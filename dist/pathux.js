@@ -13349,7495 +13349,6 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
 
-let config = {
-  doubleClickTime : 500,
-
-  //auto load 1d bspline templates, can hurt startup time
-  autoLoadSplineTemplates : true,
-
-  //timeout for press-and-hold (touch) version of double clicking
-  doubleClickHoldTime : 750,
-  DEBUG : {
-
-  }
-};
-
-function setConfig(obj) {
-  for (let k in obj) {
-    config[k] = obj[k];
-  }
-}
-
-var config$1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  config: config,
-  setConfig: setConfig,
-  'default': config
-});
-
-let modalstack$1 = [];
-let singleMouseCBs = {};
-
-function debugDomEvents() {
-  let cbsymbol = Symbol("event-callback");
-  let thsymbol = Symbol("debug-info");
-
-  let idgen = 0;
-
-  function init(et) {
-    if (!et[thsymbol]) {
-      et[thsymbol] = idgen++;
-    }
-  }
-
-  function getkey(et, type, options) {
-    init(et);
-    return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
-  }
-
-  let addEventListener = EventTarget.prototype.addEventListener;
-  let removeEventListener = EventTarget.prototype.removeEventListener;
-
-  EventTarget.prototype.addEventListener = function (type, cb, options) {
-    init(this);
-
-    if (!cb[cbsymbol]) {
-      cb[cbsymbol] = new Set();
-    }
-
-    let key = getkey(this, type, options);
-    cb[cbsymbol].add(key);
-
-    return addEventListener.call(this, type, cb, options);
-  };
-
-  EventTarget.prototype.removeEventListener = function (type, cb, options) {
-    init(this);
-
-    if (!cb[cbsymbol]) {
-      console.error("Invalid callback in removeEventListener for", type, this, cb);
-      return;
-    }
-
-    let key = getkey(this, type, options);
-
-    if (!cb[cbsymbol].has(key)) {
-      console.error("Callback not in removeEventListener;", type, this, cb);
-      return;
-    }
-
-    cb[cbsymbol].delete(key);
-
-    return removeEventListener.call(this, type, cb, options);
-  };
-}
-
-function singletonMouseEvents() {
-  let keys = ["mousedown", "mouseup", "mousemove"];
-  for (let k of keys) {
-    singleMouseCBs[k] = new Set();
-  }
-
-  let ddd = -1.0;
-  window.testSingleMouseUpEvent = (type = "mousedown") => {
-    let id = ddd++;
-    singleMouseEvent(() => {
-      console.log("mouse event", id);
-    }, type);
-  };
-
-  let _mpos = new Vector2$b();
-
-  function doSingleCbs(e, type) {
-    let list = singleMouseCBs[type];
-    singleMouseCBs[type] = new Set();
-
-    if (e.type !== "touchend" && e.type !== "touchcancel") {
-      _mpos[0] = e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.x;
-      _mpos[1] = e.touches && e.touches.length > 0 ? e.touches[0].pageY : e.y;
-    }
-
-    if (e.touches) {
-      e = copyEvent(e);
-
-      e.type = type;
-      if (e.touches.length > 0) {
-        e.x = e.pageX = e.touches[0].pageX;
-        e.y = e.pageY = e.touches[0].pageY;
-      } else {
-        e.x = _mpos[0];
-        e.y = _mpos[1];
-      }
-    }
-
-    for (let cb of list) {
-      try {
-        cb(e);
-      } catch (error) {
-        print_stack$1(error);
-        console.warn("Error in event callback");
-      }
-    }
-  }
-
-  window.addEventListener("mouseup", (e) => {
-    doSingleCbs(e, "mouseup");
-  }, {capture: true});
-  window.addEventListener("touchcancel", (e) => {
-    doSingleCbs(e, "mouseup");
-  }, {capture: true});
-  document.addEventListener("touchend", (e) => {
-    doSingleCbs(e, "mouseup");
-  }, {capture: true});
-
-  document.addEventListener("mousedown", (e) => {
-    doSingleCbs(e, "mousedown");
-  }, {capture: true});
-  document.addEventListener("touchstart", (e) => {
-    doSingleCbs(e, "mousedown");
-  }, {capture: true});
-
-  document.addEventListener("mousemove", (e) => {
-    doSingleCbs(e, "mousemove");
-  }, {capture: true});
-  document.addEventListener("touchmove", (e) => {
-    doSingleCbs(e, "mousemove");
-  }, {capture: true});
-
-  return {
-    singleMouseEvent(cb, type) {
-      if (!(type in singleMouseCBs)) {
-        throw new Error("not a mouse event");
-      }
-
-      singleMouseCBs[type].add(cb);
-    }
-  };
-}
-
-singletonMouseEvents = singletonMouseEvents();
-
-/**
- * adds a mouse event callback that only gets called once
- * */
-function singleMouseEvent(cb, type) {
-  return singletonMouseEvents.singleMouseEvent(cb, type);
-}
-
-
-/*tests if either the left mouse button is down,
-* or a touch event has happened and e.touches.length == 1*/
-function isLeftClick(e) {
-  if (e.touches !== undefined) {
-    return e.touches.length === 1;
-  }
-
-  return e.button === 0;
-}
-
-class DoubleClickHandler {
-  constructor() {
-    this.down = 0;
-    this.last = 0;
-    this.dblEvent = undefined;
-
-    this.start_mpos = new Vector2$b();
-
-    this._on_mouseup = this._on_mouseup.bind(this);
-    this._on_mousemove = this._on_mousemove.bind(this);
-  }
-
-  _on_mouseup(e) {
-    //console.log("mup", e);
-    this.mdown = false;
-  }
-
-  _on_mousemove(e) {
-    let mpos = new Vector2$b();
-    mpos[0] = e.x;
-    mpos[1] = e.y;
-
-    let dist = mpos.vectorDistance(this.start_mpos)*devicePixelRatio;
-
-    if (dist > 11) {
-      //console.log("cancel", dist);
-      this.mdown = false;
-    }
-
-    if (this.mdown) {
-      singleMouseEvent(this._on_mousemove, "mousemove");
-    }
-
-    this.update();
-  }
-
-  mousedown(e) {
-    //console.log("mdown", e.x, e.y);
-
-    if (!this.last) {
-      this.last = 0;
-    }
-    if (!this.down) {
-      this.down = 0;
-    }
-    if (!this.up) {
-      this.up = 0;
-    }
-
-    if (isMouseDown(e)) {
-      this.mdown = true;
-
-      let cpy = Object.assign({}, e);
-
-      this.start_mpos[0] = e.x;
-      this.start_mpos[1] = e.y;
-
-      singleMouseEvent(this._on_mousemove, "mousemove");
-
-      if (e.type.search("touch") >= 0 && e.touches.length > 0) {
-        cpy.x = cpy.pageX = e.touches[0].pageX;
-        cpy.y = cpy.pageY = e.touches[1].pageY;
-      } else {
-        cpy.x = cpy.pageX = e.x;
-        cpy.y = cpy.pageY = e.y;
-      }
-
-      //stupid real MouseEvent class zeros .x/.y
-      //continue using hackish copyEvent for now...
-
-      this.dblEvent = copyEvent(e);
-      this.dblEvent.type = "dblclick";
-
-      this.last = this.down;
-      this.down = time_ms();
-
-      if (this.down - this.last < config.doubleClickTime) {
-        this.mdown = false;
-        this.ondblclick(this.dblEvent);
-
-        this.down = this.last = 0.0;
-      } else {
-        singleMouseEvent(this._on_mouseup, "mouseup");
-      }
-    } else {
-      this.mdown = false;
-    }
-  }
-
-  //you may override this
-  ondblclick(e) {
-
-  }
-
-  update() {
-    if (modalstack$1.length > 0) {
-      //cancel double click requests
-      this.mdown = false;
-    }
-
-    if (this.mdown && time_ms() - this.down > config.doubleClickHoldTime) {
-      this.mdown = false;
-      this.ondblclick(this.dblEvent);
-    }
-  }
-
-  abort() {
-    this.last = this.down = 0;
-  }
-}
-
-function isMouseDown(e) {
-  let mdown = 0;
-
-  if (e.touches !== undefined) {
-    mdown = e.touches.length > 0;
-  } else {
-    mdown = e.buttons;
-  }
-
-  mdown = mdown & 1;
-
-  return mdown;
-}
-
-function pathDebugEvent(e, extra) {
-  e.__prevdef = e.preventDefault;
-  e.__stopprop = e.stopPropagation;
-
-  e.preventDefault = function () {
-    console.warn("preventDefault", extra);
-    return this.__prevdef();
-  };
-
-  e.stopPropagation = function () {
-    console.warn("stopPropagation", extra);
-    return this.__stopprop();
-  };
-}
-
-/** Returns true if event came from a touchscreen or pen device */
-function eventWasTouch(e) {
-  let ret = e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents;
-  ret = ret || e.was_touch;
-  ret = ret || e instanceof TouchEvent;
-  ret = ret || e.touches !== undefined;
-
-  if (e instanceof PointerEvent) {
-    ret = ret || (e.pointerType === "pen" || e.pointerType === "touch");
-  }
-
-  return ret;
-}
-
-function copyEvent(e) {
-  let ret = {};
-  let keys = [];
-
-  for (let k in e) {
-    keys.push(k);
-  }
-
-  keys = keys.concat(Object.getOwnPropertySymbols(e));
-  keys = keys.concat(Object.getOwnPropertyNames(e));
-
-  for (let k of keys) {
-    let v;
-
-    try {
-      v = e[k];
-    } catch (error) {
-      console.warn("read error for event key", k);
-      continue;
-    }
-
-    if (typeof v == "function") {
-      ret[k] = v.bind(e);
-    } else {
-      ret[k] = v;
-    }
-  }
-
-  ret.original = e;
-
-  return ret;
-}
-
-let Screen$2;
-
-function _setScreenClass(cls) {
-  Screen$2 = cls;
-}
-
-function findScreen() {
-  let rec = (n) => {
-    for (let n2 of n.childNodes) {
-      if (n2 && typeof n2 === "object" && n2 instanceof Screen$2) {
-        return n2;
-      }
-    }
-
-    for (let n2 of n.childNodes) {
-      let ret = rec(n2);
-      if (ret) {
-        return ret;
-      }
-    }
-  };
-
-  return rec(document.body);
-}
-
-window._findScreen = findScreen;
-
-let ContextAreaClass;
-
-function _setModalAreaClass(cls) {
-  ContextAreaClass = cls;
-}
-
-function pushPointerModal(obj, elem, pointerId, autoStopPropagation = true) {
-  return pushModalLight(obj, autoStopPropagation, elem, pointerId);
-}
-
-function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
-  let keys;
-
-  if (pointerId === undefined) {
-    keys = new Set([
-      "keydown", "keyup", "mousedown", "mouseup", "touchstart", "touchend",
-      "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter",
-      "mouseleave", "dragstart", "drag", "dragend", "dragexit", "dragleave", "dragover",
-      "dragenter", "drop", "pointerdown", "pointermove", "pointerup", "pointercancel",
-      "pointerstart", "pointerend", "pointerleave", "pointerexit", "pointerenter",
-      "pointerover"
-    ]);
-  } else {
-    keys = new Set([
-      "keydown", "keyup", "keypress", "mousewheel"
-    ]);
-  }
-
-  let ret = {
-    keys     : keys,
-    handlers : {},
-    last_mpos: [0, 0]
-  };
-
-  let touchmap = {
-    "touchstart" : "mousedown",
-    "touchmove"  : "mousemove",
-    "touchend"   : "mouseup",
-    "touchcancel": "mouseup"
-  };
-
-  let mpos = [0, 0];
-
-  let screen = findScreen();
-  if (screen) {
-    mpos[0] = screen.mpos[0];
-    mpos[1] = screen.mpos[1];
-    screen = undefined;
-  }
-
-  function handleAreaContext() {
-    let screen = findScreen();
-    if (screen) {
-      let sarea = screen.findScreenArea(mpos[0], mpos[1]);
-      if (sarea && sarea.area) {
-        sarea.area.push_ctx_active();
-        sarea.area.pop_ctx_active();
-      }
-    }
-  }
-
-  function make_default_touchhandler(type, state) {
-    return function (e) {
-      if (config.DEBUG.domEvents) {
-        pathDebugEvent(e);
-      }
-
-      if (touchmap[type] in ret.handlers) {
-        let type2 = touchmap[type];
-
-        let e2 = copyEvent(e);
-
-        e2.was_touch = true;
-        e2.type = type2;
-        e2.button = type == "touchcancel" ? 1 : 0;
-        e2.touches = e.touches;
-
-        if (e.touches.length > 0) {
-          let t = e.touches[0];
-
-          mpos[0] = t.pageX;
-          mpos[1] = t.pageY;
-
-          e2.pageX = e2.x = t.pageX;
-          e2.pageY = e2.y = t.pageY;
-          e2.clientX = t.clientX;
-          e2.clientY = t.clientY;
-          e2.x = t.clientX;
-          e2.y = t.clientY;
-
-          ret.last_mpos[0] = e2.x;
-          ret.last_mpos[1] = e2.y;
-        } else {
-          e2.x = e2.clientX = e2.pageX = e2.screenX = ret.last_mpos[0];
-          e2.y = e2.clientY = e2.pageY = e2.screenY = ret.last_mpos[1];
-        }
-
-        e2.was_touch = true;
-
-        handleAreaContext();
-        //console.log(e2.x, e2.y);
-        ret.handlers[type2](e2);
-      }
-
-      if (autoStopPropagation) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-  }
-
-  function make_handler(type, key) {
-    return function (e) {
-      if (config.DEBUG.domEvents) {
-        pathDebugEvent(e);
-      }
-
-      if (typeof key !== "string") {
-        //console.warn("key was undefined", key, type);
-        return;
-      }
-
-      if (key.startsWith("mouse")) {
-        mpos[0] = e.pageX;
-        mpos[1] = e.pageY;
-      } else if (key.startsWith("pointer")) {
-        mpos[0] = e.x;
-        mpos[1] = e.y;
-      }
-
-      handleAreaContext();
-
-      if (key !== undefined)
-        obj[key](e);
-
-      if (autoStopPropagation) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-  }
-
-  let found = {};
-
-  for (let k of keys) {
-    let key;
-
-    if (obj[k])
-      key = k;
-    else if (obj["on" + k])
-      key = "on" + k;
-    else if (obj["on_" + k])
-      key = "on_" + k;
-    else if (k in touchmap)
-      continue; //default touch event handlers will be done seperately
-    else
-      key = undefined; //make handler that still blocks events
-
-    //check we don't override other mouse pointer event handlers
-    if (key === undefined && k.search("pointer") === 0) {
-      continue;
-    }
-
-    if (key !== undefined) {
-      found[k] = 1;
-    }
-
-    let handler = make_handler(k, key);
-    ret.handlers[k] = handler;
-
-    let settings = handler.settings = {passive: false, capture: true};
-    window.addEventListener(k, handler, settings);
-  }
-
-  for (let k in touchmap) {
-    if (!(k in found)) {
-      //console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
-
-      ret.handlers[k] = make_default_touchhandler(k, ret);
-
-      let settings = ret.handlers[k].settings = {passive: false, capture: true};
-      window.addEventListener(k, ret.handlers[k], settings);
-    }
-  }
-
-  if (pointerId !== undefined) {
-    ret.pointer = {
-      elem, pointerId
-    };
-
-    function make_pointer(k) {
-      let k2 = "on_" + k;
-
-      ret.pointer[k] = function (e) {
-        if (obj[k2] !== undefined) {
-          obj[k2](e);
-        }
-
-        if (autoStopPropagation) {
-          e.stopPropagation();
-          e.preventDefault();
-        }
-      };
-    }
-
-    make_pointer("pointerdown");
-    make_pointer("pointermove");
-    make_pointer("pointerup");
-    make_pointer("pointerstart");
-    make_pointer("pointerend");
-    make_pointer("pointerleave");
-    make_pointer("pointerenter");
-    make_pointer("pointerout");
-    make_pointer("pointerover");
-    make_pointer("pointerexit");
-    make_pointer("pointercancel");
-
-    for (let k in ret.pointer) {
-      if (k !== "elem" && k !== "pointerId") {
-        elem.addEventListener(k, ret.pointer[k]);
-      }
-    }
-
-    try {
-      elem.setPointerCapture(pointerId);
-    } catch (error) {
-      print_stack$1(error);
-
-      console.log("attempting fallback");
-
-      for (let k in ret.pointer) {
-        if (k !== "elem" && k !== "pointerId") {
-          elem.removeEventListener(k, ret.pointer[k]);
-        }
-      }
-
-      delete ret.pointer;
-
-      modalstack$1.push(ret);
-      popModalLight(ret);
-
-      for (let k in obj) {
-        if (k === "pointercancel" || k === "pointerend" || k === "pointerstart") {
-          continue;
-        }
-
-        if (k.startsWith("pointer")) {
-          let k2 = k.replace(/pointer/, "mouse");
-          if (k2 in obj) {
-            console.warn("warning, existing mouse handler", k2);
-            continue;
-          }
-
-          let v = obj[k];
-          obj[k] = undefined;
-
-          obj[k2] = v;
-        }
-      }
-
-      console.log(obj);
-
-      return pushModalLight(obj, autoStopPropagation);
-    }
-  }
-
-  modalstack$1.push(ret);
-  ContextAreaClass.lock();
-
-  if (config.DEBUG.modalEvents) {
-    console.warn("pushModalLight", ret.pointer ? "(pointer events)" : "");
-  }
-
-  return ret;
-}
-
-/* Trace all calls to EventTarget.prototype.[add/rem]EventListener */
-if (0) {
-  window._print_evt_debug = false;
-
-  function evtprint() {
-    if (window.window._print_evt_debug) {
-      console.warn(...arguments);
-    }
-  }
-
-  let addevent = EventTarget.prototype.addEventListener;
-  let remevent = EventTarget.prototype.removeEventListener;
-
-  const funckey = Symbol("eventfunc");
-
-  EventTarget.prototype.addEventListener = function (name, func, args) {
-    //if (name.startsWith("key")) {
-    evtprint("listener added", name, func.name, args);
-    //}
-
-    let func2 = function (e) {
-      let proxy = new Proxy(e, {
-        get(target, p, receiver) {
-          if (p === "preventDefault") {
-            return function () {
-              evtprint("preventDefault", name, arguments);
-              return e.preventDefault(...arguments);
-            }
-          } else if (p === "stopPropagation") {
-            return function () {
-              evtprint("stopPropagation", name, arguments);
-              return e.preventDefault(...arguments);
-            }
-          }
-
-          return e[p];
-        }
-      });
-
-      return func.call(this, proxy);
-    };
-
-    func[funckey] = func2;
-
-    return addevent.call(this, name, func2, args);
-  };
-
-  EventTarget.prototype.removeEventListener = function (name, func, args) {
-    //if (name.startsWith("key")) {
-    evtprint("listener removed", name, func.name, args);
-    //}
-
-    func = func[funckey];
-
-    return remevent.call(this, name, func, args);
-  };
-}
-
-function popModalLight(state) {
-  if (state === undefined) {
-    console.warn("Bad call to popModalLight: state was undefined");
-    return;
-  }
-
-  if (state !== modalstack$1[modalstack$1.length - 1]) {
-    if (modalstack$1.indexOf(state) < 0) {
-      console.warn("Error in popModalLight; modal handler not found");
-      return;
-    } else {
-      console.warn("Error in popModalLight; called in wrong order");
-    }
-  }
-
-  for (let k in state.handlers) {
-    //console.log(k);
-    window.removeEventListener(k, state.handlers[k], state.handlers[k].settings);
-  }
-
-  state.handlers = {};
-  modalstack$1.remove(state);
-  ContextAreaClass.unlock();
-
-  if (config.DEBUG.modalEvents) {
-    console.warn("popModalLight", modalstack$1, state.pointer ? "(pointer events)" : "");
-  }
-
-  if (state.pointer) {
-    let elem = state.pointer.elem;
-
-    try {
-      elem.releasePointerCapture(state.pointer.pointerId);
-    } catch (error) {
-      print_stack$1(error);
-    }
-
-    for (let k in state.pointer) {
-      if (k !== "elem" && k !== "pointerId") {
-        elem.removeEventListener(k, state.pointer[k]);
-      }
-    }
-  }
-}
-
-function haveModal() {
-  return modalstack$1.length > 0;
-}
-
-window._haveModal = haveModal; //for debugging console
-
-var keymap_latin_1 = {
-  "Space" : 32,
-  "Escape": 27,
-  "Enter" : 13,
-  "Return": 13,
-  "Up"    : 38,
-  "Down"  : 40,
-  "Left"  : 37,
-  "Right" : 39,
-
-  "Num0"     : 96,
-  "Num1"     : 97,
-  "Num2"     : 98,
-  "Num3"     : 99,
-  "Num4"     : 100,
-  "Num5"     : 101,
-  "Num6"     : 102,
-  "Num7"     : 103,
-  "Num8"     : 104,
-  "Num9"     : 105,
-  "Home"     : 36,
-  "End"      : 35,
-  "Delete"   : 46,
-  "Backspace": 8,
-  "Insert"   : 45,
-  "PageUp"   : 33,
-  "PageDown" : 34,
-  "Tab"      : 9,
-  "-"        : 189,
-  "="        : 187,
-  "."        : 190,
-  "/"        : 191,
-  ","        : 188,
-  ";"        : 186,
-  "'"        : 222,
-  "["        : 219,
-  "]"        : 221,
-  "NumPlus"  : 107,
-  "NumMinus" : 109,
-  "Shift"    : 16,
-  "Ctrl"     : 17,
-  "Control"  : 17,
-  "Alt"      : 18
-};
-
-for (var i$1 = 0; i$1 < 26; i$1++) {
-  keymap_latin_1[String.fromCharCode(i$1 + 65)] = i$1 + 65;
-}
-for (var i$1 = 0; i$1 < 10; i$1++) {
-  keymap_latin_1[String.fromCharCode(i$1 + 48)] = i$1 + 48;
-}
-
-for (var k$1 in keymap_latin_1) {
-  if (!(k$1 in keymap_latin_1)) {
-    keymap_latin_1[keymap_latin_1[k$1]] = k$1;
-  }
-}
-
-var keymap_latin_1_rev = {};
-for (var k$1 in keymap_latin_1) {
-  keymap_latin_1_rev[keymap_latin_1[k$1]] = k$1;
-}
-
-var keymap$4 = keymap_latin_1;
-var reverse_keymap = keymap_latin_1_rev;
-
-class HotKey {
-  /**action can be a callback or a toolpath string*/
-  constructor(key, modifiers, action, uiname) {
-    this.action = action;
-    this.mods = modifiers;
-    this.key = keymap$4[key];
-    this.uiname = uiname;
-  }
-
-  exec(ctx) {
-    if (typeof this.action == "string") {
-      ctx.api.execTool(ctx, this.action);
-    } else {
-      this.action(ctx);
-    }
-  }
-
-  buildString() {
-    let s = "";
-
-    for (let i = 0; i < this.mods.length; i++) {
-      if (i > 0) {
-        s += " + ";
-      }
-
-      let k = this.mods[i].toLowerCase();
-      k = k[0].toUpperCase() + k.slice(1, k.length).toLowerCase();
-
-      s += k;
-    }
-
-    if (this.mods.length > 0) {
-      s += "+";
-    }
-
-    s += reverse_keymap[this.key];
-
-    return s.trim();
-  }
-}
-
-class KeyMap extends Array {
-  /**
-   *
-   * @param pathid{string} Id of keymap, used when patching hotkeys, when
-   *                       that is implemented
-   * */
-  constructor(hotkeys = [], pathid = "undefined") {
-    super();
-
-    this.pathid = pathid;
-
-    for (let hk of hotkeys) {
-      this.add(hk);
-    }
-  }
-
-  handle(ctx, e) {
-    let mods = new set$2();
-    if (e.shiftKey)
-      mods.add("shift");
-    if (e.altKey)
-      mods.add("alt");
-    if (e.ctrlKey) {
-      mods.add("ctrl");
-    }
-    if (e.commandKey) {
-      mods.add("command");
-    }
-
-    for (let hk of this) {
-      let ok = e.keyCode === hk.key;
-      if (!ok) continue;
-
-      let count = 0;
-      for (let m of hk.mods) {
-        m = m.toLowerCase().trim();
-
-        if (!mods.has(m)) {
-          ok = false;
-          break;
-        }
-
-        count++;
-      }
-
-      if (count !== mods.length) {
-        ok = false;
-      }
-
-      if (ok) {
-        try {
-          hk.exec(ctx);
-        } catch (error) {
-          print_stack$1(error);
-          console.log("failed to execute a hotkey", keymap$4[e.keyCode]);
-        }
-        return true;
-      }
-    }
-  }
-
-  add(hk) {
-    this.push(hk);
-  }
-
-  push(hk) {
-    super.push(hk);
-  }
-}
-
-"use strict";
-
-class EventDispatcher {
-  constructor() {
-    this._cbs = {};
-  }
-
-  _fireEvent(type, data) {
-    let stop = false;
-
-    data = {
-      stopPropagation() {
-        stop = true;
-      },
-
-      data : data
-    };
-
-    if (type in this._cbs) {
-      for (let cb of this._cbs[type]) {
-        cb(data);
-        if (stop) {
-          break;
-        }
-      }
-    }
-  }
-
-  on(type, cb) {
-    if (!(type in this._cbs)) {
-      this._cbs[type] = [];
-    }
-
-    this._cbs[type].push(cb);
-    return this;
-  }
-
-  off(type, cb) {
-    if (!(type in this._cbs)) {
-      console.warn("event handler not in list", type, cb);
-      return this;
-    }
-
-    let stack = this._cbs[type];
-    if (stack.indexOf(cb) < 0) {
-      console.warn("event handler not in list", type, cb);
-      return this;
-    }
-
-    stack.remove(cb);
-    return this;
-  }
-}
-function copyMouseEvent(e) {
-  let ret = {};
-  
-  function bind(func, obj) {
-    return function() {
-      return this._orig.apply(func, arguments);
-    }
-  }
-  
-  let exclude = new Set([
-    //"prototype",
-    //"constructor",
-    "__proto__"
-  ]);
-  
-  ret._orig = e;
-  
-  for (let k in e) {
-    let v = e[k];
-    
-    if (exclude.has(k)) {
-      continue;
-    }
-    
-    if (typeof v == "function") {
-      v = bind(v);
-    }
-    
-    ret[k] = v;
-  }
-
-  ret.ctrlKey = e.ctrlKey;
-  ret.shiftKey = e.shiftKey;
-  ret.altKey = e.altKey;
-
-  for (let i=0; i<2; i++) {
-    let key = i ? "targetTouches" : "touches";
-
-    if (e[key]) {
-      ret[key] = [];
-
-      for (let t of e[key]) {
-        let t2 = {};
-        ret[key].push(t2);
-
-        for (let k in t) {
-          t2[k] = t[k];
-        }
-      }
-    }
-  }
-
-  return ret;
-}
-
-const DomEventTypes = {
-  on_mousemove   : 'mousemove',
-  on_mousedown   : 'mousedown',
-  on_mouseup     : 'mouseup',
-  on_touchstart  : 'touchstart',
-  on_touchcancel : 'touchcanel',
-  on_touchmove   : 'touchmove',
-  on_touchend    : 'touchend',
-  on_mousewheel  : 'mousewheel',
-  on_keydown     : 'keydown',
-  on_keyup       : 'keyup',
-  on_pointerdown : 'pointerdown',
-  on_pointermove : 'pointermove',
-  on_pointercancel : 'pointercancel',
-  on_pointerup   : 'pointerup',
-
-  //on_keypress    : 'keypress'
-};
-
-function getDom(dom, eventtype) {
-  if (eventtype.startsWith("key"))
-    return window;
-  return dom;
-}
-
-let modalStack = [];
-function isModalHead(owner) {
-  return modalStack.length === 0 ||
-         modalStack[modalStack.length-1] === owner;
-}
-
-class EventHandler {
-  constructor() {
-    this._modalstate = undefined;
-  }
-  pushPointerModal(dom, pointerId) {
-    if (this._modalstate) {
-      console.warn("pushPointerModal called twiced!");
-      return;
-    }
-    
-    this._modalstate = pushPointerModal(this, dom, pointerId);
-  }
-  pushModal(dom, _is_root) {
-    if (this._modalstate) {
-      console.warn("pushModal called twiced!");
-      return;
-    }
-    
-    this._modalstate = pushModalLight(this);
-  }
-  
-  popModal() {
-    if (this._modalstate !== undefined) {
-      let modalstate = this._modalstate;
-
-      //window.setTimeout(() => {
-        popModalLight(modalstate);
-      //});
-
-      this._modalstate = undefined;
-    }
-  }
-}
-
-function pushModal(dom, handlers) {
-  console.warn("Deprecated call to pathux.events.pushModal; use api in simple_events.js instead");
-  let h = new EventHandler();
-  
-  for (let k in handlers) {
-    h[k] = handlers[k];
-  }
-  
-  handlers.popModal = () => {
-    return h.popModal(dom);
-  };
-  
-  h.pushModal(dom, false);
-  
-  return h;
-}
-
-const CurveConstructors = [];
-const CURVE_VERSION = 1.1;
-
-const CurveFlags = {
-  SELECT   : 1,
-  TRANSFORM: 2,
-};
-
-
-const TangentModes = {
-  SMOOTH: 1,
-  BREAK : 2
-};
-
-function getCurve(type, throw_on_error = true) {
-  for (let cls of CurveConstructors) {
-    if (cls.name === type)
-      return cls;
-    if (cls.define().name === type)
-      return cls;
-  }
-
-  if (throw_on_error) {
-    throw new Error("Unknown curve type " + type)
-  } else {
-    console.warn("Unknown curve type", type);
-    return getCurve("ease");
-  }
-}
-
-let _udigest$4 = new HashDigest();
-
-class CurveTypeData {
-  constructor() {
-    this.type = this.constructor.define().typeName;
-    this.parent = undefined;
-  }
-
-  get hasGUI() {
-    throw new Error("get hasGUI(): implement me!");
-  }
-
-  static register(cls) {
-    if (cls.define === CurveTypeData.define) {
-      throw new Error("missing define() static method");
-    }
-
-    let def = cls.define();
-
-    if (!def.name) {
-      throw new Error(cls.name + ".define() result is missing 'name' field");
-    }
-
-    if (!def.typeName) {
-      throw new Error(cls.name + ".define() is missing .typeName, which should equal class name; needed for minificaiton");
-    }
-
-    CurveConstructors.push(cls);
-  }
-
-  static define() {
-    return {
-      uiname  : "Some Curve",
-      name    : "somecurve",
-      typeName: CurveTypeData
-    }
-  }
-
-  calcHashKey(digest = _udigest$4.reset()) {
-    let d = digest;
-
-    d.add(this.type);
-
-    return d.get();
-  }
-
-  toJSON() {
-    return {
-      type: this.type
-    }
-  }
-
-  equals(b) {
-    return this.type === b.type;
-  }
-
-  loadJSON(obj) {
-    this.type = obj.type;
-
-    return this;
-  }
-
-  redraw() {
-    if (this.parent)
-      this.parent.redraw();
-  }
-
-  makeGUI(container) {
-
-  }
-
-  killGUI(container) {
-    container.clear();
-  }
-
-  evaluate(s) {
-    throw new Error("implement me!");
-  }
-
-  integrate(s1, quadSteps = 64) {
-    let ret = 0.0, ds = s1/quadSteps;
-
-    for (let i = 0, s = 0; i < quadSteps; i++, s += ds) {
-      ret += this.evaluate(s)*ds;
-    }
-
-    return ret;
-  }
-
-  derivative(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df))/df;
-    } else if (s < df*3) {
-      return (this.evaluate(s + df) - this.evaluate(s))/df;
-    } else {
-      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
-    }
-  }
-
-  derivative2(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df))/df;
-    } else if (s < df*3) {
-      return (this.derivative(s + df) - this.derivative(s))/df;
-    } else {
-      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
-    }
-  }
-
-  inverse(y) {
-    let steps = 9;
-    let ds = 1.0/steps, s = 0.0;
-    let best = undefined;
-    let ret = undefined;
-
-    for (let i = 0; i < steps; i++, s += ds) {
-      let s1 = s, s2 = s + ds;
-
-      let mid;
-
-      for (let j = 0; j < 11; j++) {
-        let y1 = this.evaluate(s1);
-        let y2 = this.evaluate(s2);
-        mid = (s1 + s2)*0.5;
-
-        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
-          s2 = mid;
-        } else {
-          s1 = mid;
-        }
-      }
-
-      let ymid = this.evaluate(mid);
-
-      if (best === undefined || Math.abs(y - ymid) < best) {
-        best = Math.abs(y - ymid);
-        ret = mid;
-      }
-    }
-
-    return ret === undefined ? 0.0 : ret;
-  }
-
-  onActive(parent, draw_transform) {
-  }
-
-  onInactive(parent, draw_transform) {
-  }
-
-  reset() {
-
-  }
-
-  destroy() {
-  }
-
-  update() {
-    if (this.parent)
-      this.parent._on_change();
-  }
-
-  draw(canvas, g, draw_transform) {
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-}
-
-CurveTypeData.STRUCT = `
-CurveTypeData {
-  type : string;
-}
-`;
-nstructjs.register(CurveTypeData);
-
-
-const unitRange = [0, 1];
-
-function evalHermiteTable(table, t, range = unitRange) {
-  t = (t - range[0])/(range[1] - range[0]);
-
-  let s = t*(table.length/4);
-  let i = Math.floor(s);
-
-  s -= i;
-  i *= 4;
-
-  let a = table[i] + (table[i + 1] - table[i])*s;
-  let b = table[i + 2] + (table[i + 3] - table[i + 2])*s;
-
-  return a + (b - a)*s;
-  //return table[i] + (table[i + 3] - table[i])*s;
-}
-
-function genHermiteTable(evaluate, steps, range = [0, 1]) {
-  //console.log("building spline approx");
-
-  let table = new Array(steps);
-
-  let [min, max] = range;
-
-  let eps = 0.0001;
-  let dt = ((max - min) - eps*4.001)/(steps - 1);
-  let t = min + eps*4;
-  let lastdv1, lastf3;
-
-  for (let j = 0; j < steps; j++, t += dt) {
-    //let f1 = evaluate(t - eps*2);
-    let f2 = evaluate(t - eps);
-    let f3 = evaluate(t);
-    let f4 = evaluate(t + eps);
-    //let f5 = evaluate(t + eps*2);
-
-    let dv1 = (f4 - f2)/(eps*2);
-    dv1 /= steps;
-
-    if (j > 0) {
-      let j2 = j - 1;
-
-      table[j2*4] = lastf3;
-      table[j2*4 + 1] = lastf3 + lastdv1/3.0;
-      table[j2*4 + 2] = f3 - dv1/3.0;
-      table[j2*4 + 3] = f3;
-    }
-
-    lastdv1 = dv1;
-    lastf3 = f3;
-  }
-
-  return table;
-}
-
-const DataFlags = {
-  READ_ONLY             : 1,
-  USE_CUSTOM_GETSET     : 2,
-  USE_FULL_UNDO         : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
-  USE_CUSTOM_PROP_GETTER: 8,
-};
-
-
-const DataTypes = {
-  STRUCT        : 0,
-  DYNAMIC_STRUCT: 1,
-  PROP          : 2,
-  ARRAY         : 3
-};
-
-let propCacheRings = {};
-
-function getTempProp(type) {
-  if (!(type in propCacheRings)) {
-    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
-  }
-
-  return propCacheRings[type].next();
-}
-
-class DataPathError extends Error {
-};
-
-
-function getVecClass(proptype) {
-  switch (proptype) {
-    case PropTypes$8.VEC2:
-      return Vector2$b;
-    case PropTypes$8.VEC3:
-      return Vector3$2;
-    case PropTypes$8.VEC4:
-      return Vector4$2;
-    case PropTypes$8.QUAT:
-      return Quat;
-    default:
-      throw new Error("bad prop type " + proptype);
-  }
-}
-
-function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null)
-    return false;
-
-  let ok = false;
-
-  ok = ok || prop instanceof Vec2PropertyIF;
-  ok = ok || prop instanceof Vec3PropertyIF;
-  ok = ok || prop instanceof Vec4PropertyIF;
-  ok = ok || prop instanceof Vec2Property;
-  ok = ok || prop instanceof Vec3Property;
-  ok = ok || prop instanceof Vec4Property;
-
-  ok = ok || prop.type === PropTypes$8.VEC2;
-  ok = ok || prop.type === PropTypes$8.VEC3;
-  ok = ok || prop.type === PropTypes$8.VEC4;
-  ok = ok || prop.type === PropTypes$8.QUAT;
-
-  return ok;
-}
-
-class DataPath {
-  constructor(path, apiname, prop, type = DataTypes.PROP) {
-    this.type = type;
-    this.data = prop;
-    this.apiname = apiname;
-    this.path = path;
-    this.flag = 0;
-    this.struct = undefined;
-  }
-
-  copy() {
-    let ret = new DataPath();
-
-    ret.flag = this.flag;
-    ret.type = this.type;
-    ret.data = this.data;
-    ret.apiname = this.apiname;
-    ret.path = this.path;
-    ret.struct = this.struct;
-
-    return ret;
-  }
-
-  /** this property should not be treated as something
-   *  that should be kept track off in the undo stack*/
-  noUndo() {
-    this.data.flag |= PropFlags$3.NO_UNDO;
-    return this;
-  }
-
-  setProp(prop) {
-    this.data = prop;
-  }
-
-  readOnly() {
-    this.flag |= DataFlags.READ_ONLY;
-
-    if (this.type === DataTypes.PROP) {
-      this.data.flag |= PropFlags$3.READ_ONLY;
-    }
-
-    return this;
-  }
-
-  read_only() {
-    console.warn("DataPath.read_only is deprecated; use readOnly");
-    return this.readOnly();
-  }
-
-  /** used to override tool property settings,
-   *  e.g. ranges, units, etc; returns a
-   *  base class instance of ToolProperty.
-   *
-   *  The this context points to the original ToolProperty and contains
-   *  a few useful references:
-   *
-   *  this.dataref - an object instance of this struct type
-   *  this.ctx - a context
-   *
-   *  callback takes one argument, a new (freshly copied of original)
-   *  tool property to modify
-   *
-   * */
-  customPropCallback(callback) {
-    this.flag |= DataFlags.USE_CUSTOM_PROP_GETTER;
-    this.data.flag |= PropFlags$3.USE_CUSTOM_PROP_GETTER;
-    this.propGetter = callback;
-
-    return this;
-  }
-
-  /**
-   *
-   * For the callbacks 'this' points to an internal ToolProperty;
-   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
-   * and the datapath is 'this.datapath'
-   **/
-  customGetSet(get, set) {
-    this.flag |= DataFlags.USE_CUSTOM_GETSET;
-
-    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
-      this.data.flag |= PropFlags$3.USE_CUSTOM_GETSET;
-      this.data._getValue = this.data.getValue;
-      this.data._setValue = this.data.setValue;
-
-      if (get)
-        this.data.getValue = get;
-
-      if (set)
-        this.data.setValue = set;
-    } else {
-      this.getSet = {
-        get, set
-      };
-
-      this.getSet.dataref = undefined;
-      this.getSet.datapath = undefined;
-      this.getSet.ctx = undefined;
-    }
-
-    return this;
-  }
-
-  customSet(set) {
-    this.customGetSet(undefined, set);
-    return this;
-  }
-
-  customGet(get) {
-    this.customGetSet(get, undefined);
-    return this;
-  }
-
-  /**db will be executed with underlying data object
-   that contains this path in 'this.dataref'
-
-   main event is 'change'
-   */
-  on(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.on(type, cb);
-    } else {
-      throw new Error("invalid call to DataPath.on");
-    }
-
-    return this;
-  }
-
-  off(type, cb) {
-    if (this.type === DataTypes.PROP) {
-      this.data.off(type, cb);
-    }
-  }
-
-  simpleSlider() {
-    this.data.flag |= PropFlags$3.SIMPLE_SLIDER;
-    this.data.flag &= ~PropFlags$3.FORCE_ROLLER_SLIDER;
-    return this;
-  }
-
-  rollerSlider() {
-    this.data.flag &= ~PropFlags$3.SIMPLE_SLIDER;
-    this.data.flag |= PropFlags$3.FORCE_ROLLER_SLIDER;
-
-    return this;
-  }
-
-  checkStrip(state = true) {
-    if (state) {
-      this.data.flag |= PropFlags$3.FORCE_ENUM_CHECKBOXES;
-    } else {
-      this.data.flag &= ~PropFlags$3.FORCE_ENUM_CHECKBOXES;
-    }
-
-    return this;
-  }
-
-  noUnits() {
-    this.baseUnit("none");
-    this.displayUnit("none");
-    return this;
-  }
-
-  baseUnit(unit) {
-    this.data.setBaseUnit(unit);
-    return this;
-  }
-
-  displayUnit(unit) {
-    this.data.setDisplayUnit(unit);
-    return this;
-  }
-
-  unit(unit) {
-    return this.baseUnit(unit).displayUnit(unit);
-  }
-
-  editAsBaseUnit() {
-    this.data.flag |= PropFlags$3.EDIT_AS_BASE_UNIT;
-    return this;
-  }
-
-  range(min, max) {
-    this.data.setRange(min, max);
-    return this;
-  }
-
-  uiRange(min, max) {
-    this.data.setUIRange(min, max);
-    return this;
-  }
-
-  decimalPlaces(n) {
-    this.data.setDecimalPlaces(n);
-    return this;
-  }
-
-  /**
-   * like other callbacks (until I refactor it),
-   * func will be called with a mysterious object that stores
-   * the following properties:
-   *
-   * this.dataref  : owning object reference
-   * this.datactx  : ctx
-   * this.datapath : datapath
-   * */
-  uiNameGetter(func) {
-    this.ui_name_get = func;
-    return this;
-  }
-
-  expRate(exp) {
-    this.data.setExpRate(exp);
-    return this;
-  }
-
-  slideSpeed(speed) {
-    this.data.setSlideSpeed(speed);
-    return this;
-  }
-
-  /**adds a slider for moving vector component sliders simultaneously*/
-  uniformSlider(state = true) {
-    this.data.uniformSlider(state);
-
-    return this;
-  }
-
-  radix(r) {
-    this.data.setRadix(r);
-    return this;
-  }
-
-  relativeStep(s) {
-    this.data.setRelativeStep(s);
-    return this;
-  }
-
-  step(s) {
-    this.data.setStep(s);
-    return this;
-  }
-
-  /**
-   *
-   * Tell DataPathSetOp to save/load entire app state for undo/redo
-   *
-   * */
-  fullSaveUndo() {
-    this.flag |= DataFlags.USE_FULL_UNDO;
-    this.data.flag |= PropFlags$3.USE_BASE_UNDO;
-
-    return this;
-  }
-
-  icon(i) {
-    this.data.setIcon(i);
-    return this;
-  }
-
-  icon2(i) {
-    this.data.setIcon2(i);
-    return this;
-  }
-
-  icons(icons) { //for enum/flag properties
-    this.data.addIcons(icons);
-    return this;
-  }
-
-  /** secondary icons (e.g. disabled states) */
-  icons2(icons) {
-    this.data.addIcons2(icons);
-    return this;
-  }
-
-  descriptions(description_map) { //for enum/flag properties
-    this.data.addDescriptions(description_map);
-    return this;
-  }
-
-  uiNames(uinames) {
-    this.data.addUINames(uinames);
-    return this;
-  }
-
-  description(d) {
-    this.data.description = d;
-    return this;
-  }
-}
-
-const StructFlags = {
-  NO_UNDO: 1 //struct and its child structs can't participate in undo
-             //via the DataPathToolOp
-};
-
-class ListIface {
-  getStruct(api, list, key) {
-
-  }
-
-  get(api, list, key) {
-
-  }
-
-  getKey(api, list, obj) {
-
-  }
-
-  getActive(api, list) {
-
-  }
-
-  setActive(api, list, val) {
-
-  }
-
-  set(api, list, key, val) {
-    list[key] = val;
-  }
-
-  getIter() {
-
-  }
-
-  filter(api, list, filter) {
-
-  }
-}
-
-class ToolOpIface {
-  constructor() {
-  }
-
-  static tooldef() {
-    return {
-      uiname     : "!untitled tool",
-      icon       : -1,
-      toolpath   : "logical_module.tool", //logical_module need not match up to real module name
-      description: undefined,
-      is_modal   : false,
-      inputs     : {}, //tool properties
-      outputs    : {}  //tool properties
-    }
-  }
-};
-
-
-let DataAPIClass = undefined;
-
-function setImplementationClass(cls) {
-  DataAPIClass = cls;
-}
-
-function registerTool(cls) {
-  if (DataAPIClass === undefined) {
-    throw new Error("data api not initialized properly; call setImplementationClass");
-  }
-
-  return DataAPIClass.registerTool(cls);
-}
-
-"use strict";
-
-let ToolClasses = [];
-window._ToolClasses = ToolClasses;
-
-function setContextClass(cls) {
-  console.warn("setContextClass is deprecated");
-}
-
-const ToolFlags$1 = {
-  PRIVATE: 1
-
-};
-
-
-const UndoFlags$1 = {
-  NO_UNDO      : 2,
-  IS_UNDO_ROOT : 4,
-  UNDO_BARRIER : 8,
-  HAS_UNDO_DATA: 16
-};
-
-class InheritFlag$1 {
-  constructor(slots = {}) {
-    this.slots = slots;
-  }
-}
-
-let modalstack = [];
-
-let defaultUndoHandlers = {
-  undoPre(ctx) {
-    throw new Error("implement me");
-  },
-  undo(ctx) {
-    throw new Error("implement me");
-  }
-};
-
-function setDefaultUndoHandlers(undoPre, undo) {
-  if (!undoPre || !undo) {
-    throw new Error("invalid parameters to setDefaultUndoHandlers");
-  }
-
-  defaultUndoHandlers.undoPre = undoPre;
-  defaultUndoHandlers.undo = undo;
-}
-
-class ToolPropertyCache {
-  constructor() {
-    this.map = new Map();
-    this.pathmap = new Map();
-    this.accessors = {};
-
-    this.userSetMap = new Set();
-
-    this.api = undefined;
-    this.dstruct = undefined;
-  }
-
-  static getPropKey(cls, key, prop) {
-    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
-  }
-
-  _buildAccessors(cls, key, prop, dstruct, api) {
-    let tdef = cls._getFinalToolDef();
-
-    this.api = api;
-    this.dstruct = dstruct;
-
-    if (!tdef.toolpath) {
-      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
-      return;
-    }
-
-    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
-    let obj = this.accessors;
-
-    let st = dstruct;
-    let partial = "";
-
-    for (let i = 0; i < path.length; i++) {
-      let k = path[i];
-      let pathk = k;
-
-      if (i === 0) {
-        pathk = "accessors." + k;
-      }
-
-      if (i > 0) {
-        partial += ".";
-      }
-      partial += k;
-
-      if (!(k in obj)) {
-        obj[k] = {};
-      }
-
-      let st2 = api.mapStruct(obj[k], true, k);
-      if (!(k in st.pathmap)) {
-        st.struct(pathk, k, k, st2);
-      }
-      st = st2;
-
-      this.pathmap.set(partial, obj[k]);
-
-      obj = obj[k];
-    }
-
-    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
-    let prop2 = prop.copy();
-
-    let dpath = new DataPath(name, name, prop2);
-    let uiname = prop.uiname;
-
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = prop.apiname;
-    }
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = key;
-    }
-
-    uiname = ToolProperty.makeUIName(uiname);
-
-    prop2.uiname = uiname;
-    prop2.description = prop2.description || prop2.uiname;
-
-    st.add(dpath);
-
-    obj[name] = prop2.getValue();
-  }
-
-  _getAccessor(cls) {
-    let toolpath = cls.tooldef().toolpath.trim();
-    return this.pathmap.get(toolpath);
-  }
-
-  useDefault(cls, key, prop) {
-    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
-    key = key.trim();
-
-    return key;
-  }
-
-  has(cls, key, prop) {
-    if (prop.flag & PropFlags$3.NO_DEFAULT) {
-      return false;
-    }
-
-    let obj = this._getAccessor(cls);
-
-    key = this.constructor.getPropKey(cls, key, prop);
-    return obj && key in obj;
-  }
-
-  get(cls, key, prop) {
-    if (cls === ToolMacro) {
-      return;
-    }
-
-    let obj = this._getAccessor(cls);
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    if (obj) {
-      return obj[key];
-    }
-
-    return undefined;
-  }
-
-  set(cls, key, prop) {
-    if (cls === ToolMacro) {
-      return;
-    }
-
-    let toolpath = cls.tooldef().toolpath.trim();
-    let obj = this._getAccessor(cls);
-
-    if (!obj) {
-      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
-      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-
-      obj = this.pathmap.get(toolpath);
-    }
-
-    if (!obj) {
-      console.error("Malformed toolpath in toolop definition: " + toolpath);
-      return;
-    }
-
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
-    obj[key] = prop.copy().getValue();
-
-    let path = toolpath + "." + key;
-    this.userSetMap.add(path);
-
-    return this;
-  }
-}
-
-const SavedToolDefaults = new ToolPropertyCache();
-
-class ToolOp extends EventHandler {
-  /**
-   Main ToolOp constructor.  It reads the inputs/outputs properteis from
-   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
-   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
-   chain to fetch parent class properties.
-
-
-   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
-   has been called) SavedToolDefaults will have a copy of all the default
-   property values of all registered ToolOps.
-   **/
-
-  constructor() {
-    super();
-
-    this._pointerId = undefined;
-    this._overdraw = undefined;
-    this.__memsize = undefined;
-
-    var def = this.constructor.tooldef();
-
-    if (def.undoflag !== undefined) {
-      this.undoflag = def.undoflag;
-    }
-
-    if (def.flag !== undefined) {
-      this.flag = def.flag;
-    }
-
-    this._accept = this._reject = undefined;
-    this._promise = undefined;
-
-    for (var k in def) {
-      this[k] = def[k];
-    }
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag$1)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this.constructor;
-      let lastp = undefined;
-
-      while (p !== undefined && p !== Object && p !== ToolOp && p !== lastp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag$1);
-
-            if (slots2 instanceof InheritFlag$1) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-        }
-
-        lastp = p;
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    this.inputs = {};
-    this.outputs = {};
-
-    if (dinputs) {
-      for (let k in dinputs) {
-        let prop = dinputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        if (!this.hasDefault(prop, k)) {
-          this.inputs[k] = prop;
-          continue;
-        }
-
-        try {
-          prop.setValue(this.getDefault(prop, k));
-        } catch (error) {
-          console.log(error.stack);
-          console.log(error.message);
-        }
-
-        prop.wasSet = false;
-        this.inputs[k] = prop;
-      }
-    }
-
-    if (doutputs) {
-      for (let k in doutputs) {
-        let prop = doutputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        this.outputs[k] = prop;
-      }
-    }
-
-    this.drawlines = [];
-  }
-
-  /**
-   ToolOp definition.
-
-   An example:
-   <pre>
-   static tooldef() {
-    return {
-      uiname   : "Tool Name",
-      toolpath : "logical_module.tool", //logical_module need not match up to a real module
-      icon     : -1, //tool's icon, or -1 if there is none
-      description : "tooltip",
-      is_modal : false, //tool is interactive and takes control of events
-      hotkey   : undefined,
-      undoflag : 0, //see UndoFlags
-      flag     : 0,
-      inputs   : ToolOp.inherit({
-        f32val : new Float32Property(1.0),
-        path   : new StringProperty("./path");
-      }),
-      outputs  : {}
-      }
-    }
-   </pre>
-   */
-  static tooldef() {
-    if (this === ToolOp) {
-      throw new Error("Tools must implemented static tooldef() methods!");
-    }
-
-    return {};
-  }
-
-  /** Returns a map of input property values,
-   *  e.g. `let {prop1, prop2} = this.getValues()` */
-  getInputs() {
-    let ret = {};
-
-    for (let k in this.inputs) {
-      ret[k] = this.inputs[k].getValue();
-    }
-
-    return ret;
-  }
-
-  static Equals(a, b) {
-    if (!a || !b) return false;
-    if (a.constructor !== b.constructor) return false;
-
-    let bad = false;
-
-    for (let k in a.inputs) {
-      bad = bad || !(k in b.inputs);
-      bad = bad || a.inputs[k].constructor !== b.inputs[k];
-      bad = bad || !a.inputs[k].equals(b.inputs[k]);
-
-      if (bad) {
-        break;
-      }
-    }
-
-    return !bad;
-  }
-
-  static inherit(slots = {}) {
-    return new InheritFlag$1(slots);
-  }
-
-  /**
-
-   Creates a new instance of this toolop from args and a context.
-   This is often use to fill properties with default arguments
-   stored somewhere in the context.
-
-   */
-  static invoke(ctx, args) {
-    let tool = new this();
-
-    for (let k in args) {
-      if (!(k in tool.inputs)) {
-        console.warn("Unknown tool argument " + k);
-        continue;
-      }
-
-      let prop = tool.inputs[k];
-      let val = args[k];
-
-      if ((typeof val === "string") && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
-        if (val in prop.values) {
-          val = prop.values[val];
-        } else {
-          console.warn("Possible invalid enum/flag:", val);
-          continue;
-        }
-      }
-
-      tool.inputs[k].setValue(val);
-    }
-
-    return tool;
-  }
-
-  static register(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
-      return;
-    }
-
-    ToolClasses.push(cls);
-  }
-
-  static _regWithNstructjs(cls, structName = cls.name) {
-    if (nstructjs.isRegistered(cls)) {
-      return;
-    }
-
-    let parent = cls.prototype.__proto__.constructor;
-
-    if (!cls.hasOwnProperty("STRUCT")) {
-      if (parent !== ToolOp && parent !== ToolMacro && parent !== Object) {
-        this._regWithNstructjs(parent);
-      }
-
-      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
-    }
-
-    nstructjs.register(cls);
-  }
-
-  static isRegistered(cls) {
-    return ToolClasses.indexOf(cls) >= 0;
-  }
-
-  static unregister(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      ToolClasses.remove(cls);
-    }
-  }
-
-  static _getFinalToolDef() {
-    let def = this.tooldef();
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag$1)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this;
-
-      while (p !== undefined && p !== Object && p !== ToolOp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag$1);
-
-            if (slots2 instanceof InheritFlag$1) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-
-        }
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    def.inputs = dinputs;
-    def.outputs = doutputs;
-
-    return def;
-  }
-
-  static onTick() {
-    for (let toolop of modalstack) {
-      toolop.on_tick();
-    }
-  }
-
-  static searchBoxOk(ctx) {
-    let flag = this.tooldef().flag;
-    let ret = !(flag && (flag & ToolFlags$1.PRIVATE));
-    ret = ret && this.canRun(ctx);
-
-    return ret;
-  }
-
-  //toolop is an optional instance of this class, may be undefined
-  static canRun(ctx, toolop = undefined) {
-    return true;
-  }
-
-  /** Called when the undo system needs to destroy
-   *  this toolop to save memory*/
-  onUndoDestroy() {
-
-  }
-
-  /** Used by undo system to limit memory */
-  calcMemSize(ctx) {
-    if (this.__memsize !== undefined) {
-      return this.__memsize;
-    }
-
-    let tot = 0;
-
-    for (let step = 0; step < 2; step++) {
-      let props = step ? this.outputs : this.inputs;
-
-      for (let k in props) {
-        let prop = props[k];
-
-        let size = prop.calcMemSize();
-
-        if (isNaN(size) || !isFinite(size)) {
-          console.warn("Got NaN when calculating mem size for property", prop);
-          continue;
-        }
-
-        tot += size;
-      }
-    }
-
-    let size = this.calcUndoMem(ctx);
-
-    if (isNaN(size) || !isFinite(size)) {
-      console.warn("Got NaN in calcMemSize", this);
-    } else {
-      tot += size;
-    }
-
-    this.__memsize = tot;
-
-    return tot;
-  }
-
-  loadDefaults(force = true) {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (!force && prop.wasSet) {
-        continue;
-      }
-
-      if (this.hasDefault(prop, k)) {
-        prop.setValue(this.getDefault(prop, k));
-        prop.wasSet = false;
-      }
-    }
-
-    return this;
-  }
-
-  hasDefault(toolprop, key = toolprop.apiname) {
-    return SavedToolDefaults.has(this.constructor, key, toolprop);
-  }
-
-  getDefault(toolprop, key = toolprop.apiname) {
-    let cls = this.constructor;
-
-    if (SavedToolDefaults.has(cls, key, toolprop)) {
-      return SavedToolDefaults.get(cls, key, toolprop);
-    } else {
-      return toolprop.getValue();
-    }
-  }
-
-  saveDefaultInputs() {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
-        SavedToolDefaults.set(this.constructor, k, prop);
-      }
-    }
-
-    return this;
-  }
-
-  genToolString() {
-    let def = this.constructor.tooldef();
-    let path = def.toolpath + "(";
-
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      path += k + "=";
-      if (prop.type === PropTypes$8.STRING)
-        path += "'";
-
-      if (prop.type === PropTypes$8.FLOAT) {
-        path += prop.getValue().toFixed(3);
-      } else {
-        path += prop.getValue();
-      }
-
-      if (prop.type === PropTypes$8.STRING)
-        path += "'";
-      path += " ";
-    }
-    path += ")";
-    return path;
-  }
-
-  on_tick() {
-
-  }
-
-  /**default on_keydown implementation for modal tools,
-   no need to call super() to execute this if you don't want to*/
-  on_keydown(e) {
-    switch (e.keyCode) {
-      case keymap$4["Enter"]:
-      case keymap$4["Space"]:
-        this.modalEnd(false);
-        break;
-      case keymap$4["Escape"]:
-        this.modalEnd(true);
-        break;
-    }
-  }
-
-  //called after undoPre
-  calcUndoMem(ctx) {
-    console.warn("ToolOp.prototype.calcUndoMem: implement me!");
-    return 0;
-  }
-
-  undoPre(ctx) {
-    throw new Error("implement me!");
-  }
-
-  undo(ctx) {
-    throw new Error("implement me!");
-    //_appstate.loadUndoFile(this._undo);
-  }
-
-  redo(ctx) {
-    this._was_redo = true; //also set by toolstack.redo
-
-    this.undoPre(ctx);
-    this.execPre(ctx);
-    this.exec(ctx);
-    this.execPost(ctx);
-  }
-
-  //for compatibility with fairmotion
-  exec_pre(ctx) {
-    this.execPre(ctx);
-  }
-
-  execPre(ctx) {
-  }
-
-  exec(ctx) {
-  }
-
-  execPost(ctx) {
-
-  }
-
-  /**for use in modal mode only*/
-  resetTempGeom() {
-    var ctx = this.modal_ctx;
-
-    for (var dl of this.drawlines) {
-      dl.remove();
-    }
-
-    this.drawlines.length = 0;
-  }
-
-  error(msg) {
-    console.warn(msg);
-  }
-
-  getOverdraw() {
-    if (this._overdraw === undefined) {
-      this._overdraw = document.createElement("overdraw-x");
-      this._overdraw.start(this.modal_ctx.screen);
-    }
-
-    return this._overdraw;
-  }
-
-  /**for use in modal mode only*/
-  makeTempLine(v1, v2, style) {
-    let line = this.getOverdraw().line(v1, v2, style);
-    this.drawlines.push(line);
-    return line;
-  }
-
-  pushModal(node) {
-    throw new Error("cannot call this; use modalStart")
-  }
-
-  popModal() {
-    throw new Error("cannot call this; use modalEnd");
-  }
-
-  /**returns promise to be executed on modalEnd*/
-  modalStart(ctx) {
-    if (this.modalRunning) {
-      console.warn("Warning, tool is already in modal mode consuming events");
-      return this._promise;
-    }
-
-    this.modal_ctx = ctx;
-    this.modalRunning = true;
-
-    this._promise = new Promise((accept, reject) => {
-      this._accept = accept;
-      this._reject = reject;
-
-      modalstack.push(this);
-
-      if (this._pointerId !== undefined) {
-        super.pushPointerModal(ctx.screen, this._pointerId);
-      } else {
-        super.pushModal(ctx.screen);
-      }
-    });
-
-    return this._promise;
-  }
-
-  /*eek, I've not been using this.
-    guess it's a non-enforced contract, I've been naming
-    cancel methods 'cancel' all this time.
-
-    XXX fix
-  */
-  toolCancel() {
-  }
-
-  modalEnd(was_cancelled) {
-    if (this._modalstate) {
-      modalstack.pop();
-    }
-
-    if (this._overdraw !== undefined) {
-      this._overdraw.end();
-      this._overdraw = undefined;
-    }
-
-    if (was_cancelled && this._on_cancel !== undefined) {
-      if (this._accept) {
-        this._accept(this.modal_ctx, true);
-      }
-
-      this._on_cancel(this);
-      this._on_cancel = undefined;
-    }
-
-    this.resetTempGeom();
-
-    var ctx = this.modal_ctx;
-
-    this.modal_ctx = undefined;
-    this.modalRunning = false;
-    this.is_modal = false;
-
-    super.popModal();
-
-    this._promise = undefined;
-
-    if (this._accept) {
-      this._accept(ctx, false);//Context, was_cancelled
-      this._accept = this._reject = undefined;
-    }
-
-    this.saveDefaultInputs();
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    let outs = this.outputs;
-    let ins = this.inputs;
-
-    this.inputs = {};
-    this.outputs = {};
-
-    for (let pair of ins) {
-      this.inputs[pair.key] = pair.val;
-    }
-
-    for (let pair of outs) {
-      this.outputs[pair.key] = pair.val;
-    }
-  }
-
-  _save_inputs() {
-    let ret = [];
-    for (let k in this.inputs) {
-      ret.push(new PropKey(k, this.inputs[k]));
-    }
-
-    return ret;
-  }
-
-  _save_outputs() {
-    let ret = [];
-    for (let k in this.outputs) {
-      ret.push(new PropKey(k, this.outputs[k]));
-    }
-
-    return ret;
-  }
-}
-
-ToolOp.STRUCT = `
-toolsys.ToolOp {
-  inputs  : array(toolsys.PropKey) | this._save_inputs();
-  outputs : array(toolsys.PropKey) | this._save_outputs();
-}
-`;
-nstructjs.register(ToolOp);
-
-class PropKey {
-  constructor(key, val) {
-    this.key = key;
-    this.val = val;
-  }
-}
-
-PropKey.STRUCT = `
-toolsys.PropKey {
-  key : string;
-  val : abstract(ToolProperty);
-}
-`;
-nstructjs.register(PropKey);
-
-class MacroLink {
-  constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
-    this.source = sourcetool_idx;
-    this.dest = desttool_idx;
-
-    this.sourceProps = srcprops;
-    this.destProps = dstprops;
-
-    this.sourcePropKey = srckey;
-    this.destPropKey = dstkey;
-  }
-}
-
-MacroLink.STRUCT = `
-toolsys.MacroLink {
-  source         : int;
-  dest           : int;
-  sourcePropKey  : string;
-  destPropKey    : string;
-  sourceProps    : string;
-  destProps      : string; 
-}
-`;
-nstructjs.register(MacroLink);
-
-const MacroClasses = {};
-window._MacroClasses = MacroClasses;
-
-let macroidgen = 0;
-
-
-class ToolMacro extends ToolOp {
-  constructor() {
-    super();
-
-    this.tools = [];
-    this.curtool = 0;
-    this.has_modal = false;
-    this.connects = [];
-    this.connectLinks = [];
-
-    this._macro_class = undefined;
-  }
-
-  static tooldef() {
-    return {
-      uiname: "Tool Macro"
-    }
-  }
-
-  //toolop is an optional instance of this class, may be undefined
-  static canRun(ctx, toolop = undefined) {
-    return true;
-  }
-
-  _getTypeClass() {
-    if (this._macro_class && this._macro_class.ready) {
-      return this._macro_class;
-    }
-
-    if (!this._macro_class) {
-      this._macro_class = class MacroTypeClass extends ToolOp {
-        static tooldef() {
-          return this.__tooldef;
-        }
-      };
-
-      this._macro_class.__tooldef = {
-        toolpath: this.constructor.tooldef().toolpath || ''
-      };
-      this._macro_class.ready = false;
-    }
-
-    if (!this.tools || this.tools.length === 0) {
-      /* We've been invoked by ToolOp constructor,
-      *  for now just return an empty class  */
-      return this._macro_class;
-    }
-
-    let key = "";
-    for (let tool of this.tools) {
-      key = tool.constructor.name + ":";
-    }
-
-    /* Handle child classes of ToolMacro */
-    if (this.constructor !== ToolMacro) {
-      key += ":" + this.constructor.tooldef().toolpath;
-    }
-
-    for (let k in this.inputs) {
-      key += k + ":";
-    }
-
-    if (key in MacroClasses) {
-      this._macro_class = MacroClasses[key];
-      return this._macro_class;
-    }
-
-    let name = "Macro(";
-    let i = 0;
-    let is_modal;
-
-    for (let tool of this.tools) {
-      let def = tool.constructor.tooldef();
-
-      if (i > 0) {
-        name += ", ";
-      } else {
-        is_modal = def.is_modal;
-      }
-
-      if (def.uiname) {
-        name += def.uiname;
-      } else if (def.toolpath) {
-        name += def.toolpath;
-      } else {
-        name += tool.constructor.name;
-      }
-
-      i++;
-    }
-
-    let inputs = {};
-
-    for (let k in this.inputs) {
-      inputs[k] = this.inputs[k].copy().clearEventCallbacks();
-      inputs[k].wasSet = false;
-    }
-
-    let tdef = {
-      uiname  : name,
-      toolpath: key,
-      inputs,
-      outputs : {},
-      is_modal
-    };
-
-    let cls = this._macro_class;
-    cls.__tooldef = tdef;
-    cls._macroTypeId = macroidgen++;
-    cls.ready = true;
-
-    /*
-    let cls = {
-      name : key,
-      tooldef() {
-        return tdef
-      },
-      _getFinalToolDef() {
-        return this.tooldef();
-      }
-    };//*/
-
-    MacroClasses[key] = cls;
-
-    return cls;
-  }
-
-  saveDefaultInputs() {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
-        SavedToolDefaults.set(this._getTypeClass(), k, prop);
-      }
-    }
-
-    return this;
-  }
-
-  hasDefault(toolprop, key = toolprop.apiname) {
-    return SavedToolDefaults.has(this._getTypeClass(), key, toolprop);
-  }
-
-  getDefault(toolprop, key = toolprop.apiname) {
-    let cls = this._getTypeClass();
-
-    if (SavedToolDefaults.has(cls, key, toolprop)) {
-      return SavedToolDefaults.get(cls, key, toolprop);
-    } else {
-      return toolprop.getValue();
-    }
-  }
-
-  connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
-    if (typeof dsttool === "function") {
-      return this.connectCB(...arguments);
-    }
-
-    let i1 = this.tools.indexOf(srctool);
-    let i2 = this.tools.indexOf(dsttool);
-
-    if (i1 < 0 || i2 < 0) {
-      throw new Error("tool not in macro");
-    }
-
-    //remove linked properties from this.inputs
-    if (srcprops === "inputs") {
-      let tool = this.tools[i1];
-
-      let prop = tool.inputs[srcoutput];
-      if (prop === this.inputs[srcoutput]) {
-        delete this.inputs[srcoutput];
-      }
-    }
-
-    if (dstprops === "inputs") {
-      let tool = this.tools[i2];
-      let prop = tool.inputs[dstinput];
-
-      if (this.inputs[dstinput] === prop) {
-        delete this.inputs[dstinput];
-      }
-    }
-
-    this.connectLinks.push(new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops));
-    return this;
-  }
-
-  connectCB(srctool, dsttool, callback, thisvar) {
-    this.connects.push({
-      srctool : srctool,
-      dsttool : dsttool,
-      callback: callback,
-      thisvar : thisvar
-    });
-
-    return this;
-  }
-
-  add(tool) {
-    if (tool.is_modal) {
-      this.is_modal = true;
-    }
-
-    for (let k in tool.inputs) {
-      let prop = tool.inputs[k];
-
-      if (!(prop.flag & PropFlags$3.PRIVATE)) {
-        this.inputs[k] = prop;
-      }
-    }
-
-    this.tools.push(tool);
-
-    return this;
-  }
-
-  _do_connections(tool) {
-    let i = this.tools.indexOf(tool);
-
-    for (let c of this.connectLinks) {
-      if (c.source === i) {
-        let tool2 = this.tools[c.dest];
-
-        tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
-      }
-    }
-
-    for (var c of this.connects) {
-      if (c.srctool === tool) {
-        c.callback.call(c.thisvar, c.srctool, c.dsttool);
-      }
-    }
-  }
-
-  /*
-  canRun(ctx) {
-    if (this.tools.length == 0)
-      return false;
-
-    //poll first tool only in list
-    return this.tools[0].constructor.canRun(ctx);
-  }//*/
-
-  modalStart(ctx) {
-    //macros obviously can't call loadDefaults in the constructor
-    //like normal tool ops can.
-    this.loadDefaults(false);
-
-    this._promise = new Promise((function (accept, reject) {
-      this._accept = accept;
-      this._reject = reject;
-    }).bind(this));
-
-    this.curtool = 0;
-
-    let i;
-
-    for (i = 0; i < this.tools.length; i++) {
-      if (this.tools[i].is_modal)
-        break;
-
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-
-    var on_modal_end = (function on_modal_end() {
-      this._do_connections(this.tools[this.curtool]);
-      this.curtool++;
-
-      while (this.curtool < this.tools.length &&
-      !this.tools[this.curtool].is_modal) {
-        this.tools[this.curtool].undoPre(ctx);
-        this.tools[this.curtool].execPre(ctx);
-        this.tools[this.curtool].exec(ctx);
-        this.tools[this.curtool].execPost(ctx);
-        this._do_connections(this.tools[this.curtool]);
-
-        this.curtool++;
-      }
-
-      if (this.curtool < this.tools.length) {
-        this.tools[this.curtool].undoPre(ctx);
-        this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-      } else {
-        this._accept(this, false);
-      }
-    }).bind(this);
-
-    if (i < this.tools.length) {
-      this.curtool = i;
-      this.tools[this.curtool].undoPre(ctx);
-      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-    }
-
-    return this._promise;
-  }
-
-  loadDefaults(force = true) {
-    return super.loadDefaults(force);
-  }
-
-  exec(ctx) {
-    //macros obviously can't call loadDefaults in the constructor
-    //like normal tool ops can.
-    //note that this will detect if the user changes property values
-
-    this.loadDefaults(false);
-
-    for (var i = 0; i < this.tools.length; i++) {
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-  }
-
-  calcUndoMem(ctx) {
-    let tot = 0;
-
-    for (let tool of this.tools) {
-      tot += tool.calcUndoMem(ctx);
-    }
-
-    return tot;
-  }
-
-  calcMemSize(ctx) {
-    let tot = 0;
-
-    for (let tool of this.tools) {
-      tot += tool.calcMemSize(ctx);
-    }
-
-    return tot;
-  }
-
-  undoPre() {
-    return; //undoPre is handled in exec() or modalStart()
-  }
-
-  undo(ctx) {
-    for (var i = this.tools.length - 1; i >= 0; i--) {
-      this.tools[i].undo(ctx);
-    }
-  }
-}
-
-ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
-  tools        : array(abstract(toolsys.ToolOp));
-  connectLinks : array(toolsys.MacroLink);
-}
-`;
-nstructjs.register(ToolMacro);
-
-class ToolStack extends Array {
-  constructor(ctx) {
-    super();
-
-    this.memLimit = 512*1024*1024;
-    this.enforceMemLimit = false;
-
-    this.cur = -1;
-    this.ctx = ctx;
-
-    this.modalRunning = 0;
-
-    this._undo_branch = undefined; //used to save undo branch in case of tool cancel
-  }
-
-  get head() {
-    return this[this.cur];
-  }
-
-  limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
-    if (maxmem === undefined) {
-      throw new Error("maxmem cannot be undefined");
-    }
-
-    let size = this.calcMemSize();
-
-    let start = 0;
-
-    while (start < this.cur - 2 && size > maxmem) {
-      size -= this[start].calcMemSize(ctx);
-      start++;
-    }
-
-    if (start === 0) {
-      return size;
-    }
-
-    for (let i = 0; i < start; i++) {
-      this[i].onUndoDestroy();
-    }
-
-    this.cur -= start;
-
-    for (let i = 0; i < this.length - start; i++) {
-      this[i] = this[i + start];
-    }
-    this.length -= start;
-
-    return this.calcMemSize(ctx);
-  }
-
-  calcMemSize(ctx = this.ctx) {
-    let tot = 0;
-
-    for (let tool of this) {
-      try {
-        tot += tool.calcMemSize();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Failed to execute a calcMemSize method");
-      }
-    }
-
-    return tot;
-  }
-
-  setRestrictedToolContext(ctx) {
-    this.toolctx = ctx;
-  }
-
-  reset(ctx) {
-    if (ctx !== undefined) {
-      this.ctx = ctx;
-    }
-
-    this.modalRunning = 0;
-    this.cur = -1;
-    this.length = 0;
-  }
-
-  /**
-   * runs .undo,.redo if toolstack head is same as tool
-   *
-   * otherwise, .execTool(ctx, tool) is called.
-   *
-   * @param compareInputs : check if toolstack head has identical input values, defaults to false
-   * */
-  execOrRedo(ctx, tool, compareInputs = false) {
-    let head = this.head;
-
-    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
-
-    tool.__memsize = undefined; //reset cache memsize
-
-    if (ok) {
-      //console.warn("Same tool detected");
-
-      this.undo();
-
-      //can inputs differ? in that case, execute new tool
-      if (!compareInputs) {
-        this.execTool(ctx, tool);
-      } else {
-        this.rerun();
-      }
-
-      return false;
-    } else {
-      this.execTool(ctx, tool);
-      return true;
-    }
-  }
-
-  execTool(ctx, toolop) {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit, ctx);
-    }
-
-    if (!toolop.constructor.canRun(ctx, toolop)) {
-      console.log("toolop.constructor.canRun returned false");
-      return;
-    }
-
-    let tctx = ctx.toLocked();
-
-    let undoflag = toolop.constructor.tooldef().undoflag;
-    if (toolop.undoflag !== undefined) {
-      undoflag = toolop.undoflag;
-    }
-    undoflag = undoflag === undefined ? 0 : undoflag;
-
-    //if (!(undoflag & UndoFlags.IS_UNDO_ROOT) && !(undoflag & UndoFlags.NO_UNDO)) {
-    //tctx = new SavedContext(ctx, ctx.datalib);
-    //}
-
-    toolop.execCtx = tctx;
-
-    if (!(undoflag & UndoFlags$1.NO_UNDO)) {
-      this.cur++;
-
-      //save branch for if tool cancel
-      this._undo_branch = this.slice(this.cur + 1, this.length);
-
-      //truncate
-      this.length = this.cur + 1;
-
-      this[this.cur] = toolop;
-      toolop.undoPre(tctx);
-    }
-
-    if (toolop.is_modal) {
-      ctx = toolop.modal_ctx = ctx;
-
-      this.modal_running = true;
-
-      toolop._on_cancel = (function (toolop) {
-        if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
-          this[this.cur].undo(ctx);
-          this.pop_i(this.cur);
-          this.cur--;
-        }
-      }).bind(this);
-
-      //will handle calling .exec itself
-      toolop.modalStart(ctx);
-    } else {
-      toolop.execPre(tctx);
-      toolop.exec(tctx);
-      toolop.execPost(tctx);
-      toolop.saveDefaultInputs();
-    }
-  }
-
-  toolCancel(ctx, tool) {
-    if (tool._was_redo) { //also set by toolstack.redo
-      //ignore tool cancel requests on redo
-      return;
-    }
-
-    if (tool !== this[this.cur]) {
-      console.warn("toolCancel called in error", this, tool);
-      return;
-    }
-
-    this.undo();
-    this.length = this.cur + 1;
-
-    if (this._undo_branch !== undefined) {
-      for (let item of this._undo_branch) {
-        this.push(item);
-      }
-    }
-  }
-
-  undo() {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT)) {
-      let tool = this[this.cur];
-
-      tool.undo(tool.execCtx);
-
-      this.cur--;
-    }
-  }
-
-  //reruns a tool if it's at the head of the stack
-  rerun(tool) {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (tool === this[this.cur]) {
-      tool._was_redo = false;
-
-      if (!tool.execCtx) {
-        tool.execCtx = this.ctx;
-      }
-
-      tool.undo(tool.execCtx);
-
-      tool._was_redo = true; //also set by toolstack.redo
-
-      tool.undoPre(tool.execCtx);
-      tool.execPre(tool.execCtx);
-      tool.exec(tool.execCtx);
-      tool.execPost(tool.execCtx);
-    } else {
-      console.warn("Tool wasn't at head of stack", tool);
-    }
-  }
-
-  redo() {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (this.cur >= -1 && this.cur + 1 < this.length) {
-      //console.log("redo!", this.cur, this.length);
-
-      this.cur++;
-      let tool = this[this.cur];
-
-
-      if (!tool.execCtx) {
-        tool.execCtx = this.ctx;
-      }
-
-      tool._was_redo = true;
-      tool.redo(tool.execCtx);
-
-      tool.saveDefaultInputs();
-    }
-  }
-
-  save() {
-    let data = [];
-    nstructjs.writeObject(data, this);
-    return data;
-  }
-
-  rewind() {
-    while (this.cur >= 0) {
-      let last = this.cur;
-      this.undo();
-
-      //prevent infinite loops
-      if (last === this.cur) {
-        break;
-      }
-    }
-
-    return this;
-  }
-
-  /**cb is a function(ctx), if it returns the value false then playback stops
-   promise will still be fulfilled.
-
-   onstep is a callback, if it returns a promise that promise will be
-   waited on, otherwise execution is queue with window.setTimeout().
-   */
-  replay(cb, onStep) {
-    let cur = this.cur;
-
-    this.rewind();
-
-    let last = this.cur;
-
-    let start = time_ms();
-
-    return new Promise((accept, reject) => {
-      let next = () => {
-        last = this.cur;
-
-        if (cb && cb(ctx) === false) {
-          accept();
-          return;
-        }
-
-        if (this.cur < this.length) {
-          this.cur++;
-          this.rerun();
-        }
-
-        if (last === this.cur) {
-          console.warn("time:", (time_ms() - start)/1000.0);
-          accept(this);
-        } else {
-          if (onStep) {
-            let ret = onStep();
-
-            if (ret && ret instanceof Promise) {
-              ret.then(() => {
-                next();
-              });
-            } else {
-              window.setTimeout(() => {
-                next();
-              });
-            }
-          }
-        }
-      };
-
-      next();
-    });
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    for (let item of this._stack) {
-      this.push(item);
-    }
-
-    delete this._stack;
-  }
-
-  //note that this makes sure tool classes are registered with nstructjs
-  //during save
-  _save() {
-    for (let tool of this) {
-      let cls = tool.constructor;
-
-      if (!nstructjs.isRegistered(cls)) {
-        cls._regWithNstructjs(cls);
-      }
-    }
-
-    return this;
-  }
-}
-
-ToolStack.STRUCT = `
-toolsys.ToolStack {
-  cur    : int;
-  _stack : array(abstract(toolsys.ToolOp)) | this._save();
-}
-`;
-nstructjs.register(ToolStack);
-
-window._testToolStackIO = function () {
-  let data = [];
-  let cls = _appstate.toolstack.constructor;
-
-  nstructjs.writeObject(data, _appstate.toolstack);
-  data = new DataView(new Uint8Array(data).buffer);
-
-  let toolstack = nstructjs.readObject(data, cls);
-
-  _appstate.toolstack.rewind();
-
-  toolstack.cur = -1;
-  toolstack.ctx = _appstate.toolstack.ctx;
-  _appstate.toolstack = toolstack;
-
-  return toolstack;
-};
-
-function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = undefined) {
-  let datastruct = api.mapStruct(ToolPropertyCache, true);
-
-  for (let cls of ToolClasses) {
-    let def = cls._getFinalToolDef();
-
-    for (let k in def.inputs) {
-      let prop = def.inputs[k];
-
-      if (!(prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY))) {
-        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-      }
-    }
-  }
-
-  if (rootCtxStruct) {
-    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
-  }
-
-  if (!registerWithNStructjs) {
-    return;
-  }
-
-  //register tools with nstructjs
-  for (let cls of ToolClasses) {
-    try {
-      if (!nstructjs.isRegistered(cls)) {
-        ToolOp._regWithNstructjs(cls);
-      }
-    } catch (error) {
-      console.log(error.stack);
-      console.error("Failed to register a tool with nstructjs");
-    }
-  }
-}
-
-"use strict";
-//import {EventDispatcher} from "../util/events.js";
-
-let Vector2$a = Vector2$b;
-
-const SplineTemplates = {
-  CONSTANT      : 0,
-  LINEAR        : 1,
-  SHARP         : 2,
-  SQRT          : 3,
-  SMOOTH        : 4,
-  SMOOTHER      : 5,
-  SHARPER       : 6,
-  SPHERE        : 7,
-  REVERSE_LINEAR: 8,
-  GUASSIAN      : 9
-};
-
-const templates = {
-  [SplineTemplates.CONSTANT]      : [
-    [1, 1], [1, 1]
-  ],
-  [SplineTemplates.LINEAR]        : [
-    [0, 0], [1, 1]
-  ],
-  [SplineTemplates.SHARP]         : [
-    [0, 0], [0.9999, 0.0001], [1, 1]
-  ],
-  [SplineTemplates.SQRT]          : [
-    [0, 0], [0.05, 0.25], [0.15, 0.45], [0.33, 0.65], [1, 1]
-  ],
-  [SplineTemplates.SMOOTH]        : [
-    "DEG", 3, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
-  ],
-  [SplineTemplates.SMOOTHER]      : [
-    "DEG", 6, [0, 0], [1.0/2.25, 0], [2.0/3.0, 1.0], [1, 1]
-  ],
-  [SplineTemplates.SHARPER]       : [
-    [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
-  ],
-  [SplineTemplates.SPHERE]        : [
-    [0, 0], [0.01953, 0.23438], [0.08203, 0.43359], [0.18359, 0.625], [0.35938, 0.81641], [0.625, 0.97656], [1, 1]
-  ],
-  [SplineTemplates.REVERSE_LINEAR]: [
-    [0, 1], [1, 0]
-  ],
-  [SplineTemplates.GUASSIAN]      : [
-    "DEG", 5, [0, 0], [0.17969, 0.007], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]
-  ]
-};
-
-//is initialized below
-const SplineTemplateIcons = {};
-
-let RecalcFlags = {
-  BASIS: 1,
-  FULL : 2,
-  ALL  : 3,
-
-  //private flag
-  FULL_BASIS: 4
-};
-
-function mySafeJSONStringify$1(obj) {
-  return JSON.stringify(obj.toJSON(), function (key) {
-    let v = this[key];
-
-    if (typeof v === "number") {
-      if (v !== Math.floor(v)) {
-        v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
-      }
-    }
-
-    return v;
-  });
-}
-
-function mySafeJSONParse$1(buf) {
-  return JSON.parse(buf, (key, val) => {
-
-  });
-};
-
-window.mySafeJSONStringify = mySafeJSONStringify$1;
-
-
-let bin_cache = {};
-window._bin_cache = bin_cache;
-
-let eval2_rets = cachering.fromConstructor(Vector2$a, 32);
-
-/*
-  I hate these stupid curve widgets.  This horrible one here works by
-  root-finding the x axis on a two dimensional b-spline (which works
-  surprisingly well).
-*/
-
-function bez3$1(a, b, c, t) {
-  let r1 = a + (b - a)*t;
-  let r2 = b + (c - b)*t;
-
-  return r1 + (r2 - r1)*t;
-}
-
-function bez4$1(a, b, c, d, t) {
-  let r1 = bez3$1(a, b, c, t);
-  let r2 = bez3$1(b, c, d, t);
-
-  return r1 + (r2 - r1)*t;
-}
-
-function binomial(n, i) {
-  if (i > n) {
-    throw new Error("Bad call to binomial(n, i), i was > than n");
-  }
-
-  if (i === 0 || i === n) {
-    return 1;
-  }
-
-  let key = "" + n + "," + i;
-
-  if (key in bin_cache)
-    return bin_cache[key];
-
-  let ret = binomial(n - 1, i - 1) + bin(n - 1, i);
-  bin_cache[key] = ret;
-
-  return ret;
-}
-
-window.bin = binomial;
-
-class Curve1dBSplineOpBase extends ToolOp {
-  static tooldef() {
-    return {
-      inputs : {
-        dataPath: new StringProperty()
-      },
-      outputs: {},
-    };
-  }
-
-  _undo = undefined;
-
-  undoPre(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    if (curve1d) {
-      this._undo = curve1d.copy();
-    } else {
-      this._undo = undefined;
-    }
-  }
-
-  undo(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    if (curve1d) {
-      curve1d.load(this._undo);
-      curve1d._fireEvent("update", curve1d);
-    }
-  }
-
-  getCurve1d(ctx) {
-    let {dataPath} = this.getInputs();
-
-    let curve1d;
-    try {
-      curve1d = ctx.api.getValue(ctx, dataPath);
-    } catch (error) {
-      console.error(error.stack);
-      console.error(error.message);
-      console.error("Failed to lookup curve1d property at path ", dataPath);
-      return;
-    }
-
-    return curve1d;
-  }
-
-  execPost(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    if (curve1d) {
-      curve1d._fireEvent("update", curve1d);
-    }
-  }
-}
-
-class Curve1dBSplineResetOp extends Curve1dBSplineOpBase {
-  static tooldef() {
-    return {
-      toolpath: "curve1d.reset_bspline",
-      inputs  : ToolOp.inherit({}),
-      outputs : {},
-    }
-  }
-
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    if (curve1d) {
-      curve1d.generators.active.reset();
-    }
-  }
-}
-
-ToolOp.register(Curve1dBSplineResetOp);
-
-class Curve1dBSplineLoadTemplOp extends Curve1dBSplineOpBase {
-  static tooldef() {
-    return {
-      toolpath: "curve1d.bspline_load_template",
-      inputs  : ToolOp.inherit({
-        template: new EnumProperty$9(SplineTemplates.SMOOTH, SplineTemplates)
-      }),
-      outputs : {},
-    }
-  }
-
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    let {template} = this.getInputs();
-
-    if (curve1d) {
-      curve1d.generators.active.loadTemplate(template);
-    }
-  }
-}
-
-ToolOp.register(Curve1dBSplineLoadTemplOp);
-
-class Curve1dBSplineDeleteOp extends Curve1dBSplineOpBase {
-  static tooldef() {
-    return {
-      toolpath: "curve1d.bspline_delete_point",
-      inputs  : ToolOp.inherit({}),
-      outputs : {},
-    }
-  }
-
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-
-    if (curve1d) {
-      curve1d.generators.active.deletePoint();
-    }
-  }
-}
-
-ToolOp.register(Curve1dBSplineDeleteOp);
-
-class Curve1dBSplineSelectOp extends Curve1dBSplineOpBase {
-  static tooldef() {
-    return {
-      toolpath: "curve1d.bspline_select_point",
-      inputs  : ToolOp.inherit({
-        point : new IntProperty(-1),
-        state : new BoolProperty(true),
-        unique: new BoolProperty(true),
-      }),
-      outputs : {},
-    }
-  }
-
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-
-    if (curve1d) {
-      let bspline = curve1d.generators.active;
-      let {point, state, unique} = this.getInputs();
-
-      for (let p of bspline.points) {
-        if (p.eid === point) {
-          if (state) {
-            p.flag |= CurveFlags.SELECT;
-          } else {
-            p.flag &= ~CurveFlags.SELECT;
-          }
-        } else if (unique) {
-          p.flag &= ~CurveFlags.SELECT;
-        }
-      }
-
-      curve1d._fireEvent("select", bspline);
-    }
-  }
-}
-
-ToolOp.register(Curve1dBSplineSelectOp);
-
-class Curve1dBSplineAddOp extends Curve1dBSplineOpBase {
-  static tooldef() {
-    return {
-      toolpath: "curve1d.bspline_add_point",
-      inputs  : ToolOp.inherit({
-        x: new FloatProperty(),
-        y: new FloatProperty()
-      }),
-      outputs : {},
-    }
-  }
-
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-
-    if (curve1d) {
-      let {x, y} = this.getInputs();
-      curve1d.generators.active.addFromMouse(x, y);
-    }
-  }
-}
-
-ToolOp.register(Curve1dBSplineAddOp);
-
-class BSplineTransformOp extends ToolOp {
-  constructor() {
-    super();
-
-    this.first = true;
-    this.start_mpos = new Vector2$a();
-  }
-
-  static tooldef() {
-    return {
-      toolpath: "curve1d.transform_bspline",
-      inputs  : {
-        dataPath: new StringProperty(),
-        off     : new Vec2Property(),
-        dpi     : new FloatProperty(1.0),
-      },
-      is_modal: true,
-      outputs : {},
-    };
-  }
-
-  _undo = undefined;
-
-  storePoints(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-
-    if (curve1d) {
-      let bspline = curve1d.generators.active;
-      return Array.from(bspline.points).map(p => p.copy());
-    }
-
-    return [];
-  }
-
-  loadPoints(ctx, ps) {
-    let curve1d = this.getCurve1d(ctx);
-
-    if (curve1d) {
-      let bspline = curve1d.generators.active;
-
-      for (let p1 of bspline.points) {
-        for (let p2 of ps) {
-          if (p2.eid === p1.eid) {
-            p1.co.load(p2.co);
-            p1.rco.load(p2.rco);
-            p1.sco.load(p2.sco);
-          }
-        }
-      }
-
-      bspline.parent._fireEvent("transform", bspline);
-
-      bspline.recalc = RecalcFlags.ALL;
-      bspline.updateKnots();
-      bspline.update();
-      bspline.redraw();
-    }
-  }
-
-  undoPre(ctx) {
-    this._undo = this.storePoints(ctx);
-  }
-
-  undo(ctx) {
-    this.loadPoints(ctx, this._undo);
-  }
-
-  getCurve1d(ctx) {
-    let {dataPath} = this.getInputs();
-
-    let curve1d;
-    try {
-      curve1d = ctx.api.getValue(ctx, dataPath);
-    } catch (error) {
-      console.error(error.stack);
-      console.error(error.message);
-      console.error("Failed to lookup curve1d property at path ", dataPath);
-      return;
-    }
-
-    return curve1d;
-  }
-
-  finish(cancel = false) {
-    let ctx = this.modal_ctx;
-    this.modalEnd(cancel);
-
-    let curve1d = this.getCurve1d(ctx);
-    if (curve1d) {
-      curve1d.generators.active.fastmode = false;
-    }
-
-    if (cancel) {
-      this.undo(ctx);
-    }
-  }
-
-  on_pointerup(e) {
-    this.finish();
-  }
-
-  modalStart(ctx) {
-    super.modalStart(ctx);
-
-    let curve1d = this.getCurve1d(ctx);
-    if (!curve1d) {
-      console.log("Failed to get curve1d!");
-      return;
-    }
-
-    let bspline = curve1d.generators.active;
-    for (let p of bspline.points) {
-      p.startco.load(p.co);
-    }
-  }
-
-  on_pointermove(e) {
-    let mpos = new Vector2$a().loadXY(e.x, e.y);
-    if (this.first) {
-      this.start_mpos.load(mpos);
-      this.first = false;
-      return;
-    }
-
-    let curve1d = this.getCurve1d(this.modal_ctx);
-    if (curve1d) {
-      curve1d.generators.active.fastmode = true;
-    }
-
-    const {dpi} = this.getInputs();
-    let off = new Vector2$a(mpos).sub(this.start_mpos).mulScalar(dpi);
-    off[1] = -off[1];
-
-    this.inputs.off.setValue(off);
-
-    const bspline = curve1d.generators.active;
-    for (let p of bspline.points) {
-      p.co.load(p.startco);
-    }
-
-    this.exec(this.modal_ctx);
-  }
-
-  on_pointerdown(e) {
-    this.finish();
-  }
-
-  exec(ctx) {
-    let curve1d = this.getCurve1d(ctx);
-    if (!curve1d) {
-      return;
-    }
-
-    let bspline = curve1d.generators.active;
-    let {off} = this.getInputs();
-
-    const xRange = curve1d.xRange, yRange = curve1d.yRange;
-
-    for (let p of bspline.points) {
-      if (p.flag & CurveFlags.SELECT) {
-        p.co.add(off);
-        p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
-        p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
-      }
-    }
-
-    bspline.parent._fireEvent("transform", bspline);
-
-    bspline.recalc = RecalcFlags.ALL;
-    bspline.updateKnots();
-    bspline.update();
-    bspline.redraw();
-  }
-}
-
-ToolOp.register(BSplineTransformOp);
-
-class Curve1DPoint {
-  constructor(co) {
-    this.co = new Vector2$a(co);
-    this.rco = new Vector2$a(co);
-    this.sco = new Vector2$a(co);
-
-    //for transform
-    this.startco = new Vector2$a();
-    this.eid = -1;
-    this.flag = 0;
-
-    this.tangent = TangentModes.SMOOTH;
-
-    Object.seal(this);
-  }
-
-  get 0() {
-    throw new Error("Curve1DPoint get 0");
-  }
-
-  get 1() {
-    throw new Error("Curve1DPoint get 1");
-  }
-
-  /* Needed for file compatibility. */
-  set 0(v) {
-    this.co[0] = v;
-  }
-
-  set 1(v) {
-    this.co[1] = v;
-  }
-
-  load(b) {
-    this.eid = b.eid;
-    this.flag = b.flag;
-    this.tangent = b.tangent;
-
-    this.co.load(b.co);
-    this.rco.load(b.rco);
-    this.sco.load(b.sco);
-    this.startco.load(b.startco);
-
-    return this;
-  }
-
-  set deg(v) {
-    console.warn("old file data detected");
-  }
-
-  static fromJSON(obj) {
-    let ret = new Curve1DPoint(obj);
-
-    if ("0" in obj) {
-      ret.co[0] = obj[0];
-      ret.co[1] = obj[1];
-    } else {
-      ret.co.load(obj.co);
-    }
-
-    ret.startco.load(obj.startco);
-    ret.eid = obj.eid;
-    ret.flag = obj.flag;
-    ret.tangent = obj.tangent;
-
-    ret.rco.load(obj.rco);
-
-    return ret;
-  }
-
-  copy() {
-    let ret = new Curve1DPoint(this.co);
-
-    ret.tangent = this.tangent;
-    ret.flag = this.flag;
-    ret.eid = this.eid;
-
-    ret.startco.load(this.startco);
-    ret.rco.load(this.rco);
-    ret.sco.load(this.sco);
-
-    return ret;
-  }
-
-  toJSON() {
-    return {
-      co     : this.co,
-      eid    : this.eid,
-      flag   : this.flag,
-      tangent: this.tangent,
-
-      rco    : this.rco,
-      startco: this.startco,
-    };
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    this.sco.load(this.co);
-    this.rco.load(this.co);
-
-    splineCache.update(this);
-  }
-};
-Curve1DPoint.STRUCT = `
-Curve1DPoint {
-  co      : vec2;
-  rco     : vec2;
-  sco     : vec2;
-  startco : vec2;
-  eid     : int;
-  flag    : int;
-  tangent : int;
-}
-`;
-nstructjs.register(Curve1DPoint);
-
-let _udigest$3 = new HashDigest();
-
-class BSplineCache {
-  constructor() {
-    this.curves = [];
-    this.map = new Map();
-    this.maxCurves = 32;
-    this.gen = 0;
-  }
-
-  limit() {
-    if (this.curves.length <= this.maxCurves) {
-      return;
-    }
-
-    this.curves.sort((a, b) => b.cache_w - a.cache_w);
-    while (this.curves.length > this.maxCurves) {
-      let curve = this.curves.pop();
-      this.map.delete(curve.calcHashKey());
-    }
-  }
-
-  has(curve) {
-    let curve2 = this.map.get(curve.calcHashKey());
-    return curve2 && curve2.equals(curve);
-  }
-
-  get(curve) {
-    let key = curve.calcHashKey();
-    curve._last_cache_key = key;
-
-    let curve2 = this.map.get(key);
-    if (curve2 && curve2.equals(curve)) {
-      curve2.cache_w = this.gen++;
-      return curve2;
-    }
-
-    curve2 = curve.copy();
-    curve2._last_cache_key = key;
-
-    curve2.updateKnots();
-    curve2.regen_basis();
-    curve2.regen_hermite();
-
-    this.map.set(curve2);
-    this.curves.push(curve2);
-
-    curve2.cache_w = this.gen++;
-
-    this.limit();
-
-    return curve2;
-  }
-
-  _remove(key) {
-    let curve = this.map.get(key);
-    this.map.delete(key);
-    this.curves.remove(curve);
-  }
-
-  update(curve) {
-    let key = curve._last_cache_key;
-
-    if (this.map.has(key)) {
-      this._remove(curve);
-      this.get(curve);
-    }
-  }
-}
-
-let splineCache = new BSplineCache();
-window._splineCache = splineCache;
-
-let _idgen$1 = 1;
-
-class BSplineCurve extends CurveTypeData {
-  constructor() {
-    super();
-
-    this._bid = _idgen$1++;
-
-    this._degOffset = 0;
-    this.cache_w = 0;
-    this._last_cache_key = 0;
-
-    this.fastmode = false;
-    this.points = [];
-    this.length = 0;
-    this.interpolating = false;
-
-    this._ps = [];
-    this.hermite = [];
-    this.fastmode = false;
-
-    this.deg = 6;
-    this.recalc = RecalcFlags.ALL;
-    this.basis_tables = [];
-    this.eidgen = new IDGen();
-
-    this.add(0, 0);
-    this.add(1, 1);
-
-    this.mpos = new Vector2$a();
-
-    this.on_mousedown = this.on_mousedown.bind(this);
-    this.on_mousemove = this.on_mousemove.bind(this);
-    this.on_mouseup = this.on_mouseup.bind(this);
-    this.on_keydown = this.on_keydown.bind(this);
-    this.on_touchstart = this.on_touchstart.bind(this);
-    this.on_touchmove = this.on_touchmove.bind(this);
-    this.on_touchend = this.on_touchend.bind(this);
-    this.on_touchcancel = this.on_touchcancel.bind(this);
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  static define() {
-    return {
-      uiname  : "B-Spline",
-      name    : "bspline",
-      typeName: "BSplineCurve"
-    }
-  }
-
-  calcHashKey(digest = _udigest$3.reset()) {
-    let d = digest;
-
-    super.calcHashKey(d);
-
-    d.add(this.deg);
-    d.add(this.interpolating);
-    d.add(this.points.length);
-
-    for (let p of this.points) {
-      let x = ~~(p.co[0]*1024);
-      let y = ~~(p.co[1]*1024);
-
-      d.add(x);
-      d.add(y);
-      d.add(p.tangent); //is an enum
-    }
-
-    return d.get();
-  }
-
-  copyTo(b) {
-    b.deg = this.deg;
-    b.interpolating = this.interpolating;
-    b.fastmode = this.fastmode;
-
-    for (let p of this.points) {
-      let p2 = p.copy();
-
-      b.points.push(p2);
-    }
-
-    return b;
-  }
-
-  copy() {
-    let curve = new BSplineCurve();
-    this.copyTo(curve);
-    return curve;
-  }
-
-  equals(b) {
-    if (b.type !== this.type) {
-      return false;
-    }
-
-    let bad = this.points.length !== b.points.length;
-
-    bad = bad || this.deg !== b.deg;
-    bad = bad || this.interpolating !== b.interpolating;
-
-    if (bad) {
-      return false;
-    }
-
-    for (let i = 0; i < this.points.length; i++) {
-      let p1 = this.points[i];
-      let p2 = b.points[i];
-
-      if (p1.co.vectorDistance(p2.co) > 0.00001) {
-        return false;
-      }
-
-      if (p1.tangent !== p2.tangent) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  remove(p) {
-    let ret = this.points.remove(p);
-    this.length = this.points.length;
-
-    return ret;
-  }
-
-  add(x, y, no_update = false) {
-    let p = new Curve1DPoint();
-    this.recalc = RecalcFlags.ALL;
-
-    p.eid = this.eidgen.next();
-
-    p.co.loadXY(x, y);
-    p.sco.load(p.co);
-    p.rco.load(p.co);
-
-    this.points.push(p);
-    if (!no_update) {
-      this.update();
-    }
-
-    this.length = this.points.length;
-
-    return p;
-  }
-
-  update() {
-    super.update();
-  }
-
-  _sortPoints() {
-    if (!this.interpolating) {
-      for (let i = 0; i < this.points.length; i++) {
-        this.points[i].rco.load(this.points[i].co);
-      }
-    }
-
-    this.points.sort(function (a, b) {
-      return a.co[0] - b.co[0];
-    });
-
-    return this;
-  }
-
-  updateKnots(recalc = true, points = this.points) {
-    if (recalc) {
-      this.recalc = RecalcFlags.ALL;
-    }
-
-    this._sortPoints();
-
-    this._ps = [];
-    if (points.length < 2) {
-      return;
-    }
-    let a = points[0].co[0], b = points[points.length - 1].co[0];
-
-    let degExtra = this.deg;
-    this._degOffset = -this.deg;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      this._ps.push(points[i]);
-    }
-
-    if (degExtra) {
-      let last = points.length - 1;
-      for (let i = 0; i < degExtra; i++) {
-        let p = points[last].copy();
-        this._ps.push(p);
-      }
-    }
-
-    if (!this.interpolating) {
-      for (let i = 0; i < this._ps.length; i++) {
-        this._ps[i].rco.load(this._ps[i].co);
-      }
-    }
-
-    for (let i = 0; i < points.length; i++) {
-      let p = points[i];
-      let x = p.co[0], y = p.co[1];//this.evaluate(x);
-
-      p.sco[0] = x;
-      p.sco[1] = y;
-    }
-  }
-
-  toJSON() {
-    this._sortPoints();
-
-    let ret = super.toJSON();
-
-    ret = Object.assign(ret, {
-      points       : this.points.map(p => p.toJSON()),
-      deg          : this.deg,
-      interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON()
-    });
-
-    return ret;
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    this.interpolating = obj.interpolating;
-    this.deg = obj.deg;
-
-    this.length = 0;
-    this.points = [];
-    this._ps = [];
-
-    if (obj.range) {
-      /* Will be version patched later. */
-      this.range = [new Vector2$a(obj.range[0]), new Vector2$a(obj.range[1])];
-    }
-
-    this.hightlight = undefined;
-    this.eidgen = IDGen.fromJSON(obj.eidgen);
-    this.recalc = RecalcFlags.ALL;
-    this.mpos = [0, 0];
-
-    for (let i = 0; i < obj.points.length; i++) {
-      this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
-    }
-
-    this.updateKnots();
-    this.redraw();
-
-    return this;
-  }
-
-  basis(t, i) {
-    if (this.recalc & RecalcFlags.FULL_BASIS) {
-      return this._basis(t, i);
-    }
-
-    if (this.recalc & RecalcFlags.BASIS) {
-      this.regen_basis();
-      this.recalc &= ~RecalcFlags.BASIS;
-    }
-
-    i = Math.min(Math.max(i, 0), this._ps.length - 1);
-    t = Math.min(Math.max(t, 0.0), 1.0)*0.999999999;
-
-    let table = this.basis_tables[i];
-
-    let s = t*(table.length/4)*0.99999;
-
-    let j = ~~s;
-    s -= j;
-
-    j *= 4;
-
-    //return table[j] + (table[j + 3] - table[j])*s; //linear
-    return bez4$1(table[j], table[j + 1], table[j + 2], table[j + 3], s); //cubic
-  }
-
-  reset(empty = false) {
-    this.length = 0;
-    this.points = [];
-    this._ps = [];
-
-    if (!empty) {
-      this.add(0, 0, true);
-      this.add(1, 1, true);
-    }
-
-    this.recalc = 1;
-    this.updateKnots();
-    this.update();
-    this.redraw();
-
-    return this;
-  }
-
-  regen_hermite(steps) {
-    if (splineCache.has(this)) {
-      console.log("loading spline approx from cached bspline data");
-
-      this.hermite = splineCache.get(this).hermite;
-      return;
-    }
-
-    if (steps === undefined) {
-      steps = this.fastmode ? 120 : 340;
-    }
-
-    if (this.interpolating) {
-      steps *= 2;
-    }
-
-    this.hermite = new Array(steps);
-    let table = this.hermite;
-
-    let eps = 0.00001;
-    let dt = (1.0 - eps*4.001)/(steps - 1);
-    let t = eps*4;
-    let lastdv1, lastf3;
-
-    for (let j = 0; j < steps; j++, t += dt) {
-      let f1 = this._evaluate(t - eps*2);
-      let f2 = this._evaluate(t - eps);
-      let f3 = this._evaluate(t);
-      let f4 = this._evaluate(t + eps);
-      let f5 = this._evaluate(t + eps*2);
-
-      let dv1 = (f4 - f2)/(eps*2);
-      dv1 /= steps;
-
-      if (j > 0) {
-        let j2 = j - 1;
-
-        table[j2*4] = lastf3;
-        table[j2*4 + 1] = lastf3 + lastdv1/3.0;
-        table[j2*4 + 2] = f3 - dv1/3.0;
-        table[j2*4 + 3] = f3;
-      }
-
-      lastdv1 = dv1;
-      lastf3 = f3;
-    }
-  }
-
-  solve_interpolating() {
-    //this.recalc |= RecalcFlags.FULL_BASIS;
-
-    for (let p of this._ps) {
-      p.rco.load(p.co);
-    }
-
-    let points = this.points.concat(this.points);
-
-
-    this._evaluate2(0.5);
-
-    let error1 = (p) => {
-      //return p.vectorDistance(this._evaluate2(p.co[0]));
-      return this._evaluate(p.co[0]) - p.co[1];
-    };
-
-    let error = (p) => {
-      return error1(p);
-
-      /*
-      let err = 0.0;
-      for (let p of this.points) {
-        //err += error1(p)**2;
-        err += Math.abs(error1(p));
-      }
-
-      //return Math.sqrt(err);
-      return err;
-      //*/
-    };
-
-    let err = 0.0;
-    let g = new Vector2$a();
-
-    for (let step = 0; step < 25; step++) {
-      err = 0.0;
-
-      for (let p of this._ps) {
-        let r1 = error(p);
-        const df = 0.000001;
-
-        err += Math.abs(r1);
-
-        if (p === this._ps[this._ps.length - 1]) {
-          continue;
-        }
-
-        g.zero();
-
-        for (let i = 0; i < 2; i++) {
-          let orig = p.rco[i];
-          p.rco[i] += df;
-          let r2 = error(p);
-          p.rco[i] = orig;
-
-          g[i] = (r2 - r1)/df;
-        }
-
-        let totgs = g.dot(g);
-
-        if (totgs < 0.00000001) {
-          continue;
-        }
-
-        r1 /= totgs;
-        let k = 0.5;
-
-        p.rco[0] += -r1*g[0]*k;
-        p.rco[1] += -r1*g[1]*k;
-      }
-
-      let th = this.fastmode ? 0.001 : 0.00005;
-      if (err < th) {
-        break;
-      }
-    }
-
-    //this.recalc &= ~RecalcFlags.FULL_BASIS;
-  }
-
-  regen_basis() {
-    if (splineCache.has(this)) {
-      console.log("loading from cached bspline data");
-
-      this.basis_tables = splineCache.get(this).basis_tables;
-      return;
-    }
-
-    //let steps = this.fastmode && !this.interpolating ? 64 : 128;
-    let steps = this.fastmode ? 64 : 128;
-
-    if (this.interpolating) {
-      steps *= 2;
-    }
-
-    this.basis_tables = new Array(this._ps.length);
-
-    for (let i = 0; i < this._ps.length; i++) {
-      let table = this.basis_tables[i] = new Array((steps - 1)*4);
-
-      let eps = 0.00001;
-      let dt = (1.0 - eps*8)/(steps - 1);
-      let t = eps*4;
-      let lastdv1 = 0.0, lastf3 = 0.0;
-
-      for (let j = 0; j < steps; j++, t += dt) {
-
-        let f3 = this._basis(t, i);
-        let dv1;
-
-        if (0) {
-          //let f1 = this._basis(t - eps*2, i);
-          let f2 = this._basis(t - eps, i);
-          let f4 = this._basis(t + eps, i);
-          //let f5 = this._basis(t + eps*2, i);
-
-          dv1 = (f4 - f2)/(eps*2);
-        } else {
-          dv1 = this._dbasis(t, i);
-        }
-
-        if (isNaN(dv1)) {
-          console.log("NaN!");
-          debugger;
-          dv1 = this._dbasis(t, i);
-        }
-        //dv1 = 0.0;
-
-        //dv1 = 0.0;
-        dv1 /= steps;
-
-        if (j > 0) {
-          let j2 = j - 1;
-
-          table[j2*4] = lastf3;
-          table[j2*4 + 1] = lastf3 + lastdv1/3.0;
-          table[j2*4 + 2] = f3 - dv1/3.0;
-          table[j2*4 + 3] = f3;
-        }
-
-        lastdv1 = dv1;
-        lastf3 = f3;
-      }
-    }
-  }
-
-  _dbasis(t, i) {
-    let len = this._ps.length;
-    let ps = this._ps;
-
-    function safe_inv(n) {
-      return n === 0 ? 0 : 1.0/n;
-    }
-
-    /*
-    on factor;
-
-    operator bas;
-
-    a := (s - ki) / (knn - ki);
-    b := (knn1 - s) / (knn1 - kn);
-
-    f := a*bas(s, j, n-1) + b*bas(s, j+1, n-1);
-    df(f, s);
-    */
-
-    function bas(s, i, n) {
-      let kn = Math.min(Math.max(i + 1, 0), len - 1);
-      let knn = Math.min(Math.max(i + n, 0), len - 1);
-      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
-      let ki = Math.min(Math.max(i, 0), len - 1);
-
-      if (n === 0) {
-        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
-      } else {
-
-        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
-        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
-
-        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
-      }
-    }
-
-    function dbas(s, j, n) {
-      let kn = Math.min(Math.max(j + 1, 0), len - 1);
-      let knn = Math.min(Math.max(j + n, 0), len - 1);
-      let knn1 = Math.min(Math.max(j + n + 1, 0), len - 1);
-      let ki = Math.min(Math.max(j, 0), len - 1);
-
-      kn = ps[kn].rco[0];
-      knn = ps[knn].rco[0];
-      knn1 = ps[knn1].rco[0];
-      ki = ps[ki].rco[0];
-
-      if (n === 0) {
-        return 0;
-        //return s >= ki && s < kn ? 1 : 0;
-      } else {
-        let div = ((ki - knn)*(kn - knn1));
-
-        if (div === 0.0) {
-          return 0.0;
-        }
-
-        return (((ki - s)*dbas(s, j, n - 1) - bas(s, j, n - 1))*(kn - knn1) - ((knn1 -
-          s)*dbas(s, j + 1, n - 1) - bas(s, j + 1, n - 1))*(ki - knn))/div;
-      }
-    }
-
-    let deg = this.deg;
-    return dbas(t, i + this._degOffset, deg);
-  }
-
-  _basis(t, i) {
-    let len = this._ps.length;
-    let ps = this._ps;
-
-    function safe_inv(n) {
-      return n === 0 ? 0 : 1.0/n;
-    }
-
-    function bas(s, i, n) {
-      let kp = Math.min(Math.max(i - 1, 0), len - 1);
-      let kn = Math.min(Math.max(i + 1, 0), len - 1);
-      let knn = Math.min(Math.max(i + n, 0), len - 1);
-      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
-      let ki = Math.min(Math.max(i, 0), len - 1);
-
-      if (n === 0) {
-        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
-      } else {
-
-        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
-        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
-
-        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
-      }
-    }
-
-    let p = this._ps[i].rco, nk, pk;
-    let deg = this.deg;
-
-    let b = bas(t, i + this._degOffset, deg);
-
-    return b;
-  }
-
-  evaluate(t) {
-    if (this.points.length === 0) {
-      return 0.0;
-    }
-
-    let a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
-
-    if (t < a[0]) return a[1];
-    if (t > b[0]) return b[1];
-
-    if (this.points.length === 2) {
-      t = (t - a[0])/(b[0] - a[0]);
-      return a[1] + (b[1] - a[1])*t;
-    }
-
-    if (this.recalc) {
-      this.regen_basis();
-
-      if (this.interpolating) {
-        this.solve_interpolating();
-      }
-
-      this.regen_hermite();
-      this.recalc = 0;
-    }
-
-    t *= 0.999999;
-
-    let table = this.hermite;
-    let s = t*(table.length/4);
-
-    let i = Math.floor(s);
-    s -= i;
-
-    i *= 4;
-
-    return table[i] + (table[i + 3] - table[i])*s;
-  }
-
-  /* Root find t on the x axis of the curve.  This
-   * is more intuitive for the user.
-   */
-  _evaluate(t) {
-    let start_t = t;
-
-    if (this.points.length === 0) {
-      return 0;
-    }
-
-    let xmin = this.points[0].rco[0];
-    let xmax = this.points[this.points.length - 1].rco[0];
-
-    let steps = this.fastmode ? 16 : 32;
-    let s = xmin, ds = (xmax - xmin)/(steps - 1);
-
-    let miny;
-    let mins;
-    let mindx;
-
-    for (let i = 0; i < steps; i++, s += ds) {
-      let p = this._evaluate2(s);
-
-      let dx = Math.abs(p[0] - start_t);
-      if (mindx === undefined || dx < mindx) {
-        mindx = dx;
-        miny = p[1];
-        mins = s;
-      }
-    }
-
-    let start = mins - ds, end = mins + ds;
-    s = mins;
-
-    for (let i = 0; i < 16; i++) {
-      let p = this._evaluate2(s);
-
-      if (p[0] > start_t) {
-        end = s;
-      } else {
-        start = s;
-      }
-
-      s = (start + end)*0.5;
-      miny = p[1];
-    }
-
-    if (miny === undefined) {
-      miny = 0;
-    }
-    return miny;
-
-    /* newton-raphson
-    //t = mins;
-    t = s;
-
-    for (let i = 0; i < 2; i++) {
-      let df = 0.0001;
-      let ret1 = this._evaluate2(t < 0.5 ? t : t - df);
-      let ret2 = this._evaluate2(t < 0.5 ? t + df : t);
-
-      let f1 = Math.abs(ret1[0] - start_t);
-      let f2 = Math.abs(ret2[0] - start_t);
-      let g = (f2 - f1)/df;
-
-      if (f1 === f2) break;
-
-      //if (f1 < 0.0005) break;
-
-      if (f1 === 0.0 || g === 0.0)
-        return this._evaluate2(t)[1];
-
-      let fac = -(f1/g)*0.5;
-      if (fac === 0.0) {
-        fac = 0.01;
-      } else if (Math.abs(fac) > 0.1) {
-        fac = 0.1*Math.sign(fac);
-      }
-
-      t += fac;
-      let eps = 0.00001;
-      t = Math.min(Math.max(t, eps), 1.0 - eps);
-    }
-
-    return this._evaluate2(t)[1];
-    */
-  }
-
-  _evaluate2(t) {
-    let ret = eval2_rets.next();
-
-    t *= 0.9999999;
-
-    let sumx = 0;
-    let sumy = 0;
-
-    let totbasis = 0;
-
-    for (let i = 0; i < this._ps.length; i++) {
-      let p = this._ps[i].rco;
-      let b = this.basis(t, i);
-
-      sumx += b*p[0];
-      sumy += b*p[1];
-
-      totbasis += b;
-    }
-
-    if (totbasis !== 0.0) {
-      sumx /= totbasis;
-      sumy /= totbasis;
-    }
-
-    ret[0] = sumx;
-    ret[1] = sumy;
-
-    return ret;
-  }
-
-  _wrapTouchEvent(e) {
-    return {
-      x              : e.touches.length ? e.touches[0].pageX : this.mpos[0],
-      y              : e.touches.length ? e.touches[0].pageY : this.mpos[1],
-      button         : 0,
-      shiftKey       : e.shiftKey,
-      altKey         : e.altKey,
-      ctrlKey        : e.ctrlKey,
-      isTouch        : true,
-      commandKey     : e.commandKey,
-      stopPropagation: () => e.stopPropagation(),
-      preventDefault : () => e.preventDefault()
-    };
-  }
-
-  on_touchstart(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    let e2 = this._wrapTouchEvent(e);
-
-    this.on_mousemove(e2);
-    this.on_mousedown(e2);
-  }
-
-  loadTemplate(templ) {
-    if (templ === undefined || !templates[templ]) {
-      console.warn("Unknown bspline template", templ);
-      return;
-    }
-
-    templ = templates[templ];
-
-    this.reset(true);
-    this.deg = 3.0;
-
-    for (let i = 0; i < templ.length; i++) {
-      let p = templ[i];
-
-      if (p === "DEG") {
-        this.deg = templ[i + 1];
-        i++;
-        continue;
-      }
-
-      this.add(p[0], p[1], true);
-    }
-
-    this.recalc = 1;
-    this.updateKnots();
-    this.update();
-    this.redraw();
-
-    if (this.parent) {
-      this.parent._fireEvent("update", this.parent);
-    }
-  }
-
-  on_touchmove(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    let e2 = this._wrapTouchEvent(e);
-    this.on_mousemove(e2);
-  }
-
-  on_touchend(e) {
-    this.on_mouseup(this._wrapTouchEvent(e));
-  }
-
-  on_touchcancel(e) {
-    this.on_touchend(e);
-  }
-
-  deletePoint() {
-    for (let i = 0; i < this.points.length; i++) {
-      let p = this.points[i];
-
-      if (p.flag & CurveFlags.SELECT) {
-        this.points.remove(p);
-        i--;
-      }
-    }
-
-    this.updateKnots();
-    this.update();
-    this.regen_basis();
-    this.recalc = RecalcFlags.ALL;
-    this.redraw();
-  }
-
-  makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
-    console.warn(this._bid, "makeGUI", this.uidata, this.uidata ? this.uidata.start_mpos : undefined);
-
-    let start_mpos;
-    if (this.uidata) {
-      start_mpos = this.uidata.start_mpos;
-    }
-
-    this.uidata = {
-      start_mpos : new Vector2$a(start_mpos),
-      transpoints: [],
-
-      dom         : container,
-      canvas      : canvas,
-      g           : canvas.g,
-      transforming: false,
-      draw_trans  : drawTransform,
-      datapath
-    };
-
-    console.warn("Building gui");
-
-    canvas.addEventListener("touchstart", this.on_touchstart);
-    canvas.addEventListener("touchmove", this.on_touchmove);
-    canvas.addEventListener("touchend", this.on_touchend);
-    canvas.addEventListener("touchcancel", this.on_touchcancel);
-
-    canvas.addEventListener("mousedown", this.on_mousedown);
-    canvas.addEventListener("mousemove", this.on_mousemove);
-    canvas.addEventListener("mouseup", this.on_mouseup);
-    canvas.addEventListener("keydown", this.on_keydown);
-
-    let bstrip = container.row().strip();
-
-    let makebutton = (strip, k) => {
-      let uiname = k[0] + k.slice(1, k.length).toLowerCase();
-      uiname = uiname.replace(/_/g, " ");
-
-      let icon = strip.iconbutton(-1, uiname, () => {
-        if (datapath) {
-          row.ctx.api.execTool(row.ctx, "curve1d.bspline_load_template", {
-            dataPath: datapath,
-            template: SplineTemplates[k]
-          });
-          onSourceUpdate();
-        } else {
-          this.loadTemplate(SplineTemplates[k]);
-        }
-      });
-
-      icon.iconsheet = 0;
-      icon.customIcon = SplineTemplateIcons[k];
-    };
-
-    for (let k in SplineTemplates) {
-      makebutton(bstrip, k);
-    }
-
-    let row = container.row();
-
-    let fullUpdate = () => {
-      this.updateKnots();
-      this.update();
-      this.regen_basis();
-      this.recalc = RecalcFlags.ALL;
-      this.redraw();
-    };
-
-    let Icons = row.constructor.getIconEnum();
-
-    let icon = Icons.LARGE_X !== undefined ? Icons.LARGE_X : Icons.TINY_X;
-    if (Icons.LARGE_X === undefined) {
-      console.log(Icons);
-      console.error("Curve widget expects Icons.LARGE_X icon for delete button.");
-    }
-
-    row.iconbutton(icon, "Delete Point", () => {
-      if (datapath) {
-        row.ctx.api.execTool(row.ctx, "curve1d.bspline_delete_point", {
-          dataPath: datapath
-        });
-      } else {
-        this.deletePoint();
-      }
-
-      onSourceUpdate();
-      fullUpdate();
-    });
-
-    row.button("Reset", () => {
-      if (datapath) {
-        row.ctx.api.execTool(row.ctx, "curve1d.reset_bspline", {
-          dataPath: datapath
-        });
-        onSourceUpdate();
-      } else {
-        this.reset();
-      }
-    });
-
-    let slider = row.simpleslider(undefined, {
-      name      : "Degree",
-      min       : 1,
-      max       : 7,
-      isInt     : true,
-      callback  : (slider) => {
-        this.deg = Math.floor(slider.value);
-        fullUpdate();
-      }
-    });
-    slider.setValue(this.deg);
-
-    let last_deg = this.deg;
-    slider.update.after(() => {
-      if (last_deg !== this.deg) {
-        console.log("degree update", this.deg);
-        last_deg = this.deg;
-        slider.setValue(this.deg);
-      }
-    });
-
-    /*
-    let slider = row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
-      this.deg = Math.floor(slider.value);
-      console.log(slider.value);
-
-      fullUpdate();
-    });*/
-
-    slider.baseUnit = "none";
-    slider.displayUnit = "none";
-
-    row = container.row();
-    let check = row.check(undefined, "Interpolating");
-    check.checked = this.interpolating;
-
-    check.onchange = () => {
-      this.interpolating = check.value;
-      fullUpdate();
-    };
-
-    return this;
-  }
-
-  killGUI(container, canvas) {
-    if (this.uidata !== undefined) {
-      let ud = this.uidata;
-      this.uidata = undefined;
-
-      canvas.removeEventListener("touchstart", this.on_touchstart);
-      canvas.removeEventListener("touchmove", this.on_touchmove);
-      canvas.removeEventListener("touchend", this.on_touchend);
-      canvas.removeEventListener("touchcancel", this.on_touchcancel);
-
-      canvas.removeEventListener("mousedown", this.on_mousedown);
-      canvas.removeEventListener("mousemove", this.on_mousemove);
-      canvas.removeEventListener("mouseup", this.on_mouseup);
-      canvas.removeEventListener("keydown", this.on_keydown);
-    }
-
-    return this;
-  }
-
-  start_transform(useSelected = true) {
-    let dpi = 1.0/this.uidata.draw_trans[0];
-
-    /* Manually set p.startco to avoid trashing it
-     * if we're proxying another Curve1D.*/
-    for (let p of this.points) {
-      p.startco.load(p.co);
-    }
-
-    let transform_op = new BSplineTransformOp();
-    transform_op.inputs.dataPath.setValue(this.uidata.datapath);
-    transform_op.inputs.dpi.setValue(dpi);
-
-    this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, transform_op);
-
-  }
-
-  on_mousedown(e) {
-    this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
-    this.fastmode = true;
-
-    let mpos = this.transform_mpos(e.x, e.y);
-    let x = mpos[0], y = mpos[1];
-    this.do_highlight(x, y);
-
-    if (this.points.highlight !== undefined) {
-      if (!e.shiftKey) {
-        for (let i = 0; i < this.points.length; i++) {
-          this.points[i].flag &= ~CurveFlags.SELECT;
-        }
-
-        this.points.highlight.flag |= CurveFlags.SELECT;
-      } else {
-        this.points.highlight.flag ^= CurveFlags.SELECT;
-      }
-
-      if (this.uidata.datapath) {
-        let state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
-
-        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_select_point", {
-          dataPath: this.uidata.datapath,
-          state,
-          unique  : !e.shiftKey,
-          point   : this.points.highlight.eid,
-        });
-      }
-      this.start_transform();
-
-      this.updateKnots();
-      this.update();
-      this.redraw();
-    } else {
-      let uidata = this.uidata;
-
-      if (this.uidata.datapath) {
-        /*
-         * Note: this may not update this particular curve instance,
-         * that instance however should update this one via the "update"
-         * event.
-         **/
-        let start_mpos = this.uidata.start_mpos;
-        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_add_point", {
-          dataPath: this.uidata.datapath,
-          x       : start_mpos[0],
-          y       : start_mpos[1],
-        });
-      } else {
-        this.addFromMouse(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
-        this.parent._fire("update", this.parent);
-      }
-
-      this.updateKnots();
-      this.update();
-      this.redraw();
-
-      /* Event system may have regenerated this.uidata (from killGUI,
-       * called from the update event handler),
-       * restore the one we started with.
-       */
-
-      this.uidata = uidata;
-      this.start_transform();
-    }
-  }
-
-  load(b) {
-    if (this === b) {
-      return;
-    }
-
-    this.recalc = RecalcFlags.ALL;
-
-    this.length = b.points.length;
-    this.points.length = 0;
-    this.eidgen = b.eidgen.copy();
-
-    this.deg = b.deg;
-    this.interpolating = b.interpolating;
-
-    for (let p of b.points) {
-      let p2 = new Curve1DPoint();
-      p2.load(p);
-
-      if (p === b.points.highlight) {
-        this.points.highlight = p2;
-      }
-
-      this.points.push(p2);
-    }
-
-    this.updateKnots();
-    this.update();
-    this.redraw();
-
-    return this;
-  }
-
-  addFromMouse(x, y) {
-    let p = this.add(x, y);
-    p.startco.load(p.co);
-    this.points.highlight = p;
-
-    for (let p2 of this.points) {
-      p2.flag &= ~CurveFlags.SELECT;
-    }
-    p.flag |= CurveFlags.SELECT;
-
-    this.updateKnots();
-    this.update();
-    this.redraw();
-
-    this.points.highlight.flag |= CurveFlags.SELECT;
-  }
-
-  do_highlight(x, y) {
-    let trans = this.uidata.draw_trans;
-    let mindis = 1e17, minp = undefined;
-    let limit = 19/trans[0], limitsqr = limit*limit;
-
-    for (let i = 0; i < this.points.length; i++) {
-      let p = this.points[i];
-      let dx = x - p.sco[0], dy = y - p.sco[1], dis = dx*dx + dy*dy;
-
-      if (dis < mindis && dis < limitsqr) {
-        mindis = dis;
-        minp = p;
-      }
-    }
-
-    if (this.points.highlight !== minp) {
-      this.points.highlight = minp;
-      this.redraw();
-    }
-  }
-
-  do_transform(x, y) {
-    let off = new Vector2$a([x, y]).sub(this.uidata.start_mpos);
-
-    let xRange = this.parent.xRange;
-    let yRange = this.parent.yRange;
-
-    for (let i = 0; i < this.uidata.transpoints.length; i++) {
-      let p = this.uidata.transpoints[i];
-      p.co.load(p.startco).add(off);
-
-      p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
-      p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
-    }
-
-    this.updateKnots();
-    this.update();
-    this.redraw();
-  }
-
-  transform_mpos(x, y) {
-    let r = this.uidata.canvas.getClientRects()[0];
-    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
-
-    x -= parseInt(r.left);
-    y -= parseInt(r.top);
-
-    x *= dpi;
-    y *= dpi;
-
-    let trans = this.uidata.draw_trans;
-
-    x = x/trans[0] - trans[1][0];
-    y = -y/trans[0] - trans[1][1];
-
-    return [x, y];
-  }
-
-  on_mousemove(e) {
-    if (e.isTouch && this.uidata.transforming) {
-      e.preventDefault();
-    }
-
-    let mpos = this.transform_mpos(e.x, e.y);
-    let x = mpos[0], y = mpos[1];
-
-    if (this.uidata.transforming) {
-      this.do_transform(x, y);
-      this.evaluate(0.5);
-      //this.update();
-      //this.doSave();
-    } else {
-      this.do_highlight(x, y);
-    }
-  }
-
-  end_transform() {
-    this.uidata.transforming = false;
-    this.fastmode = false;
-    this.updateKnots();
-    this.update();
-
-    splineCache.update(this);
-  }
-
-  on_mouseup(e) {
-    this.end_transform();
-  }
-
-  on_keydown(e) {
-    switch (e.keyCode) {
-      case 88: //xkeey
-      case 46: //delete
-        if (this.points.highlight !== undefined) {
-          this.points.remove(this.points.highlight);
-          this.recalc = RecalcFlags.ALL;
-
-          this.points.highlight = undefined;
-          this.updateKnots();
-          this.update();
-
-          if (this._save_hook !== undefined) {
-            this._save_hook();
-          }
-        }
-        break;
-    }
-  }
-
-  draw(canvas, g, draw_trans) {
-    g.save();
-
-    if (this.uidata === undefined) {
-      return;
-    }
-
-    this.uidata.canvas = canvas;
-    this.uidata.g = g;
-    this.uidata.draw_trans = draw_trans;
-
-    let sz = draw_trans[0], pan = draw_trans[1];
-    g.lineWidth *= 1.5;
-    let strokeStyle = g.strokeStyle;
-
-    for (let ssi = 0; ssi < 1; ssi++) {
-      break; //uncomment to draw basis functions
-
-      let steps = 512;
-      for (let si = 0; si < this.points.length; si++) {
-        g.beginPath();
-
-        let f = 0;
-        let df = 1.0/(steps - 1);
-        for (let i = 0; i < steps; i++, f += df) {
-          let totbasis = 0;
-
-          for (let j = 0; j < this.points.length; j++) {
-            totbasis += this.basis(f, j);
-          }
-
-          let val = this.basis(f, si);
-
-          if (ssi)
-            val /= (totbasis === 0 ? 1 : totbasis);
-
-          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5);
-        }
-
-        let color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
-
-        if (ssi) {
-          color = "rgba(205, 125, 5," + alpha + ")";
-        } else {
-          color = "rgba(25, 145, 45," + alpha + ")";
-        }
-        g.strokeStyle = color;
-        g.stroke();
-      }
-    }
-
-    g.strokeStyle = strokeStyle;
-    g.lineWidth /= 3.0;
-
-    let w = 0.03;
-
-    for (let p of this.points) {
-      g.beginPath();
-
-      if (p === this.points.highlight) {
-        g.fillStyle = "green";
-      } else if (p.flag & CurveFlags.SELECT) {
-        g.fillStyle = "red";
-      } else {
-        g.fillStyle = "orange";
-      }
-
-      g.rect(p.sco[0] - w/2, p.sco[1] - w/2, w, w);
-
-      g.fill();
-    }
-
-    g.restore();
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-    super.loadSTRUCT(reader);
-
-    if (this.highlightPoint >= 0) {
-      for (let p of this.points) {
-        if (p.eid === this.highlightPoint) {
-          this.points.highlight = p;
-        }
-      }
-
-      delete this.highlightPoint;
-    }
-
-    this.updateKnots();
-    this.recalc = RecalcFlags.ALL;
-  }
-}
-
-BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
-  points         : array(Curve1DPoint);
-  highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
-  deg            : int;
-  eidgen         : IDGen;
-  interpolating  : bool;
-}
-`;
-nstructjs.register(BSplineCurve);
-CurveTypeData.register(BSplineCurve);
-
-
-function makeSplineTemplateIcons(size = 64) {
-  let dpi = devicePixelRatio;
-  size = ~~(size*dpi);
-
-  for (let k in SplineTemplates) {
-    let curve = new BSplineCurve();
-    curve.loadTemplate(SplineTemplates[k]);
-
-    curve.fastmode = true;
-
-    let canvas = document.createElement("canvas");
-    canvas.width = canvas.height = size;
-
-    let g = canvas.getContext("2d");
-    let steps = 64;
-
-    curve.update();
-
-    let scale = 0.5;
-
-    g.translate(-0.5, -0.5);
-    g.scale(size*scale, size*scale);
-    g.translate(0.5, 0.5);
-
-    //margin
-    let m = 0.0;
-
-    let tent = f => 1.0 - Math.abs(Math.fract(f) - 0.5)*2.0;
-
-    for (let i = 0; i < steps; i++) {
-      let s = i/(steps - 1);
-      let f = 1.0 - curve.evaluate(tent(s));
-
-      s = s*(1.0 - m*2.0) + m;
-      f = f*(1.0 - m*2.0) + m;
-
-      //s += 0.5;
-      //f += 0.5;
-
-      if (i === 0) {
-        g.moveTo(s, f);
-      } else {
-        g.lineTo(s, f);
-      }
-    }
-
-    const ls = 7.0;
-
-    g.lineCap = "round";
-    g.strokeStyle = "black";
-    g.lineWidth = ls*3*dpi/(size*scale);
-    g.stroke();
-
-    g.strokeStyle = "white";
-    g.lineWidth = ls*dpi/(size*scale);
-    g.stroke();
-
-    let url = canvas.toDataURL();
-    let img = document.createElement("img");
-    img.src = url;
-
-    SplineTemplateIcons[k] = img;
-    SplineTemplateIcons[SplineTemplates[k]] = img;
-  }
-}
-
-let splineTemplatesLoaded = false;
-
-function initSplineTemplates() {
-  if (splineTemplatesLoaded) {
-    return;
-  }
-
-  splineTemplatesLoaded = true;
-
-  for (let k in SplineTemplates) {
-    let curve = new BSplineCurve();
-    curve.loadTemplate(SplineTemplates[k]);
-    splineCache.get(curve);
-  }
-
-  makeSplineTemplateIcons();
-  window._SplineTemplateIcons = SplineTemplateIcons;
-}
-
-//delay to ensure config is fully loaded
-window.setTimeout(() => {
-  if (config.autoLoadSplineTemplates) {
-    initSplineTemplates();
-  }
-}, 0);
-
-let _udigest$2 = new HashDigest();
-
-function feq(a, b) {
-  return Math.abs(a - b) < 0.00001;
-}
-
-class EquationCurve extends CurveTypeData {
-  constructor(type) {
-    super();
-
-    this.equation = "x";
-    this._last_equation = "";
-    this._last_xrange = new Vector2$b();
-    this._func = undefined;
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  static define() {
-    return {
-      uiname  : "Equation",
-      name    : "equation",
-      typeName: "EquationCurve"
-    }
-  }
-
-  calcHashKey(digest = _udigest$2.reset()) {
-    let d = digest;
-
-    super.calcHashKey(d);
-
-    d.add(this.equation);
-    d.add(this.parent.xRange[0]);
-    d.add(this.parent.xRange[1]);
-
-    return d.get();
-  }
-
-  equals(b) {
-    return super.equals(b) && this.equation === b.equation;
-  }
-
-  toJSON() {
-    let ret = super.toJSON();
-
-    return Object.assign(ret, {
-      equation: this.equation
-    });
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    if (obj.equation !== undefined) {
-      this.equation = obj.equation;
-    }
-
-    return this;
-  }
-
-  makeGUI(container, canvas, drawTransform) {
-    this.uidata = {
-      canvas    : canvas,
-      g         : canvas.g,
-      draw_trans: drawTransform,
-    };
-
-    let row = container.row();
-
-    let text = this.uidata.textbox = row.textbox(undefined, "" + this.equation);
-    text.onchange = (val) => {
-      console.log(val);
-      this.equation = val;
-      this.update();
-      this.redraw();
-    };
-
-    container.label("Equation");
-
-  }
-
-  killGUI(dom, gui, canvas, g, draw_transform) {
-    if (this.uidata !== undefined) {
-      this.uidata.textbox.remove();
-    }
-
-    this.uidata = undefined;
-  }
-
-  updateTextBox() {
-    if (this.uidata && this.uidata.textbox) {
-      this.uidata.textbox.text = this.equation;
-    }
-  }
-
-  evaluate(s) {
-    let update = this.hermite || this._last_equation !== this.equation;
-    update = update || this._last_xrange.vectorDistance(this.parent.xRange) > 0.0;
-    update = update || !this._func;
-
-    if (update) {
-      this._last_xrange.load(this.parent.xRange);
-      this._last_equation = this.equation;
-
-      this.updateTextBox();
-      this.#makeFunc();
-
-      this._evaluate(0.0);
-
-      if (this._haserror) {
-        console.warn("ERROR!");
-        return 0.0;
-      }
-    }
-
-    return this._func(s);
-  }
-
-  #makeFunc() {
-    this._func = undefined;
-
-    var sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
-        e                                                = Math.E, E                                    = Math.E, tan                      = Math.tan, abs = Math.abs,
-        floor                                            = Math.floor, ceil = Math.ceil, acos = Math.acos,
-        asin                                             = Math.asin, atan = Math.atan, cosh         = Math.cos,
-        sinh                                             = Math.sinh, log                            = Math.log, pow = Math.pow,
-        exp                                              = Math.exp, sqrt = Math.sqrt, cbrt           = Math.cbrt,
-        min                                              = Math.min, max = Math.max;
-
-    var func;
-    let code = `
-    func = function(x) {
-      return ${this.equation};
-    }
-    `;
-    try {
-      eval(code);
-
-      this._haserror = false;
-    } catch (error) {
-      this._haserror = true;
-      console.warn("Compile error!", error.message);
-    }
-
-    this._func = func;
-  }
-
-  _evaluate(s) {
-    try {
-      let f = this._func(s);
-      this._haserror = false;
-
-      if (isNaN(f)) {
-        return 0.0;
-      }
-    } catch (error) {
-      this._haserror = true;
-      console.warn("ERROR!");
-      return 0.0;
-    }
-  }
-
-  derivative(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df))/df;
-    } else if (s < df*3) {
-      return (this.evaluate(s + df) - this.evaluate(s))/df;
-    } else {
-      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
-    }
-  }
-
-  derivative2(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df))/df;
-    } else if (s < df*3) {
-      return (this.derivative(s + df) - this.derivative(s))/df;
-    } else {
-      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
-    }
-  }
-
-  inverse(y) {
-    let steps = 9;
-    let ds = 1.0/steps, s = 0.0;
-    let best = undefined;
-    let ret = undefined;
-
-    for (let i = 0; i < steps; i++, s += ds) {
-      let s1 = s, s2 = s + ds;
-
-      let mid;
-
-      for (let j = 0; j < 11; j++) {
-        let y1 = this.evaluate(s1);
-        let y2 = this.evaluate(s2);
-        mid = (s1 + s2)*0.5;
-
-        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
-          s2 = mid;
-        } else {
-          s1 = mid;
-        }
-      }
-
-      let ymid = this.evaluate(mid);
-
-      if (best === undefined || Math.abs(y - ymid) < best) {
-        best = Math.abs(y - ymid);
-        ret = mid;
-      }
-    }
-
-    return ret === undefined ? 0.0 : ret;
-  }
-
-  onActive(parent, draw_transform) {
-  }
-
-  onInactive(parent, draw_transform) {
-  }
-
-  reset() {
-    this.equation = "x";
-  }
-
-  destroy() {
-  }
-
-  draw(canvas, g, draw_transform) {
-    g.save();
-    if (this._haserror) {
-
-      g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
-      g.beginPath();
-      g.rect(0, 0, 1, 1);
-      g.fill();
-
-      g.beginPath();
-      g.moveTo(0, 0);
-      g.lineTo(1, 1);
-      g.moveTo(0, 1);
-      g.lineTo(1, 0);
-
-      g.lineWidth *= 3;
-      g.stroke();
-
-      g.restore();
-      return;
-    }
-
-    g.restore();
-  }
-}
-
-EquationCurve.STRUCT = nstructjs.inherit(EquationCurve, CurveTypeData) + `
-  equation : string;
-}
-`;
-nstructjs.register(EquationCurve);
-CurveTypeData.register(EquationCurve);
-
-
-class GuassianCurve extends CurveTypeData {
-  constructor(type) {
-    super();
-
-    this.height = 1.0;
-    this.offset = 1.0;
-    this.deviation = 0.3; //standard deviation
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  static define() {
-    return {
-      uiname  : "Guassian",
-      name    : "guassian",
-      typeName: "GuassianCurve"
-    }
-  }
-
-  calcHashKey(digest = _udigest$2.reset()) {
-    super.calcHashKey(digest);
-
-    let d = digest;
-
-    d.add(this.height);
-    d.add(this.offset);
-    d.add(this.deviation);
-
-    return d.get();
-  }
-
-  equals(b) {
-    let r = super.equals(b);
-
-    r = r && feq(this.height, b.height);
-    r = r && feq(this.offset, b.offset);
-    r = r && feq(this.deviation, b.deviation);
-
-    return r;
-  }
-
-  toJSON() {
-    let ret = super.toJSON();
-
-    return Object.assign(ret, {
-      height   : this.height,
-      offset   : this.offset,
-      deviation: this.deviation
-    });
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    this.height = obj.height !== undefined ? obj.height : 1.0;
-    this.offset = obj.offset;
-    this.deviation = obj.deviation;
-
-    return this;
-  }
-
-  makeGUI(container, canvas, drawTransform) {
-    this.uidata = {
-      canvas    : canvas,
-      g         : canvas.g,
-      draw_trans: drawTransform,
-    };
-
-    this.uidata.hslider = container.slider(undefined, "Height", this.height, -10, 10, 0.0001);
-    this.uidata.hslider.onchange = () => {
-      this.height = this.uidata.hslider.value;
-      this.redraw();
-      this.update();
-    };
-    this.uidata.oslider = container.slider(undefined, "Offset", this.offset, -10, 10, 0.0001);
-    this.uidata.oslider.onchange = () => {
-      this.offset = this.uidata.oslider.value;
-      this.redraw();
-      this.update();
-    };
-    this.uidata.dslider = container.slider(undefined, "STD Deviation", this.deviation, -10, 10, 0.0001);
-    this.uidata.dslider.onchange = () => {
-      this.deviation = this.uidata.dslider.value;
-      this.redraw();
-      this.update();
-    };
-
-    /*
-    this.uidata.oslider = gui.slider(undefined, "Offset", this.offset,
-      -2.5, 2.5, 0.0001, false, false, (val) => {this.offset = val, this.update(), this.redraw();});
-    this.uidata.dslider = gui.slider(undefined, "STD Deviation", this.deviation,
-      0.0001, 1.25, 0.0001, false, false, (val) => {this.deviation = val, this.update(), this.redraw();});
-    //*/
-  }
-
-  killGUI(dom, gui, canvas, g, draw_transform) {
-    if (this.uidata !== undefined) {
-      this.uidata.hslider.remove();
-      this.uidata.oslider.remove();
-      this.uidata.dslider.remove();
-    }
-
-    this.uidata = undefined;
-  }
-
-  evaluate(s) {
-    let r = this.height*Math.exp(-((s - this.offset)*(s - this.offset))/(2*this.deviation*this.deviation));
-    return r;
-  }
-
-  derivative(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df))/df;
-    } else if (s < df*3) {
-      return (this.evaluate(s + df) - this.evaluate(s))/df;
-    } else {
-      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
-    }
-  }
-
-  derivative2(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df))/df;
-    } else if (s < df*3) {
-      return (this.derivative(s + df) - this.derivative(s))/df;
-    } else {
-      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
-    }
-  }
-
-  inverse(y) {
-    let steps = 9;
-    let ds = 1.0/steps, s = 0.0;
-    let best = undefined;
-    let ret = undefined;
-
-    for (let i = 0; i < steps; i++, s += ds) {
-      let s1 = s, s2 = s + ds;
-
-      let mid;
-
-      for (let j = 0; j < 11; j++) {
-        let y1 = this.evaluate(s1);
-        let y2 = this.evaluate(s2);
-        mid = (s1 + s2)*0.5;
-
-        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
-          s2 = mid;
-        } else {
-          s1 = mid;
-        }
-      }
-
-      let ymid = this.evaluate(mid);
-
-      if (best === undefined || Math.abs(y - ymid) < best) {
-        best = Math.abs(y - ymid);
-        ret = mid;
-      }
-    }
-
-    return ret === undefined ? 0.0 : ret;
-  }
-}
-
-GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
-  height    : float;
-  offset    : float;
-  deviation : float;
-}
-`;
-nstructjs.register(GuassianCurve);
-CurveTypeData.register(GuassianCurve);
-
-/*
-* Ease
-* Visit http://createjs.com/ for documentation, updates and examples.
-*
-* Copyright (c) 2010 gskinner.com, inc.
-*
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
-*
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-/**
-* @module TweenJS
-*/
-
-
-/**
- * The Ease class provides a collection of easing functions for use with TweenJS. It does not use the standard 4 param
- * easing signature. Instead it uses a single param which indicates the current linear ratio (0 to 1) of the tween.
- *
- * Most methods on Ease can be passed directly as easing functions:
- *
- *      createjs.Tween.get(target).to({x:100}, 500, createjs.Ease.linear);
- *
- * However, methods beginning with "get" will return an easing function based on parameter values:
- *
- *      createjs.Tween.get(target).to({y:200}, 500, createjs.Ease.getPowIn(2.2));
- *
- * Please see the <a href="http://www.createjs.com/Demos/TweenJS/Tween_SparkTable">spark table demo</a> for an
- * overview of the different ease types on <a href="http://tweenjs.com">TweenJS.com</a>.
- *
- * <em>Equations derived from work by Robert Penner.</em>
- * @class Ease
- * @static
- **/
-
-
-function Ease() {
-  throw "Ease cannot be instantiated.";
-}
-
-// static methods and properties
-/**
- * @method linear
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.linear = function(t) { return t; };
-
-/**
- * Identical to linear.
- * @method none
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.none = Ease.linear;
-
-/**
- * Mimics the simple -100 to 100 easing in Adobe Flash/Animate.
- * @method get
- * @param {Number} amount A value from -1 (ease in) to 1 (ease out) indicating the strength and direction of the ease.
- * @static
- * @return {Function}
- **/
-Ease.get = function(amount) {
-  if (amount < -1) { amount = -1; }
-  else if (amount > 1) { amount = 1; }
-  return function(t) {
-    if (amount==0) { return t; }
-    if (amount<0) { return t*(t*-amount+1+amount); }
-    return t*((2-t)*amount+(1-amount));
-  };
-};
-
-/**
- * Configurable exponential ease.
- * @method getPowIn
- * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
- * @static
- * @return {Function}
- **/
-Ease.getPowIn = function(pow) {
-  return function(t) {
-    return Math.pow(t,pow);
-  };
-};
-
-/**
- * Configurable exponential ease.
- * @method getPowOut
- * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
- * @static
- * @return {Function}
- **/
-Ease.getPowOut = function(pow) {
-  return function(t) {
-    return 1-Math.pow(1-t,pow);
-  };
-};
-
-/**
- * Configurable exponential ease.
- * @method getPowInOut
- * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
- * @static
- * @return {Function}
- **/
-Ease.getPowInOut = function(pow) {
-  return function(t) {
-    if ((t*=2)<1) return 0.5*Math.pow(t,pow);
-    return 1-0.5*Math.abs(Math.pow(2-t,pow));
-  };
-};
-
-/**
- * @method quadIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quadIn = Ease.getPowIn(2);
-/**
- * @method quadOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quadOut = Ease.getPowOut(2);
-/**
- * @method quadInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quadInOut = Ease.getPowInOut(2);
-
-/**
- * @method cubicIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.cubicIn = Ease.getPowIn(3);
-/**
- * @method cubicOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.cubicOut = Ease.getPowOut(3);
-/**
- * @method cubicInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.cubicInOut = Ease.getPowInOut(3);
-
-/**
- * @method quartIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quartIn = Ease.getPowIn(4);
-/**
- * @method quartOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quartOut = Ease.getPowOut(4);
-/**
- * @method quartInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quartInOut = Ease.getPowInOut(4);
-
-/**
- * @method quintIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quintIn = Ease.getPowIn(5);
-/**
- * @method quintOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quintOut = Ease.getPowOut(5);
-/**
- * @method quintInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.quintInOut = Ease.getPowInOut(5);
-
-/**
- * @method sineIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.sineIn = function(t) {
-  return 1-Math.cos(t*Math.PI/2);
-};
-
-/**
- * @method sineOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.sineOut = function(t) {
-  return Math.sin(t*Math.PI/2);
-};
-
-/**
- * @method sineInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.sineInOut = function(t) {
-  return -0.5*(Math.cos(Math.PI*t) - 1);
-};
-
-/**
- * Configurable "back in" ease.
- * @method getBackIn
- * @param {Number} amount The strength of the ease.
- * @static
- * @return {Function}
- **/
-Ease.getBackIn = function(amount) {
-  return function(t) {
-    return t*t*((amount+1)*t-amount);
-  };
-};
-/**
- * @method backIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.backIn = Ease.getBackIn(1.7);
-
-/**
- * Configurable "back out" ease.
- * @method getBackOut
- * @param {Number} amount The strength of the ease.
- * @static
- * @return {Function}
- **/
-Ease.getBackOut = function(amount) {
-  return function(t) {
-    return (--t*t*((amount+1)*t + amount) + 1);
-  };
-};
-/**
- * @method backOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.backOut = Ease.getBackOut(1.7);
-
-/**
- * Configurable "back in out" ease.
- * @method getBackInOut
- * @param {Number} amount The strength of the ease.
- * @static
- * @return {Function}
- **/
-Ease.getBackInOut = function(amount) {
-  amount*=1.525;
-  return function(t) {
-    if ((t*=2)<1) return 0.5*(t*t*((amount+1)*t-amount));
-    return 0.5*((t-=2)*t*((amount+1)*t+amount)+2);
-  };
-};
-/**
- * @method backInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.backInOut = Ease.getBackInOut(1.7);
-
-/**
- * @method circIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.circIn = function(t) {
-  return -(Math.sqrt(1-t*t)- 1);
-};
-
-/**
- * @method circOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.circOut = function(t) {
-  return Math.sqrt(1-(--t)*t);
-};
-
-/**
- * @method circInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.circInOut = function(t) {
-  if ((t*=2) < 1) return -0.5*(Math.sqrt(1-t*t)-1);
-  return 0.5*(Math.sqrt(1-(t-=2)*t)+1);
-};
-
-/**
- * @method bounceIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.bounceIn = function(t) {
-  return 1-Ease.bounceOut(1-t);
-};
-
-/**
- * @method bounceOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.bounceOut = function(t) {
-  if (t < 1/2.75) {
-    return (7.5625*t*t);
-  } else if (t < 2/2.75) {
-    return (7.5625*(t-=1.5/2.75)*t+0.75);
-  } else if (t < 2.5/2.75) {
-    return (7.5625*(t-=2.25/2.75)*t+0.9375);
-  } else {
-    return (7.5625*(t-=2.625/2.75)*t +0.984375);
-  }
-};
-
-/**
- * @method bounceInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.bounceInOut = function(t) {
-  if (t<0.5) return Ease.bounceIn (t*2) * .5;
-  return Ease.bounceOut(t*2-1)*0.5+0.5;
-};
-
-/**
- * Configurable elastic ease.
- * @method getElasticIn
- * @param {Number} amplitude
- * @param {Number} period
- * @static
- * @return {Function}
- **/
-Ease.getElasticIn = function(amplitude,period) {
-  var pi2 = Math.PI*2;
-  return function(t) {
-    if (t==0 || t==1) return t;
-    var s = period/pi2*Math.asin(1/amplitude);
-    return -(amplitude*Math.pow(2,10*(t-=1))*Math.sin((t-s)*pi2/period));
-  };
-};
-/**
- * @method elasticIn
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.elasticIn = Ease.getElasticIn(1,0.3);
-
-/**
- * Configurable elastic ease.
- * @method getElasticOut
- * @param {Number} amplitude
- * @param {Number} period
- * @static
- * @return {Function}
- **/
-Ease.getElasticOut = function(amplitude,period) {
-  var pi2 = Math.PI*2;
-  return function(t) {
-    if (t==0 || t==1) return t;
-    var s = period/pi2 * Math.asin(1/amplitude);
-    return (amplitude*Math.pow(2,-10*t)*Math.sin((t-s)*pi2/period )+1);
-  };
-};
-/**
- * @method elasticOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.elasticOut = Ease.getElasticOut(1,0.3);
-
-/**
- * Configurable elastic ease.
- * @method getElasticInOut
- * @param {Number} amplitude
- * @param {Number} period
- * @static
- * @return {Function}
- **/
-Ease.getElasticInOut = function(amplitude,period) {
-  var pi2 = Math.PI*2;
-  return function(t) {
-    var s = period/pi2 * Math.asin(1/amplitude);
-    if ((t*=2)<1) return -0.5*(amplitude*Math.pow(2,10*(t-=1))*Math.sin( (t-s)*pi2/period ));
-    return amplitude*Math.pow(2,-10*(t-=1))*Math.sin((t-s)*pi2/period)*0.5+1;
-  };
-};
-/**
- * @method elasticInOut
- * @param {Number} t
- * @static
- * @return {Number}
- **/
-Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
-
-function bez3(a, b, c, t) {
-  var r1 = a + (b - a)*t;
-  var r2 = b + (c - b)*t;
-
-  return r1 + (r2 - r1)*t;
-}
-
-function bez4(a, b, c, d, t) {
-  var r1 = bez3(a, b, c, t);
-  var r2 = bez3(b, c, d, t);
-
-  return r1 + (r2 - r1)*t;
-}
-
-class ParamKey {
-  constructor(key, val) {
-    this.key = key;
-    this.val = val;
-  }
-}
-
-ParamKey.STRUCT = `
-ParamKey {
-  key : string;
-  val : float;
-}
-`;
-nstructjs.register(ParamKey);
-let BOOL_FLAG = 1e17;
-
-let _udigest$1 = new HashDigest();
-
-class SimpleCurveBase extends CurveTypeData {
-  constructor() {
-    super();
-
-    this.type = this.constructor.name;
-
-    let def = this.constructor.define();
-    let params = def.params;
-
-    this.params = {};
-    for (let k in params) {
-      this.params[k] = params[k][1];
-    }
-  }
-
-  get hasGUI() {
-    return true;
-  }
-
-  calcHashKey(digest = _udigest$1.reset()) {
-    let d = digest;
-    super.calcHashKey(d);
-
-    for (let k in this.params) {
-      digest.add(k);
-      digest.add(this.params[k]);
-    }
-
-    return d.get();
-  }
-
-  equals(b) {
-    if (this.type !== b.type) {
-      return false;
-    }
-
-    for (let k in this.params) {
-      if (Math.abs(this.params[k] - b.params[k]) > 0.000001) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  redraw() {
-    if (this.parent)
-      this.parent.redraw();
-  }
-
-  makeGUI(container) {
-    let def = this.constructor.define();
-    let params = def.params;
-
-    for (let k in params) {
-      let p = params[k];
-
-      if (p[2] === BOOL_FLAG) {
-        let check = container.check(undefined, p[0]);
-        check.checked = !!this.params[k];
-        check.key = k;
-
-        let this2 = this;
-        check.onchange = function () {
-          this2.params[this.key] = this.checked ? 1 : 0;
-          this2.update();
-          this2.redraw();
-        };
-      } else {
-        let slider = container.slider(undefined, {
-          name      : p[0],
-          defaultval: this.params[k],
-          min       : p[2],
-          max       : p[3]
-        });
-        slider.baseUnit = slider.displayUnit = "none";
-
-        slider.key = k;
-
-        let this2 = this;
-        slider.onchange = function () {
-          this2.params[this.key] = this.value;
-          this2.update();
-          this2.redraw();
-        };
-      }
-    }
-  }
-
-  killGUI(container) {
-    container.clear();
-  }
-
-  evaluate(s) {
-    throw new Error("implement me!");
-  }
-
-  reset() {
-
-  }
-
-  update() {
-    super.update();
-  }
-
-  draw(canvas, g, draw_transform) {
-    let steps = 128;
-    let s = 0, ds = 1.0/(steps - 1);
-
-    g.beginPath();
-    for (let i = 0; i < steps; i++, s += ds) {
-      let co = this.evaluate(s);
-
-      if (i) {
-        g.lineTo(co[0], co[1]);
-      } else {
-        g.moveTo(co[0], co[1]);
-      }
-    }
-
-    g.stroke();
-  }
-
-  _saveParams() {
-    let ret = [];
-    for (let k in this.params) {
-      ret.push(new ParamKey(k, this.params[k]));
-    }
-
-    return ret;
-  }
-
-  toJSON() {
-    return Object.assign(super.toJSON(), {
-      params: this.params
-    });
-  }
-
-  loadJSON(obj) {
-    for (let k in obj.params) {
-      this.params[k] = obj.params[k];
-    }
-
-    return this;
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-    super.loadSTRUCT(reader);
-
-    let ps = this.params;
-    this.params = {};
-
-    let pdef = this.constructor.define().params;
-    if (!pdef) {
-      console.warn("Missing define function for curve", this.constructor.name);
-      return;
-    }
-
-    for (let pair of ps) {
-      if (pair.key in pdef) {
-        this.params[pair.key] = pair.val;
-      }
-    }
-
-    for (let k in pdef) {
-      if (!(k in this.params)) {
-        this.params[k] = pdef[k][1];
-      }
-    }
-  }
-}
-
-SimpleCurveBase.STRUCT = nstructjs.inherit(SimpleCurveBase, CurveTypeData) + `
-  params : array(ParamKey) | obj._saveParams();
-}
-`;
-nstructjs.register(SimpleCurveBase);
-
-class BounceCurve extends SimpleCurveBase {
-  static define() {
-    return {
-      params  : {
-        decay : ["Decay", 1.0, 0.1, 5.0],
-        scale : ["Scale", 1.0, 0.01, 10.0],
-        freq  : ["Freq", 1.0, 0.01, 50.0],
-        phase : ["Phase", 0.0, -Math.PI*2.0, Math.PI*2.0],
-        offset: ["Offset", 0.0, -2.0, 2.0]
-      },
-      name    : "bounce",
-      uiname  : "Bounce",
-      typeName: "BounceCurve"
-
-    }
-  }
-
-  _evaluate(t) {
-    let params = this.params;
-    let decay = params.decay + 1.0;
-    let scale = params.scale;
-    let freq = params.freq;
-    let phase = params.phase;
-    let offset = params.offset;
-
-    t *= freq;
-    let t2 = Math.abs(Math.cos(phase + t*Math.PI*2.0))*scale;
-    ;//+ (1.0-scale);
-
-    t2 *= Math.exp(decay*t)/Math.exp(decay);
-
-    return t2;
-  }
-
-  evaluate(t) {
-    let s = this._evaluate(0.0);
-    let e = this._evaluate(1.0);
-
-    return (this._evaluate(t) - s)/(e - s) + this.params.offset;
-  }
-}
-
-CurveTypeData.register(BounceCurve);
-BounceCurve.STRUCT = nstructjs.inherit(BounceCurve, SimpleCurveBase) + `
-}`;
-nstructjs.register(BounceCurve);
-
-
-class ElasticCurve extends SimpleCurveBase {
-  constructor() {
-    super();
-
-    this._func = undefined;
-    this._last_hash = undefined;
-  }
-
-  static define() {
-    return {
-      params  : {
-        mode     : ["Out Mode", false, BOOL_FLAG, BOOL_FLAG],
-        amplitude: ["Amplitude", 1.0, 0.01, 10.0],
-        period   : ["Period", 1.0, 0.01, 5.0]
-      },
-      name    : "elastic",
-      uiname  : "Elastic",
-      typeName: "ElasticCurve",
-    }
-  }
-
-  evaluate(t) {
-    let hash = ~~(this.params.mode*127 + this.params.amplitude*256 + this.params.period*512);
-
-    if (hash !== this._last_hash || !this._func) {
-      this._last_hash = hash;
-
-      if (this.params.mode) {
-        this._func = Ease.getElasticOut(this.params.amplitude, this.params.period);
-      } else {
-        this._func = Ease.getElasticIn(this.params.amplitude, this.params.period);
-      }
-    }
-    return this._func(t);
-  }
-}
-
-CurveTypeData.register(ElasticCurve);
-ElasticCurve.STRUCT = nstructjs.inherit(ElasticCurve, SimpleCurveBase) + `
-}`;
-nstructjs.register(ElasticCurve);
-
-
-class EaseCurve extends SimpleCurveBase {
-  constructor() {
-    super();
-  }
-
-  static define() {
-    return {
-      params  : {
-        mode_in  : ["in", true, BOOL_FLAG, BOOL_FLAG],
-        mode_out : ["out", true, BOOL_FLAG, BOOL_FLAG],
-        amplitude: ["Amplitude", 1.0, 0.01, 4.0]
-      },
-      name    : "ease",
-      uiname  : "Ease",
-      typeName: "EaseCurve"
-    }
-  }
-
-  evaluate(t) {
-    let amp = this.params.amplitude;
-    let a1 = this.params.mode_in ? 1.0 - amp : 1.0/3.0;
-    let a2 = this.params.mode_out ? amp : 2.0/3.0;
-
-    return bez4(0.0, a1, a2, 1.0, t);
-  }
-}
-
-CurveTypeData.register(EaseCurve);
-EaseCurve.STRUCT = nstructjs.inherit(EaseCurve, SimpleCurveBase) + `
-}`;
-nstructjs.register(EaseCurve);
-
-
-class RandCurve extends SimpleCurveBase {
-  constructor() {
-    super();
-    this.random = new MersenneRandom();
-    this.seed = 0;
-  }
-
-  get seed() {
-    return this._seed;
-  }
-
-  set seed(v) {
-    this.random.seed(v);
-    this._seed = v;
-  }
-
-  static define() {
-    return {
-      params  : {
-        amplitude: ["Amplitude", 1.0, 0.01, 4.0],
-        decay    : ["Decay", 1.0, 0.0, 5.0],
-        in_mode  : ["In", true, BOOL_FLAG, BOOL_FLAG]
-      },
-      name    : "random",
-      uiname  : "Random",
-      typeName: "RandCurve"
-    }
-  }
-
-  evaluate(t) {
-    let r = this.random.random();
-    let decay = this.params.decay + 1.0;
-    let amp = this.params.amplitude;
-    let in_mode = this.params.in_mode;
-
-    if (in_mode) {
-      t = 1.0 - t;
-    }
-    //r *= t;
-
-    let d;
-
-    //r *= 0.5;
-
-    if (in_mode) {
-      d = Math.exp(t*decay)/Math.exp(decay);
-    } else {
-      d = Math.exp(t*decay)/Math.exp(decay);
-    }
-
-    t = t + (r - t)*d;
-
-    if (in_mode) {
-      t = 1.0 - t;
-    }
-
-    return t;
-  }
-}
-
-CurveTypeData.register(RandCurve);
-RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
-}`;
-nstructjs.register(RandCurve);
-
-"use strict";
-
-function mySafeJSONStringify(obj) {
-  return JSON.stringify(obj.toJSON(), function (key) {
-    let v = this[key];
-
-    if (typeof v === "number") {
-      if (v !== Math.floor(v)) {
-        v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
-      }
-    }
-
-    return v;
-  });
-}
-
-function mySafeJSONParse(buf) {
-  return JSON.parse(buf, (key, val) => {
-
-  });
-};
-
-window.mySafeJSONStringify = mySafeJSONStringify;
-
-let _udigest = new HashDigest();
-
-class Curve1D {
-  constructor() {
-    this._eventCBs = [];
-
-    this.uiZoom = 1.0;
-    this.xRange = new Vector2$b().loadXY(0.0, 1.0);
-    this.yRange = new Vector2$b().loadXY(0.0, 1.0);
-    this.clipToRange = false;
-
-    this.generators = [];
-    this.VERSION = CURVE_VERSION;
-
-    for (let gen of CurveConstructors) {
-      gen = new gen();
-
-      gen.parent = this;
-      this.generators.push(gen);
-    }
-
-    //this.generators.active = this.generators[0];
-    this.setGenerator("bspline");
-  }
-
-  get generatorType() {
-    return this.generators.active ? this.generators.active.type : undefined;
-  }
-
-  get fastmode() {
-    return this._fastmode;
-  }
-
-  set fastmode(val) {
-    this._fastmode = val;
-
-    for (let gen of this.generators) {
-      gen.fastmode = val;
-    }
-  }
-
-  /** cb_is_dead is a callback that returns true if it
-   *  should be removed from the callback list. */
-  on(type, cb, owner, cb_is_dead) {
-    if (cb_is_dead === undefined) {
-      cb_is_dead = () => false;
-    }
-
-    this._eventCBs.push({type, cb, owner, dead: cb_is_dead, once: false});
-  }
-
-  off(type, cb) {
-    this._eventCBs = this._eventCBs.filter(cb => cb.cb !== cb);
-  }
-
-  once(type, cb, owner, cb_is_dead) {
-    this.on(type, cb, owner, cb_is_dead);
-    this._eventCBs[this._eventCBs.length - 1].once = true;
-  }
-
-  subscribed(type, owner) {
-    for (let cb of this._eventCBs) {
-      if ((!type || cb.type === type) && cb.owner === owner) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  _pruneEventCallbacks() {
-    this._eventCBs = this._eventCBs.filter(cb => !cb.dead());
-  }
-
-  _fireEvent(evt, data) {
-    this._pruneEventCallbacks();
-
-    for (let i = 0; i < this._eventCBs.length; i++) {
-      let cb = this._eventCBs[i];
-
-      if (cb.type !== evt) {
-        continue;
-      }
-
-      try {
-        cb.cb(data);
-      } catch (error) {
-        console.error(error.stack);
-        console.error(error.message);
-      }
-
-      if (cb.once) {
-        this._eventCBs.remove(cb);
-        i--;
-      }
-    }
-  }
-
-  calcHashKey(digest = _udigest.reset()) {
-    let d = digest;
-
-    for (let g of this.generators) {
-      g.calcHashKey(d);
-    }
-
-    return d.get();
-  }
-
-  equals(b) {
-    let gen1 = this.generators.active;
-    let gen2 = b.generators.active;
-
-    if (!gen1 || !gen2 || gen1.constructor !== gen2.constructor) {
-      return false;
-    }
-
-    return gen1.equals(gen2);
-  }
-
-  load(b) {
-    if (b === undefined || b === this) {
-      return;
-    }
-    /*
-    if (b === undefined) {
-      return;
-    }
-
-    let buf1 = mySafeJSONStringify(b);
-    let buf2 = mySafeJSONStringify(this);
-
-    if (buf1 === buf2) {
-      return;
-    }
-
-    this.loadJSON(JSON.parse(buf1));
-    this._on_change();
-    this.redraw();
-
-    return this;*/
-
-    let json = nstructjs.writeJSON(b, Curve1D);
-    let cpy = nstructjs.readJSON(json, Curve1D);
-
-    let activeCls = this.generators.active.constructor;
-    let oldGens = this.generators;
-
-    this.generators = cpy.generators;
-    this.generators.active = undefined;
-
-    for (let gen of cpy.generators) {
-      /* See if generator provides a .load() method. */
-      for (let gen2 of oldGens) {
-        if (gen2.constructor === gen.constructor && gen2.load !== undefined) {
-          cpy.generators[cpy.generators.indexOf(gen)] = gen2;
-
-          if (gen2.constructor === activeCls) {
-            this.generators.active = gen2;
-          }
-
-          gen2.parent = this;
-          gen2.load(gen);
-          gen = gen2;
-          break;
-        }
-      }
-
-      if (gen.constructor === activeCls) {
-        this.generators.active = gen;
-      }
-      gen.parent = this;
-    }
-
-    for (let k in json) {
-      if (k === "generators") {
-        continue;
-      }
-      if (k.startsWith("_")) {
-        continue;
-      }
-
-      let v = cpy[k];
-      if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") {
-        this[k] = v;
-      } else if (v instanceof Vector2$b || v instanceof Vector3$2 || v instanceof Vector4$2 || v instanceof Matrix4$2) {
-        this[k].load(v);
-      }
-    }
-
-    this._on_change();
-    this.redraw();
-
-    return this;
-  }
-
-  copy() {
-    let json = nstructjs.writeJSON(this, Curve1D);
-    return nstructjs.readJSON(json, Curve1D);
-  }
-
-  _on_change() {
-
-  }
-
-  redraw() {
-    this._fireEvent("draw", this);
-  }
-
-  setGenerator(type) {
-    for (let gen of this.generators) {
-      if (gen.constructor.define().name === type
-        || gen.type === type
-        || gen.constructor.define().typeName === type
-        || gen.constructor === type) {
-        if (this.generators.active) {
-          this.generators.active.onInactive();
-        }
-
-        this.generators.active = gen;
-        gen.onActive();
-
-        return;
-      }
-    }
-
-    throw new Error("unknown curve type " + type);
-  }
-
-  toJSON() {
-    let ret = {
-      generators      : [],
-      uiZoom          : this.uiZoom,
-      VERSION         : this.VERSION,
-      active_generator: this.generatorType,
-      xRange          : this.xRange,
-      yRange          : this.yRange,
-      clipToRange     : this.clipToRange,
-    };
-
-    for (let gen of this.generators) {
-      ret.generators.push(gen.toJSON());
-    }
-
-    ret.generators.sort((a, b) => a.type.localeCompare(b.type));
-
-    return ret;
-  }
-
-  getGenerator(type, throw_on_error = true) {
-    for (let gen of this.generators) {
-      if (gen.type === type) {
-        return gen;
-      }
-    }
-
-    //was a new generator registerd?
-    for (let cls of CurveConstructors) {
-      if (cls.define().typeName === type) {
-        let gen = new cls();
-        gen.type = type;
-        gen.parent = this;
-        this.generators.push(gen);
-        return gen;
-      }
-    }
-
-    if (throw_on_error) {
-      throw new Error("Unknown generator " + type + ".");
-    } else {
-      return undefined;
-    }
-  }
-
-  switchGenerator(type) {
-    let gen = this.getGenerator(type);
-
-    if (gen !== this.generators.active) {
-      let old = this.generators.active;
-
-      this.generators.active = gen;
-
-      old.onInactive(this);
-      gen.onActive(this);
-    }
-
-    return gen;
-  }
-
-  destroy() {
-    return this;
-  }
-
-  loadJSON(obj) {
-    this.VERSION = obj.VERSION;
-
-    this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
-    if (obj.xRange) {
-      this.xRange = new Vector2$b(obj.xRange);
-    }
-    if (obj.yRange) {
-      this.yRange = new Vector2$b(obj.yRange);
-    }
-    this.clipToRange = Boolean(obj.clipToRange);
-
-    //this.generators = [];
-    for (let gen of obj.generators) {
-      let gen2 = this.getGenerator(gen.type, false);
-
-      if (!gen2 || !(gen2 instanceof CurveTypeData)) {
-        //old curve class?
-        console.warn("Bad curve generator class:", gen2);
-        if (gen2) {
-          this.generators.remove(gen2);
-        }
-        continue;
-      }
-
-      gen2.parent = undefined;
-      gen2.reset();
-      gen2.loadJSON(gen);
-      gen2.parent = this;
-
-      if (gen.type === obj.active_generator) {
-        this.generators.active = gen2;
-      }
-
-      //this.generators.push(gen2);
-    }
-
-    if (this.VERSION < 1.1) {
-      this.#patchRange();
-    }
-
-    return this;
-  }
-
-  evaluate(s) {
-    if (this.clipToRange) {
-      s = Math.min(Math.max(s, this.xRange[0]), this.xRange[1]);
-    }
-
-    let f = this.generators.active.evaluate(s);
-    if (this.clipToRange) {
-      f = Math.min(Math.max(f, this.yRange[0]), this.yRange[1]);
-    }
-
-    return f;
-  }
-
-  integrate(s, quadSteps) {
-    return this.generators.active.integrate(s, quadSteps);
-  }
-
-  derivative(s) {
-    return this.generators.active.derivative(s);
-  }
-
-  derivative2(s) {
-    return this.generators.active.derivative2(s);
-  }
-
-  inverse(s) {
-    return this.generators.active.inverse(s);
-  }
-
-  reset() {
-    this.generators.active.reset();
-  }
-
-  update() {
-    return this.generators.active.update();
-  }
-
-  draw(canvas, g, draw_transform) {
-    let w = canvas.width, h = canvas.height;
-
-    g.save();
-
-    let sz = draw_transform[0], pan = draw_transform[1];
-
-    g.beginPath();
-    g.moveTo(-1, 0);
-    g.lineTo(1, 0);
-    g.strokeStyle = "red";
-    g.stroke();
-
-    g.beginPath();
-    g.moveTo(0, -1);
-    g.lineTo(0, 1);
-    g.strokeStyle = "green";
-    g.stroke();
-
-    //g.rect(0, 0, 1, 1);
-    //g.fillStyle = "rgb(50, 50, 50)";
-    //g.fill();
-
-    let f = this.xRange[0], steps = 64;
-    let df = (this.xRange[1] - this.xRange[0])/(steps - 1);
-    w = 6.0/sz;
-
-    let curve = this.generators.active;
-
-    g.beginPath();
-    for (let i = 0; i < steps; i++, f += df) {
-      let val = this.evaluate(f);
-
-      (i === 0 ? g.moveTo : g.lineTo).call(g, f, val, w, w);
-    }
-
-    g.strokeStyle = "grey";
-    g.stroke();
-
-    if (this.overlay_curvefunc !== undefined) {
-      g.beginPath();
-      f = this.xRange[0];
-
-      for (let i = 0; i < steps; i++, f += df) {
-        let val = this.overlay_curvefunc(f);
-
-        (i === 0 ? g.moveTo : g.lineTo).call(g, f, val, w, w);
-      }
-
-      g.strokeStyle = "green";
-      g.stroke();
-    }
-
-    this.generators.active.draw(canvas, g, draw_transform);
-
-    g.restore();
-    return this;
-  }
-
-  loadSTRUCT(reader) {
-    this.generators = [];
-    reader(this);
-
-    if (this.VERSION <= 0.75) {
-      this.generators = [];
-
-      for (let cls of CurveConstructors) {
-        this.generators.push(new cls());
-      }
-
-      this.generators.active = this.getGenerator("BSplineCurve");
-    }
-
-    for (let gen of this.generators.concat([])) {
-      if (!(gen instanceof CurveTypeData)) {
-        console.warn("Bad generator data found:", gen);
-        this.generators.remove(gen);
-        continue;
-      }
-
-      if (gen.type === this._active) {
-        this.generators.active = gen;
-      }
-    }
-
-    for (let gen of this.generators) {
-      gen.parent = this;
-    }
-
-    if (this.VERSION < 1.1) {
-      this.#patchRange();
-    }
-
-    delete this._active;
-    this.VERSION = CURVE_VERSION;
-  }
-
-  #patchRange() {
-    let range = this.getGenerator("BSplineCurve").range;
-    if (range) {
-      this.xRange.load(range[0]);
-      this.yRange.load(range[1]);
-    }
-  }
-}
-
-/* Remember to update toJSON() loadJSON api. */
-Curve1D.STRUCT = `
-Curve1D {
-  generators  : array(abstract(CurveTypeData));
-  _active     : string | obj.generators.active.type;
-  VERSION     : float;
-  uiZoom      : float;
-  xRange      : vec2;
-  yRange      : vec2;
-  clipToRange : bool;
-}
-`;
-nstructjs.register(Curve1D);
-
 const NumberConstraintsBase = new Set([
   'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
   'slideSpeed'
@@ -20925,7 +13436,7 @@ class ToolProperty$1 extends ToolPropertyIF {
     this.apiname = apiname;
     this.uiname = uiname !== undefined ? uiname : apiname;
     this.description = description;
-    this.flag = flag;
+    this.flag = flag | PropFlags$3.SAVE_LAST_VALUE;
     this.icon = icon;
     this.icon2 = icon; //another icon, e.g. unchecked state
 
@@ -21066,8 +13577,16 @@ class ToolProperty$1 extends ToolPropertyIF {
     return this;
   }
 
+  /** Save property in last value cache.  Now set by default,
+   *  to disable use .ignoreLastValue().
+   */
   saveLastValue() {
     this.flag |= PropFlags$3.SAVE_LAST_VALUE;
+    return this;
+  }
+
+  ignoreLastValue() {
+    this.flag &= ~PropFlags$3.SAVE_LAST_VALUE;
     return this;
   }
 
@@ -21568,7 +14087,7 @@ class _NumberPropertyBase extends ToolProperty$1 {
     b.range = this.range ? [this.range[0], this.range[1]] : undefined;
     b.uiRange = this.uiRange ? [this.uiRange[0], this.uiRange[1]] : undefined;
     b.slideSpeed = this.slideSpeed;
-    
+
     b.data = this.data;
   }
 
@@ -22795,59 +15314,967 @@ nstructjs.register(StringSetProperty);
 
 ToolProperty$1.internalRegister(StringSetProperty);
 
-class Curve1DProperty extends ToolProperty$1 {
-  constructor(curve, apiname, uiname, description, flag, icon) {
-    super(PropTypes$8.CURVE, undefined, apiname, uiname, description, flag, icon);
+let config = {
+  doubleClickTime : 500,
 
-    this.data = new Curve1D();
+  //auto load 1d bspline templates, can hurt startup time
+  autoLoadSplineTemplates : true,
 
-    if (curve !== undefined) {
-      this.setValue(curve);
+  //timeout for press-and-hold (touch) version of double clicking
+  doubleClickHoldTime : 750,
+  DEBUG : {
+
+  }
+};
+
+function setConfig(obj) {
+  for (let k in obj) {
+    config[k] = obj[k];
+  }
+}
+
+var config$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  config: config,
+  setConfig: setConfig,
+  'default': config
+});
+
+let modalstack$1 = [];
+let singleMouseCBs = {};
+
+function debugDomEvents() {
+  let cbsymbol = Symbol("event-callback");
+  let thsymbol = Symbol("debug-info");
+
+  let idgen = 0;
+
+  function init(et) {
+    if (!et[thsymbol]) {
+      et[thsymbol] = idgen++;
+    }
+  }
+
+  function getkey(et, type, options) {
+    init(et);
+    return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
+  }
+
+  let addEventListener = EventTarget.prototype.addEventListener;
+  let removeEventListener = EventTarget.prototype.removeEventListener;
+
+  EventTarget.prototype.addEventListener = function (type, cb, options) {
+    init(this);
+
+    if (!cb[cbsymbol]) {
+      cb[cbsymbol] = new Set();
     }
 
-    this.wasSet = false;
-  }
+    let key = getkey(this, type, options);
+    cb[cbsymbol].add(key);
 
-  calcMemSize() {
-    //bleh, just return a largish block size
-    return 1024;
-  }
+    return addEventListener.call(this, type, cb, options);
+  };
 
-  equals(b) {
+  EventTarget.prototype.removeEventListener = function (type, cb, options) {
+    init(this);
 
-  }
-
-  getValue() {
-    return this.data;
-  }
-
-  evaluate(t) {
-    return this.data.evaluate(t);
-  }
-
-  setValue(curve) {
-    if (curve === undefined) {
+    if (!cb[cbsymbol]) {
+      console.error("Invalid callback in removeEventListener for", type, this, cb);
       return;
     }
 
-    this.data.load(curve);
-    super.setValue(curve);
+    let key = getkey(this, type, options);
+
+    if (!cb[cbsymbol].has(key)) {
+      console.error("Callback not in removeEventListener;", type, this, cb);
+      return;
+    }
+
+    cb[cbsymbol].delete(key);
+
+    return removeEventListener.call(this, type, cb, options);
+  };
+}
+
+function singletonMouseEvents() {
+  let keys = ["mousedown", "mouseup", "mousemove"];
+  for (let k of keys) {
+    singleMouseCBs[k] = new Set();
   }
 
-  copyTo(b) {
-    super.copyTo(b);
+  let ddd = -1.0;
+  window.testSingleMouseUpEvent = (type = "mousedown") => {
+    let id = ddd++;
+    singleMouseEvent(() => {
+      console.log("mouse event", id);
+    }, type);
+  };
 
-    b.setValue(this.data);
+  let _mpos = new Vector2$b();
+
+  function doSingleCbs(e, type) {
+    let list = singleMouseCBs[type];
+    singleMouseCBs[type] = new Set();
+
+    if (e.type !== "touchend" && e.type !== "touchcancel") {
+      _mpos[0] = e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.x;
+      _mpos[1] = e.touches && e.touches.length > 0 ? e.touches[0].pageY : e.y;
+    }
+
+    if (e.touches) {
+      e = copyEvent(e);
+
+      e.type = type;
+      if (e.touches.length > 0) {
+        e.x = e.pageX = e.touches[0].pageX;
+        e.y = e.pageY = e.touches[0].pageY;
+      } else {
+        e.x = _mpos[0];
+        e.y = _mpos[1];
+      }
+    }
+
+    for (let cb of list) {
+      try {
+        cb(e);
+      } catch (error) {
+        print_stack$1(error);
+        console.warn("Error in event callback");
+      }
+    }
+  }
+
+  window.addEventListener("mouseup", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  window.addEventListener("touchcancel", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  document.addEventListener("touchend", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+
+  document.addEventListener("mousedown", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+  document.addEventListener("touchstart", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+
+  document.addEventListener("mousemove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+  document.addEventListener("touchmove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+
+  return {
+    singleMouseEvent(cb, type) {
+      if (!(type in singleMouseCBs)) {
+        throw new Error("not a mouse event");
+      }
+
+      singleMouseCBs[type].add(cb);
+    }
+  };
+}
+
+singletonMouseEvents = singletonMouseEvents();
+
+/**
+ * adds a mouse event callback that only gets called once
+ * */
+function singleMouseEvent(cb, type) {
+  return singletonMouseEvents.singleMouseEvent(cb, type);
+}
+
+
+/*tests if either the left mouse button is down,
+* or a touch event has happened and e.touches.length == 1*/
+function isLeftClick(e) {
+  if (e.touches !== undefined) {
+    return e.touches.length === 1;
+  }
+
+  return e.button === 0;
+}
+
+class DoubleClickHandler {
+  constructor() {
+    this.down = 0;
+    this.last = 0;
+    this.dblEvent = undefined;
+
+    this.start_mpos = new Vector2$b();
+
+    this._on_mouseup = this._on_mouseup.bind(this);
+    this._on_mousemove = this._on_mousemove.bind(this);
+  }
+
+  _on_mouseup(e) {
+    //console.log("mup", e);
+    this.mdown = false;
+  }
+
+  _on_mousemove(e) {
+    let mpos = new Vector2$b();
+    mpos[0] = e.x;
+    mpos[1] = e.y;
+
+    let dist = mpos.vectorDistance(this.start_mpos)*devicePixelRatio;
+
+    if (dist > 11) {
+      //console.log("cancel", dist);
+      this.mdown = false;
+    }
+
+    if (this.mdown) {
+      singleMouseEvent(this._on_mousemove, "mousemove");
+    }
+
+    this.update();
+  }
+
+  mousedown(e) {
+    //console.log("mdown", e.x, e.y);
+
+    if (!this.last) {
+      this.last = 0;
+    }
+    if (!this.down) {
+      this.down = 0;
+    }
+    if (!this.up) {
+      this.up = 0;
+    }
+
+    if (isMouseDown(e)) {
+      this.mdown = true;
+
+      let cpy = Object.assign({}, e);
+
+      this.start_mpos[0] = e.x;
+      this.start_mpos[1] = e.y;
+
+      singleMouseEvent(this._on_mousemove, "mousemove");
+
+      if (e.type.search("touch") >= 0 && e.touches.length > 0) {
+        cpy.x = cpy.pageX = e.touches[0].pageX;
+        cpy.y = cpy.pageY = e.touches[1].pageY;
+      } else {
+        cpy.x = cpy.pageX = e.x;
+        cpy.y = cpy.pageY = e.y;
+      }
+
+      //stupid real MouseEvent class zeros .x/.y
+      //continue using hackish copyEvent for now...
+
+      this.dblEvent = copyEvent(e);
+      this.dblEvent.type = "dblclick";
+
+      this.last = this.down;
+      this.down = time_ms();
+
+      if (this.down - this.last < config.doubleClickTime) {
+        this.mdown = false;
+        this.ondblclick(this.dblEvent);
+
+        this.down = this.last = 0.0;
+      } else {
+        singleMouseEvent(this._on_mouseup, "mouseup");
+      }
+    } else {
+      this.mdown = false;
+    }
+  }
+
+  //you may override this
+  ondblclick(e) {
+
+  }
+
+  update() {
+    if (modalstack$1.length > 0) {
+      //cancel double click requests
+      this.mdown = false;
+    }
+
+    if (this.mdown && time_ms() - this.down > config.doubleClickHoldTime) {
+      this.mdown = false;
+      this.ondblclick(this.dblEvent);
+    }
+  }
+
+  abort() {
+    this.last = this.down = 0;
   }
 }
 
-Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty$1) + `
-  data : Curve1D;
-}
-`;
+function isMouseDown(e) {
+  let mdown = 0;
 
-nstructjs.register(Curve1DProperty);
-ToolProperty$1.internalRegister(Curve1DProperty);
+  if (e.touches !== undefined) {
+    mdown = e.touches.length > 0;
+  } else {
+    mdown = e.buttons;
+  }
+
+  mdown = mdown & 1;
+
+  return mdown;
+}
+
+function pathDebugEvent(e, extra) {
+  e.__prevdef = e.preventDefault;
+  e.__stopprop = e.stopPropagation;
+
+  e.preventDefault = function () {
+    console.warn("preventDefault", extra);
+    return this.__prevdef();
+  };
+
+  e.stopPropagation = function () {
+    console.warn("stopPropagation", extra);
+    return this.__stopprop();
+  };
+}
+
+/** Returns true if event came from a touchscreen or pen device */
+function eventWasTouch(e) {
+  let ret = e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents;
+  ret = ret || e.was_touch;
+  ret = ret || e instanceof TouchEvent;
+  ret = ret || e.touches !== undefined;
+
+  if (e instanceof PointerEvent) {
+    ret = ret || (e.pointerType === "pen" || e.pointerType === "touch");
+  }
+
+  return ret;
+}
+
+function copyEvent(e) {
+  let ret = {};
+  let keys = [];
+
+  for (let k in e) {
+    keys.push(k);
+  }
+
+  keys = keys.concat(Object.getOwnPropertySymbols(e));
+  keys = keys.concat(Object.getOwnPropertyNames(e));
+
+  for (let k of keys) {
+    let v;
+
+    try {
+      v = e[k];
+    } catch (error) {
+      console.warn("read error for event key", k);
+      continue;
+    }
+
+    if (typeof v == "function") {
+      ret[k] = v.bind(e);
+    } else {
+      ret[k] = v;
+    }
+  }
+
+  ret.original = e;
+
+  return ret;
+}
+
+let Screen$2;
+
+function _setScreenClass(cls) {
+  Screen$2 = cls;
+}
+
+function findScreen() {
+  let rec = (n) => {
+    for (let n2 of n.childNodes) {
+      if (n2 && typeof n2 === "object" && n2 instanceof Screen$2) {
+        return n2;
+      }
+    }
+
+    for (let n2 of n.childNodes) {
+      let ret = rec(n2);
+      if (ret) {
+        return ret;
+      }
+    }
+  };
+
+  return rec(document.body);
+}
+
+window._findScreen = findScreen;
+
+let ContextAreaClass;
+
+function _setModalAreaClass(cls) {
+  ContextAreaClass = cls;
+}
+
+function pushPointerModal(obj, elem, pointerId, autoStopPropagation = true) {
+  return pushModalLight(obj, autoStopPropagation, elem, pointerId);
+}
+
+function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
+  let keys;
+
+  if (pointerId === undefined) {
+    keys = new Set([
+      "keydown", "keyup", "mousedown", "mouseup", "touchstart", "touchend",
+      "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter",
+      "mouseleave", "dragstart", "drag", "dragend", "dragexit", "dragleave", "dragover",
+      "dragenter", "drop", "pointerdown", "pointermove", "pointerup", "pointercancel",
+      "pointerstart", "pointerend", "pointerleave", "pointerexit", "pointerenter",
+      "pointerover"
+    ]);
+  } else {
+    keys = new Set([
+      "keydown", "keyup", "keypress", "mousewheel"
+    ]);
+  }
+
+  let ret = {
+    keys     : keys,
+    handlers : {},
+    last_mpos: [0, 0]
+  };
+
+  let touchmap = {
+    "touchstart" : "mousedown",
+    "touchmove"  : "mousemove",
+    "touchend"   : "mouseup",
+    "touchcancel": "mouseup"
+  };
+
+  let mpos = [0, 0];
+
+  let screen = findScreen();
+  if (screen) {
+    mpos[0] = screen.mpos[0];
+    mpos[1] = screen.mpos[1];
+    screen = undefined;
+  }
+
+  function handleAreaContext() {
+    let screen = findScreen();
+    if (screen) {
+      let sarea = screen.findScreenArea(mpos[0], mpos[1]);
+      if (sarea && sarea.area) {
+        sarea.area.push_ctx_active();
+        sarea.area.pop_ctx_active();
+      }
+    }
+  }
+
+  function make_default_touchhandler(type, state) {
+    return function (e) {
+      if (config.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+
+      if (touchmap[type] in ret.handlers) {
+        let type2 = touchmap[type];
+
+        let e2 = copyEvent(e);
+
+        e2.was_touch = true;
+        e2.type = type2;
+        e2.button = type == "touchcancel" ? 1 : 0;
+        e2.touches = e.touches;
+
+        if (e.touches.length > 0) {
+          let t = e.touches[0];
+
+          mpos[0] = t.pageX;
+          mpos[1] = t.pageY;
+
+          e2.pageX = e2.x = t.pageX;
+          e2.pageY = e2.y = t.pageY;
+          e2.clientX = t.clientX;
+          e2.clientY = t.clientY;
+          e2.x = t.clientX;
+          e2.y = t.clientY;
+
+          ret.last_mpos[0] = e2.x;
+          ret.last_mpos[1] = e2.y;
+        } else {
+          e2.x = e2.clientX = e2.pageX = e2.screenX = ret.last_mpos[0];
+          e2.y = e2.clientY = e2.pageY = e2.screenY = ret.last_mpos[1];
+        }
+
+        e2.was_touch = true;
+
+        handleAreaContext();
+        //console.log(e2.x, e2.y);
+        ret.handlers[type2](e2);
+      }
+
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }
+
+  function make_handler(type, key) {
+    return function (e) {
+      if (config.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+
+      if (typeof key !== "string") {
+        //console.warn("key was undefined", key, type);
+        return;
+      }
+
+      if (key.startsWith("mouse")) {
+        mpos[0] = e.pageX;
+        mpos[1] = e.pageY;
+      } else if (key.startsWith("pointer")) {
+        mpos[0] = e.x;
+        mpos[1] = e.y;
+      }
+
+      handleAreaContext();
+
+      if (key !== undefined)
+        obj[key](e);
+
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }
+
+  let found = {};
+
+  for (let k of keys) {
+    let key;
+
+    if (obj[k])
+      key = k;
+    else if (obj["on" + k])
+      key = "on" + k;
+    else if (obj["on_" + k])
+      key = "on_" + k;
+    else if (k in touchmap)
+      continue; //default touch event handlers will be done seperately
+    else
+      key = undefined; //make handler that still blocks events
+
+    //check we don't override other mouse pointer event handlers
+    if (key === undefined && k.search("pointer") === 0) {
+      continue;
+    }
+
+    if (key !== undefined) {
+      found[k] = 1;
+    }
+
+    let handler = make_handler(k, key);
+    ret.handlers[k] = handler;
+
+    let settings = handler.settings = {passive: false, capture: true};
+    window.addEventListener(k, handler, settings);
+  }
+
+  for (let k in touchmap) {
+    if (!(k in found)) {
+      //console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
+
+      ret.handlers[k] = make_default_touchhandler(k, ret);
+
+      let settings = ret.handlers[k].settings = {passive: false, capture: true};
+      window.addEventListener(k, ret.handlers[k], settings);
+    }
+  }
+
+  if (pointerId !== undefined) {
+    ret.pointer = {
+      elem, pointerId
+    };
+
+    function make_pointer(k) {
+      let k2 = "on_" + k;
+
+      ret.pointer[k] = function (e) {
+        if (obj[k2] !== undefined) {
+          obj[k2](e);
+        }
+
+        if (autoStopPropagation) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      };
+    }
+
+    make_pointer("pointerdown");
+    make_pointer("pointermove");
+    make_pointer("pointerup");
+    make_pointer("pointerstart");
+    make_pointer("pointerend");
+    make_pointer("pointerleave");
+    make_pointer("pointerenter");
+    make_pointer("pointerout");
+    make_pointer("pointerover");
+    make_pointer("pointerexit");
+    make_pointer("pointercancel");
+
+    for (let k in ret.pointer) {
+      if (k !== "elem" && k !== "pointerId") {
+        elem.addEventListener(k, ret.pointer[k]);
+      }
+    }
+
+    try {
+      elem.setPointerCapture(pointerId);
+    } catch (error) {
+      print_stack$1(error);
+
+      console.log("attempting fallback");
+
+      for (let k in ret.pointer) {
+        if (k !== "elem" && k !== "pointerId") {
+          elem.removeEventListener(k, ret.pointer[k]);
+        }
+      }
+
+      delete ret.pointer;
+
+      modalstack$1.push(ret);
+      popModalLight(ret);
+
+      for (let k in obj) {
+        if (k === "pointercancel" || k === "pointerend" || k === "pointerstart") {
+          continue;
+        }
+
+        if (k.startsWith("pointer")) {
+          let k2 = k.replace(/pointer/, "mouse");
+          if (k2 in obj) {
+            console.warn("warning, existing mouse handler", k2);
+            continue;
+          }
+
+          let v = obj[k];
+          obj[k] = undefined;
+
+          obj[k2] = v;
+        }
+      }
+
+      console.log(obj);
+
+      return pushModalLight(obj, autoStopPropagation);
+    }
+  }
+
+  modalstack$1.push(ret);
+  ContextAreaClass.lock();
+
+  if (config.DEBUG.modalEvents) {
+    console.warn("pushModalLight", ret.pointer ? "(pointer events)" : "");
+  }
+
+  return ret;
+}
+
+/* Trace all calls to EventTarget.prototype.[add/rem]EventListener */
+if (0) {
+  window._print_evt_debug = false;
+
+  function evtprint() {
+    if (window.window._print_evt_debug) {
+      console.warn(...arguments);
+    }
+  }
+
+  let addevent = EventTarget.prototype.addEventListener;
+  let remevent = EventTarget.prototype.removeEventListener;
+
+  const funckey = Symbol("eventfunc");
+
+  EventTarget.prototype.addEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    evtprint("listener added", name, func.name, args);
+    //}
+
+    let func2 = function (e) {
+      let proxy = new Proxy(e, {
+        get(target, p, receiver) {
+          if (p === "preventDefault") {
+            return function () {
+              evtprint("preventDefault", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          } else if (p === "stopPropagation") {
+            return function () {
+              evtprint("stopPropagation", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          }
+
+          return e[p];
+        }
+      });
+
+      return func.call(this, proxy);
+    };
+
+    func[funckey] = func2;
+
+    return addevent.call(this, name, func2, args);
+  };
+
+  EventTarget.prototype.removeEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    evtprint("listener removed", name, func.name, args);
+    //}
+
+    func = func[funckey];
+
+    return remevent.call(this, name, func, args);
+  };
+}
+
+function popModalLight(state) {
+  if (state === undefined) {
+    console.warn("Bad call to popModalLight: state was undefined");
+    return;
+  }
+
+  if (state !== modalstack$1[modalstack$1.length - 1]) {
+    if (modalstack$1.indexOf(state) < 0) {
+      console.warn("Error in popModalLight; modal handler not found");
+      return;
+    } else {
+      console.warn("Error in popModalLight; called in wrong order");
+    }
+  }
+
+  for (let k in state.handlers) {
+    //console.log(k);
+    window.removeEventListener(k, state.handlers[k], state.handlers[k].settings);
+  }
+
+  state.handlers = {};
+  modalstack$1.remove(state);
+  ContextAreaClass.unlock();
+
+  if (config.DEBUG.modalEvents) {
+    console.warn("popModalLight", modalstack$1, state.pointer ? "(pointer events)" : "");
+  }
+
+  if (state.pointer) {
+    let elem = state.pointer.elem;
+
+    try {
+      elem.releasePointerCapture(state.pointer.pointerId);
+    } catch (error) {
+      print_stack$1(error);
+    }
+
+    for (let k in state.pointer) {
+      if (k !== "elem" && k !== "pointerId") {
+        elem.removeEventListener(k, state.pointer[k]);
+      }
+    }
+  }
+}
+
+function haveModal() {
+  return modalstack$1.length > 0;
+}
+
+window._haveModal = haveModal; //for debugging console
+
+var keymap_latin_1 = {
+  "Space" : 32,
+  "Escape": 27,
+  "Enter" : 13,
+  "Return": 13,
+  "Up"    : 38,
+  "Down"  : 40,
+  "Left"  : 37,
+  "Right" : 39,
+
+  "Num0"     : 96,
+  "Num1"     : 97,
+  "Num2"     : 98,
+  "Num3"     : 99,
+  "Num4"     : 100,
+  "Num5"     : 101,
+  "Num6"     : 102,
+  "Num7"     : 103,
+  "Num8"     : 104,
+  "Num9"     : 105,
+  "Home"     : 36,
+  "End"      : 35,
+  "Delete"   : 46,
+  "Backspace": 8,
+  "Insert"   : 45,
+  "PageUp"   : 33,
+  "PageDown" : 34,
+  "Tab"      : 9,
+  "-"        : 189,
+  "="        : 187,
+  "."        : 190,
+  "/"        : 191,
+  ","        : 188,
+  ";"        : 186,
+  "'"        : 222,
+  "["        : 219,
+  "]"        : 221,
+  "NumPlus"  : 107,
+  "NumMinus" : 109,
+  "Shift"    : 16,
+  "Ctrl"     : 17,
+  "Control"  : 17,
+  "Alt"      : 18
+};
+
+for (var i$1 = 0; i$1 < 26; i$1++) {
+  keymap_latin_1[String.fromCharCode(i$1 + 65)] = i$1 + 65;
+}
+for (var i$1 = 0; i$1 < 10; i$1++) {
+  keymap_latin_1[String.fromCharCode(i$1 + 48)] = i$1 + 48;
+}
+
+for (var k$1 in keymap_latin_1) {
+  if (!(k$1 in keymap_latin_1)) {
+    keymap_latin_1[keymap_latin_1[k$1]] = k$1;
+  }
+}
+
+var keymap_latin_1_rev = {};
+for (var k$1 in keymap_latin_1) {
+  keymap_latin_1_rev[keymap_latin_1[k$1]] = k$1;
+}
+
+var keymap$4 = keymap_latin_1;
+var reverse_keymap = keymap_latin_1_rev;
+
+class HotKey {
+  /**action can be a callback or a toolpath string*/
+  constructor(key, modifiers, action, uiname) {
+    this.action = action;
+    this.mods = modifiers;
+    this.key = keymap$4[key];
+    this.uiname = uiname;
+  }
+
+  exec(ctx) {
+    if (typeof this.action == "string") {
+      ctx.api.execTool(ctx, this.action);
+    } else {
+      this.action(ctx);
+    }
+  }
+
+  buildString() {
+    let s = "";
+
+    for (let i = 0; i < this.mods.length; i++) {
+      if (i > 0) {
+        s += " + ";
+      }
+
+      let k = this.mods[i].toLowerCase();
+      k = k[0].toUpperCase() + k.slice(1, k.length).toLowerCase();
+
+      s += k;
+    }
+
+    if (this.mods.length > 0) {
+      s += "+";
+    }
+
+    s += reverse_keymap[this.key];
+
+    return s.trim();
+  }
+}
+
+class KeyMap extends Array {
+  /**
+   *
+   * @param pathid{string} Id of keymap, used when patching hotkeys, when
+   *                       that is implemented
+   * */
+  constructor(hotkeys = [], pathid = "undefined") {
+    super();
+
+    this.pathid = pathid;
+
+    for (let hk of hotkeys) {
+      this.add(hk);
+    }
+  }
+
+  handle(ctx, e) {
+    let mods = new set$2();
+    if (e.shiftKey)
+      mods.add("shift");
+    if (e.altKey)
+      mods.add("alt");
+    if (e.ctrlKey) {
+      mods.add("ctrl");
+    }
+    if (e.commandKey) {
+      mods.add("command");
+    }
+
+    for (let hk of this) {
+      let ok = e.keyCode === hk.key;
+      if (!ok) continue;
+
+      let count = 0;
+      for (let m of hk.mods) {
+        m = m.toLowerCase().trim();
+
+        if (!mods.has(m)) {
+          ok = false;
+          break;
+        }
+
+        count++;
+      }
+
+      if (count !== mods.length) {
+        ok = false;
+      }
+
+      if (ok) {
+        try {
+          hk.exec(ctx);
+        } catch (error) {
+          print_stack$1(error);
+          console.log("failed to execute a hotkey", keymap$4[e.keyCode]);
+        }
+        return true;
+      }
+    }
+  }
+
+  add(hk) {
+    this.push(hk);
+  }
+
+  push(hk) {
+    super.push(hk);
+  }
+}
 
 const ClassIdSymbol = Symbol("pathux-class-id");
 
@@ -27261,6 +20688,5912 @@ function copyTheme(theme) {
   return ret;
 }
 
+"use strict";
+
+class EventDispatcher {
+  constructor() {
+    this._cbs = {};
+  }
+
+  _fireEvent(type, data) {
+    let stop = false;
+
+    data = {
+      stopPropagation() {
+        stop = true;
+      },
+
+      data : data
+    };
+
+    if (type in this._cbs) {
+      for (let cb of this._cbs[type]) {
+        cb(data);
+        if (stop) {
+          break;
+        }
+      }
+    }
+  }
+
+  on(type, cb) {
+    if (!(type in this._cbs)) {
+      this._cbs[type] = [];
+    }
+
+    this._cbs[type].push(cb);
+    return this;
+  }
+
+  off(type, cb) {
+    if (!(type in this._cbs)) {
+      console.warn("event handler not in list", type, cb);
+      return this;
+    }
+
+    let stack = this._cbs[type];
+    if (stack.indexOf(cb) < 0) {
+      console.warn("event handler not in list", type, cb);
+      return this;
+    }
+
+    stack.remove(cb);
+    return this;
+  }
+}
+function copyMouseEvent(e) {
+  let ret = {};
+  
+  function bind(func, obj) {
+    return function() {
+      return this._orig.apply(func, arguments);
+    }
+  }
+  
+  let exclude = new Set([
+    //"prototype",
+    //"constructor",
+    "__proto__"
+  ]);
+  
+  ret._orig = e;
+  
+  for (let k in e) {
+    let v = e[k];
+    
+    if (exclude.has(k)) {
+      continue;
+    }
+    
+    if (typeof v == "function") {
+      v = bind(v);
+    }
+    
+    ret[k] = v;
+  }
+
+  ret.ctrlKey = e.ctrlKey;
+  ret.shiftKey = e.shiftKey;
+  ret.altKey = e.altKey;
+
+  for (let i=0; i<2; i++) {
+    let key = i ? "targetTouches" : "touches";
+
+    if (e[key]) {
+      ret[key] = [];
+
+      for (let t of e[key]) {
+        let t2 = {};
+        ret[key].push(t2);
+
+        for (let k in t) {
+          t2[k] = t[k];
+        }
+      }
+    }
+  }
+
+  return ret;
+}
+
+const DomEventTypes = {
+  on_mousemove   : 'mousemove',
+  on_mousedown   : 'mousedown',
+  on_mouseup     : 'mouseup',
+  on_touchstart  : 'touchstart',
+  on_touchcancel : 'touchcanel',
+  on_touchmove   : 'touchmove',
+  on_touchend    : 'touchend',
+  on_mousewheel  : 'mousewheel',
+  on_keydown     : 'keydown',
+  on_keyup       : 'keyup',
+  on_pointerdown : 'pointerdown',
+  on_pointermove : 'pointermove',
+  on_pointercancel : 'pointercancel',
+  on_pointerup   : 'pointerup',
+
+  //on_keypress    : 'keypress'
+};
+
+function getDom(dom, eventtype) {
+  if (eventtype.startsWith("key"))
+    return window;
+  return dom;
+}
+
+let modalStack = [];
+function isModalHead(owner) {
+  return modalStack.length === 0 ||
+         modalStack[modalStack.length-1] === owner;
+}
+
+class EventHandler {
+  constructor() {
+    this._modalstate = undefined;
+  }
+  pushPointerModal(dom, pointerId) {
+    if (this._modalstate) {
+      console.warn("pushPointerModal called twiced!");
+      return;
+    }
+    
+    this._modalstate = pushPointerModal(this, dom, pointerId);
+  }
+  pushModal(dom, _is_root) {
+    if (this._modalstate) {
+      console.warn("pushModal called twiced!");
+      return;
+    }
+    
+    this._modalstate = pushModalLight(this);
+  }
+  
+  popModal() {
+    if (this._modalstate !== undefined) {
+      let modalstate = this._modalstate;
+
+      //window.setTimeout(() => {
+        popModalLight(modalstate);
+      //});
+
+      this._modalstate = undefined;
+    }
+  }
+}
+
+function pushModal(dom, handlers) {
+  console.warn("Deprecated call to pathux.events.pushModal; use api in simple_events.js instead");
+  let h = new EventHandler();
+  
+  for (let k in handlers) {
+    h[k] = handlers[k];
+  }
+  
+  handlers.popModal = () => {
+    return h.popModal(dom);
+  };
+  
+  h.pushModal(dom, false);
+  
+  return h;
+}
+
+const CurveConstructors = [];
+const CURVE_VERSION = 1.1;
+
+const CurveFlags = {
+  SELECT   : 1,
+  TRANSFORM: 2,
+};
+
+
+const TangentModes = {
+  SMOOTH: 1,
+  BREAK : 2
+};
+
+function getCurve(type, throw_on_error = true) {
+  for (let cls of CurveConstructors) {
+    if (cls.name === type)
+      return cls;
+    if (cls.define().name === type)
+      return cls;
+  }
+
+  if (throw_on_error) {
+    throw new Error("Unknown curve type " + type)
+  } else {
+    console.warn("Unknown curve type", type);
+    return getCurve("ease");
+  }
+}
+
+let _udigest$4 = new HashDigest();
+
+class CurveTypeData {
+  constructor() {
+    this.type = this.constructor.define().typeName;
+    this.parent = undefined;
+  }
+
+  get hasGUI() {
+    throw new Error("get hasGUI(): implement me!");
+  }
+
+  static register(cls) {
+    if (cls.define === CurveTypeData.define) {
+      throw new Error("missing define() static method");
+    }
+
+    let def = cls.define();
+
+    if (!def.name) {
+      throw new Error(cls.name + ".define() result is missing 'name' field");
+    }
+
+    if (!def.typeName) {
+      throw new Error(cls.name + ".define() is missing .typeName, which should equal class name; needed for minificaiton");
+    }
+
+    CurveConstructors.push(cls);
+  }
+
+  static define() {
+    return {
+      uiname  : "Some Curve",
+      name    : "somecurve",
+      typeName: CurveTypeData
+    }
+  }
+
+  calcHashKey(digest = _udigest$4.reset()) {
+    let d = digest;
+
+    d.add(this.type);
+
+    return d.get();
+  }
+
+  toJSON() {
+    return {
+      type: this.type
+    }
+  }
+
+  equals(b) {
+    return this.type === b.type;
+  }
+
+  loadJSON(obj) {
+    this.type = obj.type;
+
+    return this;
+  }
+
+  redraw() {
+    if (this.parent)
+      this.parent.redraw();
+  }
+
+  makeGUI(container) {
+
+  }
+
+  killGUI(container) {
+    container.clear();
+  }
+
+  evaluate(s) {
+    throw new Error("implement me!");
+  }
+
+  integrate(s1, quadSteps = 64) {
+    let ret = 0.0, ds = s1/quadSteps;
+
+    for (let i = 0, s = 0; i < quadSteps; i++, s += ds) {
+      ret += this.evaluate(s)*ds;
+    }
+
+    return ret;
+  }
+
+  derivative(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.evaluate(s) - this.evaluate(s - df))/df;
+    } else if (s < df*3) {
+      return (this.evaluate(s + df) - this.evaluate(s))/df;
+    } else {
+      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
+    }
+  }
+
+  derivative2(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.derivative(s) - this.derivative(s - df))/df;
+    } else if (s < df*3) {
+      return (this.derivative(s + df) - this.derivative(s))/df;
+    } else {
+      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
+    }
+  }
+
+  inverse(y) {
+    let steps = 9;
+    let ds = 1.0/steps, s = 0.0;
+    let best = undefined;
+    let ret = undefined;
+
+    for (let i = 0; i < steps; i++, s += ds) {
+      let s1 = s, s2 = s + ds;
+
+      let mid;
+
+      for (let j = 0; j < 11; j++) {
+        let y1 = this.evaluate(s1);
+        let y2 = this.evaluate(s2);
+        mid = (s1 + s2)*0.5;
+
+        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
+          s2 = mid;
+        } else {
+          s1 = mid;
+        }
+      }
+
+      let ymid = this.evaluate(mid);
+
+      if (best === undefined || Math.abs(y - ymid) < best) {
+        best = Math.abs(y - ymid);
+        ret = mid;
+      }
+    }
+
+    return ret === undefined ? 0.0 : ret;
+  }
+
+  onActive(parent, draw_transform) {
+  }
+
+  onInactive(parent, draw_transform) {
+  }
+
+  reset() {
+
+  }
+
+  destroy() {
+  }
+
+  update() {
+    if (this.parent)
+      this.parent._on_change();
+  }
+
+  draw(canvas, g, draw_transform) {
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+}
+
+CurveTypeData.STRUCT = `
+CurveTypeData {
+  type : string;
+}
+`;
+nstructjs.register(CurveTypeData);
+
+
+const unitRange = [0, 1];
+
+function evalHermiteTable(table, t, range = unitRange) {
+  t = (t - range[0])/(range[1] - range[0]);
+
+  let s = t*(table.length/4);
+  let i = Math.floor(s);
+
+  s -= i;
+  i *= 4;
+
+  let a = table[i] + (table[i + 1] - table[i])*s;
+  let b = table[i + 2] + (table[i + 3] - table[i + 2])*s;
+
+  return a + (b - a)*s;
+  //return table[i] + (table[i + 3] - table[i])*s;
+}
+
+function genHermiteTable(evaluate, steps, range = [0, 1]) {
+  //console.log("building spline approx");
+
+  let table = new Array(steps);
+
+  let [min, max] = range;
+
+  let eps = 0.0001;
+  let dt = ((max - min) - eps*4.001)/(steps - 1);
+  let t = min + eps*4;
+  let lastdv1, lastf3;
+
+  for (let j = 0; j < steps; j++, t += dt) {
+    //let f1 = evaluate(t - eps*2);
+    let f2 = evaluate(t - eps);
+    let f3 = evaluate(t);
+    let f4 = evaluate(t + eps);
+    //let f5 = evaluate(t + eps*2);
+
+    let dv1 = (f4 - f2)/(eps*2);
+    dv1 /= steps;
+
+    if (j > 0) {
+      let j2 = j - 1;
+
+      table[j2*4] = lastf3;
+      table[j2*4 + 1] = lastf3 + lastdv1/3.0;
+      table[j2*4 + 2] = f3 - dv1/3.0;
+      table[j2*4 + 3] = f3;
+    }
+
+    lastdv1 = dv1;
+    lastf3 = f3;
+  }
+
+  return table;
+}
+
+const DataFlags = {
+  READ_ONLY             : 1,
+  USE_CUSTOM_GETSET     : 2,
+  USE_FULL_UNDO         : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
+  USE_CUSTOM_PROP_GETTER: 8,
+};
+
+
+const DataTypes = {
+  STRUCT        : 0,
+  DYNAMIC_STRUCT: 1,
+  PROP          : 2,
+  ARRAY         : 3
+};
+
+let propCacheRings = {};
+
+function getTempProp(type) {
+  if (!(type in propCacheRings)) {
+    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
+  }
+
+  return propCacheRings[type].next();
+}
+
+class DataPathError extends Error {
+};
+
+
+function getVecClass(proptype) {
+  switch (proptype) {
+    case PropTypes$8.VEC2:
+      return Vector2$b;
+    case PropTypes$8.VEC3:
+      return Vector3$2;
+    case PropTypes$8.VEC4:
+      return Vector4$2;
+    case PropTypes$8.QUAT:
+      return Quat;
+    default:
+      throw new Error("bad prop type " + proptype);
+  }
+}
+
+function isVecProperty(prop) {
+  if (!prop || typeof prop !== "object" || prop === null)
+    return false;
+
+  let ok = false;
+
+  ok = ok || prop instanceof Vec2PropertyIF;
+  ok = ok || prop instanceof Vec3PropertyIF;
+  ok = ok || prop instanceof Vec4PropertyIF;
+  ok = ok || prop instanceof Vec2Property;
+  ok = ok || prop instanceof Vec3Property;
+  ok = ok || prop instanceof Vec4Property;
+
+  ok = ok || prop.type === PropTypes$8.VEC2;
+  ok = ok || prop.type === PropTypes$8.VEC3;
+  ok = ok || prop.type === PropTypes$8.VEC4;
+  ok = ok || prop.type === PropTypes$8.QUAT;
+
+  return ok;
+}
+
+class DataPath {
+  constructor(path, apiname, prop, type = DataTypes.PROP) {
+    this.type = type;
+    this.data = prop;
+    this.apiname = apiname;
+    this.path = path;
+    this.flag = 0;
+    this.struct = undefined;
+  }
+
+  copy() {
+    let ret = new DataPath();
+
+    ret.flag = this.flag;
+    ret.type = this.type;
+    ret.data = this.data;
+    ret.apiname = this.apiname;
+    ret.path = this.path;
+    ret.struct = this.struct;
+
+    return ret;
+  }
+
+  /** this property should not be treated as something
+   *  that should be kept track off in the undo stack*/
+  noUndo() {
+    this.data.flag |= PropFlags$3.NO_UNDO;
+    return this;
+  }
+
+  setProp(prop) {
+    this.data = prop;
+  }
+
+  readOnly() {
+    this.flag |= DataFlags.READ_ONLY;
+
+    if (this.type === DataTypes.PROP) {
+      this.data.flag |= PropFlags$3.READ_ONLY;
+    }
+
+    return this;
+  }
+
+  read_only() {
+    console.warn("DataPath.read_only is deprecated; use readOnly");
+    return this.readOnly();
+  }
+
+  /** used to override tool property settings,
+   *  e.g. ranges, units, etc; returns a
+   *  base class instance of ToolProperty.
+   *
+   *  The this context points to the original ToolProperty and contains
+   *  a few useful references:
+   *
+   *  this.dataref - an object instance of this struct type
+   *  this.ctx - a context
+   *
+   *  callback takes one argument, a new (freshly copied of original)
+   *  tool property to modify
+   *
+   * */
+  customPropCallback(callback) {
+    this.flag |= DataFlags.USE_CUSTOM_PROP_GETTER;
+    this.data.flag |= PropFlags$3.USE_CUSTOM_PROP_GETTER;
+    this.propGetter = callback;
+
+    return this;
+  }
+
+  /**
+   *
+   * For the callbacks 'this' points to an internal ToolProperty;
+   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
+   * and the datapath is 'this.datapath'
+   **/
+  customGetSet(get, set) {
+    this.flag |= DataFlags.USE_CUSTOM_GETSET;
+
+    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
+      this.data.flag |= PropFlags$3.USE_CUSTOM_GETSET;
+      this.data._getValue = this.data.getValue;
+      this.data._setValue = this.data.setValue;
+
+      if (get)
+        this.data.getValue = get;
+
+      if (set)
+        this.data.setValue = set;
+    } else {
+      this.getSet = {
+        get, set
+      };
+
+      this.getSet.dataref = undefined;
+      this.getSet.datapath = undefined;
+      this.getSet.ctx = undefined;
+    }
+
+    return this;
+  }
+
+  customSet(set) {
+    this.customGetSet(undefined, set);
+    return this;
+  }
+
+  customGet(get) {
+    this.customGetSet(get, undefined);
+    return this;
+  }
+
+  /**db will be executed with underlying data object
+   that contains this path in 'this.dataref'
+
+   main event is 'change'
+   */
+  on(type, cb) {
+    if (this.type == DataTypes.PROP) {
+      this.data.on(type, cb);
+    } else {
+      throw new Error("invalid call to DataPath.on");
+    }
+
+    return this;
+  }
+
+  off(type, cb) {
+    if (this.type === DataTypes.PROP) {
+      this.data.off(type, cb);
+    }
+  }
+
+  simpleSlider() {
+    this.data.flag |= PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag &= ~PropFlags$3.FORCE_ROLLER_SLIDER;
+    return this;
+  }
+
+  rollerSlider() {
+    this.data.flag &= ~PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags$3.FORCE_ROLLER_SLIDER;
+
+    return this;
+  }
+
+  checkStrip(state = true) {
+    if (state) {
+      this.data.flag |= PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    } else {
+      this.data.flag &= ~PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    }
+
+    return this;
+  }
+
+  noUnits() {
+    this.baseUnit("none");
+    this.displayUnit("none");
+    return this;
+  }
+
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
+  unit(unit) {
+    return this.baseUnit(unit).displayUnit(unit);
+  }
+
+  editAsBaseUnit() {
+    this.data.flag |= PropFlags$3.EDIT_AS_BASE_UNIT;
+    return this;
+  }
+
+  range(min, max) {
+    this.data.setRange(min, max);
+    return this;
+  }
+
+  uiRange(min, max) {
+    this.data.setUIRange(min, max);
+    return this;
+  }
+
+  decimalPlaces(n) {
+    this.data.setDecimalPlaces(n);
+    return this;
+  }
+
+  /**
+   * like other callbacks (until I refactor it),
+   * func will be called with a mysterious object that stores
+   * the following properties:
+   *
+   * this.dataref  : owning object reference
+   * this.datactx  : ctx
+   * this.datapath : datapath
+   * */
+  uiNameGetter(func) {
+    this.ui_name_get = func;
+    return this;
+  }
+
+  expRate(exp) {
+    this.data.setExpRate(exp);
+    return this;
+  }
+
+  slideSpeed(speed) {
+    this.data.setSlideSpeed(speed);
+    return this;
+  }
+
+  /**adds a slider for moving vector component sliders simultaneously*/
+  uniformSlider(state = true) {
+    this.data.uniformSlider(state);
+
+    return this;
+  }
+
+  radix(r) {
+    this.data.setRadix(r);
+    return this;
+  }
+
+  relativeStep(s) {
+    this.data.setRelativeStep(s);
+    return this;
+  }
+
+  step(s) {
+    this.data.setStep(s);
+    return this;
+  }
+
+  /**
+   *
+   * Tell DataPathSetOp to save/load entire app state for undo/redo
+   *
+   * */
+  fullSaveUndo() {
+    this.flag |= DataFlags.USE_FULL_UNDO;
+    this.data.flag |= PropFlags$3.USE_BASE_UNDO;
+
+    return this;
+  }
+
+  icon(i) {
+    this.data.setIcon(i);
+    return this;
+  }
+
+  icon2(i) {
+    this.data.setIcon2(i);
+    return this;
+  }
+
+  icons(icons) { //for enum/flag properties
+    this.data.addIcons(icons);
+    return this;
+  }
+
+  /** secondary icons (e.g. disabled states) */
+  icons2(icons) {
+    this.data.addIcons2(icons);
+    return this;
+  }
+
+  descriptions(description_map) { //for enum/flag properties
+    this.data.addDescriptions(description_map);
+    return this;
+  }
+
+  uiNames(uinames) {
+    this.data.addUINames(uinames);
+    return this;
+  }
+
+  description(d) {
+    this.data.description = d;
+    return this;
+  }
+}
+
+const StructFlags = {
+  NO_UNDO: 1 //struct and its child structs can't participate in undo
+             //via the DataPathToolOp
+};
+
+class ListIface {
+  getStruct(api, list, key) {
+
+  }
+
+  get(api, list, key) {
+
+  }
+
+  getKey(api, list, obj) {
+
+  }
+
+  getActive(api, list) {
+
+  }
+
+  setActive(api, list, val) {
+
+  }
+
+  set(api, list, key, val) {
+    list[key] = val;
+  }
+
+  getIter() {
+
+  }
+
+  filter(api, list, filter) {
+
+  }
+}
+
+class ToolOpIface {
+  constructor() {
+  }
+
+  static tooldef() {
+    return {
+      uiname     : "!untitled tool",
+      icon       : -1,
+      toolpath   : "logical_module.tool", //logical_module need not match up to real module name
+      description: undefined,
+      is_modal   : false,
+      inputs     : {}, //tool properties
+      outputs    : {}  //tool properties
+    }
+  }
+};
+
+
+let DataAPIClass = undefined;
+
+function setImplementationClass(cls) {
+  DataAPIClass = cls;
+}
+
+function registerTool(cls) {
+  if (DataAPIClass === undefined) {
+    throw new Error("data api not initialized properly; call setImplementationClass");
+  }
+
+  return DataAPIClass.registerTool(cls);
+}
+
+/**
+ see doc_src/context.md
+ */
+
+let notifier = undefined;
+
+function setNotifier(cls) {
+  notifier = cls;
+}
+
+const ContextFlags = {
+  IS_VIEW : 1
+};
+
+class InheritFlag$1 {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
+let __idgen = 1;
+
+if (Symbol.ContextID === undefined) {
+  Symbol.ContextID = Symbol("ContextID");
+}
+
+if (Symbol.CachedDef === undefined) {
+  Symbol.CachedDef = Symbol("CachedDef");
+}
+
+const _ret_tmp = [undefined];
+
+const OverlayClasses = [];
+
+function makeDerivedOverlay(parent) {
+  return class ContextOverlay extends parent {
+    constructor(appstate) {
+      super(appstate);
+
+      this.ctx = undefined; //owning context
+      this._state = appstate;
+    }
+
+    get state() {
+      return this._state;
+    }
+
+    set state(state) {
+      this._state = state;
+    }
+
+    /*
+    Ugly hack, ui_lasttool.js saves
+    a DataStruct wrapping the most recently executed ToolOp
+    in this.state._last_tool.
+    */
+    get last_tool() {
+      return this.state._last_tool;
+    }
+
+
+    onRemove(have_new_file = false) {
+    }
+
+    copy() {
+      return new this.constructor(this._state);
+    }
+
+    validate() {
+      throw new Error("Implement me!");
+    }
+
+
+    //base classes override this
+    static contextDefine() {
+      throw new Error("implement me!");
+      return {
+        name: "",
+        flag: 0
+      }
+    }
+
+    //don't override this
+    static resolveDef() {
+      if (this.hasOwnProperty(Symbol.CachedDef)) {
+        return this[Symbol.CachedDef];
+      }
+
+      let def2 = Symbol.CachedDef = {};
+
+      let def = this.contextDefine();
+
+      if (def === undefined) {
+        def = {};
+      }
+
+      for (let k in def) {
+        def2[k] = def[k];
+      }
+
+      if (!("flag") in def) {
+        def2.flag = Context.inherit(0);
+      }
+
+      let parents = [];
+      let p = getClassParent(this);
+
+      while (p && p !== ContextOverlay) {
+        parents.push(p);
+        p = getClassParent(p);
+      }
+
+      if (def2.flag instanceof InheritFlag$1) {
+        let flag = def2.flag.data;
+        for (let p of parents) {
+          let def = p.contextDefine();
+
+          if (!def.flag) {
+            continue;
+          } else if (def.flag instanceof InheritFlag$1) {
+            flag |= def.flag.data;
+          } else {
+            flag |= def.flag;
+            //don't go past non-inheritable parents
+            break;
+          }
+        }
+
+        def2.flag = flag;
+      }
+
+      return def2;
+    }
+  };
+}
+
+const ContextOverlay = makeDerivedOverlay(Object);
+
+const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
+                                     "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
+                                     "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
+                                     "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
+
+class LockedContext {
+  constructor(ctx, noWarnings) {
+    this.props = {};
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+
+    this.noWarnings = noWarnings;
+
+    this.load(ctx);
+  }
+
+  toLocked() {
+    //just return itself
+    return this;
+  }
+
+  error() {
+    return this.ctx.error(...arguments);
+  }
+  warning() {
+    return this.ctx.warning(...arguments);
+  }
+  message() {
+    return this.ctx.message(...arguments);
+  }
+  progbar() {
+    return this.ctx.progbar(...arguments);
+  }
+
+  load(ctx) {
+    //let keys = util.getAllKeys(ctx);
+    let keys = ctx._props;
+
+    function wrapget(name) {
+      return function(ctx2, data) {
+        return ctx.loadProperty(ctx2, name, data);
+      }
+    }
+
+    for (let k of keys) {
+      let v;
+      if (k === "state" || k === "toolstack" || k === "api") {
+        continue;
+      }
+
+      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+        continue;
+      }
+
+      try {
+        v = ctx[k];
+      } catch (error) {
+        if (config.DEBUG.contextSystem) {
+          console.warn("failed to look up property in context: ", k);
+        }
+        continue;
+      }
+
+      let data, getter;
+      let overlay = ctx.getOwningOverlay(k);
+
+      if (overlay === undefined) {
+        //property must no longer be used?
+        continue;
+      }
+
+      try {
+        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
+          data = overlay[k + "_save"]();
+          getter = overlay[k + "_load"];
+        } else {
+          data = ctx.saveProperty(k);
+          getter = wrapget(k);
+        }
+      } catch (error) {
+        //util.print_stack(error);
+        console.warn("Failed to save context property", k);
+        continue;
+      }
+
+      this.props[k] = {
+        data : data,
+        get  : getter
+      };
+    }
+
+    let defineProp = (name) => {
+      Object.defineProperty(this, name, {
+        get : function() {
+          let def = this.props[name];
+          return def.get(this.ctx, def.data)
+        }
+      });
+    };
+
+    for (let k in this.props) {
+      defineProp(k);
+    }
+
+    this.ctx = ctx;
+  }
+
+  setContext(ctx) {
+    this.ctx = ctx;
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+  }
+}
+
+let next_key = {};
+let idgen$1 = 1;
+
+class Context {
+  constructor(appstate) {
+    this.state = appstate;
+
+    this._props = new Set();
+    this._stack = [];
+    this._inside_map = {};
+  }
+
+  static isContextSubclass(cls) {
+    while (cls) {
+      if (cls === Context) {
+        return true;
+      }
+
+      cls = cls.__proto__;
+    }
+
+    return false;
+  }
+
+  /** chrome's debug console corrupts this._inside_map,
+   this method fixes it*/
+  _fix() {
+    this._inside_map = {};
+  }
+
+  fix() {
+    this._fix();
+  }
+
+  error(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.error(state.screen, message, timeout);
+    }
+  }
+
+  warning(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.warning(state.screen, message, timeout);
+    }
+  }
+
+  message(msg, timeout=1500) {
+    let state = this.state;
+
+    console.warn(msg);
+
+    if (state && state.screen) {
+      return notifier.message(state.screen, msg, timeout);
+    }
+  }
+
+  progbar(msg, perc=0.0, timeout=1500, id=msg) {
+    let state = this.state;
+
+    if (state && state.screen) {
+      //progbarNote(screen, msg, percent, color, timeout) {
+      return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
+    }
+  }
+
+  validateOverlays() {
+    let stack = this._stack;
+    let stack2 = [];
+
+    for (let i=0; i<stack.length; i++) {
+      if (stack[i].validate()) {
+        stack2.push(stack[i]);
+      }
+    }
+
+    this._stack = stack2;
+  }
+
+  hasOverlay(cls) {
+    return this.getOverlay(cls) !== undefined;
+  }
+
+  getOverlay(cls) {
+    for (let overlay of this._stack) {
+      if (overlay.constructor === cls) {
+        return overlay;
+      }
+    }
+  }
+
+  clear(have_new_file=false) {
+    for (let overlay of this._stack) {
+      overlay.onRemove(have_new_file);
+    }
+
+    this._stack = [];
+  }
+
+  //this is implemented by child classes
+  //it should load the same default overlays as in constructor
+  reset(have_new_file=false) {
+    this.clear(have_new_file);
+  }
+
+  //returns a new context with overriden properties
+  //unlike pushOverlay, overrides can be a simple object
+  override(overrides) {
+    if (overrides.copy === undefined) {
+      overrides.copy = function() {
+        return Object.assign({}, this);
+      };
+    }
+
+    let ctx = this.copy();
+    ctx.pushOverlay(overrides);
+    return ctx;
+  }
+
+  copy() {
+    let ret = new this.constructor(this.state);
+
+    for (let item of this._stack) {
+      ret.pushOverlay(item.copy());
+    }
+
+    return ret;
+  }
+
+  /**
+   Used by overlay property getters.  If returned,
+   the next overlay in the struct will have its getter used.
+
+   Example:
+
+   class overlay {
+      get scene() {
+        if (some_reason) {
+          return Context.super();
+        }
+
+        return something_else;
+      }
+    }
+   */
+  static super() {
+    return next_key;
+  }
+
+  /**
+   *
+   * saves a property into some kind of non-object-reference form
+   *
+   * */
+  saveProperty(key) {
+    //console.warn("Missing saveProperty implementation in Context; passing through values...", key)
+    return this[key];
+  }
+
+  /**
+   *
+   * lookup property based on saved data
+   *
+   * */
+  loadProperty(ctx, key, data) {
+    //console.warn("Missing loadProperty implementation in Context; passing through values...", key)
+    return data;
+  }
+
+  getOwningOverlay(name, _val_out) {
+    let inside_map = this._inside_map;
+    let stack = this._stack;
+
+    if (config.DEBUG.contextSystem) {
+      console.log(name, inside_map);
+    }
+
+    for (let i=stack.length-1; i >= 0; i--) {
+      let overlay = stack[i];
+      let ret = next_key;
+
+      if (overlay[Symbol.ContextID] === undefined) {
+        throw new Error("context corruption");
+      }
+
+      let ikey = overlay[Symbol.ContextID];
+
+      if (config.DEBUG.contextSystem) {
+        console.log(ikey, overlay);
+      }
+
+      //prevent infinite recursion
+      if (inside_map[ikey]) {
+        continue;
+      }
+
+      if (overlay.__allKeys.has(name)) {
+        if (config.DEBUG.contextSystem) {
+          console.log("getting value");
+        }
+
+        //Chrome's console messes this up
+
+        inside_map[ikey] = 1;
+
+        try {
+          ret = overlay[name];
+        } catch (error) {
+
+          inside_map[ikey] = 0;
+          throw error;
+        }
+
+        inside_map[ikey] = 0;
+      }
+
+      if (ret !== next_key) {
+        if (_val_out !== undefined) {
+          _val_out[0] = ret;
+        }
+        return overlay;
+      }
+    }
+
+    if (_val_out !== undefined) {
+      _val_out[0] = undefined;
+    }
+
+    return undefined;
+  }
+
+  ensureProperty(name) {
+    if (this.hasOwnProperty(name)) {
+      return;
+    }
+
+    this._props.add(name);
+
+    Object.defineProperty(this, name, {
+      get : function() {
+        let ret = _ret_tmp;
+        _ret_tmp[0] = undefined;
+
+        this.getOwningOverlay(name, ret);
+        return ret[0];
+      }, set : function() {
+        throw new Error("Cannot set ctx properties")
+      }
+    });
+  }
+
+  /**
+   * Returns a new context that doesn't
+   * contain any direct object references
+   * except for .state .datalib and .api, but
+   * instead uses those three to look up references
+   * on property access.
+   * */
+  toLocked() {
+    return new LockedContext(this);
+  }
+
+  pushOverlay(overlay) {
+    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
+      overlay[Symbol.ContextID] = idgen$1++;
+    }
+
+    let keys = new Set();
+    for (let key of getAllKeys(overlay)) {
+      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
+        keys.add(key);
+      }
+    }
+
+    overlay.ctx = this;
+
+    if (overlay.__allKeys === undefined) {
+      overlay.__allKeys = keys;
+    }
+
+    for (let k of keys) {
+      let bad = typeof k === "symbol" || excludedKeys.has(k);
+      bad = bad || (typeof k === "string" && k[0] === "_");
+      bad = bad || (typeof k === "string" && k.endsWith("_save"));
+      bad = bad || (typeof k === "string" && k.endsWith("_load"));
+
+      if (bad) {
+        continue;
+      }
+
+      this.ensureProperty(k);
+    }
+
+    if (this._stack.indexOf(overlay) >= 0) {
+      console.warn("Overlay already added once");
+      if (this._stack[this._stack.length-1] === overlay) {
+        console.warn("  Definitely an error, overlay is already at top of stack");
+        return;
+      }
+    }
+
+    this._stack.push(overlay);
+  }
+
+  popOverlay(overlay) {
+    if (overlay !== this._stack[this._stack.length-1]) {
+      console.warn("Context.popOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.pop();
+  }
+
+  removeOverlay(overlay) {
+    if (this._stack.indexOf(overlay) < 0) {
+      console.warn("Context.removeOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.remove(overlay);
+  }
+
+  static inherit(data) {
+    return new InheritFlag$1(data);
+  }
+
+  static register(cls) {
+    if (cls[Symbol.ContextID]) {
+      console.warn("Tried to register same class twice:", cls);
+      return;
+    }
+
+    cls[Symbol.ContextID] = __idgen++;
+    OverlayClasses.push(cls);
+  }
+}
+
+function test() {
+  function testInheritance() {
+    class Test0 extends ContextOverlay {
+      static contextDefine() {
+        return {
+          flag: 1
+        }
+      }
+    }
+
+    class Test1 extends Test0 {
+      static contextDefine() {
+        return {
+          flag: 2
+        }
+      }
+    }
+
+    class Test2 extends Test1 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(4)
+        }
+      }
+    }
+
+    class Test3 extends Test2 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(8)
+        }
+      }
+    }
+
+    class Test4 extends Test3 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(16)
+        }
+      }
+    }
+
+    return Test4.resolveDef().flag === 30;
+  }
+
+  return testInheritance();
+}
+
+if (!test()) {
+  throw new Error("Context test failed");
+}
+
+"use strict";
+
+let ToolClasses = [];
+window._ToolClasses = ToolClasses;
+
+function setContextClass(cls) {
+  console.warn("setContextClass is deprecated");
+}
+
+const ToolFlags$1 = {
+  PRIVATE: 1
+
+};
+
+
+const UndoFlags$1 = {
+  NO_UNDO      : 2,
+  IS_UNDO_ROOT : 4,
+  UNDO_BARRIER : 8,
+  HAS_UNDO_DATA: 16
+};
+
+class InheritFlag {
+  constructor(slots = {}) {
+    this.slots = slots;
+  }
+}
+
+let modalstack = [];
+
+let defaultUndoHandlers = {
+  undoPre(ctx) {
+    throw new Error("implement me");
+  },
+  undo(ctx) {
+    throw new Error("implement me");
+  }
+};
+
+function setDefaultUndoHandlers(undoPre, undo) {
+  if (!undoPre || !undo) {
+    throw new Error("invalid parameters to setDefaultUndoHandlers");
+  }
+
+  defaultUndoHandlers.undoPre = undoPre;
+  defaultUndoHandlers.undo = undo;
+}
+
+class ToolPropertyCache {
+  constructor() {
+    this.map = new Map();
+    this.pathmap = new Map();
+    this.accessors = {};
+
+    this.userSetMap = new Set();
+
+    this.api = undefined;
+    this.dstruct = undefined;
+  }
+
+  static getPropKey(cls, key, prop) {
+    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
+  }
+
+  _buildAccessors(cls, key, prop, dstruct, api) {
+    let tdef = cls._getFinalToolDef();
+
+    this.api = api;
+    this.dstruct = dstruct;
+
+    if (!tdef.toolpath) {
+      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
+      return;
+    }
+
+    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
+    let obj = this.accessors;
+
+    let st = dstruct;
+    let partial = "";
+
+    for (let i = 0; i < path.length; i++) {
+      let k = path[i];
+      let pathk = k;
+
+      if (i === 0) {
+        pathk = "accessors." + k;
+      }
+
+      if (i > 0) {
+        partial += ".";
+      }
+      partial += k;
+
+      if (!(k in obj)) {
+        obj[k] = {};
+      }
+
+      let st2 = api.mapStruct(obj[k], true, k);
+      if (!(k in st.pathmap)) {
+        st.struct(pathk, k, k, st2);
+      }
+      st = st2;
+
+      this.pathmap.set(partial, obj[k]);
+
+      obj = obj[k];
+    }
+
+    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
+    let prop2 = prop.copy();
+
+    let dpath = new DataPath(name, name, prop2);
+    let uiname = prop.uiname;
+
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = prop.apiname;
+    }
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = key;
+    }
+
+    uiname = ToolProperty.makeUIName(uiname);
+
+    prop2.uiname = uiname;
+    prop2.description = prop2.description || prop2.uiname;
+
+    st.add(dpath);
+
+    obj[name] = prop2.getValue();
+  }
+
+  _getAccessor(cls) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    return this.pathmap.get(toolpath);
+  }
+
+  useDefault(cls, key, prop) {
+    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
+    key = key.trim();
+
+    return key;
+  }
+
+  has(cls, key, prop) {
+    if (prop.flag & PropFlags$3.NO_DEFAULT) {
+      return false;
+    }
+
+    let obj = this._getAccessor(cls);
+
+    key = this.constructor.getPropKey(cls, key, prop);
+    return obj && key in obj;
+  }
+
+  get(cls, key, prop) {
+    if (cls === ToolMacro) {
+      return;
+    }
+
+    let obj = this._getAccessor(cls);
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    if (obj) {
+      return obj[key];
+    }
+
+    return undefined;
+  }
+
+  set(cls, key, prop) {
+    if (cls === ToolMacro) {
+      return;
+    }
+
+    let toolpath = cls.tooldef().toolpath.trim();
+    let obj = this._getAccessor(cls);
+
+    if (!obj) {
+      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
+      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
+
+      obj = this.pathmap.get(toolpath);
+    }
+
+    if (!obj) {
+      console.error("Malformed toolpath in toolop definition: " + toolpath);
+      return;
+    }
+
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
+    obj[key] = prop.copy().getValue();
+
+    let path = toolpath + "." + key;
+    this.userSetMap.add(path);
+
+    return this;
+  }
+}
+
+const SavedToolDefaults = new ToolPropertyCache();
+
+class ToolOp extends EventHandler {
+  /**
+   Main ToolOp constructor.  It reads the inputs/outputs properteis from
+   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
+   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
+   chain to fetch parent class properties.
+
+
+   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
+   has been called) SavedToolDefaults will have a copy of all the default
+   property values of all registered ToolOps.
+   **/
+
+  constructor() {
+    super();
+
+    this._pointerId = undefined;
+    this._overdraw = undefined;
+    this.__memsize = undefined;
+
+    var def = this.constructor.tooldef();
+
+    if (def.undoflag !== undefined) {
+      this.undoflag = def.undoflag;
+    }
+
+    if (def.flag !== undefined) {
+      this.flag = def.flag;
+    }
+
+    this._accept = this._reject = undefined;
+    this._promise = undefined;
+
+    for (var k in def) {
+      this[k] = def[k];
+    }
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this.constructor;
+      let lastp = undefined;
+
+      while (p !== undefined && p !== Object && p !== ToolOp && p !== lastp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+        }
+
+        lastp = p;
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    this.inputs = {};
+    this.outputs = {};
+
+    if (dinputs) {
+      for (let k in dinputs) {
+        let prop = dinputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        if (!this.hasDefault(prop, k)) {
+          this.inputs[k] = prop;
+          continue;
+        }
+
+        try {
+          prop.setValue(this.getDefault(prop, k));
+        } catch (error) {
+          console.log(error.stack);
+          console.log(error.message);
+        }
+
+        prop.wasSet = false;
+        this.inputs[k] = prop;
+      }
+    }
+
+    if (doutputs) {
+      for (let k in doutputs) {
+        let prop = doutputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        this.outputs[k] = prop;
+      }
+    }
+
+    this.drawlines = [];
+  }
+
+  /**
+   ToolOp definition.
+
+   An example:
+   <pre>
+   static tooldef() {
+    return {
+      uiname   : "Tool Name",
+      toolpath : "logical_module.tool", //logical_module need not match up to a real module
+      icon     : -1, //tool's icon, or -1 if there is none
+      description : "tooltip",
+      is_modal : false, //tool is interactive and takes control of events
+      hotkey   : undefined,
+      undoflag : 0, //see UndoFlags
+      flag     : 0,
+      inputs   : ToolOp.inherit({
+        f32val : new Float32Property(1.0),
+        path   : new StringProperty("./path");
+      }),
+      outputs  : {}
+      }
+    }
+   </pre>
+   */
+  static tooldef() {
+    if (this === ToolOp) {
+      throw new Error("Tools must implemented static tooldef() methods!");
+    }
+
+    return {};
+  }
+
+  /** Returns a map of input property values,
+   *  e.g. `let {prop1, prop2} = this.getValues()` */
+  getInputs() {
+    let ret = {};
+
+    for (let k in this.inputs) {
+      ret[k] = this.inputs[k].getValue();
+    }
+
+    return ret;
+  }
+
+  static Equals(a, b) {
+    if (!a || !b) return false;
+    if (a.constructor !== b.constructor) return false;
+
+    let bad = false;
+
+    for (let k in a.inputs) {
+      bad = bad || !(k in b.inputs);
+      bad = bad || a.inputs[k].constructor !== b.inputs[k];
+      bad = bad || !a.inputs[k].equals(b.inputs[k]);
+
+      if (bad) {
+        break;
+      }
+    }
+
+    return !bad;
+  }
+
+  static inherit(slots = {}) {
+    return new InheritFlag(slots);
+  }
+
+  /**
+
+   Creates a new instance of this toolop from args and a context.
+   This is often use to fill properties with default arguments
+   stored somewhere in the context.
+
+   */
+  static invoke(ctx, args) {
+    let tool = new this();
+
+    for (let k in args) {
+      if (!(k in tool.inputs)) {
+        console.warn("Unknown tool argument " + k);
+        continue;
+      }
+
+      let prop = tool.inputs[k];
+      let val = args[k];
+
+      if ((typeof val === "string") && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
+        if (val in prop.values) {
+          val = prop.values[val];
+        } else {
+          console.warn("Possible invalid enum/flag:", val);
+          continue;
+        }
+      }
+
+      tool.inputs[k].setValue(val);
+    }
+
+    return tool;
+  }
+
+  static register(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
+      return;
+    }
+
+    ToolClasses.push(cls);
+  }
+
+  static _regWithNstructjs(cls, structName = cls.name) {
+    if (nstructjs.isRegistered(cls)) {
+      return;
+    }
+
+    let parent = cls.prototype.__proto__.constructor;
+
+    if (!cls.hasOwnProperty("STRUCT")) {
+      if (parent !== ToolOp && parent !== ToolMacro && parent !== Object) {
+        this._regWithNstructjs(parent);
+      }
+
+      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
+    }
+
+    nstructjs.register(cls);
+  }
+
+  static isRegistered(cls) {
+    return ToolClasses.indexOf(cls) >= 0;
+  }
+
+  static unregister(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      ToolClasses.remove(cls);
+    }
+  }
+
+  static _getFinalToolDef() {
+    let def = this.tooldef();
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this;
+
+      while (p !== undefined && p !== Object && p !== ToolOp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    def.inputs = dinputs;
+    def.outputs = doutputs;
+
+    return def;
+  }
+
+  static onTick() {
+    for (let toolop of modalstack) {
+      toolop.on_tick();
+    }
+  }
+
+  static searchBoxOk(ctx) {
+    let flag = this.tooldef().flag;
+    let ret = !(flag && (flag & ToolFlags$1.PRIVATE));
+    ret = ret && this.canRun(ctx);
+
+    return ret;
+  }
+
+  //toolop is an optional instance of this class, may be undefined
+  static canRun(ctx, toolop = undefined) {
+    return true;
+  }
+
+  /** Called when the undo system needs to destroy
+   *  this toolop to save memory*/
+  onUndoDestroy() {
+
+  }
+
+  /** Used by undo system to limit memory */
+  calcMemSize(ctx) {
+    if (this.__memsize !== undefined) {
+      return this.__memsize;
+    }
+
+    let tot = 0;
+
+    for (let step = 0; step < 2; step++) {
+      let props = step ? this.outputs : this.inputs;
+
+      for (let k in props) {
+        let prop = props[k];
+
+        let size = prop.calcMemSize();
+
+        if (isNaN(size) || !isFinite(size)) {
+          console.warn("Got NaN when calculating mem size for property", prop);
+          continue;
+        }
+
+        tot += size;
+      }
+    }
+
+    let size = this.calcUndoMem(ctx);
+
+    if (isNaN(size) || !isFinite(size)) {
+      console.warn("Got NaN in calcMemSize", this);
+    } else {
+      tot += size;
+    }
+
+    this.__memsize = tot;
+
+    return tot;
+  }
+
+  loadDefaults(force = true) {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (!force && prop.wasSet) {
+        continue;
+      }
+
+      if (this.hasDefault(prop, k)) {
+        prop.setValue(this.getDefault(prop, k));
+        prop.wasSet = false;
+      }
+    }
+
+    return this;
+  }
+
+  hasDefault(toolprop, key = toolprop.apiname) {
+    return SavedToolDefaults.has(this.constructor, key, toolprop);
+  }
+
+  getDefault(toolprop, key = toolprop.apiname) {
+    let cls = this.constructor;
+
+    if (SavedToolDefaults.has(cls, key, toolprop)) {
+      return SavedToolDefaults.get(cls, key, toolprop);
+    } else {
+      return toolprop.getValue();
+    }
+  }
+
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this.constructor, k, prop);
+      }
+    }
+
+    return this;
+  }
+
+  genToolString() {
+    let def = this.constructor.tooldef();
+    let path = def.toolpath + "(";
+
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      path += k + "=";
+      if (prop.type === PropTypes$8.STRING)
+        path += "'";
+
+      if (prop.type === PropTypes$8.FLOAT) {
+        path += prop.getValue().toFixed(3);
+      } else {
+        path += prop.getValue();
+      }
+
+      if (prop.type === PropTypes$8.STRING)
+        path += "'";
+      path += " ";
+    }
+    path += ")";
+    return path;
+  }
+
+  on_tick() {
+
+  }
+
+  /**default on_keydown implementation for modal tools,
+   no need to call super() to execute this if you don't want to*/
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap$4["Enter"]:
+      case keymap$4["Space"]:
+        this.modalEnd(false);
+        break;
+      case keymap$4["Escape"]:
+        this.modalEnd(true);
+        break;
+    }
+  }
+
+  //called after undoPre
+  calcUndoMem(ctx) {
+    console.warn("ToolOp.prototype.calcUndoMem: implement me!");
+    return 0;
+  }
+
+  undoPre(ctx) {
+    throw new Error("implement me!");
+  }
+
+  undo(ctx) {
+    throw new Error("implement me!");
+    //_appstate.loadUndoFile(this._undo);
+  }
+
+  redo(ctx) {
+    this._was_redo = true; //also set by toolstack.redo
+
+    this.undoPre(ctx);
+    this.execPre(ctx);
+    this.exec(ctx);
+    this.execPost(ctx);
+  }
+
+  //for compatibility with fairmotion
+  exec_pre(ctx) {
+    this.execPre(ctx);
+  }
+
+  execPre(ctx) {
+  }
+
+  exec(ctx) {
+  }
+
+  execPost(ctx) {
+
+  }
+
+  /**for use in modal mode only*/
+  resetTempGeom() {
+    var ctx = this.modal_ctx;
+
+    for (var dl of this.drawlines) {
+      dl.remove();
+    }
+
+    this.drawlines.length = 0;
+  }
+
+  error(msg) {
+    console.warn(msg);
+  }
+
+  getOverdraw() {
+    if (this._overdraw === undefined) {
+      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw.start(this.modal_ctx.screen);
+    }
+
+    return this._overdraw;
+  }
+
+  /**for use in modal mode only*/
+  makeTempLine(v1, v2, style) {
+    let line = this.getOverdraw().line(v1, v2, style);
+    this.drawlines.push(line);
+    return line;
+  }
+
+  pushModal(node) {
+    throw new Error("cannot call this; use modalStart")
+  }
+
+  popModal() {
+    throw new Error("cannot call this; use modalEnd");
+  }
+
+  /**returns promise to be executed on modalEnd*/
+  modalStart(ctx) {
+    if (this.modalRunning) {
+      console.warn("Warning, tool is already in modal mode consuming events");
+      return this._promise;
+    }
+
+    this.modal_ctx = ctx;
+    this.modalRunning = true;
+
+    this._promise = new Promise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+
+      modalstack.push(this);
+
+      if (this._pointerId !== undefined) {
+        super.pushPointerModal(ctx.screen, this._pointerId);
+      } else {
+        super.pushModal(ctx.screen);
+      }
+    });
+
+    return this._promise;
+  }
+
+  /*eek, I've not been using this.
+    guess it's a non-enforced contract, I've been naming
+    cancel methods 'cancel' all this time.
+
+    XXX fix
+  */
+  toolCancel() {
+  }
+
+  modalEnd(was_cancelled) {
+    if (this._modalstate) {
+      modalstack.pop();
+    }
+
+    if (this._overdraw !== undefined) {
+      this._overdraw.end();
+      this._overdraw = undefined;
+    }
+
+    if (was_cancelled && this._on_cancel !== undefined) {
+      if (this._accept) {
+        this._accept(this.modal_ctx, true);
+      }
+
+      this._on_cancel(this);
+      this._on_cancel = undefined;
+    }
+
+    this.resetTempGeom();
+
+    var ctx = this.modal_ctx;
+
+    this.modal_ctx = undefined;
+    this.modalRunning = false;
+    this.is_modal = false;
+
+    super.popModal();
+
+    this._promise = undefined;
+
+    if (this._accept) {
+      this._accept(ctx, false);//Context, was_cancelled
+      this._accept = this._reject = undefined;
+    }
+
+    this.saveDefaultInputs();
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    let outs = this.outputs;
+    let ins = this.inputs;
+
+    this.inputs = {};
+    this.outputs = {};
+
+    for (let pair of ins) {
+      this.inputs[pair.key] = pair.val;
+    }
+
+    for (let pair of outs) {
+      this.outputs[pair.key] = pair.val;
+    }
+  }
+
+  _save_inputs() {
+    let ret = [];
+    for (let k in this.inputs) {
+      ret.push(new PropKey(k, this.inputs[k]));
+    }
+
+    return ret;
+  }
+
+  _save_outputs() {
+    let ret = [];
+    for (let k in this.outputs) {
+      ret.push(new PropKey(k, this.outputs[k]));
+    }
+
+    return ret;
+  }
+}
+
+ToolOp.STRUCT = `
+toolsys.ToolOp {
+  inputs  : array(toolsys.PropKey) | this._save_inputs();
+  outputs : array(toolsys.PropKey) | this._save_outputs();
+}
+`;
+nstructjs.register(ToolOp);
+
+class PropKey {
+  constructor(key, val) {
+    this.key = key;
+    this.val = val;
+  }
+}
+
+PropKey.STRUCT = `
+toolsys.PropKey {
+  key : string;
+  val : abstract(ToolProperty);
+}
+`;
+nstructjs.register(PropKey);
+
+class MacroLink {
+  constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
+    this.source = sourcetool_idx;
+    this.dest = desttool_idx;
+
+    this.sourceProps = srcprops;
+    this.destProps = dstprops;
+
+    this.sourcePropKey = srckey;
+    this.destPropKey = dstkey;
+  }
+}
+
+MacroLink.STRUCT = `
+toolsys.MacroLink {
+  source         : int;
+  dest           : int;
+  sourcePropKey  : string;
+  destPropKey    : string;
+  sourceProps    : string;
+  destProps      : string; 
+}
+`;
+nstructjs.register(MacroLink);
+
+const MacroClasses = {};
+window._MacroClasses = MacroClasses;
+
+let macroidgen = 0;
+
+
+class ToolMacro extends ToolOp {
+  constructor() {
+    super();
+
+    this.tools = [];
+    this.curtool = 0;
+    this.has_modal = false;
+    this.connects = [];
+    this.connectLinks = [];
+
+    this._macro_class = undefined;
+  }
+
+  static tooldef() {
+    return {
+      uiname: "Tool Macro"
+    }
+  }
+
+  //toolop is an optional instance of this class, may be undefined
+  static canRun(ctx, toolop = undefined) {
+    return true;
+  }
+
+  _getTypeClass() {
+    if (this._macro_class && this._macro_class.ready) {
+      return this._macro_class;
+    }
+
+    if (!this._macro_class) {
+      this._macro_class = class MacroTypeClass extends ToolOp {
+        static tooldef() {
+          return this.__tooldef;
+        }
+      };
+
+      this._macro_class.__tooldef = {
+        toolpath: this.constructor.tooldef().toolpath || ''
+      };
+      this._macro_class.ready = false;
+    }
+
+    if (!this.tools || this.tools.length === 0) {
+      /* We've been invoked by ToolOp constructor,
+      *  for now just return an empty class  */
+      return this._macro_class;
+    }
+
+    let key = "";
+    for (let tool of this.tools) {
+      key = tool.constructor.name + ":";
+    }
+
+    /* Handle child classes of ToolMacro */
+    if (this.constructor !== ToolMacro) {
+      key += ":" + this.constructor.tooldef().toolpath;
+    }
+
+    for (let k in this.inputs) {
+      key += k + ":";
+    }
+
+    if (key in MacroClasses) {
+      this._macro_class = MacroClasses[key];
+      return this._macro_class;
+    }
+
+    let name = "Macro(";
+    let i = 0;
+    let is_modal;
+
+    for (let tool of this.tools) {
+      let def = tool.constructor.tooldef();
+
+      if (i > 0) {
+        name += ", ";
+      } else {
+        is_modal = def.is_modal;
+      }
+
+      if (def.uiname) {
+        name += def.uiname;
+      } else if (def.toolpath) {
+        name += def.toolpath;
+      } else {
+        name += tool.constructor.name;
+      }
+
+      i++;
+    }
+
+    let inputs = {};
+
+    for (let k in this.inputs) {
+      inputs[k] = this.inputs[k].copy().clearEventCallbacks();
+      inputs[k].wasSet = false;
+    }
+
+    let tdef = {
+      uiname  : name,
+      toolpath: key,
+      inputs,
+      outputs : {},
+      is_modal
+    };
+
+    let cls = this._macro_class;
+    cls.__tooldef = tdef;
+    cls._macroTypeId = macroidgen++;
+    cls.ready = true;
+
+    /*
+    let cls = {
+      name : key,
+      tooldef() {
+        return tdef
+      },
+      _getFinalToolDef() {
+        return this.tooldef();
+      }
+    };//*/
+
+    MacroClasses[key] = cls;
+
+    return cls;
+  }
+
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this._getTypeClass(), k, prop);
+      }
+    }
+
+    return this;
+  }
+
+  hasDefault(toolprop, key = toolprop.apiname) {
+    return SavedToolDefaults.has(this._getTypeClass(), key, toolprop);
+  }
+
+  getDefault(toolprop, key = toolprop.apiname) {
+    let cls = this._getTypeClass();
+
+    if (SavedToolDefaults.has(cls, key, toolprop)) {
+      return SavedToolDefaults.get(cls, key, toolprop);
+    } else {
+      return toolprop.getValue();
+    }
+  }
+
+  connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
+    if (typeof dsttool === "function") {
+      return this.connectCB(...arguments);
+    }
+
+    let i1 = this.tools.indexOf(srctool);
+    let i2 = this.tools.indexOf(dsttool);
+
+    if (i1 < 0 || i2 < 0) {
+      throw new Error("tool not in macro");
+    }
+
+    //remove linked properties from this.inputs
+    if (srcprops === "inputs") {
+      let tool = this.tools[i1];
+
+      let prop = tool.inputs[srcoutput];
+      if (prop === this.inputs[srcoutput]) {
+        delete this.inputs[srcoutput];
+      }
+    }
+
+    if (dstprops === "inputs") {
+      let tool = this.tools[i2];
+      let prop = tool.inputs[dstinput];
+
+      if (this.inputs[dstinput] === prop) {
+        delete this.inputs[dstinput];
+      }
+    }
+
+    this.connectLinks.push(new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops));
+    return this;
+  }
+
+  connectCB(srctool, dsttool, callback, thisvar) {
+    this.connects.push({
+      srctool : srctool,
+      dsttool : dsttool,
+      callback: callback,
+      thisvar : thisvar
+    });
+
+    return this;
+  }
+
+  add(tool) {
+    if (tool.is_modal) {
+      this.is_modal = true;
+    }
+
+    for (let k in tool.inputs) {
+      let prop = tool.inputs[k];
+
+      if (!(prop.flag & PropFlags$3.PRIVATE)) {
+        this.inputs[k] = prop;
+      }
+    }
+
+    this.tools.push(tool);
+
+    return this;
+  }
+
+  _do_connections(tool) {
+    let i = this.tools.indexOf(tool);
+
+    for (let c of this.connectLinks) {
+      if (c.source === i) {
+        let tool2 = this.tools[c.dest];
+
+        tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
+      }
+    }
+
+    for (var c of this.connects) {
+      if (c.srctool === tool) {
+        c.callback.call(c.thisvar, c.srctool, c.dsttool);
+      }
+    }
+  }
+
+  /*
+  canRun(ctx) {
+    if (this.tools.length == 0)
+      return false;
+
+    //poll first tool only in list
+    return this.tools[0].constructor.canRun(ctx);
+  }//*/
+
+  modalStart(ctx) {
+    //macros obviously can't call loadDefaults in the constructor
+    //like normal tool ops can.
+    this.loadDefaults(false);
+
+    this._promise = new Promise((function (accept, reject) {
+      this._accept = accept;
+      this._reject = reject;
+    }).bind(this));
+
+    this.curtool = 0;
+
+    let i;
+
+    for (i = 0; i < this.tools.length; i++) {
+      if (this.tools[i].is_modal)
+        break;
+
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+
+    var on_modal_end = (function on_modal_end() {
+      this._do_connections(this.tools[this.curtool]);
+      this.curtool++;
+
+      while (this.curtool < this.tools.length &&
+      !this.tools[this.curtool].is_modal) {
+        this.tools[this.curtool].undoPre(ctx);
+        this.tools[this.curtool].execPre(ctx);
+        this.tools[this.curtool].exec(ctx);
+        this.tools[this.curtool].execPost(ctx);
+        this._do_connections(this.tools[this.curtool]);
+
+        this.curtool++;
+      }
+
+      if (this.curtool < this.tools.length) {
+        this.tools[this.curtool].undoPre(ctx);
+        this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+      } else {
+        this._accept(this, false);
+      }
+    }).bind(this);
+
+    if (i < this.tools.length) {
+      this.curtool = i;
+      this.tools[this.curtool].undoPre(ctx);
+      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+    }
+
+    return this._promise;
+  }
+
+  loadDefaults(force = true) {
+    return super.loadDefaults(force);
+  }
+
+  exec(ctx) {
+    //macros obviously can't call loadDefaults in the constructor
+    //like normal tool ops can.
+    //note that this will detect if the user changes property values
+
+    this.loadDefaults(false);
+
+    for (var i = 0; i < this.tools.length; i++) {
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+  }
+
+  calcUndoMem(ctx) {
+    let tot = 0;
+
+    for (let tool of this.tools) {
+      tot += tool.calcUndoMem(ctx);
+    }
+
+    return tot;
+  }
+
+  calcMemSize(ctx) {
+    let tot = 0;
+
+    for (let tool of this.tools) {
+      tot += tool.calcMemSize(ctx);
+    }
+
+    return tot;
+  }
+
+  undoPre() {
+    return; //undoPre is handled in exec() or modalStart()
+  }
+
+  undo(ctx) {
+    for (var i = this.tools.length - 1; i >= 0; i--) {
+      this.tools[i].undo(ctx);
+    }
+  }
+}
+
+ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
+  tools        : array(abstract(toolsys.ToolOp));
+  connectLinks : array(toolsys.MacroLink);
+}
+`;
+nstructjs.register(ToolMacro);
+
+class ToolStack extends Array {
+  constructor(ctx) {
+    super();
+
+    this.memLimit = 512*1024*1024;
+    this.enforceMemLimit = false;
+
+    this.cur = -1;
+    this.ctx = ctx;
+
+    this.modalRunning = 0;
+
+    this._undo_branch = undefined; //used to save undo branch in case of tool cancel
+  }
+
+  get head() {
+    return this[this.cur];
+  }
+
+  limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
+    if (maxmem === undefined) {
+      throw new Error("maxmem cannot be undefined");
+    }
+
+    let size = this.calcMemSize();
+
+    let start = 0;
+
+    while (start < this.cur - 2 && size > maxmem) {
+      size -= this[start].calcMemSize(ctx);
+      start++;
+    }
+
+    if (start === 0) {
+      return size;
+    }
+
+    for (let i = 0; i < start; i++) {
+      this[i].onUndoDestroy();
+    }
+
+    this.cur -= start;
+
+    for (let i = 0; i < this.length - start; i++) {
+      this[i] = this[i + start];
+    }
+    this.length -= start;
+
+    return this.calcMemSize(ctx);
+  }
+
+  calcMemSize(ctx = this.ctx) {
+    let tot = 0;
+
+    for (let tool of this) {
+      try {
+        tot += tool.calcMemSize();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to execute a calcMemSize method");
+      }
+    }
+
+    return tot;
+  }
+
+  setRestrictedToolContext(ctx) {
+    this.toolctx = ctx;
+  }
+
+  reset(ctx) {
+    if (ctx !== undefined) {
+      this.ctx = ctx;
+    }
+
+    this.modalRunning = 0;
+    this.cur = -1;
+    this.length = 0;
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, tool, compareInputs = false) {
+    let head = this.head;
+
+    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
+
+    tool.__memsize = undefined; //reset cache memsize
+
+    if (ok) {
+      //console.warn("Same tool detected");
+
+      this.undo();
+
+      //can inputs differ? in that case, execute new tool
+      if (!compareInputs) {
+        this.execTool(ctx, tool);
+      } else {
+        this.rerun();
+      }
+
+      return false;
+    } else {
+      this.execTool(ctx, tool);
+      return true;
+    }
+  }
+
+  execTool(ctx, toolop) {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit, ctx);
+    }
+
+    if (!toolop.constructor.canRun(ctx, toolop)) {
+      console.log("toolop.constructor.canRun returned false");
+      return;
+    }
+
+    let tctx = ctx.toLocked();
+
+    let undoflag = toolop.constructor.tooldef().undoflag;
+    if (toolop.undoflag !== undefined) {
+      undoflag = toolop.undoflag;
+    }
+    undoflag = undoflag === undefined ? 0 : undoflag;
+
+    //if (!(undoflag & UndoFlags.IS_UNDO_ROOT) && !(undoflag & UndoFlags.NO_UNDO)) {
+    //tctx = new SavedContext(ctx, ctx.datalib);
+    //}
+
+    toolop.execCtx = tctx;
+
+    if (!(undoflag & UndoFlags$1.NO_UNDO)) {
+      this.cur++;
+
+      //save branch for if tool cancel
+      this._undo_branch = this.slice(this.cur + 1, this.length);
+
+      //truncate
+      this.length = this.cur + 1;
+
+      this[this.cur] = toolop;
+      toolop.undoPre(tctx);
+    }
+
+    if (toolop.is_modal) {
+      ctx = toolop.modal_ctx = ctx;
+
+      this.modal_running = true;
+
+      toolop._on_cancel = (function (toolop) {
+        if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
+          this[this.cur].undo(ctx);
+          this.pop_i(this.cur);
+          this.cur--;
+        }
+      }).bind(this);
+
+      //will handle calling .exec itself
+      toolop.modalStart(ctx);
+    } else {
+      toolop.execPre(tctx);
+      toolop.exec(tctx);
+      toolop.execPost(tctx);
+      toolop.saveDefaultInputs();
+    }
+  }
+
+  toolCancel(ctx, tool) {
+    if (tool._was_redo) { //also set by toolstack.redo
+      //ignore tool cancel requests on redo
+      return;
+    }
+
+    if (tool !== this[this.cur]) {
+      console.warn("toolCancel called in error", this, tool);
+      return;
+    }
+
+    this.undo();
+    this.length = this.cur + 1;
+
+    if (this._undo_branch !== undefined) {
+      for (let item of this._undo_branch) {
+        this.push(item);
+      }
+    }
+  }
+
+  undo() {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT)) {
+      let tool = this[this.cur];
+
+      tool.undo(tool.execCtx);
+
+      this.cur--;
+    }
+  }
+
+  //reruns a tool if it's at the head of the stack
+  rerun(tool) {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (tool === this[this.cur]) {
+      tool._was_redo = false;
+
+      if (!tool.execCtx) {
+        tool.execCtx = this.ctx;
+      }
+
+      tool.undo(tool.execCtx);
+
+      tool._was_redo = true; //also set by toolstack.redo
+
+      tool.undoPre(tool.execCtx);
+      tool.execPre(tool.execCtx);
+      tool.exec(tool.execCtx);
+      tool.execPost(tool.execCtx);
+    } else {
+      console.warn("Tool wasn't at head of stack", tool);
+    }
+  }
+
+  redo() {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (this.cur >= -1 && this.cur + 1 < this.length) {
+      //console.log("redo!", this.cur, this.length);
+
+      this.cur++;
+      let tool = this[this.cur];
+
+
+      if (!tool.execCtx) {
+        tool.execCtx = this.ctx;
+      }
+
+      tool._was_redo = true;
+      tool.redo(tool.execCtx);
+
+      tool.saveDefaultInputs();
+    }
+  }
+
+  save() {
+    let data = [];
+    nstructjs.writeObject(data, this);
+    return data;
+  }
+
+  rewind() {
+    while (this.cur >= 0) {
+      let last = this.cur;
+      this.undo();
+
+      //prevent infinite loops
+      if (last === this.cur) {
+        break;
+      }
+    }
+
+    return this;
+  }
+
+  /**cb is a function(ctx), if it returns the value false then playback stops
+   promise will still be fulfilled.
+
+   onstep is a callback, if it returns a promise that promise will be
+   waited on, otherwise execution is queue with window.setTimeout().
+   */
+  replay(cb, onStep) {
+    let cur = this.cur;
+
+    this.rewind();
+
+    let last = this.cur;
+
+    let start = time_ms();
+
+    return new Promise((accept, reject) => {
+      let next = () => {
+        last = this.cur;
+
+        if (cb && cb(ctx) === false) {
+          accept();
+          return;
+        }
+
+        if (this.cur < this.length) {
+          this.cur++;
+          this.rerun();
+        }
+
+        if (last === this.cur) {
+          console.warn("time:", (time_ms() - start)/1000.0);
+          accept(this);
+        } else {
+          if (onStep) {
+            let ret = onStep();
+
+            if (ret && ret instanceof Promise) {
+              ret.then(() => {
+                next();
+              });
+            } else {
+              window.setTimeout(() => {
+                next();
+              });
+            }
+          }
+        }
+      };
+
+      next();
+    });
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    for (let item of this._stack) {
+      this.push(item);
+    }
+
+    delete this._stack;
+  }
+
+  //note that this makes sure tool classes are registered with nstructjs
+  //during save
+  _save() {
+    for (let tool of this) {
+      let cls = tool.constructor;
+
+      if (!nstructjs.isRegistered(cls)) {
+        cls._regWithNstructjs(cls);
+      }
+    }
+
+    return this;
+  }
+}
+
+ToolStack.STRUCT = `
+toolsys.ToolStack {
+  cur    : int;
+  _stack : array(abstract(toolsys.ToolOp)) | this._save();
+}
+`;
+nstructjs.register(ToolStack);
+
+window._testToolStackIO = function () {
+  let data = [];
+  let cls = _appstate.toolstack.constructor;
+
+  nstructjs.writeObject(data, _appstate.toolstack);
+  data = new DataView(new Uint8Array(data).buffer);
+
+  let toolstack = nstructjs.readObject(data, cls);
+
+  _appstate.toolstack.rewind();
+
+  toolstack.cur = -1;
+  toolstack.ctx = _appstate.toolstack.ctx;
+  _appstate.toolstack = toolstack;
+
+  return toolstack;
+};
+
+/**
+ * Call this to build the tool property cache data binding API.
+ *
+ * If rootCtxClass is not undefined and insertToolDefaultsIntoContext is true
+ * then ".toolDefaults" will be automatically added to rootCtxClass's prototype
+ * if necessary.
+ */
+function buildToolSysAPI(api, registerWithNStructjs    = true,
+                                rootCtxStruct                 = undefined,
+                                rootCtxClass                  = undefined,
+                                insertToolDefaultsIntoContext = true) {
+  let datastruct = api.mapStruct(ToolPropertyCache, true);
+
+  for (let cls of ToolClasses) {
+    let def = cls._getFinalToolDef();
+
+    for (let k in def.inputs) {
+      let prop = def.inputs[k];
+
+      if (!(prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY))) {
+        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
+      }
+    }
+  }
+
+  if (rootCtxStruct) {
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+  }
+
+  if (rootCtxClass && insertToolDefaultsIntoContext) {
+    let inst = new rootCtxClass({});
+    if (inst.toolDefaults === undefined) {
+      Object.defineProperty(rootCtxClass, "toolDefaults", {
+        get() {
+          return SavedToolDefaults;
+        }
+      });
+
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.toolDefaults_save = function () {
+          return {};
+        };
+        rootCtxClass.prototype.toolDefaults_load = function () {
+        };
+      }
+    }
+  }
+
+  if (!registerWithNStructjs) {
+    return;
+  }
+
+  //register tools with nstructjs
+  for (let cls of ToolClasses) {
+    try {
+      if (!nstructjs.isRegistered(cls)) {
+        ToolOp._regWithNstructjs(cls);
+      }
+    } catch (error) {
+      console.log(error.stack);
+      console.error("Failed to register a tool with nstructjs");
+    }
+  }
+}
+
+"use strict";
+//import {EventDispatcher} from "../util/events.js";
+
+let Vector2$a = Vector2$b;
+
+const SplineTemplates = {
+  CONSTANT      : 0,
+  LINEAR        : 1,
+  SHARP         : 2,
+  SQRT          : 3,
+  SMOOTH        : 4,
+  SMOOTHER      : 5,
+  SHARPER       : 6,
+  SPHERE        : 7,
+  REVERSE_LINEAR: 8,
+  GUASSIAN      : 9
+};
+
+const templates = {
+  [SplineTemplates.CONSTANT]      : [
+    [1, 1], [1, 1]
+  ],
+  [SplineTemplates.LINEAR]        : [
+    [0, 0], [1, 1]
+  ],
+  [SplineTemplates.SHARP]         : [
+    [0, 0], [0.9999, 0.0001], [1, 1]
+  ],
+  [SplineTemplates.SQRT]          : [
+    [0, 0], [0.05, 0.25], [0.15, 0.45], [0.33, 0.65], [1, 1]
+  ],
+  [SplineTemplates.SMOOTH]        : [
+    "DEG", 3, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
+  ],
+  [SplineTemplates.SMOOTHER]      : [
+    "DEG", 6, [0, 0], [1.0/2.25, 0], [2.0/3.0, 1.0], [1, 1]
+  ],
+  [SplineTemplates.SHARPER]       : [
+    [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
+  ],
+  [SplineTemplates.SPHERE]        : [
+    [0, 0], [0.01953, 0.23438], [0.08203, 0.43359], [0.18359, 0.625], [0.35938, 0.81641], [0.625, 0.97656], [1, 1]
+  ],
+  [SplineTemplates.REVERSE_LINEAR]: [
+    [0, 1], [1, 0]
+  ],
+  [SplineTemplates.GUASSIAN]      : [
+    "DEG", 5, [0, 0], [0.17969, 0.007], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]
+  ]
+};
+
+//is initialized below
+const SplineTemplateIcons = {};
+
+let RecalcFlags = {
+  BASIS: 1,
+  FULL : 2,
+  ALL  : 3,
+
+  //private flag
+  FULL_BASIS: 4
+};
+
+function mySafeJSONStringify$1(obj) {
+  return JSON.stringify(obj.toJSON(), function (key) {
+    let v = this[key];
+
+    if (typeof v === "number") {
+      if (v !== Math.floor(v)) {
+        v = parseFloat(v.toFixed(5));
+      } else {
+        v = v;
+      }
+    }
+
+    return v;
+  });
+}
+
+function mySafeJSONParse$1(buf) {
+  return JSON.parse(buf, (key, val) => {
+
+  });
+};
+
+window.mySafeJSONStringify = mySafeJSONStringify$1;
+
+
+let bin_cache = {};
+window._bin_cache = bin_cache;
+
+let eval2_rets = cachering.fromConstructor(Vector2$a, 32);
+
+/*
+  I hate these stupid curve widgets.  This horrible one here works by
+  root-finding the x axis on a two dimensional b-spline (which works
+  surprisingly well).
+*/
+
+function bez3$1(a, b, c, t) {
+  let r1 = a + (b - a)*t;
+  let r2 = b + (c - b)*t;
+
+  return r1 + (r2 - r1)*t;
+}
+
+function bez4$1(a, b, c, d, t) {
+  let r1 = bez3$1(a, b, c, t);
+  let r2 = bez3$1(b, c, d, t);
+
+  return r1 + (r2 - r1)*t;
+}
+
+function binomial(n, i) {
+  if (i > n) {
+    throw new Error("Bad call to binomial(n, i), i was > than n");
+  }
+
+  if (i === 0 || i === n) {
+    return 1;
+  }
+
+  let key = "" + n + "," + i;
+
+  if (key in bin_cache)
+    return bin_cache[key];
+
+  let ret = binomial(n - 1, i - 1) + bin(n - 1, i);
+  bin_cache[key] = ret;
+
+  return ret;
+}
+
+window.bin = binomial;
+
+class Curve1dBSplineOpBase extends ToolOp {
+  static tooldef() {
+    return {
+      inputs : {
+        dataPath: new StringProperty()
+      },
+      outputs: {},
+    };
+  }
+
+  _undo = undefined;
+
+  undoPre(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      this._undo = curve1d.copy();
+    } else {
+      this._undo = undefined;
+    }
+  }
+
+  undo(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.load(this._undo);
+      curve1d._fireEvent("update", curve1d);
+    }
+  }
+
+  getCurve1d(ctx) {
+    let {dataPath} = this.getInputs();
+
+    let curve1d;
+    try {
+      curve1d = ctx.api.getValue(ctx, dataPath);
+    } catch (error) {
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("Failed to lookup curve1d property at path ", dataPath);
+      return;
+    }
+
+    return curve1d;
+  }
+
+  execPost(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d._fireEvent("update", curve1d);
+    }
+  }
+}
+
+class Curve1dBSplineResetOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.reset_bspline",
+      inputs  : ToolOp.inherit({}),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.generators.active.reset();
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineResetOp);
+
+class Curve1dBSplineLoadTemplOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_load_template",
+      inputs  : ToolOp.inherit({
+        template: new EnumProperty$9(SplineTemplates.SMOOTH, SplineTemplates)
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    let {template} = this.getInputs();
+
+    if (curve1d) {
+      curve1d.generators.active.loadTemplate(template);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineLoadTemplOp);
+
+class Curve1dBSplineDeleteOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_delete_point",
+      inputs  : ToolOp.inherit({}),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      curve1d.generators.active.deletePoint();
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineDeleteOp);
+
+class Curve1dBSplineSelectOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_select_point",
+      inputs  : ToolOp.inherit({
+        point : new IntProperty(-1),
+        state : new BoolProperty(true),
+        unique: new BoolProperty(true),
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+      let {point, state, unique} = this.getInputs();
+
+      for (let p of bspline.points) {
+        if (p.eid === point) {
+          if (state) {
+            p.flag |= CurveFlags.SELECT;
+          } else {
+            p.flag &= ~CurveFlags.SELECT;
+          }
+        } else if (unique) {
+          p.flag &= ~CurveFlags.SELECT;
+        }
+      }
+
+      curve1d._fireEvent("select", bspline);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineSelectOp);
+
+class Curve1dBSplineAddOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_add_point",
+      inputs  : ToolOp.inherit({
+        x: new FloatProperty(),
+        y: new FloatProperty()
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let {x, y} = this.getInputs();
+      curve1d.generators.active.addFromMouse(x, y);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineAddOp);
+
+class BSplineTransformOp extends ToolOp {
+  constructor() {
+    super();
+
+    this.first = true;
+    this.start_mpos = new Vector2$a();
+  }
+
+  static tooldef() {
+    return {
+      toolpath: "curve1d.transform_bspline",
+      inputs  : {
+        dataPath: new StringProperty(),
+        off     : new Vec2Property(),
+        dpi     : new FloatProperty(1.0),
+      },
+      is_modal: true,
+      outputs : {},
+    };
+  }
+
+  _undo = undefined;
+
+  storePoints(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+      return Array.from(bspline.points).map(p => p.copy());
+    }
+
+    return [];
+  }
+
+  loadPoints(ctx, ps) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+
+      for (let p1 of bspline.points) {
+        for (let p2 of ps) {
+          if (p2.eid === p1.eid) {
+            p1.co.load(p2.co);
+            p1.rco.load(p2.rco);
+            p1.sco.load(p2.sco);
+          }
+        }
+      }
+
+      bspline.parent._fireEvent("transform", bspline);
+
+      bspline.recalc = RecalcFlags.ALL;
+      bspline.updateKnots();
+      bspline.update();
+      bspline.redraw();
+    }
+  }
+
+  undoPre(ctx) {
+    this._undo = this.storePoints(ctx);
+  }
+
+  undo(ctx) {
+    this.loadPoints(ctx, this._undo);
+  }
+
+  getCurve1d(ctx) {
+    let {dataPath} = this.getInputs();
+
+    let curve1d;
+    try {
+      curve1d = ctx.api.getValue(ctx, dataPath);
+    } catch (error) {
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("Failed to lookup curve1d property at path ", dataPath);
+      return;
+    }
+
+    return curve1d;
+  }
+
+  finish(cancel = false) {
+    let ctx = this.modal_ctx;
+    this.modalEnd(cancel);
+
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.generators.active.fastmode = false;
+    }
+
+    if (cancel) {
+      this.undo(ctx);
+    }
+  }
+
+  on_pointerup(e) {
+    this.finish();
+  }
+
+  modalStart(ctx) {
+    super.modalStart(ctx);
+
+    let curve1d = this.getCurve1d(ctx);
+    if (!curve1d) {
+      console.log("Failed to get curve1d!");
+      return;
+    }
+
+    let bspline = curve1d.generators.active;
+    for (let p of bspline.points) {
+      p.startco.load(p.co);
+    }
+  }
+
+  on_pointermove(e) {
+    let mpos = new Vector2$a().loadXY(e.x, e.y);
+    if (this.first) {
+      this.start_mpos.load(mpos);
+      this.first = false;
+      return;
+    }
+
+    let curve1d = this.getCurve1d(this.modal_ctx);
+    if (curve1d) {
+      curve1d.generators.active.fastmode = true;
+    }
+
+    const {dpi} = this.getInputs();
+    let off = new Vector2$a(mpos).sub(this.start_mpos).mulScalar(dpi);
+    off[1] = -off[1];
+
+    this.inputs.off.setValue(off);
+
+    const bspline = curve1d.generators.active;
+    for (let p of bspline.points) {
+      p.co.load(p.startco);
+    }
+
+    this.exec(this.modal_ctx);
+  }
+
+  on_pointerdown(e) {
+    this.finish();
+  }
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (!curve1d) {
+      return;
+    }
+
+    let bspline = curve1d.generators.active;
+    let {off} = this.getInputs();
+
+    const xRange = curve1d.xRange, yRange = curve1d.yRange;
+
+    for (let p of bspline.points) {
+      if (p.flag & CurveFlags.SELECT) {
+        p.co.add(off);
+        p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
+        p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
+      }
+    }
+
+    bspline.parent._fireEvent("transform", bspline);
+
+    bspline.recalc = RecalcFlags.ALL;
+    bspline.updateKnots();
+    bspline.update();
+    bspline.redraw();
+  }
+}
+
+ToolOp.register(BSplineTransformOp);
+
+class Curve1DPoint {
+  constructor(co) {
+    this.co = new Vector2$a(co);
+    this.rco = new Vector2$a(co);
+    this.sco = new Vector2$a(co);
+
+    //for transform
+    this.startco = new Vector2$a();
+    this.eid = -1;
+    this.flag = 0;
+
+    this.tangent = TangentModes.SMOOTH;
+
+    Object.seal(this);
+  }
+
+  get 0() {
+    throw new Error("Curve1DPoint get 0");
+  }
+
+  get 1() {
+    throw new Error("Curve1DPoint get 1");
+  }
+
+  /* Needed for file compatibility. */
+  set 0(v) {
+    this.co[0] = v;
+  }
+
+  set 1(v) {
+    this.co[1] = v;
+  }
+
+  load(b) {
+    this.eid = b.eid;
+    this.flag = b.flag;
+    this.tangent = b.tangent;
+
+    this.co.load(b.co);
+    this.rco.load(b.rco);
+    this.sco.load(b.sco);
+    this.startco.load(b.startco);
+
+    return this;
+  }
+
+  set deg(v) {
+    console.warn("old file data detected");
+  }
+
+  static fromJSON(obj) {
+    let ret = new Curve1DPoint(obj);
+
+    if ("0" in obj) {
+      ret.co[0] = obj[0];
+      ret.co[1] = obj[1];
+    } else {
+      ret.co.load(obj.co);
+    }
+
+    ret.startco.load(obj.startco);
+    ret.eid = obj.eid;
+    ret.flag = obj.flag;
+    ret.tangent = obj.tangent;
+
+    ret.rco.load(obj.rco);
+
+    return ret;
+  }
+
+  copy() {
+    let ret = new Curve1DPoint(this.co);
+
+    ret.tangent = this.tangent;
+    ret.flag = this.flag;
+    ret.eid = this.eid;
+
+    ret.startco.load(this.startco);
+    ret.rco.load(this.rco);
+    ret.sco.load(this.sco);
+
+    return ret;
+  }
+
+  toJSON() {
+    return {
+      co     : this.co,
+      eid    : this.eid,
+      flag   : this.flag,
+      tangent: this.tangent,
+
+      rco    : this.rco,
+      startco: this.startco,
+    };
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.sco.load(this.co);
+    this.rco.load(this.co);
+
+    splineCache.update(this);
+  }
+};
+Curve1DPoint.STRUCT = `
+Curve1DPoint {
+  co      : vec2;
+  rco     : vec2;
+  sco     : vec2;
+  startco : vec2;
+  eid     : int;
+  flag    : int;
+  tangent : int;
+}
+`;
+nstructjs.register(Curve1DPoint);
+
+let _udigest$3 = new HashDigest();
+
+class BSplineCache {
+  constructor() {
+    this.curves = [];
+    this.map = new Map();
+    this.maxCurves = 32;
+    this.gen = 0;
+  }
+
+  limit() {
+    if (this.curves.length <= this.maxCurves) {
+      return;
+    }
+
+    this.curves.sort((a, b) => b.cache_w - a.cache_w);
+    while (this.curves.length > this.maxCurves) {
+      let curve = this.curves.pop();
+      this.map.delete(curve.calcHashKey());
+    }
+  }
+
+  has(curve) {
+    let curve2 = this.map.get(curve.calcHashKey());
+    return curve2 && curve2.equals(curve);
+  }
+
+  get(curve) {
+    let key = curve.calcHashKey();
+    curve._last_cache_key = key;
+
+    let curve2 = this.map.get(key);
+    if (curve2 && curve2.equals(curve)) {
+      curve2.cache_w = this.gen++;
+      return curve2;
+    }
+
+    curve2 = curve.copy();
+    curve2._last_cache_key = key;
+
+    curve2.updateKnots();
+    curve2.regen_basis();
+    curve2.regen_hermite();
+
+    this.map.set(curve2);
+    this.curves.push(curve2);
+
+    curve2.cache_w = this.gen++;
+
+    this.limit();
+
+    return curve2;
+  }
+
+  _remove(key) {
+    let curve = this.map.get(key);
+    this.map.delete(key);
+    this.curves.remove(curve);
+  }
+
+  update(curve) {
+    let key = curve._last_cache_key;
+
+    if (this.map.has(key)) {
+      this._remove(curve);
+      this.get(curve);
+    }
+  }
+}
+
+let splineCache = new BSplineCache();
+window._splineCache = splineCache;
+
+let _idgen$1 = 1;
+
+class BSplineCurve extends CurveTypeData {
+  constructor() {
+    super();
+
+    this._bid = _idgen$1++;
+
+    this._degOffset = 0;
+    this.cache_w = 0;
+    this._last_cache_key = 0;
+
+    this.fastmode = false;
+    this.points = [];
+    this.length = 0;
+    this.interpolating = false;
+
+    this._ps = [];
+    this.hermite = [];
+    this.fastmode = false;
+
+    this.deg = 6;
+    this.recalc = RecalcFlags.ALL;
+    this.basis_tables = [];
+    this.eidgen = new IDGen();
+
+    this.add(0, 0);
+    this.add(1, 1);
+
+    this.mpos = new Vector2$a();
+
+    this.on_mousedown = this.on_mousedown.bind(this);
+    this.on_mousemove = this.on_mousemove.bind(this);
+    this.on_mouseup = this.on_mouseup.bind(this);
+    this.on_keydown = this.on_keydown.bind(this);
+    this.on_touchstart = this.on_touchstart.bind(this);
+    this.on_touchmove = this.on_touchmove.bind(this);
+    this.on_touchend = this.on_touchend.bind(this);
+    this.on_touchcancel = this.on_touchcancel.bind(this);
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  static define() {
+    return {
+      uiname  : "B-Spline",
+      name    : "bspline",
+      typeName: "BSplineCurve"
+    }
+  }
+
+  calcHashKey(digest = _udigest$3.reset()) {
+    let d = digest;
+
+    super.calcHashKey(d);
+
+    d.add(this.deg);
+    d.add(this.interpolating);
+    d.add(this.points.length);
+
+    for (let p of this.points) {
+      let x = ~~(p.co[0]*1024);
+      let y = ~~(p.co[1]*1024);
+
+      d.add(x);
+      d.add(y);
+      d.add(p.tangent); //is an enum
+    }
+
+    return d.get();
+  }
+
+  copyTo(b) {
+    b.deg = this.deg;
+    b.interpolating = this.interpolating;
+    b.fastmode = this.fastmode;
+
+    for (let p of this.points) {
+      let p2 = p.copy();
+
+      b.points.push(p2);
+    }
+
+    return b;
+  }
+
+  copy() {
+    let curve = new BSplineCurve();
+    this.copyTo(curve);
+    return curve;
+  }
+
+  equals(b) {
+    if (b.type !== this.type) {
+      return false;
+    }
+
+    let bad = this.points.length !== b.points.length;
+
+    bad = bad || this.deg !== b.deg;
+    bad = bad || this.interpolating !== b.interpolating;
+
+    if (bad) {
+      return false;
+    }
+
+    for (let i = 0; i < this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = b.points[i];
+
+      if (p1.co.vectorDistance(p2.co) > 0.00001) {
+        return false;
+      }
+
+      if (p1.tangent !== p2.tangent) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  remove(p) {
+    let ret = this.points.remove(p);
+    this.length = this.points.length;
+
+    return ret;
+  }
+
+  add(x, y, no_update = false) {
+    let p = new Curve1DPoint();
+    this.recalc = RecalcFlags.ALL;
+
+    p.eid = this.eidgen.next();
+
+    p.co.loadXY(x, y);
+    p.sco.load(p.co);
+    p.rco.load(p.co);
+
+    this.points.push(p);
+    if (!no_update) {
+      this.update();
+    }
+
+    this.length = this.points.length;
+
+    return p;
+  }
+
+  update() {
+    super.update();
+  }
+
+  _sortPoints() {
+    if (!this.interpolating) {
+      for (let i = 0; i < this.points.length; i++) {
+        this.points[i].rco.load(this.points[i].co);
+      }
+    }
+
+    this.points.sort(function (a, b) {
+      return a.co[0] - b.co[0];
+    });
+
+    return this;
+  }
+
+  updateKnots(recalc = true, points = this.points) {
+    if (recalc) {
+      this.recalc = RecalcFlags.ALL;
+    }
+
+    this._sortPoints();
+
+    this._ps = [];
+    if (points.length < 2) {
+      return;
+    }
+    let a = points[0].co[0], b = points[points.length - 1].co[0];
+
+    let degExtra = this.deg;
+    this._degOffset = -this.deg;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      this._ps.push(points[i]);
+    }
+
+    if (degExtra) {
+      let last = points.length - 1;
+      for (let i = 0; i < degExtra; i++) {
+        let p = points[last].copy();
+        this._ps.push(p);
+      }
+    }
+
+    if (!this.interpolating) {
+      for (let i = 0; i < this._ps.length; i++) {
+        this._ps[i].rco.load(this._ps[i].co);
+      }
+    }
+
+    for (let i = 0; i < points.length; i++) {
+      let p = points[i];
+      let x = p.co[0], y = p.co[1];//this.evaluate(x);
+
+      p.sco[0] = x;
+      p.sco[1] = y;
+    }
+  }
+
+  toJSON() {
+    this._sortPoints();
+
+    let ret = super.toJSON();
+
+    ret = Object.assign(ret, {
+      points       : this.points.map(p => p.toJSON()),
+      deg          : this.deg,
+      interpolating: this.interpolating,
+      eidgen       : this.eidgen.toJSON()
+    });
+
+    return ret;
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.interpolating = obj.interpolating;
+    this.deg = obj.deg;
+
+    this.length = 0;
+    this.points = [];
+    this._ps = [];
+
+    if (obj.range) {
+      /* Will be version patched later. */
+      this.range = [new Vector2$a(obj.range[0]), new Vector2$a(obj.range[1])];
+    }
+
+    this.hightlight = undefined;
+    this.eidgen = IDGen.fromJSON(obj.eidgen);
+    this.recalc = RecalcFlags.ALL;
+    this.mpos = [0, 0];
+
+    for (let i = 0; i < obj.points.length; i++) {
+      this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
+    }
+
+    this.updateKnots();
+    this.redraw();
+
+    return this;
+  }
+
+  basis(t, i) {
+    if (this.recalc & RecalcFlags.FULL_BASIS) {
+      return this._basis(t, i);
+    }
+
+    if (this.recalc & RecalcFlags.BASIS) {
+      this.regen_basis();
+      this.recalc &= ~RecalcFlags.BASIS;
+    }
+
+    i = Math.min(Math.max(i, 0), this._ps.length - 1);
+    t = Math.min(Math.max(t, 0.0), 1.0)*0.999999999;
+
+    let table = this.basis_tables[i];
+
+    let s = t*(table.length/4)*0.99999;
+
+    let j = ~~s;
+    s -= j;
+
+    j *= 4;
+
+    //return table[j] + (table[j + 3] - table[j])*s; //linear
+    return bez4$1(table[j], table[j + 1], table[j + 2], table[j + 3], s); //cubic
+  }
+
+  reset(empty = false) {
+    this.length = 0;
+    this.points = [];
+    this._ps = [];
+
+    if (!empty) {
+      this.add(0, 0, true);
+      this.add(1, 1, true);
+    }
+
+    this.recalc = 1;
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    return this;
+  }
+
+  regen_hermite(steps) {
+    if (splineCache.has(this)) {
+      console.log("loading spline approx from cached bspline data");
+
+      this.hermite = splineCache.get(this).hermite;
+      return;
+    }
+
+    if (steps === undefined) {
+      steps = this.fastmode ? 120 : 340;
+    }
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
+
+    this.hermite = new Array(steps);
+    let table = this.hermite;
+
+    let eps = 0.00001;
+    let dt = (1.0 - eps*4.001)/(steps - 1);
+    let t = eps*4;
+    let lastdv1, lastf3;
+
+    for (let j = 0; j < steps; j++, t += dt) {
+      let f1 = this._evaluate(t - eps*2);
+      let f2 = this._evaluate(t - eps);
+      let f3 = this._evaluate(t);
+      let f4 = this._evaluate(t + eps);
+      let f5 = this._evaluate(t + eps*2);
+
+      let dv1 = (f4 - f2)/(eps*2);
+      dv1 /= steps;
+
+      if (j > 0) {
+        let j2 = j - 1;
+
+        table[j2*4] = lastf3;
+        table[j2*4 + 1] = lastf3 + lastdv1/3.0;
+        table[j2*4 + 2] = f3 - dv1/3.0;
+        table[j2*4 + 3] = f3;
+      }
+
+      lastdv1 = dv1;
+      lastf3 = f3;
+    }
+  }
+
+  solve_interpolating() {
+    //this.recalc |= RecalcFlags.FULL_BASIS;
+
+    for (let p of this._ps) {
+      p.rco.load(p.co);
+    }
+
+    let points = this.points.concat(this.points);
+
+
+    this._evaluate2(0.5);
+
+    let error1 = (p) => {
+      //return p.vectorDistance(this._evaluate2(p.co[0]));
+      return this._evaluate(p.co[0]) - p.co[1];
+    };
+
+    let error = (p) => {
+      return error1(p);
+
+      /*
+      let err = 0.0;
+      for (let p of this.points) {
+        //err += error1(p)**2;
+        err += Math.abs(error1(p));
+      }
+
+      //return Math.sqrt(err);
+      return err;
+      //*/
+    };
+
+    let err = 0.0;
+    let g = new Vector2$a();
+
+    for (let step = 0; step < 25; step++) {
+      err = 0.0;
+
+      for (let p of this._ps) {
+        let r1 = error(p);
+        const df = 0.000001;
+
+        err += Math.abs(r1);
+
+        if (p === this._ps[this._ps.length - 1]) {
+          continue;
+        }
+
+        g.zero();
+
+        for (let i = 0; i < 2; i++) {
+          let orig = p.rco[i];
+          p.rco[i] += df;
+          let r2 = error(p);
+          p.rco[i] = orig;
+
+          g[i] = (r2 - r1)/df;
+        }
+
+        let totgs = g.dot(g);
+
+        if (totgs < 0.00000001) {
+          continue;
+        }
+
+        r1 /= totgs;
+        let k = 0.5;
+
+        p.rco[0] += -r1*g[0]*k;
+        p.rco[1] += -r1*g[1]*k;
+      }
+
+      let th = this.fastmode ? 0.001 : 0.00005;
+      if (err < th) {
+        break;
+      }
+    }
+
+    //this.recalc &= ~RecalcFlags.FULL_BASIS;
+  }
+
+  regen_basis() {
+    if (splineCache.has(this)) {
+      console.log("loading from cached bspline data");
+
+      this.basis_tables = splineCache.get(this).basis_tables;
+      return;
+    }
+
+    //let steps = this.fastmode && !this.interpolating ? 64 : 128;
+    let steps = this.fastmode ? 64 : 128;
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
+
+    this.basis_tables = new Array(this._ps.length);
+
+    for (let i = 0; i < this._ps.length; i++) {
+      let table = this.basis_tables[i] = new Array((steps - 1)*4);
+
+      let eps = 0.00001;
+      let dt = (1.0 - eps*8)/(steps - 1);
+      let t = eps*4;
+      let lastdv1 = 0.0, lastf3 = 0.0;
+
+      for (let j = 0; j < steps; j++, t += dt) {
+
+        let f3 = this._basis(t, i);
+        let dv1;
+
+        if (0) {
+          //let f1 = this._basis(t - eps*2, i);
+          let f2 = this._basis(t - eps, i);
+          let f4 = this._basis(t + eps, i);
+          //let f5 = this._basis(t + eps*2, i);
+
+          dv1 = (f4 - f2)/(eps*2);
+        } else {
+          dv1 = this._dbasis(t, i);
+        }
+
+        if (isNaN(dv1)) {
+          console.log("NaN!");
+          debugger;
+          dv1 = this._dbasis(t, i);
+        }
+        //dv1 = 0.0;
+
+        //dv1 = 0.0;
+        dv1 /= steps;
+
+        if (j > 0) {
+          let j2 = j - 1;
+
+          table[j2*4] = lastf3;
+          table[j2*4 + 1] = lastf3 + lastdv1/3.0;
+          table[j2*4 + 2] = f3 - dv1/3.0;
+          table[j2*4 + 3] = f3;
+        }
+
+        lastdv1 = dv1;
+        lastf3 = f3;
+      }
+    }
+  }
+
+  _dbasis(t, i) {
+    let len = this._ps.length;
+    let ps = this._ps;
+
+    function safe_inv(n) {
+      return n === 0 ? 0 : 1.0/n;
+    }
+
+    /*
+    on factor;
+
+    operator bas;
+
+    a := (s - ki) / (knn - ki);
+    b := (knn1 - s) / (knn1 - kn);
+
+    f := a*bas(s, j, n-1) + b*bas(s, j+1, n-1);
+    df(f, s);
+    */
+
+    function bas(s, i, n) {
+      let kn = Math.min(Math.max(i + 1, 0), len - 1);
+      let knn = Math.min(Math.max(i + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(i, 0), len - 1);
+
+      if (n === 0) {
+        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
+      } else {
+
+        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
+
+        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+      }
+    }
+
+    function dbas(s, j, n) {
+      let kn = Math.min(Math.max(j + 1, 0), len - 1);
+      let knn = Math.min(Math.max(j + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(j + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(j, 0), len - 1);
+
+      kn = ps[kn].rco[0];
+      knn = ps[knn].rco[0];
+      knn1 = ps[knn1].rco[0];
+      ki = ps[ki].rco[0];
+
+      if (n === 0) {
+        return 0;
+        //return s >= ki && s < kn ? 1 : 0;
+      } else {
+        let div = ((ki - knn)*(kn - knn1));
+
+        if (div === 0.0) {
+          return 0.0;
+        }
+
+        return (((ki - s)*dbas(s, j, n - 1) - bas(s, j, n - 1))*(kn - knn1) - ((knn1 -
+          s)*dbas(s, j + 1, n - 1) - bas(s, j + 1, n - 1))*(ki - knn))/div;
+      }
+    }
+
+    let deg = this.deg;
+    return dbas(t, i + this._degOffset, deg);
+  }
+
+  _basis(t, i) {
+    let len = this._ps.length;
+    let ps = this._ps;
+
+    function safe_inv(n) {
+      return n === 0 ? 0 : 1.0/n;
+    }
+
+    function bas(s, i, n) {
+      let kp = Math.min(Math.max(i - 1, 0), len - 1);
+      let kn = Math.min(Math.max(i + 1, 0), len - 1);
+      let knn = Math.min(Math.max(i + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(i, 0), len - 1);
+
+      if (n === 0) {
+        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
+      } else {
+
+        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
+
+        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+      }
+    }
+
+    let p = this._ps[i].rco, nk, pk;
+    let deg = this.deg;
+
+    let b = bas(t, i + this._degOffset, deg);
+
+    return b;
+  }
+
+  evaluate(t) {
+    if (this.points.length === 0) {
+      return 0.0;
+    }
+
+    let a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
+
+    if (t < a[0]) return a[1];
+    if (t > b[0]) return b[1];
+
+    if (this.points.length === 2) {
+      t = (t - a[0])/(b[0] - a[0]);
+      return a[1] + (b[1] - a[1])*t;
+    }
+
+    if (this.recalc) {
+      this.regen_basis();
+
+      if (this.interpolating) {
+        this.solve_interpolating();
+      }
+
+      this.regen_hermite();
+      this.recalc = 0;
+    }
+
+    t *= 0.999999;
+
+    let table = this.hermite;
+    let s = t*(table.length/4);
+
+    let i = Math.floor(s);
+    s -= i;
+
+    i *= 4;
+
+    return table[i] + (table[i + 3] - table[i])*s;
+  }
+
+  /* Root find t on the x axis of the curve.  This
+   * is more intuitive for the user.
+   */
+  _evaluate(t) {
+    let start_t = t;
+
+    if (this.points.length === 0) {
+      return 0;
+    }
+
+    let xmin = this.points[0].rco[0];
+    let xmax = this.points[this.points.length - 1].rco[0];
+
+    let steps = this.fastmode ? 16 : 32;
+    let s = xmin, ds = (xmax - xmin)/(steps - 1);
+
+    let miny;
+    let mins;
+    let mindx;
+
+    for (let i = 0; i < steps; i++, s += ds) {
+      let p = this._evaluate2(s);
+
+      let dx = Math.abs(p[0] - start_t);
+      if (mindx === undefined || dx < mindx) {
+        mindx = dx;
+        miny = p[1];
+        mins = s;
+      }
+    }
+
+    let start = mins - ds, end = mins + ds;
+    s = mins;
+
+    for (let i = 0; i < 16; i++) {
+      let p = this._evaluate2(s);
+
+      if (p[0] > start_t) {
+        end = s;
+      } else {
+        start = s;
+      }
+
+      s = (start + end)*0.5;
+      miny = p[1];
+    }
+
+    if (miny === undefined) {
+      miny = 0;
+    }
+    return miny;
+
+    /* newton-raphson
+    //t = mins;
+    t = s;
+
+    for (let i = 0; i < 2; i++) {
+      let df = 0.0001;
+      let ret1 = this._evaluate2(t < 0.5 ? t : t - df);
+      let ret2 = this._evaluate2(t < 0.5 ? t + df : t);
+
+      let f1 = Math.abs(ret1[0] - start_t);
+      let f2 = Math.abs(ret2[0] - start_t);
+      let g = (f2 - f1)/df;
+
+      if (f1 === f2) break;
+
+      //if (f1 < 0.0005) break;
+
+      if (f1 === 0.0 || g === 0.0)
+        return this._evaluate2(t)[1];
+
+      let fac = -(f1/g)*0.5;
+      if (fac === 0.0) {
+        fac = 0.01;
+      } else if (Math.abs(fac) > 0.1) {
+        fac = 0.1*Math.sign(fac);
+      }
+
+      t += fac;
+      let eps = 0.00001;
+      t = Math.min(Math.max(t, eps), 1.0 - eps);
+    }
+
+    return this._evaluate2(t)[1];
+    */
+  }
+
+  _evaluate2(t) {
+    let ret = eval2_rets.next();
+
+    t *= 0.9999999;
+
+    let sumx = 0;
+    let sumy = 0;
+
+    let totbasis = 0;
+
+    for (let i = 0; i < this._ps.length; i++) {
+      let p = this._ps[i].rco;
+      let b = this.basis(t, i);
+
+      sumx += b*p[0];
+      sumy += b*p[1];
+
+      totbasis += b;
+    }
+
+    if (totbasis !== 0.0) {
+      sumx /= totbasis;
+      sumy /= totbasis;
+    }
+
+    ret[0] = sumx;
+    ret[1] = sumy;
+
+    return ret;
+  }
+
+  _wrapTouchEvent(e) {
+    return {
+      x              : e.touches.length ? e.touches[0].pageX : this.mpos[0],
+      y              : e.touches.length ? e.touches[0].pageY : this.mpos[1],
+      button         : 0,
+      shiftKey       : e.shiftKey,
+      altKey         : e.altKey,
+      ctrlKey        : e.ctrlKey,
+      isTouch        : true,
+      commandKey     : e.commandKey,
+      stopPropagation: () => e.stopPropagation(),
+      preventDefault : () => e.preventDefault()
+    };
+  }
+
+  on_touchstart(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+
+    this.on_mousemove(e2);
+    this.on_mousedown(e2);
+  }
+
+  loadTemplate(templ) {
+    if (templ === undefined || !templates[templ]) {
+      console.warn("Unknown bspline template", templ);
+      return;
+    }
+
+    templ = templates[templ];
+
+    this.reset(true);
+    this.deg = 3.0;
+
+    for (let i = 0; i < templ.length; i++) {
+      let p = templ[i];
+
+      if (p === "DEG") {
+        this.deg = templ[i + 1];
+        i++;
+        continue;
+      }
+
+      this.add(p[0], p[1], true);
+    }
+
+    this.recalc = 1;
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    if (this.parent) {
+      this.parent._fireEvent("update", this.parent);
+    }
+  }
+
+  on_touchmove(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+    this.on_mousemove(e2);
+  }
+
+  on_touchend(e) {
+    this.on_mouseup(this._wrapTouchEvent(e));
+  }
+
+  on_touchcancel(e) {
+    this.on_touchend(e);
+  }
+
+  deletePoint() {
+    for (let i = 0; i < this.points.length; i++) {
+      let p = this.points[i];
+
+      if (p.flag & CurveFlags.SELECT) {
+        this.points.remove(p);
+        i--;
+      }
+    }
+
+    this.updateKnots();
+    this.update();
+    this.regen_basis();
+    this.recalc = RecalcFlags.ALL;
+    this.redraw();
+  }
+
+  makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
+    console.warn(this._bid, "makeGUI", this.uidata, this.uidata ? this.uidata.start_mpos : undefined);
+
+    let start_mpos;
+    if (this.uidata) {
+      start_mpos = this.uidata.start_mpos;
+    }
+
+    this.uidata = {
+      start_mpos : new Vector2$a(start_mpos),
+      transpoints: [],
+
+      dom         : container,
+      canvas      : canvas,
+      g           : canvas.g,
+      transforming: false,
+      draw_trans  : drawTransform,
+      datapath
+    };
+
+    console.warn("Building gui");
+
+    canvas.addEventListener("touchstart", this.on_touchstart);
+    canvas.addEventListener("touchmove", this.on_touchmove);
+    canvas.addEventListener("touchend", this.on_touchend);
+    canvas.addEventListener("touchcancel", this.on_touchcancel);
+
+    canvas.addEventListener("mousedown", this.on_mousedown);
+    canvas.addEventListener("mousemove", this.on_mousemove);
+    canvas.addEventListener("mouseup", this.on_mouseup);
+    canvas.addEventListener("keydown", this.on_keydown);
+
+    let bstrip = container.row().strip();
+
+    let makebutton = (strip, k) => {
+      let uiname = k[0] + k.slice(1, k.length).toLowerCase();
+      uiname = uiname.replace(/_/g, " ");
+
+      let icon = strip.iconbutton(-1, uiname, () => {
+        if (datapath) {
+          row.ctx.api.execTool(row.ctx, "curve1d.bspline_load_template", {
+            dataPath: datapath,
+            template: SplineTemplates[k]
+          });
+          onSourceUpdate();
+        } else {
+          this.loadTemplate(SplineTemplates[k]);
+        }
+      });
+
+      icon.iconsheet = 0;
+      icon.customIcon = SplineTemplateIcons[k];
+    };
+
+    for (let k in SplineTemplates) {
+      makebutton(bstrip, k);
+    }
+
+    let row = container.row();
+
+    let fullUpdate = () => {
+      this.updateKnots();
+      this.update();
+      this.regen_basis();
+      this.recalc = RecalcFlags.ALL;
+      this.redraw();
+    };
+
+    let Icons = row.constructor.getIconEnum();
+
+    let icon = Icons.LARGE_X !== undefined ? Icons.LARGE_X : Icons.TINY_X;
+    if (Icons.LARGE_X === undefined) {
+      console.log(Icons);
+      console.error("Curve widget expects Icons.LARGE_X icon for delete button.");
+    }
+
+    row.iconbutton(icon, "Delete Point", () => {
+      if (datapath) {
+        row.ctx.api.execTool(row.ctx, "curve1d.bspline_delete_point", {
+          dataPath: datapath
+        });
+      } else {
+        this.deletePoint();
+      }
+
+      onSourceUpdate();
+      fullUpdate();
+    });
+
+    row.button("Reset", () => {
+      if (datapath) {
+        row.ctx.api.execTool(row.ctx, "curve1d.reset_bspline", {
+          dataPath: datapath
+        });
+        onSourceUpdate();
+      } else {
+        this.reset();
+      }
+    });
+
+    let slider = row.simpleslider(undefined, {
+      name      : "Degree",
+      min       : 1,
+      max       : 7,
+      isInt     : true,
+      callback  : (slider) => {
+        this.deg = Math.floor(slider.value);
+        fullUpdate();
+      }
+    });
+    slider.setValue(this.deg);
+
+    let last_deg = this.deg;
+    slider.update.after(() => {
+      if (last_deg !== this.deg) {
+        console.log("degree update", this.deg);
+        last_deg = this.deg;
+        slider.setValue(this.deg);
+      }
+    });
+
+    /*
+    let slider = row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
+      this.deg = Math.floor(slider.value);
+      console.log(slider.value);
+
+      fullUpdate();
+    });*/
+
+    slider.baseUnit = "none";
+    slider.displayUnit = "none";
+
+    row = container.row();
+    let check = row.check(undefined, "Interpolating");
+    check.checked = this.interpolating;
+
+    check.onchange = () => {
+      this.interpolating = check.value;
+      fullUpdate();
+    };
+
+    return this;
+  }
+
+  killGUI(container, canvas) {
+    if (this.uidata !== undefined) {
+      let ud = this.uidata;
+      this.uidata = undefined;
+
+      canvas.removeEventListener("touchstart", this.on_touchstart);
+      canvas.removeEventListener("touchmove", this.on_touchmove);
+      canvas.removeEventListener("touchend", this.on_touchend);
+      canvas.removeEventListener("touchcancel", this.on_touchcancel);
+
+      canvas.removeEventListener("mousedown", this.on_mousedown);
+      canvas.removeEventListener("mousemove", this.on_mousemove);
+      canvas.removeEventListener("mouseup", this.on_mouseup);
+      canvas.removeEventListener("keydown", this.on_keydown);
+    }
+
+    return this;
+  }
+
+  start_transform(useSelected = true) {
+    let dpi = 1.0/this.uidata.draw_trans[0];
+
+    /* Manually set p.startco to avoid trashing it
+     * if we're proxying another Curve1D.*/
+    for (let p of this.points) {
+      p.startco.load(p.co);
+    }
+
+    let transform_op = new BSplineTransformOp();
+    transform_op.inputs.dataPath.setValue(this.uidata.datapath);
+    transform_op.inputs.dpi.setValue(dpi);
+
+    this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, transform_op);
+
+  }
+
+  on_mousedown(e) {
+    this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
+    this.fastmode = true;
+
+    let mpos = this.transform_mpos(e.x, e.y);
+    let x = mpos[0], y = mpos[1];
+    this.do_highlight(x, y);
+
+    if (this.points.highlight !== undefined) {
+      if (!e.shiftKey) {
+        for (let i = 0; i < this.points.length; i++) {
+          this.points[i].flag &= ~CurveFlags.SELECT;
+        }
+
+        this.points.highlight.flag |= CurveFlags.SELECT;
+      } else {
+        this.points.highlight.flag ^= CurveFlags.SELECT;
+      }
+
+      if (this.uidata.datapath) {
+        let state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
+
+        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_select_point", {
+          dataPath: this.uidata.datapath,
+          state,
+          unique  : !e.shiftKey,
+          point   : this.points.highlight.eid,
+        });
+      }
+      this.start_transform();
+
+      this.updateKnots();
+      this.update();
+      this.redraw();
+    } else {
+      let uidata = this.uidata;
+
+      if (this.uidata.datapath) {
+        /*
+         * Note: this may not update this particular curve instance,
+         * that instance however should update this one via the "update"
+         * event.
+         **/
+        let start_mpos = this.uidata.start_mpos;
+        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_add_point", {
+          dataPath: this.uidata.datapath,
+          x       : start_mpos[0],
+          y       : start_mpos[1],
+        });
+      } else {
+        this.addFromMouse(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
+        this.parent._fire("update", this.parent);
+      }
+
+      this.updateKnots();
+      this.update();
+      this.redraw();
+
+      /* Event system may have regenerated this.uidata (from killGUI,
+       * called from the update event handler),
+       * restore the one we started with.
+       */
+
+      this.uidata = uidata;
+      this.start_transform();
+    }
+  }
+
+  load(b) {
+    if (this === b) {
+      return;
+    }
+
+    this.recalc = RecalcFlags.ALL;
+
+    this.length = b.points.length;
+    this.points.length = 0;
+    this.eidgen = b.eidgen.copy();
+
+    this.deg = b.deg;
+    this.interpolating = b.interpolating;
+
+    for (let p of b.points) {
+      let p2 = new Curve1DPoint();
+      p2.load(p);
+
+      if (p === b.points.highlight) {
+        this.points.highlight = p2;
+      }
+
+      this.points.push(p2);
+    }
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    return this;
+  }
+
+  addFromMouse(x, y) {
+    let p = this.add(x, y);
+    p.startco.load(p.co);
+    this.points.highlight = p;
+
+    for (let p2 of this.points) {
+      p2.flag &= ~CurveFlags.SELECT;
+    }
+    p.flag |= CurveFlags.SELECT;
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    this.points.highlight.flag |= CurveFlags.SELECT;
+  }
+
+  do_highlight(x, y) {
+    let trans = this.uidata.draw_trans;
+    let mindis = 1e17, minp = undefined;
+    let limit = 19/trans[0], limitsqr = limit*limit;
+
+    for (let i = 0; i < this.points.length; i++) {
+      let p = this.points[i];
+      let dx = x - p.sco[0], dy = y - p.sco[1], dis = dx*dx + dy*dy;
+
+      if (dis < mindis && dis < limitsqr) {
+        mindis = dis;
+        minp = p;
+      }
+    }
+
+    if (this.points.highlight !== minp) {
+      this.points.highlight = minp;
+      this.redraw();
+    }
+  }
+
+  do_transform(x, y) {
+    let off = new Vector2$a([x, y]).sub(this.uidata.start_mpos);
+
+    let xRange = this.parent.xRange;
+    let yRange = this.parent.yRange;
+
+    for (let i = 0; i < this.uidata.transpoints.length; i++) {
+      let p = this.uidata.transpoints[i];
+      p.co.load(p.startco).add(off);
+
+      p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
+      p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
+    }
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+  }
+
+  transform_mpos(x, y) {
+    let r = this.uidata.canvas.getClientRects()[0];
+    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
+
+    x -= parseInt(r.left);
+    y -= parseInt(r.top);
+
+    x *= dpi;
+    y *= dpi;
+
+    let trans = this.uidata.draw_trans;
+
+    x = x/trans[0] - trans[1][0];
+    y = -y/trans[0] - trans[1][1];
+
+    return [x, y];
+  }
+
+  on_mousemove(e) {
+    if (e.isTouch && this.uidata.transforming) {
+      e.preventDefault();
+    }
+
+    let mpos = this.transform_mpos(e.x, e.y);
+    let x = mpos[0], y = mpos[1];
+
+    if (this.uidata.transforming) {
+      this.do_transform(x, y);
+      this.evaluate(0.5);
+      //this.update();
+      //this.doSave();
+    } else {
+      this.do_highlight(x, y);
+    }
+  }
+
+  end_transform() {
+    this.uidata.transforming = false;
+    this.fastmode = false;
+    this.updateKnots();
+    this.update();
+
+    splineCache.update(this);
+  }
+
+  on_mouseup(e) {
+    this.end_transform();
+  }
+
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case 88: //xkeey
+      case 46: //delete
+        if (this.points.highlight !== undefined) {
+          this.points.remove(this.points.highlight);
+          this.recalc = RecalcFlags.ALL;
+
+          this.points.highlight = undefined;
+          this.updateKnots();
+          this.update();
+
+          if (this._save_hook !== undefined) {
+            this._save_hook();
+          }
+        }
+        break;
+    }
+  }
+
+  draw(canvas, g, draw_trans) {
+    g.save();
+
+    if (this.uidata === undefined) {
+      return;
+    }
+
+    this.uidata.canvas = canvas;
+    this.uidata.g = g;
+    this.uidata.draw_trans = draw_trans;
+
+    let sz = draw_trans[0], pan = draw_trans[1];
+    g.lineWidth *= 1.5;
+    let strokeStyle = g.strokeStyle;
+
+    for (let ssi = 0; ssi < 1; ssi++) {
+      break; //uncomment to draw basis functions
+
+      let steps = 512;
+      for (let si = 0; si < this.points.length; si++) {
+        g.beginPath();
+
+        let f = 0;
+        let df = 1.0/(steps - 1);
+        for (let i = 0; i < steps; i++, f += df) {
+          let totbasis = 0;
+
+          for (let j = 0; j < this.points.length; j++) {
+            totbasis += this.basis(f, j);
+          }
+
+          let val = this.basis(f, si);
+
+          if (ssi)
+            val /= (totbasis === 0 ? 1 : totbasis);
+
+          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5);
+        }
+
+        let color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
+
+        if (ssi) {
+          color = "rgba(205, 125, 5," + alpha + ")";
+        } else {
+          color = "rgba(25, 145, 45," + alpha + ")";
+        }
+        g.strokeStyle = color;
+        g.stroke();
+      }
+    }
+
+    g.strokeStyle = strokeStyle;
+    g.lineWidth /= 3.0;
+
+    let w = 0.03;
+
+    for (let p of this.points) {
+      g.beginPath();
+
+      if (p === this.points.highlight) {
+        g.fillStyle = "green";
+      } else if (p.flag & CurveFlags.SELECT) {
+        g.fillStyle = "red";
+      } else {
+        g.fillStyle = "orange";
+      }
+
+      g.rect(p.sco[0] - w/2, p.sco[1] - w/2, w, w);
+
+      g.fill();
+    }
+
+    g.restore();
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+
+    if (this.highlightPoint >= 0) {
+      for (let p of this.points) {
+        if (p.eid === this.highlightPoint) {
+          this.points.highlight = p;
+        }
+      }
+
+      delete this.highlightPoint;
+    }
+
+    this.updateKnots();
+    this.recalc = RecalcFlags.ALL;
+  }
+}
+
+BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
+  points         : array(Curve1DPoint);
+  highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
+  deg            : int;
+  eidgen         : IDGen;
+  interpolating  : bool;
+}
+`;
+nstructjs.register(BSplineCurve);
+CurveTypeData.register(BSplineCurve);
+
+
+function makeSplineTemplateIcons(size = 64) {
+  let dpi = devicePixelRatio;
+  size = ~~(size*dpi);
+
+  for (let k in SplineTemplates) {
+    let curve = new BSplineCurve();
+    curve.loadTemplate(SplineTemplates[k]);
+
+    curve.fastmode = true;
+
+    let canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+
+    let g = canvas.getContext("2d");
+    let steps = 64;
+
+    curve.update();
+
+    let scale = 0.5;
+
+    g.translate(-0.5, -0.5);
+    g.scale(size*scale, size*scale);
+    g.translate(0.5, 0.5);
+
+    //margin
+    let m = 0.0;
+
+    let tent = f => 1.0 - Math.abs(Math.fract(f) - 0.5)*2.0;
+
+    for (let i = 0; i < steps; i++) {
+      let s = i/(steps - 1);
+      let f = 1.0 - curve.evaluate(tent(s));
+
+      s = s*(1.0 - m*2.0) + m;
+      f = f*(1.0 - m*2.0) + m;
+
+      //s += 0.5;
+      //f += 0.5;
+
+      if (i === 0) {
+        g.moveTo(s, f);
+      } else {
+        g.lineTo(s, f);
+      }
+    }
+
+    const ls = 7.0;
+
+    g.lineCap = "round";
+    g.strokeStyle = "black";
+    g.lineWidth = ls*3*dpi/(size*scale);
+    g.stroke();
+
+    g.strokeStyle = "white";
+    g.lineWidth = ls*dpi/(size*scale);
+    g.stroke();
+
+    let url = canvas.toDataURL();
+    let img = document.createElement("img");
+    img.src = url;
+
+    SplineTemplateIcons[k] = img;
+    SplineTemplateIcons[SplineTemplates[k]] = img;
+  }
+}
+
+let splineTemplatesLoaded = false;
+
+function initSplineTemplates() {
+  if (splineTemplatesLoaded) {
+    return;
+  }
+
+  splineTemplatesLoaded = true;
+
+  for (let k in SplineTemplates) {
+    let curve = new BSplineCurve();
+    curve.loadTemplate(SplineTemplates[k]);
+    splineCache.get(curve);
+  }
+
+  makeSplineTemplateIcons();
+  window._SplineTemplateIcons = SplineTemplateIcons;
+}
+
+//delay to ensure config is fully loaded
+window.setTimeout(() => {
+  if (config.autoLoadSplineTemplates) {
+    initSplineTemplates();
+  }
+}, 0);
+
+"use strict";
+
+function mySafeJSONStringify(obj) {
+  return JSON.stringify(obj.toJSON(), function (key) {
+    let v = this[key];
+
+    if (typeof v === "number") {
+      if (v !== Math.floor(v)) {
+        v = parseFloat(v.toFixed(5));
+      } else {
+        v = v;
+      }
+    }
+
+    return v;
+  });
+}
+
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (key, val) => {
+
+  });
+};
+
+window.mySafeJSONStringify = mySafeJSONStringify;
+
+let _udigest$2 = new HashDigest();
+
+class Curve1D {
+  constructor() {
+    this._eventCBs = [];
+
+    this.uiZoom = 1.0;
+    this.xRange = new Vector2$b().loadXY(0.0, 1.0);
+    this.yRange = new Vector2$b().loadXY(0.0, 1.0);
+    this.clipToRange = false;
+
+    this.generators = [];
+    this.VERSION = CURVE_VERSION;
+
+    for (let gen of CurveConstructors) {
+      gen = new gen();
+
+      gen.parent = this;
+      this.generators.push(gen);
+    }
+
+    //this.generators.active = this.generators[0];
+    this.setGenerator("bspline");
+  }
+
+  get generatorType() {
+    return this.generators.active ? this.generators.active.type : undefined;
+  }
+
+  get fastmode() {
+    return this._fastmode;
+  }
+
+  set fastmode(val) {
+    this._fastmode = val;
+
+    for (let gen of this.generators) {
+      gen.fastmode = val;
+    }
+  }
+
+  /** cb_is_dead is a callback that returns true if it
+   *  should be removed from the callback list. */
+  on(type, cb, owner, cb_is_dead) {
+    if (cb_is_dead === undefined) {
+      cb_is_dead = () => false;
+    }
+
+    this._eventCBs.push({type, cb, owner, dead: cb_is_dead, once: false});
+  }
+
+  off(type, cb) {
+    this._eventCBs = this._eventCBs.filter(cb => cb.cb !== cb);
+  }
+
+  once(type, cb, owner, cb_is_dead) {
+    this.on(type, cb, owner, cb_is_dead);
+    this._eventCBs[this._eventCBs.length - 1].once = true;
+  }
+
+  subscribed(type, owner) {
+    for (let cb of this._eventCBs) {
+      if ((!type || cb.type === type) && cb.owner === owner) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _pruneEventCallbacks() {
+    this._eventCBs = this._eventCBs.filter(cb => !cb.dead());
+  }
+
+  _fireEvent(evt, data) {
+    this._pruneEventCallbacks();
+
+    for (let i = 0; i < this._eventCBs.length; i++) {
+      let cb = this._eventCBs[i];
+
+      if (cb.type !== evt) {
+        continue;
+      }
+
+      try {
+        cb.cb(data);
+      } catch (error) {
+        console.error(error.stack);
+        console.error(error.message);
+      }
+
+      if (cb.once) {
+        this._eventCBs.remove(cb);
+        i--;
+      }
+    }
+  }
+
+  calcHashKey(digest = _udigest$2.reset()) {
+    let d = digest;
+
+    for (let g of this.generators) {
+      g.calcHashKey(d);
+    }
+
+    return d.get();
+  }
+
+  equals(b) {
+    let gen1 = this.generators.active;
+    let gen2 = b.generators.active;
+
+    if (!gen1 || !gen2 || gen1.constructor !== gen2.constructor) {
+      return false;
+    }
+
+    return gen1.equals(gen2);
+  }
+
+  load(b) {
+    if (b === undefined || b === this) {
+      return;
+    }
+    /*
+    if (b === undefined) {
+      return;
+    }
+
+    let buf1 = mySafeJSONStringify(b);
+    let buf2 = mySafeJSONStringify(this);
+
+    if (buf1 === buf2) {
+      return;
+    }
+
+    this.loadJSON(JSON.parse(buf1));
+    this._on_change();
+    this.redraw();
+
+    return this;*/
+
+    let json = nstructjs.writeJSON(b, Curve1D);
+    let cpy = nstructjs.readJSON(json, Curve1D);
+
+    let activeCls = this.generators.active.constructor;
+    let oldGens = this.generators;
+
+    this.generators = cpy.generators;
+    this.generators.active = undefined;
+
+    for (let gen of cpy.generators) {
+      /* See if generator provides a .load() method. */
+      for (let gen2 of oldGens) {
+        if (gen2.constructor === gen.constructor && gen2.load !== undefined) {
+          cpy.generators[cpy.generators.indexOf(gen)] = gen2;
+
+          if (gen2.constructor === activeCls) {
+            this.generators.active = gen2;
+          }
+
+          gen2.parent = this;
+          gen2.load(gen);
+          gen = gen2;
+          break;
+        }
+      }
+
+      if (gen.constructor === activeCls) {
+        this.generators.active = gen;
+      }
+      gen.parent = this;
+    }
+
+    for (let k in json) {
+      if (k === "generators") {
+        continue;
+      }
+      if (k.startsWith("_")) {
+        continue;
+      }
+
+      let v = cpy[k];
+      if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") {
+        this[k] = v;
+      } else if (v instanceof Vector2$b || v instanceof Vector3$2 || v instanceof Vector4$2 || v instanceof Matrix4$2) {
+        this[k].load(v);
+      }
+    }
+
+    this._on_change();
+    this.redraw();
+
+    return this;
+  }
+
+  copy() {
+    let json = nstructjs.writeJSON(this, Curve1D);
+    return nstructjs.readJSON(json, Curve1D);
+  }
+
+  _on_change() {
+
+  }
+
+  redraw() {
+    this._fireEvent("draw", this);
+  }
+
+  setGenerator(type) {
+    for (let gen of this.generators) {
+      if (gen.constructor.define().name === type
+        || gen.type === type
+        || gen.constructor.define().typeName === type
+        || gen.constructor === type) {
+        if (this.generators.active) {
+          this.generators.active.onInactive();
+        }
+
+        this.generators.active = gen;
+        gen.onActive();
+
+        return;
+      }
+    }
+
+    throw new Error("unknown curve type " + type);
+  }
+
+  toJSON() {
+    let ret = {
+      generators      : [],
+      uiZoom          : this.uiZoom,
+      VERSION         : this.VERSION,
+      active_generator: this.generatorType,
+      xRange          : this.xRange,
+      yRange          : this.yRange,
+      clipToRange     : this.clipToRange,
+    };
+
+    for (let gen of this.generators) {
+      ret.generators.push(gen.toJSON());
+    }
+
+    ret.generators.sort((a, b) => a.type.localeCompare(b.type));
+
+    return ret;
+  }
+
+  getGenerator(type, throw_on_error = true) {
+    for (let gen of this.generators) {
+      if (gen.type === type) {
+        return gen;
+      }
+    }
+
+    //was a new generator registerd?
+    for (let cls of CurveConstructors) {
+      if (cls.define().typeName === type) {
+        let gen = new cls();
+        gen.type = type;
+        gen.parent = this;
+        this.generators.push(gen);
+        return gen;
+      }
+    }
+
+    if (throw_on_error) {
+      throw new Error("Unknown generator " + type + ".");
+    } else {
+      return undefined;
+    }
+  }
+
+  switchGenerator(type) {
+    let gen = this.getGenerator(type);
+
+    if (gen !== this.generators.active) {
+      let old = this.generators.active;
+
+      this.generators.active = gen;
+
+      old.onInactive(this);
+      gen.onActive(this);
+    }
+
+    return gen;
+  }
+
+  destroy() {
+    return this;
+  }
+
+  loadJSON(obj) {
+    this.VERSION = obj.VERSION;
+
+    this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
+    if (obj.xRange) {
+      this.xRange = new Vector2$b(obj.xRange);
+    }
+    if (obj.yRange) {
+      this.yRange = new Vector2$b(obj.yRange);
+    }
+    this.clipToRange = Boolean(obj.clipToRange);
+
+    //this.generators = [];
+    for (let gen of obj.generators) {
+      let gen2 = this.getGenerator(gen.type, false);
+
+      if (!gen2 || !(gen2 instanceof CurveTypeData)) {
+        //old curve class?
+        console.warn("Bad curve generator class:", gen2);
+        if (gen2) {
+          this.generators.remove(gen2);
+        }
+        continue;
+      }
+
+      gen2.parent = undefined;
+      gen2.reset();
+      gen2.loadJSON(gen);
+      gen2.parent = this;
+
+      if (gen.type === obj.active_generator) {
+        this.generators.active = gen2;
+      }
+
+      //this.generators.push(gen2);
+    }
+
+    if (this.VERSION < 1.1) {
+      this.#patchRange();
+    }
+
+    return this;
+  }
+
+  evaluate(s) {
+    if (this.clipToRange) {
+      s = Math.min(Math.max(s, this.xRange[0]), this.xRange[1]);
+    }
+
+    let f = this.generators.active.evaluate(s);
+    if (this.clipToRange) {
+      f = Math.min(Math.max(f, this.yRange[0]), this.yRange[1]);
+    }
+
+    return f;
+  }
+
+  integrate(s, quadSteps) {
+    return this.generators.active.integrate(s, quadSteps);
+  }
+
+  derivative(s) {
+    return this.generators.active.derivative(s);
+  }
+
+  derivative2(s) {
+    return this.generators.active.derivative2(s);
+  }
+
+  inverse(s) {
+    return this.generators.active.inverse(s);
+  }
+
+  reset() {
+    this.generators.active.reset();
+  }
+
+  update() {
+    return this.generators.active.update();
+  }
+
+  draw(canvas, g, draw_transform) {
+    let w = canvas.width, h = canvas.height;
+
+    g.save();
+
+    let sz = draw_transform[0], pan = draw_transform[1];
+
+    g.beginPath();
+    g.moveTo(-1, 0);
+    g.lineTo(1, 0);
+    g.strokeStyle = "red";
+    g.stroke();
+
+    g.beginPath();
+    g.moveTo(0, -1);
+    g.lineTo(0, 1);
+    g.strokeStyle = "green";
+    g.stroke();
+
+    //g.rect(0, 0, 1, 1);
+    //g.fillStyle = "rgb(50, 50, 50)";
+    //g.fill();
+
+    let f = this.xRange[0], steps = 64;
+    let df = (this.xRange[1] - this.xRange[0])/(steps - 1);
+    w = 6.0/sz;
+
+    let curve = this.generators.active;
+
+    g.beginPath();
+    for (let i = 0; i < steps; i++, f += df) {
+      let val = this.evaluate(f);
+
+      (i === 0 ? g.moveTo : g.lineTo).call(g, f, val, w, w);
+    }
+
+    g.strokeStyle = "grey";
+    g.stroke();
+
+    if (this.overlay_curvefunc !== undefined) {
+      g.beginPath();
+      f = this.xRange[0];
+
+      for (let i = 0; i < steps; i++, f += df) {
+        let val = this.overlay_curvefunc(f);
+
+        (i === 0 ? g.moveTo : g.lineTo).call(g, f, val, w, w);
+      }
+
+      g.strokeStyle = "green";
+      g.stroke();
+    }
+
+    this.generators.active.draw(canvas, g, draw_transform);
+
+    g.restore();
+    return this;
+  }
+
+  loadSTRUCT(reader) {
+    this.generators = [];
+    reader(this);
+
+    if (this.VERSION <= 0.75) {
+      this.generators = [];
+
+      for (let cls of CurveConstructors) {
+        this.generators.push(new cls());
+      }
+
+      this.generators.active = this.getGenerator("BSplineCurve");
+    }
+
+    for (let gen of this.generators.concat([])) {
+      if (!(gen instanceof CurveTypeData)) {
+        console.warn("Bad generator data found:", gen);
+        this.generators.remove(gen);
+        continue;
+      }
+
+      if (gen.type === this._active) {
+        this.generators.active = gen;
+      }
+    }
+
+    for (let gen of this.generators) {
+      gen.parent = this;
+    }
+
+    if (this.VERSION < 1.1) {
+      this.#patchRange();
+    }
+
+    delete this._active;
+    this.VERSION = CURVE_VERSION;
+  }
+
+  #patchRange() {
+    let range = this.getGenerator("BSplineCurve").range;
+    if (range) {
+      this.xRange.load(range[0]);
+      this.yRange.load(range[1]);
+    }
+  }
+}
+
+/* Remember to update toJSON() loadJSON api. */
+Curve1D.STRUCT = `
+Curve1D {
+  generators  : array(abstract(CurveTypeData));
+  _active     : string | obj.generators.active.type;
+  VERSION     : float;
+  uiZoom      : float;
+  xRange      : vec2;
+  yRange      : vec2;
+  clipToRange : bool;
+}
+`;
+nstructjs.register(Curve1D);
+
 class Task {
   constructor(taskcb) {
     this.task = taskcb;
@@ -29037,6 +28370,1364 @@ class DataPathSetOp extends ToolOp {
 }
 
 ToolOp.register(DataPathSetOp);
+
+let _udigest$1 = new HashDigest();
+
+function feq(a, b) {
+  return Math.abs(a - b) < 0.00001;
+}
+
+class EquationCurve extends CurveTypeData {
+  constructor(type) {
+    super();
+
+    this.equation = "x";
+    this._last_equation = "";
+    this._last_xrange = new Vector2$b();
+    this._func = undefined;
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  static define() {
+    return {
+      uiname  : "Equation",
+      name    : "equation",
+      typeName: "EquationCurve"
+    }
+  }
+
+  calcHashKey(digest = _udigest$1.reset()) {
+    let d = digest;
+
+    super.calcHashKey(d);
+
+    d.add(this.equation);
+    d.add(this.parent.xRange[0]);
+    d.add(this.parent.xRange[1]);
+
+    return d.get();
+  }
+
+  equals(b) {
+    return super.equals(b) && this.equation === b.equation;
+  }
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    return Object.assign(ret, {
+      equation: this.equation
+    });
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    if (obj.equation !== undefined) {
+      this.equation = obj.equation;
+    }
+
+    return this;
+  }
+
+  makeGUI(container, canvas, drawTransform) {
+    this.uidata = {
+      canvas    : canvas,
+      g         : canvas.g,
+      draw_trans: drawTransform,
+    };
+
+    let row = container.row();
+
+    let text = this.uidata.textbox = row.textbox(undefined, "" + this.equation);
+    text.onchange = (val) => {
+      console.log(val);
+      this.equation = val;
+      this.update();
+      this.redraw();
+    };
+
+    container.label("Equation");
+
+  }
+
+  killGUI(dom, gui, canvas, g, draw_transform) {
+    if (this.uidata !== undefined) {
+      this.uidata.textbox.remove();
+    }
+
+    this.uidata = undefined;
+  }
+
+  updateTextBox() {
+    if (this.uidata && this.uidata.textbox) {
+      this.uidata.textbox.text = this.equation;
+    }
+  }
+
+  evaluate(s) {
+    let update = this.hermite || this._last_equation !== this.equation;
+    update = update || this._last_xrange.vectorDistance(this.parent.xRange) > 0.0;
+    update = update || !this._func;
+
+    if (update) {
+      this._last_xrange.load(this.parent.xRange);
+      this._last_equation = this.equation;
+
+      this.updateTextBox();
+      this.#makeFunc();
+
+      this._evaluate(0.0);
+
+      if (this._haserror) {
+        console.warn("ERROR!");
+        return 0.0;
+      }
+    }
+
+    return this._func(s);
+  }
+
+  #makeFunc() {
+    this._func = undefined;
+
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
+        e                                                = Math.E, E                                    = Math.E, tan                      = Math.tan, abs = Math.abs,
+        floor                                            = Math.floor, ceil = Math.ceil, acos = Math.acos,
+        asin                                             = Math.asin, atan = Math.atan, cosh         = Math.cos,
+        sinh                                             = Math.sinh, log                            = Math.log, pow = Math.pow,
+        exp                                              = Math.exp, sqrt = Math.sqrt, cbrt           = Math.cbrt,
+        min                                              = Math.min, max = Math.max;
+
+    var func;
+    let code = `
+    func = function(x) {
+      return ${this.equation};
+    }
+    `;
+    try {
+      eval(code);
+
+      this._haserror = false;
+    } catch (error) {
+      this._haserror = true;
+      console.warn("Compile error!", error.message);
+    }
+
+    this._func = func;
+  }
+
+  _evaluate(s) {
+    try {
+      let f = this._func(s);
+      this._haserror = false;
+
+      if (isNaN(f)) {
+        return 0.0;
+      }
+    } catch (error) {
+      this._haserror = true;
+      console.warn("ERROR!");
+      return 0.0;
+    }
+  }
+
+  derivative(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.evaluate(s) - this.evaluate(s - df))/df;
+    } else if (s < df*3) {
+      return (this.evaluate(s + df) - this.evaluate(s))/df;
+    } else {
+      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
+    }
+  }
+
+  derivative2(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.derivative(s) - this.derivative(s - df))/df;
+    } else if (s < df*3) {
+      return (this.derivative(s + df) - this.derivative(s))/df;
+    } else {
+      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
+    }
+  }
+
+  inverse(y) {
+    let steps = 9;
+    let ds = 1.0/steps, s = 0.0;
+    let best = undefined;
+    let ret = undefined;
+
+    for (let i = 0; i < steps; i++, s += ds) {
+      let s1 = s, s2 = s + ds;
+
+      let mid;
+
+      for (let j = 0; j < 11; j++) {
+        let y1 = this.evaluate(s1);
+        let y2 = this.evaluate(s2);
+        mid = (s1 + s2)*0.5;
+
+        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
+          s2 = mid;
+        } else {
+          s1 = mid;
+        }
+      }
+
+      let ymid = this.evaluate(mid);
+
+      if (best === undefined || Math.abs(y - ymid) < best) {
+        best = Math.abs(y - ymid);
+        ret = mid;
+      }
+    }
+
+    return ret === undefined ? 0.0 : ret;
+  }
+
+  onActive(parent, draw_transform) {
+  }
+
+  onInactive(parent, draw_transform) {
+  }
+
+  reset() {
+    this.equation = "x";
+  }
+
+  destroy() {
+  }
+
+  draw(canvas, g, draw_transform) {
+    g.save();
+    if (this._haserror) {
+
+      g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
+      g.beginPath();
+      g.rect(0, 0, 1, 1);
+      g.fill();
+
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(1, 1);
+      g.moveTo(0, 1);
+      g.lineTo(1, 0);
+
+      g.lineWidth *= 3;
+      g.stroke();
+
+      g.restore();
+      return;
+    }
+
+    g.restore();
+  }
+}
+
+EquationCurve.STRUCT = nstructjs.inherit(EquationCurve, CurveTypeData) + `
+  equation : string;
+}
+`;
+nstructjs.register(EquationCurve);
+CurveTypeData.register(EquationCurve);
+
+
+class GuassianCurve extends CurveTypeData {
+  constructor(type) {
+    super();
+
+    this.height = 1.0;
+    this.offset = 1.0;
+    this.deviation = 0.3; //standard deviation
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  static define() {
+    return {
+      uiname  : "Guassian",
+      name    : "guassian",
+      typeName: "GuassianCurve"
+    }
+  }
+
+  calcHashKey(digest = _udigest$1.reset()) {
+    super.calcHashKey(digest);
+
+    let d = digest;
+
+    d.add(this.height);
+    d.add(this.offset);
+    d.add(this.deviation);
+
+    return d.get();
+  }
+
+  equals(b) {
+    let r = super.equals(b);
+
+    r = r && feq(this.height, b.height);
+    r = r && feq(this.offset, b.offset);
+    r = r && feq(this.deviation, b.deviation);
+
+    return r;
+  }
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    return Object.assign(ret, {
+      height   : this.height,
+      offset   : this.offset,
+      deviation: this.deviation
+    });
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.height = obj.height !== undefined ? obj.height : 1.0;
+    this.offset = obj.offset;
+    this.deviation = obj.deviation;
+
+    return this;
+  }
+
+  makeGUI(container, canvas, drawTransform) {
+    this.uidata = {
+      canvas    : canvas,
+      g         : canvas.g,
+      draw_trans: drawTransform,
+    };
+
+    this.uidata.hslider = container.slider(undefined, "Height", this.height, -10, 10, 0.0001);
+    this.uidata.hslider.onchange = () => {
+      this.height = this.uidata.hslider.value;
+      this.redraw();
+      this.update();
+    };
+    this.uidata.oslider = container.slider(undefined, "Offset", this.offset, -10, 10, 0.0001);
+    this.uidata.oslider.onchange = () => {
+      this.offset = this.uidata.oslider.value;
+      this.redraw();
+      this.update();
+    };
+    this.uidata.dslider = container.slider(undefined, "STD Deviation", this.deviation, -10, 10, 0.0001);
+    this.uidata.dslider.onchange = () => {
+      this.deviation = this.uidata.dslider.value;
+      this.redraw();
+      this.update();
+    };
+
+    /*
+    this.uidata.oslider = gui.slider(undefined, "Offset", this.offset,
+      -2.5, 2.5, 0.0001, false, false, (val) => {this.offset = val, this.update(), this.redraw();});
+    this.uidata.dslider = gui.slider(undefined, "STD Deviation", this.deviation,
+      0.0001, 1.25, 0.0001, false, false, (val) => {this.deviation = val, this.update(), this.redraw();});
+    //*/
+  }
+
+  killGUI(dom, gui, canvas, g, draw_transform) {
+    if (this.uidata !== undefined) {
+      this.uidata.hslider.remove();
+      this.uidata.oslider.remove();
+      this.uidata.dslider.remove();
+    }
+
+    this.uidata = undefined;
+  }
+
+  evaluate(s) {
+    let r = this.height*Math.exp(-((s - this.offset)*(s - this.offset))/(2*this.deviation*this.deviation));
+    return r;
+  }
+
+  derivative(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.evaluate(s) - this.evaluate(s - df))/df;
+    } else if (s < df*3) {
+      return (this.evaluate(s + df) - this.evaluate(s))/df;
+    } else {
+      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
+    }
+  }
+
+  derivative2(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.derivative(s) - this.derivative(s - df))/df;
+    } else if (s < df*3) {
+      return (this.derivative(s + df) - this.derivative(s))/df;
+    } else {
+      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
+    }
+  }
+
+  inverse(y) {
+    let steps = 9;
+    let ds = 1.0/steps, s = 0.0;
+    let best = undefined;
+    let ret = undefined;
+
+    for (let i = 0; i < steps; i++, s += ds) {
+      let s1 = s, s2 = s + ds;
+
+      let mid;
+
+      for (let j = 0; j < 11; j++) {
+        let y1 = this.evaluate(s1);
+        let y2 = this.evaluate(s2);
+        mid = (s1 + s2)*0.5;
+
+        if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
+          s2 = mid;
+        } else {
+          s1 = mid;
+        }
+      }
+
+      let ymid = this.evaluate(mid);
+
+      if (best === undefined || Math.abs(y - ymid) < best) {
+        best = Math.abs(y - ymid);
+        ret = mid;
+      }
+    }
+
+    return ret === undefined ? 0.0 : ret;
+  }
+}
+
+GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
+  height    : float;
+  offset    : float;
+  deviation : float;
+}
+`;
+nstructjs.register(GuassianCurve);
+CurveTypeData.register(GuassianCurve);
+
+/*
+* Ease
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+*
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+*
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+/**
+* @module TweenJS
+*/
+
+
+/**
+ * The Ease class provides a collection of easing functions for use with TweenJS. It does not use the standard 4 param
+ * easing signature. Instead it uses a single param which indicates the current linear ratio (0 to 1) of the tween.
+ *
+ * Most methods on Ease can be passed directly as easing functions:
+ *
+ *      createjs.Tween.get(target).to({x:100}, 500, createjs.Ease.linear);
+ *
+ * However, methods beginning with "get" will return an easing function based on parameter values:
+ *
+ *      createjs.Tween.get(target).to({y:200}, 500, createjs.Ease.getPowIn(2.2));
+ *
+ * Please see the <a href="http://www.createjs.com/Demos/TweenJS/Tween_SparkTable">spark table demo</a> for an
+ * overview of the different ease types on <a href="http://tweenjs.com">TweenJS.com</a>.
+ *
+ * <em>Equations derived from work by Robert Penner.</em>
+ * @class Ease
+ * @static
+ **/
+
+
+function Ease() {
+  throw "Ease cannot be instantiated.";
+}
+
+// static methods and properties
+/**
+ * @method linear
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.linear = function(t) { return t; };
+
+/**
+ * Identical to linear.
+ * @method none
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.none = Ease.linear;
+
+/**
+ * Mimics the simple -100 to 100 easing in Adobe Flash/Animate.
+ * @method get
+ * @param {Number} amount A value from -1 (ease in) to 1 (ease out) indicating the strength and direction of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.get = function(amount) {
+  if (amount < -1) { amount = -1; }
+  else if (amount > 1) { amount = 1; }
+  return function(t) {
+    if (amount==0) { return t; }
+    if (amount<0) { return t*(t*-amount+1+amount); }
+    return t*((2-t)*amount+(1-amount));
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowIn
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowIn = function(pow) {
+  return function(t) {
+    return Math.pow(t,pow);
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowOut
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowOut = function(pow) {
+  return function(t) {
+    return 1-Math.pow(1-t,pow);
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowInOut
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowInOut = function(pow) {
+  return function(t) {
+    if ((t*=2)<1) return 0.5*Math.pow(t,pow);
+    return 1-0.5*Math.abs(Math.pow(2-t,pow));
+  };
+};
+
+/**
+ * @method quadIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadIn = Ease.getPowIn(2);
+/**
+ * @method quadOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadOut = Ease.getPowOut(2);
+/**
+ * @method quadInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadInOut = Ease.getPowInOut(2);
+
+/**
+ * @method cubicIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicIn = Ease.getPowIn(3);
+/**
+ * @method cubicOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicOut = Ease.getPowOut(3);
+/**
+ * @method cubicInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicInOut = Ease.getPowInOut(3);
+
+/**
+ * @method quartIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartIn = Ease.getPowIn(4);
+/**
+ * @method quartOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartOut = Ease.getPowOut(4);
+/**
+ * @method quartInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartInOut = Ease.getPowInOut(4);
+
+/**
+ * @method quintIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintIn = Ease.getPowIn(5);
+/**
+ * @method quintOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintOut = Ease.getPowOut(5);
+/**
+ * @method quintInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintInOut = Ease.getPowInOut(5);
+
+/**
+ * @method sineIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineIn = function(t) {
+  return 1-Math.cos(t*Math.PI/2);
+};
+
+/**
+ * @method sineOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineOut = function(t) {
+  return Math.sin(t*Math.PI/2);
+};
+
+/**
+ * @method sineInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineInOut = function(t) {
+  return -0.5*(Math.cos(Math.PI*t) - 1);
+};
+
+/**
+ * Configurable "back in" ease.
+ * @method getBackIn
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackIn = function(amount) {
+  return function(t) {
+    return t*t*((amount+1)*t-amount);
+  };
+};
+/**
+ * @method backIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backIn = Ease.getBackIn(1.7);
+
+/**
+ * Configurable "back out" ease.
+ * @method getBackOut
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackOut = function(amount) {
+  return function(t) {
+    return (--t*t*((amount+1)*t + amount) + 1);
+  };
+};
+/**
+ * @method backOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backOut = Ease.getBackOut(1.7);
+
+/**
+ * Configurable "back in out" ease.
+ * @method getBackInOut
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackInOut = function(amount) {
+  amount*=1.525;
+  return function(t) {
+    if ((t*=2)<1) return 0.5*(t*t*((amount+1)*t-amount));
+    return 0.5*((t-=2)*t*((amount+1)*t+amount)+2);
+  };
+};
+/**
+ * @method backInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backInOut = Ease.getBackInOut(1.7);
+
+/**
+ * @method circIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circIn = function(t) {
+  return -(Math.sqrt(1-t*t)- 1);
+};
+
+/**
+ * @method circOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circOut = function(t) {
+  return Math.sqrt(1-(--t)*t);
+};
+
+/**
+ * @method circInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circInOut = function(t) {
+  if ((t*=2) < 1) return -0.5*(Math.sqrt(1-t*t)-1);
+  return 0.5*(Math.sqrt(1-(t-=2)*t)+1);
+};
+
+/**
+ * @method bounceIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceIn = function(t) {
+  return 1-Ease.bounceOut(1-t);
+};
+
+/**
+ * @method bounceOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceOut = function(t) {
+  if (t < 1/2.75) {
+    return (7.5625*t*t);
+  } else if (t < 2/2.75) {
+    return (7.5625*(t-=1.5/2.75)*t+0.75);
+  } else if (t < 2.5/2.75) {
+    return (7.5625*(t-=2.25/2.75)*t+0.9375);
+  } else {
+    return (7.5625*(t-=2.625/2.75)*t +0.984375);
+  }
+};
+
+/**
+ * @method bounceInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceInOut = function(t) {
+  if (t<0.5) return Ease.bounceIn (t*2) * .5;
+  return Ease.bounceOut(t*2-1)*0.5+0.5;
+};
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticIn
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticIn = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    if (t==0 || t==1) return t;
+    var s = period/pi2*Math.asin(1/amplitude);
+    return -(amplitude*Math.pow(2,10*(t-=1))*Math.sin((t-s)*pi2/period));
+  };
+};
+/**
+ * @method elasticIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticIn = Ease.getElasticIn(1,0.3);
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticOut
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticOut = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    if (t==0 || t==1) return t;
+    var s = period/pi2 * Math.asin(1/amplitude);
+    return (amplitude*Math.pow(2,-10*t)*Math.sin((t-s)*pi2/period )+1);
+  };
+};
+/**
+ * @method elasticOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticOut = Ease.getElasticOut(1,0.3);
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticInOut
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticInOut = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    var s = period/pi2 * Math.asin(1/amplitude);
+    if ((t*=2)<1) return -0.5*(amplitude*Math.pow(2,10*(t-=1))*Math.sin( (t-s)*pi2/period ));
+    return amplitude*Math.pow(2,-10*(t-=1))*Math.sin((t-s)*pi2/period)*0.5+1;
+  };
+};
+/**
+ * @method elasticInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
+
+function bez3(a, b, c, t) {
+  var r1 = a + (b - a)*t;
+  var r2 = b + (c - b)*t;
+
+  return r1 + (r2 - r1)*t;
+}
+
+function bez4(a, b, c, d, t) {
+  var r1 = bez3(a, b, c, t);
+  var r2 = bez3(b, c, d, t);
+
+  return r1 + (r2 - r1)*t;
+}
+
+class ParamKey {
+  constructor(key, val) {
+    this.key = key;
+    this.val = val;
+  }
+}
+
+ParamKey.STRUCT = `
+ParamKey {
+  key : string;
+  val : float;
+}
+`;
+nstructjs.register(ParamKey);
+let BOOL_FLAG = 1e17;
+
+let _udigest = new HashDigest();
+
+class SimpleCurveBase extends CurveTypeData {
+  constructor() {
+    super();
+
+    this.type = this.constructor.name;
+
+    let def = this.constructor.define();
+    let params = def.params;
+
+    this.params = {};
+    for (let k in params) {
+      this.params[k] = params[k][1];
+    }
+  }
+
+  get hasGUI() {
+    return true;
+  }
+
+  calcHashKey(digest = _udigest.reset()) {
+    let d = digest;
+    super.calcHashKey(d);
+
+    for (let k in this.params) {
+      digest.add(k);
+      digest.add(this.params[k]);
+    }
+
+    return d.get();
+  }
+
+  equals(b) {
+    if (this.type !== b.type) {
+      return false;
+    }
+
+    for (let k in this.params) {
+      if (Math.abs(this.params[k] - b.params[k]) > 0.000001) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  redraw() {
+    if (this.parent)
+      this.parent.redraw();
+  }
+
+  makeGUI(container) {
+    let def = this.constructor.define();
+    let params = def.params;
+
+    for (let k in params) {
+      let p = params[k];
+
+      if (p[2] === BOOL_FLAG) {
+        let check = container.check(undefined, p[0]);
+        check.checked = !!this.params[k];
+        check.key = k;
+
+        let this2 = this;
+        check.onchange = function () {
+          this2.params[this.key] = this.checked ? 1 : 0;
+          this2.update();
+          this2.redraw();
+        };
+      } else {
+        let slider = container.slider(undefined, {
+          name      : p[0],
+          defaultval: this.params[k],
+          min       : p[2],
+          max       : p[3]
+        });
+        slider.baseUnit = slider.displayUnit = "none";
+
+        slider.key = k;
+
+        let this2 = this;
+        slider.onchange = function () {
+          this2.params[this.key] = this.value;
+          this2.update();
+          this2.redraw();
+        };
+      }
+    }
+  }
+
+  killGUI(container) {
+    container.clear();
+  }
+
+  evaluate(s) {
+    throw new Error("implement me!");
+  }
+
+  reset() {
+
+  }
+
+  update() {
+    super.update();
+  }
+
+  draw(canvas, g, draw_transform) {
+    let steps = 128;
+    let s = 0, ds = 1.0/(steps - 1);
+
+    g.beginPath();
+    for (let i = 0; i < steps; i++, s += ds) {
+      let co = this.evaluate(s);
+
+      if (i) {
+        g.lineTo(co[0], co[1]);
+      } else {
+        g.moveTo(co[0], co[1]);
+      }
+    }
+
+    g.stroke();
+  }
+
+  _saveParams() {
+    let ret = [];
+    for (let k in this.params) {
+      ret.push(new ParamKey(k, this.params[k]));
+    }
+
+    return ret;
+  }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      params: this.params
+    });
+  }
+
+  loadJSON(obj) {
+    for (let k in obj.params) {
+      this.params[k] = obj.params[k];
+    }
+
+    return this;
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+
+    let ps = this.params;
+    this.params = {};
+
+    let pdef = this.constructor.define().params;
+    if (!pdef) {
+      console.warn("Missing define function for curve", this.constructor.name);
+      return;
+    }
+
+    for (let pair of ps) {
+      if (pair.key in pdef) {
+        this.params[pair.key] = pair.val;
+      }
+    }
+
+    for (let k in pdef) {
+      if (!(k in this.params)) {
+        this.params[k] = pdef[k][1];
+      }
+    }
+  }
+}
+
+SimpleCurveBase.STRUCT = nstructjs.inherit(SimpleCurveBase, CurveTypeData) + `
+  params : array(ParamKey) | obj._saveParams();
+}
+`;
+nstructjs.register(SimpleCurveBase);
+
+class BounceCurve extends SimpleCurveBase {
+  static define() {
+    return {
+      params  : {
+        decay : ["Decay", 1.0, 0.1, 5.0],
+        scale : ["Scale", 1.0, 0.01, 10.0],
+        freq  : ["Freq", 1.0, 0.01, 50.0],
+        phase : ["Phase", 0.0, -Math.PI*2.0, Math.PI*2.0],
+        offset: ["Offset", 0.0, -2.0, 2.0]
+      },
+      name    : "bounce",
+      uiname  : "Bounce",
+      typeName: "BounceCurve"
+
+    }
+  }
+
+  _evaluate(t) {
+    let params = this.params;
+    let decay = params.decay + 1.0;
+    let scale = params.scale;
+    let freq = params.freq;
+    let phase = params.phase;
+    let offset = params.offset;
+
+    t *= freq;
+    let t2 = Math.abs(Math.cos(phase + t*Math.PI*2.0))*scale;
+    ;//+ (1.0-scale);
+
+    t2 *= Math.exp(decay*t)/Math.exp(decay);
+
+    return t2;
+  }
+
+  evaluate(t) {
+    let s = this._evaluate(0.0);
+    let e = this._evaluate(1.0);
+
+    return (this._evaluate(t) - s)/(e - s) + this.params.offset;
+  }
+}
+
+CurveTypeData.register(BounceCurve);
+BounceCurve.STRUCT = nstructjs.inherit(BounceCurve, SimpleCurveBase) + `
+}`;
+nstructjs.register(BounceCurve);
+
+
+class ElasticCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+
+    this._func = undefined;
+    this._last_hash = undefined;
+  }
+
+  static define() {
+    return {
+      params  : {
+        mode     : ["Out Mode", false, BOOL_FLAG, BOOL_FLAG],
+        amplitude: ["Amplitude", 1.0, 0.01, 10.0],
+        period   : ["Period", 1.0, 0.01, 5.0]
+      },
+      name    : "elastic",
+      uiname  : "Elastic",
+      typeName: "ElasticCurve",
+    }
+  }
+
+  evaluate(t) {
+    let hash = ~~(this.params.mode*127 + this.params.amplitude*256 + this.params.period*512);
+
+    if (hash !== this._last_hash || !this._func) {
+      this._last_hash = hash;
+
+      if (this.params.mode) {
+        this._func = Ease.getElasticOut(this.params.amplitude, this.params.period);
+      } else {
+        this._func = Ease.getElasticIn(this.params.amplitude, this.params.period);
+      }
+    }
+    return this._func(t);
+  }
+}
+
+CurveTypeData.register(ElasticCurve);
+ElasticCurve.STRUCT = nstructjs.inherit(ElasticCurve, SimpleCurveBase) + `
+}`;
+nstructjs.register(ElasticCurve);
+
+
+class EaseCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+  }
+
+  static define() {
+    return {
+      params  : {
+        mode_in  : ["in", true, BOOL_FLAG, BOOL_FLAG],
+        mode_out : ["out", true, BOOL_FLAG, BOOL_FLAG],
+        amplitude: ["Amplitude", 1.0, 0.01, 4.0]
+      },
+      name    : "ease",
+      uiname  : "Ease",
+      typeName: "EaseCurve"
+    }
+  }
+
+  evaluate(t) {
+    let amp = this.params.amplitude;
+    let a1 = this.params.mode_in ? 1.0 - amp : 1.0/3.0;
+    let a2 = this.params.mode_out ? amp : 2.0/3.0;
+
+    return bez4(0.0, a1, a2, 1.0, t);
+  }
+}
+
+CurveTypeData.register(EaseCurve);
+EaseCurve.STRUCT = nstructjs.inherit(EaseCurve, SimpleCurveBase) + `
+}`;
+nstructjs.register(EaseCurve);
+
+
+class RandCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+    this.random = new MersenneRandom();
+    this.seed = 0;
+  }
+
+  get seed() {
+    return this._seed;
+  }
+
+  set seed(v) {
+    this.random.seed(v);
+    this._seed = v;
+  }
+
+  static define() {
+    return {
+      params  : {
+        amplitude: ["Amplitude", 1.0, 0.01, 4.0],
+        decay    : ["Decay", 1.0, 0.0, 5.0],
+        in_mode  : ["In", true, BOOL_FLAG, BOOL_FLAG]
+      },
+      name    : "random",
+      uiname  : "Random",
+      typeName: "RandCurve"
+    }
+  }
+
+  evaluate(t) {
+    let r = this.random.random();
+    let decay = this.params.decay + 1.0;
+    let amp = this.params.amplitude;
+    let in_mode = this.params.in_mode;
+
+    if (in_mode) {
+      t = 1.0 - t;
+    }
+    //r *= t;
+
+    let d;
+
+    //r *= 0.5;
+
+    if (in_mode) {
+      d = Math.exp(t*decay)/Math.exp(decay);
+    } else {
+      d = Math.exp(t*decay)/Math.exp(decay);
+    }
+
+    t = t + (r - t)*d;
+
+    if (in_mode) {
+      t = 1.0 - t;
+    }
+
+    return t;
+  }
+}
+
+CurveTypeData.register(RandCurve);
+RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
+}`;
+nstructjs.register(RandCurve);
+
+class Curve1DProperty extends ToolProperty$1 {
+  constructor(curve, apiname, uiname, description, flag, icon) {
+    super(PropTypes$8.CURVE, undefined, apiname, uiname, description, flag, icon);
+
+    this.data = new Curve1D();
+
+    if (curve !== undefined) {
+      this.setValue(curve);
+    }
+
+    this.wasSet = false;
+  }
+
+  calcMemSize() {
+    //bleh, just return a largish block size
+    return 1024;
+  }
+
+  equals(b) {
+
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  evaluate(t) {
+    return this.data.evaluate(t);
+  }
+
+  setValue(curve) {
+    if (curve === undefined) {
+      return;
+    }
+
+    this.data.load(curve);
+    super.setValue(curve);
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+
+    b.setValue(this.data);
+  }
+}
+
+Curve1DProperty.STRUCT = inherit$1(Curve1DProperty, ToolProperty$1) + `
+  data : Curve1D;
+}
+`;
+
+register$1(Curve1DProperty);
+ToolProperty$1.internalRegister(Curve1DProperty);
 
 /**
 
@@ -38002,648 +38693,6 @@ var html5_fileapi = /*#__PURE__*/Object.freeze({
   loadFile: loadFile$1
 });
 
-/**
- see doc_src/context.md
- */
-
-let notifier = undefined;
-
-function setNotifier(cls) {
-  notifier = cls;
-}
-
-const ContextFlags = {
-  IS_VIEW : 1
-};
-
-class InheritFlag {
-  constructor(data) {
-    this.data = data;
-  }
-}
-
-let __idgen = 1;
-
-if (Symbol.ContextID === undefined) {
-  Symbol.ContextID = Symbol("ContextID");
-}
-
-if (Symbol.CachedDef === undefined) {
-  Symbol.CachedDef = Symbol("CachedDef");
-}
-
-const _ret_tmp = [undefined];
-
-const OverlayClasses = [];
-
-function makeDerivedOverlay(parent) {
-  return class ContextOverlay extends parent {
-    constructor(appstate) {
-      super(appstate);
-
-      this.ctx = undefined; //owning context
-      this._state = appstate;
-    }
-
-    get state() {
-      return this._state;
-    }
-
-    set state(state) {
-      this._state = state;
-    }
-
-    /*
-    Ugly hack, ui_lasttool.js saves
-    a DataStruct wrapping the most recently executed ToolOp
-    in this.state._last_tool.
-    */
-    get last_tool() {
-      return this.state._last_tool;
-    }
-
-
-    onRemove(have_new_file = false) {
-    }
-
-    copy() {
-      return new this.constructor(this._state);
-    }
-
-    validate() {
-      throw new Error("Implement me!");
-    }
-
-
-    //base classes override this
-    static contextDefine() {
-      throw new Error("implement me!");
-      return {
-        name: "",
-        flag: 0
-      }
-    }
-
-    //don't override this
-    static resolveDef() {
-      if (this.hasOwnProperty(Symbol.CachedDef)) {
-        return this[Symbol.CachedDef];
-      }
-
-      let def2 = Symbol.CachedDef = {};
-
-      let def = this.contextDefine();
-
-      if (def === undefined) {
-        def = {};
-      }
-
-      for (let k in def) {
-        def2[k] = def[k];
-      }
-
-      if (!("flag") in def) {
-        def2.flag = Context.inherit(0);
-      }
-
-      let parents = [];
-      let p = getClassParent(this);
-
-      while (p && p !== ContextOverlay) {
-        parents.push(p);
-        p = getClassParent(p);
-      }
-
-      if (def2.flag instanceof InheritFlag) {
-        let flag = def2.flag.data;
-        for (let p of parents) {
-          let def = p.contextDefine();
-
-          if (!def.flag) {
-            continue;
-          } else if (def.flag instanceof InheritFlag) {
-            flag |= def.flag.data;
-          } else {
-            flag |= def.flag;
-            //don't go past non-inheritable parents
-            break;
-          }
-        }
-
-        def2.flag = flag;
-      }
-
-      return def2;
-    }
-  };
-}
-
-const ContextOverlay = makeDerivedOverlay(Object);
-
-const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
-                                     "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
-                                     "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
-                                     "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
-
-class LockedContext {
-  constructor(ctx, noWarnings) {
-    this.props = {};
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-
-    this.noWarnings = noWarnings;
-
-    this.load(ctx);
-  }
-
-  toLocked() {
-    //just return itself
-    return this;
-  }
-
-  error() {
-    return this.ctx.error(...arguments);
-  }
-  warning() {
-    return this.ctx.warning(...arguments);
-  }
-  message() {
-    return this.ctx.message(...arguments);
-  }
-  progbar() {
-    return this.ctx.progbar(...arguments);
-  }
-
-  load(ctx) {
-    //let keys = util.getAllKeys(ctx);
-    let keys = ctx._props;
-
-    function wrapget(name) {
-      return function(ctx2, data) {
-        return ctx.loadProperty(ctx2, name, data);
-      }
-    }
-
-    for (let k of keys) {
-      let v;
-      if (k === "state" || k === "toolstack" || k === "api") {
-        continue;
-      }
-
-      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
-        continue;
-      }
-
-      try {
-        v = ctx[k];
-      } catch (error) {
-        if (config.DEBUG.contextSystem) {
-          console.warn("failed to look up property in context: ", k);
-        }
-        continue;
-      }
-
-      let data, getter;
-      let overlay = ctx.getOwningOverlay(k);
-
-      if (overlay === undefined) {
-        //property must no longer be used?
-        continue;
-      }
-
-      try {
-        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
-          data = overlay[k + "_save"]();
-          getter = overlay[k + "_load"];
-        } else {
-          data = ctx.saveProperty(k);
-          getter = wrapget(k);
-        }
-      } catch (error) {
-        //util.print_stack(error);
-        console.warn("Failed to save context property", k);
-        continue;
-      }
-
-      this.props[k] = {
-        data : data,
-        get  : getter
-      };
-    }
-
-    let defineProp = (name) => {
-      Object.defineProperty(this, name, {
-        get : function() {
-          let def = this.props[name];
-          return def.get(this.ctx, def.data)
-        }
-      });
-    };
-
-    for (let k in this.props) {
-      defineProp(k);
-    }
-
-    this.ctx = ctx;
-  }
-
-  setContext(ctx) {
-    this.ctx = ctx;
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-  }
-}
-
-let next_key = {};
-let idgen$1 = 1;
-
-class Context {
-  constructor(appstate) {
-    this.state = appstate;
-
-    this._props = new Set();
-    this._stack = [];
-    this._inside_map = {};
-  }
-
-  /** chrome's debug console corrupts this._inside_map,
-   this method fixes it*/
-  _fix() {
-    this._inside_map = {};
-  }
-
-  fix() {
-    this._fix();
-  }
-
-  error(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return notifier.error(state.screen, message, timeout);
-    }
-  }
-
-  warning(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return notifier.warning(state.screen, message, timeout);
-    }
-  }
-
-  message(msg, timeout=1500) {
-    let state = this.state;
-
-    console.warn(msg);
-
-    if (state && state.screen) {
-      return notifier.message(state.screen, msg, timeout);
-    }
-  }
-
-  progbar(msg, perc=0.0, timeout=1500, id=msg) {
-    let state = this.state;
-
-    if (state && state.screen) {
-      //progbarNote(screen, msg, percent, color, timeout) {
-      return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
-    }
-  }
-
-  validateOverlays() {
-    let stack = this._stack;
-    let stack2 = [];
-
-    for (let i=0; i<stack.length; i++) {
-      if (stack[i].validate()) {
-        stack2.push(stack[i]);
-      }
-    }
-
-    this._stack = stack2;
-  }
-
-  hasOverlay(cls) {
-    return this.getOverlay(cls) !== undefined;
-  }
-
-  getOverlay(cls) {
-    for (let overlay of this._stack) {
-      if (overlay.constructor === cls) {
-        return overlay;
-      }
-    }
-  }
-
-  clear(have_new_file=false) {
-    for (let overlay of this._stack) {
-      overlay.onRemove(have_new_file);
-    }
-
-    this._stack = [];
-  }
-
-  //this is implemented by child classes
-  //it should load the same default overlays as in constructor
-  reset(have_new_file=false) {
-    this.clear(have_new_file);
-  }
-
-  //returns a new context with overriden properties
-  //unlike pushOverlay, overrides can be a simple object
-  override(overrides) {
-    if (overrides.copy === undefined) {
-      overrides.copy = function() {
-        return Object.assign({}, this);
-      };
-    }
-
-    let ctx = this.copy();
-    ctx.pushOverlay(overrides);
-    return ctx;
-  }
-
-  copy() {
-    let ret = new this.constructor(this.state);
-
-    for (let item of this._stack) {
-      ret.pushOverlay(item.copy());
-    }
-
-    return ret;
-  }
-
-  /**
-   Used by overlay property getters.  If returned,
-   the next overlay in the struct will have its getter used.
-
-   Example:
-
-   class overlay {
-      get scene() {
-        if (some_reason) {
-          return Context.super();
-        }
-
-        return something_else;
-      }
-    }
-   */
-  static super() {
-    return next_key;
-  }
-
-  /**
-   *
-   * saves a property into some kind of non-object-reference form
-   *
-   * */
-  saveProperty(key) {
-    //console.warn("Missing saveProperty implementation in Context; passing through values...", key)
-    return this[key];
-  }
-
-  /**
-   *
-   * lookup property based on saved data
-   *
-   * */
-  loadProperty(ctx, key, data) {
-    //console.warn("Missing loadProperty implementation in Context; passing through values...", key)
-    return data;
-  }
-
-  getOwningOverlay(name, _val_out) {
-    let inside_map = this._inside_map;
-    let stack = this._stack;
-
-    if (config.DEBUG.contextSystem) {
-      console.log(name, inside_map);
-    }
-
-    for (let i=stack.length-1; i >= 0; i--) {
-      let overlay = stack[i];
-      let ret = next_key;
-
-      if (overlay[Symbol.ContextID] === undefined) {
-        throw new Error("context corruption");
-      }
-
-      let ikey = overlay[Symbol.ContextID];
-
-      if (config.DEBUG.contextSystem) {
-        console.log(ikey, overlay);
-      }
-
-      //prevent infinite recursion
-      if (inside_map[ikey]) {
-        continue;
-      }
-
-      if (overlay.__allKeys.has(name)) {
-        if (config.DEBUG.contextSystem) {
-          console.log("getting value");
-        }
-
-        //Chrome's console messes this up
-
-        inside_map[ikey] = 1;
-
-        try {
-          ret = overlay[name];
-        } catch (error) {
-
-          inside_map[ikey] = 0;
-          throw error;
-        }
-
-        inside_map[ikey] = 0;
-      }
-
-      if (ret !== next_key) {
-        if (_val_out !== undefined) {
-          _val_out[0] = ret;
-        }
-        return overlay;
-      }
-    }
-
-    if (_val_out !== undefined) {
-      _val_out[0] = undefined;
-    }
-
-    return undefined;
-  }
-
-  ensureProperty(name) {
-    if (this.hasOwnProperty(name)) {
-      return;
-    }
-
-    this._props.add(name);
-
-    Object.defineProperty(this, name, {
-      get : function() {
-        let ret = _ret_tmp;
-        _ret_tmp[0] = undefined;
-
-        this.getOwningOverlay(name, ret);
-        return ret[0];
-      }, set : function() {
-        throw new Error("Cannot set ctx properties")
-      }
-    });
-  }
-
-  /**
-   * Returns a new context that doesn't
-   * contain any direct object references
-   * except for .state .datalib and .api, but
-   * instead uses those three to look up references
-   * on property access.
-   * */
-  toLocked() {
-    return new LockedContext(this);
-  }
-
-  pushOverlay(overlay) {
-    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-      overlay[Symbol.ContextID] = idgen$1++;
-    }
-
-    let keys = new Set();
-    for (let key of getAllKeys(overlay)) {
-      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
-        keys.add(key);
-      }
-    }
-
-    overlay.ctx = this;
-
-    if (overlay.__allKeys === undefined) {
-      overlay.__allKeys = keys;
-    }
-
-    for (let k of keys) {
-      let bad = typeof k === "symbol" || excludedKeys.has(k);
-      bad = bad || (typeof k === "string" && k[0] === "_");
-      bad = bad || (typeof k === "string" && k.endsWith("_save"));
-      bad = bad || (typeof k === "string" && k.endsWith("_load"));
-
-      if (bad) {
-        continue;
-      }
-
-      this.ensureProperty(k);
-    }
-
-    if (this._stack.indexOf(overlay) >= 0) {
-      console.warn("Overlay already added once");
-      if (this._stack[this._stack.length-1] === overlay) {
-        console.warn("  Definitely an error, overlay is already at top of stack");
-        return;
-      }
-    }
-
-    this._stack.push(overlay);
-  }
-
-  popOverlay(overlay) {
-    if (overlay !== this._stack[this._stack.length-1]) {
-      console.warn("Context.popOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.pop();
-  }
-
-  removeOverlay(overlay) {
-    if (this._stack.indexOf(overlay) < 0) {
-      console.warn("Context.removeOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.remove(overlay);
-  }
-
-  static inherit(data) {
-    return new InheritFlag(data);
-  }
-
-  static register(cls) {
-    if (cls[Symbol.ContextID]) {
-      console.warn("Tried to register same class twice:", cls);
-      return;
-    }
-
-    cls[Symbol.ContextID] = __idgen++;
-    OverlayClasses.push(cls);
-  }
-}
-
-function test() {
-  function testInheritance() {
-    class Test0 extends ContextOverlay {
-      static contextDefine() {
-        return {
-          flag: 1
-        }
-      }
-    }
-
-    class Test1 extends Test0 {
-      static contextDefine() {
-        return {
-          flag: 2
-        }
-      }
-    }
-
-    class Test2 extends Test1 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(4)
-        }
-      }
-    }
-
-    class Test3 extends Test2 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(8)
-        }
-      }
-    }
-
-    class Test4 extends Test3 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(16)
-        }
-      }
-    }
-
-    return Test4.resolveDef().flag === 30;
-  }
-
-  return testInheritance();
-}
-
-if (!test()) {
-  throw new Error("Context test failed");
-}
-
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
     this.glst = [];
@@ -39366,26 +39415,39 @@ var controller = /*#__PURE__*/Object.freeze({
   Mat4Property: Mat4Property,
   ListProperty: ListProperty,
   StringSetProperty: StringSetProperty,
-  Curve1DProperty: Curve1DProperty,
   ToolPaths: ToolPaths,
   buildParser: buildParser,
   Parser: Parser,
   parseToolPath: parseToolPath,
   testToolParser: testToolParser,
   initToolPaths: initToolPaths,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  getCurve: getCurve,
-  CurveTypeData: CurveTypeData,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
   SplineTemplates: SplineTemplates,
   SplineTemplateIcons: SplineTemplateIcons,
-  mySafeJSONStringify: mySafeJSONStringify,
-  mySafeJSONParse: mySafeJSONParse,
+  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
+  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
+  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
+  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
+  BSplineTransformOp: BSplineTransformOp,
+  Curve1DPoint: Curve1DPoint,
+  initSplineTemplates: initSplineTemplates,
+  ParamKey: ParamKey,
+  SimpleCurveBase: SimpleCurveBase,
+  BounceCurve: BounceCurve,
+  ElasticCurve: ElasticCurve,
+  EaseCurve: EaseCurve,
+  RandCurve: RandCurve,
+  getCurve: getCurve,
+  CurveConstructors: CurveConstructors,
+  CURVE_VERSION: CURVE_VERSION,
+  CurveTypeData: CurveTypeData,
   Curve1D: Curve1D,
+  CurveFlags: CurveFlags,
+  TangentModes: TangentModes,
+  evalHermiteTable: evalHermiteTable,
+  genHermiteTable: genHermiteTable,
+  Curve1DProperty: Curve1DProperty,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
@@ -63902,6 +63964,14 @@ function GetContextClass(ctxClass) {
       return this.state.toolstack;
     }
 
+    get toolDefaults() {
+      return SavedToolDefaults;
+    }
+
+    get last_tool() {
+      return this.toolstack.head;
+    }
+
     message(msg, timeout = 2500) {
       return message(this.screen, msg, timeout);
     }
@@ -63955,6 +64025,8 @@ function makeAPI(ctxClass) {
 
   api.rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
 
+  buildToolSysAPI(api, false, api.rootContextStruct);
+  
   return api;
 }
 
@@ -64641,5 +64713,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
