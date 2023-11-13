@@ -27,14 +27,11 @@ echo $?
 cd package
 echo $?
 
-#git commit -a
-#echo $?
-#git push
-#echo $?
+echo "npm publish"
+echo $?
+npm publish
+echo $?
 
-#echo "npm publish"
-#echo $?
-#npm publish
-#echo $?
-
+cd ..
+rm -rf package
 #git tag -a $VERSION -m "Release $VERSION"
