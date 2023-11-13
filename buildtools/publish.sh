@@ -24,7 +24,7 @@ echo $?
 bash buildtools/build_package.sh
 echo $?
 
-cd package
+cd _package
 echo $?
 
 echo "npm publish"
@@ -33,5 +33,5 @@ npm publish
 echo $?
 
 cd ..
-rm -rf package
+rm -rf _package
 #git tag -a $VERSION -m "Release $VERSION"

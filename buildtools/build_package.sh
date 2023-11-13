@@ -3,28 +3,22 @@
 echo "If publishing a new version in npm make sure to run publish.sh instead of build_package.sh"
 
 git commit -a
+git push
 
-mkdir -p package
-mkdir -p _package
-
-echo Exporting clean repo...
-rm pathux.tar 2> /dev/null
-git archive head --output pathux.tar
-
-echo Building package. . .
-cd _package
-cp ../pathux.tar .
-tar -xf pathux.tar
-
-ls
-cp -r scripts simple_docsys *.js *.json dist *.MD ../package
-rm ../package/serv*.js
-rm -rf ../package/docs
-cp -r docs_src ../package/docs
-rm ../package/docs/.esdoc.json
-
-cd ..
 rm -rf _package
 
-echo "Done"
+echo Exporting clean repo...
+git clone . _package
+
+cd _package
+git submodule init
+git submodule update --recursive
+
+rm -rf .git
+rm -rf scripts/path-controller/.git
+
+rm serv*.js
+rm rollup*.js
+rm -rf docs docs_src githooks servers buildtools simple_example example .editorconfig .git*
+
 
