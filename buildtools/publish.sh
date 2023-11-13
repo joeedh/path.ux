@@ -17,25 +17,24 @@ echo $?
 
 echo Publishing $VERSION
 echo $?
-bash build.sh
+bash buildtools/build.sh
 echo $?
 
 #bash build_docs.sh && \
-bash build_package.sh
+bash buildtools/build_package.sh
 echo $?
 
 cd package
 echo $?
 
-git commit -a
-echo $?
-echo "Git sucks"
-git push
-echo $?
+#git commit -a
+#echo $?
+#git push
+#echo $?
 
-echo "npm publish"
-echo $?
-npm publish
-echo $?
+#echo "npm publish"
+#echo $?
+#npm publish
+#echo $?
 
 #git tag -a $VERSION -m "Release $VERSION"
