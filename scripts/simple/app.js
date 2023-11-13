@@ -2,7 +2,7 @@ import nstructjs from '../path-controller/util/struct.js';
 import {Context, ContextOverlay, makeDerivedOverlay} from '../path-controller/controller/context.js';
 
 export const DataModelClasses = [];
-import {ToolStack} from '../path-controller/toolsys/toolsys.js';
+import {buildToolSysAPI, SavedToolDefaults, ToolStack} from '../path-controller/toolsys/toolsys.js';
 import {DataAPI} from '../path-controller/controller/controller.js';
 import {Screen} from '../screen/FrameManager.js';
 import {areaclasses} from '../screen/area_wrangler.js';
@@ -88,6 +88,14 @@ function GetContextClass(ctxClass) {
       return this.state.toolstack;
     }
 
+    get toolDefaults() {
+      return SavedToolDefaults;
+    }
+
+    get last_tool() {
+      return this.toolstack.head;
+    }
+
     message(msg, timeout = 2500) {
       return ui_noteframe.message(this.screen, msg, timeout);
     }
@@ -141,6 +149,8 @@ export function makeAPI(ctxClass) {
 
   api.rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
 
+  buildToolSysAPI(api, false, api.rootContextStruct);
+  
   return api;
 }
 
