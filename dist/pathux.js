@@ -1248,7 +1248,7 @@ for (let k in StructTypes) {
   StructTypeMap[StructTypes[k]] = k;
 }
 
-function gen_tabstr(t) {
+function gen_tabstr$2(t) {
   let s = "";
   for (let i = 0; i < t; i++) {
     s += "  ";
@@ -1987,17 +1987,17 @@ var struct_binpack = /*#__PURE__*/Object.freeze({
   unpack_static_string: unpack_static_string
 });
 
-let warninglvl = 2;
+let warninglvl$1 = 2;
 let debug$1 = 0;
 
-let _static_envcode_null = "";
-let packer_debug, packer_debug_start, packer_debug_end;
+let _static_envcode_null$1 = "";
+let packer_debug$1, packer_debug_start$1, packer_debug_end$1;
 let packdebug_tablevel = 0;
 
 function _get_pack_debug() {
   return {
-    packer_debug, packer_debug_start, packer_debug_end,
-    debug: debug$1, warninglvl
+    packer_debug: packer_debug$1, packer_debug_start: packer_debug_start$1, packer_debug_end: packer_debug_end$1,
+    debug: debug$1, warninglvl: warninglvl$1
   }
 }
 
@@ -2040,14 +2040,14 @@ function setWarningMode2(t) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
   }
 
-  warninglvl = t;
+  warninglvl$1 = t;
 }
 
 function setDebugMode2(t) {
   debug$1 = t;
 
   if (debug$1) {
-    packer_debug = function () {
+    packer_debug$1 = function () {
       let tab = gen_tabstr$1(packdebug_tablevel);
 
       if (arguments.length > 0) {
@@ -2056,24 +2056,24 @@ function setDebugMode2(t) {
         console.warn("Warning: undefined msg");
       }
     };
-    packer_debug_start = function (funcname) {
-      packer_debug("Start " + funcname);
+    packer_debug_start$1 = function (funcname) {
+      packer_debug$1("Start " + funcname);
       packdebug_tablevel++;
     };
 
-    packer_debug_end = function (funcname) {
+    packer_debug_end$1 = function (funcname) {
       packdebug_tablevel--;
 
       if (funcname) {
-        packer_debug("Leave " + funcname);
+        packer_debug$1("Leave " + funcname);
       }
     };
   } else {
-    packer_debug = function () {
+    packer_debug$1 = function () {
     };
-    packer_debug_start = function () {
+    packer_debug_start$1 = function () {
     };
-    packer_debug_end = function () {
+    packer_debug_end$1 = function () {
     };
   }
 }
@@ -2095,11 +2095,11 @@ function fromJSON(manager, val, obj, field, type, instance) {
   return StructFieldTypeMap[type.type].fromJSON(manager, val, obj, field, type, instance);
 }
 
-function formatJSON(manager, val, obj, field, type, instance, tlvl = 0) {
+function formatJSON$1(manager, val, obj, field, type, instance, tlvl = 0) {
   return StructFieldTypeMap[type.type].formatJSON(manager, val, obj, field, type, instance, tlvl);
 }
 
-function validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+function validateJSON$1(manager, val, obj, field, type, instance, _abstractKey) {
   return StructFieldTypeMap[type.type].validateJSON(manager, val, obj, field, type, instance, _abstractKey);
 }
 
@@ -2109,13 +2109,13 @@ function unpack_field(manager, data, type, uctx) {
 
   if (debug$1) {
     name = StructFieldTypeMap[type.type].define().name;
-    packer_debug_start("R " + name);
+    packer_debug_start$1("R " + name);
   }
 
   let ret = StructFieldTypeMap[type.type].unpack(manager, data, type, uctx);
 
   if (debug$1) {
-    packer_debug_end();
+    packer_debug_end$1();
   }
 
   return ret;
@@ -2134,7 +2134,7 @@ function do_pack(manager, data, val, obj, field, type) {
 
   if (debug$1) {
     name = StructFieldTypeMap[type.type].define().name;
-    packer_debug_start("W " + name);
+    packer_debug_start$1("W " + name);
   }
 
   let typeid = type;
@@ -2145,13 +2145,13 @@ function do_pack(manager, data, val, obj, field, type) {
   let ret = StructFieldTypeMap[typeid].pack(manager, data, val, obj, field, type);
 
   if (debug$1) {
-    packer_debug_end();
+    packer_debug_end$1();
   }
 
   return ret;
 }
 
-let _ws_env = [[undefined, undefined]];
+let _ws_env$1 = [[undefined, undefined]];
 
 class StructFieldType {
   static pack(manager, data, val, obj, field, type) {
@@ -2395,7 +2395,7 @@ class StructStructField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     let stt = manager.get_struct(type.data);
 
-    packer_debug("struct", stt.name);
+    packer_debug$1("struct", stt.name);
 
     manager.write_struct(data, val, stt);
   }
@@ -2434,14 +2434,14 @@ class StructStructField extends StructFieldType {
   static unpackInto(manager, data, type, uctx, dest) {
     let cls2 = manager.get_struct_cls(type.data);
 
-    packer_debug("struct", cls2 ? cls2.name : "(error)");
+    packer_debug$1("struct", cls2 ? cls2.name : "(error)");
     return manager.read_object(data, cls2, uctx, dest);
   }
 
   static packNull(manager, data, field, type) {
     let stt = manager.get_struct(type.data);
 
-    packer_debug("struct", type);
+    packer_debug$1("struct", type);
 
     for (let field2 of stt.fields) {
       let type2 = field2.type;
@@ -2452,7 +2452,7 @@ class StructStructField extends StructFieldType {
 
   static unpack(manager, data, type, uctx) {
     let cls2 = manager.get_struct_cls(type.data);
-    packer_debug("struct", cls2 ? cls2.name : "(error)");
+    packer_debug$1("struct", cls2 ? cls2.name : "(error)");
 
     return manager.read_object(data, cls2, uctx);
   }
@@ -2487,7 +2487,7 @@ class StructTStructField extends StructFieldType {
       throw new Error("Bad struct " + val.constructor.structName + " passed to write_struct");
     }
 
-    packer_debug("int " + stt.id);
+    packer_debug$1("int " + stt.id);
 
     pack_int(data, stt.id);
     manager.write_struct(data, val, stt);
@@ -2564,9 +2564,9 @@ class StructTStructField extends StructFieldType {
   static unpackInto(manager, data, type, uctx, dest) {
     let id = unpack_int(data, uctx);
 
-    packer_debug("-int " + id);
+    packer_debug$1("-int " + id);
     if (!(id in manager.struct_ids)) {
-      packer_debug("tstruct id: " + id);
+      packer_debug$1("tstruct id: " + id);
       console.trace();
       console.log(id);
       console.log(manager.struct_ids);
@@ -2575,7 +2575,7 @@ class StructTStructField extends StructFieldType {
 
     let cls2 = manager.get_struct_id(id);
 
-    packer_debug("struct name: " + cls2.name);
+    packer_debug$1("struct name: " + cls2.name);
 
     cls2 = manager.struct_cls[cls2.name];
 
@@ -2586,9 +2586,9 @@ class StructTStructField extends StructFieldType {
   static unpack(manager, data, type, uctx) {
     let id = unpack_int(data, uctx);
 
-    packer_debug("-int " + id);
+    packer_debug$1("-int " + id);
     if (!(id in manager.struct_ids)) {
-      packer_debug("tstruct id: " + id);
+      packer_debug$1("tstruct id: " + id);
       console.trace();
       console.log(id);
       console.log(manager.struct_ids);
@@ -2597,7 +2597,7 @@ class StructTStructField extends StructFieldType {
 
     let cls2 = manager.get_struct_id(id);
 
-    packer_debug("struct name: " + cls2.name);
+    packer_debug$1("struct name: " + cls2.name);
     cls2 = manager.struct_cls[cls2.name];
 
     return manager.read_object(data, cls2, uctx);
@@ -2636,7 +2636,7 @@ function formatArrayJson(manager, val, obj, field, type, type2, instance, tlvl, 
   for (let i = 0; i < array.length; i++) {
     let item = array[i];
 
-    s += tab(tlvl + 1) + formatJSON(manager, item, val, field, type2, instance, tlvl + 1) + ",\n";
+    s += tab(tlvl + 1) + formatJSON$1(manager, item, val, field, type2, instance, tlvl + 1) + ",\n";
   }
 
   s += tab(tlvl) + "]";
@@ -2652,12 +2652,12 @@ class StructArrayField extends StructFieldType {
       console.log("Field: ", field);
       console.log("Type: ", type);
       console.log("");
-      packer_debug("int 0");
+      packer_debug$1("int 0");
       pack_int(data, 0);
       return;
     }
 
-    packer_debug("int " + val.length);
+    packer_debug$1("int " + val.length);
     pack_int(data, val.length);
 
     let d = type.data;
@@ -2665,7 +2665,7 @@ class StructArrayField extends StructFieldType {
     let itername = d.iname;
     let type2 = d.type;
 
-    let env = _ws_env;
+    let env = _ws_env$1;
     for (let i = 0; i < val.length; i++) {
       let val2 = val[i];
       if (itername !== "" && itername !== undefined && field.get) {
@@ -2703,7 +2703,7 @@ class StructArrayField extends StructFieldType {
     }
 
     for (let i = 0; i < val.length; i++) {
-      let ret = validateJSON(manager, val[i], val, field, type.data.type, undefined, _abstractKey);
+      let ret = validateJSON$1(manager, val[i], val, field, type.data.type, undefined, _abstractKey);
 
       if (typeof ret === "string" || !ret) {
         return ret;
@@ -2747,7 +2747,7 @@ class StructArrayField extends StructFieldType {
 
     for (let i = 0; i < val.length; i++) {
       let val2 = val[i];
-      let env = _ws_env;
+      let env = _ws_env$1;
 
       if (itername !== "" && itername !== undefined && field.get) {
         env[0][0] = itername;
@@ -2774,7 +2774,7 @@ class StructArrayField extends StructFieldType {
 
   static unpack(manager, data, type, uctx) {
     let len = unpack_int(data, uctx);
-    packer_debug("-int " + len);
+    packer_debug$1("-int " + len);
 
     let arr = new Array(len);
     for (let i = 0; i < len; i++) {
@@ -2820,7 +2820,7 @@ class StructIterField extends StructFieldType {
     data.length += 4;
 
     let d = type.data, itername = d.iname, type2 = d.type;
-    let env = _ws_env;
+    let env = _ws_env$1;
 
     let i = 0;
     forEach(function (val2) {
@@ -2866,7 +2866,7 @@ class StructIterField extends StructFieldType {
     let itername = type.data.iname;
 
     for (let val2 of val) {
-      let env = _ws_env;
+      let env = _ws_env$1;
 
       if (itername !== "" && itername !== undefined && field.get) {
         env[0][0] = itername;
@@ -2900,7 +2900,7 @@ class StructIterField extends StructFieldType {
 
   static unpackInto(manager, data, type, uctx, arr) {
     let len = unpack_int(data, uctx);
-    packer_debug("-int " + len);
+    packer_debug$1("-int " + len);
 
     arr.length = 0;
 
@@ -2913,7 +2913,7 @@ class StructIterField extends StructFieldType {
 
   static unpack(manager, data, type, uctx) {
     let len = unpack_int(data, uctx);
-    packer_debug("-int " + len);
+    packer_debug$1("-int " + len);
 
     let arr = new Array(len);
     for (let i = 0; i < len; i++) {
@@ -3047,16 +3047,16 @@ class StructIterKeysField extends StructFieldType {
       len++;
     }
 
-    packer_debug("int " + len);
+    packer_debug$1("int " + len);
     pack_int(data, len);
 
     let d = type.data, itername = d.iname, type2 = d.type;
-    let env = _ws_env;
+    let env = _ws_env$1;
 
     let i = 0;
     for (let val2 in val) {
       if (i >= len) {
-        if (warninglvl > 0) {
+        if (warninglvl$1 > 0) {
           console.warn("Warning: object keys magically replaced during iteration", val, i);
         }
         return;
@@ -3097,7 +3097,7 @@ class StructIterKeysField extends StructFieldType {
 
     for (let k in val) {
       let val2 = val[k];
-      let env = _ws_env;
+      let env = _ws_env$1;
 
       if (itername !== "" && itername !== undefined && field.get) {
         env[0][0] = itername;
@@ -3131,7 +3131,7 @@ class StructIterKeysField extends StructFieldType {
 
   static unpackInto(manager, data, type, uctx, arr) {
     let len = unpack_int(data, uctx);
-    packer_debug("-int " + len);
+    packer_debug$1("-int " + len);
 
     arr.length = 0;
 
@@ -3144,7 +3144,7 @@ class StructIterKeysField extends StructFieldType {
 
   static unpack(manager, data, type, uctx) {
     let len = unpack_int(data, uctx);
-    packer_debug("-int " + len);
+    packer_debug$1("-int " + len);
 
     let arr = new Array(len);
     for (let i = 0; i < len; i++) {
@@ -3241,7 +3241,7 @@ class StructStaticArrayField extends StructFieldType {
 
       //*
       if (itername !== "" && itername !== undefined && field.get) {
-        let env = _ws_env;
+        let env = _ws_env$1;
         env[0][0] = itername;
         env[0][1] = val2;
         val2 = manager._env_call(field.get, obj, env);
@@ -3292,7 +3292,7 @@ class StructStaticArrayField extends StructFieldType {
   }
 
   static unpackInto(manager, data, type, uctx, ret) {
-    packer_debug("-size: " + type.data.size);
+    packer_debug$1("-size: " + type.data.size);
 
     ret.length = 0;
 
@@ -3304,7 +3304,7 @@ class StructStaticArrayField extends StructFieldType {
   }
 
   static unpack(manager, data, type, uctx) {
-    packer_debug("-size: " + type.data.size);
+    packer_debug$1("-size: " + type.data.size);
 
     let ret = [];
 
@@ -3335,8 +3335,8 @@ var _sintern2 = /*#__PURE__*/Object.freeze({
   packNull: packNull,
   toJSON: toJSON,
   fromJSON: fromJSON,
-  formatJSON: formatJSON,
-  validateJSON: validateJSON,
+  formatJSON: formatJSON$1,
+  validateJSON: validateJSON$1,
   do_pack: do_pack,
   StructFieldType: StructFieldType,
   formatArrayJson: formatArrayJson
@@ -3621,9 +3621,9 @@ function updateDEBUG() {
 var sintern2 = _sintern2;
 var struct_eval = _struct_eval;
 
-let warninglvl$1 = 2;
+let warninglvl = 2;
 
-var truncateDollarSign = true;
+var truncateDollarSign$1 = true;
 var manager$1;
 
 class JSONError extends Error {};
@@ -3657,7 +3657,7 @@ function printEvalError(code) {
 }
 
 function setTruncateDollarSign(v) {
-  truncateDollarSign = !!v;
+  truncateDollarSign$1 = !!v;
 }
 
 function _truncateDollarSign(s) {
@@ -3671,18 +3671,18 @@ function _truncateDollarSign(s) {
 }
 
 function unmangle(name) {
-  if (truncateDollarSign) {
+  if (truncateDollarSign$1) {
     return _truncateDollarSign(name);
   } else {
     return name;
   }
 }
 
-let _static_envcode_null$1 = "";
+let _static_envcode_null = "";
 
 //truncate webpack-mangled names
 
-function gen_tabstr$2(tot) {
+function gen_tabstr(tot) {
   let ret = "";
 
   for (let i = 0; i < tot; i++) {
@@ -3692,15 +3692,15 @@ function gen_tabstr$2(tot) {
   return ret;
 }
 
-let packer_debug$1, packer_debug_start$1, packer_debug_end$1;
+let packer_debug, packer_debug_start, packer_debug_end;
 
 function update_debug_data() {
   let ret = _get_pack_debug();
 
-  packer_debug$1 = ret.packer_debug;
-  packer_debug_start$1 = ret.packer_debug_start;
-  packer_debug_end$1 = ret.packer_debug_end;
-  warninglvl$1 = ret.warninglvl;
+  packer_debug = ret.packer_debug;
+  packer_debug_start = ret.packer_debug_start;
+  packer_debug_end = ret.packer_debug_end;
+  warninglvl = ret.warninglvl;
 }
 
 update_debug_data();
@@ -3712,7 +3712,7 @@ function setWarningMode(t) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
   }
 
-  warninglvl$1 = t;
+  warninglvl = t;
 }
 
 function setDebugMode(t) {
@@ -3720,7 +3720,7 @@ function setDebugMode(t) {
   update_debug_data();
 }
 
-let _ws_env$1 = [[undefined, undefined]];
+let _ws_env = [[undefined, undefined]];
 
 function define_empty_class(scls, name) {
   let cls = function () {
@@ -3784,7 +3784,7 @@ class STRUCT {
   /** invoke loadSTRUCT methods on parent objects.  note that
    reader() is only called once.  it is called however.*/
   static Super(obj, reader) {
-    if (warninglvl$1 > 0) {
+    if (warninglvl > 0) {
       console.warn("deprecated");
     }
 
@@ -3810,7 +3810,7 @@ class STRUCT {
 
   /** deprecated.  used with old fromSTRUCT interface. */
   static chain_fromSTRUCT(cls, reader) {
-    if (warninglvl$1 > 0) {
+    if (warninglvl > 0) {
       console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
     }
 
@@ -3829,7 +3829,7 @@ class STRUCT {
       try {
         obj2[k] = obj[k];
       } catch (error) {
-        if (warninglvl$1 > 0) {
+        if (warninglvl > 0) {
           console.warn("  failed to set property", k);
         }
       }
@@ -4064,7 +4064,7 @@ class STRUCT {
         let stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
       } else if (!cls.structName && cls.name !== "Object") {
-        if (warninglvl$1 > 0)
+        if (warninglvl > 0)
           console.log("Warning, bad class in registered class list", unmangle(cls.name), cls);
         continue;
       }
@@ -4079,7 +4079,7 @@ class STRUCT {
 
       if (!(stt.name in clsmap)) {
         if (!(stt.name in this.null_natives))
-          if (warninglvl$1 > 0)
+          if (warninglvl > 0)
             console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
         let dummy = define_empty_class(this.constructor, stt.name);
@@ -4166,6 +4166,44 @@ class STRUCT {
     recStruct(st, cls);
   }
 
+  mergeScripts(child, parent) {
+    let stc = struct_parse.parse(child.trim());
+    let stp = struct_parse.parse(parent.trim());
+
+    let fieldset = new Set();
+
+    for (let f of stc.fields) {
+      fieldset.add(f.name);
+    }
+
+    let fields = [];
+    for (let f of stp.fields) {
+      if (!fieldset.has(f.name)) {
+        fields.push(f);
+      }
+    }
+
+    stc.fields = fields.concat(stc.fields);
+    return STRUCT.fmt_struct(stc, false, false);
+  }
+
+  inlineRegister(cls, structScript) {
+    const keywords = this.constructor.keywords;
+
+    let p = cls.__proto__;
+    while (p && p !== Object) {
+      if (p.hasOwnProperty(keywords.script)) {
+        structScript = this.mergeScripts(structScript, p.STRUCT);
+        break
+      }
+      p = p.__proto__;
+    }
+
+    cls.STRUCT = structScript;
+    this.register(cls);
+    return structScript;
+  }
+
   register(cls, structName) {
     return this.add_class(cls, structName);
   }
@@ -4207,7 +4245,7 @@ class STRUCT {
       }
 
       if (bad) {
-        if (warninglvl$1 > 0) {
+        if (warninglvl > 0) {
           console.warn("Generating " + keywords.script + " script for derived class " + unmangle(cls.name));
         }
 
@@ -4245,7 +4283,7 @@ class STRUCT {
     }
 
     if (cls.structName in this.structs) {
-      if (warninglvl$1 > 0) {
+      if (warninglvl > 0) {
         console.warn("Struct " + unmangle(cls.structName) + " is already registered", cls);
       }
 
@@ -4295,7 +4333,7 @@ class STRUCT {
   }
 
   _env_call(code, obj, env) {
-    let envcode = _static_envcode_null$1;
+    let envcode = _static_envcode_null;
     if (env !== undefined) {
       envcode = "";
       for (let i = 0; i < env.length; i++) {
@@ -4303,7 +4341,7 @@ class STRUCT {
       }
     }
     let fullcode = "";
-    if (envcode !== _static_envcode_null$1)
+    if (envcode !== _static_envcode_null)
       fullcode = envcode + code;
     else
       fullcode = code;
@@ -4509,7 +4547,7 @@ class STRUCT {
     if (uctx === undefined) {
       uctx = new unpack_context();
 
-      packer_debug$1("\n\n=Begin reading " + cls.structName + "=");
+      packer_debug("\n\n=Begin reading " + cls.structName + "=");
     }
     let thestruct = this;
 
@@ -4569,7 +4607,7 @@ class STRUCT {
 
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      if (warninglvl$1 > 1) {
+      if (warninglvl > 1) {
         console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
       }
 
@@ -4750,7 +4788,7 @@ class STRUCT {
 
     stt = this.structs[cls.structName];
 
-    packer_debug$1("\n\n=Begin reading " + cls.structName + "=");
+    packer_debug("\n\n=Begin reading " + cls.structName + "=");
     let thestruct = this;
     let this2 = this;
     let was_run = false;
@@ -4779,7 +4817,9 @@ class STRUCT {
           }
 
           if (val === undefined) {
-            console.warn("nstructjs.readJSON: Missing field " + f.name + " in struct " + stt.name);
+            if (warninglvl > 1) {
+              console.warn("nstructjs.readJSON: Missing field " + f.name + " in struct " + stt.name);
+            }
             continue;
           }
 
@@ -4808,7 +4848,7 @@ class STRUCT {
       obj.loadSTRUCT(load);
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      if (warninglvl$1 > 1) {
+      if (warninglvl > 1) {
         console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
       }
       return cls.fromSTRUCT(load);
@@ -5282,7 +5322,7 @@ var struct_filehelper = /*#__PURE__*/Object.freeze({
 
 /** truncate webpack mangled names. defaults to true
  *  so Mesh$1 turns into Mesh */
-function truncateDollarSign$1(value = true) {
+function truncateDollarSign(value = true) {
   setTruncateDollarSign(value);
 }
 
@@ -5314,7 +5354,7 @@ function consoleLogger() {
  * @param logger
  * @returns {*}
  */
-function validateJSON$1(json, cls, useInternalParser, printColors = true, logger = consoleLogger) {
+function validateJSON(json, cls, useInternalParser, printColors = true, logger = consoleLogger) {
   return manager$1.validateJSON(json, cls, useInternalParser, printColors, logger);
 }
 
@@ -5328,6 +5368,28 @@ function setAllowOverriding(t) {
 
 function isRegistered(cls) {
   return manager$1.isRegistered(cls);
+}
+
+/** Register a class inline.
+ *
+ * Note: No need to use nstructjs.inherit,
+ * inheritance is handled for you.  Unlike
+ * nstructjs.inherit fields can be properly
+ * overridden in the child class without
+ * being written twice.
+ *
+ * class Test {
+ *  test = 0;
+ *
+ *  static STRUCT = nstructjs.inlineRegister(this, `
+ *  namespace.Test {
+ *    test : int;
+ *  }
+ *  `);
+ * }
+ **/
+function inlineRegister(cls, structScript) {
+  return manager$1.inlineRegister(cls, structScript);
 }
 
 /** Register a class with nstructjs **/
@@ -5362,7 +5424,7 @@ function writeJSON(obj) {
   return manager$1.writeJSON(obj);
 }
 
-function formatJSON$1(json, cls, addComments = true, validate = true) {
+function formatJSON(json, cls, addComments = true, validate = true) {
   return manager$1.formatJSON(json, cls, addComments, validate);
 }
 
@@ -5379,9 +5441,10 @@ var nstructjs = /*#__PURE__*/Object.freeze({
   consoleLogger: consoleLogger,
   deriveStructManager: deriveStructManager,
   filehelper: struct_filehelper,
-  formatJSON: formatJSON$1,
+  formatJSON: formatJSON,
   getEndian: getEndian,
   inherit: inherit$1,
+  inlineRegister: inlineRegister,
   isRegistered: isRegistered,
   get manager () { return manager$1; },
   parser: struct_parser,
@@ -5394,11 +5457,11 @@ var nstructjs = /*#__PURE__*/Object.freeze({
   setEndian: setEndian,
   setTruncateDollarSign: setTruncateDollarSign,
   setWarningMode: setWarningMode,
-  truncateDollarSign: truncateDollarSign$1,
+  truncateDollarSign: truncateDollarSign,
   typesystem: struct_typesystem,
   unpack_context: unpack_context,
   unregister: unregister,
-  validateJSON: validateJSON$1,
+  validateJSON: validateJSON,
   validateStructs: validateStructs,
   writeJSON: writeJSON,
   writeObject: writeObject,
@@ -21263,6 +21326,7 @@ ToolProperty {
   radix          : float;
   decimalPlaces  : int;
   uiname         : string | this.uiname || this.apiname || "";
+  wasSet         : bool;
 }
 `;
 nstructjs.register(ToolProperty$1);
@@ -21572,6 +21636,9 @@ class IntProperty extends _NumberPropertyBase {
 
     //remember to update NumberConstraintsBase et al when adding new number
     //constraints
+
+    /* Integer properties don't use default unit. */
+    this.baseUnit = this.displayUnit = "none";
 
     this.radix = 10;
   }
@@ -24648,31 +24715,12 @@ function winding_axis(a, b, c, up_axis) {
 }
 
 function winding(a, b, c, zero_z = false, tol = 0.0) {
-  let t1 = _cross_vec1;
-  let t2 = _cross_vec2;
+  let dx1 = b[0] - a[0];
+  let dy1 = b[1] - a[1];
+  let dx2 = c[0] - a[0];
+  let dy2 = c[1] - a[1];
 
-  for (let i = 0; i < a.length; i++) {
-    t1[i] = b[i] - a[i];
-    t2[i] = c[i] - a[i];
-  }
-
-  return t1[0]*t2[1] - t1[1]*t2[0] > tol;
-  /*
-  t1.load(a).sub(b);
-  t2.load(c).sub(b);
-  return t[0]*
-  
-  for (let i=0; i<a.length; i++) {
-      _cross_vec1[i] = b[i]-a[i];
-      _cross_vec2[i] = c[i]-a[i];
-  }
-  if (a.length==2 || zero_z) {
-      _cross_vec1[2] = 0.0;
-      _cross_vec2[2] = 0.0;
-  }
-  _cross_vec1.cross(_cross_vec2);
-  return _cross_vec1[2]>tol;
-*/
+  return dx1*dy2 - dy1*dx2 > tol;
 }
 
 function inrect_2d(p, pos, size) {
@@ -24683,48 +24731,35 @@ function inrect_2d(p, pos, size) {
     return false;
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
-};
-let $smin_aabb_isect_line_2d = new Vector2$b();
-let $ssize_aabb_isect_line_2d = new Vector2$b();
-let $sv1_aabb_isect_line_2d = new Vector2$b();
-let $ps_aabb_isect_line_2d = [new Vector2$b(), new Vector2$b(), new Vector2$b()];
-let $l1_aabb_isect_line_2d = [0, 0];
-let $smax_aabb_isect_line_2d = new Vector2$b();
-let $sv2_aabb_isect_line_2d = new Vector2$b();
-let $l2_aabb_isect_line_2d = [0, 0];
+}
 
+let $ps_aabb_isect_line_2d = [new Vector2$b(), new Vector2$b(), new Vector2$b(), new Vector2$b()];
 function aabb_isect_line_2d(v1, v2, min, max) {
-  for (let i = 0; i < 2; i++) {
-    $smin_aabb_isect_line_2d[i] = Math.min(min[i], v1[i]);
-    $smax_aabb_isect_line_2d[i] = Math.max(max[i], v2[i]);
+  if (point_in_aabb_2d(v1, min, max) || point_in_aabb(v2, min, max)) {
+    return true;
   }
-  $smax_aabb_isect_line_2d.sub($smin_aabb_isect_line_2d);
-  $ssize_aabb_isect_line_2d.load(max).sub(min);
-  if (!aabb_isect_2d($smin_aabb_isect_line_2d, $smax_aabb_isect_line_2d, min, $ssize_aabb_isect_line_2d))
-    return false;
+
+  let lines = $ps_aabb_isect_line_2d;
+  lines[0][0] = min[0];
+  lines[0][1] = min[1];
+
+  lines[1][0] = min[0];
+  lines[1][1] = max[1];
+
+  lines[2][0] = max[0];
+  lines[2][1] = max[1];
+
+  lines[3][0] = max[0];
+  lines[3][1] = min[1];
+
   for (let i = 0; i < 4; i++) {
-    if (inrect_2d(v1, min, $ssize_aabb_isect_line_2d))
+    if (line_line_cross(v1, v2, lines[i], lines[(i + 1)%4])) {
       return true;
-    if (inrect_2d(v2, min, $ssize_aabb_isect_line_2d))
-      return true;
+    }
   }
-  $ps_aabb_isect_line_2d[0] = min;
-  $ps_aabb_isect_line_2d[1][0] = min[0];
-  $ps_aabb_isect_line_2d[1][1] = max[1];
-  $ps_aabb_isect_line_2d[2] = max;
-  $ps_aabb_isect_line_2d[3][0] = max[0];
-  $ps_aabb_isect_line_2d[3][1] = min[1];
-  $l1_aabb_isect_line_2d[0] = v1;
-  $l1_aabb_isect_line_2d[1] = v2;
-  for (let i = 0; i < 4; i++) {
-    let a = $ps_aabb_isect_line_2d[i], b = $ps_aabb_isect_line_2d[(i + 1)%4];
-    $l2_aabb_isect_line_2d[0] = a;
-    $l2_aabb_isect_line_2d[1] = b;
-    if (line_line_cross($l1_aabb_isect_line_2d, $l2_aabb_isect_line_2d))
-      return true;
-  }
+
   return false;
-};
+}
 
 
 function expand_rect2d(pos, size, margin) {
@@ -24750,23 +24785,52 @@ function expand_line(l, margin) {
   l[0].add(c);
   l[1].add(c);
   return l;
-};
+}
 
-//stupidly ancient function, todo: rewrite
-function colinear(a, b, c, limit = 2.2e-16) {
-  for (let i = 0; i < 3; i++) {
-    _cross_vec1[i] = b[i] - a[i];
-    _cross_vec2[i] = c[i] - a[i];
+function colinear(a, b, c, limit = 2.2e-16, distLimit = 0.00001**2) {
+  let t1 = _cross_vec1;
+  let t2 = _cross_vec2;
+
+  let axes = a.length;
+
+  for (let i = 0; i < axes; i++) {
+    t1[i] = b[i] - a[i];
+    t2[i] = c[i] - a[i];
   }
 
-  if (a.vectorDistance(b) < feps*100 && a.vectorDistance(c) < feps*100) {
+  for (let i = axes; i < 3; i++) {
+    t1[i] = t2[i] = 0.0;
+  }
+
+  if (t1.dot(t1) <= distLimit || t2.dot(t2) <= distLimit) {
     return true;
   }
-  if (_cross_vec1.dot(_cross_vec1) < limit || _cross_vec2.dot(_cross_vec2) < limit)
-    return true;
-  _cross_vec1.cross(_cross_vec2);
-  return _cross_vec1.dot(_cross_vec1) < limit;
-};
+
+  t1.normalize();
+  t2.normalize();
+
+  t1.cross(t2);
+  return t1.dot(t1) <= limit;
+}
+
+function colinear2d(a, b, c, limit = 0.00001, precise=false) {
+  let dx1 = a[0]-b[0];
+  let dy1 = a[1]-b[1];
+  let dx2 = c[0]-b[0];
+  let dy2 = c[1]-b[1];
+
+  let det = Math.abs(dx1*dy2 - dy1*dx2);
+  if (precise) {
+    let len = (dx1**2 + dy1**2)**0.5 + (dx2**2 + dy2**2)**0.5;
+    if (len <= 0.00001) {
+      return true;
+    }
+
+    det /= len;
+  }
+
+  return det <= limit;
+}
 
 let _llc_l1 = [new Vector3$2(), new Vector3$2()];
 let _llc_l2 = [new Vector3$2(), new Vector3$2()];
@@ -26503,6 +26567,7 @@ var math = /*#__PURE__*/Object.freeze({
   expand_rect2d: expand_rect2d,
   expand_line: expand_line,
   colinear: colinear,
+  colinear2d: colinear2d,
   corner_normal: corner_normal,
   line_line_isect: line_line_isect,
   line_line_cross: line_line_cross,
@@ -26719,28 +26784,28 @@ THEME REFACTOR:
 */
 
 let compatMap = {
-  BoxMargin : "padding",
-  BoxBG : "background",
-  BoxRadius : "border-radius",
-  background : "background-color",
-  defaultWidth : "width",
-  defaultHeight : "height",
-  DefaultWidth : "width",
-  DefaultHeight : "height",
-  BoxBorder : "border-color",
-  BoxLineWidth : "border-width",
-  BoxSubBG : "background-color",
-  BoxSub2BG : "background-color",
-  DefaultPanelBG : "background-color",
-  InnerPanelBG : "background-color",
-  Background : "background-color",
+  BoxMargin       : "padding",
+  BoxBG           : "background",
+  BoxRadius       : "border-radius",
+  background      : "background-color",
+  defaultWidth    : "width",
+  defaultHeight   : "height",
+  DefaultWidth    : "width",
+  DefaultHeight   : "height",
+  BoxBorder       : "border-color",
+  BoxLineWidth    : "border-width",
+  BoxSubBG        : "background-color",
+  BoxSub2BG       : "background-color",
+  DefaultPanelBG  : "background-color",
+  InnerPanelBG    : "background-color",
+  Background      : "background-color",
   numslider_width : "width",
-  numslider_height : "height",
+  numslider_height: "height",
 };
 
 let ColorSchemeTypes = {
-  LIGHT : "light",
-  DARK  : "dark"
+  LIGHT: "light",
+  DARK : "dark"
 };
 
 function parsepx$4(css) {
@@ -26761,24 +26826,25 @@ function color2css$1(c, alpha_override) {
     return `rgba(${r},${g},${b}, ${a})`;
   }
 }
+
 window.color2css = color2css$1;
 
 let css2color_rets = cachering.fromConstructor(Vector4$2, 64);
 let basic_colors = {
-  'white' : [1,1,1],
-  'grey' : [0.5, 0.5, 0.5],
-  'gray' : [0.5, 0.5, 0.5],
+  'white' : [1, 1, 1],
+  'grey'  : [0.5, 0.5, 0.5],
+  'gray'  : [0.5, 0.5, 0.5],
   'black' : [0, 0, 0],
-  'red' : [1, 0, 0],
-  'yellow' : [1, 1, 0],
+  'red'   : [1, 0, 0],
+  'yellow': [1, 1, 0],
   'green' : [0, 1, 0],
-  'teal' : [0, 1, 1],
-  'cyan' : [0, 1, 1],
-  'blue' : [0, 0, 1],
-  'orange' : [1, 0.5, 0.25],
+  'teal'  : [0, 1, 1],
+  'cyan'  : [0, 1, 1],
+  'blue'  : [0, 0, 1],
+  'orange': [1, 0.5, 0.25],
   'brown' : [0.5, 0.4, 0.3],
-  'purple' : [1, 0, 1],
-  'pink' : [1, 0.5, 0.5]
+  'purple': [1, 0, 1],
+  'pink'  : [1, 0.5, 0.5]
 };
 
 function color2web(color) {
@@ -26817,10 +26883,10 @@ window.color2web = color2web;
 
 function css2color$1(color) {
   if (!color) {
-    return new Vector4$2([0,0,0,1]);
+    return new Vector4$2([0, 0, 0, 1]);
   }
 
-  color = (""+color).trim();
+  color = ("" + color).trim();
 
   let ret = css2color_rets.next();
 
@@ -26828,15 +26894,15 @@ function css2color$1(color) {
     color = color.slice(1, color.length);
     let parts = [];
 
-    for (let i=0; i<color.length>>1; i++) {
-      let part = "0x" + color.slice(i*2, i*2+2);
+    for (let i = 0; i < color.length>>1; i++) {
+      let part = "0x" + color.slice(i*2, i*2 + 2);
       parts.push(parseInt(part));
     }
 
     ret.zero();
     let i;
-    for (i=0; i<Math.min(parts.length, ret.length); i++) {
-      ret[i] = parts[i] / 255.0;
+    for (i = 0; i < Math.min(parts.length, ret.length); i++) {
+      ret[i] = parts[i]/255.0;
     }
 
     if (i < 4) {
@@ -26855,7 +26921,7 @@ function css2color$1(color) {
   const hasAlpha = color.startsWith("rgba(");
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
 
-  for (let i=0; i<color.length; i++) {
+  for (let i = 0; i < color.length; i++) {
     ret[i] = parseFloat(color[i]);
     if (i < 3) {
       ret[i] /= 255;
@@ -26882,6 +26948,7 @@ function web2color(str) {
 
   return css2color$1(str);
 }
+
 window.web2color = web2color;
 
 let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
@@ -26918,7 +26985,8 @@ window.validateCSSColor = validateCSSColor$1;
 let theme = {};
 
 function invertTheme() {
-  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK
+                                                                             : ColorSchemeTypes.LIGHT;
 
   function inverted(color) {
     if (Array.isArray(color)) {
@@ -26974,12 +27042,13 @@ function setColorSchemeType(mode) {
   }
 
 }
+
 window.validateWebColor = validateWebColor;
 
 let _digest$1 = new HashDigest();
 
 class CSSFont {
-  constructor(args={}) {
+  constructor(args = {}) {
     this._size = args.size ? args.size : 12;
     this.font = args.font;
     this.style = args.style !== undefined ? args.style : "normal";
@@ -26988,7 +27057,7 @@ class CSSFont {
     this.color = args.color;
   }
 
-  calcHashUpdate(digest=_digest$1.reset()) {
+  calcHashUpdate(digest = _digest$1.reset()) {
     digest.add(this._size || 0);
     digest.add(this.font);
     digest.add(this.style);
@@ -27005,9 +27074,10 @@ class CSSFont {
 
   get size() {
     if (isMobile()) {
-      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
+      let mul = theme.base.mobileTextSizeMultiplier/visualViewport.scale;
       if (mul) {
-        return this._size * mul;;
+        return this._size*mul;
+        ;
       }
     }
 
@@ -27029,7 +27099,7 @@ class CSSFont {
     return ret;
   }
 
-  genCSS(size=this.size) {
+  genCSS(size = this.size) {
     return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
 
@@ -27048,6 +27118,7 @@ class CSSFont {
     return this.genCSS() + ":" + this.size + ":" + color;
   }
 }
+
 CSSFont.STRUCT = `
 CSSFont {
   size     : float | obj._size;
@@ -27060,7 +27131,7 @@ CSSFont {
 `;
 nstructjs.register(CSSFont);
 
-function exportTheme(theme1=theme, addVarDecl=true) {
+function exportTheme(theme1 = theme, addVarDecl = true) {
   let sortkeys = (obj) => {
     let keys = [];
     for (let k in obj) {
@@ -27073,7 +27144,7 @@ function exportTheme(theme1=theme, addVarDecl=true) {
 
   let s = addVarDecl ? "var theme = {\n" : "{\n";
 
-  function writekey(v, indent="") {
+  function writekey(v, indent = "") {
     if (typeof v === "string") {
       if (v.search("\n") >= 0) {
         v = "`" + v + "`";
@@ -27109,7 +27180,7 @@ ${indent}})`;
         return s;
       }
     } else {
-      return ""+v;
+      return "" + v;
     }
 
     return "error";
@@ -27149,7 +27220,7 @@ ${indent}})`;
 
         let pad = "";
 
-        for (let i=0; i<maxwid-k2.length; i++) {
+        for (let i = 0; i < maxwid - k2.length; i++) {
           pad += " ";
         }
 
@@ -27164,7 +27235,31 @@ ${indent}})`;
 
   return s;
 }
+
 window._exportTheme = exportTheme;
+
+function copyTheme(theme) {
+  if (theme instanceof CSSFont) {
+    return theme.copy();
+  }
+
+  let ret = {};
+  for (let k in theme) {
+    let v = theme[k];
+
+    if (typeof v === "function") {
+      continue;
+    }
+
+    if (typeof v === "object") {
+      ret[k] = copyTheme(v);
+    } else {
+      ret[k] = v;
+    }
+  }
+
+  return ret;
+}
 
 class Task {
   constructor(taskcb) {
@@ -28969,7 +29064,9 @@ ToolOp.register(DataPathSetOp);
   let api = new DataAPI();
 
   //map MyContextClass to a struct, true tells mapStruct to auto-create
-  //the struct if it doesn't already exist
+  //the struct if it doesn't already exist.
+  //
+  //MyContextClass should have a member "propCache" pointing at SavedToolDefaults.
   let st = api.mapStruct(MyContextClass, true);
 
   //set fields of struct, e.g. st.int, st.float, st.enum, st.struct, etc
@@ -39344,6 +39441,7 @@ var controller = /*#__PURE__*/Object.freeze({
   expand_rect2d: expand_rect2d,
   expand_line: expand_line,
   colinear: colinear,
+  colinear2d: colinear2d,
   corner_normal: corner_normal,
   line_line_isect: line_line_isect,
   line_line_cross: line_line_cross,
@@ -42207,7 +42305,7 @@ class Container extends UIBase$f {
     return ret;
   }
 
-  pathlabel(inpath, label = "", packflag = 0) {
+  pathlabel(inpath, label = undefined, packflag = 0) {
     let path;
 
     packflag |= this.inherit_packflag & ~PackFlags$5.NO_UPDATE;
@@ -42218,11 +42316,21 @@ class Container extends UIBase$f {
 
     let ret = UIBase$a.createElement("label-x");
 
+    if (label === undefined && inpath) {
+      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+      if (rdef) {
+        label = rdef.prop.uiname ?? rdef.dpath.apiname;
+      } else {
+        label = "(error)";
+      }
+    }
+
     ret.text = label;
     ret.packflag = packflag;
     ret.setAttribute("datapath", path);
 
     this._add(ret);
+    ret.setCSS();
 
     return ret;
   }
@@ -62333,6 +62441,10 @@ class Editor extends Area$1 {
     this.makeMenuBar = makeMenuBar;
   }
 
+  /** Registers class with Area system
+   *  and nstructjs.  Uses nstructjs.inlineRegister
+   *  to handle inheritance.
+   **/
   static register(cls) {
     if (!cls.hasOwnProperty("define")) {
       throw new Error("missing define() method");
@@ -62340,10 +62452,13 @@ class Editor extends Area$1 {
 
     if (!cls.hasOwnProperty("STRUCT")) {
       cls.STRUCT = nstructjs.inherit(cls, this) + `\n}`;
+      nstructjs.register(cls);
+    } else {
+      /* inlineRegister handles inheritance. */
+      cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT);
     }
 
     super.register(cls);
-    nstructjs.register(cls);
   }
 
   makeSideBar() {
@@ -63719,6 +63834,9 @@ class DataModel {
     return strct;
   }
 
+  /** Automatically registers cls with nstructjs
+   *  and handles STRUCT inheritance.
+   */
   static register(cls) {
     if (!cls.hasOwnProperty("defineAPI")) {
       //  throw new Error(cls.name + "is missing a defineAPI method");
@@ -63726,8 +63844,8 @@ class DataModel {
 
     DataModelClasses.push(cls);
 
-    if (cls.hasOwnProperty("STRUCT")) {
-      nstructjs.register(cls);
+    if (cls.hasOwnProperty("STRUCT") && !nstructjs.isRegistered(cls)) {
+      cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT);
     }
   }
 }
@@ -64169,6 +64287,8 @@ class AppState {
   }
 
   start(args = new StartArgs()) {
+    nstructjs.validateStructs();
+
     let args2 = new StartArgs();
 
     let methodsCheck = [
@@ -64521,5 +64641,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
