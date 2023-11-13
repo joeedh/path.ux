@@ -1,4 +1,3 @@
-import {Curve1DProperty} from "../path-controller/toolsys/toolprop.js";
 import {UIBase, Icons, saveUIData, loadUIData} from '../core/ui_base.js';
 import {ColumnFrame, RowFrame} from "../core/ui.js";
 import * as util from '../path-controller/util/util.js';
