@@ -17,7 +17,7 @@ cp ../pathux.tar .
 tar -xf pathux.tar
 
 ls
-cp -r scripts simple_docsys *.js *.json dist index.html *.MD ../package
+cp -r scripts simple_docsys *.js *.json dist *.MD ../package
 rm -rf ../package/docs
 cp -r docs_src ../package/docs
 rm ../package/docs/.esdoc.json
