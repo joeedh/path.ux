@@ -16,7 +16,8 @@ cd _package
 cp ../pathux.tar .
 tar -xf pathux.tar
 
-cp -r scripts simple_docsys assets *.js *.json dist example index.html *.pem *.MD watch.py render_icons.py ../package
+ls
+cp -r scripts simple_docsys *.js *.json dist index.html *.MD ../package
 rm -rf ../package/docs
 cp -r docs_src ../package/docs
 rm ../package/docs/.esdoc.json
