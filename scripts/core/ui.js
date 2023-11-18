@@ -427,7 +427,18 @@ export class Container extends ui_base.UIBase {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(themeClass = "strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz = undefined) {
+  strip(themeClass_or_obj = "strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz = undefined) {
+    let themeClass = themeClass_or_obj;
+
+    if (typeof themeClass_or_obj === "object") {
+      let obj = themeClass_or_obj;
+
+      themeClass = obj.themeClass ?? "strip";
+      margin1 = obj.margin1 ?? margin1;
+      margin2 = obj.margin2 ?? 1;
+      horiz = obj.horiz;
+    }
+
     if (horiz === undefined) {
       horiz = this instanceof RowFrame;
       horiz = horiz || this.style["flex-direction"] === "row";
@@ -1273,15 +1284,7 @@ export class Container extends ui_base.UIBase {
       }
 
       if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
-        if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          let strip = this.strip();
-          strip.label(prop.uiname);
-
-          return strip.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
-        } else {
-          return this.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
-        }
-
+        return this.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
       } else {
         if (prop.flag & PropFlags.USE_ICONS) {
           packflag |= PackFlags.USE_ICONS;
@@ -1794,15 +1797,18 @@ export class Container extends ui_base.UIBase {
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     let path;
+    let label = name;
 
     if (inpath !== undefined) {
       path = this._joinPrefix(inpath);
     }
 
     let ret = UIBase.createElement("dropbox-x")
+
     if (enumDef !== undefined) {
       if (enumDef instanceof toolprop.EnumProperty) {
         ret.prop = enumDef;
+        label ||= enumDef.uiname || toolprop.ToolProperty.makeUIName(enumDef.apiname);
       } else {
         ret.prop = new toolprop.EnumProperty(defaultval, enumDef, path, name);
       }
@@ -1816,12 +1822,12 @@ export class Container extends ui_base.UIBase {
       if (res !== undefined) {
         ret.prop = res.prop;
 
-        name = name === undefined ? res.prop.uiname : name;
+        name ||= res.prop.uiname;
+        label ||= name;
       }
     }
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
@@ -1840,7 +1846,25 @@ export class Container extends ui_base.UIBase {
 
     ret.packflag |= packflag;
 
-    this._add(ret);
+    if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
+      const container = this.row();
+      let l;
+
+      if (packflag & PackFlags.LABEL_ON_RIGHT) {
+        container._add(ret);
+        l = container.label(label);
+
+        if (!l.style["margin-left"] || l.style["margin-left"] === "unset") {
+          l.style["margin-left"] = "5px";
+        }
+      } else {
+        l = container.label(label);
+        container._add(ret);
+      }
+    } else {
+      this._add(ret);
+    }
+
     return ret;
   }
 

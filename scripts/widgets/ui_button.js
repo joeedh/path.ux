@@ -385,42 +385,6 @@ export class OldButton extends ButtonEventBase {
 
     this._last_bg = undefined;
 
-    this.addEventListener("keydown", (e) => {
-      if (this.disabled) return;
-
-      if (cconst.DEBUG.buttonEvents)
-        console.log(e.keyCode);
-
-      switch (e.keyCode) {
-        case 27: //escape
-          this.blur();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-        case 32: //spacebar
-        case 13: //enter
-          this.click();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-      }
-    });
-
-    this.addEventListener("focusin", () => {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      if (this.disabled) return;
-
-      this._focus = 0;
-      this._redraw();
-    });
-
     this._last_disabled = false;
     this._auto_depress = true;
 
@@ -643,11 +607,7 @@ export class OldButton extends ButtonEventBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
-    this.dom.style["margin-left"] = this.getDefault("margin-left", undefined, 0) + "px";
-    this.dom.style["margin-right"] = this.getDefault("margin-right", undefined, 0) + "px";
-    this.dom.style["margin-top"] = this.getDefault("margin-top", undefined, 0) + "px";
-    this.dom.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, 0) + "px";
+    this.updateBorders();
 
     let name = this._name;
     if (name === undefined) {
@@ -676,18 +636,18 @@ export class OldButton extends ButtonEventBase {
     this.updateBorders();
   }
 
-  updateBorders() {
+  updateBorders(dom=this.dom) {
     let lwid = this.getDefault("border-width");
 
     if (lwid) {
-      this.dom.style["border-color"] = this.getDefault("border-color");
-      this.dom.style["border-width"] = lwid + "px";
-      this.dom.style["border-style"] = "solid";
-      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+      dom.style["border-color"] = this.getDefault("border-color");
+      dom.style["border-width"] = lwid + "px";
+      dom.style["border-style"] = "solid";
+      dom.style["border-radius"] = this.getDefault("border-radius") + "px";
     } else {
-      this.dom.style["border-color"] = "none";
-      this.dom.style["border-width"] = "0px";
-      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+      dom.style["border-color"] = "none";
+      dom.style["border-width"] = "0px";
+      dom.style["border-radius"] = this.getDefault("border-radius") + "px";
     }
 
   }

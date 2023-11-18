@@ -868,7 +868,7 @@ export class DropBox extends OldButton {
 
     let setDefault = (key) => {
       if (this.hasDefault(key)) {
-        this.dom.style[key] = this.getDefault(key, undefined, 0) + "px";
+        this.style[key] = this.getDefault(key, undefined, 0) + "px";
       }
     }
 
@@ -927,6 +927,11 @@ export class DropBox extends OldButton {
     }
 
     return 0;
+  }
+
+  updateBorders() {
+    //Do not apply border stlying to the child canvas
+    super.updateBorders(this)
   }
 
   updateDataPath() {

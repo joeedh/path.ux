@@ -649,7 +649,8 @@ export const PackFlags = {
   NO_NUMSLIDER_TEXTBOX   : (1<<14),
   CUSTOM_ICON_SHEET      : 1<<15,
   CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
-  NO_UPDATE              : 1<<16
+  NO_UPDATE              : 1<<16,
+  LABEL_ON_RIGHT         : 1<<17,
 };
 
 let first = (iter) => {

@@ -1312,8 +1312,8 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       color = this.getDefault("border-color");
     }
 
-    g.strokeStyle = color;
-    g.stroke();
+    //g.strokeStyle = color;
+    //g.stroke();
 
     let co = this._getButtonPos();
 

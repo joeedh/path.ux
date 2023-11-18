@@ -403,18 +403,9 @@ export class SplitTool extends ToolBase {
         this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1] + sarea.size[1]]);
       }
     }
-    //console.warn("sarea:", sarea);
-
-    //let sarea = this.
-    //console.log(e.x, e.y);
-    //this.overdraw.clear();
-    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
   on_pointerdown(e) {
-  }
-
-  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -424,8 +415,6 @@ export class SplitTool extends ToolBase {
   }
 
   on_keydown(e) {
-    console.log("s", e.keyCode);
-
     switch (e.keyCode) {
       case keymap.Escape: //esc
         this.cancel();
@@ -522,18 +511,9 @@ export class RemoveAreaTool extends ToolBase {
       this.sarea = sarea;
       this.overdraw.rect(sarea.pos, sarea.size, "rgba(0,0,0,0.1)");
     }
-    //console.warn("sarea:", sarea);
-
-    //let sarea = this.
-    //console.log(e.x, e.y);
-    //this.overdraw.clear();
-    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
   on_pointerdown(e) {
-  }
-
-  on_pointerup(e) {
     this.finish();
 
     if (e.button) {

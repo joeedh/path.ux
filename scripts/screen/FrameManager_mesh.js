@@ -170,6 +170,7 @@ export class ScreenBorder extends ui_base.UIBase {
         }],
         Menu.SEP,
         ["Collapse Area", () => {
+          console.log("Collapse Area!");
           elem.ctx.screen.removeAreaTool(elem instanceof ScreenBorder ? elem : undefined);
         }],
       ];
