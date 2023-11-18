@@ -18,7 +18,7 @@ import {Unit} from '../core/units.js';
 export const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
   "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
-  "slideSpeed"
+  "slideSpeed", "sliderDisplayExp"
 ]);
 
 function updateSliderFromDom(dom, slider = dom) {
@@ -26,14 +26,15 @@ function updateSliderFromDom(dom, slider = dom) {
 }
 
 export const SliderDefaults = {
-  stepIsRelative: false,
-  expRate       : 1.0 + 1.0/3.0,
-  radix         : 10,
-  decimalPlaces : 4,
-  baseUnit      : "none",
-  displayUnit   : "none",
-  slideSpeed    : 1.0,
-  step          : 0.1,
+  stepIsRelative  : false,
+  expRate         : 1.0 + 1.0/3.0,
+  radix           : 10,
+  decimalPlaces   : 4,
+  baseUnit        : "none",
+  displayUnit     : "none",
+  slideSpeed      : 1.0,
+  step            : 0.1,
+  sliderDisplayExp: 1.0
 }
 
 export function NumberSliderBase(cls = UIBase, skip = new Set(), defaults = SliderDefaults) {
@@ -990,6 +991,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     this.baseUnit = undefined;
     this.displayUnit = undefined;
     this.editAsBaseUnit = undefined;
+    this.sliderDisplayExp = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -1285,6 +1287,25 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, "stroke", bcolor, undefined, true);
     g.translate(0, -y);
 
+    if (this.sliderDisplayExp && this.sliderDisplayExp !== 1.0) {
+      g.strokeStyle = this.getDefault("SliderDivColor")
+        || this.getDefault("border-color")
+        || "grey";
+
+      let steps = 8;
+      let t = 0.0, dt = 1.0/(steps - 1);
+
+      g.beginPath();
+      for (let i = 0; i < steps; i++, t += dt) {
+        let t2 = Math.pow(t, this.sliderDisplayExp);
+
+        let x = t2*w;
+        g.moveTo(x, y);
+        g.lineTo(x, h - y);
+      }
+      g.stroke();
+    }
+
     if (this.highlight === 1) {
       color = this.getDefault("BoxHighlight");
     } else {
@@ -1352,6 +1373,10 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     let range = this.uiRange || this.range;
 
     x = (x - boxw*0.5)/w2;
+    if (this.sliderDisplayExp) {
+      x = Math.max(x, 0.0);
+      x = Math.pow(x, 1.0/this.sliderDisplayExp);
+    }
     x = x*(range[1] - range[0]) + range[0];
 
     return x;
@@ -1366,6 +1391,10 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     let range = this.uiRange || this.range;
 
     x = (x - range[0])/(range[1] - range[0]);
+
+    if (this.sliderDisplayExp) {
+      x = Math.pow(x, this.sliderDisplayExp);
+    }
 
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -1588,6 +1617,14 @@ export class SliderWithTextbox extends ColumnFrame {
 
   set slideSpeed(v) {
     this.numslider.slideSpeed = v;
+  }
+
+  get sliderDisplayExp() {
+    return this.numslider.sliderDisplayExp;
+  }
+
+  set sliderDisplayExp(v) {
+    this.numslider.sliderDisplayExp = v;
   }
 
   get radix() {
