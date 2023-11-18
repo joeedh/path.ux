@@ -13351,7 +13351,7 @@ window._buildStringTest = buildString;
 
 const NumberConstraintsBase = new Set([
   'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
-  'slideSpeed'
+  'slideSpeed', 'sliderDisplayExp'
 ]);
 
 const IntegerConstraints = new Set([
@@ -14021,6 +14021,12 @@ class _NumberPropertyBase extends ToolProperty$1 {
     //remember to update NumberConstraintsBase et al when adding new number
     //constraints
 
+    /** Display simple sliders with exponent divisions, don't
+     * confuse with expRate which affects rollar
+     * slider speed.
+     */
+    this.sliderDisplayExp = 1.0;
+
     /** controls roller slider rate */
     this.slideSpeed = 1.0;
 
@@ -14087,10 +14093,15 @@ class _NumberPropertyBase extends ToolProperty$1 {
     b.range = this.range ? [this.range[0], this.range[1]] : undefined;
     b.uiRange = this.uiRange ? [this.uiRange[0], this.uiRange[1]] : undefined;
     b.slideSpeed = this.slideSpeed;
+    b.sliderDisplayExp = this.sliderDisplayExp;
 
     b.data = this.data;
   }
 
+  setSliderDisplayExp(f) {
+    this.sliderDisplayExp = f;
+    return this;
+  }
 
   setSlideSpeed(f) {
     this.slideSpeed = f;
@@ -14139,11 +14150,12 @@ class _NumberPropertyBase extends ToolProperty$1 {
   }
 };
 _NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty$1) + `
-  range      : array(float);
-  expRate    : float;
-  data       : float;
-  step       : float;
-  slideSpeed : float;
+  range            : array(float);
+  expRate          : float;
+  data             : float;
+  step             : float;
+  slideSpeed       : float;
+  sliderDisplayExp : float;
 }
 `;
 nstructjs.register(_NumberPropertyBase);
@@ -21164,7 +21176,7 @@ let propCacheRings = {};
 
 function getTempProp(type) {
   if (!(type in propCacheRings)) {
-    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
+    propCacheRings[type] = cachering.fromConstructor(ToolProperty$1.getClass(type), 32);
   }
 
   return propCacheRings[type].next();
@@ -21218,6 +21230,10 @@ class DataPath {
     this.path = path;
     this.flag = 0;
     this.struct = undefined;
+
+    if (type === DataTypes.PROP && this.data && ("" + this.data.uiname).trim().length === 0) {
+      this.data.uiname = ToolProperty$1.makeUIName(apiname);
+    }
   }
 
   copy() {
@@ -21404,6 +21420,11 @@ class DataPath {
 
   decimalPlaces(n) {
     this.data.setDecimalPlaces(n);
+    return this;
+  }
+
+  sliderDisplayExp(f) {
+    this.data.setSliderDisplayExp(f);
     return this;
   }
 
@@ -33030,7 +33051,8 @@ const PackFlags$a = {
   NO_NUMSLIDER_TEXTBOX   : (1<<14),
   CUSTOM_ICON_SHEET      : 1<<15,
   CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
-  NO_UPDATE              : 1<<16
+  NO_UPDATE              : 1<<16,
+  LABEL_ON_RIGHT         : 1<<17,
 };
 
 let first = (iter) => {
@@ -36610,42 +36632,6 @@ class OldButton extends ButtonEventBase {
 
     this._last_bg = undefined;
 
-    this.addEventListener("keydown", (e) => {
-      if (this.disabled) return;
-
-      if (exports.DEBUG.buttonEvents)
-        console.log(e.keyCode);
-
-      switch (e.keyCode) {
-        case 27: //escape
-          this.blur();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-        case 32: //spacebar
-        case 13: //enter
-          this.click();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-      }
-    });
-
-    this.addEventListener("focusin", () => {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      if (this.disabled) return;
-
-      this._focus = 0;
-      this._redraw();
-    });
-
     this._last_disabled = false;
     this._auto_depress = true;
 
@@ -36868,11 +36854,7 @@ class OldButton extends ButtonEventBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
-    this.dom.style["margin-left"] = this.getDefault("margin-left", undefined, 0) + "px";
-    this.dom.style["margin-right"] = this.getDefault("margin-right", undefined, 0) + "px";
-    this.dom.style["margin-top"] = this.getDefault("margin-top", undefined, 0) + "px";
-    this.dom.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, 0) + "px";
+    this.updateBorders();
 
     let name = this._name;
     if (name === undefined) {
@@ -36901,18 +36883,18 @@ class OldButton extends ButtonEventBase {
     this.updateBorders();
   }
 
-  updateBorders() {
+  updateBorders(dom=this.dom) {
     let lwid = this.getDefault("border-width");
 
     if (lwid) {
-      this.dom.style["border-color"] = this.getDefault("border-color");
-      this.dom.style["border-width"] = lwid + "px";
-      this.dom.style["border-style"] = "solid";
-      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+      dom.style["border-color"] = this.getDefault("border-color");
+      dom.style["border-width"] = lwid + "px";
+      dom.style["border-style"] = "solid";
+      dom.style["border-radius"] = this.getDefault("border-radius") + "px";
     } else {
-      this.dom.style["border-color"] = "none";
-      this.dom.style["border-width"] = "0px";
-      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+      dom.style["border-color"] = "none";
+      dom.style["border-width"] = "0px";
+      dom.style["border-radius"] = this.getDefault("border-radius") + "px";
     }
 
   }
@@ -40435,7 +40417,7 @@ class DropBox extends OldButton {
 
     let setDefault = (key) => {
       if (this.hasDefault(key)) {
-        this.dom.style[key] = this.getDefault(key, undefined, 0) + "px";
+        this.style[key] = this.getDefault(key, undefined, 0) + "px";
       }
     };
 
@@ -40494,6 +40476,11 @@ class DropBox extends OldButton {
     }
 
     return 0;
+  }
+
+  updateBorders() {
+    //Do not apply border stlying to the child canvas
+    super.updateBorders(this);
   }
 
   updateDataPath() {
@@ -41850,7 +41837,18 @@ class Container extends UIBase$f {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(themeClass = "strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz = undefined) {
+  strip(themeClass_or_obj = "strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz = undefined) {
+    let themeClass = themeClass_or_obj;
+
+    if (typeof themeClass_or_obj === "object") {
+      let obj = themeClass_or_obj;
+
+      themeClass = obj.themeClass ?? "strip";
+      margin1 = obj.margin1 ?? margin1;
+      margin2 = obj.margin2 ?? 1;
+      horiz = obj.horiz;
+    }
+
     if (horiz === undefined) {
       horiz = this instanceof RowFrame;
       horiz = horiz || this.style["flex-direction"] === "row";
@@ -42696,15 +42694,7 @@ class Container extends UIBase$f {
       }
 
       if (!(packflag & PackFlags$5.USE_ICONS) && !(prop.flag & (PropFlags$2.USE_ICONS | PropFlags$2.FORCE_ENUM_CHECKBOXES))) {
-        if (packflag & PackFlags$5.FORCE_PROP_LABELS) {
-          let strip = this.strip();
-          strip.label(prop.uiname);
-
-          return strip.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
-        } else {
-          return this.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
-        }
-
+        return this.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
       } else {
         if (prop.flag & PropFlags$2.USE_ICONS) {
           packflag |= PackFlags$5.USE_ICONS;
@@ -43217,15 +43207,18 @@ class Container extends UIBase$f {
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     let path;
+    let label = name;
 
     if (inpath !== undefined) {
       path = this._joinPrefix(inpath);
     }
 
     let ret = UIBase$a.createElement("dropbox-x");
+
     if (enumDef !== undefined) {
       if (enumDef instanceof EnumProperty$9) {
         ret.prop = enumDef;
+        label ||= enumDef.uiname || ToolProperty$1.makeUIName(enumDef.apiname);
       } else {
         ret.prop = new EnumProperty$9(defaultval, enumDef, path, name);
       }
@@ -43239,12 +43232,12 @@ class Container extends UIBase$f {
       if (res !== undefined) {
         ret.prop = res.prop;
 
-        name = name === undefined ? res.prop.uiname : name;
+        name ||= res.prop.uiname;
+        label ||= name;
       }
     }
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
@@ -43263,7 +43256,25 @@ class Container extends UIBase$f {
 
     ret.packflag |= packflag;
 
-    this._add(ret);
+    if (label && packflag & PackFlags$5.FORCE_PROP_LABELS) {
+      const container = this.row();
+      let l;
+
+      if (packflag & PackFlags$5.LABEL_ON_RIGHT) {
+        container._add(ret);
+        l = container.label(label);
+
+        if (!l.style["margin-left"] || l.style["margin-left"] === "unset") {
+          l.style["margin-left"] = "5px";
+        }
+      } else {
+        l = container.label(label);
+        container._add(ret);
+      }
+    } else {
+      this._add(ret);
+    }
+
     return ret;
   }
 
@@ -45512,18 +45523,9 @@ class SplitTool extends ToolBase {
         this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1] + sarea.size[1]]);
       }
     }
-    //console.warn("sarea:", sarea);
-
-    //let sarea = this.
-    //console.log(e.x, e.y);
-    //this.overdraw.clear();
-    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
   on_pointerdown(e) {
-  }
-
-  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -45533,8 +45535,6 @@ class SplitTool extends ToolBase {
   }
 
   on_keydown(e) {
-    console.log("s", e.keyCode);
-
     switch (e.keyCode) {
       case keymap$4.Escape: //esc
         this.cancel();
@@ -45631,18 +45631,9 @@ class RemoveAreaTool extends ToolBase {
       this.sarea = sarea;
       this.overdraw.rect(sarea.pos, sarea.size, "rgba(0,0,0,0.1)");
     }
-    //console.warn("sarea:", sarea);
-
-    //let sarea = this.
-    //console.log(e.x, e.y);
-    //this.overdraw.clear();
-    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
   on_pointerdown(e) {
-  }
-
-  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -46463,6 +46454,7 @@ class ScreenBorder extends UIBase$f {
         }],
         Menu.SEP,
         ["Collapse Area", () => {
+          console.log("Collapse Area!");
           elem.ctx.screen.removeAreaTool(elem instanceof ScreenBorder ? elem : undefined);
         }],
       ];
@@ -48701,7 +48693,7 @@ UIBase$f.internalRegister(ThemeEditor);
 const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
   "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
-  "slideSpeed"
+  "slideSpeed", "sliderDisplayExp"
 ]);
 
 function updateSliderFromDom(dom, slider = dom) {
@@ -48709,14 +48701,15 @@ function updateSliderFromDom(dom, slider = dom) {
 }
 
 const SliderDefaults = {
-  stepIsRelative: false,
-  expRate       : 1.0 + 1.0/3.0,
-  radix         : 10,
-  decimalPlaces : 4,
-  baseUnit      : "none",
-  displayUnit   : "none",
-  slideSpeed    : 1.0,
-  step          : 0.1,
+  stepIsRelative  : false,
+  expRate         : 1.0 + 1.0/3.0,
+  radix           : 10,
+  decimalPlaces   : 4,
+  baseUnit        : "none",
+  displayUnit     : "none",
+  slideSpeed      : 1.0,
+  step            : 0.1,
+  sliderDisplayExp: 1.0
 };
 
 function NumberSliderBase(cls = UIBase$f, skip = new Set(), defaults = SliderDefaults) {
@@ -49673,6 +49666,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     this.baseUnit = undefined;
     this.displayUnit = undefined;
     this.editAsBaseUnit = undefined;
+    this.sliderDisplayExp = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -49968,14 +49962,33 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     drawRoundBox(this, this.canvas, g, w, sh, r, "stroke", bcolor, undefined, true);
     g.translate(0, -y);
 
+    if (this.sliderDisplayExp && this.sliderDisplayExp !== 1.0) {
+      g.strokeStyle = this.getDefault("SliderDivColor")
+        || this.getDefault("border-color")
+        || "grey";
+
+      let steps = 8;
+      let t = 0.0, dt = 1.0/(steps - 1);
+
+      g.beginPath();
+      for (let i = 0; i < steps; i++, t += dt) {
+        let t2 = Math.pow(t, this.sliderDisplayExp);
+
+        let x = t2*w;
+        g.moveTo(x, y);
+        g.lineTo(x, h - y);
+      }
+      g.stroke();
+    }
+
     if (this.highlight === 1) {
       color = this.getDefault("BoxHighlight");
     } else {
       color = this.getDefault("border-color");
     }
 
-    g.strokeStyle = color;
-    g.stroke();
+    //g.strokeStyle = color;
+    //g.stroke();
 
     let co = this._getButtonPos();
 
@@ -50035,6 +50048,10 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     let range = this.uiRange || this.range;
 
     x = (x - boxw*0.5)/w2;
+    if (this.sliderDisplayExp) {
+      x = Math.max(x, 0.0);
+      x = Math.pow(x, 1.0/this.sliderDisplayExp);
+    }
     x = x*(range[1] - range[0]) + range[0];
 
     return x;
@@ -50049,6 +50066,10 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     let range = this.uiRange || this.range;
 
     x = (x - range[0])/(range[1] - range[0]);
+
+    if (this.sliderDisplayExp) {
+      x = Math.pow(x, this.sliderDisplayExp);
+    }
 
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -50271,6 +50292,14 @@ class SliderWithTextbox extends ColumnFrame {
 
   set slideSpeed(v) {
     this.numslider.slideSpeed = v;
+  }
+
+  get sliderDisplayExp() {
+    return this.numslider.sliderDisplayExp;
+  }
+
+  set sliderDisplayExp(v) {
+    this.numslider.sliderDisplayExp = v;
   }
 
   get radix() {
