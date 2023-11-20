@@ -48992,12 +48992,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this._pressed = true;
       this._redraw();
 
-      if (e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.swapWithTextbox();
-      } else if (this.overArrow(e.x, e.y)) {
+      if (this.overArrow(e.x, e.y)) {
         this._on_click(e);
       } else {
         this.dragStart(e);
