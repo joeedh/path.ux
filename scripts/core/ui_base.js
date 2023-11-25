@@ -1048,7 +1048,8 @@ export class UIBase extends HTMLElement {
       p = p.parentWidget;
     }
 
-    return false;
+    /* Default to true. */
+    return true;
   }
 
   /**

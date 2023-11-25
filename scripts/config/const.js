@@ -118,6 +118,7 @@ let exports = {
     modalEvents         : false,
     areaConstraintSolver: false,
     datapaths           : false,
+    lastToolPanel       : false,
 
     domEvents        : false,
     domEventAddRemove: false,

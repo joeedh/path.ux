@@ -198,6 +198,11 @@ export class Container extends ui_base.UIBase {
     this._mass_prefixstack = [];
   }
 
+  noUndo() {
+    this.setUndo(false);
+    return this;
+  }
+
   set background(bg) {
     this.__background = bg;
 
@@ -1196,7 +1201,7 @@ export class Container extends ui_base.UIBase {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
-    let useDataPathUndo = !(prop.flag & PropFlags.NO_UNDO);
+    let useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
 
     //console.log(prop, PropTypes, PropSubTypes);
 
@@ -1354,6 +1359,7 @@ export class Container extends ui_base.UIBase {
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
+        console.log("::", ret._useDataPathUndo, this._useDataPathUndo);
 
         ret.icon = rdef.prop.iconmap[rdef.subkey];
 
@@ -1547,9 +1553,6 @@ export class Container extends ui_base.UIBase {
     }
 
     this._add(ret);
-
-    //ret.update();
-
     return ret;
   }
 
@@ -2050,7 +2053,6 @@ export class Container extends ui_base.UIBase {
     let ret = UIBase.createElement("rowframe-x");
 
     this._container_inherit(ret, packflag);
-
     this._add(ret);
 
     ret.ctx = this.ctx;

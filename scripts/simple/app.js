@@ -88,13 +88,13 @@ function GetContextClass(ctxClass) {
       return this.state.toolstack;
     }
 
-    //get toolDefaults() {
-   //   return SavedToolDefaults;
-   // }
+    get toolDefaults() {
+      return SavedToolDefaults;
+    }
 
-    //get last_tool() {
-//      return this.toolstack.head;
-  //  }
+    get last_tool() {
+      return this.toolstack.head;
+    }
 
     message(msg, timeout = 2500) {
       return ui_noteframe.message(this.screen, msg, timeout);
@@ -149,8 +149,8 @@ export function makeAPI(ctxClass) {
 
   api.rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
 
-  buildToolSysAPI(api, false, api.rootContextStruct);
-  
+  buildToolSysAPI(api, false, api.rootContextStruct, ctxClass, true);
+
   return api;
 }
 
@@ -240,10 +240,10 @@ export class AppState {
     this.startArgs = undefined;
     this.currentFileRef = undefined; //current file path/ref
 
+    this.api = makeAPI(ctxClass);
     this.ctx = new ctxClass(this);
     this.ctx._state = this;
     this.toolstack = new ToolStack();
-    this.api = makeAPI(ctxClass);
     this.screenClass = screenClass;
     this.screen = undefined;
 

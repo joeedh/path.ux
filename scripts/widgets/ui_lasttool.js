@@ -28,6 +28,25 @@ export function getLastToolStruct(ctx) {
   return ret;
 }
 
+const last_tool_eventmap = [];
+window.last_tool_eventmap = []
+
+/* Try to avoid memory leaks when last tool panels are hidden. */
+window.setInterval(() => {
+  for (const entry of last_tool_eventmap) {
+    const panel = entry.panel;
+    if (!panel.isConnected || panel.hidden) {
+      if (window.DEBUG && window.DEBUG.lastToolPanel) {
+        console.log("Disconnecting last tool panel from toolstack.");
+      }
+
+      panel.unlinkEvents();
+      panel.needsRebuild = true;
+      break;
+    }
+  }
+}, 500);
+
 /*
 *
 * This panel shows the most recently executed ToolOp's
@@ -38,8 +57,11 @@ export class LastToolPanel extends ColumnFrame {
   constructor() {
     super();
 
+    this.ignoreOnChange = false;
+    this.on_change = null;
     this._tool_id = undefined;
     this.useDataPathUndo = false;
+    this.needsRebuild = false;
   }
 
   init() {
@@ -70,6 +92,8 @@ export class LastToolPanel extends ColumnFrame {
       return;
     }
 
+    this.needsRebuild = false;
+
     this.clear();
 
     this.label("Recent Command Settings");
@@ -86,93 +110,83 @@ export class LastToolPanel extends ColumnFrame {
 
     let panel = this.panel(def.uiname);
 
+    this.on_change = () => {
+      if (this.ignoreOnChange) {
+        return;
+      }
+
+      if (tool.modalRunning) {
+        return;
+      }
+
+      if (tool === ctx.toolstack.head) {
+        this.ignoreOnChange = true;
+        ctx.toolstack.rerun(tool);
+        this.ignoreOnChange = false;
+      } else {
+        this.unlinkEvents();
+      }
+    };
+
     this.buildTool(ctx, tool, panel);
     this.flushUpdate();
+    this.flushUpdate();
+  }
+
+  unlinkEvents() {
+    for (const entry of Array.from(last_tool_eventmap)) {
+      if (entry.panel === this || !entry.panel.isConnected) {
+        entry.prop.off("change", entry.cb);
+        last_tool_eventmap.remove(entry);
+
+        if (entry.panel !== this) {
+          entry.panel.needsRebuild = true;
+        }
+      }
+    }
   }
 
   /** client code can subclass and override this method */
   buildTool(ctx, tool, panel) {
-    let fakecls = {};
-    fakecls.constructor = fakecls;
-
-    //in theory it shouldn't matter if multiple last tool panels
-    //override _last_tool, since they all access the same data
-    this.ctx.state._last_tool = fakecls;
-    let lastkey = tool[LastKey];
-
-    let getTool = () => {
-      let tool = this.ctx.toolstack[this.ctx.toolstack.cur];
-      if (!tool || tool[LastKey] !== lastkey) {
-        return undefined;
-      }
-
-      return tool;
-    };
-
     if (tool.flag & ToolFlags.PRIVATE) {
       return;
     }
 
-    let st = this.ctx.api.mapStruct(fakecls, true);
-    let paths = [];
+    this.unlinkEvents();
+    this.last_tool = tool;
 
-    function defineProp(k, key) {
-      Object.defineProperty(fakecls, key, {
-        get : function() {
-          let tool = getTool();
-          if (tool) {
-            if (!tool.inputs[k]) {
-              console.error("Missing property " + k, tool);
-            }
-            return tool.inputs[k].getValue();
-          }
-        },
-
-        set : function(val) {
-          let tool = getTool();
-          if (tool) {
-            tool.inputs[k].setValue(val);
-            tool.saveDefaultInputs();
-
-            ctx.toolstack.rerun(tool);
-          }
-        }
-      });
-    }
-
+    panel.useDataPathUndo = false;
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      if (prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY)) {
+      if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
         continue;
       }
 
-      let uiname = prop.uiname;
-      if (!uiname) {
-        uiname = ToolProperty.makeUIName(k);
+      prop.on("change", this.on_change);
+      last_tool_eventmap.push({
+        panel: this,
+        cb   : this.on_change,
+        prop
+      })
+
+      let path = `last_tool.${k}`;
+      let uiname = prop.uiname ?? ToolProperty.makeUIName(k);
+
+      panel.label(uiname);
+      let packflag = 0;
+
+      /* Default to roller number sliders. */
+      if (!(prop.flag & PropFlags.SIMPLE_SLIDER)) {
+        packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
 
-      prop.uiname = uiname;
-      let apikey = k.replace(/[\t ]/g, "_");
-
-      let dpath = new DataPath(apikey, apikey, prop, DataTypes.PROP);
-      st.add(dpath);
-
-      paths.push(dpath);
-
-      defineProp(k, apikey);
-    }
-
-    panel.useDataPathUndo = false;
-
-    for (let dpath of paths) {
-      let path = "last_tool." + dpath.path;
-
-      panel.label(dpath.data.uiname);
-      let ret = panel.prop(path, PackFlags.FORCE_ROLLER_SLIDER);
+      let ret = panel.prop(path, packflag);
 
       if (ret) {
-        ret.useDataPathUndo = false;
+        //ret.onchange = function() {
+        //ctx.toolstack.rerun(tool);
+        //}
       }
     }
     this.setCSS();
@@ -190,7 +204,9 @@ export class LastToolPanel extends ColumnFrame {
 
     let tool = this.getToolStackHead(ctx);
 
-    if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
+    this.needsRebuild |= tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
+
+    if (this.needsRebuild) {
       tool[LastKey] = tool_idgen++;
       this._tool_id = tool[LastKey];
 
@@ -198,8 +214,11 @@ export class LastToolPanel extends ColumnFrame {
     }
   }
 
-  static define() {return {
-    tagname : "last-tool-panel-x"
-  }}
+  static define() {
+    return {
+      tagname: "last-tool-panel-x"
+    }
+  }
 }
+
 UIBase.internalRegister(LastToolPanel);
