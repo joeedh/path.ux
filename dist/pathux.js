@@ -20167,6 +20167,7 @@ let exports = {
     modalEvents         : false,
     areaConstraintSolver: false,
     datapaths           : false,
+    lastToolPanel       : false,
 
     domEvents        : false,
     domEventAddRemove: false,
@@ -21644,16 +21645,6 @@ function makeDerivedOverlay(parent) {
     set state(state) {
       this._state = state;
     }
-
-    /*
-    Ugly hack, ui_lasttool.js saves
-    a DataStruct wrapping the most recently executed ToolOp
-    in this.state._last_tool.
-    */
-    get last_tool() {
-      return this.state._last_tool;
-    }
-
 
     onRemove(have_new_file = false) {
     }
@@ -23895,6 +23886,40 @@ window._testToolStackIO = function () {
   return toolstack;
 };
 
+function buildToolOpAPI(api, cls) {
+  let st = api.mapStruct(cls, true);
+  let def = cls._getFinalToolDef();
+
+  if (window.DEBUG && window.DEBUG.datapaths) {
+    console.log("Building api for ", def.toolpath);
+  }
+
+  function makeProp(k) {
+    let prop = def.inputs[k];
+
+    if (prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY)) {
+      return;
+    }
+
+    prop.uiname = prop.uiname || ToolProperty.makeUIName(k);
+
+    let dpath = new DataPath(k, k, prop);
+    st.add(dpath);
+
+    dpath.customGetSet(function () {
+      return this.dataref.inputs[k].getValue()
+    }, function (val) {
+      this.dataref.inputs[k].setValue(val);
+    });
+  }
+
+  for (let k in def.inputs) {
+    makeProp(k);
+  }
+
+  return st;
+}
+
 /**
  * Call this to build the tool property cache data binding API.
  *
@@ -23911,6 +23936,8 @@ function buildToolSysAPI(api, registerWithNStructjs    = true,
   for (let cls of ToolClasses) {
     let def = cls._getFinalToolDef();
 
+    buildToolOpAPI(api, cls);
+
     for (let k in def.inputs) {
       let prop = def.inputs[k];
 
@@ -23922,23 +23949,40 @@ function buildToolSysAPI(api, registerWithNStructjs    = true,
 
   if (rootCtxStruct) {
     rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+    rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
   }
 
   if (rootCtxClass && insertToolDefaultsIntoContext) {
     let inst = new rootCtxClass({});
-    if (inst.toolDefaults === undefined) {
-      Object.defineProperty(rootCtxClass, "toolDefaults", {
+
+    function haveprop(k) {
+      return Reflect.ownKeys(inst).indexOf(k) >= 0
+        || Reflect.ownKeys(rootCtxClass.prototype).indexOf(k) >= 0;
+    }
+
+    if (!haveprop("last_tool")) {
+      Object.defineProperty(rootCtxClass.prototype, "last_tool", {
+        get() {
+          return this.toolstack.head;
+        }
+      });
+
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.last_tool_save = () => ({});
+        rootCtxClass.prototype.last_tool_load = () => undefined;
+      }
+    }
+
+    if (!haveprop("toolDefaults")) {
+      Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
         get() {
           return SavedToolDefaults;
         }
       });
 
       if (Context.isContextSubclass(rootCtxClass)) {
-        rootCtxClass.prototype.toolDefaults_save = function () {
-          return {};
-        };
-        rootCtxClass.prototype.toolDefaults_load = function () {
-        };
+        rootCtxClass.prototype.toolDefaults_save = () => ({});
+        rootCtxClass.prototype.toolDefaults_load = () => undefined;
       }
     }
   }
@@ -33446,7 +33490,8 @@ class UIBase$f extends HTMLElement {
       p = p.parentWidget;
     }
 
-    return false;
+    /* Default to true. */
+    return true;
   }
 
   /**
@@ -39363,6 +39408,7 @@ var controller = /*#__PURE__*/Object.freeze({
   MacroClasses: MacroClasses,
   ToolMacro: ToolMacro,
   ToolStack: ToolStack,
+  buildToolOpAPI: buildToolOpAPI,
   buildToolSysAPI: buildToolSysAPI,
   PropTypes: PropTypes$8,
   PropFlags: PropFlags$3,
@@ -41608,6 +41654,11 @@ class Container extends UIBase$f {
     this._mass_prefixstack = [];
   }
 
+  noUndo() {
+    this.setUndo(false);
+    return this;
+  }
+
   set background(bg) {
     this.__background = bg;
 
@@ -42606,7 +42657,7 @@ class Container extends UIBase$f {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
-    let useDataPathUndo = !(prop.flag & PropFlags$2.NO_UNDO);
+    let useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags$2.NO_UNDO);
 
     //console.log(prop, PropTypes, PropSubTypes);
 
@@ -42764,6 +42815,7 @@ class Container extends UIBase$f {
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
+        console.log("::", ret._useDataPathUndo, this._useDataPathUndo);
 
         ret.icon = rdef.prop.iconmap[rdef.subkey];
 
@@ -42957,9 +43009,6 @@ class Container extends UIBase$f {
     }
 
     this._add(ret);
-
-    //ret.update();
-
     return ret;
   }
 
@@ -43460,7 +43509,6 @@ class Container extends UIBase$f {
     let ret = UIBase$a.createElement("rowframe-x");
 
     this._container_inherit(ret, packflag);
-
     this._add(ret);
 
     ret.ctx = this.ctx;
@@ -56639,6 +56687,25 @@ function getLastToolStruct(ctx) {
   return ret;
 }
 
+const last_tool_eventmap = [];
+window.last_tool_eventmap = [];
+
+/* Try to avoid memory leaks when last tool panels are hidden. */
+window.setInterval(() => {
+  for (const entry of last_tool_eventmap) {
+    const panel = entry.panel;
+    if (!panel.isConnected || panel.hidden) {
+      if (window.DEBUG && window.DEBUG.lastToolPanel) {
+        console.log("Disconnecting last tool panel from toolstack.");
+      }
+
+      panel.unlinkEvents();
+      panel.needsRebuild = true;
+      break;
+    }
+  }
+}, 500);
+
 /*
 *
 * This panel shows the most recently executed ToolOp's
@@ -56649,8 +56716,11 @@ class LastToolPanel extends ColumnFrame {
   constructor() {
     super();
 
+    this.ignoreOnChange = false;
+    this.on_change = null;
     this._tool_id = undefined;
     this.useDataPathUndo = false;
+    this.needsRebuild = false;
   }
 
   init() {
@@ -56681,6 +56751,8 @@ class LastToolPanel extends ColumnFrame {
       return;
     }
 
+    this.needsRebuild = false;
+
     this.clear();
 
     this.label("Recent Command Settings");
@@ -56697,93 +56769,83 @@ class LastToolPanel extends ColumnFrame {
 
     let panel = this.panel(def.uiname);
 
+    this.on_change = () => {
+      if (this.ignoreOnChange) {
+        return;
+      }
+
+      if (tool.modalRunning) {
+        return;
+      }
+
+      if (tool === ctx.toolstack.head) {
+        this.ignoreOnChange = true;
+        ctx.toolstack.rerun(tool);
+        this.ignoreOnChange = false;
+      } else {
+        this.unlinkEvents();
+      }
+    };
+
     this.buildTool(ctx, tool, panel);
     this.flushUpdate();
+    this.flushUpdate();
+  }
+
+  unlinkEvents() {
+    for (const entry of Array.from(last_tool_eventmap)) {
+      if (entry.panel === this || !entry.panel.isConnected) {
+        entry.prop.off("change", entry.cb);
+        last_tool_eventmap.remove(entry);
+
+        if (entry.panel !== this) {
+          entry.panel.needsRebuild = true;
+        }
+      }
+    }
   }
 
   /** client code can subclass and override this method */
   buildTool(ctx, tool, panel) {
-    let fakecls = {};
-    fakecls.constructor = fakecls;
-
-    //in theory it shouldn't matter if multiple last tool panels
-    //override _last_tool, since they all access the same data
-    this.ctx.state._last_tool = fakecls;
-    let lastkey = tool[LastKey];
-
-    let getTool = () => {
-      let tool = this.ctx.toolstack[this.ctx.toolstack.cur];
-      if (!tool || tool[LastKey] !== lastkey) {
-        return undefined;
-      }
-
-      return tool;
-    };
-
     if (tool.flag & ToolFlags$1.PRIVATE) {
       return;
     }
 
-    let st = this.ctx.api.mapStruct(fakecls, true);
-    let paths = [];
+    this.unlinkEvents();
+    this.last_tool = tool;
 
-    function defineProp(k, key) {
-      Object.defineProperty(fakecls, key, {
-        get : function() {
-          let tool = getTool();
-          if (tool) {
-            if (!tool.inputs[k]) {
-              console.error("Missing property " + k, tool);
-            }
-            return tool.inputs[k].getValue();
-          }
-        },
-
-        set : function(val) {
-          let tool = getTool();
-          if (tool) {
-            tool.inputs[k].setValue(val);
-            tool.saveDefaultInputs();
-
-            ctx.toolstack.rerun(tool);
-          }
-        }
-      });
-    }
-
+    panel.useDataPathUndo = false;
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      if (prop.flag & (PropFlags$3.PRIVATE|PropFlags$3.READ_ONLY)) {
+      if (prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY)) {
         continue;
       }
 
-      let uiname = prop.uiname;
-      if (!uiname) {
-        uiname = ToolProperty$1.makeUIName(k);
+      prop.on("change", this.on_change);
+      last_tool_eventmap.push({
+        panel: this,
+        cb   : this.on_change,
+        prop
+      });
+
+      let path = `last_tool.${k}`;
+      let uiname = prop.uiname ?? ToolProperty$1.makeUIName(k);
+
+      panel.label(uiname);
+      let packflag = 0;
+
+      /* Default to roller number sliders. */
+      if (!(prop.flag & PropFlags$3.SIMPLE_SLIDER)) {
+        packflag |= PackFlags$a.FORCE_ROLLER_SLIDER;
       }
 
-      prop.uiname = uiname;
-      let apikey = k.replace(/[\t ]/g, "_");
-
-      let dpath = new DataPath(apikey, apikey, prop, DataTypes.PROP);
-      st.add(dpath);
-
-      paths.push(dpath);
-
-      defineProp(k, apikey);
-    }
-
-    panel.useDataPathUndo = false;
-
-    for (let dpath of paths) {
-      let path = "last_tool." + dpath.path;
-
-      panel.label(dpath.data.uiname);
-      let ret = panel.prop(path, PackFlags$a.FORCE_ROLLER_SLIDER);
+      let ret = panel.prop(path, packflag);
 
       if (ret) {
-        ret.useDataPathUndo = false;
+        //ret.onchange = function() {
+        //ctx.toolstack.rerun(tool);
+        //}
       }
     }
     this.setCSS();
@@ -56801,7 +56863,9 @@ class LastToolPanel extends ColumnFrame {
 
     let tool = this.getToolStackHead(ctx);
 
-    if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
+    this.needsRebuild |= tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
+
+    if (this.needsRebuild) {
       tool[LastKey] = tool_idgen++;
       this._tool_id = tool[LastKey];
 
@@ -56809,10 +56873,13 @@ class LastToolPanel extends ColumnFrame {
     }
   }
 
-  static define() {return {
-    tagname : "last-tool-panel-x"
-  }}
+  static define() {
+    return {
+      tagname: "last-tool-panel-x"
+    }
+  }
 }
+
 UIBase$f.internalRegister(LastToolPanel);
 
 const mimeMap = {
@@ -64049,8 +64116,8 @@ function makeAPI(ctxClass) {
 
   api.rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
 
-  buildToolSysAPI(api, false, api.rootContextStruct);
-  
+  buildToolSysAPI(api, false, api.rootContextStruct, ctxClass, true);
+
   return api;
 }
 
@@ -64132,10 +64199,10 @@ class AppState {
     this.startArgs = undefined;
     this.currentFileRef = undefined; //current file path/ref
 
+    this.api = makeAPI(ctxClass);
     this.ctx = new ctxClass(this);
     this.ctx._state = this;
     this.toolstack = new ToolStack();
-    this.api = makeAPI(ctxClass);
     this.screenClass = screenClass;
     this.screen = undefined;
 
@@ -64737,5 +64804,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolOpAPI, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
