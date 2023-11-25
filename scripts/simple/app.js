@@ -88,13 +88,13 @@ function GetContextClass(ctxClass) {
       return this.state.toolstack;
     }
 
-    get toolDefaults() {
-      return SavedToolDefaults;
-    }
+    //get toolDefaults() {
+   //   return SavedToolDefaults;
+   // }
 
-    get last_tool() {
-      return this.toolstack.head;
-    }
+    //get last_tool() {
+//      return this.toolstack.head;
+  //  }
 
     message(msg, timeout = 2500) {
       return ui_noteframe.message(this.screen, msg, timeout);
