@@ -1359,7 +1359,6 @@ export class Container extends ui_base.UIBase {
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
-        console.log("::", ret._useDataPathUndo, this._useDataPathUndo);
 
         ret.icon = rdef.prop.iconmap[rdef.subkey];
 
