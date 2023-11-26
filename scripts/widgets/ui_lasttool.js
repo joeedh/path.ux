@@ -29,7 +29,7 @@ export function getLastToolStruct(ctx) {
 }
 
 const last_tool_eventmap = [];
-window.last_tool_eventmap = []
+//window.last_tool_eventmap = last_tool_eventmap;
 
 /* Try to avoid memory leaks when last tool panels are hidden. */
 window.setInterval(() => {
