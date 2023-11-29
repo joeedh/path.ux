@@ -674,6 +674,10 @@ let first = (iter) => {
 import {DataPathError} from '../path-controller/controller/controller.js';
 import {TimeoutPromise} from '../path-controller/util/util.js';
 import {IntProperty, NumberConstraints, PropFlags} from '../path-controller/toolsys/toolprop.js';
+import {
+  DependSocket, EventNode, PropertySocket, PropSocketModes, SocketTypes, theEventGraph
+} from '../path-controller/dag/eventdag.js';
+import {isNum} from '../path-controller/util/math.js';
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -706,7 +710,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -834,8 +838,159 @@ export function internalSetTimeout(cb, timeout) {
 window.setTimeoutQueue = setTimeoutQueue;
 
 export class UIBase extends HTMLElement {
+  static graphNodeDef = EventNode.register(this, {
+    typeName: this.name,
+    uiName  : this.name,
+    inputs  : {
+      depend: new DependSocket()
+    },
+    outputs : {
+      depend: new DependSocket()
+    }
+  })
+
+  graphExec() {
+    let node = this.node;
+
+    if (node.inputs.depend.isUpdated) {
+      node.outputs.depend.flagUpdate();
+    }
+
+    for (let k in node.inputs) {
+      let sock = node.inputs[k];
+
+      if (!(sock instanceof PropertySocket)) {
+        continue;
+      }
+
+      let val = sock.value;
+      let first = false;
+
+      for (let sockb of sock.edges) {
+        if (first) {
+          val = sockb.value;
+          first = false;
+        } else {
+          switch (sock.mixMode) {
+            case PropSocketModes.REPLACE:
+              val = sockb.value;
+              break;
+            case PropSocketModes.MIN:
+              val = Math.min(val, sockb.value);
+              break;
+            case PropSocketModes.MAX:
+              val = Math.max(val, sockb.value);
+              break;
+          }
+        }
+      }
+    }
+
+    function isNumArray(a) {
+      if (!Array.isArray(a)) {
+        return false;
+      }
+
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== undefined && typeof a[i] !== "number" && typeof a[i] !== "boolean") {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    for (let k in node.outputs) {
+      let sock = node.outputs[k];
+
+      if (!(sock instanceof PropertySocket)) {
+        continue;
+      }
+
+      let v = sock.value;
+      let changed;
+      if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
+        changed = v !== sock.oldValue;
+        sock.oldValue = v;
+      } else if (typeof v === "object") {
+        if (isNumArray(v)) {
+          if (!sock.oldValue) {
+            sock.oldValue = Array.from(v);
+          } else {
+            if (sock.oldValue.length !== v.length) {
+              changed = true;
+            } else {
+              for (let i = 0; i < sock.oldValue.length; i++) {
+                changed = sock.oldValue[i] !== v[i];
+              }
+            }
+
+            if (sock.oldValue.length !== v.length) {
+              sock.oldValue.length = v.length;
+            }
+            for (let i = 0; i < v.length; i++) {
+              sock.oldValue[i] = v.value[i];
+            }
+          }
+        } else {
+          if (sock.oldValue === undefined) {
+            sock.oldValue = JSON.stringify(v);
+          } else {
+            let json = JSON.stringify(v);
+            changed = json !== sock.oldValue;
+            sock.oldValue = json;
+          }
+        }
+      }
+
+      if (changed) {
+        console.log("Propagating prop update");
+        sock.flagUpdate();
+      }
+    }
+  }
+
+  ensureGraph() {
+    if (!theEventGraph.has(this)) {
+      theEventGraph.add(this);
+    }
+  }
+
+  /*
+   */
+  dependsOn(dstProp, source, srcProp, srcCallback = undefined, dstCallback = undefined) {
+    let src = new PropertySocket()
+    src.bind(source, srcProp)
+    if (srcCallback) {
+      src.callback(srcCallback);
+    }
+
+    this.ensureGraph();
+    source.ensureGraph();
+
+    source.graphNode.addSocket(SocketTypes.OUTPUT, src);
+
+    let dst = new PropertySocket();
+    this.graphNode.addSocket(SocketTypes.INPUT, this);
+    dst.bind(this, dstProp);
+
+    if (dstProp === "value") {
+      dstProp.callback((v) => {
+        if (this.getValue) {
+          return this.getValue();
+        }
+
+        return this.value;
+      });
+    }
+
+    return dst;
+  }
+
   constructor() {
     super();
+
+    EventNode.init(this);
 
     this._modalstack = [];
 
