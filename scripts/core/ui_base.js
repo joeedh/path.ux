@@ -710,7 +710,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -850,7 +850,7 @@ export class UIBase extends HTMLElement {
   })
 
   graphExec() {
-    let node = this.node;
+    let node = this.graphNode;
 
     if (node.inputs.depend.isUpdated) {
       node.outputs.depend.flagUpdate();
@@ -956,26 +956,31 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  /*
-   */
-  dependsOn(dstProp, source, srcProp, srcCallback = undefined, dstCallback = undefined) {
-    let src = new PropertySocket()
-    src.bind(source, srcProp)
-    if (srcCallback) {
-      src.callback(srcCallback);
+  getPropertySocket(prop, socktype) {
+    let node = this.graphNode;
+    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+
+    if (sockets[prop]) {
+      return sockets[prop];
     }
 
-    this.ensureGraph();
-    source.ensureGraph();
+    return undefined;
+  }
 
-    source.graphNode.addSocket(SocketTypes.OUTPUT, src);
+  ensurePropertySocket(prop, socktype) {
+    let node = this.graphNode;
+    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
 
-    let dst = new PropertySocket();
-    this.graphNode.addSocket(SocketTypes.INPUT, this);
-    dst.bind(this, dstProp);
+    if (sockets[prop]) {
+      return sockets[prop];
+    }
 
-    if (dstProp === "value") {
-      dstProp.callback((v) => {
+    let sock = new PropertySocket();
+    sock.bind(this, prop);
+    node.addSocket(socktype, prop, sock);
+
+    if (prop === "value") {
+      prop.callback((v) => {
         if (this.getValue) {
           return this.getValue();
         }
@@ -984,7 +989,21 @@ export class UIBase extends HTMLElement {
       });
     }
 
-    return dst;
+    return sock;
+  }
+
+  /*
+    widget.dependsOn("hidden", checkbox, "value")
+   */
+  dependsOn(dstProp, source, srcProp, srcCallback = undefined, dstCallback = undefined) {
+    let sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
+    let socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
+
+    if (srcCallback) {
+      socksrc.callback(srcCallback);
+    }
+
+    return sockdst;
   }
 
   constructor() {
@@ -2616,6 +2635,8 @@ export class UIBase extends HTMLElement {
   }
 
   setPathValueUndo(ctx, path, val) {
+    this.pathSocketUpdate(ctx, path);
+
     let mass_set_path = this.getAttribute("mass_set_path");
     let rdef = ctx.api.resolvePath(ctx, path);
     let prop = rdef.prop;
@@ -2780,7 +2801,16 @@ export class UIBase extends HTMLElement {
       this.ctx.api.popReportContext();
   }
 
+  pathSocketUpdate(ctx, path) {
+    let sock = this.getPropertySocket("value", SocketTypes.OUTPUT);
+    if (sock) {
+      sock.flagUpdate();
+    }
+  }
+
   setPathValue(ctx, path, val) {
+    this.pathSocketUpdate(ctx, path);
+
     if (this.useDataPathUndo) {
       this.pushReportContext(this._reportCtxName);
 
