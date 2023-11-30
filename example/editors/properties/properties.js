@@ -60,6 +60,13 @@ export class PropsEditor extends Editor {
       let graphtab = container.getElementById("graph_pack_tab");
       this.buildGraphPack(graphtab);
 
+      let con = container.getElementById("eventdag_test");
+      con.dataPrefix = "";
+      let bval = con.prop("data.boolval");
+      let color = con.prop("data.color");
+
+      color.dependsOn("hidden", bval, "value").invert()
+
       let exportbutton = container.getElementById("export_theme");
       exportbutton.onclick = () => {
         let theme = exportTheme();

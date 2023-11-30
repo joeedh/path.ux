@@ -19,6 +19,7 @@ export class ModelData extends DataBlock {
     this.enum = 0;
     this.color = new Vector4([0, 0, 0, 1]);
     this.text = '';
+    this.boolval = true;
   }
 
   static blockDefine() {
@@ -64,6 +65,7 @@ ModelData.STRUCT = nstructjs.inherit(ModelData, DataBlock, 'example.ModelData') 
   curvemap  : Curve1D;
   angle1    : float;
   angle2    : float;
+  boolval   : bool;
 }
 `;
 nstructjs.register(ModelData);

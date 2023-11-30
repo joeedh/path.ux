@@ -710,7 +710,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -838,6 +838,8 @@ export function internalSetTimeout(cb, timeout) {
 window.setTimeoutQueue = setTimeoutQueue;
 
 export class UIBase extends HTMLElement {
+  #reflagGraph = false;
+
   static graphNodeDef = EventNode.register(this, {
     typeName: this.name,
     uiName  : this.name,
@@ -864,7 +866,7 @@ export class UIBase extends HTMLElement {
       }
 
       let val = sock.value;
-      let first = false;
+      let first = true;
 
       for (let sockb of sock.edges) {
         if (first) {
@@ -884,6 +886,8 @@ export class UIBase extends HTMLElement {
           }
         }
       }
+
+      sock.value = val;
     }
 
     function isNumArray(a) {
@@ -951,9 +955,19 @@ export class UIBase extends HTMLElement {
   }
 
   ensureGraph() {
+    console.log("Ensure Graph", this, this.graphNode, this.graphNode.id);
     if (!theEventGraph.has(this)) {
       theEventGraph.add(this);
     }
+  }
+
+  flagPropSocketUpdate(path) {
+    let sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
+    if (sock) {
+      console.warn(`Flag socket "${path}" for update`);
+      sock.flagUpdate();
+    }
+    return this;
   }
 
   getPropertySocket(prop, socktype) {
@@ -968,6 +982,8 @@ export class UIBase extends HTMLElement {
   }
 
   ensurePropertySocket(prop, socktype) {
+    this.ensureGraph();
+
     let node = this.graphNode;
     let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
 
@@ -980,7 +996,7 @@ export class UIBase extends HTMLElement {
     node.addSocket(socktype, prop, sock);
 
     if (prop === "value") {
-      prop.callback((v) => {
+      sock.callback((v) => {
         if (this.getValue) {
           return this.getValue();
         }
@@ -1002,6 +1018,8 @@ export class UIBase extends HTMLElement {
     if (srcCallback) {
       socksrc.callback(srcCallback);
     }
+
+    sockdst.connect(socksrc);
 
     return sockdst;
   }
@@ -1415,16 +1433,26 @@ export class UIBase extends HTMLElement {
     return this;
   }
 
-  hide(sethide = true) {
-    this.hidden = sethide;
+  set hidden(state) {
+    state = !!state;
+    super.hidden = state;
 
     for (let n of this.shadow.childNodes) {
-      n.hidden = sethide;
+      n.hidden = state;
     }
 
     this._forEachChildWidget((n) => {
-      n.hide(sethide);
+      n.hide(state);
     })
+  }
+
+  get hidden() {
+    return super.hidden;
+  }
+
+  hide(sethide = true) {
+    this.hidden = sethide;
+    return this;
   }
 
   getElementById(id) {
@@ -2802,10 +2830,8 @@ export class UIBase extends HTMLElement {
   }
 
   pathSocketUpdate(ctx, path) {
-    let sock = this.getPropertySocket("value", SocketTypes.OUTPUT);
-    if (sock) {
-      sock.flagUpdate();
-    }
+    this.flagPropSocketUpdate("value");
+    return this;
   }
 
   setPathValue(ctx, path, val) {
@@ -3170,9 +3196,22 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  updateEventGraph() {
+    if (!this.isConnected) {
+      this.#reflagGraph = true;
+    } else if (this.#reflagGraph) {
+      this.#reflagGraph = false;
+
+      for (let [k, sock] of Object.entries(this.graphNode.inputs)) {
+        sock.flagUpdate();
+      }
+    }
+  }
+
   //called regularly
   update() {
     this.updateToolTips();
+    this.updateEventGraph();
 
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
       let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));

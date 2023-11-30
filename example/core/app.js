@@ -14,6 +14,7 @@ import {WorkspaceEditor} from '../editors/workspace/workspace.js';
 import {AppScreen} from "../editors/screen.js";
 //import * as util from '../util/util.js';
 import './toolop.js';
+import '../editors/eventgraph/eventgraph.js';
 
 import cconst1, {Version} from './const.js';
 import {cconst} from '../pathux.js';

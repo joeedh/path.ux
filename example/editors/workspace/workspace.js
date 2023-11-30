@@ -135,7 +135,6 @@ export class WorkspaceEditor extends Editor {
     let dpi = UIBase.getDPI();
     let scale = visualViewport.scale;
 
-
     return this.scale;
   }
 

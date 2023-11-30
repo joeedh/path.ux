@@ -113,6 +113,8 @@ export function defineAPI() {
 
   dstruct.float("angle1", "angle1", "angle1").baseUnit("radian").displayUnit("degree").range(-Math.PI, Math.PI);
   dstruct.float("angle2", "angle2", "angle2").baseUnit("degree").displayUnit("radian").range(-180, 180);
+  dstruct.bool("boolval", "boolval", "Bool");
+  dstruct.color4("color", "color", "Color");
 
   dstruct.vec4("vector_test", "vector_test", "vector_test").decimalPlaces(1).baseUnit("radian").displayUnit("degree").range(-180, 180);
 

@@ -20,6 +20,9 @@
       <pathlabel path="vector_test[2]"/>
       <pathlabel path="vector_test[3]"/>
       </row>
+      <strip id="eventdag_test">
+
+      </strip>
     </panel>
     <panel label="Canvas" path="canvas">
       <prop path="drawflag[BLUR]" useIcons="false" />
