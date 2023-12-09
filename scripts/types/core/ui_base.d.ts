@@ -8,24 +8,30 @@ import {DataStruct} from "../path-controller/controller_base";
 import {DataPath} from "../path-controller/controller_base";
 import {ToolProperty} from "../toolsys/toolprop";
 
+import {INumVector} from "../../path-controller/types/util/vectormath";
+
+export declare function color2css(color: INumVector): string;
+
+export declare function css2color(css: string): number[];
 
 declare class UIBase extends HTMLElement {
-    ctx : Context;
+  ctx: Context;
 
-    constructor();
+  constructor();
 
-    /** called regularly by a setInterval timer, see FrameManager.listen*/
-    update(): void;
+  /** called regularly by a setInterval timer, see FrameManager.listen*/
+  update(): void;
 
-    /* called after constructor, since DOM limits what you can do in constructor
-    *  (e.g. you can't modifer .style or set attributes)*/
-    init(): void;
+  /* called after constructor, since DOM limits what you can do in constructor
+  *  (e.g. you can't modifer .style or set attributes)*/
+  init(): void;
 
-    /*queue a function callback, multiple repeated calls will be ignored*/
-    doOnce(func : Function): void;
-    setCSS(): void;
+  /*queue a function callback, multiple repeated calls will be ignored*/
+  doOnce(func: Function): void;
 
-    /* float element by setting z-index and setting position to absolute*/
-    float(x : number, y : number, zindex : number): void;
-    float(x : number, y : number): void;
+  setCSS(): void;
+
+  /* float element by setting z-index and setting position to absolute*/
+  float(x: number, y: number, zindex: number): void;
+  float(x: number, y: number): void;
 }
