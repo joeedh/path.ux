@@ -6,6 +6,8 @@ import {Curve1D, mySafeJSONStringify} from "../path-controller/curve/curve1d.js"
 import {makeGenEnum} from '../path-controller/curve/curve1d_utils.js';
 
 export class Curve1DWidget extends ColumnFrame {
+  #in_onchange = false;
+
   constructor() {
     super();
 
@@ -17,21 +19,17 @@ export class Curve1DWidget extends ColumnFrame {
     this._value = new Curve1D();
     this.checkCurve1dEvents();
 
-    let in_onchange = false;
+    this.#in_onchange = 0;
 
     this._value._on_change = (msg) => {
-      if (in_onchange) {
+      if (this.#in_onchange) {
         return;
       }
 
       /* Prevent infinite recursion. */
-      in_onchange = true;
+      this.#in_onchange++;
 
       try {
-        if (this.onchange) {
-          this.onchange(this._value);
-        }
-
         if (this.hasAttribute("datapath")) {
           let path = this.getAttribute("datapath");
           if (this._value !== undefined) {
@@ -46,6 +44,10 @@ export class Curve1DWidget extends ColumnFrame {
             }
           }
         }
+
+        if (this.onchange) {
+          this.onchange(this._value);
+        }
       } catch (error) {
         if (window.DEBUG && window.DEBUG.datapath) {
           console.error(error.stack);
@@ -53,7 +55,12 @@ export class Curve1DWidget extends ColumnFrame {
         }
       }
 
-      in_onchange = false;
+      this.#in_onchange--;
+
+      if (this.#in_onchange < 0) {
+        console.warn("this.#in_onchange was negative");
+        this.#in_onchange = 0;
+      }
     };
 
     this._gen_type = undefined;
@@ -112,6 +119,9 @@ export class Curve1DWidget extends ColumnFrame {
           let bspline2 = this._value.getGenerator("BSplineCurve");
 
           for (let i = 0; i < bspline1.points.length; i++) {
+            if (i >= bspline2.length) {
+              break;
+            }
             bspline2.points[i].flag = bspline1.points[i].flag;
           }
 
@@ -122,6 +132,9 @@ export class Curve1DWidget extends ColumnFrame {
           let bspline2 = this._value.getGenerator("BSplineCurve");
 
           for (let i = 0; i < bspline1.points.length; i++) {
+            if (i >= bspline2.length) {
+              break;
+            }
             bspline2.points[i].co.load(bspline1.points[i].co);
           }
 
@@ -376,12 +389,22 @@ export class Curve1DWidget extends ColumnFrame {
 
     let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
     let gen = this.value.generators.active;
-    gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
 
-    loadUIData(this.container, uidata);
-    for (let i = 0; i < 4; i++) {
-      col.flushUpdate();
+    /* Turn off data path callbacks. */
+    this.#in_onchange++;
+    try {
+      gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+
+      loadUIData(this.container, uidata);
+      for (let i = 0; i < 4; i++) {
+        col.flushUpdate();
+      }
+    } catch (error) {
+      console.warn(error.stack);
+      console.warn(error.message);
     }
+
+    this.#in_onchange--;
 
     this._lastGen = gen;
     this._redraw();
