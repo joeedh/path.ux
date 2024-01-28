@@ -238,6 +238,7 @@ export class Animator {
     return this;
   }
 
+  /** Call this while the current command is still being executed. */
   while(cb) {
     this.commands[this.commands.length - 1].cbs.push(cb);
     return this;

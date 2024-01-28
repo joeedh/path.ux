@@ -1610,7 +1610,6 @@ export class UIBase extends HTMLElement {
   }
 
   noMarginsOrPadding() {
-    return;
     let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
     keys = keys.concat(["padding-block-start", "padding-block-end"]);
 
