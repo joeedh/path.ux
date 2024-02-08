@@ -45,13 +45,6 @@ class ListItem extends RowFrame {
     this.addEventListener("mouseout", unhighlight);
     this.addEventListener("blur", unhighlight);
 
-    this.addEventListener("click", (e) => {
-      //console.log("click!");
-      if (this.onclick) {
-        this.onclick();
-      }
-    });
-
     let style = document.createElement("style");
     style.textContent = `
       .listitem {

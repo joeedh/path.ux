@@ -1,6 +1,10 @@
+import { Context } from "./context";
+
 export as namespace ui;
 
 import { UIBase, pathUXInt } from "./ui_base";
+import { TabContainer } from "../widgets/ui_tabs";
+import { ListBox } from "../widgets/ui_listbox";
 
 export interface ListEnumArgs {
   mass_set_path?: string;
@@ -28,9 +32,11 @@ export interface SliderArgs {
   defaultval: number;
 }
 
-export declare class Container extends UIBase {
+declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
   dataPrefix: string;
   clear();
+
+  add(child: UIBase<CTX>);
 
   prop(path: string, packflag?: pathUXInt): UIBase;
 
@@ -38,13 +44,25 @@ export declare class Container extends UIBase {
 
   col(packflag?: pathUXInt): ColumnFrame;
 
-  label(str: string): UIBase;
+  row(packflag?: pathUXInt): RowFrame<CTX>;
 
-  colorbutton(str: string): UIBase;
+  col(packflag?: pathUXInt): ColumnFrame<CTX>;
 
-  vecpopup(path: string): UIBase;
+  tabs(position: "top" | "bottom" | "left" | "right", packflag?: number): TabContainer<CTX>;
 
-  table(): TableFrame;
+  listbox(packflag?: number): ListBox<CTX>;
+
+  label(str: string): UIBase<CTX>;
+
+  colorbutton(str: string): UIBase<CTX>;
+
+  iconbutton(icon: number, description: string, cb: () => void, thisvar?: any, packflag?: number): UIBase<CTX>;
+
+  button(string: string, cb: () => void, thisvar?: any, id?: any, packflag?: number): UIBase<CTX>;
+
+  vecpopup(path: string): UIBase<CTX>;
+
+  table(): TableFrame<CTX>;
 
   listenum(
     inpath: string,
@@ -54,8 +72,8 @@ export declare class Container extends UIBase {
     callback?: Function,
     iconmap?: object,
     packflag?: pathUXInt
-  ): UIBase;
-  listenum(inpath: string, args?: ListEnumArgs): UIBase;
+  ): UIBase<CTX>;
+  listenum(inpath: string, args?: ListEnumArgs): UIBase<CTX>;
 
   slider(
     inpath: string,
@@ -68,12 +86,18 @@ export declare class Container extends UIBase {
     do_redraw: boolean,
     callback: Function,
     packflag: number
-  ): UIBase;
-  slider(inpath: string, args: SliderArgs): UIBase;
+  ): UIBase<CTX>;
+  slider(inpath: string, args: SliderArgs): UIBase<CTX>;
+
+  background: string;
+
+  clear(): void;
+
+  inherit_packflag: number;
 }
 
-export declare class TableFrame extends Container {}
+declare class TableFrame<CTX extends Context = Context> extends Container<CTX> {}
 
-export declare class RowFrame extends Container {}
+declare class RowFrame<CTX extends Context = Context> extends Container<CTX> {}
 
-export declare class ColumnFrame extends Container {}
+declare class ColumnFrame<CTX extends Context = Context> extends Container<CTX> {}
