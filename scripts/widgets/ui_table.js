@@ -68,7 +68,7 @@ export class TableFrame extends Container {
   }
 
   update() {
-    this.style["display"] = "inline-block";
+    //this.style["display"] = "inline-block";
     super.update();
   }
 
@@ -225,10 +225,6 @@ export class TableFrame extends Container {
     makefunc("check");
 
     return ret;
-  }
-
-  update() {
-    super.update();
   }
 
   clear() {

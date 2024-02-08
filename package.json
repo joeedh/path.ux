@@ -19,10 +19,12 @@
     "@babel/parser": ">=7.9.6",
     "@babel/traverse": ">=7.9.6",
     "@babel/types": ">=7.9.6",
+    "diff": "^5.1.0",
     "electron": ">=8.3.0",
     "esdoc": ">=1.1.0",
     "esdoc-ecmascript-proposal-plugin": ">=1.0.0",
     "esdoc-standard-plugin": ">=1.0.0",
+    "marked": "^12.0.0",
     "minimist": "^1.2.5",
     "rollup": ">=2.7.6",
     "rollup-plugin-terser": "^7.0.2"

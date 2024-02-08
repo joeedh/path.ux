@@ -712,10 +712,6 @@ export class Area extends ui_base.UIBase {
     this.doOnce(f);
   }
 
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-
   _getSavedUIData() {
     return ui_base.saveUIData(this, "area");
   }
@@ -1305,6 +1301,7 @@ export class ScreenArea extends ui_base.UIBase {
         }
 
         existing.remove();
+        this.editors.remove(existing, true);
         this.editormap[def.areaname] = child;
       }
 
@@ -1441,15 +1438,6 @@ export class ScreenArea extends ui_base.UIBase {
 
     if (this.area !== undefined) {
       this.area.pop_ctx_active(true);
-    }
-  }
-
-  appendChild(ch) {
-    if (ch instanceof Area) {
-      this.editors.push(ch);
-      this.editormap[ch.constructor.define().areaname] = ch;
-    } else {
-      super.appendChild(ch);
     }
   }
 

@@ -7484,7 +7484,7 @@ function list$2(iterable) {
 
 /** Count items in list; if searchItem is not undefined then a count
  *  of the number of times searchItem occurs will be returned.*/
-function count(iterable, searchItem=undefined) {
+function count(iterable, searchItem = undefined) {
   let count = 0;
 
   if (searchItem !== undefined) {
@@ -8203,7 +8203,7 @@ nstructjs.register(IDGen);
 
 
 function get_callstack(err) {
-  return (""+err.stack).split("\n");
+  return ("" + err.stack).split("\n");
 }
 
 function print_stack$1(err) {
@@ -8257,14 +8257,14 @@ class MersenneRandom {
   }
 
   /** normal-ish distribution */
-  nrandom(n=3) {
+  nrandom(n = 3) {
     let ret = 0.0;
 
-    for (let i=0; i<n; i++) {
+    for (let i = 0; i < n; i++) {
       ret += this.random();
     }
 
-    return ret / n;
+    return ret/n;
   }
 
   seed(seed) {
@@ -8569,7 +8569,7 @@ class HashDigest {
     }
 
     if (typeof v === "object" && Array.isArray(v)) {
-      for (let i=0; i<v.length; i++) {
+      for (let i = 0; i < v.length; i++) {
         this.add(v[i]);
       }
 
@@ -9284,7 +9284,7 @@ class ArrayPool {
     this.map = new Array(1024);
   }
 
-  get(n, clear) {
+  get(n, clear = false) {
     let pool;
 
     if (n < 1024) {
@@ -9335,7 +9335,7 @@ class ArrayPool {
 
 /** jsFiddle-friendly */
 class DivLogger {
-  constructor(elemId, maxLines=16) {
+  constructor(elemId, maxLines = 16) {
     this.elemId = elemId;
     this.elem = undefined;
     this.lines = new Array();
@@ -9364,11 +9364,11 @@ class DivLogger {
     this.elem.innerHTML = buf;
   }
 
-  toString(obj, depth=0) {
+  toString(obj, depth = 0) {
     let s = '';
 
     let tab = '';
-    for (let i=0; i<depth; i++) {
+    for (let i = 0; i < depth; i++) {
       tab += '$TAB';
     }
 
@@ -9381,13 +9381,13 @@ class DivLogger {
 
     if (typeof obj === "object" && Array.isArray(obj)) {
       s = "[$NL";
-      for (let i=0; i<obj.length; i++) {
+      for (let i = 0; i < obj.length; i++) {
         let v = obj[i];
 
         if (depth >= DEPTH_LIMIT) {
           v = typeof v;
         } else {
-          v = this.toString(v, depth+1);
+          v = this.toString(v, depth + 1);
         }
 
         s += tab + "$TAB";
@@ -9395,7 +9395,7 @@ class DivLogger {
       }
 
       let keys = Reflect.ownKeys(obj);
-      for (let i=0; i<keys.length; i++) {
+      for (let i = 0; i < keys.length; i++) {
         let k = keys[i];
         let n;
 
@@ -9416,7 +9416,7 @@ class DivLogger {
 
         s += tab + `$TAB${k2} : ${v}`;
 
-        if (i < keys.length-1) {
+        if (i < keys.length - 1) {
           s += ",";
         }
 
@@ -9437,7 +9437,7 @@ class DivLogger {
       s = '{$NL';
 
       let keys = Reflect.ownKeys(obj);
-      for (let i=0; i<keys.length; i++) {
+      for (let i = 0; i < keys.length; i++) {
         let k = keys[i];
         let k2 = this.toString(k);
 
@@ -9451,12 +9451,12 @@ class DivLogger {
         if (depth >= DEPTH_LIMIT) {
           v = typeof v;
         } else {
-          v = this.toString(v, depth+1);
+          v = this.toString(v, depth + 1);
         }
 
         s += tab + `$TAB${k2} : ${v}`;
 
-        if (i < keys.length-1) {
+        if (i < keys.length - 1) {
           s += ",";
         }
 
@@ -9488,7 +9488,7 @@ class DivLogger {
 const PendingTimeoutPromises = new Set();
 
 class TimeoutPromise {
-  constructor(callback, timeout=3000, silent=false) {
+  constructor(callback, timeout = 3000, silent = false) {
     if (!callback) {
       return;
     }
@@ -9523,13 +9523,13 @@ class TimeoutPromise {
     }
   }
 
-  static wrapPromise(promise, timeout=3000, callback) {
+  static wrapPromise(promise, timeout = 3000, callback) {
     let p = new TimeoutPromise();
 
     p._promise = promise;
 
     p._accept = callback;
-    p._reject = function(error) {
+    p._reject = function (error) {
       throw error;
     };
 
@@ -9614,6 +9614,13 @@ function decompress(data) {
   return lzstring.decompressFromUint8Array(data);
 }
 
+/* Returns 'undefined' as type type.  Breaks the typescript
+   type system, is meant only for object pool systems.
+ */
+function undefinedForGC() {
+  return undefined;
+}
+
 var util = /*#__PURE__*/Object.freeze({
   __proto__: null,
   isDenormal: isDenormal,
@@ -9664,7 +9671,8 @@ var util = /*#__PURE__*/Object.freeze({
   PendingTimeoutPromises: PendingTimeoutPromises,
   TimeoutPromise: TimeoutPromise,
   compress: compress,
-  decompress: decompress
+  decompress: decompress,
+  undefinedForGC: undefinedForGC
 });
 
 const EulerOrders = {
@@ -9687,7 +9695,7 @@ window.makeCompiledVectormathCode = function (mode = "es") {
     if (es6exports) {
       return "export";
     } else {
-      return `var ${name} = exports.${name} =`;
+      return `let ${name} = exports.${name} =`;
     }
   }
 
@@ -9742,13 +9750,13 @@ class cachering extends Array {
 
     this.cur = 0;
 
-    for (var i=0; i<size; i++) {
+    for (let i=0; i<size; i++) {
       this.push(func());
     }
   }
 
   static fromConstructor(cls, size) {
-    var func = function() {
+    let func = function() {
       return new cls();
     }
 
@@ -9756,7 +9764,7 @@ class cachering extends Array {
   }
 
   next() {
-    var ret = this[this.cur];
+    let ret = this[this.cur];
     this.cur = (this.cur+1)%this.length;
 
     return ret;
@@ -9765,15 +9773,15 @@ class cachering extends Array {
 `;
   s += `
 
-var M_SQRT2 = Math.sqrt(2.0);
-var FLT_EPSILON = 2.22e-16;  
-var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
+let M_SQRT2 = Math.sqrt(2.0);
+let FLT_EPSILON = 2.22e-16;  
+let sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
     asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
     sign=Math.sign, tent=Math.tent, atan2=Math.atan2, atan=Math.atan,
     pow=Math.pow, sqrt=Math.sqrt, floor=Math.floor, ceil=Math.ceil,
     min=Math.min, max=Math.max, PI=Math.PI, E=2.718281828459045;
 
-var DOT_NORM_SNAP_LIMIT = 0.00000000001;
+let DOT_NORM_SNAP_LIMIT = 0.00000000001;
 
 ${doExports("BaseVector")} class BaseVector extends Array {
   constructor() {
@@ -9795,7 +9803,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   }
   
   normalize() {
-    var l = this.vectorLength();
+    let l = this.vectorLength();
     if (l > 0.00000001) {
       this.mulScalar(1.0/l);
     }
@@ -9895,21 +9903,21 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   s += "nstructjs.register(Matrix4)\n";
 
   s += `
-  var _quat_vs3_temps = cachering.fromConstructor(Vector3, 64);
-  var _v3nd4_n1_normalizedDot4 = new Vector3();
-  var _v3nd4_n2_normalizedDot4 = new Vector3();
-  var _v3nd_n1_normalizedDot = new Vector3();
-  var _v3nd_n2_normalizedDot = new Vector3();
+  let _quat_vs3_temps = cachering.fromConstructor(Vector3, 64);
+  let _v3nd4_n1_normalizedDot4 = new Vector3();
+  let _v3nd4_n2_normalizedDot4 = new Vector3();
+  let _v3nd_n1_normalizedDot = new Vector3();
+  let _v3nd_n2_normalizedDot = new Vector3();
 
-  var $_v3nd4_n1_normalizedDot4 = new Vector3();
-  var $_v3nd4_n2_normalizedDot4 = new Vector3();
-  var $_v3nd_n1_normalizedDot = new Vector3();
-  var $_v3nd_n2_normalizedDot = new Vector3();
+  let $_v3nd4_n1_normalizedDot4 = new Vector3();
+  let $_v3nd4_n2_normalizedDot4 = new Vector3();
+  let $_v3nd_n1_normalizedDot = new Vector3();
+  let $_v3nd_n2_normalizedDot = new Vector3();
 
-  var lookat_cache_vs3 = cachering.fromConstructor(Vector3, 64);
-  var lookat_cache_vs4 = cachering.fromConstructor(Vector4, 64);
+  let lookat_cache_vs3 = cachering.fromConstructor(Vector3, 64);
+  let lookat_cache_vs4 = cachering.fromConstructor(Vector4, 64);
 
-  var makenormalcache = cachering.fromConstructor(Vector3, 64);
+  let makenormalcache = cachering.fromConstructor(Vector3, 64);
 `;
 
   if (mode === "rjs") {
@@ -9931,18 +9939,18 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   return s;
 };
 
-var sin$1                                                          = Math.sin, cos$1                                          = Math.cos, abs                          = Math.abs, log = Math.log,
-    asin                                                         = Math.asin, exp                                        = Math.exp, acos = Math.acos, fract = Math.fract,
+let sin$1                                                          = Math.sin, cos$1 = Math.cos, abs = Math.abs, log = Math.log,
+    asin                                                         = Math.asin, exp = Math.exp, acos = Math.acos, fract    = Math.fract,
     sign = Math.sign, tent = Math.tent, atan2 = Math.atan2, atan = Math.atan,
-    pow                                                          = Math.pow, sqrt = Math.sqrt, floor                      = Math.floor, ceil = Math.ceil,
-    min                                                          = Math.min, max = Math.max, PI = Math.PI, E = 2.718281828459045;
+    pow                                                          = Math.pow, sqrt = Math.sqrt, floor                      = Math.floor, ceil   = Math.ceil,
+    min                                                          = Math.min, max                                          = Math.max, PI = Math.PI, E = 2.718281828459045;
 
-var DOT_NORM_SNAP_LIMIT = 0.00000000001;
-var M_SQRT2 = Math.sqrt(2.0);
-var FLT_EPSILON = 2.22e-16;
+let DOT_NORM_SNAP_LIMIT = 0.00000000001;
+let M_SQRT2 = Math.sqrt(2.0);
+let FLT_EPSILON = 2.22e-16;
 
-var basic_funcs = {
-  equals   : [["b"], "this[X] === b[X]", "&&"],
+let basic_funcs = {
+  equals: [["b"], "this[X] === b[X]", "&&"],
   /*dot is made manually so it's safe for acos
   dot     : [["b"], "this[X]*b[X]", "+"],
    */
@@ -9980,11 +9988,11 @@ function bounded_acos(fac) {
 }
 
 function make_norm_safe_dot(cls) {
-  var _dot = cls.prototype.dot;
+  let _dot = cls.prototype.dot;
 
   cls.prototype._dot = _dot;
   cls.prototype.dot = function (b) {
-    var ret = _dot.call(this, b);
+    let ret = _dot.call(this, b);
 
     if (ret >= 1.0 - DOT_NORM_SNAP_LIMIT && ret <= 1.0 + DOT_NORM_SNAP_LIMIT)
       return 1.0;
@@ -10012,13 +10020,13 @@ function getBaseVector(parent) {
 
       var f;
 
-      var vectorDotDistance = "f = function vectorDotDistance(b) {\n";
-      for (var i = 0; i < vectorsize; i++) {
+      let vectorDotDistance = "f = function vectorDotDistance(b) {\n";
+      for (let i = 0; i < vectorsize; i++) {
         vectorDotDistance += "  let d" + i + " = this[" + i + "]-b[" + i + "];\n\n  ";
       }
 
       vectorDotDistance += "  return ";
-      for (var i = 0; i < vectorsize; i++) {
+      for (let i = 0; i < vectorsize; i++) {
         if (i > 0)
           vectorDotDistance += " + ";
         vectorDotDistance += "d" + i + "*d" + i;
@@ -10027,15 +10035,15 @@ function getBaseVector(parent) {
       vectorDotDistance += "};";
       cls.prototype.vectorDotDistance = eval(vectorDotDistance);
 
-      var f;
-      var vectorDistance = "f = function vectorDistance(b) {\n";
-      for (var i = 0; i < vectorsize; i++) {
+      f = undefined;
+      let vectorDistance = "f = function vectorDistance(b) {\n";
+      for (let i = 0; i < vectorsize; i++) {
         vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
         //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
       }
 
       vectorDistance += "  return Math.sqrt(";
-      for (var i = 0; i < vectorsize; i++) {
+      for (let i = 0; i < vectorsize; i++) {
         if (i > 0)
           vectorDistance += " + ";
         vectorDistance += "d" + i + "*d" + i;
@@ -10044,14 +10052,14 @@ function getBaseVector(parent) {
       vectorDistance += "};";
       cls.prototype.vectorDistance = eval(vectorDistance);
 
-      var vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
-      for (var i = 0; i < vectorsize; i++) {
+      let vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
+      for (let i = 0; i < vectorsize; i++) {
         vectorDistanceSqr += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
         //vectorDistanceSqr += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
       }
 
       vectorDistanceSqr += "  return (";
-      for (var i = 0; i < vectorsize; i++) {
+      for (let i = 0; i < vectorsize; i++) {
         if (i > 0)
           vectorDistanceSqr += " + ";
         vectorDistanceSqr += "d" + i + "*d" + i;
@@ -10061,14 +10069,14 @@ function getBaseVector(parent) {
       cls.prototype.vectorDistanceSqr = eval(vectorDistanceSqr);
 
 
-      for (var k in basic_funcs) {
-        var func = basic_funcs[k];
-        var args = func[0];
-        var line = func[1];
+      for (let k in basic_funcs) {
+        let func = basic_funcs[k];
+        let args = func[0];
+        let line = func[1];
         var f;
 
-        var code = "f = function " + k + "(";
-        for (var i = 0; i < args.length; i++) {
+        let code = "f = function " + k + "(";
+        for (let i = 0; i < args.length; i++) {
           if (i > 0)
             code += ", ";
 
@@ -10081,7 +10089,7 @@ function getBaseVector(parent) {
           //make summation
           code += "  return ";
 
-          for (var i = 0; i < vectorsize; i++) {
+          for (let i = 0; i < vectorsize; i++) {
             if (i > 0)
               code += func[2];
 
@@ -10089,8 +10097,8 @@ function getBaseVector(parent) {
           }
           code += ";\n";
         } else {
-          for (var i = 0; i < vectorsize; i++) {
-            var line2 = line.replace(/X/g, "" + i);
+          for (let i = 0; i < vectorsize; i++) {
+            let line2 = line.replace(/X/g, "" + i);
             code += "  this[" + i + "] = " + line2 + ";\n";
           }
           code += "  return this;\n";
@@ -10099,7 +10107,7 @@ function getBaseVector(parent) {
         code += "}\n";
 
         //console.log(code);
-        var f = eval(code);
+        f = eval(code);
 
         cls.prototype[k] = f;
         //console.log(k, f);
@@ -10115,11 +10123,11 @@ function getBaseVector(parent) {
     }
 
     init_swizzle(size) {
-      var ret = {};
-      var cls = size === 4 ? Vector4$2 : (size === 3 ? Vector3$2 : Vector2$b);
+      let ret = {};
+      let cls = size === 4 ? Vector4$2 : (size === 3 ? Vector3$2 : Vector2$b);
 
-      for (var k in cls.prototype) {
-        var v = cls.prototype[k];
+      for (let k in cls.prototype) {
+        let v = cls.prototype[k];
         if (typeof v !== "function" && !(v instanceof Function))
           continue;
 
@@ -10137,6 +10145,23 @@ function getBaseVector(parent) {
       let t = this[axis1];
       this[axis1] = this[axis2];
       this[axis2] = t;
+
+      return this;
+    }
+
+    sinterp(v2, t) {
+      let l1 = this.vectorLength();
+      let l2 = v2.vectorLength();
+
+      //XXX this seems horribly incorrect.
+      return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1)*t);
+    }
+
+    perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
+      let tmp = this[axis1];
+
+      this[axis1] = this[axis2]*sign;
+      this[axis2] = -tmp*sign;
 
       return this;
     }
@@ -10171,467 +10196,538 @@ function getBaseVector(parent) {
 const BaseVector = getBaseVector(Array);
 const F64BaseVector = getBaseVector(Float64Array);
 const F32BaseVector = getBaseVector(Float32Array);
+const I32BaseVector = getBaseVector(Int32Array);
+const I16BaseVector = getBaseVector(Int16Array);
+const I8BaseVector = getBaseVector(Int8Array);
+const UI32BaseVector = getBaseVector(Uint32Array);
+const UI16BaseVector = getBaseVector(Uint16Array);
+const UI8BaseVector = getBaseVector(Uint8Array);
+
 
 function myclamp(f, a, b) {
   return Math.min(Math.max(f, a), b);
 }
 
-class Vector4$2 extends BaseVector {
-  constructor(data) {
-    super(4);
-
-    if (arguments.length > 1) {
-      throw new Error("unexpected argument");
-    }
-
-    this[0] = this[1] = this[2] = this[3] = 0.0;
-
-    if (data !== undefined) {
-      this.load(data);
-    }
-  }
-
-  toCSS() {
-    let r = ~~(this[0]*255);
-    let g = ~~(this[1]*255);
-    let b = ~~(this[2]*255);
-    let a = this[3];
-    return `rgba(${r},${g},${b},${a})`
-  }
-
-  loadXYZW(x, y, z, w) {
-    this[0] = x;
-    this[1] = y;
-    this[2] = z;
-    this[3] = w;
-
-    return this;
-  }
-
-  loadXYZ(x, y, z) {
-    this[0] = x;
-    this[1] = y;
-    this[2] = z;
-
-    return this;
-  }
-
-  load(data) {
-    if (data === undefined)
-      return this;
-
-    this[0] = data[0];
-    this[1] = data[1];
-    this[2] = data[2];
-    this[3] = data[3];
-
-    return this;
-  }
-
-  dot(b) {
-    return this[0]*b[0] + this[1]*b[1] + this[2]*b[2] + this[3]*b[3];
-  }
-
-  mulVecQuat(q) {
-    let t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
-    let t1 = q[0] * this[0] + q[2] * this[2] - q[3] * this[1];
-    let t2 = q[0] * this[1] + q[3] * this[0] - q[1] * this[2];
-
-    this[2] = q[0] * this[2] + q[1] * this[1] - q[2] * this[0];
-    this[0] = t1;
-    this[1] = t2;
-
-    t1 = t0 * -q[1] + this[0] * q[0] - this[1] * q[3] + this[2] * q[2];
-    t2 = t0 * -q[2] + this[1] * q[0] - this[2] * q[1] + this[0] * q[3];
-
-    this[2] = t0 * -q[3] + this[2] * q[0] - this[0] * q[2] + this[1] * q[1];
-    this[0] = t1;
-    this[1] = t2;
-
-    return this;
-  }
-
-  multVecMatrix(matrix) {
-    var x = this[0];
-    var y = this[1];
-    var z = this[2];
-    var w = this[3];
-
-    this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
-    this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
-    this[2] = w*matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
-    this[3] = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
-
-    return this[3];
-  }
-
-  cross(v) {
-    var x = this[1]*v[2] - this[2]*v[1];
-    var y = this[2]*v[0] - this[0]*v[2];
-    var z = this[0]*v[1] - this[1]*v[0];
-
-    this[0] = x;
-    this[1] = y;
-    this[2] = z;
-
-    return this;
-  }
-
-  preNormalizedAngle(v2) {
-    let th = this.dot(v2)*0.99999;
-    return Math.acos(th);
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    if (typeof this.vec !== "undefined") {
-      this.load(this.vec);
-      this.vec = undefined;
-    }
-  }
-};
-Vector4$2.STRUCT = `
-vec4 {
-  0 : float;
-  1 : float;
-  2 : float;
-  3 : float;
-}
-`;
-nstructjs.manager.add_class(Vector4$2);
-
-
-var _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
-var _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
-
-class Vector3$2 extends F64BaseVector {
-  constructor(data) {
-    super(3);
-
-    if (arguments.length > 1) {
-      throw new Error("unexpected argument");
-    }
-
-    this[0] = this[1] = this[2] = 0.0;
-
-    if (data !== undefined) {
-      this.load(data);
-    }
-
-    if (this.constructor === Vector3$2) {
-      Object.preventExtensions(this);
-    }
-  }
-
-  //normalizedDot4
-  static normalizedDot4(v1, v2, v3, v4) {
-    $_v3nd4_n1_normalizedDot4.load(v2).sub(v1).normalize();
-    $_v3nd4_n2_normalizedDot4.load(v4).sub(v3).normalize();
-
-    return $_v3nd4_n1_normalizedDot4.dot($_v3nd4_n2_normalizedDot4);
-  }
-
-  static normalizedDot3(v1, center, v2) {
-    $_v3nd4_n1_normalizedDot3.load(v1).sub(center).normalize();
-    $_v3nd4_n2_normalizedDot3.load(v2).sub(center).normalize();
-
-    return $_v3nd4_n1_normalizedDot3.dot($_v3nd4_n2_normalizedDot3);
-  }
-
-  toCSS() {
-    let r = ~~(this[0]*255);
-    let g = ~~(this[1]*255);
-    let b = ~~(this[2]*255);
-    return `rgb(${r},${g},${b})`
-  }
-
-  loadXYZ(x, y, z) {
-    this[0] = x;
-    this[1] = y;
-    this[2] = z;
-
-    return this;
-  }
-
-  loadXY(x, y) {
-    this[0] = x;
-    this[1] = y;
-
-    return this;
-  }
-
-  toJSON() {
-    return [this[0], this[1], this[2]];
-  }
-
-  loadJSON(obj) {
-    return this.load(obj);
-  }
-
-  initVector3() {
-    this.length = 3;
-    this[0] = this[1] = this[2] = 0;
-    return this;
-  }
-
-  load(data) {
-    if (data === undefined)
-      return this;
-
-    //if (isNaN(data[0]) || isNaN(data[1]) || isNaN(data[2])) {
-    //  throw new Error("NaN");
-    //}
-
-    this[0] = data[0];
-    this[1] = data[1];
-    this[2] = data[2];
-
-    return this;
-  }
-
-  dot(b) {
-    return this[0]*b[0] + this[1]*b[1] + this[2]*b[2];
-  }
-
-  normalizedDot(v) {
-    $_v3nd_n1_normalizedDot.load(this);
-    $_v3nd_n2_normalizedDot.load(v);
-    $_v3nd_n1_normalizedDot.normalize();
-    $_v3nd_n2_normalizedDot.normalize();
-    return $_v3nd_n1_normalizedDot.dot($_v3nd_n2_normalizedDot);
-  }
-
-  mulVecQuat(q) {
-    let t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
-    let t1 = q[0] * this[0] + q[2] * this[2] - q[3] * this[1];
-    let t2 = q[0] * this[1] + q[3] * this[0] - q[1] * this[2];
-
-    this[2] = q[0] * this[2] + q[1] * this[1] - q[2] * this[0];
-    this[0] = t1;
-    this[1] = t2;
-
-    t1 = t0 * -q[1] + this[0] * q[0] - this[1] * q[3] + this[2] * q[2];
-    t2 = t0 * -q[2] + this[1] * q[0] - this[2] * q[1] + this[0] * q[3];
-
-    this[2] = t0 * -q[3] + this[2] * q[0] - this[0] * q[2] + this[1] * q[1];
-    this[0] = t1;
-    this[1] = t2;
-
-    return this;
-  }
-
-  multVecMatrix(matrix, ignore_w) {
-    if (ignore_w === undefined) {
-      ignore_w = false;
-    }
-    var x = this[0];
-    var y = this[1];
-    var z = this[2];
-    this[0] = matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
-    this[1] = matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
-    this[2] = matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
-    var w = matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
-
-    if (!ignore_w && w !== 1 && w !== 0 && matrix.isPersp) {
-      this[0] /= w;
-      this[1] /= w;
-      this[2] /= w;
-    }
-    return w;
-  }
-
-  cross(v) {
-    var x = this[1]*v[2] - this[2]*v[1];
-    var y = this[2]*v[0] - this[0]*v[2];
-    var z = this[0]*v[1] - this[1]*v[0];
-
-    this[0] = x;
-    this[1] = y;
-    this[2] = z;
-
-    return this;
-  }
-
-  //axis is optional, 0
-  rot2d(A, axis) {
-    var x = this[0];
-    var y = this[1];
-
-    if (axis === 1) {
-      this[0] = x*cos$1(A) + y*sin$1(A);
-      this[1] = y*cos$1(A) - x*sin$1(A);
-    } else {
-      this[0] = x*cos$1(A) - y*sin$1(A);
-      this[1] = y*cos$1(A) + x*sin$1(A);
-    }
-
-    return this;
-  }
-
-  preNormalizedAngle(v2) {
-    let th = this.dot(v2)*0.99999;
-    return Math.acos(th);
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    if (typeof this.vec !== "undefined") {
-      this.load(this.vec);
-      this.vec = undefined;
-    }
-  }
-}
-
-Vector3$2.STRUCT = `
-vec3 {
-  0 : float;
-  1 : float;
-  2 : float;
-}
-`;
-nstructjs.manager.add_class(Vector3$2);
-
-class Vector2$b extends BaseVector {
-  constructor(data) {
-    super(2);
-
-    if (arguments.length > 1) {
-      throw new Error("unexpected argument");
-    }
-
-    this[0] = this[1] = 0.0;
-
-    if (data !== undefined) {
-      this.load(data);
-    }
-  }
-
-  initVector2(co) {
-    this.length = 2;
-
-    if (co !== undefined) {
-      this[0] = co[0];
-      this[1] = co[1];
-    } else {
-      this[0] = this[1] = 0.0;
-    }
-
-    return this;
-  }
-
-  loadXY(x, y) {
-    this[0] = x;
-    this[1] = y;
-
-    return this;
-  }
-
-  toJSON() {
-    return [this[0], this[1]];
-  }
-
-  loadJSON(obj) {
-    return this.load(obj);
-  }
-
-  loadXY(x, y) {
-    this[0] = x;
-    this[1] = y;
-
-    return this;
-  }
-
-  load(data) {
-    if (data === undefined)
-      return this;
-
-    this[0] = data[0];
-    this[1] = data[1];
-
-    return this;
-  }
-
-  //axis is optional, 0
-  rot2d(A, axis) {
-    var x = this[0];
-    var y = this[1];
-
-    if (axis === 1) {
-      this[0] = x*cos$1(A) + y*sin$1(A);
-      this[1] = y*cos$1(A) - x*sin$1(A);
-    } else {
-      this[0] = x*cos$1(A) - y*sin$1(A);
-      this[1] = y*cos$1(A) + x*sin$1(A);
-    }
-
-    return this;
-  }
-
-  dot(b) {
-    return this[0]*b[0] + this[1]*b[1];
-  }
-
-  multVecMatrix(matrix) {
-    var x = this[0];
-    var y = this[1];
-
-    var w = 1.0;
-
-    this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21;
-    this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22;
-
-    if (matrix.isPersp) {
-      let w2 = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24;
-
-      if (w2  !==  0.0) {
-        this[0] /= w2;
-        this[1] /= w2;
+function makeVector4(BaseVector, structName = 'vec4', structType = 'float') {
+  let temp1, temp2, temp3, temp4;
+
+  const Vector4 = class Vector4 extends BaseVector {
+    static STRUCT = nstructjs.inlineRegister(this, `
+    ${structName} {
+      0 : ${structType};
+      1 : ${structType};
+      2 : ${structType};
+      3 : ${structType};
+    }`);
+
+    constructor(data) {
+      super(4);
+
+      if (arguments.length > 1) {
+        throw new Error("unexpected argument");
+      }
+
+      this[0] = this[1] = this[2] = this[3] = 0.0;
+
+      if (data !== undefined) {
+        this.load(data);
       }
     }
 
-    return this;
-  }
+    toCSS() {
+      let r = ~~(this[0]*255);
+      let g = ~~(this[1]*255);
+      let b = ~~(this[2]*255);
+      let a = this[3];
+      return `rgba(${r},${g},${b},${a})`
+    }
 
-  mulVecQuat(q) {
-    let t0 = -q[1] * this[0] - q[2] * this[1];
-    let t1 = q[0] * this[0] - q[3] * this[1];
-    let t2 = q[0] * this[1] + q[3] * this[0];
+    loadXYZW(x, y, z, w) {
+      this[0] = x;
+      this[1] = y;
+      this[2] = z;
+      this[3] = w;
 
-    let z  = q[1] * this[1] - q[2] * this[0];
-    this[0] = t1;
-    this[1] = t2;
+      return this;
+    }
 
-    t1 = t0 * -q[1] + this[0] * q[0] - this[1] * q[3] + z * q[2];
-    t2 = t0 * -q[2] + this[1] * q[0] - z * q[1] + this[0] * q[3];
+    loadXYZ(x, y, z) {
+      this[0] = x;
+      this[1] = y;
+      this[2] = z;
 
-    this[0] = t1;
-    this[1] = t2;
+      return this;
+    }
 
-    return this;
-  }
+    static normalizedDot4(v1, v2, v3, v4) {
+      temp1.load(v2).sub(v1).normalize();
+      temp2.load(v4).sub(v3).normalize();
 
-  vectorLengthSqr() {
-    return this.dot(this);
-  }
+      return temp1.dot(temp2);
 
-  loadSTRUCT(reader) {
-    reader(this);
+    }
 
-    if (typeof this.vec !== undefined) {
-      this.load(this.vec);
-      this.vec = undefined;
+    static normalizedDot3(v1, center, v2) {
+      temp1.load(v1).sub(center).normalize();
+      temp2.load(v2).sub(center).normalize();
+
+      return temp1.dot(temp2);
+    }
+
+    load(data) {
+      if (data === undefined)
+        return this;
+
+      this[0] = data[0];
+      this[1] = data[1];
+      this[2] = data[2];
+      this[3] = data[3];
+
+      return this;
+    }
+
+    dot(b) {
+      return this[0]*b[0] + this[1]*b[1] + this[2]*b[2] + this[3]*b[3];
+    }
+
+    mulVecQuat(q) {
+      let t0 = -q[1]*this[0] - q[2]*this[1] - q[3]*this[2];
+      let t1 = q[0]*this[0] + q[2]*this[2] - q[3]*this[1];
+      let t2 = q[0]*this[1] + q[3]*this[0] - q[1]*this[2];
+
+      this[2] = q[0]*this[2] + q[1]*this[1] - q[2]*this[0];
+      this[0] = t1;
+      this[1] = t2;
+
+      t1 = t0* -q[1] + this[0]*q[0] - this[1]*q[3] + this[2]*q[2];
+      t2 = t0* -q[2] + this[1]*q[0] - this[2]*q[1] + this[0]*q[3];
+
+      this[2] = t0* -q[3] + this[2]*q[0] - this[0]*q[2] + this[1]*q[1];
+      this[0] = t1;
+      this[1] = t2;
+
+      return this;
+    }
+
+    multVecMatrix(matrix) {
+      let x = this[0];
+      let y = this[1];
+      let z = this[2];
+      let w = this[3];
+
+      this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
+      this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
+      this[2] = w*matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
+      this[3] = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
+
+      return this[3];
+    }
+
+    cross(v) {
+      let x = this[1]*v[2] - this[2]*v[1];
+      let y = this[2]*v[0] - this[0]*v[2];
+      let z = this[0]*v[1] - this[1]*v[0];
+
+      this[0] = x;
+      this[1] = y;
+      this[2] = z;
+
+      return this;
+    }
+
+    preNormalizedAngle(v2) {
+      let th = this.dot(v2)*0.99999;
+      return Math.acos(th);
+    }
+
+    loadSTRUCT(reader) {
+      reader(this);
+
+      if (typeof this.vec !== "undefined") {
+        this.load(this.vec);
+        this.vec = undefined;
+      }
+    }
+  };
+
+  temp1 = new Vector4();
+  temp2 = new Vector4();
+  temp3 = new Vector4();
+  temp4 = new Vector4();
+
+  return Vector4;
+}
+
+const Vector4$2 = makeVector4(BaseVector);
+
+let _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
+let _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
+
+function makeVector3(BaseVector, structName = 'vec3', structType = 'float', customConstructorCode = undefined) {
+  var Vector3;
+
+  const constructorCode = customConstructorCode ?? `
+    constructor(data) {
+      super(3);
+
+      if (arguments.length > 1) {
+        throw new Error("unexpected argument");
+      }
+
+      this[0] = this[1] = this[2] = 0.0;
+
+      if (data !== undefined) {
+        this.load(data);
+      }
+
+      if (this.constructor === Vector3) {
+        Object.preventExtensions(this);
+      }
+    }
+  `;
+
+  const code = `
+  let temp1, temp2, temp3, temp4;
+  Vector3 = class Vector3 extends BaseVector {
+    static STRUCT = nstructjs.inlineRegister(this, \`
+    ${structName} {
+      0 : ${structType};
+      1 : ${structType};
+      2 : ${structType};
+    }\`);
+
+    ${constructorCode}
+
+    static normalizedDot4(v1, v2, v3, v4) {
+      temp1.load(v2).sub(v1).normalize()
+      temp2.load(v4).sub(v3).normalize();
+
+      return temp1.dot(temp2);
+
+    }
+
+    static normalizedDot3(v1, center, v2) {
+      temp1.load(v1).sub(center).normalize();
+      temp2.load(v2).sub(center).normalize();
+
+      return temp1.dot(temp2);
+    }
+
+    toCSS() {
+      let r = ~~(this[0]*255);
+      let g = ~~(this[1]*255);
+      let b = ~~(this[2]*255);
+      return \`rgb(\${r},\${g},\${b})\`
+    }
+
+    loadXYZ(x, y, z) {
+      this[0] = x;
+      this[1] = y;
+      this[2] = z;
+
+      return this;
+    }
+
+    loadXY(x, y) {
+      this[0] = x;
+      this[1] = y;
+
+      return this;
+    }
+
+    toJSON() {
+      return [this[0], this[1], this[2]];
+    }
+
+    loadJSON(obj) {
+      return this.load(obj);
+    }
+
+    initVector3() {
+      this.length = 3;
+      this[0] = this[1] = this[2] = 0;
+      return this;
+    }
+
+    load(data) {
+      if (data === undefined)
+        return this;
+
+      //if (isNaN(data[0]) || isNaN(data[1]) || isNaN(data[2])) {
+      //  throw new Error("NaN");
+      //}
+
+      this[0] = data[0];
+      this[1] = data[1];
+      this[2] = data[2];
+
+      return this;
+    }
+
+    dot(b) {
+      return this[0]*b[0] + this[1]*b[1] + this[2]*b[2];
+    }
+
+    normalizedDot(v) {
+      $_v3nd_n1_normalizedDot.load(this);
+      $_v3nd_n2_normalizedDot.load(v);
+      $_v3nd_n1_normalizedDot.normalize();
+      $_v3nd_n2_normalizedDot.normalize();
+      return $_v3nd_n1_normalizedDot.dot($_v3nd_n2_normalizedDot);
+    }
+
+    mulVecQuat(q) {
+      let t0 = -q[1]*this[0] - q[2]*this[1] - q[3]*this[2];
+      let t1 = q[0]*this[0] + q[2]*this[2] - q[3]*this[1];
+      let t2 = q[0]*this[1] + q[3]*this[0] - q[1]*this[2];
+
+      this[2] = q[0]*this[2] + q[1]*this[1] - q[2]*this[0];
+      this[0] = t1;
+      this[1] = t2;
+
+      t1 = t0* -q[1] + this[0]*q[0] - this[1]*q[3] + this[2]*q[2];
+      t2 = t0* -q[2] + this[1]*q[0] - this[2]*q[1] + this[0]*q[3];
+
+      this[2] = t0* -q[3] + this[2]*q[0] - this[0]*q[2] + this[1]*q[1];
+      this[0] = t1;
+      this[1] = t2;
+
+      return this;
+    }
+
+    multVecMatrix(matrix, ignore_w) {
+      if (ignore_w === undefined) {
+        ignore_w = false;
+      }
+      let x = this[0];
+      let y = this[1];
+      let z = this[2];
+      this[0] = matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
+      this[1] = matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
+      this[2] = matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
+      let w = matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
+
+      if (!ignore_w && w !== 1 && w !== 0 && matrix.isPersp) {
+        this[0] /= w;
+        this[1] /= w;
+        this[2] /= w;
+      }
+      return w;
+    }
+
+    cross(v) {
+      let x = this[1]*v[2] - this[2]*v[1];
+      let y = this[2]*v[0] - this[0]*v[2];
+      let z = this[0]*v[1] - this[1]*v[0];
+
+      this[0] = x;
+      this[1] = y;
+      this[2] = z;
+
+      return this;
+    }
+
+    //axis is optional, 0
+    rot2d(A, axis = 0) {
+      let x = this[0];
+      let y = this[1];
+
+      if (axis === 1) {
+        this[0] = x*cos(A) + y*sin(A);
+        this[1] = y*cos(A) - x*sin(A);
+      } else {
+        this[0] = x*cos(A) - y*sin(A);
+        this[1] = y*cos(A) + x*sin(A);
+      }
+
+      return this;
+    }
+
+    preNormalizedAngle(v2) {
+      let th = this.dot(v2)*0.99999;
+      return Math.acos(th);
+    }
+
+    loadSTRUCT(reader) {
+      reader(this);
+
+      if (typeof this.vec !== "undefined") {
+        this.load(this.vec);
+        this.vec = undefined;
+      }
     }
   }
-};
-Vector2$b.STRUCT = `
-vec2 {
-  0 : float;
-  1 : float;
+
+  temp1 = new Vector3();
+  temp2 = new Vector3();
+  temp3 = new Vector3();
+  temp4 = new Vector3();
+  `;
+
+  eval(code);
+  return Vector3;
 }
-`;
-nstructjs.manager.add_class(Vector2$b);
+
+const Vector3$2 = makeVector3(F64BaseVector);
+
+function makeVector2(BaseVector, structName = 'vec2', structType = 'float') {
+  let temp1, temp2, temp3, temp4;
+
+  const Vector2 = class Vector2 extends BaseVector {
+    static STRUCT = nstructjs.inlineRegister(this, `
+    ${structName} {
+      0 : ${structType};
+      1 : ${structType};
+    }`);
+
+    constructor(data) {
+      super(2);
+
+      if (arguments.length > 1) {
+        throw new Error("unexpected argument");
+      }
+
+      this[0] = this[1] = 0.0;
+
+      if (data !== undefined) {
+        this.load(data);
+      }
+    }
+
+    initVector2(co) {
+      this.length = 2;
+
+      if (co !== undefined) {
+        this[0] = co[0];
+        this[1] = co[1];
+      } else {
+        this[0] = this[1] = 0.0;
+      }
+
+      return this;
+    }
+
+    static normalizedDot4(v1, v2, v3, v4) {
+      temp1.load(v2).sub(v1).normalize();
+      temp2.load(v4).sub(v3).normalize();
+
+      return temp1.dot(temp2);
+    }
+
+    static normalizedDot3(v1, center, v2) {
+      temp1.load(v1).sub(center).normalize();
+      temp2.load(v2).sub(center).normalize();
+
+      return temp1.dot(temp2);
+    }
+
+    toJSON() {
+      return [this[0], this[1]];
+    }
+
+    loadJSON(obj) {
+      return this.load(obj);
+    }
+
+    loadXY(x, y) {
+      this[0] = x;
+      this[1] = y;
+
+      return this;
+    }
+
+    load(data) {
+      if (data === undefined)
+        return this;
+
+      this[0] = data[0];
+      this[1] = data[1];
+
+      return this;
+    }
+
+    //axis is optional, 0
+    rot2d(A, axis) {
+      let x = this[0];
+      let y = this[1];
+
+      if (axis === 1) {
+        this[0] = x*cos$1(A) + y*sin$1(A);
+        this[1] = y*cos$1(A) - x*sin$1(A);
+      } else {
+        this[0] = x*cos$1(A) - y*sin$1(A);
+        this[1] = y*cos$1(A) + x*sin$1(A);
+      }
+
+      return this;
+    }
+
+    dot(b) {
+      return this[0]*b[0] + this[1]*b[1];
+    }
+
+    multVecMatrix(matrix) {
+      let x = this[0];
+      let y = this[1];
+
+      let w = 1.0;
+
+      this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21;
+      this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22;
+
+      if (matrix.isPersp) {
+        let w2 = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24;
+
+        if (w2 !== 0.0) {
+          this[0] /= w2;
+          this[1] /= w2;
+        }
+      }
+
+      return this;
+    }
+
+    mulVecQuat(q) {
+      let t0 = -q[1]*this[0] - q[2]*this[1];
+      let t1 = q[0]*this[0] - q[3]*this[1];
+      let t2 = q[0]*this[1] + q[3]*this[0];
+
+      let z = q[1]*this[1] - q[2]*this[0];
+      this[0] = t1;
+      this[1] = t2;
+
+      t1 = t0* -q[1] + this[0]*q[0] - this[1]*q[3] + z*q[2];
+      t2 = t0* -q[2] + this[1]*q[0] - z*q[1] + this[0]*q[3];
+
+      this[0] = t1;
+      this[1] = t2;
+
+      return this;
+    }
+
+    vectorLengthSqr() {
+      return this.dot(this);
+    }
+
+    loadSTRUCT(reader) {
+      reader(this);
+
+      if (typeof this.vec !== undefined) {
+        this.load(this.vec);
+        this.vec = undefined;
+      }
+    }
+  };
+
+  temp1 = new Vector2();
+  temp2 = new Vector2();
+  temp3 = new Vector2();
+  temp4 = new Vector2();
+
+  return Vector2;
+}
+
+const Vector2$b = makeVector2(BaseVector);
 
 let _quat_vs3_temps = cachering.fromConstructor(Vector3$2, 64);
 
@@ -10646,9 +10742,9 @@ class Quat extends Vector4$2 {
   }
 
   mulQuat(qt) {
-    var a = this[0]*qt[0] - this[1]*qt[1] - this[2]*qt[2] - this[3]*qt[3];
-    var b = this[0]*qt[1] + this[1]*qt[0] + this[2]*qt[3] - this[3]*qt[2];
-    var c = this[0]*qt[2] + this[2]*qt[0] + this[3]*qt[1] - this[1]*qt[3];
+    let a = this[0]*qt[0] - this[1]*qt[1] - this[2]*qt[2] - this[3]*qt[3];
+    let b = this[0]*qt[1] + this[1]*qt[0] + this[2]*qt[3] - this[3]*qt[2];
+    let c = this[0]*qt[2] + this[2]*qt[0] + this[3]*qt[1] - this[1]*qt[3];
     this[3] = this[0]*qt[3] + this[3]*qt[0] + this[1]*qt[2] - this[2]*qt[1];
     this[0] = a;
     this[1] = b;
@@ -10666,7 +10762,7 @@ class Quat extends Vector4$2 {
   }
 
   invert() {
-    var f = this.dot(this);
+    let f = this.dot(this);
 
     if (f === 0.0)
       return;
@@ -10676,7 +10772,7 @@ class Quat extends Vector4$2 {
   }
 
   sub(q2) {
-    var nq2 = new Quat();
+    let nq2 = new Quat();
 
     nq2[0] = -q2[0];
     nq2[1] = q2[1];
@@ -10687,13 +10783,13 @@ class Quat extends Vector4$2 {
   }
 
   mulScalarWithFactor(fac) {
-    var angle = fac*bounded_acos(this[0]);
-    var co = Math.cos(angle);
-    var si = Math.sin(angle);
+    let angle = fac*bounded_acos(this[0]);
+    let co = Math.cos(angle);
+    let si = Math.sin(angle);
 
     this[0] = co;
 
-    var last3 = Vector3$2([this[1], this[2], this[3]]);
+    let last3 = Vector3$2([this[1], this[2], this[3]]);
     last3.normalize();
     last3.mulScalar(si);
     this[1] = last3[0];
@@ -10707,19 +10803,19 @@ class Quat extends Vector4$2 {
       m = new Matrix4$2();
     }
 
-    var q0 = M_SQRT2*this[0];
-    var q1 = M_SQRT2*this[1];
-    var q2 = M_SQRT2*this[2];
-    var q3 = M_SQRT2*this[3];
-    var qda = q0*q1;
-    var qdb = q0*q2;
-    var qdc = q0*q3;
-    var qaa = q1*q1;
-    var qab = q1*q2;
-    var qac = q1*q3;
-    var qbb = q2*q2;
-    var qbc = q2*q3;
-    var qcc = q3*q3;
+    let q0 = M_SQRT2*this[0];
+    let q1 = M_SQRT2*this[1];
+    let q2 = M_SQRT2*this[2];
+    let q3 = M_SQRT2*this[3];
+    let qda = q0*q1;
+    let qdb = q0*q2;
+    let qdc = q0*q3;
+    let qaa = q1*q1;
+    let qab = q1*q2;
+    let qac = q1*q3;
+    let qbb = q2*q2;
+    let qbc = q2*q3;
+    let qcc = q3*q3;
     m.$matrix.m11 = (1.0 - qbb - qcc);
     m.$matrix.m12 = (qdc + qab);
     m.$matrix.m13 = (-qdb + qac);
@@ -10739,15 +10835,15 @@ class Quat extends Vector4$2 {
   }
 
   matrixToQuat(wmat) {
-    var mat = temp_mats.next();
+    let mat = temp_mats.next();
     mat.load(wmat);
 
     mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
     mat.$matrix.m44 = 1.0;
 
-    var r1 = new Vector3$2([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
-    var r2 = new Vector3$2([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
-    var r3 = new Vector3$2([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
+    let r1 = new Vector3$2([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
+    let r2 = new Vector3$2([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
+    let r3 = new Vector3$2([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
 
     r1.normalize();
     r2.normalize();
@@ -10762,8 +10858,8 @@ class Quat extends Vector4$2 {
     mat.$matrix.m31 = r3[0];
     mat.$matrix.m32 = r3[1];
     mat.$matrix.m33 = r3[2];
-    var tr = 0.25*(1.0 + mat.$matrix.m11 + mat.$matrix.m22 + mat.$matrix.m33);
-    var s = 0;
+    let tr = 0.25*(1.0 + mat.$matrix.m11 + mat.$matrix.m22 + mat.$matrix.m33);
+    let s = 0;
     if (tr > FLT_EPSILON) {
       s = Math.sqrt(tr);
       this[0] = s;
@@ -10799,7 +10895,7 @@ class Quat extends Vector4$2 {
   }
 
   normalize() {
-    var len = Math.sqrt(this.dot(this));
+    let len = Math.sqrt(this.dot(this));
 
     if (len !== 0.0) {
       this.mulScalar(1.0/len);
@@ -10815,8 +10911,8 @@ class Quat extends Vector4$2 {
     nor.normalize();
 
     if (nor.dot(nor) !== 0.0) {
-      var phi = angle/2.0;
-      var si = Math.sin(phi);
+      let phi = angle/2.0;
+      let si = Math.sin(phi);
       this[0] = Math.cos(phi);
       this[1] = nor[0]*si;
       this[2] = nor[1]*si;
@@ -10898,20 +10994,26 @@ BaseVector.inherit(Vector4$2, 4);
 F64BaseVector.inherit(Vector3$2, 3);
 BaseVector.inherit(Vector2$b, 2);
 
+let lookat_cache_vs3;
+let lookat_cache_vs4;
+let lookat_cache_ms;
+let euler_rotate_mats;
+let makenormalcache;
+let temp_mats;
+
+let preMultTemp;
+
 lookat_cache_vs3 = cachering.fromConstructor(Vector3$2, 64);
 lookat_cache_vs4 = cachering.fromConstructor(Vector4$2, 64);
 
 makenormalcache = cachering.fromConstructor(Vector3$2, 64);
 
-var $_v3nd_n1_normalizedDot = new Vector3$2();
-var $_v3nd_n2_normalizedDot = new Vector3$2();
-var $_v3nd4_n1_normalizedDot4 = new Vector3$2();
-var $_v3nd4_n2_normalizedDot4 = new Vector3$2();
-var $_v3nd4_n1_normalizedDot3 = new Vector3$2();
-var $_v3nd4_n2_normalizedDot3 = new Vector3$2();
-
-var M_SQRT2 = Math.sqrt(2.0);
-var FLT_EPSILON = 2.22e-16;
+let $_v3nd_n1_normalizedDot = new Vector3$2();
+let $_v3nd_n2_normalizedDot = new Vector3$2();
+let $_v3nd4_n1_normalizedDot4 = new Vector3$2();
+let $_v3nd4_n2_normalizedDot4 = new Vector3$2();
+let $_v3nd4_n1_normalizedDot3 = new Vector3$2();
+let $_v3nd4_n2_normalizedDot3 = new Vector3$2();
 
 class internal_matrix {
   constructor() {
@@ -10934,15 +11036,6 @@ class internal_matrix {
   }
 }
 
-var lookat_cache_vs3;
-var lookat_cache_vs4;
-var lookat_cache_ms;
-var euler_rotate_mats;
-var makenormalcache;
-var temp_mats;
-
-let preMultTemp;
-
 class Matrix4$2 {
   constructor(m) {
     this.$matrix = new internal_matrix();
@@ -10958,7 +11051,7 @@ class Matrix4$2 {
   }
 
   static fromJSON() {
-    var mat = new Matrix4$2();
+    let mat = new Matrix4$2();
     mat.load(json.items);
     mat.isPersp = json.isPersp;
     return mat;
@@ -11117,7 +11210,7 @@ class Matrix4$2 {
 
   load() {
     if (arguments.length === 1 && typeof arguments[0] === 'object') {
-      var matrix;
+      let matrix;
       if (arguments[0] instanceof Matrix4$2) {
         matrix = arguments[0].$matrix;
         this.isPersp = arguments[0].isPersp;
@@ -11235,7 +11328,7 @@ class Matrix4$2 {
   }
 
   transpose() {
-    var tmp = this.$matrix.m12;
+    let tmp = this.$matrix.m12;
     this.$matrix.m12 = this.$matrix.m21;
     this.$matrix.m21 = tmp;
     tmp = this.$matrix.m13;
@@ -11262,7 +11355,7 @@ class Matrix4$2 {
   }
 
   invert() {
-    var det = this._determinant4x4();
+    let det = this._determinant4x4();
 
     if (Math.abs(det) < 1e-08)
       return null;
@@ -11291,7 +11384,7 @@ class Matrix4$2 {
 
   translate(x, y, z) {
     if (typeof x === 'object' && "length" in x) {
-      var t = x;
+      let t = x;
 
       x = t[0];
       y = t[1];
@@ -11302,7 +11395,7 @@ class Matrix4$2 {
     y = y === undefined ? 0 : y;
     z = z === undefined ? 0 : z;
 
-    var matrix = temp_mats.next().makeIdentity();
+    let matrix = temp_mats.next().makeIdentity();
 
     matrix.$matrix.m41 = x;
     matrix.$matrix.m42 = y;
@@ -11314,7 +11407,7 @@ class Matrix4$2 {
 
   preTranslate(x, y, z) {
     if (typeof x === 'object' && "length" in x) {
-      var t = x;
+      let t = x;
 
       x = t[0];
       y = t[1];
@@ -11325,7 +11418,7 @@ class Matrix4$2 {
     y = y === undefined ? 0 : y;
     z = z === undefined ? 0 : z;
 
-    var matrix = temp_mats.next().makeIdentity();
+    let matrix = temp_mats.next().makeIdentity();
 
     matrix.$matrix.m41 = x;
     matrix.$matrix.m42 = y;
@@ -11337,7 +11430,7 @@ class Matrix4$2 {
 
   scale(x, y, z, w = 1.0) {
     if (typeof x === 'object' && "length" in x) {
-      var t = x;
+      let t = x;
       x = t[0];
       y = t[1];
       z = t[2];
@@ -11358,7 +11451,7 @@ class Matrix4$2 {
     }
 
 
-    var matrix = temp_mats.next().makeIdentity();
+    let matrix = temp_mats.next().makeIdentity();
     matrix.$matrix.m11 = x;
     matrix.$matrix.m22 = y;
     matrix.$matrix.m33 = z;
@@ -11552,20 +11645,20 @@ class Matrix4$2 {
     }
     window.Matrix4 = Matrix4$2;
 
-    var xmat = euler_rotate_mats.next().makeIdentity();
-    var m = xmat.$matrix;
+    let xmat = euler_rotate_mats.next().makeIdentity();
+    let m = xmat.$matrix;
 
-    var c = Math.cos(x), s = Math.sin(x);
+    let c = Math.cos(x), s = Math.sin(x);
 
     m.m22 = c;
     m.m23 = s;
     m.m32 = -s;
     m.m33 = c;
 
-    var ymat = euler_rotate_mats.next().makeIdentity();
+    let ymat = euler_rotate_mats.next().makeIdentity();
     c = Math.cos(y);
     s = Math.sin(y);
-    var m = ymat.$matrix;
+    m = ymat.$matrix;
 
     m.m11 = c;
     m.m13 = -s;
@@ -11574,10 +11667,10 @@ class Matrix4$2 {
 
     ymat.multiply(xmat);
 
-    var zmat = euler_rotate_mats.next().makeIdentity();
+    let zmat = euler_rotate_mats.next().makeIdentity();
     c = Math.cos(z);
     s = Math.sin(z);
-    var m = zmat.$matrix;
+    m = zmat.$matrix;
 
     m.m11 = c;
     m.m12 = s;
@@ -11594,11 +11687,11 @@ class Matrix4$2 {
   }
 
   toString() {
-    var s = "";
-    var m = this.$matrix;
+    let s = "";
+    let m = this.$matrix;
 
     function dec(d) {
-      var ret = d.toFixed(3);
+      let ret = d.toFixed(3);
 
       if (ret[0] !== "-") //make room for negative signs
         ret = " " + ret;
@@ -11615,7 +11708,7 @@ class Matrix4$2 {
 
   rotate(angle, x, y, z) {
     if (typeof x === 'object' && "length" in x) {
-      var t = x;
+      let t = x;
       x = t[0];
       y = t[1];
       z = t[2];
@@ -11632,10 +11725,10 @@ class Matrix4$2 {
     }
 
     angle /= 2;
-    var sinA = Math.sin(angle);
-    var cosA = Math.cos(angle);
-    var sinA2 = sinA*sinA;
-    var len = Math.sqrt(x*x + y*y + z*z);
+    let sinA = Math.sin(angle);
+    let cosA = Math.cos(angle);
+    let sinA2 = sinA*sinA;
+    let len = Math.sqrt(x*x + y*y + z*z);
 
     if (len === 0) {
       x = 0;
@@ -11647,7 +11740,7 @@ class Matrix4$2 {
       z /= len;
     }
 
-    var mat = temp_mats.next().makeIdentity();
+    let mat = temp_mats.next().makeIdentity();
 
     if (x === 1 && y === 0 && z === 0) {
       mat.$matrix.m11 = 1;
@@ -11689,9 +11782,9 @@ class Matrix4$2 {
       mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
       mat.$matrix.m44 = 1;
     } else {
-      var x2 = x*x;
-      var y2 = y*y;
-      var z2 = z*z;
+      let x2 = x*x;
+      let y2 = y*y;
+      let z2 = z*z;
       mat.$matrix.m11 = 1 - 2*(y2 + z2)*sinA2;
       mat.$matrix.m12 = 2*(x*y*sinA2 + z*sinA*cosA);
       mat.$matrix.m13 = 2*(x*z*sinA2 - y*sinA*cosA);
@@ -11891,10 +11984,10 @@ class Matrix4$2 {
   ortho(left, right, bottom, top, near, far) {
     console.warn("Matrix4.ortho() is deprecated, use .orthographic() instead");
 
-    var tx = (left + right)/(left - right);
-    var ty = (top + bottom)/(top - bottom);
-    var tz = (far + near)/(far - near);
-    var matrix = temp_mats.next().makeIdentity();
+    let tx = (left + right)/(left - right);
+    let ty = (top + bottom)/(top - bottom);
+    let tz = (far + near)/(far - near);
+    let matrix = temp_mats.next().makeIdentity();
 
     matrix.$matrix.m11 = 2/(left - right);
     matrix.$matrix.m12 = 0;
@@ -11919,12 +12012,12 @@ class Matrix4$2 {
   }
 
   frustum(left, right, bottom, top, near, far) {
-    var matrix = temp_mats.next().makeIdentity();
+    let matrix = temp_mats.next().makeIdentity();
 
-    var A = (right + left)/(right - left);
-    var B = (top + bottom)/(top - bottom);
-    var C = -(far + near)/(far - near);
-    var D = -(2*far*near)/(far - near);
+    let A = (right + left)/(right - left);
+    let B = (top + bottom)/(top - bottom);
+    let C = -(far + near)/(far - near);
+    let D = -(2*far*near)/(far - near);
 
     matrix.$matrix.m11 = (2*near)/(right - left);
     matrix.$matrix.m12 = 0;
@@ -11964,10 +12057,10 @@ class Matrix4$2 {
   }
 
   perspective(fovy, aspect, zNear, zFar) {
-    var top = Math.tan(fovy*Math.PI/360)*zNear;
-    var bottom = -top;
-    var left = aspect*bottom;
-    var right = aspect*top;
+    let top = Math.tan(fovy*Math.PI/360)*zNear;
+    let bottom = -top;
+    let left = aspect*bottom;
+    let right = aspect*top;
 
     this.frustum(left, right, bottom, top, zNear, zFar);
 
@@ -11975,16 +12068,16 @@ class Matrix4$2 {
   }
 
   lookat(pos, target, up) {
-    var matrix = lookat_cache_ms.next();
+    let matrix = lookat_cache_ms.next();
     matrix.makeIdentity();
 
-    var vec = lookat_cache_vs3.next().load(pos).sub(target);
-    var len = vec.vectorLength();
+    let vec = lookat_cache_vs3.next().load(pos).sub(target);
+    let len = vec.vectorLength();
     vec.normalize();
 
-    var zvec = vec;
-    var yvec = lookat_cache_vs3.next().load(up).normalize();
-    var xvec = lookat_cache_vs3.next().load(yvec).cross(zvec).normalize();
+    let zvec = vec;
+    let yvec = lookat_cache_vs3.next().load(up).normalize();
+    let xvec = lookat_cache_vs3.next().load(yvec).cross(zvec).normalize();
 
     let mm = matrix.$matrix;
 
@@ -12026,7 +12119,7 @@ class Matrix4$2 {
   }
 
   makeRotationOnly() {
-    var m = this.$matrix;
+    let m = this.$matrix;
 
     m.m41 = m.m42 = m.m43 = 0.0;
     m.m44 = 1.0;
@@ -12072,8 +12165,8 @@ class Matrix4$2 {
     mat2.makeRotationOnly();
     let axes = mat2.getAsVecs();
 
-    let axis2 = (axis + 1) % 3;
-    let axis3 = (axis + 2) % 3;
+    let axis2 = (axis + 1)%3;
+    let axis3 = (axis + 2)%3;
 
     axes[axis].load(vec);
     axes[axis2].cross(axes[axis]).cross(axes[axis]);
@@ -12265,47 +12358,43 @@ class Matrix4$2 {
     return a1*this._determinant2x2(b2, b3, c2, c3) - b1*this._determinant2x2(a2, a3, c2, c3) + c1*this._determinant2x2(a2, a3, b2, b3);
   }
 
-  determinant() {
-    return this._determinant4x4();
-  }
-
   _determinant4x4() {
-    var a1 = this.$matrix.m11;
-    var b1 = this.$matrix.m12;
-    var c1 = this.$matrix.m13;
-    var d1 = this.$matrix.m14;
-    var a2 = this.$matrix.m21;
-    var b2 = this.$matrix.m22;
-    var c2 = this.$matrix.m23;
-    var d2 = this.$matrix.m24;
-    var a3 = this.$matrix.m31;
-    var b3 = this.$matrix.m32;
-    var c3 = this.$matrix.m33;
-    var d3 = this.$matrix.m34;
-    var a4 = this.$matrix.m41;
-    var b4 = this.$matrix.m42;
-    var c4 = this.$matrix.m43;
-    var d4 = this.$matrix.m44;
+    let a1 = this.$matrix.m11;
+    let b1 = this.$matrix.m12;
+    let c1 = this.$matrix.m13;
+    let d1 = this.$matrix.m14;
+    let a2 = this.$matrix.m21;
+    let b2 = this.$matrix.m22;
+    let c2 = this.$matrix.m23;
+    let d2 = this.$matrix.m24;
+    let a3 = this.$matrix.m31;
+    let b3 = this.$matrix.m32;
+    let c3 = this.$matrix.m33;
+    let d3 = this.$matrix.m34;
+    let a4 = this.$matrix.m41;
+    let b4 = this.$matrix.m42;
+    let c4 = this.$matrix.m43;
+    let d4 = this.$matrix.m44;
     return a1*this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1*this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1*this._determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1*this._determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
   }
 
   _makeAdjoint() {
-    var a1 = this.$matrix.m11;
-    var b1 = this.$matrix.m12;
-    var c1 = this.$matrix.m13;
-    var d1 = this.$matrix.m14;
-    var a2 = this.$matrix.m21;
-    var b2 = this.$matrix.m22;
-    var c2 = this.$matrix.m23;
-    var d2 = this.$matrix.m24;
-    var a3 = this.$matrix.m31;
-    var b3 = this.$matrix.m32;
-    var c3 = this.$matrix.m33;
-    var d3 = this.$matrix.m34;
-    var a4 = this.$matrix.m41;
-    var b4 = this.$matrix.m42;
-    var c4 = this.$matrix.m43;
-    var d4 = this.$matrix.m44;
+    let a1 = this.$matrix.m11;
+    let b1 = this.$matrix.m12;
+    let c1 = this.$matrix.m13;
+    let d1 = this.$matrix.m14;
+    let a2 = this.$matrix.m21;
+    let b2 = this.$matrix.m22;
+    let c2 = this.$matrix.m23;
+    let d2 = this.$matrix.m24;
+    let a3 = this.$matrix.m31;
+    let b3 = this.$matrix.m32;
+    let c3 = this.$matrix.m33;
+    let d3 = this.$matrix.m34;
+    let a4 = this.$matrix.m41;
+    let b4 = this.$matrix.m42;
+    let c4 = this.$matrix.m43;
+    let d4 = this.$matrix.m44;
 
     this.$matrix.m11 = this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
     this.$matrix.m21 = -this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
@@ -12377,8 +12466,17 @@ var vectormath = /*#__PURE__*/Object.freeze({
   BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
+  I32BaseVector: I32BaseVector,
+  I16BaseVector: I16BaseVector,
+  I8BaseVector: I8BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI16BaseVector: UI16BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  makeVector4: makeVector4,
   Vector4: Vector4$2,
+  makeVector3: makeVector3,
   Vector3: Vector3$2,
+  makeVector2: makeVector2,
   Vector2: Vector2$b,
   Quat: Quat,
   Matrix4: Matrix4$2
@@ -14072,15 +14170,6 @@ class _NumberPropertyBase extends ToolProperty$1 {
     json.expRate = this.expRate;
 
     return json;
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    this.data = obj.data || this.data;
-    this.expRate = obj.expRate || this.expRate;
-
-    return this;
   }
 
   copyTo(b) {
@@ -16163,15 +16252,15 @@ for (var i$1 = 0; i$1 < 10; i$1++) {
   keymap_latin_1[String.fromCharCode(i$1 + 48)] = i$1 + 48;
 }
 
-for (var k$1 in keymap_latin_1) {
-  if (!(k$1 in keymap_latin_1)) {
-    keymap_latin_1[keymap_latin_1[k$1]] = k$1;
+for (var k in keymap_latin_1) {
+  if (!(k in keymap_latin_1)) {
+    keymap_latin_1[keymap_latin_1[k]] = k;
   }
 }
 
 var keymap_latin_1_rev = {};
-for (var k$1 in keymap_latin_1) {
-  keymap_latin_1_rev[keymap_latin_1[k$1]] = k$1;
+for (var k in keymap_latin_1) {
+  keymap_latin_1_rev[keymap_latin_1[k]] = k;
 }
 
 var keymap$4 = keymap_latin_1;
@@ -16277,6 +16366,8 @@ class KeyMap extends Array {
         return true;
       }
     }
+
+    return false;
   }
 
   add(hk) {
@@ -18173,6 +18264,7 @@ function inrect_2d(p, pos, size) {
 }
 
 let $ps_aabb_isect_line_2d = [new Vector2$b(), new Vector2$b(), new Vector2$b(), new Vector2$b()];
+
 function aabb_isect_line_2d(v1, v2, min, max) {
   if (point_in_aabb_2d(v1, min, max) || point_in_aabb(v2, min, max)) {
     return true;
@@ -18252,11 +18344,11 @@ function colinear(a, b, c, limit = 2.2e-16, distLimit = 0.00001**2) {
   return t1.dot(t1) <= limit;
 }
 
-function colinear2d(a, b, c, limit = 0.00001, precise=false) {
-  let dx1 = a[0]-b[0];
-  let dy1 = a[1]-b[1];
-  let dx2 = c[0]-b[0];
-  let dy2 = c[1]-b[1];
+function colinear2d(a, b, c, limit = 0.00001, precise = false) {
+  let dx1 = a[0] - b[0];
+  let dy1 = a[1] - b[1];
+  let dx2 = c[0] - b[0];
+  let dy2 = c[1] - b[1];
 
   let det = Math.abs(dx1*dy2 - dy1*dx2);
   if (precise) {
@@ -18785,11 +18877,7 @@ let dt2l_v3 = new Vector2$b();
 let dt2l_v4 = new Vector2$b();
 let dt2l_v5 = new Vector2$b();
 
-function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = undefined) {
-  if (clip === undefined) {
-    clip = true;
-  }
-
+function dist_to_line_2d(p, v1, v2, clip = true, closest_co_out = undefined, t_out = undefined) {
   v1 = dt2l_v4.load(v1);
   v2 = dt2l_v5.load(v2);
 
@@ -20955,7 +21043,7 @@ class CurveTypeData {
     return {
       uiname  : "Some Curve",
       name    : "somecurve",
-      typeName: CurveTypeData
+      typeName: "CurveTypeData"
     }
   }
 
@@ -21159,10 +21247,11 @@ function genHermiteTable(evaluate, steps, range = [0, 1]) {
 }
 
 const DataFlags = {
-  READ_ONLY             : 1,
-  USE_CUSTOM_GETSET     : 2,
-  USE_FULL_UNDO         : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
-  USE_CUSTOM_PROP_GETTER: 8,
+  READ_ONLY              : 1,
+  USE_CUSTOM_GETSET      : 2,
+  USE_FULL_UNDO          : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
+  USE_CUSTOM_PROP_GETTER : 8,
+  USE_EVAL_MASS_SET_PATHS: 16,
 };
 
 
@@ -21235,6 +21324,11 @@ class DataPath {
     if (type === DataTypes.PROP && this.data && ("" + this.data.uiname).trim().length === 0) {
       this.data.uiname = ToolProperty$1.makeUIName(apiname);
     }
+  }
+
+  evalMassSetFilter() {
+    this.flag |= DataFlags.USE_EVAL_MASS_SET_PATHS;
+    return this;
   }
 
   copy() {
@@ -21685,7 +21779,7 @@ function makeDerivedOverlay(parent) {
         def2[k] = def[k];
       }
 
-      if (!("flag") in def) {
+      if (!("flag" in def)) {
         def2.flag = Context.inherit(0);
       }
 
@@ -24058,7 +24152,7 @@ const templates = {
 //is initialized below
 const SplineTemplateIcons = {};
 
-let RecalcFlags = {
+let RecalcFlags$1 = {
   BASIS: 1,
   FULL : 2,
   ALL  : 3,
@@ -24374,7 +24468,7 @@ class BSplineTransformOp extends ToolOp {
 
       bspline.parent._fireEvent("transform", bspline);
 
-      bspline.recalc = RecalcFlags.ALL;
+      bspline.recalc = RecalcFlags$1.ALL;
       bspline.updateKnots();
       bspline.update();
       bspline.redraw();
@@ -24490,7 +24584,7 @@ class BSplineTransformOp extends ToolOp {
 
     bspline.parent._fireEvent("transform", bspline);
 
-    bspline.recalc = RecalcFlags.ALL;
+    bspline.recalc = RecalcFlags$1.ALL;
     bspline.updateKnots();
     bspline.update();
     bspline.redraw();
@@ -24712,7 +24806,7 @@ class BSplineCurve extends CurveTypeData {
     this.fastmode = false;
 
     this.deg = 6;
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
     this.basis_tables = [];
     this.eidgen = new IDGen();
 
@@ -24823,7 +24917,7 @@ class BSplineCurve extends CurveTypeData {
 
   add(x, y, no_update = false) {
     let p = new Curve1DPoint();
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
 
     p.eid = this.eidgen.next();
 
@@ -24861,7 +24955,7 @@ class BSplineCurve extends CurveTypeData {
 
   updateKnots(recalc = true, points = this.points) {
     if (recalc) {
-      this.recalc = RecalcFlags.ALL;
+      this.recalc = RecalcFlags$1.ALL;
     }
 
     this._sortPoints();
@@ -24934,7 +25028,7 @@ class BSplineCurve extends CurveTypeData {
 
     this.hightlight = undefined;
     this.eidgen = IDGen.fromJSON(obj.eidgen);
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
     this.mpos = [0, 0];
 
     for (let i = 0; i < obj.points.length; i++) {
@@ -24948,13 +25042,13 @@ class BSplineCurve extends CurveTypeData {
   }
 
   basis(t, i) {
-    if (this.recalc & RecalcFlags.FULL_BASIS) {
+    if (this.recalc & RecalcFlags$1.FULL_BASIS) {
       return this._basis(t, i);
     }
 
-    if (this.recalc & RecalcFlags.BASIS) {
+    if (this.recalc & RecalcFlags$1.BASIS) {
       this.regen_basis();
-      this.recalc &= ~RecalcFlags.BASIS;
+      this.recalc &= ~RecalcFlags$1.BASIS;
     }
 
     i = Math.min(Math.max(i, 0), this._ps.length - 1);
@@ -25532,7 +25626,7 @@ class BSplineCurve extends CurveTypeData {
     this.updateKnots();
     this.update();
     this.regen_basis();
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
     this.redraw();
   }
 
@@ -25600,7 +25694,7 @@ class BSplineCurve extends CurveTypeData {
       this.updateKnots();
       this.update();
       this.regen_basis();
-      this.recalc = RecalcFlags.ALL;
+      this.recalc = RecalcFlags$1.ALL;
       this.redraw();
     };
 
@@ -25789,7 +25883,7 @@ class BSplineCurve extends CurveTypeData {
       return;
     }
 
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
 
     this.length = b.points.length;
     this.points.length = 0;
@@ -25928,7 +26022,7 @@ class BSplineCurve extends CurveTypeData {
       case 46: //delete
         if (this.points.highlight !== undefined) {
           this.points.remove(this.points.highlight);
-          this.recalc = RecalcFlags.ALL;
+          this.recalc = RecalcFlags$1.ALL;
 
           this.points.highlight = undefined;
           this.updateKnots();
@@ -26032,7 +26126,7 @@ class BSplineCurve extends CurveTypeData {
     }
 
     this.updateKnots();
-    this.recalc = RecalcFlags.ALL;
+    this.recalc = RecalcFlags$1.ALL;
   }
 }
 
@@ -26124,6 +26218,7 @@ function initSplineTemplates() {
   splineTemplatesLoaded = true;
 
   for (let k in SplineTemplates) {
+    console.log("Loading spline template", k);
     let curve = new BSplineCurve();
     curve.loadTemplate(SplineTemplates[k]);
     splineCache.get(curve);
@@ -26287,7 +26382,7 @@ class Curve1D {
 
   load(b) {
     if (b === undefined || b === this) {
-      return;
+      return this;
     }
     /*
     if (b === undefined) {
@@ -26310,11 +26405,10 @@ class Curve1D {
     let json = nstructjs.writeJSON(b, Curve1D);
     let cpy = nstructjs.readJSON(json, Curve1D);
 
-    let activeCls = this.generators.active.constructor;
+    let activeCls = cpy.generators.active.constructor;
     let oldGens = this.generators;
 
     this.generators = cpy.generators;
-    this.generators.active = undefined;
 
     for (let gen of cpy.generators) {
       /* See if generator provides a .load() method. */
@@ -26507,7 +26601,16 @@ class Curve1D {
       s = Math.min(Math.max(s, this.xRange[0]), this.xRange[1]);
     }
 
-    let f = this.generators.active.evaluate(s);
+    let f;
+
+    try {
+      f = this.generators.active.evaluate(s);
+    } catch (error) {
+      f = 0.0;
+      console.warn(error.stack);
+      console.warn(error.message);
+    }
+
     if (this.clipToRange) {
       f = Math.min(Math.max(f, this.yRange[0]), this.yRange[1]);
     }
@@ -26893,6 +26996,7 @@ class Animator {
     return this;
   }
 
+  /** Call this while the current command is still being executed. */
   while(cb) {
     this.commands[this.commands.length - 1].cbs.push(cb);
     return this;
@@ -29817,24 +29921,24 @@ ToolProperty$1.internalRegister(Curve1DProperty);
  <pre>
 
  function initMyDataAPI() {
-  let api = new DataAPI();
+ let api = new DataAPI();
 
-  //map MyContextClass to a struct, true tells mapStruct to auto-create
-  //the struct if it doesn't already exist.
-  //
-  //MyContextClass should have a member "propCache" pointing at SavedToolDefaults.
-  let st = api.mapStruct(MyContextClass, true);
+ //map MyContextClass to a struct, true tells mapStruct to auto-create
+ //the struct if it doesn't already exist.
+ //
+ //MyContextClass should have a member "propCache" pointing at SavedToolDefaults.
+ let st = api.mapStruct(MyContextClass, true);
 
-  //set fields of struct, e.g. st.int, st.float, st.enum, st.struct, etc
+ //set fields of struct, e.g. st.int, st.float, st.enum, st.struct, etc
 
-  //build toolsys api
-  buildToolSysAPI(api);
+ //build toolsys api
+ buildToolSysAPI(api);
 
-  //create bindings for default tool operator settings
-  cstruct.struct("propCache", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+ //create bindings for default tool operator settings
+ cstruct.struct("propCache", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
 
-  return api;
-}
+ return api;
+ }
  </pre>
  */
 
@@ -29864,7 +29968,7 @@ let tokens = [
   tk("LSBRACKET", /\[/),
   tk("RSBRACKET", /\]/),
   tk("AND", /\&/),
-  tk("WS", /[ \t\n\r]+/, (t) => undefined) //drok token
+  tk("WS", /[ \t\n\r]+/, (t) => undefined), //drop token
 ];
 
 let lexer = new lexer$1(tokens, (t) => {
@@ -30382,15 +30486,9 @@ class DataStruct {
     this.members.remove(m);
   }
 
-  fromToolProp(path, prop, apiname) {
-    if (apiname === undefined) {
-      apiname = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : k;
-    }
-
+  fromToolProp(path, prop, apiname = prop.apiname.length > 0 ? prop.apiname : path) {
     let dpath = new DataPath(path, apiname, prop);
-
     this.add(dpath);
-
     return dpath;
   }
 
@@ -30589,11 +30687,11 @@ class DataAPI extends ModelInterface {
     let api = ctx.api;
 
     function applyFilter(obj) {
-      //console.log(filter, obj, obj.constructor.name);
+      const forceEval = rdef.dpath.flag & DataFlags.USE_EVAL_MASS_SET_PATHS;
 
       if (obj === undefined) {
         return undefined;
-      } else if (typeof obj === "object" || typeof obj === "function") {
+      } else if (!forceEval && (typeof obj === "object" || typeof obj === "function")) {
         let st = api.mapStruct(obj.constructor, false);
 
         let path = filter;
@@ -30709,7 +30807,7 @@ class DataAPI extends ModelInterface {
    get meta information for a datapath.
 
    @param ignoreExistence: don't try to get actual data associated with path,
-   just want meta information
+    just want meta information
    */
   resolvePath_intern(ctx, inpath, ignoreExistence = false, p = pathParser, dstruct = undefined) {
     inpath = inpath.replace("==", "=");
@@ -31071,260 +31169,6 @@ class DataAPI extends ModelInterface {
       dstruct: dstruct,
       prop   : prop,
       subkey : subkey
-    };
-  }
-
-  resolvePathOld2(ctx, path) {
-    let splitchars = new Set([".", "[", "]", "=", "&"]);
-    let subkey = undefined;
-
-    path = path.replace(/\=\=/g, "=");
-
-    path = "." + this.prefix + path;
-
-    let p = [""];
-    for (let i = 0; i < path.length; i++) {
-      let s = path[i];
-
-      if (splitchars.has(s)) {
-        if (s !== "]") {
-          p.push(s);
-        }
-
-        p.push("");
-        continue;
-      }
-
-      p[p.length - 1] += s;
-    }
-
-    for (let i = 0; i < p.length; i++) {
-      p[i] = p[i].trim();
-
-      if (p[i].length === 0) {
-        p.remove(p[i]);
-        i--;
-      }
-
-      let c = parseInt(p[i]);
-      if (!isNaN(c)) {
-        p[i] = c;
-      }
-    }
-
-    let i = 0;
-
-    let parent1, obj = ctx, parent2;
-    let key = undefined;
-    let dstruct = undefined;
-    let arg = undefined;
-    let type = "normal";
-    let retpath = p;
-    let prop;
-    let lastkey = key, a;
-    let apiname = key;
-
-    while (i < p.length - 1) {
-      lastkey = key;
-      apiname = key;
-
-      if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
-        let dpath = dstruct.pathmap[lastkey];
-
-        apiname = dpath.apiname;
-      }
-
-      let a = p[i];
-      let b = p[i + 1];
-
-      //check for enum/flag propertys with [] form
-      if (a === "[") {
-        let ok = false;
-
-        key = b;
-        prop = undefined;
-
-        if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
-          let dpath = dstruct.pathmap[lastkey];
-
-          if (dpath.type === DataTypes.PROP) {
-            prop = dpath.data;
-          }
-        }
-
-        if (prop !== undefined && (prop.type === PropTypes$8.ENUM || prop.type === PropTypes$8.FLAG)) {
-          console$1.context("api").log("found flag/enum property");
-          ok = true;
-        }
-
-        if (ok) {
-          if (isNaN(parseInt(key))) {
-            key = prop.values[key];
-          } else if (typeof key == "int") {
-            key = parseInt(key);
-          }
-
-          let value = obj;
-          if (typeof value == "string") {
-            value = prop.values[key];
-          }
-
-          if (prop.type === PropTypes$8.ENUM) {
-            value = !!(value == key);
-          } else { //flag
-            value = !!(value & key);
-          }
-
-          if (key in prop.keys) {
-            subkey = prop.keys[key];
-          }
-
-          obj = value;
-          i++;
-          continue;
-        }
-      }
-
-      if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
-        let dpath = dstruct.pathmap[lastkey];
-
-        if (dpath.type == DataTypes.PROP) {
-          prop = dpath.data;
-        }
-      }
-
-      if (a === "." || a === "[") {
-        key = b;
-
-        parent2 = parent1;
-        parent1 = obj;
-        obj = obj[b];
-
-        if (obj === undefined || obj === null) {
-          break;
-        }
-
-        if (typeof obj == "object") {
-          dstruct = this.mapStruct(obj.constructor, false);
-        }
-
-        i += 2;
-        continue;
-      } else if (a === "&") {
-        obj &= b;
-        arg = b;
-
-        if (b in prop.keys) {
-          subkey = prop.keys[b];
-        }
-
-        i += 2;
-        type = "flag";
-        continue;
-      } else if (a === "=") {
-        obj = obj == b;
-        arg = b;
-
-        if (b in prop.keys) {
-          subkey = prop.keys[b];
-        }
-
-        i += 2;
-        type = "enum";
-        continue;
-      } else {
-        throw new DataPathError("bad path " + path);
-      }
-
-      i++;
-    }
-
-    if (lastkey !== undefined && dstruct !== undefined && dstruct.pathmap[lastkey]) {
-      let dpath = dstruct.pathmap[key];
-
-      apiname = dpath.apiname;
-    }
-
-
-    if (dstruct !== undefined && dstruct.pathmap[key]) {
-      let dpath = dstruct.pathmap[key];
-
-      if (dpath.type == DataTypes.PROP) {
-        prop = dpath.data;
-      }
-    }
-
-    return {
-      parent : parent2,
-      obj    : parent1,
-      value  : obj,
-      key    : key,
-      dstruct: dstruct,
-      subkey : subkey,
-      prop   : prop,
-      arg    : arg,
-      type   : type,
-      _path  : retpath
-    };
-  }
-
-  /*returns {
-    obj : [object owning property key]
-    parent : [parent of obj]
-    key : [property key]
-    value : [value of property]
-    prop : [optional toolprop.ToolProperty representing the property definition]
-    struct : [optional datastruct representing the type, if value is an object]
-  }
-  */
-  resolvePathold(ctx, path) {
-    path = this.prefix + path;
-    path = path.replace(/\[/g, ".").replace(/\]/g, "").trim().split(".");
-
-    let parent1, obj = ctx, parent2;
-    let key = undefined;
-    let dstruct = undefined;
-
-    for (let c of path) {
-      let c2 = parseInt(c);
-      if (!isNaN(c2)) {
-        c = c2;
-      }
-
-      parent2 = parent1;
-      parent1 = obj;
-      key = c;
-
-      if (typeof obj == "number") {
-        //bitmask test
-        obj = obj & c;
-        break;
-      }
-
-      obj = obj[c];
-
-      if (typeof obj == "object") {
-        dstruct = this.mapStruct(obj.constructor, false);
-      }
-    }
-
-    let prop;
-
-    if (dstruct !== undefined && dstruct.pathmap[key]) {
-      let dpath = dstruct.pathmap[key];
-
-      if (dpath.type == DataTypes.PROP) {
-        prop = dpath.data;
-      }
-    }
-
-    return {
-      parent : parent2,
-      obj    : parent1,
-      value  : obj,
-      key    : key,
-      dstruct: dstruct,
-      prop   : prop
     };
   }
 
@@ -32493,6 +32337,596 @@ class AfterAspect {
   }
 }
 
+const SocketFlags = {
+  UPDATE: 1
+};
+const NodeFlags = {
+  UPDATE   : 1,
+  SORT_TAG1: 2,
+  SORT_TAG2: 4,
+};
+const RecalcFlags = {
+  RUN   : 1,
+  RESORT: 2
+};
+const SocketTypes = {
+  INPUT : "inputs",
+  OUTPUT: "outputs"
+};
+
+let graphIdGen = 1;
+
+class EventSocket {
+  static socketDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+  }
+
+  name = ""
+  id = graphIdGen++;
+  flag = 0;
+
+  edges = [];
+  node = undefined;
+
+  type = undefined;
+
+  constructor(node) {
+    this.node = node;
+  }
+
+  get value() {
+    throw new Error("implement me!");
+  }
+
+  set value(v) {
+    this.flagUpdate();
+  }
+
+  get isUpdated() {
+    return this.flag & SocketFlags.UPDATE;
+  }
+
+  copyFrom(b) {
+    this.name = b.name;
+    this.flag = b.flag;
+
+    return this;
+  }
+
+  copy() {
+    return (new this.constructor()).copyFrom(this);
+  }
+
+  flagUpdate() {
+    this.flag |= SocketFlags.UPDATE;
+
+    if (!this.node) {
+      return;
+    }
+
+    if (this.type === SocketTypes.INPUT) {
+      this.node.flagUpdate();
+    } else {
+      for (let sockb of this.edges) {
+        sockb.flag |= SocketFlags.UPDATE;
+        sockb.node.flagUpdate();
+      }
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.node) {
+      this.node.flagResort();
+    }
+
+    return this;
+  }
+
+  connect(sockb) {
+    this.edges.push(sockb);
+    sockb.edges.push(this);
+    return this;
+  }
+
+  hasNode(node) {
+    for (let sockb of this.edges) {
+      if (sockb.node === node || sockb.node.owner === node) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  has(sockb) {
+    return this.edges.indexOf(sockb) >= 0;
+  }
+
+  disconnect(sockb = undefined) {
+    this.flagResort();
+
+    if (sockb === undefined) {
+      /* Disconnect all. */
+      for (let sock of this.edges) {
+        sock.flagUpdate();
+        sock.edges.remove(this);
+      }
+
+      this.edges.length = 0;
+      return this;
+    }
+
+    sockb.flagUpdate();
+    this.edges.remove(sockb);
+    return this;
+  }
+}
+
+const NodeClasses = [];
+
+//Interface
+class NodeCapable {
+  graphNode = undefined;
+
+  static graphNodeDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+
+    /* Sockets inherit. */
+    inputs : {},
+    outputs: {}
+  };
+
+  graphExec() {
+  }
+}
+
+class EventNode {
+  owner = undefined;
+  inputs = {};
+  outputs = {};
+  allsockets = [];
+  graph = undefined;
+  sortIndex = -1;
+  id = graphIdGen++;
+  flag = 0;
+
+  static register(cls, def) {
+    cls.graphNodeDef = def;
+    if (!def.typeName) {
+      throw new Error("Missing graphNodeDef.typeName")
+    }
+
+    NodeClasses.push(cls);
+
+    return def;
+  }
+
+  addSocket(type, key, sock) {
+    this[type][key] = sock;
+    sock.name = key;
+    sock.node = this;
+    sock.type = type;
+
+    return this;
+  }
+
+  static isNodeCapable(cls) {
+    return cls.graphNodeDef !== undefined;
+  }
+
+  constructor(owner) {
+    this.owner = owner;
+
+    let cls = owner.constructor;
+
+    let getSockets = (key) => {
+      let socks = {};
+
+      let p = cls;
+      while (p) {
+        if (p.graphNodeDef) {
+          let socksDef = p.graphNodeDef[key] || {};
+
+          for (let k in socksDef) {
+            if (!(k in socks)) {
+              socks[k] = socksDef[k].copy();
+              socks[k].name = k;
+              socks[k].node = this;
+              socks[k].type = key;
+
+              this.allsockets.push(socks[k]);
+            }
+          }
+        }
+        p = p.__proto__;
+      }
+
+      return socks;
+    };
+
+    this.inputs = getSockets("inputs");
+    this.outputs = getSockets("outputs");
+  }
+
+  static init(owner) {
+    owner.graphNode = new EventNode(owner);
+    return owner.graphNode;
+  }
+
+  flagUpdate() {
+    this.flag |= NodeFlags.UPDATE;
+
+    if (this.graph) {
+      this.graph.flagUpdate(this);
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.graph) {
+      this.graph.flagResort(this);
+    }
+    return this;
+  }
+}
+
+class EventGraph {
+  nodes = [];
+  flag = 0;
+  nodeIdMap = new Map()
+  sockIdMap = new Map()
+  sortlist = [];
+  queueReq = undefined;
+  #skipQueueExec = 0;
+
+  constructor() {
+  }
+
+  add(node) {
+    node = this.eventNode(node);
+
+    node.graph = this;
+    this.nodeIdMap.set(node.id, node);
+
+    this.nodes.push(node);
+    this.flagResort(node);
+    this.flagUpdate(node);
+  }
+
+  has(node) {
+    node = this.eventNode(node);
+    return this.nodeIdMap.has(node.id);
+  }
+
+  eventNode(node) {
+    if (!(node instanceof EventNode)) {
+      node = node.graphNode;
+    }
+
+    if (node === undefined) {
+      console.warn("Not an event node:", arguments[0]);
+      throw new Error("Not an event node");
+    }
+
+    return node;
+  }
+
+  remove(node) {
+    node = this.eventNode(node);
+
+    if (node === undefined) {
+      throw new Error("EventGraph.prototype.remove(): node was undefined");
+    }
+
+    if (!this.nodeIdMap.get(node.id)) {
+      throw new Error("Node is not in event graph");
+    }
+
+    this.nodeIdMap.delete(node.id);
+
+    for (let sock of Array.from(node.eventNode.allsockets)) {
+      this.sockIdMap.delete(sock.id);
+
+      try {
+        sock.disconnect();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to disconnect a socket");
+      }
+    }
+
+    node.graph = undefined;
+    this.nodes.remove(node);
+    this.flagResort();
+  }
+
+  flagResort(node) {
+    if (node) {
+      node = this.eventNode(node);
+    }
+
+    this.flag |= RecalcFlags.RESORT | RecalcFlags.RUN;
+
+    return this;
+  }
+
+  flagUpdate(node) {
+    node = this.eventNode(node);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (!this.#skipQueueExec) {
+      this.queueExec();
+    }
+
+    return this;
+  }
+
+  sort() {
+    console.warn("Sorting Graph");
+
+    this.flag &= ~RecalcFlags.RESORT;
+
+    for (let n of this.nodes) {
+      n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
+    }
+
+    let sortlist = this.sortlist;
+    this.sortlist.length = 0;
+
+    let dosort = (n) => {
+      if (n.flag & NodeFlags.SORT_TAG2) {
+        console.error("Cycle in event dag!", n);
+        return;
+      }
+
+      n.flag |= NodeFlags.SORT_TAG2;
+
+      for (let [k, socka] of Object.entries(n.inputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+
+      n.flag &= ~NodeFlags.SORT_TAG2;
+      n.flag |= NodeFlags.SORT_TAG1;
+      n.sortIndex = sortlist.length;
+      sortlist.push(n);
+
+      for (let [k, socka] of Object.entries(n.outputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+    };
+
+    for (let n of this.nodes) {
+      if (!(n.flag & NodeFlags.SORT_TAG1)) {
+        dosort(n);
+      }
+    }
+  }
+
+  queueExec() {
+    console.warn("queueExec", this.queueReq);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (this.queueReq !== undefined) {
+      return;
+    }
+
+    this.queueReq = true;
+    this.queueReq = window.setTimeout(() => {
+      this.queueReq = undefined;
+      this.exec();
+    }, 0);
+  }
+
+  exec() {
+    this.flag &= ~RecalcFlags.RUN;
+
+    if (this.flag & RecalcFlags.RESORT) {
+      this.sort();
+    }
+
+    console.warn("Executing Graph");
+
+    this.#skipQueueExec++;
+
+    let sortlist = this.sortlist;
+    for (let n of sortlist) {
+      if (!(n.flag & NodeFlags.UPDATE)) {
+        continue;
+      }
+
+      try {
+        n.owner.graphExec();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Error during event graph execution");
+      }
+
+      n.flag &= ~NodeFlags.UPDATE;
+
+      for (let k in n.inputs) {
+        let sock = n.inputs[k];
+        sock.flag &= ~SocketFlags.UPDATE;
+      }
+
+      for (let k in n.outputs) {
+        let sock = n.outputs[k];
+
+        if (sock.flag & SocketFlags.UPDATE) {
+          for (let sockb of sock.edges) {
+            sockb.flag |= SocketFlags.UPDATE;
+            sockb.node.flag |= SocketFlags.UPDATE;
+          }
+
+          sock.flag &= ~SocketFlags.UPDATE;
+        }
+      }
+    }
+
+    this.#skipQueueExec--;
+  }
+}
+
+const theEventGraph = new EventGraph();
+
+const strBoolMap = {
+  "true" : "false",
+  "false": "true",
+  "on"   : "off",
+  "off"  : "on",
+  "yes"  : "no",
+  "no"   : "yes",
+};
+
+class DependSocket extends EventSocket {
+  static socketDef = {
+    typeName: "depend",
+    uiName  : "depend",
+    flag    : 0,
+  }
+
+  #value = undefined;
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(v) {
+    this.#value = v;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#value = b.#value;
+
+    return this;
+  }
+}
+
+const PropSocketModes = {
+  REPLACE: 0,
+  MIN    : 1,
+  MAX    : 2,
+};
+
+class PropertySocket extends EventSocket {
+  static socketDef = {
+    typeName: "property_socket",
+    uiName  : "Property Socket",
+    flag    : 0,
+  }
+
+  mixMode = PropSocketModes.REPLACE;
+
+  #binding = {
+    obj: null,
+    key: "",
+  }
+
+  #callbacks = []; //(newval, oldval) => val
+  #invert = false; //Invert bool or number properties
+
+  oldValue = undefined;
+
+  mode(mixmode) {
+    this.mixMode = mixmode;
+    return this;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#invert = b.#invert;
+    this.#callbacks = Array.from(b.#callbacks);
+    this.#binding = b.#binding;
+
+    return this;
+  }
+
+  invert(state = true) {
+    this.#invert = state;
+    return this;
+  }
+
+  callback(cb) {
+    this.#callbacks.push(cb);
+    return this;
+  }
+
+  get value() {
+    let bind = this.#binding;
+    return bind.obj ? bind.obj[bind.key] : undefined;
+  }
+
+  set value(v) {
+    let old = this.value;
+    if (this.#callbacks.length > 0) {
+      for (let cb of this.#callbacks) {
+        v = cb(v, old);
+      }
+    }
+
+    if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
+      v = !v;
+    } else if (this.#invert && typeof v === "string") {
+      let s = v.toLowerCase().trim();
+      if (s in strBoolMap) {
+        v = strBoolMap[s];
+      }
+    }
+
+    let bind = this.#binding;
+    if (bind.obj) {
+      bind.obj[bind.key] = v;
+    } else {
+      console.warn("Attempt to set unbound property socket", this);
+    }
+  }
+
+  bind(obj, key) {
+    this.#binding.obj = obj;
+    this.#binding.key = key;
+
+    return this;
+  }
+}
+
+var eventdag = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  SocketFlags: SocketFlags,
+  NodeFlags: NodeFlags,
+  RecalcFlags: RecalcFlags,
+  SocketTypes: SocketTypes,
+  EventSocket: EventSocket,
+  NodeCapable: NodeCapable,
+  EventNode: EventNode,
+  EventGraph: EventGraph,
+  theEventGraph: theEventGraph,
+  DependSocket: DependSocket,
+  PropSocketModes: PropSocketModes,
+  PropertySocket: PropertySocket
+});
+
 let _ui_base = undefined;
 
 //avoid circular module references
@@ -33148,7 +33582,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 function styleScrollBars$1(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -33276,8 +33710,196 @@ function internalSetTimeout(cb, timeout) {
 window.setTimeoutQueue = setTimeoutQueue;
 
 class UIBase$f extends HTMLElement {
+  #reflagGraph = false;
+
+  static graphNodeDef = EventNode.register(this, {
+    typeName: this.name,
+    uiName  : this.name,
+    inputs  : {
+      depend: new DependSocket()
+    },
+    outputs : {
+      depend: new DependSocket()
+    }
+  })
+
+  graphExec() {
+    let node = this.graphNode;
+
+    if (node.inputs.depend.isUpdated) {
+      node.outputs.depend.flagUpdate();
+    }
+
+    for (let k in node.inputs) {
+      let sock = node.inputs[k];
+
+      if (!(sock instanceof PropertySocket)) {
+        continue;
+      }
+
+      let val = sock.value;
+      let first = true;
+
+      for (let sockb of sock.edges) {
+        if (first) {
+          val = sockb.value;
+          first = false;
+        } else {
+          switch (sock.mixMode) {
+            case PropSocketModes.REPLACE:
+              val = sockb.value;
+              break;
+            case PropSocketModes.MIN:
+              val = Math.min(val, sockb.value);
+              break;
+            case PropSocketModes.MAX:
+              val = Math.max(val, sockb.value);
+              break;
+          }
+        }
+      }
+
+      sock.value = val;
+    }
+
+    function isNumArray(a) {
+      if (!Array.isArray(a)) {
+        return false;
+      }
+
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== undefined && typeof a[i] !== "number" && typeof a[i] !== "boolean") {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    for (let k in node.outputs) {
+      let sock = node.outputs[k];
+
+      if (!(sock instanceof PropertySocket)) {
+        continue;
+      }
+
+      let v = sock.value;
+      let changed;
+      if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
+        changed = v !== sock.oldValue;
+        sock.oldValue = v;
+      } else if (typeof v === "object") {
+        if (isNumArray(v)) {
+          if (!sock.oldValue) {
+            sock.oldValue = Array.from(v);
+          } else {
+            if (sock.oldValue.length !== v.length) {
+              changed = true;
+            } else {
+              for (let i = 0; i < sock.oldValue.length; i++) {
+                changed = sock.oldValue[i] !== v[i];
+              }
+            }
+
+            if (sock.oldValue.length !== v.length) {
+              sock.oldValue.length = v.length;
+            }
+            for (let i = 0; i < v.length; i++) {
+              sock.oldValue[i] = v.value[i];
+            }
+          }
+        } else {
+          if (sock.oldValue === undefined) {
+            sock.oldValue = JSON.stringify(v);
+          } else {
+            let json = JSON.stringify(v);
+            changed = json !== sock.oldValue;
+            sock.oldValue = json;
+          }
+        }
+      }
+
+      if (changed) {
+        console.log("Propagating prop update");
+        sock.flagUpdate();
+      }
+    }
+  }
+
+  ensureGraph() {
+    console.log("Ensure Graph", this, this.graphNode, this.graphNode.id);
+    if (!theEventGraph.has(this)) {
+      theEventGraph.add(this);
+    }
+  }
+
+  flagPropSocketUpdate(path) {
+    let sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
+    if (sock) {
+      console.warn(`Flag socket "${path}" for update`);
+      sock.flagUpdate();
+    }
+    return this;
+  }
+
+  getPropertySocket(prop, socktype) {
+    let node = this.graphNode;
+    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+
+    if (sockets[prop]) {
+      return sockets[prop];
+    }
+
+    return undefined;
+  }
+
+  ensurePropertySocket(prop, socktype) {
+    this.ensureGraph();
+
+    let node = this.graphNode;
+    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+
+    if (sockets[prop]) {
+      return sockets[prop];
+    }
+
+    let sock = new PropertySocket();
+    sock.bind(this, prop);
+    node.addSocket(socktype, prop, sock);
+
+    if (prop === "value") {
+      sock.callback((v) => {
+        if (this.getValue) {
+          return this.getValue();
+        }
+
+        return this.value;
+      });
+    }
+
+    return sock;
+  }
+
+  /*
+    widget.dependsOn("hidden", checkbox, "value")
+   */
+  dependsOn(dstProp, source, srcProp, srcCallback = undefined, dstCallback = undefined) {
+    let sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
+    let socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
+
+    if (srcCallback) {
+      socksrc.callback(srcCallback);
+    }
+
+    sockdst.connect(socksrc);
+
+    return sockdst;
+  }
+
   constructor() {
     super();
+
+    EventNode.init(this);
 
     this._modalstack = [];
 
@@ -33683,16 +34305,26 @@ class UIBase$f extends HTMLElement {
     return this;
   }
 
-  hide(sethide = true) {
-    this.hidden = sethide;
+  set hidden(state) {
+    state = !!state;
+    super.hidden = state;
 
     for (let n of this.shadow.childNodes) {
-      n.hidden = sethide;
+      n.hidden = state;
     }
 
     this._forEachChildWidget((n) => {
-      n.hide(sethide);
+      n.hide(state);
     });
+  }
+
+  get hidden() {
+    return super.hidden;
+  }
+
+  hide(sethide = true) {
+    this.hidden = sethide;
+    return this;
   }
 
   getElementById(id) {
@@ -33850,7 +34482,6 @@ class UIBase$f extends HTMLElement {
   }
 
   noMarginsOrPadding() {
-    return;
     let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
     keys = keys.concat(["padding-block-start", "padding-block-end"]);
 
@@ -34903,6 +35534,8 @@ class UIBase$f extends HTMLElement {
   }
 
   setPathValueUndo(ctx, path, val) {
+    this.pathSocketUpdate(ctx, path);
+
     let mass_set_path = this.getAttribute("mass_set_path");
     let rdef = ctx.api.resolvePath(ctx, path);
     let prop = rdef.prop;
@@ -35067,7 +35700,14 @@ class UIBase$f extends HTMLElement {
       this.ctx.api.popReportContext();
   }
 
+  pathSocketUpdate(ctx, path) {
+    this.flagPropSocketUpdate("value");
+    return this;
+  }
+
   setPathValue(ctx, path, val) {
+    this.pathSocketUpdate(ctx, path);
+
     if (this.useDataPathUndo) {
       this.pushReportContext(this._reportCtxName);
 
@@ -35427,9 +36067,22 @@ class UIBase$f extends HTMLElement {
     }
   }
 
+  updateEventGraph() {
+    if (!this.isConnected) {
+      this.#reflagGraph = true;
+    } else if (this.#reflagGraph) {
+      this.#reflagGraph = false;
+
+      for (let [k, sock] of Object.entries(this.graphNode.inputs)) {
+        sock.flagUpdate();
+      }
+    }
+  }
+
   //called regularly
   update() {
     this.updateToolTips();
+    this.updateEventGraph();
 
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
       let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
@@ -38734,7 +39387,9 @@ class Constraint {
 
     this.df = 0.0005;
     this.threshold = 0.0001;
-    this.func = func;
+    if (func !== undefined) { /* Happens with subclass-style constraints. */
+      this.func = func;
+    }
 
     this.funcDv = null;
   }
@@ -39353,6 +40008,7 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
 
 var controller = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  eventgraph: eventdag,
   solver: solver,
   util: util,
   vectormath: vectormath,
@@ -39480,8 +40136,17 @@ var controller = /*#__PURE__*/Object.freeze({
   BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
+  I32BaseVector: I32BaseVector,
+  I16BaseVector: I16BaseVector,
+  I8BaseVector: I8BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI16BaseVector: UI16BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  makeVector4: makeVector4,
   Vector4: Vector4$2,
+  makeVector3: makeVector3,
   Vector3: Vector3$2,
+  makeVector2: makeVector2,
   Vector2: Vector2$b,
   Quat: Quat,
   Matrix4: Matrix4$2,
@@ -42815,7 +43480,6 @@ class Container extends UIBase$f {
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
-        console.log("::", ret._useDataPathUndo, this._useDataPathUndo);
 
         ret.icon = rdef.prop.iconmap[rdef.subkey];
 
@@ -47461,10 +48125,6 @@ class Area$1 extends UIBase$f {
     this.doOnce(f);
   }
 
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-
   _getSavedUIData() {
     return saveUIData(this, "area");
   }
@@ -48054,6 +48714,7 @@ class ScreenArea extends UIBase$f {
         }
 
         existing.remove();
+        this.editors.remove(existing, true);
         this.editormap[def.areaname] = child;
       }
 
@@ -48190,15 +48851,6 @@ class ScreenArea extends UIBase$f {
 
     if (this.area !== undefined) {
       this.area.pop_ctx_active(true);
-    }
-  }
-
-  appendChild(ch) {
-    if (ch instanceof Area$1) {
-      this.editors.push(ch);
-      this.editormap[ch.constructor.define().areaname] = ch;
-    } else {
-      super.appendChild(ch);
     }
   }
 
@@ -51729,6 +52381,8 @@ function makeGenEnum() {
 }
 
 class Curve1DWidget extends ColumnFrame {
+  #in_onchange = false;
+
   constructor() {
     super();
 
@@ -51740,21 +52394,17 @@ class Curve1DWidget extends ColumnFrame {
     this._value = new Curve1D();
     this.checkCurve1dEvents();
 
-    let in_onchange = false;
+    this.#in_onchange = 0;
 
     this._value._on_change = (msg) => {
-      if (in_onchange) {
+      if (this.#in_onchange) {
         return;
       }
 
       /* Prevent infinite recursion. */
-      in_onchange = true;
+      this.#in_onchange++;
 
       try {
-        if (this.onchange) {
-          this.onchange(this._value);
-        }
-
         if (this.hasAttribute("datapath")) {
           let path = this.getAttribute("datapath");
           if (this._value !== undefined) {
@@ -51769,6 +52419,10 @@ class Curve1DWidget extends ColumnFrame {
             }
           }
         }
+
+        if (this.onchange) {
+          this.onchange(this._value);
+        }
       } catch (error) {
         if (window.DEBUG && window.DEBUG.datapath) {
           console.error(error.stack);
@@ -51776,7 +52430,12 @@ class Curve1DWidget extends ColumnFrame {
         }
       }
 
-      in_onchange = false;
+      this.#in_onchange--;
+
+      if (this.#in_onchange < 0) {
+        console.warn("this.#in_onchange was negative");
+        this.#in_onchange = 0;
+      }
     };
 
     this._gen_type = undefined;
@@ -51835,6 +52494,9 @@ class Curve1DWidget extends ColumnFrame {
           let bspline2 = this._value.getGenerator("BSplineCurve");
 
           for (let i = 0; i < bspline1.points.length; i++) {
+            if (i >= bspline2.length) {
+              break;
+            }
             bspline2.points[i].flag = bspline1.points[i].flag;
           }
 
@@ -51845,6 +52507,9 @@ class Curve1DWidget extends ColumnFrame {
           let bspline2 = this._value.getGenerator("BSplineCurve");
 
           for (let i = 0; i < bspline1.points.length; i++) {
+            if (i >= bspline2.length) {
+              break;
+            }
             bspline2.points[i].co.load(bspline1.points[i].co);
           }
 
@@ -52099,12 +52764,22 @@ class Curve1DWidget extends ColumnFrame {
 
     let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
     let gen = this.value.generators.active;
-    gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
 
-    loadUIData(this.container, uidata);
-    for (let i = 0; i < 4; i++) {
-      col.flushUpdate();
+    /* Turn off data path callbacks. */
+    this.#in_onchange++;
+    try {
+      gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+
+      loadUIData(this.container, uidata);
+      for (let i = 0; i < 4; i++) {
+        col.flushUpdate();
+      }
+    } catch (error) {
+      console.warn(error.stack);
+      console.warn(error.message);
     }
+
+    this.#in_onchange--;
 
     this._lastGen = gen;
     this._redraw();
@@ -54448,13 +55123,10 @@ class ModalTabMove extends EventHandler {
     return ret;
   }
 
+  on_pointerenter(e) {
+  }
+
   on_pointerleave(e) {
-  }
-
-  on_pointerenter(e) {
-  }
-
-  on_pointerenter(e) {
   }
 
   on_pointerstart(e) {
@@ -56039,7 +56711,7 @@ class TableFrame extends Container {
   }
 
   update() {
-    this.style["display"] = "inline-block";
+    //this.style["display"] = "inline-block";
     super.update();
   }
 
@@ -56198,10 +56870,6 @@ class TableFrame extends Container {
     return ret;
   }
 
-  update() {
-    super.update();
-  }
-
   clear() {
     super.clear();
     for (let child of list$1(this.dom.childNodes)) {
@@ -56250,13 +56918,6 @@ class ListItem extends RowFrame {
     this.addEventListener("mouseleave", unhighlight);
     this.addEventListener("mouseout", unhighlight);
     this.addEventListener("blur", unhighlight);
-
-    this.addEventListener("click", (e) => {
-      //console.log("click!");
-      if (this.onclick) {
-        this.onclick();
-      }
-    });
 
     let style = document.createElement("style");
     style.textContent = `
@@ -56688,7 +57349,7 @@ function getLastToolStruct(ctx) {
 }
 
 const last_tool_eventmap = [];
-window.last_tool_eventmap = [];
+//window.last_tool_eventmap = last_tool_eventmap;
 
 /* Try to avoid memory leaks when last tool panels are hidden. */
 window.setInterval(() => {
@@ -64804,5 +65465,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolOpAPI, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, I16BaseVector, I32BaseVector, I8BaseVector, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UI16BaseVector, UI32BaseVector, UI8BaseVector, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolOpAPI, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, eventdag as eventgraph, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, makeVector2, makeVector3, makeVector4, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

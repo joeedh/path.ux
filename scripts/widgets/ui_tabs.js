@@ -227,13 +227,10 @@ export class ModalTabMove extends events.EventHandler {
     return ret;
   }
 
+  on_pointerenter(e) {
+  }
+
   on_pointerleave(e) {
-  }
-
-  on_pointerenter(e) {
-  }
-
-  on_pointerenter(e) {
   }
 
   on_pointerstart(e) {
