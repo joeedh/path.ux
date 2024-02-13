@@ -40,10 +40,6 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   prop(path: string, packflag?: pathUXInt): UIBase;
 
-  row(packflag?: pathUXInt): RowFrame;
-
-  col(packflag?: pathUXInt): ColumnFrame;
-
   row(packflag?: pathUXInt): RowFrame<CTX>;
 
   col(packflag?: pathUXInt): ColumnFrame<CTX>;
