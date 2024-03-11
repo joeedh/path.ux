@@ -9,7 +9,8 @@ export default {
     file: 'dist/pathux.min.js',
     format: 'es',
     sourcemap : true,
-    mangle : false
+    inlineDynamicImports: true
+    //mangle : false
   },
   plugins : [terser()]
 };

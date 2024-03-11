@@ -11036,6 +11036,7 @@ class internal_matrix {
   }
 }
 
+/** Incredibly old matrix class. */
 class Matrix4$2 {
   constructor(m) {
     this.$matrix = new internal_matrix();

@@ -6,6 +6,7 @@ export default {
   output: {
     file: 'dist/pathux.js',
     format: 'es',
-    sourcemap : true
+    sourcemap : true,
+    inlineDynamicImports: true
   }
 };
