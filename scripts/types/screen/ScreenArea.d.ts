@@ -1,9 +1,11 @@
-import {UIBase} from "../core/ui_base";
-import {Vector2} from "../../path-controller/types/util/vectormath";
-import {Container} from "../core/ui";
-import {Context} from "../core/context";
-import {KeyMap} from "../../path-controller/types/util/simple_events";
-import {Screen} from "./FrameManager";
+import { UIBase } from "../core/ui_base";
+import { Vector2 } from "../../path-controller/types/util/vectormath";
+import { Container } from "../core/ui";
+import { Context } from "../core/context";
+import { KeyMap } from "../../path-controller/types/util/simple_events";
+import { Screen } from "./FrameManager";
+
+export { Screen };
 
 export declare interface IAreaDef {
   tagname: string;
@@ -17,14 +19,15 @@ export declare interface IAreaDef {
 }
 
 export declare interface IAreaConstructor<Type = any> {
-  new(): Type;
+  new (): Type;
 
   define(): IAreaDef;
 }
 
 export declare class Area<CTX = Context> extends UIBase<CTX> {
-  ["constructor"]: IAreaConstructor<this>
+  ["constructor"]: IAreaConstructor<this>;
 
+  header: Container;
   pos: Vector2;
   size: Vector2;
   flag: number;
@@ -53,7 +56,7 @@ export declare class Area<CTX = Context> extends UIBase<CTX> {
 
   on_area_focus(): void;
 
-  getScreen(): Screen<CTX>
+  getScreen(): Screen<CTX>;
 
   makeHeader(container: Container<CTX>, addHelpPicker?: boolean): void;
 
@@ -63,7 +66,7 @@ export declare class Area<CTX = Context> extends UIBase<CTX> {
 }
 
 export declare class ScreenArea<CTX = Context> extends UIBase<CTX> {
-  area: Area<CTX>
+  area: Area<CTX>;
 
   /** @deprecated */
   switch_editor(IAreaConstructor): void;

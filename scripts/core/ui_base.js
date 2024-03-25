@@ -2293,24 +2293,17 @@ export class UIBase extends HTMLElement {
   }
 
   pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase, excluded_classes = undefined) {
-    let marginx;
     let clip;
     let mouseEvent;
     let isMouseMove, isMouseDown;
 
     if (typeof args === "object") {
-      marginx = args.sx || 0;
-      marginy = args.sy || 0;
       nodeclass = args.nodeclass || UIBase;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
     } else {
-      marginx = args;
-
       args = {
-        marginx         : marginx || 0,
-        marginy         : marginy || 0,
         nodeclass       : nodeclass || UIBase,
         excluded_classes: excluded_classes,
         clip            : clip
@@ -3600,7 +3593,12 @@ export class UIBase extends HTMLElement {
    *
    * container.animate().goto("style.width", 500, 100, "ease");
    * */
-  animate(_extra_handlers = {}) {
+  animate(_extra_handlers = {}, domAnimateOptions=undefined) {
+    /* User is providing DOM animation data. */
+    if (Array.isArray(_extra_handlers)) {
+      return super.animate(_extra_handlers, domAnimateOptions)
+    }
+
     let transform = new DOMMatrix(this.style["transform"]);
 
     let update_trans = () => {

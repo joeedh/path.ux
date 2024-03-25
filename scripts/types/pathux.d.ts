@@ -11,3 +11,9 @@ import * as simple from "./simple/simple";
 export { simple };
 
 export const keymap: { [k: string]: number };
+
+export interface IconMap {
+  [k: string]: number;
+}
+
+export declare const Icons: IconMap;

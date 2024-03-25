@@ -1,15 +1,15 @@
-import {Screen} from "../screen/FrameManager";
+import { Screen } from "../screen/FrameManager";
 
 export as namespace context;
 
-import {DataAPI} from '../path-controller/controller_base';
+import { DataAPI } from "../path-controller/controller_base";
+import { ToolStack } from "../../path-controller/toolsys/toolsys";
 
-interface Context {
-    state     : any;
-    toolstack : any;
-    api       : DataAPI;
-    screen    : Screen
+interface Context<AppState = any> {
+  state: AppState;
+  toolstack: ToolStack;
+  api: DataAPI;
+  screen: Screen;
 
-    //report(message : string, delayMs : number);
-
+  //report(message : string, delayMs : number);
 }

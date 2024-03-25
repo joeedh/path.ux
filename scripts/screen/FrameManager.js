@@ -457,24 +457,16 @@ export class Screen extends ui_base.UIBase {
    * @param y
    * @param args arguments : {sx, sy, nodeclass, excluded_classes}
    */
-  pickElement(x, y, args, sy, nodeclass, excluded_classes) {
-    let sx;
-    let clip;
+  pickElement(x, y, args, marginy, nodeclass, excluded_classes) {
+    let marginx;
 
     if (typeof args === "object") {
-      sx = args.sx;
-      sy = args.sy;
       nodeclass = args.nodeclass;
       excluded_classes = args.excluded_classes;
-      clip = args.clip;
     } else {
-      sx = args;
-
       args = {
-        sx              : sx,
-        sy              : sy,
-        nodeclass       : nodeclass,
-        excluded_classes: excluded_classes
+        nodeclass,
+        excluded_classes
       };
     }
 
@@ -484,13 +476,10 @@ export class Screen extends ui_base.UIBase {
     }
 
     let ret;
-
     for (let i = this._popups.length - 1; i >= 0; i--) {
       let popup = this._popups[i];
-
       ret = ret || popup.pickElement(x, y, args);
     }
-
     ret = ret || super.pickElement(x, y, args);
 
     return ret;

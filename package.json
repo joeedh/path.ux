@@ -19,6 +19,7 @@
     "@babel/parser": ">=7.9.6",
     "@babel/traverse": ">=7.9.6",
     "@babel/types": ">=7.9.6",
+    "@pathtx/prettier": "^3.3.0-dev",
     "diff": "^5.1.0",
     "electron": ">=8.3.0",
     "esdoc": ">=1.1.0",
