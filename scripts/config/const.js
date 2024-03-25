@@ -9,8 +9,11 @@ let _clipboards = {};
 import * as ctrlconfig from '../path-controller/config/config.js';
 
 window.setInterval(() => {
-  let cb = navigator.clipboard;
+  if (!document.hasFocus()) {
+    return
+  }
 
+  let cb = navigator.clipboard;
   if (!cb || !cb.read) {
     return;
   }
