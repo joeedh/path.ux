@@ -7,7 +7,8 @@ export { Context } from "../core/context";
 import { Context } from "../core/context";
 import { TabContainer } from "./ui_tabs";
 import { IconMap } from "../pathux";
-export declare class DataModel {
+export declare class DataModel<ContextCls = {}> {
+  ctx: ContextCls;
   static defineAPI(api, dataStruct): DataStruct;
   static register(Class: any);
 }
@@ -24,7 +25,7 @@ export declare class SideBar<CTX extends Context = Context> extends Container<CT
 }
 export declare class Editor<CTX extends Context = Context> extends Area<CTX> {
   sidebar?: SideBar<CTX>;
-  static findEditor(Class: any): boolean;
+  static findEditor<T>(Class: new (...args: any[]) => T): T | undefined;
   makeSideBar(): SideBar<CTX>;
 }
 
