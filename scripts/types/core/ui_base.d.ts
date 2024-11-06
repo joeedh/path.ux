@@ -129,10 +129,10 @@ declare class UIBase<CTX extends Context = Context> extends HTMLElement {
  * Saves 'euphemeral' state for UI elements (e.g. scroll, collapsed/open panels, tab states, etc)
  * into a string buffer.
  */
-export declare function saveUIData(elem: UIBase, name: string): string;
+export declare function saveUIData<CTX extends Context>(elem: UIBase<CTX>, name: string): string;
 
 /**
  * Loads 'euphemeral' state saved by saveUIData.  Child elements that no longer exist
  * will be ignored; this is by design.
  */
-export declare function loadUIData(elem: UIBase, uiData: string);
+export declare function loadUIData<CTX extends Context>(elem: UIBase<CTX>, uiData: string);

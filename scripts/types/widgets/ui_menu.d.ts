@@ -3,11 +3,11 @@ import { ToolProperty } from "../../path-controller/types/toolsys/toolprop";
 import { Context } from "../core/context";
 import { HotKey } from "../../util/simple_events";
 
-export declare class DropBox<CTX = Context> extends UIBase<CTX> {
+export declare class DropBox<CTX extends Context  = Context> extends UIBase<CTX> {
   prop: ToolProperty<any>;
 }
 
-export declare class Menu<CTX = Context> extends UIBase<CTX> {
+export declare class Menu<CTX extends Context  = Context> extends UIBase<CTX> {
   addItemExtra(text: string, id: string | number, hotkey?: string, icon?: number, add?: number, tooltip?: string);
 
   addItem(text: string, id: string | number, add?: number, tooltip?: string);

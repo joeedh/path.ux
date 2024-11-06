@@ -74,7 +74,11 @@ type IStartArgs = {
   [k in keyof StartArgs]+?: StartArgFilter<StartArgs[k]>;
 };
 
+interface IContextConstructor<CTX extends Context = Context, APP> {
+  new(state?: APP): CTX
+}
 export declare class AppState<CTX extends Context = Context> {
+  constructor(ctx: IContextConstructor<CTX, this>)
   api: DataAPI;
   screen: SimpleScreen<CTX>;
   ctx: CTX;

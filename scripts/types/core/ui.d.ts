@@ -44,6 +44,8 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   col(packflag?: pathUXInt): ColumnFrame<CTX>;
 
+  panel(label: string): Container<CTX>
+  
   tabs(position: "top" | "bottom" | "left" | "right", packflag?: number): TabContainer<CTX>;
 
   listbox(packflag?: number): ListBox<CTX>;

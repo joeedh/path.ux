@@ -166,6 +166,7 @@ export class StartArgs {
   constructor() {
     this.singlePage = true;
 
+    this.DEBUG = {}
     this.icons = Icons;
     this.iconsheet = undefined; //will default to loadDefaultIconSheet();
     this.iconSizes = [16, 24, 32, 48];
