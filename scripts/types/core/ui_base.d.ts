@@ -123,6 +123,8 @@ declare class UIBase<CTX extends Context = Context> extends HTMLElement {
   saveData(): any;
 
   loadData(json: any): this;
+
+  animate(extraHandlers?: any, domAnimateOptions?: any): Animator
 }
 
 /**
