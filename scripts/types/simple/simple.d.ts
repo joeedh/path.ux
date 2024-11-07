@@ -21,7 +21,7 @@ export declare class SideBar<CTX extends Context = Context> extends Container<CT
   set closed(value: boolean);
   width: number;
   height: number;
-  tab(name: string): Container;
+  tab(name: string): Container<CTX>;
 }
 export declare class Editor<CTX extends Context = Context> extends Area<CTX> {
   sidebar?: SideBar<CTX>;
@@ -77,6 +77,18 @@ type IStartArgs = {
 interface IContextConstructor<CTX extends Context = Context, APP> {
   new(state?: APP): CTX
 }
+
+/** see FileArgs class */
+export interface IFileArgs {
+  ext?: string
+  magic?: string
+  doScreen?: boolean
+  resetOnLoad?: boolean
+  useJSON?: boolean
+  version?: number
+  fileFlags?: number
+  fromFileOp?: boolean /* SimpleSaveOp and SimpleOpenOp set this to true */
+}
 export declare class AppState<CTX extends Context = Context> {
   constructor(ctx: IContextConstructor<CTX, this>)
   api: DataAPI;
@@ -91,10 +103,10 @@ export declare class AppState<CTX extends Context = Context> {
 
   reset(): void;
   createNewFile(): void;
-  saveFileSync(objects: any, args?: FileArgs): ArrayBuffer | string;
-  saveFile(objects: any, args?: FileArgs): Promise<ArrayBuffer | string>;
-  loadFileSync(data: string | number[] | ArrayBuffer | Uint8Array | DataView, args?: FileArgs): FileData;
-  loadFile(data: string | number[] | ArrayBuffer | Uint8Array | DataView, args?: FileArgs): Promise<FileData>;
+  saveFileSync(objects: any, args?: IFileArgs): ArrayBuffer | string;
+  saveFile(objects: any, args?: IFileArgs): Promise<ArrayBuffer | string>;
+  loadFileSync(data: string | number[] | ArrayBuffer | Uint8Array | DataView, args?: IFileArgs): FileData;
+  loadFile(data: string | number[] | ArrayBuffer | Uint8Array | DataView, args?: IFileArgs): Promise<FileData>;
   makeScreen();
   start(startArgs?: IStartArgs);
 }
