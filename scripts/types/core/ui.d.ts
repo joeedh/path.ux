@@ -39,7 +39,7 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   add(child: UIBase<CTX>)
 
-  prop(path: string, packflag?: pathUXInt): UIBase
+  prop(path: string, packflag?: pathUXInt, massSetPath?: string): UIBase
 
   row(packflag?: pathUXInt): RowFrame<CTX>
 
