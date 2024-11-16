@@ -23,4 +23,6 @@ export class Screen<CTX = Context> extends UIBase<CTX> {
   ): HTMLElement | undefined;
 
   sareas: ScreenArea[]
+
+  completeUpdate(): void
 }
