@@ -8,8 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bash buildtools/build.sh",
     "build-docs": "bash build_docs.sh",
-    "render-icons": "bash render_icons.sh",
-    "publish": "bash buildtools/publish.sh"
+    "render-icons": "bash render_icons.sh"
   },
   "directories": {
     "doc": "docs"
