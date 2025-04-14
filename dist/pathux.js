@@ -13562,22 +13562,25 @@ window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
 
 const NumberConstraintsBase = new Set([
-  'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
-  'slideSpeed', 'sliderDisplayExp'
+  "range",
+  "expRate",
+  "step",
+  "uiRange",
+  "baseUnit",
+  "displayUnit",
+  "stepIsRelative",
+  "slideSpeed",
+  "sliderDisplayExp",
 ]);
 
-const IntegerConstraints = new Set([
-  'radix'
-].concat(list$2(NumberConstraintsBase)));
+const IntegerConstraints = new Set(["radix"].concat(list$2(NumberConstraintsBase)));
 
-const FloatConstrinats = new Set([
-  'decimalPlaces'
-].concat(list$2(NumberConstraintsBase)));
+const FloatConstrinats = new Set(["decimalPlaces"].concat(list$2(NumberConstraintsBase)));
 
 const NumberConstraints = new Set(list$2(IntegerConstraints).concat(list$2(FloatConstrinats)));
 
 const PropSubTypes$3 = {
-  COLOR: 1
+  COLOR: 1,
 };
 
 let first$1 = (iter) => {
@@ -13616,7 +13619,6 @@ let wordmap = {
   eid  : "id",
   props: "properties",
   res  : "resource",
-
 };
 
 var defaultRadix = 10;
@@ -13697,23 +13699,22 @@ class ToolProperty$1 extends ToolPropertyIF {
     for (let i = 0; i < name.length; i++) {
       let c = name[i];
 
-      if (c === '_' || c === '-' || c === '$') {
+      if (c === "_" || c === "-" || c === "$") {
         lastc = c;
-        c = ' ';
-        parts.push('');
+        c = " ";
+        parts.push("");
         continue;
       }
 
       if (i > 0 && c === c.toUpperCase() && lastc !== lastc.toUpperCase()) {
         if (ischar(c) && ischar(lastc)) {
-          parts.push('');
+          parts.push("");
         }
       }
 
       parts[parts.length - 1] += c;
       lastc = c;
     }
-
 
     let subst = (word) => {
       if (word in wordmap) {
@@ -13724,15 +13725,16 @@ class ToolProperty$1 extends ToolPropertyIF {
     };
 
     parts = parts
-      .filter(f => f.trim().length > 0)
-      .map(f => subst(f))
-      .map(f => f[0].toUpperCase() + f.slice(1, f.length).toLowerCase())
-      .join(" ").trim();
+      .filter((f) => f.trim().length > 0)
+      .map((f) => subst(f))
+      .map((f) => f[0].toUpperCase() + f.slice(1, f.length).toLowerCase())
+      .join(" ")
+      .trim();
     return parts;
   }
 
   static register(cls) {
-    cls.PROP_TYPE_ID = (1<<customPropTypeBase);
+    cls.PROP_TYPE_ID = 1 << customPropTypeBase;
     PropTypes$8[cls.name] = cls.PROP_TYPE_ID;
 
     customPropTypeBase++;
@@ -13744,7 +13746,7 @@ class ToolProperty$1 extends ToolPropertyIF {
   }
 
   static calcRelativeStep(step, value, logBase = 1.5) {
-    value = Math.log(Math.abs(value) + 1.0)/Math.log(logBase);
+    value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
     value = Math.max(value, step);
 
     this.report(termColor("STEP", "red"), value);
@@ -13772,7 +13774,7 @@ class ToolProperty$1 extends ToolPropertyIF {
     tot += strlen(this.apiname) + strlen(this.uiname);
     tot += strlen(this.description);
 
-    tot += 11*8; //assumed member pointers
+    tot += 11 * 8; //assumed member pointers
     for (let k in this.callbacks) {
       tot += 24;
     }
@@ -13891,7 +13893,7 @@ class ToolProperty$1 extends ToolPropertyIF {
       data       : this.data,
       range      : this.range,
       uiRange    : this.uiRange,
-      step       : this.step
+      step       : this.step,
     };
   }
 
@@ -13941,7 +13943,8 @@ class ToolProperty$1 extends ToolPropertyIF {
     }
   }
 
-  copy() { //default copy method
+  copy() {
+    //default copy method
     let ret = new this.constructor();
 
     this.copyTo(ret);
@@ -14118,7 +14121,9 @@ class FloatArrayProperty extends ToolProperty$1 {
   }
 }
 
-FloatArrayProperty.STRUCT = nstructjs.inherit(FloatArrayProperty, ToolProperty$1) + `
+FloatArrayProperty.STRUCT =
+  nstructjs.inherit(FloatArrayProperty, ToolProperty$1) +
+  `
   value : array(float);
 }`;
 nstructjs.register(FloatArrayProperty);
@@ -14139,7 +14144,7 @@ class StringProperty extends ToolProperty$1 {
   }
 
   calcMemSize() {
-    return super.calcMemSize() + (this.data !== undefined ? this.data.length*4 : 0) + 8;
+    return super.calcMemSize() + (this.data !== undefined ? this.data.length * 4 : 0) + 8;
   }
 
   equals(b) {
@@ -14166,7 +14171,9 @@ class StringProperty extends ToolProperty$1 {
   }
 }
 
-StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty$1) + `
+StringProperty.STRUCT =
+  nstructjs.inherit(StringProperty, ToolProperty$1) +
+  `
   data : string;
 }
 `;
@@ -14201,8 +14208,7 @@ export function isNumber(f) {
 //window.isNumber = isNumber;
 
 class NumProperty extends ToolProperty$1 {
-  constructor(type, value, apiname,
-              uiname, description, flag, icon) {
+  constructor(type, value, apiname, uiname, description, flag, icon) {
     super(type, undefined, apiname, uiname, description, flag, icon);
 
     this.data = 0;
@@ -14217,16 +14223,17 @@ class NumProperty extends ToolProperty$1 {
     reader(this);
     super.loadSTRUCT(reader);
   }
-};
-NumProperty.STRUCT = nstructjs.inherit(NumProperty, ToolProperty$1) + `
+}
+NumProperty.STRUCT =
+  nstructjs.inherit(NumProperty, ToolProperty$1) +
+  `
   range : array(float);
   data  : float;
 }
 `;
 
 class _NumberPropertyBase extends ToolProperty$1 {
-  constructor(type, value, apiname,
-              uiname, description, flag, icon) {
+  constructor(type, value, apiname, uiname, description, flag, icon) {
     super(type, null, apiname, uiname, description, flag, icon);
 
     this.data = 0.0;
@@ -14271,7 +14278,7 @@ class _NumberPropertyBase extends ToolProperty$1 {
   }
 
   calcMemSize() {
-    return super.calcMemSize() + 8*8;
+    return super.calcMemSize() + 8 * 8;
   }
 
   equals(b) {
@@ -14314,9 +14321,9 @@ class _NumberPropertyBase extends ToolProperty$1 {
   }
 
   /*
-  * non-linear exponent for number sliders
-  * in roll mode
-  * */
+   * non-linear exponent for number sliders
+   * in roll mode
+   * */
   setExpRate(exp) {
     this.expRate = exp;
   }
@@ -14352,8 +14359,10 @@ class _NumberPropertyBase extends ToolProperty$1 {
 
     return this;
   }
-};
-_NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty$1) + `
+}
+_NumberPropertyBase.STRUCT =
+  nstructjs.inherit(_NumberPropertyBase, ToolProperty$1) +
+  `
   range            : array(float);
   expRate          : float;
   data             : float;
@@ -14365,8 +14374,7 @@ _NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty
 nstructjs.register(_NumberPropertyBase);
 
 class IntProperty extends _NumberPropertyBase {
-  constructor(value, apiname,
-              uiname, description, flag, icon) {
+  constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.INT, value, apiname, uiname, description, flag, icon);
 
     //remember to update NumberConstraintsBase et al when adding new number
@@ -14411,7 +14419,9 @@ class IntProperty extends _NumberPropertyBase {
   }
 }
 
-IntProperty.STRUCT = nstructjs.inherit(IntProperty, _NumberPropertyBase) + `
+IntProperty.STRUCT =
+  nstructjs.inherit(IntProperty, _NumberPropertyBase) +
+  `
   data : int;
 }`;
 nstructjs.register(IntProperty);
@@ -14426,15 +14436,16 @@ class ReportProperty extends StringProperty {
   }
 }
 
-ReportProperty.STRUCT = nstructjs.inherit(ReportProperty, StringProperty) + `
+ReportProperty.STRUCT =
+  nstructjs.inherit(ReportProperty, StringProperty) +
+  `
 }
 `;
 nstructjs.register(ReportProperty);
 ToolProperty$1.internalRegister(ReportProperty);
 
 class BoolProperty extends ToolProperty$1 {
-  constructor(value, apiname,
-              uiname, description, flag, icon) {
+  constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.BOOL, undefined, apiname, uiname, description, flag, icon);
 
     this.data = !!value;
@@ -14476,16 +14487,16 @@ class BoolProperty extends ToolProperty$1 {
 }
 
 ToolProperty$1.internalRegister(BoolProperty);
-BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty$1) + `
+BoolProperty.STRUCT =
+  nstructjs.inherit(BoolProperty, ToolProperty$1) +
+  `
   data : bool;
 }
 `;
 nstructjs.register(BoolProperty);
 
-
 class FloatProperty extends _NumberPropertyBase {
-  constructor(value, apiname,
-              uiname, description, flag, icon) {
+  constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.FLOAT, value, apiname, uiname, description, flag, icon);
 
     //remember to update NumberConstraintsBase et al when adding new number
@@ -14539,7 +14550,9 @@ class FloatProperty extends _NumberPropertyBase {
 }
 
 ToolProperty$1.internalRegister(FloatProperty);
-FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
+FloatProperty.STRUCT =
+  nstructjs.inherit(FloatProperty, _NumberPropertyBase) +
+  `
   decimalPlaces : int;
   data          : float;
 }
@@ -14578,10 +14591,10 @@ EnumKeyPair {
 nstructjs.register(EnumKeyPair);
 
 class EnumProperty$9 extends ToolProperty$1 {
-  constructor(string_or_int, valid_values, apiname,
-              uiname, description, flag, icon) {
+  constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.ENUM, undefined, apiname, uiname, description, flag, icon);
 
+    this.dynamicMetaCB = undefined;
     this.values = {};
     this.keys = {};
     this.ui_value_names = {};
@@ -14623,7 +14636,23 @@ class EnumProperty$9 extends ToolProperty$1 {
     this.wasSet = false;
   }
 
+  /**
+   * Provide a callback to update the enum or flags property dynamically
+   * Callback should call enumProp.updateDefinition to update the property.
+   *
+   * @param metaCB: (enumProp: EnumProperty|FlagsProperty) => void
+   */
+  dynamicMeta(metaCB) {
+    this.on("meta", metaCB);
+    return this;
+  }
+
+  checkMeta() {
+    this._fire("meta", this);
+  }
+
   calcHash(digest = new HashDigest()) {
+    this.checkMeta();
     for (let key in this.keys) {
       digest.add(key);
       digest.add(this.keys[key]);
@@ -14679,21 +14708,22 @@ class EnumProperty$9 extends ToolProperty$1 {
       }
     }
 
-    this._fire('metaChange', this);
+    this._fire("metaChange", this);
 
     return this;
   }
 
   calcMemSize() {
+    this.checkMeta();
     let tot = super.calcMemSize();
 
     for (let k in this.values) {
-      tot += (k.length*4 + 16)*4;
+      tot += (k.length * 4 + 16) * 4;
     }
 
     if (this.descriptions) {
       for (let k in this.descriptions) {
-        tot += (k.length + this.descriptions[k].length)*4;
+        tot += (k.length + this.descriptions[k].length) * 4;
       }
     }
 
@@ -14748,6 +14778,9 @@ class EnumProperty$9 extends ToolProperty$1 {
 
     p.data = this.data;
 
+    // copy meta event handlers
+    p.callbacks.meta = Array.from(this.callbacks.meta ?? []);
+
     p.keys = Object.assign({}, this.keys);
     p.values = Object.assign({}, this.values);
     p.ui_value_names = this.ui_value_names;
@@ -14762,22 +14795,20 @@ class EnumProperty$9 extends ToolProperty$1 {
   }
 
   copy() {
-    var p = new this.constructor("dummy", {"dummy": 0}, this.apiname, this.uiname, this.description, this.flag);
+    var p = new this.constructor("dummy", { "dummy": 0 }, this.apiname, this.uiname, this.description, this.flag);
 
     this.copyTo(p);
     return p;
   }
 
   getValue() {
-    if (this.data in this.values)
-      return this.values[this.data];
-    else
-      return this.data;
+    if (this.data in this.values) return this.values[this.data];
+    else return this.data;
   }
 
   setValue(val) {
-    if (!(val in this.values) && (val in this.keys))
-      val = this.keys[val];
+    this.checkMeta();
+    if (!(val in this.values) && val in this.keys) val = this.keys[val];
 
     if (!(val in this.values)) {
       this.report("Invalid value for enum!", val, this.values);
@@ -14840,7 +14871,9 @@ class EnumProperty$9 extends ToolProperty$1 {
 }
 
 ToolProperty$1.internalRegister(EnumProperty$9);
-EnumProperty$9.STRUCT = nstructjs.inherit(EnumProperty$9, ToolProperty$1) + `
+EnumProperty$9.STRUCT =
+  nstructjs.inherit(EnumProperty$9, ToolProperty$1) +
+  `
   data            : string             | ""+this.data;
   data_is_int     : bool               | this._is_data_int();
   _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
@@ -14854,16 +14887,15 @@ EnumProperty$9.STRUCT = nstructjs.inherit(EnumProperty$9, ToolProperty$1) + `
 nstructjs.register(EnumProperty$9);
 
 class FlagProperty extends EnumProperty$9 {
-  constructor(string_or_int, valid_values, apiname,
-              uiname, description, flag, icon) {
-    super(string_or_int, valid_values, apiname,
-      uiname, description, flag, icon);
+  constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
+    super(string_or_int, valid_values, apiname, uiname, description, flag, icon);
 
     this.type = PropTypes$8.FLAG;
     this.wasSet = false;
   }
 
   setValue(bitmask) {
+    this.checkMeta();
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
@@ -14873,11 +14905,12 @@ class FlagProperty extends EnumProperty$9 {
 }
 
 ToolProperty$1.internalRegister(FlagProperty);
-FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty$9) + `
+FlagProperty.STRUCT =
+  nstructjs.inherit(FlagProperty, EnumProperty$9) +
+  `
 }
 `;
 nstructjs.register(FlagProperty);
-
 
 class VecPropertyBase extends FloatProperty {
   constructor(data, apiname, uiname, description) {
@@ -14887,7 +14920,7 @@ class VecPropertyBase extends FloatProperty {
   }
 
   calcMemSize() {
-    return super.calcMemSize() + this.data.length*8;
+    return super.calcMemSize() + this.data.length * 8;
   }
 
   equals(b) {
@@ -14905,11 +14938,12 @@ class VecPropertyBase extends FloatProperty {
   }
 }
 
-VecPropertyBase.STRUCT = nstructjs.inherit(VecPropertyBase, FloatProperty) + `
+VecPropertyBase.STRUCT =
+  nstructjs.inherit(VecPropertyBase, FloatProperty) +
+  `
   hasUniformSlider : bool | this.hasUniformSlider || false;
 }
 `;
-
 
 class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
@@ -14940,7 +14974,9 @@ class Vec2Property extends FloatProperty {
   }
 }
 
-Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, VecPropertyBase) + `
+Vec2Property.STRUCT =
+  nstructjs.inherit(Vec2Property, VecPropertyBase) +
+  `
   data : vec2;
 }
 `;
@@ -14982,7 +15018,9 @@ class Vec3Property extends VecPropertyBase {
   }
 }
 
-Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, VecPropertyBase) + `
+Vec3Property.STRUCT =
+  nstructjs.inherit(Vec3Property, VecPropertyBase) +
+  `
   data : vec3;
 }
 `;
@@ -15031,7 +15069,9 @@ class Vec4Property extends FloatProperty {
   }
 }
 
-Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, VecPropertyBase) + `
+Vec4Property.STRUCT =
+  nstructjs.inherit(Vec4Property, VecPropertyBase) +
+  `
   data : vec4;
 }
 `;
@@ -15067,7 +15107,9 @@ class QuatProperty extends ToolProperty$1 {
   }
 }
 
-QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, VecPropertyBase) + `
+QuatProperty.STRUCT =
+  nstructjs.inherit(QuatProperty, VecPropertyBase) +
+  `
   data : vec4;
 }
 `;
@@ -15082,7 +15124,7 @@ class Mat4Property extends ToolProperty$1 {
   }
 
   calcMemSize() {
-    return super.calcMemSize() + 16*8 + 32;
+    return super.calcMemSize() + 16 * 8 + 32;
   }
 
   equals(b) {
@@ -15126,7 +15168,9 @@ class Mat4Property extends ToolProperty$1 {
   }
 }
 
-Mat4Property.STRUCT = nstructjs.inherit(Mat4Property, FloatProperty) + `
+Mat4Property.STRUCT =
+  nstructjs.inherit(Mat4Property, FloatProperty) +
+  `
   data           : mat4;
 }
 `;
@@ -15138,8 +15182,8 @@ ToolProperty$1.internalRegister(Mat4Property);
  */
 class ListProperty extends ToolProperty$1 {
   /*
-  * Prop must be a ToolProperty subclass instance
-  * */
+   * Prop must be a ToolProperty subclass instance
+   * */
   constructor(prop, list = [], uiname = "") {
     super(PropTypes$8.PROPLIST);
 
@@ -15159,7 +15203,6 @@ class ListProperty extends ToolProperty$1 {
         prop = new prop();
       }
     }
-
 
     this.prop = prop;
     this.value = [];
@@ -15184,7 +15227,7 @@ class ListProperty extends ToolProperty$1 {
   splice(i, deleteCount, ...newItems) {
     const deletedItems = this.value.splice(i, deleteCount, ...newItems);
     this.length = this.value.length;
-    return deletedItems
+    return deletedItems;
   }
 
   calcMemSize() {
@@ -15195,7 +15238,7 @@ class ListProperty extends ToolProperty$1 {
       psize = this.value[0].calcMemSize();
     }
 
-    tot += psize*this.value.length + 8;
+    tot += psize * this.value.length + 8;
     tot += 16;
 
     return tot;
@@ -15258,7 +15301,7 @@ class ListProperty extends ToolProperty$1 {
 
   clear() {
     this.value.length = 0;
-    return this
+    return this;
   }
 
   getListItem(i) {
@@ -15310,14 +15353,15 @@ class ListProperty extends ToolProperty$1 {
   }
 }
 
-ListProperty.STRUCT = nstructjs.inherit(ListProperty, ToolProperty$1) + `
+ListProperty.STRUCT =
+  nstructjs.inherit(ListProperty, ToolProperty$1) +
+  `
   prop  : abstract(ToolProperty);
   value : array(abstract(ToolProperty));
 }`;
 nstructjs.register(ListProperty);
 
 ToolProperty$1.internalRegister(ListProperty);
-
 
 //like FlagsProperty but uses strings
 class StringSetProperty extends ToolProperty$1 {
@@ -15365,12 +15409,12 @@ class StringSetProperty extends ToolProperty$1 {
     let tot = super.calcMemSize();
 
     for (let k in this.values) {
-      tot += (k.length + 16)*5;
+      tot += (k.length + 16) * 5;
     }
 
     if (this.descriptions) {
       for (let k in this.descriptions) {
-        tot += (k.length + this.descriptions[k].length + 8)*4;
+        tot += (k.length + this.descriptions[k].length + 8) * 4;
       }
     }
 
@@ -15382,9 +15426,9 @@ class StringSetProperty extends ToolProperty$1 {
   }
 
   /*
-  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
-  * If destructive is true, then existing set will be cleared.
-  * */
+   * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+   * If destructive is true, then existing set will be cleared.
+   * */
   setValue(values, destructive = true, soft_fail = true) {
     let bad = typeof values !== "string";
     bad = bad && typeof values !== "object";
@@ -15403,8 +15447,7 @@ class StringSetProperty extends ToolProperty$1 {
     if (!values) {
       this.value.clear();
     } else if (typeof values === "string") {
-      if (destructive)
-        this.value.clear();
+      if (destructive) this.value.clear();
 
       if (!(values in this.values)) {
         if (soft_fail) {
@@ -15423,7 +15466,8 @@ class StringSetProperty extends ToolProperty$1 {
         for (let item of values) {
           data.push(item);
         }
-      } else { //object literal?
+      } else {
+        //object literal?
         for (let k in values) {
           data.push(k);
         }
@@ -15452,8 +15496,7 @@ class StringSetProperty extends ToolProperty$1 {
   }
 
   addIcons2(iconmap2) {
-    if (iconmap2 === undefined)
-      return;
+    if (iconmap2 === undefined) return;
 
     for (let k in iconmap2) {
       this.iconmap2[k] = iconmap2[k];
@@ -15463,8 +15506,7 @@ class StringSetProperty extends ToolProperty$1 {
   }
 
   addIcons(iconmap) {
-    if (iconmap === undefined)
-      return;
+    if (iconmap === undefined) return;
 
     for (let k in iconmap) {
       this.iconmap[k] = iconmap[k];
@@ -15537,7 +15579,9 @@ class StringSetProperty extends ToolProperty$1 {
   }
 }
 
-StringSetProperty.STRUCT = nstructjs.inherit(StringSetProperty, ToolProperty$1) + `
+StringSetProperty.STRUCT =
+  nstructjs.inherit(StringSetProperty, ToolProperty$1) +
+  `
   value  : iter(string);
   values : iterkeys(string);  
 }`;
@@ -21471,6 +21515,17 @@ class DataPath {
     }
   }
 
+   /**
+   * Provide a callback to update an enum or flags property dynamically
+   * Callback should call enumProp.updateDefinition to update the property.
+   *
+   * @param metaCB: (enumProp: EnumProperty|FlagsProperty) => void
+   */
+   dynamicMeta(metaCB) {
+     this.data.dynamicMeta(metaCB);
+     return this
+   }
+
   evalMassSetFilter() {
     this.flag |= DataFlags.USE_EVAL_MASS_SET_PATHS;
     return this;
@@ -24258,40 +24313,53 @@ const SplineTemplates = {
   SHARPER       : 6,
   SPHERE        : 7,
   REVERSE_LINEAR: 8,
-  GUASSIAN      : 9
+  GUASSIAN      : 9,
 };
 
 const templates = {
-  [SplineTemplates.CONSTANT]      : [
-    [1, 1], [1, 1]
+  [SplineTemplates.CONSTANT]: [
+    [1, 1],
+    [1, 1],
   ],
-  [SplineTemplates.LINEAR]        : [
-    [0, 0], [1, 1]
+  [SplineTemplates.LINEAR]: [
+    [0, 0],
+    [1, 1],
   ],
-  [SplineTemplates.SHARP]         : [
-    [0, 0], [0.9999, 0.0001], [1, 1]
+  [SplineTemplates.SHARP]: [
+    [0, 0],
+    [0.9999, 0.0001],
+    [1, 1],
   ],
-  [SplineTemplates.SQRT]          : [
-    [0, 0], [0.05, 0.25], [0.15, 0.45], [0.33, 0.65], [1, 1]
+  [SplineTemplates.SQRT]: [
+    [0, 0],
+    [0.05, 0.25],
+    [0.15, 0.45],
+    [0.33, 0.65],
+    [1, 1],
   ],
-  [SplineTemplates.SMOOTH]        : [
-    "DEG", 3, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
+  [SplineTemplates.SMOOTH]        : ["DEG", 3, [0, 0], [1.0 / 3.0, 0], [2.0 / 3.0, 1.0], [1, 1]],
+  [SplineTemplates.SMOOTHER]      : ["DEG", 6, [0, 0], [1.0 / 2.25, 0], [2.0 / 3.0, 1.0], [1, 1]],
+  [SplineTemplates.SHARPER]: [
+    [0, 0],
+    [0.3, 0.03],
+    [0.7, 0.065],
+    [0.9, 0.16],
+    [1, 1],
   ],
-  [SplineTemplates.SMOOTHER]      : [
-    "DEG", 6, [0, 0], [1.0/2.25, 0], [2.0/3.0, 1.0], [1, 1]
-  ],
-  [SplineTemplates.SHARPER]       : [
-    [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
-  ],
-  [SplineTemplates.SPHERE]        : [
-    [0, 0], [0.01953, 0.23438], [0.08203, 0.43359], [0.18359, 0.625], [0.35938, 0.81641], [0.625, 0.97656], [1, 1]
+  [SplineTemplates.SPHERE]: [
+    [0, 0],
+    [0.01953, 0.23438],
+    [0.08203, 0.43359],
+    [0.18359, 0.625],
+    [0.35938, 0.81641],
+    [0.625, 0.97656],
+    [1, 1],
   ],
   [SplineTemplates.REVERSE_LINEAR]: [
-    [0, 1], [1, 0]
+    [0, 1],
+    [1, 0],
   ],
-  [SplineTemplates.GUASSIAN]      : [
-    "DEG", 5, [0, 0], [0.17969, 0.007], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]
-  ]
+  [SplineTemplates.GUASSIAN]: ["DEG", 5, [0, 0], [0.17969, 0.007], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]],
 };
 
 //is initialized below
@@ -24303,7 +24371,7 @@ let RecalcFlags$1 = {
   ALL  : 3,
 
   //private flag
-  FULL_BASIS: 4
+  FULL_BASIS: 4,
 };
 
 function mySafeJSONStringify$1(obj) {
@@ -24323,13 +24391,10 @@ function mySafeJSONStringify$1(obj) {
 }
 
 function mySafeJSONParse$1(buf) {
-  return JSON.parse(buf, (key, val) => {
-
-  });
-};
+  return JSON.parse(buf, (key, val) => {});
+}
 
 window.mySafeJSONStringify = mySafeJSONStringify$1;
-
 
 let bin_cache = {};
 window._bin_cache = bin_cache;
@@ -24343,17 +24408,17 @@ let eval2_rets = cachering.fromConstructor(Vector2$a, 32);
 */
 
 function bez3$1(a, b, c, t) {
-  let r1 = a + (b - a)*t;
-  let r2 = b + (c - b)*t;
+  let r1 = a + (b - a) * t;
+  let r2 = b + (c - b) * t;
 
-  return r1 + (r2 - r1)*t;
+  return r1 + (r2 - r1) * t;
 }
 
 function bez4$1(a, b, c, d, t) {
   let r1 = bez3$1(a, b, c, t);
   let r2 = bez3$1(b, c, d, t);
 
-  return r1 + (r2 - r1)*t;
+  return r1 + (r2 - r1) * t;
 }
 
 function binomial(n, i) {
@@ -24367,8 +24432,7 @@ function binomial(n, i) {
 
   let key = "" + n + "," + i;
 
-  if (key in bin_cache)
-    return bin_cache[key];
+  if (key in bin_cache) return bin_cache[key];
 
   let ret = binomial(n - 1, i - 1) + bin(n - 1, i);
   bin_cache[key] = ret;
@@ -24381,8 +24445,8 @@ window.bin = binomial;
 class Curve1dBSplineOpBase extends ToolOp {
   static tooldef() {
     return {
-      inputs : {
-        dataPath: new StringProperty()
+      inputs: {
+        dataPath: new StringProperty(),
       },
       outputs: {},
     };
@@ -24408,7 +24472,7 @@ class Curve1dBSplineOpBase extends ToolOp {
   }
 
   getCurve1d(ctx) {
-    let {dataPath} = this.getInputs();
+    let { dataPath } = this.getInputs();
 
     let curve1d;
     try {
@@ -24437,9 +24501,8 @@ class Curve1dBSplineResetOp extends Curve1dBSplineOpBase {
       toolpath: "curve1d.reset_bspline",
       inputs  : ToolOp.inherit({}),
       outputs : {},
-    }
+    };
   }
-
 
   exec(ctx) {
     let curve1d = this.getCurve1d(ctx);
@@ -24455,17 +24518,16 @@ class Curve1dBSplineLoadTemplOp extends Curve1dBSplineOpBase {
   static tooldef() {
     return {
       toolpath: "curve1d.bspline_load_template",
-      inputs  : ToolOp.inherit({
-        template: new EnumProperty$9(SplineTemplates.SMOOTH, SplineTemplates)
+      inputs: ToolOp.inherit({
+        template: new EnumProperty$9(SplineTemplates.SMOOTH, SplineTemplates),
       }),
       outputs : {},
-    }
+    };
   }
-
 
   exec(ctx) {
     let curve1d = this.getCurve1d(ctx);
-    let {template} = this.getInputs();
+    let { template } = this.getInputs();
 
     if (curve1d) {
       curve1d.generators.active.loadTemplate(template);
@@ -24481,9 +24543,8 @@ class Curve1dBSplineDeleteOp extends Curve1dBSplineOpBase {
       toolpath: "curve1d.bspline_delete_point",
       inputs  : ToolOp.inherit({}),
       outputs : {},
-    }
+    };
   }
-
 
   exec(ctx) {
     let curve1d = this.getCurve1d(ctx);
@@ -24500,22 +24561,21 @@ class Curve1dBSplineSelectOp extends Curve1dBSplineOpBase {
   static tooldef() {
     return {
       toolpath: "curve1d.bspline_select_point",
-      inputs  : ToolOp.inherit({
+      inputs: ToolOp.inherit({
         point : new IntProperty(-1),
         state : new BoolProperty(true),
         unique: new BoolProperty(true),
       }),
       outputs : {},
-    }
+    };
   }
-
 
   exec(ctx) {
     let curve1d = this.getCurve1d(ctx);
 
     if (curve1d) {
       let bspline = curve1d.generators.active;
-      let {point, state, unique} = this.getInputs();
+      let { point, state, unique } = this.getInputs();
 
       for (let p of bspline.points) {
         if (p.eid === point) {
@@ -24540,20 +24600,19 @@ class Curve1dBSplineAddOp extends Curve1dBSplineOpBase {
   static tooldef() {
     return {
       toolpath: "curve1d.bspline_add_point",
-      inputs  : ToolOp.inherit({
+      inputs: ToolOp.inherit({
         x: new FloatProperty(),
-        y: new FloatProperty()
+        y: new FloatProperty(),
       }),
       outputs : {},
-    }
+    };
   }
-
 
   exec(ctx) {
     let curve1d = this.getCurve1d(ctx);
 
     if (curve1d) {
-      let {x, y} = this.getInputs();
+      let { x, y } = this.getInputs();
       curve1d.generators.active.addFromMouse(x, y);
     }
   }
@@ -24572,7 +24631,7 @@ class BSplineTransformOp extends ToolOp {
   static tooldef() {
     return {
       toolpath: "curve1d.transform_bspline",
-      inputs  : {
+      inputs: {
         dataPath: new StringProperty(),
         off     : new Vec2Property(),
         dpi     : new FloatProperty(1.0),
@@ -24589,7 +24648,7 @@ class BSplineTransformOp extends ToolOp {
 
     if (curve1d) {
       let bspline = curve1d.generators.active;
-      return Array.from(bspline.points).map(p => p.copy());
+      return Array.from(bspline.points).map((p) => p.copy());
     }
 
     return [];
@@ -24629,7 +24688,7 @@ class BSplineTransformOp extends ToolOp {
   }
 
   getCurve1d(ctx) {
-    let {dataPath} = this.getInputs();
+    let { dataPath } = this.getInputs();
 
     let curve1d;
     try {
@@ -24690,7 +24749,7 @@ class BSplineTransformOp extends ToolOp {
       curve1d.generators.active.fastmode = true;
     }
 
-    const {dpi} = this.getInputs();
+    const { dpi } = this.getInputs();
     let off = new Vector2$a(mpos).sub(this.start_mpos).mulScalar(dpi);
     off[1] = -off[1];
 
@@ -24715,9 +24774,10 @@ class BSplineTransformOp extends ToolOp {
     }
 
     let bspline = curve1d.generators.active;
-    let {off} = this.getInputs();
+    let { off } = this.getInputs();
 
-    const xRange = curve1d.xRange, yRange = curve1d.yRange;
+    const xRange = curve1d.xRange,
+      yRange = curve1d.yRange;
 
     for (let p of bspline.points) {
       if (p.flag & CurveFlags.SELECT) {
@@ -24842,7 +24902,7 @@ class Curve1DPoint {
 
     splineCache.update(this);
   }
-};
+}
 Curve1DPoint.STRUCT = `
 Curve1DPoint {
   co      : vec2;
@@ -24978,8 +25038,8 @@ class BSplineCurve extends CurveTypeData {
     return {
       uiname  : "B-Spline",
       name    : "bspline",
-      typeName: "BSplineCurve"
-    }
+      typeName: "BSplineCurve",
+    };
   }
 
   calcHashKey(digest = _udigest$3.reset()) {
@@ -24992,8 +25052,8 @@ class BSplineCurve extends CurveTypeData {
     d.add(this.points.length);
 
     for (let p of this.points) {
-      let x = ~~(p.co[0]*1024);
-      let y = ~~(p.co[1]*1024);
+      let x = ~~(p.co[0] * 1024);
+      let y = ~~(p.co[1] * 1024);
 
       d.add(x);
       d.add(y);
@@ -25109,7 +25169,8 @@ class BSplineCurve extends CurveTypeData {
     if (points.length < 2) {
       return;
     }
-    let a = points[0].co[0], b = points[points.length - 1].co[0];
+    let a = points[0].co[0],
+      b = points[points.length - 1].co[0];
 
     let degExtra = this.deg;
     this._degOffset = -this.deg;
@@ -25134,7 +25195,8 @@ class BSplineCurve extends CurveTypeData {
 
     for (let i = 0; i < points.length; i++) {
       let p = points[i];
-      let x = p.co[0], y = p.co[1];//this.evaluate(x);
+      let x = p.co[0],
+        y = p.co[1]; //this.evaluate(x);
 
       p.sco[0] = x;
       p.sco[1] = y;
@@ -25147,10 +25209,10 @@ class BSplineCurve extends CurveTypeData {
     let ret = super.toJSON();
 
     ret = Object.assign(ret, {
-      points       : this.points.map(p => p.toJSON()),
+      points       : this.points.map((p) => p.toJSON()),
       deg          : this.deg,
       interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON()
+      eidgen       : this.eidgen.toJSON(),
     });
 
     return ret;
@@ -25197,11 +25259,11 @@ class BSplineCurve extends CurveTypeData {
     }
 
     i = Math.min(Math.max(i, 0), this._ps.length - 1);
-    t = Math.min(Math.max(t, 0.0), 1.0)*0.999999999;
+    t = Math.min(Math.max(t, 0.0), 1.0) * 0.999999999;
 
     let table = this.basis_tables[i];
 
-    let s = t*(table.length/4)*0.99999;
+    let s = t * (table.length / 4) * 0.99999;
 
     let j = ~~s;
     s -= j;
@@ -25250,27 +25312,27 @@ class BSplineCurve extends CurveTypeData {
     let table = this.hermite;
 
     let eps = 0.00001;
-    let dt = (1.0 - eps*4.001)/(steps - 1);
-    let t = eps*4;
+    let dt = (1.0 - eps * 4.001) / (steps - 1);
+    let t = eps * 4;
     let lastdv1, lastf3;
 
     for (let j = 0; j < steps; j++, t += dt) {
-      let f1 = this._evaluate(t - eps*2);
+      let f1 = this._evaluate(t - eps * 2);
       let f2 = this._evaluate(t - eps);
       let f3 = this._evaluate(t);
       let f4 = this._evaluate(t + eps);
-      let f5 = this._evaluate(t + eps*2);
+      let f5 = this._evaluate(t + eps * 2);
 
-      let dv1 = (f4 - f2)/(eps*2);
+      let dv1 = (f4 - f2) / (eps * 2);
       dv1 /= steps;
 
       if (j > 0) {
         let j2 = j - 1;
 
-        table[j2*4] = lastf3;
-        table[j2*4 + 1] = lastf3 + lastdv1/3.0;
-        table[j2*4 + 2] = f3 - dv1/3.0;
-        table[j2*4 + 3] = f3;
+        table[j2 * 4] = lastf3;
+        table[j2 * 4 + 1] = lastf3 + lastdv1 / 3.0;
+        table[j2 * 4 + 2] = f3 - dv1 / 3.0;
+        table[j2 * 4 + 3] = f3;
       }
 
       lastdv1 = dv1;
@@ -25286,7 +25348,6 @@ class BSplineCurve extends CurveTypeData {
     }
 
     let points = this.points.concat(this.points);
-
 
     this._evaluate2(0.5);
 
@@ -25334,7 +25395,7 @@ class BSplineCurve extends CurveTypeData {
           let r2 = error(p);
           p.rco[i] = orig;
 
-          g[i] = (r2 - r1)/df;
+          g[i] = (r2 - r1) / df;
         }
 
         let totgs = g.dot(g);
@@ -25346,8 +25407,8 @@ class BSplineCurve extends CurveTypeData {
         r1 /= totgs;
         let k = 0.5;
 
-        p.rco[0] += -r1*g[0]*k;
-        p.rco[1] += -r1*g[1]*k;
+        p.rco[0] += -r1 * g[0] * k;
+        p.rco[1] += -r1 * g[1] * k;
       }
 
       let th = this.fastmode ? 0.001 : 0.00005;
@@ -25377,15 +25438,15 @@ class BSplineCurve extends CurveTypeData {
     this.basis_tables = new Array(this._ps.length);
 
     for (let i = 0; i < this._ps.length; i++) {
-      let table = this.basis_tables[i] = new Array((steps - 1)*4);
+      let table = (this.basis_tables[i] = new Array((steps - 1) * 4));
 
       let eps = 0.00001;
-      let dt = (1.0 - eps*8)/(steps - 1);
-      let t = eps*4;
-      let lastdv1 = 0.0, lastf3 = 0.0;
+      let dt = (1.0 - eps * 8) / (steps - 1);
+      let t = eps * 4;
+      let lastdv1 = 0.0,
+        lastf3 = 0.0;
 
       for (let j = 0; j < steps; j++, t += dt) {
-
         let f3 = this._basis(t, i);
         let dv1;
 
@@ -25395,7 +25456,7 @@ class BSplineCurve extends CurveTypeData {
           let f4 = this._basis(t + eps, i);
           //let f5 = this._basis(t + eps*2, i);
 
-          dv1 = (f4 - f2)/(eps*2);
+          dv1 = (f4 - f2) / (eps * 2);
         } else {
           dv1 = this._dbasis(t, i);
         }
@@ -25413,10 +25474,10 @@ class BSplineCurve extends CurveTypeData {
         if (j > 0) {
           let j2 = j - 1;
 
-          table[j2*4] = lastf3;
-          table[j2*4 + 1] = lastf3 + lastdv1/3.0;
-          table[j2*4 + 2] = f3 - dv1/3.0;
-          table[j2*4 + 3] = f3;
+          table[j2 * 4] = lastf3;
+          table[j2 * 4 + 1] = lastf3 + lastdv1 / 3.0;
+          table[j2 * 4 + 2] = f3 - dv1 / 3.0;
+          table[j2 * 4 + 3] = f3;
         }
 
         lastdv1 = dv1;
@@ -25430,7 +25491,7 @@ class BSplineCurve extends CurveTypeData {
     let ps = this._ps;
 
     function safe_inv(n) {
-      return n === 0 ? 0 : 1.0/n;
+      return n === 0 ? 0 : 1.0 / n;
     }
 
     /*
@@ -25454,11 +25515,10 @@ class BSplineCurve extends CurveTypeData {
       if (n === 0) {
         return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
       } else {
+        let a = (s - ps[ki].rco[0]) * safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s) * safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
 
-        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
-        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
-
-        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+        return a * bas(s, i, n - 1) + b * bas(s, i + 1, n - 1);
       }
     }
 
@@ -25477,14 +25537,17 @@ class BSplineCurve extends CurveTypeData {
         return 0;
         //return s >= ki && s < kn ? 1 : 0;
       } else {
-        let div = ((ki - knn)*(kn - knn1));
+        let div = (ki - knn) * (kn - knn1);
 
         if (div === 0.0) {
           return 0.0;
         }
 
-        return (((ki - s)*dbas(s, j, n - 1) - bas(s, j, n - 1))*(kn - knn1) - ((knn1 -
-          s)*dbas(s, j + 1, n - 1) - bas(s, j + 1, n - 1))*(ki - knn))/div;
+        return (
+          (((ki - s) * dbas(s, j, n - 1) - bas(s, j, n - 1)) * (kn - knn1) -
+            ((knn1 - s) * dbas(s, j + 1, n - 1) - bas(s, j + 1, n - 1)) * (ki - knn)) /
+          div
+        );
       }
     }
 
@@ -25497,7 +25560,7 @@ class BSplineCurve extends CurveTypeData {
     let ps = this._ps;
 
     function safe_inv(n) {
-      return n === 0 ? 0 : 1.0/n;
+      return n === 0 ? 0 : 1.0 / n;
     }
 
     function bas(s, i, n) {
@@ -25510,15 +25573,16 @@ class BSplineCurve extends CurveTypeData {
       if (n === 0) {
         return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
       } else {
+        let a = (s - ps[ki].rco[0]) * safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s) * safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
 
-        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
-        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
-
-        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+        return a * bas(s, i, n - 1) + b * bas(s, i + 1, n - 1);
       }
     }
 
-    let p = this._ps[i].rco, nk, pk;
+    let p = this._ps[i].rco,
+      nk,
+      pk;
     let deg = this.deg;
 
     let b = bas(t, i + this._degOffset, deg);
@@ -25531,14 +25595,15 @@ class BSplineCurve extends CurveTypeData {
       return 0.0;
     }
 
-    let a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
+    let a = this.points[0].rco,
+      b = this.points[this.points.length - 1].rco;
 
     if (t < a[0]) return a[1];
     if (t > b[0]) return b[1];
 
     if (this.points.length === 2) {
-      t = (t - a[0])/(b[0] - a[0]);
-      return a[1] + (b[1] - a[1])*t;
+      t = (t - a[0]) / (b[0] - a[0]);
+      return a[1] + (b[1] - a[1]) * t;
     }
 
     if (this.recalc) {
@@ -25555,14 +25620,14 @@ class BSplineCurve extends CurveTypeData {
     t *= 0.999999;
 
     let table = this.hermite;
-    let s = t*(table.length/4);
+    let s = t * (table.length / 4);
 
     let i = Math.floor(s);
     s -= i;
 
     i *= 4;
 
-    return table[i] + (table[i + 3] - table[i])*s;
+    return table[i] + (table[i + 3] - table[i]) * s;
   }
 
   /* Root find t on the x axis of the curve.  This
@@ -25579,7 +25644,8 @@ class BSplineCurve extends CurveTypeData {
     let xmax = this.points[this.points.length - 1].rco[0];
 
     let steps = this.fastmode ? 16 : 32;
-    let s = xmin, ds = (xmax - xmin)/(steps - 1);
+    let s = xmin,
+      ds = (xmax - xmin) / (steps - 1);
 
     let miny;
     let mins;
@@ -25596,7 +25662,8 @@ class BSplineCurve extends CurveTypeData {
       }
     }
 
-    let start = mins - ds, end = mins + ds;
+    let start = mins - ds,
+      end = mins + ds;
     s = mins;
 
     for (let i = 0; i < 16; i++) {
@@ -25608,7 +25675,7 @@ class BSplineCurve extends CurveTypeData {
         start = s;
       }
 
-      s = (start + end)*0.5;
+      s = (start + end) * 0.5;
       miny = p[1];
     }
 
@@ -25667,8 +25734,8 @@ class BSplineCurve extends CurveTypeData {
       let p = this._ps[i].rco;
       let b = this.basis(t, i);
 
-      sumx += b*p[0];
-      sumy += b*p[1];
+      sumx += b * p[0];
+      sumy += b * p[1];
 
       totbasis += b;
     }
@@ -25695,7 +25762,7 @@ class BSplineCurve extends CurveTypeData {
       isTouch        : true,
       commandKey     : e.commandKey,
       stopPropagation: () => e.stopPropagation(),
-      preventDefault : () => e.preventDefault()
+      preventDefault : () => e.preventDefault(),
     };
   }
 
@@ -25792,7 +25859,7 @@ class BSplineCurve extends CurveTypeData {
       g           : canvas.g,
       transforming: false,
       draw_trans  : drawTransform,
-      datapath
+      datapath,
     };
 
     console.warn("Building gui");
@@ -25817,7 +25884,7 @@ class BSplineCurve extends CurveTypeData {
         if (datapath) {
           row.ctx.api.execTool(row.ctx, "curve1d.bspline_load_template", {
             dataPath: datapath,
-            template: SplineTemplates[k]
+            template: SplineTemplates[k],
           });
           onSourceUpdate();
         } else {
@@ -25854,7 +25921,7 @@ class BSplineCurve extends CurveTypeData {
     row.iconbutton(icon, "Delete Point", () => {
       if (datapath) {
         row.ctx.api.execTool(row.ctx, "curve1d.bspline_delete_point", {
-          dataPath: datapath
+          dataPath: datapath,
         });
       } else {
         this.deletePoint();
@@ -25867,7 +25934,7 @@ class BSplineCurve extends CurveTypeData {
     row.button("Reset", () => {
       if (datapath) {
         row.ctx.api.execTool(row.ctx, "curve1d.reset_bspline", {
-          dataPath: datapath
+          dataPath: datapath,
         });
         onSourceUpdate();
       } else {
@@ -25876,14 +25943,14 @@ class BSplineCurve extends CurveTypeData {
     });
 
     let slider = row.simpleslider(undefined, {
-      name      : "Degree",
-      min       : 1,
-      max       : 7,
-      isInt     : true,
-      callback  : (slider) => {
+      name    : "Degree",
+      min     : 1,
+      max     : 7,
+      isInt   : true,
+      callback: (slider) => {
         this.deg = Math.floor(slider.value);
         fullUpdate();
-      }
+      },
     });
     slider.setValue(this.deg);
 
@@ -25939,7 +26006,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   start_transform(useSelected = true) {
-    let dpi = 1.0/this.uidata.draw_trans[0];
+    let dpi = 1.0 / this.uidata.draw_trans[0];
 
     /* Manually set p.startco to avoid trashing it
      * if we're proxying another Curve1D.*/
@@ -25952,7 +26019,6 @@ class BSplineCurve extends CurveTypeData {
     transform_op.inputs.dpi.setValue(dpi);
 
     this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, transform_op);
-
   }
 
   on_mousedown(e) {
@@ -25960,7 +26026,8 @@ class BSplineCurve extends CurveTypeData {
     this.fastmode = true;
 
     let mpos = this.transform_mpos(e.x, e.y);
-    let x = mpos[0], y = mpos[1];
+    let x = mpos[0],
+      y = mpos[1];
     this.do_highlight(x, y);
 
     if (this.points.highlight !== undefined) {
@@ -25980,8 +26047,8 @@ class BSplineCurve extends CurveTypeData {
         this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_select_point", {
           dataPath: this.uidata.datapath,
           state,
-          unique  : !e.shiftKey,
-          point   : this.points.highlight.eid,
+          unique: !e.shiftKey,
+          point : this.points.highlight.eid,
         });
       }
       this.start_transform();
@@ -26074,12 +26141,16 @@ class BSplineCurve extends CurveTypeData {
 
   do_highlight(x, y) {
     let trans = this.uidata.draw_trans;
-    let mindis = 1e17, minp = undefined;
-    let limit = 19/trans[0], limitsqr = limit*limit;
+    let mindis = 1e17,
+      minp = undefined;
+    let limit = 19 / trans[0],
+      limitsqr = limit * limit;
 
     for (let i = 0; i < this.points.length; i++) {
       let p = this.points[i];
-      let dx = x - p.sco[0], dy = y - p.sco[1], dis = dx*dx + dy*dy;
+      let dx = x - p.sco[0],
+        dy = y - p.sco[1],
+        dis = dx * dx + dy * dy;
 
       if (dis < mindis && dis < limitsqr) {
         mindis = dis;
@@ -26124,8 +26195,8 @@ class BSplineCurve extends CurveTypeData {
 
     let trans = this.uidata.draw_trans;
 
-    x = x/trans[0] - trans[1][0];
-    y = -y/trans[0] - trans[1][1];
+    x = x / trans[0] - trans[1][0];
+    y = -y / trans[0] - trans[1][1];
 
     return [x, y];
   }
@@ -26136,7 +26207,8 @@ class BSplineCurve extends CurveTypeData {
     }
 
     let mpos = this.transform_mpos(e.x, e.y);
-    let x = mpos[0], y = mpos[1];
+    let x = mpos[0],
+      y = mpos[1];
 
     if (this.uidata.transforming) {
       this.do_transform(x, y);
@@ -26192,7 +26264,8 @@ class BSplineCurve extends CurveTypeData {
     this.uidata.g = g;
     this.uidata.draw_trans = draw_trans;
 
-    let sz = draw_trans[0], pan = draw_trans[1];
+    let sz = draw_trans[0],
+      pan = draw_trans[1];
     g.lineWidth *= 1.5;
     let strokeStyle = g.strokeStyle;
 
@@ -26204,7 +26277,7 @@ class BSplineCurve extends CurveTypeData {
         g.beginPath();
 
         let f = 0;
-        let df = 1.0/(steps - 1);
+        let df = 1.0 / (steps - 1);
         for (let i = 0; i < steps; i++, f += df) {
           let totbasis = 0;
 
@@ -26214,13 +26287,13 @@ class BSplineCurve extends CurveTypeData {
 
           let val = this.basis(f, si);
 
-          if (ssi)
-            val /= (totbasis === 0 ? 1 : totbasis);
+          if (ssi) val /= totbasis === 0 ? 1 : totbasis;
 
-          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5);
+          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val * 0.5);
         }
 
-        let color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
+        let color,
+          alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
 
         if (ssi) {
           color = "rgba(205, 125, 5," + alpha + ")";
@@ -26248,7 +26321,7 @@ class BSplineCurve extends CurveTypeData {
         g.fillStyle = "orange";
       }
 
-      g.rect(p.sco[0] - w/2, p.sco[1] - w/2, w, w);
+      g.rect(p.sco[0] - w / 2, p.sco[1] - w / 2, w, w);
 
       g.fill();
     }
@@ -26275,7 +26348,9 @@ class BSplineCurve extends CurveTypeData {
   }
 }
 
-BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
+BSplineCurve.STRUCT =
+  nstructjs.inherit(BSplineCurve, CurveTypeData) +
+  `
   points         : array(Curve1DPoint);
   highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
   deg            : int;
@@ -26286,14 +26361,13 @@ BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
 nstructjs.register(BSplineCurve);
 CurveTypeData.register(BSplineCurve);
 
-
 function makeSplineTemplateIcons(size = 64) {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     /* inside a web worker? */
-    return
+    return;
   }
   let dpi = devicePixelRatio;
-  size = ~~(size*dpi);
+  size = ~~(size * dpi);
 
   for (let k in SplineTemplates) {
     let curve = new BSplineCurve();
@@ -26312,20 +26386,20 @@ function makeSplineTemplateIcons(size = 64) {
     let scale = 0.5;
 
     g.translate(-0.5, -0.5);
-    g.scale(size*scale, size*scale);
+    g.scale(size * scale, size * scale);
     g.translate(0.5, 0.5);
 
     //margin
     let m = 0.0;
 
-    let tent = f => 1.0 - Math.abs(Math.fract(f) - 0.5)*2.0;
+    let tent = (f) => 1.0 - Math.abs(Math.fract(f) - 0.5) * 2.0;
 
     for (let i = 0; i < steps; i++) {
-      let s = i/(steps - 1);
+      let s = i / (steps - 1);
       let f = 1.0 - curve.evaluate(tent(s));
 
-      s = s*(1.0 - m*2.0) + m;
-      f = f*(1.0 - m*2.0) + m;
+      s = s * (1.0 - m * 2.0) + m;
+      f = f * (1.0 - m * 2.0) + m;
 
       //s += 0.5;
       //f += 0.5;
@@ -26341,11 +26415,11 @@ function makeSplineTemplateIcons(size = 64) {
 
     g.lineCap = "round";
     g.strokeStyle = "black";
-    g.lineWidth = ls*3*dpi/(size*scale);
+    g.lineWidth = (ls * 3 * dpi) / (size * scale);
     g.stroke();
 
     g.strokeStyle = "white";
-    g.lineWidth = ls*dpi/(size*scale);
+    g.lineWidth = (ls * dpi) / (size * scale);
     g.stroke();
 
     let url = canvas.toDataURL();
@@ -26367,7 +26441,6 @@ function initSplineTemplates() {
   splineTemplatesLoaded = true;
 
   for (let k in SplineTemplates) {
-    console.log("Loading spline template", k);
     let curve = new BSplineCurve();
     curve.loadTemplate(SplineTemplates[k]);
     splineCache.get(curve);
@@ -26375,6 +26448,7 @@ function initSplineTemplates() {
 
   makeSplineTemplateIcons();
   window._SplineTemplateIcons = SplineTemplateIcons;
+  console.log("Loaded 1d spline templates");
 }
 
 //delay to ensure config is fully loaded
@@ -30047,6 +30121,1706 @@ Curve1DProperty.STRUCT = inherit$1(Curve1DProperty, ToolProperty$1) + `
 register$1(Curve1DProperty);
 ToolProperty$1.internalRegister(Curve1DProperty);
 
+const SocketFlags = {
+  UPDATE: 1
+};
+const NodeFlags = {
+  UPDATE   : 1,
+  SORT_TAG1: 2,
+  SORT_TAG2: 4,
+};
+const RecalcFlags = {
+  RUN   : 1,
+  RESORT: 2
+};
+const SocketTypes = {
+  INPUT : "inputs",
+  OUTPUT: "outputs"
+};
+
+let graphIdGen = 1;
+
+class EventSocket {
+  static socketDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+  }
+
+  name = ""
+  id = graphIdGen++;
+  flag = 0;
+
+  edges = [];
+  node = undefined;
+
+  type = undefined;
+
+  constructor(node) {
+    this.node = node;
+  }
+
+  get value() {
+    throw new Error("implement me!");
+  }
+
+  set value(v) {
+    this.flagUpdate();
+  }
+
+  get isUpdated() {
+    return this.flag & SocketFlags.UPDATE;
+  }
+
+  copyFrom(b) {
+    this.name = b.name;
+    this.flag = b.flag;
+
+    return this;
+  }
+
+  copy() {
+    return (new this.constructor()).copyFrom(this);
+  }
+
+  flagUpdate() {
+    this.flag |= SocketFlags.UPDATE;
+
+    if (!this.node) {
+      return;
+    }
+
+    if (this.type === SocketTypes.INPUT) {
+      this.node.flagUpdate();
+    } else {
+      for (let sockb of this.edges) {
+        sockb.flag |= SocketFlags.UPDATE;
+        sockb.node.flagUpdate();
+      }
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.node) {
+      this.node.flagResort();
+    }
+
+    return this;
+  }
+
+  connect(sockb) {
+    this.edges.push(sockb);
+    sockb.edges.push(this);
+    return this;
+  }
+
+  hasNode(node) {
+    for (let sockb of this.edges) {
+      if (sockb.node === node || sockb.node.owner === node) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  has(sockb) {
+    return this.edges.indexOf(sockb) >= 0;
+  }
+
+  disconnect(sockb = undefined) {
+    this.flagResort();
+
+    if (sockb === undefined) {
+      /* Disconnect all. */
+      for (let sock of this.edges) {
+        sock.flagUpdate();
+        sock.edges.remove(this);
+      }
+
+      this.edges.length = 0;
+      return this;
+    }
+
+    sockb.flagUpdate();
+    this.edges.remove(sockb);
+    return this;
+  }
+}
+
+const NodeClasses = [];
+
+//Interface
+class NodeCapable {
+  graphNode = undefined;
+
+  static graphNodeDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+
+    /* Sockets inherit. */
+    inputs : {},
+    outputs: {}
+  };
+
+  graphExec() {
+  }
+}
+
+class EventNode {
+  owner = undefined;
+  inputs = {};
+  outputs = {};
+  allsockets = [];
+  graph = undefined;
+  sortIndex = -1;
+  id = graphIdGen++;
+  flag = 0;
+
+  static register(cls, def) {
+    cls.graphNodeDef = def;
+    if (!def.typeName) {
+      throw new Error("Missing graphNodeDef.typeName")
+    }
+
+    NodeClasses.push(cls);
+
+    return def;
+  }
+
+  addSocket(type, key, sock) {
+    this[type][key] = sock;
+    sock.name = key;
+    sock.node = this;
+    sock.type = type;
+
+    return this;
+  }
+
+  static isNodeCapable(cls) {
+    return cls.graphNodeDef !== undefined;
+  }
+
+  constructor(owner) {
+    this.owner = owner;
+
+    let cls = owner.constructor;
+
+    let getSockets = (key) => {
+      let socks = {};
+
+      let p = cls;
+      while (p) {
+        if (p.graphNodeDef) {
+          let socksDef = p.graphNodeDef[key] || {};
+
+          for (let k in socksDef) {
+            if (!(k in socks)) {
+              socks[k] = socksDef[k].copy();
+              socks[k].name = k;
+              socks[k].node = this;
+              socks[k].type = key;
+
+              this.allsockets.push(socks[k]);
+            }
+          }
+        }
+        p = p.__proto__;
+      }
+
+      return socks;
+    };
+
+    this.inputs = getSockets("inputs");
+    this.outputs = getSockets("outputs");
+  }
+
+  static init(owner) {
+    owner.graphNode = new EventNode(owner);
+    return owner.graphNode;
+  }
+
+  flagUpdate() {
+    this.flag |= NodeFlags.UPDATE;
+
+    if (this.graph) {
+      this.graph.flagUpdate(this);
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.graph) {
+      this.graph.flagResort(this);
+    }
+    return this;
+  }
+}
+
+class EventGraph {
+  nodes = [];
+  flag = 0;
+  nodeIdMap = new Map()
+  sockIdMap = new Map()
+  sortlist = [];
+  queueReq = undefined;
+  #skipQueueExec = 0;
+
+  constructor() {
+  }
+
+  add(node) {
+    node = this.eventNode(node);
+
+    node.graph = this;
+    this.nodeIdMap.set(node.id, node);
+
+    this.nodes.push(node);
+    this.flagResort(node);
+    this.flagUpdate(node);
+  }
+
+  has(node) {
+    node = this.eventNode(node);
+    return this.nodeIdMap.has(node.id);
+  }
+
+  eventNode(node) {
+    if (!(node instanceof EventNode)) {
+      node = node.graphNode;
+    }
+
+    if (node === undefined) {
+      console.warn("Not an event node:", arguments[0]);
+      throw new Error("Not an event node");
+    }
+
+    return node;
+  }
+
+  remove(node) {
+    node = this.eventNode(node);
+
+    if (node === undefined) {
+      throw new Error("EventGraph.prototype.remove(): node was undefined");
+    }
+
+    if (!this.nodeIdMap.get(node.id)) {
+      throw new Error("Node is not in event graph");
+    }
+
+    this.nodeIdMap.delete(node.id);
+
+    for (let sock of Array.from(node.eventNode.allsockets)) {
+      this.sockIdMap.delete(sock.id);
+
+      try {
+        sock.disconnect();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to disconnect a socket");
+      }
+    }
+
+    node.graph = undefined;
+    this.nodes.remove(node);
+    this.flagResort();
+  }
+
+  flagResort(node) {
+    if (node) {
+      node = this.eventNode(node);
+    }
+
+    this.flag |= RecalcFlags.RESORT | RecalcFlags.RUN;
+
+    return this;
+  }
+
+  flagUpdate(node) {
+    node = this.eventNode(node);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (!this.#skipQueueExec) {
+      this.queueExec();
+    }
+
+    return this;
+  }
+
+  sort() {
+    console.warn("Sorting Graph");
+
+    this.flag &= ~RecalcFlags.RESORT;
+
+    for (let n of this.nodes) {
+      n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
+    }
+
+    let sortlist = this.sortlist;
+    this.sortlist.length = 0;
+
+    let dosort = (n) => {
+      if (n.flag & NodeFlags.SORT_TAG2) {
+        console.error("Cycle in event dag!", n);
+        return;
+      }
+
+      n.flag |= NodeFlags.SORT_TAG2;
+
+      for (let [k, socka] of Object.entries(n.inputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+
+      n.flag &= ~NodeFlags.SORT_TAG2;
+      n.flag |= NodeFlags.SORT_TAG1;
+      n.sortIndex = sortlist.length;
+      sortlist.push(n);
+
+      for (let [k, socka] of Object.entries(n.outputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+    };
+
+    for (let n of this.nodes) {
+      if (!(n.flag & NodeFlags.SORT_TAG1)) {
+        dosort(n);
+      }
+    }
+  }
+
+  queueExec() {
+    console.warn("queueExec", this.queueReq);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (this.queueReq !== undefined) {
+      return;
+    }
+
+    this.queueReq = true;
+    this.queueReq = window.setTimeout(() => {
+      this.queueReq = undefined;
+      this.exec();
+    }, 0);
+  }
+
+  exec() {
+    this.flag &= ~RecalcFlags.RUN;
+
+    if (this.flag & RecalcFlags.RESORT) {
+      this.sort();
+    }
+
+    console.warn("Executing Graph");
+
+    this.#skipQueueExec++;
+
+    let sortlist = this.sortlist;
+    for (let n of sortlist) {
+      if (!(n.flag & NodeFlags.UPDATE)) {
+        continue;
+      }
+
+      try {
+        n.owner.graphExec();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Error during event graph execution");
+      }
+
+      n.flag &= ~NodeFlags.UPDATE;
+
+      for (let k in n.inputs) {
+        let sock = n.inputs[k];
+        sock.flag &= ~SocketFlags.UPDATE;
+      }
+
+      for (let k in n.outputs) {
+        let sock = n.outputs[k];
+
+        if (sock.flag & SocketFlags.UPDATE) {
+          for (let sockb of sock.edges) {
+            sockb.flag |= SocketFlags.UPDATE;
+            sockb.node.flag |= SocketFlags.UPDATE;
+          }
+
+          sock.flag &= ~SocketFlags.UPDATE;
+        }
+      }
+    }
+
+    this.#skipQueueExec--;
+  }
+}
+
+const theEventGraph = new EventGraph();
+
+const strBoolMap = {
+  "true" : "false",
+  "false": "true",
+  "on"   : "off",
+  "off"  : "on",
+  "yes"  : "no",
+  "no"   : "yes",
+};
+
+class DependSocket extends EventSocket {
+  static socketDef = {
+    typeName: "depend",
+    uiName  : "depend",
+    flag    : 0,
+  }
+
+  #value = undefined;
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(v) {
+    this.#value = v;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#value = b.#value;
+
+    return this;
+  }
+}
+
+const PropSocketModes = {
+  REPLACE: 0,
+  MIN    : 1,
+  MAX    : 2,
+};
+
+class PropertySocket extends EventSocket {
+  static socketDef = {
+    typeName: "property_socket",
+    uiName  : "Property Socket",
+    flag    : 0,
+  }
+
+  mixMode = PropSocketModes.REPLACE;
+
+  #binding = {
+    obj: null,
+    key: "",
+  }
+
+  #callbacks = []; //(newval, oldval) => val
+  #invert = false; //Invert bool or number properties
+
+  oldValue = undefined;
+
+  mode(mixmode) {
+    this.mixMode = mixmode;
+    return this;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#invert = b.#invert;
+    this.#callbacks = Array.from(b.#callbacks);
+    this.#binding = b.#binding;
+
+    return this;
+  }
+
+  invert(state = true) {
+    this.#invert = state;
+    return this;
+  }
+
+  callback(cb) {
+    this.#callbacks.push(cb);
+    return this;
+  }
+
+  get value() {
+    let bind = this.#binding;
+    return bind.obj ? bind.obj[bind.key] : undefined;
+  }
+
+  set value(v) {
+    let old = this.value;
+    if (this.#callbacks.length > 0) {
+      for (let cb of this.#callbacks) {
+        v = cb(v, old);
+      }
+    }
+
+    if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
+      v = !v;
+    } else if (this.#invert && typeof v === "string") {
+      let s = v.toLowerCase().trim();
+      if (s in strBoolMap) {
+        v = strBoolMap[s];
+      }
+    }
+
+    let bind = this.#binding;
+    if (bind.obj) {
+      bind.obj[bind.key] = v;
+    } else {
+      console.warn("Attempt to set unbound property socket", this);
+    }
+  }
+
+  bind(obj, key) {
+    this.#binding.obj = obj;
+    this.#binding.key = key;
+
+    return this;
+  }
+}
+
+var eventdag = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  SocketFlags: SocketFlags,
+  NodeFlags: NodeFlags,
+  RecalcFlags: RecalcFlags,
+  SocketTypes: SocketTypes,
+  EventSocket: EventSocket,
+  NodeCapable: NodeCapable,
+  EventNode: EventNode,
+  EventGraph: EventGraph,
+  theEventGraph: theEventGraph,
+  DependSocket: DependSocket,
+  PropSocketModes: PropSocketModes,
+  PropertySocket: PropertySocket
+});
+
+class Constraint {
+  constructor(name, func, klst, params, k = 1.0) {
+    this.glst = [];
+    this.klst = klst;
+    this.wlst = [];
+    this.k = k;
+    this.params = params;
+    this.name = name;
+
+    for (let ks of klst) {
+      this.glst.push(new Float64Array(ks.length));
+      const ws = new Float64Array(ks.length);
+
+      for (let i = 0; i < ws.length; i++) {
+        ws[i] = 1.0;
+      }
+
+      this.wlst.push(ws);
+    }
+
+    this.df = 0.0005;
+    this.threshold = 0.0001;
+    if (func !== undefined) { /* Happens with subclass-style constraints. */
+      this.func = func;
+    }
+    if (!this.funcDv) {
+      this.funcDv = null;
+    }
+  }
+
+  postSolve() {
+  }
+
+  evaluate(no_dvs = false) {
+    let r1 = this.func(this.params);
+
+    if (this.funcDv) {
+      this.funcDv(this.params, this.glst);
+      return r1;
+    }
+
+    if (Math.abs(r1) < this.threshold)
+      return 0.0;
+
+    let df = this.df;
+
+    if (no_dvs)
+      return r1;
+
+    for (let i = 0; i < this.klst.length; i++) {
+      let gs = this.glst[i];
+      let ks = this.klst[i];
+
+      for (let j = 0; j < ks.length; j++) {
+        let orig = ks[j];
+        ks[j] += df;
+        let r2 = this.func(this.params);
+        ks[j] = orig;
+
+        gs[j] = (r2 - r1)/df;
+      }
+    }
+
+    return r1;
+  }
+}
+
+class Solver {
+  constructor() {
+    this.constraints = [];
+    this.gk = 0.99;
+    this.simple = false;
+    this.randCons = false;
+
+    /** stop when average constraint error falls below this */
+    this.threshold = 0.01;
+  }
+
+  remove(con) {
+    this.constraints.remove(con);
+  }
+
+  add(con) {
+    this.constraints.push(con);
+  }
+
+  solveStep(gk = this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci = 0; ci < cons.length; ci++) {
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j = 0; j < ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0) {
+        continue;
+      }
+
+      r1 /= totgs;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -r1*gs[j]*con.k*gk*ws[j];
+        }
+
+        con.postSolve();
+      }
+    }
+
+    return err;
+  }
+
+  solveStepSimple(gk = this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci = 0; ci < cons.length; ci++) {
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j = 0; j < ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0) {
+        continue;
+      }
+
+      totgs = 0.0001/Math.sqrt(totgs);
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[j];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk*ws[j];
+        }
+      }
+
+      con.postSolve();
+    }
+
+    return err;
+  }
+
+  solve(steps, gk = this.gk, printError = false) {
+    let err = 0.0;
+
+    for (let i = 0; i < steps; i++) {
+      if (this.simple) {
+        err = this.solveStepSimple(gk);
+      } else {
+        err = this.solveStep(gk);
+      }
+
+
+      if (printError) {
+        console.warn("average error:", (err/this.constraints.length).toFixed(4));
+      }
+      if (err < this.threshold/this.constraints.length) {
+        break;
+      }
+    }
+
+    return err;
+  }
+}
+
+var solver = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  Constraint: Constraint,
+  Solver: Solver
+});
+
+function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
+  let blob = new Blob([data], {type : mime});
+  let url = URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+
+  a.click();
+}
+
+//returns a promise
+function loadFile$1(filename="unnamed", exts=[]) {
+  let input = document.createElement("input");
+  input.type = "file";
+
+  exts = exts.join(",");
+
+  input.setAttribute("accept", exts);
+  return new Promise((accept, reject) => {
+    input.onchange = function(e) {
+      if (this.files === undefined || this.files.length !== 1) {
+        reject("file load error");
+        return;
+      }
+
+      let file = this.files[0];
+      let reader = new FileReader();
+
+      reader.onload = function(e2) {
+        accept(e2.target.result);
+      };
+
+      reader.readAsArrayBuffer(file);
+    };
+    input.click();
+  });
+}
+
+window._testLoadFile = function(exts=["*.*"]) {
+  loadFile$1(undefined, exts).then((data) => {
+    console.log("got file data:", data);
+  });
+};
+
+window._testSaveFile = function() {
+  let buf = _appstate.createFile();
+  //console.log(buf);
+  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
+};
+
+var html5_fileapi = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  saveFile: saveFile$1,
+  loadFile: loadFile$1
+});
+
+let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
+
+function rgb_to_hsv(r, g, b) {
+  let computedH = 0;
+  let computedS = 0;
+  let computedV = 0;
+
+  if (r == null || g == null || b == null ||
+    isNaN(r) || isNaN(g) || isNaN(b)) {
+    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
+  }
+  /*
+  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
+   throw new Error('RGB values must be in the range 0 to 1.0');
+   return;
+  }//*/
+
+  let minRGB = Math.min(r, Math.min(g, b));
+  let maxRGB = Math.max(r, Math.max(g, b));
+
+  // Black-gray-white
+  if (minRGB === maxRGB) {
+    computedV = minRGB;
+
+    let ret = rgb_to_hsv_rets.next();
+    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
+    return ret;
+  }
+
+  // Colors other than black-gray-white:
+  let d = (r === minRGB) ? g - b : ((b === minRGB) ? r - g : b - r);
+  let h = (r === minRGB) ? 3 : ((b === minRGB) ? 1 : 5);
+
+  computedH = (60*(h - d/(maxRGB - minRGB)))/360.0;
+  computedS = (maxRGB - minRGB)/maxRGB;
+  computedV = maxRGB;
+
+  let ret = rgb_to_hsv_rets.next();
+  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+  return ret;
+}
+
+let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
+
+function hsv_to_rgb(h, s, v) {
+  let c = 0, m = 0, x = 0;
+  let ret = hsv_to_rgb_rets.next();
+
+  ret[0] = ret[1] = ret[2] = 0.0;
+  h *= 360.0;
+
+  c = v*s;
+  x = c*(1.0 - Math.abs(((h/60.0)%2) - 1.0));
+  m = v - c;
+  let color;
+
+  function RgbF_Create(r, g, b) {
+    ret[0] = r;
+    ret[1] = g;
+    ret[2] = b;
+
+    return ret;
+  }
+
+  if (h >= 0.0 && h < 60.0) {
+    color = RgbF_Create(c + m, x + m, m);
+  } else if (h >= 60.0 && h < 120.0) {
+    color = RgbF_Create(x + m, c + m, m);
+  } else if (h >= 120.0 && h < 180.0) {
+    color = RgbF_Create(m, c + m, x + m);
+  } else if (h >= 180.0 && h < 240.0) {
+    color = RgbF_Create(m, x + m, c + m);
+  } else if (h >= 240.0 && h < 300.0) {
+    color = RgbF_Create(x + m, m, c + m);
+  } else if (h >= 300.0) {
+    color = RgbF_Create(c + m, m, x + m);
+  } else {
+    color = RgbF_Create(m, m, m);
+  }
+
+  return color;
+}
+
+let rgb_to_cmyk_rets = cachering.fromConstructor(Vector4$2, 512);
+let cmyk_to_rgb_rets = cachering.fromConstructor(Vector3$2, 512);
+
+function cmyk_to_rgb(c, m, y, k) {
+  let ret = cmyk_to_rgb_rets.next();
+
+  if (k === 1.0) {
+    ret.zero();
+    return ret;
+  }
+
+  c = c - c*k + k;
+  m = m - m*k + k;
+  y = y - y*k + k;
+
+  ret[0] = 1.0 - c;
+  ret[1] = 1.0 - m;
+  ret[2] = 1.0 - y;
+
+  return ret;
+}
+
+function rgb_to_cmyk(r, g, b) {
+  //CMYK and CMY values from 0 to 1
+  let ret = rgb_to_cmyk_rets.next();
+
+  let C = 1.0 - r;
+  let M = 1.0 - g;
+  let Y = 1.0 - b;
+
+  let var_K = 1;
+
+  if (C < var_K) var_K = C;
+  if (M < var_K) var_K = M;
+  if (Y < var_K) var_K = Y;
+  if (var_K === 1) { //Black
+    C = 0;
+    M = 0;
+    Y = 0;
+  } else {
+    C = (C - var_K)/(1 - var_K);
+    M = (M - var_K)/(1 - var_K);
+    Y = (Y - var_K)/(1 - var_K);
+  }
+
+  let K = var_K;
+
+  ret[0] = C;
+  ret[1] = M;
+  ret[2] = Y;
+  ret[3] = K;
+
+  return ret;
+}
+
+"use strict";
+
+let idgen = 0;
+
+class PackNodeVertex extends Vector2$b {
+  constructor(node, co) {
+    super(co);
+
+    this.node = node;
+    this._id = idgen++;
+    this.edges = [];
+    this._absPos = new Vector2$b();
+  }
+
+  get absPos() {
+    this._absPos.load(this).add(this.node.pos);
+    return this._absPos;
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+class PackNode {
+  constructor() {
+    this.pos = new Vector2$b();
+    this.vel = new Vector2$b();
+    this.oldpos = new Vector2$b();
+    this._id = idgen++;
+    this.size = new Vector2$b();
+    this.verts = [];
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+function copyGraph(nodes) {
+  let ret = [];
+  let idmap = {};
+
+  for (let n of nodes) {
+    let n2 = new PackNode();
+    n2._id = n._id;
+    n2.pos.load(n.pos);
+    n2.vel.load(n.vel);
+    n2.size.load(n.size);
+
+    n2.verts = [];
+    idmap[n2._id] = n2;
+
+    for (let v of n.verts) {
+      let v2 = new PackNodeVertex(n2, v);
+      v2._id = v._id;
+      idmap[v2._id] = v2;
+
+      n2.verts.push(v2);
+    }
+
+    ret.push(n2);
+  }
+
+  for (let n of nodes) {
+    for (let v of n.verts) {
+      let v2 = idmap[v._id];
+
+      for (let v3 of v.edges) {
+        v2.edges.push(idmap[v3._id]);
+      }
+    }
+  }
+
+  return ret;
+}
+
+function getCenter(nodes) {
+  let cent = new Vector2$b();
+
+  for (let n of nodes) {
+    cent.add(n.pos);
+  }
+
+  if (nodes.length === 0)
+    return cent;
+
+  cent.mulScalar(1.0 / nodes.length);
+
+  return cent;
+}
+
+function loadGraph(nodes, copy) {
+  let idmap = {};
+
+  for (let i=0; i<nodes.length; i++) {
+    nodes[i].pos.load(copy[i].pos);
+    nodes[i].oldpos.load(copy[i].oldpos);
+    nodes[i].vel.load(copy[i].vel);
+  }
+}
+
+function graphGetIslands(nodes) {
+  let islands = [];
+  let visit1 = new set$2();
+
+  let rec = (n, island) => {
+    island.push(n);
+    visit1.add(n);
+
+    for (let v of n.verts) {
+      for (let e of v.edges) {
+        let n2 = e.node;
+        if (n2 !== n && !visit1.has(n2)) {
+          rec(n2, island);
+        }
+      }
+    }
+  };
+
+  for (let n of nodes) {
+    if (visit1.has(n)) {
+      continue;
+    }
+
+    let island = [];
+    islands.push(island);
+    rec(n, island);
+  }
+
+  return islands;
+}
+
+function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
+  let margin = margin_or_args;
+  let speed = 1.0;
+
+  if (typeof margin === "object") {
+    let args = margin;
+
+    margin = args.margin ?? 15;
+    steps = args.steps ?? 10;
+    updateCb = args.updateCb;
+    speed = args.speed ?? 1.0;
+  }
+
+  let orignodes = nodes;
+  nodes = copyGraph(nodes);
+
+  let decay = 1.0;
+  let decayi = 0;
+
+
+  let min = new Vector2$b().addScalar(1e17);
+  let max = new Vector2$b().addScalar(-1e17);
+
+  let tmp = new Vector2$b();
+  for (let n of nodes) {
+    min.min(n.pos);
+    tmp.load(n.pos).add(n.size);
+    max.max(tmp);
+  }
+
+  let size = new Vector2$b(max).sub(min);
+
+  for (let n of nodes) {
+    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
+    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
+  }
+
+  let nodemap = {};
+  for (let n of nodes) {
+    n.vel.zero();
+    nodemap[n._id] = n;
+    for (let v of n.verts) {
+      nodemap[v._id] = v;
+    }
+  }
+
+  let visit = new set$2();
+  let verts = new set$2();
+  let isect = [];
+
+  let disableEdges = false;
+
+  function edge_c(params) {
+    let [v1, v2, restlen] = params;
+
+    if (disableEdges) return 0;
+
+    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
+  }
+
+  let p1 = new Vector2$b();
+  let p2 = new Vector2$b();
+  let s1 = new Vector2$b();
+  let s2 = new Vector2$b();
+
+  function loadBoxes(n1, n2, margin1=margin) {
+    p1.load(n1.pos);
+    p2.load(n2.pos);
+    s1.load(n1.size);
+    s2.load(n2.size);
+
+    p1.subScalar(margin1);
+    p2.subScalar(margin1);
+    s1.addScalar(margin1*2.0);
+    s2.addScalar(margin1*2.0);
+  }
+
+  let disableArea = false;
+
+  function area_c(params) {
+    let [n1, n2] = params;
+
+    if (disableArea)
+      return 0.0;
+
+    loadBoxes(n1, n2);
+
+    let a1 = n1.size[0]*n1.size[1];
+    let a2 = n2.size[0]*n2.size[1];
+
+    return aabb_overlap_area(p1, s1, p2, s2);
+    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
+  }
+
+  let lasterr, besterr, best;
+  let err;
+
+  let islands = graphGetIslands(nodes);
+  let fakeVerts = [];
+  for (let island of islands) {
+    let n = island[0];
+    let fv = new PackNodeVertex(n);
+    fakeVerts.push(fv);
+  }
+
+  let solveStep1 = (gk=1.0) => {
+    let solver = new Solver();
+
+    isect.length = 0;
+    visit = new set$2();
+
+    if (fakeVerts.length > 1) {
+      for (let i=1; i<fakeVerts.length; i++) {
+        let v1 = fakeVerts[0];
+        let v2 = fakeVerts[i];
+
+        let rlen = 1.0;
+
+        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
+        con.k = 0.25;
+        solver.add(con);
+      }
+    }
+
+    for (let n1 of nodes) {
+      for (let v of n1.verts) {
+        verts.add(v);
+        for (let v2 of v.edges) {
+          //hueristic to avoid adding same constraint twice
+          if (v2._id < v._id) continue;
+
+          let rlen = n1.size.vectorLength()*0.0;
+
+          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
+          con.k = 1.0;
+          solver.add(con);
+        }
+      }
+
+      for (let n2 of nodes) {
+        if (n1 === n2) continue;
+        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
+        if (visit.has(key)) continue;
+
+        loadBoxes(n1, n2);
+        let area = aabb_overlap_area(p1, s1, p2, s2);
+
+        if (area > 0.01) {
+          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
+          //*
+          n1.pos[0] += (Math.random() - 0.5)*size;
+          n1.pos[1] += (Math.random() - 0.5)*size;
+          n2.pos[0] += (Math.random() - 0.5)*size;
+          n2.pos[1] += (Math.random() - 0.5)*size;
+          //*/
+
+          isect.push([n1, n2]);
+          visit.add(key);
+        }
+      }
+
+      for (let [n1, n2] of isect) {
+        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
+        solver.add(con);
+        con.k = 1.0;
+      }
+    }
+
+    return solver;
+  };
+
+  let i = 1;
+  let solveStep = (gk=0.5) => {
+    let solver = solveStep1();
+
+    if (i % 40 === 0.0) {
+      let c1 = getCenter(nodes);
+
+      let rfac = 1000.0;
+
+      if (best) loadGraph(nodes, best);
+
+      for (let n of nodes) {
+        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
+        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
+        n.vel.zero();
+      }
+
+      let c2 = getCenter(nodes);
+      c1.sub(c2);
+
+      for (let n of nodes) {
+        n.pos.add(c1);
+      }
+    }
+
+    let err = 1e17;
+
+    for (let n of nodes) {
+      n.oldpos.load(n.pos);
+      n.pos.addFac(n.vel, 0.5);
+    }
+
+    disableEdges = false;
+    disableArea = true;
+    solver.solve(1, gk);
+
+    //solve so boxes don't overlap
+    disableEdges = true;
+    disableArea = false;
+
+    for (let j=0; j<10; j++) {
+      solver = solveStep1();
+      err = solver.solve(10, gk*speed);
+    }
+
+    for (let n of nodes) {
+      n.vel.load(n.pos).sub(n.oldpos);
+    }
+
+    //get error from edge constraints
+
+    disableEdges = false;
+    disableArea = true;
+
+    err = 0.0;
+    for (let con of solver.constraints) {
+      err += con.evaluate(true);
+    }
+
+    disableEdges = false;
+    disableArea = false;
+
+    /*
+    loadGraph(orignodes, nodes);
+    if (updateCb) {
+      updateCb();
+    }//*/
+
+    lasterr = err;
+
+    let add = Math.random()*besterr*Math.exp(-i*0.1);
+
+    if (besterr === undefined || err < besterr+add) {
+      best = copyGraph(nodes);
+      besterr = err;
+    }
+
+    i++;
+
+    return err;
+  };
+
+
+  for (let j=0; j<steps; j++) {
+    solveStep();
+
+    decayi++;
+    decay = Math.exp(-decayi*0.1);
+  }
+
+  min.zero().addScalar(1e17);
+  max.zero().addScalar(-1e17);
+
+  for (let node of (best ? best : nodes)) {
+    min.min(node.pos);
+    p2.load(node.pos).add(node.size);
+    max.max(p2);
+  }
+
+  for (let node of (best ? best : nodes)) {
+    node.pos.sub(min);
+  }
+
+  loadGraph(orignodes, best ? best : nodes);
+
+  if (updateCb) {
+    if (nodes._timer !== undefined) {
+      window.clearInterval(nodes._timer);
+    }
+
+    nodes._timer = window.setInterval(() => {
+      let time = time_ms();
+
+      while (time_ms() - time < 50) {
+        let err = solveStep();
+      }
+
+      if (cconst.DEBUG.boxPacker) {
+        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
+      }
+
+      if (best) loadGraph(orignodes, best);
+
+      if (updateCb() === false) {
+        clearInterval(nodes._timer);
+        return;
+      }
+    }, 100);
+
+    let timer = nodes._timer;
+
+    return {
+      stop : () => {
+        if (best) loadGraph(nodes, best);
+
+        window.clearInterval(timer);
+        nodes._timer = undefined;
+      }
+    }
+  }
+}
+
+var controller = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  eventgraph: eventdag,
+  solver: solver,
+  util: util,
+  vectormath: vectormath,
+  math: math,
+  toolprop_abstract: toolprop_abstract,
+  html5_fileapi: html5_fileapi,
+  parseutil: parseutil,
+  config: config$1,
+  nstructjs: nstructjs,
+  lzstring: lzstring,
+  binomial: binomial,
+  setNotifier: setNotifier,
+  ContextFlags: ContextFlags,
+  OverlayClasses: OverlayClasses,
+  makeDerivedOverlay: makeDerivedOverlay,
+  ContextOverlay: ContextOverlay,
+  excludedKeys: excludedKeys,
+  LockedContext: LockedContext,
+  Context: Context,
+  test: test,
+  DataPathError: DataPathError,
+  DataFlags: DataFlags,
+  DataTypes: DataTypes,
+  getTempProp: getTempProp,
+  getVecClass: getVecClass,
+  isVecProperty: isVecProperty,
+  DataPath: DataPath,
+  StructFlags: StructFlags,
+  ListIface: ListIface,
+  ToolOpIface: ToolOpIface,
+  setImplementationClass: setImplementationClass,
+  registerTool: registerTool,
+  pathParser: pathParser,
+  pushReportName: pushReportName,
+  popReportName: popReportName,
+  DataList: DataList,
+  DataStruct: DataStruct,
+  DataAPI: DataAPI,
+  initSimpleController: initSimpleController,
+  getDataPathToolOp: getDataPathToolOp,
+  setDataPathToolOp: setDataPathToolOp,
+  ModelInterface: ModelInterface,
+  DataPathSetOp: DataPathSetOp,
+  ToolClasses: ToolClasses,
+  setContextClass: setContextClass,
+  ToolFlags: ToolFlags$1,
+  UndoFlags: UndoFlags$1,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  ToolPropertyCache: ToolPropertyCache,
+  SavedToolDefaults: SavedToolDefaults,
+  ToolOp: ToolOp,
+  MacroLink: MacroLink,
+  MacroClasses: MacroClasses,
+  ToolMacro: ToolMacro,
+  ToolStack: ToolStack,
+  buildToolOpAPI: buildToolOpAPI,
+  buildToolSysAPI: buildToolSysAPI,
+  PropTypes: PropTypes$8,
+  PropFlags: PropFlags$3,
+  isNumber: isNumber,
+  NumberConstraintsBase: NumberConstraintsBase,
+  IntegerConstraints: IntegerConstraints,
+  FloatConstrinats: FloatConstrinats,
+  NumberConstraints: NumberConstraints,
+  PropSubTypes: PropSubTypes$3,
+  setPropTypes: setPropTypes,
+  customPropertyTypes: customPropertyTypes,
+  PropClasses: PropClasses,
+  get defaultRadix () { return defaultRadix; },
+  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
+  ToolProperty: ToolProperty$1,
+  FloatArrayProperty: FloatArrayProperty,
+  StringProperty: StringProperty,
+  NumProperty: NumProperty,
+  _NumberPropertyBase: _NumberPropertyBase,
+  IntProperty: IntProperty,
+  ReportProperty: ReportProperty,
+  BoolProperty: BoolProperty,
+  FloatProperty: FloatProperty,
+  EnumKeyPair: EnumKeyPair,
+  EnumProperty: EnumProperty$9,
+  FlagProperty: FlagProperty,
+  VecPropertyBase: VecPropertyBase,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  QuatProperty: QuatProperty,
+  Mat4Property: Mat4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  ToolPaths: ToolPaths,
+  buildParser: buildParser,
+  Parser: Parser,
+  parseToolPath: parseToolPath,
+  testToolParser: testToolParser,
+  initToolPaths: initToolPaths,
+  SplineTemplates: SplineTemplates,
+  SplineTemplateIcons: SplineTemplateIcons,
+  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
+  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
+  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
+  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
+  BSplineTransformOp: BSplineTransformOp,
+  Curve1DPoint: Curve1DPoint,
+  initSplineTemplates: initSplineTemplates,
+  ParamKey: ParamKey,
+  SimpleCurveBase: SimpleCurveBase,
+  BounceCurve: BounceCurve,
+  ElasticCurve: ElasticCurve,
+  EaseCurve: EaseCurve,
+  RandCurve: RandCurve,
+  getCurve: getCurve,
+  CurveConstructors: CurveConstructors,
+  CURVE_VERSION: CURVE_VERSION,
+  CurveTypeData: CurveTypeData,
+  Curve1D: Curve1D,
+  CurveFlags: CurveFlags,
+  TangentModes: TangentModes,
+  evalHermiteTable: evalHermiteTable,
+  genHermiteTable: genHermiteTable,
+  Curve1DProperty: Curve1DProperty,
+  EulerOrders: EulerOrders,
+  BaseVector: BaseVector,
+  F64BaseVector: F64BaseVector,
+  F32BaseVector: F32BaseVector,
+  I32BaseVector: I32BaseVector,
+  I16BaseVector: I16BaseVector,
+  I8BaseVector: I8BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI16BaseVector: UI16BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  makeVector4: makeVector4,
+  Vector4: Vector4$2,
+  makeVector3: makeVector3,
+  Vector3: Vector3$2,
+  makeVector2: makeVector2,
+  Vector2: Vector2$b,
+  Quat: Quat,
+  Matrix4: Matrix4$2,
+  quad_bilinear: quad_bilinear,
+  ClosestModes: ClosestModes,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
+  closestPoint: closestPoint,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
+  calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  barycentric_v2: barycentric_v2,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  tri_area: tri_area,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  FLOAT_MIN: FLOAT_MIN,
+  FLOAT_MAX: FLOAT_MAX,
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding_axis: winding_axis,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
+  colinear: colinear,
+  colinear2d: colinear2d,
+  corner_normal: corner_normal,
+  line_line_isect: line_line_isect,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  isNum: isNum,
+  normal_tri: normal_tri,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  circ_from_line_tan_2d: circ_from_line_tan_2d,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
+  rot2d: rot2d,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  Mat4Stack: Mat4Stack,
+  trilinear_v3: trilinear_v3,
+  point_in_hex: point_in_hex,
+  trilinear_co: trilinear_co,
+  trilinear_co2: trilinear_co2,
+  tri_angles: tri_angles,
+  angle_between_vecs: angle_between_vecs,
+  rgb_to_hsv: rgb_to_hsv,
+  hsv_to_rgb: hsv_to_rgb,
+  cmyk_to_rgb: cmyk_to_rgb,
+  rgb_to_cmyk: rgb_to_cmyk,
+  PackNodeVertex: PackNodeVertex,
+  PackNode: PackNode,
+  graphGetIslands: graphGetIslands,
+  graphPack: graphPack,
+  Constraint: Constraint,
+  Solver: Solver,
+  modalstack: modalstack$1,
+  singleMouseEvent: singleMouseEvent,
+  isLeftClick: isLeftClick,
+  DoubleClickHandler: DoubleClickHandler,
+  isMouseDown: isMouseDown,
+  pathDebugEvent: pathDebugEvent,
+  eventWasTouch: eventWasTouch,
+  copyEvent: copyEvent,
+  _setScreenClass: _setScreenClass,
+  _setModalAreaClass: _setModalAreaClass,
+  pushPointerModal: pushPointerModal,
+  pushModalLight: pushModalLight,
+  popModalLight: popModalLight,
+  haveModal: haveModal,
+  keymap_latin_1: keymap_latin_1,
+  keymap: keymap$4,
+  reverse_keymap: reverse_keymap,
+  HotKey: HotKey,
+  KeyMap: KeyMap
+});
+
 /**
 
  This is the main datapath controller module, inspired by Blender's RNA system.
@@ -31309,6 +33083,10 @@ class DataAPI extends ModelInterface {
       }
     }
 
+    if (prop && prop.type & (PropTypes$8.ENUM|PropFlags$3.FLAG)) {
+      prop.checkMeta();
+    }
+    
     return {
       dpath  : lastdpath,
       parent : lastobj2,
@@ -31548,144 +33326,6 @@ function setDataPathToolOp(cls) {
 }
 
 setImplementationClass(DataAPI);
-
-let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
-
-function rgb_to_hsv(r, g, b) {
-  let computedH = 0;
-  let computedS = 0;
-  let computedV = 0;
-
-  if (r == null || g == null || b == null ||
-    isNaN(r) || isNaN(g) || isNaN(b)) {
-    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
-  }
-  /*
-  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
-   throw new Error('RGB values must be in the range 0 to 1.0');
-   return;
-  }//*/
-
-  let minRGB = Math.min(r, Math.min(g, b));
-  let maxRGB = Math.max(r, Math.max(g, b));
-
-  // Black-gray-white
-  if (minRGB === maxRGB) {
-    computedV = minRGB;
-
-    let ret = rgb_to_hsv_rets.next();
-    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
-    return ret;
-  }
-
-  // Colors other than black-gray-white:
-  let d = (r === minRGB) ? g - b : ((b === minRGB) ? r - g : b - r);
-  let h = (r === minRGB) ? 3 : ((b === minRGB) ? 1 : 5);
-
-  computedH = (60*(h - d/(maxRGB - minRGB)))/360.0;
-  computedS = (maxRGB - minRGB)/maxRGB;
-  computedV = maxRGB;
-
-  let ret = rgb_to_hsv_rets.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
-  return ret;
-}
-
-let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
-
-function hsv_to_rgb(h, s, v) {
-  let c = 0, m = 0, x = 0;
-  let ret = hsv_to_rgb_rets.next();
-
-  ret[0] = ret[1] = ret[2] = 0.0;
-  h *= 360.0;
-
-  c = v*s;
-  x = c*(1.0 - Math.abs(((h/60.0)%2) - 1.0));
-  m = v - c;
-  let color;
-
-  function RgbF_Create(r, g, b) {
-    ret[0] = r;
-    ret[1] = g;
-    ret[2] = b;
-
-    return ret;
-  }
-
-  if (h >= 0.0 && h < 60.0) {
-    color = RgbF_Create(c + m, x + m, m);
-  } else if (h >= 60.0 && h < 120.0) {
-    color = RgbF_Create(x + m, c + m, m);
-  } else if (h >= 120.0 && h < 180.0) {
-    color = RgbF_Create(m, c + m, x + m);
-  } else if (h >= 180.0 && h < 240.0) {
-    color = RgbF_Create(m, x + m, c + m);
-  } else if (h >= 240.0 && h < 300.0) {
-    color = RgbF_Create(x + m, m, c + m);
-  } else if (h >= 300.0) {
-    color = RgbF_Create(c + m, m, x + m);
-  } else {
-    color = RgbF_Create(m, m, m);
-  }
-
-  return color;
-}
-
-let rgb_to_cmyk_rets = cachering.fromConstructor(Vector4$2, 512);
-let cmyk_to_rgb_rets = cachering.fromConstructor(Vector3$2, 512);
-
-function cmyk_to_rgb(c, m, y, k) {
-  let ret = cmyk_to_rgb_rets.next();
-
-  if (k === 1.0) {
-    ret.zero();
-    return ret;
-  }
-
-  c = c - c*k + k;
-  m = m - m*k + k;
-  y = y - y*k + k;
-
-  ret[0] = 1.0 - c;
-  ret[1] = 1.0 - m;
-  ret[2] = 1.0 - y;
-
-  return ret;
-}
-
-function rgb_to_cmyk(r, g, b) {
-  //CMYK and CMY values from 0 to 1
-  let ret = rgb_to_cmyk_rets.next();
-
-  let C = 1.0 - r;
-  let M = 1.0 - g;
-  let Y = 1.0 - b;
-
-  let var_K = 1;
-
-  if (C < var_K) var_K = C;
-  if (M < var_K) var_K = M;
-  if (Y < var_K) var_K = Y;
-  if (var_K === 1) { //Black
-    C = 0;
-    M = 0;
-    Y = 0;
-  } else {
-    C = (C - var_K)/(1 - var_K);
-    M = (M - var_K)/(1 - var_K);
-    Y = (Y - var_K)/(1 - var_K);
-  }
-
-  let K = var_K;
-
-  ret[0] = C;
-  ret[1] = M;
-  ret[2] = Y;
-  ret[3] = K;
-
-  return ret;
-}
 
 const DefaultTheme = {
   base: {
@@ -32502,596 +34142,6 @@ class AfterAspect {
     return this.owner;
   }
 }
-
-const SocketFlags = {
-  UPDATE: 1
-};
-const NodeFlags = {
-  UPDATE   : 1,
-  SORT_TAG1: 2,
-  SORT_TAG2: 4,
-};
-const RecalcFlags = {
-  RUN   : 1,
-  RESORT: 2
-};
-const SocketTypes = {
-  INPUT : "inputs",
-  OUTPUT: "outputs"
-};
-
-let graphIdGen = 1;
-
-class EventSocket {
-  static socketDef = {
-    typeName: "",
-    uiName  : "",
-    flag    : 0,
-  }
-
-  name = ""
-  id = graphIdGen++;
-  flag = 0;
-
-  edges = [];
-  node = undefined;
-
-  type = undefined;
-
-  constructor(node) {
-    this.node = node;
-  }
-
-  get value() {
-    throw new Error("implement me!");
-  }
-
-  set value(v) {
-    this.flagUpdate();
-  }
-
-  get isUpdated() {
-    return this.flag & SocketFlags.UPDATE;
-  }
-
-  copyFrom(b) {
-    this.name = b.name;
-    this.flag = b.flag;
-
-    return this;
-  }
-
-  copy() {
-    return (new this.constructor()).copyFrom(this);
-  }
-
-  flagUpdate() {
-    this.flag |= SocketFlags.UPDATE;
-
-    if (!this.node) {
-      return;
-    }
-
-    if (this.type === SocketTypes.INPUT) {
-      this.node.flagUpdate();
-    } else {
-      for (let sockb of this.edges) {
-        sockb.flag |= SocketFlags.UPDATE;
-        sockb.node.flagUpdate();
-      }
-    }
-
-    return this;
-  }
-
-  flagResort() {
-    if (this.node) {
-      this.node.flagResort();
-    }
-
-    return this;
-  }
-
-  connect(sockb) {
-    this.edges.push(sockb);
-    sockb.edges.push(this);
-    return this;
-  }
-
-  hasNode(node) {
-    for (let sockb of this.edges) {
-      if (sockb.node === node || sockb.node.owner === node) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  has(sockb) {
-    return this.edges.indexOf(sockb) >= 0;
-  }
-
-  disconnect(sockb = undefined) {
-    this.flagResort();
-
-    if (sockb === undefined) {
-      /* Disconnect all. */
-      for (let sock of this.edges) {
-        sock.flagUpdate();
-        sock.edges.remove(this);
-      }
-
-      this.edges.length = 0;
-      return this;
-    }
-
-    sockb.flagUpdate();
-    this.edges.remove(sockb);
-    return this;
-  }
-}
-
-const NodeClasses = [];
-
-//Interface
-class NodeCapable {
-  graphNode = undefined;
-
-  static graphNodeDef = {
-    typeName: "",
-    uiName  : "",
-    flag    : 0,
-
-    /* Sockets inherit. */
-    inputs : {},
-    outputs: {}
-  };
-
-  graphExec() {
-  }
-}
-
-class EventNode {
-  owner = undefined;
-  inputs = {};
-  outputs = {};
-  allsockets = [];
-  graph = undefined;
-  sortIndex = -1;
-  id = graphIdGen++;
-  flag = 0;
-
-  static register(cls, def) {
-    cls.graphNodeDef = def;
-    if (!def.typeName) {
-      throw new Error("Missing graphNodeDef.typeName")
-    }
-
-    NodeClasses.push(cls);
-
-    return def;
-  }
-
-  addSocket(type, key, sock) {
-    this[type][key] = sock;
-    sock.name = key;
-    sock.node = this;
-    sock.type = type;
-
-    return this;
-  }
-
-  static isNodeCapable(cls) {
-    return cls.graphNodeDef !== undefined;
-  }
-
-  constructor(owner) {
-    this.owner = owner;
-
-    let cls = owner.constructor;
-
-    let getSockets = (key) => {
-      let socks = {};
-
-      let p = cls;
-      while (p) {
-        if (p.graphNodeDef) {
-          let socksDef = p.graphNodeDef[key] || {};
-
-          for (let k in socksDef) {
-            if (!(k in socks)) {
-              socks[k] = socksDef[k].copy();
-              socks[k].name = k;
-              socks[k].node = this;
-              socks[k].type = key;
-
-              this.allsockets.push(socks[k]);
-            }
-          }
-        }
-        p = p.__proto__;
-      }
-
-      return socks;
-    };
-
-    this.inputs = getSockets("inputs");
-    this.outputs = getSockets("outputs");
-  }
-
-  static init(owner) {
-    owner.graphNode = new EventNode(owner);
-    return owner.graphNode;
-  }
-
-  flagUpdate() {
-    this.flag |= NodeFlags.UPDATE;
-
-    if (this.graph) {
-      this.graph.flagUpdate(this);
-    }
-
-    return this;
-  }
-
-  flagResort() {
-    if (this.graph) {
-      this.graph.flagResort(this);
-    }
-    return this;
-  }
-}
-
-class EventGraph {
-  nodes = [];
-  flag = 0;
-  nodeIdMap = new Map()
-  sockIdMap = new Map()
-  sortlist = [];
-  queueReq = undefined;
-  #skipQueueExec = 0;
-
-  constructor() {
-  }
-
-  add(node) {
-    node = this.eventNode(node);
-
-    node.graph = this;
-    this.nodeIdMap.set(node.id, node);
-
-    this.nodes.push(node);
-    this.flagResort(node);
-    this.flagUpdate(node);
-  }
-
-  has(node) {
-    node = this.eventNode(node);
-    return this.nodeIdMap.has(node.id);
-  }
-
-  eventNode(node) {
-    if (!(node instanceof EventNode)) {
-      node = node.graphNode;
-    }
-
-    if (node === undefined) {
-      console.warn("Not an event node:", arguments[0]);
-      throw new Error("Not an event node");
-    }
-
-    return node;
-  }
-
-  remove(node) {
-    node = this.eventNode(node);
-
-    if (node === undefined) {
-      throw new Error("EventGraph.prototype.remove(): node was undefined");
-    }
-
-    if (!this.nodeIdMap.get(node.id)) {
-      throw new Error("Node is not in event graph");
-    }
-
-    this.nodeIdMap.delete(node.id);
-
-    for (let sock of Array.from(node.eventNode.allsockets)) {
-      this.sockIdMap.delete(sock.id);
-
-      try {
-        sock.disconnect();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Failed to disconnect a socket");
-      }
-    }
-
-    node.graph = undefined;
-    this.nodes.remove(node);
-    this.flagResort();
-  }
-
-  flagResort(node) {
-    if (node) {
-      node = this.eventNode(node);
-    }
-
-    this.flag |= RecalcFlags.RESORT | RecalcFlags.RUN;
-
-    return this;
-  }
-
-  flagUpdate(node) {
-    node = this.eventNode(node);
-
-    this.flag |= RecalcFlags.RUN;
-
-    if (!this.#skipQueueExec) {
-      this.queueExec();
-    }
-
-    return this;
-  }
-
-  sort() {
-    console.warn("Sorting Graph");
-
-    this.flag &= ~RecalcFlags.RESORT;
-
-    for (let n of this.nodes) {
-      n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
-    }
-
-    let sortlist = this.sortlist;
-    this.sortlist.length = 0;
-
-    let dosort = (n) => {
-      if (n.flag & NodeFlags.SORT_TAG2) {
-        console.error("Cycle in event dag!", n);
-        return;
-      }
-
-      n.flag |= NodeFlags.SORT_TAG2;
-
-      for (let [k, socka] of Object.entries(n.inputs)) {
-        for (let sockb of socka.edges) {
-          let n2 = sockb.node;
-          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-            dosort(n2);
-          }
-        }
-      }
-
-      n.flag &= ~NodeFlags.SORT_TAG2;
-      n.flag |= NodeFlags.SORT_TAG1;
-      n.sortIndex = sortlist.length;
-      sortlist.push(n);
-
-      for (let [k, socka] of Object.entries(n.outputs)) {
-        for (let sockb of socka.edges) {
-          let n2 = sockb.node;
-
-          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-            dosort(n2);
-          }
-        }
-      }
-    };
-
-    for (let n of this.nodes) {
-      if (!(n.flag & NodeFlags.SORT_TAG1)) {
-        dosort(n);
-      }
-    }
-  }
-
-  queueExec() {
-    console.warn("queueExec", this.queueReq);
-
-    this.flag |= RecalcFlags.RUN;
-
-    if (this.queueReq !== undefined) {
-      return;
-    }
-
-    this.queueReq = true;
-    this.queueReq = window.setTimeout(() => {
-      this.queueReq = undefined;
-      this.exec();
-    }, 0);
-  }
-
-  exec() {
-    this.flag &= ~RecalcFlags.RUN;
-
-    if (this.flag & RecalcFlags.RESORT) {
-      this.sort();
-    }
-
-    console.warn("Executing Graph");
-
-    this.#skipQueueExec++;
-
-    let sortlist = this.sortlist;
-    for (let n of sortlist) {
-      if (!(n.flag & NodeFlags.UPDATE)) {
-        continue;
-      }
-
-      try {
-        n.owner.graphExec();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Error during event graph execution");
-      }
-
-      n.flag &= ~NodeFlags.UPDATE;
-
-      for (let k in n.inputs) {
-        let sock = n.inputs[k];
-        sock.flag &= ~SocketFlags.UPDATE;
-      }
-
-      for (let k in n.outputs) {
-        let sock = n.outputs[k];
-
-        if (sock.flag & SocketFlags.UPDATE) {
-          for (let sockb of sock.edges) {
-            sockb.flag |= SocketFlags.UPDATE;
-            sockb.node.flag |= SocketFlags.UPDATE;
-          }
-
-          sock.flag &= ~SocketFlags.UPDATE;
-        }
-      }
-    }
-
-    this.#skipQueueExec--;
-  }
-}
-
-const theEventGraph = new EventGraph();
-
-const strBoolMap = {
-  "true" : "false",
-  "false": "true",
-  "on"   : "off",
-  "off"  : "on",
-  "yes"  : "no",
-  "no"   : "yes",
-};
-
-class DependSocket extends EventSocket {
-  static socketDef = {
-    typeName: "depend",
-    uiName  : "depend",
-    flag    : 0,
-  }
-
-  #value = undefined;
-
-  get value() {
-    return this.#value;
-  }
-
-  set value(v) {
-    this.#value = v;
-  }
-
-  copyFrom(b) {
-    super.copyFrom(b);
-
-    this.#value = b.#value;
-
-    return this;
-  }
-}
-
-const PropSocketModes = {
-  REPLACE: 0,
-  MIN    : 1,
-  MAX    : 2,
-};
-
-class PropertySocket extends EventSocket {
-  static socketDef = {
-    typeName: "property_socket",
-    uiName  : "Property Socket",
-    flag    : 0,
-  }
-
-  mixMode = PropSocketModes.REPLACE;
-
-  #binding = {
-    obj: null,
-    key: "",
-  }
-
-  #callbacks = []; //(newval, oldval) => val
-  #invert = false; //Invert bool or number properties
-
-  oldValue = undefined;
-
-  mode(mixmode) {
-    this.mixMode = mixmode;
-    return this;
-  }
-
-  copyFrom(b) {
-    super.copyFrom(b);
-
-    this.#invert = b.#invert;
-    this.#callbacks = Array.from(b.#callbacks);
-    this.#binding = b.#binding;
-
-    return this;
-  }
-
-  invert(state = true) {
-    this.#invert = state;
-    return this;
-  }
-
-  callback(cb) {
-    this.#callbacks.push(cb);
-    return this;
-  }
-
-  get value() {
-    let bind = this.#binding;
-    return bind.obj ? bind.obj[bind.key] : undefined;
-  }
-
-  set value(v) {
-    let old = this.value;
-    if (this.#callbacks.length > 0) {
-      for (let cb of this.#callbacks) {
-        v = cb(v, old);
-      }
-    }
-
-    if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
-      v = !v;
-    } else if (this.#invert && typeof v === "string") {
-      let s = v.toLowerCase().trim();
-      if (s in strBoolMap) {
-        v = strBoolMap[s];
-      }
-    }
-
-    let bind = this.#binding;
-    if (bind.obj) {
-      bind.obj[bind.key] = v;
-    } else {
-      console.warn("Attempt to set unbound property socket", this);
-    }
-  }
-
-  bind(obj, key) {
-    this.#binding.obj = obj;
-    this.#binding.key = key;
-
-    return this;
-  }
-}
-
-var eventdag = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  SocketFlags: SocketFlags,
-  NodeFlags: NodeFlags,
-  RecalcFlags: RecalcFlags,
-  SocketTypes: SocketTypes,
-  EventSocket: EventSocket,
-  NodeCapable: NodeCapable,
-  EventNode: EventNode,
-  EventGraph: EventGraph,
-  theEventGraph: theEventGraph,
-  DependSocket: DependSocket,
-  PropSocketModes: PropSocketModes,
-  PropertySocket: PropertySocket
-});
 
 let _ui_base = undefined;
 
@@ -39497,989 +40547,17 @@ class Check1 extends Button {
 
 UIBase$c.internalRegister(Check1);
 
-function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
-  let blob = new Blob([data], {type : mime});
-  let url = URL.createObjectURL(blob);
-
-  let a = document.createElement("a");
-  a.setAttribute("href", url);
-  a.setAttribute("download", filename);
-
-  a.click();
-}
-
-//returns a promise
-function loadFile$1(filename="unnamed", exts=[]) {
-  let input = document.createElement("input");
-  input.type = "file";
-
-  exts = exts.join(",");
-
-  input.setAttribute("accept", exts);
-  return new Promise((accept, reject) => {
-    input.onchange = function(e) {
-      if (this.files === undefined || this.files.length !== 1) {
-        reject("file load error");
-        return;
-      }
-
-      let file = this.files[0];
-      let reader = new FileReader();
-
-      reader.onload = function(e2) {
-        accept(e2.target.result);
-      };
-
-      reader.readAsArrayBuffer(file);
-    };
-    input.click();
-  });
-}
-
-window._testLoadFile = function(exts=["*.*"]) {
-  loadFile$1(undefined, exts).then((data) => {
-    console.log("got file data:", data);
-  });
-};
-
-window._testSaveFile = function() {
-  let buf = _appstate.createFile();
-  //console.log(buf);
-  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
-};
-
-var html5_fileapi = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1
-});
-
-class Constraint {
-  constructor(name, func, klst, params, k = 1.0) {
-    this.glst = [];
-    this.klst = klst;
-    this.wlst = [];
-    this.k = k;
-    this.params = params;
-    this.name = name;
-
-    for (let ks of klst) {
-      this.glst.push(new Float64Array(ks.length));
-      const ws = new Float64Array(ks.length);
-
-      for (let i = 0; i < ws.length; i++) {
-        ws[i] = 1.0;
-      }
-
-      this.wlst.push(ws);
-    }
-
-    this.df = 0.0005;
-    this.threshold = 0.0001;
-    if (func !== undefined) { /* Happens with subclass-style constraints. */
-      this.func = func;
-    }
-    if (!this.funcDv) {
-      this.funcDv = null;
-    }
-  }
-
-  postSolve() {
-  }
-
-  evaluate(no_dvs = false) {
-    let r1 = this.func(this.params);
-
-    if (this.funcDv) {
-      this.funcDv(this.params, this.glst);
-      return r1;
-    }
-
-    if (Math.abs(r1) < this.threshold)
-      return 0.0;
-
-    let df = this.df;
-
-    if (no_dvs)
-      return r1;
-
-    for (let i = 0; i < this.klst.length; i++) {
-      let gs = this.glst[i];
-      let ks = this.klst[i];
-
-      for (let j = 0; j < ks.length; j++) {
-        let orig = ks[j];
-        ks[j] += df;
-        let r2 = this.func(this.params);
-        ks[j] = orig;
-
-        gs[j] = (r2 - r1)/df;
-      }
-    }
-
-    return r1;
-  }
-}
-
-class Solver {
-  constructor() {
-    this.constraints = [];
-    this.gk = 0.99;
-    this.simple = false;
-    this.randCons = false;
-
-    /** stop when average constraint error falls below this */
-    this.threshold = 0.01;
-  }
-
-  remove(con) {
-    this.constraints.remove(con);
-  }
-
-  add(con) {
-    this.constraints.push(con);
-  }
-
-  solveStep(gk = this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci = 0; ci < cons.length; ci++) {
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j = 0; j < ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0) {
-        continue;
-      }
-
-      r1 /= totgs;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
-        for (let j = 0; j < ks.length; j++) {
-          ks[j] += -r1*gs[j]*con.k*gk*ws[j];
-        }
-
-        con.postSolve();
-      }
-    }
-
-    return err;
-  }
-
-  solveStepSimple(gk = this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci = 0; ci < cons.length; ci++) {
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j = 0; j < ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0) {
-        continue;
-      }
-
-      totgs = 0.0001/Math.sqrt(totgs);
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[j];
-        for (let j = 0; j < ks.length; j++) {
-          ks[j] += -totgs*gs[j]*con.k*gk*ws[j];
-        }
-      }
-
-      con.postSolve();
-    }
-
-    return err;
-  }
-
-  solve(steps, gk = this.gk, printError = false) {
-    let err = 0.0;
-
-    for (let i = 0; i < steps; i++) {
-      if (this.simple) {
-        err = this.solveStepSimple(gk);
-      } else {
-        err = this.solveStep(gk);
-      }
-
-
-      if (printError) {
-        console.warn("average error:", (err/this.constraints.length).toFixed(4));
-      }
-      if (err < this.threshold/this.constraints.length) {
-        break;
-      }
-    }
-
-    return err;
-  }
-}
-
-var solver = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Constraint: Constraint,
-  Solver: Solver
-});
-
-"use strict";
-
-let idgen = 0;
-
-class PackNodeVertex extends Vector2$b {
-  constructor(node, co) {
-    super(co);
-
-    this.node = node;
-    this._id = idgen++;
-    this.edges = [];
-    this._absPos = new Vector2$b();
-  }
-
-  get absPos() {
-    this._absPos.load(this).add(this.node.pos);
-    return this._absPos;
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-class PackNode {
-  constructor() {
-    this.pos = new Vector2$b();
-    this.vel = new Vector2$b();
-    this.oldpos = new Vector2$b();
-    this._id = idgen++;
-    this.size = new Vector2$b();
-    this.verts = [];
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-function copyGraph(nodes) {
-  let ret = [];
-  let idmap = {};
-
-  for (let n of nodes) {
-    let n2 = new PackNode();
-    n2._id = n._id;
-    n2.pos.load(n.pos);
-    n2.vel.load(n.vel);
-    n2.size.load(n.size);
-
-    n2.verts = [];
-    idmap[n2._id] = n2;
-
-    for (let v of n.verts) {
-      let v2 = new PackNodeVertex(n2, v);
-      v2._id = v._id;
-      idmap[v2._id] = v2;
-
-      n2.verts.push(v2);
-    }
-
-    ret.push(n2);
-  }
-
-  for (let n of nodes) {
-    for (let v of n.verts) {
-      let v2 = idmap[v._id];
-
-      for (let v3 of v.edges) {
-        v2.edges.push(idmap[v3._id]);
-      }
-    }
-  }
-
-  return ret;
-}
-
-function getCenter(nodes) {
-  let cent = new Vector2$b();
-
-  for (let n of nodes) {
-    cent.add(n.pos);
-  }
-
-  if (nodes.length === 0)
-    return cent;
-
-  cent.mulScalar(1.0 / nodes.length);
-
-  return cent;
-}
-
-function loadGraph(nodes, copy) {
-  let idmap = {};
-
-  for (let i=0; i<nodes.length; i++) {
-    nodes[i].pos.load(copy[i].pos);
-    nodes[i].oldpos.load(copy[i].oldpos);
-    nodes[i].vel.load(copy[i].vel);
-  }
-}
-
-function graphGetIslands(nodes) {
-  let islands = [];
-  let visit1 = new set$2();
-
-  let rec = (n, island) => {
-    island.push(n);
-    visit1.add(n);
-
-    for (let v of n.verts) {
-      for (let e of v.edges) {
-        let n2 = e.node;
-        if (n2 !== n && !visit1.has(n2)) {
-          rec(n2, island);
-        }
-      }
-    }
-  };
-
-  for (let n of nodes) {
-    if (visit1.has(n)) {
-      continue;
-    }
-
-    let island = [];
-    islands.push(island);
-    rec(n, island);
-  }
-
-  return islands;
-}
-
-function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
-  let margin = margin_or_args;
-  let speed = 1.0;
-
-  if (typeof margin === "object") {
-    let args = margin;
-
-    margin = args.margin ?? 15;
-    steps = args.steps ?? 10;
-    updateCb = args.updateCb;
-    speed = args.speed ?? 1.0;
-  }
-
-  let orignodes = nodes;
-  nodes = copyGraph(nodes);
-
-  let decay = 1.0;
-  let decayi = 0;
-
-
-  let min = new Vector2$b().addScalar(1e17);
-  let max = new Vector2$b().addScalar(-1e17);
-
-  let tmp = new Vector2$b();
-  for (let n of nodes) {
-    min.min(n.pos);
-    tmp.load(n.pos).add(n.size);
-    max.max(tmp);
-  }
-
-  let size = new Vector2$b(max).sub(min);
-
-  for (let n of nodes) {
-    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
-    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
-  }
-
-  let nodemap = {};
-  for (let n of nodes) {
-    n.vel.zero();
-    nodemap[n._id] = n;
-    for (let v of n.verts) {
-      nodemap[v._id] = v;
-    }
-  }
-
-  let visit = new set$2();
-  let verts = new set$2();
-  let isect = [];
-
-  let disableEdges = false;
-
-  function edge_c(params) {
-    let [v1, v2, restlen] = params;
-
-    if (disableEdges) return 0;
-
-    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
-  }
-
-  let p1 = new Vector2$b();
-  let p2 = new Vector2$b();
-  let s1 = new Vector2$b();
-  let s2 = new Vector2$b();
-
-  function loadBoxes(n1, n2, margin1=margin) {
-    p1.load(n1.pos);
-    p2.load(n2.pos);
-    s1.load(n1.size);
-    s2.load(n2.size);
-
-    p1.subScalar(margin1);
-    p2.subScalar(margin1);
-    s1.addScalar(margin1*2.0);
-    s2.addScalar(margin1*2.0);
-  }
-
-  let disableArea = false;
-
-  function area_c(params) {
-    let [n1, n2] = params;
-
-    if (disableArea)
-      return 0.0;
-
-    loadBoxes(n1, n2);
-
-    let a1 = n1.size[0]*n1.size[1];
-    let a2 = n2.size[0]*n2.size[1];
-
-    return aabb_overlap_area(p1, s1, p2, s2);
-    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
-  }
-
-  let lasterr, besterr, best;
-  let err;
-
-  let islands = graphGetIslands(nodes);
-  let fakeVerts = [];
-  for (let island of islands) {
-    let n = island[0];
-    let fv = new PackNodeVertex(n);
-    fakeVerts.push(fv);
-  }
-
-  let solveStep1 = (gk=1.0) => {
-    let solver = new Solver();
-
-    isect.length = 0;
-    visit = new set$2();
-
-    if (fakeVerts.length > 1) {
-      for (let i=1; i<fakeVerts.length; i++) {
-        let v1 = fakeVerts[0];
-        let v2 = fakeVerts[i];
-
-        let rlen = 1.0;
-
-        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
-        con.k = 0.25;
-        solver.add(con);
-      }
-    }
-
-    for (let n1 of nodes) {
-      for (let v of n1.verts) {
-        verts.add(v);
-        for (let v2 of v.edges) {
-          //hueristic to avoid adding same constraint twice
-          if (v2._id < v._id) continue;
-
-          let rlen = n1.size.vectorLength()*0.0;
-
-          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
-          con.k = 1.0;
-          solver.add(con);
-        }
-      }
-
-      for (let n2 of nodes) {
-        if (n1 === n2) continue;
-        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-        if (visit.has(key)) continue;
-
-        loadBoxes(n1, n2);
-        let area = aabb_overlap_area(p1, s1, p2, s2);
-
-        if (area > 0.01) {
-          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
-          //*
-          n1.pos[0] += (Math.random() - 0.5)*size;
-          n1.pos[1] += (Math.random() - 0.5)*size;
-          n2.pos[0] += (Math.random() - 0.5)*size;
-          n2.pos[1] += (Math.random() - 0.5)*size;
-          //*/
-
-          isect.push([n1, n2]);
-          visit.add(key);
-        }
-      }
-
-      for (let [n1, n2] of isect) {
-        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
-        solver.add(con);
-        con.k = 1.0;
-      }
-    }
-
-    return solver;
-  };
-
-  let i = 1;
-  let solveStep = (gk=0.5) => {
-    let solver = solveStep1();
-
-    if (i % 40 === 0.0) {
-      let c1 = getCenter(nodes);
-
-      let rfac = 1000.0;
-
-      if (best) loadGraph(nodes, best);
-
-      for (let n of nodes) {
-        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
-        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
-        n.vel.zero();
-      }
-
-      let c2 = getCenter(nodes);
-      c1.sub(c2);
-
-      for (let n of nodes) {
-        n.pos.add(c1);
-      }
-    }
-
-    let err = 1e17;
-
-    for (let n of nodes) {
-      n.oldpos.load(n.pos);
-      n.pos.addFac(n.vel, 0.5);
-    }
-
-    disableEdges = false;
-    disableArea = true;
-    solver.solve(1, gk);
-
-    //solve so boxes don't overlap
-    disableEdges = true;
-    disableArea = false;
-
-    for (let j=0; j<10; j++) {
-      solver = solveStep1();
-      err = solver.solve(10, gk*speed);
-    }
-
-    for (let n of nodes) {
-      n.vel.load(n.pos).sub(n.oldpos);
-    }
-
-    //get error from edge constraints
-
-    disableEdges = false;
-    disableArea = true;
-
-    err = 0.0;
-    for (let con of solver.constraints) {
-      err += con.evaluate(true);
-    }
-
-    disableEdges = false;
-    disableArea = false;
-
-    /*
-    loadGraph(orignodes, nodes);
-    if (updateCb) {
-      updateCb();
-    }//*/
-
-    lasterr = err;
-
-    let add = Math.random()*besterr*Math.exp(-i*0.1);
-
-    if (besterr === undefined || err < besterr+add) {
-      best = copyGraph(nodes);
-      besterr = err;
-    }
-
-    i++;
-
-    return err;
-  };
-
-
-  for (let j=0; j<steps; j++) {
-    solveStep();
-
-    decayi++;
-    decay = Math.exp(-decayi*0.1);
-  }
-
-  min.zero().addScalar(1e17);
-  max.zero().addScalar(-1e17);
-
-  for (let node of (best ? best : nodes)) {
-    min.min(node.pos);
-    p2.load(node.pos).add(node.size);
-    max.max(p2);
-  }
-
-  for (let node of (best ? best : nodes)) {
-    node.pos.sub(min);
-  }
-
-  loadGraph(orignodes, best ? best : nodes);
-
-  if (updateCb) {
-    if (nodes._timer !== undefined) {
-      window.clearInterval(nodes._timer);
-    }
-
-    nodes._timer = window.setInterval(() => {
-      let time = time_ms();
-
-      while (time_ms() - time < 50) {
-        let err = solveStep();
-      }
-
-      if (cconst.DEBUG.boxPacker) {
-        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
-      }
-
-      if (best) loadGraph(orignodes, best);
-
-      if (updateCb() === false) {
-        clearInterval(nodes._timer);
-        return;
-      }
-    }, 100);
-
-    let timer = nodes._timer;
-
-    return {
-      stop : () => {
-        if (best) loadGraph(nodes, best);
-
-        window.clearInterval(timer);
-        nodes._timer = undefined;
-      }
-    }
-  }
-}
-
-var controller = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  eventgraph: eventdag,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: config$1,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolOpAPI: buildToolOpAPI,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
-  BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
-  EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty$9,
-  FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
-  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
-  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
-  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
-  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
-  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
-  BSplineTransformOp: BSplineTransformOp,
-  Curve1DPoint: Curve1DPoint,
-  initSplineTemplates: initSplineTemplates,
-  ParamKey: ParamKey,
-  SimpleCurveBase: SimpleCurveBase,
-  BounceCurve: BounceCurve,
-  ElasticCurve: ElasticCurve,
-  EaseCurve: EaseCurve,
-  RandCurve: RandCurve,
-  getCurve: getCurve,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveTypeData: CurveTypeData,
-  Curve1D: Curve1D,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  Curve1DProperty: Curve1DProperty,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  I32BaseVector: I32BaseVector,
-  I16BaseVector: I16BaseVector,
-  I8BaseVector: I8BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI16BaseVector: UI16BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  makeVector4: makeVector4,
-  Vector4: Vector4$2,
-  makeVector3: makeVector3,
-  Vector3: Vector3$2,
-  makeVector2: makeVector2,
-  Vector2: Vector2$b,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  colinear2d: colinear2d,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  angle_between_vecs: angle_between_vecs,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
-  cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
-  haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
-  keymap: keymap$4,
-  reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
-});
-
 "use strict";
 
 let EnumProperty$4 = EnumProperty$9,
-    PropTypes$4    = PropTypes$8;
+  PropTypes$4 = PropTypes$8;
 
-let UIBase$b     = UIBase$f,
-    PackFlags$6  = PackFlags$a,
-    IconSheets$3 = IconSheets$7;
+let UIBase$b = UIBase$f,
+  PackFlags$6 = PackFlags$a,
+  IconSheets$3 = IconSheets$7;
 
 function getpx$2(css) {
-  return parseFloat(css.trim().replace("px", ""))
+  return parseFloat(css.trim().replace("px", ""));
 }
 
 function debugmenu() {
@@ -40487,7 +40565,6 @@ function debugmenu() {
     console.warn("%cmenu:", "color:blue", ...arguments);
   }
 }
-
 
 class Menu extends UIBase$b {
   constructor() {
@@ -40536,7 +40613,7 @@ class Menu extends UIBase$b {
               justify-items : start;
     */
 
-    let style = this.menustyle = document.createElement("style");
+    let style = (this.menustyle = document.createElement("style"));
     this.buildStyle();
 
     this.dom.setAttribute("tabindex", -1);
@@ -40550,7 +40627,7 @@ class Menu extends UIBase$b {
   static define() {
     return {
       tagname: "menu-x",
-      style  : "menu"
+      style  : "menu",
     };
   }
 
@@ -40656,7 +40733,7 @@ class Menu extends UIBase$b {
       let item = this.activeItem;
 
       do {
-        i = (i + dir + this.items.length)%this.items.length;
+        i = (i + dir + this.items.length) % this.items.length;
         item = this.items[i];
 
         if (!item.hidden) {
@@ -40719,7 +40796,7 @@ class Menu extends UIBase$b {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = this.textbox = UIBase$b.createElement("textbox-x");
+    let sbox = (this.textbox = UIBase$b.createElement("textbox-x"));
     this.textbox.parentWidget = this;
 
     dom2.appendChild(sbox);
@@ -40808,8 +40885,7 @@ class Menu extends UIBase$b {
       this.container.appendChild(this.dom);
     }
 
-    if (!setActive)
-      return;
+    if (!setActive) return;
 
     this.setCSS();
     this.flushUpdate();
@@ -40842,7 +40918,8 @@ class Menu extends UIBase$b {
 
     let icon_div;
 
-    if (1) { //icon >= 0) {
+    if (1) {
+      //icon >= 0) {
       icon_div = makeIconDiv(icon, IconSheets$3.SMALL);
     } else {
       let tilesize = iconmanager$1.getTileSize(IconSheets$3.SMALL);
@@ -40881,7 +40958,7 @@ class Menu extends UIBase$b {
     if (hotkey) {
       dom.hotkey = hotkey;
       g.font = getFont(this, undefined, "HotkeyText");
-      hwid = Math.ceil(g.measureText(hotkey).width/UIBase$b.getDPI());
+      hwid = Math.ceil(g.measureText(hotkey).width / UIBase$b.getDPI());
       twid += hwid + 8;
     }
 
@@ -40894,7 +40971,7 @@ class Menu extends UIBase$b {
     span.style["overflow"] = "hidden";
     span.style["text-overflow"] = "clip";
 
-    span.style["width"] = ~~(twid) + "px";
+    span.style["width"] = ~~twid + "px";
     span.style["padding"] = "0px";
     span.style["margin"] = "0px";
 
@@ -41054,12 +41131,12 @@ class Menu extends UIBase$b {
         this.click();
       };
 
-      li.addEventListener("contextmenu", e => e.preventDefault());
-      this.addEventListener("contextmenu", e => e.preventDefault());
+      li.addEventListener("contextmenu", (e) => e.preventDefault());
+      this.addEventListener("contextmenu", (e) => e.preventDefault());
 
-      li.addEventListener("pointerup", onclick, {capture: true});
-      li.addEventListener("click", onclick, {capture: true});
-      li.addEventListener("pointerdown", onclick, {capture: true});
+      li.addEventListener("pointerup", onclick, { capture: true });
+      li.addEventListener("click", onclick, { capture: true });
+      li.addEventListener("pointerdown", onclick, { capture: true });
 
       li.addEventListener("focus", (e) => {
         onfocus(e);
@@ -41104,12 +41181,12 @@ class Menu extends UIBase$b {
 
     let boxShadow = "";
     if (this.hasDefault("box-shadow")) {
-      boxShadow = "box-shadow: " + this.getDefault("box-shadow") + ';';
+      boxShadow = "box-shadow: " + this.getDefault("box-shadow") + ";";
     }
 
     let sepcss = this.getDefault("MenuSeparator");
     if (typeof sepcss === "object") {
-      let s = '';
+      let s = "";
 
       for (let k in sepcss) {
         let v = sepcss[k];
@@ -41227,9 +41304,7 @@ class Menu extends UIBase$b {
     return ret;
   }
 
-  calcSize() {
-
-  }
+  calcSize() {}
 }
 
 Menu.SEP = Symbol("menu seperator");
@@ -41298,7 +41373,7 @@ class DropBox extends OldButton {
   static define() {
     return {
       tagname: "dropbox-x",
-      style  : "dropbox"
+      style  : "dropbox",
     };
   }
 
@@ -41321,10 +41396,17 @@ class DropBox extends OldButton {
       keys = ["margin-left", "margin-right", "padding-left", "padding-right"];
     } else {
       keys = [
-        "margin", "margin-left", "margin-right",
-        "margin-top", "margin-bottom", "padding",
-        "padding-left", "padding-right", "padding-top",
-        "padding-bottom"];
+        "margin",
+        "margin-left",
+        "margin-right",
+        "margin-top",
+        "margin-bottom",
+        "padding",
+        "padding-left",
+        "padding-right",
+        "padding-top",
+        "padding-bottom",
+      ];
     }
 
     let setDefault = (key) => {
@@ -41366,7 +41448,7 @@ class DropBox extends OldButton {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = this.g.measureText(this._genLabel()).width/dpi;
+    let tw = this.g.measureText(this._genLabel()).width / dpi;
     //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
 
@@ -41439,7 +41521,7 @@ class DropBox extends OldButton {
     prop = this.prop;
 
     let name = this.getAttribute("name");
-    
+
     if (prop.type & (PropTypes$4.ENUM | PropTypes$4.FLAG)) {
       name = prop.ui_value_names[prop.keys[val]];
     } else {
@@ -41508,7 +41590,7 @@ class DropBox extends OldButton {
       this._menu.remove();
     }
 
-    let menu = this._menu = UIBase$b.createElement("menu-x");
+    let menu = (this._menu = UIBase$b.createElement("menu-x"));
 
     //let name = "" + this.getAttribute("name");
     menu.setAttribute("name", "");
@@ -41630,7 +41712,8 @@ class DropBox extends OldButton {
 
     let dpi = this.getDPI();
 
-    let x = e.x, y = e.y;
+    let x = e.x,
+      y = e.y;
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
     let rheight = rects.height;
@@ -41642,8 +41725,8 @@ class DropBox extends OldButton {
     }
 
     /* need to figure out a better way to pop up a menu
-    *  above a given y position */
-    if (exports.menusCanPopupAbove && y > screen.size[1]*0.5 && !this.searchMenuMode) {
+     *  above a given y position */
+    if (exports.menusCanPopupAbove && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
       let con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
@@ -41676,7 +41759,7 @@ class DropBox extends OldButton {
         menu.dom.remove();
         con.remove();
 
-        let popup = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
+        let popup = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
         popup.noMarginsOrPadding();
 
         //popup.shadow.appendChild(menu.dom);
@@ -41704,7 +41787,7 @@ class DropBox extends OldButton {
     document.body.appendChild(w);
     //*/
 
-    let con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
+    let con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -41720,14 +41803,18 @@ class DropBox extends OldButton {
       let color;
 
       this.g.clearRect(0, 0, this.dom.width, this.dom.height);
-      
+
       if (this._highlight) {
-        drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight")});
+        drawRoundBox2(this, { canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
       }
 
       if (this._focus) {
         drawRoundBox2(this, {
-          canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight"), op: "stroke", no_clear: true
+          canvas: this.dom,
+          g: this.g,
+          color: this.getDefault("BoxHighlight"),
+          op: "stroke",
+          no_clear: true,
         });
         drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
@@ -41739,10 +41826,11 @@ class DropBox extends OldButton {
     super._redraw(false);
 
     let g = this.g;
-    let w = this.dom.width, h = this.dom.height;
+    let w = this.dom.width,
+      h = this.dom.height;
     let dpi = this.getDPI();
 
-    let p = 10*dpi;
+    let p = 10 * dpi;
     let p2 = dpi;
 
     //*
@@ -41751,7 +41839,7 @@ class DropBox extends OldButton {
       g.fillStyle = bg;
 
       g.beginPath();
-      g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2*2);
+      g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
       g.fill();
     }
     //*/
@@ -41767,12 +41855,12 @@ class DropBox extends OldButton {
     //*/
 
     let sz = 0.3;
-    g.moveTo(w - h*0.5 - p, p);
+    g.moveTo(w - h * 0.5 - p, p);
     g.lineTo(w - p, p);
-    g.moveTo(w - h*0.5 - p, p + sz*h/3);
-    g.lineTo(w - p, p + sz*h/3);
-    g.moveTo(w - h*0.5 - p, p + sz*h*2/3);
-    g.lineTo(w - p, p + sz*h*2/3);
+    g.moveTo(w - h * 0.5 - p, p + (sz * h) / 3);
+    g.lineTo(w - p, p + (sz * h) / 3);
+    g.moveTo(w - h * 0.5 - p, p + (sz * h * 2) / 3);
+    g.lineTo(w - p, p + (sz * h * 2) / 3);
 
     g.lineWidth = 1;
     g.stroke();
@@ -41812,8 +41900,7 @@ class DropBox extends OldButton {
       this.prop.setValue(val);
       let val2 = val;
 
-      if (val2 in this.prop.keys)
-        val2 = this.prop.keys[val2];
+      if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
       val2 = this.prop.ui_value_names[val2];
 
       this.setAttribute("name", "" + val2);
@@ -41997,7 +42084,8 @@ class MenuWrangler {
     }
 
     let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
+    let x = e.pageX,
+      y = e.pageY;
 
     let element = screen.pickElement(x, y);
 
@@ -42015,7 +42103,8 @@ class MenuWrangler {
     }
 
     let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
+    let x = e.pageX,
+      y = e.pageY;
 
     let element = screen.pickElement(x, y, undefined, undefined, DropBox);
     if (element !== undefined) {
@@ -42028,7 +42117,6 @@ class MenuWrangler {
         element.click();
       }
     }
-
   }
 
   findMenu(x, y) {
@@ -42047,7 +42135,8 @@ class MenuWrangler {
     let w = element;
 
     while (w) {
-      if (w instanceof Menu) {//w === this.menu) {
+      if (w instanceof Menu) {
+        //w === this.menu) {
         return w;
         break;
       }
@@ -42072,7 +42161,8 @@ class MenuWrangler {
     }
 
     let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
+    let x = e.pageX,
+      y = e.pageY;
 
     let element;
     let menu = this.menu;
@@ -42081,7 +42171,7 @@ class MenuWrangler {
       let r = menu.getBoundingClientRect();
       let pad = 15;
 
-      if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad*2 && y <= r.y + r.height + pad*2) {
+      if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad * 2 && y <= r.y + r.height + pad * 2) {
         element = menu;
       }
     }
@@ -42100,7 +42190,7 @@ class MenuWrangler {
       this.closereq = undefined;
       return;
     }
-    
+
     let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
     destroy = destroy && element.menu !== this.menu;
 
@@ -42130,7 +42220,8 @@ class MenuWrangler {
 
     let w = element;
     while (w) {
-      if (w instanceof Menu) {//w === this.menu) {
+      if (w instanceof Menu) {
+        //w === this.menu) {
         ok = true;
         break;
       }
@@ -42186,13 +42277,13 @@ class MenuWrangler {
   }
 }
 
-let menuWrangler = window._menuWrangler = new MenuWrangler();
+let menuWrangler = (window._menuWrangler = new MenuWrangler());
 let wrangerStarted = false;
 
 function startMenuEventWrangling(screen) {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     // inside a worker?
-    return
+    return;
   }
   menuWrangler.screen = screen;
 
@@ -42209,7 +42300,7 @@ function startMenuEventWrangling(screen) {
 
     let dom = k.search("key") >= 0 ? window : document.body;
     dom = window;
-    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), {passive: false, capture: true});
+    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), { passive: false, capture: true });
   }
 
   menuWrangler.screen = screen;
@@ -42266,7 +42357,7 @@ function createMenu(ctx, title, templ) {
       cbs[id] = (function (toolpath) {
         return function () {
           ctx.api.execTool(ctx, toolpath);
-        }
+        };
       })(item);
 
       id++;
@@ -42274,7 +42365,8 @@ function createMenu(ctx, title, templ) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
       doItem(item());
-    } else if (item instanceof Array) { //old array-based api for custom entries
+    } else if (item instanceof Array) {
+      //old array-based api for custom entries
       let hotkey = item.length > 2 ? item[2] : undefined;
       let icon = item.length > 3 ? item[3] : undefined;
       let tooltip = item.length > 4 ? item[4] : undefined;
@@ -42289,10 +42381,11 @@ function createMenu(ctx, title, templ) {
       cbs[id2] = (function (cbfunc, arg) {
         return function () {
           cbfunc(arg);
-        }
+        };
       })(item[1], id2);
-    } else if (typeof item === "object") { //new object-based api for custom entries
-      let {name, callback, hotkey, icon, tooltip} = item;
+    } else if (typeof item === "object") {
+      //new object-based api for custom entries
+      let { name, callback, hotkey, icon, tooltip } = item;
 
       let id2 = item.id !== undefined ? item.id : id++;
       if (hotkey !== undefined && hotkey instanceof HotKey) {
@@ -42304,7 +42397,7 @@ function createMenu(ctx, title, templ) {
       cbs[id2] = (function (cbfunc, arg) {
         return function () {
           cbfunc(arg);
-        }
+        };
       })(callback, id2);
     }
   };
@@ -42324,7 +42417,7 @@ function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
   menuWrangler.endMenus();
 
   let screen = menu.ctx.screen;
-  let con = menu._popup = screen.popup(undefined, x, y, false, safetyDelay);
+  let con = (menu._popup = screen.popup(undefined, x, y, false, safetyDelay));
   con.noMarginsOrPadding();
 
   con.add(menu);
@@ -48047,13 +48140,18 @@ class Area$1 extends UIBase$f {
     let row;
     let helpRow;
 
+    if (this.header) {
+      this.header.remove();
+      this.header = undefined;
+    }
+
     if (!(this.flag & AreaFlags.NO_SWITCHER) && exports.useAreaTabSwitcher) {
       let col = this.header = container.col();
 
       switcherRow = helpRow = col.row();
       row = col.row();
     } else {
-      row = helpRow = this.header = container.row();
+      row = helpRow = switcherRow = this.header = container.row();
     }
 
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
