@@ -1729,6 +1729,10 @@ export let menuWrangler = window._menuWrangler = new MenuWrangler();
 let wrangerStarted = false;
 
 export function startMenuEventWrangling(screen) {
+  if (typeof document === 'undefined') {
+    // inside a worker?
+    return
+  }
   menuWrangler.screen = screen;
 
   if (wrangerStarted) {

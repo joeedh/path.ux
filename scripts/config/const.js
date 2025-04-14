@@ -8,38 +8,41 @@ let _clipboards = {};
 
 import * as ctrlconfig from '../path-controller/config/config.js';
 
-window.setInterval(() => {
-  if (!document.hasFocus()) {
-    return
-  }
-
-  let cb = navigator.clipboard;
-  if (!cb || !cb.read) {
-    return;
-  }
-
-  cb.read().then((data) => {
-    for (let item of data) {
-      for (let i = 0; i < item.types.length; i++) {
-        let type = item.types[i];
-
-        if (!(type in _clipboards)) {
-          _clipboards[type] = {
-            name: type,
-            mime: type,
-            data: undefined
-          };
-        }
-        ;
-
-        item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
-          _clipboards[type].data = text;
-        });
-      }
+if (typeof document !== 'undefined') {
+  /* spawn clipboard reader */
+  window.setInterval(() => {
+    if (!document.hasFocus()) {
+      return
     }
-  }).catch(function () {
-  });
-}, 200);
+
+    let cb = navigator.clipboard;
+    if (!cb || !cb.read) {
+      return;
+    }
+
+    cb.read().then((data) => {
+      for (let item of data) {
+        for (let i = 0; i < item.types.length; i++) {
+          let type = item.types[i];
+
+          if (!(type in _clipboards)) {
+            _clipboards[type] = {
+              name: type,
+              mime: type,
+              data: undefined
+            };
+          }
+          ;
+
+          item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
+            _clipboards[type].data = text;
+          });
+        }
+      }
+    }).catch(function () {
+    });
+  }, 200);
+}
 
 let exports = {
   /** Client code can override this using `.loadConstants`, this is

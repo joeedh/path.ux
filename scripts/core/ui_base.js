@@ -102,11 +102,13 @@ export function getTagPrefix(prefix) {
   return tagPrefix;
 }
 
-let prefix = document.getElementById("pathux-tag-prefix");
-if (prefix) {
-  console.log("Found pathux-tag-prefix element");
-  prefix = prefix.innerText.trim();
-  setTagPrefix(prefix);
+if (typeof document !== 'undefined') {
+  let prefix = document.getElementById("pathux-tag-prefix");
+  if (prefix) {
+    console.log("Found pathux-tag-prefix element");
+    prefix = prefix.innerText.trim();
+    setTagPrefix(prefix);
+  }
 }
 
 import {ClassIdSymbol} from './ui_consts.js';
@@ -553,12 +555,19 @@ export class IconManager {
   }
 }
 
-export let iconmanager = new IconManager([
-  document.getElementById("iconsheet16"),
-  document.getElementById("iconsheet32"),
-  document.getElementById("iconsheet48")
-], [16, 32, 64], 16);
+let iconmanager
 
+if (typeof document !== 'undefined') {
+  iconmanager = new IconManager([
+    document.getElementById("iconsheet16"),
+    document.getElementById("iconsheet32"),
+    document.getElementById("iconsheet48")
+  ], [16, 32, 64], 16);
+} else {
+  iconmanager = new IconManager([])
+}
+
+export {iconmanager}
 window._iconmanager = iconmanager; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
@@ -836,6 +845,16 @@ export function internalSetTimeout(cb, timeout) {
 }
 
 window.setTimeoutQueue = setTimeoutQueue;
+
+if (typeof HTMLElement === 'undefined') {
+  // inside a worker?
+  window.HTMLElement = class HTMLElement {}
+  window.customElements = {
+    define: () => {}
+  }
+  window.devicePixelRatio = 1.0
+  window.PointerEvent = class PointerEvent {}
+}
 
 export class UIBase extends HTMLElement {
   #reflagGraph = false;
