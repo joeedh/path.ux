@@ -74,9 +74,15 @@ type IStartArgs = {
   [k in keyof StartArgs]+?: StartArgFilter<StartArgs[k]>;
 };
 
-interface IContextConstructor<CTX extends Context = Context, APP> {
+export interface IContextConstructor<CTX extends Context = Context, APP> {
   new(state?: APP): CTX
 }
+
+export interface ISimpleContextConstructor<APP> {
+  new(state?: APP): CTX
+}
+
+export type IDerivedContext<CTX, APP> = CTX & Context<APP>
 
 /** see FileArgs class */
 export interface IFileArgs {
@@ -89,11 +95,11 @@ export interface IFileArgs {
   fileFlags?: number
   fromFileOp?: boolean /* SimpleSaveOp and SimpleOpenOp set this to true */
 }
-export declare class AppState<CTX extends Context = Context> {
-  constructor(ctx: IContextConstructor<CTX, this>)
+export declare class AppState<CTX = any> {
+  constructor(ctx: ISimpleContextConstructor<CTX, this>)
   api: DataAPI;
-  screen: SimpleScreen<CTX>;
-  ctx: CTX;
+  screen: SimpleScreen<IDerivedContext<CTX, this>>;
+  ctx: IDerivedContext<CTX, this>;
   fileMagic: string;
   fileVersion: [number, number, number];
   fileExt?: string;
