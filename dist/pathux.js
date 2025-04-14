@@ -20281,38 +20281,41 @@ let _clipdata = {
 
 let _clipboards = {};
 
-window.setInterval(() => {
-  if (!document.hasFocus()) {
-    return
-  }
-
-  let cb = navigator.clipboard;
-  if (!cb || !cb.read) {
-    return;
-  }
-
-  cb.read().then((data) => {
-    for (let item of data) {
-      for (let i = 0; i < item.types.length; i++) {
-        let type = item.types[i];
-
-        if (!(type in _clipboards)) {
-          _clipboards[type] = {
-            name: type,
-            mime: type,
-            data: undefined
-          };
-        }
-        ;
-
-        item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
-          _clipboards[type].data = text;
-        });
-      }
+if (typeof document !== 'undefined') {
+  /* spawn clipboard reader */
+  window.setInterval(() => {
+    if (!document.hasFocus()) {
+      return
     }
-  }).catch(function () {
-  });
-}, 200);
+
+    let cb = navigator.clipboard;
+    if (!cb || !cb.read) {
+      return;
+    }
+
+    cb.read().then((data) => {
+      for (let item of data) {
+        for (let i = 0; i < item.types.length; i++) {
+          let type = item.types[i];
+
+          if (!(type in _clipboards)) {
+            _clipboards[type] = {
+              name: type,
+              mime: type,
+              data: undefined
+            };
+          }
+          ;
+
+          item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
+            _clipboards[type].data = text;
+          });
+        }
+      }
+    }).catch(function () {
+    });
+  }, 200);
+}
 
 let exports = {
   /** Client code can override this using `.loadConstants`, this is
@@ -26284,6 +26287,10 @@ CurveTypeData.register(BSplineCurve);
 
 
 function makeSplineTemplateIcons(size = 64) {
+  if (typeof document === 'undefined') {
+    /* inside a web worker? */
+    return
+  }
   let dpi = devicePixelRatio;
   size = ~~(size*dpi);
 
@@ -33144,11 +33151,13 @@ function getTagPrefix(prefix) {
   return tagPrefix;
 }
 
-let prefix = document.getElementById("pathux-tag-prefix");
-if (prefix) {
-  console.log("Found pathux-tag-prefix element");
-  prefix = prefix.innerText.trim();
-  setTagPrefix(prefix);
+if (typeof document !== 'undefined') {
+  let prefix = document.getElementById("pathux-tag-prefix");
+  if (prefix) {
+    console.log("Found pathux-tag-prefix element");
+    prefix = prefix.innerText.trim();
+    setTagPrefix(prefix);
+  }
 }
 
 let class_idgen = 1;
@@ -33591,12 +33600,17 @@ class IconManager {
   }
 }
 
-let iconmanager$1 = new IconManager([
-  document.getElementById("iconsheet16"),
-  document.getElementById("iconsheet32"),
-  document.getElementById("iconsheet48")
-], [16, 32, 64], 16);
+let iconmanager$1;
 
+if (typeof document !== 'undefined') {
+  iconmanager$1 = new IconManager([
+    document.getElementById("iconsheet16"),
+    document.getElementById("iconsheet32"),
+    document.getElementById("iconsheet48")
+  ], [16, 32, 64], 16);
+} else {
+  iconmanager$1 = new IconManager([]);
+}
 window._iconmanager = iconmanager$1; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
@@ -33866,6 +33880,16 @@ function internalSetTimeout(cb, timeout) {
 }
 
 window.setTimeoutQueue = setTimeoutQueue;
+
+if (typeof HTMLElement === 'undefined') {
+  // inside a worker?
+  window.HTMLElement = class HTMLElement {};
+  window.customElements = {
+    define: () => {}
+  };
+  window.devicePixelRatio = 1.0;
+  window.PointerEvent = class PointerEvent {};
+}
 
 class UIBase$f extends HTMLElement {
   #reflagGraph = false;
@@ -42165,6 +42189,10 @@ let menuWrangler = window._menuWrangler = new MenuWrangler();
 let wrangerStarted = false;
 
 function startMenuEventWrangling(screen) {
+  if (typeof document === 'undefined') {
+    // inside a worker?
+    return
+  }
   menuWrangler.screen = screen;
 
   if (wrangerStarted) {

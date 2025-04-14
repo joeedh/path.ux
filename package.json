@@ -1,6 +1,6 @@
 {
   "name": "path.ux",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Html5 based UI library with blender-rna-style data binding",
   "main": "pathux.js",
   "browser": "true",
@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bash buildtools/build.sh",
     "build-docs": "bash build_docs.sh",
-    "render-icons": "bash render_icons.sh"
+    "render-icons": "bash render_icons.sh",
+    "publish": "bash buildtools/publish.sh"
   },
   "directories": {
     "doc": "docs"
