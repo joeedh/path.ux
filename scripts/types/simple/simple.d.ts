@@ -6,7 +6,7 @@ import { Area } from "../screen/ScreenArea";
 export { Context } from "../core/context";
 import { Context } from "../core/context";
 import { TabContainer } from "./ui_tabs";
-import { IconMap } from "../pathux";
+import { IPathuxConstants, IconMap } from "../pathux";
 export declare class DataModel<ContextCls = {}> {
   ctx: ContextCls;
   static defineAPI(api, dataStruct): DataStruct;
@@ -72,7 +72,7 @@ type StartArgFilter<T> = NotCallable<T>;
 /** See StartArgs class for defaults. */
 type IStartArgs = {
   [k in keyof StartArgs]+?: StartArgFilter<StartArgs[k]>;
-};
+} & Partial<IPathuxConstants>;
 
 export interface IContextConstructor<CTX extends Context = Context, APP> {
   new(state?: APP): CTX
