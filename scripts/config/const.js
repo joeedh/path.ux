@@ -166,7 +166,9 @@ let exports = {
 export default exports;
 window.DEBUG = exports.DEBUG;
 
-let cfg = document.getElementById("pathux-config");
-if (cfg) {
-  exports.loadConstants(JSON.parse(cfg.innerText));
+if (typeof document !== 'undefined') {
+  let cfg = document.getElementById("pathux-config");
+  if (cfg) {
+    exports.loadConstants(JSON.parse(cfg.innerText));
+  }
 }
