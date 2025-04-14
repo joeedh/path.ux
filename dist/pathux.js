@@ -1201,7 +1201,8 @@ const StructEnum = {
   UINT         : 17,
   USHORT       : 18,
   STATIC_ARRAY : 19,
-  SIGNED_BYTE  : 20
+  SIGNED_BYTE  : 20,
+  OPTIONAL     : 21,
 };
 
 const ArrayTypes = new Set([
@@ -1220,7 +1221,6 @@ const ValueTypes = new Set([
   StructEnum.UINT,
   StructEnum.USHORT,
   StructEnum.SIGNED_BYTE
-
 ]);
 
 let StructTypes = {
@@ -1239,7 +1239,8 @@ let StructTypes = {
   "byte"         : StructEnum.BYTE,
   "bool"         : StructEnum.BOOL,
   "iterkeys"     : StructEnum.ITERKEYS,
-  "sbyte"        : StructEnum.SIGNED_BYTE
+  "sbyte"        : StructEnum.SIGNED_BYTE,
+  "optional"     : StructEnum.OPTIONAL,
 };
 
 let StructTypeMap = {};
@@ -1319,7 +1320,7 @@ function StructParser() {
   let reserved_tokens = new Set([
     "int", "float", "double", "string", "static_string", "array",
     "iter", "abstract", "short", "byte", "sbyte", "bool", "iterkeys", "uint", "ushort",
-    "static_array"
+    "static_array", "optional"
   ]);
 
   function tk(name, re, func) {
@@ -1346,6 +1347,7 @@ function StructParser() {
       return t;
     }),
     tk("COLON", /:/),
+    tk("OPT_COLON", /\?:/),
     tk("SOPEN", /\[/),
     tk("SCLOSE", /\]/),
     tk("JSCRIPT", /\|/, function (t) {
@@ -1515,6 +1517,18 @@ function StructParser() {
     }
   }
 
+  function p_Optional(p) {
+    p.expect("OPTIONAL");
+    p.expect("LPARAM");
+    const type = p_Type(p);
+    p.expect("RPARAM");
+
+    return {
+      type: StructEnum.OPTIONAL,
+      data: type
+    }
+  }
+
   function p_Type(p) {
     let tok = p.peeknext();
 
@@ -1538,6 +1552,8 @@ function StructParser() {
       return p_Abstract(p);
     } else if (tok.type === "DATAREF") {
       return p_DataRef(p);
+    } else if (tok.type === "OPTIONAL") {
+      return p_Optional(p);
     } else {
       p.error(tok, "invalid type " + tok.type);
     }
@@ -1558,9 +1574,22 @@ function StructParser() {
     let field = {};
 
     field.name = p_ID_or_num(p);
-    p.expect("COLON");
+    let is_opt = false;
+
+    if (p.peeknext().type === "OPT_COLON") {
+      p.expect("OPT_COLON");
+      is_opt = true;
+    } else {
+      p.expect("COLON");
+    }
 
     field.type = p_Type(p);
+    if (is_opt) {
+      field.type = {
+        type:  StructEnum.OPTIONAL,
+        data: field.type
+      };
+    }
     field.set = undefined;
     field.get = undefined;
 
@@ -3324,6 +3353,85 @@ class StructStaticArrayField extends StructFieldType {
 }
 
 StructFieldType.register(StructStaticArrayField);
+
+class StructOptionalField extends StructFieldType {
+  static pack(manager, data, val, obj, field, type) {
+    pack_int(data, val !== undefined && val !== null ? 1 : 0);
+    if (val !== undefined && val !== null) {
+      const fakeField = {...field};
+      fakeField.type = type.data;
+      do_pack(manager, data, val, obj, fakeField, type.data);
+    }
+  }
+
+  static fakeField(field, type) {
+    return {...field, type: type.data}
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    const fakeField = this.fakeField(field, type); 
+    return val !== undefined && val !== null ? validateJSON$1(manager, val, obj, fakeField, type.data, undefined, _abstractKey) : true;
+  }
+
+
+  static fromJSON(manager, val, obj, field, type, instance) {
+    const fakeField = this.fakeField(field, type); 
+    return val !== undefined && val !== null ? fromJSON(manager, val, obj, fakeField, type.data, undefined) : undefined;
+  }
+
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    if (val !== undefined && val !== null) {
+      const fakeField = this.fakeField(field, type);   
+      return formatJSON$1(manager, item, val, fakeField, type.data, instance, tlvl + 1) 
+    }
+    return 'null';
+  }
+
+  static toJSON(manager, val, obj, field, type) {
+    const fakeField = this.fakeField(field, type);
+    return val !== undefined && val !== null ? toJSON(manager, val, obj, fakeField, type.data) : null
+  }
+
+  static packNull(manager, data, field, type) {
+    pack_int(data, 0);
+  }
+
+  static format(type) {
+    return "optional(" + fmt_type(type.data) + ")";
+  }
+
+  static unpackInto(manager, data, type, uctx, dest) {
+    let exists = unpack_int(data, uctx);
+
+    packer_debug$1("-int " + id);
+    packer_debug$1("optional exists: " + exists);
+
+    if (!exists) {
+      return
+    }
+
+    unpack_field(manager, data, type.data, uctx);
+  }
+
+  static unpack(manager, data, type, uctx) {
+    let exists = unpack_int(data, uctx);
+  
+    if (!exists) {
+      return undefined
+    }
+
+    return unpack_field(manager, data, type.data, uctx);
+  }
+
+  static define() {
+    return {
+      type: StructEnum.OPTIONAL,
+      name: "optional"
+    }
+  }
+}
+
+StructFieldType.register(StructOptionalField);
 
 var _sintern2 = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -10365,6 +10473,7 @@ let _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
 
 function makeVector3(BaseVector, structName = 'vec3', structType = 'float', customConstructorCode = undefined) {
   var Vector3;
+  var bundlehelper = [nstructjs];
 
   const constructorCode = customConstructorCode ?? `
     constructor(data) {
@@ -10389,7 +10498,7 @@ function makeVector3(BaseVector, structName = 'vec3', structType = 'float', cust
   const code = `
   let temp1, temp2, temp3, temp4;
   Vector3 = class Vector3 extends BaseVector {
-    static STRUCT = nstructjs.inlineRegister(this, \`
+    static STRUCT = bundlehelper[0].inlineRegister(this, \`
     ${structName} {
       0 : ${structType};
       1 : ${structType};
@@ -10533,11 +10642,11 @@ function makeVector3(BaseVector, structName = 'vec3', structType = 'float', cust
       let y = this[1];
 
       if (axis === 1) {
-        this[0] = x*cos(A) + y*sin(A);
-        this[1] = y*cos(A) - x*sin(A);
+        this[0] = x*Math.cos(A) + y*Math.sin(A);
+        this[1] = y*Math.cos(A) - x*Math.sin(A);
       } else {
-        this[0] = x*cos(A) - y*sin(A);
-        this[1] = y*cos(A) + x*sin(A);
+        this[0] = x*Math.cos(A) - y*Math.sin(A);
+        this[1] = y*Math.cos(A) + x*Math.sin(A);
       }
 
       return this;
@@ -10652,11 +10761,11 @@ function makeVector2(BaseVector, structName = 'vec2', structType = 'float') {
       let y = this[1];
 
       if (axis === 1) {
-        this[0] = x*cos$1(A) + y*sin$1(A);
-        this[1] = y*cos$1(A) - x*sin$1(A);
+        this[0] = x*Math.cos(A) + y*Math.sin(A);
+        this[1] = y*Math.cos(A) - x*Math.sin(A);
       } else {
-        this[0] = x*cos$1(A) - y*sin$1(A);
-        this[1] = y*cos$1(A) + x*sin$1(A);
+        this[0] = x*Math.cos(A) - y*Math.sin(A);
+        this[1] = y*Math.cos(A) + x*Math.sin(A);
       }
 
       return this;
@@ -13673,6 +13782,7 @@ class ToolProperty$1 extends ToolPropertyIF {
 
   private() {
     this.flag |= PropFlags$3.PRIVATE;
+    this.flag &= ~PropFlags$3.SAVE_LAST_VALUE;
     return this;
   }
 
@@ -15030,6 +15140,7 @@ class ListProperty extends ToolProperty$1 {
     super(PropTypes$8.PROPLIST);
 
     this.uiname = uiname;
+    this.flag &= ~PropFlags$3.SAVE_LAST_VALUE;
 
     if (typeof prop == "number") {
       prop = PropClasses[prop];
@@ -15064,6 +15175,12 @@ class ListProperty extends ToolProperty$1 {
 
   set length(val) {
     this.value.length = val;
+  }
+
+  splice(i, deleteCount, ...newItems) {
+    const deletedItems = this.value.splice(i, deleteCount, ...newItems);
+    this.length = this.value.length;
+    return deletedItems
   }
 
   calcMemSize() {
@@ -15107,6 +15224,7 @@ class ListProperty extends ToolProperty$1 {
     super.copyTo(b);
 
     b.prop = this.prop.copy();
+    b.value.length = [];
 
     for (let prop of this.value) {
       b.value.push(prop.copy());
@@ -15136,13 +15254,20 @@ class ListProperty extends ToolProperty$1 {
 
   clear() {
     this.value.length = 0;
+    return this
   }
 
   getListItem(i) {
+    if (i < 0) {
+      i += this.length;
+    }
     return this.value[i].getValue();
   }
 
   setListItem(i, val) {
+    if (i < 0) {
+      i += this.length;
+    }
     this.value[i].setValue(val);
   }
 
@@ -18245,6 +18370,7 @@ function winding_axis(a, b, c, up_axis) {
   return f >= 0.0;
 }
 
+/** returns false if clockwise */
 function winding(a, b, c, zero_z = false, tol = 0.0) {
   let dx1 = b[0] - a[0];
   let dy1 = b[1] - a[1];
@@ -20147,8 +20273,11 @@ let _clipdata = {
 let _clipboards = {};
 
 window.setInterval(() => {
-  let cb = navigator.clipboard;
+  if (!document.hasFocus()) {
+    return
+  }
 
+  let cb = navigator.clipboard;
   if (!cb || !cb.read) {
     return;
   }
@@ -31345,6 +31474,23 @@ class DataAPI extends ModelInterface {
       console.error("Unknown tool " + path);
     }
 
+    args = {...args};
+
+    // feed inputs to invoke
+    const tooldef = cls._getFinalToolDef();
+    if (inputs !== undefined) {
+      for (let k in inputs) {
+        if (!(k in tooldef.inputs)) {
+          console.warn(cls.tooldef().uiname + ": Unknown tool property \"" + k + "\"");
+          continue;
+        }
+
+        if (!(k in args)) {
+          args[k] = inputs[k];
+        }
+      }
+    }
+
     let tool = cls.invoke(ctx, args);
 
     if (inputs !== undefined) {
@@ -35166,24 +35312,17 @@ class UIBase$f extends HTMLElement {
   }
 
   pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$f, excluded_classes = undefined) {
-    let marginx;
     let clip;
     let mouseEvent;
     let isMouseMove, isMouseDown;
 
     if (typeof args === "object") {
-      marginx = args.sx || 0;
-      marginy = args.sy || 0;
       nodeclass = args.nodeclass || UIBase$f;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
     } else {
-      marginx = args;
-
       args = {
-        marginx         : marginx || 0,
-        marginy         : marginy || 0,
         nodeclass       : nodeclass || UIBase$f,
         excluded_classes: excluded_classes,
         clip            : clip
@@ -36473,7 +36612,12 @@ class UIBase$f extends HTMLElement {
    *
    * container.animate().goto("style.width", 500, 100, "ease");
    * */
-  animate(_extra_handlers = {}) {
+  animate(_extra_handlers = {}, domAnimateOptions=undefined) {
+    /* User is providing DOM animation data. */
+    if (Array.isArray(_extra_handlers)) {
+      return super.animate(_extra_handlers, domAnimateOptions)
+    }
+
     let transform = new DOMMatrix(this.style["transform"]);
 
     let update_trans = () => {
@@ -39375,15 +39519,23 @@ var html5_fileapi = /*#__PURE__*/Object.freeze({
 });
 
 class Constraint {
-  constructor(name, func, klst, params, k=1.0) {
+  constructor(name, func, klst, params, k = 1.0) {
     this.glst = [];
     this.klst = klst;
+    this.wlst = [];
     this.k = k;
     this.params = params;
     this.name = name;
 
     for (let ks of klst) {
       this.glst.push(new Float64Array(ks.length));
+      const ws = new Float64Array(ks.length);
+
+      for (let i = 0; i < ws.length; i++) {
+        ws[i] = 1.0;
+      }
+
+      this.wlst.push(ws);
     }
 
     this.df = 0.0005;
@@ -39391,11 +39543,15 @@ class Constraint {
     if (func !== undefined) { /* Happens with subclass-style constraints. */
       this.func = func;
     }
-
-    this.funcDv = null;
+    if (!this.funcDv) {
+      this.funcDv = null;
+    }
   }
 
-  evaluate(no_dvs=false) {
+  postSolve() {
+  }
+
+  evaluate(no_dvs = false) {
     let r1 = this.func(this.params);
 
     if (this.funcDv) {
@@ -39411,17 +39567,17 @@ class Constraint {
     if (no_dvs)
       return r1;
 
-    for (let i=0; i<this.klst.length; i++) {
+    for (let i = 0; i < this.klst.length; i++) {
       let gs = this.glst[i];
       let ks = this.klst[i];
 
-      for (let j=0; j<ks.length; j++) {
+      for (let j = 0; j < ks.length; j++) {
         let orig = ks[j];
         ks[j] += df;
         let r2 = this.func(this.params);
         ks[j] = orig;
 
-        gs[j] = (r2 - r1) / df;
+        gs[j] = (r2 - r1)/df;
       }
     }
 
@@ -39440,15 +39596,19 @@ class Solver {
     this.threshold = 0.01;
   }
 
+  remove(con) {
+    this.constraints.remove(con);
+  }
+
   add(con) {
     this.constraints.push(con);
   }
 
-  solveStep(gk=this.gk) {
+  solveStep(gk = this.gk) {
     let err = 0.0;
 
     let cons = this.constraints;
-    for (let ci=0; ci<cons.length; ci++ ){
+    for (let ci = 0; ci < cons.length; ci++) {
       let ri = ci;
       if (this.randCons) {
         ri = ~~(Math.random()*this.constraints.length*0.99999);
@@ -39464,35 +39624,37 @@ class Solver {
       err += Math.abs(r1);
       let totgs = 0.0;
 
-      for (let i=0; i<con.klst.length; i++) {
+      for (let i = 0; i < con.klst.length; i++) {
         let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
+        for (let j = 0; j < ks.length; j++) {
           totgs += gs[j]*gs[j];
         }
       }
 
-      if (totgs === 0.0)  {
+      if (totgs === 0.0) {
         continue;
       }
 
       r1 /= totgs;
 
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          ks[j] += -r1*gs[j]*con.k*gk;
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -r1*gs[j]*con.k*gk*ws[j];
         }
+
+        con.postSolve();
       }
     }
 
     return err;
   }
 
-  solveStepSimple(gk=this.gk) {
+  solveStepSimple(gk = this.gk) {
     let err = 0.0;
 
     let cons = this.constraints;
-    for (let ci=0; ci<cons.length; ci++ ){
+    for (let ci = 0; ci < cons.length; ci++) {
       let ri = ci;
       if (this.randCons) {
         ri = ~~(Math.random()*this.constraints.length*0.99999);
@@ -39508,34 +39670,36 @@ class Solver {
       err += Math.abs(r1);
       let totgs = 0.0;
 
-      for (let i=0; i<con.klst.length; i++) {
+      for (let i = 0; i < con.klst.length; i++) {
         let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
+        for (let j = 0; j < ks.length; j++) {
           totgs += gs[j]*gs[j];
         }
       }
 
-      if (totgs === 0.0)  {
+      if (totgs === 0.0) {
         continue;
       }
 
-      totgs = 0.0001 / Math.sqrt(totgs);
+      totgs = 0.0001/Math.sqrt(totgs);
 
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          ks[j] += -totgs*gs[j]*con.k*gk;
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[j];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk*ws[j];
         }
       }
+
+      con.postSolve();
     }
 
     return err;
   }
 
-  solve(steps, gk=this.gk, printError=false) {
+  solve(steps, gk = this.gk, printError = false) {
     let err = 0.0;
 
-    for (let i=0; i<steps; i++) {
+    for (let i = 0; i < steps; i++) {
       if (this.simple) {
         err = this.solveStepSimple(gk);
       } else {
@@ -39546,7 +39710,7 @@ class Solver {
       if (printError) {
         console.warn("average error:", (err/this.constraints.length).toFixed(4));
       }
-      if (err < this.threshold / this.constraints.length) {
+      if (err < this.threshold/this.constraints.length) {
         break;
       }
     }
@@ -60350,24 +60514,16 @@ class Screen extends UIBase$f {
    * @param y
    * @param args arguments : {sx, sy, nodeclass, excluded_classes}
    */
-  pickElement(x, y, args, sy, nodeclass, excluded_classes) {
-    let sx;
-    let clip;
+  pickElement(x, y, args, marginy, nodeclass, excluded_classes) {
+    let marginx;
 
     if (typeof args === "object") {
-      sx = args.sx;
-      sy = args.sy;
       nodeclass = args.nodeclass;
       excluded_classes = args.excluded_classes;
-      clip = args.clip;
     } else {
-      sx = args;
-
       args = {
-        sx              : sx,
-        sy              : sy,
-        nodeclass       : nodeclass,
-        excluded_classes: excluded_classes
+        nodeclass,
+        excluded_classes
       };
     }
 
@@ -60377,13 +60533,10 @@ class Screen extends UIBase$f {
     }
 
     let ret;
-
     for (let i = this._popups.length - 1; i >= 0; i--) {
       let popup = this._popups[i];
-
       ret = ret || popup.pickElement(x, y, args);
     }
-
     ret = ret || super.pickElement(x, y, args);
 
     return ret;
@@ -64787,6 +64940,7 @@ class StartArgs {
   constructor() {
     this.singlePage = true;
 
+    this.DEBUG = {};
     this.icons = Icons;
     this.iconsheet = undefined; //will default to loadDefaultIconSheet();
     this.iconSizes = [16, 24, 32, 48];
