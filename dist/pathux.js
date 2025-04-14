@@ -1,9 +1,9 @@
 if (typeof window === "undefined" && typeof global !== "undefined") {
   global.window = global;
 } else if (typeof window === "undefined" && typeof globalThis !== "undefined") {
-  global.window = globalThis;
+  globalThis.window = globalThis;
 } else if (typeof window === "undefined" && typeof self !== "undefined") {
-  global.window = self;
+  self.window = self;
 }
 
 (function () {
