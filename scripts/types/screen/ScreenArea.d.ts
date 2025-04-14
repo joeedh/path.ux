@@ -27,6 +27,7 @@ export declare interface IAreaConstructor<Type = any> {
 export declare class Area<CTX = Context> extends UIBase<CTX> {
   ["constructor"]: IAreaConstructor<this>;
 
+  container: Container<CTX>;
   header: Container;
   pos: Vector2;
   size: Vector2;

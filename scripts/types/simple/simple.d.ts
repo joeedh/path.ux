@@ -9,7 +9,7 @@ import { TabContainer } from "./ui_tabs";
 import { IPathuxConstants, IconMap } from "../pathux";
 export declare class DataModel<ContextCls = {}> {
   ctx: ContextCls;
-  static defineAPI(api, dataStruct): DataStruct;
+  static defineAPI(api: DataAPI<ContextCls>, dataStruct: DataStruct<ContextCls>): DataStruct<ContextCls>;
   static register(Class: any);
 }
 

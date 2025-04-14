@@ -429,13 +429,18 @@ export class Area extends ui_base.UIBase {
     let row;
     let helpRow;
 
+    if (this.header) {
+      this.header.remove()
+      this.header = undefined
+    }
+
     if (!(this.flag & AreaFlags.NO_SWITCHER) && cconst.useAreaTabSwitcher) {
       let col = this.header = container.col();
 
       switcherRow = helpRow = col.row();
       row = col.row();
     } else {
-      row = helpRow = this.header = container.row();
+      row = helpRow = switcherRow = this.header = container.row();
     }
 
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
