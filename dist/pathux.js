@@ -15546,22 +15546,20 @@ nstructjs.register(StringSetProperty);
 ToolProperty$1.internalRegister(StringSetProperty);
 
 let config = {
-  doubleClickTime : 500,
+    doubleClickTime: 500,
 
-  //auto load 1d bspline templates, can hurt startup time
-  autoLoadSplineTemplates : true,
+    //auto load 1d bspline templates, can hurt startup time
+    autoLoadSplineTemplates: true,
 
-  //timeout for press-and-hold (touch) version of double clicking
-  doubleClickHoldTime : 750,
-  DEBUG : {
-
-  }
+    //timeout for press-and-hold (touch) version of double clicking
+    doubleClickHoldTime: 750,
+    DEBUG: {}
 };
 
 function setConfig(obj) {
-  for (let k in obj) {
-    config[k] = obj[k];
-  }
+    for (let k in obj) {
+        config[k] = obj[k];
+    }
 }
 
 var config$1 = /*#__PURE__*/Object.freeze({
@@ -20445,6 +20443,9 @@ if (typeof document !== 'undefined') {
   if (cfg) {
     exports.loadConstants(JSON.parse(cfg.innerText));
   }
+}
+if (typeof window?.PATHUX_CONFIG !== 'undefined') {
+  exports.loadConstants(window.PATHUX_CONFIG);
 }
 
 /*
