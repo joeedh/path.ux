@@ -175,3 +175,6 @@ if (typeof document !== 'undefined') {
     exports.loadConstants(JSON.parse(cfg.innerText));
   }
 }
+if (typeof window?.PATHUX_CONFIG !== 'undefined') {
+  exports.loadConstants(window.PATHUX_CONFIG)
+}

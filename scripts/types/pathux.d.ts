@@ -20,3 +20,36 @@ export interface IconMap {
 }
 
 export declare const Icons: IconMap;
+
+export declare interface IPathuxConstants {
+  colorSchemeType: 'light' | 'dark'
+  docManualPath: string
+  docEditorPath: string
+  /** Add textboxes to rollar sliders,
+     note that  users can also double click them to
+     enter text as well
+   */
+  useNumSliderTextboxes: boolean
+  /** Threshold to check if numslider arrow was clicked. */
+  numSliderArrowLimit: number
+  simpleNumSliders: boolean
+  menusCanPopupAbove: boolean
+  menu_close_time: number
+  doubleClickTime: number
+  doubleClickHoldTime: number
+  DEBUG: any
+  /** Auto load 1d bspline templates, can hurt startup time. */
+  autoLoadSplineTemplates: boolean
+  addHelpPickers: boolean
+
+  useAreaTabSwitcher: boolean
+  autoSizeUpdate: boolean
+  showPathsInToolTips: boolean
+  enableThemeAutoUpdate: boolean
+  useNativeToolTips: boolean
+  noElectronMenus: boolean
+}
+
+export declare const cconst: IPathuxConstants & {
+  setConstants(constants: Partial<IPathuxConstants>): void
+} 
