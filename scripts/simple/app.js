@@ -5,7 +5,7 @@ export const DataModelClasses = [];
 import {buildToolSysAPI, SavedToolDefaults, ToolStack} from '../path-controller/toolsys/toolsys.js';
 import {DataAPI} from '../path-controller/controller/controller.js';
 import {Screen} from '../screen/FrameManager.js';
-import {areaclasses} from '../screen/area_wrangler.js';
+import {areaclasses, contextWrangler} from '../screen/area_wrangler.js';
 import * as util from '../util/util.js';
 import {Editor} from './editor.js';
 
@@ -80,6 +80,10 @@ function GetContextClass(ctxClass) {
       return this.state.screen;
     }
 
+    get activeArea() {
+      return contextWrangler.getLastArea()
+    }
+
     get api() {
       return this.state.api;
     }
@@ -123,6 +127,7 @@ function GetContextClass(ctxClass) {
     }
 
     static defineAPI(api, st) {
+      st.dynamicStruct('activeArea', 'activeArea', 'Active Area')
       return Overlay.defineAPI(api, st);
     }
   }

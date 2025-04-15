@@ -39,13 +39,15 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   add(child: UIBase<CTX>)
 
-  prop(path: string, packflag?: pathUXInt, massSetPath?: string): UIBase
+  prop(path: string, packflag?: pathUXInt, massSetPath?: string): UIBase<CTX>
+  
+  pathlabel(inpath, label = undefined, packflag = 0): UIBase<CTX>
 
   row(packflag?: pathUXInt): RowFrame<CTX>
 
   col(packflag?: pathUXInt): ColumnFrame<CTX>
 
-  panel(label: string): Container<CTX>
+  panel(label: string): Container<CTX> & { closed: boolean }
 
   tabs(position: 'top' | 'bottom' | 'left' | 'right', packflag?: number): TabContainer<CTX>
 
