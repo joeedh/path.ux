@@ -65000,6 +65000,10 @@ function GetContextClass(ctxClass) {
       return this.state.screen;
     }
 
+    get activeArea() {
+      return contextWrangler.getLastArea()
+    }
+
     get api() {
       return this.state.api;
     }
@@ -65043,6 +65047,7 @@ function GetContextClass(ctxClass) {
     }
 
     static defineAPI(api, st) {
+      st.dynamicStruct('activeArea', 'activeArea', 'Active Area');
       return Overlay.defineAPI(api, st);
     }
   }
