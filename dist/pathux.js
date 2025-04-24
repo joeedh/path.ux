@@ -670,7 +670,7 @@ function print_lines(ld, lineno, col, printColors, token) {
   return buf;
 }
 
-class token$1 {
+let token$1 = class token {
   constructor(type, val, lexpos, lineno, lexer, parser, col) {
     this.type = type;
     this.value = val;
@@ -687,9 +687,9 @@ class token$1 {
     else
       return "token(type=" + this.type + ")";
   }
-}
+};
 
-class tokdef$1 {
+let tokdef$1 = class tokdef {
   constructor(name, regexpr, func, example) {
     this.name = name;
     this.re = regexpr;
@@ -712,7 +712,7 @@ class tokdef$1 {
       }
     }
   }
-}
+};
 
 class PUTIL_ParseError extends Error {
   constructor(msg) {
@@ -720,7 +720,7 @@ class PUTIL_ParseError extends Error {
   }
 }
 
-class lexer$2 {
+let lexer$2 = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -907,9 +907,9 @@ class lexer$2 {
     }
     return tok;
   }
-}
+};
 
-class parser$1 {
+let parser$1 = class parser {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -1020,7 +1020,7 @@ class parser$1 {
     }
     return tok.value;
   }
-}
+};
 
 function test_parser$1() {
   let basic_types = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
@@ -2034,7 +2034,7 @@ function _get_pack_debug() {
   }
 }
 
-class cachering$1 extends Array {
+let cachering$1 = class cachering extends Array {
   constructor(cb, tot) {
     super();
     this.length = tot;
@@ -2046,7 +2046,7 @@ class cachering$1 extends Array {
   }
 
   static fromConstructor(cls, tot) {
-    return new cachering$1(() => new cls(), tot);
+    return new cachering(() => new cls(), tot);
   }
 
   next() {
@@ -2056,7 +2056,7 @@ class cachering$1 extends Array {
 
     return ret;
   }
-}
+};
 
 function gen_tabstr$1(tot) {
   let ret = "";
@@ -7913,7 +7913,7 @@ class SetIter {
 
 
  * */
-class set$2 {
+let set$2 = class set {
   constructor(input) {
     this.items = [];
     this.keys = {};
@@ -7977,7 +7977,7 @@ class set$2 {
 
   filter(f, thisvar) {
     let i = 0;
-    let ret = new set$2();
+    let ret = new set();
 
     for (let item of this) {
       if (f.call(thisvar, item, i++, this)) {
@@ -7990,7 +7990,7 @@ class set$2 {
   }
 
   map(f, thisvar) {
-    let ret = new set$2();
+    let ret = new set();
 
     let i = 0;
 
@@ -8018,7 +8018,7 @@ class set$2 {
   }
 
   copy() {
-    let ret = new set$2();
+    let ret = new set();
     for (let item of this) {
       ret.add(item);
     }
@@ -8083,7 +8083,7 @@ class set$2 {
       thisvar !== undefined ? func.call(thisvar, item) : func(item);
     }
   }
-}
+};
 
 class HashIter {
   constructor(hash) {
@@ -8820,7 +8820,7 @@ class MapIter {
   }
 }
 
-class map$1 {
+let map$1 = class map {
   constructor() {
     this._items = {};
     this._list = [];
@@ -8920,7 +8920,7 @@ class map$1 {
     return ret;
   }
 
-}
+};
 
 globalThis._test_map = function () {
   let m = new map$1();
@@ -9735,55 +9735,55 @@ function undefinedForGC() {
 
 var util = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  isDenormal: isDenormal,
-  termColorMap: termColorMap,
-  termColor: termColor,
-  termPrint: termPrint,
-  MovingAvg: MovingAvg,
-  timers: timers,
-  pollTimer: pollTimer,
-  isMobile: isMobile,
-  SmartConsoleContext: SmartConsoleContext,
-  SmartConsole: SmartConsole,
-  console: console$1,
-  getClassParent: getClassParent,
-  list: list$2,
-  count: count,
-  getAllKeys: getAllKeys,
-  btoa: btoa$1,
-  formatNumberUI: formatNumberUI,
-  atob: atob$1,
-  time_ms: time_ms,
-  color2css: color2css$2,
-  merge: merge,
-  cachering: cachering,
-  SetIter: SetIter,
-  set: set$2,
-  HashIter: HashIter,
-  hashtable: hashtable,
-  IDGen: IDGen,
-  print_stack: print_stack$1,
-  fetch_file: fetch_file,
-  MersenneRandom: MersenneRandom,
-  random: random,
-  seed: seed,
-  strhash: strhash,
-  FastHash: FastHash,
-  test_fasthash: test_fasthash,
-  ImageReader: ImageReader,
-  HashDigest: HashDigest,
-  hashjoin: hashjoin,
-  MapIter: MapIter,
-  map: map$1,
-  IDMap: IDMap,
-  MinHeapQueue: MinHeapQueue,
-  Queue: Queue,
   ArrayPool: ArrayPool,
   DivLogger: DivLogger,
+  FastHash: FastHash,
+  HashDigest: HashDigest,
+  HashIter: HashIter,
+  IDGen: IDGen,
+  IDMap: IDMap,
+  ImageReader: ImageReader,
+  MapIter: MapIter,
+  MersenneRandom: MersenneRandom,
+  MinHeapQueue: MinHeapQueue,
+  MovingAvg: MovingAvg,
   PendingTimeoutPromises: PendingTimeoutPromises,
+  Queue: Queue,
+  SetIter: SetIter,
+  SmartConsole: SmartConsole,
+  SmartConsoleContext: SmartConsoleContext,
   TimeoutPromise: TimeoutPromise,
+  atob: atob$1,
+  btoa: btoa$1,
+  cachering: cachering,
+  color2css: color2css$2,
   compress: compress,
+  console: console$1,
+  count: count,
   decompress: decompress,
+  fetch_file: fetch_file,
+  formatNumberUI: formatNumberUI,
+  getAllKeys: getAllKeys,
+  getClassParent: getClassParent,
+  hashjoin: hashjoin,
+  hashtable: hashtable,
+  isDenormal: isDenormal,
+  isMobile: isMobile,
+  list: list$2,
+  map: map$1,
+  merge: merge,
+  pollTimer: pollTimer,
+  print_stack: print_stack$1,
+  random: random,
+  seed: seed,
+  set: set$2,
+  strhash: strhash,
+  termColor: termColor,
+  termColorMap: termColorMap,
+  termPrint: termPrint,
+  test_fasthash: test_fasthash,
+  time_ms: time_ms,
+  timers: timers,
   undefinedForGC: undefinedForGC
 });
 
@@ -11150,7 +11150,7 @@ class internal_matrix {
 }
 
 /** Incredibly old matrix class. */
-class Matrix4$2 {
+let Matrix4$2 = class Matrix4 {
   constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
@@ -11158,14 +11158,14 @@ class Matrix4$2 {
     if (typeof m === 'object') {
       if ("length" in m && m.length >= 16) {
         this.load(m);
-      } else if (m instanceof Matrix4$2) {
+      } else if (m instanceof Matrix4) {
         this.load(m);
       }
     }
   }
 
   static fromJSON() {
-    let mat = new Matrix4$2();
+    let mat = new Matrix4();
     mat.load(json.items);
     mat.isPersp = json.isPersp;
     return mat;
@@ -11176,7 +11176,7 @@ class Matrix4$2 {
   }
 
   clone() {
-    return new Matrix4$2(this);
+    return new Matrix4(this);
   }
 
   addToHashDigest(hash) {
@@ -11325,7 +11325,7 @@ class Matrix4$2 {
   load() {
     if (arguments.length === 1 && typeof arguments[0] === 'object') {
       let matrix;
-      if (arguments[0] instanceof Matrix4$2) {
+      if (arguments[0] instanceof Matrix4) {
         matrix = arguments[0].$matrix;
         this.isPersp = arguments[0].isPersp;
         this.$matrix.m11 = matrix.m11;
@@ -11388,31 +11388,31 @@ class Matrix4$2 {
   }
 
   setUniform(ctx, loc, transpose) {
-    if (Matrix4$2.setUniformArray === undefined) {
-      Matrix4$2.setUniformWebGLArray = new Float32Array(16);
-      Matrix4$2.setUniformArray = new Array(16);
+    if (Matrix4.setUniformArray === undefined) {
+      Matrix4.setUniformWebGLArray = new Float32Array(16);
+      Matrix4.setUniformArray = new Array(16);
     }
 
-    Matrix4$2.setUniformArray[0] = this.$matrix.m11;
-    Matrix4$2.setUniformArray[1] = this.$matrix.m12;
-    Matrix4$2.setUniformArray[2] = this.$matrix.m13;
-    Matrix4$2.setUniformArray[3] = this.$matrix.m14;
-    Matrix4$2.setUniformArray[4] = this.$matrix.m21;
-    Matrix4$2.setUniformArray[5] = this.$matrix.m22;
-    Matrix4$2.setUniformArray[6] = this.$matrix.m23;
-    Matrix4$2.setUniformArray[7] = this.$matrix.m24;
-    Matrix4$2.setUniformArray[8] = this.$matrix.m31;
-    Matrix4$2.setUniformArray[9] = this.$matrix.m32;
-    Matrix4$2.setUniformArray[10] = this.$matrix.m33;
-    Matrix4$2.setUniformArray[11] = this.$matrix.m34;
-    Matrix4$2.setUniformArray[12] = this.$matrix.m41;
-    Matrix4$2.setUniformArray[13] = this.$matrix.m42;
-    Matrix4$2.setUniformArray[14] = this.$matrix.m43;
-    Matrix4$2.setUniformArray[15] = this.$matrix.m44;
+    Matrix4.setUniformArray[0] = this.$matrix.m11;
+    Matrix4.setUniformArray[1] = this.$matrix.m12;
+    Matrix4.setUniformArray[2] = this.$matrix.m13;
+    Matrix4.setUniformArray[3] = this.$matrix.m14;
+    Matrix4.setUniformArray[4] = this.$matrix.m21;
+    Matrix4.setUniformArray[5] = this.$matrix.m22;
+    Matrix4.setUniformArray[6] = this.$matrix.m23;
+    Matrix4.setUniformArray[7] = this.$matrix.m24;
+    Matrix4.setUniformArray[8] = this.$matrix.m31;
+    Matrix4.setUniformArray[9] = this.$matrix.m32;
+    Matrix4.setUniformArray[10] = this.$matrix.m33;
+    Matrix4.setUniformArray[11] = this.$matrix.m34;
+    Matrix4.setUniformArray[12] = this.$matrix.m41;
+    Matrix4.setUniformArray[13] = this.$matrix.m42;
+    Matrix4.setUniformArray[14] = this.$matrix.m43;
+    Matrix4.setUniformArray[15] = this.$matrix.m44;
 
-    Matrix4$2.setUniformWebGLArray.set(Matrix4$2.setUniformArray);
+    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
 
-    ctx.uniformMatrix4fv(loc, transpose, Matrix4$2.setUniformWebGLArray);
+    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
 
     return this;
   }
@@ -11757,7 +11757,7 @@ class Matrix4$2 {
     if (z === undefined) {
       z = 0.0;
     }
-    window.Matrix4 = Matrix4$2;
+    window.Matrix4 = Matrix4;
 
     let xmat = euler_rotate_mats.next().makeIdentity();
     let m = xmat.$matrix;
@@ -12270,7 +12270,7 @@ class Matrix4$2 {
     let mat = this.inputs.transformMatrix.getValue();
     let m = mat.$matrix;
 
-    let mat2 = new Matrix4$2(mat);
+    let mat2 = new Matrix4(mat);
     let loc = new Vector3$2(), scale = new Vector3$2(), rot = new Vector3$2();
 
     //we don't use rot
@@ -12535,7 +12535,7 @@ class Matrix4$2 {
     this.__mat = this.mat;
     //delete this.mat;
   }
-}
+};
 
 Matrix4$2.STRUCT = `
 mat4 {
@@ -12576,24 +12576,24 @@ temp_mats = cachering.fromConstructor(Matrix4$2, 64);
 
 var vectormath = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  EulerOrders: EulerOrders,
   BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
+  EulerOrders: EulerOrders,
   F32BaseVector: F32BaseVector,
-  I32BaseVector: I32BaseVector,
+  F64BaseVector: F64BaseVector,
   I16BaseVector: I16BaseVector,
+  I32BaseVector: I32BaseVector,
   I8BaseVector: I8BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI16BaseVector: UI16BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  makeVector4: makeVector4,
-  Vector4: Vector4$2,
-  makeVector3: makeVector3,
-  Vector3: Vector3$2,
-  makeVector2: makeVector2,
-  Vector2: Vector2$b,
+  Matrix4: Matrix4$2,
   Quat: Quat,
-  Matrix4: Matrix4$2
+  UI16BaseVector: UI16BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  Vector2: Vector2$b,
+  Vector3: Vector3$2,
+  Vector4: Vector4$2,
+  makeVector2: makeVector2,
+  makeVector3: makeVector3,
+  makeVector4: makeVector4
 });
 
 "use strict";
@@ -12891,22 +12891,22 @@ class Curve1DPropertyIF extends ToolPropertyIF {
 
 var toolprop_abstract = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  PropTypes: PropTypes$8,
-  PropSubTypes: PropSubTypes$4,
-  PropFlags: PropFlags$3,
-  ToolPropertyIF: ToolPropertyIF,
-  StringPropertyIF: StringPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  IntPropertyIF: IntPropertyIF,
-  FloatPropertyIF: FloatPropertyIF,
+  Curve1DPropertyIF: Curve1DPropertyIF,
   EnumPropertyIF: EnumPropertyIF,
   FlagPropertyIF: FlagPropertyIF,
+  FloatPropertyIF: FloatPropertyIF,
+  IntPropertyIF: IntPropertyIF,
+  ListPropertyIF: ListPropertyIF,
+  NumPropertyIF: NumPropertyIF,
+  PropFlags: PropFlags$3,
+  PropSubTypes: PropSubTypes$4,
+  PropTypes: PropTypes$8,
+  StringPropertyIF: StringPropertyIF,
+  StringSetPropertyIF: StringSetPropertyIF,
+  ToolPropertyIF: ToolPropertyIF,
   Vec2PropertyIF: Vec2PropertyIF,
   Vec3PropertyIF: Vec3PropertyIF,
-  Vec4PropertyIF: Vec4PropertyIF,
-  ListPropertyIF: ListPropertyIF,
-  StringSetPropertyIF: StringSetPropertyIF,
-  Curve1DPropertyIF: Curve1DPropertyIF
+  Vec4PropertyIF: Vec4PropertyIF
 });
 
 /**
@@ -13630,7 +13630,7 @@ class OnceTag {
   }
 }
 
-class ToolProperty$1 extends ToolPropertyIF {
+let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
     super();
 
@@ -13915,7 +13915,7 @@ class ToolProperty$1 extends ToolPropertyIF {
   }
 
   setValue(val) {
-    if (this.constructor === ToolProperty$1) {
+    if (this.constructor === ToolProperty) {
       throw new Error("implement me!");
     }
 
@@ -13959,7 +13959,7 @@ class ToolProperty$1 extends ToolPropertyIF {
 
   getStep(value = 1.0) {
     if (this.stepIsRelative) {
-      return ToolProperty$1.calcRelativeStep(this.step, value);
+      return ToolProperty.calcRelativeStep(this.step, value);
     } else {
       return this.step;
     }
@@ -14040,7 +14040,7 @@ class ToolProperty$1 extends ToolPropertyIF {
       this.displayUnit = undefined;
     }
   }
-}
+};
 
 ToolProperty$1.STRUCT = `
 ToolProperty { 
@@ -14590,7 +14590,7 @@ EnumKeyPair {
 `;
 nstructjs.register(EnumKeyPair);
 
-class EnumProperty$9 extends ToolProperty$1 {
+let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
   constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.ENUM, undefined, apiname, uiname, description, flag, icon);
 
@@ -14672,7 +14672,7 @@ class EnumProperty$9 extends ToolProperty$1 {
 
     let enumdef;
 
-    if (enumdef_or_prop instanceof EnumProperty$9) {
+    if (enumdef_or_prop instanceof EnumProperty) {
       enumdef = enumdef_or_prop.values;
     } else {
       enumdef = enumdef_or_prop;
@@ -14685,7 +14685,7 @@ class EnumProperty$9 extends ToolProperty$1 {
       this.keys[v] = k;
     }
 
-    if (enumdef_or_prop instanceof EnumProperty$9) {
+    if (enumdef_or_prop instanceof EnumProperty) {
       let prop = enumdef_or_prop;
       this.iconmap = Object.assign({}, prop.iconmap);
       this.iconmap2 = Object.assign({}, prop.iconmap2);
@@ -14868,7 +14868,7 @@ class EnumProperty$9 extends ToolProperty$1 {
   _is_data_int() {
     return typeof this.data === "number";
   }
-}
+};
 
 ToolProperty$1.internalRegister(EnumProperty$9);
 EnumProperty$9.STRUCT =
@@ -15609,8 +15609,8 @@ function setConfig(obj) {
 var config$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   config: config,
-  setConfig: setConfig,
-  'default': config
+  default: config,
+  setConfig: setConfig
 });
 
 let modalstack$1 = [];
@@ -20226,93 +20226,93 @@ function angle_between_vecs(v1, vcent, v2) {
 
 var math = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
   AbstractCurve: AbstractCurve,
+  COLINEAR: COLINEAR,
+  COLINEAR_ISECT: COLINEAR_ISECT,
   ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
+  ClosestModes: ClosestModes,
+  FEPS: FEPS,
+  FEPS_DATA: FEPS_DATA,
+  FLOAT_MAX: FLOAT_MAX,
+  FLOAT_MIN: FLOAT_MIN,
+  LINECROSS: LINECROSS,
+  Mat4Stack: Mat4Stack,
+  Matrix4UI: Matrix4UI,
+  MinMax: MinMax,
+  PlaneOps: PlaneOps,
+  SQRT2: SQRT2,
+  _old_isect_ray_plane: _old_isect_ray_plane,
   aabb_intersect_2d: aabb_intersect_2d,
   aabb_intersect_3d: aabb_intersect_3d,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_sphere_dist: aabb_sphere_dist,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
   aabb_union: aabb_union,
   aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  colinear2d: colinear2d,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
+  angle_between_vecs: angle_between_vecs,
+  barycentric_v2: barycentric_v2,
+  calc_projection_axes: calc_projection_axes,
   circ_from_line_tan: circ_from_line_tan,
   circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
+  clip_line_w: clip_line_w,
+  closestPoint: closestPoint,
+  closest_point_on_line: closest_point_on_line,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
+  colinear: colinear,
+  colinear2d: colinear2d,
+  convex_quad: convex_quad,
+  corner_normal: corner_normal,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  dist_to_line: dist_to_line,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  expand_line: expand_line,
+  expand_rect2d: expand_rect2d,
+  feps: feps,
   gen_circle: gen_circle,
-  rot2d: rot2d,
+  get_boundary_winding: get_boundary_winding,
+  get_rect_lines: get_rect_lines,
+  get_rect_points: get_rect_points,
+  get_tri_circ: get_tri_circ,
+  inrect_2d: inrect_2d,
+  isNum: isNum,
+  isect_ray_plane: isect_ray_plane,
+  line_isect: line_isect,
+  line_line_cross: line_line_cross,
+  line_line_isect: line_line_isect,
   makeCircleMesh: makeCircleMesh,
   minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
+  normal_poly: normal_poly,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  normal_tri: normal_tri,
+  point_in_aabb: point_in_aabb,
+  point_in_aabb_2d: point_in_aabb_2d,
   point_in_hex: point_in_hex,
+  point_in_tri: point_in_tri,
+  project: project,
+  quad_bilinear: quad_bilinear,
+  rot2d: rot2d,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  tet_volume: tet_volume,
+  tri_angles: tri_angles,
+  tri_area: tri_area,
   trilinear_co: trilinear_co,
   trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  angle_between_vecs: angle_between_vecs
+  trilinear_v3: trilinear_v3,
+  unproject: unproject,
+  winding: winding,
+  winding_axis: winding_axis
 });
 
 let _clipdata = {
@@ -21893,6 +21893,7 @@ function registerTool(cls) {
  see doc_src/context.md
  */
 
+
 let notifier = undefined;
 
 function setNotifier(cls) {
@@ -21903,11 +21904,11 @@ const ContextFlags = {
   IS_VIEW : 1
 };
 
-class InheritFlag$1 {
+let InheritFlag$1 = class InheritFlag {
   constructor(data) {
     this.data = data;
   }
-}
+};
 
 let __idgen = 1;
 
@@ -22052,7 +22053,9 @@ class LockedContext {
   progbar() {
     return this.ctx.progbar(...arguments);
   }
-
+  progressBar() {
+    return this.ctx.progbar !== undefined ? this.ctx.progbar(...arguments) : this.ctx.progressBar(...arguments);
+  }
   load(ctx) {
     //let keys = util.getAllKeys(ctx);
     let keys = ctx._props;
@@ -23912,7 +23915,7 @@ class ToolStack extends Array {
     }
   }
 
-  execTool(ctx, toolop) {
+  execTool(ctx, toolop, event = undefined) {
     if (this.enforceMemLimit) {
       this.limitMemory(this.memLimit, ctx);
     }
@@ -23962,6 +23965,9 @@ class ToolStack extends Array {
         }
       }).bind(this);
 
+      if (event !== undefined) {
+        toolop._pointerId = event.pointerId;
+      }
       //will handle calling .exec itself
       toolop.modalStart(ctx);
     } else {
@@ -27348,15 +27354,15 @@ class tokdef {
   }
 }
 
-class PUTLParseError$1 extends Error {
-}
+let PUTLParseError$1 = class PUTLParseError extends Error {
+};
 
 //errfunc is optional.  it requires
 //a function that takes one param, lexer,
 //and returns true if the lexer
 //should propegate an error when an error
 //has happened
-class lexer$1 {
+let lexer$1 = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -27378,7 +27384,7 @@ class lexer$1 {
   }
 
   copy() {
-    let ret = new lexer$1(this.tokdef, this.errfunc);
+    let ret = new lexer(this.tokdef, this.errfunc);
 
     for (let k in this.states) {
       let state = this.states[k];
@@ -27558,7 +27564,7 @@ class lexer$1 {
 
     return tok;
   }
-}
+};
 
 function getTraceBack(limit, start) {
   try {
@@ -27940,12 +27946,12 @@ function test_parser() {
 
 var parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  token: token,
-  tokdef: tokdef,
   PUTLParseError: PUTLParseError$1,
-  lexer: lexer$1,
   getTraceBack: getTraceBack,
-  parser: parser
+  lexer: lexer$1,
+  parser: parser,
+  tokdef: tokdef,
+  token: token
 });
 
 let ToolPaths = {};
@@ -28110,7 +28116,7 @@ class ModelInterface {
     return ListIface;
   }
 
-  createTool(path, inputs = {}, constructor_argument = undefined) {
+  createTool(path, inputs = {}, unused = undefined) {
     throw new Error("implement me");
   }
 
@@ -28130,13 +28136,13 @@ class ModelInterface {
     return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
   }
 
-  execTool(ctx, path, inputs = {}, constructor_argument = undefined, event = undefined) {
+  execTool(ctx, path, inputs = {}, unused = undefined, event = undefined) {
     return new Promise((accept, reject) => {
       let tool = path;
 
       try {
         if (typeof tool == "string" || !(tool instanceof ToolOp)) {
-          tool = this.createTool(ctx, path, inputs, constructor_argument);
+          tool = this.createTool(ctx, path, inputs, unused);
         }
       } catch (error) {
         print_stack$1(error);
@@ -30121,1706 +30127,6 @@ Curve1DProperty.STRUCT = inherit$1(Curve1DProperty, ToolProperty$1) + `
 register$1(Curve1DProperty);
 ToolProperty$1.internalRegister(Curve1DProperty);
 
-const SocketFlags = {
-  UPDATE: 1
-};
-const NodeFlags = {
-  UPDATE   : 1,
-  SORT_TAG1: 2,
-  SORT_TAG2: 4,
-};
-const RecalcFlags = {
-  RUN   : 1,
-  RESORT: 2
-};
-const SocketTypes = {
-  INPUT : "inputs",
-  OUTPUT: "outputs"
-};
-
-let graphIdGen = 1;
-
-class EventSocket {
-  static socketDef = {
-    typeName: "",
-    uiName  : "",
-    flag    : 0,
-  }
-
-  name = ""
-  id = graphIdGen++;
-  flag = 0;
-
-  edges = [];
-  node = undefined;
-
-  type = undefined;
-
-  constructor(node) {
-    this.node = node;
-  }
-
-  get value() {
-    throw new Error("implement me!");
-  }
-
-  set value(v) {
-    this.flagUpdate();
-  }
-
-  get isUpdated() {
-    return this.flag & SocketFlags.UPDATE;
-  }
-
-  copyFrom(b) {
-    this.name = b.name;
-    this.flag = b.flag;
-
-    return this;
-  }
-
-  copy() {
-    return (new this.constructor()).copyFrom(this);
-  }
-
-  flagUpdate() {
-    this.flag |= SocketFlags.UPDATE;
-
-    if (!this.node) {
-      return;
-    }
-
-    if (this.type === SocketTypes.INPUT) {
-      this.node.flagUpdate();
-    } else {
-      for (let sockb of this.edges) {
-        sockb.flag |= SocketFlags.UPDATE;
-        sockb.node.flagUpdate();
-      }
-    }
-
-    return this;
-  }
-
-  flagResort() {
-    if (this.node) {
-      this.node.flagResort();
-    }
-
-    return this;
-  }
-
-  connect(sockb) {
-    this.edges.push(sockb);
-    sockb.edges.push(this);
-    return this;
-  }
-
-  hasNode(node) {
-    for (let sockb of this.edges) {
-      if (sockb.node === node || sockb.node.owner === node) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  has(sockb) {
-    return this.edges.indexOf(sockb) >= 0;
-  }
-
-  disconnect(sockb = undefined) {
-    this.flagResort();
-
-    if (sockb === undefined) {
-      /* Disconnect all. */
-      for (let sock of this.edges) {
-        sock.flagUpdate();
-        sock.edges.remove(this);
-      }
-
-      this.edges.length = 0;
-      return this;
-    }
-
-    sockb.flagUpdate();
-    this.edges.remove(sockb);
-    return this;
-  }
-}
-
-const NodeClasses = [];
-
-//Interface
-class NodeCapable {
-  graphNode = undefined;
-
-  static graphNodeDef = {
-    typeName: "",
-    uiName  : "",
-    flag    : 0,
-
-    /* Sockets inherit. */
-    inputs : {},
-    outputs: {}
-  };
-
-  graphExec() {
-  }
-}
-
-class EventNode {
-  owner = undefined;
-  inputs = {};
-  outputs = {};
-  allsockets = [];
-  graph = undefined;
-  sortIndex = -1;
-  id = graphIdGen++;
-  flag = 0;
-
-  static register(cls, def) {
-    cls.graphNodeDef = def;
-    if (!def.typeName) {
-      throw new Error("Missing graphNodeDef.typeName")
-    }
-
-    NodeClasses.push(cls);
-
-    return def;
-  }
-
-  addSocket(type, key, sock) {
-    this[type][key] = sock;
-    sock.name = key;
-    sock.node = this;
-    sock.type = type;
-
-    return this;
-  }
-
-  static isNodeCapable(cls) {
-    return cls.graphNodeDef !== undefined;
-  }
-
-  constructor(owner) {
-    this.owner = owner;
-
-    let cls = owner.constructor;
-
-    let getSockets = (key) => {
-      let socks = {};
-
-      let p = cls;
-      while (p) {
-        if (p.graphNodeDef) {
-          let socksDef = p.graphNodeDef[key] || {};
-
-          for (let k in socksDef) {
-            if (!(k in socks)) {
-              socks[k] = socksDef[k].copy();
-              socks[k].name = k;
-              socks[k].node = this;
-              socks[k].type = key;
-
-              this.allsockets.push(socks[k]);
-            }
-          }
-        }
-        p = p.__proto__;
-      }
-
-      return socks;
-    };
-
-    this.inputs = getSockets("inputs");
-    this.outputs = getSockets("outputs");
-  }
-
-  static init(owner) {
-    owner.graphNode = new EventNode(owner);
-    return owner.graphNode;
-  }
-
-  flagUpdate() {
-    this.flag |= NodeFlags.UPDATE;
-
-    if (this.graph) {
-      this.graph.flagUpdate(this);
-    }
-
-    return this;
-  }
-
-  flagResort() {
-    if (this.graph) {
-      this.graph.flagResort(this);
-    }
-    return this;
-  }
-}
-
-class EventGraph {
-  nodes = [];
-  flag = 0;
-  nodeIdMap = new Map()
-  sockIdMap = new Map()
-  sortlist = [];
-  queueReq = undefined;
-  #skipQueueExec = 0;
-
-  constructor() {
-  }
-
-  add(node) {
-    node = this.eventNode(node);
-
-    node.graph = this;
-    this.nodeIdMap.set(node.id, node);
-
-    this.nodes.push(node);
-    this.flagResort(node);
-    this.flagUpdate(node);
-  }
-
-  has(node) {
-    node = this.eventNode(node);
-    return this.nodeIdMap.has(node.id);
-  }
-
-  eventNode(node) {
-    if (!(node instanceof EventNode)) {
-      node = node.graphNode;
-    }
-
-    if (node === undefined) {
-      console.warn("Not an event node:", arguments[0]);
-      throw new Error("Not an event node");
-    }
-
-    return node;
-  }
-
-  remove(node) {
-    node = this.eventNode(node);
-
-    if (node === undefined) {
-      throw new Error("EventGraph.prototype.remove(): node was undefined");
-    }
-
-    if (!this.nodeIdMap.get(node.id)) {
-      throw new Error("Node is not in event graph");
-    }
-
-    this.nodeIdMap.delete(node.id);
-
-    for (let sock of Array.from(node.eventNode.allsockets)) {
-      this.sockIdMap.delete(sock.id);
-
-      try {
-        sock.disconnect();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Failed to disconnect a socket");
-      }
-    }
-
-    node.graph = undefined;
-    this.nodes.remove(node);
-    this.flagResort();
-  }
-
-  flagResort(node) {
-    if (node) {
-      node = this.eventNode(node);
-    }
-
-    this.flag |= RecalcFlags.RESORT | RecalcFlags.RUN;
-
-    return this;
-  }
-
-  flagUpdate(node) {
-    node = this.eventNode(node);
-
-    this.flag |= RecalcFlags.RUN;
-
-    if (!this.#skipQueueExec) {
-      this.queueExec();
-    }
-
-    return this;
-  }
-
-  sort() {
-    console.warn("Sorting Graph");
-
-    this.flag &= ~RecalcFlags.RESORT;
-
-    for (let n of this.nodes) {
-      n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
-    }
-
-    let sortlist = this.sortlist;
-    this.sortlist.length = 0;
-
-    let dosort = (n) => {
-      if (n.flag & NodeFlags.SORT_TAG2) {
-        console.error("Cycle in event dag!", n);
-        return;
-      }
-
-      n.flag |= NodeFlags.SORT_TAG2;
-
-      for (let [k, socka] of Object.entries(n.inputs)) {
-        for (let sockb of socka.edges) {
-          let n2 = sockb.node;
-          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-            dosort(n2);
-          }
-        }
-      }
-
-      n.flag &= ~NodeFlags.SORT_TAG2;
-      n.flag |= NodeFlags.SORT_TAG1;
-      n.sortIndex = sortlist.length;
-      sortlist.push(n);
-
-      for (let [k, socka] of Object.entries(n.outputs)) {
-        for (let sockb of socka.edges) {
-          let n2 = sockb.node;
-
-          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-            dosort(n2);
-          }
-        }
-      }
-    };
-
-    for (let n of this.nodes) {
-      if (!(n.flag & NodeFlags.SORT_TAG1)) {
-        dosort(n);
-      }
-    }
-  }
-
-  queueExec() {
-    console.warn("queueExec", this.queueReq);
-
-    this.flag |= RecalcFlags.RUN;
-
-    if (this.queueReq !== undefined) {
-      return;
-    }
-
-    this.queueReq = true;
-    this.queueReq = window.setTimeout(() => {
-      this.queueReq = undefined;
-      this.exec();
-    }, 0);
-  }
-
-  exec() {
-    this.flag &= ~RecalcFlags.RUN;
-
-    if (this.flag & RecalcFlags.RESORT) {
-      this.sort();
-    }
-
-    console.warn("Executing Graph");
-
-    this.#skipQueueExec++;
-
-    let sortlist = this.sortlist;
-    for (let n of sortlist) {
-      if (!(n.flag & NodeFlags.UPDATE)) {
-        continue;
-      }
-
-      try {
-        n.owner.graphExec();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Error during event graph execution");
-      }
-
-      n.flag &= ~NodeFlags.UPDATE;
-
-      for (let k in n.inputs) {
-        let sock = n.inputs[k];
-        sock.flag &= ~SocketFlags.UPDATE;
-      }
-
-      for (let k in n.outputs) {
-        let sock = n.outputs[k];
-
-        if (sock.flag & SocketFlags.UPDATE) {
-          for (let sockb of sock.edges) {
-            sockb.flag |= SocketFlags.UPDATE;
-            sockb.node.flag |= SocketFlags.UPDATE;
-          }
-
-          sock.flag &= ~SocketFlags.UPDATE;
-        }
-      }
-    }
-
-    this.#skipQueueExec--;
-  }
-}
-
-const theEventGraph = new EventGraph();
-
-const strBoolMap = {
-  "true" : "false",
-  "false": "true",
-  "on"   : "off",
-  "off"  : "on",
-  "yes"  : "no",
-  "no"   : "yes",
-};
-
-class DependSocket extends EventSocket {
-  static socketDef = {
-    typeName: "depend",
-    uiName  : "depend",
-    flag    : 0,
-  }
-
-  #value = undefined;
-
-  get value() {
-    return this.#value;
-  }
-
-  set value(v) {
-    this.#value = v;
-  }
-
-  copyFrom(b) {
-    super.copyFrom(b);
-
-    this.#value = b.#value;
-
-    return this;
-  }
-}
-
-const PropSocketModes = {
-  REPLACE: 0,
-  MIN    : 1,
-  MAX    : 2,
-};
-
-class PropertySocket extends EventSocket {
-  static socketDef = {
-    typeName: "property_socket",
-    uiName  : "Property Socket",
-    flag    : 0,
-  }
-
-  mixMode = PropSocketModes.REPLACE;
-
-  #binding = {
-    obj: null,
-    key: "",
-  }
-
-  #callbacks = []; //(newval, oldval) => val
-  #invert = false; //Invert bool or number properties
-
-  oldValue = undefined;
-
-  mode(mixmode) {
-    this.mixMode = mixmode;
-    return this;
-  }
-
-  copyFrom(b) {
-    super.copyFrom(b);
-
-    this.#invert = b.#invert;
-    this.#callbacks = Array.from(b.#callbacks);
-    this.#binding = b.#binding;
-
-    return this;
-  }
-
-  invert(state = true) {
-    this.#invert = state;
-    return this;
-  }
-
-  callback(cb) {
-    this.#callbacks.push(cb);
-    return this;
-  }
-
-  get value() {
-    let bind = this.#binding;
-    return bind.obj ? bind.obj[bind.key] : undefined;
-  }
-
-  set value(v) {
-    let old = this.value;
-    if (this.#callbacks.length > 0) {
-      for (let cb of this.#callbacks) {
-        v = cb(v, old);
-      }
-    }
-
-    if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
-      v = !v;
-    } else if (this.#invert && typeof v === "string") {
-      let s = v.toLowerCase().trim();
-      if (s in strBoolMap) {
-        v = strBoolMap[s];
-      }
-    }
-
-    let bind = this.#binding;
-    if (bind.obj) {
-      bind.obj[bind.key] = v;
-    } else {
-      console.warn("Attempt to set unbound property socket", this);
-    }
-  }
-
-  bind(obj, key) {
-    this.#binding.obj = obj;
-    this.#binding.key = key;
-
-    return this;
-  }
-}
-
-var eventdag = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  SocketFlags: SocketFlags,
-  NodeFlags: NodeFlags,
-  RecalcFlags: RecalcFlags,
-  SocketTypes: SocketTypes,
-  EventSocket: EventSocket,
-  NodeCapable: NodeCapable,
-  EventNode: EventNode,
-  EventGraph: EventGraph,
-  theEventGraph: theEventGraph,
-  DependSocket: DependSocket,
-  PropSocketModes: PropSocketModes,
-  PropertySocket: PropertySocket
-});
-
-class Constraint {
-  constructor(name, func, klst, params, k = 1.0) {
-    this.glst = [];
-    this.klst = klst;
-    this.wlst = [];
-    this.k = k;
-    this.params = params;
-    this.name = name;
-
-    for (let ks of klst) {
-      this.glst.push(new Float64Array(ks.length));
-      const ws = new Float64Array(ks.length);
-
-      for (let i = 0; i < ws.length; i++) {
-        ws[i] = 1.0;
-      }
-
-      this.wlst.push(ws);
-    }
-
-    this.df = 0.0005;
-    this.threshold = 0.0001;
-    if (func !== undefined) { /* Happens with subclass-style constraints. */
-      this.func = func;
-    }
-    if (!this.funcDv) {
-      this.funcDv = null;
-    }
-  }
-
-  postSolve() {
-  }
-
-  evaluate(no_dvs = false) {
-    let r1 = this.func(this.params);
-
-    if (this.funcDv) {
-      this.funcDv(this.params, this.glst);
-      return r1;
-    }
-
-    if (Math.abs(r1) < this.threshold)
-      return 0.0;
-
-    let df = this.df;
-
-    if (no_dvs)
-      return r1;
-
-    for (let i = 0; i < this.klst.length; i++) {
-      let gs = this.glst[i];
-      let ks = this.klst[i];
-
-      for (let j = 0; j < ks.length; j++) {
-        let orig = ks[j];
-        ks[j] += df;
-        let r2 = this.func(this.params);
-        ks[j] = orig;
-
-        gs[j] = (r2 - r1)/df;
-      }
-    }
-
-    return r1;
-  }
-}
-
-class Solver {
-  constructor() {
-    this.constraints = [];
-    this.gk = 0.99;
-    this.simple = false;
-    this.randCons = false;
-
-    /** stop when average constraint error falls below this */
-    this.threshold = 0.01;
-  }
-
-  remove(con) {
-    this.constraints.remove(con);
-  }
-
-  add(con) {
-    this.constraints.push(con);
-  }
-
-  solveStep(gk = this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci = 0; ci < cons.length; ci++) {
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j = 0; j < ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0) {
-        continue;
-      }
-
-      r1 /= totgs;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
-        for (let j = 0; j < ks.length; j++) {
-          ks[j] += -r1*gs[j]*con.k*gk*ws[j];
-        }
-
-        con.postSolve();
-      }
-    }
-
-    return err;
-  }
-
-  solveStepSimple(gk = this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci = 0; ci < cons.length; ci++) {
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j = 0; j < ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0) {
-        continue;
-      }
-
-      totgs = 0.0001/Math.sqrt(totgs);
-
-      for (let i = 0; i < con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[j];
-        for (let j = 0; j < ks.length; j++) {
-          ks[j] += -totgs*gs[j]*con.k*gk*ws[j];
-        }
-      }
-
-      con.postSolve();
-    }
-
-    return err;
-  }
-
-  solve(steps, gk = this.gk, printError = false) {
-    let err = 0.0;
-
-    for (let i = 0; i < steps; i++) {
-      if (this.simple) {
-        err = this.solveStepSimple(gk);
-      } else {
-        err = this.solveStep(gk);
-      }
-
-
-      if (printError) {
-        console.warn("average error:", (err/this.constraints.length).toFixed(4));
-      }
-      if (err < this.threshold/this.constraints.length) {
-        break;
-      }
-    }
-
-    return err;
-  }
-}
-
-var solver = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Constraint: Constraint,
-  Solver: Solver
-});
-
-function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
-  let blob = new Blob([data], {type : mime});
-  let url = URL.createObjectURL(blob);
-
-  let a = document.createElement("a");
-  a.setAttribute("href", url);
-  a.setAttribute("download", filename);
-
-  a.click();
-}
-
-//returns a promise
-function loadFile$1(filename="unnamed", exts=[]) {
-  let input = document.createElement("input");
-  input.type = "file";
-
-  exts = exts.join(",");
-
-  input.setAttribute("accept", exts);
-  return new Promise((accept, reject) => {
-    input.onchange = function(e) {
-      if (this.files === undefined || this.files.length !== 1) {
-        reject("file load error");
-        return;
-      }
-
-      let file = this.files[0];
-      let reader = new FileReader();
-
-      reader.onload = function(e2) {
-        accept(e2.target.result);
-      };
-
-      reader.readAsArrayBuffer(file);
-    };
-    input.click();
-  });
-}
-
-window._testLoadFile = function(exts=["*.*"]) {
-  loadFile$1(undefined, exts).then((data) => {
-    console.log("got file data:", data);
-  });
-};
-
-window._testSaveFile = function() {
-  let buf = _appstate.createFile();
-  //console.log(buf);
-  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
-};
-
-var html5_fileapi = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1
-});
-
-let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
-
-function rgb_to_hsv(r, g, b) {
-  let computedH = 0;
-  let computedS = 0;
-  let computedV = 0;
-
-  if (r == null || g == null || b == null ||
-    isNaN(r) || isNaN(g) || isNaN(b)) {
-    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
-  }
-  /*
-  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
-   throw new Error('RGB values must be in the range 0 to 1.0');
-   return;
-  }//*/
-
-  let minRGB = Math.min(r, Math.min(g, b));
-  let maxRGB = Math.max(r, Math.max(g, b));
-
-  // Black-gray-white
-  if (minRGB === maxRGB) {
-    computedV = minRGB;
-
-    let ret = rgb_to_hsv_rets.next();
-    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
-    return ret;
-  }
-
-  // Colors other than black-gray-white:
-  let d = (r === minRGB) ? g - b : ((b === minRGB) ? r - g : b - r);
-  let h = (r === minRGB) ? 3 : ((b === minRGB) ? 1 : 5);
-
-  computedH = (60*(h - d/(maxRGB - minRGB)))/360.0;
-  computedS = (maxRGB - minRGB)/maxRGB;
-  computedV = maxRGB;
-
-  let ret = rgb_to_hsv_rets.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
-  return ret;
-}
-
-let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
-
-function hsv_to_rgb(h, s, v) {
-  let c = 0, m = 0, x = 0;
-  let ret = hsv_to_rgb_rets.next();
-
-  ret[0] = ret[1] = ret[2] = 0.0;
-  h *= 360.0;
-
-  c = v*s;
-  x = c*(1.0 - Math.abs(((h/60.0)%2) - 1.0));
-  m = v - c;
-  let color;
-
-  function RgbF_Create(r, g, b) {
-    ret[0] = r;
-    ret[1] = g;
-    ret[2] = b;
-
-    return ret;
-  }
-
-  if (h >= 0.0 && h < 60.0) {
-    color = RgbF_Create(c + m, x + m, m);
-  } else if (h >= 60.0 && h < 120.0) {
-    color = RgbF_Create(x + m, c + m, m);
-  } else if (h >= 120.0 && h < 180.0) {
-    color = RgbF_Create(m, c + m, x + m);
-  } else if (h >= 180.0 && h < 240.0) {
-    color = RgbF_Create(m, x + m, c + m);
-  } else if (h >= 240.0 && h < 300.0) {
-    color = RgbF_Create(x + m, m, c + m);
-  } else if (h >= 300.0) {
-    color = RgbF_Create(c + m, m, x + m);
-  } else {
-    color = RgbF_Create(m, m, m);
-  }
-
-  return color;
-}
-
-let rgb_to_cmyk_rets = cachering.fromConstructor(Vector4$2, 512);
-let cmyk_to_rgb_rets = cachering.fromConstructor(Vector3$2, 512);
-
-function cmyk_to_rgb(c, m, y, k) {
-  let ret = cmyk_to_rgb_rets.next();
-
-  if (k === 1.0) {
-    ret.zero();
-    return ret;
-  }
-
-  c = c - c*k + k;
-  m = m - m*k + k;
-  y = y - y*k + k;
-
-  ret[0] = 1.0 - c;
-  ret[1] = 1.0 - m;
-  ret[2] = 1.0 - y;
-
-  return ret;
-}
-
-function rgb_to_cmyk(r, g, b) {
-  //CMYK and CMY values from 0 to 1
-  let ret = rgb_to_cmyk_rets.next();
-
-  let C = 1.0 - r;
-  let M = 1.0 - g;
-  let Y = 1.0 - b;
-
-  let var_K = 1;
-
-  if (C < var_K) var_K = C;
-  if (M < var_K) var_K = M;
-  if (Y < var_K) var_K = Y;
-  if (var_K === 1) { //Black
-    C = 0;
-    M = 0;
-    Y = 0;
-  } else {
-    C = (C - var_K)/(1 - var_K);
-    M = (M - var_K)/(1 - var_K);
-    Y = (Y - var_K)/(1 - var_K);
-  }
-
-  let K = var_K;
-
-  ret[0] = C;
-  ret[1] = M;
-  ret[2] = Y;
-  ret[3] = K;
-
-  return ret;
-}
-
-"use strict";
-
-let idgen = 0;
-
-class PackNodeVertex extends Vector2$b {
-  constructor(node, co) {
-    super(co);
-
-    this.node = node;
-    this._id = idgen++;
-    this.edges = [];
-    this._absPos = new Vector2$b();
-  }
-
-  get absPos() {
-    this._absPos.load(this).add(this.node.pos);
-    return this._absPos;
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-class PackNode {
-  constructor() {
-    this.pos = new Vector2$b();
-    this.vel = new Vector2$b();
-    this.oldpos = new Vector2$b();
-    this._id = idgen++;
-    this.size = new Vector2$b();
-    this.verts = [];
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-function copyGraph(nodes) {
-  let ret = [];
-  let idmap = {};
-
-  for (let n of nodes) {
-    let n2 = new PackNode();
-    n2._id = n._id;
-    n2.pos.load(n.pos);
-    n2.vel.load(n.vel);
-    n2.size.load(n.size);
-
-    n2.verts = [];
-    idmap[n2._id] = n2;
-
-    for (let v of n.verts) {
-      let v2 = new PackNodeVertex(n2, v);
-      v2._id = v._id;
-      idmap[v2._id] = v2;
-
-      n2.verts.push(v2);
-    }
-
-    ret.push(n2);
-  }
-
-  for (let n of nodes) {
-    for (let v of n.verts) {
-      let v2 = idmap[v._id];
-
-      for (let v3 of v.edges) {
-        v2.edges.push(idmap[v3._id]);
-      }
-    }
-  }
-
-  return ret;
-}
-
-function getCenter(nodes) {
-  let cent = new Vector2$b();
-
-  for (let n of nodes) {
-    cent.add(n.pos);
-  }
-
-  if (nodes.length === 0)
-    return cent;
-
-  cent.mulScalar(1.0 / nodes.length);
-
-  return cent;
-}
-
-function loadGraph(nodes, copy) {
-  let idmap = {};
-
-  for (let i=0; i<nodes.length; i++) {
-    nodes[i].pos.load(copy[i].pos);
-    nodes[i].oldpos.load(copy[i].oldpos);
-    nodes[i].vel.load(copy[i].vel);
-  }
-}
-
-function graphGetIslands(nodes) {
-  let islands = [];
-  let visit1 = new set$2();
-
-  let rec = (n, island) => {
-    island.push(n);
-    visit1.add(n);
-
-    for (let v of n.verts) {
-      for (let e of v.edges) {
-        let n2 = e.node;
-        if (n2 !== n && !visit1.has(n2)) {
-          rec(n2, island);
-        }
-      }
-    }
-  };
-
-  for (let n of nodes) {
-    if (visit1.has(n)) {
-      continue;
-    }
-
-    let island = [];
-    islands.push(island);
-    rec(n, island);
-  }
-
-  return islands;
-}
-
-function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
-  let margin = margin_or_args;
-  let speed = 1.0;
-
-  if (typeof margin === "object") {
-    let args = margin;
-
-    margin = args.margin ?? 15;
-    steps = args.steps ?? 10;
-    updateCb = args.updateCb;
-    speed = args.speed ?? 1.0;
-  }
-
-  let orignodes = nodes;
-  nodes = copyGraph(nodes);
-
-  let decay = 1.0;
-  let decayi = 0;
-
-
-  let min = new Vector2$b().addScalar(1e17);
-  let max = new Vector2$b().addScalar(-1e17);
-
-  let tmp = new Vector2$b();
-  for (let n of nodes) {
-    min.min(n.pos);
-    tmp.load(n.pos).add(n.size);
-    max.max(tmp);
-  }
-
-  let size = new Vector2$b(max).sub(min);
-
-  for (let n of nodes) {
-    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
-    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
-  }
-
-  let nodemap = {};
-  for (let n of nodes) {
-    n.vel.zero();
-    nodemap[n._id] = n;
-    for (let v of n.verts) {
-      nodemap[v._id] = v;
-    }
-  }
-
-  let visit = new set$2();
-  let verts = new set$2();
-  let isect = [];
-
-  let disableEdges = false;
-
-  function edge_c(params) {
-    let [v1, v2, restlen] = params;
-
-    if (disableEdges) return 0;
-
-    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
-  }
-
-  let p1 = new Vector2$b();
-  let p2 = new Vector2$b();
-  let s1 = new Vector2$b();
-  let s2 = new Vector2$b();
-
-  function loadBoxes(n1, n2, margin1=margin) {
-    p1.load(n1.pos);
-    p2.load(n2.pos);
-    s1.load(n1.size);
-    s2.load(n2.size);
-
-    p1.subScalar(margin1);
-    p2.subScalar(margin1);
-    s1.addScalar(margin1*2.0);
-    s2.addScalar(margin1*2.0);
-  }
-
-  let disableArea = false;
-
-  function area_c(params) {
-    let [n1, n2] = params;
-
-    if (disableArea)
-      return 0.0;
-
-    loadBoxes(n1, n2);
-
-    let a1 = n1.size[0]*n1.size[1];
-    let a2 = n2.size[0]*n2.size[1];
-
-    return aabb_overlap_area(p1, s1, p2, s2);
-    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
-  }
-
-  let lasterr, besterr, best;
-  let err;
-
-  let islands = graphGetIslands(nodes);
-  let fakeVerts = [];
-  for (let island of islands) {
-    let n = island[0];
-    let fv = new PackNodeVertex(n);
-    fakeVerts.push(fv);
-  }
-
-  let solveStep1 = (gk=1.0) => {
-    let solver = new Solver();
-
-    isect.length = 0;
-    visit = new set$2();
-
-    if (fakeVerts.length > 1) {
-      for (let i=1; i<fakeVerts.length; i++) {
-        let v1 = fakeVerts[0];
-        let v2 = fakeVerts[i];
-
-        let rlen = 1.0;
-
-        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
-        con.k = 0.25;
-        solver.add(con);
-      }
-    }
-
-    for (let n1 of nodes) {
-      for (let v of n1.verts) {
-        verts.add(v);
-        for (let v2 of v.edges) {
-          //hueristic to avoid adding same constraint twice
-          if (v2._id < v._id) continue;
-
-          let rlen = n1.size.vectorLength()*0.0;
-
-          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
-          con.k = 1.0;
-          solver.add(con);
-        }
-      }
-
-      for (let n2 of nodes) {
-        if (n1 === n2) continue;
-        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-        if (visit.has(key)) continue;
-
-        loadBoxes(n1, n2);
-        let area = aabb_overlap_area(p1, s1, p2, s2);
-
-        if (area > 0.01) {
-          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
-          //*
-          n1.pos[0] += (Math.random() - 0.5)*size;
-          n1.pos[1] += (Math.random() - 0.5)*size;
-          n2.pos[0] += (Math.random() - 0.5)*size;
-          n2.pos[1] += (Math.random() - 0.5)*size;
-          //*/
-
-          isect.push([n1, n2]);
-          visit.add(key);
-        }
-      }
-
-      for (let [n1, n2] of isect) {
-        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
-        solver.add(con);
-        con.k = 1.0;
-      }
-    }
-
-    return solver;
-  };
-
-  let i = 1;
-  let solveStep = (gk=0.5) => {
-    let solver = solveStep1();
-
-    if (i % 40 === 0.0) {
-      let c1 = getCenter(nodes);
-
-      let rfac = 1000.0;
-
-      if (best) loadGraph(nodes, best);
-
-      for (let n of nodes) {
-        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
-        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
-        n.vel.zero();
-      }
-
-      let c2 = getCenter(nodes);
-      c1.sub(c2);
-
-      for (let n of nodes) {
-        n.pos.add(c1);
-      }
-    }
-
-    let err = 1e17;
-
-    for (let n of nodes) {
-      n.oldpos.load(n.pos);
-      n.pos.addFac(n.vel, 0.5);
-    }
-
-    disableEdges = false;
-    disableArea = true;
-    solver.solve(1, gk);
-
-    //solve so boxes don't overlap
-    disableEdges = true;
-    disableArea = false;
-
-    for (let j=0; j<10; j++) {
-      solver = solveStep1();
-      err = solver.solve(10, gk*speed);
-    }
-
-    for (let n of nodes) {
-      n.vel.load(n.pos).sub(n.oldpos);
-    }
-
-    //get error from edge constraints
-
-    disableEdges = false;
-    disableArea = true;
-
-    err = 0.0;
-    for (let con of solver.constraints) {
-      err += con.evaluate(true);
-    }
-
-    disableEdges = false;
-    disableArea = false;
-
-    /*
-    loadGraph(orignodes, nodes);
-    if (updateCb) {
-      updateCb();
-    }//*/
-
-    lasterr = err;
-
-    let add = Math.random()*besterr*Math.exp(-i*0.1);
-
-    if (besterr === undefined || err < besterr+add) {
-      best = copyGraph(nodes);
-      besterr = err;
-    }
-
-    i++;
-
-    return err;
-  };
-
-
-  for (let j=0; j<steps; j++) {
-    solveStep();
-
-    decayi++;
-    decay = Math.exp(-decayi*0.1);
-  }
-
-  min.zero().addScalar(1e17);
-  max.zero().addScalar(-1e17);
-
-  for (let node of (best ? best : nodes)) {
-    min.min(node.pos);
-    p2.load(node.pos).add(node.size);
-    max.max(p2);
-  }
-
-  for (let node of (best ? best : nodes)) {
-    node.pos.sub(min);
-  }
-
-  loadGraph(orignodes, best ? best : nodes);
-
-  if (updateCb) {
-    if (nodes._timer !== undefined) {
-      window.clearInterval(nodes._timer);
-    }
-
-    nodes._timer = window.setInterval(() => {
-      let time = time_ms();
-
-      while (time_ms() - time < 50) {
-        let err = solveStep();
-      }
-
-      if (cconst.DEBUG.boxPacker) {
-        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
-      }
-
-      if (best) loadGraph(orignodes, best);
-
-      if (updateCb() === false) {
-        clearInterval(nodes._timer);
-        return;
-      }
-    }, 100);
-
-    let timer = nodes._timer;
-
-    return {
-      stop : () => {
-        if (best) loadGraph(nodes, best);
-
-        window.clearInterval(timer);
-        nodes._timer = undefined;
-      }
-    }
-  }
-}
-
-var controller = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  eventgraph: eventdag,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: config$1,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolOpAPI: buildToolOpAPI,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
-  BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
-  EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty$9,
-  FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
-  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
-  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
-  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
-  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
-  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
-  BSplineTransformOp: BSplineTransformOp,
-  Curve1DPoint: Curve1DPoint,
-  initSplineTemplates: initSplineTemplates,
-  ParamKey: ParamKey,
-  SimpleCurveBase: SimpleCurveBase,
-  BounceCurve: BounceCurve,
-  ElasticCurve: ElasticCurve,
-  EaseCurve: EaseCurve,
-  RandCurve: RandCurve,
-  getCurve: getCurve,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveTypeData: CurveTypeData,
-  Curve1D: Curve1D,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  Curve1DProperty: Curve1DProperty,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  I32BaseVector: I32BaseVector,
-  I16BaseVector: I16BaseVector,
-  I8BaseVector: I8BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI16BaseVector: UI16BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  makeVector4: makeVector4,
-  Vector4: Vector4$2,
-  makeVector3: makeVector3,
-  Vector3: Vector3$2,
-  makeVector2: makeVector2,
-  Vector2: Vector2$b,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  colinear2d: colinear2d,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  angle_between_vecs: angle_between_vecs,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
-  cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
-  haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
-  keymap: keymap$4,
-  reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
-});
-
 /**
 
  This is the main datapath controller module, inspired by Blender's RNA system.
@@ -31874,7 +30180,7 @@ let tokens = [
     t.value = parseInt(t.value);
     return t;
   }),
-  tk('NUMBER', /-?[0-9]+\.[0-9]*/, (t) => {
+  tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t) => {
     t.value = parseFloat(t.value);
     return t;
   }),
@@ -31945,7 +30251,6 @@ function report$1(msg) {
 function popReportName() {
   reportstack.pop();
 }
-
 
 class DataList extends ListIface {
   constructor(callbacks) {
@@ -32053,8 +30358,7 @@ class DataList extends ListIface {
 
     let obj = this.get(api, list, key);
 
-    if (obj === undefined)
-      return undefined;
+    if (obj === undefined) return undefined;
 
     return api.getStruct(obj.constructor);
   }
@@ -32203,7 +30507,8 @@ class DataStruct {
       },
       function getStruct(api, list, key) {
         return structdef;
-      }]);
+      },
+    ]);
 
     return ret;
   }
@@ -32264,7 +30569,8 @@ class DataStruct {
       },
       function getStruct(api, list, key) {
         return pstruct;
-      }]);
+      },
+    ]);
 
     return ret;
   }
@@ -32693,7 +30999,7 @@ class DataAPI extends ModelInterface {
 
     parserStack.cur--;
 
-    if (ret !== undefined && ret.prop && ret.dpath && (ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER)) {
+    if (ret !== undefined && ret.prop && ret.dpath && ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
       ret.prop = this.getPropOverride(ctx, inpath, ret.dpath, ret.obj);
     }
 
@@ -32701,7 +31007,7 @@ class DataAPI extends ModelInterface {
       let dummy = {
         datactx : ctx,
         datapath: inpath,
-        dataref : ret.obj
+        dataref : ret.obj,
       };
 
       let name = ret.dpath.ui_name_get.call(dummy);
@@ -32868,7 +31174,7 @@ class DataAPI extends ModelInterface {
         prop = dpath.data;
       }
 
-      if (prop && (dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER)) {
+      if (prop && dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
         prop = this.getPropOverride(ctx, inpath, dpath, obj);
       }
 
@@ -32909,7 +31215,7 @@ class DataAPI extends ModelInterface {
               obj = undefined;
             }
 
-            if (typeof obj === "string" && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
+            if (typeof obj === "string" && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
               obj = prop.values[obj];
             }
 
@@ -32938,7 +31244,7 @@ class DataAPI extends ModelInterface {
 
       if (t.type === "DOT") {
         p.next();
-      } else if (t.type === "EQUALS" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
+      } else if (t.type === "EQUALS" && prop !== undefined && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         p.expect("EQUALS");
 
         let t2 = p.peeknext();
@@ -32962,7 +31268,7 @@ class DataAPI extends ModelInterface {
 
         key = dpath.path;
         obj = !!(lastobj[key] == val);
-      } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
+      } else if (t.type === "AND" && prop !== undefined && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         p.expect("AND");
 
         let t2 = p.peeknext();
@@ -32986,7 +31292,7 @@ class DataAPI extends ModelInterface {
 
         key = dpath.path;
         obj = !!(lastobj[key] & val);
-      } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         p.expect("LSBRACKET");
 
         let t2 = p.peeknext();
@@ -33083,10 +31389,10 @@ class DataAPI extends ModelInterface {
       }
     }
 
-    if (prop && prop.type & (PropTypes$8.ENUM|PropFlags$3.FLAG)) {
+    if (prop && prop.type & (PropTypes$8.ENUM | PropFlags$3.FLAG)) {
       prop.checkMeta();
     }
-    
+
     return {
       dpath  : lastdpath,
       parent : lastobj2,
@@ -33095,14 +31401,16 @@ class DataAPI extends ModelInterface {
       key    : lastkey,
       dstruct: dstruct,
       prop   : prop,
-      subkey : subkey
+      subkey : subkey,
     };
   }
 
   _parsePathOverrides(path) {
-    let parts = ['', undefined, undefined];
+    let parts = ["", undefined, undefined];
 
-    const TOOLPATH = 0, NAME = 1, HOTKEY = 2;
+    const TOOLPATH = 0,
+      NAME = 1,
+      HOTKEY = 2;
     let part = TOOLPATH;
 
     for (let i = 0; i < path.length; i++) {
@@ -33134,11 +31442,11 @@ class DataAPI extends ModelInterface {
    *  "app.some_tool()|Label::CustomHotkeyString"
    * */
   getToolDef(toolpath) {
-    let {path, uiname, hotkey} = this._parsePathOverrides(toolpath);
+    let { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
 
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
-      throw new DataPathError("unknown path \"" + path + "\"");
+      throw new DataPathError('unknown path "' + path + '"');
     }
 
     let def = cls.tooldef();
@@ -33153,7 +31461,7 @@ class DataAPI extends ModelInterface {
   }
 
   getToolPathHotkey(ctx, toolpath) {
-    let {path, uiname, hotkey} = this._parsePathOverrides(toolpath);
+    let { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
 
     if (hotkey) {
       return hotkey;
@@ -33271,14 +31579,14 @@ class DataAPI extends ModelInterface {
       console.error("Unknown tool " + path);
     }
 
-    args = {...args};
+    args = { ...args };
 
     // feed inputs to invoke
     const tooldef = cls._getFinalToolDef();
     if (inputs !== undefined) {
       for (let k in inputs) {
         if (!(k in tooldef.inputs)) {
-          console.warn(cls.tooldef().uiname + ": Unknown tool property \"" + k + "\"");
+          console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
           continue;
         }
 
@@ -33293,7 +31601,7 @@ class DataAPI extends ModelInterface {
     if (inputs !== undefined) {
       for (let k in inputs) {
         if (!(k in tool.inputs)) {
-          console.warn(cls.tooldef().uiname + ": Unknown tool property \"" + k + "\"");
+          console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
           continue;
         }
 
@@ -33326,6 +31634,144 @@ function setDataPathToolOp(cls) {
 }
 
 setImplementationClass(DataAPI);
+
+let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
+
+function rgb_to_hsv(r, g, b) {
+  let computedH = 0;
+  let computedS = 0;
+  let computedV = 0;
+
+  if (r == null || g == null || b == null ||
+    isNaN(r) || isNaN(g) || isNaN(b)) {
+    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
+  }
+  /*
+  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
+   throw new Error('RGB values must be in the range 0 to 1.0');
+   return;
+  }//*/
+
+  let minRGB = Math.min(r, Math.min(g, b));
+  let maxRGB = Math.max(r, Math.max(g, b));
+
+  // Black-gray-white
+  if (minRGB === maxRGB) {
+    computedV = minRGB;
+
+    let ret = rgb_to_hsv_rets.next();
+    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
+    return ret;
+  }
+
+  // Colors other than black-gray-white:
+  let d = (r === minRGB) ? g - b : ((b === minRGB) ? r - g : b - r);
+  let h = (r === minRGB) ? 3 : ((b === minRGB) ? 1 : 5);
+
+  computedH = (60*(h - d/(maxRGB - minRGB)))/360.0;
+  computedS = (maxRGB - minRGB)/maxRGB;
+  computedV = maxRGB;
+
+  let ret = rgb_to_hsv_rets.next();
+  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+  return ret;
+}
+
+let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
+
+function hsv_to_rgb(h, s, v) {
+  let c = 0, m = 0, x = 0;
+  let ret = hsv_to_rgb_rets.next();
+
+  ret[0] = ret[1] = ret[2] = 0.0;
+  h *= 360.0;
+
+  c = v*s;
+  x = c*(1.0 - Math.abs(((h/60.0)%2) - 1.0));
+  m = v - c;
+  let color;
+
+  function RgbF_Create(r, g, b) {
+    ret[0] = r;
+    ret[1] = g;
+    ret[2] = b;
+
+    return ret;
+  }
+
+  if (h >= 0.0 && h < 60.0) {
+    color = RgbF_Create(c + m, x + m, m);
+  } else if (h >= 60.0 && h < 120.0) {
+    color = RgbF_Create(x + m, c + m, m);
+  } else if (h >= 120.0 && h < 180.0) {
+    color = RgbF_Create(m, c + m, x + m);
+  } else if (h >= 180.0 && h < 240.0) {
+    color = RgbF_Create(m, x + m, c + m);
+  } else if (h >= 240.0 && h < 300.0) {
+    color = RgbF_Create(x + m, m, c + m);
+  } else if (h >= 300.0) {
+    color = RgbF_Create(c + m, m, x + m);
+  } else {
+    color = RgbF_Create(m, m, m);
+  }
+
+  return color;
+}
+
+let rgb_to_cmyk_rets = cachering.fromConstructor(Vector4$2, 512);
+let cmyk_to_rgb_rets = cachering.fromConstructor(Vector3$2, 512);
+
+function cmyk_to_rgb(c, m, y, k) {
+  let ret = cmyk_to_rgb_rets.next();
+
+  if (k === 1.0) {
+    ret.zero();
+    return ret;
+  }
+
+  c = c - c*k + k;
+  m = m - m*k + k;
+  y = y - y*k + k;
+
+  ret[0] = 1.0 - c;
+  ret[1] = 1.0 - m;
+  ret[2] = 1.0 - y;
+
+  return ret;
+}
+
+function rgb_to_cmyk(r, g, b) {
+  //CMYK and CMY values from 0 to 1
+  let ret = rgb_to_cmyk_rets.next();
+
+  let C = 1.0 - r;
+  let M = 1.0 - g;
+  let Y = 1.0 - b;
+
+  let var_K = 1;
+
+  if (C < var_K) var_K = C;
+  if (M < var_K) var_K = M;
+  if (Y < var_K) var_K = Y;
+  if (var_K === 1) { //Black
+    C = 0;
+    M = 0;
+    Y = 0;
+  } else {
+    C = (C - var_K)/(1 - var_K);
+    M = (M - var_K)/(1 - var_K);
+    Y = (Y - var_K)/(1 - var_K);
+  }
+
+  let K = var_K;
+
+  ret[0] = C;
+  ret[1] = M;
+  ret[2] = Y;
+  ret[3] = K;
+
+  return ret;
+}
 
 const DefaultTheme = {
   base: {
@@ -34143,6 +32589,596 @@ class AfterAspect {
   }
 }
 
+const SocketFlags = {
+  UPDATE: 1
+};
+const NodeFlags = {
+  UPDATE   : 1,
+  SORT_TAG1: 2,
+  SORT_TAG2: 4,
+};
+const RecalcFlags = {
+  RUN   : 1,
+  RESORT: 2
+};
+const SocketTypes = {
+  INPUT : "inputs",
+  OUTPUT: "outputs"
+};
+
+let graphIdGen = 1;
+
+class EventSocket {
+  static socketDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+  }
+
+  name = ""
+  id = graphIdGen++;
+  flag = 0;
+
+  edges = [];
+  node = undefined;
+
+  type = undefined;
+
+  constructor(node) {
+    this.node = node;
+  }
+
+  get value() {
+    throw new Error("implement me!");
+  }
+
+  set value(v) {
+    this.flagUpdate();
+  }
+
+  get isUpdated() {
+    return this.flag & SocketFlags.UPDATE;
+  }
+
+  copyFrom(b) {
+    this.name = b.name;
+    this.flag = b.flag;
+
+    return this;
+  }
+
+  copy() {
+    return (new this.constructor()).copyFrom(this);
+  }
+
+  flagUpdate() {
+    this.flag |= SocketFlags.UPDATE;
+
+    if (!this.node) {
+      return;
+    }
+
+    if (this.type === SocketTypes.INPUT) {
+      this.node.flagUpdate();
+    } else {
+      for (let sockb of this.edges) {
+        sockb.flag |= SocketFlags.UPDATE;
+        sockb.node.flagUpdate();
+      }
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.node) {
+      this.node.flagResort();
+    }
+
+    return this;
+  }
+
+  connect(sockb) {
+    this.edges.push(sockb);
+    sockb.edges.push(this);
+    return this;
+  }
+
+  hasNode(node) {
+    for (let sockb of this.edges) {
+      if (sockb.node === node || sockb.node.owner === node) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  has(sockb) {
+    return this.edges.indexOf(sockb) >= 0;
+  }
+
+  disconnect(sockb = undefined) {
+    this.flagResort();
+
+    if (sockb === undefined) {
+      /* Disconnect all. */
+      for (let sock of this.edges) {
+        sock.flagUpdate();
+        sock.edges.remove(this);
+      }
+
+      this.edges.length = 0;
+      return this;
+    }
+
+    sockb.flagUpdate();
+    this.edges.remove(sockb);
+    return this;
+  }
+}
+
+const NodeClasses = [];
+
+//Interface
+class NodeCapable {
+  graphNode = undefined;
+
+  static graphNodeDef = {
+    typeName: "",
+    uiName  : "",
+    flag    : 0,
+
+    /* Sockets inherit. */
+    inputs : {},
+    outputs: {}
+  };
+
+  graphExec() {
+  }
+}
+
+class EventNode {
+  owner = undefined;
+  inputs = {};
+  outputs = {};
+  allsockets = [];
+  graph = undefined;
+  sortIndex = -1;
+  id = graphIdGen++;
+  flag = 0;
+
+  static register(cls, def) {
+    cls.graphNodeDef = def;
+    if (!def.typeName) {
+      throw new Error("Missing graphNodeDef.typeName")
+    }
+
+    NodeClasses.push(cls);
+
+    return def;
+  }
+
+  addSocket(type, key, sock) {
+    this[type][key] = sock;
+    sock.name = key;
+    sock.node = this;
+    sock.type = type;
+
+    return this;
+  }
+
+  static isNodeCapable(cls) {
+    return cls.graphNodeDef !== undefined;
+  }
+
+  constructor(owner) {
+    this.owner = owner;
+
+    let cls = owner.constructor;
+
+    let getSockets = (key) => {
+      let socks = {};
+
+      let p = cls;
+      while (p) {
+        if (p.graphNodeDef) {
+          let socksDef = p.graphNodeDef[key] || {};
+
+          for (let k in socksDef) {
+            if (!(k in socks)) {
+              socks[k] = socksDef[k].copy();
+              socks[k].name = k;
+              socks[k].node = this;
+              socks[k].type = key;
+
+              this.allsockets.push(socks[k]);
+            }
+          }
+        }
+        p = p.__proto__;
+      }
+
+      return socks;
+    };
+
+    this.inputs = getSockets("inputs");
+    this.outputs = getSockets("outputs");
+  }
+
+  static init(owner) {
+    owner.graphNode = new EventNode(owner);
+    return owner.graphNode;
+  }
+
+  flagUpdate() {
+    this.flag |= NodeFlags.UPDATE;
+
+    if (this.graph) {
+      this.graph.flagUpdate(this);
+    }
+
+    return this;
+  }
+
+  flagResort() {
+    if (this.graph) {
+      this.graph.flagResort(this);
+    }
+    return this;
+  }
+}
+
+class EventGraph {
+  nodes = [];
+  flag = 0;
+  nodeIdMap = new Map()
+  sockIdMap = new Map()
+  sortlist = [];
+  queueReq = undefined;
+  #skipQueueExec = 0;
+
+  constructor() {
+  }
+
+  add(node) {
+    node = this.eventNode(node);
+
+    node.graph = this;
+    this.nodeIdMap.set(node.id, node);
+
+    this.nodes.push(node);
+    this.flagResort(node);
+    this.flagUpdate(node);
+  }
+
+  has(node) {
+    node = this.eventNode(node);
+    return this.nodeIdMap.has(node.id);
+  }
+
+  eventNode(node) {
+    if (!(node instanceof EventNode)) {
+      node = node.graphNode;
+    }
+
+    if (node === undefined) {
+      console.warn("Not an event node:", arguments[0]);
+      throw new Error("Not an event node");
+    }
+
+    return node;
+  }
+
+  remove(node) {
+    node = this.eventNode(node);
+
+    if (node === undefined) {
+      throw new Error("EventGraph.prototype.remove(): node was undefined");
+    }
+
+    if (!this.nodeIdMap.get(node.id)) {
+      throw new Error("Node is not in event graph");
+    }
+
+    this.nodeIdMap.delete(node.id);
+
+    for (let sock of Array.from(node.eventNode.allsockets)) {
+      this.sockIdMap.delete(sock.id);
+
+      try {
+        sock.disconnect();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to disconnect a socket");
+      }
+    }
+
+    node.graph = undefined;
+    this.nodes.remove(node);
+    this.flagResort();
+  }
+
+  flagResort(node) {
+    if (node) {
+      node = this.eventNode(node);
+    }
+
+    this.flag |= RecalcFlags.RESORT | RecalcFlags.RUN;
+
+    return this;
+  }
+
+  flagUpdate(node) {
+    node = this.eventNode(node);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (!this.#skipQueueExec) {
+      this.queueExec();
+    }
+
+    return this;
+  }
+
+  sort() {
+    console.warn("Sorting Graph");
+
+    this.flag &= ~RecalcFlags.RESORT;
+
+    for (let n of this.nodes) {
+      n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
+    }
+
+    let sortlist = this.sortlist;
+    this.sortlist.length = 0;
+
+    let dosort = (n) => {
+      if (n.flag & NodeFlags.SORT_TAG2) {
+        console.error("Cycle in event dag!", n);
+        return;
+      }
+
+      n.flag |= NodeFlags.SORT_TAG2;
+
+      for (let [k, socka] of Object.entries(n.inputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+
+      n.flag &= ~NodeFlags.SORT_TAG2;
+      n.flag |= NodeFlags.SORT_TAG1;
+      n.sortIndex = sortlist.length;
+      sortlist.push(n);
+
+      for (let [k, socka] of Object.entries(n.outputs)) {
+        for (let sockb of socka.edges) {
+          let n2 = sockb.node;
+
+          if (!(n2.flag & NodeFlags.SORT_TAG1)) {
+            dosort(n2);
+          }
+        }
+      }
+    };
+
+    for (let n of this.nodes) {
+      if (!(n.flag & NodeFlags.SORT_TAG1)) {
+        dosort(n);
+      }
+    }
+  }
+
+  queueExec() {
+    console.warn("queueExec", this.queueReq);
+
+    this.flag |= RecalcFlags.RUN;
+
+    if (this.queueReq !== undefined) {
+      return;
+    }
+
+    this.queueReq = true;
+    this.queueReq = window.setTimeout(() => {
+      this.queueReq = undefined;
+      this.exec();
+    }, 0);
+  }
+
+  exec() {
+    this.flag &= ~RecalcFlags.RUN;
+
+    if (this.flag & RecalcFlags.RESORT) {
+      this.sort();
+    }
+
+    console.warn("Executing Graph");
+
+    this.#skipQueueExec++;
+
+    let sortlist = this.sortlist;
+    for (let n of sortlist) {
+      if (!(n.flag & NodeFlags.UPDATE)) {
+        continue;
+      }
+
+      try {
+        n.owner.graphExec();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Error during event graph execution");
+      }
+
+      n.flag &= ~NodeFlags.UPDATE;
+
+      for (let k in n.inputs) {
+        let sock = n.inputs[k];
+        sock.flag &= ~SocketFlags.UPDATE;
+      }
+
+      for (let k in n.outputs) {
+        let sock = n.outputs[k];
+
+        if (sock.flag & SocketFlags.UPDATE) {
+          for (let sockb of sock.edges) {
+            sockb.flag |= SocketFlags.UPDATE;
+            sockb.node.flag |= SocketFlags.UPDATE;
+          }
+
+          sock.flag &= ~SocketFlags.UPDATE;
+        }
+      }
+    }
+
+    this.#skipQueueExec--;
+  }
+}
+
+const theEventGraph = new EventGraph();
+
+const strBoolMap = {
+  "true" : "false",
+  "false": "true",
+  "on"   : "off",
+  "off"  : "on",
+  "yes"  : "no",
+  "no"   : "yes",
+};
+
+class DependSocket extends EventSocket {
+  static socketDef = {
+    typeName: "depend",
+    uiName  : "depend",
+    flag    : 0,
+  }
+
+  #value = undefined;
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(v) {
+    this.#value = v;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#value = b.#value;
+
+    return this;
+  }
+}
+
+const PropSocketModes = {
+  REPLACE: 0,
+  MIN    : 1,
+  MAX    : 2,
+};
+
+class PropertySocket extends EventSocket {
+  static socketDef = {
+    typeName: "property_socket",
+    uiName  : "Property Socket",
+    flag    : 0,
+  }
+
+  mixMode = PropSocketModes.REPLACE;
+
+  #binding = {
+    obj: null,
+    key: "",
+  }
+
+  #callbacks = []; //(newval, oldval) => val
+  #invert = false; //Invert bool or number properties
+
+  oldValue = undefined;
+
+  mode(mixmode) {
+    this.mixMode = mixmode;
+    return this;
+  }
+
+  copyFrom(b) {
+    super.copyFrom(b);
+
+    this.#invert = b.#invert;
+    this.#callbacks = Array.from(b.#callbacks);
+    this.#binding = b.#binding;
+
+    return this;
+  }
+
+  invert(state = true) {
+    this.#invert = state;
+    return this;
+  }
+
+  callback(cb) {
+    this.#callbacks.push(cb);
+    return this;
+  }
+
+  get value() {
+    let bind = this.#binding;
+    return bind.obj ? bind.obj[bind.key] : undefined;
+  }
+
+  set value(v) {
+    let old = this.value;
+    if (this.#callbacks.length > 0) {
+      for (let cb of this.#callbacks) {
+        v = cb(v, old);
+      }
+    }
+
+    if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
+      v = !v;
+    } else if (this.#invert && typeof v === "string") {
+      let s = v.toLowerCase().trim();
+      if (s in strBoolMap) {
+        v = strBoolMap[s];
+      }
+    }
+
+    let bind = this.#binding;
+    if (bind.obj) {
+      bind.obj[bind.key] = v;
+    } else {
+      console.warn("Attempt to set unbound property socket", this);
+    }
+  }
+
+  bind(obj, key) {
+    this.#binding.obj = obj;
+    this.#binding.key = key;
+
+    return this;
+  }
+}
+
+var eventdag = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  DependSocket: DependSocket,
+  EventGraph: EventGraph,
+  EventNode: EventNode,
+  EventSocket: EventSocket,
+  NodeCapable: NodeCapable,
+  NodeFlags: NodeFlags,
+  PropSocketModes: PropSocketModes,
+  PropertySocket: PropertySocket,
+  RecalcFlags: RecalcFlags,
+  SocketFlags: SocketFlags,
+  SocketTypes: SocketTypes,
+  theEventGraph: theEventGraph
+});
+
 let _ui_base = undefined;
 
 //avoid circular module references
@@ -34942,7 +33978,7 @@ if (typeof HTMLElement === 'undefined') {
   window.PointerEvent = class PointerEvent {};
 }
 
-class UIBase$f extends HTMLElement {
+let UIBase$f = class UIBase extends HTMLElement {
   #reflagGraph = false;
 
   static graphNodeDef = EventNode.register(this, {
@@ -35179,7 +34215,7 @@ class UIBase$f extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase$f) {
+      if (child && typeof child === "object" && child instanceof UIBase) {
         child.parentWidget = this;
       }
 
@@ -35572,9 +34608,9 @@ class UIBase$f extends HTMLElement {
         ret = n;
       }
 
-      if (n instanceof UIBase$f && n.constructor.define().tagname === "panelframe-x") {
+      if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
         rec(n.contents);
-      } else if (n instanceof UIBase$f && n.constructor.define().tagname === "tabcontainer-x") {
+      } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
         for (let k in n.tabs) {
           let tab = n.tabs[k];
 
@@ -36105,7 +35141,7 @@ class UIBase$f extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase$f) {
+    if (child instanceof UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -36324,7 +35360,7 @@ class UIBase$f extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase$f) {
+      if (n instanceof UIBase) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -36397,19 +35433,19 @@ class UIBase$f extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$f, excluded_classes = undefined) {
+  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase, excluded_classes = undefined) {
     let clip;
     let mouseEvent;
     let isMouseMove, isMouseDown;
 
     if (typeof args === "object") {
-      nodeclass = args.nodeclass || UIBase$f;
+      nodeclass = args.nodeclass || UIBase;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
     } else {
       args = {
-        nodeclass       : nodeclass || UIBase$f,
+        nodeclass       : nodeclass || UIBase,
         excluded_classes: excluded_classes,
         clip            : clip
       };
@@ -36544,7 +35580,7 @@ class UIBase$f extends HTMLElement {
     this.__disabledState = !!val;
 
     let visit = (n) => {
-      if (n instanceof UIBase$f) {
+      if (n instanceof UIBase) {
         let changed = !!n.__disabledState;
 
         /*
@@ -36697,7 +35733,7 @@ class UIBase$f extends HTMLElement {
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
-    div.style["position"] = UIBase$f.PositionKey;
+    div.style["position"] = UIBase.PositionKey;
     div.style["margin"] = "0px";
     div.style["left"] = x + "px";
     div.style["top"] = y + "px";
@@ -37088,7 +36124,7 @@ class UIBase$f extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase$f.PositionKey) {
+  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase.PositionKey) {
     this.style.position = positionKey;
 
     this.style.left = x + "px";
@@ -37361,7 +36397,7 @@ class UIBase$f extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase$f.getDPI();
+    return UIBase.getDPI();
   }
 
   /**
@@ -37571,7 +36607,7 @@ class UIBase$f extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase$f && p !== Object) {
+    while (p && p !== lastp && p !== UIBase && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -37812,7 +36848,7 @@ class UIBase$f extends HTMLElement {
 
     this._active_animations = [];
   }
-}
+};
 
 function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
@@ -40546,6 +39582,978 @@ class Check1 extends Button {
 }
 
 UIBase$c.internalRegister(Check1);
+
+function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
+  let blob = new Blob([data], {type : mime});
+  let url = URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+
+  a.click();
+}
+
+//returns a promise
+function loadFile$1(filename="unnamed", exts=[]) {
+  let input = document.createElement("input");
+  input.type = "file";
+
+  exts = exts.join(",");
+
+  input.setAttribute("accept", exts);
+  return new Promise((accept, reject) => {
+    input.onchange = function(e) {
+      if (this.files === undefined || this.files.length !== 1) {
+        reject("file load error");
+        return;
+      }
+
+      let file = this.files[0];
+      let reader = new FileReader();
+
+      reader.onload = function(e2) {
+        accept(e2.target.result);
+      };
+
+      reader.readAsArrayBuffer(file);
+    };
+    input.click();
+  });
+}
+
+window._testLoadFile = function(exts=["*.*"]) {
+  loadFile$1(undefined, exts).then((data) => {
+    console.log("got file data:", data);
+  });
+};
+
+window._testSaveFile = function() {
+  let buf = _appstate.createFile();
+  //console.log(buf);
+  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
+};
+
+var html5_fileapi = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  loadFile: loadFile$1,
+  saveFile: saveFile$1
+});
+
+class Constraint {
+  constructor(name, func, klst, params, k = 1.0) {
+    this.glst = [];
+    this.klst = klst;
+    this.wlst = [];
+    this.k = k;
+    this.params = params;
+    this.name = name;
+
+    for (let ks of klst) {
+      this.glst.push(new Float64Array(ks.length));
+      const ws = new Float64Array(ks.length);
+
+      for (let i = 0; i < ws.length; i++) {
+        ws[i] = 1.0;
+      }
+
+      this.wlst.push(ws);
+    }
+
+    this.df = 0.0005;
+    this.threshold = 0.0001;
+    if (func !== undefined) { /* Happens with subclass-style constraints. */
+      this.func = func;
+    }
+    if (!this.funcDv) {
+      this.funcDv = null;
+    }
+  }
+
+  postSolve() {
+  }
+
+  evaluate(no_dvs = false) {
+    let r1 = this.func(this.params);
+
+    if (this.funcDv) {
+      this.funcDv(this.params, this.glst);
+      return r1;
+    }
+
+    if (Math.abs(r1) < this.threshold)
+      return 0.0;
+
+    let df = this.df;
+
+    if (no_dvs)
+      return r1;
+
+    for (let i = 0; i < this.klst.length; i++) {
+      let gs = this.glst[i];
+      let ks = this.klst[i];
+
+      for (let j = 0; j < ks.length; j++) {
+        let orig = ks[j];
+        ks[j] += df;
+        let r2 = this.func(this.params);
+        ks[j] = orig;
+
+        gs[j] = (r2 - r1)/df;
+      }
+    }
+
+    return r1;
+  }
+}
+
+class Solver {
+  constructor() {
+    this.constraints = [];
+    this.gk = 0.99;
+    this.simple = false;
+    this.randCons = false;
+
+    /** stop when average constraint error falls below this */
+    this.threshold = 0.01;
+  }
+
+  remove(con) {
+    this.constraints.remove(con);
+  }
+
+  add(con) {
+    this.constraints.push(con);
+  }
+
+  solveStep(gk = this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci = 0; ci < cons.length; ci++) {
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j = 0; j < ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0) {
+        continue;
+      }
+
+      r1 /= totgs;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -r1*gs[j]*con.k*gk*ws[j];
+        }
+
+        con.postSolve();
+      }
+    }
+
+    return err;
+  }
+
+  solveStepSimple(gk = this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci = 0; ci < cons.length; ci++) {
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j = 0; j < ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0) {
+        continue;
+      }
+
+      totgs = 0.0001/Math.sqrt(totgs);
+
+      for (let i = 0; i < con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i], ws = con.wlst[j];
+        for (let j = 0; j < ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk*ws[j];
+        }
+      }
+
+      con.postSolve();
+    }
+
+    return err;
+  }
+
+  solve(steps, gk = this.gk, printError = false) {
+    let err = 0.0;
+
+    for (let i = 0; i < steps; i++) {
+      if (this.simple) {
+        err = this.solveStepSimple(gk);
+      } else {
+        err = this.solveStep(gk);
+      }
+
+
+      if (printError) {
+        console.warn("average error:", (err/this.constraints.length).toFixed(4));
+      }
+      if (err < this.threshold/this.constraints.length) {
+        break;
+      }
+    }
+
+    return err;
+  }
+}
+
+var solver = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  Constraint: Constraint,
+  Solver: Solver
+});
+
+"use strict";
+
+let idgen = 0;
+
+class PackNodeVertex extends Vector2$b {
+  constructor(node, co) {
+    super(co);
+
+    this.node = node;
+    this._id = idgen++;
+    this.edges = [];
+    this._absPos = new Vector2$b();
+  }
+
+  get absPos() {
+    this._absPos.load(this).add(this.node.pos);
+    return this._absPos;
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+class PackNode {
+  constructor() {
+    this.pos = new Vector2$b();
+    this.vel = new Vector2$b();
+    this.oldpos = new Vector2$b();
+    this._id = idgen++;
+    this.size = new Vector2$b();
+    this.verts = [];
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+function copyGraph(nodes) {
+  let ret = [];
+  let idmap = {};
+
+  for (let n of nodes) {
+    let n2 = new PackNode();
+    n2._id = n._id;
+    n2.pos.load(n.pos);
+    n2.vel.load(n.vel);
+    n2.size.load(n.size);
+
+    n2.verts = [];
+    idmap[n2._id] = n2;
+
+    for (let v of n.verts) {
+      let v2 = new PackNodeVertex(n2, v);
+      v2._id = v._id;
+      idmap[v2._id] = v2;
+
+      n2.verts.push(v2);
+    }
+
+    ret.push(n2);
+  }
+
+  for (let n of nodes) {
+    for (let v of n.verts) {
+      let v2 = idmap[v._id];
+
+      for (let v3 of v.edges) {
+        v2.edges.push(idmap[v3._id]);
+      }
+    }
+  }
+
+  return ret;
+}
+
+function getCenter(nodes) {
+  let cent = new Vector2$b();
+
+  for (let n of nodes) {
+    cent.add(n.pos);
+  }
+
+  if (nodes.length === 0)
+    return cent;
+
+  cent.mulScalar(1.0 / nodes.length);
+
+  return cent;
+}
+
+function loadGraph(nodes, copy) {
+  let idmap = {};
+
+  for (let i=0; i<nodes.length; i++) {
+    nodes[i].pos.load(copy[i].pos);
+    nodes[i].oldpos.load(copy[i].oldpos);
+    nodes[i].vel.load(copy[i].vel);
+  }
+}
+
+function graphGetIslands(nodes) {
+  let islands = [];
+  let visit1 = new set$2();
+
+  let rec = (n, island) => {
+    island.push(n);
+    visit1.add(n);
+
+    for (let v of n.verts) {
+      for (let e of v.edges) {
+        let n2 = e.node;
+        if (n2 !== n && !visit1.has(n2)) {
+          rec(n2, island);
+        }
+      }
+    }
+  };
+
+  for (let n of nodes) {
+    if (visit1.has(n)) {
+      continue;
+    }
+
+    let island = [];
+    islands.push(island);
+    rec(n, island);
+  }
+
+  return islands;
+}
+
+function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
+  let margin = margin_or_args;
+  let speed = 1.0;
+
+  if (typeof margin === "object") {
+    let args = margin;
+
+    margin = args.margin ?? 15;
+    steps = args.steps ?? 10;
+    updateCb = args.updateCb;
+    speed = args.speed ?? 1.0;
+  }
+
+  let orignodes = nodes;
+  nodes = copyGraph(nodes);
+
+  let decay = 1.0;
+  let decayi = 0;
+
+
+  let min = new Vector2$b().addScalar(1e17);
+  let max = new Vector2$b().addScalar(-1e17);
+
+  let tmp = new Vector2$b();
+  for (let n of nodes) {
+    min.min(n.pos);
+    tmp.load(n.pos).add(n.size);
+    max.max(tmp);
+  }
+
+  let size = new Vector2$b(max).sub(min);
+
+  for (let n of nodes) {
+    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
+    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
+  }
+
+  let nodemap = {};
+  for (let n of nodes) {
+    n.vel.zero();
+    nodemap[n._id] = n;
+    for (let v of n.verts) {
+      nodemap[v._id] = v;
+    }
+  }
+
+  let visit = new set$2();
+  let verts = new set$2();
+  let isect = [];
+
+  let disableEdges = false;
+
+  function edge_c(params) {
+    let [v1, v2, restlen] = params;
+
+    if (disableEdges) return 0;
+
+    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
+  }
+
+  let p1 = new Vector2$b();
+  let p2 = new Vector2$b();
+  let s1 = new Vector2$b();
+  let s2 = new Vector2$b();
+
+  function loadBoxes(n1, n2, margin1=margin) {
+    p1.load(n1.pos);
+    p2.load(n2.pos);
+    s1.load(n1.size);
+    s2.load(n2.size);
+
+    p1.subScalar(margin1);
+    p2.subScalar(margin1);
+    s1.addScalar(margin1*2.0);
+    s2.addScalar(margin1*2.0);
+  }
+
+  let disableArea = false;
+
+  function area_c(params) {
+    let [n1, n2] = params;
+
+    if (disableArea)
+      return 0.0;
+
+    loadBoxes(n1, n2);
+
+    let a1 = n1.size[0]*n1.size[1];
+    let a2 = n2.size[0]*n2.size[1];
+
+    return aabb_overlap_area(p1, s1, p2, s2);
+    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
+  }
+
+  let lasterr, besterr, best;
+  let err;
+
+  let islands = graphGetIslands(nodes);
+  let fakeVerts = [];
+  for (let island of islands) {
+    let n = island[0];
+    let fv = new PackNodeVertex(n);
+    fakeVerts.push(fv);
+  }
+
+  let solveStep1 = (gk=1.0) => {
+    let solver = new Solver();
+
+    isect.length = 0;
+    visit = new set$2();
+
+    if (fakeVerts.length > 1) {
+      for (let i=1; i<fakeVerts.length; i++) {
+        let v1 = fakeVerts[0];
+        let v2 = fakeVerts[i];
+
+        let rlen = 1.0;
+
+        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
+        con.k = 0.25;
+        solver.add(con);
+      }
+    }
+
+    for (let n1 of nodes) {
+      for (let v of n1.verts) {
+        verts.add(v);
+        for (let v2 of v.edges) {
+          //hueristic to avoid adding same constraint twice
+          if (v2._id < v._id) continue;
+
+          let rlen = n1.size.vectorLength()*0.0;
+
+          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
+          con.k = 1.0;
+          solver.add(con);
+        }
+      }
+
+      for (let n2 of nodes) {
+        if (n1 === n2) continue;
+        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
+        if (visit.has(key)) continue;
+
+        loadBoxes(n1, n2);
+        let area = aabb_overlap_area(p1, s1, p2, s2);
+
+        if (area > 0.01) {
+          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
+          //*
+          n1.pos[0] += (Math.random() - 0.5)*size;
+          n1.pos[1] += (Math.random() - 0.5)*size;
+          n2.pos[0] += (Math.random() - 0.5)*size;
+          n2.pos[1] += (Math.random() - 0.5)*size;
+          //*/
+
+          isect.push([n1, n2]);
+          visit.add(key);
+        }
+      }
+
+      for (let [n1, n2] of isect) {
+        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
+        solver.add(con);
+        con.k = 1.0;
+      }
+    }
+
+    return solver;
+  };
+
+  let i = 1;
+  let solveStep = (gk=0.5) => {
+    let solver = solveStep1();
+
+    if (i % 40 === 0.0) {
+      let c1 = getCenter(nodes);
+
+      let rfac = 1000.0;
+
+      if (best) loadGraph(nodes, best);
+
+      for (let n of nodes) {
+        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
+        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
+        n.vel.zero();
+      }
+
+      let c2 = getCenter(nodes);
+      c1.sub(c2);
+
+      for (let n of nodes) {
+        n.pos.add(c1);
+      }
+    }
+
+    let err = 1e17;
+
+    for (let n of nodes) {
+      n.oldpos.load(n.pos);
+      n.pos.addFac(n.vel, 0.5);
+    }
+
+    disableEdges = false;
+    disableArea = true;
+    solver.solve(1, gk);
+
+    //solve so boxes don't overlap
+    disableEdges = true;
+    disableArea = false;
+
+    for (let j=0; j<10; j++) {
+      solver = solveStep1();
+      err = solver.solve(10, gk*speed);
+    }
+
+    for (let n of nodes) {
+      n.vel.load(n.pos).sub(n.oldpos);
+    }
+
+    //get error from edge constraints
+
+    disableEdges = false;
+    disableArea = true;
+
+    err = 0.0;
+    for (let con of solver.constraints) {
+      err += con.evaluate(true);
+    }
+
+    disableEdges = false;
+    disableArea = false;
+
+    /*
+    loadGraph(orignodes, nodes);
+    if (updateCb) {
+      updateCb();
+    }//*/
+
+    lasterr = err;
+
+    let add = Math.random()*besterr*Math.exp(-i*0.1);
+
+    if (besterr === undefined || err < besterr+add) {
+      best = copyGraph(nodes);
+      besterr = err;
+    }
+
+    i++;
+
+    return err;
+  };
+
+
+  for (let j=0; j<steps; j++) {
+    solveStep();
+
+    decayi++;
+    decay = Math.exp(-decayi*0.1);
+  }
+
+  min.zero().addScalar(1e17);
+  max.zero().addScalar(-1e17);
+
+  for (let node of (best ? best : nodes)) {
+    min.min(node.pos);
+    p2.load(node.pos).add(node.size);
+    max.max(p2);
+  }
+
+  for (let node of (best ? best : nodes)) {
+    node.pos.sub(min);
+  }
+
+  loadGraph(orignodes, best ? best : nodes);
+
+  if (updateCb) {
+    if (nodes._timer !== undefined) {
+      window.clearInterval(nodes._timer);
+    }
+
+    nodes._timer = window.setInterval(() => {
+      let time = time_ms();
+
+      while (time_ms() - time < 50) {
+        let err = solveStep();
+      }
+
+      if (cconst.DEBUG.boxPacker) {
+        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
+      }
+
+      if (best) loadGraph(orignodes, best);
+
+      if (updateCb() === false) {
+        clearInterval(nodes._timer);
+        return;
+      }
+    }, 100);
+
+    let timer = nodes._timer;
+
+    return {
+      stop : () => {
+        if (best) loadGraph(nodes, best);
+
+        window.clearInterval(timer);
+        nodes._timer = undefined;
+      }
+    }
+  }
+}
+
+var controller = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  AbstractCurve: AbstractCurve,
+  BSplineTransformOp: BSplineTransformOp,
+  BaseVector: BaseVector,
+  BoolProperty: BoolProperty,
+  BounceCurve: BounceCurve,
+  COLINEAR: COLINEAR,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  CURVE_VERSION: CURVE_VERSION,
+  ClosestCurveRets: ClosestCurveRets,
+  ClosestModes: ClosestModes,
+  Constraint: Constraint,
+  Context: Context,
+  ContextFlags: ContextFlags,
+  ContextOverlay: ContextOverlay,
+  Curve1D: Curve1D,
+  Curve1DPoint: Curve1DPoint,
+  Curve1DProperty: Curve1DProperty,
+  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
+  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
+  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
+  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
+  CurveConstructors: CurveConstructors,
+  CurveFlags: CurveFlags,
+  CurveTypeData: CurveTypeData,
+  DataAPI: DataAPI,
+  DataFlags: DataFlags,
+  DataList: DataList,
+  DataPath: DataPath,
+  DataPathError: DataPathError,
+  DataPathSetOp: DataPathSetOp,
+  DataStruct: DataStruct,
+  DataTypes: DataTypes,
+  DoubleClickHandler: DoubleClickHandler,
+  EaseCurve: EaseCurve,
+  ElasticCurve: ElasticCurve,
+  EnumKeyPair: EnumKeyPair,
+  EnumProperty: EnumProperty$9,
+  EulerOrders: EulerOrders,
+  F32BaseVector: F32BaseVector,
+  F64BaseVector: F64BaseVector,
+  FEPS: FEPS,
+  FEPS_DATA: FEPS_DATA,
+  FLOAT_MAX: FLOAT_MAX,
+  FLOAT_MIN: FLOAT_MIN,
+  FlagProperty: FlagProperty,
+  FloatArrayProperty: FloatArrayProperty,
+  FloatConstrinats: FloatConstrinats,
+  FloatProperty: FloatProperty,
+  HotKey: HotKey,
+  I16BaseVector: I16BaseVector,
+  I32BaseVector: I32BaseVector,
+  I8BaseVector: I8BaseVector,
+  IntProperty: IntProperty,
+  IntegerConstraints: IntegerConstraints,
+  KeyMap: KeyMap,
+  LINECROSS: LINECROSS,
+  ListIface: ListIface,
+  ListProperty: ListProperty,
+  LockedContext: LockedContext,
+  MacroClasses: MacroClasses,
+  MacroLink: MacroLink,
+  Mat4Property: Mat4Property,
+  Mat4Stack: Mat4Stack,
+  Matrix4: Matrix4$2,
+  Matrix4UI: Matrix4UI,
+  MinMax: MinMax,
+  ModelInterface: ModelInterface,
+  NumProperty: NumProperty,
+  NumberConstraints: NumberConstraints,
+  NumberConstraintsBase: NumberConstraintsBase,
+  OverlayClasses: OverlayClasses,
+  PackNode: PackNode,
+  PackNodeVertex: PackNodeVertex,
+  ParamKey: ParamKey,
+  Parser: Parser,
+  PlaneOps: PlaneOps,
+  PropClasses: PropClasses,
+  PropFlags: PropFlags$3,
+  PropSubTypes: PropSubTypes$3,
+  PropTypes: PropTypes$8,
+  Quat: Quat,
+  QuatProperty: QuatProperty,
+  RandCurve: RandCurve,
+  ReportProperty: ReportProperty,
+  SQRT2: SQRT2,
+  SavedToolDefaults: SavedToolDefaults,
+  SimpleCurveBase: SimpleCurveBase,
+  Solver: Solver,
+  SplineTemplateIcons: SplineTemplateIcons,
+  SplineTemplates: SplineTemplates,
+  StringProperty: StringProperty,
+  StringSetProperty: StringSetProperty,
+  StructFlags: StructFlags,
+  TangentModes: TangentModes,
+  ToolClasses: ToolClasses,
+  ToolFlags: ToolFlags$1,
+  ToolMacro: ToolMacro,
+  ToolOp: ToolOp,
+  ToolOpIface: ToolOpIface,
+  ToolPaths: ToolPaths,
+  ToolProperty: ToolProperty$1,
+  ToolPropertyCache: ToolPropertyCache,
+  ToolStack: ToolStack,
+  UI16BaseVector: UI16BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  UndoFlags: UndoFlags$1,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  VecPropertyBase: VecPropertyBase,
+  Vector2: Vector2$b,
+  Vector3: Vector3$2,
+  Vector4: Vector4$2,
+  _NumberPropertyBase: _NumberPropertyBase,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  _setModalAreaClass: _setModalAreaClass,
+  _setScreenClass: _setScreenClass,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_sphere_dist: aabb_sphere_dist,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  angle_between_vecs: angle_between_vecs,
+  barycentric_v2: barycentric_v2,
+  binomial: binomial,
+  buildParser: buildParser,
+  buildToolOpAPI: buildToolOpAPI,
+  buildToolSysAPI: buildToolSysAPI,
+  calc_projection_axes: calc_projection_axes,
+  circ_from_line_tan: circ_from_line_tan,
+  circ_from_line_tan_2d: circ_from_line_tan_2d,
+  clip_line_w: clip_line_w,
+  closestPoint: closestPoint,
+  closest_point_on_line: closest_point_on_line,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
+  cmyk_to_rgb: cmyk_to_rgb,
+  colinear: colinear,
+  colinear2d: colinear2d,
+  config: config$1,
+  convex_quad: convex_quad,
+  copyEvent: copyEvent,
+  corner_normal: corner_normal,
+  customPropertyTypes: customPropertyTypes,
+  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
+  get defaultRadix () { return defaultRadix; },
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  dist_to_line: dist_to_line,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  evalHermiteTable: evalHermiteTable,
+  eventWasTouch: eventWasTouch,
+  eventgraph: eventdag,
+  excludedKeys: excludedKeys,
+  expand_line: expand_line,
+  expand_rect2d: expand_rect2d,
+  feps: feps,
+  genHermiteTable: genHermiteTable,
+  gen_circle: gen_circle,
+  getCurve: getCurve,
+  getDataPathToolOp: getDataPathToolOp,
+  getTempProp: getTempProp,
+  getVecClass: getVecClass,
+  get_boundary_winding: get_boundary_winding,
+  get_rect_lines: get_rect_lines,
+  get_rect_points: get_rect_points,
+  get_tri_circ: get_tri_circ,
+  graphGetIslands: graphGetIslands,
+  graphPack: graphPack,
+  haveModal: haveModal,
+  hsv_to_rgb: hsv_to_rgb,
+  html5_fileapi: html5_fileapi,
+  initSimpleController: initSimpleController,
+  initSplineTemplates: initSplineTemplates,
+  initToolPaths: initToolPaths,
+  inrect_2d: inrect_2d,
+  isLeftClick: isLeftClick,
+  isMouseDown: isMouseDown,
+  isNum: isNum,
+  isNumber: isNumber,
+  isVecProperty: isVecProperty,
+  isect_ray_plane: isect_ray_plane,
+  keymap: keymap$4,
+  keymap_latin_1: keymap_latin_1,
+  line_isect: line_isect,
+  line_line_cross: line_line_cross,
+  line_line_isect: line_line_isect,
+  lzstring: lzstring,
+  makeCircleMesh: makeCircleMesh,
+  makeDerivedOverlay: makeDerivedOverlay,
+  makeVector2: makeVector2,
+  makeVector3: makeVector3,
+  makeVector4: makeVector4,
+  math: math,
+  minmax_verts: minmax_verts,
+  modalstack: modalstack$1,
+  normal_poly: normal_poly,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  normal_tri: normal_tri,
+  nstructjs: nstructjs,
+  parseToolPath: parseToolPath,
+  parseutil: parseutil,
+  pathDebugEvent: pathDebugEvent,
+  pathParser: pathParser,
+  point_in_aabb: point_in_aabb,
+  point_in_aabb_2d: point_in_aabb_2d,
+  point_in_hex: point_in_hex,
+  point_in_tri: point_in_tri,
+  popModalLight: popModalLight,
+  popReportName: popReportName,
+  project: project,
+  pushModalLight: pushModalLight,
+  pushPointerModal: pushPointerModal,
+  pushReportName: pushReportName,
+  quad_bilinear: quad_bilinear,
+  registerTool: registerTool,
+  reverse_keymap: reverse_keymap,
+  rgb_to_cmyk: rgb_to_cmyk,
+  rgb_to_hsv: rgb_to_hsv,
+  rot2d: rot2d,
+  setContextClass: setContextClass,
+  setDataPathToolOp: setDataPathToolOp,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  setImplementationClass: setImplementationClass,
+  setNotifier: setNotifier,
+  setPropTypes: setPropTypes,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  singleMouseEvent: singleMouseEvent,
+  solver: solver,
+  test: test,
+  testToolParser: testToolParser,
+  tet_volume: tet_volume,
+  toolprop_abstract: toolprop_abstract,
+  tri_angles: tri_angles,
+  tri_area: tri_area,
+  trilinear_co: trilinear_co,
+  trilinear_co2: trilinear_co2,
+  trilinear_v3: trilinear_v3,
+  unproject: unproject,
+  util: util,
+  vectormath: vectormath,
+  winding: winding,
+  winding_axis: winding_axis
+});
 
 "use strict";
 
@@ -45162,15 +45170,15 @@ function progbarNote(screen, msg, percent, color, timeout) {
 var ui_noteframe = /*#__PURE__*/Object.freeze({
   __proto__: null,
   Note: Note,
-  ProgBarNote: ProgBarNote,
   NoteFrame: NoteFrame,
-  getNoteFrames: getNoteFrames,
-  get noteframes () { return noteframes; },
-  sendNote: sendNote,
+  ProgBarNote: ProgBarNote,
   error: error,
-  warning: warning,
+  getNoteFrames: getNoteFrames,
   message: message,
-  progbarNote: progbarNote
+  get noteframes () { return noteframes; },
+  progbarNote: progbarNote,
+  sendNote: sendNote,
+  warning: warning
 });
 
 let UIBase$8 = UIBase$f, Icons$1 = Icons$2;
@@ -47757,7 +47765,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area$1 extends UIBase$f {
+let Area$1 = class Area extends UIBase$f {
   constructor() {
     super();
 
@@ -48108,7 +48116,7 @@ class Area$1 extends UIBase$f {
       return ret;
     }
 
-    let prop = Area$1.makeAreasEnum();
+    let prop = Area.makeAreasEnum();
 
     let dropbox = container.listenum(undefined, {
       name    : this.constructor.define().uiname,
@@ -48431,7 +48439,7 @@ class Area$1 extends UIBase$f {
   _getSavedUIData() {
     return saveUIData(this, "area");
   }
-}
+};
 
 Area$1.STRUCT = `
 pathux.Area { 
@@ -49325,18 +49333,18 @@ function setScreenClass(cls) {
 
 var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  Area: Area$1,
   AreaFlags: AreaFlags,
-  contextWrangler: contextWrangler,
+  AreaTypes: AreaTypes,
+  AreaWrangler: AreaWrangler,
   BorderMask: BorderMask,
   BorderSides: BorderSides,
-  Area: Area$1,
   ScreenArea: ScreenArea,
-  setScreenClass: setScreenClass,
-  getAreaIntName: getAreaIntName,
-  AreaTypes: AreaTypes,
-  setAreaTypes: setAreaTypes,
   areaclasses: areaclasses,
-  AreaWrangler: AreaWrangler
+  contextWrangler: contextWrangler,
+  getAreaIntName: getAreaIntName,
+  setAreaTypes: setAreaTypes,
+  setScreenClass: setScreenClass
 });
 
 class ThemeEditor extends Container {
@@ -53138,6 +53146,10 @@ class Curve1DWidget extends ColumnFrame {
 UIBase$f.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular
+//module refs, in such cases do not use these vars.
+
 
 var _ui$1 = undefined;
 
@@ -56957,6 +56969,10 @@ class TabContainer extends UIBase$4 {
 UIBase$4.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular
+//module refs, in such cases do not use these vars.
+
 
 var _ui = undefined;
 
@@ -58041,8 +58057,8 @@ function getPlatformAsync() {
 
 var platform$3 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  get platform () { return platform$2; },
-  getPlatformAsync: getPlatformAsync
+  getPlatformAsync: getPlatformAsync,
+  get platform () { return platform$2; }
 });
 
 "use strict";
@@ -58553,7 +58569,7 @@ function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-class platform$1 extends PlatformAPI {
+let platform$1 = class platform extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     console.log(args.filters);
 
@@ -58683,20 +58699,20 @@ class platform$1 extends PlatformAPI {
       accept(handle);
     });
   }
-}
+};
 
 var electron_api$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   ElectronMenu: ElectronMenu,
-  wrapRemoteCallback: wrapRemoteCallback,
   ElectronMenuItem: ElectronMenuItem,
-  checkInit: checkInit,
-  iconcache: iconcache,
-  getNativeIcon: getNativeIcon,
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
+  checkInit: checkInit,
+  getNativeIcon: getNativeIcon,
+  iconcache: iconcache,
   initMenuBar: initMenuBar,
-  platform: platform$1
+  platform: platform$1,
+  wrapRemoteCallback: wrapRemoteCallback
 });
 
 "use strict";
@@ -65535,27 +65551,27 @@ class SimpleContext {
 
 var simple = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  Menu: Menu,
-  DataModelClasses: DataModelClasses,
-  DataModel: DataModel,
-  makeAPI: makeAPI,
-  StartArgs: StartArgs,
-  SimpleScreen: SimpleScreen,
   AppState: AppState,
-  SideBar: SideBar,
+  DataModel: DataModel,
+  DataModelClasses: DataModelClasses,
   Editor: Editor,
-  Icons: Icons,
-  loadDefaultIconSheet: loadDefaultIconSheet,
-  iconSvg: iconSvg,
-  FileHeader: FileHeader,
-  FileFull: FileFull,
-  FileArgs: FileArgs,
   EmptyStruct: EmptyStruct,
-  saveFile: saveFile,
-  loadFile: loadFile,
-  SimpleContext: SimpleContext,
+  FileArgs: FileArgs,
+  FileFull: FileFull,
+  FileHeader: FileHeader,
+  Icons: Icons,
+  Menu: Menu,
   MenuBarEditor: MenuBarEditor,
-  registerMenuBarEditor: registerMenuBarEditor
+  SideBar: SideBar,
+  SimpleContext: SimpleContext,
+  SimpleScreen: SimpleScreen,
+  StartArgs: StartArgs,
+  iconSvg: iconSvg,
+  loadDefaultIconSheet: loadDefaultIconSheet,
+  loadFile: loadFile,
+  makeAPI: makeAPI,
+  registerMenuBarEditor: registerMenuBarEditor,
+  saveFile: saveFile
 });
 
 setNotifier(ui_noteframe);

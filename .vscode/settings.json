@@ -1,4 +1,13 @@
 {
     "prettier.configPath": ".prettierrc",
-    "prettier.prettierPath": "./node_modules/@pathtx/prettier/index.cjs"
+    "prettier.prettierPath": "./node_modules/@pathtx/prettier/index.cjs",
+    "cSpell.words": [
+      "nstructjs",
+      "parseutil",
+      "pathux",
+      "tokdef",
+      "toolprop",
+      "toolstack",
+      "toolsys"
+    ]
 }

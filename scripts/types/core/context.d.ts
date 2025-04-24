@@ -2,16 +2,23 @@ import { Screen } from "../screen/FrameManager";
 
 export as namespace context;
 
-import { DataAPI } from "../path-controller/controller_base";
-import { ToolStack } from "../../path-controller/toolsys/toolsys";
 import { Area } from "../../screen/ScreenArea";
+import { DataAPI, ToolOp, ToolPropertyCache } from "../pathux";
 
-interface Context<AppState = any> {
+declare interface Context<AppState = any> {
   state: AppState;
   toolstack: ToolStack;
   api: DataAPI;
   screen: Screen;
-  activeArea: Area
+  activeArea: Area;
+  toolDefaults?: ToolPropertyCache
+  last_tool?: ToolOp<any, any, this, any>
 
-  //report(message : string, delayMs : number);
+  message(msg: string, timeout = 2500): void;
+
+  error(msg: string, timeout = 2500): void;
+
+  warning(msg: string, timeout = 2500): void;
+
+  progressBar(msg: string, percent: number, cssColor?: string, timeout = 1000);
 }
