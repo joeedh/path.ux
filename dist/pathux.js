@@ -670,7 +670,7 @@ function print_lines(ld, lineno, col, printColors, token) {
   return buf;
 }
 
-let token$1 = class token {
+class token$1 {
   constructor(type, val, lexpos, lineno, lexer, parser, col) {
     this.type = type;
     this.value = val;
@@ -687,9 +687,9 @@ let token$1 = class token {
     else
       return "token(type=" + this.type + ")";
   }
-};
+}
 
-let tokdef$1 = class tokdef {
+class tokdef$1 {
   constructor(name, regexpr, func, example) {
     this.name = name;
     this.re = regexpr;
@@ -712,7 +712,7 @@ let tokdef$1 = class tokdef {
       }
     }
   }
-};
+}
 
 class PUTIL_ParseError extends Error {
   constructor(msg) {
@@ -720,7 +720,7 @@ class PUTIL_ParseError extends Error {
   }
 }
 
-let lexer$2 = class lexer {
+class lexer$2 {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -907,9 +907,9 @@ let lexer$2 = class lexer {
     }
     return tok;
   }
-};
+}
 
-let parser$1 = class parser {
+class parser$1 {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -1020,7 +1020,7 @@ let parser$1 = class parser {
     }
     return tok.value;
   }
-};
+}
 
 function test_parser$1() {
   let basic_types = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
@@ -2034,7 +2034,7 @@ function _get_pack_debug() {
   }
 }
 
-let cachering$1 = class cachering extends Array {
+class cachering$1 extends Array {
   constructor(cb, tot) {
     super();
     this.length = tot;
@@ -2046,7 +2046,7 @@ let cachering$1 = class cachering extends Array {
   }
 
   static fromConstructor(cls, tot) {
-    return new cachering(() => new cls(), tot);
+    return new cachering$1(() => new cls(), tot);
   }
 
   next() {
@@ -2056,7 +2056,7 @@ let cachering$1 = class cachering extends Array {
 
     return ret;
   }
-};
+}
 
 function gen_tabstr$1(tot) {
   let ret = "";
@@ -7913,7 +7913,7 @@ class SetIter {
 
 
  * */
-let set$2 = class set {
+class set$2 {
   constructor(input) {
     this.items = [];
     this.keys = {};
@@ -7977,7 +7977,7 @@ let set$2 = class set {
 
   filter(f, thisvar) {
     let i = 0;
-    let ret = new set();
+    let ret = new set$2();
 
     for (let item of this) {
       if (f.call(thisvar, item, i++, this)) {
@@ -7990,7 +7990,7 @@ let set$2 = class set {
   }
 
   map(f, thisvar) {
-    let ret = new set();
+    let ret = new set$2();
 
     let i = 0;
 
@@ -8018,7 +8018,7 @@ let set$2 = class set {
   }
 
   copy() {
-    let ret = new set();
+    let ret = new set$2();
     for (let item of this) {
       ret.add(item);
     }
@@ -8083,7 +8083,7 @@ let set$2 = class set {
       thisvar !== undefined ? func.call(thisvar, item) : func(item);
     }
   }
-};
+}
 
 class HashIter {
   constructor(hash) {
@@ -8820,7 +8820,7 @@ class MapIter {
   }
 }
 
-let map$1 = class map {
+class map$1 {
   constructor() {
     this._items = {};
     this._list = [];
@@ -8920,7 +8920,7 @@ let map$1 = class map {
     return ret;
   }
 
-};
+}
 
 globalThis._test_map = function () {
   let m = new map$1();
@@ -9735,55 +9735,55 @@ function undefinedForGC() {
 
 var util = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  ArrayPool: ArrayPool,
-  DivLogger: DivLogger,
-  FastHash: FastHash,
-  HashDigest: HashDigest,
-  HashIter: HashIter,
-  IDGen: IDGen,
-  IDMap: IDMap,
-  ImageReader: ImageReader,
-  MapIter: MapIter,
-  MersenneRandom: MersenneRandom,
-  MinHeapQueue: MinHeapQueue,
-  MovingAvg: MovingAvg,
-  PendingTimeoutPromises: PendingTimeoutPromises,
-  Queue: Queue,
-  SetIter: SetIter,
-  SmartConsole: SmartConsole,
-  SmartConsoleContext: SmartConsoleContext,
-  TimeoutPromise: TimeoutPromise,
-  atob: atob$1,
-  btoa: btoa$1,
-  cachering: cachering,
-  color2css: color2css$2,
-  compress: compress,
-  console: console$1,
-  count: count,
-  decompress: decompress,
-  fetch_file: fetch_file,
-  formatNumberUI: formatNumberUI,
-  getAllKeys: getAllKeys,
-  getClassParent: getClassParent,
-  hashjoin: hashjoin,
-  hashtable: hashtable,
   isDenormal: isDenormal,
-  isMobile: isMobile,
-  list: list$2,
-  map: map$1,
-  merge: merge,
+  termColorMap: termColorMap,
+  termColor: termColor,
+  termPrint: termPrint,
+  MovingAvg: MovingAvg,
+  timers: timers,
   pollTimer: pollTimer,
+  isMobile: isMobile,
+  SmartConsoleContext: SmartConsoleContext,
+  SmartConsole: SmartConsole,
+  console: console$1,
+  getClassParent: getClassParent,
+  list: list$2,
+  count: count,
+  getAllKeys: getAllKeys,
+  btoa: btoa$1,
+  formatNumberUI: formatNumberUI,
+  atob: atob$1,
+  time_ms: time_ms,
+  color2css: color2css$2,
+  merge: merge,
+  cachering: cachering,
+  SetIter: SetIter,
+  set: set$2,
+  HashIter: HashIter,
+  hashtable: hashtable,
+  IDGen: IDGen,
   print_stack: print_stack$1,
+  fetch_file: fetch_file,
+  MersenneRandom: MersenneRandom,
   random: random,
   seed: seed,
-  set: set$2,
   strhash: strhash,
-  termColor: termColor,
-  termColorMap: termColorMap,
-  termPrint: termPrint,
+  FastHash: FastHash,
   test_fasthash: test_fasthash,
-  time_ms: time_ms,
-  timers: timers,
+  ImageReader: ImageReader,
+  HashDigest: HashDigest,
+  hashjoin: hashjoin,
+  MapIter: MapIter,
+  map: map$1,
+  IDMap: IDMap,
+  MinHeapQueue: MinHeapQueue,
+  Queue: Queue,
+  ArrayPool: ArrayPool,
+  DivLogger: DivLogger,
+  PendingTimeoutPromises: PendingTimeoutPromises,
+  TimeoutPromise: TimeoutPromise,
+  compress: compress,
+  decompress: decompress,
   undefinedForGC: undefinedForGC
 });
 
@@ -11150,7 +11150,7 @@ class internal_matrix {
 }
 
 /** Incredibly old matrix class. */
-let Matrix4$2 = class Matrix4 {
+class Matrix4$2 {
   constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
@@ -11158,14 +11158,14 @@ let Matrix4$2 = class Matrix4 {
     if (typeof m === 'object') {
       if ("length" in m && m.length >= 16) {
         this.load(m);
-      } else if (m instanceof Matrix4) {
+      } else if (m instanceof Matrix4$2) {
         this.load(m);
       }
     }
   }
 
   static fromJSON() {
-    let mat = new Matrix4();
+    let mat = new Matrix4$2();
     mat.load(json.items);
     mat.isPersp = json.isPersp;
     return mat;
@@ -11176,7 +11176,7 @@ let Matrix4$2 = class Matrix4 {
   }
 
   clone() {
-    return new Matrix4(this);
+    return new Matrix4$2(this);
   }
 
   addToHashDigest(hash) {
@@ -11325,7 +11325,7 @@ let Matrix4$2 = class Matrix4 {
   load() {
     if (arguments.length === 1 && typeof arguments[0] === 'object') {
       let matrix;
-      if (arguments[0] instanceof Matrix4) {
+      if (arguments[0] instanceof Matrix4$2) {
         matrix = arguments[0].$matrix;
         this.isPersp = arguments[0].isPersp;
         this.$matrix.m11 = matrix.m11;
@@ -11388,31 +11388,31 @@ let Matrix4$2 = class Matrix4 {
   }
 
   setUniform(ctx, loc, transpose) {
-    if (Matrix4.setUniformArray === undefined) {
-      Matrix4.setUniformWebGLArray = new Float32Array(16);
-      Matrix4.setUniformArray = new Array(16);
+    if (Matrix4$2.setUniformArray === undefined) {
+      Matrix4$2.setUniformWebGLArray = new Float32Array(16);
+      Matrix4$2.setUniformArray = new Array(16);
     }
 
-    Matrix4.setUniformArray[0] = this.$matrix.m11;
-    Matrix4.setUniformArray[1] = this.$matrix.m12;
-    Matrix4.setUniformArray[2] = this.$matrix.m13;
-    Matrix4.setUniformArray[3] = this.$matrix.m14;
-    Matrix4.setUniformArray[4] = this.$matrix.m21;
-    Matrix4.setUniformArray[5] = this.$matrix.m22;
-    Matrix4.setUniformArray[6] = this.$matrix.m23;
-    Matrix4.setUniformArray[7] = this.$matrix.m24;
-    Matrix4.setUniformArray[8] = this.$matrix.m31;
-    Matrix4.setUniformArray[9] = this.$matrix.m32;
-    Matrix4.setUniformArray[10] = this.$matrix.m33;
-    Matrix4.setUniformArray[11] = this.$matrix.m34;
-    Matrix4.setUniformArray[12] = this.$matrix.m41;
-    Matrix4.setUniformArray[13] = this.$matrix.m42;
-    Matrix4.setUniformArray[14] = this.$matrix.m43;
-    Matrix4.setUniformArray[15] = this.$matrix.m44;
+    Matrix4$2.setUniformArray[0] = this.$matrix.m11;
+    Matrix4$2.setUniformArray[1] = this.$matrix.m12;
+    Matrix4$2.setUniformArray[2] = this.$matrix.m13;
+    Matrix4$2.setUniformArray[3] = this.$matrix.m14;
+    Matrix4$2.setUniformArray[4] = this.$matrix.m21;
+    Matrix4$2.setUniformArray[5] = this.$matrix.m22;
+    Matrix4$2.setUniformArray[6] = this.$matrix.m23;
+    Matrix4$2.setUniformArray[7] = this.$matrix.m24;
+    Matrix4$2.setUniformArray[8] = this.$matrix.m31;
+    Matrix4$2.setUniformArray[9] = this.$matrix.m32;
+    Matrix4$2.setUniformArray[10] = this.$matrix.m33;
+    Matrix4$2.setUniformArray[11] = this.$matrix.m34;
+    Matrix4$2.setUniformArray[12] = this.$matrix.m41;
+    Matrix4$2.setUniformArray[13] = this.$matrix.m42;
+    Matrix4$2.setUniformArray[14] = this.$matrix.m43;
+    Matrix4$2.setUniformArray[15] = this.$matrix.m44;
 
-    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
+    Matrix4$2.setUniformWebGLArray.set(Matrix4$2.setUniformArray);
 
-    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+    ctx.uniformMatrix4fv(loc, transpose, Matrix4$2.setUniformWebGLArray);
 
     return this;
   }
@@ -11757,7 +11757,7 @@ let Matrix4$2 = class Matrix4 {
     if (z === undefined) {
       z = 0.0;
     }
-    window.Matrix4 = Matrix4;
+    window.Matrix4 = Matrix4$2;
 
     let xmat = euler_rotate_mats.next().makeIdentity();
     let m = xmat.$matrix;
@@ -12270,7 +12270,7 @@ let Matrix4$2 = class Matrix4 {
     let mat = this.inputs.transformMatrix.getValue();
     let m = mat.$matrix;
 
-    let mat2 = new Matrix4(mat);
+    let mat2 = new Matrix4$2(mat);
     let loc = new Vector3$2(), scale = new Vector3$2(), rot = new Vector3$2();
 
     //we don't use rot
@@ -12535,7 +12535,7 @@ let Matrix4$2 = class Matrix4 {
     this.__mat = this.mat;
     //delete this.mat;
   }
-};
+}
 
 Matrix4$2.STRUCT = `
 mat4 {
@@ -12576,24 +12576,24 @@ temp_mats = cachering.fromConstructor(Matrix4$2, 64);
 
 var vectormath = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  BaseVector: BaseVector,
   EulerOrders: EulerOrders,
-  F32BaseVector: F32BaseVector,
+  BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
-  I16BaseVector: I16BaseVector,
+  F32BaseVector: F32BaseVector,
   I32BaseVector: I32BaseVector,
+  I16BaseVector: I16BaseVector,
   I8BaseVector: I8BaseVector,
-  Matrix4: Matrix4$2,
-  Quat: Quat,
-  UI16BaseVector: UI16BaseVector,
   UI32BaseVector: UI32BaseVector,
+  UI16BaseVector: UI16BaseVector,
   UI8BaseVector: UI8BaseVector,
-  Vector2: Vector2$b,
-  Vector3: Vector3$2,
+  makeVector4: makeVector4,
   Vector4: Vector4$2,
-  makeVector2: makeVector2,
   makeVector3: makeVector3,
-  makeVector4: makeVector4
+  Vector3: Vector3$2,
+  makeVector2: makeVector2,
+  Vector2: Vector2$b,
+  Quat: Quat,
+  Matrix4: Matrix4$2
 });
 
 "use strict";
@@ -12891,22 +12891,22 @@ class Curve1DPropertyIF extends ToolPropertyIF {
 
 var toolprop_abstract = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  Curve1DPropertyIF: Curve1DPropertyIF,
+  PropTypes: PropTypes$8,
+  PropSubTypes: PropSubTypes$4,
+  PropFlags: PropFlags$3,
+  ToolPropertyIF: ToolPropertyIF,
+  StringPropertyIF: StringPropertyIF,
+  NumPropertyIF: NumPropertyIF,
+  IntPropertyIF: IntPropertyIF,
+  FloatPropertyIF: FloatPropertyIF,
   EnumPropertyIF: EnumPropertyIF,
   FlagPropertyIF: FlagPropertyIF,
-  FloatPropertyIF: FloatPropertyIF,
-  IntPropertyIF: IntPropertyIF,
-  ListPropertyIF: ListPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  PropFlags: PropFlags$3,
-  PropSubTypes: PropSubTypes$4,
-  PropTypes: PropTypes$8,
-  StringPropertyIF: StringPropertyIF,
-  StringSetPropertyIF: StringSetPropertyIF,
-  ToolPropertyIF: ToolPropertyIF,
   Vec2PropertyIF: Vec2PropertyIF,
   Vec3PropertyIF: Vec3PropertyIF,
-  Vec4PropertyIF: Vec4PropertyIF
+  Vec4PropertyIF: Vec4PropertyIF,
+  ListPropertyIF: ListPropertyIF,
+  StringSetPropertyIF: StringSetPropertyIF,
+  Curve1DPropertyIF: Curve1DPropertyIF
 });
 
 /**
@@ -13630,7 +13630,7 @@ class OnceTag {
   }
 }
 
-let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
+class ToolProperty$1 extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
     super();
 
@@ -13915,7 +13915,7 @@ let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
   }
 
   setValue(val) {
-    if (this.constructor === ToolProperty) {
+    if (this.constructor === ToolProperty$1) {
       throw new Error("implement me!");
     }
 
@@ -13959,7 +13959,7 @@ let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
 
   getStep(value = 1.0) {
     if (this.stepIsRelative) {
-      return ToolProperty.calcRelativeStep(this.step, value);
+      return ToolProperty$1.calcRelativeStep(this.step, value);
     } else {
       return this.step;
     }
@@ -14040,7 +14040,7 @@ let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
       this.displayUnit = undefined;
     }
   }
-};
+}
 
 ToolProperty$1.STRUCT = `
 ToolProperty { 
@@ -14590,7 +14590,7 @@ EnumKeyPair {
 `;
 nstructjs.register(EnumKeyPair);
 
-let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
+class EnumProperty$9 extends ToolProperty$1 {
   constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.ENUM, undefined, apiname, uiname, description, flag, icon);
 
@@ -14672,7 +14672,7 @@ let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
 
     let enumdef;
 
-    if (enumdef_or_prop instanceof EnumProperty) {
+    if (enumdef_or_prop instanceof EnumProperty$9) {
       enumdef = enumdef_or_prop.values;
     } else {
       enumdef = enumdef_or_prop;
@@ -14685,7 +14685,7 @@ let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
       this.keys[v] = k;
     }
 
-    if (enumdef_or_prop instanceof EnumProperty) {
+    if (enumdef_or_prop instanceof EnumProperty$9) {
       let prop = enumdef_or_prop;
       this.iconmap = Object.assign({}, prop.iconmap);
       this.iconmap2 = Object.assign({}, prop.iconmap2);
@@ -14868,7 +14868,7 @@ let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
   _is_data_int() {
     return typeof this.data === "number";
   }
-};
+}
 
 ToolProperty$1.internalRegister(EnumProperty$9);
 EnumProperty$9.STRUCT =
@@ -15609,8 +15609,8 @@ function setConfig(obj) {
 var config$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   config: config,
-  default: config,
-  setConfig: setConfig
+  setConfig: setConfig,
+  'default': config
 });
 
 let modalstack$1 = [];
@@ -20226,93 +20226,93 @@ function angle_between_vecs(v1, vcent, v2) {
 
 var math = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  AbstractCurve: AbstractCurve,
-  COLINEAR: COLINEAR,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  ClosestCurveRets: ClosestCurveRets,
+  quad_bilinear: quad_bilinear,
   ClosestModes: ClosestModes,
-  FEPS: FEPS,
-  FEPS_DATA: FEPS_DATA,
-  FLOAT_MAX: FLOAT_MAX,
-  FLOAT_MIN: FLOAT_MIN,
-  LINECROSS: LINECROSS,
-  Mat4Stack: Mat4Stack,
-  Matrix4UI: Matrix4UI,
-  MinMax: MinMax,
-  PlaneOps: PlaneOps,
-  SQRT2: SQRT2,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_sphere_dist: aabb_sphere_dist,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  angle_between_vecs: angle_between_vecs,
-  barycentric_v2: barycentric_v2,
-  calc_projection_axes: calc_projection_axes,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  clip_line_w: clip_line_w,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
   closestPoint: closestPoint,
-  closest_point_on_line: closest_point_on_line,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
+  calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  barycentric_v2: barycentric_v2,
   closest_point_on_quad: closest_point_on_quad,
   closest_point_on_tri: closest_point_on_tri,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  tri_area: tri_area,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  FLOAT_MIN: FLOAT_MIN,
+  FLOAT_MAX: FLOAT_MAX,
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding_axis: winding_axis,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
   colinear: colinear,
   colinear2d: colinear2d,
-  convex_quad: convex_quad,
   corner_normal: corner_normal,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  dist_to_line: dist_to_line,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  expand_line: expand_line,
-  expand_rect2d: expand_rect2d,
-  feps: feps,
-  gen_circle: gen_circle,
-  get_boundary_winding: get_boundary_winding,
-  get_rect_lines: get_rect_lines,
-  get_rect_points: get_rect_points,
-  get_tri_circ: get_tri_circ,
-  inrect_2d: inrect_2d,
-  isNum: isNum,
-  isect_ray_plane: isect_ray_plane,
-  line_isect: line_isect,
-  line_line_cross: line_line_cross,
   line_line_isect: line_line_isect,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  normal_poly: normal_poly,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  isNum: isNum,
+  normal_tri: normal_tri,
   normal_quad: normal_quad,
   normal_quad_old: normal_quad_old,
-  normal_tri: normal_tri,
-  point_in_aabb: point_in_aabb,
-  point_in_aabb_2d: point_in_aabb_2d,
-  point_in_hex: point_in_hex,
-  point_in_tri: point_in_tri,
-  project: project,
-  quad_bilinear: quad_bilinear,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  circ_from_line_tan_2d: circ_from_line_tan_2d,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
   rot2d: rot2d,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  tet_volume: tet_volume,
-  tri_angles: tri_angles,
-  tri_area: tri_area,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  Mat4Stack: Mat4Stack,
+  trilinear_v3: trilinear_v3,
+  point_in_hex: point_in_hex,
   trilinear_co: trilinear_co,
   trilinear_co2: trilinear_co2,
-  trilinear_v3: trilinear_v3,
-  unproject: unproject,
-  winding: winding,
-  winding_axis: winding_axis
+  tri_angles: tri_angles,
+  angle_between_vecs: angle_between_vecs
 });
 
 let _clipdata = {
@@ -21893,7 +21893,6 @@ function registerTool(cls) {
  see doc_src/context.md
  */
 
-
 let notifier = undefined;
 
 function setNotifier(cls) {
@@ -21904,11 +21903,11 @@ const ContextFlags = {
   IS_VIEW : 1
 };
 
-let InheritFlag$1 = class InheritFlag {
+class InheritFlag$1 {
   constructor(data) {
     this.data = data;
   }
-};
+}
 
 let __idgen = 1;
 
@@ -27354,15 +27353,15 @@ class tokdef {
   }
 }
 
-let PUTLParseError$1 = class PUTLParseError extends Error {
-};
+class PUTLParseError$1 extends Error {
+}
 
 //errfunc is optional.  it requires
 //a function that takes one param, lexer,
 //and returns true if the lexer
 //should propegate an error when an error
 //has happened
-let lexer$1 = class lexer {
+class lexer$1 {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -27384,7 +27383,7 @@ let lexer$1 = class lexer {
   }
 
   copy() {
-    let ret = new lexer(this.tokdef, this.errfunc);
+    let ret = new lexer$1(this.tokdef, this.errfunc);
 
     for (let k in this.states) {
       let state = this.states[k];
@@ -27564,7 +27563,7 @@ let lexer$1 = class lexer {
 
     return tok;
   }
-};
+}
 
 function getTraceBack(limit, start) {
   try {
@@ -27946,12 +27945,12 @@ function test_parser() {
 
 var parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  PUTLParseError: PUTLParseError$1,
-  getTraceBack: getTraceBack,
-  lexer: lexer$1,
-  parser: parser,
+  token: token,
   tokdef: tokdef,
-  token: token
+  PUTLParseError: PUTLParseError$1,
+  lexer: lexer$1,
+  getTraceBack: getTraceBack,
+  parser: parser
 });
 
 let ToolPaths = {};
@@ -33165,18 +33164,18 @@ class PropertySocket extends EventSocket {
 
 var eventdag = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  DependSocket: DependSocket,
-  EventGraph: EventGraph,
-  EventNode: EventNode,
+  SocketFlags: SocketFlags,
+  NodeFlags: NodeFlags,
+  RecalcFlags: RecalcFlags,
+  SocketTypes: SocketTypes,
   EventSocket: EventSocket,
   NodeCapable: NodeCapable,
-  NodeFlags: NodeFlags,
+  EventNode: EventNode,
+  EventGraph: EventGraph,
+  theEventGraph: theEventGraph,
+  DependSocket: DependSocket,
   PropSocketModes: PropSocketModes,
-  PropertySocket: PropertySocket,
-  RecalcFlags: RecalcFlags,
-  SocketFlags: SocketFlags,
-  SocketTypes: SocketTypes,
-  theEventGraph: theEventGraph
+  PropertySocket: PropertySocket
 });
 
 let _ui_base = undefined;
@@ -33978,7 +33977,7 @@ if (typeof HTMLElement === 'undefined') {
   window.PointerEvent = class PointerEvent {};
 }
 
-let UIBase$f = class UIBase extends HTMLElement {
+class UIBase$f extends HTMLElement {
   #reflagGraph = false;
 
   static graphNodeDef = EventNode.register(this, {
@@ -34215,7 +34214,7 @@ let UIBase$f = class UIBase extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase) {
+      if (child && typeof child === "object" && child instanceof UIBase$f) {
         child.parentWidget = this;
       }
 
@@ -34608,9 +34607,9 @@ let UIBase$f = class UIBase extends HTMLElement {
         ret = n;
       }
 
-      if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
+      if (n instanceof UIBase$f && n.constructor.define().tagname === "panelframe-x") {
         rec(n.contents);
-      } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
+      } else if (n instanceof UIBase$f && n.constructor.define().tagname === "tabcontainer-x") {
         for (let k in n.tabs) {
           let tab = n.tabs[k];
 
@@ -35141,7 +35140,7 @@ let UIBase$f = class UIBase extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase) {
+    if (child instanceof UIBase$f) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -35360,7 +35359,7 @@ let UIBase$f = class UIBase extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase) {
+      if (n instanceof UIBase$f) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -35433,19 +35432,19 @@ let UIBase$f = class UIBase extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase, excluded_classes = undefined) {
+  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$f, excluded_classes = undefined) {
     let clip;
     let mouseEvent;
     let isMouseMove, isMouseDown;
 
     if (typeof args === "object") {
-      nodeclass = args.nodeclass || UIBase;
+      nodeclass = args.nodeclass || UIBase$f;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
     } else {
       args = {
-        nodeclass       : nodeclass || UIBase,
+        nodeclass       : nodeclass || UIBase$f,
         excluded_classes: excluded_classes,
         clip            : clip
       };
@@ -35580,7 +35579,7 @@ let UIBase$f = class UIBase extends HTMLElement {
     this.__disabledState = !!val;
 
     let visit = (n) => {
-      if (n instanceof UIBase) {
+      if (n instanceof UIBase$f) {
         let changed = !!n.__disabledState;
 
         /*
@@ -35733,7 +35732,7 @@ let UIBase$f = class UIBase extends HTMLElement {
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
-    div.style["position"] = UIBase.PositionKey;
+    div.style["position"] = UIBase$f.PositionKey;
     div.style["margin"] = "0px";
     div.style["left"] = x + "px";
     div.style["top"] = y + "px";
@@ -36124,7 +36123,7 @@ let UIBase$f = class UIBase extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase.PositionKey) {
+  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase$f.PositionKey) {
     this.style.position = positionKey;
 
     this.style.left = x + "px";
@@ -36397,7 +36396,7 @@ let UIBase$f = class UIBase extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase.getDPI();
+    return UIBase$f.getDPI();
   }
 
   /**
@@ -36607,7 +36606,7 @@ let UIBase$f = class UIBase extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase && p !== Object) {
+    while (p && p !== lastp && p !== UIBase$f && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -36848,7 +36847,7 @@ let UIBase$f = class UIBase extends HTMLElement {
 
     this._active_animations = [];
   }
-};
+}
 
 function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
@@ -39636,8 +39635,8 @@ window._testSaveFile = function() {
 
 var html5_fileapi = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  loadFile: loadFile$1,
-  saveFile: saveFile$1
+  saveFile: saveFile$1,
+  loadFile: loadFile$1
 });
 
 class Constraint {
@@ -40295,264 +40294,264 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
 
 var controller = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  AbstractCurve: AbstractCurve,
-  BSplineTransformOp: BSplineTransformOp,
-  BaseVector: BaseVector,
-  BoolProperty: BoolProperty,
-  BounceCurve: BounceCurve,
-  COLINEAR: COLINEAR,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  CURVE_VERSION: CURVE_VERSION,
-  ClosestCurveRets: ClosestCurveRets,
-  ClosestModes: ClosestModes,
-  Constraint: Constraint,
-  Context: Context,
+  eventgraph: eventdag,
+  solver: solver,
+  util: util,
+  vectormath: vectormath,
+  math: math,
+  toolprop_abstract: toolprop_abstract,
+  html5_fileapi: html5_fileapi,
+  parseutil: parseutil,
+  config: config$1,
+  nstructjs: nstructjs,
+  lzstring: lzstring,
+  binomial: binomial,
+  setNotifier: setNotifier,
   ContextFlags: ContextFlags,
+  OverlayClasses: OverlayClasses,
+  makeDerivedOverlay: makeDerivedOverlay,
   ContextOverlay: ContextOverlay,
-  Curve1D: Curve1D,
-  Curve1DPoint: Curve1DPoint,
-  Curve1DProperty: Curve1DProperty,
-  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
-  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
-  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
-  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
-  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
-  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
-  CurveConstructors: CurveConstructors,
-  CurveFlags: CurveFlags,
-  CurveTypeData: CurveTypeData,
-  DataAPI: DataAPI,
-  DataFlags: DataFlags,
-  DataList: DataList,
-  DataPath: DataPath,
+  excludedKeys: excludedKeys,
+  LockedContext: LockedContext,
+  Context: Context,
+  test: test,
   DataPathError: DataPathError,
-  DataPathSetOp: DataPathSetOp,
-  DataStruct: DataStruct,
+  DataFlags: DataFlags,
   DataTypes: DataTypes,
-  DoubleClickHandler: DoubleClickHandler,
-  EaseCurve: EaseCurve,
-  ElasticCurve: ElasticCurve,
+  getTempProp: getTempProp,
+  getVecClass: getVecClass,
+  isVecProperty: isVecProperty,
+  DataPath: DataPath,
+  StructFlags: StructFlags,
+  ListIface: ListIface,
+  ToolOpIface: ToolOpIface,
+  setImplementationClass: setImplementationClass,
+  registerTool: registerTool,
+  pathParser: pathParser,
+  pushReportName: pushReportName,
+  popReportName: popReportName,
+  DataList: DataList,
+  DataStruct: DataStruct,
+  DataAPI: DataAPI,
+  initSimpleController: initSimpleController,
+  getDataPathToolOp: getDataPathToolOp,
+  setDataPathToolOp: setDataPathToolOp,
+  ModelInterface: ModelInterface,
+  DataPathSetOp: DataPathSetOp,
+  ToolClasses: ToolClasses,
+  setContextClass: setContextClass,
+  ToolFlags: ToolFlags$1,
+  UndoFlags: UndoFlags$1,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  ToolPropertyCache: ToolPropertyCache,
+  SavedToolDefaults: SavedToolDefaults,
+  ToolOp: ToolOp,
+  MacroLink: MacroLink,
+  MacroClasses: MacroClasses,
+  ToolMacro: ToolMacro,
+  ToolStack: ToolStack,
+  buildToolOpAPI: buildToolOpAPI,
+  buildToolSysAPI: buildToolSysAPI,
+  PropTypes: PropTypes$8,
+  PropFlags: PropFlags$3,
+  isNumber: isNumber,
+  NumberConstraintsBase: NumberConstraintsBase,
+  IntegerConstraints: IntegerConstraints,
+  FloatConstrinats: FloatConstrinats,
+  NumberConstraints: NumberConstraints,
+  PropSubTypes: PropSubTypes$3,
+  setPropTypes: setPropTypes,
+  customPropertyTypes: customPropertyTypes,
+  PropClasses: PropClasses,
+  get defaultRadix () { return defaultRadix; },
+  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
+  ToolProperty: ToolProperty$1,
+  FloatArrayProperty: FloatArrayProperty,
+  StringProperty: StringProperty,
+  NumProperty: NumProperty,
+  _NumberPropertyBase: _NumberPropertyBase,
+  IntProperty: IntProperty,
+  ReportProperty: ReportProperty,
+  BoolProperty: BoolProperty,
+  FloatProperty: FloatProperty,
   EnumKeyPair: EnumKeyPair,
   EnumProperty: EnumProperty$9,
-  EulerOrders: EulerOrders,
-  F32BaseVector: F32BaseVector,
-  F64BaseVector: F64BaseVector,
-  FEPS: FEPS,
-  FEPS_DATA: FEPS_DATA,
-  FLOAT_MAX: FLOAT_MAX,
-  FLOAT_MIN: FLOAT_MIN,
   FlagProperty: FlagProperty,
-  FloatArrayProperty: FloatArrayProperty,
-  FloatConstrinats: FloatConstrinats,
-  FloatProperty: FloatProperty,
-  HotKey: HotKey,
-  I16BaseVector: I16BaseVector,
-  I32BaseVector: I32BaseVector,
-  I8BaseVector: I8BaseVector,
-  IntProperty: IntProperty,
-  IntegerConstraints: IntegerConstraints,
-  KeyMap: KeyMap,
-  LINECROSS: LINECROSS,
-  ListIface: ListIface,
-  ListProperty: ListProperty,
-  LockedContext: LockedContext,
-  MacroClasses: MacroClasses,
-  MacroLink: MacroLink,
-  Mat4Property: Mat4Property,
-  Mat4Stack: Mat4Stack,
-  Matrix4: Matrix4$2,
-  Matrix4UI: Matrix4UI,
-  MinMax: MinMax,
-  ModelInterface: ModelInterface,
-  NumProperty: NumProperty,
-  NumberConstraints: NumberConstraints,
-  NumberConstraintsBase: NumberConstraintsBase,
-  OverlayClasses: OverlayClasses,
-  PackNode: PackNode,
-  PackNodeVertex: PackNodeVertex,
-  ParamKey: ParamKey,
-  Parser: Parser,
-  PlaneOps: PlaneOps,
-  PropClasses: PropClasses,
-  PropFlags: PropFlags$3,
-  PropSubTypes: PropSubTypes$3,
-  PropTypes: PropTypes$8,
-  Quat: Quat,
-  QuatProperty: QuatProperty,
-  RandCurve: RandCurve,
-  ReportProperty: ReportProperty,
-  SQRT2: SQRT2,
-  SavedToolDefaults: SavedToolDefaults,
-  SimpleCurveBase: SimpleCurveBase,
-  Solver: Solver,
-  SplineTemplateIcons: SplineTemplateIcons,
-  SplineTemplates: SplineTemplates,
-  StringProperty: StringProperty,
-  StringSetProperty: StringSetProperty,
-  StructFlags: StructFlags,
-  TangentModes: TangentModes,
-  ToolClasses: ToolClasses,
-  ToolFlags: ToolFlags$1,
-  ToolMacro: ToolMacro,
-  ToolOp: ToolOp,
-  ToolOpIface: ToolOpIface,
-  ToolPaths: ToolPaths,
-  ToolProperty: ToolProperty$1,
-  ToolPropertyCache: ToolPropertyCache,
-  ToolStack: ToolStack,
-  UI16BaseVector: UI16BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  UndoFlags: UndoFlags$1,
+  VecPropertyBase: VecPropertyBase,
   Vec2Property: Vec2Property,
   Vec3Property: Vec3Property,
   Vec4Property: Vec4Property,
-  VecPropertyBase: VecPropertyBase,
-  Vector2: Vector2$b,
-  Vector3: Vector3$2,
-  Vector4: Vector4$2,
-  _NumberPropertyBase: _NumberPropertyBase,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  _setModalAreaClass: _setModalAreaClass,
-  _setScreenClass: _setScreenClass,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_sphere_dist: aabb_sphere_dist,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  angle_between_vecs: angle_between_vecs,
-  barycentric_v2: barycentric_v2,
-  binomial: binomial,
+  QuatProperty: QuatProperty,
+  Mat4Property: Mat4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  ToolPaths: ToolPaths,
   buildParser: buildParser,
-  buildToolOpAPI: buildToolOpAPI,
-  buildToolSysAPI: buildToolSysAPI,
-  calc_projection_axes: calc_projection_axes,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  clip_line_w: clip_line_w,
+  Parser: Parser,
+  parseToolPath: parseToolPath,
+  testToolParser: testToolParser,
+  initToolPaths: initToolPaths,
+  SplineTemplates: SplineTemplates,
+  SplineTemplateIcons: SplineTemplateIcons,
+  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
+  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
+  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
+  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
+  BSplineTransformOp: BSplineTransformOp,
+  Curve1DPoint: Curve1DPoint,
+  initSplineTemplates: initSplineTemplates,
+  ParamKey: ParamKey,
+  SimpleCurveBase: SimpleCurveBase,
+  BounceCurve: BounceCurve,
+  ElasticCurve: ElasticCurve,
+  EaseCurve: EaseCurve,
+  RandCurve: RandCurve,
+  getCurve: getCurve,
+  CurveConstructors: CurveConstructors,
+  CURVE_VERSION: CURVE_VERSION,
+  CurveTypeData: CurveTypeData,
+  Curve1D: Curve1D,
+  CurveFlags: CurveFlags,
+  TangentModes: TangentModes,
+  evalHermiteTable: evalHermiteTable,
+  genHermiteTable: genHermiteTable,
+  Curve1DProperty: Curve1DProperty,
+  EulerOrders: EulerOrders,
+  BaseVector: BaseVector,
+  F64BaseVector: F64BaseVector,
+  F32BaseVector: F32BaseVector,
+  I32BaseVector: I32BaseVector,
+  I16BaseVector: I16BaseVector,
+  I8BaseVector: I8BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI16BaseVector: UI16BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  makeVector4: makeVector4,
+  Vector4: Vector4$2,
+  makeVector3: makeVector3,
+  Vector3: Vector3$2,
+  makeVector2: makeVector2,
+  Vector2: Vector2$b,
+  Quat: Quat,
+  Matrix4: Matrix4$2,
+  quad_bilinear: quad_bilinear,
+  ClosestModes: ClosestModes,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
   closestPoint: closestPoint,
-  closest_point_on_line: closest_point_on_line,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
+  calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  barycentric_v2: barycentric_v2,
   closest_point_on_quad: closest_point_on_quad,
   closest_point_on_tri: closest_point_on_tri,
-  cmyk_to_rgb: cmyk_to_rgb,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  tri_area: tri_area,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  FLOAT_MIN: FLOAT_MIN,
+  FLOAT_MAX: FLOAT_MAX,
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding_axis: winding_axis,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
   colinear: colinear,
   colinear2d: colinear2d,
-  config: config$1,
-  convex_quad: convex_quad,
-  copyEvent: copyEvent,
   corner_normal: corner_normal,
-  customPropertyTypes: customPropertyTypes,
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  get defaultRadix () { return defaultRadix; },
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  dist_to_line: dist_to_line,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  evalHermiteTable: evalHermiteTable,
-  eventWasTouch: eventWasTouch,
-  eventgraph: eventdag,
-  excludedKeys: excludedKeys,
-  expand_line: expand_line,
-  expand_rect2d: expand_rect2d,
-  feps: feps,
-  genHermiteTable: genHermiteTable,
-  gen_circle: gen_circle,
-  getCurve: getCurve,
-  getDataPathToolOp: getDataPathToolOp,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  get_boundary_winding: get_boundary_winding,
-  get_rect_lines: get_rect_lines,
-  get_rect_points: get_rect_points,
-  get_tri_circ: get_tri_circ,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  haveModal: haveModal,
-  hsv_to_rgb: hsv_to_rgb,
-  html5_fileapi: html5_fileapi,
-  initSimpleController: initSimpleController,
-  initSplineTemplates: initSplineTemplates,
-  initToolPaths: initToolPaths,
-  inrect_2d: inrect_2d,
-  isLeftClick: isLeftClick,
-  isMouseDown: isMouseDown,
-  isNum: isNum,
-  isNumber: isNumber,
-  isVecProperty: isVecProperty,
-  isect_ray_plane: isect_ray_plane,
-  keymap: keymap$4,
-  keymap_latin_1: keymap_latin_1,
-  line_isect: line_isect,
-  line_line_cross: line_line_cross,
   line_line_isect: line_line_isect,
-  lzstring: lzstring,
-  makeCircleMesh: makeCircleMesh,
-  makeDerivedOverlay: makeDerivedOverlay,
-  makeVector2: makeVector2,
-  makeVector3: makeVector3,
-  makeVector4: makeVector4,
-  math: math,
-  minmax_verts: minmax_verts,
-  modalstack: modalstack$1,
-  normal_poly: normal_poly,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  isNum: isNum,
+  normal_tri: normal_tri,
   normal_quad: normal_quad,
   normal_quad_old: normal_quad_old,
-  normal_tri: normal_tri,
-  nstructjs: nstructjs,
-  parseToolPath: parseToolPath,
-  parseutil: parseutil,
-  pathDebugEvent: pathDebugEvent,
-  pathParser: pathParser,
-  point_in_aabb: point_in_aabb,
-  point_in_aabb_2d: point_in_aabb_2d,
-  point_in_hex: point_in_hex,
-  point_in_tri: point_in_tri,
-  popModalLight: popModalLight,
-  popReportName: popReportName,
-  project: project,
-  pushModalLight: pushModalLight,
-  pushPointerModal: pushPointerModal,
-  pushReportName: pushReportName,
-  quad_bilinear: quad_bilinear,
-  registerTool: registerTool,
-  reverse_keymap: reverse_keymap,
-  rgb_to_cmyk: rgb_to_cmyk,
-  rgb_to_hsv: rgb_to_hsv,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  circ_from_line_tan_2d: circ_from_line_tan_2d,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
   rot2d: rot2d,
-  setContextClass: setContextClass,
-  setDataPathToolOp: setDataPathToolOp,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  setImplementationClass: setImplementationClass,
-  setNotifier: setNotifier,
-  setPropTypes: setPropTypes,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  singleMouseEvent: singleMouseEvent,
-  solver: solver,
-  test: test,
-  testToolParser: testToolParser,
-  tet_volume: tet_volume,
-  toolprop_abstract: toolprop_abstract,
-  tri_angles: tri_angles,
-  tri_area: tri_area,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  Mat4Stack: Mat4Stack,
+  trilinear_v3: trilinear_v3,
+  point_in_hex: point_in_hex,
   trilinear_co: trilinear_co,
   trilinear_co2: trilinear_co2,
-  trilinear_v3: trilinear_v3,
-  unproject: unproject,
-  util: util,
-  vectormath: vectormath,
-  winding: winding,
-  winding_axis: winding_axis
+  tri_angles: tri_angles,
+  angle_between_vecs: angle_between_vecs,
+  rgb_to_hsv: rgb_to_hsv,
+  hsv_to_rgb: hsv_to_rgb,
+  cmyk_to_rgb: cmyk_to_rgb,
+  rgb_to_cmyk: rgb_to_cmyk,
+  PackNodeVertex: PackNodeVertex,
+  PackNode: PackNode,
+  graphGetIslands: graphGetIslands,
+  graphPack: graphPack,
+  Constraint: Constraint,
+  Solver: Solver,
+  modalstack: modalstack$1,
+  singleMouseEvent: singleMouseEvent,
+  isLeftClick: isLeftClick,
+  DoubleClickHandler: DoubleClickHandler,
+  isMouseDown: isMouseDown,
+  pathDebugEvent: pathDebugEvent,
+  eventWasTouch: eventWasTouch,
+  copyEvent: copyEvent,
+  _setScreenClass: _setScreenClass,
+  _setModalAreaClass: _setModalAreaClass,
+  pushPointerModal: pushPointerModal,
+  pushModalLight: pushModalLight,
+  popModalLight: popModalLight,
+  haveModal: haveModal,
+  keymap_latin_1: keymap_latin_1,
+  keymap: keymap$4,
+  reverse_keymap: reverse_keymap,
+  HotKey: HotKey,
+  KeyMap: KeyMap
 });
 
 "use strict";
@@ -45170,15 +45169,15 @@ function progbarNote(screen, msg, percent, color, timeout) {
 var ui_noteframe = /*#__PURE__*/Object.freeze({
   __proto__: null,
   Note: Note,
-  NoteFrame: NoteFrame,
   ProgBarNote: ProgBarNote,
-  error: error,
+  NoteFrame: NoteFrame,
   getNoteFrames: getNoteFrames,
-  message: message,
   get noteframes () { return noteframes; },
-  progbarNote: progbarNote,
   sendNote: sendNote,
-  warning: warning
+  error: error,
+  warning: warning,
+  message: message,
+  progbarNote: progbarNote
 });
 
 let UIBase$8 = UIBase$f, Icons$1 = Icons$2;
@@ -47765,7 +47764,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-let Area$1 = class Area extends UIBase$f {
+class Area$1 extends UIBase$f {
   constructor() {
     super();
 
@@ -48116,7 +48115,7 @@ let Area$1 = class Area extends UIBase$f {
       return ret;
     }
 
-    let prop = Area.makeAreasEnum();
+    let prop = Area$1.makeAreasEnum();
 
     let dropbox = container.listenum(undefined, {
       name    : this.constructor.define().uiname,
@@ -48439,7 +48438,7 @@ let Area$1 = class Area extends UIBase$f {
   _getSavedUIData() {
     return saveUIData(this, "area");
   }
-};
+}
 
 Area$1.STRUCT = `
 pathux.Area { 
@@ -49333,18 +49332,18 @@ function setScreenClass(cls) {
 
 var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  Area: Area$1,
   AreaFlags: AreaFlags,
-  AreaTypes: AreaTypes,
-  AreaWrangler: AreaWrangler,
+  contextWrangler: contextWrangler,
   BorderMask: BorderMask,
   BorderSides: BorderSides,
+  Area: Area$1,
   ScreenArea: ScreenArea,
-  areaclasses: areaclasses,
-  contextWrangler: contextWrangler,
+  setScreenClass: setScreenClass,
   getAreaIntName: getAreaIntName,
+  AreaTypes: AreaTypes,
   setAreaTypes: setAreaTypes,
-  setScreenClass: setScreenClass
+  areaclasses: areaclasses,
+  AreaWrangler: AreaWrangler
 });
 
 class ThemeEditor extends Container {
@@ -53146,10 +53145,6 @@ class Curve1DWidget extends ColumnFrame {
 UIBase$f.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
-//
-//note that require has an api for handling circular
-//module refs, in such cases do not use these vars.
-
 
 var _ui$1 = undefined;
 
@@ -56969,10 +56964,6 @@ class TabContainer extends UIBase$4 {
 UIBase$4.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
-//
-//note that require has an api for handling circular
-//module refs, in such cases do not use these vars.
-
 
 var _ui = undefined;
 
@@ -58057,8 +58048,8 @@ function getPlatformAsync() {
 
 var platform$3 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  getPlatformAsync: getPlatformAsync,
-  get platform () { return platform$2; }
+  get platform () { return platform$2; },
+  getPlatformAsync: getPlatformAsync
 });
 
 "use strict";
@@ -58569,7 +58560,7 @@ function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-let platform$1 = class platform extends PlatformAPI {
+class platform$1 extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     console.log(args.filters);
 
@@ -58699,20 +58690,20 @@ let platform$1 = class platform extends PlatformAPI {
       accept(handle);
     });
   }
-};
+}
 
 var electron_api$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   ElectronMenu: ElectronMenu,
+  wrapRemoteCallback: wrapRemoteCallback,
   ElectronMenuItem: ElectronMenuItem,
+  checkInit: checkInit,
+  iconcache: iconcache,
+  getNativeIcon: getNativeIcon,
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
-  checkInit: checkInit,
-  getNativeIcon: getNativeIcon,
-  iconcache: iconcache,
   initMenuBar: initMenuBar,
-  platform: platform$1,
-  wrapRemoteCallback: wrapRemoteCallback
+  platform: platform$1
 });
 
 "use strict";
@@ -65551,27 +65542,27 @@ class SimpleContext {
 
 var simple = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  AppState: AppState,
-  DataModel: DataModel,
-  DataModelClasses: DataModelClasses,
-  Editor: Editor,
-  EmptyStruct: EmptyStruct,
-  FileArgs: FileArgs,
-  FileFull: FileFull,
-  FileHeader: FileHeader,
-  Icons: Icons,
   Menu: Menu,
-  MenuBarEditor: MenuBarEditor,
-  SideBar: SideBar,
-  SimpleContext: SimpleContext,
-  SimpleScreen: SimpleScreen,
-  StartArgs: StartArgs,
-  iconSvg: iconSvg,
-  loadDefaultIconSheet: loadDefaultIconSheet,
-  loadFile: loadFile,
+  DataModelClasses: DataModelClasses,
+  DataModel: DataModel,
   makeAPI: makeAPI,
-  registerMenuBarEditor: registerMenuBarEditor,
-  saveFile: saveFile
+  StartArgs: StartArgs,
+  SimpleScreen: SimpleScreen,
+  AppState: AppState,
+  SideBar: SideBar,
+  Editor: Editor,
+  Icons: Icons,
+  loadDefaultIconSheet: loadDefaultIconSheet,
+  iconSvg: iconSvg,
+  FileHeader: FileHeader,
+  FileFull: FileFull,
+  FileArgs: FileArgs,
+  EmptyStruct: EmptyStruct,
+  saveFile: saveFile,
+  loadFile: loadFile,
+  SimpleContext: SimpleContext,
+  MenuBarEditor: MenuBarEditor,
+  registerMenuBarEditor: registerMenuBarEditor
 });
 
 setNotifier(ui_noteframe);
