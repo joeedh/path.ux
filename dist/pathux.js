@@ -670,7 +670,7 @@ function print_lines(ld, lineno, col, printColors, token) {
   return buf;
 }
 
-class token$1 {
+let token$1 = class token {
   constructor(type, val, lexpos, lineno, lexer, parser, col) {
     this.type = type;
     this.value = val;
@@ -687,9 +687,9 @@ class token$1 {
     else
       return "token(type=" + this.type + ")";
   }
-}
+};
 
-class tokdef$1 {
+let tokdef$1 = class tokdef {
   constructor(name, regexpr, func, example) {
     this.name = name;
     this.re = regexpr;
@@ -712,7 +712,7 @@ class tokdef$1 {
       }
     }
   }
-}
+};
 
 class PUTIL_ParseError extends Error {
   constructor(msg) {
@@ -720,7 +720,7 @@ class PUTIL_ParseError extends Error {
   }
 }
 
-class lexer$2 {
+let lexer$2 = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -907,9 +907,9 @@ class lexer$2 {
     }
     return tok;
   }
-}
+};
 
-class parser$1 {
+let parser$1 = class parser {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -1020,7 +1020,7 @@ class parser$1 {
     }
     return tok.value;
   }
-}
+};
 
 function test_parser$1() {
   let basic_types = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
@@ -2034,7 +2034,7 @@ function _get_pack_debug() {
   }
 }
 
-class cachering$1 extends Array {
+let cachering$1 = class cachering extends Array {
   constructor(cb, tot) {
     super();
     this.length = tot;
@@ -2046,7 +2046,7 @@ class cachering$1 extends Array {
   }
 
   static fromConstructor(cls, tot) {
-    return new cachering$1(() => new cls(), tot);
+    return new cachering(() => new cls(), tot);
   }
 
   next() {
@@ -2056,7 +2056,7 @@ class cachering$1 extends Array {
 
     return ret;
   }
-}
+};
 
 function gen_tabstr$1(tot) {
   let ret = "";
@@ -7925,7 +7925,7 @@ class SetIter {
 
 
  * */
-class set$2 {
+let set$2 = class set {
   constructor(input) {
     this.items = [];
     this.keys = {};
@@ -7989,7 +7989,7 @@ class set$2 {
 
   filter(f, thisvar) {
     let i = 0;
-    let ret = new set$2();
+    let ret = new set();
 
     for (let item of this) {
       if (f.call(thisvar, item, i++, this)) {
@@ -8002,7 +8002,7 @@ class set$2 {
   }
 
   map(f, thisvar) {
-    let ret = new set$2();
+    let ret = new set();
 
     let i = 0;
 
@@ -8030,7 +8030,7 @@ class set$2 {
   }
 
   copy() {
-    let ret = new set$2();
+    let ret = new set();
     for (let item of this) {
       ret.add(item);
     }
@@ -8095,7 +8095,7 @@ class set$2 {
       thisvar !== undefined ? func.call(thisvar, item) : func(item);
     }
   }
-}
+};
 
 class HashIter {
   constructor(hash) {
@@ -8832,7 +8832,7 @@ class MapIter {
   }
 }
 
-class map$1 {
+let map$1 = class map {
   constructor() {
     this._items = {};
     this._list = [];
@@ -8932,7 +8932,7 @@ class map$1 {
     return ret;
   }
 
-}
+};
 
 globalThis._test_map = function () {
   let m = new map$1();
@@ -9747,55 +9747,55 @@ function undefinedForGC() {
 
 var util = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  isDenormal: isDenormal,
-  termColorMap: termColorMap,
-  termColor: termColor,
-  termPrint: termPrint,
-  MovingAvg: MovingAvg,
-  timers: timers,
-  pollTimer: pollTimer,
-  isMobile: isMobile,
-  SmartConsoleContext: SmartConsoleContext,
-  SmartConsole: SmartConsole,
-  console: console$1,
-  getClassParent: getClassParent,
-  list: list$2,
-  count: count,
-  getAllKeys: getAllKeys,
-  btoa: btoa$1,
-  formatNumberUI: formatNumberUI,
-  atob: atob$1,
-  time_ms: time_ms,
-  color2css: color2css$2,
-  merge: merge,
-  cachering: cachering,
-  SetIter: SetIter,
-  set: set$2,
-  HashIter: HashIter,
-  hashtable: hashtable,
-  IDGen: IDGen,
-  print_stack: print_stack$1,
-  fetch_file: fetch_file,
-  MersenneRandom: MersenneRandom,
-  random: random,
-  seed: seed,
-  strhash: strhash,
-  FastHash: FastHash,
-  test_fasthash: test_fasthash,
-  ImageReader: ImageReader,
-  HashDigest: HashDigest,
-  hashjoin: hashjoin,
-  MapIter: MapIter,
-  map: map$1,
-  IDMap: IDMap,
-  MinHeapQueue: MinHeapQueue,
-  Queue: Queue,
   ArrayPool: ArrayPool,
   DivLogger: DivLogger,
+  FastHash: FastHash,
+  HashDigest: HashDigest,
+  HashIter: HashIter,
+  IDGen: IDGen,
+  IDMap: IDMap,
+  ImageReader: ImageReader,
+  MapIter: MapIter,
+  MersenneRandom: MersenneRandom,
+  MinHeapQueue: MinHeapQueue,
+  MovingAvg: MovingAvg,
   PendingTimeoutPromises: PendingTimeoutPromises,
+  Queue: Queue,
+  SetIter: SetIter,
+  SmartConsole: SmartConsole,
+  SmartConsoleContext: SmartConsoleContext,
   TimeoutPromise: TimeoutPromise,
+  atob: atob$1,
+  btoa: btoa$1,
+  cachering: cachering,
+  color2css: color2css$2,
   compress: compress,
+  console: console$1,
+  count: count,
   decompress: decompress,
+  fetch_file: fetch_file,
+  formatNumberUI: formatNumberUI,
+  getAllKeys: getAllKeys,
+  getClassParent: getClassParent,
+  hashjoin: hashjoin,
+  hashtable: hashtable,
+  isDenormal: isDenormal,
+  isMobile: isMobile,
+  list: list$2,
+  map: map$1,
+  merge: merge,
+  pollTimer: pollTimer,
+  print_stack: print_stack$1,
+  random: random,
+  seed: seed,
+  set: set$2,
+  strhash: strhash,
+  termColor: termColor,
+  termColorMap: termColorMap,
+  termPrint: termPrint,
+  test_fasthash: test_fasthash,
+  time_ms: time_ms,
+  timers: timers,
   undefinedForGC: undefinedForGC
 });
 
@@ -9807,6 +9807,64 @@ const EulerOrders = {
   ZXY: 4,
   ZYX: 5
 };
+
+var IndexRangeStack;
+
+class _IndexRange {
+  start = 0
+  end = 0
+  i = 0
+  ret = {done: false, value: undefined}
+
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
+  }
+
+  [Symbol.iterator]() {
+    return this;
+  }
+
+  next() {
+    if (this.i < this.end) {
+      this.ret.done = false;
+      this.ret.value = this.i++;
+      return this.ret;
+    } else {
+      this.finish();
+      this.ret.done = true;
+      return this.ret;
+    }
+  }
+
+  finish() {
+    IndexRangeStack.cur--;
+  }
+
+  reset(start, end, i=0) {
+    this.start = start;
+    this.end = end;
+    this.i = i;
+    return this;
+  }
+
+  return() {
+    this.reset();
+    this.finish();
+    return this.ret
+  }
+}
+
+IndexRangeStack = [];
+IndexRangeStack.cur = 0;
+for (let i=0; i<2048; i++) {
+  IndexRangeStack[i] = new _IndexRange(0, 0);
+}
+function IndexRange(len) {
+  return IndexRangeStack[IndexRangeStack.cur++].reset(0, len)
+}
+window.IndexRange = IndexRange;
+window.IndexRangeStack = IndexRangeStack;
 
 /**
  * @param mode one of 'es', 'commonjs', 'rjs'
@@ -11162,7 +11220,7 @@ class internal_matrix {
 }
 
 /** Incredibly old matrix class. */
-class Matrix4$2 {
+let Matrix4$2 = class Matrix4 {
   constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
@@ -11170,14 +11228,14 @@ class Matrix4$2 {
     if (typeof m === 'object') {
       if ("length" in m && m.length >= 16) {
         this.load(m);
-      } else if (m instanceof Matrix4$2) {
+      } else if (m instanceof Matrix4) {
         this.load(m);
       }
     }
   }
 
   static fromJSON() {
-    let mat = new Matrix4$2();
+    let mat = new Matrix4();
     mat.load(json.items);
     mat.isPersp = json.isPersp;
     return mat;
@@ -11188,7 +11246,7 @@ class Matrix4$2 {
   }
 
   clone() {
-    return new Matrix4$2(this);
+    return new Matrix4(this);
   }
 
   addToHashDigest(hash) {
@@ -11337,7 +11395,7 @@ class Matrix4$2 {
   load() {
     if (arguments.length === 1 && typeof arguments[0] === 'object') {
       let matrix;
-      if (arguments[0] instanceof Matrix4$2) {
+      if (arguments[0] instanceof Matrix4) {
         matrix = arguments[0].$matrix;
         this.isPersp = arguments[0].isPersp;
         this.$matrix.m11 = matrix.m11;
@@ -11400,31 +11458,31 @@ class Matrix4$2 {
   }
 
   setUniform(ctx, loc, transpose) {
-    if (Matrix4$2.setUniformArray === undefined) {
-      Matrix4$2.setUniformWebGLArray = new Float32Array(16);
-      Matrix4$2.setUniformArray = new Array(16);
+    if (Matrix4.setUniformArray === undefined) {
+      Matrix4.setUniformWebGLArray = new Float32Array(16);
+      Matrix4.setUniformArray = new Array(16);
     }
 
-    Matrix4$2.setUniformArray[0] = this.$matrix.m11;
-    Matrix4$2.setUniformArray[1] = this.$matrix.m12;
-    Matrix4$2.setUniformArray[2] = this.$matrix.m13;
-    Matrix4$2.setUniformArray[3] = this.$matrix.m14;
-    Matrix4$2.setUniformArray[4] = this.$matrix.m21;
-    Matrix4$2.setUniformArray[5] = this.$matrix.m22;
-    Matrix4$2.setUniformArray[6] = this.$matrix.m23;
-    Matrix4$2.setUniformArray[7] = this.$matrix.m24;
-    Matrix4$2.setUniformArray[8] = this.$matrix.m31;
-    Matrix4$2.setUniformArray[9] = this.$matrix.m32;
-    Matrix4$2.setUniformArray[10] = this.$matrix.m33;
-    Matrix4$2.setUniformArray[11] = this.$matrix.m34;
-    Matrix4$2.setUniformArray[12] = this.$matrix.m41;
-    Matrix4$2.setUniformArray[13] = this.$matrix.m42;
-    Matrix4$2.setUniformArray[14] = this.$matrix.m43;
-    Matrix4$2.setUniformArray[15] = this.$matrix.m44;
+    Matrix4.setUniformArray[0] = this.$matrix.m11;
+    Matrix4.setUniformArray[1] = this.$matrix.m12;
+    Matrix4.setUniformArray[2] = this.$matrix.m13;
+    Matrix4.setUniformArray[3] = this.$matrix.m14;
+    Matrix4.setUniformArray[4] = this.$matrix.m21;
+    Matrix4.setUniformArray[5] = this.$matrix.m22;
+    Matrix4.setUniformArray[6] = this.$matrix.m23;
+    Matrix4.setUniformArray[7] = this.$matrix.m24;
+    Matrix4.setUniformArray[8] = this.$matrix.m31;
+    Matrix4.setUniformArray[9] = this.$matrix.m32;
+    Matrix4.setUniformArray[10] = this.$matrix.m33;
+    Matrix4.setUniformArray[11] = this.$matrix.m34;
+    Matrix4.setUniformArray[12] = this.$matrix.m41;
+    Matrix4.setUniformArray[13] = this.$matrix.m42;
+    Matrix4.setUniformArray[14] = this.$matrix.m43;
+    Matrix4.setUniformArray[15] = this.$matrix.m44;
 
-    Matrix4$2.setUniformWebGLArray.set(Matrix4$2.setUniformArray);
+    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
 
-    ctx.uniformMatrix4fv(loc, transpose, Matrix4$2.setUniformWebGLArray);
+    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
 
     return this;
   }
@@ -11769,7 +11827,7 @@ class Matrix4$2 {
     if (z === undefined) {
       z = 0.0;
     }
-    window.Matrix4 = Matrix4$2;
+    window.Matrix4 = Matrix4;
 
     let xmat = euler_rotate_mats.next().makeIdentity();
     let m = xmat.$matrix;
@@ -12282,7 +12340,7 @@ class Matrix4$2 {
     let mat = this.inputs.transformMatrix.getValue();
     let m = mat.$matrix;
 
-    let mat2 = new Matrix4$2(mat);
+    let mat2 = new Matrix4(mat);
     let loc = new Vector3$2(), scale = new Vector3$2(), rot = new Vector3$2();
 
     //we don't use rot
@@ -12547,7 +12605,7 @@ class Matrix4$2 {
     this.__mat = this.mat;
     //delete this.mat;
   }
-}
+};
 
 Matrix4$2.STRUCT = `
 mat4 {
@@ -12588,24 +12646,25 @@ temp_mats = cachering.fromConstructor(Matrix4$2, 64);
 
 var vectormath = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  EulerOrders: EulerOrders,
   BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
+  EulerOrders: EulerOrders,
   F32BaseVector: F32BaseVector,
-  I32BaseVector: I32BaseVector,
+  F64BaseVector: F64BaseVector,
   I16BaseVector: I16BaseVector,
+  I32BaseVector: I32BaseVector,
   I8BaseVector: I8BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI16BaseVector: UI16BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  makeVector4: makeVector4,
-  Vector4: Vector4$2,
-  makeVector3: makeVector3,
-  Vector3: Vector3$2,
-  makeVector2: makeVector2,
-  Vector2: Vector2$b,
+  IndexRange: IndexRange,
+  Matrix4: Matrix4$2,
   Quat: Quat,
-  Matrix4: Matrix4$2
+  UI16BaseVector: UI16BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  Vector2: Vector2$b,
+  Vector3: Vector3$2,
+  Vector4: Vector4$2,
+  makeVector2: makeVector2,
+  makeVector3: makeVector3,
+  makeVector4: makeVector4
 });
 
 "use strict";
@@ -12903,22 +12962,22 @@ class Curve1DPropertyIF extends ToolPropertyIF {
 
 var toolprop_abstract = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  PropTypes: PropTypes$8,
-  PropSubTypes: PropSubTypes$4,
-  PropFlags: PropFlags$3,
-  ToolPropertyIF: ToolPropertyIF,
-  StringPropertyIF: StringPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  IntPropertyIF: IntPropertyIF,
-  FloatPropertyIF: FloatPropertyIF,
+  Curve1DPropertyIF: Curve1DPropertyIF,
   EnumPropertyIF: EnumPropertyIF,
   FlagPropertyIF: FlagPropertyIF,
+  FloatPropertyIF: FloatPropertyIF,
+  IntPropertyIF: IntPropertyIF,
+  ListPropertyIF: ListPropertyIF,
+  NumPropertyIF: NumPropertyIF,
+  PropFlags: PropFlags$3,
+  PropSubTypes: PropSubTypes$4,
+  PropTypes: PropTypes$8,
+  StringPropertyIF: StringPropertyIF,
+  StringSetPropertyIF: StringSetPropertyIF,
+  ToolPropertyIF: ToolPropertyIF,
   Vec2PropertyIF: Vec2PropertyIF,
   Vec3PropertyIF: Vec3PropertyIF,
-  Vec4PropertyIF: Vec4PropertyIF,
-  ListPropertyIF: ListPropertyIF,
-  StringSetPropertyIF: StringSetPropertyIF,
-  Curve1DPropertyIF: Curve1DPropertyIF
+  Vec4PropertyIF: Vec4PropertyIF
 });
 
 /**
@@ -13642,7 +13701,7 @@ class OnceTag {
   }
 }
 
-class ToolProperty$1 extends ToolPropertyIF {
+let ToolProperty$1 = class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
     super();
 
@@ -13927,7 +13986,7 @@ class ToolProperty$1 extends ToolPropertyIF {
   }
 
   setValue(val) {
-    if (this.constructor === ToolProperty$1) {
+    if (this.constructor === ToolProperty) {
       throw new Error("implement me!");
     }
 
@@ -13971,7 +14030,7 @@ class ToolProperty$1 extends ToolPropertyIF {
 
   getStep(value = 1.0) {
     if (this.stepIsRelative) {
-      return ToolProperty$1.calcRelativeStep(this.step, value);
+      return ToolProperty.calcRelativeStep(this.step, value);
     } else {
       return this.step;
     }
@@ -14052,7 +14111,7 @@ class ToolProperty$1 extends ToolPropertyIF {
       this.displayUnit = undefined;
     }
   }
-}
+};
 
 ToolProperty$1.STRUCT = `
 ToolProperty { 
@@ -14602,7 +14661,7 @@ EnumKeyPair {
 `;
 nstructjs.register(EnumKeyPair);
 
-class EnumProperty$9 extends ToolProperty$1 {
+let EnumProperty$9 = class EnumProperty extends ToolProperty$1 {
   constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
     super(PropTypes$8.ENUM, undefined, apiname, uiname, description, flag, icon);
 
@@ -14684,7 +14743,7 @@ class EnumProperty$9 extends ToolProperty$1 {
 
     let enumdef;
 
-    if (enumdef_or_prop instanceof EnumProperty$9) {
+    if (enumdef_or_prop instanceof EnumProperty) {
       enumdef = enumdef_or_prop.values;
     } else {
       enumdef = enumdef_or_prop;
@@ -14697,7 +14756,7 @@ class EnumProperty$9 extends ToolProperty$1 {
       this.keys[v] = k;
     }
 
-    if (enumdef_or_prop instanceof EnumProperty$9) {
+    if (enumdef_or_prop instanceof EnumProperty) {
       let prop = enumdef_or_prop;
       this.iconmap = Object.assign({}, prop.iconmap);
       this.iconmap2 = Object.assign({}, prop.iconmap2);
@@ -14880,7 +14939,7 @@ class EnumProperty$9 extends ToolProperty$1 {
   _is_data_int() {
     return typeof this.data === "number";
   }
-}
+};
 
 ToolProperty$1.internalRegister(EnumProperty$9);
 EnumProperty$9.STRUCT =
@@ -15621,8 +15680,8 @@ function setConfig(obj) {
 var config$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   config: config,
-  setConfig: setConfig,
-  'default': config
+  default: config,
+  setConfig: setConfig
 });
 
 let modalstack$1 = [];
@@ -20238,93 +20297,93 @@ function angle_between_vecs(v1, vcent, v2) {
 
 var math = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
   AbstractCurve: AbstractCurve,
+  COLINEAR: COLINEAR,
+  COLINEAR_ISECT: COLINEAR_ISECT,
   ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
+  ClosestModes: ClosestModes,
+  FEPS: FEPS,
+  FEPS_DATA: FEPS_DATA,
+  FLOAT_MAX: FLOAT_MAX,
+  FLOAT_MIN: FLOAT_MIN,
+  LINECROSS: LINECROSS,
+  Mat4Stack: Mat4Stack,
+  Matrix4UI: Matrix4UI,
+  MinMax: MinMax,
+  PlaneOps: PlaneOps,
+  SQRT2: SQRT2,
+  _old_isect_ray_plane: _old_isect_ray_plane,
   aabb_intersect_2d: aabb_intersect_2d,
   aabb_intersect_3d: aabb_intersect_3d,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_sphere_dist: aabb_sphere_dist,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
   aabb_union: aabb_union,
   aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  colinear2d: colinear2d,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
+  angle_between_vecs: angle_between_vecs,
+  barycentric_v2: barycentric_v2,
+  calc_projection_axes: calc_projection_axes,
   circ_from_line_tan: circ_from_line_tan,
   circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
+  clip_line_w: clip_line_w,
+  closestPoint: closestPoint,
+  closest_point_on_line: closest_point_on_line,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
+  colinear: colinear,
+  colinear2d: colinear2d,
+  convex_quad: convex_quad,
+  corner_normal: corner_normal,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  dist_to_line: dist_to_line,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  expand_line: expand_line,
+  expand_rect2d: expand_rect2d,
+  feps: feps,
   gen_circle: gen_circle,
-  rot2d: rot2d,
+  get_boundary_winding: get_boundary_winding,
+  get_rect_lines: get_rect_lines,
+  get_rect_points: get_rect_points,
+  get_tri_circ: get_tri_circ,
+  inrect_2d: inrect_2d,
+  isNum: isNum,
+  isect_ray_plane: isect_ray_plane,
+  line_isect: line_isect,
+  line_line_cross: line_line_cross,
+  line_line_isect: line_line_isect,
   makeCircleMesh: makeCircleMesh,
   minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
+  normal_poly: normal_poly,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  normal_tri: normal_tri,
+  point_in_aabb: point_in_aabb,
+  point_in_aabb_2d: point_in_aabb_2d,
   point_in_hex: point_in_hex,
+  point_in_tri: point_in_tri,
+  project: project,
+  quad_bilinear: quad_bilinear,
+  rot2d: rot2d,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  tet_volume: tet_volume,
+  tri_angles: tri_angles,
+  tri_area: tri_area,
   trilinear_co: trilinear_co,
   trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  angle_between_vecs: angle_between_vecs
+  trilinear_v3: trilinear_v3,
+  unproject: unproject,
+  winding: winding,
+  winding_axis: winding_axis
 });
 
 let _clipdata = {
@@ -20371,7 +20430,7 @@ if (typeof document !== 'undefined') {
   }, 200);
 }
 
-let exports = {
+let exports$1 = {
   /** Client code can override this using `.loadConstants`, this is
    *  a simple implementation that just handles color data.
    *
@@ -20492,16 +20551,16 @@ let exports = {
     setConfig(this);
   }
 };
-window.DEBUG = exports.DEBUG;
+window.DEBUG = exports$1.DEBUG;
 
 if (typeof document !== 'undefined') {
   let cfg = document.getElementById("pathux-config");
   if (cfg) {
-    exports.loadConstants(JSON.parse(cfg.innerText));
+    exports$1.loadConstants(JSON.parse(cfg.innerText));
   }
 }
 if (typeof window?.PATHUX_CONFIG !== 'undefined') {
-  exports.loadConstants(window.PATHUX_CONFIG);
+  exports$1.loadConstants(window.PATHUX_CONFIG);
 }
 
 /*
@@ -20714,7 +20773,7 @@ window.validateCSSColor = validateCSSColor$1;
 let theme = {};
 
 function invertTheme() {
-  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK
+  exports$1.colorSchemeType = exports$1.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK
                                                                              : ColorSchemeTypes.LIGHT;
 
   function inverted(color) {
@@ -20732,7 +20791,7 @@ function invertTheme() {
 
   let bg = document.body.style["background-color"];
   //if (!bg) {
-  bg = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  bg = exports$1.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
   //} else {
   //  bg = inverted(bg);
   //}
@@ -20765,9 +20824,9 @@ function invertTheme() {
 window.invertTheme = invertTheme;
 
 function setColorSchemeType(mode) {
-  if (!!mode !== exports.colorSchemeType) {
+  if (!!mode !== exports$1.colorSchemeType) {
     invertTheme();
-    exports.colorSchemeType = mode;
+    exports$1.colorSchemeType = mode;
   }
 
 }
@@ -21905,6 +21964,7 @@ function registerTool(cls) {
  see doc_src/context.md
  */
 
+
 let notifier = undefined;
 
 function setNotifier(cls) {
@@ -21915,11 +21975,11 @@ const ContextFlags = {
   IS_VIEW : 1
 };
 
-class InheritFlag$1 {
+let InheritFlag$1 = class InheritFlag {
   constructor(data) {
     this.data = data;
   }
-}
+};
 
 let __idgen = 1;
 
@@ -27365,15 +27425,15 @@ class tokdef {
   }
 }
 
-class PUTLParseError$1 extends Error {
-}
+let PUTLParseError$1 = class PUTLParseError extends Error {
+};
 
 //errfunc is optional.  it requires
 //a function that takes one param, lexer,
 //and returns true if the lexer
 //should propegate an error when an error
 //has happened
-class lexer$1 {
+let lexer$1 = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -27395,7 +27455,7 @@ class lexer$1 {
   }
 
   copy() {
-    let ret = new lexer$1(this.tokdef, this.errfunc);
+    let ret = new lexer(this.tokdef, this.errfunc);
 
     for (let k in this.states) {
       let state = this.states[k];
@@ -27575,7 +27635,7 @@ class lexer$1 {
 
     return tok;
   }
-}
+};
 
 function getTraceBack(limit, start) {
   try {
@@ -27957,12 +28017,12 @@ function test_parser() {
 
 var parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  token: token,
-  tokdef: tokdef,
   PUTLParseError: PUTLParseError$1,
-  lexer: lexer$1,
   getTraceBack: getTraceBack,
-  parser: parser
+  lexer: lexer$1,
+  parser: parser,
+  tokdef: tokdef,
+  token: token
 });
 
 let ToolPaths = {};
@@ -33176,18 +33236,18 @@ class PropertySocket extends EventSocket {
 
 var eventdag = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  SocketFlags: SocketFlags,
-  NodeFlags: NodeFlags,
-  RecalcFlags: RecalcFlags,
-  SocketTypes: SocketTypes,
+  DependSocket: DependSocket,
+  EventGraph: EventGraph,
+  EventNode: EventNode,
   EventSocket: EventSocket,
   NodeCapable: NodeCapable,
-  EventNode: EventNode,
-  EventGraph: EventGraph,
-  theEventGraph: theEventGraph,
-  DependSocket: DependSocket,
+  NodeFlags: NodeFlags,
   PropSocketModes: PropSocketModes,
-  PropertySocket: PropertySocket
+  PropertySocket: PropertySocket,
+  RecalcFlags: RecalcFlags,
+  SocketFlags: SocketFlags,
+  SocketTypes: SocketTypes,
+  theEventGraph: theEventGraph
 });
 
 let _ui_base = undefined;
@@ -33203,7 +33263,7 @@ function _setTextboxClass(cls) {
 //of live elements
 let ElementClasses = [];
 
-window.__cconst = exports;
+window.__cconst = exports$1;
 
 let Vector4$1 = Vector4$2;
 
@@ -33989,7 +34049,7 @@ if (typeof HTMLElement === 'undefined') {
   window.PointerEvent = class PointerEvent {};
 }
 
-class UIBase$f extends HTMLElement {
+let UIBase$f = class UIBase extends HTMLElement {
   #reflagGraph = false;
 
   static graphNodeDef = EventNode.register(this, {
@@ -34196,7 +34256,7 @@ class UIBase$f extends HTMLElement {
     this._client_disabled_set = undefined;
     //this._parent_disabled_set = 0;
 
-    this._useNativeToolTips = exports.useNativeToolTips;
+    this._useNativeToolTips = exports$1.useNativeToolTips;
     this._useNativeToolTips_set = false;
     this._has_own_tooltips = undefined;
     this._tooltip_timer = time_ms();
@@ -34216,7 +34276,7 @@ class UIBase$f extends HTMLElement {
 
     this.shadow = this.attachShadow({mode: 'open'});
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       this.__cbs = [];
     }
 
@@ -34226,7 +34286,7 @@ class UIBase$f extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase$f) {
+      if (child && typeof child === "object" && child instanceof UIBase) {
         child.parentWidget = this;
       }
 
@@ -34423,7 +34483,7 @@ class UIBase$f extends HTMLElement {
       return;
     }
 
-    if (exports.showPathsInToolTips && this.hasAttribute("datapath")) {
+    if (exports$1.showPathsInToolTips && this.hasAttribute("datapath")) {
       let s = "" + this._description;
 
       let path = this.getAttribute("datapath");
@@ -34439,7 +34499,7 @@ class UIBase$f extends HTMLElement {
       this._description_final = this._description;
     }
 
-    if (exports.useNativeToolTips) {
+    if (exports$1.useNativeToolTips) {
       this.title = "" + this._description_final;
     }
   }
@@ -34619,9 +34679,9 @@ class UIBase$f extends HTMLElement {
         ret = n;
       }
 
-      if (n instanceof UIBase$f && n.constructor.define().tagname === "panelframe-x") {
+      if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
         rec(n.contents);
-      } else if (n instanceof UIBase$f && n.constructor.define().tagname === "tabcontainer-x") {
+      } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
         for (let k in n.tabs) {
           let tab = n.tabs[k];
 
@@ -34678,19 +34738,19 @@ class UIBase$f extends HTMLElement {
   }
 
   addEventListener(type, cb, options) {
-    if (exports.DEBUG.domEventAddRemove) {
+    if (exports$1.DEBUG.domEventAddRemove) {
       console.log("addEventListener", type, this._id, options);
     }
 
     let cb2 = (e) => {
-      if (exports.DEBUG.paranoidEvents) {
+      if (exports$1.DEBUG.paranoidEvents) {
         if (this.isDead()) {
           this.removeEventListener(type, cb, options);
           return;
         }
       }
 
-      if (exports.DEBUG.domEvents) {
+      if (exports$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -34707,7 +34767,7 @@ class UIBase$f extends HTMLElement {
           throw error;
         }
       } else {
-        if (exports.DEBUG.areaContextPushes) {
+        if (exports$1.DEBUG.areaContextPushes) {
           console.warn("Element is not part of an area?", element);
         }
 
@@ -34722,7 +34782,7 @@ class UIBase$f extends HTMLElement {
     let key = calcElemCBKey(this, type, options);
     cb[EventCBSymbol].set(key, cb2);
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       this.__cbs.push([type, cb2, options]);
     }
 
@@ -34730,7 +34790,7 @@ class UIBase$f extends HTMLElement {
   }
 
   removeEventListener(type, cb, options) {
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
         if (item[0] == type && item[1] === cb._cb2 && ("" + item[2]) === ("" + options)) {
           this.__cbs.remove(item);
@@ -34739,7 +34799,7 @@ class UIBase$f extends HTMLElement {
       }
     }
 
-    if (exports.DEBUG.domEventAddRemove) {
+    if (exports$1.DEBUG.domEventAddRemove) {
       console.log("removeEventListener", type, this._id, options);
     }
 
@@ -35152,7 +35212,7 @@ class UIBase$f extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase$f) {
+    if (child instanceof UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -35185,7 +35245,7 @@ class UIBase$f extends HTMLElement {
     };
 
     this._clipboard_keydown = (e, internal_mode) => {
-      if (!this.isConnected || !exports.getClipboardData) {
+      if (!this.isConnected || !exports$1.getClipboardData) {
         this._clipboard_keyend();
         return;
       }
@@ -35292,7 +35352,7 @@ class UIBase$f extends HTMLElement {
       this.regenTabOrder();
     }
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
         this.removeEventListener(item[0], item[1], item[2]);
       }
@@ -35371,7 +35431,7 @@ class UIBase$f extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase$f) {
+      if (n instanceof UIBase) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -35444,19 +35504,19 @@ class UIBase$f extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$f, excluded_classes = undefined) {
+  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase, excluded_classes = undefined) {
     let clip;
     let mouseEvent;
     let isMouseMove, isMouseDown;
 
     if (typeof args === "object") {
-      nodeclass = args.nodeclass || UIBase$f;
+      nodeclass = args.nodeclass || UIBase;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
     } else {
       args = {
-        nodeclass       : nodeclass || UIBase$f,
+        nodeclass       : nodeclass || UIBase,
         excluded_classes: excluded_classes,
         clip            : clip
       };
@@ -35591,7 +35651,7 @@ class UIBase$f extends HTMLElement {
     this.__disabledState = !!val;
 
     let visit = (n) => {
-      if (n instanceof UIBase$f) {
+      if (n instanceof UIBase) {
         let changed = !!n.__disabledState;
 
         /*
@@ -35744,7 +35804,7 @@ class UIBase$f extends HTMLElement {
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
-    div.style["position"] = UIBase$f.PositionKey;
+    div.style["position"] = UIBase.PositionKey;
     div.style["margin"] = "0px";
     div.style["left"] = x + "px";
     div.style["top"] = y + "px";
@@ -36106,7 +36166,7 @@ class UIBase$f extends HTMLElement {
           if (thisvar.isDead()) {
             func._doOnce_reqs.delete(thisvar._id);
 
-            if (func === thisvar._init || !exports.DEBUG.doOnce) {
+            if (func === thisvar._init || !exports$1.DEBUG.doOnce) {
               return;
             }
 
@@ -36115,7 +36175,7 @@ class UIBase$f extends HTMLElement {
           }
 
           if (!thisvar.ctx) {
-            if (exports.DEBUG.doOnce) {
+            if (exports$1.DEBUG.doOnce) {
               console.warn("doOnce call is waiting for context...", thisvar._id, func);
             }
 
@@ -36135,7 +36195,7 @@ class UIBase$f extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase$f.PositionKey) {
+  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase.PositionKey) {
     this.style.position = positionKey;
 
     this.style.left = x + "px";
@@ -36166,7 +36226,7 @@ class UIBase$f extends HTMLElement {
   }
 
   checkThemeUpdate() {
-    if (!exports.enableThemeAutoUpdate) {
+    if (!exports$1.enableThemeAutoUpdate) {
       return false;
     }
 
@@ -36194,8 +36254,8 @@ class UIBase$f extends HTMLElement {
   }
 
   updateToolTipHandlers() {
-    if (!this._useNativeToolTips_set && !exports.useNativeToolTips !== !this._useNativeToolTips) {
-      this._useNativeToolTips = exports.useNativeToolTips;
+    if (!this._useNativeToolTips_set && !exports$1.useNativeToolTips !== !this._useNativeToolTips) {
+      this._useNativeToolTips = exports$1.useNativeToolTips;
     }
 
     if (!!this.useNativeToolTips === !this._has_own_tooltips) {
@@ -36408,7 +36468,7 @@ class UIBase$f extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase$f.getDPI();
+    return UIBase.getDPI();
   }
 
   /**
@@ -36618,7 +36678,7 @@ class UIBase$f extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase$f && p !== Object) {
+    while (p && p !== lastp && p !== UIBase && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -36859,7 +36919,7 @@ class UIBase$f extends HTMLElement {
 
     this._active_animations = [];
   }
-}
+};
 
 function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
@@ -37245,7 +37305,7 @@ let UIBase$e     = UIBase$f,
 
 let parsepx$3 = parsepx$4;
 
-exports.DEBUG.buttonEvents = true;
+exports$1.DEBUG.buttonEvents = true;
 
 class ButtonEventBase extends UIBase$e {
   constructor() {
@@ -37301,7 +37361,7 @@ class ButtonEventBase extends UIBase$e {
         }, undefined, e.pointerId);
       }
 
-      if (exports.DEBUG.buttonEvents) {
+      if (exports$1.DEBUG.buttonEvents) {
         console.log("button press", this._pressed, this.disabled, e.button);
       }
 
@@ -37319,7 +37379,7 @@ class ButtonEventBase extends UIBase$e {
     };
 
     depress = (e) => {
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button depress", e.button, e.was_touch);
 
       if (this._auto_depress) {
@@ -37341,7 +37401,7 @@ class ButtonEventBase extends UIBase$e {
 
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
       if (this.onclick && e && e.pointerType !== "mouse") {
@@ -37378,7 +37438,7 @@ class ButtonEventBase extends UIBase$e {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log(e.keyCode);
 
       switch (e.keyCode) {
@@ -37562,7 +37622,7 @@ class Button extends ButtonEventBase {
 
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
@@ -37683,7 +37743,7 @@ class OldButton extends ButtonEventBase {
     let press = (e) => {
       e.stopPropagation();
 
-      if (exports.DEBUG.buttonEvents) {
+      if (exports$1.DEBUG.buttonEvents) {
         console.log("button press", this._pressed, this.disabled, e.button);
       }
 
@@ -37705,7 +37765,7 @@ class OldButton extends ButtonEventBase {
     };
 
     let depress = (e) => {
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button depress", e.button, e.was_touch);
 
       if (this._auto_depress) {
@@ -37725,7 +37785,7 @@ class OldButton extends ButtonEventBase {
 
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents) {
+      if (exports$1.DEBUG.buttonEvents) {
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
       }
 
@@ -37767,7 +37827,7 @@ class OldButton extends ButtonEventBase {
       this._repos_canvas();
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
@@ -39647,8 +39707,8 @@ window._testSaveFile = function() {
 
 var html5_fileapi = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1
+  loadFile: loadFile$1,
+  saveFile: saveFile$1
 });
 
 class Constraint {
@@ -40306,264 +40366,265 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
 
 var controller = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  eventgraph: eventdag,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: config$1,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolOpAPI: buildToolOpAPI,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
+  AbstractCurve: AbstractCurve,
+  BSplineTransformOp: BSplineTransformOp,
+  BaseVector: BaseVector,
   BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
+  BounceCurve: BounceCurve,
+  COLINEAR: COLINEAR,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  CURVE_VERSION: CURVE_VERSION,
+  ClosestCurveRets: ClosestCurveRets,
+  ClosestModes: ClosestModes,
+  Constraint: Constraint,
+  Context: Context,
+  ContextFlags: ContextFlags,
+  ContextOverlay: ContextOverlay,
+  Curve1D: Curve1D,
+  Curve1DPoint: Curve1DPoint,
+  Curve1DProperty: Curve1DProperty,
+  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
+  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
+  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
+  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
+  CurveConstructors: CurveConstructors,
+  CurveFlags: CurveFlags,
+  CurveTypeData: CurveTypeData,
+  DataAPI: DataAPI,
+  DataFlags: DataFlags,
+  DataList: DataList,
+  DataPath: DataPath,
+  DataPathError: DataPathError,
+  DataPathSetOp: DataPathSetOp,
+  DataStruct: DataStruct,
+  DataTypes: DataTypes,
+  DoubleClickHandler: DoubleClickHandler,
+  EaseCurve: EaseCurve,
+  ElasticCurve: ElasticCurve,
   EnumKeyPair: EnumKeyPair,
   EnumProperty: EnumProperty$9,
+  EulerOrders: EulerOrders,
+  F32BaseVector: F32BaseVector,
+  F64BaseVector: F64BaseVector,
+  FEPS: FEPS,
+  FEPS_DATA: FEPS_DATA,
+  FLOAT_MAX: FLOAT_MAX,
+  FLOAT_MIN: FLOAT_MIN,
   FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
+  FloatArrayProperty: FloatArrayProperty,
+  FloatConstrinats: FloatConstrinats,
+  FloatProperty: FloatProperty,
+  HotKey: HotKey,
+  I16BaseVector: I16BaseVector,
+  I32BaseVector: I32BaseVector,
+  I8BaseVector: I8BaseVector,
+  IndexRange: IndexRange,
+  IntProperty: IntProperty,
+  IntegerConstraints: IntegerConstraints,
+  KeyMap: KeyMap,
+  LINECROSS: LINECROSS,
+  ListIface: ListIface,
+  ListProperty: ListProperty,
+  LockedContext: LockedContext,
+  MacroClasses: MacroClasses,
+  MacroLink: MacroLink,
+  Mat4Property: Mat4Property,
+  Mat4Stack: Mat4Stack,
+  Matrix4: Matrix4$2,
+  Matrix4UI: Matrix4UI,
+  MinMax: MinMax,
+  ModelInterface: ModelInterface,
+  NumProperty: NumProperty,
+  NumberConstraints: NumberConstraints,
+  NumberConstraintsBase: NumberConstraintsBase,
+  OverlayClasses: OverlayClasses,
+  PackNode: PackNode,
+  PackNodeVertex: PackNodeVertex,
+  ParamKey: ParamKey,
+  Parser: Parser,
+  PlaneOps: PlaneOps,
+  PropClasses: PropClasses,
+  PropFlags: PropFlags$3,
+  PropSubTypes: PropSubTypes$3,
+  PropTypes: PropTypes$8,
+  Quat: Quat,
+  QuatProperty: QuatProperty,
+  RandCurve: RandCurve,
+  ReportProperty: ReportProperty,
+  SQRT2: SQRT2,
+  SavedToolDefaults: SavedToolDefaults,
+  SimpleCurveBase: SimpleCurveBase,
+  Solver: Solver,
+  SplineTemplateIcons: SplineTemplateIcons,
+  SplineTemplates: SplineTemplates,
+  StringProperty: StringProperty,
+  StringSetProperty: StringSetProperty,
+  StructFlags: StructFlags,
+  TangentModes: TangentModes,
+  ToolClasses: ToolClasses,
+  ToolFlags: ToolFlags$1,
+  ToolMacro: ToolMacro,
+  ToolOp: ToolOp,
+  ToolOpIface: ToolOpIface,
+  ToolPaths: ToolPaths,
+  ToolProperty: ToolProperty$1,
+  ToolPropertyCache: ToolPropertyCache,
+  ToolStack: ToolStack,
+  UI16BaseVector: UI16BaseVector,
+  UI32BaseVector: UI32BaseVector,
+  UI8BaseVector: UI8BaseVector,
+  UndoFlags: UndoFlags$1,
   Vec2Property: Vec2Property,
   Vec3Property: Vec3Property,
   Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  Curve1dBSplineOpBase: Curve1dBSplineOpBase,
-  Curve1dBSplineResetOp: Curve1dBSplineResetOp,
-  Curve1dBSplineLoadTemplOp: Curve1dBSplineLoadTemplOp,
-  Curve1dBSplineDeleteOp: Curve1dBSplineDeleteOp,
-  Curve1dBSplineSelectOp: Curve1dBSplineSelectOp,
-  Curve1dBSplineAddOp: Curve1dBSplineAddOp,
-  BSplineTransformOp: BSplineTransformOp,
-  Curve1DPoint: Curve1DPoint,
-  initSplineTemplates: initSplineTemplates,
-  ParamKey: ParamKey,
-  SimpleCurveBase: SimpleCurveBase,
-  BounceCurve: BounceCurve,
-  ElasticCurve: ElasticCurve,
-  EaseCurve: EaseCurve,
-  RandCurve: RandCurve,
-  getCurve: getCurve,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveTypeData: CurveTypeData,
-  Curve1D: Curve1D,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  Curve1DProperty: Curve1DProperty,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  I32BaseVector: I32BaseVector,
-  I16BaseVector: I16BaseVector,
-  I8BaseVector: I8BaseVector,
-  UI32BaseVector: UI32BaseVector,
-  UI16BaseVector: UI16BaseVector,
-  UI8BaseVector: UI8BaseVector,
-  makeVector4: makeVector4,
-  Vector4: Vector4$2,
-  makeVector3: makeVector3,
-  Vector3: Vector3$2,
-  makeVector2: makeVector2,
+  VecPropertyBase: VecPropertyBase,
   Vector2: Vector2$b,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
+  Vector3: Vector3$2,
+  Vector4: Vector4$2,
+  _NumberPropertyBase: _NumberPropertyBase,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  _setModalAreaClass: _setModalAreaClass,
+  _setScreenClass: _setScreenClass,
   aabb_intersect_2d: aabb_intersect_2d,
   aabb_intersect_3d: aabb_intersect_3d,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_sphere_dist: aabb_sphere_dist,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
   aabb_union: aabb_union,
   aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  colinear2d: colinear2d,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
+  angle_between_vecs: angle_between_vecs,
+  barycentric_v2: barycentric_v2,
+  binomial: binomial,
+  buildParser: buildParser,
+  buildToolOpAPI: buildToolOpAPI,
+  buildToolSysAPI: buildToolSysAPI,
+  calc_projection_axes: calc_projection_axes,
   circ_from_line_tan: circ_from_line_tan,
   circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  angle_between_vecs: angle_between_vecs,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
+  clip_line_w: clip_line_w,
+  closestPoint: closestPoint,
+  closest_point_on_line: closest_point_on_line,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
   cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
+  colinear: colinear,
+  colinear2d: colinear2d,
+  config: config$1,
+  convex_quad: convex_quad,
+  copyEvent: copyEvent,
+  corner_normal: corner_normal,
+  customPropertyTypes: customPropertyTypes,
+  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
+  get defaultRadix () { return defaultRadix; },
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  dist_to_line: dist_to_line,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  evalHermiteTable: evalHermiteTable,
+  eventWasTouch: eventWasTouch,
+  eventgraph: eventdag,
+  excludedKeys: excludedKeys,
+  expand_line: expand_line,
+  expand_rect2d: expand_rect2d,
+  feps: feps,
+  genHermiteTable: genHermiteTable,
+  gen_circle: gen_circle,
+  getCurve: getCurve,
+  getDataPathToolOp: getDataPathToolOp,
+  getTempProp: getTempProp,
+  getVecClass: getVecClass,
+  get_boundary_winding: get_boundary_winding,
+  get_rect_lines: get_rect_lines,
+  get_rect_points: get_rect_points,
+  get_tri_circ: get_tri_circ,
   graphGetIslands: graphGetIslands,
   graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
   haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
+  hsv_to_rgb: hsv_to_rgb,
+  html5_fileapi: html5_fileapi,
+  initSimpleController: initSimpleController,
+  initSplineTemplates: initSplineTemplates,
+  initToolPaths: initToolPaths,
+  inrect_2d: inrect_2d,
+  isLeftClick: isLeftClick,
+  isMouseDown: isMouseDown,
+  isNum: isNum,
+  isNumber: isNumber,
+  isVecProperty: isVecProperty,
+  isect_ray_plane: isect_ray_plane,
   keymap: keymap$4,
+  keymap_latin_1: keymap_latin_1,
+  line_isect: line_isect,
+  line_line_cross: line_line_cross,
+  line_line_isect: line_line_isect,
+  lzstring: lzstring,
+  makeCircleMesh: makeCircleMesh,
+  makeDerivedOverlay: makeDerivedOverlay,
+  makeVector2: makeVector2,
+  makeVector3: makeVector3,
+  makeVector4: makeVector4,
+  math: math,
+  minmax_verts: minmax_verts,
+  modalstack: modalstack$1,
+  normal_poly: normal_poly,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  normal_tri: normal_tri,
+  nstructjs: nstructjs,
+  parseToolPath: parseToolPath,
+  parseutil: parseutil,
+  pathDebugEvent: pathDebugEvent,
+  pathParser: pathParser,
+  point_in_aabb: point_in_aabb,
+  point_in_aabb_2d: point_in_aabb_2d,
+  point_in_hex: point_in_hex,
+  point_in_tri: point_in_tri,
+  popModalLight: popModalLight,
+  popReportName: popReportName,
+  project: project,
+  pushModalLight: pushModalLight,
+  pushPointerModal: pushPointerModal,
+  pushReportName: pushReportName,
+  quad_bilinear: quad_bilinear,
+  registerTool: registerTool,
   reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
+  rgb_to_cmyk: rgb_to_cmyk,
+  rgb_to_hsv: rgb_to_hsv,
+  rot2d: rot2d,
+  setContextClass: setContextClass,
+  setDataPathToolOp: setDataPathToolOp,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  setImplementationClass: setImplementationClass,
+  setNotifier: setNotifier,
+  setPropTypes: setPropTypes,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  singleMouseEvent: singleMouseEvent,
+  solver: solver,
+  test: test,
+  testToolParser: testToolParser,
+  tet_volume: tet_volume,
+  toolprop_abstract: toolprop_abstract,
+  tri_angles: tri_angles,
+  tri_area: tri_area,
+  trilinear_co: trilinear_co,
+  trilinear_co2: trilinear_co2,
+  trilinear_v3: trilinear_v3,
+  unproject: unproject,
+  util: util,
+  vectormath: vectormath,
+  winding: winding,
+  winding_axis: winding_axis
 });
 
 "use strict";
@@ -41745,7 +41806,7 @@ class DropBox extends OldButton {
 
     /* need to figure out a better way to pop up a menu
      *  above a given y position */
-    if (exports.menusCanPopupAbove && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
+    if (exports$1.menusCanPopupAbove && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
       let con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
@@ -42262,7 +42323,7 @@ class MenuWrangler {
   }
 
   update() {
-    let closetime = exports.menu_close_time;
+    let closetime = exports$1.menu_close_time;
     closetime = closetime === undefined ? 50 : closetime;
 
     let close = this.closereq && this.closereq === this.menu;
@@ -44370,10 +44431,10 @@ class Container extends UIBase$f {
       }
     }
 
-    let simple = (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) || exports.simpleNumSliders;
+    let simple = (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) || exports$1.simpleNumSliders;
     simple = simple && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER);
 
-    let extraTextBox = exports.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX);
+    let extraTextBox = exports$1.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX);
 
     if (extraTextBox) {
       if (simple) {
@@ -45181,15 +45242,15 @@ function progbarNote(screen, msg, percent, color, timeout) {
 var ui_noteframe = /*#__PURE__*/Object.freeze({
   __proto__: null,
   Note: Note,
-  ProgBarNote: ProgBarNote,
   NoteFrame: NoteFrame,
-  getNoteFrames: getNoteFrames,
-  get noteframes () { return noteframes; },
-  sendNote: sendNote,
+  ProgBarNote: ProgBarNote,
   error: error,
-  warning: warning,
+  getNoteFrames: getNoteFrames,
   message: message,
-  progbarNote: progbarNote
+  get noteframes () { return noteframes; },
+  progbarNote: progbarNote,
+  sendNote: sendNote,
+  warning: warning
 });
 
 let UIBase$8 = UIBase$f, Icons$1 = Icons$2;
@@ -46382,7 +46443,7 @@ class AreaResizeTool extends ToolBase {
     let visit = new Set();
     let borders = this.getBorders();
 
-    let color = exports.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
+    let color = exports$1.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
     let bad = false;
 
@@ -46867,7 +46928,7 @@ class AreaDragTool extends ToolBase {
             }
           }
 
-          if (exports.useAreaTabSwitcher) {
+          if (exports$1.useAreaTabSwitcher) {
             for (let editor of dst.editors) {
               if (editor.switcher) {
                 editor.switcher.flagUpdate();
@@ -47667,7 +47728,7 @@ class ScreenBorder extends UIBase$f {
 
 
     let color = this.getDefault("border-outer");
-    let debug = exports.DEBUG.screenborders;
+    let debug = exports$1.DEBUG.screenborders;
 
     if (debug) {
       wid = 4;
@@ -47776,7 +47837,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area$1 extends UIBase$f {
+let Area$1 = class Area extends UIBase$f {
   constructor() {
     super();
 
@@ -48121,13 +48182,13 @@ class Area$1 extends UIBase$f {
   }
 
   makeAreaSwitcher(container) {
-    if (exports.useAreaTabSwitcher) {
+    if (exports$1.useAreaTabSwitcher) {
       let ret = UIBase$7.createElement("area-docker-x");
       container.add(ret);
       return ret;
     }
 
-    let prop = Area$1.makeAreasEnum();
+    let prop = Area.makeAreasEnum();
 
     let dropbox = container.listenum(undefined, {
       name    : this.constructor.define().uiname,
@@ -48164,7 +48225,7 @@ class Area$1 extends UIBase$f {
       this.header = undefined;
     }
 
-    if (!(this.flag & AreaFlags.NO_SWITCHER) && exports.useAreaTabSwitcher) {
+    if (!(this.flag & AreaFlags.NO_SWITCHER) && exports$1.useAreaTabSwitcher) {
       let col = this.header = container.col();
 
       switcherRow = helpRow = col.row();
@@ -48208,11 +48269,11 @@ class Area$1 extends UIBase$f {
         //add back same switcher
         switcherRow.add(this.switcher);
       } else {
-        this.switcher = this.makeAreaSwitcher(exports.useAreaTabSwitcher ? switcherRow : row);
+        this.switcher = this.makeAreaSwitcher(exports$1.useAreaTabSwitcher ? switcherRow : row);
       }
     }
 
-    if (isMobile() || exports.addHelpPickers) {
+    if (isMobile() || exports$1.addHelpPickers) {
       if (this.helppicker) {
         this.helppicker.remove();
       }
@@ -48228,7 +48289,7 @@ class Area$1 extends UIBase$f {
     }
 
     /* don't do normal dragging for tab switchers */
-    if (exports.useAreaTabSwitcher) {
+    if (exports$1.useAreaTabSwitcher) {
       return row;
     }
 
@@ -48450,7 +48511,7 @@ class Area$1 extends UIBase$f {
   _getSavedUIData() {
     return saveUIData(this, "area");
   }
-}
+};
 
 Area$1.STRUCT = `
 pathux.Area { 
@@ -48479,7 +48540,7 @@ class ScreenArea extends UIBase$f {
     this._pos = new Vector2$6();
     this._size = new Vector2$6([512, 512]);
 
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
         Object.defineProperty(this[name], axis, {
           get: function () {
@@ -48605,7 +48666,7 @@ class ScreenArea extends UIBase$f {
   }
 
   set pos(val) {
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       console.log("ScreenArea set pos", val);
     }
     this._pos.load(val);
@@ -48616,7 +48677,7 @@ class ScreenArea extends UIBase$f {
   }
 
   set size(val) {
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       console.log("ScreenArea set size", val);
     }
     this._size.load(val);
@@ -49155,7 +49216,7 @@ class ScreenArea extends UIBase$f {
       let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
       //*
       if (moved) {
-        if (exports.DEBUG.areaConstraintSolver) {
+        if (exports$1.DEBUG.areaConstraintSolver) {
           console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area.tagName, this.size);
         }
 
@@ -49344,18 +49405,18 @@ function setScreenClass(cls) {
 
 var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  Area: Area$1,
   AreaFlags: AreaFlags,
-  contextWrangler: contextWrangler,
+  AreaTypes: AreaTypes,
+  AreaWrangler: AreaWrangler,
   BorderMask: BorderMask,
   BorderSides: BorderSides,
-  Area: Area$1,
   ScreenArea: ScreenArea,
-  setScreenClass: setScreenClass,
-  getAreaIntName: getAreaIntName,
-  AreaTypes: AreaTypes,
-  setAreaTypes: setAreaTypes,
   areaclasses: areaclasses,
-  AreaWrangler: AreaWrangler
+  contextWrangler: contextWrangler,
+  getAreaIntName: getAreaIntName,
+  setAreaTypes: setAreaTypes,
+  setScreenClass: setScreenClass
 });
 
 class ThemeEditor extends Container {
@@ -49890,11 +49951,11 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   clipboardCopy() {
     console.log("Copy", "" + this.value);
-    exports.setClipboardData("value", "text/plain", "" + this.value);
+    exports$1.setClipboardData("value", "text/plain", "" + this.value);
   }
 
   clipboardPaste() {
-    let data = exports.getClipboardData("text/plain");
+    let data = exports$1.getClipboardData("text/plain");
     console.log("Paste", data);
 
     if (typeof data == "object") {
@@ -50144,7 +50205,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     x -= rx;
     let sz = this._getArrowSize();
 
-    let szmargin = sz + exports.numSliderArrowLimit;
+    let szmargin = sz + exports$1.numSliderArrowLimit;
 
     let step = this.step || 0.01;
 
@@ -53157,6 +53218,10 @@ class Curve1DWidget extends ColumnFrame {
 UIBase$f.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular
+//module refs, in such cases do not use these vars.
+
 
 var _ui$1 = undefined;
 
@@ -53669,11 +53734,11 @@ function colorClipboardCopy() {
   let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
   //cconst.setClipboardData("color", "text/css", data);
 
-  exports.setClipboardData("color", "text/plain", data);
+  exports$1.setClipboardData("color", "text/plain", data);
 }
 
 function colorClipboardPaste() {
-  let data = exports.getClipboardData("text/plain");
+  let data = exports$1.getClipboardData("text/plain");
 
   if (!data || !validateCSSColor("" + data.data)) {// || data.mime !== "text/css") {
     return;
@@ -55126,7 +55191,7 @@ class ColorPickerButton extends UIBase$5 {
     let path = this.getAttribute("datapath");
     let prop = this.getPathMeta(this.ctx, path);
 
-    if ((prop === undefined || prop.data === undefined) && exports.DEBUG.verboseDataPath) {
+    if ((prop === undefined || prop.data === undefined) && exports$1.DEBUG.verboseDataPath) {
       console.log("bad path", path);
       return;
     } else if (prop === undefined) {
@@ -56976,6 +57041,10 @@ class TabContainer extends UIBase$4 {
 UIBase$4.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular
+//module refs, in such cases do not use these vars.
+
 
 var _ui = undefined;
 
@@ -58060,8 +58129,8 @@ function getPlatformAsync() {
 
 var platform$3 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  get platform () { return platform$2; },
-  getPlatformAsync: getPlatformAsync
+  getPlatformAsync: getPlatformAsync,
+  get platform () { return platform$2; }
 });
 
 "use strict";
@@ -58239,7 +58308,7 @@ class ElectronMenuItem {
 function patchDropBox() {
   initElectronIpc();
 
-  if (exports.noElectronMenus) {
+  if (exports$1.noElectronMenus) {
     return;
   }
 
@@ -58324,8 +58393,8 @@ let on_tick = () => {
   if (nativeTheme) {
     let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
-    if (mode !== exports.colorSchemeType) {
-      nativeTheme.themeSource = exports.colorSchemeType;
+    if (mode !== exports$1.colorSchemeType) {
+      nativeTheme.themeSource = exports$1.colorSchemeType;
     }
   }
 };
@@ -58572,7 +58641,7 @@ function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-class platform$1 extends PlatformAPI {
+let platform$1 = class platform extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     console.log(args.filters);
 
@@ -58702,20 +58771,20 @@ class platform$1 extends PlatformAPI {
       accept(handle);
     });
   }
-}
+};
 
 var electron_api$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   ElectronMenu: ElectronMenu,
-  wrapRemoteCallback: wrapRemoteCallback,
   ElectronMenuItem: ElectronMenuItem,
-  checkInit: checkInit,
-  iconcache: iconcache,
-  getNativeIcon: getNativeIcon,
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
+  checkInit: checkInit,
+  getNativeIcon: getNativeIcon,
+  iconcache: iconcache,
   initMenuBar: initMenuBar,
-  platform: platform$1
+  platform: platform$1,
+  wrapRemoteCallback: wrapRemoteCallback
 });
 
 "use strict";
@@ -59756,7 +59825,7 @@ UIBase$f.internalRegister(DragBox);
 let ignore = 0;
 
 function dockerdebug() {
-  if (exports.DEBUG.areadocker) {
+  if (exports$1.DEBUG.areadocker) {
     console.warn(...arguments);
   }
 }
@@ -60314,7 +60383,7 @@ class Screen extends UIBase$f {
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
-    this.allBordersMovable = exports.DEBUG.allBordersMovable;
+    this.allBordersMovable = exports$1.DEBUG.allBordersMovable;
     this.needsBorderRegen = true;
 
     this._popup_safe = 0;
@@ -61129,7 +61198,7 @@ class Screen extends UIBase$f {
   }
 
   updateSize() {
-    if (this.getBoolAttribute("inherit-scale") || !this.fullScreen || !exports.autoSizeUpdate) {
+    if (this.getBoolAttribute("inherit-scale") || !this.fullScreen || !exports$1.autoSizeUpdate) {
       this.checkCSSSize();
       return;
     }
@@ -61147,13 +61216,13 @@ class Screen extends UIBase$f {
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
 
-    if (exports.DEBUG.customWindowSize) {
-      let s = exports.DEBUG.customWindowSize;
+    if (exports$1.DEBUG.customWindowSize) {
+      let s = exports$1.DEBUG.customWindowSize;
       width = s.width;
       height = s.height;
       ox = 0;
       oy = 0;
-      window._DEBUG = exports.DEBUG;
+      window._DEBUG = exports$1.DEBUG;
     }
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
@@ -62079,7 +62148,7 @@ class Screen extends UIBase$f {
   }
 
   updateDebugBoxes() {
-    if (exports.DEBUG.screenborders) {
+    if (exports$1.DEBUG.screenborders) {
       let overlay = this._get_debug_overlay();
       overlay.clear();
 
@@ -62542,7 +62611,7 @@ class Screen extends UIBase$f {
 
     if (found) {
       this.snapScreenVerts(snapArgument);
-      if (exports.DEBUG.areaConstraintSolver) {
+      if (exports$1.DEBUG.areaConstraintSolver) {
         time = time_ms() - time;
 
         console.log(`enforced area constraint ${time.toFixed(2)}ms`);
@@ -65117,8 +65186,8 @@ class StartArgs {
     this.enableThemeAutoUpdate = false;
     this.addHelpPickers = false;
     this.useNumSliderTextboxes = true;
-    this.numSliderArrowLimit = exports.numSliderArrowLimit;
-    this.simpleNumSliders = exports.simpleNumSliders;
+    this.numSliderArrowLimit = exports$1.numSliderArrowLimit;
+    this.simpleNumSliders = exports$1.simpleNumSliders;
   }
 }
 
@@ -65465,7 +65534,7 @@ class AppState {
 
     this.startArgs = args;
 
-    exports.loadConstants(args);
+    exports$1.loadConstants(args);
 
     if (args.autoLoadSplineTemplates) {
       initSplineTemplates();
@@ -65554,27 +65623,27 @@ class SimpleContext {
 
 var simple = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  Menu: Menu,
-  DataModelClasses: DataModelClasses,
-  DataModel: DataModel,
-  makeAPI: makeAPI,
-  StartArgs: StartArgs,
-  SimpleScreen: SimpleScreen,
   AppState: AppState,
-  SideBar: SideBar,
+  DataModel: DataModel,
+  DataModelClasses: DataModelClasses,
   Editor: Editor,
-  Icons: Icons,
-  loadDefaultIconSheet: loadDefaultIconSheet,
-  iconSvg: iconSvg,
-  FileHeader: FileHeader,
-  FileFull: FileFull,
-  FileArgs: FileArgs,
   EmptyStruct: EmptyStruct,
-  saveFile: saveFile,
-  loadFile: loadFile,
-  SimpleContext: SimpleContext,
+  FileArgs: FileArgs,
+  FileFull: FileFull,
+  FileHeader: FileHeader,
+  Icons: Icons,
+  Menu: Menu,
   MenuBarEditor: MenuBarEditor,
-  registerMenuBarEditor: registerMenuBarEditor
+  SideBar: SideBar,
+  SimpleContext: SimpleContext,
+  SimpleScreen: SimpleScreen,
+  StartArgs: StartArgs,
+  iconSvg: iconSvg,
+  loadDefaultIconSheet: loadDefaultIconSheet,
+  loadFile: loadFile,
+  makeAPI: makeAPI,
+  registerMenuBarEditor: registerMenuBarEditor,
+  saveFile: saveFile
 });
 
 setNotifier(ui_noteframe);
@@ -65782,5 +65851,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, I16BaseVector, I32BaseVector, I8BaseVector, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UI16BaseVector, UI32BaseVector, UI8BaseVector, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolOpAPI, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, eventdag as eventgraph, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, makeVector2, makeVector3, makeVector4, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BSplineTransformOp, BaseVector, BoolProperty, BorderMask, BorderSides, BounceCurve, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, Curve1dBSplineAddOp, Curve1dBSplineDeleteOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineSelectOp, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EaseCurve, ElasticCurve, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, I16BaseVector, I32BaseVector, I8BaseVector, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IndexRange, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, ParamKey, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, RandCurve, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleCurveBase, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UI16BaseVector, UI32BaseVector, UI8BaseVector, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, angle_between_vecs, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolOpAPI, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, colinear2d, color2css$1 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, copyTheme, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, eventdag as eventgraph, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initSplineTemplates, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, makeVector2, makeVector3, makeVector4, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
