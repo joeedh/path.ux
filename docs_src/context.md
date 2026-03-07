@@ -1,20 +1,35 @@
-# Context design:
+
+
+<!-- toc -->
+
+- [Context design](#context-design)
+  * [Required fields](#required-fields)
+  * [Context Overlay](#context-overlay)
+  * [Locked contexts](#locked-contexts)
+  * [Tool Contexts](#tool-contexts)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
+# Context design
 
 Context is a simplified API to access the application model.  Contexts are passed around
 to ToolOps and used by path.ux.
 
 ## Required fields
+
 Call contexts are required to have the following fields:
 
-* screen -- the active FrameManager.Screen (or a subclass of it)
-* api -- the data path controller, (controller.ModelInterface)
-* toolstack -- The tool operator stack (simple_toolsys.ToolStack)
- 
-## Context Overlay:
+- screen -- the active FrameManager.Screen (or a subclass of it)
+- api -- the data path controller, (controller.ModelInterface)
+- toolstack -- The tool operator stack (simple_toolsys.ToolStack)
+
+## Context Overlay
+
 A [context overlay](@ContextOverlay) is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.
 
-Contexts can be "frozen" with .lock.  When frozen they should *have no direct object 
+Contexts can be "frozen" with .lock.  When frozen they should *have no direct object
 references at all*, other then .state, .datalib and .api.  
 
 Properties can control this with "_save" and "_load" methods inside
@@ -99,7 +114,7 @@ We suggest you subclass Context and implement saveProperty and loadProperty meth
 We encourage you to put Context properties related to the view inside
 a separate ContextOverlay.  That way you can keep ToolOps from accessing
 the view by feeding them a special context that lacks that overlay
-(but note that tools in modal mode should always get a full context). 
+(but note that tools in modal mode should always get a full context).
 
 ```
 class ToolOverlay extends ContextOverlay {
@@ -133,5 +148,3 @@ class ViewOverlay extends ContextOverlay {
 }
 Context.register(ToolOverlay);
 ```
-
-

@@ -1,3 +1,14 @@
+
+
+<!-- toc -->
+
+- [NStructJS](#nstructjs)
+  * [Control How Fields Are Saved](#control-how-fields-are-saved)
+  * [Versioning](#versioning)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
 # NStructJS
 
 NStructJS is a little library for saving/loading highly structured JS objects as binary data
@@ -51,5 +62,3 @@ my_module.AnotherClass {
 
 To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
 copy of your struct scripts with each file, that way each file knows how to load itself.
-
-

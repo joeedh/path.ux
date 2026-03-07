@@ -1,6 +1,16 @@
+
+
+<!-- toc -->
+
+- [Introduction](#introduction)
+- [Architecture](#architecture)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
 # Introduction
 
-Path.ux is a small app framework inspired by the architecture of 
+Path.ux is a small app framework inspired by the architecture of
 Blender, a 3D animation/modeling/visualization app.  
 
 # Architecture

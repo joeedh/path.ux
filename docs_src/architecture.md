@@ -1,6 +1,18 @@
-# Introduction 
-Path.ux follows a strict model/view/controller paradigm.  The application 
-state is the model, path.ux is the (or a) view, and the controller is 
+
+
+<!-- toc -->
+
+- [Introduction](#introduction)
+- [Setting Pathux API prefix](#setting-pathux-api-prefix)
+- [History](#history)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
+# Introduction
+
+Path.ux follows a strict model/view/controller paradigm.  The application
+state is the model, path.ux is the (or a) view, and the controller is
 the means by which path.ux queries the model.  In addition, there are two
 layers of controllers: the first, [Context](context), is a simple
 (and application-defined) API to access the application state, while the
@@ -21,26 +33,23 @@ For example, you might see code like this:
 "View3d.select_all()" is a tool path, which is a bit different.  
 
 Note that path.ux mostly makes use of the data path controller.  It does pass
-around a (client-provided) Context instance, which is required to have the 
+around a (client-provided) Context instance, which is required to have the
 following properties:
 
 - api       : a [ModelInterface](@ModelInterface) class (typically a [DataAPI](@DataAPI) instance)
 - screen    : The current screen, a [Screen](@Screen) instance (or subclass of)
 - toolstack : The tool stack, see [ToolStack](@ToolStack)
- 
-Path.ux allows different controller implementations (though they must all pass type information via the 
-classes in toolprop.js).  The included implementation can be found in 
+
+Path.ux allows different controller implementations (though they must all pass type information via the
+classes in toolprop.js).  The included implementation can be found in
 "simple_controller.js", and the abstract interface in "controller.js".
 
 # Setting Pathux API prefix
 
-To avoid conflicting with other custom HTML elements, you can add a 
+To avoid conflicting with other custom HTML elements, you can add a
 prefix to pathux element tag names.  To do so, add a script tag like so:
 
 `<script type="text-plain" id="pathux-tag-prefix">desired-prefix-</script>`
-
-
-
 
 # History
 
@@ -60,6 +69,3 @@ Since the controller provides type info to the UI a lot of messy boilerplate is 
         row = layout.row
         row.prop(context.object, "some_object_property")
         row.tool("mesh.subdivide")
-
-
-

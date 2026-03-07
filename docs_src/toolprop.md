@@ -1,21 +1,31 @@
+
+
+<!-- toc -->
+
+- [Tool Properties](#tool-properties)
+  * [API](#api)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
 # Tool Properties
 
 Tool Properties are generic typed value containers.  They
 store things like:
 
-* Numbers (floats, integers)
-* Vectors
-* Simple lists
-* Enumerations
-* Bitflags
+- Numbers (floats, integers)
+- Vectors
+- Simple lists
+- Enumerations
+- Bitflags
 
 Tool properties also store various UX related data:
 
-* Ranges
-* Tooltips
-* UI names
-* Slider step sizes
-* Number units
+- Ranges
+- Tooltips
+- UI names
+- Slider step sizes
+- Number units
 
 Tool properties are used by the ToolOp API
 (the basic operators that implement the undo stack)
@@ -33,11 +43,10 @@ class ToolProperty {
 
     setValue(v) {
     }
-    
+
     //add event callback, type should be 'change'
     on(type, cb) {
     }
 }
 
 </pre>
-

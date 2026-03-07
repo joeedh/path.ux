@@ -1,18 +1,33 @@
-#Datapath Controller 
-The controller is the glue by which the view (or UI) queries the model (application state), 
-and is loosely based on Blender's RNA system.  UI code doesn't hold references to model 
-objects; instead it holds special special "data paths".  Objects in the model are wrapped 
-in a special API that describes all the type information a UI needs (e.g. property types, 
-icon, tooltips, numeric ranges, etc).  Simple paths are used to lookup data in the model 
+
+
+<!-- toc -->
+
+- [Datapath Controller](#datapath-controller)
+  * [simple_controller.js](#simple_controllerjs)
+  * [Type-In-Place API](#type-in-place-api)
+  * [Object Wrapping Example](#object-wrapping-example)
+<!-- regenerate with pnpm markdown-toc -->
+
+<!-- tocstop -->
+
+# Datapath Controller
+
+The controller is the glue by which the view (or UI) queries the model (application state),
+and is loosely based on Blender's RNA system.  UI code doesn't hold references to model
+objects; instead it holds special special "data paths".  Objects in the model are wrapped
+in a special API that describes all the type information a UI needs (e.g. property types,
+icon, tooltips, numeric ranges, etc).  Simple paths are used to lookup data in the model
 (e.g. ```obj.property.something[bleh]```).
 
-Blender's RNA was originally created to provide one wrapper API that could power Blender's UI, 
+Blender's RNA was originally created to provide one wrapper API that could power Blender's UI,
 scripting, and animation systems.  
 
 ## simple_controller.js
-See [DataAPI](@DataAPI). 
+
+See [DataAPI](@DataAPI).
 
 ## Type-In-Place API
+
 Originally path.ux was designed to strictly separate the code that wraps model object from
 the code that builds UIs.  A new API that does both is in the works.
 
