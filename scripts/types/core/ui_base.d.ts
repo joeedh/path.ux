@@ -3,6 +3,33 @@ import { ToolProperty } from "../../path-controller/types/toolsys/toolprop";
 
 export as namespace ui_base;
 
+export enum PackFlags {
+  INHERIT_WIDTH = 1,
+  INHERIT_HEIGHT = 2,
+  VERTICAL = 4,
+  USE_ICONS = 8,
+  SMALL_ICON = 16,
+  LARGE_ICON = 32,
+
+  FORCE_PROP_LABELS = 64, //force propeties (Container.prototype.prop()) to always have labels
+  PUT_FLAG_CHECKS_IN_COLUMNS = 128, //group flag property checkmarks in columns (doesn't apply to icons)
+
+  WRAP_CHECKBOXES = 256,
+
+  //internal flags
+  STRIP_HORIZ = 512,
+  STRIP_VERT = 1024,
+  STRIP = 512 | 1024,
+  SIMPLE_NUMSLIDERS = 2048,
+  FORCE_ROLLER_SLIDER = 4096,
+  HIDE_CHECK_MARKS = 1 << 13,
+  NO_NUMSLIDER_TEXTBOX = 1 << 14,
+  CUSTOM_ICON_SHEET = 1 << 15,
+  CUSTOM_ICON_SHEET_START = 20, //custom icon sheet bits are shifted to here
+  NO_UPDATE = 1 << 16,
+  LABEL_ON_RIGHT = 1 << 17,
+}
+
 type pathUXInt = number;
 
 import { Context } from "./context";
@@ -124,7 +151,7 @@ declare class UIBase<CTX extends Context = Context> extends HTMLElement {
 
   loadData(json: any): this;
 
-  animate(extraHandlers?: any, domAnimateOptions?: any): Animator
+  animate(extraHandlers?: any, domAnimateOptions?: any): Animator;
 }
 
 /**
