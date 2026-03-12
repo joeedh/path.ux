@@ -39,12 +39,12 @@ import { Animator, AnimatorHandlers } from "./anim";
 export declare function color2css(color: IVector4): string;
 
 export declare function css2color(css: string): number[];
-declare interface IUIBaseDef {
+interface IUIBaseDef {
   tagname: string;
   style?: string;
 }
 
-declare interface IUIBaseConstructor<Type> {
+interface IUIBaseConstructor<Type> {
   new (): Type;
 
   define(): IUIBaseDef;

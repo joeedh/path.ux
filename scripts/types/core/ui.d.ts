@@ -33,6 +33,12 @@ export interface SliderArgs {
   defaultval: number
 }
 
+interface StripStyle {
+  margin1?: number
+  margin2?: number
+  horiz?: boolean
+}
+
 declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
   dataPrefix: string
   clear()
@@ -44,6 +50,7 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
   pathlabel(inpath, label = undefined, packflag = 0): UIBase<CTX>
 
   row(packflag?: pathUXInt): RowFrame<CTX>
+  strip(themeClass_or_obj?: string | StripStyle): Container<CTX>
 
   col(packflag?: pathUXInt): ColumnFrame<CTX>
 
