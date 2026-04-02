@@ -10,9 +10,10 @@ export declare enum ContextFlags {
   IS_VIEW = 1,
 }
 
-declare class ContextOverlay<AppState = any> {
+declare class ContextOverlay<AppState = any, CTX extends Context = Context> {
   constructor(appstate: AppState)
   state: AppState
+  ctx: CTX
 }
 
 declare interface IContextConstructor<AppState, Overlays extends ContextOverlay = {}> {

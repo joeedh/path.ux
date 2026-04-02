@@ -4,6 +4,8 @@ import { Container } from "../core/ui";
 import { Context } from "../core/context";
 import { KeyMap } from "../../path-controller/types/util/simple_events";
 import { Screen } from "./FrameManager";
+import { IVector } from "../pathux";
+import { StructReader } from "../../path-controller/types/util/nstructjs";
 
 export { Screen };
 
@@ -45,9 +47,9 @@ export declare class Area<CTX = Context> extends UIBase<CTX> {
 
   on_keydown(e: KeyboardEvent): void;
 
-  push_ctx_active(): void;
+  push_ctx_active(dontSetLastRef?: boolean): void;
 
-  pop_ctx_active(): void;
+  pop_ctx_active(dontSetLastRef?: boolean): void;
 
   on_area_active(): void;
 
@@ -57,16 +59,22 @@ export declare class Area<CTX = Context> extends UIBase<CTX> {
 
   on_area_focus(): void;
 
+  on_resize(size: IVector, oldsize?: IVector): void;
+  
   getScreen(): Screen<CTX>;
 
   makeHeader(container: Container<CTX>, addHelpPicker?: boolean): void;
 
+  loadSTRUCT(reader: StructReader<this>): void
+  
   static getActiveArea<T extends Area = Area>(type?: IAreaConstructor<T>): T | undefined;
 
   static register<T extends Area = Area>(type: IAreaConstructor<T>): void;
 }
 
 export declare class ScreenArea<CTX = Context> extends UIBase<CTX> {
+  pos: Vector2;
+  size: Vector2;
   area: Area<CTX>;
 
   /** @deprecated */

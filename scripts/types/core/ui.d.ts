@@ -2,19 +2,29 @@ import {Context} from './context'
 
 export as namespace ui
 
-import {UIBase, pathUXInt} from './ui_base'
+import {PackFlags, UIBase, pathUXInt} from './ui_base'
 import {TabContainer} from '../widgets/ui_tabs'
 import {ListBox} from '../widgets/ui_listbox'
 import {ToolProperty} from '../pathux'
+import { Menu, MenuTemplate } from '../widgets/ui_menu'
 
-export interface ListEnumArgs {
-  mass_set_path?: string
-  enumDef?: string
+type Enum = {[k: string]: string | number}
+
+type ListEnum<CTX extends Context, ENUM extends Enum = Enum> = Omit<UIBase<CTX>, 'onselect'> & {
+  onselect: (id: string | number) => void
+  internalDisabled?: boolean
+  setValue(value: Enum): void
+  getValue(value: Enum): void
+}
+
+export interface ListEnumArgs<ENUM extends Enum = Enum> {
   name?: string
+  mass_set_path?: string
+  enumDef?: ENUM
   callback?: Function
-  iconmap?: object
+  iconmap?: {[k in keyof ENUM]?: number}
   packflag?: pathUXInt
-  defaultval: number | string
+  defaultval?: number | string
 }
 
 export interface SliderArgs {
@@ -46,15 +56,17 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
   add(child: UIBase<CTX>)
 
   prop(path: string, packflag?: pathUXInt, massSetPath?: string): UIBase<CTX>
-  
-  pathlabel(inpath, label = undefined, packflag = 0): UIBase<CTX>
+
+  pathlabel(path, label = undefined, packflag = 0): UIBase<CTX>
 
   row(packflag?: pathUXInt): RowFrame<CTX>
   strip(themeClass_or_obj?: string | StripStyle): Container<CTX>
 
   col(packflag?: pathUXInt): ColumnFrame<CTX>
 
-  panel(label: string): Container<CTX> & { closed: boolean }
+  dynamicMenu(title, list, packflag = 0): Menu
+  menu(title: string, template: MenuTemplate, packflag?: PackFlags): Menu
+  panel(label: string): Container<CTX> & {closed: boolean}
 
   tabs(position: 'top' | 'bottom' | 'left' | 'right', packflag?: number): TabContainer<CTX>
 
@@ -64,27 +76,27 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   colorbutton(str: string): UIBase<CTX>
 
-  iconbutton(icon: number, description: string, cb: () => void, thisvar?: any, packflag?: number): UIBase<CTX>
+  iconbutton(icon: number, description: string, cb: () => void, thisvar?: any, packflag?: number): IconButton<CTX>
 
-  button(string: string, cb: () => void, thisvar?: any, id?: any, packflag?: number): UIBase<CTX>
+  button(string: string, cb: () => void, thisvar?: any, id?: any, packflag?: number): Button<CTX>
 
   vecpopup(path: string): UIBase<CTX>
 
   table(): TableFrame<CTX>
 
   listenum(
-    inpath: string,
+    path?: string,
     name: string,
     enumDef: object,
     defaultval?: any,
     callback?: Function,
     iconmap?: object,
     packflag?: pathUXInt
-  ): UIBase<CTX>
-  listenum(inpath: string, args?: ListEnumArgs): UIBase<CTX>
+  ): ListEnum<CTX>
+  listenum(path?: string, args?: ListEnumArgs): ListEnum<CTX>
 
   slider(
-    inpath: string,
+    path: string,
     name: string,
     defaultval: number,
     min: number,
@@ -95,7 +107,7 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
     callback: Function,
     packflag: number
   ): UIBase<CTX>
-  slider(inpath: string, args: SliderArgs): UIBase<CTX>
+  slider(path: string, args: SliderArgs): UIBase<CTX>
 
   tool(
     cls_or_path: (new () => ToolProperty<{}, {}, CTX>) | string,
@@ -119,9 +131,6 @@ declare class Container<CTX extends Context = Context> extends UIBase<CTX> {
 
   /** Returns previous useIcons state. */
   useIcons(state?: boolean | number): number
-
-  background: string
-
   clear(): void
 
   inherit_packflag: number

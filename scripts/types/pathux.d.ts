@@ -11,6 +11,8 @@ export * from "./widgets/ui_tabs";
 export * from './widgets/ui_textbox'
 export * from './widgets/ui_widgets'
 
+export declare function eventWasTouch(e: Event): boolean;
+
 import * as simple from "./simple/simple";
 export { simple };
 

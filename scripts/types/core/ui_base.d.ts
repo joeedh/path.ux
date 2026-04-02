@@ -1,7 +1,7 @@
-import { PathPropMeta } from "../../path-controller/types/controller/controller_base";
-import { ToolProperty } from "../../path-controller/types/toolsys/toolprop";
+import {PathPropMeta} from '../../path-controller/types/controller/controller_base'
+import {ToolProperty} from '../../path-controller/types/toolsys/toolprop'
 
-export as namespace ui_base;
+export as namespace ui_base
 
 export enum PackFlags {
   INHERIT_WIDTH = 1,
@@ -30,112 +30,140 @@ export enum PackFlags {
   LABEL_ON_RIGHT = 1 << 17,
 }
 
-type pathUXInt = number;
+type pathUXInt = number
 
-import { Context } from "./context";
-import { INumVector, IVector4 } from "../../path-controller/types/util/vectormath";
-import { Animator, AnimatorHandlers } from "./anim";
+import {Context} from './context'
+import {INumVector, IVector4} from '../../path-controller/types/util/vectormath'
+import {Animator, AnimatorHandlers} from './anim'
 
-export declare function color2css(color: IVector4): string;
+export declare function color2css(color: IVector4): string
 
-export declare function css2color(css: string): number[];
+export declare function css2color(css: string): number[]
 interface IUIBaseDef {
-  tagname: string;
-  style?: string;
+  tagname: string
+  style?: string
 }
 
 interface IUIBaseConstructor<Type> {
-  new (): Type;
+  new (): Type
 
-  define(): IUIBaseDef;
+  define(): IUIBaseDef
+}
+
+type AfterAspect<ThisCls, ARGS extends any[], RET, FUNC extends (...args: any) => RET> = {
+  (...args): RET
+  after(cb: () => void)
+  after(cb: (this: ThisCls) => void)
 }
 
 declare class UIBase<CTX extends Context = Context> extends HTMLElement {
-  ["constructor"]: IUIBaseConstructor<this>;
+  ['constructor']: IUIBaseConstructor<this>
 
-  static createElement<CTX extends Context, T extends UIBase = UIBase<CTX>>(tag: string): T;
+  static createElement<CTX extends Context, T extends UIBase = UIBase<CTX>>(tag: string): T
 
-  static getDPI(): number;
+  static getDPI(): number
 
-  ctx: CTX;
+  ctx: CTX
 
-  parentWidget?: UIBase<CTX>;
+  parentWidget?: UIBase<CTX>
 
-  constructor();
+  constructor()
 
-  useDataPathUndo: boolean;
-  shadow: ShadowRoot;
+  disabled?: boolean
+
+  useDataPathUndo: boolean
+  shadow: ShadowRoot
 
   /** called regularly by a setInterval timer, see FrameManager.listen*/
-  update(): void;
+  update(): void
+  //update(): AfterAspect<this, [], void>
 
   /** call .update and all children's .update methods recursively */
-  flushUpdate(): void;
+  flushUpdate(): void
 
   /* called after constructor, since DOM limits what you can do in constructor
    *  (e.g. you can't modifer .style or set attributes)*/
-  init(): void;
+  init(): void
+
+  /* pick an element or a child element */
+  pickElement(
+    x: number,
+    y: number,
+    args?: {
+      //
+      nodeclass: UIBase
+      excluded_classes: UIBase[]
+      clip?: boolean
+      mouseEvent?: PointerEvent
+    },
+    // @unused @deprecated
+    marginy = 0,
+    // @deprecated
+    nodeclass = UIBase,
+    // @deprecated
+    excluded_classes = undefined
+  )
 
   /*queue a function callback, multiple repeated calls will be ignored*/
-  doOnce(func: Function): void;
+  doOnce(func: Function): void
 
-  setCSS(): void;
+  setCSS(): void
 
-  noMarginsOrPadding(): this;
+  noMarginsOrPadding(): this
 
-  getPathValue<T = any>(ctx: any, path: string): T;
+  getPathValue<T = any>(ctx: any, path: string): T
 
-  setPathValueUndo<T = any>(ctx: any, path: string, value: T): void;
+  setPathValueUndo<T = any>(ctx: any, path: string, value: T): void
 
-  setPathValue<T = any>(ctx: any, path: string, value: T): void;
+  setPathValue<T = any>(ctx: any, path: string, value: T): void
 
   getPathMeta<T = any, PropType extends ToolProperty<any> = ToolProperty<any>>(
     ctx: any,
     path: string
-  ): PathPropMeta<T, P> | undefined;
+  ): PathPropMeta<T, P> | undefined
 
   //getPathMeta<T = any>(ctx: any, path: string)
-  loadNumConstraints(prop: ToolProperty<any>, dom: HTMLElement, onModifiedCallback: (elem: UIBase) => any);
+  loadNumConstraints(prop: ToolProperty<any>, dom: HTMLElement, onModifiedCallback: (elem: UIBase) => any)
 
-  undoBreakPoint(): any;
+  undoBreakPoint(): any
 
   /* float element by setting z-index and setting position to absolute*/
-  float(x: number, y: number, zindex: number): void;
-  float(x: number, y: number): void;
+  float(x: number, y: number, zindex: number): void
+  float(x: number, y: number): void
 
-  overrideDefault(key: string, val: string | number, localOnly: boolean): void;
+  overrideDefault(key: string, val: string | number, localOnly: boolean): void
 
-  overrideClass(style: string): void;
+  overrideClass(style: string): void
 
-  overrideClassDefault(style: string, key: string, value: string | number): void;
+  overrideClassDefault(style: string, key: string, value: string | number): void
 
   getDefault(
     key: string,
     checkForMobile?: boolean,
     defaultval?: string | number,
     inherit?: boolean
-  ): string | number | boolean;
+  ): string | number | boolean
 
-  getStyleClass(): string;
+  getStyleClass(): string
 
-  hasClassDefault(key: string): boolean;
+  hasClassDefault(key: string): boolean
 
   getClassDefault(
     key: string,
     checkForMobile?: boolean,
     defaultval?: string | number,
     inherit?: boolean
-  ): string | number | boolean;
+  ): string | number | boolean
 
-  overrideTheme(theme: any): this;
+  overrideTheme(theme: any): this
 
   animate(
     keyframes: Keyframe[] | PropertyIndexedKeyframes | null | AnimatorHandlers,
     options?: number | KeyframeAnimationOptions
-  ): Animator | Animation;
+  ): Animator | Animation
   //animate(handlers?: any): Animator
 
-  static register(cls: any): void;
+  static register(cls: any): void
 
   /**
    * for saving ui state.
@@ -147,21 +175,23 @@ declare class UIBase<CTX extends Context = Context> extends HTMLElement {
    * it patches it; for true serialization use
    * the toJSON/loadJSON or STRUCT interfaces.
    */
-  saveData(): any;
+  saveData(): any
 
-  loadData(json: any): this;
+  loadData(json: any): this
 
-  animate(extraHandlers?: any, domAnimateOptions?: any): Animator;
+  animate(extraHandlers?: any, domAnimateOptions?: any): Animator
+  
+  background: string
 }
 
 /**
  * Saves 'euphemeral' state for UI elements (e.g. scroll, collapsed/open panels, tab states, etc)
  * into a string buffer.
  */
-export declare function saveUIData<CTX extends Context>(elem: UIBase<CTX>, name: string): string;
+export declare function saveUIData<CTX extends Context>(elem: UIBase<CTX>, name: string): string
 
 /**
  * Loads 'euphemeral' state saved by saveUIData.  Child elements that no longer exist
  * will be ignored; this is by design.
  */
-export declare function loadUIData<CTX extends Context>(elem: UIBase<CTX>, uiData: string);
+export declare function loadUIData<CTX extends Context>(elem: UIBase<CTX>, uiData: string)
