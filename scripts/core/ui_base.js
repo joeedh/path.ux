@@ -3488,7 +3488,7 @@ export class UIBase extends HTMLElement {
     while (p && p !== lastp && p !== UIBase && p !== Object) {
       let def = p.define();
 
-      if (def.style) {
+      if (def?.style) {
         return def.style;
       }
 

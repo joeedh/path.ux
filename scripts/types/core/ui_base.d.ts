@@ -69,7 +69,8 @@ declare class UIBase<CTX extends Context = Context> extends HTMLElement {
 
   constructor()
 
-  disabled?: boolean
+  get disabled(): boolean
+  set disabled(s: boolean)
 
   useDataPathUndo: boolean
   shadow: ShadowRoot
