@@ -7,6 +7,7 @@ import * as events from '../path-controller/util/events.js';
 import * as ui from '../core/ui.js';
 import {loadUIData, saveUIData} from '../core/ui_base.js';
 import {keymap} from '../path-controller/util/events.js';
+import { fromVisualViewport } from '../core/ui_visualviewport.js';
 
 let UIBase      = ui_base.UIBase,
     PackFlags   = ui_base.PackFlags,
@@ -477,8 +478,22 @@ export class TabBar extends UIBase {
   _domouse(e) {
     let r = this.canvas.getClientRects()[0];
 
-    let mx = e.x - r.x;
-    let my = e.y - r.y;
+    console.log('a')
+
+    let ex = e.x;
+    let ey = e.y;
+    let rx = r.x;
+    let ry = r.y;
+    //[ex, ey] = fromVisualViewport(ex, ey);
+    //[rx, ry] = fromVisualViewport(rx, ry);
+
+    let mx = ex - rx;
+    let my = ey - ry;
+    console.log(mx, my)
+
+    //console.log('a', mx, my);
+    //[mx, my] = fromVisualViewport(mx, my);
+    //console.log('b', mx, my);
 
     let dpi = this.getDPI();
 

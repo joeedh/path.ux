@@ -1,4 +1,5 @@
 import {ToolTipViewer} from "./FrameManager_ops.js";
+import {toVisualViewport} from '../core/ui_visualviewport.js'
 
 let _FrameManager = undefined;
 import '../widgets/dragbox.js';
@@ -614,15 +615,13 @@ export class Screen extends ui_base.UIBase {
 
     if (typeof elem_or_x === "object") {
       let r = elem_or_x.getClientRects()[0];
-
       x = r.x;
       y = r.y;
     } else {
       x = elem_or_x;
     }
 
-    x += window.scrollX;
-    y += window.scrollY;
+    //[x, y] = toVisualViewport(x, y, false)
 
     let container = UIBase.createElement("container-x");
 
@@ -924,31 +923,36 @@ export class Screen extends ui_base.UIBase {
     let height = window.innerHeight;
 
     let ratio = window.outerHeight/window.innerHeight;
-    let scale = visualViewport.scale;
+    let scale = 1.0 //visualViewport.scale;
 
     let pad = 4;
-    width = visualViewport.width*scale - pad;
-    height = visualViewport.height*scale - pad;
+    width = window.innerWidth - pad;
+    height = window.innerHeight - pad;
+        
+    //do not try to undo pinch zoom anymoe
+    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
-    let ox = visualViewport.offsetLeft;
-    let oy = visualViewport.offsetTop;
+    //let ox = visualViewport.offsetLeft;
+    //let oy = visualViewport.offsetTop;
 
     if (cconst.DEBUG.customWindowSize) {
       let s = cconst.DEBUG.customWindowSize;
       width = s.width;
       height = s.height;
-      ox = 0;
-      oy = 0;
+      //ox = 0;
+      //oy = 0;
       window._DEBUG = cconst.DEBUG;
     }
 
-    let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
+    let key = this._calcSizeKey(width, height, 0/*ox*/, 0/*oy*/, devicePixelRatio, scale);
 
     /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
     document.body.style.margin = document.body.style.padding = "0px";
-    document.body.style["transform-origin"] = "top left";
-    document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+    //document.body.style["transform-origin"] = "top left";
 
+    // do not try to undo pinch zoom anymoe
+    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
     //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
     if (key !== this._last_ckey1) {
@@ -957,9 +961,6 @@ export class Screen extends ui_base.UIBase {
 
       this.on_resize(this.size, [width, height], false);
       this.on_resize(this.size, this.size, false);
-
-      let scale = visualViewport.scale;
-
 
       this.regenBorders();
 

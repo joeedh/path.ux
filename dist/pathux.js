@@ -10424,6 +10424,18 @@ function makeVector4(BaseVector, structName = 'vec4', structType = 'float') {
       return `rgba(${r},${g},${b},${a})`
     }
 
+    load2(b) {
+      this[0] = b[0];
+      this[1] = b[1];
+      return this
+    }
+    load3(b) {
+      this[0] = b[0];
+      this[1] = b[1];
+      this[2] = b[2];
+      return this
+    }
+    
     loadXYZW(x, y, z, w) {
       this[0] = x;
       this[1] = y;
@@ -10603,6 +10615,12 @@ function makeVector3(BaseVector, structName = 'vec3', structType = 'float', cust
       return \`rgb(\${r},\${g},\${b})\`
     }
 
+    load2(b) {
+      this[0] = b[0]
+      this[1] = b[1]
+      return this
+    }
+      
     loadXYZ(x, y, z) {
       this[0] = x;
       this[1] = y;
@@ -15687,6 +15705,10 @@ var config$1 = /*#__PURE__*/Object.freeze({
 let modalstack$1 = [];
 let singleMouseCBs = {};
 
+function consolelog() {
+  //  onsole.log(...arguments)
+}
+
 function debugDomEvents() {
   let cbsymbol = Symbol("event-callback");
   let thsymbol = Symbol("debug-info");
@@ -16129,7 +16151,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
       if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
-
+      
       if (touchmap[type] in ret.handlers) {
         let type2 = touchmap[type];
 
@@ -16291,7 +16313,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
     } catch (error) {
       print_stack$1(error);
 
-      console.log("attempting fallback");
+      consolelog("attempting fallback");
 
       for (let k in ret.pointer) {
         if (k !== "elem" && k !== "pointerId") {
@@ -16322,8 +16344,6 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
           obj[k2] = v;
         }
       }
-
-      console.log(obj);
 
       return pushModalLight(obj, autoStopPropagation);
     }
@@ -20010,20 +20030,14 @@ function point_in_hex(p, boxverts, boxfacecents = undefined, boxfacenormals = un
     if (1) {
       t1.normalize();
       t2.normalize();
-
-      //console.log(i, "DOT", n.dot(t1).toFixed(5), n, t1);
     }
 
     if (t1.dot(t2) < 0) {
-      //console.log("\n");
-      ret = false;
       return false;
     }
   }
 
-  //console.log("\n");
   return ret;
-  //return true;
 }
 
 const boxverts_tmp = new Array(8);
@@ -28843,28 +28857,28 @@ ToolOp.register(DataPathSetOp);
 let _udigest$1 = new HashDigest();
 
 function feq(a, b) {
-  return Math.abs(a - b) < 0.00001;
+  return Math.abs(a - b) < 0.00001
 }
 
 class EquationCurve extends CurveTypeData {
   constructor(type) {
     super();
 
-    this.equation = "x";
-    this._last_equation = "";
+    this.equation = 'x';
+    this._last_equation = '';
     this._last_xrange = new Vector2$b();
     this._func = undefined;
   }
 
   get hasGUI() {
-    return this.uidata !== undefined;
+    return this.uidata !== undefined
   }
 
   static define() {
     return {
-      uiname  : "Equation",
-      name    : "equation",
-      typeName: "EquationCurve"
+      uiname  : 'Equation',
+      name    : 'equation',
+      typeName: 'EquationCurve',
     }
   }
 
@@ -28877,19 +28891,19 @@ class EquationCurve extends CurveTypeData {
     d.add(this.parent.xRange[0]);
     d.add(this.parent.xRange[1]);
 
-    return d.get();
+    return d.get()
   }
 
   equals(b) {
-    return super.equals(b) && this.equation === b.equation;
+    return super.equals(b) && this.equation === b.equation
   }
 
   toJSON() {
     let ret = super.toJSON();
 
     return Object.assign(ret, {
-      equation: this.equation
-    });
+      equation: this.equation,
+    })
   }
 
   loadJSON(obj) {
@@ -28899,7 +28913,7 @@ class EquationCurve extends CurveTypeData {
       this.equation = obj.equation;
     }
 
-    return this;
+    return this
   }
 
   makeGUI(container, canvas, drawTransform) {
@@ -28911,7 +28925,7 @@ class EquationCurve extends CurveTypeData {
 
     let row = container.row();
 
-    let text = this.uidata.textbox = row.textbox(undefined, "" + this.equation);
+    let text = (this.uidata.textbox = row.textbox(undefined, '' + this.equation));
     text.onchange = (val) => {
       console.log(val);
       this.equation = val;
@@ -28919,8 +28933,7 @@ class EquationCurve extends CurveTypeData {
       this.redraw();
     };
 
-    container.label("Equation");
-
+    container.label('Equation');
   }
 
   killGUI(dom, gui, canvas, g, draw_transform) {
@@ -28952,24 +28965,39 @@ class EquationCurve extends CurveTypeData {
       this._evaluate(0.0);
 
       if (this._haserror) {
-        console.warn("ERROR!");
-        return 0.0;
+        console.warn('ERROR!');
+        return 0.0
       }
     }
 
-    return this._func(s);
+    return this._func(s)
   }
 
   #makeFunc() {
     this._func = undefined;
 
-    var sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
-        e                                                = Math.E, E                                    = Math.E, tan                      = Math.tan, abs = Math.abs,
-        floor                                            = Math.floor, ceil = Math.ceil, acos = Math.acos,
-        asin                                             = Math.asin, atan = Math.atan, cosh         = Math.cos,
-        sinh                                             = Math.sinh, log                            = Math.log, pow = Math.pow,
-        exp                                              = Math.exp, sqrt = Math.sqrt, cbrt           = Math.cbrt,
-        min                                              = Math.min, max = Math.max;
+    var sin = Math.sin,
+      cos = Math.cos,
+      pi = Math.PI,
+      PI = Math.PI,
+      e = Math.E,
+      E = Math.E,
+      tan = Math.tan,
+      abs = Math.abs,
+      floor = Math.floor,
+      ceil = Math.ceil,
+      acos = Math.acos,
+      asin = Math.asin,
+      atan = Math.atan,
+      cosh = Math.cos,
+      sinh = Math.sinh,
+      log = Math.log,
+      pow = Math.pow,
+      exp = Math.exp,
+      sqrt = Math.sqrt,
+      cbrt = Math.cbrt,
+      min = Math.min,
+      max = Math.max;
 
     var func;
     let code = `
@@ -28983,7 +29011,7 @@ class EquationCurve extends CurveTypeData {
       this._haserror = false;
     } catch (error) {
       this._haserror = true;
-      console.warn("Compile error!", error.message);
+      console.warn('Compile error!', error.message);
     }
 
     this._func = func;
@@ -28995,54 +29023,56 @@ class EquationCurve extends CurveTypeData {
       this._haserror = false;
 
       if (isNaN(f)) {
-        return 0.0;
+        return 0.0
       }
     } catch (error) {
       this._haserror = true;
-      console.warn("ERROR!");
-      return 0.0;
+      console.warn('ERROR!');
+      return 0.0
     }
   }
 
   derivative(s) {
     let df = 0.0001;
 
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df))/df;
-    } else if (s < df*3) {
-      return (this.evaluate(s + df) - this.evaluate(s))/df;
+    if (s > 1.0 - df * 3) {
+      return (this.evaluate(s) - this.evaluate(s - df)) / df
+    } else if (s < df * 3) {
+      return (this.evaluate(s + df) - this.evaluate(s)) / df
     } else {
-      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
+      return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df)
     }
   }
 
   derivative2(s) {
     let df = 0.0001;
 
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df))/df;
-    } else if (s < df*3) {
-      return (this.derivative(s + df) - this.derivative(s))/df;
+    if (s > 1.0 - df * 3) {
+      return (this.derivative(s) - this.derivative(s - df)) / df
+    } else if (s < df * 3) {
+      return (this.derivative(s + df) - this.derivative(s)) / df
     } else {
-      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
+      return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df)
     }
   }
 
   inverse(y) {
     let steps = 9;
-    let ds = 1.0/steps, s = 0.0;
+    let ds = 1.0 / steps,
+      s = 0.0;
     let best = undefined;
     let ret = undefined;
 
     for (let i = 0; i < steps; i++, s += ds) {
-      let s1 = s, s2 = s + ds;
+      let s1 = s,
+        s2 = s + ds;
 
       let mid;
 
       for (let j = 0; j < 11; j++) {
         let y1 = this.evaluate(s1);
         let y2 = this.evaluate(s2);
-        mid = (s1 + s2)*0.5;
+        mid = (s1 + s2) * 0.5;
 
         if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
           s2 = mid;
@@ -29059,27 +29089,23 @@ class EquationCurve extends CurveTypeData {
       }
     }
 
-    return ret === undefined ? 0.0 : ret;
+    return ret === undefined ? 0.0 : ret
   }
 
-  onActive(parent, draw_transform) {
-  }
+  onActive(parent, draw_transform) {}
 
-  onInactive(parent, draw_transform) {
-  }
+  onInactive(parent, draw_transform) {}
 
   reset() {
-    this.equation = "x";
+    this.equation = 'x';
   }
 
-  destroy() {
-  }
+  destroy() {}
 
   draw(canvas, g, draw_transform) {
     g.save();
     if (this._haserror) {
-
-      g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
+      g.fillStyle = g.strokeStyle = 'rgba(255, 50, 0, 0.25)';
       g.beginPath();
       g.rect(0, 0, 1, 1);
       g.fill();
@@ -29094,20 +29120,21 @@ class EquationCurve extends CurveTypeData {
       g.stroke();
 
       g.restore();
-      return;
+      return
     }
 
     g.restore();
   }
 }
 
-EquationCurve.STRUCT = nstructjs.inherit(EquationCurve, CurveTypeData) + `
+EquationCurve.STRUCT =
+  nstructjs.inherit(EquationCurve, CurveTypeData) +
+  `
   equation : string;
 }
 `;
 nstructjs.register(EquationCurve);
 CurveTypeData.register(EquationCurve);
-
 
 class GuassianCurve extends CurveTypeData {
   constructor(type) {
@@ -29119,14 +29146,14 @@ class GuassianCurve extends CurveTypeData {
   }
 
   get hasGUI() {
-    return this.uidata !== undefined;
+    return this.uidata !== undefined
   }
 
   static define() {
     return {
-      uiname  : "Guassian",
-      name    : "guassian",
-      typeName: "GuassianCurve"
+      uiname  : 'Guassian',
+      name    : 'guassian',
+      typeName: 'GuassianCurve',
     }
   }
 
@@ -29139,7 +29166,7 @@ class GuassianCurve extends CurveTypeData {
     d.add(this.offset);
     d.add(this.deviation);
 
-    return d.get();
+    return d.get()
   }
 
   equals(b) {
@@ -29149,7 +29176,7 @@ class GuassianCurve extends CurveTypeData {
     r = r && feq(this.offset, b.offset);
     r = r && feq(this.deviation, b.deviation);
 
-    return r;
+    return r
   }
 
   toJSON() {
@@ -29158,8 +29185,8 @@ class GuassianCurve extends CurveTypeData {
     return Object.assign(ret, {
       height   : this.height,
       offset   : this.offset,
-      deviation: this.deviation
-    });
+      deviation: this.deviation,
+    })
   }
 
   loadJSON(obj) {
@@ -29169,7 +29196,7 @@ class GuassianCurve extends CurveTypeData {
     this.offset = obj.offset;
     this.deviation = obj.deviation;
 
-    return this;
+    return this
   }
 
   makeGUI(container, canvas, drawTransform) {
@@ -29179,19 +29206,19 @@ class GuassianCurve extends CurveTypeData {
       draw_trans: drawTransform,
     };
 
-    this.uidata.hslider = container.slider(undefined, "Height", this.height, -10, 10, 0.0001);
+    this.uidata.hslider = container.slider(undefined, 'Height', this.height, -10, 10, 0.0001);
     this.uidata.hslider.onchange = () => {
       this.height = this.uidata.hslider.value;
       this.redraw();
       this.update();
     };
-    this.uidata.oslider = container.slider(undefined, "Offset", this.offset, -10, 10, 0.0001);
+    this.uidata.oslider = container.slider(undefined, 'Offset', this.offset, -10, 10, 0.0001);
     this.uidata.oslider.onchange = () => {
       this.offset = this.uidata.oslider.value;
       this.redraw();
       this.update();
     };
-    this.uidata.dslider = container.slider(undefined, "STD Deviation", this.deviation, -10, 10, 0.0001);
+    this.uidata.dslider = container.slider(undefined, 'STD Deviation', this.deviation, -10, 10, 0.0001);
     this.uidata.dslider.onchange = () => {
       this.deviation = this.uidata.dslider.value;
       this.redraw();
@@ -29217,49 +29244,51 @@ class GuassianCurve extends CurveTypeData {
   }
 
   evaluate(s) {
-    let r = this.height*Math.exp(-((s - this.offset)*(s - this.offset))/(2*this.deviation*this.deviation));
-    return r;
+    let r = this.height * Math.exp(-((s - this.offset) * (s - this.offset)) / (2 * this.deviation * this.deviation));
+    return r
   }
 
   derivative(s) {
     let df = 0.0001;
 
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df))/df;
-    } else if (s < df*3) {
-      return (this.evaluate(s + df) - this.evaluate(s))/df;
+    if (s > 1.0 - df * 3) {
+      return (this.evaluate(s) - this.evaluate(s - df)) / df
+    } else if (s < df * 3) {
+      return (this.evaluate(s + df) - this.evaluate(s)) / df
     } else {
-      return (this.evaluate(s + df) - this.evaluate(s - df))/(2*df);
+      return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df)
     }
   }
 
   derivative2(s) {
     let df = 0.0001;
 
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df))/df;
-    } else if (s < df*3) {
-      return (this.derivative(s + df) - this.derivative(s))/df;
+    if (s > 1.0 - df * 3) {
+      return (this.derivative(s) - this.derivative(s - df)) / df
+    } else if (s < df * 3) {
+      return (this.derivative(s + df) - this.derivative(s)) / df
     } else {
-      return (this.derivative(s + df) - this.derivative(s - df))/(2*df);
+      return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df)
     }
   }
 
   inverse(y) {
     let steps = 9;
-    let ds = 1.0/steps, s = 0.0;
+    let ds = 1.0 / steps,
+      s = 0.0;
     let best = undefined;
     let ret = undefined;
 
     for (let i = 0; i < steps; i++, s += ds) {
-      let s1 = s, s2 = s + ds;
+      let s1 = s,
+        s2 = s + ds;
 
       let mid;
 
       for (let j = 0; j < 11; j++) {
         let y1 = this.evaluate(s1);
         let y2 = this.evaluate(s2);
-        mid = (s1 + s2)*0.5;
+        mid = (s1 + s2) * 0.5;
 
         if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
           s2 = mid;
@@ -29276,11 +29305,13 @@ class GuassianCurve extends CurveTypeData {
       }
     }
 
-    return ret === undefined ? 0.0 : ret;
+    return ret === undefined ? 0.0 : ret
   }
 }
 
-GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
+GuassianCurve.STRUCT =
+  nstructjs.inherit(GuassianCurve, CurveTypeData) +
+  `
   height    : float;
   offset    : float;
   deviation : float;
@@ -36681,7 +36712,7 @@ let UIBase$f = class UIBase extends HTMLElement {
     while (p && p !== lastp && p !== UIBase && p !== Object) {
       let def = p.define();
 
-      if (def.style) {
+      if (def?.style) {
         return def.style;
       }
 
@@ -41797,8 +41828,8 @@ class DropBox extends OldButton {
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
     let rheight = rects.height;
-    x = rects.x - window.scrollX;
-    y = rects.y + rheight - window.scrollY; // + rects[0].height; // visualViewport.scale;
+    x = rects.x;
+    y = rects.y + rheight;
 
     if (!window.haveElectron) {
       //y -= 8;
@@ -41853,19 +41884,6 @@ class DropBox extends OldButton {
 
       return;
     }
-
-    /*
-    let w = document.createElement("div");
-    w.style["width"] = w.style["height"] = "15px";
-    w.style["background-color"] = "red";
-    w.style["z-index"] = "5000";
-    w.style["position"] = UIBase.PositionKey;
-    w.style["pointer-events"] = "none";
-    w.style["left"] = x + "px";
-    w.style["top"] = y + "px";
-
-    document.body.appendChild(w);
-    //*/
 
     let con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
     con.noMarginsOrPadding();
@@ -55289,6 +55307,32 @@ class ColorPickerButton extends UIBase$5 {
 };
 UIBase$5.internalRegister(ColorPickerButton);
 
+const toRets = cachering.fromConstructor(Vector2$b, 512);
+const fromRets = cachering.fromConstructor(Vector2$b, 512);
+
+function toVisualViewport(x, y, includeScale = false) {
+    const co = toRets.next().loadXY(x, y);
+
+    if (includeScale) {
+        co[0] += window.scrollX;
+        co[1] += window.scrollY;
+    }
+    co[0] -= visualViewport.offsetLeft*visualViewport.scale;
+    co[1] -= visualViewport.offsetTop*visualViewport.scale;
+    return co
+}
+function fromVisualViewport(x, y, includeScale = false) {
+    const co = fromRets.next().loadXY(x, y);
+
+    co[0] += visualViewport.offsetLeft*visualViewport.scale;
+    co[1] += visualViewport.offsetTop*visualViewport.scale;
+    if (includeScale) {
+        co[0] -= window.scrollX;
+        co[1] -= window.scrollY;
+    }
+    return co
+}
+
 "use strict";
 
 let UIBase$4      = UIBase$f,
@@ -55760,8 +55804,22 @@ class TabBar extends UIBase$4 {
   _domouse(e) {
     let r = this.canvas.getClientRects()[0];
 
-    let mx = e.x - r.x;
-    let my = e.y - r.y;
+    console.log('a');
+
+    let ex = e.x;
+    let ey = e.y;
+    let rx = r.x;
+    let ry = r.y;
+    //[ex, ey] = fromVisualViewport(ex, ey);
+    //[rx, ry] = fromVisualViewport(rx, ry);
+
+    let mx = ex - rx;
+    let my = ey - ry;
+    console.log(mx, my);
+
+    //console.log('a', mx, my);
+    //[mx, my] = fromVisualViewport(mx, my);
+    //console.log('b', mx, my);
 
     let dpi = this.getDPI();
 
@@ -60897,15 +60955,13 @@ class Screen extends UIBase$f {
 
     if (typeof elem_or_x === "object") {
       let r = elem_or_x.getClientRects()[0];
-
       x = r.x;
       y = r.y;
     } else {
       x = elem_or_x;
     }
 
-    x += window.scrollX;
-    y += window.scrollY;
+    //[x, y] = toVisualViewport(x, y, false)
 
     let container = UIBase$1.createElement("container-x");
 
@@ -61207,31 +61263,36 @@ class Screen extends UIBase$f {
     let height = window.innerHeight;
 
     let ratio = window.outerHeight/window.innerHeight;
-    let scale = visualViewport.scale;
+    let scale = 1.0; //visualViewport.scale;
 
     let pad = 4;
-    width = visualViewport.width*scale - pad;
-    height = visualViewport.height*scale - pad;
+    width = window.innerWidth - pad;
+    height = window.innerHeight - pad;
+        
+    //do not try to undo pinch zoom anymoe
+    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
-    let ox = visualViewport.offsetLeft;
-    let oy = visualViewport.offsetTop;
+    //let ox = visualViewport.offsetLeft;
+    //let oy = visualViewport.offsetTop;
 
     if (exports$1.DEBUG.customWindowSize) {
       let s = exports$1.DEBUG.customWindowSize;
       width = s.width;
       height = s.height;
-      ox = 0;
-      oy = 0;
+      //ox = 0;
+      //oy = 0;
       window._DEBUG = exports$1.DEBUG;
     }
 
-    let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
+    let key = this._calcSizeKey(width, height, 0/*ox*/, 0/*oy*/, devicePixelRatio, scale);
 
     /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
     document.body.style.margin = document.body.style.padding = "0px";
-    document.body.style["transform-origin"] = "top left";
-    document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+    //document.body.style["transform-origin"] = "top left";
 
+    // do not try to undo pinch zoom anymoe
+    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
     //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
     if (key !== this._last_ckey1) {
@@ -61240,9 +61301,6 @@ class Screen extends UIBase$f {
 
       this.on_resize(this.size, [width, height], false);
       this.on_resize(this.size, this.size, false);
-
-      let scale = visualViewport.scale;
-
 
       this.regenBorders();
 

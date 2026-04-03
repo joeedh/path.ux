@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "diff": ">=4.0.2",
-    "marked": ">=4.0.10",
-    "parse5": ">=6.0.0"
+    "diff": "^8.0.4",
+    "marked": "^17.0.5",
+    "parse5": "6.0.0"
   },
   "type": "module"
 }

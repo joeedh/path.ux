@@ -1,8 +1,11 @@
 {
   "dependencies": {
-    "diff": "^5.0.0",
-    "marked": "^2.0.0",
+    "diff": "^5.2.2",
+    "marked": "^2.1.3",
     "pngjs-nozlib": "^1.0.0"
   },
-  "main" : "electron_app.cjs"
+  "main": "electron_app.cjs",
+  "devDependencies": {
+    "pngjs": "^7.0.0"
+  }
 }

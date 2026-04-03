@@ -1178,8 +1178,8 @@ export class DropBox extends OldButton {
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
     let rheight = rects.height;
-    x = rects.x - window.scrollX;
-    y = rects.y + rheight - window.scrollY; // + rects[0].height; // visualViewport.scale;
+    x = rects.x;
+    y = rects.y + rheight;
 
     if (!window.haveElectron) {
       //y -= 8;
@@ -1234,19 +1234,6 @@ export class DropBox extends OldButton {
 
       return;
     }
-
-    /*
-    let w = document.createElement("div");
-    w.style["width"] = w.style["height"] = "15px";
-    w.style["background-color"] = "red";
-    w.style["z-index"] = "5000";
-    w.style["position"] = UIBase.PositionKey;
-    w.style["pointer-events"] = "none";
-    w.style["left"] = x + "px";
-    w.style["top"] = y + "px";
-
-    document.body.appendChild(w);
-    //*/
 
     let con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
     con.noMarginsOrPadding();
