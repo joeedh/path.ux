@@ -744,7 +744,7 @@ class BSplineCurve extends CurveTypeData {
       altKey     : e.altKey,
       ctrlKey    : e.ctrlKey,
       isTouch    : true,
-      commandKey : e.commandKey
+      metaKey : e.metaKey
     });
   }
   
@@ -759,7 +759,7 @@ class BSplineCurve extends CurveTypeData {
       shiftKey   : e.shiftKey,
       altKey     : e.altKey,
       ctrlKey    : e.ctrlKey,
-      commandKey : e.commandKey,
+      metaKey : e.metaKey,
       preventDefault : () => e.preventDefault(),
       stopPropagation : () => e.stopPropagation(),
       isTouch : true,
@@ -775,7 +775,7 @@ class BSplineCurve extends CurveTypeData {
       altKey     : e.altKey,
       ctrlKey    : e.ctrlKey,
       isTouch : true,
-      commandKey : e.commandKey
+      metaKey : e.metaKey
     });
   }
   

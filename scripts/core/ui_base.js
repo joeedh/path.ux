@@ -2064,8 +2064,8 @@ export class UIBase extends HTMLElement {
       /* the user's mouse cursor might not be over the element
       *  if they've tabbed to it */
 
-      let is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
-      let is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
+      let is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+      let is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
 
       if (!is_copy && !is_paste) {
         //early out, remember that pickElement is highly expensive to run

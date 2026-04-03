@@ -1433,7 +1433,7 @@ export class MenuWrangler {
     menu.textbox.focus();
     menu._ignoreFocusEvents = false;
 
-    //if (e.shiftKey || e.altKey || e.ctrlKey || e.commandKey) {
+    //if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) {
     //  return;
     //}
 

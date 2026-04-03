@@ -70,7 +70,7 @@ export class RichEditor extends TextBoxBase {
     this.textarea.setAttribute("white-space", "pre-wrap");
 
     this.textarea.addEventListener("keydown", (e) => {
-      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.metaKey)) {
         this.toggleStrikeThru();
 
         e.preventDefault();
