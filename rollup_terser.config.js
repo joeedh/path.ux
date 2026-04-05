@@ -1,4 +1,5 @@
 import { terser } from "rollup-plugin-terser";
+import typescript from "@rollup/plugin-typescript";
 
 // rollup.config.js
 export default {
@@ -12,5 +13,13 @@ export default {
     inlineDynamicImports: true
     //mangle : false
   },
-  plugins : [terser()]
+  plugins : [
+    typescript({
+      tsconfig: './tsconfig.json',
+      noEmit: false,
+      declaration: false,
+      sourceMap: true,
+    }),
+    terser()
+  ]
 };
