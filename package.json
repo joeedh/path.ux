@@ -6,7 +6,7 @@
   "browser": "true",
   "scripts": {
     "build": "bash buildtools/build.sh",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npx tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write \"scripts/**/*.{ts,js}\"",

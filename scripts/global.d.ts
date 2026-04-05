@@ -17,16 +17,19 @@ interface SymbolConstructor {
   // so uibase can find area instances
   IsAreaTag: symbol;
 }
+
+interface PathUXDebug {
+  paranoidEvents?: boolean;
+  domEventAddRemove?: boolean;
+  domEvents?: boolean;
+  areaContextPushes?: boolean;
+}
+
 interface Window {
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
   __theme: Record<string, unknown>;
-  DEBUG?: { [k: string]: boolean } & {
-    paranoidEvents?: boolean;
-    domEventAddRemove?: boolean;
-    domEvents?: boolean;
-    areaContextPushes?: boolean;
-  };
+  DEBUG?: { [k: string]: boolean } & PathUXDebug;
 
   /* ── Color utilities (production, assigned in ui_theme.js) ── */
   color2css: (c: number[], alphaOverride?: number) => string;

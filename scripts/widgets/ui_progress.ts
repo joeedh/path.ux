@@ -1,13 +1,23 @@
 import {UIBase} from '../core/ui_base.js';
+import {IContextBase} from '../core/context_base.js';
 import * as util from '../path-controller/util/util.js';
 import {keymap} from '../path-controller/util/simple_events.js';
 
-export class ProgressCircle extends UIBase {
+export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
+  canvas: HTMLCanvasElement;
+  g: CanvasRenderingContext2D;
+  declare size: number;
+  animreq: number | undefined;
+  _value: number;
+  startTime: number;
+  timer: number | undefined;
+  _oncancel: ((self: ProgressCircle<CTX>) => void) | undefined;
+
   constructor() {
     super();
 
     this.canvas = document.createElement("canvas");
-    this.g = this.canvas.getContext("2d");
+    this.g = this.canvas.getContext("2d")!;
 
     this.shadow.appendChild(this.canvas);
     this.size = 150;
@@ -23,14 +33,15 @@ export class ProgressCircle extends UIBase {
 
     //enable keyboard focus
     this.tabIndex = 0;
-    this.setAttribute("tab-index", 0);
-    this.setAttribute("tabindex", 0);
+    this.setAttribute("tab-index", "0");
+    this.setAttribute("tabindex", "0");
 
-    let onkey = (e) => {
-      switch (e.keyCode) {
+    let onkey = (e: Event) => {
+      let ke = e as KeyboardEvent;
+      switch (ke.keyCode) {
         case keymap["Escape"]:
-          if (this.oncancel) {
-            this.oncancel(this);
+          if (this._oncancel) {
+            this._oncancel(this);
           }
           break;
       }
@@ -73,11 +84,9 @@ export class ProgressCircle extends UIBase {
     g.beginPath();
     g.moveTo(0, 0);
     g.arc(0, 0, 0.45, Math.PI, -Math.PI);
-    //g.closePath()
 
     g.moveTo(0, 0);
     g.arc(0, 0, 0.2, Math.PI, -Math.PI);
-    //g.closePath()
 
     g.clip("evenodd");
 
@@ -119,7 +128,6 @@ export class ProgressCircle extends UIBase {
     g.beginPath();
     g.moveTo(0, 0);
     g.arc(0, 0, 0.4, Math.PI, -Math.PI);
-    //g.closePath()
 
     g.clip("evenodd");
 
@@ -136,7 +144,7 @@ export class ProgressCircle extends UIBase {
     g.restore();
   }
 
-  set value(percent) {
+  set value(percent: number) {
     this._value = percent;
     this.flagRedraw();
   }
@@ -152,7 +160,7 @@ export class ProgressCircle extends UIBase {
 
     this.focus();
 
-    window.setInterval(() => {
+    this.timer = window.setInterval(() => {
       if (!this.isConnected) {
         this.endTimer();
         return;
@@ -202,11 +210,11 @@ export class ProgressCircle extends UIBase {
       this.draw();
     }
 
-    this.style["display"] = "flex";
-    this.style["align-items"] = "center";
-    this.style["justify-content"] = "center";
-    this.style["width"] = "100%";
-    this.style["height"] = "100%";
+    this.style.display = "flex";
+    this.style.alignItems = "center";
+    this.style.justifyContent = "center";
+    this.style.width = "100%";
+    this.style.height = "100%";
   }
 
   static define() {

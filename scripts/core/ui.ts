@@ -210,7 +210,7 @@ export class Label<CTX extends IContextBase = IContextBase> extends ui_base.UIBa
   }
 }
 
-ui_base.UIBase.internalRegister(Label as unknown as typeof ui_base.UIBase);
+ui_base.UIBase.internalRegister(Label);
 
 export class Container<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   declare shadow: ShadowRoot;
@@ -2388,7 +2388,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
   }
 }
 
-ui_base.UIBase.internalRegister(Container as unknown as typeof ui_base.UIBase);
+ui_base.UIBase.internalRegister(Container);
 
 export class RowFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   constructor() {
@@ -2455,7 +2455,7 @@ export class RowFrame<CTX extends IContextBase = IContextBase> extends Container
   }
 }
 
-UIBase.internalRegister(RowFrame as unknown as typeof UIBase);
+UIBase.internalRegister(RowFrame);
 
 export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   constructor() {
@@ -2503,7 +2503,7 @@ export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Contai
   }
 }
 
-UIBase.internalRegister(ColumnFrame as unknown as typeof UIBase);
+UIBase.internalRegister(ColumnFrame);
 
 export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   static define() {
@@ -2584,7 +2584,7 @@ export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Con
   }
 }
 
-UIBase.internalRegister(TwoColumnFrame as unknown as typeof UIBase);
+UIBase.internalRegister(TwoColumnFrame);
 
 function parsepx(css: string): number {
   return parseFloat(css);

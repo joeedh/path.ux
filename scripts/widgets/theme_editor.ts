@@ -1,10 +1,17 @@
-import {Area} from '../screen/ScreenArea.js';
-import * as nstructjs from '../path-controller/util/struct.js';
 import {UIBase, theme, flagThemeUpdate, saveUIData, loadUIData} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
+import {IContextBase} from '../core/context_base.js';
 import {validateCSSColor, color2css, css2color, CSSFont} from '../core/ui_theme.js';
 
-export class ThemeEditor extends Container {
+interface CatKey {
+  key: string;
+  category: string;
+  help: string;
+}
+
+export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+  categoryMap: Record<string, string | CatKey>;
+
   constructor() {
     super();
 
@@ -24,7 +31,7 @@ export class ThemeEditor extends Container {
     this.build();
   }
 
-  doFolder(catkey, obj, container = this, panel = undefined, path=undefined) {
+  doFolder(catkey: CatKey, obj: any, container: any = this, panel: any = undefined, path: string[] | undefined = undefined) {
     let key = catkey.key;
 
     if (!path) {
@@ -33,13 +40,13 @@ export class ThemeEditor extends Container {
 
     if (!panel) {
       panel = container.panel(key, undefined, undefined, catkey.help);
-      panel.style["margin-left"] = "15px";
+      panel.style.marginLeft = "15px";
     }
 
     let row2 = panel.row();
     let textbox = row2.textbox(undefined, "");
 
-    let callback = (id) => {
+    let callback = (id: string) => {
       console.log("ID", id, obj, catkey);
       console.log(textbox, textbox.text, textbox.value);
 
@@ -71,10 +78,8 @@ export class ThemeEditor extends Container {
       panel.flushUpdate();
       panel.flushSetCSS();
 
-      //doFolder(catkey, obj, container = this, panel=undefined) {
-      //this.build();
       if (this.onchange) {
-        this.onchange(key, propkey, obj);
+        (this.onchange as any)(key, propkey, obj);
       }
     }
 
@@ -90,19 +95,19 @@ export class ThemeEditor extends Container {
     let col1 = row.col();
     let col2 = row.col();
 
-    let do_onchange = (key, k, obj) => {
+    let do_onchange = (key: string, k: string, _obj?: any) => {
       flagThemeUpdate();
 
       if (this.onchange) {
-        this.onchange(key, k, obj);
+        (this.onchange as any)(key, k, _obj);
       }
 
-      this.ctx.screen.completeSetCSS();
-      this.ctx.screen.completeUpdate();
+      (this.ctx as any).screen.completeSetCSS();
+      (this.ctx as any).screen.completeUpdate();
     };
 
-    let getpath = (path) => {
-      let obj = theme;
+    let getpath = (path: string[]) => {
+      let obj: any = theme;
 
       for (let i = 0; i < path.length; i++) {
         obj = obj[path[i]];
@@ -114,7 +119,7 @@ export class ThemeEditor extends Container {
     let ok = false;
     let _i = 0;
 
-    let dokey = (k, v, path) => {
+    let dokey = (k: string, v: any, path: string[]) => {
       let col = _i%2 === 0 ? col1 : col2;
 
       if (k.toLowerCase().search("flag") >= 0) {
@@ -131,7 +136,7 @@ export class ThemeEditor extends Container {
           ok = true;
           _i++;
 
-          let color = css2color(v2);
+          let color: any = css2color(v2);
           if (color.length < 3) {
             color = [color[0], color[1], color[2], 1.0];
           }
@@ -186,14 +191,14 @@ export class ThemeEditor extends Container {
         ok = true;
         _i++;
 
-        let textbox = (key) => {
+        let textbox = (key: string) => {
           panel2.label(key);
-          let tbox = panel2.textbox(undefined, v[key]);
+          let tbox = panel2.textbox(undefined, v[key as keyof CSSFont]);
 
           tbox.width = tbox.getDefault("width");
 
-          tbox.onchange = function () {
-            v[key] = this.text;
+          tbox.onchange = function (this: any) {
+            (v as any)[key] = this.text;
             do_onchange(key, k);
           }
         }
@@ -216,37 +221,13 @@ export class ThemeEditor extends Container {
           v.size = slider.value;
           do_onchange(key, k);
         }
-        slider.setAttribute("min", 1);
-        slider.setAttribute("max", 100);
+        slider.setAttribute("min", "1");
+        slider.setAttribute("max", "100");
 
         slider.baseUnit = slider.displayUnit = "none";
 
         panel2.closed = true;
       } else if (typeof v === "object") {
-        /*
-          let old = {
-            panel, row, col1, col2
-          };
-
-          let path2 = path.slice(0, path.length);
-          path2.push(k);
-
-          panel = panel.panel(k);
-          row = panel.row();
-          col1 = row.col();
-          col2 = row.col();
-          for (let k2 in v) {
-            let v2 = v[k2];
-
-            dokey(k2, v2, path2);
-          }
-
-          panel = old.panel;
-          row = old.row;
-          col1 = old.col1;
-          col2 = old.col2;
-        */
-
         let catkey2 = Object.assign({}, catkey);
         catkey2.key = k;
 
@@ -275,10 +256,10 @@ export class ThemeEditor extends Container {
 
     this.clear();
 
-    let categories = {};
+    let categories: Record<string, CatKey[]> = {};
 
     for (let k of Object.keys(theme)) {
-      let catkey;
+      let catkey: CatKey;
 
       if (k in this.categoryMap) {
         let cat = this.categoryMap[k];
@@ -307,7 +288,7 @@ export class ThemeEditor extends Container {
       categories[catkey.category].push(catkey);
     }
 
-    function strcmp(a, b) {
+    function strcmp(a: string, b: string) {
       a = a.trim().toLowerCase();
       b = b.trim().toLowerCase();
       return a < b ? -1 : (a === b ? 0 : 1);
@@ -320,7 +301,7 @@ export class ThemeEditor extends Container {
       let list = categories[k];
       list.sort((a, b) => strcmp(a.key, b.key));
 
-      let panel = this;
+      let panel: any = this;
 
       if (list.length > 1) {
         panel = this.panel(k);
@@ -328,7 +309,7 @@ export class ThemeEditor extends Container {
 
       for (let cat of list) {
         let k2 = cat.key;
-        let v = theme[k2];
+        let v = (theme as any)[k2];
 
         if (typeof v === "object") {
           this.doFolder(cat, v, panel);
@@ -347,10 +328,10 @@ export class ThemeEditor extends Container {
       this.flushUpdate();
     }
 
-    if (this.ctx && this.ctx.screen) {
+    if (this.ctx && (this.ctx as any).screen) {
       /* Fix panel spacing bug. */
       window.setTimeout(() => {
-        this.ctx.screen.completeSetCSS();
+        (this.ctx as any).screen.completeSetCSS();
       }, 100);
     }
   }

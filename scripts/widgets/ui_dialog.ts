@@ -1,8 +1,15 @@
+import {UIBase} from "../core/ui_base.js";
 import {AreaFlags} from "../screen/ScreenArea.js";
 import {keymap} from "../path-controller/util/simple_events.js";
 
-export function makePopupArea(area_class, screen, args={}) {
-  let sarea = UIBase.createElement("screenarea-x");
+interface PopupAreaArgs {
+  width?: number;
+  height?: number;
+  addEscapeKeyHandler?: boolean;
+}
+
+export function makePopupArea(area_class: unknown, screen: any, args: PopupAreaArgs = {}) {
+  let sarea: any = UIBase.createElement("screenarea-x");
 
   let width = args.width || (screen.size[0]*0.7);
   let height = args.height || (screen.size[1]*0.7);
@@ -32,7 +39,7 @@ export function makePopupArea(area_class, screen, args={}) {
   sarea.setCSS();
 
   if (addEscapeKeyHandler) {
-    sarea.on_keydown = (e) => {
+    sarea.on_keydown = (e: KeyboardEvent) => {
       if (e.keyCode === keymap.Escape) {
         screen.removeArea(sarea);
       }

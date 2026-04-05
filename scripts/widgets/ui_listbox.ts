@@ -1,45 +1,27 @@
-"use strict";
-
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath.js';
-import * as ui_base from '../core/ui_base.js';
-import * as events from '../path-controller/util/events.js';
-import * as simple_toolsys from '../path-controller/toolsys/toolsys.js';
-import * as toolprop from '../path-controller/toolsys/toolprop.js';
-
-import {TableFrame} from './ui_table.js';
-import {Container, ColumnFrame, RowFrame} from '../core/ui.js';
+import {UIBase} from '../core/ui_base.js';
+import {Container, RowFrame} from '../core/ui.js';
+import {IContextBase} from '../core/context_base.js';
 import {keymap} from '../path-controller/util/events.js';
 
-let EnumProperty = toolprop.EnumProperty,
-    PropTypes    = toolprop.PropTypes;
+class ListItem<CTX extends IContextBase = IContextBase> extends RowFrame<CTX> {
+  highlight: boolean = false;
+  is_active: boolean = false;
 
-let UIBase     = ui_base.UIBase,
-    PackFlags  = ui_base.PackFlags,
-    IconSheets = ui_base.IconSheets;
-
-function getpx(css) {
-  return parseFloat(css.trim().replace("px", ""))
-}
-
-class ListItem extends RowFrame {
   constructor() {
     super();
 
     let highlight = () => {
-      //console.log("listitem mouseover");
       this.highlight = true;
       this.setBackground();
     };
 
     let unhighlight = () => {
-      //console.log("listitem mouseleave");
       this.highlight = false;
       this.setBackground();
     };
 
     this.addEventListener("mouseover", highlight);
-    this.addEventListener("mousein", highlight);
+    this.addEventListener("mousein" as any, highlight);
 
     this.addEventListener("mouseleave", unhighlight);
     this.addEventListener("mouseout", unhighlight);
@@ -54,7 +36,7 @@ class ListItem extends RowFrame {
       }
     `;
 
-    this.shadowRoot.prepend(style);
+    this.shadowRoot!.prepend(style);
   }
 
   static define() {
@@ -69,9 +51,9 @@ class ListItem extends RowFrame {
 
     this.setAttribute("class", "listitem");
 
-    this.style["width"] = "100%";
-    this.style["height"] = this.getDefault("ItemHeight") + "px";
-    this.style["flex-grow"] = "unset";
+    this.style.width = "100%";
+    this.style.height = this.getDefault("ItemHeight") + "px";
+    this.style.flexGrow = "unset";
 
     this.setCSS();
   }
@@ -97,11 +79,20 @@ class ListItem extends RowFrame {
 
 UIBase.internalRegister(ListItem);
 
-class ListBox extends Container {
+interface ListItems extends Array<ListItem> {
+  active: ListItem | undefined;
+}
+
+class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+  items: ListItems;
+  idmap: Record<number, ListItem>;
+  highlight: boolean;
+  is_active: boolean;
+
   constructor() {
     super();
 
-    this.items = [];
+    this.items = [] as unknown as ListItems;
     this.idmap = {};
     this.items.active = undefined;
     this.highlight = false;
@@ -138,10 +129,6 @@ class ListBox extends Container {
           break;
       }
     };
-
-    //this.addEventListener("keydown", on_keydown);
-
-    //this._table =  this.table();
   }
 
   static define() {
@@ -160,24 +147,19 @@ class ListBox extends Container {
 
     this.setCSS();
 
-    this.style["width"] = this.getDefault("width") + "px";
-    this.style["height"] = this.getDefault("height") + "px";
-    this.style["overflow"] = "scroll";
-
-    //this.setAttribute("class", "listbox");
-    //this.setAttribute("tabindex", 0);
-    //this.tabIndex = 0;
+    this.style.width = this.getDefault("width") + "px";
+    this.style.height = this.getDefault("height") + "px";
+    this.style.overflow = "scroll";
   }
 
-  addItem(name, id) {
-    let item = UIBase.createElement("listitem-x");
+  addItem(name: string, id?: number) {
+    let item = UIBase.createElement("listitem-x") as ListItem;
 
-    item._id = id === undefined ? this.items.length : id;
-    this.idmap[item._id] = item;
+    item._id = (id === undefined ? this.items.length : id) as any;
+    this.idmap[(item as any)._id] = item;
 
-    //item.addEventListener("keydown", this.onkeydown);
     this.tabIndex = 1;
-    this.setAttribute("tabindex", 1);
+    this.setAttribute("tabindex", "1");
 
     this.add(item);
     this.items.push(item);
@@ -185,7 +167,7 @@ class ListBox extends Container {
     item.label(name);
     let this2 = this;
 
-    item.onclick = function () {
+    (item as any).onclick = function (this: ListItem) {
       this2.setActive(this);
       this.setBackground();
     };
@@ -193,22 +175,20 @@ class ListBox extends Container {
     return item;
   }
 
-  removeItem(item) {
+  removeItem(item: ListItem | number) {
     if (typeof item == "number") {
       item = this.idmap[item];
     }
 
     item.remove();
-    delete this.idmap[item._id];
-    this.items.remove(item);
+    delete this.idmap[(item as any)._id];
+    (this.items as any).remove(item);
   }
 
-  setActive(item) {
+  setActive(item: ListItem | number | undefined) {
     if (typeof item == "number") {
       item = this.idmap[item];
     }
-
-    //console.log("set active!");
 
     if (item === this.items.active) {
       return;
@@ -226,11 +206,11 @@ class ListBox extends Container {
       item.is_active = true;
 
       item.setBackground();
-      item.scrollIntoViewIfNeeded();
+      (item as any).scrollIntoViewIfNeeded();
     }
 
     if (this.onchange) {
-      this.onchange(item ? item._id : undefined, item);
+      (this.onchange as any)(item ? (item as any)._id : undefined, item);
     }
   }
 

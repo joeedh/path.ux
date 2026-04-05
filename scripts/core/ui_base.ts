@@ -1027,7 +1027,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   editAsBaseUnit?: boolean;
   range?: [number, number];
   // XXX review this later
-  declare value: VALUE;
+  get value(): VALUE {
+    throw new Error('implement me')
+  }
+  set value(value: VALUE) {
+    throw new Error('implement me')
+  }
   ondestroy?: () => void;
   getValue?: () => unknown;
 
@@ -1598,7 +1603,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     return tagPrefix + name;
   }
 
-  static internalRegister(cls: typeof UIBase): void {
+  static internalRegister(cls: typeof UIBase<any>): void {
     const clsAny = cls as any;
     clsAny[ClassIdSymbol] = class_idgen++;
 
@@ -1623,7 +1628,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
   }
 
-  static register(cls: typeof UIBase): void {
+  static register(cls: typeof UIBase<any>): void {
     registered_has_happened = true;
     const clsAny = cls as any;
     clsAny[ClassIdSymbol] = class_idgen++;

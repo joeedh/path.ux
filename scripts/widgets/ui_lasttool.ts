@@ -2,19 +2,20 @@ import {PackFlags, UIBase} from "../core/ui_base.js";
 import {ColumnFrame} from "../core/ui.js";
 import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 
-import {UndoFlags, ToolFlags} from "../path-controller/toolsys/toolsys.js";
+import {UndoFlags, ToolFlags, ToolOp} from "../path-controller/toolsys/toolsys.js";
 import {DataPath, DataTypes} from "../path-controller/controller/controller.js";
 
 import {ToolProperty} from '../path-controller/toolsys/toolprop.js';
 
 import * as util from '../path-controller/util/util.js';
 import cconst from '../config/const.js';
+import {IContextBase} from "../core/context_base.js";
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen = 0;
 
-export function getLastToolStruct(ctx) {
-  let ret = ctx.state._last_tool;
+export function getLastToolStruct(ctx: IContextBase) {
+  let ret = (ctx.state as any)._last_tool;
 
   if (!ret) {
     ret = ctx.toolstack.head;
@@ -28,15 +29,20 @@ export function getLastToolStruct(ctx) {
   return ret;
 }
 
-const last_tool_eventmap = [];
-//window.last_tool_eventmap = last_tool_eventmap;
+interface ToolEventEntry {
+  panel: LastToolPanel;
+  cb: (() => void) | null;
+  prop: ToolProperty;
+}
+
+const last_tool_eventmap: ToolEventEntry[] = [];
 
 /* Try to avoid memory leaks when last tool panels are hidden. */
 window.setInterval(() => {
   for (const entry of last_tool_eventmap) {
     const panel = entry.panel;
     if (!panel.isConnected || panel.hidden) {
-      if (window.DEBUG && window.DEBUG.lastToolPanel) {
+      if (window.DEBUG && (window.DEBUG as any).lastToolPanel) {
         console.log("Disconnecting last tool panel from toolstack.");
       }
 
@@ -53,7 +59,13 @@ window.setInterval(() => {
 * settings.  It assumes that recent toolops are accessible
 * in ctx.last_tool.
 * */
-export class LastToolPanel extends ColumnFrame {
+export class LastToolPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+  ignoreOnChange: boolean;
+  on_change: (() => void) | null;
+  _tool_id: number | undefined;
+  needsRebuild: boolean;
+  last_tool: ToolOp | undefined;
+
   constructor() {
     super();
 
@@ -72,11 +84,11 @@ export class LastToolPanel extends ColumnFrame {
   }
 
   /** client code can subclass and override this method */
-  getToolStackHead(ctx) {
+  getToolStackHead(ctx: CTX) {
     //don't process the root toolop
-    let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    let bad: boolean = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
     bad = bad || ctx.toolstack.cur < 0;
-    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+    bad = bad || !!(ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT);
 
     if (bad) {
       return undefined;
@@ -105,7 +117,7 @@ export class LastToolPanel extends ColumnFrame {
       return;
     }
 
-    let def = tool.constructor.tooldef();
+    let def = (tool.constructor as any).tooldef();
     let name = def.uiname !== undefined ? def.uiname : def.name;
 
     let panel = this.panel(def.uiname);
@@ -135,11 +147,11 @@ export class LastToolPanel extends ColumnFrame {
 
   unlinkEvents() {
     for (const entry of Array.from(last_tool_eventmap)) {
-      if (entry.panel === this || !entry.panel.isConnected) {
-        entry.prop.off("change", entry.cb);
-        last_tool_eventmap.remove(entry);
+      if (entry.panel === (this as any) || !entry.panel.isConnected) {
+        entry.prop.off("change", entry.cb!);
+        (last_tool_eventmap as any).remove(entry);
 
-        if (entry.panel !== this) {
+        if (entry.panel !== (this as any)) {
           entry.panel.needsRebuild = true;
         }
       }
@@ -147,7 +159,7 @@ export class LastToolPanel extends ColumnFrame {
   }
 
   /** client code can subclass and override this method */
-  buildTool(ctx, tool, panel) {
+  buildTool(ctx: CTX, tool: ToolOp, panel: any) {
     if (tool.flag & ToolFlags.PRIVATE) {
       return;
     }
@@ -157,15 +169,15 @@ export class LastToolPanel extends ColumnFrame {
 
     panel.useDataPathUndo = false;
     for (let k in tool.inputs) {
-      let prop = tool.inputs[k];
+      let prop = (tool.inputs as any)[k] as ToolProperty;
 
       if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
         continue;
       }
 
-      prop.on("change", this.on_change);
+      prop.on("change", this.on_change!);
       last_tool_eventmap.push({
-        panel: this,
+        panel: this as any,
         cb   : this.on_change,
         prop
       })
@@ -190,8 +202,6 @@ export class LastToolPanel extends ColumnFrame {
       }
     }
     this.setCSS();
-
-    //console.log("Building last tool settings");
   }
 
   update() {
@@ -202,9 +212,9 @@ export class LastToolPanel extends ColumnFrame {
       return;
     }
 
-    let tool = this.getToolStackHead(ctx);
+    let tool = this.getToolStackHead(ctx) as any;
 
-    this.needsRebuild |= tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
+    this.needsRebuild = this.needsRebuild || (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id));
 
     if (this.needsRebuild) {
       tool[LastKey] = tool_idgen++;
