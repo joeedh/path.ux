@@ -1,40 +1,57 @@
-import '../editors/docbrowser/docbrowser.js';
-import {nstructjs, ToolStack, UIBase, setIconManager, setIconMap,
-        setTheme, IconManager, keymap, ScreenArea, util,
-        HotKey, KeyMap, Screen, DataPathSetOp, buildToolSysAPI} from "../pathux.js";
+import "../editors/docbrowser/docbrowser.js";
+import {
+  nstructjs,
+  ToolStack,
+  UIBase,
+  setIconManager,
+  setIconMap,
+  setTheme,
+  IconManager,
+  keymap,
+  ScreenArea,
+  util,
+  contextWrangler,
+  HotKey,
+  KeyMap,
+  Screen,
+  DataPathSetOp,
+  buildToolSysAPI,
+} from "../pathux.js";
 
-import {ModelData} from "./state.js";
-import {defineAPI} from "../api/api_define.js"
-import {ToolContext, ViewContext} from "./context.js";
+import { ModelData } from "./state.js";
+import { defineAPI } from "../api/api_define.js";
+import { ToolContext, ViewContext } from "./context.js";
 
-import {DataLib, DataRef, DataBlock} from './datablock.js';
-import {theme} from '../theme.js';
+import { DataLib, DataRef, DataBlock } from "./datablock.js";
+import { theme } from "../theme.js";
 
-import {WorkspaceEditor} from '../editors/workspace/workspace.js';
-import {AppScreen} from "../editors/screen.js";
+import { WorkspaceEditor } from "../editors/workspace/workspace.js";
+import { AppScreen } from "../editors/screen.js";
 //import * as util from '../util/util.js';
-import './toolop.js';
-import '../editors/eventgraph/eventgraph.js';
+import "./toolop.js";
+import "../editors/eventgraph/eventgraph.js";
 
-import cconst1, {Version} from './const.js';
-import {cconst} from '../pathux.js';
+import cconst1, { Version } from "./const.js";
+import { cconst } from "../pathux.js";
 
 /*load our application's constants into pathux*/
 cconst.loadConstants(cconst1);
 
-import {MenuBarEditor} from "../editors/menu/menu.js";
+import { MenuBarEditor } from "../editors/menu/menu.js";
 
-import {PropsEditor} from "../editors/properties/properties.js";
-import {LogEditor} from "../editors/log/log_editor.js";
-import {contextWrangler} from '../../scripts/screen/ScreenArea.js';
-import {Icons} from '../editors/icon_enum.js';
+import { PropsEditor } from "../editors/properties/properties.js";
+import { LogEditor } from "../editors/log/log_editor.js";
+import { Icons } from "../editors/icon_enum.js";
 
-
-let iconmanager = new IconManager([
-  document.getElementById("iconsheet"),
-  document.getElementById("iconsheet"),
-  document.getElementById("iconsheet")
-], [[32, 16], [32, 32], [32, 48]], 16);
+let iconmanager = new IconManager(
+  [document.getElementById("iconsheet"), document.getElementById("iconsheet"), document.getElementById("iconsheet")],
+  [
+    [32, 16],
+    [32, 32],
+    [32, 48],
+  ],
+  16
+);
 
 setIconManager(iconmanager);
 setIconMap(Icons);
@@ -74,14 +91,13 @@ export class AppState {
   }
 
   genScreen() {
-    let screen = this.screen = UIBase.createElement("app-screen-x");
+    let screen = (this.screen = UIBase.createElement("app-screen-x"));
     screen.ctx = this.viewctx;
 
     if (cconst.DEBUG.customWindowSize) {
       screen.size[0] = cconst.DEBUG.customWindowSize.width;
       screen.size[1] = cconst.DEBUG.customWindowSize.height;
     }
-
 
     let sarea = this.screen.newScreenArea();
     sarea.switch_editor(WorkspaceEditor);
@@ -121,7 +137,7 @@ export class AppState {
     return screen;
   }
 
-  createFile(args={writeScreen : true, writeData : true}) {
+  createFile(args = { writeScreen: true, writeData: true }) {
     let data = [];
 
     let buf = new ArrayBuffer(8);
@@ -135,20 +151,20 @@ export class AppState {
 
     function packint(i) {
       i32[0] = i;
-      for (let i=0; i<4; i++) {
+      for (let i = 0; i < 4; i++) {
         data.push(u8[i]);
       }
     }
 
     function writestr(s) {
-      for (let i=0; i<s.length; i++) {
+      for (let i = 0; i < s.length; i++) {
         data.push(s.charCodeAt(i));
       }
     }
 
     function packfloat(i) {
       f32[0] = i;
-      for (let i=0; i<4; i++) {
+      for (let i = 0; i < 4; i++) {
         data.push(u8[i]);
       }
     }
@@ -157,7 +173,7 @@ export class AppState {
       writestr(type);
       packint(block.length);
 
-      for (let i=0; i<block.length; i++) {
+      for (let i = 0; i < block.length; i++) {
         data.push(block[i]);
       }
     }
@@ -191,7 +207,7 @@ export class AppState {
     return data;
   }
 
-  loadFile(data, args={resetToolStack : true, loadScreen : true}) {
+  loadFile(data, args = { resetToolStack: true, loadScreen: true }) {
     args.loadScreen = args.loadScreen === undefined ? true : args.loadScreen;
     args.resetToolStack = args.resetToolStack === undefined ? true : args.resetToolStack;
 
@@ -220,28 +236,28 @@ export class AppState {
 
     function readbyte() {
       _i += 1;
-      return data.getUint8(_i-1);
+      return data.getUint8(_i - 1);
     }
 
     function readint() {
       _i += 4;
-      return data.getInt32(_i-4, endian);
+      return data.getInt32(_i - 4, endian);
     }
 
     function readfloat() {
       _i += 4;
-      return data.getFloat32(_i-4, endian);
+      return data.getFloat32(_i - 4, endian);
     }
 
     function readstring() {
       let len = readint();
 
-      if (len > 1024*1024) {
+      if (len > 1024 * 1024) {
         throw new Error("file corruption error");
       }
 
       let ret = "";
-      for (let i=0; i<len; i++) {
+      for (let i = 0; i < len; i++) {
         ret += String.fromCharCode(data.getUint8(_i++));
       }
       return ret;
@@ -254,7 +270,7 @@ export class AppState {
     }
 
     let version = [];
-    for (let i=0; i<4; i++) {
+    for (let i = 0; i < 4; i++) {
       version.push(readbyte());
     }
     version = new Version().loadJSON(version);
@@ -267,10 +283,10 @@ export class AppState {
     rstruct.parse_structs(structs);
 
     while (_i < data.buffer.byteLength) {
-      let type = readfour()
+      let type = readfour();
       let len = readint();
 
-      let data2 = new DataView(data.buffer.slice(_i, _i+len));
+      let data2 = new DataView(data.buffer.slice(_i, _i + len));
 
       _i += len;
       if (type === "SCRN") {
@@ -280,7 +296,6 @@ export class AppState {
       } else {
         console.log("Unknown data type", type);
       }
-
     }
 
     console.error("DATALIB", datalib);
@@ -321,11 +336,11 @@ export class AppState {
   }
 
   createUndoFile() {
-    return this.createFile({writeScreen: false});
+    return this.createFile({ writeScreen: false });
   }
 
   loadUndoFile(data) {
-    this.loadFile(data, {resetToolStack : false, loadScreen : false});
+    this.loadFile(data, { resetToolStack: false, loadScreen: false });
   }
 
   clearLocalStorage() {
@@ -386,7 +401,8 @@ export function start() {
   };
 
   window.redraw_all = () => {
-    if (animreq) { //wait for pending draw to finish
+    if (animreq) {
+      //wait for pending draw to finish
       return;
     }
 
@@ -394,13 +410,12 @@ export function start() {
   };
 
   window.redraw_all_full = () => {
-    if (!_appstate || !_appstate.screen)
-      return;
+    if (!_appstate || !_appstate.screen) return;
 
     let screen = _appstate.screen;
 
     for (let sarea of screen.sareas) {
-      if (sarea.area && (sarea.area instanceof WorkspaceEditor)) {
+      if (sarea.area && sarea.area instanceof WorkspaceEditor) {
         sarea.area.tagFullDraw();
       }
     }

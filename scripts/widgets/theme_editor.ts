@@ -1,7 +1,8 @@
 import {UIBase, theme, flagThemeUpdate, saveUIData, loadUIData} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 import {IContextBase} from '../core/context_base.js';
-import {validateCSSColor, color2css, css2color, CSSFont} from '../core/ui_theme.js';
+import {validateCSSColor, color2css, css2color} from '../core/ui_theme.js';
+import { CSSFont } from '../core/cssfont.js';
 
 interface CatKey {
   key: string;

@@ -4,14 +4,12 @@
  */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
-import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
+import {pushModalLight, popModalLight, nstructjs, UIBase, Icons} from "../pathux.js";
 import cconst from '../config/const.js';
-import nstructjs from "../path-controller/util/struct.js";
-import {UIBase, Icons} from "../core/ui_base.js";
 import {platform} from '../platforms/platform.js';
 
 let tinymceLoaded = false;
-import('../lib/tinymce/tinymce.js').then(mod => {
+import('../lib/tinymce/tinymce.cjs').then(mod => {
   tinymceLoaded = true;
 });
 

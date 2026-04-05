@@ -1,4 +1,4 @@
-import { CSSFont } from "./ui_theme.js";
+import { CSSFont } from "./cssfont.js";
 
 export const DefaultTheme = {
   base: {

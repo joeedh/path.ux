@@ -2,4 +2,3 @@ package
 **/node_modules/**
 .idea
 docs
-dist

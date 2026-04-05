@@ -6,6 +6,7 @@ export * from './core/ui_base.js';
 export * from './core/ui.js';
 export * from './widgets/ui_widgets.js';
 export * from './widgets/ui_widgets2.js';
+export * from './core/cssfont.js';
 export * from './core/ui_theme.js';
 export * from './core/units.js';
 export * from './widgets/ui_button.js';
@@ -23,7 +24,6 @@ export * from './widgets/ui_numsliders.js';
 export * from './widgets/ui_lasttool.js';
 export * from './widgets/ui_textbox.js';
 export * from './path-controller/util/graphpack.js';
-//export * from './docbrowser/docbrowser.js';
 
 export * from './path-controller/util/html5_fileapi.js';
 export * from './path-controller/controller.js';

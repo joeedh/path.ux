@@ -1,13 +1,23 @@
-import {Editor} from "../editor_base.js";
-import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
+import { Editor } from "../editor_base.js";
+import {
+  pushModalLight,
+  popModalLight,
+  Icons,
+  UIBase,
+  nstructjs,
+  util,
+  Vector2,
+  Matrix4,
+  cconst,
+  DocsBrowser,
+  platform as Platform
+} from "../../pathux.js";
 //import '../../lib/tinymce/js/tinymce/tinymce.js';
-import {DocsBrowser} from '../../../scripts/docbrowser/docbrowser.js';
-import {getPlatformAsync} from '../../../scripts/platforms/platform.js';
 
 let platform;
-getPlatformAsync().then(p => platform = p);
+Platform.getPlatformAsync().then((p) => (platform = p));
 
-let countstr = function(buf, s) {
+let countstr = function (buf, s) {
   let count = 0;
 
   while (buf.length > 0) {
@@ -16,26 +26,26 @@ let countstr = function(buf, s) {
       break;
     }
 
-    buf = buf.slice(i+1, buf.length);
+    buf = buf.slice(i + 1, buf.length);
     count++;
   }
 
   return count;
-}
+};
 
 function basename(path) {
   while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length-1);
+    path = path.slice(0, path.length - 1);
   }
 
   path = path.replace(/\/+/g, "/");
   path = path.split("/");
-  return path[path.length-1];
+  return path[path.length - 1];
 }
 
 function dirname(path) {
   while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length-1);
+    path = path.slice(0, path.length - 1);
   }
 
   path = path.split("/");
@@ -53,15 +63,15 @@ function dirname(path) {
   return s;
 }
 
-
 function relative(a1, b1) {
-  let a = a1, b = b1;
+  let a = a1,
+    b = b1;
 
   let i = 1;
-  while (i <= a.length && b.startsWith(a.slice(0, i+1))) {
+  while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {
     i++;
   }
-  i--
+  i--;
   let pref = "";
 
   a = a.slice(i, a.length).trim();
@@ -74,7 +84,7 @@ function relative(a1, b1) {
   }
 
   if (s.endsWith("/") && b.startsWith("/")) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
 
   return s + b;
@@ -102,7 +112,7 @@ export class DocsBrowserEditor extends Editor {
 
     this._browser = UIBase.createElement("docs-browser-x");
 
-    getPlatformAsync().then(platform => {
+    Platform.getPlatformAsync().then((platform) => {
       let base = platform.resolveURL("../");
       this._browser.pathuxBaseURL = base;
     });
@@ -132,7 +142,7 @@ export class DocsBrowserEditor extends Editor {
     if (this.savedDocument.data.trim().length > 0) {
       this.browser.loadSource(this.savedDocument.data);
     } else if (this.browser.currentPath.trim().length === 0) {
-      this.browser.load("../simple_docsys/doc_build/index.html")
+      this.browser.load("../simple_docsys/doc_build/index.html");
     }
 
     this.style["overflow"] = "scroll";
@@ -141,11 +151,13 @@ export class DocsBrowserEditor extends Editor {
       this.browser.queueSave();
     });
   }
-  static define() {return {
-    uiname    : "Docs Browser",
-    areaname  : "docs-browser-editor-x",
-    tagname   : "docs-browser-editor-x"
-  }}
+  static define() {
+    return {
+      uiname  : "Docs Browser",
+      areaname: "docs-browser-editor-x",
+      tagname : "docs-browser-editor-x",
+    };
+  }
 
   loadSTRUCT(reader) {
     reader(this);
@@ -154,7 +166,9 @@ export class DocsBrowserEditor extends Editor {
 }
 
 //Editor.register(DocsBrowserEditor);
-DocsBrowserEditor.STRUCT = nstructjs.inherit(DocsBrowserEditor, Editor) + `
+DocsBrowserEditor.STRUCT =
+  nstructjs.inherit(DocsBrowserEditor, Editor) +
+  `
   browser        : DocsBrowser;
   savedDocument  : SavedDocument;
 }
@@ -163,40 +177,40 @@ nstructjs.register(DocsBrowserEditor);
 Editor.register(DocsBrowserEditor);
 
 function oldSave() {
-    let doc = this.browser.root.contentDocument;
-    let head = doc.head;
-    let style = document.createElement("style");
-    head.appendChild(style);
+  let doc = this.browser.root.contentDocument;
+  let head = doc.head;
+  let style = document.createElement("style");
+  head.appendChild(style);
 
-    let text = "";
-    for (let sheet of doc.styleSheets) {
-      let rules;
+  let text = "";
+  for (let sheet of doc.styleSheets) {
+    let rules;
 
-      try {
-        rules = sheet.rules;
-      } catch (error) {
-        continue; //can't read rules
-      }
-      for (let rule of sheet.rules) {
-        text += rule.cssText + "\n\n";
-      }
+    try {
+      rules = sheet.rules;
+    } catch (error) {
+      continue; //can't read rules
     }
+    for (let rule of sheet.rules) {
+      text += rule.cssText + "\n\n";
+    }
+  }
 
-    style.textContent = text;
+  style.textContent = text;
 
-    let data = `<!doctype html>
+  let data = `<!doctype html>
 <html>
 ${doc.head.outerHTML.trim()}
 ${doc.body.outerHTML.trim()}
 </html>
       `;
 
-    console.log(data);
-    this.savedDocument.data = data;
-    _appstate.saveLocalStorage();
-  };
+  console.log(data);
+  this.savedDocument.data = data;
+  _appstate.saveLocalStorage();
+}
 
-  /*this.header.button("Clear", () => {
+/*this.header.button("Clear", () => {
     if (prompt("ok?", "true")) {
       this.savedDocument.data = "";
       console.log("cleared saved data");

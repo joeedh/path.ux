@@ -1116,7 +1116,7 @@ export class DropBox extends OldButton {
     };
   }
 
-  _onpress(e) {
+  _onpress = (e) => {
     this.abortToolTips(1000);
 
     if (this._menu !== undefined) {

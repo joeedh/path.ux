@@ -23,6 +23,7 @@ interface PathUXDebug {
   domEventAddRemove?: boolean;
   domEvents?: boolean;
   areaContextPushes?: boolean;
+  areadocker?: boolean;
 }
 
 interface Window {

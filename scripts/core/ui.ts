@@ -13,7 +13,7 @@ import * as ui_widgets from "../widgets/ui_widgets.js";
 import * as toolprop from "../path-controller/toolsys/toolprop.js";
 import "../path-controller/util/html5_fileapi.js";
 import { HotKey } from "../path-controller/util/simple_events.js";
-import { CSSFont } from "./ui_theme.js";
+import { CSSFont } from "./cssfont.js";
 import { theme, iconSheetFromPackFlag } from "./ui_base.js";
 
 import { createMenu, startMenu } from "../widgets/ui_menu.js";
@@ -58,7 +58,6 @@ function styl(el: { style: CSSStyleDeclaration }): Record<string, string> {
 export class Label<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   declare dom: HTMLDivElement;
   declare shadow: ShadowRoot;
-  declare packflag: number;
   declare _useDataPathUndo: boolean | undefined;
 
   _label = "";
@@ -214,13 +213,13 @@ ui_base.UIBase.internalRegister(Label);
 
 export class Container<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   declare shadow: ShadowRoot;
-  declare packflag: number;
   declare _useDataPathUndo: boolean | undefined;
   declare div: HTMLElement;
 
-  dataPrefix = "";
-  massSetPrefix = "";
-  inherit_packflag = 0;
+  // these use accessors so child classes can override them with getters/setters
+  accessor dataPrefix = "";
+  accessor massSetPrefix = "";
+  accessor inherit_packflag = 0;
   styletag!: HTMLStyleElement;
   reversed = false;
   storagePrefix = "";
@@ -423,12 +422,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
    * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse
    * @returns {Container}
    */
-  wrap(mode = "wrap") {
+  wrap(mode = "wrap"): this {
     (this.style as unknown as Record<string, string>)["flex-wrap"] = mode;
     return this;
   }
 
-  noMarginsOrPadding() {
+  noMarginsOrPadding(): this {
     super.noMarginsOrPadding();
 
     let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
@@ -488,7 +487,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
     margin1: number = this.getDefault("oneAxisPadding") as number,
     margin2 = 1,
     horiz: boolean | undefined = undefined
-  ): Container {
+  ): Container<CTX> {
     let themeClass = themeClass_or_obj as string;
 
     if (typeof themeClass_or_obj === "object") {
@@ -1070,12 +1069,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
   }
 
   label(text: string) {
-    let ret = UIBase.createElement("label-x") as Label;
+    let ret = UIBase.createElement("label-x") as Label<CTX>;
     ret.text = text;
 
     this._add(ret as unknown as ui_base.UIBase);
 
-    return ret as unknown as ui_base.UIBase;
+    return ret
   }
 
   /**
@@ -1118,7 +1117,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
 
     this._add(ret as ui_base.UIBase);
 
-    return ret as ui_base.UIBase;
+    return ret;
   }
 
   button(label: string, cb?: () => void, thisvar?: unknown, id?: unknown, packflag = 0) {
@@ -1801,9 +1800,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
       frame = this.panel(name!, name, packflag) as unknown as Container;
 
       frame.oneAxisPadding();
-      frame.setCSSAfter(
-        () => frame!.background = this.getDefault("BoxSub2BG") as string
-      );
+      frame.setCSSAfter(() => (frame!.background = this.getDefault("BoxSub2BG") as string));
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values as Record<string, unknown>) {
@@ -2256,8 +2253,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends ui_base.
     return ret;
   }
 
-  col(packflag = 0): ColumnFrame {
-    let ret = UIBase.createElement("colframe-x") as unknown as ColumnFrame;
+  col(packflag = 0): ColumnFrame<CTX> {
+    let ret = UIBase.createElement("colframe-x") as unknown as ColumnFrame<CTX>;
 
     this._container_inherit(ret as unknown as ui_base.UIBase, packflag);
 

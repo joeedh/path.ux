@@ -2,10 +2,11 @@
   "name": "path.ux",
   "version": "0.1.26",
   "description": "Html5 based UI library with blender-rna-style data binding",
-  "main": "pathux.js",
+  "main": "dist/pathux.js",
   "browser": "true",
   "scripts": {
-    "build": "bash buildtools/build.sh",
+    "build": "node buildtools/esbuild.mjs",
+    "watch": "node buildtools/esbuild.mjs --watch",
     "typecheck": "npx tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,10 +27,10 @@
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "@pathtx/prettier": "3.3.0-dev",
-    "@rollup/plugin-typescript": "^12.3.0",
     "@types/parse5": "^7.0.0",
     "diff": "^5.2.2",
     "electron": "^41.1.1",
+    "esbuild": "^0.28.0",
     "esdoc": "^1.1.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
@@ -37,8 +38,6 @@
     "marked": "^12.0.2",
     "minimist": "^1.2.8",
     "parse5": "6.0.0",
-    "rollup": "^4.60.1",
-    "rollup-plugin-terser": "^7.0.2",
     "tslib": "^2.8.1",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
@@ -52,5 +51,6 @@
   "bugs": {
     "url": "https://github.com/joeedh/path.ux/issues"
   },
-  "homepage": "https://github.com/joeedh/path.ux#readme"
+  "homepage": "https://github.com/joeedh/path.ux#readme",
+  "packageManager": "pnpm@10.30.3"
 }

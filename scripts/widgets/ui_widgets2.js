@@ -1,23 +1,29 @@
+/** @typedef {import('../path-controller/util/vectormath').Vector2} Vector2 */
+/** @typedef {import('../path-controller/util/vectormath').Vector3} Vector3 */
+/** @typedef {import('../path-controller/util/vectormath').Vector4} Vector4 */
+/** @typedef {import('../path-controller/util/vectormath').Quat} Quat */
+/** @typedef {import('../path-controller/util/vectormath').Matrix4} Matrix4 */
+
 "use strict";
-import './ui_richedit.js';
+import "./ui_richedit.js";
 
-import * as util from '../util/util.js';
-import * as ui_base from '../core/ui_base.js';
-import * as events from '../path-controller/util/events.js';
-import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
-import {RowFrame, ColumnFrame} from "../core/ui.js";
-import {isNumber, PropFlags} from "../path-controller/toolsys/toolprop.js";
+import * as util from "../util/util.js";
+import * as ui_base from "../core/ui_base.js";
+import * as events from "../path-controller/util/events.js";
+import { Vector2, Vector3, Vector4, Quat, Matrix4 } from "../path-controller/util/vectormath.js";
+import { RowFrame, ColumnFrame } from "../core/ui.js";
+import { isNumber, PropFlags } from "../path-controller/toolsys/toolprop.js";
 
-import './ui_widgets.js';
+import "./ui_widgets.js";
 
 let keymap = events.keymap;
 
-import {EnumProperty, PropTypes} from '../path-controller/toolsys/toolprop.js';
-import {UIBase, PackFlags, IconSheets, parsepx} from '../core/ui_base.js';
+import { EnumProperty, PropTypes } from "../path-controller/toolsys/toolprop.js";
+import { UIBase, PackFlags, IconSheets, parsepx } from "../core/ui_base.js";
 
-import * as units from '../core/units.js';
-import {ToolProperty} from '../path-controller/toolsys/toolprop.js';
-import {Button} from "./ui_button.js";
+import * as units from "../core/units.js";
+import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
+import { Button } from "./ui_button.js";
 
 export class VectorPopupButton extends Button {
   constructor() {
@@ -26,10 +32,19 @@ export class VectorPopupButton extends Button {
     this.value = new Vector4();
   }
 
-  static define() {return {
-    tagname : "vector-popup-button-x",
-    style : "vecPopupButton"
-  }}
+  get value() {
+    return this._value;
+  }
+  set value(/** @type{Vector2|Vector3|Vector4|Quat} */ v) {
+    this._value = v;
+  }
+
+  static define() {
+    return {
+      tagname: "vector-popup-button-x",
+      style  : "vecPopupButton",
+    };
+  }
 
   _onpress(e) {
     if (e.button && e.button !== 0) {
@@ -44,7 +59,7 @@ export class VectorPopupButton extends Button {
     popup.add(panel);
     popup.button("ok", () => {
       popup.end();
-    })
+    });
 
     if (this.hasAttribute("datapath")) {
       panel.setAttribute("datapath", this.getAttribute("datapath"));
@@ -96,11 +111,17 @@ export class VectorPopupButton extends Button {
     super.update();
     this.updateDataPath();
   }
-
 }
 UIBase.internalRegister(VectorPopupButton);
 
 export class VectorPanel extends ColumnFrame {
+  get value() {
+    return this._value;
+  }
+  set value(/** @type{Vector2|Vector3|Vector4|Quat} */ v) {
+    this._value = v;
+  }
+
   constructor() {
     super();
 
@@ -117,13 +138,13 @@ export class VectorPanel extends ColumnFrame {
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
-        get : function() {
+        get: function () {
           return this._getNumParam(key);
         },
 
-        set : function(val) {
+        set: function (val) {
           this._setNumParam(key, val);
-        }
+        },
       });
     };
 
@@ -131,12 +152,12 @@ export class VectorPanel extends ColumnFrame {
     this._range = new Array(2);
 
     Object.defineProperty(this._range, 0, {
-      get : () => this.__range[0],
-      set : (val) => this.__range[0] = val
+      get: () => this.__range[0],
+      set: (val) => (this.__range[0] = val),
     });
     Object.defineProperty(this._range, 1, {
-      get : () => this.__range[1],
-      set : (val) => this.__range[1] = val
+      get: () => this.__range[1],
+      set: (val) => (this.__range[1] = val),
     });
 
     makeParam("isInt");
@@ -161,7 +182,7 @@ export class VectorPanel extends ColumnFrame {
   }
 
   _getNumParam(key) {
-    return this["_"+key];
+    return this["_" + key];
   }
 
   _setNumParam(key, val) {
@@ -172,7 +193,7 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-    this["_"+key] = val;
+    this["_" + key] = val;
 
     for (let slider of this.sliders) {
       slider[key] = val;
@@ -197,15 +218,15 @@ export class VectorPanel extends ColumnFrame {
 
     this.sliders = [];
 
-    for (let i=0; i<this.value.length; i++) {
+    for (let i = 0; i < this.value.length; i++) {
       let slider = frame.slider(undefined, {
-        name       : this.axes[i],
-        defaultval : this.value[i],
-        min        : this.range[0],
-        max        : this.range[1],
-        step       : this.step || 0.001,
-        is_int     : this.isInt,
-        packflag   : this.packflag
+        name      : this.axes[i],
+        defaultval: this.value[i],
+        min       : this.range[0],
+        max       : this.range[1],
+        step      : this.step || 0.001,
+        is_int    : this.isInt,
+        packflag  : this.packflag,
       });
 
       slider.addLabel = false;
@@ -224,13 +245,13 @@ export class VectorPanel extends ColumnFrame {
       slider.radix = this.radix;
       slider.step = this.step;
       slider.expRate = this.expRate;
-      slider.stepIsRelative= this.stepIsRelative;
+      slider.stepIsRelative = this.stepIsRelative;
 
       if (this.stepIsRelative) {
         slider.step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
       }
 
-      slider.onchange = function(e) {
+      slider.onchange = function (e) {
         this2.value[this.axis] = this.value;
 
         if (this2.hasAttribute("datapath")) {
@@ -244,13 +265,13 @@ export class VectorPanel extends ColumnFrame {
         if (this2.onchange) {
           this2.onchange(this2.value);
         }
-      }
+      };
 
       this.sliders.push(slider);
     }
 
     if (this.hasUniformSlider) {
-      let uslider = this.uslider = UIBase.createElement("numslider-x");
+      let uslider = (this.uslider = UIBase.createElement("numslider-x"));
       row._prepend(uslider);
 
       uslider.range = this.range;
@@ -264,7 +285,7 @@ export class VectorPanel extends ColumnFrame {
       uslider.isInt = this.isInt;
       uslider.radix = this.radix;
       uslider.decimalPlaces = this.decimalPlaces;
-      uslider.stepIsRelative= this.stepIsRelative;
+      uslider.stepIsRelative = this.stepIsRelative;
 
       uslider.vertical = true;
       uslider.setValue(this.uniformValue, false);
@@ -273,7 +294,7 @@ export class VectorPanel extends ColumnFrame {
 
       uslider.onchange = () => {
         this.uniformValue = uslider.value;
-      }
+      };
     } else {
       this.uslider = undefined;
     }
@@ -284,7 +305,7 @@ export class VectorPanel extends ColumnFrame {
   get uniformValue() {
     let sum = 0.0;
 
-    for (let i=0; i<this.value.length; i++) {
+    for (let i = 0; i < this.value.length; i++) {
       sum += isNaN(this.value[i]) ? 0.0 : this.value[i];
     }
 
@@ -296,7 +317,7 @@ export class VectorPanel extends ColumnFrame {
     let doupdate = false;
 
     if (old === 0.0 || val === 0.0) {
-      doupdate = this.value.dot(this.value) !== 0.0
+      doupdate = this.value.dot(this.value) !== 0.0;
 
       this.value.zero();
     } else {
@@ -317,7 +338,7 @@ export class VectorPanel extends ColumnFrame {
         this.onchange(this.value);
       }
 
-      for (let i=0; i<this.value.length; i++) {
+      for (let i = 0; i < this.value.length; i++) {
         this.sliders[i].setValue(this.value[i], false);
         this.sliders[i]._redraw();
       }
@@ -374,7 +395,6 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-
     let meta = this.getPathMeta(this.ctx, path);
     let name = meta.uiname !== undefined ? meta.uiname : meta.name;
     if (this.hasAttribute("name")) {
@@ -387,7 +407,7 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-    let loadNumParam = (k, do_rebuild=false) => {
+    let loadNumParam = (k, do_rebuild = false) => {
       if (meta && meta[k] !== undefined && this[k] === undefined) {
         this[k] = meta[k];
 
@@ -395,8 +415,7 @@ export class VectorPanel extends ColumnFrame {
           this.doOnce(this.rebuild);
         }
       }
-    }
-
+    };
 
     loadNumParam("decimalPlaces");
     loadNumParam("baseUnit");
@@ -416,7 +435,7 @@ export class VectorPanel extends ColumnFrame {
 
     if (meta && meta.range) {
       let update = this.range[0] !== meta.range[0];
-      update= update || this.range[1] !== meta.range[1];
+      update = update || this.range[1] !== meta.range[1];
 
       this.range[0] = meta.range[0];
       this.range[1] = meta.range[1];
@@ -430,7 +449,7 @@ export class VectorPanel extends ColumnFrame {
 
     let length = val.length;
 
-    if (meta && (meta.flag & PropFlags.USE_CUSTOM_GETSET)) {
+    if (meta && meta.flag & PropFlags.USE_CUSTOM_GETSET) {
       let rdef = this.ctx.api.resolvePath(this.ctx, path);
 
       meta.ctx = this.ctx;
@@ -461,7 +480,7 @@ export class VectorPanel extends ColumnFrame {
       this.value = val;
       this.rebuild();
 
-      for (let i=0; i<this.value.length; i++) {
+      for (let i = 0; i < this.value.length; i++) {
         this.sliders[i].setValue(val[i], false);
         this.sliders[i]._redraw();
       }
@@ -473,7 +492,7 @@ export class VectorPanel extends ColumnFrame {
           this.uslider.setValue(this.uniformValue, false);
         }
 
-        for (let i=0; i<this.value.length; i++) {
+        for (let i = 0; i < this.value.length; i++) {
           this.sliders[i].setValue(val[i], false);
           this.sliders[i]._redraw();
         }
@@ -497,16 +516,16 @@ export class VectorPanel extends ColumnFrame {
       if (this.stepIsRelative) {
         this.uslider.step = ToolProperty.calcRelativeStep(this.step, this.uniformValue);
       }
-
     }
   }
 
-  static define() {return {
-    tagname : "vector-panel-x"
-  }}
+  static define() {
+    return {
+      tagname: "vector-panel-x",
+    };
+  }
 }
 UIBase.internalRegister(VectorPanel);
-
 
 export class ToolTip extends UIBase {
   constructor() {
@@ -538,8 +557,8 @@ export class ToolTip extends UIBase {
 
     let dpi = UIBase.getDPI();
 
-    x += 10/dpi;
-    y += 15/dpi;
+    x += 10 / dpi;
+    y += 15 / dpi;
 
     ret._popup = screen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
@@ -572,7 +591,7 @@ export class ToolTip extends UIBase {
     let text = this.div.textContent;
     let block = ui_base.measureTextBlock(this, text, undefined, undefined, undefined, this.getDefault("ToolTipText"));
 
-    return [block.width+50, block.height+30];
+    return [block.width + 50, block.height + 30];
   }
 
   update() {
@@ -610,11 +629,13 @@ export class ToolTip extends UIBase {
     this.div.style["font"] = font.genCSS();
   }
 
-  static define() {return {
-    tagname : "tool-tip-x",
-    style   : "tooltip"
-  }}
-};
+  static define() {
+    return {
+      tagname: "tool-tip-x",
+      style  : "tooltip",
+    };
+  }
+}
 UIBase.internalRegister(ToolTip);
 
 window._ToolTip = ToolTip;

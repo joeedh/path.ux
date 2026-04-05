@@ -1,12 +1,23 @@
 import {
-  UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
-  PackNode, PackNodeVertex, Vector2, graphPack, exportTheme
-} from '../../pathux.js';
+  UIBase,
+  PackFlags,
+  Icons,
+  nstructjs,
+  KeyMap,
+  HotKey,
+  util,
+  PackNode,
+  PackNodeVertex,
+  Vector2,
+  graphPack,
+  exportTheme,
+  loadUIData,
+  saveUIData,
+  loadPage,
+  platform
+} from "../../pathux.js";
 
-import {Editor} from "../editor_base.js";
-import {loadPage} from '../../../scripts/xmlpage/xmlpage.js';
-import {loadUIData, saveUIData} from '../../../scripts/core/ui_base.js';
-import {getPlatformAsync} from '../../../scripts/platforms/platform.js';
+import { Editor } from "../editor_base.js";
 
 let graphNodes;
 let solveTimer;
@@ -22,15 +33,15 @@ export class PropsEditor extends Editor {
   }
 
   getKeyMaps() {
-    return []
+    return [];
   }
 
   _save_page_data() {
     if (!this.container) {
-      return '';
+      return "";
     }
 
-    let s = saveUIData(this.container, 'page');
+    let s = saveUIData(this.container, "page");
     return s;
   }
 
@@ -41,56 +52,62 @@ export class PropsEditor extends Editor {
       return;
     }
 
-    getPlatformAsync().then((platform) => {
-      let url = platform.resolveURL("./page.xml")
+    platform.getPlatformAsync()
+      .then((platform) => {
+        let url = platform.resolveURL("./page.xml");
 
-      return loadPage(this.ctx, url);
-    }).then(container => {
-      this.container.add(container);
-      this.container.flushUpdate();
-
-      if (this._pageUIData) {
-        console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");
-
-        loadUIData(this.container, this._pageUIData);
-        this._pageUIData = undefined;
+        return loadPage(this.ctx, url);
+      })
+      .then((container) => {
+        this.container.add(container);
         this.container.flushUpdate();
-      }
 
-      let graphtab = container.getElementById("graph_pack_tab");
-      this.buildGraphPack(graphtab);
+        if (this._pageUIData) {
+          console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");
 
-      let con = container.getElementById("eventdag_test");
-      con.dataPrefix = "";
-      let bval = con.prop("data.boolval");
-      let color = con.prop("data.color");
+          loadUIData(this.container, this._pageUIData);
+          this._pageUIData = undefined;
+          this.container.flushUpdate();
+        }
 
-      color.dependsOn("hidden", bval, "value").invert()
+        let graphtab = container.getElementById("graph_pack_tab");
+        this.buildGraphPack(graphtab);
 
-      let exportbutton = container.getElementById("export_theme");
-      exportbutton.onclick = () => {
-        let theme = exportTheme();
+        let con = container.getElementById("eventdag_test");
+        con.dataPrefix = "";
+        let bval = con.prop("data.boolval");
+        let color = con.prop("data.color");
 
-        theme = theme.replace(/var theme/, "export const theme");
+        color.dependsOn("hidden", bval, "value").invert();
 
-        theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
-        theme = `
+        let exportbutton = container.getElementById("export_theme");
+        exportbutton.onclick = () => {
+          let theme = exportTheme();
+
+          theme = theme.replace(/var theme/, "export const theme");
+
+          theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
+          theme =
+            `
 /*
  * WARNING: AUTO-GENERATED FILE
  * 
  * Copy to scripts/editors/theme.js
  */
-      `.trim() + "\n\n" + theme + "\n";
+      `.trim() +
+            "\n\n" +
+            theme +
+            "\n";
 
-        console.log(theme);
+          console.log(theme);
 
-        let blob = new Blob([theme], {mime: "application/javascript"});
-        let url = URL.createObjectURL(blob);
+          let blob = new Blob([theme], { mime: "application/javascript" });
+          let url = URL.createObjectURL(blob);
 
-        console.log("url", url);
-        window.open(url);
-      };
-    });
+          console.log("url", url);
+          window.open(url);
+        };
+      });
   }
 
   init() {
@@ -101,7 +118,7 @@ export class PropsEditor extends Editor {
     this.style["overflow-y"] = "scroll";
 
     return;
-    let tabs = this.tabs = this.container.tabs("left");
+    let tabs = (this.tabs = this.container.tabs("left"));
 
     let tab1 = tabs.tab("Mass Set Example");
     this.buildMassSetExample(tab1);
@@ -115,17 +132,21 @@ export class PropsEditor extends Editor {
       theme = theme.replace(/var theme/, "export const theme");
 
       theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
-      theme = `
+      theme =
+        `
 /*
  * WARNING: AUTO-GENERATED FILE
  * 
  * Copy to scripts/editors/theme.js
  */
-      `.trim() + "\n\n" + theme + "\n";
+      `.trim() +
+        "\n\n" +
+        theme +
+        "\n";
 
       console.log(theme);
 
-      let blob = new Blob([theme], {mime: "application/javascript"});
+      let blob = new Blob([theme], { mime: "application/javascript" });
       let url = URL.createObjectURL(blob);
 
       console.log("url", url);
@@ -178,26 +199,26 @@ export class PropsEditor extends Editor {
 
     tview.item("One");
     tview.item("Two");
-    let t = tview.item("Three", {icon: Icons.FILE});
+    let t = tview.item("Three", { icon: Icons.FILE });
     //t.button("Yay", () => {});
     //t.label("Label");
 
-    t = t.item("Four", {icon: Icons.FILE});
+    t = t.item("Four", { icon: Icons.FILE });
     t.item("4.5");
 
     let row = UIBase.createElement("rowframe-x");
     row.ctx = this.ctx;
 
-    let icon = row.check()
+    let icon = row.check();
     row.label("Four");
 
     t.text = row;
 
     //t.button("Yay2", () => {});
     t = t.item("Five");
-    tview.item("Six", {icon: Icons.UNDO});
-    tview.item("Six", {icon: Icons.REDO});
-    tview.item("Six", {icon: Icons.UNDO});
+    tview.item("Six", { icon: Icons.UNDO });
+    tview.item("Six", { icon: Icons.REDO });
+    tview.item("Six", { icon: Icons.UNDO });
 
     if (this.ctx) {
       this.flushUpdate();
@@ -212,28 +233,28 @@ export class PropsEditor extends Editor {
     return ret;
   }
 
-
   buildGraphPackNodes(size) {
-    let nodes = this._nodes = [];
-    let nodemap = this._nodemap = {};
+    let nodes = (this._nodes = []);
+    let nodemap = (this._nodemap = {});
 
     let rand = new util.MersenneRandom(seed++);
     let count = 35;
     size /= count;
-    size = Math.sqrt(size)*0.75;
+    size = Math.sqrt(size) * 0.75;
 
     for (let i = 0; i < count; i++) {
       let n = new PackNode();
       n.pos[0] = 0;
       n.pos[1] = 0;
 
-      n.size[0] = (rand.random()*0.5 + 0.5)*size;
-      n.size[1] = (rand.random()*0.5 + 0.5)*size;
+      n.size[0] = (rand.random() * 0.5 + 0.5) * size;
+      n.size[1] = (rand.random() * 0.5 + 0.5) * size;
 
       for (let i = 0; i < 2; i++) {
-        let scount = rand.random()*8;
+        let scount = rand.random() * 8;
         let x = i ? n.size[0] : 0;
-        let y = 0, socksize = Math.min(20, n.size[1]/scount);
+        let y = 0,
+          socksize = Math.min(20, n.size[1] / scount);
 
         for (let j = 0; j < scount; j++) {
           let v = new PackNodeVertex(n, [x, y]);
@@ -251,34 +272,34 @@ export class PropsEditor extends Editor {
     let ri;
 
     function randitem(array) {
-      ri = ~~(Math.random()*array.length*0.99999);
+      ri = ~~(Math.random() * array.length * 0.99999);
       return array[ri];
     }
 
     let visit2 = new Set();
 
-    let linkcount = count*2.5*(rand.random()*0.5 + 0.5);
+    let linkcount = count * 2.5 * (rand.random() * 0.5 + 0.5);
 
     for (let i = 0; i < linkcount; i++) {
       //let n1 = randitem(nodes), n2 = randitem(nodes);
-      let ri = i%nodes.length;
-      ri = ~~(rand.random()*nodes.length*0.99999);
+      let ri = i % nodes.length;
+      ri = ~~(rand.random() * nodes.length * 0.99999);
 
-      let ri2 = (ri + 1)%nodes.length;
+      let ri2 = (ri + 1) % nodes.length;
       if (rand.random() > 0.8) {
-        ri2 = ~~(rand.random()*nodes.length*0.99999);
+        ri2 = ~~(rand.random() * nodes.length * 0.99999);
       }
 
       let n1 = nodes[ri];
       let n2 = nodes[ri2];
 
       let key = "" + Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-      if (visit2.has(key)) {//n1._id)) {
+      if (visit2.has(key)) {
+        //n1._id)) {
         continue;
       }
 
-      if (n1 === n2)
-        continue;
+      if (n1 === n2) continue;
 
       visit2.add(key);
 
@@ -296,8 +317,9 @@ export class PropsEditor extends Editor {
     }
 
     graphNodes = {
-      nodes, nodemap
-    }
+      nodes,
+      nodemap,
+    };
 
     return graphNodes;
   }
@@ -311,7 +333,7 @@ export class PropsEditor extends Editor {
     let scale = 0.25;
 
     canvas.addEventListener("wheel", (e) => {
-      let df = Math.sign(e.deltaY)*0.05;
+      let df = Math.sign(e.deltaY) * 0.05;
       scale *= 1.0 - df;
 
       console.log("scale", scale);
@@ -322,11 +344,11 @@ export class PropsEditor extends Editor {
     const margin = 55;
 
     if (!graphNodes) {
-      this.buildGraphPackNodes(canvas.width*canvas.height);
-      graphPack(graphNodes.nodes, {steps: 2, margin});
+      this.buildGraphPackNodes(canvas.width * canvas.height);
+      graphPack(graphNodes.nodes, { steps: 2, margin });
     }
 
-    let {nodes} = graphNodes;
+    let { nodes } = graphNodes;
 
     canvas.g = canvas.getContext("2d");
 
@@ -338,10 +360,10 @@ export class PropsEditor extends Editor {
       g.resetTransform();
       g.clearRect(0, 0, canvas.width, canvas.height);
 
-      g.translate(canvas.width*0.5, canvas.height*0.5);
+      g.translate(canvas.width * 0.5, canvas.height * 0.5);
       g.scale(scale, scale);
-      g.translate(-canvas.width*0.5, -canvas.height*0.5);
-      g.lineWidth = 2.0/scale;
+      g.translate(-canvas.width * 0.5, -canvas.height * 0.5);
+      g.lineWidth = 2.0 / scale;
 
       g.beginPath();
       g.strokeStyle = "black";
@@ -354,13 +376,15 @@ export class PropsEditor extends Editor {
             let p2 = new Vector2(v2).add(v2.node.pos);
 
             //let d = v.vectorDistance(v2)*1.5;
-            let d = Math.abs(v2[0] - v[0])*1.5;
+            let d = Math.abs(v2[0] - v[0]) * 1.5;
 
             let s1 = v.side ? -1 : 1;
             let s2 = v2.side ? -1 : 1;
 
-            let dx1 = -s1*d, dy1 = 0.0;
-            let dx2 = -s2*d, dy2 = 0.0;
+            let dx1 = -s1 * d,
+              dy1 = 0.0;
+            let dx2 = -s2 * d,
+              dy2 = 0.0;
 
             g.moveTo(p1[0], p1[1]);
             g.bezierCurveTo(p1[0] + dx1, p1[1] + dy1, p2[0] + dx2, p2[1] + dy2, p2[0], p2[1]);
@@ -393,23 +417,23 @@ export class PropsEditor extends Editor {
         graphPack(nodes, {
           steps: 2,
           speed: 0.1,
-          margin
+          margin,
         });
       }
 
       draw();
-    }
+    };
 
     let strip = tab.row();
 
     strip.button("Reset", () => {
-      nodes = this.buildGraphPackNodes(canvas.width*canvas.height).nodes;
-      graphPack(graphNodes.nodes, {steps: 22, margin});
+      nodes = this.buildGraphPackNodes(canvas.width * canvas.height).nodes;
+      graphPack(graphNodes.nodes, { steps: 22, margin });
       draw();
     });
 
     strip.button("Pack", () => {
-      graphPack(graphNodes.nodes, {steps: 22, margin});
+      graphPack(graphNodes.nodes, { steps: 22, margin });
 
       draw();
     });
@@ -430,7 +454,6 @@ export class PropsEditor extends Editor {
 
     tab.shadow.appendChild(canvas);
     draw();
-
   }
 
   buildCurve(tab) {
@@ -442,14 +465,16 @@ export class PropsEditor extends Editor {
   buildMassSetExample(tab) {
     let col = tab.col();
 
-    let path = "canvas.paths.active.material.color"
+    let path = "canvas.paths.active.material.color";
     let massSetPath = "canvas.paths[{$.id % 2 === 0}].material.color";
 
     col.label("Stripe fun!");
     let ret = col.prop(path, undefined, massSetPath);
     ret.style["padding"] = "10px";
 
-    let viewer = col.viewer(undefined, `
+    let viewer = col.viewer(
+      undefined,
+      `
       <h2>Mass Paths Example</h2>
       <p>This is an example of setting multiple items in a list at once.</p>
       <p>Path.ux reads properties from a single datapath, but writes to multiple
@@ -466,8 +491,8 @@ let massSetPath
   = "canvas.paths[{$.id % 2 === 0}].material.color";
 
 col.prop(path, undefined, massSetPath);</pre>
-    `);
-
+    `
+    );
   }
 
   static define() {
@@ -475,12 +500,14 @@ col.prop(path, undefined, massSetPath);</pre>
       tagname : "props-editor-x",
       areaname: "props",
       uiname  : "Properties",
-      icon    : -1
-    }
+      icon    : -1,
+    };
   }
-};
+}
 Editor.register(PropsEditor);
-PropsEditor.STRUCT = nstructjs.STRUCT.inherit(PropsEditor, Editor) + `
+PropsEditor.STRUCT =
+  nstructjs.STRUCT.inherit(PropsEditor, Editor) +
+  `
   _pageUIData : string | this._save_page_data();
 }
 `;

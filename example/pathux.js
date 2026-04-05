@@ -1,2 +1,2 @@
-export * from '../pathux.js';
+export * from '../dist/pathux_with_docbrowser.js';
 

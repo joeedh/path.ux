@@ -1,5 +1,4 @@
-import {Area, UIBase, nstructjs} from '../pathux.js';
-import {contextWrangler} from '../../scripts/screen/ScreenArea.js';
+import {Area, UIBase, nstructjs, contextWrangler} from '../pathux.js';
 
 export class Editor extends Area {
   constructor() {

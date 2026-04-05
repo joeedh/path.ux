@@ -1,27 +1,24 @@
-import {Editor} from "../editor_base.js";
-import {
-  nstructjs, util, Vector2, Matrix4, UIBase,
-  eventgraph
-} from '../../pathux.js';
-import {theEventGraph} from '../../../scripts/path-controller/dag/eventdag.js';
+import { Editor } from "../editor_base.js";
+import { nstructjs, util, Vector2, Matrix4, UIBase, eventgraph } from "../../pathux.js";
+const { theEventGraph } = eventgraph;
 
 let proj_cachering = util.cachering.fromConstructor(Vector2, 64);
 
 window.theEventGraph = theEventGraph;
 
 class SocketUI {
-  pos = new Vector2()
-  abspos = new Vector2()
+  pos = new Vector2();
+  abspos = new Vector2();
   nodeui = undefined;
 }
 
 class NodeUI {
   pos = new Vector2();
   size = new Vector2();
-  inputs = {}
-  outputs = {}
+  inputs = {};
+  outputs = {};
   node = undefined;
-  socks = new Map()
+  socks = new Map();
 
   constructor(node) {
     this.node = node;
@@ -30,8 +27,8 @@ class NodeUI {
   getSockUI(sock) {
     let ret = this.socks.get(sock);
     if (!ret) {
-      ret = new SocketUI()
-      ret.nodeui = this
+      ret = new SocketUI();
+      ret.nodeui = this;
       this.socks.set(sock, ret);
     }
 
@@ -57,7 +54,8 @@ class NodeUI {
 
   layout() {
     this.size[1] = 350;
-    let x = 0, y = 0;
+    let x = 0,
+      y = 0;
 
     this.inputs = this.layoutSockets("inputs");
     this.outputs = this.layoutSockets("outputs");
@@ -82,7 +80,7 @@ export class EventGraphViewer extends Editor {
   }
 
   getKeyMaps() {
-    return []
+    return [];
   }
 
   init() {
@@ -127,20 +125,19 @@ export class EventGraphViewer extends Editor {
     }
 
     this.needsDraw = false;
-    let {canvas, g, scale, pan} = this;
+    let { canvas, g, scale, pan } = this;
 
     let dpi = UIBase.getDPI();
-    let w = ~~(this.size[0]*dpi);
-    let h = ~~(this.size[1]*dpi);
+    let w = ~~(this.size[0] * dpi);
+    let h = ~~(this.size[1] * dpi);
 
     canvas.width = w;
     canvas.height = h;
-    canvas.style["width"] = (w/dpi) + "px";
-    canvas.style["height"] = (h/dpi) + "px";
+    canvas.style["width"] = w / dpi + "px";
+    canvas.style["height"] = h / dpi + "px";
     canvas.style["padding"] = canvas.style["margin"] = "0px";
 
     let graph = eventgraph.theEventGraph;
-
   }
 
   update() {
@@ -152,12 +149,14 @@ export class EventGraphViewer extends Editor {
       tagname : "eventgraph-editor-x",
       areaname: "eventgraph",
       uiname  : "Event Graph",
-      icon    : -1
-    }
+      icon    : -1,
+    };
   }
-};
+}
 Editor.register(EventGraphViewer);
-EventGraphViewer.STRUCT = nstructjs.STRUCT.inherit(EventGraphViewer, Editor) + `
+EventGraphViewer.STRUCT =
+  nstructjs.STRUCT.inherit(EventGraphViewer, Editor) +
+  `
   pan   : vec2;
   scale : float;
 }

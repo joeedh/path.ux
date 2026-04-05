@@ -1,30 +1,32 @@
+/** @typedef {import('../path-controller/util/vectormath').Vector2} Vector2 */
+
 let _ScreenArea = undefined;
 
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath.js';
-import * as ui_base from '../core/ui_base.js';
-import * as ui from '../core/ui.js';
-import * as ui_noteframe from '../widgets/ui_noteframe.js';
-import {haveModal} from '../path-controller/util/simple_events.js';
-import cconst from '../config/const.js';
+import * as util from "../path-controller/util/util.js";
+import * as vectormath from "../path-controller/util/vectormath.js";
+import * as ui_base from "../core/ui_base.js";
+import * as ui from "../core/ui.js";
+import * as ui_noteframe from "../widgets/ui_noteframe.js";
+import { haveModal } from "../path-controller/util/simple_events.js";
+import cconst from "../config/const.js";
 
-import nstructjs from '../path-controller/util/struct.js';
+import nstructjs from "../path-controller/util/struct.js";
 
 let UIBase = ui_base.UIBase;
 
-import {EnumProperty} from "../path-controller/toolsys/toolprop.js";
+import { EnumProperty } from "../path-controller/toolsys/toolprop.js";
 
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
-import {AreaFlags, BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi} from './FrameManager_mesh.js';
+import { AreaFlags, BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi } from "./FrameManager_mesh.js";
 
-export {AreaFlags};
+export { AreaFlags };
 
-export * from './area_wrangler.js';
-import {getAreaIntName, setAreaTypes, contextWrangler, AreaWrangler, areaclasses} from './area_wrangler.js';
+export * from "./area_wrangler.js";
+import { getAreaIntName, setAreaTypes, contextWrangler, AreaWrangler, areaclasses } from "./area_wrangler.js";
 
-export {contextWrangler};
+export { contextWrangler };
 
 window._contextWrangler = contextWrangler;
 
@@ -33,17 +35,17 @@ export const BorderMask = {
   BOTTOM: 2,
   RIGHT : 4,
   TOP   : 8,
-  ALL   : 1 | 2 | 4 | 8
+  ALL   : 1 | 2 | 4 | 8,
 };
 
 export const BorderSides = {
   LEFT  : 0,
   BOTTOM: 1,
   RIGHT : 2,
-  TOP   : 3
+  TOP   : 3,
 };
 
-Symbol.IsAreaTag = Symbol.for('IsAreaTag');
+Symbol.IsAreaTag = Symbol.for("IsAreaTag");
 
 /**
  * Base class for all editors
@@ -77,9 +79,12 @@ export class Area extends ui_base.UIBase {
     this.owning_sarea = undefined;
     this._area_id = contextWrangler.idgen++;
 
+    /** @type {number[] | Vector2} */
     this.pos = undefined; //set by screenarea parent
+    /** @type {number[] | Vector2} */
     this.size = undefined; //set by screenarea parent
     this.minSize = [5, 5];
+    /** @type {(number|undefined)[]} */
     this.maxSize = [undefined, undefined];
 
     let appendChild = this.shadow.appendChild;
@@ -88,7 +93,7 @@ export class Area extends ui_base.UIBase {
       if (child instanceof UIBase) {
         child.parentWidget = this;
       }
-    }
+    };
 
     let prepend = this.shadow.prepend;
     this.shadow.prepend = (child) => {
@@ -198,8 +203,7 @@ export class Area extends ui_base.UIBase {
       let cls = areaclasses[k];
       let def = cls.define();
 
-      if (def.flag & AreaFlags.HIDDEN)
-        continue;
+      if (def.flag & AreaFlags.HIDDEN) continue;
 
       let uiname = def.uiname;
 
@@ -224,7 +228,7 @@ export class Area extends ui_base.UIBase {
       areaname: undefined, //api name for area type
       flag    : 0, //see AreaFlags
       uiname  : undefined,
-      icon    : undefined //icon representing area in MakeHeader's area switching menu. Integer.
+      icon    : undefined, //icon representing area in MakeHeader's area switching menu. Integer.
     };
   }
 
@@ -247,13 +251,13 @@ export class Area extends ui_base.UIBase {
     };
 
     //*
-    super.addEventListener("mouseover", onover, {passive: true});
-    super.addEventListener("mousemove", onover, {passive: true});
-    super.addEventListener("mousein", onover, {passive: true});
-    super.addEventListener("mouseenter", onover, {passive: true});
-    super.addEventListener("touchstart", onover, {passive: true});
-    super.addEventListener("focusin", onover, {passive: true});
-    super.addEventListener("focus", onover, {passive: true});
+    super.addEventListener("mouseover", onover, { passive: true });
+    super.addEventListener("mousemove", onover, { passive: true });
+    super.addEventListener("mousein", onover, { passive: true });
+    super.addEventListener("mouseenter", onover, { passive: true });
+    super.addEventListener("touchstart", onover, { passive: true });
+    super.addEventListener("focusin", onover, { passive: true });
+    super.addEventListener("focus", onover, { passive: true });
     //*/
   }
 
@@ -303,7 +307,7 @@ export class Area extends ui_base.UIBase {
   saveData() {
     return {
       _area_id: this._area_id,
-      areaName: this.areaName
+      areaName: this.areaName,
     };
   }
 
@@ -315,8 +319,7 @@ export class Area extends ui_base.UIBase {
     }
   }
 
-  draw() {
-  }
+  draw() {}
 
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
@@ -328,37 +331,31 @@ export class Area extends ui_base.UIBase {
     super.on_resize(size, oldsize);
   }
 
-  on_area_focus() {
+  on_area_focus() {}
 
-  }
-
-  on_area_blur() {
-
-  }
+  on_area_blur() {}
 
   /** called when editors are swapped with another editor type*/
-  on_area_active() {
-  }
+  on_area_active() {}
 
   /** called when editors are swapped with another editor type*/
-  on_area_inactive() {
-  }
+  on_area_inactive() {}
 
   /*
-  * This is needed so UI controls can know what their parent area is.
-  * For example, a slider with data path "view2d.zoomfac" needs to know where
-  * to find view2d.
-  *
-  * Typically this works by adding a field to a ContextOverlay:
-  *
-  * class ContextOverlay {
-  *   get view3d() {
-  *     return Area.getActiveArea(View3D);
-  *   }
-  * }
-  *
-  * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
-  * */
+   * This is needed so UI controls can know what their parent area is.
+   * For example, a slider with data path "view2d.zoomfac" needs to know where
+   * to find view2d.
+   *
+   * Typically this works by adding a field to a ContextOverlay:
+   *
+   * class ContextOverlay {
+   *   get view3d() {
+   *     return Area.getActiveArea(View3D);
+   *   }
+   * }
+   *
+   * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
+   * */
   push_ctx_active(dontSetLastRef = false) {
     contextWrangler.updateLastRef(this.constructor, this);
     contextWrangler.push(this.constructor, this, !dontSetLastRef);
@@ -380,7 +377,7 @@ export class Area extends ui_base.UIBase {
   toJSON() {
     return Object.assign(super.toJSON(), {
       areaname: this.constructor.define().areaname,
-      _area_id: this._area_id
+      _area_id: this._area_id,
     });
   }
 
@@ -410,7 +407,7 @@ export class Area extends ui_base.UIBase {
       callback: (id) => {
         let cls = areaclasses[id];
         this.owning_sarea.switch_editor(cls);
-      }
+      },
     });
 
     dropbox.updateAfter(() => {
@@ -435,12 +432,12 @@ export class Area extends ui_base.UIBase {
     let helpRow;
 
     if (this.header) {
-      this.header.remove()
-      this.header = undefined
+      this.header.remove();
+      this.header = undefined;
     }
 
     if (!(this.flag & AreaFlags.NO_SWITCHER) && cconst.useAreaTabSwitcher) {
-      let col = this.header = container.col();
+      let col = (this.header = container.col());
 
       switcherRow = helpRow = col.row();
       row = col.row();
@@ -451,7 +448,7 @@ export class Area extends ui_base.UIBase {
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
       let callmenu = ScreenBorder.bindBorderMenu(this.header, true);
 
-      this.addEventListener("mousedown", e => {
+      this.addEventListener("mousedown", (e) => {
         if (e.button !== 2 || this.header.pickElement(e.x, e.y) !== this.header) {
           return;
         }
@@ -463,9 +460,9 @@ export class Area extends ui_base.UIBase {
     this.header.remove();
     container._prepend(this.header);
 
-    row.setCSSAfter(() => row.background = this.getDefault("AreaHeaderBG"));
+    row.setCSSAfter(() => (row.background = this.getDefault("AreaHeaderBG")));
 
-    let rh = ~~(16*this.getDPI());
+    let rh = ~~(16 * this.getDPI());
 
     //container.setSize(undefined, rh);
     //row.setSize(undefined, rh);
@@ -537,7 +534,7 @@ export class Area extends ui_base.UIBase {
       }
 
       return true;
-    }
+    };
 
     eventdom.addEventListener("pointerout", (e) => {
       //console.log("pointerout", e);
@@ -579,7 +576,6 @@ export class Area extends ui_base.UIBase {
 
       if (!mdown2 || !mpre(e, pageX, pageY)) return;
 
-
       if (e.type === "mousemove" && e.was_touch) {
         //okay how are patched events getting here?
         //avoid double call. . .
@@ -590,10 +586,10 @@ export class Area extends ui_base.UIBase {
       let dx = pageX - mpos[0];
       let dy = pageY - mpos[1];
 
-      let dis = dx*dx + dy*dy;
+      let dis = dx * dx + dy * dy;
       let limit = 7;
 
-      if (dis > limit*limit) {
+      if (dis > limit * limit) {
         let sarea = this.owning_sarea;
         if (sarea === undefined) {
           console.warn("Error: missing sarea ref");
@@ -641,17 +637,29 @@ export class Area extends ui_base.UIBase {
       console.log("drag!", e);
     });*/
 
-    eventdom.addEventListener("pointermove", (e) => {
-      return do_mousemove(e, e.pageX, e.pageY);
-    }, false);
-    eventdom.addEventListener("pointerup", (e) => {
-      console.log("pointerup", e);
-      mdown = false;
-    }, false);
-    eventdom.addEventListener("pointercancel", (e) => {
-      console.log("pointercancel", e);
-      mdown = false;
-    }, false);
+    eventdom.addEventListener(
+      "pointermove",
+      (e) => {
+        return do_mousemove(e, e.pageX, e.pageY);
+      },
+      false
+    );
+    eventdom.addEventListener(
+      "pointerup",
+      (e) => {
+        console.log("pointerup", e);
+        mdown = false;
+      },
+      false
+    );
+    eventdom.addEventListener(
+      "pointercancel",
+      (e) => {
+        console.log("pointercancel", e);
+        mdown = false;
+      },
+      false
+    );
 
     return row;
   }
@@ -692,11 +700,9 @@ export class Area extends ui_base.UIBase {
 
     let screen = this.getScreen();
 
-    if (screen === undefined)
-      return true;
+    if (screen === undefined) return true;
 
-    if (screen.parentNode === undefined)
-      return true;
+    if (screen.parentNode === undefined) return true;
   }
 
   //called by owning ScreenArea on file load
@@ -732,7 +738,7 @@ pathux.Area {
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
 }
-`
+`;
 
 nstructjs.register(Area, "pathux.Area");
 ui_base.UIBase.internalRegister(Area);
@@ -764,7 +770,7 @@ export class ScreenArea extends ui_base.UIBase {
           set: function (val) {
             console.warn(`ScreenArea.${name}[${axis}] set:`, val);
             this["_" + axis] = val;
-          }
+          },
         });
       };
 
@@ -903,7 +909,7 @@ export class ScreenArea extends ui_base.UIBase {
 
   static define() {
     return {
-      tagname: "screenarea-x"
+      tagname: "screenarea-x",
     };
   }
 
@@ -965,11 +971,9 @@ export class ScreenArea extends ui_base.UIBase {
 
     let screen = this.getScreen();
 
-    if (screen === undefined)
-      return true;
+    if (screen === undefined) return true;
 
-    if (screen.parentNode === undefined)
-      return true;
+    if (screen.parentNode === undefined) return true;
   }
 
   toJSON() {
@@ -978,7 +982,7 @@ export class ScreenArea extends ui_base.UIBase {
       _sarea_id: this._sarea_id,
       area     : this.area.constructor.define().areaname,
       pos      : this.pos,
-      size     : this.size
+      size     : this.size,
     };
 
     return Object.assign(super.toJSON(), ret);
@@ -1169,7 +1173,8 @@ export class ScreenArea extends ui_base.UIBase {
    * */
   loadFromPosSize() {
     if (this.floating && this._verts.length > 0) {
-      let p = this.pos, s = this.size;
+      let p = this.pos,
+        s = this.size;
 
       this._verts[0].loadXY(p[0], p[1]);
       this._verts[1].loadXY(p[0], p[1] + s[1]);
@@ -1236,7 +1241,8 @@ export class ScreenArea extends ui_base.UIBase {
     this._borders.length = 0;
     this._verts.length = 0;
 
-    let p = this.pos, s = this.size;
+    let p = this.pos,
+      s = this.size;
 
     //s = snapi(new Vector2(s));
 
@@ -1244,7 +1250,7 @@ export class ScreenArea extends ui_base.UIBase {
       new Vector2([p[0], p[1]]),
       new Vector2([p[0], p[1] + s[1]]),
       new Vector2([p[0] + s[0], p[1] + s[1]]),
-      new Vector2([p[0] + s[0], p[1]])
+      new Vector2([p[0] + s[0], p[1]]),
     ];
 
     let floating = this.floating;
@@ -1256,10 +1262,10 @@ export class ScreenArea extends ui_base.UIBase {
     }
 
     for (let i = 0; i < vs.length; i++) {
-      let v1 = vs[i], v2 = vs[(i + 1)%vs.length];
+      let v1 = vs[i],
+        v2 = vs[(i + 1) % vs.length];
 
       let b = screen.getScreenBorder(this, v1, v2, i);
-
 
       for (let j = 0; j < 2; j++) {
         let v = j ? b.v2 : b.v1;
@@ -1407,8 +1413,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   _checkWrangler() {
-    if (this.ctx)
-      contextWrangler._checkWrangler(this.ctx);
+    if (this.ctx) contextWrangler._checkWrangler(this.ctx);
   }
 
   update() {
@@ -1431,13 +1436,20 @@ export class ScreenArea extends ui_base.UIBase {
       //*
       if (moved) {
         if (cconst.DEBUG.areaConstraintSolver) {
-          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area.tagName, this.size);
+          console.log(
+            "screen constraint solve",
+            moved,
+            this.area.minSize,
+            this.area.maxSize,
+            this.area.tagName,
+            this.size
+          );
         }
 
         screen.solveAreaConstraints();
         screen.regenBorders();
         this.on_resize(oldsize);
-      }//*/
+      } //*/
 
       this.area.push_ctx_active(true);
     }
@@ -1458,7 +1470,7 @@ export class ScreenArea extends ui_base.UIBase {
       ch.size = undefined;
 
       if (this.area === ch && this.editors.length > 1) {
-        let i = (this.editors.indexOf(ch) + 1)%this.editors.length;
+        let i = (this.editors.indexOf(ch) + 1) % this.editors.length;
         this.switchEditor(this.editors[i].constructor);
       } else if (this.area === ch) {
         this.editors = [];
@@ -1527,12 +1539,12 @@ export class ScreenArea extends ui_base.UIBase {
       }
 
       /*
-      * originally inactive areas weren't supposed to have
-      * a reference to their owning ScreenAreas.
-      *
-      * Unfortunately this will cause isDead() to return true,
-      * which might lead to nasty problems.
-      * */
+       * originally inactive areas weren't supposed to have
+       * a reference to their owning ScreenAreas.
+       *
+       * Unfortunately this will cause isDead() to return true,
+       * which might lead to nasty problems.
+       * */
       area.parentWidget = this;
 
       editors.push(area);
@@ -1593,7 +1605,6 @@ export class ScreenArea extends ui_base.UIBase {
 
       this.doOnce(f);
     }
-
   }
 }
 
@@ -1610,8 +1621,6 @@ pathux.ScreenArea {
 
 nstructjs.register(ScreenArea, "pathux.ScreenArea");
 ui_base.UIBase.internalRegister(ScreenArea);
-
-ui_base._setAreaClass(Area);
 
 export function setScreenClass(cls) {
   Screen = cls;

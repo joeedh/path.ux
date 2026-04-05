@@ -86,7 +86,7 @@ import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils.js";
 
 export * from "./ui_theme.js";
 
-import { CSSFont, theme, parsepx, compatMap, color2css, css2color } from "./ui_theme.js";
+import { theme, parsepx, compatMap, color2css, css2color } from "./ui_theme.js";
 
 import { DefaultTheme } from "./theme.js";
 
@@ -757,6 +757,7 @@ import {
 import { isNum } from "../path-controller/util/math.js";
 import type { IContextBase } from "./context_base.js";
 import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
+import { CSSFont } from "./cssfont.js";
 
 let _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
@@ -995,7 +996,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   _last_description: string | undefined;
   _description_final: string | undefined;
   _modaldata?: ModalState;
-  packflag: number;
+  accessor packflag: number;
   _internalDisabled: boolean;
   __disabledState: boolean;
   _disdata: DisableData | undefined;
@@ -1028,10 +1029,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   range?: [number, number];
   // XXX review this later
   get value(): VALUE {
-    throw new Error('implement me')
+    throw new Error("implement me");
   }
   set value(value: VALUE) {
-    throw new Error('implement me')
+    throw new Error("implement me");
   }
   ondestroy?: () => void;
   getValue?: () => unknown;
@@ -1754,6 +1755,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     return p;
   }
 
+  addEventListener<K extends keyof HTMLElementEventMap>(
+    type: K,
+    cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & { [EventCBSymbol]?: Map<string, EventListener> },
+    options?: AddEventListenerOptions | boolean
+  ): void;
   addEventListener(
     type: string,
     cb: EventListener & { [EventCBSymbol]?: Map<string, EventListener> },
@@ -1766,7 +1772,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     let cb2 = (e: Event) => {
       if (cconst.DEBUG.paranoidEvents) {
         if (this.isDead()) {
-          this.removeEventListener(type, cb, options);
+          this.removeEventListener(type, cb as any, options);
           return;
         }
       }
@@ -1780,7 +1786,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       if (area) {
         area.push_ctx_active();
         try {
-          let ret = cb(e);
+          let ret = cb.call(this as unknown as HTMLElement, e as any);
           area.pop_ctx_active();
           return ret;
         } catch (error) {
@@ -1792,7 +1798,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
           console.warn("Element is not part of an area?", this);
         }
 
-        return cb(e);
+        return cb.call(this as unknown as HTMLElement, e as any);
       }
     };
 
@@ -1812,7 +1818,15 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   removeEventListener(
     type: string,
-    cb: EventListener & { [EventCBSymbol]?: Map<string, EventListener>; _cb2?: EventListener },
+    cb: EventListener & { [EventCBSymbol]?: Map<string, EventListener> },
+    options?: AddEventListenerOptions | boolean
+  ): void;
+  removeEventListener<K extends keyof HTMLElementEventMap>(
+    type: K,
+    cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & {
+      [EventCBSymbol]?: Map<string, EventListener>;
+      _cb2?: EventListener;
+    },
     options?: AddEventListenerOptions | boolean
   ): void {
     if (cconst.DEBUG.paranoidEvents) {
@@ -1879,7 +1893,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   get saneStyle(): { [k: string]: string } {
-    return this.saneStyle as unknown as { [k: string]: string };
+    return this.style as unknown as { [k: string]: string };
   }
 
   noPadding(): this {
@@ -2108,10 +2122,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   //TS patch into this.update.after
   setCSSAfter(cb: () => void) {
-    const anyThis = this as unknown as any
-    return anyThis.setCSSAfter(cb)
+    const anyThis = this as unknown as any;
+    return anyThis.setCSS.after(cb);
   }
-  
+
   flushSetCSS(): void {
     //check init
     this._init();
@@ -2314,7 +2328,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       //pasteForAllChildren
       if (!internal_mode) {
         let screen = (
-          this.ctx as unknown as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
+          this.ctx as unknown as {
+            screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
+          }
         ).screen;
         let elem: UIBase | undefined = screen.pickElement(screen.mpos[0], screen.mpos[1]);
 
@@ -2408,7 +2424,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     if (cconst.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
-        this.removeEventListener(item[0], item[1], item[2]);
+        this.removeEventListener(item[0] as any, item[1] as any, item[2] as any);
       }
 
       this.__cbs = [];
@@ -2735,7 +2751,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   on_enabled(): void {}
 
   pushModal(
-    handlers: Record<string, Function> | UIBase = this,
+    handlers: Readonly<Record<Readonly<string>, Readonly<Function>>> | Readonly<UIBase> = this,
     autoStopPropagation = true,
     pointerId?: number,
     pointerElem: UIBase = this
@@ -3349,7 +3365,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
       for (let type of ["start_timer", "stop_timer", "reset_timer"]) {
         for (let etype of lists[i]) {
-          this.addEventListener(etype, bind_handler(type, etype), { passive: true });
+          this.addEventListener(etype as any, bind_handler(type, etype), { passive: true });
         }
 
         i++;
@@ -3394,7 +3410,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     this._tool_tip_abort_delay = undefined;
 
     let screen = (
-      this.ctx as unknown as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
+      this.ctx as unknown as {
+        screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
+      }
     ).screen;
 
     const timelimit = 500;
@@ -3456,8 +3474,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   //TS patch into this.update.after
   updateAfter(cb: () => void) {
-    const anyThis = this as unknown as any
-    return anyThis.update.after(cb)
+    const anyThis = this as unknown as any;
+    return anyThis.update.after(cb);
   }
 
   //called regularly
@@ -4144,8 +4162,12 @@ export function drawRoundBox(
 
 export function _getFont_new(elem: UIBase, size?: number, font: string = "DefaultText", do_dpi = true): string {
   let fontObj = elem.getDefault(font) as CSSFont;
+  if (fontObj === undefined) {
+    console.error("Could not find font " + font + " for element", elem, 'theme style:', elem.constructor.define().style ?? 'base');
+    debugger;
+  }
 
-  return fontObj.genCSS(size);
+  return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
 }
 
 export function getFont(elem: UIBase, size?: number, font = "DefaultText", do_dpi = true): string {
@@ -4241,7 +4263,7 @@ export function measureText(
   g?: CanvasRenderingContext2D,
   size?: number,
   font?: CSSFont | string
-): TextMetrics & { width: number, height?: number } {
+): TextMetrics & { width: number; height?: number } {
   if (
     typeof canvas === "object" &&
     canvas !== null &&

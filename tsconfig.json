@@ -7,6 +7,7 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
+    "preserveValueImports" : true,
     "allowJs": true,
     "checkJs": false,
     "sourceMap": true,

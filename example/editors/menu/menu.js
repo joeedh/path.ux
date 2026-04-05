@@ -1,14 +1,25 @@
-import {Editor} from "../editor_base.js";
-import {UIBase, electron_api, platform, PackFlags, Icons, KeyMap, HotKey, nstructjs, Menu, AreaFlags, util} from '../../pathux.js';
+import { Editor } from "../editor_base.js";
+import {
+  UIBase,
+  electron_api,
+  platform,
+  PackFlags,
+  Icons,
+  KeyMap,
+  HotKey,
+  nstructjs,
+  Menu,
+  AreaFlags,
+  util,
+} from "../../pathux.js";
 
 export class MenuBarEditor extends Editor {
   constructor() {
     super();
 
     this.updateHeight();
-    this.borderLock = 1|2|4|8;
+    this.borderLock = 1 | 2 | 4 | 8;
     this.areaDragToolEnabled = false;
-
   }
 
   copy() {
@@ -16,7 +27,6 @@ export class MenuBarEditor extends Editor {
     ret.ctx = this.ctx;
     return ret;
   }
-
 
   init() {
     super.init();
@@ -30,36 +40,33 @@ export class MenuBarEditor extends Editor {
     let header = this.header;
     let span = header.row();
 
-    span.menu("File", [
-      ["New", () => {
-
-      }],
-      Menu.SEP,
-      ["Save As", () => {
-
-      }],
-      ["Open", () => {
-
-      }],
-
-    ]);
+    span.menu("File", [["New", () => {}], Menu.SEP, ["Save As", () => {}], ["Open", () => {}]]);
 
     span.menu("Edit", [
       ["Undo", () => this.ctx.toolstack.undo(), "CTRL-Z", Icons.UNDO],
-      ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z", Icons.REDO]
+      ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z", Icons.REDO],
     ]);
 
     span.menu("Session", [
-      ["Save Default File", () => {this.ctx.state.saveLocalStorage()}],
-      ["Clear Default File", () => {this.ctx.state.clearLocalStorage()}]
+      [
+        "Save Default File",
+        () => {
+          this.ctx.state.saveLocalStorage();
+        },
+      ],
+      [
+        "Clear Default File",
+        () => {
+          this.ctx.state.clearLocalStorage();
+        },
+      ],
     ]);
 
     this.setCSS();
   }
 
   updateHeight() {
-    if (!this.header)
-      return;
+    if (!this.header) return;
 
     if (window.haveElectron) {
       this.maxSize[1] = this.minSize[1] = 1;
@@ -81,9 +88,7 @@ export class MenuBarEditor extends Editor {
   }
 
   getKeyMaps() {
-    return [
-
-    ]
+    return [];
   }
 
   update() {
@@ -91,16 +96,20 @@ export class MenuBarEditor extends Editor {
     this.updateHeight();
   }
 
-  static define() {return {
-    tagname  : "menu-editor-x",
-    areaname : "menu",
-    uiname   : "Menu Bar",
-    icon     : -1,
-    flag     :  AreaFlags.HIDDEN|AreaFlags.NO_SWITCHER,
-  }}
-};
+  static define() {
+    return {
+      tagname : "menu-editor-x",
+      areaname: "menu",
+      uiname  : "Menu Bar",
+      icon    : -1,
+      flag    : AreaFlags.HIDDEN | AreaFlags.NO_SWITCHER,
+    };
+  }
+}
 Editor.register(MenuBarEditor);
-MenuBarEditor.STRUCT = nstructjs.STRUCT.inherit(MenuBarEditor, Editor) + `
+MenuBarEditor.STRUCT =
+  nstructjs.STRUCT.inherit(MenuBarEditor, Editor) +
+  `
 }
 `;
 nstructjs.register(MenuBarEditor);

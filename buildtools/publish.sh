@@ -17,7 +17,7 @@ echo $?
 
 echo Publishing $VERSION
 echo $?
-bash buildtools/build.sh
+pnpm build
 echo $?
 
 #bash build_docs.sh && \

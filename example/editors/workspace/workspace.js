@@ -1,10 +1,9 @@
-import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, Vector2} from '../../pathux.js';
+import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, Vector2, contextWrangler} from '../../pathux.js';
 import {Editor} from "../editor_base.js";
 import {PanOp} from "./workspace_ops.js";
 import {DrawOp} from "../../draw/draw_ops.js";
 import {BrushSettings} from '../../draw/brush.js';
 import {Dynamics} from "../../core/dynamics.js";
-import {contextWrangler} from '../../../scripts/screen/ScreenArea.js';
 
 export class WorkspaceEditor extends Editor {
   constructor() {

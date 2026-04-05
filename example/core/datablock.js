@@ -2,7 +2,7 @@
 useful classes for wrangling important base classes
 */
 
-import {nstructjs, util} from '../../scripts/pathux.js';
+import {nstructjs, util} from '../pathux.js';
 
 export const BlockFlag = {
   NO_SAVE : 1

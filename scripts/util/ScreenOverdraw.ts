@@ -7,7 +7,7 @@ import * as ui_base from "../core/ui_base.js";
 import * as ui from "../core/ui.js";
 import * as math from "./math.js";
 import { IContextBase } from "../core/context_base.js";
-import { Screen } from "../types/screen/FrameManager";
+import type { Screen } from "../types/screen/FrameManager";
 
 const Vector2 = vectormath.Vector2;
 
