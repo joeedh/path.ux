@@ -8,6 +8,15 @@
 
 /* eslint-disable no-var */
 
+declare interface ElementCSSInlineStyle {
+  style: {[k: string] : string};
+}
+
+interface SymbolConstructor {
+  // used to avoid circular module references
+  // so uibase can find area instances
+  IsAreaTag: symbol
+}
 interface Window {
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
@@ -54,7 +63,7 @@ interface Window {
 
   /* ── Event system ─────────────────────────────────────────── */
   _print_evt_debug: boolean;
-  _haveModal: (() => boolean);
+  _haveModal: () => boolean;
   _findScreen: () => unknown;
   testSingleMouseUpEvent: (type?: string) => void;
   eventDebugModule: unknown;
@@ -182,3 +191,4 @@ declare var termColor: Record<string, string>;
 declare var get_callstack: (msg?: string) => string;
 declare var print_stack: (...args: unknown[]) => void;
 declare var _debug_event_listeners: boolean | undefined;
+

@@ -20,7 +20,7 @@ export interface CSSFontArgs {
   color?: string;
 }
 
-export type ThemeRecord = typeof DefaultTheme //& Record<string, Record<string, unknown> | CSSFont | string | number>;
+export type ThemeRecord = typeof DefaultTheme; //& Record<string, Record<string, unknown> | CSSFont | string | number>;
 
 export let compatMap = {
   BoxMargin       : "padding",
@@ -51,11 +51,11 @@ export function parsepx(css: string): number {
   return parseFloat(css.trim().replace("px", ""));
 }
 
-export function color2css(c: ArrayLike<number>, alpha_override?: number): string {
+export function color2css(c: number[] | Vector4 | Vector3, alpha_override?: number): string {
   let r = ~~(c[0] * 255);
   let g = ~~(c[1] * 255);
   let b = ~~(c[2] * 255);
-  let a = c.length < 4 ? 1.0 : c[3];
+  let a =  c.length < 4 ? 1.0 : (c as number[])[3];
 
   a = alpha_override !== undefined ? alpha_override : a;
 
@@ -388,8 +388,8 @@ CSSFont {
 nstructjs.register(CSSFont);
 
 export function exportTheme(themeIn: ThemeRecord = theme, addVarDecl = true): string {
-  const theme1 = themeIn as any
-  
+  const theme1 = themeIn as any;
+
   let sortkeys = (obj: Record<string, unknown>): string[] => {
     let keys: string[] = [];
     for (let k in obj) {

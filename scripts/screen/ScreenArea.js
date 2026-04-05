@@ -43,10 +43,15 @@ export const BorderSides = {
   TOP   : 3
 };
 
+Symbol.IsAreaTag = Symbol.for('IsAreaTag');
+
 /**
  * Base class for all editors
  **/
 export class Area extends ui_base.UIBase {
+  // used to avoid circular module ref with UIBase
+  [Symbol.IsAreaTag] = true;
+
   constructor() {
     super();
 

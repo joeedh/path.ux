@@ -1,9 +1,8 @@
-import type { DataAPI, ToolStack } from "../pathux";
-import type { Screen} from "../screen/FrameManager";
+import type { Screen } from "../screen/FrameManager";
+import { ContextLike } from "../path-controller/controller/controller_abstract";
+import type { ToolStack } from "../path-controller/toolsys/toolsys";
 
-export interface IContextBase<AppState = any, TS extends ToolStack = ToolStack> {
-  state: AppState
-  screen: Screen
-  api: DataAPI
-  toolstack: TS
+export interface IContextBase<AppState = any, TS extends ToolStack = ToolStack> extends ContextLike<AppState, TS> {
+  state: AppState;
+  screen: Screen;
 }

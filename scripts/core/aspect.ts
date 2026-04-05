@@ -8,7 +8,7 @@ let exclude = new Set<string | symbol>([
   "shadow",
 ]);
 
-type AspectOwner = Record<string, unknown> & { __aspect_methods?: Set<string>; constructor: Function };
+type AspectOwner = any & { __aspect_methods?: Set<string>; constructor: Function };
 
 let UIBase: Function | undefined = undefined;
 
@@ -19,7 +19,8 @@ export function _setUIBase(uibase: Function): void {
 
 let AspectKeys = Symbol("aspect-keys");
 
-export function initAspectClass(object: AspectOwner, blacklist = new Set<string | symbol>()): void {
+export function initAspectClass(objectIn: any, blacklist = new Set<string | symbol>()): void {
+  let object = objectIn as AspectOwner
   let cls = object.constructor as Function & { [k: symbol]: (string | symbol)[] };
 
   if (!cls[AspectKeys]) {

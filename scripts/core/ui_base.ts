@@ -11,6 +11,34 @@
  *   9. initAspectClass(this) — AspectOwner type
  */
 import { contextWrangler } from "../screen/area_wrangler.js";
+import type { Area } from "../screen/ScreenArea";
+
+export const PackFlags = {
+  INHERIT_WIDTH : 1,
+  INHERIT_HEIGHT: 2,
+  VERTICAL      : 4,
+  USE_ICONS     : 8,
+  SMALL_ICON    : 16,
+  LARGE_ICON    : 32,
+
+  FORCE_PROP_LABELS         : 64, //force propeties (Container.prototype.prop()) to always have labels
+  PUT_FLAG_CHECKS_IN_COLUMNS: 128, //group flag property checkmarks in columns (doesn't apply to icons)
+
+  WRAP_CHECKBOXES: 256,
+
+  //internal flags
+  STRIP_HORIZ            : 512,
+  STRIP_VERT             : 1024,
+  STRIP                  : 512 | 1024,
+  SIMPLE_NUMSLIDERS      : 2048,
+  FORCE_ROLLER_SLIDER    : 4096,
+  HIDE_CHECK_MARKS       : 1 << 13,
+  NO_NUMSLIDER_TEXTBOX   : 1 << 14,
+  CUSTOM_ICON_SHEET      : 1 << 15,
+  CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
+  NO_UPDATE              : 1 << 16,
+  LABEL_ON_RIGHT         : 1 << 17,
+} as const;
 
 /* Helper for CSSStyleDeclaration string indexing, common throughout this file */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
@@ -37,7 +65,7 @@ if (window.document && document.body) {
 import { Animator } from "./anim.js";
 import "./units.js";
 import * as util from "../path-controller/util/util.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
+import * as vectormath from "../path-controller/util/vectormath";
 import * as math from "../path-controller/util/math.js";
 import * as toolprop from "../path-controller/toolsys/toolprop.js";
 import {
@@ -50,6 +78,7 @@ import {
   reverse_keymap,
   pushPointerModal,
   ModalState,
+  eventWasMouseDown,
 } from "../path-controller/util/simple_events.js";
 import { getDataPathToolOp } from "../path-controller/controller/controller.js";
 import * as units from "./units.js";
@@ -695,33 +724,6 @@ export const UIFlags: Record<string, number> = {};
 const internalElementNames: Record<string, string> = {};
 const externalElementNames: Record<string, string> = {};
 
-export const PackFlags = {
-  INHERIT_WIDTH : 1,
-  INHERIT_HEIGHT: 2,
-  VERTICAL      : 4,
-  USE_ICONS     : 8,
-  SMALL_ICON    : 16,
-  LARGE_ICON    : 32,
-
-  FORCE_PROP_LABELS         : 64, //force propeties (Container.prototype.prop()) to always have labels
-  PUT_FLAG_CHECKS_IN_COLUMNS: 128, //group flag property checkmarks in columns (doesn't apply to icons)
-
-  WRAP_CHECKBOXES: 256,
-
-  //internal flags
-  STRIP_HORIZ            : 512,
-  STRIP_VERT             : 1024,
-  STRIP                  : 512 | 1024,
-  SIMPLE_NUMSLIDERS      : 2048,
-  FORCE_ROLLER_SLIDER    : 4096,
-  HIDE_CHECK_MARKS       : 1 << 13,
-  NO_NUMSLIDER_TEXTBOX   : 1 << 14,
-  CUSTOM_ICON_SHEET      : 1 << 15,
-  CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
-  NO_UPDATE              : 1 << 16,
-  LABEL_ON_RIGHT         : 1 << 17,
-};
-
 let first = (iter: Iterable<unknown> | Record<string, unknown> | undefined): unknown => {
   if (iter === undefined) {
     return undefined;
@@ -750,9 +752,11 @@ import {
   PropSocketModes,
   SocketTypes,
   theEventGraph,
+  SocketType,
 } from "../path-controller/dag/eventdag.js";
 import { isNum } from "../path-controller/util/math.js";
-import { IContextBase } from "./context_base.js";
+import type { IContextBase } from "./context_base.js";
+import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
 
 let _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
@@ -792,7 +796,7 @@ export function styleScrollBars(
     let c = css2color(color);
     let a = c.length > 3 ? c[3] : 1.0;
 
-    c = rgb_to_hsv(c[0], c[1], c[2]);
+    c.load3(rgb_to_hsv(c[0], c[1], c[2]));
     let inv = c.slice(0, c.length);
 
     inv[2] = 1.0 - inv[2];
@@ -833,13 +837,12 @@ ${selector}::-webkit-scrollbar-thumb {
   return buf;
 }
 
-window.styleScrollBars = styleScrollBars;
-
 let _digest = new util.HashDigest();
 
 export function calcThemeKey(digest = _digest.reset()): number {
-  for (let k in theme) {
-    let obj = theme[k];
+  const anyTheme = theme as any;
+  for (let k in anyTheme) {
+    let obj = anyTheme[k];
 
     if (typeof obj !== "object") {
       continue;
@@ -893,14 +896,14 @@ function timeout_cb(): void {
     try {
       cb();
     } catch (error) {
-      console.error(error.stack);
+      console.error((error as Error).stack);
     }
   }
 
   window.setTimeout(timeout_cb, 0);
 }
 
-export function internalSetTimeout(cb: () => void, timeout: number | undefined): void {
+export function internalSetTimeout(cb: () => void, timeout = 0): void {
   if (timeout !== undefined && timeout > 100) {
     //call directly
     window.setTimeout(cb, timeout);
@@ -956,7 +959,7 @@ interface ToolTipState {
   handlers: Record<string, EventListener>;
 }
 
-export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement {
+export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> extends HTMLElement {
   static PositionKey: string;
 
   declare ["constructor"]: typeof UIBase;
@@ -980,7 +983,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   _screenStyleTag: HTMLStyleElement;
   _screenStyleUpdateHash: number;
   shadow!: ShadowRoot;
-  __cbs: [string, EventListener, AddEventListenerOptions | boolean | undefined][];
+  __cbs: [string, EventListener, AddEventListenerOptions | boolean | undefined][] = [];
   _wasAddedToNodeAtSomeTime: boolean;
   visibleToPick: boolean;
   _override_class: string | undefined;
@@ -991,16 +994,17 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   class_default_overrides: Record<string, Record<string, unknown>>;
   _last_description: string | undefined;
   _description_final: string | undefined;
-  _modaldata: unknown;
-  packflag: unknown;
+  _modaldata?: ModalState;
+  packflag: number;
   _internalDisabled: boolean;
   __disabledState: boolean;
   _disdata: DisableData | undefined;
-  _ctx: CTX;
+  // will be set later
+  _ctx: CTX = undefined as unknown as CTX;
   _description: string | undefined;
   _init_done: boolean;
-  __background: string;
-  _flashtimer: ReturnType<typeof setInterval> | undefined;
+  __background?: string;
+  _flashtimer?: number;
   _flashcolor: string | undefined;
 
   /* clipboard-related, set by _clipboardHotkeyInit */
@@ -1012,24 +1016,24 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   _clipboard_events!: boolean;
 
   /* EventNode mixin fields */
-  declare graphNode: import("../path-controller/dag/eventdag.js").EventNode;
+  graphNode?: EventNode;
 
   /* Dynamic property fields set by subclasses (numslider, etc) */
-  declare baseUnit: string | undefined;
-  declare displayUnit: string | undefined;
-  declare isInt: boolean | undefined;
-  declare radix: number | undefined;
-  declare decimalPlaces: number | undefined;
-  declare editAsBaseUnit: boolean | undefined;
-  declare range: [number, number];
-  declare value: unknown;
-  declare ondestroy: (() => void) | undefined;
-  declare on_remove: (() => void) | undefined;
-  declare getValue: (() => unknown) | undefined;
+  baseUnit?: string;
+  displayUnit?: string;
+  isInt?: boolean;
+  radix?: number;
+  decimalPlaces?: number;
+  editAsBaseUnit?: boolean;
+  range?: [number, number];
+  declare value: VALUE;
+  ondestroy?: () => void;
+  getValue?: () => unknown;
 
   #reflagGraph = false;
 
   static graphNodeDef = EventNode.register(this, {
+    flag    : 0,
     typeName: this.name,
     uiName  : this.name,
     inputs: {
@@ -1042,6 +1046,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
   graphExec(): void {
     let node = this.graphNode;
+    if (node === undefined) {
+      return;
+    }
 
     if (node.inputs.depend.isUpdated) {
       node.outputs.depend.flagUpdate();
@@ -1067,10 +1074,10 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
               val = sockb.value;
               break;
             case PropSocketModes.MIN:
-              val = Math.min(val, sockb.value);
+              val = Math.min(val, sockb.value as number); // XXX bad cast!
               break;
             case PropSocketModes.MAX:
-              val = Math.max(val, sockb.value);
+              val = Math.max(val, sockb.value as number); // XXX bad cast!
               break;
           }
         }
@@ -1079,13 +1086,15 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       sock.value = val;
     }
 
-    function isNumArray(a) {
-      if (!Array.isArray(a)) {
+    function isNumArray(a: any) {
+      if (!(a instanceof Array)) {
         return false;
       }
 
+      const b = a as unknown as number[];
+
       for (let i = 0; i < a.length; i++) {
-        if (a[i] !== undefined && typeof a[i] !== "number" && typeof a[i] !== "boolean") {
+        if (b[i] !== undefined && typeof b[i] !== "number" && typeof b[i] !== "boolean") {
           return false;
         }
       }
@@ -1144,7 +1153,6 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   ensureGraph(): void {
-    console.log("Ensure Graph", this, this.graphNode, this.graphNode.id);
     if (!theEventGraph.has(this)) {
       theEventGraph.add(this);
     }
@@ -1159,9 +1167,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return this;
   }
 
-  getPropertySocket(prop: string, socktype: number): PropertySocket | undefined {
+  getPropertySocket(prop: string, socktype: string): PropertySocket | undefined {
     let node = this.graphNode;
-    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+    let sockets = socktype === SocketTypes.INPUT ? node!.inputs : node!.outputs;
 
     if (sockets[prop]) {
       return sockets[prop] as PropertySocket;
@@ -1170,11 +1178,11 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return undefined;
   }
 
-  ensurePropertySocket(prop: string, socktype: number): PropertySocket {
+  ensurePropertySocket(prop: string, socktype: SocketType): PropertySocket {
     this.ensureGraph();
 
-    let node = this.graphNode;
-    let sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+    let node = this.graphNode!;
+    let sockets = socktype === "inputs" ? node!.inputs : node!.outputs;
 
     if (sockets[prop]) {
       return sockets[prop] as PropertySocket;
@@ -1323,7 +1331,6 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this._internalDisabled = false;
     this.__disabledState = false;
     this._disdata = undefined;
-    this._ctx = undefined;
 
     this._description = undefined;
 
@@ -1379,28 +1386,28 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.addEventListener(
       "touchstart",
       (e) => {
-        do_touch(e, "mousedown", 0);
+        do_touch(e as TouchEvent, "mousedown", 0);
       },
       { passive: false }
     );
     this.addEventListener(
       "touchmove",
       (e) => {
-        do_touch(e, "mousemove");
+        do_touch(e as TouchEvent, "mousemove");
       },
       { passive: false }
     );
     this.addEventListener(
       "touchcancel",
       (e) => {
-        do_touch(e, "mouseup", 2);
+        do_touch(e as TouchEvent, "mouseup", 2);
       },
       { passive: false }
     );
     this.addEventListener(
       "touchend",
       (e) => {
-        do_touch(e, "mouseup", 0);
+        do_touch(e as TouchEvent, "mouseup", 0);
       },
       { passive: false }
     );
@@ -1433,7 +1440,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return this._parentWidget;
   }
 
-  set parentWidget(val) {
+  set parentWidget(val: UIBase<CTX> | undefined) {
     if (val) {
       this._wasAddedToNodeAtSomeTime = true;
     }
@@ -1442,13 +1449,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   get useDataPathUndo() {
-    let p = this;
+    let p = this as UIBase<CTX> | undefined;
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
         return p._useDataPathUndo;
       }
-
       p = p.parentWidget;
     }
 
@@ -1507,11 +1513,15 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return this.__background;
   }
 
-  set background(bg) {
+  set background(bg: string | undefined) {
     this.__background = bg;
 
-    this.overrideDefault("background-color", bg, true);
-    this.style["background-color"] = bg;
+    if (bg !== undefined) {
+      this.overrideDefault("background-color", bg, true);
+      this.saneStyle["backgroundColor"] = bg;
+    } else {
+      this.clearOverride("background-color");
+    }
   }
 
   get disabled() {
@@ -1588,12 +1598,14 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   static internalRegister(cls: typeof UIBase): void {
-    (cls as Record<symbol, unknown>)[ClassIdSymbol] = class_idgen++;
+    const clsAny = cls as any;
+    clsAny[ClassIdSymbol] = class_idgen++;
 
     registered_has_happened = true;
 
     internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
-    customElements.define(this.prefix(cls.define().tagname), cls);
+    // note: we override HTMLElement.prototype.animate in a type incompatible way
+    customElements.define(this.prefix(cls.define().tagname), cls as unknown as CustomElementConstructor);
   }
 
   static getInternalName(name: string): string | undefined {
@@ -1612,13 +1624,14 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
   static register(cls: typeof UIBase): void {
     registered_has_happened = true;
-
-    (cls as Record<symbol, unknown>)[ClassIdSymbol] = class_idgen++;
+    const clsAny = cls as any;
+    clsAny[ClassIdSymbol] = class_idgen++;
 
     ElementClasses.push(cls);
 
     externalElementNames[cls.define().tagname] = cls.define().tagname;
-    customElements.define(cls.define().tagname, cls);
+    //note: we override HTMLElement.prototype.animate in a type incompatible way
+    customElements.define(cls.define().tagname, cls as CustomElementConstructor);
   }
 
   /**
@@ -1658,7 +1671,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   get hidden(): boolean {
-    return super.hidden;
+    return super.hidden === "until-found" ? true : super.hidden;
   }
 
   hide(sethide = true): this {
@@ -1667,11 +1680,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   getElementById(id: string): HTMLElement | undefined {
-    let ret: HTMLElement | undefined;
+    let ret: HTMLElement | UIBase<CTX> | undefined;
 
-    let rec = (
-      n: HTMLElement & { shadow?: ShadowRoot; contents?: HTMLElement; tabs?: Record<string, HTMLElement> }
-    ) => {
+    let rec = (n: HTMLElement | UIBase<CTX>) => {
       if (ret) {
         return;
       }
@@ -1702,7 +1713,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         }
       }
 
-      if (n.shadow) {
+      if (n instanceof UIBase && n.shadow) {
         for (let n2 of n.shadow.childNodes) {
           if (n2 instanceof HTMLElement) {
             rec(n2);
@@ -1717,21 +1728,20 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     rec(this);
 
-    return ret;
+    return ret as HTMLElement;
   }
 
   unhide(): void {
     this.hide(false);
   }
 
-  findArea(): UIBase | undefined {
-    let p: UIBase | undefined = this;
+  findArea(): Area | undefined {
+    let p: any | undefined = this;
 
     while (p) {
-      if (Area && p instanceof Area) {
+      if (p[Symbol.IsAreaTag]) {
         return p;
       }
-
       p = p.parentWidget;
     }
 
@@ -1835,8 +1845,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
     keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
 
+    const style = this.saneStyle as any;
     for (let k of keys) {
-      this.style[k] = "0px";
+      style[k] = "0px";
     }
 
     return this;
@@ -1856,14 +1867,18 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   noMargins(): this {
-    this.style["margin"] = this.style["margin-left"] = this.style["margin-right"] = "0px";
-    this.style["margin-top"] = this.style["margin-bottom"] = "0px";
+    this.saneStyle["margin"] = this.saneStyle["margin-left"] = this.saneStyle["margin-right"] = "0px";
+    this.saneStyle["margin-top"] = this.saneStyle["margin-bottom"] = "0px";
     return this;
   }
 
+  get saneStyle(): { [k: string]: string } {
+    return this.saneStyle as unknown as { [k: string]: string };
+  }
+
   noPadding(): this {
-    this.style["padding"] = this.style["padding-left"] = this.style["padding-right"] = "0px";
-    this.style["padding-top"] = this.style["padding-bottom"] = "0px";
+    this.saneStyle["padding"] = this.saneStyle["padding-left"] = this.saneStyle["padding-right"] = "0px";
+    this.saneStyle["padding-top"] = this.saneStyle["padding-bottom"] = "0px";
     return this;
   }
 
@@ -1888,10 +1903,10 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       }
     };
 
-    doaabb(this);
+    doaabb(this as HTMLElement);
 
     this._forEachChildWidget((n) => {
-      doaabb(n);
+      doaabb(n as HTMLElement);
     });
 
     if (found) {
@@ -1975,13 +1990,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     let keys = ["left", "right", "top", "bottom"];
 
-    let sub;
+    let sub: any | undefined;
     if (subkey) {
       sub = this.getAttribute(subkey) || {};
     }
 
-    let def = (key) => {
-      if (sub) {
+    let def = (key: string) => {
+      if (sub && subkey) {
         return this.getSubDefault(subkey, key);
       }
 
@@ -1991,13 +2006,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     for (let i = 0; i < 2; i++) {
       let key = i ? "padding" : "margin";
 
-      this.style[key] = "unset";
+      this.saneStyle[key] = "unset";
 
       let val = def(key);
       if (val !== undefined) {
         //handle default first
         for (let j = 0; j < 4; j++) {
-          this.style[key + "-" + keys[j]] = val + "px";
+          this.saneStyle[key + "-" + keys[j]] = val + "px";
         }
       }
 
@@ -2007,13 +2022,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         let val2 = def(key2);
 
         if (val2 !== undefined) {
-          this.style[key2] = val2 + "px";
+          this.saneStyle[key2] = val2 + "px";
         }
       }
     }
 
-    this.style["border-radius"] = def("border-radius") + "px";
-    this.style["border"] = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+    this.saneStyle["border-radius"] = def("border-radius") + "px";
+    this.saneStyle["border"] = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
   }
 
   genBoxCSS(subkey?: string): string {
@@ -2021,13 +2036,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     let keys = ["left", "right", "top", "bottom"];
 
-    let sub;
+    let sub: any | undefined;
     if (subkey) {
       sub = this.getAttribute(subkey) || {};
     }
 
-    let def = (key) => {
-      if (sub) {
+    let def = (key: string) => {
+      if (sub && subkey) {
         return this.getSubDefault(subkey, key);
       }
 
@@ -2062,7 +2077,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     if (setBG) {
       let bg = this.getDefault("background-color");
       if (bg) {
-        this.style["background-color"] = bg;
+        this.saneStyle["background-color"] = "" + bg;
       }
     }
 
@@ -2071,7 +2086,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       return;
     }
 
-    let transform = "" + this.style["transform"];
+    let transform = "" + this.saneStyle["transform"];
 
     //try to preserve user set transform by selectively deleting scale
     //kind of hackish. . .
@@ -2082,7 +2097,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     //cut out scale
     let transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
-    this.style["transform"] = transform2 + ` scale(${zoom},${zoom})`;
+    this.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
   }
 
   flushSetCSS(): void {
@@ -2098,35 +2113,34 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     });
   }
 
-  /* Why is the DOM API argument order swapped here?*/
-  replaceChild(newnode: Node, node: Node): boolean {
+  replaceChild<T extends Node>(newnode: Node, oldnode: T): T {
     for (let i = 0; i < this.childNodes.length; i++) {
-      if (this.childNodes[i] === node) {
-        super.replaceChild(newnode, node);
-        return true;
+      if ((this.childNodes[i] as unknown as T) === oldnode) {
+        super.replaceChild(newnode, oldnode);
+        return oldnode;
       }
     }
 
     for (let i = 0; i < this.shadow.childNodes.length; i++) {
-      if (this.shadow.childNodes[i] === node) {
-        this.shadow.replaceChild(newnode, node);
-        return true;
+      if ((this.shadow.childNodes[i] as unknown as T) === oldnode) {
+        this.shadow.replaceChild(newnode, oldnode);
+        return oldnode;
       }
     }
 
-    console.error("Unknown child node", node);
-    return false;
+    console.error("Unknown child node", oldnode);
+    return oldnode;
   }
 
-  swapWith(b: UIBase): boolean {
-    let p1: Node | null | UIBase = this.parentNode;
-    let p2: Node | null | UIBase = b.parentNode;
+  swapWith(b: UIBase<CTX>): boolean {
+    let p1: Node | undefined | null | UIBase<CTX> = this.parentNode;
+    let p2: Node | undefined | null | UIBase<CTX> = b.parentNode;
 
-    if ((this.parentWidget && p1 === this.parentWidget.shadow) || p1 === null) {
+    if ((this.parentWidget && p1 === this.parentWidget.shadow) || !p1) {
       p1 = this.parentWidget;
     }
 
-    if ((b.parentWidget && p2 === b.parentWidget.shadow) || p2 === null) {
+    if ((b.parentWidget && p2 === b.parentWidget.shadow) || !p2) {
       p2 = b.parentWidget;
     }
 
@@ -2146,6 +2160,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       return [i, p];
     };
 
+    this.removeChild;
     let [i1, n1] = getPos(this, p1);
     let [i2, n2] = getPos(b, p2);
 
@@ -2199,7 +2214,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       let stack: (Node & { shadow?: ShadowRoot })[] = [this2];
 
       while (stack.length > 0) {
-        let n = stack.pop();
+        let n = stack.pop()!;
 
         visit.add(n);
 
@@ -2260,7 +2275,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       }
 
       this._clipboard_events = false;
-      window.removeEventListener("keydown", this._clipboard_keydown, { capture: true, passive: false });
+      window.removeEventListener("keydown", this._clipboard_keydown as any, { capture: true });
     };
 
     this._clipboard_keydown = (e: KeyboardEvent, internal_mode?: boolean) => {
@@ -2418,12 +2433,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
    * */
   on_remove(): void {}
 
-  removeChild(child: UIBase, trigger_on_destroy = true): void {
+  removeChild<T extends Node>(child: T, trigger_on_destroy = true): T {
     super.removeChild(child);
-
-    if (trigger_on_destroy) {
+    if (trigger_on_destroy && child instanceof UIBase) {
       child._ondestroy();
     }
+    return child;
   }
 
   flushUpdate(force = false): void {
@@ -2513,8 +2528,8 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     let n: Node | null | UIBase | undefined = this;
 
     while (n) {
-      if ((n as HTMLElement).style && (n as HTMLElement).style["z-index"]) {
-        let z = parseFloat((n as HTMLElement).style["z-index"]);
+      if ((n as HTMLElement).style && (n as HTMLElement).style["zIndex"]) {
+        let z = parseFloat((n as HTMLElement).style["zIndex"]);
         return z;
       }
 
@@ -2553,10 +2568,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     if (mouseEvent) {
       isMouseMove =
         mouseEvent.type === "mousemove" || mouseEvent.type === "touchmove" || mouseEvent.type === "pointermove";
-      isMouseDown =
-        mouseEvent.buttons ||
-        ((mouseEvent as TouchEvent & { touches?: TouchList }).touches &&
-          (mouseEvent as TouchEvent & { touches: TouchList }).touches.length > 0);
+      isMouseDown = eventWasMouseDown(mouseEvent as PointerEvent);
     }
 
     x -= window.scrollX;
@@ -2609,13 +2621,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         let rect = node.getBoundingClientRect();
         let clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
 
-        ok = ok && clip2;
+        ok = ok && Boolean(clip2);
       }
 
       if (ok) {
         window.elem = node;
         //console.log(node._id);
-        return node;
+        return node as UIBase<CTX>;
       }
     }
   }
@@ -2628,8 +2640,8 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.__disabledState = !!val;
 
     if (val && !this._disdata) {
-      let style = this.getDefault("disabled") ||
-        this.getDefault("internalDisabled") || {
+      let style: any = this.getDefault("disabled") ??
+        this.getDefault("internalDisabled") ?? {
           "background-color": this.getDefault("DisabledBG"),
         };
 
@@ -2640,17 +2652,17 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
       for (let k in style) {
         //save old style information
-        this._disdata.style[k] = this.style[k];
+        this._disdata.style[k] = this.saneStyle[k];
         this._disdata.defaults[k] = this.default_overrides[k];
 
         let v = style[k];
 
         if (typeof v === "object" && v instanceof CSSFont) {
-          this.style[k] = style[k].genCSS();
+          this.saneStyle[k] = style[k].genCSS();
         } else if (typeof v === "object") {
           continue;
         } else {
-          this.style[k] = style[k];
+          this.saneStyle[k] = style[k];
         }
         this.default_overrides[k] = style[k];
       }
@@ -2660,7 +2672,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     } else if (!val && this._disdata) {
       //load old style information
       for (let k in this._disdata.style) {
-        this.style[k] = this._disdata.style[k];
+        this.saneStyle[k] = this._disdata.style[k];
       }
 
       for (let k in this._disdata.defaults) {
@@ -2673,7 +2685,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         }
       }
 
-      //this.background = this.style["background-color"];
+      //this.background = this.saneStyle["background-color"];
       this._disdata = undefined;
 
       this.__disabledState = !!val;
@@ -2682,7 +2694,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     this.__disabledState = !!val;
 
-    let visit = (n) => {
+    let visit = (n: UIBase | HTMLElement | Node) => {
       if (n instanceof UIBase) {
         let changed = !!n.__disabledState;
 
@@ -2745,7 +2757,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     }
 
     if (pointerId !== undefined && pointerElem) {
-      this._modaldata = pushPointerModal(handlers2, autoStopPropagation);
+      this._modaldata = pushPointerModal(handlers2, undefined, undefined, autoStopPropagation);
     } else {
       this._modaldata = pushModalLight(handlers2, autoStopPropagation);
     }
@@ -2759,7 +2771,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       return;
     }
 
-    popModalLight(this._modaldata);
+    popModalLight(this._modaldata!);
     this._modaldata = undefined;
   }
 
@@ -2768,11 +2780,17 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.focus();
   }
 
-  flash(color: string | number[], rect_element: UIBase | HTMLElement = this, timems = 355, autoFocus = true): void {
-    if (typeof color != "object") {
-      color = css2color(color);
+  flash(
+    colorIn: string | number[] | vectormath.Vector3 | vectormath.Vector4,
+    rect_element: UIBase | HTMLElement = this,
+    timems = 355,
+    autoFocus = true
+  ): void {
+    if (typeof colorIn === "string") {
+      colorIn = Array.from(css2color(colorIn));
     }
-    color = new Vector4(color);
+    const color = new Vector4(colorIn as number[]);
+
     let csscolor = color2css(color);
 
     if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
@@ -2794,7 +2812,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     //okay, dom apparently calls onchange() on .remove, so we have
     //to put the timer code first to avoid loops
-    let timer;
+    let timer: number | undefined;
     let tick = 0;
     let max = ~~(timems / 20);
 
@@ -2807,7 +2825,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       }
 
       let a = 1.0 - tick / max;
-      div.style["background-color"] = color2css(color, a * a * 0.5);
+      div.style["backgroundColor"] = color2css(color, a * a * 0.5);
 
       if (tick > max) {
         window.clearInterval(timer);
@@ -2827,20 +2845,21 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     };
 
     window.setTimeout(cb, 5);
-    this._flashtimer = timer = window.setInterval(cb, 20);
+    timer = window.setInterval(cb, 20);
+    this._flashtimer = timer;
 
     let div = document.createElement("div");
 
-    div.style["pointer-events"] = "none";
+    div.style["pointerEvents"] = "none";
     div.tabIndex = -1;
-    div.style["z-index"] = "900";
+    div.style["zIndex"] = "900";
     div.style["display"] = "float";
     div.style["position"] = UIBase.PositionKey;
     div.style["margin"] = "0px";
     div.style["left"] = x + "px";
     div.style["top"] = y + "px";
 
-    div.style["background-color"] = color2css(color, 0.5);
+    div.style["backgroundColor"] = color2css(color, 0.5);
     div.style["width"] = rect.width + "px";
     div.style["height"] = rect.height + "px";
     div.setAttribute("class", "UIBaseFlash");
@@ -2882,7 +2901,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     }
   }
 
-  getPathValue(ctx: { api: Record<string, Function> }, path: string): unknown {
+  getPathValue(ctx: CTX, path: string): unknown {
     try {
       return ctx.api.getValue(ctx, path);
     } catch (error) {
@@ -2895,16 +2914,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.pathUndoGen++;
   }
 
-  setPathValueUndo(
-    ctx: { api: Record<string, Function>; toolstack: Record<string, Function | unknown> },
-    path: string,
-    val: unknown
-  ): void {
+  setPathValueUndo(ctx: CTX, path: string, val: unknown): void {
     this.pathSocketUpdate(ctx, path);
 
     let mass_set_path = this.getAttribute("mass_set_path");
-    let rdef = ctx.api.resolvePath(ctx, path) as Record<string, unknown>;
-    let prop = rdef.prop as Record<string, unknown>;
+    let rdef = ctx.api.resolvePath(ctx, path)!;
+    let prop = rdef.prop!;
 
     if (ctx.api.getValue(ctx, path) === val) {
       return;
@@ -2929,14 +2944,14 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
 
-      let toolop = (getDataPathToolOp() as Record<string, Function>).create(ctx, path, val, this._id, mass_set_path);
+      let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? undefined);
 
       /* getDataPathToolOp.create can return false in case of no-op paths. */
       if (!toolop) {
         return;
       }
 
-      (ctx.toolstack as Record<string, Function>).execTool(this.ctx, toolop);
+      ctx.toolstack.execTool(this.ctx, toolop);
       head = toolstack.head as Record<string, Function> | undefined;
     }
 
@@ -2946,8 +2961,8 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   }
 
   loadNumConstraints(
-    prop: Record<string, unknown> | undefined = undefined,
-    dom: HTMLElement & { hasAttribute: HTMLElement["hasAttribute"]; getAttribute: HTMLElement["getAttribute"] } = this,
+    prop: ResolvedProp | toolprop.ToolProperty,
+    dom: HTMLElement | UIBase<CTX> = this,
     onModifiedCallback?: (this: UIBase) => void
   ): void {
     let modified = false;
@@ -2964,7 +2979,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       }
 
       if (typeof path === "string") {
-        prop = this.getPathMeta(this.ctx, path);
+        prop = this.getPathMeta(this.ctx, path) ?? prop;
       }
     }
 
@@ -2974,7 +2989,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       if (dom.hasAttribute(domkey)) {
         (this as Record<string, unknown>)[thiskey] = parseFloat(dom.getAttribute(domkey)!);
       } else if (prop) {
-        (this as Record<string, unknown>)[thiskey] = prop[propkey];
+        (this as Record<string, unknown>)[thiskey] = (prop as any)[propkey];
       }
 
       if ((this as Record<string, unknown>)[thiskey] !== old) {
@@ -2994,6 +3009,10 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       loadAttr(key, domkey, thiskey);
     }
 
+    if (this.range === undefined) {
+      this.range = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+    }
+
     let oldmin = this.range[0];
     let oldmax = this.range[1];
 
@@ -3001,13 +3020,13 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     if (range && !dom.hasAttribute("min")) {
       this.range[0] = range[0];
     } else if (dom.hasAttribute("min")) {
-      this.range[0] = parseFloat(dom.getAttribute("min"));
+      this.range[0] = parseFloat(dom.getAttribute("min")!);
     }
 
     if (range && !dom.hasAttribute("max")) {
       this.range[1] = range[1];
     } else if (dom.hasAttribute("max")) {
-      this.range[1] = parseFloat(dom.getAttribute("max"));
+      this.range[1] = parseFloat(dom.getAttribute("max")!);
     }
 
     if (this.range[0] !== oldmin || this.range[1] !== oldmax) {
@@ -3062,14 +3081,14 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
   */
 
   pushReportContext(key: string): void {
-    let api = (this.ctx as { api: Record<string, Function> }).api;
+    let api = this.ctx.api;
     if (api.pushReportContext) {
       api.pushReportContext(key);
     }
   }
 
   popReportContext(): void {
-    let api = (this.ctx as { api: Record<string, Function> }).api;
+    let api = this.ctx.api;
     if (api.popReportContext) api.popReportContext();
   }
 
@@ -3078,11 +3097,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return this;
   }
 
-  setPathValue(
-    ctx: { api: Record<string, Function>; toolstack?: Record<string, Function> },
-    path: string,
-    val: unknown
-  ): void {
+  setPathValue<T = unknown>(ctx: CTX, path: string, val: T): void {
     this.pathSocketUpdate(ctx, path);
 
     if (this.useDataPathUndo) {
@@ -3108,7 +3123,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     try {
       if (this.hasAttribute("mass_set_path")) {
-        ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
+        ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path")!, val);
         ctx.api.setValue(ctx, path, val);
       } else {
         ctx.api.setValue(ctx, path, val);
@@ -3126,7 +3141,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.popReportContext();
   }
 
-  getPathMeta(ctx: { api: Record<string, Function> }, path: string): unknown {
+  getPathMeta(ctx: CTX, path: string) {
     this.pushReportContext(this._reportCtxName);
     let ret = ctx.api.resolvePath(ctx, path);
     this.popReportContext();
@@ -3134,7 +3149,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     return ret !== undefined ? ret.prop : undefined;
   }
 
-  getPathDescription(ctx: { api: Record<string, Function> }, path: string): string | undefined {
+  getPathDescription(ctx: CTX, path: string): string | undefined {
     let ret;
     this.pushReportContext(this._reportCtxName);
 
@@ -3161,38 +3176,6 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
   isDead(): boolean {
     return !this.isConnected;
-    let p = this,
-      lastp = this;
-
-    function find(c, n) {
-      for (let n2 of c) {
-        if (n2 === n) {
-          return true;
-        }
-      }
-    }
-
-    while (p) {
-      lastp = p;
-
-      let parent = p.parentWidget;
-      if (!parent) {
-        parent = p.parentElement ? p.parentElement : p.parentNode;
-      }
-
-      if (parent && p && !find(parent.childNodes, p)) {
-        if (parent.shadow !== undefined && !find(parent.shadow.childNodes)) {
-          return true;
-        }
-      }
-      p = parent;
-
-      if (p === document.body) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   doOnce(
@@ -3203,15 +3186,15 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       func._doOnce_reqs = new Set();
 
       func._doOnce = function (thisvar, trace) {
-        if (func._doOnce_reqs.has(thisvar._id)) {
+        if (func._doOnce_reqs!.has(thisvar._id)) {
           return;
         }
 
-        func._doOnce_reqs.add(thisvar._id);
+        func._doOnce_reqs!.add(thisvar._id);
 
         function f() {
           if (thisvar.isDead()) {
-            func._doOnce_reqs.delete(thisvar._id);
+            func._doOnce_reqs!.delete(thisvar._id);
 
             if (func === thisvar._init || !cconst.DEBUG.doOnce) {
               return;
@@ -3230,7 +3213,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
             return;
           }
 
-          func._doOnce_reqs.delete(thisvar._id);
+          func._doOnce_reqs!.delete(thisvar._id);
           func.call(thisvar);
         }
 
@@ -3239,24 +3222,23 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     }
 
     let trace = new Error().stack;
-    func._doOnce(this, trace);
+    func._doOnce(this, trace!);
   }
 
   float(x = 0, y = 0, zindex?: number | string, positionKey = UIBase.PositionKey): this {
-    this.style.position = positionKey;
+    this.saneStyle.position = positionKey;
 
-    this.style.left = x + "px";
-    this.style.top = y + "px";
+    this.saneStyle.left = x + "px";
+    this.saneStyle.top = y + "px";
 
     if (zindex !== undefined) {
-      this.style["z-index"] = zindex;
+      this.saneStyle["z-index"] = "" + zindex;
     }
 
     return this;
   }
 
-  _ensureChildrenCtx(): void {
-    let ctx = this.ctx;
+  _ensureChildrenCtx(ctx = this.ctx): void {
     if (ctx === undefined) {
       return;
     }
@@ -3338,15 +3320,15 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
             return;
           }
 
-          state[type](e);
+          (state as any)[type](e);
         };
 
         if (etype in state.handlers) {
           console.error(type, "is in handlers already");
-          return;
+          return (state.handlers as any)[etype]!;
         }
 
-        state.handlers[etype] = handler;
+        (state.handlers as any)[etype] = handler;
         return handler;
       };
 
@@ -3454,7 +3436,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     } else if (this.#reflagGraph) {
       this.#reflagGraph = false;
 
-      for (let [k, sock] of Object.entries(this.graphNode.inputs)) {
+      for (let [k, sock] of Object.entries(this.graphNode!.inputs)) {
         sock.flagUpdate();
       }
     }
@@ -3466,7 +3448,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     this.updateEventGraph();
 
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
-      let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
+      let d = this.getPathDescription(this.ctx, this.getAttribute("datapath")!);
 
       this.description = d;
     }
@@ -3540,6 +3522,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
    * the toJSON/loadJSON or STRUCT interfaces.
    */
   loadData(obj: Record<string, unknown>): this {
+    return this;
+  }
+
+  clearOverride(key: string, localOnly = false): this {
+    delete this.my_default_overrides[key];
+    if (!localOnly) delete this.default_overrides[key];
     return this;
   }
 
@@ -3698,7 +3686,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     }
   }
 
-  getDefault(key: string, checkForMobile?: boolean, defaultval?: unknown, inherit?: boolean): unknown {
+  getDefault<T extends number | string | CSSFont = string>(
+    key: string,
+    checkForMobile?: boolean,
+    defaultval?: unknown,
+    inherit?: boolean
+  ): T {
     let ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
 
     //convert pixel units straight to numbers
@@ -3708,11 +3701,11 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
       let f = parseFloat(s);
       if (!isNaN(f) && isFinite(f)) {
-        return f;
+        return f as unknown as T;
       }
     }
 
-    return ret;
+    return ret as unknown as T;
   }
 
   getDefault_intern(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
@@ -3777,7 +3770,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       return true;
     }
 
-    if (style in theme && key in theme[style]) {
+    if (style in theme && key in (theme as any)[style]) {
       return true;
     }
 
@@ -3809,9 +3802,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
 
     if (
       val === undefined &&
-      style in theme &&
-      !(key in (theme[style] as Record<string, unknown>)) &&
-      !(key in (theme.base as Record<string, unknown>))
+      style in theme && //
+      !(key in (theme as any)[style]) &&
+      !(key in (theme.base as any))
     ) {
       if (window.DEBUG && (window.DEBUG as Record<string, boolean>).theme) {
         report("Missing theme key ", key, "for", style);
@@ -3877,6 +3870,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
    *
    * container.animate().goto("style.width", 500, 100, "ease");
    * */
+  // @ts-expect-error
   animate(
     _extra_handlers: Record<string, Function> | Keyframe[] | PropertyIndexedKeyframes | null = {},
     domAnimateOptions?: KeyframeAnimationOptions | number
@@ -3886,12 +3880,12 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       return super.animate(_extra_handlers as Keyframe[], domAnimateOptions);
     }
 
-    let transform = new DOMMatrix(this.style["transform"]);
+    let transform = new DOMMatrix(this.saneStyle["transform"]);
 
     let update_trans = () => {
       let t = transform;
       let css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
-      this.style["transform"] = css;
+      this.saneStyle["transform"] = css;
     };
 
     let handlers: Record<string, Function> = {
@@ -3909,7 +3903,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       dx_get() {
         return transform.m41;
       },
-      dx_set(x) {
+      dx_set(x: number) {
         transform.m41 = x;
         update_trans();
       },
@@ -3917,7 +3911,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
       dy_get() {
         return transform.m42;
       },
-      dy_set(x) {
+      dy_set(x: number) {
         transform.m42 = x;
         update_trans();
       },
@@ -3945,9 +3939,9 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     ];
     handlers = Object.assign(handlers, _extra_handlers);
 
-    let makePixHandler = (k, k2) => {
+    let makePixHandler = (k: string, k2: string) => {
       handlers[k2 + "_get"] = () => {
-        let s = this.style[k];
+        let s = this.saneStyle[k];
 
         if (s.endsWith("px")) {
           return parsepx(s);
@@ -3956,8 +3950,8 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         }
       };
 
-      handlers[k2 + "_set"] = (val) => {
-        this.style[k] = val + "px";
+      handlers[k2 + "_set"] = (val: number | string) => {
+        this.saneStyle[k] = val + "px";
       };
     };
 
@@ -3976,7 +3970,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         if (key + "_get" in handlers) {
           return handlers[key + "_get"].call(target);
         } else {
-          return (target as Record<string, unknown>)[key];
+          return (target as any)[key];
         }
       },
       set: (target: UIBase, key: string, val: unknown, receiver: unknown) => {
@@ -3985,7 +3979,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
         if (key + "_set" in handlers) {
           handlers[key + "_set"].call(target, val);
         } else {
-          (target as Record<string, unknown>)[key] = val;
+          (target as any)[key] = val;
         }
 
         return true;
@@ -3993,7 +3987,7 @@ export class UIBase<CTX extends IContextBase = IContextBase> extends HTMLElement
     };
 
     let proxy = new Proxy(this, handler);
-    let anim = new Animator(proxy);
+    let anim = new Animator(proxy as any);
 
     anim.onend = () => {
       this._active_animations.remove(anim);
@@ -4162,7 +4156,7 @@ export function _ensureFont(
   if (canvas.font) {
     g.font = canvas.font;
   } else {
-    let font = elem.getDefault("DefaultText");
+    let font = elem.getDefault<CSSFont>("DefaultText");
     g.font = font.genCSS(size);
   }
 }
@@ -4229,7 +4223,7 @@ export function measureText(
   g?: CanvasRenderingContext2D,
   size?: number,
   font?: CSSFont | string
-): TextMetrics {
+): TextMetrics & { width: number, height?: number } {
   if (
     typeof canvas === "object" &&
     canvas !== null &&
@@ -4292,12 +4286,14 @@ export function drawText(
   let canvas = args.canvas,
     g = args.g,
     color: string | number[] | undefined = args.color,
-    font: CSSFont | string | undefined = args.font;
+    fontIn: CSSFont | string | undefined = args.font;
   let size = args.size;
 
+  let font = fontIn instanceof CSSFont ? fontIn.genCSS(size) : fontIn;
+
   if (size === undefined) {
-    if (font !== undefined && font instanceof CSSFont) {
-      size = font.size;
+    if (fontIn !== undefined && fontIn instanceof CSSFont) {
+      size = fontIn.size;
     } else {
       size = (elem.getDefault("DefaultText") as CSSFont).size;
     }
@@ -4306,8 +4302,8 @@ export function drawText(
   size *= UIBase.getDPI();
 
   if (color === undefined) {
-    if (font && font.color) {
-      color = font.color;
+    if (fontIn instanceof CSSFont && fontIn.color) {
+      color = fontIn.color;
     } else {
       color = (elem.getDefault("DefaultText") as CSSFont).color;
     }
@@ -4315,8 +4311,8 @@ export function drawText(
 
   if (font === undefined) {
     _ensureFont(elem, canvas!, g!, size);
-  } else if (typeof font === "object" && font instanceof CSSFont) {
-    g!.font = font.genCSS(size);
+  } else if (fontIn instanceof CSSFont) {
+    g!.font = fontIn.genCSS(size);
   } else if (font) {
     g!.font = font as string;
   }
@@ -4405,18 +4401,19 @@ export function saveUIData(node: UIBase, key: string): string {
   });
 }
 
-window._saveUIData = saveUIData;
-
 export function loadUIData(node: UIBase, buf: string | null | undefined): void {
   if (buf === undefined || buf === null) {
     return;
   }
 
   let obj = JSON.parse(buf);
-  let key = buf.key;
 
   for (let path of obj.paths) {
-    let n = node;
+    let n = node as typeof node | undefined;
+
+    if (n === undefined) {
+      break;
+    }
 
     let data = path[path.length - 1];
     path = path.slice(2, path.length - 1); //in case some api doesn't want me calling .pop()
@@ -4428,13 +4425,13 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
       let list;
 
       if (shadow) {
-        list = n.shadow;
+        list = n!.shadow;
 
         if (list) {
           list = list.childNodes;
         }
       } else {
-        list = n.childNodes;
+        list = n!.childNodes;
       }
 
       if (list === undefined || list[ni] === undefined) {
@@ -4443,7 +4440,7 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
         break;
       }
 
-      n = list[ni];
+      n = list[ni] as typeof n;
     }
 
     if (n !== undefined && n instanceof UIBase) {
@@ -4456,8 +4453,6 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
 }
 
 UIBase.PositionKey = "fixed";
-
-window._loadUIData = loadUIData;
 
 //avoid explicit circular references
 aspect._setUIBase(UIBase);
