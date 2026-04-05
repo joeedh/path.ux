@@ -959,7 +959,7 @@ interface ToolTipState {
   handlers: Record<string, EventListener>;
 }
 
-export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> extends HTMLElement {
+export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extends HTMLElement {
   static PositionKey: string;
 
   declare ["constructor"]: typeof UIBase;
@@ -1026,6 +1026,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
   decimalPlaces?: number;
   editAsBaseUnit?: boolean;
   range?: [number, number];
+  // XXX review this later
   declare value: VALUE;
   ondestroy?: () => void;
   getValue?: () => unknown;
@@ -2100,6 +2101,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
     this.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
   }
 
+  //TS patch into this.update.after
+  setCSSAfter(cb: () => void) {
+    const anyThis = this as unknown as any
+    return anyThis.setCSSAfter(cb)
+  }
+  
   flushSetCSS(): void {
     //check init
     this._init();
@@ -2302,7 +2309,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
       //pasteForAllChildren
       if (!internal_mode) {
         let screen = (
-          this.ctx as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
+          this.ctx as unknown as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
         ).screen;
         let elem: UIBase | undefined = screen.pickElement(screen.mpos[0], screen.mpos[1]);
 
@@ -2468,7 +2475,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
    * tree and stopping at any node that's
    * descended from ui_base.UIBase
    **/
-  _forEachChildWidget(cb: (n: UIBase) => void, thisvar?: unknown): void {
+  _forEachChildWidget(cb: (n: UIBase<CTX>) => void, thisvar?: unknown): void {
     let rec = (n: Node & { shadow?: ShadowRoot }) => {
       if (n instanceof UIBase) {
         if (thisvar !== undefined) {
@@ -3382,7 +3389,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
     this._tool_tip_abort_delay = undefined;
 
     let screen = (
-      this.ctx as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
+      this.ctx as unknown as { screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined } }
     ).screen;
 
     const timelimit = 500;
@@ -3440,6 +3447,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = unknown> ex
         sock.flagUpdate();
       }
     }
+  }
+
+  //TS patch into this.update.after
+  updateAfter(cb: () => void) {
+    const anyThis = this as unknown as any
+    return anyThis.update.after(cb)
   }
 
   //called regularly

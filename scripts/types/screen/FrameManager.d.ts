@@ -4,6 +4,8 @@ import { Vector2 } from "../../path-controller/types/util/vectormath";
 import { ScreenArea } from "./ScreenArea";
 
 export class Screen<CTX = Context> extends UIBase<CTX> {
+  size: [number, number]
+  
   listen(): void;
 
   unlisten(): void;

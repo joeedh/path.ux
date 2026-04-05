@@ -1,4 +1,3 @@
-// @ts-nocheck -- TODO(ts-conversion): Vector2 index signature incompatible with solver's VectorLike
 "use strict";
 
 import { Vector2 } from "./vectormath.js";
@@ -215,8 +214,21 @@ export function graphPack(
     let a1 = n1.size[0] * n1.size[1];
     let a2 = n2.size[0] * n2.size[1];
 
-    return math.aabb_overlap_area(p1, s1, p2, s2);
-    return math.aabb_overlap_area(p1, s1, p2, s2) / (a1 + a2);
+    return math.aabb_overlap_area(
+      p1 as unknown as number[],
+      s1 as unknown as number[],
+      p2 as unknown as number[],
+      s2 as unknown as number[]
+    );
+    return (
+      math.aabb_overlap_area(
+        p1 as unknown as number[],
+        s1 as unknown as number[],
+        p2 as unknown as number[],
+        s2 as unknown as number[]
+      ) /
+      (a1 + a2)
+    );
   }
 
   let lasterr: number | undefined, besterr: number | undefined, best: PackNode[] | undefined;
@@ -276,7 +288,12 @@ export function graphPack(
         if (visit.has(key as unknown as PackNode)) continue;
 
         loadBoxes(n1, n2);
-        let area = math.aabb_overlap_area(p1, s1, p2, s2);
+        let area = math.aabb_overlap_area(
+          p1 as unknown as number[],
+          s1 as unknown as number[],
+          p2 as unknown as number[],
+          s2 as unknown as number[]
+        );
 
         if (area > 0.01) {
           isect.push([n1, n2]);

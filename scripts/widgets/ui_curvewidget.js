@@ -258,7 +258,7 @@ export class Curve1DWidget extends ColumnFrame {
     });
 
     let last_update_key = "";
-    this.container.update.after(() => {
+    this.container.updatAfter(() => {
       const xRange = this._value.xRange;
       const yRange = this._value.yRange;
       let key = "" + xRange[0] + ":" + xRange[1]

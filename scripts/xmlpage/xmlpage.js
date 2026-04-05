@@ -303,7 +303,7 @@ class Handler {
     }
 
     if (elem2 instanceof UIBase) {
-      elem2.setCSS.after(() => {
+      elem2.setCSSAfter(() => {
         setStyle();
       });
     }
@@ -503,7 +503,7 @@ class Handler {
 
           console.warn(`Relative styling of '${key}' may be unstable for this element`, elem);
 
-          elem.setCSS.after(function () {
+          elem.setCSSAfter(function () {
             this.style[key] = val;
           });
         } else {

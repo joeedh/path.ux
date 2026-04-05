@@ -658,7 +658,7 @@ export class Screen extends ui_base.UIBase {
     let p = new Vector2();
 
     let _update = container.update;
-    container.update.after(() => {
+    container.updateAfter(() => {
       container.style["z-index"] = "2205";
     });
 

@@ -212,7 +212,7 @@ export class NoteFrame extends ui.RowFrame {
   progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id = msg) {
     let note;
 
-    for (let child of this.children) {
+    for (let child of this.childWidgets) {
       if (child._noteid === id) {
         note = child;
         break;

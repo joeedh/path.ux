@@ -12,27 +12,76 @@ npm run format         # prettier --write
 npm run format:check   # prettier --check
 ```
 
+## Vector classes
+
+By design vectors do not have a simple index signature.
+Instead, indices up to LEN type to number, while indices above
+LEN type to number | undefined.
+
+This is to prevent mixing of incompatible vectors.
+
+This can create problems with iteration, for example:
+
+  ```ts
+  let v = new Vector3()
+  for (let i=0; i<3; i++) {
+    // will not work
+    v[i] = i
+    // will work
+    v[i] = i as Number3
+  }
+  
+  //alternative with IndexRange:
+  for (const i of IndexRange(3)) {
+    v[i] = i
+  }
+  ```
+
 ## Project Structure
 
-- `scripts/` — main source (TypeScript, converting from JS)
-- `scripts/path-controller/` — git submodule (data binding, tool system, math)
-- `scripts/core/` — UIBase, Container, theme, animation
-- `scripts/widgets/` — UI widget classes (extend UIBase)
-- `scripts/screen/` — FrameManager, ScreenArea, area management
-- `scripts/platforms/` — platform abstraction (web, electron)
-- `scripts/simple/` — simple app framework
-- `docs_src/` — documentation source (markdown)
-- `dist/` — built output
+ `scripts/` — main source (TypeScript, converting from JS)
+ `scripts/path-controller/` — git submodule (data binding, tool system, math)
+ `scripts/core/` — UIBase, Container, theme, animation
+ `scripts/widgets/` — UI widget classes (extend UIBase)
+ `scripts/screen/` — FrameManager, ScreenArea, area management
+ `scripts/platforms/` — platform abstraction (web, electron)
+ `scripts/simple/` — simple app framework
+ `docs_src/` — documentation source (markdown)
+ `dist/` — built output
 
 ## Conventions
 
-- Do not add type annotations if types can be inferred
-- **TypeScript**: `strictNullChecks: true` in all tsconfigs
-- **No `any`**: except at `JSON.parse` boundaries, immediately narrowed
-- **Formatting**: prettier (see `.prettierrc`)
-- **Tests**: vitest for unit tests, Playwright for DOM widget tests
-- **Modules**: ES modules (`"type": "module"` in package.json)
-- **Entry point**: `scripts/pathux.ts` → re-exported from root `pathux.js`
+ Do not add type annotations if types can be inferred
+ TypeScript: `strictNullChecks: true` in all tsconfigs
+ No `any`: except at `JSON.parse` boundaries, immediately narrowed
+ Formatting: prettier (see `.prettierrc`)
+ Tests: vitest for unit tests, Playwright for DOM widget tests
+ Modules: ES modules (`"type": "module"` in package.json)
+ Entry point: `scripts/pathux.ts` → re-exported from root `pathux.js`
+
+## Context
+
+Children of `UIBase` should all take a `CTX` generic parameter that extends
+`IContextBase` and defaults to `IContextBase`.  They should pass this parameter
+up the inheritance chain, e.g.:
+
+```ts
+class MyWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+}
+```
+
+## Widget values
+
+If widgets implement `getValue` with a specific type they should pass that to UIBase, e.g.
+
+```ts
+class MyNumberWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
+  value = 1.0
+  getValue(): number {return this.value}
+  setValue(value: number) {return this.value}
+}
+
+```
 
 ## ToolOp
 

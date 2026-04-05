@@ -1,8 +1,3 @@
-/* Remaining type errors (116) stem from ui_base.ts lacking typed property
- * declarations (packflag, shadow, ctx, parentWidget, etc. are all assigned
- * dynamically in UIBase's constructor). Once ui_base.ts is fully typed,
- * remove @ts-nocheck -- all annotations below are ready for strict mode. */
-
 //bind module to global var to get at it in console.
 //
 //note that require has an api for handling circular
@@ -36,6 +31,9 @@ let Vector2 = vectormath.Vector2,
 import { DataPathError } from "../path-controller/controller/controller_base.js";
 
 import cconst from "../config/const.js";
+import { IContextBase } from "./context_base.js";
+import type { PanelFrame } from "../widgets/ui_panel.js";
+import type { TabContainer } from "../widgets/ui_tabs.js";
 
 /*
  * UIBase assigns many properties dynamically in its constructor without
@@ -47,12 +45,17 @@ function dyn(v: unknown): Dyn {
   return v as Dyn;
 }
 
+type CtxApi = Record<string, unknown> & { api: Record<string, Function> };
+function ctxApi(ctx: unknown): CtxApi {
+  return ctx as unknown as CtxApi;
+}
+
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }): Record<string, string> {
   return el.style as unknown as Record<string, string>;
 }
 
-export class Label extends ui_base.UIBase {
+export class Label<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   declare dom: HTMLDivElement;
   declare shadow: ShadowRoot;
   declare packflag: number;
@@ -166,9 +169,9 @@ export class Label extends ui_base.UIBase {
       return;
     }
 
-    let path = this.getAttribute("datapath");
-    let prop = this.getPathMeta(this.ctx, path);
-    let val = this.getPathValue(this.ctx, path);
+    let path = this.getAttribute("datapath")!;
+    let prop = this.getPathMeta(this.ctx, path)!;
+    let val: unknown = this.getPathValue(this.ctx, path);
 
     if (val === undefined) {
       return;
@@ -176,14 +179,14 @@ export class Label extends ui_base.UIBase {
 
     //console.log(path);
     if (prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
-      val = units.buildString(val, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
+      val = units.buildString(val as number, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
 
-    val = "" + this._label + " " + val;
+    let valStr = "" + this._label + " " + val;
 
-    if (val !== this._lastText) {
-      this._lastText = val;
-      this.dom.innerText = val;
+    if (valStr !== this._lastText) {
+      this._lastText = valStr;
+      this.dom.innerText = valStr;
     }
   }
 
@@ -207,9 +210,9 @@ export class Label extends ui_base.UIBase {
   }
 }
 
-ui_base.UIBase.internalRegister(Label);
+ui_base.UIBase.internalRegister(Label as unknown as typeof ui_base.UIBase);
 
-export class Container extends ui_base.UIBase {
+export class Container<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   declare shadow: ShadowRoot;
   declare packflag: number;
   declare _useDataPathUndo: boolean | undefined;
@@ -259,10 +262,10 @@ export class Container extends ui_base.UIBase {
     (this.style as unknown as Record<string, string>)["background-color"] = bg;
   }
 
-  get children(): ui_base.UIBase[] {
-    let list: ui_base.UIBase[] = [];
+  get childWidgets(): ui_base.UIBase<CTX>[] {
+    let list: ui_base.UIBase<CTX>[] = [];
 
-    this._forEachChildWidget((n: ui_base.UIBase) => {
+    this._forEachChildWidget((n: ui_base.UIBase<CTX>) => {
       list.push(n);
     });
 
@@ -352,8 +355,8 @@ export class Container extends ui_base.UIBase {
     }
   }
 
-  loadData(obj: Record<string, unknown>) {
-    if (!obj) return;
+  loadData(obj: Record<string, unknown>): this {
+    if (!obj) return this;
 
     let x = (obj.scrollLeft as number) || 0;
     let y = (obj.scrollTop as number) || 0;
@@ -361,6 +364,8 @@ export class Container extends ui_base.UIBase {
     this.doOnce(() => {
       this.scrollTo(x, y);
     }, 12);
+
+    return this;
   }
 
   init() {
@@ -483,7 +488,7 @@ export class Container extends ui_base.UIBase {
     margin1: number = this.getDefault("oneAxisPadding") as number,
     margin2 = 1,
     horiz: boolean | undefined = undefined
-  ) {
+  ): Container {
     let themeClass = themeClass_or_obj as string;
 
     if (typeof themeClass_or_obj === "object") {
@@ -497,7 +502,7 @@ export class Container extends ui_base.UIBase {
 
     if (horiz === undefined) {
       horiz = this instanceof RowFrame;
-      horiz = horiz || (this.style as unknown as Record<string, string>)["flex-direction"] === "row";
+      horiz = horiz || this.saneStyle["flex-direction"] === "row";
     }
 
     let flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
@@ -523,7 +528,7 @@ export class Container extends ui_base.UIBase {
 
       let lastkey: string | undefined;
 
-      (strip.update as unknown as { after(cb: () => void): void }).after(function (this: Container) {
+      strip.updateAfter(function (this: Container) {
         let bradius = strip.getDefault("border-radius");
         let bline = strip.getDefault("border-width");
         let bstyle = strip.getDefault("border-style") || "solid";
@@ -531,26 +536,26 @@ export class Container extends ui_base.UIBase {
         let bcolor = strip.getDefault("border-color") || "rgba(0,0,0,0)";
         let margin = strip.getDefault("margin") || 0;
 
-        bline = bline === undefined ? 0 : bline;
-        bradius = bradius === undefined ? 0 : bradius;
-        padding = padding === undefined ? 5 : padding;
+        let blineVal = bline === undefined ? 0 : bline;
+        let bradiusVal = bradius === undefined ? 0 : bradius;
+        let paddingVal = padding === undefined ? 5 : padding;
 
         let bg = strip.getDefault("background-color") as string;
 
-        let key = "" + bradius + ":" + bline + ":" + bg + ":" + padding + ":";
-        key += bstyle + ":" + padding + ":" + bcolor + ":" + margin;
+        let key = "" + bradiusVal + ":" + blineVal + ":" + bg + ":" + paddingVal + ":";
+        key += bstyle + ":" + paddingVal + ":" + bcolor + ":" + margin;
 
         if (key !== lastkey) {
           lastkey = key;
 
-          strip.oneAxisPadding((margin1 as number) + (padding as number), margin2 + (padding as number));
+          strip.oneAxisPadding((margin1 as number) + (paddingVal as number), margin2 + (paddingVal as number));
           strip.setCSS();
 
           strip.background = bg;
 
           (strip.style as unknown as Record<string, string>)["margin"] = "" + margin + "px";
-          (strip.style as unknown as Record<string, string>)["border"] = `${bline}px ${bstyle} ${bcolor}`;
-          (strip.style as unknown as Record<string, string>)["border-radius"] = "" + bradius + "px";
+          (strip.style as unknown as Record<string, string>)["border"] = `${blineVal}px ${bstyle} ${bcolor}`;
+          (strip.style as unknown as Record<string, string>)["border-radius"] = "" + bradiusVal + "px";
         }
       });
     } else {
@@ -655,7 +660,7 @@ export class Container extends ui_base.UIBase {
       try {
         this.loadJSON(JSON.parse((localStorage as Record<string, string>)[key]));
       } catch (error) {
-        util.print_stack(error);
+        util.print_stack(error as Error);
         ok = false;
       }
     }
@@ -705,24 +710,24 @@ export class Container extends ui_base.UIBase {
     super.update();
   }
 
-  appendChild(child: Node) {
+  appendChild<T extends Node>(child: T): T {
     if (child instanceof ui_base.UIBase) {
-      (child as Record<string, unknown>).ctx = this.ctx;
-      (child as Record<string, unknown>).parentWidget = this;
+      (child as unknown as Record<string, unknown>).ctx = this.ctx;
+      (child as unknown as Record<string, unknown>).parentWidget = this;
       this.shadow.appendChild(child);
 
-      if ((child as Record<string, unknown>).onadd) {
-        ((child as Record<string, unknown>).onadd as () => void)();
+      if ((child as unknown as Record<string, unknown>).onadd) {
+        ((child as unknown as Record<string, unknown>).onadd as () => void)();
       }
 
-      return;
+      return child;
     }
 
     return super.appendChild(child);
   }
 
   clear(trigger_on_destroy = true) {
-    for (let child of this.children) {
+    for (let child of this.childWidgets) {
       if (child instanceof ui_base.UIBase) {
         child.remove(trigger_on_destroy);
       }
@@ -763,17 +768,17 @@ export class Container extends ui_base.UIBase {
   }
 
   insert(i: number, ch: ui_base.UIBase) {
-    (ch as Record<string, unknown>).parentWidget = this;
-    (ch as Record<string, unknown>).ctx = this;
+    dyn(ch).parentWidget = this;
+    dyn(ch).ctx = this;
 
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
     } else {
-      this.shadow.insertBefore(ch, util.list(this.children)[i]);
+      this.shadow.insertBefore(ch, util.list(this.childWidgets)[i]);
     }
 
-    if ((ch as Record<string, unknown>).onadd) {
-      ((ch as Record<string, unknown>).onadd as () => void)();
+    if (dyn(ch).onadd) {
+      (dyn(ch).onadd as () => void)();
     }
   }
 
@@ -783,11 +788,11 @@ export class Container extends ui_base.UIBase {
       throw new Error("eek!");
     }
 
-    (child as Record<string, unknown>).ctx = this.ctx;
-    (child as Record<string, unknown>).parentWidget = this;
-    (child as Record<string, unknown>)._useDataPathUndo = this._useDataPathUndo;
+    dyn(child).ctx = this.ctx;
+    dyn(child).parentWidget = this;
+    dyn(child)._useDataPathUndo = this._useDataPathUndo;
 
-    if (!(child as Record<string, unknown>)._themeOverride && this._themeOverride) {
+    if (!dyn(child)._themeOverride && this._themeOverride) {
       child.overrideTheme(this._themeOverride);
     }
 
@@ -802,7 +807,7 @@ export class Container extends ui_base.UIBase {
       child._init();
     }//*/
 
-    if ((child as Record<string, unknown>).onadd) ((child as Record<string, unknown>).onadd as () => void)();
+    if (dyn(child).onadd) (dyn(child).onadd as () => void)();
 
     return child;
   }
@@ -855,7 +860,7 @@ export class Container extends ui_base.UIBase {
     let cls: Record<string, unknown>;
 
     if (typeof path_or_cls === "string") {
-      cls = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.parseToolPath(path_or_cls);
+      cls = ctxApi(this.ctx).api.parseToolPath(path_or_cls);
     } else {
       cls = path_or_cls as unknown as Record<string, unknown>;
     }
@@ -930,7 +935,7 @@ export class Container extends ui_base.UIBase {
         return;
       }
 
-      cls = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.parseToolPath(path_or_cls);
+      cls = ctxApi(this.ctx).api.parseToolPath(path_or_cls);
 
       if (cls === undefined) {
         console.warn('Unknown tool for toolpath "' + path_or_cls + '"');
@@ -945,10 +950,7 @@ export class Container extends ui_base.UIBase {
 
     if (createCb === undefined) {
       createCb = (cls: unknown) => {
-        return (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.createTool(
-          this.ctx,
-          path_or_cls
-        );
+        return ctxApi(this.ctx).api.createTool(this.ctx, path_or_cls);
       };
     }
 
@@ -956,14 +958,12 @@ export class Container extends ui_base.UIBase {
       console.log("tool run");
 
       let toolob = createCb!(cls);
-      (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.execTool(this.ctx, toolob);
+      ctxApi(this.ctx).api.execTool(this.ctx, toolob);
     };
 
     let def =
       typeof path_or_cls === "string"
-        ? ((this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.getToolDef(
-            path_or_cls
-          ) as Record<string, unknown>)
+        ? (ctxApi(this.ctx).api.getToolDef(path_or_cls) as Record<string, unknown>)
         : (cls as unknown as { tooldef(): Record<string, unknown> }).tooldef();
     let tooltip = def.description === undefined ? (def.uiname as string) : (def.description as string);
 
@@ -979,10 +979,7 @@ export class Container extends ui_base.UIBase {
         path = def.toolpath as string;
       }
 
-      let hotkey = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.getToolPathHotkey(
-        this.ctx,
-        path
-      );
+      let hotkey = ctxApi(this.ctx).api.getToolPathHotkey(this.ctx, path);
       if (hotkey) {
         tooltip += "\n\tHotkey: " + hotkey;
       }
@@ -995,14 +992,14 @@ export class Container extends ui_base.UIBase {
 
       ret = this.iconbutton(def.icon as number, label, cb);
 
-      (ret as Record<string, unknown>).iconsheet = iconSheetFromPackFlag(packflag);
+      dyn(ret).iconsheet = iconSheetFromPackFlag(packflag);
       ret.packflag |= packflag;
-      (ret as Record<string, unknown>).description = tooltip;
+      dyn(ret).description = tooltip;
     } else {
       label = label === undefined ? (def.uiname as string) : label;
 
       ret = this.button(label, cb);
-      (ret as Record<string, unknown>).description = tooltip;
+      dyn(ret).description = tooltip;
       ret.packflag |= packflag;
     }
 
@@ -1025,8 +1022,8 @@ export class Container extends ui_base.UIBase {
       ret.setAttribute("datapath", path);
     }
 
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
+    dyn(ret).ctx = this.ctx;
+    dyn(ret).parentWidget = this;
     ret._init();
     this._add(ret as ui_base.UIBase);
 
@@ -1034,8 +1031,8 @@ export class Container extends ui_base.UIBase {
     ret.update();
 
     ret.packflag |= packflag;
-    ret.onchange = cb;
-    ret.text = text;
+    dyn(ret).onchange = cb;
+    dyn(ret).text = text;
 
     return ret as ui_base.UIBase;
   }
@@ -1052,10 +1049,7 @@ export class Container extends ui_base.UIBase {
     let ret = UIBase.createElement("label-x") as Label & Record<string, unknown>;
 
     if (label === undefined && inpath) {
-      let rdef = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        path
-      ) as Record<string, unknown> | undefined;
+      let rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, path) as Record<string, unknown> | undefined;
       if (rdef) {
         label =
           ((rdef.prop as Record<string, unknown>).uiname as string) ??
@@ -1091,7 +1085,7 @@ export class Container extends ui_base.UIBase {
    * */
   helppicker() {
     let ret = this.iconbutton(ui_base.Icons.HELP, "Help Picker", () => {
-      this.getScreen().hintPickerTool();
+      (this.getScreen()! as unknown as { hintPickerTool(): void }).hintPickerTool();
     });
 
     if (util.isMobile()) {
@@ -1115,10 +1109,10 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
 
     ret.setAttribute("icon", "" + icon);
-    (ret as Record<string, unknown>).description = description;
-    (ret as Record<string, unknown>).icon = icon;
+    dyn(ret).description = description;
+    dyn(ret).icon = icon;
 
-    (ret as Record<string, unknown>).iconsheet = iconSheetFromPackFlag(packflag);
+    dyn(ret).iconsheet = iconSheetFromPackFlag(packflag);
 
     ret.onclick = cb as unknown as ((this: GlobalEventHandlers, ev: MouseEvent) => unknown) | null;
 
@@ -1229,10 +1223,7 @@ export class Container extends ui_base.UIBase {
         button.setAttribute("mass_set_path", mass_set_path);
       }
 
-      let rdef = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        inpath
-      ) as Record<string, unknown> | undefined;
+      let rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, inpath) as Record<string, unknown> | undefined;
       if (rdef && rdef.prop) {
         name =
           ((rdef.prop as Record<string, unknown>).uiname as string) ||
@@ -1247,16 +1238,9 @@ export class Container extends ui_base.UIBase {
     return button as ui_base.UIBase;
   }
 
-  _getMassPath(
-    ctx: Record<string, unknown>,
-    inpath: string | undefined,
-    mass_set_path: string | undefined
-  ): string | undefined {
+  _getMassPath(ctx: unknown, inpath: string | undefined, mass_set_path: string | undefined): string | undefined {
     if (mass_set_path === undefined && this.massSetPrefix.length > 0) {
-      mass_set_path = (ctx as Record<string, unknown> & { api: Record<string, Function> }).api.getPropName(
-        ctx,
-        inpath
-      ) as string;
+      mass_set_path = ctxApi(ctx).api.getPropName(ctx, inpath) as string;
     }
 
     if (mass_set_path === undefined) {
@@ -1269,16 +1253,16 @@ export class Container extends ui_base.UIBase {
   prop(inpath: string, packflag = 0, mass_set_path?: string): ui_base.UIBase | undefined {
     if (!this.ctx) {
       console.warn(this.id + ".ctx was undefined");
-      let p = this.parentWidget;
+      let p = this.parentWidget as ui_base.UIBase | undefined;
 
       while (p) {
-        if ((p as Record<string, unknown>).ctx) {
+        if (dyn(p).ctx) {
           console.warn("Fetched this.ctx from parent");
-          (this as Record<string, unknown>).ctx = (p as Record<string, unknown>).ctx;
+          dyn(this).ctx = dyn(p).ctx;
           break;
         }
 
-        p = (p as Record<string, unknown>).parentWidget as ui_base.UIBase | undefined;
+        p = dyn(p).parentWidget as ui_base.UIBase | undefined;
       }
 
       if (!this.ctx) {
@@ -1288,21 +1272,15 @@ export class Container extends ui_base.UIBase {
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    let rdef = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-      this.ctx,
-      this._joinPrefix(inpath),
-      true
-    ) as Record<string, unknown> | undefined;
+    let rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, this._joinPrefix(inpath), true) as
+      | Record<string, unknown>
+      | undefined;
 
     if (rdef === undefined || rdef.prop === undefined) {
       console.warn(
         "Unknown property at path",
         this._joinPrefix(inpath),
-        (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-          this.ctx,
-          this._joinPrefix(inpath),
-          true
-        )
+        ctxApi(this.ctx).api.resolvePath(this.ctx, this._joinPrefix(inpath), true)
       );
       return;
     }
@@ -1334,7 +1312,7 @@ export class Container extends ui_base.UIBase {
         ret = this.pathlabel(inpath, prop.uiname as string);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value as string, packflag, mass_set_path);
-        (ret as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+        dyn(ret).useDataPathUndo = useDataPathUndo;
       } else {
         let strip = this.strip();
 
@@ -1346,7 +1324,7 @@ export class Container extends ui_base.UIBase {
         strip.label(prop.uiname as string);
 
         ret = strip.textbox(inpath) as ui_base.UIBase;
-        (ret as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+        dyn(ret).useDataPathUndo = useDataPathUndo;
 
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
@@ -1357,7 +1335,7 @@ export class Container extends ui_base.UIBase {
       return ret;
     } else if ((prop.type as number) === PropTypes.CURVE) {
       let ret = this.curve1d(inpath, packflag, mass_set_path);
-      (ret as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+      dyn(ret).useDataPathUndo = useDataPathUndo;
       return ret;
     } else if ((prop.type as number) === PropTypes.INT || (prop.type as number) === PropTypes.FLOAT) {
       let ret: ui_base.UIBase;
@@ -1367,7 +1345,7 @@ export class Container extends ui_base.UIBase {
         ret = this.slider(inpath, { packflag: packflag });
       }
 
-      (ret as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+      dyn(ret).useDataPathUndo = useDataPathUndo;
       ret.packflag |= packflag;
 
       if (mass_set_path) {
@@ -1377,7 +1355,7 @@ export class Container extends ui_base.UIBase {
       return ret;
     } else if ((prop.type as number) === PropTypes.BOOL) {
       let ret = this.check(inpath, prop.uiname as string, packflag, mass_set_path);
-      (ret as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+      dyn(ret).useDataPathUndo = useDataPathUndo;
       return ret;
     } else if ((prop.type as number) === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
@@ -1391,11 +1369,11 @@ export class Container extends ui_base.UIBase {
         let check = this.check(inpath, name, packflag, mass_set_path);
         let tooltip = (prop.descriptions as Record<string, string>)[subkey];
 
-        (check as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+        dyn(check).useDataPathUndo = useDataPathUndo;
 
-        (check as Record<string, unknown>).description =
+        dyn(check).description =
           tooltip === undefined ? (prop.ui_value_names as Record<string, string>)[subkey] : tooltip;
-        (check as Record<string, unknown>).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
+        dyn(check).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
 
         return check;
       }
@@ -1473,10 +1451,10 @@ export class Container extends ui_base.UIBase {
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
 
-        (ret as Record<string, unknown>).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
+        dyn(ret).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
 
         if (tooltip) {
-          (ret as Record<string, unknown>).description = tooltip;
+          dyn(ret).description = tooltip;
         }
 
         return ret.setUndo(useDataPathUndo);
@@ -1506,7 +1484,7 @@ export class Container extends ui_base.UIBase {
             let check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
             if (tooltip) {
-              (check as Record<string, unknown>).description = tooltip;
+              dyn(check).description = tooltip;
             }
 
             check.setUndo(useDataPathUndo);
@@ -1555,7 +1533,7 @@ export class Container extends ui_base.UIBase {
             let check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
             if (tooltip) {
-              (check as Record<string, unknown>).description = tooltip;
+              dyn(check).description = tooltip;
             }
 
             x += name.length;
@@ -1589,10 +1567,10 @@ export class Container extends ui_base.UIBase {
             }
 
             let check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
-            (check as Record<string, unknown>).useDataPathUndo = useDataPathUndo;
+            dyn(check).useDataPathUndo = useDataPathUndo;
 
             if (tooltip) {
-              (check as Record<string, unknown>).description = tooltip;
+              dyn(check).description = tooltip;
             }
 
             check.setUndo(useDataPathUndo);
@@ -1602,7 +1580,7 @@ export class Container extends ui_base.UIBase {
         rebuild();
         let last_hash = (prop as unknown as { calcHash(): number }).calcHash();
 
-        (con.update as unknown as { after(cb: () => void): void }).after(() => {
+        con.updateAfter(() => {
           let hash = (prop as unknown as { calcHash(): number }).calcHash();
 
           if (last_hash !== hash) {
@@ -1703,14 +1681,10 @@ export class Container extends ui_base.UIBase {
 
     let has_path = path !== undefined;
     let prop: Record<string, unknown> | undefined;
-    let frame: ui_base.UIBase | undefined;
+    let frame: Container | undefined;
 
     if (path !== undefined) {
-      let resolved = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        path,
-        true
-      ) as Record<string, unknown> | undefined;
+      let resolved = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
       prop = resolved !== undefined ? (resolved.prop as Record<string, unknown>) : undefined;
     }
 
@@ -1720,13 +1694,12 @@ export class Container extends ui_base.UIBase {
         return undefined as unknown as ui_base.UIBase;
       }
 
-      frame = this.strip() as unknown as ui_base.UIBase;
-      (frame as Container).oneAxisPadding();
+      frame = this.strip();
+      frame.oneAxisPadding();
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values as Record<string, unknown>) {
-          let check = (frame as unknown as Container).check(inpath + "[" + key + "]", "", packflag) as ui_base.UIBase &
-            Record<string, unknown>;
+          let check = frame!.check(inpath + "[" + key + "]", "", packflag) as ui_base.UIBase & Record<string, unknown>;
 
           check.packflag |= PackFlags.HIDE_CHECK_MARKS;
 
@@ -1736,8 +1709,8 @@ export class Container extends ui_base.UIBase {
           (check.style as unknown as Record<string, string>)["padding"] = "0px";
           (check.style as unknown as Record<string, string>)["margin"] = "0px";
 
-          (check as Record<string, unknown> & { dom: HTMLElement }).dom.style["padding" as unknown as number] = "0px";
-          (check as Record<string, unknown> & { dom: HTMLElement }).dom.style["margin" as unknown as number] = "0px";
+          styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
+          styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
 
           check.description = (prop.descriptions as Record<string, string>)[key];
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
@@ -1747,7 +1720,7 @@ export class Container extends ui_base.UIBase {
           name = prop.uiname as string;
         }
 
-        ((frame as unknown as Container).label(name!) as unknown as Label).font = "TitleText";
+        (frame!.label(name!) as unknown as Label).font = "TitleText";
 
         let checks: Record<string, Record<string, unknown>> = {};
 
@@ -1772,7 +1745,7 @@ export class Container extends ui_base.UIBase {
         }
 
         for (let key in prop.values as Record<string, unknown>) {
-          let check = (frame as unknown as Container).check(
+          let check = frame!.check(
             `${inpath}[${key}]`,
             (prop.ui_value_names as Record<string, string>)[key]
           ) as ui_base.UIBase & Record<string, unknown>;
@@ -1791,7 +1764,7 @@ export class Container extends ui_base.UIBase {
       }
     }
 
-    return frame!;
+    return frame! as unknown as ui_base.UIBase;
   }
 
   checkenum_panel(
@@ -1811,11 +1784,7 @@ export class Container extends ui_base.UIBase {
     let has_path = path !== undefined;
 
     if (path !== undefined && prop === undefined) {
-      let resolved = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        path,
-        true
-      ) as Record<string, unknown> | undefined;
+      let resolved = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
       prop = resolved !== undefined ? (resolved.prop as Record<string, unknown>) : undefined;
     }
 
@@ -1832,8 +1801,8 @@ export class Container extends ui_base.UIBase {
       frame = this.panel(name!, name, packflag) as unknown as Container;
 
       frame.oneAxisPadding();
-      (frame.setCSS as unknown as { after(cb: unknown): void }).after(
-        (frame.background = this.getDefault("BoxSub2BG") as string)
+      frame.setCSSAfter(
+        () => frame!.background = this.getDefault("BoxSub2BG") as string
       );
 
       if (packflag & PackFlags.USE_ICONS) {
@@ -1850,8 +1819,8 @@ export class Container extends ui_base.UIBase {
           (check.style as unknown as Record<string, string>)["padding"] = "0px";
           (check.style as unknown as Record<string, string>)["margin"] = "0px";
 
-          (check as Record<string, unknown> & { dom: HTMLElement }).dom.style["padding" as unknown as number] = "0px";
-          (check as Record<string, unknown> & { dom: HTMLElement }).dom.style["margin" as unknown as number] = "0px";
+          styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
+          styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
 
           check.description = (prop.descriptions as Record<string, string>)[key];
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
@@ -1964,18 +1933,19 @@ export class Container extends ui_base.UIBase {
         ret.prop = enumDef;
         label ||= (enumDef.uiname as string) || toolprop.ToolProperty.makeUIName(enumDef.apiname as string);
       } else {
-        ret.prop = new toolprop.EnumProperty(defaultval, enumDef, path, name as string);
+        ret.prop = new toolprop.EnumProperty(
+          defaultval as string | number | undefined,
+          enumDef as Record<string, number>,
+          path,
+          name as string
+        );
       }
 
       if (iconmap !== undefined) {
         (ret.prop as Record<string, Function>).addIcons(iconmap);
       }
     } else {
-      let res = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        path,
-        true
-      ) as Record<string, unknown> | undefined;
+      let res = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
 
       if (res !== undefined) {
         ret.prop = res.prop;
@@ -1999,8 +1969,8 @@ export class Container extends ui_base.UIBase {
       (ret as unknown as { setValue(v: unknown): void }).setValue(defaultval);
     }
 
-    ret.onchange = callback;
-    ret.onselect = callback;
+    dyn(ret).onchange = callback;
+    dyn(ret).onselect = callback;
 
     ret.packflag |= packflag;
 
@@ -2032,8 +2002,8 @@ export class Container extends ui_base.UIBase {
   getroot(): Container {
     let p: Container = this;
 
-    while ((p as Record<string, unknown>).parent !== undefined) {
-      p = (p as Record<string, unknown>).parent as Container;
+    while (dyn(p).parent !== undefined) {
+      p = dyn(p).parent as Container;
     }
 
     return p;
@@ -2052,7 +2022,7 @@ export class Container extends ui_base.UIBase {
     packflag = 0
   ): ui_base.UIBase {
     if (arguments.length === 2 || typeof name === "object") {
-      let args = Object.assign({}, name);
+      let args = Object.assign({}, name as Record<string, unknown>);
 
       args.packflag = ((args.packflag as number) || 0) | PackFlags.SIMPLE_NUMSLIDERS;
       return this.slider(inpath, args);
@@ -2115,18 +2085,14 @@ export class Container extends ui_base.UIBase {
     if (inpath) {
       inpath = this._joinPrefix(inpath)!;
 
-      let rdef = (this.ctx as Record<string, unknown> & { api: Record<string, Function> }).api.resolvePath(
-        this.ctx,
-        inpath,
-        true
-      ) as Record<string, unknown> | undefined;
-      if (rdef && rdef.prop && ((rdef.prop as Record<string, unknown>).flag as number & PropFlags.SIMPLE_SLIDER)) {
+      let rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, inpath, true) as Record<string, unknown> | undefined;
+      if (rdef && rdef.prop && ((rdef.prop as Record<string, unknown>).flag as number) & PropFlags.SIMPLE_SLIDER) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }
       if (
         rdef &&
         rdef.prop &&
-        ((rdef.prop as Record<string, unknown>).flag as number & PropFlags.FORCE_ROLLER_SLIDER)
+        ((rdef.prop as Record<string, unknown>).flag as number) & PropFlags.FORCE_ROLLER_SLIDER
       ) {
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
@@ -2183,7 +2149,7 @@ export class Container extends ui_base.UIBase {
     }
 
     if (callback) {
-      ret.onchange = callback;
+      dyn(ret).onchange = callback;
     }
 
     this._add(ret as ui_base.UIBase);
@@ -2208,21 +2174,23 @@ export class Container extends ui_base.UIBase {
   }
 
   treeview() {
-    let ret = UIBase.createElement("tree-view-x") as ui_base.UIBase & Record<string, unknown>;
+    //XXX property type me
+    let ret = UIBase.createElement("tree-view-x") as ui_base.UIBase<CTX>;
     ret.ctx = this.ctx;
-    this.add(ret as ui_base.UIBase);
+    this.add(ret);
 
-    this._container_inherit(ret as ui_base.UIBase);
+    this._container_inherit(ret);
 
-    return ret as ui_base.UIBase;
+    return ret;
   }
 
   panel(name: string, id?: string, packflag = 0, tooltip?: string) {
     id = id === undefined ? name : id;
 
-    let ret = UIBase.createElement("panelframe-x") as ui_base.UIBase & Record<string, unknown>;
+    // XXX todo: add <CTX> after panelFrame is moved to TS
+    let ret = UIBase.createElement("panelframe-x") as PanelFrame as unknown as ui_base.UIBase<CTX>;
 
-    this._container_inherit(ret as ui_base.UIBase, packflag);
+    this._container_inherit(ret, packflag);
 
     if (tooltip) {
       (ret as unknown as { setHeaderToolTip(t: string): void }).setHeaderToolTip(tooltip);
@@ -2231,7 +2199,7 @@ export class Container extends ui_base.UIBase {
     ret.setAttribute("label", name);
     ret.setAttribute("id", id);
 
-    this._add(ret as ui_base.UIBase);
+    this._add(ret);
 
     if (this.ctx) {
       //check init was called
@@ -2239,23 +2207,22 @@ export class Container extends ui_base.UIBase {
       ret._init();
       //ret.headerLabel = name;
 
-      (ret as Record<string, unknown> & { contents: Record<string, unknown> }).contents.ctx = ret.ctx;
+      (dyn(ret).contents as Record<string, unknown>).ctx = ret.ctx;
     }
 
-    (ret as Record<string, unknown> & { contents: Record<string, unknown> }).contents.dataPrefix = this.dataPrefix;
-    (ret as Record<string, unknown> & { contents: Record<string, unknown> }).contents.massSetPrefix =
-      this.massSetPrefix;
+    (dyn(ret).contents as Record<string, unknown>).dataPrefix = this.dataPrefix;
+    (dyn(ret).contents as Record<string, unknown>).massSetPrefix = this.massSetPrefix;
 
-    return ret as ui_base.UIBase;
+    return ret;
   }
 
-  row(packflag = 0): RowFrame {
-    let ret = UIBase.createElement("rowframe-x") as unknown as RowFrame;
+  row(packflag = 0): RowFrame<CTX> {
+    let ret = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>;
 
-    this._container_inherit(ret as unknown as ui_base.UIBase, packflag);
-    this._add(ret as unknown as ui_base.UIBase);
+    this._container_inherit(ret, packflag);
+    this._add(ret);
 
-    (ret as Record<string, unknown>).ctx = this.ctx;
+    dyn(ret).ctx = this.ctx;
 
     return ret;
   }
@@ -2279,14 +2246,14 @@ export class Container extends ui_base.UIBase {
   }
 
   twocol(parentDepth = 1, packflag = 0) {
-    let ret = UIBase.createElement("two-column-x") as ui_base.UIBase & Record<string, unknown>;
+    let ret = UIBase.createElement("two-column-x") as unknown as TwoColumnFrame<CTX>;
 
     ret.parentDepth = parentDepth;
 
-    this._container_inherit(ret as ui_base.UIBase, packflag);
+    this._container_inherit(ret, packflag);
 
-    this._add(ret as ui_base.UIBase);
-    return ret as ui_base.UIBase;
+    this._add(ret);
+    return ret;
   }
 
   col(packflag = 0): ColumnFrame {
@@ -2332,8 +2299,8 @@ export class Container extends ui_base.UIBase {
 
     this._container_inherit(ret as ui_base.UIBase, packflag);
 
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
+    dyn(ret).ctx = this.ctx;
+    dyn(ret).parentWidget = this;
     ret._init();
     ret.packflag |= packflag;
     (ret as unknown as Container).inherit_packflag |= packflag;
@@ -2349,7 +2316,7 @@ export class Container extends ui_base.UIBase {
     }
 
     //XXX
-    (window as Record<string, unknown>).colorpicker = ret;
+    dyn(window).colorpicker = ret;
 
     this._add(ret as ui_base.UIBase);
     return ret as ui_base.UIBase;
@@ -2402,15 +2369,15 @@ export class Container extends ui_base.UIBase {
 
   //
   tabs(position: "top" | "bottom" | "left" | "right" = "top", packflag = 0) {
-    let ret = UIBase.createElement("tabcontainer-x") as ui_base.UIBase & Record<string, unknown>;
+    let ret = UIBase.createElement("tabcontainer-x") as ui_base.UIBase<CTX>;
 
     (ret.constructor as unknown as { setDefault(el: ui_base.UIBase): void }).setDefault(ret as ui_base.UIBase);
     ret.setAttribute("bar_pos", position);
 
-    this._container_inherit(ret as ui_base.UIBase, packflag);
+    this._container_inherit(ret, packflag);
 
-    this._add(ret as ui_base.UIBase);
-    return ret as ui_base.UIBase;
+    this._add(ret);
+    return ret as unknown as TabContainer;
   }
 
   asDialogFooter() {
@@ -2421,9 +2388,9 @@ export class Container extends ui_base.UIBase {
   }
 }
 
-ui_base.UIBase.internalRegister(Container, "div");
+ui_base.UIBase.internalRegister(Container as unknown as typeof ui_base.UIBase);
 
-export class RowFrame extends Container {
+export class RowFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   constructor() {
     super();
   }
@@ -2488,9 +2455,9 @@ export class RowFrame extends Container {
   }
 }
 
-UIBase.internalRegister(RowFrame);
+UIBase.internalRegister(RowFrame as unknown as typeof UIBase);
 
-export class ColumnFrame extends Container {
+export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   constructor() {
     super();
   }
@@ -2536,9 +2503,9 @@ export class ColumnFrame extends Container {
   }
 }
 
-UIBase.internalRegister(ColumnFrame);
+UIBase.internalRegister(ColumnFrame as unknown as typeof UIBase);
 
-export class TableFrame extends Container {
+export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   static define() {
     return {
       tagname: "tableframe-x",
@@ -2550,7 +2517,7 @@ export class TableFrame extends Container {
 // (the original file did not have a TableFrame class, but it's referenced
 // in createElement("tableframe-x") calls)
 
-export class TwoColumnFrame extends Container {
+export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   _colWidth = 256;
   parentDepth = 1;
 
@@ -2593,12 +2560,10 @@ export class TwoColumnFrame extends Container {
   update() {
     super.update();
 
-    let p: ui_base.UIBase | undefined = this;
+    let p: ui_base.UIBase | undefined = this as unknown as ui_base.UIBase;
 
     for (let i = 0; i < this.parentDepth; i++) {
-      p = (p as Record<string, unknown>).parentWidget
-        ? ((p as Record<string, unknown>).parentWidget as ui_base.UIBase)
-        : p;
+      p = dyn(p).parentWidget ? (dyn(p).parentWidget as ui_base.UIBase) : p;
     }
 
     if (!p) {
@@ -2619,7 +2584,7 @@ export class TwoColumnFrame extends Container {
   }
 }
 
-UIBase.internalRegister(TwoColumnFrame);
+UIBase.internalRegister(TwoColumnFrame as unknown as typeof UIBase);
 
 function parsepx(css: string): number {
   return parseFloat(css);

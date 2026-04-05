@@ -6,6 +6,8 @@ import * as vectormath from "./vectormath.js";
 import * as ui_base from "../core/ui_base.js";
 import * as ui from "../core/ui.js";
 import * as math from "./math.js";
+import { IContextBase } from "../core/context_base.js";
+import { Screen } from "../types/screen/FrameManager";
 
 const Vector2 = vectormath.Vector2;
 
@@ -31,10 +33,10 @@ interface SVGRectWithColor extends SVGRectElement {
   setColor: (color: string) => void;
 }
 
-export class CanvasOverdraw extends ui_base.UIBase {
+export class CanvasOverdraw<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   canvas: HTMLCanvasElement;
   g: CanvasRenderingContext2D | null;
-  screen: unknown;
+  screen?: Screen<CTX>;
   shapes: unknown[];
   otherChildren: HTMLElement[];
   font: string | undefined;
@@ -68,10 +70,10 @@ export class CanvasOverdraw extends ui_base.UIBase {
     };
   }
 
-  startNode(node: HTMLElement, screen?: { ctx: unknown; size: number[] }): void {
+  startNode(node: HTMLElement, screen?: Screen<CTX>): void {
     if (screen) {
       this.screen = screen;
-      this.ctx = screen.ctx;
+      this.ctx = screen.ctx as typeof this.ctx;
     }
 
     if (!this.parentNode) {
@@ -100,11 +102,11 @@ export class CanvasOverdraw extends ui_base.UIBase {
     //this.style["background-color"] = "green";
   }
 
-  start(screen: { ctx: unknown; size: number[]; parentNode: HTMLElement }): void {
+  start(screen: Screen<CTX>): void {
     this.screen = screen;
-    this.ctx = screen.ctx;
+    this.ctx = screen.ctx as typeof this.ctx;
 
-    screen.parentNode.appendChild(this as unknown as Node);
+    screen.parentNode!.appendChild(this as unknown as Node);
 
     this.style.display = "float";
     this.style.zIndex = "" + (this as unknown as { zindex_base: number }).zindex_base;
@@ -128,7 +130,7 @@ export class CanvasOverdraw extends ui_base.UIBase {
   }
 }
 
-export class Overdraw extends ui_base.UIBase {
+export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   visibleToPick: boolean;
   screen: unknown;
   shapes: unknown[];
@@ -159,7 +161,7 @@ export class Overdraw extends ui_base.UIBase {
     this.zindex_base = 1000;
   }
 
-  startNode(node: HTMLElement, screen?: { ctx: unknown; size: number[] }, cssPosition: string = "relative"): void {
+  startNode(node: HTMLElement, screen?: Screen<CTX>, cssPosition: string = "relative"): void {
     if (screen) {
       this.screen = screen;
       this.ctx = screen.ctx;
@@ -194,7 +196,7 @@ export class Overdraw extends ui_base.UIBase {
 
   start(screen: { ctx: unknown; size: number[]; parentNode: HTMLElement }): void {
     this.screen = screen;
-    this.ctx = screen.ctx;
+    this.ctx = screen.ctx as typeof this.ctx;
 
     screen.parentNode.appendChild(this as unknown as Node);
 
@@ -387,7 +389,12 @@ export class Overdraw extends ui_base.UIBase {
     }
 
     for (let box of boxes) {
-      elems.push(this.line(box.startpos as unknown as {[index: number]: number}, box.params as unknown as {[index: number]: number}));
+      elems.push(
+        this.line(
+          box.startpos as unknown as { [index: number]: number },
+          box.params as unknown as { [index: number]: number }
+        )
+      );
     }
 
     return elems as TextBox[];

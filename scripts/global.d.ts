@@ -9,19 +9,24 @@
 /* eslint-disable no-var */
 
 declare interface ElementCSSInlineStyle {
-  style: {[k: string] : string};
+  style: { [k: string]: string };
 }
 
 interface SymbolConstructor {
   // used to avoid circular module references
   // so uibase can find area instances
-  IsAreaTag: symbol
+  IsAreaTag: symbol;
 }
 interface Window {
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
   __theme: Record<string, unknown>;
-  DEBUG: Record<string, boolean> | boolean | undefined;
+  DEBUG?: { [k: string]: boolean } & {
+    paranoidEvents?: boolean;
+    domEventAddRemove?: boolean;
+    domEvents?: boolean;
+    areaContextPushes?: boolean;
+  };
 
   /* ── Color utilities (production, assigned in ui_theme.js) ── */
   color2css: (c: number[], alphaOverride?: number) => string;
@@ -191,4 +196,3 @@ declare var termColor: Record<string, string>;
 declare var get_callstack: (msg?: string) => string;
 declare var print_stack: (...args: unknown[]) => void;
 declare var _debug_event_listeners: boolean | undefined;
-

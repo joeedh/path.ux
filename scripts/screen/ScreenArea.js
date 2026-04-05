@@ -413,7 +413,7 @@ export class Area extends ui_base.UIBase {
       }
     });
 
-    dropbox.update.after(() => {
+    dropbox.updateAfter(() => {
       let name = this.constructor.define().uiname;
       let val = prop.values[name];
 
@@ -463,7 +463,7 @@ export class Area extends ui_base.UIBase {
     this.header.remove();
     container._prepend(this.header);
 
-    row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
+    row.setCSSAfter(() => row.background = this.getDefault("AreaHeaderBG"));
 
     let rh = ~~(16*this.getDPI());
 
