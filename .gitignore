@@ -2,6 +2,7 @@ package
 **/node_modules/**
 .idea
 docs
+.eslintcache
 
 # Playwright
 node_modules/

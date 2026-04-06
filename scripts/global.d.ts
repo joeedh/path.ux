@@ -66,7 +66,6 @@ interface Window {
   setTimeoutQueue: (fn: () => void) => void;
   _saveUIData: (...args: unknown[]) => unknown;
   _loadUIData: (...args: unknown[]) => unknown;
-  _testSetScrollbars: (color?: string, contrast?: number, width?: number, border?: string) => void;
   _tsttag: HTMLStyleElement;
   colorpicker: unknown;
 

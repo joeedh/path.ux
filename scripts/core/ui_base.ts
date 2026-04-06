@@ -43,8 +43,6 @@ export const PackFlags = {
 /* Helper for CSSStyleDeclaration string indexing, common throughout this file */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
-let _ui_base: typeof UIBase | undefined = undefined;
-
 //avoid circular module references
 let TextBox: (new (...args: unknown[]) => HTMLElement) | undefined = undefined;
 
@@ -75,10 +73,8 @@ import {
   pathDebugEvent,
   haveModal,
   keymap,
-  reverse_keymap,
   pushPointerModal,
   ModalState,
-  eventWasMouseDown,
 } from "../path-controller/util/simple_events.js";
 import { getDataPathToolOp } from "../path-controller/controller/controller.js";
 import * as units from "./units.js";
@@ -92,7 +88,7 @@ import { DefaultTheme } from "./theme.js";
 
 //global list of elements to, hopefully, prevent minification tree shaking
 //of live elements
-export let ElementClasses: (typeof UIBase)[] = [];
+export const ElementClasses: (typeof UIBase)[] = [];
 
 export { theme } from "./ui_theme.js";
 
@@ -100,15 +96,14 @@ import cconst from "../config/const.js";
 
 window.__cconst = cconst;
 
-let Vector4 = vectormath.Vector4;
+const Vector4 = vectormath.Vector4;
 
 export { Icons } from "../icon_enum.js";
 import { Icons } from "../icon_enum.js";
 
 export { setIconMap } from "../icon_enum.js";
-import { setIconMap } from "../icon_enum.js";
 
-import { AfterAspect, initAspectClass } from "./aspect.js";
+import { initAspectClass } from "./aspect.js";
 import * as aspect from "./aspect.js";
 
 export const ErrorColors = {
@@ -147,10 +142,10 @@ export function getTagPrefix(): string {
 }
 
 if (typeof document !== "undefined") {
-  let prefixElem = document.getElementById("pathux-tag-prefix");
+  const prefixElem = document.getElementById("pathux-tag-prefix");
   if (prefixElem) {
     console.log("Found pathux-tag-prefix element");
-    let prefixText = (prefixElem as HTMLElement).innerText.trim();
+    const prefixText = (prefixElem as HTMLElement).innerText.trim();
     setTagPrefix(prefixText);
   }
 }
@@ -163,28 +158,26 @@ let class_idgen = 1;
 
 export function setTheme(theme2: Record<string, unknown>): void {
   //merge theme
-  for (let k in theme2) {
-    let v = theme2[k];
+  for (const k in theme2) {
+    const v = theme2[k];
 
     if (typeof v !== "object" || v === null) {
       (theme as Record<string, unknown>)[k] = v;
       continue;
     }
 
-    let v0 = (theme as Record<string, unknown>)[k];
-
     if (!(k in theme)) {
       (theme as Record<string, unknown>)[k] = {};
     }
 
-    let vRec = v as Record<string, unknown>;
+    const vRec = v as Record<string, unknown>;
     for (let k2 in vRec) {
       //if (v0 && !(k2 in v0)) {
       //  continue;
       //}
 
       if (k2 in compatMap) {
-        let k3 = (compatMap as Record<string, string>)[k2]!;
+        const k3 = (compatMap as Record<string, string>)[k2]!;
 
         if (vRec[k3] === undefined) {
           vRec[k3] = vRec[k2];
@@ -214,7 +207,7 @@ export function report(...args: unknown[]): void {
 export function getDefault(key: string, elem?: UIBase): unknown {
   console.warn("Deprecated call to ui_base.js:getDefault");
 
-  let base = theme.base as Record<string, unknown>;
+  const base = theme.base as Record<string, unknown>;
   if (key in base) {
     return base[key];
   } else {
@@ -264,7 +257,7 @@ class _IconManager {
   }
 
   get ready(): boolean {
-    return !!(this.image && this.image.width);
+    return !!this.image?.width;
   }
 
   onReady(): Promise<_IconManager> | util.TimeoutPromise<_IconManager> {
@@ -278,7 +271,7 @@ class _IconManager {
       return this.promise;
     }
 
-    let onload = this.image.onload as ((this: GlobalEventHandlers, ev: Event) => void) | null;
+    const onload = this.image.onload as ((this: GlobalEventHandlers, ev: Event) => void) | null;
     this.image.onload = (e: Event) => {
       if (onload) {
         onload.call(this.image, e);
@@ -288,7 +281,7 @@ class _IconManager {
         return;
       }
 
-      let accept = this._accept;
+      const accept = this._accept;
       this._accept = this._reject = this.promise = undefined;
 
       if (this.image.width) {
@@ -314,19 +307,19 @@ class _IconManager {
   }
 
   canvasDraw(elem: UIBase, canvas: HTMLCanvasElement, g: CanvasRenderingContext2D, icon: number, x = 0, y = 0): void {
-    let customIcon = this.customIcons.get(icon);
+    const customIcon = this.customIcons.get(icon);
 
     if (customIcon) {
       g.drawImage(customIcon.canvas, x, y);
       return;
     }
 
-    let tx = icon % this.tilex;
-    let ty = ~~(icon / this.tilex);
+    const tx = icon % this.tilex;
+    const ty = ~~(icon / this.tilex);
 
-    let dpi = elem.getDPI();
-    let ts = this.tilesize;
-    let ds = this.drawsize;
+    const dpi = elem.getDPI();
+    const ts = this.tilesize;
+    const ds = this.drawsize;
 
     if (!this.image) {
       //console.warn("Failed to render an iconsheet");
@@ -343,7 +336,7 @@ class _IconManager {
     }
   }
 
-  setCSS(icon: number, dom: HTMLElement, fitsize: number | number[] | undefined = undefined): void {
+  setCSS(icon: number, dom: HTMLElement, fitsize?: number | number[] | undefined): void {
     if (!fitsize) {
       fitsize = this.drawsize;
     }
@@ -352,7 +345,7 @@ class _IconManager {
       fitsize = Math.max(fitsize[0], fitsize[1]);
     }
 
-    let s = dom.style as StyleRecord;
+    const s = dom.style as StyleRecord;
     s["background"] = this.getCSS(icon, fitsize);
     if (this.customIcons.has(icon)) {
       s["background-size"] = fitsize + "px";
@@ -381,21 +374,15 @@ class _IconManager {
       fitsize = Math.max(fitsize[0], fitsize[1]);
     }
 
-    let ratio = fitsize / this.tilesize;
+    const ratio = fitsize / this.tilesize;
 
-    let customIcon = this.customIcons.get(icon);
+    const customIcon = this.customIcons.get(icon);
     if (customIcon !== undefined) {
-      //ratio = fitsize / this.drawsize;
-      //let d = this.drawsize*0.25;
-      let d = 0.0;
-
-      let css = `url("${customIcon.blobUrl}")`;
-
-      return css;
+      return `url("${customIcon.blobUrl}")`;
     }
 
-    let x = -(icon % this.tilex) * this.tilesize * ratio;
-    let y = -~~(icon / this.tilex) * this.tilesize * ratio;
+    const x = -(icon % this.tilex) * this.tilesize * ratio;
+    const y = -~~(icon / this.tilex) * this.tilesize * ratio;
 
     //x = ~~x;
     //y = ~~y;
@@ -423,18 +410,18 @@ export class CustomIcon {
   }
 
   regenIcons(): void {
-    let manager = this.manager;
+    const manager = this.manager;
 
-    let doSheet = (sheet: _IconManager) => {
-      let size = sheet.drawsize;
-      let canvas = document.createElement("canvas");
-      let g = canvas.getContext("2d")!;
+    const doSheet = (sheet: _IconManager) => {
+      const size = sheet.drawsize;
+      const canvas = document.createElement("canvas");
+      const g = canvas.getContext("2d")!;
 
       canvas.width = canvas.height = size;
       g.drawImage(this.baseImage, 0, 0, size, size);
 
       canvas.toBlob((blob: Blob | null) => {
-        let blobUrl = URL.createObjectURL(blob!);
+        const blobUrl = URL.createObjectURL(blob!);
 
         sheet.customIcons.set(this.id, {
           blobUrl,
@@ -443,7 +430,7 @@ export class CustomIcon {
       });
     };
 
-    for (let sheet of manager.iconsheets) {
+    for (const sheet of manager.iconsheets) {
       doSheet(sheet);
     }
   }
@@ -474,10 +461,12 @@ export class IconManager {
     this.customIconIDMap = new Map();
 
     for (let i = 0; i < images.length; i++) {
-      let size: number, drawsize: number;
+      let size: number;
+      let drawsize: number;
 
       if (typeof sizes[i] == "object") {
-        (size = (sizes[i] as [number, number])[0]), (drawsize = (sizes[i] as [number, number])[1]);
+        size = (sizes as number[][])[i][0];
+        drawsize = (sizes as number[][])[i][1];
       } else {
         size = drawsize = sizes[i] as number;
       }
@@ -500,16 +489,16 @@ export class IconManager {
     if (!icon) {
       let maxid = 0;
 
-      for (let k in Icons) {
+      for (const k in Icons) {
         maxid = Math.max(maxid, Icons[k] + 1);
       }
-      for (let icon of this.customIcons.values()) {
+      for (const icon of this.customIcons.values()) {
         maxid = Math.max(maxid, icon.id + 1);
       }
 
       maxid = Math.max(maxid, 1000); //just to be on the safe side
 
-      let id = maxid;
+      const id = maxid;
       icon = new CustomIcon(this, key, id, image);
 
       this.customIcons.set(key, icon);
@@ -548,10 +537,10 @@ export class IconManager {
     y = 0,
     sheet = 0
   ): void {
-    let base = this.iconsheets[sheet];
+    const base = this.iconsheets[sheet];
 
-    let found = this.findSheet(sheet);
-    let ds = found.drawsize;
+    const found = this.findSheet(sheet);
+    const ds = found.drawsize;
 
     found.drawsize = base.drawsize;
     found.canvasDraw(elem, canvas, g, icon, x, y);
@@ -559,7 +548,7 @@ export class IconManager {
   }
 
   findClosestSheet(size: number): number {
-    let sheets = this.iconsheets.concat([]);
+    const sheets = this.iconsheets.concat([]);
 
     sheets.sort((a, b) => a.drawsize - b.drawsize);
     let sheet;
@@ -582,14 +571,14 @@ export class IconManager {
       sheet = 0;
     }
 
-    let base = this.iconsheets[sheet];
+    const base = this.iconsheets[sheet];
 
     /**sigh**/
-    let dpi = UIBase.getDPI();
+    const dpi = UIBase.getDPI();
     let minsheet = undefined;
-    let goal = dpi * base.drawsize;
+    const goal = dpi * base.drawsize;
 
-    for (let sheet of this.iconsheets) {
+    for (const sheet of this.iconsheets) {
       minsheet = sheet;
 
       if (sheet.drawsize >= goal) {
@@ -616,23 +605,23 @@ export class IconManager {
     //return this.iconsheets[sheet].getCSS(icon);
     //return this.findSheet(sheet).getCSS(icon);
 
-    let base = this.iconsheets[sheet];
-    let found = this.findSheet(sheet);
-    let ds = found.drawsize;
+    const base = this.iconsheets[sheet];
+    const found = this.findSheet(sheet);
+    const ds = found.drawsize;
 
     found.drawsize = base.drawsize;
-    let ret = found.getCSS(icon);
+    const ret = found.getCSS(icon);
     found.drawsize = ds;
 
     return ret;
   }
 
-  setCSS(icon: number, dom: HTMLElement, sheet = 0, fitsize: number | number[] | undefined = undefined): void {
+  setCSS(icon: number, dom: HTMLElement, sheet = 0, fitsize?: number | number[] | undefined): void {
     //return this.iconsheets[sheet].setCSS(icon, dom);
 
-    let base = this.iconsheets[sheet];
-    let found = this.findSheet(sheet);
-    let ds = found.drawsize;
+    const base = this.iconsheets[sheet];
+    const found = this.findSheet(sheet);
+    const ds = found.drawsize;
 
     found.drawsize = base.drawsize;
     found.setCSS(icon, dom, fitsize);
@@ -661,7 +650,7 @@ window._iconmanager = iconmanager; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
 //that the first one is "small" and the second is "large"
-export let IconSheets: Record<string, number> = {
+export const IconSheets: Record<string, number> = {
   SMALL : 0,
   LARGE : 1,
   XLARGE: 2,
@@ -688,18 +677,15 @@ export function setIconManager(manager: IconManager, IconSheetsOverride?: Record
   iconmanager.load(manager);
 
   if (IconSheetsOverride !== undefined) {
-    for (let k in IconSheetsOverride) {
+    for (const k in IconSheetsOverride) {
       IconSheets[k] = IconSheetsOverride[k];
     }
   }
 }
 
 export function makeIconDiv(icon: number, sheet = 0): HTMLDivElement {
-  let size = iconmanager.getRealSize(sheet);
-
-  let drawsize = iconmanager.getTileSize(sheet);
-
-  let icontest = document.createElement("div");
+  const drawsize = iconmanager.getTileSize(sheet);
+  const icontest = document.createElement("div");
 
   icontest.style["width"] = icontest.style["minWidth"] = drawsize + "px";
   icontest.style["height"] = icontest.style["minHeight"] = drawsize + "px";
@@ -714,36 +700,16 @@ export function makeIconDiv(icon: number, sheet = 0): HTMLDivElement {
   return icontest;
 }
 
-let Vector2 = vectormath.Vector2;
-let Matrix4 = vectormath.Matrix4;
+const Vector2 = vectormath.Vector2;
 
-export let dpistack: number[] = [];
+export const dpistack: number[] = [];
 
 export const UIFlags: Record<string, number> = {};
 
 const internalElementNames: Record<string, string> = {};
 const externalElementNames: Record<string, string> = {};
 
-let first = (iter: Iterable<unknown> | Record<string, unknown> | undefined): unknown => {
-  if (iter === undefined) {
-    return undefined;
-  }
-
-  if (!(Symbol.iterator in (iter as Record<symbol, unknown>))) {
-    for (let item in iter as Record<string, unknown>) {
-      return item;
-    }
-
-    return undefined;
-  }
-
-  for (let item of iter as Iterable<unknown>) {
-    return item;
-  }
-};
-
 import { DataPathError } from "../path-controller/controller/controller.js";
-import { TimeoutPromise } from "../path-controller/util/util.js";
 import { IntProperty, NumberConstraints, PropFlags } from "../path-controller/toolsys/toolprop.js";
 import {
   DependSocket,
@@ -754,22 +720,18 @@ import {
   theEventGraph,
   SocketType,
 } from "../path-controller/dag/eventdag.js";
-import { isNum } from "../path-controller/util/math.js";
 import type { IContextBase } from "./context_base.js";
 import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
 import { CSSFont } from "./cssfont.js";
 
-let _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
+const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
 let _idgen = 0;
 
-window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15, border = "solid"): string {
-  let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
+export const _testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15, border = "solid"): string {
+  const buf = styleScrollBars(color, undefined, contrast, width, border, "*");
   /* CTX is an app-level global */
-  (window as unknown as Record<string, unknown>)["CTX"] &&
-    (
-      (window as unknown as Record<string, unknown>)["CTX"] as { screen: { mergeGlobalCSS(buf: string): void } }
-    ).screen.mergeGlobalCSS(buf);
+  //ctx.screen.mergeGlobalCSS(buf);
 
   //document.body.style["overflow"] = "scroll";
 
@@ -787,15 +749,15 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 
 export function styleScrollBars(
   color: string = "grey",
-  color2: string | undefined = undefined,
+  color2?: string | undefined,
   contrast = 0.5,
   width = 15,
   border = "1px groove black",
   selector = "*"
 ): string {
   if (!color2) {
-    let c = css2color(color);
-    let a = c.length > 3 ? c[3] : 1.0;
+    const c = css2color(color);
+    const a = c.length > 3 ? c[3] : 1.0;
 
     c.load3(rgb_to_hsv(c[0], c[1], c[2]));
     let inv = c.slice(0, c.length);
@@ -811,7 +773,7 @@ export function styleScrollBars(
     color2 = color2css(inv);
   }
 
-  let buf = `
+  const buf = `
 
 ${selector} {
   scrollbar-width : ${width <= 16 ? "thin" : "auto"};
@@ -838,19 +800,19 @@ ${selector}::-webkit-scrollbar-thumb {
   return buf;
 }
 
-let _digest = new util.HashDigest();
+const _digest = new util.HashDigest();
 
 export function calcThemeKey(digest = _digest.reset()): number {
   const anyTheme = theme as any;
-  for (let k in anyTheme) {
-    let obj = anyTheme[k];
+  for (const k in anyTheme) {
+    const obj = anyTheme[k];
 
     if (typeof obj !== "object") {
       continue;
     }
 
-    for (let k2 in obj) {
-      let v2 = obj[k2];
+    for (const k2 in obj) {
+      const v2 = obj[k2];
 
       if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
         digest.add(v2);
@@ -863,7 +825,7 @@ export function calcThemeKey(digest = _digest.reset()): number {
   return digest.get();
 }
 
-export var _themeUpdateKey = calcThemeKey();
+export let _themeUpdateKey = calcThemeKey();
 
 export function flagThemeUpdate(): void {
   _themeUpdateKey = calcThemeKey();
@@ -877,7 +839,7 @@ interface TimeoutQueueItem {
   time: number;
 }
 
-let setTimeoutQueue = new Set<TimeoutQueueItem>();
+const setTimeoutQueue = new Set<TimeoutQueueItem>();
 let haveTimeout = false;
 
 function timeout_cb(): void {
@@ -886,8 +848,8 @@ function timeout_cb(): void {
     return;
   }
 
-  for (let item of new Set(setTimeoutQueue)) {
-    let { cb, timeout, time } = item;
+  for (const item of new Set(setTimeoutQueue)) {
+    const { cb, timeout, time } = item;
     if (util.time_ms() - time < timeout) {
       continue;
     }
@@ -1052,7 +1014,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   });
 
   graphExec(): void {
-    let node = this.graphNode;
+    const node = this.graphNode;
     if (node === undefined) {
       return;
     }
@@ -1061,8 +1023,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       node.outputs.depend.flagUpdate();
     }
 
-    for (let k in node.inputs) {
-      let sock = node.inputs[k];
+    for (const k in node.inputs) {
+      const sock = node.inputs[k];
 
       if (!(sock instanceof PropertySocket)) {
         continue;
@@ -1071,7 +1033,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       let val = sock.value;
       let first = true;
 
-      for (let sockb of sock.edges) {
+      for (const sockb of sock.edges) {
         if (first) {
           val = sockb.value;
           first = false;
@@ -1109,14 +1071,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return true;
     }
 
-    for (let k in node.outputs) {
-      let sock = node.outputs[k];
+    for (const k in node.outputs) {
+      const sock = node.outputs[k];
 
       if (!(sock instanceof PropertySocket)) {
         continue;
       }
 
-      let v = sock.value;
+      const v = sock.value;
       let changed;
       if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
         changed = v !== sock.oldValue;
@@ -1145,7 +1107,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
           if (sock.oldValue === undefined) {
             sock.oldValue = JSON.stringify(v);
           } else {
-            let json = JSON.stringify(v);
+            const json = JSON.stringify(v);
             changed = json !== sock.oldValue;
             sock.oldValue = json;
           }
@@ -1171,7 +1133,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   flagPropSocketUpdate(path: string): this {
-    let sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
+    const sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
     if (sock) {
       console.warn(`Flag socket "${path}" for update`);
       sock.flagUpdate();
@@ -1180,8 +1142,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   getPropertySocket(prop: string, socktype: string): PropertySocket | undefined {
-    let node = this.graphNode;
-    let sockets = socktype === SocketTypes.INPUT ? node!.inputs : node!.outputs;
+    const node = this.graphNode;
+    const sockets = socktype === SocketTypes.INPUT ? node!.inputs : node!.outputs;
 
     if (sockets[prop]) {
       return sockets[prop] as PropertySocket;
@@ -1193,14 +1155,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   ensurePropertySocket(prop: string, socktype: SocketType): PropertySocket {
     this.ensureGraph();
 
-    let node = this.graphNode!;
-    let sockets = socktype === "inputs" ? node!.inputs : node!.outputs;
+    const node = this.graphNode!;
+    const sockets = socktype === "inputs" ? node!.inputs : node!.outputs;
 
     if (sockets[prop]) {
       return sockets[prop] as PropertySocket;
     }
 
-    let sock = new PropertySocket();
+    const sock = new PropertySocket();
     sock.bind(this, prop);
     node.addSocket(socktype, prop, sock);
 
@@ -1227,8 +1189,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     srcCallback?: (v: unknown) => unknown,
     dstCallback?: (v: unknown) => unknown
   ): PropertySocket {
-    let sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
-    let socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
+    const sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
+    const socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
 
     if (srcCallback) {
       socksrc.callback(srcCallback);
@@ -1282,7 +1244,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     this.shadow.appendChild(this._screenStyleTag);
-    let _origAppendChild = this.shadow.appendChild.bind(this.shadow) as <T extends Node>(child: T) => T;
+    const _origAppendChild = this.shadow.appendChild.bind(this.shadow) as <T extends Node>(child: T) => T;
     (this.shadow as ShadowRoot & { _appendChild: <T extends Node>(child: T) => T })._appendChild = _origAppendChild;
 
     ///*
@@ -1318,8 +1280,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     };
     //*/
 
-    let tagname = (this.constructor as typeof UIBase).define().tagname;
-    this._id = tagname.replace(/\-/g, "_") + _idgen++;
+    const tagname = (this.constructor as typeof UIBase).define().tagname;
+    this._id = tagname.replace(/-/g, "_") + _idgen++;
 
     this.default_overrides = {}; //inherited by child widgets
     this.my_default_overrides = {}; //not inherited to child widgets
@@ -1346,7 +1308,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     this._description = undefined;
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent =
       `
     .DefaultText {
@@ -1360,18 +1322,18 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     /* Deprecated touch -> mouse event conversion,
        use pointer events instead. */
-    let do_touch = (e: TouchEvent, type: string, button?: number) => {
+    const do_touch = (e: TouchEvent, type: string, button?: number) => {
       if (haveModal()) {
         return;
       }
 
       button = button === undefined ? 0 : button;
-      let e2 = copyEvent(e) as Record<string, unknown>;
+      const e2 = copyEvent(e) as Record<string, unknown>;
 
       if (e.touches.length === 0) {
         //hrm, what to do, what to do. . .
       } else {
-        let t = e.touches[0];
+        const t = e.touches[0];
 
         e2.pageX = t.pageX;
         e2.pageY = t.pageY;
@@ -1385,7 +1347,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
       e2.button = button;
 
-      let e3 = new MouseEvent(type, e2 as MouseEventInit) as MouseEvent & { was_touch: boolean; touches: TouchList };
+      const e3 = new MouseEvent(type, e2 as MouseEventInit) as MouseEvent & { was_touch: boolean; touches: TouchList };
 
       e3.was_touch = true;
       e3.stopPropagation = e.stopPropagation.bind(e);
@@ -1503,11 +1465,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     if (cconst.showPathsInToolTips && this.hasAttribute("datapath")) {
       let s = "" + this._description;
 
-      let path = this.getAttribute("datapath");
+      const path = this.getAttribute("datapath");
       s += "\n    path: " + path;
 
       if (this.hasAttribute("mass_set_path")) {
-        let m = this.getAttribute("mass_set_path");
+        const m = this.getAttribute("mass_set_path");
         s += "\n    massSetPath: " + m;
       }
 
@@ -1539,7 +1501,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   get disabled() {
     //hrm, I could just propegate checks upward. . .
 
-    if (this.parentWidget && this.parentWidget.disabled) {
+    if (this.parentWidget?.disabled) {
       return true;
     }
 
@@ -1673,7 +1635,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     state = !!state;
     super.hidden = state;
 
-    for (let n of this.shadow.childNodes) {
+    for (const n of this.shadow.childNodes) {
       (n as HTMLElement).hidden = state;
     }
 
@@ -1694,7 +1656,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   getElementById(id: string): HTMLElement | undefined {
     let ret: HTMLElement | UIBase<CTX> | undefined;
 
-    let rec = (n: HTMLElement | UIBase<CTX>) => {
+    const rec = (n: HTMLElement | UIBase<CTX>) => {
       if (ret) {
         return;
       }
@@ -1706,8 +1668,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
         rec((n as unknown as { contents: HTMLElement }).contents);
       } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
-        for (let k in (n as unknown as { tabs: Record<string, HTMLElement> }).tabs) {
-          let tab = (n as unknown as { tabs: Record<string, HTMLElement> }).tabs[k];
+        for (const k in (n as unknown as { tabs: Record<string, HTMLElement> }).tabs) {
+          const tab = (n as unknown as { tabs: Record<string, HTMLElement> }).tabs[k];
 
           if (tab) {
             rec(tab);
@@ -1715,7 +1677,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
         }
       }
 
-      for (let n2 of n.childNodes) {
+      for (const n2 of n.childNodes) {
         if (n2 instanceof HTMLElement) {
           rec(n2);
 
@@ -1726,7 +1688,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
 
       if (n instanceof UIBase && n.shadow) {
-        for (let n2 of n.shadow.childNodes) {
+        for (const n2 of n.shadow.childNodes) {
           if (n2 instanceof HTMLElement) {
             rec(n2);
 
@@ -1774,7 +1736,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       console.log("addEventListener", type, this._id, options);
     }
 
-    let cb2 = (e: Event) => {
+    const cb2 = (e: Event) => {
       if (cconst.DEBUG.paranoidEvents) {
         if (this.isDead()) {
           this.removeEventListener(type, cb as any, options);
@@ -1786,12 +1748,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
         pathDebugEvent(e);
       }
 
-      let area = this.findArea() as (UIBase & { push_ctx_active(): void; pop_ctx_active(): void }) | undefined;
+      const area = this.findArea() as (UIBase & { push_ctx_active(): void; pop_ctx_active(): void }) | undefined;
 
       if (area) {
         area.push_ctx_active();
         try {
-          let ret = cb.call(this as unknown as HTMLElement, e as any);
+          const ret = cb.call(this as unknown as HTMLElement, e as any);
           area.pop_ctx_active();
           return ret;
         } catch (error) {
@@ -1811,7 +1773,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       cb[EventCBSymbol] = new Map();
     }
 
-    let key = calcElemCBKey(this, type, options);
+    const key = calcElemCBKey(this, type, options);
     cb[EventCBSymbol].set(key, cb2);
 
     if (cconst.DEBUG.paranoidEvents) {
@@ -1835,7 +1797,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     options?: AddEventListenerOptions | boolean
   ): void {
     if (cconst.DEBUG.paranoidEvents) {
-      for (let item of this.__cbs) {
+      for (const item of this.__cbs) {
         if (item[0] == type && item[1] === cb._cb2 && "" + item[2] === "" + options) {
           this.__cbs.remove(item);
           break;
@@ -1847,14 +1809,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       console.log("removeEventListener", type, this._id, options);
     }
 
-    let key = calcElemCBKey(this, type, options);
+    const key = calcElemCBKey(this, type, options);
 
-    if (!cb[EventCBSymbol] || !cb[EventCBSymbol].has(key)) {
+    if (!cb[EventCBSymbol]?.has(key)) {
       return super.removeEventListener(type, cb, options as EventListenerOptions);
     } else {
-      let cb2 = cb[EventCBSymbol].get(key)!;
+      const cb2 = cb[EventCBSymbol].get(key)!;
 
-      let ret = super.removeEventListener(type, cb2, options as EventListenerOptions);
+      const ret = super.removeEventListener(type, cb2, options as EventListenerOptions);
 
       cb[EventCBSymbol].delete(key);
       return ret;
@@ -1871,7 +1833,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
 
     const style = this.saneStyle as any;
-    for (let k of keys) {
+    for (const k of keys) {
       style[k] = "0px";
     }
 
@@ -1883,7 +1845,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
    * the global tab order
    * */
   regenTabOrder(): this {
-    let screen = this.getScreen() as (UIBase & { needsTabRecalc: boolean }) | undefined;
+    const screen = this.getScreen() as (UIBase & { needsTabRecalc: boolean }) | undefined;
     if (screen !== undefined) {
       screen.needsTabRecalc = true;
     }
@@ -1912,13 +1874,13 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     | undefined {
     let found = false;
 
-    let min = new Vector2([1e17, 1e17]);
-    let max = new Vector2([-1e17, -1e17]);
+    const min = new Vector2([1e17, 1e17]);
+    const max = new Vector2([-1e17, -1e17]);
 
-    let doaabb = (n: HTMLElement) => {
-      let rs = n.getClientRects();
+    const doaabb = (n: HTMLElement) => {
+      const rs = n.getClientRects();
 
-      for (let r of rs) {
+      for (const r of rs) {
         min[0] = Math.min(min[0], r.x);
         min[1] = Math.min(min[1], r.y);
         max[0] = Math.max(max[0], r.x + r.width);
@@ -1953,8 +1915,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   parseNumber(value: string | number, args: { baseUnit?: string; isInt?: boolean } = {}): number {
     let str = ("" + value).trim().toLowerCase();
 
-    let baseUnit = args.baseUnit || this.baseUnit;
-    let isInt = args.isInt || this.isInt;
+    const baseUnit = args.baseUnit || this.baseUnit;
+    const isInt = args.isInt || this.isInt;
 
     let sign = 1.0;
 
@@ -1963,7 +1925,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       sign = -1;
     }
 
-    let hexre = /-?[0-9a-f]+h$/;
+    const hexre = /-?[0-9a-f]+h$/;
     let result: number;
 
     if (str.startsWith("0b")) {
@@ -1990,16 +1952,16 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     value: number,
     args: { baseUnit?: string; displayUnit?: string; isInt?: boolean; radix?: number; decimalPlaces?: number } = {}
   ): string {
-    let baseUnit = args.baseUnit || this.baseUnit;
-    let displayUnit = args.displayUnit || this.displayUnit;
-    let isInt = args.isInt || this.isInt;
-    let radix = args.radix || this.radix || 10;
-    let decimalPlaces = args.decimalPlaces || this.decimalPlaces;
+    const baseUnit = args.baseUnit || this.baseUnit;
+    const displayUnit = args.displayUnit || this.displayUnit;
+    const isInt = args.isInt || this.isInt;
+    const radix = args.radix || this.radix || 10;
+    const decimalPlaces = args.decimalPlaces || this.decimalPlaces;
 
     //console.log(this.baseUnit, this.displayUnit);
 
     if (isInt && radix !== 10) {
-      let ret = Math.floor(value).toString(radix);
+      const ret = Math.floor(value).toString(radix);
 
       if (radix === 2) return "0b" + ret;
       else if (radix === 16) return ret + "h";
@@ -2009,18 +1971,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   setBoxCSS(subkey?: string): void {
-    let boxcode = "";
-
-    //debugger;
-
-    let keys = ["left", "right", "top", "bottom"];
+    const keys = ["left", "right", "top", "bottom"];
 
     let sub: any | undefined;
     if (subkey) {
       sub = this.getAttribute(subkey) || {};
     }
 
-    let def = (key: string) => {
+    const def = (key: string) => {
       if (sub && subkey) {
         return this.getSubDefault(subkey, key);
       }
@@ -2029,11 +1987,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     };
 
     for (let i = 0; i < 2; i++) {
-      let key = i ? "padding" : "margin";
+      const key = i ? "padding" : "margin";
 
       this.saneStyle[key] = "unset";
 
-      let val = def(key);
+      const val = def(key);
       if (val !== undefined) {
         //handle default first
         for (let j = 0; j < 4; j++) {
@@ -2043,8 +2001,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
       for (let j = 0; j < 4; j++) {
         //now do box sides
-        let key2 = `${key}-${keys[j]}`;
-        let val2 = def(key2);
+        const key2 = `${key}-${keys[j]}`;
+        const val2 = def(key2);
 
         if (val2 !== undefined) {
           this.saneStyle[key2] = val2 + "px";
@@ -2059,14 +2017,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   genBoxCSS(subkey?: string): string {
     let boxcode = "";
 
-    let keys = ["left", "right", "top", "bottom"];
+    const keys = ["left", "right", "top", "bottom"];
 
     let sub: any | undefined;
     if (subkey) {
       sub = this.getAttribute(subkey) || {};
     }
 
-    let def = (key: string) => {
+    const def = (key: string) => {
       if (sub && subkey) {
         return this.getSubDefault(subkey, key);
       }
@@ -2075,16 +2033,16 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     };
 
     for (let i = 0; i < 2; i++) {
-      let key = i ? "padding" : "margin";
+      const key = i ? "padding" : "margin";
 
-      let val = def(key);
+      const val = def(key);
       if (val !== undefined) {
         boxcode += `${key}: ${val} px;\n`;
       }
 
       for (let j = 0; j < 4; j++) {
-        let key2 = `${key}-${keys[j]}`;
-        let val2 = def(key2);
+        const key2 = `${key}-${keys[j]}`;
+        const val2 = def(key2);
 
         if (val2 !== undefined) {
           boxcode += `${key2}: ${val}px;\n`;
@@ -2100,13 +2058,13 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   setCSS(setBG = true): void {
     if (setBG) {
-      let bg = this.getDefault("background-color");
+      const bg = this.getDefault("background-color");
       if (bg) {
         this.saneStyle["background-color"] = "" + bg;
       }
     }
 
-    let zoom = this.getZoom();
+    const zoom = this.getZoom();
     if (zoom === 1.0) {
       return;
     }
@@ -2121,7 +2079,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     transform = transform.replace(/, /g, ",");
 
     //cut out scale
-    let transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
+    const transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
     this.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
   }
 
@@ -2167,11 +2125,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     let p1: Node | undefined | null | UIBase<CTX> = this.parentNode;
     let p2: Node | undefined | null | UIBase<CTX> = b.parentNode;
 
-    if ((this.parentWidget && p1 === this.parentWidget.shadow) || !p1) {
+    if (p1 === this.parentWidget?.shadow || !p1) {
       p1 = this.parentWidget;
     }
 
-    if ((b.parentWidget && p2 === b.parentWidget.shadow) || !p2) {
+    if (p2 === b.parentWidget?.shadow || !p2) {
       p2 = b.parentWidget;
     }
 
@@ -2180,7 +2138,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return false;
     }
 
-    let getPos = (n: Node, p: Node & { shadow?: ShadowRoot }): [number, Node] => {
+    const getPos = (n: Node, p: Node & { shadow?: ShadowRoot }): [number, Node] => {
       let i = Array.prototype.indexOf.call(p.childNodes, n);
 
       if (i < 0 && p.shadow) {
@@ -2191,14 +2149,13 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return [i, p];
     };
 
-    this.removeChild;
-    let [i1, n1] = getPos(this, p1);
-    let [i2, n2] = getPos(b, p2);
+    const [i1, n1] = getPos(this, p1);
+    const [i2, n2] = getPos(b, p2);
 
     console.log("i1, i2, n1, n2", i1, i2, n1, n2);
 
-    let tmp1 = document.createElement("div");
-    let tmp2 = document.createElement("div");
+    const tmp1 = document.createElement("div");
+    const tmp2 = document.createElement("div");
 
     n1.insertBefore(tmp1, this);
     n2.insertBefore(tmp2, b);
@@ -2209,7 +2166,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     n1.replaceChild(b, tmp1);
     n2.replaceChild(this, tmp2);
 
-    let ptmp = this.parentWidget;
+    const ptmp = this.parentWidget;
     this.parentWidget = b.parentWidget;
     b.parentWidget = ptmp;
 
@@ -2225,7 +2182,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       | Set<new (...args: unknown[]) => UIBase>
       | (new (...args: unknown[]) => UIBase)[]
   ): Generator<UIBase> {
-    let this2: UIBase = this;
+    const this2: UIBase = this;
 
     let classes: Iterable<new (...args: unknown[]) => UIBase>;
 
@@ -2239,34 +2196,34 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       classes = type_or_set as Iterable<new (...args: unknown[]) => UIBase>;
     }
 
-    let visit = new Set<Node>();
+    const visit = new Set<Node>();
 
     return (function* () {
-      let stack: (Node & { shadow?: ShadowRoot })[] = [this2];
+      const stack: (Node & { shadow?: ShadowRoot })[] = [this2];
 
       while (stack.length > 0) {
-        let n = stack.pop()!;
+        const n = stack.pop()!;
 
         visit.add(n);
 
-        if (!n || !n.childNodes) {
+        if (!n?.childNodes) {
           continue;
         }
 
-        for (let cls of classes) {
+        for (const cls of classes) {
           if (n instanceof cls) {
             yield n;
           }
         }
 
-        for (let c of n.childNodes) {
+        for (const c of n.childNodes) {
           if (!visit.has(c)) {
             stack.push(c);
           }
         }
 
         if (n.shadow) {
-          for (let c of n.shadow.childNodes) {
+          for (const c of n.shadow.childNodes) {
             if (!visit.has(c)) {
               stack.push(c);
             }
@@ -2322,8 +2279,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       /* the user's mouse cursor might not be over the element
        *  if they've tabbed to it */
 
-      let is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-      let is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+      const is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+      const is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
 
       if (!is_copy && !is_paste) {
         //early out, remember that pickElement is highly expensive to run
@@ -2332,7 +2289,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
       //pasteForAllChildren
       if (!internal_mode) {
-        let screen = (
+        const screen = (
           this.ctx as unknown as {
             screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
           }
@@ -2380,12 +2337,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
     };
 
-    let start = (e: Event) => {
+    const start = (e: Event) => {
       this._clipboard_over = true;
       this._clipboard_keystart();
     };
 
-    let stop = (e: Event) => {
+    const stop = (e: Event) => {
       this._clipboard_over = false;
       this._clipboard_keyend();
     };
@@ -2428,7 +2385,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     if (cconst.DEBUG.paranoidEvents) {
-      for (let item of this.__cbs) {
+      for (const item of this.__cbs) {
         this.removeEventListener(item[0] as any, item[1] as any, item[2] as any);
       }
 
@@ -2502,7 +2459,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
    * descended from ui_base.UIBase
    **/
   _forEachChildWidget(cb: (n: UIBase<CTX>) => void, thisvar?: unknown): void {
-    let rec = (n: Node & { shadow?: ShadowRoot }) => {
+    const rec = (n: Node & { shadow?: ShadowRoot }) => {
       if (n instanceof UIBase) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
@@ -2510,24 +2467,24 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
           cb(n);
         }
       } else {
-        for (let n2 of n.childNodes) {
+        for (const n2 of n.childNodes) {
           rec(n2 as Node & { shadow?: ShadowRoot });
         }
 
         if (n.shadow !== undefined) {
-          for (let n2 of n.shadow.childNodes) {
+          for (const n2 of n.shadow.childNodes) {
             rec(n2 as Node & { shadow?: ShadowRoot });
           }
         }
       }
     };
 
-    for (let n of this.childNodes) {
+    for (const n of this.childNodes) {
       rec(n);
     }
 
     if (this.shadow) {
-      for (let n of this.shadow.childNodes) {
+      for (const n of this.shadow.childNodes) {
         rec(n);
       }
     }
@@ -2561,8 +2518,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     let n: Node | null | UIBase | undefined = this;
 
     while (n) {
-      if ((n as HTMLElement).style && (n as HTMLElement).style["zIndex"]) {
-        let z = parseFloat((n as HTMLElement).style["zIndex"]);
+      if ((n as HTMLElement).style?.["zIndex"]) {
+        const z = parseFloat((n as HTMLElement).style["zIndex"]);
         return z;
       }
 
@@ -2589,20 +2546,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     nodeclass: typeof UIBase = UIBase,
     excluded_classes?: (typeof UIBase)[]
   ): UIBase | undefined {
-    let clip: { pos: number[]; size: number[] } | undefined;
-    let mouseEvent: MouseEvent | PointerEvent | undefined;
-    let isMouseMove: boolean | undefined, isMouseDown: boolean | number | undefined;
-
     nodeclass = args.nodeclass || UIBase;
     excluded_classes = args.excluded_classes;
-    clip = args.clip;
-    mouseEvent = args.mouseEvent;
-
-    if (mouseEvent) {
-      isMouseMove =
-        mouseEvent.type === "mousemove" || mouseEvent.type === "touchmove" || mouseEvent.type === "pointermove";
-      isMouseDown = eventWasMouseDown(mouseEvent as PointerEvent);
-    }
+    const clip = args.clip;
 
     x -= window.scrollX;
     y -= window.scrollY;
@@ -2613,7 +2559,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return;
     }
 
-    let path = [elem];
+    const path = [elem];
     let lastelem: Element | null = elem;
     let i = 0;
 
@@ -2641,18 +2587,18 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     //console.warn(path);
 
     for (let i = 0; i < path.length; i++) {
-      let node = path[i];
+      const node = path[i];
       let ok = node instanceof nodeclass;
 
       if (excluded_classes) {
-        for (let cls of excluded_classes) {
+        for (const cls of excluded_classes) {
           ok = ok && !(node instanceof cls);
         }
       }
 
       if (clip) {
-        let rect = node.getBoundingClientRect();
-        let clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+        const rect = node.getBoundingClientRect();
+        const clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
 
         ok = ok && Boolean(clip2);
       }
@@ -2673,7 +2619,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     this.__disabledState = !!val;
 
     if (val && !this._disdata) {
-      let style: any = this.getDefault("disabled") ??
+      const style: any = this.getDefault("disabled") ??
         this.getDefault("internalDisabled") ?? {
           "background-color": this.getDefault("DisabledBG"),
         };
@@ -2683,12 +2629,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
         defaults: {},
       };
 
-      for (let k in style) {
+      for (const k in style) {
         //save old style information
         this._disdata.style[k] = this.saneStyle[k];
         this._disdata.defaults[k] = this.default_overrides[k];
 
-        let v = style[k];
+        const v = style[k];
 
         if (typeof v === "object" && v instanceof CSSFont) {
           this.saneStyle[k] = style[k].genCSS();
@@ -2704,12 +2650,12 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       this.on_disabled();
     } else if (!val && this._disdata) {
       //load old style information
-      for (let k in this._disdata.style) {
+      for (const k in this._disdata.style) {
         this.saneStyle[k] = this._disdata.style[k];
       }
 
-      for (let k in this._disdata.defaults) {
-        let v = this._disdata.defaults[k];
+      for (const k in this._disdata.defaults) {
+        const v = this._disdata.defaults[k];
 
         if (v === undefined) {
           delete this.default_overrides[k];
@@ -2727,7 +2673,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     this.__disabledState = !!val;
 
-    let visit = (n: UIBase | HTMLElement | Node) => {
+    const visit = (n: UIBase | HTMLElement | Node) => {
       if (n instanceof UIBase) {
         let changed = !!n.__disabledState;
 
@@ -2766,7 +2712,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       this.popModal();
     }
 
-    let _areaWrangler = contextWrangler.copy();
+    const _areaWrangler = contextWrangler.copy();
 
     contextWrangler.copy(this.ctx);
 
@@ -2778,9 +2724,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       };
     }
 
-    let handlers2: Record<string, Function> = {};
-    for (let k in handlers) {
-      let func = (handlers as Record<string, unknown>)[k];
+    const handlers2: Record<string, Function> = {};
+    for (const k in handlers) {
+      const func = (handlers as Record<string, unknown>)[k];
 
       if (typeof func !== "function") {
         continue;
@@ -2824,7 +2770,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
     const color = new Vector4(colorIn as number[]);
 
-    let csscolor = color2css(color);
+    const csscolor = color2css(color);
 
     if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
       window.setTimeout(() => {
@@ -2837,7 +2783,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     //let rect = rect_element.getClientRects()[0];
-    let rect = rect_element.getBoundingClientRect();
+    const rect = rect_element.getBoundingClientRect();
 
     if (rect === undefined) {
       return;
@@ -2847,17 +2793,17 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     //to put the timer code first to avoid loops
     let timer: number | undefined;
     let tick = 0;
-    let max = ~~(timems / 20);
+    const max = ~~(timems / 20);
 
-    let x = rect.x,
-      y = rect.y;
+    const x = rect.x;
+    const y = rect.y;
 
-    let cb = () => {
+    const cb = () => {
       if (timer === undefined) {
         return;
       }
 
-      let a = 1.0 - tick / max;
+      const a = 1.0 - tick / max;
       div.style["backgroundColor"] = color2css(color, a * a * 0.5);
 
       if (tick > max) {
@@ -2881,7 +2827,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     timer = window.setInterval(cb, 20);
     this._flashtimer = timer;
 
-    let div = document.createElement("div");
+    const div = document.createElement("div");
 
     div.style["pointerEvents"] = "none";
     div.tabIndex = -1;
@@ -2897,7 +2843,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     div.style["height"] = rect.height + "px";
     div.setAttribute("class", "UIBaseFlash");
 
-    let screen = this.getScreen() as (UIBase & { _enterPopupSafe(): void; _exitPopupSafe(): void }) | undefined;
+    const screen = this.getScreen() as (UIBase & { _enterPopupSafe(): void; _exitPopupSafe(): void }) | undefined;
     if (screen !== undefined) {
       screen._enterPopupSafe();
     }
@@ -2919,7 +2865,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   on_resize(newsize: number[]): void {}
 
   toJSON(): Record<string, unknown> {
-    let ret: Record<string, unknown> = {};
+    const ret: Record<string, unknown> = {};
 
     if (this.hasAttribute("datapath")) {
       ret.datapath = this.getAttribute("datapath");
@@ -2950,15 +2896,15 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   setPathValueUndo(ctx: CTX, path: string, val: unknown): void {
     this.pathSocketUpdate(ctx, path);
 
-    let mass_set_path = this.getAttribute("mass_set_path");
-    let rdef = ctx.api.resolvePath(ctx, path)!;
-    let prop = rdef.prop!;
+    const mass_set_path = this.getAttribute("mass_set_path");
+    const rdef = ctx.api.resolvePath(ctx, path)!;
+    const prop = rdef.prop!;
 
     if (ctx.api.getValue(ctx, path) === val) {
       return;
     }
 
-    let toolstack = (this.ctx as Record<string, unknown>).toolstack as Record<string, Function | unknown>;
+    const toolstack = (this.ctx as Record<string, unknown>).toolstack as Record<string, Function | unknown>;
     let head = toolstack.head as Record<string, Function> | undefined;
 
     let bad = head === undefined || !(head instanceof (getDataPathToolOp() as Function));
@@ -2977,7 +2923,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
 
-      let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? undefined);
+      const toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? undefined);
 
       /* getDataPathToolOp.create can return false in case of no-op paths. */
       if (!toolop) {
@@ -3016,8 +2962,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
     }
 
-    let loadAttr = (propkey: string, domkey: string, thiskey: string) => {
-      let old = (this as Record<string, unknown>)[thiskey];
+    const loadAttr = (propkey: string, domkey: string, thiskey: string) => {
+      const old = (this as Record<string, unknown>)[thiskey];
 
       if (dom.hasAttribute(domkey)) {
         (this as Record<string, unknown>)[thiskey] = parseFloat(dom.getAttribute(domkey)!);
@@ -3030,9 +2976,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
     };
 
-    for (let key of NumberConstraints) {
-      let thiskey = key,
-        domkey = key;
+    for (const key of NumberConstraints) {
+      const thiskey = key;
+      const domkey = key;
 
       if (key === "range") {
         //handled later
@@ -3046,10 +2992,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       this.range = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
     }
 
-    let oldmin = this.range[0];
-    let oldmax = this.range[1];
+    const oldmin = this.range[0];
+    const oldmax = this.range[1];
 
-    let range = prop ? prop.range : undefined;
+    const range = prop ? prop.range : undefined;
     if (range && !dom.hasAttribute("min")) {
       this.range[0] = range[0];
     } else if (dom.hasAttribute("min")) {
@@ -3066,7 +3012,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       modified = true;
     }
 
-    let oldint = this.isInt;
+    const oldint = this.isInt;
 
     if (dom.getAttribute("integer")) {
       let val = dom.getAttribute("integer");
@@ -3082,7 +3028,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       modified = true;
     }
 
-    let oldedit = this.editAsBaseUnit;
+    const oldedit = this.editAsBaseUnit;
 
     if (this.editAsBaseUnit === undefined) {
       if (prop && prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
@@ -3114,14 +3060,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   */
 
   pushReportContext(key: string): void {
-    let api = this.ctx.api;
+    const api = this.ctx.api;
     if (api.pushReportContext) {
       api.pushReportContext(key);
     }
   }
 
   popReportContext(): void {
-    let api = this.ctx.api;
+    const api = this.ctx.api;
     if (api.popReportContext) api.popReportContext();
   }
 
@@ -3176,7 +3122,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   getPathMeta(ctx: CTX, path: string) {
     this.pushReportContext(this._reportCtxName);
-    let ret = ctx.api.resolvePath(ctx, path);
+    const ret = ctx.api.resolvePath(ctx, path);
     this.popReportContext();
 
     return ret !== undefined ? ret.prop : undefined;
@@ -3254,7 +3200,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       };
     }
 
-    let trace = new Error().stack;
+    const trace = new Error().stack;
     func._doOnce(this, trace!);
   }
 
@@ -3325,7 +3271,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     if (!this.useNativeToolTips) {
-      let state = (this._has_own_tooltips = {
+      const state = (this._has_own_tooltips = {
         start_timer: (e) => {
           this._tooltip_timer = util.time_ms();
           //console.warn(this._id, "tooltip timer start", e.type);
@@ -3346,8 +3292,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
         handlers    : {},
       });
 
-      let bind_handler = (type: string, etype: string): EventListener => {
-        let handler = (e: Event) => {
+      const bind_handler = (type: string, etype: string): EventListener => {
+        const handler = (e: Event) => {
           if (this._tool_tip_abort_delay !== undefined && util.time_ms() < this._tool_tip_abort_delay) {
             this._tooltip_timer = undefined;
             return;
@@ -3366,10 +3312,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       };
 
       let i = 0;
-      let lists = [state.start_events, state.stop_events, state.reset_events];
+      const lists = [state.start_events, state.stop_events, state.reset_events];
 
-      for (let type of ["start_timer", "stop_timer", "reset_timer"]) {
-        for (let etype of lists[i]) {
+      for (const type of ["start_timer", "stop_timer", "reset_timer"]) {
+        for (const etype of lists[i]) {
           this.addEventListener(etype as any, bind_handler(type, etype), { passive: true });
         }
 
@@ -3377,10 +3323,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
     } else {
       console.warn(this.id, "removing tooltip handlers");
-      let state = this._has_own_tooltips;
+      const state = this._has_own_tooltips;
 
-      for (let k in state!.handlers) {
-        let handler = state!.handlers[k];
+      for (const k in state!.handlers) {
+        const handler = state!.handlers[k];
         this.removeEventListener(k, handler);
       }
 
@@ -3414,7 +3360,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     this._tool_tip_abort_delay = undefined;
 
-    let screen = (
+    const screen = (
       this.ctx as unknown as {
         screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
       }
@@ -3423,11 +3369,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     const timelimit = 500;
     let ok = util.time_ms() - this._tooltip_timer! > timelimit;
 
-    let x = screen.mpos[0],
-      y = screen.mpos[1];
+    const x = screen.mpos[0];
+    const y = screen.mpos[1];
 
-    let rects = this.getClientRects();
-    let r: DOMRect | undefined = rects ? rects[0] : undefined;
+    const rects = this.getClientRects();
+    const r: DOMRect | undefined = rects ? rects[0] : undefined;
 
     if (!r) {
       ok = false;
@@ -3447,7 +3393,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     if (ok) {
       //console.warn("Showing tooltop", this.id);
-      let _ToolTip = (window as unknown as Record<string, unknown>)._ToolTip as {
+      const _ToolTip = (window as unknown as Record<string, unknown>)._ToolTip as {
         show(text: string, screen: UIBase, x: number, y: number): { remove(): void };
       };
       this._tooltip_ref = _ToolTip.show(this._description_final!, (this.ctx as { screen: UIBase }).screen, x, y);
@@ -3471,7 +3417,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     } else if (this.#reflagGraph) {
       this.#reflagGraph = false;
 
-      for (let [k, sock] of Object.entries(this.graphNode!.inputs)) {
+      for (const [, sock] of Object.entries(this.graphNode!.inputs)) {
         sock.flagUpdate();
       }
     }
@@ -3489,7 +3435,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     this.updateEventGraph();
 
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
-      let d = this.getPathDescription(this.ctx, this.getAttribute("datapath")!);
+      const d = this.getPathDescription(this.ctx, this.getAttribute("datapath")!);
 
       this.description = d;
     }
@@ -3605,7 +3551,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     key = key.toLowerCase();
     let ok = false;
 
-    for (let re of _mobile_theme_patterns) {
+    for (const re of _mobile_theme_patterns) {
       if (key.search(re) >= 0) {
         ok = true;
         break;
@@ -3641,9 +3587,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   _hasSubDefault(key: string, subkey: string, _themeDef?: Record<string, unknown>): boolean {
-    let style = this.getStyleClass();
-
-    let obj = this.getDefault(key);
+    const obj = this.getDefault(key);
 
     if (!obj || typeof obj !== "object") {
       return false;
@@ -3667,7 +3611,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     themeDef?: Record<string, unknown>
   ): boolean {
     if (!themeDef) return false;
-    let th = themeDef[style] as Record<string, unknown> | undefined;
+    const th = themeDef[style] as Record<string, unknown> | undefined;
 
     if (inherit) {
       if (this._hasClassSubDefault(key, subkey, false, style, themeDef)) {
@@ -3675,7 +3619,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
 
       let ret = false;
-      let def = (this.constructor as typeof UIBase).define();
+      const def = (this.constructor as typeof UIBase).define();
 
       if (def.parentStyle) {
         ret = ret || this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
@@ -3688,7 +3632,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return false;
     }
 
-    let obj = th[key];
+    const obj = th[key];
     if (!obj || typeof obj !== "object") {
       return false;
     }
@@ -3714,7 +3658,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return this.getDefault(subkey, undefined, defaultval, inherit);
     }
 
-    let style = this.getDefault(key, undefined, undefined, inherit);
+    const style = this.getDefault(key, undefined, undefined, inherit);
 
     if (!style || typeof style !== "object" || !(subkey in (style as Record<string, unknown>))) {
       if (defaultval !== undefined) {
@@ -3733,14 +3677,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     defaultval?: unknown,
     inherit?: boolean
   ): T {
-    let ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
+    const ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
 
     //convert pixel units straight to numbers
     if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
       let s = ret.trim().toLowerCase();
       s = s.slice(0, s.length - 2).trim();
 
-      let f = parseFloat(s);
+      const f = parseFloat(s);
       if (!isNaN(f) && isFinite(f)) {
         return f as unknown as T;
       }
@@ -3751,14 +3695,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   getDefault_intern(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
     if (this.my_default_overrides[key] !== undefined) {
-      let v = this.my_default_overrides[key];
+      const v = this.my_default_overrides[key];
       return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
     }
 
     let p: UIBase | undefined = this;
     while (p) {
       if (p.default_overrides[key] !== undefined) {
-        let v = p.default_overrides[key];
+        const v = p.default_overrides[key];
         return checkForMobile ? this._doMobileDefault(key, v, p.default_overrides) : v;
       }
 
@@ -3774,10 +3718,10 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     let p: Function = this.constructor;
-    let lastp: Function | undefined = undefined;
+    const lastp: Function | undefined = undefined;
 
     while (p && p !== lastp && p !== UIBase && p !== Object) {
-      let def = (p as typeof UIBase).define();
+      const def = (p as typeof UIBase).define();
 
       if (def?.style) {
         return def.style;
@@ -3792,11 +3736,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   hasClassDefault(key: string): boolean {
-    let style = this.getStyleClass();
+    const style = this.getStyleClass();
 
     let p: UIBase | undefined = this;
     while (p) {
-      let def = p.class_default_overrides[style];
+      const def = p.class_default_overrides[style];
 
       if (def && key in def) {
         return true;
@@ -3805,7 +3749,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       p = p.parentWidget;
     }
 
-    let th = this._themeOverride;
+    const th = this._themeOverride;
 
     if (th && style in th && key in (th[style] as Record<string, unknown>)) {
       return true;
@@ -3819,7 +3763,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   getClassDefault(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
-    let style = this.getStyleClass();
+    const style = this.getStyleClass();
 
     if (style === "none") {
       return undefined;
@@ -3830,7 +3774,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     let p: UIBase | undefined = this;
 
     while (p) {
-      let def = p.class_default_overrides[style];
+      const def = p.class_default_overrides[style];
 
       if (def && key in def) {
         themeobj = def;
@@ -3853,14 +3797,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
 
     for (let i = 0; i < 2; i++) {
-      let th: Record<string, unknown> = !i ? (this._themeOverride as Record<string, unknown>) : theme;
+      const th: Record<string, unknown> = !i ? (this._themeOverride as Record<string, unknown>) : theme;
 
       if (!th) {
         continue;
       }
 
-      let thStyle = th[style] as Record<string, unknown> | undefined;
-      let thBase = th.base as Record<string, unknown> | undefined;
+      const thStyle = th[style] as Record<string, unknown> | undefined;
+      const thBase = th.base as Record<string, unknown> | undefined;
 
       if (val === undefined && thStyle && key in thStyle) {
         themeobj = thStyle;
@@ -3869,9 +3813,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
         themeobj = undefined;
         val = defaultval;
       } else if (val === undefined && inherit) {
-        let def = (this.constructor as typeof UIBase).define();
+        const def = (this.constructor as typeof UIBase).define();
 
-        let thParent = def.parentStyle ? (th[def.parentStyle] as Record<string, unknown> | undefined) : undefined;
+        const thParent = def.parentStyle ? (th[def.parentStyle] as Record<string, unknown> | undefined) : undefined;
         if (thParent && key in thParent) {
           val = thParent[key];
           themeobj = thParent;
@@ -3921,11 +3865,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return super.animate(_extra_handlers as Keyframe[], domAnimateOptions);
     }
 
-    let transform = new DOMMatrix(this.saneStyle["transform"]);
+    const transform = new DOMMatrix(this.saneStyle["transform"]);
 
-    let update_trans = () => {
-      let t = transform;
-      let css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
+    const update_trans = () => {
+      const t = transform;
+      const css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
       this.saneStyle["transform"] = css;
     };
 
@@ -3958,7 +3902,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       },
     };
 
-    let pixkeys = [
+    const pixkeys = [
       "width",
       "height",
       "left",
@@ -3980,9 +3924,9 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     ];
     handlers = Object.assign(handlers, _extra_handlers);
 
-    let makePixHandler = (k: string, k2: string) => {
+    const makePixHandler = (k: string, k2: string) => {
       handlers[k2 + "_get"] = () => {
-        let s = this.saneStyle[k];
+        const s = this.saneStyle[k];
 
         if (s.endsWith("px")) {
           return parsepx(s);
@@ -3996,7 +3940,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       };
     };
 
-    for (let k of pixkeys) {
+    for (const k of pixkeys) {
       if (!(k in handlers)) {
         makePixHandler(k, `style.${k}`);
         makePixHandler(k, `style["${k}"]`);
@@ -4004,7 +3948,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       }
     }
 
-    let handler: ProxyHandler<UIBase> = {
+    const handler: ProxyHandler<UIBase> = {
       get: (target: UIBase, key: string, receiver: unknown) => {
         console.log(key, handlers[key + "_get"], handlers);
 
@@ -4027,8 +3971,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       },
     };
 
-    let proxy = new Proxy(this, handler);
-    let anim = new Animator(proxy as any);
+    const proxy = new Proxy(this, handler);
+    const anim = new Animator(proxy as any);
 
     anim.onend = () => {
       this._active_animations.remove(anim);
@@ -4039,7 +3983,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   }
 
   abortAnimations(): void {
-    for (let anim of util.list(this._active_animations)) {
+    for (const anim of util.list(this._active_animations)) {
       anim.end();
     }
 
@@ -4092,10 +4036,10 @@ export function drawRoundBox(
 ): void {
   width = width === undefined ? canvas!.width : width;
   height = height === undefined ? canvas!.height : height;
-  let ctx2d = g!;
+  const ctx2d = g!;
   ctx2d.save();
 
-  let dpi = elem.getDPI();
+  const dpi = elem.getDPI();
 
   let r2val: number = r === undefined ? (elem.getDefault("border-radius") as number) : r;
 
@@ -4104,8 +4048,8 @@ export function drawRoundBox(
   }
 
   r2val *= dpi;
-  let r1 = r2val,
-    r2 = r2val;
+  let r1 = r2val;
+  let r2 = r2val;
 
   if (r2val > (height - margin * 2) * 0.5) {
     r1 = (height - margin * 2) * 0.5;
@@ -4131,11 +4075,8 @@ export function drawRoundBox(
   //hackish!
   ctx2d.strokeStyle = color === undefined ? (elem.getDefault("border-color") as string) : color;
 
-  let w = width,
-    h = height;
-
-  let th = Math.PI / 4;
-  let th2 = Math.PI * 0.75;
+  const w = width;
+  const h = height;
 
   ctx2d.beginPath();
 
@@ -4166,7 +4107,7 @@ export function drawRoundBox(
 }
 
 export function _getFont_new(elem: UIBase, size?: number, font: string = "DefaultText", do_dpi = true): string {
-  let fontObj = elem.getDefault(font) as CSSFont;
+  const fontObj = elem.getDefault(font) as CSSFont;
   if (fontObj === undefined) {
     console.error(
       "Could not find font " + font + " for element",
@@ -4186,9 +4127,7 @@ export function getFont(elem: UIBase, size?: number, font = "DefaultText", do_dp
 
 //size is optional, defaults to font's default size
 export function _getFont(elem: UIBase, size?: number, font = "DefaultText", do_dpi = true): string {
-  let dpi = elem.getDPI();
-
-  let font2 = elem.getDefault(font);
+  const font2 = elem.getDefault(font);
   if (font2 !== undefined) {
     //console.warn("New style font detected", font2, font2.genCSS(size));
     return _getFont_new(elem, size, font, do_dpi);
@@ -4206,7 +4145,7 @@ export function _ensureFont(
   if (canvas.font) {
     g.font = canvas.font;
   } else {
-    let font = elem.getDefault<CSSFont>("DefaultText");
+    const font = elem.getDefault<CSSFont>("DefaultText");
     g.font = font.genCSS(size);
   }
 }
@@ -4218,7 +4157,7 @@ function get_measure_canvas(): HTMLCanvasElement & { g: CanvasRenderingContext2D
     return _mc;
   }
 
-  let canvas = document.createElement("canvas") as HTMLCanvasElement & { g: CanvasRenderingContext2D };
+  const canvas = document.createElement("canvas") as HTMLCanvasElement & { g: CanvasRenderingContext2D };
   canvas.width = 256;
   canvas.height = 256;
   canvas.g = canvas.getContext("2d")!;
@@ -4235,9 +4174,9 @@ export function measureTextBlock(
   size?: number,
   font?: CSSFont | string
 ): { width: number; height: number } {
-  let lines = text.split("\n");
+  const lines = text.split("\n");
 
-  let ret = {
+  const ret = {
     width : 0,
     height: 0,
   };
@@ -4252,11 +4191,11 @@ export function measureTextBlock(
     }
   }
 
-  for (let line of lines) {
-    let m = measureText(elem, line, canvas, g, size, font);
+  for (const line of lines) {
+    const m = measureText(elem, line, canvas, g, size, font);
 
     ret.width = Math.max(ret.width, m.width);
-    let h = m.height !== undefined ? m.height : size * 1.25;
+    const h = m.height !== undefined ? m.height : size * 1.25;
 
     ret.height += h;
   }
@@ -4280,7 +4219,7 @@ export function measureText(
     !(canvas instanceof HTMLCanvasElement) &&
     (canvas as HTMLElement).tagName !== "CANVAS"
   ) {
-    let args = canvas as {
+    const args = canvas as {
       canvas?: HTMLCanvasElement;
       g?: CanvasRenderingContext2D;
       size?: number;
@@ -4294,7 +4233,7 @@ export function measureText(
   }
 
   if (g === undefined) {
-    let mc = get_measure_canvas();
+    const mc = get_measure_canvas();
     canvas = mc;
     g = mc.g;
   }
@@ -4309,7 +4248,7 @@ export function measureText(
     _ensureFont(elem, canvas as HTMLCanvasElement & { font?: string }, g, size);
   }
 
-  let ret = g.measureText(text);
+  const ret = g.measureText(text);
 
   if (size !== undefined) {
     //clear custom font for next time
@@ -4333,13 +4272,13 @@ export function drawText(
     size?: number;
   } = {}
 ): void {
-  let canvas = args.canvas,
-    g = args.g,
-    color: string | number[] | undefined = args.color,
-    fontIn: CSSFont | string | undefined = args.font;
+  const canvas = args.canvas;
+  const g = args.g;
+  let color: string | number[] | undefined = args.color;
+  const fontIn: CSSFont | string | undefined = args.font;
   let size = args.size;
 
-  let font = fontIn instanceof CSSFont ? fontIn.genCSS(size) : fontIn;
+  const font = fontIn instanceof CSSFont ? fontIn.genCSS(size) : fontIn;
 
   if (size === undefined) {
     if (fontIn !== undefined && fontIn instanceof CSSFont) {
@@ -4380,9 +4319,7 @@ export function drawText(
   }
 }
 
-let PIDX = 0,
-  PSHADOW = 1,
-  PTOT = 2;
+const PTOT = 2;
 
 /**
 
@@ -4396,12 +4333,12 @@ export function saveUIData(node: UIBase, key: string): string {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
 
-  let paths: unknown[][] = [];
+  const paths: unknown[][] = [];
 
-  let rec = (n: Node & { shadow?: ShadowRoot }, path: unknown[], ni: number, is_shadow: boolean) => {
+  const rec = (n: Node & { shadow?: ShadowRoot }, path: unknown[], ni: number, is_shadow: boolean) => {
     path = path.slice(0, path.length); //copy path
 
-    let pi = path.length;
+    const pi = path.length;
     for (let i = 0; i < PTOT; i++) {
       path.push(undefined);
     }
@@ -4410,8 +4347,8 @@ export function saveUIData(node: UIBase, key: string): string {
     path[pi + 1] = is_shadow ? 1 : 0;
 
     if (n instanceof UIBase) {
-      let path2 = path.slice(0, path.length);
-      let data = n.saveData();
+      const path2 = path.slice(0, path.length);
+      const data = n.saveData();
 
       let bad = !data;
       bad = bad || (typeof data === "object" && Object.keys(data).length === 0);
@@ -4426,17 +4363,17 @@ export function saveUIData(node: UIBase, key: string): string {
     }
 
     for (let i = 0; i < n.childNodes.length; i++) {
-      let n2 = n.childNodes[i];
+      const n2 = n.childNodes[i];
 
       rec(n2, path, i, false);
     }
 
-    let shadow = n.shadow;
+    const shadow = n.shadow;
 
     if (!shadow) return;
 
     for (let i = 0; i < shadow.childNodes.length; i++) {
-      let n2 = shadow.childNodes[i];
+      const n2 = shadow.childNodes[i];
 
       rec(n2, path, i, true);
     }
@@ -4456,7 +4393,7 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
     return;
   }
 
-  let obj = JSON.parse(buf);
+  const obj = JSON.parse(buf);
 
   for (let path of obj.paths) {
     let n = node as typeof node | undefined;
@@ -4465,12 +4402,12 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
       break;
     }
 
-    let data = path[path.length - 1];
+    const data = path[path.length - 1];
     path = path.slice(2, path.length - 1); //in case some api doesn't want me calling .pop()
 
     for (let pi = 0; pi < path.length; pi += PTOT) {
-      let ni = path[pi],
-        shadow = path[pi + 1];
+      const ni = path[pi];
+      const shadow = path[pi + 1];
 
       let list;
 
@@ -4484,7 +4421,7 @@ export function loadUIData(node: UIBase, buf: string | null | undefined): void {
         list = n!.childNodes;
       }
 
-      if (list === undefined || list[ni] === undefined) {
+      if (list?.[ni] === undefined) {
         //console.log("failed to load a ui data block", path);
         n = undefined;
         break;

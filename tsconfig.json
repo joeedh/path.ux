@@ -18,6 +18,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": []
   },
-  "include": ["scripts/**/*.ts", "scripts/**/*.js", "playwright/*.ts"],
+  "include": ["scripts/**/*.ts", "scripts/**/*.js", "playwright/*.ts", "eslint.config.js"],
   "exclude": ["node_modules", "dist", "scripts/lib/**", "scripts/**/*.test.ts", "scripts/path-controller/util/isect.js"]
 }
