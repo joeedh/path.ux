@@ -1,16 +1,16 @@
 import {UIBase, Icons} from '../core/ui_base.js';
 import {IContextBase} from '../core/context_base.js';
 import {RowFrame} from '../core/ui.js';
-import {CSSFont} from '../core/ui_theme.js';
+import {CSSFont} from '../core/cssfont.js';
 import {TextBoxBase} from './ui_textbox.js';
 import {keymap} from "../path-controller/util/simple_events.js";
 
-export class RichEditor extends TextBoxBase {
+export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
   _internalDisabled: boolean;
   _value: string;
   textOnlyMode: boolean;
   styletag: HTMLStyleElement;
-  controls: RowFrame;
+  controls: RowFrame<CTX>;
   textarea: HTMLDivElement;
   _focus: number;
 
@@ -42,7 +42,7 @@ export class RichEditor extends TextBoxBase {
 
     this.shadow.appendChild(this.styletag);
 
-    let controls = this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame;
+    let controls = this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>;
 
     let makeicon = (icon: number, description: string, cb: () => void) => {
       let btn = controls.iconbutton(icon, description, cb) as UIBase & Record<string, unknown>;

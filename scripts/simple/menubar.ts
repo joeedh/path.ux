@@ -94,7 +94,7 @@ export class MenuBarEditor extends Editor {
 
     this.background = this.getDefault("AreaHeaderBG") as string;
 
-    this.menuRow = this.header.row();
+    this.menuRow = this.header!.row();
     this.makeMenuBar(this.menuRow);
 
     this.doOnce(() => {

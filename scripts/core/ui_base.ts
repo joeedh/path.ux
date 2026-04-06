@@ -13,6 +13,13 @@
 import { contextWrangler } from "../screen/area_wrangler.js";
 import type { Area } from "../screen/ScreenArea";
 
+export interface IUIBaseConstructor {
+  define(): {
+    tagname: string;
+    style?: string;
+  };
+}
+
 export const PackFlags = {
   INHERIT_WIDTH : 1,
   INHERIT_HEIGHT: 2,
@@ -930,10 +937,14 @@ type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
  * ExtraEvents specifies custom events that are not part of HTMLElementEventMap,
  * it is a mapping from event names to the type that's passed to downstream event handlers
  */
-export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extends HTMLElement {
+export class UIBase<
+  CTX extends IContextBase = IContextBase,
+  VALUE extends unknown | any = unknown,
+  CONSTRUCTOR extends any | unknown = unknown,
+> extends HTMLElement {
   static PositionKey: string;
 
-  declare ["constructor"]: typeof UIBase;
+  declare ["constructor"]: CONSTRUCTOR extends unknown ? typeof UIBase : CONSTRUCTOR;
 
   /* -- instance properties -- */
   _tool_tip_abort_delay: number | undefined;
@@ -958,7 +969,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   _wasAddedToNodeAtSomeTime: boolean;
   visibleToPick: boolean;
   _override_class: string | undefined;
-  _parentWidget: UIBase<CTX> | undefined;
+  _parentWidget: UIBase<CTX, unknown, unknown> | undefined;
   _id: string;
   default_overrides: Record<string, unknown>;
   my_default_overrides: Record<string, unknown>;
@@ -1258,7 +1269,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     ///*
     this.shadow.appendChild = <T extends Node>(child: T): T => {
       if (child && typeof child === "object" && child instanceof UIBase) {
-        child.parentWidget = this;
+        const child2 = child as unknown as this
+        child2.parentWidget = this;
       }
 
       return _origAppendChild(child);
@@ -1579,7 +1591,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     return tagPrefix + name;
   }
 
-  static internalRegister(cls: typeof UIBase<any>): void {
+  static internalRegister(cls: IUIBaseConstructor): void {
     const clsAny = cls as any;
     clsAny[ClassIdSymbol] = class_idgen++;
 
@@ -1604,16 +1616,16 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
   }
 
-  static register(cls: typeof UIBase<any>): void {
+  static register(cls: IUIBaseConstructor): void {
     registered_has_happened = true;
     const clsAny = cls as any;
     clsAny[ClassIdSymbol] = class_idgen++;
 
-    ElementClasses.push(cls);
+    ElementClasses.push(cls as any);
 
     externalElementNames[cls.define().tagname] = cls.define().tagname;
     //note: we override HTMLElement.prototype.animate in a type incompatible way
-    customElements.define(cls.define().tagname, cls as CustomElementConstructor);
+    customElements.define(cls.define().tagname, cls as unknown as CustomElementConstructor);
   }
 
   /**
@@ -2733,7 +2745,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
     const _areaWrangler = contextWrangler.copy();
 
-    contextWrangler.copy(this.ctx);
+    contextWrangler.copy();
 
     function bindFunc(func: Function): (...args: unknown[]) => unknown {
       return function (this: unknown, ...args: unknown[]) {
@@ -3736,18 +3748,17 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return this._override_class;
     }
 
-    let p: Function = this.constructor;
-    const lastp: Function | undefined = undefined;
+    let p = this.constructor as any
+    const lastp: any | undefined = undefined
 
-    while (p && p !== lastp && p !== UIBase && p !== Object) {
+    while (p && p !== lastp && p !== UIBase && (p as any) !== Object) {
       const def = (p as typeof UIBase).define();
-
+      
       if (def?.style) {
         return def.style;
       }
 
       if (!p.prototype || !Object.getPrototypeOf(p.prototype)) break;
-
       p = Object.getPrototypeOf(p.prototype).constructor;
     }
 

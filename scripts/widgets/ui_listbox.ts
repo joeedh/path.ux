@@ -153,7 +153,7 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   }
 
   addItem(name: string, id?: number) {
-    let item = UIBase.createElement("listitem-x") as ListItem;
+    let item = UIBase.createElement("listitem-x") as ListItem<CTX>;
 
     item._id = (id === undefined ? this.items.length : id) as any;
     this.idmap[(item as any)._id] = item;

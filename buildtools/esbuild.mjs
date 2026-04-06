@@ -3,7 +3,7 @@ import esbuild from "esbuild";
 const watch = process.argv.includes("--watch");
 
 const ctx = await esbuild.context({
-  entryPoints: ["scripts/pathux.js", "scripts/pathux_with_docbrowser.js"],
+  entryPoints: ["scripts/pathux.ts", "scripts/pathux_with_docbrowser.ts"],
   outdir     : "dist",
   sourcemap  : "inline",
   bundle     : true,

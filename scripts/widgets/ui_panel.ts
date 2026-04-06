@@ -2,12 +2,10 @@ import * as ui_base from "../core/ui_base.js";
 import { IContextBase } from "../core/context_base.js";
 import { ColumnFrame, RowFrame, Container, Label } from "../core/ui.js";
 import { forwardContainerMethods } from "../core/ui_forward.js";
+import { IconCheck } from "./ui_widgets.js";
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags;
-
-// XXX TODO: delete this once IconButton has been typed
-type ReplaceMeWhenButtonsAreTyped = ui_base.UIBase & Record<string, unknown>;
+const UIBase = ui_base.UIBase;
+const PackFlags = ui_base.PackFlags;
 
 export class PanelContents<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
   // set by PanelFrame
@@ -39,14 +37,14 @@ UIBase.internalRegister(PanelContents);
 export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
   titleframe: RowFrame<CTX>;
   contents: PanelContents<CTX>;
-  _iconcheckWidget!: ReplaceMeWhenButtonsAreTyped;
+  _iconcheckWidget!: IconCheck<CTX>;
   __label!: Label<CTX>;
   _closed: boolean;
   _state: boolean | undefined;
   _panel: this;
 
   private createContents() {
-    let ret = UIBase.createElement("panel-contents-x") as unknown as PanelContents<CTX>;
+    const ret = UIBase.createElement("panel-contents-x") as unknown as PanelContents<CTX>;
     this._container_inherit(ret as unknown as ui_base.UIBase<CTX>);
     this._add(ret as unknown as ui_base.UIBase<CTX>);
     return ret;
@@ -60,7 +58,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
 
     this._panel = this;
 
-    this._iconcheckWidget = UIBase.createElement("iconcheck-x") as ReplaceMeWhenButtonsAreTyped;
+    this._iconcheckWidget = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
     this._iconcheckWidget.noEmboss = true;
 
     Object.defineProperty(this.contents, "closed", {
@@ -143,7 +141,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   set closed(val: boolean) {
-    let update = !!val !== !!this.closed;
+    const update = !!val !== !!this.closed;
     this._closed = val;
 
     if (update) {
@@ -168,7 +166,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   saveData() {
-    let ret = {
+    const ret = {
       closed: this._closed,
     };
 
@@ -190,9 +188,9 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   makeHeader() {
-    let row = this.titleframe;
+    const row = this.titleframe;
 
-    let iconcheck = this._iconcheckWidget;
+    const iconcheck = this._iconcheckWidget;
 
     if (!iconcheck) {
       return;
@@ -223,14 +221,14 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
 
     row._add(iconcheck);
 
-    let onclick = (e: Event) => {
+    const onclick = (e: Event) => {
       iconcheck.checked = !iconcheck.checked;
 
       e.preventDefault();
     };
 
     this.__label = row.label(this.getAttribute("label") ?? "");
-    let label = this.__label;
+    const label = this.__label;
 
     this.__label.font = "TitleText";
 
@@ -240,7 +238,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     label.addEventListener("mousedown", onclick);
     label.addEventListener("touchdown" as keyof HTMLElementEventMap, onclick);
 
-    let bs = this.getDefault("border-style");
+    const bs = this.getDefault("border-style");
 
     row.background = this.getDefault("TitleBackground") as string;
     row.style.borderRadius = this.getDefault("border-radius") + "px";
@@ -276,19 +274,19 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
       return;
     }
 
-    let getDefault = (key: string, defval: unknown) => {
-      let val = this.getDefault(key);
+    const getDefault = (key: string, defval: unknown) => {
+      const val = this.getDefault(key);
       return val !== undefined ? val : defval;
     };
 
-    let bs = this.getDefault("border-style");
+    const bs = this.getDefault("border-style");
 
     let header_radius = this.getDefault("HeaderRadius");
     if (header_radius === undefined) {
       header_radius = this.getDefault("border-radius");
     }
 
-    let boxmargin = getDefault("padding", 0) as number;
+    const boxmargin = getDefault("padding", 0) as number;
 
     let paddingleft = getDefault("padding-left", 0) as number;
     let paddingright = getDefault("padding-right", 0) as number;
@@ -312,7 +310,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     this.__label.style.border = "unset";
     this.__label.style.borderRadius = "unset";
 
-    let bg = this.getDefault("background-color") as string;
+    const bg = this.getDefault("background-color") as string;
 
     this.background = bg;
     this.contents.background = bg;
@@ -320,7 +318,8 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     this.contents.style.backgroundColor = bg;
     this.style.backgroundColor = bg;
 
-    let margintop: unknown, marginbottom: unknown;
+    let margintop: unknown;
+    let marginbottom: unknown;
 
     if (this._closed) {
       margintop = getDefault("margin-top-closed", 0);
@@ -330,8 +329,8 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
       marginbottom = getDefault("margin-bottom", 0);
     }
 
-    let marginleft = getDefault("margin-left", 0);
-    let marginright = getDefault("margin-right", 0);
+    const marginleft = getDefault("margin-left", 0);
+    const marginright = getDefault("margin-right", 0);
 
     this.style.marginLeft = marginleft + "px";
     this.style.marginRight = marginright + "px";
@@ -358,7 +357,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   update() {
-    let text = this.getAttribute("label");
+    const text = this.getAttribute("label");
 
     let update = text !== (this.__label.text as string);
 
@@ -403,7 +402,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
       return false;
     }
 
-    let ret = this.getAttribute("update-closed-contents");
+    const ret = this.getAttribute("update-closed-contents");
     return ret === "true" || ret === "on";
   }
 
@@ -453,4 +452,3 @@ UIBase.internalRegister(PanelFrame);
 
 // forward container methods to this.contents
 forwardContainerMethods(PanelFrame, "contents");
-

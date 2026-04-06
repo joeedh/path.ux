@@ -2,7 +2,7 @@ import typescript from "@rollup/plugin-typescript";
 
 // rollup.config.js
 export default {
-  input: 'scripts/pathux.js',
+  input: 'scripts/pathux.ts',
   treeshake: false,
   inlineDynamicImports: true,
   plugins: [

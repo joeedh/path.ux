@@ -400,7 +400,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       }
 
       e2 = new DragEvent("dragover", this.dragevent);
-      this.droptarget = elem;
+      this.droptarget = elem as unknown as Element;
       if (elem) {
         elem.dispatchEvent(e2);
       }
