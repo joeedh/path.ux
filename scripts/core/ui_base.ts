@@ -1594,13 +1594,13 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     return internalElementNames[name];
   }
 
-  static createElement(name: string, internal = false): HTMLElement {
+  static createElement<T extends UIBase | HTMLElement = HTMLElement>(name: string, internal = false): T {
     if (!internal && name in externalElementNames) {
-      return document.createElement(name);
+      return document.createElement(name) as unknown as T;
     } else if (name in internalElementNames) {
-      return document.createElement(internalElementNames[name]);
+      return document.createElement(internalElementNames[name]) as unknown as T;
     } else {
-      return document.createElement(name);
+      return document.createElement(name) as unknown as T;
     }
   }
 
@@ -2101,6 +2101,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
   setCSSAfter(cb: () => void) {
     const anyThis = this as unknown as any;
     return anyThis.setCSS.after(cb);
+  }
+
+  setCSSOnce(cb: () => void, arg: any) {
+    const anyThis = this as unknown as any;
+    return anyThis.setCSS.once(cb, arg);
   }
 
   flushSetCSS(): void {
@@ -3163,8 +3168,8 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     return ret;
   }
 
-  getScreen(): UIBase | undefined {
-    if (this.ctx !== undefined) return (this.ctx as { screen: UIBase }).screen;
+  getScreen(): UIBase<CTX> | undefined {
+    return this.ctx?.screen as unknown as UIBase<CTX>;
   }
 
   isDead(): boolean {
@@ -4217,8 +4222,8 @@ export function measureTextBlock(
   return ret;
 }
 
-export function measureText(
-  elem: UIBase,
+export function measureText<CTX extends IContextBase = IContextBase>(
+  elem: UIBase<CTX>,
   text: string,
   canvas?:
     | (HTMLCanvasElement & { font?: string; g?: CanvasRenderingContext2D })

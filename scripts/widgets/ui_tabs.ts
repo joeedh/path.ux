@@ -1,23 +1,16 @@
 "use strict";
 
 import * as util from "../path-controller/util/util.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
-import * as ui_base from "../core/ui_base.js";
 import * as events from "../path-controller/util/events.js";
 import * as ui from "../core/ui.js";
-import { loadUIData, saveUIData } from "../core/ui_base.js";
 import { keymap } from "../path-controller/util/events.js";
-import { fromVisualViewport } from "../core/ui_visualviewport.js";
 import { IContextBase } from "../core/context_base.js";
-
-const UIBase = ui_base.UIBase;
-const PackFlags = ui_base.PackFlags;
-const IconSheets = ui_base.IconSheets;
-const iconmanager = ui_base.iconmanager;
+import { UIBase, iconmanager, loadUIData, measureText, saveUIData } from "../core/ui_base";
+import { CSSFont } from "../core/cssfont";
+import { Number2, Vector2 } from "../util/vectormath.js";
 
 export let tab_idgen = 1;
 const debug = false;
-const Vector2 = vectormath.Vector2;
 
 function getpx(css: string): number {
   return parseFloat(css.trim().replace("px", ""));
@@ -28,6 +21,8 @@ const FAKE_TAB_ID = Symbol("fake_tab_id");
 const isForwardAttr = (n: string) => n.startsWith("data-");
 
 export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
+  declare name: string;
+
   static define() {
     return {
       ...ui.ColumnFrame.define(),
@@ -113,11 +108,11 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
   extra: HTMLElement | undefined;
   extraSize: number | undefined;
 
-  size: vectormath.Vector2;
-  pos: vectormath.Vector2;
+  size: Vector2;
+  pos: Vector2;
 
-  abssize: vectormath.Vector2;
-  abspos: vectormath.Vector2;
+  abssize: Vector2;
+  abspos: Vector2;
 
   watcher?: { timer?: number };
 
@@ -281,35 +276,35 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
     const w = this.size[0] / dpi;
     const h = this.size[1] / dpi;
 
-    if (this == this.parentWidget.tabs.active) {
-      this.style["focus-border-width"] = "0px";
+    if (this == this.parentTabBar.tabs.active) {
+      this.saneStyle["focus-border-width"] = "0px";
     } else {
-      this.style["focus-border-width"] = "2px";
+      this.saneStyle["focus-border-width"] = "2px";
     }
 
-    this.style["background-color"] = "transparent";
+    this.saneStyle["background-color"] = "transparent";
 
-    this.style["margin"] = this.style["padding"] = "0px";
-    this.style["position"] = "absolute";
-    this.style["pointer-events"] = "auto";
+    this.saneStyle["margin"] = this.style["padding"] = "0px";
+    this.saneStyle["position"] = "absolute";
+    this.saneStyle["pointer-events"] = "auto";
 
-    this.style["left"] = x + "px";
-    this.style["top"] = y + "px";
-    this.style["width"] = w + "px";
-    this.style["height"] = h + "px";
+    this.saneStyle["left"] = x + "px";
+    this.saneStyle["top"] = y + "px";
+    this.saneStyle["width"] = w + "px";
+    this.saneStyle["height"] = h + "px";
   }
 }
 
 UIBase.internalRegister(TabItem);
 
 export class ModalTabMove<CTX extends IContextBase = IContextBase> extends events.EventHandler {
-  dom: HTMLElement | HTMLDocument | Window;
+  dom: HTMLElement | UIBase<CTX>;
   tab: TabItem<CTX>;
   tbar: TabBar<CTX>;
   first: boolean;
 
   droptarget: Element | undefined | null;
-  start_mpos: vectormath.Vector2;
+  start_mpos: Vector2;
   mpos: [number, number] | undefined;
 
   dragtab: TabItem<CTX> | undefined;
@@ -320,7 +315,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
   dragcanvas?: HTMLCanvasElement & { visibleToPick?: boolean };
   drag_g?: CanvasRenderingContext2D | null;
 
-  constructor(tab: TabItem<CTX>, tbar: TabBar<CTX>, dom: HTMLElement | HTMLDocument | Window) {
+  constructor(tab: TabItem<CTX>, tbar: TabBar<CTX>, dom: HTMLElement | UIBase<CTX>) {
     super();
 
     this.dom = dom;
@@ -350,15 +345,15 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       this.tbar.tool = undefined;
     }
 
-    this.popModal(this.dom);
+    this.popModal();
     this.tbar.update(true);
   }
 
-  popModal(...args: unknown[]) {
+  popModal() {
     if (this.dragcanvas !== undefined) {
       this.dragcanvas.remove();
     }
-    const ret = super.popModal(...args);
+    const ret = super.popModal();
 
     this.tab.sendEvent("tabdragend");
 
@@ -391,7 +386,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
 
   _dragstate(e: PointerEvent, x: number, y: number) {
     this.dragcanvas!.style["left"] = x + "px";
-    this.dragcanvas.style["top"] = y + "px";
+    this.dragcanvas!.style["top"] = y + "px";
 
     const ctx = this.tbar.ctx;
     const screen = ctx.screen;
@@ -471,7 +466,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
 
     let dragok = tab.pos[axis] + tab.size[axis] < -limit || tab.pos[axis] >= csize + limit;
     dragok = dragok || disty > limit * 1.5;
-    dragok = dragok && (this.tbar.draggable || this.tbar.getAttribute("draggable"));
+    dragok = dragok && (this.tbar.draggable || Boolean(this.tbar.getAttribute("draggable")));
 
     //console.log(dragok, disty, this.tbar.draggable);
 
@@ -485,7 +480,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       const g = this.tbar.g;
       this.dragimg = g.getImageData(~~tab.pos[0], ~~tab.pos[1], ~~tab.size[0], ~~tab.size[1]);
       this.dragcanvas = document.createElement("canvas");
-      const g2 = (this.drag_g = this.dragcanvas.getContext("2d"));
+      const g2 = (this.drag_g = this.dragcanvas.getContext("2d"))!;
 
       this.dragcanvas.visibleToPick = false;
       this.dragcanvas.width = ~~tab.size[0];
@@ -495,7 +490,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       this.dragcanvas.style["position"] = UIBase.PositionKey;
       this.dragcanvas.style["left"] = e.x + "px";
       this.dragcanvas.style["top"] = e.y + "px";
-      this.dragcanvas.style["z-index"] = "500";
+      this.dragcanvas.style["zIndex"] = "500";
       document.body.appendChild(this.dragcanvas);
       g2.putImageData(this.dragimg, 0, 0);
 
@@ -557,13 +552,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   _last_pos?: string;
 
   horiz: boolean;
+  // @ts-ignore fix later
   onchange: ((tab: TabItem<CTX>, e?: Event) => void) | null;
+  // @ts-ignore fix later
   onselect: ((e: { tab?: TabItem<CTX>; defaultPrevented: boolean; preventDefault: () => void }) => void) | null;
 
   _tool?: ModalTabMove<CTX>;
   _last_p_key?: string;
   _size_cb?: () => void;
-  draggable?: boolean;
 
   constructor() {
     super();
@@ -723,11 +719,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
   on_pointerup(e: PointerEvent) {}
 
-  static setDefault(e: TabContainer) {
+  static setDefault<T extends UIBase>(element: T): T {
+    const e = element as unknown as TabBar;
     e.setAttribute("bar_pos", "top");
     e.updatePos(true);
-
-    return e;
+    return element;
   }
 
   static define() {
@@ -770,7 +766,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         this.tool.finish();
       }
 
-      const edom = this.getScreen();
+      const edom = this.getScreen()!;
       const tool = (this.tool = new ModalTabMove<CTX>(tab, this, edom));
 
       if (event && pointerElem && pointerId !== undefined) {
@@ -825,7 +821,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       t.remove();
     }
 
-    const tabsArr: TabI = [];
+    const tabsArr: TabItem<CTX>[] & { active?: TabItem<CTX>; highlight?: TabItem<CTX> } = [];
     tabsArr.active = undefined;
     tabsArr.highlight = undefined;
     this.tabs = tabsArr;
@@ -889,7 +885,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         this.setActive(this.tabs[0]);
       }
     } catch (error) {
-      util.print_stack(error);
+      util.print_stack(error as Error);
     }
 
     this.update(true);
@@ -920,7 +916,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     const tab = UIBase.createElement<TabItem<CTX>>("tab-item-x", true);
 
     this.shadow.appendChild(tab);
-    tab.parentWidget = this;
+    tab.parentWidget = this as unknown as UIBase<CTX>;
 
     tab.name = name;
     tab.id = id;
@@ -949,10 +945,10 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
       if (this.horiz) {
         this.style["width"] = "100%";
-        delete this.style["height"];
+        delete this.saneStyle["height"];
       } else {
         this.style["height"] = "100%";
-        delete this.style["width"];
+        delete this.saneStyle["width"];
       }
 
       this._redraw();
@@ -993,7 +989,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   _getFont(tsize?: number) {
-    let font = this.getDefault("TabText");
+    let font = this.getDefault<CSSFont>("TabText");
 
     if (this.tabFontScale !== 1.0) {
       font = font.copy();
@@ -1022,7 +1018,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     const axis = this.horiz ? 0 : 1;
 
     const pad = 4 * dpi + Math.ceil(tsize * 0.25);
-    const hpad = this.getDefault("TabPadding", undefined, 0.0);
+    const hpad = this.getDefault("TabPadding", undefined, 0.0) as number;
 
     let x = pad;
     const y = 0.0;
@@ -1064,13 +1060,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
           if (tab.dom) tab.dom.remove();
           tab.dom = undefined;
 
-          if (tab.watcher.timer) clearInterval(tab.watcher.timer);
+          if (tab.watcher?.timer !== undefined) clearInterval(tab.watcher!.timer);
         }
       };
 
-      tab.watcher = watcher;
-      tab.watcher.timer = window.setInterval(watcher, 750);
-
+      tab.watcher = { timer: window.setInterval(watcher, 750) };
       return tab.watcher.timer;
     };
 
@@ -1111,9 +1105,9 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         document.body.appendChild(tab.dom);
         tab.dom.style["position"] = UIBase.PositionKey;
         tab.dom.style["display"] = "flex";
-        tab.dom.style["flex-direction"] = this.horiz ? "row" : "column";
+        tab.dom.style["flexDirection"] = this.horiz ? "row" : "column";
 
-        tab.dom.style["pointer-events"] = "none";
+        tab.dom.style["pointerEvents"] = "none";
 
         if (!this.horiz) {
           tab.dom.style["width"] = tab.size[0] / dpi + "px";
@@ -1153,12 +1147,12 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
       if (!bad) {
         tab.pos[axis] = x;
-        tab.pos[axis ^ 1] = y;
+        tab.pos[(axis ^ 1) as Number2] = y;
       }
 
       //tab.size = [0, 0];
       tab.size[axis] = w + pad * 2;
-      tab.size[axis ^ 1] = h;
+      tab.size[(axis ^ 1) as Number2] = h;
 
       x += w + pad * 2;
     }
@@ -1224,17 +1218,17 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     const r = this.r * dpi;
     this._layout();
-    let tab;
+    let tab: TabItem<CTX> | undefined;
 
     const draw_text = (name: string, x2: number, y2: number) => {
-      const hpad = this.getDefault("TabPadding", undefined, 0.0);
+      const hpad = this.getDefault("TabPadding", undefined, 0.0) as number;
       if (this.horiz) {
         y2 += hpad * 0.5;
       } else {
         y2 -= hpad * 0.5;
       }
 
-      g.fillText(tab.name, x2, y2);
+      g.fillText(tab!.name, x2, y2);
     };
 
     let ti = -1;
@@ -1248,9 +1242,10 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       const w = tab.size[0];
       const h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
-      const tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
+      // XXX fix me after fixing onchange
+      const tw = measureText<CTX>(this as unknown as UIBase<CTX>, tab.name, this.canvas, g, tsize, font).width;
 
-      let x2 = x + (tab.size[this.horiz ^ 1] - tw) * 0.5;
+      let x2 = x + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
       const y2 = y + tsize;
 
       if (tab === this.tabs.highlight) {
@@ -1262,7 +1257,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         g.fill();
       }
 
-      g.fillStyle = this.getDefault("TabText").color;
+      g.fillStyle = this.getDefault<CSSFont>("TabText").color;
 
       if (!this.horiz) {
         const x3 = 0;
@@ -1275,7 +1270,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       }
 
       if (tab.icon !== undefined) {
-        iconmanager.canvasDraw(this, this.canvas, g, tab.icon, x, y, this.iconsheet);
+        iconmanager.canvasDraw(this as unknown as UIBase, this.canvas, g, tab.icon, x, y, this.iconsheet);
         x2 += iconsize + 4;
       }
 
@@ -1312,7 +1307,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       let w = tab.size[0];
       let h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
-      const tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
+      const tw = measureText(this as unknown as UIBase, tab.name, this.canvas, g, tsize, font).width;
 
       if (this.horiz) {
         h += 2;
@@ -1320,7 +1315,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         w += 2;
       }
 
-      const x2 = x + (tab.size[this.horiz ^ 1] - tw) * 0.5;
+      const x2 = x + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
       const y2 = y + tsize;
 
       if (tab === this.tabs.active) {
@@ -1395,7 +1390,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
           g.translate(-x3 - tsize, -y3 - tsize * 0.5);
         }
 
-        g.fillStyle = this.getDefault("TabText").color;
+        g.fillStyle = this.getDefault<CSSFont>("TabText").color;
 
         draw_text(tab.name, x2, y2);
 
@@ -1473,26 +1468,26 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 }
 
-UIBase.internalRegister(TabBar);
+UIBase.internalRegister(TabBar as any);
 
 export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  _style?: HTMLStyleElement;
   tbar: TabBar<CTX>;
   tabs: Record<string, TabItemContainer<CTX>>;
   tabFontScale: number;
-  dataPrefix: string;
-  inherit_packflag: number;
-  packflag: number;
+  dataPrefix: "";
+  inherit_packflag = 0;
 
   _last_style_key: string;
   _last_horiz?: boolean;
   _last_bar_pos?: string | null;
   _tab?: TabItemContainer<CTX>;
 
+  // @ts-ignore TODO: fix this later
   onchange?: (tab: TabItem<CTX>, event?: Event) => void;
+  // @ts-ignore TODO: fix this later
   onselect?: (e: any) => void;
   horiz: boolean = false;
-  background?: string;
-  __background?: string;
   constructor() {
     super();
 
@@ -1505,10 +1500,10 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
     this.tabFontScale = 1.0;
 
-    this.tbar = UIBase.createElement("tabbar-x");
-    this.tbar.parentWidget = this;
+    this.tbar = UIBase.createElement("tabbar-x") as unknown as TabBar<CTX>;
+    this.tbar.parentWidget = this as unknown as UIBase<CTX>;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
-    this.tbar.constructor.setDefault(this.tbar);
+    this.tbar.constructor.setDefault(this.tbar as unknown as UIBase<CTX>);
     this.tbar.tabFontScale = this.tabFontScale;
 
     this._remakeStyle();
@@ -1524,7 +1519,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     div.appendChild(this.tbar);
     this.shadow.appendChild(div);
 
-    this.tbar.parentWidget = this;
+    this.tbar.parentWidget = this as unknown as UIBase<CTX>;
 
     this.tbar.onselect = (e) => {
       if (this.onselect) {
@@ -1541,7 +1536,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       //this._tab = document.createElement("div");
       //this._tab.innerText = "SDfdsfsdyay";
 
-      this._tab.parentWidget = this;
+      this._tab.parentWidget = this as unknown as UIBase<CTX>;
 
       //ensure we get full update convergence when switching
       //tabs
@@ -1551,7 +1546,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
       const div = document.createElement("div");
 
-      this.tbar.setCSS.once(() => (div.style["background-color"] = this.getDefault("background-color")), div);
+      this.tbar.setCSSOnce(() => (div.style["backgroundColor"] = this.getDefault("background-color")), div);
 
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
@@ -1626,13 +1621,13 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   }
 
   saveData(): Record<string, any> {
-    const json = super.saveData() || {};
+    const json = (super.saveData() ?? {}) as any;
     json.tabs = {};
 
     for (const k in this.tabs) {
       const tab = this.tabs[k];
 
-      if (k === this.tbar.tabs.active.id) {
+      if (k === this.tbar?.tabs?.active?.id) {
         //no need to save active tab here
         continue;
       }
@@ -1647,9 +1642,9 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     return json;
   }
 
-  loadData(json: any) {
+  loadData(json: any): this {
     if (!json.tabs) {
-      return;
+      return this;
     }
 
     for (const k in json.tabs) {
@@ -1660,6 +1655,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       const uidata = JSON.stringify(json.tabs[k]);
       loadUIData(this.tabs[k], uidata);
     }
+    return this;
   }
 
   enableDrag() {
@@ -1762,21 +1758,21 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       id = tab_idgen++;
     }
 
-    const col = UIBase.createElement("tab-item-container-x");
+    const col = UIBase.createElement("tab-item-container-x") as TabItemContainer<CTX>;
     col.parentTabs = this;
     this.tabs[id] = col;
 
     col.dataPrefix = this.dataPrefix;
 
     col.ctx = this.ctx;
-    col._tab = this.tbar.addTab(name, id, tooltip, movable);
+    col._tab = this.tbar.addTab(name, id as string, tooltip, movable);
 
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
 
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
 
-    col.parentWidget = this;
+    col.parentWidget = this as unknown as UIBase<CTX>;
 
     if (col.ctx) {
       col._init();
@@ -1810,12 +1806,12 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   }
 
   moveTab(tab: TabItemContainer<CTX>, i: number) {
-    tab = tab._tab;
+    const tab_ = tab._tab;
 
     const tab2 = this.tbar.tabs[i];
 
-    if (tab !== tab2) {
-      this.tbar.swapTabs(tab, tab2);
+    if (tab_ !== tab2) {
+      this.tbar.swapTabs(tab_, tab2);
     }
 
     this.tbar.setCSS();
@@ -1846,7 +1842,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       this.horiz = barpos === "top" || barpos === "bottom";
       this._last_bar_pos = barpos;
 
-      this.tbar.setAttribute("bar_pos", barpos);
+      this.tbar.setAttribute("bar_pos", barpos!);
       this.tbar.update(true);
       this.update();
     }
@@ -1884,7 +1880,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     }
 
     this.style["display"] = "flex";
-    this.style["flex-direction"] = !this.horiz ? "row" : "column";
+    this.style["flexDirection"] = !this.horiz ? "row" : "column";
 
     this.tbar.tabFontScale = this.tabFontScale;
 
@@ -1900,23 +1896,23 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
       //propegate overflow-y to tab container as a whole
 
-      if (container.hasAttribute("overflow-y") && this.style["overflow-y"] !== container.getAttribute("overflow-y")) {
-        this.style["overflow-y"] = container.getAttribute("overflow-y");
+      if (container.hasAttribute("overflow-y") && this.style["overflowY"] !== container.getAttribute("overflow-y")) {
+        this.style["overflowY"] = container.getAttribute("overflowY")!;
         //container.style["overflow-y"] = "unset";
       } else if (!container.hasAttribute("overflow-y")) {
-        this.style["overflow-y"] = this.getDefault("overflow-y") || "unset";
+        this.style["overflowY"] = this.getDefault("overflowY") ?? "unset";
       }
 
       if (container.hasAttribute("overflow") && this.style["overflow"] !== container.getAttribute("overflow")) {
-        this.style["overflow"] = container.getAttribute("overflow");
+        this.style["overflow"] = container.getAttribute("overflow")!;
         //container.style["overflow-y"] = "unset";
       } else if (!container.hasAttribute("overflow")) {
-        this.style["overflow"] = this.getDefault("overflow") || "unset";
+        this.style["overflow"] = this.getDefault("overflow") ?? "unset";
       }
     } else if (this.hideScrollBars) {
-      this.style["overflow"] = this.style["overflow-y"] = "unset";
+      this.style["overflow"] = this.style["overflowY"] = "unset";
     }
   }
 }
 
-UIBase.internalRegister(TabContainer);
+UIBase.internalRegister(TabContainer as any);
