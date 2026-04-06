@@ -922,6 +922,14 @@ interface ToolTipState {
   handlers: Record<string, EventListener>;
 }
 
+export type EventIF = { [k: string]: Event };
+
+type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
+
+/**
+ * ExtraEvents specifies custom events that are not part of HTMLElementEventMap,
+ * it is a mapping from event names to the type that's passed to downstream event handlers
+ */
 export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extends HTMLElement {
   static PositionKey: string;
 
@@ -1724,12 +1732,17 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
 
   addEventListener<K extends keyof HTMLElementEventMap>(
     type: K,
-    cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & { [EventCBSymbol]?: Map<string, EventListener> },
+    listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    cb: EventListenerOrEventListenerObject,
     options?: AddEventListenerOptions | boolean
   ): void;
   addEventListener(
     type: string,
-    cb: EventListener & { [EventCBSymbol]?: Map<string, EventListener> },
+    cb: EventListenerOrEventListenerObject,
     options?: AddEventListenerOptions | boolean
   ): void {
     if (cconst.DEBUG.domEventAddRemove) {
@@ -1753,7 +1766,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       if (area) {
         area.push_ctx_active();
         try {
-          const ret = cb.call(this as unknown as HTMLElement, e as any);
+          const ret = (cb as EventListener).call(this as unknown as HTMLElement, e as any);
           area.pop_ctx_active();
           return ret;
         } catch (error) {
@@ -1765,16 +1778,17 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
           console.warn("Element is not part of an area?", this);
         }
 
-        return cb.call(this as unknown as HTMLElement, e as any);
+        return (cb as EventListener).call(this as unknown as HTMLElement, e as any);
       }
     };
 
-    if (!cb[EventCBSymbol]) {
-      cb[EventCBSymbol] = new Map();
+    const cbAny = cb as any;
+    if (!cbAny[EventCBSymbol]) {
+      cbAny[EventCBSymbol] = new Map();
     }
 
     const key = calcElemCBKey(this, type, options);
-    cb[EventCBSymbol].set(key, cb2);
+    cbAny[EventCBSymbol].set(key, cb2);
 
     if (cconst.DEBUG.paranoidEvents) {
       this.__cbs.push([type, cb2, options]);
@@ -1809,14 +1823,14 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       console.log("removeEventListener", type, this._id, options);
     }
 
-    const key = calcElemCBKey(this, type, options);
+    const key = calcElemCBKey(this, type as string, options);
 
     if (!cb[EventCBSymbol]?.has(key)) {
-      return super.removeEventListener(type, cb, options as EventListenerOptions);
+      return super.removeEventListener(type as string, cb as any, options as EventListenerOptions);
     } else {
       const cb2 = cb[EventCBSymbol].get(key)!;
 
-      const ret = super.removeEventListener(type, cb2, options as EventListenerOptions);
+      const ret = super.removeEventListener(type as string, cb2, options as EventListenerOptions);
 
       cb[EventCBSymbol].delete(key);
       return ret;
@@ -2138,7 +2152,7 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
       return false;
     }
 
-    const getPos = (n: Node, p: Node & { shadow?: ShadowRoot }): [number, Node] => {
+    const getPos = (n: Node | UIBase, p: (Node | UIBase) & { shadow?: ShadowRoot }): [number, Node] => {
       let i = Array.prototype.indexOf.call(p.childNodes, n);
 
       if (i < 0 && p.shadow) {

@@ -8,25 +8,26 @@ import * as ui from "../core/ui.js";
 import { loadUIData, saveUIData } from "../core/ui_base.js";
 import { keymap } from "../path-controller/util/events.js";
 import { fromVisualViewport } from "../core/ui_visualviewport.js";
+import { IContextBase } from "../core/context_base.js";
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets,
-  iconmanager = ui_base.iconmanager;
+const UIBase = ui_base.UIBase;
+const PackFlags = ui_base.PackFlags;
+const IconSheets = ui_base.IconSheets;
+const iconmanager = ui_base.iconmanager;
 
 export let tab_idgen = 1;
-let debug = false;
-let Vector2 = vectormath.Vector2;
+const debug = false;
+const Vector2 = vectormath.Vector2;
 
-function getpx(css) {
+function getpx(css: string): number {
   return parseFloat(css.trim().replace("px", ""));
 }
 
-let FAKE_TAB_ID = Symbol("fake_tab_id");
+const FAKE_TAB_ID = Symbol("fake_tab_id");
 
-const isForwardAttr = (n) => n.startsWith("data-");
+const isForwardAttr = (n: string) => n.startsWith("data-");
 
-class TabItemContainer extends ui.ColumnFrame {
+export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
   static define() {
     return {
       ...ui.ColumnFrame.define(),
@@ -34,51 +35,51 @@ class TabItemContainer extends ui.ColumnFrame {
     };
   }
 
-  //declare parentTabs: TabContainer
-  //declare _tab: TabItem
+  declare parentTabs: TabContainer<CTX>;
+  declare _tab: TabItem<CTX>;
 
   // forward data- custom attributes
-  getAttribute(name) {
+  getAttribute(name: string): string | null {
     return isForwardAttr(name) ? this._tab.getAttribute(name) : super.getAttribute(name);
   }
-  setAttribute(name, value) {
+  setAttribute(name: string, value: string): void {
     if (isForwardAttr(name)) {
       this._tab.setAttribute(name, value);
     } else {
       super.setAttribute(name, value);
     }
   }
-  
-  noSwitch() {
-    this.parentTabs.noSwitch = true;
-    return this
+
+  noSwitch(): this {
+    this._tab.noSwitch = true as unknown as boolean; // Depending on UIBase types, noSwitch might not be officially exposed, but we carry behavior.
+    return this;
   }
 
-  get ontabclick() {
+  get ontabclick(): ((e: PointerEvent) => void) | null {
     return this._tab.ontabclick;
   }
-  set ontabclick(v) {
+  set ontabclick(v: ((e: PointerEvent) => void) | null) {
     this._tab.ontabclick = v;
   }
 
-  get ontabdragmove() {
+  get ontabdragmove(): ((e: PointerEvent) => void) | null {
     return this._tab.ontabdragmove;
   }
-  set ontabdragmove(v) {
+  set ontabdragmove(v: ((e: PointerEvent) => void) | null) {
     this._tab.ontabdragmove = v;
   }
 
-  get ontabdragstart() {
+  get ontabdragstart(): ((e: PointerEvent) => void) | null {
     return this._tab.ontabdragstart;
   }
-  set ontabdragstart(v) {
+  set ontabdragstart(v: ((e: PointerEvent) => void) | null) {
     this._tab.ontabdragstart = v;
   }
 
-  get ontabdragend() {
+  get ontabdragend(): ((e: PointerEvent) => void) | null {
     return this._tab.ontabdragend;
   }
-  set ontabdragend(v) {
+  set ontabdragend(v: ((e: PointerEvent) => void) | null) {
     this._tab.ontabdragend = v;
   }
 }
@@ -86,38 +87,69 @@ UIBase.internalRegister(TabItemContainer);
 
 class TabDragEvent extends PointerEvent {}
 
-/** 
+type TabDragEvents = {
+  tabclick: PointerEvent;
+  tabdragstart: PointerEvent;
+  tabdragmove: PointerEvent;
+  tabdragend: PointerEvent;
+};
+/**
  * This is a kind of phantom buttom DOM element (elements are 100% drawn with canvas).
  **/
-export class TabItem extends UIBase {
+export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  name: string;
+  icon: number | undefined;
+  tooltip: string;
+  movable: boolean;
+  tbar!: TabBar<CTX>;
+  noSwitch?: boolean;
+
+  ontabclick: ((e: PointerEvent) => void) | null;
+  ontabdragstart: ((e: PointerEvent) => void) | null;
+  ontabdragmove: ((e: PointerEvent) => void) | null;
+  ontabdragend: ((e: PointerEvent) => void) | null;
+
+  dom: HTMLDivElement | undefined;
+  extra: HTMLElement | undefined;
+  extraSize: number | undefined;
+
+  size: vectormath.Vector2;
+  pos: vectormath.Vector2;
+
+  abssize: vectormath.Vector2;
+  abspos: vectormath.Vector2;
+
+  watcher?: { timer?: number };
+
+  get parentTabBar(): TabBar<CTX> {
+    return this.parentWidget as unknown as TabBar<CTX>;
+  }
+
   constructor() {
     super();
 
-    this.name = name;
+    this.name = "";
     this.icon = undefined;
     this.tooltip = "";
     this.movable = true;
-    this.tbar = undefined;
 
     this.ontabclick = null;
     this.ontabdragstart = null;
     this.ontabdragmove = null;
     this.ontabdragend = null;
 
-    let helper = (key) => {
-      let key2 = "on" + key;
-
-      this.addEventListener(key, (e) => {
-        if (this[key2]) {
-          return this[key2](e);
-        }
-      });
-    };
-
-    helper("tabclick");
-    helper("tabdragstart");
-    helper("tabdragmove");
-    helper("tabdragend");
+    this.addEventListener("tabclick", (e: Event) => {
+      if (this.ontabclick) return this.ontabclick(e as PointerEvent);
+    });
+    this.addEventListener("tabdragstart", (e: Event) => {
+      if (this.ontabdragstart) return this.ontabdragstart(e as PointerEvent);
+    });
+    this.addEventListener("tabdragmove", (e: Event) => {
+      if (this.ontabdragmove) return this.ontabdragmove(e as PointerEvent);
+    });
+    this.addEventListener("tabdragend", (e: Event) => {
+      if (this.ontabdragend) return this.ontabdragend(e as PointerEvent);
+    });
 
     this.dom = undefined;
     this.extra = undefined;
@@ -130,32 +162,46 @@ export class TabItem extends UIBase {
     this.abspos = new Vector2();
 
     this.addEventListener("pointerdown", (e) => {
-      this.parentWidget.on_pointerdown(e);
+      this.parentTabBar.on_pointerdown(e);
     });
 
     // forward click event too
     this.addEventListener("click", (e) => {
       // prevent tab bar from starting a drag move of tab button itself
       e.preventDefault();
-      this.parentWidget._doclick(e);
+      this.parentTabBar._doclick(e);
     });
 
     this.addEventListener("pointermove", (e) => {
-      this.parentWidget.on_pointermove(e);
+      this.parentTabBar.on_pointermove(e);
     });
 
     this.addEventListener("pointerup", (e) => {
-      this.parentWidget.on_pointerup(e);
+      this.parentTabBar.on_pointerup(e);
     });
 
     this.addEventListener("keydown", (e) => {
-      switch (e.keyCode) {
+      const ke = e as KeyboardEvent;
+      switch (ke.keyCode) {
         case keymap.Enter:
         case keymap.Space:
-          this.parentWidget.setActive(this, e);
+          this.parentTabBar.setActive(this, ke);
           break;
       }
     });
+  }
+
+  addEventListener<K extends keyof (TabDragEvents & HTMLElementEventMap)>(
+    type: K,
+    listener: (this: HTMLElement, ev: (TabDragEvents & HTMLElementEventMap)[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    cb: EventListenerOrEventListenerObject,
+    options?: AddEventListenerOptions | boolean
+  ): void {
+    super.addEventListener(type, cb, options);
   }
 
   init() {
@@ -168,42 +214,43 @@ export class TabItem extends UIBase {
     };
   }
 
-  sendEvent(type, forwardEvent) {
-    let cls;
+  sendEvent(type: string, forwardEvent?: Event): Event {
+    type EventConstructor = new (type: string, eventInitDict?: object) => Event;
+    let cls: EventConstructor;
 
     if (type === "tabdragstart" || type === "tabdragend") {
-      cls = TabDragEvent;
+      cls = TabDragEvent as unknown as EventConstructor;
     } else if (forwardEvent && forwardEvent instanceof Event) {
-      cls = forwardEvent.constructor;
+      cls = forwardEvent.constructor as EventConstructor;
     } else {
-      cls = PointerEvent;
+      cls = PointerEvent as unknown as EventConstructor;
     }
 
-    let e2 = {};
+    const e2: Record<string, unknown> = {};
 
     if (forwardEvent) {
-      for (let k in forwardEvent) {
+      for (const k in forwardEvent) {
         if (k === "defaultPrevented" || k === "cancelBubble") {
           continue;
         }
 
-        e2[k] = forwardEvent[k];
+        e2[k] = (forwardEvent as unknown as Record<string, unknown>)[k];
       }
     }
 
     e2.target = this;
 
-    e2 = new cls(type, e2);
+    const eventObj = new cls(type, e2);
 
-    this.dispatchEvent(e2);
-    return e2;
+    this.dispatchEvent(eventObj);
+    return eventObj;
   }
 
   getClientRects() {
-    let r = this.tbar.getClientRects()[0];
+    const r = this.tbar.getClientRects()[0];
 
-    let s = this.abssize,
-      p = this.abspos;
+    const s = this.abssize;
+    const p = this.abspos;
 
     s.load(this.size);
     p.load(this.pos);
@@ -224,15 +271,15 @@ export class TabItem extends UIBase {
         right : p[0] + s[0],
         bottom: p[1] + s[1],
       },
-    ];
+    ] as unknown as DOMRectList;
   }
 
   setCSS() {
-    let dpi = UIBase.getDPI();
-    let x = this.pos[0] / dpi;
-    let y = this.pos[1] / dpi;
-    let w = this.size[0] / dpi;
-    let h = this.size[1] / dpi;
+    const dpi = UIBase.getDPI();
+    const x = this.pos[0] / dpi;
+    const y = this.pos[1] / dpi;
+    const w = this.size[0] / dpi;
+    const h = this.size[1] / dpi;
 
     if (this == this.parentWidget.tabs.active) {
       this.style["focus-border-width"] = "0px";
@@ -255,8 +302,25 @@ export class TabItem extends UIBase {
 
 UIBase.internalRegister(TabItem);
 
-export class ModalTabMove extends events.EventHandler {
-  constructor(tab, tbar, dom) {
+export class ModalTabMove<CTX extends IContextBase = IContextBase> extends events.EventHandler {
+  dom: HTMLElement | HTMLDocument | Window;
+  tab: TabItem<CTX>;
+  tbar: TabBar<CTX>;
+  first: boolean;
+
+  droptarget: Element | undefined | null;
+  start_mpos: vectormath.Vector2;
+  mpos: [number, number] | undefined;
+
+  dragtab: TabItem<CTX> | undefined;
+  dragstate: boolean;
+  finished: boolean;
+  dragevent?: DragEvent;
+  dragimg?: ImageData;
+  dragcanvas?: HTMLCanvasElement & { visibleToPick?: boolean };
+  drag_g?: CanvasRenderingContext2D | null;
+
+  constructor(tab: TabItem<CTX>, tbar: TabBar<CTX>, dom: HTMLElement | HTMLDocument | Window) {
     super();
 
     this.dom = dom;
@@ -290,50 +354,50 @@ export class ModalTabMove extends events.EventHandler {
     this.tbar.update(true);
   }
 
-  popModal() {
+  popModal(...args: unknown[]) {
     if (this.dragcanvas !== undefined) {
       this.dragcanvas.remove();
     }
-    let ret = super.popModal(...arguments);
+    const ret = super.popModal(...args);
 
     this.tab.sendEvent("tabdragend");
 
     return ret;
   }
 
-  on_pointerenter(e) {}
+  on_pointerenter(e: PointerEvent) {}
 
-  on_pointerleave(e) {}
+  on_pointerleave(e: PointerEvent) {}
 
-  on_pointerstart(e) {}
+  on_pointerstart(e: PointerEvent) {}
 
-  on_pointerend(e) {}
+  on_pointerend(e: PointerEvent) {}
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     this.finish();
   }
 
-  on_pointercancel(e) {
+  on_pointercancel(e: PointerEvent) {
     this.finish();
   }
 
-  on_pointerup(e) {
+  on_pointerup(e: PointerEvent) {
     this.finish();
   }
 
-  on_pointermove(e) {
+  on_pointermove(e: PointerEvent) {
     return this._on_move(e, e.x, e.y);
   }
 
-  _dragstate(e, x, y) {
-    this.dragcanvas.style["left"] = x + "px";
+  _dragstate(e: PointerEvent, x: number, y: number) {
+    this.dragcanvas!.style["left"] = x + "px";
     this.dragcanvas.style["top"] = y + "px";
 
-    let ctx = this.tbar.ctx;
-    let screen = ctx.screen;
-    let elem = screen.pickElement(x, y);
+    const ctx = this.tbar.ctx;
+    const screen = ctx.screen;
+    const elem = screen.pickElement(x, y);
 
-    let e2 = new DragEvent("dragenter", this.dragevent);
+    const e2 = new DragEvent("dragenter", this.dragevent);
     if (elem !== this.droptarget) {
       let e2 = new DragEvent("dragexit", this.dragevent);
       if (this.droptarget) {
@@ -349,9 +413,9 @@ export class ModalTabMove extends events.EventHandler {
     //console.log(elem);
   }
 
-  _on_move(e, x, y) {
-    let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase.getDPI();
+  _on_move(e: PointerEvent, x: number, y: number) {
+    const r = this.tbar.getClientRects()[0];
+    const dpi = UIBase.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -367,7 +431,8 @@ export class ModalTabMove extends events.EventHandler {
     x -= r.x;
     y -= r.y;
 
-    let dx, dy;
+    let dx;
+    let dy;
 
     x *= dpi;
     y *= dpi;
@@ -387,10 +452,11 @@ export class ModalTabMove extends events.EventHandler {
 
     if (debug) console.log(x, y, dx, dy);
 
-    let tab = this.tab,
-      tbar = this.tbar;
-    let axis = tbar.horiz ? 0 : 1;
-    let distx, disty;
+    const tab = this.tab;
+    const tbar = this.tbar;
+    const axis = tbar.horiz ? 0 : 1;
+    let distx;
+    let disty;
 
     if (tbar.horiz) {
       tab.pos[0] += dx;
@@ -400,8 +466,8 @@ export class ModalTabMove extends events.EventHandler {
       disty = Math.abs(x - this.start_mpos[0]);
     }
 
-    let limit = 50;
-    let csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
+    const limit = 50;
+    const csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
 
     let dragok = tab.pos[axis] + tab.size[axis] < -limit || tab.pos[axis] >= csize + limit;
     dragok = dragok || disty > limit * 1.5;
@@ -416,10 +482,10 @@ export class ModalTabMove extends events.EventHandler {
       });
 
       this.dragtab = tab;
-      let g = this.tbar.g;
+      const g = this.tbar.g;
       this.dragimg = g.getImageData(~~tab.pos[0], ~~tab.pos[1], ~~tab.size[0], ~~tab.size[1]);
       this.dragcanvas = document.createElement("canvas");
-      let g2 = (this.drag_g = this.dragcanvas.getContext("2d"));
+      const g2 = (this.drag_g = this.dragcanvas.getContext("2d"));
 
       this.dragcanvas.visibleToPick = false;
       this.dragcanvas.width = ~~tab.size[0];
@@ -438,9 +504,9 @@ export class ModalTabMove extends events.EventHandler {
       return;
     }
 
-    let ti = tbar.tabs.indexOf(tab);
-    let next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
-    let prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
+    const ti = tbar.tabs.indexOf(tab);
+    const next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
+    const prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
 
     if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
       tbar.swapTabs(tab, next);
@@ -453,14 +519,14 @@ export class ModalTabMove extends events.EventHandler {
     this.mpos[0] = x;
     this.mpos[1] = y;
 
-    let e2 = tab.sendEvent("tabdragmove", e);
+    const e2 = tab.sendEvent("tabdragmove", e);
 
     if (e2.defaultPrevented) {
       this.finish();
     }
   }
 
-  on_keydown(e) {
+  on_keydown(e: KeyboardEvent) {
     if (debug) console.log(e.keyCode);
 
     switch (e.keyCode) {
@@ -474,33 +540,58 @@ export class ModalTabMove extends events.EventHandler {
   }
 }
 
-export class TabBar extends UIBase {
+export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  iconsheet: number;
+  movableTabs: boolean;
+  tabFontScale: number;
+
+  tabs: TabItem<CTX>[] & { active?: TabItem<CTX>; highlight?: TabItem<CTX> };
+
+  _last_style_key?: string;
+  r: number;
+
+  canvas: HTMLCanvasElement;
+  g: CanvasRenderingContext2D;
+
+  _last_dpi?: number;
+  _last_pos?: string;
+
+  horiz: boolean;
+  onchange: ((tab: TabItem<CTX>, e?: Event) => void) | null;
+  onselect: ((e: { tab?: TabItem<CTX>; defaultPrevented: boolean; preventDefault: () => void }) => void) | null;
+
+  _tool?: ModalTabMove<CTX>;
+  _last_p_key?: string;
+  _size_cb?: () => void;
+  draggable?: boolean;
+
   constructor() {
     super();
 
-    let style = document.createElement("style");
-    let canvas = document.createElement("canvas");
+    const style = document.createElement("style");
+    const canvas = document.createElement("canvas");
 
     this.iconsheet = 0;
     this.movableTabs = true;
 
     this.tabFontScale = 1.0;
 
-    this.tabs = [];
-    this.tabs.active = undefined;
-    this.tabs.highlight = undefined;
+    const tabsArr: any = [];
+    tabsArr.active = undefined;
+    tabsArr.highlight = undefined;
+    this.tabs = tabsArr;
 
     this._last_style_key = undefined;
 
-    canvas.style["width"] = "145px";
-    canvas.style["height"] = "45px";
+    canvas.style.width = "145px";
+    canvas.style.height = "45px";
 
-    this.r = this.getDefault("TabBarRadius", undefined, 8);
+    this.r = this.getDefault("TabBarRadius", undefined, 8) as number;
 
     this.canvas = canvas;
-    this.g = canvas.getContext("2d");
+    this.g = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    this.canvas.style["touch-action"] = "none";
+    this.canvas.style.touchAction = "none";
 
     style.textContent = `
     `;
@@ -515,24 +606,22 @@ export class TabBar extends UIBase {
     this.onchange = null;
     this.onselect = null; //onselect is like onchange, but fires even if tab hasn't changed
 
-    let mx, my;
-
     this.canvas.addEventListener(
       "pointermove",
-      (e) => {
-        this.on_pointermove(e);
+      (e: Event) => {
+        this.on_pointermove(e as PointerEvent);
       },
       false
     );
 
-    this.canvas.addEventListener("pointerdown", (e) => {
-      this.on_pointerdown(e);
+    this.canvas.addEventListener("pointerdown", (e: Event) => {
+      this.on_pointerdown(e as PointerEvent);
     });
   }
 
-  _doelement(e, mx, my) {
-    for (let tab of this.tabs) {
-      let ok;
+  _doelement(e: PointerEvent, mx: number, my: number) {
+    for (const tab of this.tabs) {
+      let ok: boolean;
 
       if (this.horiz) {
         ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
@@ -547,18 +636,18 @@ export class TabBar extends UIBase {
     }
   }
 
-  _domouse(e) {
-    let r = this.canvas.getClientRects()[0];
+  _domouse(e: PointerEvent) {
+    const r = this.canvas.getClientRects()[0];
 
-    let ex = e.x;
-    let ey = e.y;
-    let rx = r.x;
-    let ry = r.y;
+    const ex = e.clientX || e.x;
+    const ey = e.clientY || e.y;
+    const rx = r.x;
+    const ry = r.y;
 
     let mx = ex - rx;
     let my = ey - ry;
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
     mx *= dpi;
     my *= dpi;
@@ -571,7 +660,7 @@ export class TabBar extends UIBase {
     }
   }
 
-  _doclick(e) {
+  _doclick(e: PointerEvent) {
     this._domouse(e);
 
     if (e.defaultPrevented) {
@@ -584,32 +673,34 @@ export class TabBar extends UIBase {
       return;
     }
 
-    let ht = this.tabs.highlight;
+    const ht = this.tabs.highlight;
 
-    let acte = {};
-    for (let k in e) {
+    const acte: any = {};
+    for (const k in e) {
       if (k === "defaultPrevented" || k === "cancelBubble") {
         continue;
       }
 
-      acte[k] = e[k];
+      acte[k] = (e as any)[k];
     }
 
     acte.target = ht;
     acte.pointerId = e.pointerId;
 
-    acte = new PointerEvent("tabactive", acte);
+    const pointerActe = new PointerEvent("tabactive", acte);
 
-    let e2 = ht.sendEvent("tabclick", e);
+    if (ht) {
+      const e2 = ht.sendEvent("tabclick", e);
 
-    if (e2.defaultPrevented) {
-      acte.preventDefault();
+      if (e2.defaultPrevented) {
+        pointerActe.preventDefault();
+      }
     }
 
     if (ht !== undefined && this.tool === undefined) {
-      this.setActive(ht, acte);
+      this.setActive(ht, pointerActe);
 
-      if (this.movableTabs && !acte.defaultPrevented) {
+      if (this.movableTabs && !pointerActe.defaultPrevented) {
         this._startMove(ht, e);
       }
 
@@ -618,21 +709,21 @@ export class TabBar extends UIBase {
     }
   }
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     this._doclick(e);
   }
 
-  on_pointermove(e) {
-    let r = this.canvas.getClientRects()[0];
+  on_pointermove(e: PointerEvent) {
+    const r = this.canvas.getClientRects()[0];
     this._domouse(e);
 
     e.preventDefault();
     e.stopPropagation();
   }
 
-  on_pointerup(e) {}
+  on_pointerup(e: PointerEvent) {}
 
-  static setDefault(e) {
+  static setDefault(e: TabContainer) {
     e.setAttribute("bar_pos", "top");
     e.updatePos(true);
 
@@ -657,14 +748,19 @@ export class TabBar extends UIBase {
     return this._tool;
   }
 
-  set tool(v) {
+  set tool(v: ModalTabMove<CTX> | undefined) {
     //console.warn("SET TOOL", v, this._id);
     this._tool = v;
   }
 
-  _startMove(tab = this.tabs.active, event, pointerId = event ? event.pointerId : undefined, pointerElem = tab) {
-    if (this.movableTabs) {
-      let e2 = tab.sendEvent("tabdragstart", event);
+  _startMove(
+    tab: TabItem<CTX> | undefined = this.tabs.active,
+    event?: PointerEvent,
+    pointerId: number | undefined = event ? event.pointerId : undefined,
+    pointerElem: HTMLElement | HTMLDocument | Window | TabItem<CTX> | undefined = tab
+  ) {
+    if (tab && this.movableTabs) {
+      const e2 = event ? tab.sendEvent("tabdragstart", event) : new Event("tabdragstart");
 
       if (e2.defaultPrevented) {
         return;
@@ -674,11 +770,11 @@ export class TabBar extends UIBase {
         this.tool.finish();
       }
 
-      let edom = this.getScreen();
-      let tool = (this.tool = new ModalTabMove(tab, this, edom));
+      const edom = this.getScreen();
+      const tool = (this.tool = new ModalTabMove<CTX>(tab, this, edom));
 
       if (event && pointerElem && pointerId !== undefined) {
-        tool.pushPointerModal(pointerElem, pointerId);
+        tool.pushPointerModal(pointerElem as unknown as HTMLElement, pointerId);
       } else {
         tool.pushModal(edom, false);
       }
@@ -686,7 +782,7 @@ export class TabBar extends UIBase {
   }
 
   _fireOnSelect() {
-    let e = this._makeOnSelectEvt();
+    const e = this._makeOnSelectEvt();
 
     if (this.onselect) {
       this.onselect(e);
@@ -712,8 +808,8 @@ export class TabBar extends UIBase {
    */
   }
 
-  getTab(name_or_id) {
-    for (let tab of this.tabs) {
+  getTab(name_or_id: string): TabItem<CTX> | undefined {
+    for (const tab of this.tabs) {
       if (tab.id === name_or_id || tab.name === name_or_id) return tab;
     }
 
@@ -721,7 +817,7 @@ export class TabBar extends UIBase {
   }
 
   clear() {
-    for (let t of this.tabs) {
+    for (const t of this.tabs) {
       if (t.dom) {
         t.dom.remove();
       }
@@ -729,19 +825,22 @@ export class TabBar extends UIBase {
       t.remove();
     }
 
-    this.tabs = [];
+    const tabsArr: TabI = [];
+    tabsArr.active = undefined;
+    tabsArr.highlight = undefined;
+    this.tabs = tabsArr;
     this.setCSS();
     this._redraw();
   }
 
   saveData() {
-    let taborder = [];
+    const taborder = [];
 
-    for (let tab of this.tabs) {
+    for (const tab of this.tabs) {
       taborder.push(tab.name);
     }
 
-    let act = this.tabs.active !== undefined ? this.tabs.active.name : "null";
+    const act = this.tabs.active !== undefined ? this.tabs.active.name : "null";
 
     return {
       taborder: taborder,
@@ -749,20 +848,20 @@ export class TabBar extends UIBase {
     };
   }
 
-  loadData(obj) {
+  loadData(obj: Record<string, unknown> | any): this {
     if (!obj.taborder) {
-      return;
+      return this;
     }
 
-    let tabs = this.tabs;
-    let active = undefined;
-    let ntabs = [];
+    const tabs = this.tabs;
+    let active: TabItem<CTX> | undefined = undefined;
+    const ntabs: any = [];
 
     ntabs.active = undefined;
     ntabs.highlight = undefined;
 
-    for (let tname of obj.taborder) {
-      let tab = this.getTab(tname);
+    for (const tname of obj.taborder) {
+      const tab = this.getTab(tname);
 
       if (tab === undefined) {
         continue;
@@ -775,7 +874,7 @@ export class TabBar extends UIBase {
       ntabs.push(tab);
     }
 
-    for (let tab of tabs) {
+    for (const tab of tabs) {
       if (ntabs.indexOf(tab) < 0) {
         ntabs.push(tab);
       }
@@ -798,11 +897,11 @@ export class TabBar extends UIBase {
     return this;
   }
 
-  swapTabs(a, b) {
-    let tabs = this.tabs;
+  swapTabs(a: TabItem<CTX>, b: TabItem<CTX>) {
+    const tabs = this.tabs;
 
-    let ai = tabs.indexOf(a);
-    let bi = tabs.indexOf(b);
+    const ai = tabs.indexOf(a);
+    const bi = tabs.indexOf(b);
 
     tabs[ai] = b;
     tabs[bi] = a;
@@ -810,15 +909,15 @@ export class TabBar extends UIBase {
     this.update(true);
   }
 
-  addIconTab(icon, id, tooltip, movable = true) {
-    let tab = this.addTab("", id, tooltip, movable);
+  addIconTab(icon: number, id: string, tooltip: string, movable: boolean = true) {
+    const tab = this.addTab("", id, tooltip, movable);
     tab.icon = icon;
 
     return tab;
   }
 
-  addTab(name, id, tooltip = "", movable) {
-    let tab = UIBase.createElement("tab-item-x", true);
+  addTab(name: string, id: string, tooltip: string = "", movable: boolean = false) {
+    const tab = UIBase.createElement<TabItem<CTX>>("tab-item-x", true);
 
     this.shadow.appendChild(tab);
     tab.parentWidget = this;
@@ -839,8 +938,8 @@ export class TabBar extends UIBase {
     return tab;
   }
 
-  updatePos(force_update = false) {
-    let pos = this.getAttribute("bar_pos");
+  updatePos(force_update: boolean = false) {
+    const pos: string | undefined = this.getAttribute("bar_pos") ?? undefined;
 
     if (pos !== this._last_pos || force_update) {
       this._last_pos = pos;
@@ -860,8 +959,8 @@ export class TabBar extends UIBase {
     }
   }
 
-  updateDPI(force_update = false) {
-    let dpi = this.getDPI();
+  updateDPI(force_update: boolean = false) {
+    const dpi = this.getDPI();
 
     if (dpi !== this._last_dpi) {
       if (debug) console.log("DPI update!");
@@ -871,16 +970,16 @@ export class TabBar extends UIBase {
     }
   }
 
-  updateCanvas(force_update = false) {
-    let canvas = this.canvas;
+  updateCanvas(force_update: boolean = false) {
+    const canvas = this.canvas;
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
-    let rwidth = getpx(this.canvas.style["width"]);
-    let rheight = getpx(this.canvas.style["height"]);
+    const rwidth = getpx(this.canvas.style["width"]);
+    const rheight = getpx(this.canvas.style["height"]);
 
-    let width = ~~(rwidth * dpi);
-    let height = ~~(rheight * dpi);
+    const width = ~~(rwidth * dpi);
+    const height = ~~(rheight * dpi);
 
     let update = force_update;
     update = update || canvas.width !== width || canvas.height !== height;
@@ -893,7 +992,7 @@ export class TabBar extends UIBase {
     }
   }
 
-  _getFont(tsize) {
+  _getFont(tsize?: number) {
     let font = this.getDefault("TabText");
 
     if (this.tabFontScale !== 1.0) {
@@ -909,30 +1008,30 @@ export class TabBar extends UIBase {
       this.doOnce(this._layout);
     }
 
-    let g = this.g;
+    const g = this.g;
 
     if (debug) console.log("tab layout");
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
-    let font = this._getFont();
-    let tsize = font.size * dpi;
+    const font = this._getFont();
+    const tsize = font.size * dpi;
 
     g.font = font.genCSS(tsize);
 
-    let axis = this.horiz ? 0 : 1;
+    const axis = this.horiz ? 0 : 1;
 
-    let pad = 4 * dpi + Math.ceil(tsize * 0.25);
-    let hpad = this.getDefault("TabPadding", undefined, 0.0);
+    const pad = 4 * dpi + Math.ceil(tsize * 0.25);
+    const hpad = this.getDefault("TabPadding", undefined, 0.0);
 
     let x = pad;
-    let y = 0.0;
+    const y = 0.0;
 
     let h = tsize + Math.ceil(tsize * 0.5) + hpad;
-    let iconsize = iconmanager.getTileSize(this.iconsheet);
+    const iconsize = iconmanager.getTileSize(this.iconsheet);
     let have_icons = false;
 
-    for (let tab of this.tabs) {
+    for (const tab of this.tabs) {
       if (tab.icon !== undefined) {
         have_icons = true;
         h = Math.max(h, iconsize + 4);
@@ -940,11 +1039,11 @@ export class TabBar extends UIBase {
       }
     }
 
-    let r1 = this.parentWidget ? this.parentWidget.getClientRects()[0] : undefined;
-    let r2 = this.canvas.getClientRects()[0];
+    const r1 = this.parentWidget ? this.parentWidget.getClientRects()[0] : undefined;
+    const r2 = this.canvas.getClientRects()[0];
 
-    let rx = 0,
-      ry = 0;
+    let rx = 0;
+    let ry = 0;
     if (r2) {
       rx = r2.x; //r2.x - r1.x;
       ry = r2.y; //r2.y - r1.y;
@@ -952,13 +1051,13 @@ export class TabBar extends UIBase {
 
     let ti = -1;
 
-    let makeTabWatcher = (tab) => {
+    const makeTabWatcher = (tab: TabItem<CTX>) => {
       if (tab.watcher) {
         clearInterval(tab.watcher.timer);
       }
 
-      let watcher = () => {
-        let dead = this.tabs.indexOf(tab) < 0;
+      const watcher = () => {
+        let dead = !this.tabs.includes(tab);
         dead = dead || this.isDead();
 
         if (dead) {
@@ -976,7 +1075,7 @@ export class TabBar extends UIBase {
     };
 
     let haveTabDom = false;
-    for (let tab of this.tabs) {
+    for (const tab of this.tabs) {
       if (tab.extra) {
         haveTabDom = true;
       }
@@ -998,7 +1097,7 @@ export class TabBar extends UIBase {
       this.ctx.screen.addEventListener("resize", this._size_cb);
     }
 
-    for (let tab of this.tabs) {
+    for (const tab of this.tabs) {
       ti++;
 
       if (tab.extra && !tab.dom) {
@@ -1028,7 +1127,7 @@ export class TabBar extends UIBase {
           tab.dom.style["top"] = ry + tab.pos[1] / dpi + "px";
         }
 
-        let font = this._getFont();
+        const font = this._getFont();
         tab.dom.style["font"] = font.genCSS();
         tab.dom.style["color"] = font.color;
 
@@ -1050,7 +1149,7 @@ export class TabBar extends UIBase {
       }
 
       //don't interfere with tab dragging
-      let bad = this.tool !== undefined && tab === this.tabs.active;
+      const bad = this.tool !== undefined && tab === this.tabs.active;
 
       if (!bad) {
         tab.pos[axis] = x;
@@ -1075,7 +1174,7 @@ export class TabBar extends UIBase {
       this.canvas.style["width"] = h + "px";
     }
 
-    for (let tab of this.tabs) {
+    for (const tab of this.tabs) {
       tab.setCSS();
     }
 
@@ -1083,12 +1182,12 @@ export class TabBar extends UIBase {
   }
 
   /** tab is a TabItem instance */
-  setActive(tab, event) {
+  setActive(tab: TabItem<CTX>, event?: Event) {
     if (tab.noSwitch) {
       return;
     }
 
-    let update = tab !== this.tabs.active;
+    const update = tab !== this.tabs.active;
     this.tabs.active = tab;
 
     if (update) {
@@ -1103,19 +1202,19 @@ export class TabBar extends UIBase {
   }
 
   _redraw() {
-    let g = this.g;
+    const g = this.g;
 
-    let activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
+    const activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
 
     if (debug) console.log("tab draw");
 
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    let dpi = this.getDPI();
-    let font = this._getFont();
+    const dpi = this.getDPI();
+    const font = this._getFont();
 
     let tsize = font.size;
-    let iconsize = iconmanager.getTileSize(this.iconsheet);
+    const iconsize = iconmanager.getTileSize(this.iconsheet);
 
     tsize = tsize * dpi;
     g.font = font.genCSS(tsize);
@@ -1123,12 +1222,12 @@ export class TabBar extends UIBase {
     g.lineWidth = 2;
     g.strokeStyle = this.getDefault("TabStrokeStyle1");
 
-    let r = this.r * dpi;
+    const r = this.r * dpi;
     this._layout();
     let tab;
 
-    const draw_text = (name, x2, y2) => {
-      let hpad = this.getDefault("TabPadding", undefined, 0.0);
+    const draw_text = (name: string, x2: number, y2: number) => {
+      const hpad = this.getDefault("TabPadding", undefined, 0.0);
       if (this.horiz) {
         y2 += hpad * 0.5;
       } else {
@@ -1144,18 +1243,18 @@ export class TabBar extends UIBase {
 
       if (tab === this.tabs.active) continue;
 
-      let x = tab.pos[0],
-        y = tab.pos[1];
-      let w = tab.size[0],
-        h = tab.size[1];
+      const x = tab.pos[0];
+      const y = tab.pos[1];
+      const w = tab.size[0];
+      const h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
-      let tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
+      const tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
 
       let x2 = x + (tab.size[this.horiz ^ 1] - tw) * 0.5;
-      let y2 = y + tsize;
+      const y2 = y + tsize;
 
       if (tab === this.tabs.highlight) {
-        let p = 2;
+        const p = 2;
 
         g.beginPath();
         g.rect(x + p, y + p, w - p * 2, h - p * 2);
@@ -1166,8 +1265,8 @@ export class TabBar extends UIBase {
       g.fillStyle = this.getDefault("TabText").color;
 
       if (!this.horiz) {
-        let x3 = 0,
-          y3 = y2;
+        const x3 = 0;
+        const y3 = y2;
 
         g.save();
         g.translate(x3, y3);
@@ -1186,8 +1285,8 @@ export class TabBar extends UIBase {
         g.restore();
       }
 
-      let prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
-      let next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
+      const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
+      const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
 
       if (tab !== this.tabs[this.tabs.length - 1] && prev !== this.tabs.active && next !== this.tabs.active) {
         g.beginPath();
@@ -1203,17 +1302,17 @@ export class TabBar extends UIBase {
       }
     }
 
-    let th = tsize;
+    const th = tsize;
 
     //draw active tab
     tab = this.tabs.active;
     if (tab) {
-      let x = tab.pos[0],
-        y = tab.pos[1];
-      let w = tab.size[0],
-        h = tab.size[1];
+      const x = tab.pos[0];
+      const y = tab.pos[1];
+      let w = tab.size[0];
+      let h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
-      let tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
+      const tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize, font).width;
 
       if (this.horiz) {
         h += 2;
@@ -1221,8 +1320,8 @@ export class TabBar extends UIBase {
         w += 2;
       }
 
-      let x2 = x + (tab.size[this.horiz ^ 1] - tw) * 0.5;
-      let y2 = y + tsize;
+      const x2 = x + (tab.size[this.horiz ^ 1] - tw) * 0.5;
+      const y2 = y + tsize;
 
       if (tab === this.tabs.active) {
         /*
@@ -1240,11 +1339,11 @@ export class TabBar extends UIBase {
 
         g.beginPath();
         //g.lineWidth *= 5;
-        let ypad = 2;
+        const ypad = 2;
 
         g.strokeStyle = this.getDefault("TabStrokeStyle2");
         g.fillStyle = activecolor;
-        let r2 = r * 1.5;
+        const r2 = r * 1.5;
 
         if (this.horiz) {
           g.moveTo(x - r, h);
@@ -1275,9 +1374,9 @@ export class TabBar extends UIBase {
           g.closePath();
         }
 
-        let cw = this.horiz ? this.canvas.width : this.canvas.height;
+        const cw = this.horiz ? this.canvas.width : this.canvas.height;
 
-        let worig = g.lineWidth;
+        const worig = g.lineWidth;
 
         g.lineWidth *= 0.5;
 
@@ -1287,8 +1386,8 @@ export class TabBar extends UIBase {
         g.lineWidth = worig;
 
         if (!this.horiz) {
-          let x3 = 0,
-            y3 = y2;
+          const x3 = 0;
+          const y3 = y2;
 
           g.save();
           g.translate(x3, y3);
@@ -1307,7 +1406,7 @@ export class TabBar extends UIBase {
     }
   }
 
-  removeTab(tab) {
+  removeTab(tab: TabItem<CTX>) {
     this.tabs.remove(tab);
     if (tab === this.tabs.active) {
       this.tabs.active = this.tabs[0];
@@ -1322,17 +1421,16 @@ export class TabBar extends UIBase {
     super.setCSS(false);
 
     /* create a no stacking context */
-    this.style["contain"] = "layout";
+    this.style.contain = "layout";
 
-    this.r = this.getDefault("TabBarRadius", undefined, 8);
+    this.r = this.getDefault("TabBarRadius", undefined, 8) as number;
 
-    let r = this.r !== undefined ? this.r : 3;
+    const r = this.r !== undefined ? this.r : 3;
 
-    this.style["touch-action"] = "none";
+    this.style.touchAction = "none";
 
-    this.canvas.style["background-color"] = this.getDefault("TabInactive");
-    this.canvas.style["border-radius"] = r + "px";
-    //this.style["background-color"] = this.getDefault("TabInactive");
+    this.canvas.style.backgroundColor = this.getDefault("TabInactive");
+    this.canvas.style.borderRadius = r + "px";
   }
 
   updateStyle() {
@@ -1355,10 +1453,10 @@ export class TabBar extends UIBase {
     }
   }
 
-  update(force_update = false) {
-    let rect = this.getClientRects()[0];
+  update(force_update: boolean = false) {
+    const rect = this.getClientRects()[0];
     if (rect) {
-      let key = Math.floor(rect.x * 4.0) + ":" + Math.floor(rect.y * 4.0);
+      const key = Math.floor(rect.x * 4.0) + ":" + Math.floor(rect.y * 4.0);
       if (key !== this._last_p_key) {
         this._last_p_key = key;
 
@@ -1377,7 +1475,24 @@ export class TabBar extends UIBase {
 
 UIBase.internalRegister(TabBar);
 
-export class TabContainer extends UIBase {
+export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  tbar: TabBar<CTX>;
+  tabs: Record<string, TabItemContainer<CTX>>;
+  tabFontScale: number;
+  dataPrefix: string;
+  inherit_packflag: number;
+  packflag: number;
+
+  _last_style_key: string;
+  _last_horiz?: boolean;
+  _last_bar_pos?: string | null;
+  _tab?: TabItemContainer<CTX>;
+
+  onchange?: (tab: TabItem<CTX>, event?: Event) => void;
+  onselect?: (e: any) => void;
+  horiz: boolean = false;
+  background?: string;
+  __background?: string;
   constructor() {
     super();
 
@@ -1404,7 +1519,7 @@ export class TabContainer extends UIBase {
     this._last_bar_pos = undefined;
     this._tab = undefined;
 
-    let div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute("class", `_tab_${this._id}`);
     div.appendChild(this.tbar);
     this.shadow.appendChild(div);
@@ -1434,7 +1549,7 @@ export class TabContainer extends UIBase {
         this._tab.flushUpdate();
       }
 
-      let div = document.createElement("div");
+      const div = document.createElement("div");
 
       this.tbar.setCSS.once(() => (div.style["background-color"] = this.getDefault("background-color")), div);
 
@@ -1449,7 +1564,7 @@ export class TabContainer extends UIBase {
     };
   }
 
-  get movableTabs() {
+  get movableTabs(): boolean {
     let attr;
 
     if (!this.hasAttribute("movable-tabs")) {
@@ -1471,25 +1586,25 @@ export class TabContainer extends UIBase {
     return attr === "true";
   }
 
-  set movableTabs(val) {
+  set movableTabs(val: boolean | string) {
     val = !!val;
 
     this.setAttribute("movable-tabs", val ? "true" : "false");
     this.tbar.movableTabs = this.movableTabs;
   }
 
-  get hideScrollBars() {
-    let attr = ("" + this.getAttribute("hide-scrollbars")).toLowerCase();
+  get hideScrollBars(): boolean {
+    const attr = ("" + this.getAttribute("hide-scrollbars")).toLowerCase();
     return attr === "true" || attr === "yes";
   }
 
-  set hideScrollBars(val) {
+  set hideScrollBars(val: boolean | string) {
     val = !!val;
 
     this.setAttribute("hide-scrollbars", "" + val);
   }
 
-  static setDefault(e) {
+  static setDefault<T extends UIBase<any>>(e: T): T {
     e.setAttribute("bar_pos", "top");
 
     return e;
@@ -1502,7 +1617,7 @@ export class TabContainer extends UIBase {
     };
   }
 
-  _startMove(tab = this.tbar.tabs.active, event) {
+  _startMove(tab: TabItem<CTX> | undefined = this.tbar.tabs.active, event?: PointerEvent) {
     return this.tbar._startMove(tab, event);
   }
 
@@ -1510,12 +1625,12 @@ export class TabContainer extends UIBase {
     return this.tbar._ensureNoModal();
   }
 
-  saveData() {
-    let json = super.saveData() || {};
+  saveData(): Record<string, any> {
+    const json = super.saveData() || {};
     json.tabs = {};
 
-    for (let k in this.tabs) {
-      let tab = this.tabs[k];
+    for (const k in this.tabs) {
+      const tab = this.tabs[k];
 
       if (k === this.tbar.tabs.active.id) {
         //no need to save active tab here
@@ -1532,17 +1647,17 @@ export class TabContainer extends UIBase {
     return json;
   }
 
-  loadData(json) {
+  loadData(json: any) {
     if (!json.tabs) {
       return;
     }
 
-    for (let k in json.tabs) {
+    for (const k in json.tabs) {
       if (!(k in this.tabs)) {
         continue;
       }
 
-      let uidata = JSON.stringify(json.tabs[k]);
+      const uidata = JSON.stringify(json.tabs[k]);
       loadUIData(this.tabs[k], uidata);
     }
   }
@@ -1598,12 +1713,12 @@ export class TabContainer extends UIBase {
   }
 
   _remakeStyle() {
-    let horiz = this.tbar.horiz;
-    let display = "flex";
-    let flexDir = !horiz ? "row" : "column";
-    let bgcolor = this.__background; //this.getDefault("background-color");
+    const horiz = this.tbar.horiz;
+    const display = "flex";
+    const flexDir = !horiz ? "row" : "column";
+    const bgcolor = this.__background; //this.getDefault("background-color");
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       ._tab_${this._id} {
         display : ${display};
@@ -1629,28 +1744,28 @@ export class TabContainer extends UIBase {
     this.shadow.prepend(style);
   }
 
-  icontab(icon, id, tooltip) {
-    let t = this.tab("", id, tooltip);
+  icontab(icon: number, id: string, tooltip: string): TabItemContainer<CTX> {
+    const t = this.tab("", id, tooltip);
     t._tab.icon = icon;
 
     return t;
   }
 
-  removeTab(tab) {
-    let tab2 = tab._tab;
+  removeTab(tab: TabItemContainer<CTX>) {
+    const tab2 = tab._tab;
     this.tbar.removeTab(tab2);
     tab.remove();
   }
 
-  tab(name, id = undefined, tooltip = undefined, movable = true) {
+  tab(name: string, id?: string | number, tooltip?: string, movable: boolean = true): TabItemContainer<CTX> {
     if (id === undefined) {
       id = tab_idgen++;
     }
 
-    let col = UIBase.createElement("tab-item-container-x");
+    const col = UIBase.createElement("tab-item-container-x");
     col.parentTabs = this;
     this.tabs[id] = col;
-    
+
     col.dataPrefix = this.dataPrefix;
 
     col.ctx = this.ctx;
@@ -1676,7 +1791,7 @@ export class TabContainer extends UIBase {
     return col;
   }
 
-  setActive(tab) {
+  setActive(tab: TabItemContainer<CTX> | string) {
     if (typeof tab === "string") {
       tab = this.getTab(tab);
     }
@@ -1694,10 +1809,10 @@ export class TabContainer extends UIBase {
     return this.tbar.tabs.length;
   }
 
-  moveTab(tab, i) {
+  moveTab(tab: TabItemContainer<CTX>, i: number) {
     tab = tab._tab;
 
-    let tab2 = this.tbar.tabs[i];
+    const tab2 = this.tbar.tabs[i];
 
     if (tab !== tab2) {
       this.tbar.swapTabs(tab, tab2);
@@ -1708,13 +1823,13 @@ export class TabContainer extends UIBase {
     this.tbar._redraw();
   }
 
-  getTab(name_or_id) {
+  getTab(name_or_id: string | number): TabItemContainer<CTX> {
     if (name_or_id in this.tabs) {
       return this.tabs[name_or_id];
     }
 
-    for (let k in this.tabs) {
-      let t = this.tabs[k];
+    for (const k in this.tabs) {
+      const t = this.tabs[k];
 
       if (t.name === name_or_id) {
         return t;
@@ -1725,7 +1840,7 @@ export class TabContainer extends UIBase {
   }
 
   updateBarPos() {
-    let barpos = this.getAttribute("bar_pos");
+    const barpos = this.getAttribute("bar_pos");
 
     if (barpos !== this._last_bar_pos) {
       this.horiz = barpos === "top" || barpos === "bottom";
@@ -1738,7 +1853,7 @@ export class TabContainer extends UIBase {
   }
 
   updateHoriz() {
-    let horiz = this.tbar.horiz;
+    const horiz = this.tbar.horiz;
 
     if (this._last_horiz !== horiz) {
       this._last_horiz = horiz;
@@ -1747,7 +1862,7 @@ export class TabContainer extends UIBase {
   }
 
   updateStyle() {
-    let key = "" + this.getDefault("background-color");
+    const key = "" + this.getDefault("background-color");
 
     if (key !== this._last_style_key) {
       this._last_style_key = key;
@@ -1755,7 +1870,7 @@ export class TabContainer extends UIBase {
     }
   }
 
-  getActive() {
+  getActive(): TabItem<CTX> | undefined {
     return this.tbar.tabs.active;
   }
 
@@ -1778,10 +1893,10 @@ export class TabContainer extends UIBase {
     this.updateBarPos();
     this.tbar.update();
 
-    let act = this.tbar.tabs.active;
+    const act = this.tbar.tabs.active;
 
     if (act && !this.hideScrollBars) {
-      let container = this.tabs[act.id];
+      const container = this.tabs[act.id];
 
       //propegate overflow-y to tab container as a whole
 
