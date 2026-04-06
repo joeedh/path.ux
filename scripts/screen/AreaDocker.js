@@ -130,6 +130,7 @@ export class AreaDocker extends Container {
     }
 
     tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
+    
     dockerdebug("Add Menu Tab", tab);
 
     let icon = this.addicon = tab._tab;

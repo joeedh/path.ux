@@ -1165,6 +1165,11 @@ export class UIBase<CTX extends IContextBase = IContextBase, VALUE = any> extend
     }
   }
 
+  playwrightId(id: string): this {
+    this.setAttribute("data-testid", id);
+    return this;
+  }
+
   flagPropSocketUpdate(path: string): this {
     let sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
     if (sock) {
@@ -4163,7 +4168,12 @@ export function drawRoundBox(
 export function _getFont_new(elem: UIBase, size?: number, font: string = "DefaultText", do_dpi = true): string {
   let fontObj = elem.getDefault(font) as CSSFont;
   if (fontObj === undefined) {
-    console.error("Could not find font " + font + " for element", elem, 'theme style:', elem.constructor.define().style ?? 'base');
+    console.error(
+      "Could not find font " + font + " for element",
+      elem,
+      "theme style:",
+      elem.constructor.define().style ?? "base"
+    );
     debugger;
   }
 

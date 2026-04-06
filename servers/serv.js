@@ -1,4 +1,4 @@
-const PORT = 5002;
+const PORT = process.argv[2] ? parseInt(process.argv[2]) : 5002;
 const HOST = "localhost"
 
 import * as rpc from './rpc.js';
@@ -9,7 +9,7 @@ const debug_listeners = false; //parse code with babel and activates functionalt
 
 import fs from 'fs';
 import http from 'http';
-import path from 'path';
+import path, { parse } from 'path';
 
 const INDEX = "servers/index.html";
 const BASEDIR = path.resolve(process.cwd() + "/../");

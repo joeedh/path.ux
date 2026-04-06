@@ -1,9 +1,9 @@
 <tabs pos="left" style="overflow-y : scroll">
-  <tab label="Theme">
+  <tab label="Theme" data-testid="tab-theme">
     <button id="export_theme">Export Theme</button>
     <theme-editor-x></theme-editor-x>
   </tab>
-  <tab label="Tab1">
+  <tab label="Tab" data-testid="tab-tab">
     <tool path="canvas.draw()" label="Exec Draw" useIcons="false"></tool>
     <panel label="Panel" closed="false" path="data">
       <strip mode="vertical">
@@ -28,13 +28,13 @@
       <prop path="drawflag[BLUR]" useIcons="false" />
     </panel>
   </tab>
-  <tab label="Graph Packing" id="graph_pack_tab">
+  <tab label="Graph Packing" id="graph_pack_tab" data-testid="tab-graph-packing">
 
   </tab>
-  <tab label="Curve Mapping">
+  <tab label="Curve Mapping" data-testid="tab-curve-mapping">
     <prop path="data.curvemap" />
   </tab>
-  <tab label="Last Command">
+  <tab label="Last Command" data-testid="tab-last-command">
     <last-tool-panel-x />
   </tab>
 </tabs>

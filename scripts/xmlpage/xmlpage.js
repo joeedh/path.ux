@@ -1,19 +1,19 @@
 //stores xml sources
-import {isNumber} from '../path-controller/toolsys/toolprop.js';
+import { isNumber } from "../path-controller/toolsys/toolprop.js";
 
-let pagecache = new Map()
-import {PackFlags, UIBase} from '../core/ui_base.js';
-import {sliderDomAttributes} from '../widgets/ui_numsliders.js';
-import * as util from '../util/util.js';
-import {Menu} from '../widgets/ui_menu.js';
-import {Icons} from '../core/ui_base.js';
-import {Container} from '../core/ui.js';
+let pagecache = new Map();
+import { PackFlags, UIBase } from "../core/ui_base.js";
+import { sliderDomAttributes } from "../widgets/ui_numsliders.js";
+import * as util from "../util/util.js";
+import { Menu } from "../widgets/ui_menu.js";
+import { Icons } from "../core/ui_base.js";
+import { Container } from "../core/ui.js";
 
 export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
 export var domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
 
 export function parseXML(xml) {
-  let parser = new DOMParser()
+  let parser = new DOMParser();
   xml = `<root>${xml}</root>`;
   return parser.parseFromString(xml.trim(), "application/xml");
 }
@@ -55,7 +55,7 @@ function getIconFlag(elem) {
     }
 
     let flag = PackFlags.USE_ICONS | PackFlags.CUSTOM_ICON_SHEET;
-    flag |= ((sheet - 1)<<PackFlags.CUSTOM_ICON_SHEET_START);
+    flag |= (sheet - 1) << PackFlags.CUSTOM_ICON_SHEET_START;
 
     return flag;
   }
@@ -85,7 +85,7 @@ function getPackFlag(elem) {
 }
 
 function myParseFloat(s) {
-  s = '' + s;
+  s = "" + s;
   s = s.trim().toLowerCase();
 
   if (s.endsWith("px")) {
@@ -114,15 +114,15 @@ function getfloat(elem, attr, defaultval) {
 }
 
 /*
-**
-*
-* a customHandler can be a callback, or the string "default", e.g.
-*
-* xmlpage.customHandlers["homegig-element-x"] = "default".
-*
-* The default case simply suppresses the warning that would otherwise
-* be printed to the console.
-* */
+ **
+ *
+ * a customHandler can be a callback, or the string "default", e.g.
+ *
+ * xmlpage.customHandlers["homegig-element-x"] = "default".
+ *
+ * The default case simply suppresses the warning that would otherwise
+ * be printed to the console.
+ * */
 export const customHandlers = {};
 
 class Handler {
@@ -155,12 +155,12 @@ class Handler {
   }
 
   handle(elem) {
-    if (elem.constructor === XMLDocument || elem.nodeName === 'root') {
+    if (elem.constructor === XMLDocument || elem.nodeName === "root") {
       for (let child of elem.childNodes) {
         this.handle(child);
       }
 
-      window.tree = elem
+      window.tree = elem;
       return;
     } else if (elem.constructor === Text || elem.constructor === Comment) {
       return;
@@ -252,18 +252,14 @@ class Handler {
       elem2.setAttribute("class", elem.getAttribute("class"));
 
       let cls = elem2.getAttribute("class").trim();
-      let keys = [
-        cls,
-        (elem2.tagName.toLowerCase() + "." + cls).trim(),
-        "#" + elem.getAttribute("id").trim()
-      ];
+      let keys = [cls, (elem2.tagName.toLowerCase() + "." + cls).trim(), "#" + elem.getAttribute("id").trim()];
 
       for (let sheet of document.styleSheets) {
         for (let rule of sheet.rules) {
           for (let k of keys) {
             if (rule.selectorText.trim() === k) {
               for (let k2 of rule.styleMap.keys()) {
-                let val = rule.style[k2]
+                let val = rule.style[k2];
 
                 style[k2] = val;
               }
@@ -313,7 +309,7 @@ class Handler {
 
   visit(node) {
     for (let child of node.childNodes) {
-      this.handle(child)
+      this.handle(child);
     }
   }
 
@@ -329,7 +325,7 @@ class Handler {
 
       if (!(val in this.templateVars)) {
         console.error(`unknown template variable '${val}'`);
-        val = '';
+        val = "";
       } else {
         val = this.templateVars[val];
       }
@@ -338,29 +334,31 @@ class Handler {
     return val;
   }
 
-  _basic(elem, elem2) {
-    this._style(elem, elem2);
-
-    for (let k of elem.getAttributeNames()) {
-      if (k.startsWith("custom")) {
-        elem2.setAttribute(k, this._getattr(elem, k));
-      }
-    }
-
+  _inheritCustomAttrs(elem, elem2) {
     let codeattrs = [];
+    let dataattrs = [];
 
     for (let k of elem.getAttributeNames()) {
-      let val = ""+elem.getAttribute(k);
+      let val = "" + elem.getAttribute(k);
 
-      if (val.startsWith('ng[')) {
-        val = val.slice(3, val.endsWith("]") ? val.length-1 : val.length);
+      if (val.startsWith("ng[")) {
+        val = val.slice(3, val.endsWith("]") ? val.length - 1 : val.length);
 
         codeattrs.push([k, "ng", val]);
       }
+      if (k.startsWith("data-")) {
+        dataattrs.push([k, val]);
+      }
+    }
+
+    // set data- attributes directly
+    for (const [k, val] of dataattrs) {
+      console.warn(elem.tagName, k, val, elem2);
+      elem2.setAttribute(k, val);
     }
 
     for (let k of domEventAttrs) {
-      let k2 = 'on' + k;
+      let k2 = "on" + k;
 
       if (elem.hasAttribute(k2)) {
         codeattrs.push([k, "dom", elem.getAttribute(k2)]);
@@ -376,7 +374,7 @@ class Handler {
       if (eventType === "dom") {
         //click events usually don't go through normal
         //dom event system
-        if (k === 'click') {
+        if (k === "click") {
           let onclick = elem2.onclick;
           let func = this.codefuncs[id];
 
@@ -386,7 +384,7 @@ class Handler {
             }
 
             return func.apply(this, arguments);
-          }
+          };
         } else {
           elem2.addEventListener(k, this.codefuncs[id]);
         }
@@ -394,7 +392,20 @@ class Handler {
         elem2.addEventListener(k, this.codefuncs[id]);
       }
     }
+  }
 
+  _basic(elem, elem2, options = { noInheritCustomAttrs: false }) {
+    if (!options.noInheritCustomAttrs) {
+      this._inheritCustomAttrs(elem, elem2);
+    }
+
+    this._style(elem, elem2);
+
+    for (let k of elem.getAttributeNames()) {
+      if (k.startsWith("custom")) {
+        elem2.setAttribute(k, this._getattr(elem, k));
+      }
+    }
 
     for (let k of domTransferAttrs) {
       if (elem.hasAttribute(k)) {
@@ -562,7 +573,8 @@ class Handler {
     }
   }
 
-  _container(elem, con, ignorePathPrefix=false) {
+  /** noInheritCustomAttrs: don't transfer ng or data- attributes to the container element*/
+  _container(elem, con, options = { ignorePathPrefix: false, noInheritCustomAttrs: false }) {
     for (let k of this.inheritDomAttrKeys) {
       if (elem.hasAttribute(k)) {
         this.inheritDomAttrs[k] = elem.getAttribute(k);
@@ -574,9 +586,9 @@ class Handler {
     con.packflag |= packflag;
     con.inherit_packflag |= packflag;
 
-    this._basic(elem, con);
+    this._basic(elem, con, options);
 
-    if (!ignorePathPrefix) {
+    if (!options?.ignorePathPrefix) {
       this._handlePathPrefix(elem, con);
     }
   }
@@ -605,22 +617,22 @@ class Handler {
   }
 
   panel(elem) {
-    let title = "" + elem.getAttribute("label")
-    let closed = getbool(elem, "closed")
+    let title = "" + elem.getAttribute("label");
+    let closed = getbool(elem, "closed");
 
-    this.push()
+    this.push();
     this.container = this.container.panel(title);
     this.container.closed = closed;
 
     this._container(elem, this.container);
 
-    this.visit(elem)
+    this.visit(elem);
 
     this.pop();
   }
 
   pathlabel(elem) {
-    this._prop(elem, "pathlabel")
+    this._prop(elem, "pathlabel");
   }
 
   /**
@@ -629,15 +641,16 @@ class Handler {
   code(elem) {
     window._codelem = elem;
 
-    let buf = '';
+    let buf = "";
 
     for (let elem2 of elem.childNodes) {
       if (elem2.nodeName === "#text") {
-        buf += elem2.textContent + '\n';
+        buf += elem2.textContent + "\n";
       }
     }
 
-    var func, $scope = this.templateScope;
+    var func,
+      $scope = this.templateScope;
 
     buf = `
 func = function() {
@@ -654,7 +667,7 @@ func = function() {
 
   textbox(elem) {
     if (elem.hasAttribute("path")) {
-      this._prop(elem, 'textbox');
+      this._prop(elem, "textbox");
     } else {
       //let elem2 = this.container.textbox();
       //this._basic(elem, elem2);
@@ -672,7 +685,7 @@ func = function() {
 
   /** simpleSliders=true enables simple sliders */
   prop(elem) {
-    this._prop(elem, "prop")
+    this._prop(elem, "prop");
   }
 
   _prop(elem, key) {
@@ -680,9 +693,9 @@ func = function() {
     let path = elem.getAttribute("path");
 
     let elem2;
-    if (key === 'pathlabel') {
+    if (key === "pathlabel") {
       elem2 = this.container.pathlabel(path, elem.innerHTML, packflag);
-    } else if (key === 'textbox') {
+    } else if (key === "textbox") {
       elem2 = this.container.textbox(path, undefined, undefined, packflag);
 
       elem2.update();
@@ -698,7 +711,7 @@ func = function() {
     } else if (key === "colorfield") {
       elem2 = this.container.colorPicker(path, {
         packflag,
-        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") : undefined
+        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") : undefined,
       });
     } else {
       elem2 = this.container[key](path, packflag);
@@ -767,7 +780,8 @@ func = function() {
     let path = elem.getAttribute("path");
     let packflag = getPackFlag(elem);
 
-    let noIcons = false, iconflags;
+    let noIcons = false,
+      iconflags;
 
     if (getbool(elem, "useIcons")) {
       packflag |= PackFlags.USE_ICONS;
@@ -776,7 +790,7 @@ func = function() {
       noIcons = true;
     }
 
-    let label = ("" + elem.textContent).trim()
+    let label = ("" + elem.textContent).trim();
     if (label.length > 0) {
       path += "|" + label;
     }
@@ -790,8 +804,8 @@ func = function() {
     if (elem2) {
       this._basic(elem, elem2);
     } else {
-      elem2 = document.createElement("strip")
-      elem2.innerHTML = "error"
+      elem2 = document.createElement("strip");
+      elem2.innerHTML = "error";
       this.container.shadow.appendChild(elem2);
       this._basic(elem, elem2);
     }
@@ -808,7 +822,7 @@ func = function() {
 
   menu(elem, isDropBox = false) {
     let packflag = getPackFlag(elem);
-    let title = elem.getAttribute("name")
+    let title = elem.getAttribute("name");
 
     let list = [];
 
@@ -846,7 +860,10 @@ func = function() {
 
         list.push({
           name: child.innerHTML.trim(),
-          id, icon, hotkey, description
+          id,
+          icon,
+          hotkey,
+          description,
         });
       }
     }
@@ -910,18 +927,20 @@ func = function() {
       this.container.setAttribute("overflow-y", elem.getAttribute("overflow-y"));
     }
 
-    this._container(elem, this.container)
+    this._container(elem, this.container, {noInheritCustomAttrs: true});
+    this._inheritCustomAttrs(elem, this.container._tab)
+
     this.visit(elem);
 
     this.pop();
   }
 
   tabs(elem) {
-    let pos = elem.getAttribute("pos") || "left"
+    let pos = elem.getAttribute("pos") || "left";
 
     this.push();
 
-    let tabs = this.container.tabs(pos)
+    let tabs = this.container.tabs(pos);
     this.container = tabs;
 
     if (elem.hasAttribute("movable-tabs")) {
@@ -956,11 +975,17 @@ export function initPage(ctx, xml, parentContainer = undefined, templateVars = {
   handler.handle(tree);
 
   return container;
-
 }
 
-export function loadPage(ctx, url, parentContainer_or_args = undefined, loadSourceOnly = false,
-                         modifySourceCB, templateVars, templateScope) {
+export function loadPage(
+  ctx,
+  url,
+  parentContainer_or_args = undefined,
+  loadSourceOnly = false,
+  modifySourceCB,
+  templateVars,
+  templateScope
+) {
   let source;
   let parentContainer;
 
@@ -992,19 +1017,21 @@ export function loadPage(ctx, url, parentContainer_or_args = undefined, loadSour
     });
   } else {
     return new Promise((accept, reject) => {
-      fetch(url).then(res => res.text()).then(data => {
-        pagecache.set(url, data);
+      fetch(url)
+        .then((res) => res.text())
+        .then((data) => {
+          pagecache.set(url, data);
 
-        if (modifySourceCB) {
-          data = modifySourceCB(data);
-        }
+          if (modifySourceCB) {
+            data = modifySourceCB(data);
+          }
 
-        if (loadSourceOnly) {
-          accept(data);
-        } else {
-          accept(initPage(ctx, data, parentContainer, templateVars, templateScope));
-        }
-      });
+          if (loadSourceOnly) {
+            accept(data);
+          } else {
+            accept(initPage(ctx, data, parentContainer, templateVars, templateScope));
+          }
+        });
     });
   }
 }

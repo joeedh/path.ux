@@ -15,7 +15,8 @@
     "build-docs": "bash build_docs.sh",
     "render-icons": "bash render_icons.sh",
     "markdown-toc": "bash run_markdown_toc.sh",
-    "serv": "node serv.js"
+    "serv": "node serv.js",
+    "playwright": "npx playwright test"
   },
   "directories": {
     "doc": "docs"
@@ -27,6 +28,8 @@
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "@pathtx/prettier": "3.3.0-dev",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.5.2",
     "@types/parse5": "^7.0.0",
     "diff": "^5.2.2",
     "electron": "^41.1.1",

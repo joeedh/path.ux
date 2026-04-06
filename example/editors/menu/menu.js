@@ -40,27 +40,33 @@ export class MenuBarEditor extends Editor {
     let header = this.header;
     let span = header.row();
 
-    span.menu("File", [["New", () => {}], Menu.SEP, ["Save As", () => {}], ["Open", () => {}]]);
+    span
+      .menu("File", [["New", () => {}], Menu.SEP, ["Save As", () => {}], ["Open", () => {}]])
+      .playwrightId("menu-file");
 
-    span.menu("Edit", [
-      ["Undo", () => this.ctx.toolstack.undo(), "CTRL-Z", Icons.UNDO],
-      ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z", Icons.REDO],
-    ]);
+    span
+      .menu("Edit", [
+        ["Undo", () => this.ctx.toolstack.undo(), "CTRL-Z", Icons.UNDO],
+        ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z", Icons.REDO],
+      ])
+      .playwrightId("menu-edit");
 
-    span.menu("Session", [
-      [
-        "Save Default File",
-        () => {
-          this.ctx.state.saveLocalStorage();
-        },
-      ],
-      [
-        "Clear Default File",
-        () => {
-          this.ctx.state.clearLocalStorage();
-        },
-      ],
-    ]);
+    span
+      .menu("Session", [
+        [
+          "Save Default File",
+          () => {
+            this.ctx.state.saveLocalStorage();
+          },
+        ],
+        [
+          "Clear Default File",
+          () => {
+            this.ctx.state.clearLocalStorage();
+          },
+        ],
+      ])
+      .playwrightId("menu-session");
 
     this.setCSS();
   }
