@@ -4,5 +4,7 @@ import type { ToolStack } from "../path-controller/toolsys/toolsys";
 
 export interface IContextBase<AppState = any, TS extends ToolStack = ToolStack> extends ContextLike<AppState, TS> {
   state: AppState;
-  screen: Screen;
+  // so stupid
+  // @ts-expect-error
+  screen: Screen<this>;
 }

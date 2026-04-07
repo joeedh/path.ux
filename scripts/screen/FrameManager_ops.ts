@@ -93,7 +93,7 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
 
     for (const k of keys) {
       if (k.startsWith("on")) {
-        handlers[k] = ((this as unknown) as Record<string, (...args: unknown[]) => void>)[k].bind(this);
+        handlers[k] = (this as unknown as Record<string, (...args: unknown[]) => void>)[k].bind(this);
       }
     }
 
@@ -560,8 +560,8 @@ export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends Too
 
 //controller.registerTool(SplitTool);
 
-interface DragBoxRect extends SVGRectWithColor {
-  sarea: ScreenArea;
+interface DragBoxRect<CTX extends IContextBase = IContextBase> extends SVGRectWithColor {
+  sarea: ScreenArea<CTX>;
   horiz: boolean | number;
   t: number;
   side: string | number;
@@ -569,8 +569,8 @@ interface DragBoxRect extends SVGRectWithColor {
   onclick: (e: PointerEvent | MouseEvent) => void;
 }
 
-interface DragBox {
-  sarea: ScreenArea;
+interface DragBox<CTX extends IContextBase = IContextBase> {
+  sarea: ScreenArea<CTX>;
   horiz: boolean | number;
   t: number;
   side: string | number;
@@ -580,12 +580,12 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
   dropArea: boolean;
   excludeAreas: Set<ScreenArea<CTX>>;
   cursorbox: SVGRectWithColor | undefined;
-  boxes: DragBoxRect[] & { active?: DragBoxRect };
+  boxes: DragBoxRect<CTX>[] & { active?: DragBoxRect<CTX> };
   sarea: ScreenArea<CTX> | undefined;
   start_mpos: Vector2;
   color: string;
   hcolor: string;
-  curbox: DragBoxRect | undefined;
+  curbox: DragBoxRect<CTX> | undefined;
 
   constructor(screen: Screen<CTX>, sarea: ScreenArea<CTX> | undefined, mpos: Vector2 | number[]) {
     super(screen);
@@ -593,7 +593,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     this.dropArea = false;
     this.excludeAreas = new Set();
     this.cursorbox = undefined;
-    this.boxes = [] as unknown as DragBoxRect[] & { active?: DragBoxRect };
+    this.boxes = []
     this.boxes.active = undefined;
     this.color = "";
     this.hcolor = "";
@@ -626,7 +626,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     this.screen._recalcAABB();
   }
 
-  getBoxRect(b: DragBox) {
+  getBoxRect(b: DragBox<CTX>) {
     const sa = b.sarea;
     let pos: number[];
     let size: number[];
@@ -661,7 +661,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     return ret;
   }
 
-  doSplit(b: DragBox) {
+  doSplit(b: DragBox<CTX>) {
     if (this.sarea) {
       return this.doSplitDrop(b);
     }
@@ -672,12 +672,12 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
 
     const t = b.t;
 
-    screen.splitArea(dst as ScreenArea<CTX>, t, b.horiz as boolean);
+    screen.splitArea(dst, t, b.horiz as boolean);
 
     screen._internalRegenAll();
   }
 
-  doSplitDrop(b: DragBox) {
+  doSplitDrop(b: DragBox<CTX>) {
     //first check if there was no change
     if (b.horiz === -1 && b.sarea === this.sarea) {
       return;
@@ -691,9 +691,9 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
     can_rip = can_rip || sa.floating;
     can_rip = can_rip && b.sarea !== sa;
-    can_rip = can_rip && (b.horiz === -1 || !screen.areasBorder(sa, b.sarea as ScreenArea<CTX>));
+    can_rip = can_rip && (b.horiz === -1 || !screen.areasBorder(sa, b.sarea));
 
-    const expand = b.horiz === -1 && b.sarea !== sa && screen.areasBorder(b.sarea as ScreenArea<CTX>, sa);
+    const expand = b.horiz === -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
 
     can_rip = can_rip || expand;
 
@@ -850,7 +850,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     const box = (x: number, y: number, sz: number[], horiz: boolean | number, t: number, side: string | number) => {
       //console.log(x, y, sz);
 
-      const b = this.overdraw!.rect([x - sz[0] * 0.5, y - sz[1] * 0.5], sz, color) as DragBoxRect;
+      const b = this.overdraw!.rect([x - sz[0] * 0.5, y - sz[1] * 0.5], sz, color) as DragBoxRect<CTX>;
       b.style.borderRadius = "14px";
 
       boxes.push(b);
@@ -1073,7 +1073,11 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
 
     if (this.sarea && !this.excludeAreas.has(this.sarea)) {
       const sa = this.sarea;
-      const box = this.overdraw!.rect(sa.pos as unknown as number[], sa.size as unknown as number[], "rgba(100, 100, 100, 0.5)");
+      const box = this.overdraw!.rect(
+        sa.pos as unknown as number[],
+        sa.size as unknown as number[],
+        "rgba(100, 100, 100, 0.5)"
+      );
 
       box.style.pointerEvents = "none";
     }
@@ -1228,3 +1232,4 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     e.stopPropagation();
   }
 }
+

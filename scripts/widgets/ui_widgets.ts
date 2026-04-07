@@ -142,6 +142,9 @@ export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends Ol
 }
 
 export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  icon: number
+  iconsheet: number
+  
   constructor() {
     super();
 
@@ -470,6 +473,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
   _icon_pressed?: number;
   _icon?: number;
   iconsheet: number;
+  dom: HTMLDivElement
 
   constructor() {
     super();

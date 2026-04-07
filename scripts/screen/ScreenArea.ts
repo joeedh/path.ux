@@ -15,6 +15,8 @@ import { IContextBase } from "../core/context_base.js";
 import { IUIBaseConstructor, Vector2 } from "../pathux.js";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events.js";
+import type { AreaDocker } from "./AreaDocker";
+import type { DropBox } from "../widgets/ui_menu";
 
 /** Is obj an instance of Screen */
 function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is Screen<CTX> {
@@ -64,7 +66,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   maxSize: (number | undefined)[];
   keymap?: KeyMap;
   header: Container<CTX> | undefined;
-  switcher: UIBase<CTX> | undefined;
+  switcher?: AreaDocker<CTX> | DropBox<CTX> | undefined;
   helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
   saved_uidata: string | undefined;
   areaName: string | undefined;
@@ -196,6 +198,10 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
   //*/
 
+  static getAreaConstructor<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
+    return area.constructor as unknown as AreaConstructor;
+  }
+
   static register(_cls: IUIBaseConstructor) {
     const cls = _cls as unknown as AreaConstructor;
     const def = cls.define();
@@ -235,11 +241,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     return prop;
   }
-  
+
   static getAreaName<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
     return (area.constructor as any).define().areaname as string;
   }
-  
+
   static define(): {
     tagname: string;
     areaname: string | undefined;
@@ -416,7 +422,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
   makeAreaSwitcher(container: Container<CTX>) {
     if (cconst.useAreaTabSwitcher) {
-      const ret = UIBase.createElement("area-docker-x") as UIBase<CTX>;
+      const ret = UIBase.createElement("area-docker-x") as AreaDocker<CTX>
       container.add(ret);
       return ret;
     }
@@ -424,7 +430,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     const prop = Area.makeAreasEnum();
 
     const dropbox = container.listenum(undefined, {
-      name    : (this.constructor as unknown as AreaConstructor).define().uiname,
+      name    : (this.constructor as unknown as AreaConstructor).define().uiname!,
       enumDef : prop,
       callback: (id: string) => {
         const cls = areaclasses[id] as AreaConstructor;
@@ -498,7 +504,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
         //add back same switcher
         switcherRow!.add(this.switcher);
       } else {
-        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row) as UIBase<CTX>;
+        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row)
       }
     }
 
@@ -754,7 +760,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
   screen?: Screen<CTX>;
   _flag: number;
   _borders: ScreenBorder<CTX>[];
-  _verts: import("./FrameManager_mesh.js").ScreenVert[];
+  _verts: import("./FrameManager_mesh.js").ScreenVert<CTX>[];
   dead: boolean;
   _sarea_id: number;
   _pos: Vector2;
@@ -762,10 +768,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
   area: Area<CTX> | undefined;
   editors: Area<CTX>[] & { remove(item: Area<CTX>, b?: boolean): void };
   editormap: Record<string, Area<CTX>>;
+  switcherData?: any;
 
-  on_keyup?: (e: KeyboardEvent) => void | boolean
-  on_keypress?: (e: KeyboardEvent) => void | boolean
-  
+  on_keyup?: (e: KeyboardEvent) => void | boolean;
+  on_keypress?: (e: KeyboardEvent) => void | boolean;
+
   constructor() {
     super();
 

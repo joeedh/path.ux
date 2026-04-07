@@ -1186,6 +1186,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     if (update) {
       if (!util.isMobile() && this.getDefault("focus-on-tab-click")) {
+        // @ts-ignore for focusVisible
         tab.focus({ preventScroll: true, focusVisible: false });
       }
 
@@ -1214,7 +1215,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     g.font = font.genCSS(tsize);
 
     g.lineWidth = 2;
-    g.strokeStyle = this.getDefault("TabStrokeStyle1");
+    g.strokeStyle = this.getDefault("TabStrokeStyle1") as string;
 
     const r = this.r * dpi;
     this._layout();
@@ -1253,7 +1254,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
         g.beginPath();
         g.rect(x + p, y + p, w - p * 2, h - p * 2);
-        g.fillStyle = this.getDefault("TabHighlight");
+        g.fillStyle = this.getDefault("TabHighlight") as string;
         g.fill();
       }
 
@@ -1292,7 +1293,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
           g.moveTo(w - 5, y + h);
           g.lineTo(5, y + h);
         }
-        g.strokeStyle = this.getDefault("TabStrokeStyle1");
+        g.strokeStyle = this.getDefault("TabStrokeStyle1") as string;
         g.stroke();
       }
     }
@@ -1336,7 +1337,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         //g.lineWidth *= 5;
         const ypad = 2;
 
-        g.strokeStyle = this.getDefault("TabStrokeStyle2");
+        g.strokeStyle = this.getDefault("TabStrokeStyle2") as string;
         g.fillStyle = activecolor;
         const r2 = r * 1.5;
 
@@ -1484,7 +1485,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   _tab?: TabItemContainer<CTX>;
 
   // @ts-ignore TODO: fix this later
-  onchange?: (tab: TabItem<CTX>, event?: Event) => void;
+  onchange?: (tab: TabItem<CTX>, event?: PointerEvent | KeyboardEvent) => void;
   // @ts-ignore TODO: fix this later
   onselect?: (e: any) => void;
   horiz: boolean = false;
@@ -1554,7 +1555,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       this.shadow.appendChild(div);
 
       if (this.onchange) {
-        this.onchange(tab, event);
+        this.onchange(tab, event as KeyboardEvent | PointerEvent | undefined);
       }
     };
   }
@@ -1698,13 +1699,13 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   init() {
     super.init();
 
-    this.background = this.getDefault("background-color");
+    this.background = this.getDefault("background-color") as string;
   }
 
   setCSS() {
     super.setCSS();
 
-    this.background = this.getDefault("background-color");
+    this.background = this.getDefault("background-color") as string;
     this._remakeStyle();
   }
 

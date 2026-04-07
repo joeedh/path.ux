@@ -3,43 +3,30 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
-const _ui: typeof import("./ui.js") | undefined = undefined;
+import { TextBox } from "../widgets/ui_textbox";
 
+import { Check, IconButton, IconCheck } from "../widgets/ui_widgets";
 import * as util from "../path-controller/util/util.js";
 import * as units from "../core/units.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
-import * as toolprop from "../path-controller/toolsys/toolprop.js";
+import {
+  FlagProperty,
+  EnumProperty,
+  ToolProperty,
+  PropFlags,
+  PropSubTypes,
+  ToolPropertyTypes,
+} from "../path-controller/toolsys/toolprop.js";
 import "../path-controller/util/html5_fileapi.js";
-import { HotKey } from "../path-controller/util/simple_events.js";
 import { CSSFont } from "./cssfont.js";
 import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base.js";
-import {PropTypes} from "../path-controller/toolsys/toolprop.js"
-import { createMenu, startMenu } from "../widgets/ui_menu.js";
-
-const PropFlags = toolprop.PropFlags;
-const PropSubTypes = toolprop.PropSubTypes;
-
-import { DataPathError } from "../path-controller/controller/controller_base.js";
+import { PropTypes } from "../path-controller/toolsys/toolprop.js";
+import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu.js";
 
 import cconst from "../config/const.js";
 import { IContextBase } from "./context_base.js";
 import type { PanelFrame } from "../widgets/ui_panel.js";
 import type { TabContainer } from "../widgets/ui_tabs.js";
-
-/*
- * UIBase assigns many properties dynamically in its constructor without
- * TypeScript declarations. Until ui_base.ts is fully typed, we use this
- * helper to access dynamic properties on UIBase instances.
- */
-type Dyn = Record<string, unknown>;
-function dyn(v: unknown): Dyn {
-  return v as Dyn;
-}
-
-type CtxApi = Record<string, unknown> & { api: Record<string, Function> };
-function ctxApi(ctx: unknown): CtxApi {
-  return ctx as unknown as CtxApi;
-}
+import { InheritFlag, ToolDef, ToolOp } from "../path-controller/toolsys/toolsys";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }): Record<string, string> {
@@ -277,8 +264,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       prefix += ".";
     }
 
-    const rec = (n: Record<string, unknown>, con: Container) => {
-      if (n instanceof Container && n !== (this as Container)) {
+    const rec = (n: Record<string, unknown>, con: Container<CTX>) => {
+      if (n instanceof Container && n !== this) {
         if (n.dataPrefix.startsWith(prefix)) {
           n.dataPrefix = n.dataPrefix.slice(prefix.length, n.dataPrefix.length);
           n.dataPrefix = con._joinPrefix(n.dataPrefix)!;
@@ -286,6 +273,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       if ((n as unknown as Element).hasAttribute && (n as unknown as Element).hasAttribute("datapath")) {
         let path = (n as unknown as Element).getAttribute("datapath")!;
 
@@ -758,8 +746,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   insert(i: number, ch: UIBase<CTX>) {
-    dyn(ch).parentWidget = this;
-    dyn(ch).ctx = this;
+    ch.parentWidget = this;
+    ch.ctx = this.ctx;
 
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
@@ -767,8 +755,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       this.shadow.insertBefore(ch, util.list(this.childWidgets)[i]);
     }
 
-    if (dyn(ch).onadd) {
-      (dyn(ch).onadd as () => void)();
+    if (ch.onadd) {
+      ch.onadd();
     }
   }
 
@@ -778,11 +766,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       throw new Error("eek!");
     }
 
-    dyn(child).ctx = this.ctx;
-    dyn(child).parentWidget = this;
-    dyn(child)._useDataPathUndo = this._useDataPathUndo;
+    child.ctx = this.ctx;
+    child.parentWidget = this;
+    child._useDataPathUndo = this._useDataPathUndo;
 
-    if (!dyn(child)._themeOverride && this._themeOverride) {
+    if (!child._themeOverride && this._themeOverride) {
       child.overrideTheme(this._themeOverride);
     }
 
@@ -797,13 +785,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       child._init();
     }//*/
 
-    if (dyn(child).onadd) (dyn(child).onadd as () => void)();
+    if (child.onadd) (child.onadd as () => void)();
 
     return child;
   }
 
   //TODO: make sure this works on Electron?
-  dynamicMenu(title: string, list: unknown, packflag = 0) {
+  dynamicMenu(title: string, list: MenuTemplate, packflag = 0) {
     //actually, .menu works for now
     return this.menu(title, list, packflag);
   }
@@ -819,38 +807,38 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    ])
 
    **/
-  menu(title: string, list: unknown, packflag = 0) {
-    const dbox = UIBase.createElement("dropbox-x") as UIBase<CTX> & Record<string, unknown>;
+  menu(title: string, list: MenuTemplate, packflag = 0) {
+    const dbox = UIBase.createElement("dropbox-x") as DropBox<CTX>;
 
     dbox._name = title;
     dbox.setAttribute("simple", "true");
     dbox.setAttribute("name", title);
 
-    if (list instanceof HTMLElement && list.constructor.name === "Menu") {
-      dbox._build_menu = function (this: Record<string, unknown>) {
-        if (this._menu !== undefined && (this._menu as HTMLElement).parentNode !== undefined) {
-          (this._menu as HTMLElement).remove();
+    if (list instanceof Menu) {
+      dbox._build_menu = function (this: DropBox<CTX>) {
+        if (this._menu?.parentNode !== undefined) {
+          this._menu.remove();
         }
 
-        this._menu = createMenu((this as Record<string, unknown>).ctx, title, list);
+        this._menu = createMenu(this.ctx, title, list);
         return this._menu;
       };
     } else if (list) {
       dbox.template = list;
     }
 
-    this._container_inherit(dbox as UIBase<CTX>, packflag);
+    this._container_inherit(dbox, packflag);
 
-    this._add(dbox as UIBase<CTX>);
+    this._add(dbox);
     return dbox;
   }
 
-  toolPanel(path_or_cls: string | (new (...args: unknown[]) => unknown), args: Record<string, unknown> = {}) {
-    let tdef: Record<string, unknown>;
-    let cls: Record<string, unknown>;
+  toolPanel(path_or_cls: string | typeof ToolOp, args: Record<string, unknown> = {}) {
+    let tdef: ToolDef;
+    let cls: any;
 
     if (typeof path_or_cls === "string") {
-      cls = ctxApi(this.ctx).api.parseToolPath(path_or_cls);
+      cls = this.ctx.api.parseToolPath(path_or_cls);
     } else {
       cls = path_or_cls as unknown as Record<string, unknown>;
     }
@@ -871,7 +859,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     container.useIcons(false);
 
-    const inputs = (tdef.inputs || {}) as Record<string, Record<string, unknown>>;
+    const inputs = (tdef.inputs instanceof InheritFlag ? tdef.inputs.slots : tdef.inputs) ?? {};
     for (const k in inputs) {
       const prop = inputs[k];
 
@@ -891,12 +879,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   tool(
-    path_or_cls: string | (new (...args: unknown[]) => unknown),
+    path_or_cls: string | typeof ToolOp,
     packflag_or_args: number | Record<string, unknown> = {},
     createCb?: Function,
     label?: string
   ) {
-    let cls: Record<string, unknown>;
+    let cls: typeof ToolOp | undefined;
     let packflag: number;
 
     if (typeof packflag_or_args === "object") {
@@ -925,14 +913,14 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         return;
       }
 
-      cls = ctxApi(this.ctx).api.parseToolPath(path_or_cls);
+      cls = this.ctx.api.parseToolPath(path_or_cls);
 
       if (cls === undefined) {
         console.warn('Unknown tool for toolpath "' + path_or_cls + '"');
         return;
       }
     } else {
-      cls = path_or_cls as unknown as Record<string, unknown>;
+      cls = path_or_cls;
     }
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -940,7 +928,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     if (createCb === undefined) {
       createCb = (cls: unknown) => {
-        return ctxApi(this.ctx).api.createTool(this.ctx, path_or_cls);
+        return this.ctx.api.createTool(this.ctx, path_or_cls as string);
       };
     }
 
@@ -948,12 +936,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       console.log("tool run");
 
       const toolob = createCb!(cls);
-      ctxApi(this.ctx).api.execTool(this.ctx, toolob);
+      this.ctx.api.execTool(this.ctx, toolob);
     };
 
     const def =
       typeof path_or_cls === "string"
-        ? (ctxApi(this.ctx).api.getToolDef(path_or_cls) as Record<string, unknown>)
+        ? (this.ctx.api.getToolDef(path_or_cls) as Record<string, unknown>)
         : (cls as unknown as { tooldef(): Record<string, unknown> }).tooldef();
     let tooltip = def.description === undefined ? (def.uiname as string) : (def.description as string);
 
@@ -969,7 +957,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         path = def.toolpath as string;
       }
 
-      const hotkey = ctxApi(this.ctx).api.getToolPathHotkey(this.ctx, path);
+      const hotkey = this.ctx.api.getToolPathHotkey(this.ctx, path);
       if (hotkey) {
         tooltip += "\n\tHotkey: " + hotkey;
       }
@@ -980,16 +968,17 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     if (def.icon !== undefined && packflag & PackFlags.USE_ICONS) {
       label = label === undefined ? tooltip : label;
 
-      ret = this.iconbutton(def.icon as number, label, cb);
+      const check = this.iconbutton(def.icon as number, label, cb);
 
-      dyn(ret).iconsheet = iconSheetFromPackFlag(packflag);
-      ret.packflag |= packflag;
-      dyn(ret).description = tooltip;
+      check.iconsheet = iconSheetFromPackFlag(packflag);
+      check.packflag |= packflag;
+      check.description = tooltip;
+      ret = check;
     } else {
       label = label === undefined ? (def.uiname as string) : label;
 
       ret = this.button(label, cb);
-      dyn(ret).description = tooltip;
+      ret.description = tooltip;
       ret.packflag |= packflag;
     }
 
@@ -1006,23 +995,23 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const ret = UIBase.createElement("textbox-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("textbox-x") as unknown as TextBox<CTX>;
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
 
-    dyn(ret).ctx = this.ctx;
-    dyn(ret).parentWidget = this;
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
     ret._init();
-    this._add(ret as UIBase<CTX>);
+    this._add(ret);
 
     ret.setCSS();
     ret.update();
 
     ret.packflag |= packflag;
-    dyn(ret).onchange = cb;
-    dyn(ret).text = text;
+    ret.onchange = cb as typeof ret.onchange;
+    ret.text = text;
 
     return ret as UIBase;
   }
@@ -1039,11 +1028,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     const ret = UIBase.createElement("label-x") as Label<CTX> & Record<string, unknown>;
 
     if (label === undefined && inpath) {
-      const rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, path) as Record<string, unknown> | undefined;
+      const rdef = this.ctx.api.resolvePath(this.ctx, path!);
       if (rdef) {
-        label =
-          ((rdef.prop as Record<string, unknown>).uiname as string) ??
-          ((rdef.dpath as Record<string, unknown>).apiname as string);
+        label = (rdef.prop!.uiname as string) ?? (rdef.dpath.apiname as string);
       } else {
         label = "(error)";
       }
@@ -1053,10 +1040,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     ret.packflag = packflag;
     ret.setAttribute("datapath", path!);
 
-    this._add(ret  as UIBase<CTX>);
+    this._add(ret as UIBase<CTX>);
     ret.setCSS();
 
-    return ret as UIBase<CTX>
+    return ret as UIBase<CTX>;
   }
 
   label(text: string) {
@@ -1065,7 +1052,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     this._add(ret as UIBase<CTX>);
 
-    return ret
+    return ret;
   }
 
   /**
@@ -1094,19 +1081,19 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   iconbutton(icon: number, description: string, cb?: () => void, thisvar?: unknown, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const ret = UIBase.createElement("iconbutton-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("iconbutton-x") as IconButton<CTX>;
 
     ret.packflag |= packflag;
 
     ret.setAttribute("icon", "" + icon);
-    dyn(ret).description = description;
-    dyn(ret).icon = icon;
+    ret.description = description;
+    ret.icon = icon;
 
-    dyn(ret).iconsheet = iconSheetFromPackFlag(packflag);
+    ret.iconsheet = iconSheetFromPackFlag(packflag);
 
     ret.onclick = cb as unknown as ((this: GlobalEventHandlers, ev: MouseEvent) => unknown) | null;
 
-    this._add(ret as UIBase<CTX>);
+    this._add(ret);
 
     return ret;
   }
@@ -1127,7 +1114,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret as UIBase<CTX>;
   }
 
-  _joinPrefix(path: string | undefined, prefix = this.dataPrefix.trim()) {
+  _joinPrefix(path?: string, prefix = this.dataPrefix.trim()): string | undefined {
     if (path === undefined) {
       return undefined;
     }
@@ -1147,7 +1134,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   colorbutton(inpath: string | undefined, packflag: number, mass_set_path?: string) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+    mass_set_path = inpath !== undefined ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
 
     const ret = UIBase.createElement("color-picker-button-x") as UIBase<CTX> & Record<string, unknown>;
 
@@ -1213,11 +1200,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         button.setAttribute("mass_set_path", mass_set_path);
       }
 
-      const rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, inpath) as Record<string, unknown> | undefined;
+      const rdef = this.ctx.api.resolvePath(this.ctx, inpath);
       if (rdef?.prop) {
-        name =
-          ((rdef.prop as Record<string, unknown>).uiname as string) ||
-          ((rdef.prop as Record<string, unknown>).name as string);
+        name = rdef.prop.uiname ?? rdef.prop.apiname ?? name;
       }
     }
 
@@ -1228,9 +1213,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return button as UIBase<CTX>;
   }
 
-  _getMassPath(ctx: unknown, inpath: string | undefined, mass_set_path: string | undefined): string | undefined {
+  _getMassPath(ctx: CTX, inpath?: string, mass_set_path?: string): string | undefined {
+    if (inpath === undefined) {
+      return undefined;
+    }
     if (mass_set_path === undefined && this.massSetPrefix.length > 0) {
-      mass_set_path = ctxApi(ctx).api.getPropName(ctx, inpath) as string;
+      mass_set_path = ctx.api.getPropName(ctx, inpath) as string;
     }
 
     if (mass_set_path === undefined) {
@@ -1246,13 +1234,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       let p = this.parentWidget as UIBase<CTX> | undefined;
 
       while (p) {
-        if (dyn(p).ctx) {
+        if (p.ctx) {
           console.warn("Fetched this.ctx from parent");
-          dyn(this).ctx = dyn(p).ctx;
+          this.ctx = p.ctx;
           break;
         }
 
-        p = dyn(p).parentWidget as UIBase<CTX> | undefined;
+        p = p.parentWidget as UIBase<CTX> | undefined;
       }
 
       if (!this.ctx) {
@@ -1262,7 +1250,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, this._joinPrefix(inpath), true) as
+    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath!)!, true) as
       | Record<string, unknown>
       | undefined;
 
@@ -1270,14 +1258,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       console.warn(
         "Unknown property at path",
         this._joinPrefix(inpath),
-        ctxApi(this.ctx).api.resolvePath(this.ctx, this._joinPrefix(inpath), true)
+        this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath)!, true)
       );
       return;
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
-    const prop = rdef.prop as Record<string, unknown>;
-
-    const useDataPathUndo = this.useDataPathUndo && !((prop.flag as number) & PropFlags.NO_UNDO);
+    const prop = rdef.prop as ToolPropertyTypes;
+    const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
 
     //console.log(prop, PropTypes, PropSubTypes);
 
@@ -1293,28 +1280,26 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       return s;
     }
 
-    if ((prop.type as number) === PropTypes.REPORT) {
+    if (prop.type === PropTypes.REPORT) {
       return this.pathlabel(inpath, prop.uiname as string);
-    } else if ((prop.type as number) === PropTypes.STRING) {
+    } else if (prop.type === PropTypes.STRING) {
       let ret: UIBase<CTX>;
 
-      if ((prop.flag as number) & PropFlags.READ_ONLY) {
+      if (prop.flag & PropFlags.READ_ONLY) {
         ret = this.pathlabel(inpath, prop.uiname as string);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value as string, packflag, mass_set_path);
-        dyn(ret).useDataPathUndo = useDataPathUndo;
+        ret.useDataPathUndo = useDataPathUndo;
       } else {
         const strip = this.strip();
 
         const uiname =
-          prop.uiname !== undefined
-            ? (prop.uiname as string)
-            : toolprop.ToolProperty.makeUIName(prop.apiname as string);
+          prop.uiname !== undefined ? (prop.uiname as string) : ToolProperty.makeUIName(prop.apiname as string);
 
         strip.label(prop.uiname as string);
 
         ret = strip.textbox(inpath) as UIBase<CTX>;
-        dyn(ret).useDataPathUndo = useDataPathUndo;
+        ret.useDataPathUndo = useDataPathUndo;
 
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
@@ -1323,11 +1308,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
       ret.packflag |= packflag;
       return ret;
-    } else if ((prop.type as number) === PropTypes.CURVE) {
+    } else if (prop.type === PropTypes.CURVE) {
       const ret = this.curve1d(inpath, packflag, mass_set_path);
-      dyn(ret).useDataPathUndo = useDataPathUndo;
+      ret.useDataPathUndo = useDataPathUndo;
       return ret;
-    } else if ((prop.type as number) === PropTypes.INT || (prop.type as number) === PropTypes.FLOAT) {
+    } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret: UIBase<CTX>;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath, { packflag: packflag });
@@ -1335,7 +1320,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         ret = this.slider(inpath, { packflag: packflag });
       }
 
-      dyn(ret).useDataPathUndo = useDataPathUndo;
+      ret.useDataPathUndo = useDataPathUndo;
       ret.packflag |= packflag;
 
       if (mass_set_path) {
@@ -1343,11 +1328,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       }
 
       return ret;
-    } else if ((prop.type as number) === PropTypes.BOOL) {
+    } else if (prop.type === PropTypes.BOOL) {
       const ret = this.check(inpath, prop.uiname as string, packflag, mass_set_path);
-      dyn(ret).useDataPathUndo = useDataPathUndo;
+      ret.useDataPathUndo = useDataPathUndo;
       return ret;
-    } else if ((prop.type as number) === PropTypes.ENUM) {
+    } else if (prop.type === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
         const subkey = rdef.subkey as string;
         let name = (prop.ui_value_names as Record<string, string>)[rdef.subkey as string];
@@ -1359,12 +1344,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         const check = this.check(inpath, name, packflag, mass_set_path);
         const tooltip = (prop.descriptions as Record<string, string>)[subkey];
 
-        dyn(check).useDataPathUndo = useDataPathUndo;
+        check.useDataPathUndo = useDataPathUndo;
 
-        dyn(check).description =
-          tooltip === undefined ? (prop.ui_value_names as Record<string, string>)[subkey] : tooltip;
-        dyn(check).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
-
+        check.description = tooltip === undefined ? (prop.ui_value_names as Record<string, string>)[subkey] : tooltip;
+        if (check instanceof Check) {
+          check.icon = prop.iconmap[rdef.subkey as string];
+        }
         return check;
       }
 
@@ -1372,7 +1357,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         !(packflag & PackFlags.USE_ICONS) &&
         !((prop.flag as number) & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))
       ) {
-        return this.listenum(inpath, { packflag, mass_set_path }).setUndo(useDataPathUndo);
+        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(useDataPathUndo);
       } else {
         if ((prop.flag as number) & PropFlags.USE_ICONS) {
           packflag |= PackFlags.USE_ICONS;
@@ -1389,7 +1374,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           return this.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
         }
       }
-    } else if ((prop.type as number) & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
+    } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
       if (rdef.subkey !== undefined) {
         let ret: UIBase<CTX>;
 
@@ -1421,7 +1406,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
         return (ret as UIBase<CTX>).setUndo(useDataPathUndo);
       }
-    } else if ((prop.type as number) === PropTypes.FLAG) {
+    } else if (prop.type === PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
         const tooltip = (prop.descriptions as Record<string, string>)[rdef.subkey as string];
         let name = (prop.ui_value_names as Record<string, string>)[rdef.subkey as string];
@@ -1440,19 +1425,18 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
 
         const ret = this.check(inpath, name, packflag, mass_set_path);
-
-        dyn(ret).icon = (prop.iconmap as Record<string, unknown>)[rdef.subkey as string];
+        ret.icon = prop.iconmap[rdef.subkey as string];
 
         if (tooltip) {
-          dyn(ret).description = tooltip;
+          ret.description = tooltip;
         }
 
         return ret.setUndo(useDataPathUndo);
       } else {
-        let con: Container = this;
+        let con: Container<CTX> = this;
 
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          con = this.strip() as Container;
+          con = this.strip();
           con.label(prop.uiname as string);
         }
 
@@ -1474,7 +1458,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
             if (tooltip) {
-              dyn(check).description = tooltip;
+              check.description = tooltip;
             }
 
             check.setUndo(useDataPathUndo);
@@ -1491,18 +1475,19 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
           let wrapChars: number;
 
-          let strip2: Container; let con2: Container;
+          let strip2: Container<CTX>;
+          let con2: Container<CTX>;
 
           if (isrow) {
             wrapChars = this.getDefault("checkRowWrapLimit", undefined, 24) as number;
-            strip2 = this.col().strip() as Container;
+            strip2 = this.col().strip();
             strip2.packflag |= packflag;
             strip2.inherit_packflag |= packflag;
 
             con2 = strip2.row();
           } else {
             wrapChars = this.getDefault("checkColWrapLimit", undefined, 5) as number;
-            strip2 = this.row().strip() as Container;
+            strip2 = this.row().strip();
             strip2.packflag |= packflag;
             strip2.inherit_packflag |= packflag;
 
@@ -1523,7 +1508,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
             if (tooltip) {
-              dyn(check).description = tooltip;
+              check.description = tooltip;
             }
 
             x += name.length;
@@ -1542,7 +1527,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
 
         if (con === this) {
-          con = this.strip() as Container;
+          con = this.strip();
         }
 
         const rebuild = () => {
@@ -1557,10 +1542,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             }
 
             const check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
-            dyn(check).useDataPathUndo = useDataPathUndo;
+            check.useDataPathUndo = useDataPathUndo;
 
             if (tooltip) {
-              dyn(check).description = tooltip;
+              check.description = tooltip;
             }
 
             check.setUndo(useDataPathUndo);
@@ -1609,19 +1594,18 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     const path = inpath !== undefined ? this._joinPrefix(inpath) : undefined;
 
     //let prop = this.ctx.getProp(path);
-    let ret: UIBase<CTX> & Record<string, unknown>;
+    let ret: Check<CTX> | IconCheck<CTX>;
     if (packflag & PackFlags.USE_ICONS) {
-      ret = UIBase.createElement("iconcheck-x") as UIBase<CTX> & Record<string, unknown>;
-
+      ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
       ret.iconsheet = iconSheetFromPackFlag(packflag);
     } else {
-      ret = UIBase.createElement("check-x") as UIBase<CTX> & Record<string, unknown>;
+      ret = UIBase.createElement("check-x") as Check<CTX>;
+      ret.label = name;
     }
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     ret.packflag |= packflag;
-    ret.label = name;
     ret.noMarginsOrPadding();
 
     if (inpath) {
@@ -1632,8 +1616,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret.setAttribute("mass_set_path", mass_set_path);
     }
 
-    this._add(ret as UIBase<CTX>);
-    return ret as UIBase<CTX>;
+    this._add(ret);
+    return ret;
   }
 
   /*
@@ -1669,13 +1653,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     const path = this._joinPrefix(inpath);
 
-    const has_path = path !== undefined;
-    let prop: Record<string, unknown> | undefined;
-    let frame: Container | undefined;
+    let prop: EnumProperty | FlagProperty | undefined;
+    let frame: Container<CTX> | undefined;
 
     if (path !== undefined) {
-      const resolved = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
-      prop = resolved !== undefined ? (resolved.prop as Record<string, unknown>) : undefined;
+      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
+      prop = resolved !== undefined ? (resolved.prop as unknown as EnumProperty | FlagProperty) : undefined;
     }
 
     if (path !== undefined) {
@@ -1688,19 +1671,19 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       frame.oneAxisPadding();
 
       if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values as Record<string, unknown>) {
-          const check = frame!.check(inpath + "[" + key + "]", "", packflag) as UIBase<CTX> & Record<string, unknown>;
+        for (const key in prop.values) {
+          const check = frame!.check(inpath + "[" + key + "]", "", packflag) as IconCheck<CTX>;
 
           check.packflag |= PackFlags.HIDE_CHECK_MARKS;
 
-          check.icon = (prop.iconmap as Record<string, unknown>)[key];
+          check.icon = prop.iconmap[key];
           check.drawCheck = false;
 
-          (check.style as unknown as Record<string, string>)["padding"] = "0px";
-          (check.style as unknown as Record<string, string>)["margin"] = "0px";
+          check.style["padding"] = "0px";
+          check.style["margin"] = "0px";
 
-          styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
-          styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
+          styl(check.dom)["padding"] = "0px";
+          styl(check.dom)["margin"] = "0px";
 
           check.description = (prop.descriptions as Record<string, string>)[key];
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
@@ -1712,7 +1695,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
         (frame!.label(name!) as unknown as Label).font = "TitleText";
 
-        const checks: Record<string, Record<string, unknown>> = {};
+        const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
 
         let ignorecb = false;
 
@@ -1734,11 +1717,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           };
         }
 
-        for (const key in prop.values as Record<string, unknown>) {
-          const check = frame!.check(
-            `${inpath}[${key}]`,
-            (prop.ui_value_names as Record<string, string>)[key]
-          ) as UIBase<CTX> & Record<string, unknown>;
+        for (const key in prop.values) {
+          const check = frame!.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
           checks[key] = check;
 
           if (mass_set_path) {
@@ -1763,19 +1743,17 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     packflag = 0,
     callback?: Function,
     mass_set_path?: string,
-    prop?: Record<string, unknown>
-  ) {
+    prop?: FlagProperty | EnumProperty
+  ): Container<CTX> | undefined {
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
     const path = this._joinPrefix(inpath);
-    let frame: Container | undefined;
-
-    const has_path = path !== undefined;
+    let frame: Container<CTX> | undefined;
 
     if (path !== undefined && prop === undefined) {
-      const resolved = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
-      prop = resolved !== undefined ? (resolved.prop as Record<string, unknown>) : undefined;
+      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
+      prop = resolved !== undefined ? (resolved.prop as unknown as FlagProperty | EnumProperty) : undefined;
     }
 
     if (!name && prop) {
@@ -1785,11 +1763,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     if (path !== undefined) {
       if (prop === undefined) {
         console.warn("Bad path in checkenum", path);
-        return;
+        return undefined;
       }
 
-      frame = this.panel(name!, name, packflag) as unknown as Container;
-
+      frame = this.panel(name!, name, packflag);
       frame.oneAxisPadding();
       frame.setCSSAfter(() => (frame!.background = this.getDefault("BoxSub2BG") as string));
 
@@ -1799,13 +1776,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             inpath + " == " + (prop.values as Record<string, unknown>)[key],
             "",
             packflag
-          ) as UIBase<CTX> & Record<string, unknown>;
+          ) as IconCheck<CTX>;
 
-          check.icon = (prop.iconmap as Record<string, unknown>)[key];
+          check.icon = prop.iconmap[key];
           check.drawCheck = false;
 
-          (check.style as unknown as Record<string, string>)["padding"] = "0px";
-          (check.style as unknown as Record<string, string>)["margin"] = "0px";
+          check.style["padding"] = "0px";
+          check.style["margin"] = "0px";
 
           styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
           styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
@@ -1820,7 +1797,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
         (frame.label(name!) as unknown as Label).font = "TitleText";
 
-        const checks: Record<string, Record<string, unknown>> = {};
+        const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
 
         let ignorecb = false;
 
@@ -1843,10 +1820,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
 
         for (const key in prop.values as Record<string, unknown>) {
-          const check = frame.check(
-            inpath + " = " + (prop.values as Record<string, unknown>)[key],
-            (prop.ui_value_names as Record<string, string>)[key]
-          ) as UIBase<CTX> & Record<string, unknown>;
+          const check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
           checks[key] = check;
 
           if (mass_set_path) {
@@ -1883,26 +1857,36 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   */
   listenum(
     inpath: string | undefined,
-    name?: string | Record<string, unknown>,
-    enumDef?: unknown,
-    defaultval?: unknown,
+    name?:
+      | string
+      | {
+          name: string;
+          enumDef?: Record<string, number> | EnumProperty | FlagProperty;
+          defaultval?: string | number;
+          callback?: Function;
+          iconmap?: Record<string, number>;
+          packflag?: number;
+          mass_set_path?: string;
+        },
+    enumDef?: Record<string, number> | EnumProperty | FlagProperty,
+    defaultval?: number | string,
     callback?: Function,
-    iconmap?: unknown,
+    iconmap?: Record<string, number>,
     packflag = 0
-  ): UIBase<CTX> {
+  ): DropBox<CTX> {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     let mass_set_path: string | undefined;
 
     if (name && typeof name === "object") {
-      const args = name;
+      const args = name as any;
 
-      name = args.name as string | undefined;
+      name = args.name;
       enumDef = args.enumDef;
       defaultval = args.defaultval;
-      callback = args.callback as Function | undefined;
+      callback = args.callback;
       iconmap = args.iconmap;
-      packflag = (args.packflag as number) || 0;
-      mass_set_path = args.mass_set_path as string | undefined;
+      packflag = args.packflag;
+      mass_set_path = args.mass_set_path;
     }
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
@@ -1914,31 +1898,26 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       path = this._joinPrefix(inpath);
     }
 
-    const ret = UIBase.createElement("dropbox-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("dropbox-x") as DropBox<CTX>;
 
     if (enumDef !== undefined) {
-      if (enumDef instanceof toolprop.EnumProperty) {
+      if (enumDef instanceof EnumProperty) {
         ret.prop = enumDef;
-        label ||= (enumDef.uiname as string) || toolprop.ToolProperty.makeUIName(enumDef.apiname as string);
+        label ||= (enumDef.uiname as string) || ToolProperty.makeUIName(enumDef.apiname as string);
       } else {
-        ret.prop = new toolprop.EnumProperty(
-          defaultval as string | number | undefined,
-          enumDef as Record<string, number>,
-          path,
-          name as string
-        );
+        ret.prop = new EnumProperty(defaultval, enumDef as Record<string, number>, path, name as string);
       }
 
-      if (iconmap !== undefined) {
-        (ret.prop as Record<string, Function>).addIcons(iconmap);
+      if (iconmap) {
+        ret.prop.addIcons(iconmap);
       }
     } else {
-      const res = ctxApi(this.ctx).api.resolvePath(this.ctx, path, true) as Record<string, unknown> | undefined;
+      const res = this.ctx.api.resolvePath(this.ctx, path!, true);
 
       if (res !== undefined) {
-        ret.prop = res.prop;
+        ret.prop = res.prop as unknown as EnumProperty;
 
-        name ||= (res.prop as Record<string, unknown>).uiname as string;
+        name ||= res.prop!.uiname as string;
         label ||= name as string;
       }
     }
@@ -1957,8 +1936,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       (ret as unknown as { setValue(v: unknown): void }).setValue(defaultval);
     }
 
-    dyn(ret).onchange = callback;
-    dyn(ret).onselect = callback;
+    ret.onchange = callback as unknown as typeof ret.onchange;
+    ret.onselect = callback as unknown as typeof ret.onselect;
 
     ret.packflag |= packflag;
 
@@ -1970,28 +1949,25 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         container._add(ret as UIBase<CTX>);
         l = container.label(label);
 
-        if (
-          !(l.style as unknown as Record<string, string>)["margin-left"] ||
-          (l.style as unknown as Record<string, string>)["margin-left"] === "unset"
-        ) {
-          (l.style as unknown as Record<string, string>)["margin-left"] = "5px";
+        if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
+          l.style["marginLeft"] = "5px";
         }
       } else {
         l = container.label(label);
-        container._add(ret as UIBase<CTX>);
+        container._add(ret);
       }
     } else {
-      this._add(ret as UIBase<CTX>);
+      this._add(ret);
     }
 
-    return ret as UIBase<CTX>;
+    return ret;
   }
 
-  getroot(): Container {
-    let p: Container = this;
+  getroot(): Container<CTX> {
+    let p: Container<CTX> = this;
 
-    while (dyn(p).parent !== undefined) {
-      p = dyn(p).parent as Container;
+    while (p.parentWidget !== undefined) {
+      p = p.parentWidget as Container<CTX>;
     }
 
     return p;
@@ -2073,14 +2049,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     if (inpath) {
       inpath = this._joinPrefix(inpath)!;
 
-      const rdef = ctxApi(this.ctx).api.resolvePath(this.ctx, inpath, true) as Record<string, unknown> | undefined;
-      if (rdef?.prop && ((rdef.prop as Record<string, unknown>).flag as number) & PropFlags.SIMPLE_SLIDER) {
+      const rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
+      if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }
-      if (
-        rdef?.prop &&
-        ((rdef.prop as Record<string, unknown>).flag as number) & PropFlags.FORCE_ROLLER_SLIDER
-      ) {
+      if (rdef?.prop && rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
     }
@@ -2136,7 +2109,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     }
 
     if (callback) {
-      dyn(ret).onchange = callback;
+      ret.onchange = callback as typeof ret.onchange;
     }
 
     this._add(ret as UIBase<CTX>);
@@ -2175,7 +2148,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     id = id === undefined ? name : id;
 
     // XXX todo: add <CTX> after panelFrame is moved to TS
-    const ret = UIBase.createElement("panelframe-x") as PanelFrame as unknown as UIBase<CTX>;
+    const ret = UIBase.createElement("panelframe-x") as PanelFrame<CTX>;
 
     this._container_inherit(ret, packflag);
 
@@ -2194,11 +2167,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret._init();
       //ret.headerLabel = name;
 
-      (dyn(ret).contents as Record<string, unknown>).ctx = ret.ctx;
+      ret.contents.ctx = ret.ctx;
     }
 
-    (dyn(ret).contents as Record<string, unknown>).dataPrefix = this.dataPrefix;
-    (dyn(ret).contents as Record<string, unknown>).massSetPrefix = this.massSetPrefix;
+    ret.contents.dataPrefix = this.dataPrefix;
+    ret.contents.massSetPrefix = this.massSetPrefix;
 
     return ret;
   }
@@ -2209,7 +2182,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     this._container_inherit(ret, packflag);
     this._add(ret);
 
-    dyn(ret).ctx = this.ctx;
+    ret.ctx = this.ctx;
 
     return ret;
   }
@@ -2286,8 +2259,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     this._container_inherit(ret as UIBase<CTX>, packflag);
 
-    dyn(ret).ctx = this.ctx;
-    dyn(ret).parentWidget = this;
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
     ret._init();
     ret.packflag |= packflag;
     (ret as unknown as Container).inherit_packflag |= packflag;
@@ -2303,7 +2276,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     }
 
     //XXX
-    dyn(window).colorpicker = ret;
+    window.colorpicker = ret;
 
     this._add(ret as UIBase<CTX>);
     return ret as UIBase<CTX>;
@@ -2364,7 +2337,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     this._container_inherit(ret, packflag);
 
     this._add(ret);
-    return ret as unknown as TabContainer;
+    return ret as unknown as TabContainer<CTX>;
   }
 
   asDialogFooter() {
@@ -2550,7 +2523,7 @@ export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Con
     let p: UIBase<CTX> | undefined = this as unknown as UIBase<CTX>;
 
     for (let i = 0; i < this.parentDepth; i++) {
-      p = dyn(p).parentWidget ? (dyn(p).parentWidget as UIBase<CTX>) : p;
+      p = p.parentWidget ? (p.parentWidget as UIBase<CTX>) : p;
     }
 
     if (!p) {

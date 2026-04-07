@@ -1,9 +1,9 @@
-import {UIBase, Icons} from '../core/ui_base.js';
-import {IContextBase} from '../core/context_base.js';
-import {RowFrame} from '../core/ui.js';
-import {CSSFont} from '../core/cssfont.js';
-import {TextBoxBase} from './ui_textbox.js';
-import {keymap} from "../path-controller/util/simple_events.js";
+import { UIBase, Icons } from "../core/ui_base.js";
+import { IContextBase } from "../core/context_base.js";
+import { RowFrame } from "../core/ui.js";
+import { CSSFont } from "../core/cssfont.js";
+import { TextBoxBase } from "./ui_textbox.js";
+import { keymap } from "../path-controller/util/simple_events.js";
 
 export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
   _internalDisabled: boolean;
@@ -42,10 +42,10 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 
     this.shadow.appendChild(this.styletag);
 
-    let controls = this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>;
+    let controls = (this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>);
 
     let makeicon = (icon: number, description: string, cb: () => void) => {
-      let btn = controls.iconbutton(icon, description, cb) as UIBase & Record<string, unknown>;
+      let btn = controls.iconbutton(icon, description, cb);
       btn.iconsheet = 1; //use second smallest icon size
       btn.overrideDefault("padding", 3);
 
@@ -145,15 +145,14 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
         (this.oninput as any)(this._value);
       }
 
-      this.dispatchEvent(new CustomEvent('input'));
-      this.dispatchEvent(new CustomEvent('change'));
+      this.dispatchEvent(new CustomEvent("input"));
+      this.dispatchEvent(new CustomEvent("change"));
     });
 
     this.shadow.appendChild(this.textarea);
   }
 
-  formatStart() {
-  }
+  formatStart() {}
 
   formatLine(line: string, text: string) {
     return line;
@@ -164,8 +163,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     document.execCommand("strikeThrough");
   }
 
-  formatEnd() {
-  }
+  formatEnd() {}
 
   init() {
     super.init();
@@ -218,7 +216,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     this.controls.background = this.getDefault("background-color");
 
     if (this._focus) {
-      this.textarea.style.border = `2px dashed ${this.getDefault('focus-border-color')}`;
+      this.textarea.style.border = `2px dashed ${this.getDefault("focus-border-color")}`;
     } else {
       this.textarea.style.border = "none";
     }
@@ -231,10 +229,9 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 
     if (this.style.color) {
       this.textarea.style.color = this.style.color;
-    }  else {
+    } else {
       this.textarea.style.color = (this.getDefault("DefaultText") as CSSFont).color;
     }
-
 
     if (this.disabled) {
       this.textarea.style.backgroundColor = this.getDefault("DisabledBG") as string;
@@ -273,11 +270,13 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     this.updateDataPath();
   }
 
-  static define() {return {
-    tagname : "rich-text-editor-x",
-    style   : "richtext",
-    modalKeyEvents : true
-  }}
+  static define() {
+    return {
+      tagname       : "rich-text-editor-x",
+      style         : "richtext",
+      modalKeyEvents: true,
+    };
+  }
 }
 UIBase.internalRegister(RichEditor);
 
@@ -298,11 +297,11 @@ export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   hideScrollBars() {
-    this.contents.style.overflow = "hidden"
+    this.contents.style.overflow = "hidden";
   }
 
   showScrollBars() {
-    this.contents.style.overflow = "scroll"
+    this.contents.style.overflow = "scroll";
   }
 
   textTransform(text: string) {
@@ -348,9 +347,11 @@ export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
     this.updateDataPath();
   }
 
-  static define() {return {
-    tagname : "html-viewer-x",
-    style   : "html_viewer"
-  }}
+  static define() {
+    return {
+      tagname: "html-viewer-x",
+      style  : "html_viewer",
+    };
+  }
 }
 UIBase.internalRegister(RichViewer);

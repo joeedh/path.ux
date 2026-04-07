@@ -8,6 +8,7 @@ import { Vector2 } from "../path-controller/util/vectormath.js";
 import { createMenu, Menu } from "../widgets/ui_menu.js";
 import { IContextBase } from "../core/context_base.js";
 import type { ScreenArea } from "./ScreenArea.js";
+import type { Screen } from "./FrameManager";
 
 export const AreaFlags = {
   HIDDEN                : 1,
@@ -123,7 +124,7 @@ export class ScreenHalfEdge<CTX extends IContextBase = IContextBase> {
 }
 
 export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
-  screen: import("./FrameManager.js").Screen | undefined;
+  screen?: Screen<CTX>;
   v1!: ScreenVert<CTX>;
   v2!: ScreenVert<CTX>;
   override _id: any; /* number | undefined in practice, overriding string from UIBase */
@@ -180,7 +181,7 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
           return;
         }
 
-        const tool = new FrameManager_ops.AreaResizeTool(this.screen, this, [e.x, e.y]);
+        const tool = new FrameManager_ops.AreaResizeTool<CTX>(this.screen!, this, [e.x, e.y]);
 
         (tool as any).start();
 
@@ -231,7 +232,7 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
     return on_dblclick;
   }
 
-  getOtherSarea(sarea: import("./ScreenArea.js").ScreenArea) {
+  getOtherSarea(sarea: ScreenArea<CTX>) {
     console.log(this.halfedges, this.halfedges.length);
 
     for (const he of this.halfedges) {
@@ -293,8 +294,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
         const a1x = Math.max(this.v1![0] as number, this.v2![0] as number);
         const a1y = Math.max(this.v1![1] as number, this.v2![1] as number);
 
-        const b0x = Math.min(sa.v1![0] as number, sa.v2![0] as number);
-        const b0y = Math.min(sa.v1![1] as number, sa.v2![1] as number);
         const b1x = Math.min(sa.v1![0] as number, sa.v2![0] as number);
         const b1y = Math.min(sa.v1![1] as number, sa.v2![1] as number);
 

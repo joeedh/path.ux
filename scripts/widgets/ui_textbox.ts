@@ -2,15 +2,11 @@
 "use strict";
 
 import * as units from "../core/units.js";
-import * as util from "../path-controller/util/util.js";
-import { Vector2, Vector3, Vector4, Matrix4, Quat } from "../path-controller/util/vectormath.js";
-import * as ui_base from "../core/ui_base.js";
+
 import * as events from "../path-controller/util/events.js";
 import * as toolprop from "../path-controller/toolsys/toolprop.js";
 
-import cconst from "../config/const.js";
-
-function myToFixed(s, n) {
+function myToFixed(s: string, n: number) {
   s = s.toFixed(n);
 
   while (s.endsWith("0")) {
@@ -23,19 +19,14 @@ function myToFixed(s, n) {
   return s;
 }
 
-let keymap = events.keymap;
+const keymap = events.keymap;
 
-let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+const EnumProperty = toolprop.EnumProperty;
+const PropTypes = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
-
-let parsepx = ui_base.parsepx;
-
+import { UIBase, PackFlags, IconSheets, parsepx } from "../core/ui_base";
 import { Button } from "./ui_button.js";
-import { _setTextboxClass } from "../core/ui_base.js";
+import { _setTextboxClass, ErrorColors } from "../core/ui_base.js";
 import { IContextBase } from "../core/context_base.js";
 
 export class TextBoxBase<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
@@ -55,7 +46,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
-    let margin = Math.ceil(3 * this.getDPI());
+    const margin = Math.ceil(3 * this.getDPI());
 
     this._had_error = false;
 
@@ -108,7 +99,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   }
 
   get startSelected() {
-    let b = ("" + this.getAttribute("start-selected")).toLowerCase();
+    const b = ("" + this.getAttribute("start-selected")).toLowerCase();
 
     return b === "yes" || b === "true" || b === "on" || b === "1";
   }
@@ -165,11 +156,11 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
     let ignore = 0;
 
-    let finish = (ok) => {
+    const finish = (ok) => {
       this._endModal(ok);
     };
 
-    let keydown = (e) => {
+    const keydown = (e) => {
       e.stopPropagation();
 
       switch (e.keyCode) {
@@ -184,7 +175,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       return;
       if (ignore) return;
 
-      let e2 = new KeyboardEvent(e.type, e);
+      const e2 = new KeyboardEvent(e.type, e);
 
       ignore = 1;
       this.dom.dispatchEvent(e2);
@@ -284,10 +275,10 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this.style["border-radius"] = this.getDefault("border-radius") + "px";
     this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
 
-    let bwid = this.getDefault("border-width");
-    let bcolor = this.getDefault("border-color");
-    let bstyle = this.getDefault("border-style");
-    let border = `${bwid}px ${bstyle} ${bcolor}`;
+    const bwid = this.getDefault("border-width");
+    const bcolor = this.getDefault("border-color");
+    const bstyle = this.getDefault("border-style");
+    const border = `${bwid}px ${bstyle} ${bcolor}`;
 
     this.style["border"] = border;
     this.style["border-color"] = bcolor;
@@ -318,7 +309,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       return;
     }
 
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === undefined || val === null) {
       this.internalDisabled = true;
       return;
@@ -326,7 +317,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this.internalDisabled = false;
     }
 
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
 
     let text = this.text;
 
@@ -341,7 +332,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
 
     if (is_num) {
-      let is_int = prop.type === PropTypes.INT;
+      const is_int = prop.type === PropTypes.INT;
 
       this.radix = prop.radix;
 
@@ -368,7 +359,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       } else {
         text = units.buildString(val, baseUnit, decimalPlaces, displayUnit);
       }
-    } else if (prop !== undefined && prop.type === PropTypes.STRING) {
+    } else if (prop?.type === PropTypes.STRING) {
       text = val;
     }
 
@@ -425,14 +416,14 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
   _prop_update(prop, text) {
     let is_num = prop.type & (PropTypes.FLOAT | PropTypes.INT);
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (typeof val === "number" && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)) {
       is_num = true;
     }
 
     if (is_num) {
-      let is_int = prop.type === PropTypes.INT;
+      const is_int = prop.type === PropTypes.INT;
 
       this.radix = prop.radix;
 
@@ -452,15 +443,15 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       }
 
       if (!units.isNumber(text.trim())) {
-        this.flash(ui_base.ErrorColors.ERROR, this.dom, undefined, false);
+        this.flash(ErrorColors.ERROR, this.dom, undefined, false);
         this.focus();
         this.dom.focus();
         this._had_error = true;
       } else {
-        let val = units.parseValue(text, baseUnit, displayUnit);
+        const val = units.parseValue(text, baseUnit, displayUnit);
 
         if (this._had_error) {
-          this.flash(ui_base.ErrorColors.OK, this.dom, undefined, false);
+          this.flash(ErrorColors.OK, this.dom, undefined, false);
         }
 
         this._had_error = false;
@@ -471,7 +462,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
 
         if (this._had_error) {
-          this.flash(ui_base.ErrorColors.OK, this.dom, undefined, false);
+          this.flash(ErrorColors.OK, this.dom, undefined, false);
           this.dom.focus();
         }
 
@@ -482,7 +473,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
         console.warn("textbox error!");
         //this._had_error = true;
 
-        this.flash(ui_base.ErrorColors.ERROR, this.dom, undefined, false);
+        this.flash(ErrorColors.ERROR, this.dom, undefined, false);
         this.dom.focus();
       }
     }
@@ -490,7 +481,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
   _updatePathVal(text) {
     if (this.hasAttribute("datapath") && this.ctx !== undefined) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
       console.log(prop);
 
       if (prop) {
@@ -532,9 +523,9 @@ export function checkForTextBox(screen, x, y) {
     if (p instanceof UIBase) {
       //check immediate children of p
       for (let i = 0; i < 2; i++) {
-        let nodes = i ? p.childNodes : p.shadow.childNodes;
+        const nodes = i ? p.childNodes : p.shadow.childNodes;
 
-        for (let child of nodes) {
+        for (const child of nodes) {
           if (child.draggable) {
             return true;
           }
@@ -543,7 +534,7 @@ export function checkForTextBox(screen, x, y) {
     }
 
     let ok = p instanceof TextBoxBase;
-    ok = ok || (p.constructor.define && p.constructor.define().modalKeyEvents);
+    ok = ok || p.constructor.define?.().modalKeyEvents;
 
     if (ok) {
       return true;
@@ -555,4 +546,4 @@ export function checkForTextBox(screen, x, y) {
   return false;
 }
 
-ui_base._setTextboxClass(TextBox);
+_setTextboxClass(TextBox);

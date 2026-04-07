@@ -3,6 +3,7 @@ package
 .idea
 docs
 .eslintcache
+.claude/worktrees
 
 # Playwright
 node_modules/

@@ -2,13 +2,25 @@
     "prettier.configPath": ".prettierrc",
     "prettier.prettierPath": "./node_modules/@pathtx/prettier/index.cjs",
     "cSpell.words": [
+      "cconst",
+      "cssfont",
+      "keymap",
+      "mpos",
+      "newarea",
       "nodeclass",
       "nstructjs",
       "parseutil",
       "pathux",
+      "PROPLIST",
+      "regen",
+      "sarea",
+      "STRSET",
       "tokdef",
       "toolprop",
       "toolstack",
-      "toolsys"
+      "toolsys",
+      "uidata",
+      "unlisten",
+      "Verts"
     ]
 }

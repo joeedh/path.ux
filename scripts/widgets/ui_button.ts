@@ -1,16 +1,10 @@
 import * as util from "../path-controller/util/util.js";
-import * as ui_base from "../core/ui_base.js";
+import { UIBase, parsepx, measureText, drawRoundBox, drawText } from "../core/ui_base.js";
 import { keymap } from "../path-controller/util/events.js";
 import { IContextBase } from "../core/context_base.js";
 import cconst from "../config/const.js";
 import { _themeUpdateKey } from "../core/ui_base.js";
 import type { CSSFont } from "../core/cssfont.js";
-
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
-
-let parsepx = ui_base.parsepx;
 
 cconst.DEBUG.buttonEvents = true;
 
@@ -32,11 +26,11 @@ export class ButtonEventBase<CTX extends IContextBase = IContextBase> extends UI
   bindEvents() {
     let depress: (e?: Event) => void;
 
-    let press = (e: PointerEvent) => {
+    const press = (e: PointerEvent) => {
       e.stopPropagation();
 
       if (!this.modalRunning) {
-        let this2 = this;
+        const this2 = this;
 
         const modalHandlers = {
           on_pointerdown(e: PointerEvent) {
@@ -210,7 +204,7 @@ export class Button<CTX extends IContextBase = IContextBase> extends ButtonEvent
   }
 
   set _pressed(v: boolean) {
-    let changed = !v !== !this._pressed;
+    const changed = !v !== !this._pressed;
 
     if (v) {
       this._pressedTime = util.time_ms();
@@ -276,7 +270,7 @@ export class Button<CTX extends IContextBase = IContextBase> extends ButtonEvent
     this.label.style.padding = this.label.style.margin = "0px";
     this.style.backgroundColor = this.getSubDefault(subkey, "background-color") as string;
 
-    let font = this.getSubDefault(subkey, "DefaultText") as CSSFont;
+    const font = this.getSubDefault(subkey, "DefaultText") as CSSFont;
     this.label.style.font = font.genCSS();
     this.label.style.color = font.color;
 
@@ -291,7 +285,7 @@ export class Button<CTX extends IContextBase = IContextBase> extends ButtonEvent
 
   click() {
     if (this._onpress) {
-      let rect = this.getClientRects()[0];
+      const rect = this.getClientRects()[0];
       if (rect) {
         this._onpress({
           x: rect.x + rect.width * 0.5,
@@ -345,7 +339,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   constructor() {
     super();
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
     this._last_but_update_key = "";
     this._name = "";
@@ -388,7 +382,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
 
   click() {
     if (this._onpress) {
-      let rect = this.getClientRects()[0];
+      const rect = this.getClientRects()[0];
       if (rect) {
         this._onpress({
           x: rect.x + rect.width * 0.5,
@@ -403,10 +397,10 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   }
 
   init() {
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
-    let width = ~~((this.getDefault("width") as number) * dpi);
-    let height = ~~((this.getDefault("height") as number) * dpi);
+    const width = ~~((this.getDefault("width") as number) * dpi);
+    const height = ~~((this.getDefault("height") as number) * dpi);
 
     this.dom.width = width;
     this.dom.height = height;
@@ -445,14 +439,14 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   updateDefaultSize() {
     const dpi = UIBase.getDPI();
     let height = ~~(this.getDefault("height") as number) + (this.getDefault("padding") as number);
-    let size = (this.getDefault("DefaultText") as CSSFont).size * 1.33;
+    const size = (this.getDefault("DefaultText") as CSSFont).size * 1.33;
 
     if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
       return;
     }
 
     height = ~~(Math.max(height, size) * dpi);
-    let cssHeight = height / dpi + "px";
+    const cssHeight = height / dpi + "px";
 
     if (cssHeight !== this.style.height) {
       this.style.height = cssHeight;
@@ -486,7 +480,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
       this._redraw();
     }
 
-    let key = this._calcUpdateKey();
+    const key = this._calcUpdateKey();
     if (key !== this._last_but_update_key) {
       this._last_but_update_key = key;
 
@@ -500,16 +494,16 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
     super.setCSS();
     this.updateBorders();
 
-    let name = this._name;
+    const name = this._name;
     if (name === undefined) {
       return;
     }
 
-    let pad = this.getDefault("padding") as number;
-    let ts = (this.getDefault("DefaultText") as CSSFont).size;
+    const pad = this.getDefault("padding") as number;
+    const ts = (this.getDefault("DefaultText") as CSSFont).size;
 
     let tw =
-      ui_base.measureText(this, this._genLabel(), {
+      measureText(this, this._genLabel(), {
         size: ts,
         font: this.getDefault("DefaultText") as CSSFont,
       }).width +
@@ -530,7 +524,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   }
 
   updateBorders(dom: HTMLElement = this.dom) {
-    let lwid = this.getDefault("border-width") as number;
+    const lwid = this.getDefault("border-width") as number;
 
     if (lwid) {
       dom.style.borderColor = this.getDefault("border-color") as string;
@@ -549,7 +543,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
       return;
     }
 
-    let name = this.getAttribute("name");
+    const name = this.getAttribute("name");
 
     if (name !== this._name) {
       this._name = name ?? undefined;
@@ -563,13 +557,13 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   updateWidth(w_add = 0) {}
 
   _repos_canvas() {
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
     let w = parsepx(this.dom.style.width);
     let h = parsepx(this.dom.style.height);
 
-    let w2 = ~~(w * dpi);
-    let h2 = ~~(h * dpi);
+    const w2 = ~~(w * dpi);
+    const h2 = ~~(h * dpi);
 
     w = w2 / dpi;
     h = h2 / dpi;
@@ -582,7 +576,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   }
 
   updateDPI() {
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
     if (this._last_dpi !== dpi) {
       this._last_dpi = dpi;
@@ -615,8 +609,8 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   }
 
   _redraw(draw_text = true) {
-    let dpi = this.getDPI();
-    let subkey = this._getSubKey();
+    const dpi = this.getDPI();
+    const subkey = this._getSubKey();
 
     if (this._pressed && this._highlight) {
       (this.dom as unknown as Record<string, unknown>)._background = this.getSubDefault(
@@ -644,20 +638,20 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
       );
     }
 
-    ui_base.drawRoundBox(this, this.dom, this.g);
+    drawRoundBox(this, this.dom, this.g);
     this.updateBorders();
 
     if (this._focus) {
-      let w = this.dom.width,
-        h = this.dom.height;
-      let p = 1 / dpi;
+      const w = this.dom.width;
+      const h = this.dom.height;
+      const p = 1 / dpi;
 
       this.g.translate(p, p);
-      let lw = this.g.lineWidth;
+      const lw = this.g.lineWidth;
 
       this.g.lineWidth = (this.getDefault("focus-border-width", undefined, 1.0) as number) * dpi;
 
-      ui_base.drawRoundBox(
+      drawRoundBox(
         this,
         this.dom,
         this.g,
@@ -678,24 +672,24 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   }
 
   _draw_text() {
-    let dpi = this.getDPI();
-    let subkey = this._getSubKey();
+    const dpi = this.getDPI();
+    const subkey = this._getSubKey();
 
-    let font = this.getSubDefault(subkey, "DefaultText") as CSSFont;
+    const font = this.getSubDefault(subkey, "DefaultText") as CSSFont;
 
-    let pad = (this.getDefault("padding") as number) * dpi;
-    let ts = font.size * dpi;
+    const pad = (this.getDefault("padding") as number) * dpi;
+    const ts = font.size * dpi;
 
-    let text = this._genLabel();
+    const text = this._genLabel();
 
-    let w = this.dom.width,
-      h = this.dom.height;
-    let tw = ui_base.measureText(this, text, undefined, undefined, ts, font).width;
+    const w = this.dom.width;
+    const h = this.dom.height;
+    const tw = measureText(this, text, undefined, undefined, ts, font).width;
 
-    let cx = pad * 0.5 + this._leftPad * dpi;
-    let cy = ts + (h - ts) / 3.0;
+    const cx = pad * 0.5 + this._leftPad * dpi;
+    const cy = ts + (h - ts) / 3.0;
 
-    ui_base.drawText(this, ~~cx, ~~cy, text, {
+    drawText(this, ~~cx, ~~cy, text, {
       canvas: this.dom,
       g     : this.g,
       size  : ts / dpi,

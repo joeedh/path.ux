@@ -11,7 +11,7 @@ interface DragHandlers {
   on_keydown(e: KeyboardEvent): void;
 }
 
-function startDrag(box: DragBox) {
+function startDrag<CTX extends IContextBase>(box: DragBox<CTX>) {
   if (box._modal) {
     popModalLight(box._modal);
     box._modal = undefined;

@@ -10,25 +10,48 @@ import { DomEventTypes } from "../path-controller/util/events.js";
 
 import { HotKey, keymap } from "../path-controller/util/simple_events.js";
 import { parseToolPath } from "../path-controller/controller.js";
+import { IContextBase } from "../core/context_base.js";
 
-let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+const EnumProperty = toolprop.EnumProperty;
+const PropTypes = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+const UIBase = ui_base.UIBase;
+const PackFlags = ui_base.PackFlags;
+const IconSheets = ui_base.IconSheets;
+
+export const SEP = Symbol("MenuSep");
+export type SEP = symbol;
+
+export type MenuTemplateTool = string;
+export type MenuTemplateCustom = [name: string, func: <CTX>(ctx: CTX) => void];
+export type MenuItemCallback = (dom: HTMLElement) => HTMLElement;
+/** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
+export type MenuItemArrayForm = [string, (string | HotKey)?, number?, string?, any?];
+export type MenuTemplateItem =
+  | SEP
+  | MenuTemplateTool
+  | MenuTemplateCustom
+  | MenuItemCallback
+  | MenuItemArrayForm
+  | Menu;
+
+export type MenuTemplate = MenuTemplateItem[];
 
 function getpx(css) {
   return parseFloat(css.trim().replace("px", ""));
 }
 
 function debugmenu() {
-  if (window.DEBUG && window.DEBUG.menu) {
+  if (window.DEBUG?.menu) {
     console.warn("%cmenu:", "color:blue", ...arguments);
   }
 }
 
-export class Menu extends UIBase {
+export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  closeOnMouseUp?: boolean;
+
+  on_select?: (id: number | string) => void;
+
   constructor() {
     super();
 
@@ -75,7 +98,7 @@ export class Menu extends UIBase {
               justify-items : start;
     */
 
-    let style = (this.menustyle = document.createElement("style"));
+    const style = (this.menustyle = document.createElement("style"));
     this.buildStyle();
 
     this.dom.setAttribute("tabindex", -1);
@@ -93,11 +116,11 @@ export class Menu extends UIBase {
     };
   }
 
-  float(x, y, zindex = undefined) {
-    let dpi = this.getDPI();
+  float(x, y, zindex) {
+    const dpi = this.getDPI();
     let rect = this.dom.getClientRects();
-    let maxx = this.getWinWidth() - 10;
-    let maxy = this.getWinHeight() - 10;
+    const maxx = this.getWinWidth() - 10;
+    const maxy = this.getWinHeight() - 10;
 
     if (rect.length > 0) {
       rect = rect[0];
@@ -131,7 +154,17 @@ export class Menu extends UIBase {
 
     if (this.onselect) {
       try {
+        // maintain compatibility with old JS api that overrid onselect
+        // @ts-expect-error
         this.onselect(this.activeItem._id);
+      } catch (error) {
+        util.print_stack(error);
+        console.log("Error in menu callback");
+      }
+    }
+    if (this.on_select) {
+      try {
+        this.on_select(this.activeItem._id);
       } catch (error) {
         util.print_stack(error);
         console.log("Error in menu callback");
@@ -184,7 +217,7 @@ export class Menu extends UIBase {
 
   _select(dir, focus = true) {
     if (this.activeItem === undefined) {
-      for (let item of this.items) {
+      for (const item of this.items) {
         if (!item.hidden) {
           this.setActive(item, focus);
           break;
@@ -252,13 +285,13 @@ export class Menu extends UIBase {
     this.started = true;
     menuWrangler.pushMenu(this);
 
-    let dom2 = document.createElement("div");
+    const dom2 = document.createElement("div");
     //let dom2 = document.createElement("div");
 
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = (this.textbox = UIBase.createElement("textbox-x"));
+    const sbox = (this.textbox = UIBase.createElement("textbox-x"));
     this.textbox.parentWidget = this;
 
     dom2.appendChild(sbox);
@@ -278,14 +311,14 @@ export class Menu extends UIBase {
 
     sbox.focus();
     sbox.onchange = () => {
-      let t = sbox.text.trim().toLowerCase();
+      const t = sbox.text.trim().toLowerCase();
 
-      for (let item of this.items) {
+      for (const item of this.items) {
         item.hidden = true;
         item.remove();
       }
 
-      for (let item of this.items) {
+      for (const item of this.items) {
         let ok = t == "";
         ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
 
@@ -320,7 +353,7 @@ export class Menu extends UIBase {
 
     menuWrangler.pushMenu(this);
 
-    let dokey = (key) => {
+    const dokey = (key) => {
       let val = this.getDefault(key);
       if (typeof val === "number") {
         val = "" + val + "px";
@@ -370,8 +403,8 @@ export class Menu extends UIBase {
     }, 0);
   }
 
-  addItemExtra(text, id = undefined, hotkey, icon = -1, add = true, tooltip = undefined) {
-    let dom = document.createElement("span");
+  addItemExtra(text, id, hotkey, icon = -1, add = true, tooltip = "") {
+    const dom = document.createElement("span");
 
     dom.style["display"] = "inline-flex";
 
@@ -384,7 +417,7 @@ export class Menu extends UIBase {
       //icon >= 0) {
       icon_div = ui_base.makeIconDiv(icon, IconSheets.SMALL);
     } else {
-      let tilesize = ui_base.iconmanager.getTileSize(IconSheets.SMALL);
+      const tilesize = ui_base.iconmanager.getTileSize(IconSheets.SMALL);
 
       //tilesize *= window.devicePixelRatio;
 
@@ -398,22 +431,22 @@ export class Menu extends UIBase {
     icon_div.style["margin-right"] = "1px";
     icon_div.style["align"] = "left";
 
-    let span = document.createElement("span");
+    const span = document.createElement("span");
 
     //stupid css doesn't get width right. . .
     span.style["font"] = ui_base.getFont(this, undefined, "MenuText");
 
-    let dpi = this.getDPI();
-    let tsize = this.getDefault("MenuText").size;
+    const dpi = this.getDPI();
+    const tsize = this.getDefault("MenuText").size;
     //XXX proportional font fail
 
     //XXX stupid!
-    let canvas = document.createElement("canvas");
-    let g = canvas.getContext("2d");
+    const canvas = document.createElement("canvas");
+    const g = canvas.getContext("2d");
 
     g.font = span.style["font"];
 
-    let rect = span.getClientRects();
+    const rect = span.getClientRects();
 
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
@@ -443,7 +476,7 @@ export class Menu extends UIBase {
     dom.appendChild(span);
 
     if (hotkey) {
-      let hotkey_span = document.createElement("span");
+      const hotkey_span = document.createElement("span");
       hotkey_span.innerText = hotkey;
       hotkey_span.style["display"] = "inline-flex";
 
@@ -473,7 +506,7 @@ export class Menu extends UIBase {
       dom.appendChild(hotkey_span);
     }
 
-    let ret = this.addItem(dom, id, add);
+    const ret = this.addItem(dom, id, add);
 
     ret.hotkey = hotkey;
     ret.icon = icon;
@@ -487,12 +520,12 @@ export class Menu extends UIBase {
   }
 
   //item can be menu or text
-  addItem(item, id, add = true, tooltip = undefined) {
+  addItem(item, id, add = true, tooltip) {
     id = id === undefined ? item : id;
     let text = item;
 
     if (typeof item === "string" || item instanceof String) {
-      let dom = document.createElement("dom");
+      const dom = document.createElement("dom");
       dom.style["text-align"] = "left";
 
       dom.textContent = item;
@@ -502,7 +535,7 @@ export class Menu extends UIBase {
       text = item.textContent;
     }
 
-    let li = document.createElement("li");
+    const li = document.createElement("li");
 
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
@@ -513,7 +546,7 @@ export class Menu extends UIBase {
 
     if (item instanceof Menu) {
       //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
-      let dom = document.createElement("span");
+      const dom = document.createElement("span");
       dom.innerHTML = "" + item.title;
       dom._id = dom.id = id;
       dom.setAttribute("class", "menu");
@@ -553,12 +586,12 @@ export class Menu extends UIBase {
         }
       });
 
-      let onfocus = (e) => {
+      const onfocus = (e) => {
         if (this._ignoreFocusEvents) {
           return;
         }
 
-        let active = this.activeItem;
+        const active = this.activeItem;
 
         if (this._submenu) {
           this._submenu.close();
@@ -579,7 +612,7 @@ export class Menu extends UIBase {
         this.setActive(li, false);
       };
 
-      let onclick = (e) => {
+      const onclick = (e) => {
         onfocus(e);
 
         e.stopPropagation();
@@ -630,9 +663,9 @@ export class Menu extends UIBase {
   }
 
   _getBorderStyle() {
-    let r = this.getDefault("border-width");
-    let s = this.getDefault("border-style");
-    let c = this.getDefault("border-color");
+    const r = this.getDefault("border-width");
+    const s = this.getDefault("border-style");
+    const c = this.getDefault("border-color");
 
     return `${r}px ${s} ${c}`;
   }
@@ -650,7 +683,7 @@ export class Menu extends UIBase {
     if (typeof sepcss === "object") {
       let s = "";
 
-      for (let k in sepcss) {
+      for (const k in sepcss) {
         let v = sepcss[k];
 
         if (typeof v === "number") {
@@ -749,7 +782,7 @@ export class Menu extends UIBase {
   }
 
   seperator() {
-    let bar = document.createElement("div");
+    const bar = document.createElement("div");
     bar.setAttribute("class", "menuseparator");
 
     this.dom.appendChild(bar);
@@ -758,7 +791,7 @@ export class Menu extends UIBase {
   }
 
   menu(title) {
-    let ret = UIBase.createElement("menu-x");
+    const ret = UIBase.createElement("menu-x");
 
     ret.setAttribute("name", title);
     this.addItem(ret);
@@ -769,10 +802,13 @@ export class Menu extends UIBase {
   calcSize() {}
 }
 
-Menu.SEP = Symbol("menu seperator");
+Menu.SEP = SEP;
 UIBase.internalRegister(Menu);
 
-export class DropBox extends OldButton {
+export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+  _menu: Menu<CTX> | undefined;
+  prop?: toolprop.EnumProperty;
+
   constructor() {
     super();
 
@@ -871,13 +907,13 @@ export class DropBox extends OldButton {
       ];
     }
 
-    let setDefault = (key) => {
+    const setDefault = (key) => {
       if (this.hasDefault(key)) {
         this.style[key] = this.getDefault(key, undefined, 0) + "px";
       }
     };
 
-    for (let k of keys) {
+    for (const k of keys) {
       setDefault(k);
     }
   }
@@ -907,9 +943,9 @@ export class DropBox extends OldButton {
 
   updateWidth() {
     //let ret = super.updateWidth(10);
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultText").size;
+    const ts = this.getDefault("DefaultText").size;
     let tw = this.g.measureText(this._genLabel()).width / dpi;
     //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
@@ -945,14 +981,15 @@ export class DropBox extends OldButton {
     }
 
     let wasError = false;
-    let prop, val;
+    let prop;
+    let val;
 
     try {
       this.pushReportContext(this._reportCtxName);
       prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
       val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
 
-      prop = prop && prop.prop ? prop.prop : prop;
+      prop = prop?.prop ? prop.prop : prop;
 
       this.popReportContext();
     } catch (error) {
@@ -997,7 +1034,7 @@ export class DropBox extends OldButton {
   }
 
   update() {
-    let path = this.getAttribute("datapath");
+    const path = this.getAttribute("datapath");
 
     if (path && path !== this._last_datapath) {
       this._last_datapath = path;
@@ -1008,7 +1045,7 @@ export class DropBox extends OldButton {
 
     super.update();
 
-    let key = this.getDefault("dropTextBG");
+    const key = this.getDefault("dropTextBG");
     if (key !== this._last_dbox_key) {
       this._last_dbox_key = key;
       this.setCSS();
@@ -1021,7 +1058,7 @@ export class DropBox extends OldButton {
   }
 
   _build_menu_template() {
-    if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+    if (this._menu?.parentNode !== undefined) {
       this._menu.remove();
     }
 
@@ -1042,29 +1079,29 @@ export class DropBox extends OldButton {
       return;
     }
 
-    let prop = this.prop;
+    const prop = this.prop;
 
     if (this.prop === undefined) {
       return;
     }
 
-    if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+    if (this._menu?.parentNode !== undefined) {
       this._menu.remove();
     }
 
-    let menu = (this._menu = UIBase.createElement("menu-x"));
+    const menu = (this._menu = UIBase.createElement("menu-x"));
 
     //let name = "" + this.getAttribute("name");
     menu.setAttribute("name", "");
     menu._dropbox = this;
 
-    let valmap = {};
-    let enummap = prop.values;
-    let iconmap = prop.iconmap;
-    let uimap = prop.ui_value_names;
-    let desr = prop.descriptions || {};
+    const valmap = {};
+    const enummap = prop.values;
+    const iconmap = prop.iconmap;
+    const uimap = prop.ui_value_names;
+    const desr = prop.descriptions || {};
 
-    for (let k in enummap) {
+    for (const k in enummap) {
       let uk = k;
 
       valmap[enummap[k]] = k;
@@ -1073,10 +1110,10 @@ export class DropBox extends OldButton {
         uk = uimap[k];
       }
 
-      let tooltip = desr[k];
+      const tooltip = desr[k];
 
       //menu.addItem(k, enummap[k], ":");
-      if (iconmap && iconmap[k]) {
+      if (iconmap?.[k]) {
         menu.addItemExtra(uk, enummap[k], undefined, iconmap[k], undefined, tooltip);
       } else {
         menu.addItem(uk, enummap[k], undefined, tooltip);
@@ -1094,10 +1131,10 @@ export class DropBox extends OldButton {
       //check if datapath system will be calling .prop.setValue instead of us
       let callProp = true;
       if (this.hasAttribute("datapath")) {
-        let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
-        let prop = rdef.dpath.data;
+        const rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+        const prop = rdef.dpath.data;
 
-        callProp = !rdef || !rdef.dpath || !(rdef.dpath.data instanceof ToolProperty);
+        callProp = !rdef?.dpath || !(rdef.dpath.data instanceof ToolProperty);
       }
 
       this._value = this._convertVal(id);
@@ -1126,7 +1163,7 @@ export class DropBox extends OldButton {
       this._pressed = false;
       this._redraw();
 
-      let menu = this._menu;
+      const menu = this._menu;
       this._menu = undefined;
       menu.close();
       return;
@@ -1151,14 +1188,14 @@ export class DropBox extends OldButton {
     this._pressed = true;
     this.setCSS();
 
-    let onclose = this._menu.onclose;
+    const onclose = this._menu.onclose;
     this._menu.onclose = () => {
       this.lockTimer = util.time_ms();
 
       this._pressed = false;
       this._redraw();
 
-      let menu = this._menu;
+      const menu = this._menu;
       if (menu) {
         this._menu = undefined;
         menu._dropbox = undefined;
@@ -1169,16 +1206,16 @@ export class DropBox extends OldButton {
       }
     };
 
-    let menu = this._menu;
-    let screen = this.getScreen();
+    const menu = this._menu;
+    const screen = this.getScreen();
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
-    let x = e.x,
-      y = e.y;
-    let rects = this.dom.getBoundingClientRect(); //getClientRects();
+    let x = e.x;
+    let y = e.y;
+    const rects = this.dom.getBoundingClientRect(); //getClientRects();
 
-    let rheight = rects.height;
+    const rheight = rects.height;
     x = rects.x;
     y = rects.y + rheight;
 
@@ -1189,7 +1226,7 @@ export class DropBox extends OldButton {
     /* need to figure out a better way to pop up a menu
      *  above a given y position */
     if (cconst.menusCanPopupAbove && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
-      let con = screen.popup(this, 500, 400, false, 0);
+      const con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
       con.style["position"] = UIBase.PositionKey;
@@ -1200,15 +1237,15 @@ export class DropBox extends OldButton {
       con.add(menu);
       menu.start();
 
-      let time = util.time_ms();
+      const time = util.time_ms();
 
-      let timer = window.setInterval(() => {
+      const timer = window.setInterval(() => {
         if (util.time_ms() - time > 1500) {
           window.clearInterval(timer);
           return;
         }
 
-        let r = menu.dom.getBoundingClientRect();
+        const r = menu.dom.getBoundingClientRect();
 
         if (!r || r.height < 55) {
           return;
@@ -1221,7 +1258,7 @@ export class DropBox extends OldButton {
         menu.dom.remove();
         con.remove();
 
-        let popup = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
+        const popup = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
         popup.noMarginsOrPadding();
 
         //popup.shadow.appendChild(menu.dom);
@@ -1236,7 +1273,7 @@ export class DropBox extends OldButton {
       return;
     }
 
-    let con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
+    const con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -1245,7 +1282,7 @@ export class DropBox extends OldButton {
     } else {
       menu.start();
     }
-  }
+  };
 
   _redraw() {
     if (this.getAttribute("simple")) {
@@ -1259,10 +1296,10 @@ export class DropBox extends OldButton {
 
       if (this._focus) {
         ui_base.drawRoundBox2(this, {
-          canvas: this.dom,
-          g: this.g,
-          color: this.getDefault("BoxHighlight"),
-          op: "stroke",
+          canvas  : this.dom,
+          g       : this.g,
+          color   : this.getDefault("BoxHighlight"),
+          op      : "stroke",
           no_clear: true,
         });
         ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
@@ -1274,16 +1311,16 @@ export class DropBox extends OldButton {
 
     super._redraw(false);
 
-    let g = this.g;
-    let w = this.dom.width,
-      h = this.dom.height;
-    let dpi = this.getDPI();
+    const g = this.g;
+    const w = this.dom.width;
+    const h = this.dom.height;
+    const dpi = this.getDPI();
 
-    let p = 10 * dpi;
-    let p2 = dpi;
+    const p = 10 * dpi;
+    const p2 = dpi;
 
     //*
-    let bg = this.getDefault("dropTextBG");
+    const bg = this.getDefault("dropTextBG");
     if (bg !== undefined) {
       g.fillStyle = bg;
 
@@ -1303,7 +1340,7 @@ export class DropBox extends OldButton {
     g.closePath();
     //*/
 
-    let sz = 0.3;
+    const sz = 0.3;
     g.moveTo(w - h * 0.5 - p, p);
     g.lineTo(w - p, p);
     g.moveTo(w - h * 0.5 - p, p + (sz * h) / 3);
@@ -1419,7 +1456,7 @@ export class MenuWrangler {
   endMenus() {
     debugmenu("endMenus");
 
-    for (let menu of this.menustack) {
+    for (const menu of this.menustack) {
       menu.close();
     }
 
@@ -1427,7 +1464,7 @@ export class MenuWrangler {
   }
 
   searchKeyDown(e) {
-    let menu = this.menu;
+    const menu = this.menu;
 
     e.stopPropagation();
     menu._ignoreFocusEvents = true;
@@ -1465,7 +1502,7 @@ export class MenuWrangler {
       return this.searchKeyDown(e);
     }
 
-    let menu = this.menu;
+    const menu = this.menu;
 
     switch (e.keyCode) {
       case keymap["Left"]: //left
@@ -1532,11 +1569,11 @@ export class MenuWrangler {
       return;
     }
 
-    let screen = this.screen;
-    let x = e.pageX,
-      y = e.pageY;
+    const screen = this.screen;
+    const x = e.pageX;
+    const y = e.pageY;
 
-    let element = screen.pickElement(x, y);
+    const element = screen.pickElement(x, y);
 
     if (element !== undefined && (element instanceof DropBox || util.isMobile())) {
       this.endMenus();
@@ -1551,9 +1588,9 @@ export class MenuWrangler {
       return;
     }
 
-    let screen = this.screen;
-    let x = e.pageX,
-      y = e.pageY;
+    const screen = this.screen;
+    const x = e.pageX;
+    const y = e.pageY;
 
     let element = screen.pickElement(x, y, undefined, undefined, DropBox);
     if (element !== undefined) {
@@ -1569,9 +1606,9 @@ export class MenuWrangler {
   }
 
   findMenu(x, y) {
-    let screen = this.screen;
+    const screen = this.screen;
 
-    let element = screen.pickElement(x, y);
+    const element = screen.pickElement(x, y);
 
     if (element === undefined) {
       return;
@@ -1597,7 +1634,7 @@ export class MenuWrangler {
   }
 
   on_pointermove(e) {
-    if (this.menu && this.menu.hasSearchBox) {
+    if (this.menu?.hasSearchBox) {
       this.closetimer = util.time_ms();
       this.closereq = undefined;
       return;
@@ -1609,16 +1646,16 @@ export class MenuWrangler {
       return;
     }
 
-    let screen = this.screen;
-    let x = e.pageX,
-      y = e.pageY;
+    const screen = this.screen;
+    const x = e.pageX;
+    const y = e.pageY;
 
     let element;
-    let menu = this.menu;
+    const menu = this.menu;
 
     if (menu) {
-      let r = menu.getBoundingClientRect();
-      let pad = 15;
+      const r = menu.getBoundingClientRect();
+      const pad = 15;
 
       if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad * 2 && y <= r.y + r.height + pad * 2) {
         element = menu;
@@ -1726,7 +1763,7 @@ export class MenuWrangler {
   }
 }
 
-export let menuWrangler = (window._menuWrangler = new MenuWrangler());
+export const menuWrangler = (window._menuWrangler = new MenuWrangler());
 let wrangerStarted = false;
 
 export function startMenuEventWrangling(screen?: Screen) {
@@ -1742,7 +1779,7 @@ export function startMenuEventWrangling(screen?: Screen) {
 
   wrangerStarted = true;
 
-  for (let k in DomEventTypes) {
+  for (const k in DomEventTypes) {
     if (menuWrangler[k] === undefined) {
       continue;
     }
@@ -1766,20 +1803,25 @@ export function getWranglerScreen() {
   return menuWrangler.screen;
 }
 
-export function createMenu(ctx, title, templ) {
-  let menu = UIBase.createElement("menu-x");
+export function createMenu<CTX extends IContextBase = IContextBase>(
+  ctx: CTX,
+  title: string,
+  templ: MenuTemplate
+): Menu<CTX> {
+  const menu = UIBase.createElement("menu-x");
   menu.ctx = ctx;
   menu.setAttribute("name", title);
 
-  let SEP = menu.constructor.SEP;
+  const SEP = menu.constructor.SEP;
   let id = 0;
-  let cbs = {};
+  const cbs = {};
 
-  let doItem = (item) => {
+  const doItem = (item) => {
     if (item !== undefined && item instanceof Menu) {
       menu.addItem(item);
     } else if (typeof item == "string") {
-      let def, hotkey;
+      let def;
+      let hotkey;
 
       try {
         def = ctx.api.getToolDef(item);
@@ -1817,9 +1859,9 @@ export function createMenu(ctx, title, templ) {
     } else if (item instanceof Array) {
       //old array-based api for custom entries
       let hotkey = item.length > 2 ? item[2] : undefined;
-      let icon = item.length > 3 ? item[3] : undefined;
-      let tooltip = item.length > 4 ? item[4] : undefined;
-      let id2 = item.length > 5 ? item[5] : id++;
+      const icon = item.length > 3 ? item[3] : undefined;
+      const tooltip = item.length > 4 ? item[4] : undefined;
+      const id2 = item.length > 5 ? item[5] : id++;
 
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
@@ -1836,7 +1878,7 @@ export function createMenu(ctx, title, templ) {
       //new object-based api for custom entries
       let { name, callback, hotkey, icon, tooltip } = item;
 
-      let id2 = item.id !== undefined ? item.id : id++;
+      const id2 = item.id !== undefined ? item.id : id++;
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
@@ -1851,7 +1893,7 @@ export function createMenu(ctx, title, templ) {
     }
   };
 
-  for (let item of templ) {
+  for (const item of templ) {
     doItem(item);
   }
 
@@ -1865,8 +1907,8 @@ export function createMenu(ctx, title, templ) {
 export function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
   menuWrangler.endMenus();
 
-  let screen = menu.ctx.screen;
-  let con = (menu._popup = screen.popup(undefined, x, y, false, safetyDelay));
+  const screen = menu.ctx.screen;
+  const con = (menu._popup = screen.popup(undefined, x, y, false, safetyDelay));
   con.noMarginsOrPadding();
 
   con.add(menu);

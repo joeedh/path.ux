@@ -37,6 +37,7 @@ import { checkForTextBox } from "../widgets/ui_textbox.js";
 import { startMenu } from "../widgets/ui_menu.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
+import { StructReader } from "../util/nstructjs.js";
 
 const list = Array.from;
 
@@ -1546,7 +1547,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   /** merges sarea into the screen area opposite to sarea*/
-  collapseArea(sarea: ScreenArea, border?: ScreenBorder) {
+  collapseArea(sarea: ScreenArea<CTX>, border?: ScreenBorder<CTX>) {
     let sarea2;
 
     if (!border) {
@@ -2583,7 +2584,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return this._edgemap[hash];
   }
 
-  minmaxArea(sarea: ScreenArea, mm?: any) {
+  minmaxArea(sarea: ScreenArea<CTX>, mm?: any) {
     if (mm === undefined) {
       mm = new math.MinMax(2);
     }
@@ -2597,7 +2598,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   //does sarea1 border sarea2?
-  areasBorder(sarea1: ScreenArea, sarea2: ScreenArea) {
+  areasBorder(sarea1: ScreenArea<CTX>, sarea2: ScreenArea<CTX>) {
     for (const b of sarea1._borders) {
       for (const sa of b.sareas) {
         if (sa === sarea2) return true;
@@ -2736,13 +2737,13 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     new FrameManager_ops.ToolTipViewer(this).start();
   }
 
-  removeAreaTool(border?: ScreenBorder) {
+  removeAreaTool(border?: ScreenBorder<CTX>) {
     const tool = new FrameManager_ops.RemoveAreaTool(this, border);
     //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
     tool.start();
   }
 
-  moveAttachTool(sarea: ScreenArea, mpos: [number, number] = this.mpos, elem: any, pointerId: number) {
+  moveAttachTool(sarea: ScreenArea<CTX>, mpos: [number, number] | number[] | Vector2 = this.mpos, elem?: any, pointerId?: number) {
     const tool = new FrameManager_ops.AreaMoveAttachTool(this, sarea, mpos);
     tool.start(elem, pointerId);
   }
@@ -2792,8 +2793,8 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         continue;
       }
 
-      let blank;
-      let sarea;
+      let blank: ScreenArea<CTX> | undefined;
+      let sarea: ScreenArea<CTX> | undefined;
 
       for (const he of b.halfedges) {
         if (!he.sarea.area) {
@@ -2926,7 +2927,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  loadSTRUCT(reader: (obj: Screen) => void) {
+  loadSTRUCT(reader: StructReader<this>) {
     this.clear();
 
     reader(this);
@@ -2995,8 +2996,8 @@ const stop_cbs = [] as (() => void)[];
 
 let key_event_opts: AddEventListenerOptions | undefined;
 
-export function startEvents(getScreenFunc: () => Screen) {
-  get_screen_cb = getScreenFunc;
+export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen<CTX>) {
+  get_screen_cb = getScreenFunc as unknown as typeof get_screen_cb;
 
   if (_events_started) {
     return;
