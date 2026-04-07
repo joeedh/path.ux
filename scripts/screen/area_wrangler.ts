@@ -148,7 +148,7 @@ export class AreaWrangler<CTX extends IContextBase = IContextBase> {
     return this;
   }
 
-  push(type: AreaConstructor, area: Area, pushLastRef = true) {
+  push(type: any, area: Area, pushLastRef = true) {
     theWrangler = this;
 
     if (haveModal() || this.locked) {
@@ -174,7 +174,7 @@ export class AreaWrangler<CTX extends IContextBase = IContextBase> {
     this.stack.push(area);
   }
 
-  updateLastRef(type: AreaConstructor, area: Area) {
+  updateLastRef(type: any, area: Area) {
     theWrangler = this;
 
     if ((this.locked || haveModal()) && this.lasts.has(type[ClassIdSymbol])) {
@@ -185,7 +185,7 @@ export class AreaWrangler<CTX extends IContextBase = IContextBase> {
     this.lastArea = area;
   }
 
-  pop(type: AreaConstructor, area?: Area) {
+  pop(type: any, area?: Area) {
     const stack = this.stacks.get(type[ClassIdSymbol]);
 
     if (stack === undefined) {
@@ -212,7 +212,7 @@ export class AreaWrangler<CTX extends IContextBase = IContextBase> {
     }
   }
 
-  getLastArea(type?: AreaConstructor) {
+  getLastArea(type?: any) {
     //if (Math.random() > 0.9995) {
     //console.warn("getLastArea!", type, this.lasts.get(type[ClassIdSymbol]));
     //}

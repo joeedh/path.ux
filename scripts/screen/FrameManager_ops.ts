@@ -42,7 +42,7 @@ export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
     this._finished = false;
   }
 
-  start(elem, pointerId) {
+  start(elem?: any, pointerId?: any) {
     //toolstack_getter().execTool(this);
     this.modalStart(undefined, elem, pointerId);
   }

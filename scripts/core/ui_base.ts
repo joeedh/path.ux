@@ -13,11 +13,14 @@
 import { contextWrangler } from "../screen/area_wrangler.js";
 import type { Area } from "../screen/ScreenArea";
 
-export interface IUIBaseConstructor {
+export interface IUIBaseConstructor<T extends UIBase = UIBase> {
+  new (): T;
+
   define(): {
     tagname: string;
     style?: string;
   };
+  setDefault<T2 extends T>(element: T2): T2;
 }
 
 export const PackFlags = {
@@ -930,8 +933,7 @@ interface ToolTipState {
 }
 
 export type EventIF = { [k: string]: Event };
-
-type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
+//type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
 
 /**
  * ExtraEvents specifies custom events that are not part of HTMLElementEventMap,
@@ -940,11 +942,10 @@ type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
 export class UIBase<
   CTX extends IContextBase = IContextBase,
   VALUE extends unknown | any = unknown,
-  CONSTRUCTOR extends any | unknown = unknown,
 > extends HTMLElement {
   static PositionKey: string;
 
-  declare ["constructor"]: CONSTRUCTOR extends unknown ? typeof UIBase : CONSTRUCTOR;
+  declare ["constructor"]: IUIBaseConstructor<this>;
 
   /* -- instance properties -- */
   _tool_tip_abort_delay: number | undefined;
@@ -969,7 +970,7 @@ export class UIBase<
   _wasAddedToNodeAtSomeTime: boolean;
   visibleToPick: boolean;
   _override_class: string | undefined;
-  _parentWidget: UIBase<CTX, unknown, unknown> | undefined;
+  _parentWidget: UIBase<CTX, unknown> | undefined;
   _id: string;
   default_overrides: Record<string, unknown>;
   my_default_overrides: Record<string, unknown>;
@@ -1269,8 +1270,7 @@ export class UIBase<
     ///*
     this.shadow.appendChild = <T extends Node>(child: T): T => {
       if (child && typeof child === "object" && child instanceof UIBase) {
-        const child2 = child as unknown as this
-        child2.parentWidget = this;
+        child.parentWidget = this as any;
       }
 
       return _origAppendChild(child);
@@ -1300,7 +1300,7 @@ export class UIBase<
     };
     //*/
 
-    const tagname = (this.constructor as typeof UIBase).define().tagname;
+    const tagname = (this.constructor as unknown as typeof UIBase).define().tagname;
     this._id = tagname.replace(/-/g, "_") + _idgen++;
 
     this.default_overrides = {}; //inherited by child widgets
@@ -1406,7 +1406,7 @@ export class UIBase<
       { passive: false }
     );
 
-    if ((this.constructor as typeof UIBase).define().havePickClipboard) {
+    if ((this.constructor as unknown as typeof UIBase).define().havePickClipboard) {
       this._clipboardHotkeyInit();
     }
   }
@@ -2327,8 +2327,9 @@ export class UIBase<
         ).screen;
         let elem: UIBase | undefined = screen.pickElement(screen.mpos[0], screen.mpos[1]);
 
-        let checkTree = is_paste && (this.constructor as typeof UIBase).define().pasteForAllChildren;
-        checkTree = checkTree || (is_copy && (this.constructor as typeof UIBase).define().copyForAllChildren);
+        let checkTree = is_paste && (this.constructor as unknown as typeof UIBase).define().pasteForAllChildren;
+        checkTree =
+          checkTree || (is_copy && (this.constructor as unknown as typeof UIBase).define().copyForAllChildren);
 
         while (
           checkTree &&
@@ -2564,19 +2565,19 @@ export class UIBase<
     return 0;
   }
 
-  pickElement(
+  pickElement<T extends UIBase<CTX> = UIBase<CTX>>(
     x: number,
     y: number,
     args: {
-      nodeclass?: typeof UIBase;
-      excluded_classes?: (typeof UIBase)[];
+      nodeclass?: IUIBaseConstructor;
+      excluded_classes?: IUIBaseConstructor[];
       clip?: { pos: number[]; size: number[] };
       mouseEvent?: MouseEvent | PointerEvent;
     } = {},
     marginy = 0,
-    nodeclass: typeof UIBase = UIBase,
-    excluded_classes?: (typeof UIBase)[]
-  ): UIBase | undefined {
+    nodeclass: IUIBaseConstructor = UIBase,
+    excluded_classes?: IUIBaseConstructor[]
+  ): T | undefined {
     nodeclass = args.nodeclass || UIBase;
     excluded_classes = args.excluded_classes;
     const clip = args.clip;
@@ -2637,7 +2638,7 @@ export class UIBase<
       if (ok) {
         window.elem = node;
         //console.log(node._id);
-        return node as UIBase<CTX>;
+        return node as T;
       }
     }
   }
@@ -2732,12 +2733,7 @@ export class UIBase<
 
   on_enabled(): void {}
 
-  pushModal(
-    handlers: Readonly<Record<Readonly<string>, Readonly<Function>>> | Readonly<UIBase> = this,
-    autoStopPropagation = true,
-    pointerId?: number,
-    pointerElem: UIBase = this
-  ): unknown {
+  pushModal(handlers: any = this, autoStopPropagation = true, pointerId?: number, pointerElem: UIBase = this): unknown {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       this.popModal();
@@ -2893,7 +2889,7 @@ export class UIBase<
 
   destroy(): void {}
 
-  on_resize(newsize: number[]): void {}
+  on_resize(newsize: number[] | vectormath.Vector2): void {}
 
   toJSON(): Record<string, unknown> {
     const ret: Record<string, unknown> = {};
@@ -3475,7 +3471,7 @@ export class UIBase<
       this._init();
     }
 
-    if (this._init_done && !(this.constructor as typeof UIBase).define().subclassChecksTheme) {
+    if (this._init_done && !(this.constructor as unknown as typeof UIBase).define().subclassChecksTheme) {
       if (this.checkThemeUpdate()) {
         console.log("theme update!");
 
@@ -3650,7 +3646,7 @@ export class UIBase<
       }
 
       let ret = false;
-      const def = (this.constructor as typeof UIBase).define();
+      const def = (this.constructor as unknown as typeof UIBase).define();
 
       if (def.parentStyle) {
         ret = ret || this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
@@ -3748,12 +3744,12 @@ export class UIBase<
       return this._override_class;
     }
 
-    let p = this.constructor as any
-    const lastp: any | undefined = undefined
+    let p = this.constructor as any;
+    const lastp: any | undefined = undefined;
 
     while (p && p !== lastp && p !== UIBase && (p as any) !== Object) {
       const def = (p as typeof UIBase).define();
-      
+
       if (def?.style) {
         return def.style;
       }
@@ -3843,7 +3839,7 @@ export class UIBase<
         themeobj = undefined;
         val = defaultval;
       } else if (val === undefined && inherit) {
-        const def = (this.constructor as typeof UIBase).define();
+        const def = (this.constructor as unknown as typeof UIBase).define();
 
         const thParent = def.parentStyle ? (th[def.parentStyle] as Record<string, unknown> | undefined) : undefined;
         if (thParent && key in thParent) {
@@ -4151,12 +4147,12 @@ export function _getFont_new(elem: UIBase, size?: number, font: string = "Defaul
   return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
 }
 
-export function getFont(elem: UIBase, size?: number, font = "DefaultText", do_dpi = true): string {
+export function getFont<T extends UIBase>(elem: T, size?: number, font = "DefaultText", do_dpi = true): string {
   return _getFont_new(elem, size, font, do_dpi);
 }
 
 //size is optional, defaults to font's default size
-export function _getFont(elem: UIBase, size?: number, font = "DefaultText", do_dpi = true): string {
+export function _getFont<T extends UIBase>(elem: T, size?: number, font = "DefaultText", do_dpi = true): string {
   const font2 = elem.getDefault(font);
   if (font2 !== undefined) {
     //console.warn("New style font detected", font2, font2.genCSS(size));
@@ -4358,7 +4354,7 @@ const PTOT = 2;
 
  Note that this is error-tolerant.
  */
-export function saveUIData(node: UIBase, key: string): string {
+export function saveUIData<CTX extends IContextBase = IContextBase>(node: UIBase<CTX>, key: string): string {
   if (key === undefined) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
@@ -4418,7 +4414,10 @@ export function saveUIData(node: UIBase, key: string): string {
   });
 }
 
-export function loadUIData(node: UIBase, buf: string | null | undefined): void {
+export function loadUIData<CTX extends IContextBase = IContextBase>(
+  node: UIBase<CTX>,
+  buf: string | null | undefined
+): void {
   if (buf === undefined || buf === null) {
     return;
   }

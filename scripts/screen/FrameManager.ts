@@ -1,38 +1,30 @@
-import { ToolTipViewer } from "./FrameManager_ops.js";
-import { toVisualViewport } from "../core/ui_visualviewport.js";
-
-const _FrameManager = undefined;
 import "../widgets/dragbox.js";
 import "../widgets/ui_widgets2.js";
 import "../widgets/ui_panel.js";
 import "../widgets/ui_treeview.js";
 
-import { DataPathError, nstructjs, ToolStack } from "../path-controller/controller.js";
+import { DataPathError, isMouseDown, nstructjs, ToolStack } from "../path-controller/controller.js";
 
 import "../util/ScreenOverdraw.js";
 import cconst from "../config/const.js";
-import { haveModal, pushModalLight, popModalLight, _setScreenClass } from "../path-controller/util/simple_events.js";
+import { haveModal, _setScreenClass } from "../path-controller/util/simple_events.js";
 import * as util from "../path-controller/util/util.js";
 import "../widgets/ui_curvewidget.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
-import * as ScreenArea from "./ScreenArea.js";
+import { Vector2, Number2 } from "../path-controller/util/vectormath.js";
+import { ScreenArea, Area, AreaConstructor } from "./ScreenArea.js";
 import * as FrameManager_ops from "./FrameManager_ops.js";
 import * as math from "../path-controller/util/math.js";
 import * as ui_menu from "../widgets/ui_menu.js";
 import "../path-controller/util/struct.js";
-import { KeyMap, HotKey } from "../path-controller/util/simple_events.js";
+import { KeyMap } from "../path-controller/util/simple_events.js";
 import { keymap } from "../path-controller/util/simple_events.js";
 
-import { AreaDocker } from "./AreaDocker.js";
-
-import { snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit } from "./FrameManager_mesh.js";
+import { ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit } from "./FrameManager_mesh.js";
 
 export { ScreenBorder, ScreenVert, ScreenHalfEdge } from "./FrameManager_mesh.js";
-import { theme, PackFlags, UIBase, styleScrollBars, saveUIData, loadUIData } from "../core/ui_base";
+import { theme, PackFlags, UIBase, styleScrollBars, saveUIData, loadUIData, IUIBaseConstructor } from "../core/ui_base";
 import * as FrameManager_mesh from "./FrameManager_mesh.js";
 import { makePopupArea } from "../widgets/ui_dialog.js";
-
-const Area = ScreenArea.Area;
 
 import "../widgets/ui_widgets.js";
 import "../widgets/ui_tabs.js";
@@ -44,15 +36,9 @@ import { AreaFlags } from "./ScreenArea.js";
 import { checkForTextBox } from "../widgets/ui_textbox.js";
 import { startMenu } from "../widgets/ui_menu.js";
 import { IsScreenTag } from "./constants.js";
-import { Key } from "node:readline";
+import { IContextBase } from "../core/context_base.js";
 
 const list = Array.from;
-
-declare global {
-  interface CSSStyleDeclaration {
-    [key: string]: string;
-  }
-}
 
 ui_menu.startMenuEventWrangling();
 
@@ -61,8 +47,6 @@ let _events_started = false;
 export function registerToolStackGetter(func: () => ToolStack) {
   FrameManager_ops.registerToolStackGetter(func);
 }
-
-const Vector2 = vectormath.Vector2;
 
 class UpdateStack extends Array<UIBase | HTMLElement | undefined> {
   cur = 0;
@@ -86,14 +70,25 @@ export function purgeUpdateStack() {
  inherit-scale : don't resize to fit whole screen, use cssbox scaling
 
  */
-export class Screen extends UIBase {
+export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  static STRUCT = nstructjs.inlineRegister(
+    this,
+    `pathux.Screen { 
+       size  : vec2;
+       pos   : vec2;
+       sareas : array(pathux.ScreenArea);
+       idgen : int;
+       uidata : string | obj.saveUIData();
+    }`
+  );
+
   [IsScreenTag] = true;
   snapLimit: number;
   fullScreen: boolean;
 
   globalCSS: HTMLStyleElement;
   _do_updateSize: boolean;
-  _resize_callbacks: ((screen: Screen) => void)[];
+  _resize_callbacks: ((size: Vector2) => void)[];
   allBordersMovable: boolean;
   needsBorderRegen: boolean;
   _popup_safe: number;
@@ -102,19 +97,19 @@ export class Screen extends UIBase {
   _screen_id: number;
   _popups: UIBase[];
   keymap: KeyMap;
-  size: vectormath.Vector2;
-  pos: vectormath.Vector2;
-  oldpos: vectormath.Vector2;
+  size: Vector2;
+  pos: Vector2;
+  oldpos: Vector2;
   idgen: number;
-  sareas: ScreenArea.ScreenArea[] & { active?: ScreenArea.ScreenArea };
+  sareas: ScreenArea<CTX>[] & { active?: ScreenArea<CTX> };
   mpos: [number, number];
-  screenborders: ScreenBorder[];
-  screenverts: ScreenVert[];
-  _vertmap: Record<string, ScreenVert>;
-  _edgemap: Record<string, ScreenBorder>;
-  _idmap: Record<string, ScreenVert | ScreenBorder>;
-  _aabb: [vectormath.Vector2, vectormath.Vector2];
-  listen_timer?: ReturnType<typeof setInterval>;
+  screenborders: ScreenBorder<CTX>[];
+  screenverts: ScreenVert<CTX>[];
+  _vertmap: Record<string, ScreenVert<CTX>>;
+  _edgemap: Record<string, ScreenBorder<CTX>>;
+  _idmap: Record<string, ScreenVert<CTX> | ScreenBorder<CTX>>;
+  _aabb: [Vector2, Vector2];
+  listen_timer?: any;
   _last_ckey1?: string;
   _update_gen?: Generator<void>;
   _last_scrollstyle_key?: string;
@@ -172,26 +167,19 @@ export class Screen extends UIBase {
     this._aabb = [new Vector2(), new Vector2()];
 
     const on_mousemove = (e: MouseEvent, x: number, y: number) => {
-      //let elem = this.pickElement(x, y, 1, 1, ScreenArea.ScreenArea);
+      //let elem = this.pickElement(x, y, 1, 1, ScreenArea);
       let dragging = e.type === "mousemove" || e.type === "touchmove" || e.type === "pointermove";
-      dragging = dragging && (e.buttons || (e.touches && e.touches.length > 0));
+      dragging = dragging && isMouseDown(e);
 
       /*
       make sure active area is up to date.
       but don't call pickElement too often as it's slow
       */
       if (!dragging && Math.random() > 0.9) {
-        const elem = this.pickElement(x, y, {
-          sx        : 1,
-          sy        : 1,
-          nodeclass : ScreenArea.ScreenArea,
+        const elem = this.pickElement<ScreenArea<CTX>>(x, y, {
+          nodeclass : ScreenArea,
           mouseEvent: e,
         });
-
-        if (0) {
-          const elem2 = this.pickElement(x, y, 1, 1);
-          console.log("" + this.sareas.active, elem2 ? elem2.tagName : undefined, elem !== undefined);
-        }
 
         if (elem !== undefined) {
           if (elem.area) {
@@ -210,7 +198,8 @@ export class Screen extends UIBase {
     this.shadow.addEventListener(
       "mousemove",
       (e) => {
-        return on_mousemove(e, e.x, e.y);
+        const e2 = e as unknown as MouseEvent;
+        return on_mousemove(e2, e2.x, e2.y);
       },
       { passive: true }
     );
@@ -353,6 +342,7 @@ export class Screen extends UIBase {
 
             if (!(rule as any).styleMap) {
               //handle firefox
+              // eslint-disable-next-line @typescript-eslint/no-for-in-array
               for (const k in rule.style) {
                 const desc = Object.getOwnPropertyDescriptor(rule.style, k);
 
@@ -367,7 +357,7 @@ export class Screen extends UIBase {
               }
               continue;
             }
-            for (const [key, val] of list((rule as any).styleMap.entries())) {
+            for (const [key, val] of Array.from(rule.styleMap.entries())) {
               if (1 || (rule2 as any).styleMap.has(key)) {
                 //rule2.styleMap.delete(key);
                 let sval = "";
@@ -433,7 +423,7 @@ export class Screen extends UIBase {
   }
 
   newScreenArea() {
-    const ret = UIBase.createElement("screenarea-x") as ScreenArea.ScreenArea;
+    const ret = UIBase.createElement("screenarea-x") as ScreenArea;
     ret.ctx = this.ctx;
 
     if (ret.ctx) {
@@ -444,7 +434,7 @@ export class Screen extends UIBase {
   }
 
   copy() {
-    const ret = UIBase.createElement((this.constructor as typeof Screen).define().tagname) as Screen;
+    const ret = UIBase.createElement((this.constructor as unknown as typeof Screen).define().tagname) as Screen<CTX>;
     ret.ctx = this.ctx;
     ret._init();
 
@@ -496,16 +486,16 @@ export class Screen extends UIBase {
     }
   }
 
-  override pickElement(
+  pickElement<T extends UIBase<CTX> = UIBase<CTX>>(
     x: number,
     y: number,
-    args: Parameters<UIBase["pickElement"]>[2] = {},
+    args: Parameters<UIBase<CTX>["pickElement"]>[2] = {},
     marginy = 0,
-    nodeclass?: typeof UIBase,
-    excluded_classes?: (typeof UIBase)[]
-  ) {
+    nodeclass?: IUIBaseConstructor<UIBase<CTX>>,
+    excluded_classes?: IUIBaseConstructor[]
+  ): T | undefined {
     if (typeof args === "object") {
-      nodeclass = args.nodeclass;
+      nodeclass = args.nodeclass as unknown as IUIBaseConstructor<UIBase<CTX>>;
       excluded_classes = args.excluded_classes;
     } else {
       args = {
@@ -525,8 +515,7 @@ export class Screen extends UIBase {
       ret = ret || popup.pickElement(x, y, args);
     }
     ret = ret || super.pickElement(x, y, args);
-
-    return ret;
+    return ret as unknown as T;
   }
 
   _enterPopupSafe() {
@@ -578,9 +567,9 @@ export class Screen extends UIBase {
       return ret;
     }
 
-    const z = ret.style["z-index"];
+    const z = ret.style["zIndex"];
 
-    ret.style["z-index"] = "-10";
+    ret.style["zIndex"] = "-10";
 
     const cb = () => {
       const rect = ret.getClientRects()[0];
@@ -604,7 +593,7 @@ export class Screen extends UIBase {
         ret.style["left"] = "10px";
       }
 
-      ret.style["z-index"] = z;
+      ret.style["zIndex"] = z;
 
       ret.flushUpdate();
       ret.flushSetCSS();
@@ -617,7 +606,7 @@ export class Screen extends UIBase {
   }
 
   draggablePopup(x: number, y: number) {
-    const ret = UIBase.createElement("drag-box-x") as UIBase;
+    const ret = UIBase.createElement("drag-box-x") as UIBase<CTX>;
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -625,12 +614,12 @@ export class Screen extends UIBase {
     this._popups.push(ret);
 
     (ret as any)._onend = () => {
-      if (this._popups.indexOf(ret) >= 0) {
+      if (this._popups.includes(ret)) {
         this._popups.remove(ret);
       }
     };
 
-    ret.style["z-index"] = 205;
+    ret.style["zIndex"] = "205";
     ret.style["position"] = UIBase.PositionKey;
     ret.style["left"] = x + "px";
     ret.style["top"] = y + "px";
@@ -642,13 +631,12 @@ export class Screen extends UIBase {
 
   /** makes a popup at x,y and returns a new container-x for it */
   _popup(owning_node: UIBase, elem_or_x: UIBase | number, y: number, closeOnMouseOut = true) {
-    let x;
-
     let sarea = this.sareas.active;
+    let w = owning_node as UIBase | undefined;
+    let x: number;
 
-    let w = owning_node;
     while (w) {
-      if (w instanceof ScreenArea.ScreenArea) {
+      if (w instanceof ScreenArea) {
         sarea = w;
         break;
       }
@@ -665,31 +653,31 @@ export class Screen extends UIBase {
 
     //[x, y] = toVisualViewport(x, y, false)
 
-    const container = UIBase.createElement("container-x") as UIBase & { background: string };
+    const container = UIBase.createElement("container-x") as UIBase<CTX> & { background: string; end: () => void };
 
     container.ctx = this.ctx;
     container._init();
 
     const remove = container.remove;
-    container.remove = () => {
-      if (this._popups.indexOf(container) >= 0) {
+    container.remove = (...args: Parameters<UIBase["remove"]>) => {
+      if (this._popups.includes(container)) {
         this._popups.remove(container);
       }
 
-      return remove.apply(container, arguments);
+      return remove.apply(container, args);
     };
 
     container.overrideClass("popup");
 
     container.background = container.getDefault("background-color");
-    container.style["border-radius"] = container.getDefault("border-radius") + "px";
-    container.style["border-color"] = container.getDefault("border-color");
-    container.style["border-style"] = container.getDefault("border-style");
-    container.style["border-width"] = container.getDefault("border-width") + "px";
-    container.style["box-shadow"] = container.getDefault("box-shadow");
+    container.style["borderRadius"] = container.getDefault("border-radius") + "px";
+    container.style["borderColor"] = container.getDefault("border-color");
+    container.style["borderStyle"] = container.getDefault("border-style");
+    container.style["borderWidth"] = container.getDefault("border-width") + "px";
+    container.style["boxShadow"] = container.getDefault("box-shadow");
 
     container.style["position"] = UIBase.PositionKey;
-    container.style["z-index"] = "2205";
+    container.style["zIndex"] = "2205";
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
     container.style["margin"] = "0px";
@@ -701,7 +689,7 @@ export class Screen extends UIBase {
 
     const _update = container.update;
     container.updateAfter(() => {
-      container.style["z-index"] = "2205";
+      container.style["zIndex"] = "2205";
     });
 
     /*causes weird bugs
@@ -736,9 +724,10 @@ export class Screen extends UIBase {
 
     this._popups.push(container);
 
-    let touchpick;
-    let mousepick;
-    let keydown;
+    // eslint-disable-next-line prefer-const
+    let mousepick: ((e: MouseEvent, x?: number, y?: number, do_timeout?: boolean) => void) | undefined;
+    // eslint-disable-next-line prefer-const
+    let keydown: (e: KeyboardEvent) => void | undefined;
 
     let done = false;
     const end = () => {
@@ -751,7 +740,7 @@ export class Screen extends UIBase {
       //this.ctx.screen.removeEventListener("touchstart", touchpick, true);
       //this.ctx.screen.removeEventListener("touchmove", touchpick, true);
       this.ctx.screen.removeEventListener("mousedown", mousepick, true);
-      this.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true });
+      this.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true } as any);
       this.ctx.screen.removeEventListener("mouseup", mousepick, true);
       window.removeEventListener("keydown", keydown);
 
@@ -762,11 +751,11 @@ export class Screen extends UIBase {
     container.end = end;
 
     const _remove = container.remove;
-    container.remove = function () {
+    container.remove = function (...args: Parameters<typeof _remove>) {
       if (arguments.length == 0) {
         end();
       }
-      _remove.apply(this, arguments);
+      _remove.apply(this, args);
     };
 
     container._ondestroy = () => {
@@ -776,7 +765,7 @@ export class Screen extends UIBase {
     let bad_time = util.time_ms();
     let last_pick_time = util.time_ms();
 
-    mousepick = (e: MouseEvent, x: number, y: number, do_timeout = true) => {
+    mousepick = (e: MouseEvent, x?: number, y?: number, do_timeout = true) => {
       if (!container.isConnected) {
         end();
         return;
@@ -799,8 +788,6 @@ export class Screen extends UIBase {
 
       //let elem = this.pickElement(x, y, 2, 2, undefined, [ScreenBorder]);
       let elem = this.pickElement(x, y, {
-        sx              : 2,
-        sy              : 2,
         excluded_classes: [ScreenBorder],
         mouseEvent      : e,
       });
@@ -836,13 +823,6 @@ export class Screen extends UIBase {
       }
     };
 
-    touchpick = (e: TouchEvent) => {
-      const x = e.touches[0].pageX;
-      const y = e.touches[0].pageY;
-
-      return mousepick(e, x, y, false);
-    };
-
     keydown = (e: KeyboardEvent) => {
       if (!container.isConnected) {
         window.removeEventListener("keydown", keydown);
@@ -856,8 +836,6 @@ export class Screen extends UIBase {
       }
     };
 
-    //this.ctx.screen.addEventListener("touchstart", touchpick, true);
-    //this.ctx.screen.addEventListener("touchmove", touchpick, true);
     this.ctx.screen.addEventListener("mousedown", mousepick, true);
     this.ctx.screen.addEventListener("mousemove", mousepick, { passive: true });
     this.ctx.screen.addEventListener("mouseup", mousepick, true);
@@ -885,15 +863,15 @@ export class Screen extends UIBase {
     const mm = new math.MinMax(2);
 
     for (const v of this.screenverts) {
-      mm.minmax(v);
+      mm.minmax(v as unknown as number[]);
     }
 
     if (save) {
-      this._aabb[0].load(mm.min);
-      this._aabb[1].load(mm.max);
+      this._aabb[0].load(mm.min as unknown as number[]);
+      this._aabb[1].load(mm.max as unknown as number[]);
     }
 
-    return [new Vector2(mm.min), new Vector2(mm.max)];
+    return [new Vector2(mm.min as unknown as number[]), new Vector2(mm.max as unknown as number[])];
   }
 
   //XXX look at if this is referenced anywhere
@@ -902,7 +880,7 @@ export class Screen extends UIBase {
   //XXX look at if this is referenced anywhere
   save() {}
 
-  popupArea(area_class: typeof ScreenArea.Area) {
+  popupArea(area_class: typeof Area) {
     return makePopupArea(area_class, this);
   }
 
@@ -924,12 +902,14 @@ export class Screen extends UIBase {
   }
 
   checkCSSSize() {
-    let w = this.style.width.toLowerCase().trim();
-    let h = this.style.height.toLowerCase().trim();
+    const sw = this.style.width.toLowerCase().trim();
+    const sh = this.style.height.toLowerCase().trim();
+    let w = 0;
+    let h = 0;
 
-    if (w.endsWith("px") && h.endsWith("px")) {
-      w = parseFloat(w.slice(0, w.length - 2).trim());
-      h = parseFloat(h.slice(0, h.length - 2).trim());
+    if (sw.endsWith("px") && sh.endsWith("px")) {
+      w = parseFloat(sw.slice(0, sw.length - 2).trim());
+      h = parseFloat(sh.slice(0, sh.length - 2).trim());
 
       if (w !== this.size[0] || h !== this.size[1]) {
         this.on_resize([this.size[0], this.size[1]], [w, h]);
@@ -944,13 +924,12 @@ export class Screen extends UIBase {
       return defaultval;
     }
 
-    let ret = this.getAttribute(attr);
+    const ret = this.getAttribute(attr);
 
     if (typeof ret === "number") {
       return !!ret;
     } else if (typeof ret === "string") {
-      ret = ret.toLowerCase().trim();
-      ret = ret === "true" || ret === "1" || ret === "yes";
+      return ret === "true" || ret === "1" || ret === "yes";
     }
 
     return !!ret;
@@ -972,31 +951,15 @@ export class Screen extends UIBase {
     width = window.innerWidth - pad;
     height = window.innerHeight - pad;
 
-    //do not try to undo pinch zoom anymoe
-    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
-    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
-
-    //let ox = visualViewport.offsetLeft;
-    //let oy = visualViewport.offsetTop;
-
     if (cconst.DEBUG.customWindowSize) {
-      const s = cconst.DEBUG.customWindowSize;
-      width = s.width;
-      height = s.height;
-      //ox = 0;
-      //oy = 0;
-      window._DEBUG = cconst.DEBUG;
+      const s = cconst.DEBUG.customWindowSize as unknown as any;
+      width = s.width as number;
+      height = s.height as number;
     }
 
     const key = this._calcSizeKey(width, height, 0 /*ox*/, 0 /*oy*/, devicePixelRatio, scale);
 
-    /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
     document.body.style.margin = document.body.style.padding = "0px";
-    //document.body.style["transform-origin"] = "top left";
-
-    // do not try to undo pinch zoom anymoe
-    //document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
-    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
     if (key !== this._last_ckey1) {
       //console.log("resizing", key, this._last_ckey1);
@@ -1124,10 +1087,10 @@ export class Screen extends UIBase {
 
   loadJSON(obj: Record<string, any>, schedule_resize = false) {
     this.clear();
-    super.loadJSON();
+    super.loadJSON(obj);
 
     for (const sarea of obj.sareas) {
-      const sarea2 = UIBase.createElement("screenarea-x") as ScreenArea.ScreenArea;
+      const sarea2 = UIBase.createElement("screenarea-x") as ScreenArea;
 
       sarea2.ctx = this.ctx;
       sarea2.screen = this as any;
@@ -1148,14 +1111,12 @@ export class Screen extends UIBase {
   }
 
   toJSON() {
-    const ret = {
+    return {
+      ...super.toJSON(),
       sareas: this.sareas,
+      size  : this.size,
+      idgen : this.idgen,
     };
-
-    ret.size = this.size;
-    ret.idgen = this.idgen;
-
-    return Object.assign(super.toJSON(), ret);
   }
 
   getHotKey(toolpath: string) {
@@ -1213,7 +1174,7 @@ export class Screen extends UIBase {
 
   removeEventListener(type: string, cb: any, options?: boolean | EventListenerOptions) {
     if (type === "resize") {
-      if (this._resize_callbacks.indexOf(cb) >= 0) this._resize_callbacks.remove(cb);
+      if (this._resize_callbacks.includes(cb)) this._resize_callbacks.remove(cb);
     } else {
       return super.removeEventListener(type, cb, options);
     }
@@ -1223,7 +1184,7 @@ export class Screen extends UIBase {
     let handled = false;
 
     if (window.DEBUG?.keymap) {
-      console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
+      console.warn("execKeyMap called", e.keyCode, document.activeElement?.tagName);
     }
 
     if (this.sareas.active) {
@@ -1310,8 +1271,7 @@ export class Screen extends UIBase {
 
     //console.log("nodes2", nodes2);
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i];
-
+      const n = nodes[i as unknown as keyof typeof nodes] as unknown as any;
       n.tabIndex = i + 1;
       //console.log(n.tabIndex);
     }
@@ -1375,13 +1335,13 @@ export class Screen extends UIBase {
         ret = this._update_gen.next();
       } catch (error) {
         if (!(error instanceof DataPathError)) {
-          util.print_stack(error);
+          util.print_stack(error as Error);
           console.log("error in update_intern tasklet");
         }
         return;
       }
 
-      if (ret !== undefined && ret.done) {
+      if (ret?.done) {
         this._update_gen = undefined;
       }
     } else {
@@ -1469,11 +1429,11 @@ export class Screen extends UIBase {
 
       const lastn = this2;
 
-      function push(n: UIBase | HTMLElement | symbol | undefined) {
+      function push(n: any) {
         stack[stack.cur++] = n as any;
       }
 
-      function pop(_n?: any) {
+      function pop(_n?: any): any {
         if (stack.cur < 0) {
           throw new Error("Screen.update(): stack overflow!");
         }
@@ -1497,7 +1457,7 @@ export class Screen extends UIBase {
       }
 
       while (stack.cur > 0) {
-        const n = pop();
+        const n = pop()!;
 
         if (n === undefined) {
           //console.log("eek!", stack.length);
@@ -1507,14 +1467,14 @@ export class Screen extends UIBase {
           continue;
         } else if (n === AREA_CTX_POP) {
           //console.log("POP", areastack[areastack.length-1].constructor.name);
-          areastack.pop().pop_ctx_active(ctx, true);
+          areastack.pop()!.pop_ctx_active(true);
           continue;
         }
 
         if (n instanceof Area) {
           //console.log("PUSH", n.constructor.name);
           areastack.push(n);
-          n.push_ctx_active(ctx, true);
+          n.push_ctx_active(true);
           push(AREA_CTX_POP);
         }
 
@@ -1586,7 +1546,7 @@ export class Screen extends UIBase {
   }
 
   /** merges sarea into the screen area opposite to sarea*/
-  collapseArea(sarea: ScreenArea.ScreenArea, border?: ScreenBorder) {
+  collapseArea(sarea: ScreenArea, border?: ScreenBorder) {
     let sarea2;
 
     if (!border) {
@@ -1630,7 +1590,7 @@ export class Screen extends UIBase {
     return this;
   }
 
-  splitArea(sarea: ScreenArea.ScreenArea, t = 0.5, horiz = true) {
+  splitArea(sarea: ScreenArea<CTX>, t = 0.5, horiz = true) {
     const w = sarea.size[0];
     const h = sarea.size[1];
     const x = sarea.pos[0];
@@ -1709,11 +1669,11 @@ export class Screen extends UIBase {
       b.halfedges = [];
     }
 
-    function hashHalfEdge(border: ScreenBorder, sarea: ScreenArea.ScreenArea) {
+    function hashHalfEdge(border: ScreenBorder<CTX>, sarea: ScreenArea<CTX>) {
       return border._id + ":" + sarea._id;
     }
 
-    function has_he(border: ScreenBorder, border2: ScreenBorder, sarea: ScreenArea.ScreenArea) {
+    function has_he(border: ScreenBorder<CTX>, border2: ScreenBorder<CTX>, sarea: ScreenArea<CTX>) {
       for (const he of border.halfedges) {
         if (border2 === he.border && sarea === he.sarea) {
           return true;
@@ -1725,7 +1685,7 @@ export class Screen extends UIBase {
 
     for (const b1 of this.screenborders) {
       for (const sarea of b1.sareas) {
-        const he = new ScreenHalfEdge(b1, sarea);
+        const he = new ScreenHalfEdge<CTX>(b1, sarea);
         b1.halfedges.push(he);
       }
 
@@ -1763,11 +1723,11 @@ export class Screen extends UIBase {
     }
   }
 
-  hasBorder(b: ScreenBorder) {
+  hasBorder(b: ScreenBorder<CTX>) {
     return b._id! in this._idmap;
   }
 
-  killScreenVertex(v: ScreenVert) {
+  killScreenVertex(v: ScreenVert<CTX>) {
     this.screenverts.remove(v);
 
     delete this._edgemap[ScreenVert.hash(v, v.added_id, this.snapLimit)];
@@ -1776,12 +1736,12 @@ export class Screen extends UIBase {
     return this;
   }
 
-  freeBorder(b: ScreenBorder, sarea?: ScreenArea.ScreenArea) {
-    if (b.sareas.indexOf(sarea) >= 0) {
+  freeBorder(b: ScreenBorder<CTX>, sarea?: ScreenArea<CTX>) {
+    if (b.sareas.includes(sarea!)) {
       b.sareas.remove(sarea);
     }
 
-    const dels = [];
+    const dels = [] as [ScreenBorder<CTX>, ScreenHalfEdge<CTX>][];
 
     for (const he of b.halfedges) {
       if (he.sarea === sarea) {
@@ -1798,7 +1758,7 @@ export class Screen extends UIBase {
     }
 
     for (const d of dels) {
-      if (d[0].halfedges.indexOf(d[1]) < 0) {
+      if (!d[0].halfedges.includes(d[1])) {
         console.warn("Double remove detected; use util.set?");
         continue;
       }
@@ -1811,10 +1771,10 @@ export class Screen extends UIBase {
     }
   }
 
-  killBorder(b: ScreenBorder) {
+  killBorder(b: ScreenBorder<CTX>) {
     console.log("killing border", b._id, b);
 
-    if (this.screenborders.indexOf(b) < 0) {
+    if (!this.screenborders.includes(b)) {
       console.log("unknown border", b);
       b.remove();
       return;
@@ -1822,10 +1782,10 @@ export class Screen extends UIBase {
 
     this.screenborders.remove(b);
 
-    const del = [];
+    const del = [] as [ScreenBorder<CTX>, ScreenHalfEdge<CTX>][];
 
     for (const he of b.halfedges) {
-      if (he === he2) continue;
+      if (he.border === b) continue;
 
       for (const he2 of he.border.halfedges) {
         if (he2.border === b) {
@@ -1895,7 +1855,7 @@ export class Screen extends UIBase {
   _get_debug_overlay() {
     if (!this._debug_overlay) {
       this._debug_overlay = UIBase.createElement("overdraw-x");
-      const s = this._debug_overlay;
+      const s = this._debug_overlay as any;
 
       s.startNode(this, this);
     }
@@ -1905,7 +1865,7 @@ export class Screen extends UIBase {
 
   updateDebugBoxes() {
     if (cconst.DEBUG.screenborders) {
-      const overlay = this._get_debug_overlay();
+      const overlay = this._get_debug_overlay() as any;
       overlay.clear();
 
       for (const b of this.screenborders) {
@@ -1913,7 +1873,7 @@ export class Screen extends UIBase {
       }
       const del = [];
       for (const child of document.body.childNodes) {
-        if (child.getAttribute?.("class") === "__debug") {
+        if (child instanceof HTMLElement && child.getAttribute("class") === "__debug") {
           del.push(child);
         }
       }
@@ -1936,11 +1896,11 @@ export class Screen extends UIBase {
         ret.style["top"] = y + "px";
         ret.style["height"] = s + "px";
         ret.style["width"] = s + "px"; //"200px";
-        ret.style["z-index"] = "1000";
-        ret.style["pointer-events"] = "none";
+        ret.style["zIndex"] = "1000";
+        ret.style["pointerEvents"] = "none";
         ret.style["padding"] = ret.style["margin"] = "0px";
         ret.style["display"] = "float";
-        ret.style["background-color"] = color;
+        ret.style["backgroundColor"] = color;
         document.body.appendChild(ret);
 
         const colors = ["orange", "black", "white"];
@@ -1955,19 +1915,20 @@ export class Screen extends UIBase {
           ret.style["top"] = y + "px";
           ret.style["height"] = s + "px";
           ret.style["width"] = "250px"; //"200px";
-          ret.style["z-index"] = "" + (1005 - i - 1);
-          ret.style["pointer-events"] = "none";
+          ret.style["zIndex"] = "" + (1005 - i - 1);
+          ret.style["pointerEvents"] = "none";
           ret.style["color"] = colors[i];
 
+          const style = ret.style as any;
           const w = i * 2;
-          ret.style["-webkit-text-stroke-width"] = w + "px";
-          ret.style["-webkit-text-stroke-color"] = colors[i];
-          ret.style["text-stroke-width"] = w + "px";
-          ret.style["text-stroke-color"] = colors[i];
+          style["-webkit-text-stroke-width"] = w + "px";
+          style["-webkit-text-stroke-color"] = colors[i];
+          style["text-stroke-width"] = w + "px";
+          style["text-stroke-color"] = colors[i];
 
           ret.style["padding"] = ret.style["margin"] = "0px";
           ret.style["display"] = "float";
-          ret.style["background-color"] = "rgba(0,0,0,0)";
+          ret.style["backgroundColor"] = "rgba(0,0,0,0)";
           ret.innerText = "" + text;
           document.body.appendChild(ret);
         }
@@ -1984,7 +1945,7 @@ export class Screen extends UIBase {
           const size = 10 * b.halfedges.length;
 
           const wadd = 25 + size * 0.5;
-          const axis = b.horiz & 1;
+          const axis = ((b.horiz ? 1 : 0) & 1) as unknown as Number2;
 
           if (p[axis] > he.sarea.pos[axis]) {
             p[axis] -= wadd;
@@ -1997,7 +1958,7 @@ export class Screen extends UIBase {
     }
   }
 
-  checkAreaConstraint(sarea: ScreenArea.ScreenArea, checkOnly = false) {
+  checkAreaConstraint(sarea: ScreenArea<CTX>, checkOnly = false) {
     const min = sarea.minSize;
     const max = sarea.maxSize;
     const vs = sarea._verts;
@@ -2011,7 +1972,7 @@ export class Screen extends UIBase {
 
       for (let i = 0; i < 2; i++) {
         const b = i ? b2 : b1;
-        let bad2 = sarea.borderLock & (1 << sidea);
+        let bad2 = Boolean(sarea.borderLock & (1 << sidea));
 
         bad2 = bad2 || !b.movable;
         bad2 = bad2 || this.isBorderOuter(b);
@@ -2095,12 +2056,12 @@ export class Screen extends UIBase {
     return mask;
   }
 
-  walkBorderLine(b: ScreenBorder) {
+  walkBorderLine(b: ScreenBorder<CTX>) {
     const visit = new util.set();
     let ret = [b];
     visit.add(b);
 
-    const rec = (b: ScreenBorder, v: ScreenVert | undefined) => {
+    const rec = (b: ScreenBorder<CTX>, v: ScreenVert<CTX> | undefined) => {
       if (!v) return;
       for (const b2 of v.borders) {
         if (b2 === b) {
@@ -2125,7 +2086,7 @@ export class Screen extends UIBase {
     return ret2.concat(ret);
   }
 
-  moveBorderWithoutVerts(halfedge: ScreenHalfEdge, df: number) {
+  moveBorderWithoutVerts(halfedge: ScreenHalfEdge<CTX>, df: number) {
     const side = halfedge.side;
     const sarea = halfedge.sarea;
 
@@ -2147,22 +2108,22 @@ export class Screen extends UIBase {
     }
   }
 
-  moveBorder(b: ScreenBorder, df: number, strict = true) {
+  moveBorder(b: ScreenBorder<CTX>, df: number, strict = true) {
     return this.moveBorderSimple(b, df, strict);
   }
 
-  moveBorderSimple(b: ScreenBorder, df: number, strict = true) {
+  moveBorderSimple(b: ScreenBorder<CTX>, df: number, strict = true) {
     const axis = (b.horiz as unknown as number) & 1;
     const axis2 = axis ^ 1;
 
-    const min = Math.min(b.v1![axis2] as number, b.v2![axis2] as number);
-    const max = Math.max(b.v1![axis2] as number, b.v2![axis2] as number);
+    const min = Math.min(b.v1![axis2 as Number2] as number, b.v2![axis2 as Number2] as number);
+    const max = Math.max(b.v1![axis2 as Number2] as number, b.v2![axis2 as Number2] as number);
 
-    const test = (v: ScreenVert) => {
-      return v[axis2] >= min && v[axis2] <= max;
+    const test = (v: ScreenVert<CTX>) => {
+      return v[axis2 as Number2] >= min && v[axis2 as Number2] <= max;
     };
 
-    const vs = new util.set();
+    const vs = new Set<ScreenVert<CTX>>();
 
     for (const b2 of this.walkBorderLine(b)) {
       if (strict && !test(b2.v1) && !test(b2.v2)) {
@@ -2174,7 +2135,7 @@ export class Screen extends UIBase {
     }
 
     for (const v of vs) {
-      v[axis] += df;
+      v[axis as Number2] += df;
     }
 
     for (const v of vs) {
@@ -2187,31 +2148,27 @@ export class Screen extends UIBase {
     return true;
   }
 
-  moveBorderUnused(b: ScreenBorder, df: number, strict = true) {
+  moveBorderUnused(b: ScreenBorder<CTX>, df: number, strict = true) {
     if (!b) {
       console.warn("missing border");
       return false;
     }
 
-    const axis = b.horiz & 1;
-
-    const vs = new util.set();
-
-    const visit = new util.set();
-
-    const axis2 = axis ^ 1;
+    const axis = (b.horiz ? 1 : 0) as Number2;
+    const vs = new Set<ScreenVert<CTX>>();
+    const axis2 = (axis ^ 1) as Number2;
 
     const min = Math.min(b.v1![axis2] as number, b.v2![axis2] as number);
     const max = Math.max(b.v1![axis2] as number, b.v2![axis2] as number);
 
-    const test = (v: ScreenVert) => {
+    const test = (v: ScreenVert<CTX>) => {
       return (v[axis2] as number) >= min && (v[axis2] as number) <= max;
     };
 
     let first = true;
     let found = false;
-    const halfedges = new util.set();
-    const borders = new util.set();
+    const halfedges = new Set<ScreenHalfEdge<CTX>>();
+    const borders = new Set<ScreenBorder<CTX>>();
 
     for (const b2 of this.walkBorderLine(b)) {
       /*
@@ -2267,9 +2224,9 @@ export class Screen extends UIBase {
       }
 
       for (const he of b2.halfedges) {
-        borders.remove(he.border);
+        borders.delete(he.border);
         if (halfedges.has(he)) {
-          halfedges.remove(he);
+          halfedges.delete(he);
         }
       }
     }
@@ -2287,7 +2244,7 @@ export class Screen extends UIBase {
         v[axis] += df;
       }
     } else {
-      const borders = new util.set();
+      const borders = new Set<ScreenBorder<CTX>>();
 
       for (const he of halfedges) {
         borders.add(he.border);
@@ -2307,7 +2264,7 @@ export class Screen extends UIBase {
         }
       }
 
-      return halfedges.length > 0;
+      return halfedges.size > 0;
     }
 
     for (const sarea of b.sareas) {
@@ -2341,8 +2298,7 @@ export class Screen extends UIBase {
 
       for (const sarea of this.sareas) {
         if (sarea.hidden) continue;
-
-        repeat = repeat || this.checkAreaConstraint(sarea);
+        repeat = repeat || Boolean(this.checkAreaConstraint(sarea));
       }
 
       found = found || repeat;
@@ -2394,8 +2350,8 @@ export class Screen extends UIBase {
       mm.minmax(v);
     }
 
-    let min = mm.min;
-    let max = mm.max;
+    let min = new Vector2(mm.min as number[]);
+    let max = new Vector2(mm.max as number[]);
 
     //snap(min);
     //snapi(max);
@@ -2408,7 +2364,7 @@ export class Screen extends UIBase {
       sz.div(vec);
 
       for (const v of screenverts()) {
-        v.sub(min).mul(sz);
+        v.sub(min as any).mul(sz as any);
         //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
 
@@ -2433,7 +2389,7 @@ export class Screen extends UIBase {
       //this.pos.load(min);
     }
 
-    let found = 1;
+    let found = true;
 
     for (const sarea of this.sareas) {
       if (sarea.hidden) continue;
@@ -2456,7 +2412,7 @@ export class Screen extends UIBase {
     }
   }
 
-  on_resize(oldsize: vectormath.Vector2 | number[], newsize: vectormath.Vector2 | number[] = this.size, _set_key = true) {
+  on_resize(oldsize: Vector2 | number[], newsize: Vector2 | number[] = this.size, _set_key = true) {
     //console.warn("resizing");
 
     if (_set_key) {
@@ -2466,7 +2422,7 @@ export class Screen extends UIBase {
         this.pos[0],
         this.pos[1],
         devicePixelRatio,
-        visualViewport.scale
+        visualViewport!.scale
       );
     }
 
@@ -2505,7 +2461,7 @@ export class Screen extends UIBase {
 
     let i = 0;
     for (const sarea of this.sareas) {
-      sarea.on_resize(sarea.size, olds[i]);
+      sarea.on_resize(sarea.size); //, olds[i]);
       sarea.setCSS();
       i++;
     }
@@ -2514,20 +2470,20 @@ export class Screen extends UIBase {
     this.setCSS();
     this.calcTabOrder();
 
-    this._fireResizeCB(oldsize);
+    this._fireResizeCB(new Vector2(oldsize));
   }
 
   _fireResizeCB(oldsize = this.size) {
     for (const cb of this._resize_callbacks) {
-      cb(oldsize);
+      cb(new Vector2(oldsize));
     }
   }
 
-  getScreenVert(pos: vectormath.Vector2 | number[], added_id = "", floating = false) {
+  getScreenVert(pos: Vector2 | number[], added_id = "", floating = false) {
     const key = ScreenVert.hash(pos, added_id, this.snapLimit);
 
     if (floating || !(key in this._vertmap)) {
-      const v = new ScreenVert(pos, this.idgen++, added_id);
+      const v = new ScreenVert<CTX>(pos, this.idgen++, added_id);
 
       this._vertmap[key] = v;
       this._idmap[v._id] = v;
@@ -2538,7 +2494,7 @@ export class Screen extends UIBase {
     return this._vertmap[key];
   }
 
-  isBorderOuter(border: ScreenBorder) {
+  isBorderOuter(border: ScreenBorder<CTX>) {
     let sides = 0;
 
     for (const he of border.halfedges) {
@@ -2554,7 +2510,7 @@ export class Screen extends UIBase {
     let floating = false;
 
     for (const sarea of border.sareas) {
-      floating = floating || sarea.floating;
+      floating = floating || Boolean(sarea.floating);
     }
 
     if (floating) {
@@ -2569,7 +2525,7 @@ export class Screen extends UIBase {
     return ret;
   }
 
-  isBorderMovable(b: ScreenBorder, limit = 5) {
+  isBorderMovable(b: ScreenBorder<CTX>, limit = 5) {
     if (this.allBordersMovable) return true;
 
     for (const he of b.halfedges) {
@@ -2590,21 +2546,19 @@ export class Screen extends UIBase {
     return ok;
   }
 
-  getScreenBorder(sarea: ScreenArea.ScreenArea, v1: vectormath.Vector2 | ScreenVert, v2: vectormath.Vector2 | ScreenVert, side: number) {
+  getScreenBorder(
+    sarea: ScreenArea<CTX>,
+    co1: Vector2 | ScreenVert<CTX>,
+    co2: Vector2 | ScreenVert<CTX>,
+    side: number
+  ): ScreenBorder<CTX> {
     const suffix = sarea._get_v_suffix();
-
-    if (!(v1 instanceof ScreenVert)) {
-      v1 = this.getScreenVert(v1, suffix);
-    }
-
-    if (!(v2 instanceof ScreenVert)) {
-      v2 = this.getScreenVert(v2, suffix);
-    }
-
+    const v1 = co1 instanceof ScreenVert ? co1 : this.getScreenVert(co1, suffix, true);
+    const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix, true);
     const hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      const sb = (this._edgemap[hash] = UIBase.createElement("screenborder-x") as unknown as ScreenBorder);
+      const sb = (this._edgemap[hash] = UIBase.createElement("screenborder-x") as unknown as ScreenBorder<CTX>);
 
       sb._hash = hash;
       sb.screen = this;
@@ -2629,7 +2583,7 @@ export class Screen extends UIBase {
     return this._edgemap[hash];
   }
 
-  minmaxArea(sarea: ScreenArea.ScreenArea, mm?: any) {
+  minmaxArea(sarea: ScreenArea, mm?: any) {
     if (mm === undefined) {
       mm = new math.MinMax(2);
     }
@@ -2643,7 +2597,7 @@ export class Screen extends UIBase {
   }
 
   //does sarea1 border sarea2?
-  areasBorder(sarea1: ScreenArea.ScreenArea, sarea2: ScreenArea.ScreenArea) {
+  areasBorder(sarea1: ScreenArea, sarea2: ScreenArea) {
     for (const b of sarea1._borders) {
       for (const sa of b.sareas) {
         if (sa === sarea2) return true;
@@ -2655,7 +2609,7 @@ export class Screen extends UIBase {
 
   //regenerates borders, sets css and calls this.update
 
-  replaceArea(dst: ScreenArea.ScreenArea, src: ScreenArea.ScreenArea) {
+  replaceArea(dst: ScreenArea<CTX>, src: ScreenArea<CTX>) {
     if (dst === src) return;
 
     src.pos[0] = dst.pos[0];
@@ -2667,7 +2621,7 @@ export class Screen extends UIBase {
     src._borders = dst._borders;
     src._verts = dst._verts;
 
-    if (this.sareas.indexOf(src) < 0) {
+    if (!this.sareas.includes(src)) {
       this.sareas.push(src);
       this.shadow.appendChild(src);
     }
@@ -2706,8 +2660,8 @@ export class Screen extends UIBase {
     this.update();
   }
 
-  removeArea(sarea: ScreenArea.ScreenArea) {
-    if (this.sareas.indexOf(sarea) < 0) {
+  removeArea(sarea: ScreenArea<CTX>) {
+    if (!this.sareas.includes(sarea)) {
       console.warn(sarea, "<- Warning: tried to remove unknown area");
       return;
     }
@@ -2732,7 +2686,7 @@ export class Screen extends UIBase {
       }
     }*/
 
-    if (child instanceof ScreenArea.ScreenArea) {
+    if (child instanceof ScreenArea) {
       child.screen = this;
       child.ctx = this.ctx;
       child.parentWidget = this;
@@ -2744,14 +2698,14 @@ export class Screen extends UIBase {
         child.size[1] = this.size[1];
       }
 
-      if (!child._has_evts) {
-        child._has_evts = true;
+      if (!(child as any)._has_evts) {
+        (child as any)._has_evts = true;
 
-        const onfocus = (e) => {
+        const onfocus = () => {
           this.sareas.active = child;
         };
 
-        const onblur = (e) => {
+        const onblur = () => {
           //XXX this is causing bugs
           //if (this.sareas.active === child) {
           //  this.sareas.active = undefined;
@@ -2788,7 +2742,7 @@ export class Screen extends UIBase {
     tool.start();
   }
 
-  moveAttachTool(sarea: ScreenArea.ScreenArea, mpos: [number, number] = this.mpos, elem: any, pointerId: number) {
+  moveAttachTool(sarea: ScreenArea, mpos: [number, number] = this.mpos, elem: any, pointerId: number) {
     const tool = new FrameManager_ops.AreaMoveAttachTool(this, sarea, mpos);
     tool.start(elem, pointerId);
   }
@@ -2818,7 +2772,7 @@ export class Screen extends UIBase {
   }
 
   cleanupBorders() {
-    const del = new Set();
+    const del = new Set<ScreenBorder<CTX>>();
 
     for (const b of this.screenborders) {
       if (b.halfedges.length === 0) {
@@ -2827,7 +2781,7 @@ export class Screen extends UIBase {
     }
 
     for (const b of del) {
-      delete this._edgemap[b._hash];
+      delete this._edgemap[b._hash!];
       HTMLElement.prototype.remove.call(b);
     }
   }
@@ -2846,7 +2800,7 @@ export class Screen extends UIBase {
           blank = he.sarea;
           sarea = b.getOtherSarea(blank);
 
-          const axis = b.horiz ^ 1;
+          const axis = b.horiz ? 1 : 0;
 
           if (blank && sarea && blank.size[axis] !== sarea.size[axis]) {
             blank = sarea = undefined;
@@ -2869,8 +2823,8 @@ export class Screen extends UIBase {
     this.cleanupBorders();
   }
 
-  floatArea(area: ScreenArea.Area) {
-    const sarea = area.parentWidget as ScreenArea.ScreenArea;
+  floatArea(area: Area<CTX>) {
+    const sarea = area.parentWidget as ScreenArea<CTX>;
 
     /* already floating? */
     if (sarea.floating) {
@@ -2878,12 +2832,12 @@ export class Screen extends UIBase {
     }
 
     sarea.editors.remove(area);
-    delete sarea.editormap[area.constructor.define().areaname];
+    delete sarea.editormap[(area.constructor as unknown as AreaConstructor).define().areaname!];
     sarea.area = undefined;
 
     HTMLElement.prototype.remove.call(area);
 
-    const sarea2 = UIBase.createElement("screenarea-x", true) as ScreenArea.ScreenArea;
+    const sarea2 = UIBase.createElement("screenarea-x", true) as ScreenArea<CTX>;
     sarea2.floating = true;
 
     sarea2.pos = new Vector2(sarea.pos);
@@ -2892,7 +2846,7 @@ export class Screen extends UIBase {
     sarea2.size = new Vector2(sarea.size);
 
     sarea2.editors.push(area);
-    sarea2.editormap[area.constructor.define().areaname] = area;
+    sarea2.editormap[Area.getAreaName(area)] = area;
 
     sarea2.shadow.appendChild(area);
     sarea2.area = area;
@@ -2948,13 +2902,13 @@ export class Screen extends UIBase {
   }
 
   on_keyup(e: KeyboardEvent) {
-    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keyup) {
+    if (!haveModal() && this.sareas.active?.on_keyup) {
       return this.sareas.active.on_keyup(e);
     }
   }
 
   on_keypress(e: KeyboardEvent) {
-    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keypress) {
+    if (!haveModal() && this.sareas.active?.on_keypress) {
       return this.sareas.active.on_keypress(e);
     }
   }
@@ -3010,46 +2964,11 @@ export class Screen extends UIBase {
     return this;
   }
 
-  test_struct(appstate = _appstate) {
-    let data = [];
-    //let scripts = nstructjs.write_scripts();
-    nstructjs.manager.write_object(data, this);
-    data = new DataView(new Uint8Array(data).buffer);
-
-    const screen2 = nstructjs.manager.read_object(data, this.constructor);
-    screen2.ctx = this.ctx;
-
-    for (const sarea of screen2.sareas) {
-      sarea.screen = screen2;
-      sarea.ctx = this.ctx;
-      sarea.area.ctx = this.ctx;
-    }
-
-    const parent = this.parentElement;
-    this.remove();
-
-    appstate.screen = screen2;
-
-    parent.appendChild(screen2);
-
-    //for (let
-    screen2.regenBorders();
-    screen2.update();
-    screen2.listen();
-
-    screen2.doOnce(() => {
-      screen2.on_resize(screen2.size, [window.innerWidth, window.innerHeight]);
-    });
-
-    console.log(data);
-    return screen2;
-  }
-
   saveUIData() {
     try {
       return saveUIData(this, "screen");
     } catch (error) {
-      util.print_stack(error);
+      util.print_stack(error as Error);
       console.log("Failed to save UI state data");
     }
   }
@@ -3058,33 +2977,21 @@ export class Screen extends UIBase {
     try {
       loadUIData(this, str);
     } catch (error) {
-      util.print_stack(error);
+      util.print_stack(error as Error);
       console.log("Failed to load UI state data");
     }
   }
 }
 
-Screen.STRUCT = `
-pathux.Screen { 
-  size  : vec2;
-  pos   : vec2;
-  sareas : array(pathux.ScreenArea);
-  idgen : int;
-  uidata : string | obj.saveUIData();
-}
-`;
-
-nstructjs.register(Screen);
 UIBase.internalRegister(Screen);
 
 _setScreenClass(Screen);
 
 let get_screen_cb: () => Screen;
-let _on_keydown;
+let _on_keydown: ((e: KeyboardEvent) => void) | undefined;
 
 const start_cbs = [] as (() => void)[];
 const stop_cbs = [] as (() => void)[];
-let keyboardDom = window;
 
 let key_event_opts: AddEventListenerOptions | undefined;
 
@@ -3118,7 +3025,7 @@ export function startEvents(getScreenFunc: () => Screen) {
 }
 
 export function stopEvents() {
-  window.removeEventListener("keydown", _on_keydown, key_event_opts);
+  window.removeEventListener("keydown", _on_keydown!, key_event_opts);
   _on_keydown = undefined;
   _events_started = false;
 
@@ -3126,7 +3033,7 @@ export function stopEvents() {
     try {
       cb();
     } catch (error) {
-      util.print_stack(error);
+      util.print_stack(error as Error);
     }
   }
 
@@ -3138,8 +3045,6 @@ export function setKeyboardDom(dom: Window) {
   if (started) {
     stopEvents();
   }
-
-  keyboardDom = dom;
 
   if (started) {
     startEvents(get_screen_cb);

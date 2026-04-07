@@ -1,3 +1,5 @@
+import type { Screen } from "./FrameManager";
+
 import { ClassIdSymbol, loadUIData, saveUIData, UIBase } from "../core/ui_base";
 import { Container } from "../core/ui.js";
 
@@ -10,33 +12,12 @@ import { AreaFlags, BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi } from "./Fram
 import { contextWrangler, areaclasses } from "./area_wrangler.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
-import { Vector2 } from "../pathux.js";
-
-/**
- * Minimal interface for Screen used by ScreenArea.
- * Avoids circular import with FrameManager.
- */
-interface ScreenLike extends UIBase {
-  sareas: ScreenArea[] & { active?: ScreenArea; remove(item: ScreenArea, b?: boolean): void };
-  mpos: number[];
-  size: Vector2;
-  pickElement(x: number, y: number, args?: any): UIBase | undefined;
-  areaDragTool(sarea: ScreenArea): void;
-  checkAreaConstraint(sarea: ScreenArea, b: boolean): number | false;
-  solveAreaConstraints(): void;
-  regenBorders(): void;
-  getScreenVert(v: Vector2 | number[], i?: string, floating?: boolean): any;
-  getScreenBorder(sarea: ScreenArea, v1: any, v2: any, i: number): any;
-  isBorderMovable(b: any): boolean;
-  freeBorder(b: any, sarea?: ScreenArea): void;
-  needsTabRecalc: boolean;
-  splitTool(): void;
-  removeAreaTool(border?: any): void;
-  popupMenu(menu: any, x: number, y: number): any;
-}
+import { IUIBaseConstructor, Vector2 } from "../pathux.js";
+import { StructReader } from "../util/nstructjs";
+import type { KeyMap } from "../path-controller/util/simple_events.js";
 
 /** Is obj an instance of Screen */
-function isScreen(obj: unknown): obj is ScreenLike {
+function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is Screen<CTX> {
   return typeof obj === "object" && obj !== null && IsScreenTag in obj;
 }
 
@@ -66,7 +47,7 @@ Symbol.IsAreaTag = Symbol.for("IsAreaTag");
 /**
  * Base class for all editors
  **/
-export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, any, AreaConstructor> {
+export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   static STRUCT: string;
 
   // used to avoid circular module ref with UIBase
@@ -77,14 +58,14 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
   size?: Vector2;
   inactive: boolean;
   areaDragToolEnabled: boolean;
-  owning_sarea: ScreenArea | undefined;
+  owning_sarea: ScreenArea<CTX> | undefined;
   _area_id: number;
   minSize: number[];
   maxSize: (number | undefined)[];
-  keymap: unknown;
-  header: Container | undefined;
-  switcher: UIBase | undefined;
-  helppicker: UIBase & { iconsheet?: number } | undefined;
+  keymap?: KeyMap;
+  header: Container<CTX> | undefined;
+  switcher: UIBase<CTX> | undefined;
+  helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
   saved_uidata: string | undefined;
   areaName: string | undefined;
   dead = false;
@@ -101,7 +82,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
      *
      * */
 
-    const def = this.constructor.define();
+    const def = this.constructor.define() as any;
 
     //set bits in mask to keep
     //borders from moving
@@ -156,11 +137,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
    * Type should be an Area subclass, if undefined the last accessed area
    * will be returned.
    * */
-  static getActiveArea(type?: AreaConstructor) {
+  static getActiveArea(type?: AreaConstructorParam) {
     return contextWrangler.getLastArea(type);
   }
 
-  static unregister(cls: AreaConstructor) {
+  static unregister(cls: AreaConstructorParam) {
     const def = cls.define();
 
     if (!def.areaname) {
@@ -215,7 +196,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
   }
   //*/
 
-  static register(cls: AreaConstructor) {
+  static register(_cls: IUIBaseConstructor) {
+    const cls = _cls as unknown as AreaConstructor;
     const def = cls.define();
 
     if (!def.areaname) {
@@ -253,7 +235,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
 
     return prop;
   }
-
+  
+  static getAreaName<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
+    return (area.constructor as any).define().areaname as string;
+  }
+  
   static define(): {
     tagname: string;
     areaname: string | undefined;
@@ -321,7 +307,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
   buildDataPath() {
     const sarea = this.owning_sarea;
 
-    if (sarea === undefined || sarea.screen === undefined) {
+    if (sarea?.screen === undefined) {
       console.warn("Area.buildDataPath(): Failed to build data path");
       return "";
     }
@@ -329,7 +315,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
     const screen = sarea.screen;
 
     const idx1 = screen.sareas.indexOf(sarea);
-    const idx2 = sarea.editors.indexOf(this as Area);
+    const idx2 = sarea.editors.indexOf(this as Area<CTX>);
 
     if (idx1 < 0 || idx2 < 0) {
       throw new Error("malformed area data");
@@ -363,7 +349,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
     return ret;
   }
 
-  override on_resize(size: number[]) {
+  override on_resize(size: number[] | Vector2) {
     super.on_resize(size);
   }
 
@@ -393,15 +379,15 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
    * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
    * */
   push_ctx_active(dontSetLastRef = false) {
-    contextWrangler.updateLastRef(this.constructor, this);
-    contextWrangler.push(this.constructor, this, !dontSetLastRef);
+    contextWrangler.updateLastRef(this.constructor, this as unknown as Area);
+    contextWrangler.push(this.constructor, this as unknown as Area, !dontSetLastRef);
   }
 
   /**
    * see push_ctx_active
    * */
   pop_ctx_active(dontSetLastRef = false) {
-    contextWrangler.pop(this.constructor, this);
+    contextWrangler.pop(this.constructor, this as unknown as Area);
   }
 
   override getScreen(): UIBase<CTX> | undefined {
@@ -412,7 +398,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
 
   toJSON() {
     return Object.assign(super.toJSON(), {
-      areaname: this.constructor.define().areaname,
+      areaname: (this.constructor as any).define().areaname as string,
       _area_id: this._area_id,
     });
   }
@@ -430,7 +416,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
 
   makeAreaSwitcher(container: Container<CTX>) {
     if (cconst.useAreaTabSwitcher) {
-      const ret = UIBase.createElement("area-docker-x") as UIBase;
+      const ret = UIBase.createElement("area-docker-x") as UIBase<CTX>;
       container.add(ret);
       return ret;
     }
@@ -438,7 +424,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
     const prop = Area.makeAreasEnum();
 
     const dropbox = container.listenum(undefined, {
-      name    : this.constructor.define().uiname,
+      name    : (this.constructor as unknown as AreaConstructor).define().uiname,
       enumDef : prop,
       callback: (id: string) => {
         const cls = areaclasses[id] as AreaConstructor;
@@ -447,7 +433,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
     });
 
     dropbox.updateAfter(() => {
-      const name = this.constructor.define().uiname!;
+      const name = (this.constructor as unknown as AreaConstructor).define().uiname!;
       let val = prop.values[name];
 
       if (dropbox.value !== val && val in prop.keys) {
@@ -455,7 +441,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
       }
 
       if (dropbox.value !== val) {
-        (dropbox as UIBase & { setValue(v: unknown, b: boolean): void }).setValue(prop.values[name], true);
+        (dropbox as UIBase<CTX> & { setValue(v: unknown, b: boolean): void }).setValue(prop.values[name], true);
       }
     });
 
@@ -512,7 +498,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
         //add back same switcher
         switcherRow!.add(this.switcher);
       } else {
-        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row) as UIBase;
+        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row) as UIBase<CTX>;
       }
     }
 
@@ -521,7 +507,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
         this.helppicker.remove();
       }
 
-      this.helppicker = helpRow.helppicker() as UIBase & { iconsheet?: number };
+      this.helppicker = helpRow.helppicker() as UIBase<CTX> & { iconsheet?: number };
       this.helppicker!.iconsheet = 0;
     }
 
@@ -549,7 +535,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
       pageX = pageX === undefined ? e.x : pageX;
       pageY = pageY === undefined ? e.y : pageY;
 
-      const screen = this.getScreen() as ScreenLike | undefined;
+      const screen = this.getScreen() as Screen | undefined;
       if (!screen) return false;
 
       const node = screen.pickElement(pageX, pageY);
@@ -707,7 +693,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, a
     //});
   }
 
-  loadSTRUCT(reader: (obj: Area) => void) {
+  loadSTRUCT(reader: StructReader<this>) {
     reader(this);
   }
 
@@ -761,21 +747,25 @@ pathux.Area {
 nstructjs.register(Area);
 UIBase.internalRegister(Area as unknown as typeof UIBase);
 
-export class ScreenArea extends UIBase {
+export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   static STRUCT: string;
 
-  screen?: ScreenLike;
+  keymap?: KeyMap;
+  screen?: Screen<CTX>;
   _flag: number;
-  _borders: ScreenBorder[];
+  _borders: ScreenBorder<CTX>[];
   _verts: import("./FrameManager_mesh.js").ScreenVert[];
   dead: boolean;
   _sarea_id: number;
   _pos: Vector2;
   _size: Vector2;
-  area: Area | undefined;
-  editors: Area[] & { remove(item: Area, b?: boolean): void };
-  editormap: Record<string, Area>;
+  area: Area<CTX> | undefined;
+  editors: Area<CTX>[] & { remove(item: Area<CTX>, b?: boolean): void };
+  editormap: Record<string, Area<CTX>>;
 
+  on_keyup?: (e: KeyboardEvent) => void | boolean
+  on_keypress?: (e: KeyboardEvent) => void | boolean
+  
   constructor() {
     super();
 
@@ -813,7 +803,7 @@ export class ScreenArea extends UIBase {
     }
 
     this.area = undefined;
-    this.editors = [] as unknown as Area[] & { remove(item: Area, b?: boolean): void };
+    this.editors = [];
     this.editormap = {};
 
     this.addEventListener("mouseover", (e) => {
@@ -822,7 +812,7 @@ export class ScreenArea extends UIBase {
       }
 
       //console.log("screen area mouseover");
-      const screen = this.getScreen() as ScreenLike | undefined;
+      const screen = this.getScreen() as Screen<CTX> | undefined;
       if (!screen) return;
 
       if (screen.sareas.active !== this && screen.sareas.active?.area) {
@@ -873,10 +863,10 @@ export class ScreenArea extends UIBase {
   }//*/
 
   get floating() {
-    return this.flag & AreaFlags.FLOATING;
+    return Boolean(this.flag & AreaFlags.FLOATING);
   }
 
-  set floating(val) {
+  set floating(val: boolean) {
     if (val) {
       this.flag |= AreaFlags.FLOATING;
     } else {
@@ -952,7 +942,7 @@ export class ScreenArea extends UIBase {
   }
 
   bringToFront() {
-    const screen = this.getScreen() as ScreenLike | undefined;
+    const screen = this.getScreen() as Screen<CTX> | undefined;
     if (!screen) return;
 
     HTMLElement.prototype.remove.call(this);
@@ -976,7 +966,7 @@ export class ScreenArea extends UIBase {
     this.style.zIndex = "" + zindex;
   }
 
-  _side(border: ScreenArea["_borders"][number]) {
+  _side(border: ScreenArea<CTX>["_borders"][number]) {
     const ret = this._borders.indexOf(border);
     if (ret < 0) {
       throw new Error("border not in screen area");
@@ -1015,7 +1005,7 @@ export class ScreenArea extends UIBase {
     const ret = {
       editors  : this.editors,
       _sarea_id: this._sarea_id,
-      area     : this.area!.constructor.define().areaname,
+      area     : (this.area!.constructor as unknown as AreaConstructor).define().areaname,
       pos      : this.pos,
       size     : this.size,
     };
@@ -1024,9 +1014,9 @@ export class ScreenArea extends UIBase {
   }
 
   on_keydown(e: KeyboardEvent) {
-    if ((this.area as Area & { on_keydown?: (e: KeyboardEvent) => void })?.on_keydown) {
+    if ((this.area as Area<CTX> & { on_keydown?: (e: KeyboardEvent) => void })?.on_keydown) {
       this.area!.push_ctx_active();
-      (this.area as Area & { on_keydown: (e: KeyboardEvent) => void }).on_keydown(e);
+      (this.area as Area<CTX> & { on_keydown: (e: KeyboardEvent) => void }).on_keydown(e);
       this.area!.pop_ctx_active();
     }
   }
@@ -1046,7 +1036,7 @@ export class ScreenArea extends UIBase {
       const areaname = editor.areaname as string;
 
       const tagname = areaclasses[areaname].define().tagname;
-      const area = UIBase.createElement(tagname) as Area;
+      const area = UIBase.createElement(tagname) as Area<CTX>;
 
       area.owning_sarea = this;
       this.editormap[areaname] = area;
@@ -1096,7 +1086,7 @@ export class ScreenArea extends UIBase {
     }
   }
 
-  override getScreen(): ScreenLike | undefined {
+  override getScreen(): Screen<CTX> | undefined {
     if (this.screen !== undefined) {
       return this.screen;
     }
@@ -1114,11 +1104,11 @@ export class ScreenArea extends UIBase {
       }
     }
 
-    return p && isScreen(p) ? p : undefined;
+    return p && isScreen<CTX>(p) ? p : undefined;
   }
 
-  copy(screen: ScreenLike) {
-    const ret = UIBase.createElement("screenarea-x") as ScreenArea;
+  copy(screen: Screen<CTX>) {
+    const ret = UIBase.createElement("screenarea-x") as ScreenArea<CTX>;
 
     ret.screen = screen;
     ret.ctx = this.ctx;
@@ -1130,13 +1120,13 @@ export class ScreenArea extends UIBase {
     ret.size[1] = this.size[1];
 
     for (const area of this.editors) {
-      const cpy = area.copy() as Area;
+      const cpy = area.copy() as Area<CTX>;
 
       cpy.ctx = this.ctx;
 
       cpy.parentWidget = ret;
       ret.editors.push(cpy);
-      ret.editormap[cpy.constructor.define().areaname!] = cpy;
+      ret.editormap[(cpy.constructor as unknown as AreaConstructor).define().areaname!] = cpy;
 
       if (area === this.area) {
         ret.area = cpy;
@@ -1206,8 +1196,8 @@ export class ScreenArea extends UIBase {
    * */
   loadFromPosSize() {
     if (this.floating && this._verts.length > 0) {
-      const p = this.pos,
-        s = this.size;
+      const p = this.pos;
+      const s = this.size;
 
       this._verts[0].loadXY(p[0], p[1]);
       this._verts[1].loadXY(p[0], p[1] + s[1]);
@@ -1262,7 +1252,7 @@ export class ScreenArea extends UIBase {
     return this;
   }
 
-  override on_resize(size: number[]) {
+  override on_resize(size: number[] | Vector2) {
     super.on_resize(size);
 
     if (this.area !== undefined) {
@@ -1270,16 +1260,16 @@ export class ScreenArea extends UIBase {
     }
   }
 
-  makeBorders(screen: ScreenLike) {
+  makeBorders(screen: Screen<CTX>) {
     this._borders.length = 0;
     this._verts.length = 0;
 
-    const p = this.pos,
-      s = this.size;
+    const p = this.pos;
+    const s = this.size;
 
     //s = snapi(new Vector2(s));
 
-    let vs: Vector2[] = [
+    const vs: Vector2[] = [
       new Vector2([p[0], p[1]]),
       new Vector2([p[0], p[1] + s[1]]),
       new Vector2([p[0] + s[0], p[1] + s[1]]),
@@ -1295,20 +1285,20 @@ export class ScreenArea extends UIBase {
     }
 
     for (let i = 0; i < vs.length; i++) {
-      const v1 = vs[i],
-        v2 = vs[(i + 1) % vs.length];
+      const v1 = vs[i];
+      const v2 = vs[(i + 1) % vs.length];
 
       const b = screen.getScreenBorder(this, v1, v2, i);
 
       for (let j = 0; j < 2; j++) {
         const v = j ? b.v2 : b.v1;
 
-        if (v.sareas.indexOf(this) < 0) {
+        if (!v.sareas.includes(this)) {
           v.sareas.push(this);
         }
       }
 
-      if (b.sareas.indexOf(this) < 0) {
+      if (!b.sareas.includes(this)) {
         b.sareas.push(this);
       }
 
@@ -1339,7 +1329,7 @@ export class ScreenArea extends UIBase {
 
   appendChild<T extends Node>(child: T): T {
     if (child instanceof Area) {
-      const def = child.constructor.define();
+      const def = (child.constructor as unknown as AreaConstructor).define();
       const existing = def.areaname ? this.editormap[def.areaname] : undefined;
 
       if (existing && existing !== child) {
@@ -1358,7 +1348,7 @@ export class ScreenArea extends UIBase {
       child.pos = this.pos;
       child.size = this.size;
 
-      if (this.editors.indexOf(child) < 0) {
+      if (!this.editors.includes(child)) {
         this.editors.push(child);
       }
 
@@ -1377,17 +1367,17 @@ export class ScreenArea extends UIBase {
     return result;
   }
 
-  switch_editor(cls: AreaConstructor) {
+  switch_editor(cls: AreaConstructorParam) {
     return this.switchEditor(cls);
   }
 
-  switchEditor(cls: AreaConstructor) {
+  switchEditor(cls: AreaConstructorParam) {
     const def = cls.define();
     const name = def.areaname!;
 
     //areaclasses[name]
     if (!(name in this.editormap)) {
-      this.editormap[name] = UIBase.createElement(def.tagname) as Area;
+      this.editormap[name] = UIBase.createElement(def.tagname) as Area<CTX>;
       this.editormap[name].ctx = this.ctx;
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
@@ -1507,7 +1497,7 @@ export class ScreenArea extends UIBase {
         const i = (this.editors.indexOf(ch) + 1) % this.editors.length;
         this.switchEditor(this.editors[i].constructor);
       } else if (this.area === ch) {
-        this.editors = [] as unknown as Area[] & { remove(item: Area, b?: boolean): void };
+        this.editors = [];
         this.editormap = {};
         this.area = undefined;
 
@@ -1515,7 +1505,7 @@ export class ScreenArea extends UIBase {
         return ch;
       }
 
-      const areaname = ch.constructor.define().areaname!;
+      const areaname = (ch.constructor as unknown as AreaConstructor).define().areaname!;
 
       this.editors.remove(ch);
       delete this.editormap[areaname];
@@ -1540,7 +1530,7 @@ export class ScreenArea extends UIBase {
     }
   }
 
-  loadSTRUCT(reader: (obj: ScreenArea) => void) {
+  loadSTRUCT(reader: StructReader<this>) {
     reader(this);
 
     this.pos = new Vector2(this.pos);
@@ -1548,7 +1538,7 @@ export class ScreenArea extends UIBase {
 
     //find active editor
 
-    const editors: Area[] = [];
+    const editors: Area<CTX>[] = [];
 
     for (const area of this.editors) {
       if (!area.constructor?.define || area.constructor === Area) {
@@ -1556,7 +1546,7 @@ export class ScreenArea extends UIBase {
         continue;
       }
 
-      const areaname = area.constructor.define().areaname!;
+      const areaname = (area.constructor as unknown as AreaConstructor).define().areaname!;
 
       area.inactive = true;
       area.owning_sarea = undefined;
@@ -1577,18 +1567,18 @@ export class ScreenArea extends UIBase {
 
       editors.push(area);
     }
-    this.editors = editors as unknown as Area[] & { remove(item: Area, b?: boolean): void };
+    this.editors = editors;
 
     if (typeof this.area !== "object") {
-      let area: Area | undefined = this.editors[0];
+      let area: Area<CTX> | undefined = this.editors[0];
 
       console.warn("Failed to find active area!", this.area);
 
       if (typeof area !== "object") {
         for (const k in areaclasses) {
           const tagname = areaclasses[k].define().tagname;
-          area = UIBase.createElement(tagname) as Area;
-          const areaname = area.constructor.define().areaname!;
+          area = UIBase.createElement(tagname) as Area<CTX>;
+          const areaname = (area.constructor as unknown as AreaConstructor).define().areaname!;
 
           this.editors.push(area);
           this.editormap[areaname] = area;
@@ -1651,3 +1641,5 @@ nstructjs.register(ScreenArea);
 UIBase.internalRegister(ScreenArea as unknown as typeof UIBase);
 
 export type AreaConstructor = typeof Area & { [ClassIdSymbol]: string };
+// TS makes dealing with constructor typing so absurdly stupid, just use any
+export type AreaConstructorParam = any;

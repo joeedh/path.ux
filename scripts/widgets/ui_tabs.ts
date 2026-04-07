@@ -1503,7 +1503,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     this.tbar = UIBase.createElement("tabbar-x") as unknown as TabBar<CTX>;
     this.tbar.parentWidget = this as unknown as UIBase<CTX>;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
-    this.tbar.constructor.setDefault(this.tbar as unknown as UIBase<CTX>);
+    this.tbar.constructor.setDefault(this.tbar);
     this.tbar.tabFontScale = this.tabFontScale;
 
     this._remakeStyle();

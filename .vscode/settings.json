@@ -2,6 +2,7 @@
     "prettier.configPath": ".prettierrc",
     "prettier.prettierPath": "./node_modules/@pathtx/prettier/index.cjs",
     "cSpell.words": [
+      "nodeclass",
       "nstructjs",
       "parseutil",
       "pathux",

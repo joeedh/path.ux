@@ -27,6 +27,7 @@ interface PathUXDebug {
 }
 
 interface Window {
+  redraw_all?: () => void;
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
   __theme: Record<string, unknown>;
