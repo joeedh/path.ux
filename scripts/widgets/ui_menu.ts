@@ -17,7 +17,6 @@ import { OldButton } from "./ui_button";
 import { DomEventTypes } from "../path-controller/util/events";
 
 import { HotKey, keymap } from "../path-controller/util/simple_events";
-import { parseToolPath } from "../path-controller/controller";
 import { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
 import type { Screen } from "../screen/FrameManager";
@@ -39,27 +38,15 @@ export type MenuTemplateCustom = [
 
 export type MenuItemCallback = (dom: HTMLElement) => HTMLElement;
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
-export type MenuTemplateItem =
-  | SEP
-  | MenuTemplateTool
-  | MenuTemplateCustom
-  | MenuItemCallback
-  | Menu;
+export type MenuTemplateItem = SEP | MenuTemplateTool | MenuTemplateCustom | MenuItemCallback | Menu;
 
 export type MenuTemplate = MenuTemplateItem[];
-
-function getpx(css: string) {
-  return parseFloat(css.trim().replace("px", ""));
-}
 
 function debugmenu(...args: unknown[]) {
   if (window.DEBUG?.menu) {
     console.warn("%cmenu:", "color:blue", ...args);
   }
 }
-
-/** Helper for CSSStyleDeclaration string indexing */
-type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
 /** Menu item: an HTMLLIElement with extra properties attached at runtime */
 interface MenuItem extends HTMLLIElement {
@@ -281,7 +268,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       }
     } else {
       let i = this.items.indexOf(this.activeItem);
-      let item = this.activeItem;
+      let item: typeof this.activeItem;
 
       do {
         i = (i + dir + this.items.length) % this.items.length;
@@ -493,17 +480,11 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     //stupid css doesn't get width right. . .
     span.style["font"] = getFont(this, undefined, "MenuText");
 
-    const dpi = this.getDPI();
-    const tsize = (this.getDefault("MenuText") as CSSFont).size;
-    //XXX proportional font fail
-
     //XXX stupid!
     const canvas = document.createElement("canvas");
     const g = canvas.getContext("2d")!;
 
     g.font = span.style["font"];
-
-    const rect = span.getClientRects();
 
     let twid = Math.ceil(g.measureText(text).width);
     let hwid: number | undefined;
@@ -753,7 +734,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       sepcss = s;
     }
 
-    let itemRadius: number = 0;
+    let itemRadius: number;
 
     if (this.hasDefault("item-radius")) {
       itemRadius = this.getDefault("item-radius") as number;
@@ -1018,7 +999,6 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     //let ret = super.updateWidth(10);
     const dpi = this.getDPI();
 
-    const ts = (this.getDefault("DefaultText") as CSSFont).size;
     let tw = this.g.measureText(this._genLabel()).width / dpi;
     //let tw = measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
@@ -1101,7 +1081,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     prop = this.prop;
 
-    let name: string | null = this.getAttribute("name");
+    let name: string | null;
 
     if (prop!.type & (PropTypes.ENUM | PropTypes.FLAG)) {
       name = prop!.ui_value_names[prop!.keys[val as string | number]];
@@ -1295,8 +1275,6 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     const menu = builtMenu;
     const screen = this.getScreen() as unknown as Screen<CTX> | undefined;
 
-    const dpi = this.getDPI();
-
     let x = _e.x;
     let y = _e.y;
     const rects = this.dom.getBoundingClientRect(); //getClientRects();
@@ -1374,8 +1352,6 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
   _redraw() {
     if (this.getAttribute("simple")) {
-      let color;
-
       this.g.clearRect(0, 0, this.dom.width, this.dom.height);
 
       if (this._highlight) {
@@ -1468,7 +1444,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     val = this._convertVal(val);
 
     if (val === undefined) {
-      console.warn("Bad val", arguments[0]);
+      console.warn("Bad val", val);
       return;
     }
 

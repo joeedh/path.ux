@@ -230,13 +230,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   set background(bg: string) {
-    (this as Record<string, unknown>).__background = bg;
+    this.__background = bg;
 
     this.styletag.textContent = `div.containerx {
         background-color : ${bg};
       }
     `;
-    (this.style as unknown as Record<string, string>)["background-color"] = bg;
+    this.saneStyle["background-color"] = bg;
   }
 
   get childWidgets(): UIBase<CTX>[] {
@@ -264,7 +264,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       prefix += ".";
     }
 
-    const rec = (n: Record<string, unknown>, con: Container<CTX>) => {
+    const rec = (n: UIBase<CTX>, con: Container<CTX>) => {
       if (n instanceof Container && n !== this) {
         if (n.dataPrefix.startsWith(prefix)) {
           n.dataPrefix = n.dataPrefix.slice(prefix.length, n.dataPrefix.length);
@@ -274,25 +274,25 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       }
 
       // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-      if ((n as unknown as Element).hasAttribute && (n as unknown as Element).hasAttribute("datapath")) {
+      if (n instanceof UIBase && n.hasAttribute("datapath")) {
         let path = (n as unknown as Element).getAttribute("datapath")!;
 
         if (path.startsWith(prefix)) {
           path = path.slice(prefix.length, path.length);
           path = con._joinPrefix(path)!;
-          (n as unknown as Element).setAttribute("datapath", path);
+          n.setAttribute("datapath", path);
 
           //update helper tooltips
-          (n as Record<string, unknown>).description = (n as Record<string, unknown>).description;
+          n.description = n.description;
         }
       }
 
-      (n as unknown as UIBase)._forEachChildWidget((n2: UIBase) => {
-        rec(n2 as unknown as Record<string, unknown>, con);
+      n._forEachChildWidget((n2: UIBase<CTX>) => {
+        rec(n2, con);
       });
     };
 
-    rec(this as unknown as Record<string, unknown>, this);
+    rec(this, this);
   }
 
   reverse() {
@@ -347,10 +347,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   init() {
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
-    (this.style as unknown as Record<string, string>)["flex-direction"] = this.reversed ? "column-reverse" : "column";
-    (this.style as unknown as Record<string, string>)["flex-wrap"] = "nowrap";
-    (this.style as unknown as Record<string, string>)["flex-grow"] = "" + this.getDefault("flex-grow", undefined, "1");
+    this.saneStyle["display"] = "flex";
+    this.saneStyle["flex-direction"] = this.reversed ? "column-reverse" : "column";
+    this.saneStyle["flex-wrap"] = "nowrap";
+    this.saneStyle["flex-grow"] = "" + this.getDefault("flex-grow", undefined, "1");
 
     this.setCSS();
 
@@ -402,7 +402,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * @returns {Container}
    */
   wrap(mode = "wrap"): this {
-    (this.style as unknown as Record<string, string>)["flex-wrap"] = mode;
+    this.saneStyle["flex-wrap"] = mode;
     return this;
   }
 
@@ -413,7 +413,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     keys = keys.concat(["padding-block-start", "padding-block-end"]);
 
     for (const k of keys) {
-      (this.style as unknown as Record<string, string>)[k] = "0px";
+      this.saneStyle[k] = "0px";
     }
 
     return this;
@@ -431,7 +431,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
       if (val !== undefined) {
         rest += `  ${style} = ${val};\n`;
-        (this.style as unknown as Record<string, string>)[style] = "" + val;
+        this.saneStyle[style] = "" + val;
       }
     };
 
@@ -531,9 +531,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
           strip.background = bg;
 
-          (strip.style as unknown as Record<string, string>)["margin"] = "" + margin + "px";
-          (strip.style as unknown as Record<string, string>)["border"] = `${blineVal}px ${bstyle} ${bcolor}`;
-          (strip.style as unknown as Record<string, string>)["border-radius"] = "" + bradiusVal + "px";
+          strip.style["margin"] = "" + margin + "px";
+          strip.style["border"] = `${blineVal}px ${bstyle} ${bcolor}`;
+          strip.style["borderRadius"] = "" + bradiusVal + "px";
         }
       });
     } else {
@@ -557,12 +557,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * tries to set margin along one axis only in smart manner
    * */
   oneAxisMargin(m: number | string = this.getDefault("oneAxisMargin") as number, m2 = 0) {
-    (this.style as unknown as Record<string, string>)["margin-top"] = (this.style as unknown as Record<string, string>)[
-      "margin-bottom"
-    ] = "" + m + "px";
-    (this.style as unknown as Record<string, string>)["margin-left"] = (
-      this.style as unknown as Record<string, string>
-    )["margin-right"] = "" + m2 + "px";
+    this.saneStyle["margin-top"] = this.saneStyle["margin-bottom"] = "" + m + "px";
+    this.saneStyle["margin-left"] = this.saneStyle["margin-right"] = "" + m2 + "px";
 
     return this;
   }
@@ -571,49 +567,33 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * tries to set padding along one axis only in smart manner
    * */
   oneAxisPadding(axisPadding: number | string = this.getDefault("oneAxisPadding") as number, otherPadding = 0) {
-    (this.style as unknown as Record<string, string>)["padding-top"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-bottom"] = "" + axisPadding + "px";
-    (this.style as unknown as Record<string, string>)["padding-left"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-right"] = "" + otherPadding + "px";
+    this.style["paddingTop"] = this.style["paddingBottom"] = "" + axisPadding + "px";
+    this.style["paddingLeft"] = this.style["paddingRight"] = "" + otherPadding + "px";
 
     return this;
   }
 
   setMargin(m: number) {
-    (this.style as unknown as Record<string, string>)["margin"] = m + "px";
+    this.style["margin"] = m + "px";
 
     return this;
   }
 
   setPadding(m: number) {
-    (this.style as unknown as Record<string, string>)["padding"] = m + "px";
+    this.style["padding"] = m + "px";
 
     return this;
   }
 
   setSize(width: number | string | undefined, height: number | string | undefined) {
     if (width !== undefined) {
-      if (typeof width == "number")
-        (this.style as unknown as Record<string, string>)["width"] = (
-          this.div.style as unknown as Record<string, string>
-        )["width"] = ~~width + "px";
-      else
-        (this.style as unknown as Record<string, string>)["width"] = (
-          this.div.style as unknown as Record<string, string>
-        )["width"] = width;
+      if (typeof width == "number") this.style["width"] = this.div.style["width"] = ~~width + "px";
+      else this.style["width"] = this.div.style["width"] = width;
     }
 
     if (height !== undefined) {
-      if (typeof height == "number")
-        (this.style as unknown as Record<string, string>)["height"] = (
-          this.div.style as unknown as Record<string, string>
-        )["height"] = ~~height + "px";
-      else
-        (this.style as unknown as Record<string, string>)["height"] = (
-          this.div.style as unknown as Record<string, string>
-        )["height"] = height;
+      if (typeof height == "number") this.style["height"] = this.div.style["height"] = ~~height + "px";
+      else this.style["height"] = this.div.style["height"] = height;
     }
 
     return this;
@@ -624,7 +604,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   load() {}
 
   saveVisibility() {
-    (localStorage as Record<string, string>)[this.storagePrefix + "_settings"] = JSON.stringify(this);
+    localStorage[this.storagePrefix + "_settings"] = JSON.stringify(this);
     return this;
   }
 
@@ -636,7 +616,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       console.log("loading UI visibility state. . .");
 
       try {
-        this.loadJSON(JSON.parse((localStorage as Record<string, string>)[key]));
+        this.loadJSON(JSON.parse(localStorage[key]));
       } catch (error) {
         util.print_stack(error as Error);
         ok = false;
@@ -648,7 +628,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
   toJSON() {
     const ret = {
-      opened: !(this as Record<string, unknown>).closed,
+      opened: !(this as any).closed,
     };
 
     return Object.assign(super.toJSON(), ret);
@@ -690,12 +670,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
   appendChild<T extends Node>(child: T): T {
     if (child instanceof UIBase) {
-      (child as unknown as Record<string, unknown>).ctx = this.ctx;
-      (child as unknown as Record<string, unknown>).parentWidget = this;
+      child.ctx = this.ctx;
+      child.parentWidget = this;
       this.shadow.appendChild(child);
 
-      if ((child as unknown as Record<string, unknown>).onadd) {
-        ((child as unknown as Record<string, unknown>).onadd as () => void)();
+      if (child.onadd) {
+        (child.onadd as () => void)();
       }
 
       return child;
@@ -710,22 +690,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         child.remove(trigger_on_destroy);
       }
     }
-  }
-
-  removeChild<T extends Node>(child: T, trigger_on_destroy = true): T {
-    const ret = super.removeChild(child);
-
-    if ((child as Record<string, unknown>).on_remove) {
-      ((child as Record<string, unknown>).on_remove as () => void)();
-    }
-
-    if (trigger_on_destroy && (child as Record<string, unknown>).on_destroy) {
-      ((child as Record<string, unknown>).on_destroy as () => void)();
-    }
-
-    (child as Record<string, unknown>).parentWidget = undefined;
-
-    return ret;
   }
 
   prepend(child: Node) {
@@ -840,7 +804,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     if (typeof path_or_cls === "string") {
       cls = this.ctx.api.parseToolPath(path_or_cls);
     } else {
-      cls = path_or_cls as unknown as Record<string, unknown>;
+      cls = path_or_cls;
     }
 
     tdef = (cls as unknown as { _getFinalToolDef(): Record<string, unknown> })._getFinalToolDef();
@@ -1294,7 +1258,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         const strip = this.strip();
 
         strip.label(prop.uiname as string);
-        
+
         ret = strip.textbox(inpath) as UIBase<CTX>;
         ret.useDataPathUndo = useDataPathUndo;
 
@@ -1467,8 +1431,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
 
         if (packflag & PackFlags.WRAP_CHECKBOXES) {
-          let isrow = (this.style as unknown as Record<string, string>)["flex-direction"] === "row";
-          isrow = isrow || (this.style as unknown as Record<string, string>)["flex-direction"] === "row-reverse";
+          let isrow = this.style["flexDirection"] === "row";
+          isrow = isrow || this.style["flexDirection"] === "row-reverse";
 
           let wrapChars: number;
 
@@ -2338,8 +2302,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   asDialogFooter() {
-    (this.style as unknown as Record<string, string>)["margin-top"] = "15px";
-    (this.style as unknown as Record<string, string>)["justify-content"] = "flex-end";
+    this.style["marginTop"] = "15px";
+    this.style["justifyContent"] = "flex-end";
 
     return this;
   }
@@ -2362,21 +2326,18 @@ export class RowFrame<CTX extends IContextBase = IContextBase> extends Container
   connectedCallback() {
     super.connectedCallback();
 
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
-    (this.style as unknown as Record<string, string>)["flex-direction"] = this.reversed ? "row-reverse" : "row";
+    this.style["display"] = "flex";
+    this.style["flexDirection"] = this.reversed ? "row-reverse" : "row";
   }
 
   init() {
     super.init();
 
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
-    (this.style as unknown as Record<string, string>)["flex-direction"] = this.reversed ? "row-reverse" : "row";
+    this.style["display"] = "flex";
+    this.style["flexDirection"] = this.reversed ? "row-reverse" : "row";
 
-    if (
-      !(this.style as unknown as Record<string, string>)["align-items"] ||
-      (this.style as unknown as Record<string, string>)["align-items"] == ""
-    ) {
-      (this.style as unknown as Record<string, string>)["align-items"] = "center";
+    if (!this.style["alignItems"] || this.style["alignItems"] == "") {
+      this.style["alignItems"] = "center";
     }
 
     if (this.getDefault("slider-style") === "simple") {
@@ -2386,23 +2347,15 @@ export class RowFrame<CTX extends IContextBase = IContextBase> extends Container
   }
 
   oneAxisMargin(m: number | string = this.getDefault("oneAxisMargin") as number, m2 = 0) {
-    (this.style as unknown as Record<string, string>)["margin-left"] = (
-      this.style as unknown as Record<string, string>
-    )["margin-right"] = m + "px";
-    (this.style as unknown as Record<string, string>)["margin-top"] = (this.style as unknown as Record<string, string>)[
-      "margin-bottom"
-    ] = "" + m2 + "px";
+    this.style["marginLeft"] = this.style["marginRight"] = m + "px";
+    this.style["marginTop"] = this.style["marginBottom"] = "" + m2 + "px";
 
     return this;
   }
 
   oneAxisPadding(m: number | string = this.getDefault("oneAxisPadding") as number, m2 = 0) {
-    (this.style as unknown as Record<string, string>)["padding-left"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-right"] = "" + m + "px";
-    (this.style as unknown as Record<string, string>)["padding-top"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-bottom"] = "" + m2 + "px";
+    this.style["paddingLeft"] = this.style["paddingRight"] = "" + m + "px";
+    this.style["paddingTop"] = this.style["paddingBottom"] = "" + m2 + "px";
 
     return this;
   }
@@ -2428,9 +2381,9 @@ export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Contai
   init() {
     super.init();
 
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
-    (this.style as unknown as Record<string, string>)["flex-direction"] = "column";
-    (this.style as unknown as Record<string, string>)["justify-content"] = "right";
+    this.style["display"] = "flex";
+    this.style["flexDirection"] = "column";
+    this.style["justifyContent"] = "right";
   }
 
   update() {
@@ -2438,23 +2391,15 @@ export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Contai
   }
 
   oneAxisMargin(m: number | string = this.getDefault("oneAxisMargin") as number, m2 = 0) {
-    (this.style as unknown as Record<string, string>)["margin-top"] = (this.style as unknown as Record<string, string>)[
-      "margin-bottom"
-    ] = "" + m + "px";
-    (this.style as unknown as Record<string, string>)["margin-left"] = (
-      this.style as unknown as Record<string, string>
-    )["margin-right"] = m2 + "px";
+    this.style["marginTop"] = this.style["marginBottom"] = "" + m + "px";
+    this.style["marginLeft"] = this.style["marginRight"] = m2 + "px";
 
     return this;
   }
 
   oneAxisPadding(m: number | string = this.getDefault("oneAxisPadding") as number, m2 = 0) {
-    (this.style as unknown as Record<string, string>)["padding-top"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-bottom"] = "" + m + "px";
-    (this.style as unknown as Record<string, string>)["padding-left"] = (
-      this.style as unknown as Record<string, string>
-    )["padding-right"] = "" + m2 + "px";
+    this.style["paddingTop"] = this.style["paddingBottom"] = "" + m + "px";
+    this.style["paddingLeft"] = this.style["paddingRight"] = "" + m2 + "px";
 
     return this;
   }
@@ -2510,8 +2455,8 @@ export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Con
   init() {
     super.init();
 
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
-    (this.style as unknown as Record<string, string>)["flex-direction"] = "column";
+    this.style["display"] = "flex";
+    this.style["flexDirection"] = "column";
   }
 
   update() {
@@ -2535,8 +2480,8 @@ export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Con
 
     const style = r.width > this.colWidth * 2.0 ? "row" : "column";
 
-    if ((this.style as unknown as Record<string, string>)["flex-direction"] !== style) {
-      (this.style as unknown as Record<string, string>)["flex-direction"] = style;
+    if (this.style["flexDirection"] !== style) {
+      this.style["flexDirection"] = style;
     }
   }
 }

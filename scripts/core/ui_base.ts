@@ -1,6 +1,6 @@
 import { contextWrangler } from "../screen/area_wrangler.js";
 import type { Area } from "../screen/ScreenArea";
-export type DefaultTypes = string | number | boolean | CSSFont
+export type DefaultTypes = string | number | boolean | CSSFont;
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   new (): T;
 
@@ -885,8 +885,8 @@ export function internalSetTimeout(cb: () => void, timeout = 0): void {
 
 window.setTimeoutQueue = setTimeoutQueue as unknown as typeof window.setTimeoutQueue;
 
+// inside a worker?
 if (typeof HTMLElement === "undefined") {
-  // inside a worker?
   (window as unknown as Record<string, unknown>).HTMLElement = class HTMLElement {};
   (window as unknown as Record<string, unknown>).customElements = {
     define: () => {},
@@ -2454,10 +2454,16 @@ export class UIBase<
    * */
   on_remove(): void {}
 
-  removeChild<T extends Node>(child: T, trigger_on_destroy = true): T {
+  removeChild<T extends Node | UIBase<CTX>>(child: T, trigger_on_destroy = true): T {
     super.removeChild(child);
+    if (child instanceof UIBase && child.on_remove) {
+      child.on_remove();
+    }
     if (trigger_on_destroy && child instanceof UIBase) {
       child._ondestroy();
+    }
+    if (child instanceof UIBase) {
+      child.parentWidget = undefined;
     }
     return child;
   }

@@ -14,11 +14,6 @@ interface NodeBuffer {
   writeInt32LE(value: number, offset: number): void;
 }
 
-interface NodeBufferConstructor {
-  alloc(size: number): NodeBuffer;
-  from(data: unknown[] | string, encoding?: string): NodeBuffer;
-}
-
 interface PNGImage {
   width: number;
   height: number;
