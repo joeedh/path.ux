@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use strict";
 
 import * as units from "../core/units.js";
