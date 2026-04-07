@@ -2,7 +2,16 @@
 
 import * as util from "../path-controller/util/util";
 import cconst from "../config/const";
-import * as ui_base from "../core/ui_base";
+import {
+  UIBase,
+  IconSheets,
+  makeIconDiv,
+  iconmanager,
+  getFont,
+  drawRoundBox2,
+  drawRoundBox,
+  IUIBaseConstructor,
+} from "../core/ui_base";
 import * as toolprop from "../path-controller/toolsys/toolprop";
 import { OldButton } from "./ui_button";
 import { DomEventTypes } from "../path-controller/util/events";
@@ -13,27 +22,28 @@ import { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
 import type { Screen } from "../screen/FrameManager";
 
-const EnumProperty = toolprop.EnumProperty;
 const PropTypes = toolprop.PropTypes;
-
-const UIBase = ui_base.UIBase;
-const PackFlags = ui_base.PackFlags;
-const IconSheets = ui_base.IconSheets;
 
 export const SEP = Symbol("MenuSep");
 export type SEP = symbol;
 
 export type MenuTemplateTool = string;
-export type MenuTemplateCustom = [name: string, func: <CTX>(ctx: CTX) => void];
+export type MenuTemplateCustom = [
+  name: string,
+  func: <CTX>(ctx: CTX) => void,
+  hotkey?: string,
+  icon?: number,
+  tooltip?: string,
+  id?: string | number,
+];
+
 export type MenuItemCallback = (dom: HTMLElement) => HTMLElement;
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
-export type MenuItemArrayForm = [string, (string | HotKey)?, number?, string?, any?];
 export type MenuTemplateItem =
   | SEP
   | MenuTemplateTool
   | MenuTemplateCustom
   | MenuItemCallback
-  | MenuItemArrayForm
   | Menu;
 
 export type MenuTemplate = MenuTemplateItem[];
@@ -62,10 +72,10 @@ interface MenuItem extends HTMLLIElement {
 }
 
 /** Type for popup container returned by Screen.popup() */
-type PopupContainer = ui_base.UIBase & {
+type PopupContainer<CTX extends IContextBase = IContextBase> = UIBase<CTX> & {
   noMarginsOrPadding(): void;
   end(): void;
-  add(child: ui_base.UIBase): void;
+  add(child: UIBase<CTX>): void;
 };
 
 /* Window augmentations for _menuWrangler, menu, _startMenuEventWrangling
@@ -90,7 +100,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   dom: HTMLUListElement;
   menustyle: HTMLStyleElement;
   hasSearchBox: boolean;
-  textbox!: ui_base.UIBase<CTX> & { text: string; onchange: (() => void) | null; parentWidget: unknown };
+  textbox!: UIBase<CTX> & { text: string; onchange: (() => void) | null; parentWidget: unknown };
   _popup: PopupContainer | undefined;
   _dropbox: DropBox | undefined;
   _onclose: ((...args: unknown[]) => void) | undefined;
@@ -127,8 +137,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
-    (this.container.style as StyleRecord)["display"] = "flex";
-    (this.container.style as StyleRecord)["color"] = (this.getDefault("MenuText") as CSSFont).color;
+    this.container.style["display"] = "flex";
+    this.container.style["color"] = (this.getDefault("MenuText") as CSSFont).color;
 
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
@@ -308,7 +318,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
 
     if (this.activeItem) {
-      (this.activeItem.style as StyleRecord)["background-color"] = this.getDefault("MenuBG") as string;
+      this.activeItem.style["backgroundColor"] = this.getDefault("MenuBG") as string;
 
       if (focus) {
         this.activeItem.blur();
@@ -316,7 +326,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
 
     if (item) {
-      (item.style as StyleRecord)["background-color"] = this.getDefault("MenuHighlight") as string;
+      item.style["backgroundColor"] = this.getDefault("MenuHighlight") as string;
 
       if (focus) {
         item.focus();
@@ -343,9 +353,9 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     dom2.appendChild(sbox);
     dom2.appendChild(this.dom);
 
-    (dom2.style as StyleRecord)["height"] = "300px";
-    (this.dom.style as StyleRecord)["height"] = "300px";
-    (this.dom.style as StyleRecord)["overflow"] = "scroll";
+    dom2.style["height"] = "300px";
+    this.dom.style["height"] = "300px";
+    this.dom.style["overflow"] = "scroll";
 
     if (prepend) {
       this.container.prepend(dom2);
@@ -406,7 +416,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       }
 
       if (val !== undefined) {
-        (this.dom.style as StyleRecord)[key] = val as string;
+        this.dom.style[key as any] = val as string;
       }
     };
 
@@ -452,7 +462,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   addItemExtra(text: string, id: string | number, hotkey: string | undefined, icon = -1, add = true, tooltip = "") {
     const dom = document.createElement("span") as HTMLSpanElement & { hotkey?: string; icon?: number };
 
-    (dom.style as StyleRecord)["display"] = "inline-flex";
+    console.warn("hotkey", hotkey);
+    dom.style["display"] = "inline-flex";
 
     dom.hotkey = hotkey;
     dom.icon = icon;
@@ -461,26 +472,26 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     if (1) {
       //icon >= 0) {
-      icon_div = ui_base.makeIconDiv(icon, IconSheets.SMALL);
+      icon_div = makeIconDiv(icon, IconSheets.SMALL);
     } else {
-      const tilesize = ui_base.iconmanager.getTileSize(IconSheets.SMALL);
+      const tilesize = iconmanager.getTileSize(IconSheets.SMALL);
 
       //tilesize *= window.devicePixelRatio;
 
       icon_div = document.createElement("span");
-      (icon_div.style as StyleRecord)["padding"] = (icon_div.style as StyleRecord)["margin"] = "0px";
-      (icon_div.style as StyleRecord)["width"] = tilesize + "px";
-      (icon_div.style as StyleRecord)["height"] = tilesize + "px";
+      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
+      icon_div.style["width"] = tilesize + "px";
+      icon_div.style["height"] = tilesize + "px";
     }
 
-    (icon_div.style as StyleRecord)["display"] = "inline-flex";
-    (icon_div.style as StyleRecord)["margin-right"] = "1px";
-    (icon_div.style as StyleRecord)["align"] = "left";
+    icon_div.style["display"] = "inline-flex";
+    icon_div.style["marginRight"] = "1px";
+    icon_div.style["align" as any] = "left";
 
     const span = document.createElement("span");
 
     //stupid css doesn't get width right. . .
-    span.style["font"] = ui_base.getFont(this as unknown as ui_base.UIBase, undefined, "MenuText");
+    span.style["font"] = getFont(this, undefined, "MenuText");
 
     const dpi = this.getDPI();
     const tsize = (this.getDefault("MenuText") as CSSFont).size;
@@ -498,7 +509,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     let hwid: number | undefined;
     if (hotkey) {
       dom.hotkey = hotkey;
-      g.font = ui_base.getFont(this as unknown as ui_base.UIBase, undefined, "HotkeyText");
+      g.font = getFont(this, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width / UIBase.getDPI());
       twid += hwid + 8;
     }
@@ -507,16 +518,16 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     span.innerText = text;
 
-    (span.style as StyleRecord)["word-wrap"] = "none";
-    (span.style as StyleRecord)["white-space"] = "pre";
-    (span.style as StyleRecord)["overflow"] = "hidden";
-    (span.style as StyleRecord)["text-overflow"] = "clip";
+    span.style["wordWrap"] = "none";
+    span.style["whiteSpace"] = "pre";
+    span.style["overflow"] = "hidden";
+    span.style["textOverflow"] = "clip";
 
-    (span.style as StyleRecord)["width"] = ~~twid + "px";
-    (span.style as StyleRecord)["padding"] = "0px";
-    (span.style as StyleRecord)["margin"] = "0px";
+    span.style["width"] = ~~twid + "px";
+    span.style["padding"] = "0px";
+    span.style["margin"] = "0px";
 
-    (dom.style as StyleRecord)["width"] = "100%";
+    dom.style["width"] = "100%";
 
     dom.appendChild(icon_div);
     dom.appendChild(span);
@@ -524,29 +535,25 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     if (hotkey) {
       const hotkey_span = document.createElement("span");
       hotkey_span.innerText = hotkey;
-      (hotkey_span.style as StyleRecord)["display"] = "inline-flex";
+      hotkey_span.style["display"] = "inline-flex";
 
-      (hotkey_span.style as StyleRecord)["margin"] = "0px";
-      (hotkey_span.style as StyleRecord)["margin-left"] = "auto";
-      (hotkey_span.style as StyleRecord)["margin-right"] = "0px";
-      (hotkey_span.style as StyleRecord)["padding"] = "0px";
+      hotkey_span.style["margin"] = "0px";
+      hotkey_span.style["marginLeft"] = "auto";
+      hotkey_span.style["marginRight"] = "0px";
+      hotkey_span.style["padding"] = "0px";
 
-      (hotkey_span.style as StyleRecord)["font"] = ui_base.getFont(
-        this as unknown as ui_base.UIBase,
-        undefined,
-        "HotkeyText"
-      );
-      (hotkey_span.style as StyleRecord)["color"] = this.getDefault("HotkeyTextColor") as string;
+      hotkey_span.style["font"] = getFont(this, undefined, "HotkeyText");
+      hotkey_span.style["color"] = this.getDefault("HotkeyTextColor") as string;
 
       //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
-      (hotkey_span.style as StyleRecord)["width"] = "max-content";
+      hotkey_span.style["width"] = "max-content";
 
       //hotkey_span.style["background-color"] = "rgba(0,0,0,0)";
 
-      (hotkey_span.style as StyleRecord)["text-align"] = "right";
-      (hotkey_span.style as StyleRecord)["justify-content"] = "right";
-      (hotkey_span.style as StyleRecord)["flex-wrap"] = "nowrap";
-      (hotkey_span.style as StyleRecord)["text-wrap"] = "nowrap";
+      hotkey_span.style["textAlign"] = "right";
+      hotkey_span.style["justifyContent"] = "right";
+      hotkey_span.style["flexWrap"] = "nowrap";
+      hotkey_span.style["textWrap"] = "nowrap";
 
       //hotkey_span.style["border"] = "1px solid red";
 
@@ -570,14 +577,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   //item can be menu or text
-  addItem(item: string | String | HTMLElement | Menu, id?: string | number, add = true, tooltip?: string) {
+  addItem(item: string | string | HTMLElement | Menu, id?: string | number, add = true, tooltip?: string) {
     id = id === undefined ? (item as unknown as string | number) : id;
     let text: string | null =
       typeof item === "string" || item instanceof String ? (item as string) : (item as HTMLElement).textContent;
 
     if (typeof item === "string" || item instanceof String) {
       const dom = document.createElement("div");
-      (dom.style as StyleRecord)["text-align"] = "left";
+      dom.style["textAlign"] = "left";
 
       dom.textContent = item as string;
       item = dom;
@@ -606,7 +613,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       //dom.innerText = ""+item.title;
 
       //dom.style["display"] = "inline-block";
-      (li.style as StyleRecord)["width"] = "100%";
+      li.style["width"] = "100%";
       li.appendChild(dom);
 
       li._isMenu = true;
@@ -642,8 +649,6 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
           return;
         }
 
-        const active = this.activeItem;
-
         if (this._submenu) {
           this._submenu.close();
           this._submenu = undefined;
@@ -669,7 +674,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
         e.stopPropagation();
         e.preventDefault();
 
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
+        if (this.activeItem?._isMenu) {
           //ignore
           return;
         }
@@ -832,8 +837,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     this.buildStyle();
 
     const menuTextColor = (this.getDefault("MenuText") as CSSFont).color;
-    (this.container.style as StyleRecord)["color"] = menuTextColor;
-    (this.style as StyleRecord)["color"] = menuTextColor;
+    this.container.style["color"] = menuTextColor;
+    this.style["color"] = menuTextColor;
   }
 
   seperator() {
@@ -858,7 +863,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 }
 
 Menu.SEP = SEP;
-UIBase.internalRegister(Menu as unknown as ui_base.IUIBaseConstructor);
+UIBase.internalRegister(Menu);
 
 export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
   _menu: Menu<CTX> | undefined;
@@ -894,7 +899,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     this.r = 5;
     this._menu = undefined;
     this._auto_depress = false;
-    //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
+    //this.prop = new EnumProperty(undefined, {}, "", "", 0);
 
     this._onpress = this._onpress.bind(this);
   }
@@ -954,8 +959,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   setCSS() {
     //do not call parent classes's setCSS here
 
-    (this.style as StyleRecord)["user-select"] = "none";
-    (this.dom.style as StyleRecord)["user-select"] = "none";
+    this.style["userSelect"] = "none";
+    this.dom.style["userSelect"] = "none";
 
     let keys;
     if (this.getAttribute("simple")) {
@@ -977,7 +982,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     const setDefault = (key: string) => {
       if (this.hasDefault(key)) {
-        (this.style as StyleRecord)[key] = this.getDefault(key, undefined, 0) + "px";
+        this.style[key as any] = this.getDefault(key, undefined, 0) + "px";
       }
     };
 
@@ -1015,7 +1020,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     const ts = (this.getDefault("DefaultText") as CSSFont).size;
     let tw = this.g.measureText(this._genLabel()).width / dpi;
-    //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
+    //let tw = measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
 
     tw += 15;
@@ -1026,8 +1031,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (tw !== this._last_w) {
       this._last_w = tw;
-      (this.dom.style as StyleRecord)["width"] = tw + "px";
-      (this.style as StyleRecord)["width"] = tw + "px";
+      this.dom.style["width"] = tw + "px";
+      this.style["width"] = tw + "px";
       this.width = tw;
 
       this.overrideDefault("width", tw);
@@ -1307,13 +1312,13 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     /* need to figure out a better way to pop up a menu
      *  above a given y position */
     if (cconst.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
-      const con = screen.popup(this as unknown as ui_base.UIBase, 500, 400, false, 0) as unknown as PopupContainer;
+      const con = screen.popup(this, 500, 400, false, 0) as unknown as PopupContainer;
 
-      (con.style as StyleRecord)["z-index"] = "-10000";
-      (con.style as StyleRecord)["position"] = UIBase.PositionKey;
+      con.style["zIndex"] = "-10000";
+      con.style["position"] = UIBase.PositionKey;
       document.body.appendChild(con);
 
-      (con.style as StyleRecord)["visibility"] = "hidden";
+      con.style["visibility"] = "hidden";
 
       con.add(menu);
       menu.start();
@@ -1339,18 +1344,15 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
         menu.dom.remove();
         con.remove();
 
-        const popup =
-          (this._popup =
-          menu._popup =
-            screen!.popup(this as unknown as ui_base.UIBase, x, y, false, 0) as unknown as PopupContainer);
+        const popup = (this._popup = menu._popup = screen!.popup(this, x, y, false, 0) as unknown as PopupContainer);
         popup.noMarginsOrPadding();
 
         //popup.shadow.appendChild(menu.dom);
         popup.add(menu);
         menu.start();
 
-        (popup.style as StyleRecord)["left"] = x + "px";
-        (popup.style as StyleRecord)["top"] = y + "px";
+        popup.style["left"] = x + "px";
+        popup.style["top"] = y + "px";
         //menu.setCSS();
       }, 1);
 
@@ -1359,10 +1361,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (!screen) return;
 
-    const con =
-      (this._popup =
-      menu._popup =
-        screen.popup(this as unknown as ui_base.UIBase, x, y, false, 0) as unknown as PopupContainer);
+    const con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0) as unknown as PopupContainer);
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -1380,7 +1379,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this.g.clearRect(0, 0, this.dom.width, this.dom.height);
 
       if (this._highlight) {
-        ui_base.drawRoundBox2(this as unknown as ui_base.UIBase, {
+        drawRoundBox2(this, {
           canvas: this.dom,
           g     : this.g,
           color : this.getDefault("BoxHighlight") as string | undefined,
@@ -1388,14 +1387,14 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       }
 
       if (this._focus) {
-        ui_base.drawRoundBox2(this as unknown as ui_base.UIBase, {
+        drawRoundBox2(this, {
           canvas  : this.dom,
           g       : this.g,
           color   : this.getDefault("BoxHighlight") as string | undefined,
           op      : "stroke",
           no_clear: true,
         });
-        ui_base.drawRoundBox(this as unknown as ui_base.UIBase, this.dom, this.g, undefined, undefined, 2, "stroke");
+        drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
 
       this._draw_text();
@@ -1499,7 +1498,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   }
 }
 
-UIBase.internalRegister(DropBox as unknown as ui_base.IUIBaseConstructor);
+UIBase.internalRegister(DropBox as unknown as IUIBaseConstructor);
 
 export class MenuWrangler {
   screen: Screen | undefined;
@@ -1674,8 +1673,7 @@ export class MenuWrangler {
       return;
     }
 
-    type ScreenPick = Screen & { pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined };
-    const screen = this.screen as unknown as ScreenPick;
+    const screen = this.screen;
     const x = e.pageX;
     const y = e.pageY;
 
@@ -1694,9 +1692,7 @@ export class MenuWrangler {
       return;
     }
 
-    const screen = this.screen as unknown as Screen & {
-      pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined;
-    };
+    const screen = this.screen;
     const x = e.pageX;
     const y = e.pageY;
 
@@ -1714,9 +1710,7 @@ export class MenuWrangler {
   }
 
   findMenu(x: number, y: number) {
-    const screen = this.screen as unknown as Screen & {
-      pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined;
-    };
+    const screen = this.screen;
     if (!screen) return undefined;
 
     const element = screen.pickElement(x, y);
@@ -1729,7 +1723,7 @@ export class MenuWrangler {
       return element;
     }
 
-    let w: ui_base.UIBase | undefined = element;
+    let w = element as UIBase | undefined;
 
     while (w) {
       if (w instanceof Menu) {
@@ -1738,7 +1732,7 @@ export class MenuWrangler {
         break;
       }
 
-      w = (w as unknown as { parentWidget?: ui_base.UIBase | undefined }).parentWidget;
+      w = w.parentWidget;
     }
 
     return undefined;
@@ -1757,12 +1751,11 @@ export class MenuWrangler {
       return;
     }
 
-    type ScreenPick = Screen & { pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined };
-    const screen = this.screen as unknown as ScreenPick;
+    const screen = this.screen;
     const x = e.pageX;
     const y = e.pageY;
 
-    let element: ui_base.UIBase | undefined;
+    let element: UIBase | undefined;
     const menu = this.menu;
 
     if (menu) {
@@ -1789,7 +1782,7 @@ export class MenuWrangler {
       return;
     }
 
-    type DropBoxLike = ui_base.UIBase & { menu?: Menu; _onpress?(e: PointerEvent): void };
+    type DropBoxLike = UIBase & { menu?: Menu; _onpress?(e: PointerEvent): void };
     const elem = element as DropBoxLike;
 
     let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
@@ -1974,16 +1967,16 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
       doItem((item as MenuItemCallback)(document.createElement("div")) as unknown as MenuTemplateItem);
     } else if (item instanceof Array) {
       //old array-based api for custom entries
-      let hotkey: string | HotKey | undefined = item.length > 1 ? (item[1] as string | HotKey | undefined) : undefined;
-      const icon = item.length > 2 ? (item[2] as number | undefined) : undefined;
-      const tooltip = item.length > 3 ? (item[3] as string | undefined) : undefined;
-      const id2 = item.length > 4 ? (item[4] as string | number) : id++;
+      let hotkey: string | HotKey | undefined = item.length > 1 ? (item[2] as string | HotKey | undefined) : undefined;
+      const icon = item.length > 2 ? ((item as any)[3] as number | undefined) : undefined;
+      const tooltip = item.length > 3 ? ((item as any)[4] as string | undefined) : undefined;
+      const id2 = item.length > 4 ? ((item as any)[5] as string | number) : id++;
 
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
 
-      menu.addItemExtra(item[0], id2, hotkey as string | undefined, icon, undefined, tooltip);
+      menu.addItemExtra(item[0], id2, hotkey, icon, undefined, tooltip);
 
       cbs[id2 as string | number] = (function (cbfunc: Function, arg: string | number) {
         return function () {
@@ -2033,7 +2026,7 @@ export function startMenu(menu: Menu, x: number, y: number, searchMenuMode = fal
 
   const screen = (menu.ctx as IContextBase).screen as unknown as Screen;
   const con = (menu._popup = screen.popup(
-    menu as unknown as ui_base.UIBase,
+    menu as unknown as UIBase,
     x,
     y,
     false,
@@ -2051,6 +2044,6 @@ export function startMenu(menu: Menu, x: number, y: number, searchMenuMode = fal
   menu.flushUpdate();
   menu.flushSetCSS();
 
-  (menu._popup as unknown as ui_base.UIBase).flushUpdate();
-  (menu._popup as unknown as ui_base.UIBase).flushSetCSS();
+  menu._popup.flushUpdate();
+  menu._popup.flushSetCSS();
 }
