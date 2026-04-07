@@ -1,18 +1,6 @@
-/* TS-NOCHECK RATIONALE: 215 remaining strict-mode errors after structural conversion.
- * Major categories to fix incrementally:
- *   1. CSSStyleDeclaration string indexing (31x) — use (style as StyleRecord) pattern
- *   2. graphExec() dynamic socket values — needs typed sock.value/oldValue
- *   3. catch(error) unknown (3x) — cast to Error
- *   4. Touch event handlers (4x) — addEventListener type mismatch
- *   5. SocketTypes.INPUT/OUTPUT type mismatch — imported number vs SocketType literal
- *   6. EventNode.register() GraphNodeDef shape — missing 'flag' field
- *   7. Dynamic theme object access patterns
- *   8. customElements.define() cls parameter
- *   9. initAspectClass(this) — AspectOwner type
- */
 import { contextWrangler } from "../screen/area_wrangler.js";
 import type { Area } from "../screen/ScreenArea";
-
+export type DefaultTypes = string | number | boolean | CSSFont
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   new (): T;
 
@@ -1002,13 +990,19 @@ export class UIBase<
   graphNode?: EventNode;
 
   /* Dynamic property fields set by subclasses (numslider, etc) */
-  baseUnit?: string;
-  displayUnit?: string;
-  isInt?: boolean;
-  radix?: number;
-  decimalPlaces?: number;
-  editAsBaseUnit?: boolean;
-  range?: [number, number];
+  accessor baseUnit: string | undefined = undefined;
+  accessor displayUnit: string | undefined;
+  accessor isInt: boolean | undefined;
+  accessor radix: number | undefined;
+  accessor decimalPlaces: number | undefined;
+  accessor editAsBaseUnit: boolean | undefined;
+  accessor range: [number, number] | undefined;
+  accessor step: number | undefined;
+  accessor slideSpeed: number | undefined;
+  accessor expRate: number | undefined;
+  accessor stepIsRelative: boolean | undefined;
+  accessor sliderDisplayExp: number | undefined;
+  accessor uiRange: [number, number] | undefined;
   // XXX review this later
   get value(): VALUE {
     throw new Error("implement me");
@@ -1018,6 +1012,7 @@ export class UIBase<
   }
   ondestroy?: () => void;
   getValue?: () => unknown;
+  declare onchange: ((val: unknown) => void) | null;
 
   #reflagGraph = false;
 
@@ -1665,7 +1660,11 @@ export class UIBase<
   }
 
   get hidden(): boolean {
-    return super.hidden === "until-found" ? true : super.hidden;
+    const value = super.hidden as any;
+    if (typeof value === "string" && value === "until-found") {
+      return true;
+    }
+    return Boolean(value);
   }
 
   hide(sethide = true): this {
@@ -2967,7 +2966,7 @@ export class UIBase<
   }
 
   loadNumConstraints(
-    prop: ResolvedProp | toolprop.ToolProperty,
+    prop: ResolvedProp | toolprop.ToolProperty | undefined,
     dom: HTMLElement | UIBase<CTX> = this,
     onModifiedCallback?: (this: UIBase) => void
   ): void {
@@ -3669,20 +3668,20 @@ export class UIBase<
 
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
-  getSubDefault(
+  getSubDefault<T extends DefaultTypes = string>(
     key: string,
     subkey: string,
     backupkey: string = subkey,
-    defaultval?: unknown,
+    defaultval?: T,
     inherit = true
-  ): unknown {
+  ): T {
     /* Check if client code manually overrode a theme key for this instance. */
     if (subkey && subkey in this.my_default_overrides) {
       //return this.getDefault(subkey, undefined, defaultval);
     }
 
     if (!key) {
-      return this.getDefault(subkey, undefined, defaultval, inherit);
+      return this.getDefault<T>(subkey, undefined, defaultval, inherit);
     }
 
     const style = this.getDefault(key, undefined, undefined, inherit);
@@ -3693,12 +3692,11 @@ export class UIBase<
       } else if (backupkey) {
         return this.getDefault(backupkey, undefined, undefined, inherit);
       }
-    } else {
-      return (style as Record<string, unknown>)[subkey];
     }
+    return (style as unknown as Record<string, T>)[subkey] as T;
   }
 
-  getDefault<T extends number | string | CSSFont = string>(
+  getDefault<T extends DefaultTypes = string>(
     key: string,
     checkForMobile?: boolean,
     defaultval?: unknown,

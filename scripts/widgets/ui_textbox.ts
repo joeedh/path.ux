@@ -3,78 +3,73 @@
 import * as units from "../core/units.js";
 
 import * as events from "../path-controller/util/events.js";
-import * as toolprop from "../path-controller/toolsys/toolprop.js";
-
-function myToFixed(s: string, n: number) {
-  s = s.toFixed(n);
-
-  while (s.endsWith("0")) {
-    s = s.slice(0, s.length - 1);
-  }
-  if (s.endsWith(".")) {
-    s = s.slice(0, s.length - 1);
-  }
-
-  return s;
-}
+import { PropTypes } from "../path-controller/toolsys/toolprop.js";
 
 const keymap = events.keymap;
 
-const EnumProperty = toolprop.EnumProperty;
-const PropTypes = toolprop.PropTypes;
-
-import { UIBase, PackFlags, IconSheets, parsepx } from "../core/ui_base";
-import { Button } from "./ui_button.js";
+import { UIBase } from "../core/ui_base";
 import { _setTextboxClass, ErrorColors } from "../core/ui_base.js";
 import { IContextBase } from "../core/context_base.js";
+import type { CSSFont } from "../core/cssfont.js";
 
 export class TextBoxBase<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   static define() {
     return {
+      tagname       : "text-box-base",
       modalKeyEvents: true,
     };
   }
 }
 
 export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
+  dom: HTMLInputElement;
+  _editing = false;
+  _width: string | number = "min-content";
+  _textBoxEvents = true;
+  _had_error = false;
+  _modal: unknown = undefined;
+  _focus = 0;
+  onend?: (ok: boolean) => void;
+  accessor radix = 16;
+
   constructor() {
     super();
 
     this._editing = false;
 
-    this._width = this.getDefault("width") + "px";
+    this._width = (this.getDefault("width") as number) + "px";
     this._textBoxEvents = true;
 
     const margin = Math.ceil(3 * this.getDPI());
 
     this._had_error = false;
 
-    this.decimalPlaces = undefined; //will inherit from property defaults
+    this.decimalPlaces = undefined;
 
-    this.baseUnit = undefined; //will automatically use defaults
-    this.displayUnit = undefined; //will automatically use defaults
+    this.baseUnit = undefined;
+    this.displayUnit = undefined;
 
     this.dom = document.createElement("input");
 
     this.dom.tabIndex = 0;
-    this.dom.setAttribute("tabindex", 0);
-    this.dom.setAttribute("tab-index", 0);
+    this.dom.setAttribute("tabindex", "0");
+    this.dom.setAttribute("tab-index", "0");
     this.dom.style["margin"] = margin + "px";
 
     this.dom.setAttribute("type", "textbox");
-    this.dom.onchange = (e) => {
+    this.dom.onchange = (e: Event) => {
       this._change(this.dom.value);
     };
 
     this.radix = 16;
 
-    this.dom.oninput = (e) => {
+    this.dom.oninput = (e: Event) => {
       this._change(this.dom.value);
     };
 
     this.shadow.appendChild(this.dom);
 
-    this.dom.addEventListener("focus", (e) => {
+    this.dom.addEventListener("focus", (e: Event) => {
       console.log("Textbox focus", this.isModal);
 
       this._focus = 1;
@@ -85,7 +80,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       }
     });
 
-    this.dom.addEventListener("blur", (e) => {
+    this.dom.addEventListener("blur", (e: Event) => {
       console.log("Textbox blur");
 
       this._focus = 0;
@@ -98,12 +93,12 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   }
 
   get startSelected() {
-    const b = ("" + this.getAttribute("start-selected")).toLowerCase();
+    const b = (this.getAttribute("start-selected") ?? "").toLowerCase();
 
     return b === "yes" || b === "true" || b === "on" || b === "1";
   }
 
-  set startSelected(v) {
+  set startSelected(v: boolean) {
     this.setAttribute("start-selected", v ? "true" : "false");
   }
 
@@ -120,7 +115,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     return ret === "yes" || ret === "true" || ret === "on";
   }
 
-  set realtime(val) {
+  set realtime(val: boolean) {
     this.setAttribute("realtime", val ? "true" : "false");
   }
 
@@ -136,7 +131,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     return ret === "yes" || ret === "true" || ret === "on";
   }
 
-  set isModal(val) {
+  set isModal(val: boolean) {
     this.setAttribute("modal", val ? "true" : "false");
   }
 
@@ -155,11 +150,11 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
     let ignore = 0;
 
-    const finish = (ok) => {
+    const finish = (ok: boolean) => {
       this._endModal(ok);
     };
 
-    const keydown = (e) => {
+    const keydown = (e: KeyboardEvent) => {
       e.stopPropagation();
 
       switch (e.keyCode) {
@@ -184,7 +179,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this._modal = true;
     this.pushModal(
       {
-        on_mousemove: (e) => {
+        on_mousemove: (e: PointerEvent) => {
           e.stopPropagation();
         },
 
@@ -192,7 +187,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
         on_keypress: keydown,
         on_keyup   : keydown,
 
-        on_mousedown: (e) => {
+        on_mousedown: (e: PointerEvent) => {
           e.stopPropagation();
           console.log("mouse down", e, e.x, e.y);
         },
@@ -209,7 +204,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     return this._editing;
   }
 
-  _endModal(ok) {
+  _endModal(ok: boolean) {
     console.log("textbox end modal");
 
     this._editing = false;
@@ -232,7 +227,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     return this.dom.tabIndex;
   }
 
-  set tabIndex(val) {
+  set tabIndex(val: number) {
     this.dom.tabIndex = val;
   }
 
@@ -245,18 +240,21 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
 
     this.style["display"] = "flex";
-    this.style["width"] = this._width;
+    this.style["width"] = typeof this._width === "number" ? this._width + "px" : this._width;
 
     this.setCSS();
   }
 
-  set width(val) {
+  set width(val: string | number) {
+    let widthStr: string;
     if (typeof val === "number") {
-      val += "px";
+      widthStr = val + "px";
+    } else {
+      widthStr = val;
     }
 
-    this._width = val;
-    this.style["width"] = val;
+    this._width = widthStr;
+    this.style["width"] = widthStr;
   }
 
   setCSS() {
@@ -264,40 +262,44 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
     this.overrideDefault("background-color", this.getDefault("background-color"));
 
-    this.background = this.getDefault("background-color");
-    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+    this.background = this.getDefault("background-color") as string | undefined;
+    this.dom.style.margin = this.dom.style.padding = "0px";
 
-    if (this.getDefault("background-color")) {
-      this.dom.style["background-color"] = this.getDefault("background-color");
+    const bgColor = this.getDefault("background-color") as string | undefined;
+    if (bgColor) {
+      this.dom.style.backgroundColor = bgColor;
     }
 
-    this.style["border-radius"] = this.getDefault("border-radius") + "px";
-    this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+    const borderRadius = this.getDefault("border-radius") as number;
+    this.style.borderRadius = borderRadius + "px";
+    this.dom.style.borderRadius = borderRadius + "px";
 
-    const bwid = this.getDefault("border-width");
-    const bcolor = this.getDefault("border-color");
-    const bstyle = this.getDefault("border-style");
+    const bwid = this.getDefault("border-width") as number;
+    const bcolor = this.getDefault("border-color") as string;
+    const bstyle = this.getDefault("border-style") as string;
     const border = `${bwid}px ${bstyle} ${bcolor}`;
 
-    this.style["border"] = border;
-    this.style["border-color"] = bcolor;
+    this.style.border = border;
+    this.style.borderColor = bcolor;
 
     if (this._focus) {
-      this.dom.style["border"] = `2px dashed ${this.getDefault("focus-border-color")}`;
+      this.dom.style.border = `2px dashed ${this.getDefault("focus-border-color") as string}`;
     } else {
-      this.dom.style["border"] = border;
-      this.dom.style["border-color"] = bcolor;
+      this.dom.style.border = border;
+      this.dom.style.borderColor = bcolor;
     }
 
-    if (this.style["font"]) {
-      this.dom.style["font"] = this.style["font"];
+    const fontStyle = this.style["font"];
+    if (fontStyle) {
+      this.dom.style["font"] = fontStyle;
     } else {
-      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
-      this.dom.style["color"] = this.getDefault("DefaultText").color;
+      const defaultFont = this.getDefault("DefaultText") as CSSFont;
+      this.dom.style["font"] = defaultFont.genCSS();
+      this.dom.style["color"] = defaultFont.color;
     }
 
-    this.dom.style["width"] = "100%";
-    this.dom.style["height"] = "100%";
+    this.dom.style.width = "100%";
+    this.dom.style.height = "100%";
   }
 
   updateDataPath() {
@@ -308,7 +310,8 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       return;
     }
 
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const datapath = this.getAttribute("datapath")!;
+    const val = this.getPathValue(this.ctx, datapath);
     if (val === undefined || val === null) {
       this.internalDisabled = true;
       return;
@@ -316,18 +319,18 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this.internalDisabled = false;
     }
 
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    const prop = this.getPathMeta(this.ctx, datapath);
 
     let text = this.text;
 
     if (!prop) {
-      console.error("datapath error " + this.getAttribute("datapath"), val);
+      console.error("datapath error " + datapath, val);
       return;
     }
 
-    let is_num = prop.type & (PropTypes.FLOAT | PropTypes.INT);
+    let is_num: number = prop.type & (PropTypes.FLOAT | PropTypes.INT);
     if (typeof val === "number" && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)) {
-      is_num = true;
+      is_num = 1;
     }
 
     if (is_num) {
@@ -337,29 +340,29 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
       let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
       if (this.hasAttribute("decimalPlaces")) {
-        decimalPlaces = parseInt(this.getAttribute("decimalPlaces"));
+        decimalPlaces = parseInt(this.getAttribute("decimalPlaces")!);
       }
 
-      let baseUnit = this.baseUnit ?? prop.baseUnit;
+      let baseUnit: string | undefined = this.baseUnit ?? prop.baseUnit;
       if (this.hasAttribute("baseUnit")) {
-        baseUnit = this.getAttribute("baseUnit");
+        baseUnit = this.getAttribute("baseUnit") ?? undefined;
       }
 
-      let displayUnit = this.displayUnit ?? prop.displayUnit;
+      let displayUnit: string | undefined = this.displayUnit ?? prop.displayUnit;
       if (this.hasAttribute("displayUnit")) {
-        displayUnit = this.getAttribute("displayUnit");
+        displayUnit = this.getAttribute("displayUnit") ?? undefined;
       }
 
       if (is_int && this.radix === 2) {
-        text = val.toString(this.radix);
+        text = (val as number).toString(this.radix);
         text = "0b" + text;
       } else if (is_int && this.radix === 16) {
         text += "h";
       } else {
-        text = units.buildString(val, baseUnit, decimalPlaces, displayUnit);
+        text = units.buildString(val as number, baseUnit, decimalPlaces, displayUnit);
       }
     } else if (prop?.type === PropTypes.STRING) {
-      text = val;
+      text = val as string;
     }
 
     if (this.text !== text) {
@@ -370,11 +373,13 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   update() {
     super.update();
 
-    if (this.dom.style["width"] !== this.style["width"]) {
-      this.dom.style["width"] = this.style["width"];
+    const styleWidth = this.style["width"];
+    const styleHeight = this.style["height"];
+    if (styleWidth && this.dom.style["width"] !== styleWidth) {
+      this.dom.style["width"] = styleWidth;
     }
-    if (this.dom.style["height"] !== this.style["height"]) {
-      this.dom.style["height"] = this.style["height"];
+    if (styleHeight && this.dom.style["height"] !== styleHeight) {
+      this.dom.style["height"] = styleHeight;
     }
 
     if (this.hasAttribute("datapath")) {
@@ -409,36 +414,34 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     return this.dom.value;
   }
 
-  set text(value) {
+  set text(value: string) {
     this.dom.value = value;
   }
 
-  _prop_update(prop, text) {
-    let is_num = prop.type & (PropTypes.FLOAT | PropTypes.INT);
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+  _prop_update(prop: any, text: string) {
+    let is_num: number = prop.type & (PropTypes.FLOAT | PropTypes.INT);
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
     if (typeof val === "number" && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)) {
-      is_num = true;
+      is_num = 1;
     }
 
     if (is_num) {
-      const is_int = prop.type === PropTypes.INT;
-
       this.radix = prop.radix;
 
       let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
       if (this.hasAttribute("decimalPlaces")) {
-        decimalPlaces = parseInt(this.getAttribute("decimalPlaces"));
+        decimalPlaces = parseInt(this.getAttribute("decimalPlaces")!);
       }
 
-      let baseUnit = this.baseUnit ?? prop.baseUnit;
+      let baseUnit: string | undefined = this.baseUnit ?? prop.baseUnit;
       if (this.hasAttribute("baseUnit")) {
-        baseUnit = this.getAttribute("baseUnit");
+        baseUnit = this.getAttribute("baseUnit") ?? undefined;
       }
 
-      let displayUnit = this.displayUnit ?? prop.displayUnit;
+      let displayUnit: string | undefined = this.displayUnit ?? prop.displayUnit;
       if (this.hasAttribute("displayUnit")) {
-        displayUnit = this.getAttribute("displayUnit");
+        displayUnit = this.getAttribute("displayUnit") ?? undefined;
       }
 
       if (!units.isNumber(text.trim())) {
@@ -454,11 +457,11 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
         }
 
         this._had_error = false;
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, val);
       }
     } else if (prop.type === PropTypes.STRING) {
       try {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.text);
 
         if (this._had_error) {
           this.flash(ErrorColors.OK, this.dom, undefined, false);
@@ -467,8 +470,8 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
         this._had_error = false;
       } catch (error) {
-        console.log(error.stack);
-        console.log(error.message);
+        console.log((error as Error).stack);
+        console.log((error as Error).message);
         console.warn("textbox error!");
         //this._had_error = true;
 
@@ -478,9 +481,9 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
   }
 
-  _updatePathVal(text) {
+  _updatePathVal(text: string) {
     if (this.hasAttribute("datapath") && this.ctx !== undefined) {
-      const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
       console.log(prop);
 
       if (prop) {
@@ -489,7 +492,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
   }
 
-  _change(text) {
+  _change(text: string) {
     if (this.realtime) {
       this._updatePathVal(text);
     }
@@ -500,7 +503,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   }
 }
 
-UIBase.internalRegister(TextBox);
+UIBase.internalRegister(TextBox as unknown as typeof UIBase);
 
 /**
 
@@ -509,13 +512,13 @@ UIBase.internalRegister(TextBox);
  Returns true if the element at position x,y is
  either a textbox or is draggable.
  */
-export function checkForTextBox(screen, x, y) {
-  let p = screen.pickElement(x, y);
+export function checkForTextBox<CTX extends IContextBase = IContextBase>(screen: UIBase<CTX>, x: number, y: number) {
+  let p: any = screen.pickElement(x, y);
   //console.log(p, x, y);
 
   while (p) {
     //don't prevent draggable elements from dragging
-    if (p.draggable) {
+    if ((p as any).draggable) {
       return true;
     }
 
@@ -525,7 +528,7 @@ export function checkForTextBox(screen, x, y) {
         const nodes = i ? p.childNodes : p.shadow.childNodes;
 
         for (const child of nodes) {
-          if (child.draggable) {
+          if ((child as any).draggable) {
             return true;
           }
         }
@@ -545,4 +548,4 @@ export function checkForTextBox(screen, x, y) {
   return false;
 }
 
-_setTextboxClass(TextBox);
+_setTextboxClass(TextBox as unknown as new (...args: unknown[]) => HTMLElement);

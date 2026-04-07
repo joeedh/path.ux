@@ -331,7 +331,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   _last_dpi: number;
   _lastw: number | undefined;
   _lasth: number | undefined;
-  dom: HTMLCanvasElement;
+  dom: HTMLCanvasElement & { _background?: string, font?: string };
   g: CanvasRenderingContext2D;
   _last_bg: string | undefined;
   _last_disabled: boolean;
@@ -429,7 +429,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
     if (this._last_disabled !== this.disabled) {
       this._last_disabled = this.disabled;
 
-      (this.dom as unknown as Record<string, unknown>)._background = this.getDefault("background-color");
+      this.dom._background = this.getDefault("background-color");
 
       this._repos_canvas();
       this._redraw();
@@ -581,7 +581,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
     if (this._last_dpi !== dpi) {
       this._last_dpi = dpi;
 
-      (this.g as unknown as Record<string, unknown>).font = undefined;
+      this.g.font = "";
 
       this.setCSS();
       this._repos_canvas();
@@ -589,7 +589,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
     }
 
     if (this.style.backgroundColor) {
-      (this.dom as unknown as Record<string, unknown>)._background = this.style.backgroundColor;
+      this.dom._background = this.style.backgroundColor;
       this.style.backgroundColor = "";
     }
   }
@@ -613,23 +613,11 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
     const subkey = this._getSubKey();
 
     if (this._pressed && this._highlight) {
-      (this.dom as unknown as Record<string, unknown>)._background = this.getSubDefault(
-        subkey,
-        "highlight-pressed",
-        "BoxHighlight"
-      );
+      this.dom._background = this.getSubDefault(subkey, "highlight-pressed", "BoxHighlight");
     } else if (this._pressed) {
-      (this.dom as unknown as Record<string, unknown>)._background = this.getSubDefault(
-        subkey,
-        "pressed",
-        "BoxDepressed"
-      );
+      this.dom._background = this.getSubDefault(subkey, "pressed", "BoxDepressed");
     } else if (this._highlight) {
-      (this.dom as unknown as Record<string, unknown>)._background = this.getSubDefault(
-        subkey,
-        "highlight",
-        "BoxHighlight"
-      );
+      this.dom._background = this.getSubDefault(subkey, "highlight", "BoxHighlight");
     } else {
       (this.dom as unknown as Record<string, unknown>)._background = this.getSubDefault(
         subkey,

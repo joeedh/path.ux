@@ -1,12 +1,23 @@
-// @ts-nocheck
-import * as util from '../path-controller/util/util.js';
-import * as ui from '../core/ui.js';
-import * as ui_base from '../core/ui_base.js';
-import {Icons, css2color, color2css} from '../core/ui_base.js';
+import * as util from '../path-controller/util/util';
+import * as ui from '../core/ui';
+import * as ui_base from '../core/ui_base';
+import {Icons, css2color, color2css, getFont} from '../core/ui_base';
+import {IContextBase} from '../core/context_base';
+
+/* Helper for CSSStyleDeclaration string indexing. */
+type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
 let UIBase = ui_base.UIBase;
 
-export class Note extends ui_base.UIBase {
+export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
+  _noteid: string | undefined;
+  height: number;
+  showExclMark: boolean;
+  dom: HTMLDivElement;
+  color: string;
+  mark: HTMLDivElement | undefined;
+  ntext!: HTMLDivElement;
+
   constructor() {
     super();
 
@@ -44,27 +55,27 @@ export class Note extends ui_base.UIBase {
     }
   }
 
-  setLabel(s) {
+  setLabel(s: string) {
     let color = this.color;
     if (this.showExclMark && this.mark === undefined) {
       this.mark = document.createElement("div");
-      this.mark.style["display"] = "flex";
-      this.mark.style["flex-direction"] = "row";
-      this.mark.style["flex-wrap"] = "nowrap";
+      (this.mark.style as StyleRecord)["display"] = "flex";
+      (this.mark.style as StyleRecord)["flex-direction"] = "row";
+      (this.mark.style as StyleRecord)["flex-wrap"] = "nowrap";
 
       //this.mark.style["width"]
       let sheet = 0;
 
       let size = ui_base.iconmanager.getTileSize(sheet);
 
-      this.mark.style["width"] = "" + size + "px";
-      this.mark.style["height"] = "" + size + "px";
+      (this.mark.style as StyleRecord)["width"] = "" + size + "px";
+      (this.mark.style as StyleRecord)["height"] = "" + size + "px";
 
       this.dom.appendChild(this.mark);
 
       this.ntext = document.createElement("div");
-      this.ntext.style["display"] = "inline-flex";
-      this.ntext.style["flex-wrap"] = "nowrap";
+      (this.ntext.style as StyleRecord)["display"] = "inline-flex";
+      (this.ntext.style as StyleRecord)["flex-wrap"] = "nowrap";
 
       this.dom.appendChild(this.ntext);
 
@@ -88,17 +99,17 @@ export class Note extends ui_base.UIBase {
 
     this.setAttribute("class", "notex");
 
-    this.style["display"] = "flex";
-    this.style["flex-wrap"] = "nowrap";
-    this.style["flex-direction"] = "row";
-    this.style["border-radius"] = "7px";
-    this.style["padding"] = "2px";
+    (this.style as StyleRecord)["display"] = "flex";
+    (this.style as StyleRecord)["flex-wrap"] = "nowrap";
+    (this.style as StyleRecord)["flex-direction"] = "row";
+    (this.style as StyleRecord)["border-radius"] = "7px";
+    (this.style as StyleRecord)["padding"] = "2px";
 
-    this.style["color"] = this.getDefault("DefaultText").color;
+    (this.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as {color: string}).color;
     let clr = css2color(this.color);
-    clr = color2css([clr[0], clr[1], clr[2], 0.25]);
+    let clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
 
-    this.style["background-color"] = clr;
+    (this.style as StyleRecord)["background-color"] = clrCss;
     this.setCSS();
   }
 
@@ -109,7 +120,12 @@ export class Note extends ui_base.UIBase {
 
 UIBase.internalRegister(Note);
 
-export class ProgBarNote extends Note {
+export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<CTX> {
+  _percent: number;
+  barWidth: number;
+  bar: HTMLDivElement;
+  bar2: HTMLDivElement;
+
   constructor() {
     super();
 
@@ -117,25 +133,24 @@ export class ProgBarNote extends Note {
     this.barWidth = 100;
 
     let bar = this.bar = document.createElement("div");
-    bar.style["display"] = "flex";
-    bar.style["flex-direction"] = "row";
-    bar.style["width"] = this.barWidth + "px";
-    bar.style["height"] = this.height + "px";
-    bar.style["background-color"] = this.getDefault("ProgressBarBG");
-    bar.style["border-radius"] = "12px";
-    bar.style["align-items"] = "center";
-    bar.style["padding"] = bar.style["margin"] = "0px";
+    (bar.style as StyleRecord)["display"] = "flex";
+    (bar.style as StyleRecord)["flex-direction"] = "row";
+    (bar.style as StyleRecord)["width"] = this.barWidth + "px";
+    (bar.style as StyleRecord)["height"] = this.height + "px";
+    (bar.style as StyleRecord)["background-color"] = this.getDefault("ProgressBarBG");
+    (bar.style as StyleRecord)["border-radius"] = "12px";
+    (bar.style as StyleRecord)["align-items"] = "center";
+    (bar.style as StyleRecord)["padding"] = (bar.style as StyleRecord)["margin"] = "0px";
 
     let bar2 = this.bar2 = document.createElement("div");
-    let w = 50.0;
 
-    bar2.style["display"] = "flex";
-    bar2.style["flex-direction"] = "row";
-    bar2.style["height"] = this.height + "px";
-    bar2.style["background-color"] = this.getDefault("ProgressBar");
-    bar2.style["border-radius"] = "12px";
-    bar2.style["align-items"] = "center";
-    bar2.style["padding"] = bar2.style["margin"] = "0px";
+    (bar2.style as StyleRecord)["display"] = "flex";
+    (bar2.style as StyleRecord)["flex-direction"] = "row";
+    (bar2.style as StyleRecord)["height"] = this.height + "px";
+    (bar2.style as StyleRecord)["background-color"] = this.getDefault("ProgressBar");
+    (bar2.style as StyleRecord)["border-radius"] = "12px";
+    (bar2.style as StyleRecord)["align-items"] = "center";
+    (bar2.style as StyleRecord)["padding"] = (bar2.style as StyleRecord)["margin"] = "0px";
 
     this.bar.appendChild(bar2);
     this.dom.appendChild(this.bar);
@@ -145,7 +160,7 @@ export class ProgBarNote extends Note {
     return this._percent;
   }
 
-  set percent(val) {
+  set percent(val: number) {
     this._percent = val;
     this.setCSS();
   }
@@ -162,7 +177,7 @@ export class ProgBarNote extends Note {
 
     let w = ~~(this.percent*this.barWidth + 0.5);
 
-    this.bar2.style["width"] = w + "px";
+    (this.bar2.style as StyleRecord)["width"] = w + "px";
   }
 
   init() {
@@ -172,7 +187,9 @@ export class ProgBarNote extends Note {
 
 UIBase.internalRegister(ProgBarNote);
 
-export class NoteFrame extends ui.RowFrame {
+export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFrame<CTX> {
+  _h: number;
+
   constructor() {
     super();
     this._h = 20;
@@ -190,32 +207,32 @@ export class NoteFrame extends ui.RowFrame {
 
     this.noMarginsOrPadding();
 
-    noteframes.push(this);
+    noteframes.push(this as unknown as NoteFrame);
     this.background = this.getDefault("background-color");
-    this.style['flex-grow'] = 'unset';
+    (this.style as StyleRecord)['flex-grow'] = 'unset';
   }
 
   setCSS() {
     super.setCSS();
 
-    this.style["width"] = "min-contents";
-    this.style["height"] = this._h + "px";
+    (this.style as StyleRecord)["width"] = "min-contents";
+    (this.style as StyleRecord)["height"] = this._h + "px";
   }
 
   _ondestroy() {
-    if (noteframes.indexOf(this) >= 0) {
-      noteframes.remove(this)
+    if (noteframes.indexOf(this as unknown as NoteFrame) >= 0) {
+      noteframes.remove(this as unknown as NoteFrame)
     }
 
     super._ondestroy();
   }
 
-  progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id = msg) {
-    let note;
+  progbarNote(msg: string, percent: number, color = "rgba(255,0,0,0.2)", timeout = 700, id: string = msg) {
+    let note: ProgBarNote<CTX> | undefined;
 
     for (let child of this.childWidgets) {
-      if (child._noteid === id) {
-        note = child;
+      if ((child as Note<CTX>)._noteid === id) {
+        note = child as ProgBarNote<CTX>;
         break;
       }
     }
@@ -223,7 +240,7 @@ export class NoteFrame extends ui.RowFrame {
     let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
 
     if (note === undefined) {
-      note = this.addNote(msg, color, -1, "note-progress-x");
+      note = this.addNote(msg, color, -1, "note-progress-x") as ProgBarNote<CTX>;
       note._noteid = id;
     }
 
@@ -234,14 +251,14 @@ export class NoteFrame extends ui.RowFrame {
       //note.setLabel(msg + " " + f + "%");
 
       window.setTimeout(() => {
-        note.remove();
+        note!.remove();
       }, timeout);
     }
 
     return note;
   }
 
-  addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark=true) {
+  addNote(msg: string, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
     //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
@@ -250,15 +267,15 @@ export class NoteFrame extends ui.RowFrame {
 
     //this._add(note);
 
-    let note = UIBase.createElement(tagname);
+    let note = UIBase.createElement(tagname) as Note<CTX>;
 
     note.color = color;
     note.setLabel(msg);
 
-    note.style["text-align"] = "center";
+    (note.style as StyleRecord)["text-align"] = "center";
 
-    note.style["font"] = ui_base.getFont(note, "DefaultText");
-    note.style["color"] = this.getDefault("DefaultText").color;
+    (note.style as StyleRecord)["font"] = getFont(note, undefined, "DefaultText");
+    (note.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as {color: string}).color;
     note.showExclMark = showExclMark;
 
     this.add(note);
@@ -270,7 +287,7 @@ export class NoteFrame extends ui.RowFrame {
     //this.style["position"] = UIBase.PositionKey;
     //note.style["position"] = UIBase.PositionKey;
 
-    note.style["height"] = this._h + "px";
+    (note.style as StyleRecord)["height"] = this._h + "px";
     note.height = this._h;
 
     if (timeout !== -1) {
@@ -288,10 +305,10 @@ export class NoteFrame extends ui.RowFrame {
 
 UIBase.internalRegister(NoteFrame);
 
-export function getNoteFrames(screen) {
-  let ret = [];
+export function getNoteFrames(screen: Node): NoteFrame[] {
+  let ret: NoteFrame[] = [];
 
-  let rec = (n) => {
+  let rec = (n: Node) => {
 
     if (n instanceof NoteFrame) {
       ret.push(n);
@@ -314,46 +331,46 @@ export function getNoteFrames(screen) {
   return ret;
 }
 
-export let noteframes = [];
+export let noteframes: NoteFrame[] = [];
 
-export function sendNote(screen, msg, color, timeout = 3000, showExclMark=true) {
+export function sendNote(screen: Node, msg: string, color?: string, timeout = 3000, showExclMark = true) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
     try {
       frame.addNote(msg, color, timeout, undefined, showExclMark);
-    } catch (error) {
+    } catch (error: unknown) {
       print_stack(error);
-      console.log(error.stack, error.message);
+      console.log((error as Error).stack, (error as Error).message);
       console.log("bad notification frame");
     }
   }
 }
 
-window._sendNote = sendNote;
+window._sendNote = sendNote as (...args: unknown[]) => void;
 
-export function error(screen, msg, timeout) {
+export function error(screen: Node, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([1.0, 0.0, 0.0, 1.0]), timeout);
 }
 
-export function warning(screen, msg, timeout) {
+export function warning(screen: Node, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.78, 0.78, 0.2, 1.0]), timeout);
 }
 
-export function message(screen, msg, timeout) {
+export function message(screen: Node, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
 
 
-export function progbarNote(screen, msg, percent, color, timeout) {
+export function progbarNote(screen: Node, msg: string, percent: number, color?: string, timeout?: number) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
     try {
       frame.progbarNote(msg, percent, color, timeout);
-    } catch (error) {
+    } catch (error: unknown) {
       print_stack(error);
-      console.log(error.stack, error.message);
+      console.log((error as Error).stack, (error as Error).message);
       console.log("bad notification frame");
     }
   }

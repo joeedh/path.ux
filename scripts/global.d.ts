@@ -8,6 +8,33 @@
 
 /* eslint-disable no-var */
 
+/** Minimal TinyMCE types for docbrowser integration */
+interface TinyMCEURI {
+  host: string;
+  source: string;
+  toAbsolute(): string;
+}
+
+interface TinyMCEUndoManager {
+  beforeChange(): void;
+  add(): void;
+}
+
+interface TinyMCEEditor {
+  undoManager: TinyMCEUndoManager;
+}
+
+interface TinyMCEInstance {
+  baseURI: TinyMCEURI;
+  baseURL: string;
+  editors: TinyMCEEditor[];
+  init(config: Record<string, unknown>): Promise<TinyMCEInstance[]>;
+  show(): void;
+  hide(): void;
+}
+
+declare function _tinymce(globals: Window): TinyMCEInstance;
+
 declare interface ElementCSSInlineStyle {
   style: { [k: string]: string };
 }
@@ -27,6 +54,7 @@ interface PathUXDebug {
 }
 
 interface Window {
+  haveElectron?: boolean;
   redraw_all?: () => void;
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
@@ -121,9 +149,14 @@ interface Window {
   _SplineTemplateIcons: Record<string, unknown>;
 
   /* ── TinyMCE (third-party) ─────────────────────────────────── */
-  tinymce: unknown;
+  tinymce: TinyMCEInstance | undefined;
   tinyMCE: unknown;
   tinyMCEPreInit: Record<string, unknown>;
+
+  /* ── Docs browser globals ────────────────────────────────────── */
+  PATHUX_DOCPATH?: string;
+  PATHUX_DOC_CONFIG?: string;
+  PATHUX_DOCPATH_PREFIX?: string;
 
   /* ── Debug/test helpers ────────────────────────────────────── */
   __elem: HTMLElement;

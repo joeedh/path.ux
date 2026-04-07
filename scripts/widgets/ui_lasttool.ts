@@ -1,15 +1,10 @@
-import {PackFlags, UIBase} from "../core/ui_base.js";
-import {ColumnFrame} from "../core/ui.js";
-import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
+import { PackFlags, UIBase } from "../core/ui_base.js";
+import { ColumnFrame } from "../core/ui.js";
+import { PropFlags } from "../path-controller/toolsys/toolprop.js";
+import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolsys.js";
 
-import {UndoFlags, ToolFlags, ToolOp} from "../path-controller/toolsys/toolsys.js";
-import {DataPath, DataTypes} from "../path-controller/controller/controller.js";
-
-import {ToolProperty} from '../path-controller/toolsys/toolprop.js';
-
-import * as util from '../path-controller/util/util.js';
-import cconst from '../config/const.js';
-import {IContextBase} from "../core/context_base.js";
+import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
+import { IContextBase } from "../core/context_base.js";
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen = 0;
@@ -54,11 +49,11 @@ window.setInterval(() => {
 }, 500);
 
 /*
-*
-* This panel shows the most recently executed ToolOp's
-* settings.  It assumes that recent toolops are accessible
-* in ctx.last_tool.
-* */
+ *
+ * This panel shows the most recently executed ToolOp's
+ * settings.  It assumes that recent toolops are accessible
+ * in ctx.last_tool.
+ * */
 export class LastToolPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
   ignoreOnChange: boolean;
   on_change: (() => void) | null;
@@ -179,8 +174,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
       last_tool_eventmap.push({
         panel: this as any,
         cb   : this.on_change,
-        prop
-      })
+        prop,
+      });
 
       let path = `last_tool.${k}`;
       let uiname = prop.uiname ?? ToolProperty.makeUIName(k);
@@ -226,8 +221,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
   static define() {
     return {
-      tagname: "last-tool-panel-x"
-    }
+      tagname: "last-tool-panel-x",
+    };
   }
 }
 

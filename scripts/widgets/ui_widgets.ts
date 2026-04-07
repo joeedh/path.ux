@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use strict";
 
 import * as util from "../path-controller/util/util.js";
@@ -14,17 +13,17 @@ import * as units from "../core/units.js";
 
 import cconst from "../config/const.js";
 
-function myToFixed(s, n) {
-  s = s.toFixed(n);
+function myToFixed(s: number, n: number) {
+  let str = s.toFixed(n);
 
-  while (s.endsWith("0")) {
-    s = s.slice(0, s.length - 1);
+  while (str.endsWith("0")) {
+    str = str.slice(0, str.length - 1);
   }
-  if (s.endsWith(".")) {
-    s = s.slice(0, s.length - 1);
+  if (str.endsWith(".")) {
+    str = str.slice(0, str.length - 1);
   }
 
-  return s;
+  return str;
 }
 
 const keymap = events.keymap;
@@ -41,10 +40,15 @@ const parsepx = ui_base.parsepx;
 import { Button, OldButton } from "./ui_button.js";
 import { eventWasTouch, popModalLight, pushModalLight } from "../path-controller/util/simple_events.js";
 import { IContextBase } from "../core/context_base.js";
+import type { CSSFont } from "../core/cssfont.js";
+import type { EnumPropertyBase } from "../path-controller/toolsys/toolprop.js";
 
 export { Button } from "./ui_button.js";
 
 export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  _icon: number;
+  iconsheet: number;
+
   constructor() {
     super();
     this._icon = -1;
@@ -55,7 +59,7 @@ export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<C
     return this._icon;
   }
 
-  set icon(id) {
+  set icon(id: number) {
     this._icon = id;
     this.setCSS();
   }
@@ -78,7 +82,7 @@ export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<C
   setCSS() {
     const size = ui_base.iconmanager.getTileSize(this.iconsheet);
 
-    ui_base.iconmanager.setCSS(this.icon, this);
+    ui_base.iconmanager.setCSS(this.icon, this as unknown as HTMLElement);
 
     this.style["width"] = size + "px";
     this.style["height"] = size + "px";
@@ -88,19 +92,22 @@ export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<C
 UIBase.internalRegister(IconLabel);
 
 export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+  _value: unknown;
+
   constructor() {
     super();
+    this._value = undefined;
   }
 
   get value() {
     return this._value;
   }
 
-  set value(val) {
+  set value(val: unknown) {
     this._value = val;
 
     if (this.ctx && this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
+      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._value);
     }
   }
 
@@ -108,7 +115,7 @@ export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends Ol
     if (!this.hasAttribute("datapath")) return;
     if (this.ctx === undefined) return;
 
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
     if (val === undefined) {
       const redraw = !this.disabled;
@@ -142,9 +149,18 @@ export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends Ol
 }
 
 export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
-  icon: number
-  iconsheet: number
-  
+  icon: number = -1;
+  iconsheet: number = 0;
+  _checked: boolean;
+  _highlight: boolean | undefined;
+  _focus: boolean;
+  canvas!: HTMLCanvasElement;
+  g!: CanvasRenderingContext2D;
+  checkbox!: HTMLCanvasElement;
+  _label!: HTMLLabelElement;
+  _updatekey: string = "";
+  _last_dpi: number = 1;
+
   constructor() {
     super();
 
@@ -159,43 +175,43 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
     const span = document.createElement("span");
     span.setAttribute("class", "checkx");
 
-    span.style["display"] = "flex";
-    span.style["flex-direction"] = "row";
-    span.style["margin"] = span.style["padding"] = "0px";
+    span.style.display = "flex";
+    span.style.flexDirection = "row";
+    span.style.margin = span.style.padding = "0px";
     //span.style["background"] = ui_base.iconmanager.getCSS(1);
 
     const sheet = 0;
     const size = ui_base.iconmanager.getTileSize(0);
 
     const check = (this.canvas = document.createElement("canvas"));
-    this.g = check.getContext("2d");
+    this.g = check.getContext("2d")!;
 
-    check.setAttribute("id", check._id);
-    check.setAttribute("name", check._id);
+    check.setAttribute("id", String(check.id));
+    check.setAttribute("name", String(check.id));
 
-    const mdown = (e) => {
+    const mdown = (_e: Event) => {
       this._highlight = false;
       this.checked = !this.checked;
     };
 
-    const mup = (e) => {
+    const mup = (_e: Event) => {
       this._highlight = false;
       this.blur();
       this._redraw();
     };
 
-    const mover = (e) => {
+    const mover = (_e: Event) => {
       this._highlight = true;
       this._redraw();
     };
 
-    const mleave = (e) => {
+    const mleave = (_e: Event) => {
       this._highlight = false;
       this._redraw();
     };
 
     span.addEventListener("pointerover", mover, { passive: true });
-    span.addEventListener("mousein", mover, { passive: true });
+    span.addEventListener("mousein" as keyof HTMLElementEventMap, mover, { passive: true });
     span.addEventListener("mouseleave", mleave, { passive: true });
     span.addEventListener("pointerout", mleave, { passive: true });
 
@@ -241,7 +257,7 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
     const label = (this._label = document.createElement("label"));
     label.setAttribute("class", "checkx");
     span.setAttribute("class", "checkx");
-    label.style["align-self"] = "center";
+    label.style.alignSelf = "center";
 
     const side = this.getDefault("CheckSide");
     if (side === "right") {
@@ -290,14 +306,14 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       this._redraw();
 
       if (this.onclick) {
-        this.onclick(v);
+        (this.onclick as unknown as (val: boolean) => void)(v);
       }
       if (this.onchange) {
         this.onchange(v);
       }
 
       if (this.hasAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), this._checked);
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._checked);
       }
     }
   }
@@ -338,15 +354,16 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
   }
 
   setCSS() {
-    this._label.style["font"] = this.getDefault("DefaultText").genCSS();
-    this._label.style["color"] = this.getDefault("DefaultText").color;
+    const defaultText = this.getDefault("DefaultText") as CSSFont;
+    this._label.style.font = defaultText.genCSS();
+    this._label.style.color = defaultText.color;
 
-    this._label.style["font"] = "normal 14px poppins"; // TODO - Jordan - add to settings
+    this._label.style.font = "normal 14px poppins"; // TODO - Jordan - add to settings
 
     super.setCSS();
 
     //force clear background
-    this.style["background-color"] = "rgba(0,0,0,0)";
+    this.style.backgroundColor = "rgba(0,0,0,0)";
   }
 
   updateDataPath() {
@@ -354,11 +371,11 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       return;
     }
 
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const rawVal = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
     let redraw = false;
 
-    if (val === undefined) {
+    if (rawVal === undefined) {
       this.internalDisabled = true;
       return;
     } else {
@@ -367,9 +384,9 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       this.internalDisabled = false;
     }
 
-    val = !!val;
+    const val = !!rawVal;
 
-    redraw = redraw || !!this._checked !== !!val;
+    redraw = redraw || !!this._checked !== val;
 
     if (redraw) {
       this._checked = val;
@@ -392,13 +409,13 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
     const g = this.g;
     const dpi = UIBase.getDPI();
     let tilesize = ui_base.iconmanager.getTileSize(0);
-    const pad = this.getDefault("padding");
+    const pad = this.getDefault("padding") as number;
 
     let csize = tilesize + pad * 2;
 
-    canvas.style["margin"] = "2px";
-    canvas.style["width"] = csize + "px";
-    canvas.style["height"] = csize + "px";
+    canvas.style.margin = "2px";
+    canvas.style.width = csize + "px";
+    canvas.style.height = csize + "px";
 
     csize = ~~(csize * dpi + 0.5);
     tilesize = ~~(tilesize * dpi + 0.5);
@@ -453,7 +470,7 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       this.updateDataPath();
     }
 
-    let updatekey = this.getDefault("DefaultText").hash();
+    let updatekey = (this.getDefault("DefaultText") as CSSFont).hash();
     updatekey += this._checked + ":" + this._label.textContent;
     updatekey += ":" + ready;
 
@@ -470,10 +487,19 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
 UIBase.internalRegister(Check);
 
 export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
-  _icon_pressed?: number;
-  _icon?: number;
+  _icon_pressed: number | undefined;
+  _icon: number;
   iconsheet: number;
-  dom: HTMLDivElement
+  _customIcon: HTMLImageElement | undefined;
+  _pressed: boolean;
+  _highlight: boolean;
+  _draw_pressed: boolean;
+  drawButtonBG: boolean;
+  _extraIcon: number | undefined;
+  extraDom: HTMLDivElement | undefined;
+  _last_iconsheet: number | undefined;
+  _onpress: ((e: { x: number; y: number; stopPropagation: () => void; preventDefault: () => void }) => void) | undefined;
+  dom: HTMLDivElement;
 
   constructor() {
     super();
@@ -511,11 +537,12 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
 
   click() {
     if (this._onpress) {
-      const rect = this.getClientRects();
-      const x = rect.x + rect.width * 0.5;
-      const y = rect.y + rect.height * 0.5;
+      const rects = this.getClientRects();
+      const rect = rects[0];
+      const x = (rect?.x ?? 0) + (rect?.width ?? 0) * 0.5;
+      const y = (rect?.y ?? 0) + (rect?.height ?? 0) * 0.5;
 
-      const e = { x: x, y: y, stopPropagation: () => {}, preventDefault: () => {} };
+      const e = { x, y, stopPropagation: () => {}, preventDefault: () => {} };
 
       this._onpress(e);
     }
@@ -527,7 +554,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     return this._customIcon;
   }
 
-  set customIcon(domImage) {
+  set customIcon(domImage: HTMLImageElement | undefined) {
     this._customIcon = domImage;
     this.setCSS();
   }
@@ -548,12 +575,12 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     };
   }
 
-  _on_press() {
+  _on_press(_e?: Event) {
     this._pressed = true;
     this.setCSS();
   }
 
-  _on_depress() {
+  _on_depress(_e?: Event) {
     this._pressed = false;
     this.setCSS();
   }
@@ -563,31 +590,32 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
   setCSS() {
     super.setCSS();
 
-    let def;
-    const pstyle = this.getDefault("depressed");
-    const hstyle = this.getDefault("highlight");
+    let def: (k: string) => unknown;
+    const _pstyle = this.getDefault("depressed");
+    const _hstyle = this.getDefault("highlight");
 
     this.noMarginsOrPadding();
 
     if (this._pressed && this._draw_pressed) {
-      def = (k) => this.getSubDefault("depressed", k);
+      def = (k: string) => this.getSubDefault("depressed", k);
     } else if (this._highlight) {
-      def = (k) => this.getSubDefault("highlight", k);
+      def = (k: string) => this.getSubDefault("highlight", k);
     } else {
-      def = (k) => this.getDefault(k);
+      def = (k: string) => this.getDefault(k);
     }
 
-    const loadstyle = (key, addpx) => {
+    const loadstyle = (key: string, addpx: boolean) => {
       let val = def(key);
       if (addpx) {
-        val = ("" + val).trim();
+        let strVal = ("" + val).trim();
 
-        if (!val.toLowerCase().endsWith("px")) {
-          val += "px";
+        if (!strVal.toLowerCase().endsWith("px")) {
+          strVal += "px";
         }
+        this.style.setProperty(key, strVal);
+      } else {
+        this.style.setProperty(key, "" + val);
       }
-
-      this.style[key] = val;
     };
 
     const keys = [
@@ -596,7 +624,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
       "margin-left",
       "margin-right",
       "margin-top",
-      "margin-botton",
+      "margin-bottom",
       "padding-left",
       "padding-bottom",
       "padding-top",
@@ -610,28 +638,26 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     loadstyle("background-color", false);
     loadstyle("color", false);
 
-    const border = `${def("border-width", true)} ${def("border-style", false)} ${def("border-color", false)}`;
-    this.style["border"] = border;
-
-    let w = this.getDefault("width");
+    const border = `${def("border-width")} ${def("border-style")} ${def("border-color")}`;
+    this.style.border = border;
 
     const size = ui_base.iconmanager.getTileSize(this.iconsheet);
-    w = size;
+    const w = size;
 
-    this.style["width"] = w + "px";
-    this.style["height"] = w + "px";
+    this.style.width = w + "px";
+    this.style.height = w + "px";
 
-    this.dom.style["width"] = w + "px";
-    this.dom.style["height"] = w + "px";
-    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+    this.dom.style.width = w + "px";
+    this.dom.style.height = w + "px";
+    this.dom.style.margin = this.dom.style.padding = "0px";
 
-    this.style["display"] = "flex";
-    this.style["align-items"] = "center";
+    this.style.display = "flex";
+    this.style.alignItems = "center";
 
     if (this._customIcon) {
-      this.dom.style["background-image"] = `url("${this._customIcon.src}")`;
-      this.dom.style["background-size"] = "contain";
-      this.dom.style["background-repeat"] = "no-repeat";
+      this.dom.style.backgroundImage = `url("${this._customIcon.src}")`;
+      this.dom.style.backgroundSize = "contain";
+      this.dom.style.backgroundRepeat = "no-repeat";
     } else {
       let icon = this.icon;
 
@@ -643,7 +669,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     if (this._extraIcon !== undefined) {
-      let dom;
+      let dom: HTMLDivElement;
 
       if (!this.extraDom) {
         this.extraDom = dom = document.createElement("div");
@@ -653,11 +679,11 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
         dom = this.extraDom;
       }
 
-      dom.style["position"] = "absolute";
-      dom.style["margin"] = dom.style["padding"] = "0px";
-      dom.style["pointer-events"] = "none";
-      dom.style["width"] = size + "px";
-      dom.style["height"] = size + "px";
+      dom.style.position = "absolute";
+      dom.style.margin = dom.style.padding = "0px";
+      dom.style.pointerEvents = "none";
+      dom.style.width = size + "px";
+      dom.style.height = size + "px";
 
       ui_base.iconmanager.setCSS(this._extraIcon, dom, this.iconsheet);
     } else if (this.extraDom) {
@@ -668,7 +694,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
   init() {
     super.init();
 
-    const press = (e) => {
+    const press = (e: MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
 
@@ -685,24 +711,24 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
         const this2 = this;
 
         this.pushModal({
-          on_mouseup(e) {
+          on_mouseup(ev: Event) {
             //touch events aren't fireing onclick automatically the way mouse ones are
 
-            if (this2.onclick && eventWasTouch(e)) {
-              this2.onclick();
+            if (this2.onclick && eventWasTouch(ev as MouseEvent)) {
+              (this2.onclick as unknown as () => void)();
             }
-            this.end();
+            (this as { end(): void }).end();
           },
-          on_touchcancel(e) {
-            this.on_mouseup(e);
-            this.end();
+          on_touchcancel(ev: Event) {
+            (this as { on_mouseup(e: Event): void }).on_mouseup(ev);
+            (this as { end(): void }).end();
           },
-          on_touchend(e) {
-            this.on_mouseup(e);
-            this.end();
+          on_touchend(ev: Event) {
+            (this as { on_mouseup(e: Event): void }).on_mouseup(ev);
+            (this as { end(): void }).end();
           },
-          on_keydown(e) {
-            this.end();
+          on_keydown(_ev: KeyboardEvent) {
+            (this as { end(): void }).end();
           },
           end() {
             if (this2.modalRunning) {
@@ -717,7 +743,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
       this._on_press(e);
     };
 
-    const depress = (e) => {
+    const depress = (e: MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
 
@@ -725,12 +751,12 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
       this.setCSS();
     };
 
-    const high = (e) => {
+    const high = (_e: Event) => {
       this._highlight = true;
       this.setCSS();
     };
 
-    const unhigh = (e) => {
+    const unhigh = (_e: Event) => {
       this._highlight = false;
       this.setCSS();
     };
@@ -738,7 +764,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     this.tabIndex = 0;
 
     this.addEventListener("mouseover", high);
-    this.addEventListener("mouseexit", unhigh);
+    this.addEventListener("mouseexit" as keyof HTMLElementEventMap, unhigh);
     this.addEventListener("mouseleave", unhigh);
     this.addEventListener("focus", high);
     this.addEventListener("blur", unhigh);
@@ -750,7 +776,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     //this.addEventListener("touchend", depress, {capture: true});
     this.setCSS();
 
-    this.dom.style["pointer-events"] = "none";
+    this.dom.style.pointerEvents = "none";
   }
 
   update() {
@@ -763,7 +789,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   _getsize() {
-    const margin = this.getDefault("padding");
+    const margin = this.getDefault("padding") as number;
 
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin * 2;
   }
@@ -772,8 +798,8 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
 UIBase.internalRegister(IconButton);
 
 export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButton<CTX> {
-  _checked?: boolean;
-  _drawcheck?: boolean;
+  _checked: boolean | undefined;
+  _drawCheck: boolean | undefined;
 
   constructor() {
     super();
@@ -783,9 +809,9 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
   }
 
   get drawCheck() {
-    let ret = this._drawCheck;
+    let ret: boolean | undefined = this._drawCheck;
 
-    ret = ret === undefined ? this.getDefault("drawCheck") : ret;
+    ret = ret === undefined ? (this.getDefault("drawCheck") as unknown as boolean | undefined) : ret;
     ret = ret === undefined ? true : ret;
 
     return ret;
@@ -809,14 +835,14 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
 
   click() {
     super.click();
-    this.checked ^= true;
+    this.checked = !this.checked;
   }
 
   get icon() {
     return this._icon;
   }
 
-  set icon(val) {
+  set icon(val: number) {
     this._icon = val;
     this.setCSS();
   }
@@ -825,7 +851,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
     return this._checked;
   }
 
-  set checked(val) {
+  set checked(val: boolean | undefined) {
     if (!!val !== !!this._checked) {
       this._checked = val;
       this._updatePressed(!!val);
@@ -861,7 +887,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
     };
   }
 
-  _updatePressed(val) {
+  _updatePressed(val: boolean) {
     //don't set _pressed if we have a custom icon for press state
     if (this._icon_pressed) {
       this._draw_pressed = false;
@@ -871,15 +897,15 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
     this.setCSS();
   }
 
-  _on_depress() {
+  _on_depress(_e?: Event) {
     return;
   }
 
-  _on_press() {
-    this.checked ^= true;
+  _on_press(_e?: Event) {
+    this.checked = !this.checked;
 
     if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), !!this.checked);
+      this.setPathValue(this.ctx, this.getAttribute("datapath")!, !!this.checked);
     }
 
     this.setCSS();
@@ -887,8 +913,8 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
 
   updateDefaultSize() {}
 
-  _calcUpdateKey() {
-    return super._calcUpdateKey() + ":" + this._icon;
+  _calcUpdateKey(): string {
+    return ":" + this._icon;
   }
 
   updateDataPath() {
@@ -896,10 +922,12 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       return;
     }
 
+    const datapath = this.getAttribute("datapath")!;
+
     if (this._icon < 0) {
       let rdef;
       try {
-        rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+        rdef = this.ctx.api.resolvePath(this.ctx, datapath);
       } catch (error) {
         if (error instanceof DataPathError) {
           return;
@@ -909,9 +937,9 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       }
 
       if (rdef?.prop) {
-        let icon;
-        let icon2;
-        let title;
+        let icon: number | undefined;
+        let icon2: number | undefined;
+        let title: string | undefined;
 
         if (rdef.prop.flag & PropFlags.NO_UNDO) {
           this.setUndo(false);
@@ -922,16 +950,18 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
         if (rdef.subkey && (rdef.prop.type === PropTypes.FLAG || rdef.prop.type === PropTypes.ENUM)) {
-          icon = rdef.prop.iconmap[rdef.subkey];
-          icon2 = rdef.prop.iconmap2[rdef.subkey];
-          title = rdef.prop.descriptions[rdef.subkey];
+          const enumProp = rdef.prop as unknown as EnumPropertyBase<number>;
+          const subkey = rdef.subkey as string;
+          icon = enumProp.iconmap[subkey];
+          icon2 = enumProp.iconmap2[subkey];
+          title = rdef.prop.descriptions[subkey];
 
-          if (!title && rdef.subkey.length > 0) {
-            title = rdef.subkey;
+          if (!title && subkey.length > 0) {
+            title = subkey;
             title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
           }
         } else {
-          icon2 = rdef.prop.icon2;
+          icon2 = (rdef.prop as { icon2?: number }).icon2;
           icon = rdef.prop.icon;
           title = rdef.prop.description;
         }
@@ -946,20 +976,20 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       }
     }
 
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const rawVal = this.getPathValue(this.ctx, datapath);
 
-    if (val === undefined) {
+    if (rawVal === undefined) {
       this.internalDisabled = true;
       return;
     } else {
       this.internalDisabled = false;
     }
 
-    val = !!val;
+    const val = !!rawVal;
 
     if (val !== !!this._checked) {
       this._checked = val;
-      this._updatePressed(!!val);
+      this._updatePressed(val);
       this.setCSS();
     }
   }
@@ -987,7 +1017,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
   }
 
   _getsize() {
-    const margin = this.getDefault("padding");
+    const margin = this.getDefault("padding") as number;
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin * 2;
   }
 
@@ -999,7 +1029,9 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
 
 UIBase.internalRegister(IconCheck);
 
-export class Check1<CTX extends IContextBase = IContextBase> extends Button<CTX> {
+export class Check1<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+  _value: unknown;
+
   constructor() {
     super();
 
@@ -1010,19 +1042,20 @@ export class Check1<CTX extends IContextBase = IContextBase> extends Button<CTX>
   static define() {
     return {
       tagname    : "check1-x",
+      style      : "button",
       parentStyle: "button",
     };
   }
 
-  _redraw() {
+  _redraw(draw_text = true) {
     //console.log("button draw");
 
-    const dpi = this.getDPI();
+    const _dpi = this.getDPI();
 
     const box = 40;
     ui_base.drawRoundBox(this, this.dom, this.g, box);
 
-    const ts = this.getDefault("DefaultText").size;
+    const ts = (this.getDefault("DefaultText") as CSSFont).size;
 
     const text = this._genLabel();
 

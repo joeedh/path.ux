@@ -1158,7 +1158,7 @@ export class AreaMoveAttachTool<CTX extends IContextBase = IContextBase> extends
 //controller.registerTool(AreaDragTool);
 
 export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
-  tooltip: ToolTip | undefined;
+  tooltip: ToolTip<CTX> | undefined;
   element: ui_base.UIBase | undefined;
 
   constructor(screen: Screen<CTX>) {
@@ -1226,7 +1226,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
       this.element = ele;
       const tip = ele.title;
 
-      this.tooltip = ToolTip.show(tip, this.screen, x, y) as unknown as ToolTip;
+      this.tooltip = ToolTip.show(tip, this.screen, x, y)
     }
     e.preventDefault();
     e.stopPropagation();

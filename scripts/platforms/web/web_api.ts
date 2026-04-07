@@ -1,9 +1,9 @@
-import {PlatformAPI, isMimeText} from '../platform_base.js';
-import {saveFile, loadFile} from '../../path-controller/util/html5_fileapi.js';
+import { PlatformAPI, isMimeText } from "../platform_base.js";
+import { saveFile, loadFile } from "../../path-controller/util/html5_fileapi.js";
 
-import {FileDialogArgs, FilePath} from '../platform_base.js';
+import { FileDialogArgs, FilePath } from "../platform_base.js";
 
-import {mimeMap} from '../platform_base.js';
+import { mimeMap } from "../platform_base.js";
 
 interface FileFilter {
   name: string;
@@ -33,9 +33,9 @@ export function getWebFilters(filters: FileFilter[] = []) {
 
     types.push({
       description: item.name,
-      accept     : {
-        [mime]: exts
-      }
+      accept: {
+        [mime]: exts,
+      },
     });
   }
 
@@ -47,20 +47,22 @@ export class platform extends PlatformAPI {
   static showOpenDialog(title: string, args = new FileDialogArgs()) {
     let types = getWebFilters(args.filters);
 
-    return new Promise((accept, reject) => {
+    return new Promise<FilePath[]>((accept, reject) => {
       try {
-        (window as any).showOpenFilePicker({
-          multiple: args.multi,
-          types
-        }).then((arg: any[]) => {
-          let paths: FilePath[] = [];
+        (window as any)
+          .showOpenFilePicker({
+            multiple: args.multi,
+            types,
+          })
+          .then((arg: any[]) => {
+            let paths: FilePath[] = [];
 
-          for (let file of arg) {
-            paths.push(new FilePath(file, file.name));
-          }
+            for (let file of arg) {
+              paths.push(new FilePath(file, file.name));
+            }
 
-          accept(paths);
-        });
+            accept(paths);
+          });
       } catch (error) {
         reject(error);
       }
@@ -76,7 +78,7 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title: string, savedata_cb: () => any, args = new FileDialogArgs()) {
+  static showSaveDialog(title: string, savedata_cb: () => any, args = new FileDialogArgs()): Promise<FilePath> {
     if (!(window as any).showSaveFilePicker) {
       return this.showSaveDialog_old(title, savedata_cb, args);
     }
@@ -88,38 +90,39 @@ export class platform extends PlatformAPI {
       let saveHandle: any;
 
       try {
-        saveHandle = (window as any).showSaveFilePicker({types});
+        saveHandle = (window as any).showSaveFilePicker({ types });
       } catch (error) {
         reject(error);
       }
 
       let handle: any;
 
-      saveHandle.then((handle1: any) => {
-        handle = handle1;
+      saveHandle
+        .then((handle1: any) => {
+          handle = handle1;
 
-        fname = handle.name;
-        console.log("saveHandle", handle);
-        return handle.createWritable();
-      }).then((file: any) => {
-        let savedata: any = savedata_cb();
+          fname = handle.name;
+          console.log("saveHandle", handle);
+          return handle.createWritable();
+        })
+        .then((file: any) => {
+          let savedata: any = savedata_cb();
 
-        if (savedata instanceof Uint8Array || savedata instanceof DataView) {
-          savedata = savedata.buffer;
-        }
+          if (savedata instanceof Uint8Array || savedata instanceof DataView) {
+            savedata = savedata.buffer;
+          }
 
-        file.write(savedata);
-        file.close();
+          file.write(savedata);
+          file.close();
 
-        let path = new FilePath(handle, fname);
-        accept(path);
-      });
+          let path = new FilePath(handle, fname);
+          accept(path);
+        });
     });
   }
 
   //returns a promise
   static showSaveDialog_old(title: string, savedata: any, args = new FileDialogArgs()) {
-
     let exts: string[] = [];
 
     for (let list of args.filters as any[]) {
@@ -132,20 +135,20 @@ export class platform extends PlatformAPI {
       }
     }
 
-    return new Promise((accept, reject) => {
+    return new Promise<FilePath>((accept, reject) => {
       saveFile(savedata);
 
       window.setTimeout(() => {
-        accept("undefined");
+        accept(undefined as unknown as FilePath);
       });
     });
   }
 
   //path is a FilePath instance, for web this is the actual file data
-  static readFile(path: any, mime = "") {
+  static readFile(path: any, mime = ""): Promise<string | ArrayBuffer> {
     if (mime === "") {
       mime = path.filename;
-      let i = mime.length-1;
+      let i = mime.length - 1;
 
       while (i > 0 && mime[i] !== ".") {
         i--;

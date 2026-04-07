@@ -1,16 +1,17 @@
-// @ts-nocheck
 "use strict";
 
-import * as util from "../path-controller/util/util.js";
-import cconst from "../config/const.js";
-import * as ui_base from "../core/ui_base.js";
-import * as toolprop from "../path-controller/toolsys/toolprop.js";
-import { OldButton } from "./ui_button.js";
-import { DomEventTypes } from "../path-controller/util/events.js";
+import * as util from "../path-controller/util/util";
+import cconst from "../config/const";
+import * as ui_base from "../core/ui_base";
+import * as toolprop from "../path-controller/toolsys/toolprop";
+import { OldButton } from "./ui_button";
+import { DomEventTypes } from "../path-controller/util/events";
 
-import { HotKey, keymap } from "../path-controller/util/simple_events.js";
-import { parseToolPath } from "../path-controller/controller.js";
-import { IContextBase } from "../core/context_base.js";
+import { HotKey, keymap } from "../path-controller/util/simple_events";
+import { parseToolPath } from "../path-controller/controller";
+import { IContextBase } from "../core/context_base";
+import type { CSSFont } from "../core/cssfont";
+import type { Screen } from "../screen/FrameManager";
 
 const EnumProperty = toolprop.EnumProperty;
 const PropTypes = toolprop.PropTypes;
@@ -37,18 +38,63 @@ export type MenuTemplateItem =
 
 export type MenuTemplate = MenuTemplateItem[];
 
-function getpx(css) {
+function getpx(css: string) {
   return parseFloat(css.trim().replace("px", ""));
 }
 
-function debugmenu() {
+function debugmenu(...args: unknown[]) {
   if (window.DEBUG?.menu) {
-    console.warn("%cmenu:", "color:blue", ...arguments);
+    console.warn("%cmenu:", "color:blue", ...args);
   }
 }
 
+/** Helper for CSSStyleDeclaration string indexing */
+type StyleRecord = CSSStyleDeclaration & Record<string, string>;
+
+/** Menu item: an HTMLLIElement with extra properties attached at runtime */
+interface MenuItem extends HTMLLIElement {
+  _id: string | number;
+  _isMenu: boolean;
+  _menu?: Menu;
+  hotkey?: string;
+  icon?: number;
+  label?: string;
+}
+
+/** Type for popup container returned by Screen.popup() */
+type PopupContainer = ui_base.UIBase & {
+  noMarginsOrPadding(): void;
+  end(): void;
+  add(child: ui_base.UIBase): void;
+};
+
+/* Window augmentations for _menuWrangler, menu, _startMenuEventWrangling
+ * are already declared in global.d.ts — use type assertions when setting. */
+
 export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  static SEP: typeof SEP;
+
+  parentMenu: Menu | undefined;
+  _was_clicked: boolean;
+  items: MenuItem[];
+  autoSearchMode: boolean;
+  _ignoreFocusEvents: boolean;
   closeOnMouseUp?: boolean;
+  _submenu: Menu | undefined;
+  ignoreFirstClick: number | boolean;
+  itemindex: number;
+  closed: boolean;
+  started: boolean;
+  activeItem: MenuItem | undefined;
+  container: HTMLSpanElement;
+  dom: HTMLUListElement;
+  menustyle: HTMLStyleElement;
+  hasSearchBox: boolean;
+  textbox!: ui_base.UIBase<CTX> & { text: string; onchange: (() => void) | null; parentWidget: unknown };
+  _popup: PopupContainer | undefined;
+  _dropbox: DropBox | undefined;
+  _onclose: ((...args: unknown[]) => void) | undefined;
+  _onselect: ((id: string | number) => void) | null;
 
   on_select?: (id: number | string) => void;
 
@@ -73,13 +119,16 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     this.closed = false;
     this.started = false;
     this.activeItem = undefined;
+    this.hasSearchBox = false;
+    this._onselect = null;
+    this._onclose = undefined;
 
     this.overrideDefault("DefaultText", this.getDefault("MenuText"));
 
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
-    this.container.style["display"] = "flex";
-    this.container.style["color"] = this.getDefault("MenuText").color;
+    (this.container.style as StyleRecord)["display"] = "flex";
+    (this.container.style as StyleRecord)["color"] = (this.getDefault("MenuText") as CSSFont).color;
 
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
@@ -101,7 +150,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     const style = (this.menustyle = document.createElement("style"));
     this.buildStyle();
 
-    this.dom.setAttribute("tabindex", -1);
+    this.dom.setAttribute("tabindex", "-1");
 
     //the menu wrangler handles key events
 
@@ -116,14 +165,13 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     };
   }
 
-  float(x, y, zindex) {
-    const dpi = this.getDPI();
-    let rect = this.dom.getClientRects();
+  float(x = 0, y = 0, zindex?: number | string, positionKey = UIBase.PositionKey): this {
+    const rects = this.dom.getClientRects();
     const maxx = this.getWinWidth() - 10;
     const maxy = this.getWinHeight() - 10;
 
-    if (rect.length > 0) {
-      rect = rect[0];
+    if (rects.length > 0) {
+      const rect = rects[0];
       if (y + rect.height > maxy) {
         y = maxy - rect.height - 1;
       }
@@ -133,7 +181,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       }
     }
 
-    super.float(x, y, 50);
+    return super.float(x, y, 50, positionKey);
   }
 
   click() {
@@ -142,7 +190,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
 
     if (this.ignoreFirstClick) {
-      this.ignoreFirstClick = Math.max(this.ignoreFirstClick - 1, 0);
+      this.ignoreFirstClick = Math.max((this.ignoreFirstClick as number) - 1, 0);
       return;
     }
 
@@ -152,21 +200,19 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     this._was_clicked = true;
 
-    if (this.onselect) {
+    if (this._onselect) {
       try {
-        // maintain compatibility with old JS api that overrid onselect
-        // @ts-expect-error
-        this.onselect(this.activeItem._id);
-      } catch (error) {
-        util.print_stack(error);
+        this._onselect(this.activeItem._id);
+      } catch (error: unknown) {
+        util.print_stack(error as Error);
         console.log("Error in menu callback");
       }
     }
     if (this.on_select) {
       try {
         this.on_select(this.activeItem._id);
-      } catch (error) {
-        util.print_stack(error);
+      } catch (error: unknown) {
+        util.print_stack(error as Error);
         console.log("Error in menu callback");
       }
     }
@@ -178,8 +224,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     if (this.started) {
       menuWrangler.popMenu(this);
 
-      if (this.onclose) {
-        this.onclose();
+      if (this._onclose) {
+        this._onclose();
       }
     }
   }
@@ -210,12 +256,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     this.remove();
     this.dom.remove();
 
-    if (this.onclose) {
-      this.onclose(this);
+    if (this._onclose) {
+      this._onclose(this);
     }
   }
 
-  _select(dir, focus = true) {
+  _select(dir: number, focus = true) {
     if (this.activeItem === undefined) {
       for (const item of this.items) {
         if (!item.hidden) {
@@ -240,7 +286,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
 
     if (this.hasSearchBox) {
-      this.activeItem.scrollIntoView();
+      this.activeItem?.scrollIntoView();
     }
   }
 
@@ -252,17 +298,17 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     return this._select(1, focus);
   }
 
-  start_fancy(prepend, setActive = true) {
+  start_fancy(prepend?: boolean, setActive = true) {
     return this.startFancy(prepend, setActive);
   }
 
-  setActive(item, focus = true) {
+  setActive(item: MenuItem | undefined, focus = true) {
     if (this.activeItem === item) {
       return;
     }
 
     if (this.activeItem) {
-      this.activeItem.style["background-color"] = this.getDefault("MenuBG");
+      (this.activeItem.style as StyleRecord)["background-color"] = this.getDefault("MenuBG") as string;
 
       if (focus) {
         this.activeItem.blur();
@@ -270,7 +316,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
 
     if (item) {
-      item.style["background-color"] = this.getDefault("MenuHighlight");
+      (item.style as StyleRecord)["background-color"] = this.getDefault("MenuHighlight") as string;
 
       if (focus) {
         item.focus();
@@ -280,7 +326,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     this.activeItem = item;
   }
 
-  startFancy(prepend, setActive = true) {
+  startFancy(prepend?: boolean, setActive = true) {
     this.hasSearchBox = true;
     this.started = true;
     menuWrangler.pushMenu(this);
@@ -291,15 +337,15 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    const sbox = (this.textbox = UIBase.createElement("textbox-x"));
+    const sbox = (this.textbox = UIBase.createElement("textbox-x") as typeof this.textbox);
     this.textbox.parentWidget = this;
 
     dom2.appendChild(sbox);
     dom2.appendChild(this.dom);
 
-    dom2.style["height"] = "300px";
-    this.dom.style["height"] = "300px";
-    this.dom.style["overflow"] = "scroll";
+    (dom2.style as StyleRecord)["height"] = "300px";
+    (this.dom.style as StyleRecord)["height"] = "300px";
+    (this.dom.style as StyleRecord)["overflow"] = "scroll";
 
     if (prepend) {
       this.container.prepend(dom2);
@@ -307,7 +353,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       this.container.appendChild(dom2);
     }
 
-    dom2.parentWidget = this.container;
+    (dom2 as HTMLDivElement & { parentWidget: unknown }).parentWidget = this.container;
 
     sbox.focus();
     sbox.onchange = () => {
@@ -332,13 +378,13 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       }
     };
 
-    sbox.addEventListener("keydown", (e) => {
+    sbox.addEventListener("keydown", (e: KeyboardEvent) => {
       switch (e.keyCode) {
         case 27: //escape key
           this.close();
           break;
         case 13: //enter key
-          this.click(this.activeItem);
+          this.click();
           this.close();
           break;
       }
@@ -353,14 +399,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     menuWrangler.pushMenu(this);
 
-    const dokey = (key) => {
-      let val = this.getDefault(key);
+    const dokey = (key: string) => {
+      let val = this.getDefault(key) as string | number | undefined;
       if (typeof val === "number") {
         val = "" + val + "px";
       }
 
       if (val !== undefined) {
-        this.dom.style[key] = val;
+        (this.dom.style as StyleRecord)[key] = val as string;
       }
     };
 
@@ -392,7 +438,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       //TODO: cache last child entry
 
       if (this.activeItem === undefined) {
-        this.activeItem = this.dom.childNodes[0];
+        this.activeItem = this.dom.childNodes[0] as MenuItem | undefined;
       }
 
       if (this.activeItem === undefined) {
@@ -403,15 +449,15 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }, 0);
   }
 
-  addItemExtra(text, id, hotkey, icon = -1, add = true, tooltip = "") {
-    const dom = document.createElement("span");
+  addItemExtra(text: string, id: string | number, hotkey: string | undefined, icon = -1, add = true, tooltip = "") {
+    const dom = document.createElement("span") as HTMLSpanElement & { hotkey?: string; icon?: number };
 
-    dom.style["display"] = "inline-flex";
+    (dom.style as StyleRecord)["display"] = "inline-flex";
 
     dom.hotkey = hotkey;
     dom.icon = icon;
 
-    let icon_div;
+    let icon_div: HTMLElement;
 
     if (1) {
       //icon >= 0) {
@@ -422,37 +468,37 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       //tilesize *= window.devicePixelRatio;
 
       icon_div = document.createElement("span");
-      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
-      icon_div.style["width"] = tilesize + "px";
-      icon_div.style["height"] = tilesize + "px";
+      (icon_div.style as StyleRecord)["padding"] = (icon_div.style as StyleRecord)["margin"] = "0px";
+      (icon_div.style as StyleRecord)["width"] = tilesize + "px";
+      (icon_div.style as StyleRecord)["height"] = tilesize + "px";
     }
 
-    icon_div.style["display"] = "inline-flex";
-    icon_div.style["margin-right"] = "1px";
-    icon_div.style["align"] = "left";
+    (icon_div.style as StyleRecord)["display"] = "inline-flex";
+    (icon_div.style as StyleRecord)["margin-right"] = "1px";
+    (icon_div.style as StyleRecord)["align"] = "left";
 
     const span = document.createElement("span");
 
     //stupid css doesn't get width right. . .
-    span.style["font"] = ui_base.getFont(this, undefined, "MenuText");
+    span.style["font"] = ui_base.getFont(this as unknown as ui_base.UIBase, undefined, "MenuText");
 
     const dpi = this.getDPI();
-    const tsize = this.getDefault("MenuText").size;
+    const tsize = (this.getDefault("MenuText") as CSSFont).size;
     //XXX proportional font fail
 
     //XXX stupid!
     const canvas = document.createElement("canvas");
-    const g = canvas.getContext("2d");
+    const g = canvas.getContext("2d")!;
 
     g.font = span.style["font"];
 
     const rect = span.getClientRects();
 
     let twid = Math.ceil(g.measureText(text).width);
-    let hwid;
+    let hwid: number | undefined;
     if (hotkey) {
       dom.hotkey = hotkey;
-      g.font = ui_base.getFont(this, undefined, "HotkeyText");
+      g.font = ui_base.getFont(this as unknown as ui_base.UIBase, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width / UIBase.getDPI());
       twid += hwid + 8;
     }
@@ -461,16 +507,16 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     span.innerText = text;
 
-    span.style["word-wrap"] = "none";
-    span.style["white-space"] = "pre";
-    span.style["overflow"] = "hidden";
-    span.style["text-overflow"] = "clip";
+    (span.style as StyleRecord)["word-wrap"] = "none";
+    (span.style as StyleRecord)["white-space"] = "pre";
+    (span.style as StyleRecord)["overflow"] = "hidden";
+    (span.style as StyleRecord)["text-overflow"] = "clip";
 
-    span.style["width"] = ~~twid + "px";
-    span.style["padding"] = "0px";
-    span.style["margin"] = "0px";
+    (span.style as StyleRecord)["width"] = ~~twid + "px";
+    (span.style as StyleRecord)["padding"] = "0px";
+    (span.style as StyleRecord)["margin"] = "0px";
 
-    dom.style["width"] = "100%";
+    (dom.style as StyleRecord)["width"] = "100%";
 
     dom.appendChild(icon_div);
     dom.appendChild(span);
@@ -478,25 +524,29 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     if (hotkey) {
       const hotkey_span = document.createElement("span");
       hotkey_span.innerText = hotkey;
-      hotkey_span.style["display"] = "inline-flex";
+      (hotkey_span.style as StyleRecord)["display"] = "inline-flex";
 
-      hotkey_span.style["margin"] = "0px";
-      hotkey_span.style["margin-left"] = "auto";
-      hotkey_span.style["margin-right"] = "0px";
-      hotkey_span.style["padding"] = "0px";
+      (hotkey_span.style as StyleRecord)["margin"] = "0px";
+      (hotkey_span.style as StyleRecord)["margin-left"] = "auto";
+      (hotkey_span.style as StyleRecord)["margin-right"] = "0px";
+      (hotkey_span.style as StyleRecord)["padding"] = "0px";
 
-      hotkey_span.style["font"] = ui_base.getFont(this, undefined, "HotkeyText");
-      hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
+      (hotkey_span.style as StyleRecord)["font"] = ui_base.getFont(
+        this as unknown as ui_base.UIBase,
+        undefined,
+        "HotkeyText"
+      );
+      (hotkey_span.style as StyleRecord)["color"] = this.getDefault("HotkeyTextColor") as string;
 
       //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
-      hotkey_span.style["width"] = "max-content";
+      (hotkey_span.style as StyleRecord)["width"] = "max-content";
 
       //hotkey_span.style["background-color"] = "rgba(0,0,0,0)";
 
-      hotkey_span.style["text-align"] = "right";
-      hotkey_span.style["justify-content"] = "right";
-      hotkey_span["flex-wrap"] = "nowrap";
-      hotkey_span["text-wrap"] = "nowrap";
+      (hotkey_span.style as StyleRecord)["text-align"] = "right";
+      (hotkey_span.style as StyleRecord)["justify-content"] = "right";
+      (hotkey_span.style as StyleRecord)["flex-wrap"] = "nowrap";
+      (hotkey_span.style as StyleRecord)["text-wrap"] = "nowrap";
 
       //hotkey_span.style["border"] = "1px solid red";
 
@@ -520,24 +570,25 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   //item can be menu or text
-  addItem(item, id, add = true, tooltip) {
-    id = id === undefined ? item : id;
-    let text = item;
+  addItem(item: string | String | HTMLElement | Menu, id?: string | number, add = true, tooltip?: string) {
+    id = id === undefined ? (item as unknown as string | number) : id;
+    let text: string | null =
+      typeof item === "string" || item instanceof String ? (item as string) : (item as HTMLElement).textContent;
 
     if (typeof item === "string" || item instanceof String) {
-      const dom = document.createElement("dom");
-      dom.style["text-align"] = "left";
+      const dom = document.createElement("div");
+      (dom.style as StyleRecord)["text-align"] = "left";
 
-      dom.textContent = item;
+      dom.textContent = item as string;
       item = dom;
       //return this.addItemExtra(item, id);
     } else {
-      text = item.textContent;
+      text = (item as HTMLElement).textContent;
     }
 
-    const li = document.createElement("li");
+    const li = document.createElement("li") as unknown as MenuItem;
 
-    li.setAttribute("tabindex", this.itemindex++);
+    li.setAttribute("tabindex", "" + this.itemindex++);
     li.setAttribute("class", "menuitem");
 
     if (tooltip !== undefined) {
@@ -546,16 +597,16 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     if (item instanceof Menu) {
       //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
-      const dom = document.createElement("span");
+      const dom = document.createElement("span") as HTMLSpanElement & { _id: string | number };
       dom.innerHTML = "" + item.title;
-      dom._id = dom.id = id;
+      dom._id = dom.id = "" + id;
       dom.setAttribute("class", "menu");
 
       //dom = document.createElement("div");
       //dom.innerText = ""+item.title;
 
       //dom.style["display"] = "inline-block";
-      li.style["width"] = "100%";
+      (li.style as StyleRecord)["width"] = "100%";
       li.appendChild(dom);
 
       li._isMenu = true;
@@ -566,17 +617,17 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       item.container = this.container;
     } else {
       li._isMenu = false;
-      li.appendChild(item);
+      li.appendChild(item as HTMLElement);
     }
 
-    li._id = id;
+    li._id = id!;
 
     this.items.push(li);
 
     li.label = text ? text : li.innerText.trim();
 
     if (add) {
-      li.addEventListener("blur", (e) => {
+      li.addEventListener("blur", () => {
         if (this._ignoreFocusEvents) {
           return;
         }
@@ -586,7 +637,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
         }
       });
 
-      const onfocus = (e) => {
+      const onfocus = (_e: Event) => {
         if (this._ignoreFocusEvents) {
           return;
         }
@@ -599,20 +650,20 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
         }
 
         if (li._isMenu) {
-          li._menu.onselect = (item) => {
-            this.onselect(item);
-            li._menu.close();
+          li._menu!._onselect = (item: string | number) => {
+            this._onselect?.(item);
+            li._menu!.close();
             this.close();
           };
 
-          li._menu.start(false, false);
+          li._menu!.start(false, false);
           this._submenu = li._menu;
         }
 
         this.setActive(li, false);
       };
 
-      const onclick = (e) => {
+      const onclick = (e: Event) => {
         onfocus(e);
 
         e.stopPropagation();
@@ -672,19 +723,20 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
   buildStyle() {
     let pad1 = util.isMobile() ? 2 : 0;
-    pad1 += this.getDefault("MenuSpacing");
+    pad1 += this.getDefault("MenuSpacing") as number;
 
     let boxShadow = "";
     if (this.hasDefault("box-shadow")) {
       boxShadow = "box-shadow: " + this.getDefault("box-shadow") + ";";
     }
 
-    let sepcss = this.getDefault("MenuSeparator");
-    if (typeof sepcss === "object") {
+    let sepcss: unknown = this.getDefault("MenuSeparator");
+    if (typeof sepcss === "object" && sepcss !== null) {
       let s = "";
+      const sepobj = sepcss as Record<string, string | number>;
 
-      for (const k in sepcss) {
-        let v = sepcss[k];
+      for (const k in sepobj) {
+        let v: string | number = sepobj[k];
 
         if (typeof v === "number") {
           v = v.toFixed(4) + "px";
@@ -696,60 +748,62 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       sepcss = s;
     }
 
-    let itemRadius = 0;
+    let itemRadius: number = 0;
 
     if (this.hasDefault("item-radius")) {
-      itemRadius = this.getDefault("item-radius");
+      itemRadius = this.getDefault("item-radius") as number;
     } else {
-      itemRadius = this.getDefault("border-radius");
+      itemRadius = this.getDefault("border-radius") as number;
     }
+
+    const menuText = this.getDefault("MenuText") as CSSFont;
 
     this.menustyle.textContent = `
         .menucon {
           position:fixed;
           float:left;
-          
+
           border-radius : ${this.getDefault("border-radius")}px;
 
           display: block;
           -moz-user-focus: normal;
           ${boxShadow}
         }
-        
+
         ul.menu {
           display        : flex;
           flex-direction : column;
           flex-wrap      : nowrap;
           width          : max-content;
-          
+
           margin : 0px;
           padding : 0px;
           border : ${this._getBorderStyle()};
           border-radius : ${this.getDefault("border-radius")}px;
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
-          color : ${this.getDefault("MenuText").color};
+          color : ${menuText.color};
         }
-        
+
         .menuitem {
           display : flex;
           flex-wrap : nowrap;
-          flex-direction : row;          
-          
+          flex-direction : row;
+
           list-style-type:none;
           -moz-user-focus: normal;
-          
+
           margin : 0;
           padding : 0px;
           padding-right: 16px;
           padding-left: 16px;
           padding-top : ${pad1}px;
           padding-bottom : ${pad1}px;
-          
+
           border-radius : ${itemRadius}px;
-          
-          color : ${this.getDefault("MenuText").color};
-          font : ${this.getDefault("MenuText").genCSS()};
+
+          color : ${menuText.color};
+          font : ${menuText.genCSS()};
           background-color: ${this.getDefault("MenuBG")};
         }
         
@@ -766,7 +820,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
           border-radius : ${itemRadius}px;
           
           background-color: ${this.getDefault("MenuHighlight")};
-          color : ${this.getDefault("MenuText").color};
+          color : ${menuText.color};
           -moz-user-focus: normal;
         }
       `;
@@ -777,8 +831,9 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     this.buildStyle();
 
-    this.container.style["color"] = this.getDefault("MenuText").color;
-    this.style["color"] = this.getDefault("MenuText").color;
+    const menuTextColor = (this.getDefault("MenuText") as CSSFont).color;
+    (this.container.style as StyleRecord)["color"] = menuTextColor;
+    (this.style as StyleRecord)["color"] = menuTextColor;
   }
 
   seperator() {
@@ -790,8 +845,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     return this;
   }
 
-  menu(title) {
-    const ret = UIBase.createElement("menu-x");
+  menu(title: string) {
+    const ret = UIBase.createElement("menu-x") as unknown as Menu;
 
     ret.setAttribute("name", title);
     this.addItem(ret);
@@ -803,11 +858,24 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 }
 
 Menu.SEP = SEP;
-UIBase.internalRegister(Menu);
+UIBase.internalRegister(Menu as unknown as ui_base.IUIBaseConstructor);
 
 export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
   _menu: Menu<CTX> | undefined;
   prop?: toolprop.EnumProperty;
+  lockTimer: number;
+  _template: MenuTemplate | (() => MenuTemplate) | undefined;
+  _searchMenuMode: boolean;
+  altKey: number | undefined;
+  _value: number | string;
+  _last_datapath: string | undefined;
+  _last_dbox_key: unknown;
+  _popup: PopupContainer | undefined;
+  _background: string | undefined;
+  width = 0;
+  on_select?: ((id: string | number) => void) | undefined;
+  _onselect?: ((id: string | number) => void) | undefined;
+  _onchangeCallback: ((val: string | number) => void) | null = null;
 
   constructor() {
     super();
@@ -886,8 +954,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   setCSS() {
     //do not call parent classes's setCSS here
 
-    this.style["user-select"] = "none";
-    this.dom.style["user-select"] = "none";
+    (this.style as StyleRecord)["user-select"] = "none";
+    (this.dom.style as StyleRecord)["user-select"] = "none";
 
     let keys;
     if (this.getAttribute("simple")) {
@@ -907,9 +975,9 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       ];
     }
 
-    const setDefault = (key) => {
+    const setDefault = (key: string) => {
       if (this.hasDefault(key)) {
-        this.style[key] = this.getDefault(key, undefined, 0) + "px";
+        (this.style as StyleRecord)[key] = this.getDefault(key, undefined, 0) + "px";
       }
     };
 
@@ -945,7 +1013,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     //let ret = super.updateWidth(10);
     const dpi = this.getDPI();
 
-    const ts = this.getDefault("DefaultText").size;
+    const ts = (this.getDefault("DefaultText") as CSSFont).size;
     let tw = this.g.measureText(this._genLabel()).width / dpi;
     //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
@@ -958,8 +1026,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (tw !== this._last_w) {
       this._last_w = tw;
-      this.dom.style["width"] = tw + "px";
-      this.style["width"] = tw + "px";
+      (this.dom.style as StyleRecord)["width"] = tw + "px";
+      (this.style as StyleRecord)["width"] = tw + "px";
       this.width = tw;
 
       this.overrideDefault("width", tw);
@@ -972,7 +1040,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
   updateBorders() {
     //Do not apply border stlying to the child canvas
-    super.updateBorders(this);
+    super.updateBorders(this as unknown as HTMLElement);
   }
 
   updateDataPath() {
@@ -981,19 +1049,28 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     }
 
     let wasError = false;
-    let prop;
-    let val;
+    let prop: toolprop.EnumProperty | undefined;
+    let val: unknown;
 
     try {
       this.pushReportContext(this._reportCtxName);
-      prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
-      val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      const datapath = this.getAttribute("datapath")!;
+      const resolved = this.ctx.api.resolvePath(this.ctx, datapath);
+      if (!resolved) {
+        wasError = true;
+        this.popReportContext();
+        return;
+      }
+      prop = resolved.prop as unknown as toolprop.EnumProperty;
+      val = this.ctx.api.getValue(this.ctx, datapath);
 
-      prop = prop?.prop ? prop.prop : prop;
+      prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
+        ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
+        : prop;
 
       this.popReportContext();
-    } catch (error) {
-      util.print_stack(error);
+    } catch (error: unknown) {
+      util.print_stack(error as Error);
       wasError = true;
     }
 
@@ -1019,16 +1096,16 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     prop = this.prop;
 
-    let name = this.getAttribute("name");
+    let name: string | null = this.getAttribute("name");
 
-    if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-      name = prop.ui_value_names[prop.keys[val]];
+    if (prop!.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+      name = prop!.ui_value_names[prop!.keys[val as string | number]];
     } else {
       name = "" + val;
     }
 
     if (name !== this.getAttribute("name")) {
-      this.setAttribute("name", name);
+      this.setAttribute("name", name!);
       this.updateName();
     }
   }
@@ -1069,7 +1146,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       template = template();
     }
 
-    this._menu = createMenu(this.ctx, "", template);
+    this._menu = createMenu(this.ctx!, "", template as MenuTemplate);
     return this._menu;
   }
 
@@ -1081,7 +1158,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     const prop = this.prop;
 
-    if (this.prop === undefined) {
+    if (prop === undefined) {
       return;
     }
 
@@ -1089,13 +1166,13 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._menu.remove();
     }
 
-    const menu = (this._menu = UIBase.createElement("menu-x"));
+    const menu = (this._menu = UIBase.createElement("menu-x") as unknown as Menu<CTX>);
 
     //let name = "" + this.getAttribute("name");
     menu.setAttribute("name", "");
     menu._dropbox = this;
 
-    const valmap = {};
+    const valmap: Record<string | number, string> = {};
     const enummap = prop.values;
     const iconmap = prop.iconmap;
     const uimap = prop.ui_value_names;
@@ -1120,7 +1197,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       }
     }
 
-    menu.onselect = (id) => {
+    menu._onselect = (id: string | number) => {
       this._pressed = false;
 
       this._pressed = false;
@@ -1131,30 +1208,32 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       //check if datapath system will be calling .prop.setValue instead of us
       let callProp = true;
       if (this.hasAttribute("datapath")) {
-        const rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
-        const prop = rdef.dpath.data;
+        const datapath = this.getAttribute("datapath")!;
+        const rdef = this.ctx!.api.resolvePath(this.ctx!, datapath);
+        const rdata = (rdef as unknown as { dpath: { data: unknown } }).dpath?.data;
 
-        callProp = !rdef?.dpath || !(rdef.dpath.data instanceof ToolProperty);
+        callProp = !rdata || !(rdata instanceof toolprop.ToolProperty);
       }
 
-      this._value = this._convertVal(id);
+      this._value = this._convertVal(id) ?? id;
 
       if (callProp) {
-        this.prop.setValue(id);
+        this.prop!.setValue(id);
       }
 
-      this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-      if (this.onselect) {
-        this.onselect(id);
+      this.setAttribute("name", this.prop!.ui_value_names[valmap[id]]);
+      if (this.on_select) {
+        this.on_select(id);
       }
 
       if (this.hasAttribute("datapath") && this.ctx) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, id);
       }
     };
   }
 
-  _onpress = (e) => {
+  override _onpress = (e: unknown) => {
+    const _e = e as { x: number; y: number; stopPropagation?(): void; preventDefault?(): void };
     this.abortToolTips(1000);
 
     if (this._menu !== undefined) {
@@ -1175,21 +1254,23 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     this._build_menu();
 
-    if (this._menu === undefined) {
+    // TypeScript can't see that _build_menu() sets this._menu, so cast to re-read
+    const builtMenu = (this as DropBox<CTX>)._menu;
+    if (builtMenu === undefined) {
       return;
     }
 
-    this._menu.autoSearchMode = false;
+    builtMenu.autoSearchMode = false;
 
-    this._menu._dropbox = this;
-    this.dom._background = this.getDefault("BoxDepressed");
-    this._background = this.getDefault("BoxDepressed");
+    builtMenu._dropbox = this;
+    (this.dom as HTMLCanvasElement & { _background: unknown })._background = this.getDefault("BoxDepressed");
+    this._background = this.getDefault("BoxDepressed") as string;
     this._redraw();
     this._pressed = true;
     this.setCSS();
 
-    const onclose = this._menu.onclose;
-    this._menu.onclose = () => {
+    const onclose = builtMenu._onclose;
+    builtMenu._onclose = () => {
       this.lockTimer = util.time_ms();
 
       this._pressed = false;
@@ -1206,13 +1287,13 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       }
     };
 
-    const menu = this._menu;
-    const screen = this.getScreen();
+    const menu = builtMenu;
+    const screen = this.getScreen() as unknown as Screen<CTX> | undefined;
 
     const dpi = this.getDPI();
 
-    let x = e.x;
-    let y = e.y;
+    let x = _e.x;
+    let y = _e.y;
     const rects = this.dom.getBoundingClientRect(); //getClientRects();
 
     const rheight = rects.height;
@@ -1225,14 +1306,14 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     /* need to figure out a better way to pop up a menu
      *  above a given y position */
-    if (cconst.menusCanPopupAbove && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
-      const con = screen.popup(this, 500, 400, false, 0);
+    if (cconst.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
+      const con = screen.popup(this as unknown as ui_base.UIBase, 500, 400, false, 0) as unknown as PopupContainer;
 
-      con.style["z-index"] = "-10000";
-      con.style["position"] = UIBase.PositionKey;
+      (con.style as StyleRecord)["z-index"] = "-10000";
+      (con.style as StyleRecord)["position"] = UIBase.PositionKey;
       document.body.appendChild(con);
 
-      con.style["visibility"] = "hidden";
+      (con.style as StyleRecord)["visibility"] = "hidden";
 
       con.add(menu);
       menu.start();
@@ -1258,22 +1339,30 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
         menu.dom.remove();
         con.remove();
 
-        const popup = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
+        const popup =
+          (this._popup =
+          menu._popup =
+            screen!.popup(this as unknown as ui_base.UIBase, x, y, false, 0) as unknown as PopupContainer);
         popup.noMarginsOrPadding();
 
         //popup.shadow.appendChild(menu.dom);
         popup.add(menu);
         menu.start();
 
-        popup.style["left"] = x + "px";
-        popup.style["top"] = y + "px";
+        (popup.style as StyleRecord)["left"] = x + "px";
+        (popup.style as StyleRecord)["top"] = y + "px";
         //menu.setCSS();
       }, 1);
 
       return;
     }
 
-    const con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0));
+    if (!screen) return;
+
+    const con =
+      (this._popup =
+      menu._popup =
+        screen.popup(this as unknown as ui_base.UIBase, x, y, false, 0) as unknown as PopupContainer);
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -1291,18 +1380,22 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this.g.clearRect(0, 0, this.dom.width, this.dom.height);
 
       if (this._highlight) {
-        ui_base.drawRoundBox2(this, { canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
+        ui_base.drawRoundBox2(this as unknown as ui_base.UIBase, {
+          canvas: this.dom,
+          g     : this.g,
+          color : this.getDefault("BoxHighlight") as string | undefined,
+        });
       }
 
       if (this._focus) {
-        ui_base.drawRoundBox2(this, {
+        ui_base.drawRoundBox2(this as unknown as ui_base.UIBase, {
           canvas  : this.dom,
           g       : this.g,
-          color   : this.getDefault("BoxHighlight"),
+          color   : this.getDefault("BoxHighlight") as string | undefined,
           op      : "stroke",
           no_clear: true,
         });
-        ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
+        ui_base.drawRoundBox(this as unknown as ui_base.UIBase, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
 
       this._draw_text();
@@ -1354,7 +1447,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     this._draw_text();
   }
 
-  _convertVal(val) {
+  _convertVal(val: string | number) {
     if (typeof val === "string" && this.prop) {
       if (val in this.prop.values) {
         return this.prop.values[val];
@@ -1368,7 +1461,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     return val;
   }
 
-  setValue(val, setLabelOnly = false) {
+  setValue(val: string | number | undefined, setLabelOnly = false) {
     if (val === undefined || val === this._value) {
       return;
     }
@@ -1396,8 +1489,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._name = "" + val;
     }
 
-    if (this.onchange && !setLabelOnly) {
-      this.onchange(val);
+    if (this._onchangeCallback && !setLabelOnly) {
+      this._onchangeCallback(val);
     }
 
     this.setCSS();
@@ -1406,9 +1499,20 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   }
 }
 
-UIBase.internalRegister(DropBox);
+UIBase.internalRegister(DropBox as unknown as ui_base.IUIBaseConstructor);
 
 export class MenuWrangler {
+  screen: Screen | undefined;
+  menustack: Menu[];
+  lastPickElemTime: number;
+  _closetimer: number;
+  closeOnMouseUp: boolean | undefined;
+  closereq: Menu | undefined;
+  timer: ReturnType<typeof setInterval> | undefined;
+  spawnreq: unknown;
+
+  [k: string]: unknown;
+
   constructor() {
     this.screen = undefined;
     this.menustack = [];
@@ -1435,7 +1539,7 @@ export class MenuWrangler {
     return this.menustack.length > 0 ? this.menustack[this.menustack.length - 1] : undefined;
   }
 
-  pushMenu(menu) {
+  pushMenu(menu: Menu) {
     debugmenu("pushMenu");
 
     this.spawnreq = undefined;
@@ -1447,7 +1551,7 @@ export class MenuWrangler {
     this.menustack.push(menu);
   }
 
-  popMenu(menu) {
+  popMenu(_menu?: Menu) {
     debugmenu("popMenu");
 
     return this.menustack.pop();
@@ -1463,8 +1567,9 @@ export class MenuWrangler {
     this.menustack = [];
   }
 
-  searchKeyDown(e) {
+  searchKeyDown(e: KeyboardEvent) {
     const menu = this.menu;
+    if (!menu) return;
 
     e.stopPropagation();
     menu._ignoreFocusEvents = true;
@@ -1477,7 +1582,7 @@ export class MenuWrangler {
 
     switch (e.keyCode) {
       case keymap["Enter"]: //return key
-        menu.click(menu.activeItem);
+        menu.click();
         break;
       case keymap["Escape"]: //escape key
         menu.close();
@@ -1491,7 +1596,7 @@ export class MenuWrangler {
     }
   }
 
-  on_keydown(e) {
+  on_keydown(e: KeyboardEvent) {
     window.menu = this.menu;
 
     if (this.menu === undefined) {
@@ -1508,7 +1613,7 @@ export class MenuWrangler {
       case keymap["Left"]: //left
       case keymap["Right"]: //right
         if (menu._dropbox) {
-          let dropbox = menu._dropbox;
+          let dropbox: Element | null = menu._dropbox as unknown as Element;
 
           if (e.keyCode === keymap["Left"]) {
             dropbox = dropbox.previousElementSibling;
@@ -1516,9 +1621,9 @@ export class MenuWrangler {
             dropbox = dropbox.nextElementSibling;
           }
 
-          if (dropbox !== undefined && dropbox instanceof DropBox) {
+          if (dropbox !== null && dropbox instanceof DropBox) {
             this.endMenus();
-            dropbox._onpress(e);
+            (dropbox as unknown as DropBox)._onpress(e);
           }
         }
         break;
@@ -1555,7 +1660,7 @@ export class MenuWrangler {
       break;//*/
       case 13: //return key
       case 32: //space key
-        menu.click(menu.activeItem);
+        menu.click();
         break;
       case 27: //escape key
         menu.close();
@@ -1563,13 +1668,14 @@ export class MenuWrangler {
     }
   }
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
       return;
     }
 
-    const screen = this.screen;
+    type ScreenPick = Screen & { pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined };
+    const screen = this.screen as unknown as ScreenPick;
     const x = e.pageX;
     const y = e.pageY;
 
@@ -1582,13 +1688,15 @@ export class MenuWrangler {
     }
   }
 
-  on_pointerup(e) {
+  on_pointerup(e: PointerEvent) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
       return;
     }
 
-    const screen = this.screen;
+    const screen = this.screen as unknown as Screen & {
+      pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined;
+    };
     const x = e.pageX;
     const y = e.pageY;
 
@@ -1605,8 +1713,11 @@ export class MenuWrangler {
     }
   }
 
-  findMenu(x, y) {
-    const screen = this.screen;
+  findMenu(x: number, y: number) {
+    const screen = this.screen as unknown as Screen & {
+      pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined;
+    };
+    if (!screen) return undefined;
 
     const element = screen.pickElement(x, y);
 
@@ -1618,7 +1729,7 @@ export class MenuWrangler {
       return element;
     }
 
-    let w = element;
+    let w: ui_base.UIBase | undefined = element;
 
     while (w) {
       if (w instanceof Menu) {
@@ -1627,13 +1738,13 @@ export class MenuWrangler {
         break;
       }
 
-      w = w.parentWidget;
+      w = (w as unknown as { parentWidget?: ui_base.UIBase | undefined }).parentWidget;
     }
 
     return undefined;
   }
 
-  on_pointermove(e) {
+  on_pointermove(e: PointerEvent) {
     if (this.menu?.hasSearchBox) {
       this.closetimer = util.time_ms();
       this.closereq = undefined;
@@ -1646,11 +1757,12 @@ export class MenuWrangler {
       return;
     }
 
-    const screen = this.screen;
+    type ScreenPick = Screen & { pickElement(x: number, y: number, ...args: unknown[]): ui_base.UIBase | undefined };
+    const screen = this.screen as unknown as ScreenPick;
     const x = e.pageX;
     const y = e.pageY;
 
-    let element;
+    let element: ui_base.UIBase | undefined;
     const menu = this.menu;
 
     if (menu) {
@@ -1677,16 +1789,19 @@ export class MenuWrangler {
       return;
     }
 
-    let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
-    destroy = destroy && element.menu !== this.menu;
+    type DropBoxLike = ui_base.UIBase & { menu?: Menu; _onpress?(e: PointerEvent): void };
+    const elem = element as DropBoxLike;
+
+    let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
+    destroy = destroy && elem.menu !== this.menu;
 
     if (destroy) {
       /* check that dropbox doesn't contain our parent menu either */
 
-      let menu2 = this.menu;
-      while (menu2 !== element.menu) {
-        menu2 = menu2.parentMenu;
-        destroy = destroy && (menu2 === undefined || menu2 !== element.menu);
+      let menu2: Menu | undefined = this.menu;
+      while (menu2 !== elem.menu) {
+        menu2 = menu2?.parentMenu;
+        destroy = destroy && (menu2 === undefined || menu2 !== elem.menu);
       }
     }
 
@@ -1698,13 +1813,13 @@ export class MenuWrangler {
       this.closereq = undefined;
 
       //start new menu
-      element._onpress(e);
+      elem._onpress?.(e);
       return;
     }
 
     let ok = false;
 
-    let w = element;
+    let w: DropBoxLike | undefined = elem;
     while (w) {
       if (w instanceof Menu) {
         //w === this.menu) {
@@ -1717,7 +1832,7 @@ export class MenuWrangler {
         break;
       }
 
-      w = w.parentWidget;
+      w = w.parentWidget as DropBoxLike | undefined;
     }
 
     if (!ok) {
@@ -1729,7 +1844,7 @@ export class MenuWrangler {
   }
 
   update() {
-    let closetime = cconst.menu_close_time;
+    let closetime: number | undefined = cconst.menu_close_time;
     closetime = closetime === undefined ? 50 : closetime;
 
     let close = this.closereq && this.closereq === this.menu;
@@ -1763,7 +1878,8 @@ export class MenuWrangler {
   }
 }
 
-export const menuWrangler = (window._menuWrangler = new MenuWrangler());
+export const menuWrangler = new MenuWrangler();
+window._menuWrangler = menuWrangler;
 let wrangerStarted = false;
 
 export function startMenuEventWrangling(screen?: Screen) {
@@ -1784,9 +1900,9 @@ export function startMenuEventWrangling(screen?: Screen) {
       continue;
     }
 
-    let dom = k.search("key") >= 0 ? window : document.body;
-    dom = window;
-    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), { passive: false, capture: true });
+    const eventType = (DomEventTypes as Record<string, string>)[k];
+    const handler = (menuWrangler[k] as Function).bind(menuWrangler) as EventListener;
+    window.addEventListener(eventType, handler, { passive: false, capture: true });
   }
 
   menuWrangler.screen = screen;
@@ -1795,8 +1911,8 @@ export function startMenuEventWrangling(screen?: Screen) {
 
 window._startMenuEventWrangling = startMenuEventWrangling;
 
-export function setWranglerScreen(screen) {
-  startMenuEventWrangling(screen);
+export function setWranglerScreen<CTX extends IContextBase>(screen: Screen<CTX> | undefined) {
+  startMenuEventWrangling(screen as unknown as Screen);
 }
 
 export function getWranglerScreen() {
@@ -1808,24 +1924,24 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
   title: string,
   templ: MenuTemplate
 ): Menu<CTX> {
-  const menu = UIBase.createElement("menu-x");
+  const menu = UIBase.createElement("menu-x") as unknown as Menu<CTX>;
   menu.ctx = ctx;
   menu.setAttribute("name", title);
 
-  const SEP = menu.constructor.SEP;
+  const menuSEP = (menu.constructor as typeof Menu).SEP;
   let id = 0;
-  const cbs = {};
+  const cbs: Record<string | number, () => void> = {};
 
-  const doItem = (item) => {
+  const doItem = (item: MenuTemplateItem) => {
     if (item !== undefined && item instanceof Menu) {
       menu.addItem(item);
     } else if (typeof item == "string") {
-      let def;
-      let hotkey;
+      let def: { uiname: string; hotkey?: string; icon?: number };
+      let hotkey: string | undefined;
 
       try {
-        def = ctx.api.getToolDef(item);
-      } catch (error) {
+        def = ctx.api.getToolDef(item) as typeof def;
+      } catch (error: unknown) {
         menu.addItem("(tool path error)", id++);
         return;
       }
@@ -1833,9 +1949,9 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
       //3Extra(text, id=undefined, hotkey, icon=-1, add=true) {
       if (!def.hotkey) {
         try {
-          hotkey = ctx.api.getToolPathHotkey(ctx, item);
-        } catch (error) {
-          util.print_stack(error);
+          hotkey = ctx.api.getToolPathHotkey(ctx, item) as string | undefined;
+        } catch (error: unknown) {
+          util.print_stack(error as Error);
           console.warn("error getting hotkey for tool " + item);
           hotkey = undefined;
         }
@@ -1845,47 +1961,55 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
-      cbs[id] = (function (toolpath) {
+      cbs[id] = (function (toolpath: string) {
         return function () {
           ctx.api.execTool(ctx, toolpath);
         };
       })(item);
 
       id++;
-    } else if (item === SEP) {
+    } else if (item === menuSEP) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
-      doItem(item());
+      doItem((item as MenuItemCallback)(document.createElement("div")) as unknown as MenuTemplateItem);
     } else if (item instanceof Array) {
       //old array-based api for custom entries
-      let hotkey = item.length > 2 ? item[2] : undefined;
-      const icon = item.length > 3 ? item[3] : undefined;
-      const tooltip = item.length > 4 ? item[4] : undefined;
-      const id2 = item.length > 5 ? item[5] : id++;
+      let hotkey: string | HotKey | undefined = item.length > 1 ? (item[1] as string | HotKey | undefined) : undefined;
+      const icon = item.length > 2 ? (item[2] as number | undefined) : undefined;
+      const tooltip = item.length > 3 ? (item[3] as string | undefined) : undefined;
+      const id2 = item.length > 4 ? (item[4] as string | number) : id++;
 
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
 
-      menu.addItemExtra(item[0], id2, hotkey, icon, undefined, tooltip);
+      menu.addItemExtra(item[0], id2, hotkey as string | undefined, icon, undefined, tooltip);
 
-      cbs[id2] = (function (cbfunc, arg) {
+      cbs[id2 as string | number] = (function (cbfunc: Function, arg: string | number) {
         return function () {
           cbfunc(arg);
         };
-      })(item[1], id2);
+      })(item[1] as Function, id2 as string | number);
     } else if (typeof item === "object") {
       //new object-based api for custom entries
-      let { name, callback, hotkey, icon, tooltip } = item;
+      const objItem = item as {
+        name: string;
+        callback: Function;
+        hotkey?: string | HotKey;
+        icon?: number;
+        tooltip?: string;
+        id?: string | number;
+      };
+      let { name, callback, hotkey, icon, tooltip } = objItem;
 
-      const id2 = item.id !== undefined ? item.id : id++;
+      const id2 = objItem.id !== undefined ? objItem.id : id++;
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
 
-      menu.addItemExtra(name, id2, hotkey, icon, undefined, tooltip);
+      menu.addItemExtra(name, id2, hotkey as string | undefined, icon, undefined, tooltip);
 
-      cbs[id2] = (function (cbfunc, arg) {
+      cbs[id2] = (function (cbfunc: Function, arg: string | number) {
         return function () {
           cbfunc(arg);
         };
@@ -1897,18 +2021,24 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
     doItem(item);
   }
 
-  menu.onselect = (id) => {
+  menu._onselect = (id: string | number) => {
     cbs[id]();
   };
 
   return menu;
 }
 
-export function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
+export function startMenu(menu: Menu, x: number, y: number, searchMenuMode = false, safetyDelay = 55) {
   menuWrangler.endMenus();
 
-  const screen = menu.ctx.screen;
-  const con = (menu._popup = screen.popup(undefined, x, y, false, safetyDelay));
+  const screen = (menu.ctx as IContextBase).screen as unknown as Screen;
+  const con = (menu._popup = screen.popup(
+    menu as unknown as ui_base.UIBase,
+    x,
+    y,
+    false,
+    safetyDelay
+  ) as unknown as PopupContainer);
   con.noMarginsOrPadding();
 
   con.add(menu);
@@ -1921,6 +2051,6 @@ export function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) 
   menu.flushUpdate();
   menu.flushSetCSS();
 
-  menu._popup.flushUpdate();
-  menu._popup.flushSetCSS();
+  (menu._popup as unknown as ui_base.UIBase).flushUpdate();
+  (menu._popup as unknown as ui_base.UIBase).flushSetCSS();
 }

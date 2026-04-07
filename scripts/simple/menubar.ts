@@ -1,13 +1,14 @@
 import { Editor } from "./editor.js";
 import { nstructjs } from "../path-controller/controller.js";
 import { AreaFlags } from "../screen/ScreenArea.js";
+import { IContextBase } from "../core/context_base.js";
 
 declare const electron_api: { initMenuBar(editor: unknown): void };
 declare const window: Window & { haveElectron?: boolean };
 
 /** see ./editor.js:Editor.registerAppMenu */
 
-export class MenuBarEditor extends Editor {
+export class MenuBarEditor<CTX extends IContextBase = IContextBase> extends Editor<CTX> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `

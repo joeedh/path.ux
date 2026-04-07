@@ -1,13 +1,33 @@
-// @ts-nocheck
 import {UIBase, Icons, saveUIData, loadUIData} from '../core/ui_base.js';
-import {ColumnFrame, RowFrame} from "../core/ui.js";
+import {ColumnFrame} from "../core/ui.js";
+import type {Container} from "../core/ui.js";
 import * as util from '../path-controller/util/util.js';
-import {Vector2, Vector3} from "../path-controller/util/vectormath.js";
-import {Curve1D, mySafeJSONStringify} from "../path-controller/curve/curve1d.js";
+import {Curve1D} from "../path-controller/curve/curve1d.js";
 import {makeGenEnum} from '../path-controller/curve/curve1d_utils.js';
+import type {CurveTypeData} from "../path-controller/curve/curve1d.js";
+import {IContextBase} from "../core/context_base.js";
+import type {DropBox} from "../widgets/ui_menu.js";
 
-export class Curve1DWidget extends ColumnFrame {
-  #in_onchange = false;
+/** Slider-like widget interface — slider() returns UIBase but these members exist at runtime. */
+interface SliderWidget {
+  setValue(val: number): void;
+  displayUnit: string | undefined;
+  baseUnit: string | undefined;
+}
+
+export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+  #in_onchange: number = 0;
+
+  _value: Curve1D;
+  drawTransform: [number, [number, number]];
+  _gen_type: string | undefined;
+  _lastGen: CurveTypeData | undefined;
+  _last_dpi: number | undefined;
+  canvas: HTMLCanvasElement;
+  g: CanvasRenderingContext2D;
+  container: ColumnFrame<CTX> | undefined;
+  dropbox!: DropBox<CTX>;
+  _lastu: number | undefined;
 
   constructor() {
     super();
@@ -20,9 +40,7 @@ export class Curve1DWidget extends ColumnFrame {
     this._value = new Curve1D();
     this.checkCurve1dEvents();
 
-    this.#in_onchange = 0;
-
-    this._value._on_change = (msg) => {
+    this._value._on_change = () => {
       if (this.#in_onchange) {
         return;
       }
@@ -32,16 +50,16 @@ export class Curve1DWidget extends ColumnFrame {
 
       try {
         if (this.hasAttribute("datapath")) {
-          let path = this.getAttribute("datapath");
+          let path = this.getAttribute("datapath")!;
           if (this._value !== undefined) {
             let val = this.getPathValue(this.ctx, path);
 
-            if (val) {
+            if (val instanceof Curve1D) {
               val.load(this._value);
               this.setPathValue(this.ctx, path, val);
             } else {
-              val = this._value.copy();
-              this.setPathValue(this.ctx, path, val);
+              const copy = this._value.copy();
+              this.setPathValue(this.ctx, path, copy);
             }
           }
         }
@@ -51,8 +69,8 @@ export class Curve1DWidget extends ColumnFrame {
         }
       } catch (error) {
         if (window.DEBUG && window.DEBUG.datapath) {
-          console.error(error.stack);
-          console.error(error.message);
+          console.error((error as Error).stack);
+          console.error((error as Error).message);
         }
       }
 
@@ -70,10 +88,9 @@ export class Curve1DWidget extends ColumnFrame {
     this._last_dpi = undefined;
     this.canvas = document.createElement("canvas");
 
-    this.g = this.canvas.getContext("2d");
-    this.canvas.g = this.g;
+    this.g = this.canvas.getContext("2d")!;
 
-    window.cw = this;
+    (window as Window & { cw?: unknown }).cw = this;
     this.shadow.appendChild(this.canvas);
   }
 
@@ -95,18 +112,18 @@ export class Curve1DWidget extends ColumnFrame {
     }
 
     if (this.ctx && this.hasAttribute("datapath")) {
-      let curve1d;
+      let curve1d: unknown;
 
       try {
-        curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+        curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath")!);
       } catch (error) {
         if (window.DEBUG && window.DEBUG.datapath) {
-          console.error(error.stack);
-          console.error(error.message);
+          console.error((error as Error).stack);
+          console.error((error as Error).message);
         }
       }
 
-      if (!curve1d) {
+      if (!(curve1d instanceof Curve1D)) {
         this.disabled = true;
         return;
       }
@@ -116,8 +133,15 @@ export class Curve1DWidget extends ColumnFrame {
       }
 
       if (!curve1d.subscribed(undefined, this)) {
-        curve1d.on("select", (bspline1) => {
-          let bspline2 = this._value.getGenerator("BSplineCurve");
+        curve1d.on("select", (data) => {
+          const bspline1 = data as { points: Array<{ flag: number }> };
+          let bspline2 = this._value.getGenerator("BSplineCurve") as unknown as {
+            points: Array<{ flag: number; co: { load(v: unknown): void } }>;
+            length: number;
+            redraw(): void;
+            update(): void;
+            updateKnots(): void;
+          };
 
           for (let i = 0; i < bspline1.points.length; i++) {
             if (i >= bspline2.length) {
@@ -129,8 +153,15 @@ export class Curve1DWidget extends ColumnFrame {
           bspline2.redraw();
         });
 
-        curve1d.on("transform", (bspline1) => {
-          let bspline2 = this._value.getGenerator("BSplineCurve");
+        curve1d.on("transform", (data) => {
+          const bspline1 = data as { points: Array<{ co: { load(v: unknown): void } }> };
+          let bspline2 = this._value.getGenerator("BSplineCurve") as unknown as {
+            points: Array<{ co: { load(v: unknown): void } }>;
+            length: number;
+            update(): void;
+            updateKnots(): void;
+            redraw(): void;
+          };
 
           for (let i = 0; i < bspline1.points.length; i++) {
             if (i >= bspline2.length) {
@@ -146,7 +177,7 @@ export class Curve1DWidget extends ColumnFrame {
 
         curve1d.on("update", () => {
           console.log("datapath curve1d update!");
-          this._value.load(curve1d);
+          this._value.load(curve1d as Curve1D);
           this.rebuild();
         }, this, () => !this.isConnected);
       }
@@ -157,14 +188,12 @@ export class Curve1DWidget extends ColumnFrame {
     return this._value;
   }
 
-  _on_draw(e) {
-    let curve = e.data;
-
+  _on_draw(_e: unknown) {
     //console.log("draw");
     this._redraw();
   }
 
-  set value(val) {
+  set value(val: Curve1D) {
     this._value.load(val);
     this.update();
     this._redraw();
@@ -186,11 +215,11 @@ export class Curve1DWidget extends ColumnFrame {
 
     prop.setValue(this.value.generatorType);
 
-    this.dropbox = row.listenum(undefined, "Type", prop, this.value.generatorType, (id) => {
+    this.dropbox = row.listenum(undefined, "Type", prop, this.value.generatorType, (id: string | number) => {
       console.warn("SELECT", id, prop.keys[id]);
 
-      this.value.setGenerator(id);
-      this.value._on_change("curve type change");
+      this.value.setGenerator(String(id));
+      this.value._on_change();
     });
     this.dropbox._init();
 
@@ -201,8 +230,9 @@ export class Curve1DWidget extends ColumnFrame {
       //  curve.uiZoom = 1.0;
 
       curve.uiZoom *= 0.9;
-      if (this.getAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      const dp = this.getAttribute("datapath");
+      if (dp) {
+        this.setPathValue(this.ctx, dp, curve);
       }
 
       this._redraw();
@@ -214,8 +244,9 @@ export class Curve1DWidget extends ColumnFrame {
       //  curve.uiZoom = 1.0;
 
       curve.uiZoom *= 1.1;
-      if (this.getAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      const dp = this.getAttribute("datapath");
+      if (dp) {
+        this.setPathValue(this.ctx, dp, curve);
       }
 
       this._redraw();
@@ -228,35 +259,35 @@ export class Curve1DWidget extends ColumnFrame {
 
     let clipCheck = panel.check(undefined, "Clip To Range");
     clipCheck.onchange = (val) => {
-      this._value.clipToRange = val;
+      this._value.clipToRange = val as boolean;
       this._on_change();
       this._redraw();
     }
     clipCheck.checked = this._value.clipToRange;
 
-    let xmin = panel.slider(undefined, "X Min", this._value.xRange[0], -10, 10, 0.1, false, undefined, (val) => {
-      this._value.xRange[0] = val.value;
+    const xmin = panel.slider(undefined, "X Min", this._value.xRange[0], -10, 10, 0.1, false, undefined, (val: unknown) => {
+      this._value.xRange[0] = (val as { value: number }).value;
       this._on_change();
       this._redraw();
-    });
+    }) as UIBase<CTX> & SliderWidget;
 
-    let xmax = panel.slider(undefined, "X Max", this._value.xRange[1], -10, 10, 0.1, false, undefined, (val) => {
-      this._value.xRange[1] = val.value;
+    const xmax = panel.slider(undefined, "X Max", this._value.xRange[1], -10, 10, 0.1, false, undefined, (val: unknown) => {
+      this._value.xRange[1] = (val as { value: number }).value;
       this._on_change();
       this._redraw();
-    });
+    }) as UIBase<CTX> & SliderWidget;
 
-    let ymin = panel.slider(undefined, "Y Min", this._value.yRange[0], -10, 10, 0.1, false, undefined, (val) => {
-      this._value.yRange[0] = val.value;
+    const ymin = panel.slider(undefined, "Y Min", this._value.yRange[0], -10, 10, 0.1, false, undefined, (val: unknown) => {
+      this._value.yRange[0] = (val as { value: number }).value;
       this._on_change();
       this._redraw();
-    });
+    }) as UIBase<CTX> & SliderWidget;
 
-    let ymax = panel.slider(undefined, "Y Max", this._value.yRange[1], -10, 10, 0.1, false, undefined, (val) => {
-      this._value.yRange[1] = val.value;
+    const ymax = panel.slider(undefined, "Y Max", this._value.yRange[1], -10, 10, 0.1, false, undefined, (val: unknown) => {
+      this._value.yRange[1] = (val as { value: number }).value;
       this._on_change();
       this._redraw();
-    });
+    }) as UIBase<CTX> & SliderWidget;
 
     let last_update_key = "";
     this.container.updateAfter(() => {
@@ -289,15 +320,15 @@ export class Curve1DWidget extends ColumnFrame {
   setCSS() {
     super.setCSS();
 
-    this.style["width"] = "min-contents";
-    this.style["height"] = "min-contents";
+    (this.style as unknown as Record<string, string>)["width"] = "min-contents";
+    (this.style as unknown as Record<string, string>)["height"] = "min-contents";
     this.updateSize();
   }
 
   updateSize() {
     let dpi = UIBase.getDPI();
-    let w = ~~(this.getDefault("CanvasWidth")*dpi);
-    let h = ~~(this.getDefault("CanvasHeight")*dpi);
+    let w = ~~((this.getDefault("CanvasWidth") as number) * dpi);
+    let h = ~~((this.getDefault("CanvasHeight") as number) * dpi);
 
     let bad = w !== this.canvas.width || h !== this.canvas.height;
     bad = bad || dpi !== this._last_dpi;
@@ -310,8 +341,8 @@ export class Curve1DWidget extends ColumnFrame {
     this.canvas.width = w;
     this.canvas.height = h;
 
-    this.canvas.style["width"] = (w/dpi) + "px";
-    this.canvas.style["height"] = (h/dpi) + "px";
+    this.canvas.style.width = (w / dpi) + "px";
+    this.canvas.style.height = (h / dpi) + "px";
 
     this._redraw();
   }
@@ -326,7 +357,7 @@ export class Curve1DWidget extends ColumnFrame {
     //g.clearRect(0, 0, canvas.width, canvas.height);
     g.beginPath();
     g.rect(0, 0, canvas.width, canvas.height);
-    g.fillStyle = this.getDefault("CanvasBG");
+    g.fillStyle = this.getDefault("CanvasBG") as string;
     g.fill();
 
     g.save();
@@ -336,12 +367,12 @@ export class Curve1DWidget extends ColumnFrame {
 
     g.lineWidth /= scale;
 
-    this.drawTransform[0] = scale*zoom;
+    this.drawTransform[0] = scale * zoom;
     this.drawTransform[1][0] = 0.0;
     this.drawTransform[1][1] = -1.0;
 
-    this.drawTransform[1][0] -= 0.5 - 0.5/zoom;
-    this.drawTransform[1][1] += 0.5 - 0.5/zoom;
+    this.drawTransform[1][0] -= 0.5 - 0.5 / zoom;
+    this.drawTransform[1][1] += 0.5 - 0.5 / zoom;
 
     //g.scale(scale, scale);
 
@@ -372,7 +403,7 @@ export class Curve1DWidget extends ColumnFrame {
     }
 
     let onchange = this.dropbox.onchange;
-    this.dropbox.onchange = undefined
+    this.dropbox.onchange = null;
     this.dropbox.setValue(this.value.generatorType);
     this.dropbox.onchange = onchange;
 
@@ -383,12 +414,12 @@ export class Curve1DWidget extends ColumnFrame {
         return;
       }
 
-      let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-      this._value.load(val);
+      let val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
+      this._value.load(val instanceof Curve1D ? val : undefined);
       this.rebuild();
     };
 
-    let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
+    let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath")! : undefined;
     let gen = this.value.generators.active;
 
     /* Turn off data path callbacks. */
@@ -401,8 +432,8 @@ export class Curve1DWidget extends ColumnFrame {
         col.flushUpdate();
       }
     } catch (error) {
-      console.warn(error.stack);
-      console.warn(error.message);
+      console.warn((error as Error).stack);
+      console.warn((error as Error).message);
     }
 
     this.#in_onchange--;
@@ -416,14 +447,14 @@ export class Curve1DWidget extends ColumnFrame {
       return;
     }
 
-    let path = this.getAttribute("datapath");
+    let path = this.getAttribute("datapath")!;
     let val = this.getPathValue(this.ctx, path);
 
     if (this._lastu === undefined) {
       this._lastu = 0;
     }
 
-    if (val && !val.equals(this._value) && util.time_ms() - this._lastu > 200) {
+    if (val instanceof Curve1D && !val.equals(this._value) && util.time_ms() - this._lastu > 200) {
       this._lastu = util.time_ms();
 
       this._value.load(val);

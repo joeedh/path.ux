@@ -1,75 +1,88 @@
-// @ts-nocheck
-import {UIBase, drawText} from "../core/ui_base.js";
-import {ValueButtonBase} from "./ui_widgets.js";
-import cconst from '../config/const.js';
-import * as ui_base from "../core/ui_base.js";
-import * as units from "../core/units.js";
-import {Vector2} from "../path-controller/util/vectormath.js";
-import {ColumnFrame} from "../core/ui.js";
-import * as util from "../path-controller/util/util.js";
-import {
-  PropTypes, isNumber, PropSubTypes, PropFlags, NumberConstraints, IntProperty
-} from "../path-controller/toolsys/toolprop.js";
-import {eventWasTouch} from "../path-controller/util/simple_events.js";
-import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
-import {color2css, css2color} from "../core/ui_theme.js";
-import {ThemeEditor} from "./theme_editor.js";
-import {Unit} from '../core/units.js';
+import { UIBase } from "../core/ui_base";
+import { ValueButtonBase } from "./ui_widgets";
+import cconst from "../config/const";
+import * as ui_base from "../core/ui_base";
+import * as units from "../core/units";
+import { Vector2, Vector4 } from "../path-controller/util/vectormath";
+import { ColumnFrame, Container, Label } from "../core/ui";
+import * as util from "../path-controller/util/util";
+import { NumberConstraints } from "../path-controller/toolsys/toolprop";
+import { eventWasTouch } from "../path-controller/util/simple_events";
+import { keymap } from "../path-controller/util/simple_events";
+import { color2css, css2color } from "../core/ui_theme";
+import type { ToolProperty } from "../path-controller/toolsys/toolprop";
+import { IContextBase } from "../core/context_base";
+import { ResolvedProp } from "../pathux";
+import { TextBox } from "./ui_textbox";
 
 export const sliderDomAttributes = new Set([
-  "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
-  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
-  "slideSpeed", "sliderDisplayExp"
+  "min",
+  "max",
+  "integer",
+  "displayUnit",
+  "baseUnit",
+  "labelOnTop",
+  "radix",
+  "step",
+  "expRate",
+  "stepIsRelative",
+  "decimalPlaces",
+  "slideSpeed",
+  "sliderDisplayExp",
 ]);
 
-function updateSliderFromDom(dom, slider = dom) {
-  slider.loadNumConstraints(undefined, dom);
+function updateSliderFromDom(dom: UIBase, slider: UIBase = dom) {
+  slider.loadNumConstraints(undefined as unknown as ToolProperty, dom);
 }
 
 export const SliderDefaults = {
   stepIsRelative  : false,
-  expRate         : 1.0 + 1.0/3.0,
+  expRate         : 1.0 + 1.0 / 3.0,
   radix           : 10,
   decimalPlaces   : 4,
   baseUnit        : "none",
   displayUnit     : "none",
   slideSpeed      : 1.0,
   step            : 0.1,
-  sliderDisplayExp: 1.0
-}
+  sliderDisplayExp: 1.0,
+};
 
-export function NumberSliderBase(cls = UIBase, skip = new Set(), defaults = SliderDefaults) {
-  skip = new Set(skip);
-
-  return class NumberSliderBase extends cls {
-    constructor() {
-      super();
-
-      for (let key of NumberConstraints) {
-        if (skip.has(key)) {
-          continue;
-        }
-
-        if (key in defaults) {
-          this[key] = defaults[key];
-        } else {
-          this[key] = undefined;
-        }
-      }
+function loadNumConstraints(self: any, defaults: any = SliderDefaults, skip = new Set<string>()) {
+  for (const key of NumberConstraints) {
+    if (skip.has(key)) {
+      continue;
     }
 
-    loadNumConstraints(prop, dom) {
-      return super.loadNumConstraints(prop, dom, this._redraw);
+    if (key in defaults) {
+      self[key] = defaults[key];
+    } else {
+      self[key] = undefined;
     }
   }
 }
 
 //use .setAttribute("linear") to disable nonlinear sliding
-export class NumSlider extends NumberSliderBase(ValueButtonBase) {
+export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueButtonBase<CTX> {
+  _last_label: string | undefined;
+  mdown: boolean;
+  ma: InstanceType<typeof util.MovingAvg> | undefined;
+  mpos: Vector2;
+  start_mpos: Vector2;
+  _last_overarrow: number;
+  vertical: boolean;
+  _last_disabled: boolean;
+  _last_width: number;
+  last_time: number;
+  _on_click: ((e: PointerEvent) => void) | undefined;
+  __pressed: boolean;
+  declare g: CanvasRenderingContext2D;
+  _name: string;
+  _value: number;
+
   constructor() {
     super();
+    loadNumConstraints(this);
 
-    this._highlight = undefined;
     this._last_label = undefined;
 
     this.mdown = false;
@@ -78,7 +91,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.mpos = new Vector2();
     this.start_mpos = new Vector2();
 
-    this._last_overarrow = false;
+    this._last_overarrow = 0;
 
     this._name = "";
     this._value = 0.0;
@@ -86,29 +99,46 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
     this.vertical = false;
     this._last_disabled = false;
+    this._last_width = 0;
+    this.last_time = 0;
+    this._on_click = undefined;
+    this.__pressed = false;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
     this.editAsBaseUnit = undefined;
   }
 
+  loadNumConstraints(
+    prop?: ResolvedProp | ToolProperty | undefined,
+    dom?: HTMLElement | UIBase<CTX, unknown>,
+    onModifiedCallback?: (this: UIBase) => void
+  ): void {
+    super.loadNumConstraints(prop, dom, () => {
+      if (onModifiedCallback) {
+        onModifiedCallback.call(this);
+      }
+      this._redraw();
+    });
+  }
+
   get value() {
     return this._value;
   }
 
-  set value(val) {
+  set value(val: number) {
     this.setValue(val);
   }
 
   /** Current name label.  If set to null label will
    * be pulled from the datapath api.*/
   get name() {
-    return this.getAttribute("name") || this._name;
+    return (this.getAttribute("name") ?? null) || this._name;
   }
 
   /** Current name label.  If set to null label will
    * be pulled from the datapath api.*/
-  set name(name) {
+  set name(name: string | null | undefined) {
     if (name === undefined || name === null) {
       this.removeAttribute("name");
     } else {
@@ -125,14 +155,13 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     };
   }
 
+  updateWidth(w_add = 0) {
+    const dpi = UIBase.getDPI();
+    const wid = ~~((this.getDefault("width") as number) * dpi);
 
-  updateWidth(force = false) {
-    let dpi = UIBase.getDPI();
-    let wid = ~~(this.getDefault("width")*dpi);
-
-    if (force || wid !== this._last_width) {
+    if (w_add || wid !== this._last_width) {
       this._last_width = wid;
-      this.setCSS();
+      this.setCSS(undefined, false);
     }
   }
 
@@ -141,13 +170,13 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       return;
     }
 
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath") ?? "");
 
     if (!prop) {
       return;
     }
 
-    let name;
+    let name: string | null | undefined;
 
     if (this.hasAttribute("name")) {
       name = this.getAttribute("name");
@@ -159,13 +188,13 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     //accessing of DOM attributes
     let updateConstraints = false;
 
-    if (name !== this._name) {
+    if (name !== null && name !== this._name) {
       this._name = name;
-      this.setCSS();
+      this.setCSS(undefined, false);
       updateConstraints = true;
     }
 
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
     if (val !== this._value) {
       updateConstraints = true;
@@ -182,8 +211,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   update() {
     if (!!this._last_disabled !== !!this.disabled) {
       this._last_disabled = !!this.disabled;
-      this._redraw();
-      this.setCSS();
+      this._redraw(false);
+      this.setCSS(undefined, false);
     }
 
     this.updateWidth();
@@ -198,15 +227,13 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   clipboardPaste() {
-    let data = cconst.getClipboardData("text/plain");
-    console.log("Paste", data);
+    const clipEntry = cconst.getClipboardData("text/plain");
+    console.log("Paste", clipEntry);
 
-    if (typeof data == "object") {
-      data = data.data;
-    }
+    const data: string | undefined = typeof clipEntry === "object" ? clipEntry?.data : clipEntry;
 
-    let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
-    let val = units.parseValue(data, this.baseUnit, displayUnit);
+    const displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+    const val = units.parseValue(data!, this.baseUnit, displayUnit);
 
     if (typeof val === "number" && !isNaN(val)) {
       this.setValue(val);
@@ -214,7 +241,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   swapWithTextbox() {
-    let tbox = UIBase.createElement("textbox-x");
+    const tbox = UIBase.createElement<UIBase>("textbox-x");
 
     if (this.modalRunning) {
       this.popModal();
@@ -231,75 +258,78 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     tbox.editAsBaseUnit = this.editAsBaseUnit;
 
     if (this.isInt && this.radix != 10) {
-      let text = this.value.toString(this.radix);
-      if (this.radix === 2)
-        text = "0b" + text;
-      else if (this.radix === 16)
-        text += "h";
+      let text = (this.value as number).toString(this.radix);
+      if (this.radix === 2) text = "0b" + text;
+      else if (this.radix === 16) text += "h";
 
-      tbox.text = text;
+      (tbox as unknown as { text: string }).text = text;
     } else {
-      tbox.text = units.buildString(this.value, this.baseUnit, this.decimalPlaces, this.displayUnit);
+      (tbox as unknown as { text: string }).text = units.buildString(
+        this.value as number,
+        this.baseUnit,
+        this.decimalPlaces,
+        this.displayUnit
+      ) as string;
     }
 
-    this.parentNode.insertBefore(tbox, this);
+    this.parentNode!.insertBefore(tbox, this);
     //this.remove();
     this.hidden = true;
     //this.dom.hidden = true;
 
-    let finish = (ok) => {
+    const finish = (ok: boolean) => {
       tbox.remove();
       this.hidden = false;
 
       if (ok) {
-        let val = tbox.text.trim();
+        let val: number | string = (tbox as unknown as { text: string }).text.trim();
 
         if (this.isInt && this.radix !== 10) {
-          val = parseInt(val);
+          val = parseInt(val as string);
         } else {
-          let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+          const displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
 
-          val = units.parseValue(val, this.baseUnit, displayUnit);
+          val = units.parseValue(val as string, this.baseUnit, displayUnit) as number;
         }
 
-        if (isNaN(val)) {
-          console.log("Text input error", val, tbox.text.trim(), this.isInt);
+        if (isNaN(val as number)) {
+          console.log("Text input error", val, (tbox as unknown as { text: string }).text.trim(), this.isInt);
           this.flash(ui_base.ErrorColors.ERROR);
         } else {
-          this.setValue(val);
+          this.setValue(val as number);
 
           if (this.onchange) {
             this.onchange(this);
           }
         }
       }
-    }
+    };
 
-    tbox.onend = finish;
+    (tbox as unknown as { onend: (ok: boolean) => void }).onend = finish;
     tbox.focus();
-    tbox.select();
+    (tbox as unknown as { select: () => void }).select();
 
     //this.shadow.appendChild(tbox);
     return;
   }
 
   bindEvents() {
-    let dir = this.range && this.range[0] > this.range[1] ? -1 : 1;
+    const dir = this.range && this.range[0] > this.range[1] ? -1 : 1;
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Down"]:
-          this.setValue(this.value - dir*5*this.step);
+          this.setValue((this.value as number) - dir * 5 * (this.step ?? 0.1));
           break;
         case keymap["Up"]:
         case keymap["Right"]:
-          this.setValue(this.value + dir*5*this.step);
+          this.setValue((this.value as number) + dir * 5 * (this.step ?? 0.1));
           break;
       }
     });
 
-    let onmousedown = (e) => {
+    const onmousedown = (e: PointerEvent) => {
       e.preventDefault();
 
       if (this.disabled) {
@@ -316,17 +346,17 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
       this.mdown = true;
       this._pressed = true;
-      this._redraw();
+      this._redraw(false);
 
       if (this.overArrow(e.x, e.y)) {
-        this._on_click(e);
+        this._on_click!(e);
       } else {
         this.dragStart(e);
         e.stopPropagation();
       }
-    }
+    };
 
-    this._on_click = (e) => {
+    this._on_click = (e: PointerEvent) => {
       this.setMpos(e);
 
       if (this.disabled) {
@@ -338,14 +368,14 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
       let step;
 
-      if (step = this.overArrow(e.x, e.y)) {
+      if ((step = this.overArrow(e.x, e.y))) {
         if (e.shiftKey) {
           step *= 0.1;
         }
 
         this.setValue(this.value + step);
       }
-    }
+    };
 
     this.addEventListener("pointermove", (e) => {
       this.setMpos(e);
@@ -355,8 +385,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       }
     });
 
-    this.addEventListener("dblclick", (e) => {
-      this.setMpos(e);
+    this.addEventListener("dblclick", (e: MouseEvent) => {
+      this.setMpos(e as unknown as PointerEvent);
 
       this.mdown = false;
       this._pressed = false;
@@ -374,18 +404,22 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.swapWithTextbox();
     });
 
-    this.addEventListener("pointerdown", (e) => {
-      this.setMpos(e);
+    this.addEventListener(
+      "pointerdown",
+      (e) => {
+        this.setMpos(e);
 
-      if (this.disabled) return;
-      onmousedown(e);
-    }, {capture: true});
+        if (this.disabled) return;
+        onmousedown(e);
+      },
+      { capture: true }
+    );
 
     this.addEventListener("pointerup", (e) => {
       this.mdown = false;
       this._pressed = false;
-      this._redraw();
-    })
+      this._redraw(false);
+    });
     /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
@@ -404,16 +438,16 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     //  return onmouseup(e);
     //});
 
-    this.addEventListener("pointerover", (e) => {
+    this.addEventListener("pointerover", (e: PointerEvent) => {
       this.setMpos(e);
       if (this.disabled) return;
 
       if (!this._highlight) {
         this._highlight = true;
         this._repos_canvas();
-        this._redraw();
+        this._redraw(false);
       }
-    })
+    });
 
     this.addEventListener("blur", (e) => {
       this._highlight = false;
@@ -421,20 +455,21 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     });
 
     this.addEventListener("pointerout", (e) => {
-      this.setMpos(e);
+      this.setMpos(e as unknown as PointerEvent);
       if (this.disabled) return;
 
       this._highlight = false;
 
       this.dom._background = this.getDefault("background-color");
       this._repos_canvas();
-      this._redraw();
-    })
+      this._redraw(false);
+    });
   }
 
-  overArrow(x, y) {
-    let r = this.getBoundingClientRect();
-    let rwidth, rx;
+  overArrow(x: number, y: number) {
+    const r = this.getBoundingClientRect();
+    let rwidth;
+    let rx;
 
     if (this.vertical) {
       rwidth = r.height;
@@ -446,9 +481,9 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     x -= rx;
-    let sz = this._getArrowSize();
+    const sz = this._getArrowSize();
 
-    let szmargin = sz + cconst.numSliderArrowLimit;
+    const szmargin = sz + cconst.numSliderArrowLimit;
 
     let step = this.step || 0.01;
 
@@ -476,8 +511,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.loadNumConstraints();
   }
 
-  setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
-    value = Math.min(Math.max(value, this.range[0]), this.range[1]);
+  setValue(value: number, fire_onchange = true, setDataPath = true, checkConstraints = true) {
+    value = Math.min(Math.max(value, this.range![0]), this.range![1]);
 
     this._value = value;
 
@@ -494,17 +529,17 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
+      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._value);
     }
 
     if (fire_onchange && this.onchange) {
       this.onchange(this.value);
     }
 
-    this._redraw();
+    this._redraw(false);
   }
 
-  setMpos(e) {
+  setMpos(e: PointerEvent) {
     this.mpos[0] = e.x;
     this.mpos[1] = e.y;
 
@@ -513,15 +548,15 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.start_mpos[1] = e.y;
     }
 
-    let over = this.overArrow(e.x, e.y);
+    const over = this.overArrow(e.x, e.y);
 
     if (over !== this._last_overarrow) {
       this._last_overarrow = over;
-      this._redraw();
+      this._redraw(false);
     }
   }
 
-  dragStart(e) {
+  dragStart(e: PointerEvent) {
     this.mdown = false;
     this._pressed = true;
 
@@ -535,25 +570,26 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.last_time = util.time_ms();
 
     let last_background = this.dom._background;
-    let cancel;
+    let cancel: (restore_value: boolean) => void;
 
     this.ma = new util.MovingAvg(eventWasTouch(e) ? 8 : 2);
 
-    let startvalue = this.value;
+    const startvalue = this.value as number;
     let value = startvalue;
 
-    let startx = this.vertical ? e.y : e.x, starty = this.vertical ? e.x : e.y;
+    let startx = this.vertical ? e.y : e.x;
+    const starty = this.vertical ? e.x : e.y;
     let sumdelta = 0;
 
     this.dom._background = this.getDefault("BoxDepressed");
-    let fire = () => {
+    const fire = () => {
       if (this.onchange) {
         this.onchange(this);
       }
-    }
+    };
 
-    let handlers = {
-      on_keydown: (e) => {
+    const handlers = {
+      on_keydown: (e: KeyboardEvent) => {
         switch (e.keyCode) {
           case 27: //escape key
             cancel(true);
@@ -566,13 +602,13 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_pointermove: (e) => {
+      on_pointermove: (e: PointerEvent) => {
         if (this.disabled) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        let x = this.ma.add(this.vertical ? e.y : e.x);
+        const x = this.ma!.add(this.vertical ? e.y : e.x);
         let dx = x - startx;
         startx = x;
 
@@ -589,19 +625,19 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
         sumdelta += Math.abs(dx);
 
-        value += dx*this.step*0.1*this.slideSpeed;
+        value += dx * (this.step ?? 0.1) * 0.1 * (this.slideSpeed ?? 1.0);
 
         let dvalue = value - startvalue;
-        let dsign = Math.sign(dvalue);
+        const dsign = Math.sign(dvalue);
 
-        let expRate = this.expRate;
+        const expRate = this.expRate ?? 1.0;
 
         //if (eventWasTouch(e)) {
         //  expRate = (1 + expRate)*0.5;
         //}
 
         if (!this.hasAttribute("linear")) {
-          dvalue = Math.pow(Math.abs(dvalue), expRate)*dsign;
+          dvalue = Math.pow(Math.abs(dvalue), expRate) * dsign;
         }
 
         this.value = startvalue + dvalue;
@@ -617,11 +653,11 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         }*/
 
         this.updateWidth();
-        this._redraw();
+        this._redraw(false);
         fire();
       },
 
-      on_pointerup: (e) => {
+      on_pointerup: (e: PointerEvent) => {
         this.setMpos(e);
 
         this.undoBreakPoint();
@@ -631,21 +667,21 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_pointerout: (e) => {
-        last_background = this.getDefault("background-color");
+      on_pointerout: (e: PointerEvent) => {
+        last_background = this.getDefault<string>("background-color");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_pointerover: (e) => {
-        last_background = this.getDefault("BoxHighlight");
+      on_pointerover: (e: PointerEvent) => {
+        last_background = this.getDefault<string>("BoxHighlight");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_pointerdown: (e) => {
+      on_pointerdown: (e: PointerEvent) => {
         this.popModal();
       },
     };
@@ -653,7 +689,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     //events.pushModal(this.getScreen(), handlers);
     this.pushModal(handlers);
 
-    cancel = (restore_value) => {
+    cancel = (restore_value: boolean) => {
       this._pressed = false;
 
       if (restore_value) {
@@ -663,27 +699,27 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       }
 
       this.dom._background = last_background; //ui_base.getDefault("background-color");
-      this._redraw();
+      this._redraw(false);
 
       this.popModal();
-    }
+    };
   }
 
   get _pressed() {
     return this.__pressed;
   }
 
-  set _pressed(v) {
+  set _pressed(v: boolean) {
     /* Try to improve usability on pen/touch displays
      * by forcing pressed state to last at least 100ms.
      */
     if (!v) {
       window.setTimeout(() => {
-        let redraw = this.__pressed;
+        const redraw = this.__pressed;
 
         this.__pressed = false;
         if (redraw) {
-          this._redraw();
+          this._redraw(false);
         }
       }, 100);
     } else {
@@ -691,45 +727,47 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
   }
 
-  setCSS(unused_setBG, fromRedraw) {
+  setCSS(unused_setBG?: unknown, fromRedraw?: boolean) {
     /* Do not call parent class implementation. */
 
-    let dpi = this.getDPI();
-    let ts = this.getDefault("DefaultText").size*UIBase.getDPI();
-    let label = this._genLabel();
+    const dpi = this.getDPI();
+    const ts = (this.getDefault("DefaultText") as { size: number }).size * UIBase.getDPI();
+    const label = this._genLabel();
 
-    let tw = ui_base.measureText(this, label, {
-      size: ts,
-      font: this.getDefault("DefaultText")
-    }).width/dpi;
+    let tw =
+      ui_base.measureText(this, label, {
+        size: ts,
+        font: this.getDefault("DefaultText") as import("../core/cssfont.js").CSSFont,
+      }).width / dpi;
 
     /* Enforce a minimum size based on final text. */
-    tw = Math.max(tw + this._getArrowSize()*1, this.getDefault("width"));
+    tw = Math.max(tw + this._getArrowSize() * 1, this.getDefault("width") as number);
 
     tw += ts;
     tw = ~~tw;
 
-    let w, h;
+    let w: number;
+    let h: number;
 
     if (this.vertical) {
-      w = this.getDefault("height");
+      w = this.getDefault("height") as number;
       h = tw;
     } else {
-      h = this.getDefault("height");
+      h = this.getDefault("height") as number;
       w = tw;
     }
 
-    w = ~~(w*dpi);
-    h = ~~(h*dpi);
+    w = ~~(w * dpi);
+    h = ~~(h * dpi);
 
-    this.style["width"] = this.dom.style["width"] = (w/dpi) + "px";
-    this.style["height"] = this.dom.style["height"] = (h/dpi) + "px";
+    this.style["width"] = this.dom.style["width"] = w / dpi + "px";
+    this.style["height"] = this.dom.style["height"] = h / dpi + "px";
     this.dom.width = w;
     this.dom.height = h;
 
     if (!fromRedraw) {
       this._repos_canvas();
-      this._redraw();
+      this._redraw(true);
     }
   }
 
@@ -741,69 +779,69 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     /* Do nothing, don't invoke parent class method. */
   }
 
-  updateName(force) {
+  updateName(force?: boolean) {
     if (!this.hasAttribute("name")) {
       return;
     }
 
-    let name = this.getAttribute("name");
+    const name = this.getAttribute("name");
 
-    if (force || name !== this._name) {
+    if (name !== null && (force || name !== this._name)) {
       this._name = name;
-      this.setCSS();
+      this.setCSS(undefined, false);
     }
 
-    let label = this._genLabel();
+    const label = this._genLabel();
     if (label !== this._last_label) {
       this._last_label = label;
-      this.setCSS();
+      this.setCSS(undefined, false);
     }
   }
 
   _genLabel() {
-    let val = this.value;
-    let text;
+    const val = this.value;
+    let text: string;
 
     if (val === undefined) {
       text = "error";
     } else {
-      val = val === undefined ? 0.0 : val;
+      let numVal = val === undefined ? 0.0 : val;
 
       if (this.isInt) {
-        val = Math.floor(val);
+        numVal = Math.floor(numVal);
       }
 
-      val = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
+      const valStr = units.buildString(numVal, this.baseUnit, this.decimalPlaces, this.displayUnit);
 
-      text = val;
+      text = valStr;
       if (this._name) {
         text = this._name + ": " + text;
       } else if (this.hasAttribute("name")) {
-        text = "" + this.getAttribute("name") + ": " + text;
+        text = (this.getAttribute("name") ?? "") + ": " + text;
       }
     }
 
     return text;
   }
 
-  _redraw(fromCSS) {
+  _redraw(fromCSS?: boolean) {
     if (!fromCSS) {
       this.setCSS(undefined, true);
     }
 
-    let g = this.g;
-    let canvas = this.dom;
+    const g = this.g;
+    const canvas = this.dom;
 
-    let dpi = this.getDPI();
-    let disabled = this.disabled;
+    const dpi = this.getDPI();
+    const disabled = this.disabled;
 
     /* Fallback on BoxHighlight for backwards compatibility with
      * old themes. */
 
-    let over = !this._modaldata && this.overArrow(this.mpos[0], this.mpos[1]);
+    const over = !this._modaldata ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
     let subkey = undefined;
-    let pressed = this._pressed && !over;
+    const pressed = this._pressed && !over;
 
     if (this._highlight && pressed) {
       subkey = "highlight-pressed";
@@ -813,157 +851,179 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       subkey = "pressed";
     }
 
-    let getDefault = (key, backupval = undefined, subkey2 = subkey) => {
+    const getDefault = <T extends ui_base.DefaultTypes>(
+      key: string,
+      backupval?: T,
+      subkey2: string | undefined = subkey
+    ): T => {
       /* Have highlight-pressed fall back to pressed. */
       if (subkey2 === "highlight-pressed" && !this.hasClassSubDefault(subkey2, key, false)) {
-        return this.getSubDefault("pressed", key, undefined, backupval);
+        return this.getSubDefault<T>("pressed", key, undefined, backupval);
       }
 
       if (!subkey2) {
-        return this.getDefault(key, undefined, backupval);
+        return this.getDefault<T>(key, undefined, backupval);
       } else {
-        return this.getSubDefault(subkey2, key, undefined, backupval);
+        return this.getSubDefault<T>(subkey2, key, undefined, backupval);
       }
-    }
+    };
 
-    let r = getDefault("border-radius");
+    let r = getDefault<number>("border-radius");
     if (this.isInt) {
       r *= 0.25;
     }
 
-    let boxbg = getDefault("background-color");
+    const boxbg = getDefault<string>("background-color")!;
 
-    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, "fill", disabled ? getDefault("DisabledBG") : boxbg);
-    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, "stroke", disabled ? getDefault("DisabledBG") : getDefault("border-color"));
+    ui_base.drawRoundBox(
+      this,
+      this.dom,
+      this.g,
+      undefined,
+      undefined,
+      r,
+      "fill",
+      disabled ? getDefault<string>("DisabledBG") : boxbg
+    );
+    ui_base.drawRoundBox(
+      this,
+      this.dom,
+      this.g,
+      undefined,
+      undefined,
+      r,
+      "stroke",
+      disabled ? (getDefault("DisabledBG") as string) : (getDefault("border-color") as string)
+    );
 
-    let ts = getDefault("DefaultText").size;
-    let text = this._genLabel();
+    const ts = (getDefault("DefaultText") as { size: number }).size;
+    const text = this._genLabel();
 
-    let cx = ts + this._getArrowSize();
-    let cy = this.dom.height/2;
+    const cx = ts + this._getArrowSize();
+    const cy = (this.dom as HTMLCanvasElement).height / 2;
 
     this.dom.font = undefined;
 
     g.save();
 
-    let th = Math.PI*0.5;
+    const th = Math.PI * 0.5;
 
     if (this.vertical) {
       g.rotate(th);
 
-      ui_base.drawText(this, cx, -ts*0.5, text, {
+      ui_base.drawText(this, cx, -ts * 0.5, text, {
         canvas: this.dom,
         g     : this.g,
         size  : ts,
-        font  : getDefault("DefaultText"),
+        font  : getDefault("DefaultText") as unknown as import("../core/cssfont.js").CSSFont | string | undefined,
       });
       g.restore();
     } else {
-      ui_base.drawText(this, cx, cy + ts/2, text, {
+      ui_base.drawText(this, cx, cy + ts / 2, text, {
         canvas: this.dom,
         g     : this.g,
         size  : ts,
-        font  : getDefault("DefaultText"),
+        font  : getDefault("DefaultText") as unknown as import("../core/cssfont.js").CSSFont | string | undefined,
       });
     }
 
-    let parseArrowColor = (arrowcolor) => {
+    const parseArrowColor = (arrowcolor: string): string => {
       arrowcolor = arrowcolor.trim();
       if (arrowcolor.endsWith("%")) {
         arrowcolor = arrowcolor.slice(0, arrowcolor.length - 1).trim();
 
-        let perc = parseFloat(arrowcolor)/100.0;
-        let c = css2color(this.getDefault("background-color"));
+        const perc = parseFloat(arrowcolor) / 100.0;
+        const c = css2color(this.getDefault("background-color") as string);
 
-        let f = (c[0] + c[1] + c[2])*perc;
+        let f = (c[0] + c[1] + c[2]) * perc;
 
-        f = ~~(f*255);
+        f = ~~(f * 255);
         arrowcolor = `rgba(${f},${f},${f},0.95)`;
-
       }
       return arrowcolor;
-    }
+    };
 
-    let arrowcolor_base;
-    let arrowcolor;
+    let arrowcolor_base: string;
+    let arrowcolor: string;
 
-    arrowcolor_base = this.getDefault("arrow-color");
+    arrowcolor_base = this.getDefault("arrow-color") as string;
     arrowcolor_base = parseArrowColor(arrowcolor_base);
 
-    if (this._pressed && this._highlight) {
-      arrowcolor = this.getSubDefault("highlight-pressed", "arrow-color", null, undefined, false);
+    let arrowcolorValue: string | Vector4;
 
-      if (!arrowcolor) {
-        arrowcolor = this.getSubDefault("pressed", "arrow-color");
+    if (this._pressed && this._highlight) {
+      arrowcolorValue = (this.getSubDefault("highlight-pressed", "arrow-color", undefined, undefined, false) ??
+        "") as string;
+
+      if (!arrowcolorValue) {
+        arrowcolorValue = (this.getSubDefault("pressed", "arrow-color") ?? "") as string;
       }
 
-      if (!arrowcolor) {
-        arrowcolor = "33%";
+      if (!arrowcolorValue) {
+        arrowcolorValue = "33%";
       }
     } else if (this._pressed) {
-      arrowcolor = this.getSubDefault("pressed", "arrow-color", "arrow-color", "33%");
+      arrowcolorValue = (this.getSubDefault("pressed", "arrow-color", "arrow-color", "33%") ?? "") as string;
     } else if (this._highlight) {
       if (!this.hasClassSubDefault("highlight", "arrow-color", false)) {
         if (this.hasClassSubDefault("highlight", "background-color", false)) {
-          arrowcolor = this.getSubDefault("highlight", "background-color");
+          arrowcolorValue = (this.getSubDefault("highlight", "background-color") ?? "") as string;
         } else {
-          arrowcolor = this.getDefault("BoxHighlight");
+          arrowcolorValue = (this.getDefault("BoxHighlight") ?? "") as string;
         }
 
-        arrowcolor = css2color(arrowcolor);
-        let base = this.getSubDefault("pressed", "arrow-color", undefined, "33%");
-        base = css2color(base);
+        const colorVector = css2color(arrowcolorValue as string);
+        const base = css2color((this.getSubDefault("pressed", "arrow-color", undefined, "33%") ?? "") as string);
 
-        arrowcolor.interp(base, 0.25);
-        arrowcolor = color2css(arrowcolor);
+        colorVector.interp(base, 0.25);
+        arrowcolorValue = color2css(colorVector);
       } else {
-        arrowcolor = this.getSubDefault("highlight", "arrow-color");
+        arrowcolorValue = (this.getSubDefault("highlight", "arrow-color") ?? "") as string;
       }
     } else {
-      arrowcolor = getDefault("arrow-color", "33%");
+      arrowcolorValue = (getDefault("arrow-color", "33%") ?? "") as string;
     }
 
     if (this._pressed) {
-//      arrowcolor = this.getSubDefault("pressed", "arrow-color");
+      //      arrowcolorValue = this.getSubDefault("pressed", "arrow-color");
     }
 
-    arrowcolor = parseArrowColor(arrowcolor);
+    arrowcolor = parseArrowColor(arrowcolorValue as string);
 
-
-    let d = 7, w = canvas.width, h = canvas.height;
-    let sz = this._getArrowSize();
+    const d = 7;
+    const w = (canvas as HTMLCanvasElement).width;
+    const h = (canvas as HTMLCanvasElement).height;
+    const sz = this._getArrowSize();
 
     if (this.vertical) {
       g.beginPath();
-      g.moveTo(w*0.5, d);
-      g.lineTo(w*0.5 + sz*0.5, d + sz);
-      g.lineTo(w*0.5 - sz*0.5, d + sz);
+      g.moveTo(w * 0.5, d);
+      g.lineTo(w * 0.5 + sz * 0.5, d + sz);
+      g.lineTo(w * 0.5 - sz * 0.5, d + sz);
 
       g.fillStyle = over < 0 ? arrowcolor : arrowcolor_base;
       g.fill();
 
       g.beginPath();
-      g.moveTo(w*0.5, h - d);
-      g.lineTo(w*0.5 + sz*0.5, h - sz - d);
-      g.lineTo(w*0.5 - sz*0.5, h - sz - d);
+      g.moveTo(w * 0.5, h - d);
+      g.lineTo(w * 0.5 + sz * 0.5, h - sz - d);
+      g.lineTo(w * 0.5 - sz * 0.5, h - sz - d);
 
       g.fillStyle = over > 0 ? arrowcolor : arrowcolor_base;
       g.fill();
     } else {
       g.beginPath();
-      g.moveTo(d, h*0.5);
-      g.lineTo(d + sz, h*0.5 + sz*0.5);
-      g.lineTo(d + sz, h*0.5 - sz*0.5);
+      g.moveTo(d, h * 0.5);
+      g.lineTo(d + sz, h * 0.5 + sz * 0.5);
+      g.lineTo(d + sz, h * 0.5 - sz * 0.5);
 
       g.fillStyle = over < 0 ? arrowcolor : arrowcolor_base;
       g.fill();
 
       g.beginPath();
-      g.moveTo(w - d, h*0.5);
-      g.lineTo(w - sz - d, h*0.5 + sz*0.5);
-      g.lineTo(w - sz - d, h*0.5 - sz*0.5);
+      g.moveTo(w - d, h * 0.5);
+      g.lineTo(w - sz - d, h * 0.5 + sz * 0.5);
+      g.lineTo(w - sz - d, h * 0.5 - sz * 0.5);
 
       g.fillStyle = over > 0 ? arrowcolor : arrowcolor_base;
       g.fill();
@@ -973,17 +1033,25 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   _getArrowSize() {
-    return UIBase.getDPI()*10;
+    return UIBase.getDPI() * 10;
   }
 }
-
 UIBase.internalRegister(NumSlider);
 
+export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
+  canvas: HTMLCanvasElement;
+  g: CanvasRenderingContext2D | null;
+  highlight: boolean;
+  _value: number;
+  ma: InstanceType<typeof util.MovingAvg> | undefined;
+  _focus: boolean;
+  modal: unknown;
+  _last_slider_key: string;
 
-export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
   constructor() {
     super();
 
+    loadNumConstraints(this);
     this.baseUnit = undefined;
     this.displayUnit = undefined;
     this.editAsBaseUnit = undefined;
@@ -992,7 +1060,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
 
-    this.canvas.style["pointer-events"] = "none";
+    this.canvas.style["pointerEvents"] = "none";
 
     this.highlight = false;
     this.isInt = false;
@@ -1010,7 +1078,20 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
 
     this.modal = undefined;
 
-    this._last_slider_key = '';
+    this._last_slider_key = "";
+  }
+
+  loadNumConstraints(
+    prop?: ResolvedProp | ToolProperty | undefined,
+    dom?: HTMLElement | UIBase<CTX, unknown>,
+    onModifiedCallback?: (this: UIBase) => void
+  ): void {
+    super.loadNumConstraints(prop, dom, () => {
+      if (onModifiedCallback) {
+        onModifiedCallback.call(this);
+      }
+      this._redraw();
+    });
   }
 
   get value() {
@@ -1025,12 +1106,12 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     return {
       tagname    : "numslider-simple-base-x",
       style      : "numslider_simple",
-      parentStyle: "button"
-    }
+      parentStyle: "button",
+    };
   }
 
-  setValue(val, fire_onchange = true, setDataPath = true) {
-    val = Math.min(Math.max(val, this.range[0]), this.range[1]);
+  setValue(val: number, fire_onchange = true, setDataPath = true) {
+    val = Math.min(Math.max(val, this.range![0]), this.range![1]);
 
     if (this.isInt) {
       val = Math.floor(val);
@@ -1045,7 +1126,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       }
 
       if (setDataPath && this.getAttribute("datapath")) {
-        let path = this.getAttribute("datapath");
+        const path = this.getAttribute("datapath") ?? "";
         this.setPathValue(this.ctx, path, this._value);
       }
     }
@@ -1056,20 +1137,20 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       return;
     }
 
-    let path = this.getAttribute("datapath");
+    const path = this.getAttribute("datapath");
 
     if (!path || path === "null" || path === "undefined") {
       return;
     }
 
-    let val = this.getPathValue(this.ctx, path);
+    let val = this.getPathValue(this.ctx, path) as unknown as number;
 
     if (this.isInt) {
       val = Math.floor(val);
     }
 
     if (val !== this._value) {
-      let prop = this.getPathMeta(this.ctx, path);
+      const prop = this.getPathMeta(this.ctx, path);
       if (!prop) {
         return;
       }
@@ -1079,21 +1160,21 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     }
   }
 
-  _setFromMouse(e) {
-    let rect = this.getClientRects()[0];
+  _setFromMouse(e: PointerEvent) {
+    const rect = this.getClientRects()[0];
     if (rect === undefined) {
       return;
     }
 
-    let x = e.x - rect.left;
-    let dpi = UIBase.getDPI();
-    let co = this._getButtonPos();
+    const x = e.x - rect.left;
+    const dpi = UIBase.getDPI();
+    const co = this._getButtonPos();
 
-    let val = this._invertButtonX(x*dpi);
+    const val = this._invertButtonX(x * dpi);
     this.value = val;
   }
 
-  _startModal(e) {
+  _startModal(e: PointerEvent | undefined) {
     if (this.disabled) {
       return;
     }
@@ -1101,18 +1182,18 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     if (e !== undefined) {
       this._setFromMouse(e);
     }
-    let dom = window;
-    let evtargs = {capture: false};
+    const dom = window;
+    const evtargs = { capture: false };
 
     if (this.modal) {
       console.warn("Double call to _startModal!");
       return;
     }
 
-    this.ma = new util.MovingAvg(eventWasTouch(e) ? 4 : 2);
-    let handlers;
+    this.ma = new util.MovingAvg(e && eventWasTouch(e) ? 4 : 2);
+    let handlers: unknown;
 
-    let end = () => {
+    const end = () => {
       if (handlers === undefined) {
         return;
       }
@@ -1122,77 +1203,75 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     };
 
     handlers = {
-      pointermove: (e) => {
-        let x = e.x, y = e.y;
+      pointermove: (e: PointerEvent) => {
+        let x = e.x;
+        const y = e.y;
 
-        x = this.ma.add(x);
+        x = this.ma!.add(x);
 
-        let e2 = new MouseEvent(e, {
-          x, y
-        });
         this._setFromMouse(e);
       },
 
-      pointerover : (e) => {
-      },
-      pointerout  : (e) => {
-      },
-      pointerleave: (e) => {
-      },
-      pointerenter: (e) => {
-      },
-      blur        : (e) => {
-      },
-      focus       : (e) => {
-      },
+      pointerover : (e: PointerEvent) => {},
+      pointerout  : (e: PointerEvent) => {},
+      pointerleave: (e: PointerEvent) => {},
+      pointerenter: (e: PointerEvent) => {},
+      blur        : (e: Event) => {},
+      focus       : (e: Event) => {},
 
-      pointerup: (e) => {
+      pointerup: (e: PointerEvent) => {
         this.undoBreakPoint();
         end();
       },
 
-      keydown: (e) => {
+      keydown: (e: KeyboardEvent) => {
         switch (e.keyCode) {
           case keymap["Enter"]:
           case keymap["Space"]:
           case keymap["Escape"]:
             end();
         }
-      }
-    };
+      },
+    } as Record<string, (e: Event | KeyboardEvent | PointerEvent) => void>;
 
-    function makefunc(f) {
-      return (e) => {
-        e.stopPropagation();
-        e.preventDefault();
+    function makefunc(
+      f: (e: Event | KeyboardEvent | PointerEvent) => void
+    ): (e: Event | KeyboardEvent | PointerEvent) => void {
+      return (e: Event | KeyboardEvent | PointerEvent) => {
+        if (e instanceof Event) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
 
         return f(e);
-      }
+      };
     }
 
-    for (let k in handlers) {
-      handlers[k] = makefunc(handlers[k]);
+    for (const k in handlers as Record<string, unknown>) {
+      (handlers as Record<string, unknown>)[k] = makefunc(
+        (handlers as Record<string, (e: Event | KeyboardEvent | PointerEvent) => void>)[k]
+      );
     }
 
-    this.pushModal(handlers);
+    this.pushModal(handlers as unknown);
   }
 
   init() {
     super.init();
 
     if (!this.hasAttribute("tab-index")) {
-      this.setAttribute("tab-index", 0);
+      this.setAttribute("tab-index", "0");
     }
 
     this.updateSize();
 
-    this.addEventListener("keydown", (e) => {
-      let dt = this.range[1] > this.range[0] ? 1 : -1;
+    this.addEventListener("keydown", (e: KeyboardEvent) => {
+      const dt = this.range![1] > this.range![0] ? 1 : -1;
 
       switch (e.keyCode) {
         case keymap["Left"]:
-        case keymap["Right"]:
-          let fac = this.step;
+        case keymap["Right"]: {
+          let fac = this.step ?? 0.1;
 
           if (e.shiftKey) {
             fac *= 0.1;
@@ -1202,21 +1281,22 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
             fac = Math.max(fac, 1);
           }
 
-          this.value += e.keyCode === keymap["Left"] ? -dt*fac : dt*fac;
+          this.value += e.keyCode === keymap["Left"] ? -dt * fac : dt * fac;
 
           break;
+        }
       }
     });
 
     this.addEventListener("focusin", () => {
       if (this.disabled) return;
 
-      this._focus = 1;
+      this._focus = true;
       this._redraw();
       this.focus();
     });
 
-    this.addEventListener("pointerdown", (e) => {
+    this.addEventListener("pointerdown", (e: PointerEvent) => {
       if (this.disabled) {
         return;
       }
@@ -1227,28 +1307,28 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       this._startModal(e);
     });
 
-    this.addEventListener("pointerin", (e) => {
-      this.setHighlight(e);
+    this.addEventListener("pointerin", (e: Event) => {
+      this.setHighlight(e as PointerEvent);
       this._redraw();
     });
-    this.addEventListener("pointerout", (e) => {
+    this.addEventListener("pointerout", (e: PointerEvent) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("pointerover", (e) => {
+    this.addEventListener("pointerover", (e: PointerEvent) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("pointermove", (e) => {
+    this.addEventListener("pointermove", (e: PointerEvent) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("pointerleave", (e) => {
+    this.addEventListener("pointerleave", (e: PointerEvent) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("blur", (e) => {
-      this._focus = 0;
+    this.addEventListener("blur", (e: Event) => {
+      this._focus = false;
       this.highlight = false;
       this._redraw();
     });
@@ -1256,92 +1336,96 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     this.setCSS();
   }
 
-  setHighlight(e) {
-    this.highlight = this.isOverButton(e) ? 2 : 1;
+  setHighlight(e: PointerEvent) {
+    this.highlight = this.isOverButton(e) ? true : false;
   }
 
   _redraw() {
-    let g = this.g, canvas = this.canvas;
-    let w = canvas.width, h = canvas.height;
-    let dpi = UIBase.getDPI();
+    const g = this.g;
+    const canvas = this.canvas;
+    const w = canvas.width;
+    const h = canvas.height;
+    const dpi = UIBase.getDPI();
 
-    let color = this.getDefault("background-color");
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
+    let color = this.getDefault("background-color") as unknown as string;
+    const sh = ~~((this.getDefault("SlideHeight") as unknown as number) * dpi + 0.5);
 
-    g.clearRect(0, 0, canvas.width, canvas.height);
+    g!.clearRect(0, 0, canvas.width, canvas.height);
 
-    g.fillStyle = color;
+    g!.fillStyle = color;
 
-    let y = (h - sh)*0.5;
+    const y = (h - sh) * 0.5;
 
-    let r = this.getDefault("border-radius");
+    const r = this.getDefault("border-radius") as unknown as number;
 
-    g.translate(0, y);
-    ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, "fill", color, undefined, true);
+    g!.translate(0, y);
+    ui_base.drawRoundBox(this, this.canvas, g!, w, sh, r, "fill", color, undefined, true);
 
-    let bcolor = this.getDefault('border-color');
-    ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, "stroke", bcolor, undefined, true);
-    g.translate(0, -y);
+    const bcolor = this.getDefault("border-color") as unknown as string;
+    ui_base.drawRoundBox(this, this.canvas, g!, w, sh, r, "stroke", bcolor, undefined, true);
+    g!.translate(0, -y);
 
     if (this.sliderDisplayExp && this.sliderDisplayExp !== 1.0) {
-      g.strokeStyle = this.getDefault("SliderDivColor")
-        || this.getDefault("border-color")
-        || "grey";
+      g!.strokeStyle = ((this.getDefault("SliderDivColor") as unknown as string) ||
+        this.getDefault("border-color") ||
+        "grey") as unknown as string;
 
-      let steps = 8;
-      let t = 0.0, dt = 1.0/(steps - 1);
+      const steps = 8;
+      let t = 0.0;
+      const dt = 1.0 / (steps - 1);
 
-      g.beginPath();
+      g!.beginPath();
       for (let i = 0; i < steps; i++, t += dt) {
-        let t2 = Math.pow(t, this.sliderDisplayExp);
+        const t2 = Math.pow(t, this.sliderDisplayExp!);
 
-        let x = t2*w;
-        g.moveTo(x, y);
-        g.lineTo(x, h - y);
+        const x = t2 * w;
+        g!.moveTo(x, y);
+        g!.lineTo(x, h - y);
       }
-      g.stroke();
+      g!.stroke();
     }
 
-    if (this.highlight === 1) {
-      color = this.getDefault("BoxHighlight");
+    if (this.highlight) {
+      color = this.getDefault("BoxHighlight") as unknown as string;
     } else {
-      color = this.getDefault("border-color");
+      color = this.getDefault("border-color") as unknown as string;
     }
 
     //g.strokeStyle = color;
     //g.stroke();
 
-    let co = this._getButtonPos();
+    const co = this._getButtonPos();
 
-    g.beginPath();
+    g!.beginPath();
 
-    if (this.highlight === 2) {
-      color = this.getDefault("BoxHighlight");
+    if (this.highlight) {
+      color = this.getDefault("BoxHighlight") as unknown as string;
     } else {
-      color = this.getDefault("border-color");
+      color = this.getDefault("border-color") as unknown as string;
     }
 
-    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
-    g.fill();
+    g!.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
+    g!.fill();
 
-    g.strokeStyle = color;
-    g.stroke();
+    g!.strokeStyle = color;
+    g!.stroke();
 
-    g.beginPath();
-    g.setLineDash([4, 4]);
+    g!.beginPath();
+    g!.setLineDash([4, 4]);
 
     if (this._focus) {
-      g.strokeStyle = this.getDefault("BoxHighlight");
-      g.arc(co[0], co[1], co[2] - 4, -Math.PI, Math.PI);
-      g.stroke();
+      g!.strokeStyle = this.getDefault("BoxHighlight") as unknown as string;
+      g!.arc(co[0], co[1], co[2] - 4, -Math.PI, Math.PI);
+      g!.stroke();
     }
 
-    g.setLineDash([]);
+    g!.setLineDash([]);
   }
 
-  isOverButton(e) {
-    let x = e.x, y = e.y;
-    let rect = this.getClientRects()[0];
+  isOverButton(e: PointerEvent) {
+    let x = e.x;
+    let y = e.y;
+    const rect = this.getClientRects()[0];
 
     if (!rect) {
       return false;
@@ -1350,54 +1434,54 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     x -= rect.left;
     y -= rect.top;
 
-    let co = this._getButtonPos();
+    const co = this._getButtonPos();
 
-    let dpi = UIBase.getDPI();
-    let dv = new Vector2([co[0]/dpi - x, co[1]/dpi - y]);
-    let dis = dv.vectorLength();
+    const dpi = UIBase.getDPI();
+    const dv = new Vector2([co[0] / dpi - x, co[1] / dpi - y]);
+    const dis = dv.vectorLength();
 
-    return dis < co[2]/dpi;
+    return dis < co[2] / dpi;
   }
 
-  _invertButtonX(x) {
-    let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
+  _invertButtonX(x: number): number {
+    const w = this.canvas.width;
+    const dpi = UIBase.getDPI();
+    const sh = ~~((this.getDefault("SlideHeight") as unknown as number) * dpi + 0.5);
+    const boxw = this.canvas.height - 4;
+    const w2 = w - boxw;
 
-    let range = this.uiRange || this.range;
+    const range = this.uiRange || this.range!;
 
-    x = (x - boxw*0.5)/w2;
+    x = (x - boxw * 0.5) / w2;
     if (this.sliderDisplayExp) {
       x = Math.max(x, 0.0);
-      x = Math.pow(x, 1.0/this.sliderDisplayExp);
+      x = Math.pow(x, 1.0 / this.sliderDisplayExp);
     }
-    x = x*(range[1] - range[0]) + range[0];
+    x = x * (range[1] - range[0]) + range[0];
 
     return x;
   }
 
   _getButtonPos() {
-    let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
+    const w = this.canvas.width;
+    const dpi = UIBase.getDPI();
+    const sh = ~~((this.getDefault("SlideHeight") as unknown as number) * dpi + 0.5);
     let x = this._value;
 
-    let range = this.uiRange || this.range;
+    const range = this.uiRange || this.range!;
 
-    x = (x - range[0])/(range[1] - range[0]);
+    x = (x - range[0]) / (range[1] - range[0]);
 
     if (this.sliderDisplayExp) {
       x = Math.pow(x, this.sliderDisplayExp);
     }
 
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
+    const boxw = this.canvas.height - 4;
+    const w2 = w - boxw;
 
-    x = x*w2 + boxw*0.5;
+    x = x * w2 + boxw * 0.5;
 
-    return [x, boxw*0.5, boxw*0.5];
+    return [x, boxw * 0.5, boxw * 0.5];
   }
 
   setCSS() {
@@ -1405,13 +1489,13 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     //super.setCSS();
 
     const dpi = UIBase.getDPI();
-    this.style["min-width"] = this.getDefault("width") + "px";
+    this.style["minWidth"] = this.getDefault("width") + "px";
     this.style["width"] = this.getDefault("width") + "px";
 
-    this.canvas.style["width"] = "" + (this.canvas.width/dpi) + "px";
-    this.canvas.style["height"] = "" + (this.canvas.height/dpi) + "px`";
+    this.canvas.style["width"] = "" + this.canvas.width / dpi + "px";
+    this.canvas.style["height"] = "" + this.canvas.height / dpi + "px`";
 
-    this.canvas.height = this.getDefault("height")*UIBase.getDPI();
+    this.canvas.height = this.getDefault<number>("height") * UIBase.getDPI();
 
     this._redraw();
   }
@@ -1421,15 +1505,16 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       return;
     }
 
-    let rect = this.getClientRects()[0];
+    const rect = this.getClientRects()[0];
 
     if (rect === undefined) {
       return;
     }
 
-    let dpi = UIBase.getDPI();
-    let canvas = this.canvas;
-    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
+    const dpi = UIBase.getDPI();
+    const canvas = this.canvas;
+    const w = ~~(rect.width * dpi);
+    const h = ~~(rect.height * dpi);
 
     if (w !== canvas.width || h !== canvas.height) {
       this.canvas.width = w;
@@ -1455,7 +1540,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     }
     */
 
-    let key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
+    const key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
 
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
@@ -1465,8 +1550,8 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       this._redraw();
     }
 
-    if (this.getAttribute("tab-index") !== this.tabIndex) {
-      this.tabIndex = this.getAttribute("tab-index");
+    if (parseInt(this.getAttribute("tab-index")!) !== this.tabIndex) {
+      this.tabIndex = parseInt(this.getAttribute("tab-index")!);
     }
 
     this.updateSize();
@@ -1474,10 +1559,20 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     updateSliderFromDom(this);
   }
 }
-
 UIBase.internalRegister(NumSliderSimpleBase);
 
-export class SliderWithTextbox extends ColumnFrame {
+export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+  _value: number;
+  _name: string | undefined;
+  _lock_textbox: boolean;
+  _labelOnTop: boolean | undefined;
+  _last_label_on_top: boolean | undefined;
+  container: Container<CTX>;
+  declare _numslider: NumSlider<CTX>;
+  _last_value: number | undefined;
+  declare l: Label<CTX>;
+  _textbox: TextBox<CTX>;
+
   constructor() {
     super();
 
@@ -1490,20 +1585,19 @@ export class SliderWithTextbox extends ColumnFrame {
 
     this.container = this;
 
-    this.textbox = UIBase.createElement("textbox-x");
-    this.textbox.width = 55;
-    this._numslider = undefined;
+    this._textbox = UIBase.createElement("textbox-x");
+    this._textbox.width = 55;
 
-    this.textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
-    this.textbox.setAttribute("class", "numslider_simple_textbox");
-    this.textbox.startSelected = true;
+    this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
+    this._textbox.setAttribute("class", "numslider_simple_textbox");
+    this._textbox.startSelected = true;
 
     this._last_value = undefined;
   }
 
   get addLabel() {
     if (this.hasAttribute("add-label")) {
-      let val = ("" + this.getAttribute("add-label")).toLowerCase();
+      const val = ("" + this.getAttribute("add-label")).toLowerCase();
       return val === "true" || val === "yes";
     }
 
@@ -1539,7 +1633,7 @@ export class SliderWithTextbox extends ColumnFrame {
     }
 
     if (ret === undefined) {
-      ret = this.getDefault("labelOnTop");
+      ret = Boolean(this.getDefault("labelOnTop") as number);
     }
 
     return !!ret;
@@ -1550,20 +1644,20 @@ export class SliderWithTextbox extends ColumnFrame {
   }
 
   get numslider() {
-    return this._numslider;
+    return this._numslider!;
   }
 
   //child classes set this in their constructors
-  set numslider(v) {
+  set numslider(v: this["_numslider"]) {
     this._numslider = v;
-    this.textbox.range = this._numslider.range;
+    this._textbox.range = this._numslider.range;
   }
 
   get editAsBaseUnit() {
-    return this.numslider.editAsBaseUnit;
+    return this._numslider.editAsBaseUnit;
   }
 
-  set editAsBaseUnit(v) {
+  set editAsBaseUnit(v: boolean | undefined) {
     this.numslider.editAsBaseUnit = v;
   }
 
@@ -1571,15 +1665,15 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.range;
   }
 
-  set range(v) {
-    this.numslider.range = v;
+  set range(v: [number, number] | undefined) {
+    this.numslider.range = v as [number, number];
   }
 
   get step() {
     return this.numslider.step;
   }
 
-  set step(v) {
+  set step(v: number | undefined) {
     this.numslider.step = v;
   }
 
@@ -1587,7 +1681,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.expRate;
   }
 
-  set expRate(v) {
+  set expRate(v: number | undefined) {
     this.numslider.expRate = v;
   }
 
@@ -1595,7 +1689,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.decimalPlaces;
   }
 
-  set decimalPlaces(v) {
+  set decimalPlaces(v: number | undefined) {
     this.numslider.decimalPlaces = v;
   }
 
@@ -1603,7 +1697,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.isInt;
   }
 
-  set isInt(v) {
+  set isInt(v: boolean | undefined) {
     this.numslider.isInt = v;
   }
 
@@ -1611,7 +1705,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.slideSpeed;
   }
 
-  set slideSpeed(v) {
+  set slideSpeed(v: number | undefined) {
     this.numslider.slideSpeed = v;
   }
 
@@ -1619,7 +1713,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.sliderDisplayExp;
   }
 
-  set sliderDisplayExp(v) {
+  set sliderDisplayExp(v: number | undefined) {
     this.numslider.sliderDisplayExp = v;
   }
 
@@ -1627,7 +1721,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.radix;
   }
 
-  set radix(v) {
+  set radix(v: number | undefined) {
     this.numslider.radix = v;
   }
 
@@ -1635,7 +1729,7 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.stepIsRelative;
   }
 
-  set stepIsRelative(v) {
+  set stepIsRelative(v: boolean | undefined) {
     this.numslider.stepIsRelative = v;
   }
 
@@ -1643,10 +1737,10 @@ export class SliderWithTextbox extends ColumnFrame {
     return this.numslider.displayUnit;
   }
 
-  set displayUnit(val) {
-    let update = val !== this.displayUnit;
+  set displayUnit(val: string | undefined) {
+    const update = val !== this.displayUnit;
 
-    this.numslider.displayUnit = this.textbox.displayUnit = val;
+    this.numslider.displayUnit = this._textbox.displayUnit = val;
 
     if (update) {
       //this.numslider._redraw();
@@ -1655,13 +1749,12 @@ export class SliderWithTextbox extends ColumnFrame {
   }
 
   get baseUnit() {
-    return this.textbox.baseUnit;
+    return this._textbox.baseUnit;
   }
 
-  set baseUnit(val) {
-    let update = val !== this.baseUnit;
-
-    this.numslider.baseUnit = this.textbox.baseUnit = val;
+  set baseUnit(val: string | undefined) {
+    const update = val !== this.baseUnit;
+    this.numslider.baseUnit = this._textbox.baseUnit = val;
 
     if (update) {
       //this.slider._redraw();
@@ -1678,7 +1771,7 @@ export class SliderWithTextbox extends ColumnFrame {
 
     ret = ret.toLowerCase().trim();
 
-    return ret === 'true' || ret === 'on' || ret === 'yes';
+    return ret === "true" || ret === "on" || ret === "yes";
   }
 
   set realTimeTextBox(val) {
@@ -1712,55 +1805,56 @@ export class SliderWithTextbox extends ColumnFrame {
     }
 
     if (this.hasAttribute("name")) {
-      this._name = this.getAttribute("name");
+      this._name = this.getAttribute("name") ?? undefined;
     } else {
       this._name = "slider";
     }
 
-
     if (this.addLabel) {
-      this.l = this.container.label(this._name);
-      this.l.overrideClass("numslider_textbox");
+      this.l = this.container.label(this._name!);
+      const labelMethods = this.l as unknown as Record<string, Function | unknown>;
+      (labelMethods.overrideClass as Function)?.("numslider_textbox");
       this.l.font = "TitleText";
       this.l.style["display"] = "float";
       this.l.style["position"] = "relative";
     }
 
-    let strip = this.container.row();
+    const strip = this.container.row();
     //strip.style['justify-content'] = 'space-between';
-    strip.add(this.numslider);
+    const stripMethods = strip as unknown as Record<string, Function | unknown>;
+    (stripMethods.add as Function)?.(this.numslider);
 
-    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
+    const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
-    let textbox = this.textbox;
-    this.textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
+    const textbox = this._textbox;
+    const textboxMethods = this._textbox as unknown as Record<string, Function | unknown>;
+    (textboxMethods.overrideDefault as Function)?.("width", this.getDefault("TextBoxWidth"));
 
-    let apply_textbox = () => {
-      let text = textbox.text;
+    const apply_textbox = () => {
+      const text = textbox.text as unknown as string;
 
       if (!units.isNumber(text)) {
-        textbox.flash("red");
+        textbox.flash?.("red");
         return;
       } else {
-        textbox.flash("green");
+        textbox.flash?.("green");
 
-        let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+        const displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
 
-        let f = units.parseValue(text, this.baseUnit, displayUnit);
+        let f = units.parseValue(text as string, this.baseUnit, displayUnit);
 
-        if (isNaN(f)) {
+        if (isNaN(f as unknown as number)) {
           this.flash("red");
           return;
         }
 
         if (this.isInt) {
-          f = Math.floor(f);
+          f = Math.floor(f as unknown as number);
         }
 
-        this._lock_textbox = 1;
-        this.setValue(f);
-        this._lock_textbox = 0;
-
+        this._lock_textbox = true;
+        this._numslider.setValue?.(f);
+        this._lock_textbox = false;
       }
     };
 
@@ -1771,10 +1865,10 @@ export class SliderWithTextbox extends ColumnFrame {
     textbox.onend = apply_textbox;
 
     textbox.ctx = this.ctx;
-    textbox.packflag |= this.inherit_packflag;
-    textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
+    textbox.packflag = textbox.packflag | this.inherit_packflag;
+    this._textbox.overrideDefault?.("width", this.getDefault("TextBoxWidth"));
 
-    textbox.style["height"] = (this.getDefault("height") - 2) + "px";
+    textbox.style["height"] = this.getDefault<number>("height") - 2 + "px";
     textbox._init();
 
     strip.add(textbox);
@@ -1799,12 +1893,12 @@ export class SliderWithTextbox extends ColumnFrame {
             this.onchange(this);
           }
         } catch (error) {
-          util.print_stack(error);
+          util.print_stack(error as Error);
         }
       }
 
       in_onchange--;
-    }
+    };
   }
 
   updateTextBox() {
@@ -1812,11 +1906,10 @@ export class SliderWithTextbox extends ColumnFrame {
       return;
     }
 
-    if (this._lock_textbox > 0 || this.textbox.editing)
-      return;
+    if (this._lock_textbox || this._textbox.editing) return;
 
-    this.textbox.text = this.formatNumber(this._value);
-    this.textbox.update();
+    this._textbox.text = this.formatNumber(this._value);
+    this._textbox.update();
 
     updateSliderFromDom(this, this.numslider);
   }
@@ -1824,16 +1917,15 @@ export class SliderWithTextbox extends ColumnFrame {
   linkTextBox() {
     this.updateTextBox();
 
-    let onchange = this.numslider.onchange;
-    this.numslider.onchange = (e) => {
+    const onchange = this.numslider.onchange!;
+    this.numslider.onchange = (e: any) => {
       this._value = e.value;
       this.updateTextBox();
-
       onchange(e);
-    }
+    };
   }
 
-  setValue(val, fire_onchange = true) {
+  setValue(val: number, fire_onchange = true) {
     this._value = val;
     this.numslider.setValue(val, fire_onchange);
     this.updateTextBox();
@@ -1843,10 +1935,10 @@ export class SliderWithTextbox extends ColumnFrame {
     let name = this.getAttribute("name");
 
     if (!name && this.hasAttribute("datapath")) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
 
       if (prop) {
-        name = prop.uiname;
+        name = prop.uiname!;
       }
     }
 
@@ -1874,13 +1966,13 @@ export class SliderWithTextbox extends ColumnFrame {
       return;
     }
 
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"))
+    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
 
     if (!prop) {
       return;
     }
 
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!) as number;
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
@@ -1892,10 +1984,10 @@ export class SliderWithTextbox extends ColumnFrame {
     super.update();
 
     this.updateDataPath();
-    let redraw = false;
+    const redraw = false;
 
     updateSliderFromDom(this, this.numslider);
-    updateSliderFromDom(this, this.textbox);
+    updateSliderFromDom(this, this._textbox);
 
     if (redraw) {
       this.setCSS();
@@ -1906,39 +1998,38 @@ export class SliderWithTextbox extends ColumnFrame {
     this.updateName();
 
     this.numslider.description = this.description;
-    this.textbox.description = this.title; //get full, transformed toolip
+    this._textbox.description = this.title; //get full, transformed toolip
 
     if (this.hasAttribute("datapath")) {
-      this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
-      this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
+      this.numslider.setAttribute("datapath", this.getAttribute("datapath")!);
+      this._textbox.setAttribute("datapath", this.getAttribute("datapath")!);
     }
 
     if (this.hasAttribute("mass_set_path")) {
-      this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"))
-      this.textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+      this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path")!);
+      this._textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path")!);
     }
   }
 
   setCSS() {
     super.setCSS();
-    this.textbox.setCSS();
+    this._textbox.setCSS();
     //textbox.style["margin"] = "5px";
-
   }
 }
 
-export class NumSliderSimple extends SliderWithTextbox {
+export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends SliderWithTextbox<CTX> {
   constructor() {
     super();
 
-    this.numslider = UIBase.createElement("numslider-simple-base-x");
+    this.numslider = UIBase.createElement("numslider-simple-base-x") as this['numslider'];
   }
 
   static define() {
     return {
       tagname: "numslider-simple-x",
-      style  : "numslider_simple"
-    }
+      style  : "numslider_simple",
+    };
   }
 
   _redraw() {
@@ -1958,15 +2049,15 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
   static define() {
     return {
       tagname: "numslider-textbox-x",
-      style  : "numslider_textbox"
-    }
+      style  : "numslider_textbox",
+    };
   }
 
   update() {
     super.update();
 
     if (this.hasAttribute("name")) {
-      let name = this.getAttribute("name");
+      const name = this.getAttribute("name")!;
 
       if (name !== this.numslider.name) {
         this.numslider.setAttribute("name", name);
@@ -1981,4 +2072,3 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
 }
 
 UIBase.internalRegister(NumSliderWithTextBox);
-

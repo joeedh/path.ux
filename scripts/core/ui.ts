@@ -1011,7 +1011,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     ret.packflag |= packflag;
     ret.onchange = cb as typeof ret.onchange;
-    ret.text = text;
+    ret.text = "" + text;
 
     return ret as UIBase;
   }
@@ -1293,11 +1293,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       } else {
         const strip = this.strip();
 
-        const uiname =
-          prop.uiname !== undefined ? (prop.uiname as string) : ToolProperty.makeUIName(prop.apiname as string);
-
         strip.label(prop.uiname as string);
-
+        
         ret = strip.textbox(inpath) as UIBase<CTX>;
         ret.useDataPathUndo = useDataPathUndo;
 

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node buildtools/esbuild.mjs",
     "watch": "node buildtools/esbuild.mjs --watch",
-    "typecheck": "npx tsc --noEmit",
+    "typecheck": "npx tsgo --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "npx @pathtx/prettier --write \"scripts/**/*.{ts,js}\"",
@@ -34,6 +34,7 @@
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.5.2",
     "@types/parse5": "^7.0.0",
+    "@typescript/native-preview": "7.0.0-dev.20260406.1",
     "diff": "^5.2.2",
     "electron": "^41.1.1",
     "esbuild": "^0.28.0",

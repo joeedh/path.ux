@@ -1,11 +1,51 @@
-// @ts-nocheck
+// @ts-nocheck 
 "use strict";
+
+/*
+ * Ambient type declarations for Node.js APIs used in this Electron-only module.
+ * These are declared locally to avoid pulling in @types/node for the whole project.
+ */
+interface NodeBuffer {
+  length: number;
+  readUInt8(offset: number): number;
+  writeUInt8(value: number, offset: number): void;
+  writeUInt16LE(value: number, offset: number): void;
+  writeUInt32LE(value: number, offset: number): void;
+  writeInt32LE(value: number, offset: number): void;
+}
+
+interface NodeBufferConstructor {
+  alloc(size: number): NodeBuffer;
+  from(data: unknown[] | string, encoding?: string): NodeBuffer;
+}
+
+interface PNGImage {
+  width: number;
+  height: number;
+  bpp: number;
+  data: NodeBuffer;
+}
+
+interface IcoOptions {
+  name?: string;
+  sizes?: number[];
+}
+
+interface NodeWritableStream {
+  end(): void;
+}
+
+//declare const Buffer: NodeBufferConstructor;
+//declare const exports: Record<string, unknown>;
+
 //adapted from icon-gen code
 if (window.haveElectron) {
-  let fs = require("fs");
-  let path = require("path");
-  let pngjsNozlib = require("pngjs-nozlib");
-  let png = require("pngjs");
+  const fs = require("fs") as { writeFileSync(path: string, data: unknown): void };
+  const path = require("path") as { join(...args: string[]): string };
+  const pngjsNozlib = require("pngjs-nozlib") as {
+    PNG: { sync: { read(data: NodeBuffer): PNGImage } };
+  };
+  const png = require("pngjs") as unknown;
 
   const REQUIRED_IMAGE_SIZES = [16, 24, 32, 48, 64, 128, 256];
 
@@ -21,15 +61,10 @@ if (window.haveElectron) {
    * Convert a PNG of the byte array to the DIB (Device Independent Bitmap) format.
    * PNG in color RGBA (and more), the coordinate structure is the Top/Left to Bottom/Right.
    * DIB in color BGRA, the coordinate structure is the Bottom/Left to Top/Right.
-   * @param {Buffer} src Target image.
-   * @param {Number} width The width of the image.
-   * @param {Number} height The height of the image.
-   * @param {Number} bpp The bit per pixel of the image.
-   * @return {Buffer} Converted image
    * @see https://en.wikipedia.org/wiki/BMP_file_format
    */
 
-  const convertPNGtoDIB = (src, width, height, bpp) => {
+  const convertPNGtoDIB = (src: NodeBuffer, width: number, height: number, bpp: number) => {
     const cols = width * bpp;
     const rows = height * cols;
     const rowEnd = rows - cols;
@@ -56,14 +91,11 @@ if (window.haveElectron) {
   };
   /**
    * Create the BITMAPINFOHEADER.
-   * @param {Object} png PNG image.
-   * @param {Number} compression Compression mode
-   * @return {Buffer} BITMAPINFOHEADER data.
    * @see https://msdn.microsoft.com/ja-jp/library/windows/desktop/dd183376%28v=vs.85%29.aspx
    */
 
 
-  const createBitmapInfoHeader = (png, compression) => {
+  const createBitmapInfoHeader = (png: PNGImage, compression: number) => {
     const b = Buffer.alloc(BITMAPINFOHEADER_SIZE);
     b.writeUInt32LE(BITMAPINFOHEADER_SIZE, 0); // 4 DWORD biSize
 
@@ -92,16 +124,11 @@ if (window.haveElectron) {
   /**
    * Create the Icon entry.
    *
-   * @param {Object} png    PNG image.
-   * @param {Number} offset The offset of directory data from the beginning of the ICO/CUR file
-   *
-   * @return {Buffer} Directory data.
-   *
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
 
-  const createDirectory = (png, offset) => {
+  const createDirectory = (png: PNGImage, offset: number) => {
     const b = Buffer.alloc(DIRECTORY_SIZE);
     const size = png.data.length + BITMAPINFOHEADER_SIZE;
     const width = 256 <= png.width ? 0 : png.width;
@@ -127,13 +154,11 @@ if (window.haveElectron) {
   };
   /**
    * Create the ICO file header.
-   * @param {Number} count Specifies number of images in the file.
-   * @return {Buffer} Header data.
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
 
-  const createFileHeader = count => {
+  const createFileHeader = (count: number) => {
     const b = Buffer.alloc(HEADER_SIZE);
     b.writeUInt16LE(0, 0); // 2 WORD Reserved
 
@@ -145,14 +170,10 @@ if (window.haveElectron) {
   };
   /**
    * Check an option properties.
-   * @param {Object} options Output destination the path of directory.
-   * @param {String} options.name Name of an output file.
-   * @param {Number[]} options.sizes Structure of an image sizes.
-   * @returns {Object} Checked options.
    */
 
 
-  const checkOptions = options => {
+  const checkOptions = (options: IcoOptions | undefined) => {
     if (options) {
       return {
         name: typeof options.name === 'string' && options.name !== '' ? options.name : DEFAULT_FILE_NAME,
@@ -167,86 +188,83 @@ if (window.haveElectron) {
   };
   /**
    * Get the size of the required PNG.
-   * @return {Number[]} Sizes.
    */
 
 
   const GetRequiredICOImageSizes = () => {
     return REQUIRED_IMAGE_SIZES;
   };
-  /**
-   * Generate the ICO file from a PNG images.
-   * @param {ImageInfo[]} images File informations..
-   * @param {String} dir Output destination the path of directory.
-   * @param {Object} options Options.
-   * @param {String} options.name Name of an output file.
-   * @param {Number} options.sizes Structure of an image sizes.
-   * @param {Logger} logger Logger.
-   * @return {Promise} Promise object.
-   */
 
+  let stream = require("stream") as { Writable: { new(): NodeWritableStream; prototype: NodeWritableStream } };
 
-  let stream = require("stream");
+  class WriteStream extends (stream.Writable as { new(): NodeWritableStream; prototype: NodeWritableStream }) {
+    data: number[] | NodeBuffer;
 
-  class WriteStream extends stream.Writable {
     constructor() {
       super();
       this.data = [];
     }
 
-    _write(chunk, encoding, cb) {
-      let buf = chunk;
+    _write(chunk: NodeBuffer | string, encoding: string, cb: (err: null) => void) {
+      let buf: NodeBuffer;
 
-      if (!(buf instanceof Buffer)) {
-        Buffer.from(chunk, encoding);
+      if (typeof chunk === 'string') {
+        buf = Buffer.from(chunk, encoding);
+      } else {
+        buf = chunk;
       }
 
       for (let i = 0; i < buf.length; i++) {
-        this.data.push(buf[i]);
+        (this.data as number[]).push(buf.readUInt8(i));
       }
 
       cb(null);
     }
 
+    write(data: NodeBuffer, encoding: string): boolean {
+      this._write(data, encoding, () => {});
+      return true;
+    }
+
     end() {
-      this.data = Buffer.from(this.data);
+      this.data = Buffer.from(this.data as number[]);
       super.end();
     }
   }
 
   exports.GetRequiredICOImageSizes = GetRequiredICOImageSizes;
 
-  const GenerateICO = (images, logger = console) => {
+  const GenerateICO = (images: NodeBuffer[], logger: { log(...args: unknown[]): void } = console) => {
     logger.log('ICO:');
 
-    const stream = new WriteStream();
-    stream.write(createFileHeader(images.length), 'binary');
+    const icoStream = new WriteStream();
+    icoStream.write(createFileHeader(images.length), 'binary');
 
-    let pngs = [];
-    for (let image of images) {
+    const pngs: PNGImage[] = [];
+    for (const image of images) {
       pngs.push(pngjsNozlib.PNG.sync.read(image));
     }
 
     let offset = HEADER_SIZE + DIRECTORY_SIZE * images.length;
     pngs.forEach(png => {
       const directory = createDirectory(png, offset);
-      stream.write(directory, 'binary');
+      icoStream.write(directory, 'binary');
       offset += png.data.length + BITMAPINFOHEADER_SIZE;
     });
     pngs.forEach(png => {
       const header = createBitmapInfoHeader(png, BI_RGB);
-      stream.write(header, 'binary');
+      icoStream.write(header, 'binary');
       const dib = convertPNGtoDIB(png.data, png.width, png.height, png.bpp);
-      stream.write(dib, 'binary');
+      icoStream.write(dib, 'binary');
     });
-    stream.end();
+    icoStream.end();
 
-    return stream.data;
+    return icoStream.data;
     //logger.log('  Create: ' + dest);
     //resolve(dest);
   };
 
   exports.GenerateICO = GenerateICO;
-  let _default = GenerateICO;
+  const _default = GenerateICO;
   exports.default = _default;
 }

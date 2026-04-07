@@ -1,6 +1,3 @@
-// @ts-nocheck
-/* TS-NOCHECK RATIONALE: mimeMap uses string index patterns, PlatformAPI has
- * abstract-like static methods that throw. */
 
 export const mimeMap: Record<string, string> = {
   ".js"  : "application/javascript",
@@ -74,9 +71,8 @@ export function getMime(path: string) {
 }
 
 export class PlatformAPI {
-  static writeFile(data, handle, mime) {
+  static writeFile(data: ArrayBuffer | string, handle: FilePath, mime: string): Promise<unknown> {
     throw new Error("implement me");
-    //returns a promise
   }
 
   static resolveURL(path: string, base = location.href) {
@@ -111,33 +107,29 @@ export class PlatformAPI {
       base = base.slice(0, base.length - 1).trim();
     }
 
-    path = (base + "/" + path).split("/")
-    let path2 = [];
+    const segments = (base + "/" + path).split("/");
+    const path2: string[] = [];
 
-    for (let i = 0; i < path.length; i++) {
-      if (path[i] === "..") {
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i] === "..") {
         path2.pop();
       } else {
-        path2.push(path[i]);
+        path2.push(segments[i]);
       }
     }
 
     return path2.join("/");
   }
 
-  //returns a promise that resolves to a FilePath that can be used for re-saving.
-  static showOpenDialog(title, args = new FileDialogArgs()) {
+  static showOpenDialog(title: string, args = new FileDialogArgs()): Promise<FilePath[]> {
     throw new Error("implement me");
   }
 
-  //returns a promise
-  static showSaveDialog(title, savedata_cb, args = new FileDialogArgs()) {
+  static showSaveDialog(title: string, savedata_cb: () => unknown, args = new FileDialogArgs()): Promise<FilePath> {
     throw new Error("implement me");
   }
 
-  //returns a promise.  if mime is a text type, a string will be fed to the promise,
-  //otherwise it will be an ArrayBuffer
-  static readFile(path, mime) {
+  static readFile(path: string | FilePath, mime?: string): Promise<string | ArrayBuffer> {
     throw new Error("implement me");
   }
 }
@@ -145,6 +137,7 @@ export class PlatformAPI {
 export class FileDialogArgs {
   multi = false;
   addToRecentList = false;
+  defaultPath?: string;
   filters: { name: string; mime: string; extensions: string[] }[] = [];
 }
 

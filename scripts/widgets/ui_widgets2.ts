@@ -1,14 +1,7 @@
-// @ts-nocheck
-/** @typedef {import('../path-controller/util/vectormath').Vector2} Vector2 */
-/** @typedef {import('../path-controller/util/vectormath').Vector3} Vector3 */
-/** @typedef {import('../path-controller/util/vectormath').Vector4} Vector4 */
-/** @typedef {import('../path-controller/util/vectormath').Quat} Quat */
-/** @typedef {import('../path-controller/util/vectormath').Matrix4} Matrix4 */
-
 "use strict";
 import "./ui_richedit.js";
 
-import * as util from "../util/util.js";
+import * as util from "../path-controller/util/util.js";
 import * as ui_base from "../core/ui_base.js";
 import * as events from "../path-controller/util/events.js";
 import { Vector2, Vector3, Vector4, Quat, Matrix4 } from "../path-controller/util/vectormath.js";
@@ -25,18 +18,43 @@ import { UIBase, PackFlags, IconSheets, parsepx } from "../core/ui_base.js";
 import * as units from "../core/units.js";
 import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
 import { Button } from "./ui_button.js";
+import { IContextBase } from "../core/context_base.js";
+import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
 
-export class VectorPopupButton extends Button {
+/** Extended meta type for vector properties that may carry hasUniformSlider */
+type VecPropMeta = ResolvedProp & {
+  hasUniformSlider?: boolean;
+  name?: string;
+  getValue?: () => { length: number; copy(): { load(v: unknown): unknown } };
+  ctx?: unknown;
+  dataref?: unknown;
+  datapath?: string;
+};
+
+/** Type for the container returned by Screen.popup() */
+type PopupContainer = UIBase & {
+  background: string;
+  end(): void;
+  add(child: UIBase): void;
+  button(label: string, cb?: () => void): UIBase;
+  flushUpdate(): void;
+};
+
+type AnySlider = UIBase & Record<string, unknown>;
+
+export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends Button<CTX> {
+  _value: Vector2 | Vector3 | Vector4 | Quat;
+
   constructor() {
     super();
 
-    this.value = new Vector4();
+    this._value = new Vector4();
   }
 
   get value() {
     return this._value;
   }
-  set value(/** @type{Vector2|Vector3|Vector4|Quat} */ v) {
+  set value(v: Vector2 | Vector3 | Vector4 | Quat) {
     this._value = v;
   }
 
@@ -47,15 +65,16 @@ export class VectorPopupButton extends Button {
     };
   }
 
-  _onpress(e) {
-    if (e.button && e.button !== 0) {
+  _onpress = (e: unknown) => {
+    const evt = e as { button?: number };
+    if (evt.button && evt.button !== 0) {
       return;
     }
 
-    let panel = UIBase.createElement("vector-panel-x");
-    let screen = this.ctx.screen;
+    const panel = UIBase.createElement<UIBase>("vector-panel-x");
+    const screen = this.ctx.screen;
 
-    let popup = screen.popup(this, this);
+    const popup = screen.popup(this, this, 0) as unknown as PopupContainer;
 
     popup.add(panel);
     popup.button("ok", () => {
@@ -63,21 +82,24 @@ export class VectorPopupButton extends Button {
     });
 
     if (this.hasAttribute("datapath")) {
-      panel.setAttribute("datapath", this.getAttribute("datapath"));
+      panel.setAttribute("datapath", this.getAttribute("datapath")!);
     }
     if (this.hasAttribute("mass_set_path")) {
-      panel.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+      panel.setAttribute("mass_set_path", this.getAttribute("mass_set_path")!);
     }
 
     popup.flushUpdate();
-  }
+  };
 
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
     }
 
-    let value = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const value = this.getPathValue(this.ctx, this.getAttribute("datapath")!) as
+      | (Vector2 & Vector3 & Vector4 & Quat)
+      | null
+      | undefined;
 
     if (!value) {
       this.internalDisabled = true;
@@ -115,11 +137,20 @@ export class VectorPopupButton extends Button {
 }
 UIBase.internalRegister(VectorPopupButton);
 
-export class VectorPanel extends ColumnFrame {
+export class VectorPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+  _value: Vector2 | Vector3 | Vector4 | Quat;
+  declare name: string;
+  axes: string;
+  sliders: AnySlider[];
+  hasUniformSlider: boolean;
+  __range: [number, number];
+  _range: [number, number];
+  uslider: AnySlider | undefined;
+
   get value() {
     return this._value;
   }
-  set value(/** @type{Vector2|Vector3|Vector4|Quat} */ v) {
+  set value(v: Vector2 | Vector3 | Vector4 | Quat) {
     this._value = v;
   }
 
@@ -131,34 +162,34 @@ export class VectorPanel extends ColumnFrame {
     this.name = "";
 
     this.axes = "XYZW";
-    this.value = new Vector3();
+    this._value = new Vector3();
     this.sliders = [];
     this.hasUniformSlider = false;
 
     this.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
 
-    let makeParam = (key) => {
+    const makeParam = (key: string) => {
       Object.defineProperty(this, key, {
         get: function () {
-          return this._getNumParam(key);
+          return (this as VectorPanel)._getNumParam(key);
         },
 
-        set: function (val) {
-          this._setNumParam(key, val);
+        set: function (val: unknown) {
+          (this as VectorPanel)._setNumParam(key, val);
         },
       });
     };
 
     this.__range = [-1e17, 1e17];
-    this._range = new Array(2);
+    this._range = new Array(2) as [number, number];
 
     Object.defineProperty(this._range, 0, {
       get: () => this.__range[0],
-      set: (val) => (this.__range[0] = val),
+      set: (val: number) => (this.__range[0] = val),
     });
     Object.defineProperty(this._range, 1, {
       get: () => this.__range[1],
-      set: (val) => (this.__range[1] = val),
+      set: (val: number) => (this.__range[1] = val),
     });
 
     makeParam("isInt");
@@ -182,21 +213,22 @@ export class VectorPanel extends ColumnFrame {
     this.background = this.getDefault("InnerPanelBG");
   }
 
-  _getNumParam(key) {
-    return this["_" + key];
+  _getNumParam(key: string): unknown {
+    return (this as unknown as Record<string, unknown>)["_" + key];
   }
 
-  _setNumParam(key, val) {
+  _setNumParam(key: string, val: unknown) {
     if (key === "range") {
-      this.__range[0] = val[0];
-      this.__range[1] = val[1];
+      const v = val as [number, number];
+      this.__range[0] = v[0];
+      this.__range[1] = v[1];
 
       return;
     }
 
-    this["_" + key] = val;
+    (this as unknown as Record<string, unknown>)["_" + key] = val;
 
-    for (let slider of this.sliders) {
+    for (const slider of this.sliders) {
       slider[key] = val;
     }
   }
@@ -208,7 +240,7 @@ export class VectorPanel extends ColumnFrame {
       this.label(this.name);
     }
 
-    let frame, row;
+    let frame: UIBase, row: RowFrame<CTX> | undefined;
 
     if (this.hasUniformSlider) {
       row = this.row();
@@ -220,47 +252,50 @@ export class VectorPanel extends ColumnFrame {
     this.sliders = [];
 
     for (let i = 0; i < this.value.length; i++) {
-      let slider = frame.slider(undefined, {
+      const vArr = this.value as unknown as number[];
+      const slider = (frame as ColumnFrame<CTX>).slider(undefined, {
         name      : this.axes[i],
-        defaultval: this.value[i],
-        min       : this.range[0],
-        max       : this.range[1],
-        step      : this.step || 0.001,
+        defaultval: vArr[i],
+        min       : this.range![0],
+        max       : this.range![1],
+        step      : this.step ?? 0.001,
         is_int    : this.isInt,
         packflag  : this.packflag,
-      });
+      }) as unknown as AnySlider;
 
-      slider.addLabel = false;
-      slider.labelOnTop = false;
+      slider["addLabel"] = false;
+      slider["labelOnTop"] = false;
 
-      //let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
-      slider.axis = i;
-      let this2 = this;
+      slider["axis"] = i;
+      const this2 = this;
 
-      slider.baseUnit = this.baseUnit;
-      slider.slideSpeed = this.slideSpeed;
-      slider.decimalPlaces = this.decimalPlaces;
-      slider.displayUnit = this.displayUnit;
-      slider.isInt = this.isInt;
-      slider.range = this.__range;
-      slider.radix = this.radix;
-      slider.step = this.step;
-      slider.expRate = this.expRate;
-      slider.stepIsRelative = this.stepIsRelative;
+      slider["baseUnit"] = this.baseUnit;
+      slider["slideSpeed"] = this.slideSpeed;
+      slider["decimalPlaces"] = this.decimalPlaces;
+      slider["displayUnit"] = this.displayUnit;
+      slider["isInt"] = this.isInt;
+      slider["range"] = this.__range;
+      slider["radix"] = this.radix;
+      slider["step"] = this.step;
+      slider["expRate"] = this.expRate;
+      slider["stepIsRelative"] = this.stepIsRelative;
 
       if (this.stepIsRelative) {
-        slider.step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+        slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, vArr[i]);
       }
 
-      slider.onchange = function (e) {
-        this2.value[this.axis] = this.value;
+      slider["onchange"] = function (this: AnySlider) {
+        (this2.value as unknown as Record<number, number>)[this["axis"] as number] = this["value"] as number;
 
         if (this2.hasAttribute("datapath")) {
-          this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
+          this2.setPathValue(this2.ctx, this2.getAttribute("datapath")!, this2.value);
         }
 
         if (this2.uslider) {
-          this2.uslider.setValue(this2.uniformValue, false);
+          (this2.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
+            this2.uniformValue,
+            false
+          );
         }
 
         if (this2.onchange) {
@@ -272,29 +307,27 @@ export class VectorPanel extends ColumnFrame {
     }
 
     if (this.hasUniformSlider) {
-      let uslider = (this.uslider = UIBase.createElement("numslider-x"));
-      row._prepend(uslider);
+      const uslider = (this.uslider = UIBase.createElement("numslider-x") as AnySlider);
+      row!._prepend(uslider as unknown as UIBase<CTX>);
 
-      uslider.range = this.range;
-      uslider.baseUnit = this.baseUnit;
-      uslider.slideSpeed = this.slideSpeed;
-      uslider.decimalPlaces = this.decimalPlaces;
-      uslider.displayUnit = this.displayUnit;
-      uslider.expRate = this.expRate;
-      uslider.step = this.step;
-      uslider.expRate = this.expRate;
-      uslider.isInt = this.isInt;
-      uslider.radix = this.radix;
-      uslider.decimalPlaces = this.decimalPlaces;
-      uslider.stepIsRelative = this.stepIsRelative;
+      uslider["range"] = this.range;
+      uslider["baseUnit"] = this.baseUnit;
+      uslider["slideSpeed"] = this.slideSpeed;
+      uslider["decimalPlaces"] = this.decimalPlaces;
+      uslider["displayUnit"] = this.displayUnit;
+      uslider["expRate"] = this.expRate;
+      uslider["step"] = this.step;
+      uslider["isInt"] = this.isInt;
+      uslider["radix"] = this.radix;
+      uslider["stepIsRelative"] = this.stepIsRelative;
 
-      uslider.vertical = true;
-      uslider.setValue(this.uniformValue, false);
+      uslider["vertical"] = true;
+      (uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this.uniformValue, false);
 
       this.sliders.push(uslider);
 
-      uslider.onchange = () => {
-        this.uniformValue = uslider.value;
+      uslider["onchange"] = () => {
+        this.uniformValue = uslider["value"] as number;
       };
     } else {
       this.uslider = undefined;
@@ -305,26 +338,30 @@ export class VectorPanel extends ColumnFrame {
 
   get uniformValue() {
     let sum = 0.0;
+    const vArr = this.value as unknown as number[];
 
     for (let i = 0; i < this.value.length; i++) {
-      sum += isNaN(this.value[i]) ? 0.0 : this.value[i];
+      sum += isNaN(vArr[i]) ? 0.0 : vArr[i];
     }
 
     return sum / this.value.length;
   }
 
-  set uniformValue(val) {
-    let old = this.uniformValue;
+  set uniformValue(val: number) {
+    const old = this.uniformValue;
     let doupdate = false;
 
+    const vArr = this.value as unknown as number[];
+
     if (old === 0.0 || val === 0.0) {
-      doupdate = this.value.dot(this.value) !== 0.0;
+      doupdate =
+        (this.value as unknown as { dot(v: unknown): number }).dot(this.value) !== 0.0;
 
       this.value.zero();
     } else {
-      let ratio = val / old;
+      const ratio = val / old;
       for (let i = 0; i < this.value.length; i++) {
-        this.value[i] *= ratio;
+        vArr[i] *= ratio;
       }
 
       doupdate = true;
@@ -332,7 +369,7 @@ export class VectorPanel extends ColumnFrame {
 
     if (doupdate) {
       if (this.hasAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.value);
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.value);
       }
 
       if (this.onchange) {
@@ -340,18 +377,21 @@ export class VectorPanel extends ColumnFrame {
       }
 
       for (let i = 0; i < this.value.length; i++) {
-        this.sliders[i].setValue(this.value[i], false);
-        this.sliders[i]._redraw();
+        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(
+          vArr[i],
+          false
+        );
+        (this.sliders[i] as unknown as { _redraw(): void })._redraw();
       }
 
       if (this.uslider) {
-        this.uslider.setValue(val, false);
-        this.uslider._redraw();
+        (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(val, false);
+        (this.uslider as unknown as { _redraw(): void })._redraw();
       }
     }
   }
 
-  setValue(value) {
+  setValue(value: Vector2 | Vector3 | Vector4 | Quat | null | undefined) {
     if (!value) {
       return;
     }
@@ -359,13 +399,13 @@ export class VectorPanel extends ColumnFrame {
     if (value.length !== this.value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2(value);
+          this.value = new Vector2(value as Vector2);
           break;
         case 3:
-          this.value = new Vector3(value);
+          this.value = new Vector3(value as Vector3);
           break;
         case 4:
-          this.value = new Vector4(value);
+          this.value = new Vector4(value as Vector4);
           break;
         default:
           throw new Error("invalid vector size " + value.length);
@@ -373,7 +413,7 @@ export class VectorPanel extends ColumnFrame {
 
       this.rebuild();
     } else {
-      this.value.load(value);
+      this.value.load(value as Vector2 & Vector3 & Vector4 & Quat);
     }
 
     if (this.onchange) {
@@ -388,18 +428,26 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-    let path = this.getAttribute("datapath");
+    const path = this.getAttribute("datapath")!;
 
-    let val = this.getPathValue(this.ctx, path);
+    const val = this.getPathValue(this.ctx, path) as
+      | (Vector2 & Vector3 & Vector4 & Quat)
+      | null
+      | undefined;
     if (val === undefined) {
       this.internalDisabled = true;
       return;
     }
 
-    let meta = this.getPathMeta(this.ctx, path);
-    let name = meta.uiname !== undefined ? meta.uiname : meta.name;
+    const meta = this.getPathMeta(this.ctx, path) as VecPropMeta | undefined;
+    let name =
+      meta !== undefined && meta.uiname !== undefined
+        ? meta.uiname
+        : meta !== undefined
+          ? meta.apiname
+          : undefined;
     if (this.hasAttribute("name")) {
-      name = this.getAttribute("name");
+      name = this.getAttribute("name") ?? name;
     }
 
     if (name && name !== this.name) {
@@ -408,11 +456,13 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-    let loadNumParam = (k, do_rebuild = false) => {
-      if (meta && meta[k] !== undefined && this[k] === undefined) {
-        this[k] = meta[k];
+    const loadNumParam = (k: string, do_rebuild = false) => {
+      const self = this as unknown as Record<string, unknown>;
+      const m = meta as unknown as Record<string, unknown> | undefined;
+      if (m && m[k] !== undefined && self[k] === undefined) {
+        self[k] = m[k];
 
-        if (this[k] !== meta[k] && do_rebuild) {
+        if (self[k] !== m[k] && do_rebuild) {
           this.doOnce(this.rebuild);
         }
       }
@@ -429,17 +479,21 @@ export class VectorPanel extends ColumnFrame {
     loadNumParam("expRate");
     loadNumParam("stepIsRelative");
 
-    if (meta && meta.hasUniformSlider !== undefined && meta.hasUniformSlider !== this.hasUniformSlider) {
+    if (
+      meta !== undefined &&
+      meta.hasUniformSlider !== undefined &&
+      meta.hasUniformSlider !== this.hasUniformSlider
+    ) {
       this.hasUniformSlider = meta.hasUniformSlider;
       this.doOnce(this.rebuild);
     }
 
-    if (meta && meta.range) {
-      let update = this.range[0] !== meta.range[0];
-      update = update || this.range[1] !== meta.range[1];
+    if (meta !== undefined && meta.range) {
+      const update =
+        this.range![0] !== meta.range[0] || this.range![1] !== meta.range[1];
 
-      this.range[0] = meta.range[0];
-      this.range[1] = meta.range[1];
+      this.range![0] = meta.range[0];
+      this.range![1] = meta.range[1];
 
       if (update) {
         this.doOnce(this.rebuild);
@@ -448,54 +502,73 @@ export class VectorPanel extends ColumnFrame {
 
     this.internalDisabled = false;
 
-    let length = val.length;
+    let length = (val as { length?: number }).length ?? 0;
 
-    if (meta && meta.flag & PropFlags.USE_CUSTOM_GETSET) {
-      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+    if (meta !== undefined && meta.flag & PropFlags.USE_CUSTOM_GETSET) {
+      const rdef = this.ctx.api.resolvePath(this.ctx, path);
 
-      meta.ctx = this.ctx;
-      meta.dataref = rdef.obj;
-      meta.datapath = path;
+      if (rdef !== undefined) {
+        const m = meta as VecPropMeta;
+        m.ctx = this.ctx;
+        m.dataref = rdef.obj;
+        m.datapath = path;
 
-      length = meta.getValue().length;
+        const vResult = (m as unknown as { getValue(): { length: number } }).getValue();
+        length = vResult.length;
 
-      meta.dataref = undefined;
+        m.dataref = undefined;
+      }
     }
 
     if (this.value.length !== length) {
+      let newVal: Vector2 | Vector3 | Vector4 | Quat;
       switch (length) {
         case 2:
-          val = new Vector2(val);
+          newVal = new Vector2(val as Vector2);
           break;
         case 3:
-          val = new Vector3(val);
+          newVal = new Vector3(val as Vector3);
           break;
         case 4:
-          val = new Vector4(val);
+          newVal = new Vector4(val as Vector4);
           break;
-        default:
-          val = meta.getValue().copy().load(val);
+        default: {
+          const getValFn = (meta as unknown as {
+            getValue(): { copy(): { load(v: unknown): Vector2 | Vector3 | Vector4 | Quat };
+          }}).getValue;
+          newVal = getValFn.call(meta).copy().load(val);
           break;
+        }
       }
 
-      this.value = val;
+      this.value = newVal;
       this.rebuild();
 
       for (let i = 0; i < this.value.length; i++) {
-        this.sliders[i].setValue(val[i], false);
-        this.sliders[i]._redraw();
+        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(
+          (newVal as unknown as Record<number, number>)[i],
+          false
+        );
+        (this.sliders[i] as unknown as { _redraw(): void })._redraw();
       }
     } else {
-      if (this.value.vectorDistance(val) > 0) {
-        this.value.load(val);
+      const valNN = val!;
+      if ((this.value as unknown as { vectorDistance(v: unknown): number }).vectorDistance(valNN) > 0) {
+        this.value.load(valNN as Vector2 & Vector3 & Vector4 & Quat);
 
         if (this.uslider) {
-          this.uslider.setValue(this.uniformValue, false);
+          (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
+            this.uniformValue,
+            false
+          );
         }
 
         for (let i = 0; i < this.value.length; i++) {
-          this.sliders[i].setValue(val[i], false);
-          this.sliders[i]._redraw();
+          (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(
+            (val as unknown as Record<number, number>)[i],
+            false
+          );
+          (this.sliders[i] as unknown as { _redraw(): void })._redraw();
         }
       }
     }
@@ -507,15 +580,18 @@ export class VectorPanel extends ColumnFrame {
     this.updateDataPath();
 
     if (this.stepIsRelative) {
-      for (let slider of this.sliders) {
-        slider.step = ToolProperty.calcRelativeStep(this.step, slider.value);
+      for (const slider of this.sliders) {
+        slider["step"] = ToolProperty.calcRelativeStep(
+          this.step ?? 0,
+          (slider as unknown as { value: number }).value
+        );
       }
     }
 
     if (this.uslider) {
-      this.uslider.step = this.step;
+      this.uslider["step"] = this.step;
       if (this.stepIsRelative) {
-        this.uslider.step = ToolProperty.calcRelativeStep(this.step, this.uniformValue);
+        this.uslider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, this.uniformValue);
       }
     }
   }
@@ -528,7 +604,19 @@ export class VectorPanel extends ColumnFrame {
 }
 UIBase.internalRegister(VectorPanel);
 
-export class ToolTip extends UIBase {
+export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  div: HTMLDivElement;
+  _start_time: number | undefined;
+  timeout: number | undefined;
+  _popup:
+    | {
+        background: string;
+        end(): void;
+        style: CSSStyleDeclaration;
+        add(child: UIBase): void;
+      }
+    | undefined;
+
   constructor() {
     super();
 
@@ -540,28 +628,38 @@ export class ToolTip extends UIBase {
     this.timeout = undefined;
   }
 
-  static show(message, screen, x, y) {
-    let ret = UIBase.createElement(this.define().tagname);
+  static show<CTX extends IContextBase = IContextBase>(message: string, screen: UIBase<CTX>, x: number, y: number) {
+    const ret = UIBase.createElement<ToolTip<CTX>>(this.define().tagname);
 
     ret._start_time = util.time_ms();
-    ret.timeout = ret.getDefault("timeout");
+    ret.timeout = ret.getDefault("timeout") as number;
 
     ret.text = message;
-    let size = ret._estimateSize();
+    const size = ret._estimateSize();
 
-    let pad = 5;
-    size = [size[0] + pad, size[1] + pad];
+    const pad = 5;
+    const size2 = [size[0] + pad, size[1] + pad];
 
-    console.log(size);
-    x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
-    y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
+    console.log(size2);
+    const sscreen = screen as unknown as {
+      popup(owning: UIBase, x: number, y: number): {
+        background: string;
+        end(): void;
+        style: CSSStyleDeclaration;
+        add(child: UIBase): void;
+      };
+      size: [number, number];
+    };
 
-    let dpi = UIBase.getDPI();
+    x = Math.min(Math.max(x, 0), sscreen.size[0] - size2[0]);
+    y = Math.min(Math.max(y, 0), sscreen.size[1] - size2[1]);
+
+    const dpi = UIBase.getDPI();
 
     x += 10 / dpi;
     y += 15 / dpi;
 
-    ret._popup = screen.popup(ret, x, y);
+    ret._popup = sscreen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
     ret._popup.style["border"] = "none";
     ret.div.style["padding"] = "15px";
@@ -572,7 +670,7 @@ export class ToolTip extends UIBase {
   }
 
   end() {
-    this._popup.end();
+    this._popup!.end();
   }
 
   init() {
@@ -580,7 +678,7 @@ export class ToolTip extends UIBase {
     this.setCSS();
   }
 
-  set text(val) {
+  set text(val: string) {
     this.div.innerHTML = val.replace(/[\n]/g, "<br>\n");
   }
 
@@ -589,8 +687,15 @@ export class ToolTip extends UIBase {
   }
 
   _estimateSize() {
-    let text = this.div.textContent;
-    let block = ui_base.measureTextBlock(this, text, undefined, undefined, undefined, this.getDefault("ToolTipText"));
+    const text = this.div.textContent ?? "";
+    const block = ui_base.measureTextBlock(
+      this,
+      text,
+      undefined,
+      undefined,
+      undefined,
+      this.getDefault("ToolTipText") as string | undefined
+    );
 
     return [block.width + 50, block.height + 30];
   }
@@ -598,7 +703,7 @@ export class ToolTip extends UIBase {
   update() {
     super.update();
 
-    if (util.time_ms() - this._start_time > this.timeout) {
+    if (util.time_ms() - (this._start_time ?? 0) > (this.timeout ?? 0)) {
       this.end();
     }
   }
@@ -606,26 +711,29 @@ export class ToolTip extends UIBase {
   setCSS() {
     super.setCSS();
 
-    let color = this.getDefault("background-color");
-    let bcolor = this.getDefault("border-color");
+    const color = this.getDefault("background-color") as string;
+    const bcolor = this.getDefault("border-color") as string;
 
     this.background = color;
 
-    let radius = this.getDefault("border-radius", undefined, 5);
-    let bstyle = this.getDefault("border-style", undefined, "solid");
-    let bwidth = this.getDefault("border-width", undefined, 1);
-    let padding = this.getDefault("padding", undefined, 15);
+    const radius = this.getDefault("border-radius", undefined, 5) as number;
+    const bstyle = this.getDefault("border-style", undefined, "solid") as string;
+    const bwidth = this.getDefault("border-width", undefined, 1) as number;
+    const padding = this.getDefault("padding", undefined, 15) as number;
 
     this.noMarginsOrPadding();
 
-    this.div.style["padding"] = padding + "px";
+    const divStyle = this.div.style as unknown as Record<string, string>;
+    const selfStyle = this.style as unknown as Record<string, string>;
 
-    this.div.style["background-color"] = "rgba(0,0,0,0)";
-    this.div.style["border"] = `${bwidth}px ${bstyle} ${bcolor}`;
-    this.div.style["border-radius"] = radius + "px";
-    this.style["border-radius"] = radius + "px";
+    divStyle["padding"] = padding + "px";
 
-    let font = this.getDefault("ToolTipText");
+    divStyle["background-color"] = "rgba(0,0,0,0)";
+    divStyle["border"] = `${bwidth}px ${bstyle} ${bcolor}`;
+    divStyle["border-radius"] = radius + "px";
+    selfStyle["border-radius"] = radius + "px";
+
+    const font = this.getDefault("ToolTipText") as { color: string; genCSS(): string };
     this.div.style["color"] = font.color;
     this.div.style["font"] = font.genCSS();
   }

@@ -1,16 +1,50 @@
-// @ts-nocheck
 "use strict";
 
-let _nativeTheme;
+/*
+ * Minimal ambient types for Electron/Node APIs used in this module.
+ * Declared locally to avoid pulling in @types/node or @types/electron.
+ */
+interface ElectronIpcRenderer {
+  invoke(channel: string, ...args: unknown[]): Promise<unknown>;
+  on(channel: string, listener: (event: unknown, ...args: unknown[]) => void): void;
+}
+
+interface ElectronRemote {
+  nativeTheme: NativeThemeProxy;
+}
+
+interface NativeThemeProxy {
+  shouldUseDarkColors: boolean;
+  themeSource: string;
+  _themeSource?: string;
+}
+
+interface ElectronModule {
+  remote?: ElectronRemote;
+  nativeImage?: { createFromBuffer(buf: unknown): unknown };
+  ipcRenderer: ElectronIpcRenderer;
+}
+
+interface NodeFS {
+  readFileSync(path: string, encoding?: string): string | ArrayBuffer;
+  writeFileSync(path: string, data: unknown): void;
+}
+
+interface IcoGenModule {
+  GetRequiredICOImageSizes(): number[];
+  GenerateICO(images: unknown[]): unknown;
+}
+
+let _nativeTheme: NativeThemeProxy | undefined;
 
 function getNativeTheme() {
   if (_nativeTheme) {
     return _nativeTheme;
   }
 
-  let remote = getElectron().remote;
+  const remote = getElectron().remote;
   if (!remote) { /* Newer electron version with no remote, client must provide it */
-    ipcRenderer.invoke("nativeTheme");
+    ipcRenderer!.invoke("nativeTheme");
   } else {
     _nativeTheme = remote.nativeTheme;
   }
@@ -28,33 +62,30 @@ function getElectronVersion() {
     key = key.slice(0, i);
   }
 
-  key = key.trim();
-  key = key.split(".").map(f => parseInt(f));
-
-  return key;
+  return key.trim().split(".").map(f => parseInt(f));
 }
 
 /*
 * wrap require to keep angular from auto-importing
 * this api in browsers
 * */
-function getElectron() {
-  return require('electron');
+function getElectron(): ElectronModule {
+  return require('electron') as ElectronModule;
 }
 
-function myRequire(mod) {
+function myRequire(mod: string): unknown {
   return globalThis.require(mod);
 }
 
-import {Menu, DropBox} from '../../widgets/ui_menu.js';
-import {getIconManager} from "../../core/ui_base.js";
-import cconst from "../../config/const.js";
-import * as util from '../../util/util.js';
+import {Menu, DropBox} from '../../widgets/ui_menu';
+import {getIconManager} from "../../core/ui_base";
+import cconst from "../../config/const";
+import * as util from '../../util/util';
 
-import {FileDialogArgs, FilePath} from '../platform_base.js';
+import {FileDialogArgs, FilePath} from '../platform_base';
 
-function getFilename(path) {
-  let filename = path.replace(/\\/g, "/");
+function getFilename(filepath: string) {
+  let filename = filepath.replace(/\\/g, "/");
   let i = filename.length - 1;
   while (i >= 0 && filename[i] !== "/") {
     i--;
@@ -74,23 +105,34 @@ function getFilename(path) {
 let _menu_init = false;
 let _init = false;
 
-import {mimeMap} from '../platform_base.js';
+import {mimeMap} from '../platform_base';
 
 let electron_menu_idgen = 1;
-let ipcRenderer;
+let ipcRenderer: ElectronIpcRenderer | undefined;
 
-export class ElectronMenu extends Array {
-  constructor(args = {}) {
+interface ElectronMenuItemArgs {
+  id?: string;
+  label?: string;
+  tooltip?: string;
+  accelerator?: string;
+  icon?: string;
+  click?: string | (() => void);
+  submenu?: ElectronMenu;
+  registerAccelerator?: boolean;
+}
+
+export class ElectronMenu extends Array<ElectronMenuItem> {
+  _ipcId: number;
+
+  constructor(args: Record<string, unknown> = {}) {
     super();
 
     this._ipcId = electron_menu_idgen++;
 
-    for (let k in args) {
-      this[k] = args[k];
-    }
+    Object.assign(this, args);
   }
 
-  insert(i, item) {
+  insert(i: number, item: ElectronMenuItem) {
     this.length++;
 
     let j = this.length - 1;
@@ -103,34 +145,35 @@ export class ElectronMenu extends Array {
     return this;
   }
 
-  static setApplicationMenu(menu) {
+  static setApplicationMenu(menu: ElectronMenu) {
     initElectronIpc();
 
-    ipcRenderer.invoke("set-menu-bar", menu);
+    ipcRenderer!.invoke("set-menu-bar", menu);
   }
 
   closePopup() {
-    ipcRenderer.invoke("close-menu", this._ipcId);
+    ipcRenderer!.invoke("close-menu", this._ipcId);
   }
 
-  append(item) {
+  append(item: ElectronMenuItem) {
     this.push(item);
   }
 
-  popup(args) {
-    let {x, y, callback} = args;
+  popup(args: { x: number; y: number; callback: () => void }) {
+    const {x, y} = args;
+    let callback: string | (() => void) = args.callback;
 
     callback = wrapRemoteCallback("popup_menu_click", callback);
 
-    const {ipcRenderer} = require('electron')
-    ipcRenderer.invoke("popup-menu", this, x, y, callback);
+    const {ipcRenderer: ipc} = require('electron') as ElectronModule;
+    ipc.invoke("popup-menu", this, x, y, callback);
   }
 }
 
-let callbacks = {};
+let callbacks: Record<string, (...args: unknown[]) => void> = {};
 let keybase = 1;
 
-export function wrapRemoteCallback(key, callback) {
+export function wrapRemoteCallback(key: string, callback: (...args: unknown[]) => void) {
   key = "remote_" + key + (keybase++);
   callbacks[key] = callback;
 
@@ -145,23 +188,24 @@ function initElectronIpc() {
   }
 
   ipcInit = true;
-  ipcRenderer = require('electron').ipcRenderer;
+  ipcRenderer = (require('electron') as ElectronModule).ipcRenderer;
 
-  ipcRenderer.on('invoke-menu-callback', (event, key, args) => {
+  ipcRenderer.on('invoke-menu-callback', (event: unknown, key: unknown, args: unknown) => {
     //console.error("Electron menu callback", key, args);
-    callbacks[key].apply(undefined, args);
+    callbacks[key as string].apply(undefined, args as unknown[]);
   });
 
-  ipcRenderer.on("nativeTheme", (event, module) => {
-    _nativeTheme = Object.assign({}, module);
+  ipcRenderer.on("nativeTheme", (event: unknown, module: unknown) => {
+    const themeData = module as { themeSource: string; shouldUseDarkColors: boolean };
+    _nativeTheme = Object.assign({}, themeData) as NativeThemeProxy;
     _nativeTheme._themeSource = _nativeTheme.themeSource;
 
     Object.defineProperty(_nativeTheme, "themeSource", {
       get() {
-        return this._themeSource;
+        return (this as NativeThemeProxy)._themeSource;
       },
-      set(v) {
-        ipcRenderer.invoke("nativeTheme.setThemeSource", v);
+      set(v: string) {
+        ipcRenderer!.invoke("nativeTheme.setThemeSource", v);
       }
     });
   });
@@ -169,12 +213,19 @@ function initElectronIpc() {
 
 
 export class ElectronMenuItem {
-  constructor(args) {
-    for (let k in args) {
-      this[k] = args[k];
-    }
+  id?: string;
+  label?: string;
+  tooltip?: string;
+  accelerator?: string;
+  icon?: string;
+  click?: string | (() => void);
+  submenu?: ElectronMenu;
+  registerAccelerator?: boolean;
 
-    if (this.click) {
+  constructor(args: ElectronMenuItemArgs) {
+    Object.assign(this, args);
+
+    if (typeof this.click === 'function') {
       this.click = wrapRemoteCallback("menu_click", this.click);
     }
   }
@@ -189,20 +240,20 @@ function patchDropBox() {
 
   //haveElectron = false;
   //return;
-  DropBox.prototype._onpress = function _onpress(e) {
+  (DropBox.prototype as unknown as Record<string, unknown>)._onpress = function _onpress(this: DropBox, e: MouseEvent) {
     if (this._menu !== undefined) {
       this._menu.close();
       this._menu = undefined;
-      this._pressed = false;
+      (this as unknown as { _pressed: boolean })._pressed = false;
       this._redraw();
       return;
     }
 
-    this._build_menu();
+    (this as unknown as { _build_menu(): void })._build_menu();
 
-    let emenu = buildElectronMenu(this._menu);
+    const emenu = buildElectronMenu(this._menu!);
 
-    this._menu.close = () => {
+    this._menu!.close = () => {
       emenu.closePopup(); //getCurrentWindow);
     };
 
@@ -212,22 +263,22 @@ function patchDropBox() {
       return;
     }
 
-    this._menu._dropbox = this;
-    this.dom._background = this.getDefault("BoxDepressed");
-    this._background = this.getDefault("BoxDepressed");
+    (this._menu as unknown as Record<string, unknown>)._dropbox = this;
+    (this.dom as unknown as Record<string, unknown>)._background = this.getDefault("BoxDepressed");
+    (this as unknown as Record<string, unknown>)._background = this.getDefault("BoxDepressed");
     this._redraw();
-    this._pressed = true;
+    (this as unknown as { _pressed: boolean })._pressed = true;
     this.setCSS();
 
-    let onclose = this._menu.onclose;
-    this._menu.onclose = () => {
-      this._pressed = false;
+    const onclose = (this._menu as unknown as Record<string, unknown>).onclose as (() => void) | undefined;
+    (this._menu as unknown as Record<string, unknown>).onclose = () => {
+      (this as unknown as { _pressed: boolean })._pressed = false;
       this._redraw();
 
-      let menu = this._menu;
+      const menu = this._menu;
       if (menu) {
         this._menu = undefined;
-        menu._dropbox = undefined;
+        (menu as unknown as Record<string, unknown>)._dropbox = undefined;
       }
 
       if (onclose) {
@@ -235,13 +286,13 @@ function patchDropBox() {
       }
     }
 
-    let menu = this._menu;
-    let screen = this.getScreen();
+    const menu = this._menu;
+    const screen = this.getScreen();
 
-    let dpi = this.getDPI();
+    const dpi = this.getDPI();
 
     let x = e.x, y = e.y;
-    let rects = this.dom.getClientRects();
+    const rects = this.dom.getClientRects();
 
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
@@ -255,18 +306,18 @@ function patchDropBox() {
       callback: () => {
 
         if (this._menu) {
-          this._menu.onclose();
+          (this._menu as unknown as { onclose(): void }).onclose();
         }
       }
     })
   };
 }
 
-let on_tick = () => {
-  let nativeTheme = getNativeTheme();
+const on_tick = () => {
+  const nativeTheme = getNativeTheme();
 
   if (nativeTheme) {
-    let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+    const mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
     if (mode !== cconst.colorSchemeType) {
       nativeTheme.themeSource = cconst.colorSchemeType;
@@ -284,43 +335,43 @@ export function checkInit() {
   }
 }
 
-export let iconcache = {};
+export const iconcache: Record<string, unknown> = {};
 
-function makeIconKey(icon, iconsheet, invertColors) {
+function makeIconKey(icon: number, iconsheet: number, invertColors: boolean) {
   return "" + icon + ":" + iconsheet + ":" + invertColors;
 }
 
-export function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
+export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false, size = 16) {
   //let key = makeIconKey(icon, iconsheet, invertColors);
   //if (key in iconcache) {
   //  return iconcache[key];
   //}
 
-  let icongen;
+  let icongen: IcoGenModule;
 
   try {
-    icongen = myRequire("./icogen.js");
-  } catch (error) {
-    icongen = myRequire("./icogen.cjs");
+    icongen = myRequire("./icogen.js") as IcoGenModule;
+  } catch (error: unknown) {
+    icongen = myRequire("./icogen.cjs") as IcoGenModule;
   }
 
 
-  window.icongen = icongen;
-  let nativeImage = getElectron().nativeImage;
+  (window as unknown as Record<string, unknown>).icongen = icongen;
+  const nativeImage = getElectron().nativeImage;
 
-  let manager = getIconManager();
-  let sheet = manager.findSheet(iconsheet);
-  let images = [];
+  const manager = getIconManager();
+  const sheet = manager.findSheet(iconsheet);
+  const images: unknown[] = [];
 
-  let sizes = icongen.GetRequiredICOImageSizes();
+  const sizes = icongen.GetRequiredICOImageSizes();
 
   //for (let size of sizes) {
   if (1) {
-    let iconsheet = manager.findClosestSheet(size);
-    let tilesize = manager.getTileSize(iconsheet);
+    const closestSheet = manager.findClosestSheet(size);
+    const tilesize = manager.getTileSize(closestSheet);
 
-    let canvas = document.createElement("canvas");
-    let g = canvas.getContext("2d");
+    const canvas = document.createElement("canvas");
+    const g = canvas.getContext("2d")!;
 
     canvas.width = canvas.height = size;
 
@@ -328,18 +379,18 @@ export function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 
       g.filter = "invert(100%)";
     }
 
-    let scale = size/tilesize;
+    const scale = size/tilesize;
     g.scale(scale, scale);
 
-    manager.canvasDraw({getDPI: () => 1.0}, canvas, g, icon, 0, 0, iconsheet);
+    manager.canvasDraw({getDPI: () => 1.0} as unknown as import("../../core/ui_base").UIBase, canvas, g, icon, 0, 0, closestSheet);
 
-    let header = "data:image/png;base64,";
-    let data = canvas.toDataURL();
+    const header = "data:image/png;base64,";
+    let data: unknown = canvas.toDataURL();
 
-    data = data.slice(header.length, data.length);
-    data = Buffer.from(data, "base64");
+    data = (data as string).slice(header.length, (data as string).length);
+    data = Buffer.from(data as string, "base64");
 
-    myRequire("fs").writeFileSync("./myicon2.png", data);
+    (myRequire("fs") as NodeFS).writeFileSync("./myicon2.png", data);
 
     images.push(data);
   }
@@ -350,53 +401,57 @@ export function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 
   //icon = nativeImage.createFromBitmap(ico);
   //myRequire("fs").writeFileSync("myicon2.ico", ico);
   return "myicon2.png"
-  return icon;
-  return undefined
-
-  window._icon = icon;
-  return icon;
 }
 
-let map = {
+const map: Record<string, string> = {
   CTRL   : "Control",
   ALT    : "Alt",
   SHIFT  : "Shift",
   COMMAND: "Command"
 };
 
-export function buildElectronHotkey(hk) {
+export function buildElectronHotkey(hk: string) {
   hk = hk.trim().replace(/[ \t-]+/g, "+");
-  for (let k in map) {
+  for (const k in map) {
     hk = hk.replace(k, map[k]);
   }
 
   return hk;
 }
 
-export function buildElectronMenu(menu) {
-  let electron = getElectron().remote;
+interface MenuItem {
+  _isMenu?: boolean;
+  _menu?: Menu;
+  _id: number | string;
+  hotkey?: string;
+  icon?: number;
+  label?: string;
+}
+
+export function buildElectronMenu(menu: Menu) {
+  const electron = getElectron().remote;
 
   initElectronIpc();
 
   //let ElectronMenu = electron.Menu;
   //let ElectronMenuItem = electron.MenuItem;
 
-  let emenu = new ElectronMenu();
+  const emenu = new ElectronMenu();
 
-  let buildItem = (item) => {
+  const buildItem = (item: MenuItem) => {
     if (item._isMenu) {
-      let menu2 = item._menu;
+      const menu2 = item._menu!;
 
       return new ElectronMenuItem({
-        submenu: buildElectronMenu(item._menu),
-        label  : menu2.getAttribute("title")
+        submenu: buildElectronMenu(menu2),
+        label  : menu2.getAttribute("title") ?? undefined
       });
     }
 
 
     let hotkey = item.hotkey;
-    let icon = item.icon;
-    let label = "" + item.label;
+    const icon = item.icon;
+    const label = "" + item.label;
 
     if (hotkey && typeof hotkey !== "string") {
       hotkey = buildElectronHotkey(hotkey);
@@ -404,17 +459,18 @@ export function buildElectronMenu(menu) {
       hotkey = "" + hotkey;
     }
 
-    if (icon < 0) {
-      icon = undefined;
+    let nativeIcon: string | undefined;
+    if (icon !== undefined && icon >= 0) {
+      nativeIcon = getNativeIcon(icon);
     }
 
-    let args = {
+    const args: ElectronMenuItemArgs = {
       id                 : "" + item._id,
       label              : label,
       accelerator        : hotkey,
-      icon               : icon ? getNativeIcon(icon) : undefined,
+      icon               : nativeIcon,
       click              : function () {
-        menu.onselect(item._id);
+        (menu as unknown as { onselect(id: number | string): void }).onselect(item._id);
       },
       registerAccelerator: false
     };
@@ -422,7 +478,7 @@ export function buildElectronMenu(menu) {
     return new ElectronMenuItem(args);
   }
 
-  for (let item of menu.items) {
+  for (const item of (menu as unknown as { items: MenuItem[] }).items) {
     //buildItem(item);
     emenu.append(buildItem(item));
 
@@ -431,7 +487,11 @@ export function buildElectronMenu(menu) {
   return emenu;
 }
 
-export function initMenuBar(menuEditor, override = false) {
+interface MenuEditorLike {
+  header: import("../../core/ui_base").UIBase;
+}
+
+export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
   checkInit();
 
   if (!window.haveElectron) {
@@ -446,12 +506,12 @@ export function initMenuBar(menuEditor, override = false) {
 
   //let win = electron.getCurrentWindow();
 
-  let menu = new ElectronMenu();
+  const menu = new ElectronMenu();
 
-  let _roles = new Set(["undo", "redo", "cut", "copy", "paste", "delete", "about",
+  const _roles = new Set(["undo", "redo", "cut", "copy", "paste", "delete", "about",
                         "quit", "open", "save", "load", "paste", "cut", "zoom"]);
-  let roles = {};
-  for (let k of _roles) {
+  let roles: Record<string, string> = {};
+  for (const k of _roles) {
     roles[k] = k;
   }
 
@@ -466,45 +526,22 @@ export function initMenuBar(menuEditor, override = false) {
     "zoom out"  : "zoomOut"
   });
 
-  /*
-  let item = new MenuItem({
-    label : "Label",
-    tooltip : "Tooltip",
-    icon : getNativeIcon(0),
-    accelerator : "Control+Z",
-    checked : true,
-    id : 0,
-    role : undefined,
-    click : (arg) => {
-      console.log("menu click!", arg)
-    },
-    submenu : undefined,
-    role :  undo, redo, cut, copy, paste, pasteAndMatchStyle, delete, selectAll, reload,
-            forceReload, toggleDevTools, resetZoom, zoomIn, zoomOut, togglefullscreen, window,
-             minimize, close, help, about, services, hide, hideOthers, unhide, quit, startSpeaking,
-             stopSpeaking, close, minimize, zoom, front, appMenu, fileMenu, editMenu, viewMenu, recentDocuments,
-              toggleTabBar, selectNextTab, selectPreviousTab, mergeAllWindows, clearRecentDocuments, moveTabToNewWindow
-               or windowMenu - Define the action of the menu item, when specified the click property will be ignored.
-                See roles.
+  const header = menuEditor.header;
+  for (const dbox of header.traverse(DropBox)) {
+    const db = dbox as DropBox;
+    (db as unknown as { _build_menu(): void })._build_menu();
+    db.update();
 
-  });//*/
-
-
-  let header = menuEditor.header;
-  for (let dbox of header.traverse(DropBox)) {
-    dbox._build_menu();
-    dbox.update();
-
-    dbox._build_menu();
-    let menu2 = dbox._menu;
-    menu2.ctx = dbox.ctx;
+    (db as unknown as { _build_menu(): void })._build_menu();
+    const menu2 = db._menu!;
+    menu2.ctx = db.ctx;
     menu2._init();
     menu2.update();
 
-    let title = dbox._genLabel();
-    let args = {
+    const title = (db as unknown as { _genLabel(): string })._genLabel();
+    const args: ElectronMenuItemArgs = {
       label  : title,
-      tooltip: dbox.description,
+      tooltip: (db as unknown as { description?: string }).description,
       submenu: buildElectronMenu(menu2)
     };
 
@@ -516,13 +553,20 @@ export function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-import {PlatformAPI, isMimeText} from '../platform_base.js';
+import {PlatformAPI, isMimeText} from '../platform_base';
+
+interface DialogResult {
+  canceled?: boolean;
+  cancelled?: boolean;
+  filePaths?: string[];
+  filePath?: string;
+}
 
 export class platform extends PlatformAPI {
-  static showOpenDialog(title, args = new FileDialogArgs()) {
+  static showOpenDialog(title: string, args = new FileDialogArgs()) {
     console.log(args.filters);
 
-    let eargs = {
+    const eargs: Record<string, unknown> = {
       defaultPath: args.defaultPath,
       filters    : this._sanitizeFilters(args.filters ?? []),
       properties : [
@@ -531,58 +575,61 @@ export class platform extends PlatformAPI {
     }
 
     if (args.multi) {
-      eargs.properties.push("multiSelections");
+      (eargs.properties as string[]).push("multiSelections");
     }
 
     if (!args.addToRecentList) {
-      eargs.properties.push("dontAddToRecent");
+      (eargs.properties as string[]).push("dontAddToRecent");
     }
 
     initElectronIpc();
 
-    return new Promise((accept, reject) => {
-      ipcRenderer.invoke('show-open-dialog', eargs, wrapRemoteCallback("open-dialog", (ret) => {
-        if (ret.canceled || ret.cancelled) {
+    return new Promise<FilePath[]>((accept, reject) => {
+      ipcRenderer!.invoke('show-open-dialog', eargs, wrapRemoteCallback("open-dialog", (ret: unknown) => {
+        const result = ret as DialogResult;
+        if (result.canceled || result.cancelled) {
           reject("cancel");
         } else {
-          accept(ret.filePaths.map(f => new FilePath(f, getFilename(f))));
+          accept(result.filePaths!.map(f => new FilePath(f, getFilename(f))));
         }
-      }), wrapRemoteCallback("show-open-dialog", (error) => {
+      }), wrapRemoteCallback("show-open-dialog", (error: unknown) => {
         reject(error);
       }));
     });
   }
 
-  static _sanitizeFilters(filters) {
-    let filters2 = [];
+  static _sanitizeFilters(filters: ({ name: string; mime?: string; extensions: string[] } | string[])[]) {
+    const filters2: { name: string; mime?: string; extensions: string[] }[] = [];
 
     for (let filter of filters) {
       if (Array.isArray(filter)) {
         let ext = filter[0];
 
-        filter = {extensions: filter};
+        const filterObj: { name: string; mime?: string; extensions: string[] } = {extensions: filter, name: ""};
 
         ext = ext.replace(/\./g, "").trim().toLowerCase();
         if (ext in mimeMap) {
-          filter.mime = mimeMap[ext];
+          filterObj.mime = mimeMap[ext];
         }
 
-        filter.name = ext;
+        filterObj.name = ext;
+        filter = filterObj;
       }
 
-      console.log(filter.extensions);
-      filter.extensions = filter.extensions.map(f => f.startsWith(".") ? f.slice(1, f.length) : f);
+      const f = filter as { name: string; mime?: string; extensions: string[] };
+      console.log(f.extensions);
+      f.extensions = f.extensions.map(e => e.startsWith(".") ? e.slice(1, e.length) : e);
 
-      filters2.push(filter);
+      filters2.push(f);
     }
 
     return filters2;
   }
 
-  static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
+  static showSaveDialog(title: string, filedata_cb: () => unknown, args = new FileDialogArgs()) {
     console.log(args.filters);
 
-    let eargs = {
+    const eargs: Record<string, unknown> = {
       defaultPath: args.defaultPath,
       filters    : this._sanitizeFilters(args.filters ?? []),
       properties : [
@@ -591,60 +638,61 @@ export class platform extends PlatformAPI {
     }
 
     if (args.multi) {
-      eargs.properties.push("multiSelections");
+      (eargs.properties as string[]).push("multiSelections");
     }
 
     if (!args.addToRecentList) {
-      eargs.properties.push("dontAddToRecent");
+      (eargs.properties as string[]).push("dontAddToRecent");
     }
 
-    return new Promise((accept, reject) => {
+    return new Promise<FilePath>((accept, reject) => {
       initElectronIpc();
 
-      let onthen = (ret) => {
-        if (ret.canceled) {
+      const onthen = (ret: unknown) => {
+        const result = ret as DialogResult;
+        if (result.canceled) {
           reject("cancel");
         } else {
-          let path = ret.filePath;
+          const path = result.filePath!;
           let filedata = filedata_cb();
 
           if (filedata instanceof ArrayBuffer) {
             filedata = new Uint8Array(filedata);
           }
 
-          require('fs').writeFileSync(path, filedata);
+          (require('fs') as NodeFS).writeFileSync(path, filedata);
           console.log("saved file", filedata);
 
           accept(new FilePath(path, getFilename(path)));
         }
       }
 
-      let oncatch = (error) => {
+      const oncatch = (error: unknown) => {
         reject(error);
       }
 
-      ipcRenderer.invoke('show-save-dialog', eargs, wrapRemoteCallback('dialog', onthen), wrapRemoteCallback('dialog', oncatch));
+      ipcRenderer!.invoke('show-save-dialog', eargs, wrapRemoteCallback('dialog', onthen), wrapRemoteCallback('dialog', oncatch));
 
     });
   }
 
-  static readFile(path, mime) {
-    return new Promise((accept, reject) => {
-      let fs = require('fs');
+  static readFile(path: string | FilePath, mime?: string) {
+    return new Promise<string | ArrayBuffer>((accept, reject) => {
+      const fs = require('fs') as NodeFS;
 
       if (isMimeText(mime)) {
-        accept(fs.readFileSync(path.data, "utf8"));
+        accept(fs.readFileSync((path as FilePath).data as string, "utf8"));
       } else {
-        accept(fs.readFileSync(path.data).buffer);
+        accept(fs.readFileSync((path as FilePath).data as string) as ArrayBuffer);
       }
     });
   }
 
-  static writeFile(data, handle, mime) {
-    return new Promise((accept, reject) => {
-      let fs = require('fs');
+  static writeFile(data: ArrayBuffer | string, handle: FilePath, mime: string) {
+    return new Promise<FilePath>((accept, reject) => {
+      const fs = require('fs') as NodeFS;
 
-      fs.writeFileSync(handle.data, data);
+      fs.writeFileSync(handle.data as string, data);
       accept(handle);
     });
   }

@@ -18,6 +18,15 @@ import type { KeyMap } from "../path-controller/util/simple_events.js";
 import type { AreaDocker } from "./AreaDocker";
 import type { DropBox } from "../widgets/ui_menu";
 
+export interface AreaDef {
+  tagname: string;
+  areaname: string;
+  flag?: number;
+  uiname?: string;
+  icon?: number;
+  borderLock?: number;
+}
+
 /** Is obj an instance of Screen */
 function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is Screen<CTX> {
   return typeof obj === "object" && obj !== null && IsScreenTag in obj;
@@ -64,7 +73,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   _area_id: number;
   minSize: number[];
   maxSize: (number | undefined)[];
-  keymap?: KeyMap;
+  keymap?: KeyMap<CTX>;
   header: Container<CTX> | undefined;
   switcher?: AreaDocker<CTX> | DropBox<CTX> | undefined;
   helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
@@ -223,7 +232,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       const cls = areaclasses[k];
       const def = cls.define();
 
-      if (def.flag & AreaFlags.HIDDEN) continue;
+      if ((def.flag ?? 0) & AreaFlags.HIDDEN) continue;
 
       let uiname: string | undefined = def.uiname;
 
@@ -246,17 +255,10 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     return (area.constructor as any).define().areaname as string;
   }
 
-  static define(): {
-    tagname: string;
-    areaname: string | undefined;
-    flag: number;
-    uiname: string | undefined;
-    icon: number | undefined;
-    borderLock: number | undefined;
-  } {
+  static define(): AreaDef {
     return {
       tagname   : "pathux-editor-x",
-      areaname  : undefined,
+      areaname  : "",
       flag      : 0,
       uiname    : undefined,
       icon      : undefined,
@@ -422,7 +424,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
   makeAreaSwitcher(container: Container<CTX>) {
     if (cconst.useAreaTabSwitcher) {
-      const ret = UIBase.createElement("area-docker-x") as AreaDocker<CTX>
+      const ret = UIBase.createElement("area-docker-x") as AreaDocker<CTX>;
       container.add(ret);
       return ret;
     }
@@ -504,7 +506,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
         //add back same switcher
         switcherRow!.add(this.switcher);
       } else {
-        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row)
+        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row);
       }
     }
 

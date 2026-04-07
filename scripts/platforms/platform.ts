@@ -1,13 +1,9 @@
-// @ts-nocheck
-/* TS-NOCHECK RATIONALE: Dynamic import with window.haveElectron conditional,
- * exported mutable `platform` variable assigned asynchronously. */
-
 let promise: Promise<{ platform: unknown }> | undefined;
 
-if ((window as Record<string, unknown>).haveElectron) {
-  promise = import('./electron/electron_api.js');
+if ((window as unknown as Record<string, unknown>).haveElectron) {
+  promise = import('./electron/electron_api');
 } else {
-  promise = import('./web/web_api.js');
+  promise = import('./web/web_api');
 }
 
 export var platform: unknown;

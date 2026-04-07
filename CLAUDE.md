@@ -6,7 +6,7 @@ HTML5 UI library with Blender RNA-style data binding.
 
 ```bash
 npm run build          # Rollup bundle → dist/pathux.js
-npm run typecheck      # tsc --noEmit
+npm run typecheck      # tsgo --noEmit
 npm run test           # vitest
 npm run format         # prettier --write
 npm run format:check   # prettier --check

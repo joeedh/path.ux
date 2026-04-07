@@ -539,7 +539,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this._popup_safe = Math.max(this._popup_safe - 1, 0);
   }
 
-  popupMenu(menu: UIBase, x: number, y: number) {
+  popupMenu(menu: ui_menu.Menu<CTX>, x: number, y: number) {
     startMenu(menu, x, y);
 
     for (let i = 0; i < 3; i++) {
@@ -1013,7 +1013,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   _ondestroy() {
-    if (ui_menu.getWranglerScreen() === this) {
+    if (ui_menu.getWranglerScreen() === this as unknown as Screen) {
       //ui_menu.setWranglerScreen(undefined);
     }
 

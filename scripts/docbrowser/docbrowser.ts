@@ -1,27 +1,52 @@
-// @ts-nocheck
-/* TS-NOCHECK RATIONALE: Heavy tinymce integration with global window assignments,
- * dynamic DOM manipulation, require() calls for electron, eval-like patterns,
- * and dynamic this[tagname] handler dispatch. */
-
 /**
  documentation browser, with editing support
  note that you must set window.TINYMCE_PATH
  */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
-import {pushModalLight, popModalLight, nstructjs, UIBase, Icons} from "../pathux.js";
-import cconst from '../config/const.js';
-import {platform} from '../platforms/platform.js';
+import {pushModalLight, popModalLight} from "../path-controller/util/simple_events"
+import cconst from '../config/const'
+import nstructjs from "../path-controller/util/struct"
+import type {StructReader} from "../util/nstructjs"
+import {UIBase, Icons} from "../core/ui_base"
+import {platform} from '../platforms/platform'
 
 let tinymceLoaded = false;
-import('../lib/tinymce/tinymce.cjs').then(mod => {
+// @ts-ignore - tinymce is an optional external dependency loaded at runtime
+import('../lib/tinymce/tinymce.cjs').then(() => {
   tinymceLoaded = true;
 });
 
-import * as util from '../util/util.js';
-import {Vector2, Matrix4} from '../util/vectormath.js';
+import * as util from '../util/util'
+import {Vector2} from '../util/vectormath'
 
-let countstr = function (buf, s) {
+/* Interfaces for tinymce integration */
+interface TinyMCEBlobInfo {
+  blob(): Blob
+  filename(): string
+}
+
+interface TinyMCEBaseURI {
+  host: string
+  source: string
+  toAbsolute(): string
+}
+
+interface TinyMCEEditor extends globalThis.TinyMCEEditor {
+  hide(): void
+  show(): void
+}
+
+/* Interfaces for Electron doc system */
+interface DocSysConfig {
+  uploadImage(relpath: string, filename: string, data: ArrayBuffer): string
+  hasDoc(relpath: string): boolean
+  updateDoc(relpath: string, data: string): string
+  newDoc(relpath: string, data: string): string
+  readConfig(configPath: string): DocSysConfig
+}
+
+let countstr = function (buf: string, s: string) {
   let count = 0;
 
   while (buf.length > 0) {
@@ -37,26 +62,26 @@ let countstr = function (buf, s) {
   return count;
 }
 
-function basename(path) {
+function basename(path: string) {
   while (path.length > 0 && path.trim().endsWith("/")) {
     path = path.slice(0, path.length - 1);
   }
 
   path = path.replace(/\/+/g, "/");
-  path = path.split("/");
-  return path[path.length - 1];
+  let parts = path.split("/");
+  return parts[parts.length - 1];
 }
 
-function dirname(path) {
+function dirname(path: string) {
   while (path.length > 0 && path.trim().endsWith("/")) {
     path = path.slice(0, path.length - 1);
   }
 
-  path = path.split("/");
-  path.length--;
+  let parts = path.split("/");
+  parts.length--;
 
   let s = "";
-  for (let t of path) {
+  for (let t of parts) {
     s += t + "/";
   }
 
@@ -68,7 +93,7 @@ function dirname(path) {
 }
 
 
-function relative(a1, b1) {
+function relative(a1: string, b1: string) {
   let a = a1, b = b1;
 
   let i = 1;
@@ -76,7 +101,6 @@ function relative(a1, b1) {
     i++;
   }
   i--
-  let pref = "";
 
   a = a.slice(i, a.length).trim();
   b = b.slice(i, b.length).trim();
@@ -94,23 +118,29 @@ function relative(a1, b1) {
   return s + b;
 }
 
-window._relative = relative;
+window._relative = relative as (...args: unknown[]) => unknown;
 
 export class DocsAPI {
-  updateDoc(relpath, data) {
+  start(): void {}
+
+  updateDoc(_relpath: string | undefined, _data: string | undefined): Promise<unknown> | undefined {
     //returns a promise
+    return undefined;
   }
 
-  uploadImage(relpath, blobInfo, success, onError) {
+  newDoc(_relpath: string, _data: string | undefined): Promise<unknown> | undefined {
     //returns a promise
+    return undefined;
   }
 
-  newDoc(relpath, data) {
+  hasDoc(_relpath: string): Promise<unknown> | undefined {
     //returns a promise
+    return undefined;
   }
 
-  hasDoc(relpath, data) {
+  uploadImage(_relpath: string | undefined, _blobInfo: TinyMCEBlobInfo, _success: (path: string) => void, _onError: (msg: string) => void): Promise<void> | undefined {
     //returns a promise
+    return undefined;
   }
 }
 
@@ -135,12 +165,9 @@ function getDocPaths() {
 }
 
 export class ElectronAPI extends DocsAPI {
-  constructor() {
-    super();
-
-    this.first = true;
-    this.ready = false;
-  }
+  first = true
+  ready = false
+  config!: DocSysConfig
 
   _doinit() {
     if (!this.first) {
@@ -149,26 +176,34 @@ export class ElectronAPI extends DocsAPI {
 
     this.first = false;
 
-    let {docpath, doc_config, docpath_prefix} = getDocPaths();
+    let {docpath, doc_config} = getDocPaths();
     console.log(docpath);
 
-    import(docpath).then(docsys => {
+    import(docpath).then((docsys: Record<string, unknown>) => {
       let fs = require('fs');
       let marked = require('marked');
       let parse5 = require('parse5');
       let pathmod = require('path');
       let jsdiff = require('diff');
 
-      docsys = docsys.default(fs, marked, parse5, pathmod, jsdiff);
+      let initFn = docsys.default as (
+        fs: unknown,
+        marked: unknown,
+        parse5: unknown,
+        pathmod: unknown,
+        jsdiff: unknown
+      ) => DocSysConfig;
 
-      this.config = docsys.readConfig(doc_config);
+      let initialized = initFn(fs, marked, parse5, pathmod, jsdiff);
+
+      this.config = initialized.readConfig(doc_config);
       this.ready = true;
     });
 
     return this.ready;
   }
 
-  start() {
+  override start() {
     this._doinit();
   }
 
@@ -184,83 +219,81 @@ export class ElectronAPI extends DocsAPI {
     return this.ready;
   }
 
-  uploadImage(relpath, blobInfo, success, onError) {
-    return new Promise((accept, reject) => {
+  override uploadImage(relpath: string | undefined, blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) {
+    return new Promise<void>((accept, reject) => {
       if (!this.checkInit()) {
+        accept();
         return;
       }
 
       let blob = blobInfo.blob();
 
-      return blob.arrayBuffer().then((data) => {
-        let path = this.config.uploadImage(relpath, blobInfo.filename(), data);
+      blob.arrayBuffer().then((data) => {
+        let path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
         success(path);
-      });
-    }).catch((error) => {
+        accept();
+      }).catch(reject);
+    }).catch((error: unknown) => {
       onError("" + error);
     });
   }
 
-  hasDoc(relpath) {
+  override hasDoc(relpath: string) {
     if (!this.checkInit()) {
-      return;
+      return undefined;
     }
 
-    return new Promise((accept, reject) => {
+    return new Promise((accept) => {
       accept(this.config.hasDoc(relpath));
     });
   }
 
-  updateDoc(relpath, data) {
+  override updateDoc(relpath: string | undefined, data: string | undefined) {
     if (!this.checkInit()) {
-      return;
+      return undefined;
     }
 
-    return new Promise((accept, reject) => {
-      accept(this.config.updateDoc(relpath, data));
+    return new Promise((accept) => {
+      accept(this.config.updateDoc(relpath ?? "", data ?? ""));
     });
   }
 
-  newDoc(relpath, data) {
+  override newDoc(relpath: string, data: string | undefined) {
     if (!this.checkInit()) {
-      return;
+      return undefined;
     }
 
-    return new Promise((accept, reject) => {
-      accept(this.config.newDoc(relpath, data));
+    return new Promise((accept) => {
+      accept(this.config.newDoc(relpath, data ?? ""));
     });
   }
 }
 
 export class ServerAPI extends DocsAPI {
-  constructor() {
-    super();
-  }
-
-  start() {
+  override start() {
 
   }
 
-  hasDoc(relpath) {
+  override hasDoc(relpath: string) {
     return this.callAPI("hasDoc", relpath);
   }
 
-  updateDoc(relpath, data) {
+  override updateDoc(relpath: string | undefined, data: string | undefined) {
     return this.callAPI("updateDoc", relpath, data);
   }
 
-  newDoc(relpath, data) {
+  override newDoc(relpath: string, data: string | undefined) {
     return this.callAPI("newDoc", relpath, data);
   }
 
-  uploadImage(relpath, blobInfo, success, onError) {
-    return new Promise((accept, reject) => {
+  override uploadImage(relpath: string | undefined, blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) {
+    return new Promise<void>((accept, reject) => {
       let blob = blobInfo.blob();
 
-      return blob.arrayBuffer().then((data) => {
+      blob.arrayBuffer().then((data) => {
         console.log("data!", data);
         let uint8 = new Uint8Array(data);
-        let data2 = [];
+        let data2: number[] = [];
 
         for (let i = 0; i < uint8.length; i++) {
           data2.push(uint8[i]);
@@ -268,22 +301,23 @@ export class ServerAPI extends DocsAPI {
 
         console.log("data2", data2);
 
-        this.callAPI("uploadImage", relpath, blobInfo.filename(), data2).then((path) => {
-          success(path);
-        });
-      });
-    }).catch((error) => {
+        this.callAPI("uploadImage", relpath, blobInfo.filename(), data2).then((path: unknown) => {
+          success(path as string);
+          accept();
+        }).catch(reject);
+      }).catch(reject);
+    }).catch((error: unknown) => {
       onError("" + error);
     });
   }
 
-  callAPI() {
-    let key = arguments[0];
-    let args = [];
-    for (let i = 1; i < arguments.length; i++) {
-      args.push(arguments[i]);
+  callAPI(...callArgs: unknown[]): Promise<unknown> {
+    let key = callArgs[0] as string;
+    let args: unknown[] = [];
+    for (let i = 1; i < callArgs.length; i++) {
+      args.push(callArgs[i]);
     }
-    console.log(args, arguments.length);
+    console.log(args, callArgs.length);
 
     let path = location.origin + "/api/" + key;
     console.log(path);
@@ -303,9 +337,9 @@ export class ServerAPI extends DocsAPI {
         if (res.ok || res.status < 300) {
           res.text().then((data) => {
             console.log("got json", data);
-            data = JSON.parse(data);
-            accept(data.result);
-          }).catch((error) => {
+            let parsed = JSON.parse(data) as {result: unknown};
+            accept(parsed.result);
+          }).catch((error: unknown) => {
             console.log("ERROR!", error);
             reject(error);
           });
@@ -316,7 +350,7 @@ export class ServerAPI extends DocsAPI {
           });
         }
         //let json = res.json();
-      }).catch((error) => {
+      }).catch((error: unknown) => {
         reject(error);
       });
     });
@@ -324,48 +358,67 @@ export class ServerAPI extends DocsAPI {
 }
 
 export class DocHistoryItem {
-  constructor(url, title) {
-    this.url = url;
-    this.title = "" + title;
-  }
+  url: string
+  title: string
 
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-}
-
-DocHistoryItem.STRUCT = `
+  static STRUCT = `
 DocHistoryItem {
   url   : string;
   title : string;
 }
-`;
+`
+
+  constructor(url: string, title: string) {
+    this.url = url;
+    this.title = "" + title;
+  }
+
+  loadSTRUCT(reader: StructReader<this>) {
+    reader(this);
+  }
+}
+
 nstructjs.register(DocHistoryItem);
 
-export class DocHistory extends Array {
+export class DocHistory extends Array<DocHistoryItem> {
+  cur = 0
+
+  declare _items: DocHistoryItem[]
+
+  static STRUCT = `
+DocHistory {
+  _items : array(DocHistoryItem) | this;
+  cur    : int;
+}
+`
+
   constructor() {
     super();
     this.cur = 0;
   }
 
-  push(url, title = url) {
+  override push(url: string | DocHistoryItem, title: string | DocHistoryItem = url) {
     console.warn("history push", url);
 
     this.length = this.cur + 1;
-    this[this.length - 1] = new DocHistoryItem(url, title);
+    if (url instanceof DocHistoryItem) {
+      this[this.length - 1] = url;
+    } else {
+      this[this.length - 1] = new DocHistoryItem(url, "" + title);
+    }
     this.cur++;
 
-    return this;
+    return this.length;
   }
 
-  go(dir) {
+  go(dir: number) {
     dir = Math.sign(dir);
     this.cur = Math.min(Math.max(this.cur + dir, 0), this.length - 1);
 
     return this[this.cur];
   }
 
-  loadSTRUCT(reader) {
+  loadSTRUCT(reader: StructReader<this>) {
     reader(this);
 
     this.length = 0;
@@ -380,25 +433,53 @@ export class DocHistory extends Array {
   }
 }
 
-DocHistory.STRUCT = `
-DocHistory {
-  _items : array(DocHistoryItem) | this;
-  cur    : int;
-}
-`;
-
 nstructjs.register(DocHistory);
 
+/* Container-like interface for the header row frame.
+ * UIBase.createElement("rowframe-x") returns a Container (RowFrame),
+ * but since it's created dynamically we type the methods we use. */
+interface HeaderContainer extends UIBase {
+  clear(): void
+  check(path: string | undefined, name: string): UIBase & {value: boolean; checked: boolean; onchange: (() => void) | null}
+  iconbutton(icon: number, description: string, cb: () => void): UIBase & {iconsheet: number}
+  button(label: string, cb: () => void): UIBase & {iconsheet: number}
+  listenum(path: string | undefined, name: string, enumDef: Record<string, string>): UIBase & {onselect: ((e: string) => void) | null}
+}
+
 export class DocsBrowser extends UIBase {
+  _sourceData: string | undefined
+  saveCallback: ((doc: Document) => void) | null = null
+  handlesDocURL = true
+  pathuxBaseURL: string
+  editMode = false
+  history: DocHistory
+  _prefix: string
+  saveReq = 0
+  saveReqStart: number
+  _last_save: number
+  header: HeaderContainer
+  root: HTMLIFrameElement
+  serverapi: DocsAPI
+  currentPath = ""
+  _doDocInit = true
+  contentDiv: HTMLDivElement | undefined
+  tinymce: TinyMCEInstance | undefined
+  oneditstart: ((browser: DocsBrowser) => void) | undefined
+  oneditend: ((browser: DocsBrowser) => void) | undefined
+
+  static STRUCT = `
+DocsBrowser {
+  currentPath   : string;
+  savedDocument : string;
+  editMode      : bool;
+  history       : DocHistory;
+}
+`
+
   constructor() {
     super();
 
     this._sourceData = undefined;
-
-    /* If non-null, callback to save document. Otherwise
-     * default server implementation will be used.
-     **/
-    this.saveCallback = null;
 
     this.handlesDocURL = true;
     this.pathuxBaseURL = location.href;
@@ -414,7 +495,7 @@ export class DocsBrowser extends UIBase {
     this.saveReqStart = util.time_ms();
     this._last_save = util.time_ms();
 
-    this.header = UIBase.createElement("rowframe-x");
+    this.header = UIBase.createElement("rowframe-x") as unknown as HeaderContainer;
     this.shadow.appendChild(this.header);
 
     this.doOnce(this.makeHeader);
@@ -444,7 +525,7 @@ export class DocsBrowser extends UIBase {
     this.contentDiv = undefined; //inside of iframe
   }
 
-  setEditMode(state) {
+  setEditMode(state: boolean) {
     this.editMode = state;
 
     if (this.tinymce && this.editMode) {
@@ -465,7 +546,7 @@ export class DocsBrowser extends UIBase {
     }
   }
 
-  go(dir) {
+  go(dir: number) {
     //hrm, use iframe history?
     if (!this.root.contentWindow) {
       return;
@@ -519,20 +600,20 @@ export class DocsBrowser extends UIBase {
       this.undoPre("Note Box");
 
       this.execCommand("formatBlock", undefined, "p");
-      let sel = this.root.contentDocument.getSelection();
-      let p = sel.anchorNode;
+      let sel = this.root.contentDocument!.getSelection();
+      let p: Node | null = sel!.anchorNode;
       if (!(p instanceof HTMLElement)) {
-        p = p.parentElement;
+        p = (p as Node).parentElement;
       }
 
-      p.setAttribute("class", "notebox");
+      (p as HTMLElement).setAttribute("class", "notebox");
 
       this.undoPost("Note Box");
 
       console.log(p);
     })
 
-    let indexOf = (list, item) => {
+    let indexOf = (list: NodeList, item: Node) => {
       for (let i = 0; i < list.length; i++) {
         if (list[i] === item) {
           return i;
@@ -543,41 +624,41 @@ export class DocsBrowser extends UIBase {
     }
 
     this.header.button("Remove", () => {
-      let sel = this.root.contentDocument.getSelection();
-      let p = sel.anchorNode;
+      let sel = this.root.contentDocument!.getSelection();
+      let p: Node | null = sel!.anchorNode;
       if (!p) return;
 
       if (!(p instanceof HTMLElement)) {
-        p = p.parentElement;
+        p = (p as Node).parentElement;
       }
 
       if (!p) {
         return;
       }
 
-      let parent = p.parentNode;
-      let i = indexOf(p.parentNode.childNodes, p);
+      let parent = p.parentNode!;
+      let i = indexOf(parent.childNodes, p);
 
-      if (p === this.contentDiv || p === this.contentDiv.parentNode || p === this.root.contentDocument.body) {
+      if (p === this.contentDiv || p === this.contentDiv!.parentNode || p === this.root.contentDocument!.body) {
         return;
       }
 
-      p.remove();
+      (p as HTMLElement).remove();
 
       console.log(p, i);
       let add = parent.childNodes.length > 0 ? parent.childNodes[i] : undefined;
-      for (let i = 0; i < p.childNodes.length; i++) {
+      for (let j = 0; j < p.childNodes.length; j++) {
         if (!add) {
-          parent.appendChild(p.childNodes[i]);
+          parent.appendChild(p.childNodes[j]);
         } else {
-          parent.insertBefore(p.childNodes[i], add);
+          parent.insertBefore(p.childNodes[j], add);
         }
       }
 
     });
     this.header.iconbutton(Icons.BOLD, "Bold", () => {
       this.execCommand("bold");
-      console.log("ACTIVE", this.root.contentDocument.activeElement);
+      console.log("ACTIVE", this.root.contentDocument!.activeElement);
     }).iconsheet = 0;
     this.header.iconbutton(Icons.ITALIC, "Italic", () => {
       this.execCommand("italic");
@@ -591,16 +672,17 @@ export class DocsBrowser extends UIBase {
     this.header.button("PRE", () => {
       this.execCommand("formatBlock", false, "pre");
     }).iconsheet = 0;
-    this.header.listenum(undefined, "Style", {
+    const styleList = this.header.listenum(undefined, "Style", {
       Paragraph  : "P",
       "Heading 1": "H1",
       "Heading 2": "H2",
       "Heading 3": "H3",
       "Heading 4": "H4",
       "Heading 5": "H5",
-    }).onselect = (e) => {
+    });
+    styleList.onselect = ((e: string) => {
       this.execCommand("formatBlock", false, e.toLowerCase());
-    }
+    }) as unknown as typeof styleList.onselect;
   }
 
   init() {
@@ -608,13 +690,13 @@ export class DocsBrowser extends UIBase {
     this.setCSS();
   }
 
-  execCommand() {
-    this.undoPre(arguments[0]);
-    this.root.contentDocument.execCommand(...arguments);
-    this.undoPost(arguments[0]);
+  execCommand(...args: [string, ...unknown[]]) {
+    this.undoPre(args[0]);
+    this.root.contentDocument!.execCommand(args[0], args[1] as boolean | undefined, args[2] as string | undefined);
+    this.undoPost(args[0]);
   }
 
-  loadSource(data) {
+  loadSource(data: string) {
     if (data.trim().length === 0) {
       return;
     }
@@ -628,7 +710,7 @@ export class DocsBrowser extends UIBase {
     this.saveReq = 0;
 
     let cb = () => {
-      if (this.root.readyState !== 'loading') {
+      if (this.root.contentDocument && (this.root.contentDocument as Document & {readyState?: string}).readyState !== 'loading') {
         this.initDoc();
       } else {
         window.setTimeout(cb, 5);
@@ -643,7 +725,7 @@ export class DocsBrowser extends UIBase {
     this.contentDiv = undefined;
   }
 
-  load(url) {
+  load(url: string) {
     this._sourceData = undefined;
     this.history.push(url, url);
 
@@ -669,19 +751,19 @@ export class DocsBrowser extends UIBase {
 
     console.log("doc loaded");
 
-    let visit = (n) => {
-      if (n.getAttribute) {
+    let visit = (n: Node) => {
+      if (n instanceof Element) {
         //console.log(n, n.getAttribute("class"))
       }
 
-      if (n.getAttribute && n.getAttribute("class") === "contents") {
-        this.contentDiv = n;
+      if (n instanceof Element && n.getAttribute("class") === "contents") {
+        this.contentDiv = n as HTMLDivElement;
         console.log("found content div");
         return;
       }
 
       //console.log(n.childNodes)
-      for (let c of n.childNodes) {
+      for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
     }
@@ -713,7 +795,7 @@ export class DocsBrowser extends UIBase {
         this.disableLinks();
       }
 
-      let globals = this.root.contentWindow;
+      let globals = this.root.contentWindow!;
 
       console.log("tinymce globals:", globals.document, globals);
 
@@ -736,11 +818,11 @@ export class DocsBrowser extends UIBase {
 
 
       let base = this.pathuxBaseURL;
-      let base_url = platform.resolveURL("scripts/lib/tinymce", base);
+      let base_url = (platform as unknown as {resolveURL(path: string, base?: string): string}).resolveURL("scripts/lib/tinymce", base);
 
       console.warn(window.haveElectron, "haveElectron", base_url);
 
-      let tinymce = this.tinymce = globals.tinymce = window.tinymce = _tinymce(globals);
+      let tinymce: TinyMCEInstance = this.tinymce = (globals as unknown as Window).tinymce = window.tinymce = window._tinymce(globals);
 
       let fixletter = () => {
         if (!tinymce.baseURI.host) {
@@ -749,7 +831,7 @@ export class DocsBrowser extends UIBase {
 
         //fix drive letter on windows
         if (window.haveElectron) {
-          if (process.platform === "win32") {
+          if ((process as unknown as {platform: string}).platform === "win32") {
             if (tinymce.baseURI.host.trim().length > 0) {
               console.warn("Fixing drive letter", tinymce.baseURI);
               tinymce.baseURI.host += ":";
@@ -765,7 +847,7 @@ export class DocsBrowser extends UIBase {
         get() {
           return _baseuri;
         },
-        set(v) {
+        set(v: TinyMCEBaseURI) {
           _baseuri = v;
           if (v) {
             fixletter();
@@ -775,7 +857,7 @@ export class DocsBrowser extends UIBase {
 
       fixletter();
 
-      if (this.root.contentDocument.compatMode !== "CSS1Compat") {
+      if (this.root.contentDocument!.compatMode !== "CSS1Compat") {
         throw new Error("Source document is missing <!doctype html>");
       }
 
@@ -788,20 +870,20 @@ export class DocsBrowser extends UIBase {
         toolbar              : true,
         menubar              : true,
         inline               : true,
-        images_upload_handler: (blobInfo, success, onError) => {
+        images_upload_handler: (blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) => {
           console.log("uploading image!", blobInfo);
           this.serverapi.uploadImage(this.getDocPath(), blobInfo, success, onError);
         },
-        setup                : function (editor) {
+        setup                : function (editor: TinyMCEEditor) {
           console.log("tinymce editor setup!", editor);
         }
       }).then((arg) => {
         fixletter();
 
-        this.tinymce = arg[0];
+        this.tinymce = arg[0] as unknown as TinyMCEInstance;
 
         if (!this.editMode) {
-          this.tinymce.hide();
+          (this.tinymce as unknown as TinyMCEEditor).hide();
         } else {
           this.disableLinks();
         }
@@ -809,7 +891,7 @@ export class DocsBrowser extends UIBase {
 
       fixletter();
 
-      let onchange = (e) => {
+      let onchange = () => {
         console.log("Input event!");
         this.queueSave();
       }
@@ -827,51 +909,55 @@ export class DocsBrowser extends UIBase {
     this.saveReq = 1;
   }
 
-  undoPre() {
-    let undo = this.tinymce.editors[0].undoManager;
+  undoPre(_label?: string) {
+    let undo = this.tinymce!.editors[0].undoManager;
     undo.beforeChange();
   }
 
-  undoPost(label) {
-    let undo = this.tinymce.editors[0].undoManager;
+  undoPost(_label?: string) {
+    let undo = this.tinymce!.editors[0].undoManager;
     undo.add();
   }
 
   enableLinks() {
-    let visit = (n) => {
-      if (n.getAttribute && n.getAttribute("class") === "contents") {
+    let visit = (n: Node) => {
+      if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
 
-      if (n.tagName === "A") {
-        if (n.getAttribute("_href")) {
-          n.setAttribute("href", n.getAttribute("_href"));
+      if (n instanceof Element && n.tagName === "A") {
+        let href = n.getAttribute("_href");
+        if (href) {
+          n.setAttribute("href", href);
         }
       }
-      for (let c of n.childNodes) {
+      for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
     }
 
-    visit(this.root.contentDocument.body);
+    visit(this.root.contentDocument!.body);
   }
 
   disableLinks() {
-    let visit = (n) => {
-      if (n.getAttribute && n.getAttribute("class") === "contents") {
+    let visit = (n: Node) => {
+      if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
 
-      if (n.tagName === "A") {
-        n.setAttribute("_href", n.getAttribute("href"));
+      if (n instanceof Element && n.tagName === "A") {
+        let href = n.getAttribute("href");
+        if (href) {
+          n.setAttribute("_href", href);
+        }
         n.removeAttribute("href");
       }
-      for (let c of n.childNodes) {
+      for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
     }
 
-    visit(this.root.contentDocument.body);
+    visit(this.root.contentDocument!.body);
   }
 
   patchImageTags() {
@@ -881,13 +967,13 @@ export class DocsBrowser extends UIBase {
       return;
     }
 
-    let tags = [];
+    let tags: HTMLImageElement[] = [];
 
-    let traverse = (n) => {
+    let traverse = (n: Element) => {
       if (n.tagName === "IMG" && !n.getAttribute("_PATCHED_")) {
-        tags.push(n);
+        tags.push(n as HTMLImageElement);
       }
-      for (let c of n.children) {
+      for (let c of Array.from(n.children)) {
         traverse(c);
       }
     }
@@ -897,18 +983,20 @@ export class DocsBrowser extends UIBase {
     console.log("Image Tags found:", tags);
     for (let t of tags) {
       this.patchImage(t);
-      t.setAttribute("_PATCHED_", true);
+      t.setAttribute("_PATCHED_", "true");
     }
   }
 
-  patchImage(img) {
+  patchImage(img: HTMLImageElement) {
     //OKAY, this isn't going to work
-    img.style.float = "right";
+    img.style.cssFloat = "right";
     return; //XXX
 
+    /* Dead code below - kept for future reference */
+    /* istanbul ignore next */
     console.warn("Patching image!");
 
-    let grab = (i, vs) => {
+    let grab = (i: number, vs: Vector2[]) => {
       console.log("Transform Modal start");
 
       let horiz = i%2 != 0 ? 1 : 0;
@@ -927,7 +1015,7 @@ export class DocsBrowser extends UIBase {
 
       update();
 
-      let modaldata;
+      let modaldata: ReturnType<typeof pushModalLight> | undefined;
       let first = true;
       let last_mpos = new Vector2();
       let start_mpos = new Vector2();
@@ -941,11 +1029,11 @@ export class DocsBrowser extends UIBase {
       }
 
       let ghandlers = {
-        on_mousedown(e) {
+        on_mousedown(_e: MouseEvent) {
 
         },
 
-        on_mousemove(e) {
+        on_mousemove(e: MouseEvent) {
           console.log("modal move");
           if (first) {
             first = false;
@@ -960,11 +1048,11 @@ export class DocsBrowser extends UIBase {
           last_mpos[0] = e.x;
           last_mpos[1] = e.y;
         },
-        on_mouseup(e) {
+        on_mouseup(_e: MouseEvent) {
           end();
         },
 
-        on_keydown(e) {
+        on_keydown(e: KeyboardEvent) {
           console.log(e.keyCode);
 
           if (e.keyCode === 27) {
@@ -987,7 +1075,8 @@ export class DocsBrowser extends UIBase {
 
     img.setAttribute("draggable", "false");
     let getsize = () => {
-      let r = img.getClientRects[0]
+      let rects = img.getClientRects();
+      let r = rects[0];
       if (!r) {
         setTimeout(getsize, 2)
         return;
@@ -1001,14 +1090,14 @@ export class DocsBrowser extends UIBase {
     let resizing = false;
     let moving = false;
 
-    let handlers = {
-      pointerover(e) {
+    let handlers: Record<string, (e: PointerEvent, x?: number, y?: number, button?: number) => void> = {
+      pointerover(_e: PointerEvent) {
         console.log("mouse over!")
       },
-      pointerleave(e) {
+      pointerleave(_e: PointerEvent) {
         console.log("mouse leave!")
       },
-      pointerdown(e, x = e.x, y = e.y, button = e.button) {
+      pointerdown(e: PointerEvent, x = e.x, y = e.y, _button = e.button) {
         //this.contentDiv.contentEditable = false;
         mpos[0] = x;
         mpos[1] = y;
@@ -1018,7 +1107,7 @@ export class DocsBrowser extends UIBase {
 
         img.setPointerCapture(e.pointerId);
       },
-      pointermove(e, x = e.x, y = e.y, button = e.button) {
+      pointermove(e: PointerEvent, x = e.x, y = e.y, _button = e.button) {
         if (first) {
           mpos[0] = x;
           mpos[1] = y;
@@ -1038,7 +1127,7 @@ export class DocsBrowser extends UIBase {
           img.style["position"] = "relative";
           img.style["display"] = "inline";
           img.style["left"] = ix + "px";
-          img.style.float = "right";
+          img.style.cssFloat = "right";
           img.style["top"] = iy + "px";
         }
 
@@ -1070,7 +1159,7 @@ export class DocsBrowser extends UIBase {
           new Vector2([r.x + r.width, r.y]),
         ]
 
-        let ret = undefined;
+        let ret: number | undefined = undefined;
         let mindis = 1e17;
 
         for (let i = 0; i < 4; i++) {
@@ -1078,7 +1167,7 @@ export class DocsBrowser extends UIBase {
           let v1 = verts[i1], v2 = verts[i2];
 
           let horiz = i%2 !== 0.0 ? 1 : 0;
-          let dv = mpos[horiz] - v1[horiz];
+          let dv = mpos[horiz as 0 | 1] - (v1[horiz as 0 | 1] as number);
 
           if (Math.abs(dv) < 15 && Math.abs(dv) < mindis) {
             mindis = Math.abs(dv);
@@ -1101,17 +1190,17 @@ export class DocsBrowser extends UIBase {
         }
       },
 
-      pointerup(e, x = e.x, y = e.y, button = e.button) {
+      pointerup(e: PointerEvent, x = e.x, y = e.y, _button = e.button) {
         mpos[0] = x;
         mpos[1] = y;
         mdown = false;
         if (resizing) {
-          this.releasePointerCapture(e.pointerId);
+          img.releasePointerCapture(e.pointerId);
         }
         resizing = false;
         moving = false;
       },
-      pointercancel(e) {
+      pointercancel(_e: PointerEvent) {
         mdown = false;
         moving = false;
       },
@@ -1121,12 +1210,14 @@ export class DocsBrowser extends UIBase {
       if (1 || !mdown) {
         let val = img.getAttribute("draggable");
         img.setAttribute("draggable", "false");
-        img.setAttribute("draggable", val);
+        if (val) {
+          img.setAttribute("draggable", val);
+        }
       }
     }, 200)
 
     for (let k in handlers) {
-      img.addEventListener(k, handlers[k].bind(this), true);
+      img.addEventListener(k, handlers[k] as EventListener, true);
     }
   }
 
@@ -1137,110 +1228,112 @@ export class DocsBrowser extends UIBase {
 
     let buf = "";
 
-    let visit;
-    let liststack = [];
+    let visit: (() => void) | undefined;
+    let liststack: [string, number][] = [];
     let image_idgen = 0;
 
     let getlist = () => {
       if (liststack.length > 0)
         return liststack[liststack.length - 1];
+      return undefined;
     }
 
-    let handlers = {
-      TEXT(n) {
-        console.log("Text data:", n.data);
+    type NodeHandler = (n: Node) => void
+    let handlers: Record<string, NodeHandler> = {
+      TEXT(n: Node) {
+        console.log("Text data:", (n as Text).data);
         buf += n.textContent;
       },
 
-      H1(n) {
-        buf += "\n# " + n.innerHTML.trim() + "\n\n";
+      H1(n: Node) {
+        buf += "\n# " + (n as HTMLElement).innerHTML.trim() + "\n\n";
       },
-      H2(n) {
-        buf += "\n## " + n.innerHTML.trim() + "\n\n";
+      H2(n: Node) {
+        buf += "\n## " + (n as HTMLElement).innerHTML.trim() + "\n\n";
       },
-      H3(n) {
-        buf += "\n### " + n.innerHTML.trim() + "\n\n";
+      H3(n: Node) {
+        buf += "\n### " + (n as HTMLElement).innerHTML.trim() + "\n\n";
       },
-      H4(n) {
-        buf += "\n#### " + n.innerHTML.trim() + "\n\n";
+      H4(n: Node) {
+        buf += "\n#### " + (n as HTMLElement).innerHTML.trim() + "\n\n";
       },
-      H5(n) {
-        buf += "\n##### " + n.innerHTML.trim() + "\n\n";
+      H5(n: Node) {
+        buf += "\n##### " + (n as HTMLElement).innerHTML.trim() + "\n\n";
       },
 
-      IMG(n) {
+      IMG(n: Node) {
         buf += `<!--$IMG${image_idgen++}-->`;
-        buf += n.outerHTML;
+        buf += (n as HTMLElement).outerHTML;
         buf += `<!--/$IMG${image_idgen++}-->`;
-        visit();
+        visit!();
       },
 
-      TABLE(n) {
-        buf += n.outerHTML;
-        visit();
+      TABLE(n: Node) {
+        buf += (n as HTMLElement).outerHTML;
+        visit!();
       },
 
-      P(n) {
+      P(_n: Node) {
         buf += "\n";
-        visit();
+        visit!();
       },
 
-      BR(n) {
+      BR(_n: Node) {
         buf += "\n";
       },
 
-      A(n) {
-        buf += `[${n.innerHTML}](${n.getAttribute("href")})`
+      A(n: Node) {
+        buf += `[${(n as HTMLElement).innerHTML}](${(n as Element).getAttribute("href")})`
       },
 
-      B(n) {
+      B(_n: Node) {
         buf += "<b>"
-        visit();
+        visit!();
         buf += "</b>"
       },
 
-      STRONG(n) {
+      STRONG(_n: Node) {
         buf += "<strong>"
-        visit();
+        visit!();
         buf += "</strong>"
       },
 
-      EM(n) {
+      EM(_n: Node) {
         buf += "<em>"
-        visit();
+        visit!();
         buf += "</em>"
       },
-      STRIKE(n) {
+      STRIKE(_n: Node) {
         buf += "<strike>"
-        visit();
+        visit!();
         buf += "</strike>"
       },
 
-      I(n) {
+      I(_n: Node) {
         buf += "<i>"
-        visit();
+        visit!();
         buf += "</i>"
       },
 
-      U(n) {
+      U(_n: Node) {
         buf += "<u>"
-        visit();
+        visit!();
         buf += "</u>"
       },
 
-      UL(n) {
+      UL(_n: Node) {
         liststack.push(["UL", 0]);
-        visit();
+        visit!();
         liststack.pop();
       },
 
-      OL(n) {
+      OL(_n: Node) {
         liststack.push(["OL", 1]);
-        visit();
+        visit!();
         liststack.pop();
       },
 
-      LI(n) {
+      LI(_n: Node) {
         let head = getlist();
         if (head && head[0] === "OL") {
           buf += head[1] + ".  ";
@@ -1248,13 +1341,13 @@ export class DocsBrowser extends UIBase {
         } else {
           buf += "*  "
         }
-        visit()
+        visit!()
       },
 
-      PRE(n) {
+      PRE(_n: Node) {
         let start = buf;
 
-        visit();
+        visit!();
 
         let data = buf.slice(start.length, buf.length);
         let lines = data.split("\n");
@@ -1275,9 +1368,9 @@ export class DocsBrowser extends UIBase {
       }
     }
 
-    let traverse = (n) => {
+    let traverse = (n: Node) => {
       visit = () => {
-        for (let c of n.childNodes) {
+        for (let c of Array.from(n.childNodes)) {
           traverse(c);
         }
       }
@@ -1285,7 +1378,7 @@ export class DocsBrowser extends UIBase {
       if (n.constructor.name === "Text") {
         handlers.TEXT(n);
       } else {
-        let tag = n.tagName;
+        let tag = (n as Element).tagName;
         if (tag in handlers) {
           handlers[tag](n);
         } else {
@@ -1299,7 +1392,7 @@ export class DocsBrowser extends UIBase {
     return buf;
   }
 
-  getDocPath() {
+  getDocPath(): string | undefined {
     if (!this.root.contentDocument) {
       return undefined;
     }
@@ -1315,7 +1408,7 @@ export class DocsBrowser extends UIBase {
 
     console.error("PATH", path, this._prefix);
 
-    if (!path) return;
+    if (!path) return undefined;
 
     if (path.startsWith(this._prefix)) {
       path = path.slice(this._prefix.length, path.length).trim();
@@ -1358,7 +1451,7 @@ export class DocsBrowser extends UIBase {
     this.report("Saving...", "yellow", 400);
 
     if (this.saveCallback) {
-      this.saveCallback(this.root.contentDocument);
+      this.saveCallback(this.root.contentDocument!);
       return;
     }
 
@@ -1368,17 +1461,17 @@ export class DocsBrowser extends UIBase {
 
     this.saveReq = 2;
 
-    this.serverapi.updateDoc(path, this.contentDiv.innerHTML).then((result) => {
+    this.serverapi.updateDoc(path, this.contentDiv.innerHTML)!.then((result: unknown) => {
       this.saveReq = 0;
       console.log("Sucess! Saved document", result);
 
       if (result) {
         console.log("Server changed final document; reloading...");
-        this.contentDiv.innerHTML = result;
+        this.contentDiv!.innerHTML = result as string;
       }
 
       this.report("Saved", "green", 750)
-    }).catch((error) => {
+    }).catch((error: unknown) => {
       console.error(error);
     });
   }
@@ -1388,7 +1481,7 @@ export class DocsBrowser extends UIBase {
       return;
     }
 
-    let href = this.root.contentDocument.location.href;
+    let href = this.root.contentDocument!.location.href;
     href = relative(dirname(location.href), href).trim();
 
     if (href !== this.currentPath) {
@@ -1401,10 +1494,11 @@ export class DocsBrowser extends UIBase {
 
 
   //send notifications to user
-  report(message, color = undefined, timeout = undefined) {
-    if (this.ctx.report) {
+  report(message: string, color?: string, timeout?: number) {
+    const ctx = this.ctx as unknown as Record<string, unknown>;
+    if (ctx && ctx.report) {
       console.warn("%c" + message, "color : " + color + ";");
-      this.ctx.report(message, color, timeout);
+      (ctx.report as (msg: string, color?: string, timeout?: number) => void)(message, color, timeout);
     } else {
       console.warn("%c" + message, "color : " + color + ";");
     }
@@ -1437,14 +1531,14 @@ export class DocsBrowser extends UIBase {
     this.style.width = "100%";
     this.style.height = "max-contents";
 
-    this.root.style["background-color"] = "grey";
+    this.root.style["backgroundColor"] = "grey";
   }
 
   static newSTRUCT() {
     return UIBase.createElement("docs-browser-x");
   }
 
-  loadSTRUCT(reader) {
+  loadSTRUCT(reader: StructReader<this>) {
     reader(this);
 
     this.doOnce(this.makeHeader);
@@ -1459,15 +1553,6 @@ export class DocsBrowser extends UIBase {
     }
   }
 }
-
-DocsBrowser.STRUCT = `
-DocsBrowser {
-  currentPath   : string;
-  savedDocument : string;
-  editMode      : bool;
-  history       : DocHistory;
-}
-`;
 
 UIBase.internalRegister(DocsBrowser);
 nstructjs.register(DocsBrowser);

@@ -1,5 +1,4 @@
-// @ts-nocheck
-/* TS-NOCHECK RATIONALE: Dynamic method generation via makefunc(), Object.defineProperty
+/* TS-NOTE: Dynamic method generation via makefunc(), Object.defineProperty
  * proxy patterns, DOM element wrapping with ad-hoc interfaces. */
 
 //bind module to global var to get at it in console.
@@ -7,16 +6,15 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
-import {Container} from "../core/ui.js";
+import {Container} from "../core/ui";
+import {IContextBase} from "../core/context_base";
+import {UIBase, PackFlags} from "../core/ui_base";
 
-var _ui = undefined;
-
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath.js';
-import * as ui_curvewidget from './ui_curvewidget.js';
-import * as ui_base from '../core/ui_base.js';
-import * as ui_widgets from './ui_widgets.js';
-import * as toolprop from '../path-controller/toolsys/toolprop.js';
+import * as util from '../path-controller/util/util';
+import * as vectormath from '../path-controller/util/vectormath';
+import * as ui_curvewidget from './ui_curvewidget';
+import * as ui_widgets from './ui_widgets';
+import * as toolprop from '../path-controller/toolsys/toolprop';
 
 let PropFlags = toolprop.PropFlags;
 let PropSubTypes = toolprop.PropSubTypes;
@@ -24,19 +22,54 @@ let PropSubTypes = toolprop.PropSubTypes;
 let EnumProperty = toolprop.EnumProperty;
 
 let Vector2 = vectormath.Vector2,
-  UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
   PropTypes = toolprop.PropTypes;
 
+/* Helper for CSSStyleDeclaration string indexing. */
+type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
 const list = util.list;
 
-export class TableRow extends Container {
+/** Ad-hoc wrapper around a <tr> element that proxies Container methods. */
+export interface TableRowProxy {
+  _tr: HTMLTableRowElement;
+  style: CSSStyleDeclaration;
+  focus(args?: FocusOptions): void;
+  blur(): void;
+  remove(): void;
+  addEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | AddEventListenerOptions): void;
+  removeEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | EventListenerOptions): void;
+  setAttribute(attr: string, val: string): void;
+  scrollTo(...args: unknown[]): void;
+  scrollIntoView(...args: unknown[]): void;
+  clear(): void;
+  cell(): Container;
+  tabIndex: number;
+  background: string;
+
+  /* Dynamically added Container method proxies. */
+  label(...args: unknown[]): unknown;
+  tool(...args: unknown[]): unknown;
+  prop(...args: unknown[]): unknown;
+  pathlabel(...args: unknown[]): unknown;
+  button(...args: unknown[]): unknown;
+  iconbutton(...args: unknown[]): unknown;
+  textbox(...args: unknown[]): unknown;
+  col(...args: unknown[]): unknown;
+  row(...args: unknown[]): unknown;
+  table(...args: unknown[]): unknown;
+  listenum(...args: unknown[]): unknown;
+  check(...args: unknown[]): unknown;
+}
+
+export class TableRow<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+  declare dom: HTMLTableRowElement;
+  declare shadow: ShadowRoot;
+
   constructor() {
     super();
 
     this.dom.remove();
-    this.dom = document.createElement("tr");
+    this.dom = document.createElement("tr") as unknown as HTMLTableRowElement;
 
     //kind of dumb, but this.dom doesn't live within this element itself, bleh
     //this.shadow.appendChild(this.dom);
@@ -47,7 +80,7 @@ export class TableRow extends Container {
     tagname : "tablerow-x"
   };}
 
-  _add(child) {
+  _add(child: UIBase<CTX>) {
     child.ctx = this.ctx;
     child.parentWidget = this;
 
@@ -56,15 +89,18 @@ export class TableRow extends Container {
 
     this.dom.appendChild(td);
     child.onadd();
+    return child;
   }
-};
+}
 UIBase.internalRegister(TableRow);
 
-export class TableFrame extends Container {
+export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+  declare dom: HTMLTableElement;
+
   constructor() {
     super();
 
-    this.dom = document.createElement("table");
+    this.dom = document.createElement("table") as unknown as HTMLTableElement;
     this.shadow.appendChild(this.dom);
     this.dom.setAttribute("class", "containerx");
 
@@ -76,18 +112,21 @@ export class TableFrame extends Container {
     super.update();
   }
 
-  _add(child) {
+  _add(child: UIBase<CTX>) {
     child.ctx = this.ctx;
     child.parentWidget = this;
     this.dom.appendChild(child);
     child.onadd();
+    return child;
   }
 
-  add(child) {
-    this._add(child);
+  add(child: UIBase<CTX>) {
+    return this._add(child);
   }
 
-  row() {
+  row(packflag?: number): any {
+    // Returns TableRowProxy but typed as any to work around base class covariance
+    // packflag parameter is ignored for table rows
     let tr = document.createElement("tr");
     let cls = "table-tr";
 
@@ -99,10 +138,10 @@ export class TableFrame extends Container {
       let td = document.createElement("td");
       tr.appendChild(td);
 
-      td.style["margin"] = tr.style["margin"];
-      td.style["padding"] = tr.style["padding"];
+      (td.style as StyleRecord)["margin"] = (tr.style as StyleRecord)["margin"];
+      (td.style as StyleRecord)["padding"] = (tr.style as StyleRecord)["padding"];
 
-      let container = UIBase.createElement("rowframe-x");
+      let container = UIBase.createElement("rowframe-x") as Container<CTX>;
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -115,32 +154,32 @@ export class TableFrame extends Container {
     }
 
     //hrm wish I could subclass html elements easier
-    let ret = {
+    let ret: TableRowProxy = {
       _tr : tr,
 
       style : tr.style,
 
-      focus : function(args) {
+      focus(args?: FocusOptions) {
         tr.focus(args);
       },
 
-      blur : function(args) {
-        tr.blur(args);
+      blur() {
+        tr.blur();
       },
 
       remove : () => {
         tr.remove();
       },
 
-      addEventListener : function(type, cb, arg) {
+      addEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | AddEventListenerOptions) {
         tr.addEventListener(type, cb, arg);
       },
 
-      removeEventListener : function(type, cb, arg) {
+      removeEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | EventListenerOptions) {
         tr.removeEventListener(type, cb, arg);
       },
 
-      setAttribute : function(attr, val) {
+      setAttribute(attr: string, val: string) {
         if (attr == "class") {
           cls = val;
         }
@@ -148,27 +187,44 @@ export class TableFrame extends Container {
         tr.setAttribute(attr, val);
       },
 
-      scrollTo : function() {
-        return this._tr.scrollTo(...arguments);
+      scrollTo(...args: unknown[]) {
+        return (tr.scrollTo as Function).apply(tr, args);
       },
 
-      scrollIntoView : function() {
-        return this._tr.scrollIntoView(...arguments);
+      scrollIntoView(...args: unknown[]) {
+        return (tr.scrollIntoView as Function).apply(tr, args);
       },
 
-      clear : function() {
+      clear() {
         for (let node of list(tr.childNodes)) {
           tr.removeChild(node);
         }
-      }
-    };
+      },
 
-    function makefunc(f) {
-      ret[f] = function() {
+      /* These are filled in below by makefunc / defineProperty / cell lambda */
+      cell: undefined!,
+      tabIndex: 0,
+      background: "",
+      label: undefined!,
+      tool: undefined!,
+      prop: undefined!,
+      pathlabel: undefined!,
+      button: undefined!,
+      iconbutton: undefined!,
+      textbox: undefined!,
+      col: undefined!,
+      row: undefined!,
+      table: undefined!,
+      listenum: undefined!,
+      check: undefined!,
+    } as TableRowProxy;
+
+    function makefunc(f: string) {
+      (ret as unknown as Record<string, unknown>)[f] = function() {
         let container = maketd();
 
-        container.background = tr.style["background-color"]; //"rgba(0,0,0,0)";
-        return container[f].apply(container, arguments);
+        container.background = (tr.style as StyleRecord)["background-color"]; //"rgba(0,0,0,0)";
+        return (container as unknown as Record<string, Function>)[f].apply(container, arguments);
       }
     }
 
@@ -176,27 +232,27 @@ export class TableFrame extends Container {
 
     //need to implement proper proxy here!
     Object.defineProperty(ret, "tabIndex", {
-      set : function(f) {
+      set(f: number) {
         tr.tabIndex = f;
       },
 
-      get : function(f) {
+      get() {
         return tr.tabIndex;
       }
     });
 
     Object.defineProperty(ret, "background", {
-      set : function(bg) {
+      set(bg: string) {
         _bg = bg;
-        tr.style["background-color"] = bg;
+        (tr.style as StyleRecord)["background-color"] = bg;
 
         for (let node of tr.childNodes) {
           if (node.childNodes.length > 0) {
-            node.childNodes[0].background = bg;
-            node.style["background-color"] = bg;
+            (node.childNodes[0] as unknown as Record<string, unknown>).background = bg;
+            ((node as HTMLElement).style as StyleRecord)["background-color"] = bg;
           }
         }
-      }, get : function() {
+      }, get() {
         return _bg;
       }
     });
@@ -208,11 +264,11 @@ export class TableFrame extends Container {
       }
     });//*/
 
-    ret.cell = () => {
+    ret.cell = (() => {
       let container = maketd();
-      container.background = tr.style["background-color"];
-      return container;
-    };
+      container.background = (tr.style as StyleRecord)["background-color"];
+      return container as unknown as Container;
+    }) as () => Container;
 
     //makefunc("cell");
     makefunc("label");
