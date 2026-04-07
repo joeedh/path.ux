@@ -2,7 +2,7 @@
 //XXX todo: review this rewritten version of saveUIData/loadUIData
 
 import { tokdef, parser, lexer, PUTLParseError, token } from "../path-controller/util/parseutil.js";
-import type { TokFunc, ParserErrFunc } from "../path-controller/util/parseutil.js";
+import type { TokFunc } from "../path-controller/util/parseutil.js";
 
 export const UI_SAVE_VERSION = 2;
 

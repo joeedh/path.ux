@@ -1812,8 +1812,7 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
 
     if (this.addLabel) {
       this.l = this.container.label(this._name!);
-      const labelMethods = this.l as unknown as Record<string, Function | unknown>;
-      (labelMethods.overrideClass as Function)?.("numslider_textbox");
+      this.l.overrideClass("numslider_textbox");
       this.l.font = "TitleText";
       this.l.style["display"] = "float";
       this.l.style["position"] = "relative";
@@ -1821,14 +1820,10 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
 
     const strip = this.container.row();
     //strip.style['justify-content'] = 'space-between';
-    const stripMethods = strip as unknown as Record<string, Function | unknown>;
-    (stripMethods.add as Function)?.(this.numslider);
-
-    const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
+    strip.add(this.numslider);
 
     const textbox = this._textbox;
-    const textboxMethods = this._textbox as unknown as Record<string, Function | unknown>;
-    (textboxMethods.overrideDefault as Function)?.("width", this.getDefault("TextBoxWidth"));
+    this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
 
     const apply_textbox = () => {
       const text = textbox.text as unknown as string;
@@ -2022,7 +2017,7 @@ export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends Sl
   constructor() {
     super();
 
-    this.numslider = UIBase.createElement("numslider-simple-base-x") as this['numslider'];
+    this.numslider = UIBase.createElement("numslider-simple-base-x") as this["numslider"];
   }
 
   static define() {

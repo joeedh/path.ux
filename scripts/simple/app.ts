@@ -1,35 +1,35 @@
-import nstructjs from '../path-controller/util/struct.js'
-import {Context, ContextOverlay, makeDerivedOverlay} from '../path-controller/controller/context.js'
+import nstructjs from "../path-controller/util/struct.js";
+import { Context, ContextOverlay, makeDerivedOverlay } from "../path-controller/controller/context.js";
 
-export const DataModelClasses: (typeof DataModel)[] = []
-import {buildToolSysAPI, SavedToolDefaults, ToolStack} from '../path-controller/toolsys/toolsys.js'
-import {DataAPI} from '../path-controller/controller/controller.js'
-import {Screen} from '../screen/FrameManager.js'
-import {areaclasses, contextWrangler} from '../screen/area_wrangler.js'
-import * as util from '../util/util.js'
-import {Editor} from './editor.js'
+export const DataModelClasses: (typeof DataModel)[] = [];
+import { buildToolSysAPI, SavedToolDefaults, ToolStack } from "../path-controller/toolsys/toolsys.js";
+import { DataAPI } from "../path-controller/controller/controller.js";
+import { Screen } from "../screen/FrameManager.js";
+import { areaclasses, contextWrangler } from "../screen/area_wrangler.js";
+import * as util from "../util/util.js";
+import { Editor } from "./editor.js";
 
-import {Vector2} from '../path-controller/util/vectormath.js'
+import { Vector2 } from "../path-controller/util/vectormath.js";
 
-import cconst from '../config/const.js'
+import cconst from "../config/const.js";
 
 export class DataModel {
   static defineAPI(api: DataAPI, strct: unknown) {
-    return strct
+    return strct;
   }
 
   /** Automatically registers cls with nstructjs
    *  and handles STRUCT inheritance.
    */
-  static register(cls: typeof DataModel & {STRUCT?: string}) {
-    if (!cls.hasOwnProperty('defineAPI')) {
+  static register(cls: typeof DataModel & { STRUCT?: string }) {
+    if (!cls.hasOwnProperty("defineAPI")) {
       //  throw new Error(cls.name + "is missing a defineAPI method");
     }
 
-    DataModelClasses.push(cls)
+    DataModelClasses.push(cls);
 
-    if (cls.hasOwnProperty('STRUCT') && !nstructjs.isRegistered(cls)) {
-      cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT!)
+    if (cls.hasOwnProperty("STRUCT") && !nstructjs.isRegistered(cls)) {
+      cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT!);
     }
   }
 }
@@ -38,7 +38,7 @@ class EmptyContextClass extends Context {
   static defineAPI(_api: DataAPI, _strct: unknown) {}
 }
 
-import * as ui_noteframe from '../widgets/ui_noteframe.js'
+import * as ui_noteframe from "../widgets/ui_noteframe.js";
 
 /**
  * Extend the client-provided context class
@@ -46,116 +46,116 @@ import * as ui_noteframe from '../widgets/ui_noteframe.js'
  *
  * */
 function GetContextClass(ctxClass: Function): typeof Context {
-  let ok = 0
-  let cls: Function | null = ctxClass
+  let ok = 0;
+  let cls: Function | null = ctxClass;
   while (cls) {
     if (cls === Context) {
-      ok = 1
+      ok = 1;
     } else if (cls === ContextOverlay) {
-      ok = 2
+      ok = 2;
     }
 
-    cls = (cls as unknown as Record<string, unknown>).__proto__ as Function | null
+    cls = (cls as unknown as Record<string, unknown>).__proto__ as Function | null;
   }
 
   if (ok === 1) {
-    return ctxClass as typeof Context
+    return ctxClass as typeof Context;
   }
 
-  let OverlayDerived: ReturnType<typeof makeDerivedOverlay>
+  let OverlayDerived: ReturnType<typeof makeDerivedOverlay>;
 
   if (ok === 2) {
-    OverlayDerived = ctxClass as ReturnType<typeof makeDerivedOverlay>
+    OverlayDerived = ctxClass as ReturnType<typeof makeDerivedOverlay>;
   } else {
-    OverlayDerived = makeDerivedOverlay(ctxClass as {new (appstate: unknown): Record<string, unknown>})
+    OverlayDerived = makeDerivedOverlay(ctxClass as { new (appstate: unknown): Record<string, unknown> });
   }
 
   class Overlay extends OverlayDerived {
     constructor(state: unknown) {
-      super(state)
+      super(state);
     }
 
     get screen() {
-      return (this.state as Record<string, unknown>).screen
+      return (this.state as Record<string, unknown>).screen;
     }
 
     get activeArea() {
-      return contextWrangler.getLastArea()
+      return contextWrangler.getLastArea();
     }
 
     get api() {
-      return (this.state as Record<string, unknown>).api
+      return (this.state as Record<string, unknown>).api;
     }
 
     get toolstack() {
-      return (this.state as Record<string, unknown>).toolstack
+      return (this.state as Record<string, unknown>).toolstack;
     }
 
     get toolDefaults() {
-      return SavedToolDefaults
+      return SavedToolDefaults;
     }
 
     get last_tool() {
-      return (this.toolstack as ToolStack).head
+      return (this.toolstack as ToolStack).head;
     }
 
     message(msg: string, timeout = 2500) {
-      return ui_noteframe.message(this.screen as unknown as Node, msg, timeout)
+      return ui_noteframe.message(this.screen as unknown as Node, msg, timeout);
     }
 
     error(msg: string, timeout = 2500) {
-      return ui_noteframe.error(this.screen as unknown as Node, msg, timeout)
+      return ui_noteframe.error(this.screen as unknown as Node, msg, timeout);
     }
 
     warning(msg: string, timeout = 2500) {
-      return ui_noteframe.warning(this.screen as unknown as Node, msg, timeout)
+      return ui_noteframe.warning(this.screen as unknown as Node, msg, timeout);
     }
 
     progressBar(msg: string, percent: number, color: string, timeout = 1000) {
-      return ui_noteframe.progbarNote(this.screen as unknown as Node, msg, percent, color, timeout)
+      return ui_noteframe.progbarNote(this.screen as unknown as Node, msg, percent, color, timeout);
     }
   }
 
-  Context.register(Overlay)
+  Context.register(Overlay);
 
   return class ContextDerived extends Context {
     constructor(state: unknown) {
-      super(state)
+      super(state);
 
-      this.pushOverlay(new Overlay(state))
+      this.pushOverlay(new Overlay(state));
     }
 
-    static defineAPI(api: DataAPI, st: {dynamicStruct(key: string, name: string, label: string): void}) {
-      st.dynamicStruct('activeArea', 'activeArea', 'Active Area')
-      return (Overlay as unknown as typeof EmptyContextClass).defineAPI(api, st)
+    static defineAPI(api: DataAPI, st: { dynamicStruct(key: string, name: string, label: string): void }) {
+      st.dynamicStruct("activeArea", "activeArea", "Active Area");
+      return (Overlay as unknown as typeof EmptyContextClass).defineAPI(api, st);
     }
-  }
+  };
 }
 
 export function makeAPI(ctxClass: typeof Context) {
-  let api = new DataAPI()
+  const api = new DataAPI();
 
-  for (let cls of DataModelClasses) {
+  for (const cls of DataModelClasses) {
     if (cls.defineAPI) {
-      cls.defineAPI(api, api.mapStruct(cls, true))
+      cls.defineAPI(api, api.mapStruct(cls, true));
     }
   }
 
-  for (let k in areaclasses) {
-    ;(areaclasses[k] as unknown as {defineAPI: (api: DataAPI, strct: unknown) => void}).defineAPI(
+  for (const k in areaclasses) {
+    (areaclasses[k] as unknown as { defineAPI: (api: DataAPI, strct: unknown) => void }).defineAPI(
       api,
       api.mapStruct(areaclasses[k], true)
-    )
+    );
   }
 
   if ((ctxClass as unknown as Record<string, unknown>).defineAPI) {
-    ;(ctxClass as unknown as typeof EmptyContextClass).defineAPI(api, api.mapStruct(ctxClass, true))
+    (ctxClass as unknown as typeof EmptyContextClass).defineAPI(api, api.mapStruct(ctxClass, true));
   } else {
-    throw new Error('Context class should have a defineAPI static method')
+    throw new Error("Context class should have a defineAPI static method");
   }
 
-  const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean)
-  ;(api as unknown as Record<string, unknown>).rootContextStruct = rootContextStruct
+  const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean);
+  (api as unknown as Record<string, unknown>).rootContextStruct = rootContextStruct;
 
   buildToolSysAPI(
     api as unknown as Record<string, Function>,
@@ -163,128 +163,126 @@ export function makeAPI(ctxClass: typeof Context) {
     rootContextStruct as unknown as Record<string, Function>,
     ctxClass as unknown as new (arg: Record<string, unknown>) => unknown,
     true
-  )
+  );
 
-  return api
+  return api;
 }
 
-import {Icons, loadDefaultIconSheet} from './icons.js'
-import {IconManager, setIconManager, setIconMap, setTheme, UIBase} from '../core/ui_base.js'
-import {FileArgs, loadFile, saveFile} from './file.js'
-import {HotKey, KeyMap} from '../path-controller/util/simple_events.js'
-import {initSplineTemplates} from '../path-controller/curve/curve1d_bspline.js'
-import {MenuBarEditor, registerMenuBarEditor} from './menubar.js'
-import {register} from './app_ops.js'
-import { IContextBase } from '../core/context_base.js'
+import { Icons, loadDefaultIconSheet } from "./icons.js";
+import { IconManager, setIconManager, setIconMap, setTheme, UIBase } from "../core/ui_base.js";
+import { FileArgs, loadFile, saveFile } from "./file.js";
+import { HotKey, KeyMap } from "../path-controller/util/simple_events.js";
+import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline.js";
+import { MenuBarEditor, registerMenuBarEditor } from "./menubar.js";
+import { register } from "./app_ops.js";
+import { IContextBase } from "../core/context_base.js";
 
 declare global {
-  // eslint-disable-next-line no-var
-  var _appstate: AppState
+  var _appstate: AppState;
 }
 
 type ScreenAreaElement = UIBase & {
-  pos: Vector2
-  size: Vector2
-  switch_editor(cls: unknown): void
-}
+  pos: Vector2;
+  size: Vector2;
+  switch_editor(cls: unknown): void;
+};
 
 export class StartArgs {
-  singlePage: boolean
-  DEBUG: Record<string, unknown>
-  icons: Record<string, number>
-  iconsheet: HTMLImageElement | undefined
-  iconSizes: number[]
-  iconTileSize: number
-  iconsPerRow: number
-  theme: unknown
-  registerSaveOpenOps: boolean
-  autoLoadSplineTemplates: boolean
-  showPathsInToolTips: boolean
-  enableThemeAutoUpdate: boolean
-  addHelpPickers: boolean
-  useNumSliderTextboxes: boolean
-  numSliderArrowLimit: number
-  simpleNumSliders: boolean
-  saveFilesInJSON: boolean
+  singlePage: boolean;
+  DEBUG: Record<string, unknown>;
+  icons: Record<string, number>;
+  iconsheet: HTMLImageElement | undefined;
+  iconSizes: number[];
+  iconTileSize: number;
+  iconsPerRow: number;
+  theme: unknown;
+  registerSaveOpenOps: boolean;
+  autoLoadSplineTemplates: boolean;
+  showPathsInToolTips: boolean;
+  enableThemeAutoUpdate: boolean;
+  addHelpPickers: boolean;
+  useNumSliderTextboxes: boolean;
+  numSliderArrowLimit: number;
+  simpleNumSliders: boolean;
+  saveFilesInJSON: boolean;
 
   constructor() {
-    this.singlePage = true
+    this.singlePage = true;
 
-    this.DEBUG = {}
-    this.icons = Icons
-    this.iconsheet = undefined //will default to loadDefaultIconSheet();
-    this.iconSizes = [16, 24, 32, 48]
-    this.iconTileSize = 32
-    this.iconsPerRow = 16
-    this.theme = undefined //see scripts/core/theme.js
+    this.DEBUG = {};
+    this.icons = Icons;
+    this.iconsheet = undefined; //will default to loadDefaultIconSheet();
+    this.iconSizes = [16, 24, 32, 48];
+    this.iconTileSize = 32;
+    this.iconsPerRow = 16;
+    this.theme = undefined; //see scripts/core/theme.js
 
-    this.registerSaveOpenOps = true
+    this.registerSaveOpenOps = true;
 
-    this.autoLoadSplineTemplates = true
-    this.showPathsInToolTips = true
-    this.enableThemeAutoUpdate = false
-    this.addHelpPickers = false
-    this.useNumSliderTextboxes = true
-    this.numSliderArrowLimit = (cconst as Record<string, unknown>).numSliderArrowLimit as number
-    this.simpleNumSliders = (cconst as Record<string, unknown>).simpleNumSliders as boolean
-    this.saveFilesInJSON = false
+    this.autoLoadSplineTemplates = true;
+    this.showPathsInToolTips = true;
+    this.enableThemeAutoUpdate = false;
+    this.addHelpPickers = false;
+    this.useNumSliderTextboxes = true;
+    this.numSliderArrowLimit = (cconst as Record<string, unknown>).numSliderArrowLimit as number;
+    this.simpleNumSliders = (cconst as Record<string, unknown>).simpleNumSliders as boolean;
+    this.saveFilesInJSON = false;
   }
 }
 
 export class SimpleScreen extends Screen {
   constructor() {
-    super()
+    super();
 
     this.keymap = new KeyMap([
-      new HotKey('Z', ['CTRL'], () => {
-        ;(this.ctx as unknown as {toolstack: ToolStack}).toolstack.undo()
+      new HotKey("Z", ["CTRL"], () => {
+        (this.ctx as unknown as { toolstack: ToolStack }).toolstack.undo();
       }),
-      new HotKey('Z', ['CTRL', 'SHIFT'], () => {
-        ;(this.ctx as unknown as {toolstack: ToolStack}).toolstack.redo()
+      new HotKey("Z", ["CTRL", "SHIFT"], () => {
+        (this.ctx as unknown as { toolstack: ToolStack }).toolstack.redo();
       }),
-    ])
+    ]);
   }
 
   static define() {
     return {
-      tagname: 'simple-screen-x',
-    }
+      tagname: "simple-screen-x",
+    };
   }
 
   override init() {
-    const state = (this.ctx as unknown as Record<string, unknown>).state as Record<string, unknown>
+    const state = (this.ctx as unknown as Record<string, unknown>).state as Record<string, unknown>;
     if ((state.startArgs as StartArgs).registerSaveOpenOps) {
-      this.keymap!.add(new HotKey('S', ['CTRL'], 'app.save()'))
-      this.keymap!.add(new HotKey('O', ['CTRL'], 'app.open()'))
+      this.keymap!.add(new HotKey("S", ["CTRL"], "app.save()"));
+      this.keymap!.add(new HotKey("O", ["CTRL"], "app.open()"));
     }
   }
 
   override setCSS() {
-    super.setCSS()
-
-    ;(this.style as unknown as Record<string, string>)['position'] = UIBase.PositionKey
-    ;(this.style as unknown as Record<string, string>)['left'] = this.pos![0 as 0] + 'px'
-    ;(this.style as unknown as Record<string, string>)['top'] = this.pos![1 as 0] + 'px'
+    super.setCSS();
+    (this.style as unknown as Record<string, string>)["position"] = UIBase.PositionKey;
+    (this.style as unknown as Record<string, string>)["left"] = this.pos![0 as const] + "px";
+    (this.style as unknown as Record<string, string>)["top"] = this.pos![1 as 0] + "px";
   }
 }
 
-UIBase.register(SimpleScreen)
+UIBase.register(SimpleScreen);
 
 export class AppState {
-  _ctxClass: Function
-  startArgs: StartArgs | undefined
-  currentFileRef: unknown
-  api: DataAPI
-  ctx: Context
-  toolstack: ToolStack
-  screenClass: typeof Screen
-  screen: Screen | undefined
-  fileMagic: string
-  fileVersion: [number, number, number]
-  _fileExt: string
-  _fileExtSet: boolean
-  saveFilesInJSON: boolean
-  defaultEditorClass: (typeof Editor) | undefined
+  _ctxClass: Function;
+  startArgs: StartArgs | undefined;
+  currentFileRef: unknown;
+  api: DataAPI;
+  ctx: Context;
+  toolstack: ToolStack;
+  screenClass: typeof Screen;
+  screen: Screen | undefined;
+  fileMagic: string;
+  fileVersion: [number, number, number];
+  _fileExt: string;
+  _fileExtSet: boolean;
+  saveFilesInJSON: boolean;
+  defaultEditorClass: typeof Editor | undefined;
 
   /** ctxClass is the context class.  It can be either a simple class
    *  or a subclass of the more complex path.ux Context class.  Note that
@@ -295,90 +293,89 @@ export class AppState {
    *  Path.ux will actually subclass ctxClass and add a few standard methods
    *  and properties, see GetContextClass.*/
   constructor(ctxClass: Function, screenClass: typeof Screen = SimpleScreen as unknown as typeof Screen) {
-    this._ctxClass = ctxClass
+    this._ctxClass = ctxClass;
 
-    const derivedCtxClass = GetContextClass(ctxClass)!
+    const derivedCtxClass = GetContextClass(ctxClass)!;
 
-    this.startArgs = undefined
-    this.currentFileRef = undefined //current file path/ref
+    this.startArgs = undefined;
+    this.currentFileRef = undefined; //current file path/ref
 
-    this.api = makeAPI(derivedCtxClass)
-    this.ctx = new derivedCtxClass(this)
-    ;(this.ctx as Record<string, unknown>)._state = this
-    this.toolstack = new ToolStack({} as unknown as IContextBase)
-    this.screenClass = screenClass
-    this.screen = undefined
+    this.api = makeAPI(derivedCtxClass);
+    this.ctx = new derivedCtxClass(this);
+    (this.ctx as Record<string, unknown>)._state = this;
+    this.toolstack = new ToolStack({} as unknown as IContextBase);
+    this.screenClass = screenClass;
+    this.screen = undefined;
 
-    this.fileMagic = 'STRT'
-    this.fileVersion = [0, 0, 1]
-    this._fileExt = 'data'
-    this._fileExtSet = false
-    this.saveFilesInJSON = false /* save files in nstructjs-json */
+    this.fileMagic = "STRT";
+    this.fileVersion = [0, 0, 1];
+    this._fileExt = "data";
+    this._fileExtSet = false;
+    this.saveFilesInJSON = false; /* save files in nstructjs-json */
 
-    this.defaultEditorClass = undefined //if undefined, the first non-menubar editor will be used
+    this.defaultEditorClass = undefined; //if undefined, the first non-menubar editor will be used
   }
 
   private _makeFileArgs(args: Record<string, unknown>) {
     return new FileArgs(
       Object.assign(
         {
-          magic: this.fileMagic,
+          magic  : this.fileMagic,
           version: this.fileVersion,
-          ext: this.fileExt,
+          ext    : this.fileExt,
         },
         args
       )
-    )
+    );
   }
 
   get fileExt() {
-    return this._fileExt
+    return this._fileExt;
   }
 
   set fileExt(ext: string) {
-    this._fileExt = ext
-    this._fileExtSet = true
+    this._fileExt = ext;
+    this._fileExtSet = true;
   }
 
   /** resets the undo stack */
   reset() {
-    this.toolstack.reset()
+    this.toolstack.reset();
   }
 
   /** Create a new file. See this.makeScreen() if you wish
    *  to create a new screen at this time, and this.reset()
    *  if you wish to reset the undo stack*/
   createNewFile() {
-    console.warn('appstate.createNewFile: implement me, using default hack')
-    let state = new (this.constructor as new (
-      ctxClass: Function,
-      screenClass?: typeof Screen
-    ) => AppState)((this.ctx as Record<string, unknown>)._ctxClass as Function)
+    console.warn("appstate.createNewFile: implement me, using default hack");
+    const state = new (this.constructor as new (ctxClass: Function, screenClass?: typeof Screen) => AppState)(
+      (this.ctx as Record<string, unknown>)._ctxClass as Function
+    );
 
-    state.api = this.api
-    state.ctx = this.ctx
-    state.startArgs = this.startArgs
-    state.saveFilesInJSON = this.saveFilesInJSON
+    state.api = this.api;
+    state.ctx = this.ctx;
+    state.startArgs = this.startArgs;
+    state.saveFilesInJSON = this.saveFilesInJSON;
 
-    state.toolstack = this.toolstack
-    state.toolstack.reset()
+    state.toolstack = this.toolstack;
+    state.toolstack.reset();
 
-    this.screen!.unlisten()
-    this.screen!.remove()
+    this.screen!.unlisten();
+    this.screen!.remove();
 
     for (const k in state) {
-      ;(this as unknown as Record<string, unknown>)[k] = (state as unknown as Record<string, unknown>)[k]
+      (this as unknown as Record<string, unknown>)[k] = (state as unknown as Record<string, unknown>)[k];
     }
 
-    this.makeScreen()
+    this.makeScreen();
   }
 
   saveFileSync(objects: unknown[] | undefined, args: Record<string, unknown> = {}) {
     return saveFile(
-      this as unknown as {saveFilesInJSON?: boolean; screen: unknown},
+      this as unknown as { saveFilesInJSON?: boolean; screen: unknown },
       this._makeFileArgs(args),
       objects ?? []
-    )
+    );
   }
 
   /** Serialize the application state. Takes
@@ -392,29 +389,29 @@ export class AppState {
    **/
   saveFile(objects: unknown[] | undefined, args: Record<string, unknown> = {}) {
     return new Promise<unknown>((accept, _reject) => {
-      accept(this.saveFileSync(objects, args))
-    })
+      accept(this.saveFileSync(objects, args));
+    });
   }
 
   loadFileSync(data: unknown, args: Record<string, unknown> = {}) {
-    const fileArgs = this._makeFileArgs(args)
+    const fileArgs = this._makeFileArgs(args);
 
-    const ret = loadFile(this as unknown as Record<string, unknown>, fileArgs, data)
+    const ret = loadFile(this, fileArgs, data);
 
     if (fileArgs.doScreen) {
       try {
-        this.ensureMenuBar()
+        this.ensureMenuBar();
       } catch (error: unknown) {
-        console.error((error as Error).stack)
-        console.error((error as Error).message)
-        console.error('Failed to add menu bar')
+        console.error((error as Error).stack);
+        console.error((error as Error).message);
+        console.error("Failed to add menu bar");
       }
 
-      this.screen!.completeSetCSS()
-      this.screen!.completeUpdate()
+      this.screen!.completeSetCSS();
+      this.screen!.completeUpdate();
     }
 
-    return ret
+    return ret;
   }
 
   /**
@@ -442,210 +439,209 @@ export class AppState {
    *  */
   loadFile(data: unknown, args: Record<string, unknown> = {}) {
     return new Promise<unknown>((accept, _reject) => {
-      accept(this.loadFileSync(data, args))
-    })
+      accept(this.loadFileSync(data, args));
+    });
   }
 
   ensureMenuBar() {
-    let screen = this.screen!
-    let ok = false
+    const screen = this.screen!;
+    let ok = false;
 
-    for (let sarea of screen.sareas) {
+    for (const sarea of screen.sareas) {
       if (sarea.area instanceof MenuBarEditor) {
-        ok = true
-        break
+        ok = true;
+        break;
       }
     }
 
     if (ok) {
-      return
+      return;
     }
 
     if (!Editor.makeMenuBar) {
       /* don't make menu bar if Editor.registerAppMenu hasn't been called */
-      return
+      return;
     }
 
     /* ensure screen size is up to date */
-    screen.update()
+    screen.update();
 
-    let sarea = UIBase.createElement('screenarea-x') as ScreenAreaElement
+    const sarea = UIBase.createElement("screenarea-x") as ScreenAreaElement;
 
-    screen.appendChild(sarea)
+    screen.appendChild(sarea);
 
-    let h = 55
-    let min = new Vector2().addScalar(1e17)
-    let max = new Vector2().addScalar(-1e17)
-    let tmp = new Vector2()
+    const h = 55;
+    const min = new Vector2().addScalar(1e17);
+    const max = new Vector2().addScalar(-1e17);
+    const tmp = new Vector2();
 
-    for (let sarea2 of screen.sareas) {
+    for (const sarea2 of screen.sareas) {
       if (sarea2 === (sarea as unknown)) {
-        continue
+        continue;
       }
 
-      min.min(sarea2.pos)
-      tmp.load(sarea2.pos).add(sarea2.size)
-      max.max(tmp)
+      min.min(sarea2.pos);
+      tmp.load(sarea2.pos).add(sarea2.size);
+      max.max(tmp);
     }
 
-    let scale = (max[1] - min[1] - h) / (max[1] - min[1])
+    const scale = (max[1] - min[1] - h) / (max[1] - min[1]);
 
-    for (let sarea2 of screen.sareas) {
+    for (const sarea2 of screen.sareas) {
       if (sarea2 === (sarea as unknown)) {
-        continue
+        continue;
       }
 
-      sarea2.pos[1] *= scale
-      sarea2.size[1] *= scale
-      sarea2.pos[1] += h
+      sarea2.pos[1] *= scale;
+      sarea2.size[1] *= scale;
+      sarea2.pos[1] += h;
     }
 
-    sarea.pos.zero()
-    sarea.size[0] = screen.size[0]
-    sarea.size[1] = h
+    sarea.pos.zero();
+    sarea.size[0] = screen.size[0];
+    sarea.size[1] = h;
 
-    screen.regenScreenMesh()
-    screen.snapScreenVerts()
+    screen.regenScreenMesh();
+    screen.snapScreenVerts();
 
-    sarea.switch_editor(MenuBarEditor)
+    sarea.switch_editor(MenuBarEditor);
 
-    screen.solveAreaConstraints()
+    screen.solveAreaConstraints();
 
-    screen.completeSetCSS()
-    screen.completeUpdate()
+    screen.completeSetCSS();
+    screen.completeUpdate();
   }
 
   makeScreen() {
     if (this.screen) {
-      this.screen.unlisten()
-      this.screen.remove()
+      this.screen.unlisten();
+      this.screen.remove();
     }
 
-    let screen = (this.screen = UIBase.createElement(
-      (this.screenClass as unknown as {define(): {tagname: string}}).define().tagname
-    ) as Screen)
-    let sarea = UIBase.createElement('screenarea-x') as ScreenAreaElement
+    const screen = (this.screen = UIBase.createElement(
+      (this.screenClass as unknown as { define(): { tagname: string } }).define().tagname
+    ) as Screen);
+    const sarea = UIBase.createElement("screenarea-x") as ScreenAreaElement;
 
-    ;(screen as unknown as Record<string, unknown>).ctx = this.ctx
-    ;(sarea as unknown as Record<string, unknown>).ctx = this.ctx
+    screen.ctx = this.ctx as unknown as typeof screen.ctx;
+    sarea.ctx = this.ctx as unknown as typeof sarea.ctx;
 
-    document.body.appendChild(screen)
+    document.body.appendChild(screen);
 
-    let cls: (typeof Editor) | undefined = this.defaultEditorClass
+    let cls: typeof Editor | undefined = this.defaultEditorClass;
 
     if (!cls) {
-      for (let k in areaclasses) {
-        cls = areaclasses[k] as unknown as typeof Editor
+      for (const k in areaclasses) {
+        cls = areaclasses[k] as unknown as typeof Editor;
 
         if (cls !== (MenuBarEditor as unknown)) {
-          break
+          break;
         }
       }
     }
 
-    sarea.switch_editor(cls)
-    screen.appendChild(sarea)
+    sarea.switch_editor(cls);
+    screen.appendChild(sarea);
 
-    screen._init()
-    screen.listen()
-    screen.update()
-    screen.completeSetCSS()
-    screen.completeUpdate()
+    screen._init();
+    screen.listen();
+    screen.update();
+    screen.completeSetCSS();
+    screen.completeUpdate();
 
     if (Editor.makeMenuBar) {
-      this.ensureMenuBar()
+      this.ensureMenuBar();
     }
   }
 
   start(args: StartArgs | Record<string, unknown> = new StartArgs()) {
-    nstructjs.validateStructs()
+    nstructjs.validateStructs();
 
-    let args2 = new StartArgs()
+    const args2 = new StartArgs();
 
-    let methodsCheck: (keyof AppState)[] = ['saveFile', 'createNewFile', 'loadFile']
+    const methodsCheck: (keyof AppState)[] = ["saveFile", "createNewFile", "loadFile"];
 
-    for (let method of methodsCheck) {
-      let m1 = AppState.prototype[method]
-      const m2 = (this as unknown as Record<string, unknown>)[method]
+    for (const method of methodsCheck) {
+      const m1 = AppState.prototype[method];
+      const m2 = this[method];
 
       if (m1 === m2) {
-        console.warn(
-          `Warning: it is recommended to override .${method} when subclassing simple.AppState`
-        )
+        console.warn(`Warning: it is recommended to override .${method} when subclassing simple.AppState`);
       }
     }
 
-    ;(document.body.style as unknown as Record<string, string>)['touch-action'] = 'none'
+    document.body.style["touchAction"] = "none";
 
-    registerMenuBarEditor()
+    registerMenuBarEditor();
 
-    const argsRec = args as unknown as Record<string, unknown>
-    const args2Rec = args2 as unknown as Record<string, unknown>
+    const argsRec = args as any;
+    const args2Rec = args2 as any;
     for (const k in args2) {
       if (argsRec[k] === undefined) {
-        argsRec[k] = args2Rec[k]
+        argsRec[k] = args2Rec[k];
       }
     }
 
-    const startArgs = args as StartArgs
+    const startArgs = args as StartArgs;
 
     if (startArgs.registerSaveOpenOps) {
-      register()
+      register();
     }
 
     if (!startArgs.iconsheet) {
-      startArgs.iconsheet = loadDefaultIconSheet()
+      startArgs.iconsheet = loadDefaultIconSheet();
     }
 
-    this.startArgs = startArgs
+    this.startArgs = startArgs;
 
-    cconst.loadConstants(startArgs as unknown as import('../config/const.js').PathUXConstants)
+    cconst.loadConstants(startArgs as unknown as import("../config/const.js").PathUXConstants);
 
     if (startArgs.autoLoadSplineTemplates) {
-      initSplineTemplates()
+      initSplineTemplates();
     }
 
-    let sizes: [number, number][] = []
-    let images: HTMLImageElement[] = []
+    const sizes: [number, number][] = [];
+    const images: HTMLImageElement[] = [];
 
-    for (let size of startArgs.iconSizes) {
-      sizes.push([startArgs.iconTileSize, size])
-      images.push(startArgs.iconsheet!)
+    for (const size of startArgs.iconSizes) {
+      sizes.push([startArgs.iconTileSize, size]);
+      images.push(startArgs.iconsheet!);
     }
 
-    window.iconsheet = startArgs.iconsheet!
+    window.iconsheet = startArgs.iconsheet!;
 
-    let iconManager = new IconManager(images, sizes, startArgs.iconsPerRow)
-    setIconManager(iconManager)
-    setIconMap(startArgs.icons)
+    const iconManager = new IconManager(images, sizes, startArgs.iconsPerRow);
+    setIconManager(iconManager);
+    setIconMap(startArgs.icons);
 
     if (startArgs.theme) {
-      setTheme(startArgs.theme as Record<string, unknown>)
+      setTheme(startArgs.theme as Record<string, unknown>);
     }
 
-    document.body.style['margin'] = '0px'
-    document.body.style['padding'] = '0px'
+    document.body.style["margin"] = "0px";
+    document.body.style["padding"] = "0px";
 
     if (startArgs.singlePage) {
-      document.body.style['overflow'] = 'hidden'
+      document.body.style["overflow"] = "hidden";
     }
 
-    this.makeScreen()
+    this.makeScreen();
 
-    Object.defineProperty(window, 'C', {
+    Object.defineProperty(window, "C", {
       get() {
-        return _appstate.ctx
+        return _appstate.ctx;
       },
-    })
+    });
 
-    nstructjs.validateStructs()
+    nstructjs.validateStructs();
 
     if (this.saveFilesInJSON && !this._fileExtSet) {
-      this._fileExt = 'json'
+      this._fileExt = "json";
     }
 
-    if (this._fileExt.startsWith('.')) {
-      this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim()
+    if (this._fileExt.startsWith(".")) {
+      this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim();
     }
   }
 }
+

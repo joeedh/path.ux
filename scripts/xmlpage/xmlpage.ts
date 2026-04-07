@@ -383,7 +383,6 @@ class Handler {
 
     // set data- attributes directly
     for (const [k, val] of dataattrs) {
-      console.warn(elem.tagName, k, val, elem2);
       elem2.setAttribute(k, val);
     }
 

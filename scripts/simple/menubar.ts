@@ -2,6 +2,7 @@ import { Editor } from "./editor.js";
 import { nstructjs } from "../path-controller/controller.js";
 import { AreaFlags } from "../screen/ScreenArea.js";
 import { IContextBase } from "../core/context_base.js";
+import { StructReader } from "../util/nstructjs.js";
 
 declare const electron_api: { initMenuBar(editor: unknown): void };
 declare const window: Window & { haveElectron?: boolean };
@@ -12,7 +13,7 @@ export class MenuBarEditor<CTX extends IContextBase = IContextBase> extends Edit
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-    MenuBarEditor {
+    simple.MenuBarEditor {
     }
   `
   );
@@ -121,6 +122,10 @@ export class MenuBarEditor<CTX extends IContextBase = IContextBase> extends Edit
     if (this.needsRebuild) {
       this.rebuild();
     }
+  }
+
+  loadSTRUCT(reader: StructReader<this>) {
+    reader(this);
   }
 }
 
