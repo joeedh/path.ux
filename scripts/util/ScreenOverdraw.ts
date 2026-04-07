@@ -29,7 +29,7 @@ interface TextBox extends HTMLDivElement {
   setCSS: () => void;
 }
 
-interface SVGRectWithColor extends SVGRectElement {
+export interface SVGRectWithColor extends SVGRectElement {
   setColor: (color: string) => void;
 }
 

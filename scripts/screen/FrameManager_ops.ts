@@ -9,7 +9,8 @@ import * as simple_toolsys from "../path-controller/toolsys/toolsys.js";
 import { ToolTip } from "../widgets/ui_widgets2.js";
 import type { Screen } from "./FrameManager.js";
 import type { Overdraw } from "../util/ScreenOverdraw.js";
-import type { ScreenBorder } from "./FrameManager_mesh.js";
+import type { SVGRectWithColor } from "../util/ScreenOverdraw.js";
+import type { ScreenBorder, ScreenVert } from "./FrameManager_mesh.js";
 
 /*
 why am I using a toolstack here at all?  time to remove!
@@ -28,7 +29,7 @@ const ToolFlags = simple_toolsys.ToolFlags;
 
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events.js";
 import { IContextBase } from "../core/context_base.js";
-import { ScreenArea } from "./ScreenArea.js";
+import { ScreenArea, type AreaConstructor } from "./ScreenArea.js";
 
 //import {keymap} from './events';
 
@@ -36,16 +37,17 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
   screen: Screen<CTX>;
   _finished: boolean;
   overdraw?: Overdraw<CTX>;
-  modaldata: any;
+  modaldata: ReturnType<typeof pushModalLight> | ReturnType<typeof pushPointerModal> | undefined;
+  ctx!: CTX;
 
-  constructor(screen: any) {
+  constructor(screen: Screen<CTX>) {
     super();
     this.screen = screen;
 
     this._finished = false;
   }
 
-  start(elem?: any, pointerId?: any) {
+  start(elem?: Element, pointerId?: number) {
     //toolstack_getter().execTool(this);
     this.toolModalStart(undefined, elem, pointerId);
   }
@@ -65,8 +67,8 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
     this.modaldata = undefined;
   }
 
-  toolModalStart(ctx = this.screen.ctx, elem: Element, pointerId: any) {
-    this.ctx = ctx;
+  toolModalStart(ctx: CTX | undefined = this.screen.ctx as CTX, elem?: Element, pointerId?: number) {
+    this.ctx = ctx!;
 
     if (this.modaldata !== undefined) {
       console.log("Error, modaldata was not undefined");
@@ -76,12 +78,12 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
     this.overdraw = ui_base.UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
-    const handlers: Record<string, any> = {};
+    const handlers: Record<string, (...args: unknown[]) => void> = {};
     const keys = Object.getOwnPropertyNames(this);
-    for (const k in (this as any).__proto__) {
+    for (const k in Object.getPrototypeOf(this) as Record<string, unknown>) {
       keys.push(k);
     }
-    for (const k of Object.getOwnPropertyNames((this as any).__proto__)) {
+    for (const k of Object.getOwnPropertyNames(Object.getPrototypeOf(this))) {
       keys.push(k);
     }
 
@@ -91,7 +93,7 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
 
     for (const k of keys) {
       if (k.startsWith("on")) {
-        handlers[k] = (this as any)[k].bind(this);
+        handlers[k] = ((this as unknown) as Record<string, (...args: unknown[]) => void>)[k].bind(this);
       }
     }
 
@@ -136,6 +138,11 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
   }
 }
 
+interface BorderWithOld<CTX extends IContextBase = IContextBase> extends ScreenBorder<CTX> {
+  oldv1: Vector2;
+  oldv2: Vector2;
+}
+
 export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
   sarea: ScreenArea<CTX>;
   start_mpos: Vector2;
@@ -177,10 +184,10 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
   getBorders() {
     const horiz = this.border.horiz;
 
-    const ret = [];
-    const visit = new Set();
+    const ret: ScreenBorder<CTX>[] = [];
+    const visit = new Set<number>();
 
-    const rec = (v) => {
+    const rec = (v: ScreenVert<CTX>) => {
       if (visit.has(v._id)) {
         return;
       }
@@ -203,11 +210,11 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
     return ret;
   }
 
-  on_pointerup(e) {
+  override on_pointerup(e: PointerEvent) {
     this.finish();
   }
 
-  finish() {
+  override finish() {
     super.finish();
 
     this.screen.snapScreenVerts();
@@ -216,7 +223,7 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
     this.screen.loadFromVerts();
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     switch (e.keyCode) {
       case keymap["Escape"]:
       case keymap["Enter"]:
@@ -226,7 +233,7 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
     }
   }
 
-  on_pointermove(e) {
+  override on_pointermove(e: PointerEvent) {
     const mpos = new Vector2([e.x, e.y]);
 
     mpos.sub(this.start_mpos);
@@ -235,10 +242,10 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
 
     //console.log(this.border.horiz);
 
-    this.overdraw.clear();
+    this.overdraw!.clear();
 
     const visit = new Set();
-    const borders = this.getBorders();
+    const borders = this.getBorders() as BorderWithOld<CTX>[];
 
     const color = cconst.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
@@ -272,7 +279,7 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
 
     let snapMode = true;
 
-    const df = mpos[axis];
+    const df = mpos[axis] as number;
     const border = this.border;
 
     this.screen.moveBorder(border, df, false);
@@ -285,7 +292,7 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
         snapMode = false;
       }
 
-      this.overdraw.line(border.v1, border.v2, color);
+      this.overdraw!.line(border.v1 as unknown as number[], border.v2 as unknown as number[], color);
     }
 
     this.start_mpos[0] = e.x;
@@ -313,15 +320,18 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
 
 //controller.registerTool(AreaResizeTool);
 
-export class SplitTool extends ToolBase {
-  constructor(screen) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
+  done: boolean;
+  sarea: ScreenArea<CTX> | undefined;
+  t: number | undefined;
+  horiz: boolean | undefined;
+  started: boolean;
 
+  constructor(screen: Screen<CTX>) {
     super(screen);
 
     this.done = false;
     this.screen = screen;
-    this.ctx = screen.ctx;
     this.sarea = undefined;
     this.t = undefined;
 
@@ -342,7 +352,7 @@ export class SplitTool extends ToolBase {
     };
   }
 
-  toolModalStart(ctx) {
+  override toolModalStart(ctx?: CTX) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
@@ -351,10 +361,10 @@ export class SplitTool extends ToolBase {
     this.overdraw = ui_base.UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
-    super.modalStart(ctx);
+    super.toolModalStart(ctx);
   }
 
-  cancel() {
+  override cancel() {
     return this.finish(true);
   }
 
@@ -364,9 +374,9 @@ export class SplitTool extends ToolBase {
     }
 
     this.done = true;
-    this.overdraw.end();
+    this.overdraw!.end();
 
-    this.popModal(this.screen);
+    this.popModal();
 
     if (canceled || !this.sarea) {
       return;
@@ -380,7 +390,7 @@ export class SplitTool extends ToolBase {
     screen._internalRegenAll();
   }
 
-  on_pointermove(e) {
+  override on_pointermove(e: PointerEvent) {
     let x = e.x;
     let y = e.y;
 
@@ -388,7 +398,7 @@ export class SplitTool extends ToolBase {
 
     const sarea = screen.findScreenArea(x, y);
 
-    this.overdraw.clear();
+    this.overdraw!.clear();
 
     if (sarea !== undefined) {
       //x -= sarea.pos[0];
@@ -404,24 +414,24 @@ export class SplitTool extends ToolBase {
 
       if (horiz) {
         this.t = y;
-        this.overdraw.line([sarea.pos[0], e.y], [sarea.pos[0] + sarea.size[0], e.y]);
+        this.overdraw!.line([sarea.pos[0], e.y], [sarea.pos[0] + sarea.size[0], e.y]);
       } else {
         this.t = x;
-        this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1] + sarea.size[1]]);
+        this.overdraw!.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1] + sarea.size[1]]);
       }
     }
   }
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     this.finish();
 
     if (e.button) {
-      this.stopPropagation();
-      this.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
     }
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     switch (e.keyCode) {
       case keymap.Escape: //esc
         this.cancel();
@@ -434,17 +444,20 @@ export class SplitTool extends ToolBase {
   }
 }
 
-export class RemoveAreaTool extends ToolBase {
-  constructor(screen, border) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
+  _border: ScreenBorder<CTX> | undefined;
+  done: boolean;
+  sarea: ScreenArea<CTX> | undefined;
+  t: number | undefined;
+  started: boolean;
 
+  constructor(screen: Screen<CTX>, border?: ScreenBorder<CTX>) {
     super(screen);
 
-    this.border = border;
+    this._border = border;
 
     this.done = false;
     this.screen = screen;
-    this.ctx = screen.ctx;
     this.sarea = undefined;
     this.t = undefined;
 
@@ -465,7 +478,7 @@ export class RemoveAreaTool extends ToolBase {
     };
   }
 
-  toolModalStart(ctx) {
+  override toolModalStart(ctx?: CTX) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
@@ -474,10 +487,10 @@ export class RemoveAreaTool extends ToolBase {
     this.overdraw = ui_base.UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
-    super.modalStart(ctx);
+    super.toolModalStart(ctx);
   }
 
-  cancel() {
+  override cancel() {
     return this.finish(true);
   }
 
@@ -487,9 +500,9 @@ export class RemoveAreaTool extends ToolBase {
     }
 
     this.done = true;
-    this.overdraw.end();
+    this.overdraw!.end();
 
-    this.popModal(this.screen);
+    this.popModal();
 
     if (canceled || !this.sarea) {
       return;
@@ -500,12 +513,12 @@ export class RemoveAreaTool extends ToolBase {
     const t = this.t;
 
     if (sarea) {
-      screen.collapseArea(sarea, this.border);
+      screen.collapseArea(sarea, this._border);
       screen._internalRegenAll();
     }
   }
 
-  on_pointermove(e) {
+  override on_pointermove(e: PointerEvent) {
     const x = e.x;
     const y = e.y;
 
@@ -513,24 +526,24 @@ export class RemoveAreaTool extends ToolBase {
 
     const sarea = screen.findScreenArea(x, y);
 
-    this.overdraw.clear();
+    this.overdraw!.clear();
 
     if (sarea !== undefined) {
       this.sarea = sarea;
-      this.overdraw.rect(sarea.pos, sarea.size, "rgba(0,0,0,0.1)");
+      this.overdraw!.rect(sarea.pos as unknown as number[], sarea.size as unknown as number[], "rgba(0,0,0,0.1)");
     }
   }
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     this.finish();
 
     if (e.button) {
-      this.stopPropagation();
-      this.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
     }
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
@@ -547,17 +560,43 @@ export class RemoveAreaTool extends ToolBase {
 
 //controller.registerTool(SplitTool);
 
-export class AreaDragTool extends ToolBase {
-  constructor(screen, sarea, mpos) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+interface DragBoxRect extends SVGRectWithColor {
+  sarea: ScreenArea;
+  horiz: boolean | number;
+  t: number;
+  side: string | number;
+  rect: SVGRectWithColor | undefined;
+  onclick: (e: PointerEvent | MouseEvent) => void;
+}
 
+interface DragBox {
+  sarea: ScreenArea;
+  horiz: boolean | number;
+  t: number;
+  side: string | number;
+}
+
+export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
+  dropArea: boolean;
+  excludeAreas: Set<ScreenArea<CTX>>;
+  cursorbox: SVGRectWithColor | undefined;
+  boxes: DragBoxRect[] & { active?: DragBoxRect };
+  sarea: ScreenArea<CTX> | undefined;
+  start_mpos: Vector2;
+  color: string;
+  hcolor: string;
+  curbox: DragBoxRect | undefined;
+
+  constructor(screen: Screen<CTX>, sarea: ScreenArea<CTX> | undefined, mpos: Vector2 | number[]) {
     super(screen);
 
     this.dropArea = false;
     this.excludeAreas = new Set();
     this.cursorbox = undefined;
-    this.boxes = [];
+    this.boxes = [] as unknown as DragBoxRect[] & { active?: DragBoxRect };
     this.boxes.active = undefined;
+    this.color = "";
+    this.hcolor = "";
 
     this.sarea = sarea;
     this.start_mpos = new Vector2(mpos);
@@ -578,7 +617,7 @@ export class AreaDragTool extends ToolBase {
     };
   }
 
-  finish() {
+  override finish() {
     super.finish();
 
     this.screen.regenBorders();
@@ -587,15 +626,15 @@ export class AreaDragTool extends ToolBase {
     this.screen._recalcAABB();
   }
 
-  getBoxRect(b) {
+  getBoxRect(b: DragBox) {
     const sa = b.sarea;
-    let pos;
-    let size;
+    let pos: number[];
+    let size: number[];
 
     if (b.horiz == -1) {
       //replacement mode
-      pos = sa.pos;
-      size = sa.size;
+      pos = sa.pos as unknown as number[];
+      size = sa.size as unknown as number[];
     } else if (b.horiz) {
       if (b.side == "b") {
         pos = [sa.pos[0], sa.pos[1] + sa.size[1] * b.t];
@@ -616,13 +655,13 @@ export class AreaDragTool extends ToolBase {
 
     const color = "rgba(100, 100, 100, 0.2)";
 
-    const ret = this.overdraw.rect(pos, size, color);
-    ret.style["pointer-events"] = "none";
+    const ret = this.overdraw!.rect(pos!, size!, color);
+    ret.style.pointerEvents = "none";
 
     return ret;
   }
 
-  doSplit(b) {
+  doSplit(b: DragBox) {
     if (this.sarea) {
       return this.doSplitDrop(b);
     }
@@ -633,28 +672,28 @@ export class AreaDragTool extends ToolBase {
 
     const t = b.t;
 
-    screen.splitArea(dst, t, b.horiz);
+    screen.splitArea(dst as ScreenArea<CTX>, t, b.horiz as boolean);
 
     screen._internalRegenAll();
   }
 
-  doSplitDrop(b) {
+  doSplitDrop(b: DragBox) {
     //first check if there was no change
     if (b.horiz === -1 && b.sarea === this.sarea) {
       return;
     }
 
     let can_rip = false;
-    const sa = this.sarea;
+    const sa = this.sarea!;
     const screen = this.screen;
 
     //rip conditions
     can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
-    can_rip = can_rip || this.sarea.floating;
+    can_rip = can_rip || sa.floating;
     can_rip = can_rip && b.sarea !== sa;
-    can_rip = can_rip && (b.horiz === -1 || !screen.areasBorder(sa, b.sarea));
+    can_rip = can_rip && (b.horiz === -1 || !screen.areasBorder(sa, b.sarea as ScreenArea<CTX>));
 
-    const expand = b.horiz === -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
+    const expand = b.horiz === -1 && b.sarea !== sa && screen.areasBorder(b.sarea as ScreenArea<CTX>, sa);
 
     can_rip = can_rip || expand;
 
@@ -667,11 +706,11 @@ export class AreaDragTool extends ToolBase {
 
     if (b.horiz === -1) {
       //replacement
-      const src = this.sarea;
-      const dst = b.sarea;
+      const src = this.sarea!;
+      const dst = b.sarea as ScreenArea<CTX>;
 
       if (can_rip && src !== dst) {
-        let mm;
+        let mm: ReturnType<Screen<CTX>["minmaxArea"]> | undefined;
 
         //handle case of one area "consuming" another
         if (expand) {
@@ -687,7 +726,7 @@ export class AreaDragTool extends ToolBase {
           dst.editors = [];
           dst.editormap = {};
 
-          if (dst.area && !(dst.area.constructor.define().areaname in src.editormap)) {
+          if (dst.area && !((dst.area.constructor as unknown as AreaConstructor).define().areaname! in src.editormap)) {
             dst.area.push_ctx_active();
             dst.area.on_area_inactive();
             dst.area.remove();
@@ -695,7 +734,7 @@ export class AreaDragTool extends ToolBase {
           }
 
           for (const editor of old) {
-            const def = editor.constructor.define();
+            const def = (editor.constructor as unknown as AreaConstructor).define();
 
             let bad = false;
             //bad = !(def.areaname in src.editormap);
@@ -709,14 +748,14 @@ export class AreaDragTool extends ToolBase {
 
             if (!bad) {
               dst.editors.push(editor);
-              dst.editormap[def.areaname] = editor;
+              dst.editormap[def.areaname!] = editor;
             }
           }
 
           for (const editor of src.editors) {
-            const def = editor.constructor.define();
+            const def = (editor.constructor as unknown as AreaConstructor).define();
 
-            dst.editormap[def.areaname] = editor;
+            dst.editormap[def.areaname!] = editor;
             dst.editors.push(editor);
 
             if (editor.owning_sarea) {
@@ -731,19 +770,19 @@ export class AreaDragTool extends ToolBase {
           if (cconst.useAreaTabSwitcher) {
             for (const editor of dst.editors) {
               if (editor.switcher) {
-                editor.switcher.flagUpdate();
+                (editor.switcher as unknown as { flagUpdate(): void }).flagUpdate();
               }
             }
           }
 
           dst.area = src.area;
-          dst.shadow.appendChild(src.area);
+          dst.shadow.appendChild(src.area!);
 
           src.area = undefined;
           src.editors = [];
           src.editormap = {};
 
-          dst.on_resize(dst.size, dst.size);
+          dst.on_resize(dst.size);
 
           dst.flushSetCSS();
           dst.flushUpdate();
@@ -759,11 +798,11 @@ export class AreaDragTool extends ToolBase {
         if (expand) {
           console.log("\nEXPANDING:", src.size[0], src.size[1]);
 
-          src.pos[0] = mm.min[0];
-          src.pos[1] = mm.min[1];
+          src.pos[0] = mm!.min[0];
+          src.pos[1] = mm!.min[1];
 
-          src.size[0] = mm.max[0] - mm.min[0];
-          src.size[1] = mm.max[1] - mm.min[1];
+          src.size[0] = mm!.max[0] - mm!.min[0];
+          src.size[1] = mm!.max[1] - mm!.min[1];
 
           src.loadFromPosSize();
 
@@ -771,16 +810,16 @@ export class AreaDragTool extends ToolBase {
         }
       } else {
         //console.log("copying. . .");
-        screen.replaceArea(dst, src.copy());
+        screen.replaceArea(dst as ScreenArea<CTX>, src.copy(screen));
         screen._internalRegenAll();
       }
     } else {
-      const src = this.sarea;
-      const dst = b.sarea;
+      const src = this.sarea!;
+      const dst = b.sarea as ScreenArea<CTX>;
 
       const t = b.t;
 
-      let nsa = screen.splitArea(dst, t, b.horiz);
+      let nsa = screen.splitArea(dst, t, b.horiz as boolean);
 
       if (b.side === "l" || b.side === "t") {
         nsa = dst;
@@ -791,14 +830,14 @@ export class AreaDragTool extends ToolBase {
         screen.replaceArea(nsa, src);
       } else {
         //console.log("copying");
-        screen.replaceArea(nsa, src.copy());
+        screen.replaceArea(nsa, src.copy(screen));
       }
 
       screen._internalRegenAll();
     }
   }
 
-  makeBoxes(sa) {
+  makeBoxes(sa: ScreenArea<CTX>) {
     const sz = util.isMobile() ? 100 : 40;
     const cx = sa.pos[0] + sa.size[0] * 0.5;
     const cy = sa.pos[1] + sa.size[1] * 0.5;
@@ -808,11 +847,11 @@ export class AreaDragTool extends ToolBase {
     let idgen = 0;
     const boxes = this.boxes;
 
-    const box = (x, y, sz, horiz, t, side) => {
+    const box = (x: number, y: number, sz: number[], horiz: boolean | number, t: number, side: string | number) => {
       //console.log(x, y, sz);
 
-      const b = this.overdraw.rect([x - sz[0] * 0.5, y - sz[1] * 0.5], sz, color);
-      b.style["border-radius"] = "14px";
+      const b = this.overdraw!.rect([x - sz[0] * 0.5, y - sz[1] * 0.5], sz, color) as DragBoxRect;
+      b.style.borderRadius = "14px";
 
       boxes.push(b);
 
@@ -825,11 +864,11 @@ export class AreaDragTool extends ToolBase {
       b.t = t;
       b.side = side;
       b.setAttribute("class", cls);
-      b.setAttribute("is_box", true);
+      b.setAttribute("is_box", "true");
 
       b.addEventListener("pointermove", this.on_pointermove.bind(this));
 
-      const onclick = (b.onclick = (e) => {
+      const onclick = (b.onclick = (e: PointerEvent | MouseEvent) => {
         const type = e.type.toLowerCase();
 
         if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
@@ -851,7 +890,7 @@ export class AreaDragTool extends ToolBase {
       b.addEventListener("pointerdown", onclick);
       b.addEventListener("pointerup", onclick);
 
-      b.addEventListener("pointerenter", (e) => {
+      b.addEventListener("pointerenter", (e: Event) => {
         if (this.curbox !== undefined) {
           if (this.curbox.rect) {
             this.curbox.rect.remove();
@@ -864,14 +903,14 @@ export class AreaDragTool extends ToolBase {
           b.rect = undefined;
         }
 
-        b.rect = this.getBoxRect(b);
+        b.rect = this.getBoxRect(b) as SVGRectWithColor;
         this.curbox = b;
 
         b.setColor(hcolor);
         //b.style["background-color"] = hcolor;
       });
 
-      b.addEventListener("pointerleave", (e) => {
+      b.addEventListener("pointerleave", (e: Event) => {
         if (b.rect) {
           b.rect.remove();
           b.rect = undefined;
@@ -917,7 +956,7 @@ export class AreaDragTool extends ToolBase {
     box(cx, cy + sz * 1.2 + pad, [sz, sz * 0.25], true, 0.7, "b");
   }
 
-  getActiveBox(x, y) {
+  getActiveBox(x: number, y: number) {
     for (const n of this.boxes) {
       if (n.hasAttribute?.("is_box")) {
         const rect = n.getClientRects()[0];
@@ -931,15 +970,15 @@ export class AreaDragTool extends ToolBase {
     }
   }
 
-  on_drag(e) {
+  on_drag(e: PointerEvent) {
     this.on_pointermove(e);
   }
 
-  on_dragend(e) {
+  on_dragend(e: PointerEvent) {
     this.on_pointerup(e);
   }
 
-  on_pointermove(e) {
+  override on_pointermove(e: PointerEvent) {
     let wid = 55;
     const color = "rgb(200, 200, 200, 0.7)";
 
@@ -1000,15 +1039,15 @@ export class AreaDragTool extends ToolBase {
 
     if (this.cursorbox === undefined) {
       wid = 25;
-      this.cursorbox = this.overdraw.rect([e.x - wid * 0.5, e.y - wid * 0.5], [wid, wid], color);
-      this.cursorbox.style["pointer-events"] = "none";
+      this.cursorbox = this.overdraw!.rect([e.x - wid * 0.5, e.y - wid * 0.5], [wid, wid], color);
+      this.cursorbox.style.pointerEvents = "none";
     } else {
-      this.cursorbox.style["x"] = e.x - wid * 0.5 + "px";
-      this.cursorbox.style["y"] = e.y - wid * 0.5 + "px";
+      this.cursorbox.setAttribute("x", "" + (e.x - wid * 0.5));
+      this.cursorbox.setAttribute("y", "" + (e.y - wid * 0.5));
     }
   }
 
-  on_pointerup(e) {
+  override on_pointerup(e: PointerEvent) {
     console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
 
     if (e.button) {
@@ -1025,18 +1064,18 @@ export class AreaDragTool extends ToolBase {
     this.finish();
   }
 
-  toolModalStart(ctx) {
-    super.modalStart(...arguments);
+  override toolModalStart(ctx?: CTX) {
+    super.toolModalStart(ctx);
 
     const screen = this.screen;
 
-    this.overdraw.clear();
+    this.overdraw!.clear();
 
     if (this.sarea && !this.excludeAreas.has(this.sarea)) {
       const sa = this.sarea;
-      const box = this.overdraw.rect(sa.pos, sa.size, "rgba(100, 100, 100, 0.5)");
+      const box = this.overdraw!.rect(sa.pos as unknown as number[], sa.size as unknown as number[], "rgba(100, 100, 100, 0.5)");
 
-      box.style["pointer-events"] = "none";
+      box.style.pointerEvents = "none";
     }
 
     for (const sa of screen.sareas) {
@@ -1048,7 +1087,7 @@ export class AreaDragTool extends ToolBase {
     }
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     switch (e.keyCode) {
       case keymap["Escape"]:
       case keymap["Enter"]:
@@ -1059,8 +1098,13 @@ export class AreaDragTool extends ToolBase {
   }
 }
 
-export class AreaMoveAttachTool extends AreaDragTool {
-  constructor(screen, sarea, mpos) {
+export class AreaMoveAttachTool<CTX extends IContextBase = IContextBase> extends AreaDragTool<CTX> {
+  first: boolean;
+  mpos: Vector2;
+  start_mpos2: Vector2;
+  start_pos: Vector2;
+
+  constructor(screen: Screen<CTX>, sarea: ScreenArea<CTX>, mpos: Vector2 | number[]) {
     super(screen, sarea, mpos);
 
     this.excludeAreas = new Set([sarea]);
@@ -1073,11 +1117,11 @@ export class AreaMoveAttachTool extends AreaDragTool {
     this.start_pos = new Vector2(sarea.pos);
   }
 
-  on_pointermove(e) {
-    const dx = e.x - this.start_mpos2[0];
-    const dy = e.y - this.start_mpos2[1];
+  override on_pointermove(e: PointerEvent) {
+    const dx = e.x - (this.start_mpos2[0] as number);
+    const dy = e.y - (this.start_mpos2[1] as number);
 
-    const sarea = this.sarea;
+    const sarea = this.sarea!;
 
     if (this.first) {
       this.start_mpos2 = new Vector2([e.x, e.y]);
@@ -1085,8 +1129,8 @@ export class AreaMoveAttachTool extends AreaDragTool {
       return;
     }
 
-    sarea.pos[0] = this.start_pos[0] + dx;
-    sarea.pos[1] = this.start_pos[1] + dy;
+    sarea.pos[0] = (this.start_pos[0] as number) + dx;
+    sarea.pos[1] = (this.start_pos[1] as number) + dy;
 
     sarea.loadFromPosSize();
 
@@ -1094,23 +1138,26 @@ export class AreaMoveAttachTool extends AreaDragTool {
     super.on_pointermove(e);
   }
 
-  on_pointerup(e) {
+  override on_pointerup(e: PointerEvent) {
     super.on_pointerup(e);
   }
 
-  on_pointerdown(e) {
-    super.on_pointerdown(e);
+  on_pointerdown(e: PointerEvent) {
+    // noop — absorb pointer down
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     super.on_keydown(e);
   }
 }
 
 //controller.registerTool(AreaDragTool);
 
-export class ToolTipViewer extends ToolBase {
-  constructor(screen) {
+export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
+  tooltip: ToolTip | undefined;
+  element: ui_base.UIBase | undefined;
+
+  constructor(screen: Screen<CTX>) {
     super(screen);
 
     this.tooltip = undefined;
@@ -1131,27 +1178,27 @@ export class ToolTipViewer extends ToolBase {
     };
   }
 
-  on_pointermove(e) {
+  override on_pointermove(e: PointerEvent) {
     this.pick(e);
   }
 
-  on_pointerdown(e) {
+  on_pointerdown(e: PointerEvent) {
     this.pick(e);
   }
 
-  on_pointerup(e) {
+  override on_pointerup(e: PointerEvent) {
     this.finish();
   }
 
-  finish() {
+  override finish() {
     super.finish();
   }
 
-  on_keydown(e) {
+  override on_keydown(e: KeyboardEvent) {
     switch (e.keyCode) {
       case keymap.Escape:
       case keymap.Enter:
-      case Keymap.Space:
+      case keymap.Space:
         if (this.tooltip) {
           this.tooltip.end();
         }
@@ -1160,7 +1207,7 @@ export class ToolTipViewer extends ToolBase {
     }
   }
 
-  pick(e) {
+  pick(e: PointerEvent) {
     const x = e.x;
     const y = e.y;
 
@@ -1175,7 +1222,7 @@ export class ToolTipViewer extends ToolBase {
       this.element = ele;
       const tip = ele.title;
 
-      this.tooltip = ToolTip.show(tip, this.screen, x, y);
+      this.tooltip = ToolTip.show(tip, this.screen, x, y) as unknown as ToolTip;
     }
     e.preventDefault();
     e.stopPropagation();
