@@ -7,7 +7,7 @@ import * as ui_base from "../core/ui_base.js";
 import * as ui from "../core/ui.js";
 import * as math from "./math.js";
 import { IContextBase } from "../core/context_base.js";
-import type { Screen } from "../types/screen/FrameManager";
+import type { Screen } from "../screen/FrameManager";
 
 const Vector2 = vectormath.Vector2;
 
@@ -194,11 +194,11 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     //this.style["background-color"] = "green";
   }
 
-  start(screen: { ctx: unknown; size: number[]; parentNode: HTMLElement }): void {
+  start(screen: Screen<CTX>): void {
     this.screen = screen;
     this.ctx = screen.ctx as typeof this.ctx;
 
-    screen.parentNode.appendChild(this as unknown as Node);
+    screen.parentNode!.appendChild(this as unknown as Node);
 
     this.style.display = "float";
     this.style.zIndex = "" + this.zindex_base;

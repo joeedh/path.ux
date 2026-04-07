@@ -3,16 +3,19 @@
 import cconst from "../config/const.js";
 
 import * as util from "../path-controller/util/util.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
+import { Vector2 } from "../path-controller/util/vectormath.js";
 import * as ui_base from "../core/ui_base.js";
 import * as simple_toolsys from "../path-controller/toolsys/toolsys.js";
 import { ToolTip } from "../widgets/ui_widgets2.js";
+import type { Screen } from "./FrameManager.js";
+import type { Overdraw } from "../util/ScreenOverdraw.js";
+import type { ScreenBorder } from "./FrameManager_mesh.js";
 
 /*
 why am I using a toolstack here at all?  time to remove!
 */
 
-let toolstack_getter = function () {
+let toolstack_getter = function (): simple_toolsys.ToolStack {
   throw new Error("must pass a toolstack getter to registerToolStackGetter");
 };
 
@@ -20,19 +23,19 @@ export function registerToolStackGetter(func: () => simple_toolsys.ToolStack) {
   toolstack_getter = func;
 }
 
-const Vector2 = vectormath.Vector2;
-const Vector3 = vectormath.Vector3;
 const UndoFlags = simple_toolsys.UndoFlags;
 const ToolFlags = simple_toolsys.ToolFlags;
 
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events.js";
+import { IContextBase } from "../core/context_base.js";
+import { ScreenArea } from "./ScreenArea.js";
 
 //import {keymap} from './events';
 
-export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
-  screen: any;
+export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_toolsys.ToolOp<{}, {}, CTX> {
+  screen: Screen<CTX>;
   _finished: boolean;
-  overdraw: any;
+  overdraw?: Overdraw<CTX>;
   modaldata: any;
 
   constructor(screen: any) {
@@ -44,7 +47,7 @@ export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
 
   start(elem?: any, pointerId?: any) {
     //toolstack_getter().execTool(this);
-    this.modalStart(undefined, elem, pointerId);
+    this.toolModalStart(undefined, elem, pointerId);
   }
 
   cancel() {
@@ -53,16 +56,16 @@ export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
 
   finish() {
     this._finished = true;
-    this.popModal(this.screen);
+    this.popModal();
   }
 
   popModal() {
-    this.overdraw.end();
+    this.overdraw?.end();
     popModalLight(this.modaldata);
     this.modaldata = undefined;
   }
 
-  modalStart(ctx, elem, pointerId) {
+  toolModalStart(ctx = this.screen.ctx, elem: Element, pointerId: any) {
     this.ctx = ctx;
 
     if (this.modaldata !== undefined) {
@@ -112,13 +115,13 @@ export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
     //}, {passive : false});
   }
 
-  on_pointermove(e) {}
+  on_pointermove(e: PointerEvent) {}
 
-  on_pointerup(e) {
+  on_pointerup(e: PointerEvent) {
     this.finish();
   }
 
-  on_keydown(e) {
+  on_keydown(e: KeyboardEvent) {
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
@@ -133,10 +136,12 @@ export class ToolBase extends simple_toolsys.ToolOp<{}, {}, any, any> {
   }
 }
 
-export class AreaResizeTool extends ToolBase {
-  constructor(screen, border, mpos) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
+  sarea: ScreenArea<CTX>;
+  start_mpos: Vector2;
+  side: number;
 
+  constructor(screen: Screen<CTX>, border: ScreenBorder<CTX>, mpos: Vector2 | number[]) {
     super(screen);
 
     this.start_mpos = new Vector2(mpos);
@@ -148,7 +153,6 @@ export class AreaResizeTool extends ToolBase {
     }
 
     this.screen = screen;
-
     this.side = this.sarea._side(border);
   }
 
@@ -338,7 +342,7 @@ export class SplitTool extends ToolBase {
     };
   }
 
-  modalStart(ctx) {
+  toolModalStart(ctx) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
@@ -461,7 +465,7 @@ export class RemoveAreaTool extends ToolBase {
     };
   }
 
-  modalStart(ctx) {
+  toolModalStart(ctx) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
@@ -1021,7 +1025,7 @@ export class AreaDragTool extends ToolBase {
     this.finish();
   }
 
-  modalStart(ctx) {
+  toolModalStart(ctx) {
     super.modalStart(...arguments);
 
     const screen = this.screen;
