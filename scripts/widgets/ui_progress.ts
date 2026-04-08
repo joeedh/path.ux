@@ -1,7 +1,7 @@
-import {UIBase} from '../core/ui_base.js';
-import {IContextBase} from '../core/context_base.js';
-import * as util from '../path-controller/util/util.js';
-import {keymap} from '../path-controller/util/simple_events.js';
+import { UIBase } from "../core/ui_base.js";
+import { IContextBase } from "../core/context_base.js";
+import * as util from "../path-controller/util/util.js";
+import { keymap } from "../path-controller/util/simple_events.js";
 
 export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
   canvas: HTMLCanvasElement;
@@ -36,8 +36,8 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
     this.setAttribute("tab-index", "0");
     this.setAttribute("tabindex", "0");
 
-    let onkey = (e: Event) => {
-      let ke = e as KeyboardEvent;
+    const onkey = (e: Event) => {
+      const ke = e as KeyboardEvent;
       switch (ke.keyCode) {
         case keymap["Escape"]:
           if (this._oncancel) {
@@ -45,7 +45,7 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
           }
           break;
       }
-    }
+    };
 
     this.addEventListener("keydown", onkey);
     this.canvas.addEventListener("keydown", onkey);
@@ -59,22 +59,23 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
     this.animreq = requestAnimationFrame(() => {
       this.animreq = undefined;
       this.draw();
-    })
+    });
   }
 
   draw() {
-    let c = this.canvas, g = this.g;
+    const c = this.canvas;
+    const g = this.g;
 
-    let clr1 = "rgb(68,69,83)";
-    let clr2 = "rgb(141,154,196)";
-    let clr3 = "rgb(214,110,54)";
+    const clr1 = "rgb(68,69,83)";
+    const clr2 = "rgb(141,154,196)";
+    const clr3 = "rgb(214,110,54)";
 
-    let t = (util.time_ms() - this.startTime) / 1000.0;
+    const t = (util.time_ms() - this.startTime) / 1000.0;
 
     g.save();
     g.clearRect(0, 0, c.width, c.height);
 
-    g.lineWidth /= c.width*0.5;
+    g.lineWidth /= c.width * 0.5;
     g.scale(c.width, c.height);
     g.translate(0.5, 0.5);
 
@@ -101,24 +102,24 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
 
     g.beginPath();
 
-    let th = this._value*Math.PI*2.0;
+    const th = this._value * Math.PI * 2.0;
 
-    let steps = 12;
-    let dth = (Math.PI*2.0) / steps;
-    let lwid = g.lineWidth;
+    const steps = 12;
+    const dth = (Math.PI * 2.0) / steps;
+    const lwid = g.lineWidth;
     g.lineWidth *= 3;
 
-    for (let i=0; i<steps; i++) {
+    for (let i = 0; i < steps; i++) {
       let th1 = i * dth;
       th1 += t;
 
-      let r1 = 0.2;
-      let r2 = 0.45;
-      let th2 = th1 + dth*0.5;
+      const r1 = 0.2;
+      const r2 = 0.45;
+      const th2 = th1 + dth * 0.5;
 
       g.beginPath();
-      g.moveTo(Math.cos(th1)*r1, Math.sin(th1)*r1);
-      g.lineTo(Math.cos(th2)*r2, Math.sin(th2)*r2);
+      g.moveTo(Math.cos(th1) * r1, Math.sin(th1) * r1);
+      g.lineTo(Math.cos(th2) * r2, Math.sin(th2) * r2);
       g.strokeStyle = "rgba(255,255,255,0.5)";
       g.stroke();
     }
@@ -182,7 +183,7 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
       this.endTimer();
     }
 
-    let size = ~~(this.size*UIBase.getDPI());
+    const size = ~~(this.size * UIBase.getDPI());
 
     if (size !== this.canvas.width) {
       this.setCSS();
@@ -190,9 +191,9 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
   }
 
   setCSS() {
-    let c = this.canvas;
+    const c = this.canvas;
 
-    let size = ~~(this.size*UIBase.getDPI());
+    let size = ~~(this.size * UIBase.getDPI());
 
     if (c.width !== size) {
       c.width = c.height = size;
@@ -219,8 +220,8 @@ export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIB
 
   static define() {
     return {
-      tagname : "progress-circle-x"
-    }
+      tagname: "progress-circle-x",
+    };
   }
 }
 UIBase.register(ProgressCircle);

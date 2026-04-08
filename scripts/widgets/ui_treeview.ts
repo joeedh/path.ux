@@ -1,8 +1,8 @@
-import '../util/ScreenOverdraw.js';
-import {UIBase, Icons} from '../core/ui_base.js';
-import {Container} from '../core/ui.js';
-import {IContextBase} from '../core/context_base.js';
-import * as math from '../path-controller/util/math.js';
+import "../util/ScreenOverdraw.js";
+import { UIBase, Icons } from "../core/ui_base.js";
+import { Container } from "../core/ui.js";
+import { IContextBase } from "../core/context_base.js";
+import * as math from "../path-controller/util/math.js";
 
 export class TreeItem<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   treeParent: TreeItem<CTX> | undefined;
@@ -35,10 +35,10 @@ export class TreeItem<CTX extends IContextBase = IContextBase> extends Container
     this._icon1.onclick = () => {
       if (this.opened) {
         this.close();
-      }  else {
+      } else {
         this.open();
       }
-    }
+    };
 
     this.opened = true;
 
@@ -59,10 +59,8 @@ export class TreeItem<CTX extends IContextBase = IContextBase> extends Container
   }
 
   get icon(): number {
-    if (this._icon2)
-      return this._icon2.icon;
-    else
-      return -1;
+    if (this._icon2) return this._icon2.icon;
+    else return -1;
   }
 
   open() {
@@ -103,10 +101,12 @@ export class TreeItem<CTX extends IContextBase = IContextBase> extends Container
     super.init();
   }
 
-  static define() {return {
-    tagname : "tree-item-x",
-    style   : "treeview"
-  }}
+  static define() {
+    return {
+      tagname: "tree-item-x",
+      style  : "treeview",
+    };
+  }
 }
 UIBase.internalRegister(TreeItem);
 
@@ -138,15 +138,15 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
   }
 
   _forAllChildren(item: TreeItem<CTX>, cb: (n: TreeItem<CTX>) => void) {
-    let visit = (n: TreeItem<CTX>) => {
+    const visit = (n: TreeItem<CTX>) => {
       cb(n);
 
-      for (let c of n.treeChildren) {
+      for (const c of n.treeChildren) {
         visit(c);
       }
-    }
+    };
 
-    for (let c of item.treeChildren) {
+    for (const c of item.treeChildren) {
       visit(c);
     }
   }
@@ -156,7 +156,7 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       if (c.opened) {
         c.unhide();
       }
-    })
+    });
 
     this._makeStrokes();
   }
@@ -164,7 +164,7 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
   _close(item: TreeItem<CTX>) {
     this._forAllChildren(item, (c) => {
       c.hide();
-    })
+    });
 
     this._makeStrokes();
   }
@@ -174,23 +174,23 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       return;
     }
 
-    for (let elem of this.strokes) {
+    for (const elem of this.strokes) {
       elem.remove();
     }
     this.strokes.length = 0;
 
-    let hidden = (item: TreeItem<CTX>) => {
+    const hidden = (item: TreeItem<CTX>) => {
       return item.hidden;
-    }
+    };
 
-    let items = this.items;
+    const items = this.items;
     if (items.length == 0) {
       return;
     }
 
     this.overdraw.clear();
 
-    let next = (i: number) => {
+    const next = (i: number) => {
       i++;
 
       while (i < items.length && hidden(items[i])) {
@@ -198,58 +198,58 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       }
 
       return i;
-    }
+    };
 
     let i = 0;
-    if (hidden(items[i]))
-      i = next(i);
+    if (hidden(items[i])) i = next(i);
 
-    let origin = this.overdraw.getBoundingClientRect();
-    let overdraw = this.overdraw;
+    const origin = this.overdraw.getBoundingClientRect();
+    const overdraw = this.overdraw;
 
-    let line = function(x1: number, y1: number, x2: number, y2: number) {
-      let ox = origin.x, oy = origin.y;
+    const line = function (x1: number, y1: number, x2: number, y2: number) {
+      const ox = origin.x;
+      const oy = origin.y;
 
-      x1 -= ox; y1 -= oy;
-      x2 -= ox; y2 -= oy;
+      x1 -= ox;
+      y1 -= oy;
+      x2 -= ox;
+      y2 -= oy;
 
       overdraw.line([x1, y1], [x2, y2]);
-    }
+    };
 
     console.log("making lines", i);
 
-    let indent = this.getDefault("itemIndent") as number;
-    let rowh = this.getDefault("rowHeight") as number;
+    const indent = this.getDefault("itemIndent") as number;
+    const rowh = this.getDefault("rowHeight") as number;
 
-    let getx = (depth: number) => {
-      return (depth+2.2)*indent + origin.x;
-    }
+    const getx = (depth: number) => {
+      return (depth + 2.2) * indent + origin.x;
+    };
 
     this.overdraw.style.zIndex = "0";
 
     let prev: TreeItem<CTX> | undefined = undefined;
 
-    for (; i<items.length; i = next(i)) {
-      let item = this.items[i];
-      let item2idx = next(i);
-      let item2: TreeItem<CTX> | undefined = item2idx < items.length ? items[item2idx] : undefined;
+    for (; i < items.length; i = next(i)) {
+      const item = this.items[i];
+      const item2idx = next(i);
+      const item2: TreeItem<CTX> | undefined = item2idx < items.length ? items[item2idx] : undefined;
 
-      let r = item._icon1.getBoundingClientRect();
+      const r = item._icon1.getBoundingClientRect();
 
       if (!r) continue;
 
-      let x1 = getx(item.treeDepth);
-      let y1 = origin.y + (i+1)*rowh - rowh*0.25;
-
+      const x1 = getx(item.treeDepth);
+      const y1 = origin.y + (i + 1) * rowh - rowh * 0.25;
 
       if (item2 && item2.treeDepth > item.treeDepth) {
-        let y2 = y1 + rowh*0.75;
+        const y2 = y1 + rowh * 0.75;
 
-        line(x1, y1, x1, y2)
-        line(x1, y2, getx(item2.treeDepth)-3, y2);
-
-      } else if (item2 && item2.treeDepth === item.treeDepth) {
-        line(x1, y1, x1, y1+rowh*0.5)
+        line(x1, y1, x1, y2);
+        line(x1, y2, getx(item2.treeDepth) - 3, y2);
+      } else if (item2?.treeDepth === item.treeDepth) {
+        line(x1, y1, x1, y1 + rowh * 0.5);
       }
 
       prev = item;
@@ -257,13 +257,13 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
   }
 
   updateOverdraw() {
-    let mm = new math.MinMax(2);
+    const mm = new math.MinMax(2);
     let ok = false;
 
-    for (let item of this.items) {
-      for (let r of item.getClientRects()) {
+    for (const item of this.items) {
+      for (const r of item.getClientRects()) {
         mm.minmax([r.x, r.y]);
-        mm.minmax([r.x+r.width, r.y+r.height]);
+        mm.minmax([r.x + r.width, r.y + r.height]);
         ok = true;
       }
     }
@@ -272,15 +272,15 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       return;
     }
 
-    let r = this.getClientRects()[0];
+    const r = this.getClientRects()[0];
     if (!r) return;
 
-    let x = r.left;
-    let y = r.top;
+    const x = r.left;
+    const y = r.top;
 
-    let od = this.overdraw;
-    let w = (mm.max as any)[0] - (mm.min as any)[0];
-    let h = (mm.max as any)[1] - (mm.min as any)[1];
+    const od = this.overdraw;
+    const w = (mm.max as any)[0] - (mm.min as any)[0];
+    const h = (mm.max as any)[1] - (mm.min as any)[1];
 
     od.style.margin = "0px";
     od.style.padding = "0px";
@@ -288,8 +288,8 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
 
     od.style.position = UIBase.PositionKey;
 
-    od.style.width = (r.width-1) + "px";
-    od.style.height = (r.height-1) + "px";
+    od.style.width = r.width - 1 + "px";
+    od.style.height = r.height - 1 + "px";
 
     od.style.left = x + "px";
     od.style.top = y + "px";
@@ -302,7 +302,7 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
   }
 
   item(name: string, args: { icon?: number; treeParent?: TreeItem<CTX> } = {}) {
-    let ret = UIBase.createElement("tree-item-x") as TreeItem<CTX>;
+    const ret = UIBase.createElement("tree-item-x") as TreeItem<CTX>;
     this.add(ret);
     ret._init();
 
@@ -329,7 +329,7 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       i++;
     }
 
-    ret.style.marginLeft = (i * (this.getDefault("itemIndent") as number)) + "px";
+    ret.style.marginLeft = i * (this.getDefault("itemIndent") as number) + "px";
     this.items.push(ret);
 
     this.doOnce(() => {
@@ -339,9 +339,11 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
     return ret;
   }
 
-  static define() {return {
-    tagname : "tree-view-x",
-    style   : "treeview"
-  }}
+  static define() {
+    return {
+      tagname: "tree-view-x",
+      style  : "treeview",
+    };
+  }
 }
 UIBase.internalRegister(TreeView);

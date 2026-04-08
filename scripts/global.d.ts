@@ -112,7 +112,6 @@ interface Window {
   IndexRange: unknown;
   IndexRangeStack: unknown[];
   makeCompiledVectormathCode: (mode?: string) => string;
-  Matrix4: unknown;
 
   /* ── Cachering system ──────────────────────────────────────── */
   _cacherings: unknown[];
@@ -228,7 +227,6 @@ interface Window {
 }
 
 /** globalThis extensions (from path-controller/util/util.js) */
-declare var _isDenormal: (f: number) => boolean;
 declare var termColor: Record<string, string>;
 declare var get_callstack: (msg?: string) => string;
 declare var print_stack: (...args: unknown[]) => void;

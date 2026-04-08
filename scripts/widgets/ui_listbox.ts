@@ -10,12 +10,12 @@ class ListItem<CTX extends IContextBase = IContextBase> extends RowFrame<CTX> {
   constructor() {
     super();
 
-    let highlight = () => {
+    const highlight = () => {
       this.highlight = true;
       this.setBackground();
     };
 
-    let unhighlight = () => {
+    const unhighlight = () => {
       this.highlight = false;
       this.setBackground();
     };
@@ -27,7 +27,7 @@ class ListItem<CTX extends IContextBase = IContextBase> extends RowFrame<CTX> {
     this.addEventListener("mouseout", unhighlight);
     this.addEventListener("blur", unhighlight);
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .listitem {
         -moz-user-focus: normal;
@@ -92,13 +92,13 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   constructor() {
     super();
 
-    this.items = []
+    this.items = [];
     this.idmap = {};
     this.items.active = undefined;
     this.highlight = false;
     this.is_active = false;
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .listbox {
         -moz-user-focus: normal;
@@ -120,7 +120,7 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
           }
 
           let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
+          const dir = e.keyCode == keymap["Up"] ? -1 : 1;
 
           i = Math.max(Math.min(i + dir, this.items.length - 1), 0);
           this.setActive(this.items[i]);
@@ -152,7 +152,7 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   }
 
   addItem(name: string, id?: number) {
-    let item = UIBase.createElement("listitem-x") as ListItem<CTX>;
+    const item = UIBase.createElement("listitem-x") as ListItem<CTX>;
 
     item._id = (id === undefined ? this.items.length : id) as any;
     this.idmap[item._id] = item;
@@ -164,7 +164,7 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
     this.items.push(item);
 
     item.label(name);
-    let this2 = this;
+    const this2 = this;
 
     (item as any).onclick = function (this: ListItem<CTX>) {
       this2.setActive(this);

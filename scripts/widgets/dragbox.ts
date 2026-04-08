@@ -1,8 +1,8 @@
-import {UIBase, Icons} from '../core/ui_base.js';
-import {Container} from '../core/ui.js';
-import {IContextBase} from '../core/context_base.js';
-import {pushModalLight, popModalLight, keymap, ModalState} from '../path-controller/util/simple_events.js';
-import {parsepx} from '../core/ui_theme.js';
+import { UIBase, Icons } from "../core/ui_base.js";
+import { Container } from "../core/ui.js";
+import { IContextBase } from "../core/context_base.js";
+import { pushModalLight, popModalLight, keymap, ModalState } from "../path-controller/util/simple_events.js";
+import { parsepx } from "../core/ui_theme.js";
 
 interface DragHandlers {
   on_mousemove(e: MouseEvent): void;
@@ -22,9 +22,10 @@ function startDrag<CTX extends IContextBase>(box: DragBox<CTX>) {
   let lastx = 0;
   let lasty = 0;
 
-  let handlers: DragHandlers = {
+  const handlers: DragHandlers = {
     on_mousemove(e: MouseEvent) {
-      let x = e.x, y = e.y;
+      const x = e.x;
+      const y = e.y;
 
       if (first) {
         lastx = x;
@@ -34,8 +35,8 @@ function startDrag<CTX extends IContextBase>(box: DragBox<CTX>) {
         return;
       }
 
-      let dx = x - lastx;
-      let dy = y - lasty;
+      const dx = x - lastx;
+      const dy = y - lasty;
 
       let hx = parsepx(box.style.left);
       let hy = parsepx(box.style.top);
@@ -70,9 +71,8 @@ function startDrag<CTX extends IContextBase>(box: DragBox<CTX>) {
           this.end();
           break;
       }
-    }
-
-  }
+    },
+  };
 
   box._modal = pushModalLight(handlers as unknown as Record<string, unknown>);
 }
@@ -104,7 +104,7 @@ export class DragBox<CTX extends IContextBase = IContextBase> extends Container<
   init() {
     super.init();
 
-    let header = this.header;
+    const header = this.header;
 
     header.ctx = this.ctx;
     this.contents.ctx = this.ctx;
@@ -114,20 +114,23 @@ export class DragBox<CTX extends IContextBase = IContextBase> extends Container<
     this.style.minWidth = "350px";
     header.style.height = "35px";
 
-    let icon = header.iconbutton(Icons.DELETE, "Hide", () => {
+    const icon = header.iconbutton(Icons.DELETE, "Hide", () => {
       this.end();
     });
     (icon as any).iconsheet = 0; //use small icons
 
-    this.addEventListener("mousedown", (e) => {
-      console.log("start drag");
-      startDrag(this);
+    this.addEventListener(
+      "mousedown",
+      (e) => {
+        console.log("start drag");
+        startDrag(this);
 
-      /* ensure browser doesn't spawn its own (incompatible)
+        /* ensure browser doesn't spawn its own (incompatible)
          touch->mouse emulation events}; */
-      e.preventDefault();
-
-    }, {capture : false})
+        e.preventDefault();
+      },
+      { capture: false }
+    );
 
     header.background = this.getDefault("background-color");
 
@@ -251,9 +254,11 @@ export class DragBox<CTX extends IContextBase = IContextBase> extends Container<
     this.background = this.getDefault("background-color");
   }
 
-  static define() {return {
-    tagname : "drag-box-x",
-    style   : "panel"
-  }}
+  static define() {
+    return {
+      tagname: "drag-box-x",
+      style  : "panel",
+    };
+  }
 }
 UIBase.internalRegister(DragBox);

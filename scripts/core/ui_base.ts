@@ -719,7 +719,6 @@ import {
   SocketType,
 } from "../path-controller/dag/eventdag.js";
 import type { IContextBase } from "./context_base.js";
-import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
 import { CSSFont } from "./cssfont.js";
 
 const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
@@ -2972,7 +2971,7 @@ export class UIBase<
   }
 
   loadNumConstraints(
-    prop: ResolvedProp | toolprop.ToolProperty | undefined,
+    prop: toolprop.ToolProperty | undefined,
     dom: HTMLElement | UIBase<CTX> = this,
     onModifiedCallback?: (this: UIBase) => void
   ): void {

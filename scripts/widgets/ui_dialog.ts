@@ -1,6 +1,6 @@
-import {UIBase} from "../core/ui_base.js";
-import {AreaFlags} from "../screen/ScreenArea.js";
-import {keymap} from "../path-controller/util/simple_events.js";
+import { UIBase } from "../core/ui_base.js";
+import { AreaFlags } from "../screen/ScreenArea.js";
+import { keymap } from "../path-controller/util/simple_events.js";
 
 interface PopupAreaArgs {
   width?: number;
@@ -9,11 +9,11 @@ interface PopupAreaArgs {
 }
 
 export function makePopupArea(area_class: unknown, screen: any, args: PopupAreaArgs = {}) {
-  let sarea: any = UIBase.createElement("screenarea-x");
+  const sarea: any = UIBase.createElement("screenarea-x");
 
-  let width = args.width || (screen.size[0]*0.7);
-  let height = args.height || (screen.size[1]*0.7);
-  let addEscapeKeyHandler = args.addEscapeKeyHandler !== undefined ? args.addEscapeKeyHandler : true;
+  const width = args.width || screen.size[0] * 0.7;
+  const height = args.height || screen.size[1] * 0.7;
+  const addEscapeKeyHandler = args.addEscapeKeyHandler !== undefined ? args.addEscapeKeyHandler : true;
 
   sarea.ctx = screen.ctx;
   sarea.size[0] = width;
@@ -43,7 +43,7 @@ export function makePopupArea(area_class: unknown, screen: any, args: PopupAreaA
       if (e.keyCode === keymap.Escape) {
         screen.removeArea(sarea);
       }
-    }
+    };
   }
 
   sarea.bringToFront();

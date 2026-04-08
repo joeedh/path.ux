@@ -137,7 +137,7 @@ export function saveFile(
   }
 }
 
-export function loadFile(appstate: Record<string, unknown>, args: FileArgsInit, data: unknown) {
+export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
   if (args.useJSON === undefined) {
     args.useJSON = (appstate as { saveFilesInJSON?: boolean }).saveFilesInJSON;
   }

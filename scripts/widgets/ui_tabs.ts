@@ -1,13 +1,14 @@
 "use strict";
 
-import * as util from "../path-controller/util/util.js";
-import * as events from "../path-controller/util/events.js";
-import * as ui from "../core/ui.js";
-import { keymap } from "../path-controller/util/events.js";
-import { IContextBase } from "../core/context_base.js";
+import { JSONAny } from "../path-controller/util/jsonUtils";
+import * as util from "../path-controller/util/util";
+import * as events from "../path-controller/util/events";
+import * as ui from "../core/ui";
+import { keymap } from "../path-controller/util/events";
+import { IContextBase } from "../core/context_base";
 import { UIBase, iconmanager, loadUIData, measureText, saveUIData } from "../core/ui_base";
 import { CSSFont } from "../core/cssfont";
-import { Number2, Vector2 } from "../util/vectormath.js";
+import { Number2, Vector2 } from "../util/vectormath";
 
 export let tab_idgen = 1;
 const debug = false;
@@ -15,8 +16,6 @@ const debug = false;
 function getpx(css: string): number {
   return parseFloat(css.trim().replace("px", ""));
 }
-
-const FAKE_TAB_ID = Symbol("fake_tab_id");
 
 const isForwardAttr = (n: string) => n.startsWith("data-");
 
@@ -221,7 +220,7 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
       cls = PointerEvent as unknown as EventConstructor;
     }
 
-    const e2: Record<string, unknown> = {};
+    const e2: { [key: string]: unknown } = {};
 
     if (forwardEvent) {
       for (const k in forwardEvent) {
@@ -229,7 +228,7 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
           continue;
         }
 
-        e2[k] = (forwardEvent as unknown as Record<string, unknown>)[k];
+        e2[k] = forwardEvent[k as keyof typeof forwardEvent];
       }
     }
 
@@ -392,7 +391,6 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
     const screen = ctx.screen;
     const elem = screen.pickElement(x, y);
 
-    const e2 = new DragEvent("dragenter", this.dragevent);
     if (elem !== this.droptarget) {
       let e2 = new DragEvent("dragexit", this.dragevent);
       if (this.droptarget) {
@@ -405,7 +403,6 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
         elem.dispatchEvent(e2);
       }
     }
-    //console.log(elem);
   }
 
   _on_move(e: PointerEvent, x: number, y: number) {
@@ -450,7 +447,6 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
     const tab = this.tab;
     const tbar = this.tbar;
     const axis = tbar.horiz ? 0 : 1;
-    let distx;
     let disty;
 
     if (tbar.horiz) {
@@ -844,7 +840,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     };
   }
 
-  loadData(obj: Record<string, unknown> | any): this {
+  loadData(obj: JSONAny): this {
     if (!obj.taborder) {
       return this;
     }
@@ -1474,7 +1470,7 @@ UIBase.internalRegister(TabBar as any);
 export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   _style?: HTMLStyleElement;
   tbar: TabBar<CTX>;
-  tabs: Record<string, TabItemContainer<CTX>>;
+  tabs: { [k: string]: TabItemContainer<CTX> };
   tabFontScale: number;
   dataPrefix: "";
   inherit_packflag = 0;
@@ -1621,8 +1617,8 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     return this.tbar._ensureNoModal();
   }
 
-  saveData(): Record<string, any> {
-    const json = (super.saveData() ?? {}) as any;
+  saveData(): JSONAny {
+    const json = (super.saveData() ?? {}) as JSONAny;
     json.tabs = {};
 
     for (const k in this.tabs) {
@@ -1643,7 +1639,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     return json;
   }
 
-  loadData(json: any): this {
+  loadData(json: JSONAny): this {
     if (!json.tabs) {
       return this;
     }

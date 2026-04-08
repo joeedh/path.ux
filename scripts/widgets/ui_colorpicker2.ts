@@ -1,32 +1,32 @@
 "use strict";
 
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath.js';
-import * as ui_base from '../core/ui_base.js';
-import * as ui from '../core/ui.js';
-import {PropTypes} from '../path-controller/toolsys/toolprop.js';
-import {keymap} from '../path-controller/util/simple_events.js';
-import cconst from '../config/const.js';
-import {color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor} from "../core/ui_base.js";
-import {IContextBase} from "../core/context_base.js";
+import * as util from "../path-controller/util/util.js";
+import * as vectormath from "../path-controller/util/vectormath.js";
+import * as ui_base from "../core/ui_base.js";
+import * as ui from "../core/ui.js";
+import { PropTypes } from "../path-controller/toolsys/toolprop.js";
+import { keymap } from "../path-controller/util/simple_events.js";
+import cconst from "../config/const.js";
+import { color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor } from "../core/ui_base.js";
+import { IContextBase } from "../core/context_base.js";
 
-const Vector2 = vectormath.Vector2,
-      Vector3 = vectormath.Vector3,
-      Vector4 = vectormath.Vector4;
+const Vector2 = vectormath.Vector2;
+const Vector3 = vectormath.Vector3;
+const Vector4 = vectormath.Vector4;
 
-export {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
-import {rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk} from "../path-controller/util/colorutils.js";
-import {contextWrangler} from '../screen/area_wrangler.js';
+export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils.js";
+import { rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk } from "../path-controller/util/colorutils.js";
+import { contextWrangler } from "../screen/area_wrangler.js";
 
-const UIBase     = ui_base.UIBase,
-      PackFlags  = ui_base.PackFlags;
+const UIBase = ui_base.UIBase;
 
 type Vector2 = vectormath.Vector2;
 type Vector3 = vectormath.Vector3;
 type Vector4 = vectormath.Vector4;
 type UIBaseType = InstanceType<typeof UIBase>;
 
-const UPW = 1.25, VPW = 0.75;
+const UPW = 1.25;
+const VPW = 0.75;
 
 //*
 const sample_rets = new util.cachering<number[]>(() => [0, 0], 64);
@@ -43,8 +43,8 @@ export function inv_sample(u: number, v: number): number[] {
 export function sample(u: number, v: number): number[] {
   const ret = sample_rets.next();
 
-  ret[0] = Math.pow(u, 1.0/UPW);
-  ret[1] = Math.pow(v, 1.0/VPW);
+  ret[0] = Math.pow(u, 1.0 / UPW);
+  ret[1] = Math.pow(v, 1.0 / VPW);
 
   return ret;
 }
@@ -57,13 +57,14 @@ interface ColorWidget {
 }
 
 /* shared methods for clipboard handling */
-function colorClipboardCopy(this: unknown): void {
-  const widget = this as {getRGBA(): Vector4};
-  const rgba = widget.getRGBA();
+function colorClipboardCopy<CTX extends IContextBase = IContextBase>(
+  this: HueField | SatValField | ColorPicker<CTX>
+): void {
+  const rgba = this.getRGBA();
 
-  const r = rgba[0]*255;
-  const g = rgba[1]*255;
-  const b = rgba[2]*255;
+  const r = rgba[0] * 255;
+  const g = rgba[1] * 255;
+  const b = rgba[2] * 255;
   const a = rgba[3];
 
   const data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
@@ -72,11 +73,13 @@ function colorClipboardCopy(this: unknown): void {
   cconst.setClipboardData("color", "text/plain", data);
 }
 
-function colorClipboardPaste(this: unknown): void {
-  const widget = this as {setRGBA(color: number[] | Vector4): void};
+function colorClipboardPaste<CTX extends IContextBase = IContextBase>(
+  this: HueField | SatValField | ColorPicker<CTX>
+): void {
   const entry = cconst.getClipboardData("text/plain");
 
-  if (!entry || !validateCSSColor("" + entry.data)) {// || data.mime !== "text/css") {
+  if (!entry || !validateCSSColor("" + entry.data)) {
+    // || data.mime !== "text/css") {
     return;
   }
 
@@ -92,7 +95,7 @@ function colorClipboardPaste(this: unknown): void {
   }
 
   if (color) {
-    widget.setRGBA(color);
+    this.setRGBA(Array.from(color));
   }
 }
 
@@ -110,15 +113,15 @@ export function getHueField(width: number, height: number, dpi: number): HTMLCan
   const imageData = new ImageData(width, height);
   const idata = imageData.data;
 
-  for (let i = 0; i < width*height; i++) {
-    const ix = i%width;
-    const idx = i*4;
+  for (let i = 0; i < width * height; i++) {
+    const ix = i % width;
+    const idx = i * 4;
 
-    const rgb = hsv_to_rgb(ix/width, 1, 1);
+    const rgb = hsv_to_rgb(ix / width, 1, 1);
 
-    idata[idx] = rgb[0]*255;
-    idata[idx + 1] = rgb[1]*255;
-    idata[idx + 2] = rgb[2]*255;
+    idata[idx] = rgb[0] * 255;
+    idata[idx + 1] = rgb[1] * 255;
+    idata[idx + 2] = rgb[2] * 255;
     idata[idx + 3] = 255;
   }
 
@@ -155,13 +158,12 @@ export function getFieldImage(fieldsize: number, width: number, height: number, 
   fieldrand.seed(0);
 
   /* render field at half res and upscale via canvas2d */
-  const fieldsize2 = fieldsize>>1;
+  const fieldsize2 = fieldsize >> 1;
 
   const hue = hsva[0];
-  const key = fieldsize + ":" + (width>>1) + ":" + (height>>1) + ":" + hue.toFixed(5);
+  const key = fieldsize + ":" + (width >> 1) + ":" + (height >> 1) + ":" + hue.toFixed(5);
 
-  if (key in fields)
-    return fields[key];
+  if (key in fields) return fields[key];
 
   const size2 = fieldsize2;
   const valpow = 0.75;
@@ -171,43 +173,43 @@ export function getFieldImage(fieldsize: number, width: number, height: number, 
     height,
     image : new ImageData(fieldsize2, fieldsize2),
     canvas: null as unknown as HTMLCanvasElement, // assigned below
-    scale : 0,                                    // assigned below
+    scale : 0, // assigned below
     params: {
-      box: { x: 0, y: 0, width, height }
+      box: { x: 0, y: 0, width, height },
     },
 
     x2sat(x: number) {
-      return Math.min(Math.max(x/width, 0), 1);
+      return Math.min(Math.max(x / width, 0), 1);
     },
     y2val(y: number) {
-      const yn = 1.0 - Math.min(Math.max(y/height, 0), 1);
-      return yn === 0.0 ? 0.0 : yn**valpow;
+      const yn = 1.0 - Math.min(Math.max(y / height, 0), 1);
+      return yn === 0.0 ? 0.0 : yn ** valpow;
     },
     sat2x(s: number) {
-      return s*width;
+      return s * width;
     },
     val2y(v: number) {
-      if (v === 0)
-        return height;
+      if (v === 0) return height;
 
-      const vp = v**(1.0/valpow);
-      return (1.0 - vp)*height;
-    }
+      const vp = v ** (1.0 / valpow);
+      return (1.0 - vp) * height;
+    },
   };
 
   const idata = image.image.data;
   for (let i = 0; i < idata.length; i += 4) {
-    const i2 = i/4;
-    const x = i2%size2, y = ~~(i2/size2);
+    const i2 = i / 4;
+    const x = i2 % size2;
+    const y = ~~(i2 / size2);
 
-    const v = 1.0 - (y/size2);
-    const s = (x/size2);
+    const v = 1.0 - y / size2;
+    const s = x / size2;
 
-    const rgb = hsv_to_rgb(hsva[0], s, v**valpow);
+    const rgb = hsv_to_rgb(hsva[0], s, v ** valpow);
 
-    idata[i] = rgb[0]*255;
-    idata[i + 1] = rgb[1]*255;
-    idata[i + 2] = rgb[2]*255;
+    idata[i] = rgb[0] * 255;
+    idata[i + 1] = rgb[1] * 255;
+    idata[i + 2] = rgb[2] * 255;
     idata[i + 3] = 255;
   }
 
@@ -219,14 +221,13 @@ export function getFieldImage(fieldsize: number, width: number, height: number, 
   g.putImageData(image.image, 0, 0);
   //*/
   image.canvas = image2;
-  image.scale = width/size2;
+  image.scale = width / size2;
 
   fields[key] = image;
   return image;
 }
 
-
-let _update_temp = new Vector4();
+const _update_temp = new Vector4();
 
 export class SimpleBox {
   pos: vectormath.Vector2;
@@ -260,10 +261,10 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
       const dpi = this.getDPI();
       const pad = this._getPad();
 
-      const w = this.canvas.width/dpi - pad*2.0;
+      const w = this.canvas.width / dpi - pad * 2.0;
       const xp = x - pad;
 
-      let h = xp/w;
+      let h = xp / w;
       h = Math.min(Math.max(h, 0.0), 1.0);
 
       this.hsva[0] = h;
@@ -281,7 +282,7 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
         case keymap["Right"]: {
           const sign = e.keyCode === keymap["Left"] ? -1 : 1;
 
-          this.hsva[0] = Math.min(Math.max(this.hsva[0] + 0.05*sign, 0.0), 1.0);
+          this.hsva[0] = Math.min(Math.max(this.hsva[0] + 0.05 * sign, 0.0), 1.0);
           this._redraw();
 
           if (this._onchange) {
@@ -302,38 +303,39 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
       e.preventDefault();
 
       const rect = this.canvas.getClientRects()[0];
-      const x = e.clientX - rect.x, y = e.clientY - rect.y;
+      const x = e.clientX - rect.x;
+      const y = e.clientY - rect.y;
 
       setFromXY(x, y);
 
       this.pushModal({
         on_mousemove: (e: MouseEvent) => {
           const rect = this.canvas.getClientRects()[0];
-          const x = e.clientX - rect.x, y = e.clientY - rect.y;
+          const x = e.clientX - rect.x;
+          const y = e.clientY - rect.y;
 
           setFromXY(x, y);
         },
         on_mousedown: (_e: MouseEvent) => {
           this.popModal();
         },
-        on_mouseup  : (_e: MouseEvent) => {
+        on_mouseup: (_e: MouseEvent) => {
           this.popModal();
         },
-        on_keydown  : (e: KeyboardEvent) => {
+        on_keydown: (e: KeyboardEvent) => {
           if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
             this.popModal();
           }
-        }
+        },
       });
     });
   }
-
 
   static define() {
     return {
       tagname          : "huefield-x",
       style            : "colorfield",
-      havePickClipboard: true
+      havePickClipboard: true,
     };
   }
 
@@ -366,14 +368,15 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
   }
 
   _redraw(): void {
-    const g = this.g, canvas = this.canvas;
+    const g = this.g;
+    const canvas = this.canvas;
     const dpi = this.getDPI();
 
     const w = this.getDefault("width") as number;
     const h = this.getDefault("hueHeight") as number;
 
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
+    canvas.width = ~~(w * dpi);
+    canvas.height = ~~(h * dpi);
 
     (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
     (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
@@ -381,29 +384,29 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
     /* create horizontal padding to make selection of
      *  endpoint hue easier */
 
-    const rselector = ~~(this._getPad()*dpi); //~~(this.getDefault("circleSize")*dpi);
-    const r_circle = (this.getDefault("circleSize") as number)*dpi;
+    const rselector = ~~(this._getPad() * dpi); //~~(this.getDefault("circleSize")*dpi);
+    const r_circle = (this.getDefault("circleSize") as number) * dpi;
 
     let w2 = canvas.width;
 
-    w2 -= rselector*2.0;
+    w2 -= rselector * 2.0;
 
     //g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
     g.drawImage(getHueField(w2, canvas.height, dpi), 0, 0, w2, canvas.height, rselector, 0, w2, canvas.height);
 
-    const x = this.hsva[0]*w2 + rselector;
-    const y = canvas.height*0.5;
+    const x = this.hsva[0] * w2 + rselector;
+    const y = canvas.height * 0.5;
 
     g.beginPath();
     g.arc(x, y, r_circle, -Math.PI, Math.PI);
     g.closePath();
 
     g.strokeStyle = "white";
-    g.lineWidth = 3*dpi;
+    g.lineWidth = 3 * dpi;
     g.stroke();
 
     g.strokeStyle = "grey";
-    g.lineWidth = 1*dpi;
+    g.lineWidth = 1 * dpi;
     g.stroke();
 
     if (this.disabled) {
@@ -444,10 +447,10 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
     const setFromXY = (x: number, y: number): void => {
       const field = this._getField();
-      const r = ~~((this.getDefault("circleSize") as number)*this.getDPI());
+      const r = ~~((this.getDefault("circleSize") as number) * this.getDPI());
 
-      let sat = field.x2sat(x - r);
-      let val = field.y2val(y - r);
+      const sat = field.x2sat(x - r);
+      const val = field.y2val(y - r);
 
       this.hsva[1] = sat;
       this.hsva[2] = val;
@@ -463,9 +466,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
       switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Right"]: {
-          let sign = e.keyCode === keymap["Left"] ? -1 : 1;
+          const sign = e.keyCode === keymap["Left"] ? -1 : 1;
 
-          this.hsva[1] = Math.min(Math.max(this.hsva[1] + 0.05*sign, 0.0), 1.0);
+          this.hsva[1] = Math.min(Math.max(this.hsva[1] + 0.05 * sign, 0.0), 1.0);
           this._redraw();
 
           if (this._onchange) {
@@ -477,9 +480,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
         case keymap["Up"]:
         case keymap["Down"]: {
-          let sign = e.keyCode === keymap["Down"] ? -1 : 1;
+          const sign = e.keyCode === keymap["Down"] ? -1 : 1;
 
-          this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05*sign, 0.0), 1.0);
+          this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05 * sign, 0.0), 1.0);
           this._redraw();
 
           if (this._onchange) {
@@ -499,8 +502,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
          touch->mouse emulation events}; */
       e.preventDefault();
 
-      let rect = this.canvas.getClientRects()[0];
-      let x = e.clientX - rect.x, y = e.clientY - rect.y;
+      const rect = this.canvas.getClientRects()[0];
+      const x = e.clientX - rect.x;
+      const y = e.clientY - rect.y;
 
       setFromXY(x, y);
 
@@ -511,7 +515,8 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
             return;
           }
 
-          const x = e.clientX - rect.x, y = e.clientY - rect.y;
+          const x = e.clientX - rect.x;
+          const y = e.clientY - rect.y;
 
           setFromXY(x, y);
         },
@@ -521,14 +526,14 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
         on_mousedown: (_e: MouseEvent) => {
           this.popModal();
         },
-        on_mouseup  : (_e: MouseEvent) => {
+        on_mouseup: (_e: MouseEvent) => {
           this.popModal();
         },
-        on_keydown  : (e: KeyboardEvent) => {
+        on_keydown: (e: KeyboardEvent) => {
           if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
             this.popModal();
           }
-        }
+        },
       };
       this.pushModal(mouseHandlers);
     });
@@ -543,16 +548,18 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
       e.preventDefault();
 
       const rect = this.canvas.getClientRects()[0];
-      const x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+      const x = e.touches[0].clientX - rect.x;
+      const y = e.touches[0].clientY - rect.y;
 
       setFromXY(x, y);
 
       this.pushModal({
-        on_mousemove  : (e: MouseEvent & {touches?: TouchList; x?: number; y?: number}) => {
+        on_mousemove: (e: MouseEvent & { touches?: TouchList; x?: number; y?: number }) => {
           const rect = this.canvas.getClientRects()[0];
-          let mx: number, my: number;
+          let mx: number;
+          let my: number;
 
-          if (e.touches && e.touches.length) {
+          if (e.touches?.length) {
             mx = e.touches[0].clientX - rect.x;
             my = e.touches[0].clientY - rect.y;
           } else {
@@ -562,29 +569,30 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
           setFromXY(mx, my);
         },
-        on_touchmove  : (e: TouchEvent) => {
+        on_touchmove: (e: TouchEvent) => {
           const rect = this.canvas.getClientRects()[0];
-          const x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+          const x = e.touches[0].clientX - rect.x;
+          const y = e.touches[0].clientY - rect.y;
 
           setFromXY(x, y);
         },
-        on_mousedown  : (_e: MouseEvent) => {
+        on_mousedown: (_e: MouseEvent) => {
           this.popModal();
         },
         on_touchcancel: (_e: TouchEvent) => {
           this.popModal();
         },
-        on_touchend   : (_e: TouchEvent) => {
+        on_touchend: (_e: TouchEvent) => {
           this.popModal();
         },
-        on_mouseup    : (_e: MouseEvent) => {
+        on_mouseup: (_e: MouseEvent) => {
           this.popModal();
         },
-        on_keydown    : (e: KeyboardEvent) => {
+        on_keydown: (e: KeyboardEvent) => {
           if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
             this.popModal();
           }
-        }
+        },
       });
     });
   }
@@ -593,7 +601,7 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     return {
       tagname          : "satvalfield-x",
       style            : "colorfield",
-      havePickClipboard: true
+      havePickClipboard: true,
     };
   }
 
@@ -629,7 +637,12 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
     //r = ~~(r*dpi);
 
-    return getFieldImage(this.getDefault("fieldSize") as number, w - r*2, h - r*2, this.hsva as unknown as number[]);
+    return getFieldImage(
+      this.getDefault("fieldSize") as number,
+      w - r * 2,
+      h - r * 2,
+      this.hsva as unknown as number[]
+    );
   }
 
   update(force_update = false): void {
@@ -641,20 +654,21 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
   }
 
   _redraw(): void {
-    const g = this.g, canvas = this.canvas;
+    const g = this.g;
+    const canvas = this.canvas;
     const dpi = this.getDPI();
 
     const w = this.getDefault("width") as number;
     const h = this.getDefault("height") as number;
 
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
+    canvas.width = ~~(w * dpi);
+    canvas.height = ~~(h * dpi);
 
     (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
     (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
     //SatValField
 
-    const rselector = ~~((this.getDefault("circleSize") as number)*dpi);
+    const rselector = ~~((this.getDefault("circleSize") as number) * dpi);
 
     const field = this._getField();
     const image = field.canvas;
@@ -668,13 +682,14 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     g.beginPath();
 
     const steps = 17;
-    const dx = canvas.width/steps;
-    const dy = canvas.height/steps;
+    const dx = canvas.width / steps;
+    const dy = canvas.height / steps;
 
-    for (let i = 0; i < steps*steps; i++) {
-      const x = (i%steps)*dx, y = (~~(i/steps))*dy;
+    for (let i = 0; i < steps * steps; i++) {
+      const x = (i % steps) * dx;
+      const y = ~~(i / steps) * dy;
 
-      if (i%2 === 0) {
+      if (i % 2 === 0) {
         continue;
       }
       g.rect(x, y, dx, dy);
@@ -684,12 +699,22 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     g.fill();
 
     g.globalAlpha = this.hsva[3];
-    g.drawImage(image, 0, 0, image.width, image.height, rselector, rselector, canvas.width - rselector*2, canvas.height - rselector*2);
+    g.drawImage(
+      image,
+      0,
+      0,
+      image.width,
+      image.height,
+      rselector,
+      rselector,
+      canvas.width - rselector * 2,
+      canvas.height - rselector * 2
+    );
 
     const hsva = this.hsva;
 
-    const x = field.sat2x(hsva[1])*dpi + rselector;
-    const y = field.val2y(hsva[2])*dpi + rselector;
+    const x = field.sat2x(hsva[1]) * dpi + rselector;
+    const y = field.val2y(hsva[2]) * dpi + rselector;
     const r = rselector;
 
     g.beginPath();
@@ -697,11 +722,11 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     g.closePath();
 
     g.strokeStyle = "white";
-    g.lineWidth = 3*dpi;
+    g.lineWidth = 3 * dpi;
     g.stroke();
 
     g.strokeStyle = "grey";
-    g.lineWidth = 1*dpi;
+    g.lineWidth = 1 * dpi;
     g.stroke();
 
     if (this.disabled) {
@@ -778,7 +803,7 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
   static define() {
     return {
       tagname: "colorfield-x",
-      style  : "colorfield"
+      style  : "colorfield",
     };
   }
 
@@ -828,8 +853,7 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
     if (update) {
       this._last_dpi = dpi;
 
-      if (!_in_update)
-        this._redraw();
+      if (!_in_update) this._redraw();
 
       return true;
     }
@@ -842,7 +866,10 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
   }
 
   setRGBA(r: number | Vector4 | number[], g?: number, b?: number, a = 1.0, fire_onchange = true): void {
-    let r0: number, g0: number, b0: number, a0: number;
+    let r0: number;
+    let g0: number;
+    let b0: number;
+    let a0: number;
 
     if (typeof r === "object") {
       r0 = r[0];
@@ -957,7 +984,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
 
   get rgba(): Vector4 {
     return this.field.rgba;
-  }//*/
+  } //*/
 
   set description(_val: string) {
     //do not allow setting description of the colorpicker container
@@ -973,10 +1000,15 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
       tabs = panel.tabs() as unknown as import("../widgets/ui_tabs.js").TabContainer;
       panel.closed = true;
 
-      (panel as unknown as {style: Record<string, string>}).style["flex-grow"] = "unset";
+      (panel as unknown as { style: Record<string, string> }).style["flex-grow"] = "unset";
 
       /* force compactness */
-      ((panel as unknown as {titleframe: {style: Record<string, string>}}).titleframe.style as unknown as Record<string, string>)["flex-grow"] = "unset";
+      (
+        (panel as unknown as { titleframe: { style: Record<string, string> } }).titleframe.style as unknown as Record<
+          string,
+          string
+        >
+      )["flex-grow"] = "unset";
       //panel.titleframe.style["align-items"] = "unset";
     } else {
       tabs = node.tabs() as unknown as import("../widgets/ui_tabs.js").TabContainer;
@@ -987,10 +1019,10 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
       const strVal = "" + val;
       const ok = validateWebColor(strVal);
       if (!ok) {
-        (node.cssText as unknown as {flash(c: string): void}).flash("red");
+        (node.cssText as unknown as { flash(c: string): void }).flash("red");
         return;
       } else {
-        (node.cssText as unknown as {flash(c: string): void}).flash("green");
+        (node.cssText as unknown as { flash(c: string): void }).flash("green");
       }
 
       const trimmed = strVal.trim();
@@ -1007,7 +1039,11 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
 
     let tab = tabs.tab("HSV");
 
-    const makeSlider = (tabFrame: ReturnType<typeof tabs.tab>, label: string, cb: (e: {value: number}) => void): SliderWidget => {
+    const makeSlider = (
+      tabFrame: ReturnType<typeof tabs.tab>,
+      label: string,
+      cb: (e: { value: number }) => void
+    ): SliderWidget => {
       return tabFrame.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, cb) as unknown as SliderWidget;
     };
 
@@ -1069,12 +1105,12 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
           max       : 1.0,
           is_int    : false,
           defaultval: cmyk[idx],
-          callback  : (e: {value: number}) => {
+          callback: (e: { value: number }) => {
             const cmyk2 = node.getCMYK();
             cmyk2[idx] = e.value;
             node.setCMYK(cmyk2[0], cmyk2[1], cmyk2[2], cmyk2[3]);
           },
-          step      : 0.001
+          step      : 0.001,
         }) as unknown as SliderWidget;
 
         slider.baseUnit = slider.displayUnit = "none";
@@ -1082,12 +1118,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
         return slider;
       };
 
-      node.cmyk = [
-        makeCMYKSlider("C", 0),
-        makeCMYKSlider("M", 1),
-        makeCMYKSlider("Y", 2),
-        makeCMYKSlider("K", 3),
-      ];
+      node.cmyk = [makeCMYKSlider("C", 0), makeCMYKSlider("M", 1), makeCMYKSlider("Y", 2), makeCMYKSlider("K", 3)];
     }
 
     node._setSliders();
@@ -1104,11 +1135,11 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
   }
 
   clipboardCopy(): void {
-    colorClipboardCopy.call(this);
+    colorClipboardCopy.call(this as unknown as ColorPicker);
   }
 
   clipboardPaste(): void {
-    colorClipboardPaste.call(this);
+    colorClipboardPaste.call(this as unknown as ColorPicker);
   }
 
   init(): void {
@@ -1153,9 +1184,9 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
   }
 
   updateColorBox(): void {
-    const r = ~~(this.field.rgba[0]*255);
-    const g = ~~(this.field.rgba[1]*255);
-    const b = ~~(this.field.rgba[2]*255);
+    const r = ~~(this.field.rgba[0] * 255);
+    const g = ~~(this.field.rgba[1] * 255);
+    const b = ~~(this.field.rgba[2] * 255);
 
     (this.colorbox.style as unknown as Record<string, string>)["background-color"] = `rgb(${r},${g},${b})`;
   }
@@ -1258,7 +1289,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
       }
 
       let val: Vector4 | Vector3 = this.field.rgba;
-      if (prop !== undefined && prop.type === PropTypes.VEC3) {
+      if (prop?.type === PropTypes.VEC3) {
         val = new Vector3();
         (val as Vector3).load(this.field.rgba);
       }
@@ -1287,7 +1318,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
     return this.field.getRGBA();
   }
 
-  setRGBA(r: number, g: number, b: number, a: number): void {
+  setRGBA(r: number | number[], g?: number, b?: number, a?: number): void {
     this.field.setRGBA(r, g, b, a);
     this._setSliders();
     this._setDataPath();
@@ -1295,7 +1326,6 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
 }
 
 UIBase.internalRegister(ColorPicker as unknown as typeof UIBase);
-
 
 export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   _highlight: boolean;
@@ -1367,8 +1397,8 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     return {
       tagname          : "color-picker-button-x",
       style            : "colorpickerbutton",
-      havePickClipboard: true
-    }
+      havePickClipboard: true,
+    };
   }
 
   init(): void {
@@ -1385,10 +1415,9 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this._redraw();
     };
 
-    this.addEventListener("pointerover", enter as EventListener, {capture: true, passive: true});
-    this.addEventListener("pointerout", leave as EventListener, {capture: true, passive: true});
-    this.addEventListener("focus", leave as EventListener, {capture: true, passive: true});
-
+    this.addEventListener("pointerover", enter as EventListener, { capture: true, passive: true });
+    this.addEventListener("pointerout", leave as EventListener, { capture: true, passive: true });
+    this.addEventListener("focus", leave as EventListener, { capture: true, passive: true });
 
     this.addEventListener("mousedown", (e: MouseEvent) => {
       /* ensure browser doesn't spawn its own (incompatible)
@@ -1422,25 +1451,35 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this.onclick(e as unknown as PointerEvent);
     }
 
-    const colorpicker = (this.ctx.screen as unknown as {popup: (a: unknown, b: unknown) => unknown}).popup(this, this);
+    const colorpicker = (this.ctx.screen as unknown as { popup: (a: unknown, b: unknown) => unknown }).popup(
+      this,
+      this
+    );
     const ctx = contextWrangler.makeSafeContext(this.ctx) as unknown;
 
     (colorpicker as unknown as Record<string, unknown>)["ctx"] = ctx;
-    (colorpicker as unknown as {useDataPathUndo: boolean}).useDataPathUndo = this.useDataPathUndo;
+    (colorpicker as unknown as { useDataPathUndo: boolean }).useDataPathUndo = this.useDataPathUndo;
 
-    const path = this.hasAttribute("datapath") ? (this.getAttribute("datapath") ?? undefined) : undefined;
+    const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") ?? undefined : undefined;
 
     const massSetPath = (this.getAttribute("mass_set_path") ?? undefined) as string | undefined;
-    const widget = (colorpicker as unknown as {colorPicker: (p: string | undefined, u: undefined, m: string | undefined) => unknown}).colorPicker(path, undefined, massSetPath) as unknown;
+    const widget = (
+      colorpicker as unknown as { colorPicker: (p: string | undefined, u: undefined, m: string | undefined) => unknown }
+    ).colorPicker(path, undefined, massSetPath) as unknown;
 
     (widget as unknown as Record<string, unknown>)["ctx"] = ctx;
-    (widget as unknown as {_init(): void})._init();
-    (widget as unknown as {setRGBA(r: number, g: number, b: number, a: number): void}).setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
+    (widget as unknown as { _init(): void })._init();
+    (widget as unknown as { setRGBA(r: number, g: number, b: number, a: number): void }).setRGBA(
+      this.rgba[0],
+      this.rgba[1],
+      this.rgba[2],
+      this.rgba[3]
+    );
 
-    (widget as unknown as {style: Record<string, unknown>}).style["padding"] = "20px";
+    (widget as unknown as { style: Record<string, unknown> }).style["padding"] = "20px";
 
     const onchange = () => {
-      (this.rgba as unknown as {load(v: unknown): void}).load((widget as unknown as {rgba: unknown}).rgba);
+      (this.rgba as unknown as { load(v: unknown): void }).load((widget as unknown as { rgba: unknown }).rgba);
       this.redraw();
 
       if (this.onchange) {
@@ -1448,17 +1487,21 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       }
     };
 
-    (widget as unknown as {_onchange: (() => void) | undefined})._onchange = onchange;
+    (widget as unknown as { _onchange: (() => void) | undefined })._onchange = onchange;
 
-    (colorpicker as unknown as {style: Record<string, string>}).style["background-color"] = (widget as unknown as {getDefault(key: string): string}).getDefault("background-color") as string;
+    (colorpicker as unknown as { style: Record<string, string> }).style["background-color"] = (
+      widget as unknown as { getDefault(key: string): string }
+    ).getDefault("background-color") as string;
     //colorpicker.style["border-radius"] = "25px";
-    (colorpicker as unknown as {style: Record<string, string>}).style["border-width"] = (widget as unknown as {getDefault(key: string): string}).getDefault("border-width") as string;
+    (colorpicker as unknown as { style: Record<string, string> }).style["border-width"] = (
+      widget as unknown as { getDefault(key: string): string }
+    ).getDefault("border-width") as string;
   }
 
   setRGBA(val: Vector4 | number[]): this {
-    let a = this.rgba[3];
+    const a = this.rgba[3];
 
-    let old = new Vector4(this.rgba);
+    const old = new Vector4(this.rgba);
 
     this.rgba.load(val);
 
@@ -1488,7 +1531,8 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
   }
 
   _redraw(): void {
-    const canvas = this.dom, g = this.g;
+    const canvas = this.dom;
+    const g = this.g;
 
     if (!g) {
       return;
@@ -1497,14 +1541,15 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     g.clearRect(0, 0, canvas.width, canvas.height);
 
     if (this.disabled) {
-      let color = "rgb(55, 55, 55)";
+      const color = "rgb(55, 55, 55)";
 
       g.save();
 
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 5;
-      let dt = canvas.width/steps, t = 0;
+      const steps = 5;
+      const dt = canvas.width / steps;
+      let t = 0;
 
       g.beginPath();
       g.lineWidth = 2;
@@ -1525,14 +1570,15 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     //do checker pattern for alpha
     g.save();
 
-    let grid1 = "rgb(100, 100, 100)";
-    let grid2 = "rgb(175, 175, 175)";
+    const grid1 = "rgb(100, 100, 100)";
+    const grid2 = "rgb(175, 175, 175)";
 
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
 
-    let cellsize = 10;
-    let totx = Math.ceil(canvas.width/cellsize), toty = Math.ceil(canvas.height/cellsize);
+    const cellsize = 10;
+    const totx = Math.ceil(canvas.width / cellsize);
+    const toty = Math.ceil(canvas.height / cellsize);
 
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
     g.clip();
@@ -1544,7 +1590,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
           continue;
         }
 
-        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
+        g.rect(x * cellsize, y * cellsize, cellsize, cellsize);
       }
     }
 
@@ -1556,13 +1602,13 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     //g.rect(0, 0, canvas.width, canvas.height);
     //g.fill();
 
-    let color = color2css(this.rgba);
+    const color = color2css(this.rgba);
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
     if (this._highlight) {
       //let color = "rgba(200, 200, 255, 0.5)";
-      let color = this.getDefault("BoxHighlight");
+      const color = this.getDefault("BoxHighlight");
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
     }
 
@@ -1582,22 +1628,29 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     (this.style as unknown as Record<string, string>)["flex-direction"] = "row";
     (this.style as unknown as Record<string, string>)["display"] = "flex";
 
-    (this.labelDom.style as unknown as Record<string, string>)["color"] = (this.getDefault(this._font) as unknown as Record<string, string>).color;
-    (this.labelDom.style as unknown as Record<string, string>)["font"] = ui_base.getFont(this, undefined, this._font, false);
+    (this.labelDom.style as unknown as Record<string, string>)["color"] = (
+      this.getDefault(this._font) as unknown as Record<string, string>
+    ).color;
+    (this.labelDom.style as unknown as Record<string, string>)["font"] = ui_base.getFont(
+      this,
+      undefined,
+      this._font,
+      false
+    );
 
     const canvas = this.dom;
 
     (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
     (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
+    canvas.width = ~~(w * dpi);
+    canvas.height = ~~(h * dpi);
 
     (this.style as unknown as Record<string, string>)["background-color"] = "rgba(0,0,0,0)";
     this._redraw();
   }
 
   updateDataPath(): void {
-    if (!(this.hasAttribute("datapath"))) {
+    if (!this.hasAttribute("datapath")) {
       return;
     }
 
@@ -1607,11 +1660,11 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     }
     const prop = this.getPathMeta(this.ctx, path);
 
-    if ((prop === undefined || prop.data === undefined) && cconst.DEBUG.verboseDataPath) {
+    if (prop?.data === undefined && cconst.DEBUG.verboseDataPath) {
       console.log("bad path", path);
       return;
     } else if (prop === undefined) {
-      let redraw = !this.disabled;
+      const redraw = !this.disabled;
 
       this.internalDisabled = true;
 
@@ -1632,14 +1685,13 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     const val = this.getPathValue(this.ctx, path) as unknown;
 
     if (val === undefined || val === null) {
-      redraw = redraw || this.disabled !== true;
+      redraw = redraw || !this.disabled;
 
       this.internalDisabled = true;
 
       if (redraw) {
         this._redraw();
       }
-
     } else {
       this.internalDisabled = false;
 
@@ -1687,7 +1739,15 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       }
     }
 
-    let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
+    let key =
+      "" +
+      this.rgba[0].toFixed(4) +
+      " " +
+      this.rgba[1].toFixed(4) +
+      " " +
+      this.rgba[2].toFixed(4) +
+      " " +
+      this.rgba[3].toFixed(4);
     key += this.disabled;
 
     if (key !== this._last_key) {
@@ -1703,5 +1763,5 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
   redraw() {
     this._redraw();
   }
-};
+}
 UIBase.internalRegister(ColorPickerButton as unknown as typeof UIBase);

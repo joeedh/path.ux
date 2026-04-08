@@ -13,7 +13,7 @@
     "outDir": "./dist",
     "noEmit": true,
     "skipLibCheck": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
     "types": []
   },
   "include": ["scripts/**/*.ts", "scripts/**/*.js", "playwright/*.ts", "eslint.config.js"],

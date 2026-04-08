@@ -6,23 +6,11 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
-import {Container} from "../core/ui";
-import {IContextBase} from "../core/context_base";
-import {UIBase, PackFlags} from "../core/ui_base";
+import { Container } from "../core/ui";
+import { IContextBase } from "../core/context_base";
+import { UIBase } from "../core/ui_base";
 
-import * as util from '../path-controller/util/util';
-import * as vectormath from '../path-controller/util/vectormath';
-import * as ui_curvewidget from './ui_curvewidget';
-import * as ui_widgets from './ui_widgets';
-import * as toolprop from '../path-controller/toolsys/toolprop';
-
-let PropFlags = toolprop.PropFlags;
-let PropSubTypes = toolprop.PropSubTypes;
-
-let EnumProperty = toolprop.EnumProperty;
-
-let Vector2 = vectormath.Vector2,
-  PropTypes = toolprop.PropTypes;
+import * as util from "../path-controller/util/util";
 
 /* Helper for CSSStyleDeclaration string indexing. */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
@@ -76,15 +64,17 @@ export class TableRow<CTX extends IContextBase = IContextBase> extends Container
     this.dom.setAttribute("class", "containerx");
   }
 
-  static define() {return {
-    tagname : "tablerow-x"
-  };}
+  static define() {
+    return {
+      tagname: "tablerow-x",
+    };
+  }
 
   _add(child: UIBase<CTX>) {
     child.ctx = this.ctx;
     child.parentWidget = this;
 
-    let td = document.createElement("td");
+    const td = document.createElement("td");
     td.appendChild(child);
 
     this.dom.appendChild(td);
@@ -127,21 +117,21 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
   row(packflag?: number): any {
     // Returns TableRowProxy but typed as any to work around base class covariance
     // packflag parameter is ignored for table rows
-    let tr = document.createElement("tr");
+    const tr = document.createElement("tr");
     let cls = "table-tr";
 
     tr.setAttribute("class", cls);
     this.dom.appendChild(tr);
-    let this2 = this;
+    const this2 = this;
 
     function maketd() {
-      let td = document.createElement("td");
+      const td = document.createElement("td");
       tr.appendChild(td);
 
       (td.style as StyleRecord)["margin"] = (tr.style as StyleRecord)["margin"];
       (td.style as StyleRecord)["padding"] = (tr.style as StyleRecord)["padding"];
 
-      let container = UIBase.createElement("rowframe-x") as Container<CTX>;
+      const container = UIBase.createElement("rowframe-x") as Container<CTX>;
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -154,10 +144,10 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
     }
 
     //hrm wish I could subclass html elements easier
-    let ret: TableRowProxy = {
-      _tr : tr,
+    const ret: TableRowProxy = {
+      _tr: tr,
 
-      style : tr.style,
+      style: tr.style,
 
       focus(args?: FocusOptions) {
         tr.focus(args);
@@ -167,7 +157,7 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
         tr.blur();
       },
 
-      remove : () => {
+      remove: () => {
         tr.remove();
       },
 
@@ -196,36 +186,36 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
       },
 
       clear() {
-        for (let node of list(tr.childNodes)) {
+        for (const node of list(tr.childNodes)) {
           tr.removeChild(node);
         }
       },
 
       /* These are filled in below by makefunc / defineProperty / cell lambda */
-      cell: undefined!,
-      tabIndex: 0,
+      cell      : undefined!,
+      tabIndex  : 0,
       background: "",
-      label: undefined!,
-      tool: undefined!,
-      prop: undefined!,
-      pathlabel: undefined!,
-      button: undefined!,
+      label     : undefined!,
+      tool      : undefined!,
+      prop      : undefined!,
+      pathlabel : undefined!,
+      button    : undefined!,
       iconbutton: undefined!,
-      textbox: undefined!,
-      col: undefined!,
-      row: undefined!,
-      table: undefined!,
-      listenum: undefined!,
-      check: undefined!,
+      textbox   : undefined!,
+      col       : undefined!,
+      row       : undefined!,
+      table     : undefined!,
+      listenum  : undefined!,
+      check     : undefined!,
     } as TableRowProxy;
 
     function makefunc(f: string) {
-      (ret as unknown as Record<string, unknown>)[f] = function() {
-        let container = maketd();
+      (ret as unknown as Record<string, unknown>)[f] = function () {
+        const container = maketd();
 
         container.background = (tr.style as StyleRecord)["background-color"]; //"rgba(0,0,0,0)";
         return (container as unknown as Record<string, Function>)[f].apply(container, arguments);
-      }
+      };
     }
 
     let _bg = "";
@@ -238,7 +228,7 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
 
       get() {
         return tr.tabIndex;
-      }
+      },
     });
 
     Object.defineProperty(ret, "background", {
@@ -246,15 +236,16 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
         _bg = bg;
         (tr.style as StyleRecord)["background-color"] = bg;
 
-        for (let node of tr.childNodes) {
+        for (const node of tr.childNodes) {
           if (node.childNodes.length > 0) {
             (node.childNodes[0] as unknown as Record<string, unknown>).background = bg;
             ((node as HTMLElement).style as StyleRecord)["background-color"] = bg;
           }
         }
-      }, get() {
+      },
+      get() {
         return _bg;
-      }
+      },
     });
 
     /*
@@ -265,7 +256,7 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
     });//*/
 
     ret.cell = (() => {
-      let container = maketd();
+      const container = maketd();
       container.background = (tr.style as StyleRecord)["background-color"];
       return container as unknown as Container;
     }) as () => Container;
@@ -289,13 +280,16 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
 
   clear() {
     super.clear();
-    for (let child of list(this.dom.childNodes)) {
+    for (const child of list(this.dom.childNodes)) {
       child.remove();
     }
   }
 
-  static define() {return {
-    tagname : "tableframe-x"
-  };}
+  static define() {
+    return {
+      tagname: "tableframe-x",
+    };
+  }
 }
 UIBase.internalRegister(TableFrame);
+

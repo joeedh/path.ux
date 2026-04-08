@@ -12,8 +12,8 @@ import { keymap } from "../path-controller/util/simple_events";
 import { color2css, css2color } from "../core/ui_theme";
 import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { IContextBase } from "../core/context_base";
-import { ResolvedProp } from "../pathux";
 import { TextBox } from "./ui_textbox";
+import { ToolPropertyTypes } from "../path-controller/toolsys";
 
 export const sliderDomAttributes = new Set([
   "min",
@@ -110,7 +110,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
   }
 
   loadNumConstraints(
-    prop?: ResolvedProp | ToolProperty | undefined,
+    prop?: ToolPropertyTypes | undefined,
     dom?: HTMLElement | UIBase<CTX, unknown>,
     onModifiedCallback?: (this: UIBase) => void
   ): void {
@@ -1082,7 +1082,7 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
   }
 
   loadNumConstraints(
-    prop?: ResolvedProp | ToolProperty | undefined,
+    prop?: ToolPropertyTypes | undefined,
     dom?: HTMLElement | UIBase<CTX, unknown>,
     onModifiedCallback?: (this: UIBase) => void
   ): void {

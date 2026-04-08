@@ -93,7 +93,7 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
   }
 
   rebuild() {
-    let ctx = this.ctx;
+    const ctx = this.ctx;
     if (ctx === undefined) {
       this._tool_id = -1; //wait for .ctx
       return;
@@ -105,17 +105,17 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
     this.label("Recent Command Settings");
 
-    let tool = this.getToolStackHead(ctx);
+    const tool = this.getToolStackHead(ctx);
 
     if (!tool) {
       this.setCSS();
       return;
     }
 
-    let def = (tool.constructor as any).tooldef();
-    let name = def.uiname !== undefined ? def.uiname : def.name;
+    const def = (tool.constructor as any).tooldef();
+    const name = def.uiname !== undefined ? def.uiname : def.name;
 
-    let panel = this.panel(def.uiname);
+    const panel = this.panel(def.uiname);
 
     this.on_change = () => {
       if (this.ignoreOnChange) {
@@ -163,8 +163,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
     this.last_tool = tool;
 
     panel.useDataPathUndo = false;
-    for (let k in tool.inputs) {
-      let prop = (tool.inputs as any)[k] as ToolProperty;
+    for (const k in tool.inputs) {
+      const prop = (tool.inputs as any)[k] as ToolProperty;
 
       if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
         continue;
@@ -177,8 +177,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
         prop,
       });
 
-      let path = `last_tool.${k}`;
-      let uiname = prop.uiname ?? ToolProperty.makeUIName(k);
+      const path = `last_tool.${k}`;
+      const uiname = prop.uiname ?? ToolProperty.makeUIName(k);
 
       panel.label(uiname);
       let packflag = 0;
@@ -188,7 +188,7 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
 
-      let ret = panel.prop(path, packflag);
+      const ret = panel.prop(path, packflag);
 
       if (ret) {
         //ret.onchange = function() {
@@ -201,13 +201,13 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
   update() {
     super.update();
-    let ctx = this.ctx;
+    const ctx = this.ctx;
 
     if (!ctx) {
       return;
     }
 
-    let tool = this.getToolStackHead(ctx) as any;
+    const tool = this.getToolStackHead(ctx) as any;
 
     this.needsRebuild = this.needsRebuild || (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id));
 

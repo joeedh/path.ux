@@ -1,44 +1,20 @@
 "use strict";
 
-import * as util from "../path-controller/util/util.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
 import * as ui_base from "../core/ui_base.js";
 import * as events from "../path-controller/util/events.js";
-import * as toolsys from "../path-controller/toolsys/toolsys.js";
 import * as toolprop from "../path-controller/toolsys/toolprop.js";
 import { DataPathError } from "../path-controller/controller/controller.js";
-import { Vector3, Vector4, Quat, Matrix4 } from "../path-controller/util/vectormath.js";
-import { isNumber, PropFlags } from "../path-controller/toolsys/toolprop.js";
-import * as units from "../core/units.js";
-
-import cconst from "../config/const.js";
-
-function myToFixed(s: number, n: number) {
-  let str = s.toFixed(n);
-
-  while (str.endsWith("0")) {
-    str = str.slice(0, str.length - 1);
-  }
-  if (str.endsWith(".")) {
-    str = str.slice(0, str.length - 1);
-  }
-
-  return str;
-}
+import { PropFlags } from "../path-controller/toolsys/toolprop.js";
 
 const keymap = events.keymap;
 
-const EnumProperty = toolprop.EnumProperty;
 const PropTypes = toolprop.PropTypes;
 
 const UIBase = ui_base.UIBase;
 const PackFlags = ui_base.PackFlags;
-const IconSheets = ui_base.IconSheets;
 
-const parsepx = ui_base.parsepx;
-
-import { Button, OldButton } from "./ui_button.js";
-import { eventWasTouch, popModalLight, pushModalLight } from "../path-controller/util/simple_events.js";
+import { OldButton } from "./ui_button.js";
+import { eventWasTouch } from "../path-controller/util/simple_events.js";
 import { IContextBase } from "../core/context_base.js";
 import type { CSSFont } from "../core/cssfont.js";
 import type { EnumPropertyBase } from "../path-controller/toolsys/toolprop.js";
@@ -498,7 +474,9 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
   _extraIcon: number | undefined;
   extraDom: HTMLDivElement | undefined;
   _last_iconsheet: number | undefined;
-  _onpress: ((e: { x: number; y: number; stopPropagation: () => void; preventDefault: () => void }) => void) | undefined;
+  _onpress:
+    | ((e: { x: number; y: number; stopPropagation: () => void; preventDefault: () => void }) => void)
+    | undefined;
   dom: HTMLDivElement;
 
   constructor() {
@@ -605,7 +583,7 @@ export class IconButton<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     const loadstyle = (key: string, addpx: boolean) => {
-      let val = def(key);
+      const val = def(key);
       if (addpx) {
         let strVal = ("" + val).trim();
 
@@ -950,7 +928,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
         if (rdef.subkey && (rdef.prop.type === PropTypes.FLAG || rdef.prop.type === PropTypes.ENUM)) {
-          const enumProp = rdef.prop as unknown as EnumPropertyBase<number>;
+          const enumProp = rdef.prop as unknown as EnumPropertyBase<number, number>;
           const subkey = rdef.subkey as string;
           icon = enumProp.iconmap[subkey];
           icon2 = enumProp.iconmap2[subkey];

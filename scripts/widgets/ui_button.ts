@@ -331,7 +331,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
   _last_dpi: number;
   _lastw: number | undefined;
   _lasth: number | undefined;
-  dom: HTMLCanvasElement & { _background?: string, font?: string };
+  dom: HTMLCanvasElement & { _background?: string; font?: string };
   g: CanvasRenderingContext2D;
   _last_bg: string | undefined;
   _last_disabled: boolean;

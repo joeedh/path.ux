@@ -42,10 +42,10 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 
     this.shadow.appendChild(this.styletag);
 
-    let controls = (this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>);
+    const controls = (this.controls = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>);
 
-    let makeicon = (icon: number, description: string, cb: () => void) => {
-      let btn = controls.iconbutton(icon, description, cb);
+    const makeicon = (icon: number, description: string, cb: () => void) => {
+      const btn = controls.iconbutton(icon, description, cb);
       btn.iconsheet = 1; //use second smallest icon size
       btn.overrideDefault("padding", 3);
 
@@ -125,16 +125,16 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
         return;
       }
 
-      let sel = document.getSelection()!;
-      let range = sel.getRangeAt(0);
+      const sel = document.getSelection()!;
+      const range = sel.getRangeAt(0);
 
-      let node = sel.anchorNode;
-      let off = sel.anchorOffset;
+      const node = sel.anchorNode;
+      const off = sel.anchorOffset;
 
       this._value = text;
 
       if (this.hasAttribute("datapath")) {
-        let path = this.getAttribute("datapath")!;
+        const path = this.getAttribute("datapath")!;
         this.setPathValue(this.ctx, path, this.value);
       }
 
@@ -180,7 +180,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
   }
 
   set internalDisabled(val: boolean) {
-    let changed = !!this._internalDisabled !== !!val;
+    const changed = !!this._internalDisabled !== !!val;
 
     if (changed || 1) {
       this._internalDisabled = !!val;
@@ -197,7 +197,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 
     if (this.textOnlyMode) {
       let val2 = "";
-      for (let l of val.split("\n")) {
+      for (const l of val.split("\n")) {
         val2 += l + "<br>";
       }
       val = val2;
@@ -245,8 +245,8 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
       return;
     }
 
-    let path = this.getAttribute("datapath")!;
-    let prop = this.getPathMeta(this.ctx, path);
+    const path = this.getAttribute("datapath")!;
+    const prop = this.getPathMeta(this.ctx, path);
 
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
@@ -256,7 +256,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     }
 
     this.internalDisabled = false;
-    let value = this.getPathValue(this.ctx, path) as string;
+    const value = this.getPathValue(this.ctx, path) as string;
 
     if (value !== this._value) {
       console.log("text change");
@@ -323,8 +323,8 @@ export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
       return;
     }
 
-    let path = this.getAttribute("datapath")!;
-    let prop = this.getPathMeta(this.ctx, path);
+    const path = this.getAttribute("datapath")!;
+    const prop = this.getPathMeta(this.ctx, path);
 
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
@@ -334,7 +334,7 @@ export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     this.internalDisabled = false;
-    let value = this.getPathValue(this.ctx, path) as string;
+    const value = this.getPathValue(this.ctx, path) as string;
 
     if (value !== this.value) {
       this.value = value;

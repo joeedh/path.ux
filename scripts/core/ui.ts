@@ -15,7 +15,7 @@ import {
   PropFlags,
   PropSubTypes,
   ToolPropertyTypes,
-} from "../path-controller/toolsys/toolprop.js";
+} from "../path-controller/toolsys";
 import "../path-controller/util/html5_fileapi.js";
 import { CSSFont } from "./cssfont.js";
 import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base.js";

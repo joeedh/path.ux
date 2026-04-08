@@ -1,7 +1,3 @@
-//stores xml sources
-import { isNumber } from "../path-controller/toolsys/toolprop.js";
-
-let pagecache = new Map<string, string>();
 import { PackFlags, UIBase } from "../core/ui_base.js";
 import { sliderDomAttributes } from "../widgets/ui_numsliders.js";
 import * as util from "../util/util.js";
@@ -10,16 +6,19 @@ import { Icons } from "../core/ui_base.js";
 import { Container } from "../core/ui.js";
 import type { IContextBase } from "../core/context_base.js";
 
-export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
-export var domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
+export const domTransferAttrs = new Set(["id", "title", "tab-index"]);
+export const domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
 
 export function parseXML(xml: string): XMLDocument {
-  let parser = new DOMParser();
+  const parser = new DOMParser();
   xml = `<root>${xml}</root>`;
   return parser.parseFromString(xml.trim(), "application/xml") as XMLDocument;
 }
 
-let num_re = /[0-9]+$/;
+const num_re = /[0-9]+$/;
+
+//stores xml sources
+const pagecache = new Map<string, string>();
 
 function getIconFlag(elem: Element): number {
   if (!elem.hasAttribute("useIcons")) {
@@ -149,7 +148,7 @@ class Handler {
 
     this.templateVars = {};
 
-    let attrs = util.list(sliderDomAttributes) as string[];
+    const attrs = util.list(sliderDomAttributes) as string[];
 
     //note that useIcons, showLabel and sliderMode are PackFlag bits and are inherited through that system
 
@@ -172,7 +171,7 @@ class Handler {
 
   handle(elem: Node) {
     if (elem.constructor === XMLDocument || elem.nodeName === "root") {
-      for (let child of elem.childNodes) {
+      for (const child of elem.childNodes) {
         this.handle(child);
       }
 
@@ -183,7 +182,7 @@ class Handler {
     }
 
     const elemEl = elem as Element;
-    let tagname = "" + elemEl.tagName;
+    const tagname = "" + elemEl.tagName;
 
     const handlers = customHandlers as Record<string, ((handler: Handler, elem: Element) => void) | "default">;
     if (tagname in handlers) {
@@ -194,11 +193,11 @@ class Handler {
     } else if ((this as unknown as Record<string, unknown>)[tagname]) {
       (this as unknown as Record<string, (e: Element) => void>)[tagname](elemEl);
     } else {
-      let elem2 = UIBase.createElement(tagname.toLowerCase());
+      const elem2 = UIBase.createElement(tagname.toLowerCase());
 
       (window as unknown as Record<string, unknown>)["__elem"] = elemEl;
       //transfer DOM attributes
-      for (let k of elemEl.getAttributeNames()) {
+      for (const k of elemEl.getAttributeNames()) {
         elem2.setAttribute(k, elemEl.getAttribute(k) ?? "");
       }
 
@@ -220,7 +219,7 @@ class Handler {
             massSetPath = elem2.getAttribute("massSetPath") ?? "";
           }
 
-          let path = elem2.getAttribute("datapath") ?? "";
+          const path = elem2.getAttribute("datapath") ?? "";
 
           const mpath = this.container._getMassPath(this.container.ctx, path, massSetPath);
           elem2.setAttribute("massSetPath", mpath ?? "");
@@ -243,9 +242,9 @@ class Handler {
         }
       } else {
         console.warn("Unknown element " + elemEl.tagName + " (" + elemEl.constructor.name + ")");
-        let elem2b = document.createElement(elemEl.tagName.toLowerCase());
+        const elem2b = document.createElement(elemEl.tagName.toLowerCase());
 
-        for (let attr of elemEl.getAttributeNames()) {
+        for (const attr of elemEl.getAttributeNames()) {
           elem2b.setAttribute(attr, elemEl.getAttribute(attr) ?? "");
         }
 
@@ -261,29 +260,34 @@ class Handler {
   }
 
   _style(elem: Element, elem2: Element | UIBase) {
-    let style: Record<string, string> = {};
+    const style: Record<string, string> = {};
 
     //try to handle class attribute, at least somewhat
 
     if (elem.hasAttribute("class")) {
       elem2.setAttribute("class", elem.getAttribute("class") ?? "");
 
-      let cls = (elem2.getAttribute("class") ?? "").trim();
-      let keys = [cls, (elem2.tagName.toLowerCase() + "." + cls).trim(), "#" + (elem.getAttribute("id") ?? "").trim()];
+      const cls = (elem2.getAttribute("class") ?? "").trim();
+      const keys = [
+        cls,
+        (elem2.tagName.toLowerCase() + "." + cls).trim(),
+        "#" + (elem.getAttribute("id") ?? "").trim(),
+      ];
 
-      for (let sheet of document.styleSheets) {
-        for (let rule of sheet.cssRules) {
+      for (const sheet of document.styleSheets) {
+        for (const rule of sheet.cssRules) {
           const cssRule = rule as CSSStyleRule & { styleMap?: { keys(): Iterable<string> } };
           if (!cssRule.selectorText) continue;
-          for (let k of keys) {
+          for (const k of keys) {
             if (cssRule.selectorText.trim() === k) {
               if (cssRule.styleMap) {
-                for (let k2 of cssRule.styleMap.keys()) {
-                  let val = (cssRule.style as unknown as Record<string, string>)[k2];
+                for (const k2 of cssRule.styleMap.keys()) {
+                  const val = (cssRule.style as unknown as Record<string, string>)[k2];
                   style[k2] = val;
                 }
               } else {
-                for (let k2 in cssRule.style) {
+                // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                for (const k2 in cssRule.style) {
                   const desc = Object.getOwnPropertyDescriptor(cssRule.style, k2);
                   if (!desc?.writable) continue;
                   const val = (cssRule.style as unknown as Record<string, string>)[k2];
@@ -297,34 +301,36 @@ class Handler {
     }
 
     if (elem.hasAttribute("style")) {
-      let stylecode = elem.getAttribute("style") ?? "";
+      const stylecode = elem.getAttribute("style") ?? "";
 
       const parts = stylecode.split(";");
 
       for (let row of parts) {
         row = row.trim();
 
-        let i = row.search(/:/);
+        const i = row.search(/:/);
         if (i >= 0) {
-          let key = row.slice(0, i).trim();
-          let val = row.slice(i + 1, row.length).trim();
+          const key = row.slice(0, i).trim();
+          const val = row.slice(i + 1, row.length).trim();
 
           style[key] = val;
         }
       }
     }
 
-    let keys = Object.keys(style);
+    const keys = Object.keys(style);
     if (keys.length === 0) {
       return;
     }
 
     function setStyle() {
-      for (let k of keys) {
-        (elem2 as unknown as Record<string, unknown>)["style"] &&
-          ((elem2 as HTMLElement).style as unknown as Record<string, string>)[k] !== undefined
-          ? ((elem2 as HTMLElement).style.setProperty(k, style[k]))
-          : ((elem2 as unknown as Record<string, string>)[k] = style[k]);
+      const elem3 = elem2 as any;
+      for (const k of keys) {
+        if (elem3.style?.[k] !== undefined) {
+          (elem3 as HTMLElement).style.setProperty(k, style[k]);
+        } else {
+          elem3[k] = style[k];
+        }
       }
     }
 
@@ -338,7 +344,7 @@ class Handler {
   }
 
   visit(node: Node) {
-    for (let child of node.childNodes) {
+    for (const child of node.childNodes) {
       this.handle(child);
     }
   }
@@ -351,7 +357,7 @@ class Handler {
     }
 
     if (val.startsWith("##")) {
-      let varname = val.slice(2, val.length).trim();
+      const varname = val.slice(2, val.length).trim();
 
       if (!(varname in this.templateVars)) {
         console.error(`unknown template variable '${varname}'`);
@@ -365,10 +371,10 @@ class Handler {
   }
 
   _inheritCustomAttrs(elem: Element, elem2: Element | UIBase) {
-    let codeattrs: [string, string, string][] = [];
-    let dataattrs: [string, string][] = [];
+    const codeattrs: [string, string, string][] = [];
+    const dataattrs: [string, string][] = [];
 
-    for (let k of elem.getAttributeNames()) {
+    for (const k of elem.getAttributeNames()) {
       let val = "" + elem.getAttribute(k);
 
       if (val.startsWith("ng[")) {
@@ -386,15 +392,15 @@ class Handler {
       elem2.setAttribute(k, val);
     }
 
-    for (let k of domEventAttrs) {
-      let k2 = "on" + k;
+    for (const k of domEventAttrs) {
+      const k2 = "on" + k;
 
       if (elem.hasAttribute(k2)) {
         codeattrs.push([k, "dom", elem.getAttribute(k2) ?? ""]);
       }
     }
 
-    for (let [k, eventType, id] of codeattrs) {
+    for (const [k, eventType, id] of codeattrs) {
       if (!(id in this.codefuncs)) {
         console.error("Unknown code fragment " + id);
         continue;
@@ -405,15 +411,15 @@ class Handler {
         //dom event system
         if (k === "click") {
           const htmlElem = elem2 as HTMLElement;
-          let onclick = htmlElem.onclick;
-          let func = this.codefuncs[id];
+          const onclick = htmlElem.onclick;
+          const func = this.codefuncs[id];
 
           (htmlElem as unknown as Record<string, unknown>)["onclick"] = function (this: HTMLElement) {
             if (onclick) {
-              (onclick as (...a: unknown[]) => unknown).apply(this, arguments as unknown as unknown[]);
+              (onclick as (...a: unknown[]) => unknown).apply(this, Array.from(arguments));
             }
 
-            return func.apply(this, arguments as unknown as unknown[]);
+            return func.apply(this, Array.from(arguments));
           };
         } else {
           elem2.addEventListener(k, this.codefuncs[id] as EventListener);
@@ -431,25 +437,25 @@ class Handler {
 
     this._style(elem, elem2);
 
-    for (let k of elem.getAttributeNames()) {
+    for (const k of elem.getAttributeNames()) {
       if (k.startsWith("custom")) {
         elem2.setAttribute(k, this._getattr(elem, k) ?? "");
       }
     }
 
-    for (let k of domTransferAttrs) {
+    for (const k of domTransferAttrs) {
       if (elem.hasAttribute(k)) {
         elem2.setAttribute(k, elem.getAttribute(k) ?? "");
       }
     }
 
-    for (let k in this.inheritDomAttrs) {
+    for (const k in this.inheritDomAttrs) {
       if (!elem.hasAttribute(k)) {
         elem.setAttribute(k, this.inheritDomAttrs[k]);
       }
     }
 
-    for (let k of sliderDomAttributes) {
+    for (const k of sliderDomAttributes) {
       if (elem.hasAttribute(k)) {
         elem2.setAttribute(k, elem.getAttribute(k) ?? "");
       }
@@ -468,7 +474,10 @@ class Handler {
       }
     }
 
-    if (elem.hasAttribute("useIcons") && typeof (elem2 as unknown as Record<string, unknown>)["useIcons"] === "function") {
+    if (
+      elem.hasAttribute("useIcons") &&
+      typeof (elem2 as unknown as Record<string, unknown>)["useIcons"] === "function"
+    ) {
       let val: string | number | boolean = (elem.getAttribute("useIcons") ?? "").trim().toLowerCase();
 
       if (val === "small" || val === "true" || val === "yes") {
@@ -485,7 +494,7 @@ class Handler {
     }
 
     if (elem.hasAttribute("sliderTextBox")) {
-      let textbox = getbool(elem, "sliderTextBox");
+      const textbox = getbool(elem, "sliderTextBox");
 
       if (textbox) {
         elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
@@ -499,7 +508,7 @@ class Handler {
     }
 
     if (elem.hasAttribute("sliderMode")) {
-      let sliderMode = elem.getAttribute("sliderMode");
+      const sliderMode = elem.getAttribute("sliderMode");
 
       if (sliderMode === "slider") {
         elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
@@ -519,7 +528,7 @@ class Handler {
     }
 
     if (elem.hasAttribute("showLabel")) {
-      let state = getbool(elem, "showLabel");
+      const state = getbool(elem, "showLabel");
 
       if (state) {
         elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
@@ -568,7 +577,7 @@ class Handler {
     doBox("padding");
 
     for (let i = 0; i < 2; i++) {
-      let key = i ? "margin" : "padding";
+      const key = i ? "margin" : "padding";
 
       doBox(key + "-bottom");
       doBox(key + "-top");
@@ -580,7 +589,7 @@ class Handler {
   _handlePathPrefix(elem: Element, con: Container) {
     if (elem.hasAttribute("path")) {
       let prefix = con.dataPrefix;
-      let path = (elem.getAttribute("path") ?? "").trim();
+      const path = (elem.getAttribute("path") ?? "").trim();
 
       if (prefix.length > 0) {
         prefix += ".";
@@ -592,7 +601,7 @@ class Handler {
 
     if (elem.hasAttribute("massSetPath")) {
       let prefix = con.massSetPrefix;
-      let path = (elem.getAttribute("massSetPath") ?? "").trim();
+      const path = (elem.getAttribute("massSetPath") ?? "").trim();
 
       if (prefix.length > 0) {
         prefix += ".";
@@ -605,13 +614,13 @@ class Handler {
 
   /** noInheritCustomAttrs: don't transfer ng or data- attributes to the container element*/
   _container(elem: Element, con: Container, options: ContainerOptions = {}) {
-    for (let k of this.inheritDomAttrKeys) {
+    for (const k of this.inheritDomAttrKeys) {
       if (elem.hasAttribute(k)) {
         this.inheritDomAttrs[k] = elem.getAttribute(k) ?? "";
       }
     }
 
-    let packflag = getPackFlag(elem);
+    const packflag = getPackFlag(elem);
 
     con.packflag |= packflag;
     con.inherit_packflag |= packflag;
@@ -624,7 +633,7 @@ class Handler {
   }
 
   noteframe(elem: Element) {
-    let ret = this.container.noteframe();
+    const ret = this.container.noteframe();
 
     if (ret) {
       this._basic(elem, ret);
@@ -648,8 +657,8 @@ class Handler {
   }
 
   panel(elem: Element) {
-    let title = "" + elem.getAttribute("label");
-    let closed = getbool(elem, "closed");
+    const title = "" + elem.getAttribute("label");
+    const closed = getbool(elem, "closed");
 
     this.push();
     this.container = this.container.panel(title) as unknown as Container;
@@ -674,7 +683,7 @@ class Handler {
 
     let buf = "";
 
-    for (let elem2 of elem.childNodes) {
+    for (const elem2 of elem.childNodes) {
       if (elem2.nodeName === "#text") {
         buf += elem2.textContent + "\n";
       }
@@ -689,10 +698,9 @@ func = function() {
 }
     `;
 
-    // eslint-disable-next-line no-eval
     eval(buf);
 
-    let id = "" + elem.getAttribute("id");
+    const id = "" + elem.getAttribute("id");
 
     this.codefuncs[id] = func!;
   }
@@ -707,7 +715,7 @@ func = function() {
   }
 
   label(elem: Element) {
-    let elem2 = this.container.label(elem.innerHTML);
+    const elem2 = this.container.label(elem.innerHTML);
     this._basic(elem, elem2);
   }
 
@@ -721,8 +729,8 @@ func = function() {
   }
 
   _prop(elem: Element, key: string) {
-    let packflag = getPackFlag(elem);
-    let path = elem.getAttribute("path");
+    const packflag = getPackFlag(elem);
+    const path = elem.getAttribute("path");
 
     let elem2: Element | undefined;
     if (key === "pathlabel") {
@@ -749,11 +757,14 @@ func = function() {
         themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? undefined : undefined,
       }) as unknown as Element;
     } else {
-      elem2 = (this.container as unknown as Record<string, (p: string | undefined, f: number) => Element>)[key](path ?? undefined, packflag);
+      elem2 = (this.container as unknown as Record<string, (p: string | undefined, f: number) => Element>)[key](
+        path ?? undefined,
+        packflag
+      );
     }
 
     if (!elem2) {
-      let span = document.createElement("span");
+      const span = document.createElement("span");
       span.innerHTML = "error";
       this.container.shadow.appendChild(span);
     } else {
@@ -780,8 +791,8 @@ func = function() {
       dir = (elem.getAttribute("mode") ?? "").toLowerCase().trim() === "horizontal";
     }
 
-    let margin1 = getfloat(elem, "margin1", undefined);
-    let margin2 = getfloat(elem, "margin2", undefined);
+    const margin1 = getfloat(elem, "margin1", undefined);
+    const margin2 = getfloat(elem, "margin2", undefined);
 
     this.container = this.container.strip(undefined, margin1, margin2, dir) as unknown as Container;
     this._container(elem, this.container);
@@ -824,7 +835,7 @@ func = function() {
       noIcons = true;
     }
 
-    let label = ("" + elem.textContent).trim();
+    const label = ("" + elem.textContent).trim();
     if (label.length > 0) {
       path += "|" + label;
     }
@@ -833,12 +844,14 @@ func = function() {
       iconflags = this.container.useIcons(false);
     }
 
-    let elem2: Element | undefined = (this.container as unknown as Record<string, (p: string | null, f: number) => Element | undefined>)[key](path, packflag);
+    const elem2: Element | undefined = (
+      this.container as unknown as Record<string, (p: string | null, f: number) => Element | undefined>
+    )[key](path, packflag);
 
     if (elem2) {
       this._basic(elem, elem2);
     } else {
-      let errElem = document.createElement("strip");
+      const errElem = document.createElement("strip");
       errElem.innerHTML = "error";
       this.container.shadow.appendChild(errElem);
       this._basic(elem, errElem);
@@ -855,18 +868,18 @@ func = function() {
   }
 
   menu(elem: Element, isDropBox = false) {
-    let packflag = getPackFlag(elem);
-    let title = elem.getAttribute("name") ?? "";
+    const packflag = getPackFlag(elem);
+    const title = elem.getAttribute("name") ?? "";
 
-    let list: unknown[] = [];
+    const list: unknown[] = [];
 
-    for (let child of elem.childNodes) {
+    for (const child of elem.childNodes) {
       const childEl = child as Element;
       if (!childEl.tagName) continue;
 
       if (childEl.tagName === "tool") {
         let path = childEl.getAttribute("path") ?? "";
-        let label = childEl.innerHTML.trim();
+        const label = childEl.innerHTML.trim();
 
         if (label.length > 0) {
           path += "|" + label;
@@ -908,7 +921,7 @@ func = function() {
       }
     }
 
-    let ret = this.container.menu(title, list as Parameters<Container["menu"]>[1], packflag);
+    const ret = this.container.menu(title, list as Parameters<Container["menu"]>[1], packflag);
     if (isDropBox) {
       ret.removeAttribute("simple");
     }
@@ -923,9 +936,9 @@ func = function() {
   }
 
   button(elem: Element) {
-    let title = elem.innerHTML.trim();
+    const title = elem.innerHTML.trim();
 
-    let ret = this.container.button(title);
+    const ret = this.container.button(title);
 
     if (elem.hasAttribute("id")) {
       (ret as unknown as Element).setAttribute("id", elem.getAttribute("id") ?? "");
@@ -935,14 +948,14 @@ func = function() {
   }
 
   iconbutton(elem: Element) {
-    let title = elem.innerHTML.trim();
+    const title = elem.innerHTML.trim();
 
-    let iconStr = elem.getAttribute("icon");
+    const iconStr = elem.getAttribute("icon");
     let icon: number | undefined;
     if (iconStr) {
       icon = UIBase.getIconEnum()[iconStr];
     }
-    let ret = this.container.iconbutton(icon ?? 0, title);
+    const ret = this.container.iconbutton(icon ?? 0, title);
 
     if (elem.hasAttribute("id")) {
       (ret as unknown as Element).setAttribute("id", elem.getAttribute("id") ?? "");
@@ -954,7 +967,7 @@ func = function() {
   tab(elem: Element) {
     this.push();
 
-    let title = "" + elem.getAttribute("label");
+    const title = "" + elem.getAttribute("label");
 
     this.container = (this.container as unknown as Record<string, (t: string) => Container>)["tab"](title);
 
@@ -978,11 +991,11 @@ func = function() {
   }
 
   tabs(elem: Element) {
-    let pos = elem.getAttribute("pos") || "left";
+    const pos = elem.getAttribute("pos") || "left";
 
     this.push();
 
-    let tabs = this.container.tabs(pos as "top" | "bottom" | "left" | "right");
+    const tabs = this.container.tabs(pos as "top" | "bottom" | "left" | "right");
     this.container = tabs as unknown as Container;
 
     if (elem.hasAttribute("movable-tabs")) {
@@ -1007,12 +1020,12 @@ interface LoadPageArgs {
 export function initPage(
   ctx: IContextBase,
   xml: string,
-  parentContainer: HTMLElement | undefined = undefined,
+  parentContainer?: HTMLElement | undefined,
   templateVars: Record<string, string> = {},
   templateScope: unknown = {}
 ): Container {
-  let tree = parseXML(xml);
-  let container = UIBase.createElement("container-x") as unknown as Container;
+  const tree = parseXML(xml);
+  const container = UIBase.createElement("container-x") as unknown as Container;
 
   container.ctx = ctx;
   if (ctx) {
@@ -1023,7 +1036,7 @@ export function initPage(
     (parentContainer as unknown as Container).add(container);
   }
 
-  let handler = new Handler(ctx, container);
+  const handler = new Handler(ctx, container);
 
   handler.templateVars = Object.assign({}, templateVars);
   handler.templateScope = templateScope;
@@ -1036,7 +1049,7 @@ export function initPage(
 export function loadPage(
   ctx: IContextBase,
   url: string,
-  parentContainer_or_args: HTMLElement | LoadPageArgs | undefined = undefined,
+  parentContainer_or_args?: HTMLElement | LoadPageArgs | undefined,
   loadSourceOnly = false,
   modifySourceCB?: (source: string) => string,
   templateVars?: Record<string, string>,
@@ -1046,7 +1059,7 @@ export function loadPage(
   let parentContainer: HTMLElement | undefined;
 
   if (parentContainer_or_args !== undefined && !(parentContainer_or_args instanceof HTMLElement)) {
-    let args = parentContainer_or_args as LoadPageArgs;
+    const args = parentContainer_or_args as LoadPageArgs;
 
     parentContainer = args.parentContainer;
     loadSourceOnly = args.loadSourceOnly ?? false;
@@ -1091,3 +1104,4 @@ export function loadPage(
     });
   }
 }
+

@@ -3,33 +3,17 @@ import "./ui_richedit.js";
 
 import * as util from "../path-controller/util/util.js";
 import * as ui_base from "../core/ui_base.js";
-import * as events from "../path-controller/util/events.js";
-import { Vector2, Vector3, Vector4, Quat, Matrix4 } from "../path-controller/util/vectormath.js";
+import { Vector2, Vector3, Vector4, Quat } from "../path-controller/util/vectormath.js";
 import { RowFrame, ColumnFrame } from "../core/ui.js";
-import { isNumber, PropFlags } from "../path-controller/toolsys/toolprop.js";
+import { isVecProperty, PropFlags } from "../path-controller/toolsys";
 
 import "./ui_widgets.js";
 
-let keymap = events.keymap;
+import { UIBase, PackFlags } from "../core/ui_base.js";
 
-import { EnumProperty, PropTypes } from "../path-controller/toolsys/toolprop.js";
-import { UIBase, PackFlags, IconSheets, parsepx } from "../core/ui_base.js";
-
-import * as units from "../core/units.js";
 import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
 import { Button } from "./ui_button.js";
 import { IContextBase } from "../core/context_base.js";
-import type { ResolvedProp } from "../path-controller/controller/controller_abstract.js";
-
-/** Extended meta type for vector properties that may carry hasUniformSlider */
-type VecPropMeta = ResolvedProp & {
-  hasUniformSlider?: boolean;
-  name?: string;
-  getValue?: () => { length: number; copy(): { load(v: unknown): unknown } };
-  ctx?: unknown;
-  dataref?: unknown;
-  datapath?: string;
-};
 
 /** Type for the container returned by Screen.popup() */
 type PopupContainer = UIBase & {
@@ -240,7 +224,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       this.label(this.name);
     }
 
-    let frame: UIBase, row: RowFrame<CTX> | undefined;
+    let frame: UIBase;
+    let row: RowFrame<CTX> | undefined;
 
     if (this.hasUniformSlider) {
       row = this.row();
@@ -292,10 +277,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
         }
 
         if (this2.uslider) {
-          (this2.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
-            this2.uniformValue,
-            false
-          );
+          (this2.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this2.uniformValue, false);
         }
 
         if (this2.onchange) {
@@ -354,8 +336,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     const vArr = this.value as unknown as number[];
 
     if (old === 0.0 || val === 0.0) {
-      doupdate =
-        (this.value as unknown as { dot(v: unknown): number }).dot(this.value) !== 0.0;
+      doupdate = (this.value as unknown as { dot(v: unknown): number }).dot(this.value) !== 0.0;
 
       this.value.zero();
     } else {
@@ -377,10 +358,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       }
 
       for (let i = 0; i < this.value.length; i++) {
-        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(
-          vArr[i],
-          false
-        );
+        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(vArr[i], false);
         (this.sliders[i] as unknown as { _redraw(): void })._redraw();
       }
 
@@ -430,27 +408,20 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
     const path = this.getAttribute("datapath")!;
 
-    const val = this.getPathValue(this.ctx, path) as
-      | (Vector2 & Vector3 & Vector4 & Quat)
-      | null
-      | undefined;
+    const val = this.getPathValue(this.ctx, path) as (Vector2 & Vector3 & Vector4 & Quat) | null | undefined;
     if (val === undefined) {
       this.internalDisabled = true;
       return;
     }
 
-    const meta = this.getPathMeta(this.ctx, path) as VecPropMeta | undefined;
-    let name =
-      meta !== undefined && meta.uiname !== undefined
-        ? meta.uiname
-        : meta !== undefined
-          ? meta.apiname
-          : undefined;
-    if (this.hasAttribute("name")) {
-      name = this.getAttribute("name") ?? name;
+    const meta = this.getPathMeta(this.ctx, path);
+    if (!isVecProperty(meta)) {
+      return;
     }
 
-    if (name && name !== this.name) {
+    const name = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
+
+    if (name !== undefined && name !== this.name) {
       this.name = name;
       this.rebuild();
       return;
@@ -459,7 +430,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     const loadNumParam = (k: string, do_rebuild = false) => {
       const self = this as unknown as Record<string, unknown>;
       const m = meta as unknown as Record<string, unknown> | undefined;
-      if (m && m[k] !== undefined && self[k] === undefined) {
+      if (m?.[k] !== undefined && self[k] === undefined) {
         self[k] = m[k];
 
         if (self[k] !== m[k] && do_rebuild) {
@@ -479,18 +450,13 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     loadNumParam("expRate");
     loadNumParam("stepIsRelative");
 
-    if (
-      meta !== undefined &&
-      meta.hasUniformSlider !== undefined &&
-      meta.hasUniformSlider !== this.hasUniformSlider
-    ) {
+    if (meta?.hasUniformSlider !== undefined && meta.hasUniformSlider !== this.hasUniformSlider) {
       this.hasUniformSlider = meta.hasUniformSlider;
       this.doOnce(this.rebuild);
     }
 
-    if (meta !== undefined && meta.range) {
-      const update =
-        this.range![0] !== meta.range[0] || this.range![1] !== meta.range[1];
+    if (meta?.range) {
+      const update = this.range![0] !== meta.range[0] || this.range![1] !== meta.range[1];
 
       this.range![0] = meta.range[0];
       this.range![1] = meta.range[1];
@@ -508,15 +474,13 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       const rdef = this.ctx.api.resolvePath(this.ctx, path);
 
       if (rdef !== undefined) {
-        const m = meta as VecPropMeta;
-        m.ctx = this.ctx;
-        m.dataref = rdef.obj;
-        m.datapath = path;
+        // set up context for getValue
+        using ctx = meta.execWithContext();
+        ctx.ctx = this.ctx;
+        ctx.dataref = rdef.obj;
+        ctx.datapath = path;
 
-        const vResult = (m as unknown as { getValue(): { length: number } }).getValue();
-        length = vResult.length;
-
-        m.dataref = undefined;
+        length = meta.getValue().length;
       }
     }
 
@@ -533,9 +497,11 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
           newVal = new Vector4(val as Vector4);
           break;
         default: {
-          const getValFn = (meta as unknown as {
-            getValue(): { copy(): { load(v: unknown): Vector2 | Vector3 | Vector4 | Quat };
-          }}).getValue;
+          const getValFn = (
+            meta as unknown as {
+              getValue(): { copy(): { load(v: unknown): Vector2 | Vector3 | Vector4 | Quat } };
+            }
+          ).getValue;
           newVal = getValFn.call(meta).copy().load(val);
           break;
         }
@@ -557,10 +523,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
         this.value.load(valNN as Vector2 & Vector3 & Vector4 & Quat);
 
         if (this.uslider) {
-          (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
-            this.uniformValue,
-            false
-          );
+          (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this.uniformValue, false);
         }
 
         for (let i = 0; i < this.value.length; i++) {
@@ -581,10 +544,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
     if (this.stepIsRelative) {
       for (const slider of this.sliders) {
-        slider["step"] = ToolProperty.calcRelativeStep(
-          this.step ?? 0,
-          (slider as unknown as { value: number }).value
-        );
+        slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, (slider as unknown as { value: number }).value);
       }
     }
 
@@ -642,7 +602,11 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<CTX
 
     console.log(size2);
     const sscreen = screen as unknown as {
-      popup(owning: UIBase, x: number, y: number): {
+      popup(
+        owning: UIBase,
+        x: number,
+        y: number
+      ): {
         background: string;
         end(): void;
         style: CSSStyleDeclaration;
