@@ -157,13 +157,7 @@ export function makeAPI(ctxClass: typeof Context) {
   const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean);
   (api as unknown as Record<string, unknown>).rootContextStruct = rootContextStruct;
 
-  buildToolSysAPI(
-    api as unknown as Record<string, Function>,
-    false,
-    rootContextStruct as unknown as Record<string, Function>,
-    ctxClass as unknown as new (arg: Record<string, unknown>) => unknown,
-    true
-  );
+  buildToolSysAPI(api, false, rootContextStruct, ctxClass, true);
 
   return api;
 }
@@ -644,4 +638,3 @@ export class AppState {
     }
   }
 }
-
