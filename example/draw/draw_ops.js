@@ -1,9 +1,9 @@
-import {ToolOp} from "../pathux.js";
-import {ListProperty, StringProperty, Vec2Property, Vec4Property, FloatProperty} from "../pathux.js";
-import {Vector2} from "../pathux.js";
-import {Brushes} from "./brush.js";
-import {DynamicsProperty, DynamicsState, DynamicsStateProperty} from '../core/dynamics.js';
-import {Icons} from '../editors/icon_enum.js';
+import { ToolOp } from "../pathux.js";
+import { ListProperty, StringProperty, Vec2Property, Vec4Property, FloatProperty } from "../pathux.js";
+import { Vector2 } from "../pathux.js";
+import { Brushes } from "./brush.js";
+import { DynamicsProperty, DynamicsState, DynamicsStateProperty } from "../core/dynamics.js";
+import { Icons } from "../editors/icon_enum.js";
 
 export class DrawOp extends ToolOp {
   constructor() {
@@ -13,26 +13,34 @@ export class DrawOp extends ToolOp {
     this.havePointerEvents = false;
   }
 
-  static tooldef() {return {
-    name     : "draw",
-    uiname   : "Draw",
-    toolpath : "canvas.draw",
-    icon     : Icons.ZOOM_OUT,
-    is_modal : true,
-    inputs   : {
-      brushType    : new StringProperty("circle"),
-      brushSize    : new FloatProperty(35.0),
-      brushSoft    : new FloatProperty(0.0),
-      brushSpacing : new FloatProperty(0.5),
-      strokeWidth  : new FloatProperty(1.0),
-      strokeColor  : new Vec4Property(),
-      fillColor    : new Vec4Property(),
-      //duplicate points signify splits in path
-      points        : new ListProperty(Vec2Property),
-      pointDynamics : new ListProperty(DynamicsStateProperty),
-      dynamics      : new DynamicsProperty()
-    }
-  }}
+  static tooldef() {
+    return {
+      name    : "draw",
+      uiname  : "Draw",
+      toolpath: "canvas.draw",
+      icon    : Icons.ZOOM_OUT,
+      is_modal: true,
+      inputs: {
+        brushType    : new StringProperty("circle"),
+        brushSize: new FloatProperty(35.0)
+          .setRange(0.01, 4000.0)
+          .setStep(0.5)
+          .setSlideSpeed(1.5)
+          .setExpRate(1.75)
+          .setDecimalPlaces(2)
+          .noUnits(),
+        brushSoft    : new FloatProperty(0.0).setDecimalPlaces(2).noUnits().setRange(0, 1),
+        brushSpacing : new FloatProperty(0.5).setDecimalPlaces(2).noUnits().setRange(0, 2),
+        strokeWidth  : new FloatProperty(1.0).setDecimalPlaces(2).noUnits(),
+        strokeColor  : new Vec4Property().setIsColor(),
+        fillColor    : new Vec4Property().setIsColor(),
+        //duplicate points signify splits in path
+        points       : new ListProperty(Vec2Property),
+        pointDynamics: new ListProperty(DynamicsStateProperty),
+        dynamics     : new DynamicsProperty(),
+      },
+    };
+  }
 
   static invoke(ctx, args) {
     let ret = super.invoke(ctx, args);
@@ -40,18 +48,12 @@ export class DrawOp extends ToolOp {
     let ws = ctx.workspace;
     let bs = ws.brush;
 
-    if (!args.brushType)
-      ret.inputs.brushType.setValue(bs.type);
-    if (!args.fillColor)
-      ret.inputs.fillColor.setValue(bs.color);
-    if (!args.strokeColor)
-      ret.inputs.strokeColor.setValue(bs.color);
-    if (!args.brushSize)
-      ret.inputs.brushSize.setValue(bs.size);
-    if (!args.brushSoft)
-      ret.inputs.brushSoft.setValue(bs.soft);
-    if (!args.brushSpacing)
-      ret.inputs.brushSpacing.setValue(bs.spacing);
+    if (!args.brushType) ret.inputs.brushType.setValue(bs.type);
+    if (!args.fillColor) ret.inputs.fillColor.setValue(bs.color);
+    if (!args.strokeColor) ret.inputs.strokeColor.setValue(bs.color);
+    if (!args.brushSize) ret.inputs.brushSize.setValue(bs.size);
+    if (!args.brushSoft) ret.inputs.brushSoft.setValue(bs.soft);
+    if (!args.brushSpacing) ret.inputs.brushSpacing.setValue(bs.spacing);
 
     ret.inputs.dynamics.setValue(ws.dynamics);
 
@@ -67,8 +69,8 @@ export class DrawOp extends ToolOp {
     let canvas = ctx.canvas;
 
     this._undo = {
-      idgen : canvas.idgen
-    }
+      idgen: canvas.idgen,
+    };
   }
 
   dynamicsGet(key, dstate, val) {
@@ -107,12 +109,12 @@ export class DrawOp extends ToolOp {
     let soft = this.inputs.brushSoft.getValue();
     let opacity = this.inputs.fillColor.getValue()[3];
     let spacing = this.inputs.brushSpacing.getValue();
-    
+
     let dlist = [];
     for (let ds of pointDynamics) {
       dlist.push(ds);
     }
-    
+
     let i = 0;
     for (let p of points) {
       let co = p;
@@ -128,9 +130,9 @@ export class DrawOp extends ToolOp {
       if (lastpoint !== undefined) {
         let len = lastpoint.vectorDistance(co);
 
-        let spacing2 = spacing;//this.dynamicsGet("brushSpacing", ds, spacing);
-        let size2 = this.dynamicsGet("brushSize", ds, size)*spacing2;
-        let size3 = this.dynamicsGet("brushSize", lastdstate, size)*spacing2;
+        let spacing2 = spacing; //this.dynamicsGet("brushSpacing", ds, spacing);
+        let size2 = this.dynamicsGet("brushSize", ds, size) * spacing2;
+        let size3 = this.dynamicsGet("brushSize", lastdstate, size) * spacing2;
 
         size2 = Math.max(size2, size3);
         size2 = Math.max(size2, 1);
@@ -139,9 +141,9 @@ export class DrawOp extends ToolOp {
 
         //steps = Math.min(Math.max(steps, 2), 1024); //1024*32);
 
-        let dt = 1.0 / (steps-1);
+        let dt = 1.0 / (steps - 1);
 
-        for (let j=1, t=dt; j<steps; j++, t += dt) {
+        for (let j = 1, t = dt; j < steps; j++, t += dt) {
           dst.load(lastdstate).interp(ds, t);
           co2.load(lastpoint).interp(co, t);
 
@@ -183,7 +185,7 @@ export class DrawOp extends ToolOp {
         kvs.push(v);
       }
     }
-    
+
     for (let e of canvas.edges) {
       if (e.id > idgen) {
         kes.push(e);
@@ -199,16 +201,14 @@ export class DrawOp extends ToolOp {
       canvas.killVertex(v);
     }
     for (let e of kes) {
-      if (!canvas.isDeadElement(e))
-        canvas.killEdge(e);
+      if (!canvas.isDeadElement(e)) canvas.killEdge(e);
     }
     for (let p of kps) {
-      if (!canvas.isDeadElement(p))
-        canvas.killPath(p);
+      if (!canvas.isDeadElement(p)) canvas.killPath(p);
     }
     canvas.idgen = ud.idgen;
     canvas.update();
-    
+
     window.redraw_all_full();
   }
 
@@ -217,7 +217,7 @@ export class DrawOp extends ToolOp {
     return this.mousemove(e, true);
   }
 
-  mousemove(e, pointer_mode=false) {
+  mousemove(e, pointer_mode = false) {
     if (this.havePointerEvents && !pointer_mode) {
       return;
     }
@@ -241,7 +241,7 @@ export class DrawOp extends ToolOp {
 
     this.inputs.points.push(mpos);
     this.inputs.pointDynamics.push(dstate);
-    
+
     let l1 = new ListProperty(Vec2Property);
     let l2 = new ListProperty(DynamicsStateProperty);
 
