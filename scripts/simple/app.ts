@@ -157,13 +157,13 @@ export function makeAPI(ctxClass: typeof Context) {
   const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean);
   (api as unknown as Record<string, unknown>).rootContextStruct = rootContextStruct;
 
-  buildToolSysAPI(api, false, rootContextStruct, ctxClass, true);
+  buildToolSysAPI(api, false, rootContextStruct, ctxClass as any, true);
 
   return api;
 }
 
 import { Icons, loadDefaultIconSheet } from "./icons.js";
-import { IconManager, setIconManager, setIconMap, setTheme, UIBase } from "../core/ui_base.js";
+import { IconManager, setIconManager, setIconMap, setTheme, ThemeRecord, UIBase } from "../core/ui_base.js";
 import { FileArgs, loadFile, saveFile } from "./file.js";
 import { HotKey, KeyMap } from "../path-controller/util/simple_events.js";
 import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline.js";
@@ -189,7 +189,8 @@ export class StartArgs {
   iconSizes: number[];
   iconTileSize: number;
   iconsPerRow: number;
-  theme: unknown;
+  //see scripts/core/theme.js
+  theme?: ThemeRecord;
   registerSaveOpenOps: boolean;
   autoLoadSplineTemplates: boolean;
   showPathsInToolTips: boolean;
@@ -209,7 +210,6 @@ export class StartArgs {
     this.iconSizes = [16, 24, 32, 48];
     this.iconTileSize = 32;
     this.iconsPerRow = 16;
-    this.theme = undefined; //see scripts/core/theme.js
 
     this.registerSaveOpenOps = true;
 
@@ -609,7 +609,7 @@ export class AppState {
     setIconMap(startArgs.icons);
 
     if (startArgs.theme) {
-      setTheme(startArgs.theme as Record<string, unknown>);
+      setTheme(startArgs.theme);
     }
 
     document.body.style["margin"] = "0px";

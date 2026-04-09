@@ -2034,7 +2034,7 @@ export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends Sl
 
 UIBase.internalRegister(NumSliderSimple);
 
-export class NumSliderWithTextBox extends SliderWithTextbox {
+export class NumSliderWithTextBox<CTX extends IContextBase = IContextBase> extends SliderWithTextbox<CTX> {
   constructor() {
     super();
 
@@ -2067,3 +2067,8 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
 }
 
 UIBase.internalRegister(NumSliderWithTextBox);
+
+export type NumSliderTypes<CTX extends IContextBase = IContextBase> =
+  | NumSlider<CTX>
+  | NumSliderSimple<CTX>
+  | NumSliderWithTextBox<CTX>;

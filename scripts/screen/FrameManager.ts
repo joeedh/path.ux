@@ -22,7 +22,16 @@ import { keymap } from "../path-controller/util/simple_events.js";
 import { ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit } from "./FrameManager_mesh.js";
 
 export { ScreenBorder, ScreenVert, ScreenHalfEdge } from "./FrameManager_mesh.js";
-import { theme, PackFlags, UIBase, styleScrollBars, saveUIData, loadUIData, IUIBaseConstructor } from "../core/ui_base";
+import {
+  theme,
+  PackFlags,
+  UIBase,
+  styleScrollBars,
+  saveUIData,
+  loadUIData,
+  IUIBaseConstructor,
+  ThemeScrollBars,
+} from "../core/ui_base";
 import * as FrameManager_mesh from "./FrameManager_mesh.js";
 import { makePopupArea } from "../widgets/ui_dialog.js";
 
@@ -1013,7 +1022,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   _ondestroy() {
-    if (ui_menu.getWranglerScreen() === this as unknown as Screen) {
+    if (ui_menu.getWranglerScreen() === (this as unknown as Screen)) {
       //ui_menu.setWranglerScreen(undefined);
     }
 
@@ -1372,15 +1381,18 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   completeUpdate() {
-    for (const step of this.update_intern()) {
+    for (const _step of this.update_intern()) {
+      //
     }
   }
 
   updateScrollStyling() {
     const s = theme.scrollbars;
+    if (!(s instanceof ThemeScrollBars)) {
+      return;
+    }
 
-    if (!s?.color) return;
-
+    // s's members are allowed to be undefined, styleScrollBars has defaults
     const key = "" + s.color + ":" + s.color2 + ":" + s.border + ":" + s.contrast + ":" + s.width;
 
     if (key !== this._last_scrollstyle_key) {
@@ -2743,7 +2755,12 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     tool.start();
   }
 
-  moveAttachTool(sarea: ScreenArea<CTX>, mpos: [number, number] | number[] | Vector2 = this.mpos, elem?: any, pointerId?: number) {
+  moveAttachTool(
+    sarea: ScreenArea<CTX>,
+    mpos: [number, number] | number[] | Vector2 = this.mpos,
+    elem?: any,
+    pointerId?: number
+  ) {
     const tool = new FrameManager_ops.AreaMoveAttachTool(this, sarea, mpos);
     tool.start(elem, pointerId);
   }

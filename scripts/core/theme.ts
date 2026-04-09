@@ -426,13 +426,14 @@ export const DefaultTheme = {
     "mouse-threshold": 8,
   },
 
+  /*
   scrollbars: {
     border  : undefined,
     color   : undefined,
     color2  : undefined,
     contrast: undefined,
     width   : undefined,
-  },
+  },*/
 
   sidebar: {
     "background-color": "rgba(55, 55, 55, 0.5)",

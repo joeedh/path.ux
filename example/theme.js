@@ -4,7 +4,7 @@
  * Copy to scripts/editors/theme.js
  */
 
-import { CSSFont } from "./pathux.js";
+import { CSSFont, ThemeScrollBars } from "./pathux.js";
 
 export const theme = {
   base: {
@@ -419,13 +419,13 @@ export const theme = {
     "mouse-threshold": 8,
   },
 
-  scrollbars: {
+  scrollbars: new ThemeScrollBars( {
     border  : undefined,
     color   : undefined,
     color2  : undefined,
     contrast: undefined,
     width   : undefined,
-  },
+  }),
 
   sidebar: {
     "background-color": "rgba(55, 55, 55, 0.5)",

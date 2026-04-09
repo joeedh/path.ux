@@ -7,15 +7,45 @@ THEME REFACTOR:
 */
 import * as util from "../path-controller/util/util.js";
 import { Vector3, Vector4 } from "../path-controller/util/vectormath.js";
-import nstructjs from "../path-controller/util/struct.js";
 import cconst from "../config/const.js";
-import { DefaultTheme } from "./theme.js";
 import { CSSFont } from "./cssfont.js";
 
+export class ThemeScrollBars {
+  border?: string;
+  color?: string;
+  color2?: string;
+  contrast?: number;
+  width?: number;
 
-export type ThemeRecord = typeof DefaultTheme; //& Record<string, Record<string, unknown> | CSSFont | string | number>;
+  constructor({
+    border,
+    color,
+    color2,
+    contrast,
+    width,
+  }: {
+    border?: string;
+    color?: string;
+    color2?: string;
+    contrast?: number;
+    width?: number;
+  }) {
+    this.border = border;
+    this.color = color;
+    this.color2 = color2;
+    this.contrast = contrast;
+    this.width = width;
+  }
+}
 
-export let compatMap = {
+export type ThemeItem = ThemeRecord | CSSFont | string | number | boolean | ThemeScrollBars;
+export interface ThemeRecord {
+  [k: string]: ThemeItem;
+}
+
+//export type ThemeRecord =  | CSSFont | string | number>;
+
+export const compatMap = {
   BoxMargin       : "padding",
   BoxBG           : "background",
   BoxRadius       : "border-radius",
@@ -35,7 +65,7 @@ export let compatMap = {
   numslider_height: "height",
 };
 
-export let ColorSchemeTypes = {
+export const ColorSchemeTypes = {
   LIGHT: "light",
   DARK : "dark",
 };
@@ -45,10 +75,10 @@ export function parsepx(css: string): number {
 }
 
 export function color2css(c: number[] | Vector4 | Vector3, alpha_override?: number): string {
-  let r = ~~(c[0] * 255);
-  let g = ~~(c[1] * 255);
-  let b = ~~(c[2] * 255);
-  let a =  c.length < 4 ? 1.0 : (c as number[])[3];
+  const r = ~~(c[0] * 255);
+  const g = ~~(c[1] * 255);
+  const b = ~~(c[2] * 255);
+  let a = c.length < 4 ? 1.0 : (c as number[])[3];
 
   a = alpha_override !== undefined ? alpha_override : a;
 
@@ -61,8 +91,8 @@ export function color2css(c: number[] | Vector4 | Vector3, alpha_override?: numb
 
 window.color2css = color2css;
 
-let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
-let basic_colors: Record<string, number[]> = {
+const css2color_rets = util.cachering.fromConstructor(Vector4, 64);
+const basic_colors: Record<string, number[]> = {
   "white" : [1, 1, 1],
   "grey"  : [0.5, 0.5, 0.5],
   "gray"  : [0.5, 0.5, 0.5],
@@ -96,16 +126,16 @@ export function color2web(color: ArrayLike<number>): string {
   }
 
   if (color.length === 3 || color[3] === 1.0) {
-    let r = tostr(color[0]);
-    let g = tostr(color[1]);
-    let b = tostr(color[2]);
+    const r = tostr(color[0]);
+    const g = tostr(color[1]);
+    const b = tostr(color[2]);
 
     return "#" + r + g + b;
   } else {
-    let r = tostr(color[0]);
-    let g = tostr(color[1]);
-    let b = tostr(color[2]);
-    let a = tostr(color[3]);
+    const r = tostr(color[0]);
+    const g = tostr(color[1]);
+    const b = tostr(color[2]);
+    const a = tostr(color[3]);
 
     return "#" + r + g + b + a;
   }
@@ -120,14 +150,14 @@ export function css2color(color: string | null | undefined): Vector4 {
 
   color = ("" + color).trim();
 
-  let ret = css2color_rets.next();
+  const ret = css2color_rets.next();
 
   if (color[0] === "#") {
     color = color.slice(1, color.length);
-    let parts: number[] = [];
+    const parts: number[] = [];
 
     for (let i = 0; i < color.length >> 1; i++) {
-      let part = "0x" + color.slice(i * 2, i * 2 + 2);
+      const part = "0x" + color.slice(i * 2, i * 2 + 2);
       parts.push(parseInt(part));
     }
 
@@ -151,7 +181,7 @@ export function css2color(color: string | null | undefined): Vector4 {
   }
 
   const hasAlpha = color.startsWith("rgba(");
-  let colorParts = color
+  const colorParts = color
     .replace("rgba", "")
     .replace("rgb", "")
     .replace(/[\(\)]/g, "")
@@ -188,18 +218,18 @@ export function web2color(str: string): Vector4 {
 
 window.web2color = web2color;
 
-let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+const validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 
-export function validateWebColor(str: string | String): boolean {
-  if (typeof str !== "string" && !(str instanceof String)) return false;
+export function validateWebColor(str: string): boolean {
+  if (typeof str !== "string") return false;
 
   return str.trim().search(validate_pat) === 0;
 }
 
-let num = "(([0-9]+.[0-9]+)|[0-9a-f]+)";
+const num = "(([0-9]+.[0-9]+)|[0-9a-f]+)";
 
-let validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
-let validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
+const validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
+const validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
 
 export function validateCSSColor(color: string): boolean {
   if (color.toLowerCase() in basic_colors) {
@@ -219,7 +249,7 @@ export function validateCSSColor(color: string): boolean {
 window.validateCSSColor = validateCSSColor;
 
 // will load later
-export let theme = {} as unknown as ThemeRecord;
+export const theme = {} as unknown as ThemeRecord;
 
 export function invertTheme(): void {
   cconst.colorSchemeType =
@@ -234,34 +264,33 @@ export function invertTheme(): void {
       return color;
     }
 
-    let c = css2color(color);
+    const c = css2color(color);
     return color2css(inverted(Array.from(c)) as number[]);
   }
 
-  let bg: string;
   //if (!bg) {
-  bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  const bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
   //} else {
   //  bg = inverted(bg);
   //}
 
   document.body.style.backgroundColor = bg;
 
-  for (let styleKey in theme) {
-    let style = theme[styleKey as keyof typeof theme];
+  for (const styleKey in theme) {
+    const style = theme[styleKey as keyof typeof theme];
 
     if (typeof style !== "object" || style instanceof CSSFont) {
       continue;
     }
 
-    let styleRec = style as Record<string, unknown>;
-    for (let k in styleRec) {
-      let v = styleRec[k];
+    const styleRec = style as Record<string, unknown>;
+    for (const k in styleRec) {
+      const v = styleRec[k];
 
       if (v instanceof CSSFont) {
         v.color = inverted(v.color) as string;
       } else if (typeof v === "string") {
-        let vLower = v.trim().toLowerCase();
+        const vLower = v.trim().toLowerCase();
 
         let iscolor = vLower.search("rgb") >= 0;
         iscolor = iscolor || vLower in basic_colors;
@@ -289,9 +318,9 @@ window.validateWebColor = validateWebColor;
 export function exportTheme(themeIn: ThemeRecord = theme, addVarDecl = true): string {
   const theme1 = themeIn as any;
 
-  let sortkeys = (obj: Record<string, unknown>): string[] => {
-    let keys: string[] = [];
-    for (let k in obj) {
+  const sortkeys = (obj: Record<string, unknown>): string[] => {
+    const keys: string[] = [];
+    for (const k in obj) {
       keys.push(k);
     }
     keys.sort();
@@ -325,7 +354,7 @@ ${indent}})`;
         let s = "{\n";
 
         for (let k of sortkeys(v as Record<string, unknown>)) {
-          let v2 = (v as Record<string, unknown>)[k];
+          const v2 = (v as Record<string, unknown>)[k];
 
           if (k.search(" ") >= 0 || k.search("-") >= 0) {
             k = "'" + k + "'";
@@ -342,7 +371,7 @@ ${indent}})`;
     }
   }
 
-  for (let k of sortkeys(theme1)) {
+  for (const k of sortkeys(theme1)) {
     let k2 = k;
 
     if (k.search(/[- \t.]/) >= 0) {
@@ -350,7 +379,7 @@ ${indent}})`;
     }
     s += "  " + k2 + ": ";
 
-    let v = theme1[k];
+    const v = theme1[k];
     if (typeof v !== "object" || v instanceof CSSFont) {
       s += writekey(v, "  ") + ",\n";
     } else {
@@ -368,7 +397,7 @@ ${indent}})`;
       }
 
       for (let k2 of sortkeys(v as Record<string, unknown>)) {
-        let v2 = (v as Record<string, unknown>)[k2];
+        const v2 = (v as Record<string, unknown>)[k2];
 
         if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
           k2 = "'" + k2 + "'";
@@ -401,9 +430,9 @@ export function copyTheme(
     return themeObj.copy();
   }
 
-  let ret: Record<string, unknown> = {};
-  for (let k in themeObj) {
-    let v = (themeObj as Record<string, unknown>)[k];
+  const ret: Record<string, unknown> = {};
+  for (const k in themeObj) {
+    const v = (themeObj as Record<string, unknown>)[k];
 
     if (typeof v === "function") {
       continue;

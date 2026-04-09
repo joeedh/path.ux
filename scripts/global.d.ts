@@ -113,12 +113,6 @@ interface Window {
   IndexRangeStack: unknown[];
   makeCompiledVectormathCode: (mode?: string) => string;
 
-  /* ── Cachering system ──────────────────────────────────────── */
-  _cacherings: unknown[];
-  _clear_all_cacherings: (killAll?: boolean) => void;
-  _nonvector_cacherings: () => unknown;
-  _stale_cacherings: () => unknown;
-
   /* ── Units ─────────────────────────────────────────────────── */
   _getBaseUnit: () => unknown;
   unitConvert: (...args: unknown[]) => number;

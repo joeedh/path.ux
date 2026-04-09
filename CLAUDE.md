@@ -12,6 +12,9 @@ npm run format         # prettier --write
 npm run format:check   # prettier --check
 ```
 
+Use `tsgo` to typecheck instead of `tsc`, e.g.
+`npx tsgo --noEmit`.
+
 ## Vector classes
 
 By design vectors do not have a simple index signature.

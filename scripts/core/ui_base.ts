@@ -80,7 +80,7 @@ import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils.js";
 
 export * from "./ui_theme.js";
 
-import { theme, parsepx, compatMap, color2css, css2color } from "./ui_theme.js";
+import { theme, parsepx, compatMap, color2css, css2color, ThemeRecord, ThemeScrollBars } from "./ui_theme.js";
 
 import { DefaultTheme } from "./theme.js";
 
@@ -154,28 +154,28 @@ export { ClassIdSymbol };
 
 let class_idgen = 1;
 
-export function setTheme(theme2: Record<string, unknown>): void {
+export function setTheme(theme2: ThemeRecord): void {
   //merge theme
   for (const k in theme2) {
     const v = theme2[k];
 
-    if (typeof v !== "object" || v === null) {
-      (theme as Record<string, unknown>)[k] = v;
+    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
+      theme[k] = v;
       continue;
     }
 
     if (!(k in theme)) {
-      (theme as Record<string, unknown>)[k] = {};
+      theme[k] = {};
     }
 
-    const vRec = v as Record<string, unknown>;
+    const vRec = v;
     for (let k2 in vRec) {
       //if (v0 && !(k2 in v0)) {
       //  continue;
       //}
 
       if (k2 in compatMap) {
-        const k3 = (compatMap as Record<string, string>)[k2]!;
+        const k3 = compatMap[k2 as keyof typeof compatMap]!;
 
         if (vRec[k3] === undefined) {
           vRec[k3] = vRec[k2];
@@ -185,7 +185,8 @@ export function setTheme(theme2: Record<string, unknown>): void {
         k2 = k3;
       }
 
-      ((theme as Record<string, unknown>)[k] as Record<string, unknown>)[k2] = vRec[k2];
+      const substyle = theme[k] as ThemeRecord;
+      substyle[k2] = vRec[k2];
     }
   }
 }
@@ -205,7 +206,7 @@ export function report(...args: unknown[]): void {
 export function getDefault(key: string, elem?: UIBase): unknown {
   console.warn("Deprecated call to ui_base.js:getDefault");
 
-  const base = theme.base as Record<string, unknown>;
+  const base = theme.base as ThemeRecord;
   if (key in base) {
     return base[key];
   } else {
@@ -470,7 +471,7 @@ export class IconManager {
       }
 
       if (util.isMobile()) {
-        drawsize = ~~(drawsize * theme.base.mobileSizeMultiplier);
+        drawsize = ~~(drawsize * ((theme.base as ThemeRecord).mobileSizeMultiplier as number));
       }
 
       this.iconsheets.push(new _IconManager(images[i] as HTMLImageElement, size, horizontal_tile_count, drawsize));
@@ -720,6 +721,7 @@ import {
 } from "../path-controller/dag/eventdag.js";
 import type { IContextBase } from "./context_base.js";
 import { CSSFont } from "./cssfont.js";
+import { DataPathSetOp } from "../pathux.js";
 
 const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
@@ -886,12 +888,16 @@ window.setTimeoutQueue = setTimeoutQueue as unknown as typeof window.setTimeoutQ
 
 // inside a worker?
 if (typeof HTMLElement === "undefined") {
-  (window as unknown as Record<string, unknown>).HTMLElement = class HTMLElement {};
-  (window as unknown as Record<string, unknown>).customElements = {
+  // @ts-expect-error
+  window.HTMLElement = class HTMLElement {};
+  // @ts-expect-error
+  window.customElements = {
     define: () => {},
   };
+  // @ts-nocheck
   window.devicePixelRatio = 1.0;
-  (window as unknown as Record<string, unknown>).PointerEvent = class PointerEvent {};
+  // @ts-expect-error
+  window.PointerEvent = class PointerEvent {};
 }
 
 interface UIBaseDefinition {
@@ -1342,7 +1348,7 @@ export class UIBase<
       }
 
       button = button === undefined ? 0 : button;
-      const e2 = copyEvent(e) as Record<string, unknown>;
+      const e2 = copyEvent(e);
 
       if (e.touches.length === 0) {
         //hrm, what to do, what to do. . .
@@ -2757,13 +2763,13 @@ export class UIBase<
 
     const handlers2: Record<string, Function> = {};
     for (const k in handlers) {
-      const func = (handlers as Record<string, unknown>)[k];
+      const func = handlers[k];
 
       if (typeof func !== "function") {
         continue;
       }
 
-      handlers2[k] = bindFunc(func as Function);
+      handlers2[k] = bindFunc(func);
     }
 
     if (pointerId !== undefined && pointerElem) {
@@ -2935,22 +2941,20 @@ export class UIBase<
       return;
     }
 
-    const toolstack = (this.ctx as Record<string, unknown>).toolstack as Record<string, Function | unknown>;
-    let head = toolstack.head as Record<string, Function> | undefined;
+    const toolstack = this.ctx.toolstack;
+    let head = toolstack.head;
 
-    let bad = head === undefined || !(head instanceof (getDataPathToolOp() as Function));
-    bad = bad || head!.hashThis() !== head!.hash(mass_set_path, path, prop.type, this._id);
-    bad = bad || this.pathUndoGen !== this._lastPathUndoGen;
-
-    //if (head !== undefined && head instanceof getDataPathToolOp()) {
-    //console.log("===>", bad, head.hashThis());
-    //console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
-    //}
+    const bad =
+      head === undefined ||
+      !(head instanceof getDataPathToolOp()) ||
+      head!.hashThis() !== head!.hash(mass_set_path, path, prop.type, this._id) ||
+      this.pathUndoGen !== this._lastPathUndoGen;
 
     if (!bad) {
-      (toolstack.undo as Function)();
-      head!.setValue(ctx, val, rdef.obj);
-      (toolstack.redo as Function)();
+      toolstack.undo(ctx);
+      const tool = head as InstanceType<ReturnType<typeof getDataPathToolOp>>;
+      tool.setValue(ctx, val, rdef.obj);
+      toolstack.redo(ctx);
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
 
@@ -2962,10 +2966,10 @@ export class UIBase<
       }
 
       ctx.toolstack.execTool(this.ctx, toolop);
-      head = toolstack.head as Record<string, Function> | undefined;
+      head = toolstack.head;
     }
 
-    if (!head || (head as Record<string, unknown>).hadError === true) {
+    if (!head || (head as unknown as DataPathSetOp).hadError) {
       throw new Error("toolpath error");
     }
   }
@@ -2994,15 +2998,16 @@ export class UIBase<
     }
 
     const loadAttr = (propkey: string, domkey: string, thiskey: string) => {
-      const old = (this as Record<string, unknown>)[thiskey];
+      const anyThis = this as any;
+      const old = anyThis[thiskey];
 
       if (dom.hasAttribute(domkey)) {
-        (this as Record<string, unknown>)[thiskey] = parseFloat(dom.getAttribute(domkey)!);
+        anyThis[thiskey] = parseFloat(dom.getAttribute(domkey)!);
       } else if (prop) {
-        (this as Record<string, unknown>)[thiskey] = (prop as any)[propkey];
+        anyThis[thiskey] = prop[propkey as keyof typeof prop];
       }
 
-      if ((this as Record<string, unknown>)[thiskey] !== old) {
+      if (anyThis[thiskey] !== old) {
         modified = true;
       }
     };
@@ -3424,7 +3429,7 @@ export class UIBase<
 
     if (ok) {
       //console.warn("Showing tooltop", this.id);
-      const _ToolTip = (window as unknown as Record<string, unknown>)._ToolTip as {
+      const _ToolTip = window._ToolTip as {
         show(text: string, screen: UIBase, x: number, y: number): { remove(): void };
       };
       this._tooltip_ref = _ToolTip.show(this._description_final!, (this.ctx as { screen: UIBase }).screen, x, y);
@@ -3589,8 +3594,8 @@ export class UIBase<
       }
     }
 
-    if (ok && (theme.base as Record<string, unknown>).mobileSizeMultiplier) {
-      val = (val as number) * ((theme.base as Record<string, unknown>).mobileSizeMultiplier as number);
+    if (ok && ((theme.base as ThemeRecord).mobileSizeMultiplier as number)) {
+      val = (val as number) * ((theme.base as ThemeRecord).mobileSizeMultiplier as number);
     }
 
     return val;
@@ -3642,7 +3647,7 @@ export class UIBase<
     themeDef?: Record<string, unknown>
   ): boolean {
     if (!themeDef) return false;
-    const th = themeDef[style] as Record<string, unknown> | undefined;
+    const th = themeDef[style];
 
     if (inherit) {
       if (this._hasClassSubDefault(key, subkey, false, style, themeDef)) {
@@ -3663,7 +3668,7 @@ export class UIBase<
       return false;
     }
 
-    const obj = th[key];
+    const obj = th[key as keyof typeof th];
     if (!obj || typeof obj !== "object") {
       return false;
     }
@@ -3691,14 +3696,14 @@ export class UIBase<
 
     const style = this.getDefault(key, undefined, undefined, inherit);
 
-    if (!style || typeof style !== "object" || !(subkey in (style as Record<string, unknown>))) {
+    if (!style || typeof style !== "object" || !(subkey in style)) {
       if (defaultval !== undefined) {
         return defaultval;
       } else if (backupkey) {
         return this.getDefault(backupkey, undefined, undefined, inherit);
       }
     }
-    return (style as unknown as Record<string, T>)[subkey] as T;
+    return style[subkey as keyof typeof style] as T;
   }
 
   getDefault<T extends DefaultTypes = string>(
@@ -3780,7 +3785,7 @@ export class UIBase<
 
     const th = this._themeOverride;
 
-    if (th && style in th && key in (th[style] as Record<string, unknown>)) {
+    if (th && style in th && key in th[style]) {
       return true;
     }
 
@@ -3788,7 +3793,7 @@ export class UIBase<
       return true;
     }
 
-    return key in (theme.base as Record<string, unknown>);
+    return key in (theme.base as ThemeRecord);
   }
 
   getClassDefault(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
@@ -3820,20 +3825,20 @@ export class UIBase<
       !(key in (theme as any)[style]) &&
       !(key in (theme.base as any))
     ) {
-      if (window.DEBUG && (window.DEBUG as Record<string, boolean>).theme) {
+      if (window.DEBUG?.theme) {
         report("Missing theme key ", key, "for", style);
       }
     }
 
     for (let i = 0; i < 2; i++) {
-      const th: Record<string, unknown> = !i ? (this._themeOverride as Record<string, unknown>) : theme;
+      const th = !i ? this._themeOverride : theme;
 
       if (!th) {
         continue;
       }
 
-      const thStyle = th[style] as Record<string, unknown> | undefined;
-      const thBase = th.base as Record<string, unknown> | undefined;
+      const thStyle = th[style] as ThemeRecord;
+      const thBase = th.base as ThemeRecord;
 
       if (val === undefined && thStyle && key in thStyle) {
         themeobj = thStyle;
@@ -3844,7 +3849,7 @@ export class UIBase<
       } else if (val === undefined && inherit) {
         const def = (this.constructor as unknown as typeof UIBase).define();
 
-        const thParent = def.parentStyle ? (th[def.parentStyle] as Record<string, unknown> | undefined) : undefined;
+        const thParent = (def.parentStyle ? th[def.parentStyle] : undefined) as ThemeRecord | undefined;
         if (thParent && key in thParent) {
           val = thParent[key];
           themeobj = thParent;

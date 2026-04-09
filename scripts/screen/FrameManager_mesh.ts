@@ -9,6 +9,7 @@ import { createMenu, Menu } from "../widgets/ui_menu.js";
 import { IContextBase } from "../core/context_base.js";
 import type { ScreenArea } from "./ScreenArea.js";
 import type { Screen } from "./FrameManager";
+import { StructReader } from "../util/nstructjs.js";
 
 export const AreaFlags = {
   HIDDEN                : 1,
@@ -84,7 +85,7 @@ export class ScreenVert<CTX extends IContextBase = IContextBase> extends Vector2
     return ScreenVert.hash(this, this.added_id);
   }
 
-  override loadSTRUCT(reader: (obj: this) => void) {
+  override loadSTRUCT(reader: StructReader<this>) {
     reader(this);
   }
 

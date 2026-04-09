@@ -19,7 +19,7 @@ import {
 import "../path-controller/util/html5_fileapi.js";
 import { CSSFont } from "./cssfont.js";
 import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base.js";
-import { PropTypes } from "../path-controller/toolsys/toolprop.js";
+import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop.js";
 import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu.js";
 
 import cconst from "../config/const.js";
@@ -27,11 +27,28 @@ import { IContextBase } from "./context_base.js";
 import type { PanelFrame } from "../widgets/ui_panel.js";
 import type { TabContainer } from "../widgets/ui_tabs.js";
 import { InheritFlag, ToolDef, ToolOp } from "../path-controller/toolsys/toolsys";
+import { NumSliderTypes } from "../pathux";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
-function styl(el: { style: CSSStyleDeclaration }): Record<string, string> {
-  return el.style as unknown as Record<string, string>;
+function styl(el: { style: CSSStyleDeclaration }) {
+  return el.style;
 }
+
+export type SliderArgs = {
+  name?: string;
+  defaultval?: number;
+  min?: //
+  number;
+  max?: number;
+  step?: number;
+  callback?: Function;
+  packflag?: number;
+  do_redraw?: boolean;
+  isInt?: boolean;
+  /** @deprecated */
+  is_int?: boolean;
+  decimalPlaces?: number
+};
 
 export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   declare dom: HTMLDivElement;
@@ -179,7 +196,7 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       this._updateFont();
     }
 
-    styl(this.dom)["pointer-events"] = styl(this)["pointer-events"];
+    styl(this.dom)["pointerEvents"] = styl(this)["pointerEvents"];
 
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
@@ -462,7 +479,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * .row().noMarginsOrPadding().oneAxisPadding()
    * */
   strip(
-    themeClass_or_obj: string | Record<string, unknown> = "strip",
+    themeClass_or_obj: string | any = "strip",
     margin1: number = this.getDefault("oneAxisPadding") as number,
     margin2 = 1,
     horiz?: boolean | undefined
@@ -650,12 +667,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
   redrawCurves() {
     throw new Error("Implement me (properly!)");
-
-    if ((this as Record<string, unknown>).closed) return;
-
-    for (const cw of (this as unknown as { curve_widgets: { draw(): void }[] }).curve_widgets) {
-      cw.draw();
-    }
   }
 
   listen() {
@@ -807,7 +818,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       cls = path_or_cls;
     }
 
-    tdef = (cls as unknown as { _getFinalToolDef(): Record<string, unknown> })._getFinalToolDef();
+    tdef = cls._getFinalToolDef();
 
     const packflag = (args.packflag as number) || 0;
     const label = (args.label as string) || (tdef.uiname as string);
@@ -903,10 +914,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       this.ctx.api.execTool(this.ctx, toolob);
     };
 
-    const def =
-      typeof path_or_cls === "string"
-        ? (this.ctx.api.getToolDef(path_or_cls) as Record<string, unknown>)
-        : (cls as unknown as { tooldef(): Record<string, unknown> }).tooldef();
+    const def = typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
     let tooltip = def.description === undefined ? (def.uiname as string) : (def.description as string);
 
     //is there a hotkey hardcoded in the class?
@@ -989,7 +997,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       path = this._joinPrefix(inpath);
     }
 
-    const ret = UIBase.createElement("label-x") as Label<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("label-x") as Label<CTX>;
 
     if (label === undefined && inpath) {
       const rdef = this.ctx.api.resolvePath(this.ctx, path!);
@@ -1065,7 +1073,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   button(label: string, cb?: () => void, thisvar?: unknown, id?: unknown, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const ret = UIBase.createElement("button-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("button-x") as UIBase<CTX>;
 
     ret.packflag |= packflag;
 
@@ -1100,7 +1108,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     mass_set_path = inpath !== undefined ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
 
-    const ret = UIBase.createElement("color-picker-button-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("color-picker-button-x") as UIBase<CTX>;
 
     if (inpath !== undefined) {
       inpath = this._joinPrefix(inpath)!;
@@ -1118,7 +1126,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   noteframe(packflag = 0) {
-    const ret = UIBase.createElement("noteframe-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("noteframe-x") as UIBase<CTX>;
 
     ret.packflag |= (this.inherit_packflag & ~PackFlags.NO_UPDATE) | packflag;
 
@@ -1131,7 +1139,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
-    const ret = UIBase.createElement("curve-widget-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("curve-widget-x") as UIBase<CTX>;
 
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
@@ -1149,7 +1157,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   vecpopup(inpath?: string, packflag = 0, mass_set_path?: string) {
-    const button = UIBase.createElement("vector-popup-button-x") as UIBase<CTX> & Record<string, unknown>;
+    const button = UIBase.createElement("vector-popup-button-x") as UIBase<CTX>;
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
@@ -1214,9 +1222,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath!)!, true) as
-      | Record<string, unknown>
-      | undefined;
+    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath!)!, true);
 
     if (rdef?.prop === undefined) {
       console.warn(
@@ -1296,18 +1302,18 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     } else if (prop.type === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
         const subkey = rdef.subkey as string;
-        let name = (prop.ui_value_names as Record<string, string>)[rdef.subkey as string];
+        let name = prop.ui_value_names[rdef.subkey as string];
 
         if (name === undefined) {
           name = makeUIName(rdef.subkey);
         }
 
         const check = this.check(inpath, name, packflag, mass_set_path);
-        const tooltip = (prop.descriptions as Record<string, string>)[subkey];
+        const tooltip = prop.descriptions[subkey];
 
         check.useDataPathUndo = useDataPathUndo;
 
-        check.description = tooltip === undefined ? (prop.ui_value_names as Record<string, string>)[subkey] : tooltip;
+        check.description = tooltip === undefined ? prop.ui_value_names[subkey] : tooltip;
         if (check instanceof Check) {
           check.icon = prop.iconmap[rdef.subkey as string];
         }
@@ -1369,13 +1375,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       }
     } else if (prop.type === PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
-        const tooltip = (prop.descriptions as Record<string, string>)[rdef.subkey as string];
-        let name = (prop.ui_value_names as Record<string, string>)[rdef.subkey as string];
+        const tooltip = prop.descriptions[rdef.subkey as string];
+        let name = prop.ui_value_names[rdef.subkey as string];
 
         if (typeof rdef.subkey === "number") {
-          name = (prop.keys as Record<number, string>)[rdef.subkey];
-          if (name && name in (prop.ui_value_names as Record<string, string>)) {
-            name = (prop.ui_value_names as Record<string, string>)[name];
+          name = prop.keys[rdef.subkey] as string;
+          if (name && name in prop.ui_value_names) {
+            name = prop.ui_value_names[name];
           } else {
             name = makeUIName(name ? name : "(error)");
           }
@@ -1407,9 +1413,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           const col1 = row.col();
           const col2 = row.col();
 
-          for (const k in prop.values as Record<string, unknown>) {
-            let name = (prop.ui_value_names as Record<string, string>)[k];
-            const tooltip = (prop.descriptions as Record<string, string>)[k];
+          for (const k in prop.values) {
+            let name = prop.ui_value_names[k];
+            const tooltip = prop.descriptions[k];
 
             if (name === undefined) {
               name = makeUIName(k);
@@ -1458,9 +1464,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           let x = 0;
           let y = 0;
 
-          for (const k in prop.values as Record<string, unknown>) {
-            let name = (prop.ui_value_names as Record<string, string>)[k];
-            const tooltip = (prop.descriptions as Record<string, string>)[k];
+          for (const k in prop.values) {
+            let name = prop.ui_value_names[k];
+            const tooltip = prop.descriptions[k];
 
             if (name === undefined) {
               name = makeUIName(k);
@@ -1494,9 +1500,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         const rebuild = () => {
           con.clear();
 
-          for (const k in prop.values as Record<string, unknown>) {
-            let name = (prop.ui_value_names as Record<string, string>)[k];
-            const tooltip = (prop.descriptions as Record<string, string>)[k];
+          for (const k in prop.values) {
+            let name = prop.ui_value_names[k];
+            const tooltip = prop.descriptions[k];
 
             if (name === undefined) {
               name = makeUIName(k);
@@ -1532,7 +1538,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   iconcheck(inpath: string | undefined, icon: number, name: string, mass_set_path?: string) {
-    const ret = UIBase.createElement("iconcheck-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
     ret.icon = icon;
     ret.description = name;
 
@@ -1544,9 +1550,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret.setAttribute("mass_set_path", mass_set_path);
     }
 
-    this.add(ret as UIBase<CTX>);
+    this.add(ret);
 
-    return ret as UIBase<CTX>;
+    return ret;
   }
 
   check(inpath: string | undefined, name: string, packflag = 0, mass_set_path?: string) {
@@ -1646,7 +1652,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           styl(check.dom)["padding"] = "0px";
           styl(check.dom)["margin"] = "0px";
 
-          check.description = (prop.descriptions as Record<string, string>)[key];
+          check.description = (prop.descriptions as any)[key];
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
         }
       } else {
@@ -1686,16 +1692,16 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             check.setAttribute("mass_set_path", mass_set_path);
           }
 
-          check.description = (prop.descriptions as Record<string, string>)[(prop.keys as Record<string, string>)[key]];
+          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
           if (!check.description) {
-            check.description = "" + (prop.ui_value_names as Record<string, string>)[key];
+            check.description = "" + prop.ui_value_names[key];
           }
           check.onchange = makecb(key);
         }
       }
     }
 
-    return frame! as unknown as UIBase<CTX>;
+    return frame!;
   }
 
   checkenum_panel(
@@ -1732,12 +1738,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       frame.setCSSAfter(() => (frame!.background = this.getDefault("BoxSub2BG") as string));
 
       if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values as Record<string, unknown>) {
-          const check = frame.check(
-            inpath + " == " + (prop.values as Record<string, unknown>)[key],
-            "",
-            packflag
-          ) as IconCheck<CTX>;
+        for (const key in prop.values) {
+          const check = frame.check(inpath + " == " + prop.values[key], "", packflag) as IconCheck<CTX>;
 
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
@@ -1748,7 +1750,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
           styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
 
-          check.description = (prop.descriptions as Record<string, string>)[key];
+          check.description = prop.descriptions[key];
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
         }
       } else {
@@ -1780,7 +1782,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           };
         }
 
-        for (const key in prop.values as Record<string, unknown>) {
+        for (const key in prop.values) {
           const check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
           checks[key] = check;
 
@@ -1788,9 +1790,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             check.setAttribute("mass_set_path", mass_set_path);
           }
 
-          check.description = (prop.descriptions as Record<string, string>)[(prop.keys as Record<string, string>)[key]];
+          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
           if (!check.description) {
-            check.description = "" + (prop.ui_value_names as Record<string, string>)[key];
+            check.description = "" + prop.ui_value_names[key];
           }
           check.onchange = makecb(key);
           //console.log("PATH", path);
@@ -1822,31 +1824,31 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       | string
       | {
           name: string;
-          enumDef?: Record<string, number> | EnumProperty | FlagProperty;
+          enumDef?: EnumProperty | FlagProperty;
           defaultval?: string | number;
           callback?: Function;
           iconmap?: Record<string, number>;
           packflag?: number;
           mass_set_path?: string;
         },
-    enumDef?: Record<string, number> | EnumProperty | FlagProperty,
+    enumDef?: EnumProperty | FlagProperty | EnumDef,
     defaultval?: number | string,
     callback?: Function,
-    iconmap?: Record<string, number>,
+    iconmap?: IconMap,
     packflag = 0
   ): DropBox<CTX> {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     let mass_set_path: string | undefined;
 
     if (name && typeof name === "object") {
-      const args = name as any;
+      const args = name;
 
       name = args.name;
       enumDef = args.enumDef;
       defaultval = args.defaultval;
       callback = args.callback;
       iconmap = args.iconmap;
-      packflag = args.packflag;
+      packflag = args.packflag ?? 0;
       mass_set_path = args.mass_set_path;
     }
 
@@ -1866,7 +1868,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         ret.prop = enumDef;
         label ||= (enumDef.uiname as string) || ToolProperty.makeUIName(enumDef.apiname as string);
       } else {
-        ret.prop = new EnumProperty(defaultval, enumDef as Record<string, number>, path, name as string);
+        ret.prop = new EnumProperty(defaultval, enumDef as EnumDef, path, name as string);
       }
 
       if (iconmap) {
@@ -1935,32 +1937,32 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   simpleslider(
-    inpath: string | undefined,
-    name?: string | Record<string, unknown>,
+    datapath: string | undefined,
+    name?: string | SliderArgs,
     defaultval?: number,
     min?: number,
     max?: number,
     step?: number,
-    is_int?: boolean,
+    isInt?: boolean,
     do_redraw?: boolean,
     callback?: Function,
     packflag = 0
   ): UIBase<CTX> {
-    if (arguments.length === 2 || typeof name === "object") {
-      const args = Object.assign({}, name as Record<string, unknown>);
-
-      args.packflag = ((args.packflag as number) || 0) | PackFlags.SIMPLE_NUMSLIDERS;
-      return this.slider(inpath, args);
+    if (typeof name === "object") {
+      return this.slider(datapath, {
+        ...name,
+        packflag: (name.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS,
+      });
       //new-style api call
     } else {
       return this.slider(
-        inpath,
+        datapath,
         name,
         defaultval,
         min,
         max,
         step,
-        is_int,
+        isInt,
         do_redraw,
         callback,
         packflag | PackFlags.SIMPLE_NUMSLIDERS
@@ -1977,8 +1979,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * });
    * */
   slider(
-    inpath: string | undefined,
-    name?: string | Record<string, unknown>,
+    datapath: string | undefined,
+    name?: string | SliderArgs,
     defaultval?: number,
     min?: number,
     max?: number,
@@ -1986,31 +1988,32 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     is_int?: boolean,
     do_redraw?: boolean,
     callback?: Function,
-    packflag = 0
+    packflag = 0,
+    decimalPlaces?: number
   ): UIBase<CTX> {
-    if (arguments.length === 2 || typeof name === "object") {
+    if (typeof name === "object") {
       //new-style api call
 
-      const args = name as Record<string, unknown>;
-
-      name = args.name as string | undefined;
-      defaultval = args.defaultval as number | undefined;
-      min = args.min as number | undefined;
-      max = args.max as number | undefined;
-      step = args.step as number | undefined;
-      is_int = (args.is_int || args.isInt) as boolean | undefined;
-      do_redraw = args.do_redraw as boolean | undefined;
-      callback = args.callback as Function | undefined;
-      packflag = (args.packflag as number) || 0;
+      const args = name;
+      decimalPlaces = args.decimalPlaces
+      name = args.name;
+      defaultval = args.defaultval;
+      min = args.min;
+      max = args.max;
+      step = args.step;
+      is_int = args.is_int || args.isInt;
+      do_redraw = args.do_redraw;
+      callback = args.callback;
+      packflag = args.packflag ?? 0;
     }
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let ret: UIBase<CTX> & Record<string, unknown>;
+    let ret: NumSliderTypes<CTX>;
 
-    if (inpath) {
-      inpath = this._joinPrefix(inpath)!;
+    if (datapath) {
+      datapath = this._joinPrefix(datapath)!;
 
-      const rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
+      const rdef = this.ctx.api.resolvePath(this.ctx, datapath, true);
       if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }
@@ -2026,24 +2029,22 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     if (extraTextBox) {
       if (simple) {
-        ret = UIBase.createElement("numslider-simple-x") as UIBase<CTX> & Record<string, unknown>;
+        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-simple-x");
       } else {
-        ret = UIBase.createElement("numslider-textbox-x") as UIBase<CTX> & Record<string, unknown>;
+        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-textbox-x");
       }
     } else {
       if (simple) {
-        ret = UIBase.createElement("numslider-simple-x") as UIBase<CTX> & Record<string, unknown>;
+        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-simple-x");
       } else {
-        ret = UIBase.createElement("numslider-x") as UIBase<CTX> & Record<string, unknown>;
+        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-x");
       }
     }
 
     ret.packflag |= packflag;
 
-    let decimals: number | undefined;
-
-    if (inpath) {
-      ret.setAttribute("datapath", inpath);
+    if (datapath) {
+      ret.setAttribute("datapath", datapath);
     }
 
     if (name) {
@@ -2065,22 +2066,29 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret.setAttribute("integer", "" + is_int);
     }
 
-    if (decimals !== undefined) {
-      ret.decimalPlaces = decimals;
+    if (decimalPlaces !== undefined) {
+      ret.decimalPlaces = decimalPlaces;
     }
 
+    if (step) {
+      ret.setAttribute("step", "" + step);
+    }
     if (callback) {
       ret.onchange = callback as typeof ret.onchange;
     }
 
-    this._add(ret as UIBase<CTX>);
+    this._add(ret);
 
     if (this.ctx) {
       ret.setCSS();
       ret.update();
     }
 
-    return ret as UIBase<CTX>;
+    if (do_redraw) {
+      ret._redraw();
+    }
+
+    return ret;
   }
 
   _container_inherit(elem: UIBase<CTX>, packflag = 0) {
