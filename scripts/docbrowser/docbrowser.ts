@@ -11,6 +11,9 @@ import type {StructReader} from "../util/nstructjs"
 import {UIBase, Icons} from "../core/ui_base"
 import {platform} from '../platforms/platform'
 
+declare function require(mod: string): any
+declare const process: any
+
 let tinymceLoaded = false;
 // @ts-ignore - tinymce is an optional external dependency loaded at runtime
 import('../lib/tinymce/tinymce.cjs').then(() => {

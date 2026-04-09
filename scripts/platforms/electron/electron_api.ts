@@ -1,5 +1,10 @@
 "use strict";
 
+declare function require(name: string): any
+declare class Buffer {
+  static from(data: unknown, type?: string): Buffer;
+}
+
 /*
  * Minimal ambient types for Electron/Node APIs used in this module.
  * Declared locally to avoid pulling in @types/node or @types/electron.
@@ -74,7 +79,7 @@ function getElectron(): ElectronModule {
 }
 
 function myRequire(mod: string): unknown {
-  return globalThis.require(mod);
+  return (globalThis as any).require(mod);
 }
 
 import {Menu, DropBox} from '../../widgets/ui_menu';
