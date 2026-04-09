@@ -10,15 +10,7 @@ import { IContextBase } from "../core/context_base.js";
 import type { ScreenArea } from "./ScreenArea.js";
 import type { Screen } from "./FrameManager";
 import { StructReader } from "../util/nstructjs.js";
-
-export const AreaFlags = {
-  HIDDEN                : 1,
-  FLOATING              : 2,
-  INDEPENDENT           : 4, //area is indpendent of the screen mesh
-  NO_SWITCHER           : 8,
-  NO_HEADER_CONTEXT_MENU: 16,
-  NO_COLLAPSE           : 32,
-};
+import { AreaFlags } from "./area_base.js";
 
 export const SnapLimit = 1;
 

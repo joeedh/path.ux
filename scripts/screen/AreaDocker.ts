@@ -5,15 +5,14 @@ import cconst from "../config/const";
 
 import { Vector2 } from "../path-controller/util/vectormath";
 import { Container } from "../core/ui";
-import { Area } from "./ScreenArea";
+import type { Area, ScreenArea } from "./ScreenArea";
 import { Icons } from "../core/ui_base";
 
-import { Menu, startMenu } from "../widgets/ui_menu";
-import { areaclasses } from "./area_wrangler";
-import { ScreenArea } from "./ScreenArea";
+import { type Menu, startMenu } from "../widgets/ui_menu";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
-import { IContextBase } from "../core/context_base";
-import { TabItem } from "../widgets/ui_tabs";
+import type { IContextBase } from "../core/context_base";
+import type { TabItem } from "../widgets/ui_tabs";
+import { areaclasses, getAreaConstructor, makeAreasEnum } from "./area_base";
 
 function dockerdebug(...args: any[]) {
   if (cconst.DEBUG.areadocker) {
@@ -92,7 +91,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     sarea.switcherData = uidata;
 
     for (const editor of sarea.editors) {
-      const def = Area.getAreaConstructor(editor).define();
+      const def = getAreaConstructor(editor).define();
       let name = def.uiname;
 
       if (!name) {
@@ -385,7 +384,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     menu.ctx = this.ctx;
     menu._init();
 
-    const prop = Area.makeAreasEnum();
+    const prop = makeAreasEnum();
     const sarea = this.getArea().parentWidget as unknown as ScreenArea;
 
     if (!sarea) {
@@ -395,7 +394,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     for (const k in Object.assign({}, prop.values)) {
       let ok = true;
       for (const area of sarea.editors) {
-        if (Area.getAreaConstructor(area).define().uiname === k) {
+        if (getAreaConstructor(area).define().uiname === k) {
           ok = false;
         }
       }

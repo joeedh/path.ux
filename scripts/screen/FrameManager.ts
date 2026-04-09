@@ -11,7 +11,7 @@ import { haveModal, _setScreenClass } from "../path-controller/util/simple_event
 import * as util from "../path-controller/util/util.js";
 import "../widgets/ui_curvewidget.js";
 import { Vector2, Number2 } from "../path-controller/util/vectormath.js";
-import { ScreenArea, Area, AreaConstructor } from "./ScreenArea.js";
+import { ScreenArea, Area } from "./ScreenArea.js";
 import * as FrameManager_ops from "./FrameManager_ops.js";
 import * as math from "../path-controller/util/math.js";
 import * as ui_menu from "../widgets/ui_menu.js";
@@ -47,6 +47,8 @@ import { startMenu } from "../widgets/ui_menu.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
 import { StructReader } from "../util/nstructjs.js";
+import { AreaConstructor } from "./area_base.js";
+import "./AreaDocker";
 
 const list = Array.from;
 

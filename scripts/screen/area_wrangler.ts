@@ -1,11 +1,10 @@
 //import * as nstructjs from './struct.js';
 import { haveModal, _setModalAreaClass } from "../path-controller/util/simple_events.js";
-import * as util from "../path-controller/util/util.js";
 
 import "../path-controller/util/struct.js";
 
 import { ClassIdSymbol } from "../core/ui_consts.js";
-import type { Area, AreaConstructor } from "./ScreenArea.js";
+import type { Area } from "./ScreenArea.js";
 import { IContextBase } from "../core/context_base.js";
 
 export function getAreaIntName(name: string) {
@@ -39,8 +38,6 @@ export function setAreaTypes(def: AreaTypes) {
     AreaTypes[k] = def[k];
   }
 }
-
-export const areaclasses: { [key: string]: typeof Area } = {};
 
 /*hackish! store ref to an active wrangler so simple_event's modal
  * system can lock it!*/

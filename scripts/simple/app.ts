@@ -5,8 +5,7 @@ export const DataModelClasses: (typeof DataModel)[] = [];
 import { buildToolSysAPI, SavedToolDefaults, ToolStack } from "../path-controller/toolsys/toolsys.js";
 import { DataAPI } from "../path-controller/controller/controller.js";
 import { Screen } from "../screen/FrameManager.js";
-import { areaclasses, contextWrangler } from "../screen/area_wrangler.js";
-import * as util from "../util/util.js";
+import { contextWrangler } from "../screen/area_wrangler.js";
 import { Editor } from "./editor.js";
 
 import { Vector2 } from "../path-controller/util/vectormath.js";
@@ -170,6 +169,7 @@ import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline.js
 import { MenuBarEditor, registerMenuBarEditor } from "./menubar.js";
 import { register } from "./app_ops.js";
 import { IContextBase } from "../core/context_base.js";
+import { areaclasses } from "../screen/area_base.js";
 
 declare global {
   var _appstate: AppState;

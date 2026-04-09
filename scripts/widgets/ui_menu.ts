@@ -17,7 +17,7 @@ import { OldButton } from "./ui_button";
 import { DomEventTypes } from "../path-controller/util/events";
 
 import { HotKey, keymap } from "../path-controller/util/simple_events";
-import { IContextBase } from "../core/context_base";
+import type { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
 import type { Screen } from "../screen/FrameManager";
 
@@ -449,7 +449,6 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   addItemExtra(text: string, id: string | number, hotkey: string | undefined, icon = -1, add = true, tooltip = "") {
     const dom = document.createElement("span") as HTMLSpanElement & { hotkey?: string; icon?: number };
 
-    console.warn("hotkey", hotkey);
     dom.style["display"] = "inline-flex";
 
     dom.hotkey = hotkey;
@@ -1608,31 +1607,6 @@ export class MenuWrangler {
       case keymap["Down"]: //down
         menu.selectNext();
         break;
-      /*
-      let item = menu.activeItem;
-      if (!item) {
-        item = menu.items[0];
-      }
-
-      if (!item) {
-        return;
-      }
-
-      let item2;
-      let i = menu.items.indexOf(item);
-
-      if (e.keyCode == 38) {
-        i = (i - 1 + menu.items.length) % menu.items.length;
-      } else {
-        i = (i + 1) % menu.items.length;
-      }
-
-      item2 = menu.items[i];
-
-      if (item2) {
-        menu.setActive(item2);
-      }
-      break;//*/
       case 13: //return key
       case 32: //space key
         menu.click();
@@ -1743,7 +1717,7 @@ export class MenuWrangler {
       }
     }
 
-    if (!element && util.time_ms() - this.lastPickElemTime > 250) {
+    if (!element) {
       element = screen.pickElement(x, y);
       this.lastPickElemTime = util.time_ms();
     }

@@ -8,8 +8,8 @@ import { haveModal } from "../path-controller/util/simple_events.js";
 import cconst from "../config/const.js";
 import nstructjs from "../path-controller/util/struct.js";
 import { EnumProperty } from "../path-controller/toolsys/toolprop.js";
-import { AreaFlags, BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi } from "./FrameManager_mesh.js";
-import { contextWrangler, areaclasses } from "./area_wrangler.js";
+import { BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi } from "./FrameManager_mesh.js";
+import { contextWrangler } from "./area_wrangler.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
 import { IUIBaseConstructor, Vector2 } from "../pathux.js";
@@ -17,6 +17,7 @@ import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events.js";
 import type { AreaDocker } from "./AreaDocker";
 import type { DropBox } from "../widgets/ui_menu";
+import { areaclasses, AreaConstructor, AreaConstructorParam, AreaFlags, makeAreasEnum } from "./area_base";
 
 export interface AreaDef {
   tagname: string;
@@ -207,10 +208,6 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
   //*/
 
-  static getAreaConstructor<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
-    return area.constructor as unknown as AreaConstructor;
-  }
-
   static register(_cls: IUIBaseConstructor) {
     const cls = _cls as unknown as AreaConstructor;
     const def = cls.define();
@@ -225,30 +222,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   static makeAreasEnum() {
-    const areas: Record<string, string> = {};
-    const icons: Record<string, number> = {};
-
-    for (const k in areaclasses) {
-      const cls = areaclasses[k];
-      const def = cls.define();
-
-      if ((def.flag ?? 0) & AreaFlags.HIDDEN) continue;
-
-      let uiname: string | undefined = def.uiname;
-
-      if (uiname === undefined) {
-        uiname = k.replace("_", " ").toLowerCase();
-        uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
-      }
-
-      areas[uiname] = k;
-      icons[uiname] = def.icon !== undefined ? def.icon : -1;
-    }
-
-    const prop = new EnumProperty(undefined, areas as unknown as Record<string, number>);
-    prop.addIcons(icons);
-
-    return prop;
+    return makeAreasEnum();
   }
 
   static getAreaName<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
@@ -1648,7 +1622,3 @@ pathux.ScreenArea {
 
 nstructjs.register(ScreenArea);
 UIBase.internalRegister(ScreenArea as unknown as typeof UIBase);
-
-export type AreaConstructor = typeof Area & { [ClassIdSymbol]: string };
-// TS makes dealing with constructor typing so absurdly stupid, just use any
-export type AreaConstructorParam = any;
