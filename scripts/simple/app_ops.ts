@@ -1,50 +1,50 @@
-import * as platform_mod from '../platforms/platform.js'
-import type {PlatformAPI} from '../platforms/platform_base.js'
+import * as platform_mod from "../platforms/platform.js";
+import type { PlatformAPI } from "../platforms/platform_base.js";
 
-import {ToolOp, UndoFlags, type PropertySlots} from '../path-controller/toolsys/toolsys.js'
-import {BoolProperty} from '../path-controller/toolsys/toolprop.js'
+import { ToolOp, UndoFlags, type PropertySlots } from "../path-controller/toolsys/toolsys.js";
+import { BoolProperty } from "../path-controller/toolsys/toolprop.js";
 
-import {error, message} from '../widgets/ui_noteframe.js'
+import { error, message } from "../widgets/ui_noteframe.js";
 
-import type {AppState} from './app.js'
+import type { AppState } from "./app.js";
 
-declare const _appstate: AppState
+declare const _appstate: AppState;
 
 /** Cast the lazily-loaded platform singleton to its typed API. */
 function getPlatform() {
-  return platform_mod.platform as unknown as typeof PlatformAPI
+  return platform_mod.platform as unknown as typeof PlatformAPI;
 }
 
 export class SimpleAppNewOp extends ToolOp<PropertySlots, PropertySlots> {
   static tooldef() {
     return {
-      uiname: 'New',
-      toolpath: 'app.new',
-      inputs: {},
+      uiname  : "New",
+      toolpath: "app.new",
+      inputs  : {},
       undoflag: UndoFlags.NO_UNDO,
-    }
+    };
   }
 
   exec(_ctx: unknown) {
-    _appstate.createNewFile()
+    _appstate.createNewFile();
   }
 }
 
-export class SimpleAppSaveOp extends ToolOp<{forceDialog: BoolProperty}, PropertySlots> {
+export class SimpleAppSaveOp extends ToolOp<{ forceDialog: BoolProperty }, PropertySlots> {
   static tooldef() {
     return {
-      uiname: 'Save',
-      toolpath: 'app.save',
+      uiname  : "Save",
+      toolpath: "app.save",
       inputs: {
         forceDialog: new BoolProperty(),
       },
       undoflag: UndoFlags.NO_UNDO,
-    }
+    };
   }
 
   exec(_ctx: unknown) {
-    const ext = _appstate.fileExt
-    const useJSON = _appstate.startArgs!.saveFilesInJSON
+    const ext = _appstate.fileExt;
+    const useJSON = _appstate.startArgs!.saveFilesInJSON;
 
     _appstate
       .saveFile(undefined, {
@@ -54,63 +54,63 @@ export class SimpleAppSaveOp extends ToolOp<{forceDialog: BoolProperty}, Propert
       })
       .then((data) => {
         function save() {
-          return data
+          return data;
         }
 
         getPlatform()
-          .showSaveDialog('Save As', save, {
-            multi: false,
+          .showSaveDialog("Save As", save, {
+            multi          : false,
             addToRecentList: true,
             filters: [
               {
-                name: 'File',
-                mime: useJSON ? 'text/json' : 'application/x-octet-stream',
-                extensions: ['.' + ext.toLowerCase()],
+                name      : "File",
+                mime      : useJSON ? "text/json" : "application/x-octet-stream",
+                extensions: ["." + ext.toLowerCase()],
               },
             ],
           })
           .then((path: unknown) => {
-            _appstate.currentFileRef = path
-            message(_appstate.screen as unknown as Node, 'File saved')
+            _appstate.currentFileRef = path;
+            message(_appstate.screen as unknown as Node, "File saved");
           })
           .catch((err: unknown) => {
-            let msg: unknown = err
-            if (typeof err === 'object' && err !== null && 'message' in err) {
-              msg = (err as {message: string}).message
+            let msg: unknown = err;
+            if (typeof err === "object" && err !== null && "message" in err) {
+              msg = (err as { message: string }).message;
             }
 
-            error(_appstate.screen as unknown as Node, 'Failed to save file ' + String(msg))
-          })
-      })
+            error(_appstate.screen as unknown as Node, "Failed to save file " + String(msg));
+          });
+      });
   }
 }
 
-export class SimpleAppOpenOp extends ToolOp<{forceDialog: BoolProperty}, PropertySlots> {
+export class SimpleAppOpenOp extends ToolOp<{ forceDialog: BoolProperty }, PropertySlots> {
   static tooldef() {
     return {
-      uiname: 'Open',
-      toolpath: 'app.open',
+      uiname  : "Open",
+      toolpath: "app.open",
       inputs: {
         forceDialog: new BoolProperty(),
       },
       undoflag: UndoFlags.NO_UNDO,
-    }
+    };
   }
 
   exec(ctx: unknown) {
-    const ext = _appstate.fileExt
-    const useJSON = _appstate.startArgs!.saveFilesInJSON
-    const mime = useJSON ? 'text/json' : 'application/x-octet-stream'
+    const ext = _appstate.fileExt;
+    const useJSON = _appstate.startArgs!.saveFilesInJSON;
+    const mime = useJSON ? "text/json" : "application/x-octet-stream";
 
     getPlatform()
-      .showOpenDialog('Open File', {
-        multi: false,
+      .showOpenDialog("Open File", {
+        multi          : false,
         addToRecentList: true,
         filters: [
           {
-            name: 'File',
+            name: "File",
             mime,
-            extensions: ['.' + ext.toLowerCase()],
+            extensions: ["." + ext.toLowerCase()],
           },
         ],
       })
@@ -119,27 +119,22 @@ export class SimpleAppOpenOp extends ToolOp<{forceDialog: BoolProperty}, Propert
           getPlatform()
             .readFile(path as string, mime)
             .then((data: unknown) => {
-              console.log('got data!', data)
+              console.log("got data!", data);
 
-              _appstate
-                .loadFile(data, {useJSON, doScreen: true, fromFileOp: true})
-                .catch((err: unknown) => {
-                  error(
-                    _appstate.screen as unknown as Node,
-                    'File error: ' + (err as Error).message
-                  )
-                })
-            })
+              _appstate.loadFile(data, { useJSON, doScreen: true, fromFileOp: true }).catch((err: unknown) => {
+                error(_appstate.screen as unknown as Node, "File error: " + (err as Error).message);
+              });
+            });
         }
       })
       .catch((loadError: unknown) => {
-        ;(ctx as {error(msg: string): void}).error((loadError as Error).message)
-      })
+        (ctx as { error(msg: string): void }).error((loadError as Error).message);
+      });
   }
 }
 
 export function register() {
-  ToolOp.register(SimpleAppSaveOp as unknown as Parameters<typeof ToolOp.register>[0])
-  ToolOp.register(SimpleAppOpenOp as unknown as Parameters<typeof ToolOp.register>[0])
-  ToolOp.register(SimpleAppNewOp as unknown as Parameters<typeof ToolOp.register>[0])
+  ToolOp.register(SimpleAppSaveOp as unknown as Parameters<typeof ToolOp.register>[0]);
+  ToolOp.register(SimpleAppOpenOp as unknown as Parameters<typeof ToolOp.register>[0]);
+  ToolOp.register(SimpleAppNewOp as unknown as Parameters<typeof ToolOp.register>[0]);
 }

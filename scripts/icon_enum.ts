@@ -26,38 +26,38 @@ export function setIconMap(icons: Record<string, number>): void {
 let a = 0;
 export const Icons: Record<string, number> = {
   FOLDER: a++,
-  FILE: a++,
+  FILE  : a++,
   TINY_X: a++,
 
-  SMALL_PLUS: a++,
+  SMALL_PLUS : a++,
   SMALL_MINUS: a++,
-  UNDO: a++,
+  UNDO       : a++,
 
   REDO: a++,
   HELP: a++,
 
-  UNCHECKED: a++,
-  CHECKED: a++,
-  LARGE_CHECK: a++,
+  UNCHECKED   : a++,
+  CHECKED     : a++,
+  LARGE_CHECK : a++,
   CURSOR_ARROW: a++,
-  NOTE_EXCL: a++,
-  SCROLL_DOWN: a++,
-  SCROLL_UP: a++,
-  BACKSPACE: a++,
-  LEFT_ARROW: a++,
-  RIGHT_ARROW: a++,
-  UI_EXPAND: a++, //triangle
-  UI_COLLAPSE: a++, //triangle
+  NOTE_EXCL   : a++,
+  SCROLL_DOWN : a++,
+  SCROLL_UP   : a++,
+  BACKSPACE   : a++,
+  LEFT_ARROW  : a++,
+  RIGHT_ARROW : a++,
+  UI_EXPAND   : a++, //triangle
+  UI_COLLAPSE : a++, //triangle
 
-  BOLD: a++,
-  ITALIC: a++,
-  UNDERLINE: a++,
-  STRIKETHRU: a++,
-  TREE_EXPAND: a++,
+  BOLD         : a++,
+  ITALIC       : a++,
+  UNDERLINE    : a++,
+  STRIKETHRU   : a++,
+  TREE_EXPAND  : a++,
   TREE_COLLAPSE: a++,
-  ZOOM_OUT: a++,
-  ZOOM_IN: a++,
-  LARGE_X: a++ /* Used for curve widget delete button. */,
+  ZOOM_OUT     : a++,
+  ZOOM_IN      : a++,
+  LARGE_X      : a++ /* Used for curve widget delete button. */,
 };
 /* used for icon checkboxes with overlayed check marks */
 Icons.ENUM_CHECKED = Icons.CHECKED;

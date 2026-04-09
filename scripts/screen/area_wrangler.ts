@@ -42,12 +42,12 @@ export function setAreaTypes(def: AreaTypes) {
 /*hackish! store ref to an active wrangler so simple_event's modal
  * system can lock it!*/
 let theWrangler: AreaWrangler | undefined = undefined;
-type AreaID = string
+type AreaID = string;
 
 export class AreaWrangler<CTX extends IContextBase = IContextBase> {
   stacks = new Map<AreaID, Area[]>();
   lasts = new Map<AreaID, Area>();
-  lastArea?: Area
+  lastArea?: Area;
   stack: Area[] = [];
   idgen = 0;
   locked = 0;

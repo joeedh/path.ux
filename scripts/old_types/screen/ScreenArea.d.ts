@@ -60,13 +60,13 @@ export declare class Area<CTX = Context> extends UIBase<CTX> {
   on_area_focus(): void;
 
   on_resize(size: IVector, oldsize?: IVector): void;
-  
+
   getScreen(): Screen<CTX>;
 
   makeHeader(container: Container<CTX>, addHelpPicker?: boolean): void;
 
-  loadSTRUCT(reader: StructReader<this>): void
-  
+  loadSTRUCT(reader: StructReader<this>): void;
+
   static getActiveArea<T extends Area = Area>(type?: IAreaConstructor<T>): T | undefined;
 
   static register<T extends Area = Area>(type: IAreaConstructor<T>): void;

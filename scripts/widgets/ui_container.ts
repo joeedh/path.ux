@@ -279,4 +279,4 @@ export class BuilderRow extends BuilderContainer {
   }}
 }
 UIBase.internalRegister(BuilderRow);
-`
+`;

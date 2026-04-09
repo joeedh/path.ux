@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 "use strict";
 
 /*
@@ -44,8 +44,8 @@ if (window.haveElectron) {
 
   const REQUIRED_IMAGE_SIZES = [16, 24, 32, 48, 64, 128, 256];
 
-  const DEFAULT_FILE_NAME = 'app';
-  const FILE_EXTENSION = '.ico';
+  const DEFAULT_FILE_NAME = "app";
+  const FILE_EXTENSION = ".ico";
 
   const HEADER_SIZE = 6;
 
@@ -89,7 +89,6 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/ja-jp/library/windows/desktop/dd183376%28v=vs.85%29.aspx
    */
 
-
   const createBitmapInfoHeader = (png: PNGImage, compression: number) => {
     const b = Buffer.alloc(BITMAPINFOHEADER_SIZE);
     b.writeUInt32LE(BITMAPINFOHEADER_SIZE, 0); // 4 DWORD biSize
@@ -122,7 +121,6 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
-
   const createDirectory = (png: PNGImage, offset: number) => {
     const b = Buffer.alloc(DIRECTORY_SIZE);
     const size = png.data.length + BITMAPINFOHEADER_SIZE;
@@ -152,7 +150,6 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
-
   const createFileHeader = (count: number) => {
     const b = Buffer.alloc(HEADER_SIZE);
     b.writeUInt16LE(0, 0); // 2 WORD Reserved
@@ -167,17 +164,16 @@ if (window.haveElectron) {
    * Check an option properties.
    */
 
-
   const checkOptions = (options: IcoOptions | undefined) => {
     if (options) {
       return {
-        name: typeof options.name === 'string' && options.name !== '' ? options.name : DEFAULT_FILE_NAME,
-        sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES
+        name : typeof options.name === "string" && options.name !== "" ? options.name : DEFAULT_FILE_NAME,
+        sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES,
       };
     } else {
       return {
-        name: DEFAULT_FILE_NAME,
-        sizes: REQUIRED_IMAGE_SIZES
+        name : DEFAULT_FILE_NAME,
+        sizes: REQUIRED_IMAGE_SIZES,
       };
     }
   };
@@ -185,14 +181,13 @@ if (window.haveElectron) {
    * Get the size of the required PNG.
    */
 
-
   const GetRequiredICOImageSizes = () => {
     return REQUIRED_IMAGE_SIZES;
   };
 
-  let stream = require("stream") as { Writable: { new(): NodeWritableStream; prototype: NodeWritableStream } };
+  let stream = require("stream") as { Writable: { new (): NodeWritableStream; prototype: NodeWritableStream } };
 
-  class WriteStream extends (stream.Writable as { new(): NodeWritableStream; prototype: NodeWritableStream }) {
+  class WriteStream extends (stream.Writable as { new (): NodeWritableStream; prototype: NodeWritableStream }) {
     data: number[] | NodeBuffer;
 
     constructor() {
@@ -203,7 +198,7 @@ if (window.haveElectron) {
     _write(chunk: NodeBuffer | string, encoding: string, cb: (err: null) => void) {
       let buf: NodeBuffer;
 
-      if (typeof chunk === 'string') {
+      if (typeof chunk === "string") {
         buf = Buffer.from(chunk, encoding);
       } else {
         buf = chunk;
@@ -230,10 +225,10 @@ if (window.haveElectron) {
   exports.GetRequiredICOImageSizes = GetRequiredICOImageSizes;
 
   const GenerateICO = (images: NodeBuffer[], logger: { log(...args: unknown[]): void } = console) => {
-    logger.log('ICO:');
+    logger.log("ICO:");
 
     const icoStream = new WriteStream();
-    icoStream.write(createFileHeader(images.length), 'binary');
+    icoStream.write(createFileHeader(images.length), "binary");
 
     const pngs: PNGImage[] = [];
     for (const image of images) {
@@ -241,16 +236,16 @@ if (window.haveElectron) {
     }
 
     let offset = HEADER_SIZE + DIRECTORY_SIZE * images.length;
-    pngs.forEach(png => {
+    pngs.forEach((png) => {
       const directory = createDirectory(png, offset);
-      icoStream.write(directory, 'binary');
+      icoStream.write(directory, "binary");
       offset += png.data.length + BITMAPINFOHEADER_SIZE;
     });
-    pngs.forEach(png => {
+    pngs.forEach((png) => {
       const header = createBitmapInfoHeader(png, BI_RGB);
-      icoStream.write(header, 'binary');
+      icoStream.write(header, "binary");
       const dib = convertPNGtoDIB(png.data, png.width, png.height, png.bpp);
-      icoStream.write(dib, 'binary');
+      icoStream.write(dib, "binary");
     });
     icoStream.end();
 

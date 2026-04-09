@@ -37,8 +37,7 @@ function styl(el: { style: CSSStyleDeclaration }) {
 export type SliderArgs = {
   name?: string;
   defaultval?: number;
-  min?: //
-  number;
+  min?: number; //
   max?: number;
   step?: number;
   callback?: Function;

@@ -1,6 +1,6 @@
 "use strict";
 
-declare function require(name: string): any
+declare function require(name: string): any;
 declare class Buffer {
   static from(data: unknown, type?: string): Buffer;
 }
@@ -48,7 +48,8 @@ function getNativeTheme() {
   }
 
   const remote = getElectron().remote;
-  if (!remote) { /* Newer electron version with no remote, client must provide it */
+  if (!remote) {
+    /* Newer electron version with no remote, client must provide it */
     ipcRenderer!.invoke("nativeTheme");
   } else {
     _nativeTheme = remote.nativeTheme;
@@ -67,27 +68,30 @@ function getElectronVersion() {
     key = key.slice(0, i);
   }
 
-  return key.trim().split(".").map(f => parseInt(f));
+  return key
+    .trim()
+    .split(".")
+    .map((f) => parseInt(f));
 }
 
 /*
-* wrap require to keep angular from auto-importing
-* this api in browsers
-* */
+ * wrap require to keep angular from auto-importing
+ * this api in browsers
+ * */
 function getElectron(): ElectronModule {
-  return require('electron') as ElectronModule;
+  return require("electron") as ElectronModule;
 }
 
 function myRequire(mod: string): unknown {
   return (globalThis as any).require(mod);
 }
 
-import {Menu, DropBox} from '../../widgets/ui_menu';
-import {getIconManager} from "../../core/ui_base";
+import { Menu, DropBox } from "../../widgets/ui_menu";
+import { getIconManager } from "../../core/ui_base";
 import cconst from "../../config/const";
-import * as util from '../../util/util';
+import * as util from "../../util/util";
 
-import {FileDialogArgs, FilePath} from '../platform_base';
+import { FileDialogArgs, FilePath } from "../platform_base";
 
 function getFilename(filepath: string) {
   let filename = filepath.replace(/\\/g, "/");
@@ -110,7 +114,7 @@ function getFilename(filepath: string) {
 let _menu_init = false;
 let _init = false;
 
-import {mimeMap} from '../platform_base';
+import { mimeMap } from "../platform_base";
 
 let electron_menu_idgen = 1;
 let ipcRenderer: ElectronIpcRenderer | undefined;
@@ -165,12 +169,12 @@ export class ElectronMenu extends Array<ElectronMenuItem> {
   }
 
   popup(args: { x: number; y: number; callback: () => void }) {
-    const {x, y} = args;
+    const { x, y } = args;
     let callback: string | (() => void) = args.callback;
 
     callback = wrapRemoteCallback("popup_menu_click", callback);
 
-    const {ipcRenderer: ipc} = require('electron') as ElectronModule;
+    const { ipcRenderer: ipc } = require("electron") as ElectronModule;
     ipc.invoke("popup-menu", this, x, y, callback);
   }
 }
@@ -179,7 +183,7 @@ let callbacks: Record<string, (...args: unknown[]) => void> = {};
 let keybase = 1;
 
 export function wrapRemoteCallback(key: string, callback: (...args: unknown[]) => void) {
-  key = "remote_" + key + (keybase++);
+  key = "remote_" + key + keybase++;
   callbacks[key] = callback;
 
   return key;
@@ -193,9 +197,9 @@ function initElectronIpc() {
   }
 
   ipcInit = true;
-  ipcRenderer = (require('electron') as ElectronModule).ipcRenderer;
+  ipcRenderer = (require("electron") as ElectronModule).ipcRenderer;
 
-  ipcRenderer.on('invoke-menu-callback', (event: unknown, key: unknown, args: unknown) => {
+  ipcRenderer.on("invoke-menu-callback", (event: unknown, key: unknown, args: unknown) => {
     //console.error("Electron menu callback", key, args);
     callbacks[key as string].apply(undefined, args as unknown[]);
   });
@@ -211,11 +215,10 @@ function initElectronIpc() {
       },
       set(v: string) {
         ipcRenderer!.invoke("nativeTheme.setThemeSource", v);
-      }
+      },
     });
   });
 }
-
 
 export class ElectronMenuItem {
   id?: string;
@@ -230,7 +233,7 @@ export class ElectronMenuItem {
   constructor(args: ElectronMenuItemArgs) {
     Object.assign(this, args);
 
-    if (typeof this.click === 'function') {
+    if (typeof this.click === "function") {
       this.click = wrapRemoteCallback("menu_click", this.click);
     }
   }
@@ -289,14 +292,15 @@ function patchDropBox() {
       if (onclose) {
         onclose.call(menu);
       }
-    }
+    };
 
     const menu = this._menu;
     const screen = this.getScreen();
 
     const dpi = this.getDPI();
 
-    let x = e.x, y = e.y;
+    let x = e.x,
+      y = e.y;
     const rects = this.dom.getClientRects();
 
     x = rects[0].x;
@@ -309,12 +313,11 @@ function patchDropBox() {
       x       : x,
       y       : y,
       callback: () => {
-
         if (this._menu) {
           (this._menu as unknown as { onclose(): void }).onclose();
         }
-      }
-    })
+      },
+    });
   };
 }
 
@@ -328,12 +331,11 @@ const on_tick = () => {
       nativeTheme.themeSource = cconst.colorSchemeType;
     }
   }
-}
+};
 
 export function checkInit() {
   if (window.haveElectron && !_init) {
     _init = true;
-
 
     patchDropBox();
     setInterval(on_tick, 350);
@@ -360,7 +362,6 @@ export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false,
     icongen = myRequire("./icogen.cjs") as IcoGenModule;
   }
 
-
   (window as unknown as Record<string, unknown>).icongen = icongen;
   const nativeImage = getElectron().nativeImage;
 
@@ -384,10 +385,18 @@ export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false,
       g.filter = "invert(100%)";
     }
 
-    const scale = size/tilesize;
+    const scale = size / tilesize;
     g.scale(scale, scale);
 
-    manager.canvasDraw({getDPI: () => 1.0} as unknown as import("../../core/ui_base").UIBase, canvas, g, icon, 0, 0, closestSheet);
+    manager.canvasDraw(
+      { getDPI: () => 1.0 } as unknown as import("../../core/ui_base").UIBase,
+      canvas,
+      g,
+      icon,
+      0,
+      0,
+      closestSheet
+    );
 
     const header = "data:image/png;base64,";
     let data: unknown = canvas.toDataURL();
@@ -405,14 +414,14 @@ export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false,
   //icon = nativeImage.createFromBuffer(ico);
   //icon = nativeImage.createFromBitmap(ico);
   //myRequire("fs").writeFileSync("myicon2.ico", ico);
-  return "myicon2.png"
+  return "myicon2.png";
 }
 
 const map: Record<string, string> = {
   CTRL   : "Control",
   ALT    : "Alt",
   SHIFT  : "Shift",
-  COMMAND: "Command"
+  COMMAND: "Command",
 };
 
 export function buildElectronHotkey(hk: string) {
@@ -449,10 +458,9 @@ export function buildElectronMenu(menu: Menu) {
 
       return new ElectronMenuItem({
         submenu: buildElectronMenu(menu2),
-        label  : menu2.getAttribute("title") ?? undefined
+        label  : menu2.getAttribute("title") ?? undefined,
       });
     }
-
 
     let hotkey = item.hotkey;
     const icon = item.icon;
@@ -474,19 +482,18 @@ export function buildElectronMenu(menu: Menu) {
       label              : label,
       accelerator        : hotkey,
       icon               : nativeIcon,
-      click              : function () {
+      click: function () {
         (menu as unknown as { onselect(id: number | string): void }).onselect(item._id);
       },
-      registerAccelerator: false
+      registerAccelerator: false,
     };
 
     return new ElectronMenuItem(args);
-  }
+  };
 
   for (const item of (menu as unknown as { items: MenuItem[] }).items) {
     //buildItem(item);
     emenu.append(buildItem(item));
-
   }
 
   return emenu;
@@ -513,8 +520,22 @@ export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
 
   const menu = new ElectronMenu();
 
-  const _roles = new Set(["undo", "redo", "cut", "copy", "paste", "delete", "about",
-                        "quit", "open", "save", "load", "paste", "cut", "zoom"]);
+  const _roles = new Set([
+    "undo",
+    "redo",
+    "cut",
+    "copy",
+    "paste",
+    "delete",
+    "about",
+    "quit",
+    "open",
+    "save",
+    "load",
+    "paste",
+    "cut",
+    "zoom",
+  ]);
   let roles: Record<string, string> = {};
   for (const k of _roles) {
     roles[k] = k;
@@ -528,7 +549,7 @@ export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
     "app"       : "appMenu",
     "help"      : "help",
     "zoom in"   : "zoomIn",
-    "zoom out"  : "zoomOut"
+    "zoom out"  : "zoomOut",
   });
 
   const header = menuEditor.header;
@@ -547,18 +568,17 @@ export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
     const args: ElectronMenuItemArgs = {
       label  : title,
       tooltip: (db as unknown as { description?: string }).description,
-      submenu: buildElectronMenu(menu2)
+      submenu: buildElectronMenu(menu2),
     };
 
     menu.insert(0, new ElectronMenuItem(args));
   }
 
-
   ElectronMenu.setApplicationMenu(menu);
   //win.setMenu(menu);
 }
 
-import {PlatformAPI, isMimeText} from '../platform_base';
+import { PlatformAPI, isMimeText } from "../platform_base";
 
 interface DialogResult {
   canceled?: boolean;
@@ -574,10 +594,8 @@ export class platform extends PlatformAPI {
     const eargs: Record<string, unknown> = {
       defaultPath: args.defaultPath,
       filters    : this._sanitizeFilters(args.filters ?? []),
-      properties : [
-        "openFile", "showHiddenFiles", "createDirectory"
-      ]
-    }
+      properties : ["openFile", "showHiddenFiles", "createDirectory"],
+    };
 
     if (args.multi) {
       (eargs.properties as string[]).push("multiSelections");
@@ -590,16 +608,21 @@ export class platform extends PlatformAPI {
     initElectronIpc();
 
     return new Promise<FilePath[]>((accept, reject) => {
-      ipcRenderer!.invoke('show-open-dialog', eargs, wrapRemoteCallback("open-dialog", (ret: unknown) => {
-        const result = ret as DialogResult;
-        if (result.canceled || result.cancelled) {
-          reject("cancel");
-        } else {
-          accept(result.filePaths!.map(f => new FilePath(f, getFilename(f))));
-        }
-      }), wrapRemoteCallback("show-open-dialog", (error: unknown) => {
-        reject(error);
-      }));
+      ipcRenderer!.invoke(
+        "show-open-dialog",
+        eargs,
+        wrapRemoteCallback("open-dialog", (ret: unknown) => {
+          const result = ret as DialogResult;
+          if (result.canceled || result.cancelled) {
+            reject("cancel");
+          } else {
+            accept(result.filePaths!.map((f) => new FilePath(f, getFilename(f))));
+          }
+        }),
+        wrapRemoteCallback("show-open-dialog", (error: unknown) => {
+          reject(error);
+        })
+      );
     });
   }
 
@@ -610,7 +633,7 @@ export class platform extends PlatformAPI {
       if (Array.isArray(filter)) {
         let ext = filter[0];
 
-        const filterObj: { name: string; mime?: string; extensions: string[] } = {extensions: filter, name: ""};
+        const filterObj: { name: string; mime?: string; extensions: string[] } = { extensions: filter, name: "" };
 
         ext = ext.replace(/\./g, "").trim().toLowerCase();
         if (ext in mimeMap) {
@@ -623,7 +646,7 @@ export class platform extends PlatformAPI {
 
       const f = filter as { name: string; mime?: string; extensions: string[] };
       console.log(f.extensions);
-      f.extensions = f.extensions.map(e => e.startsWith(".") ? e.slice(1, e.length) : e);
+      f.extensions = f.extensions.map((e) => (e.startsWith(".") ? e.slice(1, e.length) : e));
 
       filters2.push(f);
     }
@@ -637,10 +660,8 @@ export class platform extends PlatformAPI {
     const eargs: Record<string, unknown> = {
       defaultPath: args.defaultPath,
       filters    : this._sanitizeFilters(args.filters ?? []),
-      properties : [
-        "openFile", "showHiddenFiles", "createDirectory"
-      ]
-    }
+      properties : ["openFile", "showHiddenFiles", "createDirectory"],
+    };
 
     if (args.multi) {
       (eargs.properties as string[]).push("multiSelections");
@@ -665,25 +686,29 @@ export class platform extends PlatformAPI {
             filedata = new Uint8Array(filedata);
           }
 
-          (require('fs') as NodeFS).writeFileSync(path, filedata);
+          (require("fs") as NodeFS).writeFileSync(path, filedata);
           console.log("saved file", filedata);
 
           accept(new FilePath(path, getFilename(path)));
         }
-      }
+      };
 
       const oncatch = (error: unknown) => {
         reject(error);
-      }
+      };
 
-      ipcRenderer!.invoke('show-save-dialog', eargs, wrapRemoteCallback('dialog', onthen), wrapRemoteCallback('dialog', oncatch));
-
+      ipcRenderer!.invoke(
+        "show-save-dialog",
+        eargs,
+        wrapRemoteCallback("dialog", onthen),
+        wrapRemoteCallback("dialog", oncatch)
+      );
     });
   }
 
   static readFile(path: string | FilePath, mime?: string) {
     return new Promise<string | ArrayBuffer>((accept, reject) => {
-      const fs = require('fs') as NodeFS;
+      const fs = require("fs") as NodeFS;
 
       if (isMimeText(mime)) {
         accept(fs.readFileSync((path as FilePath).data as string, "utf8"));
@@ -695,7 +720,7 @@ export class platform extends PlatformAPI {
 
   static writeFile(data: ArrayBuffer | string, handle: FilePath, mime: string) {
     return new Promise<FilePath>((accept, reject) => {
-      const fs = require('fs') as NodeFS;
+      const fs = require("fs") as NodeFS;
 
       fs.writeFileSync(handle.data as string, data);
       accept(handle);

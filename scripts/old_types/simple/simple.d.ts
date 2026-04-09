@@ -75,28 +75,28 @@ type IStartArgs = {
 } & Partial<IPathuxConstants>;
 
 export interface IContextConstructor<CTX extends Context = Context, APP> {
-  new(state?: APP): CTX
+  new (state?: APP): CTX;
 }
 
 export interface ISimpleContextConstructor<APP> {
-  new(state?: APP): CTX
+  new (state?: APP): CTX;
 }
 
-export type IDerivedContext<CTX, APP> = CTX & Context<APP>
+export type IDerivedContext<CTX, APP> = CTX & Context<APP>;
 
 /** see FileArgs class */
 export interface IFileArgs {
-  ext?: string
-  magic?: string
-  doScreen?: boolean
-  resetOnLoad?: boolean
-  useJSON?: boolean
-  version?: number
-  fileFlags?: number
-  fromFileOp?: boolean /* SimpleSaveOp and SimpleOpenOp set this to true */
+  ext?: string;
+  magic?: string;
+  doScreen?: boolean;
+  resetOnLoad?: boolean;
+  useJSON?: boolean;
+  version?: number;
+  fileFlags?: number;
+  fromFileOp?: boolean /* SimpleSaveOp and SimpleOpenOp set this to true */;
 }
 export declare class AppState<CTX = any> {
-  constructor(ctx: ISimpleContextConstructor<CTX, this>)
+  constructor(ctx: ISimpleContextConstructor<CTX, this>);
   api: DataAPI;
   screen: SimpleScreen<IDerivedContext<CTX, this>>;
   ctx: IDerivedContext<CTX, this>;

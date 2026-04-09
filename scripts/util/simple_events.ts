@@ -1,1 +1,1 @@
-export * from '../path-controller/util/simple_events.js'
+export * from "../path-controller/util/simple_events.js";

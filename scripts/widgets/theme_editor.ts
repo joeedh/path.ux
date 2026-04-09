@@ -1,8 +1,8 @@
-import {UIBase, theme, flagThemeUpdate, saveUIData, loadUIData} from '../core/ui_base.js';
-import {Container} from '../core/ui.js';
-import {IContextBase} from '../core/context_base.js';
-import {validateCSSColor, color2css, css2color} from '../core/ui_theme.js';
-import { CSSFont } from '../core/cssfont.js';
+import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData } from "../core/ui_base.js";
+import { Container } from "../core/ui.js";
+import { IContextBase } from "../core/context_base.js";
+import { validateCSSColor, color2css, css2color } from "../core/ui_theme.js";
+import { CSSFont } from "../core/cssfont.js";
 
 interface CatKey {
   key: string;
@@ -22,8 +22,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   static define() {
     return {
       tagname: "theme-editor-x",
-      style  : "theme-editor"
-    }
+      style  : "theme-editor",
+    };
   }
 
   init() {
@@ -32,7 +32,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     this.build();
   }
 
-  doFolder(catkey: CatKey, obj: any, container: any = this, panel: any = undefined, path: string[] | undefined = undefined) {
+  doFolder(
+    catkey: CatKey,
+    obj: any,
+    container: any = this,
+    panel: any = undefined,
+    path: string[] | undefined = undefined
+  ) {
     let key = catkey.key;
 
     if (!path) {
@@ -61,7 +67,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       if (id === "FLOAT") {
         obj[propkey] = 0.0;
       } else if (id === "SUBFOLDER") {
-        obj[propkey] = {test : 0};
+        obj[propkey] = { test: 0 };
       } else if (id === "COLOR") {
         obj[propkey] = "grey";
       } else if (id === "FONT") {
@@ -82,14 +88,14 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       if (this.onchange) {
         (this.onchange as any)(key, propkey, obj);
       }
-    }
+    };
 
     let menu = row2.menu("+", [
-      {name: "Float", callback: () => callback("FLOAT")},
-      {name: "Color", callback: () => callback("COLOR")},
-      {name: "Subfolder", callback: () => callback("SUBFOLDER")},
-      {name: "Font", callback: () => callback("FONT")},
-      {name: "String", callback: () => callback("STRING")},
+      { name: "Float", callback: () => callback("FLOAT") },
+      { name: "Color", callback: () => callback("COLOR") },
+      { name: "Subfolder", callback: () => callback("SUBFOLDER") },
+      { name: "Font", callback: () => callback("FONT") },
+      { name: "String", callback: () => callback("STRING") },
     ]);
 
     let row = panel.row();
@@ -115,13 +121,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       }
 
       return obj;
-    }
+    };
 
     let ok = false;
     let _i = 0;
 
     let dokey = (k: string, v: any, path: string[]) => {
-      let col = _i%2 === 0 ? col1 : col2;
+      let col = _i % 2 === 0 ? col1 : col2;
 
       if (k.toLowerCase().search("flag") >= 0) {
         return; //don't do flags
@@ -153,7 +159,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
             getpath(path)[k] = color2css(cw.rgba);
 
             do_onchange(key, k);
-          }
+          };
           cw.label = k;
         } else {
           col.label(k);
@@ -162,7 +168,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           box.onchange = () => {
             getpath(path)[k] = box.text;
             do_onchange(key, k);
-          }
+          };
           box.text = v;
         }
       } else if (typeof v === "number") {
@@ -177,7 +183,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           getpath(path)[k] = slider.value;
 
           do_onchange(key, k);
-        }
+        };
       } else if (typeof v === "boolean") {
         let check = col.check(undefined, k);
 
@@ -186,7 +192,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         check.onchange = () => {
           getpath(path)[k] = !!check.value;
           do_onchange(key, k);
-        }
+        };
       } else if (typeof v === "object" && v instanceof CSSFont) {
         let panel2 = col.panel(k);
         ok = true;
@@ -201,8 +207,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           tbox.onchange = function (this: any) {
             (v as any)[key] = this.text;
             do_onchange(key, k);
-          }
-        }
+          };
+        };
 
         textbox("font");
         textbox("variant");
@@ -215,13 +221,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         cw.onchange = () => {
           v.color = color2css(cw.rgba);
           do_onchange(key, k);
-        }
+        };
 
         let slider = panel2.slider(undefined, "size", v.size);
         slider.onchange = () => {
           v.size = slider.value;
           do_onchange(key, k);
-        }
+        };
         slider.setAttribute("min", "1");
         slider.setAttribute("max", "100");
 
@@ -249,7 +255,6 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     } else {
       panel.closed = true;
     }
-
   }
 
   build() {
@@ -269,13 +274,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           cat = {
             category: cat,
             help    : "",
-            key     : k
-          }
+            key     : k,
+          };
         }
 
         catkey = cat;
       } else {
-        catkey = {category: k, help: '', key: k};
+        catkey = { category: k, help: "", key: k };
       }
 
       if (!catkey.key) {
@@ -292,7 +297,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     function strcmp(a: string, b: string) {
       a = a.trim().toLowerCase();
       b = b.trim().toLowerCase();
-      return a < b ? -1 : (a === b ? 0 : 1);
+      return a < b ? -1 : a === b ? 0 : 1;
     }
 
     let keys = Object.keys(categories);

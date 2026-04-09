@@ -7,16 +7,17 @@
  * Version: 5.3.1 (2020-05-27)
  */
 (function (domGlobals) {
-    'use strict';
+  "use strict";
 
-    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
+  var global = tinymce.util.Tools.resolve("tinymce.PluginManager");
 
-    function Plugin () {
-      global.add('contextmenu', function () {
-        domGlobals.console.warn('Context menu plugin is now built in to the core editor, please remove it from your editor configuration');
-      });
-    }
+  function Plugin() {
+    global.add("contextmenu", function () {
+      domGlobals.console.warn(
+        "Context menu plugin is now built in to the core editor, please remove it from your editor configuration"
+      );
+    });
+  }
 
-    Plugin();
-
-}(window));
+  Plugin();
+})(window);

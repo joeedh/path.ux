@@ -533,4 +533,3 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
 }
 
 UIBase.internalRegister(Curve1DWidget);
-

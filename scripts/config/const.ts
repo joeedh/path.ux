@@ -20,8 +20,7 @@ if (typeof document !== "undefined") {
       return;
     }
 
-    cb
-      .read()
+    cb.read()
       .then((data) => {
         for (const item of data) {
           for (let i = 0; i < item.types.length; i++) {
@@ -136,43 +135,43 @@ const cconst: PathUXConstants = {
   },
 
   colorSchemeType: "light",
-  docManualPath: "../simple_docsys/doc_build/",
-  docEditorPath: "../simple_docsys.js",
+  docManualPath  : "../simple_docsys/doc_build/",
+  docEditorPath  : "../simple_docsys.js",
 
   useNumSliderTextboxes: true,
-  numSliderArrowLimit: 15,
-  simpleNumSliders: false,
+  numSliderArrowLimit  : 15,
+  simpleNumSliders     : false,
 
-  menusCanPopupAbove: false,
-  menu_close_time: 500,
-  doubleClickTime: 500,
+  menusCanPopupAbove : false,
+  menu_close_time    : 500,
+  doubleClickTime    : 500,
   doubleClickHoldTime: 750,
 
   DEBUG: {
-    paranoidEvents: false,
-    screenborders: false,
-    areaContextPushes: false,
-    allBordersMovable: false,
-    doOnce: false,
-    modalEvents: false,
-    areaConstraintSolver: false,
-    datapaths: false,
-    lastToolPanel: false,
-    domEvents: false,
-    domEventAddRemove: false,
-    debugUIUpdatePerf: false,
+    paranoidEvents           : false,
+    screenborders            : false,
+    areaContextPushes        : false,
+    allBordersMovable        : false,
+    doOnce                   : false,
+    modalEvents              : false,
+    areaConstraintSolver     : false,
+    datapaths                : false,
+    lastToolPanel            : false,
+    domEvents                : false,
+    domEventAddRemove        : false,
+    debugUIUpdatePerf        : false,
     screenAreaPosSizeAccesses: false,
-    buttonEvents: false,
+    buttonEvents             : false,
   },
 
   autoLoadSplineTemplates: true,
-  addHelpPickers: true,
-  useAreaTabSwitcher: false,
-  autoSizeUpdate: true,
-  showPathsInToolTips: true,
-  enableThemeAutoUpdate: true,
-  useNativeToolTips: true,
-  noElectronMenus: false,
+  addHelpPickers         : true,
+  useAreaTabSwitcher     : false,
+  autoSizeUpdate         : true,
+  showPathsInToolTips    : true,
+  enableThemeAutoUpdate  : true,
+  useNativeToolTips      : true,
+  noElectronMenus        : false,
 
   loadConstants(args: Partial<PathUXConstants>): void {
     for (const k in args) {

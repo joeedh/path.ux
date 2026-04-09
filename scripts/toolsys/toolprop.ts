@@ -1,2 +1,1 @@
-export * from '../path-controller/toolsys/toolprop.js';
-
+export * from "../path-controller/toolsys/toolprop.js";

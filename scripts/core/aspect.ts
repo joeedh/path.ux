@@ -20,7 +20,7 @@ export function _setUIBase(uibase: Function): void {
 let AspectKeys = Symbol("aspect-keys");
 
 export function initAspectClass(objectIn: any, blacklist = new Set<string | symbol>()): void {
-  let object = objectIn as AspectOwner
+  let object = objectIn as AspectOwner;
   let cls = object.constructor as Function & { [k: symbol]: (string | symbol)[] };
 
   if (!cls[AspectKeys]) {

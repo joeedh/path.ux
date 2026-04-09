@@ -1,8 +1,8 @@
-import * as util from '../path-controller/util/util';
-import * as ui from '../core/ui';
-import * as ui_base from '../core/ui_base';
-import {Icons, css2color, color2css, getFont} from '../core/ui_base';
-import {IContextBase} from '../core/context_base';
+import * as util from "../path-controller/util/util";
+import * as ui from "../core/ui";
+import * as ui_base from "../core/ui_base";
+import { Icons, css2color, color2css, getFont } from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
 
 /* Helper for CSSStyleDeclaration string indexing. */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
@@ -51,8 +51,8 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
   static define() {
     return {
       tagname: "note-x",
-      style  : 'notification',
-    }
+      style  : "notification",
+    };
   }
 
   setLabel(s: string) {
@@ -105,7 +105,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
     (this.style as StyleRecord)["border-radius"] = "7px";
     (this.style as StyleRecord)["padding"] = "2px";
 
-    (this.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as {color: string}).color;
+    (this.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
     let clr = css2color(this.color);
     let clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
 
@@ -132,7 +132,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
     this._percent = 0.0;
     this.barWidth = 100;
 
-    let bar = this.bar = document.createElement("div");
+    let bar = (this.bar = document.createElement("div"));
     (bar.style as StyleRecord)["display"] = "flex";
     (bar.style as StyleRecord)["flex-direction"] = "row";
     (bar.style as StyleRecord)["width"] = this.barWidth + "px";
@@ -142,7 +142,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
     (bar.style as StyleRecord)["align-items"] = "center";
     (bar.style as StyleRecord)["padding"] = (bar.style as StyleRecord)["margin"] = "0px";
 
-    let bar2 = this.bar2 = document.createElement("div");
+    let bar2 = (this.bar2 = document.createElement("div"));
 
     (bar2.style as StyleRecord)["display"] = "flex";
     (bar2.style as StyleRecord)["flex-direction"] = "row";
@@ -168,14 +168,14 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
   static define() {
     return {
       tagname: "note-progress-x",
-      style  : 'notification',
-    }
+      style  : "notification",
+    };
   }
 
   setCSS() {
     super.setCSS();
 
-    let w = ~~(this.percent*this.barWidth + 0.5);
+    let w = ~~(this.percent * this.barWidth + 0.5);
 
     (this.bar2.style as StyleRecord)["width"] = w + "px";
   }
@@ -198,8 +198,8 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
   static define() {
     return {
       tagname: "noteframe-x",
-      style  : 'noteframe',
-    }
+      style  : "noteframe",
+    };
   }
 
   init() {
@@ -209,7 +209,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
     noteframes.push(this as unknown as NoteFrame);
     this.background = this.getDefault("background-color");
-    (this.style as StyleRecord)['flex-grow'] = 'unset';
+    (this.style as StyleRecord)["flex-grow"] = "unset";
   }
 
   setCSS() {
@@ -221,7 +221,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
   _ondestroy() {
     if (noteframes.indexOf(this as unknown as NoteFrame) >= 0) {
-      noteframes.remove(this as unknown as NoteFrame)
+      noteframes.remove(this as unknown as NoteFrame);
     }
 
     super._ondestroy();
@@ -237,7 +237,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
       }
     }
 
-    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
+    let f = (100.0 * Math.min(percent, 1.0)).toFixed(1);
 
     if (note === undefined) {
       note = this.addNote(msg, color, -1, "note-progress-x") as ProgBarNote<CTX>;
@@ -275,7 +275,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
     (note.style as StyleRecord)["text-align"] = "center";
 
     (note.style as StyleRecord)["font"] = getFont(note, undefined, "DefaultText");
-    (note.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as {color: string}).color;
+    (note.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
     note.showExclMark = showExclMark;
 
     this.add(note);
@@ -299,7 +299,6 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
     //this.appendChild(note);
     return note;
-
   }
 }
 
@@ -309,7 +308,6 @@ export function getNoteFrames(screen: Node): NoteFrame[] {
   let ret: NoteFrame[] = [];
 
   let rec = (n: Node) => {
-
     if (n instanceof NoteFrame) {
       ret.push(n);
     }
@@ -325,7 +323,7 @@ export function getNoteFrames(screen: Node): NoteFrame[] {
         rec(node);
       }
     }
-  }
+  };
 
   rec(screen);
   return ret;
@@ -360,7 +358,6 @@ export function warning(screen: Node, msg: string, timeout?: number) {
 export function message(screen: Node, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
-
 
 export function progbarNote(screen: Node, msg: string, percent: number, color?: string, timeout?: number) {
   noteframes = getNoteFrames(screen);

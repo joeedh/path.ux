@@ -1012,8 +1012,8 @@ interface LoadPageArgs {
   parentContainer?: HTMLElement;
   loadSourceOnly?: boolean;
   modifySourceCB?: (source: string) => string;
-  templateVars?: TemplateVars
-  templateScope?: TemplateScope
+  templateVars?: TemplateVars;
+  templateScope?: TemplateScope;
 }
 
 export function initPage(
@@ -1103,4 +1103,3 @@ export function loadPage(
     });
   }
 }
-

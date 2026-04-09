@@ -1,2 +1,1 @@
-export * from '../path-controller/util/events.js';
-
+export * from "../path-controller/util/events.js";

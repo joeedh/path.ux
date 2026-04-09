@@ -1,8 +1,5 @@
-
 export class SimpleContext {
-  constructor() {
-
-  }
+  constructor() {}
 
   static getContextClass() {
     let props: Record<string, PropertyDescriptor> = {};
@@ -21,7 +18,7 @@ export class SimpleContext {
           props[k] = descr;
         }
       }
-    }
+    };
 
     console.log(props);
 
@@ -29,7 +26,6 @@ export class SimpleContext {
       if (k.search("_save") >= 0 || k.search("_load") >= 0) {
         continue;
       }
-
     }
   }
 }

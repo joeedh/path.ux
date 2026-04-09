@@ -4,8 +4,8 @@ import { Vector2 } from "../../path-controller/types/util/vectormath";
 import { ScreenArea } from "./ScreenArea";
 
 export class Screen<CTX = Context> extends UIBase<CTX> {
-  size: [number, number]
-  
+  size: [number, number];
+
   listen(): void;
 
   unlisten(): void;
@@ -24,7 +24,7 @@ export class Screen<CTX = Context> extends UIBase<CTX> {
     }
   ): HTMLElement | undefined;
 
-  sareas: ScreenArea[]
+  sareas: ScreenArea[];
 
-  completeUpdate(): void
+  completeUpdate(): void;
 }

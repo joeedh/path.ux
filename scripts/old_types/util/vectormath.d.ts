@@ -1,1 +1,1 @@
-export * from '../../path-controller/types/util/vectormath';
+export * from "../../path-controller/types/util/vectormath";

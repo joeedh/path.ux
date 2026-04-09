@@ -1,6 +1,6 @@
 "use strict";
 
-import {iconSvg} from './iconsheet.js';
+import { iconSvg } from "./iconsheet.js";
 
 export const Icons = {
   FOLDER        : 0, //file folder
@@ -30,7 +30,7 @@ export const Icons = {
   TREE_EXPAND   : 24,
   TREE_COLLAPSE : 25,
   ZOOM_OUT      : 26,
-  ZOOM_IN       : 27
+  ZOOM_IN       : 27,
 };
 
 export function loadDefaultIconSheet() {
@@ -39,5 +39,3 @@ export function loadDefaultIconSheet() {
 
   return iconSheet;
 }
-
-

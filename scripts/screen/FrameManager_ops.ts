@@ -1233,4 +1233,3 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     e.stopPropagation();
   }
 }
-

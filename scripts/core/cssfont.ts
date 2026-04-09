@@ -49,7 +49,7 @@ export class CSSFont {
   get size(): number {
     if (util.isMobile()) {
       // XXX fix me! circular module dependency!
-      let mul = 1.0
+      let mul = 1.0;
       //let mul = theme.base.mobileTextSizeMultiplier / visualViewport!.scale;
       if (mul) {
         return this._size * mul;

@@ -292,4 +292,3 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
   }
 }
 UIBase.internalRegister(TableFrame);
-

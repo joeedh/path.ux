@@ -1,2 +1,1 @@
-export * from '../path-controller/util/colorutils.js';
-
+export * from "../path-controller/util/colorutils.js";

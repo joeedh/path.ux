@@ -1,4 +1,3 @@
-
 export const mimeMap: Record<string, string> = {
   ".js"  : "application/javascript",
   ".json": "text/json",
@@ -28,12 +27,14 @@ export const mimeMap: Record<string, string> = {
   "sh"   : "application/bash",
   "mjs"  : "application/javascript",
   "cjs"  : "application/javascript",
-  "gif"  : "image/gif"
+  "gif"  : "image/gif",
 };
 
 export var textMimes = new Set([
-  "application/javascript", "application/x-javscript",
-  "image/svg+xml", "application/xml"
+  "application/javascript",
+  "application/x-javscript",
+  "image/svg+xml",
+  "application/xml",
 ]);
 
 export function isMimeText(mime: string | undefined) {
@@ -90,7 +91,7 @@ export class PlatformAPI {
       base = base.slice(0, base.length - 1).trim();
     }
 
-    let exts = ["html", "txt", "js", "php", "cgi"]
+    let exts = ["html", "txt", "js", "php", "cgi"];
     for (let ext of exts) {
       ext = "." + ext;
       if (base.endsWith(ext)) {

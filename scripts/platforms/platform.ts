@@ -1,9 +1,9 @@
 let promise: Promise<{ platform: unknown }> | undefined;
 
 if ((window as unknown as Record<string, unknown>).haveElectron) {
-  promise = import('./electron/electron_api');
+  promise = import("./electron/electron_api");
 } else {
-  promise = import('./web/web_api');
+  promise = import("./web/web_api");
 }
 
 export var platform: unknown;
@@ -16,7 +16,7 @@ promise.then((module) => {
 export function getPlatformAsync() {
   if (promise) {
     return new Promise((accept, reject) => {
-      promise!.then(mod => {
+      promise!.then((mod) => {
         accept(mod.platform);
       });
     });
@@ -24,5 +24,5 @@ export function getPlatformAsync() {
 
   return new Promise((accept, reject) => {
     accept(platform);
-  })
+  });
 }

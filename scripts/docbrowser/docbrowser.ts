@@ -4,49 +4,49 @@
  */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
-import {pushModalLight, popModalLight} from "../path-controller/util/simple_events"
-import cconst from '../config/const'
-import nstructjs from "../path-controller/util/struct"
-import type {StructReader} from "../util/nstructjs"
-import {UIBase, Icons} from "../core/ui_base"
-import {platform} from '../platforms/platform'
+import { pushModalLight, popModalLight } from "../path-controller/util/simple_events";
+import cconst from "../config/const";
+import nstructjs from "../path-controller/util/struct";
+import type { StructReader } from "../util/nstructjs";
+import { UIBase, Icons } from "../core/ui_base";
+import { platform } from "../platforms/platform";
 
-declare function require(mod: string): any
-declare const process: any
+declare function require(mod: string): any;
+declare const process: any;
 
 let tinymceLoaded = false;
 // @ts-ignore - tinymce is an optional external dependency loaded at runtime
-import('../lib/tinymce/tinymce.cjs').then(() => {
+import("../lib/tinymce/tinymce.cjs").then(() => {
   tinymceLoaded = true;
 });
 
-import * as util from '../util/util'
-import {Vector2} from '../util/vectormath'
+import * as util from "../util/util";
+import { Vector2 } from "../util/vectormath";
 
 /* Interfaces for tinymce integration */
 interface TinyMCEBlobInfo {
-  blob(): Blob
-  filename(): string
+  blob(): Blob;
+  filename(): string;
 }
 
 interface TinyMCEBaseURI {
-  host: string
-  source: string
-  toAbsolute(): string
+  host: string;
+  source: string;
+  toAbsolute(): string;
 }
 
 interface TinyMCEEditor extends globalThis.TinyMCEEditor {
-  hide(): void
-  show(): void
+  hide(): void;
+  show(): void;
 }
 
 /* Interfaces for Electron doc system */
 interface DocSysConfig {
-  uploadImage(relpath: string, filename: string, data: ArrayBuffer): string
-  hasDoc(relpath: string): boolean
-  updateDoc(relpath: string, data: string): string
-  newDoc(relpath: string, data: string): string
-  readConfig(configPath: string): DocSysConfig
+  uploadImage(relpath: string, filename: string, data: ArrayBuffer): string;
+  hasDoc(relpath: string): boolean;
+  updateDoc(relpath: string, data: string): string;
+  newDoc(relpath: string, data: string): string;
+  readConfig(configPath: string): DocSysConfig;
 }
 
 let countstr = function (buf: string, s: string) {
@@ -63,7 +63,7 @@ let countstr = function (buf: string, s: string) {
   }
 
   return count;
-}
+};
 
 function basename(path: string) {
   while (path.length > 0 && path.trim().endsWith("/")) {
@@ -95,15 +95,15 @@ function dirname(path: string) {
   return s;
 }
 
-
 function relative(a1: string, b1: string) {
-  let a = a1, b = b1;
+  let a = a1,
+    b = b1;
 
   let i = 1;
   while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {
     i++;
   }
-  i--
+  i--;
 
   a = a.slice(i, a.length).trim();
   b = b.slice(i, b.length).trim();
@@ -141,7 +141,12 @@ export class DocsAPI {
     return undefined;
   }
 
-  uploadImage(_relpath: string | undefined, _blobInfo: TinyMCEBlobInfo, _success: (path: string) => void, _onError: (msg: string) => void): Promise<void> | undefined {
+  uploadImage(
+    _relpath: string | undefined,
+    _blobInfo: TinyMCEBlobInfo,
+    _success: (path: string) => void,
+    _onError: (msg: string) => void
+  ): Promise<void> | undefined {
     //returns a promise
     return undefined;
   }
@@ -152,7 +157,7 @@ function getDocPaths() {
     docpath       : `${cconst.docEditorPath}/docsys_base.js`,
     doc_config    : `${cconst.docEditorPath}/docs.config.js`,
     docpath_prefix: `${cconst.docEditorPath}/doc_build`,
-  }
+  };
 
   if (window.PATHUX_DOCPATH) {
     ret.docpath = window.PATHUX_DOCPATH;
@@ -168,9 +173,9 @@ function getDocPaths() {
 }
 
 export class ElectronAPI extends DocsAPI {
-  first = true
-  ready = false
-  config!: DocSysConfig
+  first = true;
+  ready = false;
+  config!: DocSysConfig;
 
   _doinit() {
     if (!this.first) {
@@ -179,15 +184,15 @@ export class ElectronAPI extends DocsAPI {
 
     this.first = false;
 
-    let {docpath, doc_config} = getDocPaths();
+    let { docpath, doc_config } = getDocPaths();
     console.log(docpath);
 
     import(docpath).then((docsys: Record<string, unknown>) => {
-      let fs = require('fs');
-      let marked = require('marked');
-      let parse5 = require('parse5');
-      let pathmod = require('path');
-      let jsdiff = require('diff');
+      let fs = require("fs");
+      let marked = require("marked");
+      let parse5 = require("parse5");
+      let pathmod = require("path");
+      let jsdiff = require("diff");
 
       let initFn = docsys.default as (
         fs: unknown,
@@ -222,7 +227,12 @@ export class ElectronAPI extends DocsAPI {
     return this.ready;
   }
 
-  override uploadImage(relpath: string | undefined, blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) {
+  override uploadImage(
+    relpath: string | undefined,
+    blobInfo: TinyMCEBlobInfo,
+    success: (path: string) => void,
+    onError: (msg: string) => void
+  ) {
     return new Promise<void>((accept, reject) => {
       if (!this.checkInit()) {
         accept();
@@ -231,11 +241,14 @@ export class ElectronAPI extends DocsAPI {
 
       let blob = blobInfo.blob();
 
-      blob.arrayBuffer().then((data) => {
-        let path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
-        success(path);
-        accept();
-      }).catch(reject);
+      blob
+        .arrayBuffer()
+        .then((data) => {
+          let path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
+          success(path);
+          accept();
+        })
+        .catch(reject);
     }).catch((error: unknown) => {
       onError("" + error);
     });
@@ -273,9 +286,7 @@ export class ElectronAPI extends DocsAPI {
 }
 
 export class ServerAPI extends DocsAPI {
-  override start() {
-
-  }
+  override start() {}
 
   override hasDoc(relpath: string) {
     return this.callAPI("hasDoc", relpath);
@@ -289,26 +300,36 @@ export class ServerAPI extends DocsAPI {
     return this.callAPI("newDoc", relpath, data);
   }
 
-  override uploadImage(relpath: string | undefined, blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) {
+  override uploadImage(
+    relpath: string | undefined,
+    blobInfo: TinyMCEBlobInfo,
+    success: (path: string) => void,
+    onError: (msg: string) => void
+  ) {
     return new Promise<void>((accept, reject) => {
       let blob = blobInfo.blob();
 
-      blob.arrayBuffer().then((data) => {
-        console.log("data!", data);
-        let uint8 = new Uint8Array(data);
-        let data2: number[] = [];
+      blob
+        .arrayBuffer()
+        .then((data) => {
+          console.log("data!", data);
+          let uint8 = new Uint8Array(data);
+          let data2: number[] = [];
 
-        for (let i = 0; i < uint8.length; i++) {
-          data2.push(uint8[i]);
-        }
+          for (let i = 0; i < uint8.length; i++) {
+            data2.push(uint8[i]);
+          }
 
-        console.log("data2", data2);
+          console.log("data2", data2);
 
-        this.callAPI("uploadImage", relpath, blobInfo.filename(), data2).then((path: unknown) => {
-          success(path as string);
-          accept();
-        }).catch(reject);
-      }).catch(reject);
+          this.callAPI("uploadImage", relpath, blobInfo.filename(), data2)
+            .then((path: unknown) => {
+              success(path as string);
+              accept();
+            })
+            .catch(reject);
+        })
+        .catch(reject);
     }).catch((error: unknown) => {
       onError("" + error);
     });
@@ -328,48 +349,53 @@ export class ServerAPI extends DocsAPI {
     return new Promise((accept, reject) => {
       fetch(path, {
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         method : "POST",
         cache  : "no-cache",
-        body   : JSON.stringify(args)
-      }).then((res) => {
-        //console.log(res.text, res.json, "res", res);
-        console.log(path);
+        body   : JSON.stringify(args),
+      })
+        .then((res) => {
+          //console.log(res.text, res.json, "res", res);
+          console.log(path);
 
-        if (res.ok || res.status < 300) {
-          res.text().then((data) => {
-            console.log("got json", data);
-            let parsed = JSON.parse(data) as {result: unknown};
-            accept(parsed.result);
-          }).catch((error: unknown) => {
-            console.log("ERROR!", error);
-            reject(error);
-          });
-        } else {
-          res.text().then((data) => {
-            console.log(data);
-            reject(data);
-          });
-        }
-        //let json = res.json();
-      }).catch((error: unknown) => {
-        reject(error);
-      });
+          if (res.ok || res.status < 300) {
+            res
+              .text()
+              .then((data) => {
+                console.log("got json", data);
+                let parsed = JSON.parse(data) as { result: unknown };
+                accept(parsed.result);
+              })
+              .catch((error: unknown) => {
+                console.log("ERROR!", error);
+                reject(error);
+              });
+          } else {
+            res.text().then((data) => {
+              console.log(data);
+              reject(data);
+            });
+          }
+          //let json = res.json();
+        })
+        .catch((error: unknown) => {
+          reject(error);
+        });
     });
   }
 }
 
 export class DocHistoryItem {
-  url: string
-  title: string
+  url: string;
+  title: string;
 
   static STRUCT = `
 DocHistoryItem {
   url   : string;
   title : string;
 }
-`
+`;
 
   constructor(url: string, title: string) {
     this.url = url;
@@ -384,16 +410,16 @@ DocHistoryItem {
 nstructjs.register(DocHistoryItem);
 
 export class DocHistory extends Array<DocHistoryItem> {
-  cur = 0
+  cur = 0;
 
-  declare _items: DocHistoryItem[]
+  declare _items: DocHistoryItem[];
 
   static STRUCT = `
 DocHistory {
   _items : array(DocHistoryItem) | this;
   cur    : int;
 }
-`
+`;
 
   constructor() {
     super();
@@ -442,33 +468,40 @@ nstructjs.register(DocHistory);
  * UIBase.createElement("rowframe-x") returns a Container (RowFrame),
  * but since it's created dynamically we type the methods we use. */
 interface HeaderContainer extends UIBase {
-  clear(): void
-  check(path: string | undefined, name: string): UIBase & {value: boolean; checked: boolean; onchange: (() => void) | null}
-  iconbutton(icon: number, description: string, cb: () => void): UIBase & {iconsheet: number}
-  button(label: string, cb: () => void): UIBase & {iconsheet: number}
-  listenum(path: string | undefined, name: string, enumDef: Record<string, string>): UIBase & {onselect: ((e: string) => void) | null}
+  clear(): void;
+  check(
+    path: string | undefined,
+    name: string
+  ): UIBase & { value: boolean; checked: boolean; onchange: (() => void) | null };
+  iconbutton(icon: number, description: string, cb: () => void): UIBase & { iconsheet: number };
+  button(label: string, cb: () => void): UIBase & { iconsheet: number };
+  listenum(
+    path: string | undefined,
+    name: string,
+    enumDef: Record<string, string>
+  ): UIBase & { onselect: ((e: string) => void) | null };
 }
 
 export class DocsBrowser extends UIBase {
-  _sourceData: string | undefined
-  saveCallback: ((doc: Document) => void) | null = null
-  handlesDocURL = true
-  pathuxBaseURL: string
-  editMode = false
-  history: DocHistory
-  _prefix: string
-  saveReq = 0
-  saveReqStart: number
-  _last_save: number
-  header: HeaderContainer
-  root: HTMLIFrameElement
-  serverapi: DocsAPI
-  currentPath = ""
-  _doDocInit = true
-  contentDiv: HTMLDivElement | undefined
-  tinymce: TinyMCEInstance | undefined
-  oneditstart: ((browser: DocsBrowser) => void) | undefined
-  oneditend: ((browser: DocsBrowser) => void) | undefined
+  _sourceData: string | undefined;
+  saveCallback: ((doc: Document) => void) | null = null;
+  handlesDocURL = true;
+  pathuxBaseURL: string;
+  editMode = false;
+  history: DocHistory;
+  _prefix: string;
+  saveReq = 0;
+  saveReqStart: number;
+  _last_save: number;
+  header: HeaderContainer;
+  root: HTMLIFrameElement;
+  serverapi: DocsAPI;
+  currentPath = "";
+  _doDocInit = true;
+  contentDiv: HTMLDivElement | undefined;
+  tinymce: TinyMCEInstance | undefined;
+  oneditstart: ((browser: DocsBrowser) => void) | undefined;
+  oneditend: ((browser: DocsBrowser) => void) | undefined;
 
   static STRUCT = `
 DocsBrowser {
@@ -477,7 +510,7 @@ DocsBrowser {
   editMode      : bool;
   history       : DocHistory;
 }
-`
+`;
 
   constructor() {
     super();
@@ -508,7 +541,7 @@ DocsBrowser {
 
     this.root.onload = () => {
       this.initDoc();
-    }
+    };
 
     if (window.haveElectron) {
       this.serverapi = new ElectronAPI();
@@ -579,7 +612,7 @@ DocsBrowser {
       console.warn("set edit mode:", check.checked);
 
       this.setEditMode(check.checked);
-    }
+    };
 
     if (!this.editMode) {
       this.header.iconbutton(Icons.LEFT_ARROW, "Back", () => {
@@ -614,7 +647,7 @@ DocsBrowser {
       this.undoPost("Note Box");
 
       console.log(p);
-    })
+    });
 
     let indexOf = (list: NodeList, item: Node) => {
       for (let i = 0; i < list.length; i++) {
@@ -624,7 +657,7 @@ DocsBrowser {
       }
 
       return -1;
-    }
+    };
 
     this.header.button("Remove", () => {
       let sel = this.root.contentDocument!.getSelection();
@@ -657,7 +690,6 @@ DocsBrowser {
           parent.insertBefore(p.childNodes[j], add);
         }
       }
-
     });
     this.header.iconbutton(Icons.BOLD, "Bold", () => {
       this.execCommand("bold");
@@ -704,7 +736,7 @@ DocsBrowser {
       return;
     }
 
-    if (!(data.trim().toLowerCase().startsWith("<!doctype html>"))) {
+    if (!data.trim().toLowerCase().startsWith("<!doctype html>")) {
       data = "<!doctype html>\n" + data;
     }
 
@@ -713,7 +745,10 @@ DocsBrowser {
     this.saveReq = 0;
 
     let cb = () => {
-      if (this.root.contentDocument && (this.root.contentDocument as Document & {readyState?: string}).readyState !== 'loading') {
+      if (
+        this.root.contentDocument &&
+        (this.root.contentDocument as Document & { readyState?: string }).readyState !== "loading"
+      ) {
         this.initDoc();
       } else {
         window.setTimeout(cb, 5);
@@ -738,7 +773,7 @@ DocsBrowser {
     this.root.setAttribute("src", url);
     this.root.onload = () => {
       this.initDoc();
-    }
+    };
     this._doDocInit = true;
     this.contentDiv = undefined;
   }
@@ -769,7 +804,7 @@ DocsBrowser {
       for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
-    }
+    };
 
     if (!this.root.contentDocument) {
       return;
@@ -808,7 +843,7 @@ DocsBrowser {
       window.tinyMCEPreInit = {
         suffix         : "",
         baseURL        : this.currentPath,
-        documentBaseURL: location.href
+        documentBaseURL: location.href,
       };
       //*/
 
@@ -819,13 +854,19 @@ DocsBrowser {
         }
       }
 
-
       let base = this.pathuxBaseURL;
-      let base_url = (platform as unknown as {resolveURL(path: string, base?: string): string}).resolveURL("scripts/lib/tinymce", base);
+      let base_url = (platform as unknown as { resolveURL(path: string, base?: string): string }).resolveURL(
+        "scripts/lib/tinymce",
+        base
+      );
 
       console.warn(window.haveElectron, "haveElectron", base_url);
 
-      let tinymce: TinyMCEInstance = this.tinymce = (globals as unknown as Window).tinymce = window.tinymce = window._tinymce(globals);
+      let tinymce: TinyMCEInstance =
+        (this.tinymce =
+        (globals as unknown as Window).tinymce =
+        window.tinymce =
+          window._tinymce(globals));
 
       let fixletter = () => {
         if (!tinymce.baseURI.host) {
@@ -834,7 +875,7 @@ DocsBrowser {
 
         //fix drive letter on windows
         if (window.haveElectron) {
-          if ((process as unknown as {platform: string}).platform === "win32") {
+          if ((process as unknown as { platform: string }).platform === "win32") {
             if (tinymce.baseURI.host.trim().length > 0) {
               console.warn("Fixing drive letter", tinymce.baseURI);
               tinymce.baseURI.host += ":";
@@ -842,7 +883,7 @@ DocsBrowser {
             tinymce.baseURL = tinymce.baseURI.source = tinymce.baseURI.toAbsolute();
           }
         }
-      }
+      };
 
       let _baseuri = tinymce.baseURI;
 
@@ -855,7 +896,7 @@ DocsBrowser {
           if (v) {
             fixletter();
           }
-        }
+        },
       });
 
       fixletter();
@@ -864,40 +905,46 @@ DocsBrowser {
         throw new Error("Source document is missing <!doctype html>");
       }
 
-      tinymce.init({
-        selector             : "div.contents",
-        base_url             : base_url,
-        paste_data_images    : true,
-        allow_html_data_urls : true,
-        plugins              : ['quickbars', 'paste'],
-        toolbar              : true,
-        menubar              : true,
-        inline               : true,
-        images_upload_handler: (blobInfo: TinyMCEBlobInfo, success: (path: string) => void, onError: (msg: string) => void) => {
-          console.log("uploading image!", blobInfo);
-          this.serverapi.uploadImage(this.getDocPath(), blobInfo, success, onError);
-        },
-        setup                : function (editor: TinyMCEEditor) {
-          console.log("tinymce editor setup!", editor);
-        }
-      }).then((arg) => {
-        fixletter();
+      tinymce
+        .init({
+          selector             : "div.contents",
+          base_url             : base_url,
+          paste_data_images    : true,
+          allow_html_data_urls : true,
+          plugins              : ["quickbars", "paste"],
+          toolbar              : true,
+          menubar              : true,
+          inline               : true,
+          images_upload_handler: (
+            blobInfo: TinyMCEBlobInfo,
+            success: (path: string) => void,
+            onError: (msg: string) => void
+          ) => {
+            console.log("uploading image!", blobInfo);
+            this.serverapi.uploadImage(this.getDocPath(), blobInfo, success, onError);
+          },
+          setup: function (editor: TinyMCEEditor) {
+            console.log("tinymce editor setup!", editor);
+          },
+        })
+        .then((arg) => {
+          fixletter();
 
-        this.tinymce = arg[0] as unknown as TinyMCEInstance;
+          this.tinymce = arg[0] as unknown as TinyMCEInstance;
 
-        if (!this.editMode) {
-          (this.tinymce as unknown as TinyMCEEditor).hide();
-        } else {
-          this.disableLinks();
-        }
-      });
+          if (!this.editMode) {
+            (this.tinymce as unknown as TinyMCEEditor).hide();
+          } else {
+            this.disableLinks();
+          }
+        });
 
       fixletter();
 
       let onchange = () => {
         console.log("Input event!");
         this.queueSave();
-      }
+      };
 
       this.contentDiv.addEventListener("input", onchange);
       this.contentDiv.addEventListener("change", onchange);
@@ -937,7 +984,7 @@ DocsBrowser {
       for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
-    }
+    };
 
     visit(this.root.contentDocument!.body);
   }
@@ -958,7 +1005,7 @@ DocsBrowser {
       for (let c of Array.from(n.childNodes)) {
         visit(c);
       }
-    }
+    };
 
     visit(this.root.contentDocument!.body);
   }
@@ -979,7 +1026,7 @@ DocsBrowser {
       for (let c of Array.from(n.children)) {
         traverse(c);
       }
-    }
+    };
 
     traverse(this.contentDiv);
 
@@ -1002,10 +1049,11 @@ DocsBrowser {
     let grab = (i: number, vs: Vector2[]) => {
       console.log("Transform Modal start");
 
-      let horiz = i%2 != 0 ? 1 : 0;
+      let horiz = i % 2 != 0 ? 1 : 0;
 
       let update = () => {
-        let x = vs[0][0], y = vs[0][1];
+        let x = vs[0][0],
+          y = vs[0][1];
         let w = vs[2][0] - vs[0][0];
         let h = vs[1][1] - vs[0][1];
 
@@ -1014,7 +1062,7 @@ DocsBrowser {
         img.style["top"] = y + "px";
         img.style["width"] = w + "px";
         img.style["height"] = h + "px";
-      }
+      };
 
       update();
 
@@ -1029,12 +1077,10 @@ DocsBrowser {
           popModalLight(modaldata);
           modaldata = undefined;
         }
-      }
+      };
 
       let ghandlers = {
-        on_mousedown(_e: MouseEvent) {
-
-        },
+        on_mousedown(_e: MouseEvent) {},
 
         on_mousemove(e: MouseEvent) {
           console.log("modal move");
@@ -1045,7 +1091,8 @@ DocsBrowser {
             return;
           }
 
-          let dx = e.x - last_mpos[0], dy = last_mpos[1] - e.y;
+          let dx = e.x - last_mpos[0],
+            dy = last_mpos[1] - e.y;
           console.log(dx.toFixed(2), dy.toFixed(2));
 
           last_mpos[0] = e.x;
@@ -1061,44 +1108,46 @@ DocsBrowser {
           if (e.keyCode === 27) {
             end();
           }
-        }
-      }
+        },
+      };
 
       modaldata = pushModalLight(ghandlers);
       console.warn("grab!", modaldata);
-    }
+    };
 
     let mpos = new Vector2();
     let first = true;
     let tdown = true;
     let mdown = false;
 
-    let ix = 0, iy = 0;
-    let width = img.width, height = img.height;
+    let ix = 0,
+      iy = 0;
+    let width = img.width,
+      height = img.height;
 
     img.setAttribute("draggable", "false");
     let getsize = () => {
       let rects = img.getClientRects();
       let r = rects[0];
       if (!r) {
-        setTimeout(getsize, 2)
+        setTimeout(getsize, 2);
         return;
       }
 
       console.log("got image size", width, height, img.width, img.height);
       width = r.width;
       height = r.height;
-    }
+    };
 
     let resizing = false;
     let moving = false;
 
     let handlers: Record<string, (e: PointerEvent, x?: number, y?: number, button?: number) => void> = {
       pointerover(_e: PointerEvent) {
-        console.log("mouse over!")
+        console.log("mouse over!");
       },
       pointerleave(_e: PointerEvent) {
-        console.log("mouse leave!")
+        console.log("mouse leave!");
       },
       pointerdown(e: PointerEvent, x = e.x, y = e.y, _button = e.button) {
         //this.contentDiv.contentEditable = false;
@@ -1121,7 +1170,8 @@ DocsBrowser {
         console.log(moving);
 
         if (moving) {
-          let dx = x - mpos[0], dy = y - mpos[1];
+          let dx = x - mpos[0],
+            dy = y - mpos[1];
           console.log("mdown!", dx, dy);
 
           ix += dx;
@@ -1135,7 +1185,8 @@ DocsBrowser {
         }
 
         if (resizing) {
-          let dx = x - mpos[0], dy = y - mpos[1];
+          let dx = x - mpos[0],
+            dy = y - mpos[1];
           console.log("mdown!", dx, dy);
 
           width += dy;
@@ -1160,16 +1211,18 @@ DocsBrowser {
           new Vector2([r.x, r.y + r.height]),
           new Vector2([r.x + r.width, r.y + r.height]),
           new Vector2([r.x + r.width, r.y]),
-        ]
+        ];
 
         let ret: number | undefined = undefined;
         let mindis = 1e17;
 
         for (let i = 0; i < 4; i++) {
-          let i1 = i, i2 = (i + 1)%4;
-          let v1 = verts[i1], v2 = verts[i2];
+          let i1 = i,
+            i2 = (i + 1) % 4;
+          let v1 = verts[i1],
+            v2 = verts[i2];
 
-          let horiz = i%2 !== 0.0 ? 1 : 0;
+          let horiz = i % 2 !== 0.0 ? 1 : 0;
           let dv = mpos[horiz as 0 | 1] - (v1[horiz as 0 | 1] as number);
 
           if (Math.abs(dv) < 15 && Math.abs(dv) < mindis) {
@@ -1207,7 +1260,7 @@ DocsBrowser {
         mdown = false;
         moving = false;
       },
-    }
+    };
 
     window.setInterval(() => {
       if (1 || !mdown) {
@@ -1217,7 +1270,7 @@ DocsBrowser {
           img.setAttribute("draggable", val);
         }
       }
-    }, 200)
+    }, 200);
 
     for (let k in handlers) {
       img.addEventListener(k, handlers[k] as EventListener, true);
@@ -1236,12 +1289,11 @@ DocsBrowser {
     let image_idgen = 0;
 
     let getlist = () => {
-      if (liststack.length > 0)
-        return liststack[liststack.length - 1];
+      if (liststack.length > 0) return liststack[liststack.length - 1];
       return undefined;
-    }
+    };
 
-    type NodeHandler = (n: Node) => void
+    type NodeHandler = (n: Node) => void;
     let handlers: Record<string, NodeHandler> = {
       TEXT(n: Node) {
         console.log("Text data:", (n as Text).data);
@@ -1286,42 +1338,42 @@ DocsBrowser {
       },
 
       A(n: Node) {
-        buf += `[${(n as HTMLElement).innerHTML}](${(n as Element).getAttribute("href")})`
+        buf += `[${(n as HTMLElement).innerHTML}](${(n as Element).getAttribute("href")})`;
       },
 
       B(_n: Node) {
-        buf += "<b>"
+        buf += "<b>";
         visit!();
-        buf += "</b>"
+        buf += "</b>";
       },
 
       STRONG(_n: Node) {
-        buf += "<strong>"
+        buf += "<strong>";
         visit!();
-        buf += "</strong>"
+        buf += "</strong>";
       },
 
       EM(_n: Node) {
-        buf += "<em>"
+        buf += "<em>";
         visit!();
-        buf += "</em>"
+        buf += "</em>";
       },
       STRIKE(_n: Node) {
-        buf += "<strike>"
+        buf += "<strike>";
         visit!();
-        buf += "</strike>"
+        buf += "</strike>";
       },
 
       I(_n: Node) {
-        buf += "<i>"
+        buf += "<i>";
         visit!();
-        buf += "</i>"
+        buf += "</i>";
       },
 
       U(_n: Node) {
-        buf += "<u>"
+        buf += "<u>";
         visit!();
-        buf += "</u>"
+        buf += "</u>";
       },
 
       UL(_n: Node) {
@@ -1342,9 +1394,9 @@ DocsBrowser {
           buf += head[1] + ".  ";
           head[1]++;
         } else {
-          buf += "*  "
+          buf += "*  ";
         }
-        visit!()
+        visit!();
       },
 
       PRE(_n: Node) {
@@ -1363,20 +1415,19 @@ DocsBrowser {
         }
 
         if (bad) {
-          buf = start + "<pre>" + data + "</pre>\n"
+          buf = start + "<pre>" + data + "</pre>\n";
         } else {
           buf = start + data;
         }
-
-      }
-    }
+      },
+    };
 
     let traverse = (n: Node) => {
       visit = () => {
         for (let c of Array.from(n.childNodes)) {
           traverse(c);
         }
-      }
+      };
 
       if (n.constructor.name === "Text") {
         handlers.TEXT(n);
@@ -1388,7 +1439,7 @@ DocsBrowser {
           visit();
         }
       }
-    }
+    };
 
     traverse(this.contentDiv);
 
@@ -1464,19 +1515,22 @@ DocsBrowser {
 
     this.saveReq = 2;
 
-    this.serverapi.updateDoc(path, this.contentDiv.innerHTML)!.then((result: unknown) => {
-      this.saveReq = 0;
-      console.log("Sucess! Saved document", result);
+    this.serverapi
+      .updateDoc(path, this.contentDiv.innerHTML)!
+      .then((result: unknown) => {
+        this.saveReq = 0;
+        console.log("Sucess! Saved document", result);
 
-      if (result) {
-        console.log("Server changed final document; reloading...");
-        this.contentDiv!.innerHTML = result as string;
-      }
+        if (result) {
+          console.log("Server changed final document; reloading...");
+          this.contentDiv!.innerHTML = result as string;
+        }
 
-      this.report("Saved", "green", 750)
-    }).catch((error: unknown) => {
-      console.error(error);
-    });
+        this.report("Saved", "green", 750);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      });
   }
 
   updateCurrentPath() {
@@ -1494,7 +1548,6 @@ DocsBrowser {
       this.currentPath = href;
     }
   }
-
 
   //send notifications to user
   report(message: string, color?: string, timeout?: number) {
@@ -1552,8 +1605,8 @@ DocsBrowser {
   static define() {
     return {
       tagname: "docs-browser-x",
-      style  : "docsbrowser"
-    }
+      style  : "docsbrowser",
+    };
   }
 }
 
