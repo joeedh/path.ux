@@ -1,16 +1,16 @@
 "use strict";
 
-import cconst from "../config/const.js";
+import cconst from "../config/const";
 
-import * as util from "../path-controller/util/util.js";
-import { Vector2 } from "../path-controller/util/vectormath.js";
-import * as ui_base from "../core/ui_base.js";
-import * as simple_toolsys from "../path-controller/toolsys/toolsys.js";
-import { ToolTip } from "../widgets/ui_widgets2.js";
-import type { Screen } from "./FrameManager.js";
-import type { Overdraw } from "../util/ScreenOverdraw.js";
-import type { SVGRectWithColor } from "../util/ScreenOverdraw.js";
-import type { ScreenBorder, ScreenVert } from "./FrameManager_mesh.js";
+import * as util from "../path-controller/util/util";
+import { Vector2 } from "../path-controller/util/vectormath";
+import * as ui_base from "../core/ui_base";
+import * as simple_toolsys from "../path-controller/toolsys/toolsys";
+import { ToolTip } from "../widgets/ui_widgets2";
+import type { Screen } from "./FrameManager";
+import type { Overdraw } from "../util/ScreenOverdraw";
+import type { SVGRectWithColor } from "../util/ScreenOverdraw";
+import type { ScreenBorder, ScreenVert } from "./FrameManager_mesh";
 
 /*
 why am I using a toolstack here at all?  time to remove!
@@ -27,9 +27,10 @@ export function registerToolStackGetter(func: () => simple_toolsys.ToolStack) {
 const UndoFlags = simple_toolsys.UndoFlags;
 const ToolFlags = simple_toolsys.ToolFlags;
 
-import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events.js";
-import { IContextBase } from "../core/context_base.js";
-import { ScreenArea, type AreaConstructor } from "./ScreenArea.js";
+import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events";
+import { IContextBase } from "../core/context_base";
+import { ScreenArea } from "./ScreenArea";
+import { AreaConstructor } from "./area_base";
 
 //import {keymap} from './events';
 
@@ -593,7 +594,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     this.dropArea = false;
     this.excludeAreas = new Set();
     this.cursorbox = undefined;
-    this.boxes = []
+    this.boxes = [];
     this.boxes.active = undefined;
     this.color = "";
     this.hcolor = "";
@@ -1226,7 +1227,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
       this.element = ele;
       const tip = ele.title;
 
-      this.tooltip = ToolTip.show(tip, this.screen, x, y)
+      this.tooltip = ToolTip.show(tip, this.screen, x, y);
     }
     e.preventDefault();
     e.stopPropagation();

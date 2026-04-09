@@ -1033,6 +1033,9 @@ export class UIBase<
     },
   });
 
+  /** Returns previous icon flags */
+  useIcons?: (bool_or_icon_number?: boolean | number) => number
+
   graphExec(): void {
     const node = this.graphNode;
     if (node === undefined) {

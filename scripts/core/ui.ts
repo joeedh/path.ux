@@ -47,7 +47,7 @@ export type SliderArgs = {
   isInt?: boolean;
   /** @deprecated */
   is_int?: boolean;
-  decimalPlaces?: number
+  decimalPlaces?: number;
 };
 
 export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
@@ -377,7 +377,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   /** Returns previous icon flags */
-  useIcons(enabled_or_sheet: boolean | number = true) {
+  useIcons = (enabled_or_sheet: boolean | number = true) => {
     const enabled = !!enabled_or_sheet;
 
     let mask = PackFlags.USE_ICONS | PackFlags.SMALL_ICON | PackFlags.LARGE_ICON;
@@ -411,7 +411,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     this.inherit_packflag |= PackFlags.USE_ICONS | sheet;
 
     return previous;
-  }
+  };
 
   /**
    *
@@ -1947,7 +1947,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     do_redraw?: boolean,
     callback?: Function,
     packflag = 0
-  ): UIBase<CTX> {
+  ) {
     if (typeof name === "object") {
       return this.slider(datapath, {
         ...name,
@@ -1990,12 +1990,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     callback?: Function,
     packflag = 0,
     decimalPlaces?: number
-  ): UIBase<CTX> {
+  ) {
     if (typeof name === "object") {
       //new-style api call
 
       const args = name;
-      decimalPlaces = args.decimalPlaces
+      decimalPlaces = args.decimalPlaces;
       name = args.name;
       defaultval = args.defaultval;
       min = args.min;

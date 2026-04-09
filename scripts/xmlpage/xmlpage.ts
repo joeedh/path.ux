@@ -5,6 +5,8 @@ import { Menu } from "../widgets/ui_menu.js";
 import { Icons } from "../core/ui_base.js";
 import { Container } from "../core/ui.js";
 import type { IContextBase } from "../core/context_base.js";
+import { TableRowProxy } from "../widgets/ui_table.js";
+import { PanelContents, TabContainer, TabItemContainer } from "../pathux.js";
 
 export const domTransferAttrs = new Set(["id", "title", "tab-index"]);
 export const domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
@@ -130,15 +132,24 @@ interface ContainerOptions {
   noInheritCustomAttrs?: boolean;
 }
 
+type DOMAttrs = { [k: string]: string };
+type DOMKeys = Set<string>;
+type TemplateVars = { [k: string]: string };
+type TemplateScope = { [k: string]: unknown };
+type CodeFuncs = { [k: string]: (...args: unknown[]) => unknown };
+
+type ContainerTypes = Container | TabItemContainer | PanelContents;
+
 class Handler {
-  container: Container;
-  stack: unknown[];
+  container: ContainerTypes;
+  stack: (DOMAttrs | DOMKeys | ContainerTypes)[];
   ctx: IContextBase;
-  codefuncs: Record<string, (...args: unknown[]) => unknown>;
-  templateVars: Record<string, string>;
-  templateScope: unknown;
-  inheritDomAttrs: Record<string, string>;
-  inheritDomAttrKeys: Set<string>;
+  codefuncs: CodeFuncs;
+  templateVars: TemplateVars;
+  templateScope: TemplateScope;
+  /** DOM attributes elements should inherit by default*/
+  inheritDomAttrs: DOMAttrs;
+  inheritDomAttrKeys: DOMKeys;
 
   constructor(ctx: IContextBase, container: Container) {
     this.container = container;
@@ -164,8 +175,8 @@ class Handler {
   }
 
   pop() {
-    this.inheritDomAttrs = this.stack.pop() as Record<string, string>;
-    this.inheritDomAttrKeys = this.stack.pop() as Set<string>;
+    this.inheritDomAttrs = this.stack.pop() as DOMAttrs;
+    this.inheritDomAttrKeys = this.stack.pop() as DOMKeys;
     this.container = this.stack.pop() as Container;
   }
 
@@ -174,28 +185,25 @@ class Handler {
       for (const child of elem.childNodes) {
         this.handle(child);
       }
-
-      (window as unknown as Record<string, unknown>)["tree"] = elem;
       return;
     } else if (elem.constructor === Text || elem.constructor === Comment) {
       return;
     }
 
     const elemEl = elem as Element;
-    const tagname = "" + elemEl.tagName;
+    const tagname = ("" + elemEl.tagName) as string;
 
-    const handlers = customHandlers as Record<string, ((handler: Handler, elem: Element) => void) | "default">;
+    const handlers = customHandlers;
     if (tagname in handlers) {
-      const h = handlers[tagname];
+      const h = handlers[tagname as string];
       if (typeof h === "function") {
         h(this, elemEl);
       }
-    } else if ((this as unknown as Record<string, unknown>)[tagname]) {
-      (this as unknown as Record<string, (e: Element) => void>)[tagname](elemEl);
+    } else if (tagname in this) {
+      const anyThis = this as any;
+      anyThis[tagname](elemEl);
     } else {
       const elem2 = UIBase.createElement(tagname.toLowerCase());
-
-      (window as unknown as Record<string, unknown>)["__elem"] = elemEl;
       //transfer DOM attributes
       for (const k of elemEl.getAttributeNames()) {
         elem2.setAttribute(k, elemEl.getAttribute(k) ?? "");
@@ -212,7 +220,9 @@ class Handler {
           elem2.setAttribute("datapath", path);
         }
 
-        if (elem2.hasAttribute("massSetPath") || this.container.massSetPrefix) {
+        const container = this.container;
+
+        if (elem2.hasAttribute("massSetPath") || container.massSetPrefix) {
           let massSetPath = "";
 
           if (elem2.hasAttribute("massSetPath")) {
@@ -221,12 +231,12 @@ class Handler {
 
           const path = elem2.getAttribute("datapath") ?? "";
 
-          const mpath = this.container._getMassPath(this.container.ctx, path, massSetPath);
+          const mpath = container._getMassPath(container.ctx, path, massSetPath);
           elem2.setAttribute("massSetPath", mpath ?? "");
           elem2.setAttribute("mass_set_path", mpath ?? "");
         }
 
-        this.container.add(elem2);
+        container.add(elem2);
         this._style(elemEl, elem2);
 
         if (elem2 instanceof Container) {
@@ -252,7 +262,8 @@ class Handler {
 
         this.container.shadow.appendChild(elem2b);
 
-        (elem2b as unknown as Record<string, unknown>)["pathux_ctx"] = this.container.ctx;
+        const anyElem2b = elem2b as any;
+        anyElem2b["pathux_ctx"] = this.container.ctx;
       }
 
       this.visit(elemEl);
@@ -282,15 +293,15 @@ class Handler {
             if (cssRule.selectorText.trim() === k) {
               if (cssRule.styleMap) {
                 for (const k2 of cssRule.styleMap.keys()) {
-                  const val = (cssRule.style as unknown as Record<string, string>)[k2];
-                  style[k2] = val;
+                  const val = cssRule.style[k2 as keyof typeof cssRule.style];
+                  style[k2] = val as string;
                 }
               } else {
                 // eslint-disable-next-line @typescript-eslint/no-for-in-array
                 for (const k2 in cssRule.style) {
                   const desc = Object.getOwnPropertyDescriptor(cssRule.style, k2);
                   if (!desc?.writable) continue;
-                  const val = (cssRule.style as unknown as Record<string, string>)[k2];
+                  const val = cssRule.style[k2];
                   if (val) style[k2] = val;
                 }
               }
@@ -414,12 +425,11 @@ class Handler {
           const onclick = htmlElem.onclick;
           const func = this.codefuncs[id];
 
-          (htmlElem as unknown as Record<string, unknown>)["onclick"] = function (this: HTMLElement) {
+          htmlElem.onclick = function (this: GlobalEventHandlers, ...args: unknown[]): any {
             if (onclick) {
-              (onclick as (...a: unknown[]) => unknown).apply(this, Array.from(arguments));
+              (onclick as (...a: unknown[]) => unknown).apply(this, Array.from(args));
             }
-
-            return func.apply(this, Array.from(arguments));
+            return func.apply(this, Array.from(args));
           };
         } else {
           elem2.addEventListener(k, this.codefuncs[id] as EventListener);
@@ -474,10 +484,7 @@ class Handler {
       }
     }
 
-    if (
-      elem.hasAttribute("useIcons") &&
-      typeof (elem2 as unknown as Record<string, unknown>)["useIcons"] === "function"
-    ) {
+    if (elem.hasAttribute("useIcons") && elem2.useIcons) {
       let val: string | number | boolean = (elem.getAttribute("useIcons") ?? "").trim().toLowerCase();
 
       if (val === "small" || val === "true" || val === "yes") {
@@ -489,58 +496,57 @@ class Handler {
       } else {
         val = parseInt(val as string) - 1;
       }
-
-      (elem2 as Container).useIcons(val as boolean | number);
+      elem2.useIcons(val as boolean | number);
     }
 
-    if (elem.hasAttribute("sliderTextBox")) {
+    if (elem.hasAttribute("sliderTextBox") && elem2 instanceof Container) {
       const textbox = getbool(elem, "sliderTextBox");
 
       if (textbox) {
         elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-        (elem2 as Container).inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
       } else {
         elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-        (elem2 as Container).inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
       }
 
       //console.error("textBox", textbox, elem2, elem.getAttribute("sliderTextBox"), elem2.packflag);
     }
 
-    if (elem.hasAttribute("sliderMode")) {
+    if (elem.hasAttribute("sliderMode") && elem2 instanceof Container) {
       const sliderMode = elem.getAttribute("sliderMode");
 
       if (sliderMode === "slider") {
         elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        (elem2 as Container).inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
 
         elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-        (elem2 as Container).inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       } else if (sliderMode === "roller") {
         elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
         elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
 
-        (elem2 as Container).inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        (elem2 as Container).inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
 
       //console.error("sliderMode", sliderMode, elem2, elem2.packflag & (PackFlags.SIMPLE_NUMSLIDERS | PackFlags.FORCE_ROLLER_SLIDER));
     }
 
-    if (elem.hasAttribute("showLabel")) {
+    if (elem.hasAttribute("showLabel") && elem2 instanceof Container) {
       const state = getbool(elem, "showLabel");
 
       if (state) {
         elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
-        (elem2 as Container).inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
       } else {
         elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
-        (elem2 as Container).inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
       }
     }
 
     function doBox(key: string) {
-      if (elem.hasAttribute(key)) {
+      if (elem.hasAttribute(key) && elem2 instanceof UIBase) {
         let val: string | number = (elem.getAttribute(key) ?? "").toLowerCase().trim();
 
         if ((val as string).endsWith("px")) {
@@ -553,8 +559,8 @@ class Handler {
 
           console.warn(`Relative styling of '${key}' may be unstable for this element`, elem);
 
-          (elem2 as UIBase).setCSSAfter(function (this: UIBase) {
-            (this.style as unknown as Record<string, string>)[key] = val as string;
+          elem2.setCSSAfter(function (this: UIBase) {
+            this.saneStyle[key] = val as string;
           });
         } else {
           val = parseFloat(val as string);
@@ -564,9 +570,9 @@ class Handler {
             return;
           }
 
-          (elem2 as UIBase).overrideDefault(key, val);
-          (elem2 as UIBase).setCSS();
-          (elem2 as HTMLElement).style.setProperty(key, "" + val + "px");
+          elem2.overrideDefault(key, val);
+          elem2.setCSS();
+          elem2.style.setProperty(key, "" + val + "px");
         }
       }
     }
@@ -642,7 +648,7 @@ class Handler {
 
   cell(elem: Element) {
     this.push();
-    this.container = (this.container as unknown as Record<string, () => Container>)["cell"]() as Container;
+    this.container = (this.container as unknown as TableRowProxy).cell();
     this._container(elem, this.container);
     this.visit(elem);
     this.pop();
@@ -661,8 +667,8 @@ class Handler {
     const closed = getbool(elem, "closed");
 
     this.push();
-    this.container = this.container.panel(title) as unknown as Container;
-    (this.container as unknown as Record<string, unknown>)["closed"] = closed;
+    this.container = this.container.panel(title);
+    (this.container as PanelContents).closed = closed;
 
     this._container(elem, this.container);
 
@@ -679,8 +685,6 @@ class Handler {
    handle a code element, which are wrapped in functions
    */
   code(elem: Element) {
-    (window as unknown as Record<string, unknown>)["_codelem"] = elem;
-
     let buf = "";
 
     for (const elem2 of elem.childNodes) {
@@ -757,10 +761,7 @@ func = function() {
         themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? undefined : undefined,
       }) as unknown as Element;
     } else {
-      elem2 = (this.container as unknown as Record<string, (p: string | undefined, f: number) => Element>)[key](
-        path ?? undefined,
-        packflag
-      );
+      elem2 = (this.container as any)[key](path ?? undefined, packflag);
     }
 
     if (!elem2) {
@@ -844,9 +845,7 @@ func = function() {
       iconflags = this.container.useIcons(false);
     }
 
-    const elem2: Element | undefined = (
-      this.container as unknown as Record<string, (p: string | null, f: number) => Element | undefined>
-    )[key](path, packflag);
+    const elem2: Element | undefined = (this.container as any)[key](path, packflag);
 
     if (elem2) {
       this._basic(elem, elem2);
@@ -900,7 +899,7 @@ func = function() {
 
         if (childEl.hasAttribute("icon")) {
           const iconName = (childEl.getAttribute("icon") ?? "").toUpperCase().trim();
-          icon = (Icons as Record<string, number>)[iconName];
+          icon = Icons[iconName];
         }
 
         if (childEl.hasAttribute("hotkey")) {
@@ -969,7 +968,7 @@ func = function() {
 
     const title = "" + elem.getAttribute("label");
 
-    this.container = (this.container as unknown as Record<string, (t: string) => Container>)["tab"](title);
+    this.container = (this.container as unknown as TabContainer).tab(title);
 
     if (elem.hasAttribute("overflow")) {
       this.container.setAttribute("overflow", elem.getAttribute("overflow") ?? "");
@@ -980,7 +979,7 @@ func = function() {
     }
 
     this._container(elem, this.container, { noInheritCustomAttrs: true });
-    const tabItem = (this.container as unknown as Record<string, unknown>)["_tab"];
+    const tabItem = (this.container as TabItemContainer)._tab;
     if (tabItem && typeof (tabItem as Element).setAttribute === "function") {
       this._inheritCustomAttrs(elem, tabItem as Element);
     }
@@ -1013,8 +1012,8 @@ interface LoadPageArgs {
   parentContainer?: HTMLElement;
   loadSourceOnly?: boolean;
   modifySourceCB?: (source: string) => string;
-  templateVars?: Record<string, string>;
-  templateScope?: unknown;
+  templateVars?: TemplateVars
+  templateScope?: TemplateScope
 }
 
 export function initPage(
@@ -1022,7 +1021,7 @@ export function initPage(
   xml: string,
   parentContainer?: HTMLElement | undefined,
   templateVars: Record<string, string> = {},
-  templateScope: unknown = {}
+  templateScope: TemplateScope = {}
 ): Container {
   const tree = parseXML(xml);
   const container = UIBase.createElement("container-x") as unknown as Container;
@@ -1052,8 +1051,8 @@ export function loadPage(
   parentContainer_or_args?: HTMLElement | LoadPageArgs | undefined,
   loadSourceOnly = false,
   modifySourceCB?: (source: string) => string,
-  templateVars?: Record<string, string>,
-  templateScope?: unknown
+  templateVars?: TemplateVars,
+  templateScope?: TemplateScope
 ): Promise<Container | string> {
   let source: string | undefined;
   let parentContainer: HTMLElement | undefined;
