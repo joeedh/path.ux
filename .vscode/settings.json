@@ -38,5 +38,6 @@
       "uiname",
       "unlisten",
       "Verts"
-    ]
+    ],
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
