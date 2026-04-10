@@ -3,6 +3,7 @@ import * as ui from "../core/ui";
 import * as ui_base from "../core/ui_base";
 import { Icons, css2color, color2css, getFont } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
+import type { Screen } from "../screen/FrameManager";
 
 /* Helper for CSSStyleDeclaration string indexing. */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
@@ -98,13 +99,11 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
     super.init();
 
     this.setAttribute("class", "notex");
-
     (this.style as StyleRecord)["display"] = "flex";
     (this.style as StyleRecord)["flex-wrap"] = "nowrap";
     (this.style as StyleRecord)["flex-direction"] = "row";
     (this.style as StyleRecord)["border-radius"] = "7px";
     (this.style as StyleRecord)["padding"] = "2px";
-
     (this.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
     let clr = css2color(this.color);
     let clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
@@ -214,7 +213,6 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
   setCSS() {
     super.setCSS();
-
     (this.style as StyleRecord)["width"] = "min-contents";
     (this.style as StyleRecord)["height"] = this._h + "px";
   }
@@ -271,9 +269,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
     note.color = color;
     note.setLabel(msg);
-
     (note.style as StyleRecord)["text-align"] = "center";
-
     (note.style as StyleRecord)["font"] = getFont(note, undefined, "DefaultText");
     (note.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
     note.showExclMark = showExclMark;
@@ -286,7 +282,6 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
     //this.dom.style["position"] = UIBase.PositionKey;
     //this.style["position"] = UIBase.PositionKey;
     //note.style["position"] = UIBase.PositionKey;
-
     (note.style as StyleRecord)["height"] = this._h + "px";
     note.height = this._h;
 
@@ -304,7 +299,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
 UIBase.internalRegister(NoteFrame);
 
-export function getNoteFrames(screen: Node): NoteFrame[] {
+export function getNoteFrames(screen: Screen): NoteFrame[] {
   let ret: NoteFrame[] = [];
 
   let rec = (n: Node) => {
@@ -331,7 +326,7 @@ export function getNoteFrames(screen: Node): NoteFrame[] {
 
 export let noteframes: NoteFrame[] = [];
 
-export function sendNote(screen: Node, msg: string, color?: string, timeout = 3000, showExclMark = true) {
+export function sendNote(screen: Screen, msg: string, color?: string, timeout = 3000, showExclMark = true) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
@@ -347,19 +342,19 @@ export function sendNote(screen: Node, msg: string, color?: string, timeout = 30
 
 window._sendNote = sendNote as (...args: unknown[]) => void;
 
-export function error(screen: Node, msg: string, timeout?: number) {
+export function error(screen: Screen, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([1.0, 0.0, 0.0, 1.0]), timeout);
 }
 
-export function warning(screen: Node, msg: string, timeout?: number) {
+export function warning(screen: Screen, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.78, 0.78, 0.2, 1.0]), timeout);
 }
 
-export function message(screen: Node, msg: string, timeout?: number) {
+export function message(screen: Screen, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
 
-export function progbarNote(screen: Node, msg: string, percent: number, color?: string, timeout?: number) {
+export function progbarNote(screen: Screen, msg: string, percent: number, color?: string, timeout?: number) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {

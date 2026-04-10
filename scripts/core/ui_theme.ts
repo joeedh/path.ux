@@ -89,24 +89,22 @@ export function color2css(c: number[] | Vector4 | Vector3, alpha_override?: numb
   }
 }
 
-window.color2css = color2css;
-
 const css2color_rets = util.cachering.fromConstructor(Vector4, 64);
 const basic_colors: Record<string, number[]> = {
-  "white" : [1, 1, 1],
-  "grey"  : [0.5, 0.5, 0.5],
-  "gray"  : [0.5, 0.5, 0.5],
-  "black" : [0, 0, 0],
-  "red"   : [1, 0, 0],
-  "yellow": [1, 1, 0],
-  "green" : [0, 1, 0],
-  "teal"  : [0, 1, 1],
-  "cyan"  : [0, 1, 1],
-  "blue"  : [0, 0, 1],
-  "orange": [1, 0.5, 0.25],
-  "brown" : [0.5, 0.4, 0.3],
-  "purple": [1, 0, 1],
-  "pink"  : [1, 0.5, 0.5],
+  white : [1, 1, 1],
+  grey  : [0.5, 0.5, 0.5],
+  gray  : [0.5, 0.5, 0.5],
+  black : [0, 0, 0],
+  red   : [1, 0, 0],
+  yellow: [1, 1, 0],
+  green : [0, 1, 0],
+  teal  : [0, 1, 1],
+  cyan  : [0, 1, 1],
+  blue  : [0, 0, 1],
+  orange: [1, 0.5, 0.25],
+  brown : [0.5, 0.4, 0.3],
+  purple: [1, 0, 1],
+  pink  : [1, 0.5, 0.5],
 };
 
 export function color2web(color: ArrayLike<number>): string {
@@ -140,8 +138,6 @@ export function color2web(color: ArrayLike<number>): string {
     return "#" + r + g + b + a;
   }
 }
-
-window.color2web = color2web;
 
 export function css2color(color: string | null | undefined): Vector4 {
   if (!color) {
@@ -206,8 +202,6 @@ export function css2color(color: string | null | undefined): Vector4 {
   return ret;
 }
 
-window.css2color = css2color;
-
 export function web2color(str: string): Vector4 {
   if (typeof str === "string" && str.trim()[0] !== "#") {
     str = "#" + str.trim();
@@ -215,8 +209,6 @@ export function web2color(str: string): Vector4 {
 
   return css2color(str);
 }
-
-window.web2color = web2color;
 
 const validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 
@@ -245,8 +237,6 @@ export function validateCSSColor(color: string): boolean {
 
   return validateWebColor(color);
 }
-
-window.validateCSSColor = validateCSSColor;
 
 // will load later
 export const theme = {} as unknown as ThemeRecord;
@@ -304,16 +294,12 @@ export function invertTheme(): void {
   }
 }
 
-window.invertTheme = invertTheme;
-
 export function setColorSchemeType(mode: string): void {
   if (mode !== cconst.colorSchemeType) {
     invertTheme();
     cconst.colorSchemeType = mode;
   }
 }
-
-window.validateWebColor = validateWebColor;
 
 export function exportTheme(themeIn: ThemeRecord = theme, addVarDecl = true): string {
   const theme1 = themeIn as any;
@@ -420,8 +406,6 @@ ${indent}})`;
 
   return s;
 }
-
-window._exportTheme = exportTheme;
 
 export function copyTheme(
   themeObj: ThemeRecord | CSSFont | Record<string, unknown>

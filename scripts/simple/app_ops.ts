@@ -6,7 +6,7 @@ import { BoolProperty } from "../path-controller/toolsys/toolprop.js";
 
 import { error, message } from "../widgets/ui_noteframe.js";
 
-import type { AppState } from "./app.js";
+import { getLastAppState, type AppState } from "./app.js";
 
 declare const _appstate: AppState;
 
@@ -71,7 +71,7 @@ export class SimpleAppSaveOp extends ToolOp<{ forceDialog: BoolProperty }, Prope
           })
           .then((path: unknown) => {
             _appstate.currentFileRef = path;
-            message(_appstate.screen as unknown as Node, "File saved");
+            message(getLastAppState()!.screen!, "File saved");
           })
           .catch((err: unknown) => {
             let msg: unknown = err;
@@ -79,7 +79,7 @@ export class SimpleAppSaveOp extends ToolOp<{ forceDialog: BoolProperty }, Prope
               msg = (err as { message: string }).message;
             }
 
-            error(_appstate.screen as unknown as Node, "Failed to save file " + String(msg));
+            error(getLastAppState()!.screen!, "Failed to save file " + String(msg));
           });
       });
   }
@@ -122,7 +122,7 @@ export class SimpleAppOpenOp extends ToolOp<{ forceDialog: BoolProperty }, Prope
               console.log("got data!", data);
 
               _appstate.loadFile(data, { useJSON, doScreen: true, fromFileOp: true }).catch((err: unknown) => {
-                error(_appstate.screen as unknown as Node, "File error: " + (err as Error).message);
+                error(getLastAppState()!.screen!, "File error: " + (err as Error).message);
               });
             });
         }

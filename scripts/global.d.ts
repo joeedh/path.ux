@@ -55,19 +55,12 @@ interface PathUXDebug {
 
 interface Window {
   haveElectron?: boolean;
-  redraw_all?: () => void;
+  redraw_all?: Function;
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
   __theme: Record<string, unknown>;
   DEBUG?: { [k: string]: boolean } & PathUXDebug;
 
-  /* ── Color utilities (production, assigned in ui_theme.js) ── */
-  color2css: (c: number[], alphaOverride?: number) => string;
-  color2web: (color: number[]) => string;
-  css2color: (color: string) => unknown; // returns Vector4
-  web2color: (str: string) => unknown; // returns Vector4
-  validateCSSColor: (color: string) => boolean;
-  validateWebColor: (str: string) => boolean;
   invertTheme: () => void;
   _exportTheme: () => string;
 
@@ -78,12 +71,9 @@ interface Window {
   icongen: unknown;
 
   /* ── Tool system (production) ────────────────────────────── */
-  _ToolClasses: Function[];
-  _MacroClasses: Record<string, Function>;
   ToolProperty: unknown;
   parseToolPath: (path: string) => unknown;
   _testToolStackIO: () => unknown;
-  _appstate: Record<string, unknown>;
 
   /* ── UI system ─────────────────────────────────────────────── */
   _contextWrangler: unknown;
@@ -192,7 +182,8 @@ interface Array<T> {
   /** Filter out elements matching predicate (inverse of filter) */
   reject(func: (item: T) => boolean): T[];
   /** Get keystr for use as map/set key */
-  [Symbol.keystr](): string;
+  // causes very weird type corruption errors
+  // [Symbol.keystr](): string;
 }
 
 interface Math {
@@ -218,6 +209,10 @@ interface Boolean {
 /** Augment Window for polyfill globals */
 interface Window {
   _disable_all_listeners?: boolean;
+}
+
+interface SymbolConstructor {
+  readonly Disposable: unique symbol;
 }
 
 /** globalThis extensions (from path-controller/util/util.js) */

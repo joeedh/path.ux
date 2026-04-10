@@ -17,9 +17,9 @@ import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events.js";
 import type { AreaDocker } from "./AreaDocker";
 import type { DropBox } from "../widgets/ui_menu";
-import { areaclasses, AreaConstructor, AreaConstructorParam, AreaFlags, makeAreasEnum } from "./area_base";
+import { areaclasses, IAreaConstructor, AreaConstructorParam, AreaFlags, makeAreasEnum } from "./area_base";
 
-export interface AreaDef {
+export interface IAreaDef {
   tagname: string;
   areaname: string;
   flag?: number;
@@ -208,8 +208,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
   //*/
 
-  static register(_cls: IUIBaseConstructor) {
-    const cls = _cls as unknown as AreaConstructor;
+  static register(_cls: any) {
+    const cls = _cls as unknown as IAreaConstructor;
     const def = cls.define();
 
     if (!def.areaname) {
@@ -229,7 +229,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     return (area.constructor as any).define().areaname as string;
   }
 
-  static define(): AreaDef {
+  static define(): IAreaDef {
     return {
       tagname   : "pathux-editor-x",
       areaname  : "",
@@ -373,8 +373,6 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   override getScreen(): UIBase<CTX> | undefined {
-    //XXX
-    //return _appstate.screen;
     throw new Error("replace me in Area.prototype");
   }
 
@@ -406,24 +404,24 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     const prop = Area.makeAreasEnum();
 
     const dropbox = container.listenum(undefined, {
-      name    : (this.constructor as unknown as AreaConstructor).define().uiname!,
+      name    : (this.constructor as unknown as IAreaConstructor).define().uiname!,
       enumDef : prop,
       callback: (id: string) => {
-        const cls = areaclasses[id] as AreaConstructor;
+        const cls = areaclasses[id] as IAreaConstructor;
         this.owning_sarea!.switch_editor(cls);
       },
     });
 
     dropbox.updateAfter(() => {
-      const name = (this.constructor as unknown as AreaConstructor).define().uiname!;
-      let val = prop.values[name];
+      const name = (this.constructor as unknown as IAreaConstructor).define().uiname!;
+      let val = "" + prop.values[name];
 
       if (dropbox.value !== val && val in prop.keys) {
-        val = prop.keys[val];
+        val = "" + prop.keys[val];
       }
 
       if (dropbox.value !== val) {
-        (dropbox as UIBase<CTX> & { setValue(v: unknown, b: boolean): void }).setValue(prop.values[name], true);
+        dropbox.setValue(prop.values[name], true);
       }
     });
 
@@ -988,7 +986,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     const ret = {
       editors  : this.editors,
       _sarea_id: this._sarea_id,
-      area     : (this.area!.constructor as unknown as AreaConstructor).define().areaname,
+      area     : (this.area!.constructor as unknown as IAreaConstructor).define().areaname,
       pos      : this.pos,
       size     : this.size,
     };
@@ -1109,7 +1107,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
       cpy.parentWidget = ret;
       ret.editors.push(cpy);
-      ret.editormap[(cpy.constructor as unknown as AreaConstructor).define().areaname!] = cpy;
+      ret.editormap[(cpy.constructor as unknown as IAreaConstructor).define().areaname!] = cpy;
 
       if (area === this.area) {
         ret.area = cpy;
@@ -1312,7 +1310,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
   appendChild<T extends Node>(child: T): T {
     if (child instanceof Area) {
-      const def = (child.constructor as unknown as AreaConstructor).define();
+      const def = (child.constructor as unknown as IAreaConstructor).define();
       const existing = def.areaname ? this.editormap[def.areaname] : undefined;
 
       if (existing && existing !== child) {
@@ -1488,7 +1486,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         return ch;
       }
 
-      const areaname = (ch.constructor as unknown as AreaConstructor).define().areaname!;
+      const areaname = (ch.constructor as unknown as IAreaConstructor).define().areaname!;
 
       this.editors.remove(ch);
       delete this.editormap[areaname];
@@ -1529,7 +1527,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         continue;
       }
 
-      const areaname = (area.constructor as unknown as AreaConstructor).define().areaname!;
+      const areaname = (area.constructor as unknown as IAreaConstructor).define().areaname!;
 
       area.inactive = true;
       area.owning_sarea = undefined;
@@ -1561,7 +1559,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         for (const k in areaclasses) {
           const tagname = areaclasses[k].define().tagname;
           area = UIBase.createElement(tagname) as Area<CTX>;
-          const areaname = (area.constructor as unknown as AreaConstructor).define().areaname!;
+          const areaname = (area.constructor as unknown as IAreaConstructor).define().areaname!;
 
           this.editors.push(area);
           this.editormap[areaname] = area;

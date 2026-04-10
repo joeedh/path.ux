@@ -30,7 +30,7 @@ const ToolFlags = simple_toolsys.ToolFlags;
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events";
 import { IContextBase } from "../core/context_base";
 import { ScreenArea } from "./ScreenArea";
-import { AreaConstructor } from "./area_base";
+import { IAreaConstructor } from "./area_base";
 
 //import {keymap} from './events';
 
@@ -727,7 +727,10 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
           dst.editors = [];
           dst.editormap = {};
 
-          if (dst.area && !((dst.area.constructor as unknown as AreaConstructor).define().areaname! in src.editormap)) {
+          if (
+            dst.area &&
+            !((dst.area.constructor as unknown as IAreaConstructor).define().areaname! in src.editormap)
+          ) {
             dst.area.push_ctx_active();
             dst.area.on_area_inactive();
             dst.area.remove();
@@ -735,7 +738,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
           }
 
           for (const editor of old) {
-            const def = (editor.constructor as unknown as AreaConstructor).define();
+            const def = (editor.constructor as unknown as IAreaConstructor).define();
 
             let bad = false;
             //bad = !(def.areaname in src.editormap);
@@ -754,7 +757,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
           }
 
           for (const editor of src.editors) {
-            const def = (editor.constructor as unknown as AreaConstructor).define();
+            const def = (editor.constructor as unknown as IAreaConstructor).define();
 
             dst.editormap[def.areaname!] = editor;
             dst.editors.push(editor);

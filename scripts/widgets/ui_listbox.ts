@@ -3,9 +3,13 @@ import { Container, RowFrame } from "../core/ui.js";
 import { IContextBase } from "../core/context_base.js";
 import { keymap } from "../path-controller/util/events.js";
 
-class ListItem<CTX extends IContextBase = IContextBase> extends RowFrame<CTX> {
+export class ListItem<
+  CTX extends IContextBase = IContextBase,
+  IDTYPE extends string | number = string | number,
+> extends RowFrame<CTX> {
   highlight: boolean = false;
   is_active: boolean = false;
+  declare listId: IDTYPE;
 
   constructor() {
     super();
@@ -79,21 +83,27 @@ class ListItem<CTX extends IContextBase = IContextBase> extends RowFrame<CTX> {
 
 UIBase.internalRegister(ListItem);
 
-interface ListItems<CTX extends IContextBase = IContextBase> extends Array<ListItem<CTX>> {
-  active?: ListItem<CTX> | undefined;
+export interface ListItems<CTX extends IContextBase = IContextBase, IDTYPE extends string | number = string | number>
+  extends Array<ListItem<CTX, IDTYPE>> {
+  active?: ListItem<CTX, IDTYPE> | undefined;
 }
 
-class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
-  items: ListItems<CTX>;
-  idmap: Record<number | string, ListItem<CTX>>;
+export class ListBox<
+  CTX extends IContextBase = IContextBase,
+  IDTYPE extends string | number = string | number,
+> extends Container<CTX> {
+  items: ListItems<CTX, IDTYPE>;
+  idmap: Record<IDTYPE, ListItem<CTX, IDTYPE>>;
   highlight: boolean;
   is_active: boolean;
+
+  on_change?: (val: IDTYPE | undefined, item: ListItem<CTX, IDTYPE> | undefined) => void;
 
   constructor() {
     super();
 
     this.items = [];
-    this.idmap = {};
+    this.idmap = {} as unknown as typeof this.idmap;
     this.items.active = undefined;
     this.highlight = false;
     this.is_active = false;
@@ -152,10 +162,10 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   }
 
   addItem(name: string, id?: number) {
-    const item = UIBase.createElement("listitem-x") as ListItem<CTX>;
+    const item = UIBase.createElement("listitem-x") as ListItem<CTX, IDTYPE>;
 
-    item._id = (id === undefined ? this.items.length : id) as any;
-    this.idmap[item._id] = item;
+    item.listId = (id === undefined ? this.items.length : id) as any;
+    this.idmap[item.listId] = item;
 
     this.tabIndex = 1;
     this.setAttribute("tabindex", "1");
@@ -166,7 +176,7 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
     item.label(name);
     const this2 = this;
 
-    (item as any).onclick = function (this: ListItem<CTX>) {
+    (item as any).onclick = function (this: ListItem<CTX, IDTYPE>) {
       this2.setActive(this);
       this.setBackground();
     };
@@ -174,19 +184,19 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
     return item;
   }
 
-  removeItem(item: ListItem<CTX> | number) {
-    if (typeof item == "number") {
-      item = this.idmap[item];
+  removeItem(item: ListItem<CTX, IDTYPE> | IDTYPE) {
+    if (typeof item == "number" || typeof item === "string") {
+      item = this.idmap[item as IDTYPE];
     }
 
     item.remove();
-    delete this.idmap[(item as any)._id];
+    delete this.idmap[item.listId];
     (this.items as any).remove(item);
   }
 
-  setActive(item: ListItem<CTX> | number | undefined) {
-    if (typeof item == "number") {
-      item = this.idmap[item];
+  setActive(item: ListItem<CTX, IDTYPE> | IDTYPE | undefined) {
+    if (typeof item == "number" || typeof item === "string") {
+      item = this.idmap[item as IDTYPE];
     }
 
     if (item === this.items.active) {
@@ -208,8 +218,8 @@ class ListBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
       (item as any).scrollIntoViewIfNeeded();
     }
 
-    if (this.onchange) {
-      (this.onchange as any)(item ? (item as any)._id : undefined, item);
+    if (this.on_change) {
+      this.on_change(item?.listId, item);
     }
   }
 

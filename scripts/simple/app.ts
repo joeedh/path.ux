@@ -12,6 +12,9 @@ import { Vector2 } from "../path-controller/util/vectormath.js";
 
 import cconst from "../config/const.js";
 
+let lastAppState: AppState | undefined;
+export const getLastAppState = () => lastAppState;
+
 export class DataModel {
   static defineAPI(api: DataAPI, strct: unknown) {
     return strct;
@@ -109,19 +112,19 @@ function GetContextClass(ctxClass: Function): typeof Context {
     }
 
     message(msg: string, timeout = 2500) {
-      return ui_noteframe.message(this.screen as unknown as Node, msg, timeout);
+      return ui_noteframe.message(this.screen, msg, timeout);
     }
 
     error(msg: string, timeout = 2500) {
-      return ui_noteframe.error(this.screen as unknown as Node, msg, timeout);
+      return ui_noteframe.error(this.screen, msg, timeout);
     }
 
     warning(msg: string, timeout = 2500) {
-      return ui_noteframe.warning(this.screen as unknown as Node, msg, timeout);
+      return ui_noteframe.warning(this.screen, msg, timeout);
     }
 
     progressBar(msg: string, percent: number, color: string, timeout = 1000) {
-      return ui_noteframe.progbarNote(this.screen as unknown as Node, msg, percent, color, timeout);
+      return ui_noteframe.progbarNote(this.screen, msg, percent, color, timeout);
     }
   }
 
@@ -180,10 +183,6 @@ import { MenuBarEditor, registerMenuBarEditor } from "./menubar.js";
 import { register } from "./app_ops.js";
 import { IContextBase } from "../core/context_base.js";
 import { areaclasses } from "../screen/area_base.js";
-
-declare global {
-  var _appstate: AppState;
-}
 
 type ScreenAreaElement = UIBase & {
   pos: Vector2;
@@ -318,6 +317,7 @@ export class AppState {
     this.saveFilesInJSON = false; /* save files in nstructjs-json */
 
     this.defaultEditorClass = undefined; //if undefined, the first non-menubar editor will be used
+    lastAppState = this;
   }
 
   private _makeFileArgs(args: Record<string, unknown>) {
@@ -633,7 +633,7 @@ export class AppState {
 
     Object.defineProperty(window, "C", {
       get() {
-        return _appstate.ctx;
+        return lastAppState?.ctx;
       },
     });
 

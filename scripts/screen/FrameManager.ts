@@ -47,7 +47,7 @@ import { startMenu } from "../widgets/ui_menu.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
 import { StructReader } from "../util/nstructjs.js";
-import { AreaConstructor } from "./area_base.js";
+import { IAreaConstructor } from "./area_base.js";
 import "./AreaDocker";
 
 const list = Array.from;
@@ -446,7 +446,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   copy() {
-    const ret = UIBase.createElement((this.constructor as unknown as typeof Screen).define().tagname) as Screen<CTX>;
+    const ret = UIBase.createElement((this.constructor as unknown as typeof Screen).define().tagname) as this;
     ret.ctx = this.ctx;
     ret._init();
 
@@ -2851,7 +2851,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
 
     sarea.editors.remove(area);
-    delete sarea.editormap[(area.constructor as unknown as AreaConstructor).define().areaname!];
+    delete sarea.editormap[(area.constructor as unknown as IAreaConstructor).define().areaname!];
     sarea.area = undefined;
 
     HTMLElement.prototype.remove.call(area);

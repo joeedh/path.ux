@@ -1,9 +1,16 @@
 import type { IContextBase } from "../core/context_base";
-import { ClassIdSymbol } from "../core/ui_base";
+import { ClassIdSymbol, IUIBaseConstructor } from "../core/ui_base";
 import { EnumProperty } from "../path-controller/toolsys/toolprop";
-import type { Area } from "./ScreenArea";
+import type { Area, IAreaDef as IAreaDef } from "./ScreenArea";
 
-export type AreaConstructor = typeof Area & { [ClassIdSymbol]: string };
+export interface IAreaConstructor<CTX extends IContextBase = IContextBase, T extends Area<CTX> = Area<CTX>>
+  extends IUIBaseConstructor<T> {
+  new (): T;
+  /** internal API type, do not use. */
+  [ClassIdSymbol]?: string;
+  define(): IAreaDef;
+}
+
 // TS makes dealing with constructor typing so absurdly stupid, just use any
 export type AreaConstructorParam = any;
 
@@ -16,10 +23,10 @@ export const AreaFlags = {
   NO_COLLAPSE           : 32,
 };
 
-export const areaclasses: { [key: string]: typeof Area } = {};
+export const areaclasses: { [key: string]: IAreaConstructor } = {};
 
 export function getAreaConstructor<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
-  return area.constructor as unknown as AreaConstructor;
+  return area.constructor as unknown as IAreaConstructor;
 }
 
 export function makeAreasEnum() {

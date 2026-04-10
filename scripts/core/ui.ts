@@ -28,6 +28,8 @@ import type { PanelFrame } from "../widgets/ui_panel.js";
 import type { TabContainer } from "../widgets/ui_tabs.js";
 import { InheritFlag, ToolDef, ToolOp } from "../path-controller/toolsys/toolsys";
 import { NumSliderTypes } from "../pathux";
+import { ListBox } from "../widgets/ui_listbox";
+import { DataPathError } from "../controller/controller";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }) {
@@ -1102,8 +1104,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return prefix + path;
   }
 
-  colorbutton(inpath: string | undefined, packflag: number, mass_set_path?: string) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
+  colorbutton(inpath: string | undefined, packflag?: number, mass_set_path?: string) {
+    packflag = (packflag ?? 0) | (this.inherit_packflag & ~PackFlags.NO_UPDATE);
 
     mass_set_path = inpath !== undefined ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
 
@@ -1199,7 +1201,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return this._joinPrefix(mass_set_path, this.massSetPrefix);
   }
 
-  prop(inpath: string, packflag = 0, mass_set_path?: string): UIBase<CTX> | undefined {
+  prop(inpath: string, packflag = 0, mass_set_path?: string): UIBase<CTX> {
     if (!this.ctx) {
       console.warn(this.id + ".ctx was undefined");
       let p = this.parentWidget as UIBase<CTX> | undefined;
@@ -1229,7 +1231,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         this._joinPrefix(inpath),
         this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath)!, true)
       );
-      return;
+      throw new DataPathError("Unknown property at path " + this._joinPrefix(inpath));
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     const prop = rdef.prop as ToolPropertyTypes;
@@ -1534,6 +1536,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         return con as unknown as UIBase<CTX>;
       }
     }
+
+    throw new DataPathError(`Unknown property: ${inpath}`);
   }
 
   iconcheck(inpath: string | undefined, icon: number, name: string, mass_set_path?: string) {
@@ -1823,7 +1827,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       | string
       | {
           name: string;
-          enumDef?: EnumProperty | FlagProperty;
+          enumDef?: EnumProperty | FlagProperty | EnumDef;
           defaultval?: string | number;
           callback?: Function;
           iconmap?: Record<string, number>;
@@ -2155,8 +2159,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  listbox(packflag = 0) {
-    const ret = UIBase.createElement("listbox-x") as UIBase<CTX>;
+  listbox<IDType extends string | number = string | number>(packflag = 0) {
+    const ret = UIBase.createElement("listbox-x") as ListBox<CTX, IDType>;
 
     this._container_inherit(ret, packflag);
 
@@ -2164,12 +2168,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  table(packflag = 0): TableFrame {
-    const ret = UIBase.createElement("tableframe-x") as unknown as TableFrame;
+  table(packflag = 0): TableFrame<CTX> {
+    const ret = UIBase.createElement("tableframe-x") as TableFrame<CTX>;
 
-    this._container_inherit(ret as unknown as UIBase<CTX>, packflag);
+    this._container_inherit(ret, packflag);
 
-    this._add(ret as unknown as UIBase<CTX>);
+    this._add(ret);
     return ret;
   }
 

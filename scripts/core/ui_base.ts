@@ -2926,9 +2926,9 @@ export class UIBase<
     }
   }
 
-  getPathValue(ctx: CTX, path: string): unknown {
+  getPathValue<T = unknown>(ctx: CTX, path: string): T | undefined {
     try {
-      return ctx.api.getValue(ctx, path);
+      return ctx.api.getValue(ctx, path) as T | undefined;
     } catch (error) {
       //report("data path error in ui for" + path);
       return undefined;
@@ -3898,16 +3898,11 @@ export class UIBase<
    *
    * container.animate().goto("style.width", 500, 100, "ease");
    * */
-  // @ts-expect-error
-  animate(
+  /** @deprecated Use DOM animation API*/
+  animateOld(
     _extra_handlers: Record<string, Function> | Keyframe[] | PropertyIndexedKeyframes | null = {},
     domAnimateOptions?: KeyframeAnimationOptions | number
-  ): Animator | Animation {
-    /* User is providing DOM animation data. */
-    if (Array.isArray(_extra_handlers) || _extra_handlers === null) {
-      return super.animate(_extra_handlers as Keyframe[], domAnimateOptions);
-    }
-
+  ): Animator {
     const transform = new DOMMatrix(this.saneStyle["transform"]);
 
     const update_trans = () => {

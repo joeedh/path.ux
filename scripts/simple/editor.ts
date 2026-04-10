@@ -1,4 +1,4 @@
-import { Area, AreaDef, contextWrangler } from "../screen/ScreenArea.js";
+import { Area, IAreaDef, contextWrangler } from "../screen/ScreenArea.js";
 import { nstructjs } from "../path-controller/controller.js";
 import { UIBase, parsepx, Icons, type IUIBaseConstructor } from "../core/ui_base.js";
 import { Container } from "../core/ui.js";
@@ -61,7 +61,7 @@ export class SideBar<CTX extends IContextBase = IContextBase> extends Container<
 
     console.log("animate!");
     const w = val ? 50 : this._openWidth;
-    const anim = this.animate();
+    const anim = this.animateOld();
     if (anim instanceof Animator) {
       anim.goto("width", w, 500);
     }
@@ -192,7 +192,7 @@ export class Editor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
     this.shadow.appendChild(this.container);
   }
 
-  static define(): AreaDef {
+  static define(): IAreaDef {
     return {
       areaname  : "areaname",
       tagname   : "tagname-x",
