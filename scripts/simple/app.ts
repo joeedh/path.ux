@@ -46,7 +46,7 @@ import * as ui_noteframe from "../widgets/ui_noteframe.js";
  * */
 function GetContextClass(ctxClass: Function): typeof Context {
   let ok = 0;
-  let cls: Function | null = ctxClass;
+  let cls = ctxClass as any;
   while (cls) {
     if (cls === Context) {
       ok = 1;
@@ -54,7 +54,7 @@ function GetContextClass(ctxClass: Function): typeof Context {
       ok = 2;
     }
 
-    cls = (cls as unknown as Record<string, unknown>).__proto__ as Function | null;
+    cls = cls.__proto__;
   }
 
   if (ok === 1) {
@@ -69,13 +69,23 @@ function GetContextClass(ctxClass: Function): typeof Context {
     OverlayDerived = makeDerivedOverlay(ctxClass as { new (appstate: unknown): Record<string, unknown> });
   }
 
+  interface IBasicAppState {
+    toolstack: ToolStack;
+    api: DataAPI;
+    screen: Screen;
+  }
+
   class Overlay extends OverlayDerived {
     constructor(state: unknown) {
       super(state);
     }
 
+    protected get typedState() {
+      return this.state as IBasicAppState;
+    }
+
     get screen() {
-      return (this.state as Record<string, unknown>).screen;
+      return this.typedState.screen;
     }
 
     get activeArea() {
@@ -83,11 +93,11 @@ function GetContextClass(ctxClass: Function): typeof Context {
     }
 
     get api() {
-      return (this.state as Record<string, unknown>).api;
+      return this.typedState.api;
     }
 
     get toolstack() {
-      return (this.state as Record<string, unknown>).toolstack;
+      return this.typedState.toolstack;
     }
 
     get toolDefaults() {
@@ -147,14 +157,14 @@ export function makeAPI(ctxClass: typeof Context) {
     );
   }
 
-  if ((ctxClass as unknown as Record<string, unknown>).defineAPI) {
-    (ctxClass as unknown as typeof EmptyContextClass).defineAPI(api, api.mapStruct(ctxClass, true));
+  if ((ctxClass as any).defineAPI) {
+    (ctxClass as any).defineAPI(api, api.mapStruct(ctxClass, true));
   } else {
     throw new Error("Context class should have a defineAPI static method");
   }
 
   const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean);
-  (api as unknown as Record<string, unknown>).rootContextStruct = rootContextStruct;
+  api.rootContextStruct = rootContextStruct;
 
   buildToolSysAPI(api, false, rootContextStruct, ctxClass as any, true);
 
