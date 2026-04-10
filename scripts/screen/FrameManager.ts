@@ -11,7 +11,7 @@ import { haveModal, _setScreenClass } from "../path-controller/util/simple_event
 import * as util from "../path-controller/util/util.js";
 import "../widgets/ui_curvewidget.js";
 import { Vector2, Number2 } from "../path-controller/util/vectormath.js";
-import { ScreenArea, Area } from "./ScreenArea.js";
+import { ScreenArea, Area, ScreenAreaAny, AreaAny } from "./ScreenArea.js";
 import * as FrameManager_ops from "./FrameManager_ops.js";
 import * as math from "../path-controller/util/math.js";
 import * as ui_menu from "../widgets/ui_menu.js";
@@ -113,13 +113,13 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   pos: Vector2;
   oldpos: Vector2;
   idgen: number;
-  sareas: ScreenArea<CTX>[] & { active?: ScreenArea<CTX> };
+  sareas: ScreenAreaAny[] & { active?: ScreenAreaAny };
   mpos: [number, number];
-  screenborders: ScreenBorder<CTX>[];
-  screenverts: ScreenVert<CTX>[];
-  _vertmap: Record<string, ScreenVert<CTX>>;
-  _edgemap: Record<string, ScreenBorder<CTX>>;
-  _idmap: Record<string, ScreenVert<CTX> | ScreenBorder<CTX>>;
+  screenborders: ScreenBorder[];
+  screenverts: ScreenVert[];
+  _vertmap: Record<string, ScreenVert>;
+  _edgemap: Record<string, ScreenBorder>;
+  _idmap: Record<string, ScreenVert | ScreenBorder>;
   _aabb: [Vector2, Vector2];
   listen_timer?: any;
   _last_ckey1?: string;
@@ -188,7 +188,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       but don't call pickElement too often as it's slow
       */
       if (!dragging && Math.random() > 0.9) {
-        const elem = this.pickElement<ScreenArea<CTX>>(x, y, {
+        const elem = this.pickElement<ScreenArea>(x, y, {
           nodeclass : ScreenArea,
           mouseEvent: e,
         });
@@ -498,16 +498,16 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  pickElement<T extends UIBase<CTX> = UIBase<CTX>>(
+  pickElement<T extends UIBase = UIBase>(
     x: number,
     y: number,
-    args: Parameters<UIBase<CTX>["pickElement"]>[2] = {},
+    args: Parameters<UIBase["pickElement"]>[2] = {},
     marginy = 0,
-    nodeclass?: IUIBaseConstructor<UIBase<CTX>>,
+    nodeclass?: IUIBaseConstructor<UIBase>,
     excluded_classes?: IUIBaseConstructor[]
   ): T | undefined {
     if (typeof args === "object") {
-      nodeclass = args.nodeclass as unknown as IUIBaseConstructor<UIBase<CTX>>;
+      nodeclass = args.nodeclass as unknown as IUIBaseConstructor<UIBase>;
       excluded_classes = args.excluded_classes;
     } else {
       args = {
@@ -550,7 +550,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this._popup_safe = Math.max(this._popup_safe - 1, 0);
   }
 
-  popupMenu(menu: ui_menu.Menu<CTX>, x: number, y: number) {
+  popupMenu(menu: ui_menu.Menu, x: number, y: number) {
     startMenu(menu, x, y);
 
     for (let i = 0; i < 3; i++) {
@@ -618,7 +618,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   draggablePopup(x: number, y: number) {
-    const ret = UIBase.createElement("drag-box-x") as UIBase<CTX>;
+    const ret = UIBase.createElement("drag-box-x") as UIBase;
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -664,7 +664,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     //[x, y] = toVisualViewport(x, y, false)
 
-    const container = UIBase.createElement("container-x") as UIBase<CTX> & { background: string; end: () => void };
+    const container = UIBase.createElement("container-x") as UIBase & { background: string; end: () => void };
 
     container.ctx = this.ctx;
     container._init();
@@ -1560,7 +1560,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   /** merges sarea into the screen area opposite to sarea*/
-  collapseArea(sarea: ScreenArea<CTX>, border?: ScreenBorder<CTX>) {
+  collapseArea(sarea: ScreenAreaAny, border?: ScreenBorder) {
     let sarea2;
 
     if (!border) {
@@ -1604,7 +1604,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return this;
   }
 
-  splitArea(sarea: ScreenArea<CTX>, t = 0.5, horiz = true) {
+  splitArea(sarea: ScreenAreaAny, t = 0.5, horiz = true) {
     const w = sarea.size[0];
     const h = sarea.size[1];
     const x = sarea.pos[0];
@@ -1683,11 +1683,11 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       b.halfedges = [];
     }
 
-    function hashHalfEdge(border: ScreenBorder<CTX>, sarea: ScreenArea<CTX>) {
+    function hashHalfEdge(border: ScreenBorder, sarea: ScreenArea) {
       return border._id + ":" + sarea._id;
     }
 
-    function has_he(border: ScreenBorder<CTX>, border2: ScreenBorder<CTX>, sarea: ScreenArea<CTX>) {
+    function has_he(border: ScreenBorder, border2: ScreenBorder, sarea: ScreenArea) {
       for (const he of border.halfedges) {
         if (border2 === he.border && sarea === he.sarea) {
           return true;
@@ -1699,7 +1699,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     for (const b1 of this.screenborders) {
       for (const sarea of b1.sareas) {
-        const he = new ScreenHalfEdge<CTX>(b1, sarea);
+        const he = new ScreenHalfEdge(b1, sarea);
         b1.halfedges.push(he);
       }
 
@@ -1737,11 +1737,11 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  hasBorder(b: ScreenBorder<CTX>) {
+  hasBorder(b: ScreenBorder) {
     return b._id! in this._idmap;
   }
 
-  killScreenVertex(v: ScreenVert<CTX>) {
+  killScreenVertex(v: ScreenVert) {
     this.screenverts.remove(v);
 
     delete this._edgemap[ScreenVert.hash(v, v.added_id, this.snapLimit)];
@@ -1750,12 +1750,12 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return this;
   }
 
-  freeBorder(b: ScreenBorder<CTX>, sarea?: ScreenArea<CTX>) {
+  freeBorder(b: FrameManager_mesh.ScreenBorderAny, sarea?: ScreenAreaAny) {
     if (b.sareas.includes(sarea!)) {
       b.sareas.remove(sarea);
     }
 
-    const dels = [] as [ScreenBorder<CTX>, ScreenHalfEdge<CTX>][];
+    const dels = [] as [ScreenBorder, ScreenHalfEdge][];
 
     for (const he of b.halfedges) {
       if (he.sarea === sarea) {
@@ -1785,7 +1785,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  killBorder(b: ScreenBorder<CTX>) {
+  killBorder(b: ScreenBorder) {
     console.log("killing border", b._id, b);
 
     if (!this.screenborders.includes(b)) {
@@ -1796,7 +1796,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     this.screenborders.remove(b);
 
-    const del = [] as [ScreenBorder<CTX>, ScreenHalfEdge<CTX>][];
+    const del = [] as [ScreenBorder, ScreenHalfEdge][];
 
     for (const he of b.halfedges) {
       if (he.border === b) continue;
@@ -1972,7 +1972,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  checkAreaConstraint(sarea: ScreenArea<CTX>, checkOnly = false) {
+  checkAreaConstraint(sarea: ScreenAreaAny, checkOnly = false) {
     const min = sarea.minSize;
     const max = sarea.maxSize;
     const vs = sarea._verts;
@@ -2070,12 +2070,12 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return mask;
   }
 
-  walkBorderLine(b: ScreenBorder<CTX>) {
+  walkBorderLine(b: ScreenBorder) {
     const visit = new util.set();
     let ret = [b];
     visit.add(b);
 
-    const rec = (b: ScreenBorder<CTX>, v: ScreenVert<CTX> | undefined) => {
+    const rec = (b: ScreenBorder, v: ScreenVert | undefined) => {
       if (!v) return;
       for (const b2 of v.borders) {
         if (b2 === b) {
@@ -2100,7 +2100,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return ret2.concat(ret);
   }
 
-  moveBorderWithoutVerts(halfedge: ScreenHalfEdge<CTX>, df: number) {
+  moveBorderWithoutVerts(halfedge: ScreenHalfEdge, df: number) {
     const side = halfedge.side;
     const sarea = halfedge.sarea;
 
@@ -2122,22 +2122,22 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
-  moveBorder(b: ScreenBorder<CTX>, df: number, strict = true) {
+  moveBorder(b: ScreenBorder, df: number, strict = true) {
     return this.moveBorderSimple(b, df, strict);
   }
 
-  moveBorderSimple(b: ScreenBorder<CTX>, df: number, strict = true) {
+  moveBorderSimple(b: ScreenBorder, df: number, strict = true) {
     const axis = (b.horiz as unknown as number) & 1;
     const axis2 = axis ^ 1;
 
     const min = Math.min(b.v1![axis2 as Number2] as number, b.v2![axis2 as Number2] as number);
     const max = Math.max(b.v1![axis2 as Number2] as number, b.v2![axis2 as Number2] as number);
 
-    const test = (v: ScreenVert<CTX>) => {
+    const test = (v: ScreenVert) => {
       return v[axis2 as Number2] >= min && v[axis2 as Number2] <= max;
     };
 
-    const vs = new Set<ScreenVert<CTX>>();
+    const vs = new Set<ScreenVert>();
 
     for (const b2 of this.walkBorderLine(b)) {
       if (strict && !test(b2.v1) && !test(b2.v2)) {
@@ -2162,27 +2162,27 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return true;
   }
 
-  moveBorderUnused(b: ScreenBorder<CTX>, df: number, strict = true) {
+  moveBorderUnused(b: ScreenBorder, df: number, strict = true) {
     if (!b) {
       console.warn("missing border");
       return false;
     }
 
     const axis = (b.horiz ? 1 : 0) as Number2;
-    const vs = new Set<ScreenVert<CTX>>();
+    const vs = new Set<ScreenVert>();
     const axis2 = (axis ^ 1) as Number2;
 
     const min = Math.min(b.v1![axis2] as number, b.v2![axis2] as number);
     const max = Math.max(b.v1![axis2] as number, b.v2![axis2] as number);
 
-    const test = (v: ScreenVert<CTX>) => {
+    const test = (v: ScreenVert) => {
       return (v[axis2] as number) >= min && (v[axis2] as number) <= max;
     };
 
     let first = true;
     let found = false;
-    const halfedges = new Set<ScreenHalfEdge<CTX>>();
-    const borders = new Set<ScreenBorder<CTX>>();
+    const halfedges = new Set<ScreenHalfEdge>();
+    const borders = new Set<ScreenBorder>();
 
     for (const b2 of this.walkBorderLine(b)) {
       /*
@@ -2258,7 +2258,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         v[axis] += df;
       }
     } else {
-      const borders = new Set<ScreenBorder<CTX>>();
+      const borders = new Set<ScreenBorder>();
 
       for (const he of halfedges) {
         borders.add(he.border);
@@ -2497,7 +2497,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     const key = ScreenVert.hash(pos, added_id, this.snapLimit);
 
     if (floating || !(key in this._vertmap)) {
-      const v = new ScreenVert<CTX>(pos, this.idgen++, added_id);
+      const v = new ScreenVert(pos, this.idgen++, added_id);
 
       this._vertmap[key] = v;
       this._idmap[v._id] = v;
@@ -2508,7 +2508,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return this._vertmap[key];
   }
 
-  isBorderOuter(border: ScreenBorder<CTX>) {
+  isBorderOuter(border: ScreenBorder) {
     let sides = 0;
 
     for (const he of border.halfedges) {
@@ -2539,7 +2539,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return ret;
   }
 
-  isBorderMovable(b: ScreenBorder<CTX>, limit = 5) {
+  isBorderMovable(b: ScreenBorder, limit = 5) {
     if (this.allBordersMovable) return true;
 
     for (const he of b.halfedges) {
@@ -2561,18 +2561,18 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   getScreenBorder(
-    sarea: ScreenArea<CTX>,
-    co1: Vector2 | ScreenVert<CTX>,
-    co2: Vector2 | ScreenVert<CTX>,
+    sarea: ScreenAreaAny,
+    co1: Vector2 | ScreenVert<any>,
+    co2: Vector2 | ScreenVert<any>,
     side: number
-  ): ScreenBorder<CTX> {
+  ): ScreenBorder {
     const suffix = sarea._get_v_suffix();
     const v1 = co1 instanceof ScreenVert ? co1 : this.getScreenVert(co1, suffix, true);
     const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix, true);
     const hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      const sb = (this._edgemap[hash] = UIBase.createElement("screenborder-x") as unknown as ScreenBorder<CTX>);
+      const sb = (this._edgemap[hash] = UIBase.createElement("screenborder-x") as unknown as ScreenBorder);
 
       sb._hash = hash;
       sb.screen = this;
@@ -2597,7 +2597,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return this._edgemap[hash];
   }
 
-  minmaxArea(sarea: ScreenArea<CTX>, mm?: any) {
+  minmaxArea(sarea: ScreenAreaAny, mm?: any) {
     if (mm === undefined) {
       mm = new math.MinMax(2);
     }
@@ -2611,7 +2611,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   //does sarea1 border sarea2?
-  areasBorder(sarea1: ScreenArea<CTX>, sarea2: ScreenArea<CTX>) {
+  areasBorder(sarea1: ScreenAreaAny, sarea2: ScreenAreaAny) {
     for (const b of sarea1._borders) {
       for (const sa of b.sareas) {
         if (sa === sarea2) return true;
@@ -2623,7 +2623,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
   //regenerates borders, sets css and calls this.update
 
-  replaceArea(dst: ScreenArea<CTX>, src: ScreenArea<CTX>) {
+  replaceArea(dst: ScreenAreaAny, src: ScreenAreaAny) {
     if (dst === src) return;
 
     src.pos[0] = dst.pos[0];
@@ -2674,7 +2674,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this.update();
   }
 
-  removeArea(sarea: ScreenArea<CTX>) {
+  removeArea(sarea: ScreenAreaAny) {
     if (!this.sareas.includes(sarea)) {
       console.warn(sarea, "<- Warning: tried to remove unknown area");
       return;
@@ -2750,14 +2750,14 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     new FrameManager_ops.ToolTipViewer(this).start();
   }
 
-  removeAreaTool(border?: ScreenBorder<CTX>) {
+  removeAreaTool(border?: ScreenBorder) {
     const tool = new FrameManager_ops.RemoveAreaTool(this, border);
     //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
     tool.start();
   }
 
   moveAttachTool(
-    sarea: ScreenArea<CTX>,
+    sarea: ScreenArea,
     mpos: [number, number] | number[] | Vector2 = this.mpos,
     elem?: any,
     pointerId?: number
@@ -2791,7 +2791,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   cleanupBorders() {
-    const del = new Set<ScreenBorder<CTX>>();
+    const del = new Set<ScreenBorder>();
 
     for (const b of this.screenborders) {
       if (b.halfedges.length === 0) {
@@ -2811,8 +2811,8 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         continue;
       }
 
-      let blank: ScreenArea<CTX> | undefined;
-      let sarea: ScreenArea<CTX> | undefined;
+      let blank: ScreenArea | undefined;
+      let sarea: ScreenArea | undefined;
 
       for (const he of b.halfedges) {
         if (!he.sarea.area) {
@@ -2842,8 +2842,8 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this.cleanupBorders();
   }
 
-  floatArea(area: Area<CTX>) {
-    const sarea = area.parentWidget as ScreenArea<CTX>;
+  floatArea(area: AreaAny) {
+    const sarea = area.parentWidget as ScreenArea;
 
     /* already floating? */
     if (sarea.floating) {
@@ -2856,7 +2856,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     HTMLElement.prototype.remove.call(area);
 
-    const sarea2 = UIBase.createElement("screenarea-x", true) as ScreenArea<CTX>;
+    const sarea2 = UIBase.createElement("screenarea-x", true) as ScreenArea;
     sarea2.floating = true;
 
     sarea2.pos = new Vector2(sarea.pos);
@@ -3014,7 +3014,7 @@ const stop_cbs = [] as (() => void)[];
 
 let key_event_opts: AddEventListenerOptions | undefined;
 
-export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen<CTX>) {
+export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen) {
   get_screen_cb = getScreenFunc as unknown as typeof get_screen_cb;
 
   if (_events_started) {

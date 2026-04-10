@@ -7,7 +7,7 @@ import { UIBase } from "../core/ui_base.js";
 import { Vector2 } from "../path-controller/util/vectormath.js";
 import { createMenu, Menu } from "../widgets/ui_menu.js";
 import { IContextBase } from "../core/context_base.js";
-import type { ScreenArea } from "./ScreenArea.js";
+import type { ScreenArea, ScreenAreaAny } from "./ScreenArea.js";
 import type { Screen } from "./FrameManager";
 import { StructReader } from "../util/nstructjs.js";
 import { AreaFlags } from "./area_base.js";
@@ -48,8 +48,8 @@ export function snapi(c: number | number[], snap_limit = SnapLimit): number | nu
 
 export class ScreenVert<CTX extends IContextBase = IContextBase> extends Vector2 {
   added_id: string;
-  sareas: ScreenArea<CTX>[];
-  borders: ScreenBorder<CTX>[];
+  sareas: ScreenAreaAny[];
+  borders: ScreenBorderAny[];
   _id: number;
 
   constructor(pos: Vector2 | number[], id: number, added_id: string) {
@@ -93,11 +93,11 @@ pathux.ScreenVert {
 nstructjs.register(ScreenVert);
 
 export class ScreenHalfEdge<CTX extends IContextBase = IContextBase> {
-  sarea: ScreenArea<CTX>;
-  border: ScreenBorder<CTX>;
+  sarea: ScreenAreaAny;
+  border: ScreenBorderAny;
   side: number;
 
-  constructor(border: ScreenBorder<CTX>, sarea: ScreenArea<CTX>) {
+  constructor(border: ScreenBorderAny, sarea: ScreenAreaAny) {
     this.sarea = sarea;
     this.border = border;
     this.side = sarea._side(border);
@@ -118,13 +118,13 @@ export class ScreenHalfEdge<CTX extends IContextBase = IContextBase> {
 
 export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   screen?: Screen<CTX>;
-  v1!: ScreenVert<CTX>;
-  v2!: ScreenVert<CTX>;
+  v1!: ScreenVert;
+  v2!: ScreenVert;
   override _id: any; /* number | undefined in practice, overriding string from UIBase */
   _hash: string | undefined;
   outer: boolean | undefined;
-  halfedges: ScreenHalfEdge<CTX>[];
-  sareas: ScreenArea<CTX>[];
+  halfedges: ScreenHalfEdge[];
+  sareas: ScreenAreaAny[];
   _innerstyle: HTMLStyleElement;
   _style: HTMLStyleElement | undefined;
   inner: HTMLDivElement;
@@ -212,7 +212,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
       //if (e.button === 2) {
       menu.ignoreFirstClick = 2;
       //}
-
       (elem as UIBase).ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
 
       e.preventDefault();
@@ -355,7 +354,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
     let h: number;
     let cursor: string;
     let bstyle: string;
-
     (this.style as unknown as Record<string, string>)["display"] = "flex";
     (this.style as unknown as Record<string, string>)["display"] = this.horiz ? "row" : "column";
     (this.style as unknown as Record<string, string>)["justify-content"] = "center";
@@ -450,7 +448,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
 
     this.setAttribute("class", "screenborder_" + this._id);
     this.inner.setAttribute("class", "screenborder_inner_" + this._id);
-
     (this.style as unknown as Record<string, string>)["position"] = UIBase.PositionKey;
     (this.style as unknown as Record<string, string>)["left"] = x + "px";
     (this.style as unknown as Record<string, string>)["top"] = y + "px";
@@ -469,3 +466,4 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
 }
 
 ui_base.UIBase.internalRegister(ScreenBorder);
+export type ScreenBorderAny = ScreenBorder<any>;

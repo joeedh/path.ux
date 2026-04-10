@@ -8,7 +8,7 @@ import { haveModal } from "../path-controller/util/simple_events.js";
 import cconst from "../config/const.js";
 import nstructjs from "../path-controller/util/struct.js";
 import { EnumProperty } from "../path-controller/toolsys/toolprop.js";
-import { BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi } from "./FrameManager_mesh.js";
+import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap, snapi } from "./FrameManager_mesh.js";
 import { contextWrangler } from "./area_wrangler.js";
 import { IsScreenTag } from "./constants.js";
 import { IContextBase } from "../core/context_base.js";
@@ -1285,7 +1285,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         b.sareas.push(this);
       }
 
-      this._borders.push(b);
+      this._borders.push(b as unknown as ScreenBorderAny);
 
       b.movable = screen.isBorderMovable(b);
     }
@@ -1622,3 +1622,6 @@ pathux.ScreenArea {
 
 nstructjs.register(ScreenArea);
 UIBase.internalRegister(ScreenArea as unknown as typeof UIBase);
+
+export type ScreenAreaAny = ScreenArea<any>;
+export type AreaAny = Area<any>;

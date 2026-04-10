@@ -10,7 +10,7 @@ import { ToolTip } from "../widgets/ui_widgets2";
 import type { Screen } from "./FrameManager";
 import type { Overdraw } from "../util/ScreenOverdraw";
 import type { SVGRectWithColor } from "../util/ScreenOverdraw";
-import type { ScreenBorder, ScreenVert } from "./FrameManager_mesh";
+import type { ScreenBorder, ScreenBorderAny, ScreenVert } from "./FrameManager_mesh";
 
 /*
 why am I using a toolstack here at all?  time to remove!
@@ -29,7 +29,7 @@ const ToolFlags = simple_toolsys.ToolFlags;
 
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events";
 import { IContextBase } from "../core/context_base";
-import { ScreenArea } from "./ScreenArea";
+import { ScreenArea, ScreenAreaAny } from "./ScreenArea";
 import { IAreaConstructor } from "./area_base";
 
 //import {keymap} from './events';
@@ -139,17 +139,17 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
   }
 }
 
-interface BorderWithOld<CTX extends IContextBase = IContextBase> extends ScreenBorder<CTX> {
+interface BorderWithOld<CTX extends IContextBase = any> extends ScreenBorder<CTX> {
   oldv1: Vector2;
   oldv2: Vector2;
 }
 
-export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
-  sarea: ScreenArea<CTX>;
+export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX> {
+  sarea: ScreenAreaAny;
   start_mpos: Vector2;
   side: number;
 
-  constructor(screen: Screen<CTX>, border: ScreenBorder<CTX>, mpos: Vector2 | number[]) {
+  constructor(screen: Screen<CTX>, border: ScreenBorderAny, mpos: Vector2 | number[]) {
     super(screen);
 
     this.start_mpos = new Vector2(mpos);
@@ -246,7 +246,7 @@ export class AreaResizeTool<CTX extends IContextBase = IContextBase> extends Too
     this.overdraw!.clear();
 
     const visit = new Set();
-    const borders = this.getBorders() as BorderWithOld<CTX>[];
+    const borders = this.getBorders() as BorderWithOld[];
 
     const color = cconst.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
@@ -446,7 +446,7 @@ export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase
 }
 
 export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
-  _border: ScreenBorder<CTX> | undefined;
+  _border: ScreenBorderAny | undefined;
   done: boolean;
   sarea: ScreenArea<CTX> | undefined;
   t: number | undefined;
