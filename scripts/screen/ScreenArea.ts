@@ -21,6 +21,8 @@ import { areaclasses, IAreaConstructor, AreaConstructorParam, AreaFlags, makeAre
 
 export interface IAreaDef {
   tagname: string;
+  /** used by buildEditorsAPI, if it doesn't exit areaname will be used */
+  apiname?: string;
   areaname: string;
   flag?: number;
   uiname?: string;

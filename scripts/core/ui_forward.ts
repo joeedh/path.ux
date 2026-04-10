@@ -50,7 +50,7 @@ export function forwardContainerMethods(cls: any, propertyKey: string, keys: str
 
   for (let k of keys) {
     cls.prototype[k] = function (this: any, ...args: any[]) {
-      return (this[propertyKey] as any)[k](...args);
+      return (this[propertyKey] as any)[k].apply(this, args);
     };
   }
 }

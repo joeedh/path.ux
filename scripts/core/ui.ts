@@ -2136,10 +2136,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     if (this.ctx) {
       //check init was called
       ret.ctx = this.ctx;
+      ret.contents.ctx = this.ctx;
       ret._init();
       //ret.headerLabel = name;
-
-      ret.contents.ctx = ret.ctx;
     }
 
     ret.contents.dataPrefix = this.dataPrefix;
