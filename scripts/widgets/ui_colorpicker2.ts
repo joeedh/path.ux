@@ -1,7 +1,7 @@
 "use strict";
 
 import * as util from "../path-controller/util/util.js";
-import * as vectormath from "../path-controller/util/vectormath.js";
+import * as vectormath from "../path-controller/util/vectormath";
 import * as ui_base from "../core/ui_base.js";
 import * as ui from "../core/ui.js";
 import { PropTypes } from "../path-controller/toolsys/toolprop.js";

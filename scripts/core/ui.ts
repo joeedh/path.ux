@@ -1543,7 +1543,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   iconcheck(inpath: string | undefined, icon: number, description?: string, mass_set_path?: string) {
     const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
     ret.icon = icon;
-    ret.description = name ?? '';
+    ret.description = name ?? "";
 
     if (inpath) {
       ret.setAttribute("datapath", inpath);

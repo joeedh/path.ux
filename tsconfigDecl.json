@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "esModuleInterop": true,
+        "allowJs": true,
+        "checkJs": false,
+        "sourceMap": true,
+        "rootDir": "./scripts",
+        "outDir": "./types",
+        "emitDeclarationOnly": true,
+        "declarationDir": "./types",
+        "isolatedDeclarations": false,
+        "declaration": true,
+        "declarationMap": true,
+        "skipLibCheck": true,
+        "lib": [
+            "esnext",
+            "DOM",
+            "DOM.Iterable",
+            "esnext.disposable"
+        ],
+        "types": []
+    },
+    "files": [
+        "scripts/pathux.ts", "scripts/pathux_with_docbrowser.ts"
+    ],
+    "rootDir": "./scripts",
+    "outDir": "types",
+    "exclude": [
+        "node_modules",
+        "dist",
+        "scripts/lib/tinymce/**",
+        "scripts/**/*.test.ts",
+        "scripts/path-controller/util/isect.js"
+    ]
+}
