@@ -9,6 +9,7 @@
       "dataref",
       "dpath",
       "GETSET",
+      "iconcheck",
       "keymap",
       "lexdata",
       "lexpos",

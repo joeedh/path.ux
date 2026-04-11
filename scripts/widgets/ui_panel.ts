@@ -217,9 +217,11 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     headerHeight += font.size;
 
     const iconSize = iconcheck.getSize();
-    let padding = (headerHeight - iconSize) / 2;
+    const padding = (headerHeight - iconSize) / 2;
     iconcheck.overrideDefault("padding", Math.max(padding, 0));
-    //iconcheck.noMarginsOrPadding()
+    if (padding === 0) {
+      iconcheck.noMarginsOrPadding()
+    }
 
     iconcheck.overrideDefault("highlight", {
       "background-color": iconcheck.getSubDefault("highlight", "background-color"),

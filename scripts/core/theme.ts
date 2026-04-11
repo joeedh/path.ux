@@ -379,7 +379,7 @@ export const DefaultTheme = {
 
   panel: {
     header: {
-      iconSize: 44,
+      iconSize: 16,
     },
     HeaderBorderRadius    : 5.329650280441558,
     HeaderRadius          : 4,
