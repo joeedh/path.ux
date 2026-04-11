@@ -11,7 +11,10 @@
     "checkJs": false,
     "sourceMap": true,
     "outDir": "./dist",
-    "noEmit": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "./types",
+    "declaration": true,
+    "declarationMap": true,
     "skipLibCheck": true,
     "lib": ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
     "types": []

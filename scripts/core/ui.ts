@@ -1540,10 +1540,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     throw new DataPathError(`Unknown property: ${inpath}`);
   }
 
-  iconcheck(inpath: string | undefined, icon: number, name: string, mass_set_path?: string) {
+  iconcheck(inpath: string | undefined, icon: number, description?: string, mass_set_path?: string) {
     const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
     ret.icon = icon;
-    ret.description = name;
+    ret.description = name ?? '';
 
     if (inpath) {
       ret.setAttribute("datapath", inpath);
@@ -2144,7 +2144,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     ret.contents.dataPrefix = this.dataPrefix;
     ret.contents.massSetPrefix = this.massSetPrefix;
 
-    return ret;
+    return ret.contents;
   }
 
   row(packflag = 0): RowFrame<CTX> {

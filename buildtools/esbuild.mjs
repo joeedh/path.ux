@@ -1,17 +1,17 @@
-import esbuild from "esbuild";
+import esbuild from 'esbuild'
 
-const watch = process.argv.includes("--watch");
+const watch = process.argv.includes('--watch')
 
 const ctx = await esbuild.context({
-  entryPoints: ["scripts/pathux.ts", "scripts/pathux_with_docbrowser.ts"],
-  outdir     : "dist",
-  sourcemap  : "inline",
+  entryPoints: ['scripts/pathux.ts', 'scripts/pathux_with_docbrowser.ts'],
+  outdir     : 'dist',
+  sourcemap  : 'inline',
   bundle     : true,
-  target     : "es2022",
-  format     : "esm",
-  external   : ["fs", "path"],
+  target     : 'es2022',
+  format     : 'esm',
+  external   : ['fs', 'path', 'electron', 'marked', 'parse5', 'path', 'diff'],
   treeShaking: false,
-});
+})
 
 if (watch) {
   await ctx.watch()
