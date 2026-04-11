@@ -4,7 +4,7 @@ import { UIBase, parsepx, Icons, type IUIBaseConstructor } from "../core/ui_base
 import { Container } from "../core/ui.js";
 import { Animator } from "../core/anim.js";
 import * as util from "../util/util.js";
-import { IContextBase } from "../core/context_base.js";
+import type { IContextBase } from "../core/context_base.js";
 import type { Vector2 } from "../path-controller/util/vectormath.js";
 
 let sidebar_hash = new util.HashDigest();

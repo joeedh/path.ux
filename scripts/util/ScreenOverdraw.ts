@@ -394,12 +394,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     }
 
     for (let box of boxes) {
-      elems.push(
-        this.line(
-          box.startpos as unknown as { [index: number]: number },
-          box.params as unknown as { [index: number]: number }
-        )
-      );
+      elems.push(this.line(box.startpos, box.params));
     }
 
     return elems as TextBox[];
@@ -486,7 +481,11 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     return circle;
   }
 
-  line(v1: { [index: number]: number }, v2: { [index: number]: number }, color: string = "black"): SVGLineElement {
+  line(
+    v1: vectormath.Vector2Like | number[],
+    v2: vectormath.Vector2Like | number[],
+    color: string = "black"
+  ): SVGLineElement {
     let line = document.createElementNS(SVG_URL, "line");
     line.setAttribute("x1", "" + v1[0]);
     line.setAttribute("y1", "" + v1[1]);
@@ -498,7 +497,11 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     return line;
   }
 
-  rect(p: number[], size: number[], color: string = "black"): SVGRectWithColor {
+  rect(
+    p: vectormath.Vector2Like | number[],
+    size: vectormath.Vector2Like | number[],
+    color: string = "black"
+  ): SVGRectWithColor {
     let line = document.createElementNS(SVG_URL, "rect") as SVGRectWithColor;
     line.setAttribute("x", "" + p[0]);
     line.setAttribute("y", "" + p[1]);
