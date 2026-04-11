@@ -326,6 +326,14 @@ export function exportTheme(themeIn: ThemeRecord = theme, addVarDecl = true): st
       }
 
       return vs;
+    } else if (v instanceof ThemeScrollBars) {
+      return `new ThemeScrollBars({
+${indent}  border   : ${writekey(v.border)},
+${indent}  color    : ${writekey(v.color)},
+${indent}  color2   : ${writekey(v.color2)},
+${indent}  contrast : ${writekey(v.contrast)},
+${indent}  width     : ${writekey(v.width)}
+${indent}})`;
     } else if (typeof v === "object") {
       if (v instanceof CSSFont) {
         return `new CSSFont({

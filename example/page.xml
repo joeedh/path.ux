@@ -9,7 +9,6 @@
       <strip mode="vertical">
       <prop path="angle1"/>
       <prop path="angle2"/>
-      <prop path="angle3"/>
       </strip>
       <prop path="vector_test"/>
       <column>

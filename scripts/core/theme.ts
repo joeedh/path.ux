@@ -378,6 +378,9 @@ export const DefaultTheme = {
   },
 
   panel: {
+    header: {
+      iconSize: 44,
+    },
     HeaderBorderRadius    : 5.329650280441558,
     HeaderRadius          : 4,
     TitleBackground       : "rgba(177,219,255, 1)",
@@ -427,13 +430,13 @@ export const DefaultTheme = {
   },
 
   /*
-  scrollbars: {
+  scrollbars: new ThemeScrollBars({
     border  : undefined,
     color   : undefined,
     color2  : undefined,
     contrast: undefined,
     width   : undefined,
-  },*/
+  }),*/
 
   sidebar: {
     "background-color": "rgba(55, 55, 55, 0.5)",
