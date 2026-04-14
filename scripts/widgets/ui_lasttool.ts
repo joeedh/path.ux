@@ -168,7 +168,7 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
       // do not do list properties
       if (prop instanceof ListProperty || prop instanceof StringSetProperty) {
-        continue
+        continue;
       }
 
       if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
