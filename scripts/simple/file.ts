@@ -94,7 +94,7 @@ export class FileArgs {
 export class EmptyStruct {
   static STRUCT = nstructjs.inlineRegister(this, `EmptyStruct {}`);
   loadSTRUCT(reader: nstructjs.StructReader<this>) {
-    reader(this)
+    reader(this);
   }
 }
 

@@ -220,7 +220,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     const padding = (headerHeight - iconSize) / 2;
     iconcheck.overrideDefault("padding", Math.max(padding, 0));
     if (padding === 0) {
-      iconcheck.noMarginsOrPadding()
+      iconcheck.noMarginsOrPadding();
     }
 
     iconcheck.overrideDefault("highlight", {

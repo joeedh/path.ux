@@ -398,7 +398,7 @@ DocHistoryItem {
 `;
 
   constructor(url?: string, title?: string) {
-    this.url = url ?? 'unknown';
+    this.url = url ?? "unknown";
     this.title = "" + title;
   }
 
