@@ -1751,7 +1751,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   freeBorder(b: FrameManager_mesh.ScreenBorderAny, sarea?: ScreenAreaAny) {
-    if (b.sareas.includes(sarea!)) {
+    if (sarea && b.sareas.includes(sarea!)) {
       b.sareas.remove(sarea);
     }
 

@@ -177,6 +177,8 @@ interface Array<T> {
   pop_i(idx: number): void;
   /** Remove first occurrence of item from array */
   remove(item: T, suppressError?: boolean): void;
+  replace(existing: T, replacement: T): void
+  
   /** Like TypedArray.set -- copy elements from source array */
   set(array: ArrayLike<T>, srcOffset?: number, destOrCount?: number, count?: number): this;
   /** Filter out elements matching predicate (inverse of filter) */
