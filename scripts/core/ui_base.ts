@@ -3860,9 +3860,10 @@ export class UIBase<
         return def2 as any;
       }
 
-      if (inherit) {
-        p = p.parentWidget;
+      if (!inherit) {
+        break;
       }
+      p = p.parentWidget;
     }
 
     // check theme override

@@ -1,6 +1,6 @@
 import { PackFlags, UIBase } from "../core/ui_base.js";
 import { ColumnFrame } from "../core/ui.js";
-import { PropFlags } from "../path-controller/toolsys/toolprop.js";
+import { ListProperty, PropFlags, StringSetProperty } from "../path-controller/toolsys/toolprop.js";
 import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolsys.js";
 
 import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
@@ -165,6 +165,11 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
     panel.useDataPathUndo = false;
     for (const k in tool.inputs) {
       const prop = (tool.inputs as any)[k] as ToolProperty;
+
+      // do not do list properties
+      if (prop instanceof ListProperty || prop instanceof StringSetProperty) {
+        continue
+      }
 
       if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
         continue;
