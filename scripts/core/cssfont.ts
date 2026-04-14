@@ -92,6 +92,10 @@ export class CSSFont {
 
     return this.genCSS() + ":" + this.size + ":" + color;
   }
+
+  loadSTRUCT(reader: nstructjs.StructReader<this>) {
+    reader(this);
+  }
 }
 
 CSSFont.STRUCT = `

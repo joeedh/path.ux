@@ -34,6 +34,10 @@ export class FileHeader {
     this.version_micro = version ? version[2] : 0;
     this.schema = nstructjs.write_scripts();
   }
+
+  loadSTRUCT(reader: nstructjs.StructReader<this>) {
+    reader(this);
+  }
 }
 
 export class FileFull extends FileHeader {
@@ -90,6 +94,9 @@ export class FileArgs {
 
 export class EmptyStruct {
   static STRUCT = nstructjs.inlineRegister(this, `EmptyStruct {}`);
+  loadSTRUCT(reader: nstructjs.StructReader<this>) {
+    reader(this)
+  }
 }
 
 export function saveFile(

@@ -52,14 +52,15 @@ export class ScreenVert<CTX extends IContextBase = IContextBase> extends Vector2
   borders: ScreenBorderAny[];
   _id: number;
 
-  constructor(pos: Vector2 | number[], id: number, added_id: string) {
+  constructor(pos?: Vector2 | number[], id?: number, added_id?: string) {
     super(pos);
 
-    this.added_id = added_id;
+    // note: nstructjs requires constructors take no required arguments
+    this.added_id = added_id ?? 'unknown';
     this.sareas = [];
     this.borders = [];
 
-    this._id = id;
+    this._id = id ?? -1;
   }
 
   static hash(pos: Vector2 | number[], added_id: string, limit?: number) {

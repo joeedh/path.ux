@@ -23,7 +23,7 @@ export class DataModel {
   /** Automatically registers cls with nstructjs
    *  and handles STRUCT inheritance.
    */
-  static register(cls: typeof DataModel & { STRUCT?: string }) {
+  static register(cls: typeof DataModel & { STRUCT: string }) {
     if (!cls.hasOwnProperty("defineAPI")) {
       //  throw new Error(cls.name + "is missing a defineAPI method");
     }
@@ -33,6 +33,10 @@ export class DataModel {
     if (cls.hasOwnProperty("STRUCT") && !nstructjs.isRegistered(cls)) {
       cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT!);
     }
+  }
+
+  loadSTRUCT(reader: nstructjs.StructReader<this>) {
+    reader(this);
   }
 }
 
