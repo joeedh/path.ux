@@ -78,8 +78,8 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8
       nstructjs:
-        specifier: ^0.8.2
-        version: 0.8.2
+        specifier: ^0.8.3
+        version: 0.8.3
       parse5:
         specifier: 6.0.0
         version: 6.0.0
@@ -1724,8 +1724,8 @@ packages:
     resolution: {integrity: sha512-DlL+XwOy3NxAQ8xuC0okPgK46iuVNAK01YN7RueYBqqFeGsBjV9XmCAzAdgt+667bCl5kPh9EqKKDwnaPG1I7A==}
     engines: {node: '>=10'}
 
-  nstructjs@0.8.2:
-    resolution: {integrity: sha512-buf/zQUYb1GkG3j+gD5roDtamS8D/0DhLitQ+ZrUVJ1/8VqFuy7xPJC9Pd3/ctNhN+GyVih1Ow0V4iGWhUshTQ==}
+  nstructjs@0.8.3:
+    resolution: {integrity: sha512-DoCHY2EsPiEx5ZQDyuPE6XML+y0QhdINn8HsiAado/3sLI+JfEXoEoSGiT4b6VWxu/85QeAJdahkhWiStiNe/w==}
 
   nth-check@1.0.2:
     resolution: {integrity: sha512-WeBOdju8SnzPN5vTUJYxYUxLeXpCaVP5i5e0LF8fg7WORF2Wd7wFX/pk0tYZk7s8T+J7VLy0Da6J1+wCT0AtHg==}
@@ -3923,7 +3923,7 @@ snapshots:
 
   normalize-url@6.1.0: {}
 
-  nstructjs@0.8.2:
+  nstructjs@0.8.3:
     dependencies:
       acorn: 7.4.1
       acorn-walk: 7.2.0
