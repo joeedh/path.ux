@@ -69,6 +69,4 @@ import * as simple from "./simple/simple.js";
 
 export { simple };
 
-import './global.d.ts'
-
-
+import "./global.d.ts";
