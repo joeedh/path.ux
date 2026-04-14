@@ -58,7 +58,6 @@ export class FileFull extends FileHeader {
     this.objects = [];
   }
 }
-nstructjs.register(FileFull);
 
 interface FileArgsInit {
   ext?: string;
