@@ -2,8 +2,8 @@
   "name": "path.ux",
   "version": "0.2.0",
   "description": "Html5 based UI library with blender-rna-style data binding",
-  "main": "dist/pathux.js",
-  "types": "pathux.d.ts",
+  "main": "scripts/pathux.ts",
+  "index": "scripts/pathux.ts",
   "browser": "true",
   "scripts": {
     "build": "node buildtools/esbuild.mjs",
