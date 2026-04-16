@@ -21,7 +21,7 @@ pnpm build
 echo $?
 
 #bash build_docs.sh && \
-bash buildtools/build_package.sh
+bash buildtools/build_package_new.sh
 echo $?
 
 cd _package
@@ -29,7 +29,7 @@ echo $?
 
 echo "npm publish"
 echo $?
-npm publish
+npm publish --access public
 echo $?
 
 cd ..
