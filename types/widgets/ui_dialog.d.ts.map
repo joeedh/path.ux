@@ -1,1 +1,0 @@
-{"version":3,"file":"ui_dialog.d.ts","sourceRoot":"","sources":["../../scripts/widgets/ui_dialog.ts"],"names":[],"mappings":"AAIA,UAAU,aAAa;IACrB,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,MAAM,CAAC,EAAE,MAAM,CAAC;IAChB,mBAAmB,CAAC,EAAE,OAAO,CAAC;CAC/B;AAED,wBAAgB,aAAa,CAAC,UAAU,EAAE,OAAO,EAAE,MAAM,EAAE,GAAG,EAAE,IAAI,GAAE,aAAkB,OAyCvF"}

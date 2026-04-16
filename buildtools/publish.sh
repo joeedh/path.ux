@@ -35,6 +35,7 @@ echo $?
 
 cd ..
 rm -rf _package
+rm -rf types
 
 git tag -a $VERSION -m "Release $VERSION"
 git push origin --tags
