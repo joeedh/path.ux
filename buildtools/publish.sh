@@ -35,4 +35,6 @@ echo $?
 
 cd ..
 rm -rf _package
-#git tag -a $VERSION -m "Release $VERSION"
+
+git tag -a $VERSION -m "Release $VERSION"
+git push origin --tags
