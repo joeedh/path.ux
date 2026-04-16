@@ -21,3 +21,6 @@ cp -r scripts simple_docsys package.json tsconfig.json pnpm-lock.yaml pathux.d.t
 cp -r dist _package/bundle
 cp package_dist.json _package/package.json
 
+export VERSION=`cat package.json | grep version | sed 's/[" :,]//g' | sed 's/version//'`
+sed -i "s/VERSION/$VERSION/g" _package/package.json
+

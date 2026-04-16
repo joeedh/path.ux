@@ -6,7 +6,8 @@ then
 cd ..
 fi
 
-VERSION=`cat package.json | grep version | sed 's/[" :,]//g' | sed 's/version//'`
+export VERSION=`cat package.json | grep version | sed 's/[" :,]//g' | sed 's/version//'`
+
 
 git commit -a
 echo $?
