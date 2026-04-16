@@ -209,27 +209,29 @@ export class AreaWrangler<CTX extends IContextBase = IContextBase> {
     }
   }
 
-  getLastArea(type?: any) {
+  // creating decent constructor interfaces is hard
+  // just do the absolute minimum here
+  getLastArea<T = any>(type?: { new (): T; [ClassIdSymbol]?: string }): T | undefined {
     //if (Math.random() > 0.9995) {
     //console.warn("getLastArea!", type, this.lasts.get(type[ClassIdSymbol]));
     //}
 
     if (type === undefined) {
       if (this.stack.length > 0) {
-        return this.stack[this.stack.length - 1];
+        return this.stack[this.stack.length - 1] as T;
       } else {
-        return this.lastArea;
+        return this.lastArea as T;
       }
     } else {
-      if (this.stacks.has(type[ClassIdSymbol])) {
-        const stack = this.stacks.get(type[ClassIdSymbol])!;
+      if (this.stacks.has(type[ClassIdSymbol]!)) {
+        const stack = this.stacks.get(type[ClassIdSymbol]!)!;
 
         if (stack.length > 0) {
-          return stack[stack.length - 1];
+          return stack[stack.length - 1] as T;
         }
       }
 
-      return this.lasts.get(type[ClassIdSymbol]);
+      return this.lasts.get(type[ClassIdSymbol]!) as T;
     }
   }
 }
