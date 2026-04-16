@@ -1,6 +1,6 @@
 import * as util from "../util/util.js";
 import { Vector2 } from "../util/vectormath.js";
-import type { StructReader } from "../util/nstructjs_es6.js";
+import type { StructReader } from "../util/nstructjs.js";
 export { getCurve } from "./curve1d_base.js";
 export { SplineTemplates, SplineTemplateIcons } from "./curve1d_bspline.js";
 import type { AllCurveTypes } from "./curve1d_all.js";

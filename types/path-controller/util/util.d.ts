@@ -82,7 +82,6 @@ export declare class cachering<T> extends Array<T> {
     next(): T;
 }
 interface KeystrObject {
-    [Symbol.keystr](): string | number;
 }
 export declare class SetIter<T extends KeystrObject> {
     set: set<T>;
@@ -317,7 +316,7 @@ export declare class TimeoutPromise<T = unknown> {
     finally(callback: () => void): this;
     get bad(): boolean;
 }
-import { StructReader } from "./nstructjs_es6.js";
+import { StructReader } from "./nstructjs.js";
 import type { Vector2, Vector3, Vector4 } from "./vectormath.js";
 export declare function compress(data: string): Uint8Array;
 export declare function decompress(data: DataView | ArrayBuffer | Uint8Array): string;

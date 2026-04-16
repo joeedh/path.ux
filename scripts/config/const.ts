@@ -48,50 +48,56 @@ if (typeof document !== "undefined") {
 }
 
 export interface DebugFlags {
-  paranoidEvents: boolean;
-  screenborders: boolean;
-  areaContextPushes: boolean;
-  allBordersMovable: boolean;
-  doOnce: boolean;
-  modalEvents: boolean;
-  areaConstraintSolver: boolean;
-  datapaths: boolean;
-  lastToolPanel: boolean;
-  domEvents: boolean;
-  domEventAddRemove: boolean;
-  debugUIUpdatePerf: boolean;
-  screenAreaPosSizeAccesses: boolean;
-  buttonEvents: boolean;
-  [key: string]: boolean;
+  paranoidEvents?: boolean;
+  screenborders?: boolean;
+  areaContextPushes?: boolean;
+  allBordersMovable?: boolean;
+  doOnce?: boolean;
+  modalEvents?: boolean;
+  areaConstraintSolver?: boolean;
+  datapaths?: boolean;
+  lastToolPanel?: boolean;
+  domEvents?: boolean;
+  domEventAddRemove?: boolean;
+  debugUIUpdatePerf?: boolean;
+  screenAreaPosSizeAccesses?: boolean;
+  buttonEvents?: boolean;
+  [key: string]: boolean | undefined;
 }
 
-export interface PathUXConstants {
+export interface IPathUXConstants {
+  colorSchemeType?: "light" | "dark";
+  useNumSliderTextboxes?: boolean;
+  numSliderArrowLimit?: number;
+  simpleNumSliders?: boolean;
+  /** Can menus pop above dropboxes */
+  menusCanPopupAbove?: boolean;
+  menu_close_time?: number;
+  doubleClickTime?: number;
+  doubleClickHoldTime?: number;
+  autoLoadSplineTemplates?: boolean;
+  /** Add tooltip picker tools to screen area headers for mobile devices. */
+  addHelpPickers?: boolean;
+  /** Use tab based area docker instead of the default dropboxe-based area switcher */
+  useAreaTabSwitcher?: boolean;
+  autoSizeUpdate?: boolean;
+  showPathsInToolTips?: boolean;
+  enableThemeAutoUpdate?: boolean;
+  useNativeToolTips?: boolean;
+  noElectronMenus?: boolean;
+  DEBUG?: DebugFlags;
+  docManualPath?: string;
+  docEditorPath?: string;
+}
+
+interface PathUXConfigProvider extends Required<IPathUXConstants> {
   getClipboardData(desiredMimes?: string | string[]): ClipboardEntry | undefined;
   setClipboardData(name: string, mime: string, data: string): void;
-  colorSchemeType: string;
-  docManualPath: string;
-  docEditorPath: string;
-  useNumSliderTextboxes: boolean;
-  numSliderArrowLimit: number;
-  simpleNumSliders: boolean;
-  menusCanPopupAbove: boolean;
-  menu_close_time: number;
-  doubleClickTime: number;
-  doubleClickHoldTime: number;
-  DEBUG: DebugFlags;
-  autoLoadSplineTemplates: boolean;
-  addHelpPickers: boolean;
-  useAreaTabSwitcher: boolean;
-  autoSizeUpdate: boolean;
-  showPathsInToolTips: boolean;
-  enableThemeAutoUpdate: boolean;
-  useNativeToolTips: boolean;
-  noElectronMenus: boolean;
-  loadConstants(args: Partial<PathUXConstants>): void;
+  loadConstants(args: IPathUXConstants): void;
   [key: string]: unknown;
 }
 
-const cconst: PathUXConstants = {
+const cconst: PathUXConfigProvider = {
   getClipboardData(desiredMimes: string | string[] = "text/plain"): ClipboardEntry | undefined {
     if (typeof desiredMimes === "string") {
       desiredMimes = [desiredMimes];
@@ -173,7 +179,7 @@ const cconst: PathUXConstants = {
   useNativeToolTips      : true,
   noElectronMenus        : false,
 
-  loadConstants(args: Partial<PathUXConstants>): void {
+  loadConstants(args: IPathUXConstants): void {
     for (const k in args) {
       if (k === "loadConstants") continue;
       (cconst as Record<string, unknown>)[k] = (args as Record<string, unknown>)[k];
@@ -188,9 +194,9 @@ window.DEBUG = cconst.DEBUG;
 if (typeof document !== "undefined") {
   const cfg = document.getElementById("pathux-config");
   if (cfg) {
-    cconst.loadConstants(JSON.parse(cfg.innerText) as Partial<PathUXConstants>);
+    cconst.loadConstants(JSON.parse(cfg.innerText) as Partial<PathUXConfigProvider>);
   }
 }
 if (typeof window?.PATHUX_CONFIG !== "undefined") {
-  cconst.loadConstants(window.PATHUX_CONFIG as Partial<PathUXConstants>);
+  cconst.loadConstants(window.PATHUX_CONFIG as Partial<PathUXConfigProvider>);
 }

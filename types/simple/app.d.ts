@@ -1,3 +1,4 @@
+import nstructjs from "../path-controller/util/struct.js";
 import { Context } from "../path-controller/controller/context.js";
 export declare const DataModelClasses: (typeof DataModel)[];
 import { ToolStack } from "../path-controller/toolsys/toolsys.js";
@@ -11,8 +12,9 @@ export declare class DataModel {
      *  and handles STRUCT inheritance.
      */
     static register(cls: typeof DataModel & {
-        STRUCT?: string;
+        STRUCT: string;
     }): void;
+    loadSTRUCT(reader: nstructjs.StructReader<this>): void;
 }
 export declare function makeAPI(ctxClass: typeof Context): DataAPI<import("../pathux.js").ContextLike<any, import("../pathux.js").IToolStack>>;
 import { ThemeRecord } from "../core/ui_base.js";
@@ -77,7 +79,7 @@ export declare class AppState {
      *  to create a new screen at this time, and this.reset()
      *  if you wish to reset the undo stack*/
     createNewFile(): void;
-    saveFileSync(objects: unknown[] | undefined, args?: Record<string, unknown>): any;
+    saveFileSync(objects: unknown[] | undefined, args?: Record<string, unknown>): ArrayBuffer | Record<string, unknown>;
     /** Serialize the application state. Takes
      *  a list of objects to save (with nstructjs);
      *  Subclasses should override this, like so:

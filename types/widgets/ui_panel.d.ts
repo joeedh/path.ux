@@ -1,6 +1,6 @@
-import { IContextBase } from '../core/context_base.js';
-import { ColumnFrame, RowFrame, Label } from '../core/ui.js';
-import { IconCheck } from './ui_widgets.js';
+import { IContextBase } from "../core/context_base.js";
+import { ColumnFrame, RowFrame, Label } from "../core/ui.js";
+import { IconCheck } from "./ui_widgets.js";
 export declare class PanelContents<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
     /** @deprecated use panelFrame */
     _panel: PanelFrame<CTX>;

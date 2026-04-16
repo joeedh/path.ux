@@ -87,7 +87,7 @@ function myRequire(mod: string): unknown {
 }
 
 import { Menu, DropBox } from "../../widgets/ui_menu";
-import { getIconManager } from "../../core/ui_base";
+import { getIconManager, UIBase } from "../../core/ui_base";
 import cconst from "../../config/const";
 import * as util from "../../util/util";
 
@@ -499,11 +499,11 @@ export function buildElectronMenu(menu: Menu) {
   return emenu;
 }
 
-interface MenuEditorLike {
-  header: import("../../core/ui_base").UIBase;
+interface MenuEditorLike<CTX extends IContextBase> {
+  header?: UIBase<CTX>;
 }
 
-export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
+export function initMenuBar<CTX extends IContextBase>(menuEditor: MenuEditorLike<CTX>, override = false) {
   checkInit();
 
   if (!window.haveElectron) {
@@ -552,7 +552,7 @@ export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
     "zoom out"  : "zoomOut",
   });
 
-  const header = menuEditor.header;
+  const header = menuEditor.header!;
   for (const dbox of header.traverse(DropBox)) {
     const db = dbox as DropBox;
     (db as unknown as { _build_menu(): void })._build_menu();
@@ -579,6 +579,7 @@ export function initMenuBar(menuEditor: MenuEditorLike, override = false) {
 }
 
 import { PlatformAPI, isMimeText } from "../platform_base";
+import { IContextBase } from "../../core/context_base";
 
 interface DialogResult {
   canceled?: boolean;

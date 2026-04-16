@@ -1,3 +1,4 @@
+import nstructjs from "../util/struct";
 import * as util from "../util/util";
 export interface CSSFontArgs {
     size?: number;
@@ -24,5 +25,6 @@ export declare class CSSFont {
     genCSS(size?: number): string;
     hash(): string;
     genKey(): string;
+    loadSTRUCT(reader: nstructjs.StructReader<this>): void;
 }
 //# sourceMappingURL=cssfont.d.ts.map

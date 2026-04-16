@@ -59,7 +59,7 @@ interface Window {
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;
   __theme: Record<string, unknown>;
-  DEBUG?: { [k: string]: boolean } & PathUXDebug;
+  DEBUG?: { [k: string]: boolean | undefined } & PathUXDebug;
 
   invertTheme: () => void;
   _exportTheme: () => string;

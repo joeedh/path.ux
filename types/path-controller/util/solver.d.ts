@@ -1,5 +1,4 @@
-import { Quat } from "../old_types/controller";
-import { Vector2, Vector3, Vector4 } from "./vectormath";
+import { Vector2, Vector3, Vector4, Quat } from "./vectormath";
 type ConstraintFunc<PARAMS> = (params: PARAMS) => number;
 export type KVector = (Float64Array | number[] | Vector2 | Vector3 | Vector4 | Quat) | Float32Array;
 export declare class Constraint<PARAMS = unknown[]> {

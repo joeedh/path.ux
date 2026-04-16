@@ -308,7 +308,8 @@ export declare class MacroLink {
     destProps: string;
     sourcePropKey: string;
     destPropKey: string;
-    constructor(sourcetool_idx: number, srckey: string, srcprops: string | undefined, desttool_idx: number, dstkey: string, dstprops?: string);
+    constructor(sourcetool_idx?: number, srckey?: string, srcprops?: string, desttool_idx?: number, dstkey?: string, dstprops?: string);
+    loadSTRUCT(reader: StructReader<this>): void;
 }
 export declare const MacroClasses: Record<string, MacroClassType>;
 interface ConnectCB {
@@ -355,7 +356,7 @@ export declare class ToolStack<ContextCls extends ContextLike = ContextLike, Mod
     toolctx?: ContextCls;
     _undo_branch: ToolOp[] | undefined;
     _stack?: this[0][];
-    constructor(ctx: ContextCls);
+    constructor(ctx?: ContextCls);
     get head(): (typeof this)[0] | undefined;
     limitMemory(maxmem?: number, ctx?: ContextCls): number;
     calcMemSize(ctx?: ContextCls): number;

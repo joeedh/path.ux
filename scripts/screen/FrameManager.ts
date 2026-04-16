@@ -142,7 +142,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
-    this.allBordersMovable = cconst.DEBUG.allBordersMovable;
+    this.allBordersMovable = cconst.DEBUG.allBordersMovable ?? false;
     this.needsBorderRegen = true;
 
     this._popup_safe = 0;

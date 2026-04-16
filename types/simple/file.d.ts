@@ -1,3 +1,4 @@
+import nstructjs from "../path-controller/util/struct.js";
 export declare class FileHeader {
     static STRUCT: string;
     [key: string]: unknown;
@@ -8,6 +9,7 @@ export declare class FileHeader {
     version_micro: number;
     schema: string;
     constructor(version?: number[], magic?: string, flags?: number);
+    loadSTRUCT(reader: nstructjs.StructReader<this>): void;
 }
 export declare class FileFull extends FileHeader {
     static STRUCT: string;
@@ -37,11 +39,12 @@ export declare class FileArgs {
 }
 export declare class EmptyStruct {
     static STRUCT: string;
+    loadSTRUCT(reader: nstructjs.StructReader<this>): void;
 }
 export declare function saveFile(appstate: {
     saveFilesInJSON?: boolean;
     screen: unknown;
-}, args: FileArgsInit, objects: unknown[]): any;
+}, args: FileArgsInit, objects: unknown[]): ArrayBuffer | Record<string, unknown>;
 export declare function loadFile(appstate: any, args: FileArgsInit, data: unknown): FileFull;
 export {};
 //# sourceMappingURL=file.d.ts.map

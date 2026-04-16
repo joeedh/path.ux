@@ -1,8 +1,8 @@
-import * as ui_base from '../core/ui_base.js';
+import * as ui_base from "../core/ui_base.js";
 declare const UIBase: typeof ui_base.UIBase;
-import { OldButton } from './ui_button.js';
-import { IContextBase } from '../core/context_base.js';
-export { Button } from './ui_button.js';
+import { OldButton } from "./ui_button.js";
+import { IContextBase } from "../core/context_base.js";
+export { Button } from "./ui_button.js";
 export declare class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     _icon: number;
     iconsheet: number;
@@ -136,5 +136,5 @@ export declare class Check1<CTX extends IContextBase = IContextBase> extends Old
     };
     _redraw(draw_text?: boolean): void;
 }
-export { checkForTextBox } from './ui_textbox.js';
+export { checkForTextBox } from "./ui_textbox.js";
 //# sourceMappingURL=ui_widgets.d.ts.map

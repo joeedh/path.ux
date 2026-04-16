@@ -1,7 +1,7 @@
 import * as util from "../util/util.js";
 import { Vector2, Vector3, Vector4, Quat, Matrix4 } from "../util/vectormath.js";
 import { ToolPropertyIF, PropTypes } from "./toolprop_abstract.js";
-import type { StructReader } from "../util/nstructjs_es6.js";
+import type { StructReader } from "../util/nstructjs.js";
 import type { JSONAny } from "../controller.js";
 declare global {
     interface SymbolConstructor {

@@ -10,7 +10,7 @@ import { Editor } from "./editor.js";
 
 import { Vector2 } from "../path-controller/util/vectormath.js";
 
-import cconst from "../config/const.js";
+import cconst, { IPathUXConstants } from "../config/const.js";
 
 let lastAppState: AppState | undefined;
 export const getLastAppState = () => lastAppState;
@@ -602,7 +602,7 @@ export class AppState {
 
     this.startArgs = startArgs;
 
-    cconst.loadConstants(startArgs as unknown as import("../config/const.js").PathUXConstants);
+    cconst.loadConstants(startArgs as unknown as IPathUXConstants);
 
     if (startArgs.autoLoadSplineTemplates) {
       initSplineTemplates();

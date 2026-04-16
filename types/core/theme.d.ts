@@ -254,6 +254,9 @@ export declare const DefaultTheme: {
         width: number;
     };
     panel: {
+        header: {
+            iconSize: number;
+        };
         HeaderBorderRadius: number;
         HeaderRadius: number;
         TitleBackground: string;

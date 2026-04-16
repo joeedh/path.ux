@@ -69,7 +69,7 @@ type IBaseBase<LEN extends 2 | 3 | 4> = {
  * }
  * ```
  */
-type IBaseVector<LEN extends 2 | 3 | 4, ArrayType = Array<number>> = IBaseBase<LEN> & {
+export type IBaseVector<LEN extends 2 | 3 | 4, ArrayType = Array<number>> = IBaseBase<LEN> & {
     length: number;
     [k: number]: number | undefined;
     [Symbol.iterator](): Iterator<number>;

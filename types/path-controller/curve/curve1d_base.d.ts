@@ -1,4 +1,4 @@
-import { StructReader } from "../util/nstructjs_es6.js";
+import { StructReader } from "../util/nstructjs.js";
 import * as util from "../util/util.js";
 /** Definition returned by CurveTypeData.define() and subclass overrides */
 export interface CurveTypeDefine {

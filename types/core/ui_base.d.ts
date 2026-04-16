@@ -1,4 +1,4 @@
-import type { Area } from '../screen/ScreenArea';
+import type { Area } from "../screen/ScreenArea";
 export type DefaultTypes = string | number | boolean | CSSFont;
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
     new (): T;
@@ -31,18 +31,18 @@ export declare const PackFlags: {
     readonly LABEL_ON_RIGHT: number;
 };
 export declare function _setTextboxClass(cls: new (...args: unknown[]) => HTMLElement): void;
-import { Animator } from './anim.js';
-import './units.js';
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath';
-import * as toolprop from '../path-controller/toolsys/toolprop.js';
-import { ModalState } from '../path-controller/util/simple_events.js';
-export * from './ui_theme.js';
-import { ThemeRecord } from './ui_theme.js';
+import { Animator } from "./anim.js";
+import "./units.js";
+import * as util from "../path-controller/util/util.js";
+import * as vectormath from "../path-controller/util/vectormath";
+import * as toolprop from "../path-controller/toolsys/toolprop.js";
+import { ModalState } from "../path-controller/util/simple_events.js";
+export * from "./ui_theme.js";
+import { ThemeRecord } from "./ui_theme.js";
 export declare const ElementClasses: (typeof UIBase)[];
-export { theme } from './ui_theme.js';
-export { Icons } from '../icon_enum.js';
-export { setIconMap } from '../icon_enum.js';
+export { theme } from "./ui_theme.js";
+export { Icons } from "../icon_enum.js";
+export { setIconMap } from "../icon_enum.js";
 export declare const ErrorColors: {
     WARNING: string;
     ERROR: string;
@@ -58,7 +58,7 @@ declare const EventCBSymbol: unique symbol;
  * */
 export declare function setTagPrefix(prefix: string): void;
 export declare function getTagPrefix(): string;
-import { ClassIdSymbol } from './ui_consts.js';
+import { ClassIdSymbol } from "./ui_consts.js";
 export { ClassIdSymbol };
 export declare function setTheme(theme2: ThemeRecord): void;
 export declare function report(...args: unknown[]): void;
@@ -129,9 +129,9 @@ export declare function setIconManager(manager: IconManager, IconSheetsOverride?
 export declare function makeIconDiv(icon: number, sheet?: number): HTMLDivElement;
 export declare const dpistack: number[];
 export declare const UIFlags: Record<string, number>;
-import { EventNode, PropertySocket, SocketType } from '../path-controller/dag/eventdag.js';
-import type { IContextBase } from './context_base.js';
-import { CSSFont } from './cssfont.js';
+import { EventNode, PropertySocket, SocketType } from "../path-controller/dag/eventdag.js";
+import type { IContextBase } from "./context_base.js";
+import { CSSFont } from "./cssfont.js";
 export declare const _testSetScrollbars: (color?: string, contrast?: number, width?: number, border?: string) => string;
 export declare function styleScrollBars(color?: string, color2?: string | undefined, contrast?: number, width?: number, border?: string, selector?: string): string;
 export declare function calcThemeKey(digest?: util.HashDigest): number;
@@ -170,7 +170,7 @@ export type EventIF = {
 export declare class UIBase<CTX extends IContextBase = IContextBase, VALUE extends unknown | any = unknown> extends HTMLElement {
     #private;
     static PositionKey: string;
-    ['constructor']: IUIBaseConstructor<this>;
+    ["constructor"]: IUIBaseConstructor<this>;
     _tool_tip_abort_delay: number | undefined;
     _tooltip_ref: {
         remove(): void;
@@ -284,7 +284,9 @@ export declare class UIBase<CTX extends IContextBase = IContextBase, VALUE exten
     static internalRegister(cls: IUIBaseConstructor): void;
     static getInternalName(name: string): string | undefined;
     static createElement<T extends UIBase | HTMLElement = HTMLElement>(name: string, internal?: boolean): T;
+    static isRegistered(cls: IUIBaseConstructor): boolean;
     static register(cls: IUIBaseConstructor): void;
+    static unregister(cls: IUIBaseConstructor): void;
     /**
      * Defines core attributes of the class
      *

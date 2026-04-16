@@ -1,11 +1,12 @@
 import { CurveTypeData } from "./curve1d_base.js";
 import * as util from "../util/util.js";
-import type { StructReader } from "../util/nstructjs_es6.js";
+import type { StructReader } from "../util/nstructjs.js";
 export declare class ParamKey {
+    static STRUCT: string;
     key: string;
     val: number;
-    constructor(key: string, val: number);
-    static STRUCT: string;
+    constructor(key?: string, val?: number);
+    loadSTRUCT(reader: StructReader<this>): void;
 }
 interface CurveDefineResult {
     params: Record<string, [string, number | boolean, number, number]>;

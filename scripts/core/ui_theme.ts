@@ -68,7 +68,7 @@ export const compatMap = {
 export const ColorSchemeTypes = {
   LIGHT: "light",
   DARK : "dark",
-};
+} as const;
 
 export function parsepx(css: string): number {
   return parseFloat(css.trim().replace("px", ""));
@@ -294,7 +294,7 @@ export function invertTheme(): void {
   }
 }
 
-export function setColorSchemeType(mode: string): void {
+export function setColorSchemeType(mode: "light" | "dark"): void {
   if (mode !== cconst.colorSchemeType) {
     invertTheme();
     cconst.colorSchemeType = mode;

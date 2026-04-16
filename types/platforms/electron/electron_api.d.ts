@@ -1,4 +1,5 @@
 import { Menu } from "../../widgets/ui_menu";
+import { UIBase } from "../../core/ui_base";
 import { FileDialogArgs, FilePath } from "../platform_base";
 interface ElectronMenuItemArgs {
     id?: string;
@@ -40,11 +41,12 @@ export declare const iconcache: Record<string, unknown>;
 export declare function getNativeIcon(icon: number, iconsheet?: number, invertColors?: boolean, size?: number): string;
 export declare function buildElectronHotkey(hk: string): string;
 export declare function buildElectronMenu(menu: Menu): ElectronMenu;
-interface MenuEditorLike {
-    header: import("../../core/ui_base").UIBase;
+interface MenuEditorLike<CTX extends IContextBase> {
+    header?: UIBase<CTX>;
 }
-export declare function initMenuBar(menuEditor: MenuEditorLike, override?: boolean): void;
+export declare function initMenuBar<CTX extends IContextBase>(menuEditor: MenuEditorLike<CTX>, override?: boolean): void;
 import { PlatformAPI } from "../platform_base";
+import { IContextBase } from "../../core/context_base";
 export declare class platform extends PlatformAPI {
     static showOpenDialog(title: string, args?: FileDialogArgs): Promise<FilePath[]>;
     static _sanitizeFilters(filters: ({

@@ -38,8 +38,8 @@ export declare const compatMap: {
     numslider_height: string;
 };
 export declare const ColorSchemeTypes: {
-    LIGHT: string;
-    DARK: string;
+    readonly LIGHT: "light";
+    readonly DARK: "dark";
 };
 export declare function parsepx(css: string): number;
 export declare function color2css(c: number[] | Vector4 | Vector3, alpha_override?: number): string;
@@ -50,7 +50,7 @@ export declare function validateWebColor(str: string): boolean;
 export declare function validateCSSColor(color: string): boolean;
 export declare const theme: ThemeRecord;
 export declare function invertTheme(): void;
-export declare function setColorSchemeType(mode: string): void;
+export declare function setColorSchemeType(mode: "light" | "dark"): void;
 export declare function exportTheme(themeIn?: ThemeRecord, addVarDecl?: boolean): string;
 export declare function copyTheme(themeObj: ThemeRecord | CSSFont | Record<string, unknown>): CSSFont | Record<string, unknown>;
 //# sourceMappingURL=ui_theme.d.ts.map

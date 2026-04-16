@@ -40,4 +40,5 @@ import cconst from "./config/const.js";
 export { cconst };
 import * as simple from "./simple/simple.js";
 export { simple };
+import "./global.d.ts";
 //# sourceMappingURL=pathux.d.ts.map

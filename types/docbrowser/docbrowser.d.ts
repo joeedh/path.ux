@@ -46,7 +46,7 @@ export declare class DocHistoryItem {
     url: string;
     title: string;
     static STRUCT: string;
-    constructor(url: string, title: string);
+    constructor(url?: string, title?: string);
     loadSTRUCT(reader: StructReader<this>): void;
 }
 export declare class DocHistory extends Array<DocHistoryItem> {
