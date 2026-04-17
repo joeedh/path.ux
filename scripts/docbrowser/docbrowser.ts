@@ -476,11 +476,7 @@ interface HeaderContainer extends UIBase {
   ): UIBase & { value: boolean; checked: boolean; onchange: (() => void) | null };
   iconbutton(icon: number, description: string, cb: () => void): UIBase & { iconsheet: number };
   button(label: string, cb: () => void): UIBase & { iconsheet: number };
-  listenum(
-    path: string | undefined,
-    name: string,
-    enumDef: Record<string, string>
-  ): DropBox;
+  listenum(path: string | undefined, name: string, enumDef: Record<string, string>): DropBox;
 }
 
 export class DocsBrowser extends UIBase {
