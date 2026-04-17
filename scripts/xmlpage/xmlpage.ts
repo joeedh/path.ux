@@ -693,17 +693,17 @@ class Handler {
       }
     }
 
-    let func: ((...args: unknown[]) => unknown) | undefined;
     const $scope = this.templateScope;
 
     buf = `
-func = function() {
-  ${buf};
-}
+  (function($scope) {
+    return function() {
+      ${buf};
+    }
+  })
     `;
 
-    eval(buf);
-
+    const func = (0, eval)(buf)($scope);
     const id = "" + elem.getAttribute("id");
 
     this.codefuncs[id] = func!;

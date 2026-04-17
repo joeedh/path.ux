@@ -278,8 +278,8 @@ var init_polyfill = __esm({
       });
     }
     if (Array.prototype.reject === void 0) {
-      Array.prototype.reject = function reject(func2) {
-        return this.filter((item) => !func2(item));
+      Array.prototype.reject = function reject(func) {
+        return this.filter((item) => !func(item));
       };
       Object.defineProperty(Array.prototype, "reject", {
         enumerable: false,
@@ -1223,7 +1223,7 @@ function list(iter) {
   return ret;
 }
 function print_lines(ld, lineno, col, printColors, tokenObj) {
-  let buf2 = "";
+  let buf = "";
   const lines = ld.split("\n");
   const istart = Math.max(lineno - 5, 0);
   const iend = Math.min(lineno + 3, lines.length);
@@ -1238,18 +1238,18 @@ function print_lines(ld, lineno, col, printColors, tokenObj) {
     if (i === lineno && tokenObj && tokenObj.value.length === 1) {
       l = l.slice(0, col + 5) + color(l[col + 5], "yellow") + l.slice(col + 6, l.length);
     }
-    buf2 += l;
+    buf += l;
     if (i === lineno) {
       let colstr = "     ";
       for (let j = 0; j < col; j++) {
         colstr += " ";
       }
       colstr += color("^", "red");
-      buf2 += colstr + "\n";
+      buf += colstr + "\n";
     }
   }
-  buf2 = "------------------\n" + buf2 + "\n==================\n";
-  return buf2;
+  buf = "------------------\n" + buf + "\n==================\n";
+  return buf;
 }
 function gen_tabstr$2(t) {
   let s = "";
@@ -1258,7 +1258,7 @@ function gen_tabstr$2(t) {
   }
   return s;
 }
-function stripComments(buf2) {
+function stripComments(buf) {
   let s = "";
   const MAIN = 0, COMMENT = 1, STR = 2;
   let n;
@@ -1266,9 +1266,9 @@ function stripComments(buf2) {
   let mode = MAIN;
   let strlit = "";
   let escape = false;
-  for (let i = 0; i < buf2.length; i++) {
-    const c = buf2[i];
-    n = i < buf2.length - 1 ? buf2[i + 1] : void 0;
+  for (let i = 0; i < buf.length; i++) {
+    const c = buf[i];
+    n = i < buf.length - 1 ? buf[i + 1] : void 0;
     switch (mode) {
       case MAIN:
         if (c === "/" && n === "/") {
@@ -1322,8 +1322,8 @@ function StructParser() {
     "static_array",
     "optional"
   ]);
-  function tk2(name2, re, func2, example) {
-    return new tokdef(name2, re, func2, example);
+  function tk2(name2, re, func, example) {
+    return new tokdef(name2, re, func, example);
   }
   const tokens2 = [
     tk2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_\.$]*/, function(t) {
@@ -1930,7 +1930,7 @@ function getTokInfo(obj) {
   return void 0;
 }
 function buildJSONParser() {
-  const tk2 = (name2, re, func2, example) => new tokdef(name2, re, func2, example);
+  const tk2 = (name2, re, func, example) => new tokdef(name2, re, func, example);
   let parse;
   const nint = "[+-]?[0-9]+";
   const nhex = "[+-]?0x[0-9a-fA-F]+";
@@ -2077,8 +2077,8 @@ function buildJSONParser() {
   parse.start = p_Start;
   return parse;
 }
-function printContext(buf2, tokinfo, printColors = true) {
-  const lines = buf2.split("\n");
+function printContext(buf, tokinfo, printColors = true) {
+  const lines = buf.split("\n");
   if (!tokinfo) {
     return "";
   }
@@ -2129,16 +2129,16 @@ function updateDEBUG() {
 }
 function printCodeLines(code2) {
   const lines = code2.split(String.fromCharCode(10));
-  let buf2 = "";
+  let buf = "";
   for (let i = 0; i < lines.length; i++) {
     let line = "" + (i + 1) + ":";
     while (line.length < 3) {
       line += " ";
     }
     line += " " + lines[i];
-    buf2 += line + String.fromCharCode(10);
+    buf += line + String.fromCharCode(10);
   }
-  return buf2;
+  return buf;
 }
 function printEvalError(code) {
   console.log("== CODE ==");
@@ -2228,29 +2228,29 @@ function deriveStructManager(keywords = {
   return NewSTRUCT;
 }
 function write_scripts(nManager = manager, include_code = false) {
-  let buf2 = "";
+  let buf = "";
   const nl = String.fromCharCode(10);
   const tab2 = String.fromCharCode(9);
   nManager.forEach(function(stt) {
-    buf2 += STRUCT.fmt_struct(stt, false, !include_code) + nl;
+    buf += STRUCT.fmt_struct(stt, false, !include_code) + nl;
   });
-  let buf22 = buf2;
-  buf2 = "";
-  for (let i = 0; i < buf22.length; i++) {
-    const c = buf22[i];
+  let buf2 = buf;
+  buf = "";
+  for (let i = 0; i < buf2.length; i++) {
+    const c = buf2[i];
     if (c === nl) {
-      buf2 += nl;
+      buf += nl;
       const i2 = i;
-      while (i < buf22.length && (buf22[i] === " " || buf22[i] === tab2 || buf22[i] === nl)) {
+      while (i < buf2.length && (buf2[i] === " " || buf2[i] === tab2 || buf2[i] === nl)) {
         i++;
       }
       if (i !== i2)
         i--;
     } else {
-      buf2 += c;
+      buf += c;
     }
   }
-  return buf2;
+  return buf;
 }
 function versionToInt(v) {
   const ver = versionCoerce(v);
@@ -2388,10 +2388,10 @@ var init_nstructjs_es6 = __esm({
       }
     };
     tokdef = class {
-      constructor(name2, regexpr, func2, example) {
+      constructor(name2, regexpr, func, example) {
         this.name = name2;
         this.re = regexpr;
-        this.func = func2;
+        this.func = func;
         this.example = example;
         if (example === void 0 && regexpr) {
           let s = "" + regexpr;
@@ -3139,31 +3139,31 @@ var init_nstructjs_es6 = __esm({
         return "abstract(" + type.data + ")";
       }
       static unpackInto(manager3, data, type, uctx, dest) {
-        let id2 = unpack_int(data, uctx);
-        packer_debug$1("-int " + id2);
-        if (!(id2 in manager3.struct_ids)) {
-          packer_debug$1("tstruct id: " + id2);
+        let id = unpack_int(data, uctx);
+        packer_debug$1("-int " + id);
+        if (!(id in manager3.struct_ids)) {
+          packer_debug$1("tstruct id: " + id);
           console.trace();
-          console.log(id2);
+          console.log(id);
           console.log(manager3.struct_ids);
-          throw new Error("Unknown struct type " + id2 + ".");
+          throw new Error("Unknown struct type " + id + ".");
         }
-        let cls2 = manager3.get_struct_id(id2);
+        let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
         return manager3.read_object(data, cls3, uctx, dest);
       }
       static unpack(manager3, data, type, uctx) {
-        let id2 = unpack_int(data, uctx);
-        packer_debug$1("-int " + id2);
-        if (!(id2 in manager3.struct_ids)) {
-          packer_debug$1("tstruct id: " + id2);
+        let id = unpack_int(data, uctx);
+        packer_debug$1("-int " + id);
+        if (!(id in manager3.struct_ids)) {
+          packer_debug$1("tstruct id: " + id);
           console.trace();
-          console.log(id2);
+          console.log(id);
           console.log(manager3.struct_ids);
-          throw new Error("Unknown struct type " + id2 + ".");
+          throw new Error("Unknown struct type " + id + ".");
         }
-        let cls2 = manager3.get_struct_id(id2);
+        let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
         return manager3.read_object(data, cls3, uctx);
@@ -3989,8 +3989,8 @@ var init_nstructjs_es6 = __esm({
           return ret;
         }
         function throwError(stt, field, msg) {
-          const buf2 = _STRUCT.formatStruct(stt);
-          console.error(buf2 + "\n\n" + msg);
+          const buf = _STRUCT.formatStruct(stt);
+          console.error(buf + "\n\n" + msg);
           if (onerror) {
             onerror(msg, stt, field);
           } else {
@@ -4017,17 +4017,17 @@ var init_nstructjs_es6 = __esm({
           }
         }
       }
-      forEach(func2, thisvar) {
+      forEach(func, thisvar) {
         for (const k in this.structs) {
           const stt = this.structs[k];
           if (thisvar !== void 0)
-            func2.call(thisvar, stt);
+            func.call(thisvar, stt);
           else
-            func2(stt);
+            func(stt);
         }
       }
       // defaults to structjs.manager
-      parse_structs(buf2, defined_classes) {
+      parse_structs(buf, defined_classes) {
         const keywords = this.constructor.keywords;
         if (defined_classes === void 0) {
           defined_classes = manager;
@@ -4060,7 +4060,7 @@ var init_nstructjs_es6 = __esm({
           }
           clsmap[cls.structName] = defined_classes[i];
         }
-        struct_parse.input(buf2);
+        struct_parse.input(buf);
         while (!struct_parse.at_end()) {
           const stt = struct_parse.parse(void 0, false);
           if (!(stt.name in clsmap)) {
@@ -4249,8 +4249,8 @@ var init_nstructjs_es6 = __esm({
         }
         return cls === this.struct_cls[cls.structName];
       }
-      get_struct_id(id2) {
-        return this.struct_ids[id2];
+      get_struct_id(id) {
+        return this.struct_ids[id];
       }
       get_struct(name2) {
         if (!(name2 in this.structs)) {
@@ -4279,23 +4279,23 @@ var init_nstructjs_es6 = __esm({
           fullcode = envcode + code2;
         else
           fullcode = code2;
-        let func2;
+        let func;
         if (!(fullcode in this.compiled_code)) {
           const code22 = "func = function(obj, env) { " + envcode + "return " + code2 + "}";
           try {
-            func2 = struct_eval.structEval(code22);
+            func = struct_eval.structEval(code22);
           } catch (err) {
             console.warn(err.stack);
             console.warn(code22);
             console.warn(" ");
             throw err;
           }
-          this.compiled_code[fullcode] = func2;
+          this.compiled_code[fullcode] = func;
         } else {
-          func2 = this.compiled_code[fullcode];
+          func = this.compiled_code[fullcode];
         }
         try {
-          return func2.call(obj, obj, env);
+          return func.call(obj, obj, env);
         } catch (err) {
           console.warn(err.stack);
           const code22 = "func = function(obj, env) { " + envcode + "return " + code2 + "}";
@@ -5029,13 +5029,13 @@ var init_lz_string = __esm({
       compressToUint8Array: function(uncompressed) {
         uncompressed = getInput(uncompressed);
         let compressed = this.compress(uncompressed);
-        let buf2 = new Uint8Array(compressed.length * 2);
+        let buf = new Uint8Array(compressed.length * 2);
         for (let i = 0, TotalLen = compressed.length; i < TotalLen; i++) {
           let current_value = compressed.charCodeAt(i);
-          buf2[i * 2] = current_value >>> 8;
-          buf2[i * 2 + 1] = current_value % 256;
+          buf[i * 2] = current_value >>> 8;
+          buf[i * 2 + 1] = current_value % 256;
         }
-        return buf2;
+        return buf;
       },
       //decompress from uint8array (UCS-2 big endian format)
       decompressFromUint8Array: function(compressed) {
@@ -5043,12 +5043,12 @@ var init_lz_string = __esm({
           return this.decompress(compressed);
         } else {
           compressed = getInput(compressed);
-          let buf2 = new Array(compressed.length / 2);
-          for (let i = 0, TotalLen = buf2.length; i < TotalLen; i++) {
-            buf2[i] = compressed[i * 2] * 256 + compressed[i * 2 + 1];
+          let buf = new Array(compressed.length / 2);
+          for (let i = 0, TotalLen = buf.length; i < TotalLen; i++) {
+            buf[i] = compressed[i * 2] * 256 + compressed[i * 2 + 1];
           }
           let result = [];
-          buf2.forEach(function(c) {
+          buf.forEach(function(c) {
             result.push(f(c));
           });
           return this.decompress(result.join(""));
@@ -5587,12 +5587,12 @@ function termPrint2(...args) {
   }
   return out;
 }
-function pollTimer(id2, interval) {
-  if (!(id2 in timers)) {
-    timers[id2] = time_ms();
+function pollTimer(id, interval) {
+  if (!(id in timers)) {
+    timers[id] = time_ms();
   }
-  if (time_ms() - timers[id2] >= interval) {
-    timers[id2] = time_ms();
+  if (time_ms() - timers[id] >= interval) {
+    timers[id] = time_ms();
     return true;
   }
   return false;
@@ -5682,16 +5682,16 @@ function getAllKeys(obj) {
   }
   return keys2;
 }
-function btoa2(buf2) {
-  if (buf2 instanceof ArrayBuffer) {
-    buf2 = new Uint8Array(buf2);
+function btoa2(buf) {
+  if (buf instanceof ArrayBuffer) {
+    buf = new Uint8Array(buf);
   }
-  if (typeof buf2 === "string" || buf2 instanceof String) {
-    return window.btoa(buf2);
+  if (typeof buf === "string" || buf instanceof String) {
+    return window.btoa(buf);
   }
   let ret = "";
-  for (let i = 0; i < buf2.length; i++) {
-    ret += String.fromCharCode(buf2[i]);
+  for (let i = 0; i < buf.length; i++) {
+    ret += String.fromCharCode(buf[i]);
   }
   return btoa2(ret);
 }
@@ -5710,8 +5710,8 @@ function formatNumberUI(val, isInt = false, decimals = 5) {
     return "" + Math.floor(val);
   }
 }
-function atob2(buf2) {
-  const data = window.atob(buf2);
+function atob2(buf) {
+  const data = window.atob(buf);
   const ret = [];
   for (let i = 0; i < data.length; i++) {
     ret.push(data.charCodeAt(i));
@@ -5796,12 +5796,12 @@ function test_fasthash() {
   console2.log(h);
   return h;
 }
-function validateId(id2) {
-  let bad = typeof id2 !== "number";
-  bad = bad || id2 !== ~~id2;
-  bad = bad || isNaN(id2);
+function validateId(id) {
+  let bad = typeof id !== "number";
+  bad = bad || id !== ~~id;
+  bad = bad || isNaN(id);
   if (bad) {
-    throw new Error("bad number " + id2);
+    throw new Error("bad number " + id);
   }
   return bad;
 }
@@ -6112,7 +6112,7 @@ var init_util = __esm({
       private;
       cur;
       gen;
-      constructor(func2, size, isprivate = false) {
+      constructor(func, size, isprivate = false) {
         super();
         this.private = isprivate;
         this.cur = 0;
@@ -6122,14 +6122,14 @@ var init_util = __esm({
           window._cacherings.push(this);
         }
         for (let i = 0; i < size; i++) {
-          this.push(func2());
+          this.push(func());
         }
       }
       static fromConstructor(cls, size, isprivate = false) {
-        const func2 = function() {
+        const func = function() {
           return new cls();
         };
-        return new _cachering(func2, size, isprivate);
+        return new _cachering(func, size, isprivate);
       }
       next() {
         if (debug_cacherings) {
@@ -6294,11 +6294,11 @@ var init_util = __esm({
       has(item) {
         return item[Symbol.keystr]() in this.keys;
       }
-      forEach(func2, thisvar) {
+      forEach(func, thisvar) {
         for (let i = 0; i < this.items.length; i++) {
           const item = this.items[i];
           if (item === EmptySlot) continue;
-          thisvar !== void 0 ? func2.call(thisvar, item) : func2(item);
+          thisvar !== void 0 ? func.call(thisvar, item) : func(item);
         }
       }
     };
@@ -6466,8 +6466,8 @@ var init_util = __esm({
         ret.cur = this.cur;
         return ret;
       }
-      max_cur(id2) {
-        this.cur = Math.max(this.cur, id2 + 1);
+      max_cur(id) {
+        this.cur = Math.max(this.cur, id + 1);
       }
       toJSON() {
         return {
@@ -6897,74 +6897,74 @@ IDGen {
         this._keys = /* @__PURE__ */ new Set();
         this.size = 0;
       }
-      has(id2) {
-        validateId(id2);
-        if (id2 < 0 || id2 >= this.length) {
+      has(id) {
+        validateId(id);
+        if (id < 0 || id >= this.length) {
           return false;
         }
-        return this[id2] !== void 0;
+        return this[id] !== void 0;
       }
       // @ts-ignore - intentionally shadows Array.prototype.set from polyfill
-      set(id2, val) {
-        validateId(id2);
-        if (id2 < 0) {
+      set(id, val) {
+        validateId(id);
+        if (id < 0) {
           console2.warn("got -1 id in IDMap");
           return false;
         }
-        if (id2 >= this.length) {
-          this.length = id2 + 1;
+        if (id >= this.length) {
+          this.length = id + 1;
         }
         const storedVal = val === void 0 ? UndefinedTag : val;
         let ret = false;
-        if (this[id2] === void 0) {
+        if (this[id] === void 0) {
           this.size++;
-          this._keys.add(id2);
+          this._keys.add(id);
           ret = true;
         }
-        this[id2] = storedVal;
+        this[id] = storedVal;
         return ret;
       }
       /* we allow -1, which always returns undefined*/
-      get(id2) {
-        validateId(id2);
-        if (id2 === -1) {
+      get(id) {
+        validateId(id);
+        if (id === -1) {
           return void 0;
-        } else if (id2 < 0) {
+        } else if (id < 0) {
           console2.warn("id was negative");
           return void 0;
         }
-        let ret = id2 < this.length ? this[id2] : void 0;
+        let ret = id < this.length ? this[id] : void 0;
         ret = ret === UndefinedTag ? void 0 : ret;
         return ret;
       }
-      delete(id2) {
-        if (!this.has(id2)) {
+      delete(id) {
+        if (!this.has(id)) {
           return false;
         }
-        this._keys.delete(id2);
-        this[id2] = void 0;
+        this._keys.delete(id);
+        this[id] = void 0;
         this.size--;
         return true;
       }
       keys() {
         const this2 = this;
         return (function* () {
-          for (const id2 of this2._keys) {
-            if (this2[id2] === UndefinedTag) {
+          for (const id of this2._keys) {
+            if (this2[id] === UndefinedTag) {
               continue;
             }
-            yield id2;
+            yield id;
           }
         })();
       }
       values() {
         const this2 = this;
         return (function* () {
-          for (const id2 of this2._keys) {
-            if (this2[id2] === UndefinedTag) {
+          for (const id of this2._keys) {
+            if (this2[id] === UndefinedTag) {
               continue;
             }
-            yield this2[id2];
+            yield this2[id];
           }
         })();
       }
@@ -6972,9 +6972,9 @@ IDGen {
         const this2 = this;
         const iteritem = [0, void 0];
         return (function* () {
-          for (const id2 of this2._keys) {
-            iteritem[0] = id2;
-            const val = this2[id2];
+          for (const id of this2._keys) {
+            iteritem[0] = id;
+            const val = this2[id];
             if (val === UndefinedTag) {
               continue;
             } else {
@@ -6988,8 +6988,8 @@ IDGen {
     globalThis._test_idmap = function() {
       const idmap = new IDMap();
       for (let i = 0; i < 5; i++) {
-        const id2 = ~~(Math.random() * 55);
-        idmap.set(id2, "yay" + i);
+        const id = ~~(Math.random() * 55);
+        idmap.set(id, "yay" + i);
       }
       for (const [key, val] of idmap) {
         window.console.log(key, val, idmap.has(key), idmap.get(key));
@@ -7297,13 +7297,13 @@ IDGen {
         this.update();
       }
       update() {
-        let buf2 = this.lines.join(`<br>`);
-        buf2 = buf2.replace(/[ \t]/g, "&nbsp;");
+        let buf = this.lines.join(`<br>`);
+        buf = buf.replace(/[ \t]/g, "&nbsp;");
         if (!this.elem) {
           this.elem = document.getElementById(this.elemId) ?? void 0;
         }
         if (this.elem) {
-          this.elem.innerHTML = buf2;
+          this.elem.innerHTML = buf;
         }
       }
       toString(obj, depth = 0) {
@@ -10136,9 +10136,9 @@ function singletonMouseEventsInit() {
   }
   let ddd = -1;
   window.testSingleMouseUpEvent = (type = "mousedown") => {
-    const id2 = ddd++;
+    const id = ddd++;
     singleMouseEvent(() => {
-      console.log("mouse event", id2);
+      console.log("mouse event", id);
     }, type);
   };
   const _mpos = new Vector2(void 0);
@@ -10338,10 +10338,10 @@ function findScreen() {
 function _setModalAreaClass(cls) {
   ContextAreaClass = cls;
 }
-function pushPointerModal(obj, elem2, pointerId, autoStopPropagation = true) {
-  return pushModalLight(obj, autoStopPropagation, elem2, pointerId);
+function pushPointerModal(obj, elem, pointerId, autoStopPropagation = true) {
+  return pushModalLight(obj, autoStopPropagation, elem, pointerId);
 }
-function pushModalLight(obj, autoStopPropagation = true, elem2, pointerId) {
+function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   let keys2;
   if (pointerId === void 0) {
     keys2 = /* @__PURE__ */ new Set([
@@ -10497,7 +10497,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem2, pointerId) {
       window.addEventListener(k, ret.handlers[k], settings);
     }
   }
-  if (pointerId !== void 0 && elem2) {
+  if (pointerId !== void 0 && elem) {
     let make_pointer2 = function(k) {
       const k2 = "on_" + k;
       ret.pointer[k] = function(e) {
@@ -10512,7 +10512,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem2, pointerId) {
     };
     var make_pointer = make_pointer2;
     ret.pointer = {
-      elem: elem2,
+      elem,
       pointerId
     };
     make_pointer2("pointerdown");
@@ -10528,17 +10528,17 @@ function pushModalLight(obj, autoStopPropagation = true, elem2, pointerId) {
     make_pointer2("pointercancel");
     for (const k in ret.pointer) {
       if (k !== "elem" && k !== "pointerId") {
-        elem2.addEventListener(k, ret.pointer[k]);
+        elem.addEventListener(k, ret.pointer[k]);
       }
     }
     try {
-      elem2.setPointerCapture(pointerId);
+      elem.setPointerCapture(pointerId);
     } catch (error2) {
       print_stack2(error2);
       consolelog("attempting fallback");
       for (const k in ret.pointer) {
         if (k !== "elem" && k !== "pointerId") {
-          elem2.removeEventListener(k, ret.pointer[k]);
+          elem.removeEventListener(k, ret.pointer[k]);
         }
       }
       delete ret.pointer;
@@ -10592,15 +10592,15 @@ function popModalLight(state) {
     console.warn("popModalLight", modalstack, state.pointer ? "(pointer events)" : "");
   }
   if (state.pointer) {
-    const elem2 = state.pointer.elem;
+    const elem = state.pointer.elem;
     try {
-      elem2.releasePointerCapture(state.pointer.pointerId);
+      elem.releasePointerCapture(state.pointer.pointerId);
     } catch (error2) {
       print_stack2(error2);
     }
     for (const k in state.pointer) {
       if (k !== "elem" && k !== "pointerId") {
-        elem2.removeEventListener(k, state.pointer[k]);
+        elem.removeEventListener(k, state.pointer[k]);
       }
     }
   }
@@ -11278,9 +11278,9 @@ CurveTypeData {
 // scripts/path-controller/util/events.ts
 function copyMouseEvent(e) {
   const ret = {};
-  function bind(func2) {
+  function bind(func) {
     return function(...args) {
-      return ret._orig.apply(func2, args);
+      return ret._orig.apply(func, args);
     };
   }
   const exclude2 = /* @__PURE__ */ new Set(["__proto__"]);
@@ -14155,8 +14155,8 @@ var init_controller_base = __esm({
        * this.datactx  : ctx
        * this.datapath : datapath
        * */
-      uiNameGetter(func2) {
-        this.ui_name_get = func2;
+      uiNameGetter(func) {
+        this.ui_name_get = func;
         return this;
       }
       expRate(exp) {
@@ -14661,10 +14661,10 @@ var init_context = __esm({
           return notifier.message(state.screen, msg, timeout);
         }
       }
-      progbar(msg, perc = 0, timeout = 1500, id2 = msg) {
+      progbar(msg, perc = 0, timeout = 1500, id = msg) {
         let state = this.state;
         if (state && state.screen) {
-          return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id2);
+          return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
         }
       }
       validateOverlays() {
@@ -16337,8 +16337,8 @@ function mySafeJSONStringify(obj) {
     return v;
   });
 }
-function mySafeJSONParse(buf2) {
-  return JSON.parse(buf2, (_key, _val) => {
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (_key, _val) => {
   });
 }
 function bez3(a2, b, c, t) {
@@ -18023,8 +18023,8 @@ function mySafeJSONStringify2(obj) {
     return v;
   });
 }
-function mySafeJSONParse2(buf2) {
-  return JSON.parse(buf2, (_key, _val) => {
+function mySafeJSONParse2(buf) {
+  return JSON.parse(buf, (_key, _val) => {
   });
 }
 var _udigest3, Curve1D;
@@ -21252,9 +21252,9 @@ function getTraceBack(limit, start) {
       while (k >= 0 && l[k] !== "(") {
         k--;
       }
-      const func2 = l.slice(0, k).trim();
+      const func = l.slice(0, k).trim();
       const file = l.slice(j + 1, l.length - 1);
-      l = `  ${func2} (${file})`;
+      l = `  ${func} (${file})`;
       if (l.search(/parseutil\.js/) >= 0) {
         start = Math.max(start, i);
       }
@@ -21283,8 +21283,8 @@ function test_parser() {
     "static_string",
     "array"
   ]);
-  function tk2(name2, re, func2) {
-    return new tokdef2(name2, re, func2);
+  function tk2(name2, re, func) {
+    return new tokdef2(name2, re, func);
   }
   const tokens2 = [
     tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
@@ -21450,10 +21450,10 @@ var init_parseutil = __esm({
       name;
       re;
       func;
-      constructor(name2, regexpr, func2) {
+      constructor(name2, regexpr, func) {
         this.name = name2;
         this.re = regexpr;
-        this.func = func2;
+        this.func = func;
       }
     };
     PUTLParseError = class extends Error {
@@ -21651,20 +21651,20 @@ var init_parseutil = __esm({
         let estr;
         if (tok === void 0) estr = "Parse error at end of input: " + msg;
         else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
-        let buf2 = "1| ";
+        let buf = "1| ";
         const ld = this.lexer.lexdata;
         let l = 1;
         for (let i = 0; i < ld.length; i++) {
           const c = ld[i];
           if (c === "\n") {
             l++;
-            buf2 += "\n" + l + "| ";
+            buf += "\n" + l + "| ";
           } else {
-            buf2 += c;
+            buf += c;
           }
         }
         console.log("------------------");
-        console.log(buf2);
+        console.log(buf);
         console.log("==================");
         console.log(estr);
         if (this.errfunc && !this.errfunc(tok)) {
@@ -21766,7 +21766,7 @@ var init_controller_ops = __esm({
           __callDispose(_stack, _error, _hasError);
         }
       }
-      static create(ctx, datapath, value, id2, massSetPath) {
+      static create(ctx, datapath, value, id, massSetPath) {
         const rdef = ctx.api.resolvePath(ctx, datapath);
         if (rdef?.prop === void 0) {
           console.warn("DataPathSetOp failed", rdef, rdef?.prop);
@@ -21828,14 +21828,14 @@ var init_controller_ops = __esm({
         } else {
           tool.inputs.massSetPath.setValue("");
         }
-        tool.id = id2;
+        tool.id = id;
         tool.setValue(ctx, value, rdef.obj);
         return tool;
       }
-      hash(massSetPath, dataPath, prop, id2) {
+      hash(massSetPath, dataPath, prop, id) {
         massSetPath = massSetPath === void 0 ? "" : massSetPath;
         massSetPath = massSetPath === null ? "" : massSetPath;
-        const ret = "" + massSetPath + ":" + dataPath + ":" + prop + ":" + id2;
+        const ret = "" + massSetPath + ":" + dataPath + ":" + prop + ":" + id;
         return ret;
       }
       hashThis() {
@@ -22097,7 +22097,7 @@ var init_curve1d_basic = __esm({
       }
       #makeFunc() {
         this._func = void 0;
-        var func2;
+        var func;
         const code2 = `
     (function() {
       const sin = Math.sin,
@@ -22128,13 +22128,13 @@ var init_curve1d_basic = __esm({
     })();
     `;
         try {
-          func2 = (0, eval)(code2);
+          func = (0, eval)(code2);
           this._haserror = false;
         } catch (error2) {
           this._haserror = true;
           console.warn("Compile error!", error2.message);
         }
-        this._func = func2;
+        this._func = func;
       }
       _evaluate(s) {
         try {
@@ -23213,7 +23213,7 @@ var init_allprops = __esm({
 
 // scripts/path-controller/toolsys/toolpath.ts
 function buildParser() {
-  const t = (name2, re, func2) => new tokdef2(name2, re, func2);
+  const t = (name2, re, func) => new tokdef2(name2, re, func);
   const tokens2 = [
     t("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
       if (tok.value === "true" || tok.value === "false") {
@@ -23715,7 +23715,7 @@ var init_controller = __esm({
     init_toolsys();
     init_toolprop();
     PUTLParseError2 = PUTLParseError;
-    tk = (name2, re, func2) => new tokdef2(name2, re, func2);
+    tk = (name2, re, func) => new tokdef2(name2, re, func);
     tokens = [
       tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
       tk("NUM", /-?[0-9]+/, (t) => {
@@ -24221,8 +24221,8 @@ An example of a more complicated expression might be:
           return ${filter};
         })
         `;
-            const func2 = (0, eval)(code2);
-            return func2(obj);
+            const func = (0, eval)(code2);
+            return func(obj);
           }
         }
         for (const obj of list5.getIter(this, rdef.value)) {
@@ -26686,8 +26686,8 @@ var init_tagReRegister = __esm({
 function _setTextboxClass(cls) {
   TextBox = cls;
 }
-function calcElemCBKey(elem2, type, options) {
-  return elem2._id + ":" + type + ":" + JSON.stringify(options || {});
+function calcElemCBKey(elem, type, options) {
+  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
 }
 function setTagPrefix(prefix) {
   if (registered_has_happened) {
@@ -26729,7 +26729,7 @@ function report2(...args) {
     _last_report = time_ms();
   }
 }
-function getDefault(key, elem2) {
+function getDefault(key, elem) {
   console.warn("Deprecated call to ui_base.js:getDefault");
   const base = theme.base;
   if (key in base) {
@@ -26786,7 +26786,7 @@ function styleScrollBars(color = "grey", color2, contrast = 0.5, width = 15, bor
     inv[3] = a2;
     color2 = color2css3(inv);
   }
-  const buf2 = `
+  const buf = `
 
 ${selector} {
   scrollbar-width : ${width <= 16 ? "thin" : "auto"};
@@ -26808,7 +26808,7 @@ ${selector}::-webkit-scrollbar-thumb {
   border : ${border};
 }
     `;
-  return buf2;
+  return buf;
 }
 function calcThemeKey(digest = _digest2.reset()) {
   const anyTheme = theme;
@@ -26865,9 +26865,9 @@ function internalSetTimeout(cb, timeout = 0) {
     window.setTimeout(timeout_cb, 0);
   }
 }
-function drawRoundBox2(elem2, options = {}) {
+function drawRoundBox2(elem, options = {}) {
   drawRoundBox(
-    elem2,
+    elem,
     options.canvas,
     options.g,
     options.width,
@@ -26879,13 +26879,13 @@ function drawRoundBox2(elem2, options = {}) {
     options.no_clear
   );
 }
-function drawRoundBox(elem2, canvas, g, width, height, r, op = "fill", color, margin, no_clear = false) {
+function drawRoundBox(elem, canvas, g, width, height, r, op = "fill", color, margin, no_clear = false) {
   width = width === void 0 ? canvas.width : width;
   height = height === void 0 ? canvas.height : height;
   const ctx2d = g;
   ctx2d.save();
-  const dpi = elem2.getDPI();
-  let r2val = r === void 0 ? elem2.getDefault("border-radius") : r;
+  const dpi = elem.getDPI();
+  let r2val = r === void 0 ? elem.getDefault("border-radius") : r;
   if (margin === void 0) {
     margin = 1;
   }
@@ -26902,13 +26902,13 @@ function drawRoundBox(elem2, canvas, g, width, height, r, op = "fill", color, ma
   if (bg === void 0 && canvas._background !== void 0) {
     bg = canvas._background;
   } else if (bg === void 0) {
-    bg = elem2.getDefault("background-color");
+    bg = elem.getDefault("background-color");
   }
   if (op === "fill" && !no_clear) {
     ctx2d.clearRect(0, 0, width, height);
   }
   ctx2d.fillStyle = bg;
-  ctx2d.strokeStyle = color === void 0 ? elem2.getDefault("border-color") : color;
+  ctx2d.strokeStyle = color === void 0 ? elem.getDefault("border-color") : color;
   const w = width;
   const h = height;
   ctx2d.beginPath();
@@ -26931,34 +26931,34 @@ function drawRoundBox(elem2, canvas, g, width, height, r, op = "fill", color, ma
   }
   ctx2d.restore();
 }
-function _getFont_new(elem2, size, font = "DefaultText", do_dpi = true) {
-  const fontObj = elem2.getDefault(font);
+function _getFont_new(elem, size, font = "DefaultText", do_dpi = true) {
+  const fontObj = elem.getDefault(font);
   if (fontObj === void 0) {
     console.error(
       "Could not find font " + font + " for element",
-      elem2,
+      elem,
       "theme style:",
-      elem2.constructor.define().style ?? "base"
+      elem.constructor.define().style ?? "base"
     );
     debugger;
   }
   return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
 }
-function getFont(elem2, size, font = "DefaultText", do_dpi = true) {
-  return _getFont_new(elem2, size, font, do_dpi);
+function getFont(elem, size, font = "DefaultText", do_dpi = true) {
+  return _getFont_new(elem, size, font, do_dpi);
 }
-function _getFont(elem2, size, font = "DefaultText", do_dpi = true) {
-  const font2 = elem2.getDefault(font);
+function _getFont(elem, size, font = "DefaultText", do_dpi = true) {
+  const font2 = elem.getDefault(font);
   if (font2 !== void 0) {
-    return _getFont_new(elem2, size, font, do_dpi);
+    return _getFont_new(elem, size, font, do_dpi);
   }
   throw new Error("unknown font " + font);
 }
-function _ensureFont(elem2, canvas, g, size) {
+function _ensureFont(elem, canvas, g, size) {
   if (canvas.font) {
     g.font = canvas.font;
   } else {
-    const font = elem2.getDefault("DefaultText");
+    const font = elem.getDefault("DefaultText");
     g.font = font.genCSS(size);
   }
 }
@@ -26973,7 +26973,7 @@ function get_measure_canvas() {
   _mc = canvas;
   return _mc;
 }
-function measureTextBlock(elem2, text2, canvas, g, size, font) {
+function measureTextBlock(elem, text2, canvas, g, size, font) {
   const lines = text2.split("\n");
   const ret = {
     width: 0,
@@ -26984,18 +26984,18 @@ function measureTextBlock(elem2, text2, canvas, g, size, font) {
       size = font.size;
     }
     if (size === void 0) {
-      size = elem2.getDefault("DefaultText").size;
+      size = elem.getDefault("DefaultText").size;
     }
   }
   for (const line of lines) {
-    const m = measureText(elem2, line, canvas, g, size, font);
+    const m = measureText(elem, line, canvas, g, size, font);
     ret.width = Math.max(ret.width, m.width);
     const h = m.height !== void 0 ? m.height : size * 1.25;
     ret.height += h;
   }
   return ret;
 }
-function measureText(elem2, text2, canvas, g, size, font) {
+function measureText(elem, text2, canvas, g, size, font) {
   if (typeof canvas === "object" && canvas !== null && !(canvas instanceof HTMLCanvasElement) && canvas.tagName !== "CANVAS") {
     const args = canvas;
     canvas = args.canvas;
@@ -27014,7 +27014,7 @@ function measureText(elem2, text2, canvas, g, size, font) {
     }
     g.font = font;
   } else {
-    _ensureFont(elem2, canvas, g, size);
+    _ensureFont(elem, canvas, g, size);
   }
   const ret = g.measureText(text2);
   if (size !== void 0) {
@@ -27022,7 +27022,7 @@ function measureText(elem2, text2, canvas, g, size, font) {
   }
   return ret;
 }
-function drawText(elem2, x, y, text2, args = {}) {
+function drawText(elem, x, y, text2, args = {}) {
   const canvas = args.canvas;
   const g = args.g;
   let color = args.color;
@@ -27033,7 +27033,7 @@ function drawText(elem2, x, y, text2, args = {}) {
     if (fontIn !== void 0 && fontIn instanceof CSSFont) {
       size = fontIn.size;
     } else {
-      size = elem2.getDefault("DefaultText").size;
+      size = elem.getDefault("DefaultText").size;
     }
   }
   size *= UIBase2.getDPI();
@@ -27041,11 +27041,11 @@ function drawText(elem2, x, y, text2, args = {}) {
     if (fontIn instanceof CSSFont && fontIn.color) {
       color = fontIn.color;
     } else {
-      color = elem2.getDefault("DefaultText").color;
+      color = elem.getDefault("DefaultText").color;
     }
   }
   if (font === void 0) {
-    _ensureFont(elem2, canvas, g, size);
+    _ensureFont(elem, canvas, g, size);
   } else if (fontIn instanceof CSSFont) {
     g.font = fontIn.genCSS(size);
   } else if (font) {
@@ -27103,11 +27103,11 @@ function saveUIData(node, key) {
     _ui_version: 1
   });
 }
-function loadUIData(node, buf2) {
-  if (buf2 === void 0 || buf2 === null) {
+function loadUIData(node, buf) {
+  if (buf === void 0 || buf === null) {
     return;
   }
-  const obj = JSON.parse(buf2);
+  const obj = JSON.parse(buf);
   for (let path of obj.paths) {
     let n = node;
     if (n === void 0) {
@@ -27283,7 +27283,7 @@ var init_ui_base = __esm({
         });
         return this.promise;
       }
-      canvasDraw(elem2, canvas, g, icon, x = 0, y = 0) {
+      canvasDraw(elem, canvas, g, icon, x = 0, y = 0) {
         const customIcon = this.customIcons.get(icon);
         if (customIcon) {
           g.drawImage(customIcon.canvas, x, y);
@@ -27291,7 +27291,7 @@ var init_ui_base = __esm({
         }
         const tx = icon % this.tilex;
         const ty = ~~(icon / this.tilex);
-        const dpi = elem2.getDPI();
+        const dpi = elem.getDPI();
         const ts = this.tilesize;
         const ds = this.drawsize;
         if (!this.image) {
@@ -27352,11 +27352,11 @@ var init_ui_base = __esm({
       images;
       id;
       manager;
-      constructor(manager3, key, id2, baseImage) {
+      constructor(manager3, key, id, baseImage) {
         this.key = key;
         this.baseImage = baseImage;
         this.images = [];
-        this.id = id2;
+        this.id = id;
         this.manager = manager3;
       }
       regenIcons() {
@@ -27426,10 +27426,10 @@ var init_ui_base = __esm({
             maxid = Math.max(maxid, icon2.id + 1);
           }
           maxid = Math.max(maxid, 1e3);
-          const id2 = maxid;
-          icon = new CustomIcon(this, key, id2, image);
+          const id = maxid;
+          icon = new CustomIcon(this, key, id, image);
           this.customIcons.set(key, icon);
-          this.customIconIDMap.set(id2, icon);
+          this.customIconIDMap.set(id, icon);
         }
         icon.baseImage = image;
         icon.regenIcons();
@@ -27448,12 +27448,12 @@ var init_ui_base = __esm({
         this.iconsheets.push(new _IconManager(image, size, this.tilex, drawsize));
         return this;
       }
-      canvasDraw(elem2, canvas, g, icon, x = 0, y = 0, sheet = 0) {
+      canvasDraw(elem, canvas, g, icon, x = 0, y = 0, sheet = 0) {
         const base = this.iconsheets[sheet];
         const found = this.findSheet(sheet);
         const ds = found.drawsize;
         found.drawsize = base.drawsize;
-        found.canvasDraw(elem2, canvas, g, icon, x, y);
+        found.canvasDraw(elem, canvas, g, icon, x, y);
         found.drawsize = ds;
       }
       findClosestSheet(size) {
@@ -27540,8 +27540,8 @@ var init_ui_base = __esm({
     _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
     _idgen2 = 0;
     _testSetScrollbars = function(color = "grey", contrast = 0.5, width = 15, border = "solid") {
-      const buf2 = styleScrollBars(color, void 0, contrast, width, border, "*");
-      return buf2;
+      const buf = styleScrollBars(color, void 0, contrast, width, border, "*");
+      return buf;
     };
     _digest2 = new HashDigest();
     _themeUpdateKey = calcThemeKey();
@@ -27831,8 +27831,8 @@ var init_ui_base = __esm({
           theEventGraph.add(this);
         }
       }
-      playwrightId(id2) {
-        this.setAttribute("data-testid", id2);
+      playwrightId(id) {
+        this.setAttribute("data-testid", id);
         return this;
       }
       flagPropSocketUpdate(path) {
@@ -28220,13 +28220,13 @@ var init_ui_base = __esm({
         this.hidden = sethide;
         return this;
       }
-      getElementById(id2) {
+      getElementById(id) {
         let ret;
         const rec = (n) => {
           if (ret) {
             return;
           }
-          if (n.getAttribute("id") === id2 || n.id === id2) {
+          if (n.getAttribute("id") === id || n.id === id) {
             ret = n;
           }
           if (n instanceof _UIBase && n.constructor.define().tagname === "panelframe-x") {
@@ -28685,15 +28685,15 @@ var init_ui_base = __esm({
           }
           if (!internal_mode) {
             const screen = this.ctx.screen;
-            let elem2 = screen.pickElement(screen.mpos[0], screen.mpos[1]);
+            let elem = screen.pickElement(screen.mpos[0], screen.mpos[1]);
             let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
             checkTree = checkTree || is_copy && this.constructor.define().copyForAllChildren;
-            while (checkTree && !(TextBox && elem2 instanceof TextBox) && elem2 !== this && elem2 && elem2.parentWidget) {
-              console.log("  " + elem2._id);
-              elem2 = elem2.parentWidget;
+            while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem && elem.parentWidget) {
+              console.log("  " + elem._id);
+              elem = elem.parentWidget;
             }
-            console.warn("COLOR", this._id, elem2 ? elem2._id : "none");
-            if (elem2 !== this) {
+            console.warn("COLOR", this._id, elem ? elem._id : "none");
+            if (elem !== this) {
               this._clipboard_keyend();
               return;
             }
@@ -28881,26 +28881,26 @@ var init_ui_base = __esm({
         const clip2 = args.clip;
         x -= window.scrollX;
         y -= window.scrollY;
-        let elem2 = document.elementFromPoint(x, y);
-        if (!elem2) {
+        let elem = document.elementFromPoint(x, y);
+        if (!elem) {
           return;
         }
-        const path = [elem2];
-        let lastelem = elem2;
+        const path = [elem];
+        let lastelem = elem;
         let i = 0;
-        while (elem2 && elem2.shadow) {
+        while (elem && elem.shadow) {
           if (i++ > 1e3) {
             console.error("Infinite loop error");
             break;
           }
-          elem2 = elem2.shadow.elementFromPoint(x, y);
-          if (elem2 === lastelem) {
+          elem = elem.shadow.elementFromPoint(x, y);
+          if (elem === lastelem) {
             break;
           }
-          if (elem2) {
-            path.push(elem2);
+          if (elem) {
+            path.push(elem);
           }
-          lastelem = elem2;
+          lastelem = elem;
         }
         path.reverse();
         for (let i2 = 0; i2 < path.length; i2++) {
@@ -28996,19 +28996,19 @@ var init_ui_base = __esm({
         }
         const _areaWrangler = contextWrangler.copy();
         contextWrangler.copy();
-        function bindFunc(func2) {
+        function bindFunc(func) {
           return function(...args) {
             _areaWrangler.copyTo(contextWrangler);
-            return func2.apply(handlers, args);
+            return func.apply(handlers, args);
           };
         }
         const handlers2 = {};
         for (const k in handlers) {
-          const func2 = handlers[k];
-          if (typeof func2 !== "function") {
+          const func = handlers[k];
+          if (typeof func !== "function") {
             continue;
           }
-          handlers2[k] = bindFunc(func2);
+          handlers2[k] = bindFunc(func);
         }
         if (pointerId !== void 0 && pointerElem) {
           this._modaldata = pushPointerModal(handlers2, void 0, void 0, autoStopPropagation);
@@ -29319,38 +29319,38 @@ var init_ui_base = __esm({
       isDead() {
         return !this.isConnected;
       }
-      doOnce(func2, timeout) {
-        if (func2._doOnce === void 0) {
-          func2._doOnce_reqs = /* @__PURE__ */ new Set();
-          func2._doOnce = function(thisvar, trace2) {
-            if (func2._doOnce_reqs.has(thisvar._id)) {
+      doOnce(func, timeout) {
+        if (func._doOnce === void 0) {
+          func._doOnce_reqs = /* @__PURE__ */ new Set();
+          func._doOnce = function(thisvar, trace2) {
+            if (func._doOnce_reqs.has(thisvar._id)) {
               return;
             }
-            func2._doOnce_reqs.add(thisvar._id);
+            func._doOnce_reqs.add(thisvar._id);
             function f2() {
               if (thisvar.isDead()) {
-                func2._doOnce_reqs.delete(thisvar._id);
-                if (func2 === thisvar._init || !const_default.DEBUG.doOnce) {
+                func._doOnce_reqs.delete(thisvar._id);
+                if (func === thisvar._init || !const_default.DEBUG.doOnce) {
                   return;
                 }
-                console.warn("Ignoring doOnce call for dead element", thisvar._id, func2, trace2);
+                console.warn("Ignoring doOnce call for dead element", thisvar._id, func, trace2);
                 return;
               }
               if (!thisvar.ctx) {
                 if (const_default.DEBUG.doOnce) {
-                  console.warn("doOnce call is waiting for context...", thisvar._id, func2);
+                  console.warn("doOnce call is waiting for context...", thisvar._id, func);
                 }
                 internalSetTimeout(f2, 0);
                 return;
               }
-              func2._doOnce_reqs.delete(thisvar._id);
-              func2.call(thisvar);
+              func._doOnce_reqs.delete(thisvar._id);
+              func.call(thisvar);
             }
             internalSetTimeout(f2, timeout);
           };
         }
         const trace = new Error().stack;
-        func2._doOnce(this, trace);
+        func._doOnce(this, trace);
       }
       float(x = 0, y = 0, zindex, positionKey = _UIBase.PositionKey) {
         this.saneStyle.position = positionKey;
@@ -30591,8 +30591,8 @@ var init_html5_fileapi = __esm({
       });
     };
     window._testSaveFile = function() {
-      const buf2 = window._appstate.createFile();
-      saveFile(buf2, "unnamed.w3d", [".w3d"]);
+      const buf = window._appstate.createFile();
+      saveFile(buf, "unnamed.w3d", [".w3d"]);
     };
   }
 });
@@ -30634,7 +30634,7 @@ function createMenu(ctx, title, templ) {
   menu.ctx = ctx;
   menu.setAttribute("name", title);
   const menuSEP = menu.constructor.SEP;
-  let id2 = 0;
+  let id = 0;
   const cbs = {};
   const doItem = (item) => {
     if (item !== void 0 && item instanceof Menu) {
@@ -30645,7 +30645,7 @@ function createMenu(ctx, title, templ) {
       try {
         def = ctx.api.getToolDef(item);
       } catch (error2) {
-        menu.addItem("(tool path error)", id2++);
+        menu.addItem("(tool path error)", id++);
         return;
       }
       if (!def.hotkey) {
@@ -30659,13 +30659,13 @@ function createMenu(ctx, title, templ) {
       } else {
         hotkey = def.hotkey;
       }
-      menu.addItemExtra(def.uiname, id2, hotkey, def.icon);
-      cbs[id2] = /* @__PURE__ */ (function(toolpath) {
+      menu.addItemExtra(def.uiname, id, hotkey, def.icon);
+      cbs[id] = /* @__PURE__ */ (function(toolpath) {
         return function() {
           ctx.api.execTool(ctx, toolpath);
         };
       })(item);
-      id2++;
+      id++;
     } else if (item === menuSEP) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
@@ -30674,36 +30674,36 @@ function createMenu(ctx, title, templ) {
       let hotkey = item.length > 1 ? item[2] : void 0;
       const icon = item.length > 2 ? item[3] : void 0;
       const tooltip = item.length > 3 ? item[4] : void 0;
-      const id22 = item.length > 4 ? item[5] : id2++;
+      const id2 = item.length > 4 ? item[5] : id++;
       if (hotkey !== void 0 && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
-      menu.addItemExtra(item[0], id22, hotkey, icon, void 0, tooltip);
-      cbs[id22] = /* @__PURE__ */ (function(cbfunc, arg) {
+      menu.addItemExtra(item[0], id2, hotkey, icon, void 0, tooltip);
+      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      })(item[1], id22);
+      })(item[1], id2);
     } else if (typeof item === "object") {
       const objItem = item;
       let { name: name2, callback, hotkey, icon, tooltip } = objItem;
-      const id22 = objItem.id !== void 0 ? objItem.id : id2++;
+      const id2 = objItem.id !== void 0 ? objItem.id : id++;
       if (hotkey !== void 0 && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
-      menu.addItemExtra(name2, id22, hotkey, icon, void 0, tooltip);
-      cbs[id22] = /* @__PURE__ */ (function(cbfunc, arg) {
+      menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
+      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      })(callback, id22);
+      })(callback, id2);
     }
   };
   for (const item of templ) {
     doItem(item);
   }
-  menu._onselect = (id3) => {
-    cbs[id3]();
+  menu._onselect = (id2) => {
+    cbs[id2]();
   };
   return menu;
 }
@@ -31020,7 +31020,7 @@ var init_ui_menu = __esm({
           this.activeItem.focus();
         }, 0);
       }
-      addItemExtra(text2, id2, hotkey, icon = -1, add = true, tooltip = "") {
+      addItemExtra(text2, id, hotkey, icon = -1, add = true, tooltip = "") {
         const dom = document.createElement("span");
         dom.style["display"] = "inline-flex";
         dom.hotkey = hotkey;
@@ -31079,7 +31079,7 @@ var init_ui_menu = __esm({
           hotkey_span.style["textWrap"] = "nowrap";
           dom.appendChild(hotkey_span);
         }
-        const ret = this.addItem(dom, id2, add);
+        const ret = this.addItem(dom, id, add);
         ret.hotkey = hotkey;
         ret.icon = icon;
         ret.label = text2 ? text2 : ret.innerText;
@@ -31089,8 +31089,8 @@ var init_ui_menu = __esm({
         return ret;
       }
       //item can be menu or text
-      addItem(item, id2, add = true, tooltip) {
-        id2 = id2 === void 0 ? item : id2;
+      addItem(item, id, add = true, tooltip) {
+        id = id === void 0 ? item : id;
         let text2 = typeof item === "string" || item instanceof String ? item : item.textContent;
         if (typeof item === "string" || item instanceof String) {
           const dom = document.createElement("div");
@@ -31109,7 +31109,7 @@ var init_ui_menu = __esm({
         if (item instanceof _Menu) {
           const dom = document.createElement("span");
           dom.innerHTML = "" + item.title;
-          dom._id = dom.id = "" + id2;
+          dom._id = dom.id = "" + id;
           dom.setAttribute("class", "menu");
           li.style["width"] = "100%";
           li.appendChild(dom);
@@ -31122,7 +31122,7 @@ var init_ui_menu = __esm({
           li._isMenu = false;
           li.appendChild(item);
         }
-        li._id = id2;
+        li._id = id;
         this.items.push(li);
         li.label = text2 ? text2 : li.innerText.trim();
         if (add) {
@@ -31567,7 +31567,7 @@ var init_ui_menu = __esm({
             menu.addItem(uk, enummap[k], void 0, tooltip);
           }
         }
-        menu._onselect = (id2) => {
+        menu._onselect = (id) => {
           this._pressed = false;
           this._pressed = false;
           this._redraw();
@@ -31579,16 +31579,16 @@ var init_ui_menu = __esm({
             const rdata = rdef.dpath?.data;
             callProp = !rdata || !(rdata instanceof ToolProperty);
           }
-          this._value = this._convertVal(id2) ?? id2;
+          this._value = this._convertVal(id) ?? id;
           if (callProp) {
-            this.prop.setValue(id2);
+            this.prop.setValue(id);
           }
-          this.setAttribute("name", this.prop.ui_value_names[valmap[id2]]);
+          this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
           if (this.on_select) {
-            this.on_select(id2);
+            this.on_select(id);
           }
           if (this.hasAttribute("datapath") && this.ctx) {
-            this.setPathValue(this.ctx, this.getAttribute("datapath"), id2);
+            this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
           }
         };
       }
@@ -31976,25 +31976,25 @@ var init_ui_menu = __esm({
           this.closereq = void 0;
           return;
         }
-        const elem2 = element;
-        let destroy = elem2.hasAttribute("menu-button") && element.hasAttribute("simple");
-        destroy = destroy && elem2.menu !== this.menu;
+        const elem = element;
+        let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
+        destroy = destroy && elem.menu !== this.menu;
         if (destroy) {
           let menu2 = this.menu;
-          while (menu2 !== elem2.menu) {
+          while (menu2 !== elem.menu) {
             menu2 = menu2?.parentMenu;
-            destroy = destroy && (menu2 === void 0 || menu2 !== elem2.menu);
+            destroy = destroy && (menu2 === void 0 || menu2 !== elem.menu);
           }
         }
         if (destroy) {
           this.endMenus();
           this.closetimer = time_ms();
           this.closereq = void 0;
-          elem2._onpress?.(e);
+          elem._onpress?.(e);
           return;
         }
         let ok = false;
-        let w = elem2;
+        let w = elem;
         while (w) {
           if (w instanceof Menu) {
             ok = true;
@@ -33270,8 +33270,8 @@ var IconLabel = class extends UIBase3 {
   get icon() {
     return this._icon;
   }
-  set icon(id2) {
-    this._icon = id2;
+  set icon(id) {
+    this._icon = id;
     this.setCSS();
   }
   static define() {
@@ -34836,12 +34836,12 @@ var Container2 = class _Container extends UIBase2 {
     this._add(ret);
     return ret;
   }
-  button(label, cb, thisvar, id2, packflag = 0) {
+  button(label, cb, thisvar, id, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     const ret = UIBase2.createElement("button-x");
     ret.packflag |= packflag;
     ret.setAttribute("name", label);
-    ret.setAttribute("buttonid", "" + id2);
+    ret.setAttribute("buttonid", "" + id);
     ret.onclick = cb;
     this._add(ret);
     return ret;
@@ -35576,12 +35576,12 @@ var Container2 = class _Container extends UIBase2 {
     }
     return ret;
   }
-  _container_inherit(elem2, packflag = 0) {
+  _container_inherit(elem, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    elem2.packflag |= packflag;
-    elem2.inherit_packflag |= packflag;
-    elem2.dataPrefix = this.dataPrefix;
-    elem2.massSetPrefix = this.massSetPrefix;
+    elem.packflag |= packflag;
+    elem.inherit_packflag |= packflag;
+    elem.dataPrefix = this.dataPrefix;
+    elem.massSetPrefix = this.massSetPrefix;
   }
   treeview() {
     const ret = UIBase2.createElement("tree-view-x");
@@ -35590,15 +35590,15 @@ var Container2 = class _Container extends UIBase2 {
     this._container_inherit(ret);
     return ret;
   }
-  panel(name2, id2, packflag = 0, tooltip) {
-    id2 = id2 === void 0 ? name2 : id2;
+  panel(name2, id, packflag = 0, tooltip) {
+    id = id === void 0 ? name2 : id;
     const ret = UIBase2.createElement("panelframe-x");
     this._container_inherit(ret, packflag);
     if (tooltip) {
       ret.setHeaderToolTip(tooltip);
     }
     ret.setAttribute("label", name2);
-    ret.setAttribute("id", id2);
+    ret.setAttribute("id", id);
     this._add(ret);
     if (this.ctx) {
       ret.ctx = this.ctx;
@@ -37403,11 +37403,11 @@ function parseXML(xml) {
 }
 var num_re = /[0-9]+$/;
 var pagecache = /* @__PURE__ */ new Map();
-function getIconFlag(elem2) {
-  if (!elem2.hasAttribute("useIcons")) {
+function getIconFlag(elem) {
+  if (!elem.hasAttribute("useIcons")) {
     return 0;
   }
-  let attr = elem2.getAttribute("useIcons");
+  let attr = elem.getAttribute("useIcons");
   if (typeof attr === "string") {
     attr = attr.toLowerCase().trim();
   }
@@ -37436,19 +37436,19 @@ function getIconFlag(elem2) {
   }
   return 0;
 }
-function getPackFlag(elem2) {
-  let packflag = getIconFlag(elem2);
-  if (elem2.hasAttribute("drawChecks")) {
-    if (!getbool(elem2, "drawChecks")) {
+function getPackFlag(elem) {
+  let packflag = getIconFlag(elem);
+  if (elem.hasAttribute("drawChecks")) {
+    if (!getbool(elem, "drawChecks")) {
       packflag |= PackFlags.HIDE_CHECK_MARKS;
     } else {
       packflag &= ~PackFlags.HIDE_CHECK_MARKS;
     }
   }
-  if (getbool(elem2, "simpleSlider")) {
+  if (getbool(elem, "simpleSlider")) {
     packflag |= PackFlags.SIMPLE_NUMSLIDERS;
   }
-  if (getbool(elem2, "rollarSlider")) {
+  if (getbool(elem, "rollarSlider")) {
     packflag |= PackFlags.FORCE_ROLLER_SLIDER;
   }
   return packflag;
@@ -37461,19 +37461,19 @@ function myParseFloat(s) {
   }
   return parseFloat(str);
 }
-function getbool(elem2, attr) {
-  let ret = elem2.getAttribute(attr);
+function getbool(elem, attr) {
+  let ret = elem.getAttribute(attr);
   if (!ret) {
     return false;
   }
   ret = ret.toLowerCase();
   return ret === "1" || ret === "true" || ret === "yes";
 }
-function getfloat(elem2, attr, defaultval) {
-  if (!elem2.hasAttribute(attr)) {
+function getfloat(elem, attr, defaultval) {
+  if (!elem.hasAttribute(attr)) {
     return defaultval;
   }
-  return myParseFloat(elem2.getAttribute(attr));
+  return myParseFloat(elem.getAttribute(attr));
 }
 var customHandlers = {};
 var Handler = class {
@@ -37507,16 +37507,16 @@ var Handler = class {
     this.inheritDomAttrKeys = this.stack.pop();
     this.container = this.stack.pop();
   }
-  handle(elem2) {
-    if (elem2.constructor === XMLDocument || elem2.nodeName === "root") {
-      for (const child of elem2.childNodes) {
+  handle(elem) {
+    if (elem.constructor === XMLDocument || elem.nodeName === "root") {
+      for (const child of elem.childNodes) {
         this.handle(child);
       }
       return;
-    } else if (elem2.constructor === Text || elem2.constructor === Comment) {
+    } else if (elem.constructor === Text || elem.constructor === Comment) {
       return;
     }
-    const elemEl = elem2;
+    const elemEl = elem;
     const tagname = "" + elemEl.tagName;
     const handlers = customHandlers;
     if (tagname in handlers) {
@@ -37528,36 +37528,36 @@ var Handler = class {
       const anyThis = this;
       anyThis[tagname](elemEl);
     } else {
-      const elem22 = UIBase2.createElement(tagname.toLowerCase());
+      const elem2 = UIBase2.createElement(tagname.toLowerCase());
       for (const k of elemEl.getAttributeNames()) {
-        elem22.setAttribute(k, elemEl.getAttribute(k) ?? "");
+        elem2.setAttribute(k, elemEl.getAttribute(k) ?? "");
       }
-      if (elem22 instanceof UIBase2) {
-        if (!elem22.hasAttribute("datapath") && elem22.hasAttribute("path")) {
-          elem22.setAttribute("datapath", elem22.getAttribute("path") ?? "");
+      if (elem2 instanceof UIBase2) {
+        if (!elem2.hasAttribute("datapath") && elem2.hasAttribute("path")) {
+          elem2.setAttribute("datapath", elem2.getAttribute("path") ?? "");
         }
-        if (elem22.hasAttribute("datapath")) {
-          let path = elem22.getAttribute("datapath") ?? "";
+        if (elem2.hasAttribute("datapath")) {
+          let path = elem2.getAttribute("datapath") ?? "";
           path = this.container._joinPrefix(path) ?? path;
-          elem22.setAttribute("datapath", path);
+          elem2.setAttribute("datapath", path);
         }
         const container = this.container;
-        if (elem22.hasAttribute("massSetPath") || container.massSetPrefix) {
+        if (elem2.hasAttribute("massSetPath") || container.massSetPrefix) {
           let massSetPath = "";
-          if (elem22.hasAttribute("massSetPath")) {
-            massSetPath = elem22.getAttribute("massSetPath") ?? "";
+          if (elem2.hasAttribute("massSetPath")) {
+            massSetPath = elem2.getAttribute("massSetPath") ?? "";
           }
-          const path = elem22.getAttribute("datapath") ?? "";
+          const path = elem2.getAttribute("datapath") ?? "";
           const mpath = container._getMassPath(container.ctx, path, massSetPath);
-          elem22.setAttribute("massSetPath", mpath ?? "");
-          elem22.setAttribute("mass_set_path", mpath ?? "");
+          elem2.setAttribute("massSetPath", mpath ?? "");
+          elem2.setAttribute("mass_set_path", mpath ?? "");
         }
-        container.add(elem22);
-        this._style(elemEl, elem22);
-        if (elem22 instanceof Container2) {
+        container.add(elem2);
+        this._style(elemEl, elem2);
+        if (elem2 instanceof Container2) {
           this.push();
-          this.container = elem22;
-          this._container(elemEl, elem22, { ignorePathPrefix: false });
+          this.container = elem2;
+          this._container(elemEl, elem2, { ignorePathPrefix: false });
           this.visit(elemEl);
           this.pop();
           return;
@@ -37576,15 +37576,15 @@ var Handler = class {
       this.visit(elemEl);
     }
   }
-  _style(elem2, elem22) {
+  _style(elem, elem2) {
     const style = {};
-    if (elem2.hasAttribute("class")) {
-      elem22.setAttribute("class", elem2.getAttribute("class") ?? "");
-      const cls = (elem22.getAttribute("class") ?? "").trim();
+    if (elem.hasAttribute("class")) {
+      elem2.setAttribute("class", elem.getAttribute("class") ?? "");
+      const cls = (elem2.getAttribute("class") ?? "").trim();
       const keys3 = [
         cls,
-        (elem22.tagName.toLowerCase() + "." + cls).trim(),
-        "#" + (elem2.getAttribute("id") ?? "").trim()
+        (elem2.tagName.toLowerCase() + "." + cls).trim(),
+        "#" + (elem.getAttribute("id") ?? "").trim()
       ];
       for (const sheet of document.styleSheets) {
         for (const rule of sheet.cssRules) {
@@ -37610,8 +37610,8 @@ var Handler = class {
         }
       }
     }
-    if (elem2.hasAttribute("style")) {
-      const stylecode = elem2.getAttribute("style") ?? "";
+    if (elem.hasAttribute("style")) {
+      const stylecode = elem.getAttribute("style") ?? "";
       const parts = stylecode.split(";");
       for (let row of parts) {
         row = row.trim();
@@ -37628,7 +37628,7 @@ var Handler = class {
       return;
     }
     function setStyle() {
-      const elem3 = elem22;
+      const elem3 = elem2;
       for (const k of keys2) {
         if (elem3.style?.[k] !== void 0) {
           elem3.style.setProperty(k, style[k]);
@@ -37637,8 +37637,8 @@ var Handler = class {
         }
       }
     }
-    if (elem22 instanceof UIBase2) {
-      elem22.setCSSAfter(() => {
+    if (elem2 instanceof UIBase2) {
+      elem2.setCSSAfter(() => {
         setStyle();
       });
     }
@@ -37649,8 +37649,8 @@ var Handler = class {
       this.handle(child);
     }
   }
-  _getattr(elem2, k) {
-    let val = elem2.getAttribute(k);
+  _getattr(elem, k) {
+    let val = elem.getAttribute(k);
     if (!val) {
       return val;
     }
@@ -37665,11 +37665,11 @@ var Handler = class {
     }
     return val;
   }
-  _inheritCustomAttrs(elem2, elem22) {
+  _inheritCustomAttrs(elem, elem2) {
     const codeattrs = [];
     const dataattrs = [];
-    for (const k of elem2.getAttributeNames()) {
-      let val = "" + elem2.getAttribute(k);
+    for (const k of elem.getAttributeNames()) {
+      let val = "" + elem.getAttribute(k);
       if (val.startsWith("ng[")) {
         val = val.slice(3, val.endsWith("]") ? val.length - 1 : val.length);
         codeattrs.push([k, "ng", val]);
@@ -37679,75 +37679,75 @@ var Handler = class {
       }
     }
     for (const [k, val] of dataattrs) {
-      elem22.setAttribute(k, val);
+      elem2.setAttribute(k, val);
     }
     for (const k of domEventAttrs) {
       const k2 = "on" + k;
-      if (elem2.hasAttribute(k2)) {
-        codeattrs.push([k, "dom", elem2.getAttribute(k2) ?? ""]);
+      if (elem.hasAttribute(k2)) {
+        codeattrs.push([k, "dom", elem.getAttribute(k2) ?? ""]);
       }
     }
-    for (const [k, eventType, id2] of codeattrs) {
-      if (!(id2 in this.codefuncs)) {
-        console.error("Unknown code fragment " + id2);
+    for (const [k, eventType, id] of codeattrs) {
+      if (!(id in this.codefuncs)) {
+        console.error("Unknown code fragment " + id);
         continue;
       }
       if (eventType === "dom") {
         if (k === "click") {
-          const htmlElem = elem22;
+          const htmlElem = elem2;
           const onclick = htmlElem.onclick;
-          const func2 = this.codefuncs[id2];
+          const func = this.codefuncs[id];
           htmlElem.onclick = function(...args) {
             if (onclick) {
               onclick.apply(this, Array.from(args));
             }
-            return func2.apply(this, Array.from(args));
+            return func.apply(this, Array.from(args));
           };
         } else {
-          elem22.addEventListener(k, this.codefuncs[id2]);
+          elem2.addEventListener(k, this.codefuncs[id]);
         }
       } else if (eventType === "ng") {
-        elem22.addEventListener(k, this.codefuncs[id2]);
+        elem2.addEventListener(k, this.codefuncs[id]);
       }
     }
   }
-  _basic(elem2, elem22, options = {}) {
+  _basic(elem, elem2, options = {}) {
     if (!options.noInheritCustomAttrs) {
-      this._inheritCustomAttrs(elem2, elem22);
+      this._inheritCustomAttrs(elem, elem2);
     }
-    this._style(elem2, elem22);
-    for (const k of elem2.getAttributeNames()) {
+    this._style(elem, elem2);
+    for (const k of elem.getAttributeNames()) {
       if (k.startsWith("custom")) {
-        elem22.setAttribute(k, this._getattr(elem2, k) ?? "");
+        elem2.setAttribute(k, this._getattr(elem, k) ?? "");
       }
     }
     for (const k of domTransferAttrs) {
-      if (elem2.hasAttribute(k)) {
-        elem22.setAttribute(k, elem2.getAttribute(k) ?? "");
+      if (elem.hasAttribute(k)) {
+        elem2.setAttribute(k, elem.getAttribute(k) ?? "");
       }
     }
     for (const k in this.inheritDomAttrs) {
-      if (!elem2.hasAttribute(k)) {
-        elem2.setAttribute(k, this.inheritDomAttrs[k]);
+      if (!elem.hasAttribute(k)) {
+        elem.setAttribute(k, this.inheritDomAttrs[k]);
       }
     }
     for (const k of sliderDomAttributes) {
-      if (elem2.hasAttribute(k)) {
-        elem22.setAttribute(k, elem2.getAttribute(k) ?? "");
+      if (elem.hasAttribute(k)) {
+        elem2.setAttribute(k, elem.getAttribute(k) ?? "");
       }
     }
-    if (!(elem22 instanceof UIBase2)) {
+    if (!(elem2 instanceof UIBase2)) {
       return;
     }
-    if (elem2.hasAttribute("theme-class")) {
-      elem22.overrideClass(elem2.getAttribute("theme-class") ?? "");
-      if (elem22._init_done) {
-        elem22.setCSS();
-        elem22.flushUpdate();
+    if (elem.hasAttribute("theme-class")) {
+      elem2.overrideClass(elem.getAttribute("theme-class") ?? "");
+      if (elem2._init_done) {
+        elem2.setCSS();
+        elem2.flushUpdate();
       }
     }
-    if (elem2.hasAttribute("useIcons") && elem22.useIcons) {
-      let val = (elem2.getAttribute("useIcons") ?? "").trim().toLowerCase();
+    if (elem.hasAttribute("useIcons") && elem2.useIcons) {
+      let val = (elem.getAttribute("useIcons") ?? "").trim().toLowerCase();
       if (val === "small" || val === "true" || val === "yes") {
         val = true;
       } else if (val === "large") {
@@ -37757,62 +37757,62 @@ var Handler = class {
       } else {
         val = parseInt(val) - 1;
       }
-      elem22.useIcons(val);
+      elem2.useIcons(val);
     }
-    if (elem2.hasAttribute("sliderTextBox") && elem22 instanceof Container2) {
-      const textbox = getbool(elem2, "sliderTextBox");
+    if (elem.hasAttribute("sliderTextBox") && elem2 instanceof Container2) {
+      const textbox = getbool(elem, "sliderTextBox");
       if (textbox) {
-        elem22.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem22.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
       } else {
-        elem22.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem22.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
       }
     }
-    if (elem2.hasAttribute("sliderMode") && elem22 instanceof Container2) {
-      const sliderMode = elem2.getAttribute("sliderMode");
+    if (elem.hasAttribute("sliderMode") && elem2 instanceof Container2) {
+      const sliderMode = elem.getAttribute("sliderMode");
       if (sliderMode === "slider") {
-        elem22.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem22.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem22.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-        elem22.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       } else if (sliderMode === "roller") {
-        elem22.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem22.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-        elem22.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem22.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
     }
-    if (elem2.hasAttribute("showLabel") && elem22 instanceof Container2) {
-      const state = getbool(elem2, "showLabel");
+    if (elem.hasAttribute("showLabel") && elem2 instanceof Container2) {
+      const state = getbool(elem, "showLabel");
       if (state) {
-        elem22.packflag |= PackFlags.FORCE_PROP_LABELS;
-        elem22.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
+        elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
       } else {
-        elem22.packflag &= ~PackFlags.FORCE_PROP_LABELS;
-        elem22.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
+        elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
       }
     }
     function doBox(key) {
-      if (elem2.hasAttribute(key) && elem22 instanceof UIBase2) {
-        let val = (elem2.getAttribute(key) ?? "").toLowerCase().trim();
+      if (elem.hasAttribute(key) && elem2 instanceof UIBase2) {
+        let val = (elem.getAttribute(key) ?? "").toLowerCase().trim();
         if (val.endsWith("px")) {
           val = val.slice(0, val.length - 2).trim();
         }
         if (val.endsWith("%")) {
-          console.warn(`Relative styling of '${key}' may be unstable for this element`, elem2);
-          elem22.setCSSAfter(function() {
+          console.warn(`Relative styling of '${key}' may be unstable for this element`, elem);
+          elem2.setCSSAfter(function() {
             this.saneStyle[key] = val;
           });
         } else {
           val = parseFloat(val);
           if (isNaN(val) || typeof val !== "number") {
-            console.error(`Invalid style ${key}:${elem2.getAttribute(key)}`);
+            console.error(`Invalid style ${key}:${elem.getAttribute(key)}`);
             return;
           }
-          elem22.overrideDefault(key, val);
-          elem22.setCSS();
-          elem22.style.setProperty(key, "" + val + "px");
+          elem2.overrideDefault(key, val);
+          elem2.setCSS();
+          elem2.style.setProperty(key, "" + val + "px");
         }
       }
     }
@@ -37828,19 +37828,19 @@ var Handler = class {
       doBox(key + "-right");
     }
   }
-  _handlePathPrefix(elem2, con) {
-    if (elem2.hasAttribute("path")) {
+  _handlePathPrefix(elem, con) {
+    if (elem.hasAttribute("path")) {
       let prefix = con.dataPrefix;
-      const path = (elem2.getAttribute("path") ?? "").trim();
+      const path = (elem.getAttribute("path") ?? "").trim();
       if (prefix.length > 0) {
         prefix += ".";
       }
       prefix += path;
       con.dataPrefix = prefix;
     }
-    if (elem2.hasAttribute("massSetPath")) {
+    if (elem.hasAttribute("massSetPath")) {
       let prefix = con.massSetPrefix;
-      const path = (elem2.getAttribute("massSetPath") ?? "").trim();
+      const path = (elem.getAttribute("massSetPath") ?? "").trim();
       if (prefix.length > 0) {
         prefix += ".";
       }
@@ -37849,52 +37849,52 @@ var Handler = class {
     }
   }
   /** noInheritCustomAttrs: don't transfer ng or data- attributes to the container element*/
-  _container(elem2, con, options = {}) {
+  _container(elem, con, options = {}) {
     for (const k of this.inheritDomAttrKeys) {
-      if (elem2.hasAttribute(k)) {
-        this.inheritDomAttrs[k] = elem2.getAttribute(k) ?? "";
+      if (elem.hasAttribute(k)) {
+        this.inheritDomAttrs[k] = elem.getAttribute(k) ?? "";
       }
     }
-    const packflag = getPackFlag(elem2);
+    const packflag = getPackFlag(elem);
     con.packflag |= packflag;
     con.inherit_packflag |= packflag;
-    this._basic(elem2, con, options);
+    this._basic(elem, con, options);
     if (!options?.ignorePathPrefix) {
-      this._handlePathPrefix(elem2, con);
+      this._handlePathPrefix(elem, con);
     }
   }
-  noteframe(elem2) {
+  noteframe(elem) {
     const ret = this.container.noteframe();
     if (ret) {
-      this._basic(elem2, ret);
+      this._basic(elem, ret);
     }
   }
-  cell(elem2) {
+  cell(elem) {
     this.push();
     this.container = this.container.cell();
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  table(elem2) {
+  table(elem) {
     this.push();
     this.container = this.container.table();
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  panel(elem2) {
-    const title = "" + elem2.getAttribute("label");
-    const closed = getbool(elem2, "closed");
+  panel(elem) {
+    const title = "" + elem.getAttribute("label");
+    const closed = getbool(elem, "closed");
     this.push();
     this.container = this.container.panel(title);
     this.container.closed = closed;
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  pathlabel(elem2) {
-    this._prop(elem2, "pathlabel");
+  pathlabel(elem) {
+    this._prop(elem, "pathlabel");
   }
   /**
    handle a code element, which are wrapped in functions
@@ -37906,146 +37906,147 @@ var Handler = class {
         buf += elem2.textContent + "\n";
       }
     }
-    let func;
     const $scope = this.templateScope;
     buf = `
-func = function() {
-  ${buf};
-}
+  (function($scope) {
+    return function() {
+      ${buf};
+    }
+  })
     `;
-    eval(buf);
+    const func = (0, eval)(buf)($scope);
     const id = "" + elem.getAttribute("id");
     this.codefuncs[id] = func;
   }
-  textbox(elem2) {
-    if (elem2.hasAttribute("path")) {
-      this._prop(elem2, "textbox");
+  textbox(elem) {
+    if (elem.hasAttribute("path")) {
+      this._prop(elem, "textbox");
     } else {
     }
   }
-  label(elem2) {
-    const elem22 = this.container.label(elem2.innerHTML);
-    this._basic(elem2, elem22);
+  label(elem) {
+    const elem2 = this.container.label(elem.innerHTML);
+    this._basic(elem, elem2);
   }
-  colorfield(elem2) {
-    this._prop(elem2, "colorfield");
+  colorfield(elem) {
+    this._prop(elem, "colorfield");
   }
   /** simpleSliders=true enables simple sliders */
-  prop(elem2) {
-    this._prop(elem2, "prop");
+  prop(elem) {
+    this._prop(elem, "prop");
   }
-  _prop(elem2, key) {
-    const packflag = getPackFlag(elem2);
-    const path = elem2.getAttribute("path");
-    let elem22;
+  _prop(elem, key) {
+    const packflag = getPackFlag(elem);
+    const path = elem.getAttribute("path");
+    let elem2;
     if (key === "pathlabel") {
-      elem22 = this.container.pathlabel(path ?? void 0, elem2.innerHTML, packflag);
+      elem2 = this.container.pathlabel(path ?? void 0, elem.innerHTML, packflag);
     } else if (key === "textbox") {
       const tb = this.container.textbox(path ?? void 0, void 0, void 0, packflag);
-      elem22 = tb;
+      elem2 = tb;
       if (tb) {
         tb.update();
       }
-      if (elem2.hasAttribute("modal")) {
-        elem22.setAttribute("modal", elem2.getAttribute("modal") ?? "");
+      if (elem.hasAttribute("modal")) {
+        elem2.setAttribute("modal", elem.getAttribute("modal") ?? "");
       }
-      if (elem2.hasAttribute("realtime")) {
-        elem22.setAttribute("realtime", elem2.getAttribute("realtime") ?? "");
+      if (elem.hasAttribute("realtime")) {
+        elem2.setAttribute("realtime", elem.getAttribute("realtime") ?? "");
       }
     } else if (key === "colorfield") {
-      elem22 = this.container.colorPicker(path ?? void 0, {
+      elem2 = this.container.colorPicker(path ?? void 0, {
         packflag,
-        themeOverride: elem2.hasAttribute("theme-class") ? elem2.getAttribute("theme-class") ?? void 0 : void 0
+        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? void 0 : void 0
       });
     } else {
-      elem22 = this.container[key](path ?? void 0, packflag);
+      elem2 = this.container[key](path ?? void 0, packflag);
     }
-    if (!elem22) {
+    if (!elem2) {
       const span = document.createElement("span");
       span.innerHTML = "error";
       this.container.shadow.appendChild(span);
     } else {
-      this._basic(elem2, elem22);
-      if (elem2.hasAttribute("massSetPath") || this.container.massSetPrefix) {
-        let mpath = elem2.getAttribute("massSetPath") ?? void 0;
+      this._basic(elem, elem2);
+      if (elem.hasAttribute("massSetPath") || this.container.massSetPrefix) {
+        let mpath = elem.getAttribute("massSetPath") ?? void 0;
         if (!mpath) {
-          mpath = elem2.getAttribute("path") ?? void 0;
+          mpath = elem.getAttribute("path") ?? void 0;
         }
         mpath = this.container._getMassPath(this.container.ctx, path ?? void 0, mpath);
-        elem22.setAttribute("mass_set_path", mpath ?? "");
+        elem2.setAttribute("mass_set_path", mpath ?? "");
       }
     }
   }
-  strip(elem2) {
+  strip(elem) {
     this.push();
     let dir;
-    if (elem2.hasAttribute("mode")) {
-      dir = (elem2.getAttribute("mode") ?? "").toLowerCase().trim() === "horizontal";
+    if (elem.hasAttribute("mode")) {
+      dir = (elem.getAttribute("mode") ?? "").toLowerCase().trim() === "horizontal";
     }
-    const margin1 = getfloat(elem2, "margin1", void 0);
-    const margin2 = getfloat(elem2, "margin2", void 0);
+    const margin1 = getfloat(elem, "margin1", void 0);
+    const margin2 = getfloat(elem, "margin2", void 0);
     this.container = this.container.strip(void 0, margin1, margin2, dir);
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  column(elem2) {
+  column(elem) {
     this.push();
     this.container = this.container.col();
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  row(elem2) {
+  row(elem) {
     this.push();
     this.container = this.container.row();
-    this._container(elem2, this.container);
-    this.visit(elem2);
+    this._container(elem, this.container);
+    this.visit(elem);
     this.pop();
   }
-  toolPanel(elem2) {
-    this.tool(elem2, "toolPanel");
+  toolPanel(elem) {
+    this.tool(elem, "toolPanel");
   }
-  tool(elem2, key = "tool") {
-    let path = elem2.getAttribute("path");
-    let packflag = getPackFlag(elem2);
+  tool(elem, key = "tool") {
+    let path = elem.getAttribute("path");
+    let packflag = getPackFlag(elem);
     let noIcons = false;
     let iconflags;
-    if (getbool(elem2, "useIcons")) {
+    if (getbool(elem, "useIcons")) {
       packflag |= PackFlags.USE_ICONS;
-    } else if (elem2.hasAttribute("useIcons")) {
+    } else if (elem.hasAttribute("useIcons")) {
       packflag &= ~PackFlags.USE_ICONS;
       noIcons = true;
     }
-    const label = ("" + elem2.textContent).trim();
+    const label = ("" + elem.textContent).trim();
     if (label.length > 0) {
       path += "|" + label;
     }
     if (noIcons) {
       iconflags = this.container.useIcons(false);
     }
-    const elem22 = this.container[key](path, packflag);
-    if (elem22) {
-      this._basic(elem2, elem22);
+    const elem2 = this.container[key](path, packflag);
+    if (elem2) {
+      this._basic(elem, elem2);
     } else {
       const errElem = document.createElement("strip");
       errElem.innerHTML = "error";
       this.container.shadow.appendChild(errElem);
-      this._basic(elem2, errElem);
+      this._basic(elem, errElem);
     }
     if (noIcons && iconflags !== void 0) {
       this.container.inherit_packflag |= iconflags;
       this.container.packflag |= iconflags;
     }
   }
-  dropbox(elem2) {
-    return this.menu(elem2, true);
+  dropbox(elem) {
+    return this.menu(elem, true);
   }
-  menu(elem2, isDropBox = false) {
-    const packflag = getPackFlag(elem2);
-    const title = elem2.getAttribute("name") ?? "";
+  menu(elem, isDropBox = false) {
+    const packflag = getPackFlag(elem);
+    const title = elem.getAttribute("name") ?? "";
     const list5 = [];
-    for (const child of elem2.childNodes) {
+    for (const child of elem.childNodes) {
       const childEl = child;
       if (!childEl.tagName) continue;
       if (childEl.tagName === "tool") {
@@ -38058,12 +38059,12 @@ func = function() {
       } else if (childEl.tagName === "sep") {
         list5.push(Menu.SEP);
       } else if (childEl.tagName === "item") {
-        let id2;
+        let id;
         let icon;
         let hotkey;
         let description;
         if (childEl.hasAttribute("id")) {
-          id2 = childEl.getAttribute("id") ?? void 0;
+          id = childEl.getAttribute("id") ?? void 0;
         }
         if (childEl.hasAttribute("icon")) {
           const iconName = (childEl.getAttribute("icon") ?? "").toUpperCase().trim();
@@ -38077,7 +38078,7 @@ func = function() {
         }
         list5.push({
           name: childEl.innerHTML.trim(),
-          id: id2,
+          id,
           icon,
           hotkey,
           description
@@ -38088,61 +38089,61 @@ func = function() {
     if (isDropBox) {
       ret.removeAttribute("simple");
     }
-    if (elem2.hasAttribute("id")) {
-      ret.setAttribute("id", elem2.getAttribute("id") ?? "");
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
-    this._basic(elem2, ret);
+    this._basic(elem, ret);
     return ret;
   }
-  button(elem2) {
-    const title = elem2.innerHTML.trim();
+  button(elem) {
+    const title = elem.innerHTML.trim();
     const ret = this.container.button(title);
-    if (elem2.hasAttribute("id")) {
-      ret.setAttribute("id", elem2.getAttribute("id") ?? "");
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
-    this._basic(elem2, ret);
+    this._basic(elem, ret);
   }
-  iconbutton(elem2) {
-    const title = elem2.innerHTML.trim();
-    const iconStr = elem2.getAttribute("icon");
+  iconbutton(elem) {
+    const title = elem.innerHTML.trim();
+    const iconStr = elem.getAttribute("icon");
     let icon;
     if (iconStr) {
       icon = UIBase2.getIconEnum()[iconStr];
     }
     const ret = this.container.iconbutton(icon ?? 0, title);
-    if (elem2.hasAttribute("id")) {
-      ret.setAttribute("id", elem2.getAttribute("id") ?? "");
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
-    this._basic(elem2, ret);
+    this._basic(elem, ret);
   }
-  tab(elem2) {
+  tab(elem) {
     this.push();
-    const title = "" + elem2.getAttribute("label");
+    const title = "" + elem.getAttribute("label");
     this.container = this.container.tab(title);
-    if (elem2.hasAttribute("overflow")) {
-      this.container.setAttribute("overflow", elem2.getAttribute("overflow") ?? "");
+    if (elem.hasAttribute("overflow")) {
+      this.container.setAttribute("overflow", elem.getAttribute("overflow") ?? "");
     }
-    if (elem2.hasAttribute("overflow-y")) {
-      this.container.setAttribute("overflow-y", elem2.getAttribute("overflow-y") ?? "");
+    if (elem.hasAttribute("overflow-y")) {
+      this.container.setAttribute("overflow-y", elem.getAttribute("overflow-y") ?? "");
     }
-    this._container(elem2, this.container, { noInheritCustomAttrs: true });
+    this._container(elem, this.container, { noInheritCustomAttrs: true });
     const tabItem = this.container._tab;
     if (tabItem && typeof tabItem.setAttribute === "function") {
-      this._inheritCustomAttrs(elem2, tabItem);
+      this._inheritCustomAttrs(elem, tabItem);
     }
-    this.visit(elem2);
+    this.visit(elem);
     this.pop();
   }
-  tabs(elem2) {
-    const pos = elem2.getAttribute("pos") || "left";
+  tabs(elem) {
+    const pos = elem.getAttribute("pos") || "left";
     this.push();
     const tabs = this.container.tabs(pos);
     this.container = tabs;
-    if (elem2.hasAttribute("movable-tabs")) {
-      tabs.setAttribute("movable-tabs", elem2.getAttribute("movable-tabs") ?? "");
+    if (elem.hasAttribute("movable-tabs")) {
+      tabs.setAttribute("movable-tabs", elem.getAttribute("movable-tabs") ?? "");
     }
-    this._container(elem2, tabs);
-    this.visit(elem2);
+    this._container(elem, tabs);
+    this.visit(elem);
     this.pop();
   }
 };
@@ -39198,9 +39199,9 @@ var Curve1DWidget = class extends ColumnFrame {
     const row = this.row();
     const prop = makeGenEnum();
     prop.setValue(this.value.generatorType);
-    this.dropbox = row.listenum(void 0, "Type", prop, this.value.generatorType, (id2) => {
-      console.warn("SELECT", id2, prop.keys[id2]);
-      this.value.setGenerator(String(id2));
+    this.dropbox = row.listenum(void 0, "Type", prop, this.value.generatorType, (id) => {
+      console.warn("SELECT", id, prop.keys[id]);
+      this.value.setGenerator(String(id));
       this.value._on_change();
     });
     this.dropbox._init();
@@ -41421,16 +41422,16 @@ var ModalTabMove = class extends EventHandler {
     this.dragcanvas.style["top"] = y + "px";
     const ctx = this.tbar.ctx;
     const screen = ctx.screen;
-    const elem2 = screen.pickElement(x, y);
-    if (elem2 !== this.droptarget) {
+    const elem = screen.pickElement(x, y);
+    if (elem !== this.droptarget) {
       let e2 = new DragEvent("dragexit", this.dragevent);
       if (this.droptarget) {
         this.droptarget.dispatchEvent(e2);
       }
       e2 = new DragEvent("dragover", this.dragevent);
-      this.droptarget = elem2;
-      if (elem2) {
-        elem2.dispatchEvent(e2);
+      this.droptarget = elem;
+      if (elem) {
+        elem.dispatchEvent(e2);
       }
     }
   }
@@ -41803,17 +41804,17 @@ var TabBar = class extends UIBase2 {
     tabs[bi] = a2;
     this.update(true);
   }
-  addIconTab(icon, id2, tooltip, movable = true) {
-    const tab2 = this.addTab("", id2, tooltip, movable);
+  addIconTab(icon, id, tooltip, movable = true) {
+    const tab2 = this.addTab("", id, tooltip, movable);
     tab2.icon = icon;
     return tab2;
   }
-  addTab(name2, id2, tooltip = "", movable = false) {
+  addTab(name2, id, tooltip = "", movable = false) {
     const tab2 = UIBase2.createElement("tab-item-x", true);
     this.shadow.appendChild(tab2);
     tab2.parentWidget = this;
     tab2.name = name2;
-    tab2.id = id2;
+    tab2.id = id;
     tab2.tooltip = tooltip;
     tab2.movable = movable;
     tab2.tbar = this;
@@ -42396,8 +42397,8 @@ var TabContainer2 = class extends UIBase2 {
     this._style = style;
     this.shadow.prepend(style);
   }
-  icontab(icon, id2, tooltip) {
-    const t = this.tab("", id2, tooltip);
+  icontab(icon, id, tooltip) {
+    const t = this.tab("", id, tooltip);
     t._tab.icon = icon;
     return t;
   }
@@ -42406,16 +42407,16 @@ var TabContainer2 = class extends UIBase2 {
     this.tbar.removeTab(tab22);
     tab2.remove();
   }
-  tab(name2, id2, tooltip, movable = true) {
-    if (id2 === void 0) {
-      id2 = tab_idgen++;
+  tab(name2, id, tooltip, movable = true) {
+    if (id === void 0) {
+      id = tab_idgen++;
     }
     const col = UIBase2.createElement("tab-item-container-x");
     col.parentTabs = this;
-    this.tabs[id2] = col;
+    this.tabs[id] = col;
     col.dataPrefix = this.dataPrefix;
     col.ctx = this.ctx;
-    col._tab = this.tbar.addTab(name2, id2, tooltip, movable);
+    col._tab = this.tbar.addTab(name2, id, tooltip, movable);
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
     col.parentWidget = this;
@@ -42641,9 +42642,9 @@ var ListBox2 = class extends Container2 {
     this.style.height = this.getDefault("height") + "px";
     this.style.overflow = "scroll";
   }
-  addItem(name2, id2) {
+  addItem(name2, id) {
     const item = UIBase2.createElement("listitem-x");
-    item.listId = id2 === void 0 ? this.items.length : id2;
+    item.listId = id === void 0 ? this.items.length : id;
     this.idmap[item.listId] = item;
     this.tabIndex = 1;
     this.setAttribute("tabindex", "1");
@@ -43226,10 +43227,10 @@ var NoteFrame = class extends RowFrame {
     }
     super._ondestroy();
   }
-  progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id2 = msg) {
+  progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id = msg) {
     let note;
     for (let child of this.childWidgets) {
-      if (child._noteid === id2) {
+      if (child._noteid === id) {
         note = child;
         break;
       }
@@ -43237,7 +43238,7 @@ var NoteFrame = class extends RowFrame {
     let f2 = (100 * Math.min(percent, 1)).toFixed(1);
     if (note === void 0) {
       note = this.addNote(msg, color, -1, "note-progress-x");
-      note._noteid = id2;
+      note._noteid = id;
     }
     note.percent = percent;
     if (percent >= 1) {
@@ -43507,7 +43508,7 @@ var Constraint = class {
   threshold;
   func;
   funcDv;
-  constructor(name2, func2, klst, params, k = 1) {
+  constructor(name2, func, klst, params, k = 1) {
     this.glst = [];
     this.klst = klst;
     this.wlst = [];
@@ -43524,7 +43525,7 @@ var Constraint = class {
     }
     this.df = 5e-4;
     this.threshold = 1e-4;
-    this.func = func2;
+    this.func = func;
     this.funcDv = null;
   }
   postSolve() {
@@ -44450,23 +44451,23 @@ var ThemeEditor = class extends Container2 {
     }
     let row2 = panel.row();
     let textbox = row2.textbox(void 0, "");
-    let callback = (id2) => {
-      console.log("ID", id2, obj, catkey);
+    let callback = (id) => {
+      console.log("ID", id, obj, catkey);
       console.log(textbox, textbox.text, textbox.value);
       let propkey = (textbox.text || "").trim();
       if (!propkey) {
         console.error("Cannot have empty theme property name");
         return;
       }
-      if (id2 === "FLOAT") {
+      if (id === "FLOAT") {
         obj[propkey] = 0;
-      } else if (id2 === "SUBFOLDER") {
+      } else if (id === "SUBFOLDER") {
         obj[propkey] = { test: 0 };
-      } else if (id2 === "COLOR") {
+      } else if (id === "COLOR") {
         obj[propkey] = "grey";
-      } else if (id2 === "FONT") {
+      } else if (id === "FONT") {
         obj[propkey] = new CSSFont();
-      } else if (id2 === "STRING") {
+      } else if (id === "STRING") {
         obj[propkey] = "";
       }
       let uidata = saveUIData(panel, "theme-panel");
@@ -45072,12 +45073,12 @@ var TreeItem = class extends Container2 {
     this._label = this.header.label("unlabeled");
     this._labelText = "unlabeled";
   }
-  set icon(id2) {
+  set icon(id) {
     if (this._icon2) {
-      this._icon2 = id2;
+      this._icon2 = id;
     } else {
       this._icon2 = UIBase2.createElement("icon-label-x");
-      this._icon2.icon = id2;
+      this._icon2.icon = id;
       this._icon2.iconsheet = 0;
       this.header.insert(1, this._icon2);
     }
@@ -45173,8 +45174,8 @@ var TreeView = class extends Container2 {
     if (!this.overdraw) {
       return;
     }
-    for (const elem2 of this.strokes) {
-      elem2.remove();
+    for (const elem of this.strokes) {
+      elem.remove();
     }
     this.strokes.length = 0;
     const hidden = (item) => {
@@ -45508,8 +45509,8 @@ init_toolsys();
 var toolstack_getter = function() {
   throw new Error("must pass a toolstack getter to registerToolStackGetter");
 };
-function registerToolStackGetter(func2) {
-  toolstack_getter = func2;
+function registerToolStackGetter(func) {
+  toolstack_getter = func;
 }
 var UndoFlags2 = UndoFlags;
 var ToolFlags2 = ToolFlags;
@@ -45524,8 +45525,8 @@ var ToolBase = class extends ToolOp {
     this.screen = screen;
     this._finished = false;
   }
-  start(elem2, pointerId) {
-    this.toolModalStart(void 0, elem2, pointerId);
+  start(elem, pointerId) {
+    this.toolModalStart(void 0, elem, pointerId);
   }
   cancel() {
     this.finish();
@@ -45539,7 +45540,7 @@ var ToolBase = class extends ToolOp {
     popModalLight(this.modaldata);
     this.modaldata = void 0;
   }
-  toolModalStart(ctx = this.screen.ctx, elem2, pointerId) {
+  toolModalStart(ctx = this.screen.ctx, elem, pointerId) {
     this.ctx = ctx;
     if (this.modaldata !== void 0) {
       console.log("Error, modaldata was not undefined");
@@ -45568,7 +45569,7 @@ var ToolBase = class extends ToolOp {
       handlers.on_pointermove = handlers.on_pointermove ?? handlers.on_mousemove;
       handlers.on_pointerup = handlers.on_pointerup ?? handlers.on_mouseup;
       handlers.on_pointercancel = handlers.on_pointercancel ?? handlers.on_pointerup ?? handlers.on_mouseup;
-      this.modaldata = pushPointerModal(handlers, elem2, pointerId);
+      this.modaldata = pushPointerModal(handlers, elem, pointerId);
     } else {
       this.modaldata = pushModalLight(handlers);
     }
@@ -46455,12 +46456,12 @@ var ScreenVert = class _ScreenVert extends Vector2 {
   sareas;
   borders;
   _id;
-  constructor(pos, id2, added_id) {
+  constructor(pos, id, added_id) {
     super(pos);
     this.added_id = added_id ?? "unknown";
     this.sareas = [];
     this.borders = [];
-    this._id = id2 ?? -1;
+    this._id = id ?? -1;
   }
   static hash(pos, added_id, limit) {
     const x = snap(pos[0], limit);
@@ -46554,16 +46555,16 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
       { capture: true }
     );
   }
-  static bindBorderMenu(elem2, usePickElement = false) {
+  static bindBorderMenu(elem, usePickElement = false) {
     const on_dblclick = (e) => {
-      if (usePickElement && elem2.pickElement(e.x, e.y) !== elem2) {
+      if (usePickElement && elem.pickElement(e.x, e.y) !== elem) {
         return;
       }
       let menu = [
         [
           "Split Area",
           () => {
-            elem2.ctx.screen.splitTool();
+            elem.ctx.screen.splitTool();
           }
         ],
         Menu.SEP,
@@ -46571,18 +46572,18 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
           "Collapse Area",
           () => {
             console.log("Collapse Area!");
-            elem2.ctx.screen.removeAreaTool(elem2 instanceof _ScreenBorder ? elem2 : void 0);
+            elem.ctx.screen.removeAreaTool(elem instanceof _ScreenBorder ? elem : void 0);
           }
         ]
       ];
-      menu = createMenu(elem2.ctx, "", menu);
+      menu = createMenu(elem.ctx, "", menu);
       menu.ignoreFirstClick = 2;
-      elem2.ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
+      elem.ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
       e.preventDefault();
       e.stopPropagation();
     };
-    elem2.addEventListener("contextmenu", (e) => e.preventDefault());
-    elem2.addEventListener("dblclick", on_dblclick, { capture: true });
+    elem.addEventListener("contextmenu", (e) => e.preventDefault());
+    elem.addEventListener("dblclick", on_dblclick, { capture: true });
     return on_dblclick;
   }
   getOtherSarea(sarea) {
@@ -47008,9 +47009,9 @@ var Area = class _Area extends UIBase2 {
     };
   }
   loadData(obj) {
-    const id2 = obj._area_id;
-    if (id2 !== void 0 && id2 !== null) {
-      this._area_id = id2;
+    const id = obj._area_id;
+    if (id !== void 0 && id !== null) {
+      this._area_id = id;
     }
     return this;
   }
@@ -47086,8 +47087,8 @@ var Area = class _Area extends UIBase2 {
     const dropbox = container.listenum(void 0, {
       name: this.constructor.define().uiname,
       enumDef: prop,
-      callback: (id2) => {
-        const cls = areaclasses[id2];
+      callback: (id) => {
+        const cls = areaclasses[id];
         this.owning_sarea.switch_editor(cls);
       }
     });
@@ -48381,8 +48382,8 @@ init_ui_menu();
 var list4 = Array.from;
 startMenuEventWrangling();
 var _events_started = false;
-function registerToolStackGetter2(func2) {
-  registerToolStackGetter(func2);
+function registerToolStackGetter2(func) {
+  registerToolStackGetter(func);
 }
 var UpdateStack = class extends Array {
   cur = 0;
@@ -48472,16 +48473,16 @@ var Screen2 = class extends UIBase2 {
       let dragging = e.type === "mousemove" || e.type === "touchmove" || e.type === "pointermove";
       dragging = dragging && isMouseDown(e);
       if (!dragging && Math.random() > 0.9) {
-        const elem2 = this.pickElement(x, y, {
+        const elem = this.pickElement(x, y, {
           nodeclass: ScreenArea2,
           mouseEvent: e
         });
-        if (elem2 !== void 0) {
-          if (elem2.area) {
-            elem2.area.push_ctx_active();
-            elem2.area.pop_ctx_active();
+        if (elem !== void 0) {
+          if (elem.area) {
+            elem.area.push_ctx_active();
+            elem.area.pop_ctx_active();
           }
-          this.sareas.active = elem2;
+          this.sareas.active = elem;
         }
       }
       this.mpos[0] = x;
@@ -48910,25 +48911,25 @@ var Screen2 = class extends UIBase2 {
       last_pick_time = time_ms();
       x2 = x2 === void 0 ? e.x : x2;
       y2 = y2 === void 0 ? e.y : y2;
-      let elem2 = this.pickElement(x2, y2, {
+      let elem = this.pickElement(x2, y2, {
         excluded_classes: [ScreenBorder],
         mouseEvent: e
       });
-      const startelem = elem2;
-      if (elem2 === void 0) {
+      const startelem = elem;
+      if (elem === void 0) {
         if (closeOnMouseOut) {
           end();
         }
         return;
       }
       let ok = false;
-      const elem22 = elem2;
-      while (elem2) {
-        if (elem2 === container) {
+      const elem2 = elem;
+      while (elem) {
+        if (elem === container) {
           ok = true;
           break;
         }
-        elem2 = elem2.parentWidget;
+        elem = elem.parentWidget;
       }
       if (!ok) {
         do_timeout = !do_timeout || time_ms() - bad_time > 100;
@@ -49106,9 +49107,9 @@ var Screen2 = class extends UIBase2 {
         }
       });
     };
-    const id2 = ~~(Math.random() * 1024 * 1024);
-    recurse(this, id2, void 0);
-    recurse(this, id2 + 1, void 0);
+    const id = ~~(Math.random() * 1024 * 1024);
+    recurse(this, id, void 0);
+    recurse(this, id + 1, void 0);
   }
   destroy() {
     this._ondestroy();
@@ -50345,9 +50346,9 @@ var Screen2 = class extends UIBase2 {
     const tool = new RemoveAreaTool(this, border);
     tool.start();
   }
-  moveAttachTool(sarea, mpos = this.mpos, elem2, pointerId) {
+  moveAttachTool(sarea, mpos = this.mpos, elem, pointerId) {
     const tool = new AreaMoveAttachTool(this, sarea, mpos);
-    tool.start(elem2, pointerId);
+    tool.start(elem, pointerId);
   }
   splitTool() {
     const tool = new SplitTool(this);
