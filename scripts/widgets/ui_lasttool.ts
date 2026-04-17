@@ -214,7 +214,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
     const tool = this.getToolStackHead(ctx) as any;
 
-    this.needsRebuild = this.needsRebuild || (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id));
+    this.needsRebuild =
+      this.needsRebuild || (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id));
 
     if (this.needsRebuild) {
       tool[LastKey] = tool_idgen++;

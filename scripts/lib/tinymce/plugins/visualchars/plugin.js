@@ -219,7 +219,8 @@
     }
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var TEXT = 3;
 
@@ -240,7 +241,14 @@
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };

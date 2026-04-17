@@ -44,7 +44,10 @@ export function initAspectClass(objectIn: any, blacklist = new Set<string | symb
       let p: Function | null = obj.constructor;
       do {
         if ((p as Function & { prototype?: object }).prototype) {
-          let descr = Object.getOwnPropertyDescriptor((p as Function & { prototype: object }).prototype, key);
+          let descr = Object.getOwnPropertyDescriptor(
+            (p as Function & { prototype: object }).prototype,
+            key
+          );
 
           if (descr && (descr.set || descr.get)) {
             return false;

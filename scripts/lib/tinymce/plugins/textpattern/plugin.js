@@ -355,7 +355,10 @@
           fold: function () {
             if (arguments.length !== cases.length) {
               throw new Error(
-                "Wrong number of arguments to fold. Expected " + cases.length + ", got " + arguments.length
+                "Wrong number of arguments to fold. Expected " +
+                  cases.length +
+                  ", got " +
+                  arguments.length
               );
             }
             var target = arguments[count];
@@ -700,7 +703,8 @@
     };
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var error$1 = function () {
     var args = [];
@@ -883,9 +887,11 @@
       return Option.some(point(node, offset));
     } else {
       var textSeeker = global$5(DOM);
-      return Option.from(textSeeker.backwards(node, offset, alwaysNext(node), rootNode)).map(function (prev) {
-        return point(prev.container, prev.container.data.length);
-      });
+      return Option.from(textSeeker.backwards(node, offset, alwaysNext(node), rootNode)).map(
+        function (prev) {
+          return point(prev.container, prev.container.data.length);
+        }
+      );
     }
   };
   var textAfter = function (node, offset, rootNode) {
@@ -893,9 +899,11 @@
       return Option.some(point(node, offset));
     } else {
       var textSeeker = global$5(DOM);
-      return Option.from(textSeeker.forwards(node, offset, alwaysNext(node), rootNode)).map(function (prev) {
-        return point(prev.container, 0);
-      });
+      return Option.from(textSeeker.forwards(node, offset, alwaysNext(node), rootNode)).map(
+        function (prev) {
+          return point(prev.container, 0);
+        }
+      );
     }
   };
   var scanLeft = function (node, offset, rootNode) {
@@ -907,10 +915,12 @@
       return Option.some(point(node, offset));
     } else {
       var textSeeker = global$5(DOM);
-      return Option.from(textSeeker.backwards(node, offset, alwaysNext(node), rootNode)).bind(function (prev) {
-        var prevText = prev.container.data;
-        return scanLeft(prev.container, offset + prevText.length, rootNode);
-      });
+      return Option.from(textSeeker.backwards(node, offset, alwaysNext(node), rootNode)).bind(
+        function (prev) {
+          var prevText = prev.container.data;
+          return scanLeft(prev.container, offset + prevText.length, rootNode);
+        }
+      );
     }
   };
   var scanRight = function (node, offset, rootNode) {
@@ -922,9 +932,11 @@
       return Option.some(point(node, offset));
     } else {
       var textSeeker = global$5(DOM);
-      return Option.from(textSeeker.forwards(node, offset, alwaysNext(node), rootNode)).bind(function (next) {
-        return scanRight(next.container, offset - text.length, rootNode);
-      });
+      return Option.from(textSeeker.forwards(node, offset, alwaysNext(node), rootNode)).bind(
+        function (next) {
+          return scanRight(next.container, offset - text.length, rootNode);
+        }
+      );
     }
   };
   var repeatLeft = function (dom, node, offset, process, rootNode) {
@@ -998,7 +1010,13 @@
     });
   };
   var generatePathRangeFromRange = function (root, range) {
-    return generatePathRange(root, range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+    return generatePathRange(
+      root,
+      range.startContainer,
+      range.startOffset,
+      range.endContainer,
+      range.endOffset
+    );
   };
 
   var stripPattern = function (dom, block, pattern) {
@@ -1093,7 +1111,10 @@
   };
 
   var checkRange = function (str, substr, start) {
-    return substr === "" || (str.length >= substr.length && str.substr(start, start + substr.length) === substr);
+    return (
+      substr === "" ||
+      (str.length >= substr.length && str.substr(start, start + substr.length) === substr)
+    );
   };
   var endsWith = function (str, suffix) {
     return checkRange(str, suffix, str.length - suffix.length);
@@ -1145,7 +1166,13 @@
   };
   var findPatternStartFromSpot = function (dom, pattern, block, spot) {
     var startPattern = pattern.start;
-    var startSpot = repeatLeft(dom, spot.container, spot.offset, matchesPattern(dom, block, startPattern), block);
+    var startSpot = repeatLeft(
+      dom,
+      spot.container,
+      spot.offset,
+      matchesPattern(dom, block, startPattern),
+      block
+    );
     return startSpot.bind(function (spot) {
       if (spot.offset >= startPattern.length) {
         var rng = dom.createRng();
@@ -1186,7 +1213,10 @@
         if (requireGap) {
           if (startRange.endContainer === spot.container && startRange.endOffset === spot.offset) {
             return Option.none();
-          } else if (spot.offset === 0 && startRange.endContainer.textContent.length === startRange.endOffset) {
+          } else if (
+            spot.offset === 0 &&
+            startRange.endContainer.textContent.length === startRange.endOffset
+          ) {
             return Option.none();
           }
         }
@@ -1214,13 +1244,26 @@
           position: spot,
         });
       } else {
-        var resultsOpt = findPatternsRec(editor, details.remainingPatterns, spot.container, spot.offset, block);
+        var resultsOpt = findPatternsRec(
+          editor,
+          details.remainingPatterns,
+          spot.container,
+          spot.offset,
+          block
+        );
         var results_1 = resultsOpt.getOr({
           matches : [],
           position: spot,
         });
         var pos = results_1.position;
-        var start = findPatternStart(dom, pattern, pos.container, pos.offset, block, resultsOpt.isNone());
+        var start = findPatternStart(
+          dom,
+          pattern,
+          pos.container,
+          pos.offset,
+          block,
+          resultsOpt.isNone()
+        );
         return start.map(function (startRng) {
           var startPathRng = generatePathRangeFromRange(root, startRng);
           return {

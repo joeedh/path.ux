@@ -194,7 +194,8 @@ export class GoToCommand extends AbstractCommand {
         value[i] = sv[i] + (tv[i] - sv[i]) * t;
       }
     } else {
-      this.object[this.key] = (this.startValue as number) + ((this.value as number) - (this.startValue as number)) * t;
+      this.object[this.key] =
+        (this.startValue as number) + ((this.value as number) - (this.startValue as number)) * t;
     }
   }
 }

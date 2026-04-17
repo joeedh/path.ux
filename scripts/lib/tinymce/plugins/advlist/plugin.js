@@ -264,8 +264,22 @@
     }
   };
   var register$1 = function (editor) {
-    addControl(editor, "numlist", "Numbered list", "InsertOrderedList", "OL", getNumberStyles(editor));
-    addControl(editor, "bullist", "Bullet list", "InsertUnorderedList", "UL", getBulletStyles(editor));
+    addControl(
+      editor,
+      "numlist",
+      "Numbered list",
+      "InsertOrderedList",
+      "OL",
+      getNumberStyles(editor)
+    );
+    addControl(
+      editor,
+      "bullist",
+      "Bullet list",
+      "InsertUnorderedList",
+      "UL",
+      getBulletStyles(editor)
+    );
   };
 
   function Plugin() {

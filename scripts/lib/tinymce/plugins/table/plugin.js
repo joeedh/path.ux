@@ -367,7 +367,8 @@
     return hasOwnProperty.call(obj, key);
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var COMMENT = 8;
   var DOCUMENT = 9;
@@ -396,7 +397,14 @@
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };
@@ -435,7 +443,10 @@
   };
 
   var checkRange = function (str, substr, start) {
-    return substr === "" || (str.length >= substr.length && str.substr(start, start + substr.length) === substr);
+    return (
+      substr === "" ||
+      (str.length >= substr.length && str.substr(start, start + substr.length) === substr)
+    );
   };
   var contains$1 = function (str, substr) {
     return str.indexOf(substr) !== -1;
@@ -512,7 +523,14 @@
 
   var internalSet = function (dom, property, value) {
     if (!isString(value)) {
-      domGlobals.console.error("Invalid call to CSS.set. Property ", property, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to CSS.set. Property ",
+        property,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("CSS value must be a string: " + value);
     }
     if (isSupported(dom)) {
@@ -834,7 +852,8 @@
       versionRegexes: [normalVersionRegex, /.*?cpu os ([0-9]+)_([0-9]+).*/],
       search: function (uastring) {
         return (
-          (contains$1(uastring, "safari") || contains$1(uastring, "mobile/")) && contains$1(uastring, "applewebkit")
+          (contains$1(uastring, "safari") || contains$1(uastring, "mobile/")) &&
+          contains$1(uastring, "applewebkit")
         );
       },
     },
@@ -938,7 +957,9 @@
     }
   };
   var bypassSelector = function (dom) {
-    return (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0;
+    return (
+      (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0
+    );
   };
   var all = function (selector, scope) {
     var base = scope === undefined ? domGlobals.document : scope.dom();
@@ -946,7 +967,9 @@
   };
   var one = function (selector, scope) {
     var base = scope === undefined ? domGlobals.document : scope.dom();
-    return bypassSelector(base) ? Option.none() : Option.from(base.querySelector(selector)).map(Element.fromDom);
+    return bypassSelector(base)
+      ? Option.none()
+      : Option.from(base.querySelector(selector)).map(Element.fromDom);
   };
 
   var eq = function (e1, e2) {
@@ -1349,7 +1372,9 @@
       var parentSection = parent$1
         .map(function (p) {
           var parentName = name(p);
-          return parentName === "tfoot" || parentName === "thead" || parentName === "tbody" ? parentName : "tbody";
+          return parentName === "tfoot" || parentName === "thead" || parentName === "tbody"
+            ? parentName
+            : "tbody";
         })
         .getOr("tbody");
       var cells$1 = map(cells(row), function (cell) {
@@ -2075,7 +2100,8 @@
             });
           } else if (contains$2(startTable, finishTable)) {
             var ancestorCells = ancestors$1(finish, "td,th", getIsRoot(startTable));
-            var finishCell = ancestorCells.length > 0 ? ancestorCells[ancestorCells.length - 1] : finish;
+            var finishCell =
+              ancestorCells.length > 0 ? ancestorCells[ancestorCells.length - 1] : finish;
             return Option.some({
               boxes : nestedIntercepts(startTable, start, startTable, finish, finishTable),
               start : start,
@@ -2083,7 +2109,8 @@
             });
           } else if (contains$2(finishTable, startTable)) {
             var ancestorCells = ancestors$1(start, "td,th", getIsRoot(finishTable));
-            var startCell = ancestorCells.length > 0 ? ancestorCells[ancestorCells.length - 1] : start;
+            var startCell =
+              ancestorCells.length > 0 ? ancestorCells[ancestorCells.length - 1] : start;
             return Option.some({
               boxes : nestedIntercepts(finishTable, start, startTable, finish, finishTable),
               start : start,
@@ -2096,10 +2123,14 @@
                 return closest$1(lca, "table", isRoot).bind(function (lcaTable) {
                   var finishAncestorCells = ancestors$1(finish, "td,th", getIsRoot(lcaTable));
                   var finishCell =
-                    finishAncestorCells.length > 0 ? finishAncestorCells[finishAncestorCells.length - 1] : finish;
+                    finishAncestorCells.length > 0
+                      ? finishAncestorCells[finishAncestorCells.length - 1]
+                      : finish;
                   var startAncestorCells = ancestors$1(start, "td,th", getIsRoot(lcaTable));
                   var startCell =
-                    startAncestorCells.length > 0 ? startAncestorCells[startAncestorCells.length - 1] : start;
+                    startAncestorCells.length > 0
+                      ? startAncestorCells[startAncestorCells.length - 1]
+                      : start;
                   return Option.some({
                     boxes : nestedIntercepts(lcaTable, start, startTable, finish, finishTable),
                     start : startCell,
@@ -2149,7 +2180,13 @@
       });
     });
   };
-  var shiftSelection = function (boxes, deltaRow, deltaColumn, firstSelectedSelector, lastSelectedSelector) {
+  var shiftSelection = function (
+    boxes,
+    deltaRow,
+    deltaColumn,
+    firstSelectedSelector,
+    lastSelectedSelector
+  ) {
     return getLast(boxes, lastSelectedSelector).bind(function (last) {
       return moveBy$1(last, deltaRow, deltaColumn).bind(function (finish) {
         return expandTo(finish, firstSelectedSelector);
@@ -2270,7 +2307,10 @@
           fold: function () {
             if (arguments.length !== cases.length) {
               throw new Error(
-                "Wrong number of arguments to fold. Expected " + cases.length + ", got " + arguments.length
+                "Wrong number of arguments to fold. Expected " +
+                  cases.length +
+                  ", got " +
+                  arguments.length
               );
             }
             var target = arguments[count];
@@ -2310,7 +2350,9 @@
       );
     };
     var candidates = selection(cell, selections);
-    return candidates.length > 0 && forall(candidates, hasSpan) ? Option.some(candidates) : Option.none();
+    return candidates.length > 0 && forall(candidates, hasSpan)
+      ? Option.some(candidates)
+      : Option.none();
   };
   var mergable = function (table, selections) {
     return cata(
@@ -2320,14 +2362,16 @@
         if (cells.length === 0) {
           return Option.none();
         }
-        return retrieveBox(table, firstSelectedSelector, lastSelectedSelector).bind(function (bounds) {
-          return cells.length > 1
-            ? Option.some({
-                bounds: constant(bounds),
-                cells : constant(cells),
-              })
-            : Option.none();
-        });
+        return retrieveBox(table, firstSelectedSelector, lastSelectedSelector).bind(
+          function (bounds) {
+            return cells.length > 1
+              ? Option.some({
+                  bounds: constant(bounds),
+                  cells : constant(cells),
+                })
+              : Option.none();
+          }
+        );
       },
       Option.none
     );
@@ -2392,7 +2436,8 @@
       var multiCellContext = function (cells) {
         e.preventDefault();
         extractSelected(cells).each(function (elements) {
-          e.content = e.format === "text" ? getTextContent(elements) : serializeElements(editor, elements);
+          e.content =
+            e.format === "text" ? getTextContent(elements) : serializeElements(editor, elements);
         });
       };
       if (e.selection === true) {
@@ -2544,7 +2589,9 @@
   };
   var normalizePixelSize = function (value, cell, getter, setter) {
     var number = parseInt(value, 10);
-    return endsWith(value, "%") && name(cell) !== "table" ? convert(cell, number, getter, setter) : number;
+    return endsWith(value, "%") && name(cell) !== "table"
+      ? convert(cell, number, getter, setter)
+      : number;
   };
   var getTotalHeight = function (cell) {
     var value = getHeightValue(cell);
@@ -3146,14 +3193,26 @@
   };
   var refreshCol = function (wire, colPositions, position, tableHeight) {
     drawBar(wire, colPositions, function (origin, cp) {
-      var colBar = col(cp.col, cp.x - origin.left(), position.top() - origin.top(), BAR_THICKNESS, tableHeight);
+      var colBar = col(
+        cp.col,
+        cp.x - origin.left(),
+        position.top() - origin.top(),
+        BAR_THICKNESS,
+        tableHeight
+      );
       add$2(colBar, resizeColBar);
       return colBar;
     });
   };
   var refreshRow = function (wire, rowPositions, position, tableWidth) {
     drawBar(wire, rowPositions, function (origin, cp) {
-      var rowBar = row(cp.row, position.left() - origin.left(), cp.y - origin.top(), tableWidth, BAR_THICKNESS);
+      var rowBar = row(
+        cp.row,
+        position.left() - origin.left(),
+        cp.y - origin.top(),
+        tableWidth,
+        BAR_THICKNESS
+      );
       add$2(rowBar, resizeRowBar);
       return rowBar;
     });
@@ -3525,7 +3584,10 @@
   var measure = function (startAddress, gridA, gridB) {
     if (startAddress.row() >= gridA.length || startAddress.column() > cellLength(gridA[0])) {
       return Result.error(
-        "invalid start address out of table bounds, row: " + startAddress.row() + ", column: " + startAddress.column()
+        "invalid start address out of table bounds, row: " +
+          startAddress.row() +
+          ", column: " +
+          startAddress.column()
       );
     }
     var rowRemainder = gridA.slice(startAddress.row());
@@ -3684,7 +3746,10 @@
     var fittedNewGrid = tailor(gridB, delta, generator);
     var secondDelta = measureWidth(gridA, fittedNewGrid);
     var fittedOldGrid = tailor(gridA, secondDelta, generator);
-    return fittedOldGrid.slice(0, index).concat(fittedNewGrid).concat(fittedOldGrid.slice(index, fittedOldGrid.length));
+    return fittedOldGrid
+      .slice(0, index)
+      .concat(fittedNewGrid)
+      .concat(fittedOldGrid.slice(index, fittedOldGrid.length));
   };
 
   var insertRowAt = function (grid, index, example, comparator, substitution) {
@@ -3695,7 +3760,9 @@
         index > 0 &&
         index < grid.length &&
         comparator(getCellElement(grid[index - 1], c), getCellElement(grid[index], c));
-      var ret = withinSpan ? getCell(grid[index], c) : elementnew(substitution(ex.element(), comparator), true);
+      var ret = withinSpan
+        ? getCell(grid[index], c)
+        : elementnew(substitution(ex.element(), comparator), true);
       return ret;
     });
     return before.concat([between]).concat(after);
@@ -3703,7 +3770,9 @@
   var insertColumnAt = function (grid, index, example, comparator, substitution) {
     return map(grid, function (row) {
       var withinSpan =
-        index > 0 && index < cellLength(row) && comparator(getCellElement(row, index - 1), getCellElement(row, index));
+        index > 0 &&
+        index < cellLength(row) &&
+        comparator(getCellElement(row, index - 1), getCellElement(row, index));
       var sub = withinSpan
         ? getCell(row, index)
         : elementnew(substitution(getCellElement(row, example), comparator), true);
@@ -3742,7 +3811,10 @@
     return (
       getCellElement(grid[rowIndex], colIndex) !== undefined &&
       rowIndex > 0 &&
-      comparator(getCellElement(grid[rowIndex - 1], colIndex), getCellElement(grid[rowIndex], colIndex))
+      comparator(
+        getCellElement(grid[rowIndex - 1], colIndex),
+        getCellElement(grid[rowIndex], colIndex)
+      )
     );
   };
   var notStartColumn = function (row, index, comparator) {
@@ -3750,7 +3822,8 @@
   };
   var replaceColumn = function (grid, index, comparator, substitution) {
     var targets = bind(grid, function (row, i) {
-      var alreadyAdded = notStartRow(grid, i, index, comparator) || notStartColumn(row, index, comparator);
+      var alreadyAdded =
+        notStartRow(grid, i, index, comparator) || notStartColumn(row, index, comparator);
       return alreadyAdded ? [] : [getCell(row, index)];
     });
     return replaceIn(grid, targets, comparator, substitution);
@@ -3758,7 +3831,8 @@
   var replaceRow = function (grid, index, comparator, substitution) {
     var targetRow = grid[index];
     var targets = bind(targetRow.cells(), function (item, i) {
-      var alreadyAdded = notStartRow(grid, index, i, comparator) || notStartColumn(targetRow, i, comparator);
+      var alreadyAdded =
+        notStartRow(grid, index, i, comparator) || notStartColumn(targetRow, i, comparator);
       return alreadyAdded ? [] : [item];
     });
     return replaceIn(grid, targets, comparator, substitution);
@@ -4115,7 +4189,13 @@
     });
   };
   var invalidTypeMessage = function (incorrect, type) {
-    throw new Error("All values need to be of type: " + type + ". Keys (" + sort(incorrect).join(", ") + ") were not.");
+    throw new Error(
+      "All values need to be of type: " +
+        type +
+        ". Keys (" +
+        sort(incorrect).join(", ") +
+        ") were not."
+    );
   };
   var checkDupes = function (everything) {
     var sorted = sort(everything);
@@ -4124,7 +4204,11 @@
     });
     dupe.each(function (d) {
       throw new Error(
-        "The field: " + d + " occurs more than once in the combined fields: [" + sorted.join(", ") + "]."
+        "The field: " +
+          d +
+          " occurs more than once in the combined fields: [" +
+          sorted.join(", ") +
+          "]."
       );
     });
   };
@@ -4577,7 +4661,11 @@
     var index = pasteDetails.cells[0].row();
     var gridB = gridifyRows(pasteDetails.clipboard(), pasteDetails.generators(), example);
     var mergedGrid = insert(index, grid, gridB, pasteDetails.generators(), comparator);
-    var cursor = elementFromGrid(mergedGrid, pasteDetails.cells[0].row(), pasteDetails.cells[0].column());
+    var cursor = elementFromGrid(
+      mergedGrid,
+      pasteDetails.cells[0].row(),
+      pasteDetails.cells[0].column()
+    );
     return outcome(mergedGrid, cursor);
   };
   var opPasteRowsAfter = function (grid, pasteDetails, comparator, _genWrappers) {
@@ -4587,20 +4675,54 @@
       pasteDetails.cells[pasteDetails.cells.length - 1].rowspan();
     var gridB = gridifyRows(pasteDetails.clipboard(), pasteDetails.generators(), example);
     var mergedGrid = insert(index, grid, gridB, pasteDetails.generators(), comparator);
-    var cursor = elementFromGrid(mergedGrid, pasteDetails.cells[0].row(), pasteDetails.cells[0].column());
+    var cursor = elementFromGrid(
+      mergedGrid,
+      pasteDetails.cells[0].row(),
+      pasteDetails.cells[0].column()
+    );
     return outcome(mergedGrid, cursor);
   };
   var resize = adjustWidthTo;
   var insertRowsBefore = run(opInsertRowsBefore, onCells, noop, noop, Generators.modification);
   var insertRowsAfter = run(opInsertRowsAfter, onCells, noop, noop, Generators.modification);
-  var insertColumnsBefore = run(opInsertColumnsBefore, onCells, resize, noop, Generators.modification);
-  var insertColumnsAfter = run(opInsertColumnsAfter, onCells, resize, noop, Generators.modification);
+  var insertColumnsBefore = run(
+    opInsertColumnsBefore,
+    onCells,
+    resize,
+    noop,
+    Generators.modification
+  );
+  var insertColumnsAfter = run(
+    opInsertColumnsAfter,
+    onCells,
+    resize,
+    noop,
+    Generators.modification
+  );
   var eraseColumns = run(opEraseColumns, onCells, resize, prune, Generators.modification);
   var eraseRows = run(opEraseRows, onCells, noop, prune, Generators.modification);
-  var makeColumnHeader = run(opMakeColumnHeader, onCell, noop, noop, Generators.transform("row", "th"));
-  var unmakeColumnHeader = run(opUnmakeColumnHeader, onCell, noop, noop, Generators.transform(null, "td"));
+  var makeColumnHeader = run(
+    opMakeColumnHeader,
+    onCell,
+    noop,
+    noop,
+    Generators.transform("row", "th")
+  );
+  var unmakeColumnHeader = run(
+    opUnmakeColumnHeader,
+    onCell,
+    noop,
+    noop,
+    Generators.transform(null, "td")
+  );
   var makeRowHeader = run(opMakeRowHeader, onCell, noop, noop, Generators.transform("col", "th"));
-  var unmakeRowHeader = run(opUnmakeRowHeader, onCell, noop, noop, Generators.transform(null, "td"));
+  var unmakeRowHeader = run(
+    opUnmakeRowHeader,
+    onCell,
+    noop,
+    noop,
+    Generators.transform(null, "td")
+  );
   var mergeCells = run(opMergeCells, onMergable, noop, noop, Generators.merging);
   var unmergeCells = run(opUnmergeCells, onUnmergable, resize, noop, Generators.merging);
   var pasteCells = run(opPasteCells, onPaste, resize, noop, Generators.modification);
@@ -4760,7 +4882,8 @@
 
   var scan = function (universe, element, direction) {
     if (
-      (universe.property().isText(element) && universe.property().getText(element).trim().length === 0) ||
+      (universe.property().isText(element) &&
+        universe.property().getText(element).trim().length === 0) ||
       universe.property().isComment(element)
     ) {
       return direction(element).bind(function (elem) {
@@ -4870,7 +4993,8 @@
       var grid = toGrid(house, generators, false);
       var slicedGrid = grid.slice(
         selectedCells[0].row(),
-        selectedCells[selectedCells.length - 1].row() + selectedCells[selectedCells.length - 1].rowspan()
+        selectedCells[selectedCells.length - 1].row() +
+          selectedCells[selectedCells.length - 1].rowspan()
       );
       var slicedDetails = toDetailList(slicedGrid, generators);
       return copy$2(slicedDetails);
@@ -4881,7 +5005,9 @@
 
   var getSelectionStartFromSelector = function (selector) {
     return function (editor) {
-      return Option.from(editor.dom.getParent(editor.selection.getStart(), selector)).map(Element.fromDom);
+      return Option.from(editor.dom.getParent(editor.selection.getStart(), selector)).map(
+        Element.fromDom
+      );
     };
   };
   var getSelectionStartCell = getSelectionStartFromSelector("th,td");
@@ -5134,7 +5260,10 @@
       return __assign(__assign({}, spacing), padding);
     };
     var data = __assign(
-      __assign(__assign(__assign(__assign(__assign({}, defaultData), style), attrs), advStyle), getBorder()),
+      __assign(
+        __assign(__assign(__assign(__assign({}, defaultData), style), attrs), advStyle),
+        getBorder()
+      ),
       getCellPaddingCellSpacing()
     );
     return data;
@@ -5158,7 +5287,8 @@
           width      : dom.getStyle(elm, "width") || dom.getAttrib(elm, "width"),
           height     : dom.getStyle(elm, "height") || dom.getAttrib(elm, "height"),
           cellspacing: dom.getStyle(elm, "border-spacing") || dom.getAttrib(elm, "cellspacing"),
-          cellpadding: dom.getAttrib(elm, "cellpadding") || getTDTHOverallStyle(editor.dom, elm, "padding"),
+          cellpadding:
+            dom.getAttrib(elm, "cellpadding") || getTDTHOverallStyle(editor.dom, elm, "padding"),
           border     : getBorder(dom, elm),
           caption    : !!dom.select("caption", elm)[0],
           class      : dom.getAttrib(elm, "class", ""),
@@ -5640,7 +5770,10 @@
     cellElm = dom.getParent(editor.selection.getStart(), "td,th");
     global$1.each(tableElm.rows, function (row) {
       global$1.each(row.cells, function (cell) {
-        if ((dom.getAttrib(cell, "data-mce-selected") || cell === cellElm) && rows.indexOf(row) < 0) {
+        if (
+          (dom.getAttrib(cell, "data-mce-selected") || cell === cellElm) &&
+          rows.indexOf(row) < 0
+        ) {
           rows.push(row);
           return false;
         }
@@ -5911,7 +6044,11 @@
           },
         ]
       : [];
-    return rowColCountItems.concat(alwaysItems).concat(appearanceItems).concat(alignmentItem).concat(classListItem);
+    return rowColCountItems
+      .concat(alwaysItems)
+      .concat(appearanceItems)
+      .concat(alignmentItem)
+      .concat(classListItem);
   };
 
   var styleTDTH = function (dom, elm, name, value) {
@@ -6252,7 +6389,11 @@
       }
       if (fields.length !== values.length) {
         throw new Error(
-          'Wrong number of arguments to struct. Expected "[' + fields.length + ']", got ' + values.length + " arguments"
+          'Wrong number of arguments to struct. Expected "[' +
+            fields.length +
+            ']", got ' +
+            values.length +
+            " arguments"
         );
       }
       var struct = {};
@@ -6864,7 +7005,12 @@
         });
         sz.events.beforeResize.bind(function (event) {
           var rawTable = event.table().dom();
-          fireObjectResizeStart(editor, rawTable, getPixelWidth$1(rawTable), getPixelHeight(rawTable));
+          fireObjectResizeStart(
+            editor,
+            rawTable,
+            getPixelWidth$1(rawTable),
+            getPixelHeight(rawTable)
+          );
         });
         sz.events.afterResize.bind(function (event) {
           var table = event.table();
@@ -7355,7 +7501,9 @@
       var fallback = function () {
         return search(doc, elem, x);
       };
-      return children(elem).length === 0 ? fallback() : searchTextNodes(doc, elem, x, y).orThunk(fallback);
+      return children(elem).length === 0
+        ? fallback()
+        : searchTextNodes(doc, elem, x, y).orThunk(fallback);
     });
   };
   var availableSearch = document.caretPositionFromPoint
@@ -7632,7 +7780,9 @@
         var boxes = cellSel.boxes.getOr([]);
         if (boxes.length > 0) {
           selectRange(container, boxes, cellSel.start, cellSel.finish);
-          return Option.some(Response.create(Option.some(makeSitus(start, 0, start, getEnd(start))), true));
+          return Option.some(
+            Response.create(Option.some(makeSitus(start, 0, start, getEnd(start))), true)
+          );
         } else {
           return Option.none();
         }
@@ -7804,7 +7954,12 @@
     return ancestor(scope, predicate, isRoot).isSome();
   };
 
-  var adt$5 = Adt.generate([{ none: ["message"] }, { success: [] }, { failedUp: ["cell"] }, { failedDown: ["cell"] }]);
+  var adt$5 = Adt.generate([
+    { none: ["message"] },
+    { success: [] },
+    { failedUp: ["cell"] },
+    { failedDown: ["cell"] },
+  ]);
   var isOverlapping = function (bridge, before, after) {
     var beforeBounds = bridge.getRect(before);
     var afterBounds = bridge.getRect(after);
@@ -7820,7 +7975,9 @@
           if (!eq(afterCell, beforeCell)) {
             return sharedOne$1(isRow, [afterCell, beforeCell]).fold(
               function () {
-                return isOverlapping(bridge, beforeCell, afterCell) ? adt$5.success() : failure(beforeCell);
+                return isOverlapping(bridge, beforeCell, afterCell)
+                  ? adt$5.success()
+                  : failure(beforeCell);
               },
               function (_sharedRow) {
                 return failure(beforeCell);
@@ -8022,7 +8179,9 @@
     } else if (guessBox.top === caret.bottom) {
       return adt$6.retry(moveDown(caret, 1));
     } else {
-      return inOutsideBlock(bridge, element, caret) ? adt$6.retry(translate(lowerCaret, JUMP_SIZE, 0)) : adt$6.none();
+      return inOutsideBlock(bridge, element, caret)
+        ? adt$6.retry(translate(lowerCaret, JUMP_SIZE, 0))
+        : adt$6.none();
     }
   };
   var adjustUp = function (bridge, element, guessBox, original, caret) {
@@ -8034,7 +8193,9 @@
     } else if (guessBox.bottom === caret.top) {
       return adt$6.retry(moveUp(caret, 1));
     } else {
-      return inOutsideBlock(bridge, element, caret) ? adt$6.retry(translate(higherCaret, JUMP_SIZE, 0)) : adt$6.none();
+      return inOutsideBlock(bridge, element, caret)
+        ? adt$6.retry(translate(higherCaret, JUMP_SIZE, 0))
+        : adt$6.none();
     }
   };
   var upMovement = {
@@ -8208,7 +8369,9 @@
   };
   var handle$2 = function (bridge, isRoot, direction) {
     return findSpot(bridge, isRoot, direction).bind(function (spot) {
-      return scan$1(bridge, isRoot, spot.element(), spot.offset(), direction, MAX_RETRIES).map(bridge.fromSitus);
+      return scan$1(bridge, isRoot, spot.element(), spot.offset(), direction, MAX_RETRIES).map(
+        bridge.fromSitus
+      );
     });
   };
 
@@ -8265,7 +8428,10 @@
             isRoot
           ).map(function (last) {
             var lastOffset = getEnd(last);
-            return Response.create(Option.some(makeSitus(last, lastOffset, last, lastOffset)), true);
+            return Response.create(
+              Option.some(makeSitus(last, lastOffset, last, lastOffset)),
+              true
+            );
           });
         } else {
           return Option.none();
@@ -8509,9 +8675,27 @@
       var handler = retrieve(container, annotations.selectedSelector).fold(
         function () {
           if (isDown(keycode) && shiftKey) {
-            return curry(select, bridge, container, isRoot, down, finish, start, annotations.selectRange);
+            return curry(
+              select,
+              bridge,
+              container,
+              isRoot,
+              down,
+              finish,
+              start,
+              annotations.selectRange
+            );
           } else if (isUp(keycode) && shiftKey) {
-            return curry(select, bridge, container, isRoot, up, finish, start, annotations.selectRange);
+            return curry(
+              select,
+              bridge,
+              container,
+              isRoot,
+              up,
+              finish,
+              start,
+              annotations.selectRange
+            );
           } else if (isDown(keycode)) {
             return curry(navigate, bridge, isRoot, down, finish, start, lastDownCheck);
           } else if (isUp(keycode)) {
@@ -8528,14 +8712,17 @@
               });
               return navigation.fold(
                 function () {
-                  return getEdges(container, annotations.firstSelectedSelector, annotations.lastSelectedSelector).map(
-                    function (edges) {
-                      var relative = isDown(keycode) || direction.isForward(keycode) ? Situ.after : Situ.before;
-                      bridge.setRelativeSelection(Situ.on(edges.first(), 0), relative(edges.table()));
-                      annotations.clear(container);
-                      return Response.create(Option.none(), true);
-                    }
-                  );
+                  return getEdges(
+                    container,
+                    annotations.firstSelectedSelector,
+                    annotations.lastSelectedSelector
+                  ).map(function (edges) {
+                    var relative =
+                      isDown(keycode) || direction.isForward(keycode) ? Situ.after : Situ.before;
+                    bridge.setRelativeSelection(Situ.on(edges.first(), 0), relative(edges.table()));
+                    annotations.clear(container);
+                    return Response.create(Option.none(), true);
+                  });
                 },
                 function (_) {
                   return Option.some(Response.create(Option.none(), true));
@@ -8612,7 +8799,11 @@
 
   var byClass = function (ephemera) {
     var addSelectionClass = addClass(ephemera.selected);
-    var removeSelectionClasses = removeClasses([ephemera.selected, ephemera.lastSelected, ephemera.firstSelected]);
+    var removeSelectionClasses = removeClasses([
+      ephemera.selected,
+      ephemera.lastSelected,
+      ephemera.firstSelected,
+    ]);
     var clear = function (container) {
       var sels = descendants$1(container, ephemera.selectedSelector);
       each(sels, removeSelectionClasses);
@@ -8674,7 +8865,9 @@
     var upGrid = grid.slice(0, selectedCells[selectedCells.length - 1].row() + 1);
     var upDetails = toDetailList(upGrid, generators);
     return bind(upDetails, function (detail) {
-      var slicedCells = detail.cells().slice(0, selectedCells[selectedCells.length - 1].column() + 1);
+      var slicedCells = detail
+        .cells()
+        .slice(0, selectedCells[selectedCells.length - 1].column() + 1);
       return map(slicedCells, function (cell) {
         return cell.element();
       });
@@ -8769,9 +8962,11 @@
           var rng = editor.selection.getRng();
           var start = Element.fromDom(rng.startContainer);
           var end = Element.fromDom(rng.endContainer);
-          keyHandlers.keyup(wrappedEvent, start, rng.startOffset, end, rng.endOffset).each(function (response) {
-            handleResponse(wrappedEvent, response);
-          });
+          keyHandlers
+            .keyup(wrappedEvent, start, rng.startOffset, end, rng.endOffset)
+            .each(function (response) {
+              handleResponse(wrappedEvent, response);
+            });
         }
       };
       var keydown = function (event) {

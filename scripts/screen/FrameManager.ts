@@ -448,7 +448,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   copy() {
-    const ret = UIBase.createElement((this.constructor as unknown as typeof Screen).define().tagname) as this;
+    const ret = UIBase.createElement(
+      (this.constructor as unknown as typeof Screen).define().tagname
+    ) as this;
     ret.ctx = this.ctx;
     ret._init();
 
@@ -569,7 +571,13 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
    *                     then move the popup so it's fully inside the window (if it's outsize).
    *
    * */
-  popup(owning_node: UIBase, elem_or_x: UIBase | number, y?: number, closeOnMouseOut = true, popupDelay = 5) {
+  popup(
+    owning_node: UIBase,
+    elem_or_x: UIBase | number,
+    y?: number,
+    closeOnMouseOut = true,
+    popupDelay = 5
+  ) {
     const ret = this._popup(owning_node, elem_or_x, y, closeOnMouseOut);
 
     for (let i = 0; i < 2; i++) {
@@ -738,7 +746,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this._popups.push(container);
 
     // eslint-disable-next-line prefer-const
-    let mousepick: ((e: MouseEvent, x?: number, y?: number, do_timeout?: boolean) => void) | undefined;
+    let mousepick:
+      | ((e: MouseEvent, x?: number, y?: number, do_timeout?: boolean) => void)
+      | undefined;
     // eslint-disable-next-line prefer-const
     let keydown: (e: KeyboardEvent) => void | undefined;
 
@@ -2572,7 +2582,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     const hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      const sb = (this._edgemap[hash] = UIBase.createElement("screenborder-x") as unknown as ScreenBorder);
+      const sb = (this._edgemap[hash] = UIBase.createElement(
+        "screenborder-x"
+      ) as unknown as ScreenBorder);
 
       sb._hash = hash;
       sb.screen = this;

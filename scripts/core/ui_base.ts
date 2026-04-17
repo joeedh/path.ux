@@ -77,7 +77,15 @@ import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils";
 
 export * from "./ui_theme";
 
-import { theme, parsepx, compatMap, color2css, css2color, ThemeRecord, ThemeScrollBars } from "./ui_theme";
+import {
+  theme,
+  parsepx,
+  compatMap,
+  color2css,
+  css2color,
+  ThemeRecord,
+  ThemeScrollBars,
+} from "./ui_theme";
 
 import { DefaultTheme } from "./theme";
 
@@ -111,7 +119,11 @@ let registered_has_happened = false;
 let tagPrefix = "";
 const EventCBSymbol: unique symbol = Symbol("wrapped event callback");
 
-function calcElemCBKey(elem: UIBase, type: string, options: AddEventListenerOptions | boolean | undefined): string {
+function calcElemCBKey(
+  elem: UIBase,
+  type: string,
+  options: AddEventListenerOptions | boolean | undefined
+): string {
   return elem._id + ":" + type + ":" + JSON.stringify(options || {});
 }
 
@@ -154,7 +166,12 @@ export function setTheme(theme2: ThemeRecord): void {
   for (const k in theme2) {
     const v = theme2[k];
 
-    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
+    if (
+      typeof v !== "object" ||
+      v === null ||
+      v instanceof CSSFont ||
+      v instanceof ThemeScrollBars
+    ) {
       theme[k] = v;
       continue;
     }
@@ -237,7 +254,12 @@ class _IconManager {
   _accept: ((value: _IconManager) => void) | undefined;
   _reject: ((reason?: unknown) => void) | undefined;
 
-  constructor(image: HTMLImageElement, tilesize: number, number_of_horizontal_tiles: number, drawsize: number) {
+  constructor(
+    image: HTMLImageElement,
+    tilesize: number,
+    number_of_horizontal_tiles: number,
+    drawsize: number
+  ) {
     this.tilex = number_of_horizontal_tiles;
     this.tilesize = tilesize;
     this.drawsize = drawsize;
@@ -300,7 +322,14 @@ class _IconManager {
     return this.promise;
   }
 
-  canvasDraw(elem: UIBase, canvas: HTMLCanvasElement, g: CanvasRenderingContext2D, icon: number, x = 0, y = 0): void {
+  canvasDraw(
+    elem: UIBase,
+    canvas: HTMLCanvasElement,
+    g: CanvasRenderingContext2D,
+    icon: number,
+    x = 0,
+    y = 0
+  ): void {
     const customIcon = this.customIcons.get(icon);
 
     if (customIcon) {
@@ -469,7 +498,9 @@ export class IconManager {
         drawsize = ~~(drawsize * ((theme.base as ThemeRecord).mobileSizeMultiplier as number));
       }
 
-      this.iconsheets.push(new _IconManager(images[i] as HTMLImageElement, size, horizontal_tile_count, drawsize));
+      this.iconsheets.push(
+        new _IconManager(images[i] as HTMLImageElement, size, horizontal_tile_count, drawsize)
+      );
     }
   }
 
@@ -667,7 +698,10 @@ export function getIconManager(): IconManager {
   return iconmanager;
 }
 
-export function setIconManager(manager: IconManager, IconSheetsOverride?: Record<string, number>): void {
+export function setIconManager(
+  manager: IconManager,
+  IconSheetsOverride?: Record<string, number>
+): void {
   iconmanager.load(manager);
 
   if (IconSheetsOverride !== undefined) {
@@ -717,11 +751,23 @@ import { DataPathSetOp } from "../pathux";
 import { tagManager } from "./tagReRegister";
 import type { Screen } from "../screen/FrameManager";
 
-const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
+const _mobile_theme_patterns = [
+  /.*width.*/,
+  /.*height.*/,
+  /.*size.*/,
+  /.*margin.*/,
+  /.*pad/,
+  /.*radius.*/,
+];
 
 let _idgen = 0;
 
-export const _testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15, border = "solid"): string {
+export const _testSetScrollbars = function (
+  color = "grey",
+  contrast = 0.5,
+  width = 15,
+  border = "solid"
+): string {
   const buf = styleScrollBars(color, undefined, contrast, width, border, "*");
   /* CTX is an app-level global */
   //ctx.screen.mergeGlobalCSS(buf);
@@ -1252,7 +1298,10 @@ export class UIBase<
     this._screenStyleTag = document.createElement("style");
     this._screenStyleUpdateHash = 0;
 
-    initAspectClass(this, new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"]));
+    initAspectClass(
+      this,
+      new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
+    );
 
     this.shadow = this.attachShadow({ mode: "open" });
 
@@ -1261,8 +1310,11 @@ export class UIBase<
     }
 
     this.shadow.appendChild(this._screenStyleTag);
-    const _origAppendChild = this.shadow.appendChild.bind(this.shadow) as <T extends Node>(child: T) => T;
-    (this.shadow as ShadowRoot & { _appendChild: <T extends Node>(child: T) => T })._appendChild = _origAppendChild;
+    const _origAppendChild = this.shadow.appendChild.bind(this.shadow) as <T extends Node>(
+      child: T
+    ) => T;
+    (this.shadow as ShadowRoot & { _appendChild: <T extends Node>(child: T) => T })._appendChild =
+      _origAppendChild;
 
     ///*
     this.shadow.appendChild = <T extends Node>(child: T): T => {
@@ -1599,14 +1651,20 @@ export class UIBase<
 
     internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
     // note: we override HTMLElement.prototype.animate in a type incompatible way
-    customElements.define(this.prefix(cls.define().tagname), cls as unknown as CustomElementConstructor);
+    customElements.define(
+      this.prefix(cls.define().tagname),
+      cls as unknown as CustomElementConstructor
+    );
   }
 
   static getInternalName(name: string): string | undefined {
     return internalElementNames[name];
   }
 
-  static createElement<T extends UIBase | HTMLElement = HTMLElement>(name: string, internal = false): T {
+  static createElement<T extends UIBase | HTMLElement = HTMLElement>(
+    name: string,
+    internal = false
+  ): T {
     const mappedTag = tagManager.get(name);
     if (mappedTag !== undefined) {
       return document.createElement(mappedTag) as unknown as T;
@@ -1802,7 +1860,9 @@ export class UIBase<
         pathDebugEvent(e);
       }
 
-      const area = this.findArea() as (UIBase & { push_ctx_active(): void; pop_ctx_active(): void }) | undefined;
+      const area = this.findArea() as
+        | (UIBase & { push_ctx_active(): void; pop_ctx_active(): void })
+        | undefined;
 
       if (area) {
         area.push_ctx_active();
@@ -1909,7 +1969,10 @@ export class UIBase<
   }
 
   noMargins(): this {
-    this.saneStyle["margin"] = this.saneStyle["margin-left"] = this.saneStyle["margin-right"] = "0px";
+    this.saneStyle["margin"] =
+      this.saneStyle["margin-left"] =
+      this.saneStyle["margin-right"] =
+        "0px";
     this.saneStyle["margin-top"] = this.saneStyle["margin-bottom"] = "0px";
     return this;
   }
@@ -1919,7 +1982,10 @@ export class UIBase<
   }
 
   noPadding(): this {
-    this.saneStyle["padding"] = this.saneStyle["padding-left"] = this.saneStyle["padding-right"] = "0px";
+    this.saneStyle["padding"] =
+      this.saneStyle["padding-left"] =
+      this.saneStyle["padding-right"] =
+        "0px";
     this.saneStyle["padding-top"] = this.saneStyle["padding-bottom"] = "0px";
     return this;
   }
@@ -2081,7 +2147,8 @@ export class UIBase<
     }
 
     this.saneStyle["border-radius"] = def("border-radius") + "px";
-    this.saneStyle["border"] = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+    this.saneStyle["border"] =
+      `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
   }
 
   genBoxCSS(subkey?: string): string {
@@ -2213,7 +2280,10 @@ export class UIBase<
       return false;
     }
 
-    const getPos = (n: Node | UIBase, p: (Node | UIBase) & { shadow?: ShadowRoot }): [number, Node] => {
+    const getPos = (
+      n: Node | UIBase,
+      p: (Node | UIBase) & { shadow?: ShadowRoot }
+    ): [number, Node] => {
       let i = Array.prototype.indexOf.call(p.childNodes, n);
 
       if (i < 0 && p.shadow) {
@@ -2356,8 +2426,10 @@ export class UIBase<
       /* the user's mouse cursor might not be over the element
        *  if they've tabbed to it */
 
-      const is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-      const is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+      const is_copy =
+        e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+      const is_paste =
+        e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
 
       if (!is_copy && !is_paste) {
         //early out, remember that pickElement is highly expensive to run
@@ -2372,7 +2444,12 @@ export class UIBase<
         let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
         checkTree = checkTree || (is_copy && this.constructor.define().copyForAllChildren);
 
-        while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem?.parentWidget) {
+        while (
+          checkTree &&
+          !(TextBox && elem instanceof TextBox) &&
+          elem !== this &&
+          elem?.parentWidget
+        ) {
           console.log("  " + elem._id);
 
           elem = elem.parentWidget;
@@ -2672,7 +2749,12 @@ export class UIBase<
       if (clip) {
         const rect = node.getBoundingClientRect();
         // avoid GC
-        const clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+        const clip2 = math.aabb_intersect_2d(
+          clip.pos,
+          clip.size,
+          [rect.x, rect.y],
+          [rect.width, rect.height]
+        );
 
         ok = ok && Boolean(clip2);
       }
@@ -2773,7 +2855,12 @@ export class UIBase<
 
   on_enabled(): void {}
 
-  pushModal(handlers: any = this, autoStopPropagation = true, pointerId?: number, pointerElem: UIBase = this): unknown {
+  pushModal(
+    handlers: any = this,
+    autoStopPropagation = true,
+    pointerId?: number,
+    pointerElem: UIBase = this
+  ): unknown {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       this.popModal();
@@ -2987,7 +3074,13 @@ export class UIBase<
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
 
-      const toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? undefined);
+      const toolop = getDataPathToolOp().create(
+        ctx,
+        path,
+        val,
+        this._id,
+        mass_set_path ?? undefined
+      );
 
       /* getDataPathToolOp.create can return false in case of no-op paths. */
       if (!toolop) {
@@ -3357,14 +3450,25 @@ export class UIBase<
           }
         },
         start_events: ["mouseover"],
-        reset_events: ["mousemove", "mousedown", "mouseup", "touchstart", "touchend", "keydown", "focus"],
+        reset_events: [
+          "mousemove",
+          "mousedown",
+          "mouseup",
+          "touchstart",
+          "touchend",
+          "keydown",
+          "focus",
+        ],
         stop_events : ["mouseleave", "blur", "mouseout"],
         handlers    : {},
       });
 
       const bind_handler = (type: string, etype: string): EventListener => {
         const handler = (e: Event) => {
-          if (this._tool_tip_abort_delay !== undefined && util.time_ms() < this._tool_tip_abort_delay) {
+          if (
+            this._tool_tip_abort_delay !== undefined &&
+            util.time_ms() < this._tool_tip_abort_delay
+          ) {
             this._tooltip_timer = undefined;
             return;
           }
@@ -3659,7 +3763,10 @@ export class UIBase<
   hasClassSubDefault(key: string, subkey: string, inherit = true): boolean {
     return (
       this._hasClassSubDefault(key, subkey, inherit, undefined, theme) ||
-      !!(this._themeOverride && this._hasClassSubDefault(key, subkey, inherit, undefined, this._themeOverride))
+      !!(
+        this._themeOverride &&
+        this._hasClassSubDefault(key, subkey, inherit, undefined, this._themeOverride)
+      )
     );
   }
 
@@ -3754,7 +3861,12 @@ export class UIBase<
     return ret as unknown as T;
   }
 
-  getDefault_intern(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
+  getDefault_intern(
+    key: string,
+    checkForMobile = true,
+    defaultval?: unknown,
+    inherit = true
+  ): unknown {
     if (this.my_default_overrides[key] !== undefined) {
       const v = this.my_default_overrides[key];
       return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
@@ -3800,7 +3912,11 @@ export class UIBase<
    * styleClass.  If key is not undefined it will be used to only
    * include overrides that contains that key
    */
-  private getStyleRecord(styleClass: string, key?: string, inherit = true): ThemeRecord | undefined {
+  private getStyleRecord(
+    styleClass: string,
+    key?: string,
+    inherit = true
+  ): ThemeRecord | undefined {
     let result: ThemeRecord | undefined;
     const chunks = styleClass.split(".");
     if (chunks.length === 0) {
@@ -3922,7 +4038,12 @@ export class UIBase<
    *                `this.constructor.define().style` to be checked (before parentStyle).
    * @returns The default value for the given key
    */
-  getClassDefault(key: string, checkForMobile = true, defaultval?: unknown, inherit = true): unknown {
+  getClassDefault(
+    key: string,
+    checkForMobile = true,
+    defaultval?: unknown,
+    inherit = true
+  ): unknown {
     const style = this.getStyleClass();
 
     if (style === "none") {
@@ -4194,7 +4315,8 @@ export function drawRoundBox(
     r2 = (width - margin * 2) * 0.5;
   }
 
-  const canvasWithBG = "_background" in canvas ? (canvas as HTMLCanvasElement & { _background?: string }) : undefined;
+  const canvasWithBG =
+    "_background" in canvas ? (canvas as HTMLCanvasElement & { _background?: string }) : undefined;
 
   let bg: string | undefined = color;
   if (bg === undefined && canvasWithBG?._background !== undefined) {
@@ -4242,7 +4364,12 @@ export function drawRoundBox(
   ctx2d.restore();
 }
 
-export function _getFont_new(elem: UIBase, size?: number, font: string = "DefaultText", do_dpi = true): string {
+export function _getFont_new(
+  elem: UIBase,
+  size?: number,
+  font: string = "DefaultText",
+  do_dpi = true
+): string {
   const fontObj = elem.getDefault(font) as CSSFont;
   if (fontObj === undefined) {
     console.error(
@@ -4257,12 +4384,22 @@ export function _getFont_new(elem: UIBase, size?: number, font: string = "Defaul
   return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
 }
 
-export function getFont<T extends UIBase>(elem: T, size?: number, font = "DefaultText", do_dpi = true): string {
+export function getFont<T extends UIBase>(
+  elem: T,
+  size?: number,
+  font = "DefaultText",
+  do_dpi = true
+): string {
   return _getFont_new(elem, size, font, do_dpi);
 }
 
 //size is optional, defaults to font's default size
-export function _getFont<T extends UIBase>(elem: T, size?: number, font = "DefaultText", do_dpi = true): string {
+export function _getFont<T extends UIBase>(
+  elem: T,
+  size?: number,
+  font = "DefaultText",
+  do_dpi = true
+): string {
   const font2 = elem.getDefault(font);
   if (font2 !== undefined) {
     //console.warn("New style font detected", font2, font2.genCSS(size));
@@ -4471,14 +4608,22 @@ const PTOT = 2;
 
  Note that this is error-tolerant.
  */
-export function saveUIData<CTX extends IContextBase = IContextBase>(node: UIBase<CTX>, key: string): string {
+export function saveUIData<CTX extends IContextBase = IContextBase>(
+  node: UIBase<CTX>,
+  key: string
+): string {
   if (key === undefined) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
 
   const paths: unknown[][] = [];
 
-  const rec = (n: Node & { shadow?: ShadowRoot }, path: unknown[], ni: number, is_shadow: boolean) => {
+  const rec = (
+    n: Node & { shadow?: ShadowRoot },
+    path: unknown[],
+    ni: number,
+    is_shadow: boolean
+  ) => {
     path = path.slice(0, path.length); //copy path
 
     const pi = path.length;

@@ -137,7 +137,8 @@
     };
   }
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var exports$1 = {},
     module = { exports: exports$1 },
@@ -255,7 +256,8 @@
                   greedy : true,
                 },
                 "class-name": {
-                  pattern: /(\b(?:class|interface|extends|implements|trait|instanceof|new)\s+|\bcatch\s+\()[\w.\\]+/i,
+                  pattern:
+                    /(\b(?:class|interface|extends|implements|trait|instanceof|new)\s+|\bcatch\s+\()[\w.\\]+/i,
                   lookbehind: true,
                   inside    : { "punctuation": /[.\\]/ },
                 },
@@ -284,11 +286,16 @@
                   var uniqueId = 0;
                   var _ = {
                     manual                     : _self.Prism && _self.Prism.manual,
-                    disableWorkerMessageHandler: _self.Prism && _self.Prism.disableWorkerMessageHandler,
+                    disableWorkerMessageHandler:
+                      _self.Prism && _self.Prism.disableWorkerMessageHandler,
                     util: {
                       encode: function (tokens) {
                         if (tokens instanceof Token) {
-                          return new Token(tokens.type, _.util.encode(tokens.content), tokens.alias);
+                          return new Token(
+                            tokens.type,
+                            _.util.encode(tokens.content),
+                            tokens.alias
+                          );
                         } else if (Array.isArray(tokens)) {
                           return tokens.map(_.util.encode);
                         } else {
@@ -439,7 +446,9 @@
                           'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code',
                       };
                       _.hooks.run("before-highlightall", env);
-                      env.elements = Array.prototype.slice.apply(env.container.querySelectorAll(env.selector));
+                      env.elements = Array.prototype.slice.apply(
+                        env.container.querySelectorAll(env.selector)
+                      );
                       _.hooks.run("before-all-elements-highlight", env);
                       for (var i = 0, element; (element = env.elements[i++]); ) {
                         _.highlightElement(element, async === true, env.callback);
@@ -449,11 +458,15 @@
                       var language = _.util.getLanguage(element);
                       var grammar = _.languages[language];
                       element.className =
-                        element.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
+                        element.className.replace(lang, "").replace(/\s+/g, " ") +
+                        " language-" +
+                        language;
                       var parent = element.parentNode;
                       if (parent && parent.nodeName.toLowerCase() === "pre") {
                         parent.className =
-                          parent.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
+                          parent.className.replace(lang, "").replace(/\s+/g, " ") +
+                          " language-" +
+                          language;
                       }
                       var code = element.textContent;
                       var env = {
@@ -508,7 +521,15 @@
                       _.hooks.run("after-tokenize", env);
                       return Token.stringify(_.util.encode(env.tokens), env.language);
                     },
-                    matchGrammar: function (text, strarr, grammar, index, startPos, oneshot, target) {
+                    matchGrammar: function (
+                      text,
+                      strarr,
+                      grammar,
+                      index,
+                      startPos,
+                      oneshot,
+                      target
+                    ) {
                       for (var token in grammar) {
                         if (!grammar.hasOwnProperty(token) || !grammar[token]) {
                           continue;
@@ -530,7 +551,11 @@
                             pattern.pattern = RegExp(pattern.pattern.source, flags + "g");
                           }
                           pattern = pattern.pattern || pattern;
-                          for (var i = index, pos = startPos; i < strarr.length; pos += strarr[i].length, ++i) {
+                          for (
+                            var i = index, pos = startPos;
+                            i < strarr.length;
+                            pos += strarr[i].length, ++i
+                          ) {
                             var str = strarr[i];
                             if (strarr.length > text.length) {
                               return;
@@ -544,7 +569,8 @@
                               if (!match) {
                                 break;
                               }
-                              var from = match.index + (lookbehind && match[1] ? match[1].length : 0),
+                              var from =
+                                  match.index + (lookbehind && match[1] ? match[1].length : 0),
                                 to = match.index + match[0].length,
                                 k = i,
                                 p = pos;
@@ -602,7 +628,8 @@
                               args.push(after);
                             }
                             Array.prototype.splice.apply(strarr, args);
-                            if (delNum != 1) _.matchGrammar(text, strarr, grammar, i, pos, true, token + "," + j);
+                            if (delNum != 1)
+                              _.matchGrammar(text, strarr, grammar, i, pos, true, token + "," + j);
                             if (oneshot) break;
                           }
                         }
@@ -673,7 +700,9 @@
                     _.hooks.run("wrap", env);
                     var attributes = Object.keys(env.attributes)
                       .map(function (name) {
-                        return name + '="' + (env.attributes[name] || "").replace(/"/g, "&quot;") + '"';
+                        return (
+                          name + '="' + (env.attributes[name] || "").replace(/"/g, "&quot;") + '"'
+                        );
                       })
                       .join(" ");
                     return (
@@ -726,7 +755,10 @@
                       }
                     };
                     var readyState = document.readyState;
-                    if (readyState === "loading" || (readyState === "interactive" && script && script.defer)) {
+                    if (
+                      readyState === "loading" ||
+                      (readyState === "interactive" && script && script.defer)
+                    ) {
                       document.addEventListener("DOMContentLoaded", highlightAutomaticallyCallback);
                     } else {
                       if (window.requestAnimationFrame) {
@@ -811,12 +843,14 @@
                     inside    : { punctuation: /\./ },
                   },
                   {
-                    pattern   : /(\b(?:class|interface)\s+[A-Z]\w*(?:\.\w+)*\s*:\s*)[A-Z]\w*(?:\.\w+)*\b/,
+                    pattern:
+                      /(\b(?:class|interface)\s+[A-Z]\w*(?:\.\w+)*\s*:\s*)[A-Z]\w*(?:\.\w+)*\b/,
                     lookbehind: true,
                     inside    : { punctuation: /\./ },
                   },
                   {
-                    pattern   : /((?:\b(?:class|interface|new)\s+)|(?:catch\s+\())[A-Z]\w*(?:\.\w+)*\b/,
+                    pattern:
+                      /((?:\b(?:class|interface|new)\s+)|(?:catch\s+\())[A-Z]\w*(?:\.\w+)*\b/,
                     lookbehind: true,
                     inside    : { punctuation: /\./ },
                   },
@@ -933,7 +967,8 @@
                   "number":
                     /\b0b[01][01_]*L?\b|\b0x[\da-f_]*\.?[\da-f_p+-]+\b|(?:\b\d[\d_]*\.?[\d_]*|\B\.\d[\d_]*)(?:e[+-]?\d[\d_]*)?[dfl]?/i,
                   "operator": {
-                    pattern   : /(^|[^.])(?:<<=?|>>>?=?|->|--|\+\+|&&|\|\||::|[?:~]|[-+*/%&|^!=<>]=?)/m,
+                    pattern:
+                      /(^|[^.])(?:<<=?|>>>?=?|->|--|\+\+|&&|\|\||::|[?:~]|[-+*/%&|^!=<>]=?)/m,
                     lookbehind: true,
                   },
                 });
@@ -976,7 +1011,8 @@
                 "class-name": [
                   Prism.languages.clike["class-name"],
                   {
-                    pattern: /(^|[^$\w\xA0-\uFFFF])[_$A-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\.(?:prototype|constructor))/,
+                    pattern:
+                      /(^|[^$\w\xA0-\uFFFF])[_$A-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\.(?:prototype|constructor))/,
                     lookbehind: true,
                   },
                 ],
@@ -993,8 +1029,10 @@
                 ],
                 "number":
                   /\b(?:(?:0[xX](?:[\dA-Fa-f](?:_[\dA-Fa-f])?)+|0[bB](?:[01](?:_[01])?)+|0[oO](?:[0-7](?:_[0-7])?)+)n?|(?:\d(?:_\d)?)+n|NaN|Infinity)\b|(?:\b(?:\d(?:_\d)?)+\.?(?:\d(?:_\d)?)*|\B\.(?:\d(?:_\d)?)+)(?:[Ee][+-]?(?:\d(?:_\d)?)+)?/,
-                "function"  : /#?[_$a-zA-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*(?:\.\s*(?:apply|bind|call)\s*)?\()/,
-                "operator"  : /--|\+\+|\*\*=?|=>|&&|\|\||[!=]==|<<=?|>>>?=?|[-+*/%&|^!=<>]=?|\.{3}|\?[.?]?|[~:]/,
+                "function":
+                  /#?[_$a-zA-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*(?:\.\s*(?:apply|bind|call)\s*)?\()/,
+                "operator":
+                  /--|\+\+|\*\*=?|=>|&&|\|\||[!=]==|<<=?|>>>?=?|[-+*/%&|^!=<>]=?|\.{3}|\?[.?]?|[~:]/,
               });
               Prism.languages.javascript["class-name"][0].pattern =
                 /(\b(?:class|interface|extends|implements|instanceof|new)\s+)[\w.\\]+/;
@@ -1085,7 +1123,8 @@
                         }
                         var i = tokenStack.length;
                         var placeholder;
-                        while (env.code.indexOf((placeholder = getPlaceholder(language, i))) !== -1) ++i;
+                        while (env.code.indexOf((placeholder = getPlaceholder(language, i))) !== -1)
+                          ++i;
                         tokenStack[i] = match;
                         return placeholder;
                       });
@@ -1106,7 +1145,10 @@
                             break;
                           }
                           var token = tokens[i];
-                          if (typeof token === "string" || (token.content && typeof token.content === "string")) {
+                          if (
+                            typeof token === "string" ||
+                            (token.content && typeof token.content === "string")
+                          ) {
                             var k = keys[j];
                             var t = env.tokenStack[k];
                             var s = typeof token === "string" ? token : token.content;
@@ -1194,7 +1236,8 @@
                 },
                 "entity" : /&#?[\da-z]{1,8};/i,
               };
-              Prism.languages.markup["tag"].inside["attr-value"].inside["entity"] = Prism.languages.markup["entity"];
+              Prism.languages.markup["tag"].inside["attr-value"].inside["entity"] =
+                Prism.languages.markup["entity"];
               Prism.hooks.add("wrap", function (env) {
                 if (env.type === "entity") {
                   env.attributes["title"] = env.content.replace(/&amp;/, "&");
@@ -1222,7 +1265,10 @@
                   var def = {};
                   def[tagName] = {
                     pattern: RegExp(
-                      /(<__[\s\S]*?>)(?:<!\[CDATA\[[\s\S]*?\]\]>\s*|[\s\S])*?(?=<\/__>)/.source.replace(/__/g, tagName),
+                      /(<__[\s\S]*?>)(?:<!\[CDATA\[[\s\S]*?\]\]>\s*|[\s\S])*?(?=<\/__>)/.source.replace(
+                        /__/g,
+                        tagName
+                      ),
                       "i"
                     ),
                     lookbehind: true,
@@ -1283,7 +1329,8 @@
                   },
                 });
                 var string_interpolation = {
-                  pattern   : /{\$(?:{(?:{[^{}]+}|[^{}]+)}|[^{}])+}|(^|[^\\{])\$+(?:\w+(?:\[.+?]|->\w+)*)/,
+                  pattern:
+                    /{\$(?:{(?:{[^{}]+}|[^{}]+)}|[^{}])+}|(^|[^\\{])\$+(?:\w+(?:\[.+?]|->\w+)*)/,
                   lookbehind: true,
                   inside    : Prism.languages.php,
                 };
@@ -1354,7 +1401,8 @@
                   greedy : true,
                   inside: {
                     "interpolation": {
-                      pattern   : /((?:^|[^{])(?:{{)*){(?!{)(?:[^{}]|{(?!{)(?:[^{}]|{(?!{)(?:[^{}])+})+})+}/,
+                      pattern:
+                        /((?:^|[^{])(?:{{)*){(?!{)(?:[^{}]|{(?!{)(?:[^{}]|{(?!{)(?:[^{}])+})+})+}/,
                       lookbehind: true,
                       inside: {
                         "format-spec": {
@@ -1399,7 +1447,8 @@
                 "builtin":
                   /\b(?:__import__|abs|all|any|apply|ascii|basestring|bin|bool|buffer|bytearray|bytes|callable|chr|classmethod|cmp|coerce|compile|complex|delattr|dict|dir|divmod|enumerate|eval|execfile|file|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|intern|isinstance|issubclass|iter|len|list|locals|long|map|max|memoryview|min|next|object|oct|open|ord|pow|property|range|raw_input|reduce|reload|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|unichr|unicode|vars|xrange|zip)\b/,
                 "boolean"             : /\b(?:True|False|None)\b/,
-                "number": /(?:\b(?=\d)|\B(?=\.))(?:0[bo])?(?:(?:\d|0x[\da-f])[\da-f]*\.?\d*|\.\d+)(?:e[+-]?\d+)?j?\b/i,
+                "number":
+                  /(?:\b(?=\d)|\B(?=\.))(?:0[bo])?(?:(?:\d|0x[\da-f])[\da-f]*\.?\d*|\.\d+)(?:e[+-]?\d+)?j?\b/i,
                 "operator"            : /[-+%=]=?|!=|\*\*?=?|\/\/?=?|<[<=>]?|>[=>]?|[&|^~]/,
                 "punctuation"         : /[{}[\];(),.:]/,
               };
@@ -1467,7 +1516,8 @@
                       inside : { "interpolation": interpolation },
                     },
                     {
-                      pattern   : /(^|[^/])\/(?!\/)(?:\[.+?]|\\.|[^/\\\r\n])+\/[gim]{0,3}(?=\s*(?:$|[\r\n,.;})]))/,
+                      pattern:
+                        /(^|[^/])\/(?!\/)(?:\[.+?]|\\.|[^/\\\r\n])+\/[gim]{0,3}(?=\s*(?:$|[\r\n,.;})]))/,
                       lookbehind: true,
                       greedy    : true,
                     },
@@ -1596,7 +1646,9 @@
       code = global$1.DOM.encode(code);
       return node.fold(
         function () {
-          editor.insertContent('<pre id="__new" class="language-' + language + '">' + code + "</pre>");
+          editor.insertContent(
+            '<pre id="__new" class="language-' + language + '">' + code + "</pre>"
+          );
           editor.selection.select(editor.$("#__new").removeAttr("id")[0]);
         },
         function (n) {

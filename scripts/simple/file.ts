@@ -207,7 +207,9 @@ export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
       let newScreen = UIBase.createElement(screenClass.define().tagname) as UIBase;
       newScreen.ctx = appstate.ctx as typeof newScreen.ctx;
 
-      for (let sarea of (ret.screen as { sareas: { area: { afterSTRUCT(): void; on_fileload(): void } }[] }).sareas) {
+      for (let sarea of (
+        ret.screen as { sareas: { area: { afterSTRUCT(): void; on_fileload(): void } }[] }
+      ).sareas) {
         newScreen.appendChild(sarea as unknown as Node);
 
         sarea.area.afterSTRUCT();

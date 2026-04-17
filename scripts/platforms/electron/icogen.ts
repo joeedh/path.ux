@@ -167,7 +167,10 @@ if (window.haveElectron) {
   const checkOptions = (options: IcoOptions | undefined) => {
     if (options) {
       return {
-        name : typeof options.name === "string" && options.name !== "" ? options.name : DEFAULT_FILE_NAME,
+        name:
+          typeof options.name === "string" && options.name !== ""
+            ? options.name
+            : DEFAULT_FILE_NAME,
         sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES,
       };
     } else {
@@ -229,7 +232,10 @@ if (window.haveElectron) {
 
   exports.GetRequiredICOImageSizes = GetRequiredICOImageSizes;
 
-  const GenerateICO = (images: NodeBuffer[], logger: { log(...args: unknown[]): void } = console) => {
+  const GenerateICO = (
+    images: NodeBuffer[],
+    logger: { log(...args: unknown[]): void } = console
+  ) => {
     logger.log("ICO:");
 
     const icoStream = new WriteStream();

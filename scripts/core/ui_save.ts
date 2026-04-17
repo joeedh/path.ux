@@ -14,7 +14,11 @@ interface UIBaseNode extends HTMLElement {
 }
 
 function debuglog(...args: unknown[]): void {
-  if (window.DEBUG && typeof window.DEBUG === "object" && (window.DEBUG as Record<string, boolean>).uipaths) {
+  if (
+    window.DEBUG &&
+    typeof window.DEBUG === "object" &&
+    (window.DEBUG as Record<string, boolean>).uipaths
+  ) {
     console.warn(...args);
   }
 }
@@ -141,11 +145,21 @@ export function makeParser(): parser {
         let idx = parseInt(p.expect("NUM"));
         let shadow = (node as unknown as UIBaseNode).shadow;
 
-        if (!shadow || idx >= shadow.childNodes.length || !(shadow.childNodes[idx] instanceof HTMLElement)) {
+        if (
+          !shadow ||
+          idx >= shadow.childNodes.length ||
+          !(shadow.childNodes[idx] instanceof HTMLElement)
+        ) {
           let li = p.lexer.lexpos;
           let path = p.lexer.lexdata;
 
-          debuglog(idx, p.lexer.lexpos, path.slice(li - 3, path.length), node, shadow ? shadow.childNodes : undefined);
+          debuglog(
+            idx,
+            p.lexer.lexpos,
+            path.slice(li - 3, path.length),
+            node,
+            shadow ? shadow.childNodes : undefined
+          );
           consumeAll();
           return undefined;
         }

@@ -296,7 +296,9 @@
       for (var _i = 0; _i < arguments.length; _i++) {
         values[_i] = arguments[_i];
       }
-      var args = Array.prototype.slice.call(values.length === 1 && isArray(values[0]) ? values[0] : values);
+      var args = Array.prototype.slice.call(
+        values.length === 1 && isArray(values[0]) ? values[0] : values
+      );
       return new Promise(function (resolve, reject) {
         if (args.length === 0) {
           return resolve([]);
@@ -622,7 +624,10 @@
   var global$4 = tinymce.util.Tools.resolve("tinymce.util.URI");
 
   var getToolbarItems = function (editor) {
-    return editor.getParam("imagetools_toolbar", "rotateleft rotateright flipv fliph editimage imageoptions");
+    return editor.getParam(
+      "imagetools_toolbar",
+      "rotateleft rotateright flipv fliph editimage imageoptions"
+    );
   };
   var getProxyUrl = function (editor) {
     return editor.getParam("imagetools_proxy");
@@ -637,7 +642,11 @@
     return Option.from(editor.getParam("imagetools_fetch_image", null, "function"));
   };
   var getApiKey = function (editor) {
-    return editor.getParam("api_key", editor.getParam("imagetools_api_key", "", "string"), "string");
+    return editor.getParam(
+      "api_key",
+      editor.getParam("imagetools_api_key", "", "string"),
+      "string"
+    );
   };
   var getUploadTimeout = function (editor) {
     return editor.getParam("images_upload_timeout", 30000, "number");
@@ -799,7 +808,9 @@
   var getServiceError = function (text) {
     var serviceError = parseJson(text);
     var errorType = traverse(serviceError, ["error", "type"]);
-    var errorMsg = errorType ? getServiceErrorMsg(errorType) : "Invalid JSON in service error message";
+    var errorMsg = errorType
+      ? getServiceErrorMsg(errorType)
+      : "Invalid JSON in service error message";
     return "ImageProxy Service error: " + errorMsg;
   };
   var handleServiceError = function (status, blob) {
@@ -903,7 +914,8 @@
     }
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var child = function (scope, predicate) {
     var pred = function (node) {
@@ -933,7 +945,9 @@
     var isEditable = function (imgNode) {
       return (
         isImage(imgNode) &&
-        (isLocalImage(editor, imgNode) || isCorsImage(editor, imgNode) || editor.settings.imagetools_proxy)
+        (isLocalImage(editor, imgNode) ||
+          isCorsImage(editor, imgNode) ||
+          editor.settings.imagetools_proxy)
       );
     };
     if (isFigure(editor, elem)) {
@@ -971,7 +985,9 @@
   var isLocalImage = function (editor, img) {
     var url = img.src;
     return (
-      url.indexOf("data:") === 0 || url.indexOf("blob:") === 0 || new global$4(url).host === editor.documentBaseURI.host
+      url.indexOf("data:") === 0 ||
+      url.indexOf("blob:") === 0 ||
+      new global$4(url).host === editor.documentBaseURI.host
     );
   };
   var isCorsImage = function (editor, img) {
@@ -1025,7 +1041,14 @@
   var cancelTimedUpload = function (imageUploadTimerState) {
     global$2.clearTimeout(imageUploadTimerState.get());
   };
-  var updateSelectedImage = function (editor, ir, uploadImmediately, imageUploadTimerState, selectedImage, size) {
+  var updateSelectedImage = function (
+    editor,
+    ir,
+    uploadImmediately,
+    imageUploadTimerState,
+    selectedImage,
+    size
+  ) {
     return ir.toBlob().then(function (blob) {
       var uri, name, blobCache, blobInfo;
       blobCache = editor.editorUpload.blobCache;
@@ -1087,7 +1110,14 @@
             .then(fn)
             .then(
               function (imageResult) {
-                return updateSelectedImage(editor, imageResult, false, imageUploadTimerState, img.dom(), size);
+                return updateSelectedImage(
+                  editor,
+                  imageResult,
+                  false,
+                  imageUploadTimerState,
+                  img.dom(),
+                  size
+                );
               },
               function (error) {
                 displayError(editor, error);
@@ -1197,7 +1227,13 @@
             var blob = api.getData().imagetools.blob;
             originalImgOpt.each(function (originalImg) {
               originalSizeOpt.each(function (originalSize) {
-                handleDialogBlob(editor, imageUploadTimerState, originalImg.dom(), originalSize, blob);
+                handleDialogBlob(
+                  editor,
+                  imageUploadTimerState,
+                  originalImg.dom(),
+                  originalSize,
+                  blob
+                );
               });
             });
             api.close();

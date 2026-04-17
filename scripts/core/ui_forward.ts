@@ -39,7 +39,11 @@ export let defaultForwardKeys = [
 ];
 
 /** Modifies prototype of cls to forward methods in `keys` to `this[propertyKey][key]`*/
-export function forwardContainerMethods(cls: any, propertyKey: string, keys: string[] = defaultForwardKeys) {
+export function forwardContainerMethods(
+  cls: any,
+  propertyKey: string,
+  keys: string[] = defaultForwardKeys
+) {
   /* 
     Unfortunately TS does not make this easy for us.  It almost works to use
     a mixin pattern, but unfortunately you can't pass generic parameters to mixin 

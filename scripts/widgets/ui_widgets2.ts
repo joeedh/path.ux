@@ -277,14 +277,19 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       }
 
       slider["onchange"] = function (this: AnySlider) {
-        (this2.value as unknown as Record<number, number>)[this["axis"] as number] = this["value"] as number;
+        (this2.value as unknown as Record<number, number>)[this["axis"] as number] = this[
+          "value"
+        ] as number;
 
         if (this2.hasAttribute("datapath")) {
           this2.setPathValue(this2.ctx, this2.getAttribute("datapath")!, this2.value);
         }
 
         if (this2.uslider) {
-          (this2.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this2.uniformValue, false);
+          (this2.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
+            this2.uniformValue,
+            false
+          );
         }
 
         if (this2.onchange) {
@@ -311,7 +316,10 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       uslider["stepIsRelative"] = this.stepIsRelative;
 
       uslider["vertical"] = true;
-      (uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this.uniformValue, false);
+      (uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
+        this.uniformValue,
+        false
+      );
 
       this.sliders.push(uslider);
 
@@ -365,7 +373,10 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       }
 
       for (let i = 0; i < this.value.length; i++) {
-        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(vArr[i], false);
+        (this.sliders[i] as unknown as { setValue(v: number, b: boolean): void }).setValue(
+          vArr[i],
+          false
+        );
         (this.sliders[i] as unknown as { _redraw(): void })._redraw();
       }
 
@@ -415,7 +426,9 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
     const path = this.getAttribute("datapath")!;
 
-    const val = this.getPathValue(this.ctx, path) as (Vector2 & Vector3 & Vector4 & Quat) | undefined;
+    const val = this.getPathValue(this.ctx, path) as
+      | (Vector2 & Vector3 & Vector4 & Quat)
+      | undefined;
     if (val === undefined) {
       this.internalDisabled = true;
       return;
@@ -526,11 +539,16 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       }
     } else {
       const valNN = val!;
-      if ((this.value as unknown as { vectorDistance(v: unknown): number }).vectorDistance(valNN) > 0) {
+      if (
+        (this.value as unknown as { vectorDistance(v: unknown): number }).vectorDistance(valNN) > 0
+      ) {
         this.value.load(valNN as Vector2 & Vector3 & Vector4 & Quat);
 
         if (this.uslider) {
-          (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(this.uniformValue, false);
+          (this.uslider as unknown as { setValue(v: number, b: boolean): void }).setValue(
+            this.uniformValue,
+            false
+          );
         }
 
         for (let i = 0; i < this.value.length; i++) {
@@ -551,7 +569,10 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
     if (this.stepIsRelative) {
       for (const slider of this.sliders) {
-        slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, (slider as unknown as { value: number }).value);
+        slider["step"] = ToolProperty.calcRelativeStep(
+          this.step ?? 0,
+          (slider as unknown as { value: number }).value
+        );
       }
     }
 
@@ -595,7 +616,12 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<CTX
     this.timeout = undefined;
   }
 
-  static show<CTX extends IContextBase = IContextBase>(message: string, screen: UIBase<CTX>, x: number, y: number) {
+  static show<CTX extends IContextBase = IContextBase>(
+    message: string,
+    screen: UIBase<CTX>,
+    x: number,
+    y: number
+  ) {
     const ret = UIBase.createElement<ToolTip<CTX>>(this.define().tagname);
 
     ret._start_time = util.time_ms();

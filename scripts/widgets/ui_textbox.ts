@@ -329,7 +329,10 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
 
     let is_num: number = prop.type & (PropTypes.FLOAT | PropTypes.INT);
-    if (typeof val === "number" && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)) {
+    if (
+      typeof val === "number" &&
+      prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)
+    ) {
       is_num = 1;
     }
 
@@ -338,7 +341,8 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
       this.radix = prop.radix;
 
-      let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
+      let decimalPlaces =
+        this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
       if (this.hasAttribute("decimalPlaces")) {
         decimalPlaces = parseInt(this.getAttribute("decimalPlaces")!);
       }
@@ -422,14 +426,18 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     let is_num: number = prop.type & (PropTypes.FLOAT | PropTypes.INT);
     const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
-    if (typeof val === "number" && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)) {
+    if (
+      typeof val === "number" &&
+      prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT)
+    ) {
       is_num = 1;
     }
 
     if (is_num) {
       this.radix = prop.radix;
 
-      let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
+      let decimalPlaces =
+        this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
       if (this.hasAttribute("decimalPlaces")) {
         decimalPlaces = parseInt(this.getAttribute("decimalPlaces")!);
       }
@@ -512,7 +520,11 @@ UIBase.internalRegister(TextBox as unknown as typeof UIBase);
  Returns true if the element at position x,y is
  either a textbox or is draggable.
  */
-export function checkForTextBox<CTX extends IContextBase = IContextBase>(screen: UIBase<CTX>, x: number, y: number) {
+export function checkForTextBox<CTX extends IContextBase = IContextBase>(
+  screen: UIBase<CTX>,
+  x: number,
+  y: number
+) {
   let p: any = screen.pickElement(x, y);
   //console.log(p, x, y);
 

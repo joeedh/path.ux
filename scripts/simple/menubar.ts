@@ -50,7 +50,11 @@ export class MenuBarEditor<CTX extends IContextBase = IContextBase> extends Edit
       uiname  : "Menu Bar",
       icon    : -1,
       //hide in editor list
-      flag    : AreaFlags.HIDDEN | AreaFlags.NO_HEADER_CONTEXT_MENU | AreaFlags.NO_COLLAPSE | AreaFlags.NO_SWITCHER,
+      flag:
+        AreaFlags.HIDDEN |
+        AreaFlags.NO_HEADER_CONTEXT_MENU |
+        AreaFlags.NO_COLLAPSE |
+        AreaFlags.NO_SWITCHER,
     };
   }
 

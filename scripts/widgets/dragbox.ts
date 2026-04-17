@@ -1,7 +1,12 @@
 import { UIBase, Icons } from "../core/ui_base";
 import { Container } from "../core/ui";
 import { IContextBase } from "../core/context_base";
-import { pushModalLight, popModalLight, keymap, ModalState } from "../path-controller/util/simple_events";
+import {
+  pushModalLight,
+  popModalLight,
+  keymap,
+  ModalState,
+} from "../path-controller/util/simple_events";
 import { parsepx } from "../core/ui_theme";
 
 interface DragHandlers {

@@ -293,7 +293,12 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         }
 
         if (isNaN(val as number)) {
-          console.log("Text input error", val, (tbox as unknown as { text: string }).text.trim(), this.isInt);
+          console.log(
+            "Text input error",
+            val,
+            (tbox as unknown as { text: string }).text.trim(),
+            this.isInt
+          );
           this.flash(ui_base.ErrorColors.ERROR);
         } else {
           this.setValue(val as number);
@@ -915,7 +920,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         canvas: this.dom,
         g     : this.g,
         size  : ts,
-        font  : getDefault("DefaultText") as unknown as import("../core/cssfont.js").CSSFont | string | undefined,
+        font: getDefault("DefaultText") as unknown as
+          | import("../core/cssfont.js").CSSFont
+          | string
+          | undefined,
       });
       g.restore();
     } else {
@@ -923,7 +931,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         canvas: this.dom,
         g     : this.g,
         size  : ts,
-        font  : getDefault("DefaultText") as unknown as import("../core/cssfont.js").CSSFont | string | undefined,
+        font: getDefault("DefaultText") as unknown as
+          | import("../core/cssfont.js").CSSFont
+          | string
+          | undefined,
       });
     }
 
@@ -952,8 +963,13 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     let arrowcolorValue: string | Vector4;
 
     if (this._pressed && this._highlight) {
-      arrowcolorValue = (this.getSubDefault("highlight-pressed", "arrow-color", undefined, undefined, false) ??
-        "") as string;
+      arrowcolorValue = (this.getSubDefault(
+        "highlight-pressed",
+        "arrow-color",
+        undefined,
+        undefined,
+        false
+      ) ?? "") as string;
 
       if (!arrowcolorValue) {
         arrowcolorValue = (this.getSubDefault("pressed", "arrow-color") ?? "") as string;
@@ -963,7 +979,8 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         arrowcolorValue = "33%";
       }
     } else if (this._pressed) {
-      arrowcolorValue = (this.getSubDefault("pressed", "arrow-color", "arrow-color", "33%") ?? "") as string;
+      arrowcolorValue = (this.getSubDefault("pressed", "arrow-color", "arrow-color", "33%") ??
+        "") as string;
     } else if (this._highlight) {
       if (!this.hasClassSubDefault("highlight", "arrow-color", false)) {
         if (this.hasClassSubDefault("highlight", "background-color", false)) {
@@ -973,7 +990,9 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         }
 
         const colorVector = css2color(arrowcolorValue as string);
-        const base = css2color((this.getSubDefault("pressed", "arrow-color", undefined, "33%") ?? "") as string);
+        const base = css2color(
+          (this.getSubDefault("pressed", "arrow-color", undefined, "33%") ?? "") as string
+        );
 
         colorVector.interp(base, 0.25);
         arrowcolorValue = color2css(colorVector);
@@ -1540,7 +1559,13 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
     }
     */
 
-    const key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
+    const key =
+      "" +
+      this.getDefault("width") +
+      ":" +
+      this.getDefault("height") +
+      ":" +
+      this.getDefault("SlideHeight");
 
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
@@ -2013,7 +2038,9 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
   }
 }
 
-export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends SliderWithTextbox<CTX> {
+export class NumSliderSimple<
+  CTX extends IContextBase = IContextBase,
+> extends SliderWithTextbox<CTX> {
   constructor() {
     super();
 
@@ -2034,7 +2061,9 @@ export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends Sl
 
 UIBase.internalRegister(NumSliderSimple);
 
-export class NumSliderWithTextBox<CTX extends IContextBase = IContextBase> extends SliderWithTextbox<CTX> {
+export class NumSliderWithTextBox<
+  CTX extends IContextBase = IContextBase,
+> extends SliderWithTextbox<CTX> {
   constructor() {
     super();
 

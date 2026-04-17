@@ -243,14 +243,24 @@ export class ObserveManger {
     });
   }
 
-  has(owner: ObservableInstance, type: string, child: ObservableInstance, callback: Function): void {
+  has(
+    owner: ObservableInstance,
+    type: string,
+    child: ObservableInstance,
+    callback: Function
+  ): void {
     if (!_valid(owner) || !_valid(child)) {
       throw new Error("invalid arguments to ObserveManager.has");
     }
   }
 
   //if callback is undefined, all callbacks owned by child will be unsubscribed
-  unsubscribe(owner: ObservableInstance, type: string, child: ObservableInstance, callback?: Function): boolean {
+  unsubscribe(
+    owner: ObservableInstance,
+    type: string,
+    child: ObservableInstance,
+    callback?: Function
+  ): boolean {
     if (!_valid(owner) || !_valid(child)) {
       throw new Error("invalid arguments to ObserveManager.unsubscribe");
     }
@@ -329,7 +339,10 @@ export class Observable extends AbstractObservable {
     return this;
   }
 
-  static mixin(cls: { prototype: Record<string, unknown>; observeDefine?: typeof Observable.observeDefine }): void {
+  static mixin(cls: {
+    prototype: Record<string, unknown>;
+    observeDefine?: typeof Observable.observeDefine;
+  }): void {
     function set(p: Record<string, unknown>, key: string, val: unknown): void {
       if (p[key] === undefined) {
         p[key] = val;

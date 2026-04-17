@@ -9,7 +9,14 @@ import { TableRowProxy } from "../widgets/ui_table";
 import { PanelContents, TabContainer, TabItemContainer } from "../pathux";
 
 export const domTransferAttrs = new Set(["id", "title", "tab-index"]);
-export const domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
+export const domEventAttrs = new Set([
+  "click",
+  "mousedown",
+  "mouseup",
+  "mousemove",
+  "keydown",
+  "keypress",
+]);
 
 export function parseXML(xml: string): XMLDocument {
   const parser = new DOMParser();
@@ -125,7 +132,10 @@ function getfloat(elem: Element, attr: string, defaultval: number | undefined): 
  * The default case simply suppresses the warning that would otherwise
  * be printed to the console.
  * */
-export const customHandlers: Record<string, ((handler: Handler, elem: Element) => void) | "default"> = {};
+export const customHandlers: Record<
+  string,
+  ((handler: Handler, elem: Element) => void) | "default"
+> = {};
 
 interface ContainerOptions {
   ignorePathPrefix?: boolean;
@@ -485,7 +495,9 @@ class Handler {
     }
 
     if (elem.hasAttribute("useIcons") && elem2.useIcons) {
-      let val: string | number | boolean = (elem.getAttribute("useIcons") ?? "").trim().toLowerCase();
+      let val: string | number | boolean = (elem.getAttribute("useIcons") ?? "")
+        .trim()
+        .toLowerCase();
 
       if (val === "small" || val === "true" || val === "yes") {
         val = true;
@@ -738,7 +750,11 @@ class Handler {
 
     let elem2: Element | undefined;
     if (key === "pathlabel") {
-      elem2 = this.container.pathlabel(path ?? undefined, elem.innerHTML, packflag) as unknown as Element;
+      elem2 = this.container.pathlabel(
+        path ?? undefined,
+        elem.innerHTML,
+        packflag
+      ) as unknown as Element;
     } else if (key === "textbox") {
       const tb = this.container.textbox(path ?? undefined, undefined, undefined, packflag);
       elem2 = tb as unknown as Element;
@@ -758,7 +774,9 @@ class Handler {
     } else if (key === "colorfield") {
       elem2 = this.container.colorPicker(path ?? undefined, {
         packflag,
-        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? undefined : undefined,
+        themeOverride: elem.hasAttribute("theme-class")
+          ? elem.getAttribute("theme-class") ?? undefined
+          : undefined,
       }) as unknown as Element;
     } else {
       elem2 = (this.container as any)[key](path ?? undefined, packflag);
@@ -998,7 +1016,10 @@ class Handler {
     this.container = tabs as unknown as Container;
 
     if (elem.hasAttribute("movable-tabs")) {
-      (tabs as unknown as Element).setAttribute("movable-tabs", elem.getAttribute("movable-tabs") ?? "");
+      (tabs as unknown as Element).setAttribute(
+        "movable-tabs",
+        elem.getAttribute("movable-tabs") ?? ""
+      );
     }
 
     this._container(elem, tabs as unknown as Container);

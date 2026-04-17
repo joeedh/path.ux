@@ -39,7 +39,13 @@
   var setup = function (editor) {
     function tabHandler(e) {
       var x, el, v, i;
-      if (e.keyCode !== global$6.TAB || e.ctrlKey || e.altKey || e.metaKey || e.isDefaultPrevented()) {
+      if (
+        e.keyCode !== global$6.TAB ||
+        e.ctrlKey ||
+        e.altKey ||
+        e.metaKey ||
+        e.isDefaultPrevented()
+      ) {
         return;
       }
       function find(direction) {

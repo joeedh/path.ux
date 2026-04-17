@@ -126,7 +126,11 @@ export class PlatformAPI {
     throw new Error("implement me");
   }
 
-  static showSaveDialog(title: string, savedata_cb: () => unknown, args = new FileDialogArgs()): Promise<FilePath> {
+  static showSaveDialog(
+    title: string,
+    savedata_cb: () => unknown,
+    args = new FileDialogArgs()
+  ): Promise<FilePath> {
     throw new Error("implement me");
   }
 

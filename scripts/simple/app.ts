@@ -73,7 +73,9 @@ function GetContextClass(ctxClass: Function): typeof Context {
   if (ok === 2) {
     OverlayDerived = ctxClass as ReturnType<typeof makeDerivedOverlay>;
   } else {
-    OverlayDerived = makeDerivedOverlay(ctxClass as { new (appstate: unknown): Record<string, unknown> });
+    OverlayDerived = makeDerivedOverlay(
+      ctxClass as { new (appstate: unknown): Record<string, unknown> }
+    );
   }
 
   interface IBasicAppState {
@@ -141,7 +143,10 @@ function GetContextClass(ctxClass: Function): typeof Context {
       this.pushOverlay(new Overlay(state));
     }
 
-    static defineAPI(api: DataAPI, st: { dynamicStruct(key: string, name: string, label: string): void }) {
+    static defineAPI(
+      api: DataAPI,
+      st: { dynamicStruct(key: string, name: string, label: string): void }
+    ) {
       st.dynamicStruct("activeArea", "activeArea", "Active Area");
       return (Overlay as unknown as typeof EmptyContextClass).defineAPI(api, st);
     }
@@ -170,7 +175,10 @@ export function makeAPI(ctxClass: typeof Context) {
     throw new Error("Context class should have a defineAPI static method");
   }
 
-  const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true) as unknown as boolean);
+  const rootContextStruct = api.mapStruct(
+    ctxClass,
+    api.mapStruct(ctxClass, true) as unknown as boolean
+  );
   api.rootContextStruct = rootContextStruct;
 
   buildToolSysAPI(api, false, rootContextStruct, ctxClass as any, true);
@@ -179,7 +187,14 @@ export function makeAPI(ctxClass: typeof Context) {
 }
 
 import { Icons, loadDefaultIconSheet } from "./icons";
-import { IconManager, setIconManager, setIconMap, setTheme, ThemeRecord, UIBase } from "../core/ui_base";
+import {
+  IconManager,
+  setIconManager,
+  setIconMap,
+  setTheme,
+  ThemeRecord,
+  UIBase,
+} from "../core/ui_base";
 import { FileArgs, loadFile, saveFile } from "./file";
 import { HotKey, KeyMap } from "../path-controller/util/simple_events";
 import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline";
@@ -299,7 +314,10 @@ export class AppState {
    *
    *  Path.ux will actually subclass ctxClass and add a few standard methods
    *  and properties, see GetContextClass.*/
-  constructor(ctxClass: Function, screenClass: typeof Screen = SimpleScreen as unknown as typeof Screen) {
+  constructor(
+    ctxClass: Function,
+    screenClass: typeof Screen = SimpleScreen as unknown as typeof Screen
+  ) {
     this._ctxClass = ctxClass;
 
     const derivedCtxClass = GetContextClass(ctxClass)!;
@@ -356,9 +374,10 @@ export class AppState {
    *  if you wish to reset the undo stack*/
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
-    const state = new (this.constructor as new (ctxClass: Function, screenClass?: typeof Screen) => AppState)(
-      (this.ctx as Record<string, unknown>)._ctxClass as Function
-    );
+    const state = new (this.constructor as new (
+      ctxClass: Function,
+      screenClass?: typeof Screen
+    ) => AppState)((this.ctx as Record<string, unknown>)._ctxClass as Function);
 
     state.api = this.api;
     state.ctx = this.ctx;
@@ -372,7 +391,9 @@ export class AppState {
     this.screen!.remove();
 
     for (const k in state) {
-      (this as unknown as Record<string, unknown>)[k] = (state as unknown as Record<string, unknown>)[k];
+      (this as unknown as Record<string, unknown>)[k] = (
+        state as unknown as Record<string, unknown>
+      )[k];
     }
 
     this.makeScreen();
@@ -574,7 +595,9 @@ export class AppState {
       const m2 = this[method];
 
       if (m1 === m2) {
-        console.warn(`Warning: it is recommended to override .${method} when subclassing simple.AppState`);
+        console.warn(
+          `Warning: it is recommended to override .${method} when subclassing simple.AppState`
+        );
       }
     }
 

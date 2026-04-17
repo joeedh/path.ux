@@ -342,7 +342,9 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
           ret += overlap;
         }
 
-        ret += box1.startpos.vectorDistance!(box1.params as unknown as InstanceType<typeof Vector2>) * 0.25;
+        ret +=
+          box1.startpos.vectorDistance!(box1.params as unknown as InstanceType<typeof Vector2>) *
+          0.25;
       }
 
       return ret;
@@ -422,8 +424,11 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
 
     mergedArgs["padding"] = mergedArgs["padding"] === undefined ? "5px" : mergedArgs["padding"];
     mergedArgs["border-color"] = mergedArgs["border-color"] ? mergedArgs["border-color"] : "grey";
-    mergedArgs["border-radius"] = mergedArgs["border-radius"] ? mergedArgs["border-radius"] : "25px";
-    mergedArgs["border-width"] = mergedArgs["border-width"] !== undefined ? mergedArgs["border-width"] : "2px";
+    mergedArgs["border-radius"] = mergedArgs["border-radius"]
+      ? mergedArgs["border-radius"]
+      : "25px";
+    mergedArgs["border-width"] =
+      mergedArgs["border-width"] !== undefined ? mergedArgs["border-width"] : "2px";
 
     if (typeof mergedArgs["border-width"] === "number") {
       mergedArgs["border-width"] = "" + mergedArgs["border-width"] + "px";
@@ -464,7 +469,12 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     return box;
   }
 
-  circle(p: number[], r: number, stroke: string = "black", fill: string = "none"): SVGCircleElement {
+  circle(
+    p: number[],
+    r: number,
+    stroke: string = "black",
+    fill: string = "none"
+  ): SVGCircleElement {
     let circle = document.createElementNS(SVG_URL, "circle");
     circle.setAttribute("cx", "" + p[0]);
     circle.setAttribute("cy", "" + p[1]);

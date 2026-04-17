@@ -121,9 +121,11 @@ export class SimpleAppOpenOp extends ToolOp<{ forceDialog: BoolProperty }, Prope
             .then((data: unknown) => {
               console.log("got data!", data);
 
-              _appstate.loadFile(data, { useJSON, doScreen: true, fromFileOp: true }).catch((err: unknown) => {
-                error(getLastAppState()!.screen!, "File error: " + (err as Error).message);
-              });
+              _appstate
+                .loadFile(data, { useJSON, doScreen: true, fromFileOp: true })
+                .catch((err: unknown) => {
+                  error(getLastAppState()!.screen!, "File error: " + (err as Error).message);
+                });
             });
         }
       })

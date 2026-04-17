@@ -118,7 +118,8 @@
         return editor.execCommand("mceAnchor");
       },
       onSetup: function (buttonApi) {
-        return editor.selection.selectorChangedWithUnbind("a:not([href])", buttonApi.setActive).unbind;
+        return editor.selection.selectorChangedWithUnbind("a:not([href])", buttonApi.setActive)
+          .unbind;
       },
     });
     editor.ui.registry.addMenuItem("anchor", {

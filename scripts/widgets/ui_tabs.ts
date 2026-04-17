@@ -501,7 +501,11 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
 
     if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
       tbar.swapTabs(tab, next);
-    } else if (prev !== undefined && prev.movable && tab.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5) {
+    } else if (
+      prev !== undefined &&
+      prev.movable &&
+      tab.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5
+    ) {
       tbar.swapTabs(tab, prev);
     }
 
@@ -551,7 +555,9 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   // @ts-ignore fix later
   onchange: ((tab: TabItem<CTX>, e?: Event) => void) | null;
   // @ts-ignore fix later
-  onselect: ((e: { tab?: TabItem<CTX>; defaultPrevented: boolean; preventDefault: () => void }) => void) | null;
+  onselect:
+    | ((e: { tab?: TabItem<CTX>; defaultPrevented: boolean; preventDefault: () => void }) => void)
+    | null;
 
   _tool?: ModalTabMove<CTX>;
   _last_p_key?: string;
@@ -1240,7 +1246,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       const h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
       // XXX fix me after fixing onchange
-      const tw = measureText<CTX>(this as unknown as UIBase<CTX>, tab.name, this.canvas, g, tsize, font).width;
+      const tw = measureText<CTX>(
+        this as unknown as UIBase<CTX>,
+        tab.name,
+        this.canvas,
+        g,
+        tsize,
+        font
+      ).width;
 
       let x2 = x + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
       const y2 = y + tsize;
@@ -1267,7 +1280,15 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       }
 
       if (tab.icon !== undefined) {
-        iconmanager.canvasDraw(this as unknown as UIBase, this.canvas, g, tab.icon, x, y, this.iconsheet);
+        iconmanager.canvasDraw(
+          this as unknown as UIBase,
+          this.canvas,
+          g,
+          tab.icon,
+          x,
+          y,
+          this.iconsheet
+        );
         x2 += iconsize + 4;
       }
 
@@ -1280,7 +1301,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
       const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
 
-      if (tab !== this.tabs[this.tabs.length - 1] && prev !== this.tabs.active && next !== this.tabs.active) {
+      if (
+        tab !== this.tabs[this.tabs.length - 1] &&
+        prev !== this.tabs.active &&
+        next !== this.tabs.active
+      ) {
         g.beginPath();
         if (this.horiz) {
           g.moveTo(x + w, h - 5);
@@ -1304,7 +1329,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       let w = tab.size[0];
       let h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
-      const tw = measureText(this as unknown as UIBase, tab.name, this.canvas, g, tsize, font).width;
+      const tw = measureText(
+        this as unknown as UIBase,
+        tab.name,
+        this.canvas,
+        g,
+        tsize,
+        font
+      ).width;
 
       if (this.horiz) {
         h += 2;
@@ -1543,7 +1575,10 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
       const div = document.createElement("div");
 
-      this.tbar.setCSSOnce(() => (div.style["backgroundColor"] = this.getDefault("background-color")), div);
+      this.tbar.setCSSOnce(
+        () => (div.style["backgroundColor"] = this.getDefault("background-color")),
+        div
+      );
 
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
@@ -1750,7 +1785,12 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     tab.remove();
   }
 
-  tab(name: string, id?: string | number, tooltip?: string, movable: boolean = true): TabItemContainer<CTX> {
+  tab(
+    name: string,
+    id?: string | number,
+    tooltip?: string,
+    movable: boolean = true
+  ): TabItemContainer<CTX> {
     if (id === undefined) {
       id = tab_idgen++;
     }
@@ -1893,14 +1933,20 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
       //propegate overflow-y to tab container as a whole
 
-      if (container.hasAttribute("overflow-y") && this.style["overflowY"] !== container.getAttribute("overflow-y")) {
+      if (
+        container.hasAttribute("overflow-y") &&
+        this.style["overflowY"] !== container.getAttribute("overflow-y")
+      ) {
         this.style["overflowY"] = container.getAttribute("overflowY")!;
         //container.style["overflow-y"] = "unset";
       } else if (!container.hasAttribute("overflow-y")) {
         this.style["overflowY"] = this.getDefault("overflowY") ?? "unset";
       }
 
-      if (container.hasAttribute("overflow") && this.style["overflow"] !== container.getAttribute("overflow")) {
+      if (
+        container.hasAttribute("overflow") &&
+        this.style["overflow"] !== container.getAttribute("overflow")
+      ) {
         this.style["overflow"] = container.getAttribute("overflow")!;
         //container.style["overflow-y"] = "unset";
       } else if (!container.hasAttribute("overflow")) {

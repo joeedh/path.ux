@@ -219,12 +219,18 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
 
     prop.setValue(this.value.generatorType);
 
-    this.dropbox = row.listenum(undefined, "Type", prop, this.value.generatorType, (id: string | number) => {
-      console.warn("SELECT", id, prop.keys[id]);
+    this.dropbox = row.listenum(
+      undefined,
+      "Type",
+      prop,
+      this.value.generatorType,
+      (id: string | number) => {
+        console.warn("SELECT", id, prop.keys[id]);
 
-      this.value.setGenerator(String(id));
-      this.value._on_change();
-    });
+        this.value.setGenerator(String(id));
+        this.value._on_change();
+      }
+    );
     this.dropbox._init();
 
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
@@ -336,7 +342,17 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     this.container.updateAfter(() => {
       const xRange = this._value.xRange;
       const yRange = this._value.yRange;
-      const key = "" + xRange[0] + ":" + xRange[1] + ":" + yRange[0] + ":" + yRange[1] + ":" + this._value.clipToRange;
+      const key =
+        "" +
+        xRange[0] +
+        ":" +
+        xRange[1] +
+        ":" +
+        yRange[0] +
+        ":" +
+        yRange[1] +
+        ":" +
+        this._value.clipToRange;
 
       clipCheck.checked = this._value.clipToRange;
 
@@ -468,7 +484,13 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     /* Turn off data path callbacks. */
     this.#in_onchange++;
     try {
-      gen.makeGUI(col as unknown as Container, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+      gen.makeGUI(
+        col as unknown as Container,
+        this.canvas,
+        this.drawTransform,
+        dpath,
+        onSourceUpdate
+      );
 
       loadUIData(this.container, uidata);
       for (let i = 0; i < 4; i++) {

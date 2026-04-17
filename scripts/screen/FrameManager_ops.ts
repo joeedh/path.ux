@@ -34,7 +34,11 @@ import { IAreaConstructor } from "./area_base";
 
 //import {keymap} from './events';
 
-export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_toolsys.ToolOp<{}, {}, CTX> {
+export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_toolsys.ToolOp<
+  {},
+  {},
+  CTX
+> {
   screen: Screen<CTX>;
   _finished: boolean;
   overdraw?: Overdraw<CTX>;
@@ -68,7 +72,11 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
     this.modaldata = undefined;
   }
 
-  toolModalStart(ctx: CTX | undefined = this.screen.ctx as CTX, elem?: Element, pointerId?: number) {
+  toolModalStart(
+    ctx: CTX | undefined = this.screen.ctx as CTX,
+    elem?: Element,
+    pointerId?: number
+  ) {
     this.ctx = ctx!;
 
     if (this.modaldata !== undefined) {
@@ -94,7 +102,9 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
 
     for (const k of keys) {
       if (k.startsWith("on")) {
-        handlers[k] = (this as unknown as Record<string, (...args: unknown[]) => void>)[k].bind(this);
+        handlers[k] = (this as unknown as Record<string, (...args: unknown[]) => void>)[k].bind(
+          this
+        );
       }
     }
 
@@ -103,7 +113,8 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
       handlers.on_pointerdown = handlers.on_pointerdown ?? handlers.on_mousedown;
       handlers.on_pointermove = handlers.on_pointermove ?? handlers.on_mousemove;
       handlers.on_pointerup = handlers.on_pointerup ?? handlers.on_mouseup;
-      handlers.on_pointercancel = handlers.on_pointercancel ?? handlers.on_pointerup ?? handlers.on_mouseup;
+      handlers.on_pointercancel =
+        handlers.on_pointercancel ?? handlers.on_pointerup ?? handlers.on_mouseup;
 
       this.modaldata = pushPointerModal(handlers, elem, pointerId);
     } else {
@@ -248,7 +259,9 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
     const visit = new Set();
     const borders = this.getBorders() as BorderWithOld[];
 
-    const color = cconst.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
+    const color = cconst.DEBUG.screenborders
+      ? "rgba(1.0, 0.5, 0.0, 0.1)"
+      : "rgba(1.0, 0.5, 0.0, 1.0)";
 
     let bad = false;
 
@@ -293,7 +306,11 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
         snapMode = false;
       }
 
-      this.overdraw!.line(border.v1 as unknown as number[], border.v2 as unknown as number[], color);
+      this.overdraw!.line(
+        border.v1 as unknown as number[],
+        border.v2 as unknown as number[],
+        color
+      );
     }
 
     this.start_mpos[0] = e.x;
@@ -531,7 +548,11 @@ export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends Too
 
     if (sarea !== undefined) {
       this.sarea = sarea;
-      this.overdraw!.rect(sarea.pos as unknown as number[], sarea.size as unknown as number[], "rgba(0,0,0,0.1)");
+      this.overdraw!.rect(
+        sarea.pos as unknown as number[],
+        sarea.size as unknown as number[],
+        "rgba(0,0,0,0.1)"
+      );
     }
   }
 
@@ -729,7 +750,10 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
 
           if (
             dst.area &&
-            !((dst.area.constructor as unknown as IAreaConstructor).define().areaname! in src.editormap)
+            !(
+              (dst.area.constructor as unknown as IAreaConstructor).define().areaname! in
+              src.editormap
+            )
           ) {
             dst.area.push_ctx_active();
             dst.area.on_area_inactive();
@@ -851,10 +875,21 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     let idgen = 0;
     const boxes = this.boxes;
 
-    const box = (x: number, y: number, sz: number[], horiz: boolean | number, t: number, side: string | number) => {
+    const box = (
+      x: number,
+      y: number,
+      sz: number[],
+      horiz: boolean | number,
+      t: number,
+      side: string | number
+    ) => {
       //console.log(x, y, sz);
 
-      const b = this.overdraw!.rect([x - sz[0] * 0.5, y - sz[1] * 0.5], sz, color) as DragBoxRect<CTX>;
+      const b = this.overdraw!.rect(
+        [x - sz[0] * 0.5, y - sz[1] * 0.5],
+        sz,
+        color
+      ) as DragBoxRect<CTX>;
       b.style.borderRadius = "14px";
 
       boxes.push(b);

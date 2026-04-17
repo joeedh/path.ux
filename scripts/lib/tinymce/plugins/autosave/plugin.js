@@ -65,7 +65,11 @@
     return (
       html === "" ||
       new RegExp(
-        "^<" + forcedRootBlockName + "[^>]*>((\xA0|&nbsp;|[ \t]|<br[^>]*>)+?|)</" + forcedRootBlockName + ">|<br>$",
+        "^<" +
+          forcedRootBlockName +
+          "[^>]*>((\xA0|&nbsp;|[ \t]|<br[^>]*>)+?|)</" +
+          forcedRootBlockName +
+          ">|<br>$",
         "i"
       ).test(html)
     );
@@ -153,7 +157,9 @@
           editor.plugins.autosave.storeDraft();
         }
         if (!msg && editor.isDirty() && shouldAskBeforeUnload(editor)) {
-          msg = editor.translate("You have unsaved changes are you sure you want to navigate away?");
+          msg = editor.translate(
+            "You have unsaved changes are you sure you want to navigate away?"
+          );
         }
       });
       if (msg) {

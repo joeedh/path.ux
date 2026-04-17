@@ -56,7 +56,10 @@
     var externalTargets = editor.getParam("link_assume_external_targets", false);
     if (isBoolean(externalTargets) && externalTargets) {
       return 1;
-    } else if (isString(externalTargets) && (externalTargets === "http" || externalTargets === "https")) {
+    } else if (
+      isString(externalTargets) &&
+      (externalTargets === "http" || externalTargets === "https")
+    ) {
       return externalTargets;
     }
     return 0;
@@ -103,7 +106,23 @@
     link.href = url;
     link.rel = "noreferrer noopener";
     var evt = domGlobals.document.createEvent("MouseEvents");
-    evt.initMouseEvent("click", true, true, domGlobals.window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    evt.initMouseEvent(
+      "click",
+      true,
+      true,
+      domGlobals.window,
+      0,
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      false,
+      0,
+      null
+    );
     appendClickRemove(link, evt);
   };
 
@@ -361,7 +380,9 @@
     }
   };
   var getAnchorText = function (selection, anchorElm) {
-    var text = anchorElm ? anchorElm.innerText || anchorElm.textContent : selection.getContent({ format: "text" });
+    var text = anchorElm
+      ? anchorElm.innerText || anchorElm.textContent
+      : selection.getContent({ format: "text" });
     return trimCaretContainers(text);
   };
   var isLink = function (elm) {
@@ -392,7 +413,10 @@
     );
   };
   var handleExternalTargets = function (href, assumeExternalTargets) {
-    if ((assumeExternalTargets === "http" || assumeExternalTargets === "https") && !hasProtocol(href)) {
+    if (
+      (assumeExternalTargets === "http" || assumeExternalTargets === "https") &&
+      !hasProtocol(href)
+    ) {
       return assumeExternalTargets + "://" + href;
     }
     return href;
@@ -671,10 +695,12 @@
   };
   var tryEmailTransform = function (data) {
     var url = data.href;
-    var suggestMailTo = url.indexOf("@") > 0 && url.indexOf("//") === -1 && url.indexOf("mailto:") === -1;
+    var suggestMailTo =
+      url.indexOf("@") > 0 && url.indexOf("//") === -1 && url.indexOf("mailto:") === -1;
     return suggestMailTo
       ? Option.some({
-          message: "The URL you entered seems to be an email address. Do you want to add the required mailto: prefix?",
+          message:
+            "The URL you entered seems to be an email address. Do you want to add the required mailto: prefix?",
           preprocess: function (oldData) {
             return __assign(__assign({}, oldData), { href: "mailto:" + url });
           },
@@ -702,7 +728,10 @@
   };
   var preprocess = function (editor, data) {
     return findMap(
-      [tryEmailTransform, tryProtocolTransform(assumeExternalTargets(editor), getDefaultLinkProtocol(editor))],
+      [
+        tryEmailTransform,
+        tryProtocolTransform(assumeExternalTargets(editor), getDefaultLinkProtocol(editor)),
+      ],
       function (f) {
         return f(data);
       }
@@ -813,7 +842,9 @@
       var safeRelExtractor = function (item) {
         return applyRelTargetRules(ListOptions.getValue(item), isTargetBlank_1);
       };
-      var sanitizer = enforceSafe ? ListOptions.sanitizeWith(safeRelExtractor) : ListOptions.sanitize;
+      var sanitizer = enforceSafe
+        ? ListOptions.sanitizeWith(safeRelExtractor)
+        : ListOptions.sanitize;
       return sanitizer(list);
     }
     return Option.none();
@@ -907,7 +938,10 @@
       };
       var attachState = {
         href  : data.url.value,
-        attach: data.url.meta !== undefined && data.url.meta.attach ? data.url.meta.attach : function () {},
+        attach:
+          data.url.meta !== undefined && data.url.meta.attach
+            ? data.url.meta.attach
+            : function () {},
       };
       DialogConfirms.preprocess(editor, changedData).then(function (pData) {
         link(editor, attachState, pData);

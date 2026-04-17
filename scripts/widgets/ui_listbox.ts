@@ -83,8 +83,10 @@ export class ListItem<
 
 UIBase.internalRegister(ListItem);
 
-export interface ListItems<CTX extends IContextBase = IContextBase, IDTYPE extends string | number = string | number>
-  extends Array<ListItem<CTX, IDTYPE>> {
+export interface ListItems<
+  CTX extends IContextBase = IContextBase,
+  IDTYPE extends string | number = string | number,
+> extends Array<ListItem<CTX, IDTYPE>> {
   active?: ListItem<CTX, IDTYPE> | undefined;
 }
 

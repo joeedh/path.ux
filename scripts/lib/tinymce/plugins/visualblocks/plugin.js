@@ -49,7 +49,11 @@
   var setup = function (editor, pluginUrl, enabledState) {
     editor.on("PreviewFormats AfterPreviewFormats", function (e) {
       if (enabledState.get()) {
-        editor.dom.toggleClass(editor.getBody(), "mce-visualblocks", e.type === "afterpreviewformats");
+        editor.dom.toggleClass(
+          editor.getBody(),
+          "mce-visualblocks",
+          e.type === "afterpreviewformats"
+        );
       }
     });
     editor.on("init", function () {

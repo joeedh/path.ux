@@ -410,7 +410,12 @@
       return;
     }
     if (content.length === 0 && !evt.source_view) {
-      content = global$1.trim(headState.get()) + "\n" + global$1.trim(content) + "\n" + global$1.trim(footState.get());
+      content =
+        global$1.trim(headState.get()) +
+        "\n" +
+        global$1.trim(content) +
+        "\n" +
+        global$1.trim(footState.get());
     }
     content = content.replace(/<(\/?)BODY/gi, "<$1body");
     startPos = content.indexOf("<body");
@@ -480,7 +485,8 @@
       styles = "";
     if (getDefaultXmlPi(editor)) {
       var piEncoding = getDefaultEncoding(editor);
-      header += '<?xml version="1.0" encoding="' + (piEncoding ? piEncoding : "ISO-8859-1") + '" ?>\n';
+      header +=
+        '<?xml version="1.0" encoding="' + (piEncoding ? piEncoding : "ISO-8859-1") + '" ?>\n';
     }
     header += getDefaultDocType(editor);
     header += "\n<html>\n<head>\n";
@@ -504,7 +510,9 @@
   };
   var handleGetContent = function (editor, head, foot, evt) {
     if (!evt.selection && (!evt.source_view || !shouldHideInSourceView(editor))) {
-      evt.content = unprotectHtml(global$1.trim(head) + "\n" + global$1.trim(evt.content) + "\n" + global$1.trim(foot));
+      evt.content = unprotectHtml(
+        global$1.trim(head) + "\n" + global$1.trim(evt.content) + "\n" + global$1.trim(foot)
+      );
     }
   };
   var setup = function (editor, headState, footState) {

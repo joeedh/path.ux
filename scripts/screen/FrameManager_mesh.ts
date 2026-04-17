@@ -204,7 +204,9 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
           "Collapse Area",
           () => {
             console.log("Collapse Area!");
-            (elem as UIBase).ctx.screen.removeAreaTool(elem instanceof ScreenBorder ? elem : undefined);
+            (elem as UIBase).ctx.screen.removeAreaTool(
+              elem instanceof ScreenBorder ? elem : undefined
+            );
           },
         ],
       ];
@@ -333,7 +335,9 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
   }
 
   setCSS() {
-    (this.style as unknown as Record<string, string>)["pointer-events"] = this.movable ? "auto" : "none";
+    (this.style as unknown as Record<string, string>)["pointer-events"] = this.movable
+      ? "auto"
+      : "none";
 
     if (this._style === undefined) {
       this._style = document.createElement("style");

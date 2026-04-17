@@ -234,7 +234,8 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
     for (; i < items.length; i = next(i)) {
       const item = this.items[i];
       const item2idx = next(i);
-      const item2: TreeItem<CTX> | undefined = item2idx < items.length ? items[item2idx] : undefined;
+      const item2: TreeItem<CTX> | undefined =
+        item2idx < items.length ? items[item2idx] : undefined;
 
       const r = item._icon1.getBoundingClientRect();
 

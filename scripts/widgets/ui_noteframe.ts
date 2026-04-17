@@ -104,7 +104,9 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
     (this.style as StyleRecord)["flex-direction"] = "row";
     (this.style as StyleRecord)["border-radius"] = "7px";
     (this.style as StyleRecord)["padding"] = "2px";
-    (this.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
+    (this.style as StyleRecord)["color"] = (
+      this.getDefault("DefaultText") as { color: string }
+    ).color;
     let clr = css2color(this.color);
     let clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
 
@@ -225,7 +227,13 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
     super._ondestroy();
   }
 
-  progbarNote(msg: string, percent: number, color = "rgba(255,0,0,0.2)", timeout = 700, id: string = msg) {
+  progbarNote(
+    msg: string,
+    percent: number,
+    color = "rgba(255,0,0,0.2)",
+    timeout = 700,
+    id: string = msg
+  ) {
     let note: ProgBarNote<CTX> | undefined;
 
     for (let child of this.childWidgets) {
@@ -256,7 +264,13 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
     return note;
   }
 
-  addNote(msg: string, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
+  addNote(
+    msg: string,
+    color = "rgba(255,0,0,0.2)",
+    timeout = 1200,
+    tagname = "note-x",
+    showExclMark = true
+  ) {
     //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
@@ -271,7 +285,9 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
     note.setLabel(msg);
     (note.style as StyleRecord)["text-align"] = "center";
     (note.style as StyleRecord)["font"] = getFont(note, undefined, "DefaultText");
-    (note.style as StyleRecord)["color"] = (this.getDefault("DefaultText") as { color: string }).color;
+    (note.style as StyleRecord)["color"] = (
+      this.getDefault("DefaultText") as { color: string }
+    ).color;
     note.showExclMark = showExclMark;
 
     this.add(note);
@@ -326,7 +342,13 @@ export function getNoteFrames(screen: Screen): NoteFrame[] {
 
 export let noteframes: NoteFrame[] = [];
 
-export function sendNote(screen: Screen, msg: string, color?: string, timeout = 3000, showExclMark = true) {
+export function sendNote(
+  screen: Screen,
+  msg: string,
+  color?: string,
+  timeout = 3000,
+  showExclMark = true
+) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
@@ -354,7 +376,13 @@ export function message(screen: Screen, msg: string, timeout?: number) {
   return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
 
-export function progbarNote(screen: Screen, msg: string, percent: number, color?: string, timeout?: number) {
+export function progbarNote(
+  screen: Screen,
+  msg: string,
+  percent: number,
+  color?: string,
+  timeout?: number
+) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {

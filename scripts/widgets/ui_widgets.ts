@@ -462,7 +462,10 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
 UIBase.internalRegister(Check);
 
-export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown> extends UIBase<CTX, VALUE> {
+export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown> extends UIBase<
+  CTX,
+  VALUE
+> {
   _icon_pressed: number | undefined;
   _icon: number;
   iconsheet: number;
@@ -475,7 +478,12 @@ export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown
   extraDom: HTMLDivElement | undefined;
   _last_iconsheet: number | undefined;
   _onpress:
-    | ((e: { x: number; y: number; stopPropagation: () => void; preventDefault: () => void }) => void)
+    | ((e: {
+        x: number;
+        y: number;
+        stopPropagation: () => void;
+        preventDefault: () => void;
+      }) => void)
     | undefined;
   dom: HTMLDivElement;
 
@@ -644,7 +652,12 @@ export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown
         icon = this._icon_pressed;
       }
 
-      ui_base.iconmanager.setCSS(icon, this.dom, this.iconsheet, this.getDefault<number>("iconSize"));
+      ui_base.iconmanager.setCSS(
+        icon,
+        this.dom,
+        this.iconsheet,
+        this.getDefault<number>("iconSize")
+      );
     }
 
     if (this._extraIcon !== undefined) {
@@ -802,7 +815,8 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
   get drawCheck() {
     let ret: boolean | undefined = this._drawCheck;
 
-    ret = ret === undefined ? (this.getDefault("drawCheck") as unknown as boolean | undefined) : ret;
+    ret =
+      ret === undefined ? (this.getDefault("drawCheck") as unknown as boolean | undefined) : ret;
     ret = ret === undefined ? true : ret;
 
     return ret;
@@ -940,7 +954,10 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type === PropTypes.FLAG || rdef.prop.type === PropTypes.ENUM)) {
+        if (
+          rdef.subkey &&
+          (rdef.prop.type === PropTypes.FLAG || rdef.prop.type === PropTypes.ENUM)
+        ) {
           const enumProp = rdef.prop as unknown as EnumPropertyBase<number, number>;
           const subkey = rdef.subkey as string;
           icon = enumProp.iconmap[subkey];

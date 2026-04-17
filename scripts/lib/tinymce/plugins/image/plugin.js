@@ -231,13 +231,21 @@
     return __assign.apply(this, arguments);
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var rawSet = function (dom, key, value) {
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };
@@ -476,14 +484,22 @@
 
   var DOM = global$1.DOM;
   var getHspace = function (image) {
-    if (image.style.marginLeft && image.style.marginRight && image.style.marginLeft === image.style.marginRight) {
+    if (
+      image.style.marginLeft &&
+      image.style.marginRight &&
+      image.style.marginLeft === image.style.marginRight
+    ) {
       return removePixelSuffix(image.style.marginLeft);
     } else {
       return "";
     }
   };
   var getVspace = function (image) {
-    if (image.style.marginTop && image.style.marginBottom && image.style.marginTop === image.style.marginBottom) {
+    if (
+      image.style.marginTop &&
+      image.style.marginBottom &&
+      image.style.marginTop === image.style.marginBottom
+    ) {
       return removePixelSuffix(image.style.marginTop);
     } else {
       return "";
@@ -589,7 +605,9 @@
     return elm.nodeName === "IMG";
   };
   var getIsDecorative = function (image) {
-    return DOM.getAttrib(image, "alt").length === 0 && DOM.getAttrib(image, "role") === "presentation";
+    return (
+      DOM.getAttrib(image, "alt").length === 0 && DOM.getAttrib(image, "role") === "presentation"
+    );
   };
   var getAlt = function (image) {
     if (getIsDecorative(image)) {
@@ -1402,11 +1420,13 @@
     changeSrc(helpers, info, state, api);
   };
   var calcVSpace = function (css) {
-    var matchingTopBottom = css["margin-top"] && css["margin-bottom"] && css["margin-top"] === css["margin-bottom"];
+    var matchingTopBottom =
+      css["margin-top"] && css["margin-bottom"] && css["margin-top"] === css["margin-bottom"];
     return matchingTopBottom ? removePixelSuffix(String(css["margin-top"])) : "";
   };
   var calcHSpace = function (css) {
-    var matchingLeftRight = css["margin-right"] && css["margin-left"] && css["margin-right"] === css["margin-left"];
+    var matchingLeftRight =
+      css["margin-right"] && css["margin-left"] && css["margin-right"] === css["margin-left"];
     return matchingLeftRight ? removePixelSuffix(String(css["margin-right"])) : "";
   };
   var calcBorderWidth = function (css) {
@@ -1529,7 +1549,9 @@
         tabs: flatten([
           [MainTab.makeTab(info)],
           info.hasAdvTab ? [AdvTab.makeTab(info)] : [],
-          info.hasUploadTab && (info.hasUploadUrl || info.hasUploadHandler) ? [UploadTab.makeTab(info)] : [],
+          info.hasUploadTab && (info.hasUploadUrl || info.hasUploadHandler)
+            ? [UploadTab.makeTab(info)]
+            : [],
         ]),
       };
       return tabPanel;
@@ -1572,7 +1594,11 @@
     return function (info) {
       return function (api) {
         var data = deepMerge(fromImageData(info.image), api.getData());
-        editor.execCommand("mceUpdateImage", false, toImageData(data, info.hasAccessibilityOptions));
+        editor.execCommand(
+          "mceUpdateImage",
+          false,
+          toImageData(data, info.hasAccessibilityOptions)
+        );
         editor.editorUpload.uploadImagesAuto();
         api.close();
       };
@@ -1704,7 +1730,9 @@
     });
     editor.ui.registry.addContextMenu("image", {
       update: function (element) {
-        return isFigure(element) || (isImage(element) && !isPlaceholderImage(element)) ? ["image"] : [];
+        return isFigure(element) || (isImage(element) && !isPlaceholderImage(element))
+          ? ["image"]
+          : [];
       },
     });
   };

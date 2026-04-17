@@ -327,7 +327,10 @@
 
   var DEFAULT_ID = "tinymce.plugins.emoticons";
   var getEmoticonDatabaseUrl = function (editor, pluginUrl) {
-    return editor.getParam("emoticons_database_url", pluginUrl + "/js/emojis" + editor.suffix + ".js");
+    return editor.getParam(
+      "emoticons_database_url",
+      pluginUrl + "/js/emojis" + editor.suffix + ".js"
+    );
   };
   var getEmoticonDatabaseId = function (editor) {
     return editor.getParam("emoticons_database_id", DEFAULT_ID, "string");

@@ -26,7 +26,10 @@
     editor.settings.font_formats = font_formats;
   };
   var getFontSizeStyleValues = function (editor) {
-    return editor.getParam("font_size_style_values", "xx-small,x-small,small,medium,large,x-large,xx-large");
+    return editor.getParam(
+      "font_size_style_values",
+      "xx-small,x-small,small,medium,large,x-large,xx-large"
+    );
   };
   var setInlineStyles = function (editor, inline_styles) {
     editor.settings.inline_styles = inline_styles;

@@ -16,7 +16,13 @@ import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
 import type { DropBox } from "../widgets/ui_menu";
-import { areaclasses, IAreaConstructor, AreaConstructorParam, AreaFlags, makeAreasEnum } from "./area_base";
+import {
+  areaclasses,
+  IAreaConstructor,
+  AreaConstructorParam,
+  AreaFlags,
+  makeAreasEnum,
+} from "./area_base";
 
 export interface IAreaDef {
   tagname: string;
@@ -551,7 +557,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     let last_time = util.time_ms();
 
-    const do_mousemove = (e: PointerEvent & { was_touch?: boolean }, pageX: number, pageY: number) => {
+    const do_mousemove = (
+      e: PointerEvent & { was_touch?: boolean },
+      pageX: number,
+      pageY: number
+    ) => {
       if (haveModal() || !make_draggable) {
         return;
       }

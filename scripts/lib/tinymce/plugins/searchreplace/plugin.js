@@ -271,7 +271,8 @@
     return hasOwnProperty.call(obj, key);
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var DOCUMENT = 9;
   var ELEMENT = 1;
@@ -291,7 +292,14 @@
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };
@@ -347,7 +355,9 @@
   var ELEMENT$1 = ELEMENT;
   var DOCUMENT$1 = DOCUMENT;
   var bypassSelector = function (dom) {
-    return (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0;
+    return (
+      (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0
+    );
   };
   var all = function (selector, scope) {
     var base = scope === undefined ? domGlobals.document : scope.dom();
@@ -426,7 +436,10 @@
     return dom.getContentEditable(node) === "false";
   };
   var isContentEditableTrueInCef = function (dom, node) {
-    return dom.getContentEditable(node) === "true" && dom.getContentEditableParent(node.parentNode) === "false";
+    return (
+      dom.getContentEditable(node) === "true" &&
+      dom.getContentEditableParent(node.parentNode) === "false"
+    );
   };
   var isHidden = function (dom, node) {
     return !dom.isBlock(node) && has(dom.schema.getWhiteSpaceElements(), node.nodeName);
@@ -564,10 +577,13 @@
           }
         },
         cef: function (node) {
-          var sections = bind(descendants(Element.fromDom(node), "*[contenteditable=true]"), function (e) {
-            var ceTrueNode = e.dom();
-            return collect(dom, ceTrueNode, ceTrueNode);
-          });
+          var sections = bind(
+            descendants(Element.fromDom(node), "*[contenteditable=true]"),
+            function (e) {
+              var ceTrueNode = e.dom();
+              return collect(dom, ceTrueNode, ceTrueNode);
+            }
+          );
           return sort(sections, function (a, b) {
             return documentPositionPreceding(a.elements[0].dom(), b.elements[0].dom()) ? 1 : -1;
           });
@@ -772,7 +788,9 @@
     }
   };
   var escapeSearchText = function (text, wholeWord) {
-    var escapedText = text.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(/\s/g, "[^\\S\\r\\n]");
+    var escapedText = text
+      .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      .replace(/\s/g, "[^\\S\\r\\n]");
     var wordRegex = "(" + escapedText + ")";
     return wholeWord
       ? "(?:^|\\s|" + punctuation$1() + ")" + wordRegex + ("(?=$|\\s|" + punctuation$1() + ")")
@@ -1005,7 +1023,11 @@
         reset(api);
         return;
       }
-      if (last.text === data.findtext && last.matchCase === data.matchcase && last.wholeWord === data.wholewords) {
+      if (
+        last.text === data.findtext &&
+        last.matchCase === data.matchcase &&
+        last.wholeWord === data.wholewords
+      ) {
         next(editor, currentSearchState);
       } else {
         var count = find$2(

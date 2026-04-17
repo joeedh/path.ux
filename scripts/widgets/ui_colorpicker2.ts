@@ -9,11 +9,23 @@ import { ColumnFrame } from "../core/ui";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
 import { keymap } from "../path-controller/util/simple_events";
 import cconst from "../config/const";
-import { color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor } from "../core/ui_base";
+import {
+  color2web,
+  web2color,
+  validateWebColor,
+  color2css,
+  css2color,
+  validateCSSColor,
+} from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
 
 export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils";
-import { rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk } from "../path-controller/util/colorutils";
+import {
+  rgb_to_hsv,
+  hsv_to_rgb,
+  cmyk_to_rgb,
+  rgb_to_cmyk,
+} from "../path-controller/util/colorutils";
 import { contextWrangler } from "../screen/area_wrangler";
 import { TextBox } from "./ui_textbox";
 
@@ -146,7 +158,12 @@ interface FieldImage {
 
 const fields: Record<string, FieldImage> = {};
 
-export function getFieldImage(fieldsize: number, width: number, height: number, hsva: ArrayLike<number>): FieldImage {
+export function getFieldImage(
+  fieldsize: number,
+  width: number,
+  height: number,
+  hsva: ArrayLike<number>
+): FieldImage {
   fieldrand.seed(0);
 
   /* render field at half res and upscale via canvas2d */
@@ -315,7 +332,11 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
           this.popModal();
         },
         on_keydown: (e: KeyboardEvent) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (
+            e.keyCode === keymap["Enter"] ||
+            e.keyCode === keymap["Escape"] ||
+            e.keyCode === keymap["Space"]
+          ) {
             this.popModal();
           }
         },
@@ -384,7 +405,17 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
     w2 -= rselector * 2.0;
 
     //g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
-    g.drawImage(getHueField(w2, canvas.height, dpi), 0, 0, w2, canvas.height, rselector, 0, w2, canvas.height);
+    g.drawImage(
+      getHueField(w2, canvas.height, dpi),
+      0,
+      0,
+      w2,
+      canvas.height,
+      rselector,
+      0,
+      w2,
+      canvas.height
+    );
 
     const x = this.hsva[0] * w2 + rselector;
     const y = canvas.height * 0.5;
@@ -522,7 +553,11 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
           this.popModal();
         },
         on_keydown: (e: KeyboardEvent) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (
+            e.keyCode === keymap["Enter"] ||
+            e.keyCode === keymap["Escape"] ||
+            e.keyCode === keymap["Space"]
+          ) {
             this.popModal();
           }
         },
@@ -581,7 +616,11 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
           this.popModal();
         },
         on_keydown: (e: KeyboardEvent) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (
+            e.keyCode === keymap["Enter"] ||
+            e.keyCode === keymap["Escape"] ||
+            e.keyCode === keymap["Space"]
+          ) {
             this.popModal();
           }
         },
@@ -629,7 +668,12 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
     //r = ~~(r*dpi);
 
-    return getFieldImage(this.getDefault<number>("fieldSize"), w - r * 2, h - r * 2, Array.from(this.hsva));
+    return getFieldImage(
+      this.getDefault<number>("fieldSize"),
+      w - r * 2,
+      h - r * 2,
+      Array.from(this.hsva)
+    );
   }
 
   update(force_update = false): void {
@@ -852,7 +896,13 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ColumnF
     return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
 
-  setRGBA(r: number | Vector4 | number[], g?: number, b?: number, a = 1.0, fire_onchange = true): void {
+  setRGBA(
+    r: number | Vector4 | number[],
+    g?: number,
+    b?: number,
+    a = 1.0,
+    fire_onchange = true
+  ): void {
     let r0: number;
     let g0: number;
     let b0: number;
@@ -1097,7 +1147,12 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
         return slider;
       };
 
-      node.cmyk = [makeCMYKSlider("C", 0), makeCMYKSlider("M", 1), makeCMYKSlider("Y", 2), makeCMYKSlider("K", 3)];
+      node.cmyk = [
+        makeCMYKSlider("C", 0),
+        makeCMYKSlider("M", 1),
+        makeCMYKSlider("Y", 2),
+        makeCMYKSlider("K", 3),
+      ];
     }
 
     node._setSliders();
@@ -1436,7 +1491,9 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     colorpicker.ctx = ctx;
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
-    const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") ?? undefined : undefined;
+    const path = this.hasAttribute("datapath")
+      ? this.getAttribute("datapath") ?? undefined
+      : undefined;
 
     const massSetPath = this.getAttribute("mass_set_path") ?? undefined;
     const widget = colorpicker.colorPicker(path, undefined, massSetPath);
@@ -1545,7 +1602,18 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     const totx = Math.ceil(canvas.width / cellsize);
     const toty = Math.ceil(canvas.height / cellsize);
 
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
+    drawRoundBox(
+      this,
+      canvas,
+      g,
+      canvas.width,
+      canvas.height,
+      undefined,
+      "clip",
+      undefined,
+      undefined,
+      true
+    );
     g.clip();
 
     g.beginPath();
@@ -1568,7 +1636,18 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     //g.fill();
 
     const color = color2css(this.rgba);
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
+    drawRoundBox(
+      this,
+      canvas,
+      g,
+      canvas.width,
+      canvas.height,
+      undefined,
+      "fill",
+      color,
+      undefined,
+      true
+    );
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
     if (this._highlight) {

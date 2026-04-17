@@ -585,7 +585,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   /**
    * tries to set padding along one axis only in smart manner
    * */
-  oneAxisPadding(axisPadding: number | string = this.getDefault("oneAxisPadding") as number, otherPadding = 0) {
+  oneAxisPadding(
+    axisPadding: number | string = this.getDefault("oneAxisPadding") as number,
+    otherPadding = 0
+  ) {
     this.style["paddingTop"] = this.style["paddingBottom"] = "" + axisPadding + "px";
     this.style["paddingLeft"] = this.style["paddingRight"] = "" + otherPadding + "px";
 
@@ -611,7 +614,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     }
 
     if (height !== undefined) {
-      if (typeof height == "number") this.style["height"] = this.div.style["height"] = ~~height + "px";
+      if (typeof height == "number")
+        this.style["height"] = this.div.style["height"] = ~~height + "px";
       else this.style["height"] = this.div.style["height"] = height;
     }
 
@@ -868,7 +872,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
   tool(
     path_or_cls: string | typeof ToolOp,
-    packflag_or_args: number | { packflag?: number; createCb?: (cls: typeof ToolOp) => ToolOpAny; label?: string } = 0,
+    packflag_or_args:
+      | number
+      | { packflag?: number; createCb?: (cls: typeof ToolOp) => ToolOpAny; label?: string } = 0,
     createCb?: Function,
     label?: string
   ) {
@@ -914,7 +920,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
     if (createCb === undefined) {
-      const toolpath = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath!;
+      const toolpath =
+        typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath!;
       createCb = (cls: typeof ToolOp) => {
         return this.ctx.api.createTool(this.ctx, toolpath);
       };
@@ -927,7 +934,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       this.ctx.api.execTool(this.ctx, toolob);
     };
 
-    const def = typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
+    const def =
+      typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
     let tooltip = def.description ?? def.uiname ?? "";
 
     //is there a hotkey hardcoded in the class?
@@ -1081,7 +1089,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  button(label: string, cb?: (e?: PointerEvent) => void, thisvar?: unknown, id?: string | number, packflag = 0) {
+  button(
+    label: string,
+    cb?: (e?: PointerEvent) => void,
+    thisvar?: unknown,
+    id?: string | number,
+    packflag = 0
+  ) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
     const ret = UIBase.createElement("button-x") as Button<CTX>;
@@ -1320,8 +1334,13 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         return check;
       }
 
-      if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
-        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(useDataPathUndo);
+      if (
+        !(packflag & PackFlags.USE_ICONS) &&
+        !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))
+      ) {
+        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(
+          useDataPathUndo
+        );
       } else {
         if (prop.flag & PropFlags.USE_ICONS) {
           packflag |= PackFlags.USE_ICONS;
@@ -1342,7 +1361,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       if (rdef.subkey !== undefined) {
         let ret: UIBase<CTX>;
 
-        if (packflag & PackFlags.SIMPLE_NUMSLIDERS) ret = this.simpleslider(inpath, { packflag: packflag });
+        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
+          ret = this.simpleslider(inpath, { packflag: packflag });
         else ret = this.slider(inpath, { packflag: packflag });
 
         ret.packflag |= packflag;
@@ -1538,7 +1558,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     throw new DataPathError(`Unknown property: ${inpath}`);
   }
 
-  iconcheck(inpath: string | undefined, icon: number, description?: string, mass_set_path?: string) {
+  iconcheck(
+    inpath: string | undefined,
+    icon: number,
+    description?: string,
+    mass_set_path?: string
+  ) {
     const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
     ret.icon = icon;
     ret.description = name ?? "";
@@ -1626,7 +1651,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     if (path !== undefined) {
       const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== undefined ? (resolved.prop as unknown as EnumProperty | FlagProperty) : undefined;
+      prop =
+        resolved !== undefined
+          ? (resolved.prop as unknown as EnumProperty | FlagProperty)
+          : undefined;
     }
 
     if (path !== undefined) {
@@ -1721,7 +1749,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     if (path !== undefined && prop === undefined) {
       const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== undefined ? (resolved.prop as unknown as FlagProperty | EnumProperty) : undefined;
+      prop =
+        resolved !== undefined
+          ? (resolved.prop as unknown as FlagProperty | EnumProperty)
+          : undefined;
     }
 
     if (!name && prop) {
@@ -1740,7 +1771,11 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
       if (packflag & PackFlags.USE_ICONS) {
         for (const key in prop.values) {
-          const check = frame.check(inpath + " == " + prop.values[key], "", packflag) as IconCheck<CTX>;
+          const check = frame.check(
+            inpath + " == " + prop.values[key],
+            "",
+            packflag
+          ) as IconCheck<CTX>;
 
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
@@ -2023,10 +2058,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       }
     }
 
-    let simple: boolean | number = packflag & PackFlags.SIMPLE_NUMSLIDERS || cconst.simpleNumSliders;
+    let simple: boolean | number =
+      packflag & PackFlags.SIMPLE_NUMSLIDERS || cconst.simpleNumSliders;
     simple = simple && !(packflag & PackFlags.FORCE_ROLLER_SLIDER);
 
-    const extraTextBox = cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
+    const extraTextBox =
+      cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
 
     if (extraTextBox) {
       if (simple) {
@@ -2196,7 +2233,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
   colorPicker(
     inpath?: string,
-    packflag_or_args: number | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
+    packflag_or_args:
+      | number
+      | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
     mass_set_path?: string,
     themeOverride?: string
   ) {
@@ -2300,7 +2339,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   tabs(position: "top" | "bottom" | "left" | "right" = "top", packflag = 0) {
     const ret = UIBase.createElement("tabcontainer-x") as UIBase<CTX>;
 
-    (ret.constructor as unknown as { setDefault(el: UIBase<CTX>): void }).setDefault(ret as UIBase<CTX>);
+    (ret.constructor as unknown as { setDefault(el: UIBase<CTX>): void }).setDefault(
+      ret as UIBase<CTX>
+    );
     ret.setAttribute("bar_pos", position);
 
     this._container_inherit(ret, packflag);

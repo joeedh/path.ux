@@ -24,8 +24,16 @@ export interface TableRowProxy {
   focus(args?: FocusOptions): void;
   blur(): void;
   remove(): void;
-  addEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | AddEventListenerOptions): void;
-  removeEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | EventListenerOptions): void;
+  addEventListener(
+    type: string,
+    cb: EventListenerOrEventListenerObject,
+    arg?: boolean | AddEventListenerOptions
+  ): void;
+  removeEventListener(
+    type: string,
+    cb: EventListenerOrEventListenerObject,
+    arg?: boolean | EventListenerOptions
+  ): void;
   setAttribute(attr: string, val: string): void;
   scrollTo(...args: unknown[]): void;
   scrollIntoView(...args: unknown[]): void;
@@ -161,11 +169,19 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
         tr.remove();
       },
 
-      addEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | AddEventListenerOptions) {
+      addEventListener(
+        type: string,
+        cb: EventListenerOrEventListenerObject,
+        arg?: boolean | AddEventListenerOptions
+      ) {
         tr.addEventListener(type, cb, arg);
       },
 
-      removeEventListener(type: string, cb: EventListenerOrEventListenerObject, arg?: boolean | EventListenerOptions) {
+      removeEventListener(
+        type: string,
+        cb: EventListenerOrEventListenerObject,
+        arg?: boolean | EventListenerOptions
+      ) {
         tr.removeEventListener(type, cb, arg);
       },
 

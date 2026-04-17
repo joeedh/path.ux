@@ -5,5 +5,5 @@
   "singleQuote":  false,
   "quoteProps": "preserve",
   "alignPropertyValues": "group",
-  "printWidth": 120
+  "printWidth": 100
 }

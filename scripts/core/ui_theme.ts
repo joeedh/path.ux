@@ -243,7 +243,9 @@ export const theme = {} as unknown as ThemeRecord;
 
 export function invertTheme(): void {
   cconst.colorSchemeType =
-    cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+    cconst.colorSchemeType === ColorSchemeTypes.LIGHT
+      ? ColorSchemeTypes.DARK
+      : ColorSchemeTypes.LIGHT;
 
   function inverted(color: string | number[]): string | number[] {
     if (Array.isArray(color)) {
@@ -259,7 +261,8 @@ export function invertTheme(): void {
   }
 
   //if (!bg) {
-  const bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  const bg =
+    cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
   //} else {
   //  bg = inverted(bg);
   //}

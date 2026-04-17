@@ -76,7 +76,10 @@
     var daysShort = "Sun Mon Tue Wed Thu Fri Sat Sun".split(" ");
     var daysLong = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday Sunday".split(" ");
     var monthsShort = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
-    var monthsLong = "January February March April May June July August September October November December".split(" ");
+    var monthsLong =
+      "January February March April May June July August September October November December".split(
+        " "
+      );
     date = date || new Date();
     fmt = fmt.replace("%D", "%m/%d/%Y");
     fmt = fmt.replace("%r", "%I:%M:%S %p");
@@ -180,7 +183,12 @@
       global$1.each(dom.select("div", o.node), function (e) {
         if (dom.hasClass(e, "mceTmpl")) {
           global$1.each(dom.select("*", e), function (e) {
-            if (dom.hasClass(e, editor.getParam("template_mdate_classes", "mdate").replace(/\s+/g, "|"))) {
+            if (
+              dom.hasClass(
+                e,
+                editor.getParam("template_mdate_classes", "mdate").replace(/\s+/g, "|")
+              )
+            ) {
               e.innerHTML = getDateTime(editor, dateFormat);
             }
           });
@@ -348,7 +356,9 @@
       var contentCssLinks_1 = "";
       global$1.each(editor.contentCSS, function (url) {
         contentCssLinks_1 +=
-          '<link type="text/css" rel="stylesheet" href="' + editor.documentBaseURI.toAbsolute(url) + '">';
+          '<link type="text/css" rel="stylesheet" href="' +
+          editor.documentBaseURI.toAbsolute(url) +
+          '">';
       });
       var bodyClass = editor.settings.body_class || "";
       if (bodyClass.indexOf("=") !== -1) {

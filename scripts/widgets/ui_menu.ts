@@ -38,7 +38,12 @@ export type MenuTemplateCustom = [
 
 export type MenuItemCallback = (dom: HTMLElement) => HTMLElement;
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
-export type MenuTemplateItem = SEP | MenuTemplateTool | MenuTemplateCustom | MenuItemCallback | Menu;
+export type MenuTemplateItem =
+  | SEP
+  | MenuTemplateTool
+  | MenuTemplateCustom
+  | MenuItemCallback
+  | Menu;
 
 export type MenuTemplate = MenuTemplateItem[];
 
@@ -446,7 +451,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }, 0);
   }
 
-  addItemExtra(text: string, id: string | number, hotkey: string | undefined, icon = -1, add = true, tooltip = "") {
+  addItemExtra(
+    text: string,
+    id: string | number,
+    hotkey: string | undefined,
+    icon = -1,
+    add = true,
+    tooltip = ""
+  ) {
     const dom = document.createElement("span") as HTMLSpanElement & {
       hotkey?: string;
       icon?: number;
@@ -560,10 +572,17 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   //item can be menu or text
-  addItem(item: string | string | HTMLElement | Menu, id?: string | number, add = true, tooltip?: string) {
+  addItem(
+    item: string | string | HTMLElement | Menu,
+    id?: string | number,
+    add = true,
+    tooltip?: string
+  ) {
     id = id === undefined ? (item as unknown as string | number) : id;
     let text: string | null =
-      typeof item === "string" || item instanceof String ? (item as string) : (item as HTMLElement).textContent;
+      typeof item === "string" || item instanceof String
+        ? (item as string)
+        : (item as HTMLElement).textContent;
 
     if (typeof item === "string" || item instanceof String) {
       const dom = document.createElement("div");
@@ -1250,7 +1269,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     builtMenu.autoSearchMode = false;
 
     builtMenu._dropbox = this;
-    (this.dom as HTMLCanvasElement & { _background: unknown })._background = this.getDefault("BoxDepressed");
+    (this.dom as HTMLCanvasElement & { _background: unknown })._background =
+      this.getDefault("BoxDepressed");
     this._background = this.getDefault("BoxDepressed") as string;
     this._redraw();
     this._pressed = true;
@@ -1324,7 +1344,10 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
         menu.dom.remove();
         con.remove();
 
-        const popup = (this._popup = menu._popup = screen!.popup(this, x, y, false, 0) as unknown as PopupContainer);
+        const popup =
+          (this._popup =
+          menu._popup =
+            screen!.popup(this, x, y, false, 0) as unknown as PopupContainer);
         popup.noMarginsOrPadding();
 
         //popup.shadow.appendChild(menu.dom);
@@ -1341,7 +1364,10 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (!screen) return;
 
-    const con = (this._popup = menu._popup = screen.popup(this, x, y, false, 0) as unknown as PopupContainer);
+    const con =
+      (this._popup =
+      menu._popup =
+        screen.popup(this, x, y, false, 0) as unknown as PopupContainer);
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -1715,7 +1741,13 @@ export class MenuWrangler {
       const r = menu.getBoundingClientRect();
       const pad = 15;
 
-      if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad * 2 && y <= r.y + r.height + pad * 2) {
+      if (
+        r &&
+        x >= r.x - pad &&
+        y >= r.y - pad &&
+        x <= r.x + r.width + pad * 2 &&
+        y <= r.y + r.height + pad * 2
+      ) {
         element = menu;
       }
     }
@@ -1917,10 +1949,13 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
     } else if (item === menuSEP) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
-      doItem((item as MenuItemCallback)(document.createElement("div")) as unknown as MenuTemplateItem);
+      doItem(
+        (item as MenuItemCallback)(document.createElement("div")) as unknown as MenuTemplateItem
+      );
     } else if (item instanceof Array) {
       //old array-based api for custom entries
-      let hotkey: string | HotKey | undefined = item.length > 1 ? (item[2] as string | HotKey | undefined) : undefined;
+      let hotkey: string | HotKey | undefined =
+        item.length > 1 ? (item[2] as string | HotKey | undefined) : undefined;
       const icon = item.length > 2 ? ((item as any)[3] as number | undefined) : undefined;
       const tooltip = item.length > 3 ? ((item as any)[4] as string | undefined) : undefined;
       const id2 = item.length > 4 ? ((item as any)[5] as string | number) : id++;
@@ -1974,7 +2009,13 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
   return menu;
 }
 
-export function startMenu(menu: Menu, x: number, y: number, searchMenuMode = false, safetyDelay = 55) {
+export function startMenu(
+  menu: Menu,
+  x: number,
+  y: number,
+  searchMenuMode = false,
+  safetyDelay = 55
+) {
   menuWrangler.endMenus();
 
   const screen = (menu.ctx as IContextBase).screen as unknown as Screen;

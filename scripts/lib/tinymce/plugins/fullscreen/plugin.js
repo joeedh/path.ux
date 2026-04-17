@@ -332,7 +332,8 @@
     fromPoint: fromPoint,
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var DOCUMENT = 9;
   var ELEMENT = 1;
@@ -357,7 +358,14 @@
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };
@@ -374,7 +382,14 @@
 
   var internalSet = function (dom, property, value) {
     if (!isString(value)) {
-      domGlobals.console.error("Invalid call to CSS.set. Property ", property, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to CSS.set. Property ",
+        property,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("CSS value must be a string: " + value);
     }
     if (isSupported(dom)) {
@@ -442,7 +457,9 @@
     }
   };
   var bypassSelector = function (dom) {
-    return (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0;
+    return (
+      (dom.nodeType !== ELEMENT$1 && dom.nodeType !== DOCUMENT$1) || dom.childElementCount === 0
+    );
   };
   var all = function (selector, scope) {
     var base = scope === undefined ? domGlobals.document : scope.dom();
@@ -600,7 +617,9 @@
   var isAndroid = global$2.os.isAndroid();
   var matchColor = function (editorBody) {
     var color = get$2(editorBody, "background-color");
-    return color !== undefined && color !== "" ? "background-color:" + color + "!important" : bgFallback;
+    return color !== undefined && color !== ""
+      ? "background-color:" + color + "!important"
+      : bgFallback;
   };
   var clobberStyles = function (dom, container, editorBody) {
     var gatherSibilings = function (element) {

@@ -201,7 +201,8 @@
     return dom.style !== undefined && isFunction(dom.style.getPropertyValue);
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var TEXT = 3;
 

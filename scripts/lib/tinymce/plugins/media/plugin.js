@@ -290,7 +290,13 @@
           if (!data.source && name === "param") {
             data.source = attrs.map.movie;
           }
-          if (name === "iframe" || name === "object" || name === "embed" || name === "video" || name === "audio") {
+          if (
+            name === "iframe" ||
+            name === "object" ||
+            name === "embed" ||
+            name === "video" ||
+            name === "audio"
+          ) {
             if (!data.type) {
               data.type = name;
             }
@@ -618,7 +624,8 @@
       data.height +
       '" type="application/x-shockwave-flash">';
     if (data.poster) {
-      html += '<img src="' + data.poster + '" width="' + data.width + '" height="' + data.height + '" />';
+      html +=
+        '<img src="' + data.poster + '" width="' + data.width + '" height="' + data.height + '" />';
     }
     html += "</object>";
     return html;
@@ -809,7 +816,11 @@
           });
         });
       };
-      return (_a = {}), (_a[prop] = (prop === sourceInput ? getFromValueFirst() : getFromMetaFirst()).getOr("")), _a;
+      return (
+        (_a = {}),
+        (_a[prop] = (prop === sourceInput ? getFromValueFirst() : getFromMetaFirst()).getOr("")),
+        _a
+      );
     };
   };
   var getDimensions = function (data, metaData) {
@@ -831,7 +842,10 @@
     var metaData = sourceInput ? extractMeta(sourceInput, data).getOr({}) : {};
     var get = getValue(data, metaData, sourceInput);
     return __assign(
-      __assign(__assign(__assign(__assign({}, get("source")), get("altsource")), get("poster")), get("embed")),
+      __assign(
+        __assign(__assign(__assign({}, get("source")), get("altsource")), get("poster")),
+        get("embed")
+      ),
       getDimensions(data, metaData)
     );
   };
@@ -853,7 +867,9 @@
   var handleError = function (editor) {
     return function (error) {
       var errorMessage =
-        error && error.msg ? "Media embed handler error: " + error.msg : "Media embed handler threw unknown error.";
+        error && error.msg
+          ? "Media embed handler error: " + error.msg
+          : "Media embed handler threw unknown error.";
       editor.notificationManager.open({
         type: "error",
         text: errorMessage,
@@ -868,7 +884,9 @@
   };
   var getEditorData = function (editor) {
     var element = editor.selection.getNode();
-    var snippet = isMediaElement(element) ? editor.serializer.serialize(element, { selection: true }) : "";
+    var snippet = isMediaElement(element)
+      ? editor.serializer.serialize(element, { selection: true })
+      : "";
     return __assign({ embed: snippet }, htmlToData(getScripts(editor), snippet));
   };
   var addEmbedHtml = function (api, editor) {
@@ -927,7 +945,9 @@
           url : serviceData.source,
           html: "",
         });
-        getEmbedHtml(editor, serviceData).then(addEmbedHtml(win, editor)).catch(handleError(editor));
+        getEmbedHtml(editor, serviceData)
+          .then(addEmbedHtml(win, editor))
+          .catch(handleError(editor));
       }
     };
     var handleEmbed = function (api) {
@@ -1093,7 +1113,10 @@
               attrs.splice(i, 1);
             }
             if (attrName === "style") {
-              attrs[i].value = editor.dom.serializeStyle(editor.dom.parseStyle(attrs[i].value), name);
+              attrs[i].value = editor.dom.serializeStyle(
+                editor.dom.parseStyle(attrs[i].value),
+                name
+              );
             }
           }
           writer.start(name, attrs, empty);
@@ -1239,10 +1262,16 @@
         specialElements[name] = new RegExp("</" + name + "[^>]*>", "gi");
       });
       var boolAttrs = editor.schema.getBoolAttrs();
-      global$1.each("webkitallowfullscreen mozallowfullscreen allowfullscreen".split(" "), function (name) {
-        boolAttrs[name] = {};
-      });
-      editor.parser.addNodeFilter("iframe,video,audio,object,embed,script", placeHolderConverter(editor));
+      global$1.each(
+        "webkitallowfullscreen mozallowfullscreen allowfullscreen".split(" "),
+        function (name) {
+          boolAttrs[name] = {};
+        }
+      );
+      editor.parser.addNodeFilter(
+        "iframe,video,audio,object,embed,script",
+        placeHolderConverter(editor)
+      );
       editor.serializer.addAttributeFilter("data-mce-object", function (nodes, name) {
         var i = nodes.length;
         var node;
@@ -1354,7 +1383,8 @@
 
   var stateSelectorAdapter = function (editor, selector) {
     return function (buttonApi) {
-      return editor.selection.selectorChangedWithUnbind(selector.join(","), buttonApi.setActive).unbind;
+      return editor.selection.selectorChangedWithUnbind(selector.join(","), buttonApi.setActive)
+        .unbind;
     };
   };
   var register$1 = function (editor) {

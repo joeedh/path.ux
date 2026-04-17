@@ -532,7 +532,10 @@
       name          : "Safari",
       versionRegexes: [normalVersionRegex, /.*?cpu os ([0-9]+)_([0-9]+).*/],
       search: function (uastring) {
-        return (contains(uastring, "safari") || contains(uastring, "mobile/")) && contains(uastring, "applewebkit");
+        return (
+          (contains(uastring, "safari") || contains(uastring, "mobile/")) &&
+          contains(uastring, "applewebkit")
+        );
       },
     },
   ];
@@ -697,7 +700,9 @@
   var global$3 = tinymce.util.Tools.resolve("tinymce.util.VK");
 
   var lift2 = function (oa, ob, f) {
-    return oa.isSome() && ob.isSome() ? Option.some(f(oa.getOrDie(), ob.getOrDie())) : Option.none();
+    return oa.isSome() && ob.isSome()
+      ? Option.some(f(oa.getOrDie(), ob.getOrDie()))
+      : Option.none();
   };
 
   var fromElements = function (elements, scope) {
@@ -761,7 +766,8 @@
     });
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var global$4 = tinymce.util.Tools.resolve("tinymce.dom.DomQuery");
 
@@ -818,7 +824,11 @@
 
   var getParentList = function (editor, node) {
     var selectionStart = node || editor.selection.getStart(true);
-    return editor.dom.getParent(selectionStart, "OL,UL,DL", getClosestListRootElm(editor, selectionStart));
+    return editor.dom.getParent(
+      selectionStart,
+      "OL,UL,DL",
+      getClosestListRootElm(editor, selectionStart)
+    );
   };
   var isParentListSelected = function (parentList, selectedBlocks) {
     return parentList && selectedBlocks.length === 1 && selectedBlocks[0] === parentList;
@@ -915,7 +925,10 @@
     if (contentNode) {
       while ((node = contentNode.firstChild)) {
         var nodeName = node.nodeName;
-        if (!hasContentNode && (nodeName !== "SPAN" || node.getAttribute("data-mce-type") !== "bookmark")) {
+        if (
+          !hasContentNode &&
+          (nodeName !== "SPAN" || node.getAttribute("data-mce-type") !== "bookmark")
+        ) {
           hasContentNode = true;
         }
         if (isBlock(node, blockElements)) {
@@ -989,7 +1002,14 @@
     if (isString(value) || isBoolean(value) || isNumber(value)) {
       dom.setAttribute(key, value + "");
     } else {
-      domGlobals.console.error("Invalid call to Attr.set. Key ", key, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to Attr.set. Key ",
+        key,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("Attribute value was not simple");
     }
   };
@@ -1016,7 +1036,14 @@
 
   var internalSet = function (dom, property, value) {
     if (!isString(value)) {
-      domGlobals.console.error("Invalid call to CSS.set. Property ", property, ":: Value ", value, ":: Element ", dom);
+      domGlobals.console.error(
+        "Invalid call to CSS.set. Property ",
+        property,
+        ":: Value ",
+        value,
+        ":: Element ",
+        dom
+      );
       throw new Error("CSS value must be a string: " + value);
     }
     if (isSupported(dom)) {
@@ -1121,7 +1148,9 @@
     var cast = foldl(
       entries,
       function (cast, entry) {
-        return entry.depth > cast.length ? writeDeep(scope, cast, entry) : writeShallow(scope, cast, entry);
+        return entry.depth > cast.length
+          ? writeDeep(scope, cast, entry)
+          : writeShallow(scope, cast, entry);
       },
       []
     );
@@ -1293,7 +1322,9 @@
   var composeEntries = function (editor, entries) {
     return bind(groupBy(entries, isIndented), function (entries) {
       var groupIsIndented = head(entries).map(isIndented).getOr(false);
-      return groupIsIndented ? indentedComposer(editor, entries) : outdentedComposer(editor, entries);
+      return groupIsIndented
+        ? indentedComposer(editor, entries)
+        : outdentedComposer(editor, entries);
     });
   };
   var indentSelectedEntries = function (entries, indentation) {
@@ -1320,7 +1351,11 @@
       indentSelectedEntries(entrySet.entries, indentation);
       var composedLists = composeEntries(editor, entrySet.entries);
       each(composedLists, function (composedList) {
-        fireListEvent(editor, indentation === "Indent" ? "IndentList" : "OutdentList", composedList.dom());
+        fireListEvent(
+          editor,
+          indentation === "Indent" ? "IndentList" : "OutdentList",
+          composedList.dom()
+        );
       });
       before$1(entrySet.sourceList, composedLists);
       remove(entrySet.sourceList);
@@ -1587,7 +1622,8 @@
     container = rng[start ? "startContainer" : "endContainer"];
     offset = rng[start ? "startOffset" : "endOffset"];
     if (container.nodeType === 1) {
-      container = container.childNodes[Math.min(offset, container.childNodes.length - 1)] || container;
+      container =
+        container.childNodes[Math.min(offset, container.childNodes.length - 1)] || container;
     }
     if (!start && isBr(container.nextSibling)) {
       container = container.nextSibling;
@@ -1671,7 +1707,12 @@
     global$5.each(getSelectedTextBlocks(editor, rng, root), function (block) {
       var listBlock, sibling;
       sibling = block.previousSibling;
-      if (sibling && isListNode(sibling) && sibling.nodeName === listName && hasCompatibleStyle(dom, sibling, detail)) {
+      if (
+        sibling &&
+        isListNode(sibling) &&
+        sibling.nodeName === listName &&
+        hasCompatibleStyle(dom, sibling, detail)
+      ) {
         listBlock = sibling;
         block = dom.rename(block, listItemName);
         sibling.appendChild(block);
@@ -1710,7 +1751,11 @@
     return elm1.className === elm2.className;
   };
   var shouldMerge = function (dom, list1, list2) {
-    return isValidLists(list1, list2) && hasSameListStyle(dom, list1, list2) && hasSameClasses(list1, list2);
+    return (
+      isValidLists(list1, list2) &&
+      hasSameListStyle(dom, list1, list2) &&
+      hasSameClasses(list1, list2)
+    );
   };
   var mergeWithAdjacentLists = function (dom, listBlock) {
     var sibling, node;
@@ -1758,7 +1803,11 @@
       return;
     }
     if (parentList) {
-      if (parentList.nodeName === listName && !hasListStyleDetail(detail) && !isCustomList(parentList)) {
+      if (
+        parentList.nodeName === listName &&
+        !hasListStyleDetail(detail) &&
+        !isCustomList(parentList)
+      ) {
         flattenListSelection(editor);
       } else {
         var bookmark = createBookmark(editor.selection.getRng(true));
@@ -1926,7 +1975,11 @@
         return true;
       }
       var rng_1 = normalizeRange(selection.getRng());
-      var otherLi_1 = dom.getParent(findNextCaretContainer(editor, rng_1, isForward, root), "LI", root);
+      var otherLi_1 = dom.getParent(
+        findNextCaretContainer(editor, rng_1, isForward, root),
+        "LI",
+        root
+      );
       if (otherLi_1 && otherLi_1 !== li) {
         editor.undoManager.transact(function () {
           if (isForward) {
@@ -1965,7 +2018,11 @@
     var block = dom.getParent(selectionStartElm, dom.isBlock, root);
     if (block && dom.isEmpty(block)) {
       var rng = normalizeRange(editor.selection.getRng());
-      var otherLi_2 = dom.getParent(findNextCaretContainer(editor, rng, isForward, root), "LI", root);
+      var otherLi_2 = dom.getParent(
+        findNextCaretContainer(editor, rng, isForward, root),
+        "LI",
+        root
+      );
       if (otherLi_2) {
         editor.undoManager.transact(function () {
           removeBlock(dom, block, root);
@@ -1979,7 +2036,10 @@
     return false;
   };
   var backspaceDeleteCaret = function (editor, isForward) {
-    return backspaceDeleteFromListToListCaret(editor, isForward) || backspaceDeleteIntoListCaret(editor, isForward);
+    return (
+      backspaceDeleteFromListToListCaret(editor, isForward) ||
+      backspaceDeleteIntoListCaret(editor, isForward)
+    );
   };
   var backspaceDeleteRange = function (editor) {
     var selectionStartElm = editor.selection.getStart();
@@ -1995,7 +2055,9 @@
     return false;
   };
   var backspaceDelete = function (editor, isForward) {
-    return editor.selection.isCollapsed() ? backspaceDeleteCaret(editor, isForward) : backspaceDeleteRange(editor);
+    return editor.selection.isCollapsed()
+      ? backspaceDeleteCaret(editor, isForward)
+      : backspaceDeleteRange(editor);
   };
   var setup = function (editor) {
     editor.on("keydown", function (e) {

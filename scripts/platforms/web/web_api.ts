@@ -78,7 +78,11 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title: string, savedata_cb: () => any, args = new FileDialogArgs()): Promise<FilePath> {
+  static showSaveDialog(
+    title: string,
+    savedata_cb: () => any,
+    args = new FileDialogArgs()
+  ): Promise<FilePath> {
     if (!(window as any).showSaveFilePicker) {
       return this.showSaveDialog_old(title, savedata_cb, args);
     }

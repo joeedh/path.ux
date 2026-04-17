@@ -214,7 +214,10 @@
       format = { title: selectorText };
       if (editor.schema.getTextBlockElements()[elementName]) {
         format.block = elementName;
-      } else if (editor.schema.getBlockElements()[elementName] || inlineSelectorElements[elementName.toLowerCase()]) {
+      } else if (
+        editor.schema.getBlockElements()[elementName] ||
+        inlineSelectorElements[elementName.toLowerCase()]
+      ) {
         format.selector = elementName;
       } else {
         format.inline = elementName;
@@ -255,7 +258,9 @@
     return group === null || shouldImportExclusive(editor) !== false;
   };
   var isUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
-    return !(isExclusiveMode(editor, group) ? selector in globallyUniqueSelectors : selector in group.selectors);
+    return !(isExclusiveMode(editor, group)
+      ? selector in globallyUniqueSelectors
+      : selector in group.selectors);
   };
   var markUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
     if (isExclusiveMode(editor, group)) {
@@ -301,26 +306,29 @@
         }
         return null;
       };
-      global$4.each(getSelectors(editor, editor.getDoc(), compileFilter(getFileFilter(editor))), function (selector) {
-        if (selector.indexOf(".mce-") === -1) {
-          if (!selectorFilter || selectorFilter(selector)) {
-            var selectorGroups = getGroupsBySelector(groups, selector);
-            if (selectorGroups.length > 0) {
-              global$4.each(selectorGroups, function (group) {
-                var menuItem = processSelector(selector, group);
+      global$4.each(
+        getSelectors(editor, editor.getDoc(), compileFilter(getFileFilter(editor))),
+        function (selector) {
+          if (selector.indexOf(".mce-") === -1) {
+            if (!selectorFilter || selectorFilter(selector)) {
+              var selectorGroups = getGroupsBySelector(groups, selector);
+              if (selectorGroups.length > 0) {
+                global$4.each(selectorGroups, function (group) {
+                  var menuItem = processSelector(selector, group);
+                  if (menuItem) {
+                    model.addItemToGroup(group.title, menuItem);
+                  }
+                });
+              } else {
+                var menuItem = processSelector(selector, null);
                 if (menuItem) {
-                  model.addItemToGroup(group.title, menuItem);
+                  model.addItem(menuItem);
                 }
-              });
-            } else {
-              var menuItem = processSelector(selector, null);
-              if (menuItem) {
-                model.addItem(menuItem);
               }
             }
           }
         }
-      });
+      );
       var items = model.toFormats();
       editor.fire("addStyleModifications", {
         items  : items,

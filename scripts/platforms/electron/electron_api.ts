@@ -248,7 +248,10 @@ function patchDropBox() {
 
   //haveElectron = false;
   //return;
-  (DropBox.prototype as unknown as Record<string, unknown>)._onpress = function _onpress(this: DropBox, e: MouseEvent) {
+  (DropBox.prototype as unknown as Record<string, unknown>)._onpress = function _onpress(
+    this: DropBox,
+    e: MouseEvent
+  ) {
     if (this._menu !== undefined) {
       this._menu.close();
       this._menu = undefined;
@@ -278,7 +281,9 @@ function patchDropBox() {
     (this as unknown as { _pressed: boolean })._pressed = true;
     this.setCSS();
 
-    const onclose = (this._menu as unknown as Record<string, unknown>).onclose as (() => void) | undefined;
+    const onclose = (this._menu as unknown as Record<string, unknown>).onclose as
+      | (() => void)
+      | undefined;
     (this._menu as unknown as Record<string, unknown>).onclose = () => {
       (this as unknown as { _pressed: boolean })._pressed = false;
       this._redraw();
@@ -503,7 +508,10 @@ interface MenuEditorLike<CTX extends IContextBase> {
   header?: UIBase<CTX>;
 }
 
-export function initMenuBar<CTX extends IContextBase>(menuEditor: MenuEditorLike<CTX>, override = false) {
+export function initMenuBar<CTX extends IContextBase>(
+  menuEditor: MenuEditorLike<CTX>,
+  override = false
+) {
   checkInit();
 
   if (!window.haveElectron) {
@@ -627,7 +635,9 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static _sanitizeFilters(filters: ({ name: string; mime?: string; extensions: string[] } | string[])[]) {
+  static _sanitizeFilters(
+    filters: ({ name: string; mime?: string; extensions: string[] } | string[])[]
+  ) {
     const filters2: { name: string; mime?: string; extensions: string[] }[] = [];
 
     for (let filter of filters) {

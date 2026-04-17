@@ -672,7 +672,11 @@ DocsBrowser {
       let parent = p.parentNode!;
       let i = indexOf(parent.childNodes, p);
 
-      if (p === this.contentDiv || p === this.contentDiv!.parentNode || p === this.root.contentDocument!.body) {
+      if (
+        p === this.contentDiv ||
+        p === this.contentDiv!.parentNode ||
+        p === this.root.contentDocument!.body
+      ) {
         return;
       }
 
@@ -724,7 +728,11 @@ DocsBrowser {
 
   execCommand(...args: [string, ...unknown[]]) {
     this.undoPre(args[0]);
-    this.root.contentDocument!.execCommand(args[0], args[1] as boolean | undefined, args[2] as string | undefined);
+    this.root.contentDocument!.execCommand(
+      args[0],
+      args[1] as boolean | undefined,
+      args[2] as string | undefined
+    );
     this.undoPost(args[0]);
   }
 
@@ -852,10 +860,9 @@ DocsBrowser {
       }
 
       let base = this.pathuxBaseURL;
-      let base_url = (platform as unknown as { resolveURL(path: string, base?: string): string }).resolveURL(
-        "scripts/lib/tinymce",
-        base
-      );
+      let base_url = (
+        platform as unknown as { resolveURL(path: string, base?: string): string }
+      ).resolveURL("scripts/lib/tinymce", base);
 
       console.warn(window.haveElectron, "haveElectron", base_url);
 
@@ -1139,7 +1146,10 @@ DocsBrowser {
     let resizing = false;
     let moving = false;
 
-    let handlers: Record<string, (e: PointerEvent, x?: number, y?: number, button?: number) => void> = {
+    let handlers: Record<
+      string,
+      (e: PointerEvent, x?: number, y?: number, button?: number) => void
+    > = {
       pointerover(_e: PointerEvent) {
         console.log("mouse over!");
       },
@@ -1551,7 +1561,11 @@ DocsBrowser {
     const ctx = this.ctx as unknown as Record<string, unknown>;
     if (ctx && ctx.report) {
       console.warn("%c" + message, "color : " + color + ";");
-      (ctx.report as (msg: string, color?: string, timeout?: number) => void)(message, color, timeout);
+      (ctx.report as (msg: string, color?: string, timeout?: number) => void)(
+        message,
+        color,
+        timeout
+      );
     } else {
       console.warn("%c" + message, "color : " + color + ";");
     }
@@ -1566,7 +1580,11 @@ DocsBrowser {
 
     this.updateCurrentPath();
 
-    if (this._doDocInit && this.root.contentDocument && this.root.contentDocument.readyState === "complete") {
+    if (
+      this._doDocInit &&
+      this.root.contentDocument &&
+      this.root.contentDocument.readyState === "complete"
+    ) {
       //this.initDoc();
     } else if (!this._doDocInit && this.saveReq) {
       if (util.time_ms() - this._last_save > 500) {

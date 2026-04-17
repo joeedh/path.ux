@@ -50,7 +50,9 @@
     });
   };
   var insertTable = function (editor, cols, rows) {
-    editor.plugins.table ? editor.plugins.table.insertTable(cols, rows) : insertTableHtml(editor, cols, rows);
+    editor.plugins.table
+      ? editor.plugins.table.insertTable(cols, rows)
+      : insertTableHtml(editor, cols, rows);
   };
   var insertBlob = function (editor, base64, blob) {
     var blobCache, blobInfo;
@@ -284,7 +286,8 @@
     fromPoint: fromPoint,
   };
 
-  var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
+  var Global =
+    typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
 
   var ELEMENT = 1;
 
@@ -427,7 +430,11 @@
   var getToolbarItemsOr = getToolbarItemsOr_(isString);
 
   var getTextSelectionToolbarItems = function (editor) {
-    return getToolbarItemsOr(editor, "quickbars_selection_toolbar", "bold italic | quicklink h2 h3 blockquote");
+    return getToolbarItemsOr(
+      editor,
+      "quickbars_selection_toolbar",
+      "bold italic | quicklink h2 h3 blockquote"
+    );
   };
   var getInsertToolbarItems = function (editor) {
     return getToolbarItemsOr(editor, "quickbars_insert_toolbar", "quickimage quicktable");
@@ -473,7 +480,9 @@
       return editor.dom.getContentEditableParent(node) !== "false";
     };
     var isImage = function (node) {
-      return node.nodeName === "IMG" || (node.nodeName === "FIGURE" && /image/i.test(node.className));
+      return (
+        node.nodeName === "IMG" || (node.nodeName === "FIGURE" && /image/i.test(node.className))
+      );
     };
     var imageToolbarItems = getImageToolbarItems(editor);
     if (imageToolbarItems.trim().length > 0) {

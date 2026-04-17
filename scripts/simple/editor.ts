@@ -154,7 +154,9 @@ export class SideBar<CTX extends IContextBase = IContextBase> extends Container<
     (this.style as unknown as Record<string, string>)["height"] = h + "px";
     (this.style as unknown as Record<string, string>)["z-index"] = "100";
     (this.style as unknown as Record<string, string>)["overflow"] = "scroll";
-    (this.style as unknown as Record<string, string>)["background-color"] = this.getDefault("AreaHeaderBG") as string;
+    (this.style as unknown as Record<string, string>)["background-color"] = this.getDefault(
+      "AreaHeaderBG"
+    ) as string;
     (this.tabbar.style as unknown as Record<string, string>)["height"] = h - 45 + "px";
     (this.style as unknown as Record<string, string>)["left"] = editor.size[0 as 0] - w + "px";
   }
@@ -222,7 +224,9 @@ export class Editor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
    *  ]);
    * }
    * */
-  static registerAppMenu(makeMenuBar: (ctx: unknown, container: unknown, menuBarEditor: unknown) => void) {
+  static registerAppMenu(
+    makeMenuBar: (ctx: unknown, container: unknown, menuBarEditor: unknown) => void
+  ) {
     if (this !== Editor) {
       throw new Error("must call registerAppMenu from simple.Editor base class");
     }

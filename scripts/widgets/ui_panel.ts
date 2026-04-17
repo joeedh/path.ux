@@ -212,8 +212,10 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
 
     iconcheck.overrideClass("panel.header");
 
-    let headerHeight = this.getDefault<number>("padding-top") + this.getDefault<number>("padding-bottom");
-    const font = (this.getDefault<CSSFont>("TitleText") ?? this.getDefault<CSSFont>("DefaultText"))!;
+    let headerHeight =
+      this.getDefault<number>("padding-top") + this.getDefault<number>("padding-bottom");
+    const font = (this.getDefault<CSSFont>("TitleText") ??
+      this.getDefault<CSSFont>("DefaultText"))!;
     headerHeight += font.size;
 
     const iconSize = iconcheck.getSize();

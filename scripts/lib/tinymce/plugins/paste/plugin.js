@@ -337,7 +337,9 @@
     return paragraphs.length === 1 ? paragraphs[0] : global$4.map(paragraphs, stitch).join("");
   };
   var convert = function (text, rootTag, rootAttrs) {
-    return rootTag ? toBlockElements(text, rootTag === true ? "p" : rootTag, rootAttrs) : toBRs(text);
+    return rootTag
+      ? toBlockElements(text, rootTag === true ? "p" : rootTag, rootAttrs)
+      : toBRs(text);
   };
 
   var global$7 = tinymce.util.Tools.resolve("tinymce.html.DomParser");
@@ -412,7 +414,10 @@
     var domParser = global$7({}, schema);
     var text = "";
     var shortEndedElements = schema.getShortEndedElements();
-    var ignoreElements = global$4.makeMap("script noscript style textarea video audio iframe object", " ");
+    var ignoreElements = global$4.makeMap(
+      "script noscript style textarea video audio iframe object",
+      " "
+    );
     var blockElements = schema.getBlockElements();
     function walk(node) {
       var name = node.name,
@@ -480,7 +485,9 @@
 
   function isWordContent(content) {
     return (
-      /<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^'']*\bmso-|w:WordDocument/i.test(content) ||
+      /<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^'']*\bmso-|w:WordDocument/i.test(
+        content
+      ) ||
       /class="OutlineElement/.test(content) ||
       /id="?docs\-internal\-guid\-/.test(content)
     );
@@ -959,7 +966,11 @@
   var pasteText = function (editor, text) {
     var encodedText = editor.dom.encode(text).replace(/\r\n/g, "\n");
     var normalizedText = normalizeWhitespace(encodedText);
-    var html = convert(normalizedText, editor.settings.forced_root_block, editor.settings.forced_root_block_attrs);
+    var html = convert(
+      normalizedText,
+      editor.settings.forced_root_block,
+      editor.settings.forced_root_block_attrs
+    );
     doPaste(editor, html, false, true);
   };
   var getDataTransferItems = function (dataTransfer) {
@@ -988,7 +999,9 @@
     return items;
   };
   var getClipboardContent = function (editor, clipboardEvent) {
-    var content = getDataTransferItems(clipboardEvent.clipboardData || editor.getDoc().dataTransfer);
+    var content = getDataTransferItems(
+      clipboardEvent.clipboardData || editor.getDoc().dataTransfer
+    );
     return isMsEdge() ? global$4.extend(content, { "text/html": "" }) : content;
   };
   var hasContentType = function (clipboardContent, mimeType) {
@@ -1025,7 +1038,9 @@
       type = _a.type;
     var id = uniqueId();
     var name =
-      editor.settings.images_reuse_filename && imageItem.blob.name ? extractFilename(editor, imageItem.blob.name) : id;
+      editor.settings.images_reuse_filename && imageItem.blob.name
+        ? extractFilename(editor, imageItem.blob.name)
+        : id;
     var img = new domGlobals.Image();
     img.src = imageItem.uri;
     if (isValidDataUriImage(editor.settings, img)) {
@@ -1169,7 +1184,9 @@
       }
       if (pasteBin.isDefaultContent(content)) {
         if (!isKeyBoardPaste) {
-          editor.windowManager.alert("Please use Ctrl+V/Cmd+V keyboard shortcuts to paste contents.");
+          editor.windowManager.alert(
+            "Please use Ctrl+V/Cmd+V keyboard shortcuts to paste contents."
+          );
         }
         return;
       }
@@ -1199,7 +1216,11 @@
       if (!isKeyBoardPaste) {
         e.preventDefault();
       }
-      if (global$1.ie && (!isKeyBoardPaste || e.ieFake) && !hasContentType(clipboardContent, "text/html")) {
+      if (
+        global$1.ie &&
+        (!isKeyBoardPaste || e.ieFake) &&
+        !hasContentType(clipboardContent, "text/html")
+      ) {
         pasteBin.create();
         editor.dom.bind(pasteBin.getEl(), "paste", function (e) {
           e.stopPropagation();
@@ -1287,12 +1308,17 @@
         "class"          : "mce-pastebin",
         "contentEditable": true,
         "data-mce-bogus" : "all",
-        "style"          : "position: fixed; top: 50%; width: 10px; height: 10px; overflow: hidden; opacity: 0",
+        "style":
+          "position: fixed; top: 50%; width: 10px; height: 10px; overflow: hidden; opacity: 0",
       },
       pasteBinDefaultContent
     );
     if (global$1.ie || global$1.gecko) {
-      dom.setStyle(pasteBinElm, "left", dom.getStyle(body, "direction", true) === "rtl" ? 65535 : -65535);
+      dom.setStyle(
+        pasteBinElm,
+        "left",
+        dom.getStyle(body, "direction", true) === "rtl" ? 65535 : -65535
+      );
     }
     dom.bind(pasteBinElm, "beforedeactivate focusin focusout", function (e) {
       e.stopPropagation();
@@ -1350,7 +1376,9 @@
   };
   var isDefault = function (editor, pasteBinDefaultContent) {
     var pasteBinElm = getEl(editor);
-    return isPasteBin(pasteBinElm) && isDefaultContent(pasteBinDefaultContent, pasteBinElm.innerHTML);
+    return (
+      isPasteBin(pasteBinElm) && isDefaultContent(pasteBinDefaultContent, pasteBinElm.innerHTML)
+    );
   };
   var PasteBin = function (editor) {
     var lastRng = Cell(null);
@@ -1554,7 +1582,8 @@
         return;
       }
       if (rng && shouldFilterDrop(editor)) {
-        var content_1 = dropContent["mce-internal"] || dropContent["text/html"] || dropContent["text/plain"];
+        var content_1 =
+          dropContent["mce-internal"] || dropContent["text/html"] || dropContent["text/plain"];
         if (content_1) {
           e.preventDefault();
           global$2.setEditorTimeout(editor, function () {
@@ -1623,7 +1652,9 @@
       blockElements.push(blockName);
     });
     var explorerBlocksRegExp = new RegExp(
-      "(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*(<\\/?(" + blockElements.join("|") + ")[^>]*>)(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*",
+      "(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*(<\\/?(" +
+        blockElements.join("|") +
+        ")[^>]*>)(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*",
       "g"
     );
     html = filter$1(html, [[explorerBlocksRegExp, "$1"]]);
@@ -1649,35 +1680,41 @@
     if (webKitStyles) {
       var dom_1 = editor.dom,
         node_1 = editor.selection.getNode();
-      content = content.replace(/(<[^>]+) style="([^"]*)"([^>]*>)/gi, function (all, before, value, after) {
-        var inputStyles = dom_1.parseStyle(dom_1.decode(value));
-        var outputStyles = {};
-        if (webKitStyles === "none") {
+      content = content.replace(
+        /(<[^>]+) style="([^"]*)"([^>]*>)/gi,
+        function (all, before, value, after) {
+          var inputStyles = dom_1.parseStyle(dom_1.decode(value));
+          var outputStyles = {};
+          if (webKitStyles === "none") {
+            return before + after;
+          }
+          for (var i = 0; i < webKitStyles.length; i++) {
+            var inputValue = inputStyles[webKitStyles[i]],
+              currentValue = dom_1.getStyle(node_1, webKitStyles[i], true);
+            if (/color/.test(webKitStyles[i])) {
+              inputValue = dom_1.toHex(inputValue);
+              currentValue = dom_1.toHex(currentValue);
+            }
+            if (currentValue !== inputValue) {
+              outputStyles[webKitStyles[i]] = inputValue;
+            }
+          }
+          outputStyles = dom_1.serializeStyle(outputStyles, "span");
+          if (outputStyles) {
+            return before + ' style="' + outputStyles + '"' + after;
+          }
           return before + after;
         }
-        for (var i = 0; i < webKitStyles.length; i++) {
-          var inputValue = inputStyles[webKitStyles[i]],
-            currentValue = dom_1.getStyle(node_1, webKitStyles[i], true);
-          if (/color/.test(webKitStyles[i])) {
-            inputValue = dom_1.toHex(inputValue);
-            currentValue = dom_1.toHex(currentValue);
-          }
-          if (currentValue !== inputValue) {
-            outputStyles[webKitStyles[i]] = inputValue;
-          }
-        }
-        outputStyles = dom_1.serializeStyle(outputStyles, "span");
-        if (outputStyles) {
-          return before + ' style="' + outputStyles + '"' + after;
-        }
-        return before + after;
-      });
+      );
     } else {
       content = content.replace(/(<[^>]+) style="([^"]*)"([^>]*>)/gi, "$1$3");
     }
-    content = content.replace(/(<[^>]+) data-mce-style="([^"]+)"([^>]*>)/gi, function (all, before, value, after) {
-      return before + ' style="' + value + '"' + after;
-    });
+    content = content.replace(
+      /(<[^>]+) data-mce-style="([^"]+)"([^>]*>)/gi,
+      function (all, before, value, after) {
+        return before + ' style="' + value + '"' + after;
+      }
+    );
     return content;
   }
   function removeUnderlineAndFontInAnchor(editor, root) {

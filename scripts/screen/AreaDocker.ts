@@ -20,7 +20,10 @@ function dockerdebug(...args: any[]) {
   }
 }
 
-export const testSnapScreenVerts = function (fitToSize: boolean, ctx: IContextBase & { propsbar: Area<IContextBase> }) {
+export const testSnapScreenVerts = function (
+  fitToSize: boolean,
+  ctx: IContextBase & { propsbar: Area<IContextBase> }
+) {
   const screen = ctx.screen;
 
   screen.unlisten();
@@ -123,7 +126,12 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
         const y = e.y;
 
         const m = 8;
-        if (x < rect.x - m || x > rect.x + rect.width + m || y < rect.y - m || y >= rect.y + rect.height + m) {
+        if (
+          x < rect.x - m ||
+          x > rect.x + rect.width + m ||
+          y < rect.y - m ||
+          y >= rect.y + rect.height + m
+        ) {
           dockerdebug("tab detach!");
           e.preventDefault(); //end dragging
           this.detach(e);
@@ -357,7 +365,10 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     newarea.switcher.setCSS();
     newarea.switcher.update();
 
-    if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
+    if (
+      event &&
+      (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)
+    ) {
       event.preventDefault();
       event.stopPropagation();
       newarea.switcher.tbar._startMove(undefined, event);

@@ -13,7 +13,8 @@ export function makePopupArea(area_class: unknown, screen: any, args: PopupAreaA
 
   const width = args.width || screen.size[0] * 0.7;
   const height = args.height || screen.size[1] * 0.7;
-  const addEscapeKeyHandler = args.addEscapeKeyHandler !== undefined ? args.addEscapeKeyHandler : true;
+  const addEscapeKeyHandler =
+    args.addEscapeKeyHandler !== undefined ? args.addEscapeKeyHandler : true;
 
   sarea.ctx = screen.ctx;
   sarea.size[0] = width;

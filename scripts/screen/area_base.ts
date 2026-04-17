@@ -3,8 +3,10 @@ import { ClassIdSymbol, IUIBaseConstructor } from "../core/ui_base";
 import { EnumProperty } from "../path-controller/toolsys/toolprop";
 import type { Area, IAreaDef as IAreaDef } from "./ScreenArea";
 
-export interface IAreaConstructor<CTX extends IContextBase = IContextBase, T extends Area<CTX> = Area<CTX>>
-  extends IUIBaseConstructor<T> {
+export interface IAreaConstructor<
+  CTX extends IContextBase = IContextBase,
+  T extends Area<CTX> = Area<CTX>,
+> extends IUIBaseConstructor<T> {
   new (): T;
   /** internal API type, do not use. */
   [ClassIdSymbol]?: string;
