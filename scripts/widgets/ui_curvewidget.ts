@@ -1,5 +1,5 @@
 import { UIBase, Icons, saveUIData, loadUIData } from "../core/ui_base";
-import { ColumnFrame } from "../core/ui";
+import { ColumnFrame, Container } from "../core/ui";
 import * as util from "../path-controller/util/util";
 import { Curve1D } from "../path-controller/curve/curve1d";
 import { makeGenEnum } from "../path-controller/curve/curve1d_utils";
@@ -442,7 +442,7 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     const col = this.container;
 
     if (this._lastGen !== undefined) {
-      this._lastGen.killGUI(col, this.canvas);
+      this._lastGen.killGUI(col as unknown as Container, this.canvas);
     }
 
     const onchange = this.dropbox.onchange;
@@ -468,7 +468,7 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     /* Turn off data path callbacks. */
     this.#in_onchange++;
     try {
-      gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+      gen.makeGUI(col as unknown as Container, this.canvas, this.drawTransform, dpath, onSourceUpdate);
 
       loadUIData(this.container, uidata);
       for (let i = 0; i < 4; i++) {
