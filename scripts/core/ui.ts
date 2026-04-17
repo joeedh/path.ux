@@ -1666,67 +1666,68 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       frame = this.strip();
       frame.oneAxisPadding();
 
-      if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values) {
-          const check = frame!.check(inpath + "[" + key + "]", "", packflag) as IconCheck<CTX>;
+      const makeIconCheck = (key: string) => {
+        const check = frame!.check(inpath + "[" + key + "]", "", packflag) as IconCheck<CTX>;
 
-          check.packflag |= PackFlags.HIDE_CHECK_MARKS;
+        check.packflag |= PackFlags.HIDE_CHECK_MARKS;
 
-          check.icon = prop.iconmap[key];
-          check.drawCheck = false;
+        check.icon = prop.iconmap[key];
+        check.drawCheck = false;
 
-          check.style["padding"] = "0px";
-          check.style["margin"] = "0px";
+        check.style["padding"] = "0px";
+        check.style["margin"] = "0px";
 
-          styl(check.dom)["padding"] = "0px";
-          styl(check.dom)["margin"] = "0px";
+        styl(check.dom)["padding"] = "0px";
+        styl(check.dom)["margin"] = "0px";
 
-          check.description = (prop.descriptions as any)[key];
-          //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
-        }
-      } else {
+        return check;
+      };
+      const makeCheck = (key: string) => {
+        return frame!.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
+      };
+
+      const useIcons = packflag & PackFlags.USE_ICONS;
+      if (!useIcons) {
         if (name === undefined) {
           name = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
         }
+        frame!.label(name!).font = "TitleText";
+      }
 
-        (frame!.label(name!) as unknown as Label).font = "TitleText";
+      const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
 
-        const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
+      let ignorecb = false;
+      function makecb(key: string) {
+        return () => {
+          if (ignorecb) return;
 
-        let ignorecb = false;
-
-        function makecb(key: string) {
-          return () => {
-            if (ignorecb) return;
-
-            ignorecb = true;
-            for (const k in checks) {
-              if (k !== key) {
-                checks[k].checked = false;
-              }
+          ignorecb = true;
+          for (const k in checks) {
+            if (k !== key) {
+              checks[k].checked = false;
             }
-            ignorecb = false;
+          }
+          ignorecb = false;
 
-            if (callback) {
-              callback(key);
-            }
-          };
+          if (callback) {
+            callback(key);
+          }
+        };
+      }
+
+      for (const key in prop.values) {
+        const check = useIcons ? makeIconCheck(key) : makeCheck(key);
+        checks[key] = check;
+
+        if (mass_set_path) {
+          check.setAttribute("mass_set_path", mass_set_path);
         }
 
-        for (const key in prop.values) {
-          const check = frame!.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
-          checks[key] = check;
-
-          if (mass_set_path) {
-            check.setAttribute("mass_set_path", mass_set_path);
-          }
-
-          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-          if (!check.description) {
-            check.description = "" + prop.ui_value_names[key];
-          }
-          check.onchange = makecb(key);
+        check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
+        if (!check.description) {
+          check.description = "" + prop.ui_value_names[key];
         }
+        check.onchange = makecb(key);
       }
     }
 
