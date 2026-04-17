@@ -447,7 +447,10 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   }
 
   addItemExtra(text: string, id: string | number, hotkey: string | undefined, icon = -1, add = true, tooltip = "") {
-    const dom = document.createElement("span") as HTMLSpanElement & { hotkey?: string; icon?: number };
+    const dom = document.createElement("span") as HTMLSpanElement & {
+      hotkey?: string;
+      icon?: number;
+    };
 
     dom.style["display"] = "inline-flex";
 

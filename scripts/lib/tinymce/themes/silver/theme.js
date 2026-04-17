@@ -10637,7 +10637,9 @@
   });
 
   var exhibit$3 = function (base, disableConfig) {
-    return nu$6({ classes: disableConfig.disabled ? disableConfig.disableClass.map(pure).getOr([]) : [] });
+    return nu$6({
+      classes: disableConfig.disabled ? disableConfig.disableClass.map(pure).getOr([]) : [],
+    });
   };
   var events$9 = function (disableConfig, disableState) {
     return derive([
@@ -13368,7 +13370,9 @@
       if (!isText(component.element())) {
         registry.register(component);
         each(component.components(), addToWorld);
-        systemApi.triggerEvent(systemInit(), component.element(), { target: constant(component.element()) });
+        systemApi.triggerEvent(systemInit(), component.element(), {
+          target: constant(component.element()),
+        });
       }
     };
     var removeFromWorld = function (component) {
@@ -16188,7 +16192,9 @@
             },
           },
         }),
-        Receiving.config({ channels: ((_a = {}), (_a[mouseReleased()] = { onReceive: choose }), _a) }),
+        Receiving.config({
+          channels: ((_a = {}), (_a[mouseReleased()] = { onReceive: choose }), _a),
+        }),
       ]),
       events: derive([
         run(sliderChangeEvent(), function (slider, simulatedEvent) {
@@ -18013,7 +18019,9 @@
     return renderIcon$1(get$d(iconName, iconsProvider), {});
   };
   var renderReplacableIconFromPack = function (iconName, iconsProvider) {
-    return renderIcon$1(get$d(iconName, iconsProvider), { behaviours: derive$1([Replacing.config({})]) });
+    return renderIcon$1(get$d(iconName, iconsProvider), {
+      behaviours: derive$1([Replacing.config({})]),
+    });
   };
   var renderLabel$1 = function (text, prefix, providersBackstage) {
     return {
@@ -18749,7 +18757,9 @@
       dom: {
         tag       : "button",
         classes   : ["tox-lock", "tox-button", "tox-button--naked", "tox-button--icon"],
-        attributes: { title: providersBackstage.translate(spec.label.getOr("Constrain proportions")) },
+        attributes: {
+          title: providersBackstage.translate(spec.label.getOr("Constrain proportions")),
+        },
       },
       components: [
         {
@@ -23318,7 +23328,9 @@
           others: {
             overflowGroup: function () {
               return ToolbarGroup.sketch(
-                __assign(__assign({}, externals["overflow-group"]()), { items: [memFloatingToolbarButton.asSpec()] })
+                __assign(__assign({}, externals["overflow-group"]()), {
+                  items: [memFloatingToolbarButton.asSpec()],
+                })
               );
             },
           },
@@ -32441,7 +32453,11 @@
               },
             },
             behaviours: bs,
-            components: [{ dom: fromHtml$2('<div class="tox-spinner"><div></div><div></div><div></div></div>') }],
+            components: [
+              {
+                dom: fromHtml$2('<div class="tox-spinner"><div></div><div></div><div></div></div>'),
+              },
+            ],
           };
         });
       },
@@ -33120,7 +33136,9 @@
       )
     );
     var classes = internalDialog.width.isNone() && internalDialog.height.isNone() ? ["tox-dialog--width-lg"] : [];
-    var iframeUri = new global$g(internalDialog.url, { base_uri: new global$g(domGlobals.window.location.href) });
+    var iframeUri = new global$g(internalDialog.url, {
+      base_uri: new global$g(domGlobals.window.location.href),
+    });
     var iframeDomain = iframeUri.protocol + "://" + iframeUri.host + (iframeUri.port ? ":" + iframeUri.port : "");
     var messageHandlerUnbinder = Cell(Option.none());
     var extraBehaviours = [

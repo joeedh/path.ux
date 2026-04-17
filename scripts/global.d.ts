@@ -157,7 +157,7 @@ interface Window {
   rc: unknown;
   cw: unknown;
   vp: unknown;
-  _ToolTip: unknown;
+  _ToolTip: { show(text: string, screen: UIBase, x: number, y: number): { remove(): void } };
   menu: unknown;
   elem: HTMLElement | Node;
 }

@@ -634,7 +634,10 @@ export class platform extends PlatformAPI {
       if (Array.isArray(filter)) {
         let ext = filter[0];
 
-        const filterObj: { name: string; mime?: string; extensions: string[] } = { extensions: filter, name: "" };
+        const filterObj: { name: string; mime?: string; extensions: string[] } = {
+          extensions: filter,
+          name      : "",
+        };
 
         ext = ext.replace(/\./g, "").trim().toLowerCase();
         if (ext in mimeMap) {

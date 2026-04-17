@@ -1,29 +1,21 @@
 "use strict";
 
+import { TabContainer } from "./ui_tabs";
+import type { CSSFont } from "../core/cssfont";
 import * as util from "../path-controller/util/util";
-import * as vectormath from "../path-controller/util/vectormath";
-import * as ui_base from "../core/ui_base";
-import * as ui from "../core/ui";
+import { Number4, Vector2, Vector3, Vector4 } from "../path-controller/util/vectormath";
+import { UIBase, drawRoundBox, getFont } from "../core/ui_base";
+import { ColumnFrame } from "../core/ui";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
 import { keymap } from "../path-controller/util/simple_events";
 import cconst from "../config/const";
 import { color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
 
-const Vector2 = vectormath.Vector2;
-const Vector3 = vectormath.Vector3;
-const Vector4 = vectormath.Vector4;
-
 export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils";
 import { rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk } from "../path-controller/util/colorutils";
 import { contextWrangler } from "../screen/area_wrangler";
-
-const UIBase = ui_base.UIBase;
-
-type Vector2 = vectormath.Vector2;
-type Vector3 = vectormath.Vector3;
-type Vector4 = vectormath.Vector4;
-type UIBaseType = InstanceType<typeof UIBase>;
+import { TextBox } from "./ui_textbox";
 
 const UPW = 1.25;
 const VPW = 0.75;
@@ -230,8 +222,8 @@ export function getFieldImage(fieldsize: number, width: number, height: number, 
 const _update_temp = new Vector4();
 
 export class SimpleBox {
-  pos: vectormath.Vector2;
-  size: vectormath.Vector2;
+  pos: Vector2;
+  size: Vector2;
   r: number;
 
   constructor(pos: number[] = [0, 0], size: number[] = [1, 1]) {
@@ -364,7 +356,7 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
   }
 
   _getPad(): number {
-    return Math.max(this.getDefault("circleSize") as number, 15);
+    return Math.max(this.getDefault<number>("circleSize"), 15);
   }
 
   _redraw(): void {
@@ -372,20 +364,20 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
     const canvas = this.canvas;
     const dpi = this.getDPI();
 
-    const w = this.getDefault("width") as number;
-    const h = this.getDefault("hueHeight") as number;
+    const w = this.getDefault<number>("width");
+    const h = this.getDefault<number>("hueHeight");
 
     canvas.width = ~~(w * dpi);
     canvas.height = ~~(h * dpi);
 
-    (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
-    (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
 
     /* create horizontal padding to make selection of
      *  endpoint hue easier */
 
     const rselector = ~~(this._getPad() * dpi); //~~(this.getDefault("circleSize")*dpi);
-    const r_circle = (this.getDefault("circleSize") as number) * dpi;
+    const r_circle = this.getDefault<number>("circleSize") * dpi;
 
     let w2 = canvas.width;
 
@@ -426,7 +418,7 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
   }
 }
 
-UIBase.internalRegister(HueField as unknown as typeof UIBase);
+UIBase.internalRegister(HueField);
 
 export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   canvas: HTMLCanvasElement;
@@ -447,7 +439,7 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
     const setFromXY = (x: number, y: number): void => {
       const field = this._getField();
-      const r = ~~((this.getDefault("circleSize") as number) * this.getDPI());
+      const r = ~~(this.getDefault<number>("circleSize") * this.getDPI());
 
       const sat = field.x2sat(x - r);
       const val = field.y2val(y - r);
@@ -521,7 +513,7 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
           setFromXY(x, y);
         },
         on_pointermove(e: PointerEvent) {
-          (this as typeof mouseHandlers).on_mousemove(e);
+          this.on_mousemove(e);
         },
         on_mousedown: (_e: MouseEvent) => {
           this.popModal();
@@ -631,18 +623,13 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
   }
 
   _getField(): FieldImage {
-    const r = this.getDefault("circleSize") as number;
-    const w = this.getDefault("width") as number;
-    const h = this.getDefault("height") as number;
+    const r = this.getDefault<number>("circleSize");
+    const w = this.getDefault<number>("width");
+    const h = this.getDefault<number>("height");
 
     //r = ~~(r*dpi);
 
-    return getFieldImage(
-      this.getDefault("fieldSize") as number,
-      w - r * 2,
-      h - r * 2,
-      this.hsva as unknown as number[]
-    );
+    return getFieldImage(this.getDefault<number>("fieldSize"), w - r * 2, h - r * 2, Array.from(this.hsva));
   }
 
   update(force_update = false): void {
@@ -658,17 +645,17 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     const canvas = this.canvas;
     const dpi = this.getDPI();
 
-    const w = this.getDefault("width") as number;
-    const h = this.getDefault("height") as number;
+    const w = this.getDefault<number>("width");
+    const h = this.getDefault<number>("height");
 
     canvas.width = ~~(w * dpi);
     canvas.height = ~~(h * dpi);
 
-    (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
-    (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
     //SatValField
 
-    const rselector = ~~((this.getDefault("circleSize") as number) * dpi);
+    const rselector = ~~(this.getDefault<number>("circleSize") * dpi);
 
     const field = this._getField();
     const image = field.canvas;
@@ -746,9 +733,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
   }
 }
 
-UIBase.internalRegister(SatValField as unknown as typeof UIBase);
+UIBase.internalRegister(SatValField);
 
-export class ColorField<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
+export class ColorField<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
   hsva: Vector4;
   rgba: Vector4;
   satvalfield: SatValField<CTX>;
@@ -767,7 +754,7 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
 
     this._recalcRGBA();
 
-    this._lastThemeStyle = (this.constructor as unknown as typeof ColorField).define().style;
+    this._lastThemeStyle = this.constructor.define().style!;
 
     const satvalfield = UIBase.createElement<SatValField<CTX>>("satvalfield-x");
     this.satvalfield = satvalfield;
@@ -814,9 +801,9 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
     this.setHSVA(hsv[0], hsv[1], hsv[2], this.hsva[3]);
   }
 
-  getCMYK(): number[] {
+  getCMYK(): Vector4 {
     const rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return rgb_to_cmyk(rgb[0], rgb[1], rgb[2]) as unknown as number[];
+    return rgb_to_cmyk(rgb[0], rgb[1], rgb[2]);
   }
 
   setHSVA(h: number, s: number, v: number, a = 1.0, fire_onchange = true): void {
@@ -933,7 +920,7 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
   setCSS(): void {
     super.setCSS();
 
-    (this.style as unknown as Record<string, string>)["flex-grow"] = this.getDefault("flex-grow") as string;
+    this.style.flexGrow = "" + this.getDefault<number>("flex-grow");
   }
 
   _redraw(): void {
@@ -942,9 +929,9 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ui.Colu
   }
 }
 
-UIBase.internalRegister(ColorField as unknown as typeof UIBase);
+UIBase.internalRegister(ColorField);
 
-interface SliderWidget extends UIBaseType {
+interface SliderWidget extends UIBase {
   setValue(val: number, fire_onchange?: boolean): void;
   baseUnit: string | undefined;
   displayUnit: string | undefined;
@@ -952,12 +939,12 @@ interface SliderWidget extends UIBaseType {
 }
 
 // @ts-expect-error - TypeScript limitation: generic classes can't properly override static methods
-export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
+export class ColorPicker<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
   _lastThemeStyle: string;
   field!: ColorField<CTX>;
   colorbox!: HTMLDivElement;
   _style!: HTMLStyleElement;
-  cssText!: SliderWidget;
+  cssText!: TextBox;
   h: SliderWidget | undefined;
   s: SliderWidget | undefined;
   v: SliderWidget | undefined;
@@ -974,7 +961,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
     super();
 
     this._no_update_textbox = false;
-    this._lastThemeStyle = (this.constructor as unknown as typeof ColorPicker).define().style;
+    this._lastThemeStyle = this.constructor.define().style!;
   }
 
   //*
@@ -991,38 +978,30 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
   }
 
   static setDefault(node: ColorPicker): void {
-    let tabs: import("../widgets/ui_tabs.js").TabContainer;
-    let colorsPanel: typeof node | ReturnType<typeof node.panel> = node;
+    let tabs: TabContainer;
 
     if (node.getClassDefault("usePanels")) {
       const panel = node.panel("Color");
-      colorsPanel = panel;
-      tabs = panel.tabs() as unknown as import("../widgets/ui_tabs.js").TabContainer;
+      tabs = panel.tabs();
       panel.closed = true;
 
-      (panel as unknown as { style: Record<string, string> }).style["flex-grow"] = "unset";
+      panel.style["flexGrow"] = "unset";
 
       /* force compactness */
-      (
-        (panel as unknown as { titleframe: { style: Record<string, string> } }).titleframe.style as unknown as Record<
-          string,
-          string
-        >
-      )["flex-grow"] = "unset";
-      //panel.titleframe.style["align-items"] = "unset";
+      panel.panelFrame.titleframe.style["flexGrow"] = "unset";
     } else {
-      tabs = node.tabs() as unknown as import("../widgets/ui_tabs.js").TabContainer;
+      tabs = node.tabs();
     }
 
-    node.cssText = node.textbox() as unknown as SliderWidget;
-    (node.cssText as unknown as UIBaseType).onchange = (val: unknown) => {
+    node.cssText = node.textbox();
+    node.cssText.onchange = (val: unknown) => {
       const strVal = "" + val;
       const ok = validateWebColor(strVal);
       if (!ok) {
-        (node.cssText as unknown as { flash(c: string): void }).flash("red");
+        node.cssText.flash("red");
         return;
       } else {
-        (node.cssText as unknown as { flash(c: string): void }).flash("green");
+        node.cssText.flash("green");
       }
 
       const trimmed = strVal.trim();
@@ -1044,7 +1023,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
       label: string,
       cb: (e: { value: number }) => void
     ): SliderWidget => {
-      return tabFrame.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, cb) as unknown as SliderWidget;
+      return tabFrame.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, cb);
     };
 
     node.h = makeSlider(tab, "Hue", (e) => {
@@ -1111,7 +1090,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
             node.setCMYK(cmyk2[0], cmyk2[1], cmyk2[2], cmyk2[3]);
           },
           step      : 0.001,
-        }) as unknown as SliderWidget;
+        });
 
         slider.baseUnit = slider.displayUnit = "none";
 
@@ -1171,8 +1150,8 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
 
     this.colorbox = document.createElement("div");
     this.colorbox.style["width"] = "100%";
-    (this.colorbox.style as unknown as Record<string, string>)["height"] = this.getDefault("colorBoxHeight") + "px";
-    (this.colorbox.style as unknown as Record<string, string>)["background-color"] = "black";
+    this.colorbox.style["height"] = this.getDefault("colorBoxHeight") + "px";
+    this.colorbox.style["backgroundColor"] = "black";
 
     this.shadow.appendChild(style);
     this.field.ctx = this.ctx;
@@ -1180,7 +1159,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
     this.shadow.appendChild(this.colorbox);
     this.add(this.field);
 
-    (this.style as unknown as Record<string, string>)["width"] = this.getDefault("width") + "px";
+    this.style["width"] = this.getDefault("width") + "px";
   }
 
   updateColorBox(): void {
@@ -1188,7 +1167,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
     const g = ~~(this.field.rgba[1] * 255);
     const b = ~~(this.field.rgba[2] * 255);
 
-    (this.colorbox.style as unknown as Record<string, string>)["background-color"] = `rgb(${r},${g},${b})`;
+    this.colorbox.style["backgroundColor"] = `rgb(${r},${g},${b})`;
   }
 
   _setSliders(): void {
@@ -1215,7 +1194,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
       const cmyk = this.field.getCMYK();
 
       for (let i = 0; i < 4; i++) {
-        this.cmyk[i].setValue(cmyk[i], false);
+        this.cmyk[i].setValue(cmyk[i as Number4], false);
       }
     }
 
@@ -1298,7 +1277,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends ui.Col
     }
   }
 
-  getCMYK(): number[] {
+  getCMYK(): Vector4 {
     return this.field.getCMYK();
   }
 
@@ -1415,9 +1394,9 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this._redraw();
     };
 
-    this.addEventListener("pointerover", enter as EventListener, { capture: true, passive: true });
-    this.addEventListener("pointerout", leave as EventListener, { capture: true, passive: true });
-    this.addEventListener("focus", leave as EventListener, { capture: true, passive: true });
+    this.addEventListener("pointerover", enter, { capture: true, passive: true });
+    this.addEventListener("pointerout", leave, { capture: true, passive: true });
+    this.addEventListener("focus", leave, { capture: true, passive: true });
 
     this.addEventListener("mousedown", (e: MouseEvent) => {
       /* ensure browser doesn't spawn its own (incompatible)
@@ -1451,35 +1430,25 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this.onclick(e as unknown as PointerEvent);
     }
 
-    const colorpicker = (this.ctx.screen as unknown as { popup: (a: unknown, b: unknown) => unknown }).popup(
-      this,
-      this
-    );
-    const ctx = contextWrangler.makeSafeContext(this.ctx) as unknown;
+    const colorpicker = this.ctx.screen.popup(this, this);
+    const ctx = contextWrangler.makeSafeContext(this.ctx);
 
-    (colorpicker as unknown as Record<string, unknown>)["ctx"] = ctx;
-    (colorpicker as unknown as { useDataPathUndo: boolean }).useDataPathUndo = this.useDataPathUndo;
+    colorpicker.ctx = ctx;
+    colorpicker.useDataPathUndo = this.useDataPathUndo;
 
     const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") ?? undefined : undefined;
 
-    const massSetPath = (this.getAttribute("mass_set_path") ?? undefined) as string | undefined;
-    const widget = (
-      colorpicker as unknown as { colorPicker: (p: string | undefined, u: undefined, m: string | undefined) => unknown }
-    ).colorPicker(path, undefined, massSetPath) as unknown;
+    const massSetPath = this.getAttribute("mass_set_path") ?? undefined;
+    const widget = colorpicker.colorPicker(path, undefined, massSetPath);
 
-    (widget as unknown as Record<string, unknown>)["ctx"] = ctx;
-    (widget as unknown as { _init(): void })._init();
-    (widget as unknown as { setRGBA(r: number, g: number, b: number, a: number): void }).setRGBA(
-      this.rgba[0],
-      this.rgba[1],
-      this.rgba[2],
-      this.rgba[3]
-    );
+    widget.ctx = ctx;
+    widget._init();
+    widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 
-    (widget as unknown as { style: Record<string, unknown> }).style["padding"] = "20px";
+    widget.style["padding"] = "20px";
 
     const onchange = () => {
-      (this.rgba as unknown as { load(v: unknown): void }).load((widget as unknown as { rgba: unknown }).rgba);
+      this.rgba.load(widget.rgba);
       this.redraw();
 
       if (this.onchange) {
@@ -1489,13 +1458,9 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
 
     (widget as unknown as { _onchange: (() => void) | undefined })._onchange = onchange;
 
-    (colorpicker as unknown as { style: Record<string, string> }).style["background-color"] = (
-      widget as unknown as { getDefault(key: string): string }
-    ).getDefault("background-color") as string;
+    colorpicker.style["backgroundColor"] = widget.getDefault("background-color") as string;
     //colorpicker.style["border-radius"] = "25px";
-    (colorpicker as unknown as { style: Record<string, string> }).style["border-width"] = (
-      widget as unknown as { getDefault(key: string): string }
-    ).getDefault("border-width") as string;
+    colorpicker.style["borderWidth"] = widget.getDefault("border-width") as string;
   }
 
   setRGBA(val: Vector4 | number[]): this {
@@ -1545,8 +1510,8 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
 
       g.save();
 
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
       const steps = 5;
       const dt = canvas.width / steps;
       let t = 0;
@@ -1573,14 +1538,14 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     const grid1 = "rgb(100, 100, 100)";
     const grid2 = "rgb(175, 175, 175)";
 
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
 
     const cellsize = 10;
     const totx = Math.ceil(canvas.width / cellsize);
     const toty = Math.ceil(canvas.height / cellsize);
 
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
     g.clip();
 
     g.beginPath();
@@ -1603,13 +1568,13 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     //g.fill();
 
     const color = color2css(this.rgba);
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
     if (this._highlight) {
       //let color = "rgba(200, 200, 255, 0.5)";
       const color = this.getDefault("BoxHighlight");
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
     }
 
     g.restore();
@@ -1622,30 +1587,23 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     const h = this.getDefault("height") as number;
     const dpi = this.getDPI();
 
-    (this.style as unknown as Record<string, string>)["width"] = "min-contents" + "px";
-    (this.style as unknown as Record<string, string>)["height"] = h + "px";
+    this.style["width"] = "min-contents" + "px";
+    this.style["height"] = h + "px";
 
-    (this.style as unknown as Record<string, string>)["flex-direction"] = "row";
-    (this.style as unknown as Record<string, string>)["display"] = "flex";
+    this.style["flexDirection"] = "row";
+    this.style["display"] = "flex";
 
-    (this.labelDom.style as unknown as Record<string, string>)["color"] = (
-      this.getDefault(this._font) as unknown as Record<string, string>
-    ).color;
-    (this.labelDom.style as unknown as Record<string, string>)["font"] = ui_base.getFont(
-      this,
-      undefined,
-      this._font,
-      false
-    );
+    this.labelDom.style["color"] = this.getDefault<CSSFont>(this._font).color;
+    this.labelDom.style["font"] = getFont(this, undefined, this._font, false);
 
     const canvas = this.dom;
 
-    (canvas.style as unknown as Record<string, string>)["width"] = w + "px";
-    (canvas.style as unknown as Record<string, string>)["height"] = h + "px";
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
     canvas.width = ~~(w * dpi);
     canvas.height = ~~(h * dpi);
 
-    (this.style as unknown as Record<string, string>)["background-color"] = "rgba(0,0,0,0)";
+    this.style["backgroundColor"] = "rgba(0,0,0,0)";
     this._redraw();
   }
 

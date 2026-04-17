@@ -1,18 +1,17 @@
 import type { Screen } from "./FrameManager";
 
-import { ClassIdSymbol, loadUIData, saveUIData, UIBase } from "../core/ui_base";
+import { loadUIData, saveUIData, UIBase } from "../core/ui_base";
 import { Container } from "../core/ui";
 
 import * as util from "../path-controller/util/util";
 import { haveModal } from "../path-controller/util/simple_events";
 import cconst from "../config/const";
 import nstructjs from "../path-controller/util/struct";
-import { EnumProperty } from "../path-controller/toolsys/toolprop";
-import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap, snapi } from "./FrameManager_mesh";
+import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap } from "./FrameManager_mesh";
 import { contextWrangler } from "./area_wrangler";
 import { IsScreenTag } from "./constants";
 import { IContextBase } from "../core/context_base";
-import { IUIBaseConstructor, Vector2 } from "../pathux";
+import { Vector2 } from "../pathux";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
@@ -380,7 +379,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     contextWrangler.pop(this.constructor, this as unknown as Area);
   }
 
-  override getScreen(): UIBase<CTX> | undefined {
+  override getScreen(): Screen | undefined {
     throw new Error("replace me in Area.prototype");
   }
 

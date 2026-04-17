@@ -185,9 +185,14 @@ if (window.haveElectron) {
     return REQUIRED_IMAGE_SIZES;
   };
 
-  let stream = require("stream") as { Writable: { new (): NodeWritableStream; prototype: NodeWritableStream } };
+  let stream = require("stream") as {
+    Writable: { new (): NodeWritableStream; prototype: NodeWritableStream };
+  };
 
-  class WriteStream extends (stream.Writable as { new (): NodeWritableStream; prototype: NodeWritableStream }) {
+  class WriteStream extends (stream.Writable as {
+    new (): NodeWritableStream;
+    prototype: NodeWritableStream;
+  }) {
     data: number[] | NodeBuffer;
 
     constructor() {

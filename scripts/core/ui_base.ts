@@ -4,10 +4,7 @@ export type DefaultTypes = string | number | boolean | CSSFont;
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   new (): T;
 
-  define(): {
-    tagname: string;
-    style?: string;
-  };
+  define(): UIBaseDefinition;
   setDefault<T2 extends T>(element: T2): T2;
 }
 
@@ -61,7 +58,7 @@ if (window.document && document.body) {
 import { Animator } from "./anim";
 import "./units";
 import * as util from "../path-controller/util/util";
-import * as vectormath from "../path-controller/util/vectormath";
+import { Vector2, Vector3, Vector4 } from "../path-controller/util/vectormath";
 import * as math from "../path-controller/util/math";
 import * as toolprop from "../path-controller/toolsys/toolprop";
 import {
@@ -93,8 +90,6 @@ export { theme } from "./ui_theme";
 import cconst from "../config/const";
 
 window.__cconst = cconst;
-
-const Vector4 = vectormath.Vector4;
 
 export { Icons } from "../icon_enum";
 import { Icons } from "../icon_enum";
@@ -699,10 +694,7 @@ export function makeIconDiv(icon: number, sheet = 0): HTMLDivElement {
   return icontest;
 }
 
-const Vector2 = vectormath.Vector2;
-
 export const dpistack: number[] = [];
-
 export const UIFlags: Record<string, number> = {};
 
 const internalElementNames: Record<string, string> = {};
@@ -723,6 +715,7 @@ import type { IContextBase } from "./context_base";
 import { CSSFont } from "./cssfont";
 import { DataPathSetOp } from "../pathux";
 import { tagManager } from "./tagReRegister";
+import type { Screen } from "../screen/FrameManager";
 
 const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
@@ -1304,7 +1297,7 @@ export class UIBase<
     };
     //*/
 
-    const tagname = (this.constructor as unknown as typeof UIBase).define().tagname;
+    const tagname = this.constructor.define().tagname;
     this._id = tagname.replace(/-/g, "_") + _idgen++;
 
     this.default_overrides = {}; //inherited by child widgets
@@ -1371,7 +1364,10 @@ export class UIBase<
 
       e2.button = button;
 
-      const e3 = new MouseEvent(type, e2 as MouseEventInit) as MouseEvent & { was_touch: boolean; touches: TouchList };
+      const e3 = new MouseEvent(type, e2 as MouseEventInit) as MouseEvent & {
+        was_touch: boolean;
+        touches: TouchList;
+      };
 
       e3.was_touch = true;
       e3.stopPropagation = e.stopPropagation.bind(e);
@@ -1410,7 +1406,7 @@ export class UIBase<
       { passive: false }
     );
 
-    if ((this.constructor as unknown as typeof UIBase).define().havePickClipboard) {
+    if (this.constructor.define().havePickClipboard) {
       this._clipboardHotkeyInit();
     }
   }
@@ -1904,7 +1900,7 @@ export class UIBase<
    * the global tab order
    * */
   regenTabOrder(): this {
-    const screen = this.getScreen() as (UIBase & { needsTabRecalc: boolean }) | undefined;
+    const screen = this.getScreen();
     if (screen !== undefined) {
       screen.needsTabRecalc = true;
     }
@@ -1929,7 +1925,16 @@ export class UIBase<
   }
 
   getTotalRect():
-    | { width: number; height: number; x: number; y: number; left: number; top: number; right: number; bottom: number }
+    | {
+        width: number;
+        height: number;
+        x: number;
+        y: number;
+        left: number;
+        top: number;
+        right: number;
+        bottom: number;
+      }
     | undefined {
     let found = false;
 
@@ -1949,10 +1954,10 @@ export class UIBase<
       }
     };
 
-    doaabb(this as HTMLElement);
+    doaabb(this);
 
     this._forEachChildWidget((n) => {
-      doaabb(n as HTMLElement);
+      doaabb(n);
     });
 
     if (found) {
@@ -1997,7 +2002,7 @@ export class UIBase<
       str = str.slice(0, str.length - 1).trim();
       result = parseInt(str, 16);
     } else {
-      result = units.parseValue(str, baseUnit) as number;
+      result = units.parseValue(str, baseUnit);
     }
 
     if (isInt) {
@@ -2009,7 +2014,13 @@ export class UIBase<
 
   formatNumber(
     value: number,
-    args: { baseUnit?: string; displayUnit?: string; isInt?: boolean; radix?: number; decimalPlaces?: number } = {}
+    args: {
+      baseUnit?: string;
+      displayUnit?: string;
+      isInt?: boolean;
+      radix?: number;
+      decimalPlaces?: number;
+    } = {}
   ): string {
     const baseUnit = args.baseUnit || this.baseUnit;
     const displayUnit = args.displayUnit || this.displayUnit;
@@ -2026,7 +2037,7 @@ export class UIBase<
       else if (radix === 16) return ret + "h";
     }
 
-    return units.buildString(value, baseUnit, decimalPlaces, displayUnit) as string;
+    return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
   }
 
   setBoxCSS(subkey?: string): void {
@@ -2251,7 +2262,6 @@ export class UIBase<
     let classes: Iterable<new (...args: unknown[]) => UIBase>;
 
     let is_set = type_or_set instanceof Set;
-    is_set = is_set || type_or_set instanceof util.set;
     is_set = is_set || Array.isArray(type_or_set);
 
     if (!is_set) {
@@ -2318,7 +2328,10 @@ export class UIBase<
       }
 
       this._clipboard_events = true;
-      window.addEventListener("keydown", this._clipboard_keydown, { capture: true, passive: false });
+      window.addEventListener("keydown", this._clipboard_keydown, {
+        capture: true,
+        passive: false,
+      });
     };
 
     this._clipboard_keyend = () => {
@@ -2327,7 +2340,7 @@ export class UIBase<
       }
 
       this._clipboard_events = false;
-      window.removeEventListener("keydown", this._clipboard_keydown as any, { capture: true });
+      window.removeEventListener("keydown", this._clipboard_keydown, { capture: true });
     };
 
     this._clipboard_keydown = (e: KeyboardEvent, internal_mode?: boolean) => {
@@ -2353,30 +2366,19 @@ export class UIBase<
 
       //pasteForAllChildren
       if (!internal_mode) {
-        const screen = (
-          this.ctx as unknown as {
-            screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
-          }
-        ).screen;
+        const screen = this.ctx.screen;
         let elem: UIBase | undefined = screen.pickElement(screen.mpos[0], screen.mpos[1]);
 
-        let checkTree = is_paste && (this.constructor as unknown as typeof UIBase).define().pasteForAllChildren;
-        checkTree =
-          checkTree || (is_copy && (this.constructor as unknown as typeof UIBase).define().copyForAllChildren);
+        let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
+        checkTree = checkTree || (is_copy && this.constructor.define().copyForAllChildren);
 
-        while (
-          checkTree &&
-          !(TextBox && elem instanceof TextBox) &&
-          elem !== this &&
-          elem &&
-          (elem as UIBase).parentWidget
-        ) {
+        while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem?.parentWidget) {
           console.log("  " + elem._id);
 
-          elem = (elem as UIBase).parentWidget;
+          elem = elem.parentWidget;
         }
 
-        console.warn("COLOR", this._id, elem ? (elem as UIBase)._id : "none");
+        console.warn("COLOR", this._id, elem ? elem._id : "none");
 
         if (elem !== this) {
           //remove global keyhandler
@@ -2451,7 +2453,7 @@ export class UIBase<
 
     if (cconst.DEBUG.paranoidEvents) {
       for (const item of this.__cbs) {
-        this.removeEventListener(item[0] as any, item[1] as any, item[2] as any);
+        this.removeEventListener(item[0], item[1], item[2]);
       }
 
       this.__cbs = [];
@@ -2539,12 +2541,12 @@ export class UIBase<
         }
       } else {
         for (const n2 of n.childNodes) {
-          rec(n2 as Node & { shadow?: ShadowRoot });
+          rec(n2);
         }
 
         if (n.shadow !== undefined) {
           for (const n2 of n.shadow.childNodes) {
-            rec(n2 as Node & { shadow?: ShadowRoot });
+            rec(n2);
           }
         }
       }
@@ -2589,12 +2591,12 @@ export class UIBase<
     let n: Node | null | UIBase | undefined = this;
 
     while (n) {
-      if ((n as HTMLElement).style?.["zIndex"]) {
-        const z = parseFloat((n as HTMLElement).style["zIndex"]);
+      if (n instanceof HTMLElement && !isNaN(parseFloat("" + n.style["zIndex"]))) {
+        const z = parseFloat(n.style["zIndex"]);
         return z;
       }
 
-      n = (n as Node).parentNode;
+      n = n.parentNode;
 
       if (!n) {
         n = p = p!.parentWidget;
@@ -2634,13 +2636,13 @@ export class UIBase<
     let lastelem: Element | null = elem;
     let i = 0;
 
-    while (elem && (elem as HTMLElement & { shadow?: ShadowRoot }).shadow) {
+    while (elem instanceof UIBase) {
       if (i++ > 1000) {
         console.error("Infinite loop error");
         break;
       }
 
-      elem = (elem as HTMLElement & { shadow: ShadowRoot }).shadow.elementFromPoint(x, y);
+      elem = elem.shadow.elementFromPoint(x, y);
 
       if (elem === lastelem) {
         break;
@@ -2670,19 +2672,12 @@ export class UIBase<
       if (clip) {
         const rect = node.getBoundingClientRect();
         // avoid GC
-        const clip2 = math.aabb_intersect_2d(
-          clip.pos as unknown as vectormath.Vector2,
-          clip.size as unknown as vectormath.Vector2,
-          [rect.x, rect.y] as unknown as vectormath.Vector2,
-          [rect.width, rect.height] as unknown as vectormath.Vector2
-        );
+        const clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
 
         ok = ok && Boolean(clip2);
       }
 
       if (ok) {
-        window.elem = node;
-        //console.log(node._id);
         return node as T;
       }
     }
@@ -2832,7 +2827,7 @@ export class UIBase<
   }
 
   flash(
-    colorIn: string | number[] | vectormath.Vector3 | vectormath.Vector4,
+    colorIn: string | number[] | Vector3 | Vector4,
     rect_element: UIBase | HTMLElement = this,
     timems = 355,
     autoFocus = true
@@ -2840,8 +2835,7 @@ export class UIBase<
     if (typeof colorIn === "string") {
       colorIn = Array.from(css2color(colorIn));
     }
-    const color = new Vector4(colorIn as number[]);
-
+    const color = new Vector4().loadXYZW(colorIn[0], colorIn[1], colorIn[2], colorIn[3] ?? 1.0);
     const csscolor = color2css(color);
 
     if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
@@ -2915,7 +2909,7 @@ export class UIBase<
     div.style["height"] = rect.height + "px";
     div.setAttribute("class", "UIBaseFlash");
 
-    const screen = this.getScreen() as (UIBase & { _enterPopupSafe(): void; _exitPopupSafe(): void }) | undefined;
+    const screen = this.getScreen();
     if (screen !== undefined) {
       screen._enterPopupSafe();
     }
@@ -2934,7 +2928,7 @@ export class UIBase<
 
   destroy(): void {}
 
-  on_resize(newsize: number[] | vectormath.Vector2): void {}
+  on_resize(newsize: number[] | Vector2): void {}
 
   toJSON(): Record<string, unknown> {
     const ret: Record<string, unknown> = {};
@@ -3220,8 +3214,10 @@ export class UIBase<
     return ret;
   }
 
-  getScreen(): UIBase<CTX> | undefined {
-    return this.ctx?.screen as unknown as UIBase<CTX>;
+  // we never pass Screen with a <CTX> due to potential for
+  // circular type errors
+  getScreen(): Screen | undefined {
+    return this.ctx?.screen;
   }
 
   isDead(): boolean {
@@ -3229,7 +3225,10 @@ export class UIBase<
   }
 
   doOnce(
-    func: Function & { _doOnce?: (thisvar: UIBase, trace: string) => void; _doOnce_reqs?: Set<string> },
+    func: Function & {
+      _doOnce?: (thisvar: UIBase, trace: string) => void;
+      _doOnce_reqs?: Set<string>;
+    },
     timeout?: number
   ): void {
     if (func._doOnce === undefined) {
@@ -3387,7 +3386,7 @@ export class UIBase<
 
       for (const type of ["start_timer", "stop_timer", "reset_timer"]) {
         for (const etype of lists[i]) {
-          this.addEventListener(etype as any, bind_handler(type, etype), { passive: true });
+          this.addEventListener(etype, bind_handler(type, etype), { passive: true });
         }
 
         i++;
@@ -3431,11 +3430,7 @@ export class UIBase<
 
     this._tool_tip_abort_delay = undefined;
 
-    const screen = (
-      this.ctx as unknown as {
-        screen: UIBase & { mpos: number[]; pickElement(x: number, y: number): UIBase | undefined };
-      }
-    ).screen;
+    const screen = this.ctx.screen;
 
     const timelimit = 500;
     let ok = util.time_ms() - this._tooltip_timer! > timelimit;
@@ -3453,21 +3448,13 @@ export class UIBase<
       ok = ok && y >= r.y && y < r.y + r.height;
     }
 
-    //console.log(r);
-    if (r) {
-      //console.warn(this._id, "possible tooltip", x, y, r.x-3, r.y-3, r.width, r.height);
-    }
-
     ok = ok && !haveModal();
     ok = ok && screen.pickElement(x, y) === this;
     ok = ok && !!this._description_final;
 
     if (ok) {
-      //console.warn("Showing tooltop", this.id);
-      const _ToolTip = window._ToolTip as {
-        show(text: string, screen: UIBase, x: number, y: number): { remove(): void };
-      };
-      this._tooltip_ref = _ToolTip.show(this._description_final!, (this.ctx as { screen: UIBase }).screen, x, y);
+      const _ToolTip = window._ToolTip;
+      this._tooltip_ref = _ToolTip.show(this._description_final!, this.ctx.screen, x, y);
     } else {
       if (this._tooltip_ref) {
         this._tooltip_ref.remove();
@@ -3515,7 +3502,7 @@ export class UIBase<
       this._init();
     }
 
-    if (this._init_done && !(this.constructor as unknown as typeof UIBase).define().subclassChecksTheme) {
+    if (this._init_done && !this.constructor.define().subclassChecksTheme) {
       if (this.checkThemeUpdate()) {
         console.log("theme update!");
 
@@ -3692,7 +3679,7 @@ export class UIBase<
       }
 
       let ret = false;
-      const def = (this.constructor as unknown as typeof UIBase).define();
+      const def = this.constructor.define();
 
       if (def.parentStyle) {
         ret = ret || this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
@@ -3959,7 +3946,7 @@ export class UIBase<
       }
 
       // check for define().parentStyle
-      const def = (this.constructor as unknown as typeof UIBase).define();
+      const def = this.constructor.define();
       if (value === undefined && def.parentStyle) {
         const record2 = this.getStyleRecord(def.parentStyle, key, inherit);
         value = record2 ? record2[key] : undefined;
@@ -3980,66 +3967,6 @@ export class UIBase<
     }
 
     return checkForMobile ? this._doMobileDefault(key, value, record) : value;
-    /*
-    let themeobj: Record<string, unknown> | undefined
-    let val: unknown
-    let p: UIBase | undefined = this
-
-    while (p) {
-      const def = p.class_default_overrides[style]
-
-      if (def && key in def) {
-        themeobj = def
-        val = def[key]
-        break
-      }
-
-      p = p.parentWidget
-    }
-
-    if (
-      val === undefined &&
-      style in theme && //
-      !(key in (theme as any)[style]) &&
-      !(key in (theme.base as any))
-    ) {
-      if (window.DEBUG?.theme) {
-        report('Missing theme key ', key, 'for', style)
-      }
-    }
-
-    for (let i = 0; i < 2; i++) {
-      const th = !i ? this._themeOverride : theme
-
-      if (!th) {
-        continue
-      }
-
-      const thStyle = th[style] as ThemeRecord
-      const thBase = th.base as ThemeRecord
-
-      if (val === undefined && thStyle && key in thStyle) {
-        themeobj = thStyle
-        val = thStyle[key]
-      } else if (defaultval !== undefined) {
-        themeobj = undefined
-        val = defaultval
-      } else if (val === undefined && inherit) {
-        const def = (this.constructor as unknown as typeof UIBase).define()
-
-        const thParent = (def.parentStyle ? th[def.parentStyle] : undefined) as ThemeRecord | undefined
-        if (thParent && key in thParent) {
-          val = thParent[key]
-          themeobj = thParent
-        } else if (thBase) {
-          val = thBase[key]
-          themeobj = thBase
-        }
-      }
-    }
-
-    return checkForMobile ? this._doMobileDefault(key, val, themeobj) : val
-    */
   }
 
   overrideTheme(themeOverride: Record<string, Record<string, unknown>>): this {
@@ -4202,8 +4129,8 @@ export class UIBase<
 export function drawRoundBox2(
   elem: UIBase,
   options: {
-    canvas?: HTMLCanvasElement;
-    g?: CanvasRenderingContext2D;
+    canvas: HTMLCanvasElement;
+    g: CanvasRenderingContext2D;
     width?: number;
     height?: number;
     r?: number;
@@ -4211,7 +4138,7 @@ export function drawRoundBox2(
     color?: string;
     margin?: number;
     no_clear?: boolean;
-  } = {}
+  }
 ): void {
   drawRoundBox(
     elem,
@@ -4232,8 +4159,8 @@ export function drawRoundBox2(
  and be usable for more use cases.*/
 export function drawRoundBox(
   elem: UIBase,
-  canvas?: HTMLCanvasElement,
-  g?: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  g: CanvasRenderingContext2D,
   width?: number,
   height?: number,
   r?: number,
@@ -4267,10 +4194,11 @@ export function drawRoundBox(
     r2 = (width - margin * 2) * 0.5;
   }
 
-  let bg: string | undefined = color;
+  const canvasWithBG = "_background" in canvas ? (canvas as HTMLCanvasElement & { _background?: string }) : undefined;
 
-  if (bg === undefined && (canvas as HTMLCanvasElement & { _background?: string })!._background !== undefined) {
-    bg = (canvas as HTMLCanvasElement & { _background: string })!._background;
+  let bg: string | undefined = color;
+  if (bg === undefined && canvasWithBG?._background !== undefined) {
+    bg = canvasWithBG._background;
   } else if (bg === undefined) {
     bg = elem.getDefault("background-color") as string;
   }
@@ -4365,7 +4293,9 @@ function get_measure_canvas(): HTMLCanvasElement & { g: CanvasRenderingContext2D
     return _mc;
   }
 
-  const canvas = document.createElement("canvas") as HTMLCanvasElement & { g: CanvasRenderingContext2D };
+  const canvas = document.createElement("canvas") as HTMLCanvasElement & {
+    g: CanvasRenderingContext2D;
+  };
   canvas.width = 256;
   canvas.height = 256;
   canvas.g = canvas.getContext("2d")!;
@@ -4416,7 +4346,12 @@ export function measureText<CTX extends IContextBase = IContextBase>(
   text: string,
   canvas?:
     | (HTMLCanvasElement & { font?: string; g?: CanvasRenderingContext2D })
-    | { canvas?: HTMLCanvasElement; g?: CanvasRenderingContext2D; size?: number; font?: CSSFont | string },
+    | {
+        canvas?: HTMLCanvasElement;
+        g?: CanvasRenderingContext2D;
+        size?: number;
+        font?: CSSFont | string;
+      },
   g?: CanvasRenderingContext2D,
   size?: number,
   font?: CSSFont | string

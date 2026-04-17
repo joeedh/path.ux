@@ -49,6 +49,7 @@ import { IContextBase } from "../core/context_base";
 import { StructReader } from "../util/nstructjs";
 import { IAreaConstructor } from "./area_base";
 import "./AreaDocker";
+import { Container } from "../pathux";
 
 const list = Array.from;
 
@@ -107,6 +108,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   testAllKeyMaps: boolean;
   needsTabRecalc: boolean;
   _screen_id: number;
+  // _popups is not worth typing with <CTX>
   _popups: UIBase[];
   keymap: KeyMap;
   size: Vector2;
@@ -524,9 +526,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     let ret: UIBase | undefined;
     for (let i = this._popups.length - 1; i >= 0; i--) {
       const popup = this._popups[i];
-      ret = ret || popup.pickElement(x, y, args);
+      ret = ret ?? popup.pickElement(x, y, args);
     }
-    ret = ret || super.pickElement(x, y, args);
+    ret = ret ?? super.pickElement(x, y, args);
     return ret as unknown as T;
   }
 
@@ -567,7 +569,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
    *                     then move the popup so it's fully inside the window (if it's outsize).
    *
    * */
-  popup(owning_node: UIBase, elem_or_x: UIBase | number, y: number, closeOnMouseOut = true, popupDelay = 5) {
+  popup(owning_node: UIBase, elem_or_x: UIBase | number, y?: number, closeOnMouseOut = true, popupDelay = 5) {
     const ret = this._popup(owning_node, elem_or_x, y, closeOnMouseOut);
 
     for (let i = 0; i < 2; i++) {
@@ -641,10 +643,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   /** makes a popup at x,y and returns a new container-x for it */
-  _popup(owning_node: UIBase, elem_or_x: UIBase | number, y: number, closeOnMouseOut = true) {
+  _popup(owning_node: UIBase, elem_or_x: UIBase | number, y?: number, closeOnMouseOut = true) {
     let sarea = this.sareas.active;
     let w = owning_node as UIBase | undefined;
-    let x: number;
 
     while (w) {
       if (w instanceof ScreenArea) {
@@ -654,17 +655,23 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       w = w.parentWidget;
     }
 
+    let rx: number | undefined;
+    let ry: number | undefined;
     if (typeof elem_or_x === "object") {
       const r = elem_or_x.getClientRects()[0];
-      x = r.x;
-      y = r.y;
+      rx = r.x;
+      ry = r.y;
     } else {
-      x = elem_or_x;
+      rx = elem_or_x;
     }
 
-    //[x, y] = toVisualViewport(x, y, false)
+    const x = (typeof elem_or_x === "number" ? elem_or_x : rx) ?? 0;
+    y = y ?? ry ?? 0;
 
-    const container = UIBase.createElement("container-x") as UIBase & { background: string; end: () => void };
+    const container = UIBase.createElement("container-x") as Container & {
+      background: string;
+      end: () => void;
+    };
 
     container.ctx = this.ctx;
     container._init();
@@ -694,11 +701,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     container.style["margin"] = "0px";
 
     container.parentWidget = this;
-
-    const mm = new math.MinMax(2);
-    const p = new Vector2();
-
-    const _update = container.update;
     container.updateAfter(() => {
       container.style["zIndex"] = "2205";
     });
@@ -802,8 +804,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         excluded_classes: [ScreenBorder],
         mouseEvent      : e,
       });
-
-      const startelem = elem;
 
       if (elem === undefined) {
         if (closeOnMouseOut) {

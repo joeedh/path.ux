@@ -1,13 +1,13 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __knownSymbol = (name2, symbol) => {
-  return (symbol = Symbol[name2]) ? symbol : Symbol.for("Symbol." + name2);
+var __knownSymbol = (name2, symbol) => (symbol = Symbol[name2]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name2);
+var __typeError = (msg) => {
+  throw TypeError(msg);
 };
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a2, b) => (typeof require !== "undefined" ? require : a2)[b]
 }) : x)(function(x) {
-  if (typeof require !== "undefined")
-    return require.apply(this, arguments);
+  if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
 var __esm = (fn, res) => function __init() {
@@ -19,15 +19,21 @@ var __export = (target, all) => {
 };
 var __using = (stack, value, async) => {
   if (value != null) {
-    if (typeof value !== "object" && typeof value !== "function")
-      throw TypeError("Object expected");
-    var dispose;
-    if (async)
-      dispose = value[__knownSymbol("asyncDispose")];
-    if (dispose === void 0)
+    if (typeof value !== "object" && typeof value !== "function") __typeError("Object expected");
+    var dispose, inner;
+    if (async) dispose = value[__knownSymbol("asyncDispose")];
+    if (dispose === void 0) {
       dispose = value[__knownSymbol("dispose")];
-    if (typeof dispose !== "function")
-      throw TypeError("Object not disposable");
+      if (async) inner = dispose;
+    }
+    if (typeof dispose !== "function") __typeError("Object not disposable");
+    if (inner) dispose = function() {
+      try {
+        inner.call(this);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    };
     stack.push([async, dispose, value]);
   } else if (async) {
     stack.push([async]);
@@ -43,14 +49,12 @@ var __callDispose = (stack, error2, hasError) => {
     while (it = stack.pop()) {
       try {
         var result = it[1] && it[1].call(it[2]);
-        if (it[0])
-          return Promise.resolve(result).then(next, (e) => (fail(e), next()));
+        if (it[0]) return Promise.resolve(result).then(next, (e) => (fail(e), next()));
       } catch (e) {
         fail(e);
       }
     }
-    if (hasError)
-      throw error2;
+    if (hasError) throw error2;
   };
   return next();
 };
@@ -108,7 +112,7 @@ var init_polyfill = __esm({
         }
       };
     })();
-    window.eventDebugModule = function() {
+    window.eventDebugModule = (function() {
       "use strict";
       const debugLists = () => window.debugEventLists;
       return {
@@ -193,14 +197,14 @@ var init_polyfill = __esm({
           );
         }
       };
-    }();
+    })();
     if (typeof _debug_event_listeners !== "undefined" && _debug_event_listeners) {
       window.eventDebugModule.start();
     }
     if (window._disable_all_listeners) {
       console.warn("Disabling all event listeners");
-      EventTarget.prototype.addEventListener = () => {
-      };
+      EventTarget.prototype.addEventListener = (() => {
+      });
     }
     if (typeof visualViewport === "undefined") {
       (function() {
@@ -283,7 +287,7 @@ var init_polyfill = __esm({
       });
     }
     if (Symbol.keystr === void 0) {
-      Symbol.keystr = Symbol("keystr");
+      Symbol.keystr = /* @__PURE__ */ Symbol("keystr");
     }
     if (Math.fract === void 0) {
       Math.fract = function fract(f2) {
@@ -3794,7 +3798,7 @@ var init_nstructjs_es6 = __esm({
       setStructEval
     });
     "use strict";
-    TokSymbol = Symbol("token-info");
+    TokSymbol = /* @__PURE__ */ Symbol("token-info");
     _defaultParser = buildJSONParser();
     "use strict";
     nGlobal = globalThis;
@@ -4981,13 +4985,13 @@ var init_lz_string = __esm({
     lz_string_default = {
       compressToBase64: function(input) {
         input = getInput(input);
-        if (!input)
-          return "";
+        if (!input) return "";
         let res = this._compress(input, 6, function(a2) {
           return keyStrBase64.charAt(a2);
         });
         switch (res.length % 4) {
           default:
+          // When could this happen ?
           case 0:
             return res;
           case 1:
@@ -4999,28 +5003,23 @@ var init_lz_string = __esm({
         }
       },
       decompressFromBase64: function(input) {
-        if (input === null)
-          return "";
-        if (input === "")
-          return null;
+        if (input === null) return "";
+        if (input === "") return null;
         input = getInput(input);
         return this._decompress(input.length, 32, function(index) {
           return getBaseValue(keyStrBase64, input.charAt(index));
         });
       },
       compressToUTF16: function(input) {
-        if (input === null)
-          return "";
+        if (input === null) return "";
         input = getInput(input);
         return this._compress(input, 15, function(a2) {
           return f(a2 + 32);
         }) + " ";
       },
       decompressFromUTF16: function(compressed) {
-        if (compressed === null)
-          return "";
-        if (compressed === "")
-          return null;
+        if (compressed === null) return "";
+        if (compressed === "") return null;
         compressed = getInput(compressed);
         return this._decompress(compressed.length, 16384, function(index) {
           return compressed.charCodeAt(index) - 32;
@@ -5057,18 +5056,15 @@ var init_lz_string = __esm({
       },
       //compress into a string that is already URI encoded
       compressToEncodedURIComponent: function(input) {
-        if (input === null)
-          return "";
+        if (input === null) return "";
         return this._compress(input, 6, function(a2) {
           return keyStrUriSafe.charAt(a2);
         });
       },
       //decompress from an output of compressToEncodedURIComponent
       decompressFromEncodedURIComponent: function(input) {
-        if (input === null)
-          return "";
-        if (input === "")
-          return null;
+        if (input === null) return "";
+        if (input === "") return null;
         input = input.replace(/ /g, "+");
         return this._decompress(input.length, 32, function(index) {
           return getBaseValue(keyStrUriSafe, input.charAt(index));
@@ -5081,8 +5077,7 @@ var init_lz_string = __esm({
       },
       _compress: function(uncompressed, bitsPerChar, getCharFromInt) {
         uncompressed = getInput(uncompressed);
-        if (uncompressed === null)
-          return "";
+        if (uncompressed === null) return "";
         let i, value, context_dictionary = {}, context_dictionaryToCreate = {}, context_c = "", context_wc = "", context_w = "", context_enlargeIn = 2, context_dictSize = 3, context_numBits = 2, context_data = [], context_data_val = 0, context_data_position = 0, ii;
         for (ii = 0; ii < uncompressed.length; ii += 1) {
           context_c = uncompressed.charAt(ii);
@@ -5267,16 +5262,13 @@ var init_lz_string = __esm({
           if (context_data_position === bitsPerChar - 1) {
             context_data.push(getCharFromInt(context_data_val));
             break;
-          } else
-            context_data_position++;
+          } else context_data_position++;
         }
         return context_data.join("");
       },
       decompress: function(compressed) {
-        if (compressed === null)
-          return "";
-        if (compressed === "")
-          return null;
+        if (compressed === null) return "";
+        if (compressed === "") return null;
         compressed = getInput(compressed);
         return this._decompress(compressed.length, 32768, function(index) {
           return compressed.charCodeAt(index);
@@ -5616,9 +5608,7 @@ function isMobile() {
     if (navigator.userAgent.search(/Mobi/) !== -1) {
       result = true;
     } else {
-      mobileDetect = new mobile_detect_default(
-        navigator.userAgent
-      );
+      mobileDetect = new mobile_detect_default(navigator.userAgent);
       result = mobileDetect.mobile();
     }
     if (typeof result === "string") {
@@ -5630,10 +5620,8 @@ function isMobile() {
 }
 function getClassParent(cls) {
   let p = cls.prototype;
-  if (p)
-    p = p.__proto__;
-  if (p)
-    return p.constructor;
+  if (p) p = p.__proto__;
+  if (p) return p.constructor;
   return void 0;
 }
 function list2(iterable) {
@@ -5666,8 +5654,7 @@ function getAllKeys(obj) {
   let p = obj;
   while (p && p !== Object) {
     for (const k in Object.getOwnPropertyDescriptors(p)) {
-      if (k === "__proto__")
-        continue;
+      if (k === "__proto__") continue;
       keys2.add(k);
     }
     for (const k of Object.getOwnPropertySymbols(p)) {
@@ -5676,8 +5663,7 @@ function getAllKeys(obj) {
     p = Object.getPrototypeOf(p);
   }
   let cls = obj.constructor;
-  if (!cls)
-    return keys2;
+  if (!cls) return keys2;
   while (cls) {
     const proto = cls.prototype;
     if (!proto) {
@@ -5731,20 +5717,16 @@ function atob2(buf) {
   return new Uint8Array(ret);
 }
 function time_ms() {
-  if (window.performance)
-    return window.performance.now();
-  else
-    return (/* @__PURE__ */ new Date()).getMilliseconds();
+  if (window.performance) return window.performance.now();
+  else return (/* @__PURE__ */ new Date()).getMilliseconds();
 }
 function color2css(c) {
   let ret = c.length === 3 ? "rgb(" : "rgba(";
   for (let i = 0; i < 3; i++) {
-    if (i > 0)
-      ret += ",";
+    if (i > 0) ret += ",";
     ret += ~~(c[i] * 255);
   }
-  if (c.length === 4)
-    ret += "," + c[3];
+  if (c.length === 4) ret += "," + c[3];
   ret += ")";
   return ret;
 }
@@ -6278,8 +6260,7 @@ var init_util = __esm({
       }
       add(item) {
         const key = item[Symbol.keystr]();
-        if (key in this.keys)
-          return;
+        if (key in this.keys) return;
         if (this.freelist.length > 0) {
           const i = this.freelist.pop();
           this.keys[key] = i;
@@ -6314,8 +6295,7 @@ var init_util = __esm({
       forEach(func, thisvar) {
         for (let i = 0; i < this.items.length; i++) {
           const item = this.items[i];
-          if (item === EmptySlot)
-            continue;
+          if (item === EmptySlot) continue;
           thisvar !== void 0 ? func.call(thisvar, item) : func(item);
         }
       }
@@ -6423,8 +6403,7 @@ var init_util = __esm({
         return ret;
       }
       forEach(cb, thisvar) {
-        if (thisvar === void 0)
-          thisvar = self;
+        if (thisvar === void 0) thisvar = self;
         for (const k in this._keys) {
           const i = this._keys[k];
           cb.call(thisvar, k, this._items[i]);
@@ -6534,8 +6513,7 @@ IDGen {
         }
       }
       extract_number() {
-        if (this.index >= 624)
-          this.twist();
+        if (this.index >= 624) this.twist();
         let y = this.mt[this.index];
         y = y ^ y >> 11;
         y = y ^ y << 7 & 2636928640;
@@ -6548,8 +6526,7 @@ IDGen {
         for (let i = 0; i < 624; i++) {
           const y = _int32((this.mt[i] & 2147483648) + (this.mt[(i + 1) % 624] & 2147483647));
           this.mt[i] = this.mt[(i + 397) % 624] ^ y >> 1;
-          if (y % 2 !== 0)
-            this.mt[i] = this.mt[i] ^ 2567483615;
+          if (y % 2 !== 0) this.mt[i] = this.mt[i] ^ 2567483615;
         }
         this.index = 0;
       }
@@ -6609,8 +6586,7 @@ IDGen {
         this.size = size;
         this.fill(0, 0, this.length);
         for (let i = 0; i < table.length; i += FTOT) {
-          if (!table[i + FTAKEN])
-            continue;
+          if (!table[i + FTAKEN]) continue;
           const key = table[i + FKEY];
           const val = table[i + FVAL];
           this.set(key, val);
@@ -6679,8 +6655,7 @@ IDGen {
         input.addEventListener("change", function(_e) {
           const files = this.files;
           console2.log("got file", _e, files);
-          if (!files || files.length === 0)
-            return;
+          if (!files || files.length === 0) return;
           const reader = new FileReader();
           reader.onload = (e) => {
             const data = e.target.result;
@@ -6850,19 +6825,19 @@ IDGen {
       }
       keys() {
         const this2 = this;
-        return function* () {
+        return (function* () {
           for (const [key, _val] of this2) {
             yield key;
           }
-        }();
+        })();
       }
       values() {
         const this2 = this;
-        return function* () {
+        return (function* () {
           for (const [_key, val] of this2) {
             yield val;
           }
-        }();
+        })();
       }
       get(k) {
         const ks = k[Symbol.keystr]();
@@ -6971,30 +6946,30 @@ IDGen {
       }
       keys() {
         const this2 = this;
-        return function* () {
+        return (function* () {
           for (const id of this2._keys) {
             if (this2[id] === UndefinedTag) {
               continue;
             }
             yield id;
           }
-        }();
+        })();
       }
       values() {
         const this2 = this;
-        return function* () {
+        return (function* () {
           for (const id of this2._keys) {
             if (this2[id] === UndefinedTag) {
               continue;
             }
             yield this2[id];
           }
-        }();
+        })();
       }
       [Symbol.iterator]() {
         const this2 = this;
         const iteritem = [0, void 0];
-        return function* () {
+        return (function* () {
           for (const id of this2._keys) {
             iteritem[0] = id;
             const val = this2[id];
@@ -7005,7 +6980,7 @@ IDGen {
             }
             yield iteritem;
           }
-        }();
+        })();
       }
     };
     globalThis._test_idmap = function() {
@@ -7568,7 +7543,7 @@ __export(vectormath_exports, {
   Vector4: () => Vector4
 });
 function createVector2(parent, structName) {
-  return class Vector27 extends parent {
+  return class Vector25 extends parent {
     0;
     1;
     [Symbol.iterator] = parent.prototype[Symbol.iterator];
@@ -7766,7 +7741,7 @@ function createVector2(parent, structName) {
       return d0 * d0 + d1 * d1;
     }
     copy() {
-      return new Vector27(this);
+      return new Vector25(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -7788,10 +7763,8 @@ function createVector2(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
-        return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
-        return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
       return ret;
     }
     loadX(x) {
@@ -8132,10 +8105,8 @@ function createVector3(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1] + this[2] * b[2];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
-        return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
-        return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
       return ret;
     }
     loadX(x) {
@@ -8237,7 +8208,7 @@ function createVector3(parent, structName) {
   };
 }
 function createVector4(parent, structName) {
-  return class Vector47 extends parent {
+  return class Vector45 extends parent {
     0;
     1;
     2;
@@ -8524,7 +8495,7 @@ function createVector4(parent, structName) {
       return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
     }
     copy() {
-      return new Vector47(this);
+      return new Vector45(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -8546,10 +8517,8 @@ function createVector4(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1] + this[2] * b[2] + this[3] * b[3];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
-        return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
-        return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
       return ret;
     }
     loadX(x) {
@@ -8700,8 +8669,7 @@ var init_vectormath = __esm({
       }
       invert() {
         let f2 = this.dot(this);
-        if (f2 === 0)
-          return this;
+        if (f2 === 0) return this;
         this.mulScalar(1 / f2);
         return this;
       }
@@ -9106,8 +9074,7 @@ var init_vectormath = __esm({
             this.$matrix.m43 = matrix.m43;
             this.$matrix.m44 = matrix.m44;
             return this;
-          } else
-            matrix = arguments[0];
+          } else matrix = arguments[0];
           if ("length" in matrix && matrix.length >= 16) {
             this.$matrix.m11 = matrix[0];
             this.$matrix.m12 = matrix[1];
@@ -9228,8 +9195,7 @@ var init_vectormath = __esm({
       }
       invert() {
         let det = this._determinant4x4();
-        if (Math.abs(det) < 1e-8)
-          return null;
+        if (Math.abs(det) < 1e-8) return null;
         this._makeAdjoint();
         this.$matrix.m11 /= det;
         this.$matrix.m12 /= det;
@@ -9290,8 +9256,7 @@ var init_vectormath = __esm({
           y = t[1];
           z = t[2];
         } else {
-          if (x === void 0)
-            x = 1;
+          if (x === void 0) x = 1;
           if (z === void 0) {
             if (y === void 0) {
               y = x;
@@ -9939,8 +9904,7 @@ var init_vectormath = __esm({
         return this;
       }
       decompose(_translate, _rotate, _scale, _skew, _perspective, order = EulerOrders.XYZ) {
-        if (this.$matrix.m44 === 0)
-          return false;
+        if (this.$matrix.m44 === 0) return false;
         let mat = temp_mats.next().load(this);
         let m = mat.$matrix;
         let t = _translate, r = _rotate, s = _scale;
@@ -10120,8 +10084,8 @@ var init_vectormath = __esm({
 function consolelog(..._args) {
 }
 function debugDomEvents() {
-  const cbsymbol = Symbol("event-callback");
-  const thsymbol = Symbol("debug-info");
+  const cbsymbol = /* @__PURE__ */ Symbol("event-callback");
+  const thsymbol = /* @__PURE__ */ Symbol("debug-info");
   let idgen3 = 0;
   function init2(et) {
     if (!et[thsymbol]) {
@@ -10497,8 +10461,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
         mpos[1] = e.y;
       }
       handleAreaContext();
-      if (key !== void 0)
-        obj[key](e);
+      if (key !== void 0) obj[key](e);
       if (autoStopPropagation) {
         e.preventDefault();
         e.stopPropagation();
@@ -10508,16 +10471,12 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   const found = {};
   for (const k of keys2) {
     let key;
-    if (obj[k])
-      key = k;
-    else if (obj["on" + k])
-      key = "on" + k;
-    else if (obj["on_" + k])
-      key = "on_" + k;
+    if (obj[k]) key = k;
+    else if (obj["on" + k]) key = "on" + k;
+    else if (obj["on_" + k]) key = "on_" + k;
     else if (k in touchmap)
       continue;
-    else
-      key = void 0;
+    else key = void 0;
     if (key === void 0 && k.search("pointer") === 0) {
       continue;
     }
@@ -10526,13 +10485,19 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
     }
     const handler = make_handler(k, key);
     ret.handlers[k] = handler;
-    const settings = handler.settings = { passive: false, capture: true };
+    const settings = handler.settings = {
+      passive: false,
+      capture: true
+    };
     window.addEventListener(k, handler, settings);
   }
   for (const k in touchmap) {
     if (!(k in found)) {
       ret.handlers[k] = make_default_touchhandler(k, ret);
-      const settings = ret.handlers[k].settings = { passive: false, capture: true };
+      const settings = ret.handlers[k].settings = {
+        passive: false,
+        capture: true
+      };
       window.addEventListener(k, ret.handlers[k], settings);
     }
   }
@@ -10862,10 +10827,8 @@ var init_simple_events = __esm({
       }
       handle(ctx, e) {
         const mods = /* @__PURE__ */ new Set();
-        if (e.shiftKey)
-          mods.add("shift");
-        if (e.altKey)
-          mods.add("alt");
+        if (e.shiftKey) mods.add("shift");
+        if (e.altKey) mods.add("alt");
         if (e.ctrlKey) {
           mods.add("ctrl");
         }
@@ -10875,8 +10838,7 @@ var init_simple_events = __esm({
         }
         for (const hk of this) {
           let ok = e.keyCode === hk.key;
-          if (!ok)
-            continue;
+          if (!ok) continue;
           let count2 = 0;
           for (let m of hk.mods) {
             m = m.toLowerCase().trim();
@@ -10916,7 +10878,7 @@ var ClassIdSymbol;
 var init_ui_consts = __esm({
   "scripts/core/ui_consts.ts"() {
     "use strict";
-    ClassIdSymbol = Symbol("pathux-class-id");
+    ClassIdSymbol = /* @__PURE__ */ Symbol("pathux-class-id");
   }
 });
 
@@ -11107,10 +11069,8 @@ var init_area_wrangler = __esm({
 // scripts/path-controller/curve/curve1d_base.ts
 function getCurve(type, throw_on_error = true) {
   for (const cls of CurveConstructors) {
-    if (cls.name === type)
-      return cls;
-    if (cls.define().name === type)
-      return cls;
+    if (cls.name === type) return cls;
+    if (cls.define().name === type) return cls;
   }
   if (throw_on_error) {
     throw new Error("Unknown curve type " + type);
@@ -11226,8 +11186,7 @@ var init_curve1d_base = __esm({
         return this;
       }
       redraw() {
-        if (this.parent)
-          this.parent.redraw();
+        if (this.parent) this.parent.redraw();
       }
       makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
       }
@@ -11304,8 +11263,7 @@ var init_curve1d_base = __esm({
       destroy() {
       }
       update() {
-        if (this.parent)
-          this.parent._on_change();
+        if (this.parent) this.parent._on_change();
       }
       draw(canvas, g, draw_transform) {
       }
@@ -11362,8 +11320,7 @@ function copyMouseEvent(e) {
   return ret;
 }
 function getDom(dom, eventtype) {
-  if (eventtype.startsWith("key"))
-    return window;
+  if (eventtype.startsWith("key")) return window;
   return dom;
 }
 function isModalHead(owner) {
@@ -11632,8 +11589,7 @@ var init_toolprop_abstract = __esm({
         this.keys = {};
         this.ui_value_names = {};
         this.iconmap = {};
-        if (valid_values === void 0)
-          return;
+        if (valid_values === void 0) return;
         if (valid_values instanceof Array || valid_values instanceof String) {
           for (let i = 0; i < valid_values.length; i++) {
             this.values[valid_values[i]] = valid_values[i];
@@ -11774,8 +11730,7 @@ function myToFixed(f2, decimals) {
   if (s.endsWith(".")) {
     s = s.slice(0, s.length - 1);
   }
-  if (s.length === 0)
-    s = "0";
+  if (s.length === 0) s = "0";
   return s.trim();
 }
 function setBaseUnit(unit) {
@@ -11925,8 +11880,7 @@ var init_units = __esm({
         string = normString(string);
         const def = this.unitDefine();
         const m = string.match(def.pattern);
-        if (!m)
-          return false;
+        if (!m) return false;
         return m[0] === string;
       }
       //convert to internal units,
@@ -12420,6 +12374,9 @@ var init_toolprop = __esm({
         this.expRate = 1.33;
         this.slideSpeed = 1;
         this.callbacks = {};
+      }
+      getUIName() {
+        return this.uiname ?? _ToolProperty.makeUIName(this.apiname ?? "error");
       }
       /** Get a data api execution context stack ( for use with the using keyword) */
       execWithContext() {
@@ -13173,8 +13130,7 @@ EnumKeyPair {
         this.descriptions = {};
         this.iconmap = {};
         this.iconmap2 = {};
-        if (valid_values === void 0)
-          return;
+        if (valid_values === void 0) return;
         if (valid_values instanceof Array) {
           for (let i = 0; i < valid_values.length; i++) {
             this.values[valid_values[i]] = valid_values[i];
@@ -13327,17 +13283,13 @@ EnumKeyPair {
       }
       getValue() {
         const d = this.data;
-        if (d in this.values)
-          return this.values[d];
-        else
-          return d;
+        if (d in this.values) return this.values[d];
+        else return d;
       }
       setValue(val) {
         this.checkMeta();
-        if (val === void 0)
-          return;
-        if (!(val in this.values) && val in this.keys)
-          val = this.keys[val];
+        if (val === void 0) return;
+        if (!(val in this.values) && val in this.keys) val = this.keys[val];
         if (!(val in this.values)) {
           this.report("Invalid value for enum!", val, this.values);
           return;
@@ -13753,11 +13705,11 @@ EnumKeyPair {
       }
       [Symbol.iterator]() {
         const list5 = this.value;
-        return function* () {
+        return (function* () {
           for (const item of list5) {
             yield item.getValue();
           }
-        }();
+        })();
       }
     };
     ListProperty.STRUCT = struct_default.inherit(ListProperty, ToolProperty) + `
@@ -13840,8 +13792,7 @@ EnumKeyPair {
         if (!values) {
           this.value.clear();
         } else if (typeof values === "string") {
-          if (destructive)
-            this.value.clear();
+          if (destructive) this.value.clear();
           if (!(values in this.values)) {
             if (soft_fail) {
               this.report(`"${values}" is not in this StringSetProperty`);
@@ -13880,16 +13831,14 @@ EnumKeyPair {
         return this.value;
       }
       addIcons2(iconmap2) {
-        if (iconmap2 === void 0)
-          return this;
+        if (iconmap2 === void 0) return this;
         for (const k in iconmap2) {
           this.iconmap2[k] = iconmap2[k];
         }
         return this;
       }
       addIcons(iconmap) {
-        if (iconmap === void 0)
-          return this;
+        if (iconmap === void 0) return this;
         for (const k in iconmap) {
           this.iconmap[k] = iconmap[k];
         }
@@ -14112,10 +14061,8 @@ var init_controller_base = __esm({
           data.flag |= PropFlags.USE_CUSTOM_GETSET;
           data._getValue = data.getValue;
           data._setValue = data.setValue;
-          if (get)
-            data.getValue = get;
-          if (set3)
-            data.setValue = set3;
+          if (get) data.getValue = get;
+          if (set3) data.setValue = set3;
         } else {
           this.getSet = {
             get,
@@ -14376,8 +14323,7 @@ var init_controller_base = __esm({
           return this.cb.getStruct(api, list5, key);
         }
         let obj = this.get(api, list5, key);
-        if (obj === void 0)
-          return void 0;
+        if (obj === void 0) return void 0;
         return api.getStruct(obj.constructor);
       }
     };
@@ -14540,10 +14486,10 @@ var init_context = __esm({
     };
     __idgen = 1;
     if (Symbol.ContextID === void 0) {
-      Symbol.ContextID = Symbol("ContextID");
+      Symbol.ContextID = /* @__PURE__ */ Symbol("ContextID");
     }
     if (Symbol.CachedDef === void 0) {
-      Symbol.CachedDef = Symbol("CachedDef");
+      Symbol.CachedDef = /* @__PURE__ */ Symbol("CachedDef");
     }
     _ret_tmp = [void 0];
     OverlayClasses = [];
@@ -15115,8 +15061,7 @@ var init_toolsys = __esm({
       }
       _getAccessor(cls) {
         const toolpath = cls.tooldef().toolpath;
-        if (!toolpath)
-          return void 0;
+        if (!toolpath) return void 0;
         return this.pathmap.get(toolpath.trim());
       }
       static getFullPath(cls, key, prop) {
@@ -15222,8 +15167,7 @@ var init_toolsys = __esm({
           this[k] = def[k];
         }
         const getSlots = (slots, key) => {
-          if (slots === void 0)
-            return {};
+          if (slots === void 0) return {};
           const result = {};
           let p = this.constructor;
           let lastp = void 0;
@@ -15326,10 +15270,8 @@ var init_toolsys = __esm({
         return result;
       }
       static Equals(a2, b) {
-        if (!a2 || !b)
-          return false;
-        if (a2.constructor !== b.constructor)
-          return false;
+        if (!a2 || !b) return false;
+        if (a2.constructor !== b.constructor) return false;
         let bad = false;
         const ai = a2.inputs;
         const bi = b.inputs;
@@ -15409,8 +15351,7 @@ var init_toolsys = __esm({
       static _getFinalToolDef() {
         const def = this.tooldef();
         const getSlots = (slots, key) => {
-          if (slots === void 0)
-            return {};
+          if (slots === void 0) return {};
           const result = {};
           let p = this;
           while (p !== void 0 && p !== Object && p !== _ToolOp) {
@@ -15526,15 +15467,13 @@ var init_toolsys = __esm({
         for (const k in inputs) {
           const prop = inputs[k];
           path += k + "=";
-          if (prop.type === PropTypes.STRING)
-            path += "'";
+          if (prop.type === PropTypes.STRING) path += "'";
           if (prop.type === PropTypes.FLOAT) {
             path += prop.getValue().toFixed(3);
           } else {
             path += prop.getValue();
           }
-          if (prop.type === PropTypes.STRING)
-            path += "'";
+          if (prop.type === PropTypes.STRING) path += "'";
           path += " ";
         }
         path += ")";
@@ -15965,8 +15904,7 @@ toolsys.PropKey {
         this.curtool = 0;
         let i;
         for (i = 0; i < this.tools.length; i++) {
-          if (this.tools[i].is_modal)
-            break;
+          if (this.tools[i].is_modal) break;
           this.tools[i].undoPre(ctx);
           this.tools[i].execPre(ctx);
           this.tools[i].exec(ctx);
@@ -16324,8 +16262,7 @@ toolsys.PropKey {
       }
       /** Remove element at index (Array polyfill) */
       pop_i(idx) {
-        if (idx < 0 || idx >= this.length)
-          return void 0;
+        if (idx < 0 || idx >= this.length) return void 0;
         return this.splice(idx, 1)[0];
       }
     };
@@ -16431,8 +16368,7 @@ function binomial(n, i) {
     return 1;
   }
   const key = "" + n + "," + i;
-  if (key in bin_cache)
-    return bin_cache[key];
+  if (key in bin_cache) return bin_cache[key];
   const ret = binomial(n - 1, i - 1) + binomial(n - 1, i);
   bin_cache[key] = ret;
   return ret;
@@ -16807,7 +16743,6 @@ var init_curve1d_bspline = __esm({
         this.modalEnd(cancel);
         const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
-          ;
           curve1d.generators.active.fastmode = false;
         }
         if (cancel) {
@@ -16839,15 +16774,13 @@ var init_curve1d_bspline = __esm({
         }
         const curve1d = this.getCurve1d(this.modal_ctx);
         if (curve1d) {
-          ;
           curve1d.generators.active.fastmode = true;
         }
         const { dpi } = this.getInputs();
         const off = new Vector2(mpos).sub(this.start_mpos).mulScalar(dpi ?? 1);
         off[1] = -off[1];
         this.inputs.off.setValue(off);
-        if (!curve1d)
-          return;
+        if (!curve1d) return;
         const bspline = curve1d.generators.active;
         for (const p of bspline.points) {
           p.co.load(p.startco);
@@ -16873,7 +16806,6 @@ var init_curve1d_bspline = __esm({
             p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
           }
         }
-        ;
         bspline.parent._fireEvent("transform", bspline);
         bspline.recalc = RecalcFlags.ALL;
         bspline.updateKnots();
@@ -17500,10 +17432,8 @@ Curve1DPoint {
         }
         const a2 = this.points[0].rco;
         const b = this.points[this.points.length - 1].rco;
-        if (t < a2[0])
-          return a2[1];
-        if (t > b[0])
-          return b[1];
+        if (t < a2[0]) return a2[1];
+        if (t > b[0]) return b[1];
         if (this.points.length === 2) {
           t = (t - a2[0]) / (b[0] - a2[0]);
           return a2[1] + (b[1] - a2[1]) * t;
@@ -17702,8 +17632,7 @@ Curve1DPoint {
                 dataPath: dpath,
                 template: SplineTemplates[k]
               });
-              if (srcUpdate)
-                srcUpdate();
+              if (srcUpdate) srcUpdate();
             } else {
               this.loadTemplate(SplineTemplates[k]);
             }
@@ -17737,8 +17666,7 @@ Curve1DPoint {
           } else {
             this.deletePoint();
           }
-          if (srcUpdate)
-            srcUpdate();
+          if (srcUpdate) srcUpdate();
           fullUpdate();
         });
         row.button("Reset", () => {
@@ -17747,8 +17675,7 @@ Curve1DPoint {
             r.ctx.api.execTool(r.ctx, "curve1d.reset_bspline", {
               dataPath: dpath
             });
-            if (srcUpdate)
-              srcUpdate();
+            if (srcUpdate) srcUpdate();
           } else {
             this.reset();
           }
@@ -17799,8 +17726,7 @@ Curve1DPoint {
         return this;
       }
       start_transform(_useSelected = true) {
-        if (!this.uidata)
-          return;
+        if (!this.uidata) return;
         const ui2 = this.uidata;
         const dpi = 1 / ui2.draw_trans[0];
         for (const p of this.points) {
@@ -17812,8 +17738,7 @@ Curve1DPoint {
         ui2.dom.ctx.api.execTool(ui2.dom.ctx, transform_op);
       }
       _on_mousedown(e) {
-        if (!this.uidata)
-          return;
+        if (!this.uidata) return;
         const ui2 = this.uidata;
         ui2.start_mpos.load(this.transform_mpos(e.x, e.y));
         this.fastmode = true;
@@ -17903,8 +17828,7 @@ Curve1DPoint {
         this.points.highlight.flag |= CurveFlags.SELECT;
       }
       do_highlight(x, y) {
-        if (!this.uidata)
-          return;
+        if (!this.uidata) return;
         const ui2 = this.uidata;
         const trans = ui2.draw_trans;
         let mindis = 1e17;
@@ -17927,8 +17851,7 @@ Curve1DPoint {
         }
       }
       do_transform(x, y) {
-        if (!this.uidata || !this.parent)
-          return;
+        if (!this.uidata || !this.parent) return;
         const ui2 = this.uidata;
         const off = new Vector2([x, y]).sub(ui2.start_mpos);
         const xRange = this.parent.xRange;
@@ -17957,8 +17880,7 @@ Curve1DPoint {
         return [x, y];
       }
       _on_mousemove(e) {
-        if (!this.uidata)
-          return;
+        if (!this.uidata) return;
         const ui2 = this.uidata;
         if (e.isTouch && ui2.transforming) {
           e.preventDefault();
@@ -17989,6 +17911,7 @@ Curve1DPoint {
       _on_keydown(e) {
         switch (e.keyCode) {
           case 88:
+          //xkeey
           case 46:
             if (this.points.highlight !== void 0) {
               this.points.remove(this.points.highlight);
@@ -18029,8 +17952,7 @@ Curve1DPoint {
                 totbasis += this.basis(f2, j);
               }
               let val = this.basis(f2, si);
-              if (ssi)
-                val /= totbasis === 0 ? 1 : totbasis;
+              if (ssi) val /= totbasis === 0 ? 1 : totbasis;
               (i === 0 ? g.moveTo : g.lineTo).call(g, f2, ssi ? val : val * 0.5);
             }
             let color;
@@ -19539,8 +19461,7 @@ function aabb_isect_2d(pos1, size1, pos2, size2) {
     const b = pos1[i] + size1[i];
     const c = pos2[i];
     const d = pos2[i] + size2[i];
-    if (b >= c && a2 <= d)
-      ret += 1;
+    if (b >= c && a2 <= d) ret += 1;
   }
   return ret === 2;
 }
@@ -19552,8 +19473,7 @@ function aabb_isect_3d(pos1, size1, pos2, size2) {
     const b = pos1[i] + size1[i];
     const c = pos2[i];
     const d = pos2[i] + size2[i];
-    if (b >= c && a2 <= d)
-      ret += 1;
+    if (b >= c && a2 <= d) ret += 1;
   }
   return ret === 3;
 }
@@ -19704,11 +19624,9 @@ function simple_tri_aabb_isect(v1, v2, v3, min, max) {
     let i = _i;
     let isect = true;
     for (let j = 0; j < 3; j++) {
-      if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i])
-        isect = false;
+      if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i]) isect = false;
     }
-    if (isect)
-      return true;
+    if (isect) return true;
   }
   return false;
 }
@@ -19916,8 +19834,7 @@ function aabb_sphere_isect_2d(p, r, min, max) {
   v2.add(mvec);
   v3.load(lp);
   let ret = point_in_aabb_2d(v1, lmin, lmax) || point_in_aabb_2d(v2, lmin, lmax) || point_in_aabb_2d(v3, lmin, lmax);
-  if (ret)
-    return ret;
+  if (ret) return ret;
   v1.load(lmin);
   v2[0] = lmin[0];
   v2[1] = lmax[1];
@@ -20104,8 +20021,7 @@ function normal_tri(v1, v2, v3) {
   y3 = z1 * x2 - x1 * z2;
   z3 = x1 * y2 - y1 * x2;
   let len = Math.sqrt(x3 * x3 + y3 * y3 + z3 * z3);
-  if (len > 1e-5)
-    len = 1 / len;
+  if (len > 1e-5) len = 1 / len;
   x3 *= len;
   y3 *= len;
   z3 *= len;
@@ -20136,8 +20052,7 @@ function normal_quad_old(v1, v2, v3, v4) {
   let _len = Math.sqrt(
     $n2_normal_quad[0] * $n2_normal_quad[0] + $n2_normal_quad[1] * $n2_normal_quad[1] + $n2_normal_quad[2] * $n2_normal_quad[2]
   );
-  if (_len > 1e-5)
-    _len = 1 / _len;
+  if (_len > 1e-5) _len = 1 / _len;
   $n2_normal_quad[0] *= _len;
   $n2_normal_quad[1] *= _len;
   $n2_normal_quad[2] *= _len;
@@ -20221,20 +20136,17 @@ function dist_to_line(p, v1, v2, clip2 = true) {
 function wclip(x1, x2, w1, w2, near) {
   const r1 = near * w1 - x1;
   const r2 = (w1 - w2) * near - (x1 - x2);
-  if (r2 === 0)
-    return 0;
+  if (r2 === 0) return 0;
   return r1 / r2;
 }
 function clip(a2, b, znear) {
-  if (a2 - b === 0)
-    return 0;
+  if (a2 - b === 0) return 0;
   return (a2 - znear) / (a2 - b);
 }
 function clip_line_w(_v1, _v2, znear, zfar) {
   const v1 = _cplw_vs4.next().load(_v1);
   const v2 = _cplw_vs4.next().load(_v2);
-  if (v1[2] < 1 && v2[2] < 1)
-    return false;
+  if (v1[2] < 1 && v2[2] < 1) return false;
   function doclip1(v12, v22, axis) {
     if (v12[axis] / v12[3] < -1) {
       const t = wclip(v12[axis], v22[axis], v12[3], v22[3], -1);
@@ -20432,10 +20344,8 @@ function get_tri_circ(a2, b, c) {
   e2.load(b);
   e3.load(c);
   let r = e1.sub(cent).vectorLength();
-  if (r < feps)
-    r = e2.sub(cent).vectorLength();
-  if (r < feps)
-    r = e3.sub(cent).vectorLength();
+  if (r < feps) r = e2.sub(cent).vectorLength();
+  if (r < feps) r = e3.sub(cent).vectorLength();
   const ret = _get_tri_circ_ret.next();
   ret[0] = cent;
   ret[1] = r;
@@ -20505,8 +20415,7 @@ function project(vec, pers, view) {
 }
 function get_boundary_winding(points) {
   const cent = static_cent_gbw.zero();
-  if (points.length === 0)
-    return false;
+  if (points.length === 0) return false;
   for (let i = 0; i < points.length; i++) {
     cent.add(points[i]);
   }
@@ -20521,8 +20430,7 @@ function get_boundary_winding(points) {
       totw += 1;
     }
   }
-  if (totw > 0)
-    w /= totw;
+  if (totw > 0) w /= totw;
   return Math.round(w) === 1;
 }
 function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
@@ -21183,8 +21091,7 @@ var init_math = __esm({
       }
       winding(v1, v2, v3) {
         const ax = this.axis;
-        if (v1 === void 0)
-          console.trace();
+        if (v1 === void 0) console.trace();
         v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0]);
         v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0]);
         v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0]);
@@ -21200,8 +21107,7 @@ var init_math = __esm({
       get_boundary_winding(points) {
         const ax = this.axis;
         const cent = new Vector3();
-        if (points.length === 0)
-          return false;
+        if (points.length === 0) return false;
         for (let i = 0; i < points.length; i++) {
           cent.add(points[i]);
         }
@@ -21216,8 +21122,7 @@ var init_math = __esm({
             totw += 1;
           }
         }
-        if (totw > 0)
-          w /= totw;
+        if (totw > 0) w /= totw;
         return Math.round(w) === 1;
       }
     };
@@ -21240,37 +21145,31 @@ var init_math = __esm({
       reset(mat) {
         this.matrix.load(mat);
         this.stack = [];
-        if (this.update_func !== void 0)
-          this.update_func();
+        if (this.update_func !== void 0) this.update_func();
       }
       load(mat) {
         this.matrix.load(mat);
-        if (this.update_func !== void 0)
-          this.update_func();
+        if (this.update_func !== void 0) this.update_func();
       }
       multiply(mat) {
         this.matrix.multiply(mat);
-        if (this.update_func !== void 0)
-          this.update_func();
+        if (this.update_func !== void 0) this.update_func();
       }
       identity() {
         this.matrix.makeIdentity();
-        if (this.update_func !== void 0)
-          this.update_func();
+        if (this.update_func !== void 0) this.update_func();
       }
       push(mat2) {
         this.stack.push(new Matrix4(this.matrix));
         if (mat2 !== void 0) {
           this.matrix.load(mat2);
-          if (this.update_func !== void 0)
-            this.update_func();
+          if (this.update_func !== void 0) this.update_func();
         }
       }
       pop() {
         const mat = this.stack.pop();
         this.matrix.load(mat);
-        if (this.update_func !== void 0)
-          this.update_func();
+        if (this.update_func !== void 0) this.update_func();
         return mat;
       }
     };
@@ -21412,8 +21311,7 @@ function test_parser() {
       const lex2 = t.lexer;
       while (lex2.lexpos < lex2.lexdata.length) {
         const c = lex2.lexdata[lex2.lexpos];
-        if (c === "\n")
-          break;
+        if (c === "\n") break;
         js += c;
         lex2.lexpos++;
       }
@@ -21554,10 +21452,8 @@ var init_parseutil = __esm({
         return this;
       }
       toString() {
-        if (this.value !== void 0)
-          return "token(type=" + this.type + ", value='" + this.value + "')";
-        else
-          return "token(type=" + this.type + ")";
+        if (this.value !== void 0) return "token(type=" + this.type + ", value='" + this.value + "')";
+        else return "token(type=" + this.type + ")";
       }
     };
     tokdef2 = class {
@@ -21652,8 +21548,7 @@ var init_parseutil = __esm({
         this.peeked_tokens = [];
       }
       error() {
-        if (this.errfunc !== void 0 && !this.errfunc(this))
-          return;
+        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
         console.log("Syntax error near line " + this.lineno);
         const next = Math.min(this.lexpos + 8, this.lexdata.length);
         console.log("  " + this.lexdata.slice(this.lexpos, next));
@@ -21661,16 +21556,14 @@ var init_parseutil = __esm({
       }
       peek() {
         const tok = this.next(true);
-        if (tok === void 0)
-          return void 0;
+        if (tok === void 0) return void 0;
         this.peeked_tokens.push(tok);
         return tok;
       }
       peek_i(i) {
         while (this.peeked_tokens.length <= i) {
           const t = this.peek();
-          if (t === void 0)
-            return void 0;
+          if (t === void 0) return void 0;
         }
         return this.peeked_tokens[i];
       }
@@ -21689,16 +21582,14 @@ var init_parseutil = __esm({
           }
           return tok2;
         }
-        if (this.lexpos >= this.lexdata.length)
-          return void 0;
+        if (this.lexpos >= this.lexdata.length) return void 0;
         const ts = this.tokdef;
         const tlen = ts.length;
         const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
         const results = [];
         for (let i = 0; i < tlen; i++) {
           const t = ts[i];
-          if (t.re === void 0)
-            continue;
+          if (t.re === void 0) continue;
           const res = t.re.exec(lexdata);
           if (res?.index === 0) {
             results.push([t, res]);
@@ -21754,10 +21645,8 @@ var init_parseutil = __esm({
         return ret;
       }
       parse(data, err_on_unconsumed) {
-        if (err_on_unconsumed === void 0)
-          err_on_unconsumed = true;
-        if (data !== void 0)
-          this.lexer.input(data);
+        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
+        if (data !== void 0) this.lexer.input(data);
         const ret = this.start(this);
         if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
           this.error(void 0, "parser did not consume entire input");
@@ -21768,13 +21657,10 @@ var init_parseutil = __esm({
         this.lexer.input(data);
       }
       error(tok, msg) {
-        if (msg === void 0)
-          msg = "";
+        if (msg === void 0) msg = "";
         let estr;
-        if (tok === void 0)
-          estr = "Parse error at end of input: " + msg;
-        else
-          estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
+        if (tok === void 0) estr = "Parse error at end of input: " + msg;
+        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
         let buf = "1| ";
         const ld = this.lexer.lexdata;
         let l = 1;
@@ -21798,14 +21684,12 @@ var init_parseutil = __esm({
       }
       peek() {
         const tok = this.lexer.peek();
-        if (tok !== void 0)
-          tok.parser = this;
+        if (tok !== void 0) tok.parser = this;
         return tok;
       }
       peek_i(i) {
         const tok = this.lexer.peek_i(i);
-        if (tok !== void 0)
-          tok.parser = this;
+        if (tok !== void 0) tok.parser = this;
         return tok;
       }
       peeknext() {
@@ -21813,8 +21697,7 @@ var init_parseutil = __esm({
       }
       next() {
         const tok = this.lexer.next();
-        if (tok !== void 0)
-          tok.parser = this;
+        if (tok !== void 0) tok.parser = this;
         return tok;
       }
       optional(type) {
@@ -21830,8 +21713,7 @@ var init_parseutil = __esm({
       }
       expect(type, msg) {
         const tok = this.next();
-        if (msg === void 0)
-          msg = type;
+        if (msg === void 0) msg = type;
         if (tok?.type != type) {
           this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
         }
@@ -21978,8 +21860,7 @@ var init_controller_ops = __esm({
         if (this.inputs.fullSaveUndo.getValue()) {
           return super.undoPre(ctx);
         }
-        if (this.__ctx)
-          ctx = this.__ctx;
+        if (this.__ctx) ctx = this.__ctx;
         this._undo = {};
         let paths = /* @__PURE__ */ new Set();
         if (this.inputs.massSetPath.getValue().trim()) {
@@ -21996,8 +21877,7 @@ var init_controller_ops = __esm({
         }
       }
       undo(ctx) {
-        if (this.__ctx)
-          ctx = this.__ctx;
+        if (this.__ctx) ctx = this.__ctx;
         if (this.inputs.fullSaveUndo.getValue()) {
           return super.undo(ctx);
         }
@@ -22204,7 +22084,6 @@ var init_curve1d_basic = __esm({
         if (this.uidata) {
           const ud = this.uidata;
           if (ud.textbox) {
-            ;
             ud.textbox.text = this.equation;
           }
         }
@@ -22596,8 +22475,7 @@ var init_ease = __esm({
        **/
       static getPowInOut(pow) {
         return function(t) {
-          if ((t *= 2) < 1)
-            return 0.5 * Math.pow(t, pow);
+          if ((t *= 2) < 1) return 0.5 * Math.pow(t, pow);
           return 1 - 0.5 * Math.abs(Math.pow(2 - t, pow));
         };
       }
@@ -22760,8 +22638,7 @@ var init_ease = __esm({
       static getBackInOut(amount) {
         amount *= 1.525;
         return function(t) {
-          if ((t *= 2) < 1)
-            return 0.5 * (t * t * ((amount + 1) * t - amount));
+          if ((t *= 2) < 1) return 0.5 * (t * t * ((amount + 1) * t - amount));
           return 0.5 * ((t -= 2) * t * ((amount + 1) * t + amount) + 2);
         };
       }
@@ -22797,8 +22674,7 @@ var init_ease = __esm({
        * @return {Number}
        **/
       static circInOut = function(t) {
-        if ((t *= 2) < 1)
-          return -0.5 * (Math.sqrt(1 - t * t) - 1);
+        if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1);
         return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
       };
       /**
@@ -22834,8 +22710,7 @@ var init_ease = __esm({
        * @return {Number}
        **/
       static bounceInOut = function(t) {
-        if (t < 0.5)
-          return _Ease.bounceIn(t * 2) * 0.5;
+        if (t < 0.5) return _Ease.bounceIn(t * 2) * 0.5;
         return _Ease.bounceOut(t * 2 - 1) * 0.5 + 0.5;
       };
       /**
@@ -22849,8 +22724,7 @@ var init_ease = __esm({
       static getElasticIn(amplitude, period) {
         var pi2 = Math.PI * 2;
         return function(t) {
-          if (t == 0 || t == 1)
-            return t;
+          if (t == 0 || t == 1) return t;
           var s = period / pi2 * Math.asin(1 / amplitude);
           return -(amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
         };
@@ -22873,8 +22747,7 @@ var init_ease = __esm({
       static getElasticOut(amplitude, period) {
         var pi2 = Math.PI * 2;
         return function(t) {
-          if (t == 0 || t == 1)
-            return t;
+          if (t == 0 || t == 1) return t;
           var s = period / pi2 * Math.asin(1 / amplitude);
           return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * pi2 / period) + 1;
         };
@@ -22898,8 +22771,7 @@ var init_ease = __esm({
         var pi2 = Math.PI * 2;
         return function(t) {
           var s = period / pi2 * Math.asin(1 / amplitude);
-          if ((t *= 2) < 1)
-            return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
+          if ((t *= 2) < 1) return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
           return amplitude * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * pi2 / period) * 0.5 + 1;
         };
       }
@@ -22991,8 +22863,7 @@ var init_curve1d_anim = __esm({
         return true;
       }
       redraw() {
-        if (this.parent)
-          this.parent.redraw();
+        if (this.parent) this.parent.redraw();
       }
       makeGUI(container) {
         const def = this.constructor.define();
@@ -23327,13 +23198,11 @@ var init_curve1d_toolprop = __esm({
 
 // scripts/path-controller/toolsys/allprops.ts
 function isNumProperty(p) {
-  if (p === void 0)
-    return false;
+  if (p === void 0) return false;
   return p instanceof IntProperty || p instanceof FloatProperty;
 }
 function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null)
-    return false;
+  if (!prop || typeof prop !== "object" || prop === null) return false;
   let ok = false;
   ok = ok || prop instanceof Vec2PropertyIF;
   ok = ok || prop instanceof Vec3PropertyIF;
@@ -23900,7 +23769,7 @@ var init_controller = __esm({
     parserStackCur = 0;
     tool_classes = ToolClasses;
     tool_idgen = 1;
-    Symbol.ToolID = Symbol("toolid");
+    Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
     lt = time_ms();
     lastmsg = void 0;
     lcount = 0;
@@ -24201,8 +24070,8 @@ var init_controller = __esm({
     _map_structs = {};
     _dummypath = new DataPath();
     DummyIntProperty = new IntProperty();
-    CLS_API_KEY = Symbol("dp_map_id");
-    CLS_API_KEY_CUSTOM = Symbol("dp_map_custom");
+    CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
+    CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
     DataAPI2 = class extends ModelInterface {
       rootContextStruct;
       structs = [];
@@ -24302,11 +24171,11 @@ var init_controller = __esm({
           this.setValue(ctx, path, value);
         }
       }
-      /** 
-       * 
+      /**
+       *
        * Mass set paths take the form list[{$.prop}]`, where the filter is inside of the list.
        * Note: `$.prop` cannot be an expression unless you enable eval with `struct.list().evalMassSetFilter()`.
-       * An example of a more complicated expression might be: 
+       * An example of a more complicated expression might be:
        * `canvas.paths[{$.id % 2 === 0}].material.color`
        */
       resolveMassSetPaths(ctx, massSetPath) {
@@ -24832,8 +24701,7 @@ An example of a more complicated expression might be:
           }
         }
         for (const sarea of screen.sareas) {
-          if (!sarea.area)
-            continue;
+          if (!sarea.area) continue;
           for (const keymap4 of sarea.area.getKeyMaps()) {
             const ret = searchKeymap(keymap4);
             if (ret) {
@@ -24981,12 +24849,9 @@ function rgb_to_cmyk(r, g, b) {
   let M = 1 - g;
   let Y = 1 - b;
   let var_K = 1;
-  if (C < var_K)
-    var_K = C;
-  if (M < var_K)
-    var_K = M;
-  if (Y < var_K)
-    var_K = Y;
+  if (C < var_K) var_K = C;
+  if (M < var_K) var_K = M;
+  if (Y < var_K) var_K = Y;
   if (var_K === 1) {
     C = 0;
     M = 0;
@@ -25132,8 +24997,7 @@ var init_const = __esm({
       noElectronMenus: false,
       loadConstants(args) {
         for (const k in args) {
-          if (k === "loadConstants")
-            continue;
+          if (k === "loadConstants") continue;
           cconst[k] = args[k];
         }
         setConfig(cconst);
@@ -25354,8 +25218,7 @@ function web2color(str) {
   return css2color2(str);
 }
 function validateWebColor(str) {
-  if (typeof str !== "string")
-    return false;
+  if (typeof str !== "string") return false;
   return str.trim().search(validate_pat) === 0;
 }
 function validateCSSColor(color) {
@@ -26231,7 +26094,7 @@ var init_aspect = __esm({
       "shadow"
     ]);
     UIBase = void 0;
-    AspectKeys = Symbol("aspect-keys");
+    AspectKeys = /* @__PURE__ */ Symbol("aspect-keys");
     AfterAspect = class _AfterAspect {
       owner;
       key;
@@ -27017,7 +26880,7 @@ function internalSetTimeout(cb, timeout = 0) {
     window.setTimeout(timeout_cb, 0);
   }
 }
-function drawRoundBox2(elem, options = {}) {
+function drawRoundBox2(elem, options) {
   drawRoundBox(
     elem,
     options.canvas,
@@ -27050,9 +26913,10 @@ function drawRoundBox(elem, canvas, g, width, height, r, op = "fill", color, mar
   if (r2val > (width - margin * 2) * 0.5) {
     r2 = (width - margin * 2) * 0.5;
   }
+  const canvasWithBG = "_background" in canvas ? canvas : void 0;
   let bg = color;
-  if (bg === void 0 && canvas._background !== void 0) {
-    bg = canvas._background;
+  if (bg === void 0 && canvasWithBG?._background !== void 0) {
+    bg = canvasWithBG._background;
   } else if (bg === void 0) {
     bg = elem.getDefault("background-color");
   }
@@ -27242,8 +27106,7 @@ function saveUIData(node, key) {
       rec(n2, path, i, false);
     }
     const shadow = n.shadow;
-    if (!shadow)
-      return;
+    if (!shadow) return;
     for (let i = 0; i < shadow.childNodes.length; i++) {
       const n2 = shadow.childNodes[i];
       rec(n2, path, i, true);
@@ -27292,7 +27155,7 @@ function loadUIData(node, buf) {
     }
   }
 }
-var PackFlags, TextBox, ElementClasses, Vector43, ErrorColors, registered_has_happened, tagPrefix, EventCBSymbol, class_idgen, _last_report, keys, marginPaddingCSSKeys, _IconManager, CustomIcon, IconManager, iconmanager, IconSheets, Vector23, dpistack, UIFlags, internalElementNames, externalElementNames, _mobile_theme_patterns, _idgen2, _testSetScrollbars, _digest2, _themeUpdateKey, setTimeoutQueue, haveTimeout, UIBase2, _mc, PTOT;
+var PackFlags, TextBox, ElementClasses, ErrorColors, registered_has_happened, tagPrefix, EventCBSymbol, class_idgen, _last_report, keys, marginPaddingCSSKeys, _IconManager, CustomIcon, IconManager, iconmanager, IconSheets, dpistack, UIFlags, internalElementNames, externalElementNames, _mobile_theme_patterns, _idgen2, _testSetScrollbars, _digest2, _themeUpdateKey, setTimeoutQueue, haveTimeout, UIBase2, _mc, PTOT;
 var init_ui_base = __esm({
   "scripts/core/ui_base.ts"() {
     "use strict";
@@ -27351,7 +27214,6 @@ var init_ui_base = __esm({
     TextBox = void 0;
     ElementClasses = [];
     window.__cconst = const_default;
-    Vector43 = Vector4;
     ErrorColors = {
       WARNING: "yellow",
       ERROR: "red",
@@ -27360,7 +27222,7 @@ var init_ui_base = __esm({
     window.__theme = theme;
     registered_has_happened = false;
     tagPrefix = "";
-    EventCBSymbol = Symbol("wrapped event callback");
+    EventCBSymbol = /* @__PURE__ */ Symbol("wrapped event callback");
     if (typeof document !== "undefined") {
       const prefixElem = document.getElementById("pathux-tag-prefix");
       if (prefixElem) {
@@ -27619,8 +27481,7 @@ var init_ui_base = __esm({
             break;
           }
         }
-        if (!sheet)
-          sheet = sheets[sheets.length - 1];
+        if (!sheet) sheet = sheets[sheets.length - 1];
         return this.iconsheets.indexOf(sheet);
       }
       findSheet(sheet) {
@@ -27686,7 +27547,6 @@ var init_ui_base = __esm({
       LARGE: 1,
       XLARGE: 2
     };
-    Vector23 = Vector2;
     dpistack = [];
     UIFlags = {};
     internalElementNames = {};
@@ -28532,8 +28392,8 @@ var init_ui_base = __esm({
       }
       getTotalRect() {
         let found = false;
-        const min = new Vector23([1e17, 1e17]);
-        const max = new Vector23([-1e17, -1e17]);
+        const min = new Vector2([1e17, 1e17]);
+        const max = new Vector2([-1e17, -1e17]);
         const doaabb = (n) => {
           const rs = n.getClientRects();
           for (const r of rs) {
@@ -28599,10 +28459,8 @@ var init_ui_base = __esm({
         const decimalPlaces = args.decimalPlaces || this.decimalPlaces;
         if (isInt && radix !== 10) {
           const ret = Math.floor(value).toString(radix);
-          if (radix === 2)
-            return "0b" + ret;
-          else if (radix === 16)
-            return ret + "h";
+          if (radix === 2) return "0b" + ret;
+          else if (radix === 16) return ret + "h";
         }
         return buildString(value, baseUnit, decimalPlaces, displayUnit);
       }
@@ -28765,7 +28623,6 @@ var init_ui_base = __esm({
         const this2 = this;
         let classes;
         let is_set = type_or_set instanceof Set;
-        is_set = is_set || type_or_set instanceof set;
         is_set = is_set || Array.isArray(type_or_set);
         if (!is_set) {
           classes = [type_or_set];
@@ -28773,7 +28630,7 @@ var init_ui_base = __esm({
           classes = type_or_set;
         }
         const visit = /* @__PURE__ */ new Set();
-        return function* () {
+        return (function* () {
           const stack = [this2];
           while (stack.length > 0) {
             const n = stack.pop();
@@ -28799,7 +28656,7 @@ var init_ui_base = __esm({
               }
             }
           }
-        }();
+        })();
       }
       appendChild(child) {
         if (child instanceof _UIBase) {
@@ -28817,7 +28674,10 @@ var init_ui_base = __esm({
             return;
           }
           this._clipboard_events = true;
-          window.addEventListener("keydown", this._clipboard_keydown, { capture: true, passive: false });
+          window.addEventListener("keydown", this._clipboard_keydown, {
+            capture: true,
+            passive: false
+          });
         };
         this._clipboard_keyend = () => {
           if (!this._clipboard_events) {
@@ -28844,7 +28704,7 @@ var init_ui_base = __esm({
             let elem = screen.pickElement(screen.mpos[0], screen.mpos[1]);
             let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
             checkTree = checkTree || is_copy && this.constructor.define().copyForAllChildren;
-            while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem && elem.parentWidget) {
+            while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem?.parentWidget) {
               console.log("  " + elem._id);
               elem = elem.parentWidget;
             }
@@ -28879,9 +28739,9 @@ var init_ui_base = __esm({
         this.doOnce(() => {
           this.tabIndex = 0;
         });
-        this.addEventListener("keydown", (e) => {
+        this.addEventListener("keydown", ((e) => {
           return this._clipboard_keydown(e, true);
-        });
+        }));
         this.addEventListener("pointerover", start, { capture: true, passive: true });
         this.addEventListener("pointerout", stop, { capture: true, passive: true });
         this.addEventListener("focus", stop, { capture: true, passive: true });
@@ -29020,7 +28880,7 @@ var init_ui_base = __esm({
         let p = this;
         let n = this;
         while (n) {
-          if (n.style?.["zIndex"]) {
+          if (n instanceof HTMLElement && !isNaN(parseFloat("" + n.style["zIndex"]))) {
             const z = parseFloat(n.style["zIndex"]);
             return z;
           }
@@ -29044,7 +28904,7 @@ var init_ui_base = __esm({
         const path = [elem];
         let lastelem = elem;
         let i = 0;
-        while (elem && elem.shadow) {
+        while (elem instanceof _UIBase) {
           if (i++ > 1e3) {
             console.error("Infinite loop error");
             break;
@@ -29069,16 +28929,10 @@ var init_ui_base = __esm({
           }
           if (clip2) {
             const rect = node.getBoundingClientRect();
-            const clip22 = aabb_intersect_2d(
-              clip2.pos,
-              clip2.size,
-              [rect.x, rect.y],
-              [rect.width, rect.height]
-            );
+            const clip22 = aabb_intersect_2d(clip2.pos, clip2.size, [rect.x, rect.y], [rect.width, rect.height]);
             ok = ok && Boolean(clip22);
           }
           if (ok) {
-            window.elem = node;
             return node;
           }
         }
@@ -29189,7 +29043,7 @@ var init_ui_base = __esm({
         if (typeof colorIn === "string") {
           colorIn = Array.from(css2color2(colorIn));
         }
-        const color = new Vector43(colorIn);
+        const color = new Vector4().loadXYZW(colorIn[0], colorIn[1], colorIn[2], colorIn[3] ?? 1);
         const csscolor = color2css3(color);
         if (this._flashtimer !== void 0 && this._flashcolor !== csscolor) {
           window.setTimeout(() => {
@@ -29407,8 +29261,7 @@ var init_ui_base = __esm({
       }
       popReportContext() {
         const api = this.ctx.api;
-        if (api.popReportContext)
-          api.popReportContext();
+        if (api.popReportContext) api.popReportContext();
       }
       pathSocketUpdate(ctx, path) {
         this.flagPropSocketUpdate("value");
@@ -29470,6 +29323,8 @@ var init_ui_base = __esm({
         this.popReportContext();
         return ret;
       }
+      // we never pass Screen with a <CTX> due to potential for
+      // circular type errors
       getScreen() {
         return this.ctx?.screen;
       }
@@ -29638,8 +29493,6 @@ var init_ui_base = __esm({
           ok = ok && x >= r.x && x < r.x + r.width;
           ok = ok && y >= r.y && y < r.y + r.height;
         }
-        if (r) {
-        }
         ok = ok && !haveModal();
         ok = ok && screen.pickElement(x, y) === this;
         ok = ok && !!this._description_final;
@@ -29738,8 +29591,7 @@ var init_ui_base = __esm({
       }
       clearOverride(key, localOnly = false) {
         delete this.my_default_overrides[key];
-        if (!localOnly)
-          delete this.default_overrides[key];
+        if (!localOnly) delete this.default_overrides[key];
         return this;
       }
       overrideDefault(key, val, localOnly = false) {
@@ -29803,8 +29655,7 @@ var init_ui_base = __esm({
         return this._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(this._themeOverride && this._hasClassSubDefault(key, subkey, inherit3, void 0, this._themeOverride));
       }
       _hasClassSubDefault(key, subkey, inherit3 = true, style = this.getStyleClass(), themeDef) {
-        if (!themeDef)
-          return false;
+        if (!themeDef) return false;
         const th = themeDef[style];
         if (inherit3) {
           if (this._hasClassSubDefault(key, subkey, false, style, themeDef)) {
@@ -29883,8 +29734,7 @@ var init_ui_base = __esm({
           if (def?.style) {
             return def.style;
           }
-          if (!p.prototype || !Object.getPrototypeOf(p.prototype))
-            break;
+          if (!p.prototype || !Object.getPrototypeOf(p.prototype)) break;
           p = Object.getPrototypeOf(p.prototype).constructor;
         }
         return "base";
@@ -30214,8 +30064,7 @@ var init_ui_button = __esm({
             };
             this.pushModal(modalHandlers, void 0, e.pointerId);
           }
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           this._pressed = true;
           if (this._onpress) {
             this._onpress(this);
@@ -30226,8 +30075,7 @@ var init_ui_button = __esm({
         depress = (e) => {
           if (this._auto_depress) {
             this._pressed = false;
-            if (this.disabled)
-              return;
+            if (this.disabled) return;
             this._redraw();
           }
           if (e) {
@@ -30251,20 +30099,17 @@ var init_ui_button = __esm({
         this.addEventListener("pointerdown", press, { capture: true });
         this.addEventListener("pointerup", depress, { capture: true });
         this.addEventListener("pointerover", () => {
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           this._highlight = true;
           this._redraw();
         });
         this.addEventListener("pointerout", () => {
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           this._highlight = false;
           this._redraw();
         });
         this.addEventListener("keydown", (e) => {
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           switch (e.keyCode) {
             case 27:
               this.blur();
@@ -30272,6 +30117,7 @@ var init_ui_button = __esm({
               e.stopPropagation();
               break;
             case 32:
+            //spacebar
             case 13:
               this.click();
               e.preventDefault();
@@ -30280,15 +30126,13 @@ var init_ui_button = __esm({
           }
         });
         this.addEventListener("focusin", () => {
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           this._focus = 1;
           this._redraw();
           this.focus();
         });
         this.addEventListener("blur", () => {
-          if (this.disabled)
-            return;
+          if (this.disabled) return;
           this._focus = 0;
           this._redraw();
         });
@@ -30826,11 +30670,11 @@ function createMenu(ctx, title, templ) {
         hotkey = def.hotkey;
       }
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
-      cbs[id] = /* @__PURE__ */ function(toolpath) {
+      cbs[id] = /* @__PURE__ */ (function(toolpath) {
         return function() {
           ctx.api.execTool(ctx, toolpath);
         };
-      }(item);
+      })(item);
       id++;
     } else if (item === menuSEP) {
       menu.seperator();
@@ -30845,11 +30689,11 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(item[0], id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ function(cbfunc, arg) {
+      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      }(item[1], id2);
+      })(item[1], id2);
     } else if (typeof item === "object") {
       const objItem = item;
       let { name: name2, callback, hotkey, icon, tooltip } = objItem;
@@ -30858,11 +30702,11 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ function(cbfunc, arg) {
+      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      }(callback, id2);
+      })(callback, id2);
     }
   };
   for (const item of templ) {
@@ -30907,7 +30751,7 @@ var init_ui_menu = __esm({
     init_events();
     init_simple_events();
     PropTypes3 = PropTypes;
-    SEP = Symbol("MenuSep");
+    SEP = /* @__PURE__ */ Symbol("MenuSep");
     Menu = class _Menu extends UIBase2 {
       static SEP;
       parentMenu;
@@ -31172,8 +31016,7 @@ var init_ui_menu = __esm({
         } else {
           this.container.appendChild(this.dom);
         }
-        if (!setActive)
-          return;
+        if (!setActive) return;
         this.setCSS();
         this.flushUpdate();
         window.setTimeout(() => {
@@ -31841,8 +31684,7 @@ var init_ui_menu = __esm({
           }, 1);
           return;
         }
-        if (!screen)
-          return;
+        if (!screen) return;
         const con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
         con.noMarginsOrPadding();
         con.add(menu);
@@ -31928,8 +31770,7 @@ var init_ui_menu = __esm({
         if (this.prop !== void 0 && !setLabelOnly) {
           this.prop.setValue(val);
           let val2 = val;
-          if (val2 in this.prop.keys)
-            val2 = this.prop.keys[val2];
+          if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
           val2 = this.prop.ui_value_names[val2];
           this.setAttribute("name", "" + val2);
           this._name = "" + val2;
@@ -31995,8 +31836,7 @@ var init_ui_menu = __esm({
       }
       searchKeyDown(e) {
         const menu = this.menu;
-        if (!menu)
-          return;
+        if (!menu) return;
         e.stopPropagation();
         menu._ignoreFocusEvents = true;
         menu.textbox.focus();
@@ -32027,6 +31867,7 @@ var init_ui_menu = __esm({
         const menu = this.menu;
         switch (e.keyCode) {
           case keymap["Left"]:
+          //left
           case keymap["Right"]:
             if (menu._dropbox) {
               let dropbox = menu._dropbox;
@@ -32048,6 +31889,7 @@ var init_ui_menu = __esm({
             menu.selectNext();
             break;
           case 13:
+          //return key
           case 32:
             menu.click();
             break;
@@ -32091,8 +31933,7 @@ var init_ui_menu = __esm({
       }
       findMenu(x, y) {
         const screen = this.screen;
-        if (!screen)
-          return void 0;
+        if (!screen) return void 0;
         const element = screen.pickElement(x, y);
         if (element === void 0) {
           return;
@@ -32776,7 +32617,10 @@ var init_electron_api = __esm({
         for (let filter of filters) {
           if (Array.isArray(filter)) {
             let ext = filter[0];
-            const filterObj = { extensions: filter, name: "" };
+            const filterObj = {
+              extensions: filter,
+              name: ""
+            };
             ext = ext.replace(/\./g, "").trim().toLowerCase();
             if (ext in mimeMap) {
               filterObj.mime = mimeMap[ext];
@@ -33126,8 +32970,7 @@ var TextBox2 = class extends TextBoxBase {
           break;
       }
       return;
-      if (ignore)
-        return;
+      if (ignore) return;
       const e2 = new KeyboardEvent(e.type, e);
       ignore = 1;
       this.dom.dispatchEvent(e2);
@@ -33479,22 +33322,18 @@ var ValueButtonBase = class extends OldButton {
     }
   }
   updateDataPath() {
-    if (!this.hasAttribute("datapath"))
-      return;
-    if (this.ctx === void 0)
-      return;
+    if (!this.hasAttribute("datapath")) return;
+    if (this.ctx === void 0) return;
     const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === void 0) {
       const redraw = !this.disabled;
       this.internalDisabled = true;
-      if (redraw)
-        this._redraw();
+      if (redraw) this._redraw();
       return;
     } else {
       const redraw = this.disabled;
       this.internalDisabled = false;
-      if (redraw)
-        this._redraw();
+      if (redraw) this._redraw();
     }
     if (val !== this._value) {
       this._value = val;
@@ -34152,10 +33991,8 @@ var IconCheck = class extends IconButton {
           this._icon_pressed = icon;
           icon = icon2;
         }
-        if (icon !== void 0 && icon !== this.icon)
-          this.icon = icon;
-        if (title)
-          this.description = title;
+        if (icon !== void 0 && icon !== this.icon) this.icon = icon;
+        if (title) this.description = title;
       }
     }
     const rawVal = this.getPathValue(this.ctx, datapath);
@@ -34229,9 +34066,6 @@ var Check1 = class extends OldButton {
 };
 UIBase3.internalRegister(Check1);
 
-// scripts/controller/controller.ts
-init_controller_base();
-
 // scripts/core/ui.ts
 init_util();
 init_units2();
@@ -34243,6 +34077,7 @@ init_toolprop();
 init_ui_menu();
 init_const();
 init_toolsys();
+init_controller_base();
 function styl(el) {
   return el.style;
 }
@@ -34324,8 +34159,7 @@ var Label = class extends UIBase2 {
   }
   _updateFont() {
     const font = this._font;
-    if (!font)
-      return;
+    if (!font) return;
     this.dom.style["font"] = font.genCSS();
     this.dom.style["color"] = font.color;
   }
@@ -34492,10 +34326,9 @@ var Container3 = class _Container extends UIBase2 {
     }
   }
   loadData(obj) {
-    if (!obj)
-      return this;
-    const x = obj.scrollLeft || 0;
-    const y = obj.scrollTop || 0;
+    if (!obj) return this;
+    const x = obj.scrollLeft ?? 0;
+    const y = obj.scrollTop ?? 0;
     this.doOnce(() => {
       this.scrollTo(x, y);
     }, 12);
@@ -34523,7 +34356,7 @@ var Container3 = class _Container extends UIBase2 {
       return previous;
     }
     let sheet = enabled_or_sheet;
-    if (sheet === true) {
+    if (enabled_or_sheet === true) {
       sheet = PackFlags.SMALL_ICON;
     } else if (sheet === 1) {
       sheet = PackFlags.LARGE_ICON;
@@ -34673,16 +34506,12 @@ var Container3 = class _Container extends UIBase2 {
   }
   setSize(width, height) {
     if (width !== void 0) {
-      if (typeof width == "number")
-        this.style["width"] = this.div.style["width"] = ~~width + "px";
-      else
-        this.style["width"] = this.div.style["width"] = width;
+      if (typeof width == "number") this.style["width"] = this.div.style["width"] = ~~width + "px";
+      else this.style["width"] = this.div.style["width"] = width;
     }
     if (height !== void 0) {
-      if (typeof height == "number")
-        this.style["height"] = this.div.style["height"] = ~~height + "px";
-      else
-        this.style["height"] = this.div.style["height"] = height;
+      if (typeof height == "number") this.style["height"] = this.div.style["height"] = ~~height + "px";
+      else this.style["height"] = this.div.style["height"] = height;
     }
     return this;
   }
@@ -34795,8 +34624,9 @@ var Container3 = class _Container extends UIBase2 {
     } else {
       this.shadow.appendChild(child);
     }
-    if (child.onadd)
+    if (child.onadd) {
       child.onadd();
+    }
     return child;
   }
   //TODO: make sure this works on Electron?
@@ -34835,19 +34665,18 @@ var Container3 = class _Container extends UIBase2 {
     return dbox;
   }
   toolPanel(path_or_cls, args = {}) {
-    let tdef;
     let cls;
     if (typeof path_or_cls === "string") {
       cls = this.ctx.api.parseToolPath(path_or_cls);
     } else {
       cls = path_or_cls;
     }
-    tdef = cls._getFinalToolDef();
-    const packflag = args.packflag || 0;
-    const label = args.label || tdef.uiname;
-    const createCb = args.createCb || args.create_cb;
-    const container = args.container || this.panel(label);
-    let defaultsPath = args.defaultsPath || "toolDefaults";
+    const tdef = cls._getFinalToolDef();
+    const packflag = args.packflag ?? 0;
+    const label = args.label ?? tdef.uiname ?? tdef.toolpath;
+    const createCb = args.createCb ?? args.create_cb;
+    const container = args.container ?? this.panel(label);
+    let defaultsPath = args.defaultsPath ?? "toolDefaults";
     if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
       defaultsPath += ".";
     }
@@ -34859,23 +34688,23 @@ var Container3 = class _Container extends UIBase2 {
       if (prop.flag & PropFlags.PRIVATE) {
         continue;
       }
-      const apiname = prop.apiname || k;
+      const apiname = prop.apiname ?? k;
       const path2 = path + "." + apiname;
       container.prop(path2);
     }
     container.tool(path_or_cls, packflag, createCb, label);
     return container;
   }
-  tool(path_or_cls, packflag_or_args = {}, createCb, label) {
+  tool(path_or_cls, packflag_or_args = 0, createCb, label) {
     let cls;
     let packflag;
     if (typeof packflag_or_args === "object") {
       const args = packflag_or_args;
-      packflag = args.packflag;
+      packflag = args.packflag ?? 0;
       createCb = args.createCb;
       label = args.label;
     } else {
-      packflag = packflag_or_args || 0;
+      packflag = packflag_or_args ?? 0;
     }
     if (typeof path_or_cls == "string") {
       if (path_or_cls.search(/\|/) >= 0) {
@@ -34898,10 +34727,10 @@ var Container3 = class _Container extends UIBase2 {
       cls = path_or_cls;
     }
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let hotkey;
     if (createCb === void 0) {
+      const toolpath = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath;
       createCb = (cls2) => {
-        return this.ctx.api.createTool(this.ctx, path_or_cls);
+        return this.ctx.api.createTool(this.ctx, toolpath);
       };
     }
     const cb = () => {
@@ -34910,30 +34739,29 @@ var Container3 = class _Container extends UIBase2 {
       this.ctx.api.execTool(this.ctx, toolob);
     };
     const def = typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
-    let tooltip = def.description === void 0 ? def.uiname : def.description;
+    let tooltip = def.description ?? def.uiname ?? "";
     if (def.hotkey !== void 0) {
       tooltip += "\n	" + def.hotkey;
-      hotkey = def.hotkey;
     } else {
       let path = path_or_cls;
       if (typeof path != "string") {
         path = def.toolpath;
       }
-      const hotkey2 = this.ctx.api.getToolPathHotkey(this.ctx, path);
-      if (hotkey2) {
-        tooltip += "\n	Hotkey: " + hotkey2;
+      const hotkey = this.ctx.api.getToolPathHotkey(this.ctx, path);
+      if (hotkey) {
+        tooltip += "\n	Hotkey: " + hotkey;
       }
     }
     let ret;
     if (def.icon !== void 0 && packflag & PackFlags.USE_ICONS) {
       label = label === void 0 ? tooltip : label;
-      const check = this.iconbutton(def.icon, label, cb);
+      const check = this.iconbutton(def.icon ?? -1, label, cb);
       check.iconsheet = iconSheetFromPackFlag(packflag);
       check.packflag |= packflag;
       check.description = tooltip;
       ret = check;
     } else {
-      label = label === void 0 ? def.uiname : label;
+      label = label === void 0 ? def.uiname ?? def.toolpath : label;
       ret = this.button(label, cb);
       ret.description = tooltip;
       ret.packflag |= packflag;
@@ -34958,7 +34786,7 @@ var Container3 = class _Container extends UIBase2 {
     ret.setCSS();
     ret.update();
     ret.packflag |= packflag;
-    ret.onchange = cb;
+    ret.onchange = cb ?? null;
     ret.text = "" + text2;
     return ret;
   }
@@ -34997,7 +34825,7 @@ var Container3 = class _Container extends UIBase2 {
    * */
   helppicker() {
     const ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
-      this.getScreen().hintPickerTool();
+      this.getScreen()?.hintPickerTool();
     });
     if (isMobile()) {
     }
@@ -35025,7 +34853,7 @@ var Container3 = class _Container extends UIBase2 {
     ret.packflag |= packflag;
     ret.setAttribute("name", label);
     ret.setAttribute("buttonid", "" + id);
-    ret.onclick = cb;
+    ret.onclick = (cb && thisvar ? cb.bind(thisvar) : cb) ?? null;
     this._add(ret);
     return ret;
   }
@@ -35073,8 +34901,7 @@ var Container3 = class _Container extends UIBase2 {
       inpath = this._joinPrefix(inpath);
       ret.setAttribute("datapath", inpath);
     }
-    if (mass_set_path)
-      ret.setAttribute("mass_set_path", mass_set_path);
+    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -35139,28 +34966,19 @@ var Container3 = class _Container extends UIBase2 {
     }
     const prop = rdef.prop;
     const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
-    function makeUIName(name2) {
-      if (typeof name2 === "number" && isNaN(name2)) {
-        console.warn("Subkey error in data api", inpath);
-        return "" + name2;
-      }
-      let s = "" + name2;
-      s = s[0].toUpperCase() + s.slice(1, s.length).toLowerCase();
-      s = s.replace(/_/g, " ");
-      return s;
-    }
+    const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
     if (prop.type === PropTypes.REPORT) {
-      return this.pathlabel(inpath, prop.uiname);
+      return this.pathlabel(inpath, uiName);
     } else if (prop.type === PropTypes.STRING) {
       let ret;
       if (prop.flag & PropFlags.READ_ONLY) {
-        ret = this.pathlabel(inpath, prop.uiname);
+        ret = this.pathlabel(inpath, uiName);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
         ret.useDataPathUndo = useDataPathUndo;
       } else {
         const strip = this.strip();
-        strip.label(prop.uiname);
+        strip.label(uiName);
         ret = strip.textbox(inpath);
         ret.useDataPathUndo = useDataPathUndo;
         if (mass_set_path) {
@@ -35187,7 +35005,7 @@ var Container3 = class _Container extends UIBase2 {
       }
       return ret;
     } else if (prop.type === PropTypes.BOOL) {
-      const ret = this.check(inpath, prop.uiname, packflag, mass_set_path);
+      const ret = this.check(inpath, uiName, packflag, mass_set_path);
       ret.useDataPathUndo = useDataPathUndo;
       return ret;
     } else if (prop.type === PropTypes.ENUM) {
@@ -35195,7 +35013,7 @@ var Container3 = class _Container extends UIBase2 {
         const subkey = rdef.subkey;
         let name2 = prop.ui_value_names[rdef.subkey];
         if (name2 === void 0) {
-          name2 = makeUIName(rdef.subkey);
+          name2 = ToolProperty.makeUIName("" + rdef.subkey);
         }
         const check = this.check(inpath, name2, packflag, mass_set_path);
         const tooltip = prop.descriptions[subkey];
@@ -35216,7 +35034,7 @@ var Container3 = class _Container extends UIBase2 {
         }
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
           const strip = this.strip();
-          strip.label(prop.uiname);
+          strip.label(uiName);
           return strip.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
         } else {
           return this.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
@@ -35225,10 +35043,8 @@ var Container3 = class _Container extends UIBase2 {
     } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
       if (rdef.subkey !== void 0) {
         let ret;
-        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
-          ret = this.simpleslider(inpath, { packflag });
-        else
-          ret = this.slider(inpath, { packflag });
+        if (packflag & PackFlags.SIMPLE_NUMSLIDERS) ret = this.simpleslider(inpath, { packflag });
+        else ret = this.slider(inpath, { packflag });
         ret.packflag |= packflag;
         return ret.setUndo(useDataPathUndo);
       } else if (prop.subtype === PropSubTypes2.COLOR) {
@@ -35256,7 +35072,7 @@ var Container3 = class _Container extends UIBase2 {
           if (name2 && name2 in prop.ui_value_names) {
             name2 = prop.ui_value_names[name2];
           } else {
-            name2 = makeUIName(name2 ? name2 : "(error)");
+            name2 = ToolProperty.makeUIName(name2 ? name2 : "(error)");
           }
         }
         if (name2 === void 0) {
@@ -35272,7 +35088,7 @@ var Container3 = class _Container extends UIBase2 {
         let con = this;
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
           con = this.strip();
-          con.label(prop.uiname);
+          con.label(uiName);
         }
         if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
           let i = 0;
@@ -35283,7 +35099,7 @@ var Container3 = class _Container extends UIBase2 {
             let name2 = prop.ui_value_names[k];
             const tooltip = prop.descriptions[k];
             if (name2 === void 0) {
-              name2 = makeUIName(k);
+              name2 = ToolProperty.makeUIName(k);
             }
             const con2 = i & 1 ? col1 : col2;
             const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
@@ -35320,7 +35136,7 @@ var Container3 = class _Container extends UIBase2 {
             let name2 = prop.ui_value_names[k];
             const tooltip = prop.descriptions[k];
             if (name2 === void 0) {
-              name2 = makeUIName(k);
+              name2 = ToolProperty.makeUIName(k);
             }
             const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
             if (tooltip) {
@@ -35347,7 +35163,7 @@ var Container3 = class _Container extends UIBase2 {
             let name2 = prop.ui_value_names[k];
             const tooltip = prop.descriptions[k];
             if (name2 === void 0) {
-              name2 = makeUIName(k);
+              name2 = ToolProperty.makeUIName(k);
             }
             const check = con.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
             check.useDataPathUndo = useDataPathUndo;
@@ -35455,8 +35271,7 @@ var Container3 = class _Container extends UIBase2 {
       } else {
         let makecb2 = function(key) {
           return () => {
-            if (ignorecb)
-              return;
+            if (ignorecb) return;
             ignorecb = true;
             for (const k in checks) {
               if (k !== key) {
@@ -35471,7 +35286,7 @@ var Container3 = class _Container extends UIBase2 {
         };
         var makecb = makecb2;
         if (name2 === void 0) {
-          name2 = prop.uiname;
+          name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
         }
         frame.label(name2).font = "TitleText";
         const checks = {};
@@ -35502,7 +35317,7 @@ var Container3 = class _Container extends UIBase2 {
       prop = resolved !== void 0 ? resolved.prop : void 0;
     }
     if (!name2 && prop) {
-      name2 = prop.uiname;
+      name2 = prop.getUIName();
     }
     if (path !== void 0) {
       if (prop === void 0) {
@@ -35526,8 +35341,7 @@ var Container3 = class _Container extends UIBase2 {
       } else {
         let makecb2 = function(key) {
           return () => {
-            if (ignorecb)
-              return;
+            if (ignorecb) return;
             ignorecb = true;
             for (const k in checks) {
               if (k !== key) {
@@ -35542,7 +35356,7 @@ var Container3 = class _Container extends UIBase2 {
         };
         var makecb = makecb2;
         if (name2 === void 0) {
-          name2 = prop.uiname;
+          name2 = prop.getUIName();
         }
         frame.label(name2).font = "TitleText";
         const checks = {};
@@ -35601,7 +35415,7 @@ var Container3 = class _Container extends UIBase2 {
     if (enumDef !== void 0) {
       if (enumDef instanceof EnumProperty) {
         ret.prop = enumDef;
-        label ||= enumDef.uiname || ToolProperty.makeUIName(enumDef.apiname);
+        label ??= enumDef.getUIName();
       } else {
         ret.prop = new EnumProperty(defaultval, enumDef, path, name2);
       }
@@ -35612,8 +35426,8 @@ var Container3 = class _Container extends UIBase2 {
       const res = this.ctx.api.resolvePath(this.ctx, path, true);
       if (res !== void 0) {
         ret.prop = res.prop;
-        name2 ||= res.prop.uiname;
-        label ||= name2;
+        name2 ??= res.prop.getUIName();
+        label ??= name2;
       }
     }
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
@@ -35640,7 +35454,7 @@ var Container3 = class _Container extends UIBase2 {
           l.style["marginLeft"] = "5px";
         }
       } else {
-        l = container.label(label);
+        container.label(label);
         container._add(ret);
       }
     } else {
@@ -35875,10 +35689,8 @@ var Container3 = class _Container extends UIBase2 {
     if (value !== void 0) {
       ret.value = value;
     }
-    if (datapath)
-      ret.setAttribute("datapath", datapath);
-    if (mass_set_path)
-      ret.setAttribute("mass_set_path", mass_set_path);
+    if (datapath) ret.setAttribute("datapath", datapath);
+    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -35894,10 +35706,8 @@ var Container3 = class _Container extends UIBase2 {
     if (value !== void 0) {
       ret.value = value;
     }
-    if (datapath)
-      ret.setAttribute("datapath", datapath);
-    if (mass_set_path)
-      ret.setAttribute("mass_set_path", mass_set_path);
+    if (datapath) ret.setAttribute("datapath", datapath);
+    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -36251,10 +36061,8 @@ var NumSlider = class extends ValueButtonBase {
     tbox.editAsBaseUnit = this.editAsBaseUnit;
     if (this.isInt && this.radix != 10) {
       let text2 = this.value.toString(this.radix);
-      if (this.radix === 2)
-        text2 = "0b" + text2;
-      else if (this.radix === 16)
-        text2 += "h";
+      if (this.radix === 2) text2 = "0b" + text2;
+      else if (this.radix === 16) text2 += "h";
       tbox.text = text2;
     } else {
       tbox.text = buildString(
@@ -36366,8 +36174,7 @@ var NumSlider = class extends ValueButtonBase {
       "pointerdown",
       (e) => {
         this.setMpos(e);
-        if (this.disabled)
-          return;
+        if (this.disabled) return;
         onmousedown(e);
       },
       { capture: true }
@@ -36379,8 +36186,7 @@ var NumSlider = class extends ValueButtonBase {
     });
     this.addEventListener("pointerover", (e) => {
       this.setMpos(e);
-      if (this.disabled)
-        return;
+      if (this.disabled) return;
       if (!this._highlight) {
         this._highlight = true;
         this._repos_canvas();
@@ -36393,8 +36199,7 @@ var NumSlider = class extends ValueButtonBase {
     });
     this.addEventListener("pointerout", (e) => {
       this.setMpos(e);
-      if (this.disabled)
-        return;
+      if (this.disabled) return;
       this._highlight = false;
       this.dom._background = this.getDefault("background-color");
       this._repos_canvas();
@@ -36472,8 +36277,7 @@ var NumSlider = class extends ValueButtonBase {
   dragStart(e) {
     this.mdown = false;
     this._pressed = true;
-    if (this.disabled)
-      return;
+    if (this.disabled) return;
     if (this.modalRunning) {
       console.log("modal already running for numslider", this);
       return;
@@ -36506,8 +36310,7 @@ var NumSlider = class extends ValueButtonBase {
         e2.stopPropagation();
       },
       on_pointermove: (e2) => {
-        if (this.disabled)
-          return;
+        if (this.disabled) return;
         e2.preventDefault();
         e2.stopPropagation();
         const x = this.ma.add(this.vertical ? e2.y : e2.x);
@@ -37011,8 +36814,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
       }
     });
     this.addEventListener("focusin", () => {
-      if (this.disabled)
-        return;
+      if (this.disabled) return;
       this._focus = true;
       this._redraw();
       this.focus();
@@ -37377,7 +37179,7 @@ var SliderWithTextbox = class extends ColumnFrame {
   init() {
     super.init();
     this.rebuild();
-    window.setTimeout(() => this.updateTextBox(), 500);
+    this.doOnce(() => this.updateTextBox());
   }
   rebuild() {
     this._last_label_on_top = this.labelOnTop;
@@ -37460,8 +37262,7 @@ var SliderWithTextbox = class extends ColumnFrame {
     if (!this._init_done) {
       return;
     }
-    if (this._lock_textbox || this._textbox.editing)
-      return;
+    if (this._lock_textbox || this._textbox.editing) return;
     this._textbox.text = this.formatNumber(this._value);
     this._textbox.update();
     updateSliderFromDom(this, this.numslider);
@@ -37790,8 +37591,7 @@ var Handler = class {
       for (const sheet of document.styleSheets) {
         for (const rule of sheet.cssRules) {
           const cssRule = rule;
-          if (!cssRule.selectorText)
-            continue;
+          if (!cssRule.selectorText) continue;
           for (const k of keys3) {
             if (cssRule.selectorText.trim() === k) {
               if (cssRule.styleMap) {
@@ -37802,11 +37602,9 @@ var Handler = class {
               } else {
                 for (const k2 in cssRule.style) {
                   const desc = Object.getOwnPropertyDescriptor(cssRule.style, k2);
-                  if (!desc?.writable)
-                    continue;
+                  if (!desc?.writable) continue;
                   const val = cssRule.style[k2];
-                  if (val)
-                    style[k2] = val;
+                  if (val) style[k2] = val;
                 }
               }
             }
@@ -38252,8 +38050,7 @@ var Handler = class {
     const list5 = [];
     for (const child of elem.childNodes) {
       const childEl = child;
-      if (!childEl.tagName)
-        continue;
+      if (!childEl.tagName) continue;
       if (childEl.tagName === "tool") {
         let path = childEl.getAttribute("path") ?? "";
         const label = childEl.innerHTML.trim();
@@ -39412,8 +39209,7 @@ var Curve1DWidget = class extends ColumnFrame {
     this.dropbox._init();
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       const curve = this._value;
-      if (!curve)
-        return;
+      if (!curve) return;
       curve.uiZoom *= 0.9;
       const dp = this.getAttribute("datapath");
       if (dp) {
@@ -39423,8 +39219,7 @@ var Curve1DWidget = class extends ColumnFrame {
     }).iconsheet = 0;
     row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
       const curve = this._value;
-      if (!curve)
-        return;
+      if (!curve) return;
       curve.uiZoom *= 1.1;
       const dp = this.getAttribute("datapath");
       if (dp) {
@@ -39768,23 +39563,19 @@ var PanelFrame = class extends ColumnFrame {
   }
   get inherit_packflag() {
     super.inherit_packflag;
-    if (!this.contents)
-      return 0;
+    if (!this.contents) return 0;
     return this.contents.inherit_packflag;
   }
   set inherit_packflag(val) {
-    if (!this.contents)
-      return;
+    if (!this.contents) return;
     this.contents.inherit_packflag = val;
   }
   get packflag() {
-    if (!this.contents)
-      return 0;
+    if (!this.contents) return 0;
     return this.contents.packflag;
   }
   set packflag(val) {
-    if (!this.contents)
-      return;
+    if (!this.contents) return;
     this.contents.packflag = val;
   }
   appendChild(child) {
@@ -40069,10 +39860,6 @@ init_ui_base();
 init_colorutils();
 init_colorutils();
 init_area_wrangler();
-var Vector24 = Vector2;
-var Vector34 = Vector3;
-var Vector45 = Vector4;
-var UIBase5 = UIBase2;
 var UPW = 1.25;
 var VPW = 0.75;
 var sample_rets = new cachering2(() => [0, 0], 64);
@@ -40146,8 +39933,7 @@ function getFieldImage(fieldsize, width, height, hsva) {
   const fieldsize2 = fieldsize >> 1;
   const hue = hsva[0];
   const key = fieldsize + ":" + (width >> 1) + ":" + (height >> 1) + ":" + hue.toFixed(5);
-  if (key in fields)
-    return fields[key];
+  if (key in fields) return fields[key];
   const size2 = fieldsize2;
   const valpow = 0.75;
   const image = {
@@ -40172,8 +39958,7 @@ function getFieldImage(fieldsize, width, height, hsva) {
       return s * width;
     },
     val2y(v) {
-      if (v === 0)
-        return height;
+      if (v === 0) return height;
       const vp = v ** (1 / valpow);
       return (1 - vp) * height;
     }
@@ -40201,18 +39986,18 @@ function getFieldImage(fieldsize, width, height, hsva) {
   fields[key] = image;
   return image;
 }
-var _update_temp = new Vector45();
+var _update_temp = new Vector4();
 var SimpleBox = class {
   pos;
   size;
   r;
   constructor(pos = [0, 0], size = [1, 1]) {
-    this.pos = new Vector24(pos);
-    this.size = new Vector24(size);
+    this.pos = new Vector2(pos);
+    this.size = new Vector2(size);
     this.r = 0;
   }
 };
-var HueField = class extends UIBase5 {
+var HueField = class extends UIBase2 {
   canvas;
   g;
   hsva;
@@ -40222,7 +40007,7 @@ var HueField = class extends UIBase5 {
     super();
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
-    this.hsva = new Vector45([0, 0, 0, 1]);
+    this.hsva = new Vector4([0, 0, 0, 1]);
     this._onchange = void 0;
     this.shadow.appendChild(this.canvas);
     const setFromXY = (x, _y) => {
@@ -40291,7 +40076,7 @@ var HueField = class extends UIBase5 {
   }
   getRGBA() {
     const rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector45().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
   setRGBA(rgba) {
     const hsv = rgb_to_hsv(rgba[0], rgba[1], rgba[2]);
@@ -40350,15 +40135,15 @@ var HueField = class extends UIBase5 {
     this._redraw();
   }
 };
-UIBase5.internalRegister(HueField);
-var SatValField = class extends UIBase5 {
+UIBase2.internalRegister(HueField);
+var SatValField = class extends UIBase2 {
   canvas;
   g;
   hsva;
   _onchange;
   constructor() {
     super();
-    this.hsva = new Vector45([0, 0, 0, 1]);
+    this.hsva = new Vector4([0, 0, 0, 1]);
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
     this.shadow.appendChild(this.canvas);
@@ -40493,7 +40278,7 @@ var SatValField = class extends UIBase5 {
   }
   getRGBA() {
     const rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector45().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
   setRGBA(rgba) {
     const hsv = rgb_to_hsv(rgba[0], rgba[1], rgba[2]);
@@ -40514,12 +40299,7 @@ var SatValField = class extends UIBase5 {
     const r = this.getDefault("circleSize");
     const w = this.getDefault("width");
     const h = this.getDefault("height");
-    return getFieldImage(
-      this.getDefault("fieldSize"),
-      w - r * 2,
-      h - r * 2,
-      this.hsva
-    );
+    return getFieldImage(this.getDefault("fieldSize"), w - r * 2, h - r * 2, Array.from(this.hsva));
   }
   update(force_update = false) {
     super.update();
@@ -40598,7 +40378,7 @@ var SatValField = class extends UIBase5 {
     this._redraw();
   }
 };
-UIBase5.internalRegister(SatValField);
+UIBase2.internalRegister(SatValField);
 var ColorField = class extends ColumnFrame {
   hsva;
   rgba;
@@ -40609,16 +40389,16 @@ var ColorField = class extends ColumnFrame {
   _last_dpi;
   constructor() {
     super();
-    this.hsva = new Vector45([0.05, 0.6, 0.15, 1]);
-    this.rgba = new Vector45([0, 0, 0, 0]);
+    this.hsva = new Vector4([0.05, 0.6, 0.15, 1]);
+    this.rgba = new Vector4([0, 0, 0, 0]);
     this._onchange = void 0;
     this._last_dpi = void 0;
     this._recalcRGBA();
     this._lastThemeStyle = this.constructor.define().style;
-    const satvalfield = UIBase5.createElement("satvalfield-x");
+    const satvalfield = UIBase2.createElement("satvalfield-x");
     this.satvalfield = satvalfield;
     satvalfield.hsva = this.hsva;
-    const huefield = UIBase5.createElement("huefield-x");
+    const huefield = UIBase2.createElement("huefield-x");
     this.huefield = huefield;
     huefield.hsva = this.hsva;
     huefield._onchange = () => {
@@ -40677,15 +40457,14 @@ var ColorField = class extends ColumnFrame {
     update = update || dpi != this._last_dpi;
     if (update) {
       this._last_dpi = dpi;
-      if (!_in_update)
-        this._redraw();
+      if (!_in_update) this._redraw();
       return true;
     }
     return void 0;
   }
   getRGBA() {
     const rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector45().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
   setRGBA(r, g, b, a2 = 1, fire_onchange = true) {
     let r0;
@@ -40740,14 +40519,14 @@ var ColorField = class extends ColumnFrame {
   }
   setCSS() {
     super.setCSS();
-    this.style["flex-grow"] = this.getDefault("flex-grow");
+    this.style.flexGrow = "" + this.getDefault("flex-grow");
   }
   _redraw() {
     this.satvalfield._redraw();
     this.huefield._redraw();
   }
 };
-UIBase5.internalRegister(ColorField);
+UIBase2.internalRegister(ColorField);
 var ColorPicker = class extends ColumnFrame {
   _lastThemeStyle;
   field;
@@ -40782,14 +40561,12 @@ var ColorPicker = class extends ColumnFrame {
   }
   static setDefault(node) {
     let tabs;
-    let colorsPanel = node;
     if (node.getClassDefault("usePanels")) {
       const panel = node.panel("Color");
-      colorsPanel = panel;
       tabs = panel.tabs();
       panel.closed = true;
-      panel.style["flex-grow"] = "unset";
-      panel.titleframe.style["flex-grow"] = "unset";
+      panel.style["flexGrow"] = "unset";
+      panel.panelFrame.titleframe.style["flexGrow"] = "unset";
     } else {
       tabs = node.tabs();
     }
@@ -40896,7 +40673,7 @@ var ColorPicker = class extends ColumnFrame {
   }
   init() {
     super.init();
-    this.field = UIBase5.createElement("colorfield-x");
+    this.field = UIBase2.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
     this.field.packflag |= this.inherit_packflag;
     this.field.packflag |= this.packflag;
@@ -40917,7 +40694,7 @@ var ColorPicker = class extends ColumnFrame {
     this.colorbox = document.createElement("div");
     this.colorbox.style["width"] = "100%";
     this.colorbox.style["height"] = this.getDefault("colorBoxHeight") + "px";
-    this.colorbox.style["background-color"] = "black";
+    this.colorbox.style["backgroundColor"] = "black";
     this.shadow.appendChild(style);
     this.field.ctx = this.ctx;
     this.shadow.appendChild(this.colorbox);
@@ -40928,7 +40705,7 @@ var ColorPicker = class extends ColumnFrame {
     const r = ~~(this.field.rgba[0] * 255);
     const g = ~~(this.field.rgba[1] * 255);
     const b = ~~(this.field.rgba[2] * 255);
-    this.colorbox.style["background-color"] = `rgb(${r},${g},${b})`;
+    this.colorbox.style["backgroundColor"] = `rgb(${r},${g},${b})`;
   }
   _setSliders() {
     if (this.h === void 0) {
@@ -41003,7 +40780,7 @@ var ColorPicker = class extends ColumnFrame {
       }
       let val = this.field.rgba;
       if (prop?.type === PropTypes.VEC3) {
-        val = new Vector34();
+        val = new Vector3();
         val.load(this.field.rgba);
       }
       this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
@@ -41031,8 +40808,8 @@ var ColorPicker = class extends ColumnFrame {
     this._setDataPath();
   }
 };
-UIBase5.internalRegister(ColorPicker);
-var ColorPickerButton = class extends UIBase5 {
+UIBase2.internalRegister(ColorPicker);
+var ColorPickerButton = class extends UIBase2 {
   _highlight;
   _depress;
   _label;
@@ -41049,7 +40826,7 @@ var ColorPickerButton = class extends UIBase5 {
     this._depress = false;
     this._label = "error";
     this.customLabel = void 0;
-    this.rgba = new Vector45([1, 1, 1, 1]);
+    this.rgba = new Vector4([1, 1, 1, 1]);
     this.labelDom = document.createElement("span");
     this.labelDom.textContent = this._label;
     this.dom = document.createElement("canvas");
@@ -41125,24 +40902,16 @@ var ColorPickerButton = class extends UIBase5 {
     if (this.onclick) {
       this.onclick(e);
     }
-    const colorpicker = this.ctx.screen.popup(
-      this,
-      this
-    );
+    const colorpicker = this.ctx.screen.popup(this, this);
     const ctx = contextWrangler.makeSafeContext(this.ctx);
-    colorpicker["ctx"] = ctx;
+    colorpicker.ctx = ctx;
     colorpicker.useDataPathUndo = this.useDataPathUndo;
     const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") ?? void 0 : void 0;
     const massSetPath = this.getAttribute("mass_set_path") ?? void 0;
     const widget = colorpicker.colorPicker(path, void 0, massSetPath);
-    widget["ctx"] = ctx;
+    widget.ctx = ctx;
     widget._init();
-    widget.setRGBA(
-      this.rgba[0],
-      this.rgba[1],
-      this.rgba[2],
-      this.rgba[3]
-    );
+    widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
     widget.style["padding"] = "20px";
     const onchange = () => {
       this.rgba.load(widget.rgba);
@@ -41152,12 +40921,12 @@ var ColorPickerButton = class extends UIBase5 {
       }
     };
     widget._onchange = onchange;
-    colorpicker.style["background-color"] = widget.getDefault("background-color");
-    colorpicker.style["border-width"] = widget.getDefault("border-width");
+    colorpicker.style["backgroundColor"] = widget.getDefault("background-color");
+    colorpicker.style["borderWidth"] = widget.getDefault("border-width");
   }
   setRGBA(val) {
     const a2 = this.rgba[3];
-    const old = new Vector45(this.rgba);
+    const old = new Vector4(this.rgba);
     this.rgba.load(val);
     if (val.length < 4) {
       this.rgba[3] = a2;
@@ -41242,21 +41011,16 @@ var ColorPickerButton = class extends UIBase5 {
     const dpi = this.getDPI();
     this.style["width"] = "min-contentspx";
     this.style["height"] = h + "px";
-    this.style["flex-direction"] = "row";
+    this.style["flexDirection"] = "row";
     this.style["display"] = "flex";
     this.labelDom.style["color"] = this.getDefault(this._font).color;
-    this.labelDom.style["font"] = getFont(
-      this,
-      void 0,
-      this._font,
-      false
-    );
+    this.labelDom.style["font"] = getFont(this, void 0, this._font, false);
     const canvas = this.dom;
     canvas.style["width"] = w + "px";
     canvas.style["height"] = h + "px";
     canvas.width = ~~(w * dpi);
     canvas.height = ~~(h * dpi);
-    this.style["background-color"] = "rgba(0,0,0,0)";
+    this.style["backgroundColor"] = "rgba(0,0,0,0)";
     this._redraw();
   }
   updateDataPath() {
@@ -41295,7 +41059,7 @@ var ColorPickerButton = class extends UIBase5 {
       this.internalDisabled = false;
       let dis;
       if (val.length === 3) {
-        dis = Vector34.prototype.vectorDistance.call(val, this.rgba);
+        dis = Vector3.prototype.vectorDistance.call(val, this.rgba);
       } else {
         dis = this.rgba.vectorDistance(val);
       }
@@ -41342,7 +41106,7 @@ var ColorPickerButton = class extends UIBase5 {
     this._redraw();
   }
 };
-UIBase5.internalRegister(ColorPickerButton);
+UIBase2.internalRegister(ColorPickerButton);
 
 // scripts/util/vectormath.ts
 init_vectormath();
@@ -41441,20 +41205,16 @@ var TabItem = class extends UIBase2 {
     this.ontabdragmove = null;
     this.ontabdragend = null;
     this.addEventListener("tabclick", (e) => {
-      if (this.ontabclick)
-        return this.ontabclick(e);
+      if (this.ontabclick) return this.ontabclick(e);
     });
     this.addEventListener("tabdragstart", (e) => {
-      if (this.ontabdragstart)
-        return this.ontabdragstart(e);
+      if (this.ontabdragstart) return this.ontabdragstart(e);
     });
     this.addEventListener("tabdragmove", (e) => {
-      if (this.ontabdragmove)
-        return this.ontabdragmove(e);
+      if (this.ontabdragmove) return this.ontabdragmove(e);
     });
     this.addEventListener("tabdragend", (e) => {
-      if (this.ontabdragend)
-        return this.ontabdragend(e);
+      if (this.ontabdragend) return this.ontabdragend(e);
     });
     this.dom = void 0;
     this.extra = void 0;
@@ -41595,8 +41355,7 @@ var ModalTabMove = class extends EventHandler {
   }
   finish() {
     if (debug2) {
-      if (debug2)
-        console.log("finish");
+      if (debug2) console.log("finish");
     }
     if (this.finished) {
       return;
@@ -41683,8 +41442,7 @@ var ModalTabMove = class extends EventHandler {
       dx = x - this.mpos[0];
       dy = y - this.mpos[1];
     }
-    if (debug2)
-      console.log(x, y, dx, dy);
+    if (debug2) console.log(x, y, dx, dy);
     const tab2 = this.tab;
     const tbar = this.tbar;
     const axis = tbar.horiz ? 0 : 1;
@@ -41742,12 +41500,14 @@ var ModalTabMove = class extends EventHandler {
     }
   }
   on_keydown(e) {
-    if (debug2)
-      console.log(e.keyCode);
+    if (debug2) console.log(e.keyCode);
     switch (e.keyCode) {
       case keymap.Escape:
+      //escape
       case keymap.Space:
+      //space
       case keymap.Enter:
+      //enter
       case keymap.Tab:
         this.finish();
         break;
@@ -41847,8 +41607,7 @@ var TabBar = class extends UIBase2 {
     if (e.defaultPrevented) {
       return;
     }
-    if (debug2)
-      console.log("mdown");
+    if (debug2) console.log("mdown");
     if (e.button !== 0) {
       return;
     }
@@ -41949,8 +41708,7 @@ var TabBar = class extends UIBase2 {
   }
   getTab(name_or_id) {
     for (const tab2 of this.tabs) {
-      if (tab2.id === name_or_id || tab2.name === name_or_id)
-        return tab2;
+      if (tab2.id === name_or_id || tab2.name === name_or_id) return tab2;
     }
     return void 0;
   }
@@ -42050,8 +41808,7 @@ var TabBar = class extends UIBase2 {
     if (pos !== this._last_pos || force_update) {
       this._last_pos = pos;
       this.horiz = pos === "top" || pos === "bottom";
-      if (debug2)
-        console.log("tab bar position update", this.horiz);
+      if (debug2) console.log("tab bar position update", this.horiz);
       if (this.horiz) {
         this.style["width"] = "100%";
         delete this.saneStyle["height"];
@@ -42065,8 +41822,7 @@ var TabBar = class extends UIBase2 {
   updateDPI(force_update = false) {
     const dpi = this.getDPI();
     if (dpi !== this._last_dpi) {
-      if (debug2)
-        console.log("DPI update!");
+      if (debug2) console.log("DPI update!");
       this._last_dpi = dpi;
       this.updateCanvas(true);
     }
@@ -42099,8 +41855,7 @@ var TabBar = class extends UIBase2 {
       this.doOnce(this._layout);
     }
     const g = this.g;
-    if (debug2)
-      console.log("tab layout");
+    if (debug2) console.log("tab layout");
     const dpi = this.getDPI();
     const font = this._getFont();
     const tsize = font.size * dpi;
@@ -42137,11 +41892,9 @@ var TabBar = class extends UIBase2 {
         let dead = !this.tabs.includes(tab2);
         dead = dead || this.isDead();
         if (dead) {
-          if (tab2.dom)
-            tab2.dom.remove();
+          if (tab2.dom) tab2.dom.remove();
           tab2.dom = void 0;
-          if (tab2.watcher?.timer !== void 0)
-            clearInterval(tab2.watcher.timer);
+          if (tab2.watcher?.timer !== void 0) clearInterval(tab2.watcher.timer);
         }
       };
       tab2.watcher = { timer: window.setInterval(watcher, 750) };
@@ -42160,8 +41913,7 @@ var TabBar = class extends UIBase2 {
           this._size_cb = void 0;
           return;
         }
-        if (!this.ctx)
-          return;
+        if (!this.ctx) return;
         this._layout();
         this._redraw();
       };
@@ -42234,16 +41986,14 @@ var TabBar = class extends UIBase2 {
       if (!isMobile() && this.getDefault("focus-on-tab-click")) {
         tab2.focus({ preventScroll: true, focusVisible: false });
       }
-      if (this.onchange)
-        this.onchange(tab2, event);
+      if (this.onchange) this.onchange(tab2, event);
       this.update(true);
     }
   }
   _redraw() {
     const g = this.g;
     const activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
-    if (debug2)
-      console.log("tab draw");
+    if (debug2) console.log("tab draw");
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const dpi = this.getDPI();
     const font = this._getFont();
@@ -42268,8 +42018,7 @@ var TabBar = class extends UIBase2 {
     let ti = -1;
     for (tab2 of this.tabs) {
       ti++;
-      if (tab2 === this.tabs.active)
-        continue;
+      if (tab2 === this.tabs.active) continue;
       const x = tab2.pos[0];
       const y = tab2.pos[1];
       const w = tab2.size[0];
@@ -42433,7 +42182,7 @@ var TabBar = class extends UIBase2 {
   }
 };
 UIBase2.internalRegister(TabBar);
-var TabContainer2 = class extends UIBase2 {
+var TabContainer3 = class extends UIBase2 {
   _style;
   tbar;
   tabs;
@@ -42622,8 +42371,7 @@ var TabContainer2 = class extends UIBase2 {
         ${!horiz ? "vertical-align : top;" : ""}
       }
     `;
-    if (this._style)
-      this._style.remove();
+    if (this._style) this._style.remove();
     this._style = style;
     this.shadow.prepend(style);
   }
@@ -42753,7 +42501,7 @@ var TabContainer2 = class extends UIBase2 {
     }
   }
 };
-UIBase2.internalRegister(TabContainer2);
+UIBase2.internalRegister(TabContainer3);
 
 // scripts/widgets/ui_listbox.ts
 init_ui_base();
@@ -42843,8 +42591,7 @@ var ListBox2 = class extends Container3 {
       switch (e.keyCode) {
         case keymap["Up"]:
         case keymap["Down"]:
-          if (this.items.length == 0)
-            return;
+          if (this.items.length == 0) return;
           if (this.items.active === void 0) {
             this.setActive(this.items[0]);
             return;
@@ -43246,11 +42993,11 @@ var TableFrame2 = class extends Container3 {
         return _bg;
       }
     });
-    ret.cell = () => {
+    ret.cell = (() => {
       const container = maketd();
       container.background = tr.style["background-color"];
       return container;
-    };
+    });
     makefunc("label");
     makefunc("tool");
     makefunc("prop");
@@ -43295,7 +43042,7 @@ __export(ui_noteframe_exports, {
 });
 init_ui_base();
 init_ui_base();
-var UIBase6 = UIBase2;
+var UIBase5 = UIBase2;
 var Note = class extends UIBase2 {
   _noteid;
   height;
@@ -43375,7 +43122,7 @@ var Note = class extends UIBase2 {
     super.setCSS(false);
   }
 };
-UIBase6.internalRegister(Note);
+UIBase5.internalRegister(Note);
 var ProgBarNote = class extends Note {
   _percent;
   barWidth;
@@ -43427,7 +43174,7 @@ var ProgBarNote = class extends Note {
     super.init();
   }
 };
-UIBase6.internalRegister(ProgBarNote);
+UIBase5.internalRegister(ProgBarNote);
 var NoteFrame = class extends RowFrame {
   _h;
   constructor() {
@@ -43480,7 +43227,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
   addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
-    let note = UIBase6.createElement(tagname);
+    let note = UIBase5.createElement(tagname);
     note.color = color;
     note.setLabel(msg);
     note.style["text-align"] = "center";
@@ -43500,7 +43247,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
 };
-UIBase6.internalRegister(NoteFrame);
+UIBase5.internalRegister(NoteFrame);
 function getNoteFrames(screen) {
   let ret = [];
   let rec = (n) => {
@@ -43562,7 +43309,7 @@ init_ui_base();
 init_toolprop();
 init_toolsys();
 init_toolprop();
-var LastKey = Symbol("LastToolPanelId");
+var LastKey = /* @__PURE__ */ Symbol("LastToolPanelId");
 var tool_idgen2 = 0;
 function getLastToolStruct(ctx) {
   let ret = ctx.state._last_tool;
@@ -43767,11 +43514,9 @@ var Constraint = class {
       this.funcDv(this.params, this.glst);
       return r1;
     }
-    if (Math.abs(r1) < this.threshold)
-      return 0;
+    if (Math.abs(r1) < this.threshold) return 0;
     const df = this.df;
-    if (no_dvs)
-      return r1;
+    if (no_dvs) return r1;
     for (let i = 0; i < this.klst.length; i++) {
       const gs = this.glst[i];
       const ks = this.klst[i];
@@ -43815,8 +43560,7 @@ var Solver = class {
       }
       const con = cons[ri];
       let r1 = con.evaluate();
-      if (r1 === 0)
-        continue;
+      if (r1 === 0) continue;
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
@@ -43849,8 +43593,7 @@ var Solver = class {
       }
       const con = cons[ri];
       const r1 = con.evaluate();
-      if (r1 === 0)
-        continue;
+      if (r1 === 0) continue;
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
@@ -43971,8 +43714,7 @@ function getCenter(nodes) {
   for (const n of nodes) {
     cent.add(n.pos);
   }
-  if (nodes.length === 0)
-    return cent;
+  if (nodes.length === 0) return cent;
   cent.mulScalar(1 / nodes.length);
   return cent;
 }
@@ -44049,8 +43791,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   let disableEdges = false;
   function edge_c(params) {
     const [v1, v2, restlen] = params;
-    if (disableEdges)
-      return 0;
+    if (disableEdges) return 0;
     return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
   }
   const p1 = new Vector2();
@@ -44070,8 +43811,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   let disableArea = false;
   function area_c(params) {
     const [n1, n2] = params;
-    if (disableArea)
-      return 0;
+    if (disableArea) return 0;
     loadBoxes(n1, n2);
     return aabb_overlap_area(p1, s1, p2, s2);
   }
@@ -44108,8 +43848,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
       for (const v of n1.verts) {
         verts.add(v);
         for (const v2 of v.edges) {
-          if (v2._id < v._id)
-            continue;
+          if (v2._id < v._id) continue;
           const rlen = n1.size.vectorLength() * 0;
           const con = new Constraint(
             "edge_c",
@@ -44122,11 +43861,9 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
         }
       }
       for (const n2 of nodes) {
-        if (n1 === n2)
-          continue;
+        if (n1 === n2) continue;
         const key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-        if (visit.has(key))
-          continue;
+        if (visit.has(key)) continue;
         loadBoxes(n1, n2);
         const area = aabb_overlap_area(p1, s1, p2, s2);
         if (area > 0.01) {
@@ -44158,8 +43895,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     if (i % 40 === 0) {
       const c1 = getCenter(nodes);
       const rfac = 1e3;
-      if (best)
-        loadGraph(nodes, best);
+      if (best) loadGraph(nodes, best);
       for (const n of nodes) {
         n.pos[0] += (Math.random() - 0.5) * rfac * speed;
         n.pos[1] += (Math.random() - 0.5) * rfac * speed;
@@ -44231,8 +43967,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
       while (time_ms() - time < 50) {
         solveStep();
       }
-      if (best)
-        loadGraph(orignodes, best);
+      if (best) loadGraph(orignodes, best);
       if (updateCb() === false) {
         clearInterval(extNodes._timer);
         return;
@@ -44241,8 +43976,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     const timer = extNodes._timer;
     return {
       stop: () => {
-        if (best)
-          loadGraph(nodes, best);
+        if (best) loadGraph(nodes, best);
         window.clearInterval(timer);
         extNodes._timer = void 0;
       }
@@ -44926,7 +44660,7 @@ init_math();
 init_util2();
 init_ui_base();
 var SVG_URL = "http://www.w3.org/2000/svg";
-var Vector26 = Vector2;
+var Vector24 = Vector2;
 var CanvasOverdraw = class extends UIBase2 {
   canvas;
   g;
@@ -45070,7 +44804,7 @@ var Overdraw = class extends UIBase2 {
   drawTextBubbles(texts, cos2, colors) {
     let boxes = [];
     let elems = [];
-    let cent = new Vector26();
+    let cent = new Vector24();
     for (let i = 0; i < texts.length; i++) {
       let co = cos2[i];
       let text2 = texts[i];
@@ -45103,7 +44837,7 @@ var Overdraw = class extends UIBase2 {
       let y = parsepx2(box.style["top"]);
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector26([x, y]);
+      box.startpos = new Vector24([x, y]);
       box.setCSS = function() {
         this.style["padding"] = "0px";
         this.style["margin"] = "0px";
@@ -45133,10 +44867,10 @@ var Overdraw = class extends UIBase2 {
           s2[0] = box2.params[2];
           s2[1] = box2.params[3];
           let overlap = aabb_overlap_area(
-            new Vector26(box1.params),
-            new Vector26(s1),
-            new Vector26(box2.params),
-            new Vector26(s2)
+            new Vector24(box1.params),
+            new Vector24(s1),
+            new Vector24(box2.params),
+            new Vector24(s2)
           );
           ret += overlap;
         }
@@ -45189,10 +44923,8 @@ var Overdraw = class extends UIBase2 {
       args
     );
     if (mergedArgs.font === void 0) {
-      if (this.font !== void 0)
-        mergedArgs.font = this.font;
-      else
-        mergedArgs.font = this.getDefault("DefaultText").genCSS();
+      if (this.font !== void 0) mergedArgs.font = this.font;
+      else mergedArgs.font = this.getDefault("DefaultText").genCSS();
     }
     if (!mergedArgs["background-color"]) {
       mergedArgs["background-color"] = "rgba(75, 75, 75, 0.75)";
@@ -45330,10 +45062,8 @@ var TreeItem = class extends Container3 {
     }
   }
   get icon() {
-    if (this._icon2)
-      return this._icon2.icon;
-    else
-      return -1;
+    if (this._icon2) return this._icon2.icon;
+    else return -1;
   }
   open() {
     this._icon1.icon = Icons.TREE_COLLAPSE;
@@ -45442,8 +45172,7 @@ var TreeView = class extends Container3 {
       return i2;
     };
     let i = 0;
-    if (hidden(items[i]))
-      i = next(i);
+    if (hidden(items[i])) i = next(i);
     const origin = this.overdraw.getBoundingClientRect();
     const overdraw = this.overdraw;
     const line = function(x1, y1, x2, y2) {
@@ -45468,8 +45197,7 @@ var TreeView = class extends Container3 {
       const item2idx = next(i);
       const item2 = item2idx < items.length ? items[item2idx] : void 0;
       const r = item._icon1.getBoundingClientRect();
-      if (!r)
-        continue;
+      if (!r) continue;
       const x1 = getx(item.treeDepth);
       const y1 = origin.y + (i + 1) * rowh - rowh * 0.25;
       if (item2 && item2.treeDepth > item.treeDepth) {
@@ -45496,8 +45224,7 @@ var TreeView = class extends Container3 {
       return;
     }
     const r = this.getClientRects()[0];
-    if (!r)
-      return;
+    if (!r) return;
     const x = r.left;
     const y = r.top;
     const od = this.overdraw;
@@ -45837,6 +45564,7 @@ var ToolBase = class extends ToolOp {
         this.cancel();
         break;
       case keymap.Space:
+      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -46065,6 +45793,7 @@ var SplitTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
+      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -46156,6 +45885,7 @@ var RemoveAreaTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
+      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -46656,8 +46386,7 @@ function makeAreasEnum() {
   for (const k in areaclasses) {
     const cls = areaclasses[k];
     const def = cls.define();
-    if ((def.flag ?? 0) & AreaFlags.HIDDEN)
-      continue;
+    if ((def.flag ?? 0) & AreaFlags.HIDDEN) continue;
     let uiname = def.uiname;
     if (uiname === void 0) {
       uiname = k.replace("_", " ").toLowerCase();
@@ -46873,10 +46602,8 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     for (let i = 0; i < 2; i++) {
       const sv = i ? this.v2 : this.v1;
       for (const sa of sv.borders) {
-        if (sa.horiz != this.horiz)
-          continue;
-        if (sa._id in visit)
-          continue;
+        if (sa.horiz != this.horiz) continue;
+        if (sa._id in visit) continue;
         visit[sa._id] = 1;
         const a0x = Math.min(this.v1[0], this.v2[0]);
         const a0y = Math.min(this.v1[1], this.v2[1]);
@@ -46913,10 +46640,8 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     };
   }
   otherVertex(v) {
-    if (v === this.v1)
-      return this.v2;
-    else
-      return this.v1;
+    if (v === this.v1) return this.v2;
+    else return this.v1;
   }
   setCSS() {
     this.style["pointer-events"] = this.movable ? "auto" : "none";
@@ -47028,7 +46753,7 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
 UIBase2.internalRegister(ScreenBorder);
 
 // scripts/screen/constants.ts
-var IsScreenTag = Symbol("IsScreenTag");
+var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
 
 // scripts/screen/ScreenArea.ts
 init_ui_base();
@@ -47055,7 +46780,7 @@ var BorderSides = {
   RIGHT: 2,
   TOP: 3
 };
-Symbol.IsAreaTag = Symbol.for("IsAreaTag");
+Symbol.IsAreaTag = /* @__PURE__ */ Symbol.for("IsAreaTag");
 var Area = class _Area extends UIBase2 {
   static STRUCT;
   // used to avoid circular module ref with UIBase
@@ -47422,8 +47147,7 @@ var Area = class _Area extends UIBase2 {
       pageX = pageX === void 0 ? e.x : pageX;
       pageY = pageY === void 0 ? e.y : pageY;
       const screen = this.getScreen();
-      if (!screen)
-        return false;
+      if (!screen) return false;
       const node = screen.pickElement(pageX, pageY);
       if (node !== row) {
         return false;
@@ -47437,8 +47161,7 @@ var Area = class _Area extends UIBase2 {
       mdown = false;
     });
     eventdom.addEventListener("pointerdown", (e) => {
-      if (!mpre(e))
-        return;
+      if (!mpre(e)) return;
       mpos[0] = e.pageX;
       mpos[1] = e.pageY;
       mdown = true;
@@ -47454,8 +47177,7 @@ var Area = class _Area extends UIBase2 {
         return;
       }
       last_time = time_ms();
-      if (!mdown2 || !mpre(e, pageX, pageY))
-        return;
+      if (!mdown2 || !mpre(e, pageX, pageY)) return;
       if (e.type === "mousemove" && e.was_touch) {
         return;
       }
@@ -47528,10 +47250,8 @@ var Area = class _Area extends UIBase2 {
       return true;
     }
     const screen = this.getScreen();
-    if (screen === void 0)
-      return true;
-    if (screen.parentNode === void 0)
-      return true;
+    if (screen === void 0) return true;
+    if (screen.parentNode === void 0) return true;
   }
   //called by owning ScreenArea on file load
   afterSTRUCT() {
@@ -47617,8 +47337,7 @@ var ScreenArea2 = class extends UIBase2 {
         return;
       }
       const screen = this.getScreen();
-      if (!screen)
-        return;
+      if (!screen) return;
       if (screen.sareas.active !== this && screen.sareas.active?.area) {
         screen.sareas.active.area.on_area_blur();
       }
@@ -47722,8 +47441,7 @@ var ScreenArea2 = class extends UIBase2 {
   }
   bringToFront() {
     const screen = this.getScreen();
-    if (!screen)
-      return;
+    if (!screen) return;
     HTMLElement.prototype.remove.call(this);
     screen.sareas.remove(this);
     screen.appendChild(this);
@@ -47762,10 +47480,8 @@ var ScreenArea2 = class extends UIBase2 {
       return true;
     }
     const screen = this.getScreen();
-    if (screen === void 0)
-      return true;
-    if (screen.parentNode === void 0)
-      return true;
+    if (screen === void 0) return true;
+    if (screen.parentNode === void 0) return true;
   }
   toJSON() {
     const ret = {
@@ -47828,8 +47544,7 @@ var ScreenArea2 = class extends UIBase2 {
     super._ondestroy();
     this.dead = true;
     for (const editor2 of this.editors) {
-      if (editor2 === this.area)
-        continue;
+      if (editor2 === this.area) continue;
       editor2._ondestroy();
     }
   }
@@ -47895,8 +47610,7 @@ var ScreenArea2 = class extends UIBase2 {
   }
   snapToScreenSize() {
     const screen = this.getScreen();
-    if (!screen)
-      return;
+    if (!screen) return;
     const co = new Vector2();
     let changed = 0;
     for (const v of this._verts) {
@@ -47930,8 +47644,7 @@ var ScreenArea2 = class extends UIBase2 {
       return;
     }
     const screen = this.getScreen();
-    if (!screen)
-      return;
+    if (!screen) return;
     for (const b of this._borders) {
       screen.freeBorder(b);
     }
@@ -48092,8 +47805,7 @@ var ScreenArea2 = class extends UIBase2 {
     this.regenTabOrder();
   }
   _checkWrangler() {
-    if (this.ctx)
-      contextWrangler._checkWrangler(this.ctx);
+    if (this.ctx) contextWrangler._checkWrangler(this.ctx);
   }
   update() {
     this._checkWrangler();
@@ -48685,6 +48397,7 @@ var Screen2 = class extends UIBase2 {
   testAllKeyMaps;
   needsTabRecalc;
   _screen_id;
+  // _popups is not worth typing with <CTX>
   _popups;
   keymap;
   size;
@@ -48765,11 +48478,11 @@ var Screen2 = class extends UIBase2 {
   }
   get borders() {
     const this2 = this;
-    return function* () {
+    return (function* () {
       for (const k in this2._edgemap) {
         yield this2._edgemap[k];
       }
-    }();
+    })();
   }
   get listening() {
     return this.listen_timer !== void 0;
@@ -48858,8 +48571,7 @@ var Screen2 = class extends UIBase2 {
           }
         }
         for (const rule of sheet.cssRules) {
-          if (!(rule instanceof CSSStyleRule))
-            continue;
+          if (!(rule instanceof CSSStyleRule)) continue;
           const k = rule.selectorText;
           if (k in map3) {
             const rule2 = map3[k];
@@ -48996,9 +48708,9 @@ var Screen2 = class extends UIBase2 {
     let ret;
     for (let i = this._popups.length - 1; i >= 0; i--) {
       const popup = this._popups[i];
-      ret = ret || popup.pickElement(x, y, args);
+      ret = ret ?? popup.pickElement(x, y, args);
     }
-    ret = ret || super.pickElement(x, y, args);
+    ret = ret ?? super.pickElement(x, y, args);
     return ret;
   }
   _enterPopupSafe() {
@@ -49088,7 +48800,6 @@ var Screen2 = class extends UIBase2 {
   _popup(owning_node, elem_or_x, y, closeOnMouseOut = true) {
     let sarea = this.sareas.active;
     let w = owning_node;
-    let x;
     while (w) {
       if (w instanceof ScreenArea2) {
         sarea = w;
@@ -49096,13 +48807,17 @@ var Screen2 = class extends UIBase2 {
       }
       w = w.parentWidget;
     }
+    let rx;
+    let ry;
     if (typeof elem_or_x === "object") {
       const r = elem_or_x.getClientRects()[0];
-      x = r.x;
-      y = r.y;
+      rx = r.x;
+      ry = r.y;
     } else {
-      x = elem_or_x;
+      rx = elem_or_x;
     }
+    const x = (typeof elem_or_x === "number" ? elem_or_x : rx) ?? 0;
+    y = y ?? ry ?? 0;
     const container = UIBase2.createElement("container-x");
     container.ctx = this.ctx;
     container._init();
@@ -49126,9 +48841,6 @@ var Screen2 = class extends UIBase2 {
     container.style["top"] = y + "px";
     container.style["margin"] = "0px";
     container.parentWidget = this;
-    const mm = new MinMax(2);
-    const p = new Vector2();
-    const _update = container.update;
     container.updateAfter(() => {
       container.style["zIndex"] = "2205";
     });
@@ -49142,8 +48854,7 @@ var Screen2 = class extends UIBase2 {
       if (this._popup_safe) {
         return;
       }
-      if (done)
-        return;
+      if (done) return;
       this.ctx.screen.removeEventListener("mousedown", mousepick, true);
       this.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true });
       this.ctx.screen.removeEventListener("mouseup", mousepick, true);
@@ -49183,7 +48894,6 @@ var Screen2 = class extends UIBase2 {
         excluded_classes: [ScreenBorder],
         mouseEvent: e
       });
-      const startelem = elem;
       if (elem === void 0) {
         if (closeOnMouseOut) {
           end();
@@ -49353,8 +49063,7 @@ var Screen2 = class extends UIBase2 {
       }
       n.__pass = second_pass;
       n._forEachChildWidget((n2) => {
-        if (n === n2)
-          return;
+        if (n === n2) return;
         recurse(n2, second_pass, n);
         try {
           if (!second_pass && !n2.__destroyed) {
@@ -49428,29 +49137,25 @@ var Screen2 = class extends UIBase2 {
   getHotKey(toolpath) {
     const test2 = (keymap4) => {
       for (const hk of keymap4) {
-        if (typeof hk.action != "string")
-          continue;
+        if (typeof hk.action != "string") continue;
         if (hk.action.trim().startsWith(toolpath.trim())) {
           return hk;
         }
       }
     };
     let ret = test2(this.keymap);
-    if (ret)
-      return ret;
+    if (ret) return ret;
     if (this.sareas.active?.keymap) {
       const area = this.sareas.active.area;
       for (const keymap4 of area.getKeyMaps()) {
         ret = test2(keymap4);
-        if (ret)
-          return ret;
+        if (ret) return ret;
       }
     }
     if (ret === void 0) {
       for (const sarea of this.sareas) {
         const area = sarea.area;
-        if (!area)
-          continue;
+        if (!area) continue;
         for (const keymap4 of area.getKeyMaps()) {
           ret = test2(keymap4);
           if (ret) {
@@ -49470,8 +49175,7 @@ var Screen2 = class extends UIBase2 {
   }
   removeEventListener(type, cb, options) {
     if (type === "resize") {
-      if (this._resize_callbacks.includes(cb))
-        this._resize_callbacks.remove(cb);
+      if (this._resize_callbacks.includes(cb)) this._resize_callbacks.remove(cb);
     } else {
       return super.removeEventListener(type, cb, options);
     }
@@ -49504,8 +49208,7 @@ var Screen2 = class extends UIBase2 {
         if (handled) {
           break;
         }
-        if (!sarea.area)
-          continue;
+        if (!sarea.area) continue;
         sarea.area.push_ctx_active();
         for (const keymap4 of sarea.area.getKeyMaps()) {
           if (keymap4.handle(sarea.area.ctx, e)) {
@@ -49573,17 +49276,16 @@ var Screen2 = class extends UIBase2 {
       this.needsTabRecalc = false;
       this.calcTabOrder();
     }
-    outer:
-      for (const sarea of this.sareas) {
-        for (const b of sarea._borders) {
-          const movable = this.isBorderMovable(b);
-          if (movable !== b.movable) {
-            console.log("detected change in movable borders");
-            this.regenBorders();
-            break outer;
-          }
+    outer: for (const sarea of this.sareas) {
+      for (const b of sarea._borders) {
+        const movable = this.isBorderMovable(b);
+        if (movable !== b.movable) {
+          console.log("detected change in movable borders");
+          this.regenBorders();
+          break outer;
         }
       }
+    }
     if (this._update_gen) {
       let ret;
       try {
@@ -49657,7 +49359,7 @@ var Screen2 = class extends UIBase2 {
         sarea.ctx = this.ctx;
       }
     }
-    return function* () {
+    return (function* () {
       const stack = update_stack;
       stack.cur = 0;
       const lastn = this2;
@@ -49671,8 +49373,8 @@ var Screen2 = class extends UIBase2 {
         return stack[--stack.cur];
       }
       const ctx = this2.ctx;
-      const SCOPE_POP = Symbol("pop");
-      const AREA_CTX_POP = Symbol("pop2");
+      const SCOPE_POP = /* @__PURE__ */ Symbol("pop");
+      const AREA_CTX_POP = /* @__PURE__ */ Symbol("pop2");
       const scopestack = [];
       const areastack = [];
       let t = time_ms();
@@ -49733,7 +49435,7 @@ var Screen2 = class extends UIBase2 {
           }
         }
       }
-    }();
+    })();
   }
   //load pos/size from screenverts
   loadFromVerts() {
@@ -49815,8 +49517,7 @@ var Screen2 = class extends UIBase2 {
     s1.setCSS();
     s2.setCSS();
     this.setCSS();
-    if (s2.area !== void 0)
-      s2.area.onadd();
+    if (s2.area !== void 0) s2.area.onadd();
     return s2;
   }
   setCSS() {
@@ -49899,8 +49600,7 @@ var Screen2 = class extends UIBase2 {
         dels.push([b, he]);
       }
       for (const he2 of he.border.halfedges) {
-        if (he2 === he)
-          continue;
+        if (he2 === he) continue;
         if (he2.sarea === sarea) {
           dels.push([he.border, he2]);
         }
@@ -49927,8 +49627,7 @@ var Screen2 = class extends UIBase2 {
     this.screenborders.remove(b);
     const del = [];
     for (const he of b.halfedges) {
-      if (he.border === b)
-        continue;
+      if (he.border === b) continue;
       for (const he2 of he.border.halfedges) {
         if (he2.border === b) {
           del.push([he.border, he2]);
@@ -49962,8 +49661,7 @@ var Screen2 = class extends UIBase2 {
     this._vertmap = {};
     this.screenverts = [];
     for (const sarea of this.sareas) {
-      if (sarea.hidden)
-        continue;
+      if (sarea.hidden) continue;
       sarea.makeBorders(this);
     }
     for (const key in this._edgemap) {
@@ -50081,8 +49779,7 @@ var Screen2 = class extends UIBase2 {
         let bad2 = Boolean(sarea.borderLock & 1 << sidea);
         bad2 = bad2 || !b.movable;
         bad2 = bad2 || this.isBorderOuter(b);
-        if (bad2)
-          bad |= 1 << i;
+        if (bad2) bad |= 1 << i;
       }
       if (bad === 0) {
         this.moveBorder(b1, dh * 0.5);
@@ -50148,8 +49845,7 @@ var Screen2 = class extends UIBase2 {
     let ret = [b];
     visit.add(b);
     const rec = (b2, v) => {
-      if (!v)
-        return;
+      if (!v) return;
       for (const b22 of v.borders) {
         if (b22 === b2) {
           continue;
@@ -50321,8 +50017,7 @@ var Screen2 = class extends UIBase2 {
     for (let i = 0; i < 10; i++) {
       repeat = false;
       for (const sarea of this.sareas) {
-        if (sarea.hidden)
-          continue;
+        if (sarea.hidden) continue;
         repeat = repeat || Boolean(this.checkAreaConstraint(sarea));
       }
       found = found || repeat;
@@ -50385,8 +50080,7 @@ var Screen2 = class extends UIBase2 {
     }
     let found = true;
     for (const sarea of this.sareas) {
-      if (sarea.hidden)
-        continue;
+      if (sarea.hidden) continue;
       const old = new Vector2(sarea.size);
       const oldpos = new Vector2(sarea.pos);
       sarea.loadFromVerts();
@@ -50481,8 +50175,7 @@ var Screen2 = class extends UIBase2 {
     return ret;
   }
   isBorderMovable(b, limit = 5) {
-    if (this.allBordersMovable)
-      return true;
+    if (this.allBordersMovable) return true;
     for (const he of b.halfedges) {
       if (he.sarea.borderLock & 1 << he.side) {
         return false;
@@ -50534,16 +50227,14 @@ var Screen2 = class extends UIBase2 {
   areasBorder(sarea1, sarea2) {
     for (const b of sarea1._borders) {
       for (const sa of b.sareas) {
-        if (sa === sarea2)
-          return true;
+        if (sa === sarea2) return true;
       }
     }
     return false;
   }
   //regenerates borders, sets css and calls this.update
   replaceArea(dst, src) {
-    if (dst === src)
-      return;
+    if (dst === src) return;
     src.pos[0] = dst.pos[0];
     src.pos[1] = dst.pos[1];
     src.size[0] = dst.size[0];
@@ -52247,8 +51938,7 @@ var MenuBarEditor = class extends Editor {
     };
   }
   updateHeight(force = false) {
-    if (!this.header)
-      return;
+    if (!this.header) return;
     if (window.haveElectron) {
       this.maxSize[1] = 1;
       this.minSize[1] = 1;
@@ -53136,7 +52826,7 @@ export {
   StringSetProperty,
   StructFlags,
   TabBar,
-  TabContainer2 as TabContainer,
+  TabContainer3 as TabContainer,
   TabItem,
   TabItemContainer2 as TabItemContainer,
   TableFrame,

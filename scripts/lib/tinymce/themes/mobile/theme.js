@@ -6204,7 +6204,9 @@
             },
           },
         }),
-        Receiving.config({ channels: ((_a = {}), (_a[mouseReleased()] = { onReceive: choose }), _a) }),
+        Receiving.config({
+          channels: ((_a = {}), (_a[mouseReleased()] = { onReceive: choose }), _a),
+        }),
       ]),
       events: derive([
         run(sliderChangeEvent(), function (slider, simulatedEvent) {
@@ -7249,7 +7251,9 @@
   });
 
   var exhibit$4 = function (base, disableConfig) {
-    return nu$5({ classes: disableConfig.disabled ? disableConfig.disableClass.map(pure).getOr([]) : [] });
+    return nu$5({
+      classes: disableConfig.disabled ? disableConfig.disableClass.map(pure).getOr([]) : [],
+    });
   };
   var events$7 = function (disableConfig, disableState) {
     return derive([
@@ -12188,7 +12192,9 @@
       if (!isText(component.element())) {
         registry.register(component);
         each$1(component.components(), addToWorld);
-        systemApi.triggerEvent(systemInit(), component.element(), { target: constant(component.element()) });
+        systemApi.triggerEvent(systemInit(), component.element(), {
+          target: constant(component.element()),
+        });
       }
     };
     var removeFromWorld = function (component) {

@@ -1790,7 +1790,7 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
     super.init();
 
     this.rebuild();
-    window.setTimeout(() => this.updateTextBox(), 500);
+    this.doOnce(() => this.updateTextBox());
   }
 
   rebuild() {

@@ -10,7 +10,9 @@ import cconst from "../config/const";
 let idgen = 0;
 
 // @ts-ignore - Vector2 is a factory-produced class, extending works at runtime
-export class PackNodeVertex extends (Vector2 as unknown as { new (co?: unknown): InstanceType<typeof Vector2> }) {
+export class PackNodeVertex extends (Vector2 as unknown as {
+  new (co?: unknown): InstanceType<typeof Vector2>;
+}) {
   node: PackNode;
   _id: number;
   edges: PackNodeVertex[];
