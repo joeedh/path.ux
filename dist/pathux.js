@@ -160,7 +160,10 @@ var init_polyfill = __esm({
             filepath: location.origin + String(args[6]).replace(/\\/g, "/") + ":" + args[5],
             ownerpath: args[7]
           });
-          mod._addEventListener.apply(this, args);
+          mod._addEventListener.apply(
+            this,
+            args
+          );
         },
         pruneConnected() {
           const lists = debugLists();
@@ -9849,10 +9852,30 @@ var init_vectormath = __esm({
       }
       getAsVecs() {
         return [
-          new Vector4().loadXYZW(this.$matrix.m11, this.$matrix.m12, this.$matrix.m13, this.$matrix.m14),
-          new Vector4().loadXYZW(this.$matrix.m21, this.$matrix.m22, this.$matrix.m23, this.$matrix.m24),
-          new Vector4().loadXYZW(this.$matrix.m31, this.$matrix.m32, this.$matrix.m33, this.$matrix.m34),
-          new Vector4().loadXYZW(this.$matrix.m41, this.$matrix.m42, this.$matrix.m43, this.$matrix.m44)
+          new Vector4().loadXYZW(
+            this.$matrix.m11,
+            this.$matrix.m12,
+            this.$matrix.m13,
+            this.$matrix.m14
+          ),
+          new Vector4().loadXYZW(
+            this.$matrix.m21,
+            this.$matrix.m22,
+            this.$matrix.m23,
+            this.$matrix.m24
+          ),
+          new Vector4().loadXYZW(
+            this.$matrix.m31,
+            this.$matrix.m32,
+            this.$matrix.m33,
+            this.$matrix.m34
+          ),
+          new Vector4().loadXYZW(
+            this.$matrix.m41,
+            this.$matrix.m42,
+            this.$matrix.m43,
+            this.$matrix.m44
+          )
         ];
       }
       loadFromVecs(vecs) {
@@ -11430,7 +11453,9 @@ var init_events = __esm({
       popModal() {
         if (this._modalstate !== void 0) {
           const modalstate = this._modalstate;
-          popModalLight(modalstate);
+          popModalLight(
+            modalstate
+          );
           this._modalstate = void 0;
         }
       }
@@ -12235,10 +12260,14 @@ var init_toolprop = __esm({
       ["radix"].concat(list2(NumberConstraintsBase))
     );
     FloatConstrinats = new Set(
-      ["decimalPlaces"].concat(list2(NumberConstraintsBase))
+      ["decimalPlaces"].concat(
+        list2(NumberConstraintsBase)
+      )
     );
     NumberConstraints = new Set(
-      list2(IntegerConstraints).concat(list2(FloatConstrinats))
+      list2(IntegerConstraints).concat(
+        list2(FloatConstrinats)
+      )
     );
     PropSubTypes2 = {
       COLOR: 1
@@ -14539,13 +14568,19 @@ var init_context = __esm({
         return this.ctx.error(...args);
       }
       warning(...args) {
-        return this.ctx.warning(...args);
+        return this.ctx.warning(
+          ...args
+        );
       }
       message(...args) {
-        return this.ctx.message(...args);
+        return this.ctx.message(
+          ...args
+        );
       }
       progbar(...args) {
-        return this.ctx.progbar(...args);
+        return this.ctx.progbar(
+          ...args
+        );
       }
       progressBar(...args) {
         let ctxRec = this.ctx;
@@ -14914,7 +14949,12 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
     }
   }
   if (rootCtxStruct) {
-    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+    rootCtxStruct.struct(
+      "toolDefaults",
+      "toolDefaults",
+      "Tool Defaults",
+      api.mapStruct(ToolPropertyCache)
+    );
     rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
   }
   if (rootCtxClass && insertToolDefaultsIntoContext) {
@@ -15845,7 +15885,9 @@ toolsys.PropKey {
             delete selfInputs[dstinput];
           }
         }
-        this.connectLinks.push(new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops));
+        this.connectLinks.push(
+          new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops)
+        );
         return this;
       }
       connectCB(srctool, dsttool, callback, thisvar) {
@@ -16500,7 +16542,15 @@ var init_curve1d_bspline = __esm({
         [0, 1],
         [1, 0]
       ],
-      [SplineTemplates.GUASSIAN]: ["DEG", 5, [0, 0], [0.17969, 7e-3], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]]
+      [SplineTemplates.GUASSIAN]: [
+        "DEG",
+        5,
+        [0, 0],
+        [0.17969, 7e-3],
+        [0.48958, 0.01172],
+        [0.77995, 0.99609],
+        [1, 1]
+      ]
     };
     SplineTemplateIcons = {};
     RecalcFlags = {
@@ -16545,10 +16595,7 @@ var init_curve1d_bspline = __esm({
         const { dataPath } = this.getInputs();
         let curve1d;
         try {
-          curve1d = ctx.api.getValue(
-            ctx,
-            dataPath
-          );
+          curve1d = ctx.api.getValue(ctx, dataPath);
         } catch (error2) {
           console.error(error2.stack);
           console.error(error2.message);
@@ -16726,10 +16773,7 @@ var init_curve1d_bspline = __esm({
         const { dataPath } = this.getInputs();
         let curve1d;
         try {
-          curve1d = ctx.api.getValue(
-            ctx,
-            dataPath
-          );
+          curve1d = ctx.api.getValue(ctx, dataPath);
         } catch (error2) {
           console.error(error2.stack);
           console.error(error2.message);
@@ -17596,7 +17640,12 @@ Curve1DPoint {
         const drawTrans = drawTransform;
         const dpath = datapath;
         const srcUpdate = onSourceUpdate;
-        console.warn(this._bid, "makeGUI", this.uidata, this.uidata ? this.uidata.start_mpos : void 0);
+        console.warn(
+          this._bid,
+          "makeGUI",
+          this.uidata,
+          this.uidata ? this.uidata.start_mpos : void 0
+        );
         let start_mpos;
         if (this.uidata) {
           start_mpos = this.uidata.start_mpos;
@@ -18154,7 +18203,10 @@ var init_curve1d = __esm({
           return this;
         }
         const json = struct_default.writeJSON(b);
-        const cpy = struct_default.readJSON(json, _Curve1D);
+        const cpy = struct_default.readJSON(
+          json,
+          _Curve1D
+        );
         const activeCls = cpy.generators.active.constructor;
         const oldGens = this.generators;
         this.generators = cpy.generators;
@@ -19624,7 +19676,8 @@ function simple_tri_aabb_isect(v1, v2, v3, min, max) {
     let i = _i;
     let isect = true;
     for (let j = 0; j < 3; j++) {
-      if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i]) isect = false;
+      if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i])
+        isect = false;
     }
     if (isect) return true;
   }
@@ -19975,8 +20028,14 @@ function aabb_sphere_dist(p, min, max) {
     const i2 = (i + 1) % 3;
     const i3 = (i + 2) % 3;
     p2arr[i] = p2arr[i] < 0 ? lminarr[i] : lmaxarr[i];
-    p2arr[i2] = Math.min(Math.max(p2arr[i2], lminarr[i2]), lmaxarr[i2]);
-    p2arr[i3] = Math.min(Math.max(p2arr[i3], lminarr[i3]), lmaxarr[i3]);
+    p2arr[i2] = Math.min(
+      Math.max(p2arr[i2], lminarr[i2]),
+      lmaxarr[i2]
+    );
+    p2arr[i3] = Math.min(
+      Math.max(p2arr[i3], lminarr[i3]),
+      lmaxarr[i3]
+    );
     const dis = p2.vectorDistanceSqr(lp);
     if (mindis === void 0 || dis < mindis) {
       mindis = dis;
@@ -21452,7 +21511,8 @@ var init_parseutil = __esm({
         return this;
       }
       toString() {
-        if (this.value !== void 0) return "token(type=" + this.type + ", value='" + this.value + "')";
+        if (this.value !== void 0)
+          return "token(type=" + this.type + ", value='" + this.value + "')";
         else return "token(type=" + this.type + ")";
       }
     };
@@ -21960,8 +22020,12 @@ var init_controller_ops = __esm({
       }
       modalStart(ctx) {
         if (ctx.toLocked === void 0) {
-          console.warn("Warning: no toLocked in context class, this may lead to subtle undo behaviours");
-          console.warn("  (ctx locking creates a copy with values of the context at the time it as locked)");
+          console.warn(
+            "Warning: no toLocked in context class, this may lead to subtle undo behaviours"
+          );
+          console.warn(
+            "  (ctx locking creates a copy with values of the context at the time it as locked)"
+          );
         }
         this.__ctx = ctx.toLocked ? ctx.toLocked() : ctx;
         const result = super.modalStart(this.__ctx);
@@ -22771,7 +22835,8 @@ var init_ease = __esm({
         var pi2 = Math.PI * 2;
         return function(t) {
           var s = period / pi2 * Math.asin(1 / amplitude);
-          if ((t *= 2) < 1) return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
+          if ((t *= 2) < 1)
+            return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
           return amplitude * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * pi2 / period) * 0.5 + 1;
         };
       }
@@ -23824,7 +23889,12 @@ var init_controller = __esm({
        */
       dynamicStruct(path, apiname, uiname, default_struct) {
         const ret = default_struct ? default_struct : new _DataStruct();
-        const dpath = new DataPath(path, apiname, ret, DataTypes.DYNAMIC_STRUCT);
+        const dpath = new DataPath(
+          path,
+          apiname,
+          ret,
+          DataTypes.DYNAMIC_STRUCT
+        );
         ret.inheritFlag |= this.inheritFlag;
         ret.dpath = dpath;
         this.add(dpath);
@@ -24055,7 +24125,10 @@ var init_controller = __esm({
       add(dpath) {
         if (dpath.apiname in this.pathmap) {
           if (window.DEBUG?.datapaths) {
-            console.warn("Overriding existing member '" + dpath.apiname + "' in datapath struct", this.name);
+            console.warn(
+              "Overriding existing member '" + dpath.apiname + "' in datapath struct",
+              this.name
+            );
           }
           this.remove(this.pathmap[dpath.apiname]);
         }
@@ -24203,7 +24276,9 @@ An example of a more complicated expression might be:
         }
         const rdef = rdef1;
         if (!(rdef.prop instanceof DataList)) {
-          throw new DataPathError("massSetPath expected a path resolving to a DataList: " + massSetPath);
+          throw new DataPathError(
+            "massSetPath expected a path resolving to a DataList: " + massSetPath
+          );
         }
         const paths = [];
         const list5 = rdef.prop;
@@ -24361,7 +24436,9 @@ An example of a more complicated expression might be:
               const actkey = obj !== void 0 && act !== void 0 ? prop.getKey(this, obj, act) : void 0;
               dstruct = prop.getStruct(this, obj, actkey);
               if (dstruct === void 0) {
-                throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
+                throw new DataPathError(
+                  "couldn't get data type for " + inpath + "'s element '" + key + "'"
+                );
               }
               _dummypath.parent = dpath;
               dpath = _dummypath;
@@ -26027,7 +26104,10 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
       let p2 = obj.constructor;
       do {
         if (p2.prototype) {
-          let descr2 = Object.getOwnPropertyDescriptor(p2.prototype, key);
+          let descr2 = Object.getOwnPropertyDescriptor(
+            p2.prototype,
+            key
+          );
           if (descr2 && (descr2.set || descr2.get)) {
             return false;
           }
@@ -27424,7 +27504,9 @@ var init_ui_base = __esm({
           if (isMobile()) {
             drawsize = ~~(drawsize * theme.base.mobileSizeMultiplier);
           }
-          this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
+          this.iconsheets.push(
+            new _IconManager(images[i], size, horizontal_tile_count, drawsize)
+          );
         }
       }
       isReady(sheet = 0) {
@@ -27551,7 +27633,14 @@ var init_ui_base = __esm({
     UIFlags = {};
     internalElementNames = {};
     externalElementNames = {};
-    _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
+    _mobile_theme_patterns = [
+      /.*width.*/,
+      /.*height.*/,
+      /.*size.*/,
+      /.*margin.*/,
+      /.*pad/,
+      /.*radius.*/
+    ];
     _idgen2 = 0;
     _testSetScrollbars = function(color = "grey", contrast = 0.5, width = 15, border = "solid") {
       const buf = styleScrollBars(color, void 0, contrast, width, border, "*");
@@ -27917,7 +28006,10 @@ var init_ui_base = __esm({
         this._active_animations = [];
         this._screenStyleTag = document.createElement("style");
         this._screenStyleUpdateHash = 0;
-        initAspectClass(this, /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"]));
+        initAspectClass(
+          this,
+          /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
+        );
         this.shadow = this.attachShadow({ mode: "open" });
         if (const_default.DEBUG.paranoidEvents) {
           this.__cbs = [];
@@ -28152,7 +28244,10 @@ var init_ui_base = __esm({
         clsAny[ClassIdSymbol] = class_idgen++;
         registered_has_happened = true;
         internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
-        customElements.define(this.prefix(cls.define().tagname), cls);
+        customElements.define(
+          this.prefix(cls.define().tagname),
+          cls
+        );
       }
       static getInternalName(name2) {
         return internalElementNames[name2];
@@ -28929,7 +29024,12 @@ var init_ui_base = __esm({
           }
           if (clip2) {
             const rect = node.getBoundingClientRect();
-            const clip22 = aabb_intersect_2d(clip2.pos, clip2.size, [rect.x, rect.y], [rect.width, rect.height]);
+            const clip22 = aabb_intersect_2d(
+              clip2.pos,
+              clip2.size,
+              [rect.x, rect.y],
+              [rect.width, rect.height]
+            );
             ok = ok && Boolean(clip22);
           }
           if (ok) {
@@ -29153,7 +29253,13 @@ var init_ui_base = __esm({
           toolstack.redo(ctx);
         } else {
           this._lastPathUndoGen = this.pathUndoGen;
-          const toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? void 0);
+          const toolop = getDataPathToolOp().create(
+            ctx,
+            path,
+            val,
+            this._id,
+            mass_set_path ?? void 0
+          );
           if (!toolop) {
             return;
           }
@@ -29427,7 +29533,15 @@ var init_ui_base = __esm({
               }
             },
             start_events: ["mouseover"],
-            reset_events: ["mousemove", "mousedown", "mouseup", "touchstart", "touchend", "keydown", "focus"],
+            reset_events: [
+              "mousemove",
+              "mousedown",
+              "mouseup",
+              "touchstart",
+              "touchend",
+              "keydown",
+              "focus"
+            ],
             stop_events: ["mouseleave", "blur", "mouseout"],
             handlers: {}
           };
@@ -30679,7 +30793,9 @@ function createMenu(ctx, title, templ) {
     } else if (item === menuSEP) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
-      doItem(item(document.createElement("div")));
+      doItem(
+        item(document.createElement("div"))
+      );
     } else if (item instanceof Array) {
       let hotkey = item.length > 1 ? item[2] : void 0;
       const icon = item.length > 2 ? item[3] : void 0;
@@ -33746,7 +33862,12 @@ var IconButton = class extends UIBase3 {
       if (this._pressed && this._icon_pressed !== void 0) {
         icon = this._icon_pressed;
       }
-      iconmanager.setCSS(icon, this.dom, this.iconsheet, this.getDefault("iconSize"));
+      iconmanager.setCSS(
+        icon,
+        this.dom,
+        this.iconsheet,
+        this.getDefault("iconSize")
+      );
     }
     if (this._extraIcon !== void 0) {
       let dom;
@@ -34510,7 +34631,8 @@ var Container3 = class _Container extends UIBase2 {
       else this.style["width"] = this.div.style["width"] = width;
     }
     if (height !== void 0) {
-      if (typeof height == "number") this.style["height"] = this.div.style["height"] = ~~height + "px";
+      if (typeof height == "number")
+        this.style["height"] = this.div.style["height"] = ~~height + "px";
       else this.style["height"] = this.div.style["height"] = height;
     }
     return this;
@@ -35025,7 +35147,9 @@ var Container3 = class _Container extends UIBase2 {
         return check;
       }
       if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
-        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(useDataPathUndo);
+        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(
+          useDataPathUndo
+        );
       } else {
         if (prop.flag & PropFlags.USE_ICONS) {
           packflag |= PackFlags.USE_ICONS;
@@ -35043,7 +35167,8 @@ var Container3 = class _Container extends UIBase2 {
     } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
       if (rdef.subkey !== void 0) {
         let ret;
-        if (packflag & PackFlags.SIMPLE_NUMSLIDERS) ret = this.simpleslider(inpath, { packflag });
+        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
+          ret = this.simpleslider(inpath, { packflag });
         else ret = this.slider(inpath, { packflag });
         ret.packflag |= packflag;
         return ret.setUndo(useDataPathUndo);
@@ -35250,59 +35375,62 @@ var Container3 = class _Container extends UIBase2 {
       prop = resolved !== void 0 ? resolved.prop : void 0;
     }
     if (path !== void 0) {
+      let makecb2 = function(key) {
+        return () => {
+          if (ignorecb) return;
+          ignorecb = true;
+          for (const k in checks) {
+            if (k !== key) {
+              checks[k].checked = false;
+            }
+          }
+          ignorecb = false;
+          if (callback) {
+            callback(key);
+          }
+        };
+      };
+      var makecb = makecb2;
       if (prop === void 0) {
         console.warn("Bad path in checkenum", path);
         return void 0;
       }
       frame = this.strip();
       frame.oneAxisPadding();
-      if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values) {
-          const check = frame.check(inpath + "[" + key + "]", "", packflag);
-          check.packflag |= PackFlags.HIDE_CHECK_MARKS;
-          check.icon = prop.iconmap[key];
-          check.drawCheck = false;
-          check.style["padding"] = "0px";
-          check.style["margin"] = "0px";
-          styl(check.dom)["padding"] = "0px";
-          styl(check.dom)["margin"] = "0px";
-          check.description = prop.descriptions[key];
-        }
-      } else {
-        let makecb2 = function(key) {
-          return () => {
-            if (ignorecb) return;
-            ignorecb = true;
-            for (const k in checks) {
-              if (k !== key) {
-                checks[k].checked = false;
-              }
-            }
-            ignorecb = false;
-            if (callback) {
-              callback(key);
-            }
-          };
-        };
-        var makecb = makecb2;
+      const makeIconCheck = (key) => {
+        const check = frame.check(inpath + "[" + key + "]", "", packflag);
+        check.packflag |= PackFlags.HIDE_CHECK_MARKS;
+        check.icon = prop.iconmap[key];
+        check.drawCheck = false;
+        check.style["padding"] = "0px";
+        check.style["margin"] = "0px";
+        styl(check.dom)["padding"] = "0px";
+        styl(check.dom)["margin"] = "0px";
+        return check;
+      };
+      const makeCheck = (key) => {
+        return frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
+      };
+      const useIcons = packflag & PackFlags.USE_ICONS;
+      if (!useIcons) {
         if (name2 === void 0) {
           name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
         }
         frame.label(name2).font = "TitleText";
-        const checks = {};
-        let ignorecb = false;
-        for (const key in prop.values) {
-          const check = frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
-          checks[key] = check;
-          if (mass_set_path) {
-            check.setAttribute("mass_set_path", mass_set_path);
-          }
-          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-          if (!check.description) {
-            check.description = "" + prop.ui_value_names[key];
-          }
-          check.onchange = makecb2(key);
+      }
+      const checks = {};
+      let ignorecb = false;
+      for (const key in prop.values) {
+        const check = useIcons ? makeIconCheck(key) : makeCheck(key);
+        checks[key] = check;
+        if (mass_set_path) {
+          check.setAttribute("mass_set_path", mass_set_path);
         }
+        check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
+        if (!check.description) {
+          check.description = "" + prop.ui_value_names[key];
+        }
+        check.onchange = makecb2(key);
       }
     }
     return frame;
@@ -35329,7 +35457,11 @@ var Container3 = class _Container extends UIBase2 {
       frame.setCSSAfter(() => frame.background = this.getDefault("BoxSub2BG"));
       if (packflag & PackFlags.USE_ICONS) {
         for (const key in prop.values) {
-          const check = frame.check(inpath + " == " + prop.values[key], "", packflag);
+          const check = frame.check(
+            inpath + " == " + prop.values[key],
+            "",
+            packflag
+          );
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
           check.style["padding"] = "0px";
@@ -35714,7 +35846,9 @@ var Container3 = class _Container extends UIBase2 {
   //
   tabs(position = "top", packflag = 0) {
     const ret = UIBase2.createElement("tabcontainer-x");
-    ret.constructor.setDefault(ret);
+    ret.constructor.setDefault(
+      ret
+    );
     ret.setAttribute("bar_pos", position);
     this._container_inherit(ret, packflag);
     this._add(ret);
@@ -36086,7 +36220,12 @@ var NumSlider = class extends ValueButtonBase {
           val = parseValue(val, this.baseUnit, displayUnit);
         }
         if (isNaN(val)) {
-          console.log("Text input error", val, tbox.text.trim(), this.isInt);
+          console.log(
+            "Text input error",
+            val,
+            tbox.text.trim(),
+            this.isInt
+          );
           this.flash(ErrorColors.ERROR);
         } else {
           this.setValue(val);
@@ -36552,7 +36691,13 @@ var NumSlider = class extends ValueButtonBase {
     arrowcolor_base = parseArrowColor(arrowcolor_base);
     let arrowcolorValue;
     if (this._pressed && this._highlight) {
-      arrowcolorValue = this.getSubDefault("highlight-pressed", "arrow-color", void 0, void 0, false) ?? "";
+      arrowcolorValue = this.getSubDefault(
+        "highlight-pressed",
+        "arrow-color",
+        void 0,
+        void 0,
+        false
+      ) ?? "";
       if (!arrowcolorValue) {
         arrowcolorValue = this.getSubDefault("pressed", "arrow-color") ?? "";
       }
@@ -36569,7 +36714,9 @@ var NumSlider = class extends ValueButtonBase {
           arrowcolorValue = this.getDefault("BoxHighlight") ?? "";
         }
         const colorVector = css2color2(arrowcolorValue);
-        const base = css2color2(this.getSubDefault("pressed", "arrow-color", void 0, "33%") ?? "");
+        const base = css2color2(
+          this.getSubDefault("pressed", "arrow-color", void 0, "33%") ?? ""
+        );
         colorVector.interp(base, 0.25);
         arrowcolorValue = color2css3(colorVector);
       } else {
@@ -37397,7 +37544,14 @@ init_util2();
 init_ui_menu();
 init_ui_base();
 var domTransferAttrs = /* @__PURE__ */ new Set(["id", "title", "tab-index"]);
-var domEventAttrs = /* @__PURE__ */ new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
+var domEventAttrs = /* @__PURE__ */ new Set([
+  "click",
+  "mousedown",
+  "mouseup",
+  "mousemove",
+  "keydown",
+  "keypress"
+]);
 function parseXML(xml) {
   const parser3 = new DOMParser();
   xml = `<root>${xml}</root>`;
@@ -37942,7 +38096,11 @@ var Handler = class {
     const path = elem.getAttribute("path");
     let elem2;
     if (key === "pathlabel") {
-      elem2 = this.container.pathlabel(path ?? void 0, elem.innerHTML, packflag);
+      elem2 = this.container.pathlabel(
+        path ?? void 0,
+        elem.innerHTML,
+        packflag
+      );
     } else if (key === "textbox") {
       const tb = this.container.textbox(path ?? void 0, void 0, void 0, packflag);
       elem2 = tb;
@@ -38142,7 +38300,10 @@ var Handler = class {
     const tabs = this.container.tabs(pos);
     this.container = tabs;
     if (elem.hasAttribute("movable-tabs")) {
-      tabs.setAttribute("movable-tabs", elem.getAttribute("movable-tabs") ?? "");
+      tabs.setAttribute(
+        "movable-tabs",
+        elem.getAttribute("movable-tabs") ?? ""
+      );
     }
     this._container(elem, tabs);
     this.visit(elem);
@@ -38241,7 +38402,9 @@ var RichEditor = class extends TextBoxBase {
       }
     `;
     this.shadow.appendChild(this.styletag);
-    const controls = this.controls = UIBase2.createElement("rowframe-x");
+    const controls = this.controls = UIBase2.createElement(
+      "rowframe-x"
+    );
     const makeicon = (icon, description, cb) => {
       const btn = controls.iconbutton(icon, description, cb);
       btn.iconsheet = 1;
@@ -38693,7 +38856,10 @@ var VectorPanel = class extends ColumnFrame {
           this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
         }
         if (this2.uslider) {
-          this2.uslider.setValue(this2.uniformValue, false);
+          this2.uslider.setValue(
+            this2.uniformValue,
+            false
+          );
         }
         if (this2.onchange) {
           this2.onchange(this2.value);
@@ -38715,7 +38881,10 @@ var VectorPanel = class extends ColumnFrame {
       uslider["radix"] = this.radix;
       uslider["stepIsRelative"] = this.stepIsRelative;
       uslider["vertical"] = true;
-      uslider.setValue(this.uniformValue, false);
+      uslider.setValue(
+        this.uniformValue,
+        false
+      );
       this.sliders.push(uslider);
       uslider["onchange"] = () => {
         this.uniformValue = uslider["value"];
@@ -38755,7 +38924,10 @@ var VectorPanel = class extends ColumnFrame {
         this.onchange(this.value);
       }
       for (let i = 0; i < this.value.length; i++) {
-        this.sliders[i].setValue(vArr[i], false);
+        this.sliders[i].setValue(
+          vArr[i],
+          false
+        );
         this.sliders[i]._redraw();
       }
       if (this.uslider) {
@@ -38894,7 +39066,10 @@ var VectorPanel = class extends ColumnFrame {
       if (this.value.vectorDistance(valNN) > 0) {
         this.value.load(valNN);
         if (this.uslider) {
-          this.uslider.setValue(this.uniformValue, false);
+          this.uslider.setValue(
+            this.uniformValue,
+            false
+          );
         }
         for (let i = 0; i < this.value.length; i++) {
           this.sliders[i].setValue(
@@ -38911,7 +39086,10 @@ var VectorPanel = class extends ColumnFrame {
     this.updateDataPath();
     if (this.stepIsRelative) {
       for (const slider of this.sliders) {
-        slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, slider.value);
+        slider["step"] = ToolProperty.calcRelativeStep(
+          this.step ?? 0,
+          slider.value
+        );
       }
     }
     if (this.uslider) {
@@ -39201,11 +39379,17 @@ var Curve1DWidget = class extends ColumnFrame {
     const row = this.row();
     const prop = makeGenEnum();
     prop.setValue(this.value.generatorType);
-    this.dropbox = row.listenum(void 0, "Type", prop, this.value.generatorType, (id) => {
-      console.warn("SELECT", id, prop.keys[id]);
-      this.value.setGenerator(String(id));
-      this.value._on_change();
-    });
+    this.dropbox = row.listenum(
+      void 0,
+      "Type",
+      prop,
+      this.value.generatorType,
+      (id) => {
+        console.warn("SELECT", id, prop.keys[id]);
+        this.value.setGenerator(String(id));
+        this.value._on_change();
+      }
+    );
     this.dropbox._init();
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       const curve = this._value;
@@ -39391,7 +39575,13 @@ var Curve1DWidget = class extends ColumnFrame {
     const gen = this.value.generators.active;
     this.#in_onchange++;
     try {
-      gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+      gen.makeGUI(
+        col,
+        this.canvas,
+        this.drawTransform,
+        dpath,
+        onSourceUpdate
+      );
       loadUIData(this.container, uidata);
       for (let i = 0; i < 4; i++) {
         col.flushUpdate();
@@ -40109,7 +40299,17 @@ var HueField = class extends UIBase2 {
     const r_circle = this.getDefault("circleSize") * dpi;
     let w2 = canvas.width;
     w2 -= rselector * 2;
-    g.drawImage(getHueField(w2, canvas.height, dpi), 0, 0, w2, canvas.height, rselector, 0, w2, canvas.height);
+    g.drawImage(
+      getHueField(w2, canvas.height, dpi),
+      0,
+      0,
+      w2,
+      canvas.height,
+      rselector,
+      0,
+      w2,
+      canvas.height
+    );
     const x = this.hsva[0] * w2 + rselector;
     const y = canvas.height * 0.5;
     g.beginPath();
@@ -40299,7 +40499,12 @@ var SatValField = class extends UIBase2 {
     const r = this.getDefault("circleSize");
     const w = this.getDefault("width");
     const h = this.getDefault("height");
-    return getFieldImage(this.getDefault("fieldSize"), w - r * 2, h - r * 2, Array.from(this.hsva));
+    return getFieldImage(
+      this.getDefault("fieldSize"),
+      w - r * 2,
+      h - r * 2,
+      Array.from(this.hsva)
+    );
   }
   update(force_update = false) {
     super.update();
@@ -40652,7 +40857,12 @@ var ColorPicker = class extends ColumnFrame {
         slider.baseUnit = slider.displayUnit = "none";
         return slider;
       };
-      node.cmyk = [makeCMYKSlider("C", 0), makeCMYKSlider("M", 1), makeCMYKSlider("Y", 2), makeCMYKSlider("K", 3)];
+      node.cmyk = [
+        makeCMYKSlider("C", 0),
+        makeCMYKSlider("M", 1),
+        makeCMYKSlider("Y", 2),
+        makeCMYKSlider("K", 3)
+      ];
     }
     node._setSliders();
   }
@@ -40983,7 +41193,18 @@ var ColorPickerButton = class extends UIBase2 {
     const cellsize = 10;
     const totx = Math.ceil(canvas.width / cellsize);
     const toty = Math.ceil(canvas.height / cellsize);
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, void 0, "clip", void 0, void 0, true);
+    drawRoundBox(
+      this,
+      canvas,
+      g,
+      canvas.width,
+      canvas.height,
+      void 0,
+      "clip",
+      void 0,
+      void 0,
+      true
+    );
     g.clip();
     g.beginPath();
     for (let x = 0; x < totx; x++) {
@@ -40997,7 +41218,18 @@ var ColorPickerButton = class extends UIBase2 {
     g.fillStyle = grid2;
     g.fill();
     const color = color2css3(this.rgba);
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, void 0, "fill", color, void 0, true);
+    drawRoundBox(
+      this,
+      canvas,
+      g,
+      canvas.width,
+      canvas.height,
+      void 0,
+      "fill",
+      color,
+      void 0,
+      true
+    );
     if (this._highlight) {
       const color2 = this.getDefault("BoxHighlight");
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, void 0, "fill", color2);
@@ -42023,7 +42255,14 @@ var TabBar = class extends UIBase2 {
       const y = tab2.pos[1];
       const w = tab2.size[0];
       const h = tab2.size[1];
-      const tw = measureText(this, tab2.name, this.canvas, g, tsize, font).width;
+      const tw = measureText(
+        this,
+        tab2.name,
+        this.canvas,
+        g,
+        tsize,
+        font
+      ).width;
       let x2 = x + (tab2.size[Number(this.horiz) ^ 1] - tw) * 0.5;
       const y2 = y + tsize;
       if (tab2 === this.tabs.highlight) {
@@ -42043,7 +42282,15 @@ var TabBar = class extends UIBase2 {
         g.translate(x3 - tsize, -y3 - tsize * 0.5);
       }
       if (tab2.icon !== void 0) {
-        iconmanager.canvasDraw(this, this.canvas, g, tab2.icon, x, y, this.iconsheet);
+        iconmanager.canvasDraw(
+          this,
+          this.canvas,
+          g,
+          tab2.icon,
+          x,
+          y,
+          this.iconsheet
+        );
         x2 += iconsize + 4;
       }
       draw_text(tab2.name, x2, y2);
@@ -42072,7 +42319,14 @@ var TabBar = class extends UIBase2 {
       const y = tab2.pos[1];
       let w = tab2.size[0];
       let h = tab2.size[1];
-      const tw = measureText(this, tab2.name, this.canvas, g, tsize, font).width;
+      const tw = measureText(
+        this,
+        tab2.name,
+        this.canvas,
+        g,
+        tsize,
+        font
+      ).width;
       if (this.horiz) {
         h += 2;
       } else {
@@ -42235,7 +42489,10 @@ var TabContainer3 = class extends UIBase2 {
         this._tab.flushUpdate();
       }
       const div2 = document.createElement("div");
-      this.tbar.setCSSOnce(() => div2.style["backgroundColor"] = this.getDefault("background-color"), div2);
+      this.tbar.setCSSOnce(
+        () => div2.style["backgroundColor"] = this.getDefault("background-color"),
+        div2
+      );
       div2.setAttribute("class", `_tab_${this._id}`);
       div2.appendChild(this._tab);
       this.shadow.appendChild(div2);
@@ -45539,7 +45796,9 @@ var ToolBase = class extends ToolOp {
     }
     for (const k of keys2) {
       if (k.startsWith("on")) {
-        handlers[k] = this[k].bind(this);
+        handlers[k] = this[k].bind(
+          this
+        );
       }
     }
     if (pointerId !== void 0) {
@@ -45680,7 +45939,11 @@ var AreaResizeTool = class extends ToolBase {
       if (border2.outer) {
         snapMode = false;
       }
-      this.overdraw.line(border2.v1, border2.v2, color);
+      this.overdraw.line(
+        border2.v1,
+        border2.v2,
+        color
+      );
     }
     this.start_mpos[0] = e.x;
     this.start_mpos[1] = e.y;
@@ -45868,7 +46131,11 @@ var RemoveAreaTool = class extends ToolBase {
     this.overdraw.clear();
     if (sarea !== void 0) {
       this.sarea = sarea;
-      this.overdraw.rect(sarea.pos, sarea.size, "rgba(0,0,0,0.1)");
+      this.overdraw.rect(
+        sarea.pos,
+        sarea.size,
+        "rgba(0,0,0,0.1)"
+      );
     }
   }
   on_pointerdown(e) {
@@ -46099,7 +46366,11 @@ var AreaDragTool = class extends ToolBase {
     let idgen3 = 0;
     const boxes = this.boxes;
     const box = (x, y, sz2, horiz, t, side) => {
-      const b = this.overdraw.rect([x - sz2[0] * 0.5, y - sz2[1] * 0.5], sz2, color);
+      const b = this.overdraw.rect(
+        [x - sz2[0] * 0.5, y - sz2[1] * 0.5],
+        sz2,
+        color
+      );
       b.style.borderRadius = "14px";
       boxes.push(b);
       b.sarea = sa;
@@ -46550,7 +46821,9 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
           "Collapse Area",
           () => {
             console.log("Collapse Area!");
-            elem.ctx.screen.removeAreaTool(elem instanceof _ScreenBorder ? elem : void 0);
+            elem.ctx.screen.removeAreaTool(
+              elem instanceof _ScreenBorder ? elem : void 0
+            );
           }
         ]
       ];
@@ -48652,7 +48925,9 @@ var Screen2 = class extends UIBase2 {
     return ret;
   }
   copy() {
-    const ret = UIBase2.createElement(this.constructor.define().tagname);
+    const ret = UIBase2.createElement(
+      this.constructor.define().tagname
+    );
     ret.ctx = this.ctx;
     ret._init();
     for (const sarea of this.sareas) {
@@ -50196,7 +50471,9 @@ var Screen2 = class extends UIBase2 {
     const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix, true);
     const hash = ScreenBorder.hash(v1, v2);
     if (!(hash in this._edgemap)) {
-      const sb = this._edgemap[hash] = UIBase2.createElement("screenborder-x");
+      const sb = this._edgemap[hash] = UIBase2.createElement(
+        "screenborder-x"
+      );
       sb._hash = hash;
       sb.screen = this;
       sb.v1 = v1;
@@ -50698,7 +50975,9 @@ var SideBar = class extends Container3 {
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";
     this.style["overflow"] = "scroll";
-    this.style["background-color"] = this.getDefault("AreaHeaderBG");
+    this.style["background-color"] = this.getDefault(
+      "AreaHeaderBG"
+    );
     this.tabbar.style["height"] = h - 45 + "px";
     this.style["left"] = editor2.size[0] - w + "px";
   }
@@ -52163,7 +52442,9 @@ function GetContextClass(ctxClass) {
   if (ok === 2) {
     OverlayDerived = ctxClass;
   } else {
-    OverlayDerived = makeDerivedOverlay(ctxClass);
+    OverlayDerived = makeDerivedOverlay(
+      ctxClass
+    );
   }
   class Overlay extends OverlayDerived {
     constructor(state) {
@@ -52233,7 +52514,10 @@ function makeAPI(ctxClass) {
   } else {
     throw new Error("Context class should have a defineAPI static method");
   }
-  const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
+  const rootContextStruct = api.mapStruct(
+    ctxClass,
+    api.mapStruct(ctxClass, true)
+  );
   api.rootContextStruct = rootContextStruct;
   buildToolSysAPI(api, false, rootContextStruct, ctxClass, true);
   return api;
@@ -52378,9 +52662,7 @@ var AppState = class _AppState {
    *  if you wish to reset the undo stack*/
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
-    const state = new this.constructor(
-      this.ctx._ctxClass
-    );
+    const state = new this.constructor(this.ctx._ctxClass);
     state.api = this.api;
     state.ctx = this.ctx;
     state.startArgs = this.startArgs;
@@ -52548,7 +52830,9 @@ var AppState = class _AppState {
       const m1 = _AppState.prototype[method];
       const m2 = this[method];
       if (m1 === m2) {
-        console.warn(`Warning: it is recommended to override .${method} when subclassing simple.AppState`);
+        console.warn(
+          `Warning: it is recommended to override .${method} when subclassing simple.AppState`
+        );
       }
     }
     document.body.style["touchAction"] = "none";
