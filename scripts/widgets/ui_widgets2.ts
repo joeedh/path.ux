@@ -1,19 +1,19 @@
 "use strict";
-import "./ui_richedit.js";
+import "./ui_richedit";
 
-import * as util from "../path-controller/util/util.js";
-import * as ui_base from "../core/ui_base.js";
-import { Vector2, Vector3, Vector4, Quat } from "../path-controller/util/vectormath.js";
-import { RowFrame, ColumnFrame } from "../core/ui.js";
+import * as util from "../path-controller/util/util";
+import * as ui_base from "../core/ui_base";
+import { Vector2, Vector3, Vector4, Quat } from "../path-controller/util/vectormath";
+import { RowFrame, ColumnFrame } from "../core/ui";
 import { isVecProperty, PropFlags } from "../path-controller/toolsys";
 
-import "./ui_widgets.js";
+import "./ui_widgets";
 
-import { UIBase, PackFlags } from "../core/ui_base.js";
+import { UIBase, PackFlags } from "../core/ui_base";
 
-import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
-import { Button } from "./ui_button.js";
-import { IContextBase } from "../core/context_base.js";
+import { ToolProperty } from "../path-controller/toolsys/toolprop";
+import { Button } from "./ui_button";
+import { IContextBase } from "../core/context_base";
 
 /** Type for the container returned by Screen.popup() */
 type PopupContainer = UIBase & {

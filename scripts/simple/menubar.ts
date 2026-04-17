@@ -1,8 +1,8 @@
-import { Editor } from "./editor.js";
-import { nstructjs } from "../path-controller/controller.js";
-import { AreaFlags } from "../screen/ScreenArea.js";
-import { IContextBase } from "../core/context_base.js";
-import { StructReader } from "../util/nstructjs.js";
+import { Editor } from "./editor";
+import { nstructjs } from "../path-controller/controller";
+import { AreaFlags } from "../screen/ScreenArea";
+import { IContextBase } from "../core/context_base";
+import { StructReader } from "../util/nstructjs";
 
 declare const electron_api: { initMenuBar(editor: unknown): void };
 declare const window: Window & { haveElectron?: boolean };

@@ -1,16 +1,16 @@
-import nstructjs from "../path-controller/util/struct.js";
-import { Context, ContextOverlay, makeDerivedOverlay } from "../path-controller/controller/context.js";
+import nstructjs from "../path-controller/util/struct";
+import { Context, ContextOverlay, makeDerivedOverlay } from "../path-controller/controller/context";
 
 export const DataModelClasses: (typeof DataModel)[] = [];
-import { buildToolSysAPI, SavedToolDefaults, ToolStack } from "../path-controller/toolsys/toolsys.js";
-import { DataAPI } from "../path-controller/controller/controller.js";
-import { Screen } from "../screen/FrameManager.js";
-import { contextWrangler } from "../screen/area_wrangler.js";
-import { Editor } from "./editor.js";
+import { buildToolSysAPI, SavedToolDefaults, ToolStack } from "../path-controller/toolsys/toolsys";
+import { DataAPI } from "../path-controller/controller/controller";
+import { Screen } from "../screen/FrameManager";
+import { contextWrangler } from "../screen/area_wrangler";
+import { Editor } from "./editor";
 
-import { Vector2 } from "../path-controller/util/vectormath.js";
+import { Vector2 } from "../path-controller/util/vectormath";
 
-import cconst, { IPathUXConstants } from "../config/const.js";
+import cconst, { IPathUXConstants } from "../config/const";
 
 let lastAppState: AppState | undefined;
 export const getLastAppState = () => lastAppState;
@@ -44,7 +44,7 @@ class EmptyContextClass extends Context {
   static defineAPI(_api: DataAPI, _strct: unknown) {}
 }
 
-import * as ui_noteframe from "../widgets/ui_noteframe.js";
+import * as ui_noteframe from "../widgets/ui_noteframe";
 
 /**
  * Extend the client-provided context class
@@ -178,15 +178,15 @@ export function makeAPI(ctxClass: typeof Context) {
   return api;
 }
 
-import { Icons, loadDefaultIconSheet } from "./icons.js";
-import { IconManager, setIconManager, setIconMap, setTheme, ThemeRecord, UIBase } from "../core/ui_base.js";
-import { FileArgs, loadFile, saveFile } from "./file.js";
-import { HotKey, KeyMap } from "../path-controller/util/simple_events.js";
-import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline.js";
-import { MenuBarEditor, registerMenuBarEditor } from "./menubar.js";
-import { register } from "./app_ops.js";
-import { IContextBase } from "../core/context_base.js";
-import { areaclasses } from "../screen/area_base.js";
+import { Icons, loadDefaultIconSheet } from "./icons";
+import { IconManager, setIconManager, setIconMap, setTheme, ThemeRecord, UIBase } from "../core/ui_base";
+import { FileArgs, loadFile, saveFile } from "./file";
+import { HotKey, KeyMap } from "../path-controller/util/simple_events";
+import { initSplineTemplates } from "../path-controller/curve/curve1d_bspline";
+import { MenuBarEditor, registerMenuBarEditor } from "./menubar";
+import { register } from "./app_ops";
+import { IContextBase } from "../core/context_base";
+import { areaclasses } from "../screen/area_base";
 
 type ScreenAreaElement = UIBase & {
   pos: Vector2;

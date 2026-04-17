@@ -1,12 +1,12 @@
 "use strict";
 export const SVG_URL = "http://www.w3.org/2000/svg";
 
-import * as util from "./util.js";
-import * as vectormath from "./vectormath.js";
-import * as ui_base from "../core/ui_base.js";
-import * as ui from "../core/ui.js";
-import * as math from "./math.js";
-import { IContextBase } from "../core/context_base.js";
+import * as util from "./util";
+import * as vectormath from "./vectormath";
+import * as ui_base from "../core/ui_base";
+import * as ui from "../core/ui";
+import * as math from "./math";
+import { IContextBase } from "../core/context_base";
 import type { Screen } from "../screen/FrameManager";
 
 const Vector2 = vectormath.Vector2;

@@ -1,10 +1,10 @@
 "use strict";
 
-import * as ui_base from "../core/ui_base.js";
-import * as events from "../path-controller/util/events.js";
-import * as toolprop from "../path-controller/toolsys/toolprop.js";
-import { DataPathError } from "../path-controller/controller/controller.js";
-import { PropFlags } from "../path-controller/toolsys/toolprop.js";
+import * as ui_base from "../core/ui_base";
+import * as events from "../path-controller/util/events";
+import * as toolprop from "../path-controller/toolsys/toolprop";
+import { DataPathError } from "../path-controller/controller/controller";
+import { PropFlags } from "../path-controller/toolsys/toolprop";
 
 const keymap = events.keymap;
 
@@ -13,13 +13,13 @@ const PropTypes = toolprop.PropTypes;
 const UIBase = ui_base.UIBase;
 const PackFlags = ui_base.PackFlags;
 
-import { OldButton } from "./ui_button.js";
-import { eventWasTouch } from "../path-controller/util/simple_events.js";
-import { IContextBase } from "../core/context_base.js";
-import type { CSSFont } from "../core/cssfont.js";
-import type { EnumPropertyBase } from "../path-controller/toolsys/toolprop.js";
+import { OldButton } from "./ui_button";
+import { eventWasTouch } from "../path-controller/util/simple_events";
+import { IContextBase } from "../core/context_base";
+import type { CSSFont } from "../core/cssfont";
+import type { EnumPropertyBase } from "../path-controller/toolsys/toolprop";
 
-export { Button } from "./ui_button.js";
+export { Button } from "./ui_button";
 
 export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   _icon: number;
@@ -1064,4 +1064,4 @@ export class Check1<CTX extends IContextBase = IContextBase> extends OldButton<C
 
 UIBase.internalRegister(Check1);
 
-export { checkForTextBox } from "./ui_textbox.js";
+export { checkForTextBox } from "./ui_textbox";

@@ -1,7 +1,7 @@
-import { UIBase } from "../core/ui_base.js";
-import { Container, RowFrame } from "../core/ui.js";
-import { IContextBase } from "../core/context_base.js";
-import { keymap } from "../path-controller/util/events.js";
+import { UIBase } from "../core/ui_base";
+import { Container, RowFrame } from "../core/ui";
+import { IContextBase } from "../core/context_base";
+import { keymap } from "../path-controller/util/events";
 
 export class ListItem<
   CTX extends IContextBase = IContextBase,

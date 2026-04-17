@@ -1,10 +1,10 @@
-import { PackFlags, UIBase } from "../core/ui_base.js";
-import { ColumnFrame } from "../core/ui.js";
-import { ListProperty, PropFlags, StringSetProperty } from "../path-controller/toolsys/toolprop.js";
-import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolsys.js";
+import { PackFlags, UIBase } from "../core/ui_base";
+import { ColumnFrame } from "../core/ui";
+import { ListProperty, PropFlags, StringSetProperty } from "../path-controller/toolsys/toolprop";
+import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolsys";
 
-import { ToolProperty } from "../path-controller/toolsys/toolprop.js";
-import { IContextBase } from "../core/context_base.js";
+import { ToolProperty } from "../path-controller/toolsys/toolprop";
+import { IContextBase } from "../core/context_base";
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen = 0;

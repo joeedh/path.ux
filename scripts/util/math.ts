@@ -1,1 +1,1 @@
-export * from "../path-controller/util/math.js";
+export * from "../path-controller/util/math";

@@ -1,6 +1,6 @@
 "use strict";
 
-import { iconSvg } from "./iconsheet.js";
+import { iconSvg } from "./iconsheet";
 
 export const Icons = {
   FOLDER        : 0, //file folder

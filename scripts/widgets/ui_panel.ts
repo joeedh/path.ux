@@ -1,9 +1,9 @@
-import * as ui_base from "../core/ui_base.js";
-import { IContextBase } from "../core/context_base.js";
-import { ColumnFrame, RowFrame, Container, Label } from "../core/ui.js";
-import { forwardContainerMethods } from "../core/ui_forward.js";
-import { IconCheck } from "./ui_widgets.js";
-import { CSSFont } from "../core/cssfont.js";
+import * as ui_base from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
+import { ColumnFrame, RowFrame, Container, Label } from "../core/ui";
+import { forwardContainerMethods } from "../core/ui_forward";
+import { IconCheck } from "./ui_widgets";
+import { CSSFont } from "../core/cssfont";
 
 const UIBase = ui_base.UIBase;
 const PackFlags = ui_base.PackFlags;

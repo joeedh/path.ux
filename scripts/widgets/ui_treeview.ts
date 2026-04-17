@@ -1,8 +1,8 @@
-import "../util/ScreenOverdraw.js";
-import { UIBase, Icons } from "../core/ui_base.js";
-import { Container } from "../core/ui.js";
-import { IContextBase } from "../core/context_base.js";
-import * as math from "../path-controller/util/math.js";
+import "../util/ScreenOverdraw";
+import { UIBase, Icons } from "../core/ui_base";
+import { Container } from "../core/ui";
+import { IContextBase } from "../core/context_base";
+import * as math from "../path-controller/util/math";
 
 export class TreeItem<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   treeParent: TreeItem<CTX> | undefined;

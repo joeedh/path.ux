@@ -1,9 +1,9 @@
-import { PlatformAPI, isMimeText } from "../platform_base.js";
-import { saveFile, loadFile } from "../../path-controller/util/html5_fileapi.js";
+import { PlatformAPI, isMimeText } from "../platform_base";
+import { saveFile, loadFile } from "../../path-controller/util/html5_fileapi";
 
-import { FileDialogArgs, FilePath } from "../platform_base.js";
+import { FileDialogArgs, FilePath } from "../platform_base";
 
-import { mimeMap } from "../platform_base.js";
+import { mimeMap } from "../platform_base";
 
 interface FileFilter {
   name: string;

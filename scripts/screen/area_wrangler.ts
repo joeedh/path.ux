@@ -1,11 +1,11 @@
 //import * as nstructjs from './struct.js';
-import { haveModal, _setModalAreaClass } from "../path-controller/util/simple_events.js";
+import { haveModal, _setModalAreaClass } from "../path-controller/util/simple_events";
 
-import "../path-controller/util/struct.js";
+import "../path-controller/util/struct";
 
-import { ClassIdSymbol } from "../core/ui_consts.js";
-import type { Area } from "./ScreenArea.js";
-import { IContextBase } from "../core/context_base.js";
+import { ClassIdSymbol } from "../core/ui_consts";
+import type { Area } from "./ScreenArea";
+import { IContextBase } from "../core/context_base";
 
 export function getAreaIntName(name: string) {
   let hash = 0;

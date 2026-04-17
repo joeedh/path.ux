@@ -1,1 +1,1 @@
-export * from "../path-controller/util/util.js";
+export * from "../path-controller/util/util";

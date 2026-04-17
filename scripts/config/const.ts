@@ -1,4 +1,4 @@
-import * as ctrlconfig from "../path-controller/config/config.js";
+import * as ctrlconfig from "../path-controller/config/config";
 
 interface ClipboardEntry {
   name: string;

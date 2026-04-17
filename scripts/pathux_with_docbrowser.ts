@@ -1,2 +1,2 @@
-export * from "./pathux.js";
-export * from "./docbrowser/docbrowser.js";
+export * from "./pathux";
+export * from "./docbrowser/docbrowser";

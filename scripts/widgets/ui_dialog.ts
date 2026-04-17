@@ -1,6 +1,6 @@
-import { UIBase } from "../core/ui_base.js";
-import { AreaFlags } from "../screen/ScreenArea.js";
-import { keymap } from "../path-controller/util/simple_events.js";
+import { UIBase } from "../core/ui_base";
+import { AreaFlags } from "../screen/ScreenArea";
+import { keymap } from "../path-controller/util/simple_events";
 
 interface PopupAreaArgs {
   width?: number;

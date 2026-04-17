@@ -1,22 +1,22 @@
 "use strict";
 
-import * as util from "../path-controller/util/util.js";
+import * as util from "../path-controller/util/util";
 import * as vectormath from "../path-controller/util/vectormath";
-import * as ui_base from "../core/ui_base.js";
-import * as ui from "../core/ui.js";
-import { PropTypes } from "../path-controller/toolsys/toolprop.js";
-import { keymap } from "../path-controller/util/simple_events.js";
-import cconst from "../config/const.js";
-import { color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor } from "../core/ui_base.js";
-import { IContextBase } from "../core/context_base.js";
+import * as ui_base from "../core/ui_base";
+import * as ui from "../core/ui";
+import { PropTypes } from "../path-controller/toolsys/toolprop";
+import { keymap } from "../path-controller/util/simple_events";
+import cconst from "../config/const";
+import { color2web, web2color, validateWebColor, color2css, css2color, validateCSSColor } from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
 
 const Vector2 = vectormath.Vector2;
 const Vector3 = vectormath.Vector3;
 const Vector4 = vectormath.Vector4;
 
-export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils.js";
-import { rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk } from "../path-controller/util/colorutils.js";
-import { contextWrangler } from "../screen/area_wrangler.js";
+export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils";
+import { rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk } from "../path-controller/util/colorutils";
+import { contextWrangler } from "../screen/area_wrangler";
 
 const UIBase = ui_base.UIBase;
 

@@ -1,11 +1,11 @@
-import { Area, IAreaDef, contextWrangler } from "../screen/ScreenArea.js";
-import { nstructjs } from "../path-controller/controller.js";
-import { UIBase, parsepx, Icons, type IUIBaseConstructor } from "../core/ui_base.js";
-import { Container } from "../core/ui.js";
-import { Animator } from "../core/anim.js";
-import * as util from "../util/util.js";
-import type { IContextBase } from "../core/context_base.js";
-import type { Vector2 } from "../path-controller/util/vectormath.js";
+import { Area, IAreaDef, contextWrangler } from "../screen/ScreenArea";
+import { nstructjs } from "../path-controller/controller";
+import { UIBase, parsepx, Icons, type IUIBaseConstructor } from "../core/ui_base";
+import { Container } from "../core/ui";
+import { Animator } from "../core/anim";
+import * as util from "../util/util";
+import type { IContextBase } from "../core/context_base";
+import type { Vector2 } from "../path-controller/util/vectormath";
 
 let sidebar_hash = new util.HashDigest();
 

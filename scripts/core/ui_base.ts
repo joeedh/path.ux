@@ -1,4 +1,4 @@
-import { contextWrangler } from "../screen/area_wrangler.js";
+import { contextWrangler } from "../screen/area_wrangler";
 import type { Area } from "../screen/ScreenArea";
 export type DefaultTypes = string | number | boolean | CSSFont;
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
@@ -10,7 +10,6 @@ export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   };
   setDefault<T2 extends T>(element: T2): T2;
 }
-
 
 export const PackFlags = {
   INHERIT_WIDTH : 1,
@@ -59,12 +58,12 @@ if (window.document && document.body) {
 }
  */
 
-import { Animator } from "./anim.js";
-import "./units.js";
-import * as util from "../path-controller/util/util.js";
+import { Animator } from "./anim";
+import "./units";
+import * as util from "../path-controller/util/util";
 import * as vectormath from "../path-controller/util/vectormath";
-import * as math from "../path-controller/util/math.js";
-import * as toolprop from "../path-controller/toolsys/toolprop.js";
+import * as math from "../path-controller/util/math";
+import * as toolprop from "../path-controller/toolsys/toolprop";
 import {
   pushModalLight,
   popModalLight,
@@ -74,36 +73,36 @@ import {
   keymap,
   pushPointerModal,
   ModalState,
-} from "../path-controller/util/simple_events.js";
-import { getDataPathToolOp } from "../path-controller/controller/controller.js";
-import * as units from "./units.js";
-import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils.js";
+} from "../path-controller/util/simple_events";
+import { getDataPathToolOp } from "../path-controller/controller/controller";
+import * as units from "./units";
+import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils";
 
-export * from "./ui_theme.js";
+export * from "./ui_theme";
 
-import { theme, parsepx, compatMap, color2css, css2color, ThemeRecord, ThemeScrollBars } from "./ui_theme.js";
+import { theme, parsepx, compatMap, color2css, css2color, ThemeRecord, ThemeScrollBars } from "./ui_theme";
 
-import { DefaultTheme } from "./theme.js";
+import { DefaultTheme } from "./theme";
 
 //global list of elements to, hopefully, prevent minification tree shaking
 //of live elements
 export const ElementClasses: (typeof UIBase)[] = [];
 
-export { theme } from "./ui_theme.js";
+export { theme } from "./ui_theme";
 
-import cconst from "../config/const.js";
+import cconst from "../config/const";
 
 window.__cconst = cconst;
 
 const Vector4 = vectormath.Vector4;
 
-export { Icons } from "../icon_enum.js";
-import { Icons } from "../icon_enum.js";
+export { Icons } from "../icon_enum";
+import { Icons } from "../icon_enum";
 
-export { setIconMap } from "../icon_enum.js";
+export { setIconMap } from "../icon_enum";
 
-import { initAspectClass } from "./aspect.js";
-import * as aspect from "./aspect.js";
+import { initAspectClass } from "./aspect";
+import * as aspect from "./aspect";
 
 export const ErrorColors = {
   WARNING: "yellow",
@@ -149,7 +148,7 @@ if (typeof document !== "undefined") {
   }
 }
 
-import { ClassIdSymbol } from "./ui_consts.js";
+import { ClassIdSymbol } from "./ui_consts";
 
 export { ClassIdSymbol };
 
@@ -709,8 +708,8 @@ export const UIFlags: Record<string, number> = {};
 const internalElementNames: Record<string, string> = {};
 const externalElementNames: Record<string, string> = {};
 
-import { DataPathError } from "../path-controller/controller/controller.js";
-import { IntProperty, NumberConstraints, PropFlags } from "../path-controller/toolsys/toolprop.js";
+import { DataPathError } from "../path-controller/controller/controller";
+import { IntProperty, NumberConstraints, PropFlags } from "../path-controller/toolsys/toolprop";
 import {
   DependSocket,
   EventNode,
@@ -719,11 +718,11 @@ import {
   SocketTypes,
   theEventGraph,
   SocketType,
-} from "../path-controller/dag/eventdag.js";
-import type { IContextBase } from "./context_base.js";
-import { CSSFont } from "./cssfont.js";
-import { DataPathSetOp } from "../pathux.js";
-import { tagManager } from "./tagReRegister.js";
+} from "../path-controller/dag/eventdag";
+import type { IContextBase } from "./context_base";
+import { CSSFont } from "./cssfont";
+import { DataPathSetOp } from "../pathux";
+import { tagManager } from "./tagReRegister";
 
 const _mobile_theme_patterns = [/.*width.*/, /.*height.*/, /.*size.*/, /.*margin.*/, /.*pad/, /.*radius.*/];
 
@@ -1635,6 +1634,10 @@ export class UIBase<
 
     const def = cls.define();
 
+    if (typeof customElements?.get === "undefined") {
+      // running in nodejs?
+      return;
+    }
     if (customElements.get(def.tagname) === cls) {
       // already registered
       return;

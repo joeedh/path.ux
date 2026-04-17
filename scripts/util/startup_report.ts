@@ -1,4 +1,4 @@
-import * as util from "./util.js";
+import * as util from "./util";
 
 export function startupReport(...args: unknown[]): void {
   let s = "";

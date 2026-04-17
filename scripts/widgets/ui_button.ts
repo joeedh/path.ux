@@ -1,10 +1,10 @@
-import * as util from "../path-controller/util/util.js";
-import { UIBase, parsepx, measureText, drawRoundBox, drawText } from "../core/ui_base.js";
-import { keymap } from "../path-controller/util/events.js";
-import { IContextBase } from "../core/context_base.js";
-import cconst from "../config/const.js";
-import { _themeUpdateKey } from "../core/ui_base.js";
-import type { CSSFont } from "../core/cssfont.js";
+import * as util from "../path-controller/util/util";
+import { UIBase, parsepx, measureText, drawRoundBox, drawText } from "../core/ui_base";
+import { keymap } from "../path-controller/util/events";
+import { IContextBase } from "../core/context_base";
+import cconst from "../config/const";
+import { _themeUpdateKey } from "../core/ui_base";
+import type { CSSFont } from "../core/cssfont";
 
 cconst.DEBUG.buttonEvents = true;
 

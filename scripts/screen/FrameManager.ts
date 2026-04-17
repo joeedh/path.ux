@@ -1,27 +1,27 @@
-import "../widgets/dragbox.js";
-import "../widgets/ui_widgets2.js";
-import "../widgets/ui_panel.js";
-import "../widgets/ui_treeview.js";
+import "../widgets/dragbox";
+import "../widgets/ui_widgets2";
+import "../widgets/ui_panel";
+import "../widgets/ui_treeview";
 
-import { DataPathError, isMouseDown, nstructjs, ToolStack } from "../path-controller/controller.js";
+import { DataPathError, isMouseDown, nstructjs, ToolStack } from "../path-controller/controller";
 
-import "../util/ScreenOverdraw.js";
-import cconst from "../config/const.js";
-import { haveModal, _setScreenClass } from "../path-controller/util/simple_events.js";
-import * as util from "../path-controller/util/util.js";
-import "../widgets/ui_curvewidget.js";
-import { Vector2, Number2 } from "../path-controller/util/vectormath.js";
-import { ScreenArea, Area, ScreenAreaAny, AreaAny } from "./ScreenArea.js";
-import * as FrameManager_ops from "./FrameManager_ops.js";
-import * as math from "../path-controller/util/math.js";
-import * as ui_menu from "../widgets/ui_menu.js";
-import "../path-controller/util/struct.js";
-import { KeyMap } from "../path-controller/util/simple_events.js";
-import { keymap } from "../path-controller/util/simple_events.js";
+import "../util/ScreenOverdraw";
+import cconst from "../config/const";
+import { haveModal, _setScreenClass } from "../path-controller/util/simple_events";
+import * as util from "../path-controller/util/util";
+import "../widgets/ui_curvewidget";
+import { Vector2, Number2 } from "../path-controller/util/vectormath";
+import { ScreenArea, Area, ScreenAreaAny, AreaAny } from "./ScreenArea";
+import * as FrameManager_ops from "./FrameManager_ops";
+import * as math from "../path-controller/util/math";
+import * as ui_menu from "../widgets/ui_menu";
+import "../path-controller/util/struct";
+import { KeyMap } from "../path-controller/util/simple_events";
+import { keymap } from "../path-controller/util/simple_events";
 
-import { ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit } from "./FrameManager_mesh.js";
+import { ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit } from "./FrameManager_mesh";
 
-export { ScreenBorder, ScreenVert, ScreenHalfEdge } from "./FrameManager_mesh.js";
+export { ScreenBorder, ScreenVert, ScreenHalfEdge } from "./FrameManager_mesh";
 import {
   theme,
   PackFlags,
@@ -32,22 +32,22 @@ import {
   IUIBaseConstructor,
   ThemeScrollBars,
 } from "../core/ui_base";
-import * as FrameManager_mesh from "./FrameManager_mesh.js";
-import { makePopupArea } from "../widgets/ui_dialog.js";
+import * as FrameManager_mesh from "./FrameManager_mesh";
+import { makePopupArea } from "../widgets/ui_dialog";
 
-import "../widgets/ui_widgets.js";
-import "../widgets/ui_tabs.js";
-import "../widgets/ui_colorpicker2.js";
-import "../widgets/ui_noteframe.js";
-import "../widgets/ui_listbox.js";
-import "../widgets/ui_table.js";
-import { AreaFlags } from "./ScreenArea.js";
-import { checkForTextBox } from "../widgets/ui_textbox.js";
-import { startMenu } from "../widgets/ui_menu.js";
-import { IsScreenTag } from "./constants.js";
-import { IContextBase } from "../core/context_base.js";
-import { StructReader } from "../util/nstructjs.js";
-import { IAreaConstructor } from "./area_base.js";
+import "../widgets/ui_widgets";
+import "../widgets/ui_tabs";
+import "../widgets/ui_colorpicker2";
+import "../widgets/ui_noteframe";
+import "../widgets/ui_listbox";
+import "../widgets/ui_table";
+import { AreaFlags } from "./ScreenArea";
+import { checkForTextBox } from "../widgets/ui_textbox";
+import { startMenu } from "../widgets/ui_menu";
+import { IsScreenTag } from "./constants";
+import { IContextBase } from "../core/context_base";
+import { StructReader } from "../util/nstructjs";
+import { IAreaConstructor } from "./area_base";
 import "./AreaDocker";
 
 const list = Array.from;

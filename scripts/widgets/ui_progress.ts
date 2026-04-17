@@ -1,7 +1,7 @@
-import { UIBase } from "../core/ui_base.js";
-import { IContextBase } from "../core/context_base.js";
-import * as util from "../path-controller/util/util.js";
-import { keymap } from "../path-controller/util/simple_events.js";
+import { UIBase } from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
+import * as util from "../path-controller/util/util";
+import { keymap } from "../path-controller/util/simple_events";
 
 export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
   canvas: HTMLCanvasElement;

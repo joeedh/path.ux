@@ -1,11 +1,11 @@
-import { UIBase, Icons, saveUIData, loadUIData } from "../core/ui_base.js";
-import { ColumnFrame } from "../core/ui.js";
-import * as util from "../path-controller/util/util.js";
-import { Curve1D } from "../path-controller/curve/curve1d.js";
-import { makeGenEnum } from "../path-controller/curve/curve1d_utils.js";
-import type { CurveTypeData } from "../path-controller/curve/curve1d.js";
-import { IContextBase } from "../core/context_base.js";
-import type { DropBox } from "../widgets/ui_menu.js";
+import { UIBase, Icons, saveUIData, loadUIData } from "../core/ui_base";
+import { ColumnFrame } from "../core/ui";
+import * as util from "../path-controller/util/util";
+import { Curve1D } from "../path-controller/curve/curve1d";
+import { makeGenEnum } from "../path-controller/curve/curve1d_utils";
+import type { CurveTypeData } from "../path-controller/curve/curve1d";
+import { IContextBase } from "../core/context_base";
+import type { DropBox } from "../widgets/ui_menu";
 
 /** Slider-like widget interface — slider() returns UIBase but these members exist at runtime. */
 interface SliderWidget {

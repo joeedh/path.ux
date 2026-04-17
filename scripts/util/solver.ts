@@ -1,1 +1,1 @@
-export * from "../path-controller/util/solver.js";
+export * from "../path-controller/util/solver";

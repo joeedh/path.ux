@@ -1,16 +1,16 @@
-import nstructjs from "../path-controller/util/struct.js";
-import * as ui_base from "../core/ui_base.js";
-import * as FrameManager_ops from "./FrameManager_ops.js";
-import cconst from "../config/const.js";
-import { UIBase } from "../core/ui_base.js";
+import nstructjs from "../path-controller/util/struct";
+import * as ui_base from "../core/ui_base";
+import * as FrameManager_ops from "./FrameManager_ops";
+import cconst from "../config/const";
+import { UIBase } from "../core/ui_base";
 
-import { Vector2 } from "../path-controller/util/vectormath.js";
-import { createMenu, Menu } from "../widgets/ui_menu.js";
-import { IContextBase } from "../core/context_base.js";
-import type { ScreenArea, ScreenAreaAny } from "./ScreenArea.js";
+import { Vector2 } from "../path-controller/util/vectormath";
+import { createMenu, Menu } from "../widgets/ui_menu";
+import { IContextBase } from "../core/context_base";
+import type { ScreenArea, ScreenAreaAny } from "./ScreenArea";
 import type { Screen } from "./FrameManager";
-import { StructReader } from "../util/nstructjs.js";
-import { AreaFlags } from "./area_base.js";
+import { StructReader } from "../util/nstructjs";
+import { AreaFlags } from "./area_base";
 
 export const SnapLimit = 1;
 

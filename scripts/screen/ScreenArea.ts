@@ -1,20 +1,20 @@
 import type { Screen } from "./FrameManager";
 
 import { ClassIdSymbol, loadUIData, saveUIData, UIBase } from "../core/ui_base";
-import { Container } from "../core/ui.js";
+import { Container } from "../core/ui";
 
-import * as util from "../path-controller/util/util.js";
-import { haveModal } from "../path-controller/util/simple_events.js";
-import cconst from "../config/const.js";
-import nstructjs from "../path-controller/util/struct.js";
-import { EnumProperty } from "../path-controller/toolsys/toolprop.js";
-import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap, snapi } from "./FrameManager_mesh.js";
-import { contextWrangler } from "./area_wrangler.js";
-import { IsScreenTag } from "./constants.js";
-import { IContextBase } from "../core/context_base.js";
-import { IUIBaseConstructor, Vector2 } from "../pathux.js";
+import * as util from "../path-controller/util/util";
+import { haveModal } from "../path-controller/util/simple_events";
+import cconst from "../config/const";
+import nstructjs from "../path-controller/util/struct";
+import { EnumProperty } from "../path-controller/toolsys/toolprop";
+import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap, snapi } from "./FrameManager_mesh";
+import { contextWrangler } from "./area_wrangler";
+import { IsScreenTag } from "./constants";
+import { IContextBase } from "../core/context_base";
+import { IUIBaseConstructor, Vector2 } from "../pathux";
 import { StructReader } from "../util/nstructjs";
-import type { KeyMap } from "../path-controller/util/simple_events.js";
+import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
 import type { DropBox } from "../widgets/ui_menu";
 import { areaclasses, IAreaConstructor, AreaConstructorParam, AreaFlags, makeAreasEnum } from "./area_base";
@@ -36,7 +36,7 @@ function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is
 }
 
 export { AreaFlags };
-export * from "./area_wrangler.js";
+export * from "./area_wrangler";
 export { contextWrangler };
 
 window._contextWrangler = contextWrangler;

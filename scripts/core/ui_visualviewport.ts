@@ -1,5 +1,5 @@
-import { cachering } from "../util/util.js";
-import { Vector2 } from "../path-controller/controller.js";
+import { cachering } from "../util/util";
+import { Vector2 } from "../path-controller/controller";
 
 const toRets = cachering.fromConstructor(Vector2, 512);
 const fromRets = cachering.fromConstructor(Vector2, 512);

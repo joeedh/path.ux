@@ -1,12 +1,12 @@
-import * as platform_mod from "../platforms/platform.js";
-import type { PlatformAPI } from "../platforms/platform_base.js";
+import * as platform_mod from "../platforms/platform";
+import type { PlatformAPI } from "../platforms/platform_base";
 
-import { ToolOp, UndoFlags, type PropertySlots } from "../path-controller/toolsys/toolsys.js";
-import { BoolProperty } from "../path-controller/toolsys/toolprop.js";
+import { ToolOp, UndoFlags, type PropertySlots } from "../path-controller/toolsys/toolsys";
+import { BoolProperty } from "../path-controller/toolsys/toolprop";
 
-import { error, message } from "../widgets/ui_noteframe.js";
+import { error, message } from "../widgets/ui_noteframe";
 
-import { getLastAppState, type AppState } from "./app.js";
+import { getLastAppState, type AppState } from "./app";
 
 declare const _appstate: AppState;
 

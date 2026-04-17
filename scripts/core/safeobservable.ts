@@ -11,7 +11,7 @@
  * Though in that case most event "callbacks" would do nothing more then pass the event along to their children.
  *
  * */
-import * as util from "../path-controller/util/util.js";
+import * as util from "../path-controller/util/util";
 
 let idgen = 0;
 

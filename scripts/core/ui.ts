@@ -6,8 +6,8 @@
 import { TextBox } from "../widgets/ui_textbox";
 
 import { Check, IconButton, IconCheck } from "../widgets/ui_widgets";
-import * as util from "../path-controller/util/util.js";
-import * as units from "../core/units.js";
+import * as util from "../path-controller/util/util";
+import * as units from "../core/units";
 import {
   FlagProperty,
   EnumProperty,
@@ -16,16 +16,16 @@ import {
   PropSubTypes,
   ToolPropertyTypes,
 } from "../path-controller/toolsys";
-import "../path-controller/util/html5_fileapi.js";
-import { CSSFont } from "./cssfont.js";
-import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base.js";
-import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop.js";
-import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu.js";
+import "../path-controller/util/html5_fileapi";
+import { CSSFont } from "./cssfont";
+import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base";
+import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
+import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu";
 
-import cconst from "../config/const.js";
-import { IContextBase } from "./context_base.js";
-import type { PanelFrame } from "../widgets/ui_panel.js";
-import type { TabContainer } from "../widgets/ui_tabs.js";
+import cconst from "../config/const";
+import { IContextBase } from "./context_base";
+import type { PanelFrame } from "../widgets/ui_panel";
+import type { TabContainer } from "../widgets/ui_tabs";
 import { InheritFlag, ToolDef, ToolOp } from "../path-controller/toolsys/toolsys";
 import { NumSliderTypes } from "../pathux";
 import { ListBox } from "../widgets/ui_listbox";

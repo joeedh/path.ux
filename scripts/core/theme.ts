@@ -1,4 +1,4 @@
-import { CSSFont } from "./cssfont.js";
+import { CSSFont } from "./cssfont";
 
 export const DefaultTheme = {
   base: {

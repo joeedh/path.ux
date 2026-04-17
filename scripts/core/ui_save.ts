@@ -1,8 +1,8 @@
 //this code is currently disabled
 //XXX todo: review this rewritten version of saveUIData/loadUIData
 
-import { tokdef, parser, lexer, PUTLParseError, token } from "../path-controller/util/parseutil.js";
-import type { TokFunc } from "../path-controller/util/parseutil.js";
+import { tokdef, parser, lexer, PUTLParseError, token } from "../path-controller/util/parseutil";
+import type { TokFunc } from "../path-controller/util/parseutil";
 
 export const UI_SAVE_VERSION = 2;
 

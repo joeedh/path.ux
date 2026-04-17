@@ -1,6 +1,6 @@
-import nstructjs from "../path-controller/util/struct.js";
+import nstructjs from "../path-controller/util/struct";
 
-import { UIBase } from "../core/ui_base.js";
+import { UIBase } from "../core/ui_base";
 
 export class FileHeader {
   static STRUCT = nstructjs.inlineRegister(

@@ -5,10 +5,10 @@ THEME REFACTOR:
 * Create a compatibility layer
 
 */
-import * as util from "../path-controller/util/util.js";
-import { Vector3, Vector4 } from "../path-controller/util/vectormath.js";
-import cconst from "../config/const.js";
-import { CSSFont } from "./cssfont.js";
+import * as util from "../path-controller/util/util";
+import { Vector3, Vector4 } from "../path-controller/util/vectormath";
+import cconst from "../config/const";
+import { CSSFont } from "./cssfont";
 
 export class ThemeScrollBars {
   border?: string;

@@ -1,9 +1,9 @@
-import { UIBase, Icons } from "../core/ui_base.js";
-import { IContextBase } from "../core/context_base.js";
-import { RowFrame } from "../core/ui.js";
-import { CSSFont } from "../core/cssfont.js";
-import { TextBoxBase } from "./ui_textbox.js";
-import { keymap } from "../path-controller/util/simple_events.js";
+import { UIBase, Icons } from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
+import { RowFrame } from "../core/ui";
+import { CSSFont } from "../core/cssfont";
+import { TextBoxBase } from "./ui_textbox";
+import { keymap } from "../path-controller/util/simple_events";
 
 export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
   _internalDisabled: boolean;

@@ -1,8 +1,8 @@
-import { UIBase, Icons } from "../core/ui_base.js";
-import { Container } from "../core/ui.js";
-import { IContextBase } from "../core/context_base.js";
-import { pushModalLight, popModalLight, keymap, ModalState } from "../path-controller/util/simple_events.js";
-import { parsepx } from "../core/ui_theme.js";
+import { UIBase, Icons } from "../core/ui_base";
+import { Container } from "../core/ui";
+import { IContextBase } from "../core/context_base";
+import { pushModalLight, popModalLight, keymap, ModalState } from "../path-controller/util/simple_events";
+import { parsepx } from "../core/ui_theme";
 
 interface DragHandlers {
   on_mousemove(e: MouseEvent): void;

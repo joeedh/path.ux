@@ -1,16 +1,16 @@
 "use strict";
 
-import * as units from "../core/units.js";
+import * as units from "../core/units";
 
-import * as events from "../path-controller/util/events.js";
-import { PropTypes } from "../path-controller/toolsys/toolprop.js";
+import * as events from "../path-controller/util/events";
+import { PropTypes } from "../path-controller/toolsys/toolprop";
 
 const keymap = events.keymap;
 
 import { UIBase } from "../core/ui_base";
-import { _setTextboxClass, ErrorColors } from "../core/ui_base.js";
-import { IContextBase } from "../core/context_base.js";
-import type { CSSFont } from "../core/cssfont.js";
+import { _setTextboxClass, ErrorColors } from "../core/ui_base";
+import { IContextBase } from "../core/context_base";
+import type { CSSFont } from "../core/cssfont";
 
 export class TextBoxBase<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   static define() {
