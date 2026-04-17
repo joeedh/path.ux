@@ -16,6 +16,6 @@
     "lib": ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
     "types": []
   },
-  "include": ["scripts/**/*.ts", "scripts/**/*.js", "playwright/*.ts", "eslint.config.js", "tests/*.ts"],
-  "exclude": ["node_modules", "dist", "scripts/lib/**", "scripts/**/*.test.ts", "scripts/path-controller/util/isect.js"]
+  "include": ["scripts/**/*.ts", "scripts/**/*.js", "playwright/*.ts", "eslint.config.js"],
+  "exclude": ["node_modules", "dist", "scripts/lib/**", "scripts/**/*.test.ts", "scripts/path-controller/util/isect.js", "tests/*.ts"]
 }

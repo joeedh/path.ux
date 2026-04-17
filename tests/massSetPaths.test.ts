@@ -1,5 +1,6 @@
-import { DataAPI, util } from "../scripts/pathux";
-import 'jest'
+import { DataAPI } from "../scripts/path-controller/controller/controller";
+import * as util from "../scripts/path-controller/util/util";
+import "jest";
 
 test("mass set paths test", () => {
   const rnd = new util.MersenneRandom(0);
@@ -32,24 +33,39 @@ test("mass set paths test", () => {
   pointDef.bool("sel", "sel");
 
   const containerDef = api.mapStruct(PointContainer);
-  containerDef.list("points", "points", {
-    get(api: DataAPI, list: PointContainer, key: number) {
-      return list.points[key]
-    },
-    getKey(api: DataAPI, list: PointContainer, obj: Point) {
-      return list.points.indexOf(obj);
-    },
-    getIter(api: DataAPI, list: PointContainer) {
-      return list.points[Symbol.iterator]();
-    },
-    getLength(api: DataAPI, list: PointContainer) {
-      return list.points.length;
-    },
-    getStruct(api: DataAPI, list: PointContainer, key: number) {
-      return pointDef;
-    }
-  });
+  containerDef
+    .list<Point[]>("points", "points", {
+      get(api: DataAPI, list: Point[], key: number) {
+        return list[key];
+      },
+      getKey(api: DataAPI, list: Point[], obj: Point) {
+        return list.indexOf(obj);
+      },
+      getIter(api: DataAPI, list: Point[]) {
+        return list[Symbol.iterator]();
+      },
+      getLength(api: DataAPI, list: Point[]) {
+        return list.length;
+      },
+      getStruct(api: DataAPI, list: Point[], key: number) {
+        return pointDef;
+      },
+    })
+    .evalMassSetFilter();
 
-  console.log(points)
-  
+  api.rootContextStruct = containerDef;
+
+  const container = new PointContainer();
+  container.points = points;
+
+  api.massSetProp(container as any, "points[{$.sel === true}].x", -1);
+
+  let totsel = 0;
+  let totchange = 0;
+  for (const p of points) {
+    totsel += p.sel ? 1 : 0;
+    totchange += p.x === -1 ? 1 : 0;
+  }
+
+  expect(totsel).toBe(totchange)
 });

@@ -5472,6 +5472,8 @@ __export(util_exports, {
   getAllKeys: () => getAllKeys,
   getClassParent: () => getClassParent,
   hashtable: () => hashtable,
+  insideJest: () => insideJest,
+  insideNodeJS: () => insideNodeJS,
   isDenormal: () => isDenormal,
   isMobile: () => isMobile,
   list: () => list2,
@@ -5491,6 +5493,14 @@ __export(util_exports, {
   timers: () => timers,
   undefinedForGC: () => undefinedForGC
 });
+function insideNodeJS() {
+  const globalAny = globalThis;
+  return typeof globalAny.process?.version !== "undefined";
+}
+function insideJest() {
+  const globalAny = globalThis;
+  return globalAny.INSIDE_JEST_TEST === true;
+}
 function isDenormal(f2) {
   f64tmp[0] = f2;
   const a2 = u16tmp[0];
@@ -7493,24 +7503,26 @@ IDGen {
         return time_ms() - this.time > this.timeout;
       }
     };
-    window.setInterval(() => {
-      const bad = [];
-      for (const promise2 of PendingTimeoutPromises) {
-        if (promise2.bad) {
-          bad.push(promise2);
+    if (!insideJest()) {
+      window.setInterval(() => {
+        const bad = [];
+        for (const promise2 of PendingTimeoutPromises) {
+          if (promise2.bad) {
+            bad.push(promise2);
+          }
         }
-      }
-      for (const promise2 of bad) {
-        PendingTimeoutPromises.delete(promise2);
-      }
-      for (const promise2 of bad) {
-        try {
-          promise2._reject(new Error("Timeout"));
-        } catch (error2) {
-          print_stack2(error2);
+        for (const promise2 of bad) {
+          PendingTimeoutPromises.delete(promise2);
         }
-      }
-    }, 250);
+        for (const promise2 of bad) {
+          try {
+            promise2._reject(new Error("Timeout"));
+          } catch (error2) {
+            print_stack2(error2);
+          }
+        }
+      }, 250);
+    }
   }
 });
 
@@ -13995,6 +14007,7 @@ var init_controller_base = __esm({
         this.data.dynamicMeta(metaCB);
         return this;
       }
+      /** enable arbitrary code expressions in mass set path */
       evalMassSetFilter() {
         this.flag |= DataFlags.USE_EVAL_MASS_SET_PATHS;
         return this;
@@ -18009,11 +18022,13 @@ Curve1DPoint {
     struct_default.register(BSplineCurve);
     CurveTypeData.register(BSplineCurve);
     splineTemplatesLoaded = false;
-    window.setTimeout(() => {
-      if (config_default.autoLoadSplineTemplates) {
-        initSplineTemplates();
-      }
-    }, 0);
+    if (0) {
+      window.setTimeout(() => {
+        if (config2.autoLoadSplineTemplates) {
+          initSplineTemplates();
+        }
+      }, 0);
+    }
   }
 });
 
@@ -24164,6 +24179,13 @@ var init_controller = __esm({
           this.setValue(ctx, path, value);
         }
       }
+      /** 
+       * 
+       * Mass set paths take the form list[{$.prop}]`, where the filter is inside of the list.
+       * Note: `$.prop` cannot be an expression unless you enable eval with `struct.list().evalMassSetFilter()`.
+       * An example of a more complicated expression might be: 
+       * `canvas.paths[{$.id % 2 === 0}].material.color`
+       */
       resolveMassSetPaths(ctx, massSetPath) {
         if (massSetPath.startsWith("/")) {
           massSetPath = massSetPath.slice(1, massSetPath.length);
@@ -24171,6 +24193,13 @@ var init_controller = __esm({
         const start = massSetPath.search("{");
         const end = massSetPath.search("}");
         if (start < 0 || end < 0) {
+          console.log(
+            `
+Mass set paths take the form \`list[{$.prop}]\`, where the filter is inside of the list.
+Note: \`$.prop\` cannot be an expression unless you enable eval with \`struct.list().evalMassSetFilter()\`.
+An example of a more complicated expression might be: 
+\`canvas.paths[{$.id % 2 === 0}].material.color\``.trim()
+          );
           throw new DataPathError("Invalid mass set datapath: " + massSetPath);
         }
         const prefix = massSetPath.slice(0, start - 1);
@@ -24186,7 +24215,7 @@ var init_controller = __esm({
         }
         const paths = [];
         const list5 = rdef.prop;
-        const api = ctx.api;
+        const api = ctx.api ?? this;
         function applyFilter(obj) {
           const forceEval = rdef.dpath.flag & DataFlags.USE_EVAL_MASS_SET_PATHS;
           if (obj === void 0) {
@@ -24211,9 +24240,9 @@ var init_controller = __esm({
             }
           } else {
             const code2 = `
-        function filter($) {
+        (function filter($) {
           return ${filter};
-        }
+        })
         `;
             const func2 = (0, eval)(code2);
             return func2(obj);
@@ -28157,6 +28186,9 @@ var init_ui_base = __esm({
         const clsAny = cls;
         clsAny[ClassIdSymbol] = class_idgen++;
         const def = cls.define();
+        if (typeof customElements?.get === "undefined") {
+          return;
+        }
         if (customElements.get(def.tagname) === cls) {
           return;
         }
