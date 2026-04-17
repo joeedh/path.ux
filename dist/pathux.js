@@ -30,8 +30,8 @@ var __using = (stack, value, async) => {
     if (inner) dispose = function() {
       try {
         inner.call(this);
-      } catch (e2) {
-        return Promise.reject(e2);
+      } catch (e) {
+        return Promise.reject(e);
       }
     };
     stack.push([async, dispose, value]);
@@ -41,17 +41,17 @@ var __using = (stack, value, async) => {
   return value;
 };
 var __callDispose = (stack, error2, hasError) => {
-  var E2 = typeof SuppressedError === "function" ? SuppressedError : function(e2, s, m, _) {
-    return _ = Error(m), _.name = "SuppressedError", _.error = e2, _.suppressed = s, _;
+  var E = typeof SuppressedError === "function" ? SuppressedError : function(e, s, m, _) {
+    return _ = Error(m), _.name = "SuppressedError", _.error = e, _.suppressed = s, _;
   };
-  var fail = (e2) => error2 = hasError ? new E2(e2, error2, "An error was suppressed during disposal") : (hasError = true, e2);
+  var fail = (e) => error2 = hasError ? new E(e, error2, "An error was suppressed during disposal") : (hasError = true, e);
   var next = (it) => {
     while (it = stack.pop()) {
       try {
         var result = it[1] && it[1].call(it[2]);
-        if (it[0]) return Promise.resolve(result).then(next, (e2) => (fail(e2), next()));
-      } catch (e2) {
-        fail(e2);
+        if (it[0]) return Promise.resolve(result).then(next, (e) => (fail(e), next()));
+      } catch (e) {
+        fail(e);
       }
     }
     if (hasError) throw error2;
@@ -165,15 +165,15 @@ var init_polyfill = __esm({
         pruneConnected() {
           const lists = debugLists();
           for (const k in lists) {
-            const list6 = lists[k];
-            for (let i = 0; i < list6.length; i++) {
-              const e2 = list6[i];
-              if (!e2.thisvar || !(e2.thisvar instanceof Node)) {
+            const list5 = lists[k];
+            for (let i = 0; i < list5.length; i++) {
+              const e = list5[i];
+              if (!e.thisvar || !(e.thisvar instanceof Node)) {
                 continue;
               }
-              if (!e2.thisvar.isConnected) {
-                list6[i] = list6[list6.length - 1];
-                list6.length--;
+              if (!e.thisvar.isConnected) {
+                list5[i] = list5[list5.length - 1];
+                list5.length--;
                 i--;
               }
             }
@@ -354,7 +354,7 @@ var init_polyfill = __esm({
   }
 });
 
-// node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js
+// ../../node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js
 function tab(n, chr = " ") {
   let t = "";
   for (let i = 0; i < n; i++) {
@@ -458,7 +458,7 @@ function termPrint(...args) {
   }
   return out;
 }
-function list2(iter) {
+function list(iter) {
   const ret = [];
   for (const item of iter) {
     ret.push(item);
@@ -1094,17 +1094,17 @@ function setDebugMode2(t) {
 function packNull(manager3, data, field, type) {
   StructFieldTypeMap[type.type].packNull(manager3, data, field, type);
 }
-function toJSON(manager3, val, obj2, field, type) {
-  return StructFieldTypeMap[type.type].toJSON(manager3, val, obj2, field, type);
+function toJSON(manager3, val, obj, field, type) {
+  return StructFieldTypeMap[type.type].toJSON(manager3, val, obj, field, type);
 }
-function fromJSON(manager3, val, obj2, field, type, instance) {
-  return StructFieldTypeMap[type.type].fromJSON(manager3, val, obj2, field, type, instance);
+function fromJSON(manager3, val, obj, field, type, instance) {
+  return StructFieldTypeMap[type.type].fromJSON(manager3, val, obj, field, type, instance);
 }
-function formatJSON$1(manager3, val, obj2, field, type, instance, tlvl = 0) {
-  return StructFieldTypeMap[type.type].formatJSON(manager3, val, obj2, field, type, instance, tlvl);
+function formatJSON$1(manager3, val, obj, field, type, instance, tlvl = 0) {
+  return StructFieldTypeMap[type.type].formatJSON(manager3, val, obj, field, type, instance, tlvl);
 }
-function validateJSON$1(manager3, val, obj2, field, type, instance, _abstractKey) {
-  return StructFieldTypeMap[type.type].validateJSON(manager3, val, obj2, field, type, instance, _abstractKey);
+function validateJSON$1(manager3, val, obj, field, type, instance, _abstractKey) {
+  return StructFieldTypeMap[type.type].validateJSON(manager3, val, obj, field, type, instance, _abstractKey);
 }
 function unpack_field(manager3, data, type, uctx) {
   let name2;
@@ -1121,7 +1121,7 @@ function unpack_field(manager3, data, type, uctx) {
 function fmt_type(type) {
   return StructFieldTypeMap[type.type].format(type);
 }
-function do_pack(manager3, data, val, obj2, field, type) {
+function do_pack(manager3, data, val, obj, field, type) {
   let name2;
   if (debug) {
     name2 = StructFieldTypeMap[type.type !== void 0 ? type.type : type].define().name;
@@ -1133,15 +1133,15 @@ function do_pack(manager3, data, val, obj2, field, type) {
   } else {
     typeid = type;
   }
-  let ret = StructFieldTypeMap[typeid].pack(manager3, data, val, obj2, field, type);
+  let ret = StructFieldTypeMap[typeid].pack(manager3, data, val, obj, field, type);
   if (debug) {
     packer_debug_end$1();
   }
   return ret;
 }
-function formatArrayJson(manager3, val, obj2, field, type, type2, instance, tlvl, array = val) {
+function formatArrayJson(manager3, val, obj, field, type, type2, instance, tlvl, array = val) {
   if (array === void 0 || array === null || typeof array !== "object" || !(Symbol.iterator in array)) {
-    console.log(obj2);
+    console.log(obj);
     console.log(array);
     throw new Error(`Expected an array for ${field.name}`);
   }
@@ -1163,12 +1163,12 @@ function formatArrayJson(manager3, val, obj2, field, type, type2, instance, tlvl
 function setStructEval(val) {
   structEval = val;
 }
-function setTokInfo(obj2, info) {
-  obj2[TokSymbol] = info;
+function setTokInfo(obj, info) {
+  obj[TokSymbol] = info;
 }
-function getTokInfo(obj2) {
-  if (obj2 && typeof obj2 === "object") {
-    return obj2[TokSymbol];
+function getTokInfo(obj) {
+  if (obj && typeof obj === "object") {
+    return obj[TokSymbol];
   }
   return void 0;
 }
@@ -1269,10 +1269,10 @@ function buildJSONParser() {
   }
   function p_Object(p) {
     p.expect("LBRACE");
-    const obj2 = {};
+    const obj = {};
     let first2 = true;
     let t = p.peeknext();
-    setTokInfo(obj2, tokinfo(t));
+    setTokInfo(obj, tokinfo(t));
     while (t && t.type !== "RBRACE") {
       if (!first2) {
         p.expect("COMMA");
@@ -1280,13 +1280,13 @@ function buildJSONParser() {
       const key = p.expect("STRLIT");
       p.expect("COLON");
       const val = p_Start(p, true);
-      obj2[key] = val;
+      obj[key] = val;
       first2 = false;
       t = p.peeknext();
-      getTokInfo(obj2).fields[key] = tokinfo(t);
+      getTokInfo(obj).fields[key] = tokinfo(t);
     }
     p.expect("RBRACE");
-    return obj2;
+    return obj;
   }
   function p_Start(p, _throwError = true) {
     const t = p.peeknext();
@@ -1574,11 +1574,11 @@ function inherit(child, parent, structName = child.name) {
 function readObject(data, cls, __uctx) {
   return manager.readObject(data, cls, __uctx);
 }
-function writeObject(data, obj2) {
-  return manager.writeObject(data, obj2);
+function writeObject(data, obj) {
+  return manager.writeObject(data, obj);
 }
-function writeJSON(obj2) {
-  return manager.writeJSON(obj2);
+function writeJSON(obj) {
+  return manager.writeJSON(obj);
 }
 function formatJSON(json, cls, addComments = true, validate = true) {
   return manager.formatJSON(json, cls, addComments, validate);
@@ -1588,7 +1588,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js"() {
+  "../../node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js"() {
     "use strict";
     colormap = {
       "black": 30,
@@ -2071,7 +2071,7 @@ var init_nstructjs_es6 = __esm({
     }, 256);
     _ws_env$1 = [[void 0, void 0]];
     StructFieldType = class _StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
       }
       static unpack(_manager, _data, _type, _uctx) {
         return void 0;
@@ -2082,16 +2082,16 @@ var init_nstructjs_es6 = __esm({
       static format(type) {
         return this.define().name;
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         return val;
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         return val;
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
         return JSON.stringify(val);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         return true;
       }
       /**
@@ -2139,13 +2139,13 @@ var init_nstructjs_es6 = __esm({
       }
     };
     StructIntField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_int(data, val);
       }
       static unpack(manager3, data, type, uctx) {
         return unpack_int(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "number" || val !== Math.floor(val)) {
           return "" + val + " is not an integer";
         }
@@ -2160,13 +2160,13 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructIntField);
     StructFloatField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_float(data, val);
       }
       static unpack(manager3, data, type, uctx) {
         return unpack_float(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "number") {
           return "Not a float: " + val;
         }
@@ -2181,13 +2181,13 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructFloatField);
     StructDoubleField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_double(data, val);
       }
       static unpack(manager3, data, type, uctx) {
         return unpack_double(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "number") {
           return "Not a double: " + val;
         }
@@ -2202,11 +2202,11 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructDoubleField);
     StructStringField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         const s = !val ? "" : val;
         pack_string(data, s);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "string") {
           return "Not a string: " + val;
         }
@@ -2227,11 +2227,11 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructStringField);
     StructStaticStringField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         const s = !val ? "" : val;
         pack_static_string(data, s, type.data.maxlength);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "string") {
           return "Not a string: " + val;
         }
@@ -2258,12 +2258,12 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructStaticStringField);
     StructStructField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         let stt = manager3.get_struct(type.data);
         packer_debug$1("struct", stt.name);
         manager3.write_struct(data, val, stt);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         let stt = manager3.get_struct(type.data);
         if (!val) {
           return "Expected " + stt.name + " object";
@@ -2273,15 +2273,15 @@ var init_nstructjs_es6 = __esm({
       static format(type) {
         return type.data;
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         let stt = manager3.get_struct(type.data);
         return manager3.readJSON(val, stt, instance);
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
         let stt = manager3.get_struct(type.data);
         return manager3.formatJSON_intern(val, stt, field, tlvl);
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         let stt = manager3.get_struct(type.data);
         return manager3.writeJSON(val, stt);
       }
@@ -2312,7 +2312,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructStructField);
     StructTStructField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         let cls = manager3.get_struct_cls(type.data);
         let stt = manager3.get_struct(type.data);
         const keywords = manager3.constructor.keywords;
@@ -2330,7 +2330,7 @@ var init_nstructjs_es6 = __esm({
         pack_int(data, stt.id);
         manager3.write_struct(data, val, stt);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         let key = type.jsonKeyword;
         if (typeof val !== "object") {
           return typeof val + " is not an object";
@@ -2352,19 +2352,19 @@ var init_nstructjs_es6 = __esm({
         }
         return manager3.validateJSONIntern(valObj, stt, type.jsonKeyword);
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         let key = type.jsonKeyword;
         const valObj = val;
         let stt = manager3.get_struct(valObj[key]);
         return manager3.readJSON(val, stt, instance);
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
         let key = type.jsonKeyword;
         const valObj = val;
         let stt = manager3.get_struct(valObj[key]);
         return manager3.formatJSON_intern(valObj, stt, field, tlvl);
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         const keywords = manager3.constructor.keywords;
         const valObj = val;
         const valCtor = valObj.constructor;
@@ -2420,7 +2420,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructTStructField);
     StructArrayField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         if (val === void 0) {
           console.trace();
           console.log("Undefined array fed to struct struct packer!");
@@ -2443,11 +2443,11 @@ var init_nstructjs_es6 = __esm({
           if (itername !== "" && itername !== void 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = val2;
-            val2 = manager3._env_call(field.get, obj2, env);
+            val2 = manager3._env_call(field.get, obj, env);
           }
           let fakeField = fakeFields.next();
           fakeField.type = type2;
-          do_pack(manager3, data, val2, obj2, fakeField, type2);
+          do_pack(manager3, data, val2, obj, fakeField, type2);
         }
       }
       static packNull(manager3, data, field, type) {
@@ -2464,7 +2464,7 @@ var init_nstructjs_es6 = __esm({
       static useHelperJS(field) {
         return !field.type.data.iname;
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (!val) {
           return "not an array: " + val;
         }
@@ -2477,7 +2477,7 @@ var init_nstructjs_es6 = __esm({
         }
         return true;
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         const arr = val;
         let ret = instance || [];
         ret.length = 0;
@@ -2492,10 +2492,10 @@ var init_nstructjs_es6 = __esm({
         }
         return ret;
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
-        return formatArrayJson(manager3, val, obj2, field, type, type.data.type, instance, tlvl ?? 0);
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
+        return formatArrayJson(manager3, val, obj, field, type, type.data.type, instance, tlvl ?? 0);
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         const arr = val || [];
         let json = [];
         let itername = type.data.iname;
@@ -2505,7 +2505,7 @@ var init_nstructjs_es6 = __esm({
           if (itername !== "" && itername !== void 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = val2;
-            val2 = manager3._env_call(field.get, obj2, env);
+            val2 = manager3._env_call(field.get, obj, env);
           }
           json.push(toJSON(manager3, val2, val, field, type.data.type));
         }
@@ -2538,7 +2538,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructArrayField);
     StructIterField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         function forEach(cb, thisvar) {
           const v = val;
           if (v && v[Symbol.iterator]) {
@@ -2569,11 +2569,11 @@ var init_nstructjs_es6 = __esm({
           if (itername !== "" && itername !== void 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = v2;
-            v2 = manager3._env_call(field.get, obj2, env);
+            v2 = manager3._env_call(field.get, obj, env);
           }
           let fakeField = fakeFields.next();
           fakeField.type = type2;
-          do_pack(manager3, data, v2, obj2, fakeField, type2);
+          do_pack(manager3, data, v2, obj, fakeField, type2);
           i++;
         }, void 0);
         temp_dataview.setInt32(0, i, STRUCT_ENDIAN);
@@ -2582,16 +2582,16 @@ var init_nstructjs_es6 = __esm({
         data[starti++] = uint8_view[2];
         data[starti++] = uint8_view[3];
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
-        return formatArrayJson(manager3, val, obj2, field, type, type.data.type, instance, tlvl ?? 0, list2(val));
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
+        return formatArrayJson(manager3, val, obj, field, type, type.data.type, instance, tlvl ?? 0, list(val));
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
-        return StructArrayField.validateJSON(manager3, val, obj2, field, type, instance, _abstractKey);
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
+        return StructArrayField.validateJSON(manager3, val, obj, field, type, instance, _abstractKey);
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
-        return StructArrayField.fromJSON(manager3, val, obj2, field, type, instance);
+      static fromJSON(manager3, val, obj, field, type, instance) {
+        return StructArrayField.fromJSON(manager3, val, obj, field, type, instance);
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         const arr = val || [];
         let json = [];
         let itername = type.data.iname;
@@ -2601,7 +2601,7 @@ var init_nstructjs_es6 = __esm({
           if (itername !== "" && itername !== void 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = v2;
-            v2 = manager3._env_call(field.get, obj2, env);
+            v2 = manager3._env_call(field.get, obj, env);
           }
           json.push(toJSON(manager3, v2, val, field, type.data.type));
         }
@@ -2649,7 +2649,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructIterField);
     StructShortField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_short(data, val);
       }
       static unpack(manager3, data, type, uctx) {
@@ -2664,7 +2664,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructShortField);
     StructByteField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_byte(data, val);
       }
       static unpack(manager3, data, type, uctx) {
@@ -2679,7 +2679,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructByteField);
     StructSignedByteField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_sbyte(data, val);
       }
       static unpack(manager3, data, type, uctx) {
@@ -2694,25 +2694,25 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructSignedByteField);
     StructBoolField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_byte(data, val ? 1 : 0);
       }
       static unpack(manager3, data, type, uctx) {
         return !!unpack_byte(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (val === 0 || val === 1 || val === true || val === false || val === "true" || val === "false") {
           return true;
         }
         return "" + val + " is not a bool";
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         if (val === "false") {
           return false;
         }
         return !!val;
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         return !!val;
       }
       static define() {
@@ -2724,7 +2724,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructBoolField);
     StructIterKeysField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         if (typeof val !== "object" && typeof val !== "function" || val === null) {
           console.warn("Bad object fed to iterkeys in struct packer!", val);
           console.log("Field: ", field);
@@ -2756,25 +2756,25 @@ var init_nstructjs_es6 = __esm({
           if (itername && itername.trim().length > 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = key;
-            val2 = manager3._env_call(field.get, obj2, env);
+            val2 = manager3._env_call(field.get, obj, env);
           } else {
             val2 = valObj[key];
           }
           let f2 = { type: type2, get: void 0, set: void 0, name: "", comment: "" };
-          do_pack(manager3, data, val2, obj2, f2, type2);
+          do_pack(manager3, data, val2, obj, f2, type2);
           i++;
         }
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
-        return StructArrayField.validateJSON(manager3, val, obj2, field, type, instance, _abstractKey);
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
+        return StructArrayField.validateJSON(manager3, val, obj, field, type, instance, _abstractKey);
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
-        return StructArrayField.fromJSON(manager3, val, obj2, field, type, instance);
+      static fromJSON(manager3, val, obj, field, type, instance) {
+        return StructArrayField.fromJSON(manager3, val, obj, field, type, instance);
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
-        return formatArrayJson(manager3, val, obj2, field, type, type.data.type, instance, tlvl ?? 0, list2(val));
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
+        return formatArrayJson(manager3, val, obj, field, type, type.data.type, instance, tlvl ?? 0, list(val));
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         const arr = val || [];
         let json = [];
         let itername = type.data.iname;
@@ -2784,7 +2784,7 @@ var init_nstructjs_es6 = __esm({
           if (itername !== "" && itername !== void 0 && field.get) {
             env[0][0] = itername;
             env[0][1] = val2;
-            val2 = manager3._env_call(field.get, obj2, env);
+            val2 = manager3._env_call(field.get, obj, env);
           }
           json.push(toJSON(manager3, val2, val, field, type.data.type));
         }
@@ -2832,13 +2832,13 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructIterKeysField);
     StructUintField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_uint(data, val);
       }
       static unpack(manager3, data, type, uctx) {
         return unpack_uint(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "number" || val !== Math.floor(val)) {
           return "" + val + " is not an integer";
         }
@@ -2853,13 +2853,13 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructUintField);
     StructUshortField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_ushort(data, val);
       }
       static unpack(manager3, data, type, uctx) {
         return unpack_ushort(data, uctx);
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         if (typeof val !== "number" || val !== Math.floor(val)) {
           return "" + val + " is not an integer";
         }
@@ -2874,7 +2874,7 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructUshortField);
     StructStaticArrayField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         const d = type.data;
         if (d.size === void 0) {
           throw new Error("type.data.size was undefined");
@@ -2892,7 +2892,7 @@ var init_nstructjs_es6 = __esm({
             let env = _ws_env$1;
             env[0][0] = itername;
             env[0][1] = val2;
-            val2 = manager3._env_call(field.get, obj2, env);
+            val2 = manager3._env_call(field.get, obj, env);
           }
           do_pack(manager3, data, val2, val, field, d.type);
         }
@@ -2900,14 +2900,14 @@ var init_nstructjs_es6 = __esm({
       static useHelperJS(field) {
         return !field.type.data.iname;
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
-        return StructArrayField.validateJSON(manager3, val, obj2, field, type, instance, _abstractKey);
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
+        return StructArrayField.validateJSON(manager3, val, obj, field, type, instance, _abstractKey);
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
-        return StructArrayField.fromJSON(manager3, val, obj2, field, type, instance);
+      static fromJSON(manager3, val, obj, field, type, instance) {
+        return StructArrayField.fromJSON(manager3, val, obj, field, type, instance);
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
-        return formatArrayJson(manager3, val, obj2, field, type, type.data.type, instance, tlvl ?? 0, list2(val));
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
+        return formatArrayJson(manager3, val, obj, field, type, type.data.type, instance, tlvl ?? 0, list(val));
       }
       static packNull(manager3, data, field, type) {
         const d = type.data;
@@ -2916,8 +2916,8 @@ var init_nstructjs_es6 = __esm({
           packNull(manager3, data, field, d.type);
         }
       }
-      static toJSON(manager3, val, obj2, field, type) {
-        return StructArrayField.toJSON(manager3, val, obj2, field, type);
+      static toJSON(manager3, val, obj, field, type) {
+        return StructArrayField.toJSON(manager3, val, obj, field, type);
       }
       static format(type) {
         const d = type.data;
@@ -2957,34 +2957,34 @@ var init_nstructjs_es6 = __esm({
     };
     StructFieldType.register(StructStaticArrayField);
     StructOptionalField = class extends StructFieldType {
-      static pack(manager3, data, val, obj2, field, type) {
+      static pack(manager3, data, val, obj, field, type) {
         pack_int(data, val !== void 0 && val !== null ? 1 : 0);
         if (val !== void 0 && val !== null) {
           const fakeField = { ...field, type: type.data };
-          do_pack(manager3, data, val, obj2, fakeField, type.data);
+          do_pack(manager3, data, val, obj, fakeField, type.data);
         }
       }
       static fakeField(field, type) {
         return { ...field, type: type.data };
       }
-      static validateJSON(manager3, val, obj2, field, type, instance, _abstractKey) {
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
         const fakeField = this.fakeField(field, type);
-        return val !== void 0 && val !== null ? validateJSON$1(manager3, val, obj2, fakeField, type.data, void 0, _abstractKey) : true;
+        return val !== void 0 && val !== null ? validateJSON$1(manager3, val, obj, fakeField, type.data, void 0, _abstractKey) : true;
       }
-      static fromJSON(manager3, val, obj2, field, type, instance) {
+      static fromJSON(manager3, val, obj, field, type, instance) {
         const fakeField = this.fakeField(field, type);
-        return val !== void 0 && val !== null ? fromJSON(manager3, val, obj2, fakeField, type.data, void 0) : void 0;
+        return val !== void 0 && val !== null ? fromJSON(manager3, val, obj, fakeField, type.data, void 0) : void 0;
       }
-      static formatJSON(manager3, val, obj2, field, type, instance, tlvl) {
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
         if (val !== void 0 && val !== null) {
           const fakeField = this.fakeField(field, type);
           return formatJSON$1(manager3, val, val, fakeField, type.data, instance, (tlvl ?? 0) + 1);
         }
         return "null";
       }
-      static toJSON(manager3, val, obj2, field, type) {
+      static toJSON(manager3, val, obj, field, type) {
         const fakeField = this.fakeField(field, type);
-        return val !== void 0 && val !== null ? toJSON(manager3, val, obj2, fakeField, type.data) : null;
+        return val !== void 0 && val !== null ? toJSON(manager3, val, obj, fakeField, type.data) : null;
       }
       static packNull(manager3, data, field, type) {
         pack_int(data, 0);
@@ -3091,14 +3091,14 @@ var init_nstructjs_es6 = __esm({
       }
       /** invoke loadSTRUCT methods on parent objects.  note that
        reader() is only called once.  it is called however.*/
-      static Super(obj2, reader) {
+      static Super(obj, reader) {
         if (warninglvl > 0) {
           console.warn("deprecated");
         }
-        reader(obj2);
+        reader(obj);
         function reader2(_obj) {
         }
-        const cls = obj2.constructor;
+        const cls = obj.constructor;
         const keywords = this.keywords;
         let bad = cls === void 0 || cls.prototype === void 0 || Object.getPrototypeOf(cls.prototype) === void 0;
         if (bad) {
@@ -3107,8 +3107,8 @@ var init_nstructjs_es6 = __esm({
         const parentProto = Object.getPrototypeOf(cls.prototype);
         const parent = parentProto.constructor;
         bad = bad || parent === void 0;
-        if (!bad && parent.prototype.loadSTRUCT && parent.prototype.loadSTRUCT !== obj2.loadSTRUCT) {
-          parent.prototype.loadSTRUCT.call(obj2, reader2);
+        if (!bad && parent.prototype.loadSTRUCT && parent.prototype.loadSTRUCT !== obj.loadSTRUCT) {
+          parent.prototype.loadSTRUCT.call(obj, reader2);
         }
       }
       /** deprecated.  used with old fromSTRUCT interface. */
@@ -3119,21 +3119,21 @@ var init_nstructjs_es6 = __esm({
         }
         const proto = cls.prototype;
         const parent = proto.prototype;
-        const obj2 = parent.constructor.fromSTRUCT;
-        const result = obj2(reader);
-        const obj22 = new cls();
+        const obj = parent.constructor.fromSTRUCT;
+        const result = obj(reader);
+        const obj2 = new cls();
         const keys2 = Object.keys(result).concat(Object.getOwnPropertySymbols(result));
         for (let i = 0; i < keys2.length; i++) {
           const k = keys2[i];
           try {
-            obj22[k] = result[k];
+            obj2[k] = result[k];
           } catch (error2) {
             if (warninglvl > 0) {
               console.warn("  failed to set property", k);
             }
           }
         }
-        return obj22;
+        return obj2;
       }
       // defined_classes is an array of class constructors
       // with STRUCT scripts, *OR* another STRUCT instance
@@ -3188,8 +3188,8 @@ var init_nstructjs_es6 = __esm({
       }
       define_null_native(name2, cls) {
         const keywords = this.constructor.keywords;
-        const obj2 = define_empty_class(this.constructor, name2);
-        const stt = struct_parse.parse(obj2.STRUCT);
+        const obj = define_empty_class(this.constructor, name2);
+        const stt = struct_parse.parse(obj.STRUCT);
         stt.id = this.idgen++;
         this.structs[name2] = stt;
         this.struct_cls[name2] = cls;
@@ -3509,7 +3509,7 @@ var init_nstructjs_es6 = __esm({
         }
         return this.struct_cls[name2];
       }
-      _env_call(code2, obj2, env) {
+      _env_call(code2, obj, env) {
         let envcode = _static_envcode_null;
         if (env !== void 0) {
           envcode = "";
@@ -3538,7 +3538,7 @@ var init_nstructjs_es6 = __esm({
           func2 = this.compiled_code[fullcode];
         }
         try {
-          return func2.call(obj2, obj2, env);
+          return func2.call(obj, obj, env);
         } catch (err) {
           console.warn(err.stack);
           const code22 = "func = function(obj, env) { " + envcode + "return " + code2 + "}";
@@ -3547,7 +3547,7 @@ var init_nstructjs_es6 = __esm({
           throw err;
         }
       }
-      write_struct(data, obj2, stt) {
+      write_struct(data, obj, stt) {
         function use_helper_js(field) {
           const type = field.type.type;
           const cls = StructFieldTypeMap[type];
@@ -3563,17 +3563,17 @@ var init_nstructjs_es6 = __esm({
             let val;
             const type = t2;
             if (f2.get !== void 0) {
-              val = thestruct._env_call(f2.get, obj2);
+              val = thestruct._env_call(f2.get, obj);
             } else {
-              val = f2.name === "this" ? obj2 : obj2[f2.name];
+              val = f2.name === "this" ? obj : obj[f2.name];
             }
             if (DEBUG.tinyeval) {
               console.log("\n\n\n", f2.get, "Helper JS Ret", val, "\n\n\n");
             }
-            sintern2.do_pack(this, data, val, obj2, f2, t1);
+            sintern2.do_pack(this, data, val, obj, f2, t1);
           } else {
-            const val = f2.name === "this" ? obj2 : obj2[f2.name];
-            sintern2.do_pack(this, data, val, obj2, f2, t1);
+            const val = f2.name === "this" ? obj : obj[f2.name];
+            sintern2.do_pack(this, data, val, obj, f2, t1);
           }
         }
       }
@@ -3581,14 +3581,14 @@ var init_nstructjs_es6 = __esm({
        @param data : array to write data into,
        @param obj  : structable object
        */
-      write_object(data, obj2) {
+      write_object(data, obj) {
         const keywords = this.constructor.keywords;
-        const cls = obj2.constructor.structName;
+        const cls = obj.constructor.structName;
         const stt = this.get_struct(cls);
         if (data === void 0) {
           data = [];
         }
-        this.write_struct(data, obj2, stt);
+        this.write_struct(data, obj, stt);
         return data;
       }
       /**
@@ -3611,12 +3611,12 @@ var init_nstructjs_es6 = __esm({
        @param data array to write data into,
        @param obj structable object
        */
-      writeObject(data, obj2) {
-        return this.write_object(data, obj2);
+      writeObject(data, obj) {
+        return this.write_object(data, obj);
       }
-      writeJSON(obj2, stt) {
+      writeJSON(obj, stt) {
         const keywords = this.constructor.keywords;
-        const cls = obj2.constructor;
+        const cls = obj.constructor;
         stt = stt || this.get_struct(cls.structName);
         function use_helper_js(field) {
           const type = field.type.type;
@@ -3634,17 +3634,17 @@ var init_nstructjs_es6 = __esm({
           let json2;
           if (use_helper_js(f2)) {
             if (f2.get !== void 0) {
-              val = thestruct._env_call(f2.get, obj2);
+              val = thestruct._env_call(f2.get, obj);
             } else {
-              val = f2.name === "this" ? obj2 : obj2[f2.name];
+              val = f2.name === "this" ? obj : obj[f2.name];
             }
             if (DEBUG.tinyeval) {
               console.log("\n\n\n", f2.get, "Helper JS Ret", val, "\n\n\n");
             }
-            json2 = toJSON2(this, val, obj2, f2, t1);
+            json2 = toJSON2(this, val, obj, f2, t1);
           } else {
-            val = f2.name === "this" ? obj2 : obj2[f2.name];
-            json2 = toJSON2(this, val, obj2, f2, t1);
+            val = f2.name === "this" ? obj : obj[f2.name];
+            json2 = toJSON2(this, val, obj, f2, t1);
           }
           if (f2.name !== "this") {
             json[f2.name] = json2;
@@ -3700,7 +3700,7 @@ var init_nstructjs_es6 = __esm({
         }
         let was_run = false;
         function makeLoader(stt2) {
-          return function load(obj2) {
+          return function load(obj) {
             if (was_run) {
               return;
             }
@@ -3710,28 +3710,28 @@ var init_nstructjs_es6 = __esm({
             for (let i = 0; i < flen; i++) {
               const f2 = fields2[i];
               if (f2.name === "this") {
-                unpack_into(f2.type, obj2);
+                unpack_into(f2.type, obj);
               } else {
-                obj2[f2.name] = unpack_field2(f2.type);
+                obj[f2.name] = unpack_field2(f2.type);
               }
             }
           };
         }
         const loader = makeLoader(stt);
         if (cls.prototype.loadSTRUCT !== void 0) {
-          let obj2 = objInstance;
-          if (!obj2 && cls.newSTRUCT !== void 0) {
-            obj2 = cls.newSTRUCT.call(cls, loader);
-          } else if (!obj2) {
-            obj2 = new cls();
+          let obj = objInstance;
+          if (!obj && cls.newSTRUCT !== void 0) {
+            obj = cls.newSTRUCT.call(cls, loader);
+          } else if (!obj) {
+            obj = new cls();
           }
-          const objAny = obj2;
+          const objAny = obj;
           objAny.loadSTRUCT(loader);
           if (!was_run) {
             console.warn("" + cls.structName + ".prototype.loadSTRUCT() did not execute its loader callback!");
-            loader(obj2);
+            loader(obj);
           }
-          return obj2;
+          return obj;
         } else if (cls.fromSTRUCT !== void 0) {
           if (warninglvl > 1) {
             console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
@@ -3739,14 +3739,14 @@ var init_nstructjs_es6 = __esm({
           const anyCls = cls;
           return anyCls.fromSTRUCT(loader);
         } else {
-          let obj2 = objInstance;
-          if (!obj2 && cls.newSTRUCT !== void 0) {
-            obj2 = cls.newSTRUCT.call(cls, loader);
-          } else if (!obj2) {
-            obj2 = new cls();
+          let obj = objInstance;
+          if (!obj && cls.newSTRUCT !== void 0) {
+            obj = cls.newSTRUCT.call(cls, loader);
+          } else if (!obj) {
+            obj = new cls();
           }
-          loader(obj2);
-          return obj2;
+          loader(obj);
+          return obj;
         }
       }
       validateJSON(json, cls_or_struct_id, useInternalParser = true, useColors = true, consoleLogger2 = function(...args) {
@@ -3875,7 +3875,7 @@ var init_nstructjs_es6 = __esm({
         let was_run = false;
         const fromJSON2 = sintern2.fromJSON;
         function makeLoader(stt2) {
-          return function load(obj2) {
+          return function load(obj) {
             if (was_run) {
               return;
             }
@@ -3896,25 +3896,25 @@ var init_nstructjs_es6 = __esm({
                 }
                 continue;
               }
-              const instance = f2.name === "this" ? obj2 : objInstance;
-              const ret = fromJSON2(this2, val, obj2, f2, f2.type, instance);
+              const instance = f2.name === "this" ? obj : objInstance;
+              const ret = fromJSON2(this2, val, obj, f2, f2.type, instance);
               if (f2.name !== "this") {
-                obj2[f2.name] = ret;
+                obj[f2.name] = ret;
               }
             }
           };
         }
         const loader = makeLoader(stt);
         if (cls.prototype.loadSTRUCT !== void 0) {
-          let obj2 = objInstance;
-          if (!obj2 && cls.newSTRUCT !== void 0) {
-            obj2 = cls.newSTRUCT.call(cls, loader);
-          } else if (!obj2) {
-            obj2 = new cls();
+          let obj = objInstance;
+          if (!obj && cls.newSTRUCT !== void 0) {
+            obj = cls.newSTRUCT.call(cls, loader);
+          } else if (!obj) {
+            obj = new cls();
           }
-          const anyObj = obj2;
+          const anyObj = obj;
           anyObj.loadSTRUCT(loader);
-          return obj2;
+          return obj;
         } else if (cls.fromSTRUCT !== void 0) {
           if (warninglvl > 1) {
             console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
@@ -3922,14 +3922,14 @@ var init_nstructjs_es6 = __esm({
           const anyCls = cls;
           return anyCls.fromSTRUCT(loader);
         } else {
-          let obj2 = objInstance;
-          if (!obj2 && cls.newSTRUCT !== void 0) {
-            obj2 = cls.newSTRUCT.call(cls, loader);
-          } else if (!obj2) {
-            obj2 = new cls();
+          let obj = objInstance;
+          if (!obj && cls.newSTRUCT !== void 0) {
+            obj = cls.newSTRUCT.call(cls, loader);
+          } else if (!obj) {
+            obj = new cls();
           }
-          loader(obj2);
-          return obj2;
+          loader(obj);
+          return obj;
         }
       }
       formatJSON_intern(json, stt, field, tlvl = 0) {
@@ -5451,7 +5451,7 @@ __export(util_exports, {
   hashtable: () => hashtable,
   isDenormal: () => isDenormal,
   isMobile: () => isMobile,
-  list: () => list3,
+  list: () => list2,
   map: () => map,
   merge: () => merge,
   pollTimer: () => pollTimer,
@@ -5616,7 +5616,7 @@ function getClassParent(cls) {
   if (p) return p.constructor;
   return void 0;
 }
-function list3(iterable) {
+function list2(iterable) {
   const ret = [];
   for (const item of iterable) {
     ret.push(item);
@@ -5638,12 +5638,12 @@ function count(iterable, searchItem) {
   }
   return count2;
 }
-function getAllKeys(obj2) {
+function getAllKeys(obj) {
   const keys2 = /* @__PURE__ */ new Set();
-  if (typeof obj2 !== "object" && typeof obj2 !== "function") {
-    throw new Error("must pass an object ot getAllKeys; object was: " + obj2);
+  if (typeof obj !== "object" && typeof obj !== "function") {
+    throw new Error("must pass an object ot getAllKeys; object was: " + obj);
   }
-  let p = obj2;
+  let p = obj;
   while (p && p !== Object) {
     for (const k in Object.getOwnPropertyDescriptors(p)) {
       if (k === "__proto__") continue;
@@ -5654,7 +5654,7 @@ function getAllKeys(obj2) {
     }
     p = Object.getPrototypeOf(p);
   }
-  let cls = obj2.constructor;
+  let cls = obj.constructor;
   if (!cls) return keys2;
   while (cls) {
     const proto = cls.prototype;
@@ -6039,15 +6039,15 @@ var init_util = __esm({
     if (debug_cacherings) {
       window._cacherings = [];
       window._clear_all_cacherings = function(kill_all = false) {
-        function copy(obj2) {
-          if (typeof obj2 === "object" && obj2 !== null && typeof obj2.copy === "function") {
-            return obj2.copy();
-          } else if (typeof obj2 === "object" && obj2 !== null && obj2.constructor === Object) {
+        function copy(obj) {
+          if (typeof obj === "object" && obj !== null && typeof obj.copy === "function") {
+            return obj.copy();
+          } else if (typeof obj === "object" && obj !== null && obj.constructor === Object) {
             const ret = {};
-            for (const k of Reflect.ownKeys(obj2)) {
+            for (const k of Reflect.ownKeys(obj)) {
               let v;
               try {
-                v = obj2[k];
+                v = obj[k];
               } catch (error2) {
                 continue;
               }
@@ -6058,13 +6058,13 @@ var init_util = __esm({
               }
             }
             return ret;
-          } else if (typeof obj2 === "object" && obj2 !== null) {
-            return new obj2.constructor();
+          } else if (typeof obj === "object" && obj !== null) {
+            return new obj.constructor();
           }
-          return obj2;
+          return obj;
         }
         for (const ch of window._cacherings) {
-          const obj2 = ch[0];
+          const obj = ch[0];
           const len = ch.length;
           ch.length = 0;
           ch.cur = 0;
@@ -6072,7 +6072,7 @@ var init_util = __esm({
             continue;
           }
           for (let i = 0; i < len; i++) {
-            ch.push(copy(obj2));
+            ch.push(copy(obj));
           }
         }
       };
@@ -6444,9 +6444,9 @@ var init_util = __esm({
         window.console.warn("Deprecated use of IDGen._cur");
         this.cur = v;
       }
-      static fromJSON(obj2) {
+      static fromJSON(obj) {
         const ret = new _IDGen();
-        ret.cur = obj2.cur === void 0 ? obj2._cur : obj2.cur;
+        ret.cur = obj.cur === void 0 ? obj._cur : obj.cur;
         return ret;
       }
       next() {
@@ -6650,8 +6650,8 @@ IDGen {
           console2.log("got file", _e, files);
           if (!files || files.length === 0) return;
           const reader = new FileReader();
-          reader.onload = (e2) => {
-            const data = e2.target.result;
+          reader.onload = (e) => {
+            const data = e.target.result;
             const image = new Image();
             image.src = data;
             image.onload = (_e2) => {
@@ -6750,19 +6750,19 @@ IDGen {
         const ret = this.ret;
         let i = this.i;
         const m = this.map;
-        const list6 = m._list;
-        while (i < list6.length && list6[i] === NullItem) {
+        const list5 = m._list;
+        while (i < list5.length && list5[i] === NullItem) {
           i += 2;
         }
-        if (i >= list6.length) {
+        if (i >= list5.length) {
           ret.done = true;
           ret.value = void 0;
           this.finish();
           return ret;
         }
         this.i = i + 2;
-        this.value[0] = list6[i];
-        this.value[1] = list6[i + 1];
+        this.value[0] = list5[i];
+        this.value[1] = list5[i + 1];
         ret.value = this.value;
         ret.done = false;
         return ret;
@@ -7008,7 +7008,7 @@ IDGen {
           }
         }
       }
-      push(e2, w) {
+      push(e, w) {
         if (typeof w !== "number") {
           throw new Error("w must be a number");
         }
@@ -7020,8 +7020,8 @@ IDGen {
         const tot = Math.pow(2, depth) + 1;
         heaplog(depth, tot);
         if (this.heap.length < tot * HTOT) {
-          const start2 = this.heap.length / HTOT;
-          for (let i = start2; i < tot; i++) {
+          const start = this.heap.length / HTOT;
+          for (let i = start; i < tot; i++) {
             this.freelist.push(i * HTOT);
           }
         }
@@ -7031,7 +7031,7 @@ IDGen {
         heaplog("freelist", this.freelist);
         this.end = Math.max(this.end, n);
         heap[n] = w;
-        heap[n + 1] = e2;
+        heap[n + 1] = e;
         while (n > 0) {
           n /= HTOT;
           let p = n - 1 >> 1;
@@ -7044,7 +7044,7 @@ IDGen {
             heap[n] = heap[p];
             heap[n + 1] = heap[p + 1];
             heap[p] = w;
-            heap[p + 1] = e2;
+            heap[p + 1] = e;
             n = p;
           } else {
             break;
@@ -7064,7 +7064,7 @@ IDGen {
           return ret2;
         }
         const ret = heap[1];
-        const end2 = this.end;
+        const end = this.end;
         function swap(n1, n2) {
           let t = heap[n1];
           heap[n1] = heap[n2];
@@ -7073,12 +7073,12 @@ IDGen {
           heap[n1 + 1] = heap[n2 + 1];
           heap[n2 + 1] = t;
         }
-        heaplog("end", end2);
+        heaplog("end", end);
         heaplog(heap.concat([]));
-        heap[0] = heap[end2];
-        heap[1] = heap[end2 + 1];
-        heap[end2] = void 0;
-        heap[end2 + 1] = void 0;
+        heap[0] = heap[end];
+        heap[1] = heap[end + 1];
+        heap[end] = void 0;
+        heap[end + 1] = void 0;
         let n = 0;
         while (n < heap.length) {
           n /= HTOT;
@@ -7199,17 +7199,17 @@ IDGen {
     globalThis._testQueue = function(steps = 15, samples = 15) {
       const queue = new Queue(3);
       for (let i = 0; i < steps; i++) {
-        const list6 = [];
+        const list5 = [];
         for (let j2 = 0; j2 < samples; j2++) {
           const item = { f: Math.random() };
-          list6.push(item);
+          list5.push(item);
           queue.enqueue(item);
         }
         let j = 0;
         while (queue.length > 0) {
           const item = queue.dequeue();
-          if (item !== list6[j]) {
-            console2.log(item, list6);
+          if (item !== list5[j]) {
+            console2.log(item, list5);
             throw new Error("got wrong item");
           }
           j++;
@@ -7297,19 +7297,19 @@ IDGen {
           this.elem.innerHTML = buf2;
         }
       }
-      toString(obj2, depth = 0) {
+      toString(obj, depth = 0) {
         let s = "";
         let tab2 = "";
         for (let i = 0; i < depth; i++) {
           tab2 += "$TAB";
         }
-        if (typeof obj2 === "symbol") {
-          return `[${obj2.description}]`;
+        if (typeof obj === "symbol") {
+          return `[${obj.description}]`;
         }
         const DEPTH_LIMIT = 1;
         const CHAR_LIMIT = 100;
-        if (typeof obj2 === "object" && Array.isArray(obj2)) {
-          const arr = obj2;
+        if (typeof obj === "object" && Array.isArray(obj)) {
+          const arr = obj;
           s = "[$NL";
           for (let i = 0; i < arr.length; i++) {
             let v;
@@ -7353,15 +7353,15 @@ IDGen {
             s = s.replace(/\$NL/g, "\n");
             s = s.replace(/\$TAB/g, "  ");
           }
-        } else if (typeof obj2 === "object") {
+        } else if (typeof obj === "object") {
           s = "{$NL";
-          const keys2 = Reflect.ownKeys(obj2);
+          const keys2 = Reflect.ownKeys(obj);
           for (let i = 0; i < keys2.length; i++) {
             const k = keys2[i];
             const k2 = this.toString(k);
             let v;
             try {
-              v = obj2[k];
+              v = obj[k];
             } catch (error2) {
               v = "(error)";
             }
@@ -7386,12 +7386,12 @@ IDGen {
             s = s.replace(/\$NL/g, "\n");
             s = s.replace(/\$TAB/g, "  ");
           }
-        } else if (typeof obj2 === "undefined") {
+        } else if (typeof obj === "undefined") {
           s = "undefined";
-        } else if (typeof obj2 === "function") {
-          s = "function " + obj2.name;
+        } else if (typeof obj === "function") {
+          s = "function " + obj.name;
         } else {
-          s = "" + obj2;
+          s = "" + obj;
         }
         return s;
       }
@@ -7499,11 +7499,11 @@ __export(config_exports, {
   default: () => config_default,
   setConfig: () => setConfig
 });
-function setConfig(obj2) {
-  for (const k in obj2) {
-    if (Object.prototype.hasOwnProperty.call(obj2, k)) {
+function setConfig(obj) {
+  for (const k in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, k)) {
       const key = k;
-      config[key] = obj2[key];
+      config[key] = obj[key];
     }
   }
 }
@@ -7711,9 +7711,9 @@ function createVector2(parent, structName) {
       this[1] = Math.max(this[1], b[1]);
       return this;
     }
-    clamp(min2, max2) {
-      this[0] = Math.min(Math.max(this[0], max2), min2);
-      this[1] = Math.min(Math.max(this[1], max2), min2);
+    clamp(min, max) {
+      this[0] = Math.min(Math.max(this[0], max), min);
+      this[1] = Math.min(Math.max(this[1], max), min);
       return this;
     }
     vectorDotDistance(b) {
@@ -8049,10 +8049,10 @@ function createVector3(parent, structName) {
       this[2] = Math.max(this[2], b[2]);
       return this;
     }
-    clamp(min2, max2) {
-      this[0] = Math.min(Math.max(this[0], max2), min2);
-      this[1] = Math.min(Math.max(this[1], max2), min2);
-      this[2] = Math.min(Math.max(this[2], max2), min2);
+    clamp(min, max) {
+      this[0] = Math.min(Math.max(this[0], max), min);
+      this[1] = Math.min(Math.max(this[1], max), min);
+      this[2] = Math.min(Math.max(this[2], max), min);
       return this;
     }
     vectorDotDistance(b) {
@@ -8457,11 +8457,11 @@ function createVector4(parent, structName) {
       this[3] = Math.max(this[3], b[3]);
       return this;
     }
-    clamp(min2, max2) {
-      this[0] = Math.min(Math.max(this[0], max2), min2);
-      this[1] = Math.min(Math.max(this[1], max2), min2);
-      this[2] = Math.min(Math.max(this[2], max2), min2);
-      this[3] = Math.min(Math.max(this[3], max2), min2);
+    clamp(min, max) {
+      this[0] = Math.min(Math.max(this[0], max), min);
+      this[1] = Math.min(Math.max(this[1], max), min);
+      this[2] = Math.min(Math.max(this[2], max), min);
+      this[3] = Math.min(Math.max(this[3], max), min);
       return this;
     }
     vectorDotDistance(b) {
@@ -8613,7 +8613,7 @@ function createVector4(parent, structName) {
 function myclamp(f2, a2, b) {
   return Math.min(Math.max(f2, a2), b);
 }
-var vec_temp_mats, DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, PI2, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, lookat_cache_vs3, lookat_cache_vs4, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, internal_matrix, Matrix4;
+var vec_temp_mats, DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, PI, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, lookat_cache_vs3, lookat_cache_vs4, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, internal_matrix, Matrix4;
 var init_vectormath = __esm({
   "scripts/path-controller/util/vectormath.ts"() {
     "use strict";
@@ -8622,7 +8622,7 @@ var init_vectormath = __esm({
     DOT_NORM_SNAP_LIMIT = 1e-11;
     FLT_EPSILON = 222e-18;
     M_SQRT2 = Math.SQRT2;
-    PI2 = Math.PI;
+    PI = Math.PI;
     Vector2 = createVector2(Array, "vec2");
     Vector3 = createVector3(Array, "vec3");
     Vector4 = createVector4(Array, "vec4");
@@ -9115,7 +9115,7 @@ var init_vectormath = __esm({
       getAsFloat32Array() {
         return new Float32Array(this.getAsArray());
       }
-      setUniform(ctx2, loc, transpose = false) {
+      setUniform(ctx, loc, transpose = false) {
         if (_Matrix4.setUniformArray === void 0) {
           _Matrix4.setUniformWebGLArray = new Float32Array(16);
           _Matrix4.setUniformArray = new Array(16);
@@ -9137,7 +9137,7 @@ var init_vectormath = __esm({
         _Matrix4.setUniformArray[14] = this.$matrix.m43;
         _Matrix4.setUniformArray[15] = this.$matrix.m44;
         _Matrix4.setUniformWebGLArray.set(_Matrix4.setUniformArray);
-        ctx2.uniformMatrix4fv(loc, transpose, _Matrix4.setUniformWebGLArray);
+        ctx.uniformMatrix4fv(loc, transpose, _Matrix4.setUniformWebGLArray);
         return this;
       }
       makeIdentity() {
@@ -10131,10 +10131,10 @@ function singletonMouseEventsInit() {
     }, type);
   };
   const _mpos = new Vector2(void 0);
-  function doSingleCbs(e2, type) {
-    const list6 = singleMouseCBs[type];
+  function doSingleCbs(e, type) {
+    const list5 = singleMouseCBs[type];
     singleMouseCBs[type] = /* @__PURE__ */ new Set();
-    const ev = e2;
+    const ev = e;
     if (ev.type !== "touchend" && ev.type !== "touchcancel") {
       const touches2 = ev.touches;
       _mpos[0] = touches2 && touches2.length > 0 ? touches2[0].pageX : ev.x;
@@ -10142,7 +10142,7 @@ function singletonMouseEventsInit() {
     }
     const touches = ev.touches;
     if (touches) {
-      const ev2 = copyEvent(e2);
+      const ev2 = copyEvent(e);
       ev2.type = type;
       if (touches.length > 0) {
         ev2.x = ev2.pageX = touches[0].pageX;
@@ -10151,11 +10151,11 @@ function singletonMouseEventsInit() {
         ev2.x = _mpos[0];
         ev2.y = _mpos[1];
       }
-      e2 = ev2;
+      e = ev2;
     }
-    for (const cb of list6) {
+    for (const cb of list5) {
       try {
-        cb(e2);
+        cb(e);
       } catch (error2) {
         print_stack2(error2);
         console.warn("Error in event callback");
@@ -10164,50 +10164,50 @@ function singletonMouseEventsInit() {
   }
   window.addEventListener(
     "mouseup",
-    (e2) => {
-      doSingleCbs(e2, "mouseup");
+    (e) => {
+      doSingleCbs(e, "mouseup");
     },
     { capture: true }
   );
   window.addEventListener(
     "touchcancel",
-    (e2) => {
-      doSingleCbs(e2, "mouseup");
+    (e) => {
+      doSingleCbs(e, "mouseup");
     },
     { capture: true }
   );
   document.addEventListener(
     "touchend",
-    (e2) => {
-      doSingleCbs(e2, "mouseup");
+    (e) => {
+      doSingleCbs(e, "mouseup");
     },
     { capture: true }
   );
   document.addEventListener(
     "mousedown",
-    (e2) => {
-      doSingleCbs(e2, "mousedown");
+    (e) => {
+      doSingleCbs(e, "mousedown");
     },
     { capture: true }
   );
   document.addEventListener(
     "touchstart",
-    (e2) => {
-      doSingleCbs(e2, "mousedown");
+    (e) => {
+      doSingleCbs(e, "mousedown");
     },
     { capture: true }
   );
   document.addEventListener(
     "mousemove",
-    (e2) => {
-      doSingleCbs(e2, "mousemove");
+    (e) => {
+      doSingleCbs(e, "mousemove");
     },
     { capture: true }
   );
   document.addEventListener(
     "touchmove",
-    (e2) => {
-      doSingleCbs(e2, "mousemove");
+    (e) => {
+      doSingleCbs(e, "mousemove");
     },
     { capture: true }
   );
@@ -10223,83 +10223,83 @@ function singletonMouseEventsInit() {
 function singleMouseEvent(cb, type) {
   return singletonMouseEventsResult.singleMouseEvent(cb, type);
 }
-function isLeftClick(e2) {
-  if (e2.touches !== void 0) {
-    return e2.touches.length === 1;
+function isLeftClick(e) {
+  if (e.touches !== void 0) {
+    return e.touches.length === 1;
   }
-  return e2.button === 0;
+  return e.button === 0;
 }
-function isMouseDown(e2) {
-  return eventWasMouseDown(e2);
+function isMouseDown(e) {
+  return eventWasMouseDown(e);
 }
 function pathDebugEvent(event, extra) {
-  const e2 = { ...event };
-  e2.__prevdef = e2.preventDefault;
-  e2.__stopprop = e2.stopPropagation;
-  e2.preventDefault = function() {
+  const e = { ...event };
+  e.__prevdef = e.preventDefault;
+  e.__stopprop = e.stopPropagation;
+  e.preventDefault = function() {
     console.warn("preventDefault", extra);
     return this.__prevdef.call(this);
   };
-  e2.stopPropagation = function() {
+  e.stopPropagation = function() {
     console.warn("stopPropagation", extra);
     return this.__stopprop.call(this);
   };
 }
-function eventWasMouseDown(e2, button = 0) {
-  if (e2 instanceof MouseEvent && !(e2 instanceof PointerEvent)) {
-    return e2.buttons === 1 << button;
+function eventWasMouseDown(e, button = 0) {
+  if (e instanceof MouseEvent && !(e instanceof PointerEvent)) {
+    return e.buttons === 1 << button;
   }
-  if (e2 instanceof TouchEvent) {
-    return e2.touches && e2.touches.length > 0;
+  if (e instanceof TouchEvent) {
+    return e.touches && e.touches.length > 0;
   }
   let mdown = false;
-  switch (e2.pointerType) {
+  switch (e.pointerType) {
     case "touch":
-      mdown = e2.persistentDeviceId === 0 && !!(e2.buttons & 1 << button);
+      mdown = e.persistentDeviceId === 0 && !!(e.buttons & 1 << button);
       break;
     case "pen":
-      mdown = !!(e2.buttons & 1 << button);
+      mdown = !!(e.buttons & 1 << button);
       break;
     case "mouse":
-      mdown = e2.buttons === 1 << button;
+      mdown = e.buttons === 1 << button;
       break;
   }
   return mdown;
 }
-function eventWasTouch(e2) {
-  const ev = e2;
+function eventWasTouch(e) {
+  const ev = e;
   let ret = ev.sourceCapabilities?.firesTouchEvents;
   ret = ret || ev.was_touch;
-  ret = ret || e2 instanceof TouchEvent;
+  ret = ret || e instanceof TouchEvent;
   ret = ret || ev.touches !== void 0;
-  if (e2 instanceof PointerEvent) {
-    ret = ret || e2.pointerType === "pen" || e2.pointerType === "touch";
+  if (e instanceof PointerEvent) {
+    ret = ret || e.pointerType === "pen" || e.pointerType === "touch";
   }
   return !!ret;
 }
-function copyEvent(e2) {
+function copyEvent(e) {
   const ret = {};
   let keys2 = [];
-  for (const k in e2) {
+  for (const k in e) {
     keys2.push(k);
   }
-  keys2 = keys2.concat(Object.getOwnPropertySymbols(e2));
-  keys2 = keys2.concat(Object.getOwnPropertyNames(e2));
+  keys2 = keys2.concat(Object.getOwnPropertySymbols(e));
+  keys2 = keys2.concat(Object.getOwnPropertyNames(e));
   for (const k of keys2) {
     let v;
     try {
-      v = e2[k];
+      v = e[k];
     } catch (error2) {
       console.warn("read error for event key", k);
       continue;
     }
     if (typeof v == "function") {
-      ret[k] = v.bind(e2);
+      ret[k] = v.bind(e);
     } else {
       ret[k] = v;
     }
   }
-  ret.original = e2;
+  ret.original = e;
   return ret;
 }
 function _setScreenClass(cls) {
@@ -10327,10 +10327,10 @@ function findScreen() {
 function _setModalAreaClass(cls) {
   ContextAreaClass = cls;
 }
-function pushPointerModal(obj2, elem2, pointerId, autoStopPropagation = true) {
-  return pushModalLight(obj2, autoStopPropagation, elem2, pointerId);
+function pushPointerModal(obj, elem2, pointerId, autoStopPropagation = true) {
+  return pushModalLight(obj, autoStopPropagation, elem2, pointerId);
 }
-function pushModalLight(obj2, autoStopPropagation = true, elem2, pointerId) {
+function pushModalLight(obj, autoStopPropagation = true, elem2, pointerId) {
   let keys2;
   if (pointerId === void 0) {
     keys2 = /* @__PURE__ */ new Set([
@@ -10399,72 +10399,72 @@ function pushModalLight(obj2, autoStopPropagation = true, elem2, pointerId) {
     }
   }
   function make_default_touchhandler(type, _state) {
-    return function(e2) {
+    return function(e) {
       if (config_default.DEBUG.domEvents) {
-        pathDebugEvent(e2);
+        pathDebugEvent(e);
       }
       if (touchmap[type] in ret.handlers) {
         const type2 = touchmap[type];
-        const e22 = copyEvent(e2);
-        e22.was_touch = true;
-        e22.type = type2;
-        e22.button = type == "touchcancel" ? 1 : 0;
-        e22.touches = e2.touches;
-        if (e2.touches.length > 0) {
-          const t = e2.touches[0];
+        const e2 = copyEvent(e);
+        e2.was_touch = true;
+        e2.type = type2;
+        e2.button = type == "touchcancel" ? 1 : 0;
+        e2.touches = e.touches;
+        if (e.touches.length > 0) {
+          const t = e.touches[0];
           mpos[0] = t.pageX;
           mpos[1] = t.pageY;
-          e22.pageX = e22.x = t.pageX;
-          e22.pageY = e22.y = t.pageY;
-          e22.clientX = t.clientX;
-          e22.clientY = t.clientY;
-          e22.x = t.clientX;
-          e22.y = t.clientY;
-          ret.last_mpos[0] = e22.x;
-          ret.last_mpos[1] = e22.y;
+          e2.pageX = e2.x = t.pageX;
+          e2.pageY = e2.y = t.pageY;
+          e2.clientX = t.clientX;
+          e2.clientY = t.clientY;
+          e2.x = t.clientX;
+          e2.y = t.clientY;
+          ret.last_mpos[0] = e2.x;
+          ret.last_mpos[1] = e2.y;
         } else {
-          e22.x = e22.clientX = e22.pageX = e22.screenX = ret.last_mpos[0];
-          e22.y = e22.clientY = e22.pageY = e22.screenY = ret.last_mpos[1];
+          e2.x = e2.clientX = e2.pageX = e2.screenX = ret.last_mpos[0];
+          e2.y = e2.clientY = e2.pageY = e2.screenY = ret.last_mpos[1];
         }
-        e22.was_touch = true;
+        e2.was_touch = true;
         handleAreaContext();
-        ret.handlers[type2](e22);
+        ret.handlers[type2](e2);
       }
       if (autoStopPropagation) {
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
   }
   function make_handler(_type, key) {
-    return function(e2) {
+    return function(e) {
       if (config_default.DEBUG.domEvents) {
-        pathDebugEvent(e2);
+        pathDebugEvent(e);
       }
       if (typeof key !== "string") {
         return;
       }
       if (key.startsWith("mouse")) {
-        mpos[0] = e2.pageX;
-        mpos[1] = e2.pageY;
+        mpos[0] = e.pageX;
+        mpos[1] = e.pageY;
       } else if (key.startsWith("pointer")) {
-        mpos[0] = e2.x;
-        mpos[1] = e2.y;
+        mpos[0] = e.x;
+        mpos[1] = e.y;
       }
       handleAreaContext();
-      if (key !== void 0) obj2[key](e2);
+      if (key !== void 0) obj[key](e);
       if (autoStopPropagation) {
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
   }
   const found = {};
   for (const k of keys2) {
     let key;
-    if (obj2[k]) key = k;
-    else if (obj2["on" + k]) key = "on" + k;
-    else if (obj2["on_" + k]) key = "on_" + k;
+    if (obj[k]) key = k;
+    else if (obj["on" + k]) key = "on" + k;
+    else if (obj["on_" + k]) key = "on_" + k;
     else if (k in touchmap)
       continue;
     else key = void 0;
@@ -10489,13 +10489,13 @@ function pushModalLight(obj2, autoStopPropagation = true, elem2, pointerId) {
   if (pointerId !== void 0 && elem2) {
     let make_pointer2 = function(k) {
       const k2 = "on_" + k;
-      ret.pointer[k] = function(e2) {
-        if (obj2[k2] !== void 0) {
-          obj2[k2](e2);
+      ret.pointer[k] = function(e) {
+        if (obj[k2] !== void 0) {
+          obj[k2](e);
         }
         if (autoStopPropagation) {
-          e2.stopPropagation();
-          e2.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
         }
       };
     };
@@ -10533,22 +10533,22 @@ function pushModalLight(obj2, autoStopPropagation = true, elem2, pointerId) {
       delete ret.pointer;
       modalstack.push(ret);
       popModalLight(ret);
-      for (const k in obj2) {
+      for (const k in obj) {
         if (k === "pointercancel" || k === "pointerend" || k === "pointerstart") {
           continue;
         }
         if (k.startsWith("pointer")) {
           const k2 = k.replace(/pointer/, "mouse");
-          if (k2 in obj2) {
+          if (k2 in obj) {
             console.warn("warning, existing mouse handler", k2);
             continue;
           }
-          const v = obj2[k];
-          obj2[k] = void 0;
-          obj2[k2] = v;
+          const v = obj[k];
+          obj[k] = void 0;
+          obj[k2] = v;
         }
       }
-      return pushModalLight(obj2, autoStopPropagation);
+      return pushModalLight(obj, autoStopPropagation);
     }
   }
   modalstack.push(ret);
@@ -10629,8 +10629,8 @@ var init_simple_events = __esm({
       _on_mouseup_impl(_e) {
         this.mdown = false;
       }
-      _on_mousemove_impl(e2) {
-        const ev = e2;
+      _on_mousemove_impl(e) {
+        const ev = e;
         const mpos = new Vector2(void 0);
         mpos[0] = ev.x;
         mpos[1] = ev.y;
@@ -10643,7 +10643,7 @@ var init_simple_events = __esm({
         }
         this.update();
       }
-      mousedown(e2) {
+      mousedown(e) {
         if (!this.last) {
           this.last = 0;
         }
@@ -10653,20 +10653,20 @@ var init_simple_events = __esm({
         if (!this.up) {
           this.up = 0;
         }
-        if (isMouseDown(e2)) {
+        if (isMouseDown(e)) {
           this.mdown = true;
-          const cpy = Object.assign({}, e2);
-          this.start_mpos[0] = e2.x;
-          this.start_mpos[1] = e2.y;
+          const cpy = Object.assign({}, e);
+          this.start_mpos[0] = e.x;
+          this.start_mpos[1] = e.y;
           singleMouseEvent(this._on_mousemove, "mousemove");
-          if (e2.type.search("touch") >= 0 && e2 instanceof TouchEvent && e2.touches.length > 0) {
-            cpy.x = cpy.pageX = e2.touches[0].pageX;
-            cpy.y = cpy.pageY = e2.touches[1].pageY;
+          if (e.type.search("touch") >= 0 && e instanceof TouchEvent && e.touches.length > 0) {
+            cpy.x = cpy.pageX = e.touches[0].pageX;
+            cpy.y = cpy.pageY = e.touches[1].pageY;
           } else {
-            cpy.x = cpy.pageX = e2.x;
-            cpy.y = cpy.pageY = e2.y;
+            cpy.x = cpy.pageX = e.x;
+            cpy.y = cpy.pageY = e.y;
           }
-          this.dblEvent = copyEvent(e2);
+          this.dblEvent = copyEvent(e);
           this.dblEvent.type = "dblclick";
           this.last = this.down;
           this.down = time_ms();
@@ -10771,11 +10771,11 @@ var init_simple_events = __esm({
         this.key = keymap[key];
         this.uiname = uiname;
       }
-      exec(ctx2) {
+      exec(ctx) {
         if (typeof this.action == "string") {
-          ctx2.api.execTool(ctx2, this.action);
+          ctx.api.execTool(ctx, this.action);
         } else {
-          this.action(ctx2);
+          this.action(ctx);
         }
       }
       buildString() {
@@ -10810,19 +10810,19 @@ var init_simple_events = __esm({
           this.add(hk);
         }
       }
-      handle(ctx2, e2) {
+      handle(ctx, e) {
         const mods = /* @__PURE__ */ new Set();
-        if (e2.shiftKey) mods.add("shift");
-        if (e2.altKey) mods.add("alt");
-        if (e2.ctrlKey) {
+        if (e.shiftKey) mods.add("shift");
+        if (e.altKey) mods.add("alt");
+        if (e.ctrlKey) {
           mods.add("ctrl");
         }
-        if (e2.metaKey) {
+        if (e.metaKey) {
           mods.add("meta");
           mods.add("command");
         }
         for (const hk of this) {
-          let ok = e2.keyCode === hk.key;
+          let ok = e.keyCode === hk.key;
           if (!ok) continue;
           let count2 = 0;
           for (let m of hk.mods) {
@@ -10838,10 +10838,10 @@ var init_simple_events = __esm({
           }
           if (ok) {
             try {
-              hk.exec(ctx2);
+              hk.exec(ctx);
             } catch (error2) {
               print_stack2(error2);
-              console.log("failed to execute a hotkey", keymap[e2.keyCode]);
+              console.log("failed to execute a hotkey", keymap[e.keyCode]);
             }
             return true;
           }
@@ -10913,9 +10913,9 @@ var init_area_wrangler = __esm({
       /*Yeek this is particularly evil, it creates a context
        * that can be used by popups with the original context
        * area stack intact of the elements that spawned them.*/
-      makeSafeContext(ctx2) {
+      makeSafeContext(ctx) {
         const wrangler = this.copy();
-        return new Proxy(ctx2, {
+        return new Proxy(ctx, {
           get(target, key, rec) {
             wrangler.copyTo(contextWrangler);
             return target[key];
@@ -10937,17 +10937,17 @@ var init_area_wrangler = __esm({
         this.copyTo(ret);
         return ret;
       }
-      _checkWrangler(ctx2) {
-        if (ctx2 === void 0) {
+      _checkWrangler(ctx) {
+        if (ctx === void 0) {
           return true;
         }
         if (this._last_screen_id === void 0) {
-          this._last_screen_id = ctx2.screen._id;
+          this._last_screen_id = ctx.screen._id;
           return true;
         }
-        if (ctx2.screen._id !== this._last_screen_id) {
+        if (ctx.screen._id !== this._last_screen_id) {
           this.reset();
-          this._last_screen_id = ctx2.screen._id;
+          this._last_screen_id = ctx.screen._id;
           console.warn("contextWrangler detected a new screen; new file?");
           return false;
         }
@@ -11026,6 +11026,8 @@ var init_area_wrangler = __esm({
           this.stack.pop();
         }
       }
+      // creating decent constructor interfaces is hard
+      // just do the absolute minimum here
       getLastArea(type) {
         if (type === void 0) {
           if (this.stack.length > 0) {
@@ -11074,10 +11076,10 @@ function evalHermiteTable(table, t, range = unitRange) {
 }
 function genHermiteTable(evaluate, steps, range = [0, 1]) {
   let table = new Array(steps);
-  let [min2, max2] = range;
+  let [min, max] = range;
   let eps = 1e-4;
-  let dt = (max2 - min2 - eps * 4.001) / (steps - 1);
-  let t = min2 + eps * 4;
+  let dt = (max - min - eps * 4.001) / (steps - 1);
+  let t = min + eps * 4;
   let lastdv1 = 0;
   let lastf3 = 0;
   for (let j = 0; j < steps; j++, t += dt) {
@@ -11165,8 +11167,8 @@ var init_curve1d_base = __esm({
       equals(b) {
         return this.type === b.type;
       }
-      loadJSON(obj2) {
-        this.type = obj2.type;
+      loadJSON(obj) {
+        this.type = obj.type;
         return this;
       }
       redraw() {
@@ -11263,7 +11265,7 @@ CurveTypeData {
 });
 
 // scripts/path-controller/util/events.ts
-function copyMouseEvent(e2) {
+function copyMouseEvent(e) {
   const ret = {};
   function bind(func2) {
     return function(...args) {
@@ -11271,9 +11273,9 @@ function copyMouseEvent(e2) {
     };
   }
   const exclude2 = /* @__PURE__ */ new Set(["__proto__"]);
-  ret._orig = e2;
-  for (const k in e2) {
-    let v = e2[k];
+  ret._orig = e;
+  for (const k in e) {
+    let v = e[k];
     if (exclude2.has(k)) {
       continue;
     }
@@ -11282,14 +11284,14 @@ function copyMouseEvent(e2) {
     }
     ret[k] = v;
   }
-  ret.ctrlKey = e2.ctrlKey;
-  ret.shiftKey = e2.shiftKey;
-  ret.altKey = e2.altKey;
+  ret.ctrlKey = e.ctrlKey;
+  ret.shiftKey = e.shiftKey;
+  ret.altKey = e.altKey;
   for (let i = 0; i < 2; i++) {
     const key = i ? "targetTouches" : "touches";
-    if (e2[key]) {
+    if (e[key]) {
       ret[key] = [];
-      for (const t of e2[key]) {
+      for (const t of e[key]) {
         const t2 = {};
         ret[key].push(t2);
         for (const k in t) {
@@ -11527,12 +11529,12 @@ var init_toolprop_abstract = __esm({
       }
       setStep(step) {
       }
-      setRange(min2, max2) {
+      setRange(min, max) {
       }
       setUnit(unit) {
       }
       //some clients have seperate ui range
-      setUIRange(min2, max2) {
+      setUIRange(min, max) {
       }
       setIcon(icon) {
       }
@@ -12213,13 +12215,13 @@ var init_toolprop = __esm({
       "sliderDisplayExp"
     ]);
     IntegerConstraints = new Set(
-      ["radix"].concat(list3(NumberConstraintsBase))
+      ["radix"].concat(list2(NumberConstraintsBase))
     );
     FloatConstrinats = new Set(
-      ["decimalPlaces"].concat(list3(NumberConstraintsBase))
+      ["decimalPlaces"].concat(list2(NumberConstraintsBase))
     );
     NumberConstraints = new Set(
-      list3(IntegerConstraints).concat(list3(FloatConstrinats))
+      list2(IntegerConstraints).concat(list2(FloatConstrinats))
     );
     PropSubTypes2 = {
       COLOR: 1
@@ -12533,15 +12535,15 @@ var init_toolprop = __esm({
           step: this.step
         };
       }
-      loadJSON(obj2) {
-        this.type = obj2.type;
-        this.subtype = obj2.subtype;
-        this.apiname = obj2.apiname;
-        this.uiname = obj2.uiname;
-        this.description = obj2.description;
-        this.flag = obj2.flag;
-        this.icon = obj2.icon;
-        this.data = obj2.data;
+      loadJSON(obj) {
+        this.type = obj.type;
+        this.subtype = obj.subtype;
+        this.apiname = obj.apiname;
+        this.uiname = obj.uiname;
+        this.description = obj.description;
+        this.flag = obj.flag;
+        this.icon = obj.icon;
+        this.data = obj.data;
         return this;
       }
       getValue() {
@@ -12589,11 +12591,11 @@ var init_toolprop = __esm({
         this.stepIsRelative = true;
         return this;
       }
-      setRange(min2, max2) {
-        if (min2 === void 0 || max2 === void 0) {
+      setRange(min, max) {
+        if (min === void 0 || max === void 0) {
           throw new Error("min and/or max cannot be undefined");
         }
-        this.range = [min2, max2];
+        this.range = [min, max];
         return this;
       }
       noUnits() {
@@ -12616,11 +12618,11 @@ var init_toolprop = __esm({
         this.flag = combine ? this.flag | f2 : f2;
         return this;
       }
-      setUIRange(min2, max2) {
-        if (min2 === void 0 || max2 === void 0) {
+      setUIRange(min, max) {
+        if (min === void 0 || max === void 0) {
           throw new Error("min and/or max cannot be undefined");
         }
-        this.uiRange = [min2, max2];
+        this.uiRange = [min, max];
         return this;
       }
       setIcon(icon) {
@@ -12838,8 +12840,8 @@ ToolProperty {
        * non-linear exponent for number sliders
        * in roll mode
        * */
-      setExpRate(exp2) {
-        this.expRate = exp2;
+      setExpRate(exp) {
+        this.expRate = exp;
         return this;
       }
       setValue(val) {
@@ -12852,11 +12854,11 @@ ToolProperty {
         this.data = val;
         super.setValue(val);
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
+      loadJSON(obj) {
+        super.loadJSON(obj);
         const get = (key) => {
-          if (key in obj2) {
-            this[key] = obj2[key];
+          if (key in obj) {
+            this[key] = obj[key];
           }
         };
         get("range");
@@ -12899,10 +12901,10 @@ ToolProperty {
         json.radix = this.radix;
         return json;
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
-        this.data = obj2.data || this.data;
-        this.radix = obj2.radix || this.radix;
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.data = obj.data || this.data;
+        this.radix = obj.radix || this.radix;
         return this;
       }
       loadSTRUCT(reader) {
@@ -12949,8 +12951,8 @@ ToolProperty {
         const ret = super.toJSON();
         return ret;
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
+      loadJSON(obj) {
+        super.loadJSON(obj);
         return this;
       }
     };
@@ -12994,10 +12996,10 @@ ToolProperty {
         json.decimalPlaces = this.decimalPlaces;
         return json;
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
-        this.data = obj2.data || this.data;
-        this.decimalPlaces = obj2.decimalPlaces || this.decimalPlaces;
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.data = obj.data || this.data;
+        this.decimalPlaces = obj.decimalPlaces || this.decimalPlaces;
         return this;
       }
       loadSTRUCT(reader) {
@@ -13014,21 +13016,21 @@ ToolProperty {
     };
     ToolProperty.internalRegister(FloatProperty);
     EnumKeyPair = class _EnumKeyPair {
-      static loadMap(obj2) {
-        if (!obj2) {
+      static loadMap(obj) {
+        if (!obj) {
           return {};
         }
         const ret = {};
-        for (const k of obj2) {
+        for (const k of obj) {
           ret[k.key] = k.val;
         }
         return ret;
       }
-      static saveMap(obj2) {
-        obj2 = obj2 === void 0 ? {} : obj2;
+      static saveMap(obj) {
+        obj = obj === void 0 ? {} : obj;
         const ret = [];
-        for (const k in obj2) {
-          ret.push(new _EnumKeyPair(k, obj2[k]));
+        for (const k in obj) {
+          ret.push(new _EnumKeyPair(k, obj[k]));
         }
         return ret;
       }
@@ -13557,7 +13559,7 @@ EnumKeyPair {
       /*
        * Prop must be a ToolProperty subclass instance
        * */
-      constructor(prop, list6 = [], uiname = "") {
+      constructor(prop, list5 = [], uiname = "") {
         super(PropTypes.PROPLIST);
         this.uiname = uiname;
         this.flag &= ~PropFlags.SAVE_LAST_VALUE;
@@ -13575,8 +13577,8 @@ EnumKeyPair {
         }
         this.prop = prop;
         this.value = [];
-        if (list6) {
-          for (const val of list6) {
+        if (list5) {
+          for (const val of list5) {
             this.push(val);
           }
         }
@@ -13682,9 +13684,9 @@ EnumKeyPair {
         return this.value;
       }
       [Symbol.iterator]() {
-        const list6 = this.value;
+        const list5 = this.value;
         return (function* () {
-          for (const item of list6) {
+          for (const item of list5) {
             yield item.getValue();
           }
         })();
@@ -14116,12 +14118,12 @@ var init_controller_base = __esm({
         this.data.flag |= PropFlags.EDIT_AS_BASE_UNIT;
         return this;
       }
-      range(min2, max2) {
-        this.data.setRange(min2, max2);
+      range(min, max) {
+        this.data.setRange(min, max);
         return this;
       }
-      uiRange(min2, max2) {
-        this.data.setUIRange(min2, max2);
+      uiRange(min, max) {
+        this.data.setUIRange(min, max);
         return this;
       }
       decimalPlaces(n) {
@@ -14145,8 +14147,8 @@ var init_controller_base = __esm({
         this.ui_name_get = func2;
         return this;
       }
-      expRate(exp2) {
-        this.data.setExpRate(exp2);
+      expRate(exp) {
+        this.data.setExpRate(exp);
         return this;
       }
       slideSpeed(speed) {
@@ -14258,50 +14260,50 @@ var init_controller_base = __esm({
         }
         return ret;
       }
-      get(api2, list6, key) {
-        return this.cb.get(api2, list6, key);
+      get(api, list5, key) {
+        return this.cb.get(api, list5, key);
       }
-      getLength(api2, list6) {
+      getLength(api, list5) {
         this._check("getLength");
-        return this.cb.getLength(api2, list6);
+        return this.cb.getLength(api, list5);
       }
       _check(cb) {
         if (!(cb in this.cb)) {
           throw new DataPathError(cb + " not supported by this list");
         }
       }
-      set(api2, list6, key, val) {
+      set(api, list5, key, val) {
         if (this.cb.set !== void 0) {
-          this.cb.set(api2, list6, key, val);
+          this.cb.set(api, list5, key, val);
         }
       }
-      getIter(api2, list6) {
+      getIter(api, list5) {
         this._check("getIter");
-        return this.cb.getIter(api2, list6);
+        return this.cb.getIter(api, list5);
       }
-      filter(api2, list6, filter2) {
+      filter(api, list5, filter) {
         this._check("filter");
-        return this.cb.filter(api2, list6, filter2);
+        return this.cb.filter(api, list5, filter);
       }
-      getActive(api2, list6) {
+      getActive(api, list5) {
         this._check("getActive");
-        return this.cb.getActive(api2, list6);
+        return this.cb.getActive(api, list5);
       }
-      setActive(api2, list6, value) {
+      setActive(api, list5, value) {
         this._check("setActive");
-        this.cb.setActive(api2, list6, value);
+        this.cb.setActive(api, list5, value);
       }
-      getKey(api2, list6, value) {
+      getKey(api, list5, value) {
         this._check("getKey");
-        return this.cb.getKey(api2, list6, value);
+        return this.cb.getKey(api, list5, value);
       }
-      getStruct(api2, list6, key) {
+      getStruct(api, list5, key) {
         if (this.cb.getStruct !== void 0) {
-          return this.cb.getStruct(api2, list6, key);
+          return this.cb.getStruct(api, list5, key);
         }
-        let obj2 = this.get(api2, list6, key);
-        if (obj2 === void 0) return void 0;
-        return api2.getStruct(obj2.constructor);
+        let obj = this.get(api, list5, key);
+        if (obj === void 0) return void 0;
+        return api.getStruct(obj.constructor);
       }
     };
     ToolOpIface = class {
@@ -14500,14 +14502,14 @@ var init_context = __esm({
       toolstack;
       noWarnings;
       ctx;
-      constructor(ctx2, noWarnings) {
+      constructor(ctx, noWarnings) {
         this.props = {};
-        this.state = ctx2.state;
-        this.api = ctx2.api;
-        this.toolstack = ctx2.toolstack;
+        this.state = ctx.state;
+        this.api = ctx.api;
+        this.toolstack = ctx.toolstack;
         this.noWarnings = !!noWarnings;
-        this.ctx = ctx2;
-        this.load(ctx2);
+        this.ctx = ctx;
+        this.load(ctx);
       }
       toLocked() {
         return this;
@@ -14528,11 +14530,11 @@ var init_context = __esm({
         let ctxRec = this.ctx;
         return ctxRec.progbar !== void 0 ? ctxRec.progbar(...args) : ctxRec.progressBar(...args);
       }
-      load(ctx2) {
-        let keys2 = ctx2._props;
+      load(ctx) {
+        let keys2 = ctx._props;
         function wrapget(name2) {
-          return function(ctx22, data) {
-            return ctx2.loadProperty(ctx22, name2, data);
+          return function(ctx2, data) {
+            return ctx.loadProperty(ctx2, name2, data);
           };
         }
         for (let k of keys2) {
@@ -14544,7 +14546,7 @@ var init_context = __esm({
             continue;
           }
           try {
-            v = ctx2[k];
+            v = ctx[k];
           } catch (_error) {
             if (config_default.DEBUG.contextSystem) {
               console.warn("failed to look up property in context: ", k);
@@ -14552,7 +14554,7 @@ var init_context = __esm({
             continue;
           }
           let data, getter;
-          let overlay = ctx2.getOwningOverlay(k);
+          let overlay = ctx.getOwningOverlay(k);
           if (overlay === void 0) {
             continue;
           }
@@ -14562,7 +14564,7 @@ var init_context = __esm({
               data = oRec[k + "_save"]();
               getter = oRec[k + "_load"];
             } else {
-              data = ctx2.saveProperty(k);
+              data = ctx.saveProperty(k);
               getter = wrapget(k);
             }
           } catch (_error) {
@@ -14587,13 +14589,13 @@ var init_context = __esm({
             defineProp(k);
           }
         }
-        this.ctx = ctx2;
+        this.ctx = ctx;
       }
-      setContext(ctx2) {
-        this.ctx = ctx2;
-        this.state = ctx2.state;
-        this.api = ctx2.api;
-        this.toolstack = ctx2.toolstack;
+      setContext(ctx) {
+        this.ctx = ctx;
+        this.state = ctx.state;
+        this.api = ctx.api;
+        this.toolstack = ctx.toolstack;
       }
     };
     next_key = {};
@@ -14688,9 +14690,9 @@ var init_context = __esm({
             return Object.assign({}, this);
           };
         }
-        let ctx2 = this.copy();
-        ctx2.pushOverlay(overrides);
-        return ctx2;
+        let ctx = this.copy();
+        ctx.pushOverlay(overrides);
+        return ctx;
       }
       copy() {
         let ret = new this.constructor(this.state);
@@ -14850,8 +14852,8 @@ function setDefaultUndoHandlers(undoPre, undo) {
   defaultUndoHandlers.undoPre = undoPre;
   defaultUndoHandlers.undo = undo;
 }
-function buildToolOpAPI(api2, cls) {
-  const st = api2.mapStruct(cls, true);
+function buildToolOpAPI(api, cls) {
+  const st = api.mapStruct(cls, true);
   const def = cls._getFinalToolDef();
   function makeProp(k) {
     const prop = def.inputs[k];
@@ -14878,20 +14880,20 @@ function buildToolOpAPI(api2, cls) {
   }
   return st;
 }
-function buildToolSysAPI(api2, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
-  const datastruct = api2.mapStruct(ToolPropertyCache, true);
+function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
+  const datastruct = api.mapStruct(ToolPropertyCache, true);
   for (const cls of ToolClasses) {
     const def = cls._getFinalToolDef();
-    buildToolOpAPI(api2, cls);
+    buildToolOpAPI(api, cls);
     for (const k in def.inputs) {
       const prop = def.inputs[k];
       if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
-        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api2);
+        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
       }
     }
   }
   if (rootCtxStruct) {
-    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api2.mapStruct(ToolPropertyCache));
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
     rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
   }
   if (rootCtxClass && insertToolDefaultsIntoContext) {
@@ -14987,16 +14989,16 @@ var init_toolsys = __esm({
       static getPropKey(_cls, key, prop) {
         return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
       }
-      _buildAccessors(cls, key, prop, dstruct, api2) {
+      _buildAccessors(cls, key, prop, dstruct, api) {
         const tdef = cls._getFinalToolDef();
-        this.api = api2;
+        this.api = api;
         this.dstruct = dstruct;
         if (!tdef.toolpath) {
           console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
           return;
         }
         const path = tdef.toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
-        let obj2 = this.accessors;
+        let obj = this.accessors;
         let st = dstruct;
         let partial = "";
         for (let i = 0; i < path.length; i++) {
@@ -15009,16 +15011,16 @@ var init_toolsys = __esm({
             partial += ".";
           }
           partial += k;
-          if (!(k in obj2)) {
-            obj2[k] = {};
+          if (!(k in obj)) {
+            obj[k] = {};
           }
-          const st2 = api2.mapStruct(obj2[k], true, k);
+          const st2 = api.mapStruct(obj[k], true, k);
           if (!(st.pathmap && k in st.pathmap)) {
             st.struct(pathk, k, k, st2);
           }
           st = st2;
-          this.pathmap.set(partial, obj2[k]);
-          obj2 = obj2[k];
+          this.pathmap.set(partial, obj[k]);
+          obj = obj[k];
         }
         const name2 = prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
         const prop2 = prop.copy();
@@ -15034,7 +15036,7 @@ var init_toolsys = __esm({
         prop2.uiname = uiname;
         prop2.description = prop2.description || prop2.uiname;
         st.add(dpath);
-        obj2[name2] = prop2.getValue();
+        obj[name2] = prop2.getValue();
       }
       _getAccessor(cls) {
         const toolpath = cls.tooldef().toolpath;
@@ -15053,18 +15055,18 @@ var init_toolsys = __esm({
         if (prop.flag & PropFlags.NO_DEFAULT) {
           return false;
         }
-        const obj2 = this._getAccessor(cls);
+        const obj = this._getAccessor(cls);
         key = _ToolPropertyCache.getPropKey(cls, key, prop);
-        return !!obj2 && key in obj2;
+        return !!obj && key in obj;
       }
       get(cls, key, prop) {
         if (cls === ToolMacro) {
           return void 0;
         }
-        const obj2 = this._getAccessor(cls);
+        const obj = this._getAccessor(cls);
         key = this.constructor.getPropKey(cls, key, prop);
-        if (obj2) {
-          return obj2[key];
+        if (obj) {
+          return obj[key];
         }
         return void 0;
       }
@@ -15078,18 +15080,18 @@ var init_toolsys = __esm({
           return;
         }
         toolpath = toolpath.trim();
-        let obj2 = this._getAccessor(cls);
-        if (!obj2) {
+        let obj = this._getAccessor(cls);
+        if (!obj) {
           console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
           this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-          obj2 = this.pathmap.get(toolpath);
+          obj = this.pathmap.get(toolpath);
         }
-        if (!obj2) {
+        if (!obj) {
           console.error("Malformed toolpath in toolop definition: " + toolpath);
           return;
         }
         key = this.constructor.getPropKey(cls, key, prop);
-        obj2[key] = prop.copy().getValue();
+        obj[key] = prop.copy().getValue();
         const path = toolpath + "." + key;
         this.userSetMap.add(path);
         return this;
@@ -15274,7 +15276,7 @@ var init_toolsys = __esm({
       
          */
       static invoke(_ctx, args) {
-        const ctx2 = _ctx;
+        const ctx = _ctx;
         const tool = new this();
         const inputs = tool.inputs;
         for (const k in args) {
@@ -15361,10 +15363,10 @@ var init_toolsys = __esm({
           toolop.on_tick();
         }
       }
-      static searchBoxOk(ctx2) {
+      static searchBoxOk(ctx) {
         const flag = this.tooldef().flag;
         let ret = !(flag && flag & ToolFlags.PRIVATE);
-        ret = ret && this.canRun(ctx2);
+        ret = ret && this.canRun(ctx);
         return ret;
       }
       //toolop is an optional instance of this class, may be undefined
@@ -15376,7 +15378,7 @@ var init_toolsys = __esm({
       onUndoDestroy() {
       }
       /** Used by undo system to limit memory */
-      calcMemSize(ctx2) {
+      calcMemSize(ctx) {
         if (this.__memsize !== void 0) {
           return this.__memsize;
         }
@@ -15393,7 +15395,7 @@ var init_toolsys = __esm({
             tot += size2;
           }
         }
-        const size = this.calcUndoMem(ctx2);
+        const size = this.calcUndoMem(ctx);
         if (isNaN(size) || !isFinite(size)) {
           console.warn("Got NaN in calcMemSize", this);
         } else {
@@ -15460,8 +15462,8 @@ var init_toolsys = __esm({
       }
       /**default on_keydown implementation for modal tools,
        no need to call super() to execute this if you don't want to*/
-      on_keydown(e2) {
-        switch (e2.keyCode) {
+      on_keydown(e) {
+        switch (e.keyCode) {
           case keymap["Enter"]:
           case keymap["Space"]:
             this.modalEnd(false);
@@ -15482,16 +15484,16 @@ var init_toolsys = __esm({
       undo(_ctx) {
         throw new Error("implement me!");
       }
-      redo(ctx2) {
+      redo(ctx) {
         this._was_redo = true;
-        this.undoPre(ctx2);
-        this.execPre(ctx2);
-        this.exec(ctx2);
-        this.execPost(ctx2);
+        this.undoPre(ctx);
+        this.execPre(ctx);
+        this.exec(ctx);
+        this.execPost(ctx);
       }
       //for compatibility with fairmotion
-      exec_pre(ctx2) {
-        this.execPre(ctx2);
+      exec_pre(ctx) {
+        this.execPre(ctx);
       }
       execPre(_ctx) {
       }
@@ -15529,21 +15531,21 @@ var init_toolsys = __esm({
         throw new Error("cannot call this; use modalEnd");
       }
       /**returns promise to be executed on modalEnd*/
-      modalStart(ctx2) {
+      modalStart(ctx) {
         if (this.modalRunning) {
           console.warn("Warning, tool is already in modal mode consuming events");
           return this._promise;
         }
-        this.modal_ctx = ctx2;
+        this.modal_ctx = ctx;
         this.modalRunning = true;
         this._promise = new Promise((accept, reject) => {
           this._accept = accept;
           this._reject = reject;
           modalstack2.push(this);
           if (this._pointerId !== void 0) {
-            super.pushPointerModal(ctx2.screen, this._pointerId);
+            super.pushPointerModal(ctx.screen, this._pointerId);
           } else {
-            super.pushModal(ctx2.screen);
+            super.pushModal(ctx.screen);
           }
         });
         return this._promise;
@@ -15572,14 +15574,14 @@ var init_toolsys = __esm({
           this._on_cancel = void 0;
         }
         this.resetTempGeom();
-        const ctx2 = this.modal_ctx;
+        const ctx = this.modal_ctx;
         this.modal_ctx = void 0;
         this.modalRunning = false;
         this.is_modal = false;
         super.popModal();
         this._promise = void 0;
         if (this._accept) {
-          this._accept(ctx2, false);
+          this._accept(ctx, false);
           this._accept = this._reject = void 0;
         }
         this.saveDefaultInputs();
@@ -15872,7 +15874,7 @@ toolsys.PropKey {
           //poll first tool only in list
           return this.tools[0].constructor.canRun(ctx);
         }//*/
-      modalStart(ctx2) {
+      modalStart(ctx) {
         this.loadDefaults(false);
         this._promise = new Promise((accept, reject) => {
           this._accept = accept;
@@ -15882,47 +15884,47 @@ toolsys.PropKey {
         let i;
         for (i = 0; i < this.tools.length; i++) {
           if (this.tools[i].is_modal) break;
-          this.tools[i].undoPre(ctx2);
-          this.tools[i].execPre(ctx2);
-          this.tools[i].exec(ctx2);
-          this.tools[i].execPost(ctx2);
+          this.tools[i].undoPre(ctx);
+          this.tools[i].execPre(ctx);
+          this.tools[i].exec(ctx);
+          this.tools[i].execPost(ctx);
           this._do_connections(this.tools[i]);
         }
         const on_modal_end = () => {
           this._do_connections(this.tools[this.curtool]);
           this.curtool++;
           while (this.curtool < this.tools.length && !this.tools[this.curtool].is_modal) {
-            this.tools[this.curtool].undoPre(ctx2);
-            this.tools[this.curtool].execPre(ctx2);
-            this.tools[this.curtool].exec(ctx2);
-            this.tools[this.curtool].execPost(ctx2);
+            this.tools[this.curtool].undoPre(ctx);
+            this.tools[this.curtool].execPre(ctx);
+            this.tools[this.curtool].exec(ctx);
+            this.tools[this.curtool].execPost(ctx);
             this._do_connections(this.tools[this.curtool]);
             this.curtool++;
           }
           if (this.curtool < this.tools.length) {
-            this.tools[this.curtool].undoPre(ctx2);
-            this.tools[this.curtool].modalStart(ctx2).then(on_modal_end);
+            this.tools[this.curtool].undoPre(ctx);
+            this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
           } else {
             this._accept(this, false);
           }
         };
         if (i < this.tools.length) {
           this.curtool = i;
-          this.tools[this.curtool].undoPre(ctx2);
-          this.tools[this.curtool].modalStart(ctx2).then(on_modal_end);
+          this.tools[this.curtool].undoPre(ctx);
+          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
         }
         return this._promise;
       }
       loadDefaults(force = true) {
         return super.loadDefaults(force);
       }
-      exec(ctx2) {
+      exec(ctx) {
         this.loadDefaults(false);
         for (let i = 0; i < this.tools.length; i++) {
-          this.tools[i].undoPre(ctx2);
-          this.tools[i].execPre(ctx2);
-          this.tools[i].exec(ctx2);
-          this.tools[i].execPost(ctx2);
+          this.tools[i].undoPre(ctx);
+          this.tools[i].execPre(ctx);
+          this.tools[i].exec(ctx);
+          this.tools[i].execPost(ctx);
           this._do_connections(this.tools[i]);
         }
       }
@@ -15933,19 +15935,19 @@ toolsys.PropKey {
         }
         return tot;
       }
-      calcMemSize(ctx2) {
+      calcMemSize(ctx) {
         let tot = 0;
         for (const tool of this.tools) {
-          tot += tool.calcMemSize(ctx2);
+          tot += tool.calcMemSize(ctx);
         }
         return tot;
       }
       undoPre() {
         return;
       }
-      undo(ctx2) {
+      undo(ctx) {
         for (let i = this.tools.length - 1; i >= 0; i--) {
-          this.tools[i].undo(ctx2);
+          this.tools[i].undo(ctx);
         }
       }
     };
@@ -15970,46 +15972,46 @@ toolsys.PropKey {
       toolctx;
       _undo_branch;
       _stack;
-      constructor(ctx2) {
+      constructor(ctx) {
         super();
         this.memLimit = 512 * 1024 * 1024;
         this.enforceMemLimit = false;
         this.cur = -1;
-        this.ctx = ctx2;
+        this.ctx = ctx;
         this.modalRunning = 0;
         this._undo_branch = void 0;
       }
       get head() {
         return this[this.cur];
       }
-      limitMemory(maxmem = this.memLimit, ctx2 = this.ctx) {
+      limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
         if (maxmem === void 0) {
           throw new Error("maxmem cannot be undefined");
         }
         let size = this.calcMemSize();
-        let start2 = 0;
-        while (start2 < this.cur - 2 && size > maxmem) {
-          size -= this[start2].calcMemSize(ctx2);
-          start2++;
+        let start = 0;
+        while (start < this.cur - 2 && size > maxmem) {
+          size -= this[start].calcMemSize(ctx);
+          start++;
         }
-        if (start2 === 0) {
+        if (start === 0) {
           return size;
         }
-        for (let i = 0; i < start2; i++) {
+        for (let i = 0; i < start; i++) {
           this[i].onUndoDestroy();
         }
-        this.cur -= start2;
-        for (let i = 0; i < this.length - start2; i++) {
-          this[i] = this[i + start2];
+        this.cur -= start;
+        for (let i = 0; i < this.length - start; i++) {
+          this[i] = this[i + start];
         }
-        this.length -= start2;
-        return this.calcMemSize(ctx2);
+        this.length -= start;
+        return this.calcMemSize(ctx);
       }
-      calcMemSize(ctx2 = this.ctx) {
+      calcMemSize(ctx = this.ctx) {
         let tot = 0;
         for (const tool of this) {
           try {
-            tot += tool.calcMemSize(ctx2);
+            tot += tool.calcMemSize(ctx);
           } catch (error2) {
             print_stack2(error2);
             console.error("Failed to execute a calcMemSize method");
@@ -16017,12 +16019,12 @@ toolsys.PropKey {
         }
         return tot;
       }
-      setRestrictedToolContext(ctx2) {
-        this.toolctx = ctx2;
+      setRestrictedToolContext(ctx) {
+        this.toolctx = ctx;
       }
-      reset(ctx2) {
-        if (ctx2 !== void 0) {
-          this.ctx = ctx2;
+      reset(ctx) {
+        if (ctx !== void 0) {
+          this.ctx = ctx;
         }
         this.modalRunning = 0;
         this.cur = -1;
@@ -16035,38 +16037,38 @@ toolsys.PropKey {
        *
        * @param compareInputs : check if toolstack head has identical input values, defaults to false
        * */
-      execOrRedo(ctx2, tool, compareInputs = false) {
+      execOrRedo(ctx, tool, compareInputs = false) {
         const head = this.head;
         const ok = compareInputs ? ToolOp.Equals(head, tool) : !!head && head.constructor === tool.constructor;
         tool.__memsize = void 0;
         if (ok) {
           this.undo();
           if (!compareInputs) {
-            this.execTool(ctx2, tool);
+            this.execTool(ctx, tool);
           } else {
             this.rerun(this.head);
           }
           return false;
         } else {
-          this.execTool(ctx2, tool);
+          this.execTool(ctx, tool);
           return true;
         }
       }
-      execTool(ctx2, toolop, event) {
+      execTool(ctx, toolop, event) {
         if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit, ctx2);
+          this.limitMemory(this.memLimit, ctx);
         }
         if (!toolop.constructor.canRun(
-          ctx2,
+          ctx,
           toolop
         )) {
           console.log("toolop.constructor.canRun returned false");
           return;
         }
-        if (!("toLocked" in ctx2)) {
+        if (!("toLocked" in ctx)) {
           console.warn("warning: context does not support locking, could lead to undo errors");
         }
-        const tctx = ctx2.toLocked ? ctx2.toLocked() : ctx2;
+        const tctx = ctx.toLocked ? ctx.toLocked() : ctx;
         let undoflag = toolop.constructor.tooldef().undoflag;
         if (toolop.undoflag !== void 0) {
           undoflag = toolop.undoflag;
@@ -16081,11 +16083,11 @@ toolsys.PropKey {
           toolop.undoPre(tctx);
         }
         if (toolop.is_modal) {
-          toolop.modal_ctx = ctx2;
+          toolop.modal_ctx = ctx;
           this.modal_running = true;
           toolop._on_cancel = (tool) => {
             if (!(tool.undoflag & UndoFlags.NO_UNDO)) {
-              this[this.cur].undo(ctx2);
+              this[this.cur].undo(ctx);
               this.pop_i(this.cur);
               this.cur--;
             }
@@ -16093,7 +16095,7 @@ toolsys.PropKey {
           if (event !== void 0) {
             toolop._pointerId = event.pointerId;
           }
-          toolop.modalStart(ctx2);
+          toolop.modalStart(ctx);
         } else {
           toolop.execPre(tctx);
           toolop.exec(tctx);
@@ -16101,7 +16103,7 @@ toolsys.PropKey {
           toolop.saveDefaultInputs();
         }
       }
-      toolCancel(ctx2, tool) {
+      toolCancel(ctx, tool) {
         if (tool._was_redo) {
           return;
         }
@@ -16186,7 +16188,7 @@ toolsys.PropKey {
       replay(cb, onStep) {
         this.rewind();
         let last = this.cur;
-        const start2 = time_ms();
+        const start = time_ms();
         return new Promise((accept, reject) => {
           const next = () => {
             last = this.cur;
@@ -16199,7 +16201,7 @@ toolsys.PropKey {
               this.rerun(this[this.cur]);
             }
             if (last === this.cur) {
-              console.warn("time:", (time_ms() - start2) / 1e3);
+              console.warn("time:", (time_ms() - start) / 1e3);
               accept(this);
             } else {
               if (onStep) {
@@ -16266,9 +16268,9 @@ var init_indexRange = __esm({
       end = 0;
       i = 0;
       ret = { done: false, value: void 0 };
-      constructor(start2, end2) {
-        this.start = start2;
-        this.end = end2;
+      constructor(start, end) {
+        this.start = start;
+        this.end = end;
       }
       [Symbol.iterator]() {
         return this;
@@ -16287,9 +16289,9 @@ var init_indexRange = __esm({
       finish() {
         indexRangeStack.cur--;
       }
-      reset(start2 = 0, end2 = 0, i = 0) {
-        this.start = start2;
-        this.end = end2;
+      reset(start = 0, end = 0, i = 0) {
+        this.start = start;
+        this.end = end;
         this.i = i;
         return this;
       }
@@ -16310,8 +16312,8 @@ var init_indexRange = __esm({
 });
 
 // scripts/path-controller/curve/curve1d_bspline.ts
-function mySafeJSONStringify(obj2) {
-  return JSON.stringify(obj2.toJSON(), function(key) {
+function mySafeJSONStringify(obj) {
+  return JSON.stringify(obj.toJSON(), function(key) {
     let v = this[key];
     if (typeof v === "number") {
       if (v !== Math.floor(v)) {
@@ -16499,27 +16501,27 @@ var init_curve1d_bspline = __esm({
         };
       }
       _undo = void 0;
-      undoPre(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      undoPre(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           this._undo = curve1d.copy();
         } else {
           this._undo = void 0;
         }
       }
-      undo(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      undo(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d && this._undo) {
           curve1d.load(this._undo);
           curve1d._fireEvent("update", curve1d);
         }
       }
-      getCurve1d(ctx2) {
+      getCurve1d(ctx) {
         const { dataPath } = this.getInputs();
         let curve1d;
         try {
-          curve1d = ctx2.api.getValue(
-            ctx2,
+          curve1d = ctx.api.getValue(
+            ctx,
             dataPath
           );
         } catch (error2) {
@@ -16530,8 +16532,8 @@ var init_curve1d_bspline = __esm({
         }
         return curve1d;
       }
-      execPost(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      execPost(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           curve1d._fireEvent("update", curve1d);
         }
@@ -16544,8 +16546,8 @@ var init_curve1d_bspline = __esm({
           toolpath: "curve1d.reset_bspline"
         };
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           curve1d.generators.active.reset();
         }
@@ -16564,8 +16566,8 @@ var init_curve1d_bspline = __esm({
           }
         };
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         const { template } = this.getInputs();
         if (curve1d) {
           curve1d.generators.active.loadTemplate(template);
@@ -16580,8 +16582,8 @@ var init_curve1d_bspline = __esm({
           toolpath: "curve1d.bspline_delete_point"
         };
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           curve1d.generators.active.deletePoint();
         }
@@ -16602,8 +16604,8 @@ var init_curve1d_bspline = __esm({
           }
         };
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           const bspline = curve1d.generators.active;
           const { point, state, unique } = this.getInputs();
@@ -16636,8 +16638,8 @@ var init_curve1d_bspline = __esm({
           }
         };
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           const { x, y } = this.getInputs();
           curve1d.generators.active.addFromMouse(x ?? 0, y ?? 0);
@@ -16661,16 +16663,16 @@ var init_curve1d_bspline = __esm({
           outputs: {}
         };
       }
-      storePoints(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      storePoints(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           const bspline = curve1d.generators.active;
           return Array.from(bspline.points).map((p) => p.copy());
         }
         return [];
       }
-      loadPoints(ctx2, ps) {
-        const curve1d = this.getCurve1d(ctx2);
+      loadPoints(ctx, ps) {
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           const bspline = curve1d.generators.active;
           for (const p1 of bspline.points) {
@@ -16689,18 +16691,18 @@ var init_curve1d_bspline = __esm({
           bspline.redraw();
         }
       }
-      undoPre(ctx2) {
-        this._undo = this.storePoints(ctx2);
+      undoPre(ctx) {
+        this._undo = this.storePoints(ctx);
       }
-      undo(ctx2) {
-        this.loadPoints(ctx2, this._undo);
+      undo(ctx) {
+        this.loadPoints(ctx, this._undo);
       }
-      getCurve1d(ctx2) {
+      getCurve1d(ctx) {
         const { dataPath } = this.getInputs();
         let curve1d;
         try {
-          curve1d = ctx2.api.getValue(
-            ctx2,
+          curve1d = ctx.api.getValue(
+            ctx,
             dataPath
           );
         } catch (error2) {
@@ -16712,22 +16714,22 @@ var init_curve1d_bspline = __esm({
         return curve1d;
       }
       finish(cancel = false) {
-        const ctx2 = this.modal_ctx;
+        const ctx = this.modal_ctx;
         this.modalEnd(cancel);
-        const curve1d = this.getCurve1d(ctx2);
+        const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           curve1d.generators.active.fastmode = false;
         }
         if (cancel) {
-          this.undo(ctx2);
+          this.undo(ctx);
         }
       }
       on_pointerup(_e) {
         this.finish();
       }
-      modalStart(ctx2) {
-        const promise2 = super.modalStart(ctx2);
-        const curve1d = this.getCurve1d(ctx2);
+      modalStart(ctx) {
+        const promise2 = super.modalStart(ctx);
+        const curve1d = this.getCurve1d(ctx);
         if (!curve1d) {
           console.log("Failed to get curve1d!");
           return promise2;
@@ -16738,8 +16740,8 @@ var init_curve1d_bspline = __esm({
         }
         return promise2;
       }
-      on_pointermove(e2) {
-        const mpos = new Vector2().loadXY(e2.x, e2.y);
+      on_pointermove(e) {
+        const mpos = new Vector2().loadXY(e.x, e.y);
         if (this.first) {
           this.start_mpos.load(mpos);
           this.first = false;
@@ -16763,8 +16765,8 @@ var init_curve1d_bspline = __esm({
       on_pointerdown(_e) {
         this.finish();
       }
-      exec(ctx2) {
-        const curve1d = this.getCurve1d(ctx2);
+      exec(ctx) {
+        const curve1d = this.getCurve1d(ctx);
         if (!curve1d) {
           return;
         }
@@ -16832,22 +16834,22 @@ var init_curve1d_bspline = __esm({
       set deg(_v) {
         console.warn("old file data detected");
       }
-      static fromJSON(obj2) {
-        const ret = new _Curve1DPoint(obj2);
-        if ("0" in obj2) {
-          ret.co[0] = obj2[0];
-          ret.co[1] = obj2[1];
+      static fromJSON(obj) {
+        const ret = new _Curve1DPoint(obj);
+        if ("0" in obj) {
+          ret.co[0] = obj[0];
+          ret.co[1] = obj[1];
         } else {
-          ret.co.load(obj2.co);
+          ret.co.load(obj.co);
         }
-        if (obj2.startco !== void 0) {
-          ret.startco.load(obj2.startco);
+        if (obj.startco !== void 0) {
+          ret.startco.load(obj.startco);
         }
-        ret.eid = obj2.eid;
-        ret.flag = obj2.flag;
-        ret.tangent = obj2.tangent;
-        if (obj2.rco !== void 0) {
-          ret.rco.load(obj2.rco);
+        ret.eid = obj.eid;
+        ret.flag = obj.flag;
+        ret.tangent = obj.tangent;
+        if (obj.rco !== void 0) {
+          ret.rco.load(obj.rco);
         }
         return ret;
       }
@@ -17152,22 +17154,22 @@ Curve1DPoint {
         });
         return ret;
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
-        this.interpolating = obj2.interpolating;
-        this.deg = obj2.deg;
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.interpolating = obj.interpolating;
+        this.deg = obj.deg;
         this.length = 0;
         this.points = [];
         this._ps = [];
-        if (obj2.range) {
-          const range = obj2.range;
+        if (obj.range) {
+          const range = obj.range;
           this.range = [new Vector2(range[0]), new Vector2(range[1])];
         }
         this.points.highlight = void 0;
-        this.eidgen = IDGen.fromJSON(obj2.eidgen);
+        this.eidgen = IDGen.fromJSON(obj.eidgen);
         this.recalc = RecalcFlags.ALL;
         this.mpos = new Vector2();
-        const points = obj2.points;
+        const points = obj.points;
         for (let i = 0; i < points.length; i++) {
           this.points.push(Curve1DPoint.fromJSON(points[i]));
         }
@@ -17454,17 +17456,17 @@ Curve1DPoint {
             mins = s;
           }
         }
-        let start2 = mins - ds;
-        let end2 = mins + ds;
+        let start = mins - ds;
+        let end = mins + ds;
         s = mins;
         for (let i = 0; i < 16; i++) {
           const p = this._evaluate2(s);
           if (p[0] > start_t) {
-            end2 = s;
+            end = s;
           } else {
-            start2 = s;
+            start = s;
           }
-          s = (start2 + end2) * 0.5;
+          s = (start + end) * 0.5;
           miny = p[1];
         }
         if (miny === void 0) {
@@ -17493,26 +17495,26 @@ Curve1DPoint {
         ret[1] = sumy;
         return ret;
       }
-      _wrapTouchEvent(e2) {
+      _wrapTouchEvent(e) {
         return {
-          x: e2.touches.length ? e2.touches[0].pageX : this.mpos[0],
-          y: e2.touches.length ? e2.touches[0].pageY : this.mpos[1],
+          x: e.touches.length ? e.touches[0].pageX : this.mpos[0],
+          y: e.touches.length ? e.touches[0].pageY : this.mpos[1],
           button: 0,
-          shiftKey: e2.shiftKey,
-          altKey: e2.altKey,
-          ctrlKey: e2.ctrlKey,
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
           isTouch: true,
-          metaKey: e2.metaKey,
-          stopPropagation: () => e2.stopPropagation(),
-          preventDefault: () => e2.preventDefault()
+          metaKey: e.metaKey,
+          stopPropagation: () => e.stopPropagation(),
+          preventDefault: () => e.preventDefault()
         };
       }
-      _on_touchstart(e2) {
-        this.mpos[0] = e2.touches[0].pageX;
-        this.mpos[1] = e2.touches[0].pageY;
-        const e22 = this._wrapTouchEvent(e2);
-        this._on_mousemove(e22);
-        this._on_mousedown(e22);
+      _on_touchstart(e) {
+        this.mpos[0] = e.touches[0].pageX;
+        this.mpos[1] = e.touches[0].pageY;
+        const e2 = this._wrapTouchEvent(e);
+        this._on_mousemove(e2);
+        this._on_mousedown(e2);
       }
       loadTemplate(templ) {
         if (templ === void 0 || !templates[templ]) {
@@ -17540,17 +17542,17 @@ Curve1DPoint {
           this.parent._fireEvent("update", this.parent);
         }
       }
-      _on_touchmove(e2) {
-        this.mpos[0] = e2.touches[0].pageX;
-        this.mpos[1] = e2.touches[0].pageY;
-        const e22 = this._wrapTouchEvent(e2);
-        this._on_mousemove(e22);
+      _on_touchmove(e) {
+        this.mpos[0] = e.touches[0].pageX;
+        this.mpos[1] = e.touches[0].pageY;
+        const e2 = this._wrapTouchEvent(e);
+        this._on_mousemove(e2);
       }
-      _on_touchend(e2) {
-        this._on_mouseup(this._wrapTouchEvent(e2));
+      _on_touchend(e) {
+        this._on_mouseup(this._wrapTouchEvent(e));
       }
-      _on_touchcancel(e2) {
-        this._on_touchend(e2);
+      _on_touchcancel(e) {
+        this._on_touchend(e);
       }
       deletePoint() {
         for (let i = 0; i < this.points.length; i++) {
@@ -17713,17 +17715,17 @@ Curve1DPoint {
         transform_op.inputs.dpi.setValue(dpi);
         ui2.dom.ctx.api.execTool(ui2.dom.ctx, transform_op);
       }
-      _on_mousedown(e2) {
+      _on_mousedown(e) {
         if (!this.uidata) return;
         const ui2 = this.uidata;
-        ui2.start_mpos.load(this.transform_mpos(e2.x, e2.y));
+        ui2.start_mpos.load(this.transform_mpos(e.x, e.y));
         this.fastmode = true;
-        const mpos = this.transform_mpos(e2.x, e2.y);
+        const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
         const y = mpos[1];
         this.do_highlight(x, y);
         if (this.points.highlight !== void 0) {
-          if (!e2.shiftKey) {
+          if (!e.shiftKey) {
             for (let i = 0; i < this.points.length; i++) {
               this.points[i].flag &= ~CurveFlags.SELECT;
             }
@@ -17732,11 +17734,11 @@ Curve1DPoint {
             this.points.highlight.flag ^= CurveFlags.SELECT;
           }
           if (ui2.datapath) {
-            const state = e2.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
+            const state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
             ui2.dom.ctx.api.execTool(ui2.dom.ctx, "curve1d.bspline_select_point", {
               dataPath: ui2.datapath,
               state,
-              unique: !e2.shiftKey,
+              unique: !e.shiftKey,
               point: this.points.highlight.eid
             });
           }
@@ -17855,13 +17857,13 @@ Curve1DPoint {
         y = -y / trans[0] - trans[1][1];
         return [x, y];
       }
-      _on_mousemove(e2) {
+      _on_mousemove(e) {
         if (!this.uidata) return;
         const ui2 = this.uidata;
-        if (e2.isTouch && ui2.transforming) {
-          e2.preventDefault();
+        if (e.isTouch && ui2.transforming) {
+          e.preventDefault();
         }
-        const mpos = this.transform_mpos(e2.x, e2.y);
+        const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
         const y = mpos[1];
         if (ui2.transforming) {
@@ -17884,8 +17886,8 @@ Curve1DPoint {
       _on_mouseup(_e) {
         this.end_transform();
       }
-      _on_keydown(e2) {
-        switch (e2.keyCode) {
+      _on_keydown(e) {
+        switch (e.keyCode) {
           case 88:
           //xkeey
           case 46:
@@ -17994,8 +17996,8 @@ Curve1DPoint {
 });
 
 // scripts/path-controller/curve/curve1d.ts
-function mySafeJSONStringify2(obj2) {
-  return JSON.stringify(obj2.toJSON(), function(key) {
+function mySafeJSONStringify2(obj) {
+  return JSON.stringify(obj.toJSON(), function(key) {
     let v = this[key];
     if (typeof v === "number") {
       if (v !== Math.floor(v)) {
@@ -18243,17 +18245,17 @@ var init_curve1d = __esm({
       destroy() {
         return this;
       }
-      loadJSON(obj2) {
-        this.VERSION = obj2.VERSION;
-        this.uiZoom = parseFloat(obj2.uiZoom) || this.uiZoom;
-        if (obj2.xRange) {
-          this.xRange = new Vector2(obj2.xRange);
+      loadJSON(obj) {
+        this.VERSION = obj.VERSION;
+        this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
+        if (obj.xRange) {
+          this.xRange = new Vector2(obj.xRange);
         }
-        if (obj2.yRange) {
-          this.yRange = new Vector2(obj2.yRange);
+        if (obj.yRange) {
+          this.yRange = new Vector2(obj.yRange);
         }
-        this.clipToRange = Boolean(obj2.clipToRange);
-        for (const gen of obj2.generators) {
+        this.clipToRange = Boolean(obj.clipToRange);
+        for (const gen of obj.generators) {
           const gen2 = this.checkGenerator(gen.type);
           if (!gen2 || !(gen2 instanceof CurveTypeData)) {
             console.warn("Bad curve generator class:", gen2);
@@ -18266,7 +18268,7 @@ var init_curve1d = __esm({
           gen2.reset();
           gen2.loadJSON(gen);
           gen2.parent = this;
-          if (gen.type === obj2.active_generator) {
+          if (gen.type === obj.active_generator) {
             this.generators.active = gen2;
           }
         }
@@ -18520,9 +18522,9 @@ var init_anim = __esm({
       curve;
       time;
       startValue;
-      constructor(obj2, key, value, time, curve = "ease") {
+      constructor(obj, key, value, time, curve = "ease") {
         super();
-        this.object = obj2;
+        this.object = obj;
         this.key = key;
         this.value = value;
         this.ms = time;
@@ -18536,7 +18538,7 @@ var init_anim = __esm({
         this.time = animator.time;
         let value = this.object[this.key];
         if (Array.isArray(value)) {
-          this.startValue = list3(value);
+          this.startValue = list2(value);
         } else {
           this.startValue = value;
         }
@@ -18569,9 +18571,9 @@ var init_anim = __esm({
       object;
       key;
       value;
-      constructor(obj2, key, val) {
+      constructor(obj, key, val) {
         super();
-        this.object = obj2;
+        this.object = obj;
         this.key = key;
         this.value = val;
       }
@@ -18817,7 +18819,7 @@ function quad_uv_2d(p, v1, v2, v3, v4) {
   const v4y = v4[1] - v1[1];
   const x = p[0] - v1[0];
   const y = p[1] - v1[1];
-  const sqrt2 = Math.sqrt;
+  const sqrt = Math.sqrt;
   let A = 2 * (((v4y + y) * x - 2 * v4x * y) * v3y + (v4x * y - v4y * x) * (v4y + y) - ((v4x - x) * v2y - v3x * y) * (v4y - y)) * v2x - 2 * ((v4x * y - v4y * x) * (v4x + x) - (v4x - x) * v3y * x + ((2 * v4y - y) * x - v4x * y) * v3x) * v2y + (v4x * y - v4y * x + v3y * x - v3x * y) ** 2 + (v4x - x) ** 2 * v2y ** 2 + (v4y - y) ** 2 * v2x ** 2;
   const B = v4x * y - v4y * x + v3y * x - v3x * y;
   let C1 = 2 * (v3x - v4x) * v2y - 2 * (v3y - v4y) * v2x;
@@ -18842,8 +18844,8 @@ function quad_uv_2d(p, v1, v2, v3, v4) {
     }
     u1 = u2 = dx * x + dy * y;
   } else {
-    u1 = (-(B + sqrt2(A) - (v4y - y) * v2x) - (v4x - x) * v2y) / C1;
-    u2 = (-(B - sqrt2(A) - (v4y - y) * v2x) - (v4x - x) * v2y) / C1;
+    u1 = (-(B + sqrt(A) - (v4y - y) * v2x) - (v4x - x) * v2y) / C1;
+    u2 = (-(B - sqrt(A) - (v4y - y) * v2x) - (v4x - x) * v2y) / C1;
   }
   if (Math.abs(C2) < 1e-5) {
     let dx;
@@ -18858,8 +18860,8 @@ function quad_uv_2d(p, v1, v2, v3, v4) {
     }
     v1_out = v2_out = x * dx + y * dy;
   } else {
-    v1_out = (-(B - sqrt2(A) + (v4y + y) * v2x) + (v4x + x) * v2y) / C2;
-    v2_out = (-(B + sqrt2(A) + (v4y + y) * v2x) + (v4x + x) * v2y) / C2;
+    v1_out = (-(B - sqrt(A) + (v4y + y) * v2x) + (v4x + x) * v2y) / C2;
+    v2_out = (-(B + sqrt(A) + (v4y + y) * v2x) + (v4x + x) * v2y) / C2;
   }
   const ret = quad_co_rets2.next();
   const d1 = (u1 - 0.5) ** 2 + (v1_out - 0.5) ** 2;
@@ -18950,39 +18952,39 @@ function calc_projection_axes(no) {
   }
   return ret;
 }
-function inrect_3d(p, min2, max2) {
-  let ok = p[0] >= min2[0] && p[0] <= max2[0];
-  ok = ok && p[1] >= min2[1] && p[1] <= max2[1];
-  ok = ok && p[2] >= min2[2] && p[2] <= max2[2];
+function inrect_3d(p, min, max) {
+  let ok = p[0] >= min[0] && p[0] <= max[0];
+  ok = ok && p[1] >= min[1] && p[1] <= max[1];
+  ok = ok && p[2] >= min[2] && p[2] <= max[2];
   return ok;
 }
-function aabb_isect_line_3d(v1, v2, min2, max2) {
-  let inside = inrect_3d(v1, min2, max2);
-  inside = inside || inrect_3d(v2, min2, max2);
+function aabb_isect_line_3d(v1, v2, min, max) {
+  let inside = inrect_3d(v1, min, max);
+  inside = inside || inrect_3d(v2, min, max);
   if (inside) {
     return true;
   }
-  const cent = _avtmps.next().load(min2).interp(max2, 0.5);
+  const cent = _avtmps.next().load(min).interp(max, 0.5);
   const cpl = closest_point_on_line(cent, v1, v2, true);
   if (!cpl) {
     return false;
   }
   const p = cpl[0];
-  return inrect_3d(p, min2, max2);
+  return inrect_3d(p, min, max);
 }
-function aabb_isect_cylinder_3d(v1, v2, radius, min2, max2) {
-  let inside = inrect_3d(v1, min2, max2);
-  inside = inside || inrect_3d(v2, min2, max2);
+function aabb_isect_cylinder_3d(v1, v2, radius, min, max) {
+  let inside = inrect_3d(v1, min, max);
+  inside = inside || inrect_3d(v2, min, max);
   if (inside) {
     return true;
   }
-  const cent = _avtmps.next().load(min2).interp(max2, 0.5);
+  const cent = _avtmps.next().load(min).interp(max, 0.5);
   const cpl = closest_point_on_line(cent, v1, v2, true);
   if (!cpl) {
     return false;
   }
   const p = cpl[0];
-  const size = _avtmps.next().load(max2).sub(min2);
+  const size = _avtmps.next().load(max).sub(min);
   size.mulScalar(0.5);
   size.addScalar(radius);
   p.sub(cent).abs();
@@ -19456,15 +19458,15 @@ function aabb_intersect_2d(pos1, size1, pos2, size2) {
   const v2 = aabb_intersect_vs.next().load(pos1).add(size1);
   const v3 = aabb_intersect_vs.next().load(pos2);
   const v4 = aabb_intersect_vs.next().load(pos2).add(size2);
-  const min2 = aabb_intersect_vs.next().zero();
-  const max2 = aabb_intersect_vs.next().zero();
+  const min = aabb_intersect_vs.next().zero();
+  const max = aabb_intersect_vs.next().zero();
   let tot = 0;
   const v1arr = v1;
   const v2arr = v2;
   const v3arr = v3;
   const v4arr = v4;
-  const minarr = min2;
-  const maxarr = max2;
+  const minarr = min;
+  const maxarr = max;
   for (let _i = 0; _i < 2; _i++) {
     const i = _i;
     if (v2arr[i] >= v3arr[i] && v1arr[i] <= v4arr[i]) {
@@ -19477,8 +19479,8 @@ function aabb_intersect_2d(pos1, size1, pos2, size2) {
     return void 0;
   }
   const ret = aabb_intersect_rets.next();
-  ret.pos.load(min2);
-  ret.size.load(max2).sub(min2);
+  ret.pos.load(min);
+  ret.size.load(max).sub(min);
   return ret;
 }
 function aabb_intersect_3d(min1, max1, min2, max2) {
@@ -19506,16 +19508,16 @@ function aabb_union(a2, b) {
 function aabb_union_2d(pos1, size1, pos2, size2) {
   const v1 = aabb_intersect_vs.next();
   const v2 = aabb_intersect_vs.next();
-  const min2 = aabb_intersect_vs.next();
-  const max2 = aabb_intersect_vs.next();
+  const min = aabb_intersect_vs.next();
+  const max = aabb_intersect_vs.next();
   v1.load(pos1).add(size1);
   v2.load(pos2).add(size2);
-  min2.load(v1).min(v2);
-  max2.load(v1).max(v2);
-  max2.sub(min2);
+  min.load(v1).min(v2);
+  max.load(v1).max(v2);
+  max.sub(min);
   const ret = aabb_intersect_rets.next();
-  ret.pos.load(min2);
-  ret.pos.load(max2);
+  ret.pos.load(min);
+  ret.pos.load(max);
   return ret;
 }
 function init_prototype(cls, proto) {
@@ -19590,7 +19592,7 @@ function get_rect_lines(p, size) {
     throw "get_rect_points has no implementation for " + p.length + "-dimensional data";
   }
 }
-function simple_tri_aabb_isect(v1, v2, v3, min2, max2) {
+function simple_tri_aabb_isect(v1, v2, v3, min, max) {
   $vs_simple_tri_aabb_isect[0] = v1;
   $vs_simple_tri_aabb_isect[1] = v2;
   $vs_simple_tri_aabb_isect[2] = v3;
@@ -19598,7 +19600,7 @@ function simple_tri_aabb_isect(v1, v2, v3, min2, max2) {
     let i = _i;
     let isect = true;
     for (let j = 0; j < 3; j++) {
-      if ($vs_simple_tri_aabb_isect[j][i] < min2[i] || $vs_simple_tri_aabb_isect[j][i] >= max2[i]) isect = false;
+      if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i]) isect = false;
     }
     if (isect) return true;
   }
@@ -19636,19 +19638,19 @@ function inrect_2d(p, pos, size) {
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
 }
-function aabb_isect_line_2d(v1, v2, min2, max2) {
-  if (point_in_aabb_2d(v1, min2, max2) || point_in_aabb_2d(v2, min2, max2)) {
+function aabb_isect_line_2d(v1, v2, min, max) {
+  if (point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)) {
     return true;
   }
   const lines = $ps_aabb_isect_line_2d;
-  lines[0][0] = min2[0];
-  lines[0][1] = min2[1];
-  lines[1][0] = min2[0];
-  lines[1][1] = max2[1];
-  lines[2][0] = max2[0];
-  lines[2][1] = max2[1];
-  lines[3][0] = max2[0];
-  lines[3][1] = min2[1];
+  lines[0][0] = min[0];
+  lines[0][1] = min[1];
+  lines[1][0] = min[0];
+  lines[1][1] = max[1];
+  lines[2][0] = max[0];
+  lines[2][1] = max[1];
+  lines[3][0] = max[0];
+  lines[3][1] = min[1];
   for (let i = 0; i < 4; i++) {
     if (line_line_cross(v1, v2, lines[i], lines[(i + 1) % 4])) {
       return true;
@@ -19788,10 +19790,10 @@ function line_line_cross(a2, b, c, d) {
   const w4 = winding(c, b, d);
   return w1 === w2 && w3 === w4 && w1 !== w3;
 }
-function point_in_aabb_2d(p, min2, max2) {
-  return p[0] >= min2[0] && p[0] <= max2[0] && p[1] >= min2[1] && p[1] <= max2[1];
+function point_in_aabb_2d(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
-function aabb_sphere_isect_2d(p, r, min2, max2) {
+function aabb_sphere_isect_2d(p, r, min, max) {
   const v1 = _asi2d_v1;
   const v2 = _asi2d_v2;
   const v3 = _asi2d_v3;
@@ -19800,8 +19802,8 @@ function aabb_sphere_isect_2d(p, r, min2, max2) {
   const lp = _asi2d_v6.load(p);
   v1.load(lp);
   v2.load(lp);
-  const lmin = _asi_v5.load2(min2);
-  const lmax = _asi_v6.load2(max2);
+  const lmin = _asi_v5.load2(min);
+  const lmax = _asi_v6.load2(max);
   lmin[2] = lmax[2] = 0;
   mvec.load(lmax).sub(lmin).normalize().mulScalar(r + 1e-4);
   v1.sub(mvec);
@@ -19827,24 +19829,24 @@ function aabb_sphere_isect_2d(p, r, min2, max2) {
   ret = ret || dist_to_line_2d(lp, v1, v2) < r;
   return ret;
 }
-function point_in_aabb(p, min2, max2) {
-  return p[0] >= min2[0] && p[0] <= max2[0] && p[1] >= min2[1] && p[1] <= max2[1] && p[2] >= min2[2] && p[2] <= max2[2];
+function point_in_aabb(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1] && p[2] >= min[2] && p[2] <= max[2];
 }
-function aabb_sphere_isect(p, r, min2, max2) {
+function aabb_sphere_isect(p, r, min, max) {
   let lp;
   let lmin;
   let lmax;
   {
     const p1 = aabb_sphere_isect_vs.next().load(p);
-    const min1 = aabb_sphere_isect_vs.next().load(min2);
-    const max1 = aabb_sphere_isect_vs.next().load(max2);
+    const min1 = aabb_sphere_isect_vs.next().load(min);
+    const max1 = aabb_sphere_isect_vs.next().load(max);
     if (p.length === 2) {
       p1[2] = 0;
     }
     if (min1.length === 2) {
       min1[2] = 0;
     }
-    if (max2.length === 2) {
+    if (max.length === 2) {
       max1[2] = 0;
     }
     lp = p1;
@@ -19894,21 +19896,21 @@ function aabb_sphere_isect(p, r, min2, max2) {
   }
   return false;
 }
-function aabb_sphere_dist(p, min2, max2) {
+function aabb_sphere_dist(p, min, max) {
   let lp;
   let lmin;
   let lmax;
   {
     const p1 = aabb_sphere_isect_vs.next().load(p);
-    const min1 = aabb_sphere_isect_vs.next().load(min2);
-    const max1 = aabb_sphere_isect_vs.next().load(max2);
+    const min1 = aabb_sphere_isect_vs.next().load(min);
+    const max1 = aabb_sphere_isect_vs.next().load(max);
     if (p.length === 2) {
       p1[2] = 0;
     }
     if (min1.length === 2) {
       min1[2] = 0;
     }
-    if (max2.length === 2) {
+    if (max.length === 2) {
       max1[2] = 0;
     }
     lp = p1;
@@ -20326,9 +20328,9 @@ function get_tri_circ(a2, b, c) {
   return ret;
 }
 function gen_circle(m, origin, r, stfeps) {
-  const pi2 = Math.PI;
-  let f2 = -pi2 / 2;
-  const df = pi2 * 2 / stfeps;
+  const pi = Math.PI;
+  let f2 = -pi / 2;
+  const df = pi * 2 / stfeps;
   const verts = [];
   for (let i = 0; i < stfeps; i++) {
     const x = origin[0] + r * Math.sin(f2);
@@ -20348,11 +20350,11 @@ function rot2d(v1, A, axis) {
   const x = v1[0];
   const y = v1[1];
   if (axis === 1) {
-    v1[0] = x * cos2(A) + y * sin2(A);
-    v1[2] = y * cos2(A) - x * sin2(A);
+    v1[0] = x * cos(A) + y * sin(A);
+    v1[2] = y * cos(A) - x * sin(A);
   } else {
-    v1[0] = x * cos2(A) - y * sin2(A);
-    v1[1] = y * cos2(A) + x * sin2(A);
+    v1[0] = x * cos(A) - y * sin(A);
+    v1[1] = y * cos(A) + x * sin(A);
   }
 }
 function makeCircleMesh(gl, radius, stfeps) {
@@ -20364,16 +20366,16 @@ function makeCircleMesh(gl, radius, stfeps) {
   return mesh;
 }
 function minmax_verts(verts) {
-  const min2 = new Vector3([1e12, 1e12, 1e12]);
-  const max2 = new Vector3([-1e12, -1e12, -1e12]);
+  const min = new Vector3([1e12, 1e12, 1e12]);
+  const max = new Vector3([-1e12, -1e12, -1e12]);
   for (const v of verts) {
     for (let _i = 0; _i < 3; _i++) {
       let i = _i;
-      min2[i] = Math.min(min2[i], v.co[i]);
-      max2[i] = Math.max(max2[i], v.co[i]);
+      min[i] = Math.min(min[i], v.co[i]);
+      max[i] = Math.max(max[i], v.co[i]);
     }
   }
-  return [min2, max2];
+  return [min, max];
 }
 function unproject(vec, ipers, iview) {
   const newvec = new Vector3(vec);
@@ -20686,7 +20688,7 @@ function angle_between_vecs(v1, vcent, v2) {
     return Math.acos(d);
   }
 }
-var dtvtmps, quad_co_rets2, ClosestModes, advs, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_v4, cpt_v5, cpt_v6, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, tri_area_temps, aabb_intersect_vs, aabb_intersect_rets, set2, $_mh, $_swapt, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v1, _asi_v2, _asi_v3, _asi_v4, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v5, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, $e1_normal_tri, $e3_normal_tri, $e2_normal_tri, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _q3, _li_vi, dt2l_v1, dt2l_v2, dt2l_v3, dt2l_v4, dt2l_v5, dt3l_v1, dt3l_v2, dt3l_v3, dt3l_v4, dt3l_v5, _cplw_vs4, _cplw_vs3, _cplw_vs2, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos2, sin2, _sh_minv, _sh_maxv, _sh_start, _sh_end, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
+var dtvtmps, quad_co_rets2, ClosestModes, advs, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_v4, cpt_v5, cpt_v6, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, tri_area_temps, aabb_intersect_vs, aabb_intersect_rets, set2, $_mh, $_swapt, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v1, _asi_v2, _asi_v3, _asi_v4, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v5, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, $e1_normal_tri, $e3_normal_tri, $e2_normal_tri, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _q3, _li_vi, dt2l_v1, dt2l_v2, dt2l_v3, dt2l_v4, dt2l_v5, dt3l_v1, dt3l_v2, dt3l_v3, dt3l_v4, dt3l_v5, _cplw_vs4, _cplw_vs3, _cplw_vs2, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos, sin, _sh_minv, _sh_maxv, _sh_start, _sh_end, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
 var init_math = __esm({
   "scripts/path-controller/util/math.ts"() {
     "use strict";
@@ -20988,8 +20990,8 @@ var init_math = __esm({
     _get_tri_circ_ret = new cachering2(function() {
       return [new Vector3(), 0];
     }, 64);
-    cos2 = Math.cos;
-    sin2 = Math.sin;
+    cos = Math.cos;
+    sin = Math.sin;
     _sh_minv = new Vector3();
     _sh_maxv = new Vector3();
     _sh_start = [];
@@ -21217,14 +21219,14 @@ __export(parseutil_exports, {
   tokdef: () => tokdef2,
   token: () => token2
 });
-function getTraceBack(limit, start2) {
+function getTraceBack(limit, start) {
   try {
     throw new Error();
   } catch (error2) {
     let stack = error2.stack.split("\n");
     stack = stack.slice(1, stack.length);
-    if (start2 === void 0) {
-      start2 = 0;
+    if (start === void 0) {
+      start = 0;
     }
     for (let i = 0; i < stack.length; i++) {
       let l = stack[i];
@@ -21240,15 +21242,15 @@ function getTraceBack(limit, start2) {
       const file = l.slice(j + 1, l.length - 1);
       l = `  ${func2} (${file})`;
       if (l.search(/parseutil\.js/) >= 0) {
-        start2 = Math.max(start2, i);
+        start = Math.max(start, i);
       }
       stack[i] = l;
     }
     if (limit !== void 0) {
       stack.length = Math.min(stack.length, limit);
     }
-    if (start2 !== void 0) {
-      stack = stack.slice(start2, stack.length);
+    if (start !== void 0) {
+      stack = stack.slice(start, stack.length);
     }
     return stack.join("\n");
   }
@@ -21717,17 +21719,17 @@ var init_controller_ops = __esm({
         this._undo = void 0;
         this.hadError = false;
       }
-      setValue(ctx2, val, object) {
+      setValue(ctx, val, object) {
         var _stack = [];
         try {
           const prop = this.inputs.prop;
           const path = this.inputs.dataPath.getValue();
           if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            const rdef2 = ctx2.api.resolvePath(ctx2, path);
-            if (rdef2?.subkey !== void 0) {
-              let subkey = rdef2.subkey;
+            const rdef = ctx.api.resolvePath(ctx, path);
+            if (rdef?.subkey !== void 0) {
+              let subkey = rdef.subkey;
               if (typeof subkey === "string") {
-                subkey = rdef2.prop.values[subkey];
+                subkey = rdef.prop.values[subkey];
               }
               this.inputs.flagBit.setValue(subkey);
               this.inputs.useFlagBit.setValue(true);
@@ -21735,7 +21737,7 @@ var init_controller_ops = __esm({
           }
           const execCtx = __using(_stack, prop.execWithContext());
           execCtx.dataref = object;
-          execCtx.ctx = ctx2;
+          execCtx.ctx = ctx;
           execCtx.datapath = path;
           try {
             prop.setValue(val);
@@ -21750,13 +21752,13 @@ var init_controller_ops = __esm({
           __callDispose(_stack, _error, _hasError);
         }
       }
-      static create(ctx2, datapath, value, id2, massSetPath2) {
-        const rdef2 = ctx2.api.resolvePath(ctx2, datapath);
-        if (rdef2?.prop === void 0) {
-          console.warn("DataPathSetOp failed", rdef2, rdef2?.prop);
+      static create(ctx, datapath, value, id2, massSetPath) {
+        const rdef = ctx.api.resolvePath(ctx, datapath);
+        if (rdef?.prop === void 0) {
+          console.warn("DataPathSetOp failed", rdef, rdef?.prop);
           return;
         }
-        const prop = rdef2.prop;
+        const prop = rdef.prop;
         const tool = new _DataPathSetOp();
         tool.propType = prop.type;
         tool.inputs.destType.setValue(prop.type);
@@ -21765,7 +21767,7 @@ var init_controller_ops = __esm({
         }
         let mask = PropTypes.FLAG | PropTypes.ENUM;
         mask |= PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT;
-        if (rdef2.subkey !== void 0 && prop.type & mask) {
+        if (rdef.subkey !== void 0 && prop.type & mask) {
           if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             let i = datapath.length - 1;
             while (i >= 0 && datapath[i] !== "[" && datapath[i] !== "=") {
@@ -21781,7 +21783,7 @@ var init_controller_ops = __esm({
           } else {
             tool.inputs.prop = new FloatProperty();
           }
-          let subkey = rdef2.subkey;
+          let subkey = rdef.subkey;
           if (typeof subkey !== "number" && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             subkey = prop.values[subkey];
           }
@@ -21792,7 +21794,7 @@ var init_controller_ops = __esm({
           if (prop.type === PropTypes.ENUM) {
             value = subkey;
           } else if (prop.type === PropTypes.FLAG) {
-            let value2 = ctx2.api.getValue(ctx2, datapath);
+            let value2 = ctx.api.getValue(ctx, datapath);
             if (typeof value2 !== "number") {
               value2 = typeof value2 === "boolean" ? value & 1 : 0;
             }
@@ -21807,19 +21809,19 @@ var init_controller_ops = __esm({
           tool.inputs.prop = prop.copy();
         }
         tool.inputs.dataPath.setValue(datapath);
-        if (massSetPath2) {
-          tool.inputs.massSetPath.setValue(massSetPath2);
+        if (massSetPath) {
+          tool.inputs.massSetPath.setValue(massSetPath);
         } else {
           tool.inputs.massSetPath.setValue("");
         }
         tool.id = id2;
-        tool.setValue(ctx2, value, rdef2.obj);
+        tool.setValue(ctx, value, rdef.obj);
         return tool;
       }
-      hash(massSetPath2, dataPath, prop, id2) {
-        massSetPath2 = massSetPath2 === void 0 ? "" : massSetPath2;
-        massSetPath2 = massSetPath2 === null ? "" : massSetPath2;
-        const ret = "" + massSetPath2 + ":" + dataPath + ":" + prop + ":" + id2;
+      hash(massSetPath, dataPath, prop, id2) {
+        massSetPath = massSetPath === void 0 ? "" : massSetPath;
+        massSetPath = massSetPath === null ? "" : massSetPath;
+        const ret = "" + massSetPath + ":" + dataPath + ":" + prop + ":" + id2;
         return ret;
       }
       hashThis() {
@@ -21830,61 +21832,61 @@ var init_controller_ops = __esm({
           this.id
         );
       }
-      undoPre(ctx2) {
+      undoPre(ctx) {
         if (this.inputs.fullSaveUndo.getValue()) {
-          return super.undoPre(ctx2);
+          return super.undoPre(ctx);
         }
-        if (this.__ctx) ctx2 = this.__ctx;
+        if (this.__ctx) ctx = this.__ctx;
         this._undo = {};
-        let paths2 = /* @__PURE__ */ new Set();
+        let paths = /* @__PURE__ */ new Set();
         if (this.inputs.massSetPath.getValue().trim()) {
-          const massSetPath2 = this.inputs.massSetPath.getValue().trim();
-          paths2 = new Set(ctx2.api.resolveMassSetPaths(ctx2, massSetPath2));
+          const massSetPath = this.inputs.massSetPath.getValue().trim();
+          paths = new Set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
         }
-        paths2.add(this.inputs.dataPath.getValue());
-        for (const path of paths2) {
-          let val = ctx2.api.getValue(ctx2, path);
+        paths.add(this.inputs.dataPath.getValue());
+        for (const path of paths) {
+          let val = ctx.api.getValue(ctx, path);
           if (typeof val === "object" && val !== null) {
             val = val.copy();
           }
           this._undo[path] = val;
         }
       }
-      undo(ctx2) {
-        if (this.__ctx) ctx2 = this.__ctx;
+      undo(ctx) {
+        if (this.__ctx) ctx = this.__ctx;
         if (this.inputs.fullSaveUndo.getValue()) {
-          return super.undo(ctx2);
+          return super.undo(ctx);
         }
         for (const path in this._undo) {
-          const rdef2 = ctx2.api.resolvePath(ctx2, path);
-          if (rdef2 !== void 0 && (rdef2.prop?.type ?? 0) & (PropTypes.ENUM | PropTypes.FLAG)) {
+          const rdef = ctx.api.resolvePath(ctx, path);
+          if (rdef !== void 0 && (rdef.prop?.type ?? 0) & (PropTypes.ENUM | PropTypes.FLAG)) {
             var _stack = [];
             try {
-              const old = rdef2.obj[rdef2.key];
-              if (rdef2.subkey) {
-                let key = rdef2.subkey;
-                const prop = rdef2.prop;
+              const old = rdef.obj[rdef.key];
+              if (rdef.subkey) {
+                let key = rdef.subkey;
+                const prop = rdef.prop;
                 if (typeof key !== "number") {
                   key = prop.values[key];
                 }
                 if (prop.type === PropTypes.FLAG) {
                   if (this._undo[path]) {
-                    rdef2.obj[rdef2.key] |= key;
+                    rdef.obj[rdef.key] |= key;
                   } else {
-                    rdef2.obj[rdef2.key] &= ~key;
+                    rdef.obj[rdef.key] &= ~key;
                   }
                 } else {
-                  rdef2.obj[rdef2.key] = key;
+                  rdef.obj[rdef.key] = key;
                 }
               } else {
-                rdef2.obj[rdef2.key] = this._undo[path];
+                rdef.obj[rdef.key] = this._undo[path];
               }
-              const rprop = rdef2.prop;
+              const rprop = rdef.prop;
               const execCtx = __using(_stack, rprop.execWithContext());
-              execCtx.dataref = rdef2.obj;
+              execCtx.dataref = rdef.obj;
               execCtx.datapath = path;
-              execCtx.ctx = ctx2;
-              rprop._fire("change", rdef2.obj[rdef2.key], old);
+              execCtx.ctx = ctx;
+              rprop._fire("change", rdef.obj[rdef.key], old);
             } catch (_) {
               var _error = _, _hasError = true;
             } finally {
@@ -21892,7 +21894,7 @@ var init_controller_ops = __esm({
             }
           } else {
             try {
-              ctx2.api.setValue(ctx2, path, this._undo[path]);
+              ctx.api.setValue(ctx, path, this._undo[path]);
             } catch (error2) {
               print_stack2(error2);
               console.warn("Failed to set property in undo for DataPathSetOp");
@@ -21900,14 +21902,14 @@ var init_controller_ops = __esm({
           }
         }
       }
-      exec(ctx2) {
+      exec(ctx) {
         if (this.__ctx) {
-          ctx2 = this.__ctx;
+          ctx = this.__ctx;
         }
         const path = this.inputs.dataPath.getValue();
-        const massSetPath2 = this.inputs.massSetPath.getValue().trim();
+        const massSetPath = this.inputs.massSetPath.getValue().trim();
         try {
-          ctx2.api.setValue(ctx2, path, this.inputs.prop.getValue());
+          ctx.api.setValue(ctx, path, this.inputs.prop.getValue());
           this.hadError = false;
         } catch (error2) {
           console.log(error2.stack);
@@ -21915,7 +21917,7 @@ var init_controller_ops = __esm({
           console.log("error setting " + path);
           this.hadError = true;
         }
-        if (massSetPath2) {
+        if (massSetPath) {
           let value = this.inputs.prop.getValue();
           const useFlagBit = this.inputs.useFlagBit.getValue();
           if (useFlagBit && this.inputs.destType.getValue() === PropTypes.FLAG) {
@@ -21923,7 +21925,7 @@ var init_controller_ops = __esm({
             value = !!(value & bit);
           }
           try {
-            ctx2.api.massSetProp(ctx2, massSetPath2, value);
+            ctx.api.massSetProp(ctx, massSetPath, value);
           } catch (error2) {
             console.log(error2.stack);
             console.log(error2.message);
@@ -21932,12 +21934,12 @@ var init_controller_ops = __esm({
           }
         }
       }
-      modalStart(ctx2) {
-        if (ctx2.toLocked === void 0) {
+      modalStart(ctx) {
+        if (ctx.toLocked === void 0) {
           console.warn("Warning: no toLocked in context class, this may lead to subtle undo behaviours");
           console.warn("  (ctx locking creates a copy with values of the context at the time it as locked)");
         }
-        this.__ctx = ctx2.toLocked ? ctx2.toLocked() : ctx2;
+        this.__ctx = ctx.toLocked ? ctx.toLocked() : ctx;
         const result = super.modalStart(this.__ctx);
         this.exec(this.__ctx);
         this.modalEnd(false);
@@ -22019,10 +22021,10 @@ var init_curve1d_basic = __esm({
           equation: this.equation
         });
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
-        if (obj2.equation !== void 0) {
-          this.equation = obj2.equation;
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        if (obj.equation !== void 0) {
+          this.equation = obj.equation;
         }
         return this;
       }
@@ -22081,21 +22083,44 @@ var init_curve1d_basic = __esm({
       }
       #makeFunc() {
         this._func = void 0;
-        var sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI, e = Math.E, E = Math.E, tan = Math.tan, abs = Math.abs, floor = Math.floor, ceil = Math.ceil, acos = Math.acos, asin = Math.asin, atan = Math.atan, cosh = Math.cos, sinh = Math.sinh, log = Math.log, pow = Math.pow, exp = Math.exp, sqrt = Math.sqrt, cbrt = Math.cbrt, min = Math.min, max = Math.max;
-        var func;
-        let code = `
-    func = function(x) {
-      return ${this.equation};
-    }
+        var func2;
+        const code2 = `
+    (function() {
+      const sin = Math.sin,
+        cos = Math.cos,
+        pi = Math.PI,
+        PI = Math.PI,
+        e = Math.E,
+        E = Math.E,
+        tan = Math.tan,
+        abs = Math.abs,
+        floor = Math.floor,
+        ceil = Math.ceil,
+        acos = Math.acos,
+        asin = Math.asin,
+        atan = Math.atan,
+        cosh = Math.cos,
+        sinh = Math.sinh,
+        log = Math.log,
+        pow = Math.pow,
+        exp = Math.exp,
+        sqrt = Math.sqrt,
+        cbrt = Math.cbrt,
+        min = Math.min,
+        max = Math.max;
+      return function(x) {
+        return ${this.equation};
+      }
+    })();
     `;
         try {
-          eval(code);
+          func2 = (0, eval)(code2);
           this._haserror = false;
         } catch (error2) {
           this._haserror = true;
           console.warn("Compile error!", error2.message);
         }
-        this._func = func;
+        this._func = func2;
       }
       _evaluate(s) {
         try {
@@ -22235,11 +22260,11 @@ var init_curve1d_basic = __esm({
           deviation: this.deviation
         });
       }
-      loadJSON(obj2) {
-        super.loadJSON(obj2);
-        this.height = obj2.height !== void 0 ? obj2.height : 1;
-        this.offset = obj2.offset;
-        this.deviation = obj2.deviation;
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.height = obj.height !== void 0 ? obj.height : 1;
+        this.offset = obj.offset;
+        this.deviation = obj.deviation;
         return this;
       }
       makeGUI(container, canvas, drawTransform) {
@@ -22397,9 +22422,9 @@ var init_ease = __esm({
        * @static
        * @return {Function}
        **/
-      static getPowIn(pow2) {
+      static getPowIn(pow) {
         return function(t) {
-          return Math.pow(t, pow2);
+          return Math.pow(t, pow);
         };
       }
       /**
@@ -22409,9 +22434,9 @@ var init_ease = __esm({
        * @static
        * @return {Function}
        **/
-      static getPowOut(pow2) {
+      static getPowOut(pow) {
         return function(t) {
-          return 1 - Math.pow(1 - t, pow2);
+          return 1 - Math.pow(1 - t, pow);
         };
       }
       /**
@@ -22421,10 +22446,10 @@ var init_ease = __esm({
        * @static
        * @return {Function}
        **/
-      static getPowInOut(pow2) {
+      static getPowInOut(pow) {
         return function(t) {
-          if ((t *= 2) < 1) return 0.5 * Math.pow(t, pow2);
-          return 1 - 0.5 * Math.abs(Math.pow(2 - t, pow2));
+          if ((t *= 2) < 1) return 0.5 * Math.pow(t, pow);
+          return 1 - 0.5 * Math.abs(Math.pow(2 - t, pow));
         };
       }
       /**
@@ -22883,8 +22908,8 @@ var init_curve1d_anim = __esm({
           params: this.params
         });
       }
-      loadJSON(obj2) {
-        let params = obj2.params;
+      loadJSON(obj) {
+        let params = obj.params;
         for (let k in params) {
           this.params[k] = params[k];
         }
@@ -22946,8 +22971,8 @@ var init_curve1d_anim = __esm({
       }
       evaluate(t) {
         let s = this._evaluate(0);
-        let e2 = this._evaluate(1);
-        return (this._evaluate(t) - s) / (e2 - s) + this.params.offset;
+        let e = this._evaluate(1);
+        return (this._evaluate(t) - s) / (e - s) + this.params.offset;
       }
       static STRUCT;
     };
@@ -23322,7 +23347,7 @@ var init_controller_abstract = __esm({
       getToolDef(path) {
         throw new Error("implement me");
       }
-      getToolPathHotkey(ctx2, path) {
+      getToolPathHotkey(ctx, path) {
         return void 0;
       }
       createTool(ctxOrPath, pathOrInputs, inputsOrUnused, unused) {
@@ -23339,24 +23364,33 @@ var init_controller_abstract = __esm({
        *
        * @param compareInputs : check if toolstack head has identical input values, defaults to false
        * */
-      execOrRedo(ctx2, toolop, compareInputs = false) {
-        return ctx2.toolstack.execOrRedo(ctx2, toolop, compareInputs);
+      execOrRedo(ctx, toolop, compareInputs = false) {
+        return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
       }
-      execTool(ctx2, path, inputs, unused, event) {
+      execTool(ctx, path, inputs, unused, event) {
         return new Promise((accept, reject) => {
           let tool = path;
           try {
             if (typeof tool == "string" || !(tool instanceof ToolOp)) {
-              tool = this.createTool(ctx2, tool, inputs, unused);
+              tool = this.createTool(ctx, tool, inputs, unused);
             }
           } catch (error2) {
             print_stack2(error2);
             reject(error2);
             return;
           }
+          if (typeof path !== "string") {
+            for (const k in inputs) {
+              if (!(k in tool.inputs)) {
+                console.warn('Unknown tool property "' + k + '"', "in tool", tool);
+                continue;
+              }
+              tool.inputs[k].setValue(inputs[k]);
+            }
+          }
           accept(tool);
           try {
-            ctx2.toolstack.execTool(ctx2, tool, event);
+            ctx.toolstack.execTool(ctx, tool, event);
           } catch (error2) {
             print_stack2(error2);
             throw error2;
@@ -23376,11 +23410,11 @@ var init_controller_abstract = __esm({
         throw new Error("implement me");
       }
       //not yet supported by path.ux's controller implementation
-      massSetProp(ctx2, mass_set_path, value) {
+      massSetProp(ctx, mass_set_path, value) {
         throw new Error("implement me");
       }
       /** takes a mass_set_path and returns an array of individual paths */
-      resolveMassSetPaths(ctx2, mass_set_path) {
+      resolveMassSetPaths(ctx, mass_set_path) {
         throw new Error("implement me");
       }
       /**
@@ -23397,11 +23431,11 @@ var init_controller_abstract = __esm({
        *   mass_set : mass setter string, if controller implementation supports it
        * }
        */
-      resolvePath(ctx2, path, ignoreExistence, rootStruct) {
+      resolvePath(ctx, path, ignoreExistence, rootStruct) {
         return void 0;
       }
-      setValue(ctx2, path, val, rootStruct) {
-        const res = this.resolvePath(ctx2, path, void 0, rootStruct);
+      setValue(ctx, path, val, rootStruct) {
+        const res = this.resolvePath(ctx, path, void 0, rootStruct);
         const prop = res.prop;
         if (prop !== void 0 && prop.flag & PropFlags.READ_ONLY) {
           throw new DataPathError("Tried to set read only property");
@@ -23411,7 +23445,7 @@ var init_controller_abstract = __esm({
           try {
             const execCtx = __using(_stack, prop.execWithContext());
             execCtx.dataref = res.obj;
-            execCtx.ctx = ctx2;
+            execCtx.ctx = ctx;
             execCtx.datapath = path;
             if (res.subkey !== void 0) {
               let val2 = prop.getValue();
@@ -23494,7 +23528,7 @@ var init_controller_abstract = __esm({
             const execCtx = __using(_stack2, prop.execWithContext());
             execCtx.dataref = res.obj;
             execCtx.datapath = path;
-            execCtx.ctx = ctx2;
+            execCtx.ctx = ctx;
             prop._fire("change", res.obj[res.key], old);
           } catch (_2) {
             var _error2 = _2, _hasError2 = true;
@@ -23503,17 +23537,17 @@ var init_controller_abstract = __esm({
           }
         }
       }
-      getDescription(ctx2, path) {
-        const rdef2 = this.resolvePath(ctx2, path);
-        if (rdef2 === void 0) {
+      getDescription(ctx, path) {
+        const rdef = this.resolvePath(ctx, path);
+        if (rdef === void 0) {
           throw new DataPathError("invalid path " + path);
         }
-        if (!rdef2.prop || !(rdef2.prop instanceof ToolProperty)) {
+        if (!rdef.prop || !(rdef.prop instanceof ToolProperty)) {
           return "";
         }
-        const prop = rdef2.prop;
-        if (rdef2.subkey !== void 0) {
-          let subkey = rdef2.subkey;
+        const prop = rdef.prop;
+        if (rdef.subkey !== void 0) {
+          let subkey = rdef.subkey;
           if (prop.type !== void 0 && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
             if (typeof subkey === "string") {
               subkey = parseInt(subkey);
@@ -23530,7 +23564,7 @@ var init_controller_abstract = __esm({
               return prop.descriptions[subkey];
             }
           } else if (prop.type === PropTypes.PROPLIST) {
-            const val = rdef2.value;
+            const val = rdef.value;
             if (typeof val === "object" && val instanceof ToolProperty) {
               return val.description ?? "";
             }
@@ -23538,9 +23572,9 @@ var init_controller_abstract = __esm({
         }
         return prop.description ? prop.description : prop.uiname ?? "";
       }
-      validPath(ctx2, path, rootStruct) {
+      validPath(ctx, path, rootStruct) {
         try {
-          this.getValue(ctx2, path, rootStruct);
+          this.getValue(ctx, path, rootStruct);
           return true;
         } catch (error2) {
           if (!(error2 instanceof DataPathError)) {
@@ -23549,7 +23583,7 @@ var init_controller_abstract = __esm({
         }
         return false;
       }
-      getPropName(ctx2, path) {
+      getPropName(ctx, path) {
         let i = path.length - 1;
         while (i >= 0 && path[i] !== ".") {
           i--;
@@ -23561,15 +23595,15 @@ var init_controller_abstract = __esm({
             i--;
           }
           path = path.slice(0, i).trim();
-          return this.getPropName(ctx2, path);
+          return this.getPropName(ctx, path);
         }
         return path;
       }
-      getValue(ctx2, path, rootStruct) {
-        if (typeof ctx2 == "string") {
+      getValue(ctx, path, rootStruct) {
+        if (typeof ctx == "string") {
           throw new Error("You forgot to pass context to getValue");
         }
-        const ret = this.resolvePath(ctx2, path, void 0, rootStruct);
+        const ret = this.resolvePath(ctx, path, void 0, rootStruct);
         if (ret === void 0) {
           throw new DataPathError("invalid path " + path);
         }
@@ -23584,7 +23618,7 @@ var init_controller_abstract = __esm({
               const execCtx = __using(_stack, prop.execWithContext());
               execCtx.dataref = ret.obj;
               execCtx.datapath = path;
-              execCtx.ctx = ctx2;
+              execCtx.ctx = ctx;
               val = prop.getValue();
             } catch (_) {
               var _error = _, _hasError = true;
@@ -23801,28 +23835,28 @@ var init_controller = __esm({
       }
       arrayList(path, apiname, structdef, uiname, description) {
         const ret = this.list(path, apiname, {
-          getIter(api2, list6) {
-            return list6[Symbol.iterator]();
+          getIter(api, list5) {
+            return list5[Symbol.iterator]();
           },
-          getLength(api2, list6) {
-            return list6.length;
+          getLength(api, list5) {
+            return list5.length;
           },
-          get(api2, list6, key) {
-            return list6[key];
+          get(api, list5, key) {
+            return list5[key];
           },
-          set(api2, list6, key, val) {
+          set(api, list5, key, val) {
             if (typeof key === "string") {
               key = parseInt(key);
             }
-            if (key < 0 || key >= list6.length) {
+            if (key < 0 || key >= list5.length) {
               throw new DataPathError("Invalid index " + key);
             }
-            list6[key] = val;
+            list5[key] = val;
           },
-          getKey(api2, list6, value) {
-            return list6.indexOf(value);
+          getKey(api, list5, value) {
+            return list5.indexOf(value);
           },
-          getStruct(api2, list6, key) {
+          getStruct(api, list5, key) {
             return structdef;
           }
         });
@@ -23852,28 +23886,28 @@ var init_controller = __esm({
         const pstruct = new _DataStruct(void 0, "Vector");
         pstruct.vec3("", "co", "Coords", "Coordinates");
         const ret = this.list(path, apiname, {
-          getIter(api2, list6) {
-            return list6[Symbol.iterator]();
+          getIter(api, list5) {
+            return list5[Symbol.iterator]();
           },
-          getLength(api2, list6) {
-            return list6.length;
+          getLength(api, list5) {
+            return list5.length;
           },
-          get(api2, list6, key) {
-            return list6[key];
+          get(api, list5, key) {
+            return list5[key];
           },
-          set(api2, list6, key, val) {
+          set(api, list5, key, val) {
             if (typeof key == "string") {
               key = parseInt(key);
             }
-            if (key < 0 || key >= list6.length) {
+            if (key < 0 || key >= list5.length) {
               throw new DataPathError("Invalid index " + key);
             }
-            list6[key] = val;
+            list5[key] = val;
           },
-          getKey(api2, list6, value) {
-            return list6.indexOf(value);
+          getKey(api, list5, value) {
+            return list5.indexOf(value);
           },
-          getStruct(api2, list6, key) {
+          getStruct(api, list5, key) {
             return pstruct;
           }
         });
@@ -24103,9 +24137,9 @@ var init_controller = __esm({
       
       
         * */
-      massSetProp(ctx2, massSetPath2, value) {
-        for (const path of this.resolveMassSetPaths(ctx2, massSetPath2)) {
-          this.setValue(ctx2, path, value);
+      massSetProp(ctx, massSetPath, value) {
+        for (const path of this.resolveMassSetPaths(ctx, massSetPath)) {
+          this.setValue(ctx, path, value);
         }
       }
       resolveMassSetPaths(ctx, massSetPath) {
@@ -24129,7 +24163,7 @@ var init_controller = __esm({
           throw new DataPathError("massSetPath expected a path resolving to a DataList: " + massSetPath);
         }
         const paths = [];
-        const list = rdef.prop;
+        const list5 = rdef.prop;
         const api = ctx.api;
         function applyFilter(obj) {
           const forceEval = rdef.dpath.flag & DataFlags.USE_EVAL_MASS_SET_PATHS;
@@ -24154,15 +24188,20 @@ var init_controller = __esm({
               return false;
             }
           } else {
-            const $ = obj;
-            return eval(filter);
+            const code2 = `
+        function filter($) {
+          return ${filter};
+        }
+        `;
+            const func2 = (0, eval)(code2);
+            return func2(obj);
           }
         }
-        for (const obj2 of list.getIter(this, rdef.value)) {
-          if (!applyFilter(obj2)) {
+        for (const obj of list5.getIter(this, rdef.value)) {
+          if (!applyFilter(obj)) {
             continue;
           }
-          const key = "" + list.getKey(this, rdef.value, obj2);
+          const key = "" + list5.getKey(this, rdef.value, obj);
           const path = `${prefix}[${key}]${suffix}`;
           try {
             this.getValue(ctx, path);
@@ -24177,14 +24216,14 @@ var init_controller = __esm({
         }
         return paths;
       }
-      resolvePath(ctx2, inpath, ignoreExistence = false, dstruct) {
+      resolvePath(ctx, inpath, ignoreExistence = false, dstruct) {
         const parser3 = parserStack[parserStackCur++];
         let ret = void 0;
         if (inpath[0] === "/") {
           inpath = inpath.slice(1, inpath.length).trim();
         }
         try {
-          ret = this.resolvePath_intern(ctx2, inpath, ignoreExistence, parser3, dstruct);
+          ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser3, dstruct);
         } catch (error2) {
           if (!(error2 instanceof DataPathError)) {
             print_stack2(error2);
@@ -24197,11 +24236,11 @@ var init_controller = __esm({
         }
         parserStackCur--;
         if (ret?.prop && ret.dpath && ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
-          ret.prop = this.getPropOverride(ctx2, inpath, ret.dpath, ret.obj);
+          ret.prop = this.getPropOverride(ctx, inpath, ret.dpath, ret.obj);
         }
         if (ret?.prop && ret.dpath?.ui_name_get) {
           const dummy = {
-            datactx: ctx2,
+            datactx: ctx,
             datapath: inpath,
             dataref: ret.obj
           };
@@ -24210,13 +24249,13 @@ var init_controller = __esm({
         }
         return ret;
       }
-      getPropOverride(ctx2, path, dpath, obj2, prop = dpath.data) {
+      getPropOverride(ctx, path, dpath, obj, prop = dpath.data) {
         var _stack = [];
         try {
           const execCtx = __using(_stack, prop.execWithContext());
-          execCtx.ctx = ctx2;
+          execCtx.ctx = ctx;
           execCtx.datapath = path;
-          execCtx.dataref = obj2;
+          execCtx.dataref = obj;
           const newprop = getTempProp(prop.type);
           prop.copyTo(newprop);
           dpath.propGetter.call(prop, newprop);
@@ -24233,12 +24272,12 @@ var init_controller = __esm({
          @param ignoreExistence: don't try to get actual data associated with path,
           just want meta information
          */
-      resolvePath_intern(ctx2, inpath, ignoreExistence = false, p = pathParser, dstruct) {
+      resolvePath_intern(ctx, inpath, ignoreExistence = false, p = pathParser, dstruct) {
         inpath = inpath.replace("==", "=");
         p.input(inpath);
         dstruct = dstruct || this.rootContextStruct;
-        let obj2 = ctx2;
-        let lastobj = ctx2;
+        let obj = ctx;
+        let lastobj = ctx;
         let subkey;
         let lastobj2;
         let lastkey;
@@ -24260,7 +24299,7 @@ var init_controller = __esm({
           lastdpath = dpath;
           if (dpath === void 0) {
             if (key === "length" && prop !== void 0 && prop instanceof DataList) {
-              prop.getLength(this, obj2);
+              prop.getLength(this, obj);
               key = "length";
               prop = DummyIntProperty;
               prop.name = "length";
@@ -24272,19 +24311,19 @@ var init_controller = __esm({
               dpath.flag = DataFlags.READ_ONLY;
               dpath.path = "length";
             } else if (key === "active" && prop !== void 0 && prop instanceof DataList) {
-              const act = prop.getActive(this, obj2);
+              const act = prop.getActive(this, obj);
               if (act === void 0 && !ignoreExistence) {
                 throw new DataPathError("no active elem ent for list");
               }
-              const actkey = obj2 !== void 0 && act !== void 0 ? prop.getKey(this, obj2, act) : void 0;
-              dstruct = prop.getStruct(this, obj2, actkey);
+              const actkey = obj !== void 0 && act !== void 0 ? prop.getKey(this, obj, act) : void 0;
+              dstruct = prop.getStruct(this, obj, actkey);
               if (dstruct === void 0) {
                 throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
               }
               _dummypath.parent = dpath;
               dpath = _dummypath;
-              lastobj = obj2;
-              obj2 = act;
+              lastobj = obj;
+              obj = act;
               dpath.type = DataTypes.STRUCT;
               dpath.data = dstruct;
               dpath.path = key;
@@ -24299,24 +24338,24 @@ var init_controller = __esm({
             dstruct = dpath.data;
           } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
             let ok = false;
-            if (obj2 !== void 0) {
-              let obj22;
+            if (obj !== void 0) {
+              let obj2;
               if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
                 const fakeprop = dpath.getSet;
-                fakeprop.ctx = ctx2;
-                fakeprop.dataref = obj2;
+                fakeprop.ctx = ctx;
+                fakeprop.dataref = obj;
                 fakeprop.datapath = inpath;
-                obj22 = fakeprop.get();
+                obj2 = fakeprop.get();
                 fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
               } else {
-                obj22 = obj2[dpath.path];
+                obj2 = obj[dpath.path];
               }
-              dynstructobj = obj22;
-              if (obj22 !== void 0) {
-                if (CLS_API_KEY_CUSTOM in obj22.constructor) {
-                  dstruct = obj22.constructor[CLS_API_KEY_CUSTOM](obj22);
+              dynstructobj = obj2;
+              if (obj2 !== void 0) {
+                if (CLS_API_KEY_CUSTOM in obj2.constructor) {
+                  dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2);
                 } else {
-                  dstruct = this.mapStruct(obj22.constructor, false);
+                  dstruct = this.mapStruct(obj2.constructor, false);
                 }
               } else {
                 dstruct = dpath.data;
@@ -24333,23 +24372,23 @@ var init_controller = __esm({
             prop = dpath.data;
           }
           if (prop && dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
-            prop = this.getPropOverride(ctx2, inpath, dpath, obj2);
+            prop = this.getPropOverride(ctx, inpath, dpath, obj);
           }
           if (dpath.path.search(/\./) >= 0) {
             const keys2 = dpath.path.split(/\./);
             for (const key2 of keys2) {
               lastobj2 = lastobj;
-              lastobj = obj2;
+              lastobj = obj;
               lastkey = key2;
-              if (obj2 === void 0 && !ignoreExistence) {
+              if (obj === void 0 && !ignoreExistence) {
                 throw new DataPathError("no data for " + inpath);
-              } else if (obj2 !== void 0) {
-                obj2 = obj2[key2.trim()];
+              } else if (obj !== void 0) {
+                obj = obj[key2.trim()];
               }
             }
           } else {
             lastobj2 = lastobj;
-            lastobj = obj2;
+            lastobj = obj;
             lastkey = dpath.path;
             if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
               const fakeprop = dpath.getSet;
@@ -24357,18 +24396,18 @@ var init_controller = __esm({
                 var _stack = [];
                 try {
                   const prop2 = dpath.data;
-                  const execCtx = __using(_stack, prop2.execWithContext(ctx2));
-                  execCtx.ctx = ctx2;
-                  execCtx.dataref = obj2;
+                  const execCtx = __using(_stack, prop2.execWithContext(ctx));
+                  execCtx.ctx = ctx;
+                  execCtx.dataref = obj;
                   execCtx.datapath = inpath;
                   try {
-                    obj2 = prop2.getValue();
+                    obj = prop2.getValue();
                   } catch (error2) {
                     print_stack2(error2);
-                    obj2 = void 0;
+                    obj = void 0;
                   }
-                  if (typeof obj2 === "string" && prop2.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-                    obj2 = prop2.values[obj2];
+                  if (typeof obj === "string" && prop2.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+                    obj = prop2.values[obj];
                   }
                 } catch (_) {
                   var _error = _, _hasError = true;
@@ -24376,18 +24415,18 @@ var init_controller = __esm({
                   __callDispose(_stack, _error, _hasError);
                 }
               } else {
-                fakeprop.ctx = ctx2;
-                fakeprop.dataref = obj2;
+                fakeprop.ctx = ctx;
+                fakeprop.dataref = obj;
                 fakeprop.datapath = inpath;
-                obj2 = fakeprop.get();
+                obj = fakeprop.get();
                 fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
               }
-            } else if (obj2 === void 0 && !ignoreExistence) {
+            } else if (obj === void 0 && !ignoreExistence) {
               throw new DataPathError("no data for " + inpath);
             } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
-              obj2 = dynstructobj;
-            } else if (obj2 !== void 0 && dpath.path !== "") {
-              obj2 = obj2[dpath.path];
+              obj = dynstructobj;
+            } else if (obj !== void 0 && dpath.path !== "") {
+              obj = obj[dpath.path];
             }
           }
           const t = p.peeknext();
@@ -24412,7 +24451,7 @@ var init_controller = __esm({
               subkey = prop.keys[val];
             }
             key = dpath.path;
-            obj2 = !!(lastobj[key] == val);
+            obj = !!(lastobj[key] == val);
           } else if (t.type === "AND" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             p.expect("AND");
             const t2 = p.peeknext();
@@ -24429,7 +24468,7 @@ var init_controller = __esm({
               subkey = prop.keys[val];
             }
             key = dpath.path;
-            obj2 = !!(lastobj[key] & val);
+            obj = !!(lastobj[key] & val);
           } else if (t.type === "LSBRACKET" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             p.expect("LSBRACKET");
             const t2 = p.peeknext();
@@ -24457,7 +24496,7 @@ var init_controller = __esm({
                 const execCtx = __using(_stack2, enumProp.execWithContext());
                 execCtx.dataref = lastobj;
                 execCtx.datapath = inpath;
-                execCtx.ctx = ctx2;
+                execCtx.ctx = ctx;
                 try {
                   bitfield = enumProp.getValue();
                 } catch (error2) {
@@ -24474,9 +24513,9 @@ var init_controller = __esm({
               throw new DataPathError("no data for path " + inpath);
             } else if (lastobj !== void 0) {
               if (enumProp.type === PropTypes.ENUM) {
-                obj2 = !!(bitfield === val);
+                obj = !!(bitfield === val);
               } else {
-                obj2 = !!(bitfield & val);
+                obj = !!(bitfield & val);
               }
             }
             p.expect("RSBRACKET");
@@ -24486,9 +24525,9 @@ var init_controller = __esm({
             p.expect("RSBRACKET");
             subkey = num2;
             if (prop !== void 0 && !(prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
-              lastobj = obj2;
+              lastobj = obj;
             }
-            obj2 = obj2[num2];
+            obj = obj[num2];
           } else if (t.type === "LSBRACKET") {
             p.expect("LSBRACKET");
             if (lastobj && lastkey && typeof lastkey === "string" && lastkey.length > 0) {
@@ -24499,7 +24538,7 @@ var init_controller = __esm({
             if (!(prop instanceof DataList)) {
               throw new DataPathError("bad property, not a list");
             }
-            obj2 = prop.get(this, lastobj, lastkey);
+            obj = prop.get(this, lastobj, lastkey);
             dstruct = prop.getStruct(this, lastobj, lastkey);
             if (!dstruct) {
               throw new DataPathError(inpath + ": list has no entry " + lastkey);
@@ -24520,7 +24559,7 @@ var init_controller = __esm({
           dpath: lastdpath,
           parent: lastobj2,
           obj: lastobj,
-          value: obj2,
+          value: obj,
           key: lastkey,
           dstruct,
           prop,
@@ -24570,21 +24609,21 @@ var init_controller = __esm({
         }
         return def;
       }
-      getToolPathHotkey(ctx2, toolpath) {
+      getToolPathHotkey(ctx, toolpath) {
         const { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
         if (hotkey) {
           return hotkey;
         }
         try {
-          return this.#getToolPathHotkey_intern(ctx2, path);
+          return this.#getToolPathHotkey_intern(ctx, path);
         } catch (error2) {
           print_stack2(error2);
           console2.context("api").log("failed to fetch tool path: " + path);
           return void 0;
         }
       }
-      #getToolPathHotkey_intern(ctx2, path) {
-        const screen = ctx2.screen;
+      #getToolPathHotkey_intern(ctx, path) {
+        const screen = ctx.screen;
         const this2 = this;
         function searchKeymap(keymap4) {
           if (keymap4 === void 0) {
@@ -24644,7 +24683,7 @@ var init_controller = __esm({
       parseToolArgs(path) {
         return parseToolPath(path).args;
       }
-      createTool(ctx2, path, inputs = {}) {
+      createTool(ctx, path, inputs = {}) {
         let cls;
         let args;
         if (typeof path == "string") {
@@ -24672,7 +24711,7 @@ var init_controller = __esm({
             }
           }
         }
-        const tool = cls.invoke(ctx2, args);
+        const tool = cls.invoke(ctx, args);
         if (inputs !== void 0) {
           for (const k in inputs) {
             if (!(k in tool.inputs)) {
@@ -25194,9 +25233,9 @@ function setColorSchemeType(mode) {
 }
 function exportTheme(themeIn = theme, addVarDecl = true) {
   const theme1 = themeIn;
-  const sortkeys = (obj2) => {
+  const sortkeys = (obj) => {
     const keys2 = [];
-    for (const k in obj2) {
+    for (const k in obj) {
       keys2.push(k);
     }
     keys2.sort();
@@ -25937,12 +25976,12 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
   let object = objectIn;
   let cls = object.constructor;
   if (!cls[AspectKeys]) {
-    let validProperty2 = function(obj2, key) {
-      let descr = Object.getOwnPropertyDescriptor(obj2, key);
+    let validProperty2 = function(obj, key) {
+      let descr = Object.getOwnPropertyDescriptor(obj, key);
       if (descr && (descr.get || descr.set)) {
         return false;
       }
-      let p2 = obj2.constructor;
+      let p2 = obj.constructor;
       do {
         if (p2.prototype) {
           let descr2 = Object.getOwnPropertyDescriptor(p2.prototype, key);
@@ -25993,9 +26032,9 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
     AfterAspect.bind(object, k);
   }
 }
-function clearAspectCallbacks(obj2) {
-  for (let key of obj2.__aspect_methods) {
-    obj2[key].clear();
+function clearAspectCallbacks(obj) {
+  for (let key of obj.__aspect_methods) {
+    obj[key].clear();
   }
 }
 var exclude, UIBase, AspectKeys, AfterAspect;
@@ -26577,8 +26616,8 @@ var init_eventdag = __esm({
           console.warn("Attempt to set unbound property socket", this);
         }
       }
-      bind(obj2, key) {
-        this.#binding.obj = obj2;
+      bind(obj, key) {
+        this.#binding.obj = obj;
         this.#binding.key = key;
         return this;
       }
@@ -26622,11 +26661,11 @@ function _setTextboxClass(cls) {
 function calcElemCBKey(elem2, type, options) {
   return elem2._id + ":" + type + ":" + JSON.stringify(options || {});
 }
-function setTagPrefix(prefix2) {
+function setTagPrefix(prefix) {
   if (registered_has_happened) {
     throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
   }
-  tagPrefix = "" + prefix2;
+  tagPrefix = "" + prefix;
 }
 function getTagPrefix() {
   return tagPrefix;
@@ -26746,12 +26785,12 @@ ${selector}::-webkit-scrollbar-thumb {
 function calcThemeKey(digest = _digest2.reset()) {
   const anyTheme = theme;
   for (const k in anyTheme) {
-    const obj2 = anyTheme[k];
-    if (typeof obj2 !== "object") {
+    const obj = anyTheme[k];
+    if (typeof obj !== "object") {
       continue;
     }
-    for (const k2 in obj2) {
-      const v2 = obj2[k2];
+    for (const k2 in obj) {
+      const v2 = obj[k2];
       if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
         digest.add(v2);
       } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
@@ -26997,15 +27036,15 @@ function saveUIData(node, key) {
   if (key === void 0) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
-  const paths2 = [];
+  const paths = [];
   const rec = (n, path, ni, is_shadow) => {
     path = path.slice(0, path.length);
-    const pi2 = path.length;
+    const pi = path.length;
     for (let i = 0; i < PTOT; i++) {
       path.push(void 0);
     }
-    path[pi2] = ni;
-    path[pi2 + 1] = is_shadow ? 1 : 0;
+    path[pi] = ni;
+    path[pi + 1] = is_shadow ? 1 : 0;
     if (n instanceof UIBase2) {
       const path2 = path.slice(0, path.length);
       const data = n.saveData();
@@ -27013,8 +27052,8 @@ function saveUIData(node, key) {
       bad = bad || typeof data === "object" && Object.keys(data).length === 0;
       if (!bad) {
         path2.push(data);
-        if (path2[pi2 + 2]) {
-          paths2.push(path2);
+        if (path2[pi + 2]) {
+          paths.push(path2);
         }
       }
     }
@@ -27032,7 +27071,7 @@ function saveUIData(node, key) {
   rec(node, [], 0, false);
   return JSON.stringify({
     key,
-    paths: paths2,
+    paths,
     _ui_version: 1
   });
 }
@@ -27040,31 +27079,31 @@ function loadUIData(node, buf2) {
   if (buf2 === void 0 || buf2 === null) {
     return;
   }
-  const obj2 = JSON.parse(buf2);
-  for (let path of obj2.paths) {
+  const obj = JSON.parse(buf2);
+  for (let path of obj.paths) {
     let n = node;
     if (n === void 0) {
       break;
     }
     const data = path[path.length - 1];
     path = path.slice(2, path.length - 1);
-    for (let pi2 = 0; pi2 < path.length; pi2 += PTOT) {
-      const ni = path[pi2];
-      const shadow = path[pi2 + 1];
-      let list6;
+    for (let pi = 0; pi < path.length; pi += PTOT) {
+      const ni = path[pi];
+      const shadow = path[pi + 1];
+      let list5;
       if (shadow) {
-        list6 = n.shadow;
-        if (list6) {
-          list6 = list6.childNodes;
+        list5 = n.shadow;
+        if (list5) {
+          list5 = list5.childNodes;
         }
       } else {
-        list6 = n.childNodes;
+        list5 = n.childNodes;
       }
-      if (list6?.[ni] === void 0) {
+      if (list5?.[ni] === void 0) {
         n = void 0;
         break;
       }
-      n = list6[ni];
+      n = list5[ni];
     }
     if (n !== void 0 && n instanceof UIBase2) {
       n._init();
@@ -27189,9 +27228,9 @@ var init_ui_base = __esm({
           return this.promise;
         }
         const onload = this.image.onload;
-        this.image.onload = (e2) => {
+        this.image.onload = (e) => {
           if (onload) {
-            onload.call(this.image, e2);
+            onload.call(this.image, e);
           }
           if (!this._accept) {
             return;
@@ -27875,57 +27914,57 @@ var init_ui_base = __esm({
     `;
         this.shadow.appendChild(style);
         this._init_done = false;
-        const do_touch = (e2, type, button) => {
+        const do_touch = (e, type, button) => {
           if (haveModal()) {
             return;
           }
           button = button === void 0 ? 0 : button;
-          const e22 = copyEvent(e2);
-          if (e2.touches.length === 0) {
+          const e2 = copyEvent(e);
+          if (e.touches.length === 0) {
           } else {
-            const t = e2.touches[0];
-            e22.pageX = t.pageX;
-            e22.pageY = t.pageY;
-            e22.screenX = t.screenX;
-            e22.screenY = t.screenY;
-            e22.clientX = t.clientX;
-            e22.clientY = t.clientY;
-            e22.x = t.clientX;
-            e22.y = t.clientY;
+            const t = e.touches[0];
+            e2.pageX = t.pageX;
+            e2.pageY = t.pageY;
+            e2.screenX = t.screenX;
+            e2.screenY = t.screenY;
+            e2.clientX = t.clientX;
+            e2.clientY = t.clientY;
+            e2.x = t.clientX;
+            e2.y = t.clientY;
           }
-          e22.button = button;
-          const e3 = new MouseEvent(type, e22);
+          e2.button = button;
+          const e3 = new MouseEvent(type, e2);
           e3.was_touch = true;
-          e3.stopPropagation = e2.stopPropagation.bind(e2);
-          e3.preventDefault = e2.preventDefault.bind(e2);
-          e3.touches = e2.touches;
+          e3.stopPropagation = e.stopPropagation.bind(e);
+          e3.preventDefault = e.preventDefault.bind(e);
+          e3.touches = e.touches;
           this.dispatchEvent(e3);
         };
         this.addEventListener(
           "touchstart",
-          (e2) => {
-            do_touch(e2, "mousedown", 0);
+          (e) => {
+            do_touch(e, "mousedown", 0);
           },
           { passive: false }
         );
         this.addEventListener(
           "touchmove",
-          (e2) => {
-            do_touch(e2, "mousemove");
+          (e) => {
+            do_touch(e, "mousemove");
           },
           { passive: false }
         );
         this.addEventListener(
           "touchcancel",
-          (e2) => {
-            do_touch(e2, "mouseup", 2);
+          (e) => {
+            do_touch(e, "mouseup", 2);
           },
           { passive: false }
         );
         this.addEventListener(
           "touchend",
-          (e2) => {
-            do_touch(e2, "mouseup", 0);
+          (e) => {
+            do_touch(e, "mouseup", 0);
           },
           { passive: false }
         );
@@ -28208,7 +28247,7 @@ var init_ui_base = __esm({
         if (const_default.DEBUG.domEventAddRemove) {
           console.log("addEventListener", type, this._id, options);
         }
-        const cb2 = (e2) => {
+        const cb2 = (e) => {
           if (const_default.DEBUG.paranoidEvents) {
             if (this.isDead()) {
               this.removeEventListener(type, cb, options);
@@ -28216,13 +28255,13 @@ var init_ui_base = __esm({
             }
           }
           if (const_default.DEBUG.domEvents) {
-            pathDebugEvent(e2);
+            pathDebugEvent(e);
           }
           const area = this.findArea();
           if (area) {
             area.push_ctx_active();
             try {
-              const ret = cb.call(this, e2);
+              const ret = cb.call(this, e);
               area.pop_ctx_active();
               return ret;
             } catch (error2) {
@@ -28233,7 +28272,7 @@ var init_ui_base = __esm({
             if (const_default.DEBUG.areaContextPushes) {
               console.warn("Element is not part of an area?", this);
             }
-            return cb.call(this, e2);
+            return cb.call(this, e);
           }
         };
         const cbAny = cb;
@@ -28308,15 +28347,15 @@ var init_ui_base = __esm({
       }
       getTotalRect() {
         let found = false;
-        const min2 = new Vector23([1e17, 1e17]);
-        const max2 = new Vector23([-1e17, -1e17]);
+        const min = new Vector23([1e17, 1e17]);
+        const max = new Vector23([-1e17, -1e17]);
         const doaabb = (n) => {
           const rs = n.getClientRects();
           for (const r of rs) {
-            min2[0] = Math.min(min2[0], r.x);
-            min2[1] = Math.min(min2[1], r.y);
-            max2[0] = Math.max(max2[0], r.x + r.width);
-            max2[1] = Math.max(max2[1], r.y + r.height);
+            min[0] = Math.min(min[0], r.x);
+            min[1] = Math.min(min[1], r.y);
+            max[0] = Math.max(max[0], r.x + r.width);
+            max[1] = Math.max(max[1], r.y + r.height);
             found = true;
           }
         };
@@ -28326,14 +28365,14 @@ var init_ui_base = __esm({
         });
         if (found) {
           return {
-            width: max2[0] - min2[0],
-            height: max2[1] - min2[1],
-            x: min2[0],
-            y: min2[1],
-            left: min2[0],
-            top: min2[1],
-            right: max2[0],
-            bottom: max2[1]
+            width: max[0] - min[0],
+            height: max[1] - min[1],
+            x: min[0],
+            y: min[1],
+            left: min[0],
+            top: min[1],
+            right: max[0],
+            bottom: max[1]
           };
         } else {
           return void 0;
@@ -28600,16 +28639,16 @@ var init_ui_base = __esm({
           this._clipboard_events = false;
           window.removeEventListener("keydown", this._clipboard_keydown, { capture: true });
         };
-        this._clipboard_keydown = (e2, internal_mode) => {
+        this._clipboard_keydown = (e, internal_mode) => {
           if (!this.isConnected || !const_default.getClipboardData) {
             this._clipboard_keyend();
             return;
           }
-          if (e2 === this._last_clipboard_keyevt || !this._clipboard_over) {
+          if (e === this._last_clipboard_keyevt || !this._clipboard_over) {
             return;
           }
-          const is_copy = e2.keyCode === keymap["C"] && (e2.ctrlKey || e2.metaKey) && !e2.shiftKey && !e2.altKey;
-          const is_paste = e2.keyCode === keymap["V"] && (e2.ctrlKey || e2.metaKey) && !e2.shiftKey && !e2.altKey;
+          const is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+          const is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
           if (!is_copy && !is_paste) {
             return;
           }
@@ -28630,33 +28669,33 @@ var init_ui_base = __esm({
           } else {
             console.warn("COLOR", this._id);
           }
-          this._last_clipboard_keyevt = e2;
+          this._last_clipboard_keyevt = e;
           if (is_copy) {
             this.clipboardCopy();
-            e2.preventDefault();
-            e2.stopPropagation();
+            e.preventDefault();
+            e.stopPropagation();
           }
           if (is_paste) {
             this.clipboardPaste();
-            e2.preventDefault();
-            e2.stopPropagation();
+            e.preventDefault();
+            e.stopPropagation();
           }
         };
-        const start2 = (e2) => {
+        const start = (e) => {
           this._clipboard_over = true;
           this._clipboard_keystart();
         };
-        const stop = (e2) => {
+        const stop = (e) => {
           this._clipboard_over = false;
           this._clipboard_keyend();
         };
         this.doOnce(() => {
           this.tabIndex = 0;
         });
-        this.addEventListener("keydown", ((e2) => {
-          return this._clipboard_keydown(e2, true);
+        this.addEventListener("keydown", ((e) => {
+          return this._clipboard_keydown(e, true);
         }));
-        this.addEventListener("pointerover", start2, { capture: true, passive: true });
+        this.addEventListener("pointerover", start, { capture: true, passive: true });
         this.addEventListener("pointerout", stop, { capture: true, passive: true });
         this.addEventListener("focus", stop, { capture: true, passive: true });
       }
@@ -28979,16 +29018,16 @@ var init_ui_base = __esm({
         }
         let timer;
         let tick = 0;
-        const max2 = ~~(timems / 20);
+        const max = ~~(timems / 20);
         const x = rect.x;
         const y = rect.y;
         const cb = () => {
           if (timer === void 0) {
             return;
           }
-          const a2 = 1 - tick / max2;
+          const a2 = 1 - tick / max;
           div.style["backgroundColor"] = color2css3(color, a2 * a2 * 0.5);
-          if (tick > max2) {
+          if (tick > max) {
             window.clearInterval(timer);
             this._flashtimer = void 0;
             this._flashcolor = void 0;
@@ -29040,14 +29079,14 @@ var init_ui_base = __esm({
         }
         return ret;
       }
-      loadJSON(obj2) {
+      loadJSON(obj) {
         if (!this._init_done) {
           this._init();
         }
       }
-      getPathValue(ctx2, path) {
+      getPathValue(ctx, path) {
         try {
-          return ctx2.api.getValue(ctx2, path);
+          return ctx.api.getValue(ctx, path);
         } catch (error2) {
           return void 0;
         }
@@ -29055,29 +29094,29 @@ var init_ui_base = __esm({
       undoBreakPoint() {
         this.pathUndoGen++;
       }
-      setPathValueUndo(ctx2, path, val) {
-        this.pathSocketUpdate(ctx2, path);
+      setPathValueUndo(ctx, path, val) {
+        this.pathSocketUpdate(ctx, path);
         const mass_set_path = this.getAttribute("mass_set_path");
-        const rdef2 = ctx2.api.resolvePath(ctx2, path);
-        const prop = rdef2.prop;
-        if (ctx2.api.getValue(ctx2, path) === val) {
+        const rdef = ctx.api.resolvePath(ctx, path);
+        const prop = rdef.prop;
+        if (ctx.api.getValue(ctx, path) === val) {
           return;
         }
         const toolstack = this.ctx.toolstack;
         let head = toolstack.head;
         const bad = head === void 0 || !(head instanceof getDataPathToolOp()) || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id) || this.pathUndoGen !== this._lastPathUndoGen;
         if (!bad) {
-          toolstack.undo(ctx2);
+          toolstack.undo(ctx);
           const tool = head;
-          tool.setValue(ctx2, val, rdef2.obj);
-          toolstack.redo(ctx2);
+          tool.setValue(ctx, val, rdef.obj);
+          toolstack.redo(ctx);
         } else {
           this._lastPathUndoGen = this.pathUndoGen;
-          const toolop = getDataPathToolOp().create(ctx2, path, val, this._id, mass_set_path ?? void 0);
+          const toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path ?? void 0);
           if (!toolop) {
             return;
           }
-          ctx2.toolstack.execTool(this.ctx, toolop);
+          ctx.toolstack.execTool(this.ctx, toolop);
           head = toolstack.head;
         }
         if (!head || head.hadError) {
@@ -29174,25 +29213,25 @@ var init_ui_base = __esm({
           also, method won't be ran until this.ctx exists
         */
       pushReportContext(key) {
-        const api2 = this.ctx.api;
-        if (api2.pushReportContext) {
-          api2.pushReportContext(key);
+        const api = this.ctx.api;
+        if (api.pushReportContext) {
+          api.pushReportContext(key);
         }
       }
       popReportContext() {
-        const api2 = this.ctx.api;
-        if (api2.popReportContext) api2.popReportContext();
+        const api = this.ctx.api;
+        if (api.popReportContext) api.popReportContext();
       }
-      pathSocketUpdate(ctx2, path) {
+      pathSocketUpdate(ctx, path) {
         this.flagPropSocketUpdate("value");
         return this;
       }
-      setPathValue(ctx2, path, val) {
-        this.pathSocketUpdate(ctx2, path);
+      setPathValue(ctx, path, val) {
+        this.pathSocketUpdate(ctx, path);
         if (this.useDataPathUndo) {
           this.pushReportContext(this._reportCtxName);
           try {
-            this.setPathValueUndo(ctx2, path, val);
+            this.setPathValueUndo(ctx, path, val);
           } catch (error2) {
             this.popReportContext();
             if (!(error2 instanceof DataPathError)) {
@@ -29207,10 +29246,10 @@ var init_ui_base = __esm({
         this.pushReportContext(this._reportCtxName);
         try {
           if (this.hasAttribute("mass_set_path")) {
-            ctx2.api.massSetProp(ctx2, this.getAttribute("mass_set_path"), val);
-            ctx2.api.setValue(ctx2, path, val);
+            ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
+            ctx.api.setValue(ctx, path, val);
           } else {
-            ctx2.api.setValue(ctx2, path, val);
+            ctx.api.setValue(ctx, path, val);
           }
         } catch (error2) {
           this.popReportContext();
@@ -29221,17 +29260,17 @@ var init_ui_base = __esm({
         }
         this.popReportContext();
       }
-      getPathMeta(ctx2, path) {
+      getPathMeta(ctx, path) {
         this.pushReportContext(this._reportCtxName);
-        const ret = ctx2.api.resolvePath(ctx2, path);
+        const ret = ctx.api.resolvePath(ctx, path);
         this.popReportContext();
         return ret !== void 0 ? ret.prop : void 0;
       }
-      getPathDescription(ctx2, path) {
+      getPathDescription(ctx, path) {
         let ret;
         this.pushReportContext(this._reportCtxName);
         try {
-          ret = ctx2.api.getDescription(ctx2, path);
+          ret = ctx.api.getDescription(ctx, path);
         } catch (error2) {
           this.popReportContext();
           if (error2 instanceof DataPathError) {
@@ -29291,16 +29330,16 @@ var init_ui_base = __esm({
         }
         return this;
       }
-      _ensureChildrenCtx(ctx2 = this.ctx) {
-        if (ctx2 === void 0) {
+      _ensureChildrenCtx(ctx = this.ctx) {
+        if (ctx === void 0) {
           return;
         }
         this._forEachChildWidget((n) => {
           n.parentWidget = this;
           if (n.ctx === void 0) {
-            n.ctx = ctx2;
+            n.ctx = ctx;
           }
-          n._ensureChildrenCtx(ctx2);
+          n._ensureChildrenCtx(ctx);
         });
       }
       checkThemeUpdate() {
@@ -29333,13 +29372,13 @@ var init_ui_base = __esm({
         }
         if (!this.useNativeToolTips) {
           const state = this._has_own_tooltips = {
-            start_timer: (e2) => {
+            start_timer: (e) => {
               this._tooltip_timer = time_ms();
             },
-            stop_timer: (e2) => {
+            stop_timer: (e) => {
               this._tooltip_timer = void 0;
             },
-            reset_timer: (e2) => {
+            reset_timer: (e) => {
               if (this._tooltip_timer !== void 0) {
                 this._tooltip_timer = time_ms();
               }
@@ -29350,12 +29389,12 @@ var init_ui_base = __esm({
             handlers: {}
           };
           const bind_handler = (type, etype) => {
-            const handler = (e2) => {
+            const handler = (e) => {
               if (this._tool_tip_abort_delay !== void 0 && time_ms() < this._tool_tip_abort_delay) {
                 this._tooltip_timer = void 0;
                 return;
               }
-              state[type](e2);
+              state[type](e);
             };
             if (etype in state.handlers) {
               console.error(type, "is in handlers already");
@@ -29506,7 +29545,7 @@ var init_ui_base = __esm({
        * it patches it; for true serialization use
        * the toJSON/loadJSON or STRUCT interfaces.
        */
-      loadData(obj2) {
+      loadData(obj) {
         return this;
       }
       clearOverride(key, localOnly = false) {
@@ -29530,13 +29569,13 @@ var init_ui_base = __esm({
         }
         this.class_default_overrides[style][key] = val;
       }
-      _doMobileDefault(key, val, obj2) {
+      _doMobileDefault(key, val, obj) {
         if (!isMobile()) {
           return val;
         }
         const mobilekey = key + "_mobile";
-        if (obj2 && mobilekey in obj2) {
-          return obj2[mobilekey];
+        if (obj && mobilekey in obj) {
+          return obj[mobilekey];
         }
         key = key.toLowerCase();
         let ok = false;
@@ -29565,11 +29604,11 @@ var init_ui_base = __esm({
         return this._hasSubDefault(key, subkey, theme) || !!(this._themeOverride && this._hasSubDefault(key, subkey, this._themeOverride));
       }
       _hasSubDefault(key, subkey, _themeDef) {
-        const obj2 = this.getDefault(key);
-        if (!obj2 || typeof obj2 !== "object") {
+        const obj = this.getDefault(key);
+        if (!obj || typeof obj !== "object") {
           return false;
         }
-        return subkey in obj2;
+        return subkey in obj;
       }
       hasClassSubDefault(key, subkey, inherit3 = true) {
         return this._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(this._themeOverride && this._hasClassSubDefault(key, subkey, inherit3, void 0, this._themeOverride));
@@ -29592,11 +29631,11 @@ var init_ui_base = __esm({
         if (!th) {
           return false;
         }
-        const obj2 = th[key];
-        if (!obj2 || typeof obj2 !== "object") {
+        const obj = th[key];
+        if (!obj || typeof obj !== "object") {
           return false;
         }
-        return subkey in obj2;
+        return subkey in obj;
       }
       /** get a sub style from a theme style class.
        *  note that if key is falsy then it just forwards to this.getDefault directly*/
@@ -29671,17 +29710,17 @@ var init_ui_base = __esm({
           return void 0;
         }
         const chunk1 = chunks[0];
-        function testKey(obj2) {
-          if (key === void 0 || obj2 === void 0) {
+        function testKey(obj) {
+          if (key === void 0 || obj === void 0) {
             return true;
           }
           for (let i = 1; i < chunks.length; i++) {
-            obj2 = obj2[chunks[i]];
-            if (typeof obj2 !== "object") {
+            obj = obj[chunks[i]];
+            if (typeof obj !== "object") {
               return false;
             }
           }
-          return key in obj2;
+          return key in obj;
         }
         let p = this;
         while (p) {
@@ -29907,7 +29946,7 @@ var init_ui_base = __esm({
         return anim;
       }
       abortAnimations() {
-        for (const anim of list3(this._active_animations)) {
+        for (const anim of list2(this._active_animations)) {
           anim.end();
         }
         this._active_animations = [];
@@ -29950,23 +29989,23 @@ var init_ui_button = __esm({
       }
       bindEvents() {
         let depress;
-        const press = (e2) => {
-          e2.stopPropagation();
+        const press = (e) => {
+          e.stopPropagation();
           if (!this.modalRunning) {
             const this2 = this;
             const modalHandlers = {
-              on_pointerdown(e3) {
-                this.end(e3);
+              on_pointerdown(e2) {
+                this.end(e2);
               },
-              on_pointerup(e3) {
-                this.end(e3);
+              on_pointerup(e2) {
+                this.end(e2);
               },
               on_pointercancel() {
                 console.warn("Pointer cancel in button");
                 this2.popModal();
               },
-              on_keydown(e3) {
-                switch (e3.keyCode) {
+              on_keydown(e2) {
+                switch (e2.keyCode) {
                   case keymap["Enter"]:
                   case keymap["Escape"]:
                   case keymap["Space"]:
@@ -29974,15 +30013,15 @@ var init_ui_button = __esm({
                     break;
                 }
               },
-              end(e3) {
+              end(e2) {
                 if (!this2.modalRunning) {
                   return;
                 }
                 this2.popModal();
-                depress(e3);
+                depress(e2);
               }
             };
-            this.pushModal(modalHandlers, void 0, e2.pointerId);
+            this.pushModal(modalHandlers, void 0, e.pointerId);
           }
           if (this.disabled) return;
           this._pressed = true;
@@ -29990,24 +30029,24 @@ var init_ui_button = __esm({
             this._onpress(this);
           }
           this._redraw();
-          e2.preventDefault();
+          e.preventDefault();
         };
-        depress = (e2) => {
+        depress = (e) => {
           if (this._auto_depress) {
             this._pressed = false;
             if (this.disabled) return;
             this._redraw();
           }
-          if (e2) {
-            e2.preventDefault();
-            e2.stopPropagation();
-            if (isMobile() || e2.type === "pointerup" && e2.button) {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isMobile() || e.type === "pointerup" && e.button) {
               return;
             }
           }
           this._redraw();
-          if (this.onclick && e2 && e2.pointerType !== "mouse") {
-            this.onclick(e2);
+          if (this.onclick && e && e.pointerType !== "mouse") {
+            this.onclick(e);
           }
           this.undoBreakPoint();
         };
@@ -30028,20 +30067,20 @@ var init_ui_button = __esm({
           this._highlight = false;
           this._redraw();
         });
-        this.addEventListener("keydown", (e2) => {
+        this.addEventListener("keydown", (e) => {
           if (this.disabled) return;
-          switch (e2.keyCode) {
+          switch (e.keyCode) {
             case 27:
               this.blur();
-              e2.preventDefault();
-              e2.stopPropagation();
+              e.preventDefault();
+              e.stopPropagation();
               break;
             case 32:
             //spacebar
             case 13:
               this.click();
-              e2.preventDefault();
-              e2.stopPropagation();
+              e.preventDefault();
+              e.stopPropagation();
               break;
           }
         });
@@ -30559,9 +30598,9 @@ function setWranglerScreen(screen) {
 function getWranglerScreen() {
   return menuWrangler.screen;
 }
-function createMenu(ctx2, title, templ) {
+function createMenu(ctx, title, templ) {
   const menu = UIBase2.createElement("menu-x");
-  menu.ctx = ctx2;
+  menu.ctx = ctx;
   menu.setAttribute("name", title);
   const menuSEP = menu.constructor.SEP;
   let id2 = 0;
@@ -30573,14 +30612,14 @@ function createMenu(ctx2, title, templ) {
       let def;
       let hotkey;
       try {
-        def = ctx2.api.getToolDef(item);
+        def = ctx.api.getToolDef(item);
       } catch (error2) {
         menu.addItem("(tool path error)", id2++);
         return;
       }
       if (!def.hotkey) {
         try {
-          hotkey = ctx2.api.getToolPathHotkey(ctx2, item);
+          hotkey = ctx.api.getToolPathHotkey(ctx, item);
         } catch (error2) {
           print_stack2(error2);
           console.warn("error getting hotkey for tool " + item);
@@ -30592,7 +30631,7 @@ function createMenu(ctx2, title, templ) {
       menu.addItemExtra(def.uiname, id2, hotkey, def.icon);
       cbs[id2] = /* @__PURE__ */ (function(toolpath) {
         return function() {
-          ctx2.api.execTool(ctx2, toolpath);
+          ctx.api.execTool(ctx, toolpath);
         };
       })(item);
       id2++;
@@ -30897,8 +30936,8 @@ var init_ui_menu = __esm({
             }
           }
         };
-        sbox.addEventListener("keydown", (e2) => {
-          switch (e2.keyCode) {
+        sbox.addEventListener("keydown", (e) => {
+          switch (e.keyCode) {
             case 27:
               this.close();
               break;
@@ -31083,38 +31122,38 @@ var init_ui_menu = __esm({
             }
             this.setActive(li, false);
           };
-          const onclick = (e2) => {
-            onfocus(e2);
-            e2.stopPropagation();
-            e2.preventDefault();
+          const onclick = (e) => {
+            onfocus(e);
+            e.stopPropagation();
+            e.preventDefault();
             if (this.activeItem?._isMenu) {
               return;
             }
             this.click();
           };
-          li.addEventListener("contextmenu", (e2) => e2.preventDefault());
-          this.addEventListener("contextmenu", (e2) => e2.preventDefault());
+          li.addEventListener("contextmenu", (e) => e.preventDefault());
+          this.addEventListener("contextmenu", (e) => e.preventDefault());
           li.addEventListener("pointerup", onclick, { capture: true });
           li.addEventListener("click", onclick, { capture: true });
           li.addEventListener("pointerdown", onclick, { capture: true });
-          li.addEventListener("focus", (e2) => {
-            onfocus(e2);
-            onfocus(e2);
+          li.addEventListener("focus", (e) => {
+            onfocus(e);
+            onfocus(e);
           });
-          li.addEventListener("pointermove", (e2) => {
-            onfocus(e2);
+          li.addEventListener("pointermove", (e) => {
+            onfocus(e);
             li.focus();
           });
-          li.addEventListener("mouseover", (e2) => {
-            onfocus(e2);
+          li.addEventListener("mouseover", (e) => {
+            onfocus(e);
             li.focus();
           });
-          li.addEventListener("mouseenter", (e2) => {
-            onfocus(e2);
+          li.addEventListener("mouseenter", (e) => {
+            onfocus(e);
             li.focus();
           });
-          li.addEventListener("pointerover", (e2) => {
-            onfocus(e2);
+          li.addEventListener("pointerover", (e) => {
+            onfocus(e);
             li.focus();
           });
           this.dom.appendChild(li);
@@ -31505,8 +31544,8 @@ var init_ui_menu = __esm({
           let callProp = true;
           if (this.hasAttribute("datapath")) {
             const datapath = this.getAttribute("datapath");
-            const rdef2 = this.ctx.api.resolvePath(this.ctx, datapath);
-            const rdata = rdef2.dpath?.data;
+            const rdef = this.ctx.api.resolvePath(this.ctx, datapath);
+            const rdata = rdef.dpath?.data;
             callProp = !rdata || !(rdata instanceof ToolProperty);
           }
           this._value = this._convertVal(id2) ?? id2;
@@ -31522,8 +31561,8 @@ var init_ui_menu = __esm({
           }
         };
       }
-      _onpress = (e2) => {
-        const _e = e2;
+      _onpress = (e) => {
+        const _e = e;
         this.abortToolTips(1e3);
         if (this._menu !== void 0) {
           this.lockTimer = time_ms();
@@ -31754,14 +31793,14 @@ var init_ui_menu = __esm({
         }
         this.menustack = [];
       }
-      searchKeyDown(e2) {
+      searchKeyDown(e) {
         const menu = this.menu;
         if (!menu) return;
-        e2.stopPropagation();
+        e.stopPropagation();
         menu._ignoreFocusEvents = true;
         menu.textbox.focus();
         menu._ignoreFocusEvents = false;
-        switch (e2.keyCode) {
+        switch (e.keyCode) {
           case keymap["Enter"]:
             menu.click();
             break;
@@ -31776,29 +31815,29 @@ var init_ui_menu = __esm({
             break;
         }
       }
-      on_keydown(e2) {
+      on_keydown(e) {
         window.menu = this.menu;
         if (this.menu === void 0) {
           return;
         }
         if (this.menu.hasSearchBox) {
-          return this.searchKeyDown(e2);
+          return this.searchKeyDown(e);
         }
         const menu = this.menu;
-        switch (e2.keyCode) {
+        switch (e.keyCode) {
           case keymap["Left"]:
           //left
           case keymap["Right"]:
             if (menu._dropbox) {
               let dropbox = menu._dropbox;
-              if (e2.keyCode === keymap["Left"]) {
+              if (e.keyCode === keymap["Left"]) {
                 dropbox = dropbox.previousElementSibling;
               } else {
                 dropbox = dropbox.nextElementSibling;
               }
               if (dropbox !== null && dropbox instanceof DropBox) {
                 this.endMenus();
-                dropbox._onpress(e2);
+                dropbox._onpress(e);
               }
             }
             break;
@@ -31818,29 +31857,29 @@ var init_ui_menu = __esm({
             break;
         }
       }
-      on_pointerdown(e2) {
+      on_pointerdown(e) {
         if (this.menu === void 0 || this.screen === void 0) {
           this.closetimer = time_ms();
           return;
         }
         const screen = this.screen;
-        const x = e2.pageX;
-        const y = e2.pageY;
+        const x = e.pageX;
+        const y = e.pageY;
         const element = screen.pickElement(x, y);
         if (element !== void 0 && (element instanceof DropBox || isMobile())) {
           this.endMenus();
-          e2.preventDefault();
-          e2.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
         }
       }
-      on_pointerup(e2) {
+      on_pointerup(e) {
         if (this.menu === void 0 || this.screen === void 0) {
           this.closetimer = time_ms();
           return;
         }
         const screen = this.screen;
-        const x = e2.pageX;
-        const y = e2.pageY;
+        const x = e.pageX;
+        const y = e.pageY;
         let element = screen.pickElement(x, y, void 0, void 0, DropBox);
         if (element !== void 0) {
           this.closeOnMouseUp = false;
@@ -31871,7 +31910,7 @@ var init_ui_menu = __esm({
         }
         return void 0;
       }
-      on_pointermove(e2) {
+      on_pointermove(e) {
         if (this.menu?.hasSearchBox) {
           this.closetimer = time_ms();
           this.closereq = void 0;
@@ -31883,8 +31922,8 @@ var init_ui_menu = __esm({
           return;
         }
         const screen = this.screen;
-        const x = e2.pageX;
-        const y = e2.pageY;
+        const x = e.pageX;
+        const y = e.pageY;
         let element;
         const menu = this.menu;
         if (menu) {
@@ -31920,7 +31959,7 @@ var init_ui_menu = __esm({
           this.endMenus();
           this.closetimer = time_ms();
           this.closereq = void 0;
-          elem2._onpress?.(e2);
+          elem2._onpress?.(e);
           return;
         }
         let ok = false;
@@ -32201,7 +32240,7 @@ function patchDropBox() {
   if (const_default.noElectronMenus) {
     return;
   }
-  DropBox.prototype._onpress = function _onpress(e2) {
+  DropBox.prototype._onpress = function _onpress(e) {
     if (this._menu !== void 0) {
       this._menu.close();
       this._menu = void 0;
@@ -32239,7 +32278,7 @@ function patchDropBox() {
     const menu = this._menu;
     const screen = this.getScreen();
     const dpi = this.getDPI();
-    let x = e2.x, y = e2.y;
+    let x = e.x, y = e.y;
     const rects = this.dom.getClientRects();
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
@@ -32534,20 +32573,20 @@ var init_electron_api = __esm({
       }
       static _sanitizeFilters(filters) {
         const filters2 = [];
-        for (let filter2 of filters) {
-          if (Array.isArray(filter2)) {
-            let ext = filter2[0];
-            const filterObj = { extensions: filter2, name: "" };
+        for (let filter of filters) {
+          if (Array.isArray(filter)) {
+            let ext = filter[0];
+            const filterObj = { extensions: filter, name: "" };
             ext = ext.replace(/\./g, "").trim().toLowerCase();
             if (ext in mimeMap) {
               filterObj.mime = mimeMap[ext];
             }
             filterObj.name = ext;
-            filter2 = filterObj;
+            filter = filterObj;
           }
-          const f2 = filter2;
+          const f2 = filter;
           console.log(f2.extensions);
-          f2.extensions = f2.extensions.map((e2) => e2.startsWith(".") ? e2.slice(1, e2.length) : e2);
+          f2.extensions = f2.extensions.map((e) => e.startsWith(".") ? e.slice(1, e.length) : e);
           filters2.push(f2);
         }
         return filters2;
@@ -32662,11 +32701,11 @@ var init_web_api = __esm({
               multiple: args.multi,
               types
             }).then((arg) => {
-              let paths2 = [];
+              let paths = [];
               for (let file of arg) {
-                paths2.push(new FilePath(file, file.name));
+                paths.push(new FilePath(file, file.name));
               }
-              accept(paths2);
+              accept(paths);
             });
           } catch (error2) {
             reject(error2);
@@ -32714,11 +32753,11 @@ var init_web_api = __esm({
       //returns a promise
       static showSaveDialog_old(title, savedata, args = new FileDialogArgs()) {
         let exts = [];
-        for (let list6 of args.filters) {
-          if (!Array.isArray(list6) && list6.filters) {
-            list6 = list6.filters;
+        for (let list5 of args.filters) {
+          if (!Array.isArray(list5) && list5.filters) {
+            list5 = list5.filters;
           }
-          for (let ext of list6) {
+          for (let ext of list5) {
             exts.push(ext);
           }
         }
@@ -32808,15 +32847,15 @@ var TextBox2 = class extends TextBoxBase {
     this.dom.setAttribute("tab-index", "0");
     this.dom.style["margin"] = margin + "px";
     this.dom.setAttribute("type", "textbox");
-    this.dom.onchange = (e2) => {
+    this.dom.onchange = (e) => {
       this._change(this.dom.value);
     };
     this.radix = 16;
-    this.dom.oninput = (e2) => {
+    this.dom.oninput = (e) => {
       this._change(this.dom.value);
     };
     this.shadow.appendChild(this.dom);
-    this.dom.addEventListener("focus", (e2) => {
+    this.dom.addEventListener("focus", (e) => {
       console.log("Textbox focus", this.isModal);
       this._focus = 1;
       if (this.isModal) {
@@ -32824,7 +32863,7 @@ var TextBox2 = class extends TextBoxBase {
         this.setCSS();
       }
     });
-    this.dom.addEventListener("blur", (e2) => {
+    this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
       this._focus = 0;
       if (this._modal) {
@@ -32876,9 +32915,9 @@ var TextBox2 = class extends TextBoxBase {
     const finish = (ok) => {
       this._endModal(ok);
     };
-    const keydown = (e2) => {
-      e2.stopPropagation();
-      switch (e2.keyCode) {
+    const keydown = (e) => {
+      e.stopPropagation();
+      switch (e.keyCode) {
         case keymap2.Enter:
           finish(true);
           break;
@@ -32888,23 +32927,23 @@ var TextBox2 = class extends TextBoxBase {
       }
       return;
       if (ignore) return;
-      const e22 = new KeyboardEvent(e2.type, e2);
+      const e2 = new KeyboardEvent(e.type, e);
       ignore = 1;
-      this.dom.dispatchEvent(e22);
+      this.dom.dispatchEvent(e2);
       ignore = 0;
     };
     this._modal = true;
     this.pushModal(
       {
-        on_mousemove: (e2) => {
-          e2.stopPropagation();
+        on_mousemove: (e) => {
+          e.stopPropagation();
         },
         on_keydown: keydown,
         on_keypress: keydown,
         on_keyup: keydown,
-        on_mousedown: (e2) => {
-          e2.stopPropagation();
-          console.log("mouse down", e2, e2.x, e2.y);
+        on_mousedown: (e) => {
+          e.stopPropagation();
+          console.log("mouse down", e, e.x, e.y);
         }
       },
       false
@@ -33315,35 +33354,35 @@ var Check = class extends UIBase3 {
     span.addEventListener("mousein", mover, { passive: true });
     span.addEventListener("mouseleave", mleave, { passive: true });
     span.addEventListener("pointerout", mleave, { passive: true });
-    this.addEventListener("blur", (e2) => {
+    this.addEventListener("blur", (e) => {
       this._highlight = this._focus = false;
       this._redraw();
     });
-    this.addEventListener("focusin", (e2) => {
+    this.addEventListener("focusin", (e) => {
       this._focus = true;
       this._redraw();
     });
-    this.addEventListener("focus", (e2) => {
+    this.addEventListener("focus", (e) => {
       this._focus = true;
       this._redraw();
     });
     span.addEventListener("pointerdown", mdown, { passive: true });
     span.addEventListener("pointerup", mup, { passive: true });
     span.addEventListener("pointercancel", mup, { passive: true });
-    this.addEventListener("keydown", (e2) => {
-      switch (e2.keyCode) {
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
         case keymap3["Escape"]:
           this._highlight = void 0;
           this._redraw();
-          e2.preventDefault();
-          e2.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
           this.blur();
           break;
         case keymap3["Enter"]:
         case keymap3["Space"]:
           this.checked = !this.checked;
-          e2.preventDefault();
-          e2.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
           break;
       }
     });
@@ -33547,8 +33586,8 @@ var IconButton = class extends UIBase3 {
     this.dom = document.createElement("div");
     this.shadow.appendChild(this.dom);
     this._last_iconsheet = void 0;
-    this.addEventListener("keydown", (e2) => {
-      switch (e2.keyCode) {
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
         case keymap3["Enter"]:
         case keymap3["Space"]:
           this.click();
@@ -33562,10 +33601,10 @@ var IconButton = class extends UIBase3 {
       const rect = rects[0];
       const x = (rect?.x ?? 0) + (rect?.width ?? 0) * 0.5;
       const y = (rect?.y ?? 0) + (rect?.height ?? 0) * 0.5;
-      const e2 = { x, y, stopPropagation: () => {
+      const e = { x, y, stopPropagation: () => {
       }, preventDefault: () => {
       } };
-      this._onpress(e2);
+      this._onpress(e);
     }
     super.click();
   }
@@ -33685,13 +33724,13 @@ var IconButton = class extends UIBase3 {
   }
   init() {
     super.init();
-    const press = (e2) => {
-      e2.stopPropagation();
-      e2.preventDefault();
+    const press = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
       if (this.modalRunning) {
         this.popModal();
       }
-      if (!eventWasTouch(e2) && e2.button !== 0) {
+      if (!eventWasTouch(e) && e.button !== 0) {
         return;
       }
       if (1) {
@@ -33717,17 +33756,17 @@ var IconButton = class extends UIBase3 {
           end() {
             if (this2.modalRunning) {
               this2.popModal();
-              this2._on_depress(e2);
+              this2._on_depress(e);
               this2.setCSS();
             }
           }
         });
       }
-      this._on_press(e2);
+      this._on_press(e);
     };
-    const depress = (e2) => {
-      e2.stopPropagation();
-      e2.preventDefault();
+    const depress = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
       this._on_depress();
       this.setCSS();
     };
@@ -33870,9 +33909,9 @@ var IconCheck = class extends IconButton {
     }
     const datapath = this.getAttribute("datapath");
     if (this._icon < 0) {
-      let rdef2;
+      let rdef;
       try {
-        rdef2 = this.ctx.api.resolvePath(this.ctx, datapath);
+        rdef = this.ctx.api.resolvePath(this.ctx, datapath);
       } catch (error2) {
         if (error2 instanceof DataPathError) {
           return;
@@ -33880,29 +33919,29 @@ var IconCheck = class extends IconButton {
           throw error2;
         }
       }
-      if (rdef2?.prop) {
+      if (rdef?.prop) {
         let icon;
         let icon2;
         let title;
-        if (rdef2.prop.flag & PropFlags.NO_UNDO) {
+        if (rdef.prop.flag & PropFlags.NO_UNDO) {
           this.setUndo(false);
         } else {
           this.setUndo(true);
         }
-        if (rdef2.subkey && (rdef2.prop.type === PropTypes2.FLAG || rdef2.prop.type === PropTypes2.ENUM)) {
-          const enumProp = rdef2.prop;
-          const subkey = rdef2.subkey;
+        if (rdef.subkey && (rdef.prop.type === PropTypes2.FLAG || rdef.prop.type === PropTypes2.ENUM)) {
+          const enumProp = rdef.prop;
+          const subkey = rdef.subkey;
           icon = enumProp.iconmap[subkey];
           icon2 = enumProp.iconmap2[subkey];
-          title = rdef2.prop.descriptions[subkey];
+          title = rdef.prop.descriptions[subkey];
           if (!title && subkey.length > 0) {
             title = subkey;
             title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
           }
         } else {
-          icon2 = rdef2.prop.icon2;
-          icon = rdef2.prop.icon;
-          title = rdef2.prop.description;
+          icon2 = rdef.prop.icon2;
+          icon = rdef.prop.icon;
+          title = rdef.prop.description;
         }
         if (icon2 !== void 0 && icon2 !== -1) {
           this._icon_pressed = icon;
@@ -34171,11 +34210,11 @@ var Container2 = class _Container extends UIBase2 {
     this.saneStyle["background-color"] = bg;
   }
   get childWidgets() {
-    const list6 = [];
+    const list5 = [];
     this._forEachChildWidget((n) => {
-      list6.push(n);
+      list5.push(n);
     });
-    return list6;
+    return list5;
   }
   static define() {
     return {
@@ -34184,23 +34223,23 @@ var Container2 = class _Container extends UIBase2 {
   }
   /** recursively change path prefix for all children*/
   changePathPrefix(newprefix) {
-    let prefix2 = this.dataPrefix.trim();
+    let prefix = this.dataPrefix.trim();
     this.dataPrefix = newprefix;
-    if (prefix2.length > 0) {
-      prefix2 += ".";
+    if (prefix.length > 0) {
+      prefix += ".";
     }
     const rec = (n, con) => {
       if (n instanceof _Container && n !== this) {
-        if (n.dataPrefix.startsWith(prefix2)) {
-          n.dataPrefix = n.dataPrefix.slice(prefix2.length, n.dataPrefix.length);
+        if (n.dataPrefix.startsWith(prefix)) {
+          n.dataPrefix = n.dataPrefix.slice(prefix.length, n.dataPrefix.length);
           n.dataPrefix = con._joinPrefix(n.dataPrefix);
           con = n;
         }
       }
       if (n instanceof UIBase2 && n.hasAttribute("datapath")) {
         let path = n.getAttribute("datapath");
-        if (path.startsWith(prefix2)) {
-          path = path.slice(prefix2.length, path.length);
+        if (path.startsWith(prefix)) {
+          path = path.slice(prefix.length, path.length);
           path = con._joinPrefix(path);
           n.setAttribute("datapath", path);
           n.description = n.description;
@@ -34244,10 +34283,10 @@ var Container2 = class _Container extends UIBase2 {
       return {};
     }
   }
-  loadData(obj2) {
-    if (!obj2) return this;
-    const x = obj2.scrollLeft || 0;
-    const y = obj2.scrollTop || 0;
+  loadData(obj) {
+    if (!obj) return this;
+    const x = obj.scrollLeft || 0;
+    const y = obj.scrollTop || 0;
     this.doOnce(() => {
       this.scrollTo(x, y);
     }, 12);
@@ -34344,11 +34383,11 @@ var Container2 = class _Container extends UIBase2 {
   strip(themeClass_or_obj = "strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz) {
     let themeClass = themeClass_or_obj;
     if (typeof themeClass_or_obj === "object") {
-      const obj2 = themeClass_or_obj;
-      themeClass = obj2.themeClass ?? "strip";
-      margin1 = obj2.margin1 ?? margin1;
-      margin2 = obj2.margin2 ?? 1;
-      horiz = obj2.horiz;
+      const obj = themeClass_or_obj;
+      themeClass = obj.themeClass ?? "strip";
+      margin1 = obj.margin1 ?? margin1;
+      margin2 = obj.margin2 ?? 1;
+      horiz = obj.horiz;
     }
     if (horiz === void 0) {
       horiz = this instanceof RowFrame;
@@ -34468,7 +34507,7 @@ var Container2 = class _Container extends UIBase2 {
     });
     super._ondestroy();
   }
-  loadJSON(obj2) {
+  loadJSON(obj) {
     return this;
   }
   redrawCurves() {
@@ -34522,7 +34561,7 @@ var Container2 = class _Container extends UIBase2 {
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
     } else {
-      this.shadow.insertBefore(ch, list3(this.childWidgets)[i]);
+      this.shadow.insertBefore(ch, list2(this.childWidgets)[i]);
     }
     if (ch.onadd) {
       ch.onadd();
@@ -34547,8 +34586,8 @@ var Container2 = class _Container extends UIBase2 {
     return child;
   }
   //TODO: make sure this works on Electron?
-  dynamicMenu(title, list6, packflag = 0) {
-    return this.menu(title, list6, packflag);
+  dynamicMenu(title, list5, packflag = 0) {
+    return this.menu(title, list5, packflag);
   }
   /**example usage:
   
@@ -34561,21 +34600,21 @@ var Container2 = class _Container extends UIBase2 {
      ])
   
      **/
-  menu(title, list6, packflag = 0) {
+  menu(title, list5, packflag = 0) {
     const dbox = UIBase2.createElement("dropbox-x");
     dbox._name = title;
     dbox.setAttribute("simple", "true");
     dbox.setAttribute("name", title);
-    if (list6 instanceof Menu) {
+    if (list5 instanceof Menu) {
       dbox._build_menu = function() {
         if (this._menu?.parentNode !== void 0) {
           this._menu.remove();
         }
-        this._menu = createMenu(this.ctx, title, list6);
+        this._menu = createMenu(this.ctx, title, list5);
         return this._menu;
       };
-    } else if (list6) {
-      dbox.template = list6;
+    } else if (list5) {
+      dbox.template = list5;
     }
     this._container_inherit(dbox, packflag);
     this._add(dbox);
@@ -34717,9 +34756,9 @@ var Container2 = class _Container extends UIBase2 {
     }
     const ret = UIBase2.createElement("label-x");
     if (label === void 0 && inpath) {
-      const rdef2 = this.ctx.api.resolvePath(this.ctx, path);
-      if (rdef2) {
-        label = rdef2.prop.uiname ?? rdef2.dpath.apiname;
+      const rdef = this.ctx.api.resolvePath(this.ctx, path);
+      if (rdef) {
+        label = rdef.prop.uiname ?? rdef.dpath.apiname;
       } else {
         label = "(error)";
       }
@@ -34776,7 +34815,7 @@ var Container2 = class _Container extends UIBase2 {
     this._add(ret);
     return ret;
   }
-  _joinPrefix(path, prefix2 = this.dataPrefix.trim()) {
+  _joinPrefix(path, prefix = this.dataPrefix.trim()) {
     if (path === void 0) {
       return void 0;
     }
@@ -34784,10 +34823,10 @@ var Container2 = class _Container extends UIBase2 {
     if (path[0] === "/") {
       return path;
     }
-    if (prefix2.length > 0 && path.length > 0 && !prefix2.endsWith(".") && !path.startsWith(".")) {
+    if (prefix.length > 0 && path.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
       path = "." + path;
     }
-    return prefix2 + path;
+    return prefix + path;
   }
   colorbutton(inpath, packflag, mass_set_path) {
     packflag = (packflag ?? 0) | this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -34835,9 +34874,9 @@ var Container2 = class _Container extends UIBase2 {
       if (mass_set_path) {
         button.setAttribute("mass_set_path", mass_set_path);
       }
-      const rdef2 = this.ctx.api.resolvePath(this.ctx, inpath);
-      if (rdef2?.prop) {
-        name2 = rdef2.prop.uiname ?? rdef2.prop.apiname ?? name2;
+      const rdef = this.ctx.api.resolvePath(this.ctx, inpath);
+      if (rdef?.prop) {
+        name2 = rdef.prop.uiname ?? rdef.prop.apiname ?? name2;
       }
     }
     button.setAttribute("name", name2);
@@ -34845,12 +34884,12 @@ var Container2 = class _Container extends UIBase2 {
     this.add(button);
     return button;
   }
-  _getMassPath(ctx2, inpath, mass_set_path) {
+  _getMassPath(ctx, inpath, mass_set_path) {
     if (inpath === void 0) {
       return void 0;
     }
     if (mass_set_path === void 0 && this.massSetPrefix.length > 0) {
-      mass_set_path = ctx2.api.getPropName(ctx2, inpath);
+      mass_set_path = ctx.api.getPropName(ctx, inpath);
     }
     if (mass_set_path === void 0) {
       return void 0;
@@ -34874,8 +34913,8 @@ var Container2 = class _Container extends UIBase2 {
       }
     }
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const rdef2 = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath), true);
-    if (rdef2?.prop === void 0) {
+    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath), true);
+    if (rdef?.prop === void 0) {
       console.warn(
         "Unknown property at path",
         this._joinPrefix(inpath),
@@ -34883,7 +34922,7 @@ var Container2 = class _Container extends UIBase2 {
       );
       throw new DataPathError("Unknown property at path " + this._joinPrefix(inpath));
     }
-    const prop = rdef2.prop;
+    const prop = rdef.prop;
     const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
     function makeUIName(name2) {
       if (typeof name2 === "number" && isNaN(name2)) {
@@ -34902,7 +34941,7 @@ var Container2 = class _Container extends UIBase2 {
       if (prop.flag & PropFlags.READ_ONLY) {
         ret = this.pathlabel(inpath, prop.uiname);
       } else if (prop.multiLine) {
-        ret = this.textarea(inpath, rdef2.value, packflag, mass_set_path);
+        ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
         ret.useDataPathUndo = useDataPathUndo;
       } else {
         const strip = this.strip();
@@ -34937,18 +34976,18 @@ var Container2 = class _Container extends UIBase2 {
       ret.useDataPathUndo = useDataPathUndo;
       return ret;
     } else if (prop.type === PropTypes.ENUM) {
-      if (rdef2.subkey !== void 0) {
-        const subkey = rdef2.subkey;
-        let name2 = prop.ui_value_names[rdef2.subkey];
+      if (rdef.subkey !== void 0) {
+        const subkey = rdef.subkey;
+        let name2 = prop.ui_value_names[rdef.subkey];
         if (name2 === void 0) {
-          name2 = makeUIName(rdef2.subkey);
+          name2 = makeUIName(rdef.subkey);
         }
         const check = this.check(inpath, name2, packflag, mass_set_path);
         const tooltip = prop.descriptions[subkey];
         check.useDataPathUndo = useDataPathUndo;
         check.description = tooltip === void 0 ? prop.ui_value_names[subkey] : tooltip;
         if (check instanceof Check) {
-          check.icon = prop.iconmap[rdef2.subkey];
+          check.icon = prop.iconmap[rdef.subkey];
         }
         return check;
       }
@@ -34969,7 +35008,7 @@ var Container2 = class _Container extends UIBase2 {
         }
       }
     } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
-      if (rdef2.subkey !== void 0) {
+      if (rdef.subkey !== void 0) {
         let ret;
         if (packflag & PackFlags.SIMPLE_NUMSLIDERS) ret = this.simpleslider(inpath, { packflag });
         else ret = this.slider(inpath, { packflag });
@@ -34992,11 +35031,11 @@ var Container2 = class _Container extends UIBase2 {
         return ret.setUndo(useDataPathUndo);
       }
     } else if (prop.type === PropTypes.FLAG) {
-      if (rdef2.subkey !== void 0) {
-        const tooltip = prop.descriptions[rdef2.subkey];
-        let name2 = prop.ui_value_names[rdef2.subkey];
-        if (typeof rdef2.subkey === "number") {
-          name2 = prop.keys[rdef2.subkey];
+      if (rdef.subkey !== void 0) {
+        const tooltip = prop.descriptions[rdef.subkey];
+        let name2 = prop.ui_value_names[rdef.subkey];
+        if (typeof rdef.subkey === "number") {
+          name2 = prop.keys[rdef.subkey];
           if (name2 && name2 in prop.ui_value_names) {
             name2 = prop.ui_value_names[name2];
           } else {
@@ -35007,7 +35046,7 @@ var Container2 = class _Container extends UIBase2 {
           name2 = "(error)";
         }
         const ret = this.check(inpath, name2, packflag, mass_set_path);
-        ret.icon = prop.iconmap[rdef2.subkey];
+        ret.icon = prop.iconmap[rdef.subkey];
         if (tooltip) {
           ret.description = tooltip;
         }
@@ -35370,7 +35409,7 @@ var Container2 = class _Container extends UIBase2 {
       ret.setValue(defaultval);
     }
     ret.onchange = callback;
-    ret.onselect = callback;
+    ret.on_select = callback;
     ret.packflag |= packflag;
     if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
       const container = this.row();
@@ -35397,7 +35436,7 @@ var Container2 = class _Container extends UIBase2 {
     }
     return p;
   }
-  simpleslider(datapath, name2, defaultval, min2, max2, step, isInt, do_redraw, callback, packflag = 0) {
+  simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
     if (typeof name2 === "object") {
       return this.slider(datapath, {
         ...name2,
@@ -35408,8 +35447,8 @@ var Container2 = class _Container extends UIBase2 {
         datapath,
         name2,
         defaultval,
-        min2,
-        max2,
+        min,
+        max,
         step,
         isInt,
         do_redraw,
@@ -35426,14 +35465,14 @@ var Container2 = class _Container extends UIBase2 {
    *  etc...
    * });
    * */
-  slider(datapath, name2, defaultval, min2, max2, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+  slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
     if (typeof name2 === "object") {
       const args = name2;
       decimalPlaces = args.decimalPlaces;
       name2 = args.name;
       defaultval = args.defaultval;
-      min2 = args.min;
-      max2 = args.max;
+      min = args.min;
+      max = args.max;
       step = args.step;
       is_int = args.is_int || args.isInt;
       do_redraw = args.do_redraw;
@@ -35444,11 +35483,11 @@ var Container2 = class _Container extends UIBase2 {
     let ret;
     if (datapath) {
       datapath = this._joinPrefix(datapath);
-      const rdef2 = this.ctx.api.resolvePath(this.ctx, datapath, true);
-      if (rdef2?.prop && rdef2.prop.flag & PropFlags.SIMPLE_SLIDER) {
+      const rdef = this.ctx.api.resolvePath(this.ctx, datapath, true);
+      if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }
-      if (rdef2?.prop && rdef2.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
+      if (rdef?.prop && rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
     }
@@ -35475,11 +35514,11 @@ var Container2 = class _Container extends UIBase2 {
     if (name2) {
       ret.setAttribute("name", name2);
     }
-    if (min2 !== void 0) {
-      ret.setAttribute("min", "" + min2);
+    if (min !== void 0) {
+      ret.setAttribute("min", "" + min);
     }
-    if (max2 !== void 0) {
-      ret.setAttribute("max", "" + max2);
+    if (max !== void 0) {
+      ret.setAttribute("max", "" + max);
     }
     if (defaultval !== void 0) {
       ret.setValue(defaultval);
@@ -36031,8 +36070,8 @@ var NumSlider = class extends ValueButtonBase {
   }
   bindEvents() {
     const dir = this.range && this.range[0] > this.range[1] ? -1 : 1;
-    this.addEventListener("keydown", (e2) => {
-      switch (e2.keyCode) {
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Down"]:
           this.setValue(this.value - dir * 5 * (this.step ?? 0.1));
@@ -36043,77 +36082,77 @@ var NumSlider = class extends ValueButtonBase {
           break;
       }
     });
-    const onmousedown = (e2) => {
-      e2.preventDefault();
+    const onmousedown = (e) => {
+      e.preventDefault();
       if (this.disabled) {
         this.mdown = false;
         this._pressed = false;
-        e2.stopPropagation();
+        e.stopPropagation();
         return;
       }
-      if (e2.button) {
+      if (e.button) {
         return;
       }
       this.mdown = true;
       this._pressed = true;
       this._redraw(false);
-      if (this.overArrow(e2.x, e2.y)) {
-        this._on_click(e2);
+      if (this.overArrow(e.x, e.y)) {
+        this._on_click(e);
       } else {
-        this.dragStart(e2);
-        e2.stopPropagation();
+        this.dragStart(e);
+        e.stopPropagation();
       }
     };
-    this._on_click = (e2) => {
-      this.setMpos(e2);
+    this._on_click = (e) => {
+      this.setMpos(e);
       if (this.disabled) {
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
       let step;
-      if (step = this.overArrow(e2.x, e2.y)) {
-        if (e2.shiftKey) {
+      if (step = this.overArrow(e.x, e.y)) {
+        if (e.shiftKey) {
           step *= 0.1;
         }
         this.setValue(this.value + step);
       }
     };
-    this.addEventListener("pointermove", (e2) => {
-      this.setMpos(e2);
+    this.addEventListener("pointermove", (e) => {
+      this.setMpos(e);
       if (this.mdown && !this._modaldata && this.mpos.vectorDistance(this.start_mpos) > 13) {
-        this.dragStart(e2);
+        this.dragStart(e);
       }
     });
-    this.addEventListener("dblclick", (e2) => {
-      this.setMpos(e2);
+    this.addEventListener("dblclick", (e) => {
+      this.setMpos(e);
       this.mdown = false;
       this._pressed = false;
-      if (this.disabled || this.overArrow(e2.x, e2.y)) {
-        e2.preventDefault();
-        e2.stopPropagation();
+      if (this.disabled || this.overArrow(e.x, e.y)) {
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
-      e2.preventDefault();
-      e2.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
       this.swapWithTextbox();
     });
     this.addEventListener(
       "pointerdown",
-      (e2) => {
-        this.setMpos(e2);
+      (e) => {
+        this.setMpos(e);
         if (this.disabled) return;
-        onmousedown(e2);
+        onmousedown(e);
       },
       { capture: true }
     );
-    this.addEventListener("pointerup", (e2) => {
+    this.addEventListener("pointerup", (e) => {
       this.mdown = false;
       this._pressed = false;
       this._redraw(false);
     });
-    this.addEventListener("pointerover", (e2) => {
-      this.setMpos(e2);
+    this.addEventListener("pointerover", (e) => {
+      this.setMpos(e);
       if (this.disabled) return;
       if (!this._highlight) {
         this._highlight = true;
@@ -36121,12 +36160,12 @@ var NumSlider = class extends ValueButtonBase {
         this._redraw(false);
       }
     });
-    this.addEventListener("blur", (e2) => {
+    this.addEventListener("blur", (e) => {
       this._highlight = false;
       this.mdown = false;
     });
-    this.addEventListener("pointerout", (e2) => {
-      this.setMpos(e2);
+    this.addEventListener("pointerout", (e) => {
+      this.setMpos(e);
       if (this.disabled) return;
       this._highlight = false;
       this.dom._background = this.getDefault("background-color");
@@ -36189,20 +36228,20 @@ var NumSlider = class extends ValueButtonBase {
     }
     this._redraw(false);
   }
-  setMpos(e2) {
-    this.mpos[0] = e2.x;
-    this.mpos[1] = e2.y;
+  setMpos(e) {
+    this.mpos[0] = e.x;
+    this.mpos[1] = e.y;
     if (!this.mdown) {
-      this.start_mpos[0] = e2.x;
-      this.start_mpos[1] = e2.y;
+      this.start_mpos[0] = e.x;
+      this.start_mpos[1] = e.y;
     }
-    const over = this.overArrow(e2.x, e2.y);
+    const over = this.overArrow(e.x, e.y);
     if (over !== this._last_overarrow) {
       this._last_overarrow = over;
       this._redraw(false);
     }
   }
-  dragStart(e2) {
+  dragStart(e) {
     this.mdown = false;
     this._pressed = true;
     if (this.disabled) return;
@@ -36213,11 +36252,11 @@ var NumSlider = class extends ValueButtonBase {
     this.last_time = time_ms();
     let last_background = this.dom._background;
     let cancel;
-    this.ma = new MovingAvg(eventWasTouch(e2) ? 8 : 2);
+    this.ma = new MovingAvg(eventWasTouch(e) ? 8 : 2);
     const startvalue = this.value;
     let value = startvalue;
-    let startx = this.vertical ? e2.y : e2.x;
-    const starty = this.vertical ? e2.x : e2.y;
+    let startx = this.vertical ? e.y : e.x;
+    const starty = this.vertical ? e.x : e.y;
     let sumdelta = 0;
     this.dom._background = this.getDefault("BoxDepressed");
     const fire = () => {
@@ -36226,29 +36265,29 @@ var NumSlider = class extends ValueButtonBase {
       }
     };
     const handlers = {
-      on_keydown: (e3) => {
-        switch (e3.keyCode) {
+      on_keydown: (e2) => {
+        switch (e2.keyCode) {
           case 27:
             cancel(true);
           case 13:
             cancel(false);
             break;
         }
-        e3.preventDefault();
-        e3.stopPropagation();
+        e2.preventDefault();
+        e2.stopPropagation();
       },
-      on_pointermove: (e3) => {
+      on_pointermove: (e2) => {
         if (this.disabled) return;
-        e3.preventDefault();
-        e3.stopPropagation();
-        const x = this.ma.add(this.vertical ? e3.y : e3.x);
+        e2.preventDefault();
+        e2.stopPropagation();
+        const x = this.ma.add(this.vertical ? e2.y : e2.x);
         let dx = x - startx;
         startx = x;
         if (time_ms() - this.last_time < 35) {
           return;
         }
         this.last_time = time_ms();
-        if (e3.shiftKey) {
+        if (e2.shiftKey) {
           dx *= 0.1;
         }
         dx *= this.vertical ? -1 : 1;
@@ -36265,24 +36304,24 @@ var NumSlider = class extends ValueButtonBase {
         this._redraw(false);
         fire();
       },
-      on_pointerup: (e3) => {
-        this.setMpos(e3);
+      on_pointerup: (e2) => {
+        this.setMpos(e2);
         this.undoBreakPoint();
         cancel(false);
-        e3.preventDefault();
-        e3.stopPropagation();
+        e2.preventDefault();
+        e2.stopPropagation();
       },
-      on_pointerout: (e3) => {
+      on_pointerout: (e2) => {
         last_background = this.getDefault("background-color");
-        e3.preventDefault();
-        e3.stopPropagation();
+        e2.preventDefault();
+        e2.stopPropagation();
       },
-      on_pointerover: (e3) => {
+      on_pointerover: (e2) => {
         last_background = this.getDefault("BoxHighlight");
-        e3.preventDefault();
-        e3.stopPropagation();
+        e2.preventDefault();
+        e2.stopPropagation();
       },
-      on_pointerdown: (e3) => {
+      on_pointerdown: (e2) => {
         this.popModal();
       }
     };
@@ -36637,23 +36676,23 @@ var NumSliderSimpleBase = class extends UIBase2 {
       this.setValue(val, true, false);
     }
   }
-  _setFromMouse(e2) {
+  _setFromMouse(e) {
     const rect = this.getClientRects()[0];
     if (rect === void 0) {
       return;
     }
-    const x = e2.x - rect.left;
+    const x = e.x - rect.left;
     const dpi = UIBase2.getDPI();
     const co = this._getButtonPos();
     const val = this._invertButtonX(x * dpi);
     this.value = val;
   }
-  _startModal(e2) {
+  _startModal(e) {
     if (this.disabled) {
       return;
     }
-    if (e2 !== void 0) {
-      this._setFromMouse(e2);
+    if (e !== void 0) {
+      this._setFromMouse(e);
     }
     const dom = window;
     const evtargs = { capture: false };
@@ -36661,9 +36700,9 @@ var NumSliderSimpleBase = class extends UIBase2 {
       console.warn("Double call to _startModal!");
       return;
     }
-    this.ma = new MovingAvg(e2 && eventWasTouch(e2) ? 4 : 2);
+    this.ma = new MovingAvg(e && eventWasTouch(e) ? 4 : 2);
     let handlers;
-    const end2 = () => {
+    const end = () => {
       if (handlers === void 0) {
         return;
       }
@@ -36671,44 +36710,44 @@ var NumSliderSimpleBase = class extends UIBase2 {
       handlers = void 0;
     };
     handlers = {
-      pointermove: (e3) => {
-        let x = e3.x;
-        const y = e3.y;
+      pointermove: (e2) => {
+        let x = e2.x;
+        const y = e2.y;
         x = this.ma.add(x);
-        this._setFromMouse(e3);
+        this._setFromMouse(e2);
       },
-      pointerover: (e3) => {
+      pointerover: (e2) => {
       },
-      pointerout: (e3) => {
+      pointerout: (e2) => {
       },
-      pointerleave: (e3) => {
+      pointerleave: (e2) => {
       },
-      pointerenter: (e3) => {
+      pointerenter: (e2) => {
       },
-      blur: (e3) => {
+      blur: (e2) => {
       },
-      focus: (e3) => {
+      focus: (e2) => {
       },
-      pointerup: (e3) => {
+      pointerup: (e2) => {
         this.undoBreakPoint();
-        end2();
+        end();
       },
-      keydown: (e3) => {
-        switch (e3.keyCode) {
+      keydown: (e2) => {
+        switch (e2.keyCode) {
           case keymap["Enter"]:
           case keymap["Space"]:
           case keymap["Escape"]:
-            end2();
+            end();
         }
       }
     };
     function makefunc(f2) {
-      return (e3) => {
-        if (e3 instanceof Event) {
-          e3.stopPropagation();
-          e3.preventDefault();
+      return (e2) => {
+        if (e2 instanceof Event) {
+          e2.stopPropagation();
+          e2.preventDefault();
         }
-        return f2(e3);
+        return f2(e2);
       };
     }
     for (const k in handlers) {
@@ -36724,19 +36763,19 @@ var NumSliderSimpleBase = class extends UIBase2 {
       this.setAttribute("tab-index", "0");
     }
     this.updateSize();
-    this.addEventListener("keydown", (e2) => {
+    this.addEventListener("keydown", (e) => {
       const dt = this.range[1] > this.range[0] ? 1 : -1;
-      switch (e2.keyCode) {
+      switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Right"]: {
           let fac = this.step ?? 0.1;
-          if (e2.shiftKey) {
+          if (e.shiftKey) {
             fac *= 0.1;
           }
           if (this.isInt) {
             fac = Math.max(fac, 1);
           }
-          this.value += e2.keyCode === keymap["Left"] ? -dt * fac : dt * fac;
+          this.value += e.keyCode === keymap["Left"] ? -dt * fac : dt * fac;
           break;
         }
       }
@@ -36747,42 +36786,42 @@ var NumSliderSimpleBase = class extends UIBase2 {
       this._redraw();
       this.focus();
     });
-    this.addEventListener("pointerdown", (e2) => {
+    this.addEventListener("pointerdown", (e) => {
       if (this.disabled) {
         return;
       }
-      e2.preventDefault();
-      this._startModal(e2);
+      e.preventDefault();
+      this._startModal(e);
     });
-    this.addEventListener("pointerin", (e2) => {
-      this.setHighlight(e2);
+    this.addEventListener("pointerin", (e) => {
+      this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("pointerout", (e2) => {
+    this.addEventListener("pointerout", (e) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("pointerover", (e2) => {
-      this.setHighlight(e2);
+    this.addEventListener("pointerover", (e) => {
+      this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("pointermove", (e2) => {
-      this.setHighlight(e2);
+    this.addEventListener("pointermove", (e) => {
+      this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("pointerleave", (e2) => {
+    this.addEventListener("pointerleave", (e) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("blur", (e2) => {
+    this.addEventListener("blur", (e) => {
       this._focus = false;
       this.highlight = false;
       this._redraw();
     });
     this.setCSS();
   }
-  setHighlight(e2) {
-    this.highlight = this.isOverButton(e2) ? true : false;
+  setHighlight(e) {
+    this.highlight = this.isOverButton(e) ? true : false;
   }
   _redraw() {
     const g = this.g;
@@ -36840,9 +36879,9 @@ var NumSliderSimpleBase = class extends UIBase2 {
     }
     g.setLineDash([]);
   }
-  isOverButton(e2) {
-    let x = e2.x;
-    let y = e2.y;
+  isOverButton(e) {
+    let x = e.x;
+    let y = e.y;
     const rect = this.getClientRects()[0];
     if (!rect) {
       return false;
@@ -37198,10 +37237,10 @@ var SliderWithTextbox = class extends ColumnFrame {
   linkTextBox() {
     this.updateTextBox();
     const onchange = this.numslider.onchange;
-    this.numslider.onchange = (e2) => {
-      this._value = e2.value;
+    this.numslider.onchange = (e) => {
+      this._value = e.value;
       this.updateTextBox();
-      onchange(e2);
+      onchange(e);
     };
   }
   setValue(val, fire_onchange = true) {
@@ -37416,13 +37455,13 @@ var Handler = class {
   /** DOM attributes elements should inherit by default*/
   inheritDomAttrs;
   inheritDomAttrKeys;
-  constructor(ctx2, container) {
+  constructor(ctx, container) {
     this.container = container;
     this.stack = [];
-    this.ctx = ctx2;
+    this.ctx = ctx;
     this.codefuncs = {};
     this.templateVars = {};
-    const attrs = list3(sliderDomAttributes);
+    const attrs = list2(sliderDomAttributes);
     this.inheritDomAttrs = {};
     this.inheritDomAttrKeys = new Set(attrs);
     this.templateScope = {};
@@ -37473,12 +37512,12 @@ var Handler = class {
         }
         const container = this.container;
         if (elem22.hasAttribute("massSetPath") || container.massSetPrefix) {
-          let massSetPath2 = "";
+          let massSetPath = "";
           if (elem22.hasAttribute("massSetPath")) {
-            massSetPath2 = elem22.getAttribute("massSetPath") ?? "";
+            massSetPath = elem22.getAttribute("massSetPath") ?? "";
           }
           const path = elem22.getAttribute("datapath") ?? "";
-          const mpath = container._getMassPath(container.ctx, path, massSetPath2);
+          const mpath = container._getMassPath(container.ctx, path, massSetPath);
           elem22.setAttribute("massSetPath", mpath ?? "");
           elem22.setAttribute("mass_set_path", mpath ?? "");
         }
@@ -37760,22 +37799,22 @@ var Handler = class {
   }
   _handlePathPrefix(elem2, con) {
     if (elem2.hasAttribute("path")) {
-      let prefix2 = con.dataPrefix;
+      let prefix = con.dataPrefix;
       const path = (elem2.getAttribute("path") ?? "").trim();
-      if (prefix2.length > 0) {
-        prefix2 += ".";
+      if (prefix.length > 0) {
+        prefix += ".";
       }
-      prefix2 += path;
-      con.dataPrefix = prefix2;
+      prefix += path;
+      con.dataPrefix = prefix;
     }
     if (elem2.hasAttribute("massSetPath")) {
-      let prefix2 = con.massSetPrefix;
+      let prefix = con.massSetPrefix;
       const path = (elem2.getAttribute("massSetPath") ?? "").trim();
-      if (prefix2.length > 0) {
-        prefix2 += ".";
+      if (prefix.length > 0) {
+        prefix += ".";
       }
-      prefix2 += path;
-      con.massSetPrefix = prefix2;
+      prefix += path;
+      con.massSetPrefix = prefix;
     }
   }
   /** noInheritCustomAttrs: don't transfer ng or data- attributes to the container element*/
@@ -37974,7 +38013,7 @@ func = function() {
   menu(elem2, isDropBox = false) {
     const packflag = getPackFlag(elem2);
     const title = elem2.getAttribute("name") ?? "";
-    const list6 = [];
+    const list5 = [];
     for (const child of elem2.childNodes) {
       const childEl = child;
       if (!childEl.tagName) continue;
@@ -37984,9 +38023,9 @@ func = function() {
         if (label.length > 0) {
           path += "|" + label;
         }
-        list6.push(path);
+        list5.push(path);
       } else if (childEl.tagName === "sep") {
-        list6.push(Menu.SEP);
+        list5.push(Menu.SEP);
       } else if (childEl.tagName === "item") {
         let id2;
         let icon;
@@ -38005,7 +38044,7 @@ func = function() {
         if (childEl.hasAttribute("description")) {
           description = childEl.getAttribute("description") ?? void 0;
         }
-        list6.push({
+        list5.push({
           name: childEl.innerHTML.trim(),
           id: id2,
           icon,
@@ -38014,7 +38053,7 @@ func = function() {
         });
       }
     }
-    const ret = this.container.menu(title, list6, packflag);
+    const ret = this.container.menu(title, list5, packflag);
     if (isDropBox) {
       ret.removeAttribute("simple");
     }
@@ -38076,23 +38115,23 @@ func = function() {
     this.pop();
   }
 };
-function initPage(ctx2, xml, parentContainer, templateVars = {}, templateScope = {}) {
+function initPage(ctx, xml, parentContainer, templateVars = {}, templateScope = {}) {
   const tree = parseXML(xml);
   const container = UIBase2.createElement("container-x");
-  container.ctx = ctx2;
-  if (ctx2) {
+  container.ctx = ctx;
+  if (ctx) {
     container._init();
   }
   if (parentContainer) {
     parentContainer.add(container);
   }
-  const handler = new Handler(ctx2, container);
+  const handler = new Handler(ctx, container);
   handler.templateVars = Object.assign({}, templateVars);
   handler.templateScope = templateScope;
   handler.handle(tree);
   return container;
 }
-function loadPage(ctx2, url, parentContainer_or_args, loadSourceOnly = false, modifySourceCB, templateVars, templateScope) {
+function loadPage(ctx, url, parentContainer_or_args, loadSourceOnly = false, modifySourceCB, templateVars, templateScope) {
   let source;
   let parentContainer;
   if (parentContainer_or_args !== void 0 && !(parentContainer_or_args instanceof HTMLElement)) {
@@ -38114,7 +38153,7 @@ function loadPage(ctx2, url, parentContainer_or_args, loadSourceOnly = false, mo
       if (loadSourceOnly) {
         accept(source);
       } else {
-        accept(initPage(ctx2, source, parentContainer, templateVars, templateScope));
+        accept(initPage(ctx, source, parentContainer, templateVars, templateScope));
       }
     });
   } else {
@@ -38127,7 +38166,7 @@ function loadPage(ctx2, url, parentContainer_or_args, loadSourceOnly = false, mo
         if (loadSourceOnly) {
           accept(data);
         } else {
-          accept(initPage(ctx2, data, parentContainer, templateVars, templateScope));
+          accept(initPage(ctx, data, parentContainer, templateVars, templateScope));
         }
       });
     });
@@ -38195,11 +38234,11 @@ var RichEditor = class extends TextBoxBase {
     this.textarea.style.font = this.getDefault("DefaultText").genCSS();
     this.textarea.style.backgroundColor = this.getDefault("background-color");
     this.textarea.setAttribute("white-space", "pre-wrap");
-    this.textarea.addEventListener("keydown", (e2) => {
-      if (e2.keyCode === keymap["S"] && e2.shiftKey && (e2.ctrlKey || e2.metaKey)) {
+    this.textarea.addEventListener("keydown", (e) => {
+      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.metaKey)) {
         this.toggleStrikeThru();
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
       }
     });
     this.textarea.addEventListener("focus", () => {
@@ -38438,8 +38477,8 @@ var VectorPopupButton = class extends Button {
       style: "vecPopupButton"
     };
   }
-  _onpress = (e2) => {
-    const evt = e2;
+  _onpress = (e) => {
+    const evt = e;
     if (evt.button && evt.button !== 0) {
       return;
     }
@@ -38773,14 +38812,14 @@ var VectorPanel = class extends ColumnFrame {
     this.internalDisabled = false;
     let length = val?.length ?? 0;
     if (meta !== void 0 && meta.flag & PropFlags.USE_CUSTOM_GETSET) {
-      const rdef2 = this.ctx.api.resolvePath(this.ctx, path);
-      if (rdef2 !== void 0) {
+      const rdef = this.ctx.api.resolvePath(this.ctx, path);
+      if (rdef !== void 0) {
         var _stack = [];
         try {
-          const ctx2 = __using(_stack, meta.execWithContext());
-          ctx2.ctx = this.ctx;
-          ctx2.dataref = rdef2.obj;
-          ctx2.datapath = path;
+          const ctx = __using(_stack, meta.execWithContext());
+          ctx.ctx = this.ctx;
+          ctx.dataref = rdef.obj;
+          ctx.datapath = path;
           length = meta.getValue().length;
         } catch (_) {
           var _error = _, _hasError = true;
@@ -39290,8 +39329,8 @@ var Curve1DWidget = class extends ColumnFrame {
     g.restore();
   }
   rebuild() {
-    const ctx2 = this.ctx;
-    if (ctx2 === void 0 || this.container === void 0) {
+    const ctx = this.ctx;
+    if (ctx === void 0 || this.container === void 0) {
       return;
     }
     this.checkCurve1dEvents();
@@ -39559,11 +39598,11 @@ var PanelFrame = class extends ColumnFrame {
     };
     return Object.assign(super.saveData(), ret);
   }
-  loadData(obj2) {
-    if (!("closed" in obj2)) {
-      this.closed = !!obj2._closed;
+  loadData(obj) {
+    if (!("closed" in obj)) {
+      this.closed = !!obj._closed;
     } else {
-      this.closed = !!obj2.closed;
+      this.closed = !!obj.closed;
     }
     return this;
   }
@@ -39604,9 +39643,9 @@ var PanelFrame = class extends ColumnFrame {
       this.closed = !!this._iconcheckWidget.checked;
     };
     row._add(iconcheck);
-    const onclick = (e2) => {
+    const onclick = (e) => {
       iconcheck.checked = !iconcheck.checked;
-      e2.preventDefault();
+      e.preventDefault();
     };
     this.__label = row.label(this.getAttribute("label") ?? "");
     const label = this.__label;
@@ -39954,11 +39993,11 @@ var HueField = class extends UIBase5 {
       }
       this._redraw();
     };
-    this.addEventListener("keydown", (e2) => {
-      switch (e2.keyCode) {
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Right"]: {
-          const sign = e2.keyCode === keymap["Left"] ? -1 : 1;
+          const sign = e.keyCode === keymap["Left"] ? -1 : 1;
           this.hsva[0] = Math.min(Math.max(this.hsva[0] + 0.05 * sign, 0), 1);
           this._redraw();
           if (this._onchange) {
@@ -39968,20 +40007,20 @@ var HueField = class extends UIBase5 {
         }
       }
     });
-    this.addEventListener("mousedown", (e2) => {
+    this.addEventListener("mousedown", (e) => {
       if (this.modalRunning) {
         return;
       }
-      e2.preventDefault();
+      e.preventDefault();
       const rect = this.canvas.getClientRects()[0];
-      const x = e2.clientX - rect.x;
-      const y = e2.clientY - rect.y;
+      const x = e.clientX - rect.x;
+      const y = e.clientY - rect.y;
       setFromXY(x, y);
       this.pushModal({
-        on_mousemove: (e3) => {
+        on_mousemove: (e2) => {
           const rect2 = this.canvas.getClientRects()[0];
-          const x2 = e3.clientX - rect2.x;
-          const y2 = e3.clientY - rect2.y;
+          const x2 = e2.clientX - rect2.x;
+          const y2 = e2.clientY - rect2.y;
           setFromXY(x2, y2);
         },
         on_mousedown: (_e) => {
@@ -39990,8 +40029,8 @@ var HueField = class extends UIBase5 {
         on_mouseup: (_e) => {
           this.popModal();
         },
-        on_keydown: (e3) => {
-          if (e3.keyCode === keymap["Enter"] || e3.keyCode === keymap["Escape"] || e3.keyCode === keymap["Space"]) {
+        on_keydown: (e2) => {
+          if (e2.keyCode === keymap["Enter"] || e2.keyCode === keymap["Escape"] || e2.keyCode === keymap["Space"]) {
             this.popModal();
           }
         }
@@ -40091,11 +40130,11 @@ var SatValField = class extends UIBase5 {
       }
       this._redraw();
     };
-    this.addEventListener("keydown", (e2) => {
-      switch (e2.keyCode) {
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
         case keymap["Left"]:
         case keymap["Right"]: {
-          const sign = e2.keyCode === keymap["Left"] ? -1 : 1;
+          const sign = e.keyCode === keymap["Left"] ? -1 : 1;
           this.hsva[1] = Math.min(Math.max(this.hsva[1] + 0.05 * sign, 0), 1);
           this._redraw();
           if (this._onchange) {
@@ -40105,7 +40144,7 @@ var SatValField = class extends UIBase5 {
         }
         case keymap["Up"]:
         case keymap["Down"]: {
-          const sign = e2.keyCode === keymap["Down"] ? -1 : 1;
+          const sign = e.keyCode === keymap["Down"] ? -1 : 1;
           this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05 * sign, 0), 1);
           this._redraw();
           if (this._onchange) {
@@ -40115,27 +40154,27 @@ var SatValField = class extends UIBase5 {
         }
       }
     });
-    this.canvas.addEventListener("mousedown", (e2) => {
+    this.canvas.addEventListener("mousedown", (e) => {
       if (this.modalRunning) {
         return;
       }
-      e2.preventDefault();
+      e.preventDefault();
       const rect = this.canvas.getClientRects()[0];
-      const x = e2.clientX - rect.x;
-      const y = e2.clientY - rect.y;
+      const x = e.clientX - rect.x;
+      const y = e.clientY - rect.y;
       setFromXY(x, y);
       const mouseHandlers = {
-        on_mousemove: (e3) => {
+        on_mousemove: (e2) => {
           const rect2 = this.canvas.getClientRects()[0];
           if (rect2 === void 0) {
             return;
           }
-          const x2 = e3.clientX - rect2.x;
-          const y2 = e3.clientY - rect2.y;
+          const x2 = e2.clientX - rect2.x;
+          const y2 = e2.clientY - rect2.y;
           setFromXY(x2, y2);
         },
-        on_pointermove(e3) {
-          this.on_mousemove(e3);
+        on_pointermove(e2) {
+          this.on_mousemove(e2);
         },
         on_mousedown: (_e) => {
           this.popModal();
@@ -40143,41 +40182,41 @@ var SatValField = class extends UIBase5 {
         on_mouseup: (_e) => {
           this.popModal();
         },
-        on_keydown: (e3) => {
-          if (e3.keyCode === keymap["Enter"] || e3.keyCode === keymap["Escape"] || e3.keyCode === keymap["Space"]) {
+        on_keydown: (e2) => {
+          if (e2.keyCode === keymap["Enter"] || e2.keyCode === keymap["Escape"] || e2.keyCode === keymap["Space"]) {
             this.popModal();
           }
         }
       };
       this.pushModal(mouseHandlers);
     });
-    this.canvas.addEventListener("touchstart", (e2) => {
+    this.canvas.addEventListener("touchstart", (e) => {
       if (this.modalRunning) {
         return;
       }
-      e2.preventDefault();
+      e.preventDefault();
       const rect = this.canvas.getClientRects()[0];
-      const x = e2.touches[0].clientX - rect.x;
-      const y = e2.touches[0].clientY - rect.y;
+      const x = e.touches[0].clientX - rect.x;
+      const y = e.touches[0].clientY - rect.y;
       setFromXY(x, y);
       this.pushModal({
-        on_mousemove: (e3) => {
+        on_mousemove: (e2) => {
           const rect2 = this.canvas.getClientRects()[0];
           let mx;
           let my;
-          if (e3.touches?.length) {
-            mx = e3.touches[0].clientX - rect2.x;
-            my = e3.touches[0].clientY - rect2.y;
+          if (e2.touches?.length) {
+            mx = e2.touches[0].clientX - rect2.x;
+            my = e2.touches[0].clientY - rect2.y;
           } else {
-            mx = e3.x ?? 0;
-            my = e3.y ?? 0;
+            mx = e2.x ?? 0;
+            my = e2.y ?? 0;
           }
           setFromXY(mx, my);
         },
-        on_touchmove: (e3) => {
+        on_touchmove: (e2) => {
           const rect2 = this.canvas.getClientRects()[0];
-          const x2 = e3.touches[0].clientX - rect2.x;
-          const y2 = e3.touches[0].clientY - rect2.y;
+          const x2 = e2.touches[0].clientX - rect2.x;
+          const y2 = e2.touches[0].clientY - rect2.y;
           setFromXY(x2, y2);
         },
         on_mousedown: (_e) => {
@@ -40192,8 +40231,8 @@ var SatValField = class extends UIBase5 {
         on_mouseup: (_e) => {
           this.popModal();
         },
-        on_keydown: (e3) => {
-          if (e3.keyCode === keymap["Enter"] || e3.keyCode === keymap["Escape"] || e3.keyCode === keymap["Space"]) {
+        on_keydown: (e2) => {
+          if (e2.keyCode === keymap["Enter"] || e2.keyCode === keymap["Escape"] || e2.keyCode === keymap["Space"]) {
             this.popModal();
           }
         }
@@ -40529,42 +40568,42 @@ var ColorPicker = class extends ColumnFrame {
     const makeSlider = (tabFrame, label, cb) => {
       return tabFrame.slider(void 0, label, 0, 0, 1, 1e-3, false, true, cb);
     };
-    node.h = makeSlider(tab2, "Hue", (e2) => {
+    node.h = makeSlider(tab2, "Hue", (e) => {
       const hsva = node.hsva;
-      node.setHSVA(e2.value, hsva[1], hsva[2], hsva[3]);
+      node.setHSVA(e.value, hsva[1], hsva[2], hsva[3]);
     });
-    node.s = makeSlider(tab2, "Saturation", (e2) => {
+    node.s = makeSlider(tab2, "Saturation", (e) => {
       const hsva = node.hsva;
-      node.setHSVA(hsva[0], e2.value, hsva[2], hsva[3]);
+      node.setHSVA(hsva[0], e.value, hsva[2], hsva[3]);
     });
-    node.v = makeSlider(tab2, "Value", (e2) => {
+    node.v = makeSlider(tab2, "Value", (e) => {
       const hsva = node.hsva;
-      node.setHSVA(hsva[0], hsva[1], e2.value, hsva[3]);
+      node.setHSVA(hsva[0], hsva[1], e.value, hsva[3]);
     });
-    node.a = makeSlider(tab2, "Alpha", (e2) => {
+    node.a = makeSlider(tab2, "Alpha", (e) => {
       const hsva = node.hsva;
-      node.setHSVA(hsva[0], hsva[1], hsva[2], e2.value);
+      node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
     });
     node.h.baseUnit = node.h.displayUnit = "none";
     node.s.baseUnit = node.s.displayUnit = "none";
     node.v.baseUnit = node.v.displayUnit = "none";
     node.a.baseUnit = node.a.displayUnit = "none";
     tab2 = tabs.tab("RGB");
-    node.r = makeSlider(tab2, "R", (e2) => {
+    node.r = makeSlider(tab2, "R", (e) => {
       const rgba = node.rgba;
-      node.setRGBA(e2.value, rgba[1], rgba[2], rgba[3]);
+      node.setRGBA(e.value, rgba[1], rgba[2], rgba[3]);
     });
-    node.g = makeSlider(tab2, "G", (e2) => {
+    node.g = makeSlider(tab2, "G", (e) => {
       const rgba = node.rgba;
-      node.setRGBA(rgba[0], e2.value, rgba[2], rgba[3]);
+      node.setRGBA(rgba[0], e.value, rgba[2], rgba[3]);
     });
-    node.b = makeSlider(tab2, "B", (e2) => {
+    node.b = makeSlider(tab2, "B", (e) => {
       const rgba = node.rgba;
-      node.setRGBA(rgba[0], rgba[1], e2.value, rgba[3]);
+      node.setRGBA(rgba[0], rgba[1], e.value, rgba[3]);
     });
-    node.a2 = makeSlider(tab2, "Alpha", (e2) => {
+    node.a2 = makeSlider(tab2, "Alpha", (e) => {
       const rgba = node.rgba;
-      node.setRGBA(rgba[0], rgba[1], rgba[2], e2.value);
+      node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
     });
     node.r.baseUnit = node.r.displayUnit = "none";
     node.g.baseUnit = node.g.displayUnit = "none";
@@ -40580,9 +40619,9 @@ var ColorPicker = class extends ColumnFrame {
           max: 1,
           is_int: false,
           defaultval: cmyk[idx],
-          callback: (e2) => {
+          callback: (e) => {
             const cmyk2 = node.getCMYK();
-            cmyk2[idx] = e2.value;
+            cmyk2[idx] = e.value;
             node.setCMYK(cmyk2[0], cmyk2[1], cmyk2[2], cmyk2[3]);
           },
           step: 1e-3
@@ -40818,9 +40857,9 @@ var ColorPickerButton = class extends UIBase5 {
     this.addEventListener("pointerover", enter, { capture: true, passive: true });
     this.addEventListener("pointerout", leave, { capture: true, passive: true });
     this.addEventListener("focus", leave, { capture: true, passive: true });
-    this.addEventListener("mousedown", (e2) => {
-      e2.preventDefault();
-      this._onClickButton(e2);
+    this.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      this._onClickButton(e);
     });
     this.setCSS();
   }
@@ -40833,24 +40872,24 @@ var ColorPickerButton = class extends UIBase5 {
   getRGBA() {
     return this.rgba;
   }
-  _onClickButton(e2) {
+  _onClickButton(e) {
     this.abortToolTips(4e3);
     console.warn("CLICK COLORPICKER");
     this.blur();
     if (this.onclick) {
-      this.onclick(e2);
+      this.onclick(e);
     }
     const colorpicker = this.ctx.screen.popup(
       this,
       this
     );
-    const ctx2 = contextWrangler.makeSafeContext(this.ctx);
-    colorpicker["ctx"] = ctx2;
+    const ctx = contextWrangler.makeSafeContext(this.ctx);
+    colorpicker["ctx"] = ctx;
     colorpicker.useDataPathUndo = this.useDataPathUndo;
     const path = this.hasAttribute("datapath") ? this.getAttribute("datapath") ?? void 0 : void 0;
-    const massSetPath2 = this.getAttribute("mass_set_path") ?? void 0;
-    const widget = colorpicker.colorPicker(path, void 0, massSetPath2);
-    widget["ctx"] = ctx2;
+    const massSetPath = this.getAttribute("mass_set_path") ?? void 0;
+    const widget = colorpicker.colorPicker(path, void 0, massSetPath);
+    widget["ctx"] = ctx;
     widget._init();
     widget.setRGBA(
       this.rgba[0],
@@ -41155,17 +41194,17 @@ var TabItem = class extends UIBase2 {
     this.ontabdragstart = null;
     this.ontabdragmove = null;
     this.ontabdragend = null;
-    this.addEventListener("tabclick", (e2) => {
-      if (this.ontabclick) return this.ontabclick(e2);
+    this.addEventListener("tabclick", (e) => {
+      if (this.ontabclick) return this.ontabclick(e);
     });
-    this.addEventListener("tabdragstart", (e2) => {
-      if (this.ontabdragstart) return this.ontabdragstart(e2);
+    this.addEventListener("tabdragstart", (e) => {
+      if (this.ontabdragstart) return this.ontabdragstart(e);
     });
-    this.addEventListener("tabdragmove", (e2) => {
-      if (this.ontabdragmove) return this.ontabdragmove(e2);
+    this.addEventListener("tabdragmove", (e) => {
+      if (this.ontabdragmove) return this.ontabdragmove(e);
     });
-    this.addEventListener("tabdragend", (e2) => {
-      if (this.ontabdragend) return this.ontabdragend(e2);
+    this.addEventListener("tabdragend", (e) => {
+      if (this.ontabdragend) return this.ontabdragend(e);
     });
     this.dom = void 0;
     this.extra = void 0;
@@ -41174,21 +41213,21 @@ var TabItem = class extends UIBase2 {
     this.pos = new Vector2();
     this.abssize = new Vector2();
     this.abspos = new Vector2();
-    this.addEventListener("pointerdown", (e2) => {
-      this.parentTabBar.on_pointerdown(e2);
+    this.addEventListener("pointerdown", (e) => {
+      this.parentTabBar.on_pointerdown(e);
     });
-    this.addEventListener("click", (e2) => {
-      e2.preventDefault();
-      this.parentTabBar._doclick(e2);
+    this.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.parentTabBar._doclick(e);
     });
-    this.addEventListener("pointermove", (e2) => {
-      this.parentTabBar.on_pointermove(e2);
+    this.addEventListener("pointermove", (e) => {
+      this.parentTabBar.on_pointermove(e);
     });
-    this.addEventListener("pointerup", (e2) => {
-      this.parentTabBar.on_pointerup(e2);
+    this.addEventListener("pointerup", (e) => {
+      this.parentTabBar.on_pointerup(e);
     });
-    this.addEventListener("keydown", (e2) => {
-      const ke = e2;
+    this.addEventListener("keydown", (e) => {
+      const ke = e;
       switch (ke.keyCode) {
         case keymap.Enter:
         case keymap.Space:
@@ -41326,45 +41365,45 @@ var ModalTabMove = class extends EventHandler {
     this.tab.sendEvent("tabdragend");
     return ret;
   }
-  on_pointerenter(e2) {
+  on_pointerenter(e) {
   }
-  on_pointerleave(e2) {
+  on_pointerleave(e) {
   }
-  on_pointerstart(e2) {
+  on_pointerstart(e) {
   }
-  on_pointerend(e2) {
+  on_pointerend(e) {
   }
-  on_pointerdown(e2) {
+  on_pointerdown(e) {
     this.finish();
   }
-  on_pointercancel(e2) {
+  on_pointercancel(e) {
     this.finish();
   }
-  on_pointerup(e2) {
+  on_pointerup(e) {
     this.finish();
   }
-  on_pointermove(e2) {
-    return this._on_move(e2, e2.x, e2.y);
+  on_pointermove(e) {
+    return this._on_move(e, e.x, e.y);
   }
-  _dragstate(e2, x, y) {
+  _dragstate(e, x, y) {
     this.dragcanvas.style["left"] = x + "px";
     this.dragcanvas.style["top"] = y + "px";
-    const ctx2 = this.tbar.ctx;
-    const screen = ctx2.screen;
+    const ctx = this.tbar.ctx;
+    const screen = ctx.screen;
     const elem2 = screen.pickElement(x, y);
     if (elem2 !== this.droptarget) {
-      let e22 = new DragEvent("dragexit", this.dragevent);
+      let e2 = new DragEvent("dragexit", this.dragevent);
       if (this.droptarget) {
-        this.droptarget.dispatchEvent(e22);
+        this.droptarget.dispatchEvent(e2);
       }
-      e22 = new DragEvent("dragover", this.dragevent);
+      e2 = new DragEvent("dragover", this.dragevent);
       this.droptarget = elem2;
       if (elem2) {
-        elem2.dispatchEvent(e22);
+        elem2.dispatchEvent(e2);
       }
     }
   }
-  _on_move(e2, x, y) {
+  _on_move(e, x, y) {
     const r = this.tbar.getClientRects()[0];
     const dpi = UIBase2.getDPI();
     if (r === void 0) {
@@ -41372,7 +41411,7 @@ var ModalTabMove = class extends EventHandler {
       return;
     }
     if (this.dragstate) {
-      this._dragstate(e2, x, y);
+      this._dragstate(e, x, y);
       return;
     }
     x -= r.x;
@@ -41426,8 +41465,8 @@ var ModalTabMove = class extends EventHandler {
       this.dragcanvas.style["width"] = tab2.size[0] / dpi + "px";
       this.dragcanvas.style["height"] = tab2.size[1] / dpi + "px";
       this.dragcanvas.style["position"] = UIBase2.PositionKey;
-      this.dragcanvas.style["left"] = e2.x + "px";
-      this.dragcanvas.style["top"] = e2.y + "px";
+      this.dragcanvas.style["left"] = e.x + "px";
+      this.dragcanvas.style["top"] = e.y + "px";
       this.dragcanvas.style["zIndex"] = "500";
       document.body.appendChild(this.dragcanvas);
       g2.putImageData(this.dragimg, 0, 0);
@@ -41445,14 +41484,14 @@ var ModalTabMove = class extends EventHandler {
     tbar.update(true);
     this.mpos[0] = x;
     this.mpos[1] = y;
-    const e22 = tab2.sendEvent("tabdragmove", e2);
-    if (e22.defaultPrevented) {
+    const e2 = tab2.sendEvent("tabdragmove", e);
+    if (e2.defaultPrevented) {
       this.finish();
     }
   }
-  on_keydown(e2) {
-    if (debug2) console.log(e2.keyCode);
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    if (debug2) console.log(e.keyCode);
+    switch (e.keyCode) {
       case keymap.Escape:
       //escape
       case keymap.Space:
@@ -41513,16 +41552,16 @@ var TabBar = class extends UIBase2 {
     this.onselect = null;
     this.canvas.addEventListener(
       "pointermove",
-      (e2) => {
-        this.on_pointermove(e2);
+      (e) => {
+        this.on_pointermove(e);
       },
       false
     );
-    this.canvas.addEventListener("pointerdown", (e2) => {
-      this.on_pointerdown(e2);
+    this.canvas.addEventListener("pointerdown", (e) => {
+      this.on_pointerdown(e);
     });
   }
-  _doelement(e2, mx, my) {
+  _doelement(e, mx, my) {
     for (const tab2 of this.tabs) {
       let ok;
       if (this.horiz) {
@@ -41536,10 +41575,10 @@ var TabBar = class extends UIBase2 {
       }
     }
   }
-  _domouse(e2) {
+  _domouse(e) {
     const r = this.canvas.getClientRects()[0];
-    const ex = e2.clientX || e2.x;
-    const ey = e2.clientY || e2.y;
+    const ex = e.clientX || e.x;
+    const ey = e.clientY || e.y;
     const rx = r.x;
     const ry = r.y;
     let mx = ex - rx;
@@ -41547,62 +41586,62 @@ var TabBar = class extends UIBase2 {
     const dpi = this.getDPI();
     mx *= dpi;
     my *= dpi;
-    this._doelement(e2, mx, my);
-    const is_mdown = e2.type === "mousedown" || e2.type == "pointerdown";
+    this._doelement(e, mx, my);
+    const is_mdown = e.type === "mousedown" || e.type == "pointerdown";
     if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
-      e2.preventDefault();
+      e.preventDefault();
     }
   }
-  _doclick(e2) {
-    this._domouse(e2);
-    if (e2.defaultPrevented) {
+  _doclick(e) {
+    this._domouse(e);
+    if (e.defaultPrevented) {
       return;
     }
     if (debug2) console.log("mdown");
-    if (e2.button !== 0) {
+    if (e.button !== 0) {
       return;
     }
     const ht = this.tabs.highlight;
     const acte = {};
-    for (const k in e2) {
+    for (const k in e) {
       if (k === "defaultPrevented" || k === "cancelBubble") {
         continue;
       }
-      acte[k] = e2[k];
+      acte[k] = e[k];
     }
     acte.target = ht;
-    acte.pointerId = e2.pointerId;
+    acte.pointerId = e.pointerId;
     const pointerActe = new PointerEvent("tabactive", acte);
     if (ht) {
-      const e22 = ht.sendEvent("tabclick", e2);
-      if (e22.defaultPrevented) {
+      const e2 = ht.sendEvent("tabclick", e);
+      if (e2.defaultPrevented) {
         pointerActe.preventDefault();
       }
     }
     if (ht !== void 0 && this.tool === void 0) {
       this.setActive(ht, pointerActe);
       if (this.movableTabs && !pointerActe.defaultPrevented) {
-        this._startMove(ht, e2);
+        this._startMove(ht, e);
       }
-      e2.preventDefault();
-      e2.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
     }
   }
-  on_pointerdown(e2) {
-    this._doclick(e2);
+  on_pointerdown(e) {
+    this._doclick(e);
   }
-  on_pointermove(e2) {
+  on_pointermove(e) {
     const r = this.canvas.getClientRects()[0];
-    this._domouse(e2);
-    e2.preventDefault();
-    e2.stopPropagation();
+    this._domouse(e);
+    e.preventDefault();
+    e.stopPropagation();
   }
-  on_pointerup(e2) {
+  on_pointerup(e) {
   }
   static setDefault(element) {
-    const e2 = element;
-    e2.setAttribute("bar_pos", "top");
-    e2.updatePos(true);
+    const e = element;
+    e.setAttribute("bar_pos", "top");
+    e.updatePos(true);
     return element;
   }
   static define() {
@@ -41642,11 +41681,11 @@ var TabBar = class extends UIBase2 {
     }
   }
   _fireOnSelect() {
-    const e2 = this._makeOnSelectEvt();
+    const e = this._makeOnSelectEvt();
     if (this.onselect) {
-      this.onselect(e2);
+      this.onselect(e);
     }
-    return e2;
+    return e;
   }
   _makeOnSelectEvt() {
     return {
@@ -41688,8 +41727,8 @@ var TabBar = class extends UIBase2 {
       active: act
     };
   }
-  loadData(obj2) {
-    if (!obj2.taborder) {
+  loadData(obj) {
+    if (!obj.taborder) {
       return this;
     }
     const tabs = this.tabs;
@@ -41697,12 +41736,12 @@ var TabBar = class extends UIBase2 {
     const ntabs = [];
     ntabs.active = void 0;
     ntabs.highlight = void 0;
-    for (const tname of obj2.taborder) {
+    for (const tname of obj.taborder) {
       const tab2 = this.getTab(tname);
       if (tab2 === void 0) {
         continue;
       }
-      if (tab2.name === obj2.active) {
+      if (tab2.name === obj.active) {
         active = tab2;
       }
       ntabs.push(tab2);
@@ -42171,9 +42210,9 @@ var TabContainer2 = class extends UIBase2 {
     div.appendChild(this.tbar);
     this.shadow.appendChild(div);
     this.tbar.parentWidget = this;
-    this.tbar.onselect = (e2) => {
+    this.tbar.onselect = (e) => {
       if (this.onselect) {
-        this.onselect(e2);
+        this.onselect(e);
       }
     };
     this.tbar.onchange = (tab2, event) => {
@@ -42224,9 +42263,9 @@ var TabContainer2 = class extends UIBase2 {
     val = !!val;
     this.setAttribute("hide-scrollbars", "" + val);
   }
-  static setDefault(e2) {
-    e2.setAttribute("bar_pos", "top");
-    return e2;
+  static setDefault(e) {
+    e.setAttribute("bar_pos", "top");
+    return e;
   }
   static define() {
     return {
@@ -42271,14 +42310,14 @@ var TabContainer2 = class extends UIBase2 {
   }
   enableDrag() {
     this.tbar.draggable = this.draggable = true;
-    this.tbar.addEventListener("dragstart", (e2) => {
-      this.dispatchEvent(new DragEvent("dragstart", e2));
+    this.tbar.addEventListener("dragstart", (e) => {
+      this.dispatchEvent(new DragEvent("dragstart", e));
     });
-    this.tbar.addEventListener("dragover", (e2) => {
-      this.dispatchEvent(new DragEvent("dragover", e2));
+    this.tbar.addEventListener("dragover", (e) => {
+      this.dispatchEvent(new DragEvent("dragover", e));
     });
-    this.tbar.addEventListener("dragexit", (e2) => {
-      this.dispatchEvent(new DragEvent("dragexit", e2));
+    this.tbar.addEventListener("dragexit", (e) => {
+      this.dispatchEvent(new DragEvent("dragexit", e));
     });
   }
   clear() {
@@ -42538,8 +42577,8 @@ var ListBox2 = class extends Container2 {
       }
     `;
     this.shadow.prepend(style);
-    this.onkeydown = (e2) => {
-      switch (e2.keyCode) {
+    this.onkeydown = (e) => {
+      switch (e.keyCode) {
         case keymap["Up"]:
         case keymap["Down"]:
           if (this.items.length == 0) return;
@@ -42548,7 +42587,7 @@ var ListBox2 = class extends Container2 {
             return;
           }
           let i = this.items.indexOf(this.items.active);
-          const dir = e2.keyCode == keymap["Up"] ? -1 : 1;
+          const dir = e.keyCode == keymap["Up"] ? -1 : 1;
           i = Math.max(Math.min(i + dir, this.items.length - 1), 0);
           this.setActive(this.items[i]);
           break;
@@ -42651,8 +42690,8 @@ var ProgressCircle = class extends UIBase2 {
     this.tabIndex = 0;
     this.setAttribute("tab-index", "0");
     this.setAttribute("tabindex", "0");
-    const onkey = (e2) => {
-      const ke = e2;
+    const onkey = (e) => {
+      const ke = e;
       switch (ke.keyCode) {
         case keymap["Escape"]:
           if (this._oncancel) {
@@ -42798,7 +42837,7 @@ UIBase2.register(ProgressCircle);
 // scripts/widgets/ui_table.ts
 init_ui_base();
 init_util();
-var list4 = list3;
+var list3 = list2;
 var TableRow = class extends Container2 {
   constructor() {
     super();
@@ -42892,7 +42931,7 @@ var TableFrame2 = class extends Container2 {
         return tr.scrollIntoView.apply(tr, args);
       },
       clear() {
-        for (const node of list4(tr.childNodes)) {
+        for (const node of list3(tr.childNodes)) {
           tr.removeChild(node);
         }
       },
@@ -42965,7 +43004,7 @@ var TableFrame2 = class extends Container2 {
   }
   clear() {
     super.clear();
-    for (const child of list4(this.dom.childNodes)) {
+    for (const child of list3(this.dom.childNodes)) {
       child.remove();
     }
   }
@@ -43262,10 +43301,10 @@ init_toolsys();
 init_toolprop();
 var LastKey = /* @__PURE__ */ Symbol("LastToolPanelId");
 var tool_idgen2 = 0;
-function getLastToolStruct(ctx2) {
-  let ret = ctx2.state._last_tool;
+function getLastToolStruct(ctx) {
+  let ret = ctx.state._last_tool;
   if (!ret) {
-    ret = ctx2.toolstack.head;
+    ret = ctx.toolstack.head;
   } else {
     let msg = "Passing the last tool to last-tool-panel via appstate._last_tool is deprecated;";
     msg += "\nctx.toolstack.head is now used instead.";
@@ -43307,25 +43346,25 @@ var LastToolPanel = class extends ColumnFrame {
     this.rebuild();
   }
   /** client code can subclass and override this method */
-  getToolStackHead(ctx2) {
-    let bad = ctx2.toolstack.length === 0 || ctx2.toolstack.cur >= ctx2.toolstack.length;
-    bad = bad || ctx2.toolstack.cur < 0;
-    bad = bad || !!(ctx2.toolstack[ctx2.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT);
+  getToolStackHead(ctx) {
+    let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    bad = bad || ctx.toolstack.cur < 0;
+    bad = bad || !!(ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT);
     if (bad) {
       return void 0;
     }
-    return ctx2.toolstack[ctx2.toolstack.cur];
+    return ctx.toolstack[ctx.toolstack.cur];
   }
   rebuild() {
-    const ctx2 = this.ctx;
-    if (ctx2 === void 0) {
+    const ctx = this.ctx;
+    if (ctx === void 0) {
       this._tool_id = -1;
       return;
     }
     this.needsRebuild = false;
     this.clear();
     this.label("Recent Command Settings");
-    const tool = this.getToolStackHead(ctx2);
+    const tool = this.getToolStackHead(ctx);
     if (!tool) {
       this.setCSS();
       return;
@@ -43340,15 +43379,15 @@ var LastToolPanel = class extends ColumnFrame {
       if (tool.modalRunning) {
         return;
       }
-      if (tool === ctx2.toolstack.head) {
+      if (tool === ctx.toolstack.head) {
         this.ignoreOnChange = true;
-        ctx2.toolstack.rerun(tool);
+        ctx.toolstack.rerun(tool);
         this.ignoreOnChange = false;
       } else {
         this.unlinkEvents();
       }
     };
-    this.buildTool(ctx2, tool, panel);
+    this.buildTool(ctx, tool, panel);
     this.flushUpdate();
     this.flushUpdate();
   }
@@ -43364,7 +43403,7 @@ var LastToolPanel = class extends ColumnFrame {
     }
   }
   /** client code can subclass and override this method */
-  buildTool(ctx2, tool, panel) {
+  buildTool(ctx, tool, panel) {
     if (tool.flag & ToolFlags.PRIVATE) {
       return;
     }
@@ -43400,11 +43439,11 @@ var LastToolPanel = class extends ColumnFrame {
   }
   update() {
     super.update();
-    const ctx2 = this.ctx;
-    if (!ctx2) {
+    const ctx = this.ctx;
+    if (!ctx) {
       return;
     }
-    const tool = this.getToolStackHead(ctx2);
+    const tool = this.getToolStackHead(ctx);
     this.needsRebuild = this.needsRebuild || tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
     if (this.needsRebuild) {
       tool[LastKey] = tool_idgen2++;
@@ -43683,8 +43722,8 @@ function graphGetIslands(nodes) {
     island.push(n);
     visit1.add(n);
     for (const v of n.verts) {
-      for (const e2 of v.edges) {
-        const n2 = e2.node;
+      for (const e of v.edges) {
+        const n2 = e.node;
         if (n2 !== n && !visit1.has(n2)) {
           rec(n2, island);
         }
@@ -43715,15 +43754,15 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   nodes = copyGraph(nodes);
   let decay = 1;
   let decayi = 0;
-  const min2 = new Vector2().addScalar(1e17);
-  const max2 = new Vector2().addScalar(-1e17);
+  const min = new Vector2().addScalar(1e17);
+  const max = new Vector2().addScalar(-1e17);
   const tmp = new Vector2();
   for (const n of nodes) {
-    min2.min(n.pos);
+    min.min(n.pos);
     tmp.load(n.pos).add(n.size);
-    max2.max(tmp);
+    max.max(tmp);
   }
-  const size = new Vector2(max2).sub(min2);
+  const size = new Vector2(max).sub(min);
   for (const n of nodes) {
     n.pos[0] += (Math.random() - 0.5) * 5 / size[0] * speed;
     n.pos[1] += (Math.random() - 0.5) * 5 / size[1] * speed;
@@ -43897,15 +43936,15 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     decayi++;
     decay = Math.exp(-decayi * 0.1);
   }
-  min2.zero().addScalar(1e17);
-  max2.zero().addScalar(-1e17);
+  min.zero().addScalar(1e17);
+  max.zero().addScalar(-1e17);
   for (const node of best ? best : nodes) {
-    min2.min(node.pos);
+    min.min(node.pos);
     p2.load(node.pos).add(node.size);
-    max2.max(p2);
+    max.max(p2);
   }
   for (const node of best ? best : nodes) {
-    node.pos.sub(min2);
+    node.pos.sub(min);
   }
   loadGraph(orignodes, best ? best : nodes);
   if (updateCb) {
@@ -44201,64 +44240,64 @@ __export(controller_exports, {
 // scripts/path-controller/controller/contextNew.ts
 var ContextLocker = class {
   ctx;
-  constructor(ctx2) {
-    this.ctx = ctx2;
+  constructor(ctx) {
+    this.ctx = ctx;
   }
   /**
    * Serializes the current context into a 'locked' read-only form.
    * Needed for consistent undo/redo.
    **/
-  lock(ctx2, saveProperty, loadProperty) {
-    if (ctx2 === void 0) {
+  lock(ctx, saveProperty, loadProperty) {
+    if (ctx === void 0) {
       throw new Error("ctx was undefined! in ContextLocker.lock()!");
     }
     let keys2 = [];
     let props = {};
-    function getAllKeys2(obj2) {
+    function getAllKeys2(obj) {
       const keys3 = /* @__PURE__ */ new Set();
-      while (obj2 && obj2 !== Object) {
-        for (const k in Object.getOwnPropertyDescriptors(obj2)) {
+      while (obj && obj !== Object) {
+        for (const k in Object.getOwnPropertyDescriptors(obj)) {
           if (typeof k === "string") {
             keys3.add(k);
           }
         }
-        for (let k in obj2) {
+        for (let k in obj) {
           if (typeof k === "string") {
             keys3.add(k);
           }
         }
-        obj2 = Object.getPrototypeOf(obj2);
+        obj = Object.getPrototypeOf(obj);
       }
       return keys3;
     }
-    let keys22 = new Set(getAllKeys2(ctx2));
+    let keys22 = new Set(getAllKeys2(ctx));
     keys22.forEach((key) => {
       if (typeof key === "string" && (key.endsWith("_save") || key.endsWith("_load"))) {
         return;
       }
       if (typeof key === "symbol") {
-        props[key] = ctx2[key];
+        props[key] = ctx[key];
         return;
       }
-      const hasSave = `${key}_save` in ctx2;
-      const hasLoad = `${key}_load` in ctx2;
+      const hasSave = `${key}_save` in ctx;
+      const hasLoad = `${key}_load` in ctx;
       const savedKey = (s) => "$$" + s;
       function loadProp(key2, hasLoad2) {
         if (hasLoad2) {
-          return ctx2[key2 + "_load"](ctx2, props[savedKey(key2)]);
+          return ctx[key2 + "_load"](ctx, props[savedKey(key2)]);
         } else if (typeof loadProperty === "function") {
-          return loadProperty(ctx2, key2, props[savedKey(key2)]);
+          return loadProperty(ctx, key2, props[savedKey(key2)]);
         } else {
           return props[savedKey(key2)];
         }
       }
       function saveProp(key2, hasSave2) {
         if (hasSave2) {
-          return ctx2[key2 + "_save"](ctx2);
+          return ctx[key2 + "_save"](ctx);
         } else if (typeof saveProperty === "function") {
-          return saveProperty.call(void 0, ctx2, key2, ctx2[key2]);
+          return saveProperty.call(void 0, ctx, key2, ctx[key2]);
         } else {
-          return ctx2[key2];
+          return ctx[key2];
         }
       }
       if (hasSave || hasLoad) {
@@ -44278,7 +44317,7 @@ var ContextLocker = class {
           }
         });
       } else {
-        props[key] = ctx2[key];
+        props[key] = ctx[key];
       }
     });
     return props;
@@ -44369,7 +44408,7 @@ var ThemeEditor = class extends Container2 {
     super.init();
     this.build();
   }
-  doFolder(catkey, obj2, container = this, panel = void 0, path = void 0) {
+  doFolder(catkey, obj, container = this, panel = void 0, path = void 0) {
     let key = catkey.key;
     if (!path) {
       path = [key];
@@ -44381,7 +44420,7 @@ var ThemeEditor = class extends Container2 {
     let row2 = panel.row();
     let textbox = row2.textbox(void 0, "");
     let callback = (id2) => {
-      console.log("ID", id2, obj2, catkey);
+      console.log("ID", id2, obj, catkey);
       console.log(textbox, textbox.text, textbox.value);
       let propkey = (textbox.text || "").trim();
       if (!propkey) {
@@ -44389,24 +44428,24 @@ var ThemeEditor = class extends Container2 {
         return;
       }
       if (id2 === "FLOAT") {
-        obj2[propkey] = 0;
+        obj[propkey] = 0;
       } else if (id2 === "SUBFOLDER") {
-        obj2[propkey] = { test: 0 };
+        obj[propkey] = { test: 0 };
       } else if (id2 === "COLOR") {
-        obj2[propkey] = "grey";
+        obj[propkey] = "grey";
       } else if (id2 === "FONT") {
-        obj2[propkey] = new CSSFont();
+        obj[propkey] = new CSSFont();
       } else if (id2 === "STRING") {
-        obj2[propkey] = "";
+        obj[propkey] = "";
       }
       let uidata = saveUIData(panel, "theme-panel");
       panel.clear();
-      this.doFolder(catkey, obj2, container, panel, path);
+      this.doFolder(catkey, obj, container, panel, path);
       loadUIData(panel, uidata);
       panel.flushUpdate();
       panel.flushSetCSS();
       if (this.onchange) {
-        this.onchange(key, propkey, obj2);
+        this.onchange(key, propkey, obj);
       }
     };
     let menu = row2.menu("+", [
@@ -44428,11 +44467,11 @@ var ThemeEditor = class extends Container2 {
       this.ctx.screen.completeUpdate();
     };
     let getpath = (path2) => {
-      let obj3 = theme;
+      let obj2 = theme;
       for (let i = 0; i < path2.length; i++) {
-        obj3 = obj3[path2[i]];
+        obj2 = obj2[path2[i]];
       }
-      return obj3;
+      return obj2;
     };
     let ok = false;
     let _i = 0;
@@ -44528,8 +44567,8 @@ var ThemeEditor = class extends Container2 {
         this.doFolder(catkey2, v, panel, void 0, path22);
       }
     };
-    for (let k in obj2) {
-      let v = obj2[k];
+    for (let k in obj) {
+      let v = obj[k];
       dokey(k, v, path);
     }
     if (!ok) {
@@ -44573,20 +44612,20 @@ var ThemeEditor = class extends Container2 {
     let keys2 = Object.keys(categories);
     keys2.sort(strcmp);
     for (let k of keys2) {
-      let list6 = categories[k];
-      list6.sort((a2, b) => strcmp(a2.key, b.key));
+      let list5 = categories[k];
+      list5.sort((a2, b) => strcmp(a2.key, b.key));
       let panel = this;
-      if (list6.length > 1) {
+      if (list5.length > 1) {
         panel = this.panel(k);
       }
-      for (let cat of list6) {
+      for (let cat of list5) {
         let k2 = cat.key;
         let v = theme[k2];
         if (typeof v === "object") {
           this.doFolder(cat, v, panel);
         }
       }
-      if (list6.length > 1) {
+      if (list5.length > 1) {
         panel.closed = true;
       }
     }
@@ -44744,7 +44783,7 @@ var Overdraw = class extends UIBase2 {
     this.shadow.appendChild(this.svg);
   }
   clear() {
-    for (let child of list3(this.svg.childNodes)) {
+    for (let child of list2(this.svg.childNodes)) {
       child.remove();
     }
     for (let child of this.otherChildren) {
@@ -44752,12 +44791,12 @@ var Overdraw = class extends UIBase2 {
     }
     this.otherChildren.length = 0;
   }
-  drawTextBubbles(texts, cos3, colors) {
+  drawTextBubbles(texts, cos2, colors) {
     let boxes = [];
     let elems = [];
     let cent = new Vector26();
     for (let i = 0; i < texts.length; i++) {
-      let co = cos3[i];
+      let co = cos2[i];
       let text2 = texts[i];
       let color;
       if (colors !== void 0) {
@@ -45245,9 +45284,9 @@ function startDrag(box) {
   let lastx = 0;
   let lasty = 0;
   const handlers = {
-    on_mousemove(e2) {
-      const x = e2.x;
-      const y = e2.y;
+    on_mousemove(e) {
+      const x = e.x;
+      const y = e.y;
       if (first2) {
         lastx = x;
         lasty = y;
@@ -45272,11 +45311,11 @@ function startDrag(box) {
         box._modal = void 0;
       }
     },
-    on_mouseup(e2) {
+    on_mouseup(e) {
       this.end();
     },
-    on_keydown(e2) {
-      switch (e2.keyCode) {
+    on_keydown(e) {
+      switch (e.keyCode) {
         case keymap["Escape"]:
         case keymap["Return"]:
           this.end();
@@ -45319,10 +45358,10 @@ var DragBox = class extends Container2 {
     icon.iconsheet = 0;
     this.addEventListener(
       "mousedown",
-      (e2) => {
+      (e) => {
         console.log("start drag");
         startDrag(this);
-        e2.preventDefault();
+        e.preventDefault();
       },
       { capture: false }
     );
@@ -45469,8 +45508,8 @@ var ToolBase = class extends ToolOp {
     popModalLight(this.modaldata);
     this.modaldata = void 0;
   }
-  toolModalStart(ctx2 = this.screen.ctx, elem2, pointerId) {
-    this.ctx = ctx2;
+  toolModalStart(ctx = this.screen.ctx, elem2, pointerId) {
+    this.ctx = ctx;
     if (this.modaldata !== void 0) {
       console.log("Error, modaldata was not undefined");
       popModalLight(this.modaldata);
@@ -45503,14 +45542,14 @@ var ToolBase = class extends ToolOp {
       this.modaldata = pushModalLight(handlers);
     }
   }
-  on_pointermove(e2) {
+  on_pointermove(e) {
   }
-  on_pointerup(e2) {
+  on_pointerup(e) {
     this.finish();
   }
-  on_keydown(e2) {
-    console.log("s", e2.keyCode);
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    console.log("s", e.keyCode);
+    switch (e.keyCode) {
       case keymap.Escape:
         this.cancel();
         break;
@@ -45576,7 +45615,7 @@ var AreaResizeTool = class extends ToolBase {
     rec(this.border.v2);
     return ret;
   }
-  on_pointerup(e2) {
+  on_pointerup(e) {
     this.finish();
   }
   finish() {
@@ -45586,8 +45625,8 @@ var AreaResizeTool = class extends ToolBase {
     this.screen.snapScreenVerts();
     this.screen.loadFromVerts();
   }
-  on_keydown(e2) {
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    switch (e.keyCode) {
       case keymap["Escape"]:
       case keymap["Enter"]:
       case keymap["Space"]:
@@ -45595,8 +45634,8 @@ var AreaResizeTool = class extends ToolBase {
         break;
     }
   }
-  on_pointermove(e2) {
-    const mpos = new Vector2([e2.x, e2.y]);
+  on_pointermove(e) {
+    const mpos = new Vector2([e.x, e.y]);
     mpos.sub(this.start_mpos);
     const axis = this.border.horiz ? 1 : 0;
     this.overdraw.clear();
@@ -45633,8 +45672,8 @@ var AreaResizeTool = class extends ToolBase {
       }
       this.overdraw.line(border2.v1, border2.v2, color);
     }
-    this.start_mpos[0] = e2.x;
-    this.start_mpos[1] = e2.y;
+    this.start_mpos[0] = e.x;
+    this.start_mpos[1] = e.y;
     this.screen.loadFromVerts();
     this.screen.setCSS();
     if (check() != badcount) {
@@ -45681,14 +45720,14 @@ var SplitTool = class extends ToolBase {
       //tool properties
     };
   }
-  toolModalStart(ctx2) {
+  toolModalStart(ctx) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
     }
     this.overdraw = UIBase2.createElement("overdraw-x");
     this.overdraw.start(this.screen);
-    super.toolModalStart(ctx2);
+    super.toolModalStart(ctx);
   }
   cancel() {
     return this.finish(true);
@@ -45709,9 +45748,9 @@ var SplitTool = class extends ToolBase {
     screen.splitArea(sarea, t, this.horiz);
     screen._internalRegenAll();
   }
-  on_pointermove(e2) {
-    let x = e2.x;
-    let y = e2.y;
+  on_pointermove(e) {
+    let x = e.x;
+    let y = e.y;
     const screen = this.screen;
     const sarea = screen.findScreenArea(x, y);
     this.overdraw.clear();
@@ -45724,22 +45763,22 @@ var SplitTool = class extends ToolBase {
       const horiz = this.horiz = dx < dy;
       if (horiz) {
         this.t = y;
-        this.overdraw.line([sarea.pos[0], e2.y], [sarea.pos[0] + sarea.size[0], e2.y]);
+        this.overdraw.line([sarea.pos[0], e.y], [sarea.pos[0] + sarea.size[0], e.y]);
       } else {
         this.t = x;
-        this.overdraw.line([e2.x, sarea.pos[1]], [e2.x, sarea.pos[1] + sarea.size[1]]);
+        this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1] + sarea.size[1]]);
       }
     }
   }
-  on_pointerdown(e2) {
+  on_pointerdown(e) {
     this.finish();
-    if (e2.button) {
-      e2.stopPropagation();
-      e2.preventDefault();
+    if (e.button) {
+      e.stopPropagation();
+      e.preventDefault();
     }
   }
-  on_keydown(e2) {
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    switch (e.keyCode) {
       case keymap.Escape:
         this.cancel();
         break;
@@ -45781,14 +45820,14 @@ var RemoveAreaTool = class extends ToolBase {
       //tool properties
     };
   }
-  toolModalStart(ctx2) {
+  toolModalStart(ctx) {
     if (this.started) {
       console.trace("double call to modalStart()");
       return;
     }
     this.overdraw = UIBase2.createElement("overdraw-x");
     this.overdraw.start(this.screen);
-    super.toolModalStart(ctx2);
+    super.toolModalStart(ctx);
   }
   cancel() {
     return this.finish(true);
@@ -45811,9 +45850,9 @@ var RemoveAreaTool = class extends ToolBase {
       screen._internalRegenAll();
     }
   }
-  on_pointermove(e2) {
-    const x = e2.x;
-    const y = e2.y;
+  on_pointermove(e) {
+    const x = e.x;
+    const y = e.y;
     const screen = this.screen;
     const sarea = screen.findScreenArea(x, y);
     this.overdraw.clear();
@@ -45822,16 +45861,16 @@ var RemoveAreaTool = class extends ToolBase {
       this.overdraw.rect(sarea.pos, sarea.size, "rgba(0,0,0,0.1)");
     }
   }
-  on_pointerdown(e2) {
+  on_pointerdown(e) {
     this.finish();
-    if (e2.button) {
-      e2.stopPropagation();
-      e2.preventDefault();
+    if (e.button) {
+      e.stopPropagation();
+      e.preventDefault();
     }
   }
-  on_keydown(e2) {
-    console.log("s", e2.keyCode);
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    console.log("s", e.keyCode);
+    switch (e.keyCode) {
       case keymap.Escape:
         this.cancel();
         break;
@@ -46062,23 +46101,23 @@ var AreaDragTool = class extends ToolBase {
       b.setAttribute("class", cls);
       b.setAttribute("is_box", "true");
       b.addEventListener("pointermove", this.on_pointermove.bind(this));
-      const onclick = b.onclick = (e2) => {
-        const type = e2.type.toLowerCase();
-        if ((e2.type === "pointerdown" || e2.type === "pointerup") && e2.button !== 0) {
+      const onclick = b.onclick = (e) => {
+        const type = e.type.toLowerCase();
+        if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
           return;
         }
         console.log("split click");
         if (!this._finished) {
           this.finish();
           this.doSplit(b);
-          e2.preventDefault();
-          e2.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
         }
       };
       b.addEventListener("click", onclick);
       b.addEventListener("pointerdown", onclick);
       b.addEventListener("pointerup", onclick);
-      b.addEventListener("pointerenter", (e2) => {
+      b.addEventListener("pointerenter", (e) => {
         if (this.curbox !== void 0) {
           if (this.curbox.rect) {
             this.curbox.rect.remove();
@@ -46093,7 +46132,7 @@ var AreaDragTool = class extends ToolBase {
         this.curbox = b;
         b.setColor(hcolor);
       });
-      b.addEventListener("pointerleave", (e2) => {
+      b.addEventListener("pointerleave", (e) => {
         if (b.rect) {
           b.rect.remove();
           b.rect = void 0;
@@ -46136,25 +46175,25 @@ var AreaDragTool = class extends ToolBase {
       }
     }
   }
-  on_drag(e2) {
-    this.on_pointermove(e2);
+  on_drag(e) {
+    this.on_pointermove(e);
   }
-  on_dragend(e2) {
-    this.on_pointerup(e2);
+  on_dragend(e) {
+    this.on_pointerup(e);
   }
-  on_pointermove(e2) {
+  on_pointermove(e) {
     let wid = 55;
     const color = "rgb(200, 200, 200, 0.7)";
-    const n = this.getActiveBox(e2.x, e2.y);
+    const n = this.getActiveBox(e.x, e.y);
     if (n !== void 0) {
       n.setColor(this.hcolor);
     }
     if (this.boxes.active !== void 0 && this.boxes.active !== n) {
       this.boxes.active.setColor(this.color);
-      this.boxes.active.dispatchEvent(new PointerEvent("pointerleave", e2));
+      this.boxes.active.dispatchEvent(new PointerEvent("pointerleave", e));
     }
     if (n !== void 0) {
-      n.dispatchEvent(new PointerEvent("pointerenter", e2));
+      n.dispatchEvent(new PointerEvent("pointerenter", e));
     }
     this.boxes.active = n;
     if (this.sarea === void 0) {
@@ -46162,28 +46201,28 @@ var AreaDragTool = class extends ToolBase {
     }
     if (this.cursorbox === void 0) {
       wid = 25;
-      this.cursorbox = this.overdraw.rect([e2.x - wid * 0.5, e2.y - wid * 0.5], [wid, wid], color);
+      this.cursorbox = this.overdraw.rect([e.x - wid * 0.5, e.y - wid * 0.5], [wid, wid], color);
       this.cursorbox.style.pointerEvents = "none";
     } else {
-      this.cursorbox.setAttribute("x", "" + (e2.x - wid * 0.5));
-      this.cursorbox.setAttribute("y", "" + (e2.y - wid * 0.5));
+      this.cursorbox.setAttribute("x", "" + (e.x - wid * 0.5));
+      this.cursorbox.setAttribute("y", "" + (e.y - wid * 0.5));
     }
   }
-  on_pointerup(e2) {
-    console.log("e.button", e2.button, e2, e2.x, e2.y, this.getActiveBox(e2.x, e2.y));
-    if (e2.button) {
-      e2.stopPropagation();
-      e2.preventDefault();
+  on_pointerup(e) {
+    console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
+    if (e.button) {
+      e.stopPropagation();
+      e.preventDefault();
     } else {
-      const box = this.getActiveBox(e2.x, e2.y);
+      const box = this.getActiveBox(e.x, e.y);
       if (box !== void 0) {
-        box.onclick(e2);
+        box.onclick(e);
       }
     }
     this.finish();
   }
-  toolModalStart(ctx2) {
-    super.toolModalStart(ctx2);
+  toolModalStart(ctx) {
+    super.toolModalStart(ctx);
     const screen = this.screen;
     this.overdraw.clear();
     if (this.sarea && !this.excludeAreas.has(this.sarea)) {
@@ -46202,8 +46241,8 @@ var AreaDragTool = class extends ToolBase {
       this.makeBoxes(sa);
     }
   }
-  on_keydown(e2) {
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    switch (e.keyCode) {
       case keymap["Escape"]:
       case keymap["Enter"]:
       case keymap["Space"]:
@@ -46227,28 +46266,28 @@ var AreaMoveAttachTool = class extends AreaDragTool {
     this.start_mpos2 = new Vector2(mpos);
     this.start_pos = new Vector2(sarea.pos);
   }
-  on_pointermove(e2) {
-    const dx = e2.x - this.start_mpos2[0];
-    const dy = e2.y - this.start_mpos2[1];
+  on_pointermove(e) {
+    const dx = e.x - this.start_mpos2[0];
+    const dy = e.y - this.start_mpos2[1];
     const sarea = this.sarea;
     if (this.first) {
-      this.start_mpos2 = new Vector2([e2.x, e2.y]);
+      this.start_mpos2 = new Vector2([e.x, e.y]);
       this.first = false;
       return;
     }
     sarea.pos[0] = this.start_pos[0] + dx;
     sarea.pos[1] = this.start_pos[1] + dy;
     sarea.loadFromPosSize();
-    this.mpos.loadXY(e2.x, e2.y);
-    super.on_pointermove(e2);
+    this.mpos.loadXY(e.x, e.y);
+    super.on_pointermove(e);
   }
-  on_pointerup(e2) {
-    super.on_pointerup(e2);
+  on_pointerup(e) {
+    super.on_pointerup(e);
   }
-  on_pointerdown(e2) {
+  on_pointerdown(e) {
   }
-  on_keydown(e2) {
-    super.on_keydown(e2);
+  on_keydown(e) {
+    super.on_keydown(e);
   }
 };
 var ToolTipViewer = class extends ToolBase {
@@ -46274,20 +46313,20 @@ var ToolTipViewer = class extends ToolBase {
       //tool properties
     };
   }
-  on_pointermove(e2) {
-    this.pick(e2);
+  on_pointermove(e) {
+    this.pick(e);
   }
-  on_pointerdown(e2) {
-    this.pick(e2);
+  on_pointerdown(e) {
+    this.pick(e);
   }
-  on_pointerup(e2) {
+  on_pointerup(e) {
     this.finish();
   }
   finish() {
     super.finish();
   }
-  on_keydown(e2) {
-    switch (e2.keyCode) {
+  on_keydown(e) {
+    switch (e.keyCode) {
       case keymap.Escape:
       case keymap.Enter:
       case keymap.Space:
@@ -46298,9 +46337,9 @@ var ToolTipViewer = class extends ToolBase {
         break;
     }
   }
-  pick(e2) {
-    const x = e2.x;
-    const y = e2.y;
+  pick(e) {
+    const x = e.x;
+    const y = e.y;
     const ele = this.screen.pickElement(x, y);
     console.log(ele ? ele.tagName : ele);
     if (ele !== void 0 && ele !== this.element && ele.title) {
@@ -46311,8 +46350,8 @@ var ToolTipViewer = class extends ToolBase {
       const tip = ele.title;
       this.tooltip = ToolTip.show(tip, this.screen, x, y);
     }
-    e2.preventDefault();
-    e2.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
   }
 };
 
@@ -46466,27 +46505,27 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     const call_menu = _ScreenBorder.bindBorderMenu(this);
     this.addEventListener(
       "pointerdown",
-      (e2) => {
+      (e) => {
         const ok = this.movable;
-        if (e2.button === 2) {
-          call_menu(e2);
+        if (e.button === 2) {
+          call_menu(e);
           return;
         }
         if (!ok) {
           console.log("border is not movable");
           return;
         }
-        const tool = new AreaResizeTool(this.screen, this, [e2.x, e2.y]);
+        const tool = new AreaResizeTool(this.screen, this, [e.x, e.y]);
         tool.start();
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
       },
       { capture: true }
     );
   }
   static bindBorderMenu(elem2, usePickElement = false) {
-    const on_dblclick = (e2) => {
-      if (usePickElement && elem2.pickElement(e2.x, e2.y) !== elem2) {
+    const on_dblclick = (e) => {
+      if (usePickElement && elem2.pickElement(e.x, e.y) !== elem2) {
         return;
       }
       let menu = [
@@ -46507,11 +46546,11 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
       ];
       menu = createMenu(elem2.ctx, "", menu);
       menu.ignoreFirstClick = 2;
-      elem2.ctx.screen.popupMenu(menu, e2.x - 15, e2.y - 15);
-      e2.preventDefault();
-      e2.stopPropagation();
+      elem2.ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
+      e.preventDefault();
+      e.stopPropagation();
     };
-    elem2.addEventListener("contextmenu", (e2) => e2.preventDefault());
+    elem2.addEventListener("contextmenu", (e) => e.preventDefault());
     elem2.addEventListener("dblclick", on_dblclick, { capture: true });
     return on_dblclick;
   }
@@ -46714,8 +46753,8 @@ init_const();
 init_struct();
 init_area_wrangler();
 init_area_wrangler();
-function isScreen(obj2) {
-  return typeof obj2 === "object" && obj2 !== null && IsScreenTag in obj2;
+function isScreen(obj) {
+  return typeof obj === "object" && obj !== null && IsScreenTag in obj;
 }
 window._contextWrangler = contextWrangler;
 var BorderMask = {
@@ -46889,7 +46928,7 @@ var Area = class _Area extends UIBase2 {
     super.init();
     this.style["overflow"] = "hidden";
     this.noMarginsOrPadding();
-    const onover = (e2) => {
+    const onover = (e) => {
       this.push_ctx_active();
       this.pop_ctx_active();
     };
@@ -46937,8 +46976,8 @@ var Area = class _Area extends UIBase2 {
       areaName: this.areaName
     };
   }
-  loadData(obj2) {
-    const id2 = obj2._area_id;
+  loadData(obj) {
+    const id2 = obj._area_id;
     if (id2 !== void 0 && id2 !== null) {
       this._area_id = id2;
     }
@@ -46998,9 +47037,9 @@ var Area = class _Area extends UIBase2 {
       _area_id: this._area_id
     });
   }
-  loadJSON(obj2) {
-    super.loadJSON(obj2);
-    this._area_id = obj2._area_id;
+  loadJSON(obj) {
+    super.loadJSON(obj);
+    this._area_id = obj._area_id;
     return this;
   }
   getBarHeight() {
@@ -47050,11 +47089,11 @@ var Area = class _Area extends UIBase2 {
     }
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
       const callmenu = ScreenBorder.bindBorderMenu(this.header, true);
-      this.addEventListener("mousedown", (e2) => {
-        if (e2.button !== 2 || this.header.pickElement(e2.x, e2.y) !== this.header) {
+      this.addEventListener("mousedown", (e) => {
+        if (e.button !== 2 || this.header.pickElement(e.x, e.y) !== this.header) {
           return;
         }
-        callmenu(e2);
+        callmenu(e);
       });
     }
     this.header.remove();
@@ -47091,12 +47130,12 @@ var Area = class _Area extends UIBase2 {
     const eventdom = this.header;
     let mdown = false;
     const mpos = new Vector2();
-    const mpre = (e2, pageX, pageY) => {
+    const mpre = (e, pageX, pageY) => {
       if (haveModal()) {
         return;
       }
-      pageX = pageX === void 0 ? e2.x : pageX;
-      pageY = pageY === void 0 ? e2.y : pageY;
+      pageX = pageX === void 0 ? e.x : pageX;
+      pageY = pageY === void 0 ? e.y : pageY;
       const screen = this.getScreen();
       if (!screen) return false;
       const node = screen.pickElement(pageX, pageY);
@@ -47105,31 +47144,31 @@ var Area = class _Area extends UIBase2 {
       }
       return true;
     };
-    eventdom.addEventListener("pointerout", (e2) => {
+    eventdom.addEventListener("pointerout", (e) => {
       mdown = false;
     });
-    eventdom.addEventListener("pointerleave", (e2) => {
+    eventdom.addEventListener("pointerleave", (e) => {
       mdown = false;
     });
-    eventdom.addEventListener("pointerdown", (e2) => {
-      if (!mpre(e2)) return;
-      mpos[0] = e2.pageX;
-      mpos[1] = e2.pageY;
+    eventdom.addEventListener("pointerdown", (e) => {
+      if (!mpre(e)) return;
+      mpos[0] = e.pageX;
+      mpos[1] = e.pageY;
       mdown = true;
     });
     let last_time = time_ms();
-    const do_mousemove = (e2, pageX, pageY) => {
+    const do_mousemove = (e, pageX, pageY) => {
       if (haveModal() || !make_draggable) {
         return;
       }
-      let mdown2 = e2.buttons !== 0 || !!e2.touches?.length;
+      let mdown2 = e.buttons !== 0 || !!e.touches?.length;
       mdown2 = mdown2 && mdown;
       if (time_ms() - last_time < 250) {
         return;
       }
       last_time = time_ms();
-      if (!mdown2 || !mpre(e2, pageX, pageY)) return;
-      if (e2.type === "mousemove" && e2.was_touch) {
+      if (!mdown2 || !mpre(e, pageX, pageY)) return;
+      if (e.type === "mousemove" && e.was_touch) {
         return;
       }
       const dx = pageX - mpos[0];
@@ -47151,29 +47190,29 @@ var Area = class _Area extends UIBase2 {
           return;
         }
         mdown = false;
-        console.log("area drag tool!", e2.type, e2);
+        console.log("area drag tool!", e.type, e);
         screen.areaDragTool(this.owning_sarea);
       }
     };
     eventdom.addEventListener(
       "pointermove",
-      (e2) => {
-        return do_mousemove(e2, e2.pageX, e2.pageY);
+      (e) => {
+        return do_mousemove(e, e.pageX, e.pageY);
       },
       false
     );
     eventdom.addEventListener(
       "pointerup",
-      (e2) => {
-        console.log("pointerup", e2);
+      (e) => {
+        console.log("pointerup", e);
         mdown = false;
       },
       false
     );
     eventdom.addEventListener(
       "pointercancel",
-      (e2) => {
-        console.log("pointercancel", e2);
+      (e) => {
+        console.log("pointercancel", e);
         mdown = false;
       },
       false
@@ -47283,7 +47322,7 @@ var ScreenArea2 = class extends UIBase2 {
     this.area = void 0;
     this.editors = [];
     this.editormap = {};
-    this.addEventListener("mouseover", (e2) => {
+    this.addEventListener("mouseover", (e) => {
       if (haveModal()) {
         return;
       }
@@ -47444,35 +47483,35 @@ var ScreenArea2 = class extends UIBase2 {
     };
     return Object.assign(super.toJSON(), ret);
   }
-  on_keydown(e2) {
+  on_keydown(e) {
     if (this.area?.on_keydown) {
       this.area.push_ctx_active();
-      this.area.on_keydown(e2);
+      this.area.on_keydown(e);
       this.area.pop_ctx_active();
     }
   }
-  loadJSON(obj2) {
-    if (obj2 === void 0) {
+  loadJSON(obj) {
+    if (obj === void 0) {
       console.warn("undefined in loadJSON");
       return;
     }
-    super.loadJSON(obj2);
-    this.pos.load(obj2.pos);
-    this.size.load(obj2.size);
-    for (const editor2 of obj2.editors) {
+    super.loadJSON(obj);
+    this.pos.load(obj.pos);
+    this.size.load(obj.size);
+    for (const editor2 of obj.editors) {
       const areaname = editor2.areaname;
       const tagname = areaclasses[areaname].define().tagname;
       const area = UIBase2.createElement(tagname);
       area.owning_sarea = this;
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
-      area.pos = new Vector2(obj2.pos);
-      area.size = new Vector2(obj2.size);
+      area.pos = new Vector2(obj.pos);
+      area.size = new Vector2(obj.size);
       area.ctx = this.ctx;
       area.inactive = true;
       area.loadJSON(editor2);
       area.owning_sarea = void 0;
-      if (areaname === obj2.area) {
+      if (areaname === obj.area) {
         this.area = area;
       }
     }
@@ -47611,16 +47650,16 @@ var ScreenArea2 = class extends UIBase2 {
     if (this._verts.length == 0) {
       return;
     }
-    const min2 = new Vector2([1e17, 1e17]);
-    const max2 = new Vector2([-1e17, -1e17]);
+    const min = new Vector2([1e17, 1e17]);
+    const max = new Vector2([-1e17, -1e17]);
     for (const v of this._verts) {
-      min2.min(v);
-      max2.max(v);
+      min.min(v);
+      max.max(v);
     }
-    this.pos[0] = min2[0];
-    this.pos[1] = min2[1];
-    this.size[0] = max2[0] - min2[0];
-    this.size[1] = max2[1] - min2[1];
+    this.pos[0] = min[0];
+    this.pos[1] = min[1];
+    this.size[0] = max[0] - min[0];
+    this.size[1] = max[1] - min[1];
     this.setCSS();
     return this;
   }
@@ -47931,8 +47970,8 @@ function makePopupArea(area_class, screen, args = {}) {
   screen.appendChild(sarea);
   sarea.setCSS();
   if (addEscapeKeyHandler) {
-    sarea.on_keydown = (e2) => {
-      if (e2.keyCode === keymap.Escape) {
+    sarea.on_keydown = (e) => {
+      if (e.keyCode === keymap.Escape) {
         screen.removeArea(sarea);
       }
     };
@@ -47954,13 +47993,13 @@ function dockerdebug(...args) {
     console.warn(...args);
   }
 }
-var testSnapScreenVerts = function(fitToSize, ctx2) {
-  const screen = ctx2.screen;
+var testSnapScreenVerts = function(fitToSize, ctx) {
+  const screen = ctx.screen;
   screen.unlisten();
   screen.on_resize([screen.size[0] - 75, screen.size[1]], screen.size);
   screen.on_resize = screen.updateSize = () => {
   };
-  const p = ctx2.propsbar;
+  const p = ctx.propsbar;
   p.pos[0] += 50;
   p.owning_sarea.loadFromPosSize();
   screen.regenBorders();
@@ -48016,36 +48055,36 @@ var AreaDocker = class _AreaDocker extends Container2 {
       const tab3 = tabs.tab(name2, editor2._id);
       const start_mpos = new Vector2();
       const mpos = new Vector2();
-      tab3._tab.addEventListener("tabdragstart", (e2) => {
-        if (e2.x !== 0 && e2.y !== 0) {
-          start_mpos.loadXY(e2.x, e2.y);
-          this.mpos.loadXY(e2.x, e2.y);
+      tab3._tab.addEventListener("tabdragstart", (e) => {
+        if (e.x !== 0 && e.y !== 0) {
+          start_mpos.loadXY(e.x, e.y);
+          this.mpos.loadXY(e.x, e.y);
         } else {
           start_mpos.load(this.mpos);
         }
-        dockerdebug("tab drag start!", start_mpos, e2);
+        dockerdebug("tab drag start!", start_mpos, e);
       });
-      tab3._tab.addEventListener("tabdragmove", (e2) => {
-        this.mpos.loadXY(e2.x, e2.y);
+      tab3._tab.addEventListener("tabdragmove", (e) => {
+        this.mpos.loadXY(e.x, e.y);
         const rect = this.tbar.tbar.canvas.getBoundingClientRect();
-        const x = e2.x;
-        const y = e2.y;
+        const x = e.x;
+        const y = e.y;
         const m = 8;
         if (x < rect.x - m || x > rect.x + rect.width + m || y < rect.y - m || y >= rect.y + rect.height + m) {
           dockerdebug("tab detach!");
-          e2.preventDefault();
-          this.detach(e2);
+          e.preventDefault();
+          this.detach(e);
         }
       });
-      tab3._tab.addEventListener("tabdragend", (e2) => {
-        this.mpos.loadXY(e2.x, e2.y);
-        dockerdebug("tab drag end!", e2);
+      tab3._tab.addEventListener("tabdragend", (e) => {
+        this.mpos.loadXY(e.x, e.y);
+        dockerdebug("tab drag end!", e);
       });
     }
     tab2 = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
     dockerdebug("Add Menu Tab", tab2);
     const icon = this.addicon = tab2._tab;
-    icon.ontabclick = (e2) => this.on_addclick(e2);
+    icon.ontabclick = (e) => this.on_addclick(e);
     icon.setAttribute("menu-button", "true");
     icon.setAttribute("simple", "true");
     this.loadTabData(uidata);
@@ -48070,12 +48109,12 @@ var AreaDocker = class _AreaDocker extends Container2 {
     loadUIData(this, uidata);
     this.ignoreChange--;
   }
-  on_addclick(e2) {
-    const mpos = new Vector2([e2.x, e2.y]);
+  on_addclick(e) {
+    const mpos = new Vector2([e.x, e.y]);
     if (this.addicon.menu && !this.addicon.menu.closed) {
       this.addicon.menu.close();
     } else {
-      this.addTabMenu(e2.target, mpos);
+      this.addTabMenu(e.target, mpos);
     }
   }
   tab_onchange(tab2, event) {
@@ -48090,8 +48129,8 @@ var AreaDocker = class _AreaDocker extends Container2 {
   init() {
     super.init();
     this.style["touchAction"] = "none";
-    this.addEventListener("pointermove", (e2) => {
-      this.mpos.loadXY(e2.x, e2.y);
+    this.addEventListener("pointermove", (e) => {
+      this.mpos.loadXY(e.x, e.y);
     });
     this.rebuild();
   }
@@ -48308,7 +48347,7 @@ init_simple_events();
 init_simple_events();
 init_ui_base();
 init_ui_menu();
-var list5 = Array.from;
+var list4 = Array.from;
 startMenuEventWrangling();
 var _events_started = false;
 function registerToolStackGetter2(func2) {
@@ -48398,13 +48437,13 @@ var Screen2 = class extends UIBase2 {
     this._edgemap = {};
     this._idmap = {};
     this._aabb = [new Vector2(), new Vector2()];
-    const on_mousemove = (e2, x, y) => {
-      let dragging = e2.type === "mousemove" || e2.type === "touchmove" || e2.type === "pointermove";
-      dragging = dragging && isMouseDown(e2);
+    const on_mousemove = (e, x, y) => {
+      let dragging = e.type === "mousemove" || e.type === "touchmove" || e.type === "pointermove";
+      dragging = dragging && isMouseDown(e);
       if (!dragging && Math.random() > 0.9) {
         const elem2 = this.pickElement(x, y, {
           nodeclass: ScreenArea2,
-          mouseEvent: e2
+          mouseEvent: e
         });
         if (elem2 !== void 0) {
           if (elem2.area) {
@@ -48419,9 +48458,9 @@ var Screen2 = class extends UIBase2 {
     };
     this.shadow.addEventListener(
       "mousemove",
-      (e2) => {
-        const e22 = e2;
-        return on_mousemove(e22, e22.x, e22.y);
+      (e) => {
+        const e2 = e;
+        return on_mousemove(e2, e2.x, e2.y);
       },
       { passive: true }
     );
@@ -48462,9 +48501,9 @@ var Screen2 = class extends UIBase2 {
       rec(n);
     }
   }
-  static fromJSON(obj2, schedule_resize = false) {
+  static fromJSON(obj, schedule_resize = false) {
     const ret = UIBase2.createElement(this.define().tagname);
-    return ret.loadJSON(obj2, schedule_resize);
+    return ret.loadJSON(obj, schedule_resize);
   }
   static define() {
     return {
@@ -48800,7 +48839,7 @@ var Screen2 = class extends UIBase2 {
     let mousepick;
     let keydown;
     let done = false;
-    const end2 = () => {
+    const end = () => {
       if (this._popup_safe) {
         return;
       }
@@ -48812,22 +48851,22 @@ var Screen2 = class extends UIBase2 {
       done = true;
       container.remove();
     };
-    container.end = end2;
+    container.end = end;
     const _remove = container.remove;
     container.remove = function(...args) {
       if (arguments.length == 0) {
-        end2();
+        end();
       }
       _remove.apply(this, args);
     };
     container._ondestroy = () => {
-      end2();
+      end();
     };
     let bad_time = time_ms();
     let last_pick_time = time_ms();
-    mousepick = (e2, x2, y2, do_timeout = true) => {
+    mousepick = (e, x2, y2, do_timeout = true) => {
       if (!container.isConnected) {
-        end2();
+        end();
         return;
       }
       if (sarea?.area) {
@@ -48838,16 +48877,16 @@ var Screen2 = class extends UIBase2 {
         return;
       }
       last_pick_time = time_ms();
-      x2 = x2 === void 0 ? e2.x : x2;
-      y2 = y2 === void 0 ? e2.y : y2;
+      x2 = x2 === void 0 ? e.x : x2;
+      y2 = y2 === void 0 ? e.y : y2;
       let elem2 = this.pickElement(x2, y2, {
         excluded_classes: [ScreenBorder],
-        mouseEvent: e2
+        mouseEvent: e
       });
       const startelem = elem2;
       if (elem2 === void 0) {
         if (closeOnMouseOut) {
-          end2();
+          end();
         }
         return;
       }
@@ -48863,20 +48902,20 @@ var Screen2 = class extends UIBase2 {
       if (!ok) {
         do_timeout = !do_timeout || time_ms() - bad_time > 100;
         if (closeOnMouseOut && do_timeout) {
-          end2();
+          end();
         }
       } else {
         bad_time = time_ms();
       }
     };
-    keydown = (e2) => {
+    keydown = (e) => {
       if (!container.isConnected) {
         window.removeEventListener("keydown", keydown);
         return;
       }
-      switch (e2.keyCode) {
+      switch (e.keyCode) {
         case keymap["Escape"]:
-          end2();
+          end();
           break;
       }
     };
@@ -48978,8 +49017,8 @@ var Screen2 = class extends UIBase2 {
   }
   listen(args = { updateSize: true }) {
     setWranglerScreen(this);
-    const ctx2 = this.ctx;
-    startEvents(() => ctx2.screen);
+    const ctx = this.ctx;
+    startEvents(() => ctx.screen);
     if (this.listen_timer !== void 0) {
       return;
     }
@@ -49047,22 +49086,22 @@ var Screen2 = class extends UIBase2 {
     this._ondestroy();
     this.sareas = [];
     this.sareas.active = void 0;
-    for (const child of list5(this.childNodes)) {
+    for (const child of list4(this.childNodes)) {
       child.remove();
     }
-    for (const child of list5(this.shadow.childNodes)) {
+    for (const child of list4(this.shadow.childNodes)) {
       child.remove();
     }
   }
   _test_save() {
-    const obj2 = JSON.parse(JSON.stringify(this));
+    const obj = JSON.parse(JSON.stringify(this));
     console.log(JSON.stringify(this));
-    this.loadJSON(obj2);
+    this.loadJSON(obj);
   }
-  loadJSON(obj2, schedule_resize = false) {
+  loadJSON(obj, schedule_resize = false) {
     this.clear();
-    super.loadJSON(obj2);
-    for (const sarea of obj2.sareas) {
+    super.loadJSON(obj);
+    for (const sarea of obj.sareas) {
       const sarea2 = UIBase2.createElement("screenarea-x");
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
@@ -49131,10 +49170,10 @@ var Screen2 = class extends UIBase2 {
       return super.removeEventListener(type, cb, options);
     }
   }
-  execKeyMap(e2) {
+  execKeyMap(e) {
     let handled = false;
     if (window.DEBUG?.keymap) {
-      console.warn("execKeyMap called", e2.keyCode, document.activeElement?.tagName);
+      console.warn("execKeyMap called", e.keyCode, document.activeElement?.tagName);
     }
     if (this.sareas.active) {
       const area = this.sareas.active.area;
@@ -49146,14 +49185,14 @@ var Screen2 = class extends UIBase2 {
         if (keymap4 === void 0) {
           continue;
         }
-        if (keymap4.handle(area.ctx, e2)) {
+        if (keymap4.handle(area.ctx, e)) {
           handled = true;
           break;
         }
       }
       area.pop_ctx_active();
     }
-    handled = handled || this.keymap.handle(this.ctx, e2);
+    handled = handled || this.keymap.handle(this.ctx, e);
     if (!handled && this.testAllKeyMaps) {
       for (const sarea of this.sareas) {
         if (handled) {
@@ -49162,7 +49201,7 @@ var Screen2 = class extends UIBase2 {
         if (!sarea.area) continue;
         sarea.area.push_ctx_active();
         for (const keymap4 of sarea.area.getKeyMaps()) {
-          if (keymap4.handle(sarea.area.ctx, e2)) {
+          if (keymap4.handle(sarea.area.ctx, e)) {
             handled = true;
             break;
           }
@@ -49323,7 +49362,7 @@ var Screen2 = class extends UIBase2 {
         }
         return stack[--stack.cur];
       }
-      const ctx2 = this2.ctx;
+      const ctx = this2.ctx;
       const SCOPE_POP = /* @__PURE__ */ Symbol("pop");
       const AREA_CTX_POP = /* @__PURE__ */ Symbol("pop2");
       const scopestack = [];
@@ -49351,7 +49390,7 @@ var Screen2 = class extends UIBase2 {
         }
         if (!n.hidden && n !== this2 && n instanceof UIBase2) {
           if (!n._ctx) {
-            n._ctx = ctx2;
+            n._ctx = ctx;
           }
           if (n._screenStyleUpdateHash !== cssTextHash) {
             n._screenStyleTag.textContent = cssText;
@@ -49507,14 +49546,14 @@ var Screen2 = class extends UIBase2 {
         b1.halfedges.push(he);
       }
       const axis = b1.horiz ? 1 : 0;
-      const min2 = Math.min(b1.v1[axis], b1.v2[axis]);
-      const max2 = Math.max(b1.v1[axis], b1.v2[axis]);
+      const min = Math.min(b1.v1[axis], b1.v2[axis]);
+      const max = Math.max(b1.v1[axis], b1.v2[axis]);
       for (const b2 of this.walkBorderLine(b1)) {
         if (b1 === b2) {
           continue;
         }
-        let ok = b2.v1[axis] >= min2 && b2.v1[axis] <= max2;
-        ok = ok || b2.v2[axis] >= min2 && b2.v2[axis] <= max2;
+        let ok = b2.v1[axis] >= min && b2.v1[axis] <= max;
+        ok = ok || b2.v2[axis] >= min && b2.v2[axis] <= max;
         for (const sarea of b2.sareas) {
           const ok2 = ok && !has_he(b2, b1, sarea);
           if (ok2) {
@@ -49716,8 +49755,8 @@ var Screen2 = class extends UIBase2 {
     }
   }
   checkAreaConstraint(sarea, checkOnly = false) {
-    const min2 = sarea.minSize;
-    const max2 = sarea.maxSize;
+    const min = sarea.minSize;
+    const max = sarea.maxSize;
     const vs = sarea._verts;
     let chg = 0;
     let mask = 0;
@@ -49750,26 +49789,26 @@ var Screen2 = class extends UIBase2 {
         }
       }
     };
-    if (max2[0] !== void 0 && sarea.size[0] > max2[0]) {
-      const dh = sarea.size[0] - max2[0];
+    if (max[0] !== void 0 && sarea.size[0] > max[0]) {
+      const dh = sarea.size[0] - max[0];
       chg += Math.abs(dh);
       mask |= 1;
       moveBorder(0, 2, dh);
     }
-    if (min2[0] !== void 0 && sarea.size[0] < min2[0]) {
-      const dh = min2[0] - sarea.size[0];
+    if (min[0] !== void 0 && sarea.size[0] < min[0]) {
+      const dh = min[0] - sarea.size[0];
       chg += Math.abs(dh);
       mask |= 2;
       moveBorder(2, 0, dh);
     }
-    if (max2[1] !== void 0 && sarea.size[1] > max2[1]) {
-      const dh = sarea.size[1] - max2[1];
+    if (max[1] !== void 0 && sarea.size[1] > max[1]) {
+      const dh = sarea.size[1] - max[1];
       chg += Math.abs(dh);
       mask |= 4;
       moveBorder(3, 1, dh);
     }
-    if (min2[1] !== void 0 && sarea.size[1] < min2[1]) {
-      const dh = min2[1] - sarea.size[1];
+    if (min[1] !== void 0 && sarea.size[1] < min[1]) {
+      const dh = min[1] - sarea.size[1];
       chg += Math.abs(dh);
       mask |= 8;
       moveBorder(1, 3, dh);
@@ -49841,10 +49880,10 @@ var Screen2 = class extends UIBase2 {
   moveBorderSimple(b, df, strict = true) {
     const axis = b.horiz & 1;
     const axis2 = axis ^ 1;
-    const min2 = Math.min(b.v1[axis2], b.v2[axis2]);
-    const max2 = Math.max(b.v1[axis2], b.v2[axis2]);
+    const min = Math.min(b.v1[axis2], b.v2[axis2]);
+    const max = Math.max(b.v1[axis2], b.v2[axis2]);
     const test2 = (v) => {
-      return v[axis2] >= min2 && v[axis2] <= max2;
+      return v[axis2] >= min && v[axis2] <= max;
     };
     const vs = /* @__PURE__ */ new Set();
     for (const b2 of this.walkBorderLine(b)) {
@@ -49874,10 +49913,10 @@ var Screen2 = class extends UIBase2 {
     const axis = b.horiz ? 1 : 0;
     const vs = /* @__PURE__ */ new Set();
     const axis2 = axis ^ 1;
-    const min2 = Math.min(b.v1[axis2], b.v2[axis2]);
-    const max2 = Math.max(b.v1[axis2], b.v2[axis2]);
+    const min = Math.min(b.v1[axis2], b.v2[axis2]);
+    const max = Math.max(b.v1[axis2], b.v2[axis2]);
     const test2 = (v) => {
-      return v[axis2] >= min2 && v[axis2] <= max2;
+      return v[axis2] >= min && v[axis2] <= max;
     };
     let first2 = true;
     let found = false;
@@ -49920,7 +49959,7 @@ var Screen2 = class extends UIBase2 {
       }
     }
     for (const v of vs) {
-      const ok = v[axis2] >= min2 && v[axis2] <= max2;
+      const ok = v[axis2] >= min && v[axis2] <= max;
       if (!ok && strict) {
       }
     }
@@ -50010,14 +50049,14 @@ var Screen2 = class extends UIBase2 {
     for (const v of screenverts()) {
       mm.minmax(v);
     }
-    let min2 = new Vector2(mm.min);
-    let max2 = new Vector2(mm.max);
+    let min = new Vector2(mm.min);
+    let max = new Vector2(mm.max);
     if (fitToSize) {
-      const vec = new Vector2(max2).sub(min2);
+      const vec = new Vector2(max).sub(min);
       const sz = new Vector2(this.size);
       sz.div(vec);
       for (const v of screenverts()) {
-        v.sub(min2).mul(sz);
+        v.sub(min).mul(sz);
       }
       for (const v of screenverts()) {
         v[0] += this.pos[0];
@@ -50026,8 +50065,8 @@ var Screen2 = class extends UIBase2 {
     } else {
       for (const v of screenverts()) {
       }
-      [min2, max2] = this._recalcAABB();
-      this.size.load(max2).sub(min2);
+      [min, max] = this._recalcAABB();
+      this.size.load(max).sub(min);
     }
     let found = true;
     for (const sarea of this.sareas) {
@@ -50065,8 +50104,8 @@ var Screen2 = class extends UIBase2 {
       v[0] += offx;
       v[1] += offy;
     }
-    const min2 = [1e17, 1e17];
-    const max2 = [-1e17, -1e17];
+    const min = [1e17, 1e17];
+    const max = [-1e17, -1e17];
     const olds = [];
     for (const sarea of this.sareas) {
       olds.push([sarea.size[0], sarea.size[1]]);
@@ -50142,9 +50181,9 @@ var Screen2 = class extends UIBase2 {
     return ok;
   }
   getScreenBorder(sarea, co1, co2, side) {
-    const suffix2 = sarea._get_v_suffix();
-    const v1 = co1 instanceof ScreenVert ? co1 : this.getScreenVert(co1, suffix2, true);
-    const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix2, true);
+    const suffix = sarea._get_v_suffix();
+    const v1 = co1 instanceof ScreenVert ? co1 : this.getScreenVert(co1, suffix, true);
+    const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix, true);
     const hash = ScreenBorder.hash(v1, v2);
     if (!(hash in this._edgemap)) {
       const sb = this._edgemap[hash] = UIBase2.createElement("screenborder-x");
@@ -50379,28 +50418,28 @@ var Screen2 = class extends UIBase2 {
     this.cleanupBorders();
     return sarea2;
   }
-  on_keydown(e2) {
+  on_keydown(e) {
     if (checkForTextBox(this, this.mpos[0], this.mpos[1])) {
       console.log("textbox detected");
       return;
     }
-    if (!haveModal() && this.execKeyMap(e2)) {
-      e2.preventDefault();
+    if (!haveModal() && this.execKeyMap(e)) {
+      e.preventDefault();
       return;
     }
     if (!haveModal() && this.sareas.active !== void 0 && this.sareas.active.on_keydown) {
       const area = this.sareas.active;
-      return this.sareas.active.on_keydown(e2);
+      return this.sareas.active.on_keydown(e);
     }
   }
-  on_keyup(e2) {
+  on_keyup(e) {
     if (!haveModal() && this.sareas.active?.on_keyup) {
-      return this.sareas.active.on_keyup(e2);
+      return this.sareas.active.on_keyup(e);
     }
   }
-  on_keypress(e2) {
+  on_keypress(e) {
     if (!haveModal() && this.sareas.active?.on_keypress) {
-      return this.sareas.active.on_keypress(e2);
+      return this.sareas.active.on_keypress(e);
     }
   }
   draw() {
@@ -50463,12 +50502,12 @@ function startEvents(getScreenFunc) {
     return;
   }
   _events_started = true;
-  _on_keydown = (e2) => {
-    if (e2.keyCode === keymap["Alt"]) {
-      e2.preventDefault();
+  _on_keydown = (e) => {
+    if (e.keyCode === keymap["Alt"]) {
+      e.preventDefault();
     }
     const screen = get_screen_cb();
-    return screen.on_keydown(e2);
+    return screen.on_keydown(e);
   };
   window.addEventListener("keydown", _on_keydown, key_event_opts);
   for (const cb of start_cbs) {
@@ -50566,8 +50605,8 @@ var SideBar = class extends Container2 {
       closed: this.closed
     };
   }
-  loadData(obj2) {
-    this.closed = obj2.closed;
+  loadData(obj) {
+    this.closed = obj.closed;
     return this;
   }
   set closed(val) {
@@ -52025,7 +52064,7 @@ var SimpleAppOpenOp = class extends ToolOp {
       undoflag: UndoFlags.NO_UNDO
     };
   }
-  exec(ctx2) {
+  exec(ctx) {
     const ext = _appstate.fileExt;
     const useJSON = _appstate.startArgs.saveFilesInJSON;
     const mime = useJSON ? "text/json" : "application/x-octet-stream";
@@ -52039,8 +52078,8 @@ var SimpleAppOpenOp = class extends ToolOp {
           extensions: ["." + ext.toLowerCase()]
         }
       ]
-    }).then((paths2) => {
-      for (const path of paths2) {
+    }).then((paths) => {
+      for (const path of paths) {
         getPlatform().readFile(path, mime).then((data) => {
           console.log("got data!", data);
           _appstate.loadFile(data, { useJSON, doScreen: true, fromFileOp: true }).catch((err) => {
@@ -52049,7 +52088,7 @@ var SimpleAppOpenOp = class extends ToolOp {
         });
       }
     }).catch((loadError) => {
-      ctx2.error(loadError.message);
+      ctx.error(loadError.message);
     });
   }
 };
@@ -52074,7 +52113,7 @@ var DataModelClasses = [];
 var lastAppState;
 var getLastAppState = () => lastAppState;
 var DataModel = class {
-  static defineAPI(api2, strct) {
+  static defineAPI(api, strct) {
     return strct;
   }
   /** Automatically registers cls with nstructjs
@@ -52160,34 +52199,34 @@ function GetContextClass(ctxClass) {
       super(state);
       this.pushOverlay(new Overlay(state));
     }
-    static defineAPI(api2, st) {
+    static defineAPI(api, st) {
       st.dynamicStruct("activeArea", "activeArea", "Active Area");
-      return Overlay.defineAPI(api2, st);
+      return Overlay.defineAPI(api, st);
     }
   };
 }
 function makeAPI(ctxClass) {
-  const api2 = new DataAPI2();
+  const api = new DataAPI2();
   for (const cls of DataModelClasses) {
     if (cls.defineAPI) {
-      cls.defineAPI(api2, api2.mapStruct(cls, true));
+      cls.defineAPI(api, api.mapStruct(cls, true));
     }
   }
   for (const k in areaclasses) {
     areaclasses[k].defineAPI(
-      api2,
-      api2.mapStruct(areaclasses[k], true)
+      api,
+      api.mapStruct(areaclasses[k], true)
     );
   }
   if (ctxClass.defineAPI) {
-    ctxClass.defineAPI(api2, api2.mapStruct(ctxClass, true));
+    ctxClass.defineAPI(api, api.mapStruct(ctxClass, true));
   } else {
     throw new Error("Context class should have a defineAPI static method");
   }
-  const rootContextStruct = api2.mapStruct(ctxClass, api2.mapStruct(ctxClass, true));
-  api2.rootContextStruct = rootContextStruct;
-  buildToolSysAPI(api2, false, rootContextStruct, ctxClass, true);
-  return api2;
+  const rootContextStruct = api.mapStruct(ctxClass, api.mapStruct(ctxClass, true));
+  api.rootContextStruct = rootContextStruct;
+  buildToolSysAPI(api, false, rootContextStruct, ctxClass, true);
+  return api;
 }
 var StartArgs = class {
   singlePage;
@@ -52429,18 +52468,18 @@ var AppState = class _AppState {
     const sarea = UIBase2.createElement("screenarea-x");
     screen.appendChild(sarea);
     const h = 55;
-    const min2 = new Vector2().addScalar(1e17);
-    const max2 = new Vector2().addScalar(-1e17);
+    const min = new Vector2().addScalar(1e17);
+    const max = new Vector2().addScalar(-1e17);
     const tmp = new Vector2();
     for (const sarea2 of screen.sareas) {
       if (sarea2 === sarea) {
         continue;
       }
-      min2.min(sarea2.pos);
+      min.min(sarea2.pos);
       tmp.load(sarea2.pos).add(sarea2.size);
-      max2.max(tmp);
+      max.max(tmp);
     }
-    const scale = (max2[1] - min2[1] - h) / (max2[1] - min2[1]);
+    const scale = (max[1] - min[1] - h) / (max[1] - min[1]);
     for (const sarea2 of screen.sareas) {
       if (sarea2 === sarea) {
         continue;

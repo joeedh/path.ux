@@ -11,6 +11,7 @@ export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   setDefault<T2 extends T>(element: T2): T2;
 }
 
+
 export const PackFlags = {
   INHERIT_WIDTH : 1,
   INHERIT_HEIGHT: 2,

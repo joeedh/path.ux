@@ -1,12 +1,12 @@
-import { PackFlags, UIBase } from "../core/ui_base.js";
-import { sliderDomAttributes } from "../widgets/ui_numsliders.js";
-import * as util from "../util/util.js";
-import { Menu } from "../widgets/ui_menu.js";
-import { Icons } from "../core/ui_base.js";
-import { Container } from "../core/ui.js";
-import type { IContextBase } from "../core/context_base.js";
-import { TableRowProxy } from "../widgets/ui_table.js";
-import { PanelContents, TabContainer, TabItemContainer } from "../pathux.js";
+import { PackFlags, UIBase } from "../core/ui_base";
+import { sliderDomAttributes } from "../widgets/ui_numsliders";
+import * as util from "../util/util";
+import { Menu } from "../widgets/ui_menu";
+import { Icons } from "../core/ui_base";
+import { Container } from "../core/ui";
+import type { IContextBase } from "../core/context_base";
+import { TableRowProxy } from "../widgets/ui_table";
+import { PanelContents, TabContainer, TabItemContainer } from "../pathux";
 
 export const domTransferAttrs = new Set(["id", "title", "tab-index"]);
 export const domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);

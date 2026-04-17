@@ -22,6 +22,7 @@ import("../lib/tinymce/tinymce.cjs").then(() => {
 
 import * as util from "../util/util";
 import { Vector2 } from "../util/vectormath";
+import { DropBox } from "../widgets/ui_menu";
 
 /* Interfaces for tinymce integration */
 interface TinyMCEBlobInfo {
@@ -479,7 +480,7 @@ interface HeaderContainer extends UIBase {
     path: string | undefined,
     name: string,
     enumDef: Record<string, string>
-  ): UIBase & { onselect: ((e: string) => void) | null };
+  ): DropBox;
 }
 
 export class DocsBrowser extends UIBase {
@@ -715,9 +716,9 @@ DocsBrowser {
       "Heading 4": "H4",
       "Heading 5": "H5",
     });
-    styleList.onselect = ((e: string) => {
+    styleList.on_select = ((e: string) => {
       this.execCommand("formatBlock", false, e.toLowerCase());
-    }) as unknown as typeof styleList.onselect;
+    }) as unknown as typeof styleList.on_select;
   }
 
   init() {

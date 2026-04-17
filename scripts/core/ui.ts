@@ -1903,7 +1903,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     }
 
     ret.onchange = callback as unknown as typeof ret.onchange;
-    ret.onselect = callback as unknown as typeof ret.onselect;
+    ret.on_select = callback as unknown as typeof ret.on_select;
 
     ret.packflag |= packflag;
 

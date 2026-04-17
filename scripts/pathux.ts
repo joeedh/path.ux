@@ -1,38 +1,38 @@
-import "./path-controller/util/polyfill.js";
+import "./path-controller/util/polyfill";
 
-export * from "./xmlpage/xmlpage.js";
+export * from "./xmlpage/xmlpage";
 
-export * from "./core/ui_base.js";
-export * from "./core/ui.js";
-export * from "./widgets/ui_widgets.js";
-export * from "./widgets/ui_widgets2.js";
-export * from "./core/cssfont.js";
-export * from "./core/ui_theme.js";
-export * from "./core/units.js";
-export * from "./widgets/ui_button.js";
-export * from "./widgets/ui_richedit.js";
-export * from "./widgets/ui_curvewidget.js";
-export * from "./widgets/ui_panel.js";
-export * from "./widgets/ui_colorpicker2.js";
-export * from "./widgets/ui_tabs.js";
-export * from "./widgets/ui_listbox.js";
-export * from "./widgets/ui_menu.js";
-export * from "./widgets/ui_progress.js";
-export { TableRow } from "./widgets/ui_table.js";
-export * from "./widgets/ui_noteframe.js";
-export * from "./widgets/ui_numsliders.js";
-export * from "./widgets/ui_lasttool.js";
-export * from "./widgets/ui_textbox.js";
-export * from "./path-controller/util/graphpack.js";
+export * from "./core/ui_base";
+export * from "./core/ui";
+export * from "./widgets/ui_widgets";
+export * from "./widgets/ui_widgets2";
+export * from "./core/cssfont";
+export * from "./core/ui_theme";
+export * from "./core/units";
+export * from "./widgets/ui_button";
+export * from "./widgets/ui_richedit";
+export * from "./widgets/ui_curvewidget";
+export * from "./widgets/ui_panel";
+export * from "./widgets/ui_colorpicker2";
+export * from "./widgets/ui_tabs";
+export * from "./widgets/ui_listbox";
+export * from "./widgets/ui_menu";
+export * from "./widgets/ui_progress";
+export { TableRow } from "./widgets/ui_table";
+export * from "./widgets/ui_noteframe";
+export * from "./widgets/ui_numsliders";
+export * from "./widgets/ui_lasttool";
+export * from "./widgets/ui_textbox";
+export * from "./path-controller/util/graphpack";
 
-export * from "./path-controller/util/html5_fileapi.js";
-export * from "./path-controller/controller.js";
+export * from "./path-controller/util/html5_fileapi";
+export * from "./path-controller/controller";
 
-import * as controller from "./path-controller/controller.js";
+import * as controller from "./path-controller/controller";
 
 export { controller };
 
-import * as ui_noteframe from "./widgets/ui_noteframe.js";
+import * as ui_noteframe from "./widgets/ui_noteframe";
 
 controller.setNotifier(ui_noteframe);
 
@@ -44,28 +44,28 @@ export {
   textMimes,
   FileDialogArgs,
   FilePath,
-} from "./platforms/platform_base.js";
+} from "./platforms/platform_base";
 
-import * as platform from "./platforms/platform.js";
+import * as platform from "./platforms/platform";
 
 export { platform };
 
-import * as electron_api from "./platforms/electron/electron_api.js";
+import * as electron_api from "./platforms/electron/electron_api";
 
 export { electron_api };
 
-export * from "./widgets/theme_editor.js";
-export * from "./widgets/ui_treeview.js";
+export * from "./widgets/theme_editor";
+export * from "./widgets/ui_treeview";
 
-export * from "./screen/FrameManager.js";
-export * from "./screen/ScreenArea.js";
-export * from "./util/ScreenOverdraw.js";
+export * from "./screen/FrameManager";
+export * from "./screen/ScreenArea";
+export * from "./util/ScreenOverdraw";
 
-import cconst from "./config/const.js";
+import cconst from "./config/const";
 
 export { cconst };
 
-import * as simple from "./simple/simple.js";
+import * as simple from "./simple/simple";
 
 export { simple };
 
