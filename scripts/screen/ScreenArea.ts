@@ -83,6 +83,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   maxSize: (number | undefined)[];
   keymap?: KeyMap<CTX>;
   header: Container<CTX> | undefined;
+  /** Notifications area. */
+  noteArea?: UIBase<CTX>;
   switcher?: AreaDocker<CTX> | DropBox<CTX> | undefined;
   helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
   saved_uidata: string | undefined;
@@ -441,7 +443,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     return dropbox;
   }
 
-  makeHeader(container: Container<CTX>, add_note_area = true, make_draggable = true) {
+  makeHeader(container: Container<CTX>, addNoteArea = true, makeDraggable = true) {
     let switcherRow: Container<CTX>;
     let row: Container<CTX>;
     let helpRow: Container<CTX>;
@@ -504,9 +506,10 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       this.helppicker!.iconsheet = 0;
     }
 
-    if (add_note_area) {
+    if (addNoteArea) {
       const notef = UIBase.createElement("noteframe-x") as UIBase<CTX>;
       notef.ctx = this.ctx;
+      this.noteArea = notef;
       row._add(notef);
     }
 
@@ -562,7 +565,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       pageX: number,
       pageY: number
     ) => {
-      if (haveModal() || !make_draggable) {
+      if (haveModal() || !makeDraggable) {
         return;
       }
 

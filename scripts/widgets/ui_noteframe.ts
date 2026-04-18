@@ -8,7 +8,7 @@ import type { Screen } from "../screen/FrameManager";
 /* Helper for CSSStyleDeclaration string indexing. */
 type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
-let UIBase = ui_base.UIBase;
+const UIBase = ui_base.UIBase;
 
 export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
   _noteid: string | undefined;
@@ -22,7 +22,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
   constructor() {
     super();
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
 
     this._noteid = undefined;
     this.height = 20;
@@ -37,6 +37,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
       height : {this.height}px;
       padding : 0px;
       margin : 0px;
+      align-items: center;
     }
     `;
 
@@ -57,7 +58,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
   }
 
   setLabel(s: string) {
-    let color = this.color;
+    const color = this.color;
     if (this.showExclMark && this.mark === undefined) {
       this.mark = document.createElement("div");
       (this.mark.style as StyleRecord)["display"] = "flex";
@@ -65,9 +66,9 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
       (this.mark.style as StyleRecord)["flex-wrap"] = "nowrap";
 
       //this.mark.style["width"]
-      let sheet = 0;
+      const sheet = 0;
 
-      let size = ui_base.iconmanager.getTileSize(sheet);
+      const size = ui_base.iconmanager.getTileSize(sheet);
 
       (this.mark.style as StyleRecord)["width"] = "" + size + "px";
       (this.mark.style as StyleRecord)["height"] = "" + size + "px";
@@ -90,7 +91,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
       this.mark = undefined;
     }
 
-    let ntext = this.ntext;
+    const ntext = this.ntext;
     //mark.innerText = "!";
     ntext.innerText = " " + s;
   }
@@ -107,8 +108,8 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
     (this.style as StyleRecord)["color"] = (
       this.getDefault("DefaultText") as { color: string }
     ).color;
-    let clr = css2color(this.color);
-    let clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
+    const clr = css2color(this.color);
+    const clrCss = color2css([clr[0], clr[1], clr[2], 0.25]);
 
     (this.style as StyleRecord)["background-color"] = clrCss;
     this.setCSS();
@@ -133,7 +134,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
     this._percent = 0.0;
     this.barWidth = 100;
 
-    let bar = (this.bar = document.createElement("div"));
+    const bar = (this.bar = document.createElement("div"));
     (bar.style as StyleRecord)["display"] = "flex";
     (bar.style as StyleRecord)["flex-direction"] = "row";
     (bar.style as StyleRecord)["width"] = this.barWidth + "px";
@@ -143,7 +144,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
     (bar.style as StyleRecord)["align-items"] = "center";
     (bar.style as StyleRecord)["padding"] = (bar.style as StyleRecord)["margin"] = "0px";
 
-    let bar2 = (this.bar2 = document.createElement("div"));
+    const bar2 = (this.bar2 = document.createElement("div"));
 
     (bar2.style as StyleRecord)["display"] = "flex";
     (bar2.style as StyleRecord)["flex-direction"] = "row";
@@ -176,7 +177,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
   setCSS() {
     super.setCSS();
 
-    let w = ~~(this.percent * this.barWidth + 0.5);
+    const w = ~~(this.percent * this.barWidth + 0.5);
 
     (this.bar2.style as StyleRecord)["width"] = w + "px";
   }
@@ -220,7 +221,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
   }
 
   _ondestroy() {
-    if (noteframes.indexOf(this as unknown as NoteFrame) >= 0) {
+    if (noteframes.includes(this as unknown as NoteFrame)) {
       noteframes.remove(this as unknown as NoteFrame);
     }
 
@@ -236,14 +237,14 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
   ) {
     let note: ProgBarNote<CTX> | undefined;
 
-    for (let child of this.childWidgets) {
+    for (const child of this.childWidgets) {
       if ((child as Note<CTX>)._noteid === id) {
         note = child as ProgBarNote<CTX>;
         break;
       }
     }
 
-    let f = (100.0 * Math.min(percent, 1.0)).toFixed(1);
+    const f = (100.0 * Math.min(percent, 1.0)).toFixed(1);
 
     if (note === undefined) {
       note = this.addNote(msg, color, -1, "note-progress-x") as ProgBarNote<CTX>;
@@ -279,7 +280,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 
     //this._add(note);
 
-    let note = UIBase.createElement(tagname) as Note<CTX>;
+    const note = UIBase.createElement(tagname) as Note<CTX>;
 
     note.color = color;
     note.setLabel(msg);
@@ -316,21 +317,21 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
 UIBase.internalRegister(NoteFrame);
 
 export function getNoteFrames(screen: Screen): NoteFrame[] {
-  let ret: NoteFrame[] = [];
+  const ret: NoteFrame[] = [];
 
-  let rec = (n: Node) => {
+  const rec = (n: Node) => {
     if (n instanceof NoteFrame) {
       ret.push(n);
     }
 
     if (n.childNodes !== undefined) {
-      for (let node of n.childNodes) {
+      for (const node of n.childNodes) {
         rec(node);
       }
     }
 
     if (n instanceof ui_base.UIBase && n.shadow !== undefined && n.shadow.childNodes) {
-      for (let node of n.shadow.childNodes) {
+      for (const node of n.shadow.childNodes) {
         rec(node);
       }
     }
@@ -351,7 +352,7 @@ export function sendNote(
 ) {
   noteframes = getNoteFrames(screen);
 
-  for (let frame of noteframes) {
+  for (const frame of noteframes) {
     try {
       frame.addNote(msg, color, timeout, undefined, showExclMark);
     } catch (error: unknown) {
@@ -385,7 +386,7 @@ export function progbarNote(
 ) {
   noteframes = getNoteFrames(screen);
 
-  for (let frame of noteframes) {
+  for (const frame of noteframes) {
     try {
       frame.progbarNote(msg, percent, color, timeout);
     } catch (error: unknown) {

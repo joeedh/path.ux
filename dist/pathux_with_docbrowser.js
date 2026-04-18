@@ -10658,7 +10658,7 @@ function popModalLight(state) {
 function haveModal() {
   return modalstack.length > 0;
 }
-var modalstack, singleMouseCBs, singletonMouseEventsResult, DoubleClickHandler, Screen, ContextAreaClass, keymap_latin_1, keymap_latin_1_rev, keymap, reverse_keymap, HotKey, KeyMap, i, k;
+var modalstack, singleMouseCBs, singletonMouseEventsResult, DoubleClickHandler, Screen, ContextAreaClass, keymap_latin_1, keymap_latin_1_rev, keymap, reverse_keymap, HotKey, KeyMap;
 var init_simple_events = __esm({
   "scripts/path-controller/util/simple_events.ts"() {
     "use strict";
@@ -10760,63 +10760,91 @@ var init_simple_events = __esm({
     };
     window._findScreen = findScreen;
     window._haveModal = haveModal;
-    keymap_latin_1 = {
-      Space: 32,
-      Escape: 27,
-      Enter: 13,
-      Return: 13,
-      Up: 38,
-      Down: 40,
-      Left: 37,
-      Right: 39,
-      Num0: 96,
-      Num1: 97,
-      Num2: 98,
-      Num3: 99,
-      Num4: 100,
-      Num5: 101,
-      Num6: 102,
-      Num7: 103,
-      Num8: 104,
-      Num9: 105,
-      Home: 36,
-      End: 35,
-      Delete: 46,
-      Backspace: 8,
-      Insert: 45,
-      PageUp: 33,
-      PageDown: 34,
-      Tab: 9,
-      "-": 189,
-      "=": 187,
-      ".": 190,
-      "/": 191,
-      ",": 188,
-      ";": 186,
-      "'": 222,
-      "[": 219,
-      "]": 221,
-      NumPlus: 107,
-      NumMinus: 109,
-      Shift: 16,
-      Ctrl: 17,
-      Control: 17,
-      Alt: 18
-    };
-    for (i = 0; i < 26; i++) {
-      keymap_latin_1[String.fromCharCode(i + 65)] = i + 65;
-    }
-    for (i = 0; i < 10; i++) {
-      keymap_latin_1[String.fromCharCode(i + 48)] = i + 48;
-    }
-    for (k in keymap_latin_1) {
-      if (!(k in keymap_latin_1)) {
-        keymap_latin_1[keymap_latin_1[k]] = k;
-      }
-    }
+    keymap_latin_1 = /* @__PURE__ */ ((keymap_latin_12) => {
+      keymap_latin_12[keymap_latin_12["Space"] = 32] = "Space";
+      keymap_latin_12[keymap_latin_12["Escape"] = 27] = "Escape";
+      keymap_latin_12[keymap_latin_12["Enter"] = 13] = "Enter";
+      keymap_latin_12[keymap_latin_12["Return"] = 13] = "Return";
+      keymap_latin_12[keymap_latin_12["Up"] = 38] = "Up";
+      keymap_latin_12[keymap_latin_12["Down"] = 40] = "Down";
+      keymap_latin_12[keymap_latin_12["Left"] = 37] = "Left";
+      keymap_latin_12[keymap_latin_12["Right"] = 39] = "Right";
+      keymap_latin_12[keymap_latin_12["Num0"] = 96] = "Num0";
+      keymap_latin_12[keymap_latin_12["Num1"] = 97] = "Num1";
+      keymap_latin_12[keymap_latin_12["Num2"] = 98] = "Num2";
+      keymap_latin_12[keymap_latin_12["Num3"] = 99] = "Num3";
+      keymap_latin_12[keymap_latin_12["Num4"] = 100] = "Num4";
+      keymap_latin_12[keymap_latin_12["Num5"] = 101] = "Num5";
+      keymap_latin_12[keymap_latin_12["Num6"] = 102] = "Num6";
+      keymap_latin_12[keymap_latin_12["Num7"] = 103] = "Num7";
+      keymap_latin_12[keymap_latin_12["Num8"] = 104] = "Num8";
+      keymap_latin_12[keymap_latin_12["Num9"] = 105] = "Num9";
+      keymap_latin_12[keymap_latin_12["Home"] = 36] = "Home";
+      keymap_latin_12[keymap_latin_12["End"] = 35] = "End";
+      keymap_latin_12[keymap_latin_12["Delete"] = 46] = "Delete";
+      keymap_latin_12[keymap_latin_12["Backspace"] = 8] = "Backspace";
+      keymap_latin_12[keymap_latin_12["Insert"] = 45] = "Insert";
+      keymap_latin_12[keymap_latin_12["PageUp"] = 33] = "PageUp";
+      keymap_latin_12[keymap_latin_12["PageDown"] = 34] = "PageDown";
+      keymap_latin_12[keymap_latin_12["Tab"] = 9] = "Tab";
+      keymap_latin_12[keymap_latin_12["-"] = 189] = "-";
+      keymap_latin_12[keymap_latin_12["="] = 187] = "=";
+      keymap_latin_12[keymap_latin_12["."] = 190] = ".";
+      keymap_latin_12[keymap_latin_12["/"] = 191] = "/";
+      keymap_latin_12[keymap_latin_12[","] = 188] = ",";
+      keymap_latin_12[keymap_latin_12[";"] = 186] = ";";
+      keymap_latin_12[keymap_latin_12["'"] = 222] = "'";
+      keymap_latin_12[keymap_latin_12["["] = 219] = "[";
+      keymap_latin_12[keymap_latin_12["]"] = 221] = "]";
+      keymap_latin_12[keymap_latin_12["NumPlus"] = 107] = "NumPlus";
+      keymap_latin_12[keymap_latin_12["NumMinus"] = 109] = "NumMinus";
+      keymap_latin_12[keymap_latin_12["Shift"] = 16] = "Shift";
+      keymap_latin_12[keymap_latin_12["Ctrl"] = 17] = "Ctrl";
+      keymap_latin_12[keymap_latin_12["Control"] = 17] = "Control";
+      keymap_latin_12[keymap_latin_12["Alt"] = 18] = "Alt";
+      keymap_latin_12[keymap_latin_12["A"] = 65] = "A";
+      keymap_latin_12[keymap_latin_12["B"] = 66] = "B";
+      keymap_latin_12[keymap_latin_12["C"] = 67] = "C";
+      keymap_latin_12[keymap_latin_12["D"] = 68] = "D";
+      keymap_latin_12[keymap_latin_12["E"] = 69] = "E";
+      keymap_latin_12[keymap_latin_12["F"] = 70] = "F";
+      keymap_latin_12[keymap_latin_12["G"] = 71] = "G";
+      keymap_latin_12[keymap_latin_12["H"] = 72] = "H";
+      keymap_latin_12[keymap_latin_12["I"] = 73] = "I";
+      keymap_latin_12[keymap_latin_12["J"] = 74] = "J";
+      keymap_latin_12[keymap_latin_12["K"] = 75] = "K";
+      keymap_latin_12[keymap_latin_12["L"] = 76] = "L";
+      keymap_latin_12[keymap_latin_12["M"] = 77] = "M";
+      keymap_latin_12[keymap_latin_12["N"] = 78] = "N";
+      keymap_latin_12[keymap_latin_12["O"] = 79] = "O";
+      keymap_latin_12[keymap_latin_12["P"] = 80] = "P";
+      keymap_latin_12[keymap_latin_12["Q"] = 81] = "Q";
+      keymap_latin_12[keymap_latin_12["R"] = 82] = "R";
+      keymap_latin_12[keymap_latin_12["S"] = 83] = "S";
+      keymap_latin_12[keymap_latin_12["T"] = 84] = "T";
+      keymap_latin_12[keymap_latin_12["U"] = 85] = "U";
+      keymap_latin_12[keymap_latin_12["V"] = 86] = "V";
+      keymap_latin_12[keymap_latin_12["W"] = 87] = "W";
+      keymap_latin_12[keymap_latin_12["X"] = 88] = "X";
+      keymap_latin_12[keymap_latin_12["Y"] = 89] = "Y";
+      keymap_latin_12[keymap_latin_12["Z"] = 90] = "Z";
+      keymap_latin_12[keymap_latin_12["Key0"] = 48] = "Key0";
+      keymap_latin_12[keymap_latin_12["Key1"] = 49] = "Key1";
+      keymap_latin_12[keymap_latin_12["Key2"] = 50] = "Key2";
+      keymap_latin_12[keymap_latin_12["Key3"] = 51] = "Key3";
+      keymap_latin_12[keymap_latin_12["Key4"] = 52] = "Key4";
+      keymap_latin_12[keymap_latin_12["Key5"] = 53] = "Key5";
+      keymap_latin_12[keymap_latin_12["Key6"] = 54] = "Key6";
+      keymap_latin_12[keymap_latin_12["Key7"] = 55] = "Key7";
+      keymap_latin_12[keymap_latin_12["Key8"] = 56] = "Key8";
+      keymap_latin_12[keymap_latin_12["Key9"] = 57] = "Key9";
+      return keymap_latin_12;
+    })(keymap_latin_1 || {});
     keymap_latin_1_rev = {};
-    for (k in keymap_latin_1) {
-      keymap_latin_1_rev[keymap_latin_1[k]] = k;
+    for (const k in keymap_latin_1) {
+      if (typeof k === "string") {
+        keymap_latin_1_rev[keymap_latin_1[k]] = k;
+      }
     }
     keymap = keymap_latin_1;
     reverse_keymap = keymap_latin_1_rev;
@@ -15453,8 +15481,11 @@ var init_toolsys = __esm({
         ret = ret && this.canRun(ctx);
         return ret;
       }
-      //toolop is an optional instance of this class, may be undefined
-      static canRun(_ctx, _toolop) {
+      /**
+       * note: you can use a derivation of ContextLike if you like for ctx
+       * @param toolop: an optional instance of this class, may be undefined
+       */
+      static canRun(ctx, toolop) {
         return true;
       }
       /** Called when the undo system needs to destroy
@@ -72010,7 +72041,7 @@ var Note = class extends UIBase2 {
   ntext;
   constructor() {
     super();
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     this._noteid = void 0;
     this.height = 20;
     this.showExclMark = true;
@@ -72022,6 +72053,7 @@ var Note = class extends UIBase2 {
       height : {this.height}px;
       padding : 0px;
       margin : 0px;
+      align-items: center;
     }
     `;
     this.dom = document.createElement("div");
@@ -72038,14 +72070,14 @@ var Note = class extends UIBase2 {
     };
   }
   setLabel(s) {
-    let color = this.color;
+    const color = this.color;
     if (this.showExclMark && this.mark === void 0) {
       this.mark = document.createElement("div");
       this.mark.style["display"] = "flex";
       this.mark.style["flex-direction"] = "row";
       this.mark.style["flex-wrap"] = "nowrap";
-      let sheet = 0;
-      let size = iconmanager.getTileSize(sheet);
+      const sheet = 0;
+      const size = iconmanager.getTileSize(sheet);
       this.mark.style["width"] = "" + size + "px";
       this.mark.style["height"] = "" + size + "px";
       this.dom.appendChild(this.mark);
@@ -72058,7 +72090,7 @@ var Note = class extends UIBase2 {
       this.mark.remove();
       this.mark = void 0;
     }
-    let ntext = this.ntext;
+    const ntext = this.ntext;
     ntext.innerText = " " + s;
   }
   init() {
@@ -72070,8 +72102,8 @@ var Note = class extends UIBase2 {
     this.style["border-radius"] = "7px";
     this.style["padding"] = "2px";
     this.style["color"] = this.getDefault("DefaultText").color;
-    let clr = css2color2(this.color);
-    let clrCss = color2css3([clr[0], clr[1], clr[2], 0.25]);
+    const clr = css2color2(this.color);
+    const clrCss = color2css3([clr[0], clr[1], clr[2], 0.25]);
     this.style["background-color"] = clrCss;
     this.setCSS();
   }
@@ -72089,7 +72121,7 @@ var ProgBarNote = class extends Note {
     super();
     this._percent = 0;
     this.barWidth = 100;
-    let bar = this.bar = document.createElement("div");
+    const bar = this.bar = document.createElement("div");
     bar.style["display"] = "flex";
     bar.style["flex-direction"] = "row";
     bar.style["width"] = this.barWidth + "px";
@@ -72098,7 +72130,7 @@ var ProgBarNote = class extends Note {
     bar.style["border-radius"] = "12px";
     bar.style["align-items"] = "center";
     bar.style["padding"] = bar.style["margin"] = "0px";
-    let bar2 = this.bar2 = document.createElement("div");
+    const bar2 = this.bar2 = document.createElement("div");
     bar2.style["display"] = "flex";
     bar2.style["flex-direction"] = "row";
     bar2.style["height"] = this.height + "px";
@@ -72124,7 +72156,7 @@ var ProgBarNote = class extends Note {
   }
   setCSS() {
     super.setCSS();
-    let w = ~~(this.percent * this.barWidth + 0.5);
+    const w = ~~(this.percent * this.barWidth + 0.5);
     this.bar2.style["width"] = w + "px";
   }
   init() {
@@ -72157,20 +72189,20 @@ var NoteFrame = class extends RowFrame {
     this.style["height"] = this._h + "px";
   }
   _ondestroy() {
-    if (noteframes.indexOf(this) >= 0) {
+    if (noteframes.includes(this)) {
       noteframes.remove(this);
     }
     super._ondestroy();
   }
   progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id = msg) {
     let note;
-    for (let child of this.childWidgets) {
+    for (const child of this.childWidgets) {
       if (child._noteid === id) {
         note = child;
         break;
       }
     }
-    let f2 = (100 * Math.min(percent, 1)).toFixed(1);
+    const f2 = (100 * Math.min(percent, 1)).toFixed(1);
     if (note === void 0) {
       note = this.addNote(msg, color, -1, "note-progress-x");
       note._noteid = id;
@@ -72184,7 +72216,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
   addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
-    let note = UIBase5.createElement(tagname);
+    const note = UIBase5.createElement(tagname);
     note.color = color;
     note.setLabel(msg);
     note.style["text-align"] = "center";
@@ -72206,18 +72238,18 @@ var NoteFrame = class extends RowFrame {
 };
 UIBase5.internalRegister(NoteFrame);
 function getNoteFrames(screen) {
-  let ret = [];
-  let rec = (n) => {
+  const ret = [];
+  const rec = (n) => {
     if (n instanceof NoteFrame) {
       ret.push(n);
     }
     if (n.childNodes !== void 0) {
-      for (let node of n.childNodes) {
+      for (const node of n.childNodes) {
         rec(node);
       }
     }
     if (n instanceof UIBase2 && n.shadow !== void 0 && n.shadow.childNodes) {
-      for (let node of n.shadow.childNodes) {
+      for (const node of n.shadow.childNodes) {
         rec(node);
       }
     }
@@ -72228,7 +72260,7 @@ function getNoteFrames(screen) {
 var noteframes = [];
 function sendNote(screen, msg, color, timeout = 3e3, showExclMark = true) {
   noteframes = getNoteFrames(screen);
-  for (let frame of noteframes) {
+  for (const frame of noteframes) {
     try {
       frame.addNote(msg, color, timeout, void 0, showExclMark);
     } catch (error2) {
@@ -72250,7 +72282,7 @@ function message(screen, msg, timeout) {
 }
 function progbarNote(screen, msg, percent, color, timeout) {
   noteframes = getNoteFrames(screen);
-  for (let frame of noteframes) {
+  for (const frame of noteframes) {
     try {
       frame.progbarNote(msg, percent, color, timeout);
     } catch (error2) {
@@ -75770,6 +75802,8 @@ var Area = class _Area extends UIBase2 {
   maxSize;
   keymap;
   header;
+  /** Notifications area. */
+  noteArea;
   switcher;
   helppicker;
   saved_uidata;
@@ -76055,7 +76089,7 @@ var Area = class _Area extends UIBase2 {
     });
     return dropbox;
   }
-  makeHeader(container, add_note_area = true, make_draggable = true) {
+  makeHeader(container, addNoteArea = true, makeDraggable = true) {
     let switcherRow;
     let row;
     let helpRow;
@@ -76102,9 +76136,10 @@ var Area = class _Area extends UIBase2 {
       this.helppicker = helpRow.helppicker();
       this.helppicker.iconsheet = 0;
     }
-    if (add_note_area) {
+    if (addNoteArea) {
       const notef = UIBase2.createElement("noteframe-x");
       notef.ctx = this.ctx;
+      this.noteArea = notef;
       row._add(notef);
     }
     if (const_default.useAreaTabSwitcher) {
@@ -76141,7 +76176,7 @@ var Area = class _Area extends UIBase2 {
     });
     let last_time = time_ms();
     const do_mousemove = (e, pageX, pageY) => {
-      if (haveModal() || !make_draggable) {
+      if (haveModal() || !makeDraggable) {
         return;
       }
       let mdown2 = e.buttons !== 0 || !!e.touches?.length;
@@ -81264,10 +81299,10 @@ var SimpleScreen = class extends Screen2 {
   constructor() {
     super();
     this.keymap = new KeyMap([
-      new HotKey("Z", ["CTRL"], () => {
+      new HotKey("Z", ["ctrl"], () => {
         this.ctx.toolstack.undo();
       }),
-      new HotKey("Z", ["CTRL", "SHIFT"], () => {
+      new HotKey("Z", ["ctrl", "shift"], () => {
         this.ctx.toolstack.redo();
       })
     ]);
@@ -81280,8 +81315,8 @@ var SimpleScreen = class extends Screen2 {
   init() {
     const state = this.ctx.state;
     if (state.startArgs.registerSaveOpenOps) {
-      this.keymap.add(new HotKey("S", ["CTRL"], "app.save()"));
-      this.keymap.add(new HotKey("O", ["CTRL"], "app.open()"));
+      this.keymap.add(new HotKey("S", ["ctrl"], "app.save()"));
+      this.keymap.add(new HotKey("O", ["ctrl"], "app.open()"));
     }
   }
   setCSS() {

@@ -257,10 +257,10 @@ export class SimpleScreen extends Screen {
     super();
 
     this.keymap = new KeyMap([
-      new HotKey("Z", ["CTRL"], () => {
+      new HotKey("Z", ["ctrl"], () => {
         (this.ctx as unknown as { toolstack: ToolStack }).toolstack.undo();
       }),
-      new HotKey("Z", ["CTRL", "SHIFT"], () => {
+      new HotKey("Z", ["ctrl", "shift"], () => {
         (this.ctx as unknown as { toolstack: ToolStack }).toolstack.redo();
       }),
     ]);
@@ -275,8 +275,8 @@ export class SimpleScreen extends Screen {
   override init() {
     const state = (this.ctx as unknown as Record<string, unknown>).state as Record<string, unknown>;
     if ((state.startArgs as StartArgs).registerSaveOpenOps) {
-      this.keymap!.add(new HotKey("S", ["CTRL"], "app.save()"));
-      this.keymap!.add(new HotKey("O", ["CTRL"], "app.open()"));
+      this.keymap!.add(new HotKey("S", ["ctrl"], "app.save()"));
+      this.keymap!.add(new HotKey("O", ["ctrl"], "app.open()"));
     }
   }
 
