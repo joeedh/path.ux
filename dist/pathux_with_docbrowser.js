@@ -4,14 +4,14 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __knownSymbol = (name2, symbol) => (symbol = Symbol[name2]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name2);
-var __typeError = (msg) => {
-  throw TypeError(msg);
+var __knownSymbol = (name2, symbol) => {
+  return (symbol = Symbol[name2]) ? symbol : Symbol.for("Symbol." + name2);
 };
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a2, b) => (typeof require !== "undefined" ? require : a2)[b]
 }) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
+  if (typeof require !== "undefined")
+    return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
 var __esm = (fn, res) => function __init() {
@@ -42,21 +42,15 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __using = (stack, value, async) => {
   if (value != null) {
-    if (typeof value !== "object" && typeof value !== "function") __typeError("Object expected");
-    var dispose, inner;
-    if (async) dispose = value[__knownSymbol("asyncDispose")];
-    if (dispose === void 0) {
+    if (typeof value !== "object" && typeof value !== "function")
+      throw TypeError("Object expected");
+    var dispose;
+    if (async)
+      dispose = value[__knownSymbol("asyncDispose")];
+    if (dispose === void 0)
       dispose = value[__knownSymbol("dispose")];
-      if (async) inner = dispose;
-    }
-    if (typeof dispose !== "function") __typeError("Object not disposable");
-    if (inner) dispose = function() {
-      try {
-        inner.call(this);
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    };
+    if (typeof dispose !== "function")
+      throw TypeError("Object not disposable");
     stack.push([async, dispose, value]);
   } else if (async) {
     stack.push([async]);
@@ -72,12 +66,14 @@ var __callDispose = (stack, error2, hasError) => {
     while (it = stack.pop()) {
       try {
         var result = it[1] && it[1].call(it[2]);
-        if (it[0]) return Promise.resolve(result).then(next, (e) => (fail(e), next()));
+        if (it[0])
+          return Promise.resolve(result).then(next, (e) => (fail(e), next()));
       } catch (e) {
         fail(e);
       }
     }
-    if (hasError) throw error2;
+    if (hasError)
+      throw error2;
   };
   return next();
 };
@@ -135,7 +131,7 @@ var init_polyfill = __esm({
         }
       };
     })();
-    window.eventDebugModule = (function() {
+    window.eventDebugModule = function() {
       "use strict";
       const debugLists = () => window.debugEventLists;
       return {
@@ -223,14 +219,14 @@ var init_polyfill = __esm({
           );
         }
       };
-    })();
+    }();
     if (typeof _debug_event_listeners !== "undefined" && _debug_event_listeners) {
       window.eventDebugModule.start();
     }
     if (window._disable_all_listeners) {
       console.warn("Disabling all event listeners");
-      EventTarget.prototype.addEventListener = (() => {
-      });
+      EventTarget.prototype.addEventListener = () => {
+      };
     }
     if (typeof visualViewport === "undefined") {
       (function() {
@@ -313,7 +309,7 @@ var init_polyfill = __esm({
       });
     }
     if (Symbol.keystr === void 0) {
-      Symbol.keystr = /* @__PURE__ */ Symbol("keystr");
+      Symbol.keystr = Symbol("keystr");
     }
     if (Math.fract === void 0) {
       Math.fract = function fract(f2) {
@@ -3824,7 +3820,7 @@ var init_nstructjs_es6 = __esm({
       setStructEval
     });
     "use strict";
-    TokSymbol = /* @__PURE__ */ Symbol("token-info");
+    TokSymbol = Symbol("token-info");
     _defaultParser = buildJSONParser();
     "use strict";
     nGlobal = globalThis;
@@ -5011,13 +5007,13 @@ var init_lz_string = __esm({
     lz_string_default = {
       compressToBase64: function(input) {
         input = getInput(input);
-        if (!input) return "";
+        if (!input)
+          return "";
         let res = this._compress(input, 6, function(a2) {
           return keyStrBase64.charAt(a2);
         });
         switch (res.length % 4) {
           default:
-          // When could this happen ?
           case 0:
             return res;
           case 1:
@@ -5029,23 +5025,28 @@ var init_lz_string = __esm({
         }
       },
       decompressFromBase64: function(input) {
-        if (input === null) return "";
-        if (input === "") return null;
+        if (input === null)
+          return "";
+        if (input === "")
+          return null;
         input = getInput(input);
         return this._decompress(input.length, 32, function(index) {
           return getBaseValue(keyStrBase64, input.charAt(index));
         });
       },
       compressToUTF16: function(input) {
-        if (input === null) return "";
+        if (input === null)
+          return "";
         input = getInput(input);
         return this._compress(input, 15, function(a2) {
           return f(a2 + 32);
         }) + " ";
       },
       decompressFromUTF16: function(compressed) {
-        if (compressed === null) return "";
-        if (compressed === "") return null;
+        if (compressed === null)
+          return "";
+        if (compressed === "")
+          return null;
         compressed = getInput(compressed);
         return this._decompress(compressed.length, 16384, function(index) {
           return compressed.charCodeAt(index) - 32;
@@ -5082,15 +5083,18 @@ var init_lz_string = __esm({
       },
       //compress into a string that is already URI encoded
       compressToEncodedURIComponent: function(input) {
-        if (input === null) return "";
+        if (input === null)
+          return "";
         return this._compress(input, 6, function(a2) {
           return keyStrUriSafe.charAt(a2);
         });
       },
       //decompress from an output of compressToEncodedURIComponent
       decompressFromEncodedURIComponent: function(input) {
-        if (input === null) return "";
-        if (input === "") return null;
+        if (input === null)
+          return "";
+        if (input === "")
+          return null;
         input = input.replace(/ /g, "+");
         return this._decompress(input.length, 32, function(index) {
           return getBaseValue(keyStrUriSafe, input.charAt(index));
@@ -5103,7 +5107,8 @@ var init_lz_string = __esm({
       },
       _compress: function(uncompressed, bitsPerChar, getCharFromInt) {
         uncompressed = getInput(uncompressed);
-        if (uncompressed === null) return "";
+        if (uncompressed === null)
+          return "";
         let i, value, context_dictionary = {}, context_dictionaryToCreate = {}, context_c = "", context_wc = "", context_w = "", context_enlargeIn = 2, context_dictSize = 3, context_numBits = 2, context_data = [], context_data_val = 0, context_data_position = 0, ii;
         for (ii = 0; ii < uncompressed.length; ii += 1) {
           context_c = uncompressed.charAt(ii);
@@ -5288,13 +5293,16 @@ var init_lz_string = __esm({
           if (context_data_position === bitsPerChar - 1) {
             context_data.push(getCharFromInt(context_data_val));
             break;
-          } else context_data_position++;
+          } else
+            context_data_position++;
         }
         return context_data.join("");
       },
       decompress: function(compressed) {
-        if (compressed === null) return "";
-        if (compressed === "") return null;
+        if (compressed === null)
+          return "";
+        if (compressed === "")
+          return null;
         compressed = getInput(compressed);
         return this._decompress(compressed.length, 32768, function(index) {
           return compressed.charCodeAt(index);
@@ -5646,8 +5654,10 @@ function isMobile() {
 }
 function getClassParent(cls) {
   let p = cls.prototype;
-  if (p) p = p.__proto__;
-  if (p) return p.constructor;
+  if (p)
+    p = p.__proto__;
+  if (p)
+    return p.constructor;
   return void 0;
 }
 function list2(iterable) {
@@ -5680,7 +5690,8 @@ function getAllKeys(obj) {
   let p = obj;
   while (p && p !== Object) {
     for (const k in Object.getOwnPropertyDescriptors(p)) {
-      if (k === "__proto__") continue;
+      if (k === "__proto__")
+        continue;
       keys2.add(k);
     }
     for (const k of Object.getOwnPropertySymbols(p)) {
@@ -5689,7 +5700,8 @@ function getAllKeys(obj) {
     p = Object.getPrototypeOf(p);
   }
   let cls = obj.constructor;
-  if (!cls) return keys2;
+  if (!cls)
+    return keys2;
   while (cls) {
     const proto = cls.prototype;
     if (!proto) {
@@ -5743,16 +5755,20 @@ function atob2(buf) {
   return new Uint8Array(ret);
 }
 function time_ms() {
-  if (window.performance) return window.performance.now();
-  else return (/* @__PURE__ */ new Date()).getMilliseconds();
+  if (window.performance)
+    return window.performance.now();
+  else
+    return (/* @__PURE__ */ new Date()).getMilliseconds();
 }
 function color2css(c) {
   let ret = c.length === 3 ? "rgb(" : "rgba(";
   for (let i = 0; i < 3; i++) {
-    if (i > 0) ret += ",";
+    if (i > 0)
+      ret += ",";
     ret += ~~(c[i] * 255);
   }
-  if (c.length === 4) ret += "," + c[3];
+  if (c.length === 4)
+    ret += "," + c[3];
   ret += ")";
   return ret;
 }
@@ -6286,7 +6302,8 @@ var init_util = __esm({
       }
       add(item) {
         const key = item[Symbol.keystr]();
-        if (key in this.keys) return;
+        if (key in this.keys)
+          return;
         if (this.freelist.length > 0) {
           const i = this.freelist.pop();
           this.keys[key] = i;
@@ -6321,7 +6338,8 @@ var init_util = __esm({
       forEach(func, thisvar) {
         for (let i = 0; i < this.items.length; i++) {
           const item = this.items[i];
-          if (item === EmptySlot) continue;
+          if (item === EmptySlot)
+            continue;
           thisvar !== void 0 ? func.call(thisvar, item) : func(item);
         }
       }
@@ -6429,7 +6447,8 @@ var init_util = __esm({
         return ret;
       }
       forEach(cb, thisvar) {
-        if (thisvar === void 0) thisvar = self;
+        if (thisvar === void 0)
+          thisvar = self;
         for (const k in this._keys) {
           const i = this._keys[k];
           cb.call(thisvar, k, this._items[i]);
@@ -6539,7 +6558,8 @@ IDGen {
         }
       }
       extract_number() {
-        if (this.index >= 624) this.twist();
+        if (this.index >= 624)
+          this.twist();
         let y = this.mt[this.index];
         y = y ^ y >> 11;
         y = y ^ y << 7 & 2636928640;
@@ -6552,7 +6572,8 @@ IDGen {
         for (let i = 0; i < 624; i++) {
           const y = _int32((this.mt[i] & 2147483648) + (this.mt[(i + 1) % 624] & 2147483647));
           this.mt[i] = this.mt[(i + 397) % 624] ^ y >> 1;
-          if (y % 2 !== 0) this.mt[i] = this.mt[i] ^ 2567483615;
+          if (y % 2 !== 0)
+            this.mt[i] = this.mt[i] ^ 2567483615;
         }
         this.index = 0;
       }
@@ -6612,7 +6633,8 @@ IDGen {
         this.size = size;
         this.fill(0, 0, this.length);
         for (let i = 0; i < table.length; i += FTOT) {
-          if (!table[i + FTAKEN]) continue;
+          if (!table[i + FTAKEN])
+            continue;
           const key = table[i + FKEY];
           const val = table[i + FVAL];
           this.set(key, val);
@@ -6681,7 +6703,8 @@ IDGen {
         input.addEventListener("change", function(_e) {
           const files = this.files;
           console2.log("got file", _e, files);
-          if (!files || files.length === 0) return;
+          if (!files || files.length === 0)
+            return;
           const reader = new FileReader();
           reader.onload = (e) => {
             const data = e.target.result;
@@ -6851,19 +6874,19 @@ IDGen {
       }
       keys() {
         const this2 = this;
-        return (function* () {
+        return function* () {
           for (const [key, _val] of this2) {
             yield key;
           }
-        })();
+        }();
       }
       values() {
         const this2 = this;
-        return (function* () {
+        return function* () {
           for (const [_key, val] of this2) {
             yield val;
           }
-        })();
+        }();
       }
       get(k) {
         const ks = k[Symbol.keystr]();
@@ -6972,30 +6995,30 @@ IDGen {
       }
       keys() {
         const this2 = this;
-        return (function* () {
+        return function* () {
           for (const id of this2._keys) {
             if (this2[id] === UndefinedTag) {
               continue;
             }
             yield id;
           }
-        })();
+        }();
       }
       values() {
         const this2 = this;
-        return (function* () {
+        return function* () {
           for (const id of this2._keys) {
             if (this2[id] === UndefinedTag) {
               continue;
             }
             yield this2[id];
           }
-        })();
+        }();
       }
       [Symbol.iterator]() {
         const this2 = this;
         const iteritem = [0, void 0];
-        return (function* () {
+        return function* () {
           for (const id of this2._keys) {
             iteritem[0] = id;
             const val = this2[id];
@@ -7006,7 +7029,7 @@ IDGen {
             }
             yield iteritem;
           }
-        })();
+        }();
       }
     };
     globalThis._test_idmap = function() {
@@ -7789,8 +7812,10 @@ function createVector2(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
+        return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
+        return -1;
       return ret;
     }
     loadX(x) {
@@ -8131,8 +8156,10 @@ function createVector3(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1] + this[2] * b[2];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
+        return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
+        return -1;
       return ret;
     }
     loadX(x) {
@@ -8543,8 +8570,10 @@ function createVector4(parent, structName) {
     }
     dot(b) {
       const ret = this[0] * b[0] + this[1] * b[1] + this[2] * b[2] + this[3] * b[3];
-      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT) return 1;
-      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT) return -1;
+      if (ret >= 1 - DOT_NORM_SNAP_LIMIT && ret <= 1 + DOT_NORM_SNAP_LIMIT)
+        return 1;
+      if (ret >= -1 - DOT_NORM_SNAP_LIMIT && ret <= -1 + DOT_NORM_SNAP_LIMIT)
+        return -1;
       return ret;
     }
     loadX(x) {
@@ -8695,7 +8724,8 @@ var init_vectormath = __esm({
       }
       invert() {
         let f2 = this.dot(this);
-        if (f2 === 0) return this;
+        if (f2 === 0)
+          return this;
         this.mulScalar(1 / f2);
         return this;
       }
@@ -9100,7 +9130,8 @@ var init_vectormath = __esm({
             this.$matrix.m43 = matrix.m43;
             this.$matrix.m44 = matrix.m44;
             return this;
-          } else matrix = arguments[0];
+          } else
+            matrix = arguments[0];
           if ("length" in matrix && matrix.length >= 16) {
             this.$matrix.m11 = matrix[0];
             this.$matrix.m12 = matrix[1];
@@ -9221,7 +9252,8 @@ var init_vectormath = __esm({
       }
       invert() {
         let det = this._determinant4x4();
-        if (Math.abs(det) < 1e-8) return null;
+        if (Math.abs(det) < 1e-8)
+          return null;
         this._makeAdjoint();
         this.$matrix.m11 /= det;
         this.$matrix.m12 /= det;
@@ -9282,7 +9314,8 @@ var init_vectormath = __esm({
           y = t[1];
           z = t[2];
         } else {
-          if (x === void 0) x = 1;
+          if (x === void 0)
+            x = 1;
           if (z === void 0) {
             if (y === void 0) {
               y = x;
@@ -9950,7 +9983,8 @@ var init_vectormath = __esm({
         return this;
       }
       decompose(_translate, _rotate, _scale, _skew, _perspective, order = EulerOrders.XYZ) {
-        if (this.$matrix.m44 === 0) return false;
+        if (this.$matrix.m44 === 0)
+          return false;
         let mat = temp_mats.next().load(this);
         let m = mat.$matrix;
         let t = _translate, r = _rotate, s = _scale;
@@ -10130,8 +10164,8 @@ var init_vectormath = __esm({
 function consolelog(..._args) {
 }
 function debugDomEvents() {
-  const cbsymbol = /* @__PURE__ */ Symbol("event-callback");
-  const thsymbol = /* @__PURE__ */ Symbol("debug-info");
+  const cbsymbol = Symbol("event-callback");
+  const thsymbol = Symbol("debug-info");
   let idgen3 = 0;
   function init2(et) {
     if (!et[thsymbol]) {
@@ -10507,7 +10541,8 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
         mpos[1] = e.y;
       }
       handleAreaContext();
-      if (key !== void 0) obj[key](e);
+      if (key !== void 0)
+        obj[key](e);
       if (autoStopPropagation) {
         e.preventDefault();
         e.stopPropagation();
@@ -10517,12 +10552,16 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   const found = {};
   for (const k of keys2) {
     let key;
-    if (obj[k]) key = k;
-    else if (obj["on" + k]) key = "on" + k;
-    else if (obj["on_" + k]) key = "on_" + k;
+    if (obj[k])
+      key = k;
+    else if (obj["on" + k])
+      key = "on" + k;
+    else if (obj["on_" + k])
+      key = "on_" + k;
     else if (k in touchmap)
       continue;
-    else key = void 0;
+    else
+      key = void 0;
     if (key === void 0 && k.search("pointer") === 0) {
       continue;
     }
@@ -10901,8 +10940,10 @@ var init_simple_events = __esm({
       }
       handle(ctx, e) {
         const mods = /* @__PURE__ */ new Set();
-        if (e.shiftKey) mods.add("shift");
-        if (e.altKey) mods.add("alt");
+        if (e.shiftKey)
+          mods.add("shift");
+        if (e.altKey)
+          mods.add("alt");
         if (e.ctrlKey) {
           mods.add("ctrl");
         }
@@ -10912,7 +10953,8 @@ var init_simple_events = __esm({
         }
         for (const hk of this) {
           let ok = e.keyCode === hk.key;
-          if (!ok) continue;
+          if (!ok)
+            continue;
           let count2 = 0;
           for (let m of hk.mods) {
             m = m.toLowerCase().trim();
@@ -10952,7 +10994,7 @@ var ClassIdSymbol;
 var init_ui_consts = __esm({
   "scripts/core/ui_consts.ts"() {
     "use strict";
-    ClassIdSymbol = /* @__PURE__ */ Symbol("pathux-class-id");
+    ClassIdSymbol = Symbol("pathux-class-id");
   }
 });
 
@@ -11143,8 +11185,10 @@ var init_area_wrangler = __esm({
 // scripts/path-controller/curve/curve1d_base.ts
 function getCurve(type, throw_on_error = true) {
   for (const cls of CurveConstructors) {
-    if (cls.name === type) return cls;
-    if (cls.define().name === type) return cls;
+    if (cls.name === type)
+      return cls;
+    if (cls.define().name === type)
+      return cls;
   }
   if (throw_on_error) {
     throw new Error("Unknown curve type " + type);
@@ -11260,7 +11304,8 @@ var init_curve1d_base = __esm({
         return this;
       }
       redraw() {
-        if (this.parent) this.parent.redraw();
+        if (this.parent)
+          this.parent.redraw();
       }
       makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
       }
@@ -11337,7 +11382,8 @@ var init_curve1d_base = __esm({
       destroy() {
       }
       update() {
-        if (this.parent) this.parent._on_change();
+        if (this.parent)
+          this.parent._on_change();
       }
       draw(canvas, g, draw_transform) {
       }
@@ -11394,7 +11440,8 @@ function copyMouseEvent(e) {
   return ret;
 }
 function getDom(dom, eventtype) {
-  if (eventtype.startsWith("key")) return window;
+  if (eventtype.startsWith("key"))
+    return window;
   return dom;
 }
 function isModalHead(owner) {
@@ -11665,7 +11712,8 @@ var init_toolprop_abstract = __esm({
         this.keys = {};
         this.ui_value_names = {};
         this.iconmap = {};
-        if (valid_values === void 0) return;
+        if (valid_values === void 0)
+          return;
         if (valid_values instanceof Array || valid_values instanceof String) {
           for (let i = 0; i < valid_values.length; i++) {
             this.values[valid_values[i]] = valid_values[i];
@@ -11806,7 +11854,8 @@ function myToFixed(f2, decimals) {
   if (s.endsWith(".")) {
     s = s.slice(0, s.length - 1);
   }
-  if (s.length === 0) s = "0";
+  if (s.length === 0)
+    s = "0";
   return s.trim();
 }
 function setBaseUnit(unit) {
@@ -11956,7 +12005,8 @@ var init_units = __esm({
         string = normString(string);
         const def = this.unitDefine();
         const m = string.match(def.pattern);
-        if (!m) return false;
+        if (!m)
+          return false;
         return m[0] === string;
       }
       //convert to internal units,
@@ -13210,7 +13260,8 @@ EnumKeyPair {
         this.descriptions = {};
         this.iconmap = {};
         this.iconmap2 = {};
-        if (valid_values === void 0) return;
+        if (valid_values === void 0)
+          return;
         if (valid_values instanceof Array) {
           for (let i = 0; i < valid_values.length; i++) {
             this.values[valid_values[i]] = valid_values[i];
@@ -13363,13 +13414,17 @@ EnumKeyPair {
       }
       getValue() {
         const d = this.data;
-        if (d in this.values) return this.values[d];
-        else return d;
+        if (d in this.values)
+          return this.values[d];
+        else
+          return d;
       }
       setValue(val) {
         this.checkMeta();
-        if (val === void 0) return;
-        if (!(val in this.values) && val in this.keys) val = this.keys[val];
+        if (val === void 0)
+          return;
+        if (!(val in this.values) && val in this.keys)
+          val = this.keys[val];
         if (!(val in this.values)) {
           this.report("Invalid value for enum!", val, this.values);
           return;
@@ -13785,11 +13840,11 @@ EnumKeyPair {
       }
       [Symbol.iterator]() {
         const list5 = this.value;
-        return (function* () {
+        return function* () {
           for (const item of list5) {
             yield item.getValue();
           }
-        })();
+        }();
       }
     };
     ListProperty.STRUCT = struct_default.inherit(ListProperty, ToolProperty) + `
@@ -13872,7 +13927,8 @@ EnumKeyPair {
         if (!values) {
           this.value.clear();
         } else if (typeof values === "string") {
-          if (destructive) this.value.clear();
+          if (destructive)
+            this.value.clear();
           if (!(values in this.values)) {
             if (soft_fail) {
               this.report(`"${values}" is not in this StringSetProperty`);
@@ -13911,14 +13967,16 @@ EnumKeyPair {
         return this.value;
       }
       addIcons2(iconmap2) {
-        if (iconmap2 === void 0) return this;
+        if (iconmap2 === void 0)
+          return this;
         for (const k in iconmap2) {
           this.iconmap2[k] = iconmap2[k];
         }
         return this;
       }
       addIcons(iconmap) {
-        if (iconmap === void 0) return this;
+        if (iconmap === void 0)
+          return this;
         for (const k in iconmap) {
           this.iconmap[k] = iconmap[k];
         }
@@ -14141,8 +14199,10 @@ var init_controller_base = __esm({
           data.flag |= PropFlags.USE_CUSTOM_GETSET;
           data._getValue = data.getValue;
           data._setValue = data.setValue;
-          if (get) data.getValue = get;
-          if (set3) data.setValue = set3;
+          if (get)
+            data.getValue = get;
+          if (set3)
+            data.setValue = set3;
         } else {
           this.getSet = {
             get,
@@ -14403,7 +14463,8 @@ var init_controller_base = __esm({
           return this.cb.getStruct(api, list5, key);
         }
         let obj = this.get(api, list5, key);
-        if (obj === void 0) return void 0;
+        if (obj === void 0)
+          return void 0;
         return api.getStruct(obj.constructor);
       }
     };
@@ -14566,10 +14627,10 @@ var init_context = __esm({
     };
     __idgen = 1;
     if (Symbol.ContextID === void 0) {
-      Symbol.ContextID = /* @__PURE__ */ Symbol("ContextID");
+      Symbol.ContextID = Symbol("ContextID");
     }
     if (Symbol.CachedDef === void 0) {
-      Symbol.CachedDef = /* @__PURE__ */ Symbol("CachedDef");
+      Symbol.CachedDef = Symbol("CachedDef");
     }
     _ret_tmp = [void 0];
     OverlayClasses = [];
@@ -15152,7 +15213,8 @@ var init_toolsys = __esm({
       }
       _getAccessor(cls) {
         const toolpath = cls.tooldef().toolpath;
-        if (!toolpath) return void 0;
+        if (!toolpath)
+          return void 0;
         return this.pathmap.get(toolpath.trim());
       }
       static getFullPath(cls, key, prop) {
@@ -15258,7 +15320,8 @@ var init_toolsys = __esm({
           this[k] = def[k];
         }
         const getSlots = (slots, key) => {
-          if (slots === void 0) return {};
+          if (slots === void 0)
+            return {};
           const result = {};
           let p = this.constructor;
           let lastp = void 0;
@@ -15361,8 +15424,10 @@ var init_toolsys = __esm({
         return result;
       }
       static Equals(a2, b) {
-        if (!a2 || !b) return false;
-        if (a2.constructor !== b.constructor) return false;
+        if (!a2 || !b)
+          return false;
+        if (a2.constructor !== b.constructor)
+          return false;
         let bad = false;
         const ai = a2.inputs;
         const bi = b.inputs;
@@ -15442,7 +15507,8 @@ var init_toolsys = __esm({
       static _getFinalToolDef() {
         const def = this.tooldef();
         const getSlots = (slots, key) => {
-          if (slots === void 0) return {};
+          if (slots === void 0)
+            return {};
           const result = {};
           let p = this;
           while (p !== void 0 && p !== Object && p !== _ToolOp) {
@@ -15561,13 +15627,15 @@ var init_toolsys = __esm({
         for (const k in inputs) {
           const prop = inputs[k];
           path += k + "=";
-          if (prop.type === PropTypes.STRING) path += "'";
+          if (prop.type === PropTypes.STRING)
+            path += "'";
           if (prop.type === PropTypes.FLOAT) {
             path += prop.getValue().toFixed(3);
           } else {
             path += prop.getValue();
           }
-          if (prop.type === PropTypes.STRING) path += "'";
+          if (prop.type === PropTypes.STRING)
+            path += "'";
           path += " ";
         }
         path += ")";
@@ -16000,7 +16068,8 @@ toolsys.PropKey {
         this.curtool = 0;
         let i;
         for (i = 0; i < this.tools.length; i++) {
-          if (this.tools[i].is_modal) break;
+          if (this.tools[i].is_modal)
+            break;
           this.tools[i].undoPre(ctx);
           this.tools[i].execPre(ctx);
           this.tools[i].exec(ctx);
@@ -16358,7 +16427,8 @@ toolsys.PropKey {
       }
       /** Remove element at index (Array polyfill) */
       pop_i(idx) {
-        if (idx < 0 || idx >= this.length) return void 0;
+        if (idx < 0 || idx >= this.length)
+          return void 0;
         return this.splice(idx, 1)[0];
       }
     };
@@ -16464,7 +16534,8 @@ function binomial(n, i) {
     return 1;
   }
   const key = "" + n + "," + i;
-  if (key in bin_cache) return bin_cache[key];
+  if (key in bin_cache)
+    return bin_cache[key];
   const ret = binomial(n - 1, i - 1) + binomial(n - 1, i);
   bin_cache[key] = ret;
   return ret;
@@ -16878,7 +16949,8 @@ var init_curve1d_bspline = __esm({
         const off = new Vector2(mpos).sub(this.start_mpos).mulScalar(dpi ?? 1);
         off[1] = -off[1];
         this.inputs.off.setValue(off);
-        if (!curve1d) return;
+        if (!curve1d)
+          return;
         const bspline = curve1d.generators.active;
         for (const p of bspline.points) {
           p.co.load(p.startco);
@@ -17530,8 +17602,10 @@ Curve1DPoint {
         }
         const a2 = this.points[0].rco;
         const b = this.points[this.points.length - 1].rco;
-        if (t < a2[0]) return a2[1];
-        if (t > b[0]) return b[1];
+        if (t < a2[0])
+          return a2[1];
+        if (t > b[0])
+          return b[1];
         if (this.points.length === 2) {
           t = (t - a2[0]) / (b[0] - a2[0]);
           return a2[1] + (b[1] - a2[1]) * t;
@@ -17735,7 +17809,8 @@ Curve1DPoint {
                 dataPath: dpath,
                 template: SplineTemplates[k]
               });
-              if (srcUpdate) srcUpdate();
+              if (srcUpdate)
+                srcUpdate();
             } else {
               this.loadTemplate(SplineTemplates[k]);
             }
@@ -17769,7 +17844,8 @@ Curve1DPoint {
           } else {
             this.deletePoint();
           }
-          if (srcUpdate) srcUpdate();
+          if (srcUpdate)
+            srcUpdate();
           fullUpdate();
         });
         row.button("Reset", () => {
@@ -17778,7 +17854,8 @@ Curve1DPoint {
             r.ctx.api.execTool(r.ctx, "curve1d.reset_bspline", {
               dataPath: dpath
             });
-            if (srcUpdate) srcUpdate();
+            if (srcUpdate)
+              srcUpdate();
           } else {
             this.reset();
           }
@@ -17829,7 +17906,8 @@ Curve1DPoint {
         return this;
       }
       start_transform(_useSelected = true) {
-        if (!this.uidata) return;
+        if (!this.uidata)
+          return;
         const ui2 = this.uidata;
         const dpi = 1 / ui2.draw_trans[0];
         for (const p of this.points) {
@@ -17841,7 +17919,8 @@ Curve1DPoint {
         ui2.dom.ctx.api.execTool(ui2.dom.ctx, transform_op);
       }
       _on_mousedown(e) {
-        if (!this.uidata) return;
+        if (!this.uidata)
+          return;
         const ui2 = this.uidata;
         ui2.start_mpos.load(this.transform_mpos(e.x, e.y));
         this.fastmode = true;
@@ -17931,7 +18010,8 @@ Curve1DPoint {
         this.points.highlight.flag |= CurveFlags.SELECT;
       }
       do_highlight(x, y) {
-        if (!this.uidata) return;
+        if (!this.uidata)
+          return;
         const ui2 = this.uidata;
         const trans = ui2.draw_trans;
         let mindis = 1e17;
@@ -17954,7 +18034,8 @@ Curve1DPoint {
         }
       }
       do_transform(x, y) {
-        if (!this.uidata || !this.parent) return;
+        if (!this.uidata || !this.parent)
+          return;
         const ui2 = this.uidata;
         const off = new Vector2([x, y]).sub(ui2.start_mpos);
         const xRange = this.parent.xRange;
@@ -17983,7 +18064,8 @@ Curve1DPoint {
         return [x, y];
       }
       _on_mousemove(e) {
-        if (!this.uidata) return;
+        if (!this.uidata)
+          return;
         const ui2 = this.uidata;
         if (e.isTouch && ui2.transforming) {
           e.preventDefault();
@@ -18014,7 +18096,6 @@ Curve1DPoint {
       _on_keydown(e) {
         switch (e.keyCode) {
           case 88:
-          //xkeey
           case 46:
             if (this.points.highlight !== void 0) {
               this.points.remove(this.points.highlight);
@@ -18055,7 +18136,8 @@ Curve1DPoint {
                 totbasis += this.basis(f2, j);
               }
               let val = this.basis(f2, si);
-              if (ssi) val /= totbasis === 0 ? 1 : totbasis;
+              if (ssi)
+                val /= totbasis === 0 ? 1 : totbasis;
               (i === 0 ? g.moveTo : g.lineTo).call(g, f2, ssi ? val : val * 0.5);
             }
             let color;
@@ -19567,7 +19649,8 @@ function aabb_isect_2d(pos1, size1, pos2, size2) {
     const b = pos1[i] + size1[i];
     const c = pos2[i];
     const d = pos2[i] + size2[i];
-    if (b >= c && a2 <= d) ret += 1;
+    if (b >= c && a2 <= d)
+      ret += 1;
   }
   return ret === 2;
 }
@@ -19579,7 +19662,8 @@ function aabb_isect_3d(pos1, size1, pos2, size2) {
     const b = pos1[i] + size1[i];
     const c = pos2[i];
     const d = pos2[i] + size2[i];
-    if (b >= c && a2 <= d) ret += 1;
+    if (b >= c && a2 <= d)
+      ret += 1;
   }
   return ret === 3;
 }
@@ -19733,7 +19817,8 @@ function simple_tri_aabb_isect(v1, v2, v3, min, max) {
       if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i])
         isect = false;
     }
-    if (isect) return true;
+    if (isect)
+      return true;
   }
   return false;
 }
@@ -19941,7 +20026,8 @@ function aabb_sphere_isect_2d(p, r, min, max) {
   v2.add(mvec);
   v3.load(lp);
   let ret = point_in_aabb_2d(v1, lmin, lmax) || point_in_aabb_2d(v2, lmin, lmax) || point_in_aabb_2d(v3, lmin, lmax);
-  if (ret) return ret;
+  if (ret)
+    return ret;
   v1.load(lmin);
   v2[0] = lmin[0];
   v2[1] = lmax[1];
@@ -20134,7 +20220,8 @@ function normal_tri(v1, v2, v3) {
   y3 = z1 * x2 - x1 * z2;
   z3 = x1 * y2 - y1 * x2;
   let len = Math.sqrt(x3 * x3 + y3 * y3 + z3 * z3);
-  if (len > 1e-5) len = 1 / len;
+  if (len > 1e-5)
+    len = 1 / len;
   x3 *= len;
   y3 *= len;
   z3 *= len;
@@ -20165,7 +20252,8 @@ function normal_quad_old(v1, v2, v3, v4) {
   let _len = Math.sqrt(
     $n2_normal_quad[0] * $n2_normal_quad[0] + $n2_normal_quad[1] * $n2_normal_quad[1] + $n2_normal_quad[2] * $n2_normal_quad[2]
   );
-  if (_len > 1e-5) _len = 1 / _len;
+  if (_len > 1e-5)
+    _len = 1 / _len;
   $n2_normal_quad[0] *= _len;
   $n2_normal_quad[1] *= _len;
   $n2_normal_quad[2] *= _len;
@@ -20249,17 +20337,20 @@ function dist_to_line(p, v1, v2, clip2 = true) {
 function wclip(x1, x2, w1, w2, near) {
   const r1 = near * w1 - x1;
   const r2 = (w1 - w2) * near - (x1 - x2);
-  if (r2 === 0) return 0;
+  if (r2 === 0)
+    return 0;
   return r1 / r2;
 }
 function clip(a2, b, znear) {
-  if (a2 - b === 0) return 0;
+  if (a2 - b === 0)
+    return 0;
   return (a2 - znear) / (a2 - b);
 }
 function clip_line_w(_v1, _v2, znear, zfar) {
   const v1 = _cplw_vs4.next().load(_v1);
   const v2 = _cplw_vs4.next().load(_v2);
-  if (v1[2] < 1 && v2[2] < 1) return false;
+  if (v1[2] < 1 && v2[2] < 1)
+    return false;
   function doclip1(v12, v22, axis) {
     if (v12[axis] / v12[3] < -1) {
       const t = wclip(v12[axis], v22[axis], v12[3], v22[3], -1);
@@ -20457,8 +20548,10 @@ function get_tri_circ(a2, b, c) {
   e2.load(b);
   e3.load(c);
   let r = e1.sub(cent).vectorLength();
-  if (r < feps) r = e2.sub(cent).vectorLength();
-  if (r < feps) r = e3.sub(cent).vectorLength();
+  if (r < feps)
+    r = e2.sub(cent).vectorLength();
+  if (r < feps)
+    r = e3.sub(cent).vectorLength();
   const ret = _get_tri_circ_ret.next();
   ret[0] = cent;
   ret[1] = r;
@@ -20528,7 +20621,8 @@ function project(vec, pers, view) {
 }
 function get_boundary_winding(points) {
   const cent = static_cent_gbw.zero();
-  if (points.length === 0) return false;
+  if (points.length === 0)
+    return false;
   for (let i = 0; i < points.length; i++) {
     cent.add(points[i]);
   }
@@ -20543,7 +20637,8 @@ function get_boundary_winding(points) {
       totw += 1;
     }
   }
-  if (totw > 0) w /= totw;
+  if (totw > 0)
+    w /= totw;
   return Math.round(w) === 1;
 }
 function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
@@ -21204,7 +21299,8 @@ var init_math = __esm({
       }
       winding(v1, v2, v3) {
         const ax = this.axis;
-        if (v1 === void 0) console.trace();
+        if (v1 === void 0)
+          console.trace();
         v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0]);
         v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0]);
         v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0]);
@@ -21220,7 +21316,8 @@ var init_math = __esm({
       get_boundary_winding(points) {
         const ax = this.axis;
         const cent = new Vector3();
-        if (points.length === 0) return false;
+        if (points.length === 0)
+          return false;
         for (let i = 0; i < points.length; i++) {
           cent.add(points[i]);
         }
@@ -21235,7 +21332,8 @@ var init_math = __esm({
             totw += 1;
           }
         }
-        if (totw > 0) w /= totw;
+        if (totw > 0)
+          w /= totw;
         return Math.round(w) === 1;
       }
     };
@@ -21258,31 +21356,37 @@ var init_math = __esm({
       reset(mat) {
         this.matrix.load(mat);
         this.stack = [];
-        if (this.update_func !== void 0) this.update_func();
+        if (this.update_func !== void 0)
+          this.update_func();
       }
       load(mat) {
         this.matrix.load(mat);
-        if (this.update_func !== void 0) this.update_func();
+        if (this.update_func !== void 0)
+          this.update_func();
       }
       multiply(mat) {
         this.matrix.multiply(mat);
-        if (this.update_func !== void 0) this.update_func();
+        if (this.update_func !== void 0)
+          this.update_func();
       }
       identity() {
         this.matrix.makeIdentity();
-        if (this.update_func !== void 0) this.update_func();
+        if (this.update_func !== void 0)
+          this.update_func();
       }
       push(mat2) {
         this.stack.push(new Matrix4(this.matrix));
         if (mat2 !== void 0) {
           this.matrix.load(mat2);
-          if (this.update_func !== void 0) this.update_func();
+          if (this.update_func !== void 0)
+            this.update_func();
         }
       }
       pop() {
         const mat = this.stack.pop();
         this.matrix.load(mat);
-        if (this.update_func !== void 0) this.update_func();
+        if (this.update_func !== void 0)
+          this.update_func();
         return mat;
       }
     };
@@ -21424,7 +21528,8 @@ function test_parser() {
       const lex2 = t.lexer;
       while (lex2.lexpos < lex2.lexdata.length) {
         const c = lex2.lexdata[lex2.lexpos];
-        if (c === "\n") break;
+        if (c === "\n")
+          break;
         js += c;
         lex2.lexpos++;
       }
@@ -21567,7 +21672,8 @@ var init_parseutil = __esm({
       toString() {
         if (this.value !== void 0)
           return "token(type=" + this.type + ", value='" + this.value + "')";
-        else return "token(type=" + this.type + ")";
+        else
+          return "token(type=" + this.type + ")";
       }
     };
     tokdef2 = class {
@@ -21662,7 +21768,8 @@ var init_parseutil = __esm({
         this.peeked_tokens = [];
       }
       error() {
-        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
+        if (this.errfunc !== void 0 && !this.errfunc(this))
+          return;
         console.log("Syntax error near line " + this.lineno);
         const next = Math.min(this.lexpos + 8, this.lexdata.length);
         console.log("  " + this.lexdata.slice(this.lexpos, next));
@@ -21670,14 +21777,16 @@ var init_parseutil = __esm({
       }
       peek() {
         const tok = this.next(true);
-        if (tok === void 0) return void 0;
+        if (tok === void 0)
+          return void 0;
         this.peeked_tokens.push(tok);
         return tok;
       }
       peek_i(i) {
         while (this.peeked_tokens.length <= i) {
           const t = this.peek();
-          if (t === void 0) return void 0;
+          if (t === void 0)
+            return void 0;
         }
         return this.peeked_tokens[i];
       }
@@ -21696,14 +21805,16 @@ var init_parseutil = __esm({
           }
           return tok2;
         }
-        if (this.lexpos >= this.lexdata.length) return void 0;
+        if (this.lexpos >= this.lexdata.length)
+          return void 0;
         const ts = this.tokdef;
         const tlen = ts.length;
         const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
         const results = [];
         for (let i = 0; i < tlen; i++) {
           const t = ts[i];
-          if (t.re === void 0) continue;
+          if (t.re === void 0)
+            continue;
           const res = t.re.exec(lexdata);
           if (res?.index === 0) {
             results.push([t, res]);
@@ -21759,8 +21870,10 @@ var init_parseutil = __esm({
         return ret;
       }
       parse(data, err_on_unconsumed) {
-        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
-        if (data !== void 0) this.lexer.input(data);
+        if (err_on_unconsumed === void 0)
+          err_on_unconsumed = true;
+        if (data !== void 0)
+          this.lexer.input(data);
         const ret = this.start(this);
         if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
           this.error(void 0, "parser did not consume entire input");
@@ -21771,10 +21884,13 @@ var init_parseutil = __esm({
         this.lexer.input(data);
       }
       error(tok, msg) {
-        if (msg === void 0) msg = "";
+        if (msg === void 0)
+          msg = "";
         let estr;
-        if (tok === void 0) estr = "Parse error at end of input: " + msg;
-        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
+        if (tok === void 0)
+          estr = "Parse error at end of input: " + msg;
+        else
+          estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
         let buf = "1| ";
         const ld = this.lexer.lexdata;
         let l = 1;
@@ -21798,12 +21914,14 @@ var init_parseutil = __esm({
       }
       peek() {
         const tok = this.lexer.peek();
-        if (tok !== void 0) tok.parser = this;
+        if (tok !== void 0)
+          tok.parser = this;
         return tok;
       }
       peek_i(i) {
         const tok = this.lexer.peek_i(i);
-        if (tok !== void 0) tok.parser = this;
+        if (tok !== void 0)
+          tok.parser = this;
         return tok;
       }
       peeknext() {
@@ -21811,7 +21929,8 @@ var init_parseutil = __esm({
       }
       next() {
         const tok = this.lexer.next();
-        if (tok !== void 0) tok.parser = this;
+        if (tok !== void 0)
+          tok.parser = this;
         return tok;
       }
       optional(type) {
@@ -21827,7 +21946,8 @@ var init_parseutil = __esm({
       }
       expect(type, msg) {
         const tok = this.next();
-        if (msg === void 0) msg = type;
+        if (msg === void 0)
+          msg = type;
         if (tok?.type != type) {
           this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
         }
@@ -21974,7 +22094,8 @@ var init_controller_ops = __esm({
         if (this.inputs.fullSaveUndo.getValue()) {
           return super.undoPre(ctx);
         }
-        if (this.__ctx) ctx = this.__ctx;
+        if (this.__ctx)
+          ctx = this.__ctx;
         this._undo = {};
         let paths = /* @__PURE__ */ new Set();
         if (this.inputs.massSetPath.getValue().trim()) {
@@ -21991,7 +22112,8 @@ var init_controller_ops = __esm({
         }
       }
       undo(ctx) {
-        if (this.__ctx) ctx = this.__ctx;
+        if (this.__ctx)
+          ctx = this.__ctx;
         if (this.inputs.fullSaveUndo.getValue()) {
           return super.undo(ctx);
         }
@@ -22593,7 +22715,8 @@ var init_ease = __esm({
        **/
       static getPowInOut(pow) {
         return function(t) {
-          if ((t *= 2) < 1) return 0.5 * Math.pow(t, pow);
+          if ((t *= 2) < 1)
+            return 0.5 * Math.pow(t, pow);
           return 1 - 0.5 * Math.abs(Math.pow(2 - t, pow));
         };
       }
@@ -22756,7 +22879,8 @@ var init_ease = __esm({
       static getBackInOut(amount) {
         amount *= 1.525;
         return function(t) {
-          if ((t *= 2) < 1) return 0.5 * (t * t * ((amount + 1) * t - amount));
+          if ((t *= 2) < 1)
+            return 0.5 * (t * t * ((amount + 1) * t - amount));
           return 0.5 * ((t -= 2) * t * ((amount + 1) * t + amount) + 2);
         };
       }
@@ -22792,7 +22916,8 @@ var init_ease = __esm({
        * @return {Number}
        **/
       static circInOut = function(t) {
-        if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1);
+        if ((t *= 2) < 1)
+          return -0.5 * (Math.sqrt(1 - t * t) - 1);
         return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
       };
       /**
@@ -22828,7 +22953,8 @@ var init_ease = __esm({
        * @return {Number}
        **/
       static bounceInOut = function(t) {
-        if (t < 0.5) return _Ease.bounceIn(t * 2) * 0.5;
+        if (t < 0.5)
+          return _Ease.bounceIn(t * 2) * 0.5;
         return _Ease.bounceOut(t * 2 - 1) * 0.5 + 0.5;
       };
       /**
@@ -22842,7 +22968,8 @@ var init_ease = __esm({
       static getElasticIn(amplitude, period) {
         var pi2 = Math.PI * 2;
         return function(t) {
-          if (t == 0 || t == 1) return t;
+          if (t == 0 || t == 1)
+            return t;
           var s = period / pi2 * Math.asin(1 / amplitude);
           return -(amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
         };
@@ -22865,7 +22992,8 @@ var init_ease = __esm({
       static getElasticOut(amplitude, period) {
         var pi2 = Math.PI * 2;
         return function(t) {
-          if (t == 0 || t == 1) return t;
+          if (t == 0 || t == 1)
+            return t;
           var s = period / pi2 * Math.asin(1 / amplitude);
           return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * pi2 / period) + 1;
         };
@@ -22982,7 +23110,8 @@ var init_curve1d_anim = __esm({
         return true;
       }
       redraw() {
-        if (this.parent) this.parent.redraw();
+        if (this.parent)
+          this.parent.redraw();
       }
       makeGUI(container) {
         const def = this.constructor.define();
@@ -23317,11 +23446,13 @@ var init_curve1d_toolprop = __esm({
 
 // scripts/path-controller/toolsys/allprops.ts
 function isNumProperty(p) {
-  if (p === void 0) return false;
+  if (p === void 0)
+    return false;
   return p instanceof IntProperty || p instanceof FloatProperty;
 }
 function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null) return false;
+  if (!prop || typeof prop !== "object" || prop === null)
+    return false;
   let ok = false;
   ok = ok || prop instanceof Vec2PropertyIF;
   ok = ok || prop instanceof Vec3PropertyIF;
@@ -23888,7 +24019,7 @@ var init_controller = __esm({
     parserStackCur = 0;
     tool_classes = ToolClasses;
     tool_idgen = 1;
-    Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
+    Symbol.ToolID = Symbol("toolid");
     lt = time_ms();
     lastmsg = void 0;
     lcount = 0;
@@ -24197,8 +24328,8 @@ var init_controller = __esm({
     _map_structs = {};
     _dummypath = new DataPath();
     DummyIntProperty = new IntProperty();
-    CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
-    CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
+    CLS_API_KEY = Symbol("dp_map_id");
+    CLS_API_KEY_CUSTOM = Symbol("dp_map_custom");
     DataAPI2 = class extends ModelInterface {
       rootContextStruct;
       structs = [];
@@ -24832,7 +24963,8 @@ An example of a more complicated expression might be:
           }
         }
         for (const sarea of screen.sareas) {
-          if (!sarea.area) continue;
+          if (!sarea.area)
+            continue;
           for (const keymap4 of sarea.area.getKeyMaps()) {
             const ret = searchKeymap(keymap4);
             if (ret) {
@@ -24980,9 +25112,12 @@ function rgb_to_cmyk(r, g, b) {
   let M = 1 - g;
   let Y = 1 - b;
   let var_K = 1;
-  if (C < var_K) var_K = C;
-  if (M < var_K) var_K = M;
-  if (Y < var_K) var_K = Y;
+  if (C < var_K)
+    var_K = C;
+  if (M < var_K)
+    var_K = M;
+  if (Y < var_K)
+    var_K = Y;
   if (var_K === 1) {
     C = 0;
     M = 0;
@@ -25128,7 +25263,8 @@ var init_const = __esm({
       noElectronMenus: false,
       loadConstants(args) {
         for (const k in args) {
-          if (k === "loadConstants") continue;
+          if (k === "loadConstants")
+            continue;
           cconst[k] = args[k];
         }
         setConfig(cconst);
@@ -25349,7 +25485,8 @@ function web2color(str) {
   return css2color2(str);
 }
 function validateWebColor(str) {
-  if (typeof str !== "string") return false;
+  if (typeof str !== "string")
+    return false;
   return str.trim().search(validate_pat) === 0;
 }
 function validateCSSColor(color) {
@@ -26228,7 +26365,7 @@ var init_aspect = __esm({
       "shadow"
     ]);
     UIBase = void 0;
-    AspectKeys = /* @__PURE__ */ Symbol("aspect-keys");
+    AspectKeys = Symbol("aspect-keys");
     AfterAspect = class _AfterAspect {
       owner;
       key;
@@ -27240,7 +27377,8 @@ function saveUIData(node, key) {
       rec(n2, path, i, false);
     }
     const shadow = n.shadow;
-    if (!shadow) return;
+    if (!shadow)
+      return;
     for (let i = 0; i < shadow.childNodes.length; i++) {
       const n2 = shadow.childNodes[i];
       rec(n2, path, i, true);
@@ -27356,7 +27494,7 @@ var init_ui_base = __esm({
     window.__theme = theme;
     registered_has_happened = false;
     tagPrefix = "";
-    EventCBSymbol = /* @__PURE__ */ Symbol("wrapped event callback");
+    EventCBSymbol = Symbol("wrapped event callback");
     if (typeof document !== "undefined") {
       const prefixElem = document.getElementById("pathux-tag-prefix");
       if (prefixElem) {
@@ -27617,7 +27755,8 @@ var init_ui_base = __esm({
             break;
           }
         }
-        if (!sheet) sheet = sheets[sheets.length - 1];
+        if (!sheet)
+          sheet = sheets[sheets.length - 1];
         return this.iconsheets.indexOf(sheet);
       }
       findSheet(sheet) {
@@ -28608,8 +28747,10 @@ var init_ui_base = __esm({
         const decimalPlaces = args.decimalPlaces || this.decimalPlaces;
         if (isInt && radix !== 10) {
           const ret = Math.floor(value).toString(radix);
-          if (radix === 2) return "0b" + ret;
-          else if (radix === 16) return ret + "h";
+          if (radix === 2)
+            return "0b" + ret;
+          else if (radix === 16)
+            return ret + "h";
         }
         return buildString(value, baseUnit, decimalPlaces, displayUnit);
       }
@@ -28779,7 +28920,7 @@ var init_ui_base = __esm({
           classes = type_or_set;
         }
         const visit = /* @__PURE__ */ new Set();
-        return (function* () {
+        return function* () {
           const stack = [this2];
           while (stack.length > 0) {
             const n = stack.pop();
@@ -28805,7 +28946,7 @@ var init_ui_base = __esm({
               }
             }
           }
-        })();
+        }();
       }
       appendChild(child) {
         if (child instanceof _UIBase) {
@@ -28888,9 +29029,9 @@ var init_ui_base = __esm({
         this.doOnce(() => {
           this.tabIndex = 0;
         });
-        this.addEventListener("keydown", ((e) => {
+        this.addEventListener("keydown", (e) => {
           return this._clipboard_keydown(e, true);
-        }));
+        });
         this.addEventListener("pointerover", start, { capture: true, passive: true });
         this.addEventListener("pointerout", stop, { capture: true, passive: true });
         this.addEventListener("focus", stop, { capture: true, passive: true });
@@ -29421,7 +29562,8 @@ var init_ui_base = __esm({
       }
       popReportContext() {
         const api = this.ctx.api;
-        if (api.popReportContext) api.popReportContext();
+        if (api.popReportContext)
+          api.popReportContext();
       }
       pathSocketUpdate(ctx, path) {
         this.flagPropSocketUpdate("value");
@@ -29759,7 +29901,8 @@ var init_ui_base = __esm({
       }
       clearOverride(key, localOnly = false) {
         delete this.my_default_overrides[key];
-        if (!localOnly) delete this.default_overrides[key];
+        if (!localOnly)
+          delete this.default_overrides[key];
         return this;
       }
       overrideDefault(key, val, localOnly = false) {
@@ -29823,7 +29966,8 @@ var init_ui_base = __esm({
         return this._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(this._themeOverride && this._hasClassSubDefault(key, subkey, inherit3, void 0, this._themeOverride));
       }
       _hasClassSubDefault(key, subkey, inherit3 = true, style = this.getStyleClass(), themeDef) {
-        if (!themeDef) return false;
+        if (!themeDef)
+          return false;
         const th = themeDef[style];
         if (inherit3) {
           if (this._hasClassSubDefault(key, subkey, false, style, themeDef)) {
@@ -29902,7 +30046,8 @@ var init_ui_base = __esm({
           if (def?.style) {
             return def.style;
           }
-          if (!p.prototype || !Object.getPrototypeOf(p.prototype)) break;
+          if (!p.prototype || !Object.getPrototypeOf(p.prototype))
+            break;
           p = Object.getPrototypeOf(p.prototype).constructor;
         }
         return "base";
@@ -30232,7 +30377,8 @@ var init_ui_button = __esm({
             };
             this.pushModal(modalHandlers, void 0, e.pointerId);
           }
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           this._pressed = true;
           if (this._onpress) {
             this._onpress(this);
@@ -30243,7 +30389,8 @@ var init_ui_button = __esm({
         depress = (e) => {
           if (this._auto_depress) {
             this._pressed = false;
-            if (this.disabled) return;
+            if (this.disabled)
+              return;
             this._redraw();
           }
           if (e) {
@@ -30267,17 +30414,20 @@ var init_ui_button = __esm({
         this.addEventListener("pointerdown", press, { capture: true });
         this.addEventListener("pointerup", depress, { capture: true });
         this.addEventListener("pointerover", () => {
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           this._highlight = true;
           this._redraw();
         });
         this.addEventListener("pointerout", () => {
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           this._highlight = false;
           this._redraw();
         });
         this.addEventListener("keydown", (e) => {
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           switch (e.keyCode) {
             case 27:
               this.blur();
@@ -30285,7 +30435,6 @@ var init_ui_button = __esm({
               e.stopPropagation();
               break;
             case 32:
-            //spacebar
             case 13:
               this.click();
               e.preventDefault();
@@ -30294,13 +30443,15 @@ var init_ui_button = __esm({
           }
         });
         this.addEventListener("focusin", () => {
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           this._focus = 1;
           this._redraw();
           this.focus();
         });
         this.addEventListener("blur", () => {
-          if (this.disabled) return;
+          if (this.disabled)
+            return;
           this._focus = 0;
           this._redraw();
         });
@@ -30838,11 +30989,11 @@ function createMenu(ctx, title, templ) {
         hotkey = def.hotkey;
       }
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
-      cbs[id] = /* @__PURE__ */ (function(toolpath) {
+      cbs[id] = /* @__PURE__ */ function(toolpath) {
         return function() {
           ctx.api.execTool(ctx, toolpath);
         };
-      })(item);
+      }(item);
       id++;
     } else if (item === menuSEP) {
       menu.seperator();
@@ -30859,11 +31010,11 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(item[0], id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
+      cbs[id2] = /* @__PURE__ */ function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      })(item[1], id2);
+      }(item[1], id2);
     } else if (typeof item === "object") {
       const objItem = item;
       let { name: name2, callback, hotkey, icon, tooltip } = objItem;
@@ -30872,11 +31023,11 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
+      cbs[id2] = /* @__PURE__ */ function(cbfunc, arg) {
         return function() {
           cbfunc(arg);
         };
-      })(callback, id2);
+      }(callback, id2);
     }
   };
   for (const item of templ) {
@@ -30921,7 +31072,7 @@ var init_ui_menu = __esm({
     init_events();
     init_simple_events();
     PropTypes3 = PropTypes;
-    SEP = /* @__PURE__ */ Symbol("MenuSep");
+    SEP = Symbol("MenuSep");
     Menu = class _Menu extends UIBase2 {
       static SEP;
       parentMenu;
@@ -31186,7 +31337,8 @@ var init_ui_menu = __esm({
         } else {
           this.container.appendChild(this.dom);
         }
-        if (!setActive) return;
+        if (!setActive)
+          return;
         this.setCSS();
         this.flushUpdate();
         window.setTimeout(() => {
@@ -31854,7 +32006,8 @@ var init_ui_menu = __esm({
           }, 1);
           return;
         }
-        if (!screen) return;
+        if (!screen)
+          return;
         const con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
         con.noMarginsOrPadding();
         con.add(menu);
@@ -31940,7 +32093,8 @@ var init_ui_menu = __esm({
         if (this.prop !== void 0 && !setLabelOnly) {
           this.prop.setValue(val);
           let val2 = val;
-          if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
+          if (val2 in this.prop.keys)
+            val2 = this.prop.keys[val2];
           val2 = this.prop.ui_value_names[val2];
           this.setAttribute("name", "" + val2);
           this._name = "" + val2;
@@ -32006,7 +32160,8 @@ var init_ui_menu = __esm({
       }
       searchKeyDown(e) {
         const menu = this.menu;
-        if (!menu) return;
+        if (!menu)
+          return;
         e.stopPropagation();
         menu._ignoreFocusEvents = true;
         menu.textbox.focus();
@@ -32037,7 +32192,6 @@ var init_ui_menu = __esm({
         const menu = this.menu;
         switch (e.keyCode) {
           case keymap["Left"]:
-          //left
           case keymap["Right"]:
             if (menu._dropbox) {
               let dropbox = menu._dropbox;
@@ -32059,7 +32213,6 @@ var init_ui_menu = __esm({
             menu.selectNext();
             break;
           case 13:
-          //return key
           case 32:
             menu.click();
             break;
@@ -32103,7 +32256,8 @@ var init_ui_menu = __esm({
       }
       findMenu(x, y) {
         const screen = this.screen;
-        if (!screen) return void 0;
+        if (!screen)
+          return void 0;
         const element = screen.pickElement(x, y);
         if (element === void 0) {
           return;
@@ -32595,7 +32749,8 @@ function buildElectronMenu(menu) {
       accelerator: hotkey,
       icon: nativeIcon,
       click: function() {
-        menu.onselect(item._id);
+        menu.on_select?.(item._id);
+        menu._onselect?.(item._id);
       },
       registerAccelerator: false
     };
@@ -33165,7 +33320,7 @@ var require_tinymce = __commonJS({
       var none = function() {
         return NONE;
       };
-      var NONE = (function() {
+      var NONE = function() {
         var eq2 = function(o) {
           return o.isNone();
         };
@@ -33205,7 +33360,7 @@ var require_tinymce = __commonJS({
           toString: constant("none()")
         };
         return me;
-      })();
+      }();
       var some = function(a2) {
         var constant_a = constant(a2);
         var self2 = function() {
@@ -34477,7 +34632,7 @@ var require_tinymce = __commonJS({
             g.EphoxContactWrapper = f2();
           }
         })(function() {
-          return (/* @__PURE__ */ (function() {
+          return (/* @__PURE__ */ function() {
             function r2(e, n, t) {
               function o(i2, f2) {
                 if (!n[i2]) {
@@ -34503,7 +34658,7 @@ var require_tinymce = __commonJS({
               return o;
             }
             return r2;
-          })())({
+          }())({
             1: [
               function(require3, module3, exports3) {
                 var process3 = module3.exports = {};
@@ -34937,13 +35092,13 @@ var require_tinymce = __commonJS({
             4: [
               function(require3, module3, exports3) {
                 var promisePolyfill = require3("promise-polyfill");
-                var Global2 = (function() {
+                var Global2 = function() {
                   if (typeof window !== "undefined") {
                     return window;
                   } else {
                     return Function("return this;")();
                   }
-                })();
+                }();
                 module3.exports = { boltExport: Global2.Promise || promisePolyfill };
               },
               { "promise-polyfill": 2 }
@@ -37293,7 +37448,7 @@ var require_tinymce = __commonJS({
         }
         addEvent(win, "load", readyHandler);
       };
-      var EventUtils = (function() {
+      var EventUtils = function() {
         function EventUtils2() {
           this.domLoaded = false;
           this.events = {};
@@ -37518,7 +37673,7 @@ var require_tinymce = __commonJS({
         };
         EventUtils2.Event = new EventUtils2();
         return EventUtils2;
-      })();
+      }();
       var support, Expr, getText, isXML, tokenize, compile, select, outermostContext, sortInput, hasDuplicate, setDocument, document2, docElem, documentIsHTML, rbuggyQSA, rbuggyMatches, matches, contains$3, expando = "sizzle" + -/* @__PURE__ */ new Date(), preferredDoc = domGlobals.window.document, dirruns = 0, done = 0, classCache = createCache(), tokenCache = createCache(), compilerCache = createCache(), sortOrder = function(a2, b) {
         if (a2 === b) {
           hasDuplicate = true;
@@ -39328,7 +39483,7 @@ var require_tinymce = __commonJS({
       DomQueryConstructor.attrHooks = attrHooks;
       DomQueryConstructor.cssHooks = cssHooks;
       var DomQuery = DomQueryConstructor;
-      var TreeWalker = (function() {
+      var TreeWalker = function() {
         function TreeWalker2(startNode, rootNode) {
           this.node = startNode;
           this.rootNode = rootNode;
@@ -39396,7 +39551,7 @@ var require_tinymce = __commonJS({
           }
         };
         return TreeWalker2;
-      })();
+      }();
       var each$5 = Tools.each;
       var grep$1 = Tools.grep;
       var isIE = Env.ie;
@@ -40281,7 +40436,7 @@ var require_tinymce = __commonJS({
       var LOADING = 1;
       var LOADED = 2;
       var FAILED = 3;
-      var ScriptLoader = (function() {
+      var ScriptLoader = function() {
         function ScriptLoader2(settings) {
           if (settings === void 0) {
             settings = {};
@@ -40426,7 +40581,7 @@ var require_tinymce = __commonJS({
         };
         ScriptLoader2.ScriptLoader = new ScriptLoader2();
         return ScriptLoader2;
-      })();
+      }();
       var Cell = function(initial) {
         var value2 = initial;
         var get2 = function() {
@@ -43882,7 +44037,7 @@ var require_tinymce = __commonJS({
         var isNamedAnchor2 = node.name === "a" && !node.attr("href") && node.attr("id");
         return node.attr("name") || node.attr("id") && !node.firstChild || node.attr("data-mce-bookmark") || isNamedAnchor2;
       };
-      var Node2 = (function() {
+      var Node2 = function() {
         function Node3(name3, type2) {
           this.name = name3;
           this.type = type2;
@@ -44127,7 +44282,7 @@ var require_tinymce = __commonJS({
           return walk$2(this, null, prev);
         };
         return Node3;
-      })();
+      }();
       var makeMap$3 = Tools.makeMap;
       var Writer = function(settings) {
         var html = [];
@@ -56717,7 +56872,7 @@ var require_tinymce = __commonJS({
           registerKeyboardOverrides(editor2);
         }
       };
-      var NodeChange = (function() {
+      var NodeChange = function() {
         function NodeChange2(editor2) {
           this.lastPath = [];
           this.editor = editor2;
@@ -56803,7 +56958,7 @@ var require_tinymce = __commonJS({
           return false;
         };
         return NodeChange2;
-      })();
+      }();
       var preventSummaryToggle = function(editor2) {
         editor2.on("click", function(e) {
           if (editor2.dom.getParent(e.target, "details")) {
@@ -58819,7 +58974,7 @@ var require_tinymce = __commonJS({
       };
       var each$e = Tools.each;
       var map$3 = Tools.map, inArray$2 = Tools.inArray;
-      var EditorCommands = (function() {
+      var EditorCommands = function() {
         function EditorCommands2(editor2) {
           this.commands = {
             state: {},
@@ -59217,9 +59372,9 @@ var require_tinymce = __commonJS({
           }, this);
         };
         return EditorCommands2;
-      })();
+      }();
       var nativeEvents = Tools.makeMap("focus blur focusin focusout click dblclick mousedown mouseup mousemove mouseover beforepaste paste cut copy selectionchange mouseout mouseenter mouseleave wheel keydown keypress keyup input beforeinput contextmenu dragstart dragend dragover draggesture dragdrop drop drag submit compositionstart compositionend compositionupdate touchstart touchmove touchend touchcancel", " ");
-      var EventDispatcher3 = (function() {
+      var EventDispatcher3 = function() {
         function EventDispatcher4(settings) {
           this.bindings = {};
           this.settings = settings || {};
@@ -59351,7 +59506,7 @@ var require_tinymce = __commonJS({
           return !(!this.bindings[name3] || this.bindings[name3].length === 0);
         };
         return EventDispatcher4;
-      })();
+      }();
       var getEventDispatcher = function(obj) {
         if (!obj._eventDispatcher) {
           obj._eventDispatcher = new EventDispatcher3({
@@ -59727,7 +59882,7 @@ var require_tinymce = __commonJS({
         f12: 123
       };
       var modifierNames = Tools.makeMap("alt,ctrl,shift,meta,access");
-      var Shortcuts = (function() {
+      var Shortcuts = function() {
         function Shortcuts2(editor2) {
           this.shortcuts = {};
           this.pendingPatterns = [];
@@ -59862,7 +60017,7 @@ var require_tinymce = __commonJS({
           return shortcut.func ? shortcut.func.call(shortcut.scope) : null;
         };
         return Shortcuts2;
-      })();
+      }();
       var create$5 = function() {
         var buttons = {};
         var menuItems = {};
@@ -59935,7 +60090,7 @@ var require_tinymce = __commonJS({
         https: 443,
         mailto: 25
       };
-      var URI = globalThis._tinyMCE_URI = (function() {
+      var URI = globalThis._tinyMCE_URI = function() {
         function URI2(url, settings) {
           url = trim$4(url);
           this.settings = settings || {};
@@ -60170,12 +60325,12 @@ var require_tinymce = __commonJS({
           return this.source;
         };
         return URI2;
-      })();
+      }();
       var DOM$9 = DOMUtils$1.DOM;
       var extend$3 = Tools.extend, each$h = Tools.each;
       var resolve$3 = Tools.resolve;
       var ie$1 = Env.ie;
-      var Editor2 = (function() {
+      var Editor2 = function() {
         function Editor3(id, settings, editorManager) {
           var _this = this;
           this.plugins = {};
@@ -60545,7 +60700,7 @@ var require_tinymce = __commonJS({
           throw new Error("editor.addContextToolbar has been removed in tinymce 5x, use editor.ui.registry.addContextToolbar instead");
         };
         return Editor3;
-      })();
+      }();
       var DOM$a = DOMUtils$1.DOM;
       var explode$4 = Tools.explode, each$i = Tools.each, extend$4 = Tools.extend;
       var instanceCounter = 0, boundGlobalEvents = false;
@@ -61501,7 +61656,7 @@ var require_tinymce = __commonJS({
         }
       });
       var extend$6 = Tools.extend;
-      var JSONRequest = (function() {
+      var JSONRequest = function() {
         function JSONRequest2(settings) {
           this.settings = extend$6({}, settings);
           this.count = 0;
@@ -61537,9 +61692,9 @@ var require_tinymce = __commonJS({
           XHR.send(xhrArgs);
         };
         return JSONRequest2;
-      })();
+      }();
       var create$8 = function() {
-        return (function() {
+        return function() {
           var data2 = {};
           var keys3 = [];
           var storage = {
@@ -61574,7 +61729,7 @@ var require_tinymce = __commonJS({
             enumerable: false
           });
           return storage;
-        })();
+        }();
       };
       var localStorage2;
       try {
@@ -61817,7 +61972,8 @@ var TextBox2 = class extends TextBoxBase {
           break;
       }
       return;
-      if (ignore) return;
+      if (ignore)
+        return;
       const e2 = new KeyboardEvent(e.type, e);
       ignore = 1;
       this.dom.dispatchEvent(e2);
@@ -62169,18 +62325,22 @@ var ValueButtonBase = class extends OldButton {
     }
   }
   updateDataPath() {
-    if (!this.hasAttribute("datapath")) return;
-    if (this.ctx === void 0) return;
+    if (!this.hasAttribute("datapath"))
+      return;
+    if (this.ctx === void 0)
+      return;
     const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === void 0) {
       const redraw = !this.disabled;
       this.internalDisabled = true;
-      if (redraw) this._redraw();
+      if (redraw)
+        this._redraw();
       return;
     } else {
       const redraw = this.disabled;
       this.internalDisabled = false;
-      if (redraw) this._redraw();
+      if (redraw)
+        this._redraw();
     }
     if (val !== this._value) {
       this._value = val;
@@ -62843,8 +63003,10 @@ var IconCheck = class extends IconButton {
           this._icon_pressed = icon;
           icon = icon2;
         }
-        if (icon !== void 0 && icon !== this.icon) this.icon = icon;
-        if (title) this.description = title;
+        if (icon !== void 0 && icon !== this.icon)
+          this.icon = icon;
+        if (title)
+          this.description = title;
       }
     }
     const rawVal = this.getPathValue(this.ctx, datapath);
@@ -63011,7 +63173,8 @@ var Label = class extends UIBase2 {
   }
   _updateFont() {
     const font = this._font;
-    if (!font) return;
+    if (!font)
+      return;
     this.dom.style["font"] = font.genCSS();
     this.dom.style["color"] = font.color;
   }
@@ -63178,7 +63341,8 @@ var Container3 = class _Container extends UIBase2 {
     }
   }
   loadData(obj) {
-    if (!obj) return this;
+    if (!obj)
+      return this;
     const x = obj.scrollLeft ?? 0;
     const y = obj.scrollTop ?? 0;
     this.doOnce(() => {
@@ -63358,13 +63522,16 @@ var Container3 = class _Container extends UIBase2 {
   }
   setSize(width, height) {
     if (width !== void 0) {
-      if (typeof width == "number") this.style["width"] = this.div.style["width"] = ~~width + "px";
-      else this.style["width"] = this.div.style["width"] = width;
+      if (typeof width == "number")
+        this.style["width"] = this.div.style["width"] = ~~width + "px";
+      else
+        this.style["width"] = this.div.style["width"] = width;
     }
     if (height !== void 0) {
       if (typeof height == "number")
         this.style["height"] = this.div.style["height"] = ~~height + "px";
-      else this.style["height"] = this.div.style["height"] = height;
+      else
+        this.style["height"] = this.div.style["height"] = height;
     }
     return this;
   }
@@ -63754,7 +63921,8 @@ var Container3 = class _Container extends UIBase2 {
       inpath = this._joinPrefix(inpath);
       ret.setAttribute("datapath", inpath);
     }
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -63900,7 +64068,8 @@ var Container3 = class _Container extends UIBase2 {
         let ret;
         if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
           ret = this.simpleslider(inpath, { packflag });
-        else ret = this.slider(inpath, { packflag });
+        else
+          ret = this.slider(inpath, { packflag });
         ret.packflag |= packflag;
         return ret.setUndo(useDataPathUndo);
       } else if (prop.subtype === PropSubTypes2.COLOR) {
@@ -64108,7 +64277,8 @@ var Container3 = class _Container extends UIBase2 {
     if (path !== void 0) {
       let makecb2 = function(key) {
         return () => {
-          if (ignorecb) return;
+          if (ignorecb)
+            return;
           ignorecb = true;
           for (const k in checks) {
             if (k !== key) {
@@ -64204,7 +64374,8 @@ var Container3 = class _Container extends UIBase2 {
       } else {
         let makecb2 = function(key) {
           return () => {
-            if (ignorecb) return;
+            if (ignorecb)
+              return;
             ignorecb = true;
             for (const k in checks) {
               if (k !== key) {
@@ -64552,8 +64723,10 @@ var Container3 = class _Container extends UIBase2 {
     if (value !== void 0) {
       ret.value = value;
     }
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+    if (datapath)
+      ret.setAttribute("datapath", datapath);
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -64569,8 +64742,10 @@ var Container3 = class _Container extends UIBase2 {
     if (value !== void 0) {
       ret.value = value;
     }
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+    if (datapath)
+      ret.setAttribute("datapath", datapath);
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path);
     this.add(ret);
     return ret;
   }
@@ -64926,8 +65101,10 @@ var NumSlider = class extends ValueButtonBase {
     tbox.editAsBaseUnit = this.editAsBaseUnit;
     if (this.isInt && this.radix != 10) {
       let text2 = this.value.toString(this.radix);
-      if (this.radix === 2) text2 = "0b" + text2;
-      else if (this.radix === 16) text2 += "h";
+      if (this.radix === 2)
+        text2 = "0b" + text2;
+      else if (this.radix === 16)
+        text2 += "h";
       tbox.text = text2;
     } else {
       tbox.text = buildString(
@@ -65044,7 +65221,8 @@ var NumSlider = class extends ValueButtonBase {
       "pointerdown",
       (e) => {
         this.setMpos(e);
-        if (this.disabled) return;
+        if (this.disabled)
+          return;
         onmousedown(e);
       },
       { capture: true }
@@ -65056,7 +65234,8 @@ var NumSlider = class extends ValueButtonBase {
     });
     this.addEventListener("pointerover", (e) => {
       this.setMpos(e);
-      if (this.disabled) return;
+      if (this.disabled)
+        return;
       if (!this._highlight) {
         this._highlight = true;
         this._repos_canvas();
@@ -65069,7 +65248,8 @@ var NumSlider = class extends ValueButtonBase {
     });
     this.addEventListener("pointerout", (e) => {
       this.setMpos(e);
-      if (this.disabled) return;
+      if (this.disabled)
+        return;
       this._highlight = false;
       this.dom._background = this.getDefault("background-color");
       this._repos_canvas();
@@ -65147,7 +65327,8 @@ var NumSlider = class extends ValueButtonBase {
   dragStart(e) {
     this.mdown = false;
     this._pressed = true;
-    if (this.disabled) return;
+    if (this.disabled)
+      return;
     if (this.modalRunning) {
       console.log("modal already running for numslider", this);
       return;
@@ -65180,7 +65361,8 @@ var NumSlider = class extends ValueButtonBase {
         e2.stopPropagation();
       },
       on_pointermove: (e2) => {
-        if (this.disabled) return;
+        if (this.disabled)
+          return;
         e2.preventDefault();
         e2.stopPropagation();
         const x = this.ma.add(this.vertical ? e2.y : e2.x);
@@ -65692,7 +65874,8 @@ var NumSliderSimpleBase = class extends UIBase2 {
       }
     });
     this.addEventListener("focusin", () => {
-      if (this.disabled) return;
+      if (this.disabled)
+        return;
       this._focus = true;
       this._redraw();
       this.focus();
@@ -66140,7 +66323,8 @@ var SliderWithTextbox = class extends ColumnFrame {
     if (!this._init_done) {
       return;
     }
-    if (this._lock_textbox || this._textbox.editing) return;
+    if (this._lock_textbox || this._textbox.editing)
+      return;
     this._textbox.text = this.formatNumber(this._value);
     this._textbox.update();
     updateSliderFromDom(this, this.numslider);
@@ -66476,7 +66660,8 @@ var Handler = class {
       for (const sheet of document.styleSheets) {
         for (const rule of sheet.cssRules) {
           const cssRule = rule;
-          if (!cssRule.selectorText) continue;
+          if (!cssRule.selectorText)
+            continue;
           for (const k of keys3) {
             if (cssRule.selectorText.trim() === k) {
               if (cssRule.styleMap) {
@@ -66487,9 +66672,11 @@ var Handler = class {
               } else {
                 for (const k2 in cssRule.style) {
                   const desc = Object.getOwnPropertyDescriptor(cssRule.style, k2);
-                  if (!desc?.writable) continue;
+                  if (!desc?.writable)
+                    continue;
                   const val = cssRule.style[k2];
-                  if (val) style[k2] = val;
+                  if (val)
+                    style[k2] = val;
                 }
               }
             }
@@ -66939,7 +67126,8 @@ var Handler = class {
     const list5 = [];
     for (const child of elem.childNodes) {
       const childEl = child;
-      if (!childEl.tagName) continue;
+      if (!childEl.tagName)
+        continue;
       if (childEl.tagName === "tool") {
         let path = childEl.getAttribute("path") ?? "";
         const label = childEl.innerHTML.trim();
@@ -68124,7 +68312,8 @@ var Curve1DWidget = class extends ColumnFrame {
     this.dropbox._init();
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       const curve = this._value;
-      if (!curve) return;
+      if (!curve)
+        return;
       curve.uiZoom *= 0.9;
       const dp = this.getAttribute("datapath");
       if (dp) {
@@ -68134,7 +68323,8 @@ var Curve1DWidget = class extends ColumnFrame {
     }).iconsheet = 0;
     row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
       const curve = this._value;
-      if (!curve) return;
+      if (!curve)
+        return;
       curve.uiZoom *= 1.1;
       const dp = this.getAttribute("datapath");
       if (dp) {
@@ -68484,19 +68674,23 @@ var PanelFrame = class extends ColumnFrame {
   }
   get inherit_packflag() {
     super.inherit_packflag;
-    if (!this.contents) return 0;
+    if (!this.contents)
+      return 0;
     return this.contents.inherit_packflag;
   }
   set inherit_packflag(val) {
-    if (!this.contents) return;
+    if (!this.contents)
+      return;
     this.contents.inherit_packflag = val;
   }
   get packflag() {
-    if (!this.contents) return 0;
+    if (!this.contents)
+      return 0;
     return this.contents.packflag;
   }
   set packflag(val) {
-    if (!this.contents) return;
+    if (!this.contents)
+      return;
     this.contents.packflag = val;
   }
   appendChild(child) {
@@ -68854,7 +69048,8 @@ function getFieldImage(fieldsize, width, height, hsva) {
   const fieldsize2 = fieldsize >> 1;
   const hue = hsva[0];
   const key = fieldsize + ":" + (width >> 1) + ":" + (height >> 1) + ":" + hue.toFixed(5);
-  if (key in fields) return fields[key];
+  if (key in fields)
+    return fields[key];
   const size2 = fieldsize2;
   const valpow = 0.75;
   const image = {
@@ -68879,7 +69074,8 @@ function getFieldImage(fieldsize, width, height, hsva) {
       return s * width;
     },
     val2y(v) {
-      if (v === 0) return height;
+      if (v === 0)
+        return height;
       const vp = v ** (1 / valpow);
       return (1 - vp) * height;
     }
@@ -69393,7 +69589,8 @@ var ColorField = class extends ColumnFrame {
     update = update || dpi != this._last_dpi;
     if (update) {
       this._last_dpi = dpi;
-      if (!_in_update) this._redraw();
+      if (!_in_update)
+        this._redraw();
       return true;
     }
     return void 0;
@@ -70168,16 +70365,20 @@ var TabItem = class extends UIBase2 {
     this.ontabdragmove = null;
     this.ontabdragend = null;
     this.addEventListener("tabclick", (e) => {
-      if (this.ontabclick) return this.ontabclick(e);
+      if (this.ontabclick)
+        return this.ontabclick(e);
     });
     this.addEventListener("tabdragstart", (e) => {
-      if (this.ontabdragstart) return this.ontabdragstart(e);
+      if (this.ontabdragstart)
+        return this.ontabdragstart(e);
     });
     this.addEventListener("tabdragmove", (e) => {
-      if (this.ontabdragmove) return this.ontabdragmove(e);
+      if (this.ontabdragmove)
+        return this.ontabdragmove(e);
     });
     this.addEventListener("tabdragend", (e) => {
-      if (this.ontabdragend) return this.ontabdragend(e);
+      if (this.ontabdragend)
+        return this.ontabdragend(e);
     });
     this.dom = void 0;
     this.extra = void 0;
@@ -70318,7 +70519,8 @@ var ModalTabMove = class extends EventHandler {
   }
   finish() {
     if (debug2) {
-      if (debug2) console.log("finish");
+      if (debug2)
+        console.log("finish");
     }
     if (this.finished) {
       return;
@@ -70405,7 +70607,8 @@ var ModalTabMove = class extends EventHandler {
       dx = x - this.mpos[0];
       dy = y - this.mpos[1];
     }
-    if (debug2) console.log(x, y, dx, dy);
+    if (debug2)
+      console.log(x, y, dx, dy);
     const tab2 = this.tab;
     const tbar = this.tbar;
     const axis = tbar.horiz ? 0 : 1;
@@ -70463,14 +70666,12 @@ var ModalTabMove = class extends EventHandler {
     }
   }
   on_keydown(e) {
-    if (debug2) console.log(e.keyCode);
+    if (debug2)
+      console.log(e.keyCode);
     switch (e.keyCode) {
       case keymap.Escape:
-      //escape
       case keymap.Space:
-      //space
       case keymap.Enter:
-      //enter
       case keymap.Tab:
         this.finish();
         break;
@@ -70570,7 +70771,8 @@ var TabBar = class extends UIBase2 {
     if (e.defaultPrevented) {
       return;
     }
-    if (debug2) console.log("mdown");
+    if (debug2)
+      console.log("mdown");
     if (e.button !== 0) {
       return;
     }
@@ -70671,7 +70873,8 @@ var TabBar = class extends UIBase2 {
   }
   getTab(name_or_id) {
     for (const tab2 of this.tabs) {
-      if (tab2.id === name_or_id || tab2.name === name_or_id) return tab2;
+      if (tab2.id === name_or_id || tab2.name === name_or_id)
+        return tab2;
     }
     return void 0;
   }
@@ -70771,7 +70974,8 @@ var TabBar = class extends UIBase2 {
     if (pos !== this._last_pos || force_update) {
       this._last_pos = pos;
       this.horiz = pos === "top" || pos === "bottom";
-      if (debug2) console.log("tab bar position update", this.horiz);
+      if (debug2)
+        console.log("tab bar position update", this.horiz);
       if (this.horiz) {
         this.style["width"] = "100%";
         delete this.saneStyle["height"];
@@ -70785,7 +70989,8 @@ var TabBar = class extends UIBase2 {
   updateDPI(force_update = false) {
     const dpi = this.getDPI();
     if (dpi !== this._last_dpi) {
-      if (debug2) console.log("DPI update!");
+      if (debug2)
+        console.log("DPI update!");
       this._last_dpi = dpi;
       this.updateCanvas(true);
     }
@@ -70818,7 +71023,8 @@ var TabBar = class extends UIBase2 {
       this.doOnce(this._layout);
     }
     const g = this.g;
-    if (debug2) console.log("tab layout");
+    if (debug2)
+      console.log("tab layout");
     const dpi = this.getDPI();
     const font = this._getFont();
     const tsize = font.size * dpi;
@@ -70855,9 +71061,11 @@ var TabBar = class extends UIBase2 {
         let dead = !this.tabs.includes(tab2);
         dead = dead || this.isDead();
         if (dead) {
-          if (tab2.dom) tab2.dom.remove();
+          if (tab2.dom)
+            tab2.dom.remove();
           tab2.dom = void 0;
-          if (tab2.watcher?.timer !== void 0) clearInterval(tab2.watcher.timer);
+          if (tab2.watcher?.timer !== void 0)
+            clearInterval(tab2.watcher.timer);
         }
       };
       tab2.watcher = { timer: window.setInterval(watcher, 750) };
@@ -70876,7 +71084,8 @@ var TabBar = class extends UIBase2 {
           this._size_cb = void 0;
           return;
         }
-        if (!this.ctx) return;
+        if (!this.ctx)
+          return;
         this._layout();
         this._redraw();
       };
@@ -70949,14 +71158,16 @@ var TabBar = class extends UIBase2 {
       if (!isMobile() && this.getDefault("focus-on-tab-click")) {
         tab2.focus({ preventScroll: true, focusVisible: false });
       }
-      if (this.onchange) this.onchange(tab2, event);
+      if (this.onchange)
+        this.onchange(tab2, event);
       this.update(true);
     }
   }
   _redraw() {
     const g = this.g;
     const activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
-    if (debug2) console.log("tab draw");
+    if (debug2)
+      console.log("tab draw");
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const dpi = this.getDPI();
     const font = this._getFont();
@@ -70981,7 +71192,8 @@ var TabBar = class extends UIBase2 {
     let ti = -1;
     for (tab2 of this.tabs) {
       ti++;
-      if (tab2 === this.tabs.active) continue;
+      if (tab2 === this.tabs.active)
+        continue;
       const x = tab2.pos[0];
       const y = tab2.pos[1];
       const w = tab2.size[0];
@@ -71359,7 +71571,8 @@ var TabContainer3 = class extends UIBase2 {
         ${!horiz ? "vertical-align : top;" : ""}
       }
     `;
-    if (this._style) this._style.remove();
+    if (this._style)
+      this._style.remove();
     this._style = style;
     this.shadow.prepend(style);
   }
@@ -71579,7 +71792,8 @@ var ListBox2 = class extends Container3 {
       switch (e.keyCode) {
         case keymap["Up"]:
         case keymap["Down"]:
-          if (this.items.length == 0) return;
+          if (this.items.length == 0)
+            return;
           if (this.items.active === void 0) {
             this.setActive(this.items[0]);
             return;
@@ -71981,11 +72195,11 @@ var TableFrame2 = class extends Container3 {
         return _bg;
       }
     });
-    ret.cell = (() => {
+    ret.cell = () => {
       const container = maketd();
       container.background = tr.style["background-color"];
       return container;
-    });
+    };
     makefunc("label");
     makefunc("tool");
     makefunc("prop");
@@ -72298,7 +72512,7 @@ init_ui_base();
 init_toolprop();
 init_toolsys();
 init_toolprop();
-var LastKey = /* @__PURE__ */ Symbol("LastToolPanelId");
+var LastKey = Symbol("LastToolPanelId");
 var tool_idgen2 = 0;
 function getLastToolStruct(ctx) {
   let ret = ctx.state._last_tool;
@@ -72503,9 +72717,11 @@ var Constraint = class {
       this.funcDv(this.params, this.glst);
       return r1;
     }
-    if (Math.abs(r1) < this.threshold) return 0;
+    if (Math.abs(r1) < this.threshold)
+      return 0;
     const df = this.df;
-    if (no_dvs) return r1;
+    if (no_dvs)
+      return r1;
     for (let i = 0; i < this.klst.length; i++) {
       const gs = this.glst[i];
       const ks = this.klst[i];
@@ -72549,7 +72765,8 @@ var Solver = class {
       }
       const con = cons[ri];
       let r1 = con.evaluate();
-      if (r1 === 0) continue;
+      if (r1 === 0)
+        continue;
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
@@ -72582,7 +72799,8 @@ var Solver = class {
       }
       const con = cons[ri];
       const r1 = con.evaluate();
-      if (r1 === 0) continue;
+      if (r1 === 0)
+        continue;
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
@@ -72703,7 +72921,8 @@ function getCenter(nodes) {
   for (const n of nodes) {
     cent.add(n.pos);
   }
-  if (nodes.length === 0) return cent;
+  if (nodes.length === 0)
+    return cent;
   cent.mulScalar(1 / nodes.length);
   return cent;
 }
@@ -72780,7 +72999,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   let disableEdges = false;
   function edge_c(params) {
     const [v1, v2, restlen] = params;
-    if (disableEdges) return 0;
+    if (disableEdges)
+      return 0;
     return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
   }
   const p1 = new Vector2();
@@ -72800,7 +73020,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   let disableArea = false;
   function area_c(params) {
     const [n1, n2] = params;
-    if (disableArea) return 0;
+    if (disableArea)
+      return 0;
     loadBoxes(n1, n2);
     return aabb_overlap_area(p1, s1, p2, s2);
   }
@@ -72837,7 +73058,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
       for (const v of n1.verts) {
         verts.add(v);
         for (const v2 of v.edges) {
-          if (v2._id < v._id) continue;
+          if (v2._id < v._id)
+            continue;
           const rlen = n1.size.vectorLength() * 0;
           const con = new Constraint(
             "edge_c",
@@ -72850,9 +73072,11 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
         }
       }
       for (const n2 of nodes) {
-        if (n1 === n2) continue;
+        if (n1 === n2)
+          continue;
         const key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-        if (visit.has(key)) continue;
+        if (visit.has(key))
+          continue;
         loadBoxes(n1, n2);
         const area = aabb_overlap_area(p1, s1, p2, s2);
         if (area > 0.01) {
@@ -72884,7 +73108,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     if (i % 40 === 0) {
       const c1 = getCenter(nodes);
       const rfac = 1e3;
-      if (best) loadGraph(nodes, best);
+      if (best)
+        loadGraph(nodes, best);
       for (const n of nodes) {
         n.pos[0] += (Math.random() - 0.5) * rfac * speed;
         n.pos[1] += (Math.random() - 0.5) * rfac * speed;
@@ -72956,7 +73181,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
       while (time_ms() - time < 50) {
         solveStep();
       }
-      if (best) loadGraph(orignodes, best);
+      if (best)
+        loadGraph(orignodes, best);
       if (updateCb() === false) {
         clearInterval(extNodes._timer);
         return;
@@ -72965,7 +73191,8 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     const timer = extNodes._timer;
     return {
       stop: () => {
-        if (best) loadGraph(nodes, best);
+        if (best)
+          loadGraph(nodes, best);
         window.clearInterval(timer);
         extNodes._timer = void 0;
       }
@@ -73912,8 +74139,10 @@ var Overdraw = class extends UIBase2 {
       args
     );
     if (mergedArgs.font === void 0) {
-      if (this.font !== void 0) mergedArgs.font = this.font;
-      else mergedArgs.font = this.getDefault("DefaultText").genCSS();
+      if (this.font !== void 0)
+        mergedArgs.font = this.font;
+      else
+        mergedArgs.font = this.getDefault("DefaultText").genCSS();
     }
     if (!mergedArgs["background-color"]) {
       mergedArgs["background-color"] = "rgba(75, 75, 75, 0.75)";
@@ -74051,8 +74280,10 @@ var TreeItem = class extends Container3 {
     }
   }
   get icon() {
-    if (this._icon2) return this._icon2.icon;
-    else return -1;
+    if (this._icon2)
+      return this._icon2.icon;
+    else
+      return -1;
   }
   open() {
     this._icon1.icon = Icons.TREE_COLLAPSE;
@@ -74161,7 +74392,8 @@ var TreeView = class extends Container3 {
       return i2;
     };
     let i = 0;
-    if (hidden(items[i])) i = next(i);
+    if (hidden(items[i]))
+      i = next(i);
     const origin = this.overdraw.getBoundingClientRect();
     const overdraw = this.overdraw;
     const line = function(x1, y1, x2, y2) {
@@ -74186,7 +74418,8 @@ var TreeView = class extends Container3 {
       const item2idx = next(i);
       const item2 = item2idx < items.length ? items[item2idx] : void 0;
       const r = item._icon1.getBoundingClientRect();
-      if (!r) continue;
+      if (!r)
+        continue;
       const x1 = getx(item.treeDepth);
       const y1 = origin.y + (i + 1) * rowh - rowh * 0.25;
       if (item2 && item2.treeDepth > item.treeDepth) {
@@ -74213,7 +74446,8 @@ var TreeView = class extends Container3 {
       return;
     }
     const r = this.getClientRects()[0];
-    if (!r) return;
+    if (!r)
+      return;
     const x = r.left;
     const y = r.top;
     const od = this.overdraw;
@@ -74555,7 +74789,6 @@ var ToolBase = class extends ToolOp {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -74788,7 +75021,6 @@ var SplitTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -74884,7 +75116,6 @@ var RemoveAreaTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -75389,7 +75620,8 @@ function makeAreasEnum() {
   for (const k in areaclasses) {
     const cls = areaclasses[k];
     const def = cls.define();
-    if ((def.flag ?? 0) & AreaFlags.HIDDEN) continue;
+    if ((def.flag ?? 0) & AreaFlags.HIDDEN)
+      continue;
     let uiname = def.uiname;
     if (uiname === void 0) {
       uiname = k.replace("_", " ").toLowerCase();
@@ -75607,8 +75839,10 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     for (let i = 0; i < 2; i++) {
       const sv = i ? this.v2 : this.v1;
       for (const sa of sv.borders) {
-        if (sa.horiz != this.horiz) continue;
-        if (sa._id in visit) continue;
+        if (sa.horiz != this.horiz)
+          continue;
+        if (sa._id in visit)
+          continue;
         visit[sa._id] = 1;
         const a0x = Math.min(this.v1[0], this.v2[0]);
         const a0y = Math.min(this.v1[1], this.v2[1]);
@@ -75645,8 +75879,10 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     };
   }
   otherVertex(v) {
-    if (v === this.v1) return this.v2;
-    else return this.v1;
+    if (v === this.v1)
+      return this.v2;
+    else
+      return this.v1;
   }
   setCSS() {
     this.style["pointer-events"] = this.movable ? "auto" : "none";
@@ -75758,7 +75994,7 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
 UIBase2.internalRegister(ScreenBorder);
 
 // scripts/screen/constants.ts
-var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
+var IsScreenTag = Symbol("IsScreenTag");
 
 // scripts/screen/ScreenArea.ts
 init_ui_base();
@@ -75785,7 +76021,7 @@ var BorderSides = {
   RIGHT: 2,
   TOP: 3
 };
-Symbol.IsAreaTag = /* @__PURE__ */ Symbol.for("IsAreaTag");
+Symbol.IsAreaTag = Symbol.for("IsAreaTag");
 var Area = class _Area extends UIBase2 {
   static STRUCT;
   // used to avoid circular module ref with UIBase
@@ -76155,7 +76391,8 @@ var Area = class _Area extends UIBase2 {
       pageX = pageX === void 0 ? e.x : pageX;
       pageY = pageY === void 0 ? e.y : pageY;
       const screen = this.getScreen();
-      if (!screen) return false;
+      if (!screen)
+        return false;
       const node = screen.pickElement(pageX, pageY);
       if (node !== row) {
         return false;
@@ -76169,7 +76406,8 @@ var Area = class _Area extends UIBase2 {
       mdown = false;
     });
     eventdom.addEventListener("pointerdown", (e) => {
-      if (!mpre(e)) return;
+      if (!mpre(e))
+        return;
       mpos[0] = e.pageX;
       mpos[1] = e.pageY;
       mdown = true;
@@ -76185,7 +76423,8 @@ var Area = class _Area extends UIBase2 {
         return;
       }
       last_time = time_ms();
-      if (!mdown2 || !mpre(e, pageX, pageY)) return;
+      if (!mdown2 || !mpre(e, pageX, pageY))
+        return;
       if (e.type === "mousemove" && e.was_touch) {
         return;
       }
@@ -76258,8 +76497,10 @@ var Area = class _Area extends UIBase2 {
       return true;
     }
     const screen = this.getScreen();
-    if (screen === void 0) return true;
-    if (screen.parentNode === void 0) return true;
+    if (screen === void 0)
+      return true;
+    if (screen.parentNode === void 0)
+      return true;
   }
   //called by owning ScreenArea on file load
   afterSTRUCT() {
@@ -76345,7 +76586,8 @@ var ScreenArea2 = class extends UIBase2 {
         return;
       }
       const screen = this.getScreen();
-      if (!screen) return;
+      if (!screen)
+        return;
       if (screen.sareas.active !== this && screen.sareas.active?.area) {
         screen.sareas.active.area.on_area_blur();
       }
@@ -76449,7 +76691,8 @@ var ScreenArea2 = class extends UIBase2 {
   }
   bringToFront() {
     const screen = this.getScreen();
-    if (!screen) return;
+    if (!screen)
+      return;
     HTMLElement.prototype.remove.call(this);
     screen.sareas.remove(this);
     screen.appendChild(this);
@@ -76488,8 +76731,10 @@ var ScreenArea2 = class extends UIBase2 {
       return true;
     }
     const screen = this.getScreen();
-    if (screen === void 0) return true;
-    if (screen.parentNode === void 0) return true;
+    if (screen === void 0)
+      return true;
+    if (screen.parentNode === void 0)
+      return true;
   }
   toJSON() {
     const ret = {
@@ -76552,7 +76797,8 @@ var ScreenArea2 = class extends UIBase2 {
     super._ondestroy();
     this.dead = true;
     for (const editor2 of this.editors) {
-      if (editor2 === this.area) continue;
+      if (editor2 === this.area)
+        continue;
       editor2._ondestroy();
     }
   }
@@ -76618,7 +76864,8 @@ var ScreenArea2 = class extends UIBase2 {
   }
   snapToScreenSize() {
     const screen = this.getScreen();
-    if (!screen) return;
+    if (!screen)
+      return;
     const co = new Vector2();
     let changed = 0;
     for (const v of this._verts) {
@@ -76652,7 +76899,8 @@ var ScreenArea2 = class extends UIBase2 {
       return;
     }
     const screen = this.getScreen();
-    if (!screen) return;
+    if (!screen)
+      return;
     for (const b of this._borders) {
       screen.freeBorder(b);
     }
@@ -76813,7 +77061,8 @@ var ScreenArea2 = class extends UIBase2 {
     this.regenTabOrder();
   }
   _checkWrangler() {
-    if (this.ctx) contextWrangler._checkWrangler(this.ctx);
+    if (this.ctx)
+      contextWrangler._checkWrangler(this.ctx);
   }
   update() {
     this._checkWrangler();
@@ -77486,11 +77735,11 @@ var Screen2 = class extends UIBase2 {
   }
   get borders() {
     const this2 = this;
-    return (function* () {
+    return function* () {
       for (const k in this2._edgemap) {
         yield this2._edgemap[k];
       }
-    })();
+    }();
   }
   get listening() {
     return this.listen_timer !== void 0;
@@ -77579,7 +77828,8 @@ var Screen2 = class extends UIBase2 {
           }
         }
         for (const rule of sheet.cssRules) {
-          if (!(rule instanceof CSSStyleRule)) continue;
+          if (!(rule instanceof CSSStyleRule))
+            continue;
           const k = rule.selectorText;
           if (k in map3) {
             const rule2 = map3[k];
@@ -77864,7 +78114,8 @@ var Screen2 = class extends UIBase2 {
       if (this._popup_safe) {
         return;
       }
-      if (done) return;
+      if (done)
+        return;
       this.ctx.screen.removeEventListener("mousedown", mousepick, true);
       this.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true });
       this.ctx.screen.removeEventListener("mouseup", mousepick, true);
@@ -78073,7 +78324,8 @@ var Screen2 = class extends UIBase2 {
       }
       n.__pass = second_pass;
       n._forEachChildWidget((n2) => {
-        if (n === n2) return;
+        if (n === n2)
+          return;
         recurse(n2, second_pass, n);
         try {
           if (!second_pass && !n2.__destroyed) {
@@ -78147,25 +78399,29 @@ var Screen2 = class extends UIBase2 {
   getHotKey(toolpath) {
     const test2 = (keymap4) => {
       for (const hk of keymap4) {
-        if (typeof hk.action != "string") continue;
+        if (typeof hk.action != "string")
+          continue;
         if (hk.action.trim().startsWith(toolpath.trim())) {
           return hk;
         }
       }
     };
     let ret = test2(this.keymap);
-    if (ret) return ret;
+    if (ret)
+      return ret;
     if (this.sareas.active?.keymap) {
       const area = this.sareas.active.area;
       for (const keymap4 of area.getKeyMaps()) {
         ret = test2(keymap4);
-        if (ret) return ret;
+        if (ret)
+          return ret;
       }
     }
     if (ret === void 0) {
       for (const sarea of this.sareas) {
         const area = sarea.area;
-        if (!area) continue;
+        if (!area)
+          continue;
         for (const keymap4 of area.getKeyMaps()) {
           ret = test2(keymap4);
           if (ret) {
@@ -78185,7 +78441,8 @@ var Screen2 = class extends UIBase2 {
   }
   removeEventListener(type, cb, options) {
     if (type === "resize") {
-      if (this._resize_callbacks.includes(cb)) this._resize_callbacks.remove(cb);
+      if (this._resize_callbacks.includes(cb))
+        this._resize_callbacks.remove(cb);
     } else {
       return super.removeEventListener(type, cb, options);
     }
@@ -78218,7 +78475,8 @@ var Screen2 = class extends UIBase2 {
         if (handled) {
           break;
         }
-        if (!sarea.area) continue;
+        if (!sarea.area)
+          continue;
         sarea.area.push_ctx_active();
         for (const keymap4 of sarea.area.getKeyMaps()) {
           if (keymap4.handle(sarea.area.ctx, e)) {
@@ -78286,16 +78544,17 @@ var Screen2 = class extends UIBase2 {
       this.needsTabRecalc = false;
       this.calcTabOrder();
     }
-    outer: for (const sarea of this.sareas) {
-      for (const b of sarea._borders) {
-        const movable = this.isBorderMovable(b);
-        if (movable !== b.movable) {
-          console.log("detected change in movable borders");
-          this.regenBorders();
-          break outer;
+    outer:
+      for (const sarea of this.sareas) {
+        for (const b of sarea._borders) {
+          const movable = this.isBorderMovable(b);
+          if (movable !== b.movable) {
+            console.log("detected change in movable borders");
+            this.regenBorders();
+            break outer;
+          }
         }
       }
-    }
     if (this._update_gen) {
       let ret;
       try {
@@ -78369,7 +78628,7 @@ var Screen2 = class extends UIBase2 {
         sarea.ctx = this.ctx;
       }
     }
-    return (function* () {
+    return function* () {
       const stack = update_stack;
       stack.cur = 0;
       const lastn = this2;
@@ -78383,8 +78642,8 @@ var Screen2 = class extends UIBase2 {
         return stack[--stack.cur];
       }
       const ctx = this2.ctx;
-      const SCOPE_POP = /* @__PURE__ */ Symbol("pop");
-      const AREA_CTX_POP = /* @__PURE__ */ Symbol("pop2");
+      const SCOPE_POP = Symbol("pop");
+      const AREA_CTX_POP = Symbol("pop2");
       const scopestack = [];
       const areastack = [];
       let t = time_ms();
@@ -78445,7 +78704,7 @@ var Screen2 = class extends UIBase2 {
           }
         }
       }
-    })();
+    }();
   }
   //load pos/size from screenverts
   loadFromVerts() {
@@ -78527,7 +78786,8 @@ var Screen2 = class extends UIBase2 {
     s1.setCSS();
     s2.setCSS();
     this.setCSS();
-    if (s2.area !== void 0) s2.area.onadd();
+    if (s2.area !== void 0)
+      s2.area.onadd();
     return s2;
   }
   setCSS() {
@@ -78610,7 +78870,8 @@ var Screen2 = class extends UIBase2 {
         dels.push([b, he]);
       }
       for (const he2 of he.border.halfedges) {
-        if (he2 === he) continue;
+        if (he2 === he)
+          continue;
         if (he2.sarea === sarea) {
           dels.push([he.border, he2]);
         }
@@ -78637,7 +78898,8 @@ var Screen2 = class extends UIBase2 {
     this.screenborders.remove(b);
     const del = [];
     for (const he of b.halfedges) {
-      if (he.border === b) continue;
+      if (he.border === b)
+        continue;
       for (const he2 of he.border.halfedges) {
         if (he2.border === b) {
           del.push([he.border, he2]);
@@ -78671,7 +78933,8 @@ var Screen2 = class extends UIBase2 {
     this._vertmap = {};
     this.screenverts = [];
     for (const sarea of this.sareas) {
-      if (sarea.hidden) continue;
+      if (sarea.hidden)
+        continue;
       sarea.makeBorders(this);
     }
     for (const key in this._edgemap) {
@@ -78789,7 +79052,8 @@ var Screen2 = class extends UIBase2 {
         let bad2 = Boolean(sarea.borderLock & 1 << sidea);
         bad2 = bad2 || !b.movable;
         bad2 = bad2 || this.isBorderOuter(b);
-        if (bad2) bad |= 1 << i;
+        if (bad2)
+          bad |= 1 << i;
       }
       if (bad === 0) {
         this.moveBorder(b1, dh * 0.5);
@@ -78855,7 +79119,8 @@ var Screen2 = class extends UIBase2 {
     let ret = [b];
     visit.add(b);
     const rec = (b2, v) => {
-      if (!v) return;
+      if (!v)
+        return;
       for (const b22 of v.borders) {
         if (b22 === b2) {
           continue;
@@ -79027,7 +79292,8 @@ var Screen2 = class extends UIBase2 {
     for (let i = 0; i < 10; i++) {
       repeat = false;
       for (const sarea of this.sareas) {
-        if (sarea.hidden) continue;
+        if (sarea.hidden)
+          continue;
         repeat = repeat || Boolean(this.checkAreaConstraint(sarea));
       }
       found = found || repeat;
@@ -79090,7 +79356,8 @@ var Screen2 = class extends UIBase2 {
     }
     let found = true;
     for (const sarea of this.sareas) {
-      if (sarea.hidden) continue;
+      if (sarea.hidden)
+        continue;
       const old = new Vector2(sarea.size);
       const oldpos = new Vector2(sarea.pos);
       sarea.loadFromVerts();
@@ -79185,7 +79452,8 @@ var Screen2 = class extends UIBase2 {
     return ret;
   }
   isBorderMovable(b, limit = 5) {
-    if (this.allBordersMovable) return true;
+    if (this.allBordersMovable)
+      return true;
     for (const he of b.halfedges) {
       if (he.sarea.borderLock & 1 << he.side) {
         return false;
@@ -79239,14 +79507,16 @@ var Screen2 = class extends UIBase2 {
   areasBorder(sarea1, sarea2) {
     for (const b of sarea1._borders) {
       for (const sa of b.sareas) {
-        if (sa === sarea2) return true;
+        if (sa === sarea2)
+          return true;
       }
     }
     return false;
   }
   //regenerates borders, sets css and calls this.update
   replaceArea(dst, src) {
-    if (dst === src) return;
+    if (dst === src)
+      return;
     src.pos[0] = dst.pos[0];
     src.pos[1] = dst.pos[1];
     src.size[0] = dst.size[0];
@@ -80952,7 +81222,8 @@ var MenuBarEditor = class extends Editor {
     };
   }
   updateHeight(force = false) {
-    if (!this.header) return;
+    if (!this.header)
+      return;
     if (window.haveElectron) {
       this.maxSize[1] = 1;
       this.minSize[1] = 1;
@@ -82110,7 +82381,8 @@ DocsBrowser {
     this.header.button("Remove", () => {
       let sel = this.root.contentDocument.getSelection();
       let p = sel.anchorNode;
-      if (!p) return;
+      if (!p)
+        return;
       if (!(p instanceof HTMLElement)) {
         p = p.parentElement;
       }
@@ -82157,9 +82429,9 @@ DocsBrowser {
       "Heading 4": "H4",
       "Heading 5": "H5"
     });
-    styleList.on_select = ((e) => {
+    styleList.on_select = (e) => {
       this.execCommand("formatBlock", false, e.toLowerCase());
-    });
+    };
   }
   init() {
     super.init();
@@ -82594,7 +82866,8 @@ DocsBrowser {
     let liststack = [];
     let image_idgen = 0;
     let getlist = () => {
-      if (liststack.length > 0) return liststack[liststack.length - 1];
+      if (liststack.length > 0)
+        return liststack[liststack.length - 1];
       return void 0;
     };
     let handlers = {
@@ -82736,7 +83009,8 @@ DocsBrowser {
       path = path.slice(1, path.length);
     }
     console.error("PATH", path, this._prefix);
-    if (!path) return void 0;
+    if (!path)
+      return void 0;
     if (path.startsWith(this._prefix)) {
       path = path.slice(this._prefix.length, path.length).trim();
     }

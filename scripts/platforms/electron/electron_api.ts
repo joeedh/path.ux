@@ -488,7 +488,8 @@ export function buildElectronMenu(menu: Menu) {
       accelerator        : hotkey,
       icon               : nativeIcon,
       click: function () {
-        (menu as unknown as { onselect(id: number | string): void }).onselect(item._id);
+        menu.on_select?.(item._id);
+        menu._onselect?.(item._id);
       },
       registerAccelerator: false,
     };
