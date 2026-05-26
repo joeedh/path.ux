@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import validDatapath from "./buildtools/eslint-rules/valid-datapath.mjs";
 
 export default defineConfig([
   globalIgnores([
@@ -78,6 +79,10 @@ export default defineConfig([
       "@typescript-eslint/no-empty-object-type"           : "off",
       "one-var"                                           : ["error", "never"],
     },
+  },
+  {
+    plugins: { pathux: { rules: { "valid-datapath": validDatapath } } },
+    rules  : { "pathux/valid-datapath": "warn" },
   },
   eslintConfigPrettier,
   eslintPluginPrettierRecommended,

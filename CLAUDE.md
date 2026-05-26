@@ -51,6 +51,16 @@ This can create problems with iteration, for example:
  `scripts/simple/` — simple app framework
  `docs_src/` — documentation source (markdown)
  `dist/` — built output
+ `generated/` — auto-generated data-path catalog (`npm run gen:paths`)
+
+## Data API paths
+
+Valid `path` strings for `container.prop("...")`, related widget methods, and
+`<prop path="...">` xmlpage tags are catalogued in `generated/API_PATHS.md`
+(human/LLM-readable) and `generated/api-paths.json` (machine-readable), with each
+path's type, UI name, range, unit, and enum items. `generated/datapaths.ts` exports
+a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changing any
+`api_define` with `npm run gen:paths` (walks the app's `defineAPI()`).
 
 ## Conventions
 

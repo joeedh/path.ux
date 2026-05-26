@@ -18,6 +18,7 @@ import {
 import "../path-controller/util/html5_fileapi";
 import { CSSFont } from "./cssfont";
 import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base";
+import type { KnownDataPath } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
 import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu";
 
@@ -978,7 +979,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   //supports number types
-  textbox(inpath?: string, text?: string, cb?: typeof this.onchange, packflag = 0) {
+  textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.onchange, packflag = 0) {
     let path: string | undefined;
 
     if (inpath) {
@@ -1008,7 +1009,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  pathlabel(inpath?: string, label?: string, packflag = 0) {
+  pathlabel(inpath?: KnownDataPath, label?: string, packflag = 0) {
     let path: string | undefined;
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -1024,6 +1025,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       if (rdef) {
         label = rdef.prop!.uiname ?? rdef.dpath.apiname;
       } else {
+        console.warn(
+          `pathlabel: bad path "${path}"` +
+            (this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "")
+        );
         label = "(error)";
       }
     }
@@ -1224,7 +1229,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return this._joinPrefix(mass_set_path, this.massSetPrefix);
   }
 
-  prop(inpath: string, packflag = 0, mass_set_path?: string): UIBase<CTX> {
+  prop(inpath: KnownDataPath, packflag = 0, mass_set_path?: string): UIBase<CTX> {
     if (!this.ctx) {
       console.warn(this.id + ".ctx was undefined");
       let p = this.parentWidget as UIBase<CTX> | undefined;
@@ -1249,12 +1254,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath!)!, true);
 
     if (rdef?.prop === undefined) {
-      console.warn(
-        "Unknown property at path",
-        this._joinPrefix(inpath),
-        this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath)!, true)
-      );
-      throw new DataPathError("Unknown property at path " + this._joinPrefix(inpath));
+      const fullpath = this._joinPrefix(inpath);
+      const detail = this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "";
+      console.warn("Unknown property at path", fullpath, detail);
+      throw new DataPathError(`Unknown property at path "${fullpath}"${detail}`);
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     const prop = rdef.prop as ToolPropertyTypes;
@@ -1581,7 +1584,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  check(inpath: string | undefined, name: string, packflag = 0, mass_set_path?: string) {
+  check(inpath: KnownDataPath | undefined, name: string, packflag = 0, mass_set_path?: string) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
     const path = inpath !== undefined ? this._joinPrefix(inpath) : undefined;
@@ -1618,7 +1621,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * new (optional) form: checkenum(inpath, args)
    * */
   checkenum(
-    inpath: string | undefined,
+    inpath: KnownDataPath | undefined,
     name?: string | Record<string, unknown> | null,
     packflag?: number,
     enummap?: unknown,
@@ -1856,7 +1859,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     defaultval cannot be undefined
   */
   listenum(
-    inpath: string | undefined,
+    inpath: KnownDataPath | undefined,
     name?:
       | string
       | {
@@ -1974,7 +1977,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   simpleslider(
-    datapath: string | undefined,
+    datapath: KnownDataPath | undefined,
     name?: string | SliderArgs,
     defaultval?: number,
     min?: number,
@@ -2016,7 +2019,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
    * });
    * */
   slider(
-    datapath: string | undefined,
+    datapath: KnownDataPath | undefined,
     name?: string | SliderArgs,
     defaultval?: number,
     min?: number,

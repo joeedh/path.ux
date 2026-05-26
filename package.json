@@ -7,6 +7,7 @@
   "browser": "true",
   "scripts": {
     "build": "node buildtools/esbuild.mjs",
+    "gen:paths": "node buildtools/gen-datapaths.mjs",
     "watch": "node buildtools/esbuild.mjs --watch",
     "typecheck": "npx tsgo --noEmit",
     "emitTypes": "npx tsgo --project tsconfigDecl.json",
