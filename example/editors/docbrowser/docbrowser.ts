@@ -15,8 +15,9 @@ import {
 // DocsBrowser lives in the optional pathux_with_docbrowser bundle, not the main
 // pathux entry; import it from source so the example bundle includes it and the
 // "docs-browser-x" custom element gets registered.
-import { DocsBrowser } from "../../../scripts/docbrowser/docbrowser.js";
-//import '../../lib/tinymce/js/tinymce/tinymce.js';
+import { DocsBrowser } from "../../../scripts/docbrowser/docbrowser";
+// note: we need this import statement here due to esbuild pruning the above one in error
+import "../../../scripts/docbrowser/docbrowser";
 
 let platform: unknown;
 Platform.getPlatformAsync().then((p) => (platform = p));

@@ -1,0 +1,8 @@
+packages:
+  - simple_docsys
+  - example
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild
+  - unrs-resolver

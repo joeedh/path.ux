@@ -21,6 +21,7 @@ let copyExamplePlugin = {
   name: "copyExamplePlugin",
   setup(build) {
     build.onEnd(() => {
+      console.log('built')
       fs.mkdirSync("example/dist", {recursive: true});
 
       for (let name of ["app.js", "app.js.map"]) {
