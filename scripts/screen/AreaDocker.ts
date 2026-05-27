@@ -11,7 +11,7 @@ import { Icons } from "../core/ui_base";
 import { type Menu, startMenu } from "../widgets/ui_menu";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { IContextBase } from "../core/context_base";
-import type { TabItem } from "../widgets/ui_tabs";
+import type { TabContainer, TabItem } from "../widgets/ui_tabs";
 import { areaclasses, getAreaConstructor, makeAreasEnum } from "./area_base";
 
 function dockerdebug(...args: any[]) {
@@ -45,8 +45,10 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
   mpos: InstanceType<typeof Vector2>;
   needsRebuild: boolean;
   ignoreChange: number;
-  tbar: any;
-  addicon: any;
+  tbar!: TabContainer<CTX>;
+  addicon!: TabItem<CTX>;
+  /** Currently-open add-editor menu attached to the `+` icon, if any. */
+  addMenu: Menu<CTX> | undefined;
 
   constructor() {
     super();
@@ -69,7 +71,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       return;
     }
 
-    const sarea = this.getArea().parentWidget as unknown as ScreenArea;
+    const sarea = this.getScreenArea();
     if (!sarea) {
       this.needsRebuild = true;
       return;
@@ -84,16 +86,18 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
     this.clear();
 
-    const tabs = (this.tbar = this.tabs());
+    const tabs = (this.tbar = this.tabs() as unknown as TabContainer<CTX>);
     tabs.onchange = this.tab_onchange.bind(this);
-
-    let tab;
 
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
 
     sarea.switcherData = uidata;
 
     for (const editor of sarea.editors) {
+      if (editor.closed) {
+        continue;
+      }
+
       const def = getAreaConstructor(editor).define();
       let name = def.uiname;
 
@@ -103,51 +107,43 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       }
 
       const tab = tabs.tab(name, editor._id);
+      const tabItem = tab._tab;
 
-      const start_mpos = new Vector2();
-      const mpos = new Vector2();
+      tabItem.closable = true;
+      tabItem.ontabclose = () => this.closeEditor(editor);
+      tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor, e);
 
-      tab._tab.addEventListener("tabdragstart", (e) => {
-        if (e.x !== 0 && e.y !== 0) {
-          start_mpos.loadXY(e.x, e.y);
-          this.mpos.loadXY(e.x, e.y);
-        } else {
-          start_mpos.load(this.mpos);
-        }
-
-        dockerdebug("tab drag start!", start_mpos, e);
+      tabItem.addEventListener("tabdragstart", (e) => {
+        dockerdebug("tab drag start!", e);
       });
-      tab._tab.addEventListener("tabdragmove", (e) => {
+      tabItem.addEventListener("tabdragmove", (e) => {
         this.mpos.loadXY(e.x, e.y);
 
         const rect = this.tbar.tbar.canvas.getBoundingClientRect();
 
-        const x = e.x;
-        const y = e.y;
-
         const m = 8;
         if (
-          x < rect.x - m ||
-          x > rect.x + rect.width + m ||
-          y < rect.y - m ||
-          y >= rect.y + rect.height + m
+          e.x < rect.x - m ||
+          e.x > rect.x + rect.width + m ||
+          e.y < rect.y - m ||
+          e.y >= rect.y + rect.height + m
         ) {
           dockerdebug("tab detach!");
           e.preventDefault(); //end dragging
           this.detach(e);
         }
       });
-      tab._tab.addEventListener("tabdragend", (e) => {
+      tabItem.addEventListener("tabdragend", (e) => {
         this.mpos.loadXY(e.x, e.y);
         dockerdebug("tab drag end!", e);
       });
     }
 
-    tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
+    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
 
-    dockerdebug("Add Menu Tab", tab);
+    dockerdebug("Add Menu Tab", addTab);
 
-    const icon = (this.addicon = tab._tab);
+    const icon = (this.addicon = addTab._tab);
 
     icon.ontabclick = (e: PointerEvent) => this.on_addclick(e);
     icon.setAttribute("menu-button", "true");
@@ -187,8 +183,8 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
   on_addclick(e: PointerEvent) {
     const mpos = new Vector2([e.x, e.y]);
 
-    if (this.addicon.menu && !this.addicon.menu.closed) {
-      this.addicon.menu.close();
+    if (this.addMenu && !this.addMenu.closed) {
+      this.addMenu.close();
     } else {
       this.addTabMenu(e.target! as TabItem<CTX>, mpos);
     }
@@ -235,6 +231,11 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     }
 
     return lastp as unknown as Area<CTX>;
+  }
+
+  /** Owning ScreenArea, or undefined when this docker is not attached. */
+  getScreenArea(): ScreenArea<CTX> {
+    return this.getArea().parentWidget as unknown as ScreenArea<CTX>;
   }
 
   flagUpdate() {
@@ -284,9 +285,41 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       this.ignoreChange--;
     }
 
-    window.tabs = this.tbar;
-
+    // Defensive reset — guards against re-entrant rebuilds leaving ignoreChange
+    // pinned >0 and silently swallowing future tab change events.
     this.ignoreChange = 0;
+  }
+
+  /** Swap the `switcher` instances between two Area<CTX> objects, also moving
+   *  the DOM nodes. Workaround for a Chrome bug where `touch-action` is not
+   *  respected after we swap host elements at the DOM level. */
+  _swapSwitcherDOM(oldArea: Area<CTX>, newArea: Area<CTX>) {
+    const parentw = oldArea.switcher!.parentWidget;
+    const newparentw = newArea.switcher!.parentWidget;
+
+    const parent = oldArea.switcher!.parentNode;
+    const newparent = newArea.switcher!.parentNode;
+
+    oldArea.switcher = newArea.switcher;
+    newArea.switcher = this;
+
+    HTMLElement.prototype.remove.call(oldArea.switcher);
+    HTMLElement.prototype.remove.call(newArea.switcher);
+
+    if (parent instanceof UIBase) {
+      parent.shadow.appendChild(oldArea.switcher!);
+    } else {
+      parent!.appendChild(oldArea.switcher!);
+    }
+
+    if (newparent instanceof UIBase) {
+      newparent.shadow.prepend(newArea.switcher!);
+    } else {
+      newparent!.prepend(newArea.switcher!);
+    }
+
+    oldArea.switcher!.parentWidget = parentw;
+    newArea.switcher!.parentWidget = newparentw;
   }
 
   select(areaId: string, event: PointerEvent | KeyboardEvent | MouseEvent) {
@@ -297,7 +330,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     const area = this.getArea();
     const sarea = area.owning_sarea!;
 
-    const uidata = saveUIData(this.tbar, "switcherTabs");
+    const uidata = saveUIData(this.tbar as unknown as UIBase<CTX>, "switcherTabs");
     let newarea: Area<CTX> | undefined;
 
     for (const area2 of sarea.editors) {
@@ -317,53 +350,22 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       return;
     }
 
-    //this.ctx.screen.completeSetCSS();
-    //this.ctx.screen.completeUpdate();
     sarea.flushSetCSS();
     sarea.flushUpdate();
 
     newarea = sarea.area!;
 
-    /* unswap switchers to avoid a bug in Chrome where
-     *  touch-action appears to not be respected due to our
-     *  swapping elements */
-
-    const parentw = area.switcher!.parentWidget;
-    const newparentw = newarea.switcher!.parentWidget;
-
-    const parent = area.switcher!.parentNode;
-    const newparent = newarea.switcher!.parentNode;
-
-    area.switcher = newarea!.switcher;
-    newarea.switcher = this;
-
-    HTMLElement.prototype.remove.call(area.switcher);
-    HTMLElement.prototype.remove.call(newarea.switcher);
-
-    if (parent instanceof UIBase) {
-      parent.shadow.appendChild(area.switcher!);
-    } else {
-      parent!.appendChild(area.switcher!);
-    }
-
-    if (newparent instanceof UIBase) {
-      newparent.shadow.prepend(newarea.switcher);
-    } else {
-      newparent!.prepend(newarea.switcher);
-    }
-
-    area.switcher!.parentWidget = parentw;
-    newarea.switcher.parentWidget = newparentw;
+    this._swapSwitcherDOM(area, newarea);
 
     if (area.switcher instanceof AreaDocker) {
-      area.switcher!.tbar._ensureNoModal();
-      newarea.switcher!.tbar._ensureNoModal();
-      newarea.switcher.loadTabData(uidata);
+      area.switcher.tbar._ensureNoModal();
+      (newarea.switcher as AreaDocker<CTX>).tbar._ensureNoModal();
+      (newarea.switcher as AreaDocker<CTX>).loadTabData(uidata);
       area.switcher.loadTabData(uidata);
     }
 
-    newarea.switcher.setCSS();
-    newarea.switcher.update();
+    newarea.switcher!.setCSS();
+    newarea.switcher!.update();
 
     if (
       event &&
@@ -371,10 +373,10 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     ) {
       event.preventDefault();
       event.stopPropagation();
-      newarea.switcher.tbar._startMove(undefined, event);
+      if (newarea.switcher instanceof AreaDocker) {
+        newarea.switcher.tbar._startMove(undefined, event as PointerEvent);
+      }
     }
-
-    //console.log(this._id);
 
     sarea.switcherData = uidata;
     this.ignoreChange--;
@@ -396,16 +398,19 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     menu._init();
 
     const prop = makeAreasEnum();
-    const sarea = this.getArea().parentWidget as unknown as ScreenArea;
+    const sarea = this.getScreenArea();
 
     if (!sarea) {
       return;
     }
 
     for (const k in Object.assign({}, prop.values)) {
+      // An editor is "already shown" only if it exists and is not currently
+      // closed — closed editors should appear in the add menu so the user can
+      // bring them back via the existing switchEditor flow.
       let ok = true;
       for (const area of sarea.editors) {
-        if (getAreaConstructor(area).define().uiname === k) {
+        if (getAreaConstructor(area).define().uiname === k && !area.closed) {
           ok = false;
         }
       }
@@ -428,18 +433,18 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     menu.on_select = (val) => {
       dockerdebug("menu select", val, this.getArea().parentWidget);
 
-      this.addicon.menu = undefined;
+      this.addMenu = undefined;
 
-      const sarea = this.getArea().parentWidget as unknown as ScreenArea<CTX>;
+      const sarea = this.getScreenArea();
       if (sarea) {
         const cls = areaclasses[val];
 
         this.ignoreChange++;
-        let area;
-        let ud;
+        let area: Area<CTX> | undefined;
+        let uidata: string | undefined;
 
         try {
-          const uidata = saveUIData(this.tbar, "switcherTabs");
+          uidata = saveUIData(this.tbar as unknown as UIBase<CTX>, "switcherTabs");
           sarea.switchEditor(cls);
 
           dockerdebug("switching", cls);
@@ -471,9 +476,9 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
             area.switcher._init();
             area.switcher.update();
 
-            dockerdebug("loading data", ud);
+            dockerdebug("loading data", uidata);
             if (area.switcher instanceof AreaDocker) {
-              area.switcher.loadTabData(ud);
+              area.switcher.loadTabData(uidata);
               area.switcher.rebuild(); //make sure plus tab is at end
             }
             area.flushUpdate();
@@ -484,9 +489,49 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       }
     };
 
-    this.addicon.menu = menu;
+    this.addMenu = menu;
 
     startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
+    return menu;
+  }
+
+  /** Soft-close an editor: hide it from the tab bar but keep its instance and
+   *  UI state alive in `ScreenArea.editors` / `editormap`. If the closed
+   *  editor is the active one, switches to the first remaining non-closed
+   *  editor; if none remains, the tab bar is rebuilt with only the `+` tab. */
+  closeEditor(editor: Area<CTX>) {
+    const sarea = this.getScreenArea();
+    if (!sarea) return;
+
+    if (editor === sarea.area) {
+      const other = sarea.editors.find((e) => e !== editor && !e.closed);
+      if (other) {
+        sarea.switchEditor(other.constructor);
+      }
+    }
+
+    editor.closed = true;
+    this.flagUpdate();
+  }
+
+  /** Build and show the right-click context menu for a single editor tab.
+   *  Currently exposes a `Close` action; designed to grow other items later. */
+  openTabContextMenu(editor: Area<CTX>, event: PointerEvent) {
+    const menu = UIBase.createElement("menu-x") as Menu<CTX>;
+
+    menu.closeOnMouseUp = false;
+    menu.ctx = this.ctx;
+    menu._init();
+
+    menu.addItemExtra("Close", "close", undefined, Icons.TINY_X);
+
+    menu.on_select = (val) => {
+      if (val === "close") {
+        this.closeEditor(editor);
+      }
+    };
+
+    startMenu(menu, event.x, event.y, false, 0);
     return menu;
   }
 }

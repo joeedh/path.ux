@@ -7,8 +7,16 @@ import * as ui from "../core/ui";
 import { keymap } from "../path-controller/util/events";
 import { IContextBase } from "../core/context_base";
 import { UIBase, iconmanager, loadUIData, measureText, saveUIData } from "../core/ui_base";
+import { Icons } from "../icon_enum";
 import { CSSFont } from "../core/cssfont";
 import { Number2, Vector2 } from "../util/vectormath";
+
+interface CloseRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 export let tab_idgen = 1;
 const debug = false;
@@ -76,6 +84,20 @@ export class TabItemContainer<CTX extends IContextBase = IContextBase> extends u
   set ontabdragend(v: ((e: PointerEvent) => void) | null) {
     this._tab.ontabdragend = v;
   }
+
+  get ontabclose(): ((e: PointerEvent) => void) | null {
+    return this._tab.ontabclose;
+  }
+  set ontabclose(v: ((e: PointerEvent) => void) | null) {
+    this._tab.ontabclose = v;
+  }
+
+  get ontabcontextmenu(): ((e: PointerEvent) => void) | null {
+    return this._tab.ontabcontextmenu;
+  }
+  set ontabcontextmenu(v: ((e: PointerEvent) => void) | null) {
+    this._tab.ontabcontextmenu = v;
+  }
 }
 UIBase.internalRegister(TabItemContainer);
 
@@ -86,6 +108,8 @@ type TabDragEvents = {
   tabdragstart: PointerEvent;
   tabdragmove: PointerEvent;
   tabdragend: PointerEvent;
+  tabclose: PointerEvent;
+  tabcontextmenu: PointerEvent;
 };
 /**
  * This is a kind of phantom buttom DOM element (elements are 100% drawn with canvas).
@@ -98,10 +122,17 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
   tbar!: TabBar<CTX>;
   noSwitch?: boolean;
 
+  /** Whether the tab shows an inline close-X and accepts a `tabclose` event. */
+  closable = false;
+  /** Hit-test rect for the close-X, in TabBar canvas coords. Filled by `TabBar._layout`. */
+  closeRect: CloseRect | undefined;
+
   ontabclick: ((e: PointerEvent) => void) | null;
   ontabdragstart: ((e: PointerEvent) => void) | null;
   ontabdragmove: ((e: PointerEvent) => void) | null;
   ontabdragend: ((e: PointerEvent) => void) | null;
+  ontabclose: ((e: PointerEvent) => void) | null = null;
+  ontabcontextmenu: ((e: PointerEvent) => void) | null = null;
 
   dom: HTMLDivElement | undefined;
   extra: HTMLElement | undefined;
@@ -126,11 +157,15 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
     this.icon = undefined;
     this.tooltip = "";
     this.movable = true;
+    this.closable = false;
+    this.closeRect = undefined;
 
     this.ontabclick = null;
     this.ontabdragstart = null;
     this.ontabdragmove = null;
     this.ontabdragend = null;
+    this.ontabclose = null;
+    this.ontabcontextmenu = null;
 
     this.addEventListener("tabclick", (e: Event) => {
       if (this.ontabclick) return this.ontabclick(e as PointerEvent);
@@ -143,6 +178,12 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
     });
     this.addEventListener("tabdragend", (e: Event) => {
       if (this.ontabdragend) return this.ontabdragend(e as PointerEvent);
+    });
+    this.addEventListener("tabclose", (e: Event) => {
+      if (this.ontabclose) return this.ontabclose(e as PointerEvent);
+    });
+    this.addEventListener("tabcontextmenu", (e: Event) => {
+      if (this.ontabcontextmenu) return this.ontabcontextmenu(e as PointerEvent);
     });
 
     this.dom = undefined;
@@ -615,6 +656,12 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this.canvas.addEventListener("pointerdown", (e: Event) => {
       this.on_pointerdown(e as PointerEvent);
     });
+
+    // Suppress browser's native context menu — we route right-click into a
+    // `tabcontextmenu` event on the targeted tab via on_pointerdown.
+    this.canvas.addEventListener("contextmenu", (e: Event) => {
+      e.preventDefault();
+    });
   }
 
   _doelement(e: PointerEvent, mx: number, my: number) {
@@ -658,6 +705,37 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
   }
 
+  /** Returns the canvas-space mouse coords for a pointer event. */
+  _canvasCoords(e: PointerEvent): [number, number] {
+    const r = this.canvas.getClientRects()[0];
+    const dpi = this.getDPI();
+    const ex = e.clientX || e.x;
+    const ey = e.clientY || e.y;
+    return [(ex - (r ? r.x : 0)) * dpi, (ey - (r ? r.y : 0)) * dpi];
+  }
+
+  /** Finds the tab whose close-X hit-test contains the given canvas-space coords. */
+  _findCloseHit(mx: number, my: number): TabItem<CTX> | undefined {
+    for (const tab of this.tabs) {
+      const c = tab.closeRect;
+      if (!c) continue;
+      if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) {
+        return tab;
+      }
+    }
+    return undefined;
+  }
+
+  _doContextMenu(e: PointerEvent) {
+    this._domouse(e);
+    const ht = this.tabs.highlight;
+    if (ht) {
+      ht.sendEvent("tabcontextmenu", e);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
   _doclick(e: PointerEvent) {
     this._domouse(e);
 
@@ -668,6 +746,15 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     if (debug) console.log("mdown");
 
     if (e.button !== 0) {
+      return;
+    }
+
+    const [mx, my] = this._canvasCoords(e);
+    const closeHit = this._findCloseHit(mx, my);
+    if (closeHit) {
+      closeHit.sendEvent("tabclose", e);
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
@@ -708,6 +795,10 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   on_pointerdown(e: PointerEvent) {
+    if (e.button === 2) {
+      this._doContextMenu(e);
+      return;
+    }
     this._doclick(e);
   }
 
@@ -1144,6 +1235,10 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         w += iconsize;
       }
 
+      if (tab.closable) {
+        w += iconsize + Math.ceil(tsize * 0.25);
+      }
+
       //don't interfere with tab dragging
       const bad = this.tool !== undefined && tab === this.tabs.active;
 
@@ -1155,6 +1250,15 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       //tab.size = [0, 0];
       tab.size[axis] = w + pad * 2;
       tab.size[(axis ^ 1) as Number2] = h;
+
+      if (tab.closable) {
+        const cpad = Math.ceil(tsize * 0.25);
+        const cx = tab.pos[0] + tab.size[0] - iconsize - cpad;
+        const cy = tab.pos[1] + (tab.size[1] - iconsize) * 0.5;
+        tab.closeRect = { x: cx, y: cy, w: iconsize, h: iconsize };
+      } else {
+        tab.closeRect = undefined;
+      }
 
       x += w + pad * 2;
     }
@@ -1234,6 +1338,19 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       g.fillText(tab!.name, x2, y2);
     };
 
+    const draw_close = (t: TabItem<CTX>) => {
+      if (!t.closable || !t.closeRect) return;
+      iconmanager.canvasDraw(
+        this as unknown as UIBase,
+        this.canvas,
+        g,
+        Icons.TINY_X,
+        t.closeRect.x,
+        t.closeRect.y,
+        this.iconsheet
+      );
+    };
+
     let ti = -1;
     for (tab of this.tabs) {
       ti++;
@@ -1297,6 +1414,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       if (!this.horiz) {
         g.restore();
       }
+
+      draw_close(tab);
 
       const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
       const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
@@ -1426,6 +1545,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         if (!this.horiz) {
           g.restore();
         }
+
+        draw_close(tab);
       }
     }
   }

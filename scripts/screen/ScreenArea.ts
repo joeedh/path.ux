@@ -90,6 +90,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   saved_uidata: string | undefined;
   areaName: string | undefined;
   dead = false;
+  /** Soft-close flag. Closed editors are hidden from the AreaDocker tab bar
+   *  but stay in `ScreenArea.editors` / `editormap`, so their UI state is
+   *  preserved and a `switchEditor` call restores them as-is. Roundtripped
+   *  through nstructjs via `Area.STRUCT`. */
+  closed = false;
 
   constructor() {
     super();
@@ -741,6 +746,7 @@ Area.STRUCT = `
 pathux.Area {
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
+  closed : bool;
 }
 `;
 
@@ -1406,6 +1412,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     this.area = this.editormap[name];
+
+    // Selecting an editor always un-hides it from the tab bar.
+    this.area.closed = false;
 
     this.area.inactive = false;
     this.area.parentWidget = this;
