@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-find docs_src/ -name '*.md' | while read -r file; do
+find documentation/ -name '*.md' | while read -r file; do
   echo "Processing $file"
   npx markdown-toc --append "##NL##<!-- regenerate with pnpm markdown-toc -->" -i "$file"
   sed -i 's/##NL##/\

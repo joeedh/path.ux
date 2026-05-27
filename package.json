@@ -17,7 +17,7 @@
     "test:debug": "node --inspect-brk --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "format": "node node_modules/@pathtx/prettier/bin/prettier.cjs --log-level warn --cache --write \"scripts/**/*.{ts,js}\"",
     "format:check": "node node_modules/@pathtx/prettier/bin/prettier.cjs --log-level warn --cache --check \"scripts/**/*.{ts,js}\"",
-    "build-docs": "bash build_docs.sh",
+    "build-docs": "typedoc",
     "render-icons": "bash render_icons.sh",
     "markdown-toc": "bash run_markdown_toc.sh",
     "serv": "node serv.js",
@@ -26,7 +26,7 @@
     "eslint:clean-cache": "rm .eslintcache"
   },
   "directories": {
-    "doc": "docs"
+    "doc": "documentation"
   },
   "type": "module",
   "devDependencies": {
@@ -50,9 +50,11 @@
     "markdown-toc": "^1.2.0",
     "nstructjs": "^0.8.4",
     "parse5": "6.0.0",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
-    "typescript-language-server": "^5.1.3"
+    "typescript-language-server": "^5.1.3",
+    "vitest": "^4.1.7"
   },
   "repository": {
     "type": "git",

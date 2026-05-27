@@ -11,7 +11,7 @@
     window.haveElectron = true;
 
     window.init = async function () {
-      const app = await import('./core/app.js');
+      const app = await import('./dist/app.js');
 
       console.log("init");
       app.start();

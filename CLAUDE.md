@@ -49,7 +49,7 @@ This can create problems with iteration, for example:
  `scripts/screen/` — FrameManager, ScreenArea, area management
  `scripts/platforms/` — platform abstraction (web, electron)
  `scripts/simple/` — simple app framework
- `docs_src/` — documentation source (markdown)
+ `documentation/` — documentation source (markdown)
  `dist/` — built output
  `generated/` — auto-generated data-path catalog (`npm run gen:paths`)
 

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["scripts/pathux.ts"],
+  "tsconfig": "tsconfig.json",
+  "out": "docs",
+  "name": "path.ux",
+  "readme": "Readme.MD",
+  "projectDocuments": ["documentation/*.md"],
+  "excludePrivate": false,
+  "excludeExternals": true,
+  "githubPages": false,
+  "highlightLanguages": ["bash", "ts", "tsx", "js", "json", "jsonc", "md", "html", "css"],
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "navigationLinks": {
+    "GitHub": "https://github.com/joeedh/path.ux"
+  }
+}

@@ -79,7 +79,7 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   areaDragToolEnabled: boolean;
   owning_sarea: ScreenArea<CTX> | undefined;
   _area_id: number;
-  minSize: number[];
+  minSize: (number | undefined)[];
   maxSize: (number | undefined)[];
   keymap?: KeyMap<CTX>;
   header: Container<CTX> | undefined;

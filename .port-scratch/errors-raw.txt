@@ -1,0 +1,377 @@
+example/api/api_define.ts(8,30): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(19,32): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(25,28): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(35,24): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(35,29): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(35,35): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/api/api_define.ts(38,24): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(38,29): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(41,24): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(41,29): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(44,24): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(44,29): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(44,35): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/api/api_define.ts(47,18): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(47,23): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(47,29): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/api/api_define.ts(50,18): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(50,23): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(50,29): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/api/api_define.ts(50,34): error TS7006: Parameter 'val' implicitly has an 'any' type.
+example/api/api_define.ts(53,22): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(53,27): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(56,21): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(56,26): error TS7006: Parameter 'list' implicitly has an 'any' type.
+example/api/api_define.ts(56,32): error TS7006: Parameter 'item' implicitly has an 'any' type.
+example/api/api_define.ts(62,30): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(64,35): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/api/api_define.ts(95,31): error TS7006: Parameter 'api' implicitly has an 'any' type.
+example/core/context.ts(115,14): error TS2345: Argument of type 'AppScreen | undefined' is not assignable to parameter of type 'Screen<ContextLike<any, IToolStack>>'.
+example/core/dynamics.ts(15,15): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/core/dynamics.ts(15,20): error TS7006: Parameter 'min' implicitly has an 'any' type.
+example/core/dynamics.ts(15,25): error TS7006: Parameter 'max' implicitly has an 'any' type.
+example/core/dynamics.ts(15,30): error TS7006: Parameter 'exp' implicitly has an 'any' type.
+example/core/dynamics.ts(16,10): error TS2339: Property 'key' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(17,10): error TS2339: Property 'min' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(18,10): error TS2339: Property 'max' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(19,10): error TS2339: Property 'exp' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(20,10): error TS2339: Property 'mode' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(21,10): error TS2339: Property 'penkey' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,32): error TS2339: Property 'key' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,42): error TS2339: Property 'min' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,52): error TS2339: Property 'max' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,62): error TS2339: Property 'exp' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,72): error TS2339: Property 'mode' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(25,83): error TS2339: Property 'penkey' does not exist on type 'DynamicKey'.
+example/core/dynamics.ts(28,12): error TS2339: Property 'STRUCT' does not exist on type 'typeof DynamicKey'.
+example/core/dynamics.ts(42,10): error TS2339: Property 'keys' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(43,10): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(50,16): error TS2554: Expected 4-6 arguments, but got 1.
+example/core/dynamics.ts(50,37): error TS2554: Expected 1 arguments, but got 5.
+example/core/dynamics.ts(51,16): error TS2554: Expected 4-6 arguments, but got 1.
+example/core/dynamics.ts(51,35): error TS2554: Expected 1 arguments, but got 5.
+example/core/dynamics.ts(56,10): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/core/dynamics.ts(57,10): error TS2339: Property 'keys' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(58,10): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(63,10): error TS2339: Property 'keys' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(64,10): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(69,9): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/core/dynamics.ts(69,14): error TS7006: Parameter 'value' implicitly has an 'any' type.
+example/core/dynamics.ts(69,21): error TS7006: Parameter 'dynamic_state' implicitly has an 'any' type.
+example/core/dynamics.ts(70,23): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(74,24): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(113,8): error TS7006: Parameter 'b' implicitly has an 'any' type.
+example/core/dynamics.ts(125,14): error TS7006: Parameter 'reader' implicitly has an 'any' type.
+example/core/dynamics.ts(128,26): error TS2339: Property 'keys' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(129,12): error TS2339: Property 'keymap' does not exist on type 'Dynamics'.
+example/core/dynamics.ts(133,10): error TS2339: Property 'STRUCT' does not exist on type 'typeof Dynamics'.
+example/core/dynamics.ts(143,10): error TS2339: Property 'pressure' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(144,10): error TS2339: Property 'tilt' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(147,10): error TS7006: Parameter 'b' implicitly has an 'any' type.
+example/core/dynamics.ts(147,13): error TS7006: Parameter 't' implicitly has an 'any' type.
+example/core/dynamics.ts(148,10): error TS2339: Property 'pressure' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(148,41): error TS2339: Property 'pressure' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(149,10): error TS2339: Property 'tilt' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(153,8): error TS7006: Parameter 'b' implicitly has an 'any' type.
+example/core/dynamics.ts(157,10): error TS2339: Property 'pressure' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(158,10): error TS2339: Property 'tilt' does not exist on type 'DynamicsState'.
+example/core/dynamics.ts(168,15): error TS2339: Property 'STRUCT' does not exist on type 'typeof DynamicsState'.
+example/core/dynamics.ts(182,9): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ readonly INT: 1; readonly STRING: 2; readonly BOOL: 4; readonly ENUM: 8; readonly FLAG: 16; readonly FLOAT: 32; readonly VEC2: 64; readonly VEC3: 128; readonly VEC4: 256; readonly MATRIX4: 512; ... 5 more ...; readonly REPORT: 65536; }'.
+example/core/dynamics.ts(189,15): error TS2339: Property 'DYNAMICS' does not exist on type '{ readonly INT: 1; readonly STRING: 2; readonly BOOL: 4; readonly ENUM: 8; readonly FLAG: 16; readonly FLOAT: 32; readonly VEC2: 64; readonly VEC3: 128; readonly VEC4: 256; readonly MATRIX4: 512; ... 5 more ...; readonly REPORT: 65536; }'.
+example/core/dynamics.ts(190,15): error TS2339: Property 'DYNAMICS_STATE' does not exist on type '{ readonly INT: 1; readonly STRING: 2; readonly BOOL: 4; readonly ENUM: 8; readonly FLAG: 16; readonly FLOAT: 32; readonly VEC2: 64; readonly VEC3: 128; readonly VEC4: 256; readonly MATRIX4: 512; ... 5 more ...; readonly REPORT: 65536; }'.
+example/core/dynamics.ts(197,21): error TS2339: Property 'DYNAMICS' does not exist on type '{ readonly INT: 1; readonly STRING: 2; readonly BOOL: 4; readonly ENUM: 8; readonly FLAG: 16; readonly FLOAT: 32; readonly VEC2: 64; readonly VEC3: 128; readonly VEC4: 256; readonly MATRIX4: 512; ... 5 more ...; readonly REPORT: 65536; }'.
+example/core/dynamics.ts(199,30): error TS2554: Expected 0 arguments, but got 1.
+example/core/dynamics.ts(206,12): error TS7006: Parameter 'val' implicitly has an 'any' type.
+example/core/dynamics.ts(207,5): error TS2571: Object is of type 'unknown'.
+example/core/dynamics.ts(213,10): error TS7006: Parameter 'b' implicitly has an 'any' type.
+example/core/dynamics.ts(222,15): error TS7006: Parameter 'value' implicitly has an 'any' type.
+example/core/dynamics.ts(223,21): error TS2339: Property 'DYNAMICS' does not exist on type '{ readonly INT: 1; readonly STRING: 2; readonly BOOL: 4; readonly ENUM: 8; readonly FLAG: 16; readonly FLOAT: 32; readonly VEC2: 64; readonly VEC3: 128; readonly VEC4: 256; readonly MATRIX4: 512; ... 5 more ...; readonly REPORT: 65536; }'.
+example/core/dynamics.ts(228,7): error TS2571: Object is of type 'unknown'.
+example/core/dynamics.ts(236,12): error TS7006: Parameter 'val' implicitly has an 'any' type.
+example/core/dynamics.ts(237,5): error TS2571: Object is of type 'unknown'.
+example/core/dynamics.ts(243,10): error TS7006: Parameter 'b' implicitly has an 'any' type.
+example/core/toolop.ts(7,8): error TS2551: Property '_undo' does not exist on type 'ToolOp<any, any, any, any>'. Did you mean 'undo'?
+example/core/toolop.ts(11,31): error TS2551: Property '_undo' does not exist on type 'ToolOp<any, any, any, any>'. Did you mean 'undo'?
+example/draw/brush.ts(7,10): error TS2339: Property 'size' does not exist on type 'BrushSettings'.
+example/draw/brush.ts(8,10): error TS2339: Property 'soft' does not exist on type 'BrushSettings'.
+example/draw/brush.ts(9,10): error TS2339: Property 'type' does not exist on type 'BrushSettings'.
+example/draw/brush.ts(10,10): error TS2339: Property 'spacing' does not exist on type 'BrushSettings'.
+example/draw/brush.ts(11,10): error TS2339: Property 'color' does not exist on type 'BrushSettings'.
+example/draw/brush.ts(14,15): error TS2339: Property 'STRUCT' does not exist on type 'typeof BrushSettings'.
+example/draw/brush.ts(26,9): error TS2339: Property 'get' does not exist on type 'never[]'.
+example/draw/brush.ts(26,24): error TS7006: Parameter 'name' implicitly has an 'any' type.
+example/draw/brush.ts(28,26): error TS2339: Property 'define' does not exist on type 'never'.
+example/draw/brush.ts(36,10): error TS2339: Property 'size' does not exist on type 'Brush'.
+example/draw/brush.ts(37,10): error TS2339: Property 'soft' does not exist on type 'Brush'.
+example/draw/brush.ts(40,10): error TS7006: Parameter 'path' implicitly has an 'any' type.
+example/draw/brush.ts(41,34): error TS2339: Property 'soft' does not exist on type 'Brush'.
+example/draw/brush.ts(41,44): error TS2339: Property 'size' does not exist on type 'Brush'.
+example/draw/brush.ts(44,12): error TS7006: Parameter 'canvas' implicitly has an 'any' type.
+example/draw/brush.ts(52,19): error TS7006: Parameter 'cls' implicitly has an 'any' type.
+example/draw/brush.ts(53,18): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+example/draw/brush.ts(62,12): error TS7006: Parameter 'canvas' implicitly has an 'any' type.
+example/draw/brush.ts(63,18): error TS2339: Property 'size' does not exist on type 'CircleBrush'.
+example/draw/draw_ops.ts(12,10): error TS2339: Property 'last_mpos' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(13,10): error TS2339: Property 'havePointerEvents' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(45,17): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(45,22): error TS7006: Parameter 'args' implicitly has an 'any' type.
+example/draw/draw_ops.ts(63,14): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(64,10): error TS2339: Property '_workspace' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(68,11): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(71,10): error TS2551: Property '_undo' does not exist on type 'DrawOp'. Did you mean 'undo'?
+example/draw/draw_ops.ts(76,15): error TS7006: Parameter 'key' implicitly has an 'any' type.
+example/draw/draw_ops.ts(76,20): error TS7006: Parameter 'dstate' implicitly has an 'any' type.
+example/draw/draw_ops.ts(76,28): error TS7006: Parameter 'val' implicitly has an 'any' type.
+example/draw/draw_ops.ts(77,32): error TS2339: Property 'dynamics' does not exist on type '{}'.
+example/draw/draw_ops.ts(84,14): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(84,19): error TS7006: Parameter 'points' implicitly has an 'any' type.
+example/draw/draw_ops.ts(84,27): error TS7006: Parameter 'pointDynamics' implicitly has an 'any' type.
+example/draw/draw_ops.ts(84,42): error TS7006: Parameter 'lastpoint' implicitly has an 'any' type.
+example/draw/draw_ops.ts(84,53): error TS7006: Parameter 'lastdstate' implicitly has an 'any' type.
+example/draw/draw_ops.ts(86,25): error TS2339: Property 'get' does not exist on type 'never[]'.
+example/draw/draw_ops.ts(86,41): error TS2339: Property 'brushType' does not exist on type '{}'.
+example/draw/draw_ops.ts(89,29): error TS2339: Property 'fillColor' does not exist on type '{}'.
+example/draw/draw_ops.ts(91,23): error TS7006: Parameter 'co' implicitly has an 'any' type.
+example/draw/draw_ops.ts(91,27): error TS7006: Parameter 'ds' implicitly has an 'any' type.
+example/draw/draw_ops.ts(108,28): error TS2339: Property 'brushSize' does not exist on type '{}'.
+example/draw/draw_ops.ts(109,28): error TS2339: Property 'brushSoft' does not exist on type '{}'.
+example/draw/draw_ops.ts(110,31): error TS2339: Property 'fillColor' does not exist on type '{}'.
+example/draw/draw_ops.ts(111,31): error TS2339: Property 'brushSpacing' does not exist on type '{}'.
+example/draw/draw_ops.ts(159,8): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(160,25): error TS2339: Property 'get' does not exist on type 'never[]'.
+example/draw/draw_ops.ts(160,41): error TS2339: Property 'brushType' does not exist on type '{}'.
+example/draw/draw_ops.ts(161,30): error TS2339: Property 'brushSize' does not exist on type '{}'.
+example/draw/draw_ops.ts(167,38): error TS2339: Property 'points' does not exist on type '{}'.
+example/draw/draw_ops.ts(167,58): error TS2339: Property 'pointDynamics' does not exist on type '{}'.
+example/draw/draw_ops.ts(173,8): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+example/draw/draw_ops.ts(174,19): error TS2551: Property '_undo' does not exist on type 'DrawOp'. Did you mean 'undo'?
+example/draw/draw_ops.ts(215,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/draw/draw_ops.ts(216,10): error TS2339: Property 'havePointerEvents' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(220,13): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/draw/draw_ops.ts(221,14): error TS2339: Property 'havePointerEvents' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(228,14): error TS2339: Property 'pressure' does not exist on type 'DynamicsState'.
+example/draw/draw_ops.ts(229,14): error TS2339: Property 'tilt' does not exist on type 'DynamicsState'.
+example/draw/draw_ops.ts(230,14): error TS2339: Property 'tilt' does not exist on type 'DynamicsState'.
+example/draw/draw_ops.ts(236,18): error TS18048: 'ctx' is possibly 'undefined'.
+example/draw/draw_ops.ts(236,22): error TS2339: Property 'canvas' does not exist on type 'ContextLike<any, IToolStack>'.
+example/draw/draw_ops.ts(237,26): error TS2339: Property '_workspace' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(242,17): error TS2339: Property 'points' does not exist on type '{}'.
+example/draw/draw_ops.ts(243,17): error TS2339: Property 'pointDynamics' does not exist on type '{}'.
+example/draw/draw_ops.ts(251,39): error TS2339: Property 'last_mpos' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(251,55): error TS2339: Property 'last_dstate' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(253,14): error TS2339: Property 'last_mpos' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(254,12): error TS2339: Property 'last_mpos' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(257,10): error TS2339: Property 'last_dstate' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(258,10): error TS2339: Property 'last_mpos' does not exist on type 'DrawOp'.
+example/draw/draw_ops.ts(263,11): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(12,3): error TS2305: Module '"../../pathux.js"' has no exported member 'DocsBrowser'.
+example/editors/docbrowser/docbrowser.ts(20,26): error TS7006: Parameter 'buf' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(20,31): error TS7006: Parameter 's' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(36,19): error TS7006: Parameter 'path' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(46,18): error TS7006: Parameter 'path' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(66,19): error TS7006: Parameter 'a1' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(66,23): error TS7006: Parameter 'b1' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(97,10): error TS2339: Property 'data' does not exist on type 'SavedDocument'.
+example/editors/docbrowser/docbrowser.ts(100,15): error TS2339: Property 'STRUCT' does not exist on type 'typeof SavedDocument'.
+example/editors/docbrowser/docbrowser.ts(113,10): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(116,18): error TS18046: 'platform' is of type 'unknown'.
+example/editors/docbrowser/docbrowser.ts(117,12): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(120,10): error TS2339: Property 'savedDocument' does not exist on type 'DocsBrowserEditor'.
+example/editors/docbrowser/docbrowser.ts(124,17): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(128,14): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(128,37): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(129,16): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(130,14): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(135,10): error TS2551: Property '_browser' does not exist on type 'DocsBrowserEditor'. Did you mean 'browser'?
+example/editors/docbrowser/docbrowser.ts(142,14): error TS2339: Property 'savedDocument' does not exist on type 'DocsBrowserEditor'.
+example/editors/docbrowser/docbrowser.ts(143,36): error TS2339: Property 'savedDocument' does not exist on type 'DocsBrowserEditor'.
+example/editors/docbrowser/docbrowser.ts(150,5): error TS2532: Object is possibly 'undefined'.
+example/editors/docbrowser/docbrowser.ts(162,14): error TS7006: Parameter 'reader' implicitly has an 'any' type.
+example/editors/docbrowser/docbrowser.ts(180,13): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
+example/editors/docbrowser/docbrowser.ts(209,3): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
+example/editors/editor_base.ts(14,15): error TS7006: Parameter 'isActiveEditor' implicitly has an 'any' type.
+example/editors/editor_base.ts(29,10): error TS2551: Property 'container' does not exist on type 'Editor'. Did you mean 'contains'?
+example/editors/editor_base.ts(30,10): error TS2551: Property 'container' does not exist on type 'Editor'. Did you mean 'contains'?
+example/editors/editor_base.ts(31,34): error TS2551: Property 'container' does not exist on type 'Editor'. Did you mean 'contains'?
+example/editors/editor_base.ts(33,40): error TS2551: Property 'container' does not exist on type 'Editor'. Did you mean 'contains'?
+example/editors/eventgraph/eventgraph.ts(23,15): error TS7006: Parameter 'node' implicitly has an 'any' type.
+example/editors/eventgraph/eventgraph.ts(27,13): error TS7006: Parameter 'sock' implicitly has an 'any' type.
+example/editors/eventgraph/eventgraph.ts(38,17): error TS7006: Parameter 'type' implicitly has an 'any' type.
+example/editors/eventgraph/eventgraph.ts(39,17): error TS2532: Object is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(60,5): error TS2322: Type 'void' is not assignable to type '{}'.
+example/editors/eventgraph/eventgraph.ts(61,5): error TS2322: Type 'void' is not assignable to type '{}'.
+example/editors/eventgraph/eventgraph.ts(75,10): error TS2339: Property 'pan' does not exist on type 'EventGraphViewer'.
+example/editors/eventgraph/eventgraph.ts(76,10): error TS2339: Property 'scale' does not exist on type 'EventGraphViewer'.
+example/editors/eventgraph/eventgraph.ts(78,5): error TS2322: Type 'HTMLCanvasElement' is not assignable to type 'undefined'.
+example/editors/eventgraph/eventgraph.ts(79,14): error TS2532: Object is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(89,29): error TS2345: Argument of type 'undefined' is not assignable to parameter of type 'Node'.
+example/editors/eventgraph/eventgraph.ts(102,13): error TS7006: Parameter 'node' implicitly has an 'any' type.
+example/editors/eventgraph/eventgraph.ts(112,3): error TS2393: Duplicate function implementation.
+example/editors/eventgraph/eventgraph.ts(118,24): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+example/editors/eventgraph/eventgraph.ts(128,22): error TS2339: Property 'scale' does not exist on type 'EventGraphViewer'.
+example/editors/eventgraph/eventgraph.ts(128,29): error TS2339: Property 'pan' does not exist on type 'EventGraphViewer'.
+example/editors/eventgraph/eventgraph.ts(131,16): error TS2532: Object is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(132,16): error TS2532: Object is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(134,5): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(135,5): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(136,5): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(137,5): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(138,5): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(138,31): error TS18048: 'canvas' is possibly 'undefined'.
+example/editors/eventgraph/eventgraph.ts(143,3): error TS2393: Duplicate function implementation.
+example/editors/log/log_editor.ts(18,10): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(18,23): error TS2551: Property 'container' does not exist on type 'LogEditor'. Did you mean 'contains'?
+example/editors/log/log_editor.ts(39,28): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(42,23): error TS2551: Property 'container' does not exist on type 'LogEditor'. Did you mean 'contains'?
+example/editors/log/log_editor.ts(53,22): error TS2339: Property '_last_buf' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(57,10): error TS2339: Property '_last_buf' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(68,10): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(71,12): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(72,12): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(73,12): error TS2551: Property 'container' does not exist on type 'LogEditor'. Did you mean 'contains'?
+example/editors/log/log_editor.ts(73,31): error TS2339: Property 'table' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(82,22): error TS2339: Property '_last_key' does not exist on type 'LogEditor'.
+example/editors/log/log_editor.ts(83,12): error TS2339: Property '_last_key' does not exist on type 'LogEditor'.
+example/editors/menu/menu.ts(27,9): error TS2339: Property 'ctx' does not exist on type 'HTMLElement'.
+example/editors/menu/menu.ts(37,7): error TS2532: Object is possibly 'undefined'.
+example/editors/menu/menu.ts(41,16): error TS18048: 'header' is possibly 'undefined'.
+example/editors/menu/menu.ts(49,43): error TS2554: Expected 1 arguments, but got 0.
+example/editors/menu/menu.ts(50,43): error TS2554: Expected 1 arguments, but got 0.
+example/editors/menu/menu.ts(85,12): error TS2339: Property '_height' does not exist on type 'MenuBarEditor'.
+example/editors/menu/menu.ts(88,23): error TS2339: Property '_height' does not exist on type 'MenuBarEditor'.
+example/editors/menu/menu.ts(89,46): error TS2339: Property '_height' does not exist on type 'MenuBarEditor'.
+example/editors/properties/properties.ts(22,5): error TS7034: Variable 'graphNodes' implicitly has type 'any' in some locations where its type cannot be determined.
+example/editors/properties/properties.ts(23,5): error TS7034: Variable 'solveTimer' implicitly has type 'any' in some locations where its type cannot be determined.
+example/editors/properties/properties.ts(30,10): error TS2339: Property '_pageUIData' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(31,25): error TS2322: Type 'undefined' is not assignable to type 'number'.
+example/editors/properties/properties.ts(40,15): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(44,29): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(57,19): error TS18046: 'platform' is of type 'unknown'.
+example/editors/properties/properties.ts(62,14): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(63,14): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(65,18): error TS2339: Property '_pageUIData' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(66,44): error TS2339: Property '_pageUIData' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(68,27): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(68,43): error TS2339: Property '_pageUIData' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(69,16): error TS2339: Property '_pageUIData' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(70,16): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(73,34): error TS2339: Property 'getElementById' does not exist on type 'string | Container<ContextLike<any, IToolStack>>'.
+example/editors/properties/properties.ts(76,29): error TS2339: Property 'getElementById' does not exist on type 'string | Container<ContextLike<any, IToolStack>>'.
+example/editors/properties/properties.ts(83,38): error TS2339: Property 'getElementById' does not exist on type 'string | Container<ContextLike<any, IToolStack>>'.
+example/editors/properties/properties.ts(104,42): error TS2353: Object literal may only specify known properties, and 'mime' does not exist in type 'BlobPropertyBag'.
+example/editors/properties/properties.ts(118,16): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+example/editors/properties/properties.ts(121,22): error TS2339: Property 'tabs' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(121,34): error TS2551: Property 'container' does not exist on type 'PropsEditor'. Did you mean 'contains'?
+example/editors/properties/properties.ts(149,38): error TS2353: Object literal may only specify known properties, and 'mime' does not exist in type 'BlobPropertyBag'.
+example/editors/properties/properties.ts(157,16): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+example/editors/properties/properties.ts(210,9): error TS2339: Property 'ctx' does not exist on type 'HTMLElement'.
+example/editors/properties/properties.ts(212,20): error TS2339: Property 'check' does not exist on type 'HTMLElement'.
+example/editors/properties/properties.ts(213,9): error TS2339: Property 'label' does not exist on type 'HTMLElement'.
+example/editors/properties/properties.ts(232,9): error TS2339: Property 'ctx' does not exist on type 'HTMLElement'.
+example/editors/properties/properties.ts(236,23): error TS7006: Parameter 'size' implicitly has an 'any' type.
+example/editors/properties/properties.ts(237,23): error TS2339: Property '_nodes' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(238,25): error TS2339: Property '_nodemap' does not exist on type 'PropsEditor'.
+example/editors/properties/properties.ts(261,13): error TS2339: Property 'side' does not exist on type 'PackNodeVertex'.
+example/editors/properties/properties.ts(268,7): error TS7053: Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '{}'.
+example/editors/properties/properties.ts(269,18): error TS2345: Argument of type 'PackNode' is not assignable to parameter of type 'never'.
+example/editors/properties/properties.ts(274,23): error TS7006: Parameter 'array' implicitly has an 'any' type.
+example/editors/properties/properties.ts(296,34): error TS2339: Property '_id' does not exist on type 'never'.
+example/editors/properties/properties.ts(296,42): error TS2339: Property '_id' does not exist on type 'never'.
+example/editors/properties/properties.ts(296,67): error TS2339: Property '_id' does not exist on type 'never'.
+example/editors/properties/properties.ts(296,75): error TS2339: Property '_id' does not exist on type 'never'.
+example/editors/properties/properties.ts(306,28): error TS2339: Property 'verts' does not exist on type 'never'.
+example/editors/properties/properties.ts(307,28): error TS2339: Property 'verts' does not exist on type 'never'.
+example/editors/properties/properties.ts(327,18): error TS7006: Parameter 'tab' implicitly has an 'any' type.
+example/editors/properties/properties.ts(328,9): error TS7034: Variable 'draw' implicitly has type 'any' in some locations where its type cannot be determined.
+example/editors/properties/properties.ts(341,7): error TS7005: Variable 'draw' implicitly has an 'any' type.
+example/editors/properties/properties.ts(346,10): error TS7005: Variable 'graphNodes' implicitly has an 'any' type.
+example/editors/properties/properties.ts(348,17): error TS7005: Variable 'graphNodes' implicitly has an 'any' type.
+example/editors/properties/properties.ts(351,21): error TS7005: Variable 'graphNodes' implicitly has an 'any' type.
+example/editors/properties/properties.ts(353,12): error TS2339: Property 'g' does not exist on type 'HTMLCanvasElement'.
+example/editors/properties/properties.ts(358,22): error TS2339: Property 'g' does not exist on type 'HTMLCanvasElement'.
+example/editors/properties/properties.ts(410,30): error TS7005: Variable 'solveTimer' implicitly has an 'any' type.
+example/editors/properties/properties.ts(431,17): error TS7005: Variable 'graphNodes' implicitly has an 'any' type.
+example/editors/properties/properties.ts(436,17): error TS7005: Variable 'graphNodes' implicitly has an 'any' type.
+example/editors/properties/properties.ts(444,11): error TS7005: Variable 'solveTimer' implicitly has an 'any' type.
+example/editors/properties/properties.ts(445,30): error TS7005: Variable 'solveTimer' implicitly has an 'any' type.
+example/editors/properties/properties.ts(459,14): error TS7006: Parameter 'tab' implicitly has an 'any' type.
+example/editors/properties/properties.ts(465,23): error TS7006: Parameter 'tab' implicitly has an 'any' type.
+example/editors/screen.ts(12,24): error TS2820: Type '"CTRL"' is not assignable to type 'KeyModifiers'. Did you mean '"ctrl"'?
+example/editors/screen.ts(16,24): error TS2820: Type '"CTRL"' is not assignable to type 'KeyModifiers'. Did you mean '"ctrl"'?
+example/editors/screen.ts(16,32): error TS2820: Type '"SHIFT"' is not assignable to type 'KeyModifiers'. Did you mean '"shift"'?
+example/editors/screen.ts(20,24): error TS2820: Type '"CTRL"' is not assignable to type 'KeyModifiers'. Did you mean '"ctrl"'?
+example/editors/screen.ts(25,9): error TS18048: '_appstate.screen' is possibly 'undefined'.
+example/editors/workspace/workspace.ts(16,10): error TS2339: Property '_last_dpi' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(17,10): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(19,10): error TS2339: Property 'brush' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(20,10): error TS2339: Property 'dynamics' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(22,10): error TS2339: Property 'pan' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(23,10): error TS2339: Property 'scale' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(25,10): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(26,10): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(26,40): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(28,10): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(29,10): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(31,10): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(33,10): error TS2339: Property 'g' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(33,19): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(34,34): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(36,30): error TS7006: Parameter 'name' implicitly has an 'any' type.
+example/editors/workspace/workspace.ts(45,50): error TS2559: Type '1' has no properties in common with type '{ nodeclass?: IUIBaseConstructor<UIBase<ContextLike<any, IToolStack>, unknown>> | undefined; excluded_classes?: IUIBaseConstructor<UIBase<ContextLike<any, IToolStack>, unknown>>[] | undefined; clip?: { ...; } | undefined; mouseEvent?: MouseEvent | ... 1 more ... | undefined; }'.
+example/editors/workspace/workspace.ts(46,44): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(52,19): error TS2349: This expression is not callable.
+example/editors/workspace/workspace.ts(66,9): error TS2339: Property 'ctx' does not exist on type 'HTMLElement'.
+example/editors/workspace/workspace.ts(71,21): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+example/editors/workspace/workspace.ts(73,10): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(78,10): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(81,15): error TS7006: Parameter 'isActiveEditor' implicitly has an 'any' type.
+example/editors/workspace/workspace.ts(94,10): error TS2551: Property 'container' does not exist on type 'WorkspaceEditor'. Did you mean 'contains'?
+example/editors/workspace/workspace.ts(95,10): error TS2551: Property 'container' does not exist on type 'WorkspaceEditor'. Did you mean 'contains'?
+example/editors/workspace/workspace.ts(97,10): error TS2551: Property 'container' does not exist on type 'WorkspaceEditor'. Did you mean 'contains'?
+example/editors/workspace/workspace.ts(99,20): error TS2551: Property 'container' does not exist on type 'WorkspaceEditor'. Did you mean 'contains'?
+example/editors/workspace/workspace.ts(104,26): error TS2554: Expected 1 arguments, but got 0.
+example/editors/workspace/workspace.ts(107,26): error TS2554: Expected 1 arguments, but got 0.
+example/editors/workspace/workspace.ts(110,26): error TS2551: Property 'container' does not exist on type 'WorkspaceEditor'. Did you mean 'contains'?
+example/editors/workspace/workspace.ts(135,17): error TS18047: 'visualViewport' is possibly 'null'.
+example/editors/workspace/workspace.ts(137,17): error TS2339: Property 'scale' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(140,17): error TS7006: Parameter 'mpos' implicitly has an 'any' type.
+example/editors/workspace/workspace.ts(145,24): error TS2532: Object is possibly 'undefined'.
+example/editors/workspace/workspace.ts(146,24): error TS2532: Object is possibly 'undefined'.
+example/editors/workspace/workspace.ts(148,20): error TS2339: Property 'pan' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(149,20): error TS2339: Property 'pan' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(159,13): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/editors/workspace/workspace.ts(170,13): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/editors/workspace/workspace.ts(188,14): error TS2532: Object is possibly 'undefined'.
+example/editors/workspace/workspace.ts(189,14): error TS2532: Object is possibly 'undefined'.
+example/editors/workspace/workspace.ts(194,23): error TS2339: Property '_last_dpi' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(195,36): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(196,36): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(199,12): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(201,12): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(202,12): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(204,12): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(205,12): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(209,10): error TS2339: Property '_last_dpi' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(215,18): error TS2339: Property 'g' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(221,22): error TS2339: Property 'pan' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(221,35): error TS2339: Property 'pan' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(223,27): error TS2339: Property 'canvas' does not exist on type 'ContextLike<any, IToolStack>'.
+example/editors/workspace/workspace.ts(225,22): error TS2339: Property 'canvas' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(225,35): error TS2339: Property 'g' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(225,43): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace.ts(226,10): error TS2339: Property '_last_id' does not exist on type 'WorkspaceEditor'.
+example/editors/workspace/workspace_ops.ts(4,3): error TS2377: Constructors for derived classes must contain a 'super' call.
+example/editors/workspace/workspace_ops.ts(4,15): error TS7006: Parameter 'start_mpos' implicitly has an 'any' type.
+example/editors/workspace/workspace_ops.ts(5,5): error TS17009: 'super' must be called before accessing 'this' in the constructor of a derived class.
+example/editors/workspace/workspace_ops.ts(5,10): error TS2339: Property 'start_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(6,5): error TS17009: 'super' must be called before accessing 'this' in the constructor of a derived class.
+example/editors/workspace/workspace_ops.ts(6,10): error TS2339: Property 'last_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(23,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/editors/workspace/workspace_ops.ts(29,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+example/editors/workspace/workspace_ops.ts(31,18): error TS18048: 'ctx' is possibly 'undefined'.
+example/editors/workspace/workspace_ops.ts(31,22): error TS2339: Property 'canvas' does not exist on type 'ContextLike<any, IToolStack>'.
+example/editors/workspace/workspace_ops.ts(35,15): error TS2339: Property 'start_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(36,12): error TS2339: Property 'start_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(37,12): error TS2339: Property 'last_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(43,10): error TS2339: Property 'last_mpos' does not exist on type 'PanOp'.
+example/editors/workspace/workspace_ops.ts(46,13): error TS7006: Parameter 'e' implicitly has an 'any' type.

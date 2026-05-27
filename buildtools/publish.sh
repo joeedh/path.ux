@@ -21,7 +21,6 @@ echo $?
 pnpm build  
 echo $?
 
-#bash build_docs.sh && \
 bash buildtools/build_package_new.sh
 echo $?
 

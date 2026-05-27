@@ -26,6 +26,7 @@ import cconst from "../config/const";
 import { IContextBase } from "./context_base";
 import type { PanelFrame } from "../widgets/ui_panel";
 import type { TabContainer } from "../widgets/ui_tabs";
+import type { TreeView } from "../widgets/ui_treeview";
 import { InheritFlag, ToolOp } from "../path-controller/toolsys/toolsys";
 import type { RichViewer } from "../widgets/ui_richedit";
 import type { NumSliderTypes } from "../widgets/ui_numsliders";
@@ -128,7 +129,7 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
   static define() {
     return {
       tagname: "label-x",
-      style  : "label",
+      style: "label",
     };
   }
 
@@ -345,7 +346,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   saveData() {
     if (this.scrollTop || this.scrollLeft) {
       return {
-        scrollTop : this.scrollTop,
+        scrollTop: this.scrollTop,
         scrollLeft: this.scrollLeft,
       };
     } else {
@@ -968,7 +969,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       check.description = tooltip;
       ret = check;
     } else {
-      label = label === undefined ? def.uiname ?? def.toolpath! : label;
+      label = label === undefined ? (def.uiname ?? def.toolpath!) : label;
 
       ret = this.button(label, cb);
       ret.description = tooltip;
@@ -2144,9 +2145,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     (elem as unknown as Container).massSetPrefix = this.massSetPrefix;
   }
 
-  treeview() {
-    //XXX property type me
-    const ret = UIBase.createElement("tree-view-x") as UIBase<CTX>;
+  treeview(): TreeView<CTX> {
+    const ret = UIBase.createElement("tree-view-x") as TreeView<CTX>;
     ret.ctx = this.ctx;
     this.add(ret);
 
