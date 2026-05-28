@@ -5,6 +5,10 @@ docs
 .eslintcache
 .claude/worktrees
 
+# Auto-generated datapath catalog (parent repo writes api-paths.json here so the
+# valid-datapath ESLint rule, which hardcodes this path, finds the catalog).
+generated/
+
 # Playwright
 node_modules/
 /test-results/
