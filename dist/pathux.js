@@ -35176,6 +35176,7 @@ var Container3 = class _Container extends UIBase2 {
         strip.label(uiName);
         ret = strip.textbox(inpath);
         ret.useDataPathUndo = useDataPathUndo;
+        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
         }
@@ -35195,6 +35196,7 @@ var Container3 = class _Container extends UIBase2 {
       }
       ret.useDataPathUndo = useDataPathUndo;
       ret.packflag |= packflag;
+      mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
       }
@@ -35213,7 +35215,7 @@ var Container3 = class _Container extends UIBase2 {
         const check = this.check(inpath, name2, packflag, mass_set_path);
         const tooltip = prop.descriptions[subkey];
         check.useDataPathUndo = useDataPathUndo;
-        check.description = tooltip === void 0 ? prop.ui_value_names[subkey] : tooltip;
+        check.description = tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
         if (check instanceof Check) {
           check.icon = prop.iconmap[rdef.subkey];
         }
@@ -35244,6 +35246,10 @@ var Container3 = class _Container extends UIBase2 {
           ret = this.simpleslider(inpath, { packflag });
         else ret = this.slider(inpath, { packflag });
         ret.packflag |= packflag;
+        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+        if (mass_set_path) {
+          ret.setAttribute("mass_set_path", mass_set_path);
+        }
         return ret.setUndo(useDataPathUndo);
       } else if (prop.subtype === PropSubTypes2.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
@@ -35299,7 +35305,7 @@ var Container3 = class _Container extends UIBase2 {
             if (name2 === void 0) {
               name2 = ToolProperty.makeUIName(k);
             }
-            const con2 = i & 1 ? col1 : col2;
+            const con2 = i & 1 ? col2 : col1;
             const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
             if (tooltip) {
               check.description = tooltip;
@@ -35337,6 +35343,7 @@ var Container3 = class _Container extends UIBase2 {
               name2 = ToolProperty.makeUIName(k);
             }
             const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+            check.setUndo(useDataPathUndo);
             if (tooltip) {
               check.description = tooltip;
             }
@@ -35377,14 +35384,13 @@ var Container3 = class _Container extends UIBase2 {
           const hash = prop.calcHash();
           if (last_hash !== hash) {
             last_hash = hash;
-            console.error("Property definition update");
             rebuild();
           }
         });
         return con;
       }
     }
-    throw new DataPathError(`Unknown property: ${inpath}`);
+    throw new DataPathError(`Unsupported property: ${inpath}`);
   }
   iconcheck(inpath, icon, description, mass_set_path) {
     const ret = UIBase2.createElement("iconcheck-x");
@@ -41421,6 +41427,7 @@ init_util();
 init_events();
 init_events();
 init_ui_base();
+init_icon_enum();
 var tab_idgen = 1;
 var debug2 = false;
 function getpx(css) {
@@ -41473,6 +41480,18 @@ var TabItemContainer2 = class extends ColumnFrame {
   set ontabdragend(v) {
     this._tab.ontabdragend = v;
   }
+  get ontabclose() {
+    return this._tab.ontabclose;
+  }
+  set ontabclose(v) {
+    this._tab.ontabclose = v;
+  }
+  get ontabcontextmenu() {
+    return this._tab.ontabcontextmenu;
+  }
+  set ontabcontextmenu(v) {
+    this._tab.ontabcontextmenu = v;
+  }
 };
 UIBase2.internalRegister(TabItemContainer2);
 var TabDragEvent = class extends PointerEvent {
@@ -41484,10 +41503,16 @@ var TabItem = class extends UIBase2 {
   movable;
   tbar;
   noSwitch;
+  /** Whether the tab shows an inline close-X and accepts a `tabclose` event. */
+  closable = false;
+  /** Hit-test rect for the close-X, in TabBar canvas coords. Filled by `TabBar._layout`. */
+  closeRect;
   ontabclick;
   ontabdragstart;
   ontabdragmove;
   ontabdragend;
+  ontabclose = null;
+  ontabcontextmenu = null;
   dom;
   extra;
   extraSize;
@@ -41505,10 +41530,14 @@ var TabItem = class extends UIBase2 {
     this.icon = void 0;
     this.tooltip = "";
     this.movable = true;
+    this.closable = false;
+    this.closeRect = void 0;
     this.ontabclick = null;
     this.ontabdragstart = null;
     this.ontabdragmove = null;
     this.ontabdragend = null;
+    this.ontabclose = null;
+    this.ontabcontextmenu = null;
     this.addEventListener("tabclick", (e) => {
       if (this.ontabclick) return this.ontabclick(e);
     });
@@ -41520,6 +41549,12 @@ var TabItem = class extends UIBase2 {
     });
     this.addEventListener("tabdragend", (e) => {
       if (this.ontabdragend) return this.ontabdragend(e);
+    });
+    this.addEventListener("tabclose", (e) => {
+      if (this.ontabclose) return this.ontabclose(e);
+    });
+    this.addEventListener("tabcontextmenu", (e) => {
+      if (this.ontabcontextmenu) return this.ontabcontextmenu(e);
     });
     this.dom = void 0;
     this.extra = void 0;
@@ -41875,6 +41910,9 @@ var TabBar = class extends UIBase2 {
     this.canvas.addEventListener("pointerdown", (e) => {
       this.on_pointerdown(e);
     });
+    this.canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
   }
   _doelement(e, mx, my) {
     for (const tab2 of this.tabs) {
@@ -41907,6 +41945,34 @@ var TabBar = class extends UIBase2 {
       e.preventDefault();
     }
   }
+  /** Returns the canvas-space mouse coords for a pointer event. */
+  _canvasCoords(e) {
+    const r = this.canvas.getClientRects()[0];
+    const dpi = this.getDPI();
+    const ex = e.clientX || e.x;
+    const ey = e.clientY || e.y;
+    return [(ex - (r ? r.x : 0)) * dpi, (ey - (r ? r.y : 0)) * dpi];
+  }
+  /** Finds the tab whose close-X hit-test contains the given canvas-space coords. */
+  _findCloseHit(mx, my) {
+    for (const tab2 of this.tabs) {
+      const c = tab2.closeRect;
+      if (!c) continue;
+      if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) {
+        return tab2;
+      }
+    }
+    return void 0;
+  }
+  _doContextMenu(e) {
+    this._domouse(e);
+    const ht = this.tabs.highlight;
+    if (ht) {
+      ht.sendEvent("tabcontextmenu", e);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
   _doclick(e) {
     this._domouse(e);
     if (e.defaultPrevented) {
@@ -41914,6 +41980,14 @@ var TabBar = class extends UIBase2 {
     }
     if (debug2) console.log("mdown");
     if (e.button !== 0) {
+      return;
+    }
+    const [mx, my] = this._canvasCoords(e);
+    const closeHit = this._findCloseHit(mx, my);
+    if (closeHit) {
+      closeHit.sendEvent("tabclose", e);
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     const ht = this.tabs.highlight;
@@ -41943,6 +42017,10 @@ var TabBar = class extends UIBase2 {
     }
   }
   on_pointerdown(e) {
+    if (e.button === 2) {
+      this._doContextMenu(e);
+      return;
+    }
     this._doclick(e);
   }
   on_pointermove(e) {
@@ -42258,6 +42336,9 @@ var TabBar = class extends UIBase2 {
       if (tab2.icon !== void 0) {
         w += iconsize;
       }
+      if (tab2.closable) {
+        w += iconsize + Math.ceil(tsize * 0.25);
+      }
       const bad = this.tool !== void 0 && tab2 === this.tabs.active;
       if (!bad) {
         tab2.pos[axis] = x;
@@ -42265,6 +42346,14 @@ var TabBar = class extends UIBase2 {
       }
       tab2.size[axis] = w + pad * 2;
       tab2.size[axis ^ 1] = h;
+      if (tab2.closable) {
+        const cpad = Math.ceil(tsize * 0.25);
+        const cx = tab2.pos[0] + tab2.size[0] - iconsize - cpad;
+        const cy = tab2.pos[1] + (tab2.size[1] - iconsize) * 0.5;
+        tab2.closeRect = { x: cx, y: cy, w: iconsize, h: iconsize };
+      } else {
+        tab2.closeRect = void 0;
+      }
       x += w + pad * 2;
     }
     x = ~~(x + pad) / dpi;
@@ -42320,6 +42409,18 @@ var TabBar = class extends UIBase2 {
       }
       g.fillText(tab2.name, x2, y2);
     };
+    const draw_close = (t) => {
+      if (!t.closable || !t.closeRect) return;
+      iconmanager.canvasDraw(
+        this,
+        this.canvas,
+        g,
+        Icons.TINY_X,
+        t.closeRect.x,
+        t.closeRect.y,
+        this.iconsheet
+      );
+    };
     let ti = -1;
     for (tab2 of this.tabs) {
       ti++;
@@ -42370,6 +42471,7 @@ var TabBar = class extends UIBase2 {
       if (!this.horiz) {
         g.restore();
       }
+      draw_close(tab2);
       const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
       const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
       if (tab2 !== this.tabs[this.tabs.length - 1] && prev !== this.tabs.active && next !== this.tabs.active) {
@@ -42454,6 +42556,7 @@ var TabBar = class extends UIBase2 {
         if (!this.horiz) {
           g.restore();
         }
+        draw_close(tab2);
       }
     }
   }
@@ -47152,6 +47255,11 @@ var Area = class _Area extends UIBase2 {
   saved_uidata;
   areaName;
   dead = false;
+  /** Soft-close flag. Closed editors are hidden from the AreaDocker tab bar
+   *  but stay in `ScreenArea.editors` / `editormap`, so their UI state is
+   *  preserved and a `switchEditor` call restores them as-is. Roundtripped
+   *  through nstructjs via `Area.STRUCT`. */
+  closed = false;
   constructor() {
     super();
     const def = this.constructor.define();
@@ -47632,6 +47740,7 @@ Area.STRUCT = `
 pathux.Area {
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
+  closed : bool;
 }
 `;
 struct_default.register(Area);
@@ -48136,6 +48245,7 @@ var ScreenArea2 = class extends UIBase2 {
       this.area = void 0;
     }
     this.area = this.editormap[name2];
+    this.area.closed = false;
     this.area.inactive = false;
     this.area.parentWidget = this;
     this.area.pos = this.pos;
@@ -48374,6 +48484,8 @@ var AreaDocker = class _AreaDocker extends Container3 {
   ignoreChange;
   tbar;
   addicon;
+  /** Currently-open add-editor menu attached to the `+` icon, if any. */
+  addMenu;
   constructor() {
     super();
     this._last_update_key = void 0;
@@ -48391,7 +48503,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
     if (!this.parentWidget) {
       return;
     }
-    const sarea = this.getArea().parentWidget;
+    const sarea = this.getScreenArea();
     if (!sarea) {
       this.needsRebuild = true;
       return;
@@ -48403,48 +48515,44 @@ var AreaDocker = class _AreaDocker extends Container3 {
     this.clear();
     const tabs = this.tbar = this.tabs();
     tabs.onchange = this.tab_onchange.bind(this);
-    let tab2;
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
     sarea.switcherData = uidata;
     for (const editor2 of sarea.editors) {
+      if (editor2.closed) {
+        continue;
+      }
       const def = getAreaConstructor(editor2).define();
       let name2 = def.uiname;
       if (!name2) {
         name2 = def.areaname || def.tagname.replace(/-x/, "");
         name2 = ToolProperty.makeUIName(name2);
       }
-      const tab3 = tabs.tab(name2, editor2._id);
-      const start_mpos = new Vector2();
-      const mpos = new Vector2();
-      tab3._tab.addEventListener("tabdragstart", (e) => {
-        if (e.x !== 0 && e.y !== 0) {
-          start_mpos.loadXY(e.x, e.y);
-          this.mpos.loadXY(e.x, e.y);
-        } else {
-          start_mpos.load(this.mpos);
-        }
-        dockerdebug("tab drag start!", start_mpos, e);
+      const tab2 = tabs.tab(name2, editor2._id);
+      const tabItem = tab2._tab;
+      tabItem.closable = true;
+      tabItem.ontabclose = () => this.closeEditor(editor2);
+      tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor2, e);
+      tabItem.addEventListener("tabdragstart", (e) => {
+        dockerdebug("tab drag start!", e);
       });
-      tab3._tab.addEventListener("tabdragmove", (e) => {
+      tabItem.addEventListener("tabdragmove", (e) => {
         this.mpos.loadXY(e.x, e.y);
         const rect = this.tbar.tbar.canvas.getBoundingClientRect();
-        const x = e.x;
-        const y = e.y;
         const m = 8;
-        if (x < rect.x - m || x > rect.x + rect.width + m || y < rect.y - m || y >= rect.y + rect.height + m) {
+        if (e.x < rect.x - m || e.x > rect.x + rect.width + m || e.y < rect.y - m || e.y >= rect.y + rect.height + m) {
           dockerdebug("tab detach!");
           e.preventDefault();
           this.detach(e);
         }
       });
-      tab3._tab.addEventListener("tabdragend", (e) => {
+      tabItem.addEventListener("tabdragend", (e) => {
         this.mpos.loadXY(e.x, e.y);
         dockerdebug("tab drag end!", e);
       });
     }
-    tab2 = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
-    dockerdebug("Add Menu Tab", tab2);
-    const icon = this.addicon = tab2._tab;
+    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    dockerdebug("Add Menu Tab", addTab);
+    const icon = this.addicon = addTab._tab;
     icon.ontabclick = (e) => this.on_addclick(e);
     icon.setAttribute("menu-button", "true");
     icon.setAttribute("simple", "true");
@@ -48472,8 +48580,8 @@ var AreaDocker = class _AreaDocker extends Container3 {
   }
   on_addclick(e) {
     const mpos = new Vector2([e.x, e.y]);
-    if (this.addicon.menu && !this.addicon.menu.closed) {
-      this.addicon.menu.close();
+    if (this.addMenu && !this.addMenu.closed) {
+      this.addMenu.close();
     } else {
       this.addTabMenu(e.target, mpos);
     }
@@ -48507,6 +48615,10 @@ var AreaDocker = class _AreaDocker extends Container3 {
       p = p.parentWidget;
     }
     return lastp;
+  }
+  /** Owning ScreenArea, or undefined when this docker is not attached. */
+  getScreenArea() {
+    return this.getArea().parentWidget;
   }
   flagUpdate() {
     this.needsRebuild = true;
@@ -48545,8 +48657,32 @@ var AreaDocker = class _AreaDocker extends Container3 {
       }
       this.ignoreChange--;
     }
-    window.tabs = this.tbar;
     this.ignoreChange = 0;
+  }
+  /** Swap the `switcher` instances between two Area<CTX> objects, also moving
+   *  the DOM nodes. Workaround for a Chrome bug where `touch-action` is not
+   *  respected after we swap host elements at the DOM level. */
+  _swapSwitcherDOM(oldArea, newArea) {
+    const parentw = oldArea.switcher.parentWidget;
+    const newparentw = newArea.switcher.parentWidget;
+    const parent = oldArea.switcher.parentNode;
+    const newparent = newArea.switcher.parentNode;
+    oldArea.switcher = newArea.switcher;
+    newArea.switcher = this;
+    HTMLElement.prototype.remove.call(oldArea.switcher);
+    HTMLElement.prototype.remove.call(newArea.switcher);
+    if (parent instanceof UIBase2) {
+      parent.shadow.appendChild(oldArea.switcher);
+    } else {
+      parent.appendChild(oldArea.switcher);
+    }
+    if (newparent instanceof UIBase2) {
+      newparent.shadow.prepend(newArea.switcher);
+    } else {
+      newparent.prepend(newArea.switcher);
+    }
+    oldArea.switcher.parentWidget = parentw;
+    newArea.switcher.parentWidget = newparentw;
   }
   select(areaId, event) {
     dockerdebug("Tab Select!", areaId);
@@ -48572,26 +48708,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
     sarea.flushSetCSS();
     sarea.flushUpdate();
     newarea = sarea.area;
-    const parentw = area.switcher.parentWidget;
-    const newparentw = newarea.switcher.parentWidget;
-    const parent = area.switcher.parentNode;
-    const newparent = newarea.switcher.parentNode;
-    area.switcher = newarea.switcher;
-    newarea.switcher = this;
-    HTMLElement.prototype.remove.call(area.switcher);
-    HTMLElement.prototype.remove.call(newarea.switcher);
-    if (parent instanceof UIBase2) {
-      parent.shadow.appendChild(area.switcher);
-    } else {
-      parent.appendChild(area.switcher);
-    }
-    if (newparent instanceof UIBase2) {
-      newparent.shadow.prepend(newarea.switcher);
-    } else {
-      newparent.prepend(newarea.switcher);
-    }
-    area.switcher.parentWidget = parentw;
-    newarea.switcher.parentWidget = newparentw;
+    this._swapSwitcherDOM(area, newarea);
     if (area.switcher instanceof _AreaDocker) {
       area.switcher.tbar._ensureNoModal();
       newarea.switcher.tbar._ensureNoModal();
@@ -48603,7 +48720,9 @@ var AreaDocker = class _AreaDocker extends Container3 {
     if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
       event.preventDefault();
       event.stopPropagation();
-      newarea.switcher.tbar._startMove(void 0, event);
+      if (newarea.switcher instanceof _AreaDocker) {
+        newarea.switcher.tbar._startMove(void 0, event);
+      }
     }
     sarea.switcherData = uidata;
     this.ignoreChange--;
@@ -48619,14 +48738,14 @@ var AreaDocker = class _AreaDocker extends Container3 {
     menu.ctx = this.ctx;
     menu._init();
     const prop = makeAreasEnum();
-    const sarea = this.getArea().parentWidget;
+    const sarea = this.getScreenArea();
     if (!sarea) {
       return;
     }
     for (const k in Object.assign({}, prop.values)) {
       let ok = true;
       for (const area of sarea.editors) {
-        if (getAreaConstructor(area).define().uiname === k) {
+        if (getAreaConstructor(area).define().uiname === k && !area.closed) {
           ok = false;
         }
       }
@@ -48643,15 +48762,15 @@ var AreaDocker = class _AreaDocker extends Container3 {
     dockerdebug(mpos[0], mpos[1], rect.x, rect.y);
     menu.on_select = (val) => {
       dockerdebug("menu select", val, this.getArea().parentWidget);
-      this.addicon.menu = void 0;
-      const sarea2 = this.getArea().parentWidget;
+      this.addMenu = void 0;
+      const sarea2 = this.getScreenArea();
       if (sarea2) {
         const cls = areaclasses[val];
         this.ignoreChange++;
         let area;
-        let ud;
+        let uidata;
         try {
-          const uidata = saveUIData(this.tbar, "switcherTabs");
+          uidata = saveUIData(this.tbar, "switcherTabs");
           sarea2.switchEditor(cls);
           dockerdebug("switching", cls);
           area = sarea2.area;
@@ -48677,9 +48796,9 @@ var AreaDocker = class _AreaDocker extends Container3 {
             area.switcher.ctx = area.ctx;
             area.switcher._init();
             area.switcher.update();
-            dockerdebug("loading data", ud);
+            dockerdebug("loading data", uidata);
             if (area.switcher instanceof _AreaDocker) {
-              area.switcher.loadTabData(ud);
+              area.switcher.loadTabData(uidata);
               area.switcher.rebuild();
             }
             area.flushUpdate();
@@ -48689,8 +48808,40 @@ var AreaDocker = class _AreaDocker extends Container3 {
         }
       }
     };
-    this.addicon.menu = menu;
+    this.addMenu = menu;
     startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
+    return menu;
+  }
+  /** Soft-close an editor: hide it from the tab bar but keep its instance and
+   *  UI state alive in `ScreenArea.editors` / `editormap`. If the closed
+   *  editor is the active one, switches to the first remaining non-closed
+   *  editor; if none remains, the tab bar is rebuilt with only the `+` tab. */
+  closeEditor(editor2) {
+    const sarea = this.getScreenArea();
+    if (!sarea) return;
+    if (editor2 === sarea.area) {
+      const other = sarea.editors.find((e) => e !== editor2 && !e.closed);
+      if (other) {
+        sarea.switchEditor(other.constructor);
+      }
+    }
+    editor2.closed = true;
+    this.flagUpdate();
+  }
+  /** Build and show the right-click context menu for a single editor tab.
+   *  Currently exposes a `Close` action; designed to grow other items later. */
+  openTabContextMenu(editor2, event) {
+    const menu = UIBase2.createElement("menu-x");
+    menu.closeOnMouseUp = false;
+    menu.ctx = this.ctx;
+    menu._init();
+    menu.addItemExtra("Close", "close", void 0, Icons.TINY_X);
+    menu.on_select = (val) => {
+      if (val === "close") {
+        this.closeEditor(editor2);
+      }
+    };
+    startMenu(menu, event.x, event.y, false, 0);
     return menu;
   }
 };

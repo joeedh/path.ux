@@ -129,7 +129,7 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
   static define() {
     return {
       tagname: "label-x",
-      style: "label",
+      style  : "label",
     };
   }
 
@@ -346,7 +346,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   saveData() {
     if (this.scrollTop || this.scrollLeft) {
       return {
-        scrollTop: this.scrollTop,
+        scrollTop : this.scrollTop,
         scrollLeft: this.scrollLeft,
       };
     } else {
@@ -969,7 +969,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       check.description = tooltip;
       ret = check;
     } else {
-      label = label === undefined ? (def.uiname ?? def.toolpath!) : label;
+      label = label === undefined ? def.uiname ?? def.toolpath! : label;
 
       ret = this.button(label, cb);
       ret.description = tooltip;
@@ -1252,7 +1252,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
-    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath!)!, true);
+    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath)!, true);
 
     if (rdef?.prop === undefined) {
       const fullpath = this._joinPrefix(inpath);
@@ -1286,6 +1286,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         ret = strip.textbox(inpath) as UIBase<CTX>;
         ret.useDataPathUndo = useDataPathUndo;
 
+        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
         }
@@ -1307,6 +1309,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
       ret.useDataPathUndo = useDataPathUndo;
       ret.packflag |= packflag;
+
+      mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
@@ -1331,7 +1335,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
         check.useDataPathUndo = useDataPathUndo;
 
-        check.description = tooltip === undefined ? prop.ui_value_names[subkey] : tooltip;
+        check.description =
+          tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
         if (check instanceof Check) {
           check.icon = prop.iconmap[rdef.subkey as string];
         }
@@ -1370,6 +1375,12 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         else ret = this.slider(inpath, { packflag: packflag });
 
         ret.packflag |= packflag;
+
+        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+        if (mass_set_path) {
+          ret.setAttribute("mass_set_path", mass_set_path);
+        }
+
         return ret.setUndo(useDataPathUndo);
       } else if ((prop.subtype as number) === PropSubTypes.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
@@ -1393,7 +1404,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         }
 
         this.add(ret as UIBase<CTX>);
-
         return (ret as UIBase<CTX>).setUndo(useDataPathUndo);
       }
     } else if (prop.type === PropTypes.FLAG) {
@@ -1444,7 +1454,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
               name = ToolProperty.makeUIName(k);
             }
 
-            const con2 = i & 1 ? col1 : col2;
+            const con2 = i & 1 ? col2 : col1;
             const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
             if (tooltip) {
@@ -1496,6 +1506,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             }
 
             const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
+            check.setUndo(useDataPathUndo);
 
             if (tooltip) {
               check.description = tooltip;
@@ -1550,7 +1561,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
           if (last_hash !== hash) {
             last_hash = hash;
-            console.error("Property definition update");
             rebuild();
           }
         });
@@ -1559,7 +1569,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       }
     }
 
-    throw new DataPathError(`Unknown property: ${inpath}`);
+    throw new DataPathError(`Unsupported property: ${inpath}`);
   }
 
   iconcheck(

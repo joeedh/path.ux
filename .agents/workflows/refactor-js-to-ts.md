@@ -27,12 +27,12 @@ This workflow defines the steps to systematically refactor typical JS files in t
    - Run type checking:
      // turbo
      ```bash
-     npm run typecheck
+     pnpm run typecheck
      ```
    - Re-format the modified files to pass styling:
      // turbo
      ```bash
-     npm run format
+     pnpm run format
      ```
    - Iteratively check if errors arise from your changes. If there are typecheck errors in the file that was just converted, fix them immediately.
 

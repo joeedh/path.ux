@@ -4,16 +4,19 @@ HTML5 UI library with Blender RNA-style data binding.
 
 ## Build
 
+This project uses **pnpm** as its package manager. Use `pnpm` (and `pnpm run …`)
+rather than `npm`.
+
 ```bash
-npm run build          # Rollup bundle → dist/pathux.js
-npm run typecheck      # tsgo --noEmit
-npm run test           # vitest
-npm run format         # prettier --write
-npm run format:check   # prettier --check
+pnpm run build          # Rollup bundle → dist/pathux.js
+pnpm run typecheck      # tsgo --noEmit
+pnpm run test           # vitest
+pnpm run format         # prettier --write
+pnpm run format:check   # prettier --check
 ```
 
 Use `tsgo` to typecheck instead of `tsc`, e.g.
-`npx tsgo --noEmit`.
+`pnpm exec tsgo --noEmit`.
 
 ## Vector classes
 
@@ -51,7 +54,7 @@ This can create problems with iteration, for example:
  `scripts/simple/` — simple app framework
  `documentation/` — documentation source (markdown)
  `dist/` — built output
- `generated/` — auto-generated data-path catalog (`npm run gen:paths`)
+ `generated/` — auto-generated data-path catalog (`pnpm run gen:paths`)
 
 ## Data API paths
 
@@ -60,7 +63,7 @@ Valid `path` strings for `container.prop("...")`, related widget methods, and
 (human/LLM-readable) and `generated/api-paths.json` (machine-readable), with each
 path's type, UI name, range, unit, and enum items. `generated/datapaths.ts` exports
 a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changing any
-`api_define` with `npm run gen:paths` (walks the app's `defineAPI()`).
+`api_define` with `pnpm run gen:paths` (walks the app's `defineAPI()`).
 
 ## Conventions
 

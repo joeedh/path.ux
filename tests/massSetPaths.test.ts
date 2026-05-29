@@ -1,6 +1,6 @@
 import { DataAPI } from "../scripts/path-controller/controller/controller";
 import * as util from "../scripts/path-controller/util/util";
-import "jest";
+import { test, expect } from "vitest";
 
 test("mass set paths test", () => {
   const rnd = new util.MersenneRandom(0);

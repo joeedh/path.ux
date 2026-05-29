@@ -31,9 +31,9 @@ inside `<prop path="...">` template strings), and **richer runtime errors** with
 
 ## Prerequisites
 
-- Node 18+ and a package manager (`npm`/`pnpm`).
+- Node 18+ and a package manager. This project uses **pnpm**; examples below use `pnpm`.
 - `esbuild` available (used to bundle your API factory headlessly). It is a dependency of
-  path.ux; if you consume path.ux as a library, add it: `npm i -D esbuild`.
+  path.ux; if you consume path.ux as a library, add it: `pnpm add -D esbuild`.
 - ESLint 9 flat config (`eslint.config.js`) if you want the lint rule.
 - TypeScript via `tsgo` (`@typescript/native-preview`) or `tsc` for the typecheck surface.
 
@@ -84,10 +84,10 @@ Run it, pointing at your factory:
 
 ```bash
 # defaults: factory=example/api/api_define.js  export=defineAPI  out=generated
-npm run gen:paths
+pnpm run gen:paths
 
 # your own app:
-npm run gen:paths -- src/api/define_api.ts defineAPI
+pnpm run gen:paths -- src/api/define_api.ts defineAPI
 ```
 
 ### CLI arguments
@@ -216,8 +216,8 @@ A typical ordering — regenerate, then lint and typecheck against fresh artifac
     "gen:paths":  "node node_modules/path.ux/buildtools/gen-datapaths.mjs -- src/api/define_api.ts",
     "lint":       "eslint .",
     "typecheck":  "tsgo --noEmit",
-    "prebuild":   "npm run gen:paths",
-    "ci":         "npm run gen:paths && npm run lint && npm run typecheck && npm run build"
+    "prebuild":   "pnpm run gen:paths",
+    "ci":         "pnpm run gen:paths && pnpm run lint && pnpm run typecheck && pnpm run build"
   }
 }
 ```
@@ -225,10 +225,10 @@ A typical ordering — regenerate, then lint and typecheck against fresh artifac
 In a shell-based pipeline:
 
 ```bash
-npm run gen:paths -- src/api/define_api.ts || exit 1
-npm run lint      || exit 1
-npm run typecheck || exit 1
-npm run build
+pnpm run gen:paths -- src/api/define_api.ts || exit 1
+pnpm run lint      || exit 1
+pnpm run typecheck || exit 1
+pnpm run build
 ```
 
 > If your release script auto-commits/pushes, decide deliberately whether to run
@@ -247,14 +247,14 @@ authoring `prop()` calls:
 
 Valid `path` strings for `container.prop("...")` and `<prop path="...">` are catalogued in
 `generated/API_PATHS.md` (human/LLM-readable) and `generated/api-paths.json` (machine).
-Regenerate after changing any `api_define` with `npm run gen:paths`.
+Regenerate after changing any `api_define` with `pnpm run gen:paths`.
 ```
 
 ---
 
 ## Verifying the setup
 
-1. `npm run gen:paths` writes a non-empty `generated/api-paths.json` covering known paths.
+1. `pnpm run gen:paths` writes a non-empty `generated/api-paths.json` covering known paths.
 2. Introduce a deliberate typo, e.g. `container.prop("workspace.brush.sized")`:
    - `eslint` flags it with a "did you mean…?" hint.
    - With the augmentation included, a wrong *type* (`prop(123)`) is a `tsgo` error.

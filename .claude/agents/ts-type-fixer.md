@@ -33,7 +33,7 @@ You are an expert TypeScript type system engineer with deep knowledge of advance
    - `unknown` over `any`, narrowed with type guards
    - Existing project types (check `scripts/path-controller/` submodule for math, data binding, and tool system types)
 
-4. **Verify fixes**: After making changes, run `npm run typecheck` to confirm errors are resolved without introducing new ones.
+4. **Verify fixes**: After making changes, run `pnpm run typecheck` to confirm errors are resolved without introducing new ones.
 
 ## Project-Specific Patterns
 
@@ -48,7 +48,7 @@ You are an expert TypeScript type system engineer with deep knowledge of advance
 - After fixing types, ask: Could this be inferred? If yes, remove the annotation.
 - After fixing types, ask: Did I introduce `any`? If yes, replace it.
 - After fixing types, ask: Does the generic parameter chain from child to parent correctly?
-- After fixing types, run `npm run typecheck` to verify.
+- After fixing types, run `pnpm run typecheck` to verify.
 
 ## Update your agent memory
 
