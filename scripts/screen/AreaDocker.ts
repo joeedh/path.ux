@@ -140,6 +140,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     }
 
     const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    addTab._tab.overrideDefault('iconPaddingRight', 8);
 
     dockerdebug("Add Menu Tab", addTab);
 
@@ -182,6 +183,9 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
   on_addclick(e: PointerEvent) {
     const mpos = new Vector2([e.x, e.y]);
+
+    // prevent tab move modal p
+    e.preventDefault()
 
     if (this.addMenu && !this.addMenu.closed) {
       this.addMenu.close();
@@ -383,7 +387,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
   }
 
   addTabMenu(tab: TabItem<CTX>, mpos: number[] | Vector2) {
-    const rect = tab.getClientRects()[0];
+    const rect = tab.getBoundingClientRect();
 
     dockerdebug(tab, tab.getClientRects());
 
@@ -395,6 +399,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
+    menu.srcWidget = tab
     menu._init();
 
     const prop = makeAreasEnum();

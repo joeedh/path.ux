@@ -1114,7 +1114,7 @@ var init_mobile_detect = __esm({
   }
 });
 
-// node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js
+// node_modules/.pnpm/nstructjs@0.8.5/node_modules/nstructjs/build/nstructjs_es6.js
 function tab(n, chr = " ") {
   let t = "";
   for (let i = 0; i < n; i++) {
@@ -2348,8 +2348,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "node_modules/.pnpm/nstructjs@0.8.4/node_modules/nstructjs/build/nstructjs_es6.js"() {
-    "use strict";
+  "node_modules/.pnpm/nstructjs@0.8.5/node_modules/nstructjs/build/nstructjs_es6.js"() {
     colormap = {
       "black": 30,
       "red": 31,
@@ -2372,7 +2371,6 @@ var init_nstructjs_es6 = __esm({
       termColorMap[k] = colormap[k];
       termColorMap[colormap[k]] = k;
     }
-    "use strict";
     token = class {
       constructor(type, val, lexpos, lineno, lex, p, col) {
         this.type = type;
@@ -2394,6 +2392,7 @@ var init_nstructjs_es6 = __esm({
       constructor(name2, regexpr, func, example) {
         this.name = name2;
         this.re = regexpr;
+        this.reSticky = regexpr ? new RegExp(regexpr.source, regexpr.flags.replace(/[gy]/g, "") + "y") : void 0;
         this.func = func;
         this.example = example;
         if (example === void 0 && regexpr) {
@@ -2528,24 +2527,20 @@ var init_nstructjs_es6 = __esm({
           return void 0;
         const ts = this.tokdef;
         const tlen = ts.length;
-        const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
-        const results = [];
-        for (let i = 0; i < tlen; i++) {
-          const t = ts[i];
-          if (t.re === void 0)
-            continue;
-          const res = t.re.exec(lexdata);
-          if (res !== null && res !== void 0 && res.index === 0) {
-            results.push([t, res]);
-          }
-        }
+        const lexpos = this.lexpos;
+        const lexdata = this.lexdata;
         let max_res = 0;
         let theres = void 0;
-        for (let i = 0; i < results.length; i++) {
-          const res = results[i];
-          if (res[1][0].length > max_res) {
-            theres = res;
-            max_res = res[1][0].length;
+        for (let i = 0; i < tlen; i++) {
+          const t = ts[i];
+          const re = t.reSticky;
+          if (re === void 0)
+            continue;
+          re.lastIndex = lexpos;
+          const res = re.exec(lexdata);
+          if (res !== null && res[0].length > max_res) {
+            theres = [t, res[0]];
+            max_res = res[0].length;
           }
         }
         if (theres === void 0) {
@@ -2557,7 +2552,7 @@ var init_nstructjs_es6 = __esm({
         if (this.lexpos < this.lexdata.length) {
           this.lineno = this.linemap[this.lexpos];
         }
-        let tok = new token(def.name, theres[1][0], this.lexpos, this.lineno, this, void 0, col);
+        let tok = new token(def.name, theres[1], this.lexpos, this.lineno, this, void 0, col);
         this.lexpos += tok.value.length;
         if (def.func) {
           tok = def.func(tok);
@@ -2688,7 +2683,6 @@ var init_nstructjs_es6 = __esm({
       SIGNED_BYTE: 20,
       OPTIONAL: 21
     };
-    "use strict";
     NStruct = class {
       constructor(name2) {
         this.fields = [];
@@ -2753,7 +2747,6 @@ var init_nstructjs_es6 = __esm({
     struct_typesystem = /* @__PURE__ */ Object.freeze({
       __proto__: null
     });
-    "use strict";
     STRUCT_ENDIAN = true;
     temp_dataview = new DataView(new ArrayBuffer(16));
     uint8_view = new Uint8Array(temp_dataview.buffer);
@@ -3076,6 +3069,16 @@ var init_nstructjs_es6 = __esm({
         let cls = manager3.get_struct_cls(type.data);
         let stt = manager3.get_struct(type.data);
         const keywords = manager3.constructor.keywords;
+        if (manager3.onSerializeUnknown) {
+          const overrideName = manager3.onSerializeUnknown(val);
+          if (overrideName !== void 0) {
+            const ostt = manager3.get_struct(overrideName);
+            packer_debug$1("int " + ostt.id);
+            pack_int(data, ostt.id);
+            manager3.write_struct(data, val, ostt);
+            return;
+          }
+        }
         const valObj = val;
         const valCtor = valObj.constructor;
         if (valCtor.structName !== type.data && val instanceof cls) {
@@ -3154,7 +3157,11 @@ var init_nstructjs_es6 = __esm({
         let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
-        return manager3.read_object(data, cls3, uctx, dest);
+        const instance = manager3.read_object(data, cls3 ?? id, uctx, dest);
+        if (cls3 === void 0 && instance && typeof instance === "object") {
+          instance._origClsname = cls2.name;
+        }
+        return instance;
       }
       static unpack(manager3, data, type, uctx) {
         let id = unpack_int(data, uctx);
@@ -3169,7 +3176,11 @@ var init_nstructjs_es6 = __esm({
         let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
-        return manager3.read_object(data, cls3, uctx);
+        const instance = manager3.read_object(data, cls3 ?? id, uctx);
+        if (cls3 === void 0 && instance && typeof instance === "object") {
+          instance._origClsname = cls2.name;
+        }
+        return instance;
       }
       static define() {
         return {
@@ -3791,7 +3802,6 @@ var init_nstructjs_es6 = __esm({
       StructFieldType,
       formatArrayJson
     });
-    "use strict";
     structEval = eval;
     _struct_eval = /* @__PURE__ */ Object.freeze({
       __proto__: null,
@@ -3800,10 +3810,8 @@ var init_nstructjs_es6 = __esm({
       },
       setStructEval
     });
-    "use strict";
     TokSymbol = /* @__PURE__ */ Symbol("token-info");
     _defaultParser = buildJSONParser();
-    "use strict";
     nGlobal = globalThis;
     if (typeof globalThis !== "undefined") {
       nGlobal = globalThis;
@@ -3815,7 +3823,6 @@ var init_nstructjs_es6 = __esm({
       nGlobal = self;
     }
     DEBUG = {};
-    "use strict";
     sintern2 = _sintern2;
     struct_eval = _struct_eval;
     warninglvl = 2;
@@ -4437,15 +4444,24 @@ var init_nstructjs_es6 = __esm({
         if (data instanceof Array) {
           data = new DataView(new Uint8Array(data).buffer);
         }
+        let unknownClassSchema;
         if (typeof cls_or_struct_id === "number") {
-          cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
+          const fileSchema = this.struct_ids[cls_or_struct_id];
+          cls = this.struct_cls[fileSchema.name];
+          if (cls === void 0 && this.onUnknownClass) {
+            const hookResult = this.onUnknownClass(fileSchema.name, fileSchema);
+            if (hookResult !== void 0) {
+              cls = hookResult;
+              unknownClassSchema = fileSchema;
+            }
+          }
         } else {
           cls = cls_or_struct_id;
         }
         if (cls === void 0) {
           throw new Error("bad cls_or_struct_id " + cls_or_struct_id);
         }
-        stt = this.structs[cls.structName];
+        stt = unknownClassSchema ?? this.structs[cls.structName];
         if (uctx === void 0) {
           uctx = new unpack_context();
           packer_debug("\n\n=Begin reading " + cls.structName + "=");
@@ -4735,7 +4751,6 @@ var init_nstructjs_es6 = __esm({
     };
     STRUCT.setClassKeyword("STRUCT");
     manager = new STRUCT();
-    "use strict";
     if (typeof btoa === "undefined") {
       nbtoa = function(str) {
         const buffer = Buffer.from("" + str, "binary");
@@ -30941,6 +30956,8 @@ var init_ui_menu = __esm({
     SEP = /* @__PURE__ */ Symbol("MenuSep");
     Menu = class _Menu extends UIBase2 {
       static SEP;
+      /** The src button that created this menu, used to switch menus when hovering over other buttons. */
+      srcWidget;
       parentMenu;
       _was_clicked;
       items;
@@ -31313,6 +31330,7 @@ var init_ui_menu = __esm({
           li._isMenu = true;
           li._menu = item;
           item.parentMenu = this;
+          item.srcWidget = this.srcWidget;
           item.hidden = false;
           item.container = this.container;
         } else {
@@ -31810,6 +31828,7 @@ var init_ui_menu = __esm({
           return;
         }
         builtMenu.autoSearchMode = false;
+        builtMenu.srcWidget = this;
         builtMenu._dropbox = this;
         this.dom._background = this.getDefault("BoxDepressed");
         this._background = this.getDefault("BoxDepressed");
@@ -32175,7 +32194,7 @@ var init_ui_menu = __esm({
         }
         const elem = element;
         let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
-        destroy = destroy && elem.menu !== this.menu;
+        destroy = destroy && this.menu.srcWidget !== elem;
         if (destroy) {
           let menu2 = this.menu;
           while (menu2 !== elem.menu) {
@@ -42456,12 +42475,13 @@ var TabBar = class extends UIBase2 {
         g.translate(x3 - tsize, -y3 - tsize * 0.5);
       }
       if (tab2.icon !== void 0) {
+        let paddingRight = tab2.getDefault("iconPaddingRight", void 0, 2);
         iconmanager.canvasDraw(
           this,
           this.canvas,
           g,
           tab2.icon,
-          x,
+          x + paddingRight,
           y,
           this.iconsheet
         );
@@ -48551,6 +48571,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
       });
     }
     const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    addTab._tab.overrideDefault("iconPaddingRight", 8);
     dockerdebug("Add Menu Tab", addTab);
     const icon = this.addicon = addTab._tab;
     icon.ontabclick = (e) => this.on_addclick(e);
@@ -48580,6 +48601,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
   }
   on_addclick(e) {
     const mpos = new Vector2([e.x, e.y]);
+    e.preventDefault();
     if (this.addMenu && !this.addMenu.closed) {
       this.addMenu.close();
     } else {
@@ -48728,7 +48750,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
     this.ignoreChange--;
   }
   addTabMenu(tab2, mpos) {
-    const rect = tab2.getClientRects()[0];
+    const rect = tab2.getBoundingClientRect();
     dockerdebug(tab2, tab2.getClientRects());
     if (!mpos) {
       mpos = this.ctx.screen.mpos;
@@ -48736,6 +48758,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
     const menu = UIBase2.createElement("menu-x");
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
+    menu.srcWidget = tab2;
     menu._init();
     const prop = makeAreasEnum();
     const sarea = this.getScreenArea();

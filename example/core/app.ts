@@ -23,7 +23,7 @@ import {
 import { ModelData } from "./state.js";
 import { defineAPI } from "../api/api_define.js";
 import { ToolContext, ViewContext } from "./context.js";
-
+import '../draw/draw_ops';
 import { DataLib, DataRef, DataBlock } from "./datablock.js";
 import { theme } from "../theme.js";
 

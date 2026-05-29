@@ -1397,12 +1397,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       }
 
       if (tab.icon !== undefined) {
+        let paddingRight = tab.getDefault("iconPaddingRight", undefined, 2) as number;
+        
         iconmanager.canvasDraw(
           this as unknown as UIBase,
           this.canvas,
           g,
           tab.icon,
-          x,
+          x + paddingRight,
           y,
           this.iconsheet
         );
