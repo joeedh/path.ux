@@ -39,7 +39,7 @@ function api_define_canvas(api: DataAPI) {
   };
 
   st.flags("drawflag", "drawflag", DrawFlags).on("change", onchange);
-  st.list("paths", "paths", [
+  st.list<ElementArray<CanvasPath>, number, CanvasPath>("paths", "paths", [
     function getStruct(api: DataAPI, list: ElementArray<CanvasPath>, key: number) {
       return pathst;
     },
@@ -49,8 +49,10 @@ function api_define_canvas(api: DataAPI) {
     function getActive(api: DataAPI, list: ElementArray<CanvasPath>) {
       return list.active;
     },
-    function setActive(api: DataAPI, list: ElementArray<CanvasPath>, key: number) {
-      list.active = list[key];
+    function setActive(api: DataAPI, list: ElementArray<CanvasPath>, val: CanvasPath) {
+      // ListIFace.setActive receives the value (symmetric with getActive),
+      // not a key.
+      list.active = val;
     },
     function get(api: DataAPI, list: ElementArray<CanvasPath>, key: number) {
       return list[key];
@@ -85,7 +87,7 @@ function api_define_brushsettings(api: DataAPI) {
     .range(0.01, 2)
     .decimalPlaces(2)
     .noUnits()
-    .sliderDisplayExp(1.0/3.0)
+    .sliderDisplayExp(1.0 / 3.0)
     .expRate(1.4)
     .step(0.025)
     .simpleSlider();
@@ -126,8 +128,16 @@ export function defineAPI() {
   const dstruct = cstruct.struct("data", "data", "Data");
   dstruct.curve1d("curvemap", "curvemap", "curvemap");
 
-  dstruct.float("angle1", "angle1", "angle1").baseUnit("radian").displayUnit("degree").range(-Math.PI, Math.PI);
-  dstruct.float("angle2", "angle2", "angle2").baseUnit("degree").displayUnit("radian").range(-180, 180);
+  dstruct
+    .float("angle1", "angle1", "angle1")
+    .baseUnit("radian")
+    .displayUnit("degree")
+    .range(-Math.PI, Math.PI);
+  dstruct
+    .float("angle2", "angle2", "angle2")
+    .baseUnit("degree")
+    .displayUnit("radian")
+    .range(-180, 180);
   dstruct.bool("boolval", "boolval", "Bool");
   dstruct.color4("color", "color", "Color");
 

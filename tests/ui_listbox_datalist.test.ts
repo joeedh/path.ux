@@ -213,3 +213,45 @@ test("fallback: list without getActive/setActive/getVersion", () => {
   expect(rebuilds).toBe(1);
   expect(box.items.length).toBe(4);
 });
+
+test("rebuilds when the datapath resolves to a different list object", () => {
+  const fx = buildFixture(true);
+  const box = makeBox(fx.ctx);
+  box.updateDataPath();
+  expect(box.items.length).toBe(3);
+
+  // Swap to a different array instance WITHOUT bumping the version counter, so
+  // the version/key fast-path matches and only the list-ref check can catch it.
+  fx.ctx.items = [new Item(100, "x"), new Item(101, "y")];
+  box.updateDataPath();
+
+  expect(box.items.length).toBe(2);
+});
+
+test("clears items when the bound list ceases to exist", () => {
+  const fx = buildFixture(true);
+  const box = makeBox(fx.ctx);
+  box.updateDataPath();
+  expect(box.items.length).toBe(3);
+
+  fx.ctx.items = undefined;
+  box.updateDataPath();
+  expect(box.items.length).toBe(0);
+});
+
+test("repopulates when a vanished list reappears as the same object", () => {
+  const fx = buildFixture(true);
+  const box = makeBox(fx.ctx);
+  box.updateDataPath();
+  expect(box.items.length).toBe(3);
+
+  const saved = fx.ctx.items;
+  fx.ctx.items = undefined;
+  box.updateDataPath();
+  expect(box.items.length).toBe(0);
+
+  // Same array object reappears with an unchanged version; must still rebuild.
+  fx.ctx.items = saved;
+  box.updateDataPath();
+  expect(box.items.length).toBe(3);
+});

@@ -123,6 +123,8 @@ export class ListBox<
   items: ListItems<CTX, IDTYPE>;
   idmap: Map<IDTYPE, ListItem<CTX, IDTYPE>>;
 
+  lastListRef?: WeakRef<any>;
+
   private _active: ListItem<CTX, IDTYPE> | undefined = undefined;
   private _idgen = 0;
 
@@ -477,6 +479,20 @@ export class ListBox<
 
   updateDataPath() {
     const resolved = this._resolveList();
+    // detect if list bound at datapath doesn't exist
+    if (this.hasAttribute("datapath") && resolved?.list === undefined) {
+      if (this.items.length > 0) {
+        this.clear();
+      }
+      // Reset change-detection state so that if the list reappears (even as the
+      // same object with an unchanged version) it repopulates instead of being
+      // short-circuited by the ref/key check below.
+      this._listKey = undefined;
+      this.lastListRef = undefined;
+      return;
+    }
+
+    // invalid data path
     if (resolved === undefined || this._dataList === undefined) {
       return;
     }
@@ -488,10 +504,12 @@ export class ListBox<
     const ver = dataList.getVersion(api, list);
     const key = ver !== undefined ? "v" + ver : this._computeKeyDiff(api, list);
 
-    if (key === this._listKey) {
+    // make sure list reference hasn't changed
+    if (this.lastListRef?.deref() === list && key === this._listKey) {
       this._syncActiveOnly(api, list);
       return;
     }
+    this.lastListRef = new WeakRef(list as WeakKey);
 
     // structural change: rebuild
     this.clear();

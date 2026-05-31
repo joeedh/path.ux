@@ -33,6 +33,13 @@
   <tab label="Curve Mapping" data-testid="tab-curve-mapping">
     <prop path="data.curvemap" />
   </tab>
+  <tab label="ListBox" data-testid="tab-listbox">
+    <label>Canvas paths (DataList-backed listbox):</label>
+    <listbox path="canvas.paths" id="path_listbox" height="220" resize-axes="xy" />
+    <panel label="Active Path" path="canvas.paths.active">
+      <colorfield path="material.color" />
+    </panel>
+  </tab>
   <tab label="Last Command" data-testid="tab-last-command">
     <last-tool-panel-x />
   </tab>

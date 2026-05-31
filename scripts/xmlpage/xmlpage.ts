@@ -880,6 +880,28 @@ class Handler {
     }
   }
 
+  listbox(elem: Element) {
+    const packflag = getPackFlag(elem);
+    const path = elem.getAttribute("path") ?? undefined;
+
+    const ret = this.container.listbox(path ?? undefined, packflag);
+
+    // ListBox reads `resize-axes` in init(); pass it (and resizable) through.
+    if (elem.hasAttribute("resize-axes")) {
+      (ret as unknown as Element).setAttribute(
+        "resize-axes",
+        elem.getAttribute("resize-axes") ?? ""
+      );
+    }
+    if (elem.hasAttribute("resizable")) {
+      (ret as unknown as { resizable: boolean }).resizable = getbool(elem, "resizable");
+    }
+
+    this._basic(elem, ret as unknown as Element);
+
+    return ret;
+  }
+
   dropbox(elem: Element) {
     return this.menu(elem, true);
   }

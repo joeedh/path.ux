@@ -19,6 +19,7 @@ import {
   Container,
   TabContainer,
   RowFrame,
+  ListBox,
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
@@ -93,6 +94,12 @@ export class PropsEditor extends Editor {
 
         const graphtab = container.getElementById("graph_pack_tab") as Container;
         this.buildGraphPack(graphtab);
+
+        // CanvasPath has no name field; label list entries by id for the demo.
+        const pathListbox = container.getElementById("path_listbox") as ListBox | null;
+        if (pathListbox) {
+          pathListbox.itemNames((obj) => "Path " + (obj as { id: number }).id);
+        }
 
         const con = container.getElementById("eventdag_test") as Container;
         con.dataPrefix = "";
@@ -518,10 +525,10 @@ col.prop(path, undefined, massSetPath);</pre>
 
   static define() {
     return {
-      tagname: "props-editor-x",
+      tagname : "props-editor-x",
       areaname: "props",
-      uiname: "Properties",
-      icon: -1,
+      uiname  : "Properties",
+      icon    : -1,
     };
   }
 }
