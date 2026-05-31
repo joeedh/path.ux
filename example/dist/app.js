@@ -14446,6 +14446,9 @@ var init_controller_base = __esm({
         this._check("getKey");
         return this.cb.getKey(api, list5, value);
       }
+      getVersion(api, list5) {
+        return this.cb.getVersion !== void 0 ? this.cb.getVersion(api, list5) : void 0;
+      }
       getStruct(api, list5, key) {
         if (this.cb.getStruct !== void 0) {
           return this.cb.getStruct(api, list5, key);
@@ -25888,7 +25891,9 @@ var init_theme = __esm({
       },
       listbox: {
         ListActive: "rgba(200, 205, 215, 1.0)",
+        ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
         ListHighlight: "rgba(155, 220, 255, 0.5)",
+        ItemHeight: 24,
         height: 200,
         width: 110
       },
@@ -64548,10 +64553,13 @@ var Container3 = class _Container extends UIBase2 {
     ret.ctx = this.ctx;
     return ret;
   }
-  listbox(packflag = 0) {
+  listbox(path, packflag = 0) {
     const ret = UIBase2.createElement("listbox-x");
     this._container_inherit(ret, packflag);
     this._add(ret);
+    if (path !== void 0) {
+      ret.setAttribute("datapath", this._joinPrefix(path));
+    }
     return ret;
   }
   table(packflag = 0) {
@@ -66996,6 +67004,22 @@ var Handler = class {
       this.container.inherit_packflag |= iconflags;
       this.container.packflag |= iconflags;
     }
+  }
+  listbox(elem) {
+    const packflag = getPackFlag(elem);
+    const path = elem.getAttribute("path") ?? void 0;
+    const ret = this.container.listbox(path ?? void 0, packflag);
+    if (elem.hasAttribute("resize-axes")) {
+      ret.setAttribute(
+        "resize-axes",
+        elem.getAttribute("resize-axes") ?? ""
+      );
+    }
+    if (elem.hasAttribute("resizable")) {
+      ret.resizable = getbool(elem, "resizable");
+    }
+    this._basic(elem, ret);
+    return ret;
   }
   dropbox(elem) {
     return this.menu(elem, true);
@@ -71658,7 +71682,11 @@ UIBase2.internalRegister(TabContainer3);
 
 // scripts/widgets/ui_listbox.ts
 init_ui_base();
+init_ui_theme();
 init_events();
+init_controller_base();
+init_toolsys();
+init_toolprop();
 var ListItem = class extends RowFrame {
   highlight = false;
   is_active = false;
@@ -71672,11 +71700,8 @@ var ListItem = class extends RowFrame {
       this.highlight = false;
       this.setBackground();
     };
-    this.addEventListener("mouseover", highlight);
-    this.addEventListener("mousein", highlight);
-    this.addEventListener("mouseleave", unhighlight);
-    this.addEventListener("mouseout", unhighlight);
-    this.addEventListener("blur", unhighlight);
+    this.addEventListener("pointerenter", highlight);
+    this.addEventListener("pointerleave", unhighlight);
     const style = document.createElement("style");
     style.textContent = `
       .listitem {
@@ -71718,19 +71743,61 @@ var ListItem = class extends RowFrame {
   }
 };
 UIBase2.internalRegister(ListItem);
+var ListBoxChangeEvent = class extends Event {
+  selection;
+  constructor(selection) {
+    super("change");
+    this.selection = selection;
+  }
+};
 var ListBox2 = class extends Container3 {
   items;
   idmap;
-  highlight;
-  is_active;
+  lastListRef;
+  _active = void 0;
+  _idgen = 0;
+  /** Whether the corner resize grip is shown. */
+  resizable = true;
+  /** Minimum/maximum drag-resize bounds (px). */
+  minWidth = 60;
+  maxWidth = Infinity;
+  minHeight = 24;
+  maxHeight = Infinity;
+  _resizeAxes = "y";
+  _userSized = false;
+  _grip;
+  /**
+   * Optional label provider for data-path-backed lists. If unset the widget
+   * uses the element's `.name` (when a string) and otherwise the key.
+   */
+  getItemName;
+  /**
+   * When true (and the bound list exposes `setActive`), user selection is
+   * written back through an undoable tool op instead of a direct call.
+   * Requires `ctx.toolstack`; falls back to the direct call when absent.
+   */
+  useActiveUndo = false;
+  // data-path binding state (manual mode leaves all of these untouched)
+  _last_datapath;
+  _dataList;
+  _listKey;
+  _dataMode = false;
+  _syncingFromData = false;
+  /**
+   * @deprecated Listen for the `"change"` DOM event instead, e.g.
+   * `listbox.addEventListener("change", e => { const {id, item} = e.selection; })`.
+   */
   on_change;
   constructor() {
     super();
     this.items = [];
-    this.idmap = {};
-    this.items.active = void 0;
-    this.highlight = false;
-    this.is_active = false;
+    this.idmap = /* @__PURE__ */ new Map();
+    Object.defineProperty(this.items, "active", {
+      get: () => this._active,
+      set: (v) => this._active = v,
+      enumerable: false,
+      configurable: true
+    });
     const style = document.createElement("style");
     style.textContent = `
       .listbox {
@@ -71743,17 +71810,20 @@ var ListBox2 = class extends Container3 {
     this.onkeydown = (e) => {
       switch (e.keyCode) {
         case keymap["Up"]:
-        case keymap["Down"]:
+        case keymap["Down"]: {
           if (this.items.length == 0) return;
-          if (this.items.active === void 0) {
+          if (this._active === void 0) {
             this.setActive(this.items[0]);
             return;
           }
-          let i2 = this.items.indexOf(this.items.active);
+          let i2 = this.items.indexOf(this._active);
           const dir = e.keyCode == keymap["Up"] ? -1 : 1;
           i2 = Math.max(Math.min(i2 + dir, this.items.length - 1), 0);
           this.setActive(this.items[i2]);
+          e.preventDefault();
+          e.stopPropagation();
           break;
+        }
       }
     };
   }
@@ -71763,66 +71833,410 @@ var ListBox2 = class extends Container3 {
       style: "listbox"
     };
   }
+  /** The currently-active list entry, or `undefined`. */
+  get active() {
+    return this._active;
+  }
+  /** The id of the currently-active entry, or `undefined`. */
+  get activeId() {
+    return this._active?.listId;
+  }
+  /** Fluent setter for {@link getItemName} (data-path-backed mode). */
+  itemNames(cb) {
+    this.getItemName = cb;
+    return this;
+  }
+  /**
+   * Axes the box may be resized along via its corner grip. Defaults to `"y"`
+   * (vertical only); set to `"x"` or `"xy"` to allow horizontal resizing.
+   */
+  get resizeAxes() {
+    return this._resizeAxes;
+  }
+  set resizeAxes(v) {
+    this._resizeAxes = v;
+    this.setAttribute("resize-axes", v);
+    this._updateGrip();
+  }
+  _ensureGrip() {
+    if (this._grip) {
+      this._updateGrip();
+      return;
+    }
+    const grip = document.createElement("div");
+    const s = grip.style;
+    s.position = "absolute";
+    s.right = "0px";
+    s.bottom = "0px";
+    s.width = "0px";
+    s.height = "0px";
+    s.borderStyle = "solid";
+    s.zIndex = "5";
+    grip.addEventListener("pointerdown", (e) => this._startResize(e));
+    this._grip = grip;
+    this.shadow.appendChild(grip);
+    this.addEventListener("scroll", () => this._positionGrip());
+    this._updateGrip();
+    this._positionGrip();
+  }
+  _updateGrip() {
+    const grip = this._grip;
+    if (!grip) {
+      return;
+    }
+    grip.style.display = this.resizable ? "block" : "none";
+    const sz = 12;
+    grip.style.borderWidth = `0 0 ${sz}px ${sz}px`;
+    grip.style.borderColor = "transparent transparent rgba(120, 120, 120, 0.7) transparent";
+    const axes = this._resizeAxes;
+    grip.style.cursor = axes === "xy" ? "nwse-resize" : axes === "x" ? "ew-resize" : "ns-resize";
+  }
+  /**
+   * Keep the grip pinned to the visible bottom-right corner of the scroll
+   * viewport by undoing the current scroll offset (it lives inside the
+   * scrolling host, so it would otherwise scroll out of view).
+   */
+  _positionGrip() {
+    if (!this._grip) {
+      return;
+    }
+    this._grip.style.transform = `translate(${this.scrollLeft}px, ${this.scrollTop}px)`;
+  }
+  _startResize(e) {
+    if (!this.resizable) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.x;
+    const startY = e.y;
+    const startW = parsepx2(this.style.width) || this.getDefault("width");
+    const startH = parsepx2(this.style.height) || this.getDefault("height");
+    const axes = this._resizeAxes;
+    const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+    this.pushModal({
+      on_pointermove: (ev) => {
+        if (axes.includes("x")) {
+          this.style.width = clamp(startW + (ev.x - startX), this.minWidth, this.maxWidth) + "px";
+        }
+        if (axes.includes("y")) {
+          this.style.height = clamp(startH + (ev.y - startY), this.minHeight, this.maxHeight) + "px";
+        }
+        this._userSized = true;
+        this._positionGrip();
+      },
+      on_pointerup: () => this._endResize(),
+      on_pointercancel: () => this._endResize(),
+      on_keydown: (ev) => {
+        if (ev.keyCode === keymap["Escape"]) {
+          if (axes.includes("x")) this.style.width = startW + "px";
+          if (axes.includes("y")) this.style.height = startH + "px";
+          this.popModal();
+        }
+      }
+    });
+  }
+  _endResize() {
+    this.popModal();
+    this.overrideDefault("width", parsepx2(this.style.width));
+    this.overrideDefault("height", parsepx2(this.style.height));
+  }
+  addEventListener(type, listener, options) {
+    super.addEventListener(type, listener, options);
+  }
   setCSS() {
     super.setCSS();
   }
   init() {
     super.init();
     this.setCSS();
-    this.style.width = this.getDefault("width") + "px";
-    this.style.height = this.getDefault("height") + "px";
+    this.tabIndex = 1;
+    this.setAttribute("tabindex", "1");
+    this.minHeight = 2 * this.getDefault("ItemHeight");
+    if (!this._userSized) {
+      this.style.width = this.getDefault("width") + "px";
+      this.style.height = this.getDefault("height") + "px";
+    }
     this.style.overflow = "scroll";
+    this.style.position = "relative";
+    if (this.hasAttribute("resize-axes")) {
+      this._resizeAxes = this.getAttribute("resize-axes");
+    }
+    this._ensureGrip();
+  }
+  saveData() {
+    const data = { ...super.saveData() };
+    if (this._userSized) {
+      data.width = parsepx2(this.style.width);
+      data.height = parsepx2(this.style.height);
+      data._userSized = true;
+    }
+    return data;
+  }
+  loadData(obj) {
+    super.loadData(obj);
+    if (obj && obj._userSized) {
+      this._userSized = true;
+      if (typeof obj.width === "number") {
+        this.style.width = obj.width + "px";
+        this.overrideDefault("width", obj.width);
+      }
+      if (typeof obj.height === "number") {
+        this.style.height = obj.height + "px";
+        this.overrideDefault("height", obj.height);
+      }
+    }
+    return this;
+  }
+  update() {
+    super.update();
+    const path = this.getAttribute("datapath") ?? void 0;
+    if (path !== this._last_datapath) {
+      this._last_datapath = path;
+      this._dataMode = path !== void 0;
+      this._dataList = void 0;
+      this._listKey = void 0;
+    }
+    if (this._dataMode) {
+      this.updateDataPath();
+    }
+  }
+  /** Resolve the bound DataList prop + the raw list object, or undefined. */
+  _resolveList() {
+    if (!this.ctx) {
+      return void 0;
+    }
+    const path = this.getAttribute("datapath");
+    if (!path) {
+      return void 0;
+    }
+    try {
+      const prop = this.getPathMeta(this.ctx, path);
+      if (!(prop instanceof DataList)) {
+        this._dataList = void 0;
+        return void 0;
+      }
+      this._dataList = prop;
+      return { list: this.ctx.api.getValue(this.ctx, path) };
+    } catch (error3) {
+      console.warn("ListBox: failed to resolve datapath", path, error3);
+      this._dataList = void 0;
+      return void 0;
+    }
+  }
+  updateDataPath() {
+    const resolved = this._resolveList();
+    if (this.hasAttribute("datapath") && resolved?.list === void 0) {
+      if (this.items.length > 0) {
+        this.clear();
+      }
+      return;
+    }
+    if (resolved === void 0 || this._dataList === void 0) {
+      return;
+    }
+    const api = this.ctx.api;
+    const { list: list5 } = resolved;
+    const dataList = this._dataList;
+    const ver = dataList.getVersion(api, list5);
+    const key = ver !== void 0 ? "v" + ver : this._computeKeyDiff(api, list5);
+    if (this.lastListRef?.deref() === list5 && key === this._listKey) {
+      this._syncActiveOnly(api, list5);
+      return;
+    }
+    this.lastListRef = new WeakRef(list5);
+    this.clear();
+    for (const obj of dataList.getIter(api, list5)) {
+      const id = dataList.getKey(api, list5, obj);
+      this.addItem(this._labelFor(obj, id), id);
+    }
+    this._listKey = key;
+    this._syncActiveOnly(api, list5);
+  }
+  _labelFor(obj, key) {
+    if (this.getItemName) {
+      return this.getItemName(obj, key);
+    }
+    const name2 = obj?.name;
+    return typeof name2 === "string" ? name2 : String(key);
+  }
+  _computeKeyDiff(api, list5) {
+    if (this._dataList === void 0) {
+      return "";
+    }
+    const keys2 = [];
+    for (const obj of this._dataList.getIter(api, list5)) {
+      keys2.push(this._dataList.getKey(api, list5, obj));
+    }
+    return keys2.length + "|" + keys2.join(",");
+  }
+  /** Reflect the data list's active element into the widget (no write-back). */
+  _syncActiveOnly(api, list5) {
+    const dataList = this._dataList;
+    if (dataList === void 0 || dataList.cb.getActive === void 0) {
+      return;
+    }
+    const active = dataList.getActive(api, list5);
+    const activeKey = active !== void 0 ? dataList.getKey(api, list5, active) : void 0;
+    if (activeKey !== this.activeId) {
+      this.setActiveFromData(activeKey);
+    }
+  }
+  /** Set active from the data side, suppressing the write-back loop. */
+  setActiveFromData(item) {
+    this._syncingFromData = true;
+    try {
+      this.setActive(item);
+    } finally {
+      this._syncingFromData = false;
+    }
+  }
+  _writeActiveToData(id) {
+    const dataList = this._dataList;
+    const path = this.getAttribute("datapath");
+    if (dataList === void 0 || !path || dataList.cb.setActive === void 0) {
+      return;
+    }
+    if (this.useActiveUndo && this.ctx.toolstack) {
+      const tool = ListBoxSetActiveToolOp.create(path, id);
+      this.ctx.toolstack.execTool(this.ctx, tool);
+      return;
+    }
+    const api = this.ctx.api;
+    const list5 = api.getValue(this.ctx, path);
+    const obj = id === void 0 ? void 0 : dataList.get(api, list5, id);
+    dataList.setActive(api, list5, obj);
   }
   addItem(name2, id) {
     const item = UIBase2.createElement("listitem-x");
-    item.listId = id === void 0 ? this.items.length : id;
-    this.idmap[item.listId] = item;
-    this.tabIndex = 1;
-    this.setAttribute("tabindex", "1");
+    item.listId = id === void 0 ? this._idgen++ : id;
+    if (typeof item.listId === "number") {
+      this._idgen = Math.max(this._idgen, item.listId + 1);
+    }
+    this.idmap.set(item.listId, item);
     this.add(item);
     this.items.push(item);
     item.label(name2);
-    const this2 = this;
-    item.onclick = function() {
-      this2.setActive(this);
-      this.setBackground();
-    };
+    item.addEventListener("click", () => this.setActive(item));
     return item;
   }
   removeItem(item) {
     if (typeof item == "number" || typeof item === "string") {
-      item = this.idmap[item];
+      item = this.idmap.get(item);
+    }
+    if (item === void 0) {
+      console.warn("ListBox.removeItem: no such item");
+      return;
+    }
+    if (item === this._active) {
+      this.setActive(void 0);
     }
     item.remove();
-    delete this.idmap[item.listId];
+    this.idmap.delete(item.listId);
     this.items.remove(item);
   }
   setActive(item) {
     if (typeof item == "number" || typeof item === "string") {
-      item = this.idmap[item];
+      item = this.idmap.get(item);
     }
-    if (item === this.items.active) {
+    if (item === this._active) {
       return;
     }
-    if (this.items.active !== void 0) {
-      this.items.active.highlight = false;
-      this.items.active.is_active = false;
-      this.items.active.setBackground();
+    if (this._active !== void 0) {
+      this._active.is_active = false;
+      this._active.setBackground();
     }
-    this.items.active = item;
+    this._active = item;
     if (item) {
       item.is_active = true;
       item.setBackground();
-      item.scrollIntoViewIfNeeded();
+      item.scrollIntoView({ block: "nearest" });
+    }
+    this.dispatchEvent(new ListBoxChangeEvent({ id: item?.listId, item }));
+    if (!this._syncingFromData && this._dataMode && this._dataList?.cb.setActive) {
+      this._writeActiveToData(item?.listId);
     }
     if (this.on_change) {
       this.on_change(item?.listId, item);
     }
   }
   clear() {
+    for (const item of this.items.slice()) {
+      this.removeItem(item);
+    }
   }
 };
 UIBase2.internalRegister(ListBox2);
+var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
+  _undo;
+  static tooldef() {
+    return {
+      uiname: "Set Active List Item",
+      toolpath: "listbox.set_active",
+      icon: -1,
+      flag: ToolFlags.PRIVATE,
+      inputs: {
+        dataPath: new StringProperty(),
+        key: new StringProperty(),
+        numericKey: new BoolProperty(false),
+        hasKey: new BoolProperty(false)
+      }
+    };
+  }
+  static create(path, id) {
+    const tool = new _ListBoxSetActiveToolOp();
+    tool.inputs.dataPath.setValue(path);
+    tool.inputs.hasKey.setValue(id !== void 0);
+    if (id !== void 0) {
+      tool.inputs.numericKey.setValue(typeof id === "number");
+      tool.inputs.key.setValue(String(id));
+    }
+    return tool;
+  }
+  _resolvedKey() {
+    if (!this.inputs.hasKey.getValue()) {
+      return void 0;
+    }
+    const k = this.inputs.key.getValue();
+    return this.inputs.numericKey.getValue() ? Number(k) : k;
+  }
+  _resolve(ctx) {
+    const path = this.inputs.dataPath.getValue();
+    const rdef = ctx.api.resolvePath(ctx, path);
+    if (rdef?.prop === void 0 || !(rdef.prop instanceof DataList)) {
+      return void 0;
+    }
+    return { list: ctx.api.getValue(ctx, path), dataList: rdef.prop };
+  }
+  _applyKey(ctx, key) {
+    const res = this._resolve(ctx);
+    if (res === void 0) {
+      return;
+    }
+    const obj = key === void 0 ? void 0 : res.dataList.get(ctx.api, res.list, key);
+    res.dataList.setActive(ctx.api, res.list, obj);
+  }
+  undoPre(ctx) {
+    const res = this._resolve(ctx);
+    if (res === void 0 || res.dataList.cb.getActive === void 0) {
+      this._undo = { hadActive: false, key: void 0 };
+      return;
+    }
+    const active = res.dataList.getActive(ctx.api, res.list);
+    const key = active !== void 0 ? res.dataList.getKey(ctx.api, res.list, active) : void 0;
+    this._undo = { hadActive: active !== void 0, key };
+  }
+  undo(ctx) {
+    if (this._undo === void 0) {
+      return;
+    }
+    this._applyKey(ctx, this._undo.hadActive ? this._undo.key : void 0);
+  }
+  exec(ctx) {
+    this._applyKey(ctx, this._resolvedKey());
+  }
+};
+ToolOp.register(ListBoxSetActiveToolOp);
 
 // scripts/widgets/ui_progress.ts
 init_ui_base();
@@ -84606,8 +85020,8 @@ function api_define_canvas(api) {
     function getActive(api2, list5) {
       return list5.active;
     },
-    function setActive(api2, list5, key) {
-      list5.active = list5[key];
+    function setActive(api2, list5, val) {
+      list5.active = val;
     },
     function get(api2, list5, key) {
       return list5[key];
@@ -85257,7 +85671,9 @@ var theme2 = {
   },
   listbox: {
     ListActive: "rgba(200, 205, 215, 1.0)",
+    ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
     ListHighlight: "rgba(155, 220, 255, 0.5)",
+    ItemHeight: 24,
     height: 200,
     width: 110
   },
@@ -85864,6 +86280,10 @@ var PropsEditor = class extends Editor2 {
       }
       const graphtab = container.getElementById("graph_pack_tab");
       this.buildGraphPack(graphtab);
+      const pathListbox = container.getElementById("path_listbox");
+      if (pathListbox) {
+        pathListbox.itemNames((obj) => "Path " + obj.id);
+      }
       const con = container.getElementById("eventdag_test");
       con.dataPrefix = "";
       const bval = con.prop("data.boolval");
