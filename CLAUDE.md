@@ -75,6 +75,18 @@ a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changin
  Modules: ES modules (`"type": "module"` in package.json)
  Entry point: `scripts/pathux.ts` → re-exported from root `pathux.js`
 
+## DOM events (future direction)
+
+Historically widgets signal value/selection changes through bespoke
+`on_change`-style callback properties; very few use real DOM events. We are
+moving towards standard DOM events (e.g. `dispatchEvent(new
+CustomEvent("change", { detail }))`) so consumers can use
+`addEventListener`. `scripts/widgets/ui_listbox.ts` is the first widget
+converted: it dispatches a `"change"` event (`detail = { id, item }`) and keeps
+its `on_change` callback only as a deprecated backwards-compat shim. New
+widgets should prefer DOM events; convert existing callbacks opportunistically,
+leaving the old callback in place and `@deprecated`.
+
 ## Context
 
 Children of `UIBase` should all take a `CTX` generic parameter that extends

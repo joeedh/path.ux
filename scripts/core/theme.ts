@@ -247,10 +247,12 @@ export const DefaultTheme = {
   },
 
   listbox: {
-    ListActive   : "rgba(200, 205, 215, 1.0)",
-    ListHighlight: "rgba(155, 220, 255, 0.5)",
-    height       : 200,
-    width        : 110,
+    ListActive         : "rgba(200, 205, 215, 1.0)",
+    ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
+    ListHighlight      : "rgba(155, 220, 255, 0.5)",
+    ItemHeight         : 24,
+    height             : 200,
+    width              : 110,
   },
 
   menu: {

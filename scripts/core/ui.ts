@@ -2207,12 +2207,17 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     return ret;
   }
 
-  listbox<IDType extends string | number = string | number>(packflag = 0) {
+  listbox<IDType extends string | number = string | number>(path?: string, packflag = 0) {
     const ret = UIBase.createElement("listbox-x") as ListBox<CTX, IDType>;
 
     this._container_inherit(ret, packflag);
 
     this._add(ret);
+
+    if (path !== undefined) {
+      ret.setAttribute("datapath", this._joinPrefix(path)!);
+    }
+
     return ret;
   }
 
