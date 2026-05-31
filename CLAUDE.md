@@ -87,6 +87,12 @@ its `on_change` callback only as a deprecated backwards-compat shim. New
 widgets should prefer DOM events; convert existing callbacks opportunistically,
 leaving the old callback in place and `@deprecated`.
 
+## Widgets
+
+- [ListBox](documentation/listbox.md) — scrollable single-select list, in
+  either manual (`addItem`) or `DataList`-backed mode, with a typed `"change"`
+  event and user-resizable corner grip.
+
 ## Context
 
 Children of `UIBase` should all take a `CTX` generic parameter that extends

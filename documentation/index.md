@@ -22,3 +22,7 @@ Blender, a 3D animation/modeling/visualization app.
 - [Tool System](manual/toolsystem.html)
 - [STRUCT](manual/nstructjs.html)
 - [FrameManager](manual/FrameManager.html)
+
+# Widgets
+
+- [ListBox](manual/listbox.html)
