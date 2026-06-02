@@ -672,7 +672,7 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
       this.getDefault<number>("fieldSize"),
       w - r * 2,
       h - r * 2,
-      Array.from(this.hsva)
+      Array.from(this.hsva) as number[]
     );
   }
 
