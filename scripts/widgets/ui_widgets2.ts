@@ -276,7 +276,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
         slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, vArr[i]);
       }
 
-      slider["onchange"] = function (this: AnySlider) {
+      slider["on_change"] = function (this: AnySlider) {
         (this2.value as unknown as Record<number, number>)[this["axis"] as number] = this[
           "value"
         ] as number;
@@ -292,8 +292,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
           );
         }
 
-        if (this2.onchange) {
-          this2.onchange(this2.value);
+        if (this2.on_change) {
+          this2.on_change(this2.value);
         }
       };
 
@@ -323,7 +323,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
       this.sliders.push(uslider);
 
-      uslider["onchange"] = () => {
+      uslider["on_change"] = () => {
         this.uniformValue = uslider["value"] as number;
       };
     } else {
@@ -368,8 +368,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
         this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.value);
       }
 
-      if (this.onchange) {
-        this.onchange(this.value);
+      if (this.on_change) {
+        this.on_change(this.value);
       }
 
       for (let i = 0; i < this.value.length; i++) {
@@ -412,8 +412,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
       this.castValue<typeof value>().load(value as any);
     }
 
-    if (this.onchange) {
-      this.onchange(this.value);
+    if (this.on_change) {
+      this.on_change(this.value);
     }
 
     return this;

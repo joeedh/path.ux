@@ -17835,7 +17835,7 @@ Curve1DPoint {
         row = container.row();
         const check = row.check(void 0, "Interpolating");
         check.checked = this.interpolating;
-        check.onchange = () => {
+        check.on_change = () => {
           this.interpolating = check.value;
           fullUpdate();
         };
@@ -22448,17 +22448,17 @@ var init_curve1d_basic = __esm({
           oslider: container.slider(void 0, "Offset", this.offset, -10, 10, 0.05),
           dslider: container.slider(void 0, "STD Deviation", this.deviation, -10, 10, 0.05)
         };
-        this.uidata.hslider.onchange = () => {
+        this.uidata.hslider.on_change = () => {
           this.height = this.uidata.hslider.value;
           this.redraw();
           this.update();
         };
-        this.uidata.oslider.onchange = () => {
+        this.uidata.oslider.on_change = () => {
           this.offset = this.uidata.oslider.value;
           this.redraw();
           this.update();
         };
-        this.uidata.dslider.onchange = () => {
+        this.uidata.dslider.on_change = () => {
           this.deviation = this.uidata.dslider.value;
           this.redraw();
           this.update();
@@ -23023,7 +23023,7 @@ var init_curve1d_anim = __esm({
             check.checked = !!this.params[k];
             elemKeyMap.set(check, k);
             const this2 = this;
-            check.onchange = function() {
+            check.on_change = function() {
               this2.params[elemKeyMap.get(this)] = this.checked ? 1 : 0;
               this2.update();
               this2.redraw();
@@ -23038,7 +23038,7 @@ var init_curve1d_anim = __esm({
             slider.baseUnit = slider.displayUnit = "none";
             elemKeyMap.set(slider, k);
             const this2 = this;
-            slider.onchange = function() {
+            slider.on_change = function() {
               this2.params[elemKeyMap.get(this)] = Number(this.value);
               this2.update();
               this2.redraw();
@@ -23881,11 +23881,11 @@ var init_controller = __esm({
     tokens = [
       tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
       tk("NUM", /-?[0-9]+/, (t) => {
-        t.value = "" + parseInt(t.value);
+        t.value = parseInt(t.value);
         return t;
       }),
       tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t) => {
-        t.value = "" + parseFloat(t.value);
+        t.value = parseFloat(t.value);
         return t;
       }),
       tk("STRLIT", /'.*?'/, (t) => {
@@ -29978,7 +29978,7 @@ var init_ui_base = __esm({
           if (def2 && (key === void 0 || key in def2)) {
             result = def2;
           }
-          if (def1 !== void 0 && def2 !== void 0) {
+          if (def1 !== def2 && def1 !== void 0 && def2 !== void 0) {
             console.warn(
               'You defined a class override both as a "key1.key2" value and a nested object, e.g. "key1: {key2: {}}"',
               'The former (e.g. the one with class key "key1.key2") will be used'
@@ -31169,7 +31169,7 @@ var init_ui_menu = __esm({
         }
         dom2.parentWidget = this.container;
         sbox.focus();
-        sbox.onchange = () => {
+        sbox.on_change = () => {
           const t = sbox.text.trim().toLowerCase();
           for (const item of this.items) {
             item.hidden = true;
@@ -33438,8 +33438,8 @@ var TextBox2 = class extends TextBoxBase {
     if (this.realtime) {
       this._updatePathVal(text2);
     }
-    if (this.onchange) {
-      this.onchange(text2);
+    if (this.on_change) {
+      this.on_change(text2);
     }
   }
 };
@@ -33684,8 +33684,8 @@ var Check = class extends UIBase3 {
       if (this.onclick) {
         this.onclick(v);
       }
-      if (this.onchange) {
-        this.onchange(v);
+      if (this.on_change) {
+        this.on_change(v);
       }
       if (this.hasAttribute("datapath")) {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this._checked);
@@ -34119,8 +34119,8 @@ var IconCheck = class extends IconButton {
       this._checked = val;
       this._updatePressed(!!val);
       this.setCSS();
-      if (this.onchange) {
-        this.onchange(val);
+      if (this.on_change) {
+        this.on_change(val);
       }
     }
   }
@@ -35004,7 +35004,7 @@ var Container3 = class _Container extends UIBase2 {
     ret.setCSS();
     ret.update();
     ret.packflag |= packflag;
-    ret.onchange = cb ?? null;
+    ret.on_change = cb ?? null;
     ret.text = "" + text2;
     return ret;
   }
@@ -35533,7 +35533,7 @@ var Container3 = class _Container extends UIBase2 {
         if (!check.description) {
           check.description = "" + prop.ui_value_names[key];
         }
-        check.onchange = makecb2(key);
+        check.on_change = makecb2(key);
       }
     }
     return frame;
@@ -35606,7 +35606,7 @@ var Container3 = class _Container extends UIBase2 {
           if (!check.description) {
             check.description = "" + prop.ui_value_names[key];
           }
-          check.onchange = makecb2(key);
+          check.on_change = makecb2(key);
         }
       }
     }
@@ -35676,7 +35676,7 @@ var Container3 = class _Container extends UIBase2 {
     if (defaultval) {
       ret.setValue(defaultval);
     }
-    ret.onchange = callback;
+    ret.on_change = callback;
     ret.on_select = callback;
     ret.packflag |= packflag;
     if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
@@ -35801,7 +35801,7 @@ var Container3 = class _Container extends UIBase2 {
       ret.setAttribute("step", "" + step);
     }
     if (callback) {
-      ret.onchange = callback;
+      ret.on_change = callback;
     }
     this._add(ret);
     if (this.ctx) {
@@ -36335,8 +36335,8 @@ var NumSlider = class extends ValueButtonBase {
           this.flash(ErrorColors.ERROR);
         } else {
           this.setValue(val);
-          if (this.onchange) {
-            this.onchange(this);
+          if (this.on_change) {
+            this.on_change(this);
           }
         }
       }
@@ -36501,8 +36501,8 @@ var NumSlider = class extends ValueButtonBase {
     if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
     }
-    if (fire_onchange && this.onchange) {
-      this.onchange(this.value);
+    if (fire_onchange && this.on_change) {
+      this.on_change(this.value);
     }
     this._redraw(false);
   }
@@ -36538,8 +36538,8 @@ var NumSlider = class extends ValueButtonBase {
     let sumdelta = 0;
     this.dom._background = this.getDefault("BoxDepressed");
     const fire = () => {
-      if (this.onchange) {
-        this.onchange(this);
+      if (this.on_change) {
+        this.on_change(this);
       }
     };
     const handlers = {
@@ -36793,7 +36793,7 @@ var NumSlider = class extends ValueButtonBase {
     };
     let arrowcolor_base;
     let arrowcolor;
-    arrowcolor_base = this.getDefault("arrow-color");
+    arrowcolor_base = this.getDefault("arrow-color", void 0, "orange");
     arrowcolor_base = parseArrowColor(arrowcolor_base);
     let arrowcolorValue;
     if (this._pressed && this._highlight) {
@@ -36932,8 +36932,8 @@ var NumSliderSimpleBase = class extends UIBase2 {
     if (this._value !== val) {
       this._value = val;
       this._redraw();
-      if (this.onchange && fire_onchange) {
-        this.onchange(val);
+      if (this.on_change && fire_onchange) {
+        this.on_change(val);
       }
       if (setDataPath && this.getAttribute("datapath")) {
         const path = this.getAttribute("datapath") ?? "";
@@ -37480,7 +37480,7 @@ var SliderWithTextbox = class extends ColumnFrame {
       }
     };
     if (this.realTimeTextBox) {
-      textbox.onchange = apply_textbox;
+      textbox.on_change = apply_textbox;
     }
     textbox.onend = apply_textbox;
     textbox.ctx = this.ctx;
@@ -37492,17 +37492,17 @@ var SliderWithTextbox = class extends ColumnFrame {
     textbox.setCSS();
     this.linkTextBox();
     let in_onchange = 0;
-    this.numslider.onchange = (val) => {
+    this.numslider.on_change = (val) => {
       this._value = this.numslider.value;
       this.updateTextBox();
       if (in_onchange) {
         return;
       }
-      if (this.onchange !== void 0) {
+      if (this.on_change !== void 0) {
         in_onchange++;
         try {
-          if (this.onchange) {
-            this.onchange(this);
+          if (this.on_change) {
+            this.on_change(this);
           }
         } catch (error2) {
           print_stack2(error2);
@@ -37522,8 +37522,8 @@ var SliderWithTextbox = class extends ColumnFrame {
   }
   linkTextBox() {
     this.updateTextBox();
-    const onchange = this.numslider.onchange;
-    this.numslider.onchange = (e) => {
+    const onchange = this.numslider.on_change;
+    this.numslider.on_change = (e) => {
       this._value = e.value;
       this.updateTextBox();
       onchange(e);
@@ -38599,8 +38599,8 @@ var RichEditor = class extends TextBoxBase {
         const path = this.getAttribute("datapath");
         this.setPathValue(this.ctx, path, this.value);
       }
-      if (this.onchange) {
-        this.onchange(this._value);
+      if (this.on_change) {
+        this.on_change(this._value);
       }
       if (this.oninput) {
         this.oninput(this._value);
@@ -38972,7 +38972,7 @@ var VectorPanel = class extends ColumnFrame {
       if (this.stepIsRelative) {
         slider["step"] = ToolProperty.calcRelativeStep(this.step ?? 0, vArr[i]);
       }
-      slider["onchange"] = function() {
+      slider["on_change"] = function() {
         this2.value[this["axis"]] = this["value"];
         if (this2.hasAttribute("datapath")) {
           this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
@@ -38983,8 +38983,8 @@ var VectorPanel = class extends ColumnFrame {
             false
           );
         }
-        if (this2.onchange) {
-          this2.onchange(this2.value);
+        if (this2.on_change) {
+          this2.on_change(this2.value);
         }
       };
       this.sliders.push(slider);
@@ -39008,7 +39008,7 @@ var VectorPanel = class extends ColumnFrame {
         false
       );
       this.sliders.push(uslider);
-      uslider["onchange"] = () => {
+      uslider["on_change"] = () => {
         this.uniformValue = uslider["value"];
       };
     } else {
@@ -39042,8 +39042,8 @@ var VectorPanel = class extends ColumnFrame {
       if (this.hasAttribute("datapath")) {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this.value);
       }
-      if (this.onchange) {
-        this.onchange(this.value);
+      if (this.on_change) {
+        this.on_change(this.value);
       }
       for (let i = 0; i < this.value.length; i++) {
         this.sliders[i].setValue(
@@ -39080,8 +39080,8 @@ var VectorPanel = class extends ColumnFrame {
     } else {
       this.castValue().load(value);
     }
-    if (this.onchange) {
-      this.onchange(this.value);
+    if (this.on_change) {
+      this.on_change(this.value);
     }
     return this;
   }
@@ -39385,8 +39385,8 @@ var Curve1DWidget = class extends ColumnFrame {
             }
           }
         }
-        if (this.onchange) {
-          this.onchange(this._value);
+        if (this.on_change) {
+          this.on_change(this._value);
         }
       } catch (error2) {
         if (window.DEBUG?.datapath) {
@@ -39491,8 +39491,8 @@ var Curve1DWidget = class extends ColumnFrame {
     this._redraw();
   }
   _on_change() {
-    if (this.onchange) {
-      this.onchange(this);
+    if (this.on_change) {
+      this.on_change(this);
     }
   }
   init() {
@@ -39536,7 +39536,7 @@ var Curve1DWidget = class extends ColumnFrame {
     this.container = this.col();
     const panel = this.panel("Range");
     const clipCheck = panel.check(void 0, "Clip To Range");
-    clipCheck.onchange = (val) => {
+    clipCheck.on_change = (val) => {
       this._value.clipToRange = val;
       this._on_change();
       this._redraw();
@@ -39680,10 +39680,10 @@ var Curve1DWidget = class extends ColumnFrame {
     if (this._lastGen !== void 0) {
       this._lastGen.killGUI(col, this.canvas);
     }
-    const onchange = this.dropbox.onchange;
-    this.dropbox.onchange = null;
+    const onchange = this.dropbox.on_change;
+    this.dropbox.on_change = null;
     this.dropbox.setValue(this.value.generatorType);
-    this.dropbox.onchange = onchange;
+    this.dropbox.on_change = onchange;
     col.clear();
     const onSourceUpdate = () => {
       if (!this.hasAttribute("datapath")) {
@@ -39985,7 +39985,7 @@ var PanelFrame = class extends ColumnFrame {
     iconcheck.drawCheck = false;
     iconcheck.iconsheet = IconSheets.SMALL;
     iconcheck.checked = this._closed;
-    this._iconcheckWidget.onchange = () => {
+    this._iconcheckWidget.on_change = () => {
       this.closed = !!this._iconcheckWidget.checked;
     };
     row._add(iconcheck);
@@ -40104,11 +40104,11 @@ var PanelFrame = class extends ColumnFrame {
     super.update();
   }
   _onchange(isClosed) {
-    if (this.onchange) {
-      this.onchange(isClosed);
+    if (this.on_change) {
+      this.on_change(isClosed);
     }
-    if (this.contents.onchange) {
-      this.contents.onchange(isClosed);
+    if (this.contents.on_change) {
+      this.contents.on_change(isClosed);
     }
   }
   setAttribute(key, value) {
@@ -40898,7 +40898,7 @@ var ColorPicker = class extends ColumnFrame {
       tabs = node.tabs();
     }
     node.cssText = node.textbox();
-    node.cssText.onchange = (val) => {
+    node.cssText.on_change = (val) => {
       const strVal = "" + val;
       const ok = validateWebColor(strVal);
       if (!ok) {
@@ -41248,8 +41248,8 @@ var ColorPickerButton = class extends UIBase2 {
     const onchange = () => {
       this.rgba.load(widget.rgba);
       this.redraw();
-      if (this.onchange) {
-        this.onchange(this);
+      if (this.on_change) {
+        this.on_change(this);
       }
     };
     widget._onchange = onchange;
@@ -41269,8 +41269,8 @@ var ColorPickerButton = class extends UIBase2 {
     if (this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
     }
-    if (this.onchange) {
-      this.onchange(this);
+    if (this.on_change) {
+      this.on_change(this);
     }
     this._redraw();
     return this;
@@ -41477,6 +41477,24 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""));
 }
 var isForwardAttr = (n) => n.startsWith("data-");
+var TabClickEvent = class _TabClickEvent extends PointerEvent {
+  tab;
+  _preventTabDragging = false;
+  constructor(name2, tab2, e) {
+    super(name2, e);
+    if (e instanceof _TabClickEvent) {
+      this._preventTabDragging = e._preventTabDragging;
+    }
+    this.tab = tab2;
+  }
+  preventTabDragging() {
+    this._preventTabDragging = true;
+    return this;
+  }
+  clone() {
+    return new _TabClickEvent(this.type, this.tab, this);
+  }
+};
 var TabItemContainer2 = class extends ColumnFrame {
   static define() {
     return {
@@ -41642,7 +41660,9 @@ var TabItem = class extends UIBase2 {
   }
   sendEvent(type, forwardEvent) {
     let cls;
-    if (type === "tabdragstart" || type === "tabdragend") {
+    if (type === "tabclick") {
+      cls = TabClickEvent;
+    } else if (type === "tabdragstart" || type === "tabdragend") {
       cls = TabDragEvent;
     } else if (forwardEvent && forwardEvent instanceof Event) {
       cls = forwardEvent.constructor;
@@ -41659,7 +41679,12 @@ var TabItem = class extends UIBase2 {
       }
     }
     e2.target = this;
-    const eventObj = new cls(type, e2);
+    let eventObj;
+    if (cls === TabClickEvent) {
+      eventObj = new cls(type, this, e2);
+    } else {
+      eventObj = new cls(type, e2);
+    }
     this.dispatchEvent(eventObj);
     return eventObj;
   }
@@ -41898,6 +41923,8 @@ var ModalTabMove = class extends EventHandler {
   }
 };
 var TabBar = class extends UIBase2 {
+  _wrapperDiv;
+  _contentsWrapper;
   iconsheet;
   movableTabs;
   tabFontScale;
@@ -41910,7 +41937,7 @@ var TabBar = class extends UIBase2 {
   _last_pos;
   horiz;
   // @ts-ignore fix later
-  onchange;
+  on_change;
   // @ts-ignore fix later
   onselect;
   _tool;
@@ -41941,7 +41968,7 @@ var TabBar = class extends UIBase2 {
     this._last_dpi = void 0;
     this._last_pos = void 0;
     this.horiz = true;
-    this.onchange = null;
+    this.on_change = null;
     this.onselect = null;
     this.canvas.addEventListener(
       "pointermove",
@@ -42244,6 +42271,15 @@ var TabBar = class extends UIBase2 {
       }
       this._redraw();
     }
+    if (!this.parentWidget || !this._wrapperDiv) {
+      return;
+    }
+    if (pos === "right" && this._wrapperDiv !== this.parentWidget.shadow.lastElementChild) {
+      this._wrapperDiv.remove();
+      this.parentWidget.shadow.appendChild(this._wrapperDiv);
+      this.setCSS();
+      this._redraw();
+    }
   }
   updateDPI(force_update = false) {
     const dpi = this.getDPI();
@@ -42423,7 +42459,7 @@ var TabBar = class extends UIBase2 {
       if (!isMobile() && this.getDefault("focus-on-tab-click")) {
         tab2.focus({ preventScroll: true, focusVisible: false });
       }
-      if (this.onchange) this.onchange(tab2, event);
+      if (this.on_change) this.on_change(tab2, event);
       this.update(true);
     }
   }
@@ -42621,6 +42657,10 @@ var TabBar = class extends UIBase2 {
     this.style.touchAction = "none";
     this.canvas.style.backgroundColor = this.getDefault("TabInactive");
     this.canvas.style.borderRadius = r + "px";
+    if (this._contentsWrapper !== void 0) {
+      const bar_pos = this.getAttribute("bar_pos");
+      this._contentsWrapper.style.width = bar_pos === "right" ? "100%" : "unset";
+    }
   }
   updateStyle() {
     let key = "" + this.getDefault("background-color");
@@ -42663,12 +42703,13 @@ var TabContainer3 = class extends UIBase2 {
   tabFontScale;
   dataPrefix;
   inherit_packflag = 0;
+  _contentsHidden = false;
   _last_style_key;
   _last_horiz;
   _last_bar_pos;
   _tab;
   // @ts-ignore TODO: fix this later
-  onchange;
+  on_change;
   // @ts-ignore TODO: fix this later
   onselect;
   horiz = false;
@@ -42690,6 +42731,7 @@ var TabContainer3 = class extends UIBase2 {
     this._last_bar_pos = void 0;
     this._tab = void 0;
     const div = document.createElement("div");
+    this.tbar._wrapperDiv = div;
     div.setAttribute("class", `_tab_${this._id}`);
     div.appendChild(this.tbar);
     this.shadow.appendChild(div);
@@ -42699,27 +42741,48 @@ var TabContainer3 = class extends UIBase2 {
         this.onselect(e);
       }
     };
-    this.tbar.onchange = (tab2, event) => {
+    this.tbar.on_change = (tab2, event) => {
       if (this._tab) {
         HTMLElement.prototype.remove.call(this._tab);
       }
       this._tab = this.tabs[tab2.id];
       this._tab.parentWidget = this;
-      for (let i = 0; i < 2; i++) {
-        this._tab.flushUpdate();
-      }
       const div2 = document.createElement("div");
       this.tbar.setCSSOnce(
         () => div2.style["backgroundColor"] = this.getDefault("background-color"),
         div2
       );
+      this.tbar._contentsWrapper?.remove();
+      this.tbar._contentsWrapper = div2;
+      div2.style.display = this._contentsHidden ? "none" : "inherit";
       div2.setAttribute("class", `_tab_${this._id}`);
       div2.appendChild(this._tab);
-      this.shadow.appendChild(div2);
-      if (this.onchange) {
-        this.onchange(tab2, event);
+      if (this.getAttribute("bar_pos") !== "right") {
+        this.shadow.appendChild(div2);
+      } else {
+        this.shadow.insertBefore(div2, this.tbar._wrapperDiv);
+        div2.style.width = "100%";
+      }
+      if (this.on_change) {
+        this.on_change(tab2, event);
+      }
+      for (let i = 0; i < 4; i++) {
+        this._tab.flushUpdate();
+        this.flushUpdate();
       }
     };
+  }
+  addEventListener(type, cb, options) {
+    super.addEventListener(type, cb, options);
+  }
+  set contentsHidden(val) {
+    if (val === this._contentsHidden) {
+      return;
+    }
+    this._contentsHidden = val;
+    if (this.tbar._contentsWrapper !== void 0) {
+      this.tbar._contentsWrapper.style.display = val ? "none" : "inherit";
+    }
   }
   get movableTabs() {
     let attr;
@@ -43086,10 +43149,20 @@ var ListBox2 = class extends Container3 {
   /**
    * @deprecated Listen for the `"change"` DOM event instead, e.g.
    * `listbox.addEventListener("change", e => { const {id, item} = e.selection; })`.
+   * 
    */
-  on_change;
+  onitemchange;
   constructor() {
     super();
+    Object.defineProperty(this, "on_change", {
+      get() {
+        return this.onitemchange;
+      },
+      set(v) {
+        console.warn('Deprecated use of ListBox.on_change, use the "change" event or .onitemchange instead.');
+        this.onitemchange = v;
+      }
+    });
     this.items = [];
     this.idmap = /* @__PURE__ */ new Map();
     Object.defineProperty(this.items, "active", {
@@ -43330,6 +43403,8 @@ var ListBox2 = class extends Container3 {
       if (this.items.length > 0) {
         this.clear();
       }
+      this._listKey = void 0;
+      this.lastListRef = void 0;
       return;
     }
     if (resolved === void 0 || this._dataList === void 0) {
@@ -43456,8 +43531,8 @@ var ListBox2 = class extends Container3 {
     if (!this._syncingFromData && this._dataMode && this._dataList?.cb.setActive) {
       this._writeActiveToData(item?.listId);
     }
-    if (this.on_change) {
-      this.on_change(item?.listId, item);
+    if (this.onitemchange) {
+      this.onitemchange(item?.listId, item);
     }
   }
   clear() {
@@ -45323,8 +45398,8 @@ var ThemeEditor = class extends Container3 {
       loadUIData(panel, uidata);
       panel.flushUpdate();
       panel.flushSetCSS();
-      if (this.onchange) {
-        this.onchange(key, propkey, obj);
+      if (this.on_change) {
+        this.on_change(key, propkey, obj);
       }
     };
     let menu = row2.menu("+", [
@@ -45339,8 +45414,8 @@ var ThemeEditor = class extends Container3 {
     let col2 = row.col();
     let do_onchange = (key2, k, _obj) => {
       flagThemeUpdate();
-      if (this.onchange) {
-        this.onchange(key2, k, _obj);
+      if (this.on_change) {
+        this.on_change(key2, k, _obj);
       }
       this.ctx.screen.completeSetCSS();
       this.ctx.screen.completeUpdate();
@@ -48948,7 +49023,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
     const uidata = sarea.switcherData = saveUIData(this, "switcherTabs");
     this.clear();
     const tabs = this.tbar = this.tabs();
-    tabs.onchange = this.tab_onchange.bind(this);
+    tabs.on_change = this.tab_onchange.bind(this);
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
     sarea.switcherData = uidata;
     for (const editor2 of sarea.editors) {

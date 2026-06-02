@@ -284,8 +284,8 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
       if (this.onclick) {
         (this.onclick as unknown as (val: boolean) => void)(v);
       }
-      if (this.onchange) {
-        this.onchange(v);
+      if (this.on_change) {
+        this.on_change(v);
       }
 
       if (this.hasAttribute("datapath")) {
@@ -862,8 +862,8 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       this._updatePressed(!!val);
       this.setCSS();
 
-      if (this.onchange) {
-        this.onchange(val);
+      if (this.on_change) {
+        this.on_change(val);
       }
     }
   }

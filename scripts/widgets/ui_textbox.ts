@@ -505,8 +505,8 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this._updatePathVal(text);
     }
 
-    if (this.onchange) {
-      this.onchange(text);
+    if (this.on_change) {
+      this.on_change(text);
     }
   }
 }

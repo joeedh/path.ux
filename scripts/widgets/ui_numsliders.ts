@@ -303,8 +303,8 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         } else {
           this.setValue(val as number);
 
-          if (this.onchange) {
-            this.onchange(this);
+          if (this.on_change) {
+            this.on_change(this);
           }
         }
       }
@@ -537,8 +537,8 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._value);
     }
 
-    if (fire_onchange && this.onchange) {
-      this.onchange(this.value);
+    if (fire_onchange && this.on_change) {
+      this.on_change(this.value);
     }
 
     this._redraw(false);
@@ -588,8 +588,8 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
     this.dom._background = this.getDefault("BoxDepressed");
     const fire = () => {
-      if (this.onchange) {
-        this.onchange(this);
+      if (this.on_change) {
+        this.on_change(this);
       }
     };
 
@@ -957,7 +957,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     let arrowcolor_base: string;
     let arrowcolor: string;
 
-    arrowcolor_base = this.getDefault("arrow-color") as string;
+    arrowcolor_base = this.getDefault("arrow-color", undefined, "orange") as string;
     arrowcolor_base = parseArrowColor(arrowcolor_base);
 
     let arrowcolorValue: string | Vector4;
@@ -1140,8 +1140,8 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
       this._value = val;
       this._redraw();
 
-      if (this.onchange && fire_onchange) {
-        this.onchange(val);
+      if (this.on_change && fire_onchange) {
+        this.on_change(val);
       }
 
       if (setDataPath && this.getAttribute("datapath")) {
@@ -1879,7 +1879,7 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
     };
 
     if (this.realTimeTextBox) {
-      textbox.onchange = apply_textbox;
+      textbox.on_change = apply_textbox;
     }
 
     textbox.onend = apply_textbox;
@@ -1898,7 +1898,7 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
 
     let in_onchange = 0;
 
-    this.numslider.onchange = (val) => {
+    this.numslider.on_change = (val) => {
       this._value = this.numslider.value;
       this.updateTextBox();
 
@@ -1906,11 +1906,11 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
         return;
       }
 
-      if (this.onchange !== undefined) {
+      if (this.on_change !== undefined) {
         in_onchange++;
         try {
-          if (this.onchange) {
-            this.onchange(this);
+          if (this.on_change) {
+            this.on_change(this);
           }
         } catch (error) {
           util.print_stack(error as Error);
@@ -1937,8 +1937,8 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
   linkTextBox() {
     this.updateTextBox();
 
-    const onchange = this.numslider.onchange!;
-    this.numslider.onchange = (e: any) => {
+    const onchange = this.numslider.on_change!;
+    this.numslider.on_change = (e: any) => {
       this._value = e.value;
       this.updateTextBox();
       onchange(e);

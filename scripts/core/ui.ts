@@ -980,7 +980,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   //supports number types
-  textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.onchange, packflag = 0) {
+  textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.on_change, packflag = 0) {
     let path: string | undefined;
 
     if (inpath) {
@@ -1004,7 +1004,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     ret.update();
 
     ret.packflag |= packflag;
-    ret.onchange = cb ?? null;
+    ret.on_change = cb ?? null;
     ret.text = "" + text;
 
     return ret;
@@ -1741,7 +1741,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
         if (!check.description) {
           check.description = "" + prop.ui_value_names[key];
         }
-        check.onchange = makecb(key);
+        check.on_change = makecb(key);
       }
     }
 
@@ -1845,7 +1845,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           if (!check.description) {
             check.description = "" + prop.ui_value_names[key];
           }
-          check.onchange = makecb(key);
+          check.on_change = makecb(key);
           //console.log("PATH", path);
         }
       }
@@ -1950,7 +1950,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       (ret as unknown as { setValue(v: unknown): void }).setValue(defaultval);
     }
 
-    ret.onchange = callback as unknown as typeof ret.onchange;
+    ret.on_change = callback as unknown as typeof ret.on_change;
     ret.on_select = callback as unknown as typeof ret.on_select;
 
     ret.packflag |= packflag;
@@ -2127,7 +2127,7 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret.setAttribute("step", "" + step);
     }
     if (callback) {
-      ret.onchange = callback as typeof ret.onchange;
+      ret.on_change = callback as typeof ret.on_change;
     }
 
     this._add(ret);

@@ -163,11 +163,22 @@ export class ListBox<
   /**
    * @deprecated Listen for the `"change"` DOM event instead, e.g.
    * `listbox.addEventListener("change", e => { const {id, item} = e.selection; })`.
+   * 
    */
-  on_change?: (val: IDTYPE | undefined, item: ListItem<CTX, IDTYPE> | undefined) => void;
+  onitemchange?: (val: IDTYPE | undefined, item: ListItem<CTX, IDTYPE> | undefined) => void;
 
   constructor() {
     super();
+
+    Object.defineProperty(this, 'on_change', {
+      get() {
+        return this.onitemchange
+      },
+      set(v: any) {
+        console.warn('Deprecated use of ListBox.on_change, use the "change" event or .onitemchange instead.');
+        this.onitemchange = v
+      }
+    })
 
     this.items = [];
     this.idmap = new Map();
@@ -658,8 +669,8 @@ export class ListBox<
     }
 
     // Backwards-compat shim for the deprecated on_change callback.
-    if (this.on_change) {
-      this.on_change(item?.listId, item);
+    if (this.onitemchange) {
+      this.onitemchange(item?.listId, item);
     }
   }
 

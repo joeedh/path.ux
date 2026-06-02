@@ -240,7 +240,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     iconcheck.iconsheet = ui_base.IconSheets.SMALL;
     iconcheck.checked = this._closed;
 
-    this._iconcheckWidget.onchange = () => {
+    this._iconcheckWidget.on_change = () => {
       this.closed = !!this._iconcheckWidget.checked;
     };
 
@@ -404,12 +404,12 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   _onchange(isClosed: boolean) {
-    if (this.onchange) {
-      (this.onchange as Function)(isClosed);
+    if (this.on_change) {
+      (this.on_change as Function)(isClosed);
     }
 
-    if (this.contents.onchange) {
-      (this.contents.onchange as Function)(isClosed);
+    if (this.contents.on_change) {
+      (this.contents.on_change as Function)(isClosed);
     }
   }
 

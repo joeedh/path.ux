@@ -77,7 +77,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
   static SEP: typeof SEP;
 
   /** The src button that created this menu, used to switch menus when hovering over other buttons. */
-  srcWidget: UIBase<CTX> | undefined
+  srcWidget: UIBase<CTX> | undefined;
   parentMenu: Menu | undefined;
   _was_clicked: boolean;
   items: MenuItem[];
@@ -360,7 +360,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     (dom2 as HTMLDivElement & { parentWidget: unknown }).parentWidget = this.container;
 
     sbox.focus();
-    sbox.onchange = () => {
+    sbox.on_change = () => {
       const t = sbox.text.trim().toLowerCase();
 
       for (const item of this.items) {
@@ -623,7 +623,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
       li._isMenu = true;
       li._menu = item;
       item.parentMenu = this;
-      item.srcWidget = this.srcWidget
+      item.srcWidget = this.srcWidget;
 
       item.hidden = false;
       item.container = this.container;
@@ -1775,7 +1775,7 @@ export class MenuWrangler {
     const elem = element as DropBoxLike;
 
     let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
-    destroy = destroy && this.menu.srcWidget !== elem
+    destroy = destroy && this.menu.srcWidget !== elem;
 
     if (destroy) {
       /* check that dropbox doesn't contain our parent menu either */

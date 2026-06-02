@@ -87,7 +87,7 @@ export function saveUIData(node: HTMLElement, key: string): string {
 //window._saveUIData = saveUIData;
 
 export function makeParser(): parser {
-  const tk = (name: string, re: RegExp, func?: TokFunc) => new tokdef(name, re, func);
+  const tk = <T=string>(name: string, re: RegExp, func?: TokFunc<T>) => new tokdef<T>(name, re, func);
   let p: parser;
 
   const tokens = [
@@ -95,11 +95,11 @@ export function makeParser(): parser {
     tk("RSBRACKET", /\]/),
     tk("LBRACE", /\{/),
     tk("RBRACE", /\}/),
-    tk("NUM", /[0-9]+/, (t: token) => t.setValue(String(parseInt(t.value)))),
-    tk("WS", /[ \t]/, (token: token) => undefined), //drop token
+    tk("NUM", /[0-9]+/, (t) => t.setValue(String(parseInt(t.value)))),
+    tk("WS", /[ \t]/, (token) => undefined), //drop token
   ];
 
-  function p_error(t: token | undefined): boolean {
+  function p_error(t: token<unknown> | undefined): boolean {
     console.warn(t);
 
     p.userdata = undefined; //prevent reference leak

@@ -27,6 +27,29 @@ function getpx(css: string): number {
 
 const isForwardAttr = (n: string) => n.startsWith("data-");
 
+// TODO: integrate this more widely
+class TabClickEvent<CTX extends IContextBase = IContextBase> extends PointerEvent {
+  tab: TabItem<CTX>;
+  _preventTabDragging = false;
+
+  constructor(name: string, tab: TabItem<CTX>, e: PointerEvent) {
+    super(name, e);
+    if (e instanceof TabClickEvent) {
+      this._preventTabDragging = e._preventTabDragging;
+    }
+    this.tab = tab;
+  }
+
+  preventTabDragging() {
+    this._preventTabDragging = true;
+    return this;
+  }
+
+  clone() {
+    return new TabClickEvent(this.type, this.tab, this);
+  }
+}
+
 export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
   declare name: string;
 
@@ -104,7 +127,7 @@ UIBase.internalRegister(TabItemContainer);
 class TabDragEvent extends PointerEvent {}
 
 type TabDragEvents = {
-  tabclick: PointerEvent;
+  tabclick: TabClickEvent;
   tabdragstart: PointerEvent;
   tabdragmove: PointerEvent;
   tabdragend: PointerEvent;
@@ -251,14 +274,16 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
 
   sendEvent(type: string, forwardEvent?: Event): Event {
     type EventConstructor = new (type: string, eventInitDict?: object) => Event;
-    let cls: EventConstructor;
+    let cls: EventConstructor | typeof TabClickEvent | typeof TabDragEvent | typeof PointerEvent;
 
-    if (type === "tabdragstart" || type === "tabdragend") {
-      cls = TabDragEvent as unknown as EventConstructor;
+    if (type === "tabclick") {
+      cls = TabClickEvent;
+    } else if (type === "tabdragstart" || type === "tabdragend") {
+      cls = TabDragEvent;
     } else if (forwardEvent && forwardEvent instanceof Event) {
       cls = forwardEvent.constructor as EventConstructor;
     } else {
-      cls = PointerEvent as unknown as EventConstructor;
+      cls = PointerEvent;
     }
 
     const e2: { [key: string]: unknown } = {};
@@ -275,7 +300,13 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX
 
     e2.target = this;
 
-    const eventObj = new cls(type, e2);
+    let eventObj: InstanceType<typeof cls> | undefined;
+
+    if (cls === TabClickEvent) {
+      eventObj = new cls(type, this, e2 as unknown as PointerEvent);
+    } else {
+      eventObj = new (cls as typeof PointerEvent)(type, e2);
+    }
 
     this.dispatchEvent(eventObj);
     return eventObj;
@@ -577,6 +608,8 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
 }
 
 export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+  _wrapperDiv?: HTMLDivElement;
+  _contentsWrapper?: HTMLDivElement;
   iconsheet: number;
   movableTabs: boolean;
   tabFontScale: number;
@@ -594,7 +627,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
   horiz: boolean;
   // @ts-ignore fix later
-  onchange: ((tab: TabItem<CTX>, e?: Event) => void) | null;
+  on_change: ((tab: TabItem<CTX>, e?: Event) => void) | null;
   // @ts-ignore fix later
   onselect:
     | ((e: { tab?: TabItem<CTX>; defaultPrevented: boolean; preventDefault: () => void }) => void)
@@ -642,7 +675,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this._last_pos = undefined;
 
     this.horiz = true;
-    this.onchange = null;
+    this.on_change = null;
     this.onselect = null; //onselect is like onchange, but fires even if tab hasn't changed
 
     this.canvas.addEventListener(
@@ -1046,6 +1079,18 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
       this._redraw();
     }
+
+    if (!this.parentWidget || !this._wrapperDiv) {
+      return;
+    }
+
+    // TODO: currently no logic for 'bottom' (currently unsupported)
+    if (pos === "right" && this._wrapperDiv !== this.parentWidget!.shadow.lastElementChild) {
+      this._wrapperDiv.remove();
+      this.parentWidget.shadow.appendChild(this._wrapperDiv);
+      this.setCSS();
+      this._redraw();
+    }
   }
 
   updateDPI(force_update: boolean = false) {
@@ -1296,7 +1341,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         tab.focus({ preventScroll: true, focusVisible: false });
       }
 
-      if (this.onchange) this.onchange(tab, event);
+      if (this.on_change) this.on_change(tab, event);
 
       this.update(true);
     }
@@ -1398,7 +1443,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
       if (tab.icon !== undefined) {
         let paddingRight = tab.getDefault("iconPaddingRight", undefined, 2) as number;
-        
+
         iconmanager.canvasDraw(
           this as unknown as UIBase,
           this.canvas,
@@ -1578,6 +1623,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     this.canvas.style.backgroundColor = this.getDefault("TabInactive");
     this.canvas.style.borderRadius = r + "px";
+
+    if (this._contentsWrapper !== undefined) {
+      const bar_pos = this.getAttribute("bar_pos");
+      this._contentsWrapper.style.width = bar_pos === "right" ? "100%" : "unset";
+    }
   }
 
   updateStyle() {
@@ -1629,6 +1679,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   tabFontScale: number;
   dataPrefix: "";
   inherit_packflag = 0;
+  _contentsHidden = false;
 
   _last_style_key: string;
   _last_horiz?: boolean;
@@ -1636,7 +1687,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   _tab?: TabItemContainer<CTX>;
 
   // @ts-ignore TODO: fix this later
-  onchange?: (tab: TabItem<CTX>, event?: PointerEvent | KeyboardEvent) => void;
+  on_change?: (tab: TabItem<CTX>, event?: PointerEvent | KeyboardEvent) => void;
   // @ts-ignore TODO: fix this later
   onselect?: (e: any) => void;
   horiz: boolean = false;
@@ -1667,8 +1718,10 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     this._tab = undefined;
 
     const div = document.createElement("div");
+    this.tbar._wrapperDiv = div;
     div.setAttribute("class", `_tab_${this._id}`);
     div.appendChild(this.tbar);
+
     this.shadow.appendChild(div);
 
     this.tbar.parentWidget = this as unknown as UIBase<CTX>;
@@ -1679,7 +1732,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       }
     };
 
-    this.tbar.onchange = (tab, event) => {
+    this.tbar.on_change = (tab, event) => {
       if (this._tab) {
         HTMLElement.prototype.remove.call(this._tab);
       }
@@ -1690,12 +1743,6 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
       this._tab.parentWidget = this as unknown as UIBase<CTX>;
 
-      //ensure we get full update convergence when switching
-      //tabs
-      for (let i = 0; i < 2; i++) {
-        this._tab.flushUpdate();
-      }
-
       const div = document.createElement("div");
 
       this.tbar.setCSSOnce(
@@ -1703,15 +1750,52 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
         div
       );
 
+      this.tbar._contentsWrapper?.remove();
+      this.tbar._contentsWrapper = div;
+      div.style.display = this._contentsHidden ? "none" : "inherit";
+
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
 
-      this.shadow.appendChild(div);
+      if (this.getAttribute("bar_pos") !== "right") {
+        this.shadow.appendChild(div);
+      } else {
+        this.shadow.insertBefore(div, this.tbar._wrapperDiv!);
+        div.style.width = "100%";
+      }
 
-      if (this.onchange) {
-        this.onchange(tab, event as KeyboardEvent | PointerEvent | undefined);
+      if (this.on_change) {
+        this.on_change(tab, event as KeyboardEvent | PointerEvent | undefined);
+      }
+
+      for (let i = 0; i < 4; i++) {
+        this._tab.flushUpdate();
+        this.flushUpdate();
       }
     };
+  }
+
+  addEventListener<K extends keyof (TabDragEvents & HTMLElementEventMap)>(
+    type: K,
+    listener: (this: HTMLElement, ev: (TabDragEvents & HTMLElementEventMap)[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    cb: EventListenerOrEventListenerObject,
+    options?: AddEventListenerOptions | boolean
+  ): void {
+    super.addEventListener(type, cb, options);
+  }
+
+  set contentsHidden(val: boolean) {
+    if (val === this._contentsHidden) {
+      return;
+    }
+    this._contentsHidden = val;
+    if (this.tbar._contentsWrapper !== undefined) {
+      this.tbar._contentsWrapper.style.display = val ? "none" : "inherit";
+    }
   }
 
   get movableTabs(): boolean {

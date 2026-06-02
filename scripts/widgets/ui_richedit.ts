@@ -140,8 +140,8 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
         this.setPathValue(this.ctx, path, this.value);
       }
 
-      if (this.onchange) {
-        (this.onchange as any)(this._value);
+      if (this.on_change) {
+        (this.on_change as any)(this._value);
       }
       if (this.oninput) {
         (this.oninput as any)(this._value);

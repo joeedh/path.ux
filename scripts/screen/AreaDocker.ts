@@ -87,7 +87,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     this.clear();
 
     const tabs = (this.tbar = this.tabs() as unknown as TabContainer<CTX>);
-    tabs.onchange = this.tab_onchange.bind(this);
+    tabs.on_change = this.tab_onchange.bind(this);
 
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
 
@@ -140,7 +140,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     }
 
     const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
-    addTab._tab.overrideDefault('iconPaddingRight', 8);
+    addTab._tab.overrideDefault("iconPaddingRight", 8);
 
     dockerdebug("Add Menu Tab", addTab);
 
@@ -185,7 +185,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     const mpos = new Vector2([e.x, e.y]);
 
     // prevent tab move modal p
-    e.preventDefault()
+    e.preventDefault();
 
     if (this.addMenu && !this.addMenu.closed) {
       this.addMenu.close();
@@ -399,7 +399,7 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
-    menu.srcWidget = tab
+    menu.srcWidget = tab;
     menu._init();
 
     const prop = makeAreasEnum();

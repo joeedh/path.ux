@@ -1044,7 +1044,7 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
     }
 
     node.cssText = node.textbox();
-    node.cssText.onchange = (val: unknown) => {
+    node.cssText.on_change = (val: unknown) => {
       const strVal = "" + val;
       const ok = validateWebColor(strVal);
       if (!ok) {
@@ -1508,8 +1508,8 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this.rgba.load(widget.rgba);
       this.redraw();
 
-      if (this.onchange) {
-        this.onchange(this);
+      if (this.on_change) {
+        this.on_change(this);
       }
     };
 
@@ -1539,8 +1539,8 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.rgba);
     }
 
-    if (this.onchange) {
-      this.onchange(this);
+    if (this.on_change) {
+      this.on_change(this);
     }
 
     this._redraw();

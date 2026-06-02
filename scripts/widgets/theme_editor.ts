@@ -85,8 +85,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       panel.flushUpdate();
       panel.flushSetCSS();
 
-      if (this.onchange) {
-        (this.onchange as any)(key, propkey, obj);
+      if (this.on_change) {
+        (this.on_change as any)(key, propkey, obj);
       }
     };
 
@@ -105,8 +105,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     let do_onchange = (key: string, k: string, _obj?: any) => {
       flagThemeUpdate();
 
-      if (this.onchange) {
-        (this.onchange as any)(key, k, _obj);
+      if (this.on_change) {
+        (this.on_change as any)(key, k, _obj);
       }
 
       (this.ctx as any).screen.completeSetCSS();

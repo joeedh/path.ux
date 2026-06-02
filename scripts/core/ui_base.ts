@@ -1057,7 +1057,7 @@ export class UIBase<
   }
   ondestroy?: () => void;
   getValue?: () => unknown;
-  declare onchange: ((val: unknown) => void) | null;
+  declare on_change: ((val: unknown) => void) | null;
 
   #reflagGraph = false;
 
@@ -3953,7 +3953,7 @@ export class UIBase<
       }
 
       //do we have both?
-      if (def1 !== undefined && def2 !== undefined) {
+      if (def1 !== def2 && def1 !== undefined && def2 !== undefined) {
         console.warn(
           'You defined a class override both as a "key1.key2" value and a nested object, e.g. "key1: {key2: {}}"',
           'The former (e.g. the one with class key "key1.key2") will be used'

@@ -63,8 +63,8 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
           }
         }
 
-        if (this.onchange) {
-          this.onchange(this._value);
+        if (this.on_change) {
+          this.on_change(this._value);
         }
       } catch (error) {
         if (window.DEBUG?.datapath) {
@@ -204,8 +204,8 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
   }
 
   _on_change() {
-    if (this.onchange) {
-      this.onchange(this);
+    if (this.on_change) {
+      this.on_change(this);
     }
   }
 
@@ -267,7 +267,7 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     const panel = this.panel("Range");
 
     const clipCheck = panel.check(undefined, "Clip To Range");
-    clipCheck.onchange = (val) => {
+    clipCheck.on_change = (val) => {
       this._value.clipToRange = val as boolean;
       this._on_change();
       this._redraw();
@@ -461,10 +461,10 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
       this._lastGen.killGUI(col as unknown as Container, this.canvas);
     }
 
-    const onchange = this.dropbox.onchange;
-    this.dropbox.onchange = null;
+    const onchange = this.dropbox.on_change;
+    this.dropbox.on_change = null;
     this.dropbox.setValue(this.value.generatorType);
-    this.dropbox.onchange = onchange;
+    this.dropbox.on_change = onchange;
 
     col.clear();
 
