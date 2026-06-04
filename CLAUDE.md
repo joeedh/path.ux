@@ -224,3 +224,11 @@ The `scripts/path-controller/` directory is a git submodule. Commit changes ther
 cd scripts/path-controller && git add -A && git commit -m "msg"
 cd ../.. && git add scripts/path-controller && git commit -m "update submodule"
 ```
+
+**Commit a parent repo and its submodules together** whenever their branch names
+match, or both are on their default branches: make the submodule commit, then bump
+the parent's gitlink, as one logical change. This applies both to
+`path-controller` under path.ux and to path.ux itself under any superproject that
+embeds it. (Pinned third-party submodules — e.g. a parent's `emsdk` / `extern/imgui`
+— are the exception and are bumped deliberately, not auto-co-committed; path.ux has
+no such pinned submodules.)
