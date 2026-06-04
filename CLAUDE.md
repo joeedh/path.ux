@@ -232,3 +232,13 @@ the parent's gitlink, as one logical change. This applies both to
 embeds it. (Pinned third-party submodules — e.g. a parent's `emsdk` / `extern/imgui`
 — are the exception and are bumped deliberately, not auto-co-committed; path.ux has
 no such pinned submodules.)
+
+**Parent on a branch, submodule on its default branch:** do not silently commit or
+advance the submodule's shared default branch. Ask the user whether they want to
+commit and/or push the submodule's default branch (and bump the gitlink) before
+doing so. This applies to `path-controller` under path.ux and to path.ux itself
+under any superproject.
+
+**Worktree teardown:** before removing a worktree, every submodule sitting on its
+default branch (path.ux has no pinned exceptions) must be committed and pushed, so
+no work is lost when the checkout goes away.
