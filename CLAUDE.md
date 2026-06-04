@@ -229,7 +229,7 @@ cd ../.. && git add scripts/path-controller && git commit -m "update submodule"
 match, or both are on their default branches: make the submodule commit, then bump
 the parent's gitlink, as one logical change. This applies both to
 `path-controller` under path.ux and to path.ux itself under any superproject that
-embeds it. (Pinned third-party submodules — e.g. a parent's `emsdk` / `extern/imgui`
+embeds it. (Pinned third-party submodules — e.g. a parent's `extern/imgui`
 — are the exception and are bumped deliberately, not auto-co-committed; path.ux has
 no such pinned submodules.)
 
