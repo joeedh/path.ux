@@ -204,6 +204,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     this._was_clicked = true;
 
+    const activeItem = this.activeItem
+    
     if (this._onselect) {
       try {
         this._onselect(this.activeItem._id);
@@ -214,7 +216,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
     }
     if (this.on_select) {
       try {
-        this.on_select(this.activeItem._id);
+        this.on_select(activeItem._id);
       } catch (error: unknown) {
         util.print_stack(error as Error);
         console.log("Error in menu callback");
@@ -666,6 +668,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
             this.close();
           };
 
+          if (!li._menu!.on_select && this.on_select !== undefined) {
+            li._menu!.on_select = (item: string | number) => {
+              this.on_select!(item);
+            };
+          }
+          
           li._menu!.start(false, false);
           this._submenu = li._menu;
         }
