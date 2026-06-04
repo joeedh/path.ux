@@ -4,6 +4,7 @@
 
 - [Introduction](#introduction)
 - [Architecture](#architecture)
+- [Widgets](#widgets)
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->

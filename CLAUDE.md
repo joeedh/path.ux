@@ -58,6 +58,11 @@ This can create problems with iteration, for example:
 
 ## Data API paths
 
+See [documentation/controller.md](documentation/controller.md) for the datapath
+controller overview: how model classes are wrapped (`DataAPI` / `DataStruct` /
+`DataPath`), how the UI references values by path, and how to look up structs by
+name (`getStructByName`).
+
 Valid `path` strings for `container.prop("...")`, related widget methods, and
 `<prop path="...">` xmlpage tags are catalogued in `generated/API_PATHS.md`
 (human/LLM-readable) and `generated/api-paths.json` (machine-readable), with each

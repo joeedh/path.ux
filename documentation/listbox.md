@@ -16,14 +16,15 @@ navigation (Up/Down), and can be resized by the user via a corner grip.
 - [Manual mode](#manual-mode)
 - [Listening for selection changes](#listening-for-selection-changes)
 - [Data-API backed mode](#data-api-backed-mode)
-  - [The DataList contract](#the-datalist-contract)
-  - [Active element sync](#active-element-sync)
-  - [Item labels](#item-labels)
-  - [Change detection: getVersion vs key diff](#change-detection-getversion-vs-key-diff)
-  - [Undoable selection](#undoable-selection)
+  * [The DataList contract](#the-datalist-contract)
+  * [Active element sync](#active-element-sync)
+  * [Item labels](#item-labels)
+  * [Change detection: getVersion vs key diff](#change-detection-getversion-vs-key-diff)
+  * [Undoable selection](#undoable-selection)
 - [XML pages](#xml-pages)
 - [Resizing](#resizing)
 - [API reference](#api-reference)
+<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 

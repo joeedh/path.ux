@@ -3,9 +3,10 @@
 <!-- toc -->
 
 - [Datapath Controller](#datapath-controller)
-  * [simple_controller.js](#simple_controllerjs)
-  * [Type-In-Place API](#type-in-place-api)
   * [Object Wrapping Example](#object-wrapping-example)
+  * [Defining Properties](#defining-properties)
+  * [Using Paths From the UI](#using-paths-from-the-ui)
+  * [Looking Up Structs by Name](#looking-up-structs-by-name)
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -14,26 +15,27 @@
 
 The controller is the glue by which the view (or UI) queries the model (application state),
 and is loosely based on Blender's RNA system.  UI code doesn't hold references to model
-objects; instead it holds special special "data paths".  Objects in the model are wrapped
+objects; instead it holds special "data paths".  Objects in the model are wrapped
 in a special API that describes all the type information a UI needs (e.g. property types,
-icon, tooltips, numeric ranges, etc).  Simple paths are used to lookup data in the model
+icon, tooltips, numeric ranges, etc).  Simple paths are used to look up data in the model
 (e.g. ```obj.property.something[bleh]```).
 
 Blender's RNA was originally created to provide one wrapper API that could power Blender's UI,
-scripting, and animation systems.  
+scripting, and animation systems.
 
-## simple_controller.js
+The core types live in `scripts/path-controller/controller/controller.ts`, re-exported through
+`scripts/controller/simple_controller.ts`:
 
-See [DataAPI](@DataAPI).
-
-## Type-In-Place API
-
-Originally path.ux was designed to strictly separate the code that wraps model object from
-the code that builds UIs.  A new API that does both is in the works.
+- **`DataAPI`** — the registry. Maps model classes to `DataStruct` definitions, and resolves
+  string paths against a context object.
+- **`DataStruct`** — the type description for one wrapped class: a collection of `DataPath`
+  members.
+- **`DataPath`** — one property: its member name, API name, `ToolProperty` (type, range,
+  units, enum items, icons), and getter/setter behavior.
 
 ## Object Wrapping Example
 
-```
+```js
     //our test class we want to wrap
     class Thing {
       constructor(name, id, location, opacity) {
@@ -43,31 +45,100 @@ the code that builds UIs.  A new API that does both is in the works.
         this.opacity = opacity; //float
       }
     }
-    
+
     //enumeration for .location member
     const LocationEnum = {
       LIVING_ROOM : 0,
       BEDROOM : 1,
       DRIVEWAY : 2
     };
-    
+
     import {DataAPI} from 'simple_controller.js';
-    
-    export api = new DataAPI();
-    
+
+    export const api = new DataAPI();
+
     //create a structure mapping to Thing
     let st = api.mapStruct(Thing);
-    
+
     //define properties and their types
     //these all have the prototype (membername, apiname, ui_name, description)
-    
+
     st.string("name", "name", "Name", "Name of thing");
     st.int("id", "id", "ID", "Unique ID of thing");
-    st.enum("location", "location", "Location", "Location of thing").icons({
+    st.enum("location", "location", LocationEnum, "Location", "Location of thing").icons({
       LIVING_ROOM : [some icon id],
       BEDROOM : [some icon id],
       DRIVEWAY : [some icon id],
     });
     st.float("opacity", "opacity", "Opacity", "Transparency of thing").range(0, 1);
-
 ```
+
+## Defining Properties
+
+`DataStruct` exposes a builder method per property type. Each takes
+`(path, apiname, uiname?, description?)` and returns a `DataPath` you can chain modifiers on:
+
+- Scalars: `string`, `int`, `float`, `bool`
+- Vectors: `vec2`, `vec3`, `vec4`, `color3`, `color4`
+- Choice: `enum`, `flags` (both take an `enumdef` object)
+- Nested: `struct` (a fixed sub-struct), `dynamicStruct` (sub-struct resolved at runtime),
+  `list` / `arrayList` (collections)
+
+Common chained modifiers: `.range(min, max)`, `.step(...)`, `.icons({KEY: id})`,
+`.noUnits()`, `.readOnly()`, `.customGet(getter)` / `.customGetSet(getter, setter)`,
+`.uiNameGetter(...)`. See `api_define.ts` in the app for worked examples.
+
+## Using Paths From the UI
+
+Once a class is mapped, UI code references model values by string path against the current
+context. Containers and widgets accept these paths directly:
+
+```js
+container.prop("scene.objects.active.location");
+container.slider("scene.tool.brush.radius");
+container.check("settings.snap.enabled");
+```
+
+`DataAPI.resolvePath(ctx, path)` is the low-level resolver behind these calls; on failure it
+records a message (including "did you mean" hints) on `api.lastResolveError`. In this app the
+set of valid paths is catalogued — see `generated/API_PATHS.md` and run `pnpm run gen:paths`
+after changing any `defineAPI`.
+
+## Looking Up Structs by Name
+
+`getStruct(cls)` resolves a `DataStruct` from a class reference. When you only have a *name* —
+e.g. a serialized type tag, or a string from a saved file or generic tool — use
+`getStructByName(name)` instead:
+
+```js
+const st = api.getStructByName("Brush");
+if (st) {
+  // st is the same DataStruct as api.getStruct(BrushClass)
+}
+```
+
+It returns `undefined` for unknown names.
+
+**Which name?** Every struct is registered under the most stable name available, chosen in
+priority order (`resolveStructName`):
+
+1. an **explicit** name passed to `mapStruct` / `mapStructCustom` / `inheritStruct`;
+2. the **nstructjs registered name** (`cls.structName`) — a string literal that bundlers
+   can't mangle, the same name used for serialization;
+3. `cls.name` — the JS constructor name, which production bundlers mangle, so it's only a
+   last resort for classes nobody looks up by name.
+
+Because of (2), name lookup survives minification as long as the class is nstructjs-registered.
+Prefer it over `cls.name` whenever the lookup string crosses a serialization or bundle boundary.
+
+```js
+// explicit name
+const def = api.mapStruct(Widget, true, "ExplicitWidget");
+api.getStructByName("ExplicitWidget") === api.getStruct(Widget); // true
+
+// nstructjs name (mangle-proof even if the class is minified to `a`)
+api.getStructByName("RealBrush") === api.getStruct(brushClass); // true
+```
+
+If two classes register the same name, the **first** registration wins and a warning is logged;
+pass an explicit name to `mapStruct` / `inheritStruct` to disambiguate.
