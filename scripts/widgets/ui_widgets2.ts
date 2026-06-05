@@ -62,7 +62,7 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
     const panel = UIBase.createElement<UIBase>("vector-panel-x");
     const screen = this.ctx.screen;
 
-    const popup = screen.popup(this, this, 0) as unknown as PopupContainer;
+    const popup = screen.popup(this, this) as PopupContainer;
 
     popup.add(panel);
     popup.button("ok", () => {
