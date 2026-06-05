@@ -204,8 +204,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     this._was_clicked = true;
 
-    const activeItem = this.activeItem
-    
+    const activeItem = this.activeItem;
+
     if (this._onselect) {
       try {
         this._onselect(this.activeItem._id);
@@ -673,7 +673,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
               this.on_select!(item);
             };
           }
-          
+
           li._menu!.start(false, false);
           this._submenu = li._menu;
         }
@@ -1817,8 +1817,11 @@ export class MenuWrangler {
         break;
       }
 
-      console.log('-', w)
-      if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute('menu-id') === this.menu?.id)) {
+      console.log("-", w);
+      if (
+        w.hasAttribute("menu-button") &&
+        (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)
+      ) {
         ok = true;
         break;
       }
@@ -1826,7 +1829,7 @@ export class MenuWrangler {
       w = w.parentWidget as DropBoxLike | undefined;
     }
 
-    console.log('\n\n')
+    console.log("\n\n");
     if (!ok) {
       this.closereq = this.menu;
     } else {

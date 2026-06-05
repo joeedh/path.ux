@@ -87,7 +87,8 @@ export function saveUIData(node: HTMLElement, key: string): string {
 //window._saveUIData = saveUIData;
 
 export function makeParser(): parser {
-  const tk = <T=string>(name: string, re: RegExp, func?: TokFunc<T>) => new tokdef<T>(name, re, func);
+  const tk = <T = string>(name: string, re: RegExp, func?: TokFunc<T>) =>
+    new tokdef<T>(name, re, func);
   let p: parser;
 
   const tokens = [

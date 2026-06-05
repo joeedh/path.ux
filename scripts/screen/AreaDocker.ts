@@ -147,8 +147,8 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     const icon = (this.addicon = addTab._tab);
 
     icon.ontabclick = (e: PointerEvent) => this.on_addclick(e);
-    // prevent menu from auto-closing when user pointer passes over 
-    // the tab item on the way to the menu.  note: we will have 
+    // prevent menu from auto-closing when user pointer passes over
+    // the tab item on the way to the menu.  note: we will have
     // to set a menu-id attribute when we create the menu.
     icon.setAttribute("menu-button", "true");
     icon.setAttribute("simple", "true");
@@ -499,9 +499,9 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
     this.addMenu = menu;
     // set the menu id so the menu wrangler knows not to
-    // close the menu on hovering over addicon 
+    // close the menu on hovering over addicon
     // (also see the menu-button attribute we set earlier).
-    this.addicon.setAttribute('menu-id', menu.id);
+    this.addicon.setAttribute("menu-id", menu.id);
 
     startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
     return menu;
