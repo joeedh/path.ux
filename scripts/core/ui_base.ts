@@ -2696,35 +2696,36 @@ export class UIBase<
     marginy = 0,
     nodeclass: IUIBaseConstructor = UIBase,
     excluded_classes?: IUIBaseConstructor[]
-  ): T[]  {
+  ): T[] {
     nodeclass = args.nodeclass || UIBase;
     excluded_classes = args.excluded_classes;
     const clip = args.clip;
 
-     x -= window.scrollX;
+    x -= window.scrollX;
     y -= window.scrollY;
 
     let elems = this.shadow.elementsFromPoint(x, y);
 
-    const excluded = (n: UIBase) => excluded_classes ? excluded_classes.find(n2 => n instanceof n2) : false;
-    const visit = new WeakSet<Element>()
+    const excluded = (n: UIBase) =>
+      excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
+    const visit = new WeakSet<Element>();
 
-    const result = new Set<T>()
-    const recurse = (elems2 : Element[]) => {
+    const result = new Set<T>();
+    const recurse = (elems2: Element[]) => {
       for (const n of elems2) {
         if (n instanceof UIBase) {
-          const ns = n.shadow.elementsFromPoint(x, y)
+          const ns = n.shadow.elementsFromPoint(x, y);
           if (!excluded(n) && (!nodeclass || n instanceof nodeclass)) {
             result.add(n as T);
           }
-          ns.forEach(n2 => visit.add(n2));
-          recurse(ns.filter(n2 => !visit.has(n2)));
-        } 
+          ns.forEach((n2) => visit.add(n2));
+          recurse(ns.filter((n2) => !visit.has(n2)));
+        }
       }
-    }
+    };
     recurse(elems);
 
-    return Array.from(result)
+    return Array.from(result);
   }
 
   pickElement<T extends UIBase<CTX> = UIBase<CTX>>(

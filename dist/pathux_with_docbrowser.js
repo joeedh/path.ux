@@ -1137,7 +1137,10 @@ var init_mobile_detect = __esm({
   }
 });
 
-// node_modules/.pnpm/nstructjs@0.8.5/node_modules/nstructjs/build/nstructjs_es6.js
+// ../../vendor/nstructjs/build/nstructjs_es6.js
+function isParseStructsDummy(cls) {
+  return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
+}
 function tab(n, chr = " ") {
   let t = "";
   for (let i = 0; i < n; i++) {
@@ -2369,9 +2372,10 @@ function formatJSON(json, cls, addComments = true, validate = true) {
 function readJSON(json, class_or_struct_id) {
   return manager.readJSON(json, class_or_struct_id);
 }
-var colormap, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
+var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "node_modules/.pnpm/nstructjs@0.8.5/node_modules/nstructjs/build/nstructjs_es6.js"() {
+  "../../vendor/nstructjs/build/nstructjs_es6.js"() {
+    "use strict";
     colormap = {
       "black": 30,
       "red": 31,
@@ -2389,6 +2393,7 @@ var init_nstructjs_es6 = __esm({
       "lightred": 91,
       "peach": 210
     };
+    PARSE_STRUCTS_DUMMY = /* @__PURE__ */ Symbol.for("nstructjs.parseStructsDummy");
     termColorMap = {};
     for (const k in colormap) {
       termColorMap[k] = colormap[k];
@@ -3180,8 +3185,9 @@ var init_nstructjs_es6 = __esm({
         let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
-        const instance = manager3.read_object(data, cls3 ?? id, uctx, dest);
-        if (cls3 === void 0 && instance && typeof instance === "object") {
+        const missing = cls3 === void 0 || !!manager3.onUnknownClass && isParseStructsDummy(cls3);
+        const instance = manager3.read_object(data, missing ? id : cls3, uctx, dest);
+        if (missing && instance && typeof instance === "object") {
           instance._origClsname = cls2.name;
         }
         return instance;
@@ -3199,8 +3205,9 @@ var init_nstructjs_es6 = __esm({
         let cls2 = manager3.get_struct_id(id);
         packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
-        const instance = manager3.read_object(data, cls3 ?? id, uctx);
-        if (cls3 === void 0 && instance && typeof instance === "object") {
+        const missing = cls3 === void 0 || !!manager3.onUnknownClass && isParseStructsDummy(cls3);
+        const instance = manager3.read_object(data, missing ? id : cls3, uctx);
+        if (missing && instance && typeof instance === "object") {
           instance._origClsname = cls2.name;
         }
         return instance;
@@ -4105,6 +4112,7 @@ var init_nstructjs_es6 = __esm({
             dummy.STRUCT = _STRUCT.fmt_struct(stt, void 0, void 0, void 0, true);
             dummy.structName = stt.name;
             dummy.prototype.structName = dummy.name;
+            dummy[PARSE_STRUCTS_DUMMY] = true;
             this.struct_cls[dummy.structName] = dummy;
             this.structs[dummy.structName] = stt;
             if (stt.id !== -1)
@@ -4471,7 +4479,7 @@ var init_nstructjs_es6 = __esm({
         if (typeof cls_or_struct_id === "number") {
           const fileSchema = this.struct_ids[cls_or_struct_id];
           cls = this.struct_cls[fileSchema.name];
-          if (cls === void 0 && this.onUnknownClass) {
+          if ((cls === void 0 || isParseStructsDummy(cls)) && this.onUnknownClass) {
             const hookResult = this.onUnknownClass(fileSchema.name, fileSchema);
             if (hookResult !== void 0) {
               cls = hookResult;
@@ -11929,7 +11937,7 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
     return myToFixed(value, decimalPlaces);
   }
 }
-var FLT_EPSILONE, Units, Unit, MeterUnit, InchUnit, foot_re, FootUnit, square_foot_re, SquareFootUnit, MileUnit, DegreeUnit, RadianUnit, numre1, numre2, hexre1, hexre2, binre, expre, intre, PixelUnit, PercentUnit;
+var FLT_EPSILONE, Units, Unit, MeterUnit, InchUnit, CentimeterUnit, MillimeterUnit, foot_re, FootUnit, square_foot_re, SquareFootUnit, MileUnit, DegreeUnit, RadianUnit, numre1, numre2, hexre1, hexre2, binre, expre, intre, PixelUnit, PercentUnit;
 var init_units = __esm({
   "scripts/path-controller/units/units.ts"() {
     "use strict";
@@ -12047,6 +12055,62 @@ var init_units = __esm({
       }
     };
     Unit.register(InchUnit);
+    CentimeterUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "centimeter",
+          uiname: "Centimeter",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?cm$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("cm")) {
+          string = string.slice(0, string.length - 2);
+        }
+        return parseFloat(string);
+      }
+      static toInternal(value) {
+        return value * 0.01;
+      }
+      static fromInternal(value) {
+        return value / 0.01;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "cm";
+      }
+    };
+    Unit.register(CentimeterUnit);
+    MillimeterUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "millimeter",
+          uiname: "Millimeter",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?mm$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("mm")) {
+          string = string.slice(0, string.length - 2);
+        }
+        return parseFloat(string);
+      }
+      static toInternal(value) {
+        return value * 1e-3;
+      }
+      static fromInternal(value) {
+        return value / 1e-3;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "mm";
+      }
+    };
+    Unit.register(MillimeterUnit);
     foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
     FootUnit = class extends Unit {
       static unitDefine() {
@@ -12785,8 +12849,14 @@ ToolProperty {
 `;
     struct_default.register(ToolProperty);
     FloatArrayProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.FloatArrayProperty {
+  value : array(float);
+}`
+      );
       static PROP_TYPE_ID = PropTypes.FLOAT_ARRAY;
-      static STRUCT;
       value;
       constructor(value, apiname, uiname, description, flag, icon) {
         super(PropTypes.FLOAT_ARRAY, void 0, apiname, uiname, description, flag, icon);
@@ -12826,10 +12896,6 @@ ToolProperty {
         return this;
       }
     };
-    FloatArrayProperty.STRUCT = struct_default.inherit(FloatArrayProperty, ToolProperty) + `
-  value : array(float);
-}`;
-    struct_default.register(FloatArrayProperty);
     StringPropertyBase = class extends ToolProperty {
       static STRUCT = struct_default.inlineRegister(
         this,
@@ -12874,7 +12940,15 @@ ToolProperty {
     };
     ToolProperty.internalRegister(StringProperty);
     NumProperty = class extends ToolProperty {
-      static STRUCT;
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.NumProperty {
+  range : array(float);
+  data  : float;
+}
+`
+      );
       constructor(type, value, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
         this.data = 0;
@@ -12888,13 +12962,20 @@ ToolProperty {
         super.loadSTRUCT(reader);
       }
     };
-    NumProperty.STRUCT = struct_default.inherit(NumProperty, ToolProperty) + `
-  range : array(float);
-  data  : float;
-}
-`;
     _NumberPropertyBase = class extends ToolProperty {
-      static STRUCT;
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop._NumberPropertyBase {
+  range            : array(float);
+  expRate          : float;
+  data             : float;
+  step             : float;
+  slideSpeed       : float;
+  sliderDisplayExp : float;
+}
+`
+      );
       constructor(type, value, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
         this.data = 0;
@@ -12983,19 +13064,15 @@ ToolProperty {
         return this;
       }
     };
-    _NumberPropertyBase.STRUCT = struct_default.inherit(_NumberPropertyBase, ToolProperty) + `
-  range            : array(float);
-  expRate          : float;
-  data             : float;
-  step             : float;
-  slideSpeed       : float;
-  sliderDisplayExp : float;
-}
-`;
-    struct_default.register(_NumberPropertyBase);
     IntProperty = class extends _NumberPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.IntProperty {
+  data : int;
+}`
+      );
       static PROP_TYPE_ID = PropTypes.INT;
-      static STRUCT;
       constructor(value, apiname, uiname, description, flag, icon) {
         super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
         this.baseUnit = this.displayUnit = "none";
@@ -13027,10 +13104,6 @@ ToolProperty {
         super.loadSTRUCT(reader);
       }
     };
-    IntProperty.STRUCT = struct_default.inherit(IntProperty, _NumberPropertyBase) + `
-  data : int;
-}`;
-    struct_default.register(IntProperty);
     ToolProperty.internalRegister(IntProperty);
     ReportProperty = class extends StringPropertyBase {
       static PROP_TYPE_ID = PropTypes.REPORT;
@@ -13042,8 +13115,15 @@ ToolProperty {
     };
     ToolProperty.internalRegister(ReportProperty);
     BoolProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.BoolProperty {
+  data : bool;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.BOOL;
-      static STRUCT;
       constructor(value, apiname, uiname, description, flag, icon) {
         super(PropTypes.BOOL, void 0, apiname, uiname, description, flag, icon);
         this.data = !!value;
@@ -13072,11 +13152,6 @@ ToolProperty {
       }
     };
     ToolProperty.internalRegister(BoolProperty);
-    BoolProperty.STRUCT = struct_default.inherit(BoolProperty, ToolProperty) + `
-  data : bool;
-}
-`;
-    struct_default.register(BoolProperty);
     FloatPropertyBase = class extends _NumberPropertyBase {
       static STRUCT = struct_default.inlineRegister(
         this,
@@ -13495,8 +13570,15 @@ EnumKeyPair {
       }
     };
     Vec2Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec2Property {
+  data : vec2;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.VEC2;
-      static STRUCT;
       constructor(data, apiname, uiname, description) {
         super(PropTypes.VEC2, void 0, apiname, uiname, description);
         this.type = PropTypes.VEC2;
@@ -13516,15 +13598,17 @@ EnumKeyPair {
         origData.load(this.data);
       }
     };
-    Vec2Property.STRUCT = struct_default.inherit(Vec2Property, VecPropertyBase) + `
-  data : vec2;
-}
-`;
-    struct_default.register(Vec2Property);
     ToolProperty.internalRegister(Vec2Property);
     Vec3Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec3Property {
+  data : vec3;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.VEC3;
-      static STRUCT;
       constructor(data, apiname, uiname, description) {
         super(PropTypes.VEC3, void 0, apiname, uiname, description);
         this.type = PropTypes.VEC3;
@@ -13542,15 +13626,17 @@ EnumKeyPair {
         return this.data;
       }
     };
-    Vec3Property.STRUCT = struct_default.inherit(Vec3Property, VecPropertyBase) + `
-  data : vec3;
-}
-`;
-    struct_default.register(Vec3Property);
     ToolProperty.internalRegister(Vec3Property);
     Vec4Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec4Property {
+  data : vec4;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.VEC4;
-      static STRUCT;
       constructor(data, apiname, uiname, description) {
         super(PropTypes.VEC4, void 0, apiname, uiname, description);
         this.type = PropTypes.VEC4;
@@ -13582,15 +13668,17 @@ EnumKeyPair {
         b.data.load(this.data);
       }
     };
-    Vec4Property.STRUCT = struct_default.inherit(Vec4Property, VecPropertyBase) + `
-  data : vec4;
-}
-`;
-    struct_default.register(Vec4Property);
     ToolProperty.internalRegister(Vec4Property);
     QuatProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.QuatProperty {
+  data : vec4;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.QUAT;
-      static STRUCT;
       constructor(data, apiname, uiname, description) {
         super(PropTypes.QUAT, void 0, apiname, uiname, description);
         this.data = new Quat(data);
@@ -13613,15 +13701,17 @@ EnumKeyPair {
         b.data.load(this.data);
       }
     };
-    QuatProperty.STRUCT = struct_default.inherit(QuatProperty, VecPropertyBase) + `
-  data : vec4;
-}
-`;
-    struct_default.register(QuatProperty);
     ToolProperty.internalRegister(QuatProperty);
     Mat4Property = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Mat4Property {
+  data           : mat4;
+}
+`
+      );
       static PROP_TYPE_ID = PropTypes.MATRIX4;
-      static STRUCT;
       constructor(data, apiname, uiname, description) {
         super(PropTypes.MATRIX4, void 0, apiname, uiname, description);
         this.data = new Matrix4(data);
@@ -13660,15 +13750,17 @@ EnumKeyPair {
         super.loadSTRUCT(reader);
       }
     };
-    Mat4Property.STRUCT = struct_default.inherit(Mat4Property, FloatPropertyBase) + `
-  data           : mat4;
-}
-`;
-    struct_default.register(Mat4Property);
     ToolProperty.internalRegister(Mat4Property);
     ListProperty = class _ListProperty extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.ListProperty {
+  prop  : abstract(ToolProperty);
+  value : array(abstract(ToolProperty));
+}`
+      );
       static PROP_TYPE_ID = PropTypes.PROPLIST;
-      static STRUCT;
       prop;
       value;
       /*
@@ -13807,14 +13899,16 @@ EnumKeyPair {
         })();
       }
     };
-    ListProperty.STRUCT = struct_default.inherit(ListProperty, ToolProperty) + `
-  prop  : abstract(ToolProperty);
-  value : array(abstract(ToolProperty));
-}`;
-    struct_default.register(ListProperty);
     ToolProperty.internalRegister(ListProperty);
     StringSetProperty = class extends ToolProperty {
-      static STRUCT;
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.StringSetProperty {
+  value  : iter(string);
+  values : iterkeys(string);
+}`
+      );
       static PROP_TYPE_ID = PropTypes.STRSET;
       value;
       values;
@@ -13988,11 +14082,6 @@ EnumKeyPair {
         this.value = new set(this.value);
       }
     };
-    StringSetProperty.STRUCT = struct_default.inherit(StringSetProperty, ToolProperty) + `
-  value  : iter(string);
-  values : iterkeys(string);
-}`;
-    struct_default.register(StringSetProperty);
     ToolProperty.internalRegister(StringSetProperty);
   }
 });
@@ -17132,7 +17221,18 @@ Curve1DPoint {
     splineCache = new BSplineCache();
     _idgen = 1;
     BSplineCurve = class _BSplineCurve extends CurveTypeData {
-      static STRUCT;
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.BSplineCurve {
+  points         : array(Curve1DPoint);
+  highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
+  deg            : int;
+  eidgen         : IDGen;
+  interpolating  : bool;
+}
+`
+      );
       _bid;
       _degOffset;
       cache_w;
@@ -18152,15 +18252,6 @@ Curve1DPoint {
         this.recalc = RecalcFlags.ALL;
       }
     };
-    BSplineCurve.STRUCT = struct_default.inherit(BSplineCurve, CurveTypeData) + `
-  points         : array(Curve1DPoint);
-  highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
-  deg            : int;
-  eidgen         : IDGen;
-  interpolating  : bool;
-}
-`;
-    struct_default.register(BSplineCurve);
     CurveTypeData.register(BSplineCurve);
     splineTemplatesLoaded = false;
     if (0) {
@@ -22174,6 +22265,14 @@ var init_curve1d_basic = __esm({
     init_util();
     _udigest4 = new HashDigest();
     EquationCurve = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.EquationCurve {
+  equation : string;
+}
+`
+      );
       equation;
       _last_equation;
       _last_xrange;
@@ -22403,15 +22502,19 @@ var init_curve1d_basic = __esm({
         }
         g.restore();
       }
-      static STRUCT;
     };
-    EquationCurve.STRUCT = struct_default.inherit(EquationCurve, CurveTypeData) + `
-  equation : string;
-}
-`;
-    struct_default.register(EquationCurve);
     CurveTypeData.register(EquationCurve);
     GuassianCurve = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.GuassianCurve {
+  height    : float;
+  offset    : float;
+  deviation : float;
+}
+`
+      );
       height;
       offset;
       deviation;
@@ -22548,15 +22651,7 @@ var init_curve1d_basic = __esm({
         }
         return ret === void 0 ? 0 : ret;
       }
-      static STRUCT;
     };
-    GuassianCurve.STRUCT = struct_default.inherit(GuassianCurve, CurveTypeData) + `
-  height    : float;
-  offset    : float;
-  deviation : float;
-}
-`;
-    struct_default.register(GuassianCurve);
     CurveTypeData.register(GuassianCurve);
   }
 });
@@ -22997,6 +23092,14 @@ var init_curve1d_anim = __esm({
     BOOL_FLAG = 1e17;
     _udigest5 = new HashDigest();
     SimpleCurveBase = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.SimpleCurveBase {
+  params : array(ParamKey) | obj._saveParams();
+}
+`
+      );
       params;
       constructor() {
         super();
@@ -23135,14 +23238,14 @@ var init_curve1d_anim = __esm({
           }
         }
       }
-      static STRUCT;
     };
-    SimpleCurveBase.STRUCT = struct_default.inherit(SimpleCurveBase, CurveTypeData) + `
-  params : array(ParamKey) | obj._saveParams();
-}
-`;
-    struct_default.register(SimpleCurveBase);
     BounceCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.BounceCurve {
+}`
+      );
       static define() {
         return {
           params: {
@@ -23173,13 +23276,15 @@ var init_curve1d_anim = __esm({
         const e = this._evaluate(1);
         return (this._evaluate(t) - s) / (e - s) + this.params.offset;
       }
-      static STRUCT;
     };
     CurveTypeData.register(BounceCurve);
-    BounceCurve.STRUCT = struct_default.inherit(BounceCurve, SimpleCurveBase) + `
-}`;
-    struct_default.register(BounceCurve);
     ElasticCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.ElasticCurve {
+}`
+      );
       _func;
       _last_hash;
       constructor() {
@@ -23211,13 +23316,15 @@ var init_curve1d_anim = __esm({
         }
         return this._func(t);
       }
-      static STRUCT;
     };
     CurveTypeData.register(ElasticCurve);
-    ElasticCurve.STRUCT = struct_default.inherit(ElasticCurve, SimpleCurveBase) + `
-}`;
-    struct_default.register(ElasticCurve);
     EaseCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.EaseCurve {
+}`
+      );
       constructor() {
         super();
       }
@@ -23239,13 +23346,15 @@ var init_curve1d_anim = __esm({
         const a2 = this.params.mode_out ? amp : 2 / 3;
         return bez42(0, a1, a2, 1, t);
       }
-      static STRUCT;
     };
     CurveTypeData.register(EaseCurve);
-    EaseCurve.STRUCT = struct_default.inherit(EaseCurve, SimpleCurveBase) + `
-}`;
-    struct_default.register(EaseCurve);
     RandCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.RandCurve {
+}`
+      );
       random;
       _seed;
       constructor() {
@@ -23291,12 +23400,8 @@ var init_curve1d_anim = __esm({
         }
         return t;
       }
-      static STRUCT;
     };
     CurveTypeData.register(RandCurve);
-    RandCurve.STRUCT = struct_default.inherit(RandCurve, SimpleCurveBase) + `
-}`;
-    struct_default.register(RandCurve);
   }
 });
 
@@ -23865,6 +23970,15 @@ function report(msg) {
 function popReportName() {
   reportstack.pop();
 }
+function resolveStructName(cls, explicit) {
+  if (explicit !== void 0) {
+    return explicit;
+  }
+  if (cls.hasOwnProperty("structName") && typeof cls.structName === "string") {
+    return cls.structName;
+  }
+  return cls.name;
+}
 function initSimpleController() {
   initToolPaths();
 }
@@ -23878,7 +23992,7 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_classes, tool_idgen, lt, lastmsg, lcount, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_classes, tool_idgen, lt, lastmsg, lcount, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
@@ -24246,6 +24360,7 @@ var init_controller = __esm({
     };
     _map_struct_idgen = 1;
     _map_structs = {};
+    _map_structs_by_name = {};
     _dummypath = new DataPath();
     DummyIntProperty = new IntProperty();
     CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
@@ -24279,19 +24394,28 @@ var init_controller = __esm({
       getStruct(cls) {
         return this.mapStruct(cls, false);
       }
+      /**
+       * Look up a struct definition by its stable name (see `resolveStructName`):
+       * an explicit name passed to `mapStruct`, else the nstructjs registered name
+       * (`cls.structName`), else `cls.name`. Unlike `getStruct(cls)` this does not
+       * need a class reference, so it survives bundler name-mangling as long as the
+       * struct was registered with an nstructjs/explicit name.
+       */
+      getStructByName(name2) {
+        return _map_structs_by_name[name2];
+      }
       mergeStructs(dest, src) {
         for (const m of src.members) {
           dest.add(m.copy());
         }
       }
-      inheritStruct(cls, parent, auto_create_parent = false) {
+      inheritStruct(cls, parent, auto_create_parent = false, name2) {
         let st = this.mapStruct(parent, auto_create_parent);
         if (st === void 0) {
           throw new Error("parent has no struct definition");
         }
         st = st.copy();
-        st.name = cls.name;
-        this._addClass(cls, st);
+        this._addClass(cls, st, name2);
         return st;
       }
       /**
@@ -24301,20 +24425,30 @@ var init_controller = __esm({
        * @param auto_create: If true, automatically create definition if not already existing.
        * @returns {IterableIterator<*>}
        */
-      _addClass(cls, dstruct) {
+      _addClass(cls, dstruct, name2) {
         const key = _map_struct_idgen++;
         cls[CLS_API_KEY] = key;
+        const stableName = resolveStructName(cls, name2);
+        dstruct.name = stableName;
         this.structs.push(dstruct);
         _map_structs[key] = dstruct;
+        const existing = _map_structs_by_name[stableName];
+        if (existing !== void 0 && existing !== dstruct) {
+          console.warn(
+            `mapStruct: duplicate struct name "${stableName}"; keeping the first registration. Pass an explicit name to mapStruct/inheritStruct to disambiguate.`
+          );
+        } else {
+          _map_structs_by_name[stableName] = dstruct;
+        }
       }
       /* Associate cls with a DataStruct
        * via callback, which will be called
        * with an instance of cls as its argument*/
-      mapStructCustom(cls, callback) {
-        this.mapStruct(cls, true);
+      mapStructCustom(cls, callback, name2) {
+        this.mapStruct(cls, true, name2);
         cls[CLS_API_KEY_CUSTOM] = callback;
       }
-      mapStruct(cls, auto_create = true, name2 = cls.name) {
+      mapStruct(cls, auto_create = true, name2) {
         let key;
         if (!cls.hasOwnProperty(CLS_API_KEY)) {
           key = void 0;
@@ -24322,11 +24456,14 @@ var init_controller = __esm({
           key = cls[CLS_API_KEY];
         }
         if (key === void 0 && auto_create) {
-          const dstruct = new DataStruct2(void 0, name2);
-          this._addClass(cls, dstruct);
+          const dstruct = new DataStruct2(
+            void 0,
+            resolveStructName(cls, name2)
+          );
+          this._addClass(cls, dstruct, name2);
           return dstruct;
         } else if (key === void 0) {
-          throw new Error("class does not have a struct definition: " + name2);
+          throw new Error("class does not have a struct definition: " + resolveStructName(cls, name2));
         }
         return _map_structs[key];
       }
@@ -24568,8 +24705,10 @@ An example of a more complicated expression might be:
           let dynstructobj = void 0;
           if (dpath.type === DataTypes.STRUCT) {
             dstruct = dpath.data;
+            prop = void 0;
           } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
             let ok = false;
+            prop = void 0;
             if (obj !== void 0) {
               let obj2;
               if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
@@ -29100,6 +29239,32 @@ var init_ui_base = __esm({
         }
         return 0;
       }
+      /** returns path to a specific element, see document.elementsFromPoint */
+      pickElements(x, y, args = {}, marginy = 0, nodeclass = _UIBase, excluded_classes) {
+        nodeclass = args.nodeclass || _UIBase;
+        excluded_classes = args.excluded_classes;
+        const clip2 = args.clip;
+        x -= window.scrollX;
+        y -= window.scrollY;
+        let elems = this.shadow.elementsFromPoint(x, y);
+        const excluded = (n) => excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
+        const visit = /* @__PURE__ */ new WeakSet();
+        const result = /* @__PURE__ */ new Set();
+        const recurse = (elems2) => {
+          for (const n of elems2) {
+            if (n instanceof _UIBase) {
+              const ns = n.shadow.elementsFromPoint(x, y);
+              if (!excluded(n) && (!nodeclass || n instanceof nodeclass)) {
+                result.add(n);
+              }
+              ns.forEach((n2) => visit.add(n2));
+              recurse(ns.filter((n2) => !visit.has(n2)));
+            }
+          }
+        };
+        recurse(elems);
+        return Array.from(result);
+      }
       pickElement(x, y, args = {}, marginy = 0, nodeclass = _UIBase, excluded_classes) {
         nodeclass = args.nodeclass || _UIBase;
         excluded_classes = args.excluded_classes;
@@ -31071,6 +31236,7 @@ var init_ui_menu = __esm({
           return;
         }
         this._was_clicked = true;
+        const activeItem = this.activeItem;
         if (this._onselect) {
           try {
             this._onselect(this.activeItem._id);
@@ -31081,7 +31247,7 @@ var init_ui_menu = __esm({
         }
         if (this.on_select) {
           try {
-            this.on_select(this.activeItem._id);
+            this.on_select(activeItem._id);
           } catch (error2) {
             print_stack2(error2);
             console.log("Error in menu callback");
@@ -31391,6 +31557,11 @@ var init_ui_menu = __esm({
                 li._menu.close();
                 this.close();
               };
+              if (!li._menu.on_select && this.on_select !== void 0) {
+                li._menu.on_select = (item2) => {
+                  this.on_select(item2);
+                };
+              }
               li._menu.start(false, false);
               this._submenu = li._menu;
             }
@@ -32244,12 +32415,14 @@ var init_ui_menu = __esm({
             ok = true;
             break;
           }
-          if (w.hasAttribute("menu-button") && w.menu === this.menu) {
+          console.log("-", w);
+          if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)) {
             ok = true;
             break;
           }
           w = w.parentWidget;
         }
+        console.log("\n\n");
         if (!ok) {
           this.closereq = this.menu;
         } else {
@@ -67503,7 +67676,7 @@ var VectorPopupButton = class extends Button {
     }
     const panel = UIBase2.createElement("vector-panel-x");
     const screen = this.ctx.screen;
-    const popup = screen.popup(this, this, 0);
+    const popup = screen.popup(this, this);
     popup.add(panel);
     popup.button("ok", () => {
       popup.end();
@@ -71849,7 +72022,7 @@ var ListBox2 = class extends Container3 {
   /**
    * @deprecated Listen for the `"change"` DOM event instead, e.g.
    * `listbox.addEventListener("change", e => { const {id, item} = e.selection; })`.
-   * 
+   *
    */
   onitemchange;
   constructor() {
@@ -71859,7 +72032,9 @@ var ListBox2 = class extends Container3 {
         return this.onitemchange;
       },
       set(v) {
-        console.warn('Deprecated use of ListBox.on_change, use the "change" event or .onitemchange instead.');
+        console.warn(
+          'Deprecated use of ListBox.on_change, use the "change" event or .onitemchange instead.'
+        );
         this.onitemchange = v;
       }
     });
@@ -78021,6 +78196,7 @@ var AreaDocker = class _AreaDocker extends Container3 {
       }
     };
     this.addMenu = menu;
+    this.addicon.setAttribute("menu-id", menu.id);
     startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
     return menu;
   }
@@ -83570,6 +83746,7 @@ export {
   CSSFont,
   CURVE_VERSION,
   CanvasOverdraw,
+  CentimeterUnit,
   Check,
   Check1,
   ClassIdSymbol,
@@ -83671,6 +83848,7 @@ export {
   MenuWrangler,
   MeterUnit,
   MileUnit,
+  MillimeterUnit,
   MinMax,
   MinMax1,
   ModalTabMove,

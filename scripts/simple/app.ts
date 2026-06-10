@@ -179,9 +179,10 @@ export function makeAPI(ctxClass: typeof Context) {
     ctxClass,
     api.mapStruct(ctxClass, true) as unknown as boolean
   );
-  api.rootContextStruct = rootContextStruct;
 
-  buildToolSysAPI(api, false, rootContextStruct, ctxClass as any, true);
+  // XXX fixme: type errors
+  api.rootContextStruct = rootContextStruct as any;
+  buildToolSysAPI(api, false, rootContextStruct as any, ctxClass as any, true);
 
   return api;
 }
