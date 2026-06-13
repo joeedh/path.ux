@@ -1817,7 +1817,6 @@ export class MenuWrangler {
         break;
       }
 
-      console.log("-", w);
       if (
         w.hasAttribute("menu-button") &&
         (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)
@@ -1829,7 +1828,6 @@ export class MenuWrangler {
       w = w.parentWidget as DropBoxLike | undefined;
     }
 
-    console.log("\n\n");
     if (!ok) {
       this.closereq = this.menu;
     } else {
