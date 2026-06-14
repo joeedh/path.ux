@@ -436,12 +436,6 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     if (is_num) {
       this.radix = prop.radix;
 
-      let decimalPlaces =
-        this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
-      if (this.hasAttribute("decimalPlaces")) {
-        decimalPlaces = parseInt(this.getAttribute("decimalPlaces")!);
-      }
-
       let baseUnit: string | undefined = this.baseUnit ?? prop.baseUnit;
       if (this.hasAttribute("baseUnit")) {
         baseUnit = this.getAttribute("baseUnit") ?? undefined;

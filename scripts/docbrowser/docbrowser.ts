@@ -50,11 +50,11 @@ interface DocSysConfig {
   readConfig(configPath: string): DocSysConfig;
 }
 
-let countstr = function (buf: string, s: string) {
+const countstr = function (buf: string, s: string) {
   let count = 0;
 
   while (buf.length > 0) {
-    let i = buf.search(s);
+    const i = buf.search(s);
     if (i < 0) {
       break;
     }
@@ -72,7 +72,7 @@ function basename(path: string) {
   }
 
   path = path.replace(/\/+/g, "/");
-  let parts = path.split("/");
+  const parts = path.split("/");
   return parts[parts.length - 1];
 }
 
@@ -81,11 +81,11 @@ function dirname(path: string) {
     path = path.slice(0, path.length - 1);
   }
 
-  let parts = path.split("/");
+  const parts = path.split("/");
   parts.length--;
 
   let s = "";
-  for (let t of parts) {
+  for (const t of parts) {
     s += t + "/";
   }
 
@@ -97,8 +97,8 @@ function dirname(path: string) {
 }
 
 function relative(a1: string, b1: string) {
-  let a = a1,
-    b = b1;
+  let a = a1;
+  let b = b1;
 
   let i = 1;
   while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {
@@ -154,7 +154,7 @@ export class DocsAPI {
 }
 
 function getDocPaths() {
-  let ret = {
+  const ret = {
     docpath       : `${cconst.docEditorPath}/docsys_base.js`,
     doc_config    : `${cconst.docEditorPath}/docs.config.js`,
     docpath_prefix: `${cconst.docEditorPath}/doc_build`,
@@ -185,17 +185,17 @@ export class ElectronAPI extends DocsAPI {
 
     this.first = false;
 
-    let { docpath, doc_config } = getDocPaths();
+    const { docpath, doc_config } = getDocPaths();
     console.log(docpath);
 
     import(docpath).then((docsys: Record<string, unknown>) => {
-      let fs = require("fs");
-      let marked = require("marked");
-      let parse5 = require("parse5");
-      let pathmod = require("path");
-      let jsdiff = require("diff");
+      const fs = require("fs");
+      const marked = require("marked");
+      const parse5 = require("parse5");
+      const pathmod = require("path");
+      const jsdiff = require("diff");
 
-      let initFn = docsys.default as (
+      const initFn = docsys.default as (
         fs: unknown,
         marked: unknown,
         parse5: unknown,
@@ -203,7 +203,7 @@ export class ElectronAPI extends DocsAPI {
         jsdiff: unknown
       ) => DocSysConfig;
 
-      let initialized = initFn(fs, marked, parse5, pathmod, jsdiff);
+      const initialized = initFn(fs, marked, parse5, pathmod, jsdiff);
 
       this.config = initialized.readConfig(doc_config);
       this.ready = true;
@@ -240,12 +240,12 @@ export class ElectronAPI extends DocsAPI {
         return;
       }
 
-      let blob = blobInfo.blob();
+      const blob = blobInfo.blob();
 
       blob
         .arrayBuffer()
         .then((data) => {
-          let path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
+          const path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
           success(path);
           accept();
         })
@@ -308,14 +308,14 @@ export class ServerAPI extends DocsAPI {
     onError: (msg: string) => void
   ) {
     return new Promise<void>((accept, reject) => {
-      let blob = blobInfo.blob();
+      const blob = blobInfo.blob();
 
       blob
         .arrayBuffer()
         .then((data) => {
           console.log("data!", data);
-          let uint8 = new Uint8Array(data);
-          let data2: number[] = [];
+          const uint8 = new Uint8Array(data);
+          const data2: number[] = [];
 
           for (let i = 0; i < uint8.length; i++) {
             data2.push(uint8[i]);
@@ -337,14 +337,14 @@ export class ServerAPI extends DocsAPI {
   }
 
   callAPI(...callArgs: unknown[]): Promise<unknown> {
-    let key = callArgs[0] as string;
-    let args: unknown[] = [];
+    const key = callArgs[0] as string;
+    const args: unknown[] = [];
     for (let i = 1; i < callArgs.length; i++) {
       args.push(callArgs[i]);
     }
     console.log(args, callArgs.length);
 
-    let path = location.origin + "/api/" + key;
+    const path = location.origin + "/api/" + key;
     console.log(path);
 
     return new Promise((accept, reject) => {
@@ -365,7 +365,7 @@ export class ServerAPI extends DocsAPI {
               .text()
               .then((data) => {
                 console.log("got json", data);
-                let parsed = JSON.parse(data) as { result: unknown };
+                const parsed = JSON.parse(data) as { result: unknown };
                 accept(parsed.result);
               })
               .catch((error: unknown) => {
@@ -452,10 +452,10 @@ DocHistory {
     reader(this);
 
     this.length = 0;
-    let cur = this.cur;
+    const cur = this.cur;
     this.cur = 0;
 
-    for (let item of this._items) {
+    for (const item of this._items) {
       this.push(item);
     }
 
@@ -602,7 +602,7 @@ DocsBrowser {
 
     this.header.clear();
 
-    let check = this.header.check(undefined, "Edit Enabled");
+    const check = this.header.check(undefined, "Edit Enabled");
     check.value = this.editMode;
 
     check.onchange = () => {
@@ -622,7 +622,7 @@ DocsBrowser {
       return;
     }
 
-    if (!this.contentDiv || !this.contentDiv.contentEditable) {
+    if (!this.contentDiv?.contentEditable) {
       setTimeout(() => {
         this.makeHeader();
       });
@@ -633,7 +633,7 @@ DocsBrowser {
       this.undoPre("Note Box");
 
       this.execCommand("formatBlock", undefined, "p");
-      let sel = this.root.contentDocument!.getSelection();
+      const sel = this.root.contentDocument!.getSelection();
       let p: Node | null = sel!.anchorNode;
       if (!(p instanceof HTMLElement)) {
         p = (p as Node).parentElement;
@@ -646,7 +646,7 @@ DocsBrowser {
       console.log(p);
     });
 
-    let indexOf = (list: NodeList, item: Node) => {
+    const indexOf = (list: NodeList, item: Node) => {
       for (let i = 0; i < list.length; i++) {
         if (list[i] === item) {
           return i;
@@ -657,7 +657,7 @@ DocsBrowser {
     };
 
     this.header.button("Remove", () => {
-      let sel = this.root.contentDocument!.getSelection();
+      const sel = this.root.contentDocument!.getSelection();
       let p: Node | null = sel!.anchorNode;
       if (!p) return;
 
@@ -669,8 +669,8 @@ DocsBrowser {
         return;
       }
 
-      let parent = p.parentNode!;
-      let i = indexOf(parent.childNodes, p);
+      const parent = p.parentNode!;
+      const i = indexOf(parent.childNodes, p);
 
       if (
         p === this.contentDiv ||
@@ -683,7 +683,7 @@ DocsBrowser {
       (p as HTMLElement).remove();
 
       console.log(p, i);
-      let add = parent.childNodes.length > 0 ? parent.childNodes[i] : undefined;
+      const add = parent.childNodes.length > 0 ? parent.childNodes[i] : undefined;
       for (let j = 0; j < p.childNodes.length; j++) {
         if (!add) {
           parent.appendChild(p.childNodes[j]);
@@ -749,7 +749,7 @@ DocsBrowser {
 
     this.saveReq = 0;
 
-    let cb = () => {
+    const cb = () => {
       if (
         this.root.contentDocument &&
         (this.root.contentDocument as Document & { readyState?: string }).readyState !== "loading"
@@ -794,7 +794,7 @@ DocsBrowser {
 
     console.log("doc loaded");
 
-    let visit = (n: Node) => {
+    const visit = (n: Node) => {
       if (n instanceof Element) {
         //console.log(n, n.getAttribute("class"))
       }
@@ -806,7 +806,7 @@ DocsBrowser {
       }
 
       //console.log(n.childNodes)
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
@@ -817,7 +817,7 @@ DocsBrowser {
     visit(this.root.contentDocument.body);
 
     if (!this.contentDiv) {
-      let body = this.root.contentDocument.body;
+      const body = this.root.contentDocument.body;
 
       this.contentDiv = this.root.contentDocument.createElement("div");
       this.contentDiv.setAttribute("class", "contents");
@@ -825,7 +825,7 @@ DocsBrowser {
       this.contentDiv.style["margin"] = "0px";
       this.contentDiv.style["padding"] = "0px";
 
-      for (let node of Array.from(body.childNodes)) {
+      for (const node of Array.from(body.childNodes)) {
         body.removeChild(node);
         this.contentDiv.appendChild(node);
       }
@@ -838,7 +838,7 @@ DocsBrowser {
         this.disableLinks();
       }
 
-      let globals = this.root.contentWindow!;
+      const globals = this.root.contentWindow!;
 
       console.log("tinymce globals:", globals.document, globals);
 
@@ -852,27 +852,27 @@ DocsBrowser {
       };
       //*/
 
-      let loc = globals.document.location;
+      const loc = globals.document.location;
       if (loc.href === "about:srcdoc" && this.currentPath && this._sourceData === undefined) {
         if (this.currentPath) {
           loc.href = this.currentPath;
         }
       }
 
-      let base = this.pathuxBaseURL;
-      let base_url = (
+      const base = this.pathuxBaseURL;
+      const base_url = (
         platform as unknown as { resolveURL(path: string, base?: string): string }
       ).resolveURL("scripts/lib/tinymce", base);
 
       console.warn(window.haveElectron, "haveElectron", base_url);
 
-      let tinymce: TinyMCEInstance =
+      const tinymce: TinyMCEInstance =
         (this.tinymce =
         (globals as unknown as Window).tinymce =
         window.tinymce =
           window._tinymce(globals));
 
-      let fixletter = () => {
+      const fixletter = () => {
         if (!tinymce.baseURI.host) {
           return;
         }
@@ -945,7 +945,7 @@ DocsBrowser {
 
       fixletter();
 
-      let onchange = () => {
+      const onchange = () => {
         console.log("Input event!");
         this.queueSave();
       };
@@ -964,28 +964,28 @@ DocsBrowser {
   }
 
   undoPre(_label?: string) {
-    let undo = this.tinymce!.editors[0].undoManager;
+    const undo = this.tinymce!.editors[0].undoManager;
     undo.beforeChange();
   }
 
   undoPost(_label?: string) {
-    let undo = this.tinymce!.editors[0].undoManager;
+    const undo = this.tinymce!.editors[0].undoManager;
     undo.add();
   }
 
   enableLinks() {
-    let visit = (n: Node) => {
+    const visit = (n: Node) => {
       if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
 
       if (n instanceof Element && n.tagName === "A") {
-        let href = n.getAttribute("_href");
+        const href = n.getAttribute("_href");
         if (href) {
           n.setAttribute("href", href);
         }
       }
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
@@ -994,19 +994,19 @@ DocsBrowser {
   }
 
   disableLinks() {
-    let visit = (n: Node) => {
+    const visit = (n: Node) => {
       if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
 
       if (n instanceof Element && n.tagName === "A") {
-        let href = n.getAttribute("href");
+        const href = n.getAttribute("href");
         if (href) {
           n.setAttribute("_href", href);
         }
         n.removeAttribute("href");
       }
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
@@ -1021,13 +1021,13 @@ DocsBrowser {
       return;
     }
 
-    let tags: HTMLImageElement[] = [];
+    const tags: HTMLImageElement[] = [];
 
-    let traverse = (n: Element) => {
+    const traverse = (n: Element) => {
       if (n.tagName === "IMG" && !n.getAttribute("_PATCHED_")) {
         tags.push(n as HTMLImageElement);
       }
-      for (let c of Array.from(n.children)) {
+      for (const c of Array.from(n.children)) {
         traverse(c);
       }
     };
@@ -1035,7 +1035,7 @@ DocsBrowser {
     traverse(this.contentDiv);
 
     console.log("Image Tags found:", tags);
-    for (let t of tags) {
+    for (const t of tags) {
       this.patchImage(t);
       t.setAttribute("_PATCHED_", "true");
     }
@@ -1050,16 +1050,16 @@ DocsBrowser {
     /* istanbul ignore next */
     console.warn("Patching image!");
 
-    let grab = (i: number, vs: Vector2[]) => {
+    const grab = (i: number, vs: Vector2[]) => {
       console.log("Transform Modal start");
 
-      let horiz = i % 2 != 0 ? 1 : 0;
+      const horiz = i % 2 != 0 ? 1 : 0;
 
-      let update = () => {
-        let x = vs[0][0],
-          y = vs[0][1];
-        let w = vs[2][0] - vs[0][0];
-        let h = vs[1][1] - vs[0][1];
+      const update = () => {
+        const x = vs[0][0];
+        const y = vs[0][1];
+        const w = vs[2][0] - vs[0][0];
+        const h = vs[1][1] - vs[0][1];
 
         img.style["display"] = "float";
         img.style["left"] = x + "px";
@@ -1072,10 +1072,10 @@ DocsBrowser {
 
       let modaldata: ReturnType<typeof pushModalLight> | undefined;
       let first = true;
-      let last_mpos = new Vector2();
-      let start_mpos = new Vector2();
+      const last_mpos = new Vector2();
+      const start_mpos = new Vector2();
 
-      let end = () => {
+      const end = () => {
         if (modaldata) {
           console.log("done.");
           popModalLight(modaldata);
@@ -1083,7 +1083,7 @@ DocsBrowser {
         }
       };
 
-      let ghandlers = {
+      const ghandlers = {
         on_mousedown(_e: MouseEvent) {},
 
         on_mousemove(e: MouseEvent) {
@@ -1095,8 +1095,8 @@ DocsBrowser {
             return;
           }
 
-          let dx = e.x - last_mpos[0],
-            dy = last_mpos[1] - e.y;
+          const dx = e.x - last_mpos[0];
+          const dy = last_mpos[1] - e.y;
           console.log(dx.toFixed(2), dy.toFixed(2));
 
           last_mpos[0] = e.x;
@@ -1119,20 +1119,20 @@ DocsBrowser {
       console.warn("grab!", modaldata);
     };
 
-    let mpos = new Vector2();
+    const mpos = new Vector2();
     let first = true;
-    let tdown = true;
+    const tdown = true;
     let mdown = false;
 
-    let ix = 0,
-      iy = 0;
-    let width = img.width,
-      height = img.height;
+    let ix = 0;
+    let iy = 0;
+    let width = img.width;
+    let height = img.height;
 
     img.setAttribute("draggable", "false");
-    let getsize = () => {
-      let rects = img.getClientRects();
-      let r = rects[0];
+    const getsize = () => {
+      const rects = img.getClientRects();
+      const r = rects[0];
       if (!r) {
         setTimeout(getsize, 2);
         return;
@@ -1146,7 +1146,7 @@ DocsBrowser {
     let resizing = false;
     let moving = false;
 
-    let handlers: Record<
+    const handlers: Record<
       string,
       (e: PointerEvent, x?: number, y?: number, button?: number) => void
     > = {
@@ -1177,8 +1177,8 @@ DocsBrowser {
         console.log(moving);
 
         if (moving) {
-          let dx = x - mpos[0],
-            dy = y - mpos[1];
+          const dx = x - mpos[0];
+          const dy = y - mpos[1];
           console.log("mdown!", dx, dy);
 
           ix += dx;
@@ -1192,8 +1192,8 @@ DocsBrowser {
         }
 
         if (resizing) {
-          let dx = x - mpos[0],
-            dy = y - mpos[1];
+          const dx = x - mpos[0];
+          const dy = y - mpos[1];
           console.log("mdown!", dx, dy);
 
           width += dy;
@@ -1208,12 +1208,12 @@ DocsBrowser {
         mpos[1] = y;
         //console.log(x.toFixed(2), y.toFixed(2));
 
-        let r = img.getBoundingClientRect();
+        const r = img.getBoundingClientRect();
         if (!r) {
           return;
         }
 
-        let verts = [
+        const verts = [
           new Vector2([r.x, r.y]),
           new Vector2([r.x, r.y + r.height]),
           new Vector2([r.x + r.width, r.y + r.height]),
@@ -1224,13 +1224,13 @@ DocsBrowser {
         let mindis = 1e17;
 
         for (let i = 0; i < 4; i++) {
-          let i1 = i,
-            i2 = (i + 1) % 4;
-          let v1 = verts[i1],
-            v2 = verts[i2];
+          const i1 = i;
+          const i2 = (i + 1) % 4;
+          const v1 = verts[i1];
+          const v2 = verts[i2];
 
-          let horiz = i % 2 !== 0.0 ? 1 : 0;
-          let dv = mpos[horiz as 0 | 1] - (v1[horiz as 0 | 1] as number);
+          const horiz = i % 2 !== 0.0 ? 1 : 0;
+          const dv = mpos[horiz as 0 | 1] - (v1[horiz as 0 | 1] as number);
 
           if (Math.abs(dv) < 15 && Math.abs(dv) < mindis) {
             mindis = Math.abs(dv);
@@ -1271,7 +1271,7 @@ DocsBrowser {
 
     window.setInterval(() => {
       if (1 || !mdown) {
-        let val = img.getAttribute("draggable");
+        const val = img.getAttribute("draggable");
         img.setAttribute("draggable", "false");
         if (val) {
           img.setAttribute("draggable", val);
@@ -1279,7 +1279,7 @@ DocsBrowser {
       }
     }, 200);
 
-    for (let k in handlers) {
+    for (const k in handlers) {
       img.addEventListener(k, handlers[k] as EventListener, true);
     }
   }
@@ -1292,16 +1292,16 @@ DocsBrowser {
     let buf = "";
 
     let visit: (() => void) | undefined;
-    let liststack: [string, number][] = [];
+    const liststack: [string, number][] = [];
     let image_idgen = 0;
 
-    let getlist = () => {
+    const getlist = () => {
       if (liststack.length > 0) return liststack[liststack.length - 1];
       return undefined;
     };
 
     type NodeHandler = (n: Node) => void;
-    let handlers: Record<string, NodeHandler> = {
+    const handlers: Record<string, NodeHandler> = {
       TEXT(n: Node) {
         console.log("Text data:", (n as Text).data);
         buf += n.textContent;
@@ -1396,8 +1396,8 @@ DocsBrowser {
       },
 
       LI(_n: Node) {
-        let head = getlist();
-        if (head && head[0] === "OL") {
+        const head = getlist();
+        if (head?.[0] === "OL") {
           buf += head[1] + ".  ";
           head[1]++;
         } else {
@@ -1407,14 +1407,14 @@ DocsBrowser {
       },
 
       PRE(_n: Node) {
-        let start = buf;
+        const start = buf;
 
         visit!();
 
-        let data = buf.slice(start.length, buf.length);
-        let lines = data.split("\n");
+        const data = buf.slice(start.length, buf.length);
+        const lines = data.split("\n");
         let bad = false;
-        for (let l of lines) {
+        for (const l of lines) {
           if (!l.startsWith("    ")) {
             bad = true;
             break;
@@ -1429,9 +1429,9 @@ DocsBrowser {
       },
     };
 
-    let traverse = (n: Node) => {
+    const traverse = (n: Node) => {
       visit = () => {
-        for (let c of Array.from(n.childNodes)) {
+        for (const c of Array.from(n.childNodes)) {
           traverse(c);
         }
       };
@@ -1439,7 +1439,7 @@ DocsBrowser {
       if (n.constructor.name === "Text") {
         handlers.TEXT(n);
       } else {
-        let tag = (n as Element).tagName;
+        const tag = (n as Element).tagName;
         if (tag in handlers) {
           handlers[tag](n);
         } else {
@@ -1458,7 +1458,7 @@ DocsBrowser {
       return undefined;
     }
 
-    let href = this.root.contentDocument.location.href;
+    const href = this.root.contentDocument.location.href;
 
     //console.log(document.location.href, this.root.src);
 
@@ -1516,7 +1516,7 @@ DocsBrowser {
       return;
     }
 
-    let path = this.getDocPath();
+    const path = this.getDocPath();
 
     console.log("saving " + path);
 
@@ -1559,7 +1559,7 @@ DocsBrowser {
   //send notifications to user
   report(message: string, color?: string, timeout?: number) {
     const ctx = this.ctx as unknown as Record<string, unknown>;
-    if (ctx && ctx.report) {
+    if (ctx?.report) {
       console.warn("%c" + message, "color : " + color + ";");
       (ctx.report as (msg: string, color?: string, timeout?: number) => void)(
         message,
@@ -1580,11 +1580,7 @@ DocsBrowser {
 
     this.updateCurrentPath();
 
-    if (
-      this._doDocInit &&
-      this.root.contentDocument &&
-      this.root.contentDocument.readyState === "complete"
-    ) {
+    if (this._doDocInit && this.root.contentDocument?.readyState === "complete") {
       //this.initDoc();
     } else if (!this._doDocInit && this.saveReq) {
       if (util.time_ms() - this._last_save > 500) {

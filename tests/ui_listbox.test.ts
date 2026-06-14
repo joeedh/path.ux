@@ -54,7 +54,7 @@ test("deprecated on_change still fires (id, item)", () => {
   const box = makeBox();
   const a = box.addItem("a");
 
-  const calls: Array<[unknown, unknown]> = [];
+  const calls: [unknown, unknown][] = [];
   box.on_change = (id, item) => calls.push([id, item]);
 
   box.setActive(a);

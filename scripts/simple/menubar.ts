@@ -69,14 +69,14 @@ export class MenuBarEditor<CTX extends IContextBase = IContextBase> extends Edit
     }
 
     if (this._height === undefined) {
-      let rect = this.header.getClientRects()[0];
+      const rect = this.header.getClientRects()[0];
 
       if (rect) {
         this._height = rect.height;
       }
     }
 
-    let update = force || this._height !== (this.minSize as number[])[1];
+    const update = force || this._height !== (this.minSize as number[])[1];
     this.minSize[1] = this.maxSize[1] = this._height;
 
     if (update && this.ctx && this.getScreen()) {

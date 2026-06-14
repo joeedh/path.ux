@@ -19,7 +19,7 @@
  * Once augmented, exact known paths are checked/autocompleted while arbitrary
  * strings (relative/prefixed paths resolved at runtime) are still accepted.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+
 export interface DataPathRegistry {}
 
 export type KnownDataPath = [keyof DataPathRegistry] extends [never]

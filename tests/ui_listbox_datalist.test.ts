@@ -14,7 +14,7 @@ class Item {
   ) {}
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 function buildFixture(withActive: boolean) {
   const api = new DataAPI();
   const root = new DataStruct();

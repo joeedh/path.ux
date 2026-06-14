@@ -107,22 +107,22 @@ export function saveFile(
     args.useJSON = appstate.saveFilesInJSON;
   }
 
-  let fargs = new FileArgs(args);
+  const fargs = new FileArgs(args);
 
   let version: number | number[] = fargs.version;
   if (typeof version === "number") {
     if (version === Math.floor(version)) {
       version = [version, 0, 0];
     } else {
-      let major = ~~version;
-      let minor = ~~(Math.fract(version) * 10.0);
-      let micro = (Math.fract(version) - minor) * 100.0;
+      const major = ~~version;
+      const minor = ~~(Math.fract(version) * 10.0);
+      const micro = (Math.fract(version) - minor) * 100.0;
 
       version = [major, minor, micro];
     }
   }
 
-  let file = new FileFull(version, fargs.magic, fargs.fileFlags);
+  const file = new FileFull(version, fargs.magic, fargs.fileFlags);
 
   if (fargs.doScreen) {
     file.screen = appstate.screen;
@@ -130,14 +130,14 @@ export function saveFile(
     file.screen = new EmptyStruct();
   }
 
-  for (let ob of objects) {
+  for (const ob of objects) {
     file.objects.push(ob);
   }
 
   if (fargs.useJSON) {
     return nstructjs.writeJSON(file);
   } else {
-    let data: number[] = [];
+    const data: number[] = [];
     nstructjs.writeObject(data, file);
     return new Uint8Array(data).buffer;
   }
@@ -148,7 +148,7 @@ export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
     args.useJSON = (appstate as { saveFilesInJSON?: boolean }).saveFilesInJSON;
   }
 
-  let fargs = new FileArgs(args);
+  const fargs = new FileArgs(args);
 
   let header: FileHeader;
 
@@ -178,7 +178,7 @@ export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
     throw new Error("invalid file");
   }
 
-  let istruct = new nstructjs.STRUCT();
+  const istruct = new nstructjs.STRUCT();
   istruct.parse_structs(header.schema);
 
   let ret: FileFull;
@@ -194,7 +194,7 @@ export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
   }
 
   if (fargs.doScreen) {
-    let screen = appstate.screen as { unlisten(): void; remove(): void } | undefined;
+    const screen = appstate.screen as { unlisten(): void; remove(): void } | undefined;
     if (screen) {
       screen.unlisten();
       screen.remove();
@@ -202,12 +202,12 @@ export function loadFile(appstate: any, args: FileArgsInit, data: unknown) {
 
     (ret.screen as { ctx: unknown }).ctx = appstate.ctx;
 
-    let screenClass = appstate.screenClass as { define(): { tagname: string } };
+    const screenClass = appstate.screenClass as { define(): { tagname: string } };
     if (!(ret.screen instanceof (screenClass as unknown as new (...args: unknown[]) => unknown))) {
-      let newScreen = UIBase.createElement(screenClass.define().tagname) as UIBase;
+      const newScreen = UIBase.createElement(screenClass.define().tagname) as UIBase;
       newScreen.ctx = appstate.ctx as typeof newScreen.ctx;
 
-      for (let sarea of (
+      for (const sarea of (
         ret.screen as { sareas: { area: { afterSTRUCT(): void; on_fileload(): void } }[] }
       ).sareas) {
         newScreen.appendChild(sarea as unknown as Node);

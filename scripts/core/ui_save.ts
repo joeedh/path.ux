@@ -34,22 +34,22 @@ export function saveUIData(node: HTMLElement, key: string): string {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
 
-  let paths = new Map<string, unknown>();
+  const paths = new Map<string, unknown>();
 
-  let rec = (path: string, n: Node) => {
+  const rec = (path: string, n: Node) => {
     if (!(n instanceof HTMLElement)) {
       return;
     }
 
     if (UIBase && n instanceof UIBase) {
-      let uiNode = n as unknown as UIBaseNode;
-      let path2 = uiNode.constructor.define().tagname + "|" + path;
+      const uiNode = n as unknown as UIBaseNode;
+      const path2 = uiNode.constructor.define().tagname + "|" + path;
       paths.set(path2, uiNode.saveData());
     }
 
     let ni = 0;
-    for (let n2 of Array.from(n.childNodes)) {
-      let path2 = path + `[${ni}]`;
+    for (const n2 of Array.from(n.childNodes)) {
+      const path2 = path + `[${ni}]`;
       rec(path2, n2);
       ni++;
     }
@@ -57,8 +57,8 @@ export function saveUIData(node: HTMLElement, key: string): string {
     if ((n as unknown as UIBaseNode).shadow) {
       let ni = 0;
 
-      for (let n2 of Array.from((n as unknown as UIBaseNode).shadow!.childNodes)) {
-        let path2 = path + `{${ni}}`;
+      for (const n2 of Array.from((n as unknown as UIBaseNode).shadow!.childNodes)) {
+        const path2 = path + `{${ni}}`;
         rec(path2, n2);
         ni++;
       }
@@ -67,8 +67,8 @@ export function saveUIData(node: HTMLElement, key: string): string {
 
   rec("", node);
 
-  let paths2: Record<string, unknown> = {};
-  for (let [path, data] of paths) {
+  const paths2: Record<string, unknown> = {};
+  for (const [path, data] of paths) {
     let bad = !data;
     bad = bad || (typeof data === "object" && Object.keys(data as object).length === 0);
 
@@ -120,17 +120,17 @@ export function makeParser(): parser {
     let node = p.userdata as HTMLElement;
 
     while (!p.at_end()) {
-      let t = p.peeknext();
+      const t = p.peeknext();
 
       //console.log(node.tagName.toLowerCase());
 
-      if (t && t.type === "LSBRACKET") {
+      if (t?.type === "LSBRACKET") {
         p.next();
-        let idx = parseInt(p.expect("NUM"));
+        const idx = parseInt(p.expect("NUM"));
 
         if (idx >= node.childNodes.length || !(node.childNodes[idx] instanceof HTMLElement)) {
-          let li = p.lexer.lexpos;
-          let path = p.lexer.lexdata;
+          const li = p.lexer.lexpos;
+          const path = p.lexer.lexdata;
 
           debuglog(idx, p.lexer.lexpos, path.slice(li - 3, path.length), node.childNodes);
 
@@ -141,18 +141,18 @@ export function makeParser(): parser {
         node = node.childNodes[idx] as HTMLElement;
 
         p.expect("RSBRACKET");
-      } else if (t && t.type === "LBRACE") {
+      } else if (t?.type === "LBRACE") {
         p.next();
-        let idx = parseInt(p.expect("NUM"));
-        let shadow = (node as unknown as UIBaseNode).shadow;
+        const idx = parseInt(p.expect("NUM"));
+        const shadow = (node as unknown as UIBaseNode).shadow;
 
         if (
           !shadow ||
           idx >= shadow.childNodes.length ||
           !(shadow.childNodes[idx] instanceof HTMLElement)
         ) {
-          let li = p.lexer.lexpos;
-          let path = p.lexer.lexdata;
+          const li = p.lexer.lexpos;
+          const path = p.lexer.lexdata;
 
           debuglog(
             idx,
@@ -185,9 +185,9 @@ const pathParser = makeParser();
 
 export function loadPath(node: UIBaseNode, key: string, json: unknown): void {
   console.log(key);
-  let parts = key.split("|");
-  let tagname = parts[0].trim();
-  let path = (parts[1] || "").trim();
+  const parts = key.split("|");
+  const tagname = parts[0].trim();
+  const path = (parts[1] || "").trim();
 
   if (path === "") {
     if (tagname === node.constructor.define().tagname) {
@@ -237,8 +237,8 @@ export function loadUIData(node: UIBaseNode, json: string | UISaveData): void {
     json = JSON.parse(json) as UISaveData;
   }
 
-  for (let k in json.paths) {
-    let v = json.paths[k];
+  for (const k in json.paths) {
+    const v = json.paths[k];
 
     //paranoia check
     if (v === undefined) {

@@ -12,11 +12,11 @@ interface FileFilter {
 }
 
 export function getWebFilters(filters: FileFilter[] = []) {
-  let types: { description: string; accept: Record<string, string[]> }[] = [];
+  const types: { description: string; accept: Record<string, string[]> }[] = [];
 
-  for (let item of filters) {
+  for (const item of filters) {
     let mime = item.mime;
-    let exts: string[] = [];
+    const exts: string[] = [];
 
     for (let ext of item.extensions) {
       ext = "." + ext;
@@ -45,7 +45,7 @@ export function getWebFilters(filters: FileFilter[] = []) {
 export class platform extends PlatformAPI {
   //returns a promise
   static showOpenDialog(title: string, args = new FileDialogArgs()) {
-    let types = getWebFilters(args.filters);
+    const types = getWebFilters(args.filters);
 
     return new Promise<FilePath[]>((accept, reject) => {
       try {
@@ -55,9 +55,9 @@ export class platform extends PlatformAPI {
             types,
           })
           .then((arg: any[]) => {
-            let paths: FilePath[] = [];
+            const paths: FilePath[] = [];
 
-            for (let file of arg) {
+            for (const file of arg) {
               paths.push(new FilePath(file, file.name));
             }
 
@@ -87,7 +87,7 @@ export class platform extends PlatformAPI {
       return this.showSaveDialog_old(title, savedata_cb, args);
     }
 
-    let types = getWebFilters(args.filters);
+    const types = getWebFilters(args.filters);
 
     return new Promise((accept, reject) => {
       let fname: string;
@@ -119,7 +119,7 @@ export class platform extends PlatformAPI {
           file.write(savedata);
           file.close();
 
-          let path = new FilePath(handle, fname);
+          const path = new FilePath(handle, fname);
           accept(path);
         });
     });
@@ -127,14 +127,14 @@ export class platform extends PlatformAPI {
 
   //returns a promise
   static showSaveDialog_old(title: string, savedata: any, args = new FileDialogArgs()) {
-    let exts: string[] = [];
+    const exts: string[] = [];
 
     for (let list of args.filters as any[]) {
       if (!Array.isArray(list) && list.filters) {
         list = list.filters;
       }
 
-      for (let ext of list) {
+      for (const ext of list) {
         exts.push(ext);
       }
     }

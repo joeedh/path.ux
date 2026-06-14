@@ -36,10 +36,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     catkey: CatKey,
     obj: any,
     container: any = this,
-    panel: any = undefined,
-    path: string[] | undefined = undefined
+    panel?: any,
+    path?: string[] | undefined
   ) {
-    let key = catkey.key;
+    const key = catkey.key;
 
     if (!path) {
       path = [key];
@@ -50,14 +50,14 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       panel.style.marginLeft = "15px";
     }
 
-    let row2 = panel.row();
-    let textbox = row2.textbox(undefined, "");
+    const row2 = panel.row();
+    const textbox = row2.textbox(undefined, "");
 
-    let callback = (id: string) => {
+    const callback = (id: string) => {
       console.log("ID", id, obj, catkey);
       console.log(textbox, textbox.text, textbox.value);
 
-      let propkey = (textbox.text || "").trim();
+      const propkey = (textbox.text || "").trim();
 
       if (!propkey) {
         console.error("Cannot have empty theme property name");
@@ -76,7 +76,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         obj[propkey] = "";
       }
 
-      let uidata = saveUIData(panel, "theme-panel");
+      const uidata = saveUIData(panel, "theme-panel");
 
       panel.clear();
       this.doFolder(catkey, obj, container, panel, path);
@@ -90,7 +90,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       }
     };
 
-    let menu = row2.menu("+", [
+    const menu = row2.menu("+", [
       { name: "Float", callback: () => callback("FLOAT") },
       { name: "Color", callback: () => callback("COLOR") },
       { name: "Subfolder", callback: () => callback("SUBFOLDER") },
@@ -98,11 +98,11 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       { name: "String", callback: () => callback("STRING") },
     ]);
 
-    let row = panel.row();
-    let col1 = row.col();
-    let col2 = row.col();
+    const row = panel.row();
+    const col1 = row.col();
+    const col2 = row.col();
 
-    let do_onchange = (key: string, k: string, _obj?: any) => {
+    const do_onchange = (key: string, k: string, _obj?: any) => {
       flagThemeUpdate();
 
       if (this.on_change) {
@@ -113,7 +113,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       (this.ctx as any).screen.completeUpdate();
     };
 
-    let getpath = (path: string[]) => {
+    const getpath = (path: string[]) => {
       let obj: any = theme;
 
       for (let i = 0; i < path.length; i++) {
@@ -126,20 +126,20 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     let ok = false;
     let _i = 0;
 
-    let dokey = (k: string, v: any, path: string[]) => {
-      let col = _i % 2 === 0 ? col1 : col2;
+    const dokey = (k: string, v: any, path: string[]) => {
+      const col = _i % 2 === 0 ? col1 : col2;
 
       if (k.toLowerCase().search("flag") >= 0) {
         return; //don't do flags
       }
 
       if (typeof v === "string") {
-        let v2 = v.toLowerCase().trim();
+        const v2 = v.toLowerCase().trim();
 
-        let iscolor = validateCSSColor(v2);
+        const iscolor = validateCSSColor(v2);
 
         if (iscolor) {
-          let cw = col.colorbutton();
+          const cw = col.colorbutton();
           ok = true;
           _i++;
 
@@ -164,7 +164,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         } else {
           col.label(k);
 
-          let box = col.textbox();
+          const box = col.textbox();
           box.onchange = () => {
             getpath(path)[k] = box.text;
             do_onchange(key, k);
@@ -172,7 +172,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           box.text = v;
         }
       } else if (typeof v === "number") {
-        let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
+        const slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
 
         slider.baseUnit = slider.displayUnit = "none";
 
@@ -185,7 +185,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           do_onchange(key, k);
         };
       } else if (typeof v === "boolean") {
-        let check = col.check(undefined, k);
+        const check = col.check(undefined, k);
 
         check.value = getpath(path)[k];
 
@@ -194,13 +194,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           do_onchange(key, k);
         };
       } else if (typeof v === "object" && v instanceof CSSFont) {
-        let panel2 = col.panel(k);
+        const panel2 = col.panel(k);
         ok = true;
         _i++;
 
-        let textbox = (key: string) => {
+        const textbox = (key: string) => {
           panel2.label(key);
-          let tbox = panel2.textbox(undefined, v[key as keyof CSSFont]);
+          const tbox = panel2.textbox(undefined, v[key as keyof CSSFont]);
 
           tbox.width = tbox.getDefault("width");
 
@@ -215,7 +215,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         textbox("weight");
         textbox("style");
 
-        let cw = panel2.colorbutton();
+        const cw = panel2.colorbutton();
         cw.label = "color";
         cw.setRGBA(css2color(v.color));
         cw.onchange = () => {
@@ -223,7 +223,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           do_onchange(key, k);
         };
 
-        let slider = panel2.slider(undefined, "size", v.size);
+        const slider = panel2.slider(undefined, "size", v.size);
         slider.onchange = () => {
           v.size = slider.value;
           do_onchange(key, k);
@@ -235,17 +235,17 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
         panel2.closed = true;
       } else if (typeof v === "object") {
-        let catkey2 = Object.assign({}, catkey);
+        const catkey2 = Object.assign({}, catkey);
         catkey2.key = k;
 
-        let path2 = path.concat(k);
+        const path2 = path.concat(k);
 
         this.doFolder(catkey2, v, panel, undefined, path2);
       }
     };
 
-    for (let k in obj) {
-      let v = obj[k];
+    for (const k in obj) {
+      const v = obj[k];
 
       dokey(k, v, path);
     }
@@ -258,13 +258,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   }
 
   build() {
-    let uidata = saveUIData(this, "theme");
+    const uidata = saveUIData(this, "theme");
 
     this.clear();
 
-    let categories: Record<string, CatKey[]> = {};
+    const categories: Record<string, CatKey[]> = {};
 
-    for (let k of Object.keys(theme)) {
+    for (const k of Object.keys(theme)) {
       let catkey: CatKey;
 
       if (k in this.categoryMap) {
@@ -300,11 +300,11 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       return a < b ? -1 : a === b ? 0 : 1;
     }
 
-    let keys = Object.keys(categories);
+    const keys = Object.keys(categories);
     keys.sort(strcmp);
 
-    for (let k of keys) {
-      let list = categories[k];
+    for (const k of keys) {
+      const list = categories[k];
       list.sort((a, b) => strcmp(a.key, b.key));
 
       let panel: any = this;
@@ -313,9 +313,9 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         panel = this.panel(k);
       }
 
-      for (let cat of list) {
-        let k2 = cat.key;
-        let v = (theme as any)[k2];
+      for (const cat of list) {
+        const k2 = cat.key;
+        const v = (theme as any)[k2];
 
         if (typeof v === "object") {
           this.doFolder(cat, v, panel);

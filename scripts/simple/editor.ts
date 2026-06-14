@@ -7,7 +7,7 @@ import * as util from "../util/util";
 import type { IContextBase } from "../core/context_base";
 import type { Vector2 } from "../path-controller/util/vectormath";
 
-let sidebar_hash = new util.HashDigest();
+const sidebar_hash = new util.HashDigest();
 
 export class SideBar<CTX extends IContextBase = IContextBase> extends Container<CTX> {
   header: Container<CTX>;
@@ -142,8 +142,8 @@ export class SideBar<CTX extends IContextBase = IContextBase> extends Container<
 
     this.needsSetCSS = false;
 
-    let w = this.width,
-      h = this.height;
+    let w = this.width;
+    let h = this.height;
 
     w = isNaN(w) ? 500 : w;
     h = isNaN(h) ? 500 : h;
@@ -158,7 +158,7 @@ export class SideBar<CTX extends IContextBase = IContextBase> extends Container<
       "AreaHeaderBG"
     ) as string;
     (this.tabbar.style as unknown as Record<string, string>)["height"] = h - 45 + "px";
-    (this.style as unknown as Record<string, string>)["left"] = editor.size[0 as 0] - w + "px";
+    (this.style as unknown as Record<string, string>)["left"] = editor.size[0 as const] - w + "px";
   }
 
   override update() {

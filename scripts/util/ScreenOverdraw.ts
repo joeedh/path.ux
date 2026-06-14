@@ -54,7 +54,7 @@ export class CanvasOverdraw<CTX extends IContextBase = IContextBase> extends ui_
     this.otherChildren = []; //non-svg elements
     this.font = undefined;
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .overdrawx {
         pointer-events : none;
@@ -149,7 +149,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     this.otherChildren = []; //non-svg elements
     this.font = undefined;
 
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .overdrawx {
         pointer-events : none;
@@ -222,11 +222,11 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
   }
 
   clear(): void {
-    for (let child of util.list(this.svg.childNodes)) {
+    for (const child of util.list(this.svg.childNodes)) {
       (child as ChildNode).remove();
     }
 
-    for (let child of this.otherChildren) {
+    for (const child of this.otherChildren) {
       child.remove();
     }
 
@@ -234,14 +234,14 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
   }
 
   drawTextBubbles(texts: string[], cos: number[][], colors?: string[]): TextBox[] | undefined {
-    let boxes: TextBox[] = [];
-    let elems: (TextBox | SVGLineElement)[] = [];
+    const boxes: TextBox[] = [];
+    const elems: (TextBox | SVGLineElement)[] = [];
 
-    let cent = new Vector2();
+    const cent = new Vector2();
 
     for (let i = 0; i < texts.length; i++) {
-      let co = cos[i];
-      let text = texts[i];
+      const co = cos[i];
+      const text = texts[i];
       let color: string | undefined;
 
       if (colors !== undefined) {
@@ -249,12 +249,12 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
       }
 
       cent.add(co as unknown as InstanceType<typeof Vector2>);
-      let box = this.text(texts[i], co[0], co[1], { color: color }) as TextBox;
+      const box = this.text(texts[i], co[0], co[1], { color: color }) as TextBox;
 
       boxes.push(box);
-      let font = box.style["font"];
-      let pat = /[0-9]+px/;
-      let sizeMatch = font.match(pat);
+      const font = box.style["font"];
+      const pat = /[0-9]+px/;
+      const sizeMatch = font.match(pat);
 
       let size: number;
 
@@ -267,7 +267,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
       }
 
       //console.log(size);
-      let measureFn = ui_base.measureTextBlock as unknown as (
+      const measureFn = ui_base.measureTextBlock as unknown as (
         elem: unknown,
         text: string,
         canvas: undefined,
@@ -275,20 +275,20 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
         size: number,
         font: string
       ) => { width: number; height: number };
-      let tsize = measureFn(this, text, undefined, undefined, size, font);
+      const tsize = measureFn(this, text, undefined, undefined, size, font);
 
       box.minsize = [
         ~~(tsize as { width: number; height: number }).width,
         ~~(tsize as { width: number; height: number }).height,
       ];
 
-      let pad = ui_base.parsepx(box.style["padding"]);
+      const pad = ui_base.parsepx(box.style["padding"]);
 
       box.minsize[0] += pad * 2;
       box.minsize[1] += pad * 2;
 
-      let x = ui_base.parsepx(box.style["left"]);
-      let y = ui_base.parsepx(box.style["top"]);
+      const x = ui_base.parsepx(box.style["left"]);
+      const y = ui_base.parsepx(box.style["top"]);
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
@@ -315,15 +315,15 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     cent.mulScalar(1.0 / boxes.length);
 
     function error(): number {
-      let p1 = [0, 0],
-        p2 = [0, 0];
-      let s1 = [0, 0],
-        s2 = [0, 0];
+      const p1 = [0, 0];
+      const p2 = [0, 0];
+      const s1 = [0, 0];
+      const s2 = [0, 0];
 
       let ret = 0.0;
 
-      for (let box1 of boxes) {
-        for (let box2 of boxes) {
+      for (const box1 of boxes) {
+        for (const box2 of boxes) {
           if (box2 === box1) {
             continue;
           }
@@ -333,7 +333,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
           s2[0] = box2.params[2];
           s2[1] = box2.params[3];
 
-          let overlap = math.aabb_overlap_area(
+          const overlap = math.aabb_overlap_area(
             new Vector2(box1.params),
             new Vector2(s1),
             new Vector2(box2.params),
@@ -357,14 +357,14 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
         return;
       }
 
-      let df = 0.0001;
+      const df = 0.0001;
       let totgs = 0.0;
 
-      for (let box of boxes) {
+      for (const box of boxes) {
         for (let i = 0; i < box.params.length; i++) {
-          let orig = box.params[i];
+          const orig = box.params[i];
           box.params[i] += df;
-          let r2 = error();
+          const r2 = error();
           box.params[i] = orig;
 
           box.grads[i] = (r2 - r1) / df;
@@ -377,9 +377,9 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
       }
 
       r1 /= totgs;
-      let k = 0.4;
+      const k = 0.4;
 
-      for (let box of boxes) {
+      for (const box of boxes) {
         for (let i = 0; i < box.params.length; i++) {
           box.params[i] += -r1 * box.grads[i] * k;
         }
@@ -395,7 +395,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
       solve();
     }
 
-    for (let box of boxes) {
+    for (const box of boxes) {
       elems.push(this.line(box.startpos, box.params));
     }
 
@@ -403,7 +403,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
   }
 
   text(text: string, x: number, y: number, args: TextArgs = {}): HTMLDivElement {
-    let mergedArgs: Record<string, string | number | number[] | undefined> = Object.assign(
+    const mergedArgs: Record<string, string | number | number[] | undefined> = Object.assign(
       {} as Record<string, string | number | number[] | undefined>,
       args
     );
@@ -438,7 +438,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     }
 
     //not sure I need SVG for this. . .
-    let box = document.createElement("div");
+    const box = document.createElement("div");
 
     box.setAttribute("class", "overdrawx");
 
@@ -475,7 +475,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     stroke: string = "black",
     fill: string = "none"
   ): SVGCircleElement {
-    let circle = document.createElementNS(SVG_URL, "circle");
+    const circle = document.createElementNS(SVG_URL, "circle");
     circle.setAttribute("cx", "" + p[0]);
     circle.setAttribute("cy", "" + p[1]);
     circle.setAttribute("r", "" + r);
@@ -496,7 +496,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     v2: vectormath.Vector2Like | number[],
     color: string = "black"
   ): SVGLineElement {
-    let line = document.createElementNS(SVG_URL, "line");
+    const line = document.createElementNS(SVG_URL, "line");
     line.setAttribute("x1", "" + v1[0]);
     line.setAttribute("y1", "" + v1[1]);
     line.setAttribute("x2", "" + v2[0]);
@@ -512,7 +512,7 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     size: vectormath.Vector2Like | number[],
     color: string = "black"
   ): SVGRectWithColor {
-    let line = document.createElementNS(SVG_URL, "rect") as SVGRectWithColor;
+    const line = document.createElementNS(SVG_URL, "rect") as SVGRectWithColor;
     line.setAttribute("x", "" + p[0]);
     line.setAttribute("y", "" + p[1]);
     line.setAttribute("width", "" + size[0]);

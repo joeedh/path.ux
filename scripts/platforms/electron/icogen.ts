@@ -188,7 +188,7 @@ if (window.haveElectron) {
     return REQUIRED_IMAGE_SIZES;
   };
 
-  let stream = require("stream") as {
+  const stream = require("stream") as {
     Writable: { new (): NodeWritableStream; prototype: NodeWritableStream };
   };
 

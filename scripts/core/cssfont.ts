@@ -1,7 +1,7 @@
 import nstructjs from "../util/struct";
 import * as util from "../util/util";
 
-let _digest = new util.HashDigest();
+const _digest = new util.HashDigest();
 
 export interface CSSFontArgs {
   size?: number;
@@ -49,7 +49,7 @@ export class CSSFont {
   get size(): number {
     if (util.isMobile()) {
       // XXX fix me! circular module dependency!
-      let mul = 1.0;
+      const mul = 1.0;
       //let mul = theme.base.mobileTextSizeMultiplier / visualViewport!.scale;
       if (mul) {
         return this._size * mul;
@@ -69,7 +69,7 @@ export class CSSFont {
   }
 
   copy(): CSSFont {
-    let ret = new CSSFont();
+    const ret = new CSSFont();
     this.copyTo(ret);
     return ret;
   }

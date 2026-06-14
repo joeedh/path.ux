@@ -229,8 +229,6 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
 
     this.overdraw.style.zIndex = "0";
 
-    let prev: TreeItem<CTX> | undefined = undefined;
-
     for (; i < items.length; i = next(i)) {
       const item = this.items[i];
       const item2idx = next(i);
@@ -252,8 +250,6 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
       } else if (item2?.treeDepth === item.treeDepth) {
         line(x1, y1, x1, y1 + rowh * 0.5);
       }
-
-      prev = item;
     }
   }
 
@@ -280,9 +276,6 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
     const y = r.top;
 
     const od = this.overdraw;
-    const w = (mm.max as any)[0] - (mm.min as any)[0];
-    const h = (mm.max as any)[1] - (mm.min as any)[1];
-
     od.style.margin = "0px";
     od.style.padding = "0px";
     od.svg.style.margin = "0px";

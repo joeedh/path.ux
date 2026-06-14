@@ -16,7 +16,7 @@ if (typeof document !== "undefined") {
     }
 
     const cb = navigator.clipboard;
-    if (!cb || !cb.read) {
+    if (!cb?.read) {
       return;
     }
 
@@ -105,7 +105,7 @@ const cconst: PathUXConfigProvider = {
 
     for (const m of desiredMimes) {
       const cb = _clipboards[m];
-      if (cb && cb.data) {
+      if (cb?.data) {
         return cb;
       }
     }

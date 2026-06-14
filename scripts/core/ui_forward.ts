@@ -1,5 +1,5 @@
 //methods to forward to this.contents
-export let defaultForwardKeys = [
+export const defaultForwardKeys = [
   "row",
   "col",
   "strip",
@@ -52,7 +52,7 @@ export function forwardContainerMethods(
     Thus we do this in a completely type erased manner with `any`.
   */
 
-  for (let k of keys) {
+  for (const k of keys) {
     cls.prototype[k] = function (this: any, ...args: any[]) {
       return (this[propertyKey] as any)[k].apply(this, args);
     };

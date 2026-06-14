@@ -46,7 +46,7 @@ export class AnimManager {
   }
 
   remove(task: TaskCallback): void {
-    for (let t of this.tasks) {
+    for (const t of this.tasks) {
       if (t.task === task) {
         t.dead = true;
         this.tasks.remove(t);
@@ -57,7 +57,7 @@ export class AnimManager {
 
   start(): void {
     this.timer = window.setInterval(() => {
-      for (let t of this.tasks) {
+      for (const t of this.tasks) {
         try {
           t.task();
         } catch (error) {
@@ -72,7 +72,7 @@ export class AnimManager {
 
       for (let i = 0; i < this.tasks.length; i++) {
         if (this.tasks[i].done) {
-          let t = this.tasks[i];
+          const t = this.tasks[i];
           this.tasks.remove(t);
           i--;
 
@@ -159,7 +159,7 @@ export class GoToCommand extends AbstractCommand {
   start(animator: Animator, done: () => void): void {
     this.time = animator.time;
 
-    let value = this.object[this.key];
+    const value = this.object[this.key];
 
     if (Array.isArray(value)) {
       this.startValue = util.list(value);
@@ -170,7 +170,7 @@ export class GoToCommand extends AbstractCommand {
 
   exec(animator: Animator, done: () => void): void {
     let t = animator.time - this.time;
-    let ms = this.ms;
+    const ms = this.ms;
 
     if (t > ms) {
       done();
@@ -182,9 +182,9 @@ export class GoToCommand extends AbstractCommand {
     t = this.curve.evaluate(t);
 
     if (Array.isArray(this.startValue)) {
-      let value = this.object[this.key] as number[];
-      let sv = this.startValue as number[];
-      let tv = this.value as number[];
+      const value = this.object[this.key] as number[];
+      const sv = this.startValue as number[];
+      const tv = this.value as number[];
 
       for (let i = 0; i < sv.length; i++) {
         if (value[i] === undefined || tv[i] === undefined) {
@@ -274,13 +274,13 @@ export class Animator {
   }
 
   goto(key: string, val: unknown, timeMs: number, curve: string | CurveTypeData = "ease"): this {
-    let cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
+    const cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
     this.commands.push(cmd);
     return this;
   }
 
   set(key: string, val: unknown, time?: number): this {
-    let cmd = new SetCommand(this.owner, key, val);
+    const cmd = new SetCommand(this.owner, key, val);
     this.commands.push(cmd);
     return this;
   }
@@ -315,7 +315,7 @@ export class Animator {
       throw new Error("animation wasn't properly cleaned up");
     }
 
-    let dt = util.time_ms() - this.last;
+    const dt = util.time_ms() - this.last;
     this.time += dt;
     this.last = util.time_ms();
 
@@ -324,7 +324,7 @@ export class Animator {
       return;
     }
 
-    let cmd = this.commands[0];
+    const cmd = this.commands[0];
     let done = false;
 
     function donecb() {
@@ -344,7 +344,7 @@ export class Animator {
       util.print_stack(error as Error);
     }
 
-    for (let cb of this.commands[0].cbs) {
+    for (const cb of this.commands[0].cbs) {
       try {
         cb();
       } catch (error) {
@@ -353,7 +353,7 @@ export class Animator {
     }
 
     if (done) {
-      for (let cb of this.commands[0].end_cbs) {
+      for (const cb of this.commands[0].end_cbs) {
         try {
           cb();
         } catch (error) {

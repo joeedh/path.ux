@@ -432,7 +432,7 @@ export class ListBox<
   loadData(obj: Record<string, unknown>): this {
     super.loadData(obj);
 
-    if (obj && obj._userSized) {
+    if (obj?._userSized) {
       this._userSized = true;
       if (typeof obj.width === "number") {
         this.style.width = obj.width + "px";
@@ -547,7 +547,7 @@ export class ListBox<
     if (this._dataList === undefined) {
       return "";
     }
-    const keys: Array<string | number> = [];
+    const keys: (string | number)[] = [];
     for (const obj of this._dataList.getIter(api, list)) {
       keys.push(this._dataList.getKey(api, list, obj) as string | number);
     }
@@ -557,7 +557,7 @@ export class ListBox<
   /** Reflect the data list's active element into the widget (no write-back). */
   private _syncActiveOnly(api: typeof this.ctx.api, list: unknown) {
     const dataList = this._dataList;
-    if (dataList === undefined || dataList.cb.getActive === undefined) {
+    if (dataList?.cb.getActive === undefined) {
       return;
     }
 
@@ -761,7 +761,7 @@ export class ListBoxSetActiveToolOp<CTX extends IContextBase = IContextBase> ext
 
   undoPre(ctx: CTX): void {
     const res = this._resolve(ctx);
-    if (res === undefined || res.dataList.cb.getActive === undefined) {
+    if (res?.dataList.cb.getActive === undefined) {
       this._undo = { hadActive: false, key: undefined };
       return;
     }

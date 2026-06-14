@@ -179,7 +179,7 @@ export class ElectronMenu extends Array<ElectronMenuItem> {
   }
 }
 
-let callbacks: Record<string, (...args: unknown[]) => void> = {};
+const callbacks: Record<string, (...args: unknown[]) => void> = {};
 let keybase = 1;
 
 export function wrapRemoteCallback(key: string, callback: (...args: unknown[]) => void) {
@@ -304,8 +304,8 @@ function patchDropBox() {
 
     const dpi = this.getDPI();
 
-    let x = e.x,
-      y = e.y;
+    let x = e.x;
+    let y = e.y;
     const rects = this.dom.getClientRects();
 
     x = rects[0].x;

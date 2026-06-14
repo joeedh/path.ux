@@ -853,4 +853,4 @@ let text = `
 `.trim();
 
 text = btoa(text);
-export let iconSvg = `data:image/svg+xml;base64,` + text;
+export const iconSvg = `data:image/svg+xml;base64,` + text;

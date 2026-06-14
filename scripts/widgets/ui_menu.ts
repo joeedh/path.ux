@@ -1996,7 +1996,8 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
         tooltip?: string;
         id?: string | number;
       };
-      let { name, callback, hotkey, icon, tooltip } = objItem;
+      const { name, callback, icon, tooltip } = objItem;
+      let { hotkey } = objItem;
 
       const id2 = objItem.id !== undefined ? objItem.id : id++;
       if (hotkey !== undefined && hotkey instanceof HotKey) {

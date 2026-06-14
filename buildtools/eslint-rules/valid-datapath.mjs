@@ -83,7 +83,7 @@ function isValid(rawPath) {
 }
 
 function nearestSuggestion(rawPath) {
-  if (!catalog || !catalog.all.length) {
+  if (!catalog?.all.length) {
     return "";
   }
   const target = normalizePath(rawPath.trim().replace(/^\//, "")).toLowerCase();
@@ -136,7 +136,7 @@ export default {
           return;
         }
         const arg = node.arguments[0];
-        if (!arg || arg.type !== "Literal" || typeof arg.value !== "string") {
+        if (arg?.type !== "Literal" || typeof arg.value !== "string") {
           return;
         }
         if (!isValid(arg.value)) {
@@ -148,7 +148,7 @@ export default {
       TemplateLiteral(node) {
         for (const quasi of node.quasis) {
           const text = quasi.value.cooked ?? quasi.value.raw;
-          if (!text || !text.includes("path=") || !text.includes("<")) {
+          if (!text?.includes("path=") || !text.includes("<")) {
             continue;
           }
           let m;

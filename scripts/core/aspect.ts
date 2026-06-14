@@ -1,4 +1,4 @@
-let exclude = new Set<string | symbol>([
+const exclude = new Set<string | symbol>([
   "toString",
   "constructor",
   "prototype",
@@ -17,11 +17,11 @@ export function _setUIBase(uibase: Function): void {
   UIBase = uibase;
 }
 
-let AspectKeys = Symbol("aspect-keys");
+const AspectKeys = Symbol("aspect-keys");
 
 export function initAspectClass(objectIn: any, blacklist = new Set<string | symbol>()): void {
-  let object = objectIn as AspectOwner;
-  let cls = object.constructor as Function & { [k: symbol]: (string | symbol)[] };
+  const object = objectIn as AspectOwner;
+  const cls = object.constructor as Function & { [k: symbol]: (string | symbol)[] };
 
   if (!cls[AspectKeys]) {
     cls[AspectKeys] = [];
@@ -32,10 +32,10 @@ export function initAspectClass(objectIn: any, blacklist = new Set<string | symb
       keys = keys.concat(Reflect.ownKeys(p));
       p = Object.getPrototypeOf(p);
     }
-    let keySet = new Set(keys);
+    const keySet = new Set(keys);
 
     function validProperty(obj: AspectOwner, key: string | symbol): boolean {
-      let descr = Object.getOwnPropertyDescriptor(obj, key);
+      const descr = Object.getOwnPropertyDescriptor(obj, key);
 
       if (descr && (descr.get || descr.set)) {
         return false;
@@ -44,7 +44,7 @@ export function initAspectClass(objectIn: any, blacklist = new Set<string | symb
       let p: Function | null = obj.constructor;
       do {
         if ((p as Function & { prototype?: object }).prototype) {
-          let descr = Object.getOwnPropertyDescriptor(
+          const descr = Object.getOwnPropertyDescriptor(
             (p as Function & { prototype: object }).prototype,
             key
           );
@@ -60,7 +60,7 @@ export function initAspectClass(objectIn: any, blacklist = new Set<string | symb
       return true;
     }
 
-    for (let k of keySet) {
+    for (const k of keySet) {
       let v: unknown;
 
       if (typeof k === "string" && k.startsWith("_")) {
@@ -95,13 +95,13 @@ export function initAspectClass(objectIn: any, blacklist = new Set<string | symb
 
   object.__aspect_methods = new Set<string>();
 
-  for (let k of cls[AspectKeys]) {
+  for (const k of cls[AspectKeys]) {
     AfterAspect.bind(object, k as string);
   }
 }
 
 export function clearAspectCallbacks(obj: AspectOwner): void {
-  for (let key of obj.__aspect_methods!) {
+  for (const key of obj.__aspect_methods!) {
     (obj[key] as AspectMethod).clear();
   }
 }
@@ -145,11 +145,11 @@ export class AfterAspect {
 
     this.root = [[owner[key] as Function, undefined]];
 
-    let this2 = this;
+    const this2 = this;
 
-    let method: AspectMethod = (this._method = function (this: unknown) {
-      let chain = this2.chain;
-      let chain2 = this2.chain2;
+    const method: AspectMethod = (this._method = function (this: unknown) {
+      const chain = this2.chain;
+      const chain2 = this2.chain2;
 
       chain2.length = chain.length;
 
@@ -158,7 +158,7 @@ export class AfterAspect {
       }
 
       for (let i = 0; i < chain2.length; i++) {
-        let [cb, node, once] = chain2[i];
+        const [cb, node, once] = chain2[i];
 
         if (node) {
           let isDead = !node.isConnected;
@@ -174,18 +174,18 @@ export class AfterAspect {
           }
         }
 
-        if (once && chain.indexOf(chain2[i]) >= 0) {
+        if (once && chain.includes(chain2[i])) {
           chain.remove(chain2[i]);
         }
 
-        if (cb && cb.apply) {
+        if (cb?.apply) {
           method.value = cb.apply(this, arguments);
           //method.value = Reflect.apply(cb, this, arguments);
           //cb.apply(this, args);
         }
       }
 
-      let ret = method.value;
+      const ret = method.value;
       method.value = undefined;
 
       return ret;
@@ -209,7 +209,7 @@ export class AfterAspect {
   }
 
   remove(cb: Function): boolean {
-    for (let item of this.chain) {
+    for (const item of this.chain) {
       if (item[0] === cb) {
         this.chain.remove(item);
         return true;

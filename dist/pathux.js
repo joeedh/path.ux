@@ -1309,6 +1309,7 @@ function stripComments(buf) {
 }
 function StructParser() {
   const basic_types = /* @__PURE__ */ new Set(["int", "float", "double", "string", "short", "byte", "sbyte", "bool", "uint", "ushort"]);
+  const arraybuffer_types = /* @__PURE__ */ new Set(["int", "uint", "short", "ushort", "byte", "sbyte", "float", "double"]);
   const reserved_tokens = /* @__PURE__ */ new Set([
     "int",
     "float",
@@ -1411,6 +1412,28 @@ function StructParser() {
     p.expect("SCLOSE");
     return { type: StructEnum.STATIC_STRING, data: { maxlength: num2 } };
   }
+  function p_ArrayBuffer(p) {
+    const tok1 = p.peek_i(0);
+    const tok2 = p.peek_i(1);
+    if (!tok1 || !tok2) {
+      return void 0;
+    }
+    if (tok1.type !== "ID" || tok1.value !== "arraybuffer" || tok2.type !== "LPARAM") {
+      return void 0;
+    }
+    p.next();
+    p.next();
+    const type = p.next();
+    if (type === void 0) {
+      return p.error(void 0, "Expected type for arraybuffer");
+    }
+    const tname = type.value.toLowerCase();
+    if (!arraybuffer_types.has(tname)) {
+      p.error(type, "Expected a numeric element type for arraybuffer, got '" + type.value + "'");
+    }
+    p.expect("RPARAM");
+    return { type: StructEnum.ARRAYBUFFER, data: { type: tname } };
+  }
   function p_Array(p) {
     p.expect("ARRAY");
     p.expect("LPARAM");
@@ -1495,7 +1518,10 @@ function StructParser() {
     if (!tok) {
       p.error(void 0, "Unexpected end of input");
     }
-    if (tok.type === "ID") {
+    const pbuffer = p_ArrayBuffer(p);
+    if (pbuffer) {
+      return pbuffer;
+    } else if (tok.type === "ID") {
       p.next();
       return { type: StructEnum.STRUCT, data: tok.value };
     } else if (basic_types.has(tok.type.toLowerCase())) {
@@ -1605,11 +1631,19 @@ function pack_sbyte(array, val) {
   array.push(val);
 }
 function pack_bytes(array, bytes) {
+  if (array._isBinWriter) {
+    array.pushBytes(bytes);
+    return;
+  }
   for (let i = 0; i < bytes.length; i++) {
     array.push(bytes[i]);
   }
 }
 function pack_int(array, val) {
+  if (array._isBinWriter) {
+    array.i32(val);
+    return;
+  }
   temp_dataview.setInt32(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -1617,6 +1651,10 @@ function pack_int(array, val) {
   array.push(uint8_view[3]);
 }
 function pack_uint(array, val) {
+  if (array._isBinWriter) {
+    array.u32(val);
+    return;
+  }
   temp_dataview.setUint32(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -1624,11 +1662,19 @@ function pack_uint(array, val) {
   array.push(uint8_view[3]);
 }
 function pack_ushort(array, val) {
+  if (array._isBinWriter) {
+    array.u16(val);
+    return;
+  }
   temp_dataview.setUint16(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
 }
 function pack_float(array, val) {
+  if (array._isBinWriter) {
+    array.f32(val);
+    return;
+  }
   temp_dataview.setFloat32(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -1636,6 +1682,10 @@ function pack_float(array, val) {
   array.push(uint8_view[3]);
 }
 function pack_double(array, val) {
+  if (array._isBinWriter) {
+    array.f64(val);
+    return;
+  }
   temp_dataview.setFloat64(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -1647,6 +1697,10 @@ function pack_double(array, val) {
   array.push(uint8_view[7]);
 }
 function pack_short(array, val) {
+  if (array._isBinWriter) {
+    array.i16(val);
+    return;
+  }
   temp_dataview.setInt16(0, val, STRUCT_ENDIAN);
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -1721,21 +1775,17 @@ function pack_static_string(data, str, length) {
   arr.length = 0;
   encode_utf8(arr, str);
   truncate_utf8(arr, length);
-  for (let i = 0; i < length; i++) {
-    if (i >= arr.length) {
-      data.push(0);
-    } else {
-      data.push(arr[i]);
-    }
+  for (let i = arr.length; i < length; i++) {
+    arr.push(0);
   }
+  arr.length = length;
+  pack_bytes(data, arr);
 }
 function pack_string(data, str) {
   _static_sbuf.length = 0;
   encode_utf8(_static_sbuf, str);
   pack_int(data, _static_sbuf.length);
-  for (let i = 0; i < _static_sbuf.length; i++) {
-    data.push(_static_sbuf[i]);
-  }
+  pack_bytes(data, _static_sbuf);
 }
 function unpack_bytes(dview, uctx, len) {
   const ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
@@ -1779,9 +1829,11 @@ function unpack_string(data, uctx) {
   }
   const arr = slen < 2048 ? _static_arr_us : new Array(slen);
   arr.length = slen;
+  const p = uctx.i;
   for (let i = 0; i < slen; i++) {
-    arr[i] = unpack_byte(data, uctx);
+    arr[i] = data.getUint8(p + i);
   }
+  uctx.i += slen;
   return decode_utf8(arr);
 }
 function unpack_static_string(data, uctx, length) {
@@ -1789,9 +1841,10 @@ function unpack_static_string(data, uctx, length) {
     throw new Error("'length' cannot be undefined in unpack_static_string()");
   const arr = length < 2048 ? _static_arr_uss : new Array(length);
   arr.length = 0;
+  const p = uctx.i;
   let done = false;
   for (let i = 0; i < length; i++) {
-    const c = unpack_byte(data, uctx);
+    const c = data.getUint8(p + i);
     if (c === 0) {
       done = true;
     }
@@ -1799,6 +1852,7 @@ function unpack_static_string(data, uctx, length) {
       arr.push(c);
     }
   }
+  uctx.i += length;
   truncate_utf8(arr, length);
   return decode_utf8(arr);
 }
@@ -1881,6 +1935,113 @@ function unpack_field(manager3, data, type, uctx) {
   }
   return ret;
 }
+function unpackPrimitiveBulk(data, etype, len, uctx, arr) {
+  let p = uctx.i;
+  switch (etype) {
+    case StructEnum.BYTE:
+      for (let i = 0; i < len; i++)
+        arr[i] = data.getUint8(p + i);
+      p += len;
+      break;
+    case StructEnum.SIGNED_BYTE:
+      for (let i = 0; i < len; i++)
+        arr[i] = data.getInt8(p + i);
+      p += len;
+      break;
+    case StructEnum.BOOL:
+      for (let i = 0; i < len; i++)
+        arr[i] = !!data.getUint8(p + i);
+      p += len;
+      break;
+    case StructEnum.SHORT:
+      for (let i = 0; i < len; i++, p += 2)
+        arr[i] = data.getInt16(p, STRUCT_ENDIAN);
+      break;
+    case StructEnum.USHORT:
+      for (let i = 0; i < len; i++, p += 2)
+        arr[i] = data.getUint16(p, STRUCT_ENDIAN);
+      break;
+    case StructEnum.INT:
+      for (let i = 0; i < len; i++, p += 4)
+        arr[i] = data.getInt32(p, STRUCT_ENDIAN);
+      break;
+    case StructEnum.UINT:
+      for (let i = 0; i < len; i++, p += 4)
+        arr[i] = data.getUint32(p, STRUCT_ENDIAN);
+      break;
+    case StructEnum.FLOAT:
+      for (let i = 0; i < len; i++, p += 4)
+        arr[i] = data.getFloat32(p, STRUCT_ENDIAN);
+      break;
+    case StructEnum.DOUBLE:
+      for (let i = 0; i < len; i++, p += 8)
+        arr[i] = data.getFloat64(p, STRUCT_ENDIAN);
+      break;
+    default:
+      return false;
+  }
+  uctx.i = p;
+  return true;
+}
+function packPrimitiveBulk(data, etype, arr, n = arr.length) {
+  switch (etype) {
+    case StructEnum.BYTE:
+      if (data._isBinWriter && n === arr.length) {
+        data.pushBytes(arr);
+      } else {
+        for (let i = 0; i < n; i++)
+          pack_byte(data, arr[i]);
+      }
+      break;
+    case StructEnum.SIGNED_BYTE:
+      for (let i = 0; i < n; i++)
+        pack_sbyte(data, arr[i]);
+      break;
+    case StructEnum.BOOL:
+      for (let i = 0; i < n; i++)
+        pack_byte(data, arr[i] ? 1 : 0);
+      break;
+    case StructEnum.SHORT:
+      for (let i = 0; i < n; i++)
+        pack_short(data, arr[i]);
+      break;
+    case StructEnum.USHORT:
+      for (let i = 0; i < n; i++)
+        pack_ushort(data, arr[i]);
+      break;
+    case StructEnum.INT:
+      for (let i = 0; i < n; i++)
+        pack_int(data, arr[i]);
+      break;
+    case StructEnum.UINT:
+      for (let i = 0; i < n; i++)
+        pack_uint(data, arr[i]);
+      break;
+    case StructEnum.FLOAT:
+      for (let i = 0; i < n; i++)
+        pack_float(data, arr[i]);
+      break;
+    case StructEnum.DOUBLE:
+      for (let i = 0; i < n; i++)
+        pack_double(data, arr[i]);
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
+function isBulkArray(val) {
+  return Array.isArray(val) || ArrayBuffer.isView(val) && !(val instanceof DataView);
+}
+function unpackByteTyped(data, etype, len, uctx) {
+  if (etype !== StructEnum.BYTE && etype !== StructEnum.SIGNED_BYTE) {
+    return null;
+  }
+  const abs = data.byteOffset + uctx.i;
+  const slice = data.buffer.slice(abs, abs + len);
+  uctx.i += len;
+  return etype === StructEnum.BYTE ? new Uint8Array(slice) : new Int8Array(slice);
+}
 function fmt_type(type) {
   return StructFieldTypeMap[type.type].format(type);
 }
@@ -1922,6 +2083,44 @@ function formatArrayJson(manager3, val, obj, field, type, type2, instance, tlvl,
   }
   s += tab(tlvl) + "]";
   return s;
+}
+function arrayBufferElem(type) {
+  const name2 = type.data.type;
+  const elem = arrayBufferElemTypes[name2];
+  if (!elem) {
+    throw new Error("invalid arraybuffer element type " + name2);
+  }
+  return elem;
+}
+function byteswapElems(bytes, elemSize) {
+  if (elemSize <= 1) {
+    return;
+  }
+  for (let i = 0; i < bytes.length; i += elemSize) {
+    for (let a2 = i, b = i + elemSize - 1; a2 < b; a2++, b--) {
+      const t = bytes[a2];
+      bytes[a2] = bytes[b];
+      bytes[b] = t;
+    }
+  }
+}
+function toElemTyped(val, elem) {
+  if (val instanceof elem.ctor) {
+    return val;
+  }
+  if (val instanceof ArrayBuffer) {
+    return new elem.ctor(val, 0, val.byteLength / elem.size | 0);
+  }
+  if (ArrayBuffer.isView(val)) {
+    const v = val;
+    return new elem.ctor(v.buffer, v.byteOffset, v.byteLength / elem.size | 0);
+  }
+  if (Array.isArray(val)) {
+    const ta = new elem.ctor(val.length);
+    ta.set(val);
+    return ta;
+  }
+  throw new Error("arraybuffer field expects an ArrayBuffer, typed array, DataView, or number[]");
 }
 function setStructEval(val) {
   structEval = val;
@@ -2349,7 +2548,7 @@ function formatJSON(json, cls, addComments = true, validate = true) {
 function readJSON(json, class_or_struct_id) {
   return manager.readJSON(json, class_or_struct_id);
 }
-var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
+var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
   "../../vendor/nstructjs/build/nstructjs_es6.js"() {
     "use strict";
@@ -2509,6 +2708,15 @@ var init_nstructjs_es6 = __esm({
         this.peeked_tokens.push(tok);
         return tok;
       }
+      peek_i(i) {
+        while (this.peeked_tokens.length <= i) {
+          const tok = this.peek();
+          if (tok === void 0) {
+            return void 0;
+          }
+        }
+        return this.peeked_tokens[i];
+      }
       peeknext() {
         if (this.peeked_tokens.length > 0) {
           return this.peeked_tokens[0];
@@ -2619,6 +2827,12 @@ var init_nstructjs_es6 = __esm({
           tok.parser = this;
         return tok;
       }
+      peek_i(i) {
+        const tok = this.lexer.peek_i(i);
+        if (tok !== void 0)
+          tok.parser = this;
+        return tok;
+      }
       peeknext() {
         const tok = this.lexer.peeknext();
         if (tok !== void 0)
@@ -2686,7 +2900,8 @@ var init_nstructjs_es6 = __esm({
       USHORT: 18,
       STATIC_ARRAY: 19,
       SIGNED_BYTE: 20,
-      OPTIONAL: 21
+      OPTIONAL: 21,
+      ARRAYBUFFER: 22
     };
     NStruct = class {
       constructor(name2) {
@@ -2760,6 +2975,86 @@ var init_nstructjs_es6 = __esm({
         this.i = 0;
       }
     };
+    BinWriter = class {
+      constructor(initialCapacity = 4096) {
+        this._isBinWriter = true;
+        this.length = 0;
+        this.buf = new Uint8Array(initialCapacity);
+        this.view = new DataView(this.buf.buffer);
+      }
+      ensure(n) {
+        const need = this.length + n;
+        if (need > this.buf.length) {
+          let cap = this.buf.length * 2;
+          while (cap < need) {
+            cap *= 2;
+          }
+          const nb = new Uint8Array(cap);
+          nb.set(this.buf);
+          this.buf = nb;
+          this.view = new DataView(nb.buffer);
+        }
+      }
+      push(v) {
+        this.ensure(1);
+        this.buf[this.length++] = v;
+      }
+      pushBytes(bytes) {
+        const n = bytes.length;
+        this.ensure(n);
+        this.buf.set(bytes, this.length);
+        this.length += n;
+      }
+      i16(v) {
+        this.ensure(2);
+        this.view.setInt16(this.length, v, STRUCT_ENDIAN);
+        this.length += 2;
+      }
+      u16(v) {
+        this.ensure(2);
+        this.view.setUint16(this.length, v, STRUCT_ENDIAN);
+        this.length += 2;
+      }
+      i32(v) {
+        this.ensure(4);
+        this.view.setInt32(this.length, v, STRUCT_ENDIAN);
+        this.length += 4;
+      }
+      u32(v) {
+        this.ensure(4);
+        this.view.setUint32(this.length, v, STRUCT_ENDIAN);
+        this.length += 4;
+      }
+      f32(v) {
+        this.ensure(4);
+        this.view.setFloat32(this.length, v, STRUCT_ENDIAN);
+        this.length += 4;
+      }
+      f64(v) {
+        this.ensure(8);
+        this.view.setFloat64(this.length, v, STRUCT_ENDIAN);
+        this.length += 8;
+      }
+      /** Reserve n bytes (zero-filled) and return their offset, for back-patching. */
+      reserve(n) {
+        this.ensure(n);
+        const off = this.length;
+        this.buf.fill(0, off, off + n);
+        this.length += n;
+        return off;
+      }
+      patchI32(offset, v) {
+        this.view.setInt32(offset, v, STRUCT_ENDIAN);
+      }
+      /** Used bytes as a view over the internal buffer (no copy). */
+      finish() {
+        return this.buf.subarray(0, this.length);
+      }
+      /** Used bytes as an exact-size copy (safe to grab .buffer of). */
+      toBytes() {
+        return this.buf.slice(0, this.length);
+      }
+    };
     _static_sbuf_ss = new Array(2048);
     _static_sbuf = new Array(32);
     _static_arr_us = new Array(32);
@@ -2773,6 +3068,7 @@ var init_nstructjs_es6 = __esm({
       temp_dataview,
       uint8_view,
       unpack_context,
+      BinWriter,
       pack_byte,
       pack_sbyte,
       pack_bytes,
@@ -3078,7 +3374,8 @@ var init_nstructjs_es6 = __esm({
           const overrideName = manager3.onSerializeUnknown(val);
           if (overrideName !== void 0) {
             const ostt = manager3.get_struct(overrideName);
-            packer_debug$1("int " + ostt.id);
+            if (debug)
+              packer_debug$1("int " + ostt.id);
             pack_int(data, ostt.id);
             manager3.write_struct(data, val, ostt);
             return;
@@ -3094,7 +3391,8 @@ var init_nstructjs_es6 = __esm({
           console.trace();
           throw new Error("Bad struct " + valCtor.structName + " passed to write_struct");
         }
-        packer_debug$1("int " + stt.id);
+        if (debug)
+          packer_debug$1("int " + stt.id);
         pack_int(data, stt.id);
         manager3.write_struct(data, val, stt);
       }
@@ -3151,7 +3449,8 @@ var init_nstructjs_es6 = __esm({
       }
       static unpackInto(manager3, data, type, uctx, dest) {
         let id = unpack_int(data, uctx);
-        packer_debug$1("-int " + id);
+        if (debug)
+          packer_debug$1("-int " + id);
         if (!(id in manager3.struct_ids)) {
           packer_debug$1("tstruct id: " + id);
           console.trace();
@@ -3160,7 +3459,8 @@ var init_nstructjs_es6 = __esm({
           throw new Error("Unknown struct type " + id + ".");
         }
         let cls2 = manager3.get_struct_id(id);
-        packer_debug$1("struct name: " + cls2.name);
+        if (debug)
+          packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
         const missing = cls3 === void 0 || !!manager3.onUnknownClass && isParseStructsDummy(cls3);
         const instance = manager3.read_object(data, missing ? id : cls3, uctx, dest);
@@ -3171,7 +3471,8 @@ var init_nstructjs_es6 = __esm({
       }
       static unpack(manager3, data, type, uctx) {
         let id = unpack_int(data, uctx);
-        packer_debug$1("-int " + id);
+        if (debug)
+          packer_debug$1("-int " + id);
         if (!(id in manager3.struct_ids)) {
           packer_debug$1("tstruct id: " + id);
           console.trace();
@@ -3180,7 +3481,8 @@ var init_nstructjs_es6 = __esm({
           throw new Error("Unknown struct type " + id + ".");
         }
         let cls2 = manager3.get_struct_id(id);
-        packer_debug$1("struct name: " + cls2.name);
+        if (debug)
+          packer_debug$1("struct name: " + cls2.name);
         let cls3 = manager3.struct_cls[cls2.name];
         const missing = cls3 === void 0 || !!manager3.onUnknownClass && isParseStructsDummy(cls3);
         const instance = manager3.read_object(data, missing ? id : cls3, uctx);
@@ -3215,10 +3517,14 @@ var init_nstructjs_es6 = __esm({
         let d = type.data;
         let itername = d.iname;
         let type2 = d.type;
+        const useEnv = itername !== "" && itername !== void 0 && field.get;
+        if (!debug && !useEnv && packPrimitiveBulk(data, type2.type, arr)) {
+          return;
+        }
         let env = _ws_env$1;
         for (let i = 0; i < arr.length; i++) {
           let val2 = arr[i];
-          if (itername !== "" && itername !== void 0 && field.get) {
+          if (useEnv) {
             env[0][0] = itername;
             env[0][1] = val2;
             val2 = manager3._env_call(field.get, obj, env);
@@ -3292,18 +3598,35 @@ var init_nstructjs_es6 = __esm({
       static unpackInto(manager3, data, type, uctx, dest) {
         let len = unpack_int(data, uctx);
         const arr = dest;
+        const t2 = type.data.type;
+        if (!debug) {
+          arr.length = len;
+          if (unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+            return arr;
+          }
+        }
         arr.length = 0;
         for (let i = 0; i < len; i++) {
-          arr.push(unpack_field(manager3, data, type.data.type, uctx));
+          arr.push(unpack_field(manager3, data, t2, uctx));
         }
         return arr;
       }
       static unpack(manager3, data, type, uctx) {
         let len = unpack_int(data, uctx);
         packer_debug$1("-int " + len);
+        const t2 = type.data.type;
+        if (!debug) {
+          const typed = unpackByteTyped(data, t2.type, len, uctx);
+          if (typed) {
+            return typed;
+          }
+        }
         let arr = new Array(len);
+        if (!debug && unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+          return arr;
+        }
         for (let i = 0; i < len; i++) {
-          arr[i] = unpack_field(manager3, data, type.data.type, uctx);
+          arr[i] = unpack_field(manager3, data, t2, uctx);
         }
         return arr;
       }
@@ -3335,16 +3658,30 @@ var init_nstructjs_es6 = __esm({
             console.log("");
           }
         }
-        let starti = data.length;
-        data.length += 4;
         let d = type.data;
         let itername = d.iname;
         let type2 = d.type;
         let env = _ws_env$1;
+        const useEnv = itername !== "" && itername !== void 0 && field.get;
+        if (!debug && !useEnv && isBulkArray(val)) {
+          const arr = val;
+          pack_int(data, arr.length);
+          if (packPrimitiveBulk(data, type2.type, arr)) {
+            return;
+          }
+          data.length -= 4;
+        }
+        let starti;
+        if (data._isBinWriter) {
+          starti = data.reserve(4);
+        } else {
+          starti = data.length;
+          data.length += 4;
+        }
         let i = 0;
         forEach(function(val2) {
           let v2 = val2;
-          if (itername !== "" && itername !== void 0 && field.get) {
+          if (useEnv) {
             env[0][0] = itername;
             env[0][1] = v2;
             v2 = manager3._env_call(field.get, obj, env);
@@ -3354,11 +3691,16 @@ var init_nstructjs_es6 = __esm({
           do_pack(manager3, data, v2, obj, fakeField, type2);
           i++;
         }, void 0);
-        temp_dataview.setInt32(0, i, STRUCT_ENDIAN);
-        data[starti++] = uint8_view[0];
-        data[starti++] = uint8_view[1];
-        data[starti++] = uint8_view[2];
-        data[starti++] = uint8_view[3];
+        if (data._isBinWriter) {
+          data.patchI32(starti, i);
+        } else {
+          temp_dataview.setInt32(0, i, STRUCT_ENDIAN);
+          const a2 = data;
+          a2[starti++] = uint8_view[0];
+          a2[starti++] = uint8_view[1];
+          a2[starti++] = uint8_view[2];
+          a2[starti++] = uint8_view[3];
+        }
       }
       static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
         return formatArrayJson(manager3, val, obj, field, type, type.data.type, instance, tlvl ?? 0, list(val));
@@ -3403,18 +3745,35 @@ var init_nstructjs_es6 = __esm({
         let len = unpack_int(data, uctx);
         packer_debug$1("-int " + len);
         const arr = dest;
+        const t2 = type.data.type;
+        if (!debug) {
+          arr.length = len;
+          if (unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+            return arr;
+          }
+        }
         arr.length = 0;
         for (let i = 0; i < len; i++) {
-          arr.push(unpack_field(manager3, data, type.data.type, uctx));
+          arr.push(unpack_field(manager3, data, t2, uctx));
         }
         return arr;
       }
       static unpack(manager3, data, type, uctx) {
         let len = unpack_int(data, uctx);
         packer_debug$1("-int " + len);
+        const t2 = type.data.type;
+        if (!debug) {
+          const typed = unpackByteTyped(data, t2.type, len, uctx);
+          if (typed) {
+            return typed;
+          }
+        }
         let arr = new Array(len);
+        if (!debug && unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+          return arr;
+        }
         for (let i = 0; i < len; i++) {
-          arr[i] = unpack_field(manager3, data, type.data.type, uctx);
+          arr[i] = unpack_field(manager3, data, t2, uctx);
         }
         return arr;
       }
@@ -3586,18 +3945,35 @@ var init_nstructjs_es6 = __esm({
         let len = unpack_int(data, uctx);
         packer_debug$1("-int " + len);
         const arr = dest;
+        const t2 = type.data.type;
+        if (!debug) {
+          arr.length = len;
+          if (unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+            return arr;
+          }
+        }
         arr.length = 0;
         for (let i = 0; i < len; i++) {
-          arr.push(unpack_field(manager3, data, type.data.type, uctx));
+          arr.push(unpack_field(manager3, data, t2, uctx));
         }
         return arr;
       }
       static unpack(manager3, data, type, uctx) {
         let len = unpack_int(data, uctx);
         packer_debug$1("-int " + len);
+        const t2 = type.data.type;
+        if (!debug) {
+          const typed = unpackByteTyped(data, t2.type, len, uctx);
+          if (typed) {
+            return typed;
+          }
+        }
         let arr = new Array(len);
+        if (!debug && unpackPrimitiveBulk(data, t2.type, len, uctx, arr)) {
+          return arr;
+        }
         for (let i = 0; i < len; i++) {
-          arr[i] = unpack_field(manager3, data, type.data.type, uctx);
+          arr[i] = unpack_field(manager3, data, t2, uctx);
         }
         return arr;
       }
@@ -3663,10 +4039,14 @@ var init_nstructjs_es6 = __esm({
           this.packNull(manager3, data, field, type);
           return;
         }
+        const useEnv = itername !== "" && itername !== void 0 && field.get;
+        if (!debug && !useEnv && arr.length >= d.size && packPrimitiveBulk(data, d.type.type, arr, d.size)) {
+          return;
+        }
         for (let i = 0; i < d.size; i++) {
           let i2 = Math.min(i, Math.min(arr.length - 1, d.size));
           let val2 = arr[i2];
-          if (itername !== "" && itername !== void 0 && field.get) {
+          if (useEnv) {
             let env = _ws_env$1;
             env[0][0] = itername;
             env[0][1] = val2;
@@ -3711,6 +4091,12 @@ var init_nstructjs_es6 = __esm({
         const d = type.data;
         packer_debug$1("-size: " + d.size);
         const ret = dest;
+        if (!debug) {
+          ret.length = d.size;
+          if (unpackPrimitiveBulk(data, d.type.type, d.size, uctx, ret)) {
+            return ret;
+          }
+        }
         ret.length = 0;
         for (let i = 0; i < d.size; i++) {
           ret.push(unpack_field(manager3, data, d.type, uctx));
@@ -3720,6 +4106,12 @@ var init_nstructjs_es6 = __esm({
       static unpack(manager3, data, type, uctx) {
         const d = type.data;
         packer_debug$1("-size: " + d.size);
+        if (!debug) {
+          const ret2 = new Array(d.size);
+          if (unpackPrimitiveBulk(data, d.type.type, d.size, uctx, ret2)) {
+            return ret2;
+          }
+        }
         let ret = [];
         for (let i = 0; i < d.size; i++) {
           ret.push(unpack_field(manager3, data, d.type, uctx));
@@ -3793,6 +4185,87 @@ var init_nstructjs_es6 = __esm({
       }
     };
     StructFieldType.register(StructOptionalField);
+    arrayBufferElemTypes = {
+      byte: { ctor: Uint8Array, size: 1 },
+      sbyte: { ctor: Int8Array, size: 1 },
+      short: { ctor: Int16Array, size: 2 },
+      ushort: { ctor: Uint16Array, size: 2 },
+      int: { ctor: Int32Array, size: 4 },
+      uint: { ctor: Uint32Array, size: 4 },
+      float: { ctor: Float32Array, size: 4 },
+      double: { ctor: Float64Array, size: 8 }
+    };
+    PLATFORM_LITTLE_ENDIAN = new Uint8Array(Uint32Array.of(1).buffer)[0] === 1;
+    StructArrayBufferField = class extends StructFieldType {
+      static pack(manager3, data, val, obj, field, type) {
+        const elem = arrayBufferElem(type);
+        if (val === void 0 || val === null) {
+          pack_int(data, 0);
+          return;
+        }
+        const view = toElemTyped(val, elem);
+        let bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+        pack_int(data, bytes.byteLength);
+        if (elem.size > 1 && STRUCT_ENDIAN !== PLATFORM_LITTLE_ENDIAN) {
+          bytes = bytes.slice();
+          byteswapElems(bytes, elem.size);
+        }
+        pack_bytes(data, bytes);
+      }
+      static packNull(manager3, data, field, type) {
+        pack_int(data, 0);
+      }
+      static unpack(manager3, data, type, uctx) {
+        const elem = arrayBufferElem(type);
+        const byteLength = unpack_int(data, uctx);
+        packer_debug$1("-arraybuffer bytes " + byteLength);
+        const abs = data.byteOffset + uctx.i;
+        const slice = data.buffer.slice(abs, abs + byteLength);
+        uctx.i += byteLength;
+        if (elem.size > 1 && STRUCT_ENDIAN !== PLATFORM_LITTLE_ENDIAN) {
+          byteswapElems(new Uint8Array(slice), elem.size);
+        }
+        return new elem.ctor(slice, 0, byteLength / elem.size | 0);
+      }
+      static toJSON(manager3, val, obj, field, type) {
+        if (val === void 0 || val === null) {
+          return [];
+        }
+        return Array.from(toElemTyped(val, arrayBufferElem(type)));
+      }
+      static fromJSON(manager3, val, obj, field, type, instance) {
+        const elem = arrayBufferElem(type);
+        const arr = val || [];
+        const ta = new elem.ctor(arr.length);
+        ta.set(arr);
+        return ta;
+      }
+      static formatJSON(manager3, val, obj, field, type, instance, tlvl) {
+        const arr = Array.isArray(val) ? val : Array.from(toElemTyped(val, arrayBufferElem(type)));
+        return JSON.stringify(arr);
+      }
+      static validateJSON(manager3, val, obj, field, type, instance, _abstractKey) {
+        if (!Array.isArray(val)) {
+          return "not an array: " + val;
+        }
+        for (let i = 0; i < val.length; i++) {
+          if (typeof val[i] !== "number") {
+            return "non-numeric arraybuffer element: " + val[i];
+          }
+        }
+        return true;
+      }
+      static format(type) {
+        return "arraybuffer(" + type.data.type + ")";
+      }
+      static define() {
+        return {
+          type: StructEnum.ARRAYBUFFER,
+          name: "arraybuffer"
+        };
+      }
+    };
+    StructFieldType.register(StructArrayBufferField);
     _sintern2 = /* @__PURE__ */ Object.freeze({
       __proto__: null,
       _get_pack_debug,
@@ -4352,10 +4825,6 @@ var init_nstructjs_es6 = __esm({
           }
         }
       }
-      /**
-       @param data : array to write data into,
-       @param obj  : structable object
-       */
       write_object(data, obj) {
         const keywords = this.constructor.keywords;
         const cls = obj.constructor.structName;
@@ -4382,10 +4851,6 @@ var init_nstructjs_es6 = __esm({
         }
         return this.read_object(data, cls_or_struct_id, uctx);
       }
-      /**
-       @param data array to write data into,
-       @param obj structable object
-       */
       writeObject(data, obj) {
         return this.write_object(data, obj);
       }
@@ -4474,34 +4939,25 @@ var init_nstructjs_es6 = __esm({
           uctx = new unpack_context();
           packer_debug("\n\n=Begin reading " + cls.structName + "=");
         }
-        const thestruct = this;
         const this2 = this;
-        function unpack_field2(type) {
-          return StructFieldTypeMap[type.type].unpack(this2, data, type, uctx);
-        }
-        function unpack_into(type, dest) {
-          return StructFieldTypeMap[type.type].unpackInto(this2, data, type, uctx, dest);
-        }
+        const typeMap = StructFieldTypeMap;
         let was_run = false;
-        function makeLoader(stt2) {
-          return function load(obj) {
-            if (was_run) {
-              return;
+        const loader = function load(obj) {
+          if (was_run) {
+            return;
+          }
+          was_run = true;
+          const fields2 = stt.fields;
+          const flen = fields2.length;
+          for (let i = 0; i < flen; i++) {
+            const f2 = fields2[i];
+            if (f2.name === "this") {
+              typeMap[f2.type.type].unpackInto(this2, data, f2.type, uctx, obj);
+            } else {
+              obj[f2.name] = typeMap[f2.type.type].unpack(this2, data, f2.type, uctx);
             }
-            was_run = true;
-            const fields2 = stt2.fields;
-            const flen = fields2.length;
-            for (let i = 0; i < flen; i++) {
-              const f2 = fields2[i];
-              if (f2.name === "this") {
-                unpack_into(f2.type, obj);
-              } else {
-                obj[f2.name] = unpack_field2(f2.type);
-              }
-            }
-          };
-        }
-        const loader = makeLoader(stt);
+          }
+        };
         if (cls.prototype.loadSTRUCT !== void 0) {
           let obj = objInstance;
           if (!obj && cls.newSTRUCT !== void 0) {
@@ -4854,7 +5310,7 @@ var init_nstructjs_es6 = __esm({
       write(blocks) {
         this.struct = manager;
         this.blocks = blocks;
-        const data = [];
+        const data = new BinWriter();
         pack_static_string(data, this.magic, 4);
         pack_short(data, this.version.major);
         pack_byte(data, this.version.minor & 255);
@@ -4875,15 +5331,15 @@ var init_nstructjs_es6 = __esm({
           if (structNameVal === void 0 || !(structNameVal in struct.structs)) {
             throw new Error("Non-STRUCTable object " + block.data);
           }
-          const data2 = [];
+          const data2 = new BinWriter();
           const stt = struct.structs[structNameVal];
           struct.write_object(data2, block.data);
           pack_static_string(data, block.type, 4);
           pack_int(data, data2.length);
           pack_int(data, stt.id);
-          pack_bytes(data, data2);
+          data.pushBytes(data2.finish());
         }
-        return new DataView(new Uint8Array(data).buffer);
+        return new DataView(data.toBytes().buffer);
       }
       writeBase64(blocks) {
         const dataview = this.write(blocks);
@@ -4922,6 +5378,7 @@ var init_nstructjs_es6 = __esm({
 // scripts/path-controller/util/nstructjs.ts
 var nstructjs_exports = {};
 __export(nstructjs_exports, {
+  BinWriter: () => BinWriter,
   JSONError: () => JSONError,
   STRUCT: () => STRUCT,
   _truncateDollarSign: () => _truncateDollarSign,
@@ -11554,7 +12011,8 @@ var init_toolprop_abstract = __esm({
       STRSET: 8192,
       CURVE: 16384,
       FLOAT_ARRAY: 32768,
-      REPORT: 65536
+      REPORT: 65536,
+      ARRAY_BUFFER: 65536 << 1
       //ITER : 8192<<1
     };
     PropSubTypes = {
@@ -12342,7 +12800,7 @@ function setPropTypes(types) {
     PropTypes[k] = types[k];
   }
 }
-var NumberConstraintsBase, IntegerConstraints, FloatConstrinats, NumberConstraints, PropSubTypes2, first, customPropertyTypes, PropClasses, customPropTypeBase, MakeUINameWordMap, defaultRadix, defaultDecimalPlaces, OnceTag, ExecScopeUsing, ExecScopeUsingStack, execScopeUsingStack, ToolProperty, FloatArrayProperty, StringPropertyBase, StringProperty, NumProperty, _NumberPropertyBase, IntProperty, ReportProperty, BoolProperty, FloatPropertyBase, FloatProperty, EnumKeyPair, EnumPropertyBase, EnumProperty, FlagProperty, VecPropertyBase, Vec2Property, Vec3Property, Vec4Property, QuatProperty, Mat4Property, ListProperty, StringSetProperty;
+var NumberConstraintsBase, IntegerConstraints, FloatConstrinats, NumberConstraints, PropSubTypes2, first, customPropertyTypes, PropClasses, customPropTypeBase, MakeUINameWordMap, defaultRadix, defaultDecimalPlaces, OnceTag, ExecScopeUsing, ExecScopeUsingStack, execScopeUsingStack, ToolProperty, FloatArrayProperty, StringPropertyBase, StringProperty, ArrayBufferProperty, NumProperty, _NumberPropertyBase, IntProperty, ReportProperty, BoolProperty, FloatPropertyBase, FloatProperty, EnumKeyPair, EnumPropertyBase, EnumProperty, FlagProperty, VecPropertyBase, Vec2Property, Vec3Property, Vec4Property, QuatProperty, Mat4Property, ListProperty, StringSetProperty;
 var init_toolprop = __esm({
   "scripts/path-controller/toolsys/toolprop.ts"() {
     "use strict";
@@ -12916,6 +13374,35 @@ toolprop.FloatArrayProperty {
       }
     };
     ToolProperty.internalRegister(StringProperty);
+    ArrayBufferProperty = class extends ToolProperty {
+      data = new ArrayBuffer(0);
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    toolprop.ArrayBufferProperty {
+      data : arraybuffer(byte);
+    }
+  `
+      );
+      constructor(buffer) {
+        super(PropTypes.ARRAY_BUFFER);
+        this.data = buffer ?? this.data;
+      }
+      setValue(buffer) {
+        super.setValue();
+        this.data = buffer;
+      }
+      getValue() {
+        return this.data;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.data = new Uint8Array(Array.from(new Uint8Array(this.data))).buffer;
+      }
+      calcMemSize() {
+        return super.calcMemSize() + this.data.byteLength;
+      }
+    };
     NumProperty = class extends ToolProperty {
       static STRUCT = struct_default.inlineRegister(
         this,
@@ -16214,6 +16701,9 @@ toolsys.PropKey {
         this.ctx = ctx;
         this.modalRunning = 0;
         this._undo_branch = void 0;
+      }
+      prepend(tool) {
+        this.splice(0, 0, tool);
       }
       get head() {
         return this[this.cur];
@@ -32392,14 +32882,12 @@ var init_ui_menu = __esm({
             ok = true;
             break;
           }
-          console.log("-", w);
           if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)) {
             ok = true;
             break;
           }
           w = w.parentWidget;
         }
-        console.log("\n\n");
         if (!ok) {
           this.closereq = this.menu;
         } else {
@@ -45106,6 +45594,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
 var controller_exports = {};
 __export(controller_exports, {
   AbstractCurve: () => AbstractCurve,
+  ArrayBufferProperty: () => ArrayBufferProperty,
   BSplineCurve: () => BSplineCurve,
   BSplineTransformOp: () => BSplineTransformOp,
   BoolProperty: () => BoolProperty,
@@ -53856,6 +54345,7 @@ export {
   AreaFlags,
   AreaTypes,
   AreaWrangler,
+  ArrayBufferProperty,
   BSplineCurve,
   BSplineTransformOp,
   BoolProperty,

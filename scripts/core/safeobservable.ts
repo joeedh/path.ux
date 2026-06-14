@@ -77,14 +77,14 @@ export class ObserveManger {
   }
 
   _getEvents(owner: ObservableInstance): Set<string> {
-    let keys = new Set<string>();
+    const keys = new Set<string>();
 
     let p: ObservableInstance | undefined = owner;
     while (p) {
       if (p.observeDefine) {
-        let def = p.observeDefine();
+        const def = p.observeDefine();
 
-        for (let item in def.events) {
+        for (const item in def.events) {
           keys.add(item);
         }
       }
@@ -99,16 +99,16 @@ export class ObserveManger {
       throw new Error("invalid argument to ObserveManger.dispathc");
     }
 
-    let oid = this.getId(owner);
-    let list = this.subscribeeMap.get(oid);
+    const oid = this.getId(owner);
+    const list = this.subscribeeMap.get(oid);
 
     if (!list) return;
 
     for (let i = 0; i < list.length; i++) {
-      let item = list[i];
-      let cid = item.id,
-        cb = item.callback,
-        isValid = item.isValid;
+      const item = list[i];
+      const cid = item.id;
+      const cb = item.callback;
+      const isValid = item.isValid;
 
       if (isValid && !isValid()) {
         if (this._unsubscribe(oid, type, cid, cb)) {
@@ -128,12 +128,12 @@ export class ObserveManger {
   }
 
   update(): void {
-    for (let cid of this.subscriberMap.keys()) {
-      let list = this.subscriberMap.get(cid)!;
+    for (const cid of this.subscriberMap.keys()) {
+      const list = this.subscriberMap.get(cid)!;
 
-      for (let item of list) {
+      for (const item of list) {
         let bad = false;
-        let oid = item.id;
+        const oid = item.id;
 
         try {
           bad = !!item.isValid && !item.isValid();
@@ -148,14 +148,14 @@ export class ObserveManger {
       }
     }
 
-    for (let oid of this.subscribeeMap.keys()) {
-      let list = this.subscriberMap.get(oid);
+    for (const oid of this.subscribeeMap.keys()) {
+      const list = this.subscriberMap.get(oid);
 
       if (!list) continue;
 
-      for (let item of list) {
+      for (const item of list) {
         let bad = false;
-        let cid = item.id;
+        const cid = item.id;
 
         try {
           bad = !!item.isValid && !item.isValid();
@@ -186,14 +186,14 @@ export class ObserveManger {
       throw new Error("owner is not an observable; no observeDefine");
     }
 
-    let validkeys = this._getEvents(owner);
+    const validkeys = this._getEvents(owner);
     if (!validkeys.has(type)) {
       throw new Error("unknown event type " + type);
     }
 
-    let oid = this.getId(owner);
-    let cid = this.getId(child);
-    let cbid = this.getId(callback as unknown as object);
+    const oid = this.getId(owner);
+    const cid = this.getId(child);
+    const cbid = this.getId(callback as unknown as object);
 
     if (!this.subscriberMap.has(cid)) {
       this.subscriberMap.set(cid, []);
@@ -205,13 +205,13 @@ export class ObserveManger {
     let ref: (() => boolean) | undefined;
     if (typeof child.isValid === "function") {
       ref = child.isValid;
-      if (child.prototype && ref === child.prototype.isValid) {
+      if (ref === child.prototype?.isValid) {
         ref = ref.bind(child);
       }
     }
 
     if (customIsValid && ref) {
-      let ref2 = ref;
+      const ref2 = ref;
       ref = () => {
         return ref2() && customIsValid();
       };
@@ -230,7 +230,7 @@ export class ObserveManger {
     if (owner.isValid) {
       ref = owner.isValid;
 
-      if (owner.prototype && ref === owner.prototype.isValid) {
+      if (ref === owner.prototype?.isValid) {
         ref = ref.bind(owner);
       }
     }
@@ -264,24 +264,24 @@ export class ObserveManger {
     if (!_valid(owner) || !_valid(child)) {
       throw new Error("invalid arguments to ObserveManager.unsubscribe");
     }
-    let oid = this.getId(owner);
-    let cid = this.getId(child);
+    const oid = this.getId(owner);
+    const cid = this.getId(child);
 
     return this._unsubscribe(oid, type, cid, callback);
   }
 
   _unsubscribe(oid: number, type: string, cid: number, callback?: Function): boolean {
-    let cbid = callback ? this.getId(callback as unknown as object) : undefined;
+    const cbid = callback ? this.getId(callback as unknown as object) : undefined;
 
     if (!this.subscribeeMap.has(oid) || !this.subscriberMap.has(cid)) {
       console.warn("Warning, bad call to ObserveManager.unsubscribe");
     }
 
-    let list = this.subscriberMap.get(cid);
+    const list = this.subscriberMap.get(cid);
     let found = false;
 
     if (list) {
-      for (let item of list.concat([])) {
+      for (const item of list.concat([])) {
         if (item.type === type && item.id === oid && (!callback || item.callback === callback)) {
           list.remove(item);
           found = true;
@@ -289,9 +289,9 @@ export class ObserveManger {
       }
     }
 
-    let list2 = this.subscribeeMap.get(oid);
+    const list2 = this.subscribeeMap.get(oid);
     if (list2) {
-      for (let item of list2.concat([])) {
+      for (const item of list2.concat([])) {
         if (item.type === type && item.id === cid && (!callback || item.callback === callback)) {
           list2.remove(item);
           found = true;

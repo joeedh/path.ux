@@ -836,7 +836,6 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   on_pointermove(e: PointerEvent) {
-    const r = this.canvas.getClientRects()[0];
     this._domouse(e);
 
     e.preventDefault();
@@ -1163,17 +1162,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
     let h = tsize + Math.ceil(tsize * 0.5) + hpad;
     const iconsize = iconmanager.getTileSize(this.iconsheet);
-    let have_icons = false;
 
     for (const tab of this.tabs) {
       if (tab.icon !== undefined) {
-        have_icons = true;
         h = Math.max(h, iconsize + 4);
         break;
       }
     }
 
-    const r1 = this.parentWidget ? this.parentWidget.getClientRects()[0] : undefined;
     const r2 = this.canvas.getClientRects()[0];
 
     let rx = 0;
@@ -1230,8 +1226,6 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
 
     for (const tab of this.tabs) {
-      ti++;
-
       if (tab.extra && !tab.dom) {
         tab.dom = document.createElement("div");
         tab.dom.style["margin"] = tab.dom.style["padding"] = "0px";
@@ -1442,7 +1436,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       }
 
       if (tab.icon !== undefined) {
-        let paddingRight = tab.getDefault("iconPaddingRight", undefined, 2) as number;
+        const paddingRight = tab.getDefault("iconPaddingRight", undefined, 2) as number;
 
         iconmanager.canvasDraw(
           this as unknown as UIBase,
@@ -1484,8 +1478,6 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
         g.stroke();
       }
     }
-
-    const th = tsize;
 
     //draw active tab
     tab = this.tabs.active;
@@ -1563,8 +1555,6 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
           //
           g.closePath();
         }
-
-        const cw = this.horiz ? this.canvas.width : this.canvas.height;
 
         const worig = g.lineWidth;
 

@@ -98,14 +98,13 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   get inherit_packflag(): number {
-    super.inherit_packflag;
-    if (!this.contents) return 0 as number;
-    return this.contents.inherit_packflag;
+    return this.contents ? this.contents.inherit_packflag : 0;
   }
 
   set inherit_packflag(val: number) {
-    if (!this.contents) return;
-    this.contents.inherit_packflag = val;
+    if (this.contents) {
+      this.contents.inherit_packflag = val;
+    }
   }
 
   get packflag(): number {
@@ -140,7 +139,6 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   get dataPrefix(): string {
-    super.dataPrefix;
     return this.contents ? this.contents.dataPrefix : "";
   }
 

@@ -63,7 +63,7 @@ export function getExtension(path: string | undefined) {
 }
 
 export function getMime(path: string) {
-  let ext = getExtension(path);
+  const ext = getExtension(path);
   if (ext in mimeMap) {
     return mimeMap[ext];
   }
@@ -91,7 +91,7 @@ export class PlatformAPI {
       base = base.slice(0, base.length - 1).trim();
     }
 
-    let exts = ["html", "txt", "js", "php", "cgi"];
+    const exts = ["html", "txt", "js", "php", "cgi"];
     for (let ext of exts) {
       ext = "." + ext;
       if (base.endsWith(ext)) {

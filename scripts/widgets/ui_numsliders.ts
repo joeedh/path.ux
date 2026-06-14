@@ -583,8 +583,6 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     let value = startvalue;
 
     let startx = this.vertical ? e.y : e.x;
-    const starty = this.vertical ? e.x : e.y;
-    let sumdelta = 0;
 
     this.dom._background = this.getDefault("BoxDepressed");
     const fire = () => {
@@ -598,6 +596,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         switch (e.keyCode) {
           case 27: //escape key
             cancel(true);
+            break;
           case 13: //enter key
             cancel(false);
             break;
@@ -627,9 +626,6 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         }
 
         dx *= this.vertical ? -1 : 1;
-
-        sumdelta += Math.abs(dx);
-
         value += dx * (this.step ?? 0.1) * 0.1 * (this.slideSpeed ?? 1.0);
 
         let dvalue = value - startvalue;
@@ -836,13 +832,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
     const g = this.g;
     const canvas = this.dom;
-
-    const dpi = this.getDPI();
     const disabled = this.disabled;
 
     /* Fallback on BoxHighlight for backwards compatibility with
      * old themes. */
-
     const over = !this._modaldata ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
     let subkey = undefined;
@@ -955,7 +948,6 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     };
 
     let arrowcolor_base: string;
-    let arrowcolor: string;
 
     arrowcolor_base = this.getDefault("arrow-color", undefined, "orange") as string;
     arrowcolor_base = parseArrowColor(arrowcolor_base);
@@ -1007,11 +999,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       //      arrowcolorValue = this.getSubDefault("pressed", "arrow-color");
     }
 
-    arrowcolor = parseArrowColor(arrowcolorValue as string);
-
+    const arrowcolor = parseArrowColor(arrowcolorValue as string);
     const d = 7;
-    const w = (canvas as HTMLCanvasElement).width;
-    const h = (canvas as HTMLCanvasElement).height;
+    const w = canvas.width;
+    const h = canvas.height;
     const sz = this._getArrowSize();
 
     if (this.vertical) {
@@ -1187,7 +1178,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
 
     const x = e.x - rect.left;
     const dpi = UIBase.getDPI();
-    const co = this._getButtonPos();
 
     const val = this._invertButtonX(x * dpi);
     this.value = val;
@@ -1201,8 +1191,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
     if (e !== undefined) {
       this._setFromMouse(e);
     }
-    const dom = window;
-    const evtargs = { capture: false };
 
     if (this.modal) {
       console.warn("Double call to _startModal!");
@@ -1223,11 +1211,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
 
     handlers = {
       pointermove: (e: PointerEvent) => {
-        let x = e.x;
-        const y = e.y;
-
-        x = this.ma!.add(x);
-
         this._setFromMouse(e);
       },
 
@@ -1404,14 +1387,16 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
       g!.stroke();
     }
 
+    /*
     if (this.highlight) {
       color = this.getDefault("BoxHighlight") as unknown as string;
     } else {
       color = this.getDefault("border-color") as unknown as string;
     }
 
-    //g.strokeStyle = color;
-    //g.stroke();
+    g.strokeStyle = color;
+    g.stroke();
+    */
 
     const co = this._getButtonPos();
 
@@ -1465,7 +1450,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
   _invertButtonX(x: number): number {
     const w = this.canvas.width;
     const dpi = UIBase.getDPI();
-    const sh = ~~((this.getDefault("SlideHeight") as unknown as number) * dpi + 0.5);
     const boxw = this.canvas.height - 4;
     const w2 = w - boxw;
 
@@ -1484,7 +1468,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
   _getButtonPos() {
     const w = this.canvas.width;
     const dpi = UIBase.getDPI();
-    const sh = ~~((this.getDefault("SlideHeight") as unknown as number) * dpi + 0.5);
     let x = this._value;
 
     const range = this.uiRange || this.range!;

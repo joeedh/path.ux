@@ -154,10 +154,6 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     span.style.display = "flex";
     span.style.flexDirection = "row";
     span.style.margin = span.style.padding = "0px";
-    //span.style["background"] = ui_base.iconmanager.getCSS(1);
-
-    const sheet = 0;
-    const size = ui_base.iconmanager.getTileSize(0);
 
     const check = (this.canvas = document.createElement("canvas"));
     this.g = check.getContext("2d")!;
@@ -315,9 +311,6 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     this.setAttribute("class", "checkx");
 
     const style = document.createElement("style");
-    //let style = this.cssStyleTag();
-
-    const color = this.getDefault("focus-border-color");
 
     style.textContent = `
       .checkx:focus {
@@ -349,7 +342,7 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
     const rawVal = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
 
-    let redraw = false;
+    let redraw: boolean;
 
     if (rawVal === undefined) {
       this.internalDisabled = true;
@@ -577,9 +570,6 @@ export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown
     super.setCSS();
 
     let def: (k: string) => unknown;
-    const _pstyle = this.getDefault("depressed");
-    const _hstyle = this.getDefault("highlight");
-
     this.noMarginsOrPadding();
 
     if (this._pressed && this._draw_pressed) {
@@ -1055,21 +1045,11 @@ export class Check1<CTX extends IContextBase = IContextBase> extends OldButton<C
   }
 
   _redraw(draw_text = true) {
-    //console.log("button draw");
-
-    const _dpi = this.getDPI();
-
     const box = 40;
     ui_base.drawRoundBox(this, this.dom, this.g, box);
 
     const ts = (this.getDefault("DefaultText") as CSSFont).size;
-
     const text = this._genLabel();
-
-    //console.log(text, "text", this._name);
-
-    const tw = ui_base.measureText(this, text, this.dom, this.g).width;
-    const cx = this.dom.width / 2 - tw / 2;
     const cy = this.dom.height / 2;
 
     ui_base.drawText(this, box, cy + ts / 2, text, {

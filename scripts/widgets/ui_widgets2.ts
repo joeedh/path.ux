@@ -346,7 +346,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
   set uniformValue(val: number) {
     const old = this.uniformValue;
-    let doupdate = false;
+    let doupdate: boolean;
 
     const vArr = this.value as unknown as number[];
 

@@ -2704,7 +2704,7 @@ export class UIBase<
     x -= window.scrollX;
     y -= window.scrollY;
 
-    let elems = this.shadow.elementsFromPoint(x, y);
+    const elems = this.shadow.elementsFromPoint(x, y);
 
     const excluded = (n: UIBase) =>
       excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;

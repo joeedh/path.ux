@@ -20,8 +20,7 @@ test("mass set paths test", () => {
     points: Point[] = [];
   }
 
-  let index = 0;
-  let points: Point[] = [];
+  const points: Point[] = [];
   for (let i = 0; i < 100; i++) {
     points.push(new Point(rnd.random(), rnd.random(), rnd.random() > 0.75));
   }

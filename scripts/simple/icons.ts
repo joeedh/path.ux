@@ -34,7 +34,7 @@ export const Icons = {
 };
 
 export function loadDefaultIconSheet() {
-  let iconSheet = document.createElement("img");
+  const iconSheet = document.createElement("img");
   iconSheet.src = iconSvg;
 
   return iconSheet;
