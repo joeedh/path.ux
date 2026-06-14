@@ -44,7 +44,7 @@
     "globals": "^17.4.0",
     "happy-dom": "^20.9.0",
     "markdown-toc": "^1.2.0",
-    "nstructjs": "^0.8.5",
+    "nstructjs": "^0.8.7",
     "parse5": "6.0.0",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.2",
