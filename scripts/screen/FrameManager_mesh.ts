@@ -374,7 +374,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
       h = Math.abs(vec[1] as number);
 
       cursor = "e-resize";
-      bstyle = "border-left-style : solid;\n    border-right-style : solid;\n";
       bstyle = "border-top-style : none;\n    border-bottom-style : none;\n";
     } else {
       (this.style as unknown as Record<string, string>)["padding-top"] = (

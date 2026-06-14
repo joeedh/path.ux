@@ -312,8 +312,7 @@ export class PropsEditor extends Editor {
 
     for (let i = 0; i < linkcount; i++) {
       //let n1 = randitem(nodes), n2 = randitem(nodes);
-      let ri = i % nodes.length;
-      ri = ~~(rand.random() * nodes.length * 0.99999);
+      const ri = ~~(rand.random() * nodes.length * 0.99999);
 
       let ri2 = (ri + 1) % nodes.length;
       if (rand.random() > 0.8) {

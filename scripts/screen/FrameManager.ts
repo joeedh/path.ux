@@ -511,10 +511,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     nodeclass?: IUIBaseConstructor<UIBase>,
     excluded_classes?: IUIBaseConstructor[]
   ): T | undefined {
-    if (typeof args === "object") {
-      nodeclass = args.nodeclass as unknown as IUIBaseConstructor<UIBase>;
-      excluded_classes = args.excluded_classes;
-    } else {
+    if (typeof args !== "object") {
       args = {
         nodeclass,
         excluded_classes,
@@ -925,8 +922,8 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   checkCSSSize() {
     const sw = this.style.width.toLowerCase().trim();
     const sh = this.style.height.toLowerCase().trim();
-    let w = 0;
-    let h = 0;
+    let w: number;
+    let h: number;
 
     if (sw.endsWith("px") && sh.endsWith("px")) {
       w = parseFloat(sw.slice(0, sw.length - 2).trim());
@@ -962,8 +959,8 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       return;
     }
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    let width: number;
+    let height: number;
 
     const scale = 1.0; //visualViewport.scale;
 
@@ -2308,7 +2305,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   solveAreaConstraints(snapArgument = true) {
-    let repeat = false;
+    let repeat: boolean;
     let found = false;
 
     let time = util.time_ms();

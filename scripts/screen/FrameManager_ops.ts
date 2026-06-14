@@ -702,7 +702,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       return;
     }
 
-    let can_rip = false;
+    let can_rip: boolean;
     const sa = this.sarea!;
     const screen = this.screen;
 

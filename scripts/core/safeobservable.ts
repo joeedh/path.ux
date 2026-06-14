@@ -132,7 +132,7 @@ export class ObserveManger {
       const list = this.subscriberMap.get(cid)!;
 
       for (const item of list) {
-        let bad = false;
+        let bad;
         const oid = item.id;
 
         try {
@@ -154,7 +154,7 @@ export class ObserveManger {
       if (!list) continue;
 
       for (const item of list) {
-        let bad = false;
+        let bad;
         const cid = item.id;
 
         try {

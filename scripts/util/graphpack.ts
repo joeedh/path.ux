@@ -213,11 +213,7 @@ export function graphPack(
 
     loadBoxes(n1, n2);
 
-    const a1 = n1.size[0] * n1.size[1];
-    const a2 = n2.size[0] * n2.size[1];
-
     return math.aabb_overlap_area(p1, s1, p2, s2);
-    return math.aabb_overlap_area(p1, s1, p2, s2) / (a1 + a2);
   }
 
   let lasterr: number | undefined;
@@ -327,8 +323,6 @@ export function graphPack(
       }
     }
 
-    let err = 1e17;
-
     for (const n of nodes) {
       n.oldpos.load!(n.pos);
       n.pos.addFac!(n.vel, 0.5);
@@ -344,7 +338,7 @@ export function graphPack(
 
     for (let j = 0; j < 10; j++) {
       solver = solveStep1();
-      err = solver.solve(10, gk);
+      solver.solve(10, gk);
     }
 
     for (const n of nodes) {

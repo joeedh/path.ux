@@ -57,6 +57,7 @@ export const Icons: Record<string, number> = {
   TREE_COLLAPSE: a++,
   ZOOM_OUT     : a++,
   ZOOM_IN      : a++,
+  // eslint-disable-next-line no-useless-assignment
   LARGE_X      : a++ /* Used for curve widget delete button. */,
 };
 /* used for icon checkboxes with overlayed check marks */

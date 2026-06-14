@@ -134,8 +134,6 @@ export class Dynamics {
         throw new Error("unknown dynamics channel mode " + channel.mode);
     }
 
-    data = Math.pow(data, channel.exp);
-
     return value;
   }
 

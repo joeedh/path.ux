@@ -299,8 +299,8 @@ function patchDropBox() {
       }
     };
 
-    let x = e.x;
-    let y = e.y;
+    let x: number;
+    let y: number;
     const rects = this.dom.getClientRects();
 
     x = rects[0].x;
@@ -534,12 +534,12 @@ export function initMenuBar<CTX extends IContextBase>(
     "cut",
     "zoom",
   ]);
-  let roles: Record<string, string> = {};
+  const roles: Record<string, string> = {};
   for (const k of _roles) {
     roles[k] = k;
   }
 
-  roles = Object.assign(roles, {
+  Object.assign(roles, {
     "select all": "selectAll",
     "file"      : "fileMenu",
     "edit"      : "editMenu",
