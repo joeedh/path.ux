@@ -58,7 +58,6 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
   }
 
   setLabel(s: string) {
-    const color = this.color;
     if (this.showExclMark && this.mark === undefined) {
       this.mark = document.createElement("div");
       (this.mark.style as StyleRecord)["display"] = "flex";
@@ -243,8 +242,6 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFr
         break;
       }
     }
-
-    const f = (100.0 * Math.min(percent, 1.0)).toFixed(1);
 
     if (note === undefined) {
       note = this.addNote(msg, color, -1, "note-progress-x") as ProgBarNote<CTX>;

@@ -299,11 +299,6 @@ function patchDropBox() {
       }
     };
 
-    const menu = this._menu;
-    const screen = this.getScreen();
-
-    const dpi = this.getDPI();
-
     let x = e.x;
     let y = e.y;
     const rects = this.dom.getClientRects();
@@ -368,13 +363,9 @@ export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false,
   }
 
   (window as unknown as Record<string, unknown>).icongen = icongen;
-  const nativeImage = getElectron().nativeImage;
 
   const manager = getIconManager();
-  const sheet = manager.findSheet(iconsheet);
   const images: unknown[] = [];
-
-  const sizes = icongen.GetRequiredICOImageSizes();
 
   //for (let size of sizes) {
   if (1) {
@@ -448,8 +439,6 @@ interface MenuItem {
 }
 
 export function buildElectronMenu(menu: Menu) {
-  const electron = getElectron().remote;
-
   initElectronIpc();
 
   //let ElectronMenu = electron.Menu;

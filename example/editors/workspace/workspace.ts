@@ -103,7 +103,6 @@ export class WorkspaceEditor extends Editor {
   init() {
     super.init();
 
-    const header = this.header;
     this.useDataPathUndo = true;
     this.container.parentWidget = this;
     this.container.useDataPathUndo = true;
@@ -120,8 +119,6 @@ export class WorkspaceEditor extends Editor {
     strip.iconbutton(Icons.REDO, "Redo", () => {
       this.ctx.toolstack.redo(this.ctx);
     });
-
-    const container = this.container;
 
     const table = row.table();
 
@@ -144,9 +141,6 @@ export class WorkspaceEditor extends Editor {
   }
 
   getFinalScale() {
-    const dpi = UIBase.getDPI();
-    const scale = visualViewport?.scale;
-
     return this.scale;
   }
 
@@ -180,11 +174,7 @@ export class WorkspaceEditor extends Editor {
     }
   }
 
-  mousemove(e: MouseEvent) {
-    let mpos = new Vector2([e.x, e.y]);
-
-    mpos = this.getLocalMouse(mpos);
-  }
+  mousemove(e: MouseEvent) {}
 
   mouseup() {}
 

@@ -16,6 +16,7 @@ import type { ScreenBorder, ScreenBorderAny, ScreenVert } from "./FrameManager_m
 why am I using a toolstack here at all?  time to remove!
 */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let toolstack_getter = function (): simple_toolsys.ToolStack {
   throw new Error("must pass a toolstack getter to registerToolStackGetter");
 };
@@ -25,7 +26,6 @@ export function registerToolStackGetter(func: () => simple_toolsys.ToolStack) {
 }
 
 const UndoFlags = simple_toolsys.UndoFlags;
-const ToolFlags = simple_toolsys.ToolFlags;
 
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events";
 import { IContextBase } from "../core/context_base";
@@ -256,7 +256,6 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
 
     this.overdraw!.clear();
 
-    const visit = new Set();
     const borders = this.getBorders() as BorderWithOld[];
 
     const color = cconst.DEBUG.screenborders
@@ -528,7 +527,6 @@ export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends Too
 
     const sarea = this.sarea;
     const screen = this.screen;
-    const t = this.t;
 
     if (sarea) {
       screen.collapseArea(sarea, this._border);
@@ -688,7 +686,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       return this.doSplitDrop(b);
     }
 
-    const src = this.sarea;
     const dst = b.sarea;
     const screen = this.screen;
 
@@ -908,8 +905,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       b.addEventListener("pointermove", this.on_pointermove.bind(this));
 
       const onclick = (b.onclick = (e: PointerEvent | MouseEvent) => {
-        const type = e.type.toLowerCase();
-
         if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
           return; //another handler will cancel
         }

@@ -127,12 +127,6 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
         return;
       }
 
-      const sel = document.getSelection()!;
-      const range = sel.getRangeAt(0);
-
-      const node = sel.anchorNode;
-      const off = sel.anchorOffset;
-
       this._value = text;
 
       if (this.hasAttribute("datapath")) {

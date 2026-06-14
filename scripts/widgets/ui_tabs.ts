@@ -1179,8 +1179,6 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       ry = r2.y; //r2.y - r1.y;
     }
 
-    let ti = -1;
-
     const makeTabWatcher = (tab: TabItem<CTX>) => {
       if (tab.watcher) {
         clearInterval(tab.watcher.timer);

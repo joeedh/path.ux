@@ -401,7 +401,7 @@ export function graphPack(
       const time = util.time_ms();
 
       while (util.time_ms() - time < 50) {
-        const err = solveStep();
+        solveStep();
       }
 
       if (cconst.DEBUG.boxPacker) {

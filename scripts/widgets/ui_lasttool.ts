@@ -113,7 +113,6 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
     }
 
     const def = (tool.constructor as any).tooldef();
-    const name = def.uiname !== undefined ? def.uiname : def.name;
 
     const panel = this.panel(def.uiname);
 

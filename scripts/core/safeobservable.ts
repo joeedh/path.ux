@@ -193,7 +193,6 @@ export class ObserveManger {
 
     const oid = this.getId(owner);
     const cid = this.getId(child);
-    const cbid = this.getId(callback as unknown as object);
 
     if (!this.subscriberMap.has(cid)) {
       this.subscriberMap.set(cid, []);
@@ -271,8 +270,6 @@ export class ObserveManger {
   }
 
   _unsubscribe(oid: number, type: string, cid: number, callback?: Function): boolean {
-    const cbid = callback ? this.getId(callback as unknown as object) : undefined;
-
     if (!this.subscribeeMap.has(oid) || !this.subscriberMap.has(cid)) {
       console.warn("Warning, bad call to ObserveManager.unsubscribe");
     }

@@ -2,8 +2,6 @@ import { Editor } from "../editor_base.js";
 import { nstructjs, util, Vector2, Matrix4, UIBase, eventgraph } from "../../pathux.js";
 const { theEventGraph } = eventgraph;
 
-const proj_cachering = util.cachering.fromConstructor(Vector2, 64);
-
 window.theEventGraph = theEventGraph;
 
 class SocketUI {
@@ -40,7 +38,7 @@ class NodeUI {
     const x = type === "inputs" ? 0 : this.size[1];
     let y = 35;
 
-    for (const [k, sock] of Object.entries(socks)) {
+    for (const sock of Object.values(socks)) {
       const sockui = this.getSockUI(sock);
 
       sockui.pos.loadXY(x, y);
@@ -133,7 +131,7 @@ export class EventGraphViewer extends Editor {
     }
 
     this.needsDraw = false;
-    const { canvas, g, scale, pan } = this;
+    const { canvas } = this;
 
     const dpi = UIBase.getDPI();
     const w = ~~(this.size![0] * dpi);
@@ -144,8 +142,6 @@ export class EventGraphViewer extends Editor {
     canvas.style["width"] = w / dpi + "px";
     canvas.style["height"] = h / dpi + "px";
     canvas.style["padding"] = canvas.style["margin"] = "0px";
-
-    const graph = eventgraph.theEventGraph;
   }
 
   static define() {

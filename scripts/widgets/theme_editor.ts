@@ -90,7 +90,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       }
     };
 
-    const menu = row2.menu("+", [
+    row2.menu("+", [
       { name: "Float", callback: () => callback("FLOAT") },
       { name: "Color", callback: () => callback("COLOR") },
       { name: "Subfolder", callback: () => callback("SUBFOLDER") },

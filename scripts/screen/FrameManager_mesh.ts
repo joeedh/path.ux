@@ -395,7 +395,6 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
     if (debug) {
       wid = 4;
       const alpha = 1.0;
-      const c = this.sareas.length * 75;
 
       let r = 0;
       let g = 0;

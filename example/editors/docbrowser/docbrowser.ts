@@ -19,8 +19,7 @@ import { DocsBrowser } from "../../../scripts/docbrowser/docbrowser";
 // note: we need this import statement here due to esbuild pruning the above one in error
 import "../../../scripts/docbrowser/docbrowser";
 
-let platform: unknown;
-Platform.getPlatformAsync().then((p) => (platform = p));
+Platform.getPlatformAsync();
 
 const countstr = function (buf: string, s: string) {
   let count = 0;
@@ -77,7 +76,6 @@ function relative(a1: string, b1: string) {
     i++;
   }
   i--;
-  const pref = "";
 
   a = a.slice(i, a.length).trim();
   b = b.slice(i, b.length).trim();

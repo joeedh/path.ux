@@ -377,6 +377,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
                 let sval = "";
 
                 if (Array.isArray(val)) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   for (const item of val) {
                     sval += " " + val;
                   }
@@ -823,7 +824,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       }
 
       let ok = false;
-      const elem2 = elem;
 
       while (elem) {
         if (elem === container) {
@@ -965,7 +965,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     let width = window.innerWidth;
     let height = window.innerHeight;
 
-    const ratio = window.outerHeight / window.innerHeight;
     const scale = 1.0; //visualViewport.scale;
 
     const pad = 4;
@@ -1392,6 +1391,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   }
 
   completeUpdate() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const _step of this.update_intern()) {
       //
     }
@@ -1450,8 +1450,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     return (function* () {
       const stack = update_stack;
       stack.cur = 0;
-
-      const lastn = this2;
 
       function push(n: any) {
         stack[stack.cur++] = n as any;
@@ -1617,8 +1615,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   splitArea(sarea: ScreenAreaAny, t = 0.5, horiz = true) {
     const w = sarea.size[0];
     const h = sarea.size[1];
-    const x = sarea.pos[0];
-    const y = sarea.size[1];
     let s1;
     let s2;
 
@@ -1739,6 +1735,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     for (const b of this.screenborders) {
       let movable = true;
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const sarea of b.sareas) {
         movable = movable && this.isBorderMovable(b);
       }
@@ -1985,7 +1982,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
   checkAreaConstraint(sarea: ScreenAreaAny, checkOnly = false) {
     const min = sarea.minSize;
     const max = sarea.maxSize;
-    const vs = sarea._verts;
     let chg = 0.0;
     let mask = 0;
 
@@ -2399,6 +2395,7 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
       //this.pos.zero();
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const v of screenverts()) {
         //snap(v);
       }
@@ -2466,8 +2463,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
       v[1] += offy;
     }
 
-    const min = [1e17, 1e17];
-    const max = [-1e17, -1e17];
     const olds = [];
 
     for (const sarea of this.sareas) {
@@ -2483,11 +2478,9 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     this.solveAreaConstraints();
     this._recalcAABB();
 
-    let i = 0;
     for (const sarea of this.sareas) {
       sarea.on_resize(sarea.size); //, olds[i]);
       sarea.setCSS();
-      i++;
     }
 
     this.regenBorders();
@@ -2927,7 +2920,6 @@ export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
     }
 
     if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keydown) {
-      const area = this.sareas.active;
       return this.sareas.active.on_keydown(e);
     }
   }

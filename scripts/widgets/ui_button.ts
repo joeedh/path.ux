@@ -670,9 +670,7 @@ export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEv
 
     const text = this._genLabel();
 
-    const w = this.dom.width;
     const h = this.dom.height;
-    const tw = measureText(this, text, undefined, undefined, ts, font).width;
 
     const cx = pad * 0.5 + this._leftPad * dpi;
     const cy = ts + (h - ts) / 3.0;

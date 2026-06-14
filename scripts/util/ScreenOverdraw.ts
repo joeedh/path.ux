@@ -315,8 +315,6 @@ export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.U
     cent.mulScalar(1.0 / boxes.length);
 
     function error(): number {
-      const p1 = [0, 0];
-      const p2 = [0, 0];
       const s1 = [0, 0];
       const s2 = [0, 0];
 

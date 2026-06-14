@@ -435,14 +435,13 @@ DataLib {
 nstructjs.register(DataLib);
 
 export function buildAPI(api: DataAPI) {
-  const st = api.mapStruct(DataLib, true);
+  api.mapStruct(DataLib, true);
 
   for (const cls of BlockClasses) {
     cls.defineAPI(api);
 
     const st = api.mapStruct(cls, false);
     const def = cls.blockDefine();
-    const key = def.typeName;
 
     st.list<BlockSet, number, DataBlock | undefined>(def.typeName, def.typeName, {
       getStruct(api, list, key) {

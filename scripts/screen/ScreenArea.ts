@@ -484,8 +484,6 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 
     row.setCSSAfter(() => (row.background = this.getDefault("AreaHeaderBG")));
 
-    const rh = ~~(16 * this.getDPI());
-
     container.noMarginsOrPadding();
     row.noMarginsOrPadding();
 

@@ -1050,78 +1050,8 @@ DocsBrowser {
     /* istanbul ignore next */
     console.warn("Patching image!");
 
-    const grab = (i: number, vs: Vector2[]) => {
-      console.log("Transform Modal start");
-
-      const horiz = i % 2 != 0 ? 1 : 0;
-
-      const update = () => {
-        const x = vs[0][0];
-        const y = vs[0][1];
-        const w = vs[2][0] - vs[0][0];
-        const h = vs[1][1] - vs[0][1];
-
-        img.style["display"] = "float";
-        img.style["left"] = x + "px";
-        img.style["top"] = y + "px";
-        img.style["width"] = w + "px";
-        img.style["height"] = h + "px";
-      };
-
-      update();
-
-      let modaldata: ReturnType<typeof pushModalLight> | undefined;
-      let first = true;
-      const last_mpos = new Vector2();
-      const start_mpos = new Vector2();
-
-      const end = () => {
-        if (modaldata) {
-          console.log("done.");
-          popModalLight(modaldata);
-          modaldata = undefined;
-        }
-      };
-
-      const ghandlers = {
-        on_mousedown(_e: MouseEvent) {},
-
-        on_mousemove(e: MouseEvent) {
-          console.log("modal move");
-          if (first) {
-            first = false;
-            start_mpos[0] = last_mpos[0] = e.x;
-            start_mpos[1] = last_mpos[1] = e.y;
-            return;
-          }
-
-          const dx = e.x - last_mpos[0];
-          const dy = last_mpos[1] - e.y;
-          console.log(dx.toFixed(2), dy.toFixed(2));
-
-          last_mpos[0] = e.x;
-          last_mpos[1] = e.y;
-        },
-        on_mouseup(_e: MouseEvent) {
-          end();
-        },
-
-        on_keydown(e: KeyboardEvent) {
-          console.log(e.keyCode);
-
-          if (e.keyCode === 27) {
-            end();
-          }
-        },
-      };
-
-      modaldata = pushModalLight(ghandlers);
-      console.warn("grab!", modaldata);
-    };
-
     const mpos = new Vector2();
     let first = true;
-    const tdown = true;
     let mdown = false;
 
     let ix = 0;
@@ -1130,19 +1060,6 @@ DocsBrowser {
     let height = img.height;
 
     img.setAttribute("draggable", "false");
-    const getsize = () => {
-      const rects = img.getClientRects();
-      const r = rects[0];
-      if (!r) {
-        setTimeout(getsize, 2);
-        return;
-      }
-
-      console.log("got image size", width, height, img.width, img.height);
-      width = r.width;
-      height = r.height;
-    };
-
     let resizing = false;
     let moving = false;
 
@@ -1225,9 +1142,7 @@ DocsBrowser {
 
         for (let i = 0; i < 4; i++) {
           const i1 = i;
-          const i2 = (i + 1) % 4;
           const v1 = verts[i1];
-          const v2 = verts[i2];
 
           const horiz = i % 2 !== 0.0 ? 1 : 0;
           const dv = mpos[horiz as 0 | 1] - (v1[horiz as 0 | 1] as number);

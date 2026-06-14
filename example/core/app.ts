@@ -118,8 +118,6 @@ export class AppState {
 
     screen.add(sarea);
 
-    const t = 300 / window.innerWidth;
-
     const wsarea = screen.splitArea(sarea, 0.1, true);
     sarea.switchEditor(MenuBarEditor);
 
@@ -295,7 +293,7 @@ export class AppState {
     for (let i = 0; i < 4; i++) {
       versionArr.push(readbyte());
     }
-    const version = new Version().loadJSON(versionArr);
+    new Version().loadJSON(versionArr);
 
     const structs = readstring();
 

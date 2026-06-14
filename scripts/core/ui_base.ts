@@ -2699,7 +2699,6 @@ export class UIBase<
   ): T[] {
     nodeclass = args.nodeclass || UIBase;
     excluded_classes = args.excluded_classes;
-    const clip = args.clip;
 
     x -= window.scrollX;
     y -= window.scrollY;

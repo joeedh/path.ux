@@ -237,7 +237,7 @@ export class PropsEditor extends Editor {
     const row = UIBase.createElement<RowFrame>("rowframe-x");
     row.ctx = this.ctx;
 
-    const icon = row.check(undefined, "");
+    row.check(undefined, "");
     row.label("Four");
 
     t.text = row;
@@ -500,7 +500,7 @@ export class PropsEditor extends Editor {
     const ret = col.prop(path, undefined, massSetPath);
     ret.style["padding"] = "10px";
 
-    const viewer = col.viewer(
+    col.viewer(
       undefined,
       `
       <h2>Mass Paths Example</h2>

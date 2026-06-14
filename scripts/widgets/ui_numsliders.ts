@@ -1449,7 +1449,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
 
   _invertButtonX(x: number): number {
     const w = this.canvas.width;
-    const dpi = UIBase.getDPI();
     const boxw = this.canvas.height - 4;
     const w2 = w - boxw;
 
@@ -1467,7 +1466,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
 
   _getButtonPos() {
     const w = this.canvas.width;
-    const dpi = UIBase.getDPI();
     let x = this._value;
 
     const range = this.uiRange || this.range!;
