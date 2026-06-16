@@ -1709,6 +1709,23 @@ export class UIBase<
     // via our proxy system but unregistering them altogether
     // could be problematic.
   }
+
+  /**
+   * Unprefixed tag names of every registered element, from both
+   * {@link internalRegister} (built-ins) and {@link register} (app widgets).
+   * Used by the data-path generator to emit the JSX widget-tag registry.
+   */
+  static getRegisteredTagNames(): string[] {
+    const names = new Set<string>(Object.keys(internalElementNames));
+    for (const cls of ElementClasses) {
+      try {
+        names.add(cls.define().tagname);
+      } catch {
+        // some define()s touch ctx/DOM; skip what we can't read
+      }
+    }
+    return [...names].sort();
+  }
   /**
    * Defines core attributes of the class
    *

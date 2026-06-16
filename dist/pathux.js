@@ -28980,6 +28980,21 @@ var init_ui_base = __esm({
       static unregister(cls) {
       }
       /**
+       * Unprefixed tag names of every registered element, from both
+       * {@link internalRegister} (built-ins) and {@link register} (app widgets).
+       * Used by the data-path generator to emit the JSX widget-tag registry.
+       */
+      static getRegisteredTagNames() {
+        const names = new Set(Object.keys(internalElementNames));
+        for (const cls of ElementClasses) {
+          try {
+            names.add(cls.define().tagname);
+          } catch {
+          }
+        }
+        return [...names].sort();
+      }
+      /**
        * Defines core attributes of the class
        *
        * @example

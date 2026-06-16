@@ -27,10 +27,10 @@ step. Both target the same widgets, so they interoperate freely.
 ```jsonc
 {
   "compilerOptions": {
-    "jsx": "react",
-    "jsxFactory": "jsx",
-    "jsxFragmentFactory": "Fragment"
-  }
+    "jsx"               : "react",
+    "jsxFactory"        : "jsx",
+    "jsxFragmentFactory": "Fragment",
+  },
 }
 ```
 
@@ -69,12 +69,16 @@ Mount it under any `Container`:
 ```ts
 import { mount } from "pathux";
 
-mount(ctx, this.container, MyPage((strip) => {
-  // ref fires once the widget exists — replaces getElementById wiring
-  const a = strip.prop("data.boolval");
-  const b = strip.prop("data.color");
-  b.dependsOn("hidden", a, "value").invert();
-}));
+mount(
+  ctx,
+  this.container,
+  MyPage((strip) => {
+    // ref fires once the widget exists — replaces getElementById wiring
+    const a = strip.prop("data.boolval");
+    const b = strip.prop("data.color");
+    b.dependsOn("hidden", a, "value").invert();
+  })
+);
 ```
 
 ## How it works
@@ -92,6 +96,32 @@ mount(ctx, this.container, MyPage((strip) => {
 
 A future pass could teach the xmlpage `Handler` to walk the IR directly and skip
 the XML round-trip.
+
+## Custom widget tags
+
+Registered custom elements (`*-x` tags) can be used directly, e.g.
+`<theme-editor-x />`. By default any `${string}-x` tag is accepted. Running
+`pnpm run gen:paths` enumerates the app's registered widgets (via
+`UIBase.getRegisteredTagNames()`) and emits a `WidgetTagRegistry` augmentation in
+`generated/datapaths.ts`; once that file is included in your tsconfig, JSX checks
+custom widget tag names exactly, so a typo'd `<them-editor-x />` becomes a compile
+error. Regenerate after adding new widgets.
+
+## Converting xmlpage XML to JSX
+
+`buildtools/xml-to-tsx.mjs` is a codemod that turns an xmlpage `.xml` file into a
+`.tsx` component:
+
+```bash
+node buildtools/xml-to-tsx.mjs example/page.xml \
+  --name PropsPage --import "./pathux.js" --out example/page.tsx
+```
+
+It uses a case-preserving XML parser (so `toolPanel`, `useIcons`, `massSetPath`
+survive) and is a _starting point_ — review the result. xmlpage silently ignores
+unknown attributes, whereas the typed intrinsics may reject ones the original
+markup got away with (e.g. `label` on `<tool>`), and interactive wiring still
+needs to be added via `ref`.
 
 ## Notes & limits
 

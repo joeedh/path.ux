@@ -84,6 +84,11 @@ export default defineConfig([
     plugins: { pathux: { rules: { "valid-datapath": validDatapath } } },
     rules  : { "pathux/valid-datapath": "warn" },
   },
+  {
+    // Build-tool CLIs run under Node, not the browser.
+    files          : ["buildtools/**/*.mjs"],
+    languageOptions: { globals: globals.node },
+  },
   eslintConfigPrettier,
   eslintPluginPrettierRecommended,
   {

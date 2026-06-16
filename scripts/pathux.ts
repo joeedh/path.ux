@@ -8,6 +8,7 @@ export { compile, mount } from "./jsx/mount";
 import "./jsx/intrinsics";
 
 export * from "./core/datapath_registry";
+export * from "./core/widget_registry";
 export * from "./core/ui_base";
 export * from "./core/ui";
 export * from "./widgets/ui_widgets";
