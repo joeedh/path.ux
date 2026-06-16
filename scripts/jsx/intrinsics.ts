@@ -56,6 +56,8 @@ interface PathAttrs extends LeafAttrs {
 }
 
 declare global {
+  // The JSX namespace is the standard mechanism for typing intrinsic elements.
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     type Element = PXNode;
 

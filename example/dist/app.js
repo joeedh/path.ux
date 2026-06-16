@@ -86914,22 +86914,26 @@ var PropsEditor = class extends Editor2 {
       this.doOnce(this.loadPage);
       return;
     }
-    mount(this.ctx, this.container, PropsPage({
-      exportButton: (btn) => {
-        btn.onclick = () => this.exportTheme();
-      },
-      graphTab: (tab2) => this.buildGraphPack(tab2),
-      // CanvasPath has no name field; label list entries by id for the demo.
-      listbox: (lb) => {
-        lb.itemNames((obj) => "Path " + obj.id);
-      },
-      eventStrip: (con) => {
-        con.dataPrefix = "";
-        const bval = con.prop("data.boolval");
-        const color = con.prop("data.color");
-        color.dependsOn("hidden", bval, "value").invert();
-      }
-    }));
+    mount(
+      this.ctx,
+      this.container,
+      PropsPage({
+        exportButton: (btn) => {
+          btn.onclick = () => this.exportTheme();
+        },
+        graphTab: (tab2) => this.buildGraphPack(tab2),
+        // CanvasPath has no name field; label list entries by id for the demo.
+        listbox: (lb) => {
+          lb.itemNames((obj) => "Path " + obj.id);
+        },
+        eventStrip: (con) => {
+          con.dataPrefix = "";
+          const bval = con.prop("data.boolval");
+          const color = con.prop("data.color");
+          color.dependsOn("hidden", bval, "value").invert();
+        }
+      })
+    );
     this.container.flushUpdate();
     if (this._pageUIData) {
       console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");

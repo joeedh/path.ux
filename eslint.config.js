@@ -15,7 +15,7 @@ export default defineConfig([
     "scripts/lib/tinymce/**",
   ]),
   {
-    files          : ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+    files          : ["**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}"],
     plugins        : { js },
     extends        : ["js/recommended"],
     languageOptions: { globals: globals.browser },
@@ -34,7 +34,7 @@ export default defineConfig([
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
-          args: "none",
+          args        : "none",
           caughtErrors: "none",
         },
       ],
@@ -72,12 +72,12 @@ export default defineConfig([
       // off during typification
       "@typescript-eslint/no-unused-private-class-members": "off",
 
-      "@typescript-eslint/no-useless-default-assignment"  : "error",
-      "@typescript-eslint/prefer-includes"                : "error",
-      "@typescript-eslint/prefer-optional-chain"          : "error",
-      "@typescript-eslint/related-getter-setter-pairs"    : "error",
-      "@typescript-eslint/no-empty-object-type"           : "off",
-      "one-var"                                           : ["error", "never"],
+      "@typescript-eslint/no-useless-default-assignment": "error",
+      "@typescript-eslint/prefer-includes"              : "error",
+      "@typescript-eslint/prefer-optional-chain"        : "error",
+      "@typescript-eslint/related-getter-setter-pairs"  : "error",
+      "@typescript-eslint/no-empty-object-type"         : "off",
+      "one-var"                                         : ["error", "never"],
     },
   },
   {

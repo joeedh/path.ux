@@ -2,8 +2,9 @@
  * ESLint rule: flag invalid data-path strings.
  *
  * Validates string-literal path arguments to `container.prop(...)` and related
- * widget methods, plus `path="..."` attributes inside xmlpage template strings,
- * against the catalog in generated/api-paths.json.
+ * widget methods, `path="..."` attributes inside xmlpage template strings, and
+ * `path` props in JSX (`<prop path="..." />`), against the catalog in
+ * generated/api-paths.json.
  *
  * Relative/prefixed paths (resolved at runtime via Container._joinPrefix) are
  * accepted when they match a known path *suffix*, to avoid false positives.
@@ -67,19 +68,37 @@ function loadCatalog() {
 
 const catalog = loadCatalog();
 
+function matches(norm) {
+  return catalog.known.has(norm) || catalog.suffixes.has(norm);
+}
+
 function isValid(rawPath) {
   if (!catalog) {
     return true; // no manifest -> no-op
   }
   let p = rawPath.trim();
-  if (!p || p.includes("{") || p.includes("$") || p.includes("`")) {
-    return true; // empty, or a mass-set / interpolated expression
+  if (!p || p.includes("{") || p.includes("$") || p.includes("`") || p.includes("(")) {
+    return true; // empty, a mass-set / interpolated expression, or a tool/method call
   }
   if (p.startsWith("/")) {
     p = p.slice(1).trim();
   }
   const norm = normalizePath(p);
-  return catalog.known.has(norm) || catalog.suffixes.has(norm);
+  if (matches(norm)) {
+    return true;
+  }
+  // Indexed access into a known property (e.g. a vector or list): the catalog
+  // lists the base "data.vector_test", not "data.vector_test[0]".
+  const deindexed = norm.replace(/\[n\]$/, "");
+  if (deindexed !== norm && matches(deindexed)) {
+    return true;
+  }
+  // DataList virtual members resolved at runtime (e.g. "canvas.paths.active").
+  const virt = norm.match(/^(.*)\.(active|length)$/);
+  if (virt && matches(virt[1])) {
+    return true;
+  }
+  return false;
 }
 
 function nearestSuggestion(rawPath) {
@@ -106,9 +125,9 @@ const ATTR_RE = /\bpath\s*=\s*["']([^"']+)["']/g;
 
 export default {
   meta: {
-    type: "problem",
+    type    : "problem",
     docs: { description: "validate path.ux data-path strings against generated/api-paths.json" },
-    schema: [],
+    schema  : [],
     messages: {
       unknownPath: 'Unknown data path "{{path}}".{{hint}}',
     },
@@ -122,7 +141,7 @@ export default {
       context.report({
         node,
         messageId: "unknownPath",
-        data: { path: rawPath, hint: nearestSuggestion(rawPath) },
+        data     : { path: rawPath, hint: nearestSuggestion(rawPath) },
       });
     }
 
@@ -141,6 +160,31 @@ export default {
         }
         if (!isValid(arg.value)) {
           reportNode(arg, arg.value);
+        }
+      },
+
+      // JSX `<prop path="..." />` / `<prop path={"..."} />`. The `path` prop on
+      // <tool>/<toolPanel> is a toolpath, not a data path, so skip those tags.
+      JSXAttribute(node) {
+        if (node.name?.name !== "path") {
+          return;
+        }
+        const tag = node.parent?.name;
+        if (tag?.type === "JSXIdentifier" && (tag.name === "tool" || tag.name === "toolPanel")) {
+          return;
+        }
+        const value = node.value;
+        let lit;
+        if (value?.type === "Literal") {
+          lit = value;
+        } else if (
+          value?.type === "JSXExpressionContainer" &&
+          value.expression?.type === "Literal"
+        ) {
+          lit = value.expression;
+        }
+        if (lit && typeof lit.value === "string" && !isValid(lit.value)) {
+          reportNode(lit, lit.value);
         }
       },
 

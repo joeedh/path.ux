@@ -1,10 +1,7 @@
 import {
   UIBase,
-  PackFlags,
   Icons,
   nstructjs,
-  KeyMap,
-  HotKey,
   util,
   PackNode,
   PackNodeVertex,
@@ -17,7 +14,6 @@ import {
   Container,
   TabContainer,
   RowFrame,
-  ListBox,
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
