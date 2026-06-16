@@ -261,7 +261,7 @@ var init_polyfill = __esm({
       })();
     }
     if (Array.prototype.set === void 0) {
-      Array.prototype.set = function set3(array, srcOffsetOrCount, destOrCount, countArg) {
+      Array.prototype.set = function set2(array, srcOffsetOrCount, destOrCount, countArg) {
         if (!array) {
           return this;
         }
@@ -382,10 +382,12 @@ var init_polyfill = __esm({
 
 // scripts/path-controller/util/mobile-detect.ts
 function equalIC(a2, b) {
-  return a2 != null && b != null && a2.toLowerCase() === b.toLowerCase();
+  return a2 != null && a2.toLowerCase() === b?.toLowerCase();
 }
 function containsIC(array, value) {
-  var valueLC, i, len = array.length;
+  let valueLC;
+  let i;
+  const len = array.length;
   if (!len || !value) {
     return false;
   }
@@ -398,7 +400,7 @@ function containsIC(array, value) {
   return false;
 }
 function convertPropsToRegExp(object) {
-  for (var key in object) {
+  for (const key in object) {
     if (hasOwnProp.call(object, key)) {
       object[key] = new RegExp(object[key], "i");
     }
@@ -677,10 +679,16 @@ var init_mobile_detect = __esm({
       return Object.prototype.toString.call(value) === "[object Array]";
     };
     (function init() {
-      var key, values, value, i, len, verPos, mobileDetectRules = impl.mobileDetectRules;
+      let key;
+      let values;
+      let value;
+      let i;
+      let len;
+      let verPos;
+      const mobileDetectRules = impl.mobileDetectRules;
       for (key in mobileDetectRules.props) {
         if (hasOwnProp.call(mobileDetectRules.props, key)) {
-          let rawValues = mobileDetectRules.props[key];
+          const rawValues = mobileDetectRules.props[key];
           if (!isArray(rawValues)) {
             values = [rawValues];
           } else {
@@ -709,7 +717,7 @@ var init_mobile_detect = __esm({
       };
     })();
     impl.findMatch = function(rules, userAgent) {
-      for (var key in rules) {
+      for (const key in rules) {
         if (hasOwnProp.call(rules, key)) {
           if (rules[key].test(userAgent)) {
             return key;
@@ -719,8 +727,8 @@ var init_mobile_detect = __esm({
       return null;
     };
     impl.findMatches = function(rules, userAgent) {
-      var result = [];
-      for (var key in rules) {
+      const result = [];
+      for (const key in rules) {
         if (hasOwnProp.call(rules, key)) {
           if (rules[key].test(userAgent)) {
             result.push(key);
@@ -730,7 +738,11 @@ var init_mobile_detect = __esm({
       return result;
     };
     impl.getVersionStr = function(propertyName, userAgent) {
-      var props = impl.mobileDetectRules.props, patterns, i, len, match;
+      const props = impl.mobileDetectRules.props;
+      let patterns;
+      let i;
+      let len;
+      let match;
       if (hasOwnProp.call(props, propertyName)) {
         patterns = props[propertyName];
         len = patterns.length;
@@ -744,11 +756,11 @@ var init_mobile_detect = __esm({
       return null;
     };
     impl.getVersion = function(propertyName, userAgent) {
-      var version = impl.getVersionStr(propertyName, userAgent);
+      const version = impl.getVersionStr(propertyName, userAgent);
       return version ? impl.prepareVersionNo(version) : NaN;
     };
     impl.prepareVersionNo = function(version) {
-      var numbers;
+      let numbers;
       numbers = version.split(/[a-z._ \/\-]/i);
       if (numbers.length === 1) {
         version = numbers[0];
@@ -770,7 +782,9 @@ var init_mobile_detect = __esm({
       if (cache.mobile !== void 0) {
         return;
       }
-      var phone, tablet, phoneSized;
+      let phone;
+      let tablet;
+      let phoneSized;
       tablet = impl.findMatch(impl.mobileDetectRules.tablets, userAgent);
       if (tablet) {
         cache.mobile = cache.tablet = tablet;
@@ -803,7 +817,7 @@ var init_mobile_detect = __esm({
       }
     };
     impl.mobileGrade = function(t) {
-      var $isMobile = t.mobile() !== null;
+      const $isMobile = t.mobile() !== null;
       if (
         // Apple iOS 3.2-5.1 - Tested on the original iPad (4.3 / 5.0), iPad 2 (4.3), iPad 3 (5.1), original iPhone (3.1), iPhone 3 (3.2), 3GS (4.3), 4 (4.3 / 5.0), and 4S (5.1)
         t.os("iOS") && t.version("iPad") >= 4.3 || t.os("iOS") && t.version("iPhone") >= 3.1 || t.os("iOS") && t.version("iPod") >= 3.1 || // Android 2.1-2.3 - Tested on the HTC Incredible (2.2), original Droid (2.2), HTC Aria (2.1), Google Nexus S (2.3). Functional on 1.5 & 1.6 but performance may be sluggish, tested on Google G1 (1.5)
@@ -1137,7 +1151,7 @@ var init_mobile_detect = __esm({
   }
 });
 
-// ../../vendor/nstructjs/build/nstructjs_es6.js
+// node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
 function isParseStructsDummy(cls) {
   return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
 }
@@ -1597,7 +1611,7 @@ function StructParser() {
       };
     }
     let get = void 0;
-    let set3 = void 0;
+    let set2 = void 0;
     let tok = p.peeknext();
     if (tok && tok.type === "JSCRIPT") {
       get = tok.value;
@@ -1605,7 +1619,7 @@ function StructParser() {
       tok = p.peeknext();
     }
     if (tok && tok.type === "JSCRIPT") {
-      set3 = tok.value;
+      set2 = tok.value;
       p.next();
     }
     p.expect("SEMI");
@@ -1615,7 +1629,7 @@ function StructParser() {
       comment = tok.value;
       p.next();
     }
-    return { name: name2, type, get, set: set3, comment };
+    return { name: name2, type, get, set: set2, comment };
   }
   function p_Struct(p) {
     const name2 = p.expect("ID", "struct name");
@@ -2573,8 +2587,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "../../vendor/nstructjs/build/nstructjs_es6.js"() {
-    "use strict";
+  "node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
     colormap = {
       "black": 30,
       "red": 31,
@@ -5584,7 +5597,20 @@ var init_lz_string = __esm({
       _compress: function(uncompressed, bitsPerChar, getCharFromInt) {
         uncompressed = getInput(uncompressed);
         if (uncompressed === null) return "";
-        let i, value, context_dictionary = {}, context_dictionaryToCreate = {}, context_c = "", context_wc = "", context_w = "", context_enlargeIn = 2, context_dictSize = 3, context_numBits = 2, context_data = [], context_data_val = 0, context_data_position = 0, ii;
+        let i;
+        let value;
+        let context_dictionary = {};
+        let context_dictionaryToCreate = {};
+        let context_c;
+        let context_wc;
+        let context_w = "";
+        let context_enlargeIn = 2;
+        let context_dictSize = 3;
+        let context_numBits = 2;
+        let context_data = [];
+        let context_data_val = 0;
+        let context_data_position = 0;
+        let ii;
         for (ii = 0; ii < uncompressed.length; ii += 1) {
           context_c = uncompressed.charAt(ii);
           if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
@@ -5747,7 +5773,6 @@ var init_lz_string = __esm({
           }
           context_enlargeIn--;
           if (context_enlargeIn === 0) {
-            context_enlargeIn = Math.pow(2, context_numBits);
             context_numBits++;
           }
         }
@@ -5781,7 +5806,20 @@ var init_lz_string = __esm({
         });
       },
       _decompress: function(length, resetValue, getNextValue) {
-        let dictionary = [], next, enlargeIn = 4, dictSize = 4, numBits = 3, entry = "", result = [], i, w, bits, resb, maxpower, power, c, data = { val: getNextValue(0), position: resetValue, index: 1 };
+        let dictionary = [];
+        let enlargeIn = 4;
+        let dictSize = 4;
+        let numBits = 3;
+        let entry;
+        let result = [];
+        let i;
+        let w;
+        let bits;
+        let resb;
+        let maxpower;
+        let power;
+        let c;
+        let data = { val: getNextValue(0), position: resetValue, index: 1 };
         for (i = 0; i < 3; i += 1) {
           dictionary[i] = i;
         }
@@ -5798,7 +5836,7 @@ var init_lz_string = __esm({
           bits |= (resb > 0 ? 1 : 0) * power;
           power <<= 1;
         }
-        switch (next = bits) {
+        switch (bits) {
           case 0:
             bits = 0;
             maxpower = Math.pow(2, 8);
@@ -6018,11 +6056,11 @@ function termColor2(s, c, d = 0) {
 }
 function termPrint2(...args) {
   let s = "";
-  for (let i2 = 0; i2 < args.length; i2++) {
-    if (i2 > 0) {
+  for (let i = 0; i < args.length; i++) {
+    if (i > 0) {
       s += " ";
     }
-    s += args[i2];
+    s += args[i];
   }
   const re1a = /\u001b\[[1-9][0-9]?m/;
   const re1b = /\u001b\[[1-9][0-9];[0-9][0-9]?;[0-9]+m/;
@@ -6040,11 +6078,9 @@ function termPrint2(...args) {
     [re2, "end"]
   ];
   let s2 = s;
-  const i = 0;
   const tokens2 = [];
   while (s2.length > 0) {
     let ok = false;
-    let mintk = void 0;
     let mini = void 0;
     let minslice = void 0;
     let mintype = void 0;
@@ -6054,7 +6090,6 @@ function termPrint2(...args) {
         minslice = s2.slice(idx, s2.length).match(tk2[0])[0];
         mini = idx;
         mintype = tk2[1];
-        mintk = tk2;
         ok = true;
       }
     }
@@ -6326,7 +6361,7 @@ function decompress(data) {
 function undefinedForGC() {
   return void 0;
 }
-var f64tmp, u16tmp, colormap2, termColorMap2, MovingAvg, timers, mobileDetect, mobileDetectValue, lastUserAgent, SmartConsoleContext, SmartConsole, console2, EmptySlot, debug_cacherings, cachering2, SetIter, set, HashIter, _hash_null, hashtable, IDGenInternalIDGen, IDGen, MersenneRandom, _mt, smallstr_hashes, MAXINT, hashsizes, FTAKEN, FKEY, FVAL, FTOT, FastHash, ImageReader, digestcache, HashDigest, NullItem, MapIter, map, UndefinedTag, IDMap, HW, HELEM, HTOT, MinHeapQueue, Queue, ArrayPool, DivLogger, PendingTimeoutPromises, TimeoutPromise;
+var f64tmp, u16tmp, colormap2, termColorMap2, MovingAvg, timers, mobileDetect, mobileDetectValue, lastUserAgent, SmartConsoleContext, SmartConsole, console2, EmptySlot, debug_cacherings, cachering2, SetIter, set, HashIter, _hash_null, hashtable, IDGenInternalIDGen, IDGen, MersenneRandom, _mt, smallstr_hashes, MAXINT, hashsizes, FTAKEN, FKEY, FVAL, FTOT, FastHash, ImageReader, digestcache, HashDigest, NullItem, MapIter, map, UndefinedTag, IDMap, HTOT, MinHeapQueue, Queue, ArrayPool, DivLogger, PendingTimeoutPromises, TimeoutPromise;
 var init_util = __esm({
   "scripts/path-controller/util/util.ts"() {
     "use strict";
@@ -7332,7 +7367,7 @@ IDGen {
       keys() {
         const this2 = this;
         return (function* () {
-          for (const [key, _val] of this2) {
+          for (const [key] of this2) {
             yield key;
           }
         })();
@@ -7340,7 +7375,7 @@ IDGen {
       values() {
         const this2 = this;
         return (function* () {
-          for (const [_key, val] of this2) {
+          for (const [, val] of this2) {
             yield val;
           }
         })();
@@ -7500,8 +7535,6 @@ IDGen {
       }
       return idmap;
     };
-    HW = 0;
-    HELEM = 1;
     HTOT = 2;
     MinHeapQueue = class {
       heap;
@@ -7811,7 +7844,7 @@ IDGen {
         }
       }
       toString(obj, depth = 0) {
-        let s = "";
+        let s;
         let tab2 = "";
         for (let i = 0; i < depth; i++) {
           tab2 += "$TAB";
@@ -8074,8 +8107,8 @@ function createVector2(parent, structName) {
       l2 = l2 > 1e-7 ? 1 / l2 : 0;
       dx1 *= l1;
       dy1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
       return dx1 * dx2 + dy1 * dy2;
     }
     static normalizedDot3(v1, center, v2) {
@@ -8089,8 +8122,8 @@ function createVector2(parent, structName) {
       l2 = l2 > 1e-7 ? 1 / l2 : 0;
       dx1 *= l1;
       dy1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
       return dx1 * dx2 + dy1 * dy2;
     }
     constructor(existing) {
@@ -8256,8 +8289,8 @@ function createVector2(parent, structName) {
       return Math.sqrt(this.dot(this));
     }
     rot2d(A, axis = 0) {
-      let x = this[0];
-      let y = this[1];
+      const x = this[0];
+      const y = this[1];
       if (axis === 1) {
         this[0] = x * Math.cos(A) + y * Math.sin(A);
         this[1] = y * Math.cos(A) - x * Math.sin(A);
@@ -8290,13 +8323,13 @@ function createVector2(parent, structName) {
     }
     /** somewhat crappy spherical interpolation */
     sinterp(v2, t) {
-      let l1 = this.vectorLength();
-      let l2 = v2.vectorLength();
+      const l1 = this.vectorLength();
+      const l2 = v2.vectorLength();
       return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
-      let tmp = this[axis1];
+      const tmp = this[axis1];
       this[axis1] = this[axis2] * sign;
       this[axis2] = -tmp * sign;
       return this;
@@ -8316,7 +8349,7 @@ function createVector2(parent, structName) {
       this[0] = w * matrix.$matrix.m41 + x * matrix.$matrix.m11 + y * matrix.$matrix.m21;
       this[1] = w * matrix.$matrix.m42 + x * matrix.$matrix.m12 + y * matrix.$matrix.m22;
       if (!ignore_w && matrix.isPersp) {
-        let w2 = w * matrix.$matrix.m44 + x * matrix.$matrix.m14 + y * matrix.$matrix.m24;
+        const w2 = w * matrix.$matrix.m44 + x * matrix.$matrix.m14 + y * matrix.$matrix.m24;
         if (w2 !== 0) {
           this[0] /= w2;
           this[1] /= w2;
@@ -8325,10 +8358,10 @@ function createVector2(parent, structName) {
       return this;
     }
     mulVecQuat(q) {
-      let t0 = -q[1] * this[0] - q[2] * this[1];
+      const t0 = -q[1] * this[0] - q[2] * this[1];
       let t1 = q[0] * this[0] - q[3] * this[1];
       let t2 = q[0] * this[1] + q[3] * this[0];
-      let z = q[1] * this[1] - q[2] * this[0];
+      const z = q[1] * this[1] - q[2] * this[0];
       this[0] = t1;
       this[1] = t2;
       t1 = t0 * -q[1] + this[0] * q[0] - this[1] * q[3] + z * q[2];
@@ -8338,7 +8371,7 @@ function createVector2(parent, structName) {
       return this;
     }
     preNormalizedAngle(v2) {
-      let th = this.dot(v2) * 0.99999;
+      const th = this.dot(v2) * 0.99999;
       return Math.acos(th);
     }
     loadSTRUCT(reader) {
@@ -8377,9 +8410,9 @@ function createVector3(parent, structName) {
       dx1 *= l1;
       dy1 *= l1;
       dz1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
-      dz1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
+      dz2 *= l2;
       return dx1 * dx2 + dy1 * dy2 + dz1 * dz2;
     }
     static normalizedDot3(v1, center, v2) {
@@ -8396,9 +8429,9 @@ function createVector3(parent, structName) {
       dx1 *= l1;
       dy1 *= l1;
       dz1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
-      dz1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
+      dz2 *= l2;
       return dx1 * dx2 + dy1 * dy2 + dz1 * dz2;
     }
     constructor(existing) {
@@ -8598,8 +8631,8 @@ function createVector3(parent, structName) {
       return Math.sqrt(this.dot(this));
     }
     rot2d(A, axis = 0) {
-      let x = this[0];
-      let y = this[1];
+      const x = this[0];
+      const y = this[1];
       if (axis === 1) {
         this[0] = x * Math.cos(A) + y * Math.sin(A);
         this[1] = y * Math.cos(A) - x * Math.sin(A);
@@ -8638,13 +8671,13 @@ function createVector3(parent, structName) {
     }
     /** somewhat crappy spherical interpolation */
     sinterp(v2, t) {
-      let l1 = this.vectorLength();
-      let l2 = v2.vectorLength();
+      const l1 = this.vectorLength();
+      const l2 = v2.vectorLength();
       return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
-      let tmp = this[axis1];
+      const tmp = this[axis1];
       this[axis1] = this[axis2] * sign;
       this[axis2] = -tmp * sign;
       return this;
@@ -8661,13 +8694,13 @@ function createVector3(parent, structName) {
       if (ignore_w === void 0) {
         ignore_w = false;
       }
-      let x = this[0];
-      let y = this[1];
-      let z = this[2];
+      const x = this[0];
+      const y = this[1];
+      const z = this[2];
       this[0] = matrix.$matrix.m41 + x * matrix.$matrix.m11 + y * matrix.$matrix.m21 + z * matrix.$matrix.m31;
       this[1] = matrix.$matrix.m42 + x * matrix.$matrix.m12 + y * matrix.$matrix.m22 + z * matrix.$matrix.m32;
       this[2] = matrix.$matrix.m43 + x * matrix.$matrix.m13 + y * matrix.$matrix.m23 + z * matrix.$matrix.m33;
-      let w = matrix.$matrix.m44 + x * matrix.$matrix.m14 + y * matrix.$matrix.m24 + z * matrix.$matrix.m34;
+      const w = matrix.$matrix.m44 + x * matrix.$matrix.m14 + y * matrix.$matrix.m24 + z * matrix.$matrix.m34;
       if (!ignore_w && w !== 1 && w !== 0 && matrix.isPersp) {
         this[0] /= w;
         this[1] /= w;
@@ -8676,7 +8709,7 @@ function createVector3(parent, structName) {
       return w;
     }
     mulVecQuat(q) {
-      let t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
+      const t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
       let t1 = q[0] * this[0] + q[2] * this[2] - q[3] * this[1];
       let t2 = q[0] * this[1] + q[3] * this[0] - q[1] * this[2];
       this[2] = q[0] * this[2] + q[1] * this[1] - q[2] * this[0];
@@ -8699,13 +8732,13 @@ function createVector3(parent, structName) {
       return this;
     }
     preNormalizedAngle(v2) {
-      let th = this.dot(v2) * 0.99999;
+      const th = this.dot(v2) * 0.99999;
       return Math.acos(th);
     }
     toCSS() {
-      let r = ~~(this[0] * 255);
-      let g = ~~(this[1] * 255);
-      let b = ~~(this[2] * 255);
+      const r = ~~(this[0] * 255);
+      const g = ~~(this[1] * 255);
+      const b = ~~(this[2] * 255);
       return `rgb(${r},${g},${b})`;
     }
     loadSTRUCT(reader) {
@@ -8749,10 +8782,10 @@ function createVector4(parent, structName) {
       dy1 *= l1;
       dz1 *= l1;
       dw1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
-      dz1 *= l1;
-      dw1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
+      dz2 *= l2;
+      dw2 *= l2;
       return dx1 * dx2 + dy1 * dy2 + dz1 * dz2 + dw1 * dw2;
     }
     static normalizedDot3(v1, center, v2) {
@@ -8772,10 +8805,10 @@ function createVector4(parent, structName) {
       dy1 *= l1;
       dz1 *= l1;
       dw1 *= l1;
-      dx1 *= l1;
-      dy1 *= l1;
-      dz1 *= l1;
-      dw1 *= l1;
+      dx2 *= l2;
+      dy2 *= l2;
+      dz2 *= l2;
+      dw2 *= l2;
       return dx1 * dx2 + dy1 * dy2 + dz1 * dz2 + dw1 * dw2;
     }
     constructor(existing) {
@@ -9010,8 +9043,8 @@ function createVector4(parent, structName) {
       return Math.sqrt(this.dot(this));
     }
     rot2d(A, axis = 0) {
-      let x = this[0];
-      let y = this[1];
+      const x = this[0];
+      const y = this[1];
       if (axis === 1) {
         this[0] = x * Math.cos(A) + y * Math.sin(A);
         this[1] = y * Math.cos(A) - x * Math.sin(A);
@@ -9057,13 +9090,13 @@ function createVector4(parent, structName) {
     }
     /** somewhat crappy spherical interpolation */
     sinterp(v2, t) {
-      let l1 = this.vectorLength();
-      let l2 = v2.vectorLength();
+      const l1 = this.vectorLength();
+      const l2 = v2.vectorLength();
       return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
-      let tmp = this[axis1];
+      const tmp = this[axis1];
       this[axis1] = this[axis2] * sign;
       this[axis2] = -tmp * sign;
       return this;
@@ -9077,10 +9110,10 @@ function createVector4(parent, structName) {
     }
     /** Returns w value. */
     multVecMatrix(matrix) {
-      let x = this[0];
-      let y = this[1];
-      let z = this[2];
-      let w = this[3];
+      const x = this[0];
+      const y = this[1];
+      const z = this[2];
+      const w = this[3];
       this[0] = w * matrix.$matrix.m41 + x * matrix.$matrix.m11 + y * matrix.$matrix.m21 + z * matrix.$matrix.m31;
       this[1] = w * matrix.$matrix.m42 + x * matrix.$matrix.m12 + y * matrix.$matrix.m22 + z * matrix.$matrix.m32;
       this[2] = w * matrix.$matrix.m43 + x * matrix.$matrix.m13 + y * matrix.$matrix.m23 + z * matrix.$matrix.m33;
@@ -9088,7 +9121,7 @@ function createVector4(parent, structName) {
       return this[3];
     }
     mulVecQuat(q) {
-      let t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
+      const t0 = -q[1] * this[0] - q[2] * this[1] - q[3] * this[2];
       let t1 = q[0] * this[0] + q[2] * this[2] - q[3] * this[1];
       let t2 = q[0] * this[1] + q[3] * this[0] - q[1] * this[2];
       this[2] = q[0] * this[2] + q[1] * this[1] - q[2] * this[0];
@@ -9111,13 +9144,13 @@ function createVector4(parent, structName) {
       return this;
     }
     preNormalizedAngle(v2) {
-      let th = this.dot(v2) * 0.99999;
+      const th = this.dot(v2) * 0.99999;
       return Math.acos(th);
     }
     toCSS() {
-      let r = ~~(this[0] * 255);
-      let g = ~~(this[1] * 255);
-      let b = ~~(this[2] * 255);
+      const r = ~~(this[0] * 255);
+      const g = ~~(this[1] * 255);
+      const b = ~~(this[2] * 255);
       return `rgb(${r},${g},${b},${this[3]})`;
     }
     loadSTRUCT(reader) {
@@ -9128,7 +9161,7 @@ function createVector4(parent, structName) {
 function myclamp(f2, a2, b) {
   return Math.min(Math.max(f2, a2), b);
 }
-var vec_temp_mats, DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, PI, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, lookat_cache_vs3, lookat_cache_vs4, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, internal_matrix, Matrix4;
+var vec_temp_mats, DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, lookat_cache_vs3, lookat_cache_vs4, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, internal_matrix, Matrix4;
 var init_vectormath = __esm({
   "scripts/path-controller/util/vectormath.ts"() {
     "use strict";
@@ -9137,7 +9170,6 @@ var init_vectormath = __esm({
     DOT_NORM_SNAP_LIMIT = 1e-11;
     FLT_EPSILON = 222e-18;
     M_SQRT2 = Math.SQRT2;
-    PI = Math.PI;
     Vector2 = createVector2(Array, "vec2");
     Vector3 = createVector3(Array, "vec3");
     Vector4 = createVector4(Array, "vec4");
@@ -9152,9 +9184,9 @@ var init_vectormath = __esm({
         return this[0] === 0 && this[1] === 0 && this[2] === 0 && this[3] === 0;
       }
       mulQuat(qt) {
-        let a2 = this[0] * qt[0] - this[1] * qt[1] - this[2] * qt[2] - this[3] * qt[3];
-        let b = this[0] * qt[1] + this[1] * qt[0] + this[2] * qt[3] - this[3] * qt[2];
-        let c = this[0] * qt[2] + this[2] * qt[0] + this[3] * qt[1] - this[1] * qt[3];
+        const a2 = this[0] * qt[0] - this[1] * qt[1] - this[2] * qt[2] - this[3] * qt[3];
+        const b = this[0] * qt[1] + this[1] * qt[0] + this[2] * qt[3] - this[3] * qt[2];
+        const c = this[0] * qt[2] + this[2] * qt[0] + this[3] * qt[1] - this[1] * qt[3];
         this[3] = this[0] * qt[3] + this[3] * qt[0] + this[1] * qt[2] - this[2] * qt[1];
         this[0] = a2;
         this[1] = b;
@@ -9174,13 +9206,13 @@ var init_vectormath = __esm({
         return this.dot(this) !== 0;
       }
       invert() {
-        let f2 = this.dot(this);
+        const f2 = this.dot(this);
         if (f2 === 0) return this;
         this.mulScalar(1 / f2);
         return this;
       }
       sub(q2) {
-        let nq2 = new _Quat();
+        const nq2 = new _Quat();
         nq2[0] = -q2[0];
         nq2[1] = q2[1];
         nq2[2] = q2[2];
@@ -9193,19 +9225,19 @@ var init_vectormath = __esm({
         if (m === void 0) {
           m = new Matrix4();
         }
-        let q0 = M_SQRT2 * this[0];
-        let q1 = M_SQRT2 * this[1];
-        let q2 = M_SQRT2 * this[2];
-        let q3 = M_SQRT2 * this[3];
-        let qda = q0 * q1;
-        let qdb = q0 * q2;
-        let qdc = q0 * q3;
-        let qaa = q1 * q1;
-        let qab = q1 * q2;
-        let qac = q1 * q3;
-        let qbb = q2 * q2;
-        let qbc = q2 * q3;
-        let qcc = q3 * q3;
+        const q0 = M_SQRT2 * this[0];
+        const q1 = M_SQRT2 * this[1];
+        const q2 = M_SQRT2 * this[2];
+        const q3 = M_SQRT2 * this[3];
+        const qda = q0 * q1;
+        const qdb = q0 * q2;
+        const qdc = q0 * q3;
+        const qaa = q1 * q1;
+        const qab = q1 * q2;
+        const qac = q1 * q3;
+        const qbb = q2 * q2;
+        const qbc = q2 * q3;
+        const qcc = q3 * q3;
         m.$matrix.m11 = 1 - qbb - qcc;
         m.$matrix.m12 = qdc + qab;
         m.$matrix.m13 = -qdb + qac;
@@ -9223,13 +9255,13 @@ var init_vectormath = __esm({
         return m;
       }
       matrixToQuat(wmat) {
-        let mat = vec_temp_mats.next();
+        const mat = vec_temp_mats.next();
         mat.load(wmat);
         mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
         mat.$matrix.m44 = 1;
-        let r1 = new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
-        let r2 = new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
-        let r3 = new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
+        const r1 = new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
+        const r2 = new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
+        const r3 = new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
         r1.normalize();
         r2.normalize();
         r3.normalize();
@@ -9242,8 +9274,8 @@ var init_vectormath = __esm({
         mat.$matrix.m31 = r3[0];
         mat.$matrix.m32 = r3[1];
         mat.$matrix.m33 = r3[2];
-        let tr = 0.25 * (1 + mat.$matrix.m11 + mat.$matrix.m22 + mat.$matrix.m33);
-        let s = 0;
+        const tr = 0.25 * (1 + mat.$matrix.m11 + mat.$matrix.m22 + mat.$matrix.m33);
+        let s;
         if (tr > FLT_EPSILON) {
           s = Math.sqrt(tr);
           this[0] = s;
@@ -9279,7 +9311,7 @@ var init_vectormath = __esm({
         return this;
       }
       normalize() {
-        let len = Math.sqrt(this.dot(this));
+        const len = Math.sqrt(this.dot(this));
         if (len !== 0) {
           this.mulScalar(1 / len);
         } else {
@@ -9289,11 +9321,11 @@ var init_vectormath = __esm({
         return this;
       }
       axisAngleToQuat(axis, angle) {
-        let nor = _quat_vs3_temps.next().load(axis);
+        const nor = _quat_vs3_temps.next().load(axis);
         nor.normalize();
         if (nor.dot(nor) !== 0) {
-          let phi = angle / 2;
-          let si = Math.sin(phi);
+          const phi = angle / 2;
+          const si = Math.sin(phi);
           this[0] = Math.cos(phi);
           this[1] = nor[0] * si;
           this[2] = nor[1] * si;
@@ -9312,14 +9344,14 @@ var init_vectormath = __esm({
           this.makeUnitQuat();
           return this;
         }
-        let axis = new Vector3(v1);
+        const axis = new Vector3(v1);
         axis.cross(v2);
-        let angle = v1.preNormalizedAngle(v2) * fac;
+        const angle = v1.preNormalizedAngle(v2) * fac;
         this.axisAngleToQuat(axis, angle);
         return this;
       }
       quatInterp(quat2, t) {
-        let quat = new _Quat();
+        const quat = new _Quat();
         let cosom = this[0] * quat2[0] + this[1] * quat2[1] + this[2] * quat2[2] + this[3] * quat2[3];
         if (cosom < 0) {
           cosom = -cosom;
@@ -9333,7 +9365,10 @@ var init_vectormath = __esm({
           quat[2] = this[2];
           quat[3] = this[3];
         }
-        let omega, sinom, sc1, sc2;
+        let omega;
+        let sinom;
+        let sc1;
+        let sc2;
         if (1 - cosom > 1e-4) {
           omega = Math.acos(cosom);
           sinom = Math.sin(omega);
@@ -9423,7 +9458,7 @@ var init_vectormath = __esm({
         }
       }
       static fromJSON(json) {
-        let mat = new _Matrix4();
+        const mat = new _Matrix4();
         mat.load(json.items);
         mat.isPersp = json.isPersp;
         return mat;
@@ -9435,7 +9470,7 @@ var init_vectormath = __esm({
         return new _Matrix4(this);
       }
       addToHashDigest(hash) {
-        let m = this.$matrix;
+        const m = this.$matrix;
         hash.add(m.m11);
         hash.add(m.m12);
         hash.add(m.m13);
@@ -9455,8 +9490,8 @@ var init_vectormath = __esm({
         return this;
       }
       equals(m) {
-        let m1 = this.$matrix;
-        let m2 = m.$matrix;
+        const m1 = this.$matrix;
+        const m2 = m.$matrix;
         let ok = true;
         ok = ok && m1.m11 === m2.m11;
         ok = ok && m1.m12 === m2.m12;
@@ -9477,8 +9512,8 @@ var init_vectormath = __esm({
         return ok;
       }
       loadColumn(i, vec) {
-        let m = this.$matrix;
-        let have4 = vec.length > 3;
+        const m = this.$matrix;
+        const have4 = vec.length > 3;
         switch (i) {
           case 0:
             m.m11 = vec[0];
@@ -9516,8 +9551,8 @@ var init_vectormath = __esm({
         return this;
       }
       copyColumnTo(i, vec) {
-        let m = this.$matrix;
-        let have4 = vec.length > 3;
+        const m = this.$matrix;
+        const have4 = vec.length > 3;
         switch (i) {
           case 0:
             vec[0] = m.m11;
@@ -9700,7 +9735,7 @@ var init_vectormath = __esm({
         return this._determinant4x4();
       }
       invert() {
-        let det = this._determinant4x4();
+        const det = this._determinant4x4();
         if (Math.abs(det) < 1e-8) return null;
         this._makeAdjoint();
         this.$matrix.m11 /= det;
@@ -9723,7 +9758,7 @@ var init_vectormath = __esm({
       }
       translate(x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          let t = x;
+          const t = x;
           x = t[0];
           y = t[1];
           z = t[2];
@@ -9731,7 +9766,7 @@ var init_vectormath = __esm({
         x = x === void 0 ? 0 : x;
         y = y === void 0 ? 0 : y;
         z = z === void 0 ? 0 : z;
-        let matrix = temp_mats.next().makeIdentity();
+        const matrix = temp_mats.next().makeIdentity();
         matrix.$matrix.m41 = x;
         matrix.$matrix.m42 = y;
         matrix.$matrix.m43 = z;
@@ -9740,7 +9775,7 @@ var init_vectormath = __esm({
       }
       preTranslate(x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          let t = x;
+          const t = x;
           x = t[0];
           y = t[1];
           z = t[2];
@@ -9748,7 +9783,7 @@ var init_vectormath = __esm({
         x = x === void 0 ? 0 : x;
         y = y === void 0 ? 0 : y;
         z = z === void 0 ? 0 : z;
-        let matrix = temp_mats.next().makeIdentity();
+        const matrix = temp_mats.next().makeIdentity();
         matrix.$matrix.m41 = x;
         matrix.$matrix.m42 = y;
         matrix.$matrix.m43 = z;
@@ -9757,7 +9792,7 @@ var init_vectormath = __esm({
       }
       scale(x, y, z, w = 1) {
         if (typeof x === "object" && "length" in x) {
-          let t = x;
+          const t = x;
           x = t[0];
           y = t[1];
           z = t[2];
@@ -9774,7 +9809,7 @@ var init_vectormath = __esm({
             y = x;
           }
         }
-        let matrix = temp_mats.next().makeIdentity();
+        const matrix = temp_mats.next().makeIdentity();
         matrix.$matrix.m11 = x;
         matrix.$matrix.m22 = y;
         matrix.$matrix.m33 = z;
@@ -9783,7 +9818,7 @@ var init_vectormath = __esm({
         return this;
       }
       preScale(x, y, z, w = 1) {
-        let mat = temp_mats.next().makeIdentity();
+        const mat = temp_mats.next().makeIdentity();
         mat.scale(x, y, z, w);
         this.preMultiply(mat);
         return this;
@@ -9879,14 +9914,15 @@ var init_vectormath = __esm({
         x = -x;
         y = -y;
         z = -z;
-        let xmat = euler_rotate_mats.next().makeIdentity();
+        const xmat = euler_rotate_mats.next().makeIdentity();
         let m = xmat.$matrix;
-        let c = Math.cos(x), s = Math.sin(x);
+        let c = Math.cos(x);
+        let s = Math.sin(x);
         m.m22 = c;
         m.m23 = s;
         m.m32 = -s;
         m.m33 = c;
-        let ymat = euler_rotate_mats.next().makeIdentity();
+        const ymat = euler_rotate_mats.next().makeIdentity();
         c = Math.cos(y);
         s = Math.sin(y);
         m = ymat.$matrix;
@@ -9894,7 +9930,7 @@ var init_vectormath = __esm({
         m.m13 = -s;
         m.m31 = s;
         m.m33 = c;
-        let zmat = euler_rotate_mats.next().makeIdentity();
+        const zmat = euler_rotate_mats.next().makeIdentity();
         c = Math.cos(z);
         s = Math.sin(z);
         m = zmat.$matrix;
@@ -9902,7 +9938,9 @@ var init_vectormath = __esm({
         m.m12 = s;
         m.m21 = -s;
         m.m22 = c;
-        let a2, b, cmat;
+        let a2;
+        let b;
+        let cmat;
         switch (order) {
           case EulerOrders.XYZ:
             a2 = xmat;
@@ -9947,14 +9985,15 @@ var init_vectormath = __esm({
         if (z === void 0) {
           z = 0;
         }
-        let xmat = euler_rotate_mats.next().makeIdentity();
+        const xmat = euler_rotate_mats.next().makeIdentity();
         let m = xmat.$matrix;
-        let c = Math.cos(x), s = Math.sin(x);
+        let c = Math.cos(x);
+        let s = Math.sin(x);
         m.m22 = c;
         m.m23 = s;
         m.m32 = -s;
         m.m33 = c;
-        let ymat = euler_rotate_mats.next().makeIdentity();
+        const ymat = euler_rotate_mats.next().makeIdentity();
         c = Math.cos(y);
         s = Math.sin(y);
         m = ymat.$matrix;
@@ -9963,7 +10002,7 @@ var init_vectormath = __esm({
         m.m31 = s;
         m.m33 = c;
         ymat.multiply(xmat);
-        let zmat = euler_rotate_mats.next().makeIdentity();
+        const zmat = euler_rotate_mats.next().makeIdentity();
         c = Math.cos(z);
         s = Math.sin(z);
         m = zmat.$matrix;
@@ -9976,8 +10015,8 @@ var init_vectormath = __esm({
         return this;
       }
       toString() {
-        let s = "";
-        let m = this.$matrix;
+        let s;
+        const m = this.$matrix;
         function dec(d) {
           let ret = d.toFixed(3);
           if (ret[0] !== "-")
@@ -9992,7 +10031,7 @@ var init_vectormath = __esm({
       }
       rotate(angle, x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          let t = x;
+          const t = x;
           x = t[0];
           y = t[1];
           z = t[2];
@@ -10008,10 +10047,10 @@ var init_vectormath = __esm({
           }
         }
         angle /= 2;
-        let sinA = Math.sin(angle);
-        let cosA = Math.cos(angle);
-        let sinA2 = sinA * sinA;
-        let len = Math.sqrt(x * x + y * y + z * z);
+        const sinA = Math.sin(angle);
+        const cosA = Math.cos(angle);
+        const sinA2 = sinA * sinA;
+        const len = Math.sqrt(x * x + y * y + z * z);
         if (len === 0) {
           x = 0;
           y = 0;
@@ -10021,7 +10060,7 @@ var init_vectormath = __esm({
           y /= len;
           z /= len;
         }
-        let mat = temp_mats.next().makeIdentity();
+        const mat = temp_mats.next().makeIdentity();
         if (x === 1 && y === 0 && z === 0) {
           mat.$matrix.m11 = 1;
           mat.$matrix.m12 = 0;
@@ -10062,9 +10101,9 @@ var init_vectormath = __esm({
           mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
           mat.$matrix.m44 = 1;
         } else {
-          let x2 = x * x;
-          let y2 = y * y;
-          let z2 = z * z;
+          const x2 = x * x;
+          const y2 = y * y;
+          const z2 = z * z;
           mat.$matrix.m11 = 1 - 2 * (y2 + z2) * sinA2;
           mat.$matrix.m12 = 2 * (x * y * sinA2 + z * sinA * cosA);
           mat.$matrix.m13 = 2 * (x * z * sinA2 - y * sinA * cosA);
@@ -10082,20 +10121,37 @@ var init_vectormath = __esm({
         return this;
       }
       normalize() {
-        let m = this.$matrix;
-        let v1 = new Vector4([m.m11, m.m12, m.m13, m.m14]);
-        let v2 = new Vector4([m.m21, m.m22, m.m23, m.m24]);
-        let v3 = new Vector4([m.m31, m.m32, m.m33, m.m34]);
-        let v4 = new Vector4([m.m41, m.m42, m.m43, m.m44]);
+        const m = this.$matrix;
+        const v1 = new Vector4([m.m11, m.m12, m.m13, m.m14]);
+        const v2 = new Vector4([m.m21, m.m22, m.m23, m.m24]);
+        const v3 = new Vector4([m.m31, m.m32, m.m33, m.m34]);
+        const v4 = new Vector4([m.m41, m.m42, m.m43, m.m44]);
         v1.normalize();
         v2.normalize();
         v3.normalize();
-        let flat = new Array().concat(v1).concat(v2).concat(v3).concat(v4);
+        const flat = [
+          v1[0],
+          v1[1],
+          v1[2],
+          v1[3],
+          v2[0],
+          v2[1],
+          v2[2],
+          v2[3],
+          v3[0],
+          v3[1],
+          v3[2],
+          v3[3],
+          v4[0],
+          v4[1],
+          v4[2],
+          v4[3]
+        ];
         this.load(flat);
         return this;
       }
       clearTranslation(set_w_to_one = false) {
-        let m = this.$matrix;
+        const m = this.$matrix;
         m.m41 = m.m42 = m.m43 = 0;
         if (set_w_to_one) {
           m.m44 = 1;
@@ -10108,7 +10164,7 @@ var init_vectormath = __esm({
           z = x[2];
           x = x[0];
         }
-        let m = this.$matrix;
+        const m = this.$matrix;
         m.m41 = x;
         m.m42 = y;
         m.m43 = z;
@@ -10122,7 +10178,7 @@ var init_vectormath = __esm({
         if (normal === void 0) {
           throw new Error("normal cannot be undefined");
         }
-        let n = makenormalcache.next().load(normal).normalize();
+        const n = makenormalcache.next().load(normal).normalize();
         if (up === void 0) {
           up = makenormalcache.next().zero();
           if (Math.abs(n[2]) > 0.95) {
@@ -10141,12 +10197,12 @@ var init_vectormath = __esm({
           this.scale(1, 1, -1);
           return this;
         }
-        let x = makenormalcache.next();
-        let y = makenormalcache.next();
+        const x = makenormalcache.next();
+        const y = makenormalcache.next();
         x.load(n).cross(up).normalize();
         y.load(x).cross(n).normalize();
         this.makeIdentity();
-        let m = this.$matrix;
+        const m = this.$matrix;
         m.m11 = x[0];
         m.m12 = x[1];
         m.m13 = x[2];
@@ -10166,24 +10222,24 @@ var init_vectormath = __esm({
         return this;
       }
       multiply(mat) {
-        let mm = this.$matrix;
-        let mm2 = mat.$matrix;
-        let m11 = mm2.m11 * mm.m11 + mm2.m12 * mm.m21 + mm2.m13 * mm.m31 + mm2.m14 * mm.m41;
-        let m12 = mm2.m11 * mm.m12 + mm2.m12 * mm.m22 + mm2.m13 * mm.m32 + mm2.m14 * mm.m42;
-        let m13 = mm2.m11 * mm.m13 + mm2.m12 * mm.m23 + mm2.m13 * mm.m33 + mm2.m14 * mm.m43;
-        let m14 = mm2.m11 * mm.m14 + mm2.m12 * mm.m24 + mm2.m13 * mm.m34 + mm2.m14 * mm.m44;
-        let m21 = mm2.m21 * mm.m11 + mm2.m22 * mm.m21 + mm2.m23 * mm.m31 + mm2.m24 * mm.m41;
-        let m22 = mm2.m21 * mm.m12 + mm2.m22 * mm.m22 + mm2.m23 * mm.m32 + mm2.m24 * mm.m42;
-        let m23 = mm2.m21 * mm.m13 + mm2.m22 * mm.m23 + mm2.m23 * mm.m33 + mm2.m24 * mm.m43;
-        let m24 = mm2.m21 * mm.m14 + mm2.m22 * mm.m24 + mm2.m23 * mm.m34 + mm2.m24 * mm.m44;
-        let m31 = mm2.m31 * mm.m11 + mm2.m32 * mm.m21 + mm2.m33 * mm.m31 + mm2.m34 * mm.m41;
-        let m32 = mm2.m31 * mm.m12 + mm2.m32 * mm.m22 + mm2.m33 * mm.m32 + mm2.m34 * mm.m42;
-        let m33 = mm2.m31 * mm.m13 + mm2.m32 * mm.m23 + mm2.m33 * mm.m33 + mm2.m34 * mm.m43;
-        let m34 = mm2.m31 * mm.m14 + mm2.m32 * mm.m24 + mm2.m33 * mm.m34 + mm2.m34 * mm.m44;
-        let m41 = mm2.m41 * mm.m11 + mm2.m42 * mm.m21 + mm2.m43 * mm.m31 + mm2.m44 * mm.m41;
-        let m42 = mm2.m41 * mm.m12 + mm2.m42 * mm.m22 + mm2.m43 * mm.m32 + mm2.m44 * mm.m42;
-        let m43 = mm2.m41 * mm.m13 + mm2.m42 * mm.m23 + mm2.m43 * mm.m33 + mm2.m44 * mm.m43;
-        let m44 = mm2.m41 * mm.m14 + mm2.m42 * mm.m24 + mm2.m43 * mm.m34 + mm2.m44 * mm.m44;
+        const mm = this.$matrix;
+        const mm2 = mat.$matrix;
+        const m11 = mm2.m11 * mm.m11 + mm2.m12 * mm.m21 + mm2.m13 * mm.m31 + mm2.m14 * mm.m41;
+        const m12 = mm2.m11 * mm.m12 + mm2.m12 * mm.m22 + mm2.m13 * mm.m32 + mm2.m14 * mm.m42;
+        const m13 = mm2.m11 * mm.m13 + mm2.m12 * mm.m23 + mm2.m13 * mm.m33 + mm2.m14 * mm.m43;
+        const m14 = mm2.m11 * mm.m14 + mm2.m12 * mm.m24 + mm2.m13 * mm.m34 + mm2.m14 * mm.m44;
+        const m21 = mm2.m21 * mm.m11 + mm2.m22 * mm.m21 + mm2.m23 * mm.m31 + mm2.m24 * mm.m41;
+        const m22 = mm2.m21 * mm.m12 + mm2.m22 * mm.m22 + mm2.m23 * mm.m32 + mm2.m24 * mm.m42;
+        const m23 = mm2.m21 * mm.m13 + mm2.m22 * mm.m23 + mm2.m23 * mm.m33 + mm2.m24 * mm.m43;
+        const m24 = mm2.m21 * mm.m14 + mm2.m22 * mm.m24 + mm2.m23 * mm.m34 + mm2.m24 * mm.m44;
+        const m31 = mm2.m31 * mm.m11 + mm2.m32 * mm.m21 + mm2.m33 * mm.m31 + mm2.m34 * mm.m41;
+        const m32 = mm2.m31 * mm.m12 + mm2.m32 * mm.m22 + mm2.m33 * mm.m32 + mm2.m34 * mm.m42;
+        const m33 = mm2.m31 * mm.m13 + mm2.m32 * mm.m23 + mm2.m33 * mm.m33 + mm2.m34 * mm.m43;
+        const m34 = mm2.m31 * mm.m14 + mm2.m32 * mm.m24 + mm2.m33 * mm.m34 + mm2.m34 * mm.m44;
+        const m41 = mm2.m41 * mm.m11 + mm2.m42 * mm.m21 + mm2.m43 * mm.m31 + mm2.m44 * mm.m41;
+        const m42 = mm2.m41 * mm.m12 + mm2.m42 * mm.m22 + mm2.m43 * mm.m32 + mm2.m44 * mm.m42;
+        const m43 = mm2.m41 * mm.m13 + mm2.m42 * mm.m23 + mm2.m43 * mm.m33 + mm2.m44 * mm.m43;
+        const m44 = mm2.m41 * mm.m14 + mm2.m42 * mm.m24 + mm2.m43 * mm.m34 + mm2.m44 * mm.m44;
         mm.m11 = m11;
         mm.m12 = m12;
         mm.m13 = m13;
@@ -10223,10 +10279,10 @@ var init_vectormath = __esm({
       }
       ortho(left, right, bottom, top, near, far) {
         console.warn("Matrix4.ortho() is deprecated, use .orthographic() instead");
-        let tx = (left + right) / (left - right);
-        let ty = (top + bottom) / (top - bottom);
-        let tz = (far + near) / (far - near);
-        let matrix = temp_mats.next().makeIdentity();
+        const tx = (left + right) / (left - right);
+        const ty = (top + bottom) / (top - bottom);
+        const tz = (far + near) / (far - near);
+        const matrix = temp_mats.next().makeIdentity();
         matrix.$matrix.m11 = 2 / (left - right);
         matrix.$matrix.m12 = 0;
         matrix.$matrix.m13 = 0;
@@ -10247,11 +10303,11 @@ var init_vectormath = __esm({
         return this;
       }
       frustum(left, right, bottom, top, near, far) {
-        let matrix = temp_mats.next().makeIdentity();
-        let A = (right + left) / (right - left);
-        let B = (top + bottom) / (top - bottom);
-        let C = -(far + near) / (far - near);
-        let D = -(2 * far * near) / (far - near);
+        const matrix = temp_mats.next().makeIdentity();
+        const A = (right + left) / (right - left);
+        const B = (top + bottom) / (top - bottom);
+        const C = -(far + near) / (far - near);
+        const D = -(2 * far * near) / (far - near);
         matrix.$matrix.m11 = 2 * near / (right - left);
         matrix.$matrix.m12 = 0;
         matrix.$matrix.m13 = 0;
@@ -10273,8 +10329,8 @@ var init_vectormath = __esm({
         return this;
       }
       orthographic(scale, aspect, near, far) {
-        let mat = temp_mats.next().makeIdentity();
-        let zscale = far - near;
+        const mat = temp_mats.next().makeIdentity();
+        const zscale = far - near;
         mat.scale(2 / aspect, 2, -1 / scale / zscale, 1 / scale);
         mat.translate(0, 0, 0.5 * zscale - near);
         this.isPersp = true;
@@ -10282,23 +10338,22 @@ var init_vectormath = __esm({
         return mat;
       }
       perspective(fovy, aspect, zNear, zFar) {
-        let top = Math.tan(fovy * Math.PI / 360) * zNear;
-        let bottom = -top;
-        let left = aspect * bottom;
-        let right = aspect * top;
+        const top = Math.tan(fovy * Math.PI / 360) * zNear;
+        const bottom = -top;
+        const left = aspect * bottom;
+        const right = aspect * top;
         this.frustum(left, right, bottom, top, zNear, zFar);
         return this;
       }
       lookat(pos, target, up) {
-        let matrix = lookat_cache_ms.next();
+        const matrix = lookat_cache_ms.next();
         matrix.makeIdentity();
-        let vec = lookat_cache_vs3.next().load(pos).sub(target);
-        let len = vec.vectorLength();
+        const vec = lookat_cache_vs3.next().load(pos).sub(target);
         vec.normalize();
-        let zvec = vec;
-        let yvec = lookat_cache_vs3.next().load(up).normalize();
-        let xvec = lookat_cache_vs3.next().load(yvec).cross(zvec).normalize();
-        let mm = matrix.$matrix;
+        const zvec = vec;
+        const yvec = lookat_cache_vs3.next().load(up).normalize();
+        const xvec = lookat_cache_vs3.next().load(yvec).cross(zvec).normalize();
+        const mm = matrix.$matrix;
         mm.m11 = xvec[0];
         mm.m12 = yvec[0];
         mm.m13 = zvec[0];
@@ -10330,12 +10385,12 @@ var init_vectormath = __esm({
         return this;
       }
       makeRotationOnly() {
-        let m = this.$matrix;
+        const m = this.$matrix;
         m.m41 = m.m42 = m.m43 = 0;
         m.m44 = 1;
-        let l1 = Math.sqrt(m.m11 * m.m11 + m.m12 * m.m12 + m.m13 * m.m13);
-        let l2 = Math.sqrt(m.m21 * m.m21 + m.m22 * m.m22 + m.m23 * m.m23);
-        let l3 = Math.sqrt(m.m31 * m.m31 + m.m32 * m.m32 + m.m33 * m.m33);
+        const l1 = Math.sqrt(m.m11 * m.m11 + m.m12 * m.m12 + m.m13 * m.m13);
+        const l2 = Math.sqrt(m.m21 * m.m21 + m.m22 * m.m22 + m.m23 * m.m23);
+        const l3 = Math.sqrt(m.m31 * m.m31 + m.m32 * m.m32 + m.m33 * m.m33);
         if (l1) {
           m.m11 /= l1;
           m.m12 /= l1;
@@ -10382,7 +10437,7 @@ var init_vectormath = __esm({
         ];
       }
       loadFromVecs(vecs) {
-        let m = this.$matrix;
+        const m = this.$matrix;
         m.m11 = vecs[0][0];
         m.m12 = vecs[0][1];
         m.m13 = vecs[0][2];
@@ -10404,15 +10459,17 @@ var init_vectormath = __esm({
       alignAxis(axis, vec_) {
         const vec = new Vector4().load3(vec_);
         vec.normalize();
-        let mat = this;
-        let m = mat.$matrix;
-        let mat2 = new _Matrix4(mat);
-        let loc = new Vector3(), scale = new Vector3(), rot = new Vector3();
+        const mat = this;
+        const m = mat.$matrix;
+        const mat2 = new _Matrix4(mat);
+        const loc = new Vector3();
+        const scale = new Vector3();
+        const rot = new Vector3();
         mat2.decompose(loc, rot, scale);
         mat2.makeRotationOnly();
-        let axes = mat2.getAsVecs();
-        let axis2 = (axis + 1) % 3;
-        let axis3 = (axis + 2) % 3;
+        const axes = mat2.getAsVecs();
+        const axis2 = (axis + 1) % 3;
+        const axis3 = (axis + 2) % 3;
         axes[axis].load(vec);
         axes[axis2].cross(axes[axis]).cross(axes[axis]);
         axes[axis3].load(axes[axis]).cross(axes[axis2]);
@@ -10431,17 +10488,19 @@ var init_vectormath = __esm({
       }
       decompose(_translate, _rotate, _scale, _skew, _perspective, order = EulerOrders.XYZ) {
         if (this.$matrix.m44 === 0) return false;
-        let mat = temp_mats.next().load(this);
+        const mat = temp_mats.next().load(this);
         let m = mat.$matrix;
-        let t = _translate, r = _rotate, s = _scale;
+        const t = _translate;
+        const r = _rotate;
+        const s = _scale;
         if (t) {
           t[0] = m.m41;
           t[1] = m.m42;
           t[2] = m.m43;
         }
-        let l1 = Math.sqrt(m.m11 * m.m11 + m.m12 * m.m12 + m.m13 * m.m13);
-        let l2 = Math.sqrt(m.m21 * m.m21 + m.m22 * m.m22 + m.m23 * m.m23);
-        let l3 = Math.sqrt(m.m31 * m.m31 + m.m32 * m.m32 + m.m33 * m.m33);
+        const l1 = Math.sqrt(m.m11 * m.m11 + m.m12 * m.m12 + m.m13 * m.m13);
+        const l2 = Math.sqrt(m.m21 * m.m21 + m.m22 * m.m22 + m.m23 * m.m23);
+        const l3 = Math.sqrt(m.m31 * m.m31 + m.m32 * m.m32 + m.m33 * m.m33);
         if (l1) {
           m.m11 /= l1;
           m.m12 /= l1;
@@ -10463,13 +10522,19 @@ var init_vectormath = __esm({
           s[2] = l3;
         }
         if (r) {
-          let clamp = myclamp;
-          let rmat = temp_mats.next().load(this);
+          const clamp = myclamp;
+          const rmat = temp_mats.next().load(this);
           rmat.normalize();
           m = rmat.$matrix;
-          let m11 = m.m11, m12 = m.m12, m13 = m.m13, m14 = m.m14;
-          let m21 = m.m21, m22 = m.m22, m23 = m.m23, m24 = m.m24;
-          let m31 = m.m31, m32 = m.m32, m33 = m.m33, m34 = m.m34;
+          const m11 = m.m11;
+          const m12 = m.m12;
+          const m13 = m.m13;
+          const m21 = m.m21;
+          const m22 = m.m22;
+          const m23 = m.m23;
+          const m31 = m.m31;
+          const m32 = m.m32;
+          const m33 = m.m33;
           if (order === EulerOrders.XYZ) {
             r[1] = Math.asin(clamp(m13, -1, 1));
             if (Math.abs(m13) < 0.9999999) {
@@ -10536,41 +10601,41 @@ var init_vectormath = __esm({
         return a1 * this._determinant2x2(b2, b3, c2, c3) - b1 * this._determinant2x2(a2, a3, c2, c3) + c1 * this._determinant2x2(a2, a3, b2, b3);
       }
       _determinant4x4() {
-        let a1 = this.$matrix.m11;
-        let b1 = this.$matrix.m12;
-        let c1 = this.$matrix.m13;
-        let d1 = this.$matrix.m14;
-        let a2 = this.$matrix.m21;
-        let b2 = this.$matrix.m22;
-        let c2 = this.$matrix.m23;
-        let d2 = this.$matrix.m24;
-        let a3 = this.$matrix.m31;
-        let b3 = this.$matrix.m32;
-        let c3 = this.$matrix.m33;
-        let d3 = this.$matrix.m34;
-        let a4 = this.$matrix.m41;
-        let b4 = this.$matrix.m42;
-        let c4 = this.$matrix.m43;
-        let d4 = this.$matrix.m44;
+        const a1 = this.$matrix.m11;
+        const b1 = this.$matrix.m12;
+        const c1 = this.$matrix.m13;
+        const d1 = this.$matrix.m14;
+        const a2 = this.$matrix.m21;
+        const b2 = this.$matrix.m22;
+        const c2 = this.$matrix.m23;
+        const d2 = this.$matrix.m24;
+        const a3 = this.$matrix.m31;
+        const b3 = this.$matrix.m32;
+        const c3 = this.$matrix.m33;
+        const d3 = this.$matrix.m34;
+        const a4 = this.$matrix.m41;
+        const b4 = this.$matrix.m42;
+        const c4 = this.$matrix.m43;
+        const d4 = this.$matrix.m44;
         return a1 * this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1 * this._determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * this._determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
       }
       _makeAdjoint() {
-        let a1 = this.$matrix.m11;
-        let b1 = this.$matrix.m12;
-        let c1 = this.$matrix.m13;
-        let d1 = this.$matrix.m14;
-        let a2 = this.$matrix.m21;
-        let b2 = this.$matrix.m22;
-        let c2 = this.$matrix.m23;
-        let d2 = this.$matrix.m24;
-        let a3 = this.$matrix.m31;
-        let b3 = this.$matrix.m32;
-        let c3 = this.$matrix.m33;
-        let d3 = this.$matrix.m34;
-        let a4 = this.$matrix.m41;
-        let b4 = this.$matrix.m42;
-        let c4 = this.$matrix.m43;
-        let d4 = this.$matrix.m44;
+        const a1 = this.$matrix.m11;
+        const b1 = this.$matrix.m12;
+        const c1 = this.$matrix.m13;
+        const d1 = this.$matrix.m14;
+        const a2 = this.$matrix.m21;
+        const b2 = this.$matrix.m22;
+        const c2 = this.$matrix.m23;
+        const d2 = this.$matrix.m24;
+        const a3 = this.$matrix.m31;
+        const b3 = this.$matrix.m32;
+        const c3 = this.$matrix.m33;
+        const d3 = this.$matrix.m34;
+        const a4 = this.$matrix.m41;
+        const b4 = this.$matrix.m42;
+        const c4 = this.$matrix.m43;
+        const d4 = this.$matrix.m44;
         this.$matrix.m11 = this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
         this.$matrix.m21 = -this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
         this.$matrix.m31 = this._determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4);
@@ -10596,7 +10661,6 @@ var init_vectormath = __esm({
       }
     };
     lookat_cache_vs3 = cachering2.fromConstructor(Vector3, 512);
-    lookat_cache_vs4 = cachering2.fromConstructor(Vector4, 512);
     lookat_cache_ms = cachering2.fromConstructor(Matrix4, 512);
     euler_rotate_mats = cachering2.fromConstructor(Matrix4, 512);
     makenormalcache = cachering2.fromConstructor(Vector3, 512);
@@ -10916,11 +10980,10 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
     touchcancel: "mouseup"
   };
   const mpos = [0, 0];
-  let screen = findScreen();
+  const screen = findScreen();
   if (screen) {
     mpos[0] = screen.mpos[0];
     mpos[1] = screen.mpos[1];
-    screen = void 0;
   }
   function handleAreaContext() {
     const screen2 = findScreen();
@@ -11933,7 +11996,7 @@ var init_events = __esm({
           return this;
         }
         const stack = this._cbs[type];
-        if (stack.indexOf(cb) < 0) {
+        if (!stack.includes(cb)) {
           console.warn("event handler not in list", type, cb);
           return this;
         }
@@ -12324,7 +12387,6 @@ function parseValueIntern(string, baseUnit) {
     console.warn("No base unit in units.js:parseValueIntern");
   }
   for (const unit of Units) {
-    const def = unit.unitDefine();
     if (unit.validate(string)) {
       console.log(unit);
       let value = unit.parse(string);
@@ -12355,7 +12417,6 @@ function isNumber(string) {
     return true;
   }
   for (const unit of Units) {
-    const def = unit.unitDefine();
     if (unit.validate(string)) {
       return true;
     }
@@ -12583,7 +12644,7 @@ var init_units = __esm({
       static parse(string) {
         string = normString(string);
         const i = string.search("ft");
-        let parts = [];
+        let parts;
         let vft = 0;
         let vin = 0;
         if (i >= 0) {
@@ -13023,10 +13084,9 @@ var init_toolprop = __esm({
           return upper || lower;
         };
         for (let i = 0; i < name2.length; i++) {
-          let c = name2[i];
+          const c = name2[i];
           if (c === "_" || c === "-" || c === "$") {
             lastc = c;
-            c = " ";
             parts.push("");
             continue;
           }
@@ -13078,9 +13138,7 @@ var init_toolprop = __esm({
         tot += strlen(this.apiname) + strlen(this.uiname);
         tot += strlen(this.description);
         tot += 11 * 8;
-        for (const k in this.callbacks) {
-          tot += 24;
-        }
+        tot += Object.keys(this.callbacks).length * 24;
         return tot;
       }
       equals(b) {
@@ -14703,7 +14761,7 @@ var init_controller_base = __esm({
         return this;
       }
       copy() {
-        let ret = new _DataPath();
+        const ret = new _DataPath();
         ret.flag = this.flag;
         ret.type = this.type;
         ret.data = this.data;
@@ -14758,7 +14816,7 @@ var init_controller_base = __esm({
        * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
        * and the datapath is 'this.datapath'
        **/
-      customGetSet(get, set3) {
+      customGetSet(get, set2) {
         this.flag |= DataFlags.USE_CUSTOM_GETSET;
         if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
           const data = this.data;
@@ -14766,11 +14824,11 @@ var init_controller_base = __esm({
           data._getValue = data.getValue;
           data._setValue = data.setValue;
           if (get) data.getValue = get;
-          if (set3) data.setValue = set3;
+          if (set2) data.setValue = set2;
         } else {
           this.getSet = {
             get,
-            set: set3
+            set: set2
           };
           this.getSet.dataref = void 0;
           this.getSet.datapath = void 0;
@@ -14778,8 +14836,8 @@ var init_controller_base = __esm({
         }
         return this;
       }
-      customSet(set3) {
-        this.customGetSet(void 0, set3);
+      customSet(set2) {
+        this.customGetSet(void 0, set2);
         return this;
       }
       customGet(get) {
@@ -14951,19 +15009,14 @@ var init_controller_base = __esm({
         }
         this.cb = {};
         if (typeof callbacks2 === "object" && !Array.isArray(callbacks2)) {
-          for (let k in callbacks2) {
+          for (const k in callbacks2) {
             this.cb[k] = callbacks2[k];
           }
         } else {
-          for (let cb of callbacks2) {
+          for (const cb of callbacks2) {
             this.cb[cb.name] = cb;
           }
         }
-        let check = (key) => {
-          if (!(key in this.cb)) {
-            throw new DataPathError(`Missing ${key} callback in DataList`);
-          }
-        };
       }
       /**
          Generic list API.
@@ -14979,8 +15032,8 @@ var init_controller_base = __esm({
          - function getKey(api, list, object) returns object's key in this list, either a string or a number
          * */
       copy() {
-        let ret = new _DataList([this.cb.get]);
-        for (let k in this.cb) {
+        const ret = new _DataList([this.cb.get]);
+        for (const k in this.cb) {
           ret.cb[k] = this.cb[k];
         }
         return ret;
@@ -15029,7 +15082,7 @@ var init_controller_base = __esm({
         if (this.cb.getStruct !== void 0) {
           return this.cb.getStruct(api, list5, key);
         }
-        let obj = this.get(api, list5, key);
+        const obj = this.get(api, list5, key);
         if (obj === void 0) return void 0;
         return api.getStruct(obj.constructor);
       }
@@ -15097,19 +15150,19 @@ function makeDerivedOverlay(parent) {
       if (this.hasOwnProperty(Symbol.CachedDef)) {
         return this[Symbol.CachedDef];
       }
-      let def2 = {};
+      const def2 = {};
       Symbol.CachedDef = {};
       let def = this.contextDefine();
       if (def === void 0) {
         def = {};
       }
-      for (let k in def) {
+      for (const k in def) {
         def2[k] = def[k];
       }
       if (!("flag" in def)) {
         def2.flag = Context.inherit(0);
       }
-      let parents = [];
+      const parents = [];
       let p = getClassParent(this);
       while (p && p !== ContextOverlay2) {
         parents.push(p);
@@ -15117,8 +15170,8 @@ function makeDerivedOverlay(parent) {
       }
       if (def2.flag instanceof InheritFlag) {
         let flag = def2.flag.data;
-        for (let parent2 of parents) {
-          let pdef = parent2.contextDefine();
+        for (const parent2 of parents) {
+          const pdef = parent2.contextDefine();
           if (!pdef.flag) {
             continue;
           } else if (pdef.flag instanceof InheritFlag) {
@@ -15261,18 +15314,17 @@ var init_context = __esm({
         );
       }
       progressBar(...args) {
-        let ctxRec = this.ctx;
+        const ctxRec = this.ctx;
         return ctxRec.progbar !== void 0 ? ctxRec.progbar(...args) : ctxRec.progressBar(...args);
       }
       load(ctx) {
-        let keys2 = ctx._props;
+        const keys2 = ctx._props;
         function wrapget(name2) {
           return function(ctx2, data) {
             return ctx.loadProperty(ctx2, name2, data);
           };
         }
-        for (let k of keys2) {
-          let v;
+        for (const k of keys2) {
           if (k === "state" || k === "toolstack" || k === "api") {
             continue;
           }
@@ -15280,20 +15332,21 @@ var init_context = __esm({
             continue;
           }
           try {
-            v = ctx[k];
+            ctx[k];
           } catch (_error) {
             if (config_default.DEBUG.contextSystem) {
               console.warn("failed to look up property in context: ", k);
             }
             continue;
           }
-          let data, getter;
-          let overlay = ctx.getOwningOverlay(k);
+          let data;
+          let getter;
+          const overlay = ctx.getOwningOverlay(k);
           if (overlay === void 0) {
             continue;
           }
           try {
-            let oRec = overlay;
+            const oRec = overlay;
             if (typeof k === "string" && oRec[k + "_save"] && oRec[k + "_load"]) {
               data = oRec[k + "_save"]();
               getter = oRec[k + "_load"];
@@ -15310,15 +15363,15 @@ var init_context = __esm({
             get: getter
           };
         }
-        let defineProp = (name2) => {
+        const defineProp = (name2) => {
           Object.defineProperty(this, name2, {
             get: function() {
-              let def = this.props[name2];
+              const def = this.props[name2];
               return def.get(this.ctx, def.data);
             }
           });
         };
-        for (let k in this.props) {
+        for (const k in this.props) {
           if (k !== "ctx") {
             defineProp(k);
           }
@@ -15363,35 +15416,35 @@ var init_context = __esm({
         this._fix();
       }
       error(message2, timeout = 1500) {
-        let state = this.state;
+        const state = this.state;
         console.warn(message2);
-        if (state && state.screen) {
+        if (state?.screen) {
           return notifier.error(state.screen, message2, timeout);
         }
       }
       warning(message2, timeout = 1500) {
-        let state = this.state;
+        const state = this.state;
         console.warn(message2);
-        if (state && state.screen) {
+        if (state?.screen) {
           return notifier.warning(state.screen, message2, timeout);
         }
       }
       message(msg, timeout = 1500) {
-        let state = this.state;
+        const state = this.state;
         console.warn(msg);
-        if (state && state.screen) {
+        if (state?.screen) {
           return notifier.message(state.screen, msg, timeout);
         }
       }
       progbar(msg, perc = 0, timeout = 1500, id = msg) {
-        let state = this.state;
-        if (state && state.screen) {
+        const state = this.state;
+        if (state?.screen) {
           return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
         }
       }
       validateOverlays() {
-        let stack = this._stack;
-        let stack2 = [];
+        const stack = this._stack;
+        const stack2 = [];
         for (let i = 0; i < stack.length; i++) {
           if (stack[i].validate()) {
             stack2.push(stack[i]);
@@ -15403,14 +15456,14 @@ var init_context = __esm({
         return this.getOverlay(cls) !== void 0;
       }
       getOverlay(cls) {
-        for (let overlay of this._stack) {
+        for (const overlay of this._stack) {
           if (overlay.constructor === cls) {
             return overlay;
           }
         }
       }
       clear(have_new_file = false) {
-        for (let overlay of this._stack) {
+        for (const overlay of this._stack) {
           overlay.onRemove(have_new_file);
         }
         this._stack = [];
@@ -15424,13 +15477,13 @@ var init_context = __esm({
             return Object.assign({}, this);
           };
         }
-        let ctx = this.copy();
+        const ctx = this.copy();
         ctx.pushOverlay(overrides);
         return ctx;
       }
       copy() {
-        let ret = new this.constructor(this.state);
-        for (let item of this._stack) {
+        const ret = new this.constructor(this.state);
+        for (const item of this._stack) {
           ret.pushOverlay(item.copy());
         }
         return ret;
@@ -15445,25 +15498,25 @@ var init_context = __esm({
         return data;
       }
       getOwningOverlay(name2, _val_out) {
-        let inside_map = this._inside_map;
-        let stack = this._stack;
+        const inside_map = this._inside_map;
+        const stack = this._stack;
         if (config_default.DEBUG.contextSystem) {
           console.log(name2, inside_map);
         }
         for (let i = stack.length - 1; i >= 0; i--) {
-          let overlay = stack[i];
+          const overlay = stack[i];
           let ret = next_key;
           if (overlay[Symbol.ContextID] === void 0) {
             throw new Error("context corruption");
           }
-          let ikey = overlay[Symbol.ContextID];
+          const ikey = overlay[Symbol.ContextID];
           if (config_default.DEBUG.contextSystem) {
             console.log(ikey, overlay);
           }
           if (inside_map[ikey]) {
             continue;
           }
-          if (overlay.__allKeys && overlay.__allKeys.has(name2)) {
+          if (overlay.__allKeys?.has(name2)) {
             if (config_default.DEBUG.contextSystem) {
               console.log("getting value");
             }
@@ -15495,7 +15548,7 @@ var init_context = __esm({
         this._props.add(name2);
         Object.defineProperty(this, name2, {
           get: function() {
-            let ret = _ret_tmp;
+            const ret = _ret_tmp;
             _ret_tmp[0] = void 0;
             this.getOwningOverlay(name2, ret);
             return ret[0];
@@ -15512,8 +15565,8 @@ var init_context = __esm({
         if (!overlay.hasOwnProperty(Symbol.ContextID)) {
           overlay[Symbol.ContextID] = idgen++;
         }
-        let keys2 = /* @__PURE__ */ new Set();
-        for (let key of getAllKeys(overlay)) {
+        const keys2 = /* @__PURE__ */ new Set();
+        for (const key of getAllKeys(overlay)) {
           if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
             keys2.add(key);
           }
@@ -15522,7 +15575,7 @@ var init_context = __esm({
         if (overlay.__allKeys === void 0) {
           overlay.__allKeys = keys2;
         }
-        for (let k of keys2) {
+        for (const k of keys2) {
           let bad = typeof k === "symbol" || excludedKeys.has(k);
           bad = bad || typeof k === "string" && k[0] === "_";
           bad = bad || typeof k === "string" && k.endsWith("_save");
@@ -15532,7 +15585,7 @@ var init_context = __esm({
           }
           this.ensureProperty(k);
         }
-        if (this._stack.indexOf(overlay) >= 0) {
+        if (this._stack.includes(overlay)) {
           console.warn("Overlay already added once");
           if (this._stack[this._stack.length - 1] === overlay) {
             console.warn("  Definitely an error, overlay is already at top of stack");
@@ -15550,7 +15603,7 @@ var init_context = __esm({
         this._stack.pop();
       }
       removeOverlay(overlay) {
-        if (this._stack.indexOf(overlay) < 0) {
+        if (!this._stack.includes(overlay)) {
           console.warn("Context.removeOverlay called in error", overlay);
           return;
         }
@@ -16015,7 +16068,6 @@ var init_toolsys = __esm({
       
          */
       static invoke(_ctx, args) {
-        const ctx = _ctx;
         const tool = new this();
         const inputs = tool.inputs;
         for (const k in args) {
@@ -16932,8 +16984,8 @@ toolsys.PropKey {
          onstep is a callback, if it returns a promise that promise will be
          waited on, otherwise execution is queue with window.setTimeout().
          */
-      replay(cb, onStep) {
-        this.rewind();
+      replay(cb, onStep, rewind = () => this.rewind()) {
+        rewind();
         let last = this.cur;
         const start = time_ms();
         return new Promise((accept, reject) => {
@@ -16943,25 +16995,30 @@ toolsys.PropKey {
               accept(void 0);
               return;
             }
-            if (this.cur < this.length) {
+            if (this.cur < this.length - 1) {
               this.cur++;
-              this.rerun(this[this.cur]);
+              const tool = this[this.cur];
+              if (!tool.execCtx) {
+                tool.execCtx = this.ctx;
+              }
+              tool.undoPre(tool.execCtx);
+              tool.execPre(tool.execCtx);
+              tool.exec(tool.execCtx);
+              tool.execPost(tool.execCtx);
             }
             if (last === this.cur) {
               console.warn("time:", (time_ms() - start) / 1e3);
               accept(this);
             } else {
-              if (onStep) {
-                const ret = onStep();
-                if (ret && ret instanceof Promise) {
-                  ret.then(() => {
-                    next();
-                  });
-                } else {
-                  window.setTimeout(() => {
-                    next();
-                  });
-                }
+              const ret = onStep ? onStep() : true;
+              if (ret && ret instanceof Promise) {
+                ret.then(() => {
+                  next();
+                });
+              } else {
+                window.setTimeout(() => {
+                  next();
+                });
               }
             }
           };
@@ -17972,7 +18029,6 @@ curve1d.BSplineCurve {
       }
       regen_hermite(steps) {
         if (splineCache.has(this)) {
-          console.log("loading spline approx from cached bspline data");
           this.hermite = splineCache.get(this).hermite;
           return;
         }
@@ -17990,11 +18046,9 @@ curve1d.BSplineCurve {
         let lastdv1 = 0;
         let lastf3 = 0;
         for (let j = 0; j < steps; j++, t += dt) {
-          const f1 = this._evaluate(t - eps * 2);
           const f2 = this._evaluate(t - eps);
           const f3 = this._evaluate(t);
           const f4 = this._evaluate(t + eps);
-          const f5 = this._evaluate(t + eps * 2);
           let dv1 = (f4 - f2) / (eps * 2);
           dv1 /= steps;
           if (j > 0) {
@@ -18012,7 +18066,6 @@ curve1d.BSplineCurve {
         for (const p of this._ps) {
           p.rco.load(p.co);
         }
-        const points = this.points.concat(this.points);
         this._evaluate2(0.5);
         const error1 = (p) => {
           return this._evaluate(p.co[0]) - p.co[1];
@@ -18020,7 +18073,7 @@ curve1d.BSplineCurve {
         const error2 = (p) => {
           return error1(p);
         };
-        let err = 0;
+        let err;
         const g = new Vector2();
         for (let step = 0; step < 25; step++) {
           err = 0;
@@ -18057,7 +18110,6 @@ curve1d.BSplineCurve {
       }
       regen_basis() {
         if (splineCache.has(this)) {
-          console.log("loading from cached bspline data");
           this.basis_tables = splineCache.get(this).basis_tables;
           return;
         }
@@ -18335,12 +18387,6 @@ curve1d.BSplineCurve {
         const drawTrans = drawTransform;
         const dpath = datapath;
         const srcUpdate = onSourceUpdate;
-        console.warn(
-          this._bid,
-          "makeGUI",
-          this.uidata,
-          this.uidata ? this.uidata.start_mpos : void 0
-        );
         let start_mpos;
         if (this.uidata) {
           start_mpos = this.uidata.start_mpos;
@@ -18355,7 +18401,6 @@ curve1d.BSplineCurve {
           draw_trans: drawTrans,
           datapath: dpath
         };
-        console.warn("Building gui");
         cvs.addEventListener("touchstart", this.on_touchstart);
         cvs.addEventListener("touchmove", this.on_touchmove);
         cvs.addEventListener("touchend", this.on_touchend);
@@ -18398,7 +18443,6 @@ curve1d.BSplineCurve {
         const Icons3 = row.constructor.getIconEnum();
         const icon = Icons3.LARGE_X !== void 0 ? Icons3.LARGE_X : Icons3.TINY_X;
         if (Icons3.LARGE_X === void 0) {
-          console.log(Icons3);
           console.error("Curve widget expects Icons.LARGE_X icon for delete button.");
         }
         row.iconbutton(icon, "Delete Point", () => {
@@ -18438,7 +18482,6 @@ curve1d.BSplineCurve {
         let last_deg = this.deg;
         slider.updateAfter(() => {
           if (last_deg !== this.deg) {
-            console.log("degree update", this.deg);
             last_deg = this.deg;
             slider.setValue(this.deg);
           }
@@ -18679,8 +18722,6 @@ curve1d.BSplineCurve {
         ui2.canvas = canvas;
         ui2.g = g;
         ui2.draw_trans = draw_trans;
-        const _sz = draw_trans[0];
-        const _pan = draw_trans[1];
         g.lineWidth *= 1.5;
         const strokeStyle = g.strokeStyle;
         for (let ssi = 0; ssi < 1; ssi++) {
@@ -19075,11 +19116,7 @@ var init_curve1d = __esm({
         return this.generators.active.update();
       }
       draw(canvas, g, draw_transform) {
-        let w = canvas.width;
-        const h = canvas.height;
         g.save();
-        const sz = draw_transform[0];
-        const pan = draw_transform[1];
         g.beginPath();
         g.moveTo(-1, 0);
         g.lineTo(1, 0);
@@ -19093,8 +19130,6 @@ var init_curve1d = __esm({
         let f2 = this.xRange[0];
         const steps = 64;
         const df = (this.xRange[1] - this.xRange[0]) / (steps - 1);
-        w = 6 / sz;
-        const curve = this.generators.active;
         g.beginPath();
         for (let i = 0; i < steps; i++, f2 += df) {
           const val = this.evaluate(f2);
@@ -19208,7 +19243,7 @@ var init_anim = __esm({
         this.tasks.push(new Task(task));
       }
       remove(task) {
-        for (let t of this.tasks) {
+        for (const t of this.tasks) {
           if (t.task === task) {
             t.dead = true;
             this.tasks.remove(t);
@@ -19218,7 +19253,7 @@ var init_anim = __esm({
       }
       start() {
         this.timer = window.setInterval(() => {
-          for (let t of this.tasks) {
+          for (const t of this.tasks) {
             try {
               t.task();
             } catch (error2) {
@@ -19231,7 +19266,7 @@ var init_anim = __esm({
           }
           for (let i = 0; i < this.tasks.length; i++) {
             if (this.tasks[i].done) {
-              let t = this.tasks[i];
+              const t = this.tasks[i];
               this.tasks.remove(t);
               i--;
               try {
@@ -19298,7 +19333,7 @@ var init_anim = __esm({
       }
       start(animator, done) {
         this.time = animator.time;
-        let value = this.object[this.key];
+        const value = this.object[this.key];
         if (Array.isArray(value)) {
           this.startValue = list2(value);
         } else {
@@ -19307,7 +19342,7 @@ var init_anim = __esm({
       }
       exec(animator, done) {
         let t = animator.time - this.time;
-        let ms = this.ms;
+        const ms = this.ms;
         if (t > ms) {
           done();
           t = ms;
@@ -19315,9 +19350,9 @@ var init_anim = __esm({
         t /= ms;
         t = this.curve.evaluate(t);
         if (Array.isArray(this.startValue)) {
-          let value = this.object[this.key];
-          let sv = this.startValue;
-          let tv = this.value;
+          const value = this.object[this.key];
+          const sv = this.startValue;
+          const tv = this.value;
           for (let i = 0; i < sv.length; i++) {
             if (value[i] === void 0 || tv[i] === void 0) {
               continue;
@@ -19389,12 +19424,12 @@ var init_anim = __esm({
         return this;
       }
       goto(key, val, timeMs, curve = "ease") {
-        let cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
+        const cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
         this.commands.push(cmd);
         return this;
       }
       set(key, val, time) {
-        let cmd = new SetCommand(this.owner, key, val);
+        const cmd = new SetCommand(this.owner, key, val);
         this.commands.push(cmd);
         return this;
       }
@@ -19421,14 +19456,14 @@ var init_anim = __esm({
         if (this._done) {
           throw new Error("animation wasn't properly cleaned up");
         }
-        let dt = time_ms() - this.last;
+        const dt = time_ms() - this.last;
         this.time += dt;
         this.last = time_ms();
         if (this.commands.length === 0) {
           this.end();
           return;
         }
-        let cmd = this.commands[0];
+        const cmd = this.commands[0];
         let done = false;
         function donecb() {
           done = true;
@@ -19443,7 +19478,7 @@ var init_anim = __esm({
           done = true;
           print_stack2(error2);
         }
-        for (let cb of this.commands[0].cbs) {
+        for (const cb of this.commands[0].cbs) {
           try {
             cb();
           } catch (error2) {
@@ -19451,7 +19486,7 @@ var init_anim = __esm({
           }
         }
         if (done) {
-          for (let cb of this.commands[0].end_cbs) {
+          for (const cb of this.commands[0].end_cbs) {
             try {
               cb();
             } catch (error2) {
@@ -19641,10 +19676,9 @@ function closestPoint(p, curve, mode) {
   const steps = 5;
   let s = 0;
   const ds = 1 / steps;
-  const ri = 0;
   for (let i = 0; i < steps; i++, s += ds) {
-    const c1 = curve.evaluate(s);
-    const c2 = curve.evaluate(s + ds);
+    curve.evaluate(s);
+    curve.evaluate(s + ds);
   }
 }
 function normal_poly(vs) {
@@ -19820,19 +19854,15 @@ function closest_point_on_tri(p, v1, v2, v3, n, uvw) {
     ret2.uv.zero();
     return ret2;
   }
-  let ax3;
   if (ax >= ay && ax >= az) {
     ax1 = 1;
     ax2 = 2;
-    ax3 = 0;
   } else if (ay >= ax && ay >= az) {
     ax1 = 0;
     ax2 = 2;
-    ax3 = 1;
   } else {
     ax1 = 0;
     ax2 = 1;
-    ax3 = 2;
   }
   const mat = cpt_mat;
   const mat2 = cpt_mat2;
@@ -19976,7 +20006,6 @@ function dist_to_tri_v3_old(co, v1, v2, v3, no) {
     w = Math.min(Math.max(w, 0), 1);
     let sum = uv[0] + uv[1] + w;
     sum = sum !== 0 ? 1 / sum : 0;
-    w *= sum;
     uv[0] *= sum;
     uv[1] *= sum;
     pp.zero();
@@ -20033,17 +20062,12 @@ function dist_to_tri_v3_sqr(p, v1, v2, v3, n) {
   const cz = v3arr[axis3] - az;
   const bx2 = bx * bx;
   const by2 = by * by;
-  const bz2 = bz * bz;
   const cx2 = cx * cx;
   const cy2 = cy * cy;
-  const cz2 = cz * cz;
   const x1 = parr[axis1] - ax;
   const y1 = parr[axis2] - ay;
   const z1 = parr[axis3] - az;
   const testf = 0;
-  const l1 = Math.sqrt(bx ** 2 + by ** 2);
-  const l2 = Math.sqrt((cx - bx) ** 2 + (cy - by) ** 2);
-  const l3 = Math.sqrt(cx ** 2 + cy ** 2);
   let s1 = x1 * by - y1 * bx < testf;
   let s2 = (x1 - bx) * (cy - by) - (y1 - by) * (cx - bx) < testf;
   let s3 = x1 * -cy + y1 * cx < testf;
@@ -20091,7 +20115,6 @@ function dist_to_tri_v3_sqr(p, v1, v2, v3, n) {
       lx = x1 - bx;
       ly = y1 - by;
       lz = z1 - bz;
-      dis = lx * lx + ly * ly;
       return lx * lx + ly * ly + lz * lz;
     case 2:
       div = (bx - cx) ** 2 + (by - cy) ** 2;
@@ -20248,7 +20271,7 @@ function aabb_intersect_2d(pos1, size1, pos2, size2) {
 function aabb_intersect_3d(min1, max1, min2, max2) {
   let tot = 0;
   for (let _i = 0; _i < 2; _i++) {
-    let i = _i;
+    const i = _i;
     if (max1[i] >= min2[i] && min1[i] <= max2[i]) {
       tot++;
     }
@@ -20359,7 +20382,7 @@ function simple_tri_aabb_isect(v1, v2, v3, min, max) {
   $vs_simple_tri_aabb_isect[1] = v2;
   $vs_simple_tri_aabb_isect[2] = v3;
   for (let _i = 0; _i < 3; _i++) {
-    let i = _i;
+    const i = _i;
     let isect = true;
     for (let j = 0; j < 3; j++) {
       if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i])
@@ -20454,7 +20477,7 @@ function colinear(a2, b, c, limit = 22e-17, distLimit = 1e-5 ** 2) {
   const carr = c;
   const axes = a2.length;
   for (let _i = 0; _i < axes; _i++) {
-    let i = _i;
+    const i = _i;
     t1arr[i] = barr[i] - aarr[i];
     t2arr[i] = carr[i] - aarr[i];
   }
@@ -20561,7 +20584,6 @@ function aabb_sphere_isect_2d(p, r, min, max) {
   const v2 = _asi2d_v2;
   const v3 = _asi2d_v3;
   const mvec = _asi2d_v4;
-  const v4 = _asi2d_v5;
   const lp = _asi2d_v6.load(p);
   v1.load(lp);
   v2.load(lp);
@@ -20641,11 +20663,10 @@ function aabb_sphere_isect(p, r, min, max) {
   }
   const p2 = aabb_sphere_isect_vs.next().load(lp);
   const p2arr = p2;
-  const lparr = lp;
   const lminarr = lmin;
   const lmaxarr = lmax;
   for (let _i = 0; _i < 3; _i++) {
-    let i = _i;
+    const i = _i;
     p2.load(lp);
     const i2 = (i + 1) % 3;
     const i3 = (i + 2) % 3;
@@ -20706,7 +20727,6 @@ function aabb_sphere_dist(p, min, max) {
   }
   const p2 = aabb_sphere_isect_vs.next().load(lp);
   const p2arr = p2;
-  const lparr = lp;
   const lminarr = lmin;
   const lmaxarr = lmax;
   for (let i = 0; i < 3; i++) {
@@ -20747,7 +20767,6 @@ function normal_tri(v1, v2, v3) {
   let x1 = v2[0] - v1[0];
   let y1 = v2[1] - v1[1];
   let z1 = v2[2] - v1[2];
-  let x2 = v3[0] - v1[0];
   let y2 = v3[1] - v1[1];
   let z2 = v3[2] - v1[2];
   if (!isNum(x1 + y1 + z1 + z2 + y2 + z2)) {
@@ -20759,7 +20778,7 @@ function normal_tri(v1, v2, v3) {
   x1 = v2[0] - v1[0];
   y1 = v2[1] - v1[1];
   z1 = v2[2] - v1[2];
-  x2 = v3[0] - v1[0];
+  const x2 = v3[0] - v1[0];
   y2 = v3[1] - v1[1];
   z2 = v3[2] - v1[2];
   x3 = y1 * z2 - z1 * y2;
@@ -20846,7 +20865,7 @@ function dist_to_line_2d(p, v1, v2, clip2 = true, closest_co_out, t_out) {
     closest_co_out[1] = n[1];
   }
   if (t_out !== void 0) {
-    t_out = t;
+    t_out[0] = t;
   }
   return n.vectorDistance(p);
 }
@@ -20973,13 +20992,13 @@ function circ_from_line_tan(a2, b, t) {
 function circ_from_line_tan_2d(a2, b, t) {
   const la = _circ_from_line_tan2d_vs.next().load2(a2);
   const lb = _circ_from_line_tan2d_vs.next().load2(b);
-  const lt2 = _circ_from_line_tan2d_vs.next().load2(t);
-  la[2] = lb[2] = lt2[2] = 0;
+  const lt = _circ_from_line_tan2d_vs.next().load2(t);
+  la[2] = lb[2] = lt[2] = 0;
   const p1 = _circ_from_line_tan2d_vs.next();
   const t2 = _circ_from_line_tan2d_vs.next();
   const n1 = _circ_from_line_tan2d_vs.next();
   p1.load(la).sub(lb);
-  t2.load(lt2).normalize();
+  t2.load(lt).normalize();
   n1.load(p1).normalize().cross(t2).cross(t2).normalize();
   if (1) {
     let cx;
@@ -20989,8 +21008,8 @@ function circ_from_line_tan_2d(a2, b, t) {
     const y1 = la[1];
     const x2 = lb[0];
     const y2 = lb[1];
-    const tanx1 = lt2[0];
-    const tany1 = lt2[1];
+    const tanx1 = lt[0];
+    const tany1 = lt[1];
     const div = 4 * ((x1 - x2) * tany1 - (y1 - y2) * tanx1) ** 2;
     const div2 = 2 * (x1 - x2) * tany1 - 2 * (y1 - y2) * tanx1;
     if (Math.abs(div) < 1e-4 || Math.abs(div2) < 1e-4) {
@@ -21054,13 +21073,13 @@ function get_tri_circ(a2, b, c) {
   const v1arr = v1;
   const v2arr = v2;
   for (let _i = 0; _i < 3; _i++) {
-    let i = _i;
+    const i = _i;
     e1arr[i] = barr[i] - aarr[i];
     e2arr[i] = carr[i] - barr[i];
     e3arr[i] = aarr[i] - carr[i];
   }
   for (let _i = 0; _i < 3; _i++) {
-    let i = _i;
+    const i = _i;
     p1arr[i] = (aarr[i] + barr[i]) * 0.5;
     p2arr[i] = (carr[i] + barr[i]) * 0.5;
   }
@@ -21078,13 +21097,12 @@ function get_tri_circ(a2, b, c) {
   const p12arr = _gtc_p12;
   const p22arr = _gtc_p22;
   for (let _i = 0; _i < 3; _i++) {
-    let i = _i;
+    const i = _i;
     p12arr[i] = p1[i] + v1[i];
     p22arr[i] = p2[i] + v2[i];
   }
   const isect = line_isect(p1, _gtc_p12, p2, _gtc_p22);
   cent = isect[0];
-  type = isect[1];
   e1.load(a2);
   e2.load(b);
   e3.load(c);
@@ -21139,7 +21157,7 @@ function minmax_verts(verts) {
   const max = new Vector3([-1e12, -1e12, -1e12]);
   for (const v of verts) {
     for (let _i = 0; _i < 3; _i++) {
-      let i = _i;
+      const i = _i;
       min[i] = Math.min(min[i], v.co[i]);
       max[i] = Math.max(max[i], v.co[i]);
     }
@@ -21196,7 +21214,6 @@ function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   const n = planenormal;
   const r = rayorigin;
   const v = raynormal;
-  const d = p.vectorLength();
   const t = -(r.dot(n) - p.dot(n)) / v.dot(n);
   _isrp_ret.load(v);
   _isrp_ret.mulScalar(t);
@@ -21244,7 +21261,7 @@ function point_in_hex(p, boxverts, boxfacecents, boxfacenormals) {
   if (!boxfacecents) {
     boxfacecents = boxfaces_tmp;
     for (let i = 0; i < 6; i++) {
-      let [a2, b, c, d] = boxfaces_table[i];
+      const [a2, b, c, d] = boxfaces_table[i];
       const v1 = boxverts[a2];
       const v2 = boxverts[b];
       const v3 = boxverts[c];
@@ -21255,7 +21272,7 @@ function point_in_hex(p, boxverts, boxfacecents, boxfacenormals) {
   if (!boxfacenormals) {
     boxfacenormals = boxfacenormals_tmp;
     for (let i = 0; i < 6; i++) {
-      let [a2, b, c, d] = boxfaces_table[i];
+      const [a2, b, c, d] = boxfaces_table[i];
       const v1 = boxverts[a2];
       const v2 = boxverts[b];
       const v3 = boxverts[c];
@@ -21275,7 +21292,6 @@ function point_in_hex(p, boxverts, boxfacecents, boxfacenormals) {
   for (let i = 0; i < 6; i++) {
     t1.load(p).sub(boxfacecents[i]);
     t2.load(cent).sub(boxfacecents[i]);
-    const n = boxfacenormals[i];
     if (1) {
       t1.normalize();
       t2.normalize();
@@ -21295,7 +21311,6 @@ function trilinear_co(p, boxverts) {
   u.loadXYZ(0, 0.5, 1);
   v.loadXYZ(0, 0.5, 1);
   w.loadXYZ(0, 0.5, 1);
-  const uvw2 = tril_co_tmps.next();
   for (let step = 0; step < 4; step++) {
     uvw.loadXYZ(u[1], v[1], w[1]);
     let mini = void 0;
@@ -21359,7 +21374,6 @@ function trilinear_co(p, boxverts) {
 }
 function trilinear_co2(p, boxverts, uvw) {
   const grad = tril_co_tmps.next();
-  const parr = p;
   const uvwarr = uvw;
   const gradarr = grad;
   const df = 1e-5;
@@ -21372,7 +21386,7 @@ function trilinear_co2(p, boxverts, uvw) {
     let totg = 0;
     for (let _i = 0; _i < 3; _i++) {
       let axis_error = 0;
-      let i = _i;
+      const i = _i;
       if (uvwarr[i] < 0) {
         axis_error = -uvwarr[i];
       } else if (uvwarr[i] > 1) {
@@ -21457,7 +21471,7 @@ function angle_between_vecs(v1, vcent, v2) {
     return Math.acos(d);
   }
 }
-var dtvtmps, quad_co_rets2, ClosestModes, advs, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_v4, cpt_v5, cpt_v6, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, tri_area_temps, aabb_intersect_vs, aabb_intersect_rets, set2, $_mh, $_swapt, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v1, _asi_v2, _asi_v3, _asi_v4, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v5, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, $e1_normal_tri, $e3_normal_tri, $e2_normal_tri, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _q3, _li_vi, dt2l_v1, dt2l_v2, dt2l_v3, dt2l_v4, dt2l_v5, dt3l_v1, dt3l_v2, dt3l_v3, dt3l_v4, dt3l_v5, _cplw_vs4, _cplw_vs3, _cplw_vs2, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos, sin, _sh_minv, _sh_maxv, _sh_start, _sh_end, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
+var dtvtmps, quad_co_rets2, ClosestModes, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, aabb_intersect_vs, aabb_intersect_rets, $_mh, $_swapt, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _li_vi, dt2l_v1, dt2l_v3, dt2l_v4, dt2l_v5, _cplw_vs4, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos, sin, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
 var init_math = __esm({
   "scripts/path-controller/util/math.ts"() {
     "use strict";
@@ -21473,7 +21487,6 @@ var init_math = __esm({
       ENDPOINTS: 3,
       ALL: 4
     };
-    advs = cachering2.fromConstructor(Vector4, 128);
     AbstractCurve = class {
       evaluate(t) {
         throw new Error("implement me");
@@ -21511,16 +21524,12 @@ var init_math = __esm({
     cpt_v1 = new Vector3();
     cpt_v2 = new Vector3();
     cpt_v3 = new Vector3();
-    cpt_v4 = new Vector3();
-    cpt_v5 = new Vector3();
-    cpt_v6 = new Vector3();
     cpt_p = new Vector3();
     cpt_n = new Vector3();
     cpt_mat = new Matrix4();
     cpt_mat2 = new Matrix4();
     cpt_b = new Vector4();
     _dt3s_n = new Vector3();
-    tri_area_temps = cachering2.fromConstructor(Vector3, 64);
     aabb_intersect_vs = cachering2.fromConstructor(Vector2, 32);
     aabb_intersect_rets = new cachering2(() => {
       return {
@@ -21528,7 +21537,6 @@ var init_math = __esm({
         size: new Vector2()
       };
     }, 512);
-    set2 = set;
     feps = 222e-18;
     COLINEAR = 1;
     LINECROSS = 2;
@@ -21695,45 +21703,28 @@ var init_math = __esm({
     line_line_isect_rects4 = cachering2.fromConstructor(Vector4, 32);
     _tmps_cn = cachering2.fromConstructor(Vector3, 64);
     _rets_cn = cachering2.fromConstructor(Vector3, 64);
-    _asi_v1 = new Vector3();
-    _asi_v2 = new Vector3();
-    _asi_v3 = new Vector3();
-    _asi_v4 = new Vector3();
     _asi_v5 = new Vector3();
     _asi_v6 = new Vector3();
     _asi2d_v1 = new Vector2();
     _asi2d_v2 = new Vector2();
     _asi2d_v3 = new Vector2();
     _asi2d_v4 = new Vector2();
-    _asi2d_v5 = new Vector2();
     _asi2d_v6 = new Vector2();
     asi_rect = new Array(8);
     for (let i = 0; i < 8; i++) {
       asi_rect[i] = new Vector3();
     }
     aabb_sphere_isect_vs = cachering2.fromConstructor(Vector3, 64);
-    $e1_normal_tri = new Vector3();
-    $e3_normal_tri = new Vector3();
-    $e2_normal_tri = new Vector3();
     _normal_tri_rets = cachering2.fromConstructor(Vector3, 64);
     $n2_normal_quad = new Vector3();
     _q1 = new Vector3();
     _q2 = new Vector3();
-    _q3 = new Vector3();
     _li_vi = new Vector3();
     dt2l_v1 = new Vector2();
-    dt2l_v2 = new Vector2();
     dt2l_v3 = new Vector2();
     dt2l_v4 = new Vector2();
     dt2l_v5 = new Vector2();
-    dt3l_v1 = new Vector3();
-    dt3l_v2 = new Vector3();
-    dt3l_v3 = new Vector3();
-    dt3l_v4 = new Vector3();
-    dt3l_v5 = new Vector3();
     _cplw_vs4 = cachering2.fromConstructor(Vector4, 64);
-    _cplw_vs3 = cachering2.fromConstructor(Vector3, 64);
-    _cplw_vs2 = cachering2.fromConstructor(Vector2, 64);
     _closest_point_on_line_cache = cachering2.fromConstructor(Vector3, 64);
     _closest_point_rets = new cachering2(function() {
       return [new Vector3(), 0];
@@ -21761,15 +21752,10 @@ var init_math = __esm({
     }, 64);
     cos = Math.cos;
     sin = Math.sin;
-    _sh_minv = new Vector3();
-    _sh_maxv = new Vector3();
-    _sh_start = [];
-    _sh_end = [];
     static_cent_gbw = new Vector3();
     PlaneOps = class {
       axis;
       constructor(normal) {
-        const no = normal;
         this.axis = [0, 1, 2];
         this.reset_axis(normal);
       }
@@ -21816,7 +21802,6 @@ var init_math = __esm({
         v3 = new Vector3([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
         v4 = new Vector3([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
         const ret = line_isect(v1, v2, v3, v4, true);
-        const vi = ret[0];
         if (ret[1] === LINECROSS) {
           ret[0].load(orig2).sub(orig1).mulScalar(ret[2]).add(orig1);
         }
@@ -21850,7 +21835,6 @@ var init_math = __esm({
         return colinear(v1, v2, v3);
       }
       get_boundary_winding(points) {
-        const ax = this.axis;
         const cent = new Vector3();
         if (points.length === 0) return false;
         for (let i = 0; i < points.length; i++) {
@@ -23476,10 +23460,10 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getElasticIn(amplitude, period) {
-        var pi2 = Math.PI * 2;
+        const pi2 = Math.PI * 2;
         return function(t) {
           if (t == 0 || t == 1) return t;
-          var s = period / pi2 * Math.asin(1 / amplitude);
+          const s = period / pi2 * Math.asin(1 / amplitude);
           return -(amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
         };
       }
@@ -23499,10 +23483,10 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getElasticOut(amplitude, period) {
-        var pi2 = Math.PI * 2;
+        const pi2 = Math.PI * 2;
         return function(t) {
           if (t == 0 || t == 1) return t;
-          var s = period / pi2 * Math.asin(1 / amplitude);
+          const s = period / pi2 * Math.asin(1 / amplitude);
           return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * pi2 / period) + 1;
         };
       }
@@ -23522,9 +23506,9 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getElasticInOut(amplitude, period) {
-        var pi2 = Math.PI * 2;
+        const pi2 = Math.PI * 2;
         return function(t) {
-          var s = period / pi2 * Math.asin(1 / amplitude);
+          const s = period / pi2 * Math.asin(1 / amplitude);
           if ((t *= 2) < 1)
             return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
           return amplitude * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * pi2 / period) * 0.5 + 1;
@@ -24482,7 +24466,7 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_classes, tool_idgen, lt, lastmsg, lcount, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
@@ -24501,7 +24485,6 @@ var init_controller = __esm({
     init_toolpath();
     init_controller_abstract();
     init_controller_base();
-    init_toolsys();
     init_toolprop();
     PUTLParseError2 = PUTLParseError;
     tk = (name2, re, func) => new tokdef2(name2, re, func);
@@ -24541,12 +24524,8 @@ var init_controller = __esm({
       parserStack[i] = pathParser.copy();
     }
     parserStackCur = 0;
-    tool_classes = ToolClasses;
     tool_idgen = 1;
     Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
-    lt = time_ms();
-    lastmsg = void 0;
-    lcount = 0;
     reportstack = ["api"];
     DataStruct2 = class _DataStruct {
       members;
@@ -24683,14 +24662,12 @@ var init_controller = __esm({
             type = Vec2Property;
             break;
           case 3:
-            type = Vec3Property;
           case 4:
             type = Vec4Property;
         }
         if (type === void 0) {
           throw new DataPathError("Invalid size for vectorList; expected 2 3 or 4");
         }
-        const prop = new type(void 0, apiname, uiname, description);
         const pstruct = new _DataStruct(void 0, "Vector");
         pstruct.vec3("", "co", "Coords", "Coordinates");
         const ret = this.list(path, apiname, {
@@ -25070,7 +25047,7 @@ An example of a more complicated expression might be:
       }
       resolvePath(ctx, inpath, ignoreExistence = false, dstruct) {
         const parser3 = parserStack[parserStackCur++];
-        let ret = void 0;
+        let ret;
         if (inpath[0] === "/") {
           inpath = inpath.slice(1, inpath.length).trim();
         }
@@ -25155,7 +25132,6 @@ An example of a more complicated expression might be:
           if (dpath === void 0) {
             if (key === "length" && prop !== void 0 && prop instanceof DataList) {
               prop.getLength(this, obj);
-              key = "length";
               prop = DummyIntProperty;
               prop.name = "length";
               prop.flag = PropFlags.READ_ONLY;
@@ -25471,7 +25447,7 @@ An example of a more complicated expression might be:
         return def;
       }
       getToolPathHotkey(ctx, toolpath) {
-        const { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
+        const { path, hotkey } = this._parsePathOverrides(toolpath);
         if (hotkey) {
           return hotkey;
         }
@@ -25592,9 +25568,7 @@ An example of a more complicated expression might be:
 
 // scripts/path-controller/util/colorutils.ts
 function rgb_to_hsv(r, g, b) {
-  let computedH = 0;
-  let computedS = 0;
-  let computedV = 0;
+  let computedV;
   if (r == null || g == null || b == null || isNaN(r) || isNaN(g) || isNaN(b)) {
     throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
   }
@@ -25608,21 +25582,20 @@ function rgb_to_hsv(r, g, b) {
   }
   const d = r === minRGB ? g - b : b === minRGB ? r - g : b - r;
   const h = r === minRGB ? 3 : b === minRGB ? 1 : 5;
-  computedH = 60 * (h - d / (maxRGB - minRGB)) / 360;
-  computedS = (maxRGB - minRGB) / maxRGB;
+  const computedH = 60 * (h - d / (maxRGB - minRGB)) / 360;
+  const computedS = (maxRGB - minRGB) / maxRGB;
   computedV = maxRGB;
   const ret = rgb_to_hsv_rets.next();
   ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
   return ret;
 }
 function hsv_to_rgb(h, s, v) {
-  let c = 0, m = 0, x = 0;
   const ret = hsv_to_rgb_rets.next();
   ret[0] = ret[1] = ret[2] = 0;
   h *= 360;
-  c = v * s;
-  x = c * (1 - Math.abs(h / 60 % 2 - 1));
-  m = v - c;
+  const c = v * s;
+  const x = c * (1 - Math.abs(h / 60 % 2 - 1));
+  const m = v - c;
   let color;
   function RgbF_Create(r, g, b) {
     ret[0] = r;
@@ -25720,7 +25693,7 @@ var init_const = __esm({
           return;
         }
         const cb = navigator.clipboard;
-        if (!cb || !cb.read) {
+        if (!cb?.read) {
           return;
         }
         cb.read().then((data) => {
@@ -25750,7 +25723,7 @@ var init_const = __esm({
         }
         for (const m of desiredMimes) {
           const cb = _clipboards[m];
-          if (cb && cb.data) {
+          if (cb?.data) {
             return cb;
           }
         }
@@ -25892,7 +25865,7 @@ var init_cssfont = __esm({
       }
       get size() {
         if (isMobile()) {
-          let mul = 1;
+          const mul = 1;
           if (mul) {
             return this._size * mul;
           }
@@ -25908,7 +25881,7 @@ var init_cssfont = __esm({
         b.weight = this.weight;
       }
       copy() {
-        let ret = new _CSSFont();
+        const ret = new _CSSFont();
         this.copyTo(ret);
         return ret;
       }
@@ -26824,6 +26797,7 @@ var init_icon_enum = __esm({
       TREE_COLLAPSE: a++,
       ZOOM_OUT: a++,
       ZOOM_IN: a++,
+      // eslint-disable-next-line no-useless-assignment
       LARGE_X: a++
     };
     Icons.ENUM_CHECKED = Icons.CHECKED;
@@ -26836,18 +26810,18 @@ function _setUIBase(uibase) {
   UIBase = uibase;
 }
 function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
-  let object = objectIn;
-  let cls = object.constructor;
+  const object = objectIn;
+  const cls = object.constructor;
   if (!cls[AspectKeys]) {
     let validProperty2 = function(obj, key) {
-      let descr = Object.getOwnPropertyDescriptor(obj, key);
+      const descr = Object.getOwnPropertyDescriptor(obj, key);
       if (descr && (descr.get || descr.set)) {
         return false;
       }
       let p2 = obj.constructor;
       do {
         if (p2.prototype) {
-          let descr2 = Object.getOwnPropertyDescriptor(
+          const descr2 = Object.getOwnPropertyDescriptor(
             p2.prototype,
             key
           );
@@ -26867,8 +26841,8 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
       keys2 = keys2.concat(Reflect.ownKeys(p));
       p = Object.getPrototypeOf(p);
     }
-    let keySet = new Set(keys2);
-    for (let k of keySet) {
+    const keySet = new Set(keys2);
+    for (const k of keySet) {
       let v;
       if (typeof k === "string" && k.startsWith("_")) {
         continue;
@@ -26894,12 +26868,12 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
     }
   }
   object.__aspect_methods = /* @__PURE__ */ new Set();
-  for (let k of cls[AspectKeys]) {
+  for (const k of cls[AspectKeys]) {
     AfterAspect.bind(object, k);
   }
 }
 function clearAspectCallbacks(obj) {
-  for (let key of obj.__aspect_methods) {
+  for (const key of obj.__aspect_methods) {
     obj[key].clear();
   }
 }
@@ -26932,16 +26906,16 @@ var init_aspect = __esm({
         this.chain = [[owner[key], void 0]];
         this.chain2 = [[owner[key], void 0]];
         this.root = [[owner[key], void 0]];
-        let this2 = this;
-        let method = this._method = function() {
-          let chain = this2.chain;
-          let chain2 = this2.chain2;
+        const this2 = this;
+        const method = this._method = function() {
+          const chain = this2.chain;
+          const chain2 = this2.chain2;
           chain2.length = chain.length;
           for (let i = 0; i < chain.length; i++) {
             chain2[i] = chain[i];
           }
           for (let i = 0; i < chain2.length; i++) {
-            let [cb, node, once] = chain2[i];
+            const [cb, node, once] = chain2[i];
             if (node) {
               let isDead = !node.isConnected;
               if (UIBase && node instanceof UIBase) {
@@ -26953,14 +26927,14 @@ var init_aspect = __esm({
                 continue;
               }
             }
-            if (once && chain.indexOf(chain2[i]) >= 0) {
+            if (once && chain.includes(chain2[i])) {
               chain.remove(chain2[i]);
             }
-            if (cb && cb.apply) {
+            if (cb?.apply) {
               method.value = cb.apply(this, arguments);
             }
           }
-          let ret = method.value;
+          const ret = method.value;
           method.value = void 0;
           return ret;
         };
@@ -26977,7 +26951,7 @@ var init_aspect = __esm({
         return new _AfterAspect(owner, key);
       }
       remove(cb) {
-        for (let item of this.chain) {
+        for (const item of this.chain) {
           if (item[0] === cb) {
             this.chain.remove(item);
             return true;
@@ -27099,7 +27073,7 @@ var init_eventdag = __esm({
         if (this.type === SocketTypes.INPUT) {
           this.node.flagUpdate();
         } else {
-          for (let sockb of this.edges) {
+          for (const sockb of this.edges) {
             sockb.flag |= SocketFlags.UPDATE;
             sockb.node.flagUpdate();
           }
@@ -27118,7 +27092,7 @@ var init_eventdag = __esm({
         return this;
       }
       hasNode(node) {
-        for (let sockb of this.edges) {
+        for (const sockb of this.edges) {
           if (sockb.node === node || sockb.node.owner === node) {
             return true;
           }
@@ -27126,12 +27100,12 @@ var init_eventdag = __esm({
         return false;
       }
       has(sockb) {
-        return this.edges.indexOf(sockb) >= 0;
+        return this.edges.includes(sockb);
       }
-      disconnect(sockb = void 0) {
+      disconnect(sockb) {
         this.flagResort();
         if (sockb === void 0) {
-          for (let sock of this.edges) {
+          for (const sock of this.edges) {
             sock.flagUpdate();
             sock.edges.remove(this);
           }
@@ -27186,15 +27160,15 @@ var init_eventdag = __esm({
       }
       constructor(owner) {
         this.owner = owner;
-        let cls = owner.constructor;
-        let getSockets = (key) => {
-          let socks = {};
+        const cls = owner.constructor;
+        const getSockets = (key) => {
+          const socks = {};
           let p = cls;
           while (p) {
             if (p.graphNodeDef) {
-              let graphNodeDef = p.graphNodeDef;
-              let socksDef = graphNodeDef[key] || {};
-              for (let k in socksDef) {
+              const graphNodeDef = p.graphNodeDef;
+              const socksDef = graphNodeDef[key] || {};
+              for (const k in socksDef) {
                 if (!(k in socks)) {
                   socks[k] = socksDef[k].copy();
                   socks[k].name = k;
@@ -27240,7 +27214,7 @@ var init_eventdag = __esm({
       constructor() {
       }
       add(node) {
-        let eventNode = this.eventNode(node);
+        const eventNode = this.eventNode(node);
         eventNode.graph = this;
         this.nodeIdMap.set(eventNode.id, eventNode);
         this.nodes.push(eventNode);
@@ -27248,7 +27222,7 @@ var init_eventdag = __esm({
         this.flagUpdate(eventNode);
       }
       has(node) {
-        let eventNode = this.eventNode(node);
+        const eventNode = this.eventNode(node);
         return this.nodeIdMap.has(eventNode.id);
       }
       eventNode(node) {
@@ -27262,7 +27236,7 @@ var init_eventdag = __esm({
         return node;
       }
       remove(node) {
-        let eventNode = this.eventNode(node);
+        const eventNode = this.eventNode(node);
         if (eventNode === void 0) {
           throw new Error("EventGraph.prototype.remove(): node was undefined");
         }
@@ -27270,7 +27244,7 @@ var init_eventdag = __esm({
           throw new Error("Node is not in event graph");
         }
         this.nodeIdMap.delete(eventNode.id);
-        for (let sock of Array.from(eventNode.allsockets)) {
+        for (const sock of Array.from(eventNode.allsockets)) {
           this.sockIdMap.delete(sock.id);
           try {
             sock.disconnect();
@@ -27301,20 +27275,20 @@ var init_eventdag = __esm({
       sort() {
         console.warn("Sorting Graph");
         this.flag &= ~RecalcFlags2.RESORT;
-        for (let n of this.nodes) {
+        for (const n of this.nodes) {
           n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
         }
-        let sortlist = this.sortlist;
+        const sortlist = this.sortlist;
         this.sortlist.length = 0;
-        let dosort = (n) => {
+        const dosort = (n) => {
           if (n.flag & NodeFlags.SORT_TAG2) {
             console.error("Cycle in event dag!", n);
             return;
           }
           n.flag |= NodeFlags.SORT_TAG2;
-          for (let [k, socka] of Object.entries(n.inputs)) {
-            for (let sockb of socka.edges) {
-              let n2 = sockb.node;
+          for (const socka of Object.values(n.inputs)) {
+            for (const sockb of socka.edges) {
+              const n2 = sockb.node;
               if (!(n2.flag & NodeFlags.SORT_TAG1)) {
                 dosort(n2);
               }
@@ -27324,16 +27298,16 @@ var init_eventdag = __esm({
           n.flag |= NodeFlags.SORT_TAG1;
           n.sortIndex = sortlist.length;
           sortlist.push(n);
-          for (let [k, socka] of Object.entries(n.outputs)) {
-            for (let sockb of socka.edges) {
-              let n2 = sockb.node;
+          for (const socka of Object.values(n.outputs)) {
+            for (const sockb of socka.edges) {
+              const n2 = sockb.node;
               if (!(n2.flag & NodeFlags.SORT_TAG1)) {
                 dosort(n2);
               }
             }
           }
         };
-        for (let n of this.nodes) {
+        for (const n of this.nodes) {
           if (!(n.flag & NodeFlags.SORT_TAG1)) {
             dosort(n);
           }
@@ -27358,8 +27332,8 @@ var init_eventdag = __esm({
         }
         console.warn("Executing Graph");
         this.#skipQueueExec++;
-        let sortlist = this.sortlist;
-        for (let n of sortlist) {
+        const sortlist = this.sortlist;
+        for (const n of sortlist) {
           if (!(n.flag & NodeFlags.UPDATE)) {
             continue;
           }
@@ -27370,14 +27344,14 @@ var init_eventdag = __esm({
             console.error("Error during event graph execution");
           }
           n.flag &= ~NodeFlags.UPDATE;
-          for (let k in n.inputs) {
-            let sock = n.inputs[k];
+          for (const k in n.inputs) {
+            const sock = n.inputs[k];
             sock.flag &= ~SocketFlags.UPDATE;
           }
-          for (let k in n.outputs) {
-            let sock = n.outputs[k];
+          for (const k in n.outputs) {
+            const sock = n.outputs[k];
             if (sock.flag & SocketFlags.UPDATE) {
-              for (let sockb of sock.edges) {
+              for (const sockb of sock.edges) {
                 sockb.flag |= SocketFlags.UPDATE;
                 sockb.node.flag |= NodeFlags.UPDATE;
               }
@@ -27457,25 +27431,25 @@ var init_eventdag = __esm({
         return this;
       }
       get value() {
-        let bind = this.#binding;
+        const bind = this.#binding;
         return bind.obj ? bind.obj[bind.key] : void 0;
       }
       set value(v) {
-        let old = this.value;
+        const old = this.value;
         if (this.#callbacks.length > 0) {
-          for (let cb of this.#callbacks) {
+          for (const cb of this.#callbacks) {
             v = cb(v, old);
           }
         }
         if (this.#invert && (typeof v === "number" || typeof v === "boolean" || typeof v === "undefined")) {
           v = !v;
         } else if (this.#invert && typeof v === "string") {
-          let s = v.toLowerCase().trim();
+          const s = v.toLowerCase().trim();
           if (s in strBoolMap) {
             v = strBoolMap[s];
           }
         }
-        let bind = this.#binding;
+        const bind = this.#binding;
         if (bind.obj) {
           bind.obj[bind.key] = v;
         } else {
@@ -29733,10 +29707,9 @@ var init_ui_base = __esm({
       pickElements(x, y, args = {}, marginy = 0, nodeclass = _UIBase, excluded_classes) {
         nodeclass = args.nodeclass || _UIBase;
         excluded_classes = args.excluded_classes;
-        const clip2 = args.clip;
         x -= window.scrollX;
         y -= window.scrollY;
-        let elems = this.shadow.elementsFromPoint(x, y);
+        const elems = this.shadow.elementsFromPoint(x, y);
         const excluded = (n) => excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
         const visit = /* @__PURE__ */ new WeakSet();
         const result = /* @__PURE__ */ new Set();
@@ -31423,9 +31396,7 @@ var init_ui_button = __esm({
         const pad = this.getDefault("padding") * dpi;
         const ts = font.size * dpi;
         const text2 = this._genLabel();
-        const w = this.dom.width;
         const h = this.dom.height;
-        const tw = measureText(this, text2, void 0, void 0, ts, font).width;
         const cx = pad * 0.5 + this._leftPad * dpi;
         const cy = ts + (h - ts) / 3;
         drawText(this, ~~cx, ~~cy, text2, {
@@ -31461,7 +31432,7 @@ function loadFile(_filename = "unnamed", exts = []) {
   input.setAttribute("accept", acceptStr);
   return new Promise((accept, reject) => {
     input.onchange = function() {
-      if (input.files === null || input.files.length !== 1) {
+      if (input.files?.length !== 1) {
         reject("file load error");
         return;
       }
@@ -31581,7 +31552,8 @@ function createMenu(ctx, title, templ) {
       })(item[1], id2);
     } else if (typeof item === "object") {
       const objItem = item;
-      let { name: name2, callback, hotkey, icon, tooltip } = objItem;
+      const { name: name2, callback, icon, tooltip } = objItem;
+      let { hotkey } = objItem;
       const id2 = objItem.id !== void 0 ? objItem.id : id++;
       if (hotkey !== void 0 && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
@@ -32973,7 +32945,7 @@ function getExtension(path) {
   return path.slice(i, path.length).trim().toLowerCase();
 }
 function getMime(path) {
-  let ext = getExtension(path);
+  const ext = getExtension(path);
   if (ext in mimeMap) {
     return mimeMap[ext];
   }
@@ -33035,7 +33007,7 @@ var init_platform_base = __esm({
         while (base.endsWith("/")) {
           base = base.slice(0, base.length - 1).trim();
         }
-        let exts = ["html", "txt", "js", "php", "cgi"];
+        const exts = ["html", "txt", "js", "php", "cgi"];
         for (let ext of exts) {
           ext = "." + ext;
           if (base.endsWith(ext)) {
@@ -33202,19 +33174,17 @@ function patchDropBox() {
     this._menu.onclose = () => {
       this._pressed = false;
       this._redraw();
-      const menu2 = this._menu;
-      if (menu2) {
+      const menu = this._menu;
+      if (menu) {
         this._menu = void 0;
-        menu2._dropbox = void 0;
+        menu._dropbox = void 0;
       }
       if (onclose) {
-        onclose.call(menu2);
+        onclose.call(menu);
       }
     };
-    const menu = this._menu;
-    const screen = this.getScreen();
-    const dpi = this.getDPI();
-    let x = e.x, y = e.y;
+    let x;
+    let y;
     const rects = this.dom.getClientRects();
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
@@ -33249,11 +33219,8 @@ function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
     icongen = myRequire("./icogen.cjs");
   }
   window.icongen = icongen;
-  const nativeImage = getElectron().nativeImage;
   const manager3 = getIconManager();
-  const sheet = manager3.findSheet(iconsheet);
   const images = [];
-  const sizes = icongen.GetRequiredICOImageSizes();
   if (1) {
     const closestSheet = manager3.findClosestSheet(size);
     const tilesize = manager3.getTileSize(closestSheet);
@@ -33291,7 +33258,6 @@ function buildElectronHotkey(hk) {
   return hk;
 }
 function buildElectronMenu(menu) {
-  const electron = getElectron().remote;
   initElectronIpc();
   const emenu = new ElectronMenu();
   const buildItem = (item) => {
@@ -33358,11 +33324,11 @@ function initMenuBar(menuEditor, override = false) {
     "cut",
     "zoom"
   ]);
-  let roles = {};
+  const roles = {};
   for (const k of _roles) {
     roles[k] = k;
   }
-  roles = Object.assign(roles, {
+  Object.assign(roles, {
     "select all": "selectAll",
     "file": "fileMenu",
     "edit": "editMenu",
@@ -33600,10 +33566,10 @@ __export(web_api_exports, {
   platform: () => platform2
 });
 function getWebFilters(filters = []) {
-  let types = [];
-  for (let item of filters) {
+  const types = [];
+  for (const item of filters) {
     let mime = item.mime;
-    let exts = [];
+    const exts = [];
     for (let ext of item.extensions) {
       ext = "." + ext;
       if (ext.toLowerCase() in mimeMap) {
@@ -33634,15 +33600,15 @@ var init_web_api = __esm({
     platform2 = class extends PlatformAPI {
       //returns a promise
       static showOpenDialog(title, args = new FileDialogArgs()) {
-        let types = getWebFilters(args.filters);
+        const types = getWebFilters(args.filters);
         return new Promise((accept, reject) => {
           try {
             window.showOpenFilePicker({
               multiple: args.multi,
               types
             }).then((arg) => {
-              let paths = [];
-              for (let file of arg) {
+              const paths = [];
+              for (const file of arg) {
                 paths.push(new FilePath(file, file.name));
               }
               accept(paths);
@@ -33663,7 +33629,7 @@ var init_web_api = __esm({
         if (!window.showSaveFilePicker) {
           return this.showSaveDialog_old(title, savedata_cb, args);
         }
-        let types = getWebFilters(args.filters);
+        const types = getWebFilters(args.filters);
         return new Promise((accept, reject) => {
           let fname;
           let saveHandle;
@@ -33685,19 +33651,19 @@ var init_web_api = __esm({
             }
             file.write(savedata);
             file.close();
-            let path = new FilePath(handle, fname);
+            const path = new FilePath(handle, fname);
             accept(path);
           });
         });
       }
       //returns a promise
       static showSaveDialog_old(title, savedata, args = new FileDialogArgs()) {
-        let exts = [];
+        const exts = [];
         for (let list5 of args.filters) {
           if (!Array.isArray(list5) && list5.filters) {
             list5 = list5.filters;
           }
-          for (let ext of list5) {
+          for (const ext of list5) {
             exts.push(ext);
           }
         }
@@ -34129,7 +34095,7 @@ var require_tinymce = __commonJS({
         }
         return Option.none();
       };
-      var flatten = function(xs) {
+      var flatten2 = function(xs) {
         var r2 = [];
         for (var i = 0, len = xs.length; i < len; ++i) {
           if (!isArray2(xs[i])) {
@@ -34140,7 +34106,7 @@ var require_tinymce = __commonJS({
         return r2;
       };
       var bind = function(xs, f2) {
-        return flatten(map3(xs, f2));
+        return flatten2(map3(xs, f2));
       };
       var forall = function(xs, pred) {
         for (var i = 0, len = xs.length; i < len; ++i) {
@@ -35072,7 +35038,7 @@ var require_tinymce = __commonJS({
           throw new Error("Attribute value was not simple");
         }
       };
-      var set3 = function(element, key, value2) {
+      var set2 = function(element, key, value2) {
         rawSet(element.dom(), key, value2);
       };
       var setAll = function(element, attrs) {
@@ -35695,7 +35661,7 @@ var require_tinymce = __commonJS({
             callbacks2.push(nCallback);
           }
         };
-        var set4 = function(x) {
+        var set3 = function(x) {
           data2 = Option.some(x);
           run(callbacks2);
           callbacks2 = [];
@@ -35713,7 +35679,7 @@ var require_tinymce = __commonJS({
             }, 0);
           });
         };
-        baseFn(set4);
+        baseFn(set3);
         return {
           get: get2,
           map: map4,
@@ -36626,7 +36592,7 @@ var require_tinymce = __commonJS({
             link.crossOrigin = "anonymous";
           }
           if (settings.referrerPolicy) {
-            set3(Element2.fromDom(link), "referrerpolicy", settings.referrerPolicy);
+            set2(Element2.fromDom(link), "referrerpolicy", settings.referrerPolicy);
           }
           if ("onload" in link && !isOldWebKit()) {
             link.onload = waitForWebKitLinkLoaded;
@@ -38245,7 +38211,7 @@ var require_tinymce = __commonJS({
         EventUtils2.Event = new EventUtils2();
         return EventUtils2;
       })();
-      var support, Expr, getText, isXML, tokenize, compile, select, outermostContext, sortInput, hasDuplicate, setDocument, document2, docElem, documentIsHTML, rbuggyQSA, rbuggyMatches, matches, contains$3, expando = "sizzle" + -/* @__PURE__ */ new Date(), preferredDoc = domGlobals.window.document, dirruns = 0, done = 0, classCache = createCache(), tokenCache = createCache(), compilerCache = createCache(), sortOrder = function(a2, b) {
+      var support, Expr, getText, isXML, tokenize, compile2, select, outermostContext, sortInput, hasDuplicate, setDocument, document2, docElem, documentIsHTML, rbuggyQSA, rbuggyMatches, matches, contains$3, expando = "sizzle" + -/* @__PURE__ */ new Date(), preferredDoc = domGlobals.window.document, dirruns = 0, done = 0, classCache = createCache(), tokenCache = createCache(), compilerCache = createCache(), sortOrder = function(a2, b) {
         if (a2 === b) {
           hasDuplicate = true;
         }
@@ -38788,7 +38754,7 @@ var require_tinymce = __commonJS({
         },
         pseudos: {
           not: markFunction(function(selector) {
-            var input = [], results = [], matcher = compile(selector.replace(rtrim, "$1"));
+            var input = [], results = [], matcher = compile2(selector.replace(rtrim, "$1"));
             return matcher[expando] ? markFunction(function(seed3, matches2, context2, xml) {
               var elem, unmatched = matcher(seed3, null, xml, []), i = seed3.length;
               while (i--) {
@@ -39195,7 +39161,7 @@ var require_tinymce = __commonJS({
         };
         return bySet ? markFunction(superMatcher) : superMatcher;
       }
-      compile = Sizzle.compile = function(selector, match2) {
+      compile2 = Sizzle.compile = function(selector, match2) {
         var i, setMatchers = [], elementMatchers = [], cached2 = compilerCache[selector + " "];
         if (!cached2) {
           if (!match2) {
@@ -39248,7 +39214,7 @@ var require_tinymce = __commonJS({
             }
           }
         }
-        (compiled || compile(selector, match2))(seed3, context2, !documentIsHTML, results, rsibling.test(selector) && testContext(context2.parentNode) || context2);
+        (compiled || compile2(selector, match2))(seed3, context2, !documentIsHTML, results, rsibling.test(selector) && testContext(context2.parentNode) || context2);
         return results;
       };
       support.sortStable = expando.split("").sort(sortOrder).join("") === expando;
@@ -41158,12 +41124,12 @@ var require_tinymce = __commonJS({
         var get2 = function() {
           return value2;
         };
-        var set4 = function(v) {
+        var set3 = function(v) {
           value2 = v;
         };
         return {
           get: get2,
-          set: set4
+          set: set3
         };
       };
       var isRaw = function(str) {
@@ -41455,7 +41421,7 @@ var require_tinymce = __commonJS({
       var add$1 = function(element, attr, id) {
         var old = read(element, attr);
         var nu2 = old.concat([id]);
-        set3(element, attr, nu2.join(" "));
+        set2(element, attr, nu2.join(" "));
         return true;
       };
       var remove$2 = function(element, attr, id) {
@@ -41463,7 +41429,7 @@ var require_tinymce = __commonJS({
           return v !== id;
         });
         if (nu2.length > 0) {
-          set3(element, attr, nu2.join(" "));
+          set2(element, attr, nu2.join(" "));
         } else {
           remove$1(element, attr);
         }
@@ -44414,7 +44380,7 @@ var require_tinymce = __commonJS({
         var getOption = function(element) {
           return is2(element) ? Option.from(element.dom().nodeValue) : Option.none();
         };
-        var set4 = function(element, value2) {
+        var set3 = function(element, value2) {
           if (!is2(element)) {
             throw new Error("Can only set raw " + name3 + " value of a " + name3 + " node");
           }
@@ -44423,7 +44389,7 @@ var require_tinymce = __commonJS({
         return {
           get: get2,
           getOption,
-          set: set4
+          set: set3
         };
       }
       var api = NodeValue(isText, "text");
@@ -44460,8 +44426,8 @@ var require_tinymce = __commonJS({
         var _b = _a.uid, uid = _b === void 0 ? generate("mce-annotation") : _b, data2 = __rest(_a, ["uid"]);
         var master = Element2.fromTag("span", eDoc);
         add$3(master, annotation());
-        set3(master, "" + dataAnnotationId(), uid);
-        set3(master, "" + dataAnnotation(), annotationName);
+        set2(master, "" + dataAnnotationId(), uid);
+        set2(master, "" + dataAnnotation(), annotationName);
         var _c = decorate(uid, data2), _d = _c.attributes, attributes2 = _d === void 0 ? {} : _d, _e = _c.classes, classes = _e === void 0 ? [] : _e;
         setAll(master, attributes2);
         add$4(master, classes);
@@ -44941,7 +44907,7 @@ var require_tinymce = __commonJS({
         var writer = Writer(settings);
         settings = settings || {};
         settings.validate = "validate" in settings ? settings.validate : true;
-        var serialize2 = function(node) {
+        var serialize3 = function(node) {
           var handlers, validate2;
           validate2 = settings.validate;
           handlers = {
@@ -45026,7 +44992,7 @@ var require_tinymce = __commonJS({
           }
           return writer.getContent();
         };
-        return { serialize: serialize2 };
+        return { serialize: serialize3 };
       };
       var extractBase64DataUris = function(html) {
         var dataImageUri = /data:[^;]+;base64,([a-z0-9\+\/=]+)/gi;
@@ -50033,7 +49999,7 @@ var require_tinymce = __commonJS({
         editor2.contentCSS = editor2.contentCSS.concat(getContentCssUrls(editor2));
       };
       function Dimension(name3, getOffset) {
-        var set4 = function(element, h) {
+        var set3 = function(element, h) {
           if (!isNumber2(h) && !h.match(/^[0-9]+$/)) {
             throw new Error(name3 + ".set accepts only positive integer values. Value was " + h);
           }
@@ -50064,7 +50030,7 @@ var require_tinymce = __commonJS({
           return absoluteMax;
         };
         return {
-          set: set4,
+          set: set3,
           get: get2,
           getOuter,
           aggregate,
@@ -52656,7 +52622,7 @@ var require_tinymce = __commonJS({
         settings.remove_trailing_brs = "remove_trailing_brs" in settings ? settings.remove_trailing_brs : true;
         var htmlParser = DomParser(settings, schema);
         register$3(htmlParser, settings, dom2);
-        var serialize2 = function(node, parserArgs) {
+        var serialize3 = function(node, parserArgs) {
           if (parserArgs === void 0) {
             parserArgs = {};
           }
@@ -52670,7 +52636,7 @@ var require_tinymce = __commonJS({
           schema,
           addNodeFilter: htmlParser.addNodeFilter,
           addAttributeFilter: htmlParser.addAttributeFilter,
-          serialize: serialize2,
+          serialize: serialize3,
           addRules: function(rules) {
             schema.addValidElements(rules);
           },
@@ -58662,7 +58628,7 @@ var require_tinymce = __commonJS({
       var appendStyle = function(editor2, text2) {
         var head2 = Element2.fromDom(editor2.getDoc().head);
         var tag = Element2.fromTag("style");
-        set3(tag, "type", "text/css");
+        set2(tag, "type", "text/css");
         append(tag, Element2.fromText(text2));
         append(head2, tag);
       };
@@ -60139,7 +60105,7 @@ var require_tinymce = __commonJS({
       };
       var switchOffContentEditableTrue = function(elm) {
         each(descendants$1(elm, '*[contenteditable="true"]'), function(elm2) {
-          set3(elm2, internalContentEditableAttr, "true");
+          set2(elm2, internalContentEditableAttr, "true");
           setContentEditable(elm2, false);
         });
       };
@@ -62137,7 +62103,7 @@ var require_tinymce = __commonJS({
         self2.parse = parse;
         return self2;
       };
-      var serialize = function(obj) {
+      var serialize2 = function(obj) {
         var data2 = JSON.stringify(obj);
         if (!isString(data2)) {
           return data2;
@@ -62148,7 +62114,7 @@ var require_tinymce = __commonJS({
         });
       };
       var JSONUtils = {
-        serialize,
+        serialize: serialize2,
         parse: function(text2) {
           try {
             return JSON.parse(text2);
@@ -62744,10 +62710,6 @@ var TextBox2 = class extends TextBoxBase {
     }
     if (is_num) {
       this.radix = prop.radix;
-      let decimalPlaces = this.decimalPlaces !== void 0 ? this.decimalPlaces : prop.decimalPlaces;
-      if (this.hasAttribute("decimalPlaces")) {
-        decimalPlaces = parseInt(this.getAttribute("decimalPlaces"));
-      }
       let baseUnit = this.baseUnit ?? prop.baseUnit;
       if (this.hasAttribute("baseUnit")) {
         baseUnit = this.getAttribute("baseUnit") ?? void 0;
@@ -62944,8 +62906,6 @@ var Check = class extends UIBase3 {
     span.style.display = "flex";
     span.style.flexDirection = "row";
     span.style.margin = span.style.padding = "0px";
-    const sheet = 0;
-    const size = iconmanager.getTileSize(0);
     const check = this.canvas = document.createElement("canvas");
     this.g = check.getContext("2d");
     check.setAttribute("id", String(check.id));
@@ -63070,7 +63030,6 @@ var Check = class extends UIBase3 {
     this.tabIndex = 1;
     this.setAttribute("class", "checkx");
     const style = document.createElement("style");
-    const color = this.getDefault("focus-border-color");
     style.textContent = `
       .checkx:focus {
         outline : none;
@@ -63091,7 +63050,7 @@ var Check = class extends UIBase3 {
       return;
     }
     const rawVal = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    let redraw = false;
+    let redraw;
     if (rawVal === void 0) {
       this.internalDisabled = true;
       return;
@@ -63258,8 +63217,6 @@ var IconButton = class extends UIBase3 {
   setCSS() {
     super.setCSS();
     let def;
-    const _pstyle = this.getDefault("depressed");
-    const _hstyle = this.getDefault("highlight");
     this.noMarginsOrPadding();
     if (this._pressed && this._draw_pressed) {
       def = (k) => this.getSubDefault("depressed", k);
@@ -63628,13 +63585,10 @@ var Check1 = class extends OldButton {
     };
   }
   _redraw(draw_text = true) {
-    const _dpi = this.getDPI();
     const box = 40;
     drawRoundBox(this, this.dom, this.g, box);
     const ts = this.getDefault("DefaultText").size;
     const text2 = this._genLabel();
-    const tw = measureText(this, text2, this.dom, this.g).width;
-    const cx = this.dom.width / 2 - tw / 2;
     const cy = this.dom.height / 2;
     drawText(this, box, cy + ts / 2, text2, {
       canvas: this.dom,
@@ -65895,8 +65849,6 @@ var NumSlider = class extends ValueButtonBase {
     const startvalue = this.value;
     let value = startvalue;
     let startx = this.vertical ? e.y : e.x;
-    const starty = this.vertical ? e.x : e.y;
-    let sumdelta = 0;
     this.dom._background = this.getDefault("BoxDepressed");
     const fire = () => {
       if (this.on_change) {
@@ -65908,6 +65860,7 @@ var NumSlider = class extends ValueButtonBase {
         switch (e2.keyCode) {
           case 27:
             cancel(true);
+            break;
           case 13:
             cancel(false);
             break;
@@ -65930,7 +65883,6 @@ var NumSlider = class extends ValueButtonBase {
           dx *= 0.1;
         }
         dx *= this.vertical ? -1 : 1;
-        sumdelta += Math.abs(dx);
         value += dx * (this.step ?? 0.1) * 0.1 * (this.slideSpeed ?? 1);
         let dvalue = value - startvalue;
         const dsign = Math.sign(dvalue);
@@ -66069,7 +66021,6 @@ var NumSlider = class extends ValueButtonBase {
     }
     const g = this.g;
     const canvas = this.dom;
-    const dpi = this.getDPI();
     const disabled = this.disabled;
     const over = !this._modaldata ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
     let subkey = void 0;
@@ -66153,7 +66104,6 @@ var NumSlider = class extends ValueButtonBase {
       return arrowcolor2;
     };
     let arrowcolor_base;
-    let arrowcolor;
     arrowcolor_base = this.getDefault("arrow-color", void 0, "orange");
     arrowcolor_base = parseArrowColor(arrowcolor_base);
     let arrowcolorValue;
@@ -66194,7 +66144,7 @@ var NumSlider = class extends ValueButtonBase {
     }
     if (this._pressed) {
     }
-    arrowcolor = parseArrowColor(arrowcolorValue);
+    const arrowcolor = parseArrowColor(arrowcolorValue);
     const d = 7;
     const w = canvas.width;
     const h = canvas.height;
@@ -66330,7 +66280,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
     }
     const x = e.x - rect.left;
     const dpi = UIBase2.getDPI();
-    const co = this._getButtonPos();
     const val = this._invertButtonX(x * dpi);
     this.value = val;
   }
@@ -66341,8 +66290,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
     if (e !== void 0) {
       this._setFromMouse(e);
     }
-    const dom = window;
-    const evtargs = { capture: false };
     if (this.modal) {
       console.warn("Double call to _startModal!");
       return;
@@ -66358,9 +66305,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
     };
     handlers = {
       pointermove: (e2) => {
-        let x = e2.x;
-        const y = e2.y;
-        x = this.ma.add(x);
         this._setFromMouse(e2);
       },
       pointerover: (e2) => {
@@ -66501,11 +66445,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
       }
       g.stroke();
     }
-    if (this.highlight) {
-      color = this.getDefault("BoxHighlight");
-    } else {
-      color = this.getDefault("border-color");
-    }
     const co = this._getButtonPos();
     g.beginPath();
     if (this.highlight) {
@@ -66543,8 +66482,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
   }
   _invertButtonX(x) {
     const w = this.canvas.width;
-    const dpi = UIBase2.getDPI();
-    const sh = ~~(this.getDefault("SlideHeight") * dpi + 0.5);
     const boxw = this.canvas.height - 4;
     const w2 = w - boxw;
     const range = this.uiRange || this.range;
@@ -66558,8 +66495,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
   }
   _getButtonPos() {
     const w = this.canvas.width;
-    const dpi = UIBase2.getDPI();
-    const sh = ~~(this.getDefault("SlideHeight") * dpi + 0.5);
     let x = this._value;
     const range = this.uiRange || this.range;
     x = (x - range[0]) / (range[1] - range[0]);
@@ -67851,6 +67786,100 @@ function loadPage(ctx, url, parentContainer_or_args, loadSourceOnly = false, mod
   }
 }
 
+// scripts/jsx/jsx-runtime.ts
+var Fragment = /* @__PURE__ */ Symbol.for("pathux.jsx.Fragment");
+function flatten(children) {
+  const out = [];
+  for (const c of children) {
+    if (Array.isArray(c)) {
+      out.push(...flatten(c));
+    } else {
+      out.push(c);
+    }
+  }
+  return out;
+}
+function jsx(tag, props, ...children) {
+  return { tag, props: props ?? {}, children: flatten(children) };
+}
+var jsxs = jsx;
+
+// scripts/jsx/mount.ts
+function escapeText(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeAttr(s) {
+  return escapeText(s).replace(/"/g, "&quot;");
+}
+function serialize(node, st) {
+  if (node === null || node === void 0 || typeof node === "boolean") {
+    return "";
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    return escapeText(String(node));
+  }
+  let { tag } = node;
+  const { props, children } = node;
+  if (typeof tag === "function") {
+    return serialize(tag(props), st);
+  }
+  if (tag === Fragment) {
+    return children.map((c) => serialize(c, st)).join("");
+  }
+  tag = tag;
+  const attrs = {};
+  let refFn;
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "children") {
+      continue;
+    }
+    if (k === "ref") {
+      if (typeof v === "function") {
+        refFn = v;
+      }
+      continue;
+    }
+    if (typeof v === "function" || v === null || v === void 0 || v === false) {
+      continue;
+    }
+    attrs[k] = String(v);
+  }
+  if (refFn) {
+    if (!attrs.id) {
+      attrs.id = `__px${st.counter++}`;
+    }
+    st.refs.push({ id: attrs.id, fn: refFn });
+  }
+  let open = `<${tag}`;
+  for (const [k, v] of Object.entries(attrs)) {
+    open += ` ${k}="${escapeAttr(v)}"`;
+  }
+  const inner = children.map((c) => serialize(c, st)).join("");
+  return inner.length === 0 ? `${open}/>` : `${open}>${inner}</${tag}>`;
+}
+function compile(node) {
+  const st = { refs: [], counter: 0 };
+  const xml = serialize(node, st);
+  return { xml, refs: st.refs };
+}
+function mount(ctx, parent, node) {
+  const { xml, refs } = compile(node);
+  const container = initPage(
+    ctx,
+    xml,
+    parent
+  );
+  for (const { id, fn } of refs) {
+    const el = container.getElementById(id);
+    if (el) {
+      fn(el);
+    } else {
+      console.warn("jsx mount: ref target not found for id", id);
+    }
+  }
+  return container;
+}
+
 // scripts/widgets/ui_richedit.ts
 init_ui_base();
 init_simple_events();
@@ -67951,10 +67980,6 @@ var RichEditor = class extends TextBoxBase {
         console.log("detected formatting change");
         return;
       }
-      const sel = document.getSelection();
-      const range = sel.getRangeAt(0);
-      const node = sel.anchorNode;
-      const off = sel.anchorOffset;
       this._value = text2;
       if (this.hasAttribute("datapath")) {
         const path = this.getAttribute("datapath");
@@ -68387,7 +68412,7 @@ var VectorPanel = class extends ColumnFrame {
   }
   set uniformValue(val) {
     const old = this.uniformValue;
-    let doupdate = false;
+    let doupdate;
     const vArr = this.value;
     if (old === 0 || val === 0) {
       doupdate = this.value.dot(this.value) !== 0;
@@ -69156,7 +69181,7 @@ var defaultForwardKeys = [
   "wrap"
 ];
 function forwardContainerMethods(cls, propertyKey, keys2 = defaultForwardKeys) {
-  for (let k of keys2) {
+  for (const k of keys2) {
     cls.prototype[k] = function(...args) {
       return this[propertyKey][k].apply(this, args);
     };
@@ -69235,13 +69260,12 @@ var PanelFrame = class extends ColumnFrame {
     this.makeHeader();
   }
   get inherit_packflag() {
-    super.inherit_packflag;
-    if (!this.contents) return 0;
-    return this.contents.inherit_packflag;
+    return this.contents ? this.contents.inherit_packflag : 0;
   }
   set inherit_packflag(val) {
-    if (!this.contents) return;
-    this.contents.inherit_packflag = val;
+    if (this.contents) {
+      this.contents.inherit_packflag = val;
+    }
   }
   get packflag() {
     if (!this.contents) return 0;
@@ -69268,7 +69292,6 @@ var PanelFrame = class extends ColumnFrame {
     }
   }
   get dataPrefix() {
-    super.dataPrefix;
     return this.contents ? this.contents.dataPrefix : "";
   }
   set dataPrefix(v) {
@@ -71455,7 +71478,6 @@ var TabBar = class extends UIBase2 {
     this._doclick(e);
   }
   on_pointermove(e) {
-    const r = this.canvas.getClientRects()[0];
     this._domouse(e);
     e.preventDefault();
     e.stopPropagation();
@@ -71690,15 +71712,12 @@ var TabBar = class extends UIBase2 {
     const y = 0;
     let h = tsize + Math.ceil(tsize * 0.5) + hpad;
     const iconsize = iconmanager.getTileSize(this.iconsheet);
-    let have_icons = false;
     for (const tab2 of this.tabs) {
       if (tab2.icon !== void 0) {
-        have_icons = true;
         h = Math.max(h, iconsize + 4);
         break;
       }
     }
-    const r1 = this.parentWidget ? this.parentWidget.getClientRects()[0] : void 0;
     const r2 = this.canvas.getClientRects()[0];
     let rx = 0;
     let ry = 0;
@@ -71706,7 +71725,6 @@ var TabBar = class extends UIBase2 {
       rx = r2.x;
       ry = r2.y;
     }
-    let ti = -1;
     const makeTabWatcher = (tab2) => {
       if (tab2.watcher) {
         clearInterval(tab2.watcher.timer);
@@ -71743,7 +71761,6 @@ var TabBar = class extends UIBase2 {
       this.ctx.screen.addEventListener("resize", this._size_cb);
     }
     for (const tab2 of this.tabs) {
-      ti++;
       if (tab2.extra && !tab2.dom) {
         tab2.dom = document.createElement("div");
         tab2.dom.style["margin"] = tab2.dom.style["padding"] = "0px";
@@ -71896,7 +71913,7 @@ var TabBar = class extends UIBase2 {
         g.translate(x3 - tsize, -y3 - tsize * 0.5);
       }
       if (tab2.icon !== void 0) {
-        let paddingRight = tab2.getDefault("iconPaddingRight", void 0, 2);
+        const paddingRight = tab2.getDefault("iconPaddingRight", void 0, 2);
         iconmanager.canvasDraw(
           this,
           this.canvas,
@@ -71928,7 +71945,6 @@ var TabBar = class extends UIBase2 {
         g.stroke();
       }
     }
-    const th = tsize;
     tab2 = this.tabs.active;
     if (tab2) {
       const x = tab2.pos[0];
@@ -71979,7 +71995,6 @@ var TabBar = class extends UIBase2 {
           g.stroke();
           g.closePath();
         }
-        const cw = this.horiz ? this.canvas.width : this.canvas.height;
         const worig = g.lineWidth;
         g.lineWidth *= 0.5;
         g.fill();
@@ -72711,7 +72726,7 @@ var ListBox2 = class extends Container3 {
   }
   loadData(obj) {
     super.loadData(obj);
-    if (obj && obj._userSized) {
+    if (obj?._userSized) {
       this._userSized = true;
       if (typeof obj.width === "number") {
         this.style.width = obj.width + "px";
@@ -72811,7 +72826,7 @@ var ListBox2 = class extends Container3 {
   /** Reflect the data list's active element into the widget (no write-back). */
   _syncActiveOnly(api, list5) {
     const dataList = this._dataList;
-    if (dataList === void 0 || dataList.cb.getActive === void 0) {
+    if (dataList?.cb.getActive === void 0) {
       return;
     }
     const active = dataList.getActive(api, list5);
@@ -72956,7 +72971,7 @@ var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
   }
   undoPre(ctx) {
     const res = this._resolve(ctx);
-    if (res === void 0 || res.dataList.cb.getActive === void 0) {
+    if (res?.dataList.cb.getActive === void 0) {
       this._undo = { hadActive: false, key: void 0 };
       return;
     }
@@ -73387,7 +73402,6 @@ var Note = class extends UIBase2 {
     };
   }
   setLabel(s) {
-    const color = this.color;
     if (this.showExclMark && this.mark === void 0) {
       this.mark = document.createElement("div");
       this.mark.style["display"] = "flex";
@@ -73519,7 +73533,6 @@ var NoteFrame = class extends RowFrame {
         break;
       }
     }
-    const f2 = (100 * Math.min(percent, 1)).toFixed(1);
     if (note === void 0) {
       note = this.addNote(msg, color, -1, "note-progress-x");
       note._noteid = id;
@@ -73686,7 +73699,6 @@ var LastToolPanel = class extends ColumnFrame {
       return;
     }
     const def = tool.constructor.tooldef();
-    const name2 = def.uiname !== void 0 ? def.uiname : def.name;
     const panel = this.panel(def.uiname);
     this.on_change = () => {
       if (this.ignoreOnChange) {
@@ -73870,7 +73882,8 @@ var Solver = class {
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
-        const ks = con.klst[i], gs = con.glst[i];
+        const ks = con.klst[i];
+        const gs = con.glst[i];
         for (let j = 0; j < ks.length; j++) {
           totgs += gs[j] * gs[j];
         }
@@ -73880,7 +73893,9 @@ var Solver = class {
       }
       r1 /= totgs;
       for (let i = 0; i < con.klst.length; i++) {
-        const ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
+        const ks = con.klst[i];
+        const gs = con.glst[i];
+        const ws = con.wlst[i];
         for (let j = 0; j < ks.length; j++) {
           ks[j] += -r1 * gs[j] * con.k * gk * ws[j];
         }
@@ -73903,7 +73918,8 @@ var Solver = class {
       err += Math.abs(r1);
       let totgs = 0;
       for (let i = 0; i < con.klst.length; i++) {
-        const ks = con.klst[i], gs = con.glst[i];
+        const ks = con.klst[i];
+        const gs = con.glst[i];
         for (let j = 0; j < ks.length; j++) {
           totgs += gs[j] * gs[j];
         }
@@ -73913,7 +73929,9 @@ var Solver = class {
       }
       totgs = 1e-4 / Math.sqrt(totgs);
       for (let i = 0; i < con.klst.length; i++) {
-        const ks = con.klst[i], gs = con.glst[i], ws = con.wlst[i];
+        const ks = con.klst[i];
+        const gs = con.glst[i];
+        const ws = con.wlst[i];
         for (let j = 0; j < ks.length; j++) {
           ks[j] += -totgs * gs[j] * con.k * gk * ws[j];
         }
@@ -74121,7 +74139,6 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     loadBoxes(n1, n2);
     return aabb_overlap_area(p1, s1, p2, s2);
   }
-  let lasterr;
   let besterr;
   let best;
   const islands = graphGetIslands(nodes);
@@ -74213,7 +74230,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
         n.pos.add(c1);
       }
     }
-    let err = 1e17;
+    let err;
     for (const n of nodes) {
       n.oldpos.load(n.pos);
       n.pos.addFac(n.vel, 0.5);
@@ -74225,7 +74242,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     disableArea = false;
     for (let j = 0; j < 10; j++) {
       solver = solveStep1();
-      err = solver.solve(10, gk * speed);
+      solver.solve(10, gk * speed);
     }
     for (const n of nodes) {
       n.vel.load(n.pos).sub(n.oldpos);
@@ -74238,7 +74255,6 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     }
     disableEdges = false;
     disableArea = false;
-    lasterr = err;
     const add = Math.random() * (besterr ?? 0) * Math.exp(-i * 0.1);
     if (besterr === void 0 || err < besterr + add) {
       best = copyGraph(nodes);
@@ -74569,8 +74585,7 @@ var ContextLocker = class {
     if (ctx === void 0) {
       throw new Error("ctx was undefined! in ContextLocker.lock()!");
     }
-    let keys2 = [];
-    let props = {};
+    const props = {};
     function getAllKeys2(obj) {
       const keys3 = /* @__PURE__ */ new Set();
       while (obj && obj !== Object) {
@@ -74579,7 +74594,7 @@ var ContextLocker = class {
             keys3.add(k);
           }
         }
-        for (let k in obj) {
+        for (const k in obj) {
           if (typeof k === "string") {
             keys3.add(k);
           }
@@ -74588,8 +74603,8 @@ var ContextLocker = class {
       }
       return keys3;
     }
-    let keys22 = new Set(getAllKeys2(ctx));
-    keys22.forEach((key) => {
+    const keys2 = new Set(getAllKeys2(ctx));
+    keys2.forEach((key) => {
       if (typeof key === "string" && (key.endsWith("_save") || key.endsWith("_load"))) {
         return;
       }
@@ -74726,8 +74741,8 @@ var ThemeEditor = class extends Container3 {
     super.init();
     this.build();
   }
-  doFolder(catkey, obj, container = this, panel = void 0, path = void 0) {
-    let key = catkey.key;
+  doFolder(catkey, obj, container = this, panel, path) {
+    const key = catkey.key;
     if (!path) {
       path = [key];
     }
@@ -74735,12 +74750,12 @@ var ThemeEditor = class extends Container3 {
       panel = container.panel(key, void 0, void 0, catkey.help);
       panel.style.marginLeft = "15px";
     }
-    let row2 = panel.row();
-    let textbox = row2.textbox(void 0, "");
-    let callback = (id) => {
+    const row2 = panel.row();
+    const textbox = row2.textbox(void 0, "");
+    const callback = (id) => {
       console.log("ID", id, obj, catkey);
       console.log(textbox, textbox.text, textbox.value);
-      let propkey = (textbox.text || "").trim();
+      const propkey = (textbox.text || "").trim();
       if (!propkey) {
         console.error("Cannot have empty theme property name");
         return;
@@ -74756,7 +74771,7 @@ var ThemeEditor = class extends Container3 {
       } else if (id === "STRING") {
         obj[propkey] = "";
       }
-      let uidata = saveUIData(panel, "theme-panel");
+      const uidata = saveUIData(panel, "theme-panel");
       panel.clear();
       this.doFolder(catkey, obj, container, panel, path);
       loadUIData(panel, uidata);
@@ -74766,17 +74781,17 @@ var ThemeEditor = class extends Container3 {
         this.on_change(key, propkey, obj);
       }
     };
-    let menu = row2.menu("+", [
+    row2.menu("+", [
       { name: "Float", callback: () => callback("FLOAT") },
       { name: "Color", callback: () => callback("COLOR") },
       { name: "Subfolder", callback: () => callback("SUBFOLDER") },
       { name: "Font", callback: () => callback("FONT") },
       { name: "String", callback: () => callback("STRING") }
     ]);
-    let row = panel.row();
-    let col1 = row.col();
-    let col2 = row.col();
-    let do_onchange = (key2, k, _obj) => {
+    const row = panel.row();
+    const col1 = row.col();
+    const col2 = row.col();
+    const do_onchange = (key2, k, _obj) => {
       flagThemeUpdate();
       if (this.on_change) {
         this.on_change(key2, k, _obj);
@@ -74784,7 +74799,7 @@ var ThemeEditor = class extends Container3 {
       this.ctx.screen.completeSetCSS();
       this.ctx.screen.completeUpdate();
     };
-    let getpath = (path2) => {
+    const getpath = (path2) => {
       let obj2 = theme;
       for (let i = 0; i < path2.length; i++) {
         obj2 = obj2[path2[i]];
@@ -74793,16 +74808,16 @@ var ThemeEditor = class extends Container3 {
     };
     let ok = false;
     let _i = 0;
-    let dokey = (k, v, path2) => {
-      let col = _i % 2 === 0 ? col1 : col2;
+    const dokey = (k, v, path2) => {
+      const col = _i % 2 === 0 ? col1 : col2;
       if (k.toLowerCase().search("flag") >= 0) {
         return;
       }
       if (typeof v === "string") {
-        let v2 = v.toLowerCase().trim();
-        let iscolor = validateCSSColor(v2);
+        const v2 = v.toLowerCase().trim();
+        const iscolor = validateCSSColor(v2);
         if (iscolor) {
-          let cw = col.colorbutton();
+          const cw = col.colorbutton();
           ok = true;
           _i++;
           let color = css2color2(v2);
@@ -74822,7 +74837,7 @@ var ThemeEditor = class extends Container3 {
           cw.label = k;
         } else {
           col.label(k);
-          let box = col.textbox();
+          const box = col.textbox();
           box.onchange = () => {
             getpath(path2)[k] = box.text;
             do_onchange(key, k);
@@ -74830,7 +74845,7 @@ var ThemeEditor = class extends Container3 {
           box.text = v;
         }
       } else if (typeof v === "number") {
-        let slider = col.slider(void 0, k, v, 0, 256, 0.01, false);
+        const slider = col.slider(void 0, k, v, 0, 256, 0.01, false);
         slider.baseUnit = slider.displayUnit = "none";
         ok = true;
         _i++;
@@ -74839,19 +74854,19 @@ var ThemeEditor = class extends Container3 {
           do_onchange(key, k);
         };
       } else if (typeof v === "boolean") {
-        let check = col.check(void 0, k);
+        const check = col.check(void 0, k);
         check.value = getpath(path2)[k];
         check.onchange = () => {
           getpath(path2)[k] = !!check.value;
           do_onchange(key, k);
         };
       } else if (typeof v === "object" && v instanceof CSSFont) {
-        let panel2 = col.panel(k);
+        const panel2 = col.panel(k);
         ok = true;
         _i++;
-        let textbox2 = (key2) => {
+        const textbox2 = (key2) => {
           panel2.label(key2);
-          let tbox = panel2.textbox(void 0, v[key2]);
+          const tbox = panel2.textbox(void 0, v[key2]);
           tbox.width = tbox.getDefault("width");
           tbox.onchange = function() {
             v[key2] = this.text;
@@ -74862,14 +74877,14 @@ var ThemeEditor = class extends Container3 {
         textbox2("variant");
         textbox2("weight");
         textbox2("style");
-        let cw = panel2.colorbutton();
+        const cw = panel2.colorbutton();
         cw.label = "color";
         cw.setRGBA(css2color2(v.color));
         cw.onchange = () => {
           v.color = color2css3(cw.rgba);
           do_onchange(key, k);
         };
-        let slider = panel2.slider(void 0, "size", v.size);
+        const slider = panel2.slider(void 0, "size", v.size);
         slider.onchange = () => {
           v.size = slider.value;
           do_onchange(key, k);
@@ -74879,14 +74894,14 @@ var ThemeEditor = class extends Container3 {
         slider.baseUnit = slider.displayUnit = "none";
         panel2.closed = true;
       } else if (typeof v === "object") {
-        let catkey2 = Object.assign({}, catkey);
+        const catkey2 = Object.assign({}, catkey);
         catkey2.key = k;
-        let path22 = path2.concat(k);
+        const path22 = path2.concat(k);
         this.doFolder(catkey2, v, panel, void 0, path22);
       }
     };
-    for (let k in obj) {
-      let v = obj[k];
+    for (const k in obj) {
+      const v = obj[k];
       dokey(k, v, path);
     }
     if (!ok) {
@@ -74896,10 +74911,10 @@ var ThemeEditor = class extends Container3 {
     }
   }
   build() {
-    let uidata = saveUIData(this, "theme");
+    const uidata = saveUIData(this, "theme");
     this.clear();
-    let categories = {};
-    for (let k of Object.keys(theme)) {
+    const categories = {};
+    for (const k of Object.keys(theme)) {
       let catkey;
       if (k in this.categoryMap) {
         let cat = this.categoryMap[k];
@@ -74927,18 +74942,18 @@ var ThemeEditor = class extends Container3 {
       b = b.trim().toLowerCase();
       return a2 < b ? -1 : a2 === b ? 0 : 1;
     }
-    let keys2 = Object.keys(categories);
+    const keys2 = Object.keys(categories);
     keys2.sort(strcmp);
-    for (let k of keys2) {
-      let list5 = categories[k];
+    for (const k of keys2) {
+      const list5 = categories[k];
       list5.sort((a2, b) => strcmp(a2.key, b.key));
       let panel = this;
       if (list5.length > 1) {
         panel = this.panel(k);
       }
-      for (let cat of list5) {
-        let k2 = cat.key;
-        let v = theme[k2];
+      for (const cat of list5) {
+        const k2 = cat.key;
+        const v = theme[k2];
         if (typeof v === "object") {
           this.doFolder(cat, v, panel);
         }
@@ -74986,7 +75001,7 @@ var CanvasOverdraw = class extends UIBase2 {
     this.shapes = [];
     this.otherChildren = [];
     this.font = void 0;
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .overdrawx {
         pointer-events : none;
@@ -75054,7 +75069,7 @@ var Overdraw = class extends UIBase2 {
     this.shapes = [];
     this.otherChildren = [];
     this.font = void 0;
-    let style = document.createElement("style");
+    const style = document.createElement("style");
     style.textContent = `
       .overdrawx {
         pointer-events : none;
@@ -75101,48 +75116,48 @@ var Overdraw = class extends UIBase2 {
     this.shadow.appendChild(this.svg);
   }
   clear() {
-    for (let child of list2(this.svg.childNodes)) {
+    for (const child of list2(this.svg.childNodes)) {
       child.remove();
     }
-    for (let child of this.otherChildren) {
+    for (const child of this.otherChildren) {
       child.remove();
     }
     this.otherChildren.length = 0;
   }
   drawTextBubbles(texts, cos2, colors) {
-    let boxes = [];
-    let elems = [];
-    let cent = new Vector24();
+    const boxes = [];
+    const elems = [];
+    const cent = new Vector24();
     for (let i = 0; i < texts.length; i++) {
-      let co = cos2[i];
-      let text2 = texts[i];
+      const co = cos2[i];
+      const text2 = texts[i];
       let color;
       if (colors !== void 0) {
         color = colors[i];
       }
       cent.add(co);
-      let box = this.text(texts[i], co[0], co[1], { color });
+      const box = this.text(texts[i], co[0], co[1], { color });
       boxes.push(box);
-      let font = box.style["font"];
-      let pat = /[0-9]+px/;
-      let sizeMatch = font.match(pat);
+      const font = box.style["font"];
+      const pat = /[0-9]+px/;
+      const sizeMatch = font.match(pat);
       let size;
       if (sizeMatch === null) {
         size = this.getDefault("DefaultText").size;
       } else {
         size = parsepx2(sizeMatch[0]);
       }
-      let measureFn = measureTextBlock;
-      let tsize = measureFn(this, text2, void 0, void 0, size, font);
+      const measureFn = measureTextBlock;
+      const tsize = measureFn(this, text2, void 0, void 0, size, font);
       box.minsize = [
         ~~tsize.width,
         ~~tsize.height
       ];
-      let pad = parsepx2(box.style["padding"]);
+      const pad = parsepx2(box.style["padding"]);
       box.minsize[0] += pad * 2;
       box.minsize[1] += pad * 2;
-      let x = parsepx2(box.style["left"]);
-      let y = parsepx2(box.style["top"]);
+      const x = parsepx2(box.style["left"]);
+      const y = parsepx2(box.style["top"]);
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
       box.startpos = new Vector24([x, y]);
@@ -75162,11 +75177,11 @@ var Overdraw = class extends UIBase2 {
     }
     cent.mulScalar(1 / boxes.length);
     function error2() {
-      let p1 = [0, 0], p2 = [0, 0];
-      let s1 = [0, 0], s2 = [0, 0];
+      const s1 = [0, 0];
+      const s2 = [0, 0];
       let ret = 0;
-      for (let box1 of boxes) {
-        for (let box2 of boxes) {
+      for (const box1 of boxes) {
+        for (const box2 of boxes) {
           if (box2 === box1) {
             continue;
           }
@@ -75174,7 +75189,7 @@ var Overdraw = class extends UIBase2 {
           s1[1] = box1.params[3];
           s2[0] = box2.params[2];
           s2[1] = box2.params[3];
-          let overlap = aabb_overlap_area(
+          const overlap = aabb_overlap_area(
             new Vector24(box1.params),
             new Vector24(s1),
             new Vector24(box2.params),
@@ -75191,13 +75206,13 @@ var Overdraw = class extends UIBase2 {
       if (r1 === 0) {
         return;
       }
-      let df = 1e-4;
+      const df = 1e-4;
       let totgs = 0;
-      for (let box of boxes) {
+      for (const box of boxes) {
         for (let i = 0; i < box.params.length; i++) {
-          let orig = box.params[i];
+          const orig = box.params[i];
           box.params[i] += df;
-          let r2 = error2();
+          const r2 = error2();
           box.params[i] = orig;
           box.grads[i] = (r2 - r1) / df;
           totgs += box.grads[i] ** 2;
@@ -75207,8 +75222,8 @@ var Overdraw = class extends UIBase2 {
         return;
       }
       r1 /= totgs;
-      let k = 0.4;
-      for (let box of boxes) {
+      const k = 0.4;
+      for (const box of boxes) {
         for (let i = 0; i < box.params.length; i++) {
           box.params[i] += -r1 * box.grads[i] * k;
         }
@@ -75220,13 +75235,13 @@ var Overdraw = class extends UIBase2 {
     for (let i = 0; i < 15; i++) {
       solve();
     }
-    for (let box of boxes) {
+    for (const box of boxes) {
       elems.push(this.line(box.startpos, box.params));
     }
     return elems;
   }
   text(text2, x, y, args = {}) {
-    let mergedArgs = Object.assign(
+    const mergedArgs = Object.assign(
       {},
       args
     );
@@ -75251,7 +75266,7 @@ var Overdraw = class extends UIBase2 {
     if (typeof mergedArgs["border-radius"] === "number") {
       mergedArgs["border-radius"] = "" + mergedArgs["border-radius"] + "px";
     }
-    let box = document.createElement("div");
+    const box = document.createElement("div");
     box.setAttribute("class", "overdrawx");
     box.style["position"] = "fixed";
     box.style["width"] = "min-content";
@@ -75275,7 +75290,7 @@ var Overdraw = class extends UIBase2 {
     return box;
   }
   circle(p, r, stroke = "black", fill = "none") {
-    let circle = document.createElementNS(SVG_URL, "circle");
+    const circle = document.createElementNS(SVG_URL, "circle");
     circle.setAttribute("cx", "" + p[0]);
     circle.setAttribute("cy", "" + p[1]);
     circle.setAttribute("r", "" + r);
@@ -75288,7 +75303,7 @@ var Overdraw = class extends UIBase2 {
     return circle;
   }
   line(v1, v2, color = "black") {
-    let line = document.createElementNS(SVG_URL, "line");
+    const line = document.createElementNS(SVG_URL, "line");
     line.setAttribute("x1", "" + v1[0]);
     line.setAttribute("y1", "" + v1[1]);
     line.setAttribute("x2", "" + v2[0]);
@@ -75298,7 +75313,7 @@ var Overdraw = class extends UIBase2 {
     return line;
   }
   rect(p, size, color = "black") {
-    let line = document.createElementNS(SVG_URL, "rect");
+    const line = document.createElementNS(SVG_URL, "rect");
     line.setAttribute("x", "" + p[0]);
     line.setAttribute("y", "" + p[1]);
     line.setAttribute("width", "" + size[0]);
@@ -75499,7 +75514,6 @@ var TreeView = class extends Container3 {
       return (depth + 2.2) * indent + origin.x;
     };
     this.overdraw.style.zIndex = "0";
-    let prev = void 0;
     for (; i < items.length; i = next(i)) {
       const item = this.items[i];
       const item2idx = next(i);
@@ -75515,7 +75529,6 @@ var TreeView = class extends Container3 {
       } else if (item2?.treeDepth === item.treeDepth) {
         line(x1, y1, x1, y1 + rowh * 0.5);
       }
-      prev = item;
     }
   }
   updateOverdraw() {
@@ -75536,8 +75549,6 @@ var TreeView = class extends Container3 {
     const x = r.left;
     const y = r.top;
     const od = this.overdraw;
-    const w = mm.max[0] - mm.min[0];
-    const h = mm.max[1] - mm.min[1];
     od.style.margin = "0px";
     od.style.padding = "0px";
     od.svg.style.margin = "0px";
@@ -75799,7 +75810,6 @@ function registerToolStackGetter(func) {
   toolstack_getter = func;
 }
 var UndoFlags2 = UndoFlags;
-var ToolFlags2 = ToolFlags;
 var ToolBase = class extends ToolOp {
   screen;
   _finished;
@@ -75959,7 +75969,6 @@ var AreaResizeTool = class extends ToolBase {
     mpos.sub(this.start_mpos);
     const axis = this.border.horiz ? 1 : 0;
     this.overdraw.clear();
-    const visit = /* @__PURE__ */ new Set();
     const borders = this.getBorders();
     const color = const_default.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
     let bad = false;
@@ -76168,7 +76177,6 @@ var RemoveAreaTool = class extends ToolBase {
     }
     const sarea = this.sarea;
     const screen = this.screen;
-    const t = this.t;
     if (sarea) {
       screen.collapseArea(sarea, this._border);
       screen._internalRegenAll();
@@ -76288,7 +76296,6 @@ var AreaDragTool = class extends ToolBase {
     if (this.sarea) {
       return this.doSplitDrop(b);
     }
-    const src = this.sarea;
     const dst = b.sarea;
     const screen = this.screen;
     const t = b.t;
@@ -76299,7 +76306,7 @@ var AreaDragTool = class extends ToolBase {
     if (b.horiz === -1 && b.sarea === this.sarea) {
       return;
     }
-    let can_rip = false;
+    let can_rip;
     const sa = this.sarea;
     const screen = this.screen;
     can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
@@ -76434,7 +76441,6 @@ var AreaDragTool = class extends ToolBase {
       b.setAttribute("is_box", "true");
       b.addEventListener("pointermove", this.on_pointermove.bind(this));
       const onclick = b.onclick = (e) => {
-        const type = e.type.toLowerCase();
         if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
           return;
         }
@@ -76995,7 +77001,6 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
       w = wid * 2;
       h = Math.abs(vec[1]);
       cursor = "e-resize";
-      bstyle = "border-left-style : solid;\n    border-right-style : solid;\n";
       bstyle = "border-top-style : none;\n    border-bottom-style : none;\n";
     } else {
       this.style["padding-top"] = this.style["padding-bottom"] = pad + "px";
@@ -77010,7 +77015,6 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     if (debug3) {
       wid = 4;
       const alpha = 1;
-      const c = this.sareas.length * 75;
       let r = 0;
       let g = 0;
       let b = 0;
@@ -77440,7 +77444,6 @@ var Area = class _Area extends UIBase2 {
     this.header.remove();
     container._prepend(this.header);
     row.setCSSAfter(() => row.background = this.getDefault("AreaHeaderBG"));
-    const rh = ~~(16 * this.getDPI());
     container.noMarginsOrPadding();
     row.noMarginsOrPadding();
     row.style["width"] = "100%";
@@ -79073,10 +79076,7 @@ var Screen2 = class extends UIBase2 {
     }
   }
   pickElement(x, y, args = {}, marginy = 0, nodeclass, excluded_classes) {
-    if (typeof args === "object") {
-      nodeclass = args.nodeclass;
-      excluded_classes = args.excluded_classes;
-    } else {
+    if (typeof args !== "object") {
       args = {
         nodeclass,
         excluded_classes
@@ -79282,7 +79282,6 @@ var Screen2 = class extends UIBase2 {
         return;
       }
       let ok = false;
-      const elem2 = elem;
       while (elem) {
         if (elem === container) {
           ok = true;
@@ -79354,8 +79353,8 @@ var Screen2 = class extends UIBase2 {
   checkCSSSize() {
     const sw = this.style.width.toLowerCase().trim();
     const sh = this.style.height.toLowerCase().trim();
-    let w = 0;
-    let h = 0;
+    let w;
+    let h;
     if (sw.endsWith("px") && sh.endsWith("px")) {
       w = parseFloat(sw.slice(0, sw.length - 2).trim());
       h = parseFloat(sh.slice(0, sh.length - 2).trim());
@@ -79383,9 +79382,8 @@ var Screen2 = class extends UIBase2 {
       this.checkCSSSize();
       return;
     }
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    const ratio = window.outerHeight / window.innerHeight;
+    let width;
+    let height;
     const scale = 1;
     const pad = 4;
     width = window.innerWidth - pad;
@@ -79743,7 +79741,6 @@ var Screen2 = class extends UIBase2 {
     return (function* () {
       const stack = update_stack;
       stack.cur = 0;
-      const lastn = this2;
       function push(n) {
         stack[stack.cur++] = n;
       }
@@ -79866,8 +79863,6 @@ var Screen2 = class extends UIBase2 {
   splitArea(sarea, t = 0.5, horiz = true) {
     const w = sarea.size[0];
     const h = sarea.size[1];
-    const x = sarea.pos[0];
-    const y = sarea.size[1];
     let s1;
     let s2;
     if (!horiz) {
@@ -80148,7 +80143,6 @@ var Screen2 = class extends UIBase2 {
   checkAreaConstraint(sarea, checkOnly = false) {
     const min = sarea.minSize;
     const max = sarea.maxSize;
-    const vs = sarea._verts;
     let chg = 0;
     let mask = 0;
     const moveBorder = (sidea, sideb, dh) => {
@@ -80392,7 +80386,7 @@ var Screen2 = class extends UIBase2 {
     return true;
   }
   solveAreaConstraints(snapArgument = true) {
-    let repeat = false;
+    let repeat;
     let found = false;
     let time = time_ms();
     for (let i = 0; i < 10; i++) {
@@ -80495,8 +80489,6 @@ var Screen2 = class extends UIBase2 {
       v[0] += offx;
       v[1] += offy;
     }
-    const min = [1e17, 1e17];
-    const max = [-1e17, -1e17];
     const olds = [];
     for (const sarea of this.sareas) {
       olds.push([sarea.size[0], sarea.size[1]]);
@@ -80507,11 +80499,9 @@ var Screen2 = class extends UIBase2 {
     this.snapScreenVerts();
     this.solveAreaConstraints();
     this._recalcAABB();
-    let i = 0;
     for (const sarea of this.sareas) {
       sarea.on_resize(sarea.size);
       sarea.setCSS();
-      i++;
     }
     this.regenBorders();
     this.setCSS();
@@ -80821,7 +80811,6 @@ var Screen2 = class extends UIBase2 {
       return;
     }
     if (!haveModal() && this.sareas.active !== void 0 && this.sareas.active.on_keydown) {
-      const area = this.sareas.active;
       return this.sareas.active.on_keydown(e);
     }
   }
@@ -81072,7 +81061,8 @@ var SideBar = class extends Container3 {
       return;
     }
     this.needsSetCSS = false;
-    let w = this.width, h = this.height;
+    let w = this.width;
+    let h = this.height;
     w = isNaN(w) ? 500 : w;
     h = isNaN(h) ? 500 : h;
     h = Math.min(h, editor2.size[1] - 25);
@@ -82109,7 +82099,7 @@ var Icons2 = {
   ZOOM_IN: 27
 };
 function loadDefaultIconSheet() {
-  let iconSheet = document.createElement("img");
+  const iconSheet = document.createElement("img");
   iconSheet.src = iconSvg;
   return iconSheet;
 }
@@ -82195,31 +82185,31 @@ function saveFile2(appstate, args, objects) {
   if (args.useJSON === void 0) {
     args.useJSON = appstate.saveFilesInJSON;
   }
-  let fargs = new FileArgs(args);
+  const fargs = new FileArgs(args);
   let version = fargs.version;
   if (typeof version === "number") {
     if (version === Math.floor(version)) {
       version = [version, 0, 0];
     } else {
-      let major = ~~version;
-      let minor = ~~(Math.fract(version) * 10);
-      let micro = (Math.fract(version) - minor) * 100;
+      const major = ~~version;
+      const minor = ~~(Math.fract(version) * 10);
+      const micro = (Math.fract(version) - minor) * 100;
       version = [major, minor, micro];
     }
   }
-  let file = new FileFull(version, fargs.magic, fargs.fileFlags);
+  const file = new FileFull(version, fargs.magic, fargs.fileFlags);
   if (fargs.doScreen) {
     file.screen = appstate.screen;
   } else {
     file.screen = new EmptyStruct();
   }
-  for (let ob of objects) {
+  for (const ob of objects) {
     file.objects.push(ob);
   }
   if (fargs.useJSON) {
     return struct_default.writeJSON(file);
   } else {
-    let data = [];
+    const data = [];
     struct_default.writeObject(data, file);
     return new Uint8Array(data).buffer;
   }
@@ -82228,7 +82218,7 @@ function loadFile3(appstate, args, data) {
   if (args.useJSON === void 0) {
     args.useJSON = appstate.saveFilesInJSON;
   }
-  let fargs = new FileArgs(args);
+  const fargs = new FileArgs(args);
   let header;
   if (!fargs.useJSON) {
     if (data instanceof Array) {
@@ -82250,7 +82240,7 @@ function loadFile3(appstate, args, data) {
   if (header.magic !== fargs.magic) {
     throw new Error("invalid file");
   }
-  let istruct = new struct_default.STRUCT();
+  const istruct = new struct_default.STRUCT();
   istruct.parse_structs(header.schema);
   let ret;
   if (!fargs.useJSON) {
@@ -82262,17 +82252,17 @@ function loadFile3(appstate, args, data) {
     appstate.reset();
   }
   if (fargs.doScreen) {
-    let screen = appstate.screen;
+    const screen = appstate.screen;
     if (screen) {
       screen.unlisten();
       screen.remove();
     }
     ret.screen.ctx = appstate.ctx;
-    let screenClass = appstate.screenClass;
+    const screenClass = appstate.screenClass;
     if (!(ret.screen instanceof screenClass)) {
-      let newScreen = UIBase2.createElement(screenClass.define().tagname);
+      const newScreen = UIBase2.createElement(screenClass.define().tagname);
       newScreen.ctx = appstate.ctx;
-      for (let sarea of ret.screen.sareas) {
+      for (const sarea of ret.screen.sareas) {
         newScreen.appendChild(sarea);
         sarea.area.afterSTRUCT();
         sarea.area.on_fileload();
@@ -82331,12 +82321,12 @@ var MenuBarEditor = class extends Editor {
       return;
     }
     if (this._height === void 0) {
-      let rect = this.header.getClientRects()[0];
+      const rect = this.header.getClientRects()[0];
       if (rect) {
         this._height = rect.height;
       }
     }
-    let update = force || this._height !== this.minSize[1];
+    const update = force || this._height !== this.minSize[1];
     this.minSize[1] = this.maxSize[1] = this._height;
     if (update && this.ctx && this.getScreen()) {
       this.getScreen().solveAreaConstraints();
@@ -83001,21 +82991,9 @@ var SimpleContext = class {
   constructor() {
   }
   static getContextClass() {
-    let props = {};
-    let rec = (cls) => {
-      let prototype = cls.prototype;
-      if (Object.getPrototypeOf(cls) !== Object.getPrototypeOf(Object)) {
-        rec(cls);
-      }
-      for (let k in cls) {
-        let descr = Object.getOwnPropertyDescriptor(prototype, k);
-        if (descr) {
-          props[k] = descr;
-        }
-      }
-    };
+    const props = {};
     console.log(props);
-    for (let k in props) {
+    for (const k in props) {
       if (k.search("_save") >= 0 || k.search("_load") >= 0) {
         continue;
       }
@@ -83041,7 +83019,6 @@ init_const();
 setNotifier(ui_noteframe_exports);
 
 // scripts/docbrowser/docbrowser.ts
-init_simple_events();
 init_const();
 init_struct();
 init_ui_base();
@@ -83053,7 +83030,7 @@ Promise.resolve().then(() => __toESM(require_tinymce(), 1)).then(() => {
 var countstr = function(buf, s) {
   let count2 = 0;
   while (buf.length > 0) {
-    let i = buf.search(s);
+    const i = buf.search(s);
     if (i < 0) {
       break;
     }
@@ -83067,17 +83044,17 @@ function basename(path) {
     path = path.slice(0, path.length - 1);
   }
   path = path.replace(/\/+/g, "/");
-  let parts = path.split("/");
+  const parts = path.split("/");
   return parts[parts.length - 1];
 }
 function dirname(path) {
   while (path.length > 0 && path.trim().endsWith("/")) {
     path = path.slice(0, path.length - 1);
   }
-  let parts = path.split("/");
+  const parts = path.split("/");
   parts.length--;
   let s = "";
-  for (let t of parts) {
+  for (const t of parts) {
     s += t + "/";
   }
   while (s.endsWith("/")) {
@@ -83086,7 +83063,8 @@ function dirname(path) {
   return s;
 }
 function relative(a1, b1) {
-  let a2 = a1, b = b1;
+  let a2 = a1;
+  let b = b1;
   let i = 1;
   while (i <= a2.length && b.startsWith(a2.slice(0, i + 1))) {
     i++;
@@ -83121,7 +83099,7 @@ var DocsAPI = class {
   }
 };
 function getDocPaths() {
-  let ret = {
+  const ret = {
     docpath: `${const_default.docEditorPath}/docsys_base.js`,
     doc_config: `${const_default.docEditorPath}/docs.config.js`,
     docpath_prefix: `${const_default.docEditorPath}/doc_build`
@@ -83146,16 +83124,16 @@ var ElectronAPI = class extends DocsAPI {
       return this.ready;
     }
     this.first = false;
-    let { docpath, doc_config } = getDocPaths();
+    const { docpath, doc_config } = getDocPaths();
     console.log(docpath);
     import(docpath).then((docsys) => {
-      let fs = __require("fs");
-      let marked = __require("marked");
-      let parse5 = __require("parse5");
-      let pathmod = __require("path");
-      let jsdiff = __require("diff");
-      let initFn = docsys.default;
-      let initialized = initFn(fs, marked, parse5, pathmod, jsdiff);
+      const fs = __require("fs");
+      const marked = __require("marked");
+      const parse5 = __require("parse5");
+      const pathmod = __require("path");
+      const jsdiff = __require("diff");
+      const initFn = docsys.default;
+      const initialized = initFn(fs, marked, parse5, pathmod, jsdiff);
       this.config = initialized.readConfig(doc_config);
       this.ready = true;
     });
@@ -83179,9 +83157,9 @@ var ElectronAPI = class extends DocsAPI {
         accept();
         return;
       }
-      let blob = blobInfo.blob();
+      const blob = blobInfo.blob();
       blob.arrayBuffer().then((data) => {
-        let path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
+        const path = this.config.uploadImage(relpath ?? "", blobInfo.filename(), data);
         success(path);
         accept();
       }).catch(reject);
@@ -83228,11 +83206,11 @@ var ServerAPI = class extends DocsAPI {
   }
   uploadImage(relpath, blobInfo, success, onError) {
     return new Promise((accept, reject) => {
-      let blob = blobInfo.blob();
+      const blob = blobInfo.blob();
       blob.arrayBuffer().then((data) => {
         console.log("data!", data);
-        let uint8 = new Uint8Array(data);
-        let data2 = [];
+        const uint8 = new Uint8Array(data);
+        const data2 = [];
         for (let i = 0; i < uint8.length; i++) {
           data2.push(uint8[i]);
         }
@@ -83247,13 +83225,13 @@ var ServerAPI = class extends DocsAPI {
     });
   }
   callAPI(...callArgs) {
-    let key = callArgs[0];
-    let args = [];
+    const key = callArgs[0];
+    const args = [];
     for (let i = 1; i < callArgs.length; i++) {
       args.push(callArgs[i]);
     }
     console.log(args, callArgs.length);
-    let path = location.origin + "/api/" + key;
+    const path = location.origin + "/api/" + key;
     console.log(path);
     return new Promise((accept, reject) => {
       fetch(path, {
@@ -83268,7 +83246,7 @@ var ServerAPI = class extends DocsAPI {
         if (res.ok || res.status < 300) {
           res.text().then((data) => {
             console.log("got json", data);
-            let parsed = JSON.parse(data);
+            const parsed = JSON.parse(data);
             accept(parsed.result);
           }).catch((error2) => {
             console.log("ERROR!", error2);
@@ -83335,9 +83313,9 @@ DocHistory {
   loadSTRUCT(reader) {
     reader(this);
     this.length = 0;
-    let cur = this.cur;
+    const cur = this.cur;
     this.cur = 0;
-    for (let item of this._items) {
+    for (const item of this._items) {
       this.push(item);
     }
     this.cur = cur;
@@ -83437,7 +83415,7 @@ DocsBrowser {
   makeHeader_intern() {
     console.log("making header", this.header);
     this.header.clear();
-    let check = this.header.check(void 0, "Edit Enabled");
+    const check = this.header.check(void 0, "Edit Enabled");
     check.value = this.editMode;
     check.onchange = () => {
       console.warn("set edit mode:", check.checked);
@@ -83452,7 +83430,7 @@ DocsBrowser {
       });
       return;
     }
-    if (!this.contentDiv || !this.contentDiv.contentEditable) {
+    if (!this.contentDiv?.contentEditable) {
       setTimeout(() => {
         this.makeHeader();
       });
@@ -83461,7 +83439,7 @@ DocsBrowser {
     this.header.button("NoteBox", () => {
       this.undoPre("Note Box");
       this.execCommand("formatBlock", void 0, "p");
-      let sel = this.root.contentDocument.getSelection();
+      const sel = this.root.contentDocument.getSelection();
       let p = sel.anchorNode;
       if (!(p instanceof HTMLElement)) {
         p = p.parentElement;
@@ -83470,7 +83448,7 @@ DocsBrowser {
       this.undoPost("Note Box");
       console.log(p);
     });
-    let indexOf = (list5, item) => {
+    const indexOf = (list5, item) => {
       for (let i = 0; i < list5.length; i++) {
         if (list5[i] === item) {
           return i;
@@ -83479,7 +83457,7 @@ DocsBrowser {
       return -1;
     };
     this.header.button("Remove", () => {
-      let sel = this.root.contentDocument.getSelection();
+      const sel = this.root.contentDocument.getSelection();
       let p = sel.anchorNode;
       if (!p) return;
       if (!(p instanceof HTMLElement)) {
@@ -83488,14 +83466,14 @@ DocsBrowser {
       if (!p) {
         return;
       }
-      let parent = p.parentNode;
-      let i = indexOf(parent.childNodes, p);
+      const parent = p.parentNode;
+      const i = indexOf(parent.childNodes, p);
       if (p === this.contentDiv || p === this.contentDiv.parentNode || p === this.root.contentDocument.body) {
         return;
       }
       p.remove();
       console.log(p, i);
-      let add = parent.childNodes.length > 0 ? parent.childNodes[i] : void 0;
+      const add = parent.childNodes.length > 0 ? parent.childNodes[i] : void 0;
       for (let j = 0; j < p.childNodes.length; j++) {
         if (!add) {
           parent.appendChild(p.childNodes[j]);
@@ -83554,7 +83532,7 @@ DocsBrowser {
     }
     this._sourceData = data;
     this.saveReq = 0;
-    let cb = () => {
+    const cb = () => {
       if (this.root.contentDocument && this.root.contentDocument.readyState !== "loading") {
         this.initDoc();
       } else {
@@ -83587,7 +83565,7 @@ DocsBrowser {
     this._doDocInit = false;
     this.contentDiv = void 0;
     console.log("doc loaded");
-    let visit = (n) => {
+    const visit = (n) => {
       if (n instanceof Element) {
       }
       if (n instanceof Element && n.getAttribute("class") === "contents") {
@@ -83595,7 +83573,7 @@ DocsBrowser {
         console.log("found content div");
         return;
       }
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
@@ -83604,12 +83582,12 @@ DocsBrowser {
     }
     visit(this.root.contentDocument.body);
     if (!this.contentDiv) {
-      let body = this.root.contentDocument.body;
+      const body = this.root.contentDocument.body;
       this.contentDiv = this.root.contentDocument.createElement("div");
       this.contentDiv.setAttribute("class", "contents");
       this.contentDiv.style["margin"] = "0px";
       this.contentDiv.style["padding"] = "0px";
-      for (let node of Array.from(body.childNodes)) {
+      for (const node of Array.from(body.childNodes)) {
         body.removeChild(node);
         this.contentDiv.appendChild(node);
       }
@@ -83619,7 +83597,7 @@ DocsBrowser {
       if (this.editMode) {
         this.disableLinks();
       }
-      let globals = this.root.contentWindow;
+      const globals = this.root.contentWindow;
       console.log("tinymce globals:", globals.document, globals);
       window.tinymce = void 0;
       window.tinyMCEPreInit = {
@@ -83627,17 +83605,17 @@ DocsBrowser {
         baseURL: this.currentPath,
         documentBaseURL: location.href
       };
-      let loc = globals.document.location;
+      const loc = globals.document.location;
       if (loc.href === "about:srcdoc" && this.currentPath && this._sourceData === void 0) {
         if (this.currentPath) {
           loc.href = this.currentPath;
         }
       }
-      let base = this.pathuxBaseURL;
-      let base_url = platform3.resolveURL("scripts/lib/tinymce", base);
+      const base = this.pathuxBaseURL;
+      const base_url = platform3.resolveURL("scripts/lib/tinymce", base);
       console.warn(window.haveElectron, "haveElectron", base_url);
-      let tinymce = this.tinymce = globals.tinymce = window.tinymce = window._tinymce(globals);
-      let fixletter = () => {
+      const tinymce = this.tinymce = globals.tinymce = window.tinymce = window._tinymce(globals);
+      const fixletter = () => {
         if (!tinymce.baseURI.host) {
           return;
         }
@@ -83693,7 +83671,7 @@ DocsBrowser {
         }
       });
       fixletter();
-      let onchange = () => {
+      const onchange = () => {
         console.log("Input event!");
         this.queueSave();
       };
@@ -83708,43 +83686,43 @@ DocsBrowser {
     this.saveReq = 1;
   }
   undoPre(_label) {
-    let undo = this.tinymce.editors[0].undoManager;
+    const undo = this.tinymce.editors[0].undoManager;
     undo.beforeChange();
   }
   undoPost(_label) {
-    let undo = this.tinymce.editors[0].undoManager;
+    const undo = this.tinymce.editors[0].undoManager;
     undo.add();
   }
   enableLinks() {
-    let visit = (n) => {
+    const visit = (n) => {
       if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
       if (n instanceof Element && n.tagName === "A") {
-        let href = n.getAttribute("_href");
+        const href = n.getAttribute("_href");
         if (href) {
           n.setAttribute("href", href);
         }
       }
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
     visit(this.root.contentDocument.body);
   }
   disableLinks() {
-    let visit = (n) => {
+    const visit = (n) => {
       if (n instanceof Element && n.getAttribute("class") === "contents") {
         return;
       }
       if (n instanceof Element && n.tagName === "A") {
-        let href = n.getAttribute("href");
+        const href = n.getAttribute("href");
         if (href) {
           n.setAttribute("_href", href);
         }
         n.removeAttribute("href");
       }
-      for (let c of Array.from(n.childNodes)) {
+      for (const c of Array.from(n.childNodes)) {
         visit(c);
       }
     };
@@ -83755,18 +83733,18 @@ DocsBrowser {
     if (!this.contentDiv) {
       return;
     }
-    let tags = [];
-    let traverse = (n) => {
+    const tags = [];
+    const traverse = (n) => {
       if (n.tagName === "IMG" && !n.getAttribute("_PATCHED_")) {
         tags.push(n);
       }
-      for (let c of Array.from(n.children)) {
+      for (const c of Array.from(n.children)) {
         traverse(c);
       }
     };
     traverse(this.contentDiv);
     console.log("Image Tags found:", tags);
-    for (let t of tags) {
+    for (const t of tags) {
       this.patchImage(t);
       t.setAttribute("_PATCHED_", "true");
     }
@@ -83775,81 +83753,17 @@ DocsBrowser {
     img.style.cssFloat = "right";
     return;
     console.warn("Patching image!");
-    let grab = (i, vs) => {
-      console.log("Transform Modal start");
-      let horiz = i % 2 != 0 ? 1 : 0;
-      let update = () => {
-        let x = vs[0][0], y = vs[0][1];
-        let w = vs[2][0] - vs[0][0];
-        let h = vs[1][1] - vs[0][1];
-        img.style["display"] = "float";
-        img.style["left"] = x + "px";
-        img.style["top"] = y + "px";
-        img.style["width"] = w + "px";
-        img.style["height"] = h + "px";
-      };
-      update();
-      let modaldata;
-      let first3 = true;
-      let last_mpos = new Vector2();
-      let start_mpos = new Vector2();
-      let end = () => {
-        if (modaldata) {
-          console.log("done.");
-          popModalLight(modaldata);
-          modaldata = void 0;
-        }
-      };
-      let ghandlers = {
-        on_mousedown(_e) {
-        },
-        on_mousemove(e) {
-          console.log("modal move");
-          if (first3) {
-            first3 = false;
-            start_mpos[0] = last_mpos[0] = e.x;
-            start_mpos[1] = last_mpos[1] = e.y;
-            return;
-          }
-          let dx = e.x - last_mpos[0], dy = last_mpos[1] - e.y;
-          console.log(dx.toFixed(2), dy.toFixed(2));
-          last_mpos[0] = e.x;
-          last_mpos[1] = e.y;
-        },
-        on_mouseup(_e) {
-          end();
-        },
-        on_keydown(e) {
-          console.log(e.keyCode);
-          if (e.keyCode === 27) {
-            end();
-          }
-        }
-      };
-      modaldata = pushModalLight(ghandlers);
-      console.warn("grab!", modaldata);
-    };
-    let mpos = new Vector2();
+    const mpos = new Vector2();
     let first2 = true;
-    let tdown = true;
     let mdown = false;
-    let ix = 0, iy = 0;
-    let width = img.width, height = img.height;
+    let ix = 0;
+    let iy = 0;
+    let width = img.width;
+    let height = img.height;
     img.setAttribute("draggable", "false");
-    let getsize = () => {
-      let rects = img.getClientRects();
-      let r = rects[0];
-      if (!r) {
-        setTimeout(getsize, 2);
-        return;
-      }
-      console.log("got image size", width, height, img.width, img.height);
-      width = r.width;
-      height = r.height;
-    };
     let resizing = false;
     let moving = false;
-    let handlers = {
+    const handlers = {
       pointerover(_e) {
         console.log("mouse over!");
       },
@@ -83873,7 +83787,8 @@ DocsBrowser {
         }
         console.log(moving);
         if (moving) {
-          let dx = x - mpos[0], dy = y - mpos[1];
+          const dx = x - mpos[0];
+          const dy = y - mpos[1];
           console.log("mdown!", dx, dy);
           ix += dx;
           iy += dy;
@@ -83884,7 +83799,8 @@ DocsBrowser {
           img.style["top"] = iy + "px";
         }
         if (resizing) {
-          let dx = x - mpos[0], dy = y - mpos[1];
+          const dx = x - mpos[0];
+          const dy = y - mpos[1];
           console.log("mdown!", dx, dy);
           width += dy;
           height += dy;
@@ -83894,11 +83810,11 @@ DocsBrowser {
         }
         mpos[0] = x;
         mpos[1] = y;
-        let r = img.getBoundingClientRect();
+        const r = img.getBoundingClientRect();
         if (!r) {
           return;
         }
-        let verts = [
+        const verts = [
           new Vector2([r.x, r.y]),
           new Vector2([r.x, r.y + r.height]),
           new Vector2([r.x + r.width, r.y + r.height]),
@@ -83907,10 +83823,10 @@ DocsBrowser {
         let ret = void 0;
         let mindis = 1e17;
         for (let i = 0; i < 4; i++) {
-          let i1 = i, i2 = (i + 1) % 4;
-          let v1 = verts[i1], v2 = verts[i2];
-          let horiz = i % 2 !== 0 ? 1 : 0;
-          let dv = mpos[horiz] - v1[horiz];
+          const i1 = i;
+          const v1 = verts[i1];
+          const horiz = i % 2 !== 0 ? 1 : 0;
+          const dv = mpos[horiz] - v1[horiz];
           if (Math.abs(dv) < 15 && Math.abs(dv) < mindis) {
             mindis = Math.abs(dv);
             ret = i;
@@ -83945,14 +83861,14 @@ DocsBrowser {
     };
     window.setInterval(() => {
       if (1) {
-        let val = img.getAttribute("draggable");
+        const val = img.getAttribute("draggable");
         img.setAttribute("draggable", "false");
         if (val) {
           img.setAttribute("draggable", val);
         }
       }
     }, 200);
-    for (let k in handlers) {
+    for (const k in handlers) {
       img.addEventListener(k, handlers[k], true);
     }
   }
@@ -83962,13 +83878,13 @@ DocsBrowser {
     }
     let buf = "";
     let visit;
-    let liststack = [];
+    const liststack = [];
     let image_idgen = 0;
-    let getlist = () => {
+    const getlist = () => {
       if (liststack.length > 0) return liststack[liststack.length - 1];
       return void 0;
     };
-    let handlers = {
+    const handlers = {
       TEXT(n) {
         console.log("Text data:", n.data);
         buf += n.textContent;
@@ -84049,8 +83965,8 @@ DocsBrowser {
         liststack.pop();
       },
       LI(_n) {
-        let head = getlist();
-        if (head && head[0] === "OL") {
+        const head = getlist();
+        if (head?.[0] === "OL") {
           buf += head[1] + ".  ";
           head[1]++;
         } else {
@@ -84059,12 +83975,12 @@ DocsBrowser {
         visit();
       },
       PRE(_n) {
-        let start = buf;
+        const start = buf;
         visit();
-        let data = buf.slice(start.length, buf.length);
-        let lines = data.split("\n");
+        const data = buf.slice(start.length, buf.length);
+        const lines = data.split("\n");
         let bad = false;
-        for (let l of lines) {
+        for (const l of lines) {
           if (!l.startsWith("    ")) {
             bad = true;
             break;
@@ -84077,16 +83993,16 @@ DocsBrowser {
         }
       }
     };
-    let traverse = (n) => {
+    const traverse = (n) => {
       visit = () => {
-        for (let c of Array.from(n.childNodes)) {
+        for (const c of Array.from(n.childNodes)) {
           traverse(c);
         }
       };
       if (n.constructor.name === "Text") {
         handlers.TEXT(n);
       } else {
-        let tag = n.tagName;
+        const tag = n.tagName;
         if (tag in handlers) {
           handlers[tag](n);
         } else {
@@ -84101,7 +84017,7 @@ DocsBrowser {
     if (!this.root.contentDocument) {
       return void 0;
     }
-    let href = this.root.contentDocument.location.href;
+    const href = this.root.contentDocument.location.href;
     let path = relative(dirname(document.location.href), href).trim();
     while (path.startsWith("/")) {
       path = path.slice(1, path.length);
@@ -84135,7 +84051,7 @@ DocsBrowser {
       this.saveCallback(this.root.contentDocument);
       return;
     }
-    let path = this.getDocPath();
+    const path = this.getDocPath();
     console.log("saving " + path);
     this.saveReq = 2;
     this.serverapi.updateDoc(path, this.contentDiv.innerHTML).then((result) => {
@@ -84165,7 +84081,7 @@ DocsBrowser {
   //send notifications to user
   report(message2, color, timeout) {
     const ctx = this.ctx;
-    if (ctx && ctx.report) {
+    if (ctx?.report) {
       console.warn("%c" + message2, "color : " + color + ";");
       ctx.report(
         message2,
@@ -84183,7 +84099,7 @@ DocsBrowser {
       }
     }
     this.updateCurrentPath();
-    if (this._doDocInit && this.root.contentDocument && this.root.contentDocument.readyState === "complete") {
+    if (this._doDocInit && this.root.contentDocument?.readyState === "complete") {
     } else if (!this._doDocInit && this.saveReq) {
       if (time_ms() - this._last_save > 500) {
         this.save();
@@ -84302,6 +84218,7 @@ export {
   FloatConstrinats,
   FloatProperty,
   FootUnit,
+  Fragment,
   GuassianCurve,
   HotKey,
   HueField,
@@ -84491,6 +84408,7 @@ export {
   color2css3 as color2css,
   color2web,
   compatMap,
+  compile,
   config_exports as config,
   contextWrangler,
   controller_exports as controller,
@@ -84571,6 +84489,8 @@ export {
   isNum,
   isNumber,
   isect_ray_plane,
+  jsx,
+  jsxs,
   keymap,
   keymap_latin_1,
   line_isect,
@@ -84592,6 +84512,7 @@ export {
   mimeMap,
   minmax_verts,
   modalstack,
+  mount,
   mySafeJSONParse,
   mySafeJSONStringify,
   normal_poly,

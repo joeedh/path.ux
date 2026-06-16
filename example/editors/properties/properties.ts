@@ -13,9 +13,7 @@ import {
   exportTheme,
   loadUIData,
   saveUIData,
-  loadPage,
-  platform,
-  PlatformAPI,
+  mount,
   Container,
   TabContainer,
   RowFrame,
@@ -23,6 +21,7 @@ import {
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
+import { PropsPage } from "../../page.js";
 
 // graphpack's PackNodeVertex tracks which side of a node a socket sits on; this
 // app sets it when laying out the demo graph. It is not part of the library type.
@@ -70,72 +69,67 @@ export class PropsEditor extends Editor {
       return;
     }
 
-    platform
-      .getPlatformAsync()
-      .then((plat) => {
-        const url = (plat as typeof PlatformAPI).resolveURL("./page.xml");
-
-        return loadPage(this.ctx, url);
-      })
-      .then((result) => {
-        // loadPage resolves to a string only in loadSourceOnly mode; here it is a Container.
-        const container = result as Container;
-
-        this.container.add(container);
-        this.container.flushUpdate();
-
-        if (this._pageUIData) {
-          console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");
-
-          loadUIData(this.container, this._pageUIData);
-          this._pageUIData = undefined;
-          this.container.flushUpdate();
-        }
-
-        const graphtab = container.getElementById("graph_pack_tab") as Container;
-        this.buildGraphPack(graphtab);
-
+    // Build the page from typed JSX (example/page.tsx). Interactive wiring that
+    // the markup can't express is supplied through typed `ref` callbacks instead
+    // of post-build getElementById lookups.
+    mount(
+      this.ctx,
+      this.container,
+      PropsPage({
+        exportButton: (btn) => {
+          btn.onclick = () => this.exportTheme();
+        },
+        graphTab    : (tab) => this.buildGraphPack(tab),
         // CanvasPath has no name field; label list entries by id for the demo.
-        const pathListbox = container.getElementById("path_listbox") as ListBox | null;
-        if (pathListbox) {
-          pathListbox.itemNames((obj) => "Path " + (obj as { id: number }).id);
-        }
+        listbox: (lb) => {
+          lb.itemNames((obj) => "Path " + (obj as { id: number }).id);
+        },
+        eventStrip: (con) => {
+          con.dataPrefix = "";
+          const bval = con.prop("data.boolval");
+          const color = con.prop("data.color");
 
-        const con = container.getElementById("eventdag_test") as Container;
-        con.dataPrefix = "";
-        const bval = con.prop("data.boolval");
-        const color = con.prop("data.color");
+          color.dependsOn("hidden", bval, "value").invert();
+        },
+      })
+    );
 
-        color.dependsOn("hidden", bval, "value").invert();
+    this.container.flushUpdate();
 
-        const exportbutton = container.getElementById("export_theme")!;
-        exportbutton.onclick = () => {
-          let theme = exportTheme();
+    if (this._pageUIData) {
+      console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");
 
-          theme = theme.replace(/var theme/, "export const theme");
+      loadUIData(this.container, this._pageUIData);
+      this._pageUIData = undefined;
+      this.container.flushUpdate();
+    }
+  }
 
-          theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
-          theme =
-            `
+  exportTheme() {
+    let theme = exportTheme();
+
+    theme = theme.replace(/var theme/, "export const theme");
+
+    theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
+    theme =
+      `
 /*
  * WARNING: AUTO-GENERATED FILE
- * 
+ *
  * Copy to scripts/editors/theme.js
  */
       `.trim() +
-            "\n\n" +
-            theme +
-            "\n";
+      "\n\n" +
+      theme +
+      "\n";
 
-          console.log(theme);
+    console.log(theme);
 
-          const blob = new Blob([theme], { type: "application/javascript" });
-          const url = URL.createObjectURL(blob);
+    const blob = new Blob([theme], { type: "application/javascript" });
+    const url = URL.createObjectURL(blob);
 
-          console.log("url", url);
-          window.open(url);
-        };
-      });
+    console.log("url", url);
+    window.open(url);
   }
 
   init() {

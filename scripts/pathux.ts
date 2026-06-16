@@ -2,6 +2,11 @@ import "./path-controller/util/polyfill";
 
 export * from "./xmlpage/xmlpage";
 
+export * from "./jsx/jsx-runtime";
+export { compile, mount } from "./jsx/mount";
+// Side-effect import: pulls the global JSX namespace declaration into the program.
+import "./jsx/intrinsics";
+
 export * from "./core/datapath_registry";
 export * from "./core/ui_base";
 export * from "./core/ui";

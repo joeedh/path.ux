@@ -51,8 +51,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       nstructjs:
-        specifier: ^0.8.5
-        version: 0.8.5
+        specifier: ^0.8.7
+        version: 0.8.7
       parse5:
         specifier: 6.0.0
         version: 6.0.0
@@ -1164,8 +1164,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  nstructjs@0.8.5:
-    resolution: {integrity: sha512-Jy27MXRWAD0xIbvCzhRd3S9RGcDnhZ3m07oxOvBlrmYJd2o9u1XQOuWJB93anUY7nM4U21z97aYSjiPb4c7k7g==}
+  nstructjs@0.8.7:
+    resolution: {integrity: sha512-7ctMcZ1bX08CbfPCpUC9aFV52s8V3ZLW1RVedAMs0RESDLlbynv5sBBa8Z9tbzRaKrgQ9Aa2iMsoKyZAT7OCHQ==}
 
   object.pick@1.3.0:
     resolution: {integrity: sha512-tqa/UMy/CCoYmj+H5qc07qvSL9dqcs/WZENZ1JbtWBlATP+iVOe778gE6MSijnyCnORzDuX6hU+LA4SZ09YjFQ==}
@@ -2487,7 +2487,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  nstructjs@0.8.5:
+  nstructjs@0.8.7:
     dependencies:
       acorn: 7.4.1
       acorn-walk: 7.2.0
