@@ -347,8 +347,13 @@ export class PropsEditor extends Editor {
     let draw = (): void => {};
 
     const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 600;
+    const g = canvas.getContext("2d")!;
+    const dpi = UIBase.getDPI();
+
+    let w = 800;
+    let h = 600;
+    canvas.style["width"] = w / dpi + "px";
+    canvas.style["height"] = h / dpi + "px";
     let scale = 0.25;
 
     canvas.addEventListener("wheel", (e) => {
@@ -368,12 +373,22 @@ export class PropsEditor extends Editor {
     }
 
     let { nodes } = graphNodes;
-
-    const g = canvas.getContext("2d")!;
-
     canvas.style.border = "1px solid orange";
 
     draw = () => {
+      if (this.size === undefined) {
+        // properties editor is not active
+        return;
+      }
+
+      w = ~~((this.size[0] - 75) * dpi);
+      h = ~~(this.size[1] * dpi);
+
+      canvas.style["width"] = w / dpi + "px";
+      canvas.style["height"] = h / dpi + "px";
+      canvas.width = w;
+      canvas.height = h;
+
       g.resetTransform();
       g.clearRect(0, 0, canvas.width, canvas.height);
 

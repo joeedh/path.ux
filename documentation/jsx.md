@@ -76,7 +76,7 @@ mount(
     // ref fires once the widget exists — replaces getElementById wiring
     const a = strip.prop("data.boolval");
     const b = strip.prop("data.color");
-    b.dependsOn("hidden", a, "value").invert();
+    b.  ("hidden", a, "value").invert();
   })
 );
 ```

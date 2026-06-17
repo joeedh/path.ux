@@ -87139,8 +87139,12 @@ var PropsEditor = class extends Editor2 {
     let draw = () => {
     };
     const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 600;
+    const g = canvas.getContext("2d");
+    const dpi = UIBase2.getDPI();
+    let w = 800;
+    let h = 600;
+    canvas.style["width"] = w / dpi + "px";
+    canvas.style["height"] = h / dpi + "px";
     let scale = 0.25;
     canvas.addEventListener("wheel", (e) => {
       const df = Math.sign(e.deltaY) * 0.05;
@@ -87154,9 +87158,17 @@ var PropsEditor = class extends Editor2 {
       graphPack(graphNodes.nodes, { steps: 2, margin });
     }
     let { nodes } = graphNodes;
-    const g = canvas.getContext("2d");
     canvas.style.border = "1px solid orange";
     draw = () => {
+      if (this.size === void 0) {
+        return;
+      }
+      w = ~~((this.size[0] - 75) * dpi);
+      h = ~~(this.size[1] * dpi);
+      canvas.style["width"] = w / dpi + "px";
+      canvas.style["height"] = h / dpi + "px";
+      canvas.width = w;
+      canvas.height = h;
       g.resetTransform();
       g.clearRect(0, 0, canvas.width, canvas.height);
       g.translate(canvas.width * 0.5, canvas.height * 0.5);
