@@ -4,7 +4,7 @@ import { Container } from "../core/ui";
 import { IContextBase } from "../core/context_base";
 import * as math from "../path-controller/util/math";
 
-export class TreeItem<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class TreeItem<CTX extends IContextBase = IContextBase> extends Container<CTX, "TreeItem"> {
   treeParent: TreeItem<CTX> | undefined;
   treeChildren: TreeItem<CTX>[];
   treeView: TreeView<CTX> | undefined;
@@ -110,7 +110,7 @@ export class TreeItem<CTX extends IContextBase = IContextBase> extends Container
 }
 UIBase.internalRegister(TreeItem);
 
-export class TreeView<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class TreeView<CTX extends IContextBase = IContextBase> extends Container<CTX, "TreeView"> {
   items: TreeItem<CTX>[];
   strokes: any[];
   overdraw: any;

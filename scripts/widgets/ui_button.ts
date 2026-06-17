@@ -168,10 +168,10 @@ export class ButtonEventBase<
   _redraw() {}
 }
 
-export class Button<CTX extends IContextBase = IContextBase> extends ButtonEventBase<
-  CTX,
-  "Button"
-> {
+export class Button<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "Button",
+> extends ButtonEventBase<CTX, SELF> {
   label: HTMLSpanElement;
   _pressedTime: number;
   _pressedTimeout: number;
@@ -340,7 +340,10 @@ export class Button<CTX extends IContextBase = IContextBase> extends ButtonEvent
 
 UIBase.register(Button);
 
-export class OldButton<CTX extends IContextBase = IContextBase> extends ButtonEventBase<CTX> {
+export class OldButton<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "OldButton",
+> extends ButtonEventBase<CTX, SELF> {
   _last_but_update_key: string | number;
   _name: string | undefined;
   _namePad: number | undefined;

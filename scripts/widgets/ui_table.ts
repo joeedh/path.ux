@@ -57,7 +57,7 @@ export interface TableRowProxy {
   check(...args: unknown[]): unknown;
 }
 
-export class TableRow<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class TableRow<CTX extends IContextBase = IContextBase> extends Container<CTX, "TableRow"> {
   declare dom: HTMLTableRowElement;
   declare shadow: ShadowRoot;
 

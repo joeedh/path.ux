@@ -66,7 +66,7 @@ Symbol.IsAreaTag = Symbol.for("IsAreaTag");
 /**
  * Base class for all editors
  **/
-export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, unknown, "Area"> {
   static STRUCT: string;
 
   // used to avoid circular module ref with UIBase
@@ -751,7 +751,11 @@ pathux.Area {
 nstructjs.register(Area);
 UIBase.internalRegister(Area as unknown as typeof UIBase);
 
-export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "ScreenArea"
+> {
   static STRUCT: string;
 
   keymap?: KeyMap;

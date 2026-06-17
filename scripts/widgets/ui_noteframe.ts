@@ -10,7 +10,10 @@ type StyleRecord = CSSStyleDeclaration & Record<string, string>;
 
 const UIBase = ui_base.UIBase;
 
-export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
+export class Note<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "Note",
+> extends ui_base.UIBase<CTX, unknown, SELF> {
   _noteid: string | undefined;
   height: number;
   showExclMark: boolean;
@@ -121,7 +124,7 @@ export class Note<CTX extends IContextBase = IContextBase> extends ui_base.UIBas
 
 UIBase.internalRegister(Note);
 
-export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<CTX> {
+export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<CTX, "ProgBarNote"> {
   _percent: number;
   barWidth: number;
   bar: HTMLDivElement;
@@ -188,7 +191,10 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
 
 UIBase.internalRegister(ProgBarNote);
 
-export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFrame<CTX> {
+export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFrame<
+  CTX,
+  "NoteFrame"
+> {
   _h: number;
 
   constructor() {

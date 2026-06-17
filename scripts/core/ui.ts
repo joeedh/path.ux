@@ -216,7 +216,10 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
 UIBase.internalRegister(Label);
 
-export class Container<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class Container<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "Container",
+> extends UIBase<CTX, unknown, SELF> {
   declare shadow: ShadowRoot;
   declare _useDataPathUndo: boolean | undefined;
   declare div: HTMLElement;
@@ -2361,7 +2364,10 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
 
 UIBase.internalRegister(Container);
 
-export class RowFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class RowFrame<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "RowFrame",
+> extends Container<CTX, SELF> {
   constructor() {
     super();
   }
@@ -2417,7 +2423,10 @@ export class RowFrame<CTX extends IContextBase = IContextBase> extends Container
 
 UIBase.internalRegister(RowFrame);
 
-export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class ColumnFrame<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "ColumnFrame",
+> extends Container<CTX, SELF> {
   constructor() {
     super();
   }
@@ -2457,7 +2466,10 @@ export class ColumnFrame<CTX extends IContextBase = IContextBase> extends Contai
 
 UIBase.internalRegister(ColumnFrame);
 
-export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "TableFrame"
+> {
   static define() {
     return {
       tagname: "tableframe-x",
@@ -2469,7 +2481,10 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
 // (the original file did not have a TableFrame class, but it's referenced
 // in createElement("tableframe-x") calls)
 
-export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "TwoColumnFrame"
+> {
   _colWidth = 256;
   parentDepth = 1;
 

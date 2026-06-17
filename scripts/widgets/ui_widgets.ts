@@ -21,7 +21,11 @@ import type { EnumPropertyBase } from "../path-controller/toolsys/toolprop";
 
 export { Button } from "./ui_button";
 
-export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "IconLabel"
+> {
   _icon: number;
   iconsheet: number;
 
@@ -67,7 +71,10 @@ export class IconLabel<CTX extends IContextBase = IContextBase> extends UIBase<C
 
 UIBase.internalRegister(IconLabel);
 
-export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+export class ValueButtonBase<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "UIBase",
+> extends OldButton<CTX, SELF> {
   _value: unknown;
 
   constructor() {
@@ -124,7 +131,7 @@ export class ValueButtonBase<CTX extends IContextBase = IContextBase> extends Ol
   }
 }
 
-export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, boolean> {
+export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, boolean, "Check"> {
   icon: number = -1;
   iconsheet: number = 0;
   _checked: boolean;
@@ -455,10 +462,11 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
 UIBase.internalRegister(Check);
 
-export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown> extends UIBase<
-  CTX,
-  VALUE
-> {
+export class IconButton<
+  CTX extends IContextBase = IContextBase,
+  VALUE = unknown,
+  SELF extends string = "IconButton",
+> extends UIBase<CTX, VALUE, SELF> {
   _icon_pressed: number | undefined;
   _icon: number;
   iconsheet: number;
@@ -791,7 +799,11 @@ export class IconButton<CTX extends IContextBase = IContextBase, VALUE = unknown
 
 UIBase.internalRegister(IconButton);
 
-export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButton<CTX, boolean> {
+export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButton<
+  CTX,
+  boolean,
+  "IconCheck"
+> {
   _checked: boolean | undefined;
   _drawCheck: boolean | undefined;
 
@@ -1026,7 +1038,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
 
 UIBase.internalRegister(IconCheck);
 
-export class Check1<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+export class Check1<CTX extends IContextBase = IContextBase> extends OldButton<CTX, "Check1"> {
   _value: unknown;
 
   constructor() {

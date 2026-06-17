@@ -73,7 +73,7 @@ type PopupContainer<CTX extends IContextBase = IContextBase> = UIBase<CTX> & {
 /* Window augmentations for _menuWrangler, menu, _startMenuEventWrangling
  * are already declared in global.d.ts — use type assertions when setting. */
 
-export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, unknown, "Menu"> {
   static SEP: typeof SEP;
 
   /** The src button that created this menu, used to switch menus when hovering over other buttons. */
@@ -878,7 +878,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
 Menu.SEP = SEP;
 UIBase.internalRegister(Menu);
 
-export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX> {
+export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX, "DropBox"> {
   _menu: Menu<CTX> | undefined;
   prop?: toolprop.EnumProperty;
   lockTimer: number;

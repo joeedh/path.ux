@@ -26,7 +26,10 @@ type PopupContainer = UIBase & {
 
 type AnySlider = UIBase & Record<string, unknown>;
 
-export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends Button<CTX> {
+export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends Button<
+  CTX,
+  "VectorPopupButton"
+> {
   _value: Vector2 | Vector3 | Vector4 | Quat;
 
   constructor() {
@@ -124,7 +127,10 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
 }
 UIBase.internalRegister(VectorPopupButton);
 
-export class VectorPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class VectorPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "VectorPanel"
+> {
   _value: Vector2 | Vector3 | Vector4 | Quat;
   declare name: string;
   axes: string;
@@ -592,7 +598,11 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 }
 UIBase.internalRegister(VectorPanel);
 
-export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "ToolTip"
+> {
   div: HTMLDivElement;
   _start_time: number | undefined;
   timeout: number | undefined;
@@ -691,7 +701,7 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<CTX
       undefined,
       undefined,
       undefined,
-      this.getDefault("ToolTipText") as string | undefined
+      this.getDefault("ToolTipText")
     );
 
     return [block.width + 50, block.height + 30];

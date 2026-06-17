@@ -5,7 +5,10 @@ import { CSSFont } from "../core/cssfont";
 import { TextBoxBase } from "./ui_textbox";
 import { keymap } from "../path-controller/util/simple_events";
 
-export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
+export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<
+  CTX,
+  "RichEditor"
+> {
   _internalDisabled: boolean;
   _value: string;
   textOnlyMode: boolean;
@@ -276,7 +279,11 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 }
 UIBase.internalRegister(RichEditor);
 
-export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<CTX, string> {
+export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  string,
+  "RichViewer"
+> {
   contents: HTMLDivElement;
   _value: string;
 

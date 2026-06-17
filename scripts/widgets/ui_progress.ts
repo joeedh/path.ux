@@ -3,7 +3,11 @@ import { IContextBase } from "../core/context_base";
 import * as util from "../path-controller/util/util";
 import { keymap } from "../path-controller/util/simple_events";
 
-export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
+export class ProgressCircle<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  number,
+  "ProgressCircle"
+> {
   canvas: HTMLCanvasElement;
   g: CanvasRenderingContext2D;
   declare size: number;

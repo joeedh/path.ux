@@ -130,7 +130,11 @@ export class CanvasOverdraw<CTX extends IContextBase = IContextBase> extends ui_
   }
 }
 
-export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
+export class Overdraw<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<
+  CTX,
+  unknown,
+  "Overdraw"
+> {
   visibleToPick: boolean;
   screen: unknown;
   shapes: unknown[];

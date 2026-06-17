@@ -117,7 +117,11 @@ export class ScreenHalfEdge<CTX extends IContextBase = IContextBase> {
   }
 }
 
-export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<CTX> {
+export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_base.UIBase<
+  CTX,
+  unknown,
+  "ScreenBorder"
+> {
   screen?: Screen<CTX>;
   v1!: ScreenVert;
   v2!: ScreenVert;

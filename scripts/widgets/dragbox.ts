@@ -82,7 +82,7 @@ function startDrag<CTX extends IContextBase>(box: DragBox<CTX>) {
   box._modal = pushModalLight(handlers as unknown as Record<string, unknown>);
 }
 
-export class DragBox<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class DragBox<CTX extends IContextBase = IContextBase> extends Container<CTX, "DragBox"> {
   _done: boolean;
   header: Container<CTX>;
   contents: Container<CTX>;

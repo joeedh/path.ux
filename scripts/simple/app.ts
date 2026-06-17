@@ -253,7 +253,7 @@ export class StartArgs {
   }
 }
 
-export class SimpleScreen extends Screen {
+export class SimpleScreen extends Screen<IContextBase, "SimpleScreen"> {
   constructor() {
     super();
 

@@ -10,7 +10,10 @@ interface CatKey {
   help: string;
 }
 
-export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "ThemeEditor"
+> {
   categoryMap: Record<string, string | CatKey>;
 
   constructor() {

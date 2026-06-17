@@ -40,7 +40,10 @@ export const testSnapScreenVerts = function (
   screen.snapScreenVerts(fitToSize);
 };
 
-export class AreaDocker<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class AreaDocker<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "AreaDocker"
+> {
   _last_update_key: string | undefined;
   mpos: InstanceType<typeof Vector2>;
   needsRebuild: boolean;

@@ -8,7 +8,10 @@ import { CSSFont } from "../core/cssfont";
 const UIBase = ui_base.UIBase;
 const PackFlags = ui_base.PackFlags;
 
-export class PanelContents<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class PanelContents<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "PanelContents"
+> {
   // set by PanelFrame
   /** @deprecated use panelFrame */
   declare _panel: PanelFrame<CTX>;
@@ -42,7 +45,10 @@ export class PanelContents<CTX extends IContextBase = IContextBase> extends Colu
 }
 UIBase.internalRegister(PanelContents);
 
-export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "PanelFrame"
+> {
   titleframe: RowFrame<CTX>;
   contents: PanelContents<CTX>;
   _iconcheckWidget!: IconCheck<CTX>;

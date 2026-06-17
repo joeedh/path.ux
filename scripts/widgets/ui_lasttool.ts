@@ -54,7 +54,10 @@ window.setInterval(() => {
  * settings.  It assumes that recent toolops are accessible
  * in ctx.last_tool.
  * */
-export class LastToolPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class LastToolPanel<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "LastToolPanel"
+> {
   ignoreOnChange: boolean;
   on_change: (() => void) | null;
   _tool_id: number | undefined;

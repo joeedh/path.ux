@@ -62,7 +62,10 @@ function loadNumConstraints(self: any, defaults: any = SliderDefaults, skip = ne
 }
 
 //use .setAttribute("linear") to disable nonlinear sliding
-export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueButtonBase<CTX> {
+export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueButtonBase<
+  CTX,
+  "NumSlider"
+> {
   _last_label: string | undefined;
   mdown: boolean;
   ma: InstanceType<typeof util.MovingAvg> | undefined;
@@ -1048,7 +1051,11 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 }
 UIBase.internalRegister(NumSlider);
 
-export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
+export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "NumSliderSimpleBase"
+> {
   canvas: HTMLCanvasElement;
   g: CanvasRenderingContext2D | null;
   highlight: boolean;
@@ -1567,7 +1574,10 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<CTX> {
 }
 UIBase.internalRegister(NumSliderSimpleBase);
 
-export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class SliderWithTextbox<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "UIBase",
+> extends ColumnFrame<CTX, SELF> {
   _value: number;
   _name: string | undefined;
   _lock_textbox: boolean;
@@ -2019,9 +2029,10 @@ export class SliderWithTextbox<CTX extends IContextBase = IContextBase> extends 
   }
 }
 
-export class NumSliderSimple<
-  CTX extends IContextBase = IContextBase,
-> extends SliderWithTextbox<CTX> {
+export class NumSliderSimple<CTX extends IContextBase = IContextBase> extends SliderWithTextbox<
+  CTX,
+  "NumSliderSimple"
+> {
   constructor() {
     super();
 
@@ -2044,7 +2055,7 @@ UIBase.internalRegister(NumSliderSimple);
 
 export class NumSliderWithTextBox<
   CTX extends IContextBase = IContextBase,
-> extends SliderWithTextbox<CTX> {
+> extends SliderWithTextbox<CTX, "NumSliderWithTextBox"> {
   constructor() {
     super();
 

@@ -50,7 +50,10 @@ class TabClickEvent<CTX extends IContextBase = IContextBase> extends PointerEven
   }
 }
 
-export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<CTX> {
+export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<
+  CTX,
+  "TabItemContainer"
+> {
   declare name: string;
 
   static define() {
@@ -137,7 +140,11 @@ type TabDragEvents = {
 /**
  * This is a kind of phantom buttom DOM element (elements are 100% drawn with canvas).
  **/
-export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "TabItem"
+> {
   name: string;
   icon: number | undefined;
   tooltip: string;
@@ -607,7 +614,11 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
   }
 }
 
-export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "TabBar"
+> {
   _wrapperDiv?: HTMLDivElement;
   _contentsWrapper?: HTMLDivElement;
   iconsheet: number;
@@ -1660,7 +1671,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<CTX>
 
 UIBase.internalRegister(TabBar as any);
 
-export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "TabContainer"
+> {
   _style?: HTMLStyleElement;
   tbar: TabBar<CTX>;
   tabs: { [k: string]: TabItemContainer<CTX> };

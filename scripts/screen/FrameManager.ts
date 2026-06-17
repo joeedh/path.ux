@@ -83,7 +83,10 @@ export function purgeUpdateStack() {
  inherit-scale : don't resize to fit whole screen, use cssbox scaling
 
  */
-export class Screen<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class Screen<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "Screen",
+> extends UIBase<CTX, unknown, SELF> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `pathux.Screen { 

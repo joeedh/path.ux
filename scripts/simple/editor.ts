@@ -9,7 +9,7 @@ import type { Vector2 } from "../path-controller/util/vectormath";
 
 const sidebar_hash = new util.HashDigest();
 
-export class SideBar<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class SideBar<CTX extends IContextBase = IContextBase> extends Container<CTX, "SideBar"> {
   header: Container<CTX>;
   _last_resize_key: number | undefined;
   _closed: boolean;

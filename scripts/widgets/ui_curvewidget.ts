@@ -14,7 +14,10 @@ interface SliderWidget {
   baseUnit: string | undefined;
 }
 
-export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "Curve1DWidget"
+> {
   #in_onchange: number = 0;
 
   _value: Curve1D;

@@ -10,7 +10,7 @@ import { StringProperty, BoolProperty } from "../path-controller/toolsys/toolpro
 export class ListItem<
   CTX extends IContextBase = IContextBase,
   IDTYPE extends string | number = string | number,
-> extends RowFrame<CTX> {
+> extends RowFrame<CTX, "ListItem"> {
   highlight: boolean = false;
   is_active: boolean = false;
   declare listId: IDTYPE;
@@ -119,7 +119,7 @@ export type ResizeAxes = "x" | "y" | "xy";
 export class ListBox<
   CTX extends IContextBase = IContextBase,
   IDTYPE extends string | number = string | number,
-> extends Container<CTX> {
+> extends Container<CTX, "ListBox"> {
   items: ListItems<CTX, IDTYPE>;
   idmap: Map<IDTYPE, ListItem<CTX, IDTYPE>>;
 

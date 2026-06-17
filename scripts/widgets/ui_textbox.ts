@@ -12,7 +12,10 @@ import { _setTextboxClass, ErrorColors } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
 
-export class TextBoxBase<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class TextBoxBase<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "UIBase",
+> extends UIBase<CTX, unknown, SELF> {
   static define() {
     return {
       tagname       : "text-box-base",
@@ -21,7 +24,7 @@ export class TextBoxBase<CTX extends IContextBase = IContextBase> extends UIBase
   }
 }
 
-export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX> {
+export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX, "TextBox"> {
   dom: HTMLInputElement;
   _editing = false;
   _width: string | number = "min-content";

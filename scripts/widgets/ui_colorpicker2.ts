@@ -250,7 +250,11 @@ export class SimpleBox {
   }
 }
 
-export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "HueField"
+> {
   canvas: HTMLCanvasElement;
   g: CanvasRenderingContext2D;
   hsva: Vector4;
@@ -451,7 +455,11 @@ export class HueField<CTX extends IContextBase = IContextBase> extends UIBase<CT
 
 UIBase.internalRegister(HueField);
 
-export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "SatValField"
+> {
   canvas: HTMLCanvasElement;
   g: CanvasRenderingContext2D;
   hsva: Vector4;
@@ -779,7 +787,10 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
 
 UIBase.internalRegister(SatValField);
 
-export class ColorField<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class ColorField<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "ColorField"
+> {
   hsva: Vector4;
   rgba: Vector4;
   satvalfield: SatValField<CTX>;
@@ -989,7 +1000,10 @@ interface SliderWidget extends UIBase {
 }
 
 // @ts-expect-error - TypeScript limitation: generic classes can't properly override static methods
-export class ColorPicker<CTX extends IContextBase = IContextBase> extends ColumnFrame<CTX> {
+export class ColorPicker<CTX extends IContextBase = IContextBase> extends ColumnFrame<
+  CTX,
+  "ColorPicker"
+> {
   _lastThemeStyle: string;
   field!: ColorField<CTX>;
   colorbox!: HTMLDivElement;
@@ -1361,7 +1375,11 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
 
 UIBase.internalRegister(ColorPicker as unknown as typeof UIBase);
 
-export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends UIBase<
+  CTX,
+  unknown,
+  "ColorPickerButton"
+> {
   _highlight: boolean;
   _depress: boolean;
   _label: string;
