@@ -54,7 +54,7 @@ This can create problems with iteration, for example:
  `scripts/simple/` — simple app framework
  `documentation/` — documentation source (markdown)
  `dist/` — built output
- `generated/` — auto-generated data-path catalog (`pnpm run gen:paths`)
+ `generated/` — auto-generated catalogs: data paths (`pnpm run gen:paths`) and theme keys (`pnpm run gen:themes`)
 
 ## Data API paths
 
@@ -69,6 +69,40 @@ Valid `path` strings for `container.prop("...")`, related widget methods, and
 path's type, UI name, range, unit, and enum items. `generated/datapaths.ts` exports
 a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changing any
 `api_define` with `pnpm run gen:paths` (walks the app's `defineAPI()`).
+
+## Theme typing (`getDefault`)
+
+Theme lookups go through `UIBase.getDefault(key)` (style-class scoped, with
+`parentStyle`/`base` fallback). The keys are catalogued so `getDefault` can be
+type-checked, mirroring the data-path catalog above.
+
+- **Declare** the keys a widget uses in its `static define().theme`, mapping each
+  to a `t.*` token from `scripts/core/theme_schema.ts` (`t.number`, `t.color`,
+  `t.font`, …; nest an object for sub-records like `disabled`/`highlight`).
+  Declare the *returned* type — a `"12px"` value reads back as a number, so use
+  `t.number`. A widget inherits its parent class's declarations; only list what
+  it adds or overrides. Annotate the migrated `define()` with the exported
+  `UIBaseDefinition` return type so subclasses that omit `theme` still satisfy
+  the static-side variance check.
+- **Opt in** to typed lookups by passing the class name as `UIBase`'s third type
+  param: `class Button<CTX…> extends ButtonEventBase<CTX, "Button">` (thread a
+  `SELF extends string = "UIBase"` param through any intermediate base class).
+- **Regenerate** with `pnpm run gen:themes` (walks the registry, resolves
+  inheritance + `theme.ts` in JS, emits flat per-class types). It writes
+  `generated/themes.ts` (augments the `ThemeKeyRegistry` seam) and
+  `generated/themes.json`. `generated/` is gitignored — it's a build artifact.
+- **Strict check**: the default `pnpm run typecheck` keeps `getDefault` loose
+  (empty seam) so the library builds standalone; existing `as number`/`as CSSFont`
+  casts stay load-bearing there. Run `pnpm run gen:themes && pnpm run
+  typecheck:themes` (includes the catalog) to type-check `getDefault` against the
+  per-class keys for migrated widgets.
+- **CI**: run `pnpm run gen:themes --strict` (fails on a `define().theme` key
+  absent from `theme.ts` — i.e. a typo) followed by `pnpm run typecheck:themes`.
+- An **optional**, opt-in ESLint rule (`buildtools/eslint-rules/valid-theme-key.mjs`)
+  flags literal `getDefault("…")` keys absent from the whole catalog. It is not
+  wired into `eslint.config.js` by default (it currently surfaces ~15 legitimately
+  un-themed keys read with runtime defaults); enable it as a `pathux/valid-theme-key`
+  warning if you want typo coverage.
 
 ## Conventions
 

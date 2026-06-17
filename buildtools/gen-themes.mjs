@@ -354,9 +354,11 @@ function renderJson(entries) {
 
 async function main(argv) {
   let outDir = "generated";
+  let strict = false;
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--out") outDir = argv[++i] ?? outDir;
+    else if (argv[i] === "--strict") strict = true;
     else positional.push(argv[i]);
   }
   const entryModule = positional[0] ?? "scripts/pathux.ts";
@@ -402,6 +404,13 @@ async function main(argv) {
     `[gen-themes] wrote ${entries.length} classes to ${outDir}/ ` +
       `(themes.ts, themes.json)${allWarnings.length ? `; ${allWarnings.length} warning(s)` : ""}`
   );
+
+  // --strict (CI): a theme key declared in a widget's own define().theme that
+  // doesn't exist in theme.ts is almost always a typo — fail the build.
+  if (strict && allWarnings.length) {
+    console.error(`[gen-themes] --strict: ${allWarnings.length} validation error(s)`);
+    process.exitCode = 1;
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
