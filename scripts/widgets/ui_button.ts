@@ -1,14 +1,19 @@
 import * as util from "../path-controller/util/util";
 import { UIBase, parsepx, measureText, drawRoundBox, drawText } from "../core/ui_base";
+import type { UIBaseDefinition } from "../core/ui_base";
 import { keymap } from "../path-controller/util/events";
 import { IContextBase } from "../core/context_base";
 import cconst from "../config/const";
 import { _themeUpdateKey } from "../core/ui_base";
+import { t } from "../core/theme_schema";
 import type { CSSFont } from "../core/cssfont";
 
 cconst.DEBUG.buttonEvents = true;
 
-export class ButtonEventBase<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class ButtonEventBase<
+  CTX extends IContextBase = IContextBase,
+  SELF extends string = "UIBase",
+> extends UIBase<CTX, unknown, SELF> {
   _auto_depress: boolean;
   _highlight: boolean;
   accessor _pressed: boolean = false;
@@ -163,7 +168,10 @@ export class ButtonEventBase<CTX extends IContextBase = IContextBase> extends UI
   _redraw() {}
 }
 
-export class Button<CTX extends IContextBase = IContextBase> extends ButtonEventBase<CTX> {
+export class Button<CTX extends IContextBase = IContextBase> extends ButtonEventBase<
+  CTX,
+  "Button"
+> {
   label: HTMLSpanElement;
   _pressedTime: number;
   _pressedTimeout: number;
@@ -220,10 +228,22 @@ export class Button<CTX extends IContextBase = IContextBase> extends ButtonEvent
     this.__pressed = v;
   }
 
-  static define() {
+  static define(): UIBaseDefinition {
     return {
       tagname: "button-x",
       style  : "button",
+      theme: {
+        width               : t.number,
+        height              : t.number,
+        padding             : t.number,
+        "background-color"  : t.color,
+        "border-color"      : t.color,
+        "border-width"      : t.number,
+        "border-radius"     : t.number,
+        "focus-border-width": t.number,
+        DefaultText         : t.font,
+        BoxHighlight        : t.color,
+      },
     };
   }
 

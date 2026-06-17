@@ -941,7 +941,7 @@ if (typeof HTMLElement === "undefined") {
   window.PointerEvent = class PointerEvent {};
 }
 
-interface UIBaseDefinition {
+export interface UIBaseDefinition {
   tagname: string;
   style?: string;
   subclassChecksTheme?: boolean;

@@ -279,14 +279,19 @@ function resolveClass(cls, ctx) {
   if (style && style !== "base") overlay(resolved, inferStyle(style, ctx));
   overlay(resolved, declaredToTypes(declared));
 
-  // validation: declared keys absent from theme.ts (own style/parent/base)
+  // validation: a class's OWN declared keys absent from theme.ts (own style /
+  // parentStyle / base). Inherited declarations are validated on the class that
+  // declares them, so a subclass isn't blamed for a parent's keys.
+  const ownDef = ownDefine(cls);
+  const ownDeclared =
+    ownDef && ownDef.theme && typeof ownDef.theme === "object" ? ownDef.theme : {};
   const known = new Set([
     ...styleKeySet(ctx, "base"),
     ...(parentStyle ? styleKeySet(ctx, parentStyle) : []),
     ...(style ? styleKeySet(ctx, style) : []),
   ]);
   const warnings = [];
-  for (const k of Object.keys(declared)) {
+  for (const k of Object.keys(ownDeclared)) {
     if (!known.has(k))
       warnings.push(
         `${cls.name}: declared theme key "${k}" not found in theme.ts (style "${style}")`

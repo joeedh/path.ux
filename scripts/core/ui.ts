@@ -18,6 +18,8 @@ import {
 import "../path-controller/util/html5_fileapi";
 import { CSSFont } from "./cssfont";
 import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base";
+import type { UIBaseDefinition } from "./ui_base";
+import { t } from "./theme_schema";
 import type { KnownDataPath } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
 import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu";
@@ -55,7 +57,7 @@ export type SliderArgs = {
   decimalPlaces?: number;
 };
 
-export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
+export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, unknown, "Label"> {
   declare dom: HTMLDivElement;
   declare shadow: ShadowRoot;
   declare _useDataPathUndo: boolean | undefined;
@@ -126,10 +128,14 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
     }
   }
 
-  static define() {
+  static define(): UIBaseDefinition {
     return {
       tagname: "label-x",
       style  : "label",
+      theme: {
+        LabelText  : t.font,
+        DefaultText: t.font,
+      },
     };
   }
 
