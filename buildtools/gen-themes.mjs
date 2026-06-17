@@ -115,9 +115,13 @@ async function loadRegistry(entryModule) {
     format  : "esm",
     platform: "node",
     target  : "es2022",
-    external: ["electron", "marked", "parse5", "diff"],
-    banner  : { js: DOM_STUB_BANNER },
-    logLevel: "silent",
+    // Preserve SOURCE class names: without this esbuild renames collisions
+    // (Screen->Screen2, Container->_Container, ...) and the catalog keys would
+    // no longer match the class names widgets pass as the SELF type param.
+    keepNames: true,
+    external : ["electron", "marked", "parse5", "diff"],
+    banner   : { js: DOM_STUB_BANNER },
+    logLevel : "silent",
   });
 
   const code = result.outputFiles[0].text;
