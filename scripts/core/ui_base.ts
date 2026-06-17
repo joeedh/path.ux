@@ -88,6 +88,7 @@ import {
 } from "./ui_theme";
 
 import { DefaultTheme } from "./theme";
+import type { ThemeSchema } from "./theme_schema";
 
 //global list of elements to, hopefully, prevent minification tree shaking
 //of live elements
@@ -948,6 +949,12 @@ interface UIBaseDefinition {
   pasteForAllChildren?: boolean;
   copyForAllChildren?: boolean;
   parentStyle?: string;
+  /**
+   * Theme keys this element consumes, mapped to `t.*` schema tokens (see
+   * theme_schema.ts). Read by the `gen:themes` build step; an element inherits
+   * its parent class's declarations, so only list keys it adds or overrides.
+   */
+  theme?: ThemeSchema;
 }
 
 interface DisableData {
