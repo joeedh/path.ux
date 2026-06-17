@@ -88,7 +88,7 @@ import {
 } from "./ui_theme";
 
 import { DefaultTheme } from "./theme";
-import type { ThemeSchema } from "./theme_schema";
+import type { ThemeSchema, ThemeKeysFor } from "./theme_schema";
 
 //global list of elements to, hopefully, prevent minification tree shaking
 //of live elements
@@ -982,6 +982,13 @@ export type EventIF = { [k: string]: Event };
 export class UIBase<
   CTX extends IContextBase = IContextBase,
   VALUE extends unknown | any = unknown,
+  /**
+   * Widget class name used to look up this element's theme keys in
+   * {@link ThemeKeyRegistry} (see theme_schema.ts / generated/themes.ts).
+   * Defaults to "UIBase", whose catalog entry is empty, so `getDefault`'s typed
+   * overload stays inert unless a subclass opts in by passing its own name.
+   */
+  SELF extends string = "UIBase",
 > extends HTMLElement {
   static PositionKey: string;
 
@@ -3918,12 +3925,28 @@ export class UIBase<
     return style[subkey as keyof typeof style] as T;
   }
 
+  /**
+   * Typed against this class's theme catalog: when `SELF` names a class present
+   * in {@link ThemeKeyRegistry} (augmented by generated/themes.ts), `key` is
+   * checked and the return type is inferred from the catalog. Otherwise the
+   * string fallback overload below applies, preserving prior behavior.
+   */
+  getDefault<K extends keyof ThemeKeysFor<SELF> & string>(
+    key: K,
+    checkForMobile?: boolean
+  ): ThemeKeysFor<SELF>[K];
   getDefault<T extends DefaultTypes = string>(
     key: string,
     checkForMobile?: boolean,
     defaultval?: unknown,
     inherit?: boolean
-  ): T {
+  ): T;
+  getDefault(
+    key: string,
+    checkForMobile?: boolean,
+    defaultval?: unknown,
+    inherit?: boolean
+  ): unknown {
     const ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
 
     //convert pixel units straight to numbers
@@ -3933,11 +3956,11 @@ export class UIBase<
 
       const f = parseFloat(s);
       if (!isNaN(f) && isFinite(f)) {
-        return f as unknown as T;
+        return f;
       }
     }
 
-    return ret as unknown as T;
+    return ret;
   }
 
   getDefault_intern(

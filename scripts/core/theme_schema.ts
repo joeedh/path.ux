@@ -53,3 +53,17 @@ export type TokenType<X> =
     : X extends ThemeSchema
       ? { [K in keyof X]: TokenType<X[K]> }
       : never;
+
+/**
+ * Catalog seam: maps a widget class name to its resolved (own + inherited +
+ * base) theme-key → value-type record. Empty here so the library typechecks
+ * standalone; `gen:themes` emits `generated/themes.ts` which augments this
+ * interface. Include that file (tsconfig.themes.json) to make
+ * {@link UIBase.getDefault}'s typed overload strict.
+ */
+export interface ThemeKeyRegistry {}
+
+/** Resolved theme keys for class `S`, or `{}` if `S` isn't in the catalog. */
+export type ThemeKeysFor<S extends string> = S extends keyof ThemeKeyRegistry
+  ? ThemeKeyRegistry[S]
+  : {};

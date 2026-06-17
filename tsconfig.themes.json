@@ -1,0 +1,9 @@
+{
+  // Opt-in strict-theme typecheck: same as tsconfig.json but also pulls in the
+  // generated catalog (generated/themes.ts) which augments ThemeKeyRegistry, so
+  // UIBase.getDefault is checked against per-class theme keys for migrated
+  // widgets. Run `pnpm run gen:themes` first. `extends` replaces `include`, so
+  // the scripts globs are repeated here.
+  "extends": "./tsconfig.json",
+  "include": ["scripts/**/*.ts", "scripts/**/*.tsx", "scripts/**/*.js", "generated/themes.ts"]
+}

@@ -8,6 +8,8 @@
   "scripts": {
     "build": "node buildtools/esbuild.mjs",
     "gen:paths": "node buildtools/gen-datapaths.mjs",
+    "gen:themes": "node buildtools/gen-themes.mjs",
+    "typecheck:themes": "npx tsgo --noEmit -p tsconfig.themes.json",
     "watch": "node buildtools/esbuild.mjs --watch",
     "typecheck": "npx tsgo --noEmit",
     "emitTypes": "npx tsgo --project tsconfigDecl.json",
