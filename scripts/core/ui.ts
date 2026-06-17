@@ -176,7 +176,6 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX> 
       return;
     }
 
-    //console.log(path);
     if (prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
       val = units.buildString(val as number, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
@@ -561,16 +560,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       console.warn((this as any).constructor.name + ".strip(): unknown theme class " + themeClass);
     }
 
-    /*
-    let prev = strip.previousElementSibling;
-    if (prev !== undefined && (prev.packflag & flag)) {
-      if (horiz) {
-        prev.style["padding-right"] = "0px";
-      } else {
-        prev.style["padding-top"] = "0px";
-      }
-    }//*/
-
     return strip;
   }
 
@@ -669,8 +658,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
   }
 
   loadJSON(obj: Record<string, unknown>) {
-    //console.error("ui.js:Container.loadJSON: implement me!");
-
     return this;
   }
 
@@ -930,8 +917,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
     }
 
     const cb = () => {
-      console.log("tool run");
-
       const toolob = createCb!(cls);
       this.ctx.api.execTool(this.ctx, toolob);
     };
@@ -1260,11 +1245,8 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       console.warn("Unknown property at path", fullpath, detail);
       throw new DataPathError(`Unknown property at path "${fullpath}"${detail}`);
     }
-    //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     const prop = rdef.prop as ToolPropertyTypes;
     const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
-
-    //console.log(prop, PropTypes, PropSubTypes);
 
     const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
 
@@ -1802,7 +1784,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
           styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
 
           check.description = prop.descriptions[key];
-          //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
         }
       } else {
         if (name === undefined) {
@@ -1846,7 +1827,6 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
             check.description = "" + prop.ui_value_names[key];
           }
           check.on_change = makecb(key);
-          //console.log("PATH", path);
         }
       }
     }
@@ -2297,13 +2277,9 @@ export class Container<CTX extends IContextBase = IContextBase> extends UIBase<C
       ret.setAttribute("datapath", path);
     }
 
-    console.warn("mass_set_path", mass_set_path);
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
     }
-
-    //XXX
-    window.colorpicker = ret;
 
     this._add(ret);
     return ret;

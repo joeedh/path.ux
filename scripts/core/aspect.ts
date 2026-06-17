@@ -168,7 +168,7 @@ export class AfterAspect {
           }
 
           if (isDead) {
-            console.warn("pruning dead AfterAspect callback", node);
+            //console.warn("pruning dead AfterAspect callback", node);
             chain.remove(chain2[i]);
             continue;
           }

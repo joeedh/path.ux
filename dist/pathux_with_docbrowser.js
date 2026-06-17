@@ -26922,7 +26922,6 @@ var init_aspect = __esm({
                 isDead = isDead || !!node.isDead?.();
               }
               if (isDead) {
-                console.warn("pruning dead AfterAspect callback", node);
                 chain.remove(chain2[i]);
                 continue;
               }
@@ -27230,7 +27229,7 @@ var init_eventdag = __esm({
           node = node.graphNode;
         }
         if (node === void 0) {
-          console.warn("Not an event node:", arguments[0]);
+          console.warn("Not an event node:", node);
           throw new Error("Not an event node");
         }
         return node;
@@ -27273,16 +27272,18 @@ var init_eventdag = __esm({
         return this;
       }
       sort() {
-        console.warn("Sorting Graph");
         this.flag &= ~RecalcFlags2.RESORT;
         for (const n of this.nodes) {
           n.flag &= ~(NodeFlags.SORT_TAG1 | NodeFlags.SORT_TAG2);
         }
         const sortlist = this.sortlist;
         this.sortlist.length = 0;
-        const dosort = (n) => {
+        const checkparent = (n, path = []) => {
           if (n.flag & NodeFlags.SORT_TAG2) {
-            console.error("Cycle in event dag!", n);
+            const spath = path.map(
+              (s) => typeof s === "string" ? s : `${s.name}:${s.type[0]}:n${s.node.id}`
+            );
+            console.error("Cycle in event dag!", n, path, spath);
             return;
           }
           n.flag |= NodeFlags.SORT_TAG2;
@@ -27290,7 +27291,7 @@ var init_eventdag = __esm({
             for (const sockb of socka.edges) {
               const n2 = sockb.node;
               if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-                dosort(n2);
+                checkparent(n2, path.concat(["1", sockb, socka]));
               }
             }
           }
@@ -27298,23 +27299,25 @@ var init_eventdag = __esm({
           n.flag |= NodeFlags.SORT_TAG1;
           n.sortIndex = sortlist.length;
           sortlist.push(n);
+        };
+        const dosort = (n, path = []) => {
+          checkparent(n, path);
           for (const socka of Object.values(n.outputs)) {
             for (const sockb of socka.edges) {
               const n2 = sockb.node;
               if (!(n2.flag & NodeFlags.SORT_TAG1)) {
-                dosort(n2);
+                dosort(n2, path.concat(["2", socka, sockb]));
               }
             }
           }
         };
         for (const n of this.nodes) {
           if (!(n.flag & NodeFlags.SORT_TAG1)) {
-            dosort(n);
+            dosort(n, ["3"]);
           }
         }
       }
       queueExec() {
-        console.warn("queueExec", this.queueReq);
         this.flag |= RecalcFlags2.RUN;
         if (this.queueReq !== void 0) {
           return;
@@ -27330,7 +27333,6 @@ var init_eventdag = __esm({
         if (this.flag & RecalcFlags2.RESORT) {
           this.sort();
         }
-        console.warn("Executing Graph");
         this.#skipQueueExec++;
         const sortlist = this.sortlist;
         for (const n of sortlist) {
@@ -28728,6 +28730,14 @@ var init_ui_base = __esm({
           /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
         );
         this.shadow = this.attachShadow({ mode: "open" });
+        const styleElem = document.createElement("style");
+        styleElem.innerHTML = `
+        /* This hides the host element when it has the hidden attribute */
+        :host([hidden]) {
+          display: none !important;
+        }
+    `;
+        this.shadow.appendChild(styleElem);
         if (const_default.DEBUG.paranoidEvents) {
           this.__cbs = [];
         }
@@ -64282,7 +64292,6 @@ var Container3 = class _Container extends UIBase2 {
       };
     }
     const cb = () => {
-      console.log("tool run");
       const toolob = createCb(cls);
       this.ctx.api.execTool(this.ctx, toolob);
     };
@@ -65240,11 +65249,9 @@ var Container3 = class _Container extends UIBase2 {
     if (path !== void 0) {
       ret.setAttribute("datapath", path);
     }
-    console.warn("mass_set_path", mass_set_path);
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
     }
-    window.colorpicker = ret;
     this._add(ret);
     return ret;
   }
