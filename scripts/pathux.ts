@@ -61,6 +61,10 @@ import * as electron_api from "./platforms/electron/electron_api";
 
 export { electron_api };
 
+import * as nwjs_api from "./platforms/nwjs/nwjs_api";
+
+export { nwjs_api };
+
 export * from "./widgets/theme_editor";
 export * from "./widgets/ui_treeview";
 

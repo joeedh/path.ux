@@ -55,6 +55,7 @@ interface PathUXDebug {
 
 interface Window {
   haveElectron?: boolean;
+  haveNwjs?: boolean;
   redraw_all?: Function;
   /* ── Config & Theme (production) ────────────────────────── */
   __cconst: Record<string, unknown>;

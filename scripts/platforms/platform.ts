@@ -1,6 +1,8 @@
 let promise: Promise<{ platform: unknown }> | undefined;
 
-if ((window as unknown as Record<string, unknown>).haveElectron) {
+if ((window as unknown as Record<string, unknown>).haveNwjs) {
+  promise = import("./nwjs/nwjs_api");
+} else if ((window as unknown as Record<string, unknown>).haveElectron) {
   promise = import("./electron/electron_api");
 } else {
   promise = import("./web/web_api");
