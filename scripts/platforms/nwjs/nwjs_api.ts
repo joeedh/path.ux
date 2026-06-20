@@ -8,8 +8,14 @@
  * no main process. Menu-item `click` handlers are ordinary in-page functions.
  */
 
+/** Minimal nodejs buffer interface */
 declare class Buffer {
   static from(data: unknown, type?: string): Buffer;
+  byteLength: number;
+  byteOffset: number;
+  buffer: {
+    slice(start: number, end: number): ArrayBuffer;
+  }
 }
 
 // Minimal ambient types for the NW.js APIs used here.
@@ -449,7 +455,8 @@ export class platform extends PlatformAPI {
       if (isMimeText(mime)) {
         accept(fs.readFileSync(p, "utf8"));
       } else {
-        accept(fs.readFileSync(p) as ArrayBuffer);
+        const buf = fs.readFileSync(p) as unknown as Buffer;
+        accept(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
       }
     });
   }
