@@ -1128,7 +1128,7 @@ var init_mobile_detect = __esm({
   }
 });
 
-// node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
+// ../../vendor/nstructjs/build/nstructjs_es6.js
 function isParseStructsDummy(cls) {
   return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
 }
@@ -2564,7 +2564,8 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
+  "../../vendor/nstructjs/build/nstructjs_es6.js"() {
+    "use strict";
     colormap = {
       "black": 30,
       "red": 31,
@@ -33061,6 +33062,323 @@ var init_platform_base = __esm({
   }
 });
 
+// scripts/platforms/nwjs/nwjs_api.ts
+var nwjs_api_exports = {};
+__export(nwjs_api_exports, {
+  buildNwMenu: () => buildNwMenu,
+  checkInit: () => checkInit,
+  getNativeIcon: () => getNativeIcon,
+  initMenuBar: () => initMenuBar,
+  mimeMap: () => mimeMap,
+  platform: () => platform
+});
+function getNw() {
+  return globalThis.nw;
+}
+function myRequire(mod) {
+  return globalThis.require(mod);
+}
+function getFilename(filepath) {
+  let filename = filepath.replace(/\\/g, "/");
+  let i = filename.length - 1;
+  while (i >= 0 && filename[i] !== "/") {
+    i--;
+  }
+  if (filename[i] === "/") {
+    i++;
+  }
+  if (i > 0) {
+    filename = filename.slice(i, filename.length).trim();
+  }
+  return filename;
+}
+function checkInit() {
+  if (window.haveNwjs && !_init) {
+    _init = true;
+    patchDropBox();
+  }
+}
+function patchDropBox() {
+  if (const_default.noElectronMenus) {
+    return;
+  }
+  DropBox.prototype._onpress = function _onpress(e) {
+    if (this._menu !== void 0) {
+      this._menu.close();
+      this._menu = void 0;
+      this._pressed = false;
+      this._redraw();
+      return;
+    }
+    this._build_menu();
+    const nwmenu = buildNwMenu(this._menu);
+    this._menu.close = () => {
+    };
+    if (this._menu === void 0) {
+      return;
+    }
+    this._menu._dropbox = this;
+    this.dom._background = this.getDefault("BoxDepressed");
+    this._background = this.getDefault("BoxDepressed");
+    this._redraw();
+    this._pressed = true;
+    this.setCSS();
+    const onclose = this._menu.onclose;
+    this._menu.onclose = () => {
+      this._pressed = false;
+      this._redraw();
+      const menu = this._menu;
+      if (menu) {
+        this._menu = void 0;
+        menu._dropbox = void 0;
+      }
+      if (onclose) {
+        onclose.call(menu);
+      }
+    };
+    const rects = this.dom.getClientRects();
+    const x = ~~rects[0].x;
+    const y = ~~(rects[0].y + Math.ceil(rects[0].height));
+    nwmenu.popup(x, y);
+    if (this._menu) {
+      this._menu.onclose();
+    }
+  };
+}
+function getNativeIcon(icon, size = 16) {
+  if (icon in iconcache) {
+    return iconcache[icon];
+  }
+  try {
+    const manager3 = getIconManager();
+    const closestSheet = manager3.findClosestSheet(size);
+    const tilesize = manager3.getTileSize(closestSheet);
+    const canvas = document.createElement("canvas");
+    const g = canvas.getContext("2d");
+    canvas.width = canvas.height = size;
+    const scale = size / tilesize;
+    g.scale(scale, scale);
+    manager3.canvasDraw(
+      { getDPI: () => 1 },
+      canvas,
+      g,
+      icon,
+      0,
+      0,
+      closestSheet
+    );
+    const header = "data:image/png;base64,";
+    const dataUrl = canvas.toDataURL();
+    const b64 = dataUrl.slice(header.length);
+    const data = Buffer.from(b64, "base64");
+    const os = myRequire("os");
+    const pathlib = myRequire("path");
+    const file = pathlib.join(os.tmpdir(), `pathux_icon_${icon}.png`);
+    myRequire("fs").writeFileSync(file, data);
+    iconcache[icon] = file;
+    return file;
+  } catch (error2) {
+    console.warn("nwjs getNativeIcon failed", error2);
+    return void 0;
+  }
+}
+function buildNwMenuInto(menu, retain) {
+  const nw = getNw();
+  const nwmenu = new nw.Menu();
+  retain.push(nwmenu);
+  const buildItem = (item) => {
+    let mi;
+    if (item._isMenu) {
+      const menu2 = item._menu;
+      mi = new nw.MenuItem({
+        submenu: buildNwMenuInto(menu2, retain),
+        label: menu2.getAttribute("title") ?? ""
+      });
+    } else {
+      const icon = item.icon;
+      const label = "" + item.label;
+      let nativeIcon;
+      if (icon !== void 0 && icon >= 0) {
+        nativeIcon = getNativeIcon(icon);
+      }
+      mi = new nw.MenuItem({
+        label,
+        icon: nativeIcon,
+        click: function() {
+          try {
+            menu.on_select?.(item._id);
+            menu._onselect?.(item._id);
+          } catch (err) {
+            console.warn("nwjs menu callback error:", err?.stack || err);
+          }
+        }
+      });
+    }
+    retain.push(mi);
+    return mi;
+  };
+  for (const item of menu.items) {
+    nwmenu.append(buildItem(item));
+  }
+  return nwmenu;
+}
+function buildNwMenu(menu) {
+  _popupRetain = [];
+  return buildNwMenuInto(menu, _popupRetain);
+}
+function initMenuBar(menuEditor, override = false) {
+  checkInit();
+  if (!window.haveNwjs) {
+    return;
+  }
+  if (_menu_init && !override) {
+    return;
+  }
+  _menu_init = true;
+  const nw = getNw();
+  const menubar = new nw.Menu({ type: "menubar" });
+  const retain = [menubar];
+  const header = menuEditor.header;
+  const items = [];
+  for (const dbox of header.traverse(DropBox)) {
+    const db = dbox;
+    db._build_menu();
+    db.update();
+    db._build_menu();
+    const menu2 = db._menu;
+    menu2.ctx = db.ctx;
+    menu2._init();
+    menu2.update();
+    const title = db._genLabel();
+    const item = new nw.MenuItem({
+      label: title,
+      tooltip: db.description,
+      submenu: buildNwMenuInto(menu2, retain)
+    });
+    retain.push(item);
+    items.unshift(item);
+  }
+  for (const item of items) {
+    menubar.append(item);
+  }
+  _menubarRetain = retain;
+  nw.Window.get().menu = menubar;
+}
+function pickFiles(attrs) {
+  return new Promise((accept, reject) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.style.display = "none";
+    if (attrs.accept) input.accept = attrs.accept;
+    if (attrs.multiple) input.multiple = true;
+    if (attrs.nwsaveas !== void 0) input.setAttribute("nwsaveas", attrs.nwsaveas);
+    if (attrs.nwdirectory) input.setAttribute("nwdirectory", "");
+    let settled = false;
+    const cleanup = () => {
+      window.removeEventListener("focus", onFocus, true);
+      input.remove();
+    };
+    const onChange = () => {
+      settled = true;
+      const files = Array.from(input.files ?? []);
+      cleanup();
+      if (files.length === 0) {
+        reject("cancel");
+      } else {
+        accept(files.map((f2) => f2.path));
+      }
+    };
+    const onFocus = () => {
+      window.setTimeout(() => {
+        if (!settled) {
+          cleanup();
+          reject("cancel");
+        }
+      }, 300);
+    };
+    input.addEventListener("change", onChange);
+    window.addEventListener("focus", onFocus, true);
+    document.body.appendChild(input);
+    input.click();
+  });
+}
+var _menu_init, _init, iconcache, _menubarRetain, _popupRetain, platform;
+var init_nwjs_api = __esm({
+  "scripts/platforms/nwjs/nwjs_api.ts"() {
+    "use strict";
+    init_ui_menu();
+    init_ui_base();
+    init_const();
+    init_platform_base();
+    init_platform_base();
+    init_platform_base();
+    _menu_init = false;
+    _init = false;
+    iconcache = {};
+    _menubarRetain = [];
+    _popupRetain = [];
+    platform = class extends PlatformAPI {
+      static _acceptFromFilters(filters) {
+        const exts = /* @__PURE__ */ new Set();
+        for (const f2 of filters) {
+          const list5 = Array.isArray(f2) ? f2 : f2.extensions;
+          for (let e of list5) {
+            e = e.replace(/\./g, "").trim();
+            if (e && e !== "*") exts.add("." + e);
+          }
+        }
+        return Array.from(exts).join(",");
+      }
+      static showOpenDialog(title, args = new FileDialogArgs()) {
+        const accept = this._acceptFromFilters(
+          args.filters ?? []
+        );
+        return pickFiles({
+          accept: accept || void 0,
+          multiple: !!args.multi
+        }).then((paths) => paths.map((p) => new FilePath(p, getFilename(p))));
+      }
+      static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
+        const accept = this._acceptFromFilters(
+          args.filters ?? []
+        );
+        const defaultName = args.defaultPath ? getFilename(args.defaultPath) : "untitled";
+        return pickFiles({
+          accept: accept || void 0,
+          nwsaveas: defaultName
+        }).then((paths) => {
+          const path = paths[0];
+          let filedata = filedata_cb();
+          if (filedata instanceof ArrayBuffer) {
+            filedata = new Uint8Array(filedata);
+          }
+          myRequire("fs").writeFileSync(path, filedata);
+          return new FilePath(path, getFilename(path));
+        });
+      }
+      static readFile(path, mime) {
+        return new Promise((accept) => {
+          const fs = myRequire("fs");
+          const p = path.data;
+          if (isMimeText(mime)) {
+            accept(fs.readFileSync(p, "utf8"));
+          } else {
+            const buf = fs.readFileSync(p);
+            accept(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+          }
+        });
+      }
+      static writeFile(data, handle, mime) {
+        return new Promise((accept) => {
+          const fs = myRequire("fs");
+          fs.writeFileSync(handle.data, data);
+          accept(handle);
+        });
+      }
+    };
+  }
+});
+
 // scripts/platforms/electron/electron_api.ts
 var electron_api_exports = {};
 __export(electron_api_exports, {
@@ -33068,11 +33386,11 @@ __export(electron_api_exports, {
   ElectronMenuItem: () => ElectronMenuItem,
   buildElectronHotkey: () => buildElectronHotkey,
   buildElectronMenu: () => buildElectronMenu,
-  checkInit: () => checkInit,
-  getNativeIcon: () => getNativeIcon,
-  iconcache: () => iconcache,
-  initMenuBar: () => initMenuBar,
-  platform: () => platform,
+  checkInit: () => checkInit2,
+  getNativeIcon: () => getNativeIcon2,
+  iconcache: () => iconcache2,
+  initMenuBar: () => initMenuBar2,
+  platform: () => platform2,
   wrapRemoteCallback: () => wrapRemoteCallback
 });
 function getNativeTheme() {
@@ -33100,10 +33418,10 @@ function getElectronVersion() {
 function getElectron() {
   return __require("electron");
 }
-function myRequire(mod) {
+function myRequire2(mod) {
   return globalThis.require(mod);
 }
-function getFilename(filepath) {
+function getFilename2(filepath) {
   let filename = filepath.replace(/\\/g, "/");
   let i = filename.length - 1;
   while (i >= 0 && filename[i] !== "/") {
@@ -33145,7 +33463,7 @@ function initElectronIpc() {
     });
   });
 }
-function patchDropBox() {
+function patchDropBox2() {
   initElectronIpc();
   if (const_default.noElectronMenus) {
     return;
@@ -33203,22 +33521,22 @@ function patchDropBox() {
     });
   };
 }
-function checkInit() {
-  if (window.haveElectron && !_init) {
-    _init = true;
-    patchDropBox();
+function checkInit2() {
+  if (window.haveElectron && !_init2) {
+    _init2 = true;
+    patchDropBox2();
     setInterval(on_tick, 350);
   }
 }
 function makeIconKey(icon, iconsheet, invertColors) {
   return "" + icon + ":" + iconsheet + ":" + invertColors;
 }
-function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
+function getNativeIcon2(icon, iconsheet = 0, invertColors = false, size = 16) {
   let icongen;
   try {
-    icongen = myRequire("./icogen.js");
+    icongen = myRequire2("./icogen.js");
   } catch (error2) {
-    icongen = myRequire("./icogen.cjs");
+    icongen = myRequire2("./icogen.cjs");
   }
   window.icongen = icongen;
   const manager3 = getIconManager();
@@ -33247,7 +33565,7 @@ function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
     let data = canvas.toDataURL();
     data = data.slice(header.length, data.length);
     data = Buffer.from(data, "base64");
-    myRequire("fs").writeFileSync("./myicon2.png", data);
+    myRequire2("fs").writeFileSync("./myicon2.png", data);
     images.push(data);
   }
   return "myicon2.png";
@@ -33280,7 +33598,7 @@ function buildElectronMenu(menu) {
     }
     let nativeIcon;
     if (icon !== void 0 && icon >= 0) {
-      nativeIcon = getNativeIcon(icon);
+      nativeIcon = getNativeIcon2(icon);
     }
     const args = {
       id: "" + item._id,
@@ -33300,15 +33618,15 @@ function buildElectronMenu(menu) {
   }
   return emenu;
 }
-function initMenuBar(menuEditor, override = false) {
-  checkInit();
+function initMenuBar2(menuEditor, override = false) {
+  checkInit2();
   if (!window.haveElectron) {
     return;
   }
-  if (_menu_init && !override) {
+  if (_menu_init2 && !override) {
     return;
   }
-  _menu_init = true;
+  _menu_init2 = true;
   const menu = new ElectronMenu();
   const _roles = /* @__PURE__ */ new Set([
     "undo",
@@ -33360,7 +33678,7 @@ function initMenuBar(menuEditor, override = false) {
   }
   ElectronMenu.setApplicationMenu(menu);
 }
-var _nativeTheme, _menu_init, _init, electron_menu_idgen, ipcRenderer, ElectronMenu, callbacks, keybase, ipcInit, ElectronMenuItem, on_tick, iconcache, map2, platform;
+var _nativeTheme, _menu_init2, _init2, electron_menu_idgen, ipcRenderer, ElectronMenu, callbacks, keybase, ipcInit, ElectronMenuItem, on_tick, iconcache2, map2, platform2;
 var init_electron_api = __esm({
   "scripts/platforms/electron/electron_api.ts"() {
     "use strict";
@@ -33370,8 +33688,8 @@ var init_electron_api = __esm({
     init_platform_base();
     init_platform_base();
     init_platform_base();
-    _menu_init = false;
-    _init = false;
+    _menu_init2 = false;
+    _init2 = false;
     electron_menu_idgen = 1;
     ElectronMenu = class extends Array {
       _ipcId;
@@ -33436,14 +33754,14 @@ var init_electron_api = __esm({
         }
       }
     };
-    iconcache = {};
+    iconcache2 = {};
     map2 = {
       CTRL: "Control",
       ALT: "Alt",
       SHIFT: "Shift",
       COMMAND: "Command"
     };
-    platform = class extends PlatformAPI {
+    platform2 = class extends PlatformAPI {
       static showOpenDialog(title, args = new FileDialogArgs()) {
         console.log(args.filters);
         const eargs = {
@@ -33467,7 +33785,7 @@ var init_electron_api = __esm({
               if (result.canceled || result.cancelled) {
                 reject("cancel");
               } else {
-                accept(result.filePaths.map((f2) => new FilePath(f2, getFilename(f2))));
+                accept(result.filePaths.map((f2) => new FilePath(f2, getFilename2(f2))));
               }
             }),
             wrapRemoteCallback("show-open-dialog", (error2) => {
@@ -33526,7 +33844,7 @@ var init_electron_api = __esm({
               }
               __require("fs").writeFileSync(path, filedata);
               console.log("saved file", filedata);
-              accept(new FilePath(path, getFilename(path)));
+              accept(new FilePath(path, getFilename2(path)));
             }
           };
           const oncatch = (error2) => {
@@ -33565,7 +33883,7 @@ var init_electron_api = __esm({
 var web_api_exports = {};
 __export(web_api_exports, {
   getWebFilters: () => getWebFilters,
-  platform: () => platform2
+  platform: () => platform3
 });
 function getWebFilters(filters = []) {
   const types = [];
@@ -33591,7 +33909,7 @@ function getWebFilters(filters = []) {
   }
   return types;
 }
-var platform2;
+var platform3;
 var init_web_api = __esm({
   "scripts/platforms/web/web_api.ts"() {
     "use strict";
@@ -33599,7 +33917,7 @@ var init_web_api = __esm({
     init_html5_fileapi();
     init_platform_base();
     init_platform_base();
-    platform2 = class extends PlatformAPI {
+    platform3 = class extends PlatformAPI {
       //returns a promise
       static showOpenDialog(title, args = new FileDialogArgs()) {
         const types = getWebFilters(args.filters);
@@ -40582,7 +40900,7 @@ var PanelFrame = class extends ColumnFrame {
     this.makeHeader();
   }
   get inherit_packflag() {
-    return this.contents ? this.contents.inherit_packflag : 0;
+    return this.contents ? this.contents.inherit_packflag & ~PackFlags3.NO_UPDATE : 0;
   }
   set inherit_packflag(val) {
     if (this.contents) {
@@ -40591,7 +40909,7 @@ var PanelFrame = class extends ColumnFrame {
   }
   get packflag() {
     if (!this.contents) return 0;
-    return this.contents.packflag;
+    return this.contents.packflag & ~PackFlags3.NO_UPDATE;
   }
   set packflag(val) {
     if (!this.contents) return;
@@ -40824,14 +41142,14 @@ var PanelFrame = class extends ColumnFrame {
       this.flushUpdate();
     }
   }
-  get noUpdateClosedContents() {
+  get updateClosedContents() {
     if (!this.hasAttribute("update-closed-contents")) {
       return false;
     }
     const ret = this.getAttribute("update-closed-contents");
     return ret === "true" || ret === "on";
   }
-  set noUpdateClosedContents(v) {
+  set updateClosedContents(v) {
     this.setAttribute("update-closed-contents", v ? "true" : "false");
   }
   _setVisible(isClosed, changed) {
@@ -40839,7 +41157,7 @@ var PanelFrame = class extends ColumnFrame {
     this._state = isClosed;
     if (isClosed) {
       this.contents.style.display = "none";
-      if (!this.noUpdateClosedContents) {
+      if (!this.updateClosedContents) {
         this.contents.packflag |= PackFlags3.NO_UPDATE;
       }
     } else {
@@ -46017,17 +46335,19 @@ init_curve1d_bspline();
 var platform_exports = {};
 __export(platform_exports, {
   getPlatformAsync: () => getPlatformAsync,
-  platform: () => platform3
+  platform: () => platform4
 });
 var promise;
-if (window.haveElectron) {
+if (window.haveNwjs) {
+  promise = Promise.resolve().then(() => (init_nwjs_api(), nwjs_api_exports));
+} else if (window.haveElectron) {
   promise = Promise.resolve().then(() => (init_electron_api(), electron_api_exports));
 } else {
   promise = Promise.resolve().then(() => (init_web_api(), web_api_exports));
 }
-var platform3;
+var platform4;
 promise.then((module) => {
-  platform3 = module.platform;
+  platform4 = module.platform;
   promise = void 0;
 });
 function getPlatformAsync() {
@@ -46039,7 +46359,7 @@ function getPlatformAsync() {
     });
   }
   return new Promise((accept, reject) => {
-    accept(platform3);
+    accept(platform4);
   });
 }
 
@@ -53700,7 +54020,7 @@ function registerMenuBarEditor() {
 init_toolsys();
 init_toolprop();
 function getPlatform() {
-  return platform3;
+  return platform4;
 }
 var SimpleAppNewOp = class extends ToolOp {
   static tooldef() {
@@ -54337,6 +54657,7 @@ init_ui_menu();
 init_html5_fileapi();
 init_platform_base();
 init_electron_api();
+init_nwjs_api();
 init_const();
 setNotifier(ui_noteframe_exports);
 export {
@@ -54722,6 +55043,7 @@ export {
   normal_tri,
   noteframes,
   struct_default as nstructjs,
+  nwjs_api_exports as nwjs_api,
   parseToolPath,
   parseValue,
   parseValueIntern,

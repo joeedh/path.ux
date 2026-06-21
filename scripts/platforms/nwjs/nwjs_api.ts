@@ -15,7 +15,7 @@ declare class Buffer {
   byteOffset: number;
   buffer: {
     slice(start: number, end: number): ArrayBuffer;
-  }
+  };
 }
 
 // Minimal ambient types for the NW.js APIs used here.
@@ -37,13 +37,13 @@ interface NwMenu {
   items: NwMenuItem[];
 }
 interface NwApi {
-  Menu: {new (opts?: {type?: "menubar"}): NwMenu};
-  MenuItem: {new (opts: NwMenuItemOptions): NwMenuItem};
-  Window: {get(): {menu: NwMenu | null}};
+  Menu: { new (opts?: { type?: "menubar" }): NwMenu };
+  MenuItem: { new (opts: NwMenuItemOptions): NwMenuItem };
+  Window: { get(): { menu: NwMenu | null } };
 }
 
 function getNw(): NwApi {
-  return (globalThis as unknown as {nw: NwApi}).nw;
+  return (globalThis as unknown as { nw: NwApi }).nw;
 }
 
 interface NodeFS {
@@ -419,7 +419,9 @@ export class platform extends PlatformAPI {
   }
 
   static showOpenDialog(title: string, args = new FileDialogArgs()) {
-    const accept = this._acceptFromFilters((args.filters ?? []) as ({ extensions: string[] } | string[])[]);
+    const accept = this._acceptFromFilters(
+      (args.filters ?? []) as ({ extensions: string[] } | string[])[]
+    );
 
     return pickFiles({
       accept  : accept || undefined,
@@ -428,7 +430,9 @@ export class platform extends PlatformAPI {
   }
 
   static showSaveDialog(title: string, filedata_cb: () => unknown, args = new FileDialogArgs()) {
-    const accept = this._acceptFromFilters((args.filters ?? []) as ({ extensions: string[] } | string[])[]);
+    const accept = this._acceptFromFilters(
+      (args.filters ?? []) as ({ extensions: string[] } | string[])[]
+    );
     const defaultName = args.defaultPath ? getFilename(args.defaultPath) : "untitled";
 
     return pickFiles({

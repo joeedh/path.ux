@@ -98,7 +98,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   }
 
   get inherit_packflag(): number {
-    return this.contents ? this.contents.inherit_packflag : 0;
+    return this.contents ? this.contents.inherit_packflag & ~PackFlags.NO_UPDATE : 0;
   }
 
   set inherit_packflag(val: number) {
@@ -109,7 +109,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
 
   get packflag(): number {
     if (!this.contents) return 0 as number;
-    return this.contents.packflag;
+    return this.contents.packflag & ~PackFlags.NO_UPDATE;
   }
 
   set packflag(val: number) {
@@ -420,7 +420,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     }
   }
 
-  get noUpdateClosedContents() {
+  get updateClosedContents() {
     if (!this.hasAttribute("update-closed-contents")) {
       return false;
     }
@@ -429,7 +429,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     return ret === "true" || ret === "on";
   }
 
-  set noUpdateClosedContents(v: boolean) {
+  set updateClosedContents(v: boolean) {
     this.setAttribute("update-closed-contents", v ? "true" : "false");
   }
 
@@ -441,7 +441,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     if (isClosed) {
       this.contents.style.display = "none";
 
-      if (!this.noUpdateClosedContents) {
+      if (!this.updateClosedContents) {
         this.contents.packflag |= PackFlags.NO_UPDATE;
       }
     } else {

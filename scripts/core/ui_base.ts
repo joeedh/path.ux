@@ -1268,7 +1268,7 @@ export class UIBase<
     super();
 
     EventNode.init(this);
-  
+
     this._tool_tip_abort_delay = undefined;
     this._tooltip_ref = undefined;
 
@@ -1304,7 +1304,7 @@ export class UIBase<
     );
 
     this.shadow = this.attachShadow({ mode: "open" });
-    
+
     // this is the stupidest thing ever
     const styleElem = document.createElement("style");
     styleElem.innerHTML = `
