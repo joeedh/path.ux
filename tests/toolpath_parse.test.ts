@@ -241,3 +241,56 @@ describe("parseToolPath", () => {
     expect(() => parseToolPath("test.select(count='hi')")).toThrow(/expected a number/);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/*  ToolOp.invoke                                                     */
+/* ------------------------------------------------------------------ */
+
+describe("ToolOp.invoke", () => {
+  test("resolves an enum key and sets it on the new tool instance", () => {
+    const tool = SelectTool.invoke({}, { mode: "SET" }) as InstanceType<typeof SelectTool>;
+    expect(tool.inputs.mode.getValue()).toBe(2);
+    expect(tool.getInputs().mode).toBe(2);
+  });
+
+  test("sets number, string and bool inputs from args", () => {
+    const tool = SelectTool.invoke({}, { count: 7, label: "hey", toggle: true }) as InstanceType<
+      typeof SelectTool
+    >;
+    const inputs = tool.getInputs();
+    expect(inputs.count).toBe(7);
+    expect(inputs.label).toBe("hey");
+    expect(inputs.toggle).toBe(true);
+  });
+
+  test("resolves a flag key to its bit value", () => {
+    const tool = FlagTool.invoke({}, { flags: "B" }) as InstanceType<typeof FlagTool>;
+    expect(tool.inputs.flags.getValue()).toBe(2);
+  });
+
+  // The core fix: invoke must throw on an enum/flag key it cannot transform,
+  // rather than silently warning and leaving the default value in place.
+  test("throws on an enum key it cannot transform", () => {
+    expect(() => SelectTool.invoke({}, { mode: "ZZZ" })).toThrow(/unknown key ZZZ/);
+  });
+
+  test("throws on a flag key it cannot transform", () => {
+    expect(() => FlagTool.invoke({}, { flags: "ZZZ" })).toThrow(/unknown key ZZZ/);
+  });
+
+  test("throws on an argument the tool does not declare", () => {
+    expect(() => silenceWarn(() => SelectTool.invoke({}, { bogus: 1 }))).toThrow(
+      /unknown argument bogus/
+    );
+  });
+
+  test("leaves untouched inputs at their defaults", () => {
+    const tool = SelectTool.invoke({}, { count: 4 }) as InstanceType<typeof SelectTool>;
+    const inputs = tool.getInputs();
+    expect(inputs.count).toBe(4);
+    // mode/label/toggle were not passed, so they keep their tooldef defaults
+    expect(inputs.mode).toBe(0);
+    expect(inputs.label).toBe("x");
+    expect(inputs.toggle).toBe(false);
+  });
+});
