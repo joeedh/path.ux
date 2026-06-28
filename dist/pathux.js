@@ -13031,6 +13031,13 @@ var init_toolprop = __esm({
         this.slideSpeed = 1;
         this.callbacks = {};
       }
+      /**
+       * Validates and optionally transforms arg, see parseArgs in ToolOp.
+       * This is used for e.g. enum/flag property parsing.
+       */
+      parseArg(arg) {
+        return arg;
+      }
       getUIName() {
         return this.uiname ?? _ToolProperty.makeUIName(this.apiname ?? "error");
       }
@@ -13514,6 +13521,12 @@ toolprop._NumberPropertyBase {
           this.wasSet = false;
         }
       }
+      parseArg(arg) {
+        if (typeof arg !== "number") {
+          throw new Error("expected a number for a number property");
+        }
+        return arg;
+      }
       get ui_range() {
         this.report("NumberProperty.ui_range is deprecated");
         return this.uiRange;
@@ -13846,6 +13859,15 @@ EnumKeyPair {
           this.descriptions[k] = uiname2;
         }
         this.wasSet = false;
+      }
+      parseArg(arg) {
+        if (typeof arg === "string") {
+          if (!(arg in this.values)) {
+            throw new Error(`unknown key ${arg}`);
+          }
+          arg = this.values[arg];
+        }
+        return arg;
       }
       /**
        * Provide a callback to update the enum or flags property dynamically
@@ -16001,6 +16023,23 @@ var init_toolsys = __esm({
         }
         return {};
       }
+      /**
+       * Goes through each argument, ensures an input exists for it then
+       * then passes the arg through the input property's parseArg method
+       */
+      static parseArgs(args) {
+        const def = this._getFinalToolDef();
+        const inputs = def.inputs;
+        for (const k in args) {
+          if (!(k in inputs)) {
+            console.warn(`unknown argument ${k} in tool ${this}`);
+            throw new Error(`unknown argument ${k}`);
+          }
+          const prop = inputs[k];
+          args[k] = prop.parseArg(args[k]);
+        }
+        return args;
+      }
       /** Returns a map of input property values,
        *  e.g. `let {prop1, prop2} = this.getInputs()` */
       getInputs() {
@@ -16046,6 +16085,7 @@ var init_toolsys = __esm({
       
          */
       static invoke(_ctx, args) {
+        args = this.parseArgs(args);
         const tool = new this();
         const inputs = tool.inputs;
         for (const k in args) {
@@ -16053,17 +16093,7 @@ var init_toolsys = __esm({
             console.warn("Unknown tool argument " + k);
             continue;
           }
-          const prop = inputs[k];
-          let val = args[k];
-          if (typeof val === "string" && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            if (val in prop.values) {
-              val = prop.values[val];
-            } else {
-              console.warn("Possible invalid enum/flag:", val);
-              continue;
-            }
-          }
-          inputs[k].setValue(val);
+          inputs[k].setValue(args[k]);
         }
         return tool;
       }
@@ -24025,25 +24055,29 @@ function parseToolPath(str, check_tool_exists = true) {
   const startstr = str;
   const i1 = str.search(/\(/);
   const i2 = str.search(/\)/);
-  let args = "";
+  let argsStr = "";
   if (i1 >= 0 && i2 >= 0) {
-    args = str.slice(i1 + 1, i2).trim();
+    argsStr = str.slice(i1 + 1, i2).trim();
     str = str.slice(0, i1).trim();
   }
   if (!(str in ToolPaths) && check_tool_exists) {
     throw new DataPathError("unknown tool " + str);
   }
-  let ret;
+  let args;
   try {
-    ret = Parser.parse(args);
+    args = Parser.parse(argsStr);
   } catch (error2) {
     console.log(error2);
     throw new DataPathError(`"${startstr}"
   ${error2.message}`);
   }
+  const toolclass = ToolPaths[str];
+  if (toolclass !== void 0) {
+    args = toolclass.parseArgs(args);
+  }
   return {
-    toolclass: ToolPaths[str],
-    args: ret
+    toolclass,
+    args
   };
 }
 function testToolParser() {

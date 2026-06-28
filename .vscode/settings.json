@@ -35,6 +35,7 @@
       "tabdragend",
       "tabdragstart",
       "tokdef",
+      "toolclass",
       "toolpath",
       "toolprop",
       "toolstack",
