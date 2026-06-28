@@ -202,7 +202,7 @@ describe("parseToolPath", () => {
   });
 
   test("converts an enum string argument to its numeric value", () => {
-    const { toolclass, args } = parseToolPath("test.select(mode='SET')");
+    const { toolclass, args } = parseToolPath("test.select(mode=SET)");
     expect(toolclass).toBe(SelectTool);
     expect(args.mode).toBe(2);
   });
@@ -234,7 +234,7 @@ describe("parseToolPath", () => {
   });
 
   test("throws for an invalid enum key", () => {
-    expect(() => parseToolPath("test.select(mode='ZZZ')")).toThrow(/unknown key ZZZ/);
+    expect(() => parseToolPath("test.select(mode=ZZZ)")).toThrow(/unknown key ZZZ/);
   });
 
   test("throws when a number argument is given a string literal", () => {
