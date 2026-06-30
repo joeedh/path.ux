@@ -15690,18 +15690,34 @@ function buildToolOpAPI(api, cls) {
   }
   return st;
 }
-function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
-  const datastruct = api.mapStruct(ToolPropertyCache, true);
-  for (const cls of ToolClasses) {
-    const def = cls._getFinalToolDef();
-    buildToolOpAPI(api, cls);
-    for (const k in def.inputs) {
-      const prop = def.inputs[k];
-      if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
-        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-      }
+function updateToolDefaults(cls, api, datastruct) {
+  const def = cls._getFinalToolDef();
+  if (datastruct === void 0) {
+    datastruct = SavedToolDefaults.dstruct;
+  }
+  if (api === void 0) {
+    api = SavedToolDefaults.api;
+  }
+  if (datastruct === void 0 || api === void 0) {
+    return;
+  }
+  buildToolOpAPI(api, cls);
+  for (const k in def.inputs) {
+    const prop = def.inputs[k];
+    if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
+      SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
     }
   }
+}
+function updateToolSysAPI(api) {
+  const datastruct = api.mapStruct(ToolPropertyCache, true);
+  datastruct.clear();
+  for (const cls of ToolClasses) {
+    updateToolDefaults(cls, api, datastruct);
+  }
+}
+function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
+  updateToolSysAPI(api);
   if (rootCtxStruct) {
     rootCtxStruct.struct(
       "toolDefaults",
@@ -16127,6 +16143,7 @@ var init_toolsys = __esm({
           return;
         }
         ToolClasses.push(cls);
+        updateToolDefaults(cls);
       }
       static _regWithNstructjs(cls, structName = cls.name) {
         if (struct_default.isRegistered(cls)) {
@@ -24050,7 +24067,8 @@ function buildParser() {
   const valid_datatypes = {
     STRLIT: 1,
     NUMBER: 1,
-    BOOL: 1
+    BOOL: 1,
+    ID: 1
   };
   function p_Start(p2) {
     const args = {};
@@ -24958,10 +24976,12 @@ var init_controller = __esm({
           key = cls[CLS_API_KEY];
         }
         if (key === void 0 && auto_create) {
-          const dstruct = new DataStruct2(
-            void 0,
-            resolveStructName(cls, name2)
-          );
+          let dstruct;
+          if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
+            dstruct = _map_structs_by_name[name2];
+          } else {
+            dstruct = new DataStruct2(void 0, resolveStructName(cls, name2));
+          }
           this._addClass(cls, dstruct, name2);
           return dstruct;
         } else if (key === void 0) {
@@ -74939,6 +74959,8 @@ __export(controller_exports, {
   trilinear_co2: () => trilinear_co2,
   trilinear_v3: () => trilinear_v3,
   unproject: () => unproject,
+  updateToolDefaults: () => updateToolDefaults,
+  updateToolSysAPI: () => updateToolSysAPI,
   util: () => util_exports,
   vectormath: () => vectormath_exports,
   winding: () => winding,
