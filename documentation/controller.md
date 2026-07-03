@@ -140,5 +140,43 @@ api.getStructByName("ExplicitWidget") === api.getStruct(Widget); // true
 api.getStructByName("RealBrush") === api.getStruct(brushClass); // true
 ```
 
-If two classes register the same name, the **first** registration wins and a warning is logged;
-pass an explicit name to `mapStruct` / `inheritStruct` to disambiguate.
+If two classes register the same *explicit* name, the second `mapStruct` call **aliases** the
+first struct (both classes share one `DataStruct`; this is what lets `SavedToolDefaults`
+re-register). A genuine collision between *different* auto-derived structs logs a warning and
+keeps the first registration — pass an explicit name to disambiguate.
+
+## Update Notifications (subscribe / notify)
+
+The controller pushes change notifications to subscribers instead of relying on the UI
+re-reading every path per frame (`scripts/path-controller/controller/pathwatch.ts`).
+
+**Subscribing.** `api.watch(ctx, path, cb, opts?)` returns a `DataPathWatcher` that owns
+change detection for that path: it resolves once, snapshots the value, and invokes `cb(value,
+info)` only when a prop-aware compare says the value changed (componentwise for
+vectors/arrays, `.equals()` for value objects like `Curve1D`, `Object.is` for scalars).
+`info = { resolved, path, prop, source }`. Hold the watcher and call `watcher.remove()` when
+done — the registry keeps only a `WeakRef` (a `FinalizationRegistry` prunes leaks). Widgets
+should not call `watch` directly; use the `UIBase.watchPath()` / `updateFromPath()` protocol,
+which manages watcher lifecycle automatically.
+
+**Notifying.** `api.setValue` notifies at the choke point, so tool ops, mass-set, and
+undo/redo are covered automatically. For raw model mutation:
+
+```ts
+api.updateFrom<BrushSettings>("workspace.brush", "size"); // typed, exact instance
+api.updateChanged<BrushSettings>("size");                 // typed, any instance of T
+api.notifyChange("workspace.brush.size");                 // untyped path
+api.notifyChange();  // structural epoch bump: wakes everything, re-resolves paths
+```
+
+Notifying a path wakes watchers on the path itself, its subtree, and its ancestors
+(`"workspace.brush"` wakes a `"workspace.brush.size"` watcher and vice versa).
+
+**Coalescing.** Notifications mark watchers dirty; one `requestAnimationFrame` flush drains
+them, so a thousand writes in a frame produce one callback. Watcher `opts.debounce` selects
+`"raf"` (default), `"immediate"`, or `{ trailing: ms }`. Outside the DOM (vitest/node) the
+flush falls back to a microtask, and `flushPathNotifications()` drains synchronously.
+
+**Polling fallback.** `watcher.tick()` re-reads and diffs on demand; `UIBase` drives it from
+`update()` while `UIBase.dataPathPolling` is enabled (the default), catching writes that
+bypass `api.setValue` without any instrumentation.

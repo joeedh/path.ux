@@ -1,6 +1,11 @@
 # Plan: datapath update-notification system
 
-Status: proposed. Author-reviewed design; to be executed in a fresh session.
+Status: **implemented** (July 2026). Runtime in
+`scripts/path-controller/controller/pathwatch.ts`; widget protocol on `UIBase`
+(`watchPath` / `updateFromPath` / `addPathWatch`); all 17 `updateDataPath`
+sites migrated and the method removed. See CLAUDE.md "Datapath updates" and
+`documentation/controller.md` "Update Notifications". Out-of-scope follow-ups
+at the bottom of this file still apply.
 
 ## Goal
 

@@ -106,6 +106,55 @@ path's type, UI name, range, unit, and enum items. `generated/datapaths.ts` expo
 a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changing any
 `api_define` with `pnpm run gen:paths` (walks the app's `defineAPI()`).
 
+## Datapath updates (push + coalesced)
+
+Widgets subscribe to their datapaths instead of re-reading them per frame; the
+old per-widget `updateDataPath()` protocol is **removed**. The runtime lives in
+`scripts/path-controller/controller/pathwatch.ts`.
+
+**Widget protocol** (both overridable on `UIBase`):
+
+- `watchPath()` — declare bindings once by calling
+  `this.addPathWatch(pathOrAttr, opts?)` (idempotent per path; the base
+  implementation watches the `datapath` attribute when present). Runs
+  automatically from `update()` once `ctx` exists, and re-runs when the
+  `datapath` attribute changes. `opts.onChange` routes a binding somewhere
+  other than `updateFromPath` (multi-path widgets).
+- `updateFromPath(value, info)` — the reaction, called only when the value
+  actually changed. `info = { resolved, path, prop, source }`;
+  `info.resolved === false` replaces the old `val === undefined →
+  internalDisabled` check. The watcher owns read + snapshot + prop-aware
+  compare (including in-place vector mutation), so do **not** re-diff, but a
+  widget-side no-op guard is fine.
+- `refreshPathWatches()` re-delivers current values past the diff — call it
+  when a widget stops gating reactions (e.g. textbox blur).
+
+**Write side**: `api.setValue` (and everything through it — `setPathValue`,
+tool ops, mass-set, undo/redo) notifies automatically. For raw model writes,
+call the typed `api.updateFrom<T>(path, prop)` / `api.updateChanged<T>(prop)`
+(checked against the generated `StructCatalog`, `pnpm run gen:paths`), or
+`api.notifyChange(path)`. `api.notifyChange()` with no arguments bumps the
+structural epoch and wakes every watcher — use after tree-shape changes
+(active-object switch, list insert/remove, context swap).
+
+**Delivery**: notifications coalesce onto one `requestAnimationFrame` flush
+(1000 sets in a frame → one reaction). Per-binding debounce via
+`addPathWatch("datapath", { debounce })`: `"raf"` (default), `"immediate"`, or
+`{ trailing: ms }` for heavy widgets (Curve1DWidget uses 200, ColorPicker 100).
+In tests, drive the flush synchronously with `flushPathNotifications()`.
+
+**Compat safety net**: `UIBase.dataPathPolling` (static, default `true`) keeps
+every watcher also polling from `update()` — same cadence and diff as the old
+protocol — so un-instrumented raw writes are still caught. Per-widget
+`pollDataPath: boolean | "auto"` overrides it in either direction. Widgets
+must keep chaining `super.update()` (or drive `this._updatePathWatchers()`
+directly, as `Label` does) or their watchers neither build nor poll.
+
+Lifecycle: watchers are removed in `remove()`/`removeChild()` and rebuilt on
+the next `update()` if the widget is reused; the registry holds only weak
+refs (a `FinalizationRegistry` prunes anything missed). See
+`tests/pathWatch.test.ts` for the behavioral contract.
+
 ## Theme typing (`getDefault`)
 
 Theme lookups go through `UIBase.getDefault(key)` (style-class scoped, with
