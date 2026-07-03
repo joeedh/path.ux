@@ -735,7 +735,13 @@ export const UIFlags: Record<string, number> = {};
 const internalElementNames: Record<string, string> = {};
 const externalElementNames: Record<string, string> = {};
 
-import { DataPathError } from "../path-controller/controller/controller";
+import { DataPathError, normalizePath } from "../path-controller/controller/controller";
+import type {
+  DataPathWatcher,
+  DataPathWatcherOpts,
+  PathWatchCallback,
+  PathWatchInfo,
+} from "../path-controller/controller/controller";
 import { IntProperty, NumberConstraints, PropFlags } from "../path-controller/toolsys/toolprop";
 import {
   DependSocket,
@@ -992,6 +998,16 @@ export class UIBase<
 > extends HTMLElement {
   static PositionKey: string;
 
+  /**
+   * Global datapath poll safety net. While `true` (the default) every widget
+   * with path watchers re-reads and diffs its paths from `update()` exactly
+   * like the old `updateDataPath` protocol, catching raw model writes that
+   * bypass `api.setValue`. Set to `false` to rely on push notifications
+   * (`api.notifyChange` / `updateFrom`) alone; per-widget {@link pollDataPath}
+   * overrides this in either direction.
+   */
+  static dataPathPolling = true;
+
   declare ["constructor"]: IUIBaseConstructor<this>;
 
   /* -- instance properties -- */
@@ -1036,6 +1052,18 @@ export class UIBase<
   __background?: string;
   _flashtimer?: number;
   _flashcolor: string | undefined;
+
+  /* -- datapath watch protocol (see watchPath / updateFromPath) -- */
+  _pathWatchers: DataPathWatcher<CTX>[] = [];
+  _pathWatchInit = false;
+  _watchedDataPathAttr: string | null = null;
+  /**
+   * Per-widget override for the datapath poll safety net: `false` never polls,
+   * `true` always polls (even when {@link UIBase.dataPathPolling} is off),
+   * `"auto"` (default) follows the global flag. Push notifications are
+   * unaffected — polling only covers writes that bypass `api.setValue`.
+   */
+  pollDataPath: boolean | "auto" = "auto";
 
   /* clipboard-related, set by _clipboardHotkeyInit */
   _clipboard_over!: boolean;
@@ -2587,6 +2615,8 @@ export class UIBase<
       this.regenTabOrder();
     }
 
+    this.clearPathWatches();
+
     super.remove();
 
     if (trigger_on_destroy) {
@@ -2610,6 +2640,9 @@ export class UIBase<
 
   removeChild<T extends Node | UIBase<CTX>>(child: T, trigger_on_destroy = true): T {
     super.removeChild(child);
+    if (child instanceof UIBase) {
+      child.clearPathWatches();
+    }
     if (child instanceof UIBase && child.on_remove) {
       child.on_remove();
     }
@@ -3677,10 +3710,110 @@ export class UIBase<
     return anyThis.update.after(cb);
   }
 
+  /**
+   * Declare this widget's datapath binding(s) by calling {@link addPathWatch}.
+   * Invoked automatically (from `update()`) once `ctx` is available, and
+   * re-invoked whenever the `datapath` attribute changes. The base
+   * implementation watches the `datapath` attribute when present; override in
+   * widgets that bind additional or non-default paths.
+   */
+  watchPath(): void {
+    if (this.hasAttribute("datapath")) {
+      this.addPathWatch("datapath");
+    }
+  }
+
+  /**
+   * Reaction to a watched path's value changing — the former post-diff body of
+   * `updateDataPath`: update widget state, then `_redraw()`/`setCSS()` as
+   * needed. The watcher owns the read + compare; this is only called when the
+   * value actually changed. `info.resolved` is `false` when the path failed to
+   * resolve (the old `val === undefined → internalDisabled` case).
+   */
+  updateFromPath(value: unknown, info: PathWatchInfo): void {}
+
+  /**
+   * Subscribe to a datapath. `pathOrAttr` names an attribute on this element
+   * (default `"datapath"`) whose value is the path, or — when no such
+   * attribute exists — is itself the path. Idempotent per path. Pass
+   * `opts.onChange` to route a binding somewhere other than
+   * {@link updateFromPath} (multi-path widgets).
+   */
+  addPathWatch(
+    pathOrAttr: string = "datapath",
+    opts?: DataPathWatcherOpts & { onChange?: PathWatchCallback }
+  ): DataPathWatcher<CTX> | undefined {
+    if (!this._ctx) {
+      return undefined;
+    }
+
+    const raw = this.hasAttribute(pathOrAttr) ? this.getAttribute(pathOrAttr)! : pathOrAttr;
+    const path = normalizePath(raw);
+
+    if (!path) {
+      return undefined;
+    }
+
+    for (const w of this._pathWatchers) {
+      if (w.path === path) {
+        return w;
+      }
+    }
+
+    const onChange: PathWatchCallback =
+      opts?.onChange ?? ((v, info) => this.updateFromPath(v, info));
+
+    /* ctx is passed as a getter so watchers survive context swaps */
+    const w = this._ctx.api.watch(() => this._ctx, path, onChange, opts);
+    this._pathWatchers.push(w);
+
+    return w;
+  }
+
+  /** Unsubscribe every path watcher; they are rebuilt (via {@link watchPath})
+   * on the next `update()` while the widget stays in the tree. */
+  clearPathWatches(): void {
+    for (const w of this._pathWatchers) {
+      w.remove();
+    }
+
+    this._pathWatchers.length = 0;
+    this._pathWatchInit = false;
+  }
+
+  /** Lifecycle driver: (re)builds watchers once ctx/datapath are available and
+   * runs the poll-mode compat bridge (see {@link UIBase.dataPathPolling}). */
+  _updatePathWatchers(): void {
+    if (!this._ctx) {
+      return;
+    }
+
+    const dp = this.getAttribute("datapath");
+
+    if (!this._pathWatchInit || dp !== this._watchedDataPathAttr) {
+      this.clearPathWatches();
+
+      this._pathWatchInit = true;
+      this._watchedDataPathAttr = dp;
+
+      this.watchPath();
+    }
+
+    const poll =
+      this.pollDataPath === true || (UIBase.dataPathPolling && this.pollDataPath !== false);
+
+    if (poll) {
+      for (const w of this._pathWatchers) {
+        w.tick();
+      }
+    }
+  }
+
   //called regularly
   update(): void {
     this.updateToolTips();
     this.updateEventGraph();
+    this._updatePathWatchers();
 
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
       const d = this.getPathDescription(this.ctx, this.getAttribute("datapath")!);
