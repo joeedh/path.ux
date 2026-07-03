@@ -42,7 +42,7 @@ test("getStructByName returns undefined for unknown names", () => {
   expect(api.getStructByName("DoesNotExist")).toBe(undefined);
 });
 
-test("duplicate names keep the first registration", () => {
+test("duplicate explicit names alias the first registration", () => {
   const api = new DataAPI();
 
   class First {
@@ -53,17 +53,12 @@ test("duplicate names keep the first registration", () => {
   }
 
   const first = api.mapStruct(First, true, "Dup");
-  const warn = console.warn;
-  let warned = false;
-  console.warn = () => {
-    warned = true;
-  };
-  try {
-    api.mapStruct(Second, true, "Dup");
-  } finally {
-    console.warn = warn;
-  }
+  // Re-mapping the same explicit name intentionally reuses the existing
+  // struct (needed for SavedToolDefaults re-registration) rather than
+  // creating a shadow duplicate.
+  const second = api.mapStruct(Second, true, "Dup");
 
-  expect(warned).toBe(true);
+  expect(second).toBe(first);
   expect(api.getStructByName("Dup")).toBe(first);
+  expect(api.getStruct(Second)).toBe(first);
 });
