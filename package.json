@@ -23,6 +23,8 @@
     "render-icons": "bash render_icons.sh",
     "markdown-toc": "bash run_markdown_toc.sh",
     "serv": "node serv.js",
+    "nwjs": "node buildtools/nwjs.mjs",
+    "nwjs:cdp": "node buildtools/nwjs-cdp.mjs",
     "playwright": "npx playwright test",
     "eslint": "node node_modules/eslint/bin/eslint.js --config eslint.config.js --cache --cache-location .eslintcache",
     "eslint:clean-cache": "rm .eslintcache"
@@ -47,6 +49,7 @@
     "happy-dom": "^20.9.0",
     "markdown-toc": "^1.2.0",
     "nstructjs": "^0.8.7",
+    "nw": "0.112.0-sdk",
     "parse5": "6.0.0",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.2",
@@ -64,5 +67,10 @@
     "url": "https://github.com/joeedh/path.ux/issues"
   },
   "homepage": "https://github.com/joeedh/path.ux#readme",
-  "packageManager": "pnpm@10.30.3"
+  "packageManager": "pnpm@10.30.3",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "nw"
+    ]
+  }
 }
