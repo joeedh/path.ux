@@ -1,8 +1,8 @@
 /*
- * Launches the example/ app under NW.js with the Chrome DevTools Protocol
- * enabled, for use via `pnpm nwjs`.
+ * Launches the example/ app under Electron with the Chrome DevTools Protocol
+ * enabled, for use via `pnpm electron`.
  *
- *   pnpm nwjs [--port=9222] [--no-wait] [-- <extra chromium args>]
+ *   pnpm electron [--port=9222] [--no-wait] [-- <extra chromium args>]
  *
  * The CDP endpoint is http://127.0.0.1:<port>. Drive it with
  * `pnpm cdp <command>` (see buildtools/cdp.mjs).
@@ -46,19 +46,17 @@ if (!fs.existsSync(path.join(appDir, "dist", "app.js"))) {
   }
 }
 
-/* The nw package's findpath() has been async since 0.85; awaiting also
- * tolerates older sync versions. */
-const nwModule = await import("nw");
-const findpath = nwModule.findpath ?? nwModule.default.findpath;
-const nwPath = await findpath("nwjs", { flavor: "sdk" });
+/* In a plain Node context the electron package's default export is the path
+ * to the Electron binary. */
+const electronPath = (await import("electron")).default;
 
-const args = [appDir, `--remote-debugging-port=${port}`, ...extraArgs];
+const args = [path.join(appDir, "electron_app.cjs"), `--remote-debugging-port=${port}`, ...extraArgs];
 
-console.log(`Launching NW.js: ${nwPath}`);
+console.log(`Launching Electron: ${electronPath}`);
 console.log(`  app: ${appDir}`);
 console.log(`  CDP: http://127.0.0.1:${port}`);
 
-const child = spawn(nwPath, args, { stdio: "inherit" });
+const child = spawn(electronPath, args, { cwd: appDir, stdio: "inherit" });
 
 child.on("exit", (code) => {
   process.exit(code ?? 0);

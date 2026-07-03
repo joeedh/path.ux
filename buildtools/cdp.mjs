@@ -1,20 +1,21 @@
 /*
- * Drives a running NW.js example app (launched with `pnpm nwjs`) over the
- * Chrome DevTools Protocol, via Playwright's connectOverCDP.
+ * Drives a running example app — NW.js (`pnpm nwjs`) or Electron
+ * (`pnpm electron`) — over the Chrome DevTools Protocol, via Playwright's
+ * connectOverCDP.
  *
- *   pnpm nwjs:cdp pages                      # list debuggable pages
- *   pnpm nwjs:cdp eval "<js expression>"     # evaluate in the app page
- *   pnpm nwjs:cdp screenshot [file.png]      # capture the app page
- *   pnpm nwjs:cdp click <x> <y>              # click at viewport coordinates
- *   pnpm nwjs:cdp key <key>                  # press a key (Playwright names)
+ *   pnpm cdp pages                      # list debuggable pages
+ *   pnpm cdp eval "<js expression>"     # evaluate in the app page
+ *   pnpm cdp screenshot [file.png]      # capture the app page
+ *   pnpm cdp click <x> <y>              # click at viewport coordinates
+ *   pnpm cdp key <key>                  # press a key (Playwright names)
  *
  * All commands accept --port=<n> (default 9222). Each invocation connects,
  * acts, and disconnects; the app keeps running.
  *
  * For richer scripting, import the helper instead of shelling out:
  *
- *   import { connectNwjs } from "./buildtools/nwjs-cdp.mjs";
- *   const { browser, page } = await connectNwjs();
+ *   import { connectApp } from "./buildtools/cdp.mjs";
+ *   const { browser, page } = await connectApp();
  *   await page.mouse.click(100, 100);
  *   await browser.close(); // disconnects only
  */
@@ -22,19 +23,20 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "@playwright/test";
 
 /**
- * Connect to the NW.js CDP endpoint and locate the example app's page.
+ * Connect to the app's CDP endpoint and locate the example app's page.
  * `browser.close()` disconnects without killing the app.
  */
-export async function connectNwjs({ port = 9222 } = {}) {
+export async function connectApp({ port = 9222 } = {}) {
   const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
   const pages = browser.contexts().flatMap((ctx) => ctx.pages());
 
   /* NW.js also exposes its background page; prefer the app window. */
-  const page = pages.find((p) => p.url().includes("nwjs_app.html")) ?? pages[0];
+  const page =
+    pages.find((p) => p.url().includes("nwjs_app.html") || p.url().includes("electron_app.html")) ?? pages[0];
 
   if (!page) {
     await browser.close();
-    throw new Error(`No pages found on CDP port ${port}. Is \`pnpm nwjs\` running?`);
+    throw new Error(`No pages found on CDP port ${port}. Is \`pnpm nwjs\` or \`pnpm electron\` running?`);
   }
 
   return { browser, page };
@@ -55,11 +57,11 @@ async function main() {
   const [cmd, ...rest] = args;
 
   if (!cmd) {
-    console.error("Usage: pnpm nwjs:cdp <pages|eval|screenshot|click|key> [args] [--port=9222]");
+    console.error("Usage: pnpm cdp <pages|eval|screenshot|click|key> [args] [--port=9222]");
     process.exit(1);
   }
 
-  const { browser, page } = await connectNwjs({ port });
+  const { browser, page } = await connectApp({ port });
 
   try {
     switch (cmd) {

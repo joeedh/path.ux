@@ -18,38 +18,41 @@ pnpm run format:check   # prettier --check
 Use `tsgo` to typecheck instead of `tsc`, e.g.
 `pnpm exec tsgo --noEmit`.
 
-## Running the example app under NW.js
+## Running the example app (NW.js / Electron)
 
-`pnpm nwjs` launches the `example/` app in NW.js (SDK flavor, from the `nw`
-devDependency) with the Chrome DevTools Protocol enabled on port 9222
-(override with `--port=<n>`). It builds `example/dist/app.js` first if
-missing. `example/package.json` doubles as the NW.js manifest: its `main` is
+`pnpm nwjs` and `pnpm electron` launch the `example/` app in NW.js (SDK
+flavor, from the `nw` devDependency) or Electron respectively, with the
+Chrome DevTools Protocol enabled on port 9222 (override with `--port=<n>`).
+Both build `example/dist/app.js` first if missing.
+
+`example/package.json` doubles as the NW.js manifest: its `main` is
 `nwjs_app.html`, which sets `window.haveNwjs` so the app picks the NW.js
-platform backend (`scripts/platforms/nwjs/`). Electron ignores that field and
-is launched explicitly instead: `npx electron example/electron_app.cjs`.
+platform backend (`scripts/platforms/nwjs/`). Electron ignores that field —
+`pnpm electron` runs `electron_app.cjs` directly, whose `electron_app.html`
+sets `window.haveElectron`.
 
-Drive the running app over CDP with `pnpm nwjs:cdp` (each invocation
-connects, acts, and disconnects; the app keeps running):
+Drive the running app (either runtime) over CDP with `pnpm cdp` (each
+invocation connects, acts, and disconnects; the app keeps running):
 
 ```bash
-pnpm nwjs:cdp pages                  # list debuggable pages
-pnpm nwjs:cdp eval "document.title"  # evaluate JS in the app page
-pnpm nwjs:cdp screenshot shot.png    # capture the window
-pnpm nwjs:cdp click 100 200          # click at viewport coordinates
-pnpm nwjs:cdp key Enter              # press a key (Playwright key names)
+pnpm cdp pages                  # list debuggable pages
+pnpm cdp eval "document.title"  # evaluate JS in the app page
+pnpm cdp screenshot shot.png    # capture the window
+pnpm cdp click 100 200          # click at viewport coordinates
+pnpm cdp key Enter              # press a key (Playwright key names)
 ```
 
 Gotcha: screenshots are captured at the window's `devicePixelRatio` (often
 1.25 on Windows) while `click` takes CSS-pixel coordinates — divide
 screenshot pixel positions by `devicePixelRatio` before clicking.
 
-For richer automation, import `connectNwjs()` from `buildtools/nwjs-cdp.mjs`
+For richer automation, import `connectApp()` from `buildtools/cdp.mjs`
 in a Node script: it returns `{ browser, page }` where `page` is a Playwright
 `Page` connected over CDP; `browser.close()` only disconnects.
 
-The NW.js binary is downloaded by the `nw` package's postinstall script
-(allowed via `pnpm.onlyBuiltDependencies`). If the launcher reports a missing
-binary, run `pnpm rebuild nw`.
+The NW.js and Electron binaries are downloaded by their packages' postinstall
+scripts (allowed via `pnpm.onlyBuiltDependencies`). If a launcher reports a
+missing binary, run `pnpm rebuild nw` / `pnpm rebuild electron`.
 
 ## Vector classes
 
