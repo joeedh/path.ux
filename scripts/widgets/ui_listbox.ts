@@ -4,6 +4,7 @@ import { IContextBase } from "../core/context_base";
 import { parsepx } from "../core/ui_theme";
 import { keymap } from "../path-controller/util/events";
 import { DataList } from "../path-controller/controller/controller_base";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 import { ToolOp, ToolFlags } from "../path-controller/toolsys/toolsys";
 import { StringProperty, BoolProperty } from "../path-controller/toolsys/toolprop";
 
@@ -459,7 +460,17 @@ export class ListBox<
     }
 
     if (this._dataMode) {
-      this.updateDataPath();
+      /* DataList contents mutate in place, invisible to the generic watcher
+       * diff — keep running the bespoke version/key differ every tick (it is
+       * internally guarded, so this is cheap when nothing changed) */
+      this._syncFromDataList();
+    }
+  }
+
+  /** Push reaction: api.notifyChange on the list path lands here. */
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    if (this._dataMode) {
+      this._syncFromDataList();
     }
   }
 
@@ -490,7 +501,7 @@ export class ListBox<
     }
   }
 
-  updateDataPath() {
+  _syncFromDataList() {
     const resolved = this._resolveList();
     // detect if list bound at datapath doesn't exist
     if (this.hasAttribute("datapath") && resolved?.list === undefined) {

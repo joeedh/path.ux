@@ -14,7 +14,6 @@ class Item {
   ) {}
 }
 
- 
 function buildFixture(withActive: boolean) {
   const api = new DataAPI();
   const root = new DataStruct();
@@ -108,7 +107,7 @@ test("populates items from a bound DataList", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
 
-  box.updateDataPath();
+  box._syncFromDataList();
 
   expect(box.items.length).toBe(3);
   expect(box.items.map((it) => it.listId)).toEqual([0, 1, 2]);
@@ -124,17 +123,17 @@ test("uses getItemName for labels when provided", () => {
     return "item-" + key;
   });
 
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(seen).toEqual([0, 1, 2]);
 });
 
 test("reflects the data list's active element", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
-  box.updateDataPath();
+  box._syncFromDataList();
 
   fx.setActiveId(2);
-  box.updateDataPath();
+  box._syncFromDataList();
 
   expect(box.activeId).toBe(2);
   expect(box.active?.is_active).toBe(true);
@@ -167,7 +166,7 @@ test("writes selection back through an undoable op", () => {
 test("version fast-path avoids rebuild when unchanged, rebuilds on mutation", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
-  box.updateDataPath();
+  box._syncFromDataList();
 
   let rebuilds = 0;
   const origClear = box.clear.bind(box);
@@ -176,12 +175,12 @@ test("version fast-path avoids rebuild when unchanged, rebuilds on mutation", ()
     return origClear();
   };
 
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(rebuilds).toBe(0); // version unchanged → no rebuild
 
   fx.arr.push(new Item(3, "d"));
   fx.bump();
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(rebuilds).toBe(1);
   expect(box.items.length).toBe(4);
 });
@@ -205,11 +204,11 @@ test("fallback: list without getActive/setActive/getVersion", () => {
     rebuilds++;
     return origClear();
   };
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(rebuilds).toBe(0);
 
   fx.arr.push(new Item(9, "z"));
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(rebuilds).toBe(1);
   expect(box.items.length).toBe(4);
 });
@@ -217,13 +216,13 @@ test("fallback: list without getActive/setActive/getVersion", () => {
 test("rebuilds when the datapath resolves to a different list object", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(3);
 
   // Swap to a different array instance WITHOUT bumping the version counter, so
   // the version/key fast-path matches and only the list-ref check can catch it.
   fx.ctx.items = [new Item(100, "x"), new Item(101, "y")];
-  box.updateDataPath();
+  box._syncFromDataList();
 
   expect(box.items.length).toBe(2);
 });
@@ -231,27 +230,27 @@ test("rebuilds when the datapath resolves to a different list object", () => {
 test("clears items when the bound list ceases to exist", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(3);
 
   fx.ctx.items = undefined;
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(0);
 });
 
 test("repopulates when a vanished list reappears as the same object", () => {
   const fx = buildFixture(true);
   const box = makeBox(fx.ctx);
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(3);
 
   const saved = fx.ctx.items;
   fx.ctx.items = undefined;
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(0);
 
   // Same array object reappears with an unchanged version; must still rebuild.
   fx.ctx.items = saved;
-  box.updateDataPath();
+  box._syncFromDataList();
   expect(box.items.length).toBe(3);
 });

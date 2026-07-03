@@ -4,6 +4,7 @@ import * as units from "../core/units";
 
 import * as events from "../path-controller/util/events";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 const keymap = events.keymap;
 
@@ -92,6 +93,10 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
         this._endModal(true);
         this.setCSS();
       }
+
+      /* re-deliver any path change that arrived (and was ignored) while
+       * the textbox had focus */
+      this.refreshPathWatches();
     });
   }
 
@@ -305,24 +310,25 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this.dom.style.height = "100%";
   }
 
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
+  updateFromPath(val: unknown, info: PathWatchInfo) {
+    if (!this.ctx) {
       return;
     }
     if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
+      /* ignore while the user is editing; the blur handler calls
+       * refreshPathWatches() to catch up */
       return;
     }
 
-    const datapath = this.getAttribute("datapath")!;
-    const val = this.getPathValue(this.ctx, datapath);
-    if (val === undefined || val === null) {
+    const datapath = info.path;
+    if (!info.resolved || val === null) {
       this.internalDisabled = true;
       return;
     } else {
       this.internalDisabled = false;
     }
 
-    const prop = this.getPathMeta(this.ctx, datapath);
+    const prop = info.prop ?? this.getPathMeta(this.ctx, datapath);
 
     let text = this.text;
 
@@ -387,10 +393,6 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
     if (styleHeight && this.dom.style["height"] !== styleHeight) {
       this.dom.style["height"] = styleHeight;
-    }
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
     }
 
     this.setCSS();

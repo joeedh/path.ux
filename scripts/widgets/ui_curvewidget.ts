@@ -1,11 +1,11 @@
 import { UIBase, Icons, saveUIData, loadUIData } from "../core/ui_base";
 import { ColumnFrame, Container } from "../core/ui";
-import * as util from "../path-controller/util/util";
 import { Curve1D } from "../path-controller/curve/curve1d";
 import { makeGenEnum } from "../path-controller/curve/curve1d_utils";
 import type { CurveTypeData } from "../path-controller/curve/curve1d";
 import { IContextBase } from "../core/context_base";
 import type { DropBox } from "../widgets/ui_menu";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 /** Slider-like widget interface — slider() returns UIBase but these members exist at runtime. */
 interface SliderWidget {
@@ -29,7 +29,6 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
   g: CanvasRenderingContext2D;
   container: ColumnFrame<CTX> | undefined;
   dropbox!: DropBox<CTX>;
-  _lastu: number | undefined;
 
   constructor() {
     super();
@@ -510,21 +509,16 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     this._redraw();
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
+  watchPath() {
+    if (this.hasAttribute("datapath")) {
+      /* heavy rebuild+redraw reaction: trailing debounce replaces the old
+       * 200ms manual throttle */
+      this.addPathWatch("datapath", { debounce: { trailing: 200 } });
     }
+  }
 
-    const path = this.getAttribute("datapath")!;
-    const val = this.getPathValue(this.ctx, path);
-
-    if (this._lastu === undefined) {
-      this._lastu = 0;
-    }
-
-    if (val instanceof Curve1D && !val.equals(this._value) && util.time_ms() - this._lastu > 200) {
-      this._lastu = util.time_ms();
-
+  updateFromPath(val: unknown, info: PathWatchInfo) {
+    if (val instanceof Curve1D && !val.equals(this._value)) {
       this._value.load(val);
       this.update();
       this._redraw();
@@ -544,7 +538,6 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
     super.update();
 
     this.checkCurve1dEvents();
-    this.updateDataPath();
     this.updateSize();
     this.updateGenUI();
   }

@@ -4,6 +4,7 @@ import * as ui_base from "../core/ui_base";
 import * as events from "../path-controller/util/events";
 import * as toolprop from "../path-controller/toolsys/toolprop";
 import { DataPathError } from "../path-controller/controller/controller";
+import type { PathWatchInfo } from "../path-controller/controller/controller";
 import { PropFlags } from "../path-controller/toolsys/toolprop";
 
 const keymap = events.keymap;
@@ -94,13 +95,8 @@ export class ValueButtonBase<
     }
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) return;
-    if (this.ctx === undefined) return;
-
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
-
-    if (val === undefined) {
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    if (!info.resolved) {
       const redraw = !this.disabled;
 
       this.internalDisabled = true;
@@ -115,19 +111,13 @@ export class ValueButtonBase<
       if (redraw) this._redraw();
     }
 
-    if (val !== this._value) {
-      this._value = val;
+    if (value !== this._value) {
+      this._value = value;
       this.updateWidth();
       this._repos_canvas();
       this._redraw();
       this.setCSS();
     }
-  }
-
-  update() {
-    this.updateDataPath();
-
-    super.update();
   }
 }
 
@@ -342,16 +332,10 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     this.style.backgroundColor = "rgba(0,0,0,0)";
   }
 
-  updateDataPath() {
-    if (!this.getAttribute("datapath")) {
-      return;
-    }
-
-    const rawVal = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
-
+  updateFromPath(value: unknown, info: PathWatchInfo) {
     let redraw: boolean;
 
-    if (rawVal === undefined) {
+    if (!info.resolved) {
       this.internalDisabled = true;
       return;
     } else {
@@ -360,7 +344,7 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
       this.internalDisabled = false;
     }
 
-    const val = !!rawVal;
+    const val = !!value;
 
     redraw = redraw || !!this._checked !== val;
 
@@ -441,10 +425,6 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     this.updateDPI();
 
     const ready = ui_base.getIconManager().isReady(0);
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
 
     let updatekey = (this.getDefault("DefaultText") as CSSFont).hash();
     updatekey += this._checked + ":" + this._label.textContent;
@@ -924,12 +904,12 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
     return ":" + this._icon;
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath") || !this.ctx) {
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    if (!this.ctx) {
       return;
     }
 
-    const datapath = this.getAttribute("datapath")!;
+    const datapath = info.path;
 
     if (this._icon < 0) {
       let rdef;
@@ -986,16 +966,14 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       }
     }
 
-    const rawVal = this.getPathValue(this.ctx, datapath);
-
-    if (rawVal === undefined) {
+    if (!info.resolved) {
       this.internalDisabled = true;
       return;
     } else {
       this.internalDisabled = false;
     }
 
-    const val = !!rawVal;
+    const val = !!value;
 
     if (val !== !!this._checked) {
       this._checked = val;
@@ -1018,10 +996,6 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
     }
 
     this.updateDrawCheck();
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
 
     super.update();
   }

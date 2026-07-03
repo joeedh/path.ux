@@ -18,6 +18,7 @@ import { DomEventTypes } from "../path-controller/util/events";
 
 import { HotKey, keymap } from "../path-controller/util/simple_events";
 import type { IContextBase } from "../core/context_base";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 import type { CSSFont } from "../core/cssfont";
 import type { Screen } from "../screen/FrameManager";
 
@@ -1060,38 +1061,12 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     super.updateBorders(this as unknown as HTMLElement);
   }
 
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
+  updateFromPath(val: unknown, info: PathWatchInfo) {
+    if (!this.ctx) {
       return;
     }
 
-    let wasError = false;
-    let prop: toolprop.EnumProperty | undefined;
-    let val: unknown;
-
-    try {
-      this.pushReportContext(this._reportCtxName);
-      const datapath = this.getAttribute("datapath")!;
-      const resolved = this.ctx.api.resolvePath(this.ctx, datapath);
-      if (!resolved) {
-        wasError = true;
-        this.popReportContext();
-        return;
-      }
-      prop = resolved.prop as unknown as toolprop.EnumProperty;
-      val = this.ctx.api.getValue(this.ctx, datapath);
-
-      prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
-        ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
-        : prop;
-
-      this.popReportContext();
-    } catch (error: unknown) {
-      util.print_stack(error as Error);
-      wasError = true;
-    }
-
-    if (wasError) {
+    if (!info.resolved) {
       this.disabled = true;
       this.setCSS();
       this._redraw();
@@ -1102,6 +1077,12 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this.setCSS();
       this._redraw();
     }
+
+    let prop = info.prop as unknown as toolprop.EnumProperty | undefined;
+
+    prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
+      ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
+      : prop;
 
     if (!prop) {
       return;
@@ -1132,9 +1113,9 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (path && path !== this._last_datapath) {
       this._last_datapath = path;
+      /* drop the cached prop; the base watcher rebuild re-delivers through
+       * updateFromPath */
       this.prop = undefined;
-
-      this.updateDataPath();
     }
 
     super.update();
@@ -1144,10 +1125,6 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._last_dbox_key = key;
       this.setCSS();
       this._redraw();
-    }
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
     }
   }
 
@@ -1509,7 +1486,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     }
 
     this.setCSS();
-    this.updateDataPath();
+    this.refreshPathWatches();
     this._redraw();
   }
 }

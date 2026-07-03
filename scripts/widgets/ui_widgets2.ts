@@ -6,6 +6,7 @@ import * as ui_base from "../core/ui_base";
 import { Vector2, Vector3, Vector4, Quat } from "../path-controller/util/vectormath";
 import { RowFrame, ColumnFrame } from "../core/ui";
 import { isVecProperty, PropFlags } from "../path-controller/toolsys";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 import "./ui_widgets";
 
@@ -82,16 +83,10 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
     popup.flushUpdate();
   };
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
+  updateFromPath(rawValue: unknown, info: PathWatchInfo) {
+    const value = rawValue as (Vector2 | Vector3 | Vector4 | Quat) | undefined;
 
-    const value = this.getPathValue(this.ctx, this.getAttribute("datapath")!) as
-      | (Vector2 | Vector3 | Vector4 | Quat)
-      | undefined;
-
-    if (!value) {
+    if (!info.resolved || !value) {
       this.internalDisabled = true;
       return;
     }
@@ -118,11 +113,6 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
       this.castValue<typeof value>().load(value as any);
       console.log("updated vector popup button value");
     }
-  }
-
-  update() {
-    super.update();
-    this.updateDataPath();
   }
 }
 UIBase.internalRegister(VectorPopupButton);
@@ -425,17 +415,11 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     return this;
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    const path = info.path;
 
-    const path = this.getAttribute("datapath")!;
-
-    const val = this.getPathValue(this.ctx, path) as
-      | (Vector2 & Vector3 & Vector4 & Quat)
-      | undefined;
-    if (val === undefined) {
+    const val = value as (Vector2 & Vector3 & Vector4 & Quat) | undefined;
+    if (!info.resolved || val === undefined) {
       this.internalDisabled = true;
       return;
     }
@@ -570,8 +554,6 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
   update() {
     super.update();
-
-    this.updateDataPath();
 
     if (this.stepIsRelative) {
       for (const slider of this.sliders) {

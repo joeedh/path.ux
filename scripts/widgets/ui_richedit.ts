@@ -4,6 +4,7 @@ import { RowFrame } from "../core/ui";
 import { CSSFont } from "../core/cssfont";
 import { TextBoxBase } from "./ui_textbox";
 import { keymap } from "../path-controller/util/simple_events";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<
   CTX,
@@ -239,34 +240,21 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     }
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    const path = this.getAttribute("datapath")!;
-    const prop = this.getPathMeta(this.ctx, path);
-
-    if (prop === undefined) {
-      console.warn("invalid datapath " + path);
+  updateFromPath(rawValue: unknown, info: PathWatchInfo) {
+    if (!info.resolved) {
+      console.warn("invalid datapath " + info.path);
 
       this.internalDisabled = true;
       return;
     }
 
     this.internalDisabled = false;
-    const value = this.getPathValue(this.ctx, path) as string;
+    const value = rawValue as string;
 
     if (value !== this._value) {
       console.log("text change");
       this.value = value;
     }
-  }
-
-  update() {
-    super.update();
-
-    this.updateDataPath();
   }
 
   static define() {
@@ -321,33 +309,20 @@ export class RichViewer<CTX extends IContextBase = IContextBase> extends UIBase<
     return this._value;
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    const path = this.getAttribute("datapath")!;
-    const prop = this.getPathMeta(this.ctx, path);
-
-    if (prop === undefined) {
-      console.warn("invalid datapath " + path);
+  updateFromPath(rawValue: unknown, info: PathWatchInfo) {
+    if (!info.resolved) {
+      console.warn("invalid datapath " + info.path);
 
       this.internalDisabled = true;
       return;
     }
 
     this.internalDisabled = false;
-    const value = this.getPathValue(this.ctx, path) as string;
+    const value = rawValue as string;
 
     if (value !== this.value) {
       this.value = value;
     }
-  }
-
-  update() {
-    super.update();
-
-    this.updateDataPath();
   }
 
   static define() {

@@ -36,6 +36,7 @@ import type { ColorPicker, ColorPickerButton } from "../widgets/ui_colorpicker2"
 import { ListBox } from "../widgets/ui_listbox";
 import { DataPathError } from "../path-controller/controller/controller_base";
 import { ToolOpAny } from "../path-controller/controller/controller_abstract";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }) {
@@ -125,6 +126,11 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
     if (!this.hasAttribute("datapath")) {
       this.dom.innerText = text;
+    } else {
+      /* the rendered text is "<label> <path value>" — re-render with the
+       * current path value */
+      this._lastText = "";
+      this.refreshPathWatches();
     }
   }
 
@@ -169,20 +175,15 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     this.dom.style["color"] = (font as CSSFont).color;
   }
 
-  updateDataPath() {
-    if (this.ctx === undefined) {
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    if (this.ctx === undefined || value === undefined) {
       return;
     }
 
-    const path = this.getAttribute("datapath")!;
-    const prop = this.getPathMeta(this.ctx, path)!;
-    let val: unknown = this.getPathValue(this.ctx, path);
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
+    let val: unknown = value;
 
-    if (val === undefined) {
-      return;
-    }
-
-    if (prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
+    if (prop && prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
       val = units.buildString(val as number, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
 
@@ -208,9 +209,9 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
     styl(this.dom)["pointerEvents"] = styl(this)["pointerEvents"];
 
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
+    /* Label.update does not chain to super.update, so drive the
+     * datapath watch lifecycle directly */
+    this._updatePathWatchers();
   }
 }
 

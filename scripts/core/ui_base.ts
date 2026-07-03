@@ -3770,6 +3770,15 @@ export class UIBase<
     return w;
   }
 
+  /** Re-deliver every watched path's current value through
+   * {@link updateFromPath}, bypassing the change diff. Call after a widget
+   * stops gating reactions (e.g. a textbox losing focus). */
+  refreshPathWatches(): void {
+    for (const w of this._pathWatchers) {
+      w.refresh();
+    }
+  }
+
   /** Unsubscribe every path watcher; they are rebuilt (via {@link watchPath})
    * on the next `update()` while the widget stays in the tree. */
   clearPathWatches(): void {

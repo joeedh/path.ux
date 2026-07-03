@@ -14,6 +14,7 @@ import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { IContextBase } from "../core/context_base";
 import { TextBox } from "./ui_textbox";
 import { ToolPropertyTypes } from "../path-controller/toolsys";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 export const sliderDomAttributes = new Set([
   "min",
@@ -168,47 +169,30 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     }
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
 
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath") ?? "");
+    if (prop) {
+      let name: string | null | undefined;
 
-    if (!prop) {
-      return;
-    }
+      if (this.hasAttribute("name")) {
+        name = this.getAttribute("name");
+      } else {
+        name = "" + prop.uiname;
+      }
 
-    let name: string | null | undefined;
+      if (name !== null && name !== this._name) {
+        this._name = name;
+        this.setCSS(undefined, false);
+      }
 
-    if (this.hasAttribute("name")) {
-      name = this.getAttribute("name");
-    } else {
-      name = "" + prop.uiname;
-    }
-
-    //lazily load constraints, since there's so much
-    //accessing of DOM attributes
-    let updateConstraints = false;
-
-    if (name !== null && name !== this._name) {
-      this._name = name;
-      this.setCSS(undefined, false);
-      updateConstraints = true;
-    }
-
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
-
-    if (val !== this._value) {
-      updateConstraints = true;
-      /* Note that super.updateDataPath will update .value for us*/
-    }
-
-    if (updateConstraints) {
+      /* the watcher only fires on change, so constraints reload exactly when
+       * the old updateConstraints flag was set */
       this.loadNumConstraints(prop);
     }
 
-    super.updateDataPath();
+    /* super.updateFromPath updates .value for us */
+    super.updateFromPath(value, info);
   }
 
   update() {
@@ -219,7 +203,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     }
 
     this.updateWidth();
-    super.update(); //calls this.updateDataPath
+    super.update();
 
     updateSliderFromDom(this);
   }
@@ -1149,25 +1133,21 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     }
   }
 
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    const path = info.path;
+
+    if (!path || path === "null" || path === "undefined" || !info.resolved) {
       return;
     }
 
-    const path = this.getAttribute("datapath");
-
-    if (!path || path === "null" || path === "undefined") {
-      return;
-    }
-
-    let val = this.getPathValue(this.ctx, path) as unknown as number;
+    let val = value as number;
 
     if (this.isInt) {
       val = Math.floor(val);
     }
 
     if (val !== this._value) {
-      const prop = this.getPathMeta(this.ctx, path);
+      const prop = info.prop ?? this.getPathMeta(this.ctx, path);
       if (!prop) {
         return;
       }
@@ -1568,7 +1548,6 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     }
 
     this.updateSize();
-    this.updateDataPath();
     updateSliderFromDom(this);
   }
 }
@@ -1972,18 +1951,18 @@ export class SliderWithTextbox<
     }
   }
 
-  updateDataPath() {
-    if (!this.ctx || !this.getAttribute("datapath")) {
+  updateFromPath(value: unknown, info: PathWatchInfo) {
+    if (!this.ctx || !info.resolved) {
       return;
     }
 
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
 
     if (!prop) {
       return;
     }
 
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!) as number;
+    const val = value as number;
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
@@ -1994,7 +1973,6 @@ export class SliderWithTextbox<
     this.updateLabelOnTop();
     super.update();
 
-    this.updateDataPath();
     const redraw = false;
 
     updateSliderFromDom(this, this.numslider);

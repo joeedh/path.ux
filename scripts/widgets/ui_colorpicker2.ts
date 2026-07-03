@@ -8,6 +8,7 @@ import { UIBase, drawRoundBox, getFont } from "../core/ui_base";
 import { ColumnFrame } from "../core/ui";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
 import { keymap } from "../path-controller/util/simple_events";
+import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 import cconst from "../config/const";
 import {
   color2web,
@@ -1274,21 +1275,23 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
     }
   }
 
-  updateDataPath(): void {
-    if (!this.hasAttribute("datapath")) {
-      return;
+  watchPath(): void {
+    if (this.hasAttribute("datapath")) {
+      /* heavy reaction (field redraw + slider sync): trailing debounce */
+      this.addPathWatch("datapath", { debounce: { trailing: 100 } });
     }
+  }
 
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath")!);
-
-    if (val === undefined) {
+  updateFromPath(val: unknown, info: PathWatchInfo): void {
+    if (!info.resolved) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
       this.internalDisabled = true;
       return;
     }
 
     this.internalDisabled = false;
+
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
 
     _update_temp.load(val as number[]);
 
@@ -1320,10 +1323,6 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
 
   update(): void {
     this.updateThemeOverride();
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
 
     super.update();
   }
@@ -1704,16 +1703,9 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     this._redraw();
   }
 
-  updateDataPath(): void {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    const path = this.getAttribute("datapath");
-    if (!path) {
-      return;
-    }
-    const prop = this.getPathMeta(this.ctx, path);
+  updateFromPath(val: unknown, info: PathWatchInfo): void {
+    const path = info.path;
+    const prop = info.prop ?? this.getPathMeta(this.ctx, path);
 
     if (prop?.data === undefined && cconst.DEBUG.verboseDataPath) {
       console.log("bad path", path);
@@ -1736,8 +1728,6 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     if (this.customLabel === undefined && prop.uiname && prop.uiname !== this._label) {
       this.label = prop.uiname;
     }
-
-    const val = this.getPathValue(this.ctx, path) as unknown;
 
     if (val === undefined || val === null) {
       redraw = redraw || !this.disabled;
@@ -1808,10 +1798,6 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     if (key !== this._last_key) {
       this._last_key = key;
       this.redraw();
-    }
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
     }
   }
 
