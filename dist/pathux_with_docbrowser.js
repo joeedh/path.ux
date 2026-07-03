@@ -816,52 +816,52 @@ var init_mobile_detect = __esm({
         cache.mobile = cache.tablet = cache.phone = null;
       }
     };
-    impl.mobileGrade = function(t) {
-      const $isMobile = t.mobile() !== null;
+    impl.mobileGrade = function(t2) {
+      const $isMobile = t2.mobile() !== null;
       if (
         // Apple iOS 3.2-5.1 - Tested on the original iPad (4.3 / 5.0), iPad 2 (4.3), iPad 3 (5.1), original iPhone (3.1), iPhone 3 (3.2), 3GS (4.3), 4 (4.3 / 5.0), and 4S (5.1)
-        t.os("iOS") && t.version("iPad") >= 4.3 || t.os("iOS") && t.version("iPhone") >= 3.1 || t.os("iOS") && t.version("iPod") >= 3.1 || // Android 2.1-2.3 - Tested on the HTC Incredible (2.2), original Droid (2.2), HTC Aria (2.1), Google Nexus S (2.3). Functional on 1.5 & 1.6 but performance may be sluggish, tested on Google G1 (1.5)
+        t2.os("iOS") && t2.version("iPad") >= 4.3 || t2.os("iOS") && t2.version("iPhone") >= 3.1 || t2.os("iOS") && t2.version("iPod") >= 3.1 || // Android 2.1-2.3 - Tested on the HTC Incredible (2.2), original Droid (2.2), HTC Aria (2.1), Google Nexus S (2.3). Functional on 1.5 & 1.6 but performance may be sluggish, tested on Google G1 (1.5)
         // Android 3.1 (Honeycomb)  - Tested on the Samsung Galaxy Tab 10.1 and Motorola XOOM
         // Android 4.0 (ICS)  - Tested on a Galaxy Nexus. Note: transition performance can be poor on upgraded devices
         // Android 4.1 (Jelly Bean)  - Tested on a Galaxy Nexus and Galaxy 7
-        t.version("Android") > 2.1 && t.is("Webkit") || // Windows Phone 7-7.5 - Tested on the HTC Surround (7.0) HTC Trophy (7.5), LG-E900 (7.5), Nokia Lumia 800
-        t.version("Windows Phone OS") >= 7 || // Blackberry 7 - Tested on BlackBerry Torch 9810
+        t2.version("Android") > 2.1 && t2.is("Webkit") || // Windows Phone 7-7.5 - Tested on the HTC Surround (7.0) HTC Trophy (7.5), LG-E900 (7.5), Nokia Lumia 800
+        t2.version("Windows Phone OS") >= 7 || // Blackberry 7 - Tested on BlackBerry Torch 9810
         // Blackberry 6.0 - Tested on the Torch 9800 and Style 9670
-        t.is("BlackBerry") && t.version("BlackBerry") >= 6 || // Blackberry Playbook (1.0-2.0) - Tested on PlayBook
-        t.match("Playbook.*Tablet") || // Palm WebOS (1.4-2.0) - Tested on the Palm Pixi (1.4), Pre (1.4), Pre 2 (2.0)
-        t.version("webOS") >= 1.4 && t.match("Palm|Pre|Pixi") || // Palm WebOS 3.0  - Tested on HP TouchPad
-        t.match("hp.*TouchPad") || // Firefox Mobile (12 Beta) - Tested on Android 2.3 device
-        t.is("Firefox") && t.version("Firefox") >= 12 || // Chrome for Android - Tested on Android 4.0, 4.1 device
-        t.is("Chrome") && t.is("AndroidOS") && t.version("Android") >= 4 || // Skyfire 4.1 - Tested on Android 2.3 device
-        t.is("Skyfire") && t.version("Skyfire") >= 4.1 && t.is("AndroidOS") && t.version("Android") >= 2.3 || // Opera Mobile 11.5-12: Tested on Android 2.3
-        t.is("Opera") && t.version("Opera Mobi") > 11 && t.is("AndroidOS") || // Meego 1.2 - Tested on Nokia 950 and N9
-        t.is("MeeGoOS") || // Tizen (pre-release) - Tested on early hardware
-        t.is("Tizen") || // Samsung Bada 2.0 - Tested on a Samsung Wave 3, Dolphin browser
+        t2.is("BlackBerry") && t2.version("BlackBerry") >= 6 || // Blackberry Playbook (1.0-2.0) - Tested on PlayBook
+        t2.match("Playbook.*Tablet") || // Palm WebOS (1.4-2.0) - Tested on the Palm Pixi (1.4), Pre (1.4), Pre 2 (2.0)
+        t2.version("webOS") >= 1.4 && t2.match("Palm|Pre|Pixi") || // Palm WebOS 3.0  - Tested on HP TouchPad
+        t2.match("hp.*TouchPad") || // Firefox Mobile (12 Beta) - Tested on Android 2.3 device
+        t2.is("Firefox") && t2.version("Firefox") >= 12 || // Chrome for Android - Tested on Android 4.0, 4.1 device
+        t2.is("Chrome") && t2.is("AndroidOS") && t2.version("Android") >= 4 || // Skyfire 4.1 - Tested on Android 2.3 device
+        t2.is("Skyfire") && t2.version("Skyfire") >= 4.1 && t2.is("AndroidOS") && t2.version("Android") >= 2.3 || // Opera Mobile 11.5-12: Tested on Android 2.3
+        t2.is("Opera") && t2.version("Opera Mobi") > 11 && t2.is("AndroidOS") || // Meego 1.2 - Tested on Nokia 950 and N9
+        t2.is("MeeGoOS") || // Tizen (pre-release) - Tested on early hardware
+        t2.is("Tizen") || // Samsung Bada 2.0 - Tested on a Samsung Wave 3, Dolphin browser
         // @todo: more tests here!
-        t.is("Dolfin") && t.version("Bada") >= 2 || // UC Browser - Tested on Android 2.3 device
-        (t.is("UC Browser") || t.is("Dolfin")) && t.version("Android") >= 2.3 || // Kindle 3 and Fire  - Tested on the built-in WebKit browser for each
-        t.match("Kindle Fire") || t.is("Kindle") && t.version("Kindle") >= 3 || // Nook Color 1.4.1 - Tested on original Nook Color, not Nook Tablet
-        t.is("AndroidOS") && t.is("NookTablet") || // Chrome Desktop 11-21 - Tested on OS X 10.7 and Windows 7
-        t.version("Chrome") >= 11 && !$isMobile || // Safari Desktop 4-5 - Tested on OS X 10.7 and Windows 7
-        t.version("Safari") >= 5 && !$isMobile || // Firefox Desktop 4-13 - Tested on OS X 10.7 and Windows 7
-        t.version("Firefox") >= 4 && !$isMobile || // Internet Explorer 7-9 - Tested on Windows XP, Vista and 7
-        t.version("MSIE") >= 7 && !$isMobile || // Opera Desktop 10-12 - Tested on OS X 10.7 and Windows 7
+        t2.is("Dolfin") && t2.version("Bada") >= 2 || // UC Browser - Tested on Android 2.3 device
+        (t2.is("UC Browser") || t2.is("Dolfin")) && t2.version("Android") >= 2.3 || // Kindle 3 and Fire  - Tested on the built-in WebKit browser for each
+        t2.match("Kindle Fire") || t2.is("Kindle") && t2.version("Kindle") >= 3 || // Nook Color 1.4.1 - Tested on original Nook Color, not Nook Tablet
+        t2.is("AndroidOS") && t2.is("NookTablet") || // Chrome Desktop 11-21 - Tested on OS X 10.7 and Windows 7
+        t2.version("Chrome") >= 11 && !$isMobile || // Safari Desktop 4-5 - Tested on OS X 10.7 and Windows 7
+        t2.version("Safari") >= 5 && !$isMobile || // Firefox Desktop 4-13 - Tested on OS X 10.7 and Windows 7
+        t2.version("Firefox") >= 4 && !$isMobile || // Internet Explorer 7-9 - Tested on Windows XP, Vista and 7
+        t2.version("MSIE") >= 7 && !$isMobile || // Opera Desktop 10-12 - Tested on OS X 10.7 and Windows 7
         // @reference: http://my.opera.com/community/openweb/idopera/
-        t.version("Opera") >= 10 && !$isMobile
+        t2.version("Opera") >= 10 && !$isMobile
       ) {
         return "A";
       }
-      if (t.os("iOS") && t.version("iPad") < 4.3 || t.os("iOS") && t.version("iPhone") < 3.1 || t.os("iOS") && t.version("iPod") < 3.1 || // Blackberry 5.0: Tested on the Storm 2 9550, Bold 9770
-      t.is("Blackberry") && t.version("BlackBerry") >= 5 && t.version("BlackBerry") < 6 || //Opera Mini (5.0-6.5) - Tested on iOS 3.2/4.3 and Android 2.3
-      t.version("Opera Mini") >= 5 && t.version("Opera Mini") <= 6.5 && (t.version("Android") >= 2.3 || t.is("iOS")) || // Nokia Symbian^3 - Tested on Nokia N8 (Symbian^3), C7 (Symbian^3), also works on N97 (Symbian^1)
-      t.match("NokiaN8|NokiaC7|N97.*Series60|Symbian/3") || // @todo: report this (tested on Nokia N71)
-      t.version("Opera Mobi") >= 11 && t.is("SymbianOS")) {
+      if (t2.os("iOS") && t2.version("iPad") < 4.3 || t2.os("iOS") && t2.version("iPhone") < 3.1 || t2.os("iOS") && t2.version("iPod") < 3.1 || // Blackberry 5.0: Tested on the Storm 2 9550, Bold 9770
+      t2.is("Blackberry") && t2.version("BlackBerry") >= 5 && t2.version("BlackBerry") < 6 || //Opera Mini (5.0-6.5) - Tested on iOS 3.2/4.3 and Android 2.3
+      t2.version("Opera Mini") >= 5 && t2.version("Opera Mini") <= 6.5 && (t2.version("Android") >= 2.3 || t2.is("iOS")) || // Nokia Symbian^3 - Tested on Nokia N8 (Symbian^3), C7 (Symbian^3), also works on N97 (Symbian^1)
+      t2.match("NokiaN8|NokiaC7|N97.*Series60|Symbian/3") || // @todo: report this (tested on Nokia N71)
+      t2.version("Opera Mobi") >= 11 && t2.is("SymbianOS")) {
         return "B";
       }
       if (
         // Blackberry 4.x - Tested on the Curve 8330
-        t.version("BlackBerry") < 5 || // Windows Mobile - Tested on the HTC Leo (WinMo 5.2)
-        t.match("MSIEMobile|Windows CE.*Mobile") || t.version("Windows Mobile") <= 5.2
+        t2.version("BlackBerry") < 5 || // Windows Mobile - Tested on the HTC Leo (WinMo 5.2)
+        t2.match("MSIEMobile|Windows CE.*Mobile") || t2.version("Windows Mobile") <= 5.2
       ) {
         return "C";
       }
@@ -1151,16 +1151,16 @@ var init_mobile_detect = __esm({
   }
 });
 
-// ../../vendor/nstructjs/build/nstructjs_es6.js
+// node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
 function isParseStructsDummy(cls) {
   return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
 }
 function tab(n, chr = " ") {
-  let t = "";
+  let t2 = "";
   for (let i = 0; i < n; i++) {
-    t += chr;
+    t2 += chr;
   }
-  return t;
+  return t2;
 }
 function termColor(s, c) {
   let str;
@@ -1231,8 +1231,8 @@ function termPrint(...args) {
       tokens2.push(tok(chunk, "chunk"));
     }
     s2 = s2.slice(mini + minslice.length, s2.length);
-    const t = tok(minslice, mintype);
-    tokens2.push(t);
+    const t2 = tok(minslice, mintype);
+    tokens2.push(t2);
   }
   if (s2.length > 0) {
     tokens2.push(tok(s2, "chunk"));
@@ -1240,14 +1240,14 @@ function termPrint(...args) {
   const stack = [];
   let cur;
   let out = "";
-  for (const t of tokens2) {
-    if (t.type === "chunk") {
-      out += t.value;
-    } else if (t.type === "start") {
+  for (const t2 of tokens2) {
+    if (t2.type === "chunk") {
+      out += t2.value;
+    } else if (t2.type === "start") {
       stack.push(cur);
-      cur = t.value;
-      out += t.value;
-    } else if (t.type === "end") {
+      cur = t2.value;
+      out += t2.value;
+    } else if (t2.type === "end") {
       cur = stack.pop();
       if (cur) {
         out += cur;
@@ -1294,9 +1294,9 @@ function print_lines(ld, lineno, col, printColors, tokenObj) {
   buf = "------------------\n" + buf + "\n==================\n";
   return buf;
 }
-function gen_tabstr$2(t) {
+function gen_tabstr$2(t2) {
   let s = "";
-  for (let i = 0; i < t; i++) {
+  for (let i = 0; i < t2; i++) {
     s += "  ";
   }
   return s;
@@ -1370,30 +1370,30 @@ function StructParser() {
     return new tokdef(name2, re, func, example);
   }
   const tokens2 = [
-    tk2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_\.$]*/, function(t) {
-      if (reserved_tokens.has(t.value)) {
-        t.type = t.value.toUpperCase();
+    tk2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_\.$]*/, function(t2) {
+      if (reserved_tokens.has(t2.value)) {
+        t2.type = t2.value.toUpperCase();
       }
-      return t;
+      return t2;
     }, "identifier"),
     tk2("OPEN", /\{/),
     tk2("EQUALS", /=/),
     tk2("CLOSE", /}/),
-    tk2("STRLIT", /\"[^"]*\"/, (t) => {
-      t.value = t.value.slice(1, t.value.length - 1);
-      return t;
+    tk2("STRLIT", /\"[^"]*\"/, (t2) => {
+      t2.value = t2.value.slice(1, t2.value.length - 1);
+      return t2;
     }),
-    tk2("STRLIT", /\'[^']*\'/, (t) => {
-      t.value = t.value.slice(1, t.value.length - 1);
-      return t;
+    tk2("STRLIT", /\'[^']*\'/, (t2) => {
+      t2.value = t2.value.slice(1, t2.value.length - 1);
+      return t2;
     }),
     tk2("COLON", /:/),
     tk2("OPT_COLON", /\?:/),
     tk2("SOPEN", /\[/),
     tk2("SCLOSE", /\]/),
-    tk2("JSCRIPT", /\|/, function(t) {
+    tk2("JSCRIPT", /\|/, function(t2) {
       let js = "";
-      const lex2 = t.lexer;
+      const lex2 = t2.lexer;
       let p;
       while (lex2.lexpos < lex2.lexdata.length) {
         const c = lex2.lexdata[lex2.lexpos];
@@ -1412,8 +1412,8 @@ function StructParser() {
         js = js.slice(0, js.length - 1);
         lex2.lexpos--;
       }
-      t.value = js.trim();
-      return t;
+      t2.value = js.trim();
+      return t2;
     }),
     tk2("COMMENT", /\/\/.*[\n\r]/),
     tk2("LPARAM", /\(/),
@@ -1421,8 +1421,8 @@ function StructParser() {
     tk2("COMMA", /,/),
     tk2("NUM", /[0-9]+/, void 0, "number"),
     tk2("SEMI", /;/),
-    tk2("NEWLINE", /\n/, function(t) {
-      t.lexer.lineno += 1;
+    tk2("NEWLINE", /\n/, function(t2) {
+      t2.lexer.lineno += 1;
       return void 0;
     }, "newline"),
     tk2("SPACE", / |\t/, function(_t) {
@@ -1585,10 +1585,10 @@ function StructParser() {
     }
   }
   function p_ID_or_num(p) {
-    const t = p.peeknext();
-    if (t && t.type === "NUM") {
+    const t2 = p.peeknext();
+    if (t2 && t2.type === "NUM") {
       p.next();
-      return t.value;
+      return t2.value;
     } else {
       return p.expect("ID", "struct field name");
     }
@@ -1909,14 +1909,14 @@ function gen_tabstr$1(tot) {
   }
   return ret;
 }
-function setWarningMode2(t) {
-  if (typeof t !== "number" || isNaN(t)) {
+function setWarningMode2(t2) {
+  if (typeof t2 !== "number" || isNaN(t2)) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
   }
-  warninglvl$1 = t;
+  warninglvl$1 = t2;
 }
-function setDebugMode2(t) {
-  debug = t;
+function setDebugMode2(t2) {
+  debug = t2;
   if (debug) {
     packer_debug$1 = function(...args) {
       let tab2 = gen_tabstr$1(packdebug_tablevel);
@@ -2135,9 +2135,9 @@ function byteswapElems(bytes, elemSize) {
   }
   for (let i = 0; i < bytes.length; i += elemSize) {
     for (let a2 = i, b = i + elemSize - 1; a2 < b; a2++, b--) {
-      const t = bytes[a2];
+      const t2 = bytes[a2];
       bytes[a2] = bytes[b];
-      bytes[b] = t;
+      bytes[b] = t2;
     }
   }
 }
@@ -2195,16 +2195,16 @@ function buildJSONParser() {
     tk2("BOOL", /true|false/),
     tk2("WS", /[ \r\t\n]/, (_t) => void 0),
     //drop token
-    tk2("STRLIT", /["']/, (t) => {
-      const lex2 = t.lexer;
-      const char = t.value;
+    tk2("STRLIT", /["']/, (t2) => {
+      const lex2 = t2.lexer;
+      const char = t2.value;
       let i = lex2.lexpos;
       const lexdata = lex2.lexdata;
       let escape2 = false;
-      t.value = "";
+      t2.value = "";
       while (i < lexdata.length) {
         const c = lexdata[i];
-        t.value += c;
+        t2.value += c;
         if (c === "\\") {
           escape2 = !escape2;
         } else if (!escape2 && c === char) {
@@ -2215,10 +2215,10 @@ function buildJSONParser() {
         i++;
       }
       lex2.lexpos = i + 1;
-      if (t.value.length > 0) {
-        t.value = t.value.slice(0, t.value.length - 1);
+      if (t2.value.length > 0) {
+        t2.value = t2.value.slice(0, t2.value.length - 1);
       }
-      return t;
+      return t2;
     }),
     tk2("LSBRACKET", /\[/),
     tk2("RSBRACKET", /]/),
@@ -2227,41 +2227,41 @@ function buildJSONParser() {
     tk2("NULL", /null/),
     tk2("COMMA", /,/),
     tk2("COLON", /:/),
-    tk2("NUM", numre, (t) => {
-      t.value = "" + parseFloat(t.value);
-      return t;
+    tk2("NUM", numre, (t2) => {
+      t2.value = "" + parseFloat(t2.value);
+      return t2;
     }),
-    tk2("NUM", nfloat3, (t) => {
-      t.value = "" + parseFloat(t.value);
-      return t;
+    tk2("NUM", nfloat3, (t2) => {
+      t2.value = "" + parseFloat(t2.value);
+      return t2;
     }),
-    tk2("NUM", nfloatexp, (t) => {
-      t.value = "" + parseFloat(t.value);
-      return t;
+    tk2("NUM", nfloatexp, (t2) => {
+      t2.value = "" + parseFloat(t2.value);
+      return t2;
     })
   ];
-  function tokinfo(t) {
+  function tokinfo(t2) {
     return {
-      lexpos: t ? t.lexpos : 0,
-      lineno: t ? t.lineno : 0,
-      col: t ? t.col : 0,
+      lexpos: t2 ? t2.lexpos : 0,
+      lineno: t2 ? t2.lineno : 0,
+      col: t2 ? t2.col : 0,
       fields: {}
     };
   }
   function p_Array(p) {
     p.expect("LSBRACKET");
-    let t = p.peeknext();
+    let t2 = p.peeknext();
     let first2 = true;
     const ret = [];
-    setTokInfo(ret, tokinfo(t));
-    while (t && t.type !== "RSBRACKET") {
+    setTokInfo(ret, tokinfo(t2));
+    while (t2 && t2.type !== "RSBRACKET") {
       if (!first2) {
         p.expect("COMMA");
       }
-      getTokInfo(ret).fields[ret.length] = tokinfo(t);
+      getTokInfo(ret).fields[ret.length] = tokinfo(t2);
       ret.push(p_Start(p));
       first2 = false;
-      t = p.peeknext();
+      t2 = p.peeknext();
     }
     p.expect("RSBRACKET");
     return ret;
@@ -2270,9 +2270,9 @@ function buildJSONParser() {
     p.expect("LBRACE");
     const obj = {};
     let first2 = true;
-    let t = p.peeknext();
-    setTokInfo(obj, tokinfo(t));
-    while (t && t.type !== "RBRACE") {
+    let t2 = p.peeknext();
+    setTokInfo(obj, tokinfo(t2));
+    while (t2 && t2.type !== "RBRACE") {
       if (!first2) {
         p.expect("COMMA");
       }
@@ -2281,22 +2281,22 @@ function buildJSONParser() {
       const val = p_Start(p, true);
       obj[key] = val;
       first2 = false;
-      t = p.peeknext();
-      getTokInfo(obj).fields[key] = tokinfo(t);
+      t2 = p.peeknext();
+      getTokInfo(obj).fields[key] = tokinfo(t2);
     }
     p.expect("RBRACE");
     return obj;
   }
   function p_Start(p, _throwError = true) {
-    const t = p.peeknext();
-    if (!t) {
+    const t2 = p.peeknext();
+    if (!t2) {
       p.error(void 0, "Unexpected end of input");
     }
-    if (t.type === "LSBRACKET") {
+    if (t2.type === "LSBRACKET") {
       return p_Array(p);
-    } else if (t.type === "LBRACE") {
+    } else if (t2.type === "LBRACE") {
       return p_Object(p);
-    } else if (t.type === "STRLIT" || t.type === "NUM" || t.type === "NULL" || t.type === "BOOL") {
+    } else if (t2.type === "STRLIT" || t2.type === "NUM" || t2.type === "NULL" || t2.type === "BOOL") {
       const tok = p.next();
       if (tok.type === "NUM") {
         return parseFloat(tok.value);
@@ -2307,7 +2307,7 @@ function buildJSONParser() {
       }
       return tok.value;
     } else {
-      p.error(t, "Unknown token");
+      p.error(t2, "Unknown token");
     }
   }
   function p_Error(_token, _msg) {
@@ -2418,15 +2418,15 @@ function update_debug_data() {
   packer_debug_end = ret.packer_debug_end;
   warninglvl = ret.warninglvl;
 }
-function setWarningMode(t) {
-  sintern2.setWarningMode2(t);
-  if (typeof t !== "number" || isNaN(t)) {
+function setWarningMode(t2) {
+  sintern2.setWarningMode2(t2);
+  if (typeof t2 !== "number" || isNaN(t2)) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
   }
-  warninglvl = t;
+  warninglvl = t2;
 }
-function setDebugMode(t) {
-  sintern2.setDebugMode2(t);
+function setDebugMode(t2) {
+  sintern2.setDebugMode2(t2);
   update_debug_data();
 }
 function define_empty_class(scls, name2) {
@@ -2552,8 +2552,8 @@ function validateJSON(json, cls, useInternalParser, printColors = true, logger =
 function getEndian() {
   return STRUCT_ENDIAN;
 }
-function setAllowOverriding(t) {
-  return manager.allowOverriding = !!t;
+function setAllowOverriding(t2) {
+  return manager.allowOverriding = !!t2;
 }
 function isRegistered(cls) {
   return manager.isRegistered(cls);
@@ -2587,8 +2587,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "../../vendor/nstructjs/build/nstructjs_es6.js"() {
-    "use strict";
+  "node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
     colormap = {
       "black": 30,
       "red": 31,
@@ -2782,14 +2781,14 @@ var init_nstructjs_es6 = __esm({
         let max_res = 0;
         let theres = void 0;
         for (let i = 0; i < tlen; i++) {
-          const t = ts[i];
-          const re = t.reSticky;
+          const t2 = ts[i];
+          const re = t2.reSticky;
           if (re === void 0)
             continue;
           re.lastIndex = lexpos;
           const res = re.exec(lexdata);
           if (res !== null && res[0].length > max_res) {
-            theres = [t, res[0]];
+            theres = [t2, res[0]];
             max_res = res[0].length;
           }
         }
@@ -4626,19 +4625,19 @@ var init_nstructjs_es6 = __esm({
           return;
         }
         let recStruct;
-        const recArray = (t) => {
-          switch (t.type) {
+        const recArray = (t2) => {
+          switch (t2.type) {
             case StructEnum.ARRAY:
-              return recArray(t.data.type);
+              return recArray(t2.data.type);
             case StructEnum.ITERKEYS:
-              return recArray(t.data.type);
+              return recArray(t2.data.type);
             case StructEnum.STATIC_ARRAY:
-              return recArray(t.data.type);
+              return recArray(t2.data.type);
             case StructEnum.ITER:
-              return recArray(t.data.type);
+              return recArray(t2.data.type);
             case StructEnum.STRUCT:
             case StructEnum.TSTRUCT: {
-              const st2 = srcSTRUCT.structs[t.data];
+              const st2 = srcSTRUCT.structs[t2.data];
               const cls2 = srcSTRUCT.struct_cls[st2.name];
               return recStruct(st2, cls2);
             }
@@ -6102,8 +6101,8 @@ function termPrint2(...args) {
       tokens2.push(tok(chunk, "chunk"));
     }
     s2 = s2.slice(mini + minslice.length, s2.length);
-    const t = tok(minslice, mintype);
-    tokens2.push(t);
+    const t2 = tok(minslice, mintype);
+    tokens2.push(t2);
   }
   if (s2.length > 0) {
     tokens2.push(tok(s2, "chunk"));
@@ -6111,14 +6110,14 @@ function termPrint2(...args) {
   const stack = [];
   let cur;
   let out = "";
-  for (const t of tokens2) {
-    if (t.type === "chunk") {
-      out += t.value;
-    } else if (t.type === "start") {
+  for (const t2 of tokens2) {
+    if (t2.type === "chunk") {
+      out += t2.value;
+    } else if (t2.type === "start") {
       stack.push(cur);
-      cur = t.value;
-      out += t.value;
-    } else if (t.type === "end") {
+      cur = t2.value;
+      out += t2.value;
+    } else if (t2.type === "end") {
       cur = stack.pop();
       if (cur) {
         out += cur;
@@ -7613,12 +7612,12 @@ IDGen {
         const ret = heap[1];
         const end = this.end;
         function swap(n1, n2) {
-          let t = heap[n1];
+          let t2 = heap[n1];
           heap[n1] = heap[n2];
-          heap[n2] = t;
-          t = heap[n1 + 1];
+          heap[n2] = t2;
+          t2 = heap[n1 + 1];
           heap[n1 + 1] = heap[n2 + 1];
-          heap[n2 + 1] = t;
+          heap[n2 + 1] = t2;
         }
         heaplog("end", end);
         heaplog(heap.concat([]));
@@ -7637,9 +7636,9 @@ IDGen {
           heaplog("  ", heap[n], heap[n1], heap[n2]);
           if (heap[n1] !== void 0 && heap[n2] !== void 0) {
             if (heap[n1] > heap[n2]) {
-              const t = n1;
+              const t2 = n1;
               n1 = n2;
-              n2 = t;
+              n2 = t2;
             }
             if (heap[n] > heap[n1]) {
               swap(n, n1);
@@ -8170,9 +8169,9 @@ function createVector2(parent, structName) {
       this[1] = this[1] * u + b[1] * v;
       return this;
     }
-    interp(b, t) {
-      this[0] = this[0] + (b[0] - this[0]) * t;
-      this[1] = this[1] + (b[1] - this[1]) * t;
+    interp(b, t2) {
+      this[0] = this[0] + (b[0] - this[0]) * t2;
+      this[1] = this[1] + (b[1] - this[1]) * t2;
       return this;
     }
     add(b) {
@@ -8317,16 +8316,16 @@ function createVector2(parent, structName) {
       return this;
     }
     swapAxes(axis1, axis2) {
-      const t = this[axis1];
+      const t2 = this[axis1];
       this[axis1] = this[axis2];
-      this[axis2] = t;
+      this[axis2] = t2;
       return this;
     }
     /** somewhat crappy spherical interpolation */
-    sinterp(v2, t) {
+    sinterp(v2, t2) {
       const l1 = this.vectorLength();
       const l2 = v2.vectorLength();
-      return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
+      return this.interp(v2, t2).normalize().mulScalar(l1 + (l2 - l1) * t2);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
@@ -8490,10 +8489,10 @@ function createVector3(parent, structName) {
       this[2] = this[2] * u + b[2] * v;
       return this;
     }
-    interp(b, t) {
-      this[0] = this[0] + (b[0] - this[0]) * t;
-      this[1] = this[1] + (b[1] - this[1]) * t;
-      this[2] = this[2] + (b[2] - this[2]) * t;
+    interp(b, t2) {
+      this[0] = this[0] + (b[0] - this[0]) * t2;
+      this[1] = this[1] + (b[1] - this[1]) * t2;
+      this[2] = this[2] + (b[2] - this[2]) * t2;
       return this;
     }
     add(b) {
@@ -8665,16 +8664,16 @@ function createVector3(parent, structName) {
       return this;
     }
     swapAxes(axis1, axis2) {
-      const t = this[axis1];
+      const t2 = this[axis1];
       this[axis1] = this[axis2];
-      this[axis2] = t;
+      this[axis2] = t2;
       return this;
     }
     /** somewhat crappy spherical interpolation */
-    sinterp(v2, t) {
+    sinterp(v2, t2) {
       const l1 = this.vectorLength();
       const l2 = v2.vectorLength();
-      return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
+      return this.interp(v2, t2).normalize().mulScalar(l1 + (l2 - l1) * t2);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
@@ -8880,11 +8879,11 @@ function createVector4(parent, structName) {
       this[3] = this[3] * u + b[3] * v;
       return this;
     }
-    interp(b, t) {
-      this[0] = this[0] + (b[0] - this[0]) * t;
-      this[1] = this[1] + (b[1] - this[1]) * t;
-      this[2] = this[2] + (b[2] - this[2]) * t;
-      this[3] = this[3] + (b[3] - this[3]) * t;
+    interp(b, t2) {
+      this[0] = this[0] + (b[0] - this[0]) * t2;
+      this[1] = this[1] + (b[1] - this[1]) * t2;
+      this[2] = this[2] + (b[2] - this[2]) * t2;
+      this[3] = this[3] + (b[3] - this[3]) * t2;
       return this;
     }
     add(b) {
@@ -9084,16 +9083,16 @@ function createVector4(parent, structName) {
       return this;
     }
     swapAxes(axis1, axis2) {
-      const t = this[axis1];
+      const t2 = this[axis1];
       this[axis1] = this[axis2];
-      this[axis2] = t;
+      this[axis2] = t2;
       return this;
     }
     /** somewhat crappy spherical interpolation */
-    sinterp(v2, t) {
+    sinterp(v2, t2) {
       const l1 = this.vectorLength();
       const l2 = v2.vectorLength();
-      return this.interp(v2, t).normalize().mulScalar(l1 + (l2 - l1) * t);
+      return this.interp(v2, t2).normalize().mulScalar(l1 + (l2 - l1) * t2);
     }
     /** perpendicular swap */
     perpSwap(axis1 = 0, axis2 = 1, sign = 1) {
@@ -9351,7 +9350,7 @@ var init_vectormath = __esm({
         this.axisAngleToQuat(axis, angle);
         return this;
       }
-      quatInterp(quat2, t) {
+      quatInterp(quat2, t2) {
         const quat = new _Quat();
         let cosom = this[0] * quat2[0] + this[1] * quat2[1] + this[2] * quat2[2] + this[3] * quat2[3];
         if (cosom < 0) {
@@ -9373,11 +9372,11 @@ var init_vectormath = __esm({
         if (1 - cosom > 1e-4) {
           omega = Math.acos(cosom);
           sinom = Math.sin(omega);
-          sc1 = Math.sin((1 - t) * omega) / sinom;
-          sc2 = Math.sin(t * omega) / sinom;
+          sc1 = Math.sin((1 - t2) * omega) / sinom;
+          sc2 = Math.sin(t2 * omega) / sinom;
         } else {
-          sc1 = 1 - t;
-          sc2 = t;
+          sc1 = 1 - t2;
+          sc2 = t2;
         }
         this[0] = sc1 * quat[0] + sc2 * quat2[0];
         this[1] = sc1 * quat[1] + sc2 * quat2[1];
@@ -9759,10 +9758,10 @@ var init_vectormath = __esm({
       }
       translate(x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          const t = x;
-          x = t[0];
-          y = t[1];
-          z = t[2];
+          const t2 = x;
+          x = t2[0];
+          y = t2[1];
+          z = t2[2];
         }
         x = x === void 0 ? 0 : x;
         y = y === void 0 ? 0 : y;
@@ -9776,10 +9775,10 @@ var init_vectormath = __esm({
       }
       preTranslate(x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          const t = x;
-          x = t[0];
-          y = t[1];
-          z = t[2];
+          const t2 = x;
+          x = t2[0];
+          y = t2[1];
+          z = t2[2];
         }
         x = x === void 0 ? 0 : x;
         y = y === void 0 ? 0 : y;
@@ -9793,10 +9792,10 @@ var init_vectormath = __esm({
       }
       scale(x, y, z, w = 1) {
         if (typeof x === "object" && "length" in x) {
-          const t = x;
-          x = t[0];
-          y = t[1];
-          z = t[2];
+          const t2 = x;
+          x = t2[0];
+          y = t2[1];
+          z = t2[2];
         } else {
           if (x === void 0) x = 1;
           if (z === void 0) {
@@ -10032,10 +10031,10 @@ var init_vectormath = __esm({
       }
       rotate(angle, x, y, z) {
         if (typeof x === "object" && "length" in x) {
-          const t = x;
-          x = t[0];
-          y = t[1];
-          z = t[2];
+          const t2 = x;
+          x = t2[0];
+          y = t2[1];
+          z = t2[2];
         } else {
           if (arguments.length === 1) {
             x = y = 0;
@@ -10491,13 +10490,13 @@ var init_vectormath = __esm({
         if (this.$matrix.m44 === 0) return false;
         const mat = temp_mats.next().load(this);
         let m = mat.$matrix;
-        const t = _translate;
+        const t2 = _translate;
         const r = _rotate;
         const s = _scale;
-        if (t) {
-          t[0] = m.m41;
-          t[1] = m.m42;
-          t[2] = m.m43;
+        if (t2) {
+          t2[0] = m.m41;
+          t2[1] = m.m42;
+          t2[2] = m.m43;
         }
         const l1 = Math.sqrt(m.m11 * m.m11 + m.m12 * m.m12 + m.m13 * m.m13);
         const l2 = Math.sqrt(m.m21 * m.m21 + m.m22 * m.m22 + m.m23 * m.m23);
@@ -11010,15 +11009,15 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
         e2.button = type == "touchcancel" ? 1 : 0;
         e2.touches = e.touches;
         if (e.touches.length > 0) {
-          const t = e.touches[0];
-          mpos[0] = t.pageX;
-          mpos[1] = t.pageY;
-          e2.pageX = e2.x = t.pageX;
-          e2.pageY = e2.y = t.pageY;
-          e2.clientX = t.clientX;
-          e2.clientY = t.clientY;
-          e2.x = t.clientX;
-          e2.y = t.clientY;
+          const t2 = e.touches[0];
+          mpos[0] = t2.pageX;
+          mpos[1] = t2.pageY;
+          e2.pageX = e2.x = t2.pageX;
+          e2.pageY = e2.y = t2.pageY;
+          e2.clientX = t2.clientX;
+          e2.clientY = t2.clientY;
+          e2.x = t2.clientX;
+          e2.y = t2.clientY;
           ret.last_mpos[0] = e2.x;
           ret.last_mpos[1] = e2.y;
         } else {
@@ -11697,9 +11696,9 @@ function getCurve(type, throw_on_error = true) {
     return getCurve("ease");
   }
 }
-function evalHermiteTable(table, t, range = unitRange) {
-  t = (t - range[0]) / (range[1] - range[0]);
-  let s = t * (table.length / 4);
+function evalHermiteTable(table, t2, range = unitRange) {
+  t2 = (t2 - range[0]) / (range[1] - range[0]);
+  let s = t2 * (table.length / 4);
   let i = Math.floor(s);
   s -= i;
   i *= 4;
@@ -11712,13 +11711,13 @@ function genHermiteTable(evaluate, steps, range = [0, 1]) {
   const [min, max] = range;
   const eps = 1e-4;
   const dt = (max - min - eps * 4.001) / (steps - 1);
-  let t = min + eps * 4;
+  let t2 = min + eps * 4;
   let lastdv1 = 0;
   let lastf3 = 0;
-  for (let j = 0; j < steps; j++, t += dt) {
-    const f2 = evaluate(t - eps);
-    const f3 = evaluate(t);
-    const f4 = evaluate(t + eps);
+  for (let j = 0; j < steps; j++, t2 += dt) {
+    const f2 = evaluate(t2 - eps);
+    const f3 = evaluate(t2);
+    const f4 = evaluate(t2 + eps);
     let dv1 = (f4 - f2) / (eps * 2);
     dv1 /= steps;
     if (j > 0) {
@@ -11926,11 +11925,11 @@ function copyMouseEvent(e) {
     const key = i ? "targetTouches" : "touches";
     if (e[key]) {
       ret[key] = [];
-      for (const t of e[key]) {
-        const t2 = {};
-        ret[key].push(t2);
-        for (const k in t) {
-          t2[k] = t[k];
+      for (const t2 of e[key]) {
+        const t22 = {};
+        ret[key].push(t22);
+        for (const k in t2) {
+          t22[k] = t2[k];
         }
       }
     }
@@ -17181,15 +17180,15 @@ function mySafeJSONParse(buf) {
   return JSON.parse(buf, (_key, _val) => {
   });
 }
-function bez3(a2, b, c, t) {
-  const r1 = a2 + (b - a2) * t;
-  const r2 = b + (c - b) * t;
-  return r1 + (r2 - r1) * t;
+function bez3(a2, b, c, t2) {
+  const r1 = a2 + (b - a2) * t2;
+  const r2 = b + (c - b) * t2;
+  return r1 + (r2 - r1) * t2;
 }
-function bez4(a2, b, c, d, t) {
-  const r1 = bez3(a2, b, c, t);
-  const r2 = bez3(b, c, d, t);
-  return r1 + (r2 - r1) * t;
+function bez4(a2, b, c, d, t2) {
+  const r1 = bez3(a2, b, c, t2);
+  const r2 = bez3(b, c, d, t2);
+  return r1 + (r2 - r1) * t2;
 }
 function binomial(n, i) {
   if (i > n) {
@@ -18044,18 +18043,18 @@ curve1d.BSplineCurve {
         this.redraw();
         return this;
       }
-      basis(t, i) {
+      basis(t2, i) {
         if (this.recalc & RecalcFlags.FULL_BASIS) {
-          return this._basis(t, i);
+          return this._basis(t2, i);
         }
         if (this.recalc & RecalcFlags.BASIS) {
           this.regen_basis();
           this.recalc &= ~RecalcFlags.BASIS;
         }
         i = Math.min(Math.max(i, 0), this._ps.length - 1);
-        t = Math.min(Math.max(t, 0), 1) * 0.999999999;
+        t2 = Math.min(Math.max(t2, 0), 1) * 0.999999999;
         const table = this.basis_tables[i];
-        let s = t * (table.length / 4) * 0.99999;
+        let s = t2 * (table.length / 4) * 0.99999;
         let j = ~~s;
         s -= j;
         j *= 4;
@@ -18090,13 +18089,13 @@ curve1d.BSplineCurve {
         const table = this.hermite;
         const eps = 1e-5;
         const dt = (1 - eps * 4.001) / (steps - 1);
-        let t = eps * 4;
+        let t2 = eps * 4;
         let lastdv1 = 0;
         let lastf3 = 0;
-        for (let j = 0; j < steps; j++, t += dt) {
-          const f2 = this._evaluate(t - eps);
-          const f3 = this._evaluate(t);
-          const f4 = this._evaluate(t + eps);
+        for (let j = 0; j < steps; j++, t2 += dt) {
+          const f2 = this._evaluate(t2 - eps);
+          const f3 = this._evaluate(t2);
+          const f4 = this._evaluate(t2 + eps);
           let dv1 = (f4 - f2) / (eps * 2);
           dv1 /= steps;
           if (j > 0) {
@@ -18170,23 +18169,23 @@ curve1d.BSplineCurve {
           const table = this.basis_tables[i] = new Array((steps - 1) * 4);
           const eps = 1e-5;
           const dt = (1 - eps * 8) / (steps - 1);
-          let t = eps * 4;
+          let t2 = eps * 4;
           let lastdv1 = 0;
           let lastf3 = 0;
-          for (let j = 0; j < steps; j++, t += dt) {
-            const f3 = this._basis(t, i);
+          for (let j = 0; j < steps; j++, t2 += dt) {
+            const f3 = this._basis(t2, i);
             let dv1;
             if (0) {
-              const f2 = this._basis(t - eps, i);
-              const f4 = this._basis(t + eps, i);
+              const f2 = this._basis(t2 - eps, i);
+              const f4 = this._basis(t2 + eps, i);
               dv1 = (f4 - f2) / (eps * 2);
             } else {
-              dv1 = this._dbasis(t, i);
+              dv1 = this._dbasis(t2, i);
             }
             if (isNaN(dv1)) {
               console.log("NaN!");
               debugger;
-              dv1 = this._dbasis(t, i);
+              dv1 = this._dbasis(t2, i);
             }
             dv1 /= steps;
             if (j > 0) {
@@ -18201,7 +18200,7 @@ curve1d.BSplineCurve {
           }
         }
       }
-      _dbasis(t, i) {
+      _dbasis(t2, i) {
         const len = this._ps.length;
         const ps = this._ps;
         function safe_inv(n) {
@@ -18240,9 +18239,9 @@ curve1d.BSplineCurve {
           }
         }
         const deg = this.deg;
-        return dbas(t, i + this._degOffset, deg);
+        return dbas(t2, i + this._degOffset, deg);
       }
-      _basis(t, i) {
+      _basis(t2, i) {
         const len = this._ps.length;
         const ps = this._ps;
         function safe_inv(n) {
@@ -18262,20 +18261,20 @@ curve1d.BSplineCurve {
           }
         }
         const deg = this.deg;
-        const b = bas(t, i + this._degOffset, deg);
+        const b = bas(t2, i + this._degOffset, deg);
         return b;
       }
-      evaluate(t) {
+      evaluate(t2) {
         if (this.points.length === 0) {
           return 0;
         }
         const a2 = this.points[0].rco;
         const b = this.points[this.points.length - 1].rco;
-        if (t < a2[0]) return a2[1];
-        if (t > b[0]) return b[1];
+        if (t2 < a2[0]) return a2[1];
+        if (t2 > b[0]) return b[1];
         if (this.points.length === 2) {
-          t = (t - a2[0]) / (b[0] - a2[0]);
-          return a2[1] + (b[1] - a2[1]) * t;
+          t2 = (t2 - a2[0]) / (b[0] - a2[0]);
+          return a2[1] + (b[1] - a2[1]) * t2;
         }
         if (this.recalc) {
           this.regen_basis();
@@ -18285,9 +18284,9 @@ curve1d.BSplineCurve {
           this.regen_hermite();
           this.recalc = 0;
         }
-        t *= 0.999999;
+        t2 *= 0.999999;
         const table = this.hermite;
-        let s = t * (table.length / 4);
+        let s = t2 * (table.length / 4);
         let i = Math.floor(s);
         s -= i;
         i *= 4;
@@ -18296,8 +18295,8 @@ curve1d.BSplineCurve {
       /* Root find t on the x axis of the curve.  This
        * is more intuitive for the user.
        */
-      _evaluate(t) {
-        const start_t = t;
+      _evaluate(t2) {
+        const start_t = t2;
         if (this.points.length === 0) {
           return 0;
         }
@@ -18336,15 +18335,15 @@ curve1d.BSplineCurve {
         }
         return miny;
       }
-      _evaluate2(t) {
+      _evaluate2(t2) {
         const ret = eval2_rets.next();
-        t *= 0.9999999;
+        t2 *= 0.9999999;
         let sumx = 0;
         let sumy = 0;
         let totbasis = 0;
         for (let i = 0; i < this._ps.length; i++) {
           const p = this._ps[i].rco;
-          const b = this.basis(t, i);
+          const b = this.basis(t2, i);
           sumx += b * p[0];
           sumy += b * p[1];
           totbasis += b;
@@ -19291,35 +19290,35 @@ var init_anim = __esm({
         this.tasks.push(new Task(task));
       }
       remove(task) {
-        for (const t of this.tasks) {
-          if (t.task === task) {
-            t.dead = true;
-            this.tasks.remove(t);
+        for (const t2 of this.tasks) {
+          if (t2.task === task) {
+            t2.dead = true;
+            this.tasks.remove(t2);
             return;
           }
         }
       }
       start() {
         this.timer = window.setInterval(() => {
-          for (const t of this.tasks) {
+          for (const t2 of this.tasks) {
             try {
-              t.task();
+              t2.task();
             } catch (error2) {
-              t.done = true;
+              t2.done = true;
               print_stack2(error2);
             }
-            if (time_ms() - t.start > this.timeOut) {
-              t.dead = true;
+            if (time_ms() - t2.start > this.timeOut) {
+              t2.dead = true;
             }
           }
           for (let i = 0; i < this.tasks.length; i++) {
             if (this.tasks[i].done) {
-              const t = this.tasks[i];
-              this.tasks.remove(t);
+              const t2 = this.tasks[i];
+              this.tasks.remove(t2);
               i--;
               try {
-                if (t.task.onend) {
-                  t.task.onend();
+                if (t2.task.onend) {
+                  t2.task.onend();
                 }
               } catch (error2) {
                 print_stack2(error2);
@@ -19389,14 +19388,14 @@ var init_anim = __esm({
         }
       }
       exec(animator, done) {
-        let t = animator.time - this.time;
+        let t2 = animator.time - this.time;
         const ms = this.ms;
-        if (t > ms) {
+        if (t2 > ms) {
           done();
-          t = ms;
+          t2 = ms;
         }
-        t /= ms;
-        t = this.curve.evaluate(t);
+        t2 /= ms;
+        t2 = this.curve.evaluate(t2);
         if (Array.isArray(this.startValue)) {
           const value = this.object[this.key];
           const sv = this.startValue;
@@ -19405,10 +19404,10 @@ var init_anim = __esm({
             if (value[i] === void 0 || tv[i] === void 0) {
               continue;
             }
-            value[i] = sv[i] + (tv[i] - sv[i]) * t;
+            value[i] = sv[i] + (tv[i] - sv[i]) * t2;
           }
         } else {
-          this.object[this.key] = this.startValue + (this.value - this.startValue) * t;
+          this.object[this.key] = this.startValue + (this.value - this.startValue) * t2;
         }
       }
     };
@@ -20035,9 +20034,9 @@ function dist_to_tri_v3_old(co, v1, v2, v3, no) {
   function linedis3d(a2, b, c) {
     tmp.load(a2).sub(b);
     tmp2.load(c).sub(b).normalize();
-    let t = tmp.dot(tmp2);
-    t = Math.min(Math.max(t, 0), b.vectorDistance(c));
-    tmp2.mulScalar(t).add(b);
+    let t2 = tmp.dot(tmp2);
+    t2 = Math.min(Math.max(t2, 0), b.vectorDistance(c));
+    tmp2.mulScalar(t2).add(b);
     return tmp2.vectorDistance(a2);
   }
   if (point_in_tri(pp, p1, p2, p3)) {
@@ -20883,16 +20882,16 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   if (calc_t || v1.length === 3) {
     const n1 = new Vector2(v2).sub(v1);
     const n2 = new Vector2(vi).sub(v1);
-    let t = n2.vectorLength() / n1.vectorLength();
+    let t2 = n2.vectorLength() / n1.vectorLength();
     n1.normalize();
     n2.normalize();
     if (n1.dot(n2) < 0) {
-      t = -t;
+      t2 = -t2;
     }
     if (v1.length === 3) {
-      vi[2] = v1[2] + (v2[2] - v1[2]) * t;
+      vi[2] = v1[2] + (v2[2] - v1[2]) * t2;
     }
-    return [vi, LINECROSS, t];
+    return [vi, LINECROSS, t2];
   }
   return [vi, LINECROSS];
 }
@@ -20903,17 +20902,17 @@ function dist_to_line_2d(p, v1, v2, clip2 = true, closest_co_out, t_out) {
   const vec = dt2l_v3;
   n.load(lv2).sub(lv1).normalize();
   vec.load(p).sub(lv1);
-  let t = vec.dot(n);
+  let t2 = vec.dot(n);
   if (clip2) {
-    t = Math.min(Math.max(t, 0), lv1.vectorDistance(lv2));
+    t2 = Math.min(Math.max(t2, 0), lv1.vectorDistance(lv2));
   }
-  n.mulScalar(t).add(lv1);
+  n.mulScalar(t2).add(lv1);
   if (closest_co_out) {
     closest_co_out[0] = n[0];
     closest_co_out[1] = n[1];
   }
   if (t_out !== void 0) {
-    t_out[0] = t;
+    t_out[0] = t2;
   }
   return n.vectorDistance(p);
 }
@@ -20933,13 +20932,13 @@ function dist_to_line_sqr(p, v1, v2, clip2 = true) {
   v2x *= len2;
   v2y *= len2;
   v2z *= len2;
-  let t = px * v2x + py * v2y + pz * v2z;
+  let t2 = px * v2x + py * v2y + pz * v2z;
   if (clip2) {
-    t = Math.min(Math.max(t, 0), len);
+    t2 = Math.min(Math.max(t2, 0), len);
   }
-  v2x *= t;
-  v2y *= t;
-  v2z *= t;
+  v2x *= t2;
+  v2y *= t2;
+  v2z *= t2;
   return (v2x - px) * (v2x - px) + (v2y - py) * (v2y - py) + (v2z - pz) * (v2z - pz);
 }
 function dist_to_line(p, v1, v2, clip2 = true) {
@@ -20961,11 +20960,11 @@ function clip_line_w(_v1, _v2, znear, zfar) {
   if (v1[2] < 1 && v2[2] < 1) return false;
   function doclip1(v12, v22, axis) {
     if (v12[axis] / v12[3] < -1) {
-      const t = wclip(v12[axis], v22[axis], v12[3], v22[3], -1);
-      v12.interp(v22, t);
+      const t2 = wclip(v12[axis], v22[axis], v12[3], v22[3], -1);
+      v12.interp(v22, t2);
     } else if (v12[axis] / v12[3] > 1) {
-      const t = wclip(v12[axis], v22[axis], v12[3], v22[3], 1);
-      v12.interp(v22, t);
+      const t2 = wclip(v12[axis], v22[axis], v12[3], v22[3], 1);
+      v12.interp(v22, t2);
     }
   }
   function doclip(v12, v22, axis) {
@@ -20974,11 +20973,11 @@ function clip_line_w(_v1, _v2, znear, zfar) {
   }
   function dozclip(v12, v22) {
     if (v12[2] < 1) {
-      const t = clip(v12[2], v22[2], 1);
-      v12.interp(v22, t);
+      const t2 = clip(v12[2], v22[2], 1);
+      v12.interp(v22, t2);
     } else if (v22[2] < 1) {
-      const t = clip(v22[2], v12[2], 1);
-      v22.interp(v12, t);
+      const t2 = clip(v22[2], v12[2], 1);
+      v22.interp(v12, t2);
     }
   }
   dozclip(v1, v2);
@@ -21000,25 +20999,25 @@ function closest_point_on_line(p, v1, v2, clip2 = true) {
   }
   l1.normalize();
   l2.load(p).sub(v1);
-  let t = l2.dot(l1);
+  let t2 = l2.dot(l1);
   if (clip2) {
-    t = t < 0 ? 0 : t;
-    t = t > len ? len : t;
+    t2 = t2 < 0 ? 0 : t2;
+    t2 = t2 > len ? len : t2;
   }
   const co = _closest_point_on_line_cache.next();
-  co.load(l1).mulScalar(t).add(v1);
+  co.load(l1).mulScalar(t2).add(v1);
   const ret = _closest_point_rets.next();
   ret[0] = co;
-  ret[1] = t;
+  ret[1] = t2;
   return ret;
 }
-function circ_from_line_tan(a2, b, t) {
+function circ_from_line_tan(a2, b, t2) {
   const p1 = _circ_from_line_tan_vs.next();
-  const t2 = _circ_from_line_tan_vs.next();
+  const t22 = _circ_from_line_tan_vs.next();
   const n1 = _circ_from_line_tan_vs.next();
   p1.load(a2).sub(b);
-  t2.load(t).normalize();
-  n1.load(p1).normalize().cross(t2).cross(t2).normalize();
+  t22.load(t2).normalize();
+  n1.load(p1).normalize().cross(t22).cross(t22).normalize();
   const ax = p1[0];
   const ay = p1[1];
   const az = p1[2];
@@ -21037,17 +21036,17 @@ function circ_from_line_tan(a2, b, t) {
   ret[1] = r;
   return ret;
 }
-function circ_from_line_tan_2d(a2, b, t) {
+function circ_from_line_tan_2d(a2, b, t2) {
   const la = _circ_from_line_tan2d_vs.next().load2(a2);
   const lb = _circ_from_line_tan2d_vs.next().load2(b);
-  const lt = _circ_from_line_tan2d_vs.next().load2(t);
+  const lt = _circ_from_line_tan2d_vs.next().load2(t2);
   la[2] = lb[2] = lt[2] = 0;
   const p1 = _circ_from_line_tan2d_vs.next();
-  const t2 = _circ_from_line_tan2d_vs.next();
+  const t22 = _circ_from_line_tan2d_vs.next();
   const n1 = _circ_from_line_tan2d_vs.next();
   p1.load(la).sub(lb);
-  t2.load(lt).normalize();
-  n1.load(p1).normalize().cross(t2).cross(t2).normalize();
+  t22.load(lt).normalize();
+  n1.load(p1).normalize().cross(t22).cross(t22).normalize();
   if (1) {
     let cx;
     let cy;
@@ -21253,8 +21252,8 @@ function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   if (Math.abs(div) < 1e-6) {
     return void 0;
   }
-  const t = ((po[1] - ro[1]) * pn[1] + (po[2] - ro[2]) * pn[2] + (po[0] - ro[0]) * pn[0]) / div;
-  _isrp_ret.load(ro).addFac(rn, t);
+  const t2 = ((po[1] - ro[1]) * pn[1] + (po[2] - ro[2]) * pn[2] + (po[0] - ro[0]) * pn[0]) / div;
+  _isrp_ret.load(ro).addFac(rn, t2);
   return isect_ray_plane_rets.next().load(_isrp_ret);
 }
 function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
@@ -21262,9 +21261,9 @@ function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   const n = planenormal;
   const r = rayorigin;
   const v = raynormal;
-  const t = -(r.dot(n) - p.dot(n)) / v.dot(n);
+  const t2 = -(r.dot(n) - p.dot(n)) / v.dot(n);
   _isrp_ret.load(v);
-  _isrp_ret.mulScalar(t);
+  _isrp_ret.mulScalar(t2);
   _isrp_ret.add(r);
   return _isrp_ret;
 }
@@ -21536,16 +21535,16 @@ var init_math = __esm({
       ALL: 4
     };
     AbstractCurve = class {
-      evaluate(t) {
+      evaluate(t2) {
         throw new Error("implement me");
       }
-      derivative(t) {
+      derivative(t2) {
       }
-      curvature(t) {
+      curvature(t2) {
       }
-      normal(t) {
+      normal(t2) {
       }
-      width(t) {
+      width(t2) {
       }
     };
     ClosestCurveRets = class {
@@ -22074,18 +22073,18 @@ function test_parser() {
     return new tokdef2(name2, re, func);
   }
   const tokens2 = [
-    tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
-      if (reserved_tokens.has(t.value)) {
-        t.type = t.value.toUpperCase();
+    tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t2) {
+      if (reserved_tokens.has(t2.value)) {
+        t2.type = t2.value.toUpperCase();
       }
-      return t;
+      return t2;
     }),
     tk2("OPEN", /\{/),
     tk2("CLOSE", /}/),
     tk2("COLON", /:/),
-    tk2("JSCRIPT", /\|/, function(t) {
+    tk2("JSCRIPT", /\|/, function(t2) {
       let js = "";
-      const lex2 = t.lexer;
+      const lex2 = t2.lexer;
       while (lex2.lexpos < lex2.lexdata.length) {
         const c = lex2.lexdata[lex2.lexpos];
         if (c === "\n") break;
@@ -22096,16 +22095,16 @@ function test_parser() {
         js = js.slice(0, js.length - 1);
         lex2.lexpos--;
       }
-      t.value = js;
-      return t;
+      t2.value = js;
+      return t2;
     }),
     tk2("LPARAM", /\(/),
     tk2("RPARAM", /\)/),
     tk2("COMMA", /,/),
     tk2("NUM", /[0-9]/),
     tk2("SEMI", /;/),
-    tk2("NEWLINE", /\n/, function(t) {
-      t.lexer.lineno += 1;
+    tk2("NEWLINE", /\n/, function(t2) {
+      t2.lexer.lineno += 1;
     }),
     tk2("SPACE", / |\t/, function(_t) {
     })
@@ -22340,8 +22339,8 @@ var init_parseutil = __esm({
       }
       peek_i(i) {
         while (this.peeked_tokens.length <= i) {
-          const t = this.peek();
-          if (t === void 0) return void 0;
+          const t2 = this.peek();
+          if (t2 === void 0) return void 0;
         }
         return this.peeked_tokens[i];
       }
@@ -22366,11 +22365,11 @@ var init_parseutil = __esm({
         const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
         const results = [];
         for (let i = 0; i < tlen; i++) {
-          const t = ts[i];
-          if (t.re === void 0) continue;
-          const res = t.re.exec(lexdata);
+          const t2 = ts[i];
+          if (t2.re === void 0) continue;
+          const res = t2.re.exec(lexdata);
           if (res?.index === 0) {
-            results.push([t, res]);
+            results.push([t2, res]);
           }
         }
         let max_res = 0;
@@ -23194,8 +23193,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static linear = function(t) {
-        return t;
+      static linear = function(t2) {
+        return t2;
       };
       /**
        * Identical to linear.
@@ -23218,14 +23217,14 @@ var init_ease = __esm({
         } else if (amount > 1) {
           amount = 1;
         }
-        return function(t) {
+        return function(t2) {
           if (amount == 0) {
-            return t;
+            return t2;
           }
           if (amount < 0) {
-            return t * (t * -amount + 1 + amount);
+            return t2 * (t2 * -amount + 1 + amount);
           }
-          return t * ((2 - t) * amount + (1 - amount));
+          return t2 * ((2 - t2) * amount + (1 - amount));
         };
       }
       /**
@@ -23236,8 +23235,8 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getPowIn(pow) {
-        return function(t) {
-          return Math.pow(t, pow);
+        return function(t2) {
+          return Math.pow(t2, pow);
         };
       }
       /**
@@ -23248,8 +23247,8 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getPowOut(pow) {
-        return function(t) {
-          return 1 - Math.pow(1 - t, pow);
+        return function(t2) {
+          return 1 - Math.pow(1 - t2, pow);
         };
       }
       /**
@@ -23260,9 +23259,9 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getPowInOut(pow) {
-        return function(t) {
-          if ((t *= 2) < 1) return 0.5 * Math.pow(t, pow);
-          return 1 - 0.5 * Math.abs(Math.pow(2 - t, pow));
+        return function(t2) {
+          if ((t2 *= 2) < 1) return 0.5 * Math.pow(t2, pow);
+          return 1 - 0.5 * Math.abs(Math.pow(2 - t2, pow));
         };
       }
       /**
@@ -23355,8 +23354,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static sineIn = function(t) {
-        return 1 - Math.cos(t * Math.PI / 2);
+      static sineIn = function(t2) {
+        return 1 - Math.cos(t2 * Math.PI / 2);
       };
       /**
        * @method sineOut
@@ -23364,8 +23363,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static sineOut = function(t) {
-        return Math.sin(t * Math.PI / 2);
+      static sineOut = function(t2) {
+        return Math.sin(t2 * Math.PI / 2);
       };
       /**
        * @method sineInOut
@@ -23373,8 +23372,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static sineInOut = function(t) {
-        return -0.5 * (Math.cos(Math.PI * t) - 1);
+      static sineInOut = function(t2) {
+        return -0.5 * (Math.cos(Math.PI * t2) - 1);
       };
       /**
        * Configurable "back in" ease.
@@ -23384,8 +23383,8 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getBackIn(amount) {
-        return function(t) {
-          return t * t * ((amount + 1) * t - amount);
+        return function(t2) {
+          return t2 * t2 * ((amount + 1) * t2 - amount);
         };
       }
       /**
@@ -23403,8 +23402,8 @@ var init_ease = __esm({
        * @return {Function}
        **/
       static getBackOut(amount) {
-        return function(t) {
-          return --t * t * ((amount + 1) * t + amount) + 1;
+        return function(t2) {
+          return --t2 * t2 * ((amount + 1) * t2 + amount) + 1;
         };
       }
       /**
@@ -23423,9 +23422,9 @@ var init_ease = __esm({
        **/
       static getBackInOut(amount) {
         amount *= 1.525;
-        return function(t) {
-          if ((t *= 2) < 1) return 0.5 * (t * t * ((amount + 1) * t - amount));
-          return 0.5 * ((t -= 2) * t * ((amount + 1) * t + amount) + 2);
+        return function(t2) {
+          if ((t2 *= 2) < 1) return 0.5 * (t2 * t2 * ((amount + 1) * t2 - amount));
+          return 0.5 * ((t2 -= 2) * t2 * ((amount + 1) * t2 + amount) + 2);
         };
       }
       /**
@@ -23441,8 +23440,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static circIn = function(t) {
-        return -(Math.sqrt(1 - t * t) - 1);
+      static circIn = function(t2) {
+        return -(Math.sqrt(1 - t2 * t2) - 1);
       };
       /**
        * @method circOut
@@ -23450,8 +23449,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static circOut = function(t) {
-        return Math.sqrt(1 - --t * t);
+      static circOut = function(t2) {
+        return Math.sqrt(1 - --t2 * t2);
       };
       /**
        * @method circInOut
@@ -23459,9 +23458,9 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static circInOut = function(t) {
-        if ((t *= 2) < 1) return -0.5 * (Math.sqrt(1 - t * t) - 1);
-        return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
+      static circInOut = function(t2) {
+        if ((t2 *= 2) < 1) return -0.5 * (Math.sqrt(1 - t2 * t2) - 1);
+        return 0.5 * (Math.sqrt(1 - (t2 -= 2) * t2) + 1);
       };
       /**
        * @method bounceIn
@@ -23469,8 +23468,8 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static bounceIn = function(t) {
-        return 1 - _Ease.bounceOut(1 - t);
+      static bounceIn = function(t2) {
+        return 1 - _Ease.bounceOut(1 - t2);
       };
       /**
        * @method bounceOut
@@ -23478,15 +23477,15 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static bounceOut = function(t) {
-        if (t < 1 / 2.75) {
-          return 7.5625 * t * t;
-        } else if (t < 2 / 2.75) {
-          return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-        } else if (t < 2.5 / 2.75) {
-          return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+      static bounceOut = function(t2) {
+        if (t2 < 1 / 2.75) {
+          return 7.5625 * t2 * t2;
+        } else if (t2 < 2 / 2.75) {
+          return 7.5625 * (t2 -= 1.5 / 2.75) * t2 + 0.75;
+        } else if (t2 < 2.5 / 2.75) {
+          return 7.5625 * (t2 -= 2.25 / 2.75) * t2 + 0.9375;
         } else {
-          return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+          return 7.5625 * (t2 -= 2.625 / 2.75) * t2 + 0.984375;
         }
       };
       /**
@@ -23495,9 +23494,9 @@ var init_ease = __esm({
        * @static
        * @return {Number}
        **/
-      static bounceInOut = function(t) {
-        if (t < 0.5) return _Ease.bounceIn(t * 2) * 0.5;
-        return _Ease.bounceOut(t * 2 - 1) * 0.5 + 0.5;
+      static bounceInOut = function(t2) {
+        if (t2 < 0.5) return _Ease.bounceIn(t2 * 2) * 0.5;
+        return _Ease.bounceOut(t2 * 2 - 1) * 0.5 + 0.5;
       };
       /**
        * Configurable elastic ease.
@@ -23509,10 +23508,10 @@ var init_ease = __esm({
        **/
       static getElasticIn(amplitude, period) {
         const pi2 = Math.PI * 2;
-        return function(t) {
-          if (t == 0 || t == 1) return t;
+        return function(t2) {
+          if (t2 == 0 || t2 == 1) return t2;
           const s = period / pi2 * Math.asin(1 / amplitude);
-          return -(amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
+          return -(amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
         };
       }
       /**
@@ -23532,10 +23531,10 @@ var init_ease = __esm({
        **/
       static getElasticOut(amplitude, period) {
         const pi2 = Math.PI * 2;
-        return function(t) {
-          if (t == 0 || t == 1) return t;
+        return function(t2) {
+          if (t2 == 0 || t2 == 1) return t2;
           const s = period / pi2 * Math.asin(1 / amplitude);
-          return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * pi2 / period) + 1;
+          return amplitude * Math.pow(2, -10 * t2) * Math.sin((t2 - s) * pi2 / period) + 1;
         };
       }
       /**
@@ -23555,11 +23554,11 @@ var init_ease = __esm({
        **/
       static getElasticInOut(amplitude, period) {
         const pi2 = Math.PI * 2;
-        return function(t) {
+        return function(t2) {
           const s = period / pi2 * Math.asin(1 / amplitude);
-          if ((t *= 2) < 1)
-            return -0.5 * (amplitude * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * pi2 / period));
-          return amplitude * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * pi2 / period) * 0.5 + 1;
+          if ((t2 *= 2) < 1)
+            return -0.5 * (amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
+          return amplitude * Math.pow(2, -10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period) * 0.5 + 1;
         };
       }
       /**
@@ -23575,15 +23574,15 @@ var init_ease = __esm({
 });
 
 // scripts/path-controller/curve/curve1d_anim.ts
-function bez32(a2, b, c, t) {
-  const r1 = a2 + (b - a2) * t;
-  const r2 = b + (c - b) * t;
-  return r1 + (r2 - r1) * t;
+function bez32(a2, b, c, t2) {
+  const r1 = a2 + (b - a2) * t2;
+  const r2 = b + (c - b) * t2;
+  return r1 + (r2 - r1) * t2;
 }
-function bez42(a2, b, c, d, t) {
-  const r1 = bez32(a2, b, c, t);
-  const r2 = bez32(b, c, d, t);
-  return r1 + (r2 - r1) * t;
+function bez42(a2, b, c, d, t2) {
+  const r1 = bez32(a2, b, c, t2);
+  const r2 = bez32(b, c, d, t2);
+  return r1 + (r2 - r1) * t2;
 }
 var ParamKey, BOOL_FLAG, _udigest5, SimpleCurveBase, BounceCurve, ElasticCurve, EaseCurve, RandCurve;
 var init_curve1d_anim = __esm({
@@ -23782,21 +23781,21 @@ curve1d.BounceCurve {
           typeName: "BounceCurve"
         };
       }
-      _evaluate(t) {
+      _evaluate(t2) {
         const params = this.params;
         const decay = params.decay + 1;
         const scale = params.scale;
         const freq = params.freq;
         const phase = params.phase;
-        t *= freq;
-        let t2 = Math.abs(Math.cos(phase + t * Math.PI * 2)) * scale;
-        t2 *= Math.exp(decay * t) / Math.exp(decay);
-        return t2;
+        t2 *= freq;
+        let t22 = Math.abs(Math.cos(phase + t2 * Math.PI * 2)) * scale;
+        t22 *= Math.exp(decay * t2) / Math.exp(decay);
+        return t22;
       }
-      evaluate(t) {
+      evaluate(t2) {
         const s = this._evaluate(0);
         const e = this._evaluate(1);
-        return (this._evaluate(t) - s) / (e - s) + this.params.offset;
+        return (this._evaluate(t2) - s) / (e - s) + this.params.offset;
       }
     };
     CurveTypeData.register(BounceCurve);
@@ -23826,7 +23825,7 @@ curve1d.ElasticCurve {
           typeName: "ElasticCurve"
         };
       }
-      evaluate(t) {
+      evaluate(t2) {
         const hash = ~~(this.params.mode * 127 + this.params.amplitude * 256 + this.params.period * 512);
         if (hash !== this._last_hash || !this._func) {
           this._last_hash = hash;
@@ -23836,7 +23835,7 @@ curve1d.ElasticCurve {
             this._func = ease_default.getElasticIn(this.params.amplitude, this.params.period);
           }
         }
-        return this._func(t);
+        return this._func(t2);
       }
     };
     CurveTypeData.register(ElasticCurve);
@@ -23862,11 +23861,11 @@ curve1d.EaseCurve {
           typeName: "EaseCurve"
         };
       }
-      evaluate(t) {
+      evaluate(t2) {
         const amp = this.params.amplitude;
         const a1 = this.params.mode_in ? 1 - amp : 1 / 3;
         const a2 = this.params.mode_out ? amp : 2 / 3;
-        return bez42(0, a1, a2, 1, t);
+        return bez42(0, a1, a2, 1, t2);
       }
     };
     CurveTypeData.register(EaseCurve);
@@ -23903,24 +23902,24 @@ curve1d.RandCurve {
           typeName: "RandCurve"
         };
       }
-      evaluate(t) {
+      evaluate(t2) {
         const r = this.random.random();
         const decay = this.params.decay + 1;
         const in_mode = this.params.in_mode;
         if (in_mode) {
-          t = 1 - t;
+          t2 = 1 - t2;
         }
         let d;
         if (in_mode) {
-          d = Math.exp(t * decay) / Math.exp(decay);
+          d = Math.exp(t2 * decay) / Math.exp(decay);
         } else {
-          d = Math.exp(t * decay) / Math.exp(decay);
+          d = Math.exp(t2 * decay) / Math.exp(decay);
         }
-        t = t + (r - t) * d;
+        t2 = t2 + (r - t2) * d;
         if (in_mode) {
-          t = 1 - t;
+          t2 = 1 - t2;
         }
-        return t;
+        return t2;
       }
     };
     CurveTypeData.register(RandCurve);
@@ -23974,8 +23973,8 @@ var init_curve1d_toolprop = __esm({
       getValue() {
         return this.data;
       }
-      evaluate(t) {
-        return this.data.evaluate(t);
+      evaluate(t2) {
+        return this.data.evaluate(t2);
       }
       setValue(curve) {
         if (curve === void 0) {
@@ -24025,39 +24024,39 @@ var init_allprops = __esm({
 
 // scripts/path-controller/toolsys/toolpath.ts
 function buildParser() {
-  const t = (name2, re, func) => new tokdef2(name2, re, func);
+  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
   const tokens2 = [
-    t("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
+    t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
       if (tok.value === "true" || tok.value === "false") {
         tok.type = "BOOL";
         tok.value = tok.value === "true";
       }
       return tok;
     }),
-    t("LPAREN", /\(/),
-    t("RPAREN", /\)/),
-    t("LSBRACKET", /\[/),
-    t("RSBRACKET", /\]/),
-    t("DOT", /\./),
-    t("COMMA", /\,/),
-    t("EQUALS", /\=/),
-    t("STRLIT", /"[^"]*"/, (tok) => {
+    t2("LPAREN", /\(/),
+    t2("RPAREN", /\)/),
+    t2("LSBRACKET", /\[/),
+    t2("RSBRACKET", /\]/),
+    t2("DOT", /\./),
+    t2("COMMA", /\,/),
+    t2("EQUALS", /\=/),
+    t2("STRLIT", /"[^"]*"/, (tok) => {
       tok.value = tok.value.slice(1, tok.value.length - 1);
       return tok;
     }),
-    t("STRLIT", /'[^']*'/, (tok) => {
+    t2("STRLIT", /'[^']*'/, (tok) => {
       tok.value = tok.value.slice(1, tok.value.length - 1);
       return tok;
     }),
-    t("NUMBER", /-?[0-9]+/, (tok) => {
+    t2("NUMBER", /-?[0-9]+/, (tok) => {
       tok.value = parseInt(tok.value);
       return tok;
     }),
-    t("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
+    t2("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
       tok.value = parseFloat(tok.value);
       return tok;
     }),
-    t("WS", /[ \n\r\t]/, () => void 0)
+    t2("WS", /[ \n\r\t]/, () => void 0)
     //ignore whitespace
   ];
   const lexerror = () => {
@@ -24075,11 +24074,11 @@ function buildParser() {
     while (!p2.at_end()) {
       const keyword = p2.expect("ID");
       p2.expect("EQUALS");
-      const t2 = p2.next();
-      if (!(t2.type in valid_datatypes)) {
-        throw new PUTLParseError("parse error: unexpected " + t2.type);
+      const t3 = p2.next();
+      if (!(t3.type in valid_datatypes)) {
+        throw new PUTLParseError("parse error: unexpected " + t3.type);
       }
-      args[keyword] = t2.value;
+      args[keyword] = t3.value;
     }
     return args;
   }
@@ -24161,6 +24160,347 @@ var init_toolsys2 = __esm({
   }
 });
 
+// scripts/path-controller/controller/pathwatch.ts
+function getPathStructureGen() {
+  return structureGen;
+}
+function bumpPathStructureGen() {
+  structureGen++;
+}
+function addRef(map3, key, ref) {
+  let set2 = map3.get(key);
+  if (!set2) {
+    set2 = /* @__PURE__ */ new Set();
+    map3.set(key, set2);
+  }
+  set2.add(ref);
+}
+function dropRef(map3, key, ref) {
+  if (key === void 0) return;
+  const set2 = map3.get(key);
+  if (!set2) return;
+  set2.delete(ref);
+  if (set2.size === 0) {
+    map3.delete(key);
+  }
+}
+function normalizePath(path) {
+  path = path.trim();
+  if (path.startsWith("/")) {
+    path = path.slice(1);
+  }
+  return path;
+}
+function pathsOverlap(a2, b) {
+  if (a2 === b) return true;
+  if (a2.length < b.length) {
+    const t2 = a2;
+    a2 = b;
+    b = t2;
+  }
+  if (!a2.startsWith(b)) return false;
+  const c = a2[b.length];
+  return c === "." || c === "[";
+}
+function markSet(set2) {
+  if (!set2) return;
+  for (const ref of [...set2]) {
+    const w = ref.deref();
+    if (!w) {
+      set2.delete(ref);
+      continue;
+    }
+    w.markDirty();
+  }
+}
+function notifyPathChange(path, prop) {
+  if (path !== void 0) {
+    const key = normalizePath(path);
+    for (const [subPath, set2] of pathSubs) {
+      if (pathsOverlap(subPath, key)) {
+        markSet(set2);
+      }
+    }
+  } else if (prop !== void 0) {
+    markSet(propSubs.get(prop));
+  } else {
+    bumpPathStructureGen();
+    for (const set2 of pathSubs.values()) {
+      markSet(set2);
+    }
+  }
+}
+function scheduleFlush() {
+  if (flushScheduled) return;
+  flushScheduled = true;
+  const run = () => {
+    flushScheduled = false;
+    flushPathNotifications();
+  };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(run);
+  } else {
+    queueMicrotask(run);
+  }
+}
+function flushPathNotifications() {
+  while (dirty.size > 0) {
+    const batch = [...dirty];
+    dirty.clear();
+    for (const w of batch) {
+      w.flush();
+    }
+  }
+}
+function getPathWatchStats() {
+  let pathRefs = 0;
+  for (const set2 of pathSubs.values()) {
+    pathRefs += set2.size;
+  }
+  let propRefs = 0;
+  for (const set2 of propSubs.values()) {
+    propRefs += set2.size;
+  }
+  return {
+    paths: pathSubs.size,
+    pathRefs,
+    props: propSubs.size,
+    propRefs,
+    dirty: dirty.size
+  };
+}
+function clearPathWatchers() {
+  pathSubs.clear();
+  propSubs.clear();
+  dirty.clear();
+}
+var pathSubs, propSubs, dirty, flushScheduled, structureGen, finalizer, DataPathWatcher;
+var init_pathwatch = __esm({
+  "scripts/path-controller/controller/pathwatch.ts"() {
+    "use strict";
+    pathSubs = /* @__PURE__ */ new Map();
+    propSubs = /* @__PURE__ */ new Map();
+    dirty = /* @__PURE__ */ new Set();
+    flushScheduled = false;
+    structureGen = 1;
+    finalizer = typeof FinalizationRegistry !== "undefined" ? new FinalizationRegistry((rec) => {
+      dropRef(pathSubs, rec.pathKey, rec.ref);
+      dropRef(propSubs, rec.propKey, rec.ref);
+    }) : void 0;
+    DataPathWatcher = class _DataPathWatcher {
+      path;
+      onChange;
+      debounce;
+      api;
+      getCtx;
+      rec;
+      removed = false;
+      subscribed = false;
+      dirtyFlag = false;
+      lastGen = -1;
+      prop = void 0;
+      snapshot = void 0;
+      hasSnapshot = false;
+      /** false when the snapshot is an identity ref that cannot detect in-place
+       * mutation; push flushes then fire unconditionally instead of diffing. */
+      snapshotReliable = true;
+      timer = void 0;
+      constructor(api, ctx, path, onChange, opts = {}) {
+        this.api = api;
+        this.getCtx = typeof ctx === "function" ? ctx : () => ctx;
+        this.path = normalizePath(path);
+        this.onChange = onChange;
+        this.debounce = opts.debounce ?? "raf";
+        this.rec = { pathKey: void 0, propKey: void 0, ref: new WeakRef(this) };
+      }
+      /** Register with the path/prop indices and prime the initial callback
+       * (delivered on the next flush). Idempotent. */
+      subscribe() {
+        if (this.subscribed || this.removed) {
+          return this;
+        }
+        this.subscribed = true;
+        this.rec.pathKey = this.path;
+        addRef(pathSubs, this.path, this.rec.ref);
+        this.resolveMeta();
+        finalizer?.register(this, this.rec, this);
+        this.markDirty();
+        return this;
+      }
+      /** Unsubscribe and prune. Idempotent; the watcher is dead afterwards. */
+      remove() {
+        if (this.removed) return;
+        this.removed = true;
+        this.subscribed = false;
+        if (this.timer !== void 0) {
+          clearTimeout(this.timer);
+          this.timer = void 0;
+        }
+        dirty.delete(this);
+        dropRef(pathSubs, this.rec.pathKey, this.rec.ref);
+        dropRef(propSubs, this.rec.propKey, this.rec.ref);
+        this.rec.pathKey = this.rec.propKey = void 0;
+        finalizer?.unregister(this);
+      }
+      /** Push side: flag for the next flush (or fire now for `"immediate"`). */
+      markDirty() {
+        if (this.removed) return;
+        if (this.debounce === "immediate") {
+          this.check("push", true);
+          return;
+        }
+        this.dirtyFlag = true;
+        dirty.add(this);
+        scheduleFlush();
+      }
+      /** Poll side: re-read, diff against the snapshot, fire on change. */
+      poll() {
+        return this.check("poll", false);
+      }
+      /** Per-frame driver for poll mode (the compat safety net). */
+      tick() {
+        return this.poll();
+      }
+      /**
+       * Drop the snapshot and re-deliver the current value unconditionally.
+       * For widgets that gate {@link PathWatchCallback} reactions (e.g. a textbox
+       * ignoring updates while focused): call `refresh()` when the gate lifts to
+       * catch anything delivered-but-ignored in between.
+       */
+      refresh() {
+        this.hasSnapshot = false;
+        return this.check("push", true);
+      }
+      /** Push side: if dirty, re-read + diff + fire (debounced). */
+      flush() {
+        if (this.removed || !this.dirtyFlag) {
+          return false;
+        }
+        if (typeof this.debounce === "object") {
+          if (this.timer !== void 0) {
+            clearTimeout(this.timer);
+          }
+          this.timer = setTimeout(() => {
+            this.timer = void 0;
+            if (this.dirtyFlag && !this.removed) {
+              this.dirtyFlag = false;
+              this.check("push", true);
+            }
+          }, this.debounce.trailing);
+          return false;
+        }
+        this.dirtyFlag = false;
+        return this.check("push", true);
+      }
+      /** Resolve once and cache leaf metadata; (re-)file the reverse index used
+       * by type-scoped notifications (`updateChanged<T>`). */
+      resolveMeta() {
+        const ctx = this.getCtx();
+        if (!ctx) return;
+        this.lastGen = structureGen;
+        let res;
+        try {
+          res = this.api.resolvePath(ctx, this.path, true);
+        } catch {
+          res = void 0;
+        }
+        this.prop = res?.prop;
+        const propKey = res?.dpath?.apiname;
+        if (propKey !== this.rec.propKey) {
+          dropRef(propSubs, this.rec.propKey, this.rec.ref);
+          this.rec.propKey = propKey;
+          if (propKey !== void 0 && this.subscribed) {
+            addRef(propSubs, propKey, this.rec.ref);
+          }
+        }
+      }
+      read(ctx) {
+        try {
+          return this.api.getValue(ctx, this.path);
+        } catch {
+          return void 0;
+        }
+      }
+      /**
+       * Prop-aware structural equality: componentwise for vectors/arrays (so
+       * in-place mutation is detected against the copied snapshot), `.equals()`
+       * for value objects that provide it (Curve1D etc.), `Object.is` for
+       * scalars/enums/flags.
+       */
+      static valuesEqual(a2, b) {
+        if (Object.is(a2, b)) return true;
+        if (a2 === null || b === null || a2 === void 0 || b === void 0) return false;
+        const aArr = Array.isArray(a2) || ArrayBuffer.isView(a2);
+        const bArr = Array.isArray(b) || ArrayBuffer.isView(b);
+        if (aArr || bArr) {
+          if (!aArr || !bArr) return false;
+          const av = a2;
+          const bv = b;
+          if (av.length !== bv.length) return false;
+          for (let i = 0; i < av.length; i++) {
+            if (!Object.is(av[i], bv[i])) return false;
+          }
+          return true;
+        }
+        const eq = a2.equals;
+        if (typeof a2 === "object" && typeof eq === "function") {
+          try {
+            return !!eq.call(a2, b);
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      }
+      snapshotValue(v) {
+        this.hasSnapshot = true;
+        this.snapshotReliable = true;
+        if (v === null || typeof v !== "object") {
+          this.snapshot = v;
+          return;
+        }
+        const cp = v.copy;
+        if (typeof cp === "function") {
+          try {
+            this.snapshot = cp.call(v);
+            return;
+          } catch {
+          }
+        }
+        if (Array.isArray(v) || ArrayBuffer.isView(v)) {
+          this.snapshot = Array.from(v);
+          return;
+        }
+        this.snapshot = v;
+        this.snapshotReliable = false;
+      }
+      check(source, fireOnUnreliable) {
+        if (this.removed) return false;
+        const ctx = this.getCtx();
+        if (!ctx) return false;
+        if (this.lastGen !== structureGen) {
+          this.resolveMeta();
+        }
+        const value = this.read(ctx);
+        const resolved = value !== void 0;
+        if (resolved && this.prop === void 0 && this.rec.propKey === void 0) {
+          this.resolveMeta();
+        }
+        let changed = !this.hasSnapshot || !_DataPathWatcher.valuesEqual(this.snapshot, value);
+        if (!changed && fireOnUnreliable && !this.snapshotReliable) {
+          changed = true;
+        }
+        if (!changed) return false;
+        this.dirtyFlag = false;
+        dirty.delete(this);
+        this.snapshotValue(value);
+        this.onChange(value, { resolved, path: this.path, prop: this.prop, source });
+        return true;
+      }
+    };
+  }
+});
+
 // scripts/path-controller/controller/controller_abstract.ts
 var ModelInterface;
 var init_controller_abstract = __esm({
@@ -24170,6 +24510,7 @@ var init_controller_abstract = __esm({
     init_toolprop_abstract();
     init_toolsys2();
     init_controller_base();
+    init_pathwatch();
     ModelInterface = class {
       prefix;
       constructor() {
@@ -24298,6 +24639,7 @@ var init_controller_abstract = __esm({
               }
             }
             prop.setValue(val);
+            notifyPathChange(path);
             return;
           } catch (_) {
             var _error = _, _hasError = true;
@@ -24367,6 +24709,7 @@ var init_controller_abstract = __esm({
             __callDispose(_stack2, _error2, _hasError2);
           }
         }
+        notifyPathChange(path);
       }
       getDescription(ctx, path) {
         const rdef = this.resolvePath(ctx, path);
@@ -24533,7 +24876,9 @@ var init_controller = __esm({
     init_curve1d_toolprop();
     init_toolsys2();
     init_controller_base();
+    init_pathwatch();
     init_controller_base();
+    init_pathwatch();
     init_controller_base();
     init_toolpath();
     init_controller_abstract();
@@ -24543,21 +24888,21 @@ var init_controller = __esm({
     tk = (name2, re, func) => new tokdef2(name2, re, func);
     tokens = [
       tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
-      tk("NUM", /-?[0-9]+/, (t) => {
-        t.value = parseInt(t.value);
-        return t;
+      tk("NUM", /-?[0-9]+/, (t2) => {
+        t2.value = parseInt(t2.value);
+        return t2;
       }),
-      tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t) => {
-        t.value = parseFloat(t.value);
-        return t;
+      tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t2) => {
+        t2.value = parseFloat(t2.value);
+        return t2;
       }),
-      tk("STRLIT", /'.*?'/, (t) => {
-        t.value = t.value.slice(1, t.value.length - 1);
-        return t;
+      tk("STRLIT", /'.*?'/, (t2) => {
+        t2.value = t2.value.slice(1, t2.value.length - 1);
+        return t2;
       }),
-      tk("STRLIT", /".*?"/, (t) => {
-        t.value = t.value.slice(1, t.value.length - 1);
-        return t;
+      tk("STRLIT", /".*?"/, (t2) => {
+        t2.value = t2.value.slice(1, t2.value.length - 1);
+        return t2;
       }),
       tk("DOT", /\./),
       tk("EQUALS", /(\=)|(\=\=)/),
@@ -24567,8 +24912,8 @@ var init_controller = __esm({
       tk("WS", /[ \t\n\r]+/, () => void 0)
       //drop token
     ];
-    lexer3 = new lexer2(tokens, (t) => {
-      console.warn("Parse error", t);
+    lexer3 = new lexer2(tokens, (t2) => {
+      console.warn("Parse error", t2);
       throw new DataPathError();
     });
     pathParser = new parser2(lexer3);
@@ -24915,6 +25260,74 @@ var init_controller = __esm({
         return this.mapStruct(cls, false);
       }
       /**
+       * Signal that `prop` changed on the model reached by `path`. Strongly typed:
+       * pass the model type as the type argument, and `path` is restricted to the
+       * datapaths that resolve to that type while `prop` is restricted to that
+       * struct's members — both checked at compile time against the generated
+       * {@link StructCatalog}.
+       *
+       * ```ts
+       * api.updateFrom<BrushSettings>("workspace.brush", "size"); // ok
+       * api.updateFrom<BrushSettings>("workspace.brush", "nope"); // ✗ not a member
+       * api.updateFrom<BrushSettings>("canvas", "size");          // ✗ not a BrushSettings path
+       * ```
+       *
+       * (With the empty standalone seam both params are `never`, so this is only
+       * callable once the app's generated catalog is included — same opt-in model as
+       * the typed `getDefault`/`prop` paths.)
+       */
+      updateFrom(path, prop) {
+        this.notifyChange(`${path}.${prop}`);
+      }
+      /**
+       * Coarser sibling of {@link updateFrom}: some instance of `T` had `prop`
+       * change, without a known root path (e.g. raw model mutation that holds an
+       * instance but not its path). Wakes every subscription whose endpoint resolves
+       * to `(T, prop)`.
+       */
+      updateChanged(prop) {
+        this.notifyChange(void 0, prop);
+      }
+      /**
+       * Low-level change signal: marks matching subscriptions dirty and coalesces
+       * their callbacks onto the next animation frame (see {@link notifyPathChange}).
+       *
+       *  - `notifyChange(path)` wakes watchers on `path` and its subtree/ancestors;
+       *  - `notifyChange(undefined, prop)` is the type-scoped wake used by
+       *    {@link updateChanged};
+       *  - `notifyChange()` bumps the structural epoch and wakes every watcher —
+       *    use it for tree-shape changes (active-object switch, list
+       *    insert/remove, context swap) that invalidate resolved paths.
+       */
+      notifyChange(path, prop) {
+        if (typeof window !== "undefined" && window.DEBUG?.datapaths) {
+          console.log("[datapath] notifyChange", { path, prop });
+        }
+        notifyPathChange(path, prop);
+      }
+      /**
+       * Subscribe to changes on `path`: creates a {@link DataPathWatcher} that
+       * owns change detection (read + snapshot + prop-aware compare) and invokes
+       * `cb` when the value changes — pushed via {@link notifyChange} (rAF
+       * coalesced) or polled via `watcher.tick()`.
+       *
+       * `ctx` may be a getter so long-lived watchers always see the current
+       * context. The caller must hold the returned watcher and call
+       * `watcher.remove()` (or {@link unsubscribe}) when done; the registry only
+       * holds a weak ref.
+       */
+      watch(ctx, path, cb, opts) {
+        return new DataPathWatcher(this, ctx, path, cb, opts).subscribe();
+      }
+      /** Register an unsubscribed {@link DataPathWatcher} (see {@link watch}). */
+      subscribe(watcher) {
+        return watcher.subscribe();
+      }
+      /** Unsubscribe a watcher created with {@link watch}; alias of `watcher.remove()`. */
+      unsubscribe(watcher) {
+        watcher.remove();
+      }
+      /**
        * Look up a struct definition by its stable name (see `resolveStructName`):
        * an explicit name passed to `mapStruct`, else the nstructjs registered name
        * (`cls.structName`), else `cls.name`. Unlike `getStruct(cls)` this does not
@@ -25171,10 +25584,10 @@ An example of a more complicated expression might be:
         let prop;
         let lastdpath;
         function p_key() {
-          const t = p.peeknext();
-          if (t.type === "NUM" || t.type === "STRLIT") {
+          const t2 = p.peeknext();
+          if (t2.type === "NUM" || t2.type === "STRLIT") {
             p.next();
-            return t.value;
+            return t2.value;
           } else {
             throw new PUTLParseError2("Expected list key");
           }
@@ -25321,16 +25734,16 @@ An example of a more complicated expression might be:
               obj = obj[dpath.path];
             }
           }
-          const t = p.peeknext();
-          if (t === void 0) {
+          const t2 = p.peeknext();
+          if (t2 === void 0) {
             break;
           }
-          if (t.type === "DOT") {
+          if (t2.type === "DOT") {
             p.next();
-          } else if (t.type === "EQUALS" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+          } else if (t2.type === "EQUALS" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             p.expect("EQUALS");
-            const t2 = p.peeknext();
-            const type = t2?.type === "ID" ? "ID" : "NUM";
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
             let val = p.expect(type);
             const val1 = val;
             if (typeof val == "string") {
@@ -25344,10 +25757,10 @@ An example of a more complicated expression might be:
             }
             key = dpath.path;
             obj = !!(lastobj[key] == val);
-          } else if (t.type === "AND" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+          } else if (t2.type === "AND" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             p.expect("AND");
-            const t2 = p.peeknext();
-            const type = t2?.type === "ID" ? "ID" : "NUM";
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
             let val = p.expect(type);
             const val1 = val;
             if (typeof val == "string") {
@@ -25361,10 +25774,10 @@ An example of a more complicated expression might be:
             }
             key = dpath.path;
             obj = !!(lastobj[key] & val);
-          } else if (t.type === "LSBRACKET" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+          } else if (t2.type === "LSBRACKET" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
             p.expect("LSBRACKET");
-            const t2 = p.peeknext();
-            const type = t2?.type === "ID" ? "ID" : "NUM";
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
             let val = p.expect(type);
             const val1 = val;
             const enumProp = prop;
@@ -25411,7 +25824,7 @@ An example of a more complicated expression might be:
               }
             }
             p.expect("RSBRACKET");
-          } else if (t.type === "LSBRACKET" && prop !== void 0 && isVecProperty(prop)) {
+          } else if (t2.type === "LSBRACKET" && prop !== void 0 && isVecProperty(prop)) {
             p.expect("LSBRACKET");
             const num2 = p.expect("NUM");
             p.expect("RSBRACKET");
@@ -25420,7 +25833,7 @@ An example of a more complicated expression might be:
               lastobj = obj;
             }
             obj = obj[num2];
-          } else if (t.type === "LSBRACKET") {
+          } else if (t2.type === "LSBRACKET") {
             p.expect("LSBRACKET");
             if (lastobj && lastkey && typeof lastkey === "string" && lastkey.length > 0) {
               lastobj = lastobj[lastkey];
@@ -28439,6 +28852,15 @@ var init_ui_base = __esm({
     }
     UIBase2 = class _UIBase extends HTMLElement {
       static PositionKey;
+      /**
+       * Global datapath poll safety net. While `true` (the default) every widget
+       * with path watchers re-reads and diffs its paths from `update()` exactly
+       * like the old `updateDataPath` protocol, catching raw model writes that
+       * bypass `api.setValue`. Set to `false` to rely on push notifications
+       * (`api.notifyChange` / `updateFrom`) alone; per-widget {@link pollDataPath}
+       * overrides this in either direction.
+       */
+      static dataPathPolling = true;
       /* -- instance properties -- */
       _tool_tip_abort_delay;
       _tooltip_ref;
@@ -28487,6 +28909,17 @@ var init_ui_base = __esm({
       __background;
       _flashtimer;
       _flashcolor;
+      /* -- datapath watch protocol (see watchPath / updateFromPath) -- */
+      _pathWatchers = [];
+      _pathWatchInit = false;
+      _watchedDataPathAttr = null;
+      /**
+       * Per-widget override for the datapath poll safety net: `false` never polls,
+       * `true` always polls (even when {@link UIBase.dataPathPolling} is off),
+       * `"auto"` (default) follows the global flag. Push notifications are
+       * unaffected — polling only covers writes that bypass `api.setValue`.
+       */
+      pollDataPath = "auto";
       /* clipboard-related, set by _clipboardHotkeyInit */
       _clipboard_over;
       _last_clipboard_keyevt;
@@ -28838,15 +29271,15 @@ var init_ui_base = __esm({
           const e2 = copyEvent(e);
           if (e.touches.length === 0) {
           } else {
-            const t = e.touches[0];
-            e2.pageX = t.pageX;
-            e2.pageY = t.pageY;
-            e2.screenX = t.screenX;
-            e2.screenY = t.screenY;
-            e2.clientX = t.clientX;
-            e2.clientY = t.clientY;
-            e2.x = t.clientX;
-            e2.y = t.clientY;
+            const t2 = e.touches[0];
+            e2.pageX = t2.pageX;
+            e2.pageY = t2.pageY;
+            e2.screenX = t2.screenX;
+            e2.screenY = t2.screenY;
+            e2.clientX = t2.clientX;
+            e2.clientY = t2.clientY;
+            e2.x = t2.clientX;
+            e2.y = t2.clientY;
           }
           e2.button = button;
           const e3 = new MouseEvent(type, e2);
@@ -29671,6 +30104,7 @@ var init_ui_base = __esm({
         if (this.tabIndex >= 0) {
           this.regenTabOrder();
         }
+        this.clearPathWatches();
         super.remove();
         if (trigger_on_destroy) {
           this._ondestroy();
@@ -29690,6 +30124,9 @@ var init_ui_base = __esm({
       }
       removeChild(child, trigger_on_destroy = true) {
         super.removeChild(child);
+        if (child instanceof _UIBase) {
+          child.clearPathWatches();
+        }
         if (child instanceof _UIBase && child.on_remove) {
           child.on_remove();
         }
@@ -30460,10 +30897,95 @@ var init_ui_base = __esm({
         const anyThis = this;
         return anyThis.update.after(cb);
       }
+      /**
+       * Declare this widget's datapath binding(s) by calling {@link addPathWatch}.
+       * Invoked automatically (from `update()`) once `ctx` is available, and
+       * re-invoked whenever the `datapath` attribute changes. The base
+       * implementation watches the `datapath` attribute when present; override in
+       * widgets that bind additional or non-default paths.
+       */
+      watchPath() {
+        if (this.hasAttribute("datapath")) {
+          this.addPathWatch("datapath");
+        }
+      }
+      /**
+       * Reaction to a watched path's value changing — the former post-diff body of
+       * `updateDataPath`: update widget state, then `_redraw()`/`setCSS()` as
+       * needed. The watcher owns the read + compare; this is only called when the
+       * value actually changed. `info.resolved` is `false` when the path failed to
+       * resolve (the old `val === undefined → internalDisabled` case).
+       */
+      updateFromPath(value, info) {
+      }
+      /**
+       * Subscribe to a datapath. `pathOrAttr` names an attribute on this element
+       * (default `"datapath"`) whose value is the path, or — when no such
+       * attribute exists — is itself the path. Idempotent per path. Pass
+       * `opts.onChange` to route a binding somewhere other than
+       * {@link updateFromPath} (multi-path widgets).
+       */
+      addPathWatch(pathOrAttr = "datapath", opts) {
+        if (!this._ctx) {
+          return void 0;
+        }
+        const raw = this.hasAttribute(pathOrAttr) ? this.getAttribute(pathOrAttr) : pathOrAttr;
+        const path = normalizePath(raw);
+        if (!path) {
+          return void 0;
+        }
+        for (const w2 of this._pathWatchers) {
+          if (w2.path === path) {
+            return w2;
+          }
+        }
+        const onChange = opts?.onChange ?? ((v, info) => this.updateFromPath(v, info));
+        const w = this._ctx.api.watch(() => this._ctx, path, onChange, opts);
+        this._pathWatchers.push(w);
+        return w;
+      }
+      /** Re-deliver every watched path's current value through
+       * {@link updateFromPath}, bypassing the change diff. Call after a widget
+       * stops gating reactions (e.g. a textbox losing focus). */
+      refreshPathWatches() {
+        for (const w of this._pathWatchers) {
+          w.refresh();
+        }
+      }
+      /** Unsubscribe every path watcher; they are rebuilt (via {@link watchPath})
+       * on the next `update()` while the widget stays in the tree. */
+      clearPathWatches() {
+        for (const w of this._pathWatchers) {
+          w.remove();
+        }
+        this._pathWatchers.length = 0;
+        this._pathWatchInit = false;
+      }
+      /** Lifecycle driver: (re)builds watchers once ctx/datapath are available and
+       * runs the poll-mode compat bridge (see {@link UIBase.dataPathPolling}). */
+      _updatePathWatchers() {
+        if (!this._ctx) {
+          return;
+        }
+        const dp = this.getAttribute("datapath");
+        if (!this._pathWatchInit || dp !== this._watchedDataPathAttr) {
+          this.clearPathWatches();
+          this._pathWatchInit = true;
+          this._watchedDataPathAttr = dp;
+          this.watchPath();
+        }
+        const poll = this.pollDataPath === true || _UIBase.dataPathPolling && this.pollDataPath !== false;
+        if (poll) {
+          for (const w of this._pathWatchers) {
+            w.tick();
+          }
+        }
+      }
       //called regularly
       update() {
         this.updateToolTips();
         this.updateEventGraph();
+        this._updatePathWatchers();
         if (this.ctx && this._description === void 0 && this.getAttribute("datapath")) {
           const d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
           this.description = d;
@@ -30825,8 +31347,8 @@ var init_ui_base = __esm({
       animateOld(_extra_handlers = {}, domAnimateOptions) {
         const transform = new DOMMatrix(this.saneStyle["transform"]);
         const update_trans = () => {
-          const t = transform;
-          const css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
+          const t2 = transform;
+          const css = "matrix(" + t2.a + "," + t2.b + "," + t2.c + "," + t2.d + "," + t2.e + "," + t2.f + ")";
           this.saneStyle["transform"] = css;
         };
         let handlers = {
@@ -30935,6 +31457,26 @@ var init_ui_base = __esm({
   }
 });
 
+// scripts/core/theme_schema.ts
+function token3(kind) {
+  return { kind };
+}
+var t;
+var init_theme_schema = __esm({
+  "scripts/core/theme_schema.ts"() {
+    "use strict";
+    t = {
+      string: token3("string"),
+      number: token3("number"),
+      bool: token3("bool"),
+      /** a CSS color string; same TS type as `string`, distinct intent */
+      color: token3("color"),
+      font: token3("font"),
+      scrollbars: token3("scrollbars")
+    };
+  }
+});
+
 // scripts/widgets/ui_button.ts
 var ButtonEventBase, Button, OldButton;
 var init_ui_button = __esm({
@@ -30945,6 +31487,7 @@ var init_ui_button = __esm({
     init_events();
     init_const();
     init_ui_base();
+    init_theme_schema();
     const_default.DEBUG.buttonEvents = true;
     ButtonEventBase = class extends UIBase2 {
       _auto_depress;
@@ -31123,7 +31666,19 @@ var init_ui_button = __esm({
       static define() {
         return {
           tagname: "button-x",
-          style: "button"
+          style: "button",
+          theme: {
+            width: t.number,
+            height: t.number,
+            padding: t.number,
+            "background-color": t.color,
+            "border-color": t.color,
+            "border-width": t.number,
+            "border-radius": t.number,
+            "focus-border-width": t.number,
+            DefaultText: t.font,
+            BoxHighlight: t.color
+          }
         };
       }
       init() {
@@ -31901,14 +32456,14 @@ var init_ui_menu = __esm({
         dom2.parentWidget = this.container;
         sbox.focus();
         sbox.on_change = () => {
-          const t = sbox.text.trim().toLowerCase();
+          const t2 = sbox.text.trim().toLowerCase();
           for (const item of this.items) {
             item.hidden = true;
             item.remove();
           }
           for (const item of this.items) {
-            let ok = t == "";
-            ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
+            let ok = t2 == "";
+            ok = ok || item.innerHTML.toLowerCase().search(t2) >= 0;
             if (ok) {
               item.hidden = false;
               this.dom.appendChild(item);
@@ -32409,31 +32964,11 @@ var init_ui_menu = __esm({
       updateBorders() {
         super.updateBorders(this);
       }
-      updateDataPath() {
-        if (!this.ctx || !this.hasAttribute("datapath")) {
+      updateFromPath(val, info) {
+        if (!this.ctx) {
           return;
         }
-        let wasError = false;
-        let prop;
-        let val;
-        try {
-          this.pushReportContext(this._reportCtxName);
-          const datapath = this.getAttribute("datapath");
-          const resolved = this.ctx.api.resolvePath(this.ctx, datapath);
-          if (!resolved) {
-            wasError = true;
-            this.popReportContext();
-            return;
-          }
-          prop = resolved.prop;
-          val = this.ctx.api.getValue(this.ctx, datapath);
-          prop = prop?.prop ? prop.prop : prop;
-          this.popReportContext();
-        } catch (error2) {
-          print_stack2(error2);
-          wasError = true;
-        }
-        if (wasError) {
+        if (!info.resolved) {
           this.disabled = true;
           this.setCSS();
           this._redraw();
@@ -32443,6 +32978,8 @@ var init_ui_menu = __esm({
           this.setCSS();
           this._redraw();
         }
+        let prop = info.prop;
+        prop = prop?.prop ? prop.prop : prop;
         if (!prop) {
           return;
         }
@@ -32466,7 +33003,6 @@ var init_ui_menu = __esm({
         if (path && path !== this._last_datapath) {
           this._last_datapath = path;
           this.prop = void 0;
-          this.updateDataPath();
         }
         super.update();
         const key = this.getDefault("dropTextBG");
@@ -32474,9 +33010,6 @@ var init_ui_menu = __esm({
           this._last_dbox_key = key;
           this.setCSS();
           this._redraw();
-        }
-        if (this.hasAttribute("datapath")) {
-          this.updateDataPath();
         }
       }
       _build_menu_template() {
@@ -32729,7 +33262,7 @@ var init_ui_menu = __esm({
           this._onchangeCallback(val);
         }
         this.setCSS();
-        this.updateDataPath();
+        this.refreshPathWatches();
         this._redraw();
       }
     };
@@ -34116,14 +34649,14 @@ var require_tinymce = __commonJS({
         if (x === void 0) {
           return "undefined";
         }
-        var t = typeof x;
-        if (t === "object" && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "Array")) {
+        var t2 = typeof x;
+        if (t2 === "object" && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "Array")) {
           return "array";
         }
-        if (t === "object" && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "String")) {
+        if (t2 === "object" && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "String")) {
           return "string";
         }
-        return t;
+        return t2;
       };
       var isEquatableType = function(x) {
         return [
@@ -34240,8 +34773,8 @@ var require_tinymce = __commonJS({
         };
       }
       var not = function(f2) {
-        return function(t) {
-          return !f2(t);
+        return function(t2) {
+          return !f2(t2);
         };
       };
       var die = function(msg) {
@@ -34357,15 +34890,15 @@ var require_tinymce = __commonJS({
         from
       };
       var typeOf$1 = function(x) {
-        var t = typeof x;
+        var t2 = typeof x;
         if (x === null) {
           return "null";
-        } else if (t === "object" && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "Array")) {
+        } else if (t2 === "object" && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "Array")) {
           return "array";
-        } else if (t === "object" && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "String")) {
+        } else if (t2 === "object" && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === "String")) {
           return "string";
         } else {
-          return t;
+          return t2;
         }
       };
       var isType = function(type2) {
@@ -34378,9 +34911,9 @@ var require_tinymce = __commonJS({
           return typeof value2 === type2;
         };
       };
-      var eq$1 = function(t) {
+      var eq$1 = function(t2) {
         return function(a2) {
-          return t === a2;
+          return t2 === a2;
         };
       };
       var isString = isType("string");
@@ -34394,8 +34927,8 @@ var require_tinymce = __commonJS({
       var nativeSlice = Array.prototype.slice;
       var nativeIndexOf = Array.prototype.indexOf;
       var nativePush = Array.prototype.push;
-      var rawIndexOf = function(ts, t) {
-        return nativeIndexOf.call(ts, t);
+      var rawIndexOf = function(ts, t2) {
+        return nativeIndexOf.call(ts, t2);
       };
       var indexOf = function(xs, x) {
         var r2 = rawIndexOf(xs, x);
@@ -34585,18 +35118,18 @@ var require_tinymce = __commonJS({
         return r2;
       };
       var bifilter = function(obj, pred) {
-        var t = {};
+        var t2 = {};
         var f2 = {};
-        internalFilter(obj, pred, objAcc(t), objAcc(f2));
+        internalFilter(obj, pred, objAcc(t2), objAcc(f2));
         return {
-          t,
+          t: t2,
           f: f2
         };
       };
       var filter$1 = function(obj, pred) {
-        var t = {};
-        internalFilter(obj, pred, objAcc(t), noop);
-        return t;
+        var t2 = {};
+        internalFilter(obj, pred, objAcc(t2), noop);
+        return t2;
       };
       var mapToArray = function(obj, f2) {
         var r2 = [];
@@ -34623,28 +35156,28 @@ var require_tinymce = __commonJS({
         return eqRecord(eq2).eq(a1, a2);
       };
       var __assign = function() {
-        __assign = Object.assign || function __assign2(t) {
+        __assign = Object.assign || function __assign2(t2) {
           for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
             for (var p in s)
               if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
+                t2[p] = s[p];
           }
-          return t;
+          return t2;
         };
         return __assign.apply(this, arguments);
       };
       function __rest(s, e) {
-        var t = {};
+        var t2 = {};
         for (var p in s)
           if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-            t[p] = s[p];
+            t2[p] = s[p];
         if (s != null && typeof Object.getOwnPropertySymbols === "function")
           for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
             if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-              t[p[i]] = s[p[i]];
+              t2[p[i]] = s[p[i]];
           }
-        return t;
+        return t2;
       }
       function __spreadArrays() {
         for (var s = 0, i = 0, il = arguments.length; i < il; i++)
@@ -35236,9 +35769,9 @@ var require_tinymce = __commonJS({
       var type = function(element) {
         return element.dom().nodeType;
       };
-      var isType$1 = function(t) {
+      var isType$1 = function(t2) {
         return function(element) {
-          return type(element) === t;
+          return type(element) === t2;
         };
       };
       var isComment = function(element) {
@@ -35567,7 +36100,7 @@ var require_tinymce = __commonJS({
           }
         })(function() {
           return (/* @__PURE__ */ (function() {
-            function r2(e, n, t) {
+            function r2(e, n, t2) {
               function o(i2, f2) {
                 if (!n[i2]) {
                   if (!e[i2]) {
@@ -35583,12 +36116,12 @@ var require_tinymce = __commonJS({
                   e[i2][0].call(p.exports, function(r3) {
                     var n2 = e[i2][1][r3];
                     return o(n2 || r3);
-                  }, p, p.exports, r2, e, n, t);
+                  }, p, p.exports, r2, e, n, t2);
                 }
                 return n[i2].exports;
               }
-              for (var u = "function" == typeof require2 && require2, i = 0; i < t.length; i++)
-                o(t[i]);
+              for (var u = "function" == typeof require2 && require2, i = 0; i < t2.length; i++)
+                o(t2[i]);
               return o;
             }
             return r2;
@@ -39579,12 +40112,12 @@ var require_tinymce = __commonJS({
         return cached2;
       };
       select = Sizzle.select = function(selector, context2, results, seed3) {
-        var i, tokens2, token3, type2, find2, compiled = typeof selector === "function" && selector, match2 = !seed3 && tokenize(selector = compiled.selector || selector);
+        var i, tokens2, token4, type2, find2, compiled = typeof selector === "function" && selector, match2 = !seed3 && tokenize(selector = compiled.selector || selector);
         results = results || [];
         if (match2.length === 1) {
           tokens2 = match2[0] = match2[0].slice(0);
-          if (tokens2.length > 2 && (token3 = tokens2[0]).type === "ID" && support.getById && context2.nodeType === 9 && documentIsHTML && Expr.relative[tokens2[1].type]) {
-            context2 = (Expr.find.ID(token3.matches[0].replace(runescape, funescape), context2) || [])[0];
+          if (tokens2.length > 2 && (token4 = tokens2[0]).type === "ID" && support.getById && context2.nodeType === 9 && documentIsHTML && Expr.relative[tokens2[1].type]) {
+            context2 = (Expr.find.ID(token4.matches[0].replace(runescape, funescape), context2) || [])[0];
             if (!context2) {
               return results;
             } else if (compiled) {
@@ -39594,12 +40127,12 @@ var require_tinymce = __commonJS({
           }
           i = matchExpr.needsContext.test(selector) ? 0 : tokens2.length;
           while (i--) {
-            token3 = tokens2[i];
-            if (Expr.relative[type2 = token3.type]) {
+            token4 = tokens2[i];
+            if (Expr.relative[type2 = token4.type]) {
               break;
             }
             if (find2 = Expr.find[type2]) {
-              if (seed3 = find2(token3.matches[0].replace(runescape, funescape), rsibling.test(tokens2[0].type) && testContext(context2.parentNode) || context2)) {
+              if (seed3 = find2(token4.matches[0].replace(runescape, funescape), rsibling.test(tokens2[0].type) && testContext(context2.parentNode) || context2)) {
                 tokens2.splice(i, 1);
                 selector = seed3.length && toSelector(tokens2);
                 if (!selector) {
@@ -62850,6 +63383,7 @@ var TextBox2 = class extends TextBoxBase {
         this._endModal(true);
         this.setCSS();
       }
+      this.refreshPathWatches();
     });
   }
   get startSelected() {
@@ -63007,22 +63541,21 @@ var TextBox2 = class extends TextBoxBase {
     this.dom.style.width = "100%";
     this.dom.style.height = "100%";
   }
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
+  updateFromPath(val, info) {
+    if (!this.ctx) {
       return;
     }
     if (this._focus || this._flashtimer !== void 0 || this._had_error && this._focus) {
       return;
     }
-    const datapath = this.getAttribute("datapath");
-    const val = this.getPathValue(this.ctx, datapath);
-    if (val === void 0 || val === null) {
+    const datapath = info.path;
+    if (!info.resolved || val === null) {
       this.internalDisabled = true;
       return;
     } else {
       this.internalDisabled = false;
     }
-    const prop = this.getPathMeta(this.ctx, datapath);
+    const prop = info.prop ?? this.getPathMeta(this.ctx, datapath);
     let text2 = this.text;
     if (!prop) {
       console.error("datapath error " + datapath, val);
@@ -63071,9 +63604,6 @@ var TextBox2 = class extends TextBoxBase {
     }
     if (styleHeight && this.dom.style["height"] !== styleHeight) {
       this.dom.style["height"] = styleHeight;
-    }
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
     }
     this.setCSS();
   }
@@ -63253,11 +63783,8 @@ var ValueButtonBase = class extends OldButton {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
     }
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) return;
-    if (this.ctx === void 0) return;
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val === void 0) {
+  updateFromPath(value, info) {
+    if (!info.resolved) {
       const redraw = !this.disabled;
       this.internalDisabled = true;
       if (redraw) this._redraw();
@@ -63267,17 +63794,13 @@ var ValueButtonBase = class extends OldButton {
       this.internalDisabled = false;
       if (redraw) this._redraw();
     }
-    if (val !== this._value) {
-      this._value = val;
+    if (value !== this._value) {
+      this._value = value;
       this.updateWidth();
       this._repos_canvas();
       this._redraw();
       this.setCSS();
     }
-  }
-  update() {
-    this.updateDataPath();
-    super.update();
   }
 };
 var Check = class extends UIBase3 {
@@ -63442,20 +63965,16 @@ var Check = class extends UIBase3 {
     super.setCSS();
     this.style.backgroundColor = "rgba(0,0,0,0)";
   }
-  updateDataPath() {
-    if (!this.getAttribute("datapath")) {
-      return;
-    }
-    const rawVal = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+  updateFromPath(value, info) {
     let redraw;
-    if (rawVal === void 0) {
+    if (!info.resolved) {
       this.internalDisabled = true;
       return;
     } else {
       redraw = this.internalDisabled;
       this.internalDisabled = false;
     }
-    const val = !!rawVal;
+    const val = !!value;
     redraw = redraw || !!this._checked !== val;
     if (redraw) {
       this._checked = val;
@@ -63515,9 +64034,6 @@ var Check = class extends UIBase3 {
     super.update();
     this.updateDPI();
     const ready = getIconManager().isReady(0);
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
     let updatekey = this.getDefault("DefaultText").hash();
     updatekey += this._checked + ":" + this._label.textContent;
     updatekey += ":" + ready;
@@ -63879,11 +64395,11 @@ var IconCheck = class extends IconButton {
   _calcUpdateKey() {
     return ":" + this._icon;
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath") || !this.ctx) {
+  updateFromPath(value, info) {
+    if (!this.ctx) {
       return;
     }
-    const datapath = this.getAttribute("datapath");
+    const datapath = info.path;
     if (this._icon < 0) {
       let rdef;
       try {
@@ -63927,14 +64443,13 @@ var IconCheck = class extends IconButton {
         if (title) this.description = title;
       }
     }
-    const rawVal = this.getPathValue(this.ctx, datapath);
-    if (rawVal === void 0) {
+    if (!info.resolved) {
       this.internalDisabled = true;
       return;
     } else {
       this.internalDisabled = false;
     }
-    const val = !!rawVal;
+    const val = !!value;
     if (val !== !!this._checked) {
       this._checked = val;
       this._updatePressed(val);
@@ -63953,9 +64468,6 @@ var IconCheck = class extends IconButton {
       this.drawCheck = false;
     }
     this.updateDrawCheck();
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
     super.update();
   }
   _getsize() {
@@ -64002,6 +64514,7 @@ init_toolsys2();
 init_html5_fileapi();
 init_cssfont();
 init_ui_base();
+init_theme_schema();
 init_toolprop();
 init_ui_menu();
 init_const();
@@ -64060,12 +64573,19 @@ var Label = class extends UIBase2 {
     this._label = text2;
     if (!this.hasAttribute("datapath")) {
       this.dom.innerText = text2;
+    } else {
+      this._lastText = "";
+      this.refreshPathWatches();
     }
   }
   static define() {
     return {
       tagname: "label-x",
-      style: "label"
+      style: "label",
+      theme: {
+        LabelText: t.font,
+        DefaultText: t.font
+      }
     };
   }
   init() {
@@ -64092,17 +64612,13 @@ var Label = class extends UIBase2 {
     this.dom.style["font"] = font.genCSS();
     this.dom.style["color"] = font.color;
   }
-  updateDataPath() {
-    if (this.ctx === void 0) {
+  updateFromPath(value, info) {
+    if (this.ctx === void 0 || value === void 0) {
       return;
     }
-    const path = this.getAttribute("datapath");
-    const prop = this.getPathMeta(this.ctx, path);
-    let val = this.getPathValue(this.ctx, path);
-    if (val === void 0) {
-      return;
-    }
-    if (prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
+    let val = value;
+    if (prop && prop.type & (PropTypes.INT | PropTypes.FLOAT)) {
       val = buildString(val, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
     const valStr = "" + this._label + " " + val;
@@ -64121,9 +64637,7 @@ var Label = class extends UIBase2 {
       this._updateFont();
     }
     styl(this.dom)["pointerEvents"] = styl(this)["pointerEvents"];
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
+    this._updatePathWatchers();
   }
 };
 UIBase2.internalRegister(Label);
@@ -65943,34 +66457,22 @@ var NumSlider = class extends ValueButtonBase {
       this.setCSS(void 0, false);
     }
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath") ?? "");
-    if (!prop) {
-      return;
-    }
-    let name2;
-    if (this.hasAttribute("name")) {
-      name2 = this.getAttribute("name");
-    } else {
-      name2 = "" + prop.uiname;
-    }
-    let updateConstraints = false;
-    if (name2 !== null && name2 !== this._name) {
-      this._name = name2;
-      this.setCSS(void 0, false);
-      updateConstraints = true;
-    }
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val !== this._value) {
-      updateConstraints = true;
-    }
-    if (updateConstraints) {
+  updateFromPath(value, info) {
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
+    if (prop) {
+      let name2;
+      if (this.hasAttribute("name")) {
+        name2 = this.getAttribute("name");
+      } else {
+        name2 = "" + prop.uiname;
+      }
+      if (name2 !== null && name2 !== this._name) {
+        this._name = name2;
+        this.setCSS(void 0, false);
+      }
       this.loadNumConstraints(prop);
     }
-    super.updateDataPath();
+    super.updateFromPath(value, info);
   }
   update() {
     if (!!this._last_disabled !== !!this.disabled) {
@@ -66646,20 +67148,17 @@ var NumSliderSimpleBase = class extends UIBase2 {
       }
     }
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
+  updateFromPath(value, info) {
+    const path = info.path;
+    if (!path || path === "null" || path === "undefined" || !info.resolved) {
       return;
     }
-    const path = this.getAttribute("datapath");
-    if (!path || path === "null" || path === "undefined") {
-      return;
-    }
-    let val = this.getPathValue(this.ctx, path);
+    let val = value;
     if (this.isInt) {
       val = Math.floor(val);
     }
     if (val !== this._value) {
-      const prop = this.getPathMeta(this.ctx, path);
+      const prop = info.prop ?? this.getPathMeta(this.ctx, path);
       if (!prop) {
         return;
       }
@@ -66828,12 +67327,12 @@ var NumSliderSimpleBase = class extends UIBase2 {
     if (this.sliderDisplayExp && this.sliderDisplayExp !== 1) {
       g.strokeStyle = this.getDefault("SliderDivColor") || this.getDefault("border-color") || "grey";
       const steps = 8;
-      let t = 0;
+      let t2 = 0;
       const dt = 1 / (steps - 1);
       g.beginPath();
-      for (let i = 0; i < steps; i++, t += dt) {
-        const t2 = Math.pow(t, this.sliderDisplayExp);
-        const x = t2 * w;
+      for (let i = 0; i < steps; i++, t2 += dt) {
+        const t22 = Math.pow(t2, this.sliderDisplayExp);
+        const x = t22 * w;
         g.moveTo(x, y);
         g.lineTo(x, h - y);
       }
@@ -66946,7 +67445,6 @@ var NumSliderSimpleBase = class extends UIBase2 {
       this.tabIndex = parseInt(this.getAttribute("tab-index"));
     }
     this.updateSize();
-    this.updateDataPath();
     updateSliderFromDom(this);
   }
 };
@@ -67248,15 +67746,15 @@ var SliderWithTextbox = class extends ColumnFrame {
       this.rebuild();
     }
   }
-  updateDataPath() {
-    if (!this.ctx || !this.getAttribute("datapath")) {
+  updateFromPath(value, info) {
+    if (!this.ctx || !info.resolved) {
       return;
     }
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
     if (!prop) {
       return;
     }
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    const val = value;
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
@@ -67265,7 +67763,6 @@ var SliderWithTextbox = class extends ColumnFrame {
   update() {
     this.updateLabelOnTop();
     super.update();
-    this.updateDataPath();
     const redraw = false;
     updateSliderFromDom(this, this.numslider);
     updateSliderFromDom(this, this._textbox);
@@ -68458,27 +68955,18 @@ var RichEditor = class extends TextBoxBase {
       this.textarea.style.backgroundColor = this.getDefault("background-color");
     }
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const path = this.getAttribute("datapath");
-    const prop = this.getPathMeta(this.ctx, path);
-    if (prop === void 0) {
-      console.warn("invalid datapath " + path);
+  updateFromPath(rawValue, info) {
+    if (!info.resolved) {
+      console.warn("invalid datapath " + info.path);
       this.internalDisabled = true;
       return;
     }
     this.internalDisabled = false;
-    const value = this.getPathValue(this.ctx, path);
+    const value = rawValue;
     if (value !== this._value) {
       console.log("text change");
       this.value = value;
     }
-  }
-  update() {
-    super.update();
-    this.updateDataPath();
   }
   static define() {
     return {
@@ -68517,26 +69005,17 @@ var RichViewer = class extends UIBase2 {
   get value() {
     return this._value;
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const path = this.getAttribute("datapath");
-    const prop = this.getPathMeta(this.ctx, path);
-    if (prop === void 0) {
-      console.warn("invalid datapath " + path);
+  updateFromPath(rawValue, info) {
+    if (!info.resolved) {
+      console.warn("invalid datapath " + info.path);
       this.internalDisabled = true;
       return;
     }
     this.internalDisabled = false;
-    const value = this.getPathValue(this.ctx, path);
+    const value = rawValue;
     if (value !== this.value) {
       this.value = value;
     }
-  }
-  update() {
-    super.update();
-    this.updateDataPath();
   }
   static define() {
     return {
@@ -68596,12 +69075,9 @@ var VectorPopupButton = class extends Button {
     }
     popup.flushUpdate();
   };
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const value = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (!value) {
+  updateFromPath(rawValue, info) {
+    const value = rawValue;
+    if (!info.resolved || !value) {
       this.internalDisabled = true;
       return;
     }
@@ -68625,10 +69101,6 @@ var VectorPopupButton = class extends Button {
       this.castValue().load(value);
       console.log("updated vector popup button value");
     }
-  }
-  update() {
-    super.update();
-    this.updateDataPath();
   }
 };
 UIBase2.internalRegister(VectorPopupButton);
@@ -68865,13 +69337,10 @@ var VectorPanel = class extends ColumnFrame {
     }
     return this;
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const path = this.getAttribute("datapath");
-    const val = this.getPathValue(this.ctx, path);
-    if (val === void 0) {
+  updateFromPath(value, info) {
+    const path = info.path;
+    const val = value;
+    if (!info.resolved || val === void 0) {
       this.internalDisabled = true;
       return;
     }
@@ -68985,7 +69454,6 @@ var VectorPanel = class extends ColumnFrame {
   }
   update() {
     super.update();
-    this.updateDataPath();
     if (this.stepIsRelative) {
       for (const slider of this.sliders) {
         slider["step"] = ToolProperty.calcRelativeStep(
@@ -69125,7 +69593,6 @@ function makeGenEnum() {
 
 // scripts/widgets/ui_curvewidget.ts
 init_ui_base();
-init_util();
 init_curve1d();
 var Curve1DWidget = class extends ColumnFrame {
   #in_onchange = 0;
@@ -69138,7 +69605,6 @@ var Curve1DWidget = class extends ColumnFrame {
   g;
   container;
   dropbox;
-  _lastu;
   constructor() {
     super();
     this.useDataPathUndo = false;
@@ -69496,17 +69962,13 @@ var Curve1DWidget = class extends ColumnFrame {
     this._lastGen = gen;
     this._redraw();
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
+  watchPath() {
+    if (this.hasAttribute("datapath")) {
+      this.addPathWatch("datapath", { debounce: { trailing: 200 } });
     }
-    const path = this.getAttribute("datapath");
-    const val = this.getPathValue(this.ctx, path);
-    if (this._lastu === void 0) {
-      this._lastu = 0;
-    }
-    if (val instanceof Curve1D && !val.equals(this._value) && time_ms() - this._lastu > 200) {
-      this._lastu = time_ms();
+  }
+  updateFromPath(val, info) {
+    if (val instanceof Curve1D && !val.equals(this._value)) {
       this._value.load(val);
       this.update();
       this._redraw();
@@ -69522,7 +69984,6 @@ var Curve1DWidget = class extends ColumnFrame {
   update() {
     super.update();
     this.checkCurve1dEvents();
-    this.updateDataPath();
     this.updateSize();
     this.updateGenUI();
   }
@@ -70843,17 +71304,18 @@ var ColorPicker = class extends ColumnFrame {
       this.cssText.text = color2web(this.field.rgba);
     }
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
+  watchPath() {
+    if (this.hasAttribute("datapath")) {
+      this.addPathWatch("datapath", { debounce: { trailing: 100 } });
     }
-    const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    const val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val === void 0) {
+  }
+  updateFromPath(val, info) {
+    if (!info.resolved) {
       this.internalDisabled = true;
       return;
     }
     this.internalDisabled = false;
+    const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
     _update_temp.load(val);
     if (prop?.type === PropTypes.VEC3) {
       _update_temp[3] = 1;
@@ -70877,9 +71339,6 @@ var ColorPicker = class extends ColumnFrame {
   }
   update() {
     this.updateThemeOverride();
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
     super.update();
   }
   _setDataPath() {
@@ -71071,15 +71530,15 @@ var ColorPickerButton = class extends UIBase2 {
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, void 0, "clip");
       const steps = 5;
       const dt = canvas.width / steps;
-      let t = 0;
+      let t2 = 0;
       g.beginPath();
       g.lineWidth = 2;
       g.strokeStyle = "black";
-      for (let i = 0; i < steps; i++, t += dt) {
-        g.moveTo(t, 0);
-        g.lineTo(t + dt, canvas.height);
-        g.moveTo(t + dt, 0);
-        g.lineTo(t, canvas.height);
+      for (let i = 0; i < steps; i++, t2 += dt) {
+        g.moveTo(t2, 0);
+        g.lineTo(t2 + dt, canvas.height);
+        g.moveTo(t2 + dt, 0);
+        g.lineTo(t2, canvas.height);
       }
       g.stroke();
       g.restore();
@@ -71155,15 +71614,9 @@ var ColorPickerButton = class extends UIBase2 {
     this.style["backgroundColor"] = "rgba(0,0,0,0)";
     this._redraw();
   }
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-    const path = this.getAttribute("datapath");
-    if (!path) {
-      return;
-    }
-    const prop = this.getPathMeta(this.ctx, path);
+  updateFromPath(val, info) {
+    const path = info.path;
+    const prop = info.prop ?? this.getPathMeta(this.ctx, path);
     if (prop?.data === void 0 && const_default.DEBUG.verboseDataPath) {
       console.log("bad path", path);
       return;
@@ -71180,7 +71633,6 @@ var ColorPickerButton = class extends UIBase2 {
     if (this.customLabel === void 0 && prop.uiname && prop.uiname !== this._label) {
       this.label = prop.uiname;
     }
-    const val = this.getPathValue(this.ctx, path);
     if (val === void 0 || val === null) {
       redraw = redraw || !this.disabled;
       this.internalDisabled = true;
@@ -71229,9 +71681,6 @@ var ColorPickerButton = class extends UIBase2 {
     if (key !== this._last_key) {
       this._last_key = key;
       this.redraw();
-    }
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
     }
   }
   redraw() {
@@ -71943,11 +72392,11 @@ var TabBar = class extends UIBase2 {
     return void 0;
   }
   clear() {
-    for (const t of this.tabs) {
-      if (t.dom) {
-        t.dom.remove();
+    for (const t2 of this.tabs) {
+      if (t2.dom) {
+        t2.dom.remove();
       }
-      t.remove();
+      t2.remove();
     }
     const tabsArr = [];
     tabsArr.active = void 0;
@@ -72260,15 +72709,15 @@ var TabBar = class extends UIBase2 {
       }
       g.fillText(tab2.name, x2, y2);
     };
-    const draw_close = (t) => {
-      if (!t.closable || !t.closeRect) return;
+    const draw_close = (t2) => {
+      if (!t2.closable || !t2.closeRect) return;
       iconmanager.canvasDraw(
         this,
         this.canvas,
         g,
         Icons.TINY_X,
-        t.closeRect.x,
-        t.closeRect.y,
+        t2.closeRect.x,
+        t2.closeRect.y,
         this.iconsheet
       );
     };
@@ -72686,9 +73135,9 @@ var TabContainer3 = class extends UIBase2 {
     this.shadow.prepend(style);
   }
   icontab(icon, id, tooltip) {
-    const t = this.tab("", id, tooltip);
-    t._tab.icon = icon;
-    return t;
+    const t2 = this.tab("", id, tooltip);
+    t2._tab.icon = icon;
+    return t2;
   }
   removeTab(tab2) {
     const tab22 = tab2._tab;
@@ -72746,9 +73195,9 @@ var TabContainer3 = class extends UIBase2 {
       return this.tabs[name_or_id];
     }
     for (const k in this.tabs) {
-      const t = this.tabs[k];
-      if (t.name === name_or_id) {
-        return t;
+      const t2 = this.tabs[k];
+      if (t2.name === name_or_id) {
+        return t2;
       }
     }
     throw new Error("Unknown tab " + name_or_id);
@@ -73143,7 +73592,13 @@ var ListBox2 = class extends Container3 {
       this._listKey = void 0;
     }
     if (this._dataMode) {
-      this.updateDataPath();
+      this._syncFromDataList();
+    }
+  }
+  /** Push reaction: api.notifyChange on the list path lands here. */
+  updateFromPath(value, info) {
+    if (this._dataMode) {
+      this._syncFromDataList();
     }
   }
   /** Resolve the bound DataList prop + the raw list object, or undefined. */
@@ -73169,7 +73624,7 @@ var ListBox2 = class extends Container3 {
       return void 0;
     }
   }
-  updateDataPath() {
+  _syncFromDataList() {
     const resolved = this._resolveList();
     if (this.hasAttribute("datapath") && resolved?.list === void 0) {
       if (this.items.length > 0) {
@@ -73442,7 +73897,7 @@ var ProgressCircle = class extends UIBase2 {
     const clr1 = "rgb(68,69,83)";
     const clr2 = "rgb(141,154,196)";
     const clr3 = "rgb(214,110,54)";
-    const t = (time_ms() - this.startTime) / 1e3;
+    const t2 = (time_ms() - this.startTime) / 1e3;
     g.save();
     g.clearRect(0, 0, c.width, c.height);
     g.lineWidth /= c.width * 0.5;
@@ -73471,7 +73926,7 @@ var ProgressCircle = class extends UIBase2 {
     g.lineWidth *= 3;
     for (let i = 0; i < steps; i++) {
       let th1 = i * dth;
-      th1 += t;
+      th1 += t2;
       const r1 = 0.2;
       const r2 = 0.45;
       const th2 = th1 + dth * 0.5;
@@ -74736,6 +75191,7 @@ __export(controller_exports, {
   DataPath: () => DataPath,
   DataPathError: () => DataPathError,
   DataPathSetOp: () => DataPathSetOp,
+  DataPathWatcher: () => DataPathWatcher,
   DataStruct: () => DataStruct2,
   DataTypes: () => DataTypes,
   DoubleClickHandler: () => DoubleClickHandler,
@@ -74842,9 +75298,11 @@ __export(controller_exports, {
   buildParser: () => buildParser,
   buildToolOpAPI: () => buildToolOpAPI,
   buildToolSysAPI: () => buildToolSysAPI,
+  bumpPathStructureGen: () => bumpPathStructureGen,
   calc_projection_axes: () => calc_projection_axes,
   circ_from_line_tan: () => circ_from_line_tan,
   circ_from_line_tan_2d: () => circ_from_line_tan_2d,
+  clearPathWatchers: () => clearPathWatchers,
   clip_line_w: () => clip_line_w,
   closestPoint: () => closestPoint,
   closest_point_on_line: () => closest_point_on_line,
@@ -74874,10 +75332,13 @@ __export(controller_exports, {
   expand_line: () => expand_line,
   expand_rect2d: () => expand_rect2d,
   feps: () => feps,
+  flushPathNotifications: () => flushPathNotifications,
   genHermiteTable: () => genHermiteTable,
   gen_circle: () => gen_circle,
   getCurve: () => getCurve,
   getDataPathToolOp: () => getDataPathToolOp,
+  getPathStructureGen: () => getPathStructureGen,
+  getPathWatchStats: () => getPathWatchStats,
   getTempProp: () => getTempProp,
   getVecClass: () => getVecClass,
   get_boundary_winding: () => get_boundary_winding,
@@ -74915,6 +75376,8 @@ __export(controller_exports, {
   normal_quad: () => normal_quad,
   normal_quad_old: () => normal_quad_old,
   normal_tri: () => normal_tri,
+  normalizePath: () => normalizePath,
+  notifyPathChange: () => notifyPathChange,
   nstructjs: () => struct_default,
   parseToolPath: () => parseToolPath,
   parseutil: () => parseutil_exports,
@@ -76475,8 +76938,8 @@ var SplitTool = class extends ToolBase {
     }
     const sarea = this.sarea;
     const screen = this.screen;
-    const t = this.t;
-    screen.splitArea(sarea, t, this.horiz);
+    const t2 = this.t;
+    screen.splitArea(sarea, t2, this.horiz);
     screen._internalRegenAll();
   }
   on_pointermove(e) {
@@ -76696,8 +77159,8 @@ var AreaDragTool = class extends ToolBase {
     }
     const dst = b.sarea;
     const screen = this.screen;
-    const t = b.t;
-    screen.splitArea(dst, t, b.horiz);
+    const t2 = b.t;
+    screen.splitArea(dst, t2, b.horiz);
     screen._internalRegenAll();
   }
   doSplitDrop(b) {
@@ -76800,8 +77263,8 @@ var AreaDragTool = class extends ToolBase {
     } else {
       const src = this.sarea;
       const dst = b.sarea;
-      const t = b.t;
-      let nsa = screen.splitArea(dst, t, b.horiz);
+      const t2 = b.t;
+      let nsa = screen.splitArea(dst, t2, b.horiz);
       if (b.side === "l" || b.side === "t") {
         nsa = dst;
       }
@@ -76821,7 +77284,7 @@ var AreaDragTool = class extends ToolBase {
     const hcolor = this.hcolor = "rgba(230, 230, 230, 0.75)";
     let idgen3 = 0;
     const boxes = this.boxes;
-    const box = (x, y, sz2, horiz, t, side) => {
+    const box = (x, y, sz2, horiz, t2, side) => {
       const b = this.overdraw.rect(
         [x - sz2[0] * 0.5, y - sz2[1] * 0.5],
         sz2,
@@ -76833,7 +77296,7 @@ var AreaDragTool = class extends ToolBase {
       const style = document.createElement("style");
       const cls = `mybox_${idgen3++}`;
       b.horiz = horiz;
-      b.t = t;
+      b.t = t2;
       b.side = side;
       b.setAttribute("class", cls);
       b.setAttribute("is_box", "true");
@@ -80153,7 +80616,7 @@ var Screen2 = class extends UIBase2 {
       const AREA_CTX_POP = /* @__PURE__ */ Symbol("pop2");
       const scopestack = [];
       const areastack = [];
-      let t = time_ms();
+      let t2 = time_ms();
       push(this2);
       for (const p of popups) {
         push(p);
@@ -80187,9 +80650,9 @@ var Screen2 = class extends UIBase2 {
           }
           n.update();
         }
-        if (time_ms() - t > 20) {
+        if (time_ms() - t2 > 20) {
           yield;
-          t = time_ms();
+          t2 = time_ms();
         }
         for (const n2 of n.childNodes) {
           if (!(n2 instanceof UIBase2) || !(n2.packflag & PackFlags.NO_UPDATE)) {
@@ -80258,7 +80721,7 @@ var Screen2 = class extends UIBase2 {
     this._internalRegenAll();
     return this;
   }
-  splitArea(sarea, t = 0.5, horiz = true) {
+  splitArea(sarea, t2 = 0.5, horiz = true) {
     const w = sarea.size[0];
     const h = sarea.size[1];
     let s1;
@@ -80269,18 +80732,18 @@ var Screen2 = class extends UIBase2 {
         s1.ctx = this.ctx;
       }
       s2 = s1.copy(this);
-      s1.size[0] *= t;
-      s2.size[0] *= 1 - t;
-      s2.pos[0] += w * t;
+      s1.size[0] *= t2;
+      s2.size[0] *= 1 - t2;
+      s2.pos[0] += w * t2;
     } else {
       s1 = sarea;
       if (s1.ctx === void 0) {
         s1.ctx = this.ctx;
       }
       s2 = s1.copy(this);
-      s1.size[1] *= t;
-      s2.size[1] *= 1 - t;
-      s2.pos[1] += h * t;
+      s1.size[1] *= t2;
+      s2.size[1] *= 1 - t2;
+      s2.pos[1] += h * t2;
     }
     s2.ctx = this.ctx;
     this.appendChild(s2);
@@ -83453,8 +83916,8 @@ function dirname(path) {
   const parts = path.split("/");
   parts.length--;
   let s = "";
-  for (const t of parts) {
-    s += t + "/";
+  for (const t2 of parts) {
+    s += t2 + "/";
   }
   while (s.endsWith("/")) {
     s = s.slice(0, s.length - 1);
@@ -84143,9 +84606,9 @@ DocsBrowser {
     };
     traverse(this.contentDiv);
     console.log("Image Tags found:", tags);
-    for (const t of tags) {
-      this.patchImage(t);
-      t.setAttribute("_PATCHED_", "true");
+    for (const t2 of tags) {
+      this.patchImage(t2);
+      t2.setAttribute("_PATCHED_", "true");
     }
   }
   patchImage(img) {
@@ -84587,6 +85050,7 @@ export {
   DataPath,
   DataPathError,
   DataPathSetOp,
+  DataPathWatcher,
   DataStruct2 as DataStruct,
   DataTypes,
   DegreeUnit,
@@ -84790,12 +85254,14 @@ export {
   buildString,
   buildToolOpAPI,
   buildToolSysAPI,
+  bumpPathStructureGen,
   calcThemeKey,
   calc_projection_axes,
   const_default as cconst,
   checkForTextBox,
   circ_from_line_tan,
   circ_from_line_tan_2d,
+  clearPathWatchers,
   clip_line_w,
   closestPoint,
   closest_point_on_line,
@@ -84846,6 +85312,7 @@ export {
   exportTheme,
   feps,
   flagThemeUpdate,
+  flushPathNotifications,
   genHermiteTable,
   gen_circle,
   getAreaIntName,
@@ -84859,6 +85326,8 @@ export {
   getLastToolStruct,
   getMime,
   getNoteFrames,
+  getPathStructureGen,
+  getPathWatchStats,
   getTagPrefix,
   getTempProp,
   getVecClass,
@@ -84918,7 +85387,9 @@ export {
   normal_quad,
   normal_quad_old,
   normal_tri,
+  normalizePath,
   noteframes,
+  notifyPathChange,
   struct_default as nstructjs,
   nwjs_api_exports as nwjs_api,
   parseToolPath,
