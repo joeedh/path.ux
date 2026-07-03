@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    body {
+      overflow: hidden;
+      padding: 0px;
+      margin: 0px;
+    }
+  </style>
+  <script type="text/plain" id="pathux-tag-prefix">
+pathux-
+  </script>
+  <script type="module">
+    window.haveNwjs = true;
+
+    window.init = async function () {
+      const app = await import('./dist/app.js');
+
+      console.log("init");
+      app.start();
+    }
+  </script>
+</head>
+<body onload='init()'>
+<img id="iconsheet16" style="display:none" src="./assets/iconsheet16.png"></img>
+<img id="iconsheet32" style="display:none" src="./assets/iconsheet32.png"></img>
+<img id="iconsheet48" style="display:none" src="./assets/iconsheet48.png"></img>
+<img id="iconsheet" style="display:none" src="./assets/iconsheet.svg"></img>
+</body>
+</html>
