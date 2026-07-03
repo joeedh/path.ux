@@ -1,0 +1,14 @@
+// Prototype typecheck for the typed `api.updateFrom<T>()` catalog. Same as the
+// base config but also pulls in generated/struct-catalog.ts (augments the
+// StructCatalog seam) plus the example app it references, so updateFrom is
+// checked against real per-struct paths/members. Run `pnpm run gen:paths` first.
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "scripts/**/*.ts",
+    "scripts/**/*.tsx",
+    "scripts/**/*.js",
+    "example/**/*.ts",
+    "generated/struct-catalog.ts"
+  ]
+}

@@ -90,6 +90,12 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
     return;
   }
 
+  // Stable name of the struct that OWNS these members (the resolveStructName of
+  // the wrapped class; see controller.ts). Used to build the per-struct member
+  // catalog that backs the typed `updateFrom` API. Undefined for the anonymous
+  // root/inline structs (which are not mapped classes and never catalog keys).
+  const ownerStruct = struct.name && struct.name !== "unnamed" ? struct.name : undefined;
+
   for (const dpath of struct.members) {
     const seg = dpath.apiname || dpath.path || "";
     if (!seg) {
@@ -100,21 +106,32 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
 
     switch (dpath.type) {
       case DataTypes.PROP: {
-        out.push({ path, kind: "prop", indexed: prefix.includes("["), ...readPropMeta(dpath.data) });
+        out.push({
+          path,
+          kind: "prop",
+          ownerStruct,
+          indexed: prefix.includes("["),
+          ...readPropMeta(dpath.data),
+        });
         break;
       }
 
       case DataTypes.STRUCT:
       case DataTypes.DYNAMIC_STRUCT: {
         const dynamic = dpath.type === DataTypes.DYNAMIC_STRUCT;
+        const childStruct = dpath.data;
         out.push({
           path,
           kind: dynamic ? "dynamicStruct" : "struct",
+          ownerStruct,
+          // Name of the struct this path RESOLVES TO — i.e. the type whose
+          // instance lives at `path`. This is the join key for StructCatalog's
+          // `paths` union.
+          structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
           indexed: prefix.includes("["),
           dynamic,
         });
 
-        const childStruct = dpath.data;
         const seen = visited.has(childStruct);
         if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
           walkStruct(api, childStruct, path, depth + 1, opts, out, new Set(visited).add(childStruct));
@@ -123,9 +140,17 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
       }
 
       case DataTypes.ARRAY: {
-        out.push({ path, kind: "list", indexed: prefix.includes("[") });
-
         const elemStruct = getListElementStruct(api, dpath);
+        out.push({
+          path,
+          kind: "list",
+          ownerStruct,
+          // For a list, an individual element resolves at `path[n]`; record the
+          // element struct so gen can emit `path[n]` as a valued path for it.
+          structName: elemStruct?.name && elemStruct.name !== "unnamed" ? elemStruct.name : undefined,
+          indexed: prefix.includes("["),
+        });
+
         const elemPrefix = `${path}[n]`;
         const seen = elemStruct && visited.has(elemStruct);
         if (elemStruct && !seen && depth + 1 <= opts.maxDepth) {
@@ -142,10 +167,10 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
 
 /**
  * Walk a DataAPI from its root context struct.
- * @returns {Array<{path:string, kind:string, indexed:boolean, propType?:string,
- *   uiname?:string, description?:string, range?:number[], uiRange?:number[],
- *   unit?:string, decimalPlaces?:number, step?:number, enumItems?:string[],
- *   dynamic?:boolean}>}
+ * @returns {Array<{path:string, kind:string, indexed:boolean, ownerStruct?:string,
+ *   structName?:string, propType?:string, uiname?:string, description?:string,
+ *   range?:number[], uiRange?:number[], unit?:string, decimalPlaces?:number,
+ *   step?:number, enumItems?:string[], dynamic?:boolean}>}
  */
 export function walkAPI(api, opts = {}) {
   const maxDepth = opts.maxDepth ?? 8;
@@ -161,4 +186,39 @@ export function walkAPI(api, opts = {}) {
 /** Stable, index-free path string for matching `foo[0].bar` against `foo[n].bar`. */
 export function normalizePath(path) {
   return path.replace(/\[[^\]]*\]/g, "[n]");
+}
+
+/**
+ * Fold walker entries into a per-struct catalog for the typed `updateFrom` API.
+ *
+ * For each struct name we collect:
+ *   - members: the apinames of its scalar (PROP) members
+ *   - paths:   the root datapaths whose endpoint resolves to an instance of it
+ *              (struct/dynamicStruct endpoints as-is; list elements as `…[n]`)
+ *
+ * @param {ReturnType<typeof walkAPI>} entries
+ * @returns {Map<string, {members: Set<string>, paths: Set<string>}>}
+ */
+export function collectStructCatalog(entries) {
+  /** @type {Map<string, {members: Set<string>, paths: Set<string>}>} */
+  const cat = new Map();
+  const bucket = (name) => {
+    let b = cat.get(name);
+    if (!b) cat.set(name, (b = { members: new Set(), paths: new Set() }));
+    return b;
+  };
+
+  for (const e of entries) {
+    if (e.kind === "prop" && e.ownerStruct) {
+      // apiname is the final path segment (never itself indexed for a scalar).
+      const apiname = e.path.split(".").pop();
+      if (apiname) bucket(e.ownerStruct).members.add(apiname);
+    } else if ((e.kind === "struct" || e.kind === "dynamicStruct") && e.structName) {
+      bucket(e.structName).paths.add(e.path);
+    } else if (e.kind === "list" && e.structName) {
+      bucket(e.structName).paths.add(`${e.path}[n]`);
+    }
+  }
+
+  return cat;
 }
