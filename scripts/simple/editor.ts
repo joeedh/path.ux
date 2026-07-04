@@ -301,8 +301,8 @@ export class Editor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
   }
 
   /** creates default header and puts it in this.header */
-  override makeHeader(container: Container<CTX>, add_note_area = true, make_draggable = true) {
-    return super.makeHeader(container, add_note_area, make_draggable);
+  override makeHeader(container: Container<CTX>, add_note_area = true) {
+    return super.makeHeader(container, add_note_area);
   }
 
   /** called regularly */

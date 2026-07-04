@@ -15,7 +15,6 @@ import { Vector2 } from "../pathux";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
-import type { DropBox } from "../widgets/ui_menu";
 import {
   areaclasses,
   IAreaConstructor,
@@ -76,6 +75,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   pos?: Vector2;
   size?: Vector2;
   inactive: boolean;
+  /** When false the editor cannot be ripped out of its ScreenArea by
+   *  dragging its tab off the AreaDocker tab bar (see AreaDocker.detach). */
   areaDragToolEnabled: boolean;
   owning_sarea: ScreenArea<CTX> | undefined;
   _area_id: number;
@@ -85,7 +86,9 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   header: Container<CTX> | undefined;
   /** Notifications area. */
   noteArea?: UIBase<CTX>;
-  switcher?: AreaDocker<CTX> | DropBox<CTX> | undefined;
+  /** Header row the owning ScreenArea's shared AreaDocker is adopted into
+   *  while this editor is active (see ScreenArea._attachSwitcher). */
+  _switcherRow?: Container<CTX>;
   helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
   saved_uidata: string | undefined;
   areaName: string | undefined;
@@ -414,42 +417,21 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return this.header!.getClientRects()[0].height;
   }
 
-  makeAreaSwitcher(container: Container<CTX>) {
-    if (cconst.useAreaTabSwitcher) {
-      const ret = UIBase.createElement("area-docker-x") as AreaDocker<CTX>;
-      container.add(ret);
-      return ret;
-    }
-
-    const prop = Area.makeAreasEnum();
-
-    const dropbox = container.listenum(undefined, {
-      name    : (this.constructor as unknown as IAreaConstructor).define().uiname!,
-      enumDef : prop,
-      callback: (id: string) => {
-        const cls = areaclasses[id] as IAreaConstructor;
-        this.owning_sarea!.switch_editor(cls);
-      },
-    });
-
-    dropbox.updateAfter(() => {
-      const name = (this.constructor as unknown as IAreaConstructor).define().uiname!;
-      let val = "" + prop.values[name];
-
-      if (dropbox.value !== val && val in prop.keys) {
-        val = "" + prop.keys[val];
-      }
-
-      if (dropbox.value !== val) {
-        dropbox.setValue(prop.values[name], true);
-      }
-    });
-
-    return dropbox;
+  /** The tab switcher this editor currently adopts from its owning
+   *  ScreenArea (which owns the single AreaDocker instance per tile).
+   *  Undefined while the editor is inactive or detached. */
+  get switcher(): AreaDocker<CTX> | undefined {
+    return this.owning_sarea?.switcher;
   }
 
-  makeHeader(container: Container<CTX>, addNoteArea = true, makeDraggable = true) {
-    let switcherRow: Container<CTX>;
+  makeAreaSwitcher(container: Container<CTX>) {
+    const ret = UIBase.createElement("area-docker-x") as AreaDocker<CTX>;
+    container.add(ret);
+    return ret;
+  }
+
+  makeHeader(container: Container<CTX>, addNoteArea = true) {
+    let switcherRow: Container<CTX> | undefined;
     let row: Container<CTX>;
     let helpRow: Container<CTX>;
 
@@ -458,13 +440,13 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       this.header = undefined;
     }
 
-    if (!(this.flag & AreaFlags.NO_SWITCHER) && cconst.useAreaTabSwitcher) {
+    if (!(this.flag & AreaFlags.NO_SWITCHER)) {
       const col = (this.header = container.col());
 
       switcherRow = helpRow = col.row();
       row = col.row();
     } else {
-      row = helpRow = switcherRow = this.header = container.row();
+      row = helpRow = this.header = container.row();
     }
 
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
@@ -492,12 +474,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     row.style["padding"] = "0px";
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
-      if (this.switcher) {
-        //add back same switcher
-        switcherRow!.add(this.switcher);
-      } else {
-        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow! : row);
-      }
+      this._switcherRow = switcherRow!;
+      this.owning_sarea?._attachSwitcher(this);
     }
 
     if (util.isMobile() || cconst.addHelpPickers) {
@@ -515,158 +493,6 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       this.noteArea = notef;
       row._add(notef);
     }
-
-    /* don't do normal dragging for tab switchers */
-    if (cconst.useAreaTabSwitcher) {
-      return row;
-    }
-
-    const eventdom = this.header!;
-
-    let mdown = false;
-    const mpos = new Vector2();
-
-    const mpre = (e: PointerEvent, pageX?: number, pageY?: number) => {
-      if (haveModal()) {
-        return;
-      }
-
-      pageX = pageX === undefined ? e.x : pageX;
-      pageY = pageY === undefined ? e.y : pageY;
-
-      const screen = this.getScreen() as Screen | undefined;
-      if (!screen) return false;
-
-      const node = screen.pickElement(pageX, pageY);
-
-      if (node !== row) {
-        return false;
-      }
-
-      return true;
-    };
-
-    eventdom.addEventListener("pointerout", (e: PointerEvent) => {
-      mdown = false;
-    });
-    eventdom.addEventListener("pointerleave", (e: PointerEvent) => {
-      mdown = false;
-    });
-
-    eventdom.addEventListener("pointerdown", (e: PointerEvent) => {
-      if (!mpre(e)) return;
-
-      mpos[0] = e.pageX;
-      mpos[1] = e.pageY;
-      mdown = true;
-    });
-
-    let last_time = util.time_ms();
-
-    const do_mousemove = (
-      e: PointerEvent & { was_touch?: boolean },
-      pageX: number,
-      pageY: number
-    ) => {
-      if (haveModal() || !makeDraggable) {
-        return;
-      }
-
-      let mdown2: boolean = e.buttons !== 0 || !!(e as unknown as TouchEvent).touches?.length;
-      mdown2 = mdown2 && mdown;
-
-      //calls to pickElement in mpre are expensive
-      if (util.time_ms() - last_time < 250) {
-        return;
-      }
-
-      last_time = util.time_ms();
-
-      if (!mdown2 || !mpre(e, pageX, pageY)) return;
-
-      if (e.type === "mousemove" && e.was_touch) {
-        //okay how are patched events getting here?
-        //avoid double call. . .
-        return;
-      }
-
-      const dx = pageX - mpos[0];
-      const dy = pageY - mpos[1];
-
-      const dis = dx * dx + dy * dy;
-      const limit = 7;
-
-      if (dis > limit * limit) {
-        const sarea = this.owning_sarea;
-        if (sarea === undefined) {
-          console.warn("Error: missing sarea ref");
-          return;
-        }
-
-        const screen = sarea.screen;
-        if (screen === undefined) {
-          console.log("Error: missing screen ref");
-          return;
-        }
-
-        if (!this.areaDragToolEnabled) {
-          return;
-        }
-        mdown = false;
-        console.log("area drag tool!", e.type, e);
-        screen.areaDragTool(this.owning_sarea!);
-      }
-    };
-
-    //not working on mobile
-    //row.setAttribute("draggable", true);
-    //row.draggable = true;
-    /*
-    eventdom.addEventListener("dragstart", (e) => {
-      return;
-      console.log("drag start!", e);
-      e.dataTransfer.setData("text/json", "SplitAreaDrag");
-
-      let canvas = document.createElement("canvas");
-      let g = canvas.g;
-
-      canvas.width = 32;
-      canvas.height = 32;
-
-      e.dataTransfer.setDragImage(canvas, 0, 0);
-
-      mdown = false;
-      console.log("area drag tool!");
-      this.getScreen().areaDragTool(this.owning_sarea);
-    });
-
-    eventdom.addEventListener("drag", (e) => {
-      console.log("drag!", e);
-    });*/
-
-    eventdom.addEventListener(
-      "pointermove",
-      (e: PointerEvent) => {
-        return do_mousemove(e, e.pageX, e.pageY);
-      },
-      false
-    );
-    eventdom.addEventListener(
-      "pointerup",
-      (e: PointerEvent) => {
-        console.log("pointerup", e);
-        mdown = false;
-      },
-      false
-    );
-    eventdom.addEventListener(
-      "pointercancel",
-      (e: PointerEvent) => {
-        console.log("pointercancel", e);
-        mdown = false;
-      },
-      false
-    );
 
     return row;
   }
@@ -770,6 +596,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
   area: Area<CTX> | undefined;
   editors: Area<CTX>[] & { remove(item: Area<CTX>, b?: boolean): void };
   editormap: Record<string, Area<CTX>>;
+  /** The single AreaDocker tab switcher for this tile, adopted into the
+   *  active editor's header (see _attachSwitcher).  Created lazily. */
+  switcher?: AreaDocker<CTX>;
   switcherData?: any;
 
   on_keyup?: (e: KeyboardEvent) => void | boolean;
@@ -1380,6 +1209,45 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     return this.switchEditor(cls);
   }
 
+  /** Adopt this tile's shared AreaDocker into `area`'s switcher row,
+   *  creating the docker on first use.  Because there is a single docker
+   *  element per tile, tab UI state and any in-progress tab drag survive
+   *  editor switches without swapping DOM nodes between areas. */
+  _attachSwitcher(area: Area<CTX>) {
+    const row = area._switcherRow;
+
+    if (!row || area.flag & AreaFlags.NO_SWITCHER) {
+      return;
+    }
+
+    //parentWidget alone is not a reliable attachment signal: raw
+    //HTMLElement.remove (used during editor switches) leaves it stale
+    if (this.switcher && this.switcher.parentWidget === row && this.switcher.parentNode) {
+      return;
+    }
+
+    //evict any docker that rode along inside a reparented editor's header
+    //(e.g. after Screen.floatArea moved the editor to another tile)
+    const dockerTag = UIBase.getInternalName("area-docker-x");
+    row._forEachChildWidget((child) => {
+      if (child.tagName.toLowerCase() === dockerTag && child !== this.switcher) {
+        HTMLElement.prototype.remove.call(child);
+      }
+    });
+
+    if (!this.switcher) {
+      this.switcher = area.makeAreaSwitcher(row);
+      this.switcher.ctx = this.ctx;
+      return;
+    }
+
+    HTMLElement.prototype.remove.call(this.switcher);
+    //prepend so the switcher keeps its place before the help picker/note area
+    row._prepend(this.switcher);
+    this.switcher.ctx = this.ctx;
+    this.switcher.flagUpdate();
+  }
+
   switchEditor(cls: AreaConstructorParam) {
     const def = cls.define();
     const name = def.areaname!;
@@ -1397,6 +1265,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     //var finish = () => {
     if (this.area) {
+      //keep the shared switcher; it is re-adopted by the new active area
+      if (this.switcher) {
+        HTMLElement.prototype.remove.call(this.switcher);
+      }
+
       //break direct pos/size references for old active area
       this.area.pos = new Vector2(this.area.pos);
       this.area.size = new Vector2(this.area.size);
@@ -1440,6 +1313,8 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     this.area.on_resize([this.size[0], this.size[1]]);
     this.area.pop_ctx_active();
 
+    this._attachSwitcher(this.area);
+
     this.area.push_ctx_active();
     this.area.on_area_active();
     this.area.pop_ctx_active();
@@ -1464,6 +1339,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
       this.area.parentWidget = this;
       this.area.size = this.size;
       this.area.pos = this.pos;
+
+      //self-heals paths that bypass switchEditor (loadSTRUCT, floatArea)
+      this._attachSwitcher(this.area);
 
       const screen = this.getScreen();
       const oldsize = [this.size[0], this.size[1]];

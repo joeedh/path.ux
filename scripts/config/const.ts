@@ -78,8 +78,6 @@ export interface IPathUXConstants {
   autoLoadSplineTemplates?: boolean;
   /** Add tooltip picker tools to screen area headers for mobile devices. */
   addHelpPickers?: boolean;
-  /** Use tab based area docker instead of the default dropboxe-based area switcher */
-  useAreaTabSwitcher?: boolean;
   autoSizeUpdate?: boolean;
   showPathsInToolTips?: boolean;
   enableThemeAutoUpdate?: boolean;
@@ -172,7 +170,6 @@ const cconst: PathUXConfigProvider = {
 
   autoLoadSplineTemplates: true,
   addHelpPickers         : true,
-  useAreaTabSwitcher     : false,
   autoSizeUpdate         : true,
   showPathsInToolTips    : true,
   enableThemeAutoUpdate  : true,

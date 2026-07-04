@@ -792,13 +792,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
             }
           }
 
-          if (cconst.useAreaTabSwitcher) {
-            for (const editor of dst.editors) {
-              if (editor.switcher) {
-                (editor.switcher as unknown as { flagUpdate(): void }).flagUpdate();
-              }
-            }
-          }
+          dst.switcher?.flagUpdate();
 
           dst.area = src.area;
           dst.shadow.appendChild(src.area!);

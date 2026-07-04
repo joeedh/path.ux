@@ -51,7 +51,6 @@ export interface AppConstants {
   useNativeToolTips: boolean;
   showPathsInToolTips: boolean;
   autoSizeUpdate: boolean;
-  useAreaTabSwitcher: boolean;
   VERSION: Version;
   LOCALSTORAGE_KEY: string;
   DocEditorPath: string;
@@ -74,7 +73,6 @@ const constants: AppConstants = {
   useNativeToolTips  : false,
   showPathsInToolTips: true,
   autoSizeUpdate     : true,
-  useAreaTabSwitcher : true,
   VERSION            : new Version(0, 0, 0, 0),
   LOCALSTORAGE_KEY   : "pathux_example_app",
   DocEditorPath      : "../simple_docsys.js",

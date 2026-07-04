@@ -109,9 +109,7 @@ export class AppState extends simple.AppState {
   }
 
   start() {
-    super.start({
-      useAreaTabSwitcher: true
-    });
+    super.start({});
 
     this.load().then(() => {
       window.setInterval(() => {
