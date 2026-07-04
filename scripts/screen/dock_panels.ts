@@ -30,12 +30,14 @@
  * child index, so reorders don't break restore), replayed in afterSTRUCT once
  * ctx is ready.
  *
- * Implementation status: DRAFT — types and signatures only.  Interaction
- * (drag/dock/float) and layout DOM management are later phases; unimplemented
- * methods throw.
+ * Implementation status: programmatic core (catalog, dock skeleton, edge
+ * regions, per-edge hide/show, serialization).  Floating (floatPanel), the
+ * drag/drop interaction, and the rail-mode visual are later phases;
+ * unimplemented methods throw.
  */
 
 import { Container } from "../core/ui";
+import { UIBase, loadUIData, saveUIData } from "../core/ui_base";
 import { PanelFrame } from "../widgets/ui_panel";
 import type { IContextBase } from "../core/context_base";
 import nstructjs from "../path-controller/util/struct";
@@ -240,7 +242,7 @@ export class PanelLayoutState {
 nstructjs.register(PanelLayoutState);
 
 /* -------------------------------------------------------------------------
- * Widgets (skeletons; not registered until implemented)
+ * Widgets
  * ---------------------------------------------------------------------- */
 
 /**
@@ -285,9 +287,35 @@ export class DockPanel<CTX extends IContextBase = IContextBase> extends PanelFra
   }
 }
 
+
+UIBase.internalRegister(DockPanel as unknown as typeof UIBase);
+
+/** Runtime (non-serialized) state of one dock region. */
+export interface DockRegionRuntime<CTX extends IContextBase = IContextBase> {
+  side: PanelSide;
+  container?: Container<CTX>;
+  /** Width (left/right) or height (top/bottom) in CSS pixels. */
+  size: number;
+  /** RegionMode. */
+  mode: number;
+  hidden: boolean;
+  railCollapsed: boolean;
+  /** Panel ids in display order (single stack in this phase). */
+  order: string[];
+}
+
 /**
- * Owns dock regions, floating panels, the panel catalog, and (later) the
- * drag/drop interaction.  Not a widget: it manages DOM inside the host.
+ * Owns dock regions, floating panels, the panel catalog, and the (future)
+ * drag/drop interaction.  Not a widget itself: it manages DOM inside the
+ * host editor's container.
+ *
+ * Usage from an editor:
+ *
+ *   this.panels = new PanelManager(this);
+ *   this.definePanels(this.panels);      // catalog + defaults via panel()
+ *   this.panels.build(this.container);   // dock skeleton; content goes in
+ *   this.panels.center.add(...);         // .center is the editor content
+ *   this.panels.applyDefaultLayout();    // or loadLayout(saved) when loading
  */
 export class PanelManager<CTX extends IContextBase = IContextBase> {
   readonly host: IPanelHost<CTX>;
@@ -296,8 +324,35 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
   /** Live panel widgets, created lazily; keyed by panel id. */
   readonly panels = new Map<string, DockPanel<CTX>>();
 
+  outer!: Container<CTX>;
+  /** The editor's content container, framed by the four dock regions. */
+  center!: Container<CTX>;
+
+  readonly regions: Record<PanelSide, DockRegionRuntime<CTX>>;
+
+  /** Panels hidden via closePanel(); layout position is retained. */
+  private readonly hiddenPanels = new Set<string>();
+  /** Deserialized per-panel state awaiting realization (uidata replay). */
+  private readonly pendingState = new Map<string, PanelState>();
+
   constructor(host: IPanelHost<CTX>) {
     this.host = host;
+
+    const region = (side: PanelSide): DockRegionRuntime<CTX> => ({
+      side,
+      size         : 225,
+      mode         : RegionMode.DOCKED,
+      hidden       : false,
+      railCollapsed: false,
+      order        : [],
+    });
+
+    this.regions = {
+      left  : region("left"),
+      right : region("right"),
+      top   : region("top"),
+      bottom: region("bottom"),
+    };
   }
 
   /* --- catalog / declaration (definePanels) --- */
@@ -311,73 +366,321 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     return this;
   }
 
+  /* --- skeleton --- */
+
+  /** Build the dock frame inside `parent`; editor content goes in .center. */
+  build(parent: Container<CTX>): Container<CTX> {
+    const outer = (this.outer = parent.col());
+
+    outer.noMarginsOrPadding();
+    outer.style.width = "100%";
+    outer.style.height = "100%";
+
+    this.regions.top.container = outer.row();
+
+    const mid = outer.row();
+    mid.noMarginsOrPadding();
+    mid.style.flexGrow = "1";
+    mid.style.alignItems = "stretch";
+    mid.style.width = "100%";
+
+    this.regions.left.container = mid.col();
+    this.center = mid.col();
+    this.regions.right.container = mid.col();
+    this.regions.bottom.container = outer.row();
+
+    this.center.noMarginsOrPadding();
+    this.center.style.flexGrow = "1";
+
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      r.container!.noMarginsOrPadding();
+      r.container!.style.overflow = "auto";
+      this._updateRegion(r);
+    }
+
+    return this.center;
+  }
+
   /* --- imperative layout control --- */
 
-  /** Move a panel into an edge region.  index positions it in the stack. */
-  dockPanel(id: string, side: PanelSide, opts?: { stack?: number; index?: number }): void {
-    throw new Error("TODO: PanelManager.dockPanel");
+  /** Move a panel into an edge region; index positions it in the stack. */
+  dockPanel(id: string, side: PanelSide, opts?: { index?: number }): void {
+    const panel = this._ensurePanel(id);
+    this._removeFromLayout(id);
+
+    const r = this.regions[side];
+    const index = Math.min(opts?.index ?? r.order.length, r.order.length);
+    r.order.splice(index, 0, id);
+
+    //keep DOM order in sync with r.order
+    const nextId = r.order[index + 1];
+    const next = nextId ? this.panels.get(nextId) : undefined;
+
+    HTMLElement.prototype.remove.call(panel);
+    if (next && next.parentNode) {
+      next.parentNode.insertBefore(panel, next);
+      panel.parentWidget = r.container as unknown as typeof panel.parentWidget;
+    } else {
+      r.container!.add(panel as unknown as Container<CTX>);
+    }
+
+    panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+    this._updateRegion(r);
   }
 
-  /** Float a panel at rect (screen space); defaults to def.floatRect. */
+  /** Float a panel at rect (screen space). Interactive/floating docking is
+   *  a later phase. */
   floatPanel(id: string, rect?: { pos: [number, number]; size: [number, number] }): void {
-    throw new Error("TODO: PanelManager.floatPanel");
+    throw new Error("TODO: PanelManager.floatPanel (phase 4)");
   }
 
-  /** Close (hide) a panel; its state is retained. */
+  /** Hide a panel; its layout position and widget state are retained. */
   closePanel(id: string): void {
-    throw new Error("TODO: PanelManager.closePanel");
+    this.hiddenPanels.add(id);
+    const panel = this.panels.get(id);
+    if (panel) {
+      panel.style.display = "none";
+    }
   }
 
-  /** Re-show a closed panel at its last location. */
+  /** Re-show a panel closed with closePanel(). */
   showPanel(id: string): void {
-    throw new Error("TODO: PanelManager.showPanel");
+    this.hiddenPanels.delete(id);
+    const panel = this._ensurePanel(id);
+    panel.style.display = "";
+
+    //a never-docked panel goes to its default location
+    if (!this._findSide(id)) {
+      this.dockPanel(id, this._defaultSide(this.defs.get(id)!));
+    }
+  }
+
+  isPanelClosed(id: string): boolean {
+    return this.hiddenPanels.has(id);
   }
 
   /** Discard the current layout and rebuild from the catalog's defaults. */
   resetLayout(): void {
-    throw new Error("TODO: PanelManager.resetLayout");
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      r.order = [];
+      r.hidden = false;
+      r.railCollapsed = false;
+    }
+    this.hiddenPanels.clear();
+    this.applyDefaultLayout();
+  }
+
+  /** Place every catalogued panel at its default dock. */
+  applyDefaultLayout(): void {
+    for (const def of this.defs.values()) {
+      if (!this._findSide(def.id)) {
+        this.dockPanel(def.id, this._defaultSide(def));
+      }
+    }
   }
 
   /* --- per-edge visibility (hotkey-bindable by editors) --- */
 
   hideEdge(side: PanelSide): void {
-    throw new Error("TODO: PanelManager.hideEdge");
+    const r = this.regions[side];
+    r.hidden = true;
+    this._updateRegion(r);
   }
 
   showEdge(side: PanelSide): void {
-    throw new Error("TODO: PanelManager.showEdge");
+    const r = this.regions[side];
+    r.hidden = false;
+    this._updateRegion(r);
   }
 
-  /** In rail mode this collapses to the bare rail instead of hiding it. */
+  /** In rail mode (later phase) this collapses to the bare rail instead. */
   toggleEdge(side: PanelSide): void {
-    throw new Error("TODO: PanelManager.toggleEdge");
+    if (this.isEdgeHidden(side)) {
+      this.showEdge(side);
+    } else {
+      this.hideEdge(side);
+    }
   }
 
   isEdgeHidden(side: PanelSide): boolean {
-    throw new Error("TODO: PanelManager.isEdgeHidden");
+    return this.regions[side].hidden;
   }
 
-  /** Switch a region between inline-docked and rail presentation. */
+  setEdgeSize(side: PanelSide, size: number): void {
+    this.regions[side].size = size;
+    this._updateRegion(this.regions[side]);
+  }
+
+  /** Switch a region between inline-docked and rail presentation.  The rail
+   *  visual (edge-aligned tab bar, click-to-toggle) is a later phase; the
+   *  mode is stored and serialized now so layouts round-trip. */
   setEdgeMode(side: PanelSide, mode: number): void {
-    throw new Error("TODO: PanelManager.setEdgeMode");
+    this.regions[side].mode = mode;
   }
 
   /* --- serialization --- */
 
-  /**
-   * Snapshot the layout, including per-panel saveUIData blobs.  Editors call
-   * this from a computed STRUCT field.
-   */
+  /** Snapshot the layout, including per-panel saveUIData blobs. */
   saveLayout(): PanelLayoutState {
-    throw new Error("TODO: PanelManager.saveLayout");
+    const state = new PanelLayoutState();
+
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      const rs = new DockRegionState();
+
+      rs.side = PanelSides.indexOf(side);
+      rs.size = r.size;
+      rs.mode = r.mode;
+      rs.hidden = r.hidden;
+      rs.railCollapsed = r.railCollapsed;
+
+      const stack = new PanelStackState();
+      stack.panelIds = [...r.order];
+      rs.stacks = [stack];
+
+      state.regions.push(rs);
+    }
+
+    for (const id of this.defs.keys()) {
+      const ps = new PanelState();
+      ps.id = id;
+      ps.closed = this.hiddenPanels.has(id);
+
+      const panel = this.panels.get(id);
+      if (panel) {
+        ps.uidata = saveUIData(panel as unknown as UIBase<CTX>, "panel:" + id);
+      } else {
+        ps.uidata = this.pendingState.get(id)?.uidata ?? "";
+      }
+
+      state.panels.push(ps);
+    }
+
+    return state;
   }
 
   /**
-   * Apply a deserialized layout.  Must run after definePanels() has filled
-   * the catalog; validates ids against it (unknown ids dropped, missing ids
-   * placed at their defaults).
+   * Apply a deserialized layout.  Must run after definePanels() and build();
+   * ids are validated against the catalog (unknown ids dropped, missing ids
+   * placed at their defaults).  Call when ctx is ready (afterSTRUCT/doOnce)
+   * so panel contents can build and replay their uidata.
    */
   loadLayout(state: PanelLayoutState): void {
-    throw new Error("TODO: PanelManager.loadLayout");
+    for (const side of PanelSides) {
+      this.regions[side].order = [];
+    }
+    this.hiddenPanels.clear();
+    this.pendingState.clear();
+
+    for (const ps of state.panels) {
+      if (!this.defs.has(ps.id)) {
+        continue;
+      }
+      this.pendingState.set(ps.id, ps);
+      if (ps.closed) {
+        this.hiddenPanels.add(ps.id);
+      }
+    }
+
+    for (const rs of state.regions) {
+      const side = PanelSides[rs.side];
+      if (!side) {
+        continue;
+      }
+
+      const r = this.regions[side];
+      r.size = rs.size;
+      r.mode = rs.mode;
+      r.hidden = rs.hidden;
+      r.railCollapsed = rs.railCollapsed;
+
+      for (const stack of rs.stacks) {
+        for (const id of stack.panelIds) {
+          if (this.defs.has(id) && !this._findSide(id)) {
+            this.dockPanel(id, side);
+          }
+        }
+      }
+    }
+
+    //panels the layout predates get their default placement
+    this.applyDefaultLayout();
+  }
+
+  /* --- internals --- */
+
+  private _defaultSide(def: PanelDef<CTX>): PanelSide {
+    const dock = def.dock ?? "right";
+    //floating defaults arrive with the floating implementation (phase 4)
+    return dock === "float" ? "right" : dock;
+  }
+
+  private _findSide(id: string): PanelSide | undefined {
+    return PanelSides.find((side) => this.regions[side].order.includes(id));
+  }
+
+  private _removeFromLayout(id: string) {
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      const i = r.order.indexOf(id);
+      if (i >= 0) {
+        r.order.splice(i, 1);
+        this._updateRegion(r);
+      }
+    }
+  }
+
+  private _updateRegion(r: DockRegionRuntime<CTX>) {
+    const c = r.container;
+    if (!c) {
+      return;
+    }
+
+    const visible = !r.hidden && r.order.length > 0;
+    c.style.display = visible ? "flex" : "none";
+
+    if (r.side === "left" || r.side === "right") {
+      c.style.width = r.size + "px";
+      c.style.height = "";
+    } else {
+      c.style.height = r.size + "px";
+      c.style.width = "100%";
+    }
+  }
+
+  private _ensurePanel(id: string): DockPanel<CTX> {
+    const existing = this.panels.get(id);
+    if (existing) {
+      return existing;
+    }
+
+    const def = this.defs.get(id);
+    if (!def) {
+      throw new Error(`unknown panel id "${id}" (missing panel() declaration)`);
+    }
+
+    const panel = UIBase.createElement("dock-panel-x") as DockPanel<CTX>;
+    panel.panelId = id;
+    panel.def = def;
+    panel.manager = this;
+    panel.ctx = this.host.ctx;
+    panel.setAttribute("label", def.title);
+
+    this.panels.set(id, panel);
+
+    //PanelFrame forwards container methods to its contents
+    def.build(panel as unknown as Container<CTX>, panel);
+
+    const pending = this.pendingState.get(id);
+    if (pending) {
+      if (pending.uidata) {
+        loadUIData(panel as unknown as UIBase<CTX>, pending.uidata);
+      }
+      this.pendingState.delete(id);
+    }
+
+    return panel;
   }
 }
