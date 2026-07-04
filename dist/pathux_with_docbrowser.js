@@ -72499,9 +72499,21 @@ var TabBar = class extends UIBase2 {
     if (!this.parentWidget || !this._wrapperDiv) {
       return;
     }
-    if (pos === "right" && this._wrapperDiv !== this.parentWidget.shadow.lastElementChild) {
+    const contents = this._contentsWrapper;
+    const shadow = this.parentWidget.shadow;
+    if (!contents || contents.parentNode !== shadow) {
+      return;
+    }
+    const barAfterContents = pos === "right" || pos === "bottom";
+    const barIsAfter = !!(this._wrapperDiv.compareDocumentPosition(contents) & Node.DOCUMENT_POSITION_PRECEDING);
+    if (barAfterContents !== barIsAfter) {
       this._wrapperDiv.remove();
-      this.parentWidget.shadow.appendChild(this._wrapperDiv);
+      if (barAfterContents) {
+        shadow.appendChild(this._wrapperDiv);
+      } else {
+        shadow.insertBefore(this._wrapperDiv, contents);
+      }
+      contents.style.width = pos === "right" ? "100%" : "";
       this.setCSS();
       this._redraw();
     }
@@ -72975,11 +72987,14 @@ var TabContainer3 = class extends UIBase2 {
       div2.style.display = this._contentsHidden ? "none" : "inherit";
       div2.setAttribute("class", `_tab_${this._id}`);
       div2.appendChild(this._tab);
-      if (this.getAttribute("bar_pos") !== "right") {
-        this.shadow.appendChild(div2);
-      } else {
+      const barpos = this.getAttribute("bar_pos");
+      if (barpos === "right" || barpos === "bottom") {
         this.shadow.insertBefore(div2, this.tbar._wrapperDiv);
-        div2.style.width = "100%";
+        if (barpos === "right") {
+          div2.style.width = "100%";
+        }
+      } else {
+        this.shadow.appendChild(div2);
       }
       if (this.on_change) {
         this.on_change(tab2, event);

@@ -1094,10 +1094,31 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       return;
     }
 
-    // TODO: currently no logic for 'bottom' (currently unsupported)
-    if (pos === "right" && this._wrapperDiv !== this.parentWidget!.shadow.lastElementChild) {
+    const contents = this._contentsWrapper;
+    const shadow = this.parentWidget.shadow;
+
+    if (!contents || contents.parentNode !== shadow) {
+      return;
+    }
+
+    //the bar comes after the contents for right/bottom placements,
+    //before it for left/top
+    const barAfterContents = pos === "right" || pos === "bottom";
+    const barIsAfter = !!(
+      this._wrapperDiv.compareDocumentPosition(contents) & Node.DOCUMENT_POSITION_PRECEDING
+    );
+
+    if (barAfterContents !== barIsAfter) {
       this._wrapperDiv.remove();
-      this.parentWidget.shadow.appendChild(this._wrapperDiv);
+
+      if (barAfterContents) {
+        shadow.appendChild(this._wrapperDiv);
+      } else {
+        shadow.insertBefore(this._wrapperDiv, contents);
+      }
+
+      contents.style.width = pos === "right" ? "100%" : "";
+
       this.setCSS();
       this._redraw();
     }
@@ -1760,11 +1781,16 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
 
-      if (this.getAttribute("bar_pos") !== "right") {
-        this.shadow.appendChild(div);
-      } else {
+      const barpos = this.getAttribute("bar_pos");
+
+      if (barpos === "right" || barpos === "bottom") {
+        //contents come before the bar
         this.shadow.insertBefore(div, this.tbar._wrapperDiv!);
-        div.style.width = "100%";
+        if (barpos === "right") {
+          div.style.width = "100%";
+        }
+      } else {
+        this.shadow.appendChild(div);
       }
 
       if (this.on_change) {
