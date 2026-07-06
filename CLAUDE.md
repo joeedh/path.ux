@@ -216,6 +216,11 @@ leaving the old callback in place and `@deprecated`.
 - [ListBox](documentation/listbox.md) — scrollable single-select list, in
   either manual (`addItem`) or `DataList`-backed mode, with a typed `"change"`
   event and user-resizable corner grip.
+- [Dock panels](documentation/dock_panels.md) — dockable/floatable editor
+  panels (`PanelManager` in `scripts/screen/dock_panels.ts`): editors declare
+  panels in `definePanels()`, users drag them between edge regions, float
+  them, or collapse regions to edge-aligned tab rails; layouts serialize via
+  `Area.STRUCT`'s `panelLayout` field.
 
 ## Context
 
