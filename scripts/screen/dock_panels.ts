@@ -121,8 +121,6 @@ export interface PanelDef<CTX extends IContextBase = IContextBase> {
  */
 export interface IPanelHost<CTX extends IContextBase = IContextBase> {
   readonly ctx: CTX;
-  /** Root container the dock regions attach around; the editor's content. */
-  getPanelRoot(): Container<CTX>;
   /**
    * When false, all interactive layout editing (drag, dock, float, close)
    * is disabled and the programmatic layout is authoritative.
@@ -290,6 +288,8 @@ export class DockPanel<CTX extends IContextBase = IContextBase> extends PanelFra
 
 UIBase.internalRegister(DockPanel as unknown as typeof UIBase);
 
+let _dockpin_idgen = 0;
+
 /** Runtime (non-serialized) state of one dock region. */
 export interface DockRegionRuntime<CTX extends IContextBase = IContextBase> {
   side: PanelSide;
@@ -370,19 +370,55 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
   /** Build the dock frame inside `parent`; editor content goes in .center. */
   build(parent: Container<CTX>): Container<CTX> {
+    //Containers (re)apply theme defaults like flex-grow:unset from their
+    //deferred init(), clobbering inline styles set here.  Pin structural
+    //layout via !important rules in the enclosing shadow root instead —
+    //stylesheet !important beats later plain inline assignments.
+    //note: data attributes, not classes — Container.init() replaces the
+    //whole class attribute when its deferred init runs
+    const pin = (el: Container<CTX>, styles: Record<string, string>) => {
+      const key = `p${_dockpin_idgen++}`;
+      el.setAttribute("data-dockpin", key);
+
+      let body = "";
+      for (const k in styles) {
+        body += `  ${k}: ${styles[k]} !important;\n`;
+      }
+
+      const tag = document.createElement("style");
+      tag.textContent =
+        `[data-dockpin="${key}"] {\n${body}}\n` +
+        `[data-dockpin="${key}"][data-dock-hidden] { display: none !important; }\n`;
+
+      const root = el.getRootNode();
+      if (root instanceof ShadowRoot) {
+        root.prepend(tag);
+      } else if (el.parentNode) {
+        el.parentNode.insertBefore(tag, el);
+      }
+    };
+
     const outer = (this.outer = parent.col());
 
     outer.noMarginsOrPadding();
-    outer.style.width = "100%";
-    outer.style.height = "100%";
+    pin(outer, {
+      width            : "100%",
+      height           : "100%",
+      "justify-content": "flex-start",
+      "align-items"    : "stretch",
+    });
 
     this.regions.top.container = outer.row();
 
     const mid = outer.row();
     mid.noMarginsOrPadding();
-    mid.style.flexGrow = "1";
-    mid.style.alignItems = "stretch";
-    mid.style.width = "100%";
+    pin(mid, {
+      "flex-grow"      : "1",
+      "align-items"    : "stretch",
+      "justify-content": "flex-start",
+      width            : "100%",
+      "min-height"     : "0",
+    });
 
     this.regions.left.container = mid.col();
     this.center = mid.col();
@@ -390,12 +426,23 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     this.regions.bottom.container = outer.row();
 
     this.center.noMarginsOrPadding();
-    this.center.style.flexGrow = "1";
+    pin(this.center, {
+      "flex-grow" : "1",
+      "flex-basis": "0",
+      "min-width" : "0",
+    });
 
     for (const side of PanelSides) {
       const r = this.regions[side];
       r.container!.noMarginsOrPadding();
-      r.container!.style.overflow = "auto";
+      pin(r.container!, {
+        overflow         : "auto",
+        display          : "flex",
+        "flex-grow"      : "0",
+        "flex-shrink"    : "0",
+        "justify-content": "flex-start",
+        "align-items"    : "stretch",
+      });
       this._updateRegion(r);
     }
 
@@ -639,14 +686,18 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     }
 
     const visible = !r.hidden && r.order.length > 0;
-    c.style.display = visible ? "flex" : "none";
+    if (visible) {
+      c.removeAttribute("data-dock-hidden");
+    } else {
+      c.setAttribute("data-dock-hidden", "1");
+    }
 
     if (r.side === "left" || r.side === "right") {
-      c.style.width = r.size + "px";
-      c.style.height = "";
+      c.style.setProperty("width", r.size + "px", "important");
+      c.style.removeProperty("height");
     } else {
-      c.style.height = r.size + "px";
-      c.style.width = "100%";
+      c.style.setProperty("height", r.size + "px", "important");
+      c.style.setProperty("width", "100%", "important");
     }
   }
 

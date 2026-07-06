@@ -70,6 +70,7 @@ export * from "./widgets/ui_treeview";
 
 export * from "./screen/FrameManager";
 export * from "./screen/ScreenArea";
+export * from "./screen/dock_panels";
 export * from "./util/ScreenOverdraw";
 
 import cconst from "./config/const";

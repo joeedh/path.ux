@@ -1,4 +1,14 @@
-import { UIBase, Icons, nstructjs, Vector2, contextWrangler } from "../../pathux.js";
+import {
+  UIBase,
+  Icons,
+  nstructjs,
+  Vector2,
+  contextWrangler,
+  HotKey,
+  KeyMap,
+  PanelFlags,
+  type PanelManager,
+} from "../../pathux.js";
 import { Editor } from "../editor_base.js";
 import { PanOp } from "./workspace_ops.js";
 import { DrawOp } from "../../draw/draw_ops.js";
@@ -55,7 +65,13 @@ export class WorkspaceEditor extends Editor {
 
           // (pickElement's old (x,y,w,h) signature is now (x,y,args); drop the 1x1 region.)
           const ele = screen.pickElement(me.x, me.y);
-          if (ele !== this && (ele as unknown) !== this.canvas) {
+          const isCanvasArea =
+            ele === this ||
+            (ele as unknown) === this.canvas ||
+            //the empty dock-panel center frames the drawable canvas
+            ele === this.panels?.center ||
+            (ele && ele.parentWidget === this.panels?.center);
+          if (!isCanvasArea) {
             return;
           }
         }
@@ -100,6 +116,39 @@ export class WorkspaceEditor extends Editor {
     }
   }
 
+  definePanels(panels: PanelManager) {
+    panels.panel({
+      id   : "history",
+      title: "History",
+      dock : "left",
+      flags: PanelFlags.NO_CLOSE,
+      build: (c) => {
+        const strip = c.row();
+        strip.iconbutton(Icons.UNDO, "Undo", () => {
+          this.ctx.toolstack.undo(this.ctx);
+        });
+        strip.iconbutton(Icons.REDO, "Redo", () => {
+          this.ctx.toolstack.redo(this.ctx);
+        });
+      },
+    });
+
+    panels.panel({
+      id   : "brush",
+      title: "Brush",
+      dock : "right",
+      build: (c) => {
+        c.useDataPathUndo = true;
+
+        c.prop("workspace.brush.size");
+        c.prop("workspace.brush.soft");
+        c.prop("workspace.brush.spacing");
+        c.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
+        c.prop("workspace.brush.color");
+      },
+    });
+  }
+
   init() {
     super.init();
 
@@ -109,33 +158,7 @@ export class WorkspaceEditor extends Editor {
 
     this.container._useDataPathUndo = true;
 
-    const row = this.container.row();
-    row.background = row.getDefault("AreaHeaderBG");
-
-    const strip = row.row();
-    strip.iconbutton(Icons.UNDO, "Undo", () => {
-      this.ctx.toolstack.undo(this.ctx);
-    });
-    strip.iconbutton(Icons.REDO, "Redo", () => {
-      this.ctx.toolstack.redo(this.ctx);
-    });
-
-    const table = row.table();
-
-    let row2 = table.row();
-
-    row2.useDataPathUndo = true;
-    row2.prop("workspace.brush.size"); //, PackFlags.SIMPLE_NUMSLIDERS);
-    row2.prop("workspace.brush.soft");
-
-    row2 = table.row();
-    row2.useDataPathUndo = true;
-    row2.prop("workspace.brush.spacing");
-    row2.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
-
-    row2 = table.row();
-    row2.useDataPathUndo = true;
-    row2.prop("workspace.brush.color");
+    this.makePanels(this.container);
 
     this.setCSS();
   }
@@ -179,7 +202,14 @@ export class WorkspaceEditor extends Editor {
   mouseup() {}
 
   getKeyMaps() {
-    return [];
+    if (!this.keymap) {
+      this.keymap = new KeyMap([
+        new HotKey("T", [], () => this.panels?.toggleEdge("left")),
+        new HotKey("N", [], () => this.panels?.toggleEdge("right")),
+      ]);
+    }
+
+    return [this.keymap];
   }
 
   updateSize() {

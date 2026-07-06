@@ -41,7 +41,6 @@ function makeHost() {
 
   const host: IPanelHost = {
     ctx                : undefined as unknown as IContextBase,
-    getPanelRoot       : () => root,
     panelLayoutEditable: true,
   };
 
@@ -57,6 +56,12 @@ function def(id: string, dock: PanelDef["dock"]): PanelDef {
       container.label(id + " contents");
     },
   };
+}
+
+
+/** Region visibility is attribute-driven (data-dock-hidden + !important). */
+function regionHidden(pm: PanelManager, side: "left" | "right" | "top" | "bottom") {
+  return pm.regions[side].container!.hasAttribute("data-dock-hidden");
 }
 
 function makeManager() {
@@ -79,9 +84,9 @@ test("default layout places panels at their declared docks", () => {
   expect(pm.regions.right.order).toEqual(["props"]);
 
   expect(pm.regions.left.container!.shadow.contains(pm.panels.get("tools")!)).toBe(true);
-  expect(pm.regions.left.container!.style.display).toBe("flex");
+  expect(regionHidden(pm, "left")).toBe(false);
   //empty regions collapse
-  expect(pm.regions.top.container!.style.display).toBe("none");
+  expect(regionHidden(pm, "top")).toBe(true);
 });
 
 test("dockPanel moves panels between regions with ordering", () => {
@@ -91,7 +96,7 @@ test("dockPanel moves panels between regions with ordering", () => {
 
   expect(pm.regions.left.order).toEqual([]);
   expect(pm.regions.right.order).toEqual(["tools", "props"]);
-  expect(pm.regions.left.container!.style.display).toBe("none");
+  expect(regionHidden(pm, "left")).toBe(true);
 
   //DOM order matches order list
   const region = pm.regions.right.container!;
@@ -121,11 +126,11 @@ test("hideEdge / toggleEdge control region visibility", () => {
 
   pm.hideEdge("left");
   expect(pm.isEdgeHidden("left")).toBe(true);
-  expect(pm.regions.left.container!.style.display).toBe("none");
+  expect(regionHidden(pm, "left")).toBe(true);
 
   pm.toggleEdge("left");
   expect(pm.isEdgeHidden("left")).toBe(false);
-  expect(pm.regions.left.container!.style.display).toBe("flex");
+  expect(regionHidden(pm, "left")).toBe(false);
 });
 
 test("saveLayout / loadLayout round-trips layout and closed state", () => {

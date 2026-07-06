@@ -15,6 +15,7 @@ import { Vector2 } from "../pathux";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
+import { PanelManager, PanelLayoutState, IPanelHost } from "./dock_panels";
 import {
   areaclasses,
   IAreaConstructor,
@@ -92,6 +93,14 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   helppicker: (UIBase<CTX> & { iconsheet?: number }) | undefined;
   saved_uidata: string | undefined;
   areaName: string | undefined;
+  /** Dockable-panel manager, created by makePanels() for editors that
+   *  implement definePanels(). */
+  panels?: PanelManager<CTX>;
+  /** Deserialized panel layout awaiting makePanels() (see Area.STRUCT). */
+  panelLayout?: PanelLayoutState;
+  /** When false, interactive panel-layout editing (drag/dock/float/close)
+   *  is disabled and the programmatic layout is authoritative. */
+  panelLayoutEditable = true;
   dead = false;
   /** Soft-close flag. Closed editors are hidden from the AreaDocker tab bar
    *  but stay in `ScreenArea.editors` / `editormap`, so their UI state is
@@ -564,6 +573,46 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   _getSavedUIData() {
     return saveUIData(this as unknown as UIBase, "area");
   }
+
+  /**
+   * Optional hook: editors with dockable panels implement this to declare
+   * their panel catalog and default layout (see PanelManager.panel), then
+   * call makePanels() from init().
+   */
+  definePanels?(panels: PanelManager<CTX>): void;
+
+  /**
+   * Build the dock-panel frame inside `container` and return the center
+   * content container.  Requires definePanels(); applies a deserialized
+   * layout when one arrived via loadSTRUCT, else the declared defaults.
+   */
+  makePanels(container: Container<CTX>): Container<CTX> {
+    if (!this.definePanels) {
+      throw new Error("makePanels() requires a definePanels() implementation");
+    }
+
+    const panels = (this.panels = new PanelManager<CTX>(this as unknown as IPanelHost<CTX>));
+
+    this.definePanels(panels);
+    const center = panels.build(container);
+
+    if (this.panelLayout) {
+      panels.loadLayout(this.panelLayout);
+      this.panelLayout = undefined;
+    } else {
+      panels.applyDefaultLayout();
+    }
+
+    return center;
+  }
+
+  _getPanelLayout(): PanelLayoutState {
+    if (this.panels) {
+      return this.panels.saveLayout();
+    }
+    //an editor that never initialized keeps its loaded layout intact
+    return this.panelLayout ?? new PanelLayoutState();
+  }
 }
 
 Area.STRUCT = `
@@ -571,6 +620,7 @@ pathux.Area {
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
   closed : bool;
+  panelLayout : pathux.PanelLayoutState | obj._getPanelLayout();
 }
 `;
 

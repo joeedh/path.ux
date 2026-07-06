@@ -49252,6 +49252,499 @@ UIBase2.internalRegister(ScreenBorder);
 // scripts/screen/constants.ts
 var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
 
+// scripts/screen/dock_panels.ts
+init_ui_base();
+init_struct();
+init_vectormath();
+var PanelSides = ["left", "right", "top", "bottom"];
+var PanelDockMask = {
+  LEFT: 1,
+  RIGHT: 2,
+  TOP: 4,
+  BOTTOM: 8,
+  FLOAT: 16,
+  ALL: 1 | 2 | 4 | 8 | 16
+};
+var PanelFlags = {
+  /** Panel cannot be closed by the user. */
+  NO_CLOSE: 1,
+  /** Panel cannot be floated (implies it stays in its allowed docks). */
+  NO_FLOAT: 2,
+  /** Rollout collapse (PanelFrame closed state) is disabled. */
+  NO_COLLAPSE: 4,
+  /** Panel cannot be moved at all; it stays where definePanels() put it. */
+  PINNED: 8
+};
+var RegionMode = {
+  /** Panels render inline in the region (rollout stacks / tab groups). */
+  DOCKED: 0,
+  /**
+   * Only an edge-aligned tab bar is shown; clicking a tab toggles the whole
+   * group's visibility.  The bar itself never hides.
+   */
+  RAIL: 1
+};
+var StackMode = {
+  /** Vertical rollout list (Blender N-panel style). */
+  STACK: 0,
+  /** One visible panel selected by a tab bar. */
+  TABS: 1
+};
+var PanelState = class {
+  static STRUCT = `pathux.PanelState {
+  id       : string;
+  closed   : bool;
+  uidata   : string;
+}`;
+  id = "";
+  /** PanelFrame rollout collapse state. */
+  closed = false;
+  uidata = "";
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+};
+struct_default.register(PanelState);
+var PanelStackState = class {
+  static STRUCT = `pathux.PanelStackState {
+  mode     : int;
+  panelIds : array(string);
+}`;
+  /** StackMode. */
+  mode = StackMode.STACK;
+  panelIds = [];
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+};
+struct_default.register(PanelStackState);
+var DockRegionState = class {
+  static STRUCT = `pathux.DockRegionState {
+  side          : int;
+  size          : float;
+  mode          : int;
+  hidden        : bool;
+  railCollapsed : bool;
+  stacks        : array(pathux.PanelStackState);
+}`;
+  /** Index into PanelSides. */
+  side = 0;
+  /** Width (left/right) or height (top/bottom) in CSS pixels. */
+  size = 225;
+  /** RegionMode. */
+  mode = RegionMode.DOCKED;
+  /** Hidden via hideEdge(); stacks/size are retained for restore. */
+  hidden = false;
+  /** Rail mode only: the docked group is currently toggled off. */
+  railCollapsed = false;
+  stacks = [];
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+};
+struct_default.register(DockRegionState);
+var FloatingPanelState = class {
+  static STRUCT = `pathux.FloatingPanelState {
+  panelId : string;
+  pos     : vec2;
+  size    : vec2;
+  order   : int;
+}`;
+  panelId = "";
+  pos = new Vector2();
+  size = new Vector2();
+  /** Raise order among the editor's floating panels. */
+  order = 0;
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+};
+struct_default.register(FloatingPanelState);
+var PanelLayoutState = class {
+  static STRUCT = `pathux.PanelLayoutState {
+  regions  : array(pathux.DockRegionState);
+  floating : array(pathux.FloatingPanelState);
+  panels   : array(pathux.PanelState);
+}`;
+  regions = [];
+  floating = [];
+  panels = [];
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+};
+struct_default.register(PanelLayoutState);
+var DockPanel = class extends PanelFrame {
+  panelId = "";
+  def;
+  manager;
+  static define() {
+    return {
+      tagname: "dock-panel-x",
+      style: "panel",
+      subclassChecksTheme: true
+    };
+  }
+  canDock(side) {
+    const mask = this.def.allowedDocks ?? PanelDockMask.ALL;
+    const bit = {
+      left: PanelDockMask.LEFT,
+      right: PanelDockMask.RIGHT,
+      top: PanelDockMask.TOP,
+      bottom: PanelDockMask.BOTTOM
+    }[side];
+    return !(this.def.flags & PanelFlags.PINNED) && (mask & bit) !== 0;
+  }
+  canFloat() {
+    const mask = this.def.allowedDocks ?? PanelDockMask.ALL;
+    const flags = this.def.flags ?? 0;
+    return !(flags & (PanelFlags.NO_FLOAT | PanelFlags.PINNED)) && (mask & PanelDockMask.FLOAT) !== 0;
+  }
+  canClose() {
+    return !((this.def.flags ?? 0) & PanelFlags.NO_CLOSE);
+  }
+};
+UIBase2.internalRegister(DockPanel);
+var _dockpin_idgen = 0;
+var PanelManager = class {
+  host;
+  /** Catalog registered by definePanels(); keyed by panel id. */
+  defs = /* @__PURE__ */ new Map();
+  /** Live panel widgets, created lazily; keyed by panel id. */
+  panels = /* @__PURE__ */ new Map();
+  outer;
+  /** The editor's content container, framed by the four dock regions. */
+  center;
+  regions;
+  /** Panels hidden via closePanel(); layout position is retained. */
+  hiddenPanels = /* @__PURE__ */ new Set();
+  /** Deserialized per-panel state awaiting realization (uidata replay). */
+  pendingState = /* @__PURE__ */ new Map();
+  constructor(host) {
+    this.host = host;
+    const region = (side) => ({
+      side,
+      size: 225,
+      mode: RegionMode.DOCKED,
+      hidden: false,
+      railCollapsed: false,
+      order: []
+    });
+    this.regions = {
+      left: region("left"),
+      right: region("right"),
+      top: region("top"),
+      bottom: region("bottom")
+    };
+  }
+  /* --- catalog / declaration (definePanels) --- */
+  /** Register a panel in the catalog with its default placement. */
+  panel(def) {
+    if (this.defs.has(def.id)) {
+      throw new Error(`duplicate panel id "${def.id}"`);
+    }
+    this.defs.set(def.id, def);
+    return this;
+  }
+  /* --- skeleton --- */
+  /** Build the dock frame inside `parent`; editor content goes in .center. */
+  build(parent) {
+    const pin = (el, styles) => {
+      const key = `p${_dockpin_idgen++}`;
+      el.setAttribute("data-dockpin", key);
+      let body = "";
+      for (const k in styles) {
+        body += `  ${k}: ${styles[k]} !important;
+`;
+      }
+      const tag = document.createElement("style");
+      tag.textContent = `[data-dockpin="${key}"] {
+${body}}
+[data-dockpin="${key}"][data-dock-hidden] { display: none !important; }
+`;
+      const root = el.getRootNode();
+      if (root instanceof ShadowRoot) {
+        root.prepend(tag);
+      } else if (el.parentNode) {
+        el.parentNode.insertBefore(tag, el);
+      }
+    };
+    const outer = this.outer = parent.col();
+    outer.noMarginsOrPadding();
+    pin(outer, {
+      width: "100%",
+      height: "100%",
+      "justify-content": "flex-start",
+      "align-items": "stretch"
+    });
+    this.regions.top.container = outer.row();
+    const mid = outer.row();
+    mid.noMarginsOrPadding();
+    pin(mid, {
+      "flex-grow": "1",
+      "align-items": "stretch",
+      "justify-content": "flex-start",
+      width: "100%",
+      "min-height": "0"
+    });
+    this.regions.left.container = mid.col();
+    this.center = mid.col();
+    this.regions.right.container = mid.col();
+    this.regions.bottom.container = outer.row();
+    this.center.noMarginsOrPadding();
+    pin(this.center, {
+      "flex-grow": "1",
+      "flex-basis": "0",
+      "min-width": "0"
+    });
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      r.container.noMarginsOrPadding();
+      pin(r.container, {
+        overflow: "auto",
+        display: "flex",
+        "flex-grow": "0",
+        "flex-shrink": "0",
+        "justify-content": "flex-start",
+        "align-items": "stretch"
+      });
+      this._updateRegion(r);
+    }
+    return this.center;
+  }
+  /* --- imperative layout control --- */
+  /** Move a panel into an edge region; index positions it in the stack. */
+  dockPanel(id, side, opts) {
+    const panel = this._ensurePanel(id);
+    this._removeFromLayout(id);
+    const r = this.regions[side];
+    const index = Math.min(opts?.index ?? r.order.length, r.order.length);
+    r.order.splice(index, 0, id);
+    const nextId = r.order[index + 1];
+    const next = nextId ? this.panels.get(nextId) : void 0;
+    HTMLElement.prototype.remove.call(panel);
+    if (next && next.parentNode) {
+      next.parentNode.insertBefore(panel, next);
+      panel.parentWidget = r.container;
+    } else {
+      r.container.add(panel);
+    }
+    panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+    this._updateRegion(r);
+  }
+  /** Float a panel at rect (screen space). Interactive/floating docking is
+   *  a later phase. */
+  floatPanel(id, rect) {
+    throw new Error("TODO: PanelManager.floatPanel (phase 4)");
+  }
+  /** Hide a panel; its layout position and widget state are retained. */
+  closePanel(id) {
+    this.hiddenPanels.add(id);
+    const panel = this.panels.get(id);
+    if (panel) {
+      panel.style.display = "none";
+    }
+  }
+  /** Re-show a panel closed with closePanel(). */
+  showPanel(id) {
+    this.hiddenPanels.delete(id);
+    const panel = this._ensurePanel(id);
+    panel.style.display = "";
+    if (!this._findSide(id)) {
+      this.dockPanel(id, this._defaultSide(this.defs.get(id)));
+    }
+  }
+  isPanelClosed(id) {
+    return this.hiddenPanels.has(id);
+  }
+  /** Discard the current layout and rebuild from the catalog's defaults. */
+  resetLayout() {
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      r.order = [];
+      r.hidden = false;
+      r.railCollapsed = false;
+    }
+    this.hiddenPanels.clear();
+    this.applyDefaultLayout();
+  }
+  /** Place every catalogued panel at its default dock. */
+  applyDefaultLayout() {
+    for (const def of this.defs.values()) {
+      if (!this._findSide(def.id)) {
+        this.dockPanel(def.id, this._defaultSide(def));
+      }
+    }
+  }
+  /* --- per-edge visibility (hotkey-bindable by editors) --- */
+  hideEdge(side) {
+    const r = this.regions[side];
+    r.hidden = true;
+    this._updateRegion(r);
+  }
+  showEdge(side) {
+    const r = this.regions[side];
+    r.hidden = false;
+    this._updateRegion(r);
+  }
+  /** In rail mode (later phase) this collapses to the bare rail instead. */
+  toggleEdge(side) {
+    if (this.isEdgeHidden(side)) {
+      this.showEdge(side);
+    } else {
+      this.hideEdge(side);
+    }
+  }
+  isEdgeHidden(side) {
+    return this.regions[side].hidden;
+  }
+  setEdgeSize(side, size) {
+    this.regions[side].size = size;
+    this._updateRegion(this.regions[side]);
+  }
+  /** Switch a region between inline-docked and rail presentation.  The rail
+   *  visual (edge-aligned tab bar, click-to-toggle) is a later phase; the
+   *  mode is stored and serialized now so layouts round-trip. */
+  setEdgeMode(side, mode) {
+    this.regions[side].mode = mode;
+  }
+  /* --- serialization --- */
+  /** Snapshot the layout, including per-panel saveUIData blobs. */
+  saveLayout() {
+    const state = new PanelLayoutState();
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      const rs = new DockRegionState();
+      rs.side = PanelSides.indexOf(side);
+      rs.size = r.size;
+      rs.mode = r.mode;
+      rs.hidden = r.hidden;
+      rs.railCollapsed = r.railCollapsed;
+      const stack = new PanelStackState();
+      stack.panelIds = [...r.order];
+      rs.stacks = [stack];
+      state.regions.push(rs);
+    }
+    for (const id of this.defs.keys()) {
+      const ps = new PanelState();
+      ps.id = id;
+      ps.closed = this.hiddenPanels.has(id);
+      const panel = this.panels.get(id);
+      if (panel) {
+        ps.uidata = saveUIData(panel, "panel:" + id);
+      } else {
+        ps.uidata = this.pendingState.get(id)?.uidata ?? "";
+      }
+      state.panels.push(ps);
+    }
+    return state;
+  }
+  /**
+   * Apply a deserialized layout.  Must run after definePanels() and build();
+   * ids are validated against the catalog (unknown ids dropped, missing ids
+   * placed at their defaults).  Call when ctx is ready (afterSTRUCT/doOnce)
+   * so panel contents can build and replay their uidata.
+   */
+  loadLayout(state) {
+    for (const side of PanelSides) {
+      this.regions[side].order = [];
+    }
+    this.hiddenPanels.clear();
+    this.pendingState.clear();
+    for (const ps of state.panels) {
+      if (!this.defs.has(ps.id)) {
+        continue;
+      }
+      this.pendingState.set(ps.id, ps);
+      if (ps.closed) {
+        this.hiddenPanels.add(ps.id);
+      }
+    }
+    for (const rs of state.regions) {
+      const side = PanelSides[rs.side];
+      if (!side) {
+        continue;
+      }
+      const r = this.regions[side];
+      r.size = rs.size;
+      r.mode = rs.mode;
+      r.hidden = rs.hidden;
+      r.railCollapsed = rs.railCollapsed;
+      for (const stack of rs.stacks) {
+        for (const id of stack.panelIds) {
+          if (this.defs.has(id) && !this._findSide(id)) {
+            this.dockPanel(id, side);
+          }
+        }
+      }
+    }
+    this.applyDefaultLayout();
+  }
+  /* --- internals --- */
+  _defaultSide(def) {
+    const dock = def.dock ?? "right";
+    return dock === "float" ? "right" : dock;
+  }
+  _findSide(id) {
+    return PanelSides.find((side) => this.regions[side].order.includes(id));
+  }
+  _removeFromLayout(id) {
+    for (const side of PanelSides) {
+      const r = this.regions[side];
+      const i = r.order.indexOf(id);
+      if (i >= 0) {
+        r.order.splice(i, 1);
+        this._updateRegion(r);
+      }
+    }
+  }
+  _updateRegion(r) {
+    const c = r.container;
+    if (!c) {
+      return;
+    }
+    const visible = !r.hidden && r.order.length > 0;
+    if (visible) {
+      c.removeAttribute("data-dock-hidden");
+    } else {
+      c.setAttribute("data-dock-hidden", "1");
+    }
+    if (r.side === "left" || r.side === "right") {
+      c.style.setProperty("width", r.size + "px", "important");
+      c.style.removeProperty("height");
+    } else {
+      c.style.setProperty("height", r.size + "px", "important");
+      c.style.setProperty("width", "100%", "important");
+    }
+  }
+  _ensurePanel(id) {
+    const existing = this.panels.get(id);
+    if (existing) {
+      return existing;
+    }
+    const def = this.defs.get(id);
+    if (!def) {
+      throw new Error(`unknown panel id "${id}" (missing panel() declaration)`);
+    }
+    const panel = UIBase2.createElement("dock-panel-x");
+    panel.panelId = id;
+    panel.def = def;
+    panel.manager = this;
+    panel.ctx = this.host.ctx;
+    panel.setAttribute("label", def.title);
+    this.panels.set(id, panel);
+    def.build(panel, panel);
+    const pending = this.pendingState.get(id);
+    if (pending) {
+      if (pending.uidata) {
+        loadUIData(panel, pending.uidata);
+      }
+      this.pendingState.delete(id);
+    }
+    return panel;
+  }
+};
+
 // scripts/screen/ScreenArea.ts
 init_ui_base();
 init_util();
@@ -49304,6 +49797,14 @@ var Area = class extends UIBase2 {
   helppicker;
   saved_uidata;
   areaName;
+  /** Dockable-panel manager, created by makePanels() for editors that
+   *  implement definePanels(). */
+  panels;
+  /** Deserialized panel layout awaiting makePanels() (see Area.STRUCT). */
+  panelLayout;
+  /** When false, interactive panel-layout editing (drag/dock/float/close)
+   *  is disabled and the programmatic layout is authoritative. */
+  panelLayoutEditable = true;
   dead = false;
   /** Soft-close flag. Closed editors are hidden from the AreaDocker tab bar
    *  but stay in `ScreenArea.editors` / `editormap`, so their UI state is
@@ -49672,12 +50173,39 @@ var Area = class extends UIBase2 {
   _getSavedUIData() {
     return saveUIData(this, "area");
   }
+  /**
+   * Build the dock-panel frame inside `container` and return the center
+   * content container.  Requires definePanels(); applies a deserialized
+   * layout when one arrived via loadSTRUCT, else the declared defaults.
+   */
+  makePanels(container) {
+    if (!this.definePanels) {
+      throw new Error("makePanels() requires a definePanels() implementation");
+    }
+    const panels = this.panels = new PanelManager(this);
+    this.definePanels(panels);
+    const center = panels.build(container);
+    if (this.panelLayout) {
+      panels.loadLayout(this.panelLayout);
+      this.panelLayout = void 0;
+    } else {
+      panels.applyDefaultLayout();
+    }
+    return center;
+  }
+  _getPanelLayout() {
+    if (this.panels) {
+      return this.panels.saveLayout();
+    }
+    return this.panelLayout ?? new PanelLayoutState();
+  }
 };
 Area.STRUCT = `
 pathux.Area {
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
   closed : bool;
+  panelLayout : pathux.PanelLayoutState | obj._getPanelLayout();
 }
 `;
 struct_default.register(Area);
@@ -55115,6 +55643,8 @@ export {
   DataStruct2 as DataStruct,
   DataTypes,
   DegreeUnit,
+  DockPanel,
+  DockRegionState,
   DoubleClickHandler,
   DropBox,
   EaseCurve,
@@ -55136,6 +55666,7 @@ export {
   FloatArrayProperty,
   FloatConstrinats,
   FloatProperty,
+  FloatingPanelState,
   FootUnit,
   Fragment,
   GuassianCurve,
@@ -55195,7 +55726,14 @@ export {
   PackNode,
   PackNodeVertex,
   PanelContents2 as PanelContents,
+  PanelDockMask,
+  PanelFlags,
   PanelFrame,
+  PanelLayoutState,
+  PanelManager,
+  PanelSides,
+  PanelStackState,
+  PanelState,
   ParamKey,
   Parser,
   PercentUnit,
@@ -55212,6 +55750,7 @@ export {
   QuatProperty,
   RadianUnit,
   RandCurve,
+  RegionMode,
   ReportProperty,
   RichEditor,
   RichViewer,
@@ -55234,6 +55773,7 @@ export {
   SplineTemplateIcons,
   SplineTemplates,
   SquareFootUnit,
+  StackMode,
   StringProperty,
   StringPropertyBase,
   StringSetProperty,
