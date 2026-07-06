@@ -371,11 +371,17 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
   on_area_blur() {}
 
-  /** called when editors are swapped with another editor type*/
-  on_area_active() {}
+  /** called when editors are swapped with another editor type.
+   *  overrides should call super so floating dock panels track activation. */
+  on_area_active() {
+    this.panels?._hostShown();
+  }
 
-  /** called when editors are swapped with another editor type*/
-  on_area_inactive() {}
+  /** called when editors are swapped with another editor type.
+   *  overrides should call super so floating dock panels track activation. */
+  on_area_inactive() {
+    this.panels?._hostHidden();
+  }
 
   /*
    * This is needed so UI controls can know what their parent area is.
@@ -604,6 +610,11 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
 
     return center;
+  }
+
+  /** Provenance title for floating dock panels (IPanelHost). */
+  getPanelHostTitle(): string {
+    return (this.constructor as unknown as IAreaConstructor).define().uiname ?? "";
   }
 
   _getPanelLayout(): PanelLayoutState {

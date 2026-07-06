@@ -49254,6 +49254,7 @@ var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
 
 // scripts/screen/dock_panels.ts
 init_ui_base();
+init_simple_events();
 init_struct();
 init_vectormath();
 var PanelSides = ["left", "right", "top", "bottom"];
@@ -49416,6 +49417,10 @@ var PanelManager = class {
   /** The editor's content container, framed by the four dock regions. */
   center;
   regions;
+  /** Live floating frames, keyed by panel id. */
+  floating = /* @__PURE__ */ new Map();
+  /** Last dock side per panel, used by re-dock / closePanel. */
+  lastDock = /* @__PURE__ */ new Map();
   /** Panels hidden via closePanel(); layout position is retained. */
   hiddenPanels = /* @__PURE__ */ new Set();
   /** Deserialized per-panel state awaiting realization (uidata replay). */
@@ -49517,6 +49522,7 @@ ${body}}
   dockPanel(id, side, opts) {
     const panel = this._ensurePanel(id);
     this._removeFromLayout(id);
+    this.lastDock.set(id, side);
     const r = this.regions[side];
     const index = Math.min(opts?.index ?? r.order.length, r.order.length);
     r.order.splice(index, 0, id);
@@ -49532,17 +49538,44 @@ ${body}}
     panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
     this._updateRegion(r);
   }
-  /** Float a panel at rect (screen space). Interactive/floating docking is
-   *  a later phase. */
+  /** Float a panel at rect (screen space); defaults to def.floatRect. */
   floatPanel(id, rect) {
-    throw new Error("TODO: PanelManager.floatPanel (phase 4)");
+    const panel = this._ensurePanel(id);
+    if (!panel.canFloat()) {
+      console.warn(`dock panel "${id}" is not allowed to float`);
+      return;
+    }
+    const existing = this.floating.get(id);
+    if (existing) {
+      if (rect) {
+        existing.frame.style.left = rect.pos[0] + "px";
+        existing.frame.style.top = rect.pos[1] + "px";
+      }
+      return;
+    }
+    this._removeFromLayout(id);
+    this.hiddenPanels.delete(id);
+    panel.style.display = "";
+    const def = this.defs.get(id);
+    const pos = rect?.pos ?? def.floatRect?.pos ?? [64, 64];
+    const size = rect?.size ?? def.floatRect?.size;
+    const frame = this._makeFloatFrame(panel, pos, size);
+    this.floating.set(id, { frame });
   }
-  /** Hide a panel; its layout position and widget state are retained. */
+  /** Hide a panel; its layout position and widget state are retained.
+   *  A floating panel is first re-docked to its last dock side. */
   closePanel(id) {
+    if (this.floating.has(id)) {
+      this.dockPanel(id, this.lastDock.get(id) ?? this._defaultSide(this.defs.get(id)));
+    }
     this.hiddenPanels.add(id);
     const panel = this.panels.get(id);
     if (panel) {
       panel.style.display = "none";
+      const side = this._findSide(id);
+      if (side) {
+        this._updateRegion(this.regions[side]);
+      }
     }
   }
   /** Re-show a panel closed with closePanel(). */
@@ -49550,8 +49583,13 @@ ${body}}
     this.hiddenPanels.delete(id);
     const panel = this._ensurePanel(id);
     panel.style.display = "";
-    if (!this._findSide(id)) {
+    if (!this._isPlaced(id)) {
       this.dockPanel(id, this._defaultSide(this.defs.get(id)));
+    } else {
+      const side = this._findSide(id);
+      if (side) {
+        this._updateRegion(this.regions[side]);
+      }
     }
   }
   isPanelClosed(id) {
@@ -49559,6 +49597,9 @@ ${body}}
   }
   /** Discard the current layout and rebuild from the catalog's defaults. */
   resetLayout() {
+    for (const id of [...this.floating.keys()]) {
+      this._unfloat(id);
+    }
     for (const side of PanelSides) {
       const r = this.regions[side];
       r.order = [];
@@ -49566,14 +49607,22 @@ ${body}}
       r.railCollapsed = false;
     }
     this.hiddenPanels.clear();
+    this.lastDock.clear();
     this.applyDefaultLayout();
   }
   /** Place every catalogued panel at its default dock. */
   applyDefaultLayout() {
     for (const def of this.defs.values()) {
-      if (!this._findSide(def.id)) {
-        this.dockPanel(def.id, this._defaultSide(def));
+      if (this._isPlaced(def.id)) {
+        continue;
       }
+      if (def.dock === "float") {
+        this.floatPanel(def.id, def.floatRect);
+        if (this.floating.has(def.id)) {
+          continue;
+        }
+      }
+      this.dockPanel(def.id, this._defaultSide(def));
     }
   }
   /* --- per-edge visibility (hotkey-bindable by editors) --- */
@@ -49625,6 +49674,16 @@ ${body}}
       rs.stacks = [stack];
       state.regions.push(rs);
     }
+    let order = 0;
+    for (const [id, fl] of this.floating) {
+      const fs = new FloatingPanelState();
+      const rect = fl.frame.getBoundingClientRect();
+      fs.panelId = id;
+      fs.pos.loadXY(rect.x, rect.y);
+      fs.size.loadXY(rect.width, rect.height);
+      fs.order = order++;
+      state.floating.push(fs);
+    }
     for (const id of this.defs.keys()) {
       const ps = new PanelState();
       ps.id = id;
@@ -49672,15 +49731,285 @@ ${body}}
       r.railCollapsed = rs.railCollapsed;
       for (const stack of rs.stacks) {
         for (const id of stack.panelIds) {
-          if (this.defs.has(id) && !this._findSide(id)) {
+          if (this.defs.has(id) && !this._isPlaced(id)) {
             this.dockPanel(id, side);
           }
         }
       }
     }
+    for (const fs of state.floating) {
+      if (this.defs.has(fs.panelId) && !this._isPlaced(fs.panelId)) {
+        this.floatPanel(fs.panelId, { pos: [fs.pos[0], fs.pos[1]] });
+      }
+    }
     this.applyDefaultLayout();
   }
+  /* --- host lifecycle (called from Area) --- */
+  /** Hide floating frames while the host editor is inactive in its tile. */
+  _hostHidden() {
+    for (const fl of this.floating.values()) {
+      fl.frame.style.display = "none";
+    }
+  }
+  _hostShown() {
+    for (const fl of this.floating.values()) {
+      fl.frame.style.display = "";
+    }
+  }
+  /** Remove all floating frames from the DOM (host editor destroyed). */
+  destroyFloats() {
+    for (const id of [...this.floating.keys()]) {
+      this._unfloat(id);
+    }
+  }
   /* --- internals --- */
+  _isPlaced(id) {
+    return this._findSide(id) !== void 0 || this.floating.has(id);
+  }
+  _screen() {
+    return this.host.ctx.screen;
+  }
+  /** Detach a floating frame, keeping the panel widget alive. */
+  _unfloat(id) {
+    const fl = this.floating.get(id);
+    if (!fl) {
+      return;
+    }
+    this.floating.delete(id);
+    const panel = this.panels.get(id);
+    if (panel) {
+      HTMLElement.prototype.remove.call(panel);
+    }
+    fl.frame.remove();
+  }
+  _makeFloatFrame(panel, pos, size) {
+    const def = panel.def;
+    const frame = UIBase2.createElement("colframe-x");
+    frame.ctx = this.host.ctx;
+    frame.style.position = UIBase2.PositionKey;
+    frame.style.left = pos[0] + "px";
+    frame.style.top = pos[1] + "px";
+    frame.style.zIndex = "205";
+    frame.style.borderRadius = "6px";
+    frame.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.35)";
+    if (size) {
+      frame.style.width = size[0] + "px";
+    } else {
+      frame.style.minWidth = "225px";
+    }
+    const header = frame.row();
+    header.noMarginsOrPadding();
+    const hostTitle = this.host.getPanelHostTitle?.();
+    header.label(hostTitle ? `${def.title} \u2014 ${hostTitle}` : def.title);
+    header.iconbutton(Icons.UI_COLLAPSE, "Dock", () => {
+      this.dockPanel(panel.panelId, this.lastDock.get(panel.panelId) ?? this._defaultSide(def));
+    });
+    if (panel.canClose()) {
+      header.iconbutton(Icons.TINY_X, "Close", () => {
+        this.closePanel(panel.panelId);
+      });
+    }
+    header.addEventListener("pointerdown", (e) => {
+      this._startFrameDrag(frame, panel, e);
+      e.preventDefault();
+    });
+    frame.add(panel);
+    document.body.appendChild(frame);
+    frame._init();
+    frame.background = frame.getDefault("background-color");
+    const screen = this.host.ctx ? this._screen() : void 0;
+    if (screen) {
+      screen._popups.push(frame);
+      const remove = frame.remove.bind(frame);
+      frame.remove = () => {
+        const popups = screen._popups;
+        if (popups.includes(frame)) {
+          popups.remove(frame);
+        }
+        return remove();
+      };
+    }
+    return frame;
+  }
+  /* --- drag interaction --- */
+  /** Drop zones over the host editor's edges for the sides this panel may
+   *  dock to.  Returned elements are appended to document.body. */
+  _makeDropZones(panel) {
+    const er = this.host.getBoundingClientRect();
+    const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
+    const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
+    const zones = [];
+    const mk = (side, x, y, w, h) => {
+      if (!panel.canDock(side)) {
+        return;
+      }
+      const el = document.createElement("div");
+      el.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);border-radius:4px;z-index:299;pointer-events:none;`;
+      document.body.appendChild(el);
+      zones.push({ side, el, x, y, w, h });
+    };
+    mk("left", er.x, er.y, zw, er.height);
+    mk("right", er.x + er.width - zw, er.y, zw, er.height);
+    mk("top", er.x, er.y, er.width, zh);
+    mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+    return zones;
+  }
+  /** Insertion index for a drop at screen-space y within a region. */
+  _dropIndex(side, y) {
+    const r = this.regions[side];
+    let index = 0;
+    for (const id of r.order) {
+      const p = this.panels.get(id);
+      if (!p) {
+        continue;
+      }
+      const rect = p.getBoundingClientRect();
+      if (y > rect.y + rect.height * 0.5) {
+        index++;
+      }
+    }
+    return index;
+  }
+  /** Header drag on a docked panel: ghost + drop zones; drop on a zone
+   *  docks, elsewhere floats (when allowed), Escape cancels. */
+  _beginPanelDrag(panel, e) {
+    const id = panel.panelId;
+    const ghost = document.createElement("div");
+    ghost.style.cssText = "position:fixed;width:180px;height:30px;z-index:300;pointer-events:none;background:rgba(128,128,128,0.6);border:1px solid rgba(0,0,0,0.5);border-radius:4px;padding:4px 8px;font:12px sans-serif;overflow:hidden;";
+    ghost.textContent = panel.def.title;
+    document.body.appendChild(ghost);
+    const zones = this._makeDropZones(panel);
+    const place = (x, y) => {
+      ghost.style.left = x + 8 + "px";
+      ghost.style.top = y + 8 + "px";
+      for (const z of zones) {
+        const hit = x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h;
+        z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+      }
+    };
+    place(e.x, e.y);
+    let modal;
+    const finish = (commit, e2) => {
+      if (modal) {
+        popModalLight(modal);
+        modal = void 0;
+      }
+      ghost.remove();
+      for (const z2 of zones) {
+        z2.el.remove();
+      }
+      if (!commit || !e2) {
+        return;
+      }
+      const z = zones.find(
+        (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
+      );
+      if (z) {
+        this.dockPanel(id, z.side, { index: this._dropIndex(z.side, e2.y) });
+      } else if (panel.canFloat()) {
+        this.floatPanel(id, { pos: [e2.x - 24, e2.y - 12] });
+      }
+    };
+    modal = pushModalLight({
+      on_pointermove(e2) {
+        place(e2.x, e2.y);
+      },
+      on_pointerup(e2) {
+        finish(true, e2);
+      },
+      on_keydown(e2) {
+        if (e2.keyCode === keymap["Escape"]) {
+          finish(false);
+        }
+      }
+    });
+  }
+  /** Move a floating frame with the pointer; dropping on a dock zone
+   *  re-docks the panel. */
+  _startFrameDrag(frame, panel, e) {
+    if (!this.host.panelLayoutEditable) {
+      return;
+    }
+    const zones = this._makeDropZones(panel);
+    let lastx = e.x;
+    let lasty = e.y;
+    let modal;
+    const finish = (commit, e2) => {
+      if (modal) {
+        popModalLight(modal);
+        modal = void 0;
+      }
+      for (const z2 of zones) {
+        z2.el.remove();
+      }
+      if (!commit || !e2) {
+        return;
+      }
+      const z = zones.find(
+        (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
+      );
+      if (z) {
+        this.dockPanel(panel.panelId, z.side, { index: this._dropIndex(z.side, e2.y) });
+      }
+    };
+    modal = pushModalLight({
+      on_pointermove: (e2) => {
+        const rect = frame.getBoundingClientRect();
+        frame.style.left = rect.x + (e2.x - lastx) + "px";
+        frame.style.top = rect.y + (e2.y - lasty) + "px";
+        lastx = e2.x;
+        lasty = e2.y;
+        for (const z of zones) {
+          const hit = e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h;
+          z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+        }
+      },
+      on_pointerup: (e2) => {
+        finish(true, e2);
+      },
+      on_keydown: (e2) => {
+        if (e2.keyCode === keymap["Escape"]) {
+          finish(false);
+        }
+      }
+    });
+  }
+  /** Arm a docked panel's title bar for drag-to-dock/float. */
+  _attachHeaderDrag(panel) {
+    panel.titleframe.addEventListener("pointerdown", (e) => {
+      if (!this.host.panelLayoutEditable || (panel.def.flags ?? 0) & PanelFlags.PINNED) {
+        return;
+      }
+      if (this.floating.has(panel.panelId)) {
+        return;
+      }
+      const startx = e.x;
+      const starty = e.y;
+      const title = panel.titleframe;
+      try {
+        title.setPointerCapture(e.pointerId);
+      } catch {
+      }
+      const onmove = (e2) => {
+        const dx = e2.x - startx;
+        const dy = e2.y - starty;
+        if (dx * dx + dy * dy > 49) {
+          cleanup(e2);
+          this._beginPanelDrag(panel, e2);
+        }
+      };
+      const cleanup = (e2) => {
+        title.removeEventListener("pointermove", onmove);
+        title.removeEventListener("pointerup", cleanup);
+        try {
+          title.releasePointerCapture((e2 ?? e).pointerId);
+        } catch {
+        }
+      };
+      title.addEventListener("pointermove", onmove);
+      title.addEventListener("pointerup", cleanup);
+    });
+  }
   _defaultSide(def) {
     const dock = def.dock ?? "right";
     return dock === "float" ? "right" : dock;
@@ -49689,6 +50018,7 @@ ${body}}
     return PanelSides.find((side) => this.regions[side].order.includes(id));
   }
   _removeFromLayout(id) {
+    this._unfloat(id);
     for (const side of PanelSides) {
       const r = this.regions[side];
       const i = r.order.indexOf(id);
@@ -49734,6 +50064,7 @@ ${body}}
     panel.setAttribute("label", def.title);
     this.panels.set(id, panel);
     def.build(panel, panel);
+    this._attachHeaderDrag(panel);
     const pending = this.pendingState.get(id);
     if (pending) {
       if (pending.uidata) {
@@ -50016,11 +50347,15 @@ var Area = class extends UIBase2 {
   }
   on_area_blur() {
   }
-  /** called when editors are swapped with another editor type*/
+  /** called when editors are swapped with another editor type.
+   *  overrides should call super so floating dock panels track activation. */
   on_area_active() {
+    this.panels?._hostShown();
   }
-  /** called when editors are swapped with another editor type*/
+  /** called when editors are swapped with another editor type.
+   *  overrides should call super so floating dock panels track activation. */
   on_area_inactive() {
+    this.panels?._hostHidden();
   }
   /*
    * This is needed so UI controls can know what their parent area is.
@@ -50192,6 +50527,10 @@ var Area = class extends UIBase2 {
       panels.applyDefaultLayout();
     }
     return center;
+  }
+  /** Provenance title for floating dock panels (IPanelHost). */
+  getPanelHostTitle() {
+    return this.constructor.define().uiname ?? "";
   }
   _getPanelLayout() {
     if (this.panels) {

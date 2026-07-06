@@ -40,8 +40,9 @@ function makeHost() {
   root._init();
 
   const host: IPanelHost = {
-    ctx                : undefined as unknown as IContextBase,
-    panelLayoutEditable: true,
+    ctx                   : undefined as unknown as IContextBase,
+    panelLayoutEditable   : true,
+    getBoundingClientRect : () => root.getBoundingClientRect(),
   };
 
   return { root, host };
@@ -159,6 +160,47 @@ test("saveLayout / loadLayout round-trips layout and closed state", () => {
   expect(pm2.isPanelClosed("props")).toBe(true);
   expect(pm2.isEdgeHidden("bottom")).toBe(true);
   expect(pm2.regions.top.order).toEqual(["extra"]);
+});
+
+test("floatPanel / closePanel / layout round-trip for floating panels", () => {
+  const pm = makeManager();
+
+  pm.floatPanel("props", { pos: [50, 60] });
+  expect(pm.floating.has("props")).toBe(true);
+  expect(pm.regions.right.order).toEqual([]);
+
+  const state = pm.saveLayout();
+  expect(state.floating.length).toBe(1);
+  expect(state.floating[0].panelId).toBe("props");
+
+  //closing a float re-docks it (to its last dock side) hidden
+  pm.closePanel("props");
+  expect(pm.floating.has("props")).toBe(false);
+  expect(pm.isPanelClosed("props")).toBe(true);
+  expect(pm.regions.right.order).toEqual(["props"]);
+
+  //restoring the saved layout floats it again
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.loadLayout(state);
+
+  expect(pm2.floating.has("props")).toBe(true);
+  expect(pm2.regions.left.order).toEqual(["tools"]);
+});
+
+test("NO_FLOAT panels refuse to float", () => {
+  const pm = makeManager();
+  const noFloat = def("pinned", "left");
+  noFloat.flags = 2; //PanelFlags.NO_FLOAT
+  pm.panel(noFloat);
+  pm.applyDefaultLayout();
+
+  pm.floatPanel("pinned");
+  expect(pm.floating.has("pinned")).toBe(false);
+  expect(pm.regions.left.order).toContain("pinned");
 });
 
 test("layout state ignores unknown panel ids", () => {
