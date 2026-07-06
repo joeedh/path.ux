@@ -78220,23 +78220,13 @@ ${body}}
   /* --- imperative layout control --- */
   /** Move a panel into an edge region; index positions it in the stack. */
   dockPanel(id, side, opts) {
-    const panel = this._ensurePanel(id);
+    this._ensurePanel(id);
     this._removeFromLayout(id);
     this.lastDock.set(id, side);
     const r = this.regions[side];
     const index = Math.min(opts?.index ?? r.order.length, r.order.length);
     r.order.splice(index, 0, id);
-    const nextId = r.order[index + 1];
-    const next = nextId ? this.panels.get(nextId) : void 0;
-    HTMLElement.prototype.remove.call(panel);
-    if (next && next.parentNode) {
-      next.parentNode.insertBefore(panel, next);
-      panel.parentWidget = r.container;
-    } else {
-      r.container.add(panel);
-    }
-    panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
-    this._updateRegion(r);
+    this._rebuildRegion(r);
   }
   /** Float a panel at rect (screen space); defaults to def.floatRect. */
   floatPanel(id, rect) {
@@ -78274,7 +78264,7 @@ ${body}}
       panel.style.display = "none";
       const side = this._findSide(id);
       if (side) {
-        this._updateRegion(this.regions[side]);
+        this._rebuildRegion(this.regions[side]);
       }
     }
   }
@@ -78288,7 +78278,7 @@ ${body}}
     } else {
       const side = this._findSide(id);
       if (side) {
-        this._updateRegion(this.regions[side]);
+        this._rebuildRegion(this.regions[side]);
       }
     }
   }
@@ -78336,8 +78326,15 @@ ${body}}
     r.hidden = false;
     this._updateRegion(r);
   }
-  /** In rail mode (later phase) this collapses to the bare rail instead. */
+  /** In rail mode this collapses to the bare rail instead of hiding —
+   *  the rail is the affordance for getting the panels back. */
   toggleEdge(side) {
+    const r = this.regions[side];
+    if (r.mode === RegionMode.RAIL && !r.hidden) {
+      r.railCollapsed = !r.railCollapsed;
+      this._applyRailState(r);
+      return;
+    }
     if (this.isEdgeHidden(side)) {
       this.showEdge(side);
     } else {
@@ -78351,11 +78348,17 @@ ${body}}
     this.regions[side].size = size;
     this._updateRegion(this.regions[side]);
   }
-  /** Switch a region between inline-docked and rail presentation.  The rail
-   *  visual (edge-aligned tab bar, click-to-toggle) is a later phase; the
-   *  mode is stored and serialized now so layouts round-trip. */
+  /** Switch a region between inline-docked and rail presentation.  In rail
+   *  mode a slim edge-aligned tab bar (one tab per panel, the panels' own
+   *  title bars hidden) stays visible; clicking a tab expands the group
+   *  with that panel active, clicking the active tab collapses it. */
   setEdgeMode(side, mode) {
-    this.regions[side].mode = mode;
+    const r = this.regions[side];
+    if (r.mode === mode) {
+      return;
+    }
+    r.mode = mode;
+    this._rebuildRegion(r);
   }
   /* --- serialization --- */
   /** Snapshot the layout, including per-panel saveUIData blobs. */
@@ -78724,7 +78727,7 @@ ${body}}
       const i2 = r.order.indexOf(id);
       if (i2 >= 0) {
         r.order.splice(i2, 1);
-        this._updateRegion(r);
+        this._rebuildRegion(r);
       }
     }
   }
@@ -78739,13 +78742,134 @@ ${body}}
     } else {
       c.setAttribute("data-dock-hidden", "1");
     }
+    const collapsed = r.mode === RegionMode.RAIL && r.railCollapsed;
     if (r.side === "left" || r.side === "right") {
-      c.style.setProperty("width", r.size + "px", "important");
+      c.style.setProperty("width", collapsed ? "auto" : r.size + "px", "important");
       c.style.removeProperty("height");
     } else {
-      c.style.setProperty("height", r.size + "px", "important");
+      c.style.setProperty("height", collapsed ? "auto" : r.size + "px", "important");
       c.style.setProperty("width", "100%", "important");
     }
+  }
+  /** Rebuild a region's DOM from its order/mode; panels survive detached. */
+  _rebuildRegion(r) {
+    const c = r.container;
+    if (!c) {
+      return;
+    }
+    for (const [, panel] of this.panels) {
+      if (c.shadow.contains(panel)) {
+        HTMLElement.prototype.remove.call(panel);
+        panel.titleframe.style.display = "";
+      }
+    }
+    c.clear();
+    r.rail = void 0;
+    r.stackWrap = void 0;
+    if (r.mode === RegionMode.RAIL && r.order.length > 0) {
+      this._buildRail(r);
+    } else {
+      for (const id of r.order) {
+        const panel = this._ensurePanel(id);
+        c.add(panel);
+        panel.titleframe.style.display = "";
+        panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+      }
+    }
+    this._updateRegion(r);
+  }
+  /** Build the rail presentation: an edge-aligned tab bar plus a wrap
+   *  holding the panels (title bars hidden — the tabs are the headers). */
+  _buildRail(r) {
+    const c = r.container;
+    const horizRegion = r.side === "top" || r.side === "bottom";
+    const inner = horizRegion ? c.col() : c.row();
+    inner.noMarginsOrPadding();
+    inner.style.setProperty("align-items", "stretch", "important");
+    inner.style.setProperty("justify-content", "flex-start", "important");
+    inner.style.setProperty("width", "100%", "important");
+    inner.style.setProperty("height", "100%", "important");
+    inner.style.setProperty("flex-grow", "1", "important");
+    const wrap = inner.col();
+    wrap.noMarginsOrPadding();
+    wrap.style.setProperty("flex-grow", "1", "important");
+    wrap.style.setProperty("overflow", "auto", "important");
+    wrap.style.setProperty("min-width", "0", "important");
+    r.stackWrap = wrap;
+    const rail = UIBase2.createElement("tabbar-x");
+    rail.ctx = this.host.ctx;
+    rail.setAttribute("bar_pos", r.side);
+    r.rail = rail;
+    if (r.side === "left" || r.side === "top") {
+      inner._prepend(rail);
+    } else {
+      inner._add(rail);
+    }
+    const visibleIds = r.order.filter((id) => !this.hiddenPanels.has(id));
+    if (!r.activeRail || !visibleIds.includes(r.activeRail)) {
+      r.activeRail = visibleIds[0];
+    }
+    let railIgnore = false;
+    for (const id of visibleIds) {
+      rail.addTab(this.defs.get(id).title, id);
+    }
+    rail.onselect = (e) => {
+      if (railIgnore) {
+        return;
+      }
+      const tab2 = e.tab ?? rail.tabs.active;
+      if (tab2) {
+        this._onRailTabClick(r, String(tab2.id));
+      }
+    };
+    const active = rail.tabs.find((t2) => String(t2.id) === r.activeRail);
+    if (active) {
+      railIgnore = true;
+      rail.setActive(active);
+      railIgnore = false;
+    }
+    for (const id of r.order) {
+      const panel = this._ensurePanel(id);
+      wrap.add(panel);
+      panel.titleframe.style.display = "none";
+      panel.closed = false;
+    }
+    this._applyRailState(r);
+  }
+  /** Sync panel/wrap visibility with railCollapsed + activeRail. */
+  _applyRailState(r) {
+    if (r.mode !== RegionMode.RAIL || !r.stackWrap) {
+      this._updateRegion(r);
+      return;
+    }
+    r.stackWrap.style.setProperty("display", r.railCollapsed ? "none" : "flex", "important");
+    for (const id of r.order) {
+      const panel = this.panels.get(id);
+      if (!panel) {
+        continue;
+      }
+      const shown = !r.railCollapsed && id === r.activeRail && !this.hiddenPanels.has(id);
+      panel.style.display = shown ? "" : "none";
+    }
+    if (r.rail && r.activeRail) {
+      const active = r.rail.tabs.find((t2) => String(t2.id) === r.activeRail);
+      if (active && r.rail.tabs.active !== active) {
+        r.rail.setActive(active);
+      }
+    }
+    this._updateRegion(r);
+  }
+  /** Rail tab click: expand-with-panel / switch / collapse-on-active. */
+  _onRailTabClick(r, id) {
+    if (r.railCollapsed) {
+      r.railCollapsed = false;
+      r.activeRail = id;
+    } else if (r.activeRail === id) {
+      r.railCollapsed = true;
+    } else {
+      r.activeRail = id;
+    }
+    this._applyRailState(r);
   }
   _ensurePanel(id) {
     const existing = this.panels.get(id);

@@ -5,10 +5,13 @@ import "../scripts/core/ui";
 import {
   PanelManager,
   PanelLayoutState,
+  RegionMode,
   type IPanelHost,
   type PanelDef,
 } from "../scripts/screen/dock_panels";
 import type { IContextBase } from "../scripts/core/context_base";
+//registers tabbar-x for rail mode (dock_panels only type-imports it)
+import "../scripts/widgets/ui_tabs";
 
 beforeAll(() => {
   // resolvePath / theme lookups touch window in node.
@@ -201,6 +204,64 @@ test("NO_FLOAT panels refuse to float", () => {
   pm.floatPanel("pinned");
   expect(pm.floating.has("pinned")).toBe(false);
   expect(pm.regions.left.order).toContain("pinned");
+});
+
+test("rail mode: expand/switch/collapse and toggleEdge keep the rail visible", () => {
+  const pm = makeManager();
+  pm.dockPanel("props", "left"); //both panels in the left region
+  pm.setEdgeMode("left", RegionMode.RAIL);
+
+  const r = pm.regions.left;
+  const clickTab = (id: string) =>
+    (pm as unknown as { _onRailTabClick(r: unknown, id: string): void })._onRailTabClick(r, id);
+
+  expect(r.rail).toBeTruthy();
+  expect(r.activeRail).toBe("tools");
+  //the tabs are the headers: panel title bars hide, active panel shows
+  expect(pm.panels.get("tools")!.titleframe.style.display).toBe("none");
+  expect(pm.panels.get("tools")!.style.display).not.toBe("none");
+  expect(pm.panels.get("props")!.style.display).toBe("none");
+
+  clickTab("props"); //switch
+  expect(r.activeRail).toBe("props");
+  expect(r.railCollapsed).toBe(false);
+
+  clickTab("props"); //collapse on active tab
+  expect(r.railCollapsed).toBe(true);
+  expect(r.stackWrap!.style.display).toBe("none");
+
+  clickTab("tools"); //expand with clicked panel active
+  expect(r.railCollapsed).toBe(false);
+  expect(r.activeRail).toBe("tools");
+
+  //toggleEdge collapses to the bare rail instead of hiding the region
+  pm.toggleEdge("left");
+  expect(r.railCollapsed).toBe(true);
+  expect(regionHidden(pm, "left")).toBe(false);
+
+  //switching back to docked restores the panel title bars
+  pm.setEdgeMode("left", RegionMode.DOCKED);
+  expect(pm.panels.get("tools")!.titleframe.style.display).toBe("");
+  expect(pm.regions.left.rail).toBeUndefined();
+});
+
+test("rail mode and collapse state round-trip through save/load", () => {
+  const pm = makeManager();
+  pm.setEdgeMode("left", RegionMode.RAIL);
+  pm.toggleEdge("left"); //collapse to the rail
+
+  const state = pm.saveLayout();
+
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.loadLayout(state);
+
+  expect(pm2.regions.left.mode).toBe(RegionMode.RAIL);
+  expect(pm2.regions.left.railCollapsed).toBe(true);
+  expect(pm2.regions.left.rail).toBeTruthy();
 });
 
 test("layout state ignores unknown panel ids", () => {
