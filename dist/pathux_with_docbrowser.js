@@ -78079,6 +78079,8 @@ var DockPanel = class extends PanelFrame {
   panelId = "";
   def;
   manager;
+  /** Style tag backing the data-dock-hidetitle rule (see _setTitleHidden). */
+  _dockTitleStyle;
   static define() {
     return {
       tagname: "dock-panel-x",
@@ -78133,7 +78135,8 @@ var PanelManager = class {
       mode: RegionMode.DOCKED,
       hidden: false,
       railCollapsed: false,
-      order: []
+      order: [],
+      stackMode: StackMode.STACK
     });
     this.regions = {
       left: region("left"),
@@ -78174,6 +78177,8 @@ ${body}}
         el.parentNode.insertBefore(tag, el);
       }
     };
+    parent.style.setProperty("height", "100%", "important");
+    parent.style.setProperty("width", "100%", "important");
     const outer = this.outer = parent.col();
     outer.noMarginsOrPadding();
     pin(outer, {
@@ -78211,7 +78216,8 @@ ${body}}
         "flex-grow": "0",
         "flex-shrink": "0",
         "justify-content": "flex-start",
-        "align-items": "stretch"
+        "align-items": "stretch",
+        "align-self": "stretch"
       });
       this._updateRegion(r);
     }
@@ -78348,6 +78354,16 @@ ${body}}
     this.regions[side].size = size;
     this._updateRegion(this.regions[side]);
   }
+  /** Present a docked region's panels as rollout stack or as tabs
+   *  (StackMode.STACK / StackMode.TABS). */
+  setStackMode(side, mode) {
+    const r = this.regions[side];
+    if (r.stackMode === mode) {
+      return;
+    }
+    r.stackMode = mode;
+    this._rebuildRegion(r);
+  }
   /** Switch a region between inline-docked and rail presentation.  In rail
    *  mode a slim edge-aligned tab bar (one tab per panel, the panels' own
    *  title bars hidden) stays visible; clicking a tab expands the group
@@ -78373,6 +78389,7 @@ ${body}}
       rs.hidden = r.hidden;
       rs.railCollapsed = r.railCollapsed;
       const stack = new PanelStackState();
+      stack.mode = r.stackMode;
       stack.panelIds = [...r.order];
       rs.stacks = [stack];
       state.regions.push(rs);
@@ -78432,6 +78449,7 @@ ${body}}
       r.mode = rs.mode;
       r.hidden = rs.hidden;
       r.railCollapsed = rs.railCollapsed;
+      r.stackMode = rs.stacks[0]?.mode ?? StackMode.STACK;
       for (const stack of rs.stacks) {
         for (const id of stack.panelIds) {
           if (this.defs.has(id) && !this._isPlaced(id)) {
@@ -78468,6 +78486,22 @@ ${body}}
   /* --- internals --- */
   _isPlaced(id) {
     return this._findSide(id) !== void 0 || this.floating.has(id);
+  }
+  /** Hide/show a panel's title bar via an !important shadow rule —
+   *  RowFrame.connectedCallback re-sets inline display:flex whenever the
+   *  panel reconnects (e.g. tab switches), so inline styles don't stick. */
+  _setTitleHidden(panel, hidden) {
+    if (!panel._dockTitleStyle) {
+      const tag = document.createElement("style");
+      tag.textContent = "[data-dock-hidetitle] { display: none !important; }\n";
+      panel.shadow.prepend(tag);
+      panel._dockTitleStyle = tag;
+    }
+    if (hidden) {
+      panel.titleframe.setAttribute("data-dock-hidetitle", "1");
+    } else {
+      panel.titleframe.removeAttribute("data-dock-hidetitle");
+    }
   }
   _screen() {
     return this.host.ctx.screen;
@@ -78760,23 +78794,127 @@ ${body}}
     for (const [, panel] of this.panels) {
       if (c.shadow.contains(panel)) {
         HTMLElement.prototype.remove.call(panel);
-        panel.titleframe.style.display = "";
+        this._setTitleHidden(panel, false);
       }
     }
+    r.grip?.remove();
+    r.grip = void 0;
     c.clear();
     r.rail = void 0;
     r.stackWrap = void 0;
+    r.tabStack = void 0;
     if (r.mode === RegionMode.RAIL && r.order.length > 0) {
       this._buildRail(r);
+    } else if (r.stackMode === StackMode.TABS && r.order.length > 0) {
+      this._buildTabStack(r);
     } else {
       for (const id of r.order) {
         const panel = this._ensurePanel(id);
         c.add(panel);
-        panel.titleframe.style.display = "";
+        this._setTitleHidden(panel, false);
         panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
       }
     }
+    this._addGrip(r);
     this._updateRegion(r);
+  }
+  /** Tabs presentation for a docked region: one visible panel selected by
+   *  a horizontal tab bar; panel title bars hide (the tabs are the headers). */
+  _buildTabStack(r) {
+    const c = r.container;
+    const tc = UIBase2.createElement("tabcontainer-x");
+    tc.ctx = this.host.ctx;
+    tc.setAttribute("bar_pos", "top");
+    r.tabStack = tc;
+    c._add(tc);
+    tc._init();
+    tc.style.setProperty("width", "100%", "important");
+    tc.style.setProperty("flex-grow", "1", "important");
+    tc.style.setProperty("min-height", "0", "important");
+    for (const id of r.order) {
+      if (this.hiddenPanels.has(id)) {
+        continue;
+      }
+      const panel = this._ensurePanel(id);
+      const tab2 = tc.tab(this.defs.get(id).title, id);
+      tab2.add(panel);
+      this._setTitleHidden(panel, true);
+      panel.closed = false;
+      panel.style.display = "";
+    }
+  }
+  /** Resize grip on the region's center-facing edge. */
+  _addGrip(r) {
+    const c = r.container;
+    if (!c || !this.host.panelLayoutEditable || r.order.length === 0) {
+      return;
+    }
+    c.style.setProperty("position", "relative", "important");
+    const grip = document.createElement("div");
+    const vert = r.side === "left" || r.side === "right";
+    const anchor = r.side === "left" ? "right:0;" : r.side === "right" ? "left:0;" : r.side === "top" ? "bottom:0;" : "top:0;";
+    grip.style.cssText = "position:absolute;z-index:10;background:transparent;" + (vert ? "top:0;bottom:0;width:6px;cursor:ew-resize;" : "left:0;right:0;height:6px;cursor:ns-resize;") + anchor;
+    grip.addEventListener("pointerenter", () => {
+      grip.style.background = "rgba(90,140,230,0.5)";
+    });
+    grip.addEventListener("pointerleave", () => {
+      grip.style.background = "transparent";
+    });
+    grip.addEventListener("pointerdown", (e) => {
+      this._startGripDrag(r, e);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    c.shadow.appendChild(grip);
+    r.grip = grip;
+  }
+  _startGripDrag(r, e) {
+    if (r.mode === RegionMode.RAIL && r.railCollapsed) {
+      return;
+    }
+    const startSize = r.size;
+    const sx = e.x;
+    const sy = e.y;
+    let modal;
+    const finish = (commit) => {
+      if (modal) {
+        popModalLight(modal);
+        modal = void 0;
+      }
+      if (!commit) {
+        r.size = startSize;
+        this._updateRegion(r);
+      }
+    };
+    modal = pushModalLight({
+      on_pointermove: (e2) => {
+        let delta = 0;
+        switch (r.side) {
+          case "left":
+            delta = e2.x - sx;
+            break;
+          case "right":
+            delta = sx - e2.x;
+            break;
+          case "top":
+            delta = e2.y - sy;
+            break;
+          case "bottom":
+            delta = sy - e2.y;
+            break;
+        }
+        r.size = Math.min(Math.max(startSize + delta, 80), 2e3);
+        this._updateRegion(r);
+      },
+      on_pointerup: () => {
+        finish(true);
+      },
+      on_keydown: (e2) => {
+        if (e2.keyCode === keymap["Escape"]) {
+          finish(false);
+        }
+      }
+    });
   }
   /** Build the rail presentation: an edge-aligned tab bar plus a wrap
    *  holding the panels (title bars hidden — the tabs are the headers). */
@@ -78831,7 +78969,7 @@ ${body}}
     for (const id of r.order) {
       const panel = this._ensurePanel(id);
       wrap.add(panel);
-      panel.titleframe.style.display = "none";
+      this._setTitleHidden(panel, true);
       panel.closed = false;
     }
     this._applyRailState(r);

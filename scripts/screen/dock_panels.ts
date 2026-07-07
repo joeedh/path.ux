@@ -38,9 +38,10 @@
 
 import { Container } from "../core/ui";
 import { UIBase, Icons, loadUIData, saveUIData } from "../core/ui_base";
-//side-effect import: registers tabbar-x, used by rail mode
+//side-effect import: registers tabbar-x/tabcontainer-x, used by rail
+//mode and tabbed stacks
 import "../widgets/ui_tabs";
-import type { TabBar } from "../widgets/ui_tabs";
+import type { TabBar, TabContainer } from "../widgets/ui_tabs";
 import {
   pushModalLight,
   popModalLight,
@@ -266,6 +267,8 @@ export class DockPanel<CTX extends IContextBase = IContextBase> extends PanelFra
   panelId = "";
   def!: PanelDef<CTX>;
   manager!: PanelManager<CTX>;
+  /** Style tag backing the data-dock-hidetitle rule (see _setTitleHidden). */
+  _dockTitleStyle?: HTMLStyleElement;
 
   static define() {
     return {
@@ -316,12 +319,18 @@ export interface DockRegionRuntime<CTX extends IContextBase = IContextBase> {
   railCollapsed: boolean;
   /** Panel ids in display order (single stack in this phase). */
   order: string[];
+  /** StackMode: rollout stack (default) or one-visible-panel tabs. */
+  stackMode: number;
   /** Rail mode: the edge-aligned tab bar (never hidden). */
   rail?: TabBar<CTX>;
   /** Rail mode: container holding the panels next to the rail. */
   stackWrap?: Container<CTX>;
   /** Rail mode: id of the panel shown when the group is expanded. */
   activeRail?: string;
+  /** Tabs stack mode: the TabContainer presenting the region's panels. */
+  tabStack?: TabContainer<CTX>;
+  /** Resize grip on the region's center-facing edge. */
+  grip?: HTMLDivElement;
 }
 
 /**
@@ -369,6 +378,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       hidden       : false,
       railCollapsed: false,
       order        : [],
+      stackMode    : StackMode.STACK,
     });
 
     this.regions = {
@@ -422,6 +432,11 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       }
     };
 
+    //the dock frame owns the editor's content area; percentage heights
+    //below need the parent chain to resolve
+    parent.style.setProperty("height", "100%", "important");
+    parent.style.setProperty("width", "100%", "important");
+
     const outer = (this.outer = parent.col());
 
     outer.noMarginsOrPadding();
@@ -466,6 +481,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         "flex-shrink"    : "0",
         "justify-content": "flex-start",
         "align-items"    : "stretch",
+        "align-self"     : "stretch",
       });
       this._updateRegion(r);
     }
@@ -632,6 +648,19 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     this._updateRegion(this.regions[side]);
   }
 
+  /** Present a docked region's panels as rollout stack or as tabs
+   *  (StackMode.STACK / StackMode.TABS). */
+  setStackMode(side: PanelSide, mode: number): void {
+    const r = this.regions[side];
+
+    if (r.stackMode === mode) {
+      return;
+    }
+
+    r.stackMode = mode;
+    this._rebuildRegion(r);
+  }
+
   /** Switch a region between inline-docked and rail presentation.  In rail
    *  mode a slim edge-aligned tab bar (one tab per panel, the panels' own
    *  title bars hidden) stays visible; clicking a tab expands the group
@@ -664,6 +693,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       rs.railCollapsed = r.railCollapsed;
 
       const stack = new PanelStackState();
+      stack.mode = r.stackMode;
       stack.panelIds = [...r.order];
       rs.stacks = [stack];
 
@@ -735,6 +765,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       r.mode = rs.mode;
       r.hidden = rs.hidden;
       r.railCollapsed = rs.railCollapsed;
+      r.stackMode = rs.stacks[0]?.mode ?? StackMode.STACK;
 
       for (const stack of rs.stacks) {
         for (const id of stack.panelIds) {
@@ -781,6 +812,24 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
   private _isPlaced(id: string): boolean {
     return this._findSide(id) !== undefined || this.floating.has(id);
+  }
+
+  /** Hide/show a panel's title bar via an !important shadow rule —
+   *  RowFrame.connectedCallback re-sets inline display:flex whenever the
+   *  panel reconnects (e.g. tab switches), so inline styles don't stick. */
+  private _setTitleHidden(panel: DockPanel<CTX>, hidden: boolean) {
+    if (!panel._dockTitleStyle) {
+      const tag = document.createElement("style");
+      tag.textContent = "[data-dock-hidetitle] { display: none !important; }\n";
+      panel.shadow.prepend(tag);
+      panel._dockTitleStyle = tag;
+    }
+
+    if (hidden) {
+      panel.titleframe.setAttribute("data-dock-hidetitle", "1");
+    } else {
+      panel.titleframe.removeAttribute("data-dock-hidetitle");
+    }
   }
 
   private _screen() {
@@ -1160,26 +1209,163 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     for (const [, panel] of this.panels) {
       if (c.shadow.contains(panel)) {
         HTMLElement.prototype.remove.call(panel);
-        panel.titleframe.style.display = "";
+        this._setTitleHidden(panel, false);
       }
     }
+
+    r.grip?.remove();
+    r.grip = undefined;
 
     c.clear();
     r.rail = undefined;
     r.stackWrap = undefined;
+    r.tabStack = undefined;
 
     if (r.mode === RegionMode.RAIL && r.order.length > 0) {
       this._buildRail(r);
+    } else if (r.stackMode === StackMode.TABS && r.order.length > 0) {
+      this._buildTabStack(r);
     } else {
       for (const id of r.order) {
         const panel = this._ensurePanel(id);
         c.add(panel as unknown as Container<CTX>);
-        panel.titleframe.style.display = "";
+        this._setTitleHidden(panel, false);
         panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
       }
     }
 
+    this._addGrip(r);
     this._updateRegion(r);
+  }
+
+  /** Tabs presentation for a docked region: one visible panel selected by
+   *  a horizontal tab bar; panel title bars hide (the tabs are the headers). */
+  private _buildTabStack(r: DockRegionRuntime<CTX>) {
+    const c = r.container!;
+
+    const tc = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;
+    tc.ctx = this.host.ctx;
+    tc.setAttribute("bar_pos", "top");
+    r.tabStack = tc;
+
+    c._add(tc as unknown as UIBase<CTX>);
+    tc._init();
+
+    tc.style.setProperty("width", "100%", "important");
+    tc.style.setProperty("flex-grow", "1", "important");
+    tc.style.setProperty("min-height", "0", "important");
+
+    for (const id of r.order) {
+      if (this.hiddenPanels.has(id)) {
+        continue;
+      }
+
+      const panel = this._ensurePanel(id);
+      const tab = tc.tab(this.defs.get(id)!.title, id);
+
+      tab.add(panel as unknown as Container<CTX>);
+      this._setTitleHidden(panel, true);
+      panel.closed = false; //rollout collapse is meaningless without a header
+      panel.style.display = "";
+    }
+  }
+
+  /** Resize grip on the region's center-facing edge. */
+  private _addGrip(r: DockRegionRuntime<CTX>) {
+    const c = r.container;
+
+    if (!c || !this.host.panelLayoutEditable || r.order.length === 0) {
+      return;
+    }
+
+    c.style.setProperty("position", "relative", "important");
+
+    const grip = document.createElement("div");
+    const vert = r.side === "left" || r.side === "right";
+    const anchor =
+      r.side === "left"
+        ? "right:0;"
+        : r.side === "right"
+          ? "left:0;"
+          : r.side === "top"
+            ? "bottom:0;"
+            : "top:0;";
+
+    grip.style.cssText =
+      "position:absolute;z-index:10;background:transparent;" +
+      (vert ? "top:0;bottom:0;width:6px;cursor:ew-resize;" : "left:0;right:0;height:6px;cursor:ns-resize;") +
+      anchor;
+
+    grip.addEventListener("pointerenter", () => {
+      grip.style.background = "rgba(90,140,230,0.5)";
+    });
+    grip.addEventListener("pointerleave", () => {
+      grip.style.background = "transparent";
+    });
+    grip.addEventListener("pointerdown", (e: PointerEvent) => {
+      this._startGripDrag(r, e);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    c.shadow.appendChild(grip);
+    r.grip = grip;
+  }
+
+  private _startGripDrag(r: DockRegionRuntime<CTX>, e: PointerEvent) {
+    //a collapsed rail sizes to its bar; nothing to resize
+    if (r.mode === RegionMode.RAIL && r.railCollapsed) {
+      return;
+    }
+
+    const startSize = r.size;
+    const sx = e.x;
+    const sy = e.y;
+
+    let modal: ModalState | undefined;
+
+    const finish = (commit: boolean) => {
+      if (modal) {
+        popModalLight(modal);
+        modal = undefined;
+      }
+      if (!commit) {
+        r.size = startSize;
+        this._updateRegion(r);
+      }
+    };
+
+    modal = pushModalLight({
+      on_pointermove: (e2: PointerEvent) => {
+        let delta = 0;
+
+        switch (r.side) {
+          case "left":
+            delta = e2.x - sx;
+            break;
+          case "right":
+            delta = sx - e2.x;
+            break;
+          case "top":
+            delta = e2.y - sy;
+            break;
+          case "bottom":
+            delta = sy - e2.y;
+            break;
+        }
+
+        r.size = Math.min(Math.max(startSize + delta, 80), 2000);
+        this._updateRegion(r);
+      },
+      on_pointerup: () => {
+        finish(true);
+      },
+      on_keydown: (e2: KeyboardEvent) => {
+        if (e2.keyCode === eventKeymap["Escape"]) {
+          finish(false);
+        }
+      },
+    } as unknown as Record<string, unknown>);
   }
 
   /** Build the rail presentation: an edge-aligned tab bar plus a wrap
@@ -1248,7 +1434,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     for (const id of r.order) {
       const panel = this._ensurePanel(id);
       wrap.add(panel as unknown as Container<CTX>);
-      panel.titleframe.style.display = "none";
+      this._setTitleHidden(panel, true);
       panel.closed = false; //rollout collapse is meaningless without a header
     }
 

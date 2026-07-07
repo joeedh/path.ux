@@ -79,6 +79,22 @@ getKeyMaps() {
 }
 ```
 
+## Region sizing and stack presentation
+
+Every visible region has a 6px resize grip on its center-facing edge
+(disabled when `panelLayoutEditable` is false); sizes persist. Docked
+regions present their panels either as a vertical rollout stack (default)
+or as a one-visible-panel tab group:
+
+```ts
+this.panels.setEdgeSize("right", 300);
+this.panels.setStackMode("right", StackMode.TABS);
+```
+
+In tabs mode the panels' title bars hide — the tabs are the headers — and
+the mode round-trips through `PanelStackState.mode`. Rail mode takes
+precedence over the stack mode while active.
+
 ## Rail mode
 
 `setEdgeMode(side, RegionMode.RAIL)` renders a region as a slim tab bar
@@ -122,7 +138,10 @@ corrupt restored widget state.
   compatibility mouse event stream, so `pushModalLight` drag handlers must
   be `on_pointermove`/`on_pointerup`. Threshold detection before the modal
   uses `setPointerCapture` so the gesture survives leaving the title bar.
+- `RowFrame.connectedCallback` re-sets inline `display:flex` every time an
+  element reconnects (e.g. tab switches reparenting a panel), so panel
+  title bars are hidden via a `data-dock-hidetitle` attribute matched by an
+  `!important` rule in the panel's shadow root, not via inline styles.
 
-Not yet implemented: region resize grips, `StackMode.TABS` presentation
-within docked regions, cross-editor panel drags, and the hover tether
-overlay from a floating panel to its owning editor.
+Not yet implemented: cross-editor panel drags and the hover tether overlay
+from a floating panel to its owning editor.

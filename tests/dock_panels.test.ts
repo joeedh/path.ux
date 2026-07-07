@@ -6,6 +6,7 @@ import {
   PanelManager,
   PanelLayoutState,
   RegionMode,
+  StackMode,
   type IPanelHost,
   type PanelDef,
 } from "../scripts/screen/dock_panels";
@@ -218,7 +219,7 @@ test("rail mode: expand/switch/collapse and toggleEdge keep the rail visible", (
   expect(r.rail).toBeTruthy();
   expect(r.activeRail).toBe("tools");
   //the tabs are the headers: panel title bars hide, active panel shows
-  expect(pm.panels.get("tools")!.titleframe.style.display).toBe("none");
+  expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(true);
   expect(pm.panels.get("tools")!.style.display).not.toBe("none");
   expect(pm.panels.get("props")!.style.display).toBe("none");
 
@@ -241,7 +242,7 @@ test("rail mode: expand/switch/collapse and toggleEdge keep the rail visible", (
 
   //switching back to docked restores the panel title bars
   pm.setEdgeMode("left", RegionMode.DOCKED);
-  expect(pm.panels.get("tools")!.titleframe.style.display).toBe("");
+  expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(false);
   expect(pm.regions.left.rail).toBeUndefined();
 });
 
@@ -262,6 +263,52 @@ test("rail mode and collapse state round-trip through save/load", () => {
   expect(pm2.regions.left.mode).toBe(RegionMode.RAIL);
   expect(pm2.regions.left.railCollapsed).toBe(true);
   expect(pm2.regions.left.rail).toBeTruthy();
+});
+
+test("tabs stack mode presents panels in a TabContainer and round-trips", () => {
+  const pm = makeManager();
+  pm.dockPanel("props", "left"); //both panels in the left region
+  pm.setStackMode("left", StackMode.TABS);
+
+  const r = pm.regions.left;
+  expect(r.tabStack).toBeTruthy();
+  //the tabs are the headers
+  expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(true);
+
+  const state = pm.saveLayout();
+  expect(state.regions.find((rs) => rs.side === 0)!.stacks[0].mode).toBe(StackMode.TABS);
+
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.loadLayout(state);
+
+  expect(pm2.regions.left.stackMode).toBe(StackMode.TABS);
+  expect(pm2.regions.left.tabStack).toBeTruthy();
+
+  //switching back to a rollout stack restores title bars
+  pm.setStackMode("left", StackMode.STACK);
+  expect(pm.regions.left.tabStack).toBeUndefined();
+  expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(false);
+});
+
+test("visible regions get a resize grip; hidden/empty ones do not", () => {
+  const pm = makeManager();
+
+  expect(pm.regions.left.grip).toBeTruthy();
+  expect(pm.regions.left.grip!.parentNode).toBeTruthy();
+  expect(pm.regions.top.grip).toBeUndefined(); //empty region
+
+  //grips honor panelLayoutEditable
+  const { root, host } = makeHost();
+  host.panelLayoutEditable = false;
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.build(root);
+  pm2.applyDefaultLayout();
+  expect(pm2.regions.left.grip).toBeUndefined();
 });
 
 test("layout state ignores unknown panel ids", () => {
