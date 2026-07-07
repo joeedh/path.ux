@@ -49,6 +49,9 @@ import {
   ModalState,
 } from "../path-controller/util/simple_events";
 import { PanelFrame } from "../widgets/ui_panel";
+//side-effect import: registers overdraw-x, used by the float tether
+import "../util/ScreenOverdraw";
+import type { Overdraw } from "../util/ScreenOverdraw";
 import type { IContextBase } from "../core/context_base";
 import nstructjs from "../path-controller/util/struct";
 import type { StructReader } from "../util/nstructjs";
@@ -141,6 +144,9 @@ export interface IPanelHost<CTX extends IContextBase = IContextBase> {
   getPanelHostTitle?(): string;
   /** Bounding rect of the host editor, used for drag drop zones. */
   getBoundingClientRect(): DOMRect;
+  /** Panel managers of other visible editors of the same type; drags can
+   *  drop panels onto their edge zones (same-catalog transfer). */
+  getPanelPeers?(): PanelManager<CTX>[];
 }
 
 /* -------------------------------------------------------------------------
@@ -365,6 +371,8 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
   private readonly lastDock = new Map<string, PanelSide>();
   /** Panels hidden via closePanel(); layout position is retained. */
   private readonly hiddenPanels = new Set<string>();
+  /** Active provenance tether overlay, if any (see _showTether). */
+  private _tether?: Overdraw<CTX>;
   /** Deserialized per-panel state awaiting realization (uidata replay). */
   private readonly pendingState = new Map<string, PanelState>();
 
@@ -898,6 +906,14 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       e.preventDefault();
     });
 
+    //hover tether: show where this panel came from
+    header.addEventListener("pointerenter", () => {
+      this._showTether(frame);
+    });
+    header.addEventListener("pointerleave", () => {
+      this._hideTether();
+    });
+
     frame.add(panel as unknown as Container<CTX>);
 
     document.body.appendChild(frame);
@@ -925,37 +941,130 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     return frame;
   }
 
+  /* --- cross-editor transfer --- */
+
+  /** Move a panel to another editor's manager (same panel catalog — peers
+   *  are editors of the same type).  Widget state travels via saveUIData;
+   *  in this editor the panel becomes closed ("moved away"), so showPanel
+   *  brings it back locally. */
+  transferPanel(id: string, target: PanelManager<CTX>, side: PanelSide, opts?: { index?: number }): void {
+    if (target === this || !target.defs.has(id)) {
+      return;
+    }
+
+    const srcPanel = this.panels.get(id);
+    const uidata = srcPanel
+      ? saveUIData(srcPanel as unknown as UIBase<CTX>, "panel:" + id)
+      : this.pendingState.get(id)?.uidata;
+
+    this._removeFromLayout(id);
+    this.hiddenPanels.add(id);
+    if (srcPanel) {
+      srcPanel.style.display = "none";
+    }
+
+    target.hiddenPanels.delete(id);
+    target.dockPanel(id, side, opts);
+
+    if (uidata) {
+      loadUIData(target.panels.get(id)! as unknown as UIBase<CTX>, uidata);
+    }
+  }
+
   /* --- drag interaction --- */
 
-  /** Drop zones over the host editor's edges for the sides this panel may
-   *  dock to.  Returned elements are appended to document.body. */
+  /** Drop zones over the edges of the host editor and (for cross-editor
+   *  transfer) same-type peers.  Elements are appended to document.body. */
   private _makeDropZones(panel: DockPanel<CTX>) {
-    const er = this.host.getBoundingClientRect();
-    const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
-    const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
+    const zones: {
+      side: PanelSide;
+      pm: PanelManager<CTX>;
+      el: HTMLDivElement;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }[] = [];
 
-    const zones: { side: PanelSide; el: HTMLDivElement; x: number; y: number; w: number; h: number }[] = [];
-
-    const mk = (side: PanelSide, x: number, y: number, w: number, h: number) => {
-      if (!panel.canDock(side)) {
-        return;
+    const targets: PanelManager<CTX>[] = [this];
+    for (const peer of this.host.getPanelPeers?.() ?? []) {
+      if (peer.host.panelLayoutEditable && peer.defs.has(panel.panelId)) {
+        targets.push(peer);
       }
+    }
 
-      const el = document.createElement("div");
-      el.style.cssText =
-        `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;` +
-        "background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);" +
-        "border-radius:4px;z-index:299;pointer-events:none;";
-      document.body.appendChild(el);
-      zones.push({ side, el, x, y, w, h });
-    };
+    for (const pm of targets) {
+      const er = pm.host.getBoundingClientRect();
+      const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
+      const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
 
-    mk("left", er.x, er.y, zw, er.height);
-    mk("right", er.x + er.width - zw, er.y, zw, er.height);
-    mk("top", er.x, er.y, er.width, zh);
-    mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+      const mk = (side: PanelSide, x: number, y: number, w: number, h: number) => {
+        if (!panel.canDock(side)) {
+          return;
+        }
+
+        const el = document.createElement("div");
+        el.style.cssText =
+          `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;` +
+          "background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);" +
+          "border-radius:4px;z-index:299;pointer-events:none;";
+        document.body.appendChild(el);
+        zones.push({ side, pm, el, x, y, w, h });
+      };
+
+      mk("left", er.x, er.y, zw, er.height);
+      mk("right", er.x + er.width - zw, er.y, zw, er.height);
+      mk("top", er.x, er.y, er.width, zh);
+      mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+    }
 
     return zones;
+  }
+
+  /** Dock or transfer depending on which manager owns the drop zone. */
+  private _dropOnZone(
+    id: string,
+    zone: { side: PanelSide; pm: PanelManager<CTX> },
+    y: number
+  ): void {
+    const index = zone.pm._dropIndex(zone.side, y);
+
+    if (zone.pm === this) {
+      this.dockPanel(id, zone.side, { index });
+    } else {
+      this.transferPanel(id, zone.pm, zone.side, { index });
+    }
+  }
+
+  /* --- float tether (provenance affordance) --- */
+
+  /** Outline the owning editor and draw a line to it from the frame. */
+  private _showTether(frame: Container<CTX>) {
+    this._hideTether();
+
+    if (!this.host.ctx) {
+      return;
+    }
+
+    const od = UIBase.createElement("overdraw-x") as Overdraw<CTX>;
+    od.start(this._screen() as never);
+
+    const fr = frame.getBoundingClientRect();
+    const hr = this.host.getBoundingClientRect();
+
+    od.rect([hr.x, hr.y], [hr.width, hr.height], "rgba(90,140,230,0.13)");
+    od.line(
+      [fr.x + fr.width * 0.5, fr.y + 14],
+      [hr.x + hr.width * 0.5, hr.y + hr.height * 0.5],
+      "rgba(90,140,230,0.8)"
+    );
+
+    this._tether = od;
+  }
+
+  private _hideTether() {
+    this._tether?.end();
+    this._tether = undefined;
   }
 
   /** Insertion index for a drop at screen-space y within a region. */
@@ -1024,7 +1133,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       );
 
       if (z) {
-        this.dockPanel(id, z.side, { index: this._dropIndex(z.side, e2.y) });
+        this._dropOnZone(id, z, e2.y);
       } else if (panel.canFloat()) {
         this.floatPanel(id, { pos: [e2.x - 24, e2.y - 12] });
       }
@@ -1064,6 +1173,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         popModalLight(modal);
         modal = undefined;
       }
+      this._hideTether();
       for (const z of zones) {
         z.el.remove();
       }
@@ -1076,7 +1186,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         (z) => e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h
       );
       if (z) {
-        this.dockPanel(panel.panelId, z.side, { index: this._dropIndex(z.side, e2.y) });
+        this._dropOnZone(panel.panelId, z, e2.y);
       }
     };
 
@@ -1089,6 +1199,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         frame.style.top = rect.y + (e2.y - lasty) + "px";
         lastx = e2.x;
         lasty = e2.y;
+
+        //keep the ownership link visible while dragging
+        this._showTether(frame);
 
         for (const z of zones) {
           const hit = e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h;

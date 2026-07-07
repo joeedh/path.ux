@@ -617,6 +617,27 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return (this.constructor as unknown as IAreaConstructor).define().uiname ?? "";
   }
 
+  /** Panel managers of other visible editors of this type (IPanelHost);
+   *  panel drags can drop onto their edge zones (same-catalog transfer). */
+  getPanelPeers(): PanelManager<CTX>[] {
+    const out: PanelManager<CTX>[] = [];
+    const screen = this.owning_sarea?.screen;
+
+    if (!screen) {
+      return out;
+    }
+
+    for (const sarea of screen.sareas) {
+      const area = sarea.area as Area<CTX> | undefined;
+
+      if (area && area !== this && area.constructor === this.constructor && area.panels) {
+        out.push(area.panels);
+      }
+    }
+
+    return out;
+  }
+
   _getPanelLayout(): PanelLayoutState {
     if (this.panels) {
       return this.panels.saveLayout();

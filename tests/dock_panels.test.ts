@@ -311,6 +311,32 @@ test("visible regions get a resize grip; hidden/empty ones do not", () => {
   expect(pm2.regions.left.grip).toBeUndefined();
 });
 
+test("transferPanel moves a panel to a same-catalog peer manager", () => {
+  const pm1 = makeManager();
+
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.applyDefaultLayout();
+
+  pm1.transferPanel("tools", pm2, "right", { index: 0 });
+
+  //source: removed from layout, marked closed ("moved away")
+  expect(pm1.regions.left.order).toEqual([]);
+  expect(pm1.isPanelClosed("tools")).toBe(true);
+
+  //target: docked at the requested position, visible
+  expect(pm2.regions.right.order).toEqual(["tools", "props"]);
+  expect(pm2.isPanelClosed("tools")).toBe(false);
+  expect(pm2.panels.get("tools")!.style.display).not.toBe("none");
+
+  //showPanel brings the source's copy back locally
+  pm1.showPanel("tools");
+  expect(pm1.regions.left.order).toEqual(["tools"]);
+});
+
 test("layout state ignores unknown panel ids", () => {
   const pm = makeManager();
   const state = pm.saveLayout();

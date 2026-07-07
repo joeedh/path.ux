@@ -117,6 +117,19 @@ it. Float positions serialize exactly.
 If an editor overrides `on_area_active` / `on_area_inactive` it should call
 super, which is what hides/shows the floating frames.
 
+Hovering a floating frame's header (and dragging the frame) draws a tether
+overlay — the owning editor's rect tinted plus a line from the frame — so
+ownership stays obvious with several same-type editors open.
+
+## Cross-editor transfer
+
+Drag drop zones also cover other visible editors of the same type (peers
+share the panel catalog since `definePanels` is class-level). Dropping on a
+peer's zone calls `transferPanel(id, target, side)`: widget state travels
+via `saveUIData`, the target docks and shows the panel, and in the source
+editor it becomes closed ("moved away") — `showPanel` brings the local copy
+back. Peers with `panelLayoutEditable = false` are excluded.
+
 ## Serialization
 
 `Area.STRUCT` carries `panelLayout : pathux.PanelLayoutState` as a computed
@@ -143,5 +156,3 @@ corrupt restored widget state.
   title bars are hidden via a `data-dock-hidetitle` attribute matched by an
   `!important` rule in the panel's shadow root, not via inline styles.
 
-Not yet implemented: cross-editor panel drags and the hover tether overlay
-from a floating panel to its owning editor.

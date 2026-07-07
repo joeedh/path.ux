@@ -49425,6 +49425,8 @@ var PanelManager = class {
   lastDock = /* @__PURE__ */ new Map();
   /** Panels hidden via closePanel(); layout position is retained. */
   hiddenPanels = /* @__PURE__ */ new Set();
+  /** Active provenance tether overlay, if any (see _showTether). */
+  _tether;
   /** Deserialized per-panel state awaiting realization (uidata replay). */
   pendingState = /* @__PURE__ */ new Map();
   constructor(host) {
@@ -49850,6 +49852,12 @@ ${body}}
       this._startFrameDrag(frame, panel, e);
       e.preventDefault();
     });
+    header.addEventListener("pointerenter", () => {
+      this._showTether(frame);
+    });
+    header.addEventListener("pointerleave", () => {
+      this._hideTether();
+    });
     frame.add(panel);
     document.body.appendChild(frame);
     frame._init();
@@ -49868,28 +49876,90 @@ ${body}}
     }
     return frame;
   }
+  /* --- cross-editor transfer --- */
+  /** Move a panel to another editor's manager (same panel catalog — peers
+   *  are editors of the same type).  Widget state travels via saveUIData;
+   *  in this editor the panel becomes closed ("moved away"), so showPanel
+   *  brings it back locally. */
+  transferPanel(id, target, side, opts) {
+    if (target === this || !target.defs.has(id)) {
+      return;
+    }
+    const srcPanel = this.panels.get(id);
+    const uidata = srcPanel ? saveUIData(srcPanel, "panel:" + id) : this.pendingState.get(id)?.uidata;
+    this._removeFromLayout(id);
+    this.hiddenPanels.add(id);
+    if (srcPanel) {
+      srcPanel.style.display = "none";
+    }
+    target.hiddenPanels.delete(id);
+    target.dockPanel(id, side, opts);
+    if (uidata) {
+      loadUIData(target.panels.get(id), uidata);
+    }
+  }
   /* --- drag interaction --- */
-  /** Drop zones over the host editor's edges for the sides this panel may
-   *  dock to.  Returned elements are appended to document.body. */
+  /** Drop zones over the edges of the host editor and (for cross-editor
+   *  transfer) same-type peers.  Elements are appended to document.body. */
   _makeDropZones(panel) {
-    const er = this.host.getBoundingClientRect();
-    const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
-    const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
     const zones = [];
-    const mk = (side, x, y, w, h) => {
-      if (!panel.canDock(side)) {
-        return;
+    const targets = [this];
+    for (const peer of this.host.getPanelPeers?.() ?? []) {
+      if (peer.host.panelLayoutEditable && peer.defs.has(panel.panelId)) {
+        targets.push(peer);
       }
-      const el = document.createElement("div");
-      el.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);border-radius:4px;z-index:299;pointer-events:none;`;
-      document.body.appendChild(el);
-      zones.push({ side, el, x, y, w, h });
-    };
-    mk("left", er.x, er.y, zw, er.height);
-    mk("right", er.x + er.width - zw, er.y, zw, er.height);
-    mk("top", er.x, er.y, er.width, zh);
-    mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+    }
+    for (const pm of targets) {
+      const er = pm.host.getBoundingClientRect();
+      const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
+      const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
+      const mk = (side, x, y, w, h) => {
+        if (!panel.canDock(side)) {
+          return;
+        }
+        const el = document.createElement("div");
+        el.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);border-radius:4px;z-index:299;pointer-events:none;`;
+        document.body.appendChild(el);
+        zones.push({ side, pm, el, x, y, w, h });
+      };
+      mk("left", er.x, er.y, zw, er.height);
+      mk("right", er.x + er.width - zw, er.y, zw, er.height);
+      mk("top", er.x, er.y, er.width, zh);
+      mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+    }
     return zones;
+  }
+  /** Dock or transfer depending on which manager owns the drop zone. */
+  _dropOnZone(id, zone, y) {
+    const index = zone.pm._dropIndex(zone.side, y);
+    if (zone.pm === this) {
+      this.dockPanel(id, zone.side, { index });
+    } else {
+      this.transferPanel(id, zone.pm, zone.side, { index });
+    }
+  }
+  /* --- float tether (provenance affordance) --- */
+  /** Outline the owning editor and draw a line to it from the frame. */
+  _showTether(frame) {
+    this._hideTether();
+    if (!this.host.ctx) {
+      return;
+    }
+    const od = UIBase2.createElement("overdraw-x");
+    od.start(this._screen());
+    const fr = frame.getBoundingClientRect();
+    const hr = this.host.getBoundingClientRect();
+    od.rect([hr.x, hr.y], [hr.width, hr.height], "rgba(90,140,230,0.13)");
+    od.line(
+      [fr.x + fr.width * 0.5, fr.y + 14],
+      [hr.x + hr.width * 0.5, hr.y + hr.height * 0.5],
+      "rgba(90,140,230,0.8)"
+    );
+    this._tether = od;
+  }
+  _hideTether() {
+    this._tether?.end();
+    this._tether = void 0;
   }
   /** Insertion index for a drop at screen-space y within a region. */
   _dropIndex(side, y) {
@@ -49942,7 +50012,7 @@ ${body}}
         (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
       );
       if (z) {
-        this.dockPanel(id, z.side, { index: this._dropIndex(z.side, e2.y) });
+        this._dropOnZone(id, z, e2.y);
       } else if (panel.canFloat()) {
         this.floatPanel(id, { pos: [e2.x - 24, e2.y - 12] });
       }
@@ -49976,6 +50046,7 @@ ${body}}
         popModalLight(modal);
         modal = void 0;
       }
+      this._hideTether();
       for (const z2 of zones) {
         z2.el.remove();
       }
@@ -49986,7 +50057,7 @@ ${body}}
         (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
       );
       if (z) {
-        this.dockPanel(panel.panelId, z.side, { index: this._dropIndex(z.side, e2.y) });
+        this._dropOnZone(panel.panelId, z, e2.y);
       }
     };
     modal = pushModalLight({
@@ -49996,6 +50067,7 @@ ${body}}
         frame.style.top = rect.y + (e2.y - lasty) + "px";
         lastx = e2.x;
         lasty = e2.y;
+        this._showTether(frame);
         for (const z of zones) {
           const hit = e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h;
           z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
@@ -50793,6 +50865,22 @@ var Area = class extends UIBase2 {
   /** Provenance title for floating dock panels (IPanelHost). */
   getPanelHostTitle() {
     return this.constructor.define().uiname ?? "";
+  }
+  /** Panel managers of other visible editors of this type (IPanelHost);
+   *  panel drags can drop onto their edge zones (same-catalog transfer). */
+  getPanelPeers() {
+    const out = [];
+    const screen = this.owning_sarea?.screen;
+    if (!screen) {
+      return out;
+    }
+    for (const sarea of screen.sareas) {
+      const area = sarea.area;
+      if (area && area !== this && area.constructor === this.constructor && area.panels) {
+        out.push(area.panels);
+      }
+    }
+    return out;
   }
   _getPanelLayout() {
     if (this.panels) {
