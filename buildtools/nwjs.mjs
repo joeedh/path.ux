@@ -2,7 +2,10 @@
  * Launches the example/ app under NW.js with the Chrome DevTools Protocol
  * enabled, for use via `pnpm nwjs`.
  *
- *   pnpm nwjs [--port=9222] [--no-wait] [-- <extra chromium args>]
+ *   pnpm nwjs [--port=9222] [--no-wait] [--no-devtools] [-- <extra chromium args>]
+ *
+ * DevTools opens automatically alongside the app window; pass --no-devtools
+ * to suppress it.
  *
  * The CDP endpoint is http://127.0.0.1:<port>. Drive it with
  * `pnpm cdp <command>` (see buildtools/cdp.mjs).
@@ -17,6 +20,7 @@ const appDir = path.join(root, "example");
 
 let port = 9222;
 let wait = true;
+let devtools = true;
 const extraArgs = [];
 
 for (const arg of process.argv.slice(2)) {
@@ -24,6 +28,8 @@ for (const arg of process.argv.slice(2)) {
     port = parseInt(arg.slice("--port=".length));
   } else if (arg === "--no-wait") {
     wait = false;
+  } else if (arg === "--no-devtools") {
+    devtools = false;
   } else {
     extraArgs.push(arg);
   }
@@ -52,7 +58,11 @@ const nwModule = await import("nw");
 const findpath = nwModule.findpath ?? nwModule.default.findpath;
 const nwPath = await findpath("nwjs", { flavor: "sdk" });
 
-const args = [appDir, `--remote-debugging-port=${port}`, ...extraArgs];
+const args = [appDir, `--remote-debugging-port=${port}`];
+if (devtools) {
+  args.push("--auto-open-devtools-for-tabs");
+}
+args.push(...extraArgs);
 
 console.log(`Launching NW.js: ${nwPath}`);
 console.log(`  app: ${appDir}`);
