@@ -1581,7 +1581,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
           return;
         }
 
-        if (!this.ctx && this.parentNode) {
+        if (!this.ctx?.screen?.listening || !this.ctx || !this.parentNode) {
           console.log("waiting to start. . .");
           this.doOnce(f);
           return;
