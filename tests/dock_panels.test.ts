@@ -44,9 +44,9 @@ function makeHost() {
   root._init();
 
   const host: IPanelHost = {
-    ctx                   : undefined as unknown as IContextBase,
-    panelLayoutEditable   : true,
-    getBoundingClientRect : () => root.getBoundingClientRect(),
+    ctx                  : undefined as unknown as IContextBase,
+    panelLayoutEditable  : true,
+    getBoundingClientRect: () => root.getBoundingClientRect(),
   };
 
   return { root, host };
@@ -62,7 +62,6 @@ function def(id: string, dock: PanelDef["dock"]): PanelDef {
     },
   };
 }
-
 
 /** Region visibility is attribute-driven (data-dock-hidden + !important). */
 function regionHidden(pm: PanelManager, side: "left" | "right" | "top" | "bottom") {
@@ -271,7 +270,9 @@ test("tabs stack mode presents panels in a TabContainer and round-trips", () => 
   pm.setStackMode("left", StackMode.TABS);
 
   const r = pm.regions.left;
-  expect(r.tabStack).toBeTruthy();
+  expect(r.stacks.length).toBe(1);
+  expect(r.stacks[0].mode).toBe(StackMode.TABS);
+  expect(r.stacks[0].tabs).toBeTruthy();
   //the tabs are the headers
   expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(true);
 
@@ -285,13 +286,110 @@ test("tabs stack mode presents panels in a TabContainer and round-trips", () => 
   pm2.build(root);
   pm2.loadLayout(state);
 
-  expect(pm2.regions.left.stackMode).toBe(StackMode.TABS);
-  expect(pm2.regions.left.tabStack).toBeTruthy();
+  expect(pm2.regions.left.stacks[0].mode).toBe(StackMode.TABS);
+  expect(pm2.regions.left.stacks[0].tabs).toBeTruthy();
 
-  //switching back to a rollout stack restores title bars
+  //switching back to rollout stacks restores title bars
   pm.setStackMode("left", StackMode.STACK);
-  expect(pm.regions.left.tabStack).toBeUndefined();
+  expect(pm.regions.left.stacks.every((s) => s.mode === StackMode.STACK)).toBe(true);
+  expect(pm.regions.left.stacks.every((s) => s.tabs === undefined)).toBe(true);
   expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(false);
+});
+
+test("dockPanelInto groups two panels into one tab stack and round-trips", () => {
+  const pm = makeManager();
+
+  pm.dockPanelInto("props", "tools"); //drop props onto tools
+
+  const r = pm.regions.left;
+  expect(r.stacks.length).toBe(1);
+  expect(r.stacks[0].mode).toBe(StackMode.TABS);
+  expect(r.stacks[0].ids).toEqual(["tools", "props"]);
+  expect(r.stacks[0].active).toBe("props"); //the dropped panel is active
+  expect(r.stacks[0].tabs).toBeTruthy();
+  expect(pm.regions.right.order).toEqual([]);
+
+  //tab groups round-trip, including the active tab
+  const state = pm.saveLayout();
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.loadLayout(state);
+
+  expect(pm2.regions.left.stacks[0].mode).toBe(StackMode.TABS);
+  expect(pm2.regions.left.stacks[0].ids).toEqual(["tools", "props"]);
+  expect(pm2.regions.left.stacks[0].active).toBe("props");
+
+  //docking a panel back out degrades the leftover solo group to a rollout
+  pm.dockPanel("props", "right");
+  expect(pm.regions.left.stacks.length).toBe(1);
+  expect(pm.regions.left.stacks[0].mode).toBe(StackMode.STACK);
+  expect(pm.regions.left.stacks[0].ids).toEqual(["tools"]);
+  expect(pm.panels.get("tools")!.titleframe.hasAttribute("data-dock-hidetitle")).toBe(false);
+});
+
+test("dockPanelInto refuses undocked targets and disallowed sides", () => {
+  const pm = makeManager();
+
+  pm.floatPanel("props", { pos: [10, 10] });
+  pm.dockPanelInto("tools", "props"); //target floats — no-op
+  expect(pm.regions.left.order).toEqual(["tools"]);
+
+  const noLeft = def("no-left", "right");
+  noLeft.allowedDocks = 2 | 16; //RIGHT | FLOAT
+  pm.panel(noLeft);
+  pm.applyDefaultLayout();
+
+  pm.dockPanelInto("no-left", "tools"); //tools sits on a disallowed side
+  expect(pm.regions.left.order).toEqual(["tools"]);
+  expect(pm.regions.right.order).toContain("no-left");
+});
+
+test("a docked region whose rollouts are all collapsed shrinks to content", () => {
+  const pm = makeManager();
+  pm.dockPanel("props", "top");
+  pm.dockPanel("tools", "top");
+
+  const r = pm.regions.top;
+  const c = r.container!;
+  expect(c.style.getPropertyValue("height")).toBe(r.size + "px");
+
+  //one collapsed panel shrinks itself (header only), not the region
+  pm.panels.get("tools")!.closed = true;
+  expect(pm.panels.get("tools")!.style.width).toBe("fit-content");
+  expect(pm.panels.get("props")!.style.width).toBe("100%");
+  expect(c.style.getPropertyValue("height")).toBe(r.size + "px");
+
+  //all collapsed: the region gives up its fixed size
+  pm.panels.get("props")!.closed = true;
+  expect(c.style.getPropertyValue("height")).toBe("auto");
+
+  //expanding one restores the region size
+  pm.panels.get("tools")!.closed = false;
+  expect(pm.panels.get("tools")!.style.width).toBe("100%");
+  expect(c.style.getPropertyValue("height")).toBe(r.size + "px");
+});
+
+test("PanelDef minSize/maxSize constrain the panel contents", () => {
+  const pm = makeManager();
+
+  const sized = def("sized", "left");
+  sized.minSize = [120, undefined];
+  sized.maxSize = [undefined, 300];
+  pm.panel(sized);
+  pm.applyDefaultLayout();
+
+  const cs = pm.panels.get("sized")!.contents.style;
+  expect(cs.minWidth).toBe("120px");
+  expect(cs.minHeight).toBe("");
+  expect(cs.maxWidth).toBe("");
+  expect(cs.maxHeight).toBe("300px");
+  expect(cs.overflow).toBe("auto"); //content past maxSize scrolls
+
+  //no maxSize → no forced scroll container
+  expect(pm.panels.get("tools")!.contents.style.overflow).toBe("");
 });
 
 test("visible regions get a resize grip; hidden/empty ones do not", () => {

@@ -49310,10 +49310,13 @@ var PanelStackState = class {
   static STRUCT = `pathux.PanelStackState {
   mode     : int;
   panelIds : array(string);
+  active   : string;
 }`;
   /** StackMode. */
   mode = StackMode.STACK;
   panelIds = [];
+  /** Tabs mode: id of the active tab ("" when unset). */
+  active = "";
   loadSTRUCT(reader) {
     reader(this);
   }
@@ -49406,6 +49409,10 @@ var DockPanel = class extends PanelFrame {
   canClose() {
     return !((this.def.flags ?? 0) & PanelFlags.NO_CLOSE);
   }
+  _updateClosed(changed) {
+    super._updateClosed(changed);
+    this.manager?._onPanelCollapse(this);
+  }
 };
 UIBase2.internalRegister(DockPanel);
 var _dockpin_idgen = 0;
@@ -49437,8 +49444,10 @@ var PanelManager = class {
       mode: RegionMode.DOCKED,
       hidden: false,
       railCollapsed: false,
-      order: [],
-      stackMode: StackMode.STACK
+      stacks: [],
+      get order() {
+        return this.stacks.flatMap((s) => s.ids);
+      }
     });
     this.regions = {
       left: region("left"),
@@ -49526,14 +49535,36 @@ ${body}}
     return this.center;
   }
   /* --- imperative layout control --- */
-  /** Move a panel into an edge region; index positions it in the stack. */
+  /** Move a panel into an edge region; index positions it among the
+   *  region's stacks (the panel becomes its own rollout stack). */
   dockPanel(id, side, opts) {
     this._ensurePanel(id);
     this._removeFromLayout(id);
     this.lastDock.set(id, side);
     const r = this.regions[side];
-    const index = Math.min(opts?.index ?? r.order.length, r.order.length);
-    r.order.splice(index, 0, id);
+    const index = Math.min(opts?.index ?? r.stacks.length, r.stacks.length);
+    r.stacks.splice(index, 0, { mode: StackMode.STACK, ids: [id] });
+    this._rebuildRegion(r);
+  }
+  /** Dock a panel into the same stack as `targetId`, presenting the stack
+   *  as tabs — the drop-a-panel-onto-a-panel gesture.  No-ops when the
+   *  target isn't docked or the panel may not dock on that side. */
+  dockPanelInto(id, targetId) {
+    if (id === targetId || !this.defs.has(targetId)) {
+      return;
+    }
+    const panel = this._ensurePanel(id);
+    const side = this._findSide(targetId);
+    if (!side || !panel.canDock(side)) {
+      return;
+    }
+    this._removeFromLayout(id);
+    const r = this.regions[this._findSide(targetId)];
+    const stack = r.stacks.find((s) => s.ids.includes(targetId));
+    stack.mode = StackMode.TABS;
+    stack.ids.splice(stack.ids.indexOf(targetId) + 1, 0, id);
+    stack.active = id;
+    this.lastDock.set(id, r.side);
     this._rebuildRegion(r);
   }
   /** Float a panel at rect (screen space); defaults to def.floatRect. */
@@ -49600,7 +49631,7 @@ ${body}}
     }
     for (const side of PanelSides) {
       const r = this.regions[side];
-      r.order = [];
+      r.stacks = [];
       r.hidden = false;
       r.railCollapsed = false;
     }
@@ -49656,14 +49687,27 @@ ${body}}
     this.regions[side].size = size;
     this._updateRegion(this.regions[side]);
   }
-  /** Present a docked region's panels as rollout stack or as tabs
-   *  (StackMode.STACK / StackMode.TABS). */
+  /** Present a docked region's panels as rollout stacks or as one tab
+   *  group (StackMode.STACK / StackMode.TABS).  This merges/splits the
+   *  region's stacks; per-stack tab groups are made with dockPanelInto. */
   setStackMode(side, mode) {
     const r = this.regions[side];
-    if (r.stackMode === mode) {
+    const ids = r.order;
+    if (ids.length === 0) {
       return;
     }
-    r.stackMode = mode;
+    if (mode === StackMode.TABS) {
+      if (r.stacks.length === 1 && r.stacks[0].mode === StackMode.TABS) {
+        return;
+      }
+      const active = r.stacks.find((s) => s.mode === StackMode.TABS)?.active;
+      r.stacks = [{ mode: StackMode.TABS, ids, active: active ?? ids[0] }];
+    } else {
+      if (r.stacks.every((s) => s.mode === StackMode.STACK)) {
+        return;
+      }
+      r.stacks = ids.map((id) => ({ mode: StackMode.STACK, ids: [id] }));
+    }
     this._rebuildRegion(r);
   }
   /** Switch a region between inline-docked and rail presentation.  In rail
@@ -49690,10 +49734,13 @@ ${body}}
       rs.mode = r.mode;
       rs.hidden = r.hidden;
       rs.railCollapsed = r.railCollapsed;
-      const stack = new PanelStackState();
-      stack.mode = r.stackMode;
-      stack.panelIds = [...r.order];
-      rs.stacks = [stack];
+      rs.stacks = r.stacks.map((s) => {
+        const stack = new PanelStackState();
+        stack.mode = s.mode;
+        stack.panelIds = [...s.ids];
+        stack.active = s.active ?? "";
+        return stack;
+      });
       state.regions.push(rs);
     }
     let order = 0;
@@ -49728,7 +49775,7 @@ ${body}}
    */
   loadLayout(state) {
     for (const side of PanelSides) {
-      this.regions[side].order = [];
+      this.regions[side].stacks = [];
     }
     this.hiddenPanels.clear();
     this.pendingState.clear();
@@ -49751,14 +49798,29 @@ ${body}}
       r.mode = rs.mode;
       r.hidden = rs.hidden;
       r.railCollapsed = rs.railCollapsed;
-      r.stackMode = rs.stacks[0]?.mode ?? StackMode.STACK;
       for (const stack of rs.stacks) {
-        for (const id of stack.panelIds) {
-          if (this.defs.has(id) && !this._isPlaced(id)) {
-            this.dockPanel(id, side);
+        const ids = stack.panelIds.filter((id) => this.defs.has(id) && !this._isPlaced(id));
+        if (ids.length === 0) {
+          continue;
+        }
+        if (stack.mode === StackMode.TABS && ids.length > 1) {
+          r.stacks.push({
+            mode: StackMode.TABS,
+            ids,
+            active: ids.includes(stack.active) ? stack.active : ids[0]
+          });
+        } else {
+          for (const id of ids) {
+            r.stacks.push({ mode: StackMode.STACK, ids: [id] });
           }
         }
+        for (const id of ids) {
+          this.lastDock.set(id, side);
+        }
       }
+    }
+    for (const side of PanelSides) {
+      this._rebuildRegion(this.regions[side]);
     }
     for (const fs of state.floating) {
       if (this.defs.has(fs.panelId) && !this._isPlaced(fs.panelId)) {
@@ -49899,8 +49961,9 @@ ${body}}
     }
   }
   /* --- drag interaction --- */
-  /** Drop zones over the edges of the host editor and (for cross-editor
-   *  transfer) same-type peers.  Elements are appended to document.body. */
+  /** Drop zones over the edges of the host editor, over docked panels
+   *  (drop to group as tabs), and — for cross-editor transfer — the same
+   *  zones of same-type peers.  Elements are appended to document.body. */
   _makeDropZones(panel) {
     const zones = [];
     const targets = [this];
@@ -49909,29 +49972,78 @@ ${body}}
         targets.push(peer);
       }
     }
+    const mk = (kind, pm, side, x, y, w, h, targetId) => {
+      const rgb = kind === "edge" ? "90,140,230" : "80,200,120";
+      const baseBg = `rgba(${rgb},0.25)`;
+      const el = document.createElement("div");
+      el.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${baseBg};border:2px solid rgba(${rgb},0.7);border-radius:4px;z-index:${kind === "edge" ? 299 : 300};pointer-events:none;`;
+      document.body.appendChild(el);
+      zones.push({ kind, side, pm, targetId, el, baseBg, hitBg: `rgba(${rgb},0.5)`, x, y, w, h });
+    };
     for (const pm of targets) {
       const er = pm.host.getBoundingClientRect();
       const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
       const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
-      const mk = (side, x, y, w, h) => {
-        if (!panel.canDock(side)) {
-          return;
+      const edge = (side, x, y, w, h) => {
+        if (panel.canDock(side)) {
+          mk("edge", pm, side, x, y, w, h);
         }
-        const el = document.createElement("div");
-        el.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);border-radius:4px;z-index:299;pointer-events:none;`;
-        document.body.appendChild(el);
-        zones.push({ side, pm, el, x, y, w, h });
       };
-      mk("left", er.x, er.y, zw, er.height);
-      mk("right", er.x + er.width - zw, er.y, zw, er.height);
-      mk("top", er.x, er.y, er.width, zh);
-      mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+      edge("left", er.x, er.y, zw, er.height);
+      edge("right", er.x + er.width - zw, er.y, zw, er.height);
+      edge("top", er.x, er.y, er.width, zh);
+      edge("bottom", er.x, er.y + er.height - zh, er.width, zh);
+      for (const side of PanelSides) {
+        const r = pm.regions[side];
+        if (r.hidden || r.mode === RegionMode.RAIL || !panel.canDock(side)) {
+          continue;
+        }
+        for (const stack of r.stacks) {
+          let el0;
+          let targetId;
+          if (stack.mode === StackMode.TABS) {
+            if (stack.ids.includes(panel.panelId)) {
+              continue;
+            }
+            el0 = stack.tabs;
+            targetId = stack.active ?? stack.ids[0];
+          } else {
+            targetId = stack.ids[0];
+            if (targetId === panel.panelId) {
+              continue;
+            }
+            const p = pm.panels.get(targetId);
+            if (!p || p.style.display === "none") {
+              continue;
+            }
+            el0 = p;
+          }
+          if (!el0 || targetId === void 0) {
+            continue;
+          }
+          const rect = el0.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) {
+            continue;
+          }
+          mk("stack", pm, side, rect.x, rect.y, rect.width, rect.height, targetId);
+        }
+      }
     }
+    zones.sort((a2, b) => Number(a2.kind === "edge") - Number(b.kind === "edge"));
     return zones;
   }
-  /** Dock or transfer depending on which manager owns the drop zone. */
-  _dropOnZone(id, zone, y) {
-    const index = zone.pm._dropIndex(zone.side, y);
+  /** Dock, tab-into, or transfer depending on the drop zone hit. */
+  _dropOnZone(id, zone, x, y) {
+    if (zone.kind === "stack" && zone.targetId !== void 0) {
+      if (zone.pm === this) {
+        this.dockPanelInto(id, zone.targetId);
+      } else {
+        this.transferPanel(id, zone.pm, zone.side);
+        zone.pm.dockPanelInto(id, zone.targetId);
+      }
+      return;
+    }
+    const index = zone.pm._dropIndex(zone.side, x, y);
     if (zone.pm === this) {
       this.dockPanel(id, zone.side, { index });
     } else {
@@ -49961,17 +50073,20 @@ ${body}}
     this._tether?.end();
     this._tether = void 0;
   }
-  /** Insertion index for a drop at screen-space y within a region. */
-  _dropIndex(side, y) {
+  /** Insertion index (among the region's stacks) for a drop at screen-space
+   *  x/y — panels flow horizontally in top/bottom regions. */
+  _dropIndex(side, x, y) {
     const r = this.regions[side];
+    const horiz = side === "top" || side === "bottom";
     let index = 0;
-    for (const id of r.order) {
-      const p = this.panels.get(id);
-      if (!p) {
+    for (const stack of r.stacks) {
+      const el = stack.mode === StackMode.TABS ? stack.tabs : this.panels.get(stack.ids[0]);
+      if (!el) {
         continue;
       }
-      const rect = p.getBoundingClientRect();
-      if (y > rect.y + rect.height * 0.5) {
+      const rect = el.getBoundingClientRect();
+      const past = horiz ? x > rect.x + rect.width * 0.5 : y > rect.y + rect.height * 0.5;
+      if (past) {
         index++;
       }
     }
@@ -49986,12 +50101,13 @@ ${body}}
     ghost.textContent = panel.def.title;
     document.body.appendChild(ghost);
     const zones = this._makeDropZones(panel);
+    const hitZone = (x, y) => zones.find((z) => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
     const place = (x, y) => {
       ghost.style.left = x + 8 + "px";
       ghost.style.top = y + 8 + "px";
+      const hit = hitZone(x, y);
       for (const z of zones) {
-        const hit = x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h;
-        z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+        z.el.style.background = z === hit ? z.hitBg : z.baseBg;
       }
     };
     place(e.x, e.y);
@@ -50008,11 +50124,9 @@ ${body}}
       if (!commit || !e2) {
         return;
       }
-      const z = zones.find(
-        (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
-      );
+      const z = hitZone(e2.x, e2.y);
       if (z) {
-        this._dropOnZone(id, z, e2.y);
+        this._dropOnZone(id, z, e2.x, e2.y);
       } else if (panel.canFloat()) {
         this.floatPanel(id, { pos: [e2.x - 24, e2.y - 12] });
       }
@@ -50041,6 +50155,7 @@ ${body}}
     let lastx = e.x;
     let lasty = e.y;
     let modal;
+    const hitZone = (x, y) => zones.find((z) => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
     const finish = (commit, e2) => {
       if (modal) {
         popModalLight(modal);
@@ -50053,11 +50168,9 @@ ${body}}
       if (!commit || !e2) {
         return;
       }
-      const z = zones.find(
-        (z2) => e2.x >= z2.x && e2.x <= z2.x + z2.w && e2.y >= z2.y && e2.y <= z2.y + z2.h
-      );
+      const z = hitZone(e2.x, e2.y);
       if (z) {
-        this._dropOnZone(panel.panelId, z, e2.y);
+        this._dropOnZone(panel.panelId, z, e2.x, e2.y);
       }
     };
     modal = pushModalLight({
@@ -50068,9 +50181,9 @@ ${body}}
         lastx = e2.x;
         lasty = e2.y;
         this._showTether(frame);
+        const hit = hitZone(e2.x, e2.y);
         for (const z of zones) {
-          const hit = e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h;
-          z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+          z.el.style.background = z === hit ? z.hitBg : z.baseBg;
         }
       },
       on_pointerup: (e2) => {
@@ -50124,18 +50237,78 @@ ${body}}
     return dock === "float" ? "right" : dock;
   }
   _findSide(id) {
-    return PanelSides.find((side) => this.regions[side].order.includes(id));
+    return PanelSides.find((side) => this.regions[side].stacks.some((s) => s.ids.includes(id)));
   }
   _removeFromLayout(id) {
     this._unfloat(id);
     for (const side of PanelSides) {
       const r = this.regions[side];
-      const i = r.order.indexOf(id);
-      if (i >= 0) {
-        r.order.splice(i, 1);
+      let changed = false;
+      for (let i = r.stacks.length - 1; i >= 0; i--) {
+        const s = r.stacks[i];
+        const j = s.ids.indexOf(id);
+        if (j < 0) {
+          continue;
+        }
+        s.ids.splice(j, 1);
+        changed = true;
+        if (s.ids.length === 0) {
+          r.stacks.splice(i, 1);
+        } else if (s.ids.length === 1) {
+          s.mode = StackMode.STACK;
+        }
+        if (s.active === id) {
+          s.active = s.ids[0];
+        }
+      }
+      if (changed) {
         this._rebuildRegion(r);
       }
     }
+  }
+  /** Rollout collapse changed on a docked panel: re-fit the panel and its
+   *  region so a collapsed panel gives up its footprint. */
+  _onPanelCollapse(panel) {
+    const side = this._findSide(panel.panelId);
+    if (!side) {
+      return;
+    }
+    const r = this.regions[side];
+    this._applyCollapseShrink(r, panel);
+    this._updateRegion(r);
+  }
+  /** In a horizontal region a collapsed rollout shrinks to its header so
+   *  siblings take the space; expanded panels stretch as before. */
+  _applyCollapseShrink(r, panel) {
+    const horiz = r.side === "top" || r.side === "bottom";
+    const shrink = horiz && panel.closed && r.mode === RegionMode.DOCKED;
+    panel.style.width = shrink ? "fit-content" : "100%";
+    panel.style.alignSelf = shrink ? "flex-start" : "";
+    panel.style.flexGrow = shrink ? "0" : "";
+  }
+  /** True when every visible panel in a docked region is a collapsed
+   *  rollout — the region then shrinks to its headers instead of r.size. */
+  _allPanelsCollapsed(r) {
+    if (r.mode !== RegionMode.DOCKED) {
+      return false;
+    }
+    let seen = false;
+    for (const stack of r.stacks) {
+      for (const id of stack.ids) {
+        if (this.hiddenPanels.has(id)) {
+          continue;
+        }
+        if (stack.mode === StackMode.TABS) {
+          return false;
+        }
+        const panel = this.panels.get(id);
+        if (!panel || !panel.closed) {
+          return false;
+        }
+        seen = true;
+      }
+    }
+    return seen;
   }
   _updateRegion(r) {
     const c = r.container;
@@ -50148,7 +50321,7 @@ ${body}}
     } else {
       c.setAttribute("data-dock-hidden", "1");
     }
-    const collapsed = r.mode === RegionMode.RAIL && r.railCollapsed;
+    const collapsed = r.mode === RegionMode.RAIL && r.railCollapsed || this._allPanelsCollapsed(r);
     if (r.side === "left" || r.side === "right") {
       c.style.setProperty("width", collapsed ? "auto" : r.size + "px", "important");
       c.style.removeProperty("height");
@@ -50157,7 +50330,7 @@ ${body}}
       c.style.setProperty("width", "100%", "important");
     }
   }
-  /** Rebuild a region's DOM from its order/mode; panels survive detached. */
+  /** Rebuild a region's DOM from its stacks/mode; panels survive detached. */
   _rebuildRegion(r) {
     const c = r.container;
     if (!c) {
@@ -50174,46 +50347,98 @@ ${body}}
     c.clear();
     r.rail = void 0;
     r.stackWrap = void 0;
-    r.tabStack = void 0;
+    for (const stack of r.stacks) {
+      stack.tabs = void 0;
+    }
     if (r.mode === RegionMode.RAIL && r.order.length > 0) {
       this._buildRail(r);
-    } else if (r.stackMode === StackMode.TABS && r.order.length > 0) {
-      this._buildTabStack(r);
     } else {
-      for (const id of r.order) {
-        const panel = this._ensurePanel(id);
-        c.add(panel);
-        this._setTitleHidden(panel, false);
-        panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+      for (const stack of r.stacks) {
+        if (stack.mode === StackMode.TABS) {
+          this._buildTabStack(r, stack);
+          continue;
+        }
+        for (const id of stack.ids) {
+          const panel = this._ensurePanel(id);
+          c.add(panel);
+          this._setTitleHidden(panel, false);
+          panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+          this._applyCollapseShrink(r, panel);
+        }
       }
     }
     this._addGrip(r);
     this._updateRegion(r);
   }
-  /** Tabs presentation for a docked region: one visible panel selected by
-   *  a horizontal tab bar; panel title bars hide (the tabs are the headers). */
-  _buildTabStack(r) {
+  /** Tabs presentation for one stack: one visible panel selected by a tab
+   *  bar; panel title bars hide (the tabs are the headers).  Dragging a
+   *  tab out of the bar detaches its panel into the drag-to-dock gesture. */
+  _buildTabStack(r, stack) {
     const c = r.container;
+    const visible = stack.ids.filter((id) => !this.hiddenPanels.has(id));
+    if (visible.length === 0) {
+      return;
+    }
     const tc = UIBase2.createElement("tabcontainer-x");
     tc.ctx = this.host.ctx;
     tc.setAttribute("bar_pos", "top");
-    r.tabStack = tc;
+    stack.tabs = tc;
     c._add(tc);
     tc._init();
-    tc.style.setProperty("width", "100%", "important");
+    if (r.side === "left" || r.side === "right") {
+      tc.style.setProperty("width", "100%", "important");
+    } else {
+      tc.style.setProperty("min-width", "0", "important");
+      tc.style.setProperty("align-self", "stretch", "important");
+    }
     tc.style.setProperty("flex-grow", "1", "important");
     tc.style.setProperty("min-height", "0", "important");
-    for (const id of r.order) {
-      if (this.hiddenPanels.has(id)) {
-        continue;
-      }
+    for (const id of visible) {
       const panel = this._ensurePanel(id);
       const tab2 = tc.tab(this.defs.get(id).title, id);
       tab2.add(panel);
       this._setTitleHidden(panel, true);
       panel.closed = false;
       panel.style.display = "";
+      this._applyCollapseShrink(r, panel);
+      tab2.ontabdragstart = (e) => {
+        e.preventDefault();
+        this._beginTabDragOut(panel, e);
+      };
     }
+    if (stack.active === void 0 || !visible.includes(stack.active)) {
+      stack.active = visible[0];
+    }
+    tc.setActive(stack.active);
+    tc.onselect = (e) => {
+      const tabId = e?.tab?.id;
+      if (tabId !== void 0 && stack.ids.includes(String(tabId))) {
+        stack.active = String(tabId);
+      }
+    };
+  }
+  /** Watch the pointer after a tab-bar press; past the drag threshold the
+   *  tab's panel detaches into the normal drag-to-dock gesture. */
+  _beginTabDragOut(panel, e) {
+    if (!this.host.panelLayoutEditable || (panel.def.flags ?? 0) & PanelFlags.PINNED) {
+      return;
+    }
+    const startx = e.x;
+    const starty = e.y;
+    const onmove = (e2) => {
+      const dx = e2.x - startx;
+      const dy = e2.y - starty;
+      if (dx * dx + dy * dy > 49) {
+        cleanup();
+        this._beginPanelDrag(panel, e2);
+      }
+    };
+    const cleanup = () => {
+      document.removeEventListener("pointermove", onmove, true);
+      document.removeEventListener("pointerup", cleanup, true);
+    };
+    document.addEventListener("pointermove", onmove, true);
+    document.addEventListener("pointerup", cleanup, true);
   }
   /** Resize grip on the region's center-facing edge. */
   _addGrip(r) {
@@ -50241,7 +50466,7 @@ ${body}}
     r.grip = grip;
   }
   _startGripDrag(r, e) {
-    if (r.mode === RegionMode.RAIL && r.railCollapsed) {
+    if (r.mode === RegionMode.RAIL && r.railCollapsed || this._allPanelsCollapsed(r)) {
       return;
     }
     const startSize = r.size;
@@ -50343,6 +50568,7 @@ ${body}}
       wrap.add(panel);
       this._setTitleHidden(panel, true);
       panel.closed = false;
+      this._applyCollapseShrink(r, panel);
     }
     this._applyRailState(r);
   }
@@ -50395,9 +50621,28 @@ ${body}}
     panel.def = def;
     panel.manager = this;
     panel.ctx = this.host.ctx;
+    panel.contents.ctx = this.host.ctx;
     panel.setAttribute("label", def.title);
     this.panels.set(id, panel);
-    def.build(panel, panel);
+    def.build(panel.contents, panel);
+    const [minW, minH] = def.minSize ?? [];
+    const [maxW, maxH] = def.maxSize ?? [];
+    const cs = panel.contents.style;
+    if (minW !== void 0) {
+      cs.minWidth = minW + "px";
+    }
+    if (minH !== void 0) {
+      cs.minHeight = minH + "px";
+    }
+    if (maxW !== void 0) {
+      cs.maxWidth = maxW + "px";
+    }
+    if (maxH !== void 0) {
+      cs.maxHeight = maxH + "px";
+    }
+    if (maxW !== void 0 || maxH !== void 0) {
+      cs.overflow = "auto";
+    }
     this._attachHeaderDrag(panel);
     const pending = this.pendingState.get(id);
     if (pending) {

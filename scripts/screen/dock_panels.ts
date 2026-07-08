@@ -74,13 +74,13 @@ export const PanelDockMask = {
 
 export const PanelFlags = {
   /** Panel cannot be closed by the user. */
-  NO_CLOSE: 1,
+  NO_CLOSE   : 1,
   /** Panel cannot be floated (implies it stays in its allowed docks). */
-  NO_FLOAT: 2,
+  NO_FLOAT   : 2,
   /** Rollout collapse (PanelFrame closed state) is disabled. */
   NO_COLLAPSE: 4,
   /** Panel cannot be moved at all; it stays where definePanels() put it. */
-  PINNED: 8,
+  PINNED     : 8,
 };
 
 export const RegionMode = {
@@ -90,7 +90,7 @@ export const RegionMode = {
    * Only an edge-aligned tab bar is shown; clicking a tab toggles the whole
    * group's visibility.  The bar itself never hides.
    */
-  RAIL: 1,
+  RAIL  : 1,
 };
 
 /** How the panels within one stack are presented. */
@@ -98,7 +98,7 @@ export const StackMode = {
   /** Vertical rollout list (Blender N-panel style). */
   STACK: 0,
   /** One visible panel selected by a tab bar. */
-  TABS: 1,
+  TABS : 1,
 };
 
 /**
@@ -119,8 +119,11 @@ export interface PanelDef<CTX extends IContextBase = IContextBase> {
   allowedDocks?: number;
   /** PanelFlags bits. */
   flags?: number;
-  /** Minimum content size in CSS pixels. */
-  minSize?: [number, number];
+  /** Minimum content size in CSS pixels; either component may be omitted. */
+  minSize?: [(number | undefined)?, (number | undefined)?];
+  /** Maximum content size in CSS pixels; either component may be omitted.
+   *  Content past the limit scrolls inside the panel. */
+  maxSize?: [(number | undefined)?, (number | undefined)?];
   /**
    * Builds the panel contents.  Called once when the panel is first shown;
    * widget state is restored afterwards from the per-panel uidata blob.
@@ -178,11 +181,14 @@ export class PanelStackState {
   static STRUCT = `pathux.PanelStackState {
   mode     : int;
   panelIds : array(string);
+  active   : string;
 }`;
 
   /** StackMode. */
   mode = StackMode.STACK;
   panelIds: string[] = [];
+  /** Tabs mode: id of the active tab ("" when unset). */
+  active = "";
 
   loadSTRUCT(reader: StructReader<this>) {
     reader(this);
@@ -306,12 +312,46 @@ export class DockPanel<CTX extends IContextBase = IContextBase> extends PanelFra
   canClose(): boolean {
     return !((this.def.flags ?? 0) & PanelFlags.NO_CLOSE);
   }
-}
 
+  override _updateClosed(changed: boolean) {
+    super._updateClosed(changed);
+    //collapsed panels give up their footprint, not just their contents
+    this.manager?._onPanelCollapse(this);
+  }
+}
 
 UIBase.internalRegister(DockPanel as unknown as typeof UIBase);
 
 let _dockpin_idgen = 0;
+
+/** A drag-drop target: an edge region ("edge") or an existing docked
+ *  panel/tab group to merge into as tabs ("stack"). */
+interface DropZone<CTX extends IContextBase = IContextBase> {
+  kind: "edge" | "stack";
+  side: PanelSide;
+  pm: PanelManager<CTX>;
+  /** Stack zones: a panel id inside the stack to merge with. */
+  targetId?: string;
+  el: HTMLDivElement;
+  baseBg: string;
+  hitBg: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Runtime (non-serialized) state of one stack of panels within a region. */
+export interface PanelStackRuntime<CTX extends IContextBase = IContextBase> {
+  /** StackMode.  STACK stacks hold exactly one panel (a rollout);
+   *  TABS stacks hold one or more panels behind a tab bar. */
+  mode: number;
+  ids: string[];
+  /** Tabs mode: id of the active tab. */
+  active?: string;
+  /** Tabs mode: the TabContainer presenting the stack (transient). */
+  tabs?: TabContainer<CTX>;
+}
 
 /** Runtime (non-serialized) state of one dock region. */
 export interface DockRegionRuntime<CTX extends IContextBase = IContextBase> {
@@ -323,18 +363,17 @@ export interface DockRegionRuntime<CTX extends IContextBase = IContextBase> {
   mode: number;
   hidden: boolean;
   railCollapsed: boolean;
-  /** Panel ids in display order (single stack in this phase). */
-  order: string[];
-  /** StackMode: rollout stack (default) or one-visible-panel tabs. */
-  stackMode: number;
+  /** Panel stacks in display order.  Panels dock as their own STACK-mode
+   *  stack; dropping one panel onto another merges them into a TABS stack. */
+  stacks: PanelStackRuntime<CTX>[];
+  /** All panel ids in the region, in display order (derived from stacks). */
+  readonly order: string[];
   /** Rail mode: the edge-aligned tab bar (never hidden). */
   rail?: TabBar<CTX>;
   /** Rail mode: container holding the panels next to the rail. */
   stackWrap?: Container<CTX>;
   /** Rail mode: id of the panel shown when the group is expanded. */
   activeRail?: string;
-  /** Tabs stack mode: the TabContainer presenting the region's panels. */
-  tabStack?: TabContainer<CTX>;
   /** Resize grip on the region's center-facing edge. */
   grip?: HTMLDivElement;
 }
@@ -385,8 +424,10 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       mode         : RegionMode.DOCKED,
       hidden       : false,
       railCollapsed: false,
-      order        : [],
-      stackMode    : StackMode.STACK,
+      stacks       : [],
+      get order(): string[] {
+        return this.stacks.flatMap((s: PanelStackRuntime<CTX>) => s.ids);
+      },
     });
 
     this.regions = {
@@ -499,16 +540,46 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
   /* --- imperative layout control --- */
 
-  /** Move a panel into an edge region; index positions it in the stack. */
+  /** Move a panel into an edge region; index positions it among the
+   *  region's stacks (the panel becomes its own rollout stack). */
   dockPanel(id: string, side: PanelSide, opts?: { index?: number }): void {
     this._ensurePanel(id);
     this._removeFromLayout(id);
     this.lastDock.set(id, side);
 
     const r = this.regions[side];
-    const index = Math.min(opts?.index ?? r.order.length, r.order.length);
-    r.order.splice(index, 0, id);
+    const index = Math.min(opts?.index ?? r.stacks.length, r.stacks.length);
+    r.stacks.splice(index, 0, { mode: StackMode.STACK, ids: [id] });
 
+    this._rebuildRegion(r);
+  }
+
+  /** Dock a panel into the same stack as `targetId`, presenting the stack
+   *  as tabs — the drop-a-panel-onto-a-panel gesture.  No-ops when the
+   *  target isn't docked or the panel may not dock on that side. */
+  dockPanelInto(id: string, targetId: string): void {
+    if (id === targetId || !this.defs.has(targetId)) {
+      return;
+    }
+
+    const panel = this._ensurePanel(id);
+    const side = this._findSide(targetId);
+
+    if (!side || !panel.canDock(side)) {
+      return;
+    }
+
+    this._removeFromLayout(id);
+
+    //re-find: the removal may have collapsed or dropped stacks
+    const r = this.regions[this._findSide(targetId)!];
+    const stack = r.stacks.find((s) => s.ids.includes(targetId))!;
+
+    stack.mode = StackMode.TABS;
+    stack.ids.splice(stack.ids.indexOf(targetId) + 1, 0, id);
+    stack.active = id;
+
+    this.lastDock.set(id, r.side);
     this._rebuildRegion(r);
   }
 
@@ -588,7 +659,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     }
     for (const side of PanelSides) {
       const r = this.regions[side];
-      r.order = [];
+      r.stacks = [];
       r.hidden = false;
       r.railCollapsed = false;
     }
@@ -656,16 +727,30 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     this._updateRegion(this.regions[side]);
   }
 
-  /** Present a docked region's panels as rollout stack or as tabs
-   *  (StackMode.STACK / StackMode.TABS). */
+  /** Present a docked region's panels as rollout stacks or as one tab
+   *  group (StackMode.STACK / StackMode.TABS).  This merges/splits the
+   *  region's stacks; per-stack tab groups are made with dockPanelInto. */
   setStackMode(side: PanelSide, mode: number): void {
     const r = this.regions[side];
+    const ids = r.order;
 
-    if (r.stackMode === mode) {
+    if (ids.length === 0) {
       return;
     }
 
-    r.stackMode = mode;
+    if (mode === StackMode.TABS) {
+      if (r.stacks.length === 1 && r.stacks[0].mode === StackMode.TABS) {
+        return;
+      }
+      const active = r.stacks.find((s) => s.mode === StackMode.TABS)?.active;
+      r.stacks = [{ mode: StackMode.TABS, ids, active: active ?? ids[0] }];
+    } else {
+      if (r.stacks.every((s) => s.mode === StackMode.STACK)) {
+        return;
+      }
+      r.stacks = ids.map((id) => ({ mode: StackMode.STACK, ids: [id] }));
+    }
+
     this._rebuildRegion(r);
   }
 
@@ -700,10 +785,13 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       rs.hidden = r.hidden;
       rs.railCollapsed = r.railCollapsed;
 
-      const stack = new PanelStackState();
-      stack.mode = r.stackMode;
-      stack.panelIds = [...r.order];
-      rs.stacks = [stack];
+      rs.stacks = r.stacks.map((s) => {
+        const stack = new PanelStackState();
+        stack.mode = s.mode;
+        stack.panelIds = [...s.ids];
+        stack.active = s.active ?? "";
+        return stack;
+      });
 
       state.regions.push(rs);
     }
@@ -747,7 +835,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
    */
   loadLayout(state: PanelLayoutState): void {
     for (const side of PanelSides) {
-      this.regions[side].order = [];
+      this.regions[side].stacks = [];
     }
     this.hiddenPanels.clear();
     this.pendingState.clear();
@@ -773,15 +861,34 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       r.mode = rs.mode;
       r.hidden = rs.hidden;
       r.railCollapsed = rs.railCollapsed;
-      r.stackMode = rs.stacks[0]?.mode ?? StackMode.STACK;
 
       for (const stack of rs.stacks) {
-        for (const id of stack.panelIds) {
-          if (this.defs.has(id) && !this._isPlaced(id)) {
-            this.dockPanel(id, side);
+        const ids = stack.panelIds.filter((id) => this.defs.has(id) && !this._isPlaced(id));
+        if (ids.length === 0) {
+          continue;
+        }
+
+        if (stack.mode === StackMode.TABS && ids.length > 1) {
+          r.stacks.push({
+            mode: StackMode.TABS,
+            ids,
+            active: ids.includes(stack.active) ? stack.active : ids[0],
+          });
+        } else {
+          //rollout stacks are per-panel; also splits legacy multi-id stacks
+          for (const id of ids) {
+            r.stacks.push({ mode: StackMode.STACK, ids: [id] });
           }
         }
+
+        for (const id of ids) {
+          this.lastDock.set(id, side);
+        }
       }
+    }
+
+    for (const side of PanelSides) {
+      this._rebuildRegion(this.regions[side]);
     }
 
     for (const fs of state.floating) {
@@ -947,7 +1054,12 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
    *  are editors of the same type).  Widget state travels via saveUIData;
    *  in this editor the panel becomes closed ("moved away"), so showPanel
    *  brings it back locally. */
-  transferPanel(id: string, target: PanelManager<CTX>, side: PanelSide, opts?: { index?: number }): void {
+  transferPanel(
+    id: string,
+    target: PanelManager<CTX>,
+    side: PanelSide,
+    opts?: { index?: number }
+  ): void {
     if (target === this || !target.defs.has(id)) {
       return;
     }
@@ -973,18 +1085,11 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
   /* --- drag interaction --- */
 
-  /** Drop zones over the edges of the host editor and (for cross-editor
-   *  transfer) same-type peers.  Elements are appended to document.body. */
-  private _makeDropZones(panel: DockPanel<CTX>) {
-    const zones: {
-      side: PanelSide;
-      pm: PanelManager<CTX>;
-      el: HTMLDivElement;
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    }[] = [];
+  /** Drop zones over the edges of the host editor, over docked panels
+   *  (drop to group as tabs), and — for cross-editor transfer — the same
+   *  zones of same-type peers.  Elements are appended to document.body. */
+  private _makeDropZones(panel: DockPanel<CTX>): DropZone<CTX>[] {
+    const zones: DropZone<CTX>[] = [];
 
     const targets: PanelManager<CTX>[] = [this];
     for (const peer of this.host.getPanelPeers?.() ?? []) {
@@ -993,41 +1098,108 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       }
     }
 
+    const mk = (
+      kind: "edge" | "stack",
+      pm: PanelManager<CTX>,
+      side: PanelSide,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      targetId?: string
+    ) => {
+      //edge zones blue, tab-into zones green
+      const rgb = kind === "edge" ? "90,140,230" : "80,200,120";
+      const baseBg = `rgba(${rgb},0.25)`;
+
+      const el = document.createElement("div");
+      el.style.cssText =
+        `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;` +
+        `background:${baseBg};border:2px solid rgba(${rgb},0.7);` +
+        `border-radius:4px;z-index:${kind === "edge" ? 299 : 300};pointer-events:none;`;
+      document.body.appendChild(el);
+
+      zones.push({ kind, side, pm, targetId, el, baseBg, hitBg: `rgba(${rgb},0.5)`, x, y, w, h });
+    };
+
     for (const pm of targets) {
       const er = pm.host.getBoundingClientRect();
       const zw = Math.min(Math.max(er.width * 0.18, 48), 160);
       const zh = Math.min(Math.max(er.height * 0.18, 40), 120);
 
-      const mk = (side: PanelSide, x: number, y: number, w: number, h: number) => {
-        if (!panel.canDock(side)) {
-          return;
+      const edge = (side: PanelSide, x: number, y: number, w: number, h: number) => {
+        if (panel.canDock(side)) {
+          mk("edge", pm, side, x, y, w, h);
         }
-
-        const el = document.createElement("div");
-        el.style.cssText =
-          `position:fixed;left:${x}px;top:${y}px;width:${w}px;height:${h}px;` +
-          "background:rgba(90,140,230,0.25);border:2px solid rgba(90,140,230,0.7);" +
-          "border-radius:4px;z-index:299;pointer-events:none;";
-        document.body.appendChild(el);
-        zones.push({ side, pm, el, x, y, w, h });
       };
 
-      mk("left", er.x, er.y, zw, er.height);
-      mk("right", er.x + er.width - zw, er.y, zw, er.height);
-      mk("top", er.x, er.y, er.width, zh);
-      mk("bottom", er.x, er.y + er.height - zh, er.width, zh);
+      edge("left", er.x, er.y, zw, er.height);
+      edge("right", er.x + er.width - zw, er.y, zw, er.height);
+      edge("top", er.x, er.y, er.width, zh);
+      edge("bottom", er.x, er.y + er.height - zh, er.width, zh);
+
+      //tab-into zones: one per visible docked panel / tab group
+      for (const side of PanelSides) {
+        const r = pm.regions[side];
+        if (r.hidden || r.mode === RegionMode.RAIL || !panel.canDock(side)) {
+          continue;
+        }
+
+        for (const stack of r.stacks) {
+          let el0: Element | undefined;
+          let targetId: string | undefined;
+
+          if (stack.mode === StackMode.TABS) {
+            if (stack.ids.includes(panel.panelId)) {
+              continue; //already in this group
+            }
+            el0 = stack.tabs;
+            targetId = stack.active ?? stack.ids[0];
+          } else {
+            targetId = stack.ids[0];
+            if (targetId === panel.panelId) {
+              continue;
+            }
+            const p = pm.panels.get(targetId);
+            if (!p || p.style.display === "none") {
+              continue;
+            }
+            el0 = p;
+          }
+
+          if (!el0 || targetId === undefined) {
+            continue;
+          }
+
+          const rect = el0.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) {
+            continue;
+          }
+
+          mk("stack", pm, side, rect.x, rect.y, rect.width, rect.height, targetId);
+        }
+      }
     }
+
+    //hit-testing prefers the more specific tab-into zones
+    zones.sort((a, b) => Number(a.kind === "edge") - Number(b.kind === "edge"));
 
     return zones;
   }
 
-  /** Dock or transfer depending on which manager owns the drop zone. */
-  private _dropOnZone(
-    id: string,
-    zone: { side: PanelSide; pm: PanelManager<CTX> },
-    y: number
-  ): void {
-    const index = zone.pm._dropIndex(zone.side, y);
+  /** Dock, tab-into, or transfer depending on the drop zone hit. */
+  private _dropOnZone(id: string, zone: DropZone<CTX>, x: number, y: number): void {
+    if (zone.kind === "stack" && zone.targetId !== undefined) {
+      if (zone.pm === this) {
+        this.dockPanelInto(id, zone.targetId);
+      } else {
+        this.transferPanel(id, zone.pm, zone.side);
+        zone.pm.dockPanelInto(id, zone.targetId);
+      }
+      return;
+    }
+
+    const index = zone.pm._dropIndex(zone.side, x, y);
 
     if (zone.pm === this) {
       this.dockPanel(id, zone.side, { index });
@@ -1067,18 +1239,25 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     this._tether = undefined;
   }
 
-  /** Insertion index for a drop at screen-space y within a region. */
-  private _dropIndex(side: PanelSide, y: number): number {
+  /** Insertion index (among the region's stacks) for a drop at screen-space
+   *  x/y — panels flow horizontally in top/bottom regions. */
+  private _dropIndex(side: PanelSide, x: number, y: number): number {
     const r = this.regions[side];
+    const horiz = side === "top" || side === "bottom";
     let index = 0;
 
-    for (const id of r.order) {
-      const p = this.panels.get(id);
-      if (!p) {
+    for (const stack of r.stacks) {
+      const el =
+        stack.mode === StackMode.TABS
+          ? stack.tabs
+          : (this.panels.get(stack.ids[0]) as HTMLElement | undefined);
+      if (!el) {
         continue;
       }
-      const rect = p.getBoundingClientRect();
-      if (y > rect.y + rect.height * 0.5) {
+
+      const rect = el.getBoundingClientRect();
+      const past = horiz ? x > rect.x + rect.width * 0.5 : y > rect.y + rect.height * 0.5;
+      if (past) {
         index++;
       }
     }
@@ -1101,13 +1280,16 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
     const zones = this._makeDropZones(panel);
 
+    const hitZone = (x: number, y: number) =>
+      zones.find((z) => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
+
     const place = (x: number, y: number) => {
       ghost.style.left = x + 8 + "px";
       ghost.style.top = y + 8 + "px";
 
+      const hit = hitZone(x, y);
       for (const z of zones) {
-        const hit = x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h;
-        z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+        z.el.style.background = z === hit ? z.hitBg : z.baseBg;
       }
     };
     place(e.x, e.y);
@@ -1128,12 +1310,10 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         return;
       }
 
-      const z = zones.find(
-        (z) => e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h
-      );
+      const z = hitZone(e2.x, e2.y);
 
       if (z) {
-        this._dropOnZone(id, z, e2.y);
+        this._dropOnZone(id, z, e2.x, e2.y);
       } else if (panel.canFloat()) {
         this.floatPanel(id, { pos: [e2.x - 24, e2.y - 12] });
       }
@@ -1168,6 +1348,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     let lasty = e.y;
     let modal: ModalState | undefined;
 
+    const hitZone = (x: number, y: number) =>
+      zones.find((z) => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
+
     const finish = (commit: boolean, e2?: MouseEvent) => {
       if (modal) {
         popModalLight(modal);
@@ -1182,11 +1365,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         return;
       }
 
-      const z = zones.find(
-        (z) => e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h
-      );
+      const z = hitZone(e2.x, e2.y);
       if (z) {
-        this._dropOnZone(panel.panelId, z, e2.y);
+        this._dropOnZone(panel.panelId, z, e2.x, e2.y);
       }
     };
 
@@ -1203,9 +1384,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
         //keep the ownership link visible while dragging
         this._showTether(frame);
 
+        const hit = hitZone(e2.x, e2.y);
         for (const z of zones) {
-          const hit = e2.x >= z.x && e2.x <= z.x + z.w && e2.y >= z.y && e2.y <= z.y + z.h;
-          z.el.style.background = hit ? "rgba(90,140,230,0.5)" : "rgba(90,140,230,0.25)";
+          z.el.style.background = z === hit ? z.hitBg : z.baseBg;
         }
       },
       on_pointerup: (e2: PointerEvent) => {
@@ -1271,7 +1452,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
   }
 
   private _findSide(id: string): PanelSide | undefined {
-    return PanelSides.find((side) => this.regions[side].order.includes(id));
+    return PanelSides.find((side) => this.regions[side].stacks.some((s) => s.ids.includes(id)));
   }
 
   private _removeFromLayout(id: string) {
@@ -1279,12 +1460,84 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
     for (const side of PanelSides) {
       const r = this.regions[side];
-      const i = r.order.indexOf(id);
-      if (i >= 0) {
-        r.order.splice(i, 1);
+      let changed = false;
+
+      for (let i = r.stacks.length - 1; i >= 0; i--) {
+        const s = r.stacks[i];
+        const j = s.ids.indexOf(id);
+        if (j < 0) {
+          continue;
+        }
+
+        s.ids.splice(j, 1);
+        changed = true;
+
+        if (s.ids.length === 0) {
+          r.stacks.splice(i, 1);
+        } else if (s.ids.length === 1) {
+          //a tab group of one degrades to a plain rollout
+          s.mode = StackMode.STACK;
+        }
+        if (s.active === id) {
+          s.active = s.ids[0];
+        }
+      }
+
+      if (changed) {
         this._rebuildRegion(r);
       }
     }
+  }
+
+  /** Rollout collapse changed on a docked panel: re-fit the panel and its
+   *  region so a collapsed panel gives up its footprint. */
+  _onPanelCollapse(panel: DockPanel<CTX>): void {
+    const side = this._findSide(panel.panelId);
+    if (!side) {
+      return;
+    }
+
+    const r = this.regions[side];
+    this._applyCollapseShrink(r, panel);
+    this._updateRegion(r);
+  }
+
+  /** In a horizontal region a collapsed rollout shrinks to its header so
+   *  siblings take the space; expanded panels stretch as before. */
+  private _applyCollapseShrink(r: DockRegionRuntime<CTX>, panel: DockPanel<CTX>) {
+    const horiz = r.side === "top" || r.side === "bottom";
+    const shrink = horiz && panel.closed && r.mode === RegionMode.DOCKED;
+
+    panel.style.width = shrink ? "fit-content" : "100%";
+    panel.style.alignSelf = shrink ? "flex-start" : "";
+    panel.style.flexGrow = shrink ? "0" : "";
+  }
+
+  /** True when every visible panel in a docked region is a collapsed
+   *  rollout — the region then shrinks to its headers instead of r.size. */
+  private _allPanelsCollapsed(r: DockRegionRuntime<CTX>): boolean {
+    if (r.mode !== RegionMode.DOCKED) {
+      return false;
+    }
+
+    let seen = false;
+    for (const stack of r.stacks) {
+      for (const id of stack.ids) {
+        if (this.hiddenPanels.has(id)) {
+          continue;
+        }
+        if (stack.mode === StackMode.TABS) {
+          return false; //tab groups have no rollout collapse
+        }
+        const panel = this.panels.get(id);
+        if (!panel || !panel.closed) {
+          return false;
+        }
+        seen = true;
+      }
+    }
+
+    return seen;
   }
 
   private _updateRegion(r: DockRegionRuntime<CTX>) {
@@ -1300,8 +1553,10 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       c.setAttribute("data-dock-hidden", "1");
     }
 
-    //a collapsed rail shrinks to the bare tab bar
-    const collapsed = r.mode === RegionMode.RAIL && r.railCollapsed;
+    //a collapsed rail shrinks to the bare tab bar; a docked region whose
+    //panels are all collapsed rollouts shrinks to their headers
+    const collapsed =
+      (r.mode === RegionMode.RAIL && r.railCollapsed) || this._allPanelsCollapsed(r);
 
     if (r.side === "left" || r.side === "right") {
       c.style.setProperty("width", collapsed ? "auto" : r.size + "px", "important");
@@ -1312,7 +1567,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     }
   }
 
-  /** Rebuild a region's DOM from its order/mode; panels survive detached. */
+  /** Rebuild a region's DOM from its stacks/mode; panels survive detached. */
   private _rebuildRegion(r: DockRegionRuntime<CTX>) {
     const c = r.container;
     if (!c) {
@@ -1332,18 +1587,26 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     c.clear();
     r.rail = undefined;
     r.stackWrap = undefined;
-    r.tabStack = undefined;
+    for (const stack of r.stacks) {
+      stack.tabs = undefined;
+    }
 
     if (r.mode === RegionMode.RAIL && r.order.length > 0) {
       this._buildRail(r);
-    } else if (r.stackMode === StackMode.TABS && r.order.length > 0) {
-      this._buildTabStack(r);
     } else {
-      for (const id of r.order) {
-        const panel = this._ensurePanel(id);
-        c.add(panel as unknown as Container<CTX>);
-        this._setTitleHidden(panel, false);
-        panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+      for (const stack of r.stacks) {
+        if (stack.mode === StackMode.TABS) {
+          this._buildTabStack(r, stack);
+          continue;
+        }
+
+        for (const id of stack.ids) {
+          const panel = this._ensurePanel(id);
+          c.add(panel as unknown as Container<CTX>);
+          this._setTitleHidden(panel, false);
+          panel.style.display = this.hiddenPanels.has(id) ? "none" : "";
+          this._applyCollapseShrink(r, panel);
+        }
       }
     }
 
@@ -1351,28 +1614,35 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     this._updateRegion(r);
   }
 
-  /** Tabs presentation for a docked region: one visible panel selected by
-   *  a horizontal tab bar; panel title bars hide (the tabs are the headers). */
-  private _buildTabStack(r: DockRegionRuntime<CTX>) {
+  /** Tabs presentation for one stack: one visible panel selected by a tab
+   *  bar; panel title bars hide (the tabs are the headers).  Dragging a
+   *  tab out of the bar detaches its panel into the drag-to-dock gesture. */
+  private _buildTabStack(r: DockRegionRuntime<CTX>, stack: PanelStackRuntime<CTX>) {
     const c = r.container!;
+
+    const visible = stack.ids.filter((id) => !this.hiddenPanels.has(id));
+    if (visible.length === 0) {
+      return;
+    }
 
     const tc = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;
     tc.ctx = this.host.ctx;
     tc.setAttribute("bar_pos", "top");
-    r.tabStack = tc;
+    stack.tabs = tc;
 
     c._add(tc as unknown as UIBase<CTX>);
     tc._init();
 
-    tc.style.setProperty("width", "100%", "important");
+    if (r.side === "left" || r.side === "right") {
+      tc.style.setProperty("width", "100%", "important");
+    } else {
+      tc.style.setProperty("min-width", "0", "important");
+      tc.style.setProperty("align-self", "stretch", "important");
+    }
     tc.style.setProperty("flex-grow", "1", "important");
     tc.style.setProperty("min-height", "0", "important");
 
-    for (const id of r.order) {
-      if (this.hiddenPanels.has(id)) {
-        continue;
-      }
-
+    for (const id of visible) {
       const panel = this._ensurePanel(id);
       const tab = tc.tab(this.defs.get(id)!.title, id);
 
@@ -1380,7 +1650,56 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       this._setTitleHidden(panel, true);
       panel.closed = false; //rollout collapse is meaningless without a header
       panel.style.display = "";
+      this._applyCollapseShrink(r, panel);
+
+      //dragging a tab out of the bar detaches its panel
+      tab.ontabdragstart = (e: PointerEvent) => {
+        e.preventDefault(); //suppress the tab bar's own reorder-drag
+        this._beginTabDragOut(panel, e);
+      };
     }
+
+    if (stack.active === undefined || !visible.includes(stack.active)) {
+      stack.active = visible[0];
+    }
+    tc.setActive(stack.active);
+
+    //record tab switches so saves and rebuilds keep the active tab
+    tc.onselect = (e: { tab?: { id?: unknown } }) => {
+      const tabId = e?.tab?.id;
+      if (tabId !== undefined && stack.ids.includes(String(tabId))) {
+        stack.active = String(tabId);
+      }
+    };
+  }
+
+  /** Watch the pointer after a tab-bar press; past the drag threshold the
+   *  tab's panel detaches into the normal drag-to-dock gesture. */
+  private _beginTabDragOut(panel: DockPanel<CTX>, e: PointerEvent) {
+    if (!this.host.panelLayoutEditable || (panel.def.flags ?? 0) & PanelFlags.PINNED) {
+      return;
+    }
+
+    const startx = e.x;
+    const starty = e.y;
+
+    const onmove = (e2: PointerEvent) => {
+      const dx = e2.x - startx;
+      const dy = e2.y - starty;
+
+      if (dx * dx + dy * dy > 49) {
+        cleanup();
+        this._beginPanelDrag(panel, e2);
+      }
+    };
+    const cleanup = () => {
+      document.removeEventListener("pointermove", onmove as EventListener, true);
+      document.removeEventListener("pointerup", cleanup, true);
+    };
+
+    //capture phase: the tab bar's canvas handlers stopPropagation on move
+    document.addEventListener("pointermove", onmove as EventListener, true);
+    document.addEventListener("pointerup", cleanup, true);
   }
 
   /** Resize grip on the region's center-facing edge. */
@@ -1406,7 +1725,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
     grip.style.cssText =
       "position:absolute;z-index:10;background:transparent;" +
-      (vert ? "top:0;bottom:0;width:6px;cursor:ew-resize;" : "left:0;right:0;height:6px;cursor:ns-resize;") +
+      (vert
+        ? "top:0;bottom:0;width:6px;cursor:ew-resize;"
+        : "left:0;right:0;height:6px;cursor:ns-resize;") +
       anchor;
 
     grip.addEventListener("pointerenter", () => {
@@ -1426,8 +1747,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
   }
 
   private _startGripDrag(r: DockRegionRuntime<CTX>, e: PointerEvent) {
-    //a collapsed rail sizes to its bar; nothing to resize
-    if (r.mode === RegionMode.RAIL && r.railCollapsed) {
+    //a collapsed rail (or all-collapsed region) sizes to content;
+    //nothing to resize
+    if ((r.mode === RegionMode.RAIL && r.railCollapsed) || this._allPanelsCollapsed(r)) {
       return;
     }
 
@@ -1549,6 +1871,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
       wrap.add(panel as unknown as Container<CTX>);
       this._setTitleHidden(panel, true);
       panel.closed = false; //rollout collapse is meaningless without a header
+      this._applyCollapseShrink(r, panel);
     }
 
     this._applyRailState(r);
@@ -1612,12 +1935,37 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     panel.def = def;
     panel.manager = this;
     panel.ctx = this.host.ctx;
+    panel.contents.ctx = this.host.ctx;
     panel.setAttribute("label", def.title);
 
     this.panels.set(id, panel);
 
-    //PanelFrame forwards container methods to its contents
-    def.build(panel as unknown as Container<CTX>, panel);
+    //build into the panel's contents (as container.panel() returns), so the
+    //widgets live inside the collapsible PanelContents; building on the panel
+    //itself routes through forwardContainerMethods, which lands them in the
+    //panel's shadow beside contents where rollout-collapse can't hide them.
+    def.build(panel.contents as unknown as Container<CTX>, panel);
+
+    //content size constraints; oversize content scrolls inside the panel
+    const [minW, minH] = def.minSize ?? [];
+    const [maxW, maxH] = def.maxSize ?? [];
+    const cs = panel.contents.style;
+
+    if (minW !== undefined) {
+      cs.minWidth = minW + "px";
+    }
+    if (minH !== undefined) {
+      cs.minHeight = minH + "px";
+    }
+    if (maxW !== undefined) {
+      cs.maxWidth = maxW + "px";
+    }
+    if (maxH !== undefined) {
+      cs.maxHeight = maxH + "px";
+    }
+    if (maxW !== undefined || maxH !== undefined) {
+      cs.overflow = "auto";
+    }
 
     this._attachHeaderDrag(panel);
 

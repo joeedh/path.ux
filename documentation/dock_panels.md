@@ -23,6 +23,8 @@ class MyEditor extends Editor {
       dock : "left",               //default placement (or "float")
       flags: PanelFlags.NO_CLOSE,
       allowedDocks: PanelDockMask.LEFT | PanelDockMask.RIGHT | PanelDockMask.FLOAT,
+      minSize: [120, undefined],   //content size clamps in CSS pixels;
+      maxSize: [undefined, 300],   //either component may be omitted
       build: (c) => {
         c.prop("tool.strength");
       },
@@ -42,6 +44,9 @@ afterwards from the per-panel uidata blob. A serialized layout overrides the
 declared defaults: unknown ids are dropped, ids the layout predates get their
 default placement.
 
+`minSize`/`maxSize` clamp the panel *contents* in CSS pixels; each component
+is optional. Content past `maxSize` scrolls inside the panel.
+
 ## Constraints
 
 Enforced centrally during interaction — drop zones outside `allowedDocks`
@@ -57,6 +62,7 @@ never render, and gestures are disabled by the flags:
 
 ```ts
 this.panels.dockPanel("tools", "right", { index: 0 });
+this.panels.dockPanelInto("tools", "props"); //group with "props" as tabs
 this.panels.floatPanel("tools", { pos: [x, y] });
 this.panels.closePanel("tools");     //hides; layout position retained
 this.panels.showPanel("tools");
@@ -82,18 +88,41 @@ getKeyMaps() {
 ## Region sizing and stack presentation
 
 Every visible region has a 6px resize grip on its center-facing edge
-(disabled when `panelLayoutEditable` is false); sizes persist. Docked
-regions present their panels either as a vertical rollout stack (default)
-or as a one-visible-panel tab group:
+(disabled when `panelLayoutEditable` is false); sizes persist. Regions hold
+an ordered list of *stacks*: a panel docked normally is its own rollout
+stack, and panels merged together form a tab group (`StackMode.TABS` in
+`PanelStackState`). `setStackMode` merges/splits a whole region at once:
 
 ```ts
 this.panels.setEdgeSize("right", 300);
 this.panels.setStackMode("right", StackMode.TABS);
 ```
 
-In tabs mode the panels' title bars hide — the tabs are the headers — and
-the mode round-trips through `PanelStackState.mode`. Rail mode takes
-precedence over the stack mode while active.
+In a tab group the panels' title bars hide — the tabs are the headers — and
+the group (including its active tab) round-trips through
+`PanelStackState`. Rail mode takes precedence over stacks while active.
+
+## Collapsing
+
+Clicking a docked panel's triangle collapses it to its header, and the
+panel gives up its footprint: in top/bottom regions a collapsed panel
+shrinks to its header's width so siblings take the space, and once every
+rollout in a region is collapsed the whole region shrinks to its headers
+instead of holding its fixed size (the resize grip is inert while it does).
+Expanding any panel restores the region's size. Panels inside tab groups
+and rails have no headers, so no rollout collapse.
+
+## Tab-docking panels into each other
+
+Dragging a panel over another docked panel highlights it as a green
+drop zone (edge zones stay blue); dropping merges the two into a tab group
+with the dropped panel active. Dropping onto an existing group's zone joins
+it. Dragging a tab out of the bar (past a small threshold) detaches that
+panel into the normal drag gesture — drop it on an edge to dock, on a
+panel to re-group, or elsewhere to float it. A group whose second-to-last
+panel leaves degrades back to a plain rollout. Programmatically this is
+`dockPanelInto(id, targetId)`; it refuses undocked targets and sides
+outside the panel's `allowedDocks`.
 
 ## Rail mode
 

@@ -120,7 +120,7 @@ export class WorkspaceEditor extends Editor {
     panels.panel({
       id   : "history",
       title: "History",
-      dock : "left",
+      dock : "top",
       flags: PanelFlags.NO_CLOSE,
       build: (c) => {
         const strip = c.row();
@@ -136,7 +136,7 @@ export class WorkspaceEditor extends Editor {
     panels.panel({
       id   : "brush",
       title: "Brush",
-      dock : "right",
+      dock : "top",
       build: (c) => {
         c.useDataPathUndo = true;
 
