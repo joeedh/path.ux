@@ -7,6 +7,7 @@
   * [Defining Properties](#defining-properties)
   * [Using Paths From the UI](#using-paths-from-the-ui)
   * [Looking Up Structs by Name](#looking-up-structs-by-name)
+  * [Update Notifications (subscribe / notify)](#update-notifications-subscribe--notify)
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->

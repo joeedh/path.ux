@@ -49409,6 +49409,30 @@ var DockPanel = class extends PanelFrame {
   canClose() {
     return !((this.def.flags ?? 0) & PanelFlags.NO_CLOSE);
   }
+  canCollapse() {
+    return !((this.def.flags ?? 0) & PanelFlags.NO_COLLAPSE);
+  }
+  get closed() {
+    return super.closed;
+  }
+  //NO_COLLAPSE panels stay open: swallow attempts to collapse them (def is
+  //assigned after construction, so an unset def means "not gated yet").
+  set closed(val) {
+    if (val && this.def && !this.canCollapse()) {
+      return;
+    }
+    super.closed = val;
+  }
+  /** Hide the rollout triangle and lock the panel open when NO_COLLAPSE is
+   *  set.  Called from _ensurePanel once `def` is known, since makeHeader()
+   *  builds the header (and the triangle) back in the constructor. */
+  _applyCollapseFlag() {
+    if (this.canCollapse()) {
+      return;
+    }
+    this._closed = false;
+    this._iconcheckWidget?.hide();
+  }
   _updateClosed(changed) {
     super._updateClosed(changed);
     this.manager?._onPanelCollapse(this);
@@ -49824,7 +49848,13 @@ ${body}}
     }
     for (const fs of state.floating) {
       if (this.defs.has(fs.panelId) && !this._isPlaced(fs.panelId)) {
-        this.floatPanel(fs.panelId, { pos: [fs.pos[0], fs.pos[1]] });
+        const rect = {
+          pos: [fs.pos[0], fs.pos[1]]
+        };
+        if (fs.size[0] > 0 && fs.size[1] > 0) {
+          rect.size = [fs.size[0], fs.size[1]];
+        }
+        this.floatPanel(fs.panelId, rect);
       }
     }
     this.applyDefaultLayout();
@@ -49895,6 +49925,9 @@ ${body}}
     frame.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.35)";
     if (size) {
       frame.style.width = size[0] + "px";
+      if (size[1] > 0) {
+        frame.style.height = size[1] + "px";
+      }
     } else {
       frame.style.minWidth = "225px";
     }
@@ -50623,6 +50656,7 @@ ${body}}
     panel.ctx = this.host.ctx;
     panel.contents.ctx = this.host.ctx;
     panel.setAttribute("label", def.title);
+    panel._applyCollapseFlag();
     this.panels.set(id, panel);
     def.build(panel.contents, panel);
     const [minW, minH] = def.minSize ?? [];
