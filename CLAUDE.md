@@ -23,7 +23,8 @@ Use `tsgo` to typecheck instead of `tsc`, e.g.
 `pnpm nwjs` and `pnpm electron` launch the `example/` app in NW.js (SDK
 flavor, from the `nw` devDependency) or Electron respectively, with the
 Chrome DevTools Protocol enabled on port 9222 (override with `--port=<n>`).
-Both build `example/dist/app.js` first if missing.
+Both build `example/dist/app.js` first if missing. `pnpm nwjs` also opens the
+DevTools window automatically (pass `--no-devtools` to suppress it).
 
 `example/package.json` doubles as the NW.js manifest: its `main` is
 `nwjs_app.html`, which sets `window.haveNwjs` so the app picks the NW.js

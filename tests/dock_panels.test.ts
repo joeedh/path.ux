@@ -206,6 +206,60 @@ test("NO_FLOAT panels refuse to float", () => {
   expect(pm.regions.left.order).toContain("pinned");
 });
 
+test("floatPanel applies an explicit size, and float size round-trips on load", () => {
+  const pm = makeManager();
+
+  pm.floatPanel("props", { pos: [50, 60], size: [400, 300] });
+  const frame = pm.floating.get("props")!.frame;
+  expect(frame.style.width).toBe("400px");
+  expect(frame.style.height).toBe("300px");
+
+  //saveLayout reads getBoundingClientRect (0 in happy-dom), so stamp a known
+  //rect onto the serialized float and verify loadLayout restores both axes
+  const state = pm.saveLayout();
+  state.floating[0].pos.loadXY(20, 30);
+  state.floating[0].size.loadXY(360, 240);
+
+  const { root, host } = makeHost();
+  const pm2 = new PanelManager(host);
+  pm2.panel(def("tools", "left"));
+  pm2.panel(def("props", "right"));
+  pm2.build(root);
+  pm2.loadLayout(state);
+
+  const frame2 = pm2.floating.get("props")!.frame;
+  expect(pm2.floating.has("props")).toBe(true);
+  expect(frame2.style.left).toBe("20px");
+  expect(frame2.style.width).toBe("360px");
+  expect(frame2.style.height).toBe("240px");
+});
+
+test("NO_COLLAPSE panels cannot roll up and hide their collapse triangle", () => {
+  const { root, host } = makeHost();
+  const pm = new PanelManager(host);
+  const noCollapse = def("props", "right");
+  noCollapse.flags = 4; //PanelFlags.NO_COLLAPSE
+  pm.panel(noCollapse);
+  pm.panel(def("tools", "left"));
+  pm.build(root);
+  pm.applyDefaultLayout();
+
+  const panel = pm.panels.get("props")!;
+  expect(panel.canCollapse()).toBe(false);
+  //the rollout triangle is not drawn
+  expect(panel.openCloseIcon.hidden).toBe(true);
+  //attempts to collapse are swallowed; the panel stays open
+  panel.closed = true;
+  expect(panel.closed).toBe(false);
+
+  //a normal panel still collapses and keeps its triangle
+  const tools = pm.panels.get("tools")!;
+  expect(tools.canCollapse()).toBe(true);
+  expect(tools.openCloseIcon.hidden).toBe(false);
+  tools.closed = true;
+  expect(tools.closed).toBe(true);
+});
+
 test("rail mode: expand/switch/collapse and toggleEdge keep the rail visible", () => {
   const pm = makeManager();
   pm.dockPanel("props", "left"); //both panels in the left region

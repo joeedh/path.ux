@@ -6,8 +6,8 @@ regions, float in provenance-titled windows, or collapse to edge-aligned
 tab rails. Layouts serialize with nstructjs and per-panel widget state is
 cached with `saveUIData`, keyed by panel id so reorders don't break restore.
 
-The implementation lives in `scripts/screen/dock_panels.ts` and is exported
-from `pathux.ts`. The example `WorkspaceEditor`
+The implementation lives in `scripts/screen/dock_panels.ts` and is re-exported
+from the `scripts/pathux.ts` package entry. The example `WorkspaceEditor`
 (`example/editors/workspace/workspace.ts`) is the reference conversion.
 
 ## Declaring panels
@@ -54,6 +54,8 @@ never render, and gestures are disabled by the flags:
 
 - `PanelFlags.NO_CLOSE` — no close affordance.
 - `PanelFlags.NO_FLOAT` — cannot float (also excluded via `allowedDocks`).
+- `PanelFlags.NO_COLLAPSE` — cannot roll up; the header's collapse triangle is
+  not drawn and the panel stays open.
 - `PanelFlags.PINNED` — cannot be moved at all.
 - `Area.panelLayoutEditable = false` — disables all interactive layout
   editing for the editor; the programmatic layout is authoritative.
@@ -141,7 +143,7 @@ editor is inactive in its tile and their header shows provenance — the panel
 title plus the owning editor's uiname, since several editors of one type can
 be open — with re-dock and close buttons. Dragging a docked panel's title
 bar out floats it; dragging a floating frame onto an edge drop zone docks
-it. Float positions serialize exactly.
+it. Float position and size serialize exactly.
 
 If an editor overrides `on_area_active` / `on_area_inactive` it should call
 super, which is what hides/shows the floating frames.
@@ -184,4 +186,3 @@ corrupt restored widget state.
   element reconnects (e.g. tab switches reparenting a panel), so panel
   title bars are hidden via a `data-dock-hidetitle` attribute matched by an
   `!important` rule in the panel's shadow root, not via inline styles.
-

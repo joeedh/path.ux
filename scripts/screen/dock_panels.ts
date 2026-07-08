@@ -1,7 +1,7 @@
 /**
- * Dockable / floatable editor panels — interface draft.
+ * Dockable / floatable editor panels.
  *
- * Design summary (see documentation/ once implemented):
+ * Design summary (see documentation/dock_panels.md):
  *
  * Each editor (Area subclass) may own a PanelManager.  The manager owns four
  * fixed edge dock regions (left/right/top/bottom) plus the editor's existing
@@ -17,23 +17,18 @@
  * and clicking a tab toggles visibility of the docked group — the rail itself
  * never hides.
  *
- * Floating panels live in DragBox-style containers appended at screen level
- * but owned by the editor: they hide with it, die with it, and wrap their
- * events in push_ctx_active()/pop_ctx_active().  Because several editors of
+ * Floating panels live in colframe containers appended to document.body and
+ * registered as screen popups, but owned by the editor: they hide with it and
+ * die with it.  Because several editors of
  * the same type may be open, floating panels carry provenance affordances:
  * the owning editor's uiname (plus a disambiguator) in the title bar, a
  * hover/drag tether drawn via ScreenOverdraw, and a re-dock button.
  *
  * Serialization follows the established triad: structure through nstructjs
  * (the *State classes below), per-panel widget state through
- * saveUIData(panel.contents, "panel:" + id) blobs keyed by panel id (not by
+ * saveUIData(panel, "panel:" + id) blobs keyed by panel id (not by
  * child index, so reorders don't break restore), replayed in afterSTRUCT once
  * ctx is ready.
- *
- * Implementation status: programmatic core (catalog, dock skeleton, edge
- * regions, per-edge hide/show, serialization).  Floating (floatPanel), the
- * drag/drop interaction, and the rail-mode visual are later phases;
- * unimplemented methods throw.
  */
 
 import { Container } from "../core/ui";
@@ -311,6 +306,34 @@ export class DockPanel<CTX extends IContextBase = IContextBase> extends PanelFra
 
   canClose(): boolean {
     return !((this.def.flags ?? 0) & PanelFlags.NO_CLOSE);
+  }
+
+  canCollapse(): boolean {
+    return !((this.def.flags ?? 0) & PanelFlags.NO_COLLAPSE);
+  }
+
+  override get closed(): boolean {
+    return super.closed;
+  }
+
+  //NO_COLLAPSE panels stay open: swallow attempts to collapse them (def is
+  //assigned after construction, so an unset def means "not gated yet").
+  override set closed(val: boolean) {
+    if (val && this.def && !this.canCollapse()) {
+      return;
+    }
+    super.closed = val;
+  }
+
+  /** Hide the rollout triangle and lock the panel open when NO_COLLAPSE is
+   *  set.  Called from _ensurePanel once `def` is known, since makeHeader()
+   *  builds the header (and the triangle) back in the constructor. */
+  _applyCollapseFlag(): void {
+    if (this.canCollapse()) {
+      return;
+    }
+    this._closed = false;
+    this._iconcheckWidget?.hide();
   }
 
   override _updateClosed(changed: boolean) {
@@ -893,7 +916,13 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
     for (const fs of state.floating) {
       if (this.defs.has(fs.panelId) && !this._isPlaced(fs.panelId)) {
-        this.floatPanel(fs.panelId, { pos: [fs.pos[0], fs.pos[1]] });
+        const rect: { pos: [number, number]; size?: [number, number] } = {
+          pos: [fs.pos[0], fs.pos[1]],
+        };
+        if (fs.size[0] > 0 && fs.size[1] > 0) {
+          rect.size = [fs.size[0], fs.size[1]];
+        }
+        this.floatPanel(fs.panelId, rect);
       }
     }
 
@@ -987,6 +1016,9 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
     if (size) {
       frame.style.width = size[0] + "px";
+      if (size[1] > 0) {
+        frame.style.height = size[1] + "px";
+      }
     } else {
       frame.style.minWidth = "225px";
     }
@@ -1447,7 +1479,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
 
   private _defaultSide(def: PanelDef<CTX>): PanelSide {
     const dock = def.dock ?? "right";
-    //floating defaults arrive with the floating implementation (phase 4)
+    //"float" panels are placed by applyDefaultLayout; "right" is the fallback dock side
     return dock === "float" ? "right" : dock;
   }
 
@@ -1937,6 +1969,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     panel.ctx = this.host.ctx;
     panel.contents.ctx = this.host.ctx;
     panel.setAttribute("label", def.title);
+    panel._applyCollapseFlag();
 
     this.panels.set(id, panel);
 
