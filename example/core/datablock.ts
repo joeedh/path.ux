@@ -2,7 +2,7 @@
 useful classes for wrangling important base classes
 */
 
-import {nstructjs, util, DataAPI, DataStruct} from '../pathux.js';
+import {nstructjs, util, DataAPI, DataStruct, CreateSnapshot} from '../pathux.js';
 
 export const BlockFlag = {
   NO_SAVE : 1
@@ -29,6 +29,10 @@ export class DataBlock {
     this.lib_id = -1;
     this.lib_users = 0;
     this.name = "";
+  }
+
+  [CreateSnapshot]() {
+    return this.lib_id
   }
 
   static blockDefine(): IBlockDef {

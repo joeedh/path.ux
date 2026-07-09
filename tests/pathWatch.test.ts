@@ -1,17 +1,36 @@
 import { beforeEach, afterEach, expect, test, vi } from "vitest";
 import {
+  CreateSnapshot,
   DataAPI,
   clearPathWatchers,
   flushPathNotifications,
   getPathWatchStats,
   PathWatchInfo,
 } from "../scripts/path-controller/controller/controller";
-import { Vector3 } from "../scripts/path-controller/util/vectormath";
+import { Matrix4, Vector3 } from "../scripts/path-controller/util/vectormath";
+
+class Snapshottable {
+  value: number;
+
+  constructor(value = 0) {
+    this.value = value;
+  }
+
+  equals(b: unknown) {
+    return b instanceof Snapshottable && b.value === this.value;
+  }
+
+  [CreateSnapshot]() {
+    return new Snapshottable(this.value);
+  }
+}
 
 class Brush {
   size = 1.0;
   color = new Vector3([1, 0, 0]);
   name = "default";
+  matrix = new Matrix4();
+  custom = new Snapshottable(1);
 }
 
 class Root {
@@ -21,10 +40,16 @@ class Root {
 function makeAPI() {
   const api = new DataAPI();
 
+  const matDef = api.mapStruct(Matrix4);
+  const customDef = api.mapStruct(Snapshottable);
+  customDef.float("value", "value");
+
   const brushDef = api.mapStruct(Brush);
   brushDef.float("size", "size");
   brushDef.vec3("color", "color");
   brushDef.string("name", "name");
+  brushDef.struct("matrix", "matrix", "Matrix4", matDef);
+  brushDef.struct("custom", "custom", "Snapshottable", customDef);
 
   const rootDef = api.mapStruct(Root);
   rootDef.struct("brush", "brush", "Brush", brushDef);
@@ -266,6 +291,82 @@ test("trailing debounce coalesces onto the trailing edge", () => {
   expect(calls[0].value).toBe(2.5);
 
   w.remove();
+});
+
+test("snapshot: [CreateSnapshot] objects support in-place mutation detection", () => {
+  const { api, root } = makeAPI();
+  const calls: Call[] = [];
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  const w = api.watch(root as any, "brush.custom", record(calls));
+  flushPathNotifications();
+  calls.length = 0;
+
+  root.brush.custom.value = 5;
+
+  expect(w.poll()).toBe(true);
+  expect(calls.length).toBe(1);
+  expect((calls[0].value as Snapshottable).value).toBe(5);
+
+  /* stable value → poll stays quiet */
+  expect(w.poll()).toBe(false);
+  expect(calls.length).toBe(1);
+
+  expect(warn).not.toHaveBeenCalled();
+  warn.mockRestore();
+});
+
+test("snapshot: Matrix4 in-place mutation is detected without a warning", () => {
+  const { api, root } = makeAPI();
+  const calls: Call[] = [];
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  const w = api.watch(root as any, "brush.matrix", record(calls));
+  flushPathNotifications();
+  calls.length = 0;
+
+  root.brush.matrix.$matrix.m41 = 3;
+
+  expect(w.poll()).toBe(true);
+  expect(calls.length).toBe(1);
+  expect((calls[0].value as Matrix4).$matrix.m41).toBe(3);
+
+  expect(w.poll()).toBe(false);
+  expect(calls.length).toBe(1);
+
+  expect(warn).not.toHaveBeenCalled();
+  warn.mockRestore();
+});
+
+test("snapshot: un-snapshottable object warns once and trusts pushes", () => {
+  const { api, root } = makeAPI();
+  const calls: Call[] = [];
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  /* Brush has neither [CreateSnapshot] nor an array/Matrix4 shape */
+  const w = api.watch(root as any, "brush", record(calls));
+  flushPathNotifications();
+  calls.length = 0;
+
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(warn.mock.calls[0][0]).toContain("pathux.CreateSnapshot");
+
+  /* raw in-place mutation is invisible to poll (identity snapshot) */
+  root.brush.size = 99;
+  expect(w.poll()).toBe(false);
+
+  /* but explicit pushes fire despite the unchanged reference */
+  api.notifyChange("brush");
+  flushPathNotifications();
+  expect(calls.length).toBe(1);
+
+  api.notifyChange("brush");
+  flushPathNotifications();
+  expect(calls.length).toBe(2);
+
+  /* the warning stays once-per-path */
+  expect(warn).toHaveBeenCalledTimes(1);
+  warn.mockRestore();
 });
 
 test("unresolved path reads as undefined with resolved: false", () => {

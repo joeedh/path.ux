@@ -160,6 +160,14 @@ done — the registry keeps only a `WeakRef` (a `FinalizationRegistry` prunes le
 should not call `watch` directly; use the `UIBase.watchPath()` / `updateFromPath()` protocol,
 which manages watcher lifecycle automatically.
 
+**Snapshotting object values.** To diff, the watcher must snapshot the previous value. Plain
+values, arrays/typed arrays (so all vector classes and `Quat`), and `Matrix4` are handled
+built-in. Any other object must implement the `CreateSnapshot` symbol method
+(`[CreateSnapshot]() { return this.copy() }`, exported from `pathux.js`) — the watcher will
+not deep-copy arbitrary objects. Without it, a once-per-path console warning is logged and
+change detection degrades: in-place mutations are invisible to the poll fallback, though
+explicit push notifications (`api.setValue` / `notifyChange`) still fire.
+
 **Notifying.** `api.setValue` notifies at the choke point, so tool ops, mass-set, and
 undo/redo are covered automatically. For raw model mutation:
 
