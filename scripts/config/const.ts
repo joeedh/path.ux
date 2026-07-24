@@ -8,43 +8,133 @@ interface ClipboardEntry {
 
 const _clipboards: Record<string, ClipboardEntry> = {};
 
-if (typeof document !== "undefined") {
-  /* spawn clipboard reader */
-  window.setInterval(() => {
-    if (!document.hasFocus()) {
-      return;
-    }
+const CLIPBOARD_POLL_MS = 200;
 
-    const cb = navigator.clipboard;
-    if (!cb?.read) {
-      return;
-    }
+let _clipboardTimer: number | undefined = undefined;
 
-    cb.read()
-      .then((data) => {
-        for (const item of data) {
-          for (let i = 0; i < item.types.length; i++) {
-            const type = item.types[i];
+function readClipboard(): void {
+  if (!document.hasFocus()) {
+    return;
+  }
 
-            if (!(type in _clipboards)) {
-              _clipboards[type] = {
-                name: type,
-                mime: type,
-                data: undefined,
-              };
-            }
+  const cb = navigator.clipboard;
+  if (!cb?.read) {
+    return;
+  }
 
-            item
-              .getType(type)
-              .then((blob) => new Response(blob).text())
-              .then((text) => {
-                _clipboards[type].data = text;
-              });
+  cb.read()
+    .then((data) => {
+      for (const item of data) {
+        for (let i = 0; i < item.types.length; i++) {
+          const type = item.types[i];
+
+          if (!(type in _clipboards)) {
+            _clipboards[type] = {
+              name: type,
+              mime: type,
+              data: undefined,
+            };
           }
+
+          item
+            .getType(type)
+            .then((blob) => new Response(blob).text())
+            .then((text) => {
+              _clipboards[type].data = text;
+            });
         }
-      })
-      .catch(function () {});
-  }, 200);
+      }
+    })
+    .catch(function () {});
+}
+
+function startClipboardReader(): void {
+  if (_clipboardTimer === undefined) {
+    _clipboardTimer = window.setInterval(readClipboard, CLIPBOARD_POLL_MS);
+  }
+}
+
+function stopClipboardReader(): void {
+  if (_clipboardTimer !== undefined) {
+    window.clearInterval(_clipboardTimer);
+    _clipboardTimer = undefined;
+  }
+}
+
+/** Resolves to the clipboard-read PermissionStatus, or undefined where the
+ * Permissions API doesn't know the descriptor (Firefox/Safari throw on it). */
+async function queryClipboardPermission(): Promise<PermissionStatus | undefined> {
+  const perms = navigator.permissions;
+  if (!perms?.query) {
+    return undefined;
+  }
+
+  try {
+    return await perms.query({ name: "clipboard-read" as PermissionName });
+  } catch {
+    return undefined;
+  }
+}
+
+function onPageLoad(cb: () => void): void {
+  if (document.readyState === "complete") {
+    cb();
+  } else {
+    window.addEventListener("load", cb, { once: true });
+  }
+}
+
+function onUserGesture(cb: () => void): void {
+  const events = ["pointerdown", "keydown", "touchstart"] as const;
+
+  const handler = () => {
+    for (const type of events) {
+      window.removeEventListener(type, handler, true);
+    }
+    cb();
+  };
+
+  for (const type of events) {
+    window.addEventListener(type, handler, { capture: true, passive: true });
+  }
+}
+
+/* The clipboard reader is deferred instead of started on import: reading the
+ * system clipboard raises the browser's permission prompt, and a prompt raised
+ * during startup blocks page reloads the app may still be doing (e.g. a
+ * COOP/COEP service worker refreshing to apply its headers). Waiting for `load`
+ * alone isn't enough — that reload lands after it — so we also wait for the
+ * first user gesture, which can't happen before the page is really up. Once the
+ * user has answered, polling runs only while permission is granted. */
+if (typeof document !== "undefined") {
+  onPageLoad(() =>
+    onUserGesture(() => {
+      queryClipboardPermission().then((status) => {
+        if (!status) {
+          startClipboardReader();
+          return;
+        }
+
+        const sync = () => {
+          if (status.state === "granted") {
+            startClipboardReader();
+          } else {
+            stopClipboardReader();
+          }
+        };
+
+        status.addEventListener("change", sync);
+
+        /* Still inside the gesture's transient activation, so this one read is
+         * what actually raises the prompt; `sync` picks up the answer. */
+        if (status.state === "prompt") {
+          readClipboard();
+        }
+
+        sync();
+      });
+    })
+  );
 }
 
 export interface DebugFlags {
