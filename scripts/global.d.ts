@@ -164,11 +164,17 @@ interface Window {
 }
 
 /** Symbol augmentations used for metadata throughout path.ux */
+/* `readonly` on keystr is load-bearing: an interface property only keeps its
+   `unique symbol` type when it is readonly. Without it the symbol widens to
+   plain `symbol` and every `[Symbol.keystr]()` member becomes a symbol *index
+   signature* rather than a named property, so nothing satisfies a
+   `{[Symbol.keystr](): ...}` constraint. The other three are re-declared
+   non-readonly in path-controller, and controller.ts assigns to ToolID. */
 interface SymbolConstructor {
   ToolID: unique symbol;
   ContextID: unique symbol;
   CachedDef: unique symbol;
-  keystr: unique symbol;
+  readonly keystr: unique symbol;
 }
 
 /* ── Polyfill prototype augmentations (from polyfill.js) ───── */
