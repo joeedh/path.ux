@@ -363,8 +363,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return ret;
   }
 
-  override on_resize(size: number[] | Vector2) {
-    super.on_resize(size);
+  override on_resize(size: number[] | Vector2, oldsize?: number[] | Vector2) {
+    super.on_resize(size, oldsize);
   }
 
   on_area_focus() {}
@@ -1172,8 +1172,8 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     return this;
   }
 
-  override on_resize(size: number[] | Vector2) {
-    super.on_resize(size);
+  override on_resize(size: number[] | Vector2, oldsize?: number[] | Vector2) {
+    super.on_resize(size, oldsize);
 
     if (this.area !== undefined) {
       this.area.on_resize(size);

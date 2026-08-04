@@ -202,17 +202,19 @@ interface Math {
   tent(f: number): number;
 }
 
+/* `string | number` matches Keyable in path-controller/util/util.ts, and the
+   Number implementation really does return the number itself. */
 interface String {
   contains(substr: string): boolean;
-  [Symbol.keystr](): string;
+  [Symbol.keystr](): string | number;
 }
 
 interface Number {
-  [Symbol.keystr](): string;
+  [Symbol.keystr](): string | number;
 }
 
 interface Boolean {
-  [Symbol.keystr](): string;
+  [Symbol.keystr](): string | number;
 }
 
 /** Augment Window for polyfill globals */

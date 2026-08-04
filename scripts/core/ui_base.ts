@@ -3134,7 +3134,9 @@ export class UIBase<
 
   destroy(): void {}
 
-  on_resize(newsize: number[] | Vector2): void {}
+  /* Screen and several editors take the old size too, and Screen a third
+     internal flag; declared here so overrides stay assignable. */
+  on_resize(newsize: number[] | Vector2, oldsize?: number[] | Vector2, _set_key?: boolean): void {}
 
   toJSON(): Record<string, unknown> {
     const ret: Record<string, unknown> = {};
