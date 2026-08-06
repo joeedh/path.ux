@@ -87,9 +87,13 @@ export class Screen<
   CTX extends IContextBase = IContextBase,
   SELF extends string = "Screen",
 > extends UIBase<CTX, unknown, SELF> {
+  /* stamped on by inlineRegister() below; `declare` so nothing is emitted
+     that would overwrite it */
+  declare static structName: string;
+
   static STRUCT = nstructjs.inlineRegister(
     this,
-    `pathux.Screen { 
+    `pathux.Screen {
        size  : vec2;
        pos   : vec2;
        sareas : array(pathux.ScreenArea);
@@ -3018,7 +3022,7 @@ const stop_cbs = [] as (() => void)[];
 
 let key_event_opts: AddEventListenerOptions | undefined;
 
-export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen) {
+export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen | undefined) {
   get_screen_cb = getScreenFunc as unknown as typeof get_screen_cb;
 
   if (_events_started) {

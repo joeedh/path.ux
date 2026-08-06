@@ -1,6 +1,6 @@
 import * as ctrlconfig from "../path-controller/config/config";
 
-interface ClipboardEntry {
+export interface ClipboardEntry {
   name: string;
   mime: string;
   data: string | undefined;

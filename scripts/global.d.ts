@@ -115,7 +115,6 @@ interface Window {
   PATHUX_CONFIG: Record<string, unknown> | undefined;
 
   /* ── Screen / Area management ──────────────────────────────── */
-  _DEBUG: boolean;
   cssText: string;
   getAreaIntName: (...args: unknown[]) => string;
   testSnapScreenVerts: (...args: unknown[]) => void;
@@ -227,7 +226,6 @@ interface SymbolConstructor {
 }
 
 /** globalThis extensions (from path-controller/util/util.js) */
-declare var termColor: Record<string, string>;
 declare var get_callstack: (msg?: string) => string;
 declare var print_stack: (...args: unknown[]) => void;
 declare var _debug_event_listeners: boolean | undefined;

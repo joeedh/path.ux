@@ -38,7 +38,9 @@ export class ThemeScrollBars {
   }
 }
 
-export type ThemeItem = ThemeRecord | CSSFont | string | number | boolean | ThemeScrollBars;
+/* `undefined` is a real value here: exportTheme() writes out keys the theme
+   editor left blank, and they round-trip back in. */
+export type ThemeItem = ThemeRecord | CSSFont | string | number | boolean | ThemeScrollBars | undefined;
 export interface ThemeRecord {
   [k: string]: ThemeItem;
 }

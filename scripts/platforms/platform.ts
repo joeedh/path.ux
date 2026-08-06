@@ -1,4 +1,6 @@
-let promise: Promise<{ platform: unknown }> | undefined;
+import type {PlatformAPI} from "./platform_base";
+
+let promise: Promise<{ platform: typeof PlatformAPI }> | undefined;
 
 if ((window as unknown as Record<string, unknown>).haveNwjs) {
   promise = import("./nwjs/nwjs_api");
@@ -8,7 +10,9 @@ if ((window as unknown as Record<string, unknown>).haveNwjs) {
   promise = import("./web/web_api");
 }
 
-export var platform: unknown;
+/* Assigned once the backend module resolves; every caller runs long after
+   that, which is why this is not declared optional. */
+export var platform: typeof PlatformAPI;
 
 promise.then((module) => {
   platform = module.platform;

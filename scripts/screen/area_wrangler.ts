@@ -26,7 +26,8 @@ export function getAreaIntName(name: string) {
 }
 
 //XXX get rid of me
-type AreaTypes = { [key: string]: number };
+//nothing reads this; apps put whatever they like in it (fairmotion stores classes)
+type AreaTypes = { [key: string]: unknown };
 export const AreaTypes: AreaTypes = {};
 
 export function setAreaTypes(def: AreaTypes) {

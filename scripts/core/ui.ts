@@ -1864,7 +1864,7 @@ export class Container<
     name?:
       | string
       | {
-          name: string;
+          name?: string;
           enumDef?: EnumProperty | FlagProperty | EnumDef;
           defaultval?: string | number;
           callback?: Function;

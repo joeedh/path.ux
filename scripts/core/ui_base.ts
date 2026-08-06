@@ -754,6 +754,8 @@ import {
 } from "../path-controller/dag/eventdag";
 import type { IContextBase } from "./context_base";
 import { CSSFont } from "./cssfont";
+
+export { CSSFont } from "./cssfont";
 import { DataPathSetOp } from "../pathux";
 import { tagManager } from "./tagReRegister";
 import type { Screen } from "../screen/FrameManager";
