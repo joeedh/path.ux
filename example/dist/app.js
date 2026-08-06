@@ -14,11 +14,20 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
 };
 var __commonJS = (cb, mod) => function __require2() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __export = (target, all) => {
   for (var name2 in all)
@@ -1151,7 +1160,7 @@ var init_mobile_detect = __esm({
   }
 });
 
-// node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
+// ../../node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
 function isParseStructsDummy(cls) {
   return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
 }
@@ -2587,7 +2596,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
+  "../../node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
     colormap = {
       "black": 30,
       "red": 31,
@@ -6280,8 +6289,10 @@ function get_callstack(err) {
 function print_stack2(err) {
   if (!err) {
     window.console.trace();
-  } else {
+  } else if (err instanceof Error) {
     window.console.log(err.stack);
+  } else {
+    window.console.log(err);
   }
 }
 function fetch_file(path) {
@@ -10029,22 +10040,23 @@ var init_vectormath = __esm({
         s += dec(m.m41) + ", " + dec(m.m42) + ", " + dec(m.m43) + ", " + dec(m.m44) + "\n";
         return s;
       }
-      rotate(angle, x, y, z) {
-        if (typeof x === "object" && "length" in x) {
-          const t2 = x;
-          x = t2[0];
-          y = t2[1];
-          z = t2[2];
+      rotate(angle, _x, _y, _z) {
+        let x = 0, y = 0, z = 0;
+        if (typeof _x === "object" && _x !== null && "length" in _x) {
+          x = _x[0] ?? 0;
+          y = _x[1] ?? 0;
+          z = _x[2] ?? 0;
+        } else if (arguments.length === 1) {
+          z = 1;
+        } else if (arguments.length === 3) {
+          this.rotate(angle, 1, 0, 0);
+          this.rotate(typeof _x === "number" ? _x : 0, 0, 1, 0);
+          this.rotate(_y ?? 0, 0, 0, 1);
+          return;
         } else {
-          if (arguments.length === 1) {
-            x = y = 0;
-            z = 1;
-          } else if (arguments.length === 3) {
-            this.rotate(angle, 1, 0, 0);
-            this.rotate(x, 0, 1, 0);
-            this.rotate(y, 0, 0, 1);
-            return;
-          }
+          x = typeof _x === "number" ? _x : 0;
+          y = _y ?? 0;
+          z = _z ?? 0;
         }
         angle /= 2;
         const sinA = Math.sin(angle);
@@ -12126,7 +12138,6 @@ var init_toolprop_abstract = __esm({
       NO_DEFAULT: 1 << 17
     };
     ToolPropertyIF = class {
-      data;
       subtype;
       apiname;
       uiname;
@@ -13031,7 +13042,6 @@ var init_toolprop = __esm({
       update;
       api_update;
       // these fields are used by the data api system
-      ctx;
       dataref;
       datapath;
       constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
@@ -24161,6 +24171,15 @@ var init_toolsys2 = __esm({
 });
 
 // scripts/path-controller/controller/pathwatch.ts
+function warnNoSnapshot(path) {
+  if (warnedNoSnapshotPaths.has(path)) {
+    return;
+  }
+  warnedNoSnapshotPaths.add(path);
+  console.warn(
+    `warning for ${path}: object does not have a [pathux.CreateSnapshot]() method, the automatic path watching will not be able to detect changes`
+  );
+}
 function getPathStructureGen() {
   return structureGen;
 }
@@ -24273,13 +24292,18 @@ function clearPathWatchers() {
   pathSubs.clear();
   propSubs.clear();
   dirty.clear();
+  warnedNoSnapshotPaths.clear();
 }
-var pathSubs, propSubs, dirty, flushScheduled, structureGen, finalizer, DataPathWatcher;
+var CreateSnapshot, pathSubs, propSubs, warnedNoSnapshotPaths, dirty, flushScheduled, structureGen, finalizer, DataPathWatcher;
 var init_pathwatch = __esm({
   "scripts/path-controller/controller/pathwatch.ts"() {
     "use strict";
+    init_util();
+    init_vectormath();
+    CreateSnapshot = /* @__PURE__ */ Symbol("create snapshot");
     pathSubs = /* @__PURE__ */ new Map();
     propSubs = /* @__PURE__ */ new Map();
+    warnedNoSnapshotPaths = /* @__PURE__ */ new Set();
     dirty = /* @__PURE__ */ new Set();
     flushScheduled = false;
     structureGen = 1;
@@ -24459,20 +24483,26 @@ var init_pathwatch = __esm({
           this.snapshot = v;
           return;
         }
-        const cp = v.copy;
-        if (typeof cp === "function") {
+        const cp = v;
+        if (cp[CreateSnapshot]) {
           try {
-            this.snapshot = cp.call(v);
+            this.snapshot = cp[CreateSnapshot]();
             return;
-          } catch {
+          } catch (error3) {
+            print_stack2(error3);
           }
         }
         if (Array.isArray(v) || ArrayBuffer.isView(v)) {
           this.snapshot = Array.from(v);
           return;
         }
+        if (v instanceof Matrix4) {
+          this.snapshot = v.copy();
+          return;
+        }
         this.snapshot = v;
         this.snapshotReliable = false;
+        warnNoSnapshot(this.path);
       }
       check(source, fireOnUnreliable) {
         if (this.removed) return false;
@@ -26149,40 +26179,105 @@ var init_colorutils2 = __esm({
 });
 
 // scripts/config/const.ts
-var _clipboards, cconst, const_default;
+function readClipboard() {
+  if (!document.hasFocus()) {
+    return;
+  }
+  const cb = navigator.clipboard;
+  if (!cb?.read) {
+    return;
+  }
+  cb.read().then((data) => {
+    for (const item of data) {
+      for (let i2 = 0; i2 < item.types.length; i2++) {
+        const type = item.types[i2];
+        if (!(type in _clipboards)) {
+          _clipboards[type] = {
+            name: type,
+            mime: type,
+            data: void 0
+          };
+        }
+        item.getType(type).then((blob) => new Response(blob).text()).then((text2) => {
+          _clipboards[type].data = text2;
+        });
+      }
+    }
+  }).catch(function() {
+  });
+}
+function startClipboardReader() {
+  if (_clipboardTimer === void 0) {
+    _clipboardTimer = window.setInterval(readClipboard, CLIPBOARD_POLL_MS);
+  }
+}
+function stopClipboardReader() {
+  if (_clipboardTimer !== void 0) {
+    window.clearInterval(_clipboardTimer);
+    _clipboardTimer = void 0;
+  }
+}
+async function queryClipboardPermission() {
+  const perms = navigator.permissions;
+  if (!perms?.query) {
+    return void 0;
+  }
+  try {
+    return await perms.query({ name: "clipboard-read" });
+  } catch {
+    return void 0;
+  }
+}
+function onPageLoad(cb) {
+  if (document.readyState === "complete") {
+    cb();
+  } else {
+    window.addEventListener("load", cb, { once: true });
+  }
+}
+function onUserGesture(cb) {
+  const events = ["pointerdown", "keydown", "touchstart"];
+  const handler = () => {
+    for (const type of events) {
+      window.removeEventListener(type, handler, true);
+    }
+    cb();
+  };
+  for (const type of events) {
+    window.addEventListener(type, handler, { capture: true, passive: true });
+  }
+}
+var _clipboards, CLIPBOARD_POLL_MS, _clipboardTimer, cconst, const_default;
 var init_const = __esm({
   "scripts/config/const.ts"() {
     "use strict";
     init_config();
     _clipboards = {};
+    CLIPBOARD_POLL_MS = 200;
+    _clipboardTimer = void 0;
     if (typeof document !== "undefined") {
-      window.setInterval(() => {
-        if (!document.hasFocus()) {
-          return;
-        }
-        const cb = navigator.clipboard;
-        if (!cb?.read) {
-          return;
-        }
-        cb.read().then((data) => {
-          for (const item of data) {
-            for (let i2 = 0; i2 < item.types.length; i2++) {
-              const type = item.types[i2];
-              if (!(type in _clipboards)) {
-                _clipboards[type] = {
-                  name: type,
-                  mime: type,
-                  data: void 0
-                };
-              }
-              item.getType(type).then((blob) => new Response(blob).text()).then((text2) => {
-                _clipboards[type].data = text2;
-              });
+      onPageLoad(
+        () => onUserGesture(() => {
+          queryClipboardPermission().then((status) => {
+            if (!status) {
+              startClipboardReader();
+              return;
             }
-          }
-        }).catch(function() {
-        });
-      }, 200);
+            const sync = () => {
+              if (status.state === "granted") {
+                startClipboardReader();
+              } else {
+                stopClipboardReader();
+              }
+            };
+            status.addEventListener("change", sync);
+            if (status.state === "prompt") {
+              readClipboard();
+            }
+            sync();
+          });
+        })
+      );
     }
     cconst = {
       getClipboardData(desiredMimes = "text/plain") {
@@ -28450,6 +28545,7 @@ var init_ui_base = __esm({
     init_toolprop();
     init_eventdag();
     init_cssfont();
+    init_cssfont();
     init_tagReRegister();
     PackFlags = {
       INHERIT_WIDTH: 1,
@@ -30469,7 +30565,9 @@ var init_ui_base = __esm({
       }
       destroy() {
       }
-      on_resize(newsize) {
+      /* Screen and several editors take the old size too, and Screen a third
+         internal flag; declared here so overrides stay assignable. */
+      on_resize(newsize, oldsize, _set_key) {
       }
       toJSON() {
         const ret = {};
@@ -74637,7 +74735,9 @@ var LastToolPanel = class extends ColumnFrame {
     const tool = this.getToolStackHead(ctx);
     this.needsRebuild = this.needsRebuild || tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
     if (this.needsRebuild) {
-      tool[LastKey] = tool_idgen2++;
+      if (!(LastKey in tool)) {
+        tool[LastKey] = tool_idgen2++;
+      }
       this._tool_id = tool[LastKey];
       this.rebuild();
     }
@@ -75187,6 +75287,7 @@ __export(controller_exports, {
   Context: () => Context,
   ContextFlags: () => ContextFlags,
   ContextOverlay: () => ContextOverlay,
+  CreateSnapshot: () => CreateSnapshot,
   Curve1D: () => Curve1D,
   Curve1DPoint: () => Curve1DPoint,
   Curve1DProperty: () => Curve1DProperty,
@@ -79653,8 +79754,8 @@ var Area = class extends UIBase2 {
     const ret = UIBase2.createElement(this.constructor.define().tagname);
     return ret;
   }
-  on_resize(size) {
-    super.on_resize(size);
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
   }
   on_area_focus() {
   }
@@ -80269,8 +80370,8 @@ var ScreenArea2 = class extends UIBase2 {
     this.setCSS();
     return this;
   }
-  on_resize(size) {
-    super.on_resize(size);
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
     if (this.area !== void 0) {
       this.area.on_resize(size);
     }
@@ -80557,7 +80658,7 @@ var ScreenArea2 = class extends UIBase2 {
         if (this._isDead()) {
           return;
         }
-        if (!this.ctx && this.parentNode) {
+        if (!this.ctx?.screen?.listening || !this.ctx || !this.parentNode) {
           console.log("waiting to start. . .");
           this.doOnce(f2);
           return;
@@ -80992,7 +81093,7 @@ function purgeUpdateStack() {
 var Screen2 = class extends UIBase2 {
   static STRUCT = struct_default.inlineRegister(
     this,
-    `pathux.Screen { 
+    `pathux.Screen {
        size  : vec2;
        pos   : vec2;
        sareas : array(pathux.ScreenArea);
@@ -86982,6 +87083,9 @@ var DataBlock = class _DataBlock {
     this.lib_id = -1;
     this.lib_users = 0;
     this.name = "";
+  }
+  [CreateSnapshot]() {
+    return this.lib_id;
   }
   static blockDefine() {
     return {
