@@ -2451,7 +2451,13 @@ export class Screen<
       );
     }
 
-    const ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
+    /* A screen whose old size has a zero or non-finite axis carries no layout
+       to scale; dividing through it makes every screenvert NaN, and NaN never
+       washes out -- the areas stay 0x0 through every later resize. Fall back
+       to 1:1 and let the constraint solver place them. */
+    const axisRatio = (a: number, b: number) => (b > 0 && isFinite(a / b) ? a / b : 1);
+
+    const ratio = [axisRatio(newsize[0], oldsize[0]), axisRatio(newsize[1], oldsize[1])];
 
     const offx = this.pos[0] - this.oldpos[0];
     const offy = this.pos[1] - this.oldpos[1];
