@@ -11,7 +11,7 @@ import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap } from "./Frame
 import { contextWrangler } from "./area_wrangler";
 import { IsScreenTag } from "./constants";
 import { IContextBase } from "../core/context_base";
-import { Vector2 } from "../pathux";
+import { Vector2 } from "../path-controller/util/vectormath";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
@@ -33,6 +33,13 @@ export interface IAreaDef {
   uiname?: string;
   icon?: number;
   borderLock?: number;
+}
+
+export interface SwitchEditorOptions {
+  /** Destroy every other editor in this tile before switching, so the tile is
+   *  left holding only the new editor. An existing instance of the target
+   *  class is kept and reused, UI state intact. */
+  deleteExisting?: boolean;
 }
 
 /** Is obj an instance of Screen */
@@ -774,7 +781,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
       if (area.areaType == type) {
         console.log("             found saved area type");
 
-        this.switch_editor(area.constructor);
+        this.switchEditor(area.constructor);
       }
     }
 
@@ -1287,8 +1294,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     return result;
   }
 
-  switch_editor(cls: AreaConstructorParam) {
-    return this.switchEditor(cls);
+  /** @deprecated use this.switchEditor */
+  switch_editor(cls: AreaConstructorParam, opts?: SwitchEditorOptions) {
+    return this.switchEditor(cls, opts);
   }
 
   /** Adopt this tile's shared AreaDocker into `area`'s switcher row,
@@ -1330,9 +1338,50 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     this.switcher.flagUpdate();
   }
 
-  switchEditor(cls: AreaConstructorParam) {
+  /** Destroy every editor in this tile except `keep` (an areaname), dropping each
+   *  from `editors` and `editormap`. The shared AreaDocker is detached first so it
+   *  is not torn down with the editor whose header it currently sits in. */
+  _deleteEditors(keep?: string) {
+    if (this.switcher) {
+      HTMLElement.prototype.remove.call(this.switcher);
+    }
+
+    for (const editor of this.editors.slice()) {
+      const areaname = (editor.constructor as unknown as IAreaConstructor).define().areaname!;
+
+      if (areaname === keep) {
+        continue;
+      }
+
+      if (editor === this.area) {
+        //same deactivation switchEditor runs for an outgoing area
+        editor.pos = new Vector2(editor.pos);
+        editor.size = new Vector2(editor.size);
+        editor.inactive = true;
+        editor.push_ctx_active();
+        editor._init();
+        editor.on_area_inactive();
+        editor.pop_ctx_active();
+
+        this.area = undefined;
+      }
+
+      editor.owning_sarea = undefined;
+      editor.dead = true;
+      editor.remove();
+
+      this.editors.remove(editor);
+      delete this.editormap[areaname];
+    }
+  }
+
+  switchEditor(cls: AreaConstructorParam, opts: SwitchEditorOptions = {}) {
     const def = cls.define();
     const name = def.areaname!;
+
+    if (opts.deleteExisting) {
+      this._deleteEditors(name);
+    }
 
     //areaclasses[name]
     if (!(name in this.editormap)) {

@@ -203,11 +203,12 @@ import { MenuBarEditor, registerMenuBarEditor } from "./menubar";
 import { register } from "./app_ops";
 import { IContextBase } from "../core/context_base";
 import { areaclasses } from "../screen/area_base";
+import type { SwitchEditorOptions } from "../screen/ScreenArea";
 
 type ScreenAreaElement = UIBase & {
   pos: Vector2;
   size: Vector2;
-  switch_editor(cls: unknown): void;
+  switch_editor(cls: unknown, opts?: SwitchEditorOptions): void;
 };
 
 export class StartArgs {

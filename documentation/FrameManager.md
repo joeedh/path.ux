@@ -221,6 +221,14 @@ instantiates on first use and swaps the DOM, firing
 Inactive editors keep their full UI state but are skipped by the update
 loop.
 
+`switchEditor(EditorClass, {deleteExisting: true})` first **destroys**
+every other editor in the tile — each one is removed from the DOM,
+`_ondestroy`ed, and dropped from `editors`/`editormap` — so the tile is
+left holding only the new editor. An existing instance of the target
+class is kept and reused, UI state intact, rather than being recreated.
+This is the hard counterpart to `area.closed` (below): closing hides a
+tab and keeps the instance, deleting throws the instance away.
+
 The **AreaDocker** is the tab bar in the header. Each tile owns a single
 docker instance which the active editor *adopts* into its header
 (`ScreenArea._attachSwitcher`) — so tab UI state and even an in-progress
