@@ -1000,7 +1000,14 @@ export class Container<
 
     ret.packflag |= packflag;
     ret.on_change = cb ?? null;
-    ret.text = "" + text;
+
+    /* `update()` above already subscribed the datapath and delivered its first
+     * value, so an unconditional assignment here would overwrite it — with the
+     * string "undefined" when no literal was passed. Only an explicit literal
+     * wins over the binding. */
+    if (text !== undefined) {
+      ret.text = "" + text;
+    }
 
     return ret;
   }
