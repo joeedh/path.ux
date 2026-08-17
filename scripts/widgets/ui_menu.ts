@@ -38,12 +38,27 @@ export type MenuTemplateCustom = [
 ];
 
 export type MenuItemCallback = (dom: HTMLElement) => HTMLElement;
+
+/**
+ * Object form of a custom entry. Preferred over {@link MenuTemplateCustom}: the positional array
+ * silently mistakes an argument for a tooltip when an optional slot is skipped.
+ */
+export type MenuTemplateEntry = {
+  name: string;
+  callback: (id: string | number) => void;
+  hotkey?: string | HotKey;
+  icon?: number;
+  tooltip?: string;
+  id?: string | number;
+};
+
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
 export type MenuTemplateItem =
   | SEP
   | MenuTemplateTool
   | MenuTemplateCustom
   | MenuItemCallback
+  | MenuTemplateEntry
   | Menu;
 
 export type MenuTemplate = MenuTemplateItem[];
@@ -79,6 +94,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
   /** The src button that created this menu, used to switch menus when hovering over other buttons. */
   srcWidget: UIBase<CTX> | undefined;
+  /**
+   * Hover text for the row a *parent* menu draws for this menu as a submenu. Ordinary items take
+   * their tooltip through `addItem`/`addItemExtra`, but a submenu is added as the menu itself, so
+   * the text has to travel on it.
+   */
+  tooltip: string | undefined;
   parentMenu: Menu | undefined;
   _was_clicked: boolean;
   items: MenuItem[];
@@ -605,8 +626,11 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     li.setAttribute("tabindex", "" + this.itemindex++);
     li.setAttribute("class", "menuitem");
 
-    if (tooltip !== undefined) {
-      li.title = tooltip;
+    // A submenu is added as the menu itself, so there is no `tooltip` argument to pass; it rides
+    // on the menu instead.
+    const hover = tooltip !== undefined ? tooltip : item instanceof Menu ? item.tooltip : undefined;
+    if (hover !== undefined) {
+      li.title = hover;
     }
 
     if (item instanceof Menu) {
