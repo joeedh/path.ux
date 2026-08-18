@@ -21,7 +21,10 @@ import {
   IAreaConstructor,
   AreaConstructorParam,
   AreaFlags,
+  type AreaMenuFilter,
+  getAreaMenuFilter,
   makeAreasEnum,
+  setAreaMenuFilter,
 } from "./area_base";
 
 export interface IAreaDef {
@@ -49,7 +52,8 @@ function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is
   return typeof obj === "object" && obj !== null && IsScreenTag in obj;
 }
 
-export { AreaFlags };
+export { AreaFlags, getAreaMenuFilter, makeAreasEnum, setAreaMenuFilter };
+export type { AreaMenuFilter };
 export * from "./area_wrangler";
 export { contextWrangler };
 
@@ -262,8 +266,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
   }
 
-  static makeAreasEnum() {
-    return makeAreasEnum();
+  static makeAreasEnum(filter?: AreaMenuFilter) {
+    return makeAreasEnum(filter);
   }
 
   static getAreaName<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
