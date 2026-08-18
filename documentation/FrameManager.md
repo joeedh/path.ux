@@ -62,6 +62,9 @@ export class MyEditor extends Area {
       areaname: "my_editor",     //stable key, used in serialization
       apiname : "myEditor",      //optional: name in the data API
       uiname  : "My Editor",     //label in the editor-switcher menu
+      //optional: the pane tab's tooltip, whole. Say what the editor shows;
+      //without one the tab falls back to "Show <uiname> in this pane".
+      description: "Show the scene being edited in this pane",
       icon    : Icons.EDITOR,    //optional switcher icon
       flag    : 0,               //AreaFlags bits
       //bitmask of BorderMask.LEFT/BOTTOM/RIGHT/TOP: borders the user

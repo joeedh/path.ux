@@ -31,6 +31,8 @@ export interface IAreaDef {
   areaname: string;
   flag?: number;
   uiname?: string;
+  /** The pane tab's tooltip, whole — a sentence saying what the editor shows. */
+  description?: string;
   icon?: number;
   borderLock?: number;
 }

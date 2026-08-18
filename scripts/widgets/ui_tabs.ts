@@ -647,6 +647,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   _tool?: ModalTabMove<CTX>;
   _last_p_key?: string;
   _size_cb?: () => void;
+  /** The tooltip currently on the bar, so a pointer moving inside one tab is not re-setting it. */
+  _tabToolTip?: string;
 
   constructor() {
     super();
@@ -709,6 +711,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   _doelement(e: PointerEvent, mx: number, my: number) {
+    let hit: TabItem<CTX> | undefined;
+
     for (const tab of this.tabs) {
       let ok: boolean;
 
@@ -718,11 +722,39 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
       }
 
-      if (ok && this.tabs.highlight !== tab) {
+      if (!ok) {
+        continue;
+      }
+
+      hit = tab;
+
+      if (this.tabs.highlight !== tab) {
         this.tabs.highlight = tab;
         this.update(true);
       }
     }
+
+    this._updateTabToolTip(hit);
+  }
+
+  /**
+   * Put the pointed-at tab's tooltip on the bar. A tab is painted on the bar's canvas rather than
+   * being a DOM node of its own, so there is nothing per-tab to hover: the bar carries one tooltip
+   * and swaps it as the pointer crosses tabs. Without this `TabItem.tooltip` is only ever written.
+   */
+  _updateTabToolTip(tab: TabItem<CTX> | undefined) {
+    const tooltip = tab ? tab.tooltip : "";
+
+    if (tooltip === this._tabToolTip) {
+      return;
+    }
+
+    this._tabToolTip = tooltip;
+    this.description = tooltip;
+
+    // The canvas fills the bar, so it — not the host — is what the pointer is over, and a native
+    // tooltip is looked up from there.
+    this.canvas.title = tooltip;
   }
 
   _domouse(e: PointerEvent) {

@@ -109,7 +109,10 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
         name = ToolProperty.makeUIName(name);
       }
 
-      const tab = tabs.tab(name, editor._id);
+      // An editor that says what it shows gets that sentence; the rest get what the tab does,
+      // which is at least not the label read back.
+      const tooltip = def.description ?? `Show ${name} in this pane`;
+      const tab = tabs.tab(name, editor._id, tooltip);
       const tabItem = tab._tab;
 
       tabItem.closable = true;
@@ -146,7 +149,9 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       });
     }
 
-    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    const addTab = this.tbar
+      .icontab(Icons.SMALL_PLUS, "add", "Add another editor to this pane")
+      .noSwitch();
     addTab._tab.overrideDefault("iconPaddingRight", 8);
 
     dockerdebug("Add Menu Tab", addTab);
