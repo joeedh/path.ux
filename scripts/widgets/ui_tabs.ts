@@ -56,6 +56,20 @@ export interface TabRowLayout {
  * next row instead. A row that is still empty always takes the tab it is offered, so a
  * single tab wider than the whole bar overflows its own row rather than looping forever.
  */
+/**
+ * How far a bar that cannot wrap may be scrolled along its own axis, in device pixels.
+ *
+ * Clamped rather than merely bounded, because `content - visible` goes negative the moment
+ * everything fits: a bar with nothing hidden is a bar with nowhere to go, and it reads zero
+ * from either end.
+ */
+export function clampTabScroll(scroll: number, content: number, visible: number): number {
+  return Math.min(Math.max(scroll, 0), Math.max(0, content - visible));
+}
+
+/** How far a right-drag or a swipe must travel, in CSS pixels, before it is a pan. */
+const PAN_SLOP = 4;
+
 export function layoutTabRows({ sizes, available, pad }: TabRowInput): TabRowLayout {
   const rows: number[] = [];
   const offsets: number[] = [];
@@ -720,6 +734,27 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   /** Rows the last layout used. 1 unless `multiRow` is on and the tabs overflowed. */
   rowCount = 1;
 
+  /**
+   * Let a bar that is not wrapping scroll along its own axis, rather than running its last
+   * tabs off the end where nothing can reach them.
+   *
+   * Needs {@link maxExtent} as well, and for the same reason wrapping does: a bar with no
+   * idea how much room it has sizes itself to its tabs, and there is then nothing to scroll
+   * within. Deliberately not a third thing to remember to switch on — a bar that has been
+   * told its room and cannot wrap into more rows is exactly the bar with tabs out of reach.
+   */
+  scrollTabs = true;
+  /** How far the tabs are scrolled along the bar's axis, in device pixels. Never negative. */
+  scrollPos = 0;
+  /** What the last layout measured: the tabs' whole extent, and how much of it is on screen. */
+  scrollContent = 0;
+  scrollVisible = 0;
+
+  /** The right-drag in progress, if one is: where it began, and whether it has panned yet. */
+  _pan?: { pointerId: number; last: number; start: number; moved: boolean };
+  /** Where the midpoint of a two-finger swipe was last seen, in CSS pixels along the axis. */
+  _swipe?: number;
+
   tabs: TabItem<CTX>[] & { active?: TabItem<CTX>; highlight?: TabItem<CTX> };
 
   _last_style_key?: string;
@@ -798,11 +833,35 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       this.on_pointerdown(e as PointerEvent);
     });
 
+    this.canvas.addEventListener("pointerup", (e: Event) => {
+      this.on_pointerup(e as PointerEvent);
+    });
+
     // Suppress browser's native context menu — we route right-click into a
     // `tabcontextmenu` event on the targeted tab via on_pointerdown.
     this.canvas.addEventListener("contextmenu", (e: Event) => {
       e.preventDefault();
     });
+
+    // Both non-passive: a bar with somewhere to scroll swallows the gesture, and a listener
+    // that has already been declared passive cannot change its mind about that.
+    this.canvas.addEventListener(
+      "wheel",
+      (e: Event) => {
+        this.on_wheel(e as WheelEvent);
+      },
+      { passive: false }
+    );
+
+    for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+      this.canvas.addEventListener(
+        type,
+        (e: Event) => {
+          this.on_touch(e as TouchEvent);
+        },
+        { passive: false }
+      );
+    }
   }
 
   /**
@@ -996,20 +1055,157 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
 
   on_pointerdown(e: PointerEvent) {
     if (e.button === 2) {
-      this._doContextMenu(e);
+      if (!this._startPan(e)) {
+        this._doContextMenu(e);
+      }
       return;
     }
     this._doclick(e);
   }
 
   on_pointermove(e: PointerEvent) {
+    if (this._panMove(e)) {
+      return;
+    }
+
     this._domouse(e);
 
     e.preventDefault();
     e.stopPropagation();
   }
 
-  on_pointerup(e: PointerEvent) {}
+  on_pointerup(e: PointerEvent) {
+    const pan = this._pan;
+
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return;
+    }
+
+    this._pan = undefined;
+
+    try {
+      this.canvas.releasePointerCapture(pan.pointerId);
+    } catch (error) {
+      //nothing was captured; the listener on the canvas saw the whole drag anyway
+    }
+
+    //a right-click that went nowhere is still a right-click
+    if (!pan.moved) {
+      this._doContextMenu(e);
+    }
+  }
+
+  /**
+   * Begin a right-drag pan, or decline it and let the context menu happen as it always has.
+   *
+   * Declining is what keeps this from stealing the menu: on a bar whose tabs all fit, a
+   * right-click is the act it was before this existed. On one that scrolls the menu is only
+   * deferred — a right-click that never moves still opens it when the button comes back up.
+   */
+  _startPan(e: PointerEvent): boolean {
+    if (this.maxScroll === 0) {
+      return false;
+    }
+
+    const along = this.horiz ? e.x : e.y;
+
+    this._pan = { pointerId: e.pointerId, last: along, start: along, moved: false };
+
+    try {
+      this.canvas.setPointerCapture(e.pointerId);
+    } catch (error) {
+      //a pointer that cannot be captured still reports through the canvas listener
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    return true;
+  }
+
+  /** Carry a right-drag along. Answers whether the event belonged to one. */
+  _panMove(e: PointerEvent): boolean {
+    const pan = this._pan;
+
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return false;
+    }
+
+    const along = this.horiz ? e.x : e.y;
+    const delta = along - pan.last;
+    pan.last = along;
+
+    if (Math.abs(along - pan.start) > PAN_SLOP) {
+      pan.moved = true;
+    }
+
+    //the tabs follow the pointer, so the offset into them moves against it
+    this.setScroll(this.scrollPos - delta * this.getDPI());
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    return true;
+  }
+
+  /**
+   * Scroll on a wheel, taking whichever axis the hardware reported the most of.
+   *
+   * A trackpad spells sideways as deltaX and a wheel spells it as deltaY, and over a row of
+   * tabs both mean the same thing — move along it — so the bar reads whichever is larger
+   * rather than insisting on the one that matches its own orientation.
+   */
+  on_wheel(e: WheelEvent) {
+    if (this.maxScroll === 0) {
+      return;
+    }
+
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+
+    if (this.setScroll(this.scrollPos + delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  /**
+   * Pan on a two-finger swipe, getting out of the way of a tab drag already under way.
+   *
+   * Two fingers on a tab bar cannot mean "move this tab" — the first one already started
+   * that if it landed on one — so the second arriving cancels the drag rather than leaving a
+   * tab following a finger that has stopped meaning it.
+   */
+  on_touch(e: TouchEvent) {
+    if (e.type === "touchend" || e.type === "touchcancel" || e.touches.length !== 2) {
+      this._swipe = undefined;
+      return;
+    }
+
+    const first = e.touches[0];
+    const second = e.touches[1];
+    const along = this.horiz
+      ? (first.clientX + second.clientX) * 0.5
+      : (first.clientY + second.clientY) * 0.5;
+
+    if (e.type === "touchstart" || this._swipe === undefined) {
+      this._ensureNoModal();
+      this._swipe = along;
+
+      if (this.maxScroll > 0) {
+        e.preventDefault();
+      }
+
+      return;
+    }
+
+    const delta = along - this._swipe;
+    this._swipe = along;
+
+    if (this.setScroll(this.scrollPos - delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
 
   static setDefault<T extends UIBase>(element: T): T {
     const e = element as unknown as TabBar;
@@ -1338,6 +1534,54 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
     return extent * dpi;
   }
 
+  /**
+   * The extent, in device pixels, the tabs are scrolled *within*, or undefined when the bar
+   * shows all of them at once and there is nothing to scroll.
+   *
+   * A wrapping bar never scrolls. Wrapping is already its answer to tabs that do not fit, and
+   * a bar doing both would push whole rows past an edge with nothing on screen to say so.
+   */
+  _scrollExtent(dpi: number): number | undefined {
+    const extent = this.maxExtent;
+
+    if (
+      this.multiRow ||
+      !this.scrollTabs ||
+      extent === undefined ||
+      !isFinite(extent) ||
+      extent <= 0
+    ) {
+      return undefined;
+    }
+
+    return extent * dpi;
+  }
+
+  /** How far this bar can scroll from the origin, in device pixels; 0 when it all fits. */
+  get maxScroll(): number {
+    return Math.max(0, this.scrollContent - this.scrollVisible);
+  }
+
+  /**
+   * Scroll to an offset, clamped, laying out again only if it actually moved.
+   *
+   * Answers whether it moved, which is how a gesture decides whether it swallowed the event:
+   * a wheel over a bar already at its end should scroll whatever is behind the bar instead.
+   */
+  setScroll(value: number): boolean {
+    const next = clampTabScroll(value, this.scrollContent, this.scrollVisible);
+
+    if (next === this.scrollPos) {
+      return false;
+    }
+
+    this.scrollPos = next;
+    this._layout();
+    this._redraw();
+
+    return true;
+  }
+
   _layout() {
     if ((!this.ctx || !this.ctx.screen) && !this.isDead()) {
       this.doOnce(this._layout);
@@ -1496,6 +1740,12 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       this.rowCount = placed.rowCount;
       extent = placed.extent;
 
+      //nothing is hidden along the axis once it wraps, so any scroll left over from before
+      //would be an offset with no way to undo it
+      this.scrollPos = 0;
+      this.scrollContent = extent;
+      this.scrollVisible = extent;
+
       for (let i = 0; i < this.tabs.length; i++) {
         const tab = this.tabs[i];
         tab.row = placed.rows[i];
@@ -1520,6 +1770,24 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       }
 
       extent = x + pad;
+
+      const visible = this._scrollExtent(dpi);
+
+      this.scrollContent = extent;
+      this.scrollVisible = visible === undefined ? extent : Math.min(visible, extent);
+      this.scrollPos = clampTabScroll(this.scrollPos, this.scrollContent, this.scrollVisible);
+
+      if (this.scrollPos !== 0) {
+        for (const tab of this.tabs) {
+          if (!dragging(tab)) {
+            tab.pos[axis] -= this.scrollPos;
+          }
+        }
+      }
+
+      //the canvas is the window rather than the contents: what runs past its end is clipped
+      //by the canvas itself, which is how the bar scrolls without drawing a scrollbar
+      extent = this.scrollVisible;
     }
 
     for (const tab of this.tabs) {
@@ -1896,10 +2164,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   update(force_update: boolean = false) {
     const rect = this.getClientRects()[0];
     if (rect) {
-      //the extent to wrap into belongs in this key too: a pane widened from its right edge
-      //moves nothing on the left, so position alone would never notice it
+      //the extent belongs in this key too, and for wrapping and scrolling alike: a pane
+      //widened from its right edge moves nothing on the left, so position alone would never
+      //notice it
       let key = Math.floor(rect.x * 4.0) + ":" + Math.floor(rect.y * 4.0);
-      key += ":" + (this.multiRow ? Math.floor((this.maxExtent ?? 0) * 4.0) : "off");
+      key += ":" + Math.floor((this.maxExtent ?? 0) * 4.0);
 
       if (key !== this._last_p_key) {
         this._last_p_key = key;
@@ -2093,6 +2362,18 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
   set multiRow(val: boolean) {
     this.tbar.multiRow = val;
+  }
+
+  /**
+   * Let the bar scroll along its axis when it is not wrapping. On by default, but it needs
+   * `maxExtent` as well before it does anything. See `TabBar.scrollTabs`.
+   */
+  get scrollTabs(): boolean {
+    return this.tbar.scrollTabs;
+  }
+
+  set scrollTabs(val: boolean) {
+    this.tbar.scrollTabs = val;
   }
 
   /**

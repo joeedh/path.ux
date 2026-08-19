@@ -5,6 +5,9 @@ the bar — width for a horizontal bar, height for a vertical one — so every t
 reachable without scrolling. Opt-in, off by default, switched on for the screen-area tab
 bar (`AreaDocker`).
 
+The other answer to the same problem — for a bar that does not wrap — is
+[scrolling tab bars](scrolling-tab-bars.md).
+
 ## Plan (v1)
 
 ### Where the tabs are placed today
@@ -294,6 +297,9 @@ and `maxExtent === undefined`, confirming an existing caller is untouched. Forci
 rotated labels, the active-tab frame and the `Curve Mapping | ListBox` separator each
 landing in the correct column.
 
-Not verified live: tab dragging across rows. The modal drag needs a sustained pointer
-gesture the CDP helpers here do not express, so the `ModalTabMove` changes rest on reading
-rather than on a demonstrated drag.
+Tab dragging across rows was demonstrated afterwards, against the VN desktop app rather
+than `example/`: a synthesized `pointerdown` / `pointermove` run from a row-0 tab to a
+row-1 one swapped the two, which is `ModalTabMove` reading both axes and `tabAt` finding
+the tab under the pointer. What made the first two attempts look impossible was a stale
+bar — the docker rebuilds on every editor switch, so a captured `TabBar` is detached and
+reports no client rects. Re-find the bar before each gesture.
