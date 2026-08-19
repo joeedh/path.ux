@@ -33,7 +33,7 @@ import {
   ThemeScrollBars,
 } from "../core/ui_base";
 import * as FrameManager_mesh from "./FrameManager_mesh";
-import { makePopupArea } from "../widgets/ui_dialog";
+import { makePopupArea, type PopupAreaArgs } from "../widgets/ui_dialog";
 
 import "../widgets/ui_widgets";
 import "../widgets/ui_tabs";
@@ -96,7 +96,7 @@ export class Screen<
     `pathux.Screen {
        size  : vec2;
        pos   : vec2;
-       sareas : array(pathux.ScreenArea);
+       sareas : array(pathux.ScreenArea) | this.savedAreas;
        idgen : int;
        uidata : string | obj.saveUIData();
     }`
@@ -905,8 +905,15 @@ export class Screen<
   //XXX look at if this is referenced anywhere
   save() {}
 
-  popupArea(area_class: typeof Area) {
-    return makePopupArea(area_class, this);
+  /**
+   * Open an editor in a floating window: see {@link makePopupArea}.
+   *
+   * Typed loose in the context rather than as `ScreenArea<CTX>` on purpose. `Screen` is compared
+   * structurally in several places that would otherwise have to agree on `CTX` all the way down
+   * through the returned area's borders, and they do not.
+   */
+  popupArea(area_class: typeof Area, args?: PopupAreaArgs): ScreenAreaAny {
+    return makePopupArea(area_class, this as unknown as Screen, args);
   }
 
   remove(trigger_destroy = true) {
@@ -1134,10 +1141,23 @@ export class Screen<
     }
   }
 
+  /**
+   * The areas a saved layout is made of: the mesh, without whatever floats over it.
+   *
+   * A popup is chrome around a moment — a task list raised while a run happens — and its
+   * titlebar is built by whoever opened it rather than by `STRUCT`, so one written to a file
+   * would come back as an untitled box on top of the mesh with no way to move or close it. Not
+   * writing it down is the whole fix: the mesh reloads as the author left it and the popup is
+   * gone, which is what closing the window already meant.
+   */
+  get savedAreas(): ScreenAreaAny[] {
+    return this.sareas.filter((sarea) => !(sarea.flag & AreaFlags.INDEPENDENT));
+  }
+
   toJSON() {
     return {
       ...super.toJSON(),
-      sareas: this.sareas,
+      sareas: this.savedAreas,
       size  : this.size,
       idgen : this.idgen,
     };
@@ -2888,8 +2908,7 @@ export class Screen<
     area.push_ctx_active();
     area.pop_ctx_active();
 
-    area.pos = sarea2.pos;
-    area.size = sarea2.size;
+    sarea2._syncAreaBox();
     area.parentWidget = sarea2;
     area.owning_sarea = sarea2;
 
