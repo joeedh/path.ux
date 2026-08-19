@@ -168,6 +168,14 @@ export interface IPathUXConstants {
   autoLoadSplineTemplates?: boolean;
   /** Add tooltip picker tools to screen area headers for mobile devices. */
   addHelpPickers?: boolean;
+  /**
+   * Whether an editor tab in a screen area's tab bar carries an inline close-X.
+   *
+   * Turning it off does not take closing away — the tab's own context menu still offers it, and
+   * every tab's tooltip starts saying so, because a way to close that nothing on screen mentions
+   * is a way nobody finds.
+   */
+  closableAreaTabs?: boolean;
   autoSizeUpdate?: boolean;
   showPathsInToolTips?: boolean;
   enableThemeAutoUpdate?: boolean;
@@ -260,6 +268,7 @@ const cconst: PathUXConfigProvider = {
 
   autoLoadSplineTemplates: true,
   addHelpPickers         : true,
+  closableAreaTabs       : true,
   autoSizeUpdate         : true,
   showPathsInToolTips    : true,
   enableThemeAutoUpdate  : true,

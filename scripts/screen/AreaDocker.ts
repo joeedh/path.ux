@@ -111,11 +111,21 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
 
       // An editor that says what it shows gets that sentence; the rest get what the tab does,
       // which is at least not the label read back.
-      const tooltip = def.description ?? `Show ${name} in this pane`;
+      const said = def.description ?? `Show ${name} in this pane`;
+
+      // Where the close-X is off, closing is still there but nothing on screen points at it, so
+      // every tab says where it went. Appended rather than replacing: what the pane shows is
+      // still the more useful half of the sentence.
+      const closable = cconst.closableAreaTabs;
+      const tooltip = closable
+        ? said
+        : `${said}
+Right-click the tab to close it.`;
+
       const tab = tabs.tab(name, editor._id, tooltip);
       const tabItem = tab._tab;
 
-      tabItem.closable = true;
+      tabItem.closable = closable;
       tabItem.ontabclose = () => this.closeEditor(editor);
       tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor, e);
 
