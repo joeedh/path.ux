@@ -1055,14 +1055,17 @@ export class Container<
   }
 
   /**
-   *
-   * makes a button for a help picker tool
-   * to view tooltips on mobile devices
-   * */
+   * Makes a button that starts the help picker: point at anything to read what it does, which is
+   * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
+   */
   helppicker() {
-    const ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
-      this.getScreen()?.hintPickerTool();
-    });
+    const ret = this.iconbutton(
+      Icons.HELP,
+      "Read what a control does by pointing at it; tap empty space to stop",
+      () => {
+        this.getScreen()?.hintPickerTool();
+      }
+    );
 
     if (util.isMobile()) {
       //ret.iconsheet = 2;
