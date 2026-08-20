@@ -14,20 +14,11 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var __esm = (fn, res, err) => function __init() {
-  if (err) throw err[0];
-  try {
-    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-  } catch (e) {
-    throw err = [e], e;
-  }
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
 var __commonJS = (cb, mod) => function __require2() {
-  try {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-  } catch (e) {
-    throw mod = 0, e;
-  }
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 var __export = (target, all) => {
   for (var name2 in all)
@@ -1160,7 +1151,7 @@ var init_mobile_detect = __esm({
   }
 });
 
-// ../../node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
+// node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js
 function isParseStructsDummy(cls) {
   return !!cls && !!cls[PARSE_STRUCTS_DUMMY];
 }
@@ -2596,7 +2587,7 @@ function readJSON(json, class_or_struct_id) {
 }
 var colormap, PARSE_STRUCTS_DUMMY, termColorMap, token, tokdef, PUTIL_ParseError, lexer, parser, struct_parseutil, StructEnum, NStruct, ArrayTypes, ValueTypes, StructTypes, StructTypeMap, struct_parse, struct_parser, struct_typesystem, STRUCT_ENDIAN, temp_dataview, uint8_view, unpack_context, BinWriter, _static_sbuf_ss, _static_sbuf, _static_arr_us, _static_arr_uss, struct_binpack, warninglvl$1, debug, _static_envcode_null$1, packer_debug$1, packer_debug_start$1, packer_debug_end$1, packdebug_tablevel, cachering, StructFieldTypes, StructFieldTypeMap, fakeFields, _ws_env$1, StructFieldType, StructIntField, StructFloatField, StructDoubleField, StructStringField, StructStaticStringField, StructStructField, StructTStructField, StructArrayField, StructIterField, StructShortField, StructByteField, StructSignedByteField, StructBoolField, StructIterKeysField, StructUintField, StructUshortField, StructStaticArrayField, StructOptionalField, arrayBufferElemTypes, PLATFORM_LITTLE_ENDIAN, StructArrayBufferField, _sintern2, structEval, _struct_eval, TokSymbol, _defaultParser, nGlobal, DEBUG, sintern2, struct_eval, warninglvl, truncateDollarSign$1, manager, JSONError, _static_envcode_null, packer_debug, packer_debug_start, packer_debug_end, _ws_env, STRUCT, nbtoa, natob, ver_pat, FileParams, Block, FileError, FileHelper, struct_filehelper;
 var init_nstructjs_es6 = __esm({
-  "../../node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
+  "node_modules/.pnpm/nstructjs@0.8.7/node_modules/nstructjs/build/nstructjs_es6.js"() {
     colormap = {
       "black": 30,
       "red": 31,
@@ -65327,7 +65318,9 @@ var Container3 = class _Container extends UIBase2 {
     ret.update();
     ret.packflag |= packflag;
     ret.on_change = cb ?? null;
-    ret.text = "" + text2;
+    if (text2 !== void 0) {
+      ret.text = "" + text2;
+    }
     return ret;
   }
   pathlabel(inpath, label, packflag = 0) {
@@ -79497,6 +79490,7 @@ init_simple_events();
 init_const();
 init_struct();
 init_area_wrangler();
+init_vectormath();
 init_area_wrangler();
 function isScreen(obj) {
   return typeof obj === "object" && obj !== null && IsScreenTag in obj;
@@ -80067,7 +80061,7 @@ var ScreenArea2 = class extends UIBase2 {
         if (area.areaType == type) {
           console.log("             found saved area type");
   
-          this.switch_editor(area.constructor);
+          this.switchEditor(area.constructor);
         }
       }
   
@@ -80454,8 +80448,9 @@ var ScreenArea2 = class extends UIBase2 {
     }
     return result;
   }
-  switch_editor(cls) {
-    return this.switchEditor(cls);
+  /** @deprecated use this.switchEditor */
+  switch_editor(cls, opts) {
+    return this.switchEditor(cls, opts);
   }
   /** Adopt this tile's shared AreaDocker into `area`'s switcher row,
    *  creating the docker on first use.  Because there is a single docker
@@ -80485,9 +80480,41 @@ var ScreenArea2 = class extends UIBase2 {
     this.switcher.ctx = this.ctx;
     this.switcher.flagUpdate();
   }
-  switchEditor(cls) {
+  /** Destroy every editor in this tile except `keep` (an areaname), dropping each
+   *  from `editors` and `editormap`. The shared AreaDocker is detached first so it
+   *  is not torn down with the editor whose header it currently sits in. */
+  _deleteEditors(keep) {
+    if (this.switcher) {
+      HTMLElement.prototype.remove.call(this.switcher);
+    }
+    for (const editor2 of this.editors.slice()) {
+      const areaname = editor2.constructor.define().areaname;
+      if (areaname === keep) {
+        continue;
+      }
+      if (editor2 === this.area) {
+        editor2.pos = new Vector2(editor2.pos);
+        editor2.size = new Vector2(editor2.size);
+        editor2.inactive = true;
+        editor2.push_ctx_active();
+        editor2._init();
+        editor2.on_area_inactive();
+        editor2.pop_ctx_active();
+        this.area = void 0;
+      }
+      editor2.owning_sarea = void 0;
+      editor2.dead = true;
+      editor2.remove();
+      this.editors.remove(editor2);
+      delete this.editormap[areaname];
+    }
+  }
+  switchEditor(cls, opts = {}) {
     const def = cls.define();
     const name2 = def.areaname;
+    if (opts.deleteExisting) {
+      this._deleteEditors(name2);
+    }
     if (!(name2 in this.editormap)) {
       this.editormap[name2] = UIBase2.createElement(def.tagname);
       this.editormap[name2].ctx = this.ctx;
@@ -82813,7 +82840,8 @@ var Screen2 = class extends UIBase2 {
         visualViewport.scale
       );
     }
-    const ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
+    const axisRatio = (a2, b) => b > 0 && isFinite(a2 / b) ? a2 / b : 1;
+    const ratio = [axisRatio(newsize[0], oldsize[0]), axisRatio(newsize[1], oldsize[1])];
     const offx = this.pos[0] - this.oldpos[0];
     const offy = this.pos[1] - this.oldpos[1];
     this.oldpos.load(this.pos);

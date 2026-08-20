@@ -608,24 +608,28 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
     this.timeout = undefined;
   }
 
+  /**
+   * Pop a tooltip at `x, y`. `timeout` is how long it stays, in milliseconds; pass `Infinity` for
+   * one that stays until {@link end} is called, which is what the help picker wants — there the
+   * pointer is the timer.
+   */
   static show<CTX extends IContextBase = IContextBase>(
     message: string,
     screen: UIBase<CTX>,
     x: number,
-    y: number
+    y: number,
+    timeout?: number
   ) {
     const ret = UIBase.createElement<ToolTip<CTX>>(this.define().tagname);
 
     ret._start_time = util.time_ms();
-    ret.timeout = ret.getDefault("timeout") as number;
+    ret.timeout = timeout ?? (ret.getDefault("timeout") as number);
 
     ret.text = message;
     const size = ret._estimateSize();
 
     const pad = 5;
     const size2 = [size[0] + pad, size[1] + pad];
-
-    console.log(size2);
     const sscreen = screen as unknown as {
       popup(
         owning: UIBase,
@@ -659,7 +663,9 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   end() {
-    this._popup!.end();
+    const popup = this._popup;
+    this._popup = undefined;
+    popup?.end();
   }
 
   init() {
@@ -692,7 +698,8 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
   update() {
     super.update();
 
-    if (util.time_ms() - (this._start_time ?? 0) > (this.timeout ?? 0)) {
+    const timeout = this.timeout ?? 0;
+    if (isFinite(timeout) && util.time_ms() - (this._start_time ?? 0) > timeout) {
       this.end();
     }
   }

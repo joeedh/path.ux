@@ -27,6 +27,77 @@ function getpx(css: string): number {
 
 const isForwardAttr = (n: string) => n.startsWith("data-");
 
+/** Input to {@link layoutTabRows}. Every extent is along the bar, in device pixels. */
+export interface TabRowInput {
+  /** Extent of each tab, in tab order. */
+  sizes: number[];
+  /** Extent the rows have to fit into. */
+  available: number;
+  /** Space kept before the first tab of a row and after the last one. */
+  pad: number;
+}
+
+/** Result of {@link layoutTabRows}. `rows` and `offsets` are parallel to the input sizes. */
+export interface TabRowLayout {
+  /** Row index of each tab, counting from zero. */
+  rows: number[];
+  /** Offset of each tab along the bar, measured from the start of the bar. */
+  offsets: number[];
+  /** Rows used; at least one, even for no tabs at all. */
+  rowCount: number;
+  /** Extent actually used by the widest row, leading and trailing pad included. */
+  extent: number;
+}
+
+/**
+ * Break a run of tabs into rows that each fit `available`.
+ *
+ * Greedy first-fit in tab order: a tab that would push its row past `available` starts the
+ * next row instead. A row that is still empty always takes the tab it is offered, so a
+ * single tab wider than the whole bar overflows its own row rather than looping forever.
+ */
+/**
+ * How far a bar that cannot wrap may be scrolled along its own axis, in device pixels.
+ *
+ * Clamped rather than merely bounded, because `content - visible` goes negative the moment
+ * everything fits: a bar with nothing hidden is a bar with nowhere to go, and it reads zero
+ * from either end.
+ */
+export function clampTabScroll(scroll: number, content: number, visible: number): number {
+  return Math.min(Math.max(scroll, 0), Math.max(0, content - visible));
+}
+
+/** How far a right-drag or a swipe must travel, in CSS pixels, before it is a pan. */
+const PAN_SLOP = 4;
+
+export function layoutTabRows({ sizes, available, pad }: TabRowInput): TabRowLayout {
+  const rows: number[] = [];
+  const offsets: number[] = [];
+
+  let row = 0;
+  let x = pad;
+  let rowEmpty = true;
+  let extent = pad * 2;
+
+  for (const size of sizes) {
+    if (!rowEmpty && x + size + pad > available) {
+      row++;
+      x = pad;
+      rowEmpty = true;
+    }
+
+    rows.push(row);
+    offsets.push(x);
+
+    x += size;
+    rowEmpty = false;
+
+    extent = Math.max(extent, x + pad);
+  }
+
+  return { rows, offsets, rowCount: row + 1, extent };
+}
+
 // TODO: integrate this more widely
 class TabClickEvent<CTX extends IContextBase = IContextBase> extends PointerEvent {
   tab: TabItem<CTX>;
@@ -156,6 +227,8 @@ export class TabItem<CTX extends IContextBase = IContextBase> extends UIBase<
   closable = false;
   /** Hit-test rect for the close-X, in TabBar canvas coords. Filled by `TabBar._layout`. */
   closeRect: CloseRect | undefined;
+  /** Row this tab was placed on by `TabBar._layout`; always 0 unless the bar wraps. */
+  row = 0;
 
   ontabclick: ((e: PointerEvent) => void) | null;
   ontabdragstart: ((e: PointerEvent) => void) | null;
@@ -526,21 +599,29 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
     const tab = this.tab;
     const tbar = this.tbar;
     const axis = tbar.horiz ? 0 : 1;
+    const wrapped = tbar.rowCount > 1;
     let disty;
 
     if (tbar.horiz) {
       tab.pos[0] += dx;
+      if (wrapped) tab.pos[1] += dy; //the tab has to be able to reach the other rows
       disty = Math.abs(y - this.start_mpos[1]);
     } else {
       tab.pos[1] += dy;
+      if (wrapped) tab.pos[0] += dx;
       disty = Math.abs(x - this.start_mpos[0]);
     }
 
     const limit = 50;
     const csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
+    const cross = tbar.horiz ? this.tbar.canvas.height : this.tbar.canvas.width;
+
+    //a wrapped bar is as deep as its rows are tall, so crossing to the bottom row must not
+    //read as dragging the tab out of the bar
+    const crossLimit = limit * 1.5 + (wrapped ? cross : 0);
 
     let dragok = tab.pos[axis] + tab.size[axis] < -limit || tab.pos[axis] >= csize + limit;
-    dragok = dragok || disty > limit * 1.5;
+    dragok = dragok || disty > crossLimit;
     dragok = dragok && (this.tbar.draggable || Boolean(this.tbar.getAttribute("draggable")));
 
     //console.log(dragok, disty, this.tbar.draggable);
@@ -574,18 +655,31 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       return;
     }
 
-    const ti = tbar.tabs.indexOf(tab);
-    const next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
-    const prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
+    if (wrapped) {
+      //Across rows the along-bar positions restart at the left of every row, so comparing
+      //the dragged tab against its array neighbours says nothing. Swap with whatever tab
+      //the pointer is over instead: after the swap that tab has taken the dragged tab's
+      //slot, which is not where the pointer is, so nothing swaps again until the pointer
+      //crosses another tab.
+      const under = tbar.tabAt(x, y, tab);
 
-    if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
-      tbar.swapTabs(tab, next);
-    } else if (
-      prev !== undefined &&
-      prev.movable &&
-      tab.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5
-    ) {
-      tbar.swapTabs(tab, prev);
+      if (under !== undefined && under.movable) {
+        tbar.swapTabs(tab, under);
+      }
+    } else {
+      const ti = tbar.tabs.indexOf(tab);
+      const next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
+      const prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
+
+      if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
+        tbar.swapTabs(tab, next);
+      } else if (
+        prev !== undefined &&
+        prev.movable &&
+        tab.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5
+      ) {
+        tbar.swapTabs(tab, prev);
+      }
     }
 
     tbar.update(true);
@@ -625,6 +719,42 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   movableTabs: boolean;
   tabFontScale: number;
 
+  /** Wrap tabs that do not fit onto extra rows instead of running off the end. */
+  multiRow = false;
+  /**
+   * Extent, in CSS pixels, the tabs have to fit into while `multiRow` is on: the bar's
+   * width when it is horizontal, its height when it is vertical.
+   *
+   * It has to be supplied from outside. Every ancestor of the bar's canvas shrink-wraps to
+   * that canvas (`TabContainer._remakeStyle` emits `align-self: flex-start`), so a bar that
+   * measured its own parent would read back the width it just chose and oscillate. Feed it
+   * something the bar's own size cannot move — the owning pane, say.
+   */
+  maxExtent: number | undefined = undefined;
+  /** Rows the last layout used. 1 unless `multiRow` is on and the tabs overflowed. */
+  rowCount = 1;
+
+  /**
+   * Let a bar that is not wrapping scroll along its own axis, rather than running its last
+   * tabs off the end where nothing can reach them.
+   *
+   * Needs {@link maxExtent} as well, and for the same reason wrapping does: a bar with no
+   * idea how much room it has sizes itself to its tabs, and there is then nothing to scroll
+   * within. Deliberately not a third thing to remember to switch on — a bar that has been
+   * told its room and cannot wrap into more rows is exactly the bar with tabs out of reach.
+   */
+  scrollTabs = true;
+  /** How far the tabs are scrolled along the bar's axis, in device pixels. Never negative. */
+  scrollPos = 0;
+  /** What the last layout measured: the tabs' whole extent, and how much of it is on screen. */
+  scrollContent = 0;
+  scrollVisible = 0;
+
+  /** The right-drag in progress, if one is: where it began, and whether it has panned yet. */
+  _pan?: { pointerId: number; last: number; start: number; moved: boolean };
+  /** Where the midpoint of a two-finger swipe was last seen, in CSS pixels along the axis. */
+  _swipe?: number;
+
   tabs: TabItem<CTX>[] & { active?: TabItem<CTX>; highlight?: TabItem<CTX> };
 
   _last_style_key?: string;
@@ -647,6 +777,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   _tool?: ModalTabMove<CTX>;
   _last_p_key?: string;
   _size_cb?: () => void;
+  /** The tooltip currently on the bar, so a pointer moving inside one tab is not re-setting it. */
+  _tabToolTip?: string;
 
   constructor() {
     super();
@@ -701,28 +833,111 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       this.on_pointerdown(e as PointerEvent);
     });
 
+    this.canvas.addEventListener("pointerup", (e: Event) => {
+      this.on_pointerup(e as PointerEvent);
+    });
+
     // Suppress browser's native context menu — we route right-click into a
     // `tabcontextmenu` event on the targeted tab via on_pointerdown.
     this.canvas.addEventListener("contextmenu", (e: Event) => {
       e.preventDefault();
     });
+
+    // Both non-passive: a bar with somewhere to scroll swallows the gesture, and a listener
+    // that has already been declared passive cannot change its mind about that.
+    this.canvas.addEventListener(
+      "wheel",
+      (e: Event) => {
+        this.on_wheel(e as WheelEvent);
+      },
+      { passive: false }
+    );
+
+    for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+      this.canvas.addEventListener(
+        type,
+        (e: Event) => {
+          this.on_touch(e as TouchEvent);
+        },
+        { passive: false }
+      );
+    }
+  }
+
+  /**
+   * The tab whose rectangle contains a canvas-space point, if any.
+   *
+   * Only worth asking once the bar has wrapped — on a single row a tab spans the canvas
+   * across the bar, so the one-dimensional test in `_doelement` says the same thing.
+   */
+  tabAt(x: number, y: number, exclude?: TabItem<CTX>): TabItem<CTX> | undefined {
+    for (const tab of this.tabs) {
+      if (tab === exclude) {
+        continue;
+      }
+
+      const inside =
+        x >= tab.pos[0] &&
+        x <= tab.pos[0] + tab.size[0] &&
+        y >= tab.pos[1] &&
+        y <= tab.pos[1] + tab.size[1];
+
+      if (inside) {
+        return tab;
+      }
+    }
+
+    return undefined;
   }
 
   _doelement(e: PointerEvent, mx: number, my: number) {
-    for (const tab of this.tabs) {
-      let ok: boolean;
+    let hit: TabItem<CTX> | undefined;
 
-      if (this.horiz) {
-        ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
-      } else {
-        ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
-      }
+    if (this.rowCount > 1) {
+      //rows overlap along the bar, so only a rectangle test can tell them apart
+      hit = this.tabAt(mx, my);
+    } else {
+      for (const tab of this.tabs) {
+        let ok: boolean;
 
-      if (ok && this.tabs.highlight !== tab) {
-        this.tabs.highlight = tab;
-        this.update(true);
+        if (this.horiz) {
+          ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
+        } else {
+          ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
+        }
+
+        if (ok) {
+          hit = tab;
+        }
       }
     }
+
+    if (hit !== undefined && this.tabs.highlight !== hit) {
+      this.tabs.highlight = hit;
+      this.update(true);
+    }
+
+    this._updateTabToolTip(hit);
+  }
+
+  /**
+   * Put the pointed-at tab's tooltip on the bar. A tab is painted on the bar's canvas rather than
+   * being a DOM node of its own, so there is nothing per-tab to hover: the bar carries one tooltip
+   * and swaps it as the pointer crosses tabs. Without this `TabItem.tooltip` is only ever written.
+   */
+  _updateTabToolTip(tab: TabItem<CTX> | undefined) {
+    const tooltip = tab ? tab.tooltip : "";
+
+    if (tooltip === this._tabToolTip) {
+      return;
+    }
+
+    this._tabToolTip = tooltip;
+    this.description = tooltip;
+
+    // The canvas fills the bar, so it — not the host — is what the pointer is over, and a native
+    // tooltip is looked up from there.
+    this.canvas.title = tooltip;
   }
 
   _domouse(e: PointerEvent) {
@@ -840,20 +1055,157 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
 
   on_pointerdown(e: PointerEvent) {
     if (e.button === 2) {
-      this._doContextMenu(e);
+      if (!this._startPan(e)) {
+        this._doContextMenu(e);
+      }
       return;
     }
     this._doclick(e);
   }
 
   on_pointermove(e: PointerEvent) {
+    if (this._panMove(e)) {
+      return;
+    }
+
     this._domouse(e);
 
     e.preventDefault();
     e.stopPropagation();
   }
 
-  on_pointerup(e: PointerEvent) {}
+  on_pointerup(e: PointerEvent) {
+    const pan = this._pan;
+
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return;
+    }
+
+    this._pan = undefined;
+
+    try {
+      this.canvas.releasePointerCapture(pan.pointerId);
+    } catch (error) {
+      //nothing was captured; the listener on the canvas saw the whole drag anyway
+    }
+
+    //a right-click that went nowhere is still a right-click
+    if (!pan.moved) {
+      this._doContextMenu(e);
+    }
+  }
+
+  /**
+   * Begin a right-drag pan, or decline it and let the context menu happen as it always has.
+   *
+   * Declining is what keeps this from stealing the menu: on a bar whose tabs all fit, a
+   * right-click is the act it was before this existed. On one that scrolls the menu is only
+   * deferred — a right-click that never moves still opens it when the button comes back up.
+   */
+  _startPan(e: PointerEvent): boolean {
+    if (this.maxScroll === 0) {
+      return false;
+    }
+
+    const along = this.horiz ? e.x : e.y;
+
+    this._pan = { pointerId: e.pointerId, last: along, start: along, moved: false };
+
+    try {
+      this.canvas.setPointerCapture(e.pointerId);
+    } catch (error) {
+      //a pointer that cannot be captured still reports through the canvas listener
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    return true;
+  }
+
+  /** Carry a right-drag along. Answers whether the event belonged to one. */
+  _panMove(e: PointerEvent): boolean {
+    const pan = this._pan;
+
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return false;
+    }
+
+    const along = this.horiz ? e.x : e.y;
+    const delta = along - pan.last;
+    pan.last = along;
+
+    if (Math.abs(along - pan.start) > PAN_SLOP) {
+      pan.moved = true;
+    }
+
+    //the tabs follow the pointer, so the offset into them moves against it
+    this.setScroll(this.scrollPos - delta * this.getDPI());
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    return true;
+  }
+
+  /**
+   * Scroll on a wheel, taking whichever axis the hardware reported the most of.
+   *
+   * A trackpad spells sideways as deltaX and a wheel spells it as deltaY, and over a row of
+   * tabs both mean the same thing — move along it — so the bar reads whichever is larger
+   * rather than insisting on the one that matches its own orientation.
+   */
+  on_wheel(e: WheelEvent) {
+    if (this.maxScroll === 0) {
+      return;
+    }
+
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+
+    if (this.setScroll(this.scrollPos + delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  /**
+   * Pan on a two-finger swipe, getting out of the way of a tab drag already under way.
+   *
+   * Two fingers on a tab bar cannot mean "move this tab" — the first one already started
+   * that if it landed on one — so the second arriving cancels the drag rather than leaving a
+   * tab following a finger that has stopped meaning it.
+   */
+  on_touch(e: TouchEvent) {
+    if (e.type === "touchend" || e.type === "touchcancel" || e.touches.length !== 2) {
+      this._swipe = undefined;
+      return;
+    }
+
+    const first = e.touches[0];
+    const second = e.touches[1];
+    const along = this.horiz
+      ? (first.clientX + second.clientX) * 0.5
+      : (first.clientY + second.clientY) * 0.5;
+
+    if (e.type === "touchstart" || this._swipe === undefined) {
+      this._ensureNoModal();
+      this._swipe = along;
+
+      if (this.maxScroll > 0) {
+        e.preventDefault();
+      }
+
+      return;
+    }
+
+    const delta = along - this._swipe;
+    this._swipe = along;
+
+    if (this.setScroll(this.scrollPos - delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
 
   static setDefault<T extends UIBase>(element: T): T {
     const e = element as unknown as TabBar;
@@ -1168,6 +1520,68 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
     return font;
   }
 
+  /**
+   * The extent, in device pixels, `_layout` has to wrap into, or undefined when it should
+   * lay the tabs out on one row as it always has.
+   */
+  _wrapExtent(dpi: number): number | undefined {
+    const extent = this.maxExtent;
+
+    if (!this.multiRow || extent === undefined || !isFinite(extent) || extent <= 0) {
+      return undefined;
+    }
+
+    return extent * dpi;
+  }
+
+  /**
+   * The extent, in device pixels, the tabs are scrolled *within*, or undefined when the bar
+   * shows all of them at once and there is nothing to scroll.
+   *
+   * A wrapping bar never scrolls. Wrapping is already its answer to tabs that do not fit, and
+   * a bar doing both would push whole rows past an edge with nothing on screen to say so.
+   */
+  _scrollExtent(dpi: number): number | undefined {
+    const extent = this.maxExtent;
+
+    if (
+      this.multiRow ||
+      !this.scrollTabs ||
+      extent === undefined ||
+      !isFinite(extent) ||
+      extent <= 0
+    ) {
+      return undefined;
+    }
+
+    return extent * dpi;
+  }
+
+  /** How far this bar can scroll from the origin, in device pixels; 0 when it all fits. */
+  get maxScroll(): number {
+    return Math.max(0, this.scrollContent - this.scrollVisible);
+  }
+
+  /**
+   * Scroll to an offset, clamped, laying out again only if it actually moved.
+   *
+   * Answers whether it moved, which is how a gesture decides whether it swallowed the event:
+   * a wheel over a bar already at its end should scroll whatever is behind the bar instead.
+   */
+  setScroll(value: number): boolean {
+    const next = clampTabScroll(value, this.scrollContent, this.scrollVisible);
+
+    if (next === this.scrollPos) {
+      return false;
+    }
+
+    this.scrollPos = next;
+    this._layout();
+    this._redraw();
+
+    return true;
+  }
+
   _layout() {
     if ((!this.ctx || !this.ctx.screen) && !this.isDead()) {
       this.doOnce(this._layout);
@@ -1308,18 +1722,75 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         w += iconsize + Math.ceil(tsize * 0.25);
       }
 
-      //don't interfere with tab dragging
-      const bad = this.tool !== undefined && tab === this.tabs.active;
-
-      if (!bad) {
-        tab.pos[axis] = x;
-        tab.pos[(axis ^ 1) as Number2] = y;
-      }
-
       //tab.size = [0, 0];
       tab.size[axis] = w + pad * 2;
       tab.size[(axis ^ 1) as Number2] = h;
+    }
 
+    //don't interfere with tab dragging
+    const dragging = (tab: TabItem<CTX>) => this.tool !== undefined && tab === this.tabs.active;
+
+    const wrapExtent = this._wrapExtent(dpi);
+    let extent: number;
+
+    if (wrapExtent !== undefined) {
+      const sizes = this.tabs.map((tab) => tab.size[axis]);
+      const placed = layoutTabRows({ sizes, available: wrapExtent, pad });
+
+      this.rowCount = placed.rowCount;
+      extent = placed.extent;
+
+      //nothing is hidden along the axis once it wraps, so any scroll left over from before
+      //would be an offset with no way to undo it
+      this.scrollPos = 0;
+      this.scrollContent = extent;
+      this.scrollVisible = extent;
+
+      for (let i = 0; i < this.tabs.length; i++) {
+        const tab = this.tabs[i];
+        tab.row = placed.rows[i];
+
+        if (!dragging(tab)) {
+          tab.pos[axis] = placed.offsets[i];
+          tab.pos[(axis ^ 1) as Number2] = y + tab.row * h;
+        }
+      }
+    } else {
+      this.rowCount = 1;
+
+      for (const tab of this.tabs) {
+        tab.row = 0;
+
+        if (!dragging(tab)) {
+          tab.pos[axis] = x;
+          tab.pos[(axis ^ 1) as Number2] = y;
+        }
+
+        x += tab.size[axis];
+      }
+
+      extent = x + pad;
+
+      const visible = this._scrollExtent(dpi);
+
+      this.scrollContent = extent;
+      this.scrollVisible = visible === undefined ? extent : Math.min(visible, extent);
+      this.scrollPos = clampTabScroll(this.scrollPos, this.scrollContent, this.scrollVisible);
+
+      if (this.scrollPos !== 0) {
+        for (const tab of this.tabs) {
+          if (!dragging(tab)) {
+            tab.pos[axis] -= this.scrollPos;
+          }
+        }
+      }
+
+      //the canvas is the window rather than the contents: what runs past its end is clipped
+      //by the canvas itself, which is how the bar scrolls without drawing a scrollbar
+      extent = this.scrollVisible;
+    }
+
+    for (const tab of this.tabs) {
       if (tab.closable) {
         const cpad = Math.ceil(tsize * 0.25);
         const cx = tab.pos[0] + tab.size[0] - iconsize - cpad;
@@ -1328,19 +1799,17 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       } else {
         tab.closeRect = undefined;
       }
-
-      x += w + pad * 2;
     }
 
-    x = ~~(x + pad) / dpi;
-    h = ~~h / dpi;
+    const along = ~~extent / dpi;
+    const across = ~~(h * this.rowCount) / dpi;
 
     if (this.horiz) {
-      this.canvas.style["width"] = x + "px";
-      this.canvas.style["height"] = h + "px";
+      this.canvas.style["width"] = along + "px";
+      this.canvas.style["height"] = across + "px";
     } else {
-      this.canvas.style["height"] = x + "px";
-      this.canvas.style["width"] = h + "px";
+      this.canvas.style["height"] = along + "px";
+      this.canvas.style["width"] = across + "px";
     }
 
     for (const tab of this.tabs) {
@@ -1441,7 +1910,12 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         font
       ).width;
 
-      let x2 = x + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
+      //on a vertical bar the label is drawn rotated, in a frame whose origin is the row —
+      //`x` is then the row offset and reaches the drawing through that frame, not through
+      //the along-bar coordinates below.
+      const along = this.horiz ? x : 0;
+
+      let x2 = along + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
       const y2 = y + tsize;
 
       if (tab === this.tabs.highlight) {
@@ -1460,6 +1934,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         const y3 = y2;
 
         g.save();
+        g.translate(x, 0); //this tab's row
         g.translate(x3, y3);
         g.rotate(Math.PI / 2);
         g.translate(x3 - tsize, -y3 - tsize * 0.5);
@@ -1473,7 +1948,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
           this.canvas,
           g,
           tab.icon,
-          x + paddingRight,
+          along + paddingRight,
           y,
           this.iconsheet
         );
@@ -1491,11 +1966,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
       const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
       const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
 
-      if (
-        tab !== this.tabs[this.tabs.length - 1] &&
-        prev !== this.tabs.active &&
-        next !== this.tabs.active
-      ) {
+      //no divider after the last tab of a row — there is nothing on the far side of it
+      const after = this.tabs[ti + 1];
+      const lastInRow = after === undefined || after.row !== tab.row;
+
+      if (!lastInRow && prev !== this.tabs.active && next !== this.tabs.active) {
+        g.save();
+        g.translate(this.horiz ? 0 : x, this.horiz ? y : 0); //this tab's row
+
         g.beginPath();
         if (this.horiz) {
           g.moveTo(x + w, h - 5);
@@ -1506,6 +1984,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         }
         g.strokeStyle = this.getDefault("TabStrokeStyle1") as string;
         g.stroke();
+
+        g.restore();
       }
     }
 
@@ -1532,7 +2012,10 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
         w += 2;
       }
 
-      const x2 = x + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
+      //see the same expression in the inactive loop above
+      const along = this.horiz ? x : 0;
+
+      const x2 = along + (tab.size[(Number(this.horiz) ^ 1) as Number2] - tw) * 0.5;
       const y2 = y + tsize;
 
       if (tab === this.tabs.active) {
@@ -1548,6 +2031,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
           //g.rotate(Math.PI/16);
           //g.translate(0, -y);
         }//*/
+
+        //the outline is drawn across the bar from `ypad` to `h`, which is the tab's own
+        //depth rather than an absolute edge — so put the frame on this tab's row first
+        g.save();
+        g.translate(this.horiz ? 0 : x, this.horiz ? y : 0);
 
         g.beginPath();
         //g.lineWidth *= 5;
@@ -1595,11 +2083,14 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
 
         g.lineWidth = worig;
 
+        g.restore();
+
         if (!this.horiz) {
           const x3 = 0;
           const y3 = y2;
 
           g.save();
+          g.translate(x, 0); //this tab's row
           g.translate(x3, y3);
           g.rotate(Math.PI / 2);
           g.translate(-x3 - tsize, -y3 - tsize * 0.5);
@@ -1673,7 +2164,12 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   update(force_update: boolean = false) {
     const rect = this.getClientRects()[0];
     if (rect) {
-      const key = Math.floor(rect.x * 4.0) + ":" + Math.floor(rect.y * 4.0);
+      //the extent belongs in this key too, and for wrapping and scrolling alike: a pane
+      //widened from its right edge moves nothing on the left, so position alone would never
+      //notice it
+      let key = Math.floor(rect.x * 4.0) + ":" + Math.floor(rect.y * 4.0);
+      key += ":" + Math.floor((this.maxExtent ?? 0) * 4.0);
+
       if (key !== this._last_p_key) {
         this._last_p_key = key;
 
@@ -1854,6 +2350,43 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
     this.setAttribute("movable-tabs", val ? "true" : "false");
     this.tbar.movableTabs = this.movableTabs;
+  }
+
+  /**
+   * Wrap tabs that do not fit onto extra rows instead of running them off the end of the
+   * bar. Off by default; needs `maxExtent` as well to do anything.
+   */
+  get multiRow(): boolean {
+    return this.tbar.multiRow;
+  }
+
+  set multiRow(val: boolean) {
+    this.tbar.multiRow = val;
+  }
+
+  /**
+   * Let the bar scroll along its axis when it is not wrapping. On by default, but it needs
+   * `maxExtent` as well before it does anything. See `TabBar.scrollTabs`.
+   */
+  get scrollTabs(): boolean {
+    return this.tbar.scrollTabs;
+  }
+
+  set scrollTabs(val: boolean) {
+    this.tbar.scrollTabs = val;
+  }
+
+  /**
+   * Extent, in CSS pixels, the tabs have to fit into while `multiRow` is on: the bar's
+   * width when it is horizontal, its height when it is vertical. See `TabBar.maxExtent`
+   * for why it cannot be measured from inside.
+   */
+  get maxExtent(): number | undefined {
+    return this.tbar.maxExtent;
+  }
+
+  set maxExtent(val: number | undefined) {
+    this.tbar.maxExtent = val;
   }
 
   get hideScrollBars(): boolean {

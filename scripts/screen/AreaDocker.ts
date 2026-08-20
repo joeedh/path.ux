@@ -92,6 +92,10 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     const tabs = (this.tbar = this.tabs() as unknown as TabContainer<CTX>);
     tabs.on_change = this.tab_onchange.bind(this);
 
+    //a pane can hold more editors than fit across it; wrap rather than run off the edge
+    tabs.multiRow = true;
+    this.updateMaxExtent();
+
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
 
     sarea.switcherData = uidata;
@@ -109,10 +113,23 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
         name = ToolProperty.makeUIName(name);
       }
 
-      const tab = tabs.tab(name, editor._id);
+      // An editor that says what it shows gets that sentence; the rest get what the tab does,
+      // which is at least not the label read back.
+      const said = def.description ?? `Show ${name} in this pane`;
+
+      // Where the close-X is off, closing is still there but nothing on screen points at it, so
+      // every tab says where it went. Appended rather than replacing: what the pane shows is
+      // still the more useful half of the sentence.
+      const closable = cconst.closableAreaTabs;
+      const tooltip = closable
+        ? said
+        : `${said}
+Right-click the tab to close it.`;
+
+      const tab = tabs.tab(name, editor._id, tooltip);
       const tabItem = tab._tab;
 
-      tabItem.closable = true;
+      tabItem.closable = closable;
       tabItem.ontabclose = () => this.closeEditor(editor);
       tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor, e);
 
@@ -146,7 +163,9 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
       });
     }
 
-    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    const addTab = this.tbar
+      .icontab(Icons.SMALL_PLUS, "add", "Add another editor to this pane")
+      .noSwitch();
     addTab._tab.overrideDefault("iconPaddingRight", 8);
 
     dockerdebug("Add Menu Tab", addTab);
@@ -257,8 +276,40 @@ export class AreaDocker<CTX extends IContextBase = IContextBase> extends Contain
     return this;
   }
 
+  /**
+   * Tell the tab bar how much room it has: from this docker's left edge to the right edge
+   * of the tile it sits in.
+   *
+   * Measured off the tile rather than off anything between it and the bar, because every
+   * ancestor of the bar's canvas shrink-wraps to that canvas — asking one of those would
+   * hand the bar back the width it just chose. The docker is `_prepend`ed into the switcher
+   * row, so its own left edge is the row's start and does not move when the bar resizes.
+   */
+  updateMaxExtent() {
+    const bar = this.tbar;
+    if (!bar) {
+      return;
+    }
+
+    const sarea = this.getScreenArea();
+    if (!sarea) {
+      return;
+    }
+
+    const arect = sarea.getClientRects()[0];
+    const drect = this.getClientRects()[0];
+
+    if (arect && drect) {
+      bar.maxExtent = Math.max(arect.x + arect.width - drect.x, 0);
+    } else if (sarea.size) {
+      bar.maxExtent = sarea.size[0];
+    }
+  }
+
   update() {
     super.update();
+
+    this.updateMaxExtent();
 
     const active = this.tbar.getActive();
     const area = this.getArea();

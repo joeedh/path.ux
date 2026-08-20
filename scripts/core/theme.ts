@@ -509,6 +509,9 @@ export const DefaultTheme = {
     "border-style"    : "solid",
     "border-width"    : 1,
     padding           : 5,
+    // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
+    // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
+    timeout           : 4000,
   },
 
   treeview: {

@@ -1000,7 +1000,14 @@ export class Container<
 
     ret.packflag |= packflag;
     ret.on_change = cb ?? null;
-    ret.text = "" + text;
+
+    /* `update()` above already subscribed the datapath and delivered its first
+     * value, so an unconditional assignment here would overwrite it — with the
+     * string "undefined" when no literal was passed. Only an explicit literal
+     * wins over the binding. */
+    if (text !== undefined) {
+      ret.text = "" + text;
+    }
 
     return ret;
   }
@@ -1048,14 +1055,17 @@ export class Container<
   }
 
   /**
-   *
-   * makes a button for a help picker tool
-   * to view tooltips on mobile devices
-   * */
+   * Makes a button that starts the help picker: point at anything to read what it does, which is
+   * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
+   */
   helppicker() {
-    const ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
-      this.getScreen()?.hintPickerTool();
-    });
+    const ret = this.iconbutton(
+      Icons.HELP,
+      "Read what a control does by pointing at it; tap empty space to stop",
+      () => {
+        this.getScreen()?.hintPickerTool();
+      }
+    );
 
     if (util.isMobile()) {
       //ret.iconsheet = 2;

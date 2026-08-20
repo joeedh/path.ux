@@ -460,7 +460,32 @@ export class ScreenBorder<CTX extends IContextBase = IContextBase> extends ui_ba
     (this.style as unknown as Record<string, string>)["top"] = y + "px";
     (this.style as unknown as Record<string, string>)["width"] = w! + "px";
     (this.style as unknown as Record<string, string>)["height"] = h! + "px";
-    (this.style as unknown as Record<string, string>)["z-index"] = "" + BORDER_ZINDEX_BASE;
+    (this.style as unknown as Record<string, string>)["z-index"] = "" + this.zIndex();
+  }
+
+  /**
+   * Where this border sits in the stack: above every floating area it belongs to.
+   *
+   * A floating area is raised past {@link BORDER_ZINDEX_BASE} by `bringToFront`, and its four
+   * borders are the handles that resize it — each straddling the edge, half in and half out. Left
+   * at the base the inner half is underneath the area it resizes, so a popup can only be grabbed
+   * from just *outside* its own frame, which is a pixel-hunt rather than a handle.
+   */
+  zIndex(): number {
+    let z = BORDER_ZINDEX_BASE;
+
+    for (const sarea of this.sareas) {
+      if (!sarea.floating) {
+        continue;
+      }
+
+      const areaZ = parseInt(sarea.style.zIndex);
+      if (!isNaN(areaZ)) {
+        z = Math.max(z, areaZ + 1);
+      }
+    }
+
+    return z;
   }
 
   valueOf() {

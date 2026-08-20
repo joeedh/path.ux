@@ -1185,9 +1185,36 @@ export class AreaMoveAttachTool<CTX extends IContextBase = IContextBase> extends
 
 //controller.registerTool(AreaDragTool);
 
+/**
+ * The innermost thing under the pointer that has something to say, shadow roots included.
+ *
+ * Deliberately not `screen.pickElement`: that answers with the innermost `UIBase`, and an app whose
+ * panes draw raw DOM inside a shadow root carries most of its tooltips on plain elements, which
+ * that answer never reaches. Descending and keeping the last titled node also means a widget whose
+ * innards are undescribed reports the widget's own sentence instead of nothing.
+ */
+function pickDescribed(x: number, y: number): Element | undefined {
+  let node: Element | null = document.elementFromPoint(x, y);
+  let found: Element | undefined;
+  const seen = new Set<Element>();
+
+  while (node && !seen.has(node)) {
+    seen.add(node);
+
+    if (typeof (node as HTMLElement).title === "string" && (node as HTMLElement).title) {
+      found = node;
+    }
+
+    const root = (node as unknown as { shadow?: ShadowRoot }).shadow ?? node.shadowRoot;
+    node = root ? root.elementFromPoint(x, y) : null;
+  }
+
+  return found;
+}
+
 export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
   tooltip: ToolTip<CTX> | undefined;
-  element: ui_base.UIBase | undefined;
+  element: Element | undefined;
 
   constructor(screen: Screen<CTX>) {
     super(screen);
@@ -1218,12 +1245,32 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     this.pick(e);
   }
 
+  /**
+   * Lifting off something described just puts that tooltip away and leaves the tool running, so a
+   * touch user can press one control after another instead of re-arming between each. Lifting off
+   * something undescribed — empty space — is how they leave, since a phone has no Escape key.
+   */
   override on_pointerup(e: PointerEvent) {
-    this.finish();
+    if (this.element === undefined) {
+      this.finish();
+    } else {
+      this.clear();
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   override finish() {
+    this.clear();
     super.finish();
+  }
+
+  /** Take down whatever is showing, and forget what it was about. */
+  clear() {
+    this.tooltip?.end();
+    this.tooltip = undefined;
+    this.element = undefined;
   }
 
   override on_keydown(e: KeyboardEvent) {
@@ -1231,9 +1278,6 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
       case keymap.Escape:
       case keymap.Enter:
       case keymap.Space:
-        if (this.tooltip) {
-          this.tooltip.end();
-        }
         this.finish();
         break;
     }
@@ -1243,19 +1287,21 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     const x = e.x;
     const y = e.y;
 
-    const ele = this.screen.pickElement(x, y);
-    console.log(ele ? ele.tagName : ele);
+    const ele = pickDescribed(x, y);
 
-    if (ele !== undefined && ele !== this.element && ele.title) {
-      if (this.tooltip) {
-        this.tooltip.end();
+    if (ele !== this.element) {
+      // Pointing at something undescribed takes the old tooltip down rather than leaving it
+      // asserting itself over whatever is there now.
+      this.clear();
+
+      if (ele) {
+        this.element = ele;
+        // No lifetime: the tooltip stays for as long as the pointer is on the thing it describes,
+        // which is the whole point of a tool you hold down on a touchscreen.
+        this.tooltip = ToolTip.show((ele as HTMLElement).title, this.screen, x, y, Infinity);
       }
-
-      this.element = ele;
-      const tip = ele.title;
-
-      this.tooltip = ToolTip.show(tip, this.screen, x, y);
     }
+
     e.preventDefault();
     e.stopPropagation();
   }

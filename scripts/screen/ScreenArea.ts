@@ -11,7 +11,7 @@ import { BORDER_ZINDEX_BASE, ScreenBorder, ScreenBorderAny, snap } from "./Frame
 import { contextWrangler } from "./area_wrangler";
 import { IsScreenTag } from "./constants";
 import { IContextBase } from "../core/context_base";
-import { Vector2 } from "../pathux";
+import { Vector2 } from "../path-controller/util/vectormath";
 import { StructReader } from "../util/nstructjs";
 import type { KeyMap } from "../path-controller/util/simple_events";
 import type { AreaDocker } from "./AreaDocker";
@@ -21,7 +21,10 @@ import {
   IAreaConstructor,
   AreaConstructorParam,
   AreaFlags,
+  type AreaMenuFilter,
+  getAreaMenuFilter,
   makeAreasEnum,
+  setAreaMenuFilter,
 } from "./area_base";
 
 export interface IAreaDef {
@@ -31,8 +34,17 @@ export interface IAreaDef {
   areaname: string;
   flag?: number;
   uiname?: string;
+  /** The pane tab's tooltip, whole — a sentence saying what the editor shows. */
+  description?: string;
   icon?: number;
   borderLock?: number;
+}
+
+export interface SwitchEditorOptions {
+  /** Destroy every other editor in this tile before switching, so the tile is
+   *  left holding only the new editor. An existing instance of the target
+   *  class is kept and reused, UI state intact. */
+  deleteExisting?: boolean;
 }
 
 /** Is obj an instance of Screen */
@@ -40,7 +52,8 @@ function isScreen<CTX extends IContextBase = IContextBase>(obj: unknown): obj is
   return typeof obj === "object" && obj !== null && IsScreenTag in obj;
 }
 
-export { AreaFlags };
+export { AreaFlags, getAreaMenuFilter, makeAreasEnum, setAreaMenuFilter };
+export type { AreaMenuFilter };
 export * from "./area_wrangler";
 export { contextWrangler };
 
@@ -253,8 +266,8 @@ export class Area<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
   }
 
-  static makeAreasEnum() {
-    return makeAreasEnum();
+  static makeAreasEnum(filter?: AreaMenuFilter) {
+    return makeAreasEnum(filter);
   }
 
   static getAreaName<CTX extends IContextBase = IContextBase>(area: Area<CTX>) {
@@ -675,6 +688,23 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
   _sarea_id: number;
   _pos: Vector2;
   _size: Vector2;
+  /**
+   * The box the active editor gets, which is this area's box minus {@link chromeHeight}.
+   *
+   * These are two long-lived vectors rather than fresh ones per read, because an editor is handed
+   * the reference and keeps it: the screen mesh moves an area by writing into `pos` in place and
+   * expects the editor to see it. {@link _syncAreaBox} re-derives them from `pos`/`size` at every
+   * point that used to hand `pos`/`size` over directly, which is what keeps that true once the
+   * two boxes are allowed to differ.
+   */
+  _areaPos: Vector2;
+  _areaSize: Vector2;
+  /**
+   * Height in pixels of chrome this area draws above its editor — a popup's titlebar, and
+   * nothing else so far. Zero on a docked area, which is what keeps its editor's box its whole
+   * box, down to the CSS: nothing below is even reached at zero.
+   */
+  chromeHeight: number;
   area: Area<CTX> | undefined;
   editors: Area<CTX>[] & { remove(item: Area<CTX>, b?: boolean): void };
   editormap: Record<string, Area<CTX>>;
@@ -701,6 +731,10 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     this._pos = new Vector2();
     this._size = new Vector2([512, 512]);
+
+    this._areaPos = new Vector2();
+    this._areaSize = new Vector2([512, 512]);
+    this.chromeHeight = 0;
 
     if (cconst.DEBUG.screenAreaPosSizeAccesses) {
       const wrapVector = (name: "_size" | "_pos", axis: 0 | 1) => {
@@ -774,7 +808,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
       if (area.areaType == type) {
         console.log("             found saved area type");
 
-        this.switch_editor(area.constructor);
+        this.switchEditor(area.constructor);
       }
     }
 
@@ -861,6 +895,38 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     return this.area ? this.area._get_v_suffix() : "";
   }
 
+  /**
+   * Take this area off the screen, having first asked whether it may go.
+   *
+   * The ask is an ordinary cancelable DOM event, `areaclose`, dispatched on the area itself, so
+   * anything that needs to interrupt — a warning about unsaved work, a confirmation — is an
+   * `addEventListener` away. A listener that wants to interrupt calls `preventDefault()`, puts its
+   * question on screen, and calls `close()` again once it has an answer; the second call fires the
+   * event again, so the listener is expected to stand down by then.
+   *
+   * Nothing in path.ux itself listens. This exists because the close button on a popup's titlebar
+   * has to go through something, and a bare `removeArea` gives whoever owns the popup no say.
+   *
+   * @returns whether the area actually went.
+   */
+  close(): boolean {
+    const event = new CustomEvent("areaclose", { cancelable: true, detail: { sarea: this } });
+
+    if (!this.dispatchEvent(event)) {
+      return false;
+    }
+
+    const screen = this.getScreen();
+
+    if (screen) {
+      screen.removeArea(this as unknown as ScreenArea<any>);
+    } else {
+      this.remove();
+    }
+
+    return true;
+  }
+
   bringToFront() {
     const screen = this.getScreen() as Screen<CTX> | undefined;
     if (!screen) return;
@@ -884,6 +950,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     this.style.zIndex = "" + zindex;
+
+    //the borders that resize this area stack relative to it, so they restack with it
+    for (const border of this._borders) {
+      border.setCSS();
+    }
   }
 
   _side(border: ScreenArea<CTX>["_borders"][number]) {
@@ -977,13 +1048,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     if (this.area !== undefined) {
       this.area.ctx = this.ctx;
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
 
-      this.area.pos = this.pos;
-      this.area.size = this.size;
+      this._syncAreaBox();
+      this._styleArea();
 
       this.area.inactive = false;
       this.shadow.appendChild(this.area);
@@ -1058,10 +1127,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     if (ret.area !== undefined) {
       ret.area.ctx = this.ctx;
 
-      ret.area.pos = ret.pos;
-      ret.area.size = ret.size;
       ret.area.owning_sarea = ret;
       ret.area.parentWidget = ret;
+      ret._syncAreaBox();
 
       ret.shadow.appendChild(ret.area);
       //ret.area.onadd();
@@ -1107,6 +1175,51 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     if (changed) {
       this.loadFromVerts();
+    }
+  }
+
+  /**
+   * Re-derive the active editor's box from this area's, and hand it over.
+   *
+   * Called wherever the editor used to be handed `pos`/`size` themselves. At the usual
+   * {@link chromeHeight} of zero the two boxes are equal and this is a copy, so a docked area is
+   * unaffected; a popup's editor starts below its titlebar and is that much shorter.
+   */
+  _syncAreaBox() {
+    const h = this.chromeHeight;
+
+    this._areaPos.loadXY(this.pos[0], this.pos[1] + h);
+    this._areaSize.loadXY(this.size[0], Math.max(this.size[1] - h, 0));
+
+    if (this.area !== undefined) {
+      this.area.pos = this._areaPos;
+      this.area.size = this._areaSize;
+    }
+  }
+
+  /**
+   * Size the active editor's element to the box {@link _syncAreaBox} just worked out.
+   *
+   * Without chrome this is the plain full-bleed pair it has always been. With chrome the editor is
+   * taken out of the flow instead of pushed down it, because this area is `overflow: hidden` and a
+   * margin on a full-height child would push its bottom off the end rather than shorten it.
+   */
+  _styleArea() {
+    if (this.area === undefined) {
+      return;
+    }
+
+    const h = this.chromeHeight;
+
+    this.area.style["width"] = "100%";
+
+    if (h > 0) {
+      this.area.style["position"] = UIBase.PositionKey;
+      this.area.style["left"] = "0px";
+      this.area.style["top"] = h + "px";
+      this.area.style["height"] = "calc(100% - " + h + "px)";
+    } else {
+      this.area.style["height"] = "100%";
     }
   }
 
@@ -1176,7 +1289,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     super.on_resize(size, oldsize);
 
     if (this.area !== undefined) {
-      this.area.on_resize(size);
+      //the editor is told its own box, which is this one less any chrome above it
+      this._syncAreaBox();
+      this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     }
   }
 
@@ -1243,6 +1358,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     this.style["contain"] = "layout"; //ensure we have a new positioning stack
 
     if (this.area !== undefined) {
+      //setCSS is the funnel every in-place move of pos/size comes back through, so it is where
+      //the editor's own box catches up with this one
+      this._syncAreaBox();
+      this._styleArea();
+
       this.area.setCSS();
     }
   }
@@ -1265,8 +1385,8 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
       }
 
       child.ctx = this.ctx;
-      child.pos = this.pos;
-      child.size = this.size;
+      child.pos = this._areaPos;
+      child.size = this._areaSize;
 
       if (!this.editors.includes(child)) {
         this.editors.push(child);
@@ -1287,8 +1407,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     return result;
   }
 
-  switch_editor(cls: AreaConstructorParam) {
-    return this.switchEditor(cls);
+  /** @deprecated use this.switchEditor */
+  switch_editor(cls: AreaConstructorParam, opts?: SwitchEditorOptions) {
+    return this.switchEditor(cls, opts);
   }
 
   /** Adopt this tile's shared AreaDocker into `area`'s switcher row,
@@ -1330,9 +1451,50 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     this.switcher.flagUpdate();
   }
 
-  switchEditor(cls: AreaConstructorParam) {
+  /** Destroy every editor in this tile except `keep` (an areaname), dropping each
+   *  from `editors` and `editormap`. The shared AreaDocker is detached first so it
+   *  is not torn down with the editor whose header it currently sits in. */
+  _deleteEditors(keep?: string) {
+    if (this.switcher) {
+      HTMLElement.prototype.remove.call(this.switcher);
+    }
+
+    for (const editor of this.editors.slice()) {
+      const areaname = (editor.constructor as unknown as IAreaConstructor).define().areaname!;
+
+      if (areaname === keep) {
+        continue;
+      }
+
+      if (editor === this.area) {
+        //same deactivation switchEditor runs for an outgoing area
+        editor.pos = new Vector2(editor.pos);
+        editor.size = new Vector2(editor.size);
+        editor.inactive = true;
+        editor.push_ctx_active();
+        editor._init();
+        editor.on_area_inactive();
+        editor.pop_ctx_active();
+
+        this.area = undefined;
+      }
+
+      editor.owning_sarea = undefined;
+      editor.dead = true;
+      editor.remove();
+
+      this.editors.remove(editor);
+      delete this.editormap[areaname];
+    }
+  }
+
+  switchEditor(cls: AreaConstructorParam, opts: SwitchEditorOptions = {}) {
     const def = cls.define();
     const name = def.areaname!;
+
+    if (opts.deleteExisting) {
+      this._deleteEditors(name);
+    }
 
     //areaclasses[name]
     if (!(name in this.editormap)) {
@@ -1377,8 +1539,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     this.area.parentWidget = this;
 
     //. . .and set references to pos/size
-    this.area.pos = this.pos;
-    this.area.size = this.size;
+    this._syncAreaBox();
     this.area.owning_sarea = this;
     this.area.ctx = this.ctx;
 
@@ -1386,13 +1547,12 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     this.shadow.appendChild(this.area);
 
-    this.area.style["width"] = "100%";
-    this.area.style["height"] = "100%";
+    this._styleArea();
 
     //propegate new size
     this.area.push_ctx_active();
     this.area._init(); //check that init was called
-    this.area.on_resize([this.size[0], this.size[1]]);
+    this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     this.area.pop_ctx_active();
 
     this._attachSwitcher(this.area);
@@ -1419,8 +1579,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     if (this.area !== undefined) {
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
-      this.area.size = this.size;
-      this.area.pos = this.pos;
+      this._syncAreaBox();
 
       //self-heals paths that bypass switchEditor (loadSTRUCT, floatArea)
       this._attachSwitcher(this.area);
@@ -1490,9 +1649,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   afterSTRUCT() {
+    this._syncAreaBox();
+
     for (const area of this.editors) {
-      area.pos = this.pos;
-      area.size = this.size;
+      area.pos = this._areaPos;
+      area.size = this._areaSize;
       area.owning_sarea = this;
 
       area.push_ctx_active();
@@ -1565,13 +1726,11 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     if (this.area !== undefined) {
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
 
-      this.area.pos = this.pos;
-      this.area.size = this.size;
+      this._syncAreaBox();
+      this._styleArea();
 
       this.area.inactive = false;
       this.shadow.appendChild(this.area);

@@ -62,6 +62,9 @@ export class MyEditor extends Area {
       areaname: "my_editor",     //stable key, used in serialization
       apiname : "myEditor",      //optional: name in the data API
       uiname  : "My Editor",     //label in the editor-switcher menu
+      //optional: the pane tab's tooltip, whole. Say what the editor shows;
+      //without one the tab falls back to "Show <uiname> in this pane".
+      description: "Show the scene being edited in this pane",
       icon    : Icons.EDITOR,    //optional switcher icon
       flag    : 0,               //AreaFlags bits
       //bitmask of BorderMask.LEFT/BOTTOM/RIGHT/TOP: borders the user
@@ -220,6 +223,14 @@ instantiates on first use and swaps the DOM, firing
 `on_area_inactive`/`on_area_active` on the outgoing/incoming editors.
 Inactive editors keep their full UI state but are skipped by the update
 loop.
+
+`switchEditor(EditorClass, {deleteExisting: true})` first **destroys**
+every other editor in the tile — each one is removed from the DOM,
+`_ondestroy`ed, and dropped from `editors`/`editormap` — so the tile is
+left holding only the new editor. An existing instance of the target
+class is kept and reused, UI state intact, rather than being recreated.
+This is the hard counterpart to `area.closed` (below): closing hides a
+tab and keeps the instance, deleting throws the instance away.
 
 The **AreaDocker** is the tab bar in the header. Each tile owns a single
 docker instance which the active editor *adopts* into its header
