@@ -1212,15 +1212,75 @@ function pickDescribed(x: number, y: number): Element | undefined {
   return found;
 }
 
+/** How long a tooltip left standing on its own survives before it takes itself down. */
+const LINGER_MS = 30000;
+
+/**
+ * A tooltip that outlived the gesture that raised it, and how to take it down.
+ *
+ * At most one at a time: raising a second is a request to replace the first, and two stacked
+ * tooltips with nothing holding either up is a screen nobody can clear.
+ */
+let lingering: { close: () => void } | undefined;
+
+/** Take down a lingering tooltip, if there is one. Safe to call when there is not. */
+function endLingeringTooltip(): void {
+  lingering?.close();
+}
+
+/**
+ * Leave `tip` on screen after the fingers that raised it have lifted, and arm the two things that
+ * take it down again: the next press anywhere, and a timer for a press that never comes.
+ *
+ * The press listener is `capture` so it is heard first, and deliberately neither
+ * `preventDefault`s nor `stopPropagation`s — passive, in fact, so it *cannot*. Dismissing the
+ * tooltip is all it does; the press itself still belongs to whatever it landed on, which is the
+ * difference between a tooltip that gets out of the way and one that eats a button click.
+ */
+function lingerTooltip(tip: { end(): void }): void {
+  endLingeringTooltip();
+
+  let timer: ReturnType<typeof setTimeout>;
+
+  const close = () => {
+    window.removeEventListener("pointerdown", onDown, true);
+    clearTimeout(timer);
+    if (lingering === entry) {
+      lingering = undefined;
+    }
+    tip.end();
+  };
+
+  const onDown = () => close();
+  const entry = { close };
+
+  window.addEventListener("pointerdown", onDown, {capture: true, passive: true});
+  timer = setTimeout(close, LINGER_MS);
+
+  lingering = entry;
+}
+
 export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
   tooltip: ToolTip<CTX> | undefined;
   element: Element | undefined;
+
+  /** Pointer ids currently down, so the tool can tell one finger from two. */
+  private down = new Set<number>();
+  /**
+   * Whether this gesture ever had two pointers down at once. Sticky for the life of the gesture:
+   * the second finger is usually the one that lifts first, and what matters is how the tooltip
+   * was raised, not how many fingers are left by the time one comes up.
+   */
+  private multitouch = false;
 
   constructor(screen: Screen<CTX>) {
     super(screen);
 
     this.tooltip = undefined;
     this.element = undefined;
+
+    // Re-arming the tool replaces whatever the last one left standing.
+    endLingeringTooltip();
   }
 
   static tooldef() {
@@ -1242,6 +1302,10 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
   }
 
   on_pointerdown(e: PointerEvent) {
+    this.down.add(e.pointerId);
+    if (this.down.size > 1) {
+      this.multitouch = true;
+    }
     this.pick(e);
   }
 
@@ -1249,9 +1313,24 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
    * Lifting off something described just puts that tooltip away and leaves the tool running, so a
    * touch user can press one control after another instead of re-arming between each. Lifting off
    * something undescribed — empty space — is how they leave, since a phone has no Escape key.
+   *
+   * **A two-finger gesture is the exception, and it is the only case where the tooltip outlives
+   * the press.** Held with a finger, the tooltip is under the hand that raised it — so a reader
+   * who lifts to actually read it would, under the rule above, take it down in the same motion.
+   * When the last of two-or-more fingers comes up the tool stands down and hands the tooltip to
+   * {@link lingerTooltip}, which keeps it there until the next press anywhere or thirty seconds,
+   * whichever is first. Handing it over rather than staying modal is the point: a tooltip nobody
+   * is holding must not be sitting on top of the press that dismisses it.
    */
   override on_pointerup(e: PointerEvent) {
-    if (this.element === undefined) {
+    this.down.delete(e.pointerId);
+
+    if (this.multitouch && this.tooltip !== undefined) {
+      // Still a finger down: the gesture is not over, so nothing changes yet.
+      if (this.down.size === 0) {
+        this.strand();
+      }
+    } else if (this.element === undefined) {
       this.finish();
     } else {
       this.clear();
@@ -1259,6 +1338,22 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
 
     e.preventDefault();
     e.stopPropagation();
+  }
+
+  /** Leave the tooltip standing on its own and stop being modal. */
+  private strand() {
+    const tip = this.tooltip;
+    // Forgotten before `finish`, so the `clear` inside it has nothing left to take down.
+    this.tooltip = undefined;
+    this.element = undefined;
+    this.multitouch = false;
+    this.down.clear();
+
+    this.finish();
+
+    if (tip) {
+      lingerTooltip(tip);
+    }
   }
 
   override finish() {

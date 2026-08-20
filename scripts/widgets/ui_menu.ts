@@ -121,6 +121,13 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   _dropbox: DropBox | undefined;
   _onclose: ((...args: unknown[]) => void) | undefined;
   _onselect: ((id: string | number) => void) | null;
+  /**
+   * A submenu's *own* dispatch, captured the first time a parent wraps it so that the wrapper can
+   * be reinstalled on every focus without either dropping the callbacks or nesting itself. See
+   * the wrapping in `addItem`; `undefined` means never wrapped, `null` means wrapped when there
+   * was nothing of its own to keep.
+   */
+  _ownSelect?: ((id: string | number) => void) | null;
 
   on_select?: (id: number | string) => void;
 
@@ -687,9 +694,19 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
         }
 
         if (li._isMenu) {
-          li._menu!._onselect = (item: string | number) => {
-            this._onselect?.(item);
-            li._menu!.close();
+          const sub = li._menu!;
+          // The submenu's own dispatch is kept rather than replaced. `createMenu` files a
+          // submenu's callbacks on the submenu itself, keyed by that submenu's ids; a wrapper
+          // that forwarded the id to the *parent* looked them up in the parent's table, found
+          // nothing, and threw — which `click()` catches and logs, so the entry did nothing at
+          // all. Captured once, because focus fires again every time the row is re-entered.
+          if (sub._ownSelect === undefined) sub._ownSelect = sub._onselect ?? null;
+          sub._onselect = (item: string | number) => {
+            // Falling back to the parent keeps a submenu built by hand — one with no dispatch of
+            // its own — working the way it did before.
+            if (sub._ownSelect) sub._ownSelect(item);
+            else this._onselect?.(item);
+            sub.close();
             this.close();
           };
 
