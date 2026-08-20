@@ -12,9 +12,7 @@ import type { Overdraw } from "../util/ScreenOverdraw";
 import type { SVGRectWithColor } from "../util/ScreenOverdraw";
 import type { ScreenBorder, ScreenBorderAny, ScreenVert } from "./FrameManager_mesh";
 
-/*
-why am I using a toolstack here at all?  time to remove!
-*/
+// TODO: these tools do not need a toolstack; drop the getter and run them directly.
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let toolstack_getter = function (): simple_toolsys.ToolStack {
@@ -31,8 +29,6 @@ import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util
 import { IContextBase } from "../core/context_base";
 import { ScreenArea, ScreenAreaAny } from "./ScreenArea";
 import { IAreaConstructor } from "./area_base";
-
-//import {keymap} from './events';
 
 export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_toolsys.ToolOp<
   {},
@@ -53,7 +49,6 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
   }
 
   start(elem?: Element, pointerId?: number) {
-    //toolstack_getter().execTool(this);
     this.toolModalStart(undefined, elem, pointerId);
   }
 
@@ -108,7 +103,6 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
       }
     }
 
-    //window.setTimeout(() => {
     if (pointerId !== undefined) {
       handlers.on_pointerdown = handlers.on_pointerdown ?? handlers.on_mousedown;
       handlers.on_pointermove = handlers.on_pointermove ?? handlers.on_mousemove;
@@ -120,13 +114,6 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
     } else {
       this.modaldata = pushModalLight(handlers);
     }
-    //console.log("HANDLERS", this.modaldata.handlers);
-
-    //}, 100);
-
-    //window.addEventListener("touchmove", (e) => {
-    //  console.log("touchmove");
-    //}, {passive : false});
   }
 
   on_pointermove(e: PointerEvent) {}
@@ -139,11 +126,11 @@ export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_to
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap.Escape:
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap.Space:
+      case keymap.Enter:
         this.finish();
         break;
     }
@@ -188,8 +175,8 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
       is_modal   : true,
       undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
-      inputs     : {}, //tool properties
-      outputs    : {}, //tool properties
+      inputs     : {},
+      outputs    : {},
     };
   }
 
@@ -252,8 +239,6 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
 
     const axis = this.border.horiz ? 1 : 0;
 
-    //console.log(this.border.horiz);
-
     this.overdraw!.clear();
 
     const borders = this.getBorders() as BorderWithOld[];
@@ -298,9 +283,8 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
     this.screen.moveBorder(border, df, false);
 
     for (const border of borders) {
-      //if false, stead of forcing areas to fit within screen bounds
-      //in snapScreenVerts the screen bounds will be modified instead.
-
+      // Moving an outer border resizes the screen: with snapMode false, snapScreenVerts
+      // changes the screen bounds instead of forcing the areas to fit inside them.
       if (border.outer) {
         snapMode = false;
       }
@@ -335,8 +319,6 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
   }
 }
 
-//controller.registerTool(AreaResizeTool);
-
 export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase<CTX> {
   done: boolean;
   sarea: ScreenArea<CTX> | undefined;
@@ -364,8 +346,8 @@ export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase
       is_modal   : true,
       undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
-      inputs     : {}, //tool properties
-      outputs    : {}, //tool properties
+      inputs     : {},
+      outputs    : {},
     };
   }
 
@@ -418,8 +400,6 @@ export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase
     this.overdraw!.clear();
 
     if (sarea !== undefined) {
-      //x -= sarea.pos[0];
-      //y -= sarea.pos[1];
       x = (x - sarea.pos[0]) / sarea.size[0];
       y = (y - sarea.pos[1]) / sarea.size[1];
 
@@ -450,11 +430,11 @@ export class SplitTool<CTX extends IContextBase = IContextBase> extends ToolBase
 
   override on_keydown(e: KeyboardEvent) {
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap.Escape:
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap.Space:
+      case keymap.Enter:
         this.finish();
         break;
     }
@@ -490,8 +470,8 @@ export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends Too
       is_modal   : true,
       undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
-      inputs     : {}, //tool properties
-      outputs    : {}, //tool properties
+      inputs     : {},
+      outputs    : {},
     };
   }
 
@@ -567,18 +547,16 @@ export class RemoveAreaTool<CTX extends IContextBase = IContextBase> extends Too
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap.Escape:
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap.Space:
+      case keymap.Enter:
         this.finish();
         break;
     }
   }
 }
-
-//controller.registerTool(SplitTool);
 
 interface DragBoxRect<CTX extends IContextBase = IContextBase> extends SVGRectWithColor {
   sarea: ScreenArea<CTX>;
@@ -632,8 +610,8 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       is_modal   : true,
       undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
-      inputs     : {}, //tool properties
-      outputs    : {}, //tool properties
+      inputs     : {},
+      outputs    : {},
     };
   }
 
@@ -651,8 +629,8 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     let pos: number[];
     let size: number[];
 
+    // A horiz of -1 is replacement rather than a split, so the box covers the whole area.
     if (b.horiz == -1) {
-      //replacement mode
       pos = sa.pos as unknown as number[];
       size = sa.size as unknown as number[];
     } else if (b.horiz) {
@@ -697,7 +675,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
   }
 
   doSplitDrop(b: DragBox<CTX>) {
-    //first check if there was no change
+    // Replacing an area with itself changes nothing.
     if (b.horiz === -1 && b.sarea === this.sarea) {
       return;
     }
@@ -706,7 +684,9 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     const sa = this.sarea!;
     const screen = this.screen;
 
-    //rip conditions
+    // An area can be ripped out only if removing it leaves the rest rectangular: it spans the
+    // full screen in one axis, or it floats. Dropping onto itself, or onto a neighbor it would
+    // split against, is not a rip.
     can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
     can_rip = can_rip || sa.floating;
     can_rip = can_rip && b.sarea !== sa;
@@ -724,14 +704,13 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     }
 
     if (b.horiz === -1) {
-      //replacement
       const src = this.sarea!;
       const dst = b.sarea as ScreenArea<CTX>;
 
       if (can_rip && src !== dst) {
         let mm: ReturnType<Screen<CTX>["minmaxArea"]> | undefined;
 
-        //handle case of one area "consuming" another
+        // An expanding drop takes over the consumed area's extent as well as its slot.
         if (expand) {
           mm = screen.minmaxArea(src);
           screen.minmaxArea(dst, mm);
@@ -762,7 +741,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
             const def = (editor.constructor as unknown as IAreaConstructor).define();
 
             let bad = false;
-            //bad = !(def.areaname in src.editormap);
 
             for (const editor2 of src.editors) {
               if (editor.constructor === editor2.constructor) {
@@ -828,7 +806,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
           screen._internalRegenAll();
         }
       } else {
-        //console.log("copying. . .");
         screen.replaceArea(dst as ScreenArea<CTX>, src.copy(screen));
         screen._internalRegenAll();
       }
@@ -845,10 +822,8 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       }
 
       if (can_rip) {
-        //console.log("replacing");
         screen.replaceArea(nsa, src);
       } else {
-        //console.log("copying");
         screen.replaceArea(nsa, src.copy(screen));
       }
 
@@ -874,8 +849,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       t: number,
       side: string | number
     ) => {
-      //console.log(x, y, sz);
-
       const b = this.overdraw!.rect(
         [x - sz[0] * 0.5, y - sz[1] * 0.5],
         sz,
@@ -900,7 +873,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
 
       const onclick = (b.onclick = (e: PointerEvent | MouseEvent) => {
         if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
-          return; //another handler will cancel
+          return; // a non-left button is handled by the cancel path instead
         }
 
         console.log("split click");
@@ -935,7 +908,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
         this.curbox = b;
 
         b.setColor(hcolor);
-        //b.style["background-color"] = hcolor;
       });
 
       b.addEventListener("pointerleave", (e: Event) => {
@@ -949,7 +921,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
         }
 
         b.setColor(color);
-        //b.style["background-color"] = color;
       });
 
       style.textContent = `
@@ -958,7 +929,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
           fill:orange;stroke-width:2
         }
       `;
-      //console.log(style.textContent);
       b.appendChild(style);
       b.setAttribute("class", cls);
 
@@ -989,9 +959,7 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
       if (n.hasAttribute?.("is_box")) {
         const rect = n.getClientRects()[0];
 
-        //console.log(rect.x, rect.y);
         if (x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height) {
-          //console.log("found rect");
           return n;
         }
       }
@@ -1010,19 +978,13 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     let wid = 55;
     const color = "rgb(200, 200, 200, 0.7)";
 
-    //console.trace("pointer move!", e.x, e.y, this.sarea);
-
-    /*
-     manually feed events to boxes so as to work right
-     with touch events; note that pushModalLight routes
-     touch to pointer events (if no touch handlers are present).
-     */
+    // Boxes are fed events by hand so touch works: pushModalLight routes touch to
+    // pointer events only when no touch handlers are present.
     const n = this.getActiveBox(e.x, e.y);
 
     if (n !== undefined) {
-      n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
+      n.setColor(this.hcolor);
     }
-    //console.log("pointer move", n);
 
     if (this.boxes.active !== undefined && this.boxes.active !== n) {
       this.boxes.active.setColor(this.color);
@@ -1034,33 +996,6 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     }
 
     this.boxes.active = n;
-    /*
-    let rec = (n) => {
-      if (n.hasAttribute && n.hasAttribute("is_box")) {
-        let rect = n.getClientRects()[0];
-
-        console.log(rect.x, rect.y);
-        if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
-          console.log("found rect");
-          n.dispatchEvent("pointerenter", new PointerEvent("pointerenter", e));
-        }
-      }
-      if (n === undefined || n.childNodes === undefined) {
-        return;
-      }
-
-      for (let n2 of n.childNodes) {
-        rec(n2);
-      }
-      if (n.shadow) {
-        for (let n2 of n.shadow.childNodes) {
-          rec(n2);
-        }
-      }
-    };
-
-    rec(this.overdraw);
-    //*/
     if (this.sarea === undefined) {
       return;
     }
@@ -1175,7 +1110,7 @@ export class AreaMoveAttachTool<CTX extends IContextBase = IContextBase> extends
   }
 
   on_pointerdown(e: PointerEvent) {
-    // noop — absorb pointer down
+    // Presses during a drag are swallowed; the drag ends on pointerup.
   }
 
   override on_keydown(e: KeyboardEvent) {
@@ -1183,15 +1118,14 @@ export class AreaMoveAttachTool<CTX extends IContextBase = IContextBase> extends
   }
 }
 
-//controller.registerTool(AreaDragTool);
-
 /**
- * The innermost thing under the pointer that has something to say, shadow roots included.
+ * Returns the innermost element under the pointer that carries a `title`, descending through
+ * shadow roots.
  *
- * Deliberately not `screen.pickElement`: that answers with the innermost `UIBase`, and an app whose
- * panes draw raw DOM inside a shadow root carries most of its tooltips on plain elements, which
- * that answer never reaches. Descending and keeping the last titled node also means a widget whose
- * innards are undescribed reports the widget's own sentence instead of nothing.
+ * `screen.pickElement` is not used here because it returns the innermost `UIBase`. An app whose
+ * panes draw raw DOM inside a shadow root puts most of its tooltips on plain elements, which that
+ * result never reaches. Keeping the last titled node found on the way down also means a widget
+ * with untitled innards falls back to the widget's own title.
  */
 function pickDescribed(x: number, y: number): Element | undefined {
   let node: Element | null = document.elementFromPoint(x, y);
@@ -1212,14 +1146,13 @@ function pickDescribed(x: number, y: number): Element | undefined {
   return found;
 }
 
-/** How long a tooltip left standing on its own survives before it takes itself down. */
+/** How long a tooltip stays up once nothing is holding it, in milliseconds. */
 const LINGER_MS = 30000;
 
 /**
- * A tooltip that outlived the gesture that raised it, and how to take it down.
- *
- * At most one at a time: raising a second is a request to replace the first, and two stacked
- * tooltips with nothing holding either up is a screen nobody can clear.
+ * Closes the tooltip that `lingerTooltip` is currently keeping up, clearing its listener and
+ * timer as well. Undefined when no tooltip is lingering. Only one lingers at a time, so
+ * `lingerTooltip` calls this before it starts another.
  */
 let lingering: { close: () => void } | undefined;
 
@@ -1229,13 +1162,12 @@ function endLingeringTooltip(): void {
 }
 
 /**
- * Leave `tip` on screen after the fingers that raised it have lifted, and arm the two things that
- * take it down again: the next press anywhere, and a timer for a press that never comes.
+ * Keeps `tip` on screen after the pointers that raised it have lifted. It closes on the following
+ * pointerdown, or after `LINGER_MS`,  whichever comes first.
  *
- * The press listener is `capture` so it is heard first, and deliberately neither
- * `preventDefault`s nor `stopPropagation`s — passive, in fact, so it *cannot*. Dismissing the
- * tooltip is all it does; the press itself still belongs to whatever it landed on, which is the
- * difference between a tooltip that gets out of the way and one that eats a button click.
+ * The pointerdown listener is on `window`, registered `capture` so it runs before the target's own
+ * handlers and `passive` so it cannot call `preventDefault` or `stopPropagation`. It only closes
+ * the tooltip, so the press still reaches whatever it landed on.
  */
 function lingerTooltip(tip: { end(): void }): void {
   endLingeringTooltip();
@@ -1254,7 +1186,7 @@ function lingerTooltip(tip: { end(): void }): void {
   const onDown = () => close();
   const entry = { close };
 
-  window.addEventListener("pointerdown", onDown, {capture: true, passive: true});
+  window.addEventListener("pointerdown", onDown, { capture: true, passive: true });
   timer = setTimeout(close, LINGER_MS);
 
   lingering = entry;
@@ -1267,9 +1199,9 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
   /** Pointer ids currently down, so the tool can tell one finger from two. */
   private down = new Set<number>();
   /**
-   * Whether this gesture ever had two pointers down at once. Sticky for the life of the gesture:
-   * the second finger is usually the one that lifts first, and what matters is how the tooltip
-   * was raised, not how many fingers are left by the time one comes up.
+   * Whether this gesture ever had two pointers down at once. Stays set for the life of the
+   * gesture, because the second finger usually lifts first and what matters is how the tooltip
+   * was raised rather than how many fingers remain when one comes up.
    */
   private multitouch = false;
 
@@ -1279,7 +1211,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     this.tooltip = undefined;
     this.element = undefined;
 
-    // Re-arming the tool replaces whatever the last one left standing.
+    // Arming the tool closes a tooltip left over from a previous run.
     endLingeringTooltip();
   }
 
@@ -1292,8 +1224,8 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
       is_modal   : true,
       undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
-      inputs     : {}, //tool properties
-      outputs    : {}, //tool properties
+      inputs     : {},
+      outputs    : {},
     };
   }
 
@@ -1310,23 +1242,21 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
   }
 
   /**
-   * Lifting off something described just puts that tooltip away and leaves the tool running, so a
-   * touch user can press one control after another instead of re-arming between each. Lifting off
-   * something undescribed — empty space — is how they leave, since a phone has no Escape key.
+   * Lifting off a titled element closes that tooltip and leaves the tool running, so a touch user
+   * can press one control after another without re-arming. Lifting off empty space ends the tool,
+   * which is how a touch user leaves it — a phone has no Escape key.
    *
-   * **A two-finger gesture is the exception, and it is the only case where the tooltip outlives
-   * the press.** Held with a finger, the tooltip is under the hand that raised it — so a reader
-   * who lifts to actually read it would, under the rule above, take it down in the same motion.
-   * When the last of two-or-more fingers comes up the tool stands down and hands the tooltip to
-   * {@link lingerTooltip}, which keeps it there until the next press anywhere or thirty seconds,
-   * whichever is first. Handing it over rather than staying modal is the point: a tooltip nobody
-   * is holding must not be sitting on top of the press that dismisses it.
+   * A two-finger gesture is the exception, and the only case where the tooltip outlives the press.
+   * A tooltip held with one finger sits under the hand that raised it, so lifting to read it would
+   * close it under the rule above. When the last of two or more fingers comes up, the tool ends and
+   * passes the tooltip to {@link lingerTooltip}, which keeps it up for `LINGER_MS`. The tool stops
+   * being modal instead of holding the tooltip, so the press that dismisses it is not blocked.
    */
   override on_pointerup(e: PointerEvent) {
     this.down.delete(e.pointerId);
 
     if (this.multitouch && this.tooltip !== undefined) {
-      // Still a finger down: the gesture is not over, so nothing changes yet.
+      // The gesture ends when the last finger lifts; while one is still down, nothing changes.
       if (this.down.size === 0) {
         this.strand();
       }
@@ -1340,10 +1270,10 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     e.stopPropagation();
   }
 
-  /** Leave the tooltip standing on its own and stop being modal. */
+  /** Hands the tooltip to {@link lingerTooltip} and ends the tool. */
   private strand() {
     const tip = this.tooltip;
-    // Forgotten before `finish`, so the `clear` inside it has nothing left to take down.
+    // Cleared before `finish` so the `clear` it calls does not end the tooltip being handed off.
     this.tooltip = undefined;
     this.element = undefined;
     this.multitouch = false;
@@ -1361,7 +1291,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     super.finish();
   }
 
-  /** Take down whatever is showing, and forget what it was about. */
+  /** Ends the current tooltip and forgets which element it described. */
   clear() {
     this.tooltip?.end();
     this.tooltip = undefined;
@@ -1385,14 +1315,13 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     const ele = pickDescribed(x, y);
 
     if (ele !== this.element) {
-      // Pointing at something undescribed takes the old tooltip down rather than leaving it
-      // asserting itself over whatever is there now.
+      // Moving to a different element, or to one with no title, ends the current tooltip first.
       this.clear();
 
       if (ele) {
         this.element = ele;
-        // No lifetime: the tooltip stays for as long as the pointer is on the thing it describes,
-        // which is the whole point of a tool you hold down on a touchscreen.
+        // An infinite lifetime keeps the tooltip up as long as the pointer stays on the element;
+        // `clear` is what ends it.
         this.tooltip = ToolTip.show((ele as HTMLElement).title, this.screen, x, y, Infinity);
       }
     }
