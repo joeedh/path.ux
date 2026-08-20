@@ -275,7 +275,7 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
 
     const badcount = check();
 
-    let snapMode = true;
+    let fitToSize = true;
 
     const df = mpos[axis] as number;
     const border = this.border;
@@ -283,10 +283,9 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
     this.screen.moveBorder(border, df, false);
 
     for (const border of borders) {
-      // Moving an outer border resizes the screen: with snapMode false, snapScreenVerts
-      // changes the screen bounds instead of forcing the areas to fit inside them.
+      // do not fit to size if border is on an outer edge
       if (border.outer) {
-        snapMode = false;
+        fitToSize = false;
       }
 
       this.overdraw!.line(
@@ -310,9 +309,9 @@ export class AreaResizeTool<CTX extends IContextBase = any> extends ToolBase<CTX
       }
     }
 
-    this.screen.snapScreenVerts(snapMode);
+    this.screen.snapScreenVerts(fitToSize);
     this.screen.loadFromVerts();
-    this.screen.solveAreaConstraints(snapMode);
+    this.screen.solveAreaConstraints(fitToSize);
     this.screen.setCSS();
     this.screen.updateDebugBoxes();
     this.screen._fireResizeCB();
@@ -685,8 +684,8 @@ export class AreaDragTool<CTX extends IContextBase = IContextBase> extends ToolB
     const screen = this.screen;
 
     // An area can be ripped out only if removing it leaves the rest rectangular: it spans the
-    // full screen in one axis, or it floats. Dropping onto itself, or onto a neighbor it would
-    // split against, is not a rip.
+    // full screen in one axis, or it floats. Dropping onto itself (or onto a neighbor it would
+    // split against) is not a rip
     can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
     can_rip = can_rip || sa.floating;
     can_rip = can_rip && b.sarea !== sa;
@@ -1163,11 +1162,9 @@ function endLingeringTooltip(): void {
 
 /**
  * Keeps `tip` on screen after the pointers that raised it have lifted. It closes on the following
- * pointerdown, or after `LINGER_MS`,  whichever comes first.
+ * pointerdown, or after `LINGER_MS` (whichever comes first).
  *
- * The pointerdown listener is on `window`, registered `capture` so it runs before the target's own
- * handlers and `passive` so it cannot call `preventDefault` or `stopPropagation`. It only closes
- * the tooltip, so the press still reaches whatever it landed on.
+ * Note: does not inhibit the event from reaching other consumers.
  */
 function lingerTooltip(tip: { end(): void }): void {
   endLingeringTooltip();
@@ -1196,12 +1193,10 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
   tooltip: ToolTip<CTX> | undefined;
   element: Element | undefined;
 
-  /** Pointer ids currently down, so the tool can tell one finger from two. */
+  /** Pointer ids currently down. */
   private down = new Set<number>();
   /**
-   * Whether this gesture ever had two pointers down at once. Stays set for the life of the
-   * gesture, because the second finger usually lifts first and what matters is how the tooltip
-   * was raised rather than how many fingers remain when one comes up.
+   * detected via the presence of multiple pointer ids.
    */
   private multitouch = false;
 
@@ -1211,7 +1206,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     this.tooltip = undefined;
     this.element = undefined;
 
-    // Arming the tool closes a tooltip left over from a previous run.
+    // Close any lingering tooltip
     endLingeringTooltip();
   }
 
@@ -1291,7 +1286,7 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     super.finish();
   }
 
-  /** Ends the current tooltip and forgets which element it described. */
+  /** Ends the current tooltip. */
   clear() {
     this.tooltip?.end();
     this.tooltip = undefined;
@@ -1315,13 +1310,11 @@ export class ToolTipViewer<CTX extends IContextBase = IContextBase> extends Tool
     const ele = pickDescribed(x, y);
 
     if (ele !== this.element) {
-      // Moving to a different element, or to one with no title, ends the current tooltip first.
+      // Moving to a different element (or to one with no title) ends the current tooltip first.
       this.clear();
 
       if (ele) {
         this.element = ele;
-        // An infinite lifetime keeps the tooltip up as long as the pointer stays on the element;
-        // `clear` is what ends it.
         this.tooltip = ToolTip.show((ele as HTMLElement).title, this.screen, x, y, Infinity);
       }
     }
