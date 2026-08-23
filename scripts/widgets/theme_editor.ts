@@ -113,11 +113,29 @@ function resolveRecord(path: string[]): ThemeRecord {
   return rec;
 }
 
+/**
+ * Reading and writing one value a row edits. The same row builders serve a plain
+ * theme slot, a slot bound to a theme variable, and a row of the Variables panel.
+ */
+export interface ValueSlot {
+  get(): ThemeItem;
+  set(value: ThemeItem): void;
+}
+
+/** A row's own re-read of its slot, run when something else writes the same value. */
+interface RowRefresh<CTX extends IContextBase> {
+  widget: UIBase<CTX>;
+  refresh(): void;
+}
+
 export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Container<
   CTX,
   "ThemeEditor"
 > {
   categoryMap: Record<string, string | CatKey>;
+
+  private _refreshes: RowRefresh<CTX>[] = [];
+  private _refreshing = false;
 
   constructor() {
     super();
@@ -196,7 +214,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       if (kind === "record") {
         this.doFolder({ ...catkey, key: k }, v as ThemeRecord, panel, undefined, [...path, k]);
       } else {
-        this.valueRow(placed % 2 === 0 ? col1 : col2, path, key, k, v, kind);
+        const col = placed % 2 === 0 ? col1 : col2;
+        this.valueRow(col, k, this.slotFor([...path, k], key, k), kind);
       }
 
       placed++;
@@ -283,146 +302,212 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     }
   }
 
-  private valueRow(
-    col: ColumnFrame<CTX>,
-    path: string[],
-    category: string,
-    key: string,
-    value: ThemeItem,
-    kind: ItemKind
-  ): void {
-    switch (kind) {
-      case "color":
-        this.colorRow(col, path, category, key, value as string);
-        break;
-      case "string":
-        this.stringRow(col, path, category, key, value as string);
-        break;
-      case "number":
-        this.numberRow(col, path, category, key, value as number);
-        break;
-      case "boolean":
-        this.boolRow(col, path, category, key);
-        break;
-      case "font":
-        this.fontPanel(col, category, key, value as CSSFont);
-        break;
-    }
-  }
+  /**
+   * The slot editing the live theme value at `livePath`. `category` and `key`
+   * name the change the write reports.
+   */
+  protected slotFor(livePath: string[], category: string, key: string): ValueSlot {
+    const parent = livePath.slice(0, -1);
+    const leaf = livePath[livePath.length - 1]!;
 
-  private colorRow(
-    col: ColumnFrame<CTX>,
-    path: string[],
-    category: string,
-    key: string,
-    css: string
-  ): void {
-    const cw = col.colorbutton(undefined);
-
-    try {
-      // css2color's result is recycled from a cachering; setRGBA copies it.
-      cw.setRGBA(css2color(css.toLowerCase().trim()));
-    } catch {
-      console.warn("Failed to set color " + key, css);
-    }
-
-    cw.label = key;
-
-    cw.on_change = () => {
-      resolveRecord(path)[key] = color2css(cw.rgba);
-      this.notify(category, key);
+    return {
+      get: () => resolveRecord(parent)[leaf],
+      set: (value) => {
+        resolveRecord(parent)[leaf] = value;
+        this.notify(category, key);
+      },
     };
   }
 
-  private stringRow(
+  /**
+   * Writes through a slot, unless a refresh is in flight. Assigning a widget's
+   * value fires its own `on_change`, so a refresh that did not suppress the
+   * write would send it straight back to the slot it came from.
+   */
+  private setSlot(slot: ValueSlot, value: ThemeItem): void {
+    if (this._refreshing) {
+      return;
+    }
+
+    slot.set(value);
+  }
+
+  /** Records a row's re-read, so another row writing the same value can trigger it. */
+  private onRefresh(widget: UIBase<CTX>, refresh: () => void): void {
+    this._refreshes.push({ widget, refresh });
+  }
+
+  /**
+   * Re-reads every registered row except `except`, dropping the rows a rebuild
+   * detached.
+   */
+  protected refreshRows(except?: UIBase<CTX>): void {
+    this._refreshes = this._refreshes.filter((entry) => !entry.widget.isDead());
+
+    const was = this._refreshing;
+    this._refreshing = true;
+
+    try {
+      for (const entry of this._refreshes) {
+        if (entry.widget !== except) {
+          entry.refresh();
+        }
+      }
+    } finally {
+      this._refreshing = was;
+    }
+  }
+
+  protected valueRow(
     col: ColumnFrame<CTX>,
-    path: string[],
-    category: string,
     key: string,
-    text: string
-  ): void {
+    slot: ValueSlot,
+    kind: ItemKind
+  ): UIBase<CTX> | undefined {
+    switch (kind) {
+      case "color":
+        return this.colorRow(col, key, slot);
+      case "string":
+        return this.stringRow(col, key, slot);
+      case "number":
+        return this.numberRow(col, key, slot);
+      case "boolean":
+        return this.boolRow(col, key, slot);
+      case "font":
+        return this.fontPanel(col, key, slot);
+    }
+
+    return undefined;
+  }
+
+  private colorRow(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
+    const cw = col.colorbutton(undefined);
+
+    const read = () => {
+      const css = String(slot.get() ?? "");
+
+      try {
+        // css2color's result is recycled from a cachering; setRGBA copies it.
+        cw.setRGBA(css2color(css.toLowerCase().trim()));
+      } catch {
+        console.warn("Failed to set color " + key, css);
+      }
+    };
+
+    read();
+    cw.label = key;
+
+    cw.on_change = () => this.setSlot(slot, color2css(cw.rgba));
+    this.onRefresh(cw, read);
+
+    return cw;
+  }
+
+  private stringRow(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
     col.label(key);
 
     const box = col.textbox();
-    box.text = text;
+    box.text = String(slot.get() ?? "");
 
-    box.on_change = () => {
-      resolveRecord(path)[key] = box.text;
-      this.notify(category, key);
-    };
+    box.on_change = () => this.setSlot(slot, box.text);
+    this.onRefresh(box, () => {
+      box.text = String(slot.get() ?? "");
+    });
+
+    return box;
   }
 
-  private numberRow(
-    col: ColumnFrame<CTX>,
-    path: string[],
-    category: string,
-    key: string,
-    value: number
-  ): void {
-    const slider = col.slider(undefined, key, value, 0, 256, 0.01, false);
+  private numberRow(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
+    const slider = col.slider(undefined, key, Number(slot.get() ?? 0), 0, 256, 0.01, false);
 
     slider.baseUnit = slider.displayUnit = "none";
 
-    slider.on_change = () => {
-      resolveRecord(path)[key] = slider.value;
-      this.notify(category, key);
-    };
+    slider.on_change = () => this.setSlot(slot, slider.value);
+    this.onRefresh(slider, () => {
+      slider.value = Number(slot.get() ?? 0);
+    });
+
+    return slider;
   }
 
-  private boolRow(col: ColumnFrame<CTX>, path: string[], category: string, key: string): void {
+  private boolRow(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
     const check = col.check(undefined, key);
 
     // Assigning value fires on_change, so wire the handler after it.
-    check.value = !!resolveRecord(path)[key];
+    check.value = !!slot.get();
 
-    check.on_change = () => {
-      resolveRecord(path)[key] = !!check.value;
-      this.notify(category, key);
-    };
+    check.on_change = () => this.setSlot(slot, !!check.value);
+    this.onRefresh(check, () => {
+      check.value = !!slot.get();
+    });
+
+    return check;
   }
 
-  /** A closed sub-panel editing a {@link CSSFont} in place. */
-  private fontPanel(col: ColumnFrame<CTX>, category: string, key: string, font: CSSFont): void {
+  /**
+   * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
+   * whole new font, because a slot bound to a variable holds one independent
+   * copy per referencing theme key and mutating this one would leave the rest
+   * stale.
+   */
+  private fontPanel(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
     const panel = col.panel(key);
+    const font = () => (slot.get() as CSSFont | undefined) ?? new CSSFont();
+
+    const edit = (apply: (font: CSSFont) => void) => {
+      const next = font().copy();
+      apply(next);
+      this.setSlot(slot, next);
+    };
 
     for (const field of FONT_FIELDS) {
       panel.label(field);
 
-      const tbox = panel.textbox(undefined, font[field]);
+      const tbox = panel.textbox(undefined, font()[field]);
       tbox.width = tbox.getDefault<number>("width");
 
-      tbox.on_change = () => {
-        font[field] = tbox.text;
-        this.notify(category, key);
-      };
+      tbox.on_change = () =>
+        edit((next) => {
+          next[field] = tbox.text;
+        });
+      this.onRefresh(tbox, () => {
+        tbox.text = font()[field];
+      });
     }
 
     const cw = panel.colorbutton(undefined);
     cw.label = "color";
-    cw.setRGBA(css2color(font.color));
+    cw.setRGBA(css2color(font().color));
 
-    cw.on_change = () => {
-      font.color = color2css(cw.rgba);
-      this.notify(category, key);
-    };
+    cw.on_change = () =>
+      edit((next) => {
+        next.color = color2css(cw.rgba);
+      });
+    this.onRefresh(cw, () => cw.setRGBA(css2color(font().color)));
 
-    const slider = panel.slider(undefined, "size", font.size);
+    const slider = panel.slider(undefined, "size", font().size);
     slider.setAttribute("min", "1");
     slider.setAttribute("max", "100");
     slider.baseUnit = slider.displayUnit = "none";
 
-    slider.on_change = () => {
-      font.size = slider.value;
-      this.notify(category, key);
-    };
+    slider.on_change = () =>
+      edit((next) => {
+        next.size = slider.value;
+      });
+    this.onRefresh(slider, () => {
+      slider.value = font().size;
+    });
 
     panel.closed = true;
+
+    return panel as unknown as UIBase<CTX>;
   }
 
   build(): void {
     const uidata = saveUIData(this, "theme");
 
     this.clear();
+    this._refreshes = [];
 
     for (const { category, keys } of groupThemeCategories(theme, this.categoryMap)) {
       const panel = keys.length > 1 ? this.panel(category) : undefined;
