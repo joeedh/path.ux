@@ -7,10 +7,11 @@
   - [Example theme file](#example-theme-file)
   - [Variable comments](#variable-comments)
 - [The theme editor widget](#the-theme-editor-widget)
+  - [Variable mode](#variable-mode)
 - [A theme editor area with an export button](#a-theme-editor-area-with-an-export-button)
-  - [Merging live edits back into the var theme](#merging-live-edits-back-into-the-var-theme)
   - [The export handler](#the-export-handler)
 - [Typed theme lookups](#typed-theme-lookups)
+<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 
@@ -31,9 +32,9 @@ the `ThemeEditor` widget does this itself after every edit.
 The **theme file is the ground source of truth**: a TypeScript file in the app's
 source tree holding a `themeVars` block and a `theme` record that references those
 variables. Everything else is derived from it. The live global theme is a runtime
-instance of the file.  There is a theme editor widget that edits this live instance,
+instance of the file. There is a theme editor widget that edits this live instance,
 clients typically add an Export button that writes a new theme file directly
-with (hopefully) comments preserved.  This is done to avoid using
+with (hopefully) comments preserved. This is done to avoid using
 complex JSON or CSS files that inevitably must be hand-edited by non-programmers.
 
 The cycle, in order:
@@ -66,7 +67,7 @@ export const themeVars = {
   // accent color for interactive widgets
   accent: "rgba(103, 143, 187, 1)",
   // the body font
-  body: new CSSFont({ size: 14, color: "rgba(35, 35, 35, 1)" }),
+  body  : new CSSFont({ size: 14, color: "rgba(35, 35, 35, 1)" }),
   radius: 6,
 } as const;
 
@@ -74,11 +75,11 @@ const vars = getVars(themeVars);
 
 export const theme = {
   base: {
-    DefaultText: vars.body,
+    DefaultText    : vars.body,
     "border-radius": vars.radius,
   },
   button: {
-    BoxHighlight: vars.accent,
+    BoxHighlight   : vars.accent,
     "border-radius": vars.radius,
   },
 } satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
@@ -112,7 +113,7 @@ A variant instances the same theme with different variable values:
 const darkVars = {
   ...themeVars,
   accent: "rgba(80, 120, 170, 1)",
-  body: new CSSFont({ size: 14, color: "rgba(220, 220, 220, 1)" }),
+  body  : new CSSFont({ size: 14, color: "rgba(220, 220, 220, 1)" }),
 } as const;
 
 setTheme(instanceThemeVars(theme, darkVars));
@@ -164,9 +165,9 @@ export const themeVars = {
   // accent color for interactive widgets
   accent: "rgba(103, 143, 187, 1)",
   // panel and widget background
-  bg: "rgba(217, 217, 217, 1)",
+  bg    : "rgba(217, 217, 217, 1)",
   // the body font
-  body: new CSSFont({ size: 14, color: "rgba(35, 35, 35, 1)" }),
+  body  : new CSSFont({ size: 14, color: "rgba(35, 35, 35, 1)" }),
   // corner rounding, in pixels
   radius: 6,
 } as const;
@@ -175,24 +176,24 @@ const vars = getVars(themeVars);
 
 export const theme = {
   base: {
-    "background-color": vars.bg,
-    "border-radius": vars.radius,
-    BoxHighlight: vars.accent,
-    DefaultText: vars.body,
-    LabelText: vars.body,
+    "background-color"  : vars.bg,
+    "border-radius"     : vars.radius,
+    BoxHighlight        : vars.accent,
+    DefaultText         : vars.body,
+    LabelText           : vars.body,
     "focus-border-width": 2,
   },
   button: {
     "background-color": vars.bg,
-    "border-radius": vars.radius,
-    BoxHighlight: vars.accent,
-    DefaultText: new CSSFont({ size: 12, weight: "bold", color: "rgba(35, 35, 35, 1)" }),
-    padding: 4,
+    "border-radius"   : vars.radius,
+    BoxHighlight      : vars.accent,
+    DefaultText       : new CSSFont({ size: 12, weight: "bold", color: "rgba(35, 35, 35, 1)" }),
+    padding           : 4,
   },
   numslider: {
     "background-color": vars.bg,
-    "border-radius": vars.radius,
-    BoxHighlight: vars.accent,
+    "border-radius"   : vars.radius,
+    BoxHighlight      : vars.accent,
   },
 } satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
 
@@ -241,6 +242,58 @@ section's Export button.
 `categoryMap` optionally regroups the theme's top-level keys into named categories for
 display; keys it does not mention appear under their own name.
 
+## Variable mode
+
+Hand the editor the untransformed theme and its variables and it also edits those:
+
+```ts
+import { theme as varTheme, themeVars } from "./theme";
+
+editor.setVarTheme(varTheme, themeVars);
+```
+
+Both records are deep-copied, so nothing the user does reaches the module's own
+state — an app keeping `themeVars` around to build a variant is unaffected. A third
+argument takes the theme file's source, which brings each variable's comment across
+into the panel. Without `setVarTheme` the widget behaves exactly as the section above
+describes.
+
+A Variables panel then appears above the style classes, listing each variable with its
+name, its value, how many slots read it, the comment it is exported with and a delete
+entry. A "+" menu beside a name box adds one. Each theme value grows a menu offering
+the variables its type fits, "New variable from this value", and "Detach" where it is
+already bound. A colour and a string are interchangeable, because a colour is a string
+the editor recognised; every other type has to match. Binding is offered for whole
+values only, so the fields inside a font or a `ThemeScrollBars` have no menu of their
+own.
+
+Four rules govern what an edit does:
+
+- Editing a slot bound to a variable edits the variable, and every other slot reading
+  it repaints. Each slot holds its own copy of the value, so detaching one later leaves
+  the rest alone.
+- Deleting a variable writes its current value into every slot that read it, then
+  removes it. Nothing on screen moves.
+- `ThemeChangeEvent` carries a `varKey` when the change came through a variable,
+  dispatched once per edit rather than once per affected slot. `category` and `key`
+  still name the slot the user was editing.
+- Binding a slot the theme file never mentioned creates the entry then and there,
+  rather than mirroring path.ux's whole default theme into the file. `setTheme`
+  rewrites the key inside a style class through `compatMap` — an authored
+  `base: { BoxBG: … }` is read back as `theme.base["background-color"]` — so the new
+  entry is written under the name the file authored, and the editor warns rather than
+  binding both when two legacy keys collapse onto one live key.
+
+Creating an entry two levels down inside a style class seeds the sub-record from the
+current live values, because `setTheme` assigns a sub-record by reference and a partial
+one would replace the library's wholesale at the next load. The cost is that path.ux's
+current defaults for those keys are frozen into the app's file, so a later library
+upgrade does not reach them.
+
+`invertTheme()` rewrites live colours in place behind the editor's back. The bindings
+survive, but the values the rows show no longer match what the variables hold; rebuild
+the editor after calling it.
+
 # A theme editor area with an export button
 
 The editor edits the live theme; it does not write files. The client app typically
@@ -256,8 +309,8 @@ export class ThemeEditorArea extends Area {
     super.init();
 
     const container = this.container;
-    container.button("Export Theme", () => exportThemeFile())
-      .description = "Download a regenerated theme.ts with your edits";
+    container.button("Export Theme", () => exportThemeFile()).description =
+      "Download a regenerated theme.ts with your edits";
 
     const editor = UIBase.createElement<ThemeEditor>("theme-editor-x");
     container.add(editor);
@@ -266,85 +319,28 @@ export class ThemeEditorArea extends Area {
 
   static define() {
     return {
-      tagname: "theme-editor-area-x",
+      tagname : "theme-editor-area-x",
       areaname: "theme_editor",
-      uiname: "Theme Editor",
+      uiname  : "Theme Editor",
     };
   }
 }
 ```
 
-## Merging live edits back into the var theme
-
-The live theme holds resolved values, while `createThemeFile` writes a `vars.foo`
-reference only where the record it is handed still holds a `ThemeVar`. Exporting the
-live theme directly would therefore flatten every variable into its current value. The
-export handler instead merges the live edits onto the app's var-carrying `theme`:
-
-```ts
-import { CSSFont, ThemeScrollBars, ThemeVar } from "pathux";
-import { theme as liveTheme } from "pathux";
-import { theme as varTheme, themeVars } from "./theme";
-
-function mergeEdits(authored: unknown, live: unknown): unknown {
-  if (authored instanceof ThemeVar || live === undefined) {
-    return authored;
-  }
-
-  const isRecord =
-    typeof authored === "object" &&
-    authored !== null &&
-    !(authored instanceof CSSFont) &&
-    !(authored instanceof ThemeScrollBars);
-
-  if (!isRecord) {
-    return live;
-  }
-
-  // Walking the live record's keys keeps properties added through the editor's "+" menu.
-  const out: Record<string, unknown> = {};
-  for (const k in live as object) {
-    const a = (authored as Record<string, unknown>)[k];
-    out[k] = a !== undefined ? mergeEdits(a, (live as Record<string, unknown>)[k]) : (live as Record<string, unknown>)[k];
-  }
-  return out;
-}
-
-function mergedTheme() {
-  const out: Record<string, unknown> = {};
-  // Iterating varTheme's style classes keeps the export scoped to the app's own
-  // overrides; setTheme merged them over path.ux's much larger default theme.
-  for (const k in varTheme) {
-    out[k] = mergeEdits(varTheme[k as keyof typeof varTheme], liveTheme[k]);
-  }
-  return out;
-}
-```
-
-Two consequences of this merge are worth knowing. A slot that references a variable
-keeps the reference, so an edit the user made to that one slot in the editor is
-dropped from the export — the value belongs to the variable, and changing it means
-editing `themeVars` in the file. And a style class the theme file never mentions is
-not exported, even if the user edited it; add the class to the file (empty is fine)
-to bring it under the file's control.
-
 ## The export handler
 
-With the merge in hand, the handler regenerates the file and downloads it. Passing the
-current source as `existingThemeFile` carries the variable comments over; with vite,
-a `?raw` import provides it:
+An editor in variable mode owns the authored record, so it writes the file itself:
 
 ```ts
-import { createThemeFile } from "pathux";
-import themeSource from "./theme.ts?raw";
+import { UIBase } from "pathux";
+import type { ThemeEditor } from "pathux";
+import { theme as varTheme, themeVars } from "./theme";
+
+const editor = UIBase.createElement<ThemeEditor>("theme-editor-x");
+editor.setVarTheme(varTheme, themeVars);
 
 function exportThemeFile() {
-  const src = createThemeFile({
-    theme: mergedTheme(),
-    vars: themeVars,
-    existingThemeFile: themeSource,
-    importPath: "pathux",
-  });
+  const src = editor.createFile({ importPath: "pathux" });
 
   const blob = new Blob([src], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -361,6 +357,14 @@ function exportThemeFile() {
 The user drops the downloaded `theme.ts` over the old one; the next build picks it up.
 An Electron or NW.js app can write the file directly through its platform's file API
 instead of downloading.
+
+`createFile` also takes `existingThemeFile`, which reads the variable comments out of
+the source the app is running on; the comments typed into the Variables panel win over
+them. With vite a `?raw` import supplies the source, and a bundler without one can
+fetch the file over HTTP. Passing it is optional, because `setVarTheme` already takes
+the same source. `createFile` throws if `setVarTheme` was never called, since there is
+no authored record to write. The plain `exportTheme` still writes the live theme out
+as a flat literal, with every variable resolved.
 
 # Typed theme lookups
 

@@ -9,7 +9,12 @@ import "../scripts/core/ui";
 //the editor builds panels, sliders and colour buttons from the widget registry
 import "../scripts/pathux";
 import { CSSFont } from "../scripts/core/cssfont";
-import { getVars, instanceThemeVars, ThemeVar } from "../scripts/core/ui_theme_utils";
+import {
+  getVars,
+  instanceThemeVars,
+  parseVarComments,
+  ThemeVar,
+} from "../scripts/core/ui_theme_utils";
 import type { ThemeRecordWithVar, ThemeVarsDef } from "../scripts/core/ui_theme_utils";
 import type { ThemeRecord } from "../scripts/core/ui_theme";
 import { ThemeEditor } from "../scripts/widgets/theme_editor";
@@ -59,7 +64,11 @@ function makeEditor(values: ThemeRecord) {
  * An editor in variable mode, with `values` authored as one style class and the
  * live theme instanced from it.
  */
-function makeVarEditor(values: ThemeRecordWithVar<string>, vars: ThemeVarsDef) {
+function makeVarEditor(
+  values: ThemeRecordWithVar<string>,
+  vars: ThemeVarsDef,
+  existingThemeFile?: string
+) {
   const cls = "test_" + Object.keys(theme).length;
   const varTheme: ThemeRecordWithVar<string> = { [cls]: values };
 
@@ -69,7 +78,7 @@ function makeVarEditor(values: ThemeRecordWithVar<string>, vars: ThemeVarsDef) {
   document.body.appendChild(editor);
 
   // set before init, so the editor builds its rows once
-  editor.setVarTheme(varTheme, vars);
+  editor.setVarTheme(varTheme, vars, existingThemeFile);
   editor._init();
 
   return { editor, cls, rec: theme[cls] as ThemeRecord, varTheme };
@@ -280,6 +289,37 @@ test("deleting a variable leaves every live value unchanged", () => {
   const authored = editor.getVarTheme()![cls] as ThemeRecordWithVar<string>;
   expect(authored.inner).toBe(4);
   expect(authored.outer).toBe(4);
+});
+
+test("the written file carries the variables, their comments and the bound slots", () => {
+  const source = [
+    "export const themeVars = {",
+    "  // the colour everything accents with",
+    "  accent: 'rgb(255,0,0)',",
+    "  radius: 4,",
+    "};",
+    "const vars = getVars(themeVars);",
+  ].join("\n");
+
+  const vars = { accent: "rgb(255,0,0)", radius: 4 } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+  const { editor, cls } = makeVarEditor(
+    { BoxBG: v.accent, BoxRadius: v.radius },
+    { ...vars },
+    source
+  );
+
+  editor.setVarComment("radius", "how round a box's corners are");
+
+  const written = editor.createFile();
+
+  expect(parseVarComments(written)).toEqual({
+    accent: "the colour everything accents with",
+    radius: "how round a box's corners are",
+  });
+  expect(written).toContain(`${cls}: {`);
+  expect(written).toContain("vars.accent");
+  expect(written).toContain("vars.radius");
 });
 
 test("a font field writes a whole new font rather than mutating the live one", () => {

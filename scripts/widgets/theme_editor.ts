@@ -9,8 +9,10 @@ import {
   bindSlot,
   copyThemeItem,
   copyVarItem,
+  createThemeFile,
   deleteVar,
   isPlainRecord,
+  parseVarComments,
   pathKey,
   renameVar,
   toLivePath,
@@ -381,14 +383,21 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
    * Hands the editor the untransformed theme the live one was instanced from,
    * plus its variables. Both are deep-copied, so editing here never reaches the
    * caller's module state. Without this the widget edits the live theme only.
+   * Passing the theme's own source brings each variable's comment across.
    */
-  setVarTheme(varTheme: ThemeRecordWithVar<string>, vars: ThemeVarsDef): void {
+  setVarTheme(
+    varTheme: ThemeRecordWithVar<string>,
+    vars: ThemeVarsDef,
+    existingThemeFile?: string
+  ): void {
     this._varTheme = copyVarItem(varTheme) as ThemeRecordWithVar<string>;
 
     this._vars = {};
     for (const key of Object.keys(vars)) {
       this._vars[key] = copyThemeItem(vars[key]);
     }
+
+    this._varComments = existingThemeFile ? parseVarComments(existingThemeFile) : {};
 
     this.rebuildBindings();
 
@@ -411,6 +420,39 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     }
 
     return ret;
+  }
+
+  /**
+   * Writes the edited theme back out as TypeScript source. The editor owns the
+   * authored record, so an edit at a bound slot is written as the variable it
+   * came from rather than dropped. Comments typed in the Variables panel win
+   * over the ones read out of `existingThemeFile`.
+   */
+  createFile({
+    existingThemeFile,
+    importPath,
+    onAssemble,
+  }: {
+    existingThemeFile?: string;
+    importPath?: string;
+    onAssemble?: (header: string, vars: string, theme: string, footer: string) => string;
+  } = {}): string {
+    const varTheme = this.getVarTheme();
+
+    if (!varTheme) {
+      throw new Error("the theme editor has no authored theme to write");
+    }
+
+    return createThemeFile({
+      theme      : varTheme,
+      vars       : this.getThemeVars(),
+      varComments: {
+        ...(existingThemeFile ? parseVarComments(existingThemeFile) : {}),
+        ...this._varComments,
+      },
+      importPath,
+      onAssemble,
+    });
   }
 
   /** Re-reads which live slots are bound to which variable, and where each was authored. */
