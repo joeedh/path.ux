@@ -9,7 +9,7 @@ import "../scripts/core/ui";
 //the editor builds panels, sliders and colour buttons from the widget registry
 import "../scripts/pathux";
 import { CSSFont } from "../scripts/core/cssfont";
-import { getVars, instanceThemeVars } from "../scripts/core/ui_theme_utils";
+import { getVars, instanceThemeVars, ThemeVar } from "../scripts/core/ui_theme_utils";
 import type { ThemeRecordWithVar, ThemeVarsDef } from "../scripts/core/ui_theme_utils";
 import type { ThemeRecord } from "../scripts/core/ui_theme";
 import { ThemeEditor } from "../scripts/widgets/theme_editor";
@@ -230,6 +230,56 @@ test("a refreshed sibling row does not write back", () => {
   }
 
   expect(writes).toBe(3);
+});
+
+test("binding a slot the theme file never mentioned seeds its sub-record", () => {
+  const { editor, cls, rec } = makeVarEditor({ pad: 2 }, {});
+
+  rec.inner = { a: 1, b: 2 };
+
+  editor.addThemeVar("n", 9);
+  editor.bindLiveSlot([cls, "inner", "b"], "n");
+
+  const authored = editor.getVarTheme()![cls] as ThemeRecordWithVar<string>;
+  const inner = authored.inner as ThemeRecordWithVar<string>;
+
+  // the sibling leaf comes across, so exporting the new entry does not blank it
+  expect(inner.a).toBe(1);
+  expect(inner.b).toBeInstanceOf(ThemeVar);
+  expect((rec.inner as ThemeRecord).b).toBe(9);
+});
+
+test("binding a renamed slot writes the key the theme file authored", () => {
+  const { editor, cls, rec } = makeVarEditor({ BoxBG: "red" }, {});
+
+  // setTheme renames level-2 keys through compatMap; instanceThemeVars does not
+  rec.background = rec.BoxBG;
+  delete rec.BoxBG;
+
+  editor.addThemeVar("accent", "blue");
+  editor.bindLiveSlot([cls, "background"], "accent");
+
+  const authored = editor.getVarTheme()![cls] as ThemeRecordWithVar<string>;
+
+  expect(authored.BoxBG).toBeInstanceOf(ThemeVar);
+  expect("background" in authored).toBe(false);
+  expect(rec.background).toBe("blue");
+});
+
+test("deleting a variable leaves every live value unchanged", () => {
+  const vars = { radius: 4 } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+  const { editor, cls, rec } = makeVarEditor({ inner: v.radius, outer: v.radius }, { ...vars });
+
+  editor.deleteThemeVar("radius");
+
+  expect(rec.inner).toBe(4);
+  expect(rec.outer).toBe(4);
+  expect(editor.getThemeVars()).toEqual({});
+
+  const authored = editor.getVarTheme()![cls] as ThemeRecordWithVar<string>;
+  expect(authored.inner).toBe(4);
+  expect(authored.outer).toBe(4);
 });
 
 test("a font field writes a whole new font rather than mutating the live one", () => {

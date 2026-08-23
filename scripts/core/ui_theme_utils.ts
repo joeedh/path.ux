@@ -197,7 +197,7 @@ function isWalkable(item: ThemeItemWithVar<string>): item is ThemeRecordWithVar<
 }
 
 /** A sub-record, as opposed to a leaf value or one of the theme's value classes. */
-function isPlainRecord(item: ThemeItemWithVar<string>): item is ThemeRecordWithVar<string> {
+export function isPlainRecord(item: ThemeItemWithVar<string>): item is ThemeRecordWithVar<string> {
   return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
 }
 

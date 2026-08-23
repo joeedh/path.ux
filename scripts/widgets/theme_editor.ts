@@ -1,11 +1,24 @@
 import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData } from "../core/ui_base";
 import { Container, ColumnFrame } from "../core/ui";
 import { IContextBase } from "../core/context_base";
-import { validateCSSColor, color2css, css2color } from "../core/ui_theme";
+import { validateCSSColor, color2css, css2color, ThemeScrollBars } from "../core/ui_theme";
 import type { ThemeItem, ThemeRecord } from "../core/ui_theme";
 import { CSSFont } from "../core/cssfont";
-import { copyThemeItem, copyVarItem, pathKey, varSlots } from "../core/ui_theme_utils";
-import type { ThemeRecordWithVar, ThemeVarsDef } from "../core/ui_theme_utils";
+import {
+  addVar,
+  bindSlot,
+  copyThemeItem,
+  copyVarItem,
+  deleteVar,
+  isPlainRecord,
+  pathKey,
+  renameVar,
+  toLivePath,
+  unbindSlot,
+  varSlots,
+} from "../core/ui_theme_utils";
+import type { ThemePath, ThemeRecordWithVar, ThemeVarsDef } from "../core/ui_theme_utils";
+import type { MenuTemplate } from "./ui_menu";
 import type { PanelContents } from "./ui_panel";
 
 interface CatKey {
@@ -67,6 +80,21 @@ export function themeItemKind(name: string, value: ThemeItem): ItemKind {
   }
 
   return "skip";
+}
+
+/**
+ * Whether a slot the editor shows as `kind` may read a variable holding `value`.
+ * A colour is a string the editor happens to have recognised, so the two are
+ * interchangeable; every other kind has to match.
+ */
+function varFits(kind: ItemKind, value: ThemeItem): boolean {
+  const other = themeItemKind("", value);
+
+  if (kind === "color" || kind === "string") {
+    return other === "color" || other === "string";
+  }
+
+  return other === kind;
 }
 
 /**
@@ -161,10 +189,14 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
   private _varTheme?: ThemeRecordWithVar<string>;
   private _vars: ThemeVarsDef = {};
+  private _varComments: Record<string, string> = {};
   //live path of a bound slot, as pathKey, to the variable it reads
   private _bindings = new Map<string, string>();
+  //live path of an authored slot, as pathKey, to the path it is written at
+  private _authored = new Map<string, ThemePath>();
   //the row whose gesture is writing, so a broadcast does not refresh it
   private _origin?: UIBase<CTX>;
+  private _varsPanel?: PanelContents<CTX>;
 
   constructor() {
     super();
@@ -211,7 +243,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     obj: ThemeRecord,
     container: Container<CTX> = this,
     panel?: PanelContents<CTX>,
-    path?: string[]
+    path?: string[],
+    bindable = true
   ): void {
     const key = catkey.key;
 
@@ -241,10 +274,23 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       }
 
       if (kind === "record") {
-        this.doFolder({ ...catkey, key: k }, v as ThemeRecord, panel, undefined, [...path, k]);
+        this.doFolder(
+          { ...catkey, key: k },
+          v as ThemeRecord,
+          panel,
+          undefined,
+          [...path, k],
+          bindable && !(v instanceof ThemeScrollBars)
+        );
       } else {
         const col = placed % 2 === 0 ? col1 : col2;
-        this.valueRow(col, k, this.slotFor([...path, k], key, k), kind);
+        const livePath = [...path, k];
+
+        this.valueRow(col, k, this.slotFor(livePath, key, k), kind);
+
+        if (bindable && this._varTheme) {
+          this.bindMenu(col, livePath, kind);
+        }
       }
 
       placed++;
@@ -367,13 +413,28 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     return ret;
   }
 
-  /** Re-reads which live slots are bound to which variable. */
+  /** Re-reads which live slots are bound to which variable, and where each was authored. */
   private rebuildBindings(): void {
     this._bindings = new Map();
+    this._authored = new Map();
 
     if (!this._varTheme) {
       return;
     }
+
+    const walk = (rec: ThemeRecordWithVar<string>, path: ThemePath) => {
+      for (const key in rec) {
+        const here = [...path, key];
+        this._authored.set(pathKey(toLivePath(here)), here);
+
+        const v = rec[key];
+        if (isPlainRecord(v)) {
+          walk(v, here);
+        }
+      }
+    };
+
+    walk(this._varTheme, []);
 
     for (const varKey of Object.keys(this._vars)) {
       for (const slot of varSlots(this._varTheme, varKey)) {
@@ -388,6 +449,264 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
         this._bindings.set(live, varKey);
       }
+    }
+  }
+
+  /**
+   * Where a live slot is written in the authored theme. A slot the theme file
+   * never mentioned is authored at its live path, so nothing else of the
+   * library's defaults is exported alongside it.
+   */
+  private varPathFor(livePath: string[]): ThemePath {
+    return this._authored.get(pathKey(livePath)) ?? [...livePath];
+  }
+
+  /**
+   * Points the live slot at `livePath` at `varKey` and takes the variable's
+   * value. Creating the authored entry seeds any sub-record it has to make from
+   * the live values, because `setTheme` assigns one by reference.
+   */
+  bindLiveSlot(livePath: string[], varKey: string): void {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+
+    bindSlot(this._varTheme, this.varPathFor(livePath), varKey, theme);
+
+    const parent = findRecord(livePath.slice(0, -1));
+    if (parent) {
+      parent[livePath[livePath.length - 1]!] = copyThemeItem(this._vars[varKey]);
+    }
+
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0]!, livePath[livePath.length - 1]!, undefined, varKey);
+  }
+
+  /** Writes the variable's current value into the authored slot and stops reading it. */
+  detachLiveSlot(livePath: string[]): void {
+    const varPath = this._authored.get(pathKey(livePath));
+
+    if (!this._varTheme || !varPath) {
+      return;
+    }
+
+    unbindSlot(this._varTheme, this._vars, varPath);
+
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0]!, livePath[livePath.length - 1]!);
+  }
+
+  /** Adds a variable, returning the name it was stored under. */
+  addThemeVar(name: string, value: ThemeItem): string {
+    const key = addVar(this._vars, name, copyThemeItem(value));
+
+    this.rebuild();
+    this.notify("themeVars", key, undefined, key);
+
+    return key;
+  }
+
+  /**
+   * Removes a variable, inlining its current value at every slot that read it.
+   * Nothing on screen changes.
+   */
+  deleteThemeVar(key: string): void {
+    if (!this._varTheme) {
+      return;
+    }
+
+    deleteVar(this._varTheme, this._vars, key);
+    delete this._varComments[key];
+
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key);
+  }
+
+  /** Renames a variable, rewriting every slot that reads it. */
+  renameThemeVar(from: string, to: string): string {
+    if (!this._varTheme) {
+      return from;
+    }
+
+    const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
+
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key, undefined, key);
+
+    return key;
+  }
+
+  /** The comment a variable is exported with. */
+  setVarComment(key: string, comment: string): void {
+    this._varComments[key] = comment;
+  }
+
+  /**
+   * Makes a variable out of a slot's current value and binds the slot to it.
+   * The name is taken from the slot and deduped; the Variables panel opens so
+   * it can be renamed there.
+   */
+  varFromSlot(livePath: string[]): string | undefined {
+    if (!this._varTheme) {
+      return undefined;
+    }
+
+    const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]!];
+    const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
+
+    let name = stem;
+    for (let i = 2; name in this._vars; i++) {
+      name = `${stem}_${i}`;
+    }
+
+    addVar(this._vars, name, copyThemeItem(value));
+    this.bindLiveSlot(livePath, name);
+
+    if (this._varsPanel && !this._varsPanel.isDead()) {
+      this._varsPanel.closed = false;
+    }
+
+    return name;
+  }
+
+  /** The menu binding one theme slot to a variable, detaching it, or making one. */
+  private bindMenu(col: ColumnFrame<CTX>, livePath: string[], kind: ItemKind): void {
+    const bound = this._bindings.get(pathKey(livePath));
+    const dbox = col.menu(bound !== undefined ? `= ${bound}` : "…", []);
+
+    dbox.description =
+      bound !== undefined
+        ? `This value follows the theme variable "${bound}"`
+        : "Read this value from a theme variable";
+
+    dbox.template = () => this.bindTemplate(livePath, kind);
+  }
+
+  private bindTemplate(livePath: string[], kind: ItemKind): MenuTemplate {
+    const entries: MenuTemplate = [];
+    const bound = this._bindings.get(pathKey(livePath));
+
+    for (const key of Object.keys(this._vars)) {
+      if (key === bound || !varFits(kind, this._vars[key])) {
+        continue;
+      }
+
+      entries.push({
+        name    : key,
+        tooltip : `Take this value from "${key}", and follow it from now on`,
+        callback: () => this.bindLiveSlot(livePath, key),
+      });
+    }
+
+    entries.push({
+      name    : "New variable from this value",
+      tooltip : "Make a variable holding this value, and read it here",
+      callback: () => this.varFromSlot(livePath),
+    });
+
+    if (bound !== undefined) {
+      entries.push({
+        name    : "Detach",
+        tooltip : `Keep the value "${bound}" has now, and stop following it`,
+        callback: () => this.detachLiveSlot(livePath),
+      });
+    }
+
+    return entries;
+  }
+
+  /** The panel listing every variable, above the theme's own categories. */
+  private buildVarsPanel(): void {
+    const panel = this.panel(
+      "Variables",
+      "theme-variables",
+      undefined,
+      "Values shared by the theme slots bound to them"
+    );
+
+    this._varsPanel = panel;
+
+    for (const key of Object.keys(this._vars)) {
+      this.varRow(panel, key);
+    }
+
+    this.addVarMenu(panel);
+    panel.closed = true;
+  }
+
+  private varRow(panel: PanelContents<CTX>, key: string): void {
+    const row = panel.row();
+
+    const name = row.textbox(undefined, key);
+    name.description = "The name this variable is written under in the theme file";
+    name.on_change = () => {
+      try {
+        this.renameThemeVar(key, name.text);
+      } catch (e) {
+        console.error((e as Error).message);
+        name.text = key;
+      }
+    };
+
+    const slot: ValueSlot = {
+      varKey: key,
+      get   : () => this._vars[key],
+      set   : (value) => this.writeVar(key, value, "themeVars", key),
+    };
+
+    this.valueRow(row.col(), key, slot, themeItemKind(key, this._vars[key]));
+
+    const uses = this._varTheme ? varSlots(this._varTheme, key).length : 0;
+    row.label(uses === 1 ? "1 slot" : `${uses} slots`);
+
+    const comment = row.textbox(undefined, this._varComments[key] ?? "");
+    comment.description = "A note written above this variable in the exported theme file";
+    comment.on_change = () => this.setVarComment(key, comment.text);
+
+    const del = row.menu("×", [
+      {
+        name    : "Delete",
+        tooltip : `Write the value "${key}" has now into all ${uses} slots, and remove it`,
+        callback: () => this.deleteThemeVar(key),
+      },
+    ]);
+    del.description = `Remove "${key}"`;
+  }
+
+  /** Adds the "+" menu that creates a variable under the name typed beside it. */
+  private addVarMenu(panel: PanelContents<CTX>): void {
+    const row = panel.row();
+
+    const textbox = row.textbox(undefined, "");
+    textbox.description = "A name for the variable the menu beside this adds";
+
+    const add = (value: ThemeItem) => {
+      try {
+        this.addThemeVar(textbox.text || "", value);
+      } catch (e) {
+        console.error((e as Error).message);
+      }
+    };
+
+    const menu = row.menu("+", [
+      { name: "Float", tooltip: "Add a number variable", callback: () => add(0.0) },
+      { name: "Color", tooltip: "Add a colour variable", callback: () => add("grey") },
+      { name: "String", tooltip: "Add a text variable", callback: () => add("") },
+      { name: "Boolean", tooltip: "Add an on-or-off variable", callback: () => add(false) },
+      { name: "Font", tooltip: "Add a font variable", callback: () => add(new CSSFont()) },
+    ]);
+
+    menu.description = "Add a variable of the kind chosen here";
+  }
+
+  /** Rebuilds every row, once the widget is built at all. */
+  private rebuild(): void {
+    if (this._init_done) {
+      this.build();
     }
   }
 
@@ -639,6 +958,11 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
     this.clear();
     this._refreshes = [];
+    this._varsPanel = undefined;
+
+    if (this._varTheme) {
+      this.buildVarsPanel();
+    }
 
     for (const { category, keys } of groupThemeCategories(theme, this.categoryMap)) {
       const panel = keys.length > 1 ? this.panel(category) : undefined;
