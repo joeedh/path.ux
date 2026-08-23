@@ -1,4 +1,4 @@
-import type {PlatformAPI} from "./platform_base";
+import type { PlatformAPI } from "./platform_base";
 
 let promise: Promise<{ platform: typeof PlatformAPI }> | undefined;
 

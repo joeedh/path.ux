@@ -11,6 +11,7 @@ export * from "./core/datapath_registry";
 export * from "./core/widget_registry";
 export * from "./core/ui_base";
 export * from "./core/ui";
+export * from "./core/ui_theme_utils";
 export * from "./widgets/ui_widgets";
 export * from "./widgets/ui_widgets2";
 export * from "./core/cssfont";

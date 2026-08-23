@@ -11385,7 +11385,10 @@ var init_simple_events = __esm({
       }
       exec(ctx) {
         if (typeof this.action == "string") {
-          ctx.api.execTool(ctx, this.action);
+          const action = this.action;
+          Promise.resolve(ctx.api.execTool(ctx, action)).catch((error2) => {
+            console.warn(`hotkey: could not run "${action}"`, error2);
+          });
         } else {
           this.action(ctx);
         }
@@ -14053,6 +14056,21 @@ EnumKeyPair {
         this.checkMeta();
         this.data = bitmask;
         ToolProperty.prototype.setValue.call(this, bitmask);
+      }
+      /** A flag argument may name several bits at once, e.g. `"VERTEX|HANDLE"`. */
+      parseArg(arg) {
+        if (typeof arg === "string" && arg.indexOf("|") >= 0) {
+          let mask = 0;
+          for (const part of arg.split("|")) {
+            const key = part.trim();
+            if (!(key in this.values)) {
+              throw new Error(`unknown key ${key}`);
+            }
+            mask |= this.values[key];
+          }
+          return mask;
+        }
+        return super.parseArg(arg);
       }
     };
     ToolProperty.internalRegister(FlagProperty);
@@ -24078,6 +24096,9 @@ function parseToolPath(str, check_tool_exists = true) {
     argsStr = str.slice(i1 + 1, i2).trim();
     str = str.slice(0, i1).trim();
   }
+  if (!(str in ToolPaths)) {
+    initToolPaths();
+  }
   if (!(str in ToolPaths) && check_tool_exists) {
     throw new DataPathError("unknown tool " + str);
   }
@@ -26311,6 +26332,7 @@ var init_const = __esm({
       },
       autoLoadSplineTemplates: true,
       addHelpPickers: true,
+      closableAreaTabs: true,
       autoSizeUpdate: true,
       showPathsInToolTips: true,
       enableThemeAutoUpdate: true,
@@ -27270,7 +27292,10 @@ var init_theme = __esm({
         "border-radius": 3,
         "border-style": "solid",
         "border-width": 1,
-        padding: 5
+        padding: 5,
+        // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
+        // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
+        timeout: 4e3
       },
       treeview: {
         itemIndent: 10,
@@ -32313,6 +32338,12 @@ var init_ui_menu = __esm({
       static SEP;
       /** The src button that created this menu, used to switch menus when hovering over other buttons. */
       srcWidget;
+      /**
+       * Hover text for the row a *parent* menu draws for this menu as a submenu. Ordinary items take
+       * their tooltip through `addItem`/`addItemExtra`, but a submenu is added as the menu itself, so
+       * the text has to travel on it.
+       */
+      tooltip;
       parentMenu;
       _was_clicked;
       items;
@@ -32334,6 +32365,13 @@ var init_ui_menu = __esm({
       _dropbox;
       _onclose;
       _onselect;
+      /**
+       * A submenu's *own* dispatch, captured the first time a parent wraps it so that the wrapper can
+       * be reinstalled on every focus without either dropping the callbacks or nesting itself. See
+       * the wrapping in `addItem`; `undefined` means never wrapped, `null` means wrapped when there
+       * was nothing of its own to keep.
+       */
+      _ownSelect;
       on_select;
       constructor() {
         super();
@@ -32673,8 +32711,9 @@ var init_ui_menu = __esm({
         const li = document.createElement("li");
         li.setAttribute("tabindex", "" + this.itemindex++);
         li.setAttribute("class", "menuitem");
-        if (tooltip !== void 0) {
-          li.title = tooltip;
+        const hover = tooltip !== void 0 ? tooltip : item instanceof _Menu ? item.tooltip : void 0;
+        if (hover !== void 0) {
+          li.title = hover;
         }
         if (item instanceof _Menu) {
           const dom = document.createElement("span");
@@ -32714,9 +32753,12 @@ var init_ui_menu = __esm({
               this._submenu = void 0;
             }
             if (li._isMenu) {
-              li._menu._onselect = (item2) => {
-                this._onselect?.(item2);
-                li._menu.close();
+              const sub = li._menu;
+              if (sub._ownSelect === void 0) sub._ownSelect = sub._onselect ?? null;
+              sub._onselect = (item2) => {
+                if (sub._ownSelect) sub._ownSelect(item2);
+                else this._onselect?.(item2);
+                sub.close();
                 this.close();
               };
               if (!li._menu.on_select && this.on_select !== void 0) {
@@ -36655,14 +36697,17 @@ var Container3 = class _Container extends UIBase2 {
     return ret;
   }
   /**
-   *
-   * makes a button for a help picker tool
-   * to view tooltips on mobile devices
-   * */
+   * Makes a button that starts the help picker: point at anything to read what it does, which is
+   * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
+   */
   helppicker() {
-    const ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
-      this.getScreen()?.hintPickerTool();
-    });
+    const ret = this.iconbutton(
+      Icons.HELP,
+      "Read what a control does by pointing at it; tap empty space to stop",
+      () => {
+        this.getScreen()?.hintPickerTool();
+      }
+    );
     if (isMobile()) {
     }
     if (ret.ctx) {
@@ -40161,6 +40206,234 @@ function mount(ctx, parent, node) {
   return container;
 }
 
+// scripts/core/ui_theme_utils.ts
+init_cssfont();
+init_ui_theme();
+var ThemeVar = class {
+  key;
+  constructor(key) {
+    this.key = key;
+  }
+};
+function getVars(vars) {
+  const entries = Object.keys(vars).map((key) => [key, new ThemeVar(key)]);
+  return Object.fromEntries(entries);
+}
+function instanceThemeVars(theme2, vars) {
+  return copyRecord(theme2, vars, "");
+}
+function copyRecord(rec, vars, path) {
+  const ret = {};
+  for (const key in rec) {
+    ret[key] = copyItem(rec[key], vars, path ? `${path}.${key}` : key);
+  }
+  return ret;
+}
+function copyItem(item, vars, path) {
+  if (item instanceof ThemeVar) {
+    if (!(item.key in vars)) {
+      throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
+    }
+    return copyItem(vars[item.key], vars, path);
+  }
+  if (item instanceof CSSFont) {
+    return item.copy();
+  }
+  if (item instanceof ThemeScrollBars) {
+    return new ThemeScrollBars({ ...item });
+  }
+  if (Array.isArray(item)) {
+    throw new Error(`arrays are not theme values, at "${path}"`);
+  }
+  if (typeof item === "object" && item !== null) {
+    return copyRecord(item, vars, path);
+  }
+  return item;
+}
+function createThemeFile({
+  theme: theme2,
+  vars,
+  existingThemeFile,
+  varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
+  importPath = "pathux",
+  onAssemble
+}) {
+  onAssemble = onAssemble ?? ((header2, vars2, theme3, footer2) => {
+    return header2 + vars2 + theme3 + footer2;
+  });
+  const items = [...Object.values(vars), ...Object.values(theme2)];
+  const names = ["getVars", "instanceThemeVars"];
+  if (items.some((item) => usesClass(item, CSSFont))) {
+    names.push("CSSFont");
+  }
+  if (items.some((item) => usesClass(item, ThemeScrollBars))) {
+    names.push("ThemeScrollBars");
+  }
+  const header = `//XXX warning: auto-generated file!
+
+import { ${names.sort().join(", ")} } from ${quote(importPath)};
+import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
+
+`;
+  const varsSrc = `export const themeVars = ${writeRecord(vars, "", varComments)} as const;
+
+`;
+  const themeSrc = `const vars = getVars(themeVars);
+
+export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
+
+`;
+  const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
+`;
+  return onAssemble(header, varsSrc, themeSrc, footer);
+}
+function parseVarComments(themeFile) {
+  const comments = {};
+  const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
+  const decl = new RegExp(`\\b${name2}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
+  if (!decl) {
+    return comments;
+  }
+  const block = readBlock(themeFile, decl.index + decl[0].length - 1);
+  let pending = [];
+  for (const { text: text2, depth } of block) {
+    const comment = /^\s*\/\/(.*)$/.exec(text2);
+    if (comment) {
+      pending.push(comment[1].trim());
+      continue;
+    }
+    const key = /^\s*(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:/.exec(text2);
+    if (key && depth === 1 && pending.length > 0) {
+      comments[key[1] ?? key[2] ?? key[3]] = pending.join("\n");
+    }
+    pending = [];
+  }
+  return comments;
+}
+function readBlock(src, start) {
+  const lines = [];
+  let depth = 0;
+  let line = "";
+  let lineDepth = 0;
+  let quoteChar = "";
+  let comment = false;
+  for (let i = start; i < src.length; i++) {
+    const c = src[i];
+    if (c === "\n") {
+      lines.push({ text: line, depth: lineDepth });
+      line = "";
+      comment = false;
+      lineDepth = depth;
+      continue;
+    }
+    line += c;
+    if (comment) {
+      continue;
+    } else if (quoteChar) {
+      if (c === "\\") {
+        line += src[++i] ?? "";
+      } else if (c === quoteChar) {
+        quoteChar = "";
+      }
+    } else if (c === '"' || c === "'" || c === "`") {
+      quoteChar = c;
+    } else if (c === "/" && src[i + 1] === "/") {
+      comment = true;
+    } else if (c === "{" || c === "[" || c === "(") {
+      depth++;
+    } else if (c === "}" || c === "]" || c === ")") {
+      if (--depth === 0) {
+        break;
+      }
+    }
+  }
+  return lines;
+}
+function usesClass(item, cls) {
+  if (item instanceof cls) {
+    return true;
+  }
+  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars) {
+    return false;
+  }
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  return Object.values(item).some((child) => usesClass(child, cls));
+}
+function writeRecord(rec, indent, comments) {
+  const inner = indent + "  ";
+  let out = "{\n";
+  for (const key in rec) {
+    for (const line of comments?.[key]?.split("\n") ?? []) {
+      out += `${inner}//${line ? " " + line : ""}
+`;
+    }
+    out += `${inner}${writeKey(key)}: ${writeItem(rec[key], inner)},
+`;
+  }
+  return out + indent + "}";
+}
+function writeItem(item, indent) {
+  if (item instanceof ThemeVar) {
+    return /^[A-Za-z_$][\w$]*$/.test(item.key) ? `vars.${item.key}` : `vars[${quote(item.key)}]`;
+  }
+  if (item instanceof CSSFont) {
+    return `new CSSFont(${writeArgs(
+      {
+        size: item._size,
+        font: item.font,
+        style: item.style,
+        weight: item.weight,
+        variant: item.variant,
+        color: item.color
+      },
+      DEFAULT_FONT
+    )})`;
+  }
+  if (item instanceof ThemeScrollBars) {
+    return `new ThemeScrollBars(${writeArgs({
+      border: item.border,
+      color: item.color,
+      color2: item.color2,
+      contrast: item.contrast,
+      width: item.width
+    })})`;
+  }
+  if (Array.isArray(item)) {
+    throw new Error("arrays are not theme values");
+  }
+  if (typeof item === "object" && item !== null) {
+    return writeRecord(item, indent);
+  }
+  return typeof item === "string" ? quote(item) : String(item);
+}
+var DEFAULT_FONT = {
+  size: 12,
+  font: "",
+  style: "normal",
+  weight: "normal",
+  variant: "normal",
+  color: ""
+};
+function writeArgs(args, defaults = {}) {
+  const parts = [];
+  for (const key in args) {
+    const val = args[key];
+    if (val === void 0 || val === defaults[key]) {
+      continue;
+    }
+    parts.push(`${key}: ${typeof val === "string" ? quote(val) : val}`);
+  }
+  return parts.length > 0 ? `{ ${parts.join(", ")} }` : "{}";
+}
+function writeKey(key) {
+  return /^[A-Za-z_$][\w$]*$/.test(key) ? key : quote(key);
+}
+function quote(str) {
+  return JSON.stringify(str);
+}
+
 // scripts/widgets/ui_richedit.ts
 init_ui_base();
 init_simple_events();
@@ -40879,15 +41152,19 @@ var ToolTip = class extends UIBase2 {
     this._start_time = void 0;
     this.timeout = void 0;
   }
-  static show(message2, screen, x, y) {
+  /**
+   * Pop a tooltip at `x, y`. `timeout` is how long it stays, in milliseconds; pass `Infinity` for
+   * one that stays until {@link end} is called, which is what the help picker wants — there the
+   * pointer is the timer.
+   */
+  static show(message2, screen, x, y, timeout) {
     const ret = UIBase2.createElement(this.define().tagname);
     ret._start_time = time_ms();
-    ret.timeout = ret.getDefault("timeout");
+    ret.timeout = timeout ?? ret.getDefault("timeout");
     ret.text = message2;
     const size = ret._estimateSize();
     const pad = 5;
     const size2 = [size[0] + pad, size[1] + pad];
-    console.log(size2);
     const sscreen = screen;
     x = Math.min(Math.max(x, 0), sscreen.size[0] - size2[0]);
     y = Math.min(Math.max(y, 0), sscreen.size[1] - size2[1]);
@@ -40902,7 +41179,9 @@ var ToolTip = class extends UIBase2 {
     return ret;
   }
   end() {
-    this._popup.end();
+    const popup = this._popup;
+    this._popup = void 0;
+    popup?.end();
   }
   init() {
     super.init();
@@ -40928,7 +41207,8 @@ var ToolTip = class extends UIBase2 {
   }
   update() {
     super.update();
-    if (time_ms() - (this._start_time ?? 0) > (this.timeout ?? 0)) {
+    const timeout = this.timeout ?? 0;
+    if (isFinite(timeout) && time_ms() - (this._start_time ?? 0) > timeout) {
       this.end();
     }
   }
@@ -43094,6 +43374,31 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""));
 }
 var isForwardAttr = (n) => n.startsWith("data-");
+function clampTabScroll(scroll, content, visible) {
+  return Math.min(Math.max(scroll, 0), Math.max(0, content - visible));
+}
+var PAN_SLOP = 4;
+function layoutTabRows({ sizes, available, pad }) {
+  const rows = [];
+  const offsets = [];
+  let row = 0;
+  let x = pad;
+  let rowEmpty = true;
+  let extent = pad * 2;
+  for (const size of sizes) {
+    if (!rowEmpty && x + size + pad > available) {
+      row++;
+      x = pad;
+      rowEmpty = true;
+    }
+    rows.push(row);
+    offsets.push(x);
+    x += size;
+    rowEmpty = false;
+    extent = Math.max(extent, x + pad);
+  }
+  return { rows, offsets, rowCount: row + 1, extent };
+}
 var TabClickEvent = class _TabClickEvent extends PointerEvent {
   tab;
   _preventTabDragging = false;
@@ -43185,6 +43490,8 @@ var TabItem = class extends UIBase2 {
   closable = false;
   /** Hit-test rect for the close-X, in TabBar canvas coords. Filled by `TabBar._layout`. */
   closeRect;
+  /** Row this tab was placed on by `TabBar._layout`; always 0 unless the bar wraps. */
+  row = 0;
   ontabclick;
   ontabdragstart;
   ontabdragmove;
@@ -43471,18 +43778,23 @@ var ModalTabMove = class extends EventHandler {
     const tab2 = this.tab;
     const tbar = this.tbar;
     const axis = tbar.horiz ? 0 : 1;
+    const wrapped = tbar.rowCount > 1;
     let disty;
     if (tbar.horiz) {
       tab2.pos[0] += dx;
+      if (wrapped) tab2.pos[1] += dy;
       disty = Math.abs(y - this.start_mpos[1]);
     } else {
       tab2.pos[1] += dy;
+      if (wrapped) tab2.pos[0] += dx;
       disty = Math.abs(x - this.start_mpos[0]);
     }
     const limit = 50;
     const csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
+    const cross = tbar.horiz ? this.tbar.canvas.height : this.tbar.canvas.width;
+    const crossLimit = limit * 1.5 + (wrapped ? cross : 0);
     let dragok = tab2.pos[axis] + tab2.size[axis] < -limit || tab2.pos[axis] >= csize + limit;
-    dragok = dragok || disty > limit * 1.5;
+    dragok = dragok || disty > crossLimit;
     dragok = dragok && (this.tbar.draggable || Boolean(this.tbar.getAttribute("draggable")));
     if (dragok) {
       this.dragstate = true;
@@ -43508,13 +43820,20 @@ var ModalTabMove = class extends EventHandler {
       this.tbar.dispatchEvent(this.dragevent);
       return;
     }
-    const ti = tbar.tabs.indexOf(tab2);
-    const next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : void 0;
-    const prev = ti > 0 ? tbar.tabs[ti - 1] : void 0;
-    if (next !== void 0 && next.movable && tab2.pos[axis] > next.pos[axis]) {
-      tbar.swapTabs(tab2, next);
-    } else if (prev !== void 0 && prev.movable && tab2.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5) {
-      tbar.swapTabs(tab2, prev);
+    if (wrapped) {
+      const under = tbar.tabAt(x, y, tab2);
+      if (under !== void 0 && under.movable) {
+        tbar.swapTabs(tab2, under);
+      }
+    } else {
+      const ti = tbar.tabs.indexOf(tab2);
+      const next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : void 0;
+      const prev = ti > 0 ? tbar.tabs[ti - 1] : void 0;
+      if (next !== void 0 && next.movable && tab2.pos[axis] > next.pos[axis]) {
+        tbar.swapTabs(tab2, next);
+      } else if (prev !== void 0 && prev.movable && tab2.pos[axis] < prev.pos[axis] + prev.size[axis] * 0.5) {
+        tbar.swapTabs(tab2, prev);
+      }
     }
     tbar.update(true);
     this.mpos[0] = x;
@@ -43545,6 +43864,39 @@ var TabBar = class extends UIBase2 {
   iconsheet;
   movableTabs;
   tabFontScale;
+  /** Wrap tabs that do not fit onto extra rows instead of running off the end. */
+  multiRow = false;
+  /**
+   * Extent, in CSS pixels, the tabs have to fit into while `multiRow` is on: the bar's
+   * width when it is horizontal, its height when it is vertical.
+   *
+   * It has to be supplied from outside. Every ancestor of the bar's canvas shrink-wraps to
+   * that canvas (`TabContainer._remakeStyle` emits `align-self: flex-start`), so a bar that
+   * measured its own parent would read back the width it just chose and oscillate. Feed it
+   * something the bar's own size cannot move — the owning pane, say.
+   */
+  maxExtent = void 0;
+  /** Rows the last layout used. 1 unless `multiRow` is on and the tabs overflowed. */
+  rowCount = 1;
+  /**
+   * Let a bar that is not wrapping scroll along its own axis, rather than running its last
+   * tabs off the end where nothing can reach them.
+   *
+   * Needs {@link maxExtent} as well, and for the same reason wrapping does: a bar with no
+   * idea how much room it has sizes itself to its tabs, and there is then nothing to scroll
+   * within. Deliberately not a third thing to remember to switch on — a bar that has been
+   * told its room and cannot wrap into more rows is exactly the bar with tabs out of reach.
+   */
+  scrollTabs = true;
+  /** How far the tabs are scrolled along the bar's axis, in device pixels. Never negative. */
+  scrollPos = 0;
+  /** What the last layout measured: the tabs' whole extent, and how much of it is on screen. */
+  scrollContent = 0;
+  scrollVisible = 0;
+  /** The right-drag in progress, if one is: where it began, and whether it has panned yet. */
+  _pan;
+  /** Where the midpoint of a two-finger swipe was last seen, in CSS pixels along the axis. */
+  _swipe;
   tabs;
   _last_style_key;
   r;
@@ -43560,6 +43912,8 @@ var TabBar = class extends UIBase2 {
   _tool;
   _last_p_key;
   _size_cb;
+  /** The tooltip currently on the bar, so a pointer moving inside one tab is not re-setting it. */
+  _tabToolTip;
   constructor() {
     super();
     const style = document.createElement("style");
@@ -43597,23 +43951,83 @@ var TabBar = class extends UIBase2 {
     this.canvas.addEventListener("pointerdown", (e) => {
       this.on_pointerdown(e);
     });
+    this.canvas.addEventListener("pointerup", (e) => {
+      this.on_pointerup(e);
+    });
     this.canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
     });
+    this.canvas.addEventListener(
+      "wheel",
+      (e) => {
+        this.on_wheel(e);
+      },
+      { passive: false }
+    );
+    for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+      this.canvas.addEventListener(
+        type,
+        (e) => {
+          this.on_touch(e);
+        },
+        { passive: false }
+      );
+    }
   }
-  _doelement(e, mx, my) {
+  /**
+   * The tab whose rectangle contains a canvas-space point, if any.
+   *
+   * Only worth asking once the bar has wrapped — on a single row a tab spans the canvas
+   * across the bar, so the one-dimensional test in `_doelement` says the same thing.
+   */
+  tabAt(x, y, exclude2) {
     for (const tab2 of this.tabs) {
-      let ok;
-      if (this.horiz) {
-        ok = mx >= tab2.pos[0] && mx <= tab2.pos[0] + tab2.size[0];
-      } else {
-        ok = my >= tab2.pos[1] && my <= tab2.pos[1] + tab2.size[1];
+      if (tab2 === exclude2) {
+        continue;
       }
-      if (ok && this.tabs.highlight !== tab2) {
-        this.tabs.highlight = tab2;
-        this.update(true);
+      const inside = x >= tab2.pos[0] && x <= tab2.pos[0] + tab2.size[0] && y >= tab2.pos[1] && y <= tab2.pos[1] + tab2.size[1];
+      if (inside) {
+        return tab2;
       }
     }
+    return void 0;
+  }
+  _doelement(e, mx, my) {
+    let hit;
+    if (this.rowCount > 1) {
+      hit = this.tabAt(mx, my);
+    } else {
+      for (const tab2 of this.tabs) {
+        let ok;
+        if (this.horiz) {
+          ok = mx >= tab2.pos[0] && mx <= tab2.pos[0] + tab2.size[0];
+        } else {
+          ok = my >= tab2.pos[1] && my <= tab2.pos[1] + tab2.size[1];
+        }
+        if (ok) {
+          hit = tab2;
+        }
+      }
+    }
+    if (hit !== void 0 && this.tabs.highlight !== hit) {
+      this.tabs.highlight = hit;
+      this.update(true);
+    }
+    this._updateTabToolTip(hit);
+  }
+  /**
+   * Put the pointed-at tab's tooltip on the bar. A tab is painted on the bar's canvas rather than
+   * being a DOM node of its own, so there is nothing per-tab to hover: the bar carries one tooltip
+   * and swaps it as the pointer crosses tabs. Without this `TabItem.tooltip` is only ever written.
+   */
+  _updateTabToolTip(tab2) {
+    const tooltip = tab2 ? tab2.tooltip : "";
+    if (tooltip === this._tabToolTip) {
+      return;
+    }
+    this._tabToolTip = tooltip;
+    this.description = tooltip;
+    this.canvas.title = tooltip;
   }
   _domouse(e) {
     const r = this.canvas.getClientRects()[0];
@@ -43705,17 +44119,119 @@ var TabBar = class extends UIBase2 {
   }
   on_pointerdown(e) {
     if (e.button === 2) {
-      this._doContextMenu(e);
+      if (!this._startPan(e)) {
+        this._doContextMenu(e);
+      }
       return;
     }
     this._doclick(e);
   }
   on_pointermove(e) {
+    if (this._panMove(e)) {
+      return;
+    }
     this._domouse(e);
     e.preventDefault();
     e.stopPropagation();
   }
   on_pointerup(e) {
+    const pan = this._pan;
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return;
+    }
+    this._pan = void 0;
+    try {
+      this.canvas.releasePointerCapture(pan.pointerId);
+    } catch (error2) {
+    }
+    if (!pan.moved) {
+      this._doContextMenu(e);
+    }
+  }
+  /**
+   * Begin a right-drag pan, or decline it and let the context menu happen as it always has.
+   *
+   * Declining is what keeps this from stealing the menu: on a bar whose tabs all fit, a
+   * right-click is the act it was before this existed. On one that scrolls the menu is only
+   * deferred — a right-click that never moves still opens it when the button comes back up.
+   */
+  _startPan(e) {
+    if (this.maxScroll === 0) {
+      return false;
+    }
+    const along = this.horiz ? e.x : e.y;
+    this._pan = { pointerId: e.pointerId, last: along, start: along, moved: false };
+    try {
+      this.canvas.setPointerCapture(e.pointerId);
+    } catch (error2) {
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+  /** Carry a right-drag along. Answers whether the event belonged to one. */
+  _panMove(e) {
+    const pan = this._pan;
+    if (!pan || e.pointerId !== pan.pointerId) {
+      return false;
+    }
+    const along = this.horiz ? e.x : e.y;
+    const delta = along - pan.last;
+    pan.last = along;
+    if (Math.abs(along - pan.start) > PAN_SLOP) {
+      pan.moved = true;
+    }
+    this.setScroll(this.scrollPos - delta * this.getDPI());
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+  /**
+   * Scroll on a wheel, taking whichever axis the hardware reported the most of.
+   *
+   * A trackpad spells sideways as deltaX and a wheel spells it as deltaY, and over a row of
+   * tabs both mean the same thing — move along it — so the bar reads whichever is larger
+   * rather than insisting on the one that matches its own orientation.
+   */
+  on_wheel(e) {
+    if (this.maxScroll === 0) {
+      return;
+    }
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (this.setScroll(this.scrollPos + delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+  /**
+   * Pan on a two-finger swipe, getting out of the way of a tab drag already under way.
+   *
+   * Two fingers on a tab bar cannot mean "move this tab" — the first one already started
+   * that if it landed on one — so the second arriving cancels the drag rather than leaving a
+   * tab following a finger that has stopped meaning it.
+   */
+  on_touch(e) {
+    if (e.type === "touchend" || e.type === "touchcancel" || e.touches.length !== 2) {
+      this._swipe = void 0;
+      return;
+    }
+    const first2 = e.touches[0];
+    const second = e.touches[1];
+    const along = this.horiz ? (first2.clientX + second.clientX) * 0.5 : (first2.clientY + second.clientY) * 0.5;
+    if (e.type === "touchstart" || this._swipe === void 0) {
+      this._ensureNoModal();
+      this._swipe = along;
+      if (this.maxScroll > 0) {
+        e.preventDefault();
+      }
+      return;
+    }
+    const delta = along - this._swipe;
+    this._swipe = along;
+    if (this.setScroll(this.scrollPos - delta * this.getDPI())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }
   static setDefault(element) {
     const e = element;
@@ -43940,6 +44456,51 @@ var TabBar = class extends UIBase2 {
     }
     return font;
   }
+  /**
+   * The extent, in device pixels, `_layout` has to wrap into, or undefined when it should
+   * lay the tabs out on one row as it always has.
+   */
+  _wrapExtent(dpi) {
+    const extent = this.maxExtent;
+    if (!this.multiRow || extent === void 0 || !isFinite(extent) || extent <= 0) {
+      return void 0;
+    }
+    return extent * dpi;
+  }
+  /**
+   * The extent, in device pixels, the tabs are scrolled *within*, or undefined when the bar
+   * shows all of them at once and there is nothing to scroll.
+   *
+   * A wrapping bar never scrolls. Wrapping is already its answer to tabs that do not fit, and
+   * a bar doing both would push whole rows past an edge with nothing on screen to say so.
+   */
+  _scrollExtent(dpi) {
+    const extent = this.maxExtent;
+    if (this.multiRow || !this.scrollTabs || extent === void 0 || !isFinite(extent) || extent <= 0) {
+      return void 0;
+    }
+    return extent * dpi;
+  }
+  /** How far this bar can scroll from the origin, in device pixels; 0 when it all fits. */
+  get maxScroll() {
+    return Math.max(0, this.scrollContent - this.scrollVisible);
+  }
+  /**
+   * Scroll to an offset, clamped, laying out again only if it actually moved.
+   *
+   * Answers whether it moved, which is how a gesture decides whether it swallowed the event:
+   * a wheel over a bar already at its end should scroll whatever is behind the bar instead.
+   */
+  setScroll(value) {
+    const next = clampTabScroll(value, this.scrollContent, this.scrollVisible);
+    if (next === this.scrollPos) {
+      return false;
+    }
+    this.scrollPos = next;
+    this._layout();
+    this._redraw();
+    return true;
+  }
   _layout() {
     if ((!this.ctx || !this.ctx.screen) && !this.isDead()) {
       this.doOnce(this._layout);
@@ -44041,13 +44602,53 @@ var TabBar = class extends UIBase2 {
       if (tab2.closable) {
         w += iconsize + Math.ceil(tsize * 0.25);
       }
-      const bad = this.tool !== void 0 && tab2 === this.tabs.active;
-      if (!bad) {
-        tab2.pos[axis] = x;
-        tab2.pos[axis ^ 1] = y;
-      }
       tab2.size[axis] = w + pad * 2;
       tab2.size[axis ^ 1] = h;
+    }
+    const dragging = (tab2) => this.tool !== void 0 && tab2 === this.tabs.active;
+    const wrapExtent = this._wrapExtent(dpi);
+    let extent;
+    if (wrapExtent !== void 0) {
+      const sizes = this.tabs.map((tab2) => tab2.size[axis]);
+      const placed = layoutTabRows({ sizes, available: wrapExtent, pad });
+      this.rowCount = placed.rowCount;
+      extent = placed.extent;
+      this.scrollPos = 0;
+      this.scrollContent = extent;
+      this.scrollVisible = extent;
+      for (let i = 0; i < this.tabs.length; i++) {
+        const tab2 = this.tabs[i];
+        tab2.row = placed.rows[i];
+        if (!dragging(tab2)) {
+          tab2.pos[axis] = placed.offsets[i];
+          tab2.pos[axis ^ 1] = y + tab2.row * h;
+        }
+      }
+    } else {
+      this.rowCount = 1;
+      for (const tab2 of this.tabs) {
+        tab2.row = 0;
+        if (!dragging(tab2)) {
+          tab2.pos[axis] = x;
+          tab2.pos[axis ^ 1] = y;
+        }
+        x += tab2.size[axis];
+      }
+      extent = x + pad;
+      const visible = this._scrollExtent(dpi);
+      this.scrollContent = extent;
+      this.scrollVisible = visible === void 0 ? extent : Math.min(visible, extent);
+      this.scrollPos = clampTabScroll(this.scrollPos, this.scrollContent, this.scrollVisible);
+      if (this.scrollPos !== 0) {
+        for (const tab2 of this.tabs) {
+          if (!dragging(tab2)) {
+            tab2.pos[axis] -= this.scrollPos;
+          }
+        }
+      }
+      extent = this.scrollVisible;
+    }
+    for (const tab2 of this.tabs) {
       if (tab2.closable) {
         const cpad = Math.ceil(tsize * 0.25);
         const cx = tab2.pos[0] + tab2.size[0] - iconsize - cpad;
@@ -44056,16 +44657,15 @@ var TabBar = class extends UIBase2 {
       } else {
         tab2.closeRect = void 0;
       }
-      x += w + pad * 2;
     }
-    x = ~~(x + pad) / dpi;
-    h = ~~h / dpi;
+    const along = ~~extent / dpi;
+    const across = ~~(h * this.rowCount) / dpi;
     if (this.horiz) {
-      this.canvas.style["width"] = x + "px";
-      this.canvas.style["height"] = h + "px";
+      this.canvas.style["width"] = along + "px";
+      this.canvas.style["height"] = across + "px";
     } else {
-      this.canvas.style["height"] = x + "px";
-      this.canvas.style["width"] = h + "px";
+      this.canvas.style["height"] = along + "px";
+      this.canvas.style["width"] = across + "px";
     }
     for (const tab2 of this.tabs) {
       tab2.setCSS();
@@ -44139,7 +44739,8 @@ var TabBar = class extends UIBase2 {
         tsize,
         font
       ).width;
-      let x2 = x + (tab2.size[Number(this.horiz) ^ 1] - tw) * 0.5;
+      const along = this.horiz ? x : 0;
+      let x2 = along + (tab2.size[Number(this.horiz) ^ 1] - tw) * 0.5;
       const y2 = y + tsize;
       if (tab2 === this.tabs.highlight) {
         const p = 2;
@@ -44153,6 +44754,7 @@ var TabBar = class extends UIBase2 {
         const x3 = 0;
         const y3 = y2;
         g.save();
+        g.translate(x, 0);
         g.translate(x3, y3);
         g.rotate(Math.PI / 2);
         g.translate(x3 - tsize, -y3 - tsize * 0.5);
@@ -44164,7 +44766,7 @@ var TabBar = class extends UIBase2 {
           this.canvas,
           g,
           tab2.icon,
-          x + paddingRight,
+          along + paddingRight,
           y,
           this.iconsheet
         );
@@ -44177,7 +44779,11 @@ var TabBar = class extends UIBase2 {
       draw_close(tab2);
       const prev = this.tabs[Math.max(ti - 1 + this.tabs.length, 0)];
       const next = this.tabs[Math.min(ti + 1, this.tabs.length - 1)];
-      if (tab2 !== this.tabs[this.tabs.length - 1] && prev !== this.tabs.active && next !== this.tabs.active) {
+      const after = this.tabs[ti + 1];
+      const lastInRow = after === void 0 || after.row !== tab2.row;
+      if (!lastInRow && prev !== this.tabs.active && next !== this.tabs.active) {
+        g.save();
+        g.translate(this.horiz ? 0 : x, this.horiz ? y : 0);
         g.beginPath();
         if (this.horiz) {
           g.moveTo(x + w, h - 5);
@@ -44188,6 +44794,7 @@ var TabBar = class extends UIBase2 {
         }
         g.strokeStyle = this.getDefault("TabStrokeStyle1");
         g.stroke();
+        g.restore();
       }
     }
     tab2 = this.tabs.active;
@@ -44209,9 +44816,12 @@ var TabBar = class extends UIBase2 {
       } else {
         w += 2;
       }
-      const x2 = x + (tab2.size[Number(this.horiz) ^ 1] - tw) * 0.5;
+      const along = this.horiz ? x : 0;
+      const x2 = along + (tab2.size[Number(this.horiz) ^ 1] - tw) * 0.5;
       const y2 = y + tsize;
       if (tab2 === this.tabs.active) {
+        g.save();
+        g.translate(this.horiz ? 0 : x, this.horiz ? y : 0);
         g.beginPath();
         const ypad = 2;
         g.strokeStyle = this.getDefault("TabStrokeStyle2");
@@ -44244,10 +44854,12 @@ var TabBar = class extends UIBase2 {
         g.lineWidth *= 0.5;
         g.fill();
         g.lineWidth = worig;
+        g.restore();
         if (!this.horiz) {
           const x3 = 0;
           const y3 = y2;
           g.save();
+          g.translate(x, 0);
           g.translate(x3, y3);
           g.rotate(Math.PI / 2);
           g.translate(-x3 - tsize, -y3 - tsize * 0.5);
@@ -44303,7 +44915,8 @@ var TabBar = class extends UIBase2 {
   update(force_update = false) {
     const rect = this.getClientRects()[0];
     if (rect) {
-      const key = Math.floor(rect.x * 4) + ":" + Math.floor(rect.y * 4);
+      let key = Math.floor(rect.x * 4) + ":" + Math.floor(rect.y * 4);
+      key += ":" + Math.floor((this.maxExtent ?? 0) * 4);
       if (key !== this._last_p_key) {
         this._last_p_key = key;
         this._layout();
@@ -44428,6 +45041,37 @@ var TabContainer3 = class extends UIBase2 {
     val = !!val;
     this.setAttribute("movable-tabs", val ? "true" : "false");
     this.tbar.movableTabs = this.movableTabs;
+  }
+  /**
+   * Wrap tabs that do not fit onto extra rows instead of running them off the end of the
+   * bar. Off by default; needs `maxExtent` as well to do anything.
+   */
+  get multiRow() {
+    return this.tbar.multiRow;
+  }
+  set multiRow(val) {
+    this.tbar.multiRow = val;
+  }
+  /**
+   * Let the bar scroll along its axis when it is not wrapping. On by default, but it needs
+   * `maxExtent` as well before it does anything. See `TabBar.scrollTabs`.
+   */
+  get scrollTabs() {
+    return this.tbar.scrollTabs;
+  }
+  set scrollTabs(val) {
+    this.tbar.scrollTabs = val;
+  }
+  /**
+   * Extent, in CSS pixels, the tabs have to fit into while `multiRow` is on: the bar's
+   * width when it is horizontal, its height when it is vertical. See `TabBar.maxExtent`
+   * for why it cannot be measured from inside.
+   */
+  get maxExtent() {
+    return this.tbar.maxExtent;
+  }
+  set maxExtent(val) {
+    this.tbar.maxExtent = val;
   }
   get hideScrollBars() {
     const attr = ("" + this.getAttribute("hide-scrollbars")).toLowerCase();
@@ -46994,6 +47638,69 @@ function getPlatformAsync() {
 init_ui_base();
 init_ui_theme();
 init_cssfont();
+var ThemeChangeEvent = class extends Event {
+  category;
+  key;
+  record;
+  constructor(category, key, record) {
+    super("change");
+    this.category = category;
+    this.key = key;
+    this.record = record;
+  }
+};
+var FONT_FIELDS = ["font", "variant", "weight", "style"];
+function strcmp(a2, b) {
+  a2 = a2.trim().toLowerCase();
+  b = b.trim().toLowerCase();
+  return a2 < b ? -1 : a2 === b ? 0 : 1;
+}
+function themeItemKind(name2, value) {
+  if (name2.toLowerCase().search("flag") >= 0) {
+    return "skip";
+  }
+  if (typeof value === "string") {
+    return validateCSSColor(value.toLowerCase().trim()) ? "color" : "string";
+  } else if (typeof value === "number") {
+    return "number";
+  } else if (typeof value === "boolean") {
+    return "boolean";
+  } else if (value instanceof CSSFont) {
+    return "font";
+  } else if (typeof value === "object" && value !== null) {
+    return "record";
+  }
+  return "skip";
+}
+function groupThemeCategories(rec, categoryMap) {
+  const categories = {};
+  for (const k of Object.keys(rec)) {
+    const mapped = categoryMap[k];
+    let catkey;
+    if (typeof mapped === "string") {
+      catkey = { category: mapped, help: "", key: k };
+    } else if (mapped) {
+      catkey = { ...mapped, key: mapped.key || k };
+    } else {
+      catkey = { category: k, help: "", key: k };
+    }
+    if (!(catkey.category in categories)) {
+      categories[catkey.category] = [];
+    }
+    categories[catkey.category].push(catkey);
+  }
+  return Object.keys(categories).sort(strcmp).map((category) => ({
+    category,
+    keys: categories[category].sort((a2, b) => strcmp(a2.key, b.key))
+  }));
+}
+function resolveRecord(path) {
+  let rec = theme;
+  for (const key of path) {
+    rec = rec[key];
+  }
+  return rec;
+}
 var ThemeEditor = class extends Container3 {
   categoryMap;
   constructor() {
@@ -47010,6 +47717,10 @@ var ThemeEditor = class extends Container3 {
     super.init();
     this.build();
   }
+  addEventListener(type, listener, options) {
+    super.addEventListener(type, listener, options);
+  }
+  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
   doFolder(catkey, obj, container = this, panel, path) {
     const key = catkey.key;
     if (!path) {
@@ -47019,215 +47730,172 @@ var ThemeEditor = class extends Container3 {
       panel = container.panel(key, void 0, void 0, catkey.help);
       panel.style.marginLeft = "15px";
     }
-    const row2 = panel.row();
-    const textbox = row2.textbox(void 0, "");
-    const callback = (id) => {
-      console.log("ID", id, obj, catkey);
-      console.log(textbox, textbox.text, textbox.value);
-      const propkey = (textbox.text || "").trim();
-      if (!propkey) {
-        console.error("Cannot have empty theme property name");
-        return;
-      }
-      if (id === "FLOAT") {
-        obj[propkey] = 0;
-      } else if (id === "SUBFOLDER") {
-        obj[propkey] = { test: 0 };
-      } else if (id === "COLOR") {
-        obj[propkey] = "grey";
-      } else if (id === "FONT") {
-        obj[propkey] = new CSSFont();
-      } else if (id === "STRING") {
-        obj[propkey] = "";
-      }
-      const uidata = saveUIData(panel, "theme-panel");
-      panel.clear();
-      this.doFolder(catkey, obj, container, panel, path);
-      loadUIData(panel, uidata);
-      panel.flushUpdate();
-      panel.flushSetCSS();
-      if (this.on_change) {
-        this.on_change(key, propkey, obj);
-      }
-    };
-    row2.menu("+", [
-      { name: "Float", callback: () => callback("FLOAT") },
-      { name: "Color", callback: () => callback("COLOR") },
-      { name: "Subfolder", callback: () => callback("SUBFOLDER") },
-      { name: "Font", callback: () => callback("FONT") },
-      { name: "String", callback: () => callback("STRING") }
-    ]);
+    this.addPropMenu(panel, catkey, obj, container, path);
     const row = panel.row();
     const col1 = row.col();
     const col2 = row.col();
-    const do_onchange = (key2, k, _obj) => {
-      flagThemeUpdate();
-      if (this.on_change) {
-        this.on_change(key2, k, _obj);
-      }
-      this.ctx.screen.completeSetCSS();
-      this.ctx.screen.completeUpdate();
-    };
-    const getpath = (path2) => {
-      let obj2 = theme;
-      for (let i = 0; i < path2.length; i++) {
-        obj2 = obj2[path2[i]];
-      }
-      return obj2;
-    };
-    let ok = false;
-    let _i = 0;
-    const dokey = (k, v, path2) => {
-      const col = _i % 2 === 0 ? col1 : col2;
-      if (k.toLowerCase().search("flag") >= 0) {
-        return;
-      }
-      if (typeof v === "string") {
-        const v2 = v.toLowerCase().trim();
-        const iscolor = validateCSSColor(v2);
-        if (iscolor) {
-          const cw = col.colorbutton();
-          ok = true;
-          _i++;
-          let color = css2color2(v2);
-          if (color.length < 3) {
-            color = [color[0], color[1], color[2], 1];
-          }
-          try {
-            cw.setRGBA(color);
-          } catch (error2) {
-            console.warn("Failed to set color " + k, v2);
-          }
-          cw.onchange = () => {
-            console.log("setting '" + k + "' to " + color2css3(cw.rgba), key);
-            getpath(path2)[k] = color2css3(cw.rgba);
-            do_onchange(key, k);
-          };
-          cw.label = k;
-        } else {
-          col.label(k);
-          const box = col.textbox();
-          box.onchange = () => {
-            getpath(path2)[k] = box.text;
-            do_onchange(key, k);
-          };
-          box.text = v;
-        }
-      } else if (typeof v === "number") {
-        const slider = col.slider(void 0, k, v, 0, 256, 0.01, false);
-        slider.baseUnit = slider.displayUnit = "none";
-        ok = true;
-        _i++;
-        slider.onchange = () => {
-          getpath(path2)[k] = slider.value;
-          do_onchange(key, k);
-        };
-      } else if (typeof v === "boolean") {
-        const check = col.check(void 0, k);
-        check.value = getpath(path2)[k];
-        check.onchange = () => {
-          getpath(path2)[k] = !!check.value;
-          do_onchange(key, k);
-        };
-      } else if (typeof v === "object" && v instanceof CSSFont) {
-        const panel2 = col.panel(k);
-        ok = true;
-        _i++;
-        const textbox2 = (key2) => {
-          panel2.label(key2);
-          const tbox = panel2.textbox(void 0, v[key2]);
-          tbox.width = tbox.getDefault("width");
-          tbox.onchange = function() {
-            v[key2] = this.text;
-            do_onchange(key2, k);
-          };
-        };
-        textbox2("font");
-        textbox2("variant");
-        textbox2("weight");
-        textbox2("style");
-        const cw = panel2.colorbutton();
-        cw.label = "color";
-        cw.setRGBA(css2color2(v.color));
-        cw.onchange = () => {
-          v.color = color2css3(cw.rgba);
-          do_onchange(key, k);
-        };
-        const slider = panel2.slider(void 0, "size", v.size);
-        slider.onchange = () => {
-          v.size = slider.value;
-          do_onchange(key, k);
-        };
-        slider.setAttribute("min", "1");
-        slider.setAttribute("max", "100");
-        slider.baseUnit = slider.displayUnit = "none";
-        panel2.closed = true;
-      } else if (typeof v === "object") {
-        const catkey2 = Object.assign({}, catkey);
-        catkey2.key = k;
-        const path22 = path2.concat(k);
-        this.doFolder(catkey2, v, panel, void 0, path22);
-      }
-    };
-    for (const k in obj) {
+    let placed = 0;
+    for (const k of Object.keys(obj)) {
       const v = obj[k];
-      dokey(k, v, path);
+      const kind = themeItemKind(k, v);
+      if (kind === "skip") {
+        continue;
+      }
+      if (kind === "record") {
+        this.doFolder({ ...catkey, key: k }, v, panel, void 0, [...path, k]);
+      } else {
+        this.valueRow(placed % 2 === 0 ? col1 : col2, path, key, k, v, kind);
+      }
+      placed++;
     }
-    if (!ok) {
+    if (placed === 0) {
       panel.remove();
     } else {
       panel.closed = true;
     }
   }
+  /** Adds the "+" menu that creates a new property in `obj`. */
+  addPropMenu(panel, catkey, obj, container, path) {
+    const row = panel.row();
+    const textbox = row.textbox(void 0, "");
+    const add = (value) => {
+      const propkey = (textbox.text || "").trim();
+      if (!propkey) {
+        console.error("Cannot have empty theme property name");
+        return;
+      }
+      obj[propkey] = value;
+      this.rebuildFolder(panel, catkey, obj, container, path);
+      this.notify(catkey.key, propkey, obj);
+    };
+    row.menu("+", [
+      { name: "Float", callback: () => add(0) },
+      { name: "Color", callback: () => add("grey") },
+      { name: "Subfolder", callback: () => add({ test: 0 }) },
+      { name: "Font", callback: () => add(new CSSFont()) },
+      { name: "String", callback: () => add("") }
+    ]);
+  }
+  /** Rebuilds `panel` in place, preserving which of its sub-panels are open. */
+  rebuildFolder(panel, catkey, obj, container, path) {
+    const uidata = saveUIData(panel, "theme-panel");
+    panel.clear();
+    this.doFolder(catkey, obj, container, panel, path);
+    loadUIData(panel, uidata);
+    panel.flushUpdate();
+    panel.flushSetCSS();
+  }
+  /** Repaints the screen against the edited theme and reports the change. */
+  notify(category, key, record) {
+    flagThemeUpdate();
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record));
+    const on_change = this.on_change;
+    if (on_change) {
+      on_change(category, key, record);
+    }
+    if (this.ctx) {
+      this.ctx.screen.completeSetCSS();
+      this.ctx.screen.completeUpdate();
+    }
+  }
+  valueRow(col, path, category, key, value, kind) {
+    switch (kind) {
+      case "color":
+        this.colorRow(col, path, category, key, value);
+        break;
+      case "string":
+        this.stringRow(col, path, category, key, value);
+        break;
+      case "number":
+        this.numberRow(col, path, category, key, value);
+        break;
+      case "boolean":
+        this.boolRow(col, path, category, key);
+        break;
+      case "font":
+        this.fontPanel(col, category, key, value);
+        break;
+    }
+  }
+  colorRow(col, path, category, key, css) {
+    const cw = col.colorbutton(void 0);
+    try {
+      cw.setRGBA(css2color2(css.toLowerCase().trim()));
+    } catch {
+      console.warn("Failed to set color " + key, css);
+    }
+    cw.label = key;
+    cw.on_change = () => {
+      resolveRecord(path)[key] = color2css3(cw.rgba);
+      this.notify(category, key);
+    };
+  }
+  stringRow(col, path, category, key, text2) {
+    col.label(key);
+    const box = col.textbox();
+    box.text = text2;
+    box.on_change = () => {
+      resolveRecord(path)[key] = box.text;
+      this.notify(category, key);
+    };
+  }
+  numberRow(col, path, category, key, value) {
+    const slider = col.slider(void 0, key, value, 0, 256, 0.01, false);
+    slider.baseUnit = slider.displayUnit = "none";
+    slider.on_change = () => {
+      resolveRecord(path)[key] = slider.value;
+      this.notify(category, key);
+    };
+  }
+  boolRow(col, path, category, key) {
+    const check = col.check(void 0, key);
+    check.value = !!resolveRecord(path)[key];
+    check.on_change = () => {
+      resolveRecord(path)[key] = !!check.value;
+      this.notify(category, key);
+    };
+  }
+  /** A closed sub-panel editing a {@link CSSFont} in place. */
+  fontPanel(col, category, key, font) {
+    const panel = col.panel(key);
+    for (const field of FONT_FIELDS) {
+      panel.label(field);
+      const tbox = panel.textbox(void 0, font[field]);
+      tbox.width = tbox.getDefault("width");
+      tbox.on_change = () => {
+        font[field] = tbox.text;
+        this.notify(category, key);
+      };
+    }
+    const cw = panel.colorbutton(void 0);
+    cw.label = "color";
+    cw.setRGBA(css2color2(font.color));
+    cw.on_change = () => {
+      font.color = color2css3(cw.rgba);
+      this.notify(category, key);
+    };
+    const slider = panel.slider(void 0, "size", font.size);
+    slider.setAttribute("min", "1");
+    slider.setAttribute("max", "100");
+    slider.baseUnit = slider.displayUnit = "none";
+    slider.on_change = () => {
+      font.size = slider.value;
+      this.notify(category, key);
+    };
+    panel.closed = true;
+  }
   build() {
     const uidata = saveUIData(this, "theme");
     this.clear();
-    const categories = {};
-    for (const k of Object.keys(theme)) {
-      let catkey;
-      if (k in this.categoryMap) {
-        let cat = this.categoryMap[k];
-        if (typeof cat === "string") {
-          cat = {
-            category: cat,
-            help: "",
-            key: k
-          };
-        }
-        catkey = cat;
-      } else {
-        catkey = { category: k, help: "", key: k };
-      }
-      if (!catkey.key) {
-        catkey.key = k;
-      }
-      if (!(catkey.category in categories)) {
-        categories[catkey.category] = [];
-      }
-      categories[catkey.category].push(catkey);
-    }
-    function strcmp(a2, b) {
-      a2 = a2.trim().toLowerCase();
-      b = b.trim().toLowerCase();
-      return a2 < b ? -1 : a2 === b ? 0 : 1;
-    }
-    const keys2 = Object.keys(categories);
-    keys2.sort(strcmp);
-    for (const k of keys2) {
-      const list5 = categories[k];
-      list5.sort((a2, b) => strcmp(a2.key, b.key));
-      let panel = this;
-      if (list5.length > 1) {
-        panel = this.panel(k);
-      }
-      for (const cat of list5) {
-        const k2 = cat.key;
-        const v = theme[k2];
-        if (typeof v === "object") {
-          this.doFolder(cat, v, panel);
+    for (const { category, keys: keys2 } of groupThemeCategories(theme, this.categoryMap)) {
+      const panel = keys2.length > 1 ? this.panel(category) : void 0;
+      for (const catkey of keys2) {
+        const v = theme[catkey.key];
+        if (typeof v === "object" && v !== null) {
+          this.doFolder(catkey, v, panel ?? this);
         }
       }
-      if (list5.length > 1) {
+      if (panel) {
         panel.closed = true;
       }
     }
@@ -47236,7 +47904,7 @@ var ThemeEditor = class extends Container3 {
       this.flushSetCSS();
       this.flushUpdate();
     }
-    if (this.ctx && this.ctx.screen) {
+    if (this.ctx) {
       window.setTimeout(() => {
         this.ctx.screen.completeSetCSS();
       }, 100);
@@ -48153,7 +48821,6 @@ var ToolBase = class extends ToolOp {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -48188,9 +48855,7 @@ var AreaResizeTool = class extends ToolBase {
       undoflag: UndoFlags2.NO_UNDO,
       flag: 0,
       inputs: {},
-      //tool properties
       outputs: {}
-      //tool properties
     };
   }
   getBorders() {
@@ -48260,13 +48925,13 @@ var AreaResizeTool = class extends ToolBase {
       return count2;
     };
     const badcount = check();
-    let snapMode = true;
+    let fitToSize = true;
     const df = mpos[axis];
     const border = this.border;
     this.screen.moveBorder(border, df, false);
     for (const border2 of borders) {
       if (border2.outer) {
-        snapMode = false;
+        fitToSize = false;
       }
       this.overdraw.line(
         border2.v1,
@@ -48285,9 +48950,9 @@ var AreaResizeTool = class extends ToolBase {
         border2.v2.load(border2.oldv2);
       }
     }
-    this.screen.snapScreenVerts(snapMode);
+    this.screen.snapScreenVerts(fitToSize);
     this.screen.loadFromVerts();
-    this.screen.solveAreaConstraints(snapMode);
+    this.screen.solveAreaConstraints(fitToSize);
     this.screen.setCSS();
     this.screen.updateDebugBoxes();
     this.screen._fireResizeCB();
@@ -48317,9 +48982,7 @@ var SplitTool = class extends ToolBase {
       undoflag: UndoFlags2.NO_UNDO,
       flag: 0,
       inputs: {},
-      //tool properties
       outputs: {}
-      //tool properties
     };
   }
   toolModalStart(ctx) {
@@ -48385,7 +49048,6 @@ var SplitTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -48417,9 +49079,7 @@ var RemoveAreaTool = class extends ToolBase {
       undoflag: UndoFlags2.NO_UNDO,
       flag: 0,
       inputs: {},
-      //tool properties
       outputs: {}
-      //tool properties
     };
   }
   toolModalStart(ctx) {
@@ -48480,7 +49140,6 @@ var RemoveAreaTool = class extends ToolBase {
         this.cancel();
         break;
       case keymap.Space:
-      //space
       case keymap.Enter:
         this.finish();
         break;
@@ -48520,9 +49179,7 @@ var AreaDragTool = class extends ToolBase {
       undoflag: UndoFlags2.NO_UNDO,
       flag: 0,
       inputs: {},
-      //tool properties
       outputs: {}
-      //tool properties
     };
   }
   finish() {
@@ -48891,13 +49548,56 @@ var AreaMoveAttachTool = class extends AreaDragTool {
     super.on_keydown(e);
   }
 };
+function pickDescribed(x, y) {
+  let node = document.elementFromPoint(x, y);
+  let found;
+  const seen = /* @__PURE__ */ new Set();
+  while (node && !seen.has(node)) {
+    seen.add(node);
+    if (typeof node.title === "string" && node.title) {
+      found = node;
+    }
+    const root = node.shadow ?? node.shadowRoot;
+    node = root ? root.elementFromPoint(x, y) : null;
+  }
+  return found;
+}
+var LINGER_MS = 3e4;
+var lingering;
+function endLingeringTooltip() {
+  lingering?.close();
+}
+function lingerTooltip(tip) {
+  endLingeringTooltip();
+  let timer;
+  const close = () => {
+    window.removeEventListener("pointerdown", onDown, true);
+    clearTimeout(timer);
+    if (lingering === entry) {
+      lingering = void 0;
+    }
+    tip.end();
+  };
+  const onDown = () => close();
+  const entry = { close };
+  window.addEventListener("pointerdown", onDown, { capture: true, passive: true });
+  timer = setTimeout(close, LINGER_MS);
+  lingering = entry;
+}
 var ToolTipViewer = class extends ToolBase {
   tooltip;
   element;
+  /** Pointer ids currently down. */
+  down = /* @__PURE__ */ new Set();
+  /**
+   * detected via the presence of multiple pointer ids.
+   */
+  multitouch = false;
   constructor(screen) {
     super(screen);
     this.tooltip = void 0;
     this.element = void 0;
+    endLingeringTooltip();
   }
   static tooldef() {
     return {
@@ -48909,31 +49609,71 @@ var ToolTipViewer = class extends ToolBase {
       undoflag: UndoFlags2.NO_UNDO,
       flag: 0,
       inputs: {},
-      //tool properties
       outputs: {}
-      //tool properties
     };
   }
   on_pointermove(e) {
     this.pick(e);
   }
   on_pointerdown(e) {
+    this.down.add(e.pointerId);
+    if (this.down.size > 1) {
+      this.multitouch = true;
+    }
     this.pick(e);
   }
+  /**
+   * Lifting off a titled element closes that tooltip and leaves the tool running, so a touch user
+   * can press one control after another without re-arming. Lifting off empty space ends the tool,
+   * which is how a touch user leaves it — a phone has no Escape key.
+   *
+   * A two-finger gesture is the exception, and the only case where the tooltip outlives the press.
+   * A tooltip held with one finger sits under the hand that raised it, so lifting to read it would
+   * close it under the rule above. When the last of two or more fingers comes up, the tool ends and
+   * passes the tooltip to {@link lingerTooltip}, which keeps it up for `LINGER_MS`. The tool stops
+   * being modal instead of holding the tooltip, so the press that dismisses it is not blocked.
+   */
   on_pointerup(e) {
+    this.down.delete(e.pointerId);
+    if (this.multitouch && this.tooltip !== void 0) {
+      if (this.down.size === 0) {
+        this.strand();
+      }
+    } else if (this.element === void 0) {
+      this.finish();
+    } else {
+      this.clear();
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  /** Hands the tooltip to {@link lingerTooltip} and ends the tool. */
+  strand() {
+    const tip = this.tooltip;
+    this.tooltip = void 0;
+    this.element = void 0;
+    this.multitouch = false;
+    this.down.clear();
     this.finish();
+    if (tip) {
+      lingerTooltip(tip);
+    }
   }
   finish() {
+    this.clear();
     super.finish();
+  }
+  /** Ends the current tooltip. */
+  clear() {
+    this.tooltip?.end();
+    this.tooltip = void 0;
+    this.element = void 0;
   }
   on_keydown(e) {
     switch (e.keyCode) {
       case keymap.Escape:
       case keymap.Enter:
       case keymap.Space:
-        if (this.tooltip) {
-          this.tooltip.end();
-        }
         this.finish();
         break;
     }
@@ -48941,15 +49681,13 @@ var ToolTipViewer = class extends ToolBase {
   pick(e) {
     const x = e.x;
     const y = e.y;
-    const ele = this.screen.pickElement(x, y);
-    console.log(ele ? ele.tagName : ele);
-    if (ele !== void 0 && ele !== this.element && ele.title) {
-      if (this.tooltip) {
-        this.tooltip.end();
+    const ele = pickDescribed(x, y);
+    if (ele !== this.element) {
+      this.clear();
+      if (ele) {
+        this.element = ele;
+        this.tooltip = ToolTip.show(ele.title, this.screen, x, y, Infinity);
       }
-      this.element = ele;
-      const tip = ele.title;
-      this.tooltip = ToolTip.show(tip, this.screen, x, y);
     }
     e.preventDefault();
     e.stopPropagation();
@@ -48971,13 +49709,22 @@ var areaclasses = {};
 function getAreaConstructor(area) {
   return area.constructor;
 }
-function makeAreasEnum() {
+var areaMenuFilter;
+function setAreaMenuFilter(filter) {
+  areaMenuFilter = filter;
+}
+function getAreaMenuFilter() {
+  return areaMenuFilter;
+}
+function makeAreasEnum(filter) {
   const areas = {};
   const icons = {};
+  const offered = filter ?? areaMenuFilter;
   for (const k in areaclasses) {
     const cls = areaclasses[k];
     const def = cls.define();
     if ((def.flag ?? 0) & AreaFlags.HIDDEN) continue;
+    if (offered && !offered(k, def)) continue;
     let uiname = def.uiname;
     if (uiname === void 0) {
       uiname = k.replace("_", " ").toLowerCase();
@@ -49332,7 +50079,28 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
-    this.style["z-index"] = "" + BORDER_ZINDEX_BASE;
+    this.style["z-index"] = "" + this.zIndex();
+  }
+  /**
+   * Where this border sits in the stack: above every floating area it belongs to.
+   *
+   * A floating area is raised past {@link BORDER_ZINDEX_BASE} by `bringToFront`, and its four
+   * borders are the handles that resize it — each straddling the edge, half in and half out. Left
+   * at the base the inner half is underneath the area it resizes, so a popup can only be grabbed
+   * from just *outside* its own frame, which is a pixel-hunt rather than a handle.
+   */
+  zIndex() {
+    let z = BORDER_ZINDEX_BASE;
+    for (const sarea of this.sareas) {
+      if (!sarea.floating) {
+        continue;
+      }
+      const areaZ = parseInt(sarea.style.zIndex);
+      if (!isNaN(areaZ)) {
+        z = Math.max(z, areaZ + 1);
+      }
+    }
+    return z;
   }
   valueOf() {
     return _ScreenBorder.hash(this.v1, this.v2);
@@ -50963,8 +51731,8 @@ var Area = class extends UIBase2 {
       UIBase2.register(cls);
     }
   }
-  static makeAreasEnum() {
-    return makeAreasEnum();
+  static makeAreasEnum(filter) {
+    return makeAreasEnum(filter);
   }
   static getAreaName(area) {
     return area.constructor.define().areaname;
@@ -51284,6 +52052,23 @@ var ScreenArea2 = class extends UIBase2 {
   _sarea_id;
   _pos;
   _size;
+  /**
+   * The box the active editor gets, which is this area's box minus {@link chromeHeight}.
+   *
+   * These are two long-lived vectors rather than fresh ones per read, because an editor is handed
+   * the reference and keeps it: the screen mesh moves an area by writing into `pos` in place and
+   * expects the editor to see it. {@link _syncAreaBox} re-derives them from `pos`/`size` at every
+   * point that used to hand `pos`/`size` over directly, which is what keeps that true once the
+   * two boxes are allowed to differ.
+   */
+  _areaPos;
+  _areaSize;
+  /**
+   * Height in pixels of chrome this area draws above its editor — a popup's titlebar, and
+   * nothing else so far. Zero on a docked area, which is what keeps its editor's box its whole
+   * box, down to the CSS: nothing below is even reached at zero.
+   */
+  chromeHeight;
   area;
   editors;
   editormap;
@@ -51303,6 +52088,9 @@ var ScreenArea2 = class extends UIBase2 {
     this._sarea_id = contextWrangler.idgen++;
     this._pos = new Vector2();
     this._size = new Vector2([512, 512]);
+    this._areaPos = new Vector2();
+    this._areaSize = new Vector2([512, 512]);
+    this.chromeHeight = 0;
     if (const_default.DEBUG.screenAreaPosSizeAccesses) {
       const wrapVector = (name2, axis) => {
         Object.defineProperty(this[name2], axis, {
@@ -51430,6 +52218,33 @@ var ScreenArea2 = class extends UIBase2 {
   _get_v_suffix() {
     return this.area ? this.area._get_v_suffix() : "";
   }
+  /**
+   * Take this area off the screen, having first asked whether it may go.
+   *
+   * The ask is an ordinary cancelable DOM event, `areaclose`, dispatched on the area itself, so
+   * anything that needs to interrupt — a warning about unsaved work, a confirmation — is an
+   * `addEventListener` away. A listener that wants to interrupt calls `preventDefault()`, puts its
+   * question on screen, and calls `close()` again once it has an answer; the second call fires the
+   * event again, so the listener is expected to stand down by then.
+   *
+   * Nothing in path.ux itself listens. This exists because the close button on a popup's titlebar
+   * has to go through something, and a bare `removeArea` gives whoever owns the popup no say.
+   *
+   * @returns whether the area actually went.
+   */
+  close() {
+    const event = new CustomEvent("areaclose", { cancelable: true, detail: { sarea: this } });
+    if (!this.dispatchEvent(event)) {
+      return false;
+    }
+    const screen = this.getScreen();
+    if (screen) {
+      screen.removeArea(this);
+    } else {
+      this.remove();
+    }
+    return true;
+  }
   bringToFront() {
     const screen = this.getScreen();
     if (!screen) return;
@@ -51447,6 +52262,9 @@ var ScreenArea2 = class extends UIBase2 {
       }
     }
     this.style.zIndex = "" + zindex;
+    for (const border of this._borders) {
+      border.setCSS();
+    }
   }
   _side(border) {
     const ret = this._borders.indexOf(border);
@@ -51518,12 +52336,10 @@ var ScreenArea2 = class extends UIBase2 {
     }
     if (this.area !== void 0) {
       this.area.ctx = this.ctx;
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
-      this.area.pos = this.pos;
-      this.area.size = this.size;
+      this._syncAreaBox();
+      this._styleArea();
       this.area.inactive = false;
       this.shadow.appendChild(this.area);
       this.area.on_area_active();
@@ -51575,10 +52391,9 @@ var ScreenArea2 = class extends UIBase2 {
     ret.ctx = this.ctx;
     if (ret.area !== void 0) {
       ret.area.ctx = this.ctx;
-      ret.area.pos = ret.pos;
-      ret.area.size = ret.size;
       ret.area.owning_sarea = ret;
       ret.area.parentWidget = ret;
+      ret._syncAreaBox();
       ret.shadow.appendChild(ret.area);
       if (ret.area._init_done) {
         ret.area.push_ctx_active();
@@ -51614,6 +52429,44 @@ var ScreenArea2 = class extends UIBase2 {
     }
     if (changed) {
       this.loadFromVerts();
+    }
+  }
+  /**
+   * Re-derive the active editor's box from this area's, and hand it over.
+   *
+   * Called wherever the editor used to be handed `pos`/`size` themselves. At the usual
+   * {@link chromeHeight} of zero the two boxes are equal and this is a copy, so a docked area is
+   * unaffected; a popup's editor starts below its titlebar and is that much shorter.
+   */
+  _syncAreaBox() {
+    const h = this.chromeHeight;
+    this._areaPos.loadXY(this.pos[0], this.pos[1] + h);
+    this._areaSize.loadXY(this.size[0], Math.max(this.size[1] - h, 0));
+    if (this.area !== void 0) {
+      this.area.pos = this._areaPos;
+      this.area.size = this._areaSize;
+    }
+  }
+  /**
+   * Size the active editor's element to the box {@link _syncAreaBox} just worked out.
+   *
+   * Without chrome this is the plain full-bleed pair it has always been. With chrome the editor is
+   * taken out of the flow instead of pushed down it, because this area is `overflow: hidden` and a
+   * margin on a full-height child would push its bottom off the end rather than shorten it.
+   */
+  _styleArea() {
+    if (this.area === void 0) {
+      return;
+    }
+    const h = this.chromeHeight;
+    this.area.style["width"] = "100%";
+    if (h > 0) {
+      this.area.style["position"] = UIBase2.PositionKey;
+      this.area.style["left"] = "0px";
+      this.area.style["top"] = h + "px";
+      this.area.style["height"] = "calc(100% - " + h + "px)";
+    } else {
+      this.area.style["height"] = "100%";
     }
   }
   /**
@@ -51667,7 +52520,8 @@ var ScreenArea2 = class extends UIBase2 {
   on_resize(size, oldsize) {
     super.on_resize(size, oldsize);
     if (this.area !== void 0) {
-      this.area.on_resize(size);
+      this._syncAreaBox();
+      this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     }
   }
   makeBorders(screen) {
@@ -51714,6 +52568,8 @@ var ScreenArea2 = class extends UIBase2 {
     this.style["overflow"] = "hidden";
     this.style["contain"] = "layout";
     if (this.area !== void 0) {
+      this._syncAreaBox();
+      this._styleArea();
       this.area.setCSS();
     }
   }
@@ -51731,8 +52587,8 @@ var ScreenArea2 = class extends UIBase2 {
         this.editormap[def.areaname] = child;
       }
       child.ctx = this.ctx;
-      child.pos = this.pos;
-      child.size = this.size;
+      child.pos = this._areaPos;
+      child.size = this._areaSize;
       if (!this.editors.includes(child)) {
         this.editors.push(child);
       }
@@ -51843,17 +52699,15 @@ var ScreenArea2 = class extends UIBase2 {
     this.area.closed = false;
     this.area.inactive = false;
     this.area.parentWidget = this;
-    this.area.pos = this.pos;
-    this.area.size = this.size;
+    this._syncAreaBox();
     this.area.owning_sarea = this;
     this.area.ctx = this.ctx;
     this.area.packflag |= this.packflag;
     this.shadow.appendChild(this.area);
-    this.area.style["width"] = "100%";
-    this.area.style["height"] = "100%";
+    this._styleArea();
     this.area.push_ctx_active();
     this.area._init();
-    this.area.on_resize([this.size[0], this.size[1]]);
+    this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     this.area.pop_ctx_active();
     this._attachSwitcher(this.area);
     this.area.push_ctx_active();
@@ -51870,8 +52724,7 @@ var ScreenArea2 = class extends UIBase2 {
     if (this.area !== void 0) {
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
-      this.area.size = this.size;
-      this.area.pos = this.pos;
+      this._syncAreaBox();
       this._attachSwitcher(this.area);
       const screen = this.getScreen();
       const oldsize = [this.size[0], this.size[1]];
@@ -51925,9 +52778,10 @@ var ScreenArea2 = class extends UIBase2 {
     }
   }
   afterSTRUCT() {
+    this._syncAreaBox();
     for (const area of this.editors) {
-      area.pos = this.pos;
-      area.size = this.size;
+      area.pos = this._areaPos;
+      area.size = this._areaSize;
       area.owning_sarea = this;
       area.push_ctx_active();
       area._ctx = this.ctx;
@@ -51973,12 +52827,10 @@ var ScreenArea2 = class extends UIBase2 {
       }
     }
     if (this.area !== void 0) {
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
-      this.area.pos = this.pos;
-      this.area.size = this.size;
+      this._syncAreaBox();
+      this._styleArea();
       this.area.inactive = false;
       this.shadow.appendChild(this.area);
       const f2 = () => {
@@ -52015,32 +52867,114 @@ UIBase2.internalRegister(ScreenArea2);
 // scripts/widgets/ui_dialog.ts
 init_ui_base();
 init_simple_events();
+var POPUP_TITLEBAR_HEIGHT = 24;
+function startTitleDrag(sarea, e) {
+  const screen = sarea.getScreen();
+  if (!screen) {
+    return;
+  }
+  const startPos = [sarea.pos[0], sarea.pos[1]];
+  const startMouse = [e.x, e.y];
+  let modal;
+  const move = (x, y) => {
+    const maxx = Math.max(screen.size[0] - sarea.size[0], 0);
+    const maxy = Math.max(screen.size[1] - sarea.size[1], 0);
+    sarea.pos[0] = Math.min(Math.max(startPos[0] + x - startMouse[0], 0), maxx);
+    sarea.pos[1] = Math.min(Math.max(startPos[1] + y - startMouse[1], 0), maxy);
+    sarea.loadFromPosSize();
+  };
+  const finish = (commit) => {
+    if (modal) {
+      popModalLight(modal);
+      modal = void 0;
+    }
+    if (!commit) {
+      move(startMouse[0], startMouse[1]);
+    }
+  };
+  modal = pushModalLight({
+    on_pointermove: (e2) => {
+      move(e2.x, e2.y);
+    },
+    on_pointerup: () => {
+      finish(true);
+    },
+    on_keydown: (e2) => {
+      if (e2.keyCode === keymap["Escape"]) {
+        finish(false);
+      }
+    }
+  });
+}
+function makeTitleBar(sarea, title) {
+  const bar = UIBase2.createElement("rowframe-x");
+  bar.ctx = sarea.ctx;
+  bar.parentWidget = sarea;
+  sarea.shadow.appendChild(bar);
+  bar._init();
+  bar.noMarginsOrPadding();
+  bar.style.position = UIBase2.PositionKey;
+  bar.style.left = "0px";
+  bar.style.top = "0px";
+  bar.style.width = "100%";
+  bar.style.height = POPUP_TITLEBAR_HEIGHT + "px";
+  bar.style.alignItems = "center";
+  bar.style.justifyContent = "space-between";
+  bar.style.backgroundColor = bar.getDefault("background-color");
+  bar.style.borderBottom = "1px solid " + (bar.getDefault("border-color") || "rgba(0,0,0,0.5)");
+  bar.style.cursor = "move";
+  bar.style.zIndex = "3";
+  const label = bar.label(title);
+  label.style.marginLeft = "6px";
+  label.style.pointerEvents = "none";
+  const close = bar.iconbutton(Icons.TINY_X, "Close this window", () => {
+    sarea.close();
+  });
+  bar.addEventListener("pointerdown", (e) => {
+    const pe = e;
+    if (pe.composedPath().includes(close)) {
+      return;
+    }
+    startTitleDrag(sarea, pe);
+    pe.preventDefault();
+  });
+  return bar;
+}
 function makePopupArea(area_class, screen, args = {}) {
   const sarea = UIBase2.createElement("screenarea-x");
   const width = args.width || screen.size[0] * 0.7;
   const height = args.height || screen.size[1] * 0.7;
-  const addEscapeKeyHandler = args.addEscapeKeyHandler !== void 0 ? args.addEscapeKeyHandler : true;
+  const addEscapeKeyHandler = args.addEscapeKeyHandler !== false;
+  const titlebar = args.titlebar !== false;
   sarea.ctx = screen.ctx;
   sarea.size[0] = width;
   sarea.size[1] = height;
-  sarea.pos[0] = 100;
-  sarea.pos[1] = 100;
-  sarea.pos[0] = Math.min(sarea.pos[0], screen.size[0] - sarea.size[0] - 2);
-  sarea.pos[1] = Math.min(sarea.pos[1], screen.size[1] - sarea.size[1] - 2);
-  sarea.switch_editor(area_class);
-  sarea.overrideClass("popup");
-  sarea.style["background-color"] = sarea.getDefault("background-color");
-  sarea.style["border-radius"] = sarea.getDefault("border-radius") + "px";
-  sarea.style["border-color"] = sarea.getDefault("border-color");
-  sarea.style["border-style"] = sarea.getDefault("border-style");
-  sarea.style["border-width"] = sarea.getDefault("border-width") + "px";
+  sarea.pos[0] = args.pos ? args.pos[0] : 100;
+  sarea.pos[1] = args.pos ? args.pos[1] : 100;
+  sarea.pos[0] = Math.min(Math.max(sarea.pos[0], 0), Math.max(screen.size[0] - width - 2, 0));
+  sarea.pos[1] = Math.min(Math.max(sarea.pos[1], 0), Math.max(screen.size[1] - height - 2, 0));
+  if (titlebar) {
+    sarea.chromeHeight = POPUP_TITLEBAR_HEIGHT;
+  }
+  sarea.switchEditor(area_class);
+  sarea.style.backgroundColor = sarea.getDefault("background-color");
+  sarea.style.borderRadius = (sarea.getDefault("border-radius") || 4) + "px";
+  sarea.style.borderColor = sarea.getDefault("border-color") || "rgba(0,0,0,0.5)";
+  sarea.style.borderStyle = "solid";
+  sarea.style.borderWidth = "1px";
+  sarea.style.boxShadow = "0 6px 24px rgba(0,0,0,0.45)";
+  sarea.style.overflow = "hidden";
   sarea.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
   screen.appendChild(sarea);
+  if (titlebar) {
+    makeTitleBar(sarea, args.title ?? area_class.define().uiname ?? "");
+  }
+  sarea.loadFromPosSize();
   sarea.setCSS();
   if (addEscapeKeyHandler) {
     sarea.on_keydown = (e) => {
       if (e.keyCode === keymap.Escape) {
-        screen.removeArea(sarea);
+        sarea.close();
       }
     };
   }
@@ -52112,6 +53046,8 @@ var AreaDocker = class extends Container3 {
     this.clear();
     const tabs = this.tbar = this.tabs();
     tabs.on_change = this.tab_onchange.bind(this);
+    tabs.multiRow = true;
+    this.updateMaxExtent();
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
     sarea.switcherData = uidata;
     for (const editor2 of sarea.editors) {
@@ -52124,9 +53060,13 @@ var AreaDocker = class extends Container3 {
         name2 = def.areaname || def.tagname.replace(/-x/, "");
         name2 = ToolProperty.makeUIName(name2);
       }
-      const tab2 = tabs.tab(name2, editor2._id);
+      const said = def.description ?? `Show ${name2} in this pane`;
+      const closable = const_default.closableAreaTabs;
+      const tooltip = closable ? said : `${said}
+Right-click the tab to close it.`;
+      const tab2 = tabs.tab(name2, editor2._id, tooltip);
       const tabItem = tab2._tab;
-      tabItem.closable = true;
+      tabItem.closable = closable;
       tabItem.ontabclose = () => this.closeEditor(editor2);
       tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor2, e);
       tabItem.addEventListener("tabdragstart", (e) => {
@@ -52150,7 +53090,7 @@ var AreaDocker = class extends Container3 {
         dockerdebug("tab drag end!", e);
       });
     }
-    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor").noSwitch();
+    const addTab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add another editor to this pane").noSwitch();
     addTab._tab.overrideDefault("iconPaddingRight", 8);
     dockerdebug("Add Menu Tab", addTab);
     const icon = this.addicon = addTab._tab;
@@ -52226,8 +53166,35 @@ var AreaDocker = class extends Container3 {
     this.needsRebuild = true;
     return this;
   }
+  /**
+   * Tell the tab bar how much room it has: from this docker's left edge to the right edge
+   * of the tile it sits in.
+   *
+   * Measured off the tile rather than off anything between it and the bar, because every
+   * ancestor of the bar's canvas shrink-wraps to that canvas — asking one of those would
+   * hand the bar back the width it just chose. The docker is `_prepend`ed into the switcher
+   * row, so its own left edge is the row's start and does not move when the bar resizes.
+   */
+  updateMaxExtent() {
+    const bar = this.tbar;
+    if (!bar) {
+      return;
+    }
+    const sarea = this.getScreenArea();
+    if (!sarea) {
+      return;
+    }
+    const arect = sarea.getClientRects()[0];
+    const drect = this.getClientRects()[0];
+    if (arect && drect) {
+      bar.maxExtent = Math.max(arect.x + arect.width - drect.x, 0);
+    } else if (sarea.size) {
+      bar.maxExtent = sarea.size[0];
+    }
+  }
   update() {
     super.update();
+    this.updateMaxExtent();
     const active = this.tbar.getActive();
     const area = this.getArea();
     let key = this.parentWidget._id;
@@ -52423,7 +53390,7 @@ var Screen2 = class extends UIBase2 {
     `pathux.Screen {
        size  : vec2;
        pos   : vec2;
-       sareas : array(pathux.ScreenArea);
+       sareas : array(pathux.ScreenArea) | this.savedAreas;
        idgen : int;
        uidata : string | obj.saveUIData();
     }`
@@ -52994,8 +53961,15 @@ var Screen2 = class extends UIBase2 {
   //XXX look at if this is referenced anywhere
   save() {
   }
-  popupArea(area_class) {
-    return makePopupArea(area_class, this);
+  /**
+   * Open an editor in a floating window: see {@link makePopupArea}.
+   *
+   * Typed loose in the context rather than as `ScreenArea<CTX>` on purpose. `Screen` is compared
+   * structurally in several places that would otherwise have to agree on `CTX` all the way down
+   * through the returned area's borders, and they do not.
+   */
+  popupArea(area_class, args) {
+    return makePopupArea(area_class, this, args);
   }
   remove(trigger_destroy = true) {
     this.unlisten();
@@ -53166,10 +54140,22 @@ var Screen2 = class extends UIBase2 {
       }, 50);
     }
   }
+  /**
+   * The areas a saved layout is made of: the mesh, without whatever floats over it.
+   *
+   * A popup is chrome around a moment — a task list raised while a run happens — and its
+   * titlebar is built by whoever opened it rather than by `STRUCT`, so one written to a file
+   * would come back as an untitled box on top of the mesh with no way to move or close it. Not
+   * writing it down is the whole fix: the mesh reloads as the author left it and the popup is
+   * gone, which is what closing the window already meant.
+   */
+  get savedAreas() {
+    return this.sareas.filter((sarea) => !(sarea.flag & AreaFlags.INDEPENDENT));
+  }
   toJSON() {
     return {
       ...super.toJSON(),
-      sareas: this.sareas,
+      sareas: this.savedAreas,
       size: this.size,
       idgen: this.idgen
     };
@@ -54442,8 +55428,7 @@ var Screen2 = class extends UIBase2 {
     sarea2.area = area;
     area.push_ctx_active();
     area.pop_ctx_active();
-    area.pos = sarea2.pos;
-    area.size = sarea2.size;
+    sarea2._syncAreaBox();
     area.parentWidget = sarea2;
     area.owning_sarea = sarea2;
     sarea.flushSetCSS();
@@ -56885,8 +57870,10 @@ export {
   TangentModes,
   TextBox2 as TextBox,
   TextBoxBase,
+  ThemeChangeEvent,
   ThemeEditor,
   ThemeScrollBars,
+  ThemeVar,
   ToolClasses,
   ToolFlags,
   ToolMacro,
@@ -56954,6 +57941,7 @@ export {
   checkForTextBox,
   circ_from_line_tan,
   circ_from_line_tan_2d,
+  clampTabScroll,
   clearPathWatchers,
   clip_line_w,
   closestPoint,
@@ -56975,6 +57963,7 @@ export {
   copyTheme,
   corner_normal,
   createMenu,
+  createThemeFile,
   css2color2 as css2color,
   customHandlers,
   customPropertyTypes,
@@ -57009,6 +57998,7 @@ export {
   genHermiteTable,
   gen_circle,
   getAreaIntName,
+  getAreaMenuFilter,
   getCurve,
   getDataPathToolOp,
   getDefault,
@@ -57023,6 +58013,7 @@ export {
   getPathWatchStats,
   getTagPrefix,
   getTempProp,
+  getVars,
   getVecClass,
   getWranglerScreen,
   get_boundary_winding,
@@ -57031,6 +58022,7 @@ export {
   get_tri_circ,
   graphGetIslands,
   graphPack,
+  groupThemeCategories,
   haveModal,
   hsv_to_rgb,
   html5_fileapi_exports as html5_fileapi,
@@ -57041,6 +58033,7 @@ export {
   initSplineTemplates,
   initToolPaths,
   inrect_2d,
+  instanceThemeVars,
   internalSetTimeout,
   inv_sample,
   invertTheme,
@@ -57054,6 +58047,7 @@ export {
   jsxs,
   keymap,
   keymap_latin_1,
+  layoutTabRows,
   line_isect,
   line_line_cross,
   line_line_isect,
@@ -57061,6 +58055,7 @@ export {
   loadPage,
   loadUIData,
   lz_string_default as lzstring,
+  makeAreasEnum,
   makeCircleMesh,
   makeDerivedOverlay,
   makeIconDiv,
@@ -57088,6 +58083,7 @@ export {
   parseToolPath,
   parseValue,
   parseValueIntern,
+  parseVarComments,
   parseXML,
   parsepx2 as parsepx,
   parseutil_exports as parseutil,
@@ -57120,6 +58116,7 @@ export {
   saveFile,
   saveUIData,
   sendNote,
+  setAreaMenuFilter,
   setAreaTypes,
   setBaseUnit,
   setColorSchemeType,
@@ -57154,6 +58151,7 @@ export {
   tet_volume,
   textMimes,
   theme,
+  themeItemKind,
   toLockedImpl,
   toolprop_abstract_exports as toolprop_abstract,
   tri_angles,

@@ -9,8 +9,10 @@ HTML5 UI library with Blender RNA-style data binding.
   answer — silence, said out loud." If a sentence needs a second read to parse, rewrite it.
   The same rule applies to this file and the prose in `docs/`. Specific patterns to catch:
   - **Inverted syntax and personification** — the sentence performs rather than informs.
-  - **Metaphorical equations** — "The leak scan is the refusal", "what ships is identity".
-    Say what happens instead: "Refuses if the leak scan finds a known name still in the body."
+  - **Metaphorical equations** — "The leak scan is the refusal", "what ships is identity",
+    "the project as commands". The connector word varies — do not get hung up on "is"
+    versus "as". Say what happens instead: "Refuses if the leak scan finds a known name
+    still in the body."
   - **Fragment openers that defer the subject** — "The redactor to scan a report with: the one
     that wrote it, else one built from the project as it stands." Lead with a complete sentence
     and name each case as you reach it.
@@ -33,6 +35,16 @@ HTML5 UI library with Blender RNA-style data binding.
   - **Rhetorical emphasis** — `**bold**` and `*italics*` in a comment mark the sentence the
     author found most interesting, not the one the reader needs first. Put the load-bearing
     claim in the first sentence and drop the markup.
+  - **A head noun that is not what the code is** — a module of commands documented as "The
+    prompt an asset is generated from, as commands" asserts that the module is a prompt, then
+    retracts it through a preposition. Lead with the head noun that names the declaration —
+    "Commands for the prompt an asset is generated from" — and demote the rest to a
+    complement. A trailing ", as X" or ", in the form of X" is the same metaphorical equation
+    above smuggled in through an adjunct.
+- **Reserve backticks for code symbols.** Backticks belong on identifiers, types, commands,
+  and file globs the reader will type. A file path cited as a reference —
+  `(docs/plans/archive/chunked-prompts.md §5)` — does not, because marking it up gives it the
+  same weight as the identifiers around it and dilutes them.
 - **A comment describes the code directly beneath it.** A comment placed above an `if` is read
   as a caption for the branch it guards, so one that explains the opposite case belongs on the
   `else`, or should be reworded to describe the test itself. Misplacing a comment this way is a
@@ -45,10 +57,10 @@ HTML5 UI library with Blender RNA-style data binding.
   place by giving a reason, a constraint, or a consequence.
 - **Cite a named constant rather than its value.** A comment saying "thirty seconds" beside
   `LINGER_MS` is wrong the first time the constant changes; write `` `LINGER_MS` ``.
-- **A comment that explains a name is a renaming request.** If the sentence's work is
-  translating an identifier — what `snapMode` means, what a bare `-1` means — rename the
-  identifier or introduce a named constant, then delete the sentence. Comment a name only when
-  the name cannot be fixed.  Try to avoid names longer then three words or 25 characters
+- **Rename instead of commenting a name.** If the sentence's work is translating an
+  identifier — what `snapMode` means, what a bare `-1` means — rename the identifier or
+  introduce a named constant, then delete the sentence. Comment a name only when the name
+  cannot be fixed. Try to avoid names longer than three words or 25 characters
   (10 characters or less is preferred).
 - **Comment the consequence, not the arguments.** Options passed at a call site (`capture`,
   `passive`, a flag, a lifetime) are already on screen. Say what the reader cannot see: what
@@ -67,8 +79,8 @@ HTML5 UI library with Blender RNA-style data binding.
   bare predicate — "Pointer ids currently down.", "Detected via the presence of multiple pointer
   ids." — to a full sentence that re-supplies the subject the declaration already names. A doc
   comment that reads as a standalone paragraph is usually rationale in disguise.
-- **An inline `//` note is a fragment with no terminal period; a `/** … */` doc comment is a
-  punctuated sentence.** One line each, unless the fact genuinely needs two.
+- **An inline `//` note is a fragment with no terminal period; a `/** … \*/` doc comment is a
+  punctuated sentence.\*\* One line each, unless the fact genuinely needs two.
 - **Non-doc comments use `//`.** Doc comments use proper `/** … */` brackets. Don't use
   `/* … */` for ordinary inline commentary.
 - **Non-doc comments are at most 3 lines.** A longer block comment is allowed sparingly —
@@ -82,7 +94,7 @@ HTML5 UI library with Blender RNA-style data binding.
 
 ## Build
 
-This project uses **pnpm** as its package manager. Use `pnpm` (and `pnpm run …`)
+This project uses pnpm as its package manager. Use `pnpm` (and `pnpm run …`)
 rather than `npm`.
 
 ```bash
@@ -188,7 +200,7 @@ a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changin
 ## Datapath updates (push + coalesced)
 
 Widgets subscribe to their datapaths instead of re-reading them per frame; the
-old per-widget `updateDataPath()` protocol is **removed**. The runtime lives in
+old per-widget `updateDataPath()` protocol is removed. The runtime lives in
 `scripts/path-controller/controller/pathwatch.ts`.
 
 **Widget protocol** (both overridable on `UIBase`):
@@ -243,7 +255,7 @@ type-checked, mirroring the data-path catalog above.
 - **Declare** the keys a widget uses in its `static define().theme`, mapping each
   to a `t.*` token from `scripts/core/theme_schema.ts` (`t.number`, `t.color`,
   `t.font`, …; nest an object for sub-records like `disabled`/`highlight`).
-  Declare the *returned* type — a `"12px"` value reads back as a number, so use
+  Declare the returned type — a `"12px"` value reads back as a number, so use
   `t.number`. A widget inherits its parent class's declarations; only list what
   it adds or overrides. Annotate the migrated `define()` with the exported
   `UIBaseDefinition` return type so subclasses that omit `theme` still satisfy
@@ -445,3 +457,7 @@ under any superproject.
 **Worktree teardown:** before removing a worktree, every submodule sitting on its
 default branch (path.ux has no pinned exceptions) must be committed and pushed, so
 no work is lost when the checkout goes away.
+
+## Commit Messages
+Commit messages should be terse and use bullet points.  The message should lead with 
+what the purpose of the commit is and high level information.
