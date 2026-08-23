@@ -4,6 +4,8 @@ import { IContextBase } from "../core/context_base";
 import { validateCSSColor, color2css, css2color } from "../core/ui_theme";
 import type { ThemeItem, ThemeRecord } from "../core/ui_theme";
 import { CSSFont } from "../core/cssfont";
+import { copyThemeItem, copyVarItem, pathKey, varSlots } from "../core/ui_theme_utils";
+import type { ThemeRecordWithVar, ThemeVarsDef } from "../core/ui_theme_utils";
 import type { PanelContents } from "./ui_panel";
 
 interface CatKey {
@@ -17,13 +19,16 @@ export class ThemeChangeEvent extends Event {
   category: string;
   key: string;
   record?: ThemeRecord;
+  /** The variable that was edited, when the change came through one. */
+  varKey?: string;
 
-  constructor(category: string, key: string, record?: ThemeRecord) {
+  constructor(category: string, key: string, record?: ThemeRecord, varKey?: string) {
     super("change");
 
     this.category = category;
     this.key = key;
     this.record = record;
+    this.varKey = varKey;
   }
 }
 
@@ -113,6 +118,20 @@ function resolveRecord(path: string[]): ThemeRecord {
   return rec;
 }
 
+/** Walks `path` from the theme root, answering undefined where it does not exist. */
+function findRecord(path: string[]): ThemeRecord | undefined {
+  let rec: ThemeItem = theme;
+
+  for (const key of path) {
+    if (typeof rec !== "object" || rec === null) {
+      return undefined;
+    }
+    rec = (rec as ThemeRecord)[key];
+  }
+
+  return typeof rec === "object" && rec !== null ? (rec as ThemeRecord) : undefined;
+}
+
 /**
  * Reading and writing one value a row edits. The same row builders serve a plain
  * theme slot, a slot bound to a theme variable, and a row of the Variables panel.
@@ -120,11 +139,14 @@ function resolveRecord(path: string[]): ThemeRecord {
 export interface ValueSlot {
   get(): ThemeItem;
   set(value: ThemeItem): void;
+  /** The variable this slot writes, when it is bound to one. */
+  varKey?: string;
 }
 
 /** A row's own re-read of its slot, run when something else writes the same value. */
 interface RowRefresh<CTX extends IContextBase> {
   widget: UIBase<CTX>;
+  slot: ValueSlot;
   refresh(): void;
 }
 
@@ -136,6 +158,13 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
   private _refreshes: RowRefresh<CTX>[] = [];
   private _refreshing = false;
+
+  private _varTheme?: ThemeRecordWithVar<string>;
+  private _vars: ThemeVarsDef = {};
+  //live path of a bound slot, as pathKey, to the variable it reads
+  private _bindings = new Map<string, string>();
+  //the row whose gesture is writing, so a broadcast does not refresh it
+  private _origin?: UIBase<CTX>;
 
   constructor() {
     super();
@@ -281,10 +310,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   }
 
   /** Repaints the screen against the edited theme and reports the change. */
-  private notify(category: string, key: string, record?: ThemeRecord): void {
+  private notify(category: string, key: string, record?: ThemeRecord, varKey?: string): void {
     flagThemeUpdate();
 
-    this.dispatchEvent(new ThemeChangeEvent(category, key, record));
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record, varKey));
 
     // Backwards-compat shim for the deprecated on_change callback, whose declared
     // type on UIBase takes a single argument.
@@ -303,12 +332,82 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   }
 
   /**
-   * The slot editing the live theme value at `livePath`. `category` and `key`
-   * name the change the write reports.
+   * Hands the editor the untransformed theme the live one was instanced from,
+   * plus its variables. Both are deep-copied, so editing here never reaches the
+   * caller's module state. Without this the widget edits the live theme only.
+   */
+  setVarTheme(varTheme: ThemeRecordWithVar<string>, vars: ThemeVarsDef): void {
+    this._varTheme = copyVarItem(varTheme) as ThemeRecordWithVar<string>;
+
+    this._vars = {};
+    for (const key of Object.keys(vars)) {
+      this._vars[key] = copyThemeItem(vars[key]);
+    }
+
+    this.rebuildBindings();
+
+    if (this._init_done) {
+      this.build();
+    }
+  }
+
+  /** The editor's own copy of the authored theme, or undefined in plain mode. */
+  getVarTheme(): ThemeRecordWithVar<string> | undefined {
+    return this._varTheme ? (copyVarItem(this._varTheme) as ThemeRecordWithVar<string>) : undefined;
+  }
+
+  /** The editor's own copy of the variable values. */
+  getThemeVars(): ThemeVarsDef {
+    const ret: ThemeVarsDef = {};
+
+    for (const key of Object.keys(this._vars)) {
+      ret[key] = copyThemeItem(this._vars[key]);
+    }
+
+    return ret;
+  }
+
+  /** Re-reads which live slots are bound to which variable. */
+  private rebuildBindings(): void {
+    this._bindings = new Map();
+
+    if (!this._varTheme) {
+      return;
+    }
+
+    for (const varKey of Object.keys(this._vars)) {
+      for (const slot of varSlots(this._varTheme, varKey)) {
+        const live = pathKey(slot.livePath);
+
+        if (this._bindings.has(live)) {
+          console.warn(
+            `theme slot ${live} is bound twice, to "${this._bindings.get(live)}" and "${varKey}"`
+          );
+          continue;
+        }
+
+        this._bindings.set(live, varKey);
+      }
+    }
+  }
+
+  /**
+   * The slot editing the live theme value at `livePath`. A bound slot writes its
+   * variable instead, so every other slot on that variable follows. `category`
+   * and `key` name the change the write reports.
    */
   protected slotFor(livePath: string[], category: string, key: string): ValueSlot {
     const parent = livePath.slice(0, -1);
     const leaf = livePath[livePath.length - 1]!;
+    const varKey = this._bindings.get(pathKey(livePath));
+
+    if (varKey !== undefined) {
+      return {
+        varKey,
+        get: () => resolveRecord(parent)[leaf],
+        set: (value) => this.writeVar(varKey, value, category, key),
+      };
+    }
 
     return {
       get: () => resolveRecord(parent)[leaf],
@@ -320,28 +419,60 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   }
 
   /**
+   * Writes a variable and fans its value out to every slot reading it, one
+   * independent copy each. Sharing a `CSSFont` between slots would work until a
+   * detach, after which edits would bleed between them.
+   */
+  private writeVar(varKey: string, value: ThemeItem, category: string, key: string): void {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+
+    this._vars[varKey] = copyThemeItem(value);
+
+    for (const slot of varSlots(this._varTheme, varKey)) {
+      const parent = findRecord(slot.livePath.slice(0, -1));
+
+      if (parent) {
+        parent[slot.livePath[slot.livePath.length - 1]!] = copyThemeItem(this._vars[varKey]);
+      }
+    }
+
+    this.refreshVarRows(varKey, this._origin);
+    this.notify(category, key, undefined, varKey);
+  }
+
+  /**
    * Writes through a slot, unless a refresh is in flight. Assigning a widget's
    * value fires its own `on_change`, so a refresh that did not suppress the
    * write would send it straight back to the slot it came from.
    */
-  private setSlot(slot: ValueSlot, value: ThemeItem): void {
+  private setSlot(slot: ValueSlot, value: ThemeItem, origin?: UIBase<CTX>): void {
     if (this._refreshing) {
       return;
     }
 
-    slot.set(value);
+    const was = this._origin;
+    this._origin = origin;
+
+    try {
+      slot.set(value);
+    } finally {
+      this._origin = was;
+    }
   }
 
   /** Records a row's re-read, so another row writing the same value can trigger it. */
-  private onRefresh(widget: UIBase<CTX>, refresh: () => void): void {
-    this._refreshes.push({ widget, refresh });
+  private onRefresh(widget: UIBase<CTX>, slot: ValueSlot, refresh: () => void): void {
+    this._refreshes.push({ widget, slot, refresh });
   }
 
   /**
-   * Re-reads every registered row except `except`, dropping the rows a rebuild
-   * detached.
+   * Re-reads every row bound to `varKey`, dropping the rows a rebuild detached.
+   * The row that was edited is left alone, so a refresh cannot fight a gesture
+   * still in progress.
    */
-  protected refreshRows(except?: UIBase<CTX>): void {
+  protected refreshVarRows(varKey: string, except?: UIBase<CTX>): void {
     this._refreshes = this._refreshes.filter((entry) => !entry.widget.isDead());
 
     const was = this._refreshing;
@@ -349,7 +480,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
     try {
       for (const entry of this._refreshes) {
-        if (entry.widget !== except) {
+        if (entry.slot.varKey === varKey && entry.widget !== except) {
           entry.refresh();
         }
       }
@@ -397,8 +528,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     read();
     cw.label = key;
 
-    cw.on_change = () => this.setSlot(slot, color2css(cw.rgba));
-    this.onRefresh(cw, read);
+    cw.on_change = () => this.setSlot(slot, color2css(cw.rgba), cw);
+    this.onRefresh(cw, slot, read);
 
     return cw;
   }
@@ -409,8 +540,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     const box = col.textbox();
     box.text = String(slot.get() ?? "");
 
-    box.on_change = () => this.setSlot(slot, box.text);
-    this.onRefresh(box, () => {
+    box.on_change = () => this.setSlot(slot, box.text, box);
+    this.onRefresh(box, slot, () => {
       box.text = String(slot.get() ?? "");
     });
 
@@ -422,8 +553,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
 
     slider.baseUnit = slider.displayUnit = "none";
 
-    slider.on_change = () => this.setSlot(slot, slider.value);
-    this.onRefresh(slider, () => {
+    slider.on_change = () => this.setSlot(slot, slider.value, slider);
+    this.onRefresh(slider, slot, () => {
       slider.value = Number(slot.get() ?? 0);
     });
 
@@ -436,8 +567,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     // Assigning value fires on_change, so wire the handler after it.
     check.value = !!slot.get();
 
-    check.on_change = () => this.setSlot(slot, !!check.value);
-    this.onRefresh(check, () => {
+    check.on_change = () => this.setSlot(slot, !!check.value, check);
+    this.onRefresh(check, slot, () => {
       check.value = !!slot.get();
     });
 
@@ -454,10 +585,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     const panel = col.panel(key);
     const font = () => (slot.get() as CSSFont | undefined) ?? new CSSFont();
 
-    const edit = (apply: (font: CSSFont) => void) => {
+    const edit = (origin: UIBase<CTX>, apply: (font: CSSFont) => void) => {
       const next = font().copy();
       apply(next);
-      this.setSlot(slot, next);
+      this.setSlot(slot, next, origin);
     };
 
     for (const field of FONT_FIELDS) {
@@ -467,10 +598,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       tbox.width = tbox.getDefault<number>("width");
 
       tbox.on_change = () =>
-        edit((next) => {
+        edit(tbox, (next) => {
           next[field] = tbox.text;
         });
-      this.onRefresh(tbox, () => {
+      this.onRefresh(tbox, slot, () => {
         tbox.text = font()[field];
       });
     }
@@ -480,10 +611,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     cw.setRGBA(css2color(font().color));
 
     cw.on_change = () =>
-      edit((next) => {
+      edit(cw, (next) => {
         next.color = color2css(cw.rgba);
       });
-    this.onRefresh(cw, () => cw.setRGBA(css2color(font().color)));
+    this.onRefresh(cw, slot, () => cw.setRGBA(css2color(font().color)));
 
     const slider = panel.slider(undefined, "size", font().size);
     slider.setAttribute("min", "1");
@@ -491,10 +622,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     slider.baseUnit = slider.displayUnit = "none";
 
     slider.on_change = () =>
-      edit((next) => {
+      edit(slider, (next) => {
         next.size = slider.value;
       });
-    this.onRefresh(slider, () => {
+    this.onRefresh(slider, slot, () => {
       slider.value = font().size;
     });
 

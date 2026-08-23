@@ -142,6 +142,39 @@ export function copyThemeItem(
   return item;
 }
 
+/**
+ * Deep-copies a theme value, keeping each variable reference as a reference.
+ * {@link copyThemeItem} resolves them instead, so an editor that owns an
+ * authored record uses this one.
+ */
+export function copyVarItem(item: ThemeItemWithVar<string>): ThemeItemWithVar<string> {
+  if (item instanceof ThemeVar) {
+    return new ThemeVar(item.key);
+  }
+
+  if (item instanceof CSSFont) {
+    return item.copy();
+  }
+
+  if (item instanceof ThemeScrollBars) {
+    return new ThemeScrollBars({ ...item });
+  }
+
+  if (typeof item === "object" && item !== null) {
+    const ret: ThemeRecordWithVar<string> = {};
+
+    for (const key in item) {
+      if (key !== "__proto__") {
+        ret[key] = copyVarItem(item[key]);
+      }
+    }
+
+    return ret;
+  }
+
+  return item;
+}
+
 /** A slot's address inside a theme record, one key per level. */
 export type ThemePath = string[];
 

@@ -1,10 +1,16 @@
-import { test, expect, beforeAll } from "vitest";
+import { test, expect, beforeAll, vi } from "vitest";
+
+// each editor builds a panel per style class of the whole live theme, which
+// takes seconds once the suite's other files are running alongside it
+vi.setConfig({ testTimeout: 60000 });
 
 import { UIBase, iconmanager, theme } from "../scripts/core/ui_base";
 import "../scripts/core/ui";
 //the editor builds panels, sliders and colour buttons from the widget registry
 import "../scripts/pathux";
 import { CSSFont } from "../scripts/core/cssfont";
+import { getVars, instanceThemeVars } from "../scripts/core/ui_theme_utils";
+import type { ThemeRecordWithVar, ThemeVarsDef } from "../scripts/core/ui_theme_utils";
 import type { ThemeRecord } from "../scripts/core/ui_theme";
 import { ThemeEditor } from "../scripts/widgets/theme_editor";
 import "../scripts/widgets/theme_editor";
@@ -47,6 +53,26 @@ function makeEditor(values: ThemeRecord) {
   editor._init();
 
   return { editor, cls, rec: theme[cls] as ThemeRecord };
+}
+
+/**
+ * An editor in variable mode, with `values` authored as one style class and the
+ * live theme instanced from it.
+ */
+function makeVarEditor(values: ThemeRecordWithVar<string>, vars: ThemeVarsDef) {
+  const cls = "test_" + Object.keys(theme).length;
+  const varTheme: ThemeRecordWithVar<string> = { [cls]: values };
+
+  theme[cls] = (instanceThemeVars(varTheme, vars) as ThemeRecord)[cls] as ThemeRecord;
+
+  const editor = UIBase.createElement("theme-editor-x") as ThemeEditor;
+  document.body.appendChild(editor);
+
+  // set before init, so the editor builds its rows once
+  editor.setVarTheme(varTheme, vars);
+  editor._init();
+
+  return { editor, cls, rec: theme[cls] as ThemeRecord, varTheme };
 }
 
 /** The panel the editor built for one style class, so rows elsewhere cannot match. */
@@ -107,6 +133,103 @@ test("a checkbox writes the live theme", () => {
   check.on_change();
 
   expect(rec.dashed).toBe(true);
+});
+
+test("editing one slot of a variable updates every slot reading it", () => {
+  const vars = { radius: 4 } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+  const { editor, cls, rec } = makeVarEditor({ inner: v.radius, outer: v.radius }, { ...vars });
+
+  const changes: (string | undefined)[] = [];
+  editor.addEventListener("change", (e) => changes.push(e.varKey));
+
+  const panel = classPanel(editor, cls);
+  const inner = widgets(panel, "inner")[0] as UIBase & { value: number; on_change: () => void };
+  const outer = widgets(panel, "outer")[0] as UIBase & { value: number };
+
+  inner.value = 9;
+  inner.on_change();
+
+  expect(rec.inner).toBe(9);
+  expect(rec.outer).toBe(9);
+  //the sibling row re-reads, and reports the edit exactly once
+  expect(outer.value).toBe(9);
+  expect(changes).toEqual(["radius"]);
+
+  expect(editor.getThemeVars().radius).toBe(9);
+  // the caller's own record is left as it was
+  expect(vars.radius).toBe(4);
+});
+
+test("handing the editor a var theme after init rebuilds its rows", () => {
+  const vars = { radius: 4 } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+
+  const cls = "test_" + Object.keys(theme).length;
+  const varTheme: ThemeRecordWithVar<string> = { [cls]: { inner: v.radius, outer: v.radius } };
+  theme[cls] = (instanceThemeVars(varTheme, vars as ThemeVarsDef) as ThemeRecord)[
+    cls
+  ] as ThemeRecord;
+
+  const editor = UIBase.createElement("theme-editor-x") as ThemeEditor;
+  document.body.appendChild(editor);
+  editor._init();
+  editor.setVarTheme(varTheme, { ...vars });
+
+  const panel = classPanel(editor, cls);
+  const inner = widgets(panel, "inner")[0] as UIBase & { value: number; on_change: () => void };
+  const outer = widgets(panel, "outer")[0] as UIBase & { value: number };
+
+  inner.value = 7;
+  inner.on_change();
+
+  expect(outer.value).toBe(7);
+});
+
+test("slots on one font variable hold independent copies", () => {
+  const vars = { body: new CSSFont({ size: 12, color: "black" }) } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+  const { editor, cls, rec } = makeVarEditor(
+    { TitleText: v.body, DefaultText: v.body },
+    { ...vars }
+  );
+
+  expect(rec.TitleText).not.toBe(rec.DefaultText);
+
+  const slider = widgets(classPanel(editor, cls), "size")[0] as UIBase & {
+    value: number;
+    on_change: () => void;
+  };
+
+  slider.value = 22;
+  slider.on_change();
+
+  expect((rec.TitleText as CSSFont).size).toBe(22);
+  expect((rec.DefaultText as CSSFont).size).toBe(22);
+  expect(rec.TitleText).not.toBe(rec.DefaultText);
+  //the variable's own value is not one of the live copies
+  expect(editor.getThemeVars().body).not.toBe(rec.TitleText);
+});
+
+test("a refreshed sibling row does not write back", () => {
+  const vars = { radius: 4 } satisfies ThemeVarsDef;
+  const v = getVars(vars);
+  const { editor, cls } = makeVarEditor({ inner: v.radius, outer: v.radius }, { ...vars });
+
+  let writes = 0;
+  editor.addEventListener("change", () => writes++);
+
+  const inner = widgets(classPanel(editor, cls), "inner")[0] as UIBase & {
+    value: number;
+    on_change: () => void;
+  };
+
+  for (let i = 0; i < 3; i++) {
+    inner.value = 10 + i;
+    inner.on_change();
+  }
+
+  expect(writes).toBe(3);
 });
 
 test("a font field writes a whole new font rather than mutating the live one", () => {
