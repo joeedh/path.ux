@@ -1,13 +1,116 @@
 import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData } from "../core/ui_base";
-import { Container } from "../core/ui";
+import { Container, ColumnFrame } from "../core/ui";
 import { IContextBase } from "../core/context_base";
 import { validateCSSColor, color2css, css2color } from "../core/ui_theme";
+import type { ThemeItem, ThemeRecord } from "../core/ui_theme";
 import { CSSFont } from "../core/cssfont";
+import type { PanelContents } from "./ui_panel";
 
 interface CatKey {
   key: string;
   category: string;
   help: string;
+}
+
+/** Dispatched by {@link ThemeEditor} whenever a theme value is edited or added. */
+export class ThemeChangeEvent extends Event {
+  category: string;
+  key: string;
+  record?: ThemeRecord;
+
+  constructor(category: string, key: string, record?: ThemeRecord) {
+    super("change");
+
+    this.category = category;
+    this.key = key;
+    this.record = record;
+  }
+}
+
+/** Which editor a theme value gets. `skip` values are left out of the panel. */
+export type ItemKind = "color" | "string" | "number" | "boolean" | "font" | "record" | "skip";
+
+/** One group of the theme's top-level keys, as {@link ThemeEditor} lays them out. */
+export interface ThemeCategory {
+  category: string;
+  keys: CatKey[];
+}
+
+const FONT_FIELDS = ["font", "variant", "weight", "style"] as const;
+
+function strcmp(a: string, b: string): number {
+  a = a.trim().toLowerCase();
+  b = b.trim().toLowerCase();
+  return a < b ? -1 : a === b ? 0 : 1;
+}
+
+export function themeItemKind(name: string, value: ThemeItem): ItemKind {
+  if (name.toLowerCase().search("flag") >= 0) {
+    return "skip";
+  }
+
+  if (typeof value === "string") {
+    return validateCSSColor(value.toLowerCase().trim()) ? "color" : "string";
+  } else if (typeof value === "number") {
+    return "number";
+  } else if (typeof value === "boolean") {
+    return "boolean";
+  } else if (value instanceof CSSFont) {
+    return "font";
+  } else if (typeof value === "object" && value !== null) {
+    return "record";
+  }
+
+  return "skip";
+}
+
+/**
+ * Groups the theme's top-level keys by category, sorting the categories and the keys
+ * within each. A `categoryMap` entry may be a bare category name, which is expanded
+ * into a {@link CatKey} whose `key` is the theme key it was found under.
+ */
+export function groupThemeCategories(
+  rec: ThemeRecord,
+  categoryMap: Record<string, string | CatKey>
+): ThemeCategory[] {
+  const categories: Record<string, CatKey[]> = {};
+
+  for (const k of Object.keys(rec)) {
+    const mapped = categoryMap[k];
+    let catkey: CatKey;
+
+    if (typeof mapped === "string") {
+      catkey = { category: mapped, help: "", key: k };
+    } else if (mapped) {
+      catkey = { ...mapped, key: mapped.key || k };
+    } else {
+      catkey = { category: k, help: "", key: k };
+    }
+
+    if (!(catkey.category in categories)) {
+      categories[catkey.category] = [];
+    }
+
+    categories[catkey.category].push(catkey);
+  }
+
+  return Object.keys(categories)
+    .sort(strcmp)
+    .map((category) => ({
+      category,
+      keys: categories[category].sort((a, b) => strcmp(a.key, b.key)),
+    }));
+}
+
+/** Walks `path` from the theme root. */
+function resolveRecord(path: string[]): ThemeRecord {
+  let rec: ThemeRecord = theme;
+
+  for (const key of path) {
+    rec = rec[key] as ThemeRecord;
+  }
+
+  return rec;
 }
 
 export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Container<
@@ -35,13 +138,34 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     this.build();
   }
 
+  addEventListener(
+    type: "change",
+    listener: (this: ThemeEditor<CTX>, ev: ThemeChangeEvent) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    listener:
+      | ((this: ThemeEditor<CTX>, ev: ThemeChangeEvent) => void)
+      | EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void {
+    super.addEventListener(type, listener as EventListenerOrEventListenerObject, options);
+  }
+
+  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
   doFolder(
     catkey: CatKey,
-    obj: any,
-    container: any = this,
-    panel?: any,
-    path?: string[] | undefined
-  ) {
+    obj: ThemeRecord,
+    container: Container<CTX> = this,
+    panel?: PanelContents<CTX>,
+    path?: string[]
+  ): void {
     const key = catkey.key;
 
     if (!path) {
@@ -53,13 +177,50 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       panel.style.marginLeft = "15px";
     }
 
-    const row2 = panel.row();
-    const textbox = row2.textbox(undefined, "");
+    this.addPropMenu(panel, catkey, obj, container, path);
 
-    const callback = (id: string) => {
-      console.log("ID", id, obj, catkey);
-      console.log(textbox, textbox.text, textbox.value);
+    const row = panel.row();
+    const col1 = row.col();
+    const col2 = row.col();
 
+    let placed = 0;
+
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      const kind = themeItemKind(k, v);
+
+      if (kind === "skip") {
+        continue;
+      }
+
+      if (kind === "record") {
+        this.doFolder({ ...catkey, key: k }, v as ThemeRecord, panel, undefined, [...path, k]);
+      } else {
+        this.valueRow(placed % 2 === 0 ? col1 : col2, path, key, k, v, kind);
+      }
+
+      placed++;
+    }
+
+    if (placed === 0) {
+      panel.remove();
+    } else {
+      panel.closed = true;
+    }
+  }
+
+  /** Adds the "+" menu that creates a new property in `obj`. */
+  private addPropMenu(
+    panel: PanelContents<CTX>,
+    catkey: CatKey,
+    obj: ThemeRecord,
+    container: Container<CTX>,
+    path: string[]
+  ): void {
+    const row = panel.row();
+    const textbox = row.textbox(undefined, "");
+
+    const add = (value: ThemeItem) => {
       const propkey = (textbox.text || "").trim();
 
       if (!propkey) {
@@ -67,265 +228,214 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         return;
       }
 
-      if (id === "FLOAT") {
-        obj[propkey] = 0.0;
-      } else if (id === "SUBFOLDER") {
-        obj[propkey] = { test: 0 };
-      } else if (id === "COLOR") {
-        obj[propkey] = "grey";
-      } else if (id === "FONT") {
-        obj[propkey] = new CSSFont();
-      } else if (id === "STRING") {
-        obj[propkey] = "";
-      }
+      obj[propkey] = value;
 
-      const uidata = saveUIData(panel, "theme-panel");
-
-      panel.clear();
-      this.doFolder(catkey, obj, container, panel, path);
-
-      loadUIData(panel, uidata);
-      panel.flushUpdate();
-      panel.flushSetCSS();
-
-      if (this.on_change) {
-        (this.on_change as any)(key, propkey, obj);
-      }
+      this.rebuildFolder(panel, catkey, obj, container, path);
+      this.notify(catkey.key, propkey, obj);
     };
 
-    row2.menu("+", [
-      { name: "Float", callback: () => callback("FLOAT") },
-      { name: "Color", callback: () => callback("COLOR") },
-      { name: "Subfolder", callback: () => callback("SUBFOLDER") },
-      { name: "Font", callback: () => callback("FONT") },
-      { name: "String", callback: () => callback("STRING") },
+    row.menu("+", [
+      { name: "Float", callback: () => add(0.0) },
+      { name: "Color", callback: () => add("grey") },
+      { name: "Subfolder", callback: () => add({ test: 0 }) },
+      { name: "Font", callback: () => add(new CSSFont()) },
+      { name: "String", callback: () => add("") },
     ]);
+  }
 
-    const row = panel.row();
-    const col1 = row.col();
-    const col2 = row.col();
+  /** Rebuilds `panel` in place, preserving which of its sub-panels are open. */
+  private rebuildFolder(
+    panel: PanelContents<CTX>,
+    catkey: CatKey,
+    obj: ThemeRecord,
+    container: Container<CTX>,
+    path: string[]
+  ): void {
+    const uidata = saveUIData(panel, "theme-panel");
 
-    const do_onchange = (key: string, k: string, _obj?: any) => {
-      flagThemeUpdate();
+    panel.clear();
+    this.doFolder(catkey, obj, container, panel, path);
 
-      if (this.on_change) {
-        (this.on_change as any)(key, k, _obj);
-      }
+    loadUIData(panel, uidata);
+    panel.flushUpdate();
+    panel.flushSetCSS();
+  }
 
-      (this.ctx as any).screen.completeSetCSS();
-      (this.ctx as any).screen.completeUpdate();
-    };
+  /** Repaints the screen against the edited theme and reports the change. */
+  private notify(category: string, key: string, record?: ThemeRecord): void {
+    flagThemeUpdate();
 
-    const getpath = (path: string[]) => {
-      let obj: any = theme;
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record));
 
-      for (let i = 0; i < path.length; i++) {
-        obj = obj[path[i]];
-      }
+    // Backwards-compat shim for the deprecated on_change callback, whose declared
+    // type on UIBase takes a single argument.
+    const on_change = this.on_change as
+      | ((category: string, key: string, record?: ThemeRecord) => void)
+      | null;
 
-      return obj;
-    };
-
-    let ok = false;
-    let _i = 0;
-
-    const dokey = (k: string, v: any, path: string[]) => {
-      const col = _i % 2 === 0 ? col1 : col2;
-
-      if (k.toLowerCase().search("flag") >= 0) {
-        return; //don't do flags
-      }
-
-      if (typeof v === "string") {
-        const v2 = v.toLowerCase().trim();
-
-        const iscolor = validateCSSColor(v2);
-
-        if (iscolor) {
-          const cw = col.colorbutton();
-          ok = true;
-          _i++;
-
-          let color: any = css2color(v2);
-          if (color.length < 3) {
-            color = [color[0], color[1], color[2], 1.0];
-          }
-
-          try {
-            cw.setRGBA(color);
-          } catch (error) {
-            console.warn("Failed to set color " + k, v2);
-          }
-
-          cw.onchange = () => {
-            console.log("setting '" + k + "' to " + color2css(cw.rgba), key);
-            getpath(path)[k] = color2css(cw.rgba);
-
-            do_onchange(key, k);
-          };
-          cw.label = k;
-        } else {
-          col.label(k);
-
-          const box = col.textbox();
-          box.onchange = () => {
-            getpath(path)[k] = box.text;
-            do_onchange(key, k);
-          };
-          box.text = v;
-        }
-      } else if (typeof v === "number") {
-        const slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
-
-        slider.baseUnit = slider.displayUnit = "none";
-
-        ok = true;
-        _i++;
-
-        slider.onchange = () => {
-          getpath(path)[k] = slider.value;
-
-          do_onchange(key, k);
-        };
-      } else if (typeof v === "boolean") {
-        const check = col.check(undefined, k);
-
-        check.value = getpath(path)[k];
-
-        check.onchange = () => {
-          getpath(path)[k] = !!check.value;
-          do_onchange(key, k);
-        };
-      } else if (typeof v === "object" && v instanceof CSSFont) {
-        const panel2 = col.panel(k);
-        ok = true;
-        _i++;
-
-        const textbox = (key: string) => {
-          panel2.label(key);
-          const tbox = panel2.textbox(undefined, v[key as keyof CSSFont]);
-
-          tbox.width = tbox.getDefault("width");
-
-          tbox.onchange = function (this: any) {
-            (v as any)[key] = this.text;
-            do_onchange(key, k);
-          };
-        };
-
-        textbox("font");
-        textbox("variant");
-        textbox("weight");
-        textbox("style");
-
-        const cw = panel2.colorbutton();
-        cw.label = "color";
-        cw.setRGBA(css2color(v.color));
-        cw.onchange = () => {
-          v.color = color2css(cw.rgba);
-          do_onchange(key, k);
-        };
-
-        const slider = panel2.slider(undefined, "size", v.size);
-        slider.onchange = () => {
-          v.size = slider.value;
-          do_onchange(key, k);
-        };
-        slider.setAttribute("min", "1");
-        slider.setAttribute("max", "100");
-
-        slider.baseUnit = slider.displayUnit = "none";
-
-        panel2.closed = true;
-      } else if (typeof v === "object") {
-        const catkey2 = Object.assign({}, catkey);
-        catkey2.key = k;
-
-        const path2 = path.concat(k);
-
-        this.doFolder(catkey2, v, panel, undefined, path2);
-      }
-    };
-
-    for (const k in obj) {
-      const v = obj[k];
-
-      dokey(k, v, path);
+    if (on_change) {
+      on_change(category, key, record);
     }
 
-    if (!ok) {
-      panel.remove();
-    } else {
-      panel.closed = true;
+    if (this.ctx) {
+      this.ctx.screen.completeSetCSS();
+      this.ctx.screen.completeUpdate();
     }
   }
 
-  build() {
+  private valueRow(
+    col: ColumnFrame<CTX>,
+    path: string[],
+    category: string,
+    key: string,
+    value: ThemeItem,
+    kind: ItemKind
+  ): void {
+    switch (kind) {
+      case "color":
+        this.colorRow(col, path, category, key, value as string);
+        break;
+      case "string":
+        this.stringRow(col, path, category, key, value as string);
+        break;
+      case "number":
+        this.numberRow(col, path, category, key, value as number);
+        break;
+      case "boolean":
+        this.boolRow(col, path, category, key);
+        break;
+      case "font":
+        this.fontPanel(col, category, key, value as CSSFont);
+        break;
+    }
+  }
+
+  private colorRow(
+    col: ColumnFrame<CTX>,
+    path: string[],
+    category: string,
+    key: string,
+    css: string
+  ): void {
+    const cw = col.colorbutton(undefined);
+
+    try {
+      // css2color's result is recycled from a cachering; setRGBA copies it.
+      cw.setRGBA(css2color(css.toLowerCase().trim()));
+    } catch {
+      console.warn("Failed to set color " + key, css);
+    }
+
+    cw.label = key;
+
+    cw.on_change = () => {
+      resolveRecord(path)[key] = color2css(cw.rgba);
+      this.notify(category, key);
+    };
+  }
+
+  private stringRow(
+    col: ColumnFrame<CTX>,
+    path: string[],
+    category: string,
+    key: string,
+    text: string
+  ): void {
+    col.label(key);
+
+    const box = col.textbox();
+    box.text = text;
+
+    box.on_change = () => {
+      resolveRecord(path)[key] = box.text;
+      this.notify(category, key);
+    };
+  }
+
+  private numberRow(
+    col: ColumnFrame<CTX>,
+    path: string[],
+    category: string,
+    key: string,
+    value: number
+  ): void {
+    const slider = col.slider(undefined, key, value, 0, 256, 0.01, false);
+
+    slider.baseUnit = slider.displayUnit = "none";
+
+    slider.on_change = () => {
+      resolveRecord(path)[key] = slider.value;
+      this.notify(category, key);
+    };
+  }
+
+  private boolRow(col: ColumnFrame<CTX>, path: string[], category: string, key: string): void {
+    const check = col.check(undefined, key);
+
+    // Assigning value fires on_change, so wire the handler after it.
+    check.value = !!resolveRecord(path)[key];
+
+    check.on_change = () => {
+      resolveRecord(path)[key] = !!check.value;
+      this.notify(category, key);
+    };
+  }
+
+  /** A closed sub-panel editing a {@link CSSFont} in place. */
+  private fontPanel(col: ColumnFrame<CTX>, category: string, key: string, font: CSSFont): void {
+    const panel = col.panel(key);
+
+    for (const field of FONT_FIELDS) {
+      panel.label(field);
+
+      const tbox = panel.textbox(undefined, font[field]);
+      tbox.width = tbox.getDefault<number>("width");
+
+      tbox.on_change = () => {
+        font[field] = tbox.text;
+        this.notify(category, key);
+      };
+    }
+
+    const cw = panel.colorbutton(undefined);
+    cw.label = "color";
+    cw.setRGBA(css2color(font.color));
+
+    cw.on_change = () => {
+      font.color = color2css(cw.rgba);
+      this.notify(category, key);
+    };
+
+    const slider = panel.slider(undefined, "size", font.size);
+    slider.setAttribute("min", "1");
+    slider.setAttribute("max", "100");
+    slider.baseUnit = slider.displayUnit = "none";
+
+    slider.on_change = () => {
+      font.size = slider.value;
+      this.notify(category, key);
+    };
+
+    panel.closed = true;
+  }
+
+  build(): void {
     const uidata = saveUIData(this, "theme");
 
     this.clear();
 
-    const categories: Record<string, CatKey[]> = {};
+    for (const { category, keys } of groupThemeCategories(theme, this.categoryMap)) {
+      const panel = keys.length > 1 ? this.panel(category) : undefined;
 
-    for (const k of Object.keys(theme)) {
-      let catkey: CatKey;
+      for (const catkey of keys) {
+        const v = theme[catkey.key];
 
-      if (k in this.categoryMap) {
-        let cat = this.categoryMap[k];
-
-        if (typeof cat === "string") {
-          cat = {
-            category: cat,
-            help    : "",
-            key     : k,
-          };
-        }
-
-        catkey = cat;
-      } else {
-        catkey = { category: k, help: "", key: k };
-      }
-
-      if (!catkey.key) {
-        catkey.key = k;
-      }
-
-      if (!(catkey.category in categories)) {
-        categories[catkey.category] = [];
-      }
-
-      categories[catkey.category].push(catkey);
-    }
-
-    function strcmp(a: string, b: string) {
-      a = a.trim().toLowerCase();
-      b = b.trim().toLowerCase();
-      return a < b ? -1 : a === b ? 0 : 1;
-    }
-
-    const keys = Object.keys(categories);
-    keys.sort(strcmp);
-
-    for (const k of keys) {
-      const list = categories[k];
-      list.sort((a, b) => strcmp(a.key, b.key));
-
-      let panel: any = this;
-
-      if (list.length > 1) {
-        panel = this.panel(k);
-      }
-
-      for (const cat of list) {
-        const k2 = cat.key;
-        const v = (theme as any)[k2];
-
-        if (typeof v === "object") {
-          this.doFolder(cat, v, panel);
+        if (typeof v === "object" && v !== null) {
+          this.doFolder(catkey, v as ThemeRecord, panel ?? this);
         }
       }
 
-      if (list.length > 1) {
+      if (panel) {
         panel.closed = true;
       }
     }
@@ -337,10 +447,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       this.flushUpdate();
     }
 
-    if (this.ctx && (this.ctx as any).screen) {
+    if (this.ctx) {
       /* Fix panel spacing bug. */
       window.setTimeout(() => {
-        (this.ctx as any).screen.completeSetCSS();
+        this.ctx.screen.completeSetCSS();
       }, 100);
     }
   }
