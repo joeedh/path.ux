@@ -4,31 +4,37 @@
  * Copy to scripts/editors/theme.js
  */
 
-import { CSSFont, ThemeScrollBars } from "./pathux.js";
+import { CSSFont, getVars, ThemeScrollBars } from "./pathux.js";
+
+export const themeVars = {
+  // the colour a widget takes on under the mouse
+  accent: "rgba(151,208,239, 1)",
+  // what sits behind a widget that draws no background of its own
+  background: "rgba(207,207,207, 0.5)",
+  // how round a box's corners are
+  radius: 5,
+  // the font ordinary text is drawn in
+  bodyFont: new CSSFont({
+    font   : "sans-serif",
+    weight : "normal",
+    variant: "normal",
+    style  : "normal",
+    size   : 14,
+    color  : "rgba(35, 35, 35, 1.0)",
+  }),
+};
+
+const vars = getVars(themeVars);
 
 export const theme = {
   base: {
     AreaHeaderBG        : "rgba(200, 200, 200, 0.95)",
     BasePackFlag        : 0,
     BoxDepressed        : "rgba(130,130,130, 1)",
-    BoxHighlight        : "rgba(151,208,239, 1)",
+    BoxHighlight        : vars.accent,
     mobileSizeMultiplier: 1.0,
-    DefaultText: new CSSFont({
-      font   : "sans-serif",
-      weight : "normal",
-      variant: "normal",
-      style  : "normal",
-      size   : 14,
-      color  : "rgba(35, 35, 35, 1.0)",
-    }),
-    LabelText: new CSSFont({
-      font   : "sans-serif",
-      weight : "normal",
-      variant: "normal",
-      style  : "normal",
-      size   : 14,
-      color  : "rgba(35, 35, 35, 1.0)",
-    }),
+    DefaultText         : vars.bodyFont,
+    LabelText           : vars.bodyFont,
     TitleText: new CSSFont({
       font   : "sans-serif",
       weight : "normal",
@@ -37,7 +43,7 @@ export const theme = {
       size   : 12,
       color  : "rgba(35, 35, 35, 1.0)",
     }),
-    "background-color"  : "rgba(207,207,207, 0.5)",
+    "background-color"  : vars.background,
     "border-color"      : "rgba(34,34,34, 1)",
     "border-radius"     : 12.010619764585666,
     "focus-border-width": 2,
@@ -160,7 +166,7 @@ export const theme = {
     highlight: {
       "background-color": "rgba(133,182,255,0.8)",
       "border-color"    : "black",
-      "border-radius"   : 5,
+      "border-radius"   : vars.radius,
       "border-width"    : 1,
       height            : 32,
       "margin-bottom"   : 1,
@@ -173,7 +179,7 @@ export const theme = {
     depressed: {
       "background-color": "rgba(42,61,77,0.8)",
       "border-color"    : "black",
-      "border-radius"   : 5,
+      "border-radius"   : vars.radius,
       "border-width"    : 1,
       height            : 32,
       "margin-bottom"   : 1,
@@ -185,7 +191,7 @@ export const theme = {
     },
     "background-color": "rgba(15,15,15, 0)",
     "border-color"    : "black",
-    "border-radius"   : 5,
+    "border-radius"   : vars.radius,
     "border-width"    : 1,
     height            : 32,
     "margin-bottom"   : 1,
@@ -200,7 +206,7 @@ export const theme = {
     highlight: {
       "background-color": "rgba(133,182,255,0.8)",
       "border-color"    : "black",
-      "border-radius"   : 5,
+      "border-radius"   : vars.radius,
       "border-width"    : 1,
       height            : 32,
       "margin-bottom"   : 1,
@@ -213,7 +219,7 @@ export const theme = {
     depressed: {
       "background-color": "rgba(42,61,77,0.8)",
       "border-color"    : "black",
-      "border-radius"   : 5,
+      "border-radius"   : vars.radius,
       "border-width"    : 1,
       height            : 32,
       "margin-bottom"   : 1,
@@ -225,7 +231,7 @@ export const theme = {
     },
     "background-color": "rgba(15,15,15, 0)",
     "border-color"    : "rgba(237,209,209, 1)",
-    "border-radius"   : 5,
+    "border-radius"   : vars.radius,
     "border-width"    : 0,
     drawCheck         : true,
     height            : 32,
@@ -289,7 +295,7 @@ export const theme = {
       color  : "rgb(68, 68, 68)",
     }),
     "border-color"  : "grey",
-    "border-radius" : 5,
+    "border-radius" : vars.radius,
     "border-style"  : "solid",
     "border-width"  : 1,
     "padding-top"   : 0,
@@ -308,7 +314,7 @@ export const theme = {
       color  : "rgb(225,225,225)",
     }),
     "background-color": "rgba(72,72,72,0)",
-    "border-radius"   : 5,
+    "border-radius"   : vars.radius,
     "border-color"    : "grey",
     "border-width"    : 1,
     "border-style"    : "solid",
@@ -331,7 +337,7 @@ export const theme = {
         size   : 12,
         color  : "rgb(0,0,0)",
       }),
-      "background-color": "rgba(151,208,239, 1)",
+      "background-color": vars.accent,
       "border-color"    : "rgba(255,255,255, 1)",
       "border-style"    : "solid",
       "border-width"    : 1,

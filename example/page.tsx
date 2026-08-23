@@ -15,6 +15,8 @@ import type { Container, UIBase, ListBox } from "./pathux.js";
 
 export interface PropsPageRefs {
   exportButton?: (btn: UIBase) => void;
+  //a custom tag types as UIBase in JSX, so the consumer narrows it
+  themeEditor?: (ed: UIBase) => void;
   graphTab?: (tab: Container) => void;
   listbox?: (lb: ListBox) => void;
   eventStrip?: (con: Container) => void;
@@ -25,7 +27,7 @@ export function PropsPage(refs: PropsPageRefs = {}) {
     <tabs pos="left" style="overflow-y : scroll">
       <tab label="Theme" data-testid="tab-theme">
         <button ref={refs.exportButton}>Export Theme</button>
-        <theme-editor-x></theme-editor-x>
+        <theme-editor-x ref={refs.themeEditor}></theme-editor-x>
       </tab>
       <tab label="Tab" data-testid="tab-tab">
         <tool path="canvas.draw()" useIcons="false">

@@ -18,6 +18,7 @@ import {
   buildToolSysAPI,
   DataAPI,
   ContextLike,
+  instanceThemeVars,
 } from "../pathux.js";
 
 import { ModelData } from "./state.js";
@@ -25,7 +26,7 @@ import { defineAPI } from "../api/api_define.js";
 import { ToolContext, ViewContext } from "./context.js";
 import '../draw/draw_ops';
 import { DataLib, DataRef, DataBlock } from "./datablock.js";
-import { theme } from "../theme.js";
+import { theme, themeVars } from "../theme.js";
 
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
 import { AppScreen } from "../editors/screen.js";
@@ -413,7 +414,7 @@ export class AppState {
 }
 
 export function start() {
-  setTheme(theme);
+  setTheme(instanceThemeVars(theme, themeVars));
 
   window._appstate = new AppState();
 

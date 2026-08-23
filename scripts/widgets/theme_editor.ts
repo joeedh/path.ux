@@ -58,6 +58,10 @@ export interface ThemeCategory {
 
 const FONT_FIELDS = ["font", "variant", "weight", "style"] as const;
 
+const VAR_NAME_WIDTH = 110;
+const VAR_VALUE_WIDTH = 150;
+const VAR_COMMENT_WIDTH = 150;
+
 function strcmp(a: string, b: string): number {
   a = a.trim().toLowerCase();
   b = b.trim().toLowerCase();
@@ -684,6 +688,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     const row = panel.row();
 
     const name = row.textbox(undefined, key);
+    name.width = VAR_NAME_WIDTH;
     name.description = "The name this variable is written under in the theme file";
     name.on_change = () => {
       try {
@@ -700,12 +705,20 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       set   : (value) => this.writeVar(key, value, "themeVars", key),
     };
 
-    this.valueRow(row.col(), key, slot, themeItemKind(key, this._vars[key]));
+    const kind = themeItemKind(key, this._vars[key]);
+
+    const valueCol = row.col();
+    //a fixed width keeps the columns after it aligned across rows of mixed kinds
+    valueCol.style["width"] = `${VAR_VALUE_WIDTH}px`;
+
+    //the name textbox already says which variable this is, so the value goes unlabelled
+    this.valueRow(valueCol, kind === "font" ? key : "", slot, kind);
 
     const uses = this._varTheme ? varSlots(this._varTheme, key).length : 0;
     row.label(uses === 1 ? "1 slot" : `${uses} slots`);
 
     const comment = row.textbox(undefined, this._varComments[key] ?? "");
+    comment.width = VAR_COMMENT_WIDTH;
     comment.description = "A note written above this variable in the exported theme file";
     comment.on_change = () => this.setVarComment(key, comment.text);
 
@@ -724,6 +737,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     const row = panel.row();
 
     const textbox = row.textbox(undefined, "");
+    textbox.width = VAR_NAME_WIDTH;
     textbox.description = "A name for the variable the menu beside this adds";
 
     const add = (value: ThemeItem) => {

@@ -40225,16 +40225,16 @@ function instanceThemeVars(theme2, vars) {
 function copyRecord(rec, vars, path) {
   const ret = {};
   for (const key in rec) {
-    ret[key] = copyItem(rec[key], vars, path ? `${path}.${key}` : key);
+    ret[key] = copyThemeItem(rec[key], vars, path ? `${path}.${key}` : key);
   }
   return ret;
 }
-function copyItem(item, vars, path) {
+function copyThemeItem(item, vars = {}, path = "") {
   if (item instanceof ThemeVar) {
     if (!(item.key in vars)) {
       throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
     }
-    return copyItem(vars[item.key], vars, path);
+    return copyThemeItem(vars[item.key], vars, path);
   }
   if (item instanceof CSSFont) {
     return item.copy();
@@ -40249,6 +40249,198 @@ function copyItem(item, vars, path) {
     return copyRecord(item, vars, path);
   }
   return item;
+}
+function copyVarItem(item) {
+  if (item instanceof ThemeVar) {
+    return new ThemeVar(item.key);
+  }
+  if (item instanceof CSSFont) {
+    return item.copy();
+  }
+  if (item instanceof ThemeScrollBars) {
+    return new ThemeScrollBars({ ...item });
+  }
+  if (typeof item === "object" && item !== null) {
+    const ret = {};
+    for (const key in item) {
+      if (key !== "__proto__") {
+        ret[key] = copyVarItem(item[key]);
+      }
+    }
+    return ret;
+  }
+  return item;
+}
+function pathKey(path) {
+  return JSON.stringify(path);
+}
+function isWalkable(item) {
+  return typeof item === "object" && item !== null && !(item instanceof ThemeVar);
+}
+function isPlainRecord(item) {
+  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
+}
+function itemAt(rec, path) {
+  let item = rec;
+  for (const key of path) {
+    if (!isWalkable(item)) {
+      return void 0;
+    }
+    item = item[key];
+  }
+  return item;
+}
+function hasItemAt(rec, path) {
+  if (path.length === 0) {
+    return true;
+  }
+  const parent = itemAt(rec, path.slice(0, -1));
+  return isWalkable(parent) && path[path.length - 1] in parent;
+}
+function assertKey(key) {
+  if (key === "__proto__") {
+    throw new Error('"__proto__" is not a usable theme key');
+  }
+}
+function setItemAt(rec, path, item, live) {
+  if (path.length === 0) {
+    throw new Error("cannot set the theme root");
+  }
+  let parent = rec;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    assertKey(key);
+    let next = parent[key];
+    if (!isWalkable(next)) {
+      const liveHere = live ? itemAt(live, path.slice(0, i + 1)) : void 0;
+      const created = liveHere instanceof ThemeScrollBars ? new ThemeScrollBars({}) : {};
+      if (i > 0 && isWalkable(liveHere)) {
+        seedLeaves(created, liveHere);
+      }
+      parent[key] = created;
+      next = created;
+    }
+    parent = next;
+  }
+  const last = path[path.length - 1];
+  assertKey(last);
+  parent[last] = item;
+}
+function seedLeaves(dst, src) {
+  for (const key in src) {
+    const v = src[key];
+    if (key === "__proto__" || isPlainRecord(v)) {
+      continue;
+    }
+    dst[key] = copyThemeItem(v);
+  }
+}
+function deleteItemAt(rec, path) {
+  const parent = itemAt(rec, path.slice(0, -1));
+  if (isWalkable(parent)) {
+    delete parent[path[path.length - 1]];
+  }
+}
+function toLivePath(path) {
+  if (path.length < 2) {
+    return [...path];
+  }
+  const key = path[1];
+  const mapped = key in compatMap ? compatMap[key] : key;
+  return [path[0], mapped, ...path.slice(2)];
+}
+function varSlots(varTheme, varKey) {
+  const found = [];
+  const walk = (rec, path) => {
+    for (const key in rec) {
+      const v = rec[key];
+      const here = [...path, key];
+      if (v instanceof ThemeVar) {
+        if (v.key === varKey) {
+          found.push({ varPath: here, livePath: toLivePath(here) });
+        }
+      } else if (isPlainRecord(v)) {
+        walk(v, here);
+      }
+    }
+  };
+  walk(varTheme, []);
+  return found;
+}
+function bindSlot(varTheme, varPath, varKey, live) {
+  setItemAt(varTheme, varPath, new ThemeVar(varKey), live);
+}
+function unbindSlot(varTheme, vars, varPath) {
+  const item = itemAt(varTheme, varPath);
+  if (!(item instanceof ThemeVar)) {
+    throw new Error(`slot "${pathKey(varPath)}" is not bound to a variable`);
+  }
+  const value = copyThemeItem(item, vars, pathKey(varPath));
+  setItemAt(varTheme, varPath, value);
+  return value;
+}
+function addVar(vars, key, value) {
+  const name2 = key.trim();
+  if (!name2) {
+    throw new Error("a theme variable needs a name");
+  }
+  if (name2.search("\n") >= 0) {
+    throw new Error("a theme variable name cannot contain a newline");
+  }
+  assertKey(name2);
+  if (name2 in vars) {
+    throw new Error(`theme variable "${name2}" already exists`);
+  }
+  vars[name2] = value;
+  return name2;
+}
+function deleteVar(varTheme, vars, key) {
+  if (!(key in vars)) {
+    throw new Error(`no such theme variable "${key}"`);
+  }
+  const slots = varSlots(varTheme, key);
+  for (const slot of slots) {
+    setItemAt(varTheme, slot.varPath, copyThemeItem(vars[key], vars, pathKey(slot.varPath)));
+  }
+  delete vars[key];
+  return slots;
+}
+function renameVar(varTheme, vars, comments, from, to) {
+  const name2 = to.trim();
+  if (!(from in vars)) {
+    throw new Error(`no such theme variable "${from}"`);
+  }
+  if (name2 === from) {
+    return from;
+  }
+  if (!name2) {
+    throw new Error("a theme variable needs a name");
+  }
+  if (name2.search("\n") >= 0) {
+    throw new Error("a theme variable name cannot contain a newline");
+  }
+  assertKey(name2);
+  if (name2 in vars) {
+    throw new Error(`theme variable "${name2}" already exists`);
+  }
+  for (const slot of varSlots(varTheme, from)) {
+    setItemAt(varTheme, slot.varPath, new ThemeVar(name2));
+  }
+  const entries = Object.entries(vars).map(([k, v]) => [
+    k === from ? name2 : k,
+    v
+  ]);
+  for (const k of Object.keys(vars)) {
+    delete vars[k];
+  }
+  for (const [k, v] of entries) {
+    vars[k] = v;
+  }
+  if (from in comments) {
+    comments[name2] = comments[from];
+    delete comments[from];
+  }
+  return name2;
 }
 function createThemeFile({
   theme: theme2,
@@ -40287,6 +40479,7 @@ export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<Var
 `;
   return onAssemble(header, varsSrc, themeSrc, footer);
 }
+var KEY_LINE = /^\s*(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:/;
 function parseVarComments(themeFile) {
   const comments = {};
   const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
@@ -40296,15 +40489,16 @@ function parseVarComments(themeFile) {
   }
   const block = readBlock(themeFile, decl.index + decl[0].length - 1);
   let pending = [];
-  for (const { text: text2, depth } of block) {
-    const comment = /^\s*\/\/(.*)$/.exec(text2);
-    if (comment) {
-      pending.push(comment[1].trim());
+  for (const { code: code2, comment, depth } of block) {
+    const key = KEY_LINE.exec(code2);
+    if (key && depth === 1) {
+      const lines = comment ? [...pending, comment] : pending;
+      if (lines.length > 0) {
+        comments[key[1] ?? key[2] ?? key[3]] = lines.join("\n");
+      }
+    } else if (code2.trim() === "" && comment) {
+      pending.push(comment);
       continue;
-    }
-    const key = /^\s*(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:/.exec(text2);
-    if (key && depth === 1 && pending.length > 0) {
-      comments[key[1] ?? key[2] ?? key[3]] = pending.join("\n");
     }
     pending = [];
   }
@@ -40313,36 +40507,50 @@ function parseVarComments(themeFile) {
 function readBlock(src, start) {
   const lines = [];
   let depth = 0;
-  let line = "";
   let lineDepth = 0;
+  let code2 = "";
+  let comment = "";
+  let inComment = false;
   let quoteChar = "";
-  let comment = false;
+  const pushLine = () => {
+    lines.push({ code: code2, comment: comment.trim(), depth: lineDepth });
+    code2 = "";
+    comment = "";
+    inComment = false;
+  };
   for (let i = start; i < src.length; i++) {
     const c = src[i];
     if (c === "\n") {
-      lines.push({ text: line, depth: lineDepth });
-      line = "";
-      comment = false;
+      pushLine();
       lineDepth = depth;
       continue;
     }
-    line += c;
-    if (comment) {
+    if (inComment) {
+      comment += c;
       continue;
-    } else if (quoteChar) {
+    }
+    if (quoteChar) {
+      code2 += c;
       if (c === "\\") {
-        line += src[++i] ?? "";
+        code2 += src[++i] ?? "";
       } else if (c === quoteChar) {
         quoteChar = "";
       }
-    } else if (c === '"' || c === "'" || c === "`") {
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "/") {
+      inComment = true;
+      i++;
+      continue;
+    }
+    code2 += c;
+    if (c === '"' || c === "'" || c === "`") {
       quoteChar = c;
-    } else if (c === "/" && src[i + 1] === "/") {
-      comment = true;
     } else if (c === "{" || c === "[" || c === "(") {
       depth++;
     } else if (c === "}" || c === "]" || c === ")") {
       if (--depth === 0) {
+        pushLine();
         break;
       }
     }
@@ -47642,14 +47850,20 @@ var ThemeChangeEvent = class extends Event {
   category;
   key;
   record;
-  constructor(category, key, record) {
+  /** The variable that was edited, when the change came through one. */
+  varKey;
+  constructor(category, key, record, varKey) {
     super("change");
     this.category = category;
     this.key = key;
     this.record = record;
+    this.varKey = varKey;
   }
 };
 var FONT_FIELDS = ["font", "variant", "weight", "style"];
+var VAR_NAME_WIDTH = 110;
+var VAR_VALUE_WIDTH = 150;
+var VAR_COMMENT_WIDTH = 150;
 function strcmp(a2, b) {
   a2 = a2.trim().toLowerCase();
   b = b.trim().toLowerCase();
@@ -47671,6 +47885,13 @@ function themeItemKind(name2, value) {
     return "record";
   }
   return "skip";
+}
+function varFits(kind, value) {
+  const other = themeItemKind("", value);
+  if (kind === "color" || kind === "string") {
+    return other === "color" || other === "string";
+  }
+  return other === kind;
 }
 function groupThemeCategories(rec, categoryMap) {
   const categories = {};
@@ -47701,8 +47922,30 @@ function resolveRecord(path) {
   }
   return rec;
 }
+function findRecord(path) {
+  let rec = theme;
+  for (const key of path) {
+    if (typeof rec !== "object" || rec === null) {
+      return void 0;
+    }
+    rec = rec[key];
+  }
+  return typeof rec === "object" && rec !== null ? rec : void 0;
+}
 var ThemeEditor = class extends Container3 {
   categoryMap;
+  _refreshes = [];
+  _refreshing = false;
+  _varTheme;
+  _vars = {};
+  _varComments = {};
+  //live path of a bound slot, as pathKey, to the variable it reads
+  _bindings = /* @__PURE__ */ new Map();
+  //live path of an authored slot, as pathKey, to the path it is written at
+  _authored = /* @__PURE__ */ new Map();
+  //the row whose gesture is writing, so a broadcast does not refresh it
+  _origin;
+  _varsPanel;
   constructor() {
     super();
     this.categoryMap = {};
@@ -47721,7 +47964,7 @@ var ThemeEditor = class extends Container3 {
     super.addEventListener(type, listener, options);
   }
   /** Builds a panel of editors for `obj`, recursing into its sub-records. */
-  doFolder(catkey, obj, container = this, panel, path) {
+  doFolder(catkey, obj, container = this, panel, path, bindable = true) {
     const key = catkey.key;
     if (!path) {
       path = [key];
@@ -47742,9 +47985,21 @@ var ThemeEditor = class extends Container3 {
         continue;
       }
       if (kind === "record") {
-        this.doFolder({ ...catkey, key: k }, v, panel, void 0, [...path, k]);
+        this.doFolder(
+          { ...catkey, key: k },
+          v,
+          panel,
+          void 0,
+          [...path, k],
+          bindable && !(v instanceof ThemeScrollBars)
+        );
       } else {
-        this.valueRow(placed % 2 === 0 ? col1 : col2, path, key, k, v, kind);
+        const col = placed % 2 === 0 ? col1 : col2;
+        const livePath = [...path, k];
+        this.valueRow(col, k, this.slotFor(livePath, key, k), kind);
+        if (bindable && this._varTheme) {
+          this.bindMenu(col, livePath, kind);
+        }
       }
       placed++;
     }
@@ -47786,9 +48041,9 @@ var ThemeEditor = class extends Container3 {
     panel.flushSetCSS();
   }
   /** Repaints the screen against the edited theme and reports the change. */
-  notify(category, key, record) {
+  notify(category, key, record, varKey) {
     flagThemeUpdate();
-    this.dispatchEvent(new ThemeChangeEvent(category, key, record));
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record, varKey));
     const on_change = this.on_change;
     if (on_change) {
       on_change(category, key, record);
@@ -47798,95 +48053,497 @@ var ThemeEditor = class extends Container3 {
       this.ctx.screen.completeUpdate();
     }
   }
-  valueRow(col, path, category, key, value, kind) {
+  /**
+   * Hands the editor the untransformed theme the live one was instanced from,
+   * plus its variables. Both are deep-copied, so editing here never reaches the
+   * caller's module state. Without this the widget edits the live theme only.
+   * Passing the theme's own source brings each variable's comment across.
+   */
+  setVarTheme(varTheme, vars, existingThemeFile) {
+    this._varTheme = copyVarItem(varTheme);
+    this._vars = {};
+    for (const key of Object.keys(vars)) {
+      this._vars[key] = copyThemeItem(vars[key]);
+    }
+    this._varComments = existingThemeFile ? parseVarComments(existingThemeFile) : {};
+    this.rebuildBindings();
+    if (this._init_done) {
+      this.build();
+    }
+  }
+  /** The editor's own copy of the authored theme, or undefined in plain mode. */
+  getVarTheme() {
+    return this._varTheme ? copyVarItem(this._varTheme) : void 0;
+  }
+  /** The editor's own copy of the variable values. */
+  getThemeVars() {
+    const ret = {};
+    for (const key of Object.keys(this._vars)) {
+      ret[key] = copyThemeItem(this._vars[key]);
+    }
+    return ret;
+  }
+  /**
+   * Writes the edited theme back out as TypeScript source. The editor owns the
+   * authored record, so an edit at a bound slot is written as the variable it
+   * came from rather than dropped. Comments typed in the Variables panel win
+   * over the ones read out of `existingThemeFile`.
+   */
+  createFile({
+    existingThemeFile,
+    importPath,
+    onAssemble
+  } = {}) {
+    const varTheme = this.getVarTheme();
+    if (!varTheme) {
+      throw new Error("the theme editor has no authored theme to write");
+    }
+    return createThemeFile({
+      theme: varTheme,
+      vars: this.getThemeVars(),
+      varComments: {
+        ...existingThemeFile ? parseVarComments(existingThemeFile) : {},
+        ...this._varComments
+      },
+      importPath,
+      onAssemble
+    });
+  }
+  /** Re-reads which live slots are bound to which variable, and where each was authored. */
+  rebuildBindings() {
+    this._bindings = /* @__PURE__ */ new Map();
+    this._authored = /* @__PURE__ */ new Map();
+    if (!this._varTheme) {
+      return;
+    }
+    const walk = (rec, path) => {
+      for (const key in rec) {
+        const here = [...path, key];
+        this._authored.set(pathKey(toLivePath(here)), here);
+        const v = rec[key];
+        if (isPlainRecord(v)) {
+          walk(v, here);
+        }
+      }
+    };
+    walk(this._varTheme, []);
+    for (const varKey of Object.keys(this._vars)) {
+      for (const slot of varSlots(this._varTheme, varKey)) {
+        const live = pathKey(slot.livePath);
+        if (this._bindings.has(live)) {
+          console.warn(
+            `theme slot ${live} is bound twice, to "${this._bindings.get(live)}" and "${varKey}"`
+          );
+          continue;
+        }
+        this._bindings.set(live, varKey);
+      }
+    }
+  }
+  /**
+   * Where a live slot is written in the authored theme. A slot the theme file
+   * never mentioned is authored at its live path, so nothing else of the
+   * library's defaults is exported alongside it.
+   */
+  varPathFor(livePath) {
+    return this._authored.get(pathKey(livePath)) ?? [...livePath];
+  }
+  /**
+   * Points the live slot at `livePath` at `varKey` and takes the variable's
+   * value. Creating the authored entry seeds any sub-record it has to make from
+   * the live values, because `setTheme` assigns one by reference.
+   */
+  bindLiveSlot(livePath, varKey) {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+    bindSlot(this._varTheme, this.varPathFor(livePath), varKey, theme);
+    const parent = findRecord(livePath.slice(0, -1));
+    if (parent) {
+      parent[livePath[livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
+    }
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0], livePath[livePath.length - 1], void 0, varKey);
+  }
+  /** Writes the variable's current value into the authored slot and stops reading it. */
+  detachLiveSlot(livePath) {
+    const varPath = this._authored.get(pathKey(livePath));
+    if (!this._varTheme || !varPath) {
+      return;
+    }
+    unbindSlot(this._varTheme, this._vars, varPath);
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0], livePath[livePath.length - 1]);
+  }
+  /** Adds a variable, returning the name it was stored under. */
+  addThemeVar(name2, value) {
+    const key = addVar(this._vars, name2, copyThemeItem(value));
+    this.rebuild();
+    this.notify("themeVars", key, void 0, key);
+    return key;
+  }
+  /**
+   * Removes a variable, inlining its current value at every slot that read it.
+   * Nothing on screen changes.
+   */
+  deleteThemeVar(key) {
+    if (!this._varTheme) {
+      return;
+    }
+    deleteVar(this._varTheme, this._vars, key);
+    delete this._varComments[key];
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key);
+  }
+  /** Renames a variable, rewriting every slot that reads it. */
+  renameThemeVar(from, to) {
+    if (!this._varTheme) {
+      return from;
+    }
+    const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key, void 0, key);
+    return key;
+  }
+  /** The comment a variable is exported with. */
+  setVarComment(key, comment) {
+    this._varComments[key] = comment;
+  }
+  /**
+   * Makes a variable out of a slot's current value and binds the slot to it.
+   * The name is taken from the slot and deduped; the Variables panel opens so
+   * it can be renamed there.
+   */
+  varFromSlot(livePath) {
+    if (!this._varTheme) {
+      return void 0;
+    }
+    const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]];
+    const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
+    let name2 = stem;
+    for (let i = 2; name2 in this._vars; i++) {
+      name2 = `${stem}_${i}`;
+    }
+    addVar(this._vars, name2, copyThemeItem(value));
+    this.bindLiveSlot(livePath, name2);
+    if (this._varsPanel && !this._varsPanel.isDead()) {
+      this._varsPanel.closed = false;
+    }
+    return name2;
+  }
+  /** The menu binding one theme slot to a variable, detaching it, or making one. */
+  bindMenu(col, livePath, kind) {
+    const bound = this._bindings.get(pathKey(livePath));
+    const dbox = col.menu(bound !== void 0 ? `= ${bound}` : "\u2026", []);
+    dbox.description = bound !== void 0 ? `This value follows the theme variable "${bound}"` : "Read this value from a theme variable";
+    dbox.template = () => this.bindTemplate(livePath, kind);
+  }
+  bindTemplate(livePath, kind) {
+    const entries = [];
+    const bound = this._bindings.get(pathKey(livePath));
+    for (const key of Object.keys(this._vars)) {
+      if (key === bound || !varFits(kind, this._vars[key])) {
+        continue;
+      }
+      entries.push({
+        name: key,
+        tooltip: `Take this value from "${key}", and follow it from now on`,
+        callback: () => this.bindLiveSlot(livePath, key)
+      });
+    }
+    entries.push({
+      name: "New variable from this value",
+      tooltip: "Make a variable holding this value, and read it here",
+      callback: () => this.varFromSlot(livePath)
+    });
+    if (bound !== void 0) {
+      entries.push({
+        name: "Detach",
+        tooltip: `Keep the value "${bound}" has now, and stop following it`,
+        callback: () => this.detachLiveSlot(livePath)
+      });
+    }
+    return entries;
+  }
+  /** The panel listing every variable, above the theme's own categories. */
+  buildVarsPanel() {
+    const panel = this.panel(
+      "Variables",
+      "theme-variables",
+      void 0,
+      "Values shared by the theme slots bound to them"
+    );
+    this._varsPanel = panel;
+    for (const key of Object.keys(this._vars)) {
+      this.varRow(panel, key);
+    }
+    this.addVarMenu(panel);
+    panel.closed = true;
+  }
+  varRow(panel, key) {
+    const row = panel.row();
+    const name2 = row.textbox(void 0, key);
+    name2.width = VAR_NAME_WIDTH;
+    name2.description = "The name this variable is written under in the theme file";
+    name2.on_change = () => {
+      try {
+        this.renameThemeVar(key, name2.text);
+      } catch (e) {
+        console.error(e.message);
+        name2.text = key;
+      }
+    };
+    const slot = {
+      varKey: key,
+      get: () => this._vars[key],
+      set: (value) => this.writeVar(key, value, "themeVars", key)
+    };
+    const kind = themeItemKind(key, this._vars[key]);
+    const valueCol = row.col();
+    valueCol.style["width"] = `${VAR_VALUE_WIDTH}px`;
+    this.valueRow(valueCol, kind === "font" ? key : "", slot, kind);
+    const uses = this._varTheme ? varSlots(this._varTheme, key).length : 0;
+    row.label(uses === 1 ? "1 slot" : `${uses} slots`);
+    const comment = row.textbox(void 0, this._varComments[key] ?? "");
+    comment.width = VAR_COMMENT_WIDTH;
+    comment.description = "A note written above this variable in the exported theme file";
+    comment.on_change = () => this.setVarComment(key, comment.text);
+    const del = row.menu("\xD7", [
+      {
+        name: "Delete",
+        tooltip: `Write the value "${key}" has now into all ${uses} slots, and remove it`,
+        callback: () => this.deleteThemeVar(key)
+      }
+    ]);
+    del.description = `Remove "${key}"`;
+  }
+  /** Adds the "+" menu that creates a variable under the name typed beside it. */
+  addVarMenu(panel) {
+    const row = panel.row();
+    const textbox = row.textbox(void 0, "");
+    textbox.width = VAR_NAME_WIDTH;
+    textbox.description = "A name for the variable the menu beside this adds";
+    const add = (value) => {
+      try {
+        this.addThemeVar(textbox.text || "", value);
+      } catch (e) {
+        console.error(e.message);
+      }
+    };
+    const menu = row.menu("+", [
+      { name: "Float", tooltip: "Add a number variable", callback: () => add(0) },
+      { name: "Color", tooltip: "Add a colour variable", callback: () => add("grey") },
+      { name: "String", tooltip: "Add a text variable", callback: () => add("") },
+      { name: "Boolean", tooltip: "Add an on-or-off variable", callback: () => add(false) },
+      { name: "Font", tooltip: "Add a font variable", callback: () => add(new CSSFont()) }
+    ]);
+    menu.description = "Add a variable of the kind chosen here";
+  }
+  /** Rebuilds every row, once the widget is built at all. */
+  rebuild() {
+    if (this._init_done) {
+      this.build();
+    }
+  }
+  /**
+   * The slot editing the live theme value at `livePath`. A bound slot writes its
+   * variable instead, so every other slot on that variable follows. `category`
+   * and `key` name the change the write reports.
+   */
+  slotFor(livePath, category, key) {
+    const parent = livePath.slice(0, -1);
+    const leaf = livePath[livePath.length - 1];
+    const varKey = this._bindings.get(pathKey(livePath));
+    if (varKey !== void 0) {
+      return {
+        varKey,
+        get: () => resolveRecord(parent)[leaf],
+        set: (value) => this.writeVar(varKey, value, category, key)
+      };
+    }
+    return {
+      get: () => resolveRecord(parent)[leaf],
+      set: (value) => {
+        resolveRecord(parent)[leaf] = value;
+        this.notify(category, key);
+      }
+    };
+  }
+  /**
+   * Writes a variable and fans its value out to every slot reading it, one
+   * independent copy each. Sharing a `CSSFont` between slots would work until a
+   * detach, after which edits would bleed between them.
+   */
+  writeVar(varKey, value, category, key) {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+    this._vars[varKey] = copyThemeItem(value);
+    for (const slot of varSlots(this._varTheme, varKey)) {
+      const parent = findRecord(slot.livePath.slice(0, -1));
+      if (parent) {
+        parent[slot.livePath[slot.livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
+      }
+    }
+    this.refreshVarRows(varKey, this._origin);
+    this.notify(category, key, void 0, varKey);
+  }
+  /**
+   * Writes through a slot, unless a refresh is in flight. Assigning a widget's
+   * value fires its own `on_change`, so a refresh that did not suppress the
+   * write would send it straight back to the slot it came from.
+   */
+  setSlot(slot, value, origin) {
+    if (this._refreshing) {
+      return;
+    }
+    const was = this._origin;
+    this._origin = origin;
+    try {
+      slot.set(value);
+    } finally {
+      this._origin = was;
+    }
+  }
+  /** Records a row's re-read, so another row writing the same value can trigger it. */
+  onRefresh(widget, slot, refresh) {
+    this._refreshes.push({ widget, slot, refresh });
+  }
+  /**
+   * Re-reads every row bound to `varKey`, dropping the rows a rebuild detached.
+   * The row that was edited is left alone, so a refresh cannot fight a gesture
+   * still in progress.
+   */
+  refreshVarRows(varKey, except) {
+    this._refreshes = this._refreshes.filter((entry) => !entry.widget.isDead());
+    const was = this._refreshing;
+    this._refreshing = true;
+    try {
+      for (const entry of this._refreshes) {
+        if (entry.slot.varKey === varKey && entry.widget !== except) {
+          entry.refresh();
+        }
+      }
+    } finally {
+      this._refreshing = was;
+    }
+  }
+  valueRow(col, key, slot, kind) {
     switch (kind) {
       case "color":
-        this.colorRow(col, path, category, key, value);
-        break;
+        return this.colorRow(col, key, slot);
       case "string":
-        this.stringRow(col, path, category, key, value);
-        break;
+        return this.stringRow(col, key, slot);
       case "number":
-        this.numberRow(col, path, category, key, value);
-        break;
+        return this.numberRow(col, key, slot);
       case "boolean":
-        this.boolRow(col, path, category, key);
-        break;
+        return this.boolRow(col, key, slot);
       case "font":
-        this.fontPanel(col, category, key, value);
-        break;
+        return this.fontPanel(col, key, slot);
     }
+    return void 0;
   }
-  colorRow(col, path, category, key, css) {
+  colorRow(col, key, slot) {
     const cw = col.colorbutton(void 0);
-    try {
-      cw.setRGBA(css2color2(css.toLowerCase().trim()));
-    } catch {
-      console.warn("Failed to set color " + key, css);
-    }
-    cw.label = key;
-    cw.on_change = () => {
-      resolveRecord(path)[key] = color2css3(cw.rgba);
-      this.notify(category, key);
+    const read = () => {
+      const css = String(slot.get() ?? "");
+      try {
+        cw.setRGBA(css2color2(css.toLowerCase().trim()));
+      } catch {
+        console.warn("Failed to set color " + key, css);
+      }
     };
+    read();
+    cw.label = key;
+    cw.on_change = () => this.setSlot(slot, color2css3(cw.rgba), cw);
+    this.onRefresh(cw, slot, read);
+    return cw;
   }
-  stringRow(col, path, category, key, text2) {
+  stringRow(col, key, slot) {
     col.label(key);
     const box = col.textbox();
-    box.text = text2;
-    box.on_change = () => {
-      resolveRecord(path)[key] = box.text;
-      this.notify(category, key);
-    };
+    box.text = String(slot.get() ?? "");
+    box.on_change = () => this.setSlot(slot, box.text, box);
+    this.onRefresh(box, slot, () => {
+      box.text = String(slot.get() ?? "");
+    });
+    return box;
   }
-  numberRow(col, path, category, key, value) {
-    const slider = col.slider(void 0, key, value, 0, 256, 0.01, false);
+  numberRow(col, key, slot) {
+    const slider = col.slider(void 0, key, Number(slot.get() ?? 0), 0, 256, 0.01, false);
     slider.baseUnit = slider.displayUnit = "none";
-    slider.on_change = () => {
-      resolveRecord(path)[key] = slider.value;
-      this.notify(category, key);
-    };
+    slider.on_change = () => this.setSlot(slot, slider.value, slider);
+    this.onRefresh(slider, slot, () => {
+      slider.value = Number(slot.get() ?? 0);
+    });
+    return slider;
   }
-  boolRow(col, path, category, key) {
+  boolRow(col, key, slot) {
     const check = col.check(void 0, key);
-    check.value = !!resolveRecord(path)[key];
-    check.on_change = () => {
-      resolveRecord(path)[key] = !!check.value;
-      this.notify(category, key);
-    };
+    check.value = !!slot.get();
+    check.on_change = () => this.setSlot(slot, !!check.value, check);
+    this.onRefresh(check, slot, () => {
+      check.value = !!slot.get();
+    });
+    return check;
   }
-  /** A closed sub-panel editing a {@link CSSFont} in place. */
-  fontPanel(col, category, key, font) {
+  /**
+   * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
+   * whole new font, because a slot bound to a variable holds one independent
+   * copy per referencing theme key and mutating this one would leave the rest
+   * stale.
+   */
+  fontPanel(col, key, slot) {
     const panel = col.panel(key);
+    const font = () => slot.get() ?? new CSSFont();
+    const edit = (origin, apply) => {
+      const next = font().copy();
+      apply(next);
+      this.setSlot(slot, next, origin);
+    };
     for (const field of FONT_FIELDS) {
       panel.label(field);
-      const tbox = panel.textbox(void 0, font[field]);
+      const tbox = panel.textbox(void 0, font()[field]);
       tbox.width = tbox.getDefault("width");
-      tbox.on_change = () => {
-        font[field] = tbox.text;
-        this.notify(category, key);
-      };
+      tbox.on_change = () => edit(tbox, (next) => {
+        next[field] = tbox.text;
+      });
+      this.onRefresh(tbox, slot, () => {
+        tbox.text = font()[field];
+      });
     }
     const cw = panel.colorbutton(void 0);
     cw.label = "color";
-    cw.setRGBA(css2color2(font.color));
-    cw.on_change = () => {
-      font.color = color2css3(cw.rgba);
-      this.notify(category, key);
-    };
-    const slider = panel.slider(void 0, "size", font.size);
+    cw.setRGBA(css2color2(font().color));
+    cw.on_change = () => edit(cw, (next) => {
+      next.color = color2css3(cw.rgba);
+    });
+    this.onRefresh(cw, slot, () => cw.setRGBA(css2color2(font().color)));
+    const slider = panel.slider(void 0, "size", font().size);
     slider.setAttribute("min", "1");
     slider.setAttribute("max", "100");
     slider.baseUnit = slider.displayUnit = "none";
-    slider.on_change = () => {
-      font.size = slider.value;
-      this.notify(category, key);
-    };
+    slider.on_change = () => edit(slider, (next) => {
+      next.size = slider.value;
+    });
+    this.onRefresh(slider, slot, () => {
+      slider.value = font().size;
+    });
     panel.closed = true;
+    return panel;
   }
   build() {
     const uidata = saveUIData(this, "theme");
     this.clear();
+    this._refreshes = [];
+    this._varsPanel = void 0;
+    if (this._varTheme) {
+      this.buildVarsPanel();
+    }
     for (const { category, keys: keys2 } of groupThemeCategories(theme, this.categoryMap)) {
       const panel = keys2.length > 1 ? this.panel(category) : void 0;
       for (const catkey of keys2) {
@@ -57927,8 +58584,10 @@ export {
   aabb_sphere_isect_2d,
   aabb_union,
   aabb_union_2d,
+  addVar,
   angle_between_vecs,
   barycentric_v2,
+  bindSlot,
   binomial,
   buildParser,
   buildString,
@@ -57961,6 +58620,8 @@ export {
   convert,
   copyEvent,
   copyTheme,
+  copyThemeItem,
+  copyVarItem,
   corner_normal,
   createMenu,
   createThemeFile,
@@ -57969,6 +58630,8 @@ export {
   customPropertyTypes,
   defaultDecimalPlaces,
   defaultRadix,
+  deleteItemAt,
+  deleteVar,
   dihedral_v3_sqr,
   dist_to_line,
   dist_to_line_2d,
@@ -58023,6 +58686,7 @@ export {
   graphGetIslands,
   graphPack,
   groupThemeCategories,
+  hasItemAt,
   haveModal,
   hsv_to_rgb,
   html5_fileapi_exports as html5_fileapi,
@@ -58042,7 +58706,9 @@ export {
   isMouseDown,
   isNum,
   isNumber,
+  isPlainRecord,
   isect_ray_plane,
+  itemAt,
   jsx,
   jsxs,
   keymap,
@@ -58088,6 +58754,7 @@ export {
   parsepx2 as parsepx,
   parseutil_exports as parseutil,
   pathDebugEvent,
+  pathKey,
   pathParser,
   platform_exports as platform,
   point_in_aabb,
@@ -58107,6 +58774,7 @@ export {
   quad_uv_2d,
   registerTool,
   registerToolStackGetter2 as registerToolStackGetter,
+  renameVar,
   report2 as report,
   reverse_keymap,
   rgb_to_cmyk,
@@ -58126,6 +58794,7 @@ export {
   setIconManager,
   setIconMap,
   setImplementationClass,
+  setItemAt,
   setKeyboardDom,
   setKeyboardOpts,
   setMetric,
@@ -58152,6 +58821,7 @@ export {
   textMimes,
   theme,
   themeItemKind,
+  toLivePath,
   toLockedImpl,
   toolprop_abstract_exports as toolprop_abstract,
   tri_angles,
@@ -58159,12 +58829,14 @@ export {
   trilinear_co,
   trilinear_co2,
   trilinear_v3,
+  unbindSlot,
   unproject,
   updateToolDefaults,
   updateToolSysAPI,
   util_exports as util,
   validateCSSColor,
   validateWebColor,
+  varSlots,
   vectormath_exports as vectormath,
   warning,
   web2color,

@@ -1,23 +1,22 @@
 import {
   UIBase,
-  Icons,
   nstructjs,
   util,
   PackNode,
   PackNodeVertex,
   Vector2,
   graphPack,
-  exportTheme,
   loadUIData,
   saveUIData,
   mount,
   Container,
   TabContainer,
-  RowFrame,
 } from "../../pathux.js";
+import type { ThemeEditor } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
 import { PropsPage } from "../../page.js";
+import { theme, themeVars } from "../../theme.js";
 
 // graphpack's PackNodeVertex tracks which side of a node a socket sits on; this
 // app sets it when laying out the demo graph. It is not part of the library type.
@@ -36,6 +35,7 @@ export class PropsEditor extends Editor {
   tabs!: TabContainer;
   _nodes!: PackNode[];
   _nodemap!: Record<number, PackNode>;
+  themeEditor?: ThemeEditor;
 
   constructor() {
     super();
@@ -75,6 +75,10 @@ export class PropsEditor extends Editor {
         exportButton: (btn) => {
           btn.onclick = () => this.exportTheme();
         },
+        themeEditor: (ed) => {
+          this.themeEditor = ed as ThemeEditor;
+          this.themeEditor.setVarTheme(theme, themeVars);
+        },
         graphTab    : (tab) => this.buildGraphPack(tab),
         // CanvasPath has no name field; label list entries by id for the demo.
         listbox: (lb) => {
@@ -102,29 +106,30 @@ export class PropsEditor extends Editor {
   }
 
   exportTheme() {
-    let theme = exportTheme();
+    if (!this.themeEditor) {
+      return;
+    }
 
-    theme = theme.replace(/var theme/, "export const theme");
+    const src = this.themeEditor.createFile({
+      importPath: "./pathux.js",
+      onAssemble: (header, varsSrc, themeSrc, footer) =>
+        [
+          "/*",
+          " * WARNING: AUTO-GENERATED FILE",
+          " *",
+          " * Copy to example/theme.ts",
+          " */",
+          "",
+          header,
+          varsSrc,
+          themeSrc,
+          footer,
+        ].join("\n"),
+    });
 
-    theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
-    theme =
-      `
-/*
- * WARNING: AUTO-GENERATED FILE
- *
- * Copy to scripts/editors/theme.js
- */
-      `.trim() +
-      "\n\n" +
-      theme +
-      "\n";
-
-    console.log(theme);
-
-    const blob = new Blob([theme], { type: "application/javascript" });
+    const blob = new Blob([src], { type: "application/javascript" });
     const url = URL.createObjectURL(blob);
 
-    console.log("url", url);
     window.open(url);
   }
 
@@ -134,115 +139,6 @@ export class PropsEditor extends Editor {
     this.doOnce(this.loadPage);
 
     this.style.overflowY = "scroll";
-
-    return;
-    const tabs = (this.tabs = this.container.tabs("left"));
-
-    let tab1 = tabs.tab("Mass Set Example");
-    this.buildMassSetExample(tab1);
-
-    tabs.style.overflow = "scroll";
-
-    tab1 = tabs.tab("Theme");
-    tab1.button("Export Theme", () => {
-      let theme = exportTheme();
-
-      theme = theme.replace(/var theme/, "export const theme");
-
-      theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
-      theme =
-        `
-/*
- * WARNING: AUTO-GENERATED FILE
- * 
- * Copy to scripts/editors/theme.js
- */
-      `.trim() +
-        "\n\n" +
-        theme +
-        "\n";
-
-      console.log(theme);
-
-      const blob = new Blob([theme], { type: "application/javascript" });
-      const url = URL.createObjectURL(blob);
-
-      console.log("url", url);
-      window.open(url);
-    });
-
-    const th = UIBase.createElement<UIBase>("theme-editor-x");
-    this.style.overflowY = "scroll";
-    tab1.add(th);
-
-    const tab2 = tabs.tab("Settings");
-
-    let strip = tab2.row().strip();
-
-    strip.prop("data.angle1");
-    strip.label("is internally: ");
-    strip.pathlabel("data.angle1");
-
-    strip = tab2.row().strip();
-    strip.prop("data.angle2");
-    strip.label("is internally: ");
-    strip.pathlabel("data.angle2");
-
-    strip = tab2.row().strip();
-    strip.simpleslider("data.angle1");
-    strip.label("is internally: ");
-    strip.pathlabel("data.angle1");
-
-    strip = tab2.row().strip();
-    strip.simpleslider("data.angle2");
-    strip.label("is internally: ");
-    strip.pathlabel("data.angle2");
-
-    strip = tab2.row().strip();
-    strip.prop("data.vector_test");
-
-    const col = tab2.col();
-    col.pathlabel("data.vector_test[0]");
-    col.pathlabel("data.vector_test[1]");
-    col.pathlabel("data.vector_test[2]");
-    col.pathlabel("data.vector_test[3]");
-
-    this.buildCurve(tabs.tab("Curve Mapping"));
-    this.buildGraphPack(tabs.tab("Graph Packing"));
-
-    this.setCSS();
-
-    const tab = tabs.tab("TreeView");
-    const tview = tab.treeview();
-
-    tview.item("One");
-    tview.item("Two");
-    let t = tview.item("Three", { icon: Icons.FILE });
-    //t.button("Yay", () => {});
-    //t.label("Label");
-
-    t = t.item("Four", { icon: Icons.FILE });
-    t.item("4.5");
-
-    const row = UIBase.createElement<RowFrame>("rowframe-x");
-    row.ctx = this.ctx;
-
-    row.check(undefined, "");
-    row.label("Four");
-
-    t.text = row;
-
-    //t.button("Yay2", () => {});
-    t = t.item("Five");
-    tview.item("Six", { icon: Icons.UNDO });
-    tview.item("Six", { icon: Icons.REDO });
-    tview.item("Six", { icon: Icons.UNDO });
-
-    if (this.ctx) {
-      this.flushUpdate();
-    } else {
-      this.doOnce(this.flushUpdate);
-    }
   }
 
   copy() {
@@ -486,45 +382,6 @@ export class PropsEditor extends Editor {
 
     tab.shadow.appendChild(canvas);
     draw();
-  }
-
-  buildCurve(tab: Container) {
-    tab.prop("data.curvemap");
-    //let c = document.createElement("curve-widget-x");
-    //tab.add(c);
-  }
-
-  buildMassSetExample(tab: Container) {
-    const col = tab.col();
-
-    const path = "canvas.paths.active.material.color";
-    const massSetPath = "canvas.paths[{$.id % 2 === 0}].material.color";
-
-    col.label("Stripe fun!");
-    const ret = col.prop(path, undefined, massSetPath);
-    ret.style["padding"] = "10px";
-
-    col.viewer(
-      undefined,
-      `
-      <h2>Mass Paths Example</h2>
-      <p>This is an example of setting multiple items in a list at once.</p>
-      <p>Path.ux reads properties from a single datapath, but writes to multiple
-      ones. This works by putting filters inside of lists.  For example:</p>
-        
-      <pre>"canvas.paths[{$.id % 2 === 0}].material.color"</pre>
-      
-      Will write to all items in canvas.paths whose .id members are a multiple of 2.
-      
-      <h3>Full example</h3>      
-      <pre>
-let path = "canvas.paths.active.material.color"
-let massSetPath 
-  = "canvas.paths[{$.id % 2 === 0}].material.color";
-
-col.prop(path, undefined, massSetPath);</pre>
-    `
-    );
   }
 
   static define() {
