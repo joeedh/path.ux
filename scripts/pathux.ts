@@ -32,6 +32,11 @@ export * from "./widgets/ui_numsliders";
 export * from "./widgets/ui_lasttool";
 export * from "./widgets/ui_textbox";
 export * from "./widgets/ui_panzoom";
+export * from "./editors/nodeeditor/delegate";
+export * from "./editors/nodeeditor/nodeframe";
+export * from "./editors/nodeeditor/linkcanvas";
+export * from "./editors/nodeeditor/nodegraphview";
+export * from "./editors/nodeeditor/nodeeditor";
 export * from "./path-controller/util/graphpack";
 
 export * from "./path-controller/util/html5_fileapi";

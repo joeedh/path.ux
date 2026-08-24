@@ -1,0 +1,462 @@
+import { UIBase } from "../../core/ui_base";
+import type { UIBaseDefinition } from "../../core/ui_base";
+import { Container } from "../../core/ui";
+import { IContextBase } from "../../core/context_base";
+// The plain imports keep the widget modules' module-scope internalRegister
+// calls; a type-only use would let the transpiler elide them.
+import "../../widgets/ui_panzoom";
+import "./linkcanvas";
+import type { PanZoomContainer } from "../../widgets/ui_panzoom";
+import { Graph } from "../../graph/graph";
+import { GroupNode } from "../../graph/group";
+import type { Node as GraphNode } from "../../graph/node";
+import type { GraphId } from "../../graph/graph_types";
+import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
+import type { LinkCanvas, LinkSegment } from "./linkcanvas";
+import { ToolOpDelegate } from "./delegate";
+import type { GraphEdit, NodeGraphDelegate } from "./delegate";
+
+/** The view state an embedding editor persists: camera plus descent stack. */
+export interface NodeGraphViewState {
+  pan: [number, number];
+  zoom: number;
+  descent: GraphId[];
+}
+
+const CLICK_SLOP_PX = 3;
+
+/**
+ * The hostable node-graph widget: one pan/zoom surface holding a NodeFrame per
+ * node, a link canvas beneath them, breadcrumbs for group descent, and
+ * click/box selection. It is a plain internally-registered widget, so any
+ * host — an Area subclass, a dialog, a dock panel — can create and embed one.
+ * Every mutating gesture routes through {@link delegate}; the view itself
+ * never writes the graph.
+ */
+export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+  delegate: NodeGraphDelegate = new ToolOpDelegate();
+
+  /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
+  onOpenDefinition?: (node: GroupNode) => void;
+
+  graphPath = "";
+  rootGraph: Graph | undefined = undefined;
+
+  /** GroupNode ids from the root graph down to the graph on screen. */
+  descent: GraphId[] = [];
+
+  selection = new Set<GraphId>();
+  frames = new Map<GraphId, NodeFrame<CTX>>();
+
+  panzoom!: PanZoomContainer<CTX>;
+  links!: LinkCanvas<CTX>;
+
+  private _crumbs!: HTMLDivElement;
+  private _pendingView: NodeGraphViewState | undefined = undefined;
+  private _marquee: HTMLDivElement | undefined = undefined;
+  private _boxStart: [number, number] | undefined = undefined;
+
+  static define(): UIBaseDefinition {
+    return {
+      tagname: "nodegraphview-x",
+    };
+  }
+
+  init() {
+    super.init();
+
+    this.style.display = "flex";
+    this.style.flexDirection = "column";
+    this.style.width = "100%";
+    this.style.height = "100%";
+
+    this._crumbs = document.createElement("div");
+    this._crumbs.style.cssText = "display: flex; gap: 4px; padding: 2px; align-items: center;";
+    this.shadow.appendChild(this._crumbs);
+
+    this.panzoom = UIBase.createElement("panzoom-x") as PanZoomContainer<CTX>;
+    this.panzoom.parentWidget = this;
+    this.shadow.appendChild(this.panzoom);
+    this.panzoom.ctx = this.ctx;
+    this.panzoom._init();
+    this.panzoom.style.flexGrow = "1";
+    this.panzoom.style.minHeight = "0";
+
+    this.links = UIBase.createElement("nodelinkcanvas-x") as LinkCanvas<CTX>;
+    this.links.ctx = this.ctx;
+    this.panzoom.addUnderlay(this.links);
+    this.links._init();
+
+    this.panzoom.addEventListener("transform", () => this._redrawLinks());
+
+    this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
+    this.panzoom.addEventListener("pointermove", (e: PointerEvent) => this._boxMove(e));
+    this.panzoom.addEventListener("pointerup", (e: PointerEvent) => this._boxUp(e));
+    this.panzoom.addEventListener("pointercancel", (e: PointerEvent) => this._boxUp(e));
+
+    if (this._pendingView !== undefined) {
+      const v = this._pendingView;
+      this._pendingView = undefined;
+      this.descent = [...v.descent];
+      this.panzoom.setTransform(v.zoom, v.pan);
+    }
+
+    this._rebuildCrumbs();
+    this.syncGraph();
+  }
+
+  /** Points the view at a graph; graphPath is the datapath edits dispatch against. */
+  setGraph(graph: Graph | undefined, graphPath: string) {
+    this.rootGraph = graph;
+    this.graphPath = graphPath;
+    this.descent = [];
+    this.selection.clear();
+    this._refresh();
+  }
+
+  /** The graph on screen: the root, or the descent tail's instance subgraph. */
+  get currentGraph(): Graph | undefined {
+    let g = this.rootGraph;
+    for (const nid of this.descent) {
+      const node = g?.nodeIdMap.get(nid);
+      if (!(node instanceof GroupNode)) {
+        return undefined;
+      }
+      g = node.subgraph;
+    }
+    return g;
+  }
+
+  /** The datapath of the graph on screen, descending .nodes[id].group per entry. */
+  get currentGraphPath(): string {
+    let path = this.graphPath;
+    for (const nid of this.descent) {
+      path += `.nodes[${JSON.stringify(nid)}].group`;
+    }
+    return path;
+  }
+
+  /** Descends into a group instance's subgraph (read-only for structural edits). */
+  descendInto(node: GraphNode) {
+    if (!(node instanceof GroupNode)) {
+      return;
+    }
+    this.descent.push(node.id);
+    this.selection.clear();
+    this._refresh();
+  }
+
+  /** Returns to depth entries of descent; popTo(0) shows the root graph. */
+  popTo(depth: number) {
+    this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
+    this.selection.clear();
+    this._refresh();
+  }
+
+  getViewState(): NodeGraphViewState {
+    if (this.panzoom !== undefined) {
+      const t = this.panzoom.transform;
+      return { pan: [t.pan[0], t.pan[1]], zoom: t.scale, descent: [...this.descent] };
+    }
+    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent: [...this.descent] };
+  }
+
+  /** Restores a persisted view state; safe to call before init runs. */
+  setViewState(state: NodeGraphViewState) {
+    if (this.panzoom !== undefined) {
+      this.descent = [...state.descent];
+      this.panzoom.setTransform(state.zoom, state.pan);
+      this._refresh();
+    } else {
+      this._pendingView = {
+        pan    : [state.pan[0], state.pan[1]],
+        zoom   : state.zoom,
+        descent: [...state.descent],
+      };
+      this.descent = [...state.descent];
+    }
+  }
+
+  private _refresh() {
+    if (this.panzoom === undefined) {
+      return;
+    }
+    this._rebuildCrumbs();
+    this.syncGraph();
+  }
+
+  private _rebuildCrumbs() {
+    this._crumbs.textContent = "";
+
+    const rootBtn = document.createElement("button");
+    rootBtn.textContent = "Root";
+    rootBtn.title = "Show the root graph";
+    rootBtn.addEventListener("click", () => this.popTo(0));
+    this._crumbs.appendChild(rootBtn);
+
+    let g = this.rootGraph;
+    for (let i = 0; i < this.descent.length; i++) {
+      const nid = this.descent[i];
+      const node = g?.nodeIdMap.get(nid);
+
+      const btn = document.createElement("button");
+      btn.textContent = node?.getUIName() ?? String(nid);
+      btn.title = "Show this group instance (read-only)";
+      const depth = i + 1;
+      btn.addEventListener("click", () => this.popTo(depth));
+      this._crumbs.appendChild(btn);
+
+      g = node instanceof GroupNode ? node.subgraph : undefined;
+    }
+
+    if (this.descent.length > 0) {
+      const note = document.createElement("span");
+      note.textContent = "read-only";
+      note.title =
+        "A group instance takes value edits only; structural edits belong to the group's definition";
+      note.style.cssText = "font-size: 11px; opacity: 0.7;";
+      this._crumbs.appendChild(note);
+
+      const tailId = this.descent[this.descent.length - 1];
+      let tailGraph = this.rootGraph;
+      for (let i = 0; i + 1 < this.descent.length; i++) {
+        const n = tailGraph?.nodeIdMap.get(this.descent[i]);
+        tailGraph = n instanceof GroupNode ? n.subgraph : undefined;
+      }
+      const tail = tailGraph?.nodeIdMap.get(tailId);
+      if (tail instanceof GroupNode && this.onOpenDefinition !== undefined) {
+        const open = document.createElement("button");
+        open.textContent = "Open Definition";
+        open.title = "Edit this group's definition";
+        open.addEventListener("click", () => this.onOpenDefinition?.(tail));
+        this._crumbs.appendChild(open);
+      }
+    }
+  }
+
+  /** Reconciles frames against the graph on screen; call after any graph change. */
+  syncGraph() {
+    const graph = this.currentGraph;
+
+    for (const [nid, frame] of [...this.frames]) {
+      if (graph?.nodeIdMap.get(nid) !== frame.node) {
+        frame.remove();
+        this.frames.delete(nid);
+      }
+    }
+
+    if (graph === undefined) {
+      this._redrawLinks();
+      return;
+    }
+
+    for (const node of graph.nodes) {
+      if (this.frames.has(node.id)) {
+        continue;
+      }
+
+      const frame = UIBase.createElement("nodeframe-x") as NodeFrame<CTX>;
+      frame.setNode(node);
+      frame.getScale = () => this.panzoom.transform.scale;
+      frame.onSelect = (f, e) => this._selectFrame(f, e);
+      frame.onMovePreview = (f) => this._previewMove(f);
+      frame.onMoveCommit = (f, x, y) => this._commitMove(f, x, y);
+
+      frame.parentWidget = this.panzoom;
+      this.panzoom.appendChild(frame);
+      frame.ctx = this.ctx;
+      frame._init();
+      this.frames.set(node.id, frame);
+    }
+
+    for (const nid of [...this.selection]) {
+      if (!this.frames.has(nid)) {
+        this.selection.delete(nid);
+      }
+    }
+
+    for (const [nid, frame] of this.frames) {
+      frame.syncPosition();
+      frame.syncContents();
+      frame.setSelected(this.selection.has(nid));
+    }
+
+    this._redrawLinks();
+  }
+
+  private _selectFrame(frame: NodeFrame<CTX>, e: PointerEvent) {
+    const id = frame.node.id;
+    if (e.shiftKey) {
+      if (this.selection.has(id)) {
+        this.selection.delete(id);
+      } else {
+        this.selection.add(id);
+      }
+    } else {
+      this.selection.clear();
+      this.selection.add(id);
+    }
+    this._applySelection();
+  }
+
+  private _applySelection() {
+    for (const [nid, frame] of this.frames) {
+      frame.setSelected(this.selection.has(nid));
+    }
+  }
+
+  private _moveEdit(frame: NodeFrame<CTX>, x: number, y: number): GraphEdit {
+    return {
+      kind     : "moveNode",
+      graphPath: this.currentGraphPath,
+      nodeId   : frame.node.id,
+      x,
+      y,
+    };
+  }
+
+  private _previewMove(frame: NodeFrame<CTX>) {
+    const pos = frame.previewPos ?? frame.node.pos;
+    const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
+    frame.style.opacity = verdict.ok ? "" : "0.5";
+    this._redrawLinks();
+  }
+
+  private _commitMove(frame: NodeFrame<CTX>, x: number, y: number) {
+    frame.style.opacity = "";
+    const edit = this._moveEdit(frame, x, y);
+    if (this.delegate.check(this.ctx, edit).ok) {
+      this.delegate.perform(this.ctx, edit);
+    }
+    // A refused drop snaps back here: the frame re-reads node.pos, which perform never changed.
+    this.syncGraph();
+  }
+
+  private _redrawLinks() {
+    if (this.links === undefined) {
+      return;
+    }
+
+    const graph = this.currentGraph;
+    const segments: LinkSegment[] = [];
+    const tf = this.panzoom.transform;
+
+    if (graph !== undefined) {
+      for (const node of graph.nodes) {
+        const dstFrame = this.frames.get(node.id);
+        if (dstFrame === undefined) {
+          continue;
+        }
+
+        for (const key of Object.keys(node.inputs)) {
+          const sock = node.inputs[key];
+          const dstRow = socketRow(node, "in", key);
+
+          for (const edge of sock.edges) {
+            const srcNode = edge.owningNode as GraphNode | undefined;
+            if (srcNode === undefined) {
+              continue;
+            }
+            const srcFrame = this.frames.get(srcNode.id);
+            const srcRow = socketRow(srcNode, "out", edge.name);
+            if (srcFrame === undefined || srcRow < 0 || dstRow < 0) {
+              continue;
+            }
+
+            const a = tf.project(socketAnchor(srcFrame.metrics(), "out", srcRow));
+            const b = tf.project(socketAnchor(dstFrame.metrics(), "in", dstRow));
+            segments.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
+          }
+        }
+      }
+    }
+
+    const r = this.panzoom.getBoundingClientRect();
+    const dpi = UIBase.getDPI();
+    this.links.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
+    this.links.drawLinks(segments, dpi);
+  }
+
+  private _boxDown(e: PointerEvent) {
+    // Frames stop propagation of their own presses, and the pan gesture
+    // preventDefaults before this listener runs, so what arrives here is a
+    // press on empty canvas.
+    if (e.button !== 0 || e.defaultPrevented) {
+      return;
+    }
+
+    const r = this.panzoom.getBoundingClientRect();
+    this._boxStart = [e.clientX - r.x, e.clientY - r.y];
+    this.panzoom.setPointerCapture(e.pointerId);
+  }
+
+  private _boxMove(e: PointerEvent) {
+    if (this._boxStart === undefined) {
+      return;
+    }
+
+    const r = this.panzoom.getBoundingClientRect();
+    const x = e.clientX - r.x;
+    const y = e.clientY - r.y;
+
+    if (this._marquee === undefined) {
+      this._marquee = document.createElement("div");
+      this._marquee.style.cssText =
+        "position: absolute; border: 1px dashed #ffaa33; " +
+        "background: rgba(255, 170, 51, 0.1); pointer-events: none;";
+      this.panzoom.shadow.appendChild(this._marquee);
+    }
+
+    const [sx, sy] = this._boxStart;
+    this._marquee.style.left = Math.min(sx, x) + "px";
+    this._marquee.style.top = Math.min(sy, y) + "px";
+    this._marquee.style.width = Math.abs(x - sx) + "px";
+    this._marquee.style.height = Math.abs(y - sy) + "px";
+  }
+
+  private _boxUp(e: PointerEvent) {
+    if (this._boxStart === undefined) {
+      return;
+    }
+
+    this.panzoom.releasePointerCapture(e.pointerId);
+    this._marquee?.remove();
+    this._marquee = undefined;
+
+    const start = this._boxStart;
+    this._boxStart = undefined;
+
+    const r = this.panzoom.getBoundingClientRect();
+    const end: [number, number] = [e.clientX - r.x, e.clientY - r.y];
+
+    if (
+      Math.abs(end[0] - start[0]) < CLICK_SLOP_PX &&
+      Math.abs(end[1] - start[1]) < CLICK_SLOP_PX
+    ) {
+      if (!e.shiftKey) {
+        this.selection.clear();
+        this._applySelection();
+      }
+      return;
+    }
+
+    const a = this.panzoom.transform.unproject(start);
+    const b = this.panzoom.transform.unproject(end);
+    const minX = Math.min(a[0], b[0]);
+    const minY = Math.min(a[1], b[1]);
+    const maxX = Math.max(a[0], b[0]);
+    const maxY = Math.max(a[1], b[1]);
+
+    if (!e.shiftKey) {
+      this.selection.clear();
+    }
+    for (const [nid, frame] of this.frames) {
+      const fr = frame.rect();
+      if (fr.x < maxX && fr.x + fr.width > minX && fr.y < maxY && fr.y + fr.height > minY) {
+        this.selection.add(nid);
+      }
+    }
+    this._applySelection();
+  }
+}
+UIBase.internalRegister(NodeGraphView);

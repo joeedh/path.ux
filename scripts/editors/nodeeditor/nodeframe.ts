@@ -1,0 +1,264 @@
+import { UIBase } from "../../core/ui_base";
+import type { UIBaseDefinition } from "../../core/ui_base";
+import { Container } from "../../core/ui";
+import { IContextBase } from "../../core/context_base";
+import { t } from "../../core/theme_schema";
+import { Vector2 } from "../../path-controller/util/vectormath";
+import type { Node as GraphNode } from "../../graph/node";
+import type { SocketDir } from "../../graph/graph_types";
+
+/** Graph-space geometry a frame's socket anchors derive from. */
+export interface FrameMetrics {
+  x: number;
+  y: number;
+  width: number;
+  headerHeight: number;
+  socketRowHeight: number;
+}
+
+/**
+ * Graph-space anchor of a socket terminal: the frame's left edge for an input,
+ * the right edge for an output, centered on the socket's row. Input and output
+ * rows share indices, both starting directly under the header.
+ */
+export function socketAnchor(m: FrameMetrics, dir: SocketDir, row: number): [number, number] {
+  const x = dir === "in" ? m.x : m.x + m.width;
+  const y = m.y + m.headerHeight + (row + 0.5) * m.socketRowHeight;
+  return [x, y];
+}
+
+/** Row index of the socket named key on its side, or -1 when absent. */
+export function socketRow(node: GraphNode, dir: SocketDir, key: string): number {
+  return Object.keys(dir === "in" ? node.inputs : node.outputs).indexOf(key);
+}
+
+/**
+ * One node's on-screen frame: a header row carrying the node's name, socket
+ * terminals down both sides, and the node's own createUI as the body. The
+ * frame positions itself in graph coordinates — the pan/zoom content's CSS
+ * matrix maps those to the screen — and drags in graph space by dividing
+ * screen deltas by the scale getScale supplies. A completed drag reaches the
+ * document only through onMoveCommit; the owning editor dispatches the op.
+ */
+export class NodeFrame<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "NodeFrame"
+> {
+  node!: GraphNode;
+  selected = false;
+
+  /** Graph-space position while a drag is live; undefined at rest. */
+  previewPos: Vector2 | undefined = undefined;
+
+  getScale: () => number = () => 1;
+  onSelect?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
+  onMovePreview?: (frame: NodeFrame<CTX>) => void;
+  onMoveCommit?: (frame: NodeFrame<CTX>, x: number, y: number) => void;
+
+  private _header!: HTMLDivElement;
+  private _body: Container<CTX> | undefined;
+  private _dragging = false;
+  private _dragStartX = 0;
+  private _dragStartY = 0;
+  private _dragBase = new Vector2();
+
+  static define(): UIBaseDefinition {
+    return {
+      tagname: "nodeframe-x",
+      style  : "nodeframe",
+      theme: {
+        Width          : t.number,
+        HeaderHeight   : t.number,
+        SocketRowHeight: t.number,
+      },
+    };
+  }
+
+  setNode(node: GraphNode) {
+    this.node = node;
+  }
+
+  init() {
+    super.init();
+
+    this.style.position = "absolute";
+    this.style.width = this.metrics().width + "px";
+    this.style.border = "1px solid #888";
+    this.style.borderRadius = "4px";
+    this.style.background = "rgba(64, 64, 64, 0.9)";
+    this.style.userSelect = "none";
+
+    this._buildUI();
+    this.syncPosition();
+
+    this.addEventListener("pointerdown", (e: PointerEvent) => {
+      if (e.button !== 0) {
+        return;
+      }
+      // Keeps the press from also starting the view's box-select.
+      e.stopPropagation();
+      this.onSelect?.(this, e);
+    });
+  }
+
+  /** Graph-space geometry for this frame's socket anchors. */
+  metrics(): FrameMetrics {
+    const pos = this.previewPos ?? this.node.pos;
+    return {
+      x              : pos[0],
+      y              : pos[1],
+      width          : this.getDefault("Width") as number,
+      headerHeight   : this.getDefault("HeaderHeight") as number,
+      socketRowHeight: this.getDefault("SocketRowHeight") as number,
+    };
+  }
+
+  /** Graph-space bounds, sized from the socket rows; body height is excluded. */
+  rect(): { x: number; y: number; width: number; height: number } {
+    const m = this.metrics();
+    const rows = Math.max(
+      Object.keys(this.node.inputs).length,
+      Object.keys(this.node.outputs).length
+    );
+    return {
+      x     : m.x,
+      y     : m.y,
+      width : m.width,
+      height: m.headerHeight + rows * m.socketRowHeight,
+    };
+  }
+
+  /** Writes the frame's graph-space position (preview during a drag) to CSS. */
+  syncPosition() {
+    const pos = this.previewPos ?? this.node.pos;
+    this.style.left = pos[0] + "px";
+    this.style.top = pos[1] + "px";
+  }
+
+  setSelected(sel: boolean) {
+    this.selected = sel;
+    this.style.outline = sel ? "2px solid #ffaa33" : "";
+  }
+
+  /** Rebuilds header text and socket rows; used after a rename or type swap. */
+  syncContents() {
+    this._header.textContent = this.node.getUIName();
+  }
+
+  private _buildUI() {
+    const m = this.metrics();
+
+    this._header = document.createElement("div");
+    this._header.textContent = this.node.getUIName();
+    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.style.cssText =
+      `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; ` +
+      "padding: 0 6px; cursor: move; overflow: hidden; white-space: nowrap; " +
+      "background: rgba(96, 96, 96, 0.9); border-radius: 4px 4px 0 0;";
+    this.shadow.appendChild(this._header);
+
+    this._wireDrag(this._header);
+
+    const inKeys = Object.keys(this.node.inputs);
+    const outKeys = Object.keys(this.node.outputs);
+    const rows = Math.max(inKeys.length, outKeys.length);
+
+    for (let i = 0; i < rows; i++) {
+      const row = document.createElement("div");
+      row.style.cssText =
+        `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; ` +
+        "display: flex; justify-content: space-between; padding: 0 4px; font-size: 11px;";
+
+      row.appendChild(this._terminal(inKeys[i], "in"));
+      row.appendChild(this._terminal(outKeys[i], "out"));
+      this.shadow.appendChild(row);
+    }
+
+    this._body = UIBase.createElement("container-x") as Container<CTX>;
+    this._body.parentWidget = this;
+    this.shadow.appendChild(this._body);
+    this._body.ctx = this.ctx;
+    this._body._init();
+    this.node.createUI(this._body);
+  }
+
+  /** A terminal dot plus name, or an empty spacer where this side has no row. */
+  private _terminal(key: string | undefined, dir: SocketDir): HTMLSpanElement {
+    const span = document.createElement("span");
+    if (key === undefined) {
+      return span;
+    }
+
+    const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
+    const color = typeof sock.color === "string" ? sock.color : "#ccc";
+    const dot = document.createElement("span");
+    dot.className = "nodeframe-terminal";
+    dot.dataset.socketKey = key;
+    dot.dataset.socketDir = dir;
+    dot.title = `${key} (${sock.type})`;
+    dot.style.cssText =
+      "display: inline-block; width: 8px; height: 8px; border-radius: 50%; " +
+      `background: ${color}; margin: 0 3px;`;
+
+    const name = document.createElement("span");
+    name.textContent = key;
+
+    if (dir === "in") {
+      span.appendChild(dot);
+      span.appendChild(name);
+    } else {
+      span.appendChild(name);
+      span.appendChild(dot);
+    }
+    return span;
+  }
+
+  private _wireDrag(handle: HTMLElement) {
+    handle.addEventListener("pointerdown", (e: PointerEvent) => {
+      if (e.button !== 0) {
+        return;
+      }
+
+      this._dragging = true;
+      this._dragStartX = e.clientX;
+      this._dragStartY = e.clientY;
+      this._dragBase.load(this.node.pos);
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      // Keeps the header drag from also starting the view's box-select.
+      e.stopPropagation();
+    });
+
+    handle.addEventListener("pointermove", (e: PointerEvent) => {
+      if (!this._dragging) {
+        return;
+      }
+
+      const s = this.getScale();
+      this.previewPos = new Vector2([
+        this._dragBase[0] + (e.clientX - this._dragStartX) / s,
+        this._dragBase[1] + (e.clientY - this._dragStartY) / s,
+      ]);
+      this.syncPosition();
+      this.onMovePreview?.(this);
+    });
+
+    const end = (e: PointerEvent) => {
+      if (!this._dragging) {
+        return;
+      }
+
+      this._dragging = false;
+      handle.releasePointerCapture(e.pointerId);
+
+      const dropped = this.previewPos;
+      this.previewPos = undefined;
+      if (dropped !== undefined) {
+        this.onMoveCommit?.(this, dropped[0], dropped[1]);
+      }
+    };
+    handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", end);
+  }
+}
+UIBase.internalRegister(NodeFrame);

@@ -261,6 +261,17 @@ export const DefaultTheme = {
     ZoomWheelRate: 1.1,
   },
 
+  nodeframe: {
+    Width          : 140,
+    HeaderHeight   : 24,
+    SocketRowHeight: 20,
+  },
+
+  nodelinkcanvas: {
+    LinkColor: "#aaaaaa",
+    LinkWidth: 2,
+  },
+
   menu: {
     MenuBG          : "rgba(250, 250, 250, 1.0)",
     "item-radius"   : 0,

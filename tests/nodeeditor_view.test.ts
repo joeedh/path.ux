@@ -1,0 +1,295 @@
+import { test, expect, beforeAll } from "vitest";
+import { UIBase, iconmanager } from "../scripts/core/ui_base";
+import { Area } from "../scripts/screen/ScreenArea";
+import { areaclasses } from "../scripts/screen/area_base";
+import type { IContextBase } from "../scripts/core/context_base";
+import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
+import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
+import { Node, registerNodeType } from "../scripts/graph/node";
+import type { NodeDef } from "../scripts/graph/node";
+import { Graph } from "../scripts/graph/graph";
+import { FloatSocket } from "../scripts/graph/sockets_std";
+import { GroupDef, GroupNode } from "../scripts/graph/group";
+import { defineGraphAPI } from "../scripts/graph/graph_api";
+import { socketAnchor, socketRow } from "../scripts/editors/nodeeditor/nodeframe";
+import { NodeGraphView } from "../scripts/editors/nodeeditor/nodegraphview";
+import { NodeEditor } from "../scripts/editors/nodeeditor/nodeeditor";
+import type { GraphEdit, NodeGraphDelegate } from "../scripts/editors/nodeeditor/delegate";
+
+beforeAll(() => {
+  // resolvePath / theme lookups touch window in node.
+  (globalThis as unknown as { window: unknown }).window ||= globalThis;
+
+  // the link canvas renders to 2d canvas; happy-dom has no real context.
+  const proto = HTMLCanvasElement.prototype as unknown as {
+    getContext(kind: string): unknown;
+  };
+  proto.getContext = () =>
+    new Proxy(
+      {},
+      {
+        get: (_t, key) => (key === "measureText" ? () => ({ width: 10 }) : () => undefined),
+        set: () => true,
+      }
+    );
+
+  // no iconsheet <img> elements exist in the test DOM; icon CSS lookups
+  // dereference sheet.image.src, so give the sheets a stand-in.
+  const sheets = (iconmanager as unknown as { iconsheets: { image: unknown }[] }).iconsheets;
+  for (const sheet of sheets) {
+    sheet.image ||= { src: "" };
+  }
+});
+
+class ViewSrc extends Node {
+  static override graphDef(): NodeDef {
+    return {
+      typeName: "ViewSrc",
+      outputs : { value: new FloatSocket("out") },
+    };
+  }
+}
+registerNodeType(ViewSrc);
+
+class ViewMath extends Node {
+  static override graphDef(): NodeDef {
+    return {
+      typeName: "ViewMath",
+      inputs  : { a: new FloatSocket("in"), b: new FloatSocket("in") },
+      outputs : { out: new FloatSocket("out") },
+    };
+  }
+}
+registerNodeType(ViewMath);
+
+function makeCtx(graph: Graph) {
+  const api = new DataAPI();
+  const root = new DataStruct();
+  root.struct("graph", "graph", "Graph", defineGraphAPI(api));
+  api.setRoot(root);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ctx: any = { state: {}, graph, api };
+  ctx.toLocked = () => ctx;
+  ctx.toolstack = new ToolStack(ctx);
+  return ctx;
+}
+
+function makeView(ctx: unknown): NodeGraphView {
+  const view = UIBase.createElement("nodegraphview-x") as NodeGraphView;
+  view.ctx = ctx as IContextBase;
+  view._init();
+  return view;
+}
+
+const REFUSAL =
+  "a group instance takes value edits only; structural edits belong to the group's definition";
+
+async function makeGroup() {
+  const def = new GroupDef();
+  const inner = new ViewMath();
+  def.subgraph.add(inner);
+
+  const host = new Graph();
+  const grp = new GroupNode();
+  grp.ref = "grp";
+  host.add(grp);
+  host.groupLoader = async (ref) => (ref === "grp" ? def : undefined);
+  await host.resolveGroups();
+
+  return { def, inner, host, grp };
+}
+
+test("a bare NodeGraphView works with no Area and no editor registration", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  const m = new ViewMath();
+  g.add(src);
+  g.add(m);
+  g.connect(src.outputs.value, m.inputs.a);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+
+  expect(view.frames.size).toBe(2);
+  expect(view.frames.get(src.id)!.node).toBe(src);
+});
+
+test("the editor ships unregistered; Area.register makes it reachable", () => {
+  // Direct `new` on an undefined custom element throws Illegal constructor on
+  // the web platform, so non-registration is asserted rather than constructed
+  // around.
+  expect(UIBase.getInternalName("node-editor-x")).toBe(undefined);
+  expect(areaclasses["node_editor"]).toBe(undefined);
+  expect(UIBase.createElement("node-editor-x")).not.toBeInstanceOf(NodeEditor);
+
+  Area.register(NodeEditor);
+
+  expect(areaclasses["node_editor"]).toBe(NodeEditor);
+  const ed = UIBase.createElement("node-editor-x") as NodeEditor;
+  expect(ed).toBeInstanceOf(NodeEditor);
+  expect(ed.view).toBeInstanceOf(NodeGraphView);
+
+  // The custom-element definition is irrevocable; unregister removes only the
+  // areaclasses entry, so no other test inherits it.
+  Area.unregister(NodeEditor);
+  expect(areaclasses["node_editor"]).toBe(undefined);
+});
+
+test("frames are created and destroyed as nodes enter and leave the graph", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  g.add(src);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+  expect(view.frames.size).toBe(1);
+
+  const m = new ViewMath();
+  g.add(m);
+  view.syncGraph();
+  expect(view.frames.size).toBe(2);
+
+  const frame = view.frames.get(src.id)!;
+  g.remove(src);
+  view.syncGraph();
+  expect(view.frames.size).toBe(1);
+  expect(view.frames.get(src.id)).toBe(undefined);
+  expect(frame.parentNode).toBe(null);
+});
+
+test("frame positions track node.pos through the transform", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  src.pos.loadXY(30, 40);
+  g.add(src);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+
+  const frame = view.frames.get(src.id)!;
+  expect(frame.style.left).toBe("30px");
+  expect(frame.style.top).toBe("40px");
+
+  src.pos.loadXY(300, 400);
+  view.syncGraph();
+  expect(frame.style.left).toBe("300px");
+  expect(frame.style.top).toBe("400px");
+
+  // Frames sit in graph space; the pan/zoom content's CSS matrix maps them to
+  // the screen, so a transform change moves the projection, not the styles.
+  view.panzoom.setTransform(2, [10, 20]);
+  expect(frame.style.left).toBe("300px");
+  const p = view.panzoom.transform.project([300, 400]);
+  expect([p[0], p[1]]).toEqual([610, 820]);
+});
+
+test("socketAnchor lands on the frame edge at the socket's row", () => {
+  const m = { x: 100, y: 50, width: 140, headerHeight: 24, socketRowHeight: 20 };
+
+  expect(socketAnchor(m, "in", 0)).toEqual([100, 84]);
+  expect(socketAnchor(m, "in", 1)).toEqual([100, 104]);
+  expect(socketAnchor(m, "out", 0)).toEqual([240, 84]);
+
+  const node = new ViewMath();
+  expect(socketRow(node, "in", "a")).toBe(0);
+  expect(socketRow(node, "in", "b")).toBe(1);
+  expect(socketRow(node, "out", "out")).toBe(0);
+  expect(socketRow(node, "in", "missing")).toBe(-1);
+});
+
+test("the breadcrumb reflects descent and returns", async () => {
+  const { host, grp, inner } = await makeGroup();
+  const view = makeView(makeCtx(host));
+  view.setGraph(host, "graph");
+
+  const crumbs = () => [...view.shadow.querySelectorAll("button")].map((b) => b.textContent);
+  expect(crumbs()).toEqual(["Root"]);
+  expect(view.currentGraph).toBe(host);
+  expect(view.currentGraphPath).toBe("graph");
+
+  view.descendInto(grp);
+  expect(view.currentGraph).toBe(grp.subgraph);
+  expect(view.currentGraphPath).toBe(`graph.nodes[${JSON.stringify(grp.id)}].group`);
+  expect(crumbs()).toEqual(["Root", grp.getUIName()]);
+  expect(view.frames.get(inner.id)).toBeDefined();
+
+  const note = [...view.shadow.querySelectorAll("span")].find((s) => s.textContent === "read-only");
+  expect(note).toBeDefined();
+
+  view.shadow.querySelectorAll("button")[0].click();
+  expect(view.currentGraph).toBe(host);
+  expect(crumbs()).toEqual(["Root"]);
+});
+
+test("a structural gesture inside a descended instance is refused through check", async () => {
+  const { host, grp, inner } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  view.descendInto(grp);
+
+  const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  const frame = view.frames.get(copy.id)!;
+
+  const verdict = view.delegate.check(ctx, {
+    kind     : "moveNode",
+    graphPath: view.currentGraphPath,
+    nodeId   : copy.id,
+    x        : 50,
+    y        : 60,
+  });
+  expect(verdict).toEqual({ ok: false, reason: REFUSAL });
+
+  const before = [copy.pos[0], copy.pos[1]];
+  frame.onMoveCommit!(frame, 50, 60);
+  expect([copy.pos[0], copy.pos[1]]).toEqual(before);
+  expect(ctx.toolstack.length).toBe(0);
+});
+
+test("a move commits through the default delegate as the MoveNodeOp", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  g.add(src);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const frame = view.frames.get(src.id)!;
+  frame.onMoveCommit!(frame, 50, 60);
+
+  expect([src.pos[0], src.pos[1]]).toEqual([50, 60]);
+  expect(frame.style.left).toBe("50px");
+
+  ctx.toolstack.undo();
+  expect([src.pos[0], src.pos[1]]).toEqual([0, 0]);
+});
+
+test("an installed delegate receives the move and no op issues", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  g.add(src);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const received: GraphEdit[] = [];
+  const testDelegate: NodeGraphDelegate = {
+    check  : () => ({ ok: true }),
+    perform: (_ctx, edit) => {
+      received.push(edit);
+    },
+  };
+  view.delegate = testDelegate;
+
+  const frame = view.frames.get(src.id)!;
+  frame.onMoveCommit!(frame, 50, 60);
+
+  expect(received).toEqual([
+    { kind: "moveNode", graphPath: "graph", nodeId: src.id, x: 50, y: 60 },
+  ]);
+  expect([src.pos[0], src.pos[1]]).toEqual([0, 0]);
+  expect(ctx.toolstack.length).toBe(0);
+});

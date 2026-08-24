@@ -185,6 +185,16 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
     super.remove();
   }
 
+  /** Inserts elem beneath the transformed content, in this widget's own
+   *  (untransformed) coordinate space. Underlays receive no pointer events. */
+  addUnderlay<T extends HTMLElement>(elem: T): T {
+    elem.style.position = "absolute";
+    elem.style.left = elem.style.top = "0px";
+    elem.style.pointerEvents = "none";
+    this.shadow.insertBefore(elem, this.content);
+    return elem;
+  }
+
   /** The screen point (widget-local) a content point maps to. */
   project(p: readonly [number, number] | Vector2): Vector2 {
     return this.transform.project(p);
@@ -193,6 +203,16 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   /** The content point a widget-local screen point maps to. */
   unproject(p: readonly [number, number] | Vector2): Vector2 {
     return this.transform.unproject(p);
+  }
+
+  /** Sets scale and pan directly, applying the CSS matrix and firing "transform". */
+  setTransform(scale: number, pan: readonly [number, number] | Vector2) {
+    this.transform.scale = Math.min(
+      Math.max(scale, this.transform.minScale),
+      this.transform.maxScale
+    );
+    this.transform.pan.loadXY(pan[0], pan[1]);
+    this._updateTransform();
   }
 
   /** Fits rect (content space) inside the widget's current bounds. */

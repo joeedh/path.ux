@@ -43,7 +43,7 @@ any time after stage 1 if useful.
 
 - [x] **Stage V1 — pan/zoom container.** `PanZoomContainer` with the pure
       `PanZoomTransform` math.
-- [ ] **Stage V2 — view widget and editor shell.** `NodeGraphView`, the hostable widget
+- [x] **Stage V2 — view widget and editor shell.** `NodeGraphView`, the hostable widget
       owning frames, link underlay, breadcrumb descent and selection, with moves routed
       through the `NodeGraphDelegate` seam (default: the stage-7 ops); `NodeEditor extends
       Area` as a thin shell around one view, shipped unregistered (the consumer calls

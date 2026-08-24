@@ -8,7 +8,7 @@ and on nothing later. The master task list spanning both plans is
 [node-editor-tasklist.md](node-editor-tasklist.md).
 
 The design source is [documentation/research/nodeEditor.md](../research/nodeEditor.md),
-settled input as before. Two decisions were made after the spec, by the user on 2026-08-24,
+settled input as before. Four decisions were made after the spec, by the user on 2026-08-24,
 and are settled the same way:
 
 - **`NodeEditor` subclasses the base `Area` class** (scripts/screen/ScreenArea.ts:82), not
@@ -21,6 +21,19 @@ and are settled the same way:
   no `Area.register`, no `simple.Editor.register`, no custom-element definition at import
   time. The consumer calls `Area.register(NodeEditor)` (or registers a subclass) exactly
   once, which performs both the areaclasses entry and the custom-element registration.
+- **The view is a hostable widget; the editor is a thin shell.** `NodeGraphView` (a
+  `Container`) owns the pan/zoom surface, the node frames, the link underlay, and the
+  gestures; `NodeEditor extends Area` wraps one `NodeGraphView` and adds only area
+  plumbing (header, STRUCT, keymaps). The split exists because a consumer whose editors
+  already extend their own `Area` subclass cannot also extend `NodeEditor`, but can host
+  the widget inside any editor. The VN Generator desktop app is the first such consumer.
+- **Mutating gestures route through a delegate.** Every gesture that would change the
+  graph asks a `NodeGraphDelegate` to perform it, and the default delegate dispatches the
+  library plan's stage-7 ToolOps, so a standalone consumer sees the specced behavior
+  unchanged. A host with its own command system installs a delegate that routes edits
+  into that system instead. The delegate also answers whether a proposed edit would be
+  accepted (`check`), so a refusal shows mid-gesture rather than on drop, and the host's
+  mid-gesture verdict comes from the same authority that will judge the commit.
 
 Each stage below is one commit, green on its own under `pnpm run typecheck`,
 `pnpm run test` and `pnpm run format:check`. Stage V4 additionally keeps the example app's
@@ -76,40 +89,66 @@ Tests assert (on the pure class): zoom about a cursor point keeps that point fix
 pan/zoom compose associatively; `project`/`unproject` invert each other; clamping holds at
 both ends; `zoomToRect` fits and centers.
 
-## Stage V2 — the editor, view first
+## Stage V2 — the view widget and the editor shell
 
-Files: `scripts/editors/nodeeditor/nodeeditor.ts`, `nodeframe.ts`, `linkcanvas.ts`,
-`scripts/pathux.ts` exports, `tests/nodeeditor_view.test.ts`.
+Files: `scripts/editors/nodeeditor/nodegraphview.ts`, `nodeframe.ts`, `linkcanvas.ts`,
+`delegate.ts`, `nodeeditor.ts`, `scripts/pathux.ts` exports,
+`tests/nodeeditor_view.test.ts`.
 
-Public surface: `NodeEditor extends Area`, shipped unregistered per the decision above; its
-doc comment states the consumer's one required call (`Area.register(NodeEditor)` or a
-subclass). `nstructjs.register(NodeEditor)` still runs at module scope — that adds a STRUCT
-definition, not a menu entry, and both serialization and a subclass's `STRUCT.inherit`
-require it. The editor's STRUCT carries its pan/zoom transform and current-graph descent
-state, following the Area STRUCT convention.
+Public surface, split per the widget decision above:
 
-The rest as specced: a current-graph pointer with a breadcrumb row (descending into a group
-instance is read-only viewing, offering "open definition"); `NodeFrame` — a per-node
-`Container` (borrowing `DragBox`'s drag pattern, not subclassing it: a node frame drags in
-graph space through the pan/zoom transform, not in screen pixels) whose body is the node's
-`createUI` and whose sockets render as terminals down the sides; the link underlay as a
-`CanvasOverdraw`-style canvas below the frames redrawing on transform and topology
-changes — `linkcanvas.ts` tolerates a null 2D context, because happy-dom provides no
-working canvas and this stage's vitest tests construct the editor in that environment;
-selection (click, shift-click, box-select) and node moves dispatched through the library
-plan's stage-7 ops.
+- `NodeGraphView<CTX>` — a `Container` owning the pan/zoom surface (one
+  `PanZoomContainer`), the node frames, the link underlay, the breadcrumb row, and the
+  gestures. As an ordinary widget it registers the way `PanZoomContainer` does
+  (`UIBase.internalRegister`); the no-registration decision is about editors and
+  `areaclasses`, not widgets. Its view state (the pan/zoom transform and the group-descent
+  path) is exposed as plain serializable data (`getViewState()` / `setViewState()`), so a
+  foreign host can persist it through its own mechanism.
+- `NodeGraphDelegate` — the gesture seam, in `delegate.ts`. This stage defines the
+  interface and the default implementation, which dispatches the library plan's stage-7
+  ops, and routes this stage's one mutating gesture (node moves) through it. Selection is
+  view state and stays on the widget. `check(edit)` answers whether a proposed edit would
+  be accepted, which is how a refusal shows mid-gesture; the default implementation
+  accepts whatever the ops accept, including the `structuralEditsRefused()` refusal inside
+  a descended instance.
+- `NodeEditor extends Area` — a thin shell: it constructs one `NodeGraphView`, forwards
+  the area's context to it, and carries the widget's view state in its STRUCT, following
+  the Area STRUCT convention. Shipped unregistered per the decision above; its doc comment
+  states the consumer's one required call (`Area.register(NodeEditor)` or a subclass).
+  `nstructjs.register(NodeEditor)` still runs at module scope — that adds a STRUCT
+  definition, not a menu entry, and both serialization and a subclass's `STRUCT.inherit`
+  require it.
+
+The rest as specced, all inside `NodeGraphView`: a current-graph pointer with a breadcrumb
+row (descending into a group instance is read-only viewing, offering "open definition");
+`NodeFrame` — a per-node `Container` (borrowing `DragBox`'s drag pattern, not subclassing
+it: a node frame drags in graph space through the pan/zoom transform, not in screen pixels)
+whose body is the node's `createUI` and whose sockets render as terminals down the sides;
+the link underlay as a `CanvasOverdraw`-style canvas below the frames redrawing on
+transform and topology changes — `linkcanvas.ts` tolerates a null 2D context, because
+happy-dom provides no working canvas and this stage's vitest tests construct the widget in
+that environment; selection (click, shift-click, box-select) on the widget, and node moves
+through the delegate.
 
 This stage renders and navigates; it does not yet edit topology. That split keeps both
 editor commits reviewable and independently green.
 
-Tests assert: constructing the editor without any registration works, and
-`Area.register(NodeEditor)` in a test makes it reachable through `areaclasses` (unregistered
-again afterward via `Area.unregister`, so no other test inherits the entry); frames are
-created and destroyed as nodes enter and leave the graph; frame positions track `node.pos`
-through the transform; socket terminal anchor positions (pure math, exported) land on the
-frame edge at the socket's row; breadcrumb reflects descent and returns; a structural
-gesture inside a descended instance is refused with the sentence from
-`structuralEditsRefused()`.
+Tests assert: constructing a bare `NodeGraphView` with no Area and no editor registration
+works (the widget-split contract); importing the editor module registers nothing — no
+custom-element definition, no `areaclasses` entry, and `UIBase.createElement` on its
+tagname yields a non-`NodeEditor` element (direct `new` on an undefined custom element
+throws Illegal constructor on the web platform, so non-registration is asserted rather
+than constructed around) — while `Area.register(NodeEditor)` in a test makes it
+constructible and reachable through `areaclasses` (`Area.unregister` afterward removes the
+`areaclasses` entry; the custom-element definition is irrevocable, so the register call
+happens once per test process);
+frames are created and destroyed as nodes enter and leave the graph; frame positions track
+`node.pos` through the transform; socket terminal anchor positions (pure math, exported)
+land on the frame edge at the socket's row; breadcrumb reflects descent and returns; a
+structural gesture inside a descended instance is refused with the sentence from
+`structuralEditsRefused()`, surfaced through `check`; a move with the default delegate
+issues the stage-7 op, and the same gesture with a test delegate installed reaches that
+delegate and issues no op.
 
 ## Stage V3 — the editor, editing
 
@@ -117,22 +156,32 @@ Files: additions to `scripts/editors/nodeeditor/` (`linkdrag.ts`, `addmenu.ts`,
 `groupui.ts`), `tests/nodeeditor_edit.test.ts`.
 
 Public surface: link dragging (drag from a terminal on the overdraw layer, drop on a
-compatible terminal — compatibility asked through `coerce(..., {dryRun: true})`,
-incompatible terminals dimmed); the add-node search menu built from the node type registry
-(names via the definition resolvers); delete/duplicate, and node replacement through
-`ReplaceNodeOp`; auto-arrange via `graphPack` with `graphGetIslands` (the path-controller
-copy — see ground realities); the group designer panel for a definition, hosted as a dock
-panel via `definePanels()` rather than a simple-framework sidebar — reordering `exposed`
-entries, adding a `prop` or `nodeUI` entry, repointing a broken entry by hand, with
-unresolved entries silently skipped and missing ones flagged, per the spec, and saves
-flowing through the library plan's stage-5 `groupSaver` seam; the forwarded-UI rendering on
-a group instance's frame, walking `exposed` through the stage-7 datapath.
+compatible terminal — compatibility asked through `coerce(..., {dryRun: true})` combined
+with the delegate's `check`, and terminals refused by either are dimmed); the add-node
+search menu built from the node type registry (names via the definition resolvers);
+delete/duplicate, and node replacement; auto-arrange via `graphPack` with
+`graphGetIslands` (the path-controller copy — see ground realities); the group designer
+panel for a definition, hosted as a dock panel via `definePanels()` rather than a
+simple-framework sidebar — reordering `exposed` entries, adding a `prop` or `nodeUI`
+entry, repointing a broken entry by hand, with unresolved entries silently skipped and
+missing ones flagged, per the spec, and saves flowing through the library plan's stage-5
+`groupSaver` seam; the forwarded-UI rendering on a group instance's frame, walking
+`exposed` through the stage-7 datapath.
 
-Tests assert: a completed link drag issues `ConnectOp` and an incompatible drop issues
-nothing; the add menu lists registered types and instantiates at the drop point in graph
-coordinates; auto-arrange keeps islands separate; the exposure list renders in order, skips
-an unresolved entry without flagging it, flags a missing one, and repointing preserves the
-entry's position; editing a forwarded property on an instance materializes the override.
+Every mutating gesture in this stage goes through the stage-V2 delegate: a completed link
+drop, an add-menu pick, delete/duplicate, replacement, auto-arrange's position writes, and
+the designer's exposure edits. The default delegate dispatches the stage-7 ops
+(`ConnectOp`, `ReplaceNodeOp`, and the rest) plus the `groupSaver` seam, so the specced
+behavior is unchanged when no host delegate is installed.
+
+Tests assert: a completed link drag with the default delegate issues `ConnectOp` and an
+incompatible drop issues nothing; the same drop with a test delegate installed reaches
+that delegate and issues no op, and a drop the delegate's `check` refuses dims the target
+during the drag; the add menu lists registered types and instantiates at the drop point in
+graph coordinates; auto-arrange keeps islands separate; the exposure list renders in
+order, skips an unresolved entry without flagging it, flags a missing one, and repointing
+preserves the entry's position; editing a forwarded property on an instance materializes
+the override.
 
 ## Stage V4 — example-app node editor tab
 
@@ -165,4 +214,7 @@ library surface the library plan already tests.
   menus makes the one `Area.register` call.
 - No `simple.Editor` integration. A simple-framework app can still register `NodeEditor`
   (it is an `Area`); a convenience wrapper is a follow-on if wanted.
+- No active-output bookkeeping. A consumer that wants Blender-style "most recently
+  selected output wins" semantics tracks that flag itself for now; a library-side notion
+  of an active output node is a possible follow-on once the editor exists.
 - Undo history UI and copy/paste between graphs stay follow-ons, as in the library plan.
