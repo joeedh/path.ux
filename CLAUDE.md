@@ -304,6 +304,11 @@ leaving the old callback in place and `@deprecated`.
 
 ## Widgets
 
+- [Menus](documentation/menus.md) — `Menu`, `DropBox` and the menu wrangler
+  (`scripts/widgets/ui_menu.ts`): menu templates (tool paths, separators,
+  custom entries, submenus), `container.menu`, `createMenu`/`startMenu` for
+  context menus, enum dropdowns, and `Editor.registerAppMenu` for the app
+  menu bar.
 - [ListBox](documentation/listbox.md) — scrollable single-select list, in
   either manual (`addItem`) or `DataList`-backed mode, with a typed `"change"`
   event and user-resizable corner grip.
@@ -312,6 +317,11 @@ leaving the old callback in place and `@deprecated`.
   panels in `definePanels()`, users drag them between edge regions, float
   them, or collapse regions to edge-aligned tab rails; layouts serialize via
   `Area.STRUCT`'s `panelLayout` field.
+- [Node editor](documentation/NodeEditor.md) — the node-graph data model
+  (`scripts/graph/`, exported as the `nodegraph` namespace: node/socket
+  types, groups, DSL, ToolOps, data API) plus the editor layer:
+  `NodeGraphView` is a hostable graph widget, and `NodeEditor` is an Area
+  shell shipped unregistered for the consumer to `Area.register`.
 
 ## Context
 

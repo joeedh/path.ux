@@ -27,4 +27,6 @@ Blender, a 3D animation/modeling/visualization app.
 
 # Widgets
 
+- [Menus](manual/menus.html)
 - [ListBox](manual/listbox.html)
+- [Node editor](manual/NodeEditor.html)
