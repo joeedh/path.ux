@@ -255,6 +255,12 @@ export const DefaultTheme = {
     width              : 110,
   },
 
+  panzoom: {
+    ZoomMin      : 0.1,
+    ZoomMax      : 8.0,
+    ZoomWheelRate: 1.1,
+  },
+
   menu: {
     MenuBG          : "rgba(250, 250, 250, 1.0)",
     "item-radius"   : 0,

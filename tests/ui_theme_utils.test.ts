@@ -157,33 +157,38 @@ test("comments round-trip through the generated file", () => {
   expect(again).toBe(src);
 });
 
-test("the generated file evaluates back to the theme it was written from", async () => {
-  const src = createThemeFile({
-    theme      : barsTheme,
-    vars       : barsVars,
-    varComments: comments,
-    importPath : "../scripts/pathux",
-  });
+// The dynamic import transforms the whole pathux barrel, which outgrows the default 5s timeout.
+test(
+  "the generated file evaluates back to the theme it was written from",
+  { timeout: 30000 },
+  async () => {
+    const src = createThemeFile({
+      theme      : barsTheme,
+      vars       : barsVars,
+      varComments: comments,
+      importPath : "../scripts/pathux",
+    });
 
-  const path = "tests/__roundtrip_theme.ts";
-  writeFileSync(path, src);
+    const path = "tests/__roundtrip_theme.ts";
+    writeFileSync(path, src);
 
-  try {
-    // the specifier is hidden from vite's import analysis, which runs before the file exists
-    const spec = ["./", "__roundtrip_theme"].join("");
-    const mod = (await import(/* @vite-ignore */ spec)) as {
-      themeVars: unknown;
-      theme: unknown;
-      instancedTheme: unknown;
-    };
+    try {
+      // the specifier is hidden from vite's import analysis, which runs before the file exists
+      const spec = ["./", "__roundtrip_theme"].join("");
+      const mod = (await import(/* @vite-ignore */ spec)) as {
+        themeVars: unknown;
+        theme: unknown;
+        instancedTheme: unknown;
+      };
 
-    expect(mod.themeVars).toStrictEqual(barsVars);
-    expect(mod.theme).toStrictEqual(barsTheme);
-    expect(mod.instancedTheme).toStrictEqual(instanceThemeVars(barsTheme, barsVars));
-  } finally {
-    rmSync(path, { force: true });
+      expect(mod.themeVars).toStrictEqual(barsVars);
+      expect(mod.theme).toStrictEqual(barsTheme);
+      expect(mod.instancedTheme).toStrictEqual(instanceThemeVars(barsTheme, barsVars));
+    } finally {
+      rmSync(path, { force: true });
+    }
   }
-});
+);
 
 test("comments are read from a hand-authored theme module too", () => {
   const src = [

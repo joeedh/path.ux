@@ -35,7 +35,7 @@ any time after stage 1 if useful.
 
 ## Editor ([node-editor-view.md](node-editor-view.md))
 
-- [ ] **Stage V1 — pan/zoom container.** `PanZoomContainer` with the pure
+- [x] **Stage V1 — pan/zoom container.** `PanZoomContainer` with the pure
       `PanZoomTransform` math.
 - [ ] **Stage V2 — editor view.** `NodeEditor extends Area`, shipped unregistered (the
       consumer calls `Area.register`); frames, link underlay, breadcrumb descent, selection

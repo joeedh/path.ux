@@ -31,6 +31,7 @@ export * from "./widgets/ui_noteframe";
 export * from "./widgets/ui_numsliders";
 export * from "./widgets/ui_lasttool";
 export * from "./widgets/ui_textbox";
+export * from "./widgets/ui_panzoom";
 export * from "./path-controller/util/graphpack";
 
 export * from "./path-controller/util/html5_fileapi";
