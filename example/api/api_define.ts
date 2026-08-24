@@ -1,4 +1,4 @@
-import { DataAPI, DataStruct, buildToolSysAPI } from "../pathux.js";
+import { DataAPI, DataStruct, buildToolSysAPI, nodegraph } from "../pathux.js";
 import { Icons } from "../editors/icon_enum.js";
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
 import {
@@ -124,6 +124,11 @@ export function defineAPI() {
 
   cstruct.struct("canvas", "canvas", "Canvas", api.mapStruct(Canvas));
   cstruct.struct("workspace", "workspace", "Workspace", api.mapStruct(WorkspaceEditor));
+
+  // the demo graphs the node editor tab edits; resolved via context getters.
+  const graphst = nodegraph.defineGraphAPI(api);
+  cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
+  cstruct.struct("demogroup", "demogroup", "Demo Group Definition", graphst);
 
   const dstruct = cstruct.struct("data", "data", "Data");
   dstruct.curve1d("curvemap", "curvemap", "curvemap");

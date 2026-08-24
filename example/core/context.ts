@@ -1,5 +1,6 @@
 import {WorkspaceEditor} from "../editors/workspace/workspace.js";
 import {Editor} from "../editors/editor_base.js";
+import {theDemoGraph, demoGroupDefs} from "../editors/nodeeditor/demo_nodes.js";
 
 import {Context, ContextOverlay, ContextFlags, Area, getLastToolStruct, ContextLike} from '../pathux.js';
 import {DocsBrowserEditor} from "../editors/docbrowser/docbrowser.js";
@@ -72,6 +73,14 @@ export class BaseOverlay extends ContextOverlay {
 
   get workspace() {
     return Area.getActiveArea(WorkspaceEditor);
+  }
+
+  get nodegraph() {
+    return theDemoGraph;
+  }
+
+  get demogroup() {
+    return demoGroupDefs.get("demo_group")?.subgraph;
   }
 
   workspace_save() {

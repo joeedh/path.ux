@@ -51,7 +51,7 @@ any time after stage 1 if useful.
 - [x] **Stage V3 — editor editing.** Link drag, add-node menu, replace, auto-arrange, the
       group designer dock panel, forwarded UI on instances; every mutating gesture goes
       through the stage-V2 delegate.
-- [ ] **Stage V4 — example-app tab.** Consumer-side registration exercised for real: demo
+- [x] **Stage V4 — example-app tab.** Consumer-side registration exercised for real: demo
       node/socket types, a demo group behind a stub loader/saver, verified live over CDP.
 
 ## After both plans
