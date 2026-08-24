@@ -17,7 +17,7 @@ any time after stage 1 if useful.
       (`FloatArrayProperty`, `ArrayBufferProperty`, `Curve1DProperty`), plus the parent's
       gitlink bump and registry-sweep test. Committing the submodule's default branch is
       confirmed with the user first, per CLAUDE.md.
-- [ ] **Stage 2 — sockets.** `NodeSocketBase`, `FloatSocket`/`Vec3Socket`,
+- [x] **Stage 2 — sockets.** `NodeSocketBase`, `FloatSocket`/`Vec3Socket`,
       `registerSocketType`, dirty propagation, coercion, socket STRUCT.
 - [ ] **Stage 3 — nodes and the type registry.** `Node`, `NodeDef`, `graphDef()` merge,
       `registerNodeType`, props-key ≡ `apiname` invariant, node STRUCT with socket

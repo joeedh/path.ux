@@ -69,6 +69,11 @@ export { nwjs_api };
 export * from "./widgets/theme_editor";
 export * from "./widgets/ui_treeview";
 
+// Namespaced because a bare Node export would shadow the DOM's Node.
+import * as nodegraph from "./graph/index";
+
+export { nodegraph };
+
 export * from "./screen/FrameManager";
 export * from "./screen/ScreenArea";
 export * from "./screen/dock_panels";
