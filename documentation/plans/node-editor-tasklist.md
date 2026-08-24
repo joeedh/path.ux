@@ -56,7 +56,7 @@ any time after stage 1 if useful.
 
 ## After both plans
 
-- [ ] Sweep for `CLAUDENOTE:` comments and remove any that remain.
+- [x] Sweep for `CLAUDENOTE:` comments and remove any that remain.
 - [ ] Follow-ons parked deliberately: undo history UI, copy/paste between graphs, a stock
       socket library beyond `FloatSocket`/`Vec3Socket`, a `simple.Editor` convenience
       wrapper.
