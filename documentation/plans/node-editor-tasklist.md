@@ -27,7 +27,7 @@ any time after stage 1 if useful.
 - [x] **Stage 5 — groups.** `GroupDef`, proxy nodes, `GroupNode`,
       `groupLoader`/`groupSaver`/`resolveGroups`, reconciliation and hooks, flattened sort,
       `structuralEditsRefused()`, group STRUCT.
-- [ ] **Stage 6 — LLM DSL.** `validateGraphDSL` / `buildGraphFromDSL`, diagnostics never
+- [x] **Stage 6 — LLM DSL.** `validateGraphDSL` / `buildGraphFromDSL`, diagnostics never
       throw.
 - [ ] **Stage 7 — ToolOps and the data API.** The op set including `ReplaceNodeOp` and the
       dematerializing `SetNodePropOp` undo; the group-descent datapath
