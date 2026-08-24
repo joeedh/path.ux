@@ -36,6 +36,14 @@ const repoRoot = resolve(__dirname, "..");
 const DOM_STUB_BANNER = `
 {
   const noop = () => {};
+  // Several modules start an interval as they load (util, anim, the menu
+  // wrangler). Unreffing them lets node exit once the catalog is written.
+  const realInterval = globalThis.setInterval;
+  globalThis.setInterval = (...args) => {
+    const timer = realInterval(...args);
+    timer?.unref?.();
+    return timer;
+  };
   const elTarget = { style: {}, classList: { add: noop, remove: noop, toggle: noop, contains: () => false }, dataset: {}, children: [], childNodes: [] };
   const el = new Proxy(elTarget, { get: (t, k) => (k in t ? t[k] : noop), set: () => true });
   const win = globalThis;
@@ -418,5 +426,8 @@ async function main(argv) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main(process.argv.slice(2));
+  main(process.argv.slice(2)).catch((err) => {
+    console.error("[gen-themes]", err?.stack ?? err);
+    process.exitCode = 1;
+  });
 }
