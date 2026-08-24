@@ -6,7 +6,7 @@ import type { DataAPI, DataStruct } from "../path-controller/controller/controll
 import type { IContextBase } from "../core/context_base";
 import type { Container } from "../core/ui";
 import { NodeSocketBase } from "./socket";
-import type { Graph } from "./graph";
+import type { Graph, GroupResolveRuntime } from "./graph";
 import type { Color, GraphId, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
 
@@ -169,7 +169,7 @@ graph.Node {
     }
   }
 
-  private _adoptSocket(key: string, sock: NodeSocketBase, dir: SocketDir): NodeSocketBase {
+  protected _adoptSocket(key: string, sock: NodeSocketBase, dir: SocketDir): NodeSocketBase {
     sock.name = key;
     sock.dir = dir;
     sock.owningNode = this;
@@ -177,7 +177,7 @@ graph.Node {
   }
 
   /** Enforces the record-key ≡ apiname invariant node serialization depends on. */
-  private _adoptProp(key: string, prop: ToolProperty): void {
+  protected _adoptProp(key: string, prop: ToolProperty): void {
     if (!prop.apiname) {
       prop.apiname = key;
     } else if (prop.apiname !== key) {
@@ -199,6 +199,16 @@ graph.Node {
   flagDirty(): void {
     this.dirty = true;
     this.graph?.dirtyNodes.add(this);
+  }
+
+  /** The nodes this node contributes to a flattened sort. A group instance returns its inner nodes. */
+  expandNode(): Node[] {
+    return [this];
+  }
+
+  /** Resolution hook for Graph.resolveGroups; a plain node has nothing to resolve. */
+  async _resolveGroup(rt: GroupResolveRuntime): Promise<void> {
+    void rt;
   }
 
   clearDirty(): void {

@@ -24,7 +24,7 @@ any time after stage 1 if useful.
       reconciliation.
 - [x] **Stage 4 — graph and sort.** `Graph`, per-graph ids, Tarjan `sort()` with
       `{order, cycles}`, link records, graph STRUCT.
-- [ ] **Stage 5 — groups.** `GroupDef`, proxy nodes, `GroupNode`,
+- [x] **Stage 5 — groups.** `GroupDef`, proxy nodes, `GroupNode`,
       `groupLoader`/`groupSaver`/`resolveGroups`, reconciliation and hooks, flattened sort,
       `structuralEditsRefused()`, group STRUCT.
 - [ ] **Stage 6 — LLM DSL.** `validateGraphDSL` / `buildGraphFromDSL`, diagnostics never

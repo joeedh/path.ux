@@ -4,6 +4,7 @@ import { Node } from "./node";
 import type { NodeSocketBase } from "./socket";
 import type { GraphId } from "./graph_types";
 import { NO_ID } from "./graph_types";
+import type { GroupDef, GroupNode } from "./group";
 
 const GRAPH_VERSION = 1.0;
 
@@ -53,6 +54,25 @@ export interface GraphSortResult {
   cycles: Node[][];
 }
 
+/** What resolveGroups managed and what it could not, reported rather than thrown. */
+export interface GroupResolveReport {
+  /** Instances now current: reconciled this run, or already at the definition's hash. */
+  synced: GroupNode[];
+  failed: { ref: string; reason: string }[];
+}
+
+/** Shared state one resolveGroups run threads through Node._resolveGroup. */
+export interface GroupResolveRuntime {
+  loader: ((ref: string) => Promise<GroupDef | undefined>) | undefined;
+  /** In-flight and completed loads this run, keyed by ref, so a ref loads once per run. */
+  pending: Map<string, Promise<GroupDef | undefined>>;
+  /** Last-known-good definitions across runs; a failed reload keeps the earlier one. */
+  known: Map<string, GroupDef>;
+  /** Definitions currently expanding, for the self-containment check. */
+  chain: GroupDef[];
+  report: GroupResolveReport;
+}
+
 /**
  * A collection of nodes and the edges between their sockets. Node ids are allocated
  * per graph, never globally, so a subgraph serializes and copies standalone. See
@@ -78,6 +98,18 @@ graph.Graph {
 
   /** Nodes flagged dirty since the client last cleared them; maintained by Node.flagDirty. */
   dirtyNodes = new Set<Node>();
+
+  /** Loads a group definition by reference. The library never decides where a ref points. */
+  groupLoader?: (ref: string) => Promise<GroupDef | undefined>;
+
+  /** Saves a group definition by reference; the seam beside groupLoader for group designers. */
+  groupSaver?: (ref: string, def: GroupDef) => Promise<void>;
+
+  /** Set on a group instance's subgraph; flagSortDirty bubbles through it to the owning graph. */
+  groupOwner: Node | undefined = undefined;
+
+  /** Last-known-good group definitions, kept across resolveGroups runs. */
+  private knownDefs = new Map<string, GroupDef>();
 
   private idgen = 0;
 
@@ -179,11 +211,38 @@ graph.Graph {
 
   flagSortDirty(): void {
     this.sortCache = undefined;
+    this.groupOwner?.graph?.flagSortDirty();
   }
 
-  /** The nodes a node contributes to the sort. Stage 5 overrides this on group expansion. */
-  expandNode(node: Node): Node[] {
-    return [node];
+  /**
+   * The refusal sentence for structural edits, or undefined where they are allowed.
+   * A group instance's subgraph answers with the sentence; ops consult this in canRun.
+   */
+  structuralEditsRefused(): string | undefined {
+    return this.groupOwner !== undefined
+      ? "a group instance takes value edits only; structural edits belong to the group's definition"
+      : undefined;
+  }
+
+  /**
+   * Loads and reconciles every group instance in the graph through groupLoader,
+   * recursing into loaded definitions. Failures are reported rather than thrown, and
+   * a definition that fails to reload keeps the one an earlier run resolved.
+   */
+  async resolveGroups(): Promise<GroupResolveReport> {
+    const report: GroupResolveReport = { synced: [], failed: [] };
+    const rt: GroupResolveRuntime = {
+      loader : this.groupLoader,
+      pending: new Map(),
+      known  : this.knownDefs,
+      chain  : [],
+      report,
+    };
+
+    for (const n of [...this.nodes]) {
+      await n._resolveGroup(rt);
+    }
+    return report;
   }
 
   /**
@@ -198,7 +257,7 @@ graph.Graph {
 
     const nodes: Node[] = [];
     for (const n of this.nodes) {
-      nodes.push(...this.expandNode(n));
+      nodes.push(...n.expandNode());
     }
     const nodeSet = new Set(nodes);
 
