@@ -2,7 +2,9 @@ import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { HashDigest } from "../path-controller/util/util";
+import type { DataAPI, DataStruct } from "../path-controller/controller/controller";
 import { Graph } from "./graph";
+import { defineGraphAPI } from "./graph_api";
 import type { GroupResolveRuntime } from "./graph";
 import { Node, registerNodeType } from "./node";
 import type { NodeDef, Sockets } from "./node";
@@ -12,6 +14,11 @@ import { NO_ID } from "./graph_types";
 
 /** Maps a definition's subgraph back to its GroupDef for the link-time containment check. */
 const defOfSubgraph = new WeakMap<Graph, GroupDef>();
+
+/** The GroupDef whose subgraph is g, so ops editing a definition can reach its exposure rows. */
+export function definitionOfSubgraph(g: Graph): GroupDef | undefined {
+  return defOfSubgraph.get(g);
+}
 
 /** A standalone physical copy with ids preserved, via a JSON round trip. */
 function copyGraph(g: Graph): Graph {
@@ -332,6 +339,12 @@ graph.GroupNode {
   /** The resolved definition; undefined until resolveGroups or setDefinition binds one. */
   get definition(): GroupDef | undefined {
     return this._def;
+  }
+
+  /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
+  static override defineAPI(api: DataAPI, st: DataStruct): void {
+    super.defineAPI(api, st);
+    st.struct("subgraph", "group", "Group", defineGraphAPI(api));
   }
 
   /** Reports whether target sits anywhere on def's chain of resolved group definitions. */

@@ -5,3 +5,5 @@ export * from "./node";
 export * from "./graph";
 export * from "./group";
 export * from "./dsl";
+export * from "./graph_api";
+export * from "./graph_ops";

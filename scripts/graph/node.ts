@@ -2,7 +2,8 @@ import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { Vector2 } from "../path-controller/util/vectormath";
-import type { DataAPI, DataStruct } from "../path-controller/controller/controller";
+import { DataStruct } from "../path-controller/controller/controller";
+import type { DataAPI } from "../path-controller/controller/controller";
 import type { IContextBase } from "../core/context_base";
 import type { Container } from "../core/ui";
 import { NodeSocketBase } from "./socket";
@@ -230,10 +231,57 @@ graph.Node {
     return resolveDefValue(this.def.icon, this) ?? -1;
   }
 
-  /** Declares this node in the data API. Inert until stage 7 lands the graph datapaths. */
+  /** Declares this node type's datapaths on st. Subclasses extend via super.defineAPI. */
   static defineAPI(api: DataAPI, st: DataStruct): void {
     void api;
-    void st;
+
+    st.string("", "name", "Name")
+      .customGet<Node>(function () {
+        return this.dataref.getUIName();
+      })
+      .readOnly();
+
+    st.string("", "description", "Description")
+      .customGet<Node>(function () {
+        return this.dataref.getDescription();
+      })
+      .readOnly();
+
+    st.int("", "icon", "Icon")
+      .customGet<Node>(function () {
+        return this.dataref.getIcon();
+      })
+      .readOnly();
+
+    // The list's path is empty, so callbacks receive the node itself. Reads descend
+    // a group boundary via nodePropValue; a write lands on the node's own property,
+    // which is what materializes an instance override.
+    st.list<Node, string, unknown>("", "props", {
+      get(_api: DataAPI, node: Node, key: string) {
+        return nodePropValue(node, key);
+      },
+      set(_api: DataAPI, node: Node, key: string, val: unknown) {
+        const target = nodePropTarget(node, key);
+        if (target === undefined) {
+          throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);
+        }
+        target.setValue(val);
+      },
+      getKey(_api: DataAPI, node: Node, val: unknown) {
+        return nodePropKeys(node).find((k) => nodePropValue(node, k) === val);
+      },
+      getLength(_api: DataAPI, node: Node) {
+        return nodePropKeys(node).length;
+      },
+      getIter(_api: DataAPI, node: Node) {
+        return nodePropKeys(node)
+          .map((k) => nodePropValue(node, k))
+          [Symbol.iterator]();
+      },
+      getStruct(_api: DataAPI, node: Node, key: string) {
+        return nodePropTarget(node, key) !== undefined ? NODE_PROP_LEAF : undefined;
+      },
+    });
   }
 
   /** UI for editing this node's properties. Inert until stage 7 supplies the datapaths. */
@@ -315,6 +363,49 @@ graph.Node {
 
     return socks;
   }
+}
+
+/** The struct a props entry resolves through; the entry itself is a bare value. */
+const NODE_PROP_LEAF = new DataStruct(undefined, "NodePropLeaf");
+
+/** The property a key addresses on node: its own prop first, else the input's editable default. */
+export function nodePropTarget(node: Node, key: string): ToolProperty | undefined {
+  return node.props[key] ?? node.inputs[key]?.defaultProp;
+}
+
+/** The keys the props datapath exposes: node props plus inputs carrying an editable default. */
+export function nodePropKeys(node: Node): string[] {
+  const keys = Object.keys(node.props);
+  for (const k in node.inputs) {
+    if (node.inputs[k].defaultProp !== undefined && !(k in node.props)) {
+      keys.push(k);
+    }
+  }
+  return keys;
+}
+
+/**
+ * The value a key reads on node, descending the group boundary: an unmaterialized
+ * property on a group instance's subgraph node reads the bound definition's value.
+ * A materialized (wasSet) property reads its own value, as does a node whose graph
+ * has no bound definition (a nested copy; reconciliation re-copies it whenever the
+ * definition's content moves, so the copied value stays current).
+ */
+export function nodePropValue(node: Node, key: string): unknown {
+  const target = nodePropTarget(node, key);
+  if (target === undefined) {
+    return undefined;
+  }
+  if (target.wasSet) {
+    return target.getValue();
+  }
+
+  const owner = node.graph?.groupOwner as (Node & { definition?: { subgraph: Graph } }) | undefined;
+  const defNode = owner?.definition?.subgraph.nodeIdMap.get(node.id);
+  if (defNode !== undefined && nodePropTarget(defNode, key) !== undefined) {
+    return nodePropValue(defNode, key);
+  }
+  return target.getValue();
 }
 
 const DEV_BUILD = Node.name === "Node";

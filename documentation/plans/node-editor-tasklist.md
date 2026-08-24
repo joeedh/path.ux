@@ -29,7 +29,7 @@ any time after stage 1 if useful.
       `structuralEditsRefused()`, group STRUCT.
 - [x] **Stage 6 — LLM DSL.** `validateGraphDSL` / `buildGraphFromDSL`, diagnostics never
       throw.
-- [ ] **Stage 7 — ToolOps and the data API.** The op set including `ReplaceNodeOp` and the
+- [x] **Stage 7 — ToolOps and the data API.** The op set including `ReplaceNodeOp` and the
       dematerializing `SetNodePropOp` undo; the group-descent datapath
       (`DataList` + `customGetSet`).
 
