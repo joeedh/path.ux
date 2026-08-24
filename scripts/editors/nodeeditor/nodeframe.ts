@@ -3,6 +3,7 @@ import type { UIBaseDefinition } from "../../core/ui_base";
 import { Container } from "../../core/ui";
 import { IContextBase } from "../../core/context_base";
 import { t } from "../../core/theme_schema";
+import type { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import type { Node as GraphNode } from "../../graph/node";
 import type { SocketDir } from "../../graph/graph_types";
@@ -60,6 +61,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
   private _header!: HTMLDivElement;
+  private _rows: HTMLDivElement[] = [];
   private _body: Container<CTX> | undefined;
   private _dragging = false;
   private _dragStartX = 0;
@@ -71,9 +73,16 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       tagname: "nodeframe-x",
       style  : "nodeframe",
       theme: {
-        Width          : t.number,
-        HeaderHeight   : t.number,
-        SocketRowHeight: t.number,
+        Width             : t.number,
+        HeaderHeight      : t.number,
+        SocketRowHeight   : t.number,
+        "background-color": t.color,
+        "border-color"    : t.color,
+        "border-radius"   : t.number,
+        HeaderBG          : t.color,
+        SelectOutline     : t.color,
+        DefaultText       : t.font,
+        SocketText        : t.font,
       },
     };
   }
@@ -87,12 +96,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     this.style.position = "absolute";
     this.style.width = this.metrics().width + "px";
-    this.style.border = "1px solid #888";
-    this.style.borderRadius = "4px";
-    this.style.background = "rgba(64, 64, 64, 0.9)";
     this.style.userSelect = "none";
 
     this._buildUI();
+    this.setCSS();
     this.syncPosition();
 
     this.addEventListener("pointerdown", (e: PointerEvent) => {
@@ -141,7 +148,37 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   setSelected(sel: boolean) {
     this.selected = sel;
-    this.style.outline = sel ? "2px solid #ffaa33" : "";
+    this.style.outline = sel ? `2px solid ${this.getDefault("SelectOutline")}` : "";
+  }
+
+  /** Applies the themed colors and fonts; a live theme edit re-runs it. */
+  setCSS() {
+    super.setCSS();
+
+    const radius = this.getDefault("border-radius") as number;
+    this.style.border = `1px solid ${this.getDefault("border-color")}`;
+    this.style.borderRadius = radius + "px";
+    this.style.outline = this.selected ? `2px solid ${this.getDefault("SelectOutline")}` : "";
+
+    if (this._header === undefined) {
+      return;
+    }
+
+    const m = this.metrics();
+    const font = this.getDefault("DefaultText") as CSSFont;
+    this._header.style.font = font.genCSS();
+    this._header.style.color = font.color;
+    // The font shorthand resets line-height, so the row centering is re-applied after it.
+    this._header.style.lineHeight = m.headerHeight + "px";
+    this._header.style.background = this.getDefault("HeaderBG") as string;
+    this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
+
+    const rowFont = this.getDefault("SocketText") as CSSFont;
+    for (const row of this._rows) {
+      row.style.font = rowFont.genCSS();
+      row.style.color = rowFont.color;
+      row.style.lineHeight = m.socketRowHeight + "px";
+    }
   }
 
   /** Rebuilds header text and socket rows; used after a rename or type swap. */
@@ -157,8 +194,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._header.title = this.node.getDescription() || this.node.getUIName();
     this._header.style.cssText =
       `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; ` +
-      "padding: 0 6px; cursor: move; overflow: hidden; white-space: nowrap; " +
-      "background: rgba(96, 96, 96, 0.9); border-radius: 4px 4px 0 0;";
+      "padding: 0 6px; cursor: move; overflow: hidden; white-space: nowrap;";
     this.shadow.appendChild(this._header);
 
     this._wireDrag(this._header);
@@ -171,11 +207,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       const row = document.createElement("div");
       row.style.cssText =
         `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; ` +
-        "display: flex; justify-content: space-between; padding: 0 4px; font-size: 11px;";
+        "display: flex; justify-content: space-between; padding: 0 4px;";
 
       row.appendChild(this._terminal(inKeys[i], "in"));
       row.appendChild(this._terminal(outKeys[i], "out"));
       this.shadow.appendChild(row);
+      this._rows.push(row);
     }
 
     this._body = UIBase.createElement("container-x") as Container<CTX>;

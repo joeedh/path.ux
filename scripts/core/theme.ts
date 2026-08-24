@@ -262,9 +262,36 @@ export const DefaultTheme = {
   },
 
   nodeframe: {
-    Width          : 140,
-    HeaderHeight   : 24,
-    SocketRowHeight: 20,
+    Width             : 140,
+    HeaderHeight      : 24,
+    SocketRowHeight   : 20,
+    "background-color": "rgba(64, 64, 64, 0.9)",
+    "border-color"    : "#888888",
+    "border-radius"   : 4,
+    HeaderBG          : "rgba(96, 96, 96, 0.9)",
+    SelectOutline     : "#ffaa33",
+    DefaultText: new CSSFont({
+      font   : "sans-serif",
+      weight : "normal",
+      variant: "normal",
+      style  : "normal",
+      size   : 12,
+      color  : "rgba(230, 230, 230, 1.0)",
+    }),
+    SocketText: new CSSFont({
+      font   : "sans-serif",
+      weight : "normal",
+      variant: "normal",
+      style  : "normal",
+      size   : 11,
+      color  : "rgba(230, 230, 230, 1.0)",
+    }),
+  },
+
+  nodegraphview: {
+    BoxSelectBorder: "#ffaa33",
+    BoxSelectBG    : "rgba(255, 170, 51, 0.1)",
+    ErrorColor     : "#ff6666",
   },
 
   nodelinkcanvas: {

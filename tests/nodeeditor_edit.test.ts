@@ -284,13 +284,13 @@ test("the add menu lists registered types and instantiates at the drop point in 
   view.panzoom.setTransform(2, [10, 20]);
 
   const menu = view.openAddMenu([50, 60]);
-  const names = [...menu.root.querySelectorAll("button")].map((b) => b.dataset.typeName);
-  expect(names).toContain("EditSrc");
-  expect(names).toContain("EditMath");
-  expect(names).not.toContain("GroupNode");
-  expect(names).not.toContain("GroupInputNode");
+  const ids = menu.items.map((li) => li._id);
+  expect(ids).toContain("EditSrc");
+  expect(ids).toContain("EditMath");
+  expect(ids).not.toContain("GroupNode");
+  expect(ids).not.toContain("GroupInputNode");
 
-  menu.pick("EditSrc");
+  menu._onselect!("EditSrc");
 
   const added = g.nodes.find((n) => n.def.typeName === "EditSrc")!;
   expect(added).toBeDefined();

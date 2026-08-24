@@ -119,12 +119,13 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
       return;
     }
     buildGroupDesigner(root, {
-      ctx      : this.ctx as unknown as ContextLike,
-      def      : this._designing.def,
-      ref      : this._designing.ref,
-      graphPath: this._rootPath,
-      delegate : this.view.delegate,
-      onChanged: () => this.view.syncGraph(),
+      ctx       : this.ctx as unknown as ContextLike,
+      def       : this._designing.def,
+      ref       : this._designing.ref,
+      graphPath : this._rootPath,
+      delegate  : this.view.delegate,
+      onChanged : () => this.view.syncGraph(),
+      errorColor: this.view.getDefault("ErrorColor") as string,
     });
   }
 

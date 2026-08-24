@@ -33,6 +33,7 @@ consumer that wants it as a screen editor calls `Area.register` itself.
 - [The data API](#the-data-api)
 - [ToolOps](#toolops)
 - [The view widget](#the-view-widget)
+  * [Theming](#theming)
   * [Gestures](#gestures)
   * [Group descent](#group-descent)
   * [View state](#view-state)
@@ -386,6 +387,27 @@ row per socket, and a body the node's own `createUI` override fills (the base
 implementation renders nothing). A group instance's frame appends its
 forwarded UI beneath that (see [Exposed UI](#exposed-ui)).
 
+### Theming
+
+The editor reads its colors, fonts and geometry from the theme through
+`getDefault`, so an app restyles it by overriding keys in its theme file
+rather than by patching CSS. Three style classes carry the keys:
+
+- `nodeframe` — the frame geometry (`Width`, `HeaderHeight`,
+  `SocketRowHeight`), the body's `background-color`, `border-color` and
+  `border-radius`, the header's `HeaderBG`, the selection ring's
+  `SelectOutline`, and two `CSSFont`s: `DefaultText` for the header and
+  `SocketText` for the socket rows.
+- `nodegraphview` — the box-select marquee (`BoxSelectBorder`,
+  `BoxSelectBG`) and `ErrorColor`, which the editor shell passes into the
+  group designer's missing-entry flag.
+- `nodelinkcanvas` — `LinkColor` and `LinkWidth` for the drawn links.
+
+A socket terminal's dot keeps the color its socket type declares
+(`SocketDef.color`); that is per-type identity, not theme. The add and
+context menus are ordinary path.ux menus, so the `menu` style class themes
+them along with every other menu in the app.
+
 ### Gestures
 
 - **Pan / zoom** — middle-drag (or hold space and drag) to pan; the wheel
@@ -400,10 +422,13 @@ forwarded UI beneath that (see [Exposed UI](#exposed-ui)).
   Starting on a connected single-link input detaches its edge: an empty drop
   severs the link, and a drop on another input moves it.
 - **Add** — right-click empty canvas opens the add-node menu
-  (`openAddMenu`): a filterable list of every registered node type except the
-  group machinery, added at the click point on pick.
-- **Node menu** — right-click a frame for Delete, Duplicate (keeps overridden
-  values) and Replace (keeps links where sockets still coerce).
+  (`openAddMenu`): a path.ux `Menu` in search mode (a filter textbox above
+  the list) offering every registered node type except the group machinery,
+  added at the click point on pick. `buildAddNodeMenu(ctx, onPick, items?)`
+  builds the same menu for a host that wants to start it elsewhere.
+- **Node menu** — right-click a frame for a path.ux `Menu` with Delete,
+  Duplicate (keeps overridden values) and Replace (keeps links where sockets
+  still coerce); Replace opens the same searchable type picker as Add.
 - **Arrange** — `arrangeNodes()` auto-lays-out the graph with graphpack, one
   island at a time, and commits the result as a single undo entry.
 
@@ -611,7 +636,7 @@ class NodeGraphView<CTX> extends Container<CTX> {   // custom element nodegraphv
   descendInto(node: Node): void;
   popTo(depth: number): void;
   syncGraph(): void;                                // reconcile frames after external changes
-  openAddMenu(local: readonly [number, number]): AddNodeMenu;
+  openAddMenu(local: readonly [number, number]): Menu<CTX>;  // started as a screen popup when ctx has a screen
   deleteSelected(): void;
   duplicateSelected(): void;
   replaceNode(nodeId: GraphId, newType: string): void;
@@ -625,6 +650,10 @@ class NodeEditor<CTX> extends Area<CTX> {           // custom element node-edito
   setGraph(graph: Graph | undefined, graphPath: string): void;
   editDefinition(ref: string, def: GroupDef, defPath: string): void;
 }
+
+// The type picker behind Add and Replace, as a standalone builder.
+function buildAddNodeMenu<CTX>(ctx: CTX, onPick: (typeName: string) => void, items?: AddMenuItem[]): Menu<CTX>;
+function addMenuItems(): AddMenuItem[];             // registered types minus the group machinery
 
 interface NodeGraphDelegate {
   check(ctx: ContextLike, edit: GraphEdit): EditVerdict;

@@ -23,7 +23,9 @@ import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { ToolOpDelegate } from "./delegate";
 import type { ArrangeMove, GraphEdit, NodeGraphDelegate } from "./delegate";
 import { LinkDrag } from "./linkdrag";
-import { AddNodeMenu } from "./addmenu";
+import { buildAddNodeMenu } from "./addmenu";
+import { Menu, createMenu, startMenu } from "../../widgets/ui_menu";
+import { t } from "../../core/theme_schema";
 import { buildForwardedUI } from "./groupui";
 
 /** The view state an embedding editor persists: camera plus descent stack. */
@@ -43,7 +45,10 @@ const CLICK_SLOP_PX = 3;
  * Every mutating gesture routes through {@link delegate}; the view itself
  * never writes the graph.
  */
-export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Container<CTX> {
+export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Container<
+  CTX,
+  "NodeGraphView"
+> {
   delegate: NodeGraphDelegate = new ToolOpDelegate();
 
   /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
@@ -70,6 +75,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   static define(): UIBaseDefinition {
     return {
       tagname: "nodegraphview-x",
+      style  : "nodegraphview",
+      theme: {
+        BoxSelectBorder: t.color,
+        BoxSelectBG    : t.color,
+        // Read by the editor shell for the group designer's missing-entry flag.
+        ErrorColor     : t.color,
+      },
     };
   }
 
@@ -407,24 +419,36 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   }
 
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
-  openAddMenu(local: readonly [number, number]): AddNodeMenu {
-    const menu = new AddNodeMenu({
-      onPick: (typeName) => {
-        const p = this.panzoom.transform.unproject(local);
-        this._dispatch({
-          kind     : "addNode",
-          graphPath: this.currentGraphPath,
-          nodeType : typeName,
-          x        : p[0],
-          y        : p[1],
-        });
-        this.syncGraph();
-      },
+  openAddMenu(local: readonly [number, number]): Menu<CTX> {
+    const menu = buildAddNodeMenu(this.ctx, (typeName: string) => {
+      const p = this.panzoom.transform.unproject(local);
+      this._dispatch({
+        kind     : "addNode",
+        graphPath: this.currentGraphPath,
+        nodeType : typeName,
+        x        : p[0],
+        y        : p[1],
+      });
+      this.syncGraph();
     });
-    menu.root.style.left = local[0] + "px";
-    menu.root.style.top = local[1] + "px";
-    this.panzoom.shadow.appendChild(menu.root);
+    this._startMenu(menu, local, true);
     return menu;
+  }
+
+  /**
+   * Starts a menu as a screen popup at a panzoom-local point, with the type
+   * filter box when searchMode is set. A context without a screen (the
+   * headless tests) gets the built menu back unstarted.
+   */
+  private _startMenu(menu: Menu<CTX>, local: readonly [number, number], searchMode = false) {
+    if (this.ctx.screen === undefined) {
+      return;
+    }
+    // Every menu here opens from a completed right-click; keeps the menu open
+    // when that button releases over it.
+    menu.closeOnMouseUp = false;
+    const r = this.panzoom.getBoundingClientRect();
+    startMenu(menu as unknown as Menu, r.x + local[0], r.y + local[1], searchMode);
   }
 
   deleteSelected() {
@@ -538,52 +562,44 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.syncGraph();
   }
 
-  /** A small raw-DOM context menu for one node: delete, duplicate, replace. */
+  /** The context menu for one node: delete, duplicate, replace. */
   private _openNodeMenu(frame: NodeFrame<CTX>, local: [number, number]) {
-    const menu = document.createElement("div");
-    menu.className = "nodeeditor-nodemenu";
-    menu.style.cssText =
-      `position: absolute; left: ${local[0]}px; top: ${local[1]}px; z-index: 10; ` +
-      "padding: 4px; background: rgba(48, 48, 48, 0.97); border: 1px solid #888; " +
-      "border-radius: 4px; display: flex; flex-direction: column; gap: 2px;";
-
-    const item = (label: string, title: string, act: () => void) => {
-      const btn = document.createElement("button");
-      btn.textContent = label;
-      btn.title = title;
-      btn.style.cssText = "display: block; width: 100%; text-align: left;";
-      btn.addEventListener("click", () => {
-        menu.remove();
-        act();
-      });
-      menu.appendChild(btn);
-    };
-
     const nid = frame.node.id;
-    item("Delete", "Delete this node", () => {
-      this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-      this.syncGraph();
-    });
-    item("Duplicate", "Duplicate this node, keeping its overridden values", () => {
-      this._dispatch({
-        kind     : "duplicateNode",
-        graphPath: this.currentGraphPath,
-        nodeId   : nid,
-        x        : frame.node.pos[0] + 20,
-        y        : frame.node.pos[1] + 20,
-      });
-      this.syncGraph();
-    });
-    item("Replace…", "Swap this node's type, keeping links where sockets match", () => {
-      const picker = new AddNodeMenu({ onPick: (typeName) => this.replaceNode(nid, typeName) });
-      picker.root.style.left = local[0] + "px";
-      picker.root.style.top = local[1] + "px";
-      this.panzoom.shadow.appendChild(picker.root);
-    });
-
-    this.panzoom.shadow.appendChild(menu);
-    // The listener is on window, so a press outside the menu dismisses it.
-    window.addEventListener("pointerdown", () => menu.remove(), { once: true });
+    const menu = createMenu(this.ctx, "", [
+      {
+        name    : "Delete",
+        tooltip : "Delete this node",
+        callback: () => {
+          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+          this.syncGraph();
+        },
+      },
+      {
+        name    : "Duplicate",
+        tooltip : "Duplicate this node, keeping its overridden values",
+        callback: () => {
+          this._dispatch({
+            kind     : "duplicateNode",
+            graphPath: this.currentGraphPath,
+            nodeId   : nid,
+            x        : frame.node.pos[0] + 20,
+            y        : frame.node.pos[1] + 20,
+          });
+          this.syncGraph();
+        },
+      },
+      {
+        name    : "Replace…",
+        tooltip : "Swap this node's type, keeping links where sockets match",
+        callback: () => {
+          const picker = buildAddNodeMenu(this.ctx, (typeName: string) =>
+            this.replaceNode(nid, typeName)
+          );
+          this._startMenu(picker, local, true);
+        },
+      },
+    ]);
+    this._startMenu(menu, local);
   }
 
   private _redrawLinks() {
@@ -655,9 +671,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
     if (this._marquee === undefined) {
       this._marquee = document.createElement("div");
-      this._marquee.style.cssText =
-        "position: absolute; border: 1px dashed #ffaa33; " +
-        "background: rgba(255, 170, 51, 0.1); pointer-events: none;";
+      this._marquee.style.cssText = "position: absolute; pointer-events: none;";
+      this._marquee.style.border = `1px dashed ${this.getDefault("BoxSelectBorder") as string}`;
+      this._marquee.style.background = this.getDefault("BoxSelectBG") as string;
       this.panzoom.shadow.appendChild(this._marquee);
     }
 

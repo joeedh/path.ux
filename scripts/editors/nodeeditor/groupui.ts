@@ -145,6 +145,9 @@ export interface GroupDesignerOpts {
   graphPath: string;
   delegate: NodeGraphDelegate;
   onChanged?: () => void;
+
+  /** Color of the missing-entry flag; the hosting editor passes its themed ErrorColor. */
+  errorColor?: string;
 }
 
 /**
@@ -188,7 +191,7 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
       const flag = document.createElement("span");
       flag.textContent = "missing";
       flag.title = "This entry's target no longer exists; repoint or remove it";
-      flag.style.color = "#ff6666";
+      flag.style.color = opts.errorColor ?? "#ff6666";
       row.appendChild(flag);
 
       const nodeIdIn = document.createElement("input");
