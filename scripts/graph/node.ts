@@ -6,6 +6,7 @@ import type { DataAPI, DataStruct } from "../path-controller/controller/controll
 import type { IContextBase } from "../core/context_base";
 import type { Container } from "../core/ui";
 import { NodeSocketBase } from "./socket";
+import type { Graph } from "./graph";
 import type { Color, GraphId, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
 
@@ -133,8 +134,8 @@ graph.Node {
 
   id: GraphId = NO_ID;
 
-  /** Assigned by Graph.add; typed as Graph once stage 4 lands it. */
-  graph: unknown = undefined;
+  /** Assigned by Graph.add, cleared by Graph.remove. */
+  graph: Graph | undefined = undefined;
 
   pos = new Vector2();
   size: Vector2;
@@ -197,10 +198,12 @@ graph.Node {
 
   flagDirty(): void {
     this.dirty = true;
+    this.graph?.dirtyNodes.add(this);
   }
 
   clearDirty(): void {
     this.dirty = false;
+    this.graph?.dirtyNodes.delete(this);
   }
 
   /** Precedence: the user's rename, then a definition callback, then a definition constant. */
