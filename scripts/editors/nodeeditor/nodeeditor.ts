@@ -6,11 +6,15 @@ import { IContextBase } from "../../core/context_base";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { Area } from "../../screen/ScreenArea";
 import type { IAreaDef } from "../../screen/ScreenArea";
+import type { PanelManager } from "../../screen/dock_panels";
+import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 // The plain import keeps the view module's module-scope internalRegister call;
 // a type-only use would let the transpiler elide it.
 import "./nodegraphview";
 import type { NodeGraphView } from "./nodegraphview";
+import { buildGroupDesigner } from "./groupui";
 import type { Graph } from "../../graph/graph";
+import type { GroupDef } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 
 /**
@@ -30,6 +34,12 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
   pan = new Vector2();
   zoom = 1;
   descent: string[] = [];
+
+  private _designerRoot: HTMLDivElement | undefined = undefined;
+  private _designing: { ref: string; def: GroupDef } | undefined = undefined;
+
+  /** The root graph's datapath, from setGraph; exposure edits dispatch here. */
+  private _rootPath = "";
 
   constructor() {
     super();
@@ -58,16 +68,64 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
 
     this.makeHeader(this.container, false);
 
-    this.view.parentWidget = this.container;
-    this.container.shadow.appendChild(this.view);
+    const center = this.makePanels(this.container);
+    this.view.parentWidget = center;
+    center.shadow.appendChild(this.view);
     this.view.ctx = this.ctx;
     this.view._init();
     this.view.style.flexGrow = "1";
   }
 
+  definePanels(panels: PanelManager<CTX>) {
+    panels.panel({
+      id   : "group_designer",
+      title: "Group Designer",
+      dock : "right",
+      build: (container) => {
+        const root = document.createElement("div");
+        this._designerRoot = root;
+        container.shadow.appendChild(root);
+        this._renderDesigner();
+      },
+    });
+  }
+
   /** Forwards to the view; graphPath is the datapath the view's edits dispatch against. */
   setGraph(graph: Graph | undefined, graphPath: string) {
+    this._rootPath = graphPath;
     this.view.setGraph(graph, graphPath);
+  }
+
+  /**
+   * Points the view at a group definition's subgraph for structural editing
+   * and shows the definition's exposure list in the Group Designer panel.
+   * defPath must resolve to def.subgraph in the host's data API; exposure
+   * edits dispatch against the root graph recorded by setGraph, whose
+   * groupSaver persists the definition.
+   */
+  editDefinition(ref: string, def: GroupDef, defPath: string) {
+    this._designing = { ref, def };
+    this.view.setGraph(def.subgraph, defPath);
+    this._renderDesigner();
+  }
+
+  private _renderDesigner() {
+    const root = this._designerRoot;
+    if (root === undefined) {
+      return;
+    }
+    if (this._designing === undefined) {
+      root.textContent = "Open a group definition to edit its exposed UI.";
+      return;
+    }
+    buildGroupDesigner(root, {
+      ctx      : this.ctx as unknown as ContextLike,
+      def      : this._designing.def,
+      ref      : this._designing.ref,
+      graphPath: this._rootPath,
+      delegate : this.view.delegate,
+      onChanged: () => this.view.syncGraph(),
+    });
   }
 
   override copy(): this {

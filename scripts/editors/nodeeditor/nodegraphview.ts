@@ -7,14 +7,24 @@ import { IContextBase } from "../../core/context_base";
 import "../../widgets/ui_panzoom";
 import "./linkcanvas";
 import type { PanZoomContainer } from "../../widgets/ui_panzoom";
+import type { ContextLike } from "../../path-controller/controller/controller_abstract";
+import {
+  PackNode,
+  PackNodeVertex,
+  graphGetIslands,
+  graphPack,
+} from "../../path-controller/util/graphpack";
 import { Graph } from "../../graph/graph";
 import { GroupNode } from "../../graph/group";
 import type { Node as GraphNode } from "../../graph/node";
-import type { GraphId } from "../../graph/graph_types";
+import type { GraphId, SocketDir } from "../../graph/graph_types";
 import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { ToolOpDelegate } from "./delegate";
-import type { GraphEdit, NodeGraphDelegate } from "./delegate";
+import type { ArrangeMove, GraphEdit, NodeGraphDelegate } from "./delegate";
+import { LinkDrag } from "./linkdrag";
+import { AddNodeMenu } from "./addmenu";
+import { buildForwardedUI } from "./groupui";
 
 /** The view state an embedding editor persists: camera plus descent stack. */
 export interface NodeGraphViewState {
@@ -50,6 +60,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   panzoom!: PanZoomContainer<CTX>;
   links!: LinkCanvas<CTX>;
+  linkDrag!: LinkDrag<CTX>;
 
   private _crumbs!: HTMLDivElement;
   private _pendingView: NodeGraphViewState | undefined = undefined;
@@ -93,6 +104,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.addEventListener("pointermove", (e: PointerEvent) => this._boxMove(e));
     this.panzoom.addEventListener("pointerup", (e: PointerEvent) => this._boxUp(e));
     this.panzoom.addEventListener("pointercancel", (e: PointerEvent) => this._boxUp(e));
+
+    this.linkDrag = new LinkDrag(this);
+
+    // A right-click on empty canvas opens the add menu; frames stop their own.
+    this.panzoom.addEventListener("contextmenu", (e: MouseEvent) => {
+      e.preventDefault();
+      this.openAddMenu(this._localPoint(e));
+    });
 
     if (this._pendingView !== undefined) {
       const v = this._pendingView;
@@ -261,6 +280,22 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.onSelect = (f, e) => this._selectFrame(f, e);
       frame.onMovePreview = (f) => this._previewMove(f);
       frame.onMoveCommit = (f, x, y) => this._commitMove(f, x, y);
+      frame.onSocketDown = (f, key, dir, e) => this._socketDown(f, key, dir, e);
+      frame.addEventListener("contextmenu", (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._openNodeMenu(frame, this._localPoint(e));
+      });
+
+      if (node instanceof GroupNode) {
+        const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
+        frame.buildExtraUI = (f, body) => {
+          const root = document.createElement("div");
+          root.className = "nodeeditor-forwarded";
+          body.shadow.appendChild(root);
+          buildForwardedUI(root, this.ctx as unknown as ContextLike, f.node as GroupNode, nodePath);
+        };
+      }
 
       frame.parentWidget = this.panzoom;
       this.panzoom.appendChild(frame);
@@ -330,6 +365,225 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
     // A refused drop snaps back here: the frame re-reads node.pos, which perform never changed.
     this.syncGraph();
+  }
+
+  /** Dispatches an edit through the delegate, check first. */
+  private _dispatch(edit: GraphEdit) {
+    if (this.delegate.check(this.ctx, edit).ok) {
+      this.delegate.perform(this.ctx, edit);
+    }
+  }
+
+  /** The pan/zoom-widget-local point of a mouse event. */
+  private _localPoint(e: MouseEvent): [number, number] {
+    const r = this.panzoom.getBoundingClientRect();
+    return [e.clientX - r.x, e.clientY - r.y];
+  }
+
+  private _socketDown(frame: NodeFrame<CTX>, key: string, dir: SocketDir, e: PointerEvent) {
+    if (!this.linkDrag.begin(frame, key, dir)) {
+      return;
+    }
+
+    this.linkDrag.update(this._localPoint(e));
+
+    const move = (ev: PointerEvent) => this.linkDrag.update(this._localPoint(ev));
+    const up = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointercancel", cancel);
+      this.linkDrag.drop(this._localPoint(ev));
+    };
+    const cancel = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      this.linkDrag.cancel();
+    };
+
+    // The listeners are on window so the drag survives leaving the widget;
+    // they live only while the drag does.
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up, { once: true });
+    window.addEventListener("pointercancel", cancel, { once: true });
+  }
+
+  /** Opens the add-node menu at a widget-local point; a pick adds there. */
+  openAddMenu(local: readonly [number, number]): AddNodeMenu {
+    const menu = new AddNodeMenu({
+      onPick: (typeName) => {
+        const p = this.panzoom.transform.unproject(local);
+        this._dispatch({
+          kind     : "addNode",
+          graphPath: this.currentGraphPath,
+          nodeType : typeName,
+          x        : p[0],
+          y        : p[1],
+        });
+        this.syncGraph();
+      },
+    });
+    menu.root.style.left = local[0] + "px";
+    menu.root.style.top = local[1] + "px";
+    this.panzoom.shadow.appendChild(menu.root);
+    return menu;
+  }
+
+  deleteSelected() {
+    for (const nid of [...this.selection]) {
+      this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+    }
+    this.syncGraph();
+  }
+
+  duplicateSelected() {
+    const graph = this.currentGraph;
+    for (const nid of [...this.selection]) {
+      const node = graph?.nodeIdMap.get(nid);
+      if (node === undefined) {
+        continue;
+      }
+      this._dispatch({
+        kind     : "duplicateNode",
+        graphPath: this.currentGraphPath,
+        nodeId   : nid,
+        x        : node.pos[0] + 20,
+        y        : node.pos[1] + 20,
+      });
+    }
+    this.syncGraph();
+  }
+
+  replaceNode(nodeId: GraphId, newType: string) {
+    this._dispatch({ kind: "replaceNode", graphPath: this.currentGraphPath, nodeId, newType });
+    this.syncGraph();
+  }
+
+  /**
+   * Repacks the graph with graphpack, one island at a time, then lays the
+   * islands out left to right so they stay disjoint (the solver itself is
+   * randomized). The result commits as one arrange edit — one undo entry.
+   */
+  arrangeNodes() {
+    const graph = this.currentGraph;
+    if (graph === undefined || graph.nodes.length === 0) {
+      return;
+    }
+
+    const packs = new Map<GraphId, PackNode>();
+    for (const node of graph.nodes) {
+      const frame = this.frames.get(node.id);
+      const r = frame?.rect() ?? { x: node.pos[0], y: node.pos[1], width: 140, height: 64 };
+      const pn = new PackNode();
+      pn.pos.loadXY(r.x, r.y);
+      pn.oldpos.load(pn.pos);
+      pn.size.loadXY(r.width, r.height);
+      packs.set(node.id, pn);
+    }
+
+    const relAnchor = (frame: NodeFrame<CTX>, dir: SocketDir, row: number): [number, number] => {
+      const m = frame.metrics();
+      const a = socketAnchor(m, dir, row);
+      return [a[0] - m.x, a[1] - m.y];
+    };
+
+    for (const node of graph.nodes) {
+      const dstPn = packs.get(node.id)!;
+      const dstFrame = this.frames.get(node.id);
+
+      for (const key of Object.keys(node.inputs)) {
+        for (const edge of node.inputs[key].edges) {
+          const srcNode = edge.owningNode as GraphNode | undefined;
+          const srcPn = srcNode !== undefined ? packs.get(srcNode.id) : undefined;
+          if (srcNode === undefined || srcPn === undefined) {
+            continue;
+          }
+          const srcFrame = this.frames.get(srcNode.id);
+
+          const srcOff =
+            srcFrame !== undefined
+              ? relAnchor(srcFrame, "out", socketRow(srcNode, "out", edge.name))
+              : ([0, 0] as [number, number]);
+          const dstOff =
+            dstFrame !== undefined
+              ? relAnchor(dstFrame, "in", socketRow(node, "in", key))
+              : ([0, 0] as [number, number]);
+
+          const v1 = new PackNodeVertex(srcPn, srcOff);
+          const v2 = new PackNodeVertex(dstPn, dstOff);
+          srcPn.verts.push(v1);
+          dstPn.verts.push(v2);
+          v1.edges.push(v2);
+          v2.edges.push(v1);
+        }
+      }
+    }
+
+    const islands = graphGetIslands([...packs.values()]);
+    let cursorX = 0;
+    for (const island of islands) {
+      graphPack(island, { margin: 20, steps: 8 });
+      // graphPack normalizes the island's min corner to the origin.
+      let maxX = cursorX;
+      for (const pn of island) {
+        pn.pos[0] += cursorX;
+        maxX = Math.max(maxX, pn.pos[0] + pn.size[0]);
+      }
+      cursorX = maxX + 40;
+    }
+
+    const moves: ArrangeMove[] = [];
+    for (const [nid, pn] of packs) {
+      moves.push({ nodeId: nid, x: pn.pos[0], y: pn.pos[1] });
+    }
+    this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
+    this.syncGraph();
+  }
+
+  /** A small raw-DOM context menu for one node: delete, duplicate, replace. */
+  private _openNodeMenu(frame: NodeFrame<CTX>, local: [number, number]) {
+    const menu = document.createElement("div");
+    menu.className = "nodeeditor-nodemenu";
+    menu.style.cssText =
+      `position: absolute; left: ${local[0]}px; top: ${local[1]}px; z-index: 10; ` +
+      "padding: 4px; background: rgba(48, 48, 48, 0.97); border: 1px solid #888; " +
+      "border-radius: 4px; display: flex; flex-direction: column; gap: 2px;";
+
+    const item = (label: string, title: string, act: () => void) => {
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.title = title;
+      btn.style.cssText = "display: block; width: 100%; text-align: left;";
+      btn.addEventListener("click", () => {
+        menu.remove();
+        act();
+      });
+      menu.appendChild(btn);
+    };
+
+    const nid = frame.node.id;
+    item("Delete", "Delete this node", () => {
+      this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+      this.syncGraph();
+    });
+    item("Duplicate", "Duplicate this node, keeping its overridden values", () => {
+      this._dispatch({
+        kind     : "duplicateNode",
+        graphPath: this.currentGraphPath,
+        nodeId   : nid,
+        x        : frame.node.pos[0] + 20,
+        y        : frame.node.pos[1] + 20,
+      });
+      this.syncGraph();
+    });
+    item("Replace…", "Swap this node's type, keeping links where sockets match", () => {
+      const picker = new AddNodeMenu({ onPick: (typeName) => this.replaceNode(nid, typeName) });
+      picker.root.style.left = local[0] + "px";
+      picker.root.style.top = local[1] + "px";
+      this.panzoom.shadow.appendChild(picker.root);
+    });
+
+    this.panzoom.shadow.appendChild(menu);
+    // The listener is on window, so a press outside the menu dismisses it.
+    window.addEventListener("pointerdown", () => menu.remove(), { once: true });
   }
 
   private _redrawLinks() {

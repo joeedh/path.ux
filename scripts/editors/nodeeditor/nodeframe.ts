@@ -54,6 +54,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   onSelect?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
   onMovePreview?: (frame: NodeFrame<CTX>) => void;
   onMoveCommit?: (frame: NodeFrame<CTX>, x: number, y: number) => void;
+  onSocketDown?: (frame: NodeFrame<CTX>, key: string, dir: SocketDir, e: PointerEvent) => void;
+
+  /** Extra rows the owning view appends beneath the node's own createUI. */
+  buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
   private _header!: HTMLDivElement;
   private _body: Container<CTX> | undefined;
@@ -180,6 +184,13 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._body.ctx = this.ctx;
     this._body._init();
     this.node.createUI(this._body);
+    this.buildExtraUI?.(this, this._body);
+  }
+
+  /** The terminal dot for a socket, for the view to restyle during a drag. */
+  terminalDot(key: string, dir: SocketDir): HTMLElement | undefined {
+    const sel = `.nodeframe-terminal[data-socket-key="${key}"][data-socket-dir="${dir}"]`;
+    return (this.shadow.querySelector(sel) as HTMLElement | null) ?? undefined;
   }
 
   /** A terminal dot plus name, or an empty spacer where this side has no row. */
@@ -199,6 +210,16 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     dot.style.cssText =
       "display: inline-block; width: 8px; height: 8px; border-radius: 50%; " +
       `background: ${color}; margin: 0 3px;`;
+
+    dot.addEventListener("pointerdown", (e: PointerEvent) => {
+      if (e.button !== 0 || this.onSocketDown === undefined) {
+        return;
+      }
+      e.preventDefault();
+      // Keeps the press from selecting the frame or starting a box-select.
+      e.stopPropagation();
+      this.onSocketDown(this, key, dir, e);
+    });
 
     const name = document.createElement("span");
     name.textContent = key;

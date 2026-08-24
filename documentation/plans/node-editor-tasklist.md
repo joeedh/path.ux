@@ -48,7 +48,7 @@ any time after stage 1 if useful.
       through the `NodeGraphDelegate` seam (default: the stage-7 ops); `NodeEditor extends
       Area` as a thin shell around one view, shipped unregistered (the consumer calls
       `Area.register`).
-- [ ] **Stage V3 — editor editing.** Link drag, add-node menu, replace, auto-arrange, the
+- [x] **Stage V3 — editor editing.** Link drag, add-node menu, replace, auto-arrange, the
       group designer dock panel, forwarded UI on instances; every mutating gesture goes
       through the stage-V2 delegate.
 - [ ] **Stage V4 — example-app tab.** Consumer-side registration exercised for real: demo
