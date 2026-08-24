@@ -13,7 +13,7 @@ any time after stage 1 if useful.
 
 ## Library ([node-editor.md](node-editor.md))
 
-- [ ] **Stage 1 — `equals()` completions.** The one path-controller submodule commit
+- [x] **Stage 1 — `equals()` completions.** The one path-controller submodule commit
       (`FloatArrayProperty`, `ArrayBufferProperty`, `Curve1DProperty`), plus the parent's
       gitlink bump and registry-sweep test. Committing the submodule's default branch is
       confirmed with the user first, per CLAUDE.md.
