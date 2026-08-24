@@ -1,5 +1,5 @@
 import type { IContextBase } from "../../core/context_base";
-import { Menu, createMenu } from "../../widgets/ui_menu";
+import { Menu, MenuTemplate, createMenu } from "../../widgets/ui_menu";
 import { NodeClasses } from "../../graph/node";
 import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
 
@@ -34,6 +34,23 @@ export function addMenuItems(): AddMenuItem[] {
 }
 
 /**
+ * The node-type picker as MenuTemplate entries, for a host folding it into a
+ * menu of its own — a menu bar, an editor header dropdown, a submenu. Each
+ * entry reports its pick through onPick with the node type's name.
+ */
+export function addNodeMenuTemplate(
+  onPick: (typeName: string) => void,
+  items = addMenuItems()
+): MenuTemplate {
+  return items.map((item) => ({
+    name    : item.uiName,
+    id      : item.typeName,
+    tooltip : item.description || `Add a ${item.uiName} node`,
+    callback: () => onPick(item.typeName),
+  }));
+}
+
+/**
  * The node-type picker as a Menu: one row per item, labelled by uiName and
  * keyed by the type name, reporting a pick through onPick. The same menu
  * serves both adding a node and choosing a replacement type. Start it with
@@ -44,14 +61,5 @@ export function buildAddNodeMenu<CTX extends IContextBase>(
   onPick: (typeName: string) => void,
   items = addMenuItems()
 ): Menu<CTX> {
-  return createMenu(
-    ctx,
-    "Add Node",
-    items.map((item) => ({
-      name    : item.uiName,
-      id      : item.typeName,
-      tooltip : item.description || `Add a ${item.uiName} node`,
-      callback: () => onPick(item.typeName),
-    }))
-  );
+  return createMenu(ctx, "Add Node", addNodeMenuTemplate(onPick, items));
 }

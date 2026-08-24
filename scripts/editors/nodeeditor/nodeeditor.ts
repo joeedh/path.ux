@@ -1,7 +1,7 @@
 import nstructjs from "../../path-controller/util/struct";
 import type { StructReader } from "../../util/nstructjs";
 import { UIBase } from "../../core/ui_base";
-import type { ColumnFrame } from "../../core/ui";
+import type { ColumnFrame, Container } from "../../core/ui";
 import { IContextBase } from "../../core/context_base";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { Area } from "../../screen/ScreenArea";
@@ -29,6 +29,9 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
 
   container!: ColumnFrame<CTX>;
   view: NodeGraphView<CTX>;
+
+  /** The header row makeHeader returned; a subclass adds its own controls here. */
+  headerRow!: Container<CTX>;
 
   /** STRUCT carriers; the live values stay in the view. */
   pan = new Vector2();
@@ -66,7 +69,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     this.container.ctx = this.ctx;
     this.shadow.appendChild(this.container);
 
-    this.makeHeader(this.container, false);
+    this.headerRow = this.makeHeader(this.container, false);
 
     const center = this.makePanels(this.container);
     this.view.parentWidget = center;

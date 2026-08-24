@@ -1,5 +1,6 @@
 import { UIBase } from "../../core/ui_base";
 import type { UIBaseDefinition } from "../../core/ui_base";
+import type { Vector2 } from "../../path-controller/util/vectormath";
 import { Container } from "../../core/ui";
 import { IContextBase } from "../../core/context_base";
 // The plain imports keep the widget modules' module-scope internalRegister
@@ -118,12 +119,6 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.addEventListener("pointercancel", (e: PointerEvent) => this._boxUp(e));
 
     this.linkDrag = new LinkDrag(this);
-
-    // A right-click on empty canvas opens the add menu; frames stop their own.
-    this.panzoom.addEventListener("contextmenu", (e: MouseEvent) => {
-      e.preventDefault();
-      this.openAddMenu(this._localPoint(e));
-    });
 
     if (this._pendingView !== undefined) {
       const v = this._pendingView;
@@ -299,14 +294,17 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
         this._openNodeMenu(frame, this._localPoint(e));
       });
 
+      const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
       if (node instanceof GroupNode) {
-        const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
         frame.buildExtraUI = (f, body) => {
           const root = document.createElement("div");
           root.className = "nodeeditor-forwarded";
           body.shadow.appendChild(root);
           buildForwardedUI(root, this.ctx as unknown as ContextLike, f.node as GroupNode, nodePath);
         };
+      } else {
+        // A group instance's editable values are its forwarded rows above.
+        frame.nodePath = nodePath;
       }
 
       frame.parentWidget = this.panzoom;
@@ -418,18 +416,29 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     window.addEventListener("pointercancel", cancel, { once: true });
   }
 
+  /**
+   * Adds a node of the named registered type at a graph-space point, defaulting
+   * to the view's center. This is the entry point a host's own add menu calls.
+   */
+  addNodeAt(typeName: string, at?: readonly [number, number] | Vector2) {
+    if (at === undefined) {
+      const r = this.panzoom.getBoundingClientRect();
+      at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
+    }
+    this._dispatch({
+      kind     : "addNode",
+      graphPath: this.currentGraphPath,
+      nodeType : typeName,
+      x        : at[0],
+      y        : at[1],
+    });
+    this.syncGraph();
+  }
+
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
   openAddMenu(local: readonly [number, number]): Menu<CTX> {
     const menu = buildAddNodeMenu(this.ctx, (typeName: string) => {
-      const p = this.panzoom.transform.unproject(local);
-      this._dispatch({
-        kind     : "addNode",
-        graphPath: this.currentGraphPath,
-        nodeType : typeName,
-        x        : p[0],
-        y        : p[1],
-      });
-      this.syncGraph();
+      this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
     });
     this._startMenu(menu, local, true);
     return menu;

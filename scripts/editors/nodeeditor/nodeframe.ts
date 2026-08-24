@@ -6,7 +6,9 @@ import { t } from "../../core/theme_schema";
 import type { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import type { Node as GraphNode } from "../../graph/node";
+import { nodePropKeys } from "../../graph/node";
 import type { SocketDir } from "../../graph/graph_types";
+import { propEditRow } from "./groupui";
 
 /** Graph-space geometry a frame's socket anchors derive from. */
 export interface FrameMetrics {
@@ -60,9 +62,14 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
+  /** The node's datapath. When set, the body renders an editable row per node
+   *  prop and per unconnected input default, writing through ctx.api. */
+  nodePath = "";
+
   private _header!: HTMLDivElement;
   private _rows: HTMLDivElement[] = [];
   private _body: Container<CTX> | undefined;
+  private _propsRoot: HTMLDivElement | undefined;
   private _dragging = false;
   private _dragStartX = 0;
   private _dragStartY = 0;
@@ -101,15 +108,6 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._buildUI();
     this.setCSS();
     this.syncPosition();
-
-    this.addEventListener("pointerdown", (e: PointerEvent) => {
-      if (e.button !== 0) {
-        return;
-      }
-      // Keeps the press from also starting the view's box-select.
-      e.stopPropagation();
-      this.onSelect?.(this, e);
-    });
   }
 
   /** Graph-space geometry for this frame's socket anchors. */
@@ -184,6 +182,28 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Rebuilds header text and socket rows; used after a rename or type swap. */
   syncContents() {
     this._header.textContent = this.node.getUIName();
+    this._rebuildPropRows();
+  }
+
+  /** Rebuilds the editable prop/default rows; a connected input contributes none. */
+  private _rebuildPropRows() {
+    const root = this._propsRoot;
+    if (root === undefined) {
+      return;
+    }
+    root.textContent = "";
+    if (this.nodePath === "") {
+      return;
+    }
+
+    for (const key of nodePropKeys(this.node)) {
+      if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
+        continue;
+      }
+      const path = `${this.nodePath}.props['${key}']`;
+      // syncContents re-renders a title that tracks the value it names.
+      root.appendChild(propEditRow(this.ctx, key, path, () => this.syncContents()));
+    }
   }
 
   private _buildUI() {
@@ -194,10 +214,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._header.title = this.node.getDescription() || this.node.getUIName();
     this._header.style.cssText =
       `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; ` +
-      "padding: 0 6px; cursor: move; overflow: hidden; white-space: nowrap;";
+      "padding: 0 6px; overflow: hidden; white-space: nowrap;";
     this.shadow.appendChild(this._header);
 
-    this._wireDrag(this._header);
+    this.style.cursor = "move";
+    this._wireDrag(this);
 
     const inKeys = Object.keys(this.node.inputs);
     const outKeys = Object.keys(this.node.outputs);
@@ -216,10 +237,19 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
 
     this._body = UIBase.createElement("container-x") as Container<CTX>;
+    this._body.style.cursor = "auto";
     this._body.parentWidget = this;
     this.shadow.appendChild(this._body);
     this._body.ctx = this.ctx;
     this._body._init();
+
+    this._propsRoot = document.createElement("div");
+    this._propsRoot.className = "nodeframe-props";
+    this._propsRoot.style.cssText =
+      "display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;";
+    this._body.shadow.appendChild(this._propsRoot);
+    this._rebuildPropRows();
+
     this.node.createUI(this._body);
     this.buildExtraUI?.(this, this._body);
   }
@@ -277,14 +307,21 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         return;
       }
 
+      // Keeps the press from also starting the view's box-select.
+      e.stopPropagation();
+      this.onSelect?.(this, e);
+
+      // A press inside the body belongs to the node's own widgets.
+      if (this._body !== undefined && e.composedPath().includes(this._body)) {
+        return;
+      }
+
       this._dragging = true;
       this._dragStartX = e.clientX;
       this._dragStartY = e.clientY;
       this._dragBase.load(this.node.pos);
       handle.setPointerCapture(e.pointerId);
       e.preventDefault();
-      // Keeps the header drag from also starting the view's box-select.
-      e.stopPropagation();
     });
 
     handle.addEventListener("pointermove", (e: PointerEvent) => {

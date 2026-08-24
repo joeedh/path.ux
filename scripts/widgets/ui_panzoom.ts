@@ -71,11 +71,18 @@ export class PanZoomTransform {
   }
 }
 
+/** A right-drag shorter than this in both axes still counts as a click, so its
+ *  context menu opens. */
+const PAN_MENU_SLOP_PX = 3;
+
 /**
  * A container whose single content child pans and zooms under a CSS matrix.
- * Wheel zooms about the cursor; middle-drag (or space plus left-drag) pans.
- * Children go into {@link content}; every transform change dispatches a
- * "transform" CustomEvent whose detail carries the {@link PanZoomTransform}.
+ * Wheel zooms about the cursor; middle-drag, right-drag, or space plus
+ * left-drag pans. A right-drag that moved swallows the contextmenu event its
+ * release fires, so descendants' context menus open only on a stationary
+ * right-click. Children go into {@link content}; every transform change
+ * dispatches a "transform" CustomEvent whose detail carries the
+ * {@link PanZoomTransform}.
  */
 export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends Container<
   CTX,
@@ -85,9 +92,14 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   transform = new PanZoomTransform();
 
   private _panning = false;
+  private _panButton = 0;
+  private _panMoved = false;
+  private _suppressMenu = false;
   private _spaceDown = false;
   private _lastX = 0;
   private _lastY = 0;
+  private _panStartX = 0;
+  private _panStartY = 0;
   private _onKey = (e: KeyboardEvent) => {
     if (e.code === "Space") {
       this._spaceDown = e.type === "keydown";
@@ -142,10 +154,13 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
     );
 
     this.addEventListener("pointerdown", (e: PointerEvent) => {
-      if (e.button === 1 || (e.button === 0 && this._spaceDown)) {
+      if (e.button === 1 || e.button === 2 || (e.button === 0 && this._spaceDown)) {
         this._panning = true;
-        this._lastX = e.clientX;
-        this._lastY = e.clientY;
+        this._panButton = e.button;
+        this._panMoved = false;
+        this._suppressMenu = false;
+        this._lastX = this._panStartX = e.clientX;
+        this._lastY = this._panStartY = e.clientY;
         this.setPointerCapture(e.pointerId);
         e.preventDefault();
         e.stopPropagation();
@@ -156,6 +171,12 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
       if (!this._panning) {
         return;
       }
+      if (
+        Math.abs(e.clientX - this._panStartX) >= PAN_MENU_SLOP_PX ||
+        Math.abs(e.clientY - this._panStartY) >= PAN_MENU_SLOP_PX
+      ) {
+        this._panMoved = true;
+      }
       this.transform.panBy(e.clientX - this._lastX, e.clientY - this._lastY);
       this._lastX = e.clientX;
       this._lastY = e.clientY;
@@ -165,11 +186,26 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
     const endPan = (e: PointerEvent) => {
       if (this._panning) {
         this._panning = false;
+        this._suppressMenu = this._panButton === 2 && this._panMoved;
         this.releasePointerCapture(e.pointerId);
       }
     };
     this.addEventListener("pointerup", endPan);
     this.addEventListener("pointercancel", endPan);
+
+    // Capture phase, so a moved right-drag's contextmenu is swallowed before
+    // any descendant's own contextmenu handler sees it.
+    this.addEventListener(
+      "contextmenu",
+      (e: MouseEvent) => {
+        if (this._suppressMenu) {
+          this._suppressMenu = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      { capture: true }
+    );
 
     // The listeners are on window so a held space bar is seen without focus.
     window.addEventListener("keydown", this._onKey);

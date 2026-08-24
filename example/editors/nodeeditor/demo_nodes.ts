@@ -1,7 +1,15 @@
-import { FloatProperty, nodegraph } from "../../pathux.js";
+import { BoolProperty, FloatProperty, nodegraph } from "../../pathux.js";
 
-const { Node, registerNodeType, FloatSocket, Vec3Socket, Graph, GroupDef, GroupNode, ExposedEntry } =
-  nodegraph;
+const {
+  Node,
+  registerNodeType,
+  FloatSocket,
+  Vec3Socket,
+  Graph,
+  GroupDef,
+  GroupNode,
+  ExposedEntry,
+} = nodegraph;
 
 /** A constant source; its title tracks the value property. */
 export class DemoValue extends Node {
@@ -16,11 +24,14 @@ export class DemoValue extends Node {
 }
 registerNodeType(DemoValue);
 
+/** Its scale and clamp props render as inline rows; an unconnected a or b
+ *  input contributes an editable default row as well. */
 export class DemoMath extends Node {
   static override graphDef(): nodegraph.NodeDef {
     return {
       typeName: "DemoMath",
       uiName  : "Math",
+      props   : { scale: new FloatProperty(1.0), clamp: new BoolProperty(false) },
       inputs  : { a: new FloatSocket("in"), b: new FloatSocket("in") },
       outputs : { out: new FloatSocket("out") },
     };
@@ -108,8 +119,8 @@ function makeDemoGraph() {
     g.add(n);
   }
 
+  // math.b stays unconnected so its editable default row shows in the frame.
   g.connect(v1.outputs.out, math.inputs.a);
-  g.connect(v2.outputs.out, math.inputs.b);
   g.connect(v1.outputs.out, reduce.inputs.values);
   g.connect(v2.outputs.out, reduce.inputs.values);
   g.connect(reduce.outputs.out, vec.inputs.vec);

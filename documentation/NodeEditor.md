@@ -15,28 +15,28 @@ consumer that wants it as a screen editor calls `Area.register` itself.
 
 - [Quick start](#quick-start)
 - [Defining node types](#defining-node-types)
-  * [Definition merging](#definition-merging)
-  * [Node properties](#node-properties)
+  - [Definition merging](#definition-merging)
+  - [Node properties](#node-properties)
 - [Sockets](#sockets)
-  * [Value resolution](#value-resolution)
-  * [Multi-link inputs and reduce](#multi-link-inputs-and-reduce)
-  * [Coercion](#coercion)
-  * [Writing a socket type](#writing-a-socket-type)
+  - [Value resolution](#value-resolution)
+  - [Multi-link inputs and reduce](#multi-link-inputs-and-reduce)
+  - [Coercion](#coercion)
+  - [Writing a socket type](#writing-a-socket-type)
 - [The graph](#the-graph)
-  * [Links](#links)
-  * [Evaluation order](#evaluation-order)
+  - [Links](#links)
+  - [Evaluation order](#evaluation-order)
 - [Groups](#groups)
-  * [Definitions and instances](#definitions-and-instances)
-  * [The loader and saver seams](#the-loader-and-saver-seams)
-  * [Exposed UI](#exposed-ui)
+  - [Definitions and instances](#definitions-and-instances)
+  - [The loader and saver seams](#the-loader-and-saver-seams)
+  - [Exposed UI](#exposed-ui)
 - [The graph DSL](#the-graph-dsl)
 - [The data API](#the-data-api)
 - [ToolOps](#toolops)
 - [The view widget](#the-view-widget)
-  * [Theming](#theming)
-  * [Gestures](#gestures)
-  * [Group descent](#group-descent)
-  * [View state](#view-state)
+  - [Theming](#theming)
+  - [Gestures](#gestures)
+  - [Group descent](#group-descent)
+  - [View state](#view-state)
 - [The delegate seam](#the-delegate-seam)
 - [The editor Area](#the-editor-area)
 - [Registering it in an app](#registering-it-in-an-app)
@@ -106,15 +106,15 @@ mirroring the `ToolOp.tooldef()` pattern:
 
 ```ts
 interface NodeDef {
-  typeName: string;                       // must equal the class name
-  uiName?: NodeDefValue<string>;          // header label; defaults to typeName
+  typeName: string; // must equal the class name
+  uiName?: NodeDefValue<string>; // header label; defaults to typeName
   description?: NodeDefValue<string>;
   icon?: NodeDefValue<number>;
   color?: NodeDefValue<Color>;
   size?: Vector2;
-  inputs?: Record<string, NodeSocketBase>;   // socket templates, copied per instance
+  inputs?: Record<string, NodeSocketBase>; // socket templates, copied per instance
   outputs?: Record<string, NodeSocketBase>;
-  props?: Record<string, ToolProperty>;      // property templates, copied per instance
+  props?: Record<string, ToolProperty>; // property templates, copied per instance
   typeVersion?: number;
 }
 ```
@@ -336,11 +336,11 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 The struct exposes a `nodes` list keyed by node id, and each node's struct is
 built from its class's `defineAPI` on first use. The resulting datapaths:
 
-| path | resolves to |
-| --- | --- |
-| `nodegraph.nodes[3]` | the node with id `3` (a string id is quoted: `nodes["v1"]`) |
+| path                                | resolves to                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `nodegraph.nodes[3]`                | the node with id `3` (a string id is quoted: `nodes["v1"]`)               |
 | `nodegraph.nodes[3].props['value']` | one node property; writing on a group-inner node materializes an override |
-| `nodegraph.nodes[3].group` | a `GroupNode`'s subgraph, itself a graph struct — the descent nests |
+| `nodegraph.nodes[3].group`          | a `GroupNode`'s subgraph, itself a graph struct — the descent nests       |
 
 ## ToolOps
 
@@ -348,15 +348,15 @@ The graph module registers one ToolOp per structural edit, all operating
 through a `graphPath` string input (node ids are passed JSON-encoded so
 numeric and string ids share one input):
 
-| toolpath | effect |
-| --- | --- |
-| `graph.add_node` | add a node of a registered type at a position |
-| `graph.delete_node` | remove a node, severing its links |
-| `graph.connect` | link an output to an input |
-| `graph.disconnect` | remove one link |
-| `graph.move_node` | set a node's position |
-| `graph.rename_node` | set a node's label |
-| `graph.replace_node` | swap a node's type, keeping id, position, label and every link whose sockets still coerce |
+| toolpath              | effect                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `graph.add_node`      | add a node of a registered type at a position                                                              |
+| `graph.delete_node`   | remove a node, severing its links                                                                          |
+| `graph.connect`       | link an output to an input                                                                                 |
+| `graph.disconnect`    | remove one link                                                                                            |
+| `graph.move_node`     | set a node's position                                                                                      |
+| `graph.rename_node`   | set a node's label                                                                                         |
+| `graph.replace_node`  | swap a node's type, keeping id, position, label and every link whose sockets still coerce                  |
 | `graph.set_node_prop` | write a node property (build via `SetNodePropOp.create`, since the value input clones the target property) |
 
 The structural ops share a `canRun` that consults
@@ -382,10 +382,16 @@ view.setGraph(myGraph, "nodegraph");
 datapath its edits dispatch against. After mutating the graph outside the
 view, call `view.syncGraph()` to reconcile the frames.
 
-Each `NodeFrame` shows the node's name as a draggable header, one terminal
-row per socket, and a body the node's own `createUI` override fills (the base
-implementation renders nothing). A group instance's frame appends its
-forwarded UI beneath that (see [Exposed UI](#exposed-ui)).
+Each `NodeFrame` shows the node's name in a header, one terminal row per
+socket, and a body. The body opens with an editable row per node property and
+per unconnected input default (the view supplies the node's datapath through
+`frame.nodePath`; a connected input contributes no row, since its default is
+inert). The row's input matches the value's type — a checkbox for a boolean,
+one numeric field per lane for a vector, a text field otherwise — and writes
+through `ctx.api` on the node's `props` datapath. Beneath those rows sits
+whatever the node's own `createUI` override adds (the base implementation
+renders nothing), and a group instance's frame shows its forwarded UI instead
+of prop rows (see [Exposed UI](#exposed-ui)).
 
 ### Theming
 
@@ -410,25 +416,33 @@ them along with every other menu in the app.
 
 ### Gestures
 
-- **Pan / zoom** — middle-drag (or hold space and drag) to pan; the wheel
-  zooms.
+- **Pan / zoom** — middle-drag, right-drag, or hold space and left-drag to
+  pan; the wheel zooms. A right-drag that moved swallows the contextmenu
+  event its release fires, so context menus open only on a stationary
+  right-click.
 - **Select** — click a frame; shift-click toggles; drag on empty canvas box-
   selects (shift extends); click on empty canvas clears.
-- **Move** — drag a frame's header. The delegate is consulted mid-drag, a
-  refused position renders the frame at half opacity, and a refused drop
-  snaps back.
+- **Move** — drag a frame's header or empty background (a press inside the
+  body belongs to the node's own widgets). The delegate is consulted
+  mid-drag, a refused position renders the frame at half opacity, and a
+  refused drop snaps back.
 - **Link** — drag from a socket terminal to a terminal on the other side;
   terminals whose connect the delegate refuses dim for the drag's duration.
   Starting on a connected single-link input detaches its edge: an empty drop
   severs the link, and a drop on another input moves it.
-- **Add** — right-click empty canvas opens the add-node menu
-  (`openAddMenu`): a path.ux `Menu` in search mode (a filter textbox above
-  the list) offering every registered node type except the group machinery,
-  added at the click point on pick. `buildAddNodeMenu(ctx, onPick, items?)`
-  builds the same menu for a host that wants to start it elsewhere.
-- **Node menu** — right-click a frame for a path.ux `Menu` with Delete,
-  Duplicate (keeps overridden values) and Replace (keeps links where sockets
-  still coerce); Replace opens the same searchable type picker as Add.
+- **Add** — the add-node menu belongs to the host, which folds it into a
+  menu bar, an editor header, or a context menu of its own.
+  `addNodeMenuTemplate(onPick, items?)` returns the type picker as
+  `MenuTemplate` entries for `container.menu` and friends,
+  `buildAddNodeMenu(ctx, onPick, items?)` builds it as a standalone `Menu`,
+  and `view.addNodeAt(typeName, at?)` adds a node (at the view's center when
+  `at` is omitted). `view.openAddMenu(local)` starts the picker as a popup in
+  search mode (a filter textbox above the list), adding at that point on
+  pick. The example app puts an Add dropdown in its editor header.
+- **Node menu** — right-click a frame (without dragging) for a path.ux
+  `Menu` with Delete, Duplicate (keeps overridden values) and Replace (keeps
+  links where sockets still coerce); Replace opens the same searchable type
+  picker as Add.
 - **Arrange** — `arrangeNodes()` auto-lays-out the graph with graphpack, one
   island at a time, and commits the result as a single undo entry.
 
@@ -460,7 +474,7 @@ routed through the view's `delegate`:
 
 ```ts
 interface NodeGraphDelegate {
-  check(ctx, edit: GraphEdit): EditVerdict;   // { ok: true } | { ok: false; reason }
+  check(ctx, edit: GraphEdit): EditVerdict; // { ok: true } | { ok: false; reason }
   perform(ctx, edit: GraphEdit): void;
 }
 ```
@@ -525,7 +539,12 @@ export class NodeEditorTab extends NodeEditor {
   }
 
   static define(): IAreaDef {
-    return { tagname: "nodeeditor-tab-x", areaname: "node_editor", uiname: "Node Editor", icon: -1 };
+    return {
+      tagname: "nodeeditor-tab-x",
+      areaname: "node_editor",
+      uiname: "Node Editor",
+      icon: -1,
+    };
   }
 }
 Area.register(NodeEditorTab);
@@ -559,10 +578,10 @@ function getNodeClass(typeName: string): typeof Node | undefined;
 function registerSocketType(cls: typeof NodeSocketBase): void;
 
 class Node<Inputs, Outputs> {
-  id: GraphId;                 // number (graph-allocated) or string (client-chosen)
+  id: GraphId; // number (graph-allocated) or string (client-chosen)
   pos: Vector2;
-  label: string;               // user rename; getUIName() falls back to the def
-  inputs: Inputs;              // Record<string, NodeSocketBase>
+  label: string; // user rename; getUIName() falls back to the def
+  inputs: Inputs; // Record<string, NodeSocketBase>
   outputs: Outputs;
   props: Record<string, ToolProperty>;
   static graphDef(): NodeDef;
@@ -570,16 +589,16 @@ class Node<Inputs, Outputs> {
 }
 
 class NodeSocketBase<Type extends string, Value> {
-  dir: SocketDir;                       // "in" | "out"
-  type: Type;                           // the wire type
-  multiSocket: boolean;                 // default: dir === "out"
-  defaultProp?: ToolProperty;           // editable default on unconnected inputs
+  dir: SocketDir; // "in" | "out"
+  type: Type; // the wire type
+  multiSocket: boolean; // default: dir === "out"
+  defaultProp?: ToolProperty; // editable default on unconnected inputs
   edges: NodeSocketBase[];
-  getValue(): Value | undefined;        // inputs resolve through edges, memoized
-  setValue(v: Value): void;             // outputs store
+  getValue(): Value | undefined; // inputs resolve through edges, memoized
+  setValue(v: Value): void; // outputs store
   flagDirty(): void;
   coerce(b: NodeSocketBase, opts?: { dryRun?: boolean }): boolean;
-  reduce?: (values: Value[]) => Value;  // combines multi-link input values
+  reduce?: (values: Value[]) => Value; // combines multi-link input values
 }
 
 class Graph {
@@ -587,7 +606,7 @@ class Graph {
   nodeIdMap: Map<GraphId, Node>;
   add(node: Node): void;
   remove(node: Node): void;
-  connect(a: NodeSocketBase, b: NodeSocketBase): void;     // either argument order
+  connect(a: NodeSocketBase, b: NodeSocketBase): void; // either argument order
   disconnect(a: NodeSocketBase, b: NodeSocketBase): void;
   sort(): { order: Node[]; cycles: Node[][] };
   flagSortDirty(): void;
@@ -600,7 +619,7 @@ class Graph {
 class GroupDef {
   subgraph: Graph;
   exposed: ExposedEntry[];
-  declareInput(key: string, sock: NodeSocketBase): NodeSocketBase;   // returns the inner proxy socket
+  declareInput(key: string, sock: NodeSocketBase): NodeSocketBase; // returns the inner proxy socket
   declareOutput(key: string, sock: NodeSocketBase): NodeSocketBase;
   removeInput(key: string): void;
   removeOutput(key: string): void;
@@ -610,8 +629,8 @@ class GroupDef {
 class GroupNode extends Node {
   ref: string;
   definition: GroupDef | undefined;
-  subgraph: Graph;                      // the instance's physical copy
-  setDefinition(def: GroupDef): void;   // refuses self-containment
+  subgraph: Graph; // the instance's physical copy
+  setDefinition(def: GroupDef): void; // refuses self-containment
 }
 
 class ExposedEntry {
@@ -626,34 +645,46 @@ function nodePropKeys(node: Node): string[];
 
 // --- editor layer ---
 
-class NodeGraphView<CTX> extends Container<CTX> {   // custom element nodegraphview-x
-  delegate: NodeGraphDelegate;                      // default: ToolOpDelegate
+class NodeGraphView<CTX> extends Container<CTX> {
+  // custom element nodegraphview-x
+  delegate: NodeGraphDelegate; // default: ToolOpDelegate
   onOpenDefinition?: (node: GroupNode) => void;
   selection: Set<GraphId>;
   setGraph(graph: Graph | undefined, graphPath: string): void;
-  get currentGraph(): Graph | undefined;            // the graph on screen after descent
+  get currentGraph(): Graph | undefined; // the graph on screen after descent
   get currentGraphPath(): string;
   descendInto(node: Node): void;
   popTo(depth: number): void;
-  syncGraph(): void;                                // reconcile frames after external changes
-  openAddMenu(local: readonly [number, number]): Menu<CTX>;  // started as a screen popup when ctx has a screen
+  syncGraph(): void; // reconcile frames after external changes
+  addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
+  openAddMenu(local: readonly [number, number]): Menu<CTX>; // started as a screen popup when ctx has a screen
   deleteSelected(): void;
   duplicateSelected(): void;
   replaceNode(nodeId: GraphId, newType: string): void;
   arrangeNodes(): void;
-  getViewState(): NodeGraphViewState;               // { pan, zoom, descent }
+  getViewState(): NodeGraphViewState; // { pan, zoom, descent }
   setViewState(state: NodeGraphViewState): void;
 }
 
-class NodeEditor<CTX> extends Area<CTX> {           // custom element node-editor-x; ships unregistered
+class NodeEditor<CTX> extends Area<CTX> {
+  // custom element node-editor-x; ships unregistered
   view: NodeGraphView<CTX>;
+  headerRow: Container<CTX>; // the header makeHeader built; a subclass adds its own controls
   setGraph(graph: Graph | undefined, graphPath: string): void;
   editDefinition(ref: string, def: GroupDef, defPath: string): void;
 }
 
-// The type picker behind Add and Replace, as a standalone builder.
-function buildAddNodeMenu<CTX>(ctx: CTX, onPick: (typeName: string) => void, items?: AddMenuItem[]): Menu<CTX>;
-function addMenuItems(): AddMenuItem[];             // registered types minus the group machinery
+// The type picker behind Add and Replace, as menu entries or a standalone Menu.
+function addNodeMenuTemplate(
+  onPick: (typeName: string) => void,
+  items?: AddMenuItem[]
+): MenuTemplate;
+function buildAddNodeMenu<CTX>(
+  ctx: CTX,
+  onPick: (typeName: string) => void,
+  items?: AddMenuItem[]
+): Menu<CTX>;
+function addMenuItems(): AddMenuItem[]; // registered types minus the group machinery
 
 interface NodeGraphDelegate {
   check(ctx: ContextLike, edit: GraphEdit): EditVerdict;

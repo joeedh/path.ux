@@ -91,7 +91,7 @@ export function buildForwardedUI(
     }
 
     if (row.path !== undefined) {
-      root.appendChild(_propRow(ctx, row.label, row.path));
+      root.appendChild(propEditRow(ctx, row.label, row.path));
       continue;
     }
 
@@ -102,14 +102,31 @@ export function buildForwardedUI(
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}']`;
-      root.appendChild(_propRow(ctx, key, path));
+      root.appendChild(propEditRow(ctx, key, path));
     }
   }
 }
 
-function _propRow(ctx: ContextLike, label: string, path: string): HTMLDivElement {
+/** Vector prop values read back as an Array or Float32Array subclass. */
+function _isVecValue(v: unknown): v is ArrayLike<number> {
+  return Array.isArray(v) || v instanceof Float32Array || v instanceof Float64Array;
+}
+
+/**
+ * A label plus input row editing the value at a datapath, shared by the
+ * forwarded group UI and the node frames' inline default rows. The input
+ * matches the current value's type: a checkbox for a boolean, one numeric
+ * field per lane for a vector, a parsing text field otherwise. onChange fires
+ * after each committed write.
+ */
+export function propEditRow(
+  ctx: ContextLike,
+  label: string,
+  path: string,
+  onChange?: () => void
+): HTMLDivElement {
   const row = document.createElement("div");
-  row.className = "nodeeditor-forwarded-row";
+  row.className = "nodeeditor-prop-row";
   row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
 
   const name = document.createElement("span");
@@ -124,14 +141,64 @@ function _propRow(ctx: ContextLike, label: string, path: string): HTMLDivElement
     current = undefined;
   }
 
+  if (typeof current === "boolean") {
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = current;
+    input.title = `Toggle ${label}`;
+    input.addEventListener("change", () => {
+      ctx.api.setValue(ctx, path, input.checked);
+      onChange?.();
+    });
+    row.appendChild(input);
+    return row;
+  }
+
+  if (_isVecValue(current)) {
+    const vec = Array.from(current);
+    for (let i = 0; i < vec.length; i++) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = String(vec[i]);
+      input.title = `Edit ${label}[${i}]`;
+      input.style.width = "36px";
+      input.style.minWidth = "0";
+      input.addEventListener("change", () => {
+        const n = parseFloat(input.value);
+        if (Number.isNaN(n)) {
+          input.value = String(vec[i]);
+          return;
+        }
+        vec[i] = n;
+        input.value = String(n);
+        ctx.api.setValue(ctx, path, vec);
+        onChange?.();
+      });
+      row.appendChild(input);
+    }
+    return row;
+  }
+
   const input = document.createElement("input");
   input.type = "text";
   input.title = `Edit ${label}`;
   input.value = current === undefined ? "" : String(current);
+  input.style.flex = "1";
+  input.style.minWidth = "0";
   input.addEventListener("change", () => {
-    const value = typeof current === "number" ? parseFloat(input.value) : input.value;
-    ctx.api.setValue(ctx, path, value);
-    current = value;
+    if (typeof current === "number") {
+      const n = parseFloat(input.value);
+      if (Number.isNaN(n)) {
+        input.value = String(current);
+        return;
+      }
+      current = n;
+      input.value = String(n);
+    } else {
+      current = input.value;
+    }
+    ctx.api.setValue(ctx, path, current);
+    onChange?.();
   });
   row.appendChild(input);
 

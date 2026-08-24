@@ -1,4 +1,11 @@
-import { Area, NodeEditor, contextWrangler, nstructjs, nodegraph } from "../../pathux.js";
+import {
+  Area,
+  NodeEditor,
+  addNodeMenuTemplate,
+  contextWrangler,
+  nstructjs,
+  nodegraph,
+} from "../../pathux.js";
 import type { IAreaDef } from "../../pathux.js";
 import { DEMO_GRAPH_PATH, DEMO_GROUP_DEF_PATH, theDemoGraph } from "./demo_nodes.js";
 
@@ -22,6 +29,12 @@ export class NodeEditorTab extends NodeEditor {
 
     this.setGraph(theDemoGraph, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
+
+    const add = this.headerRow.menu(
+      "Add",
+      addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName))
+    );
+    add.description = "Add a node at the view's center";
 
     // group instances render unresolved until the stub loader answers.
     void theDemoGraph.resolveGroups().then(() => this.view.syncGraph());
