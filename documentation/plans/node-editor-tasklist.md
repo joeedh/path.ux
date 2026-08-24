@@ -19,7 +19,7 @@ any time after stage 1 if useful.
       confirmed with the user first, per CLAUDE.md.
 - [x] **Stage 2 — sockets.** `NodeSocketBase`, `FloatSocket`/`Vec3Socket`,
       `registerSocketType`, dirty propagation, coercion, socket STRUCT.
-- [ ] **Stage 3 — nodes and the type registry.** `Node`, `NodeDef`, `graphDef()` merge,
+- [x] **Stage 3 — nodes and the type registry.** `Node`, `NodeDef`, `graphDef()` merge,
       `registerNodeType`, props-key ≡ `apiname` invariant, node STRUCT with socket
       reconciliation.
 - [ ] **Stage 4 — graph and sort.** `Graph`, per-graph ids, Tarjan `sort()` with

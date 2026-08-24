@@ -36,6 +36,7 @@ export class NodeSocketBase<Type extends string = string, Value = unknown> {
     `
 graph.NodeSocketBase {
   socketId    : string | JSON.stringify(this.socketId);
+  name        : string;
   type        : string;
   dir         : string;
   multiSocket : bool;
@@ -49,6 +50,10 @@ graph.NodeSocketBase {
   }
 
   socketId: GraphId = NO_ID;
+
+  /** The record key this socket sits under in its owning node's inputs or outputs. */
+  name = "";
+
   type: Type;
   dir: SocketDir;
 
@@ -67,6 +72,9 @@ graph.NodeSocketBase {
   reduce?(values: Value[]): Value;
 
   isDirty = false;
+
+  /** Set on load when this socket was kept from the file but is absent from the node type's definition. */
+  orphaned = false;
 
   color: Color;
   owningNode: ISocketOwner | undefined = undefined;
