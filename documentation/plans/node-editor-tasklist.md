@@ -32,16 +32,25 @@ any time after stage 1 if useful.
 - [x] **Stage 7 — ToolOps and the data API.** The op set including `ReplaceNodeOp` and the
       dematerializing `SetNodePropOp` undo; the group-descent datapath
       (`DataList` + `customGetSet`).
+- [x] **Addendum — headless contract test.** A test that imports `scripts/graph` in plain
+      Node (no DOM, no happy-dom) and builds, sorts and serializes a small graph, so the
+      graph module's freedom from module-scope DOM access is a stated contract rather than
+      an incidental property. Asked for by the first embedding consumer (the VN Generator
+      desktop app), whose Electron main process and CLI import the module outside a
+      browser.
 
 ## Editor ([node-editor-view.md](node-editor-view.md))
 
 - [x] **Stage V1 — pan/zoom container.** `PanZoomContainer` with the pure
       `PanZoomTransform` math.
-- [ ] **Stage V2 — editor view.** `NodeEditor extends Area`, shipped unregistered (the
-      consumer calls `Area.register`); frames, link underlay, breadcrumb descent, selection
-      and moves through ops.
+- [ ] **Stage V2 — view widget and editor shell.** `NodeGraphView`, the hostable widget
+      owning frames, link underlay, breadcrumb descent and selection, with moves routed
+      through the `NodeGraphDelegate` seam (default: the stage-7 ops); `NodeEditor extends
+      Area` as a thin shell around one view, shipped unregistered (the consumer calls
+      `Area.register`).
 - [ ] **Stage V3 — editor editing.** Link drag, add-node menu, replace, auto-arrange, the
-      group designer dock panel, forwarded UI on instances.
+      group designer dock panel, forwarded UI on instances; every mutating gesture goes
+      through the stage-V2 delegate.
 - [ ] **Stage V4 — example-app tab.** Consumer-side registration exercised for real: demo
       node/socket types, a demo group behind a stub loader/saver, verified live over CDP.
 
