@@ -78,10 +78,11 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       tagname: "nodegraphview-x",
       style  : "nodegraphview",
       theme: {
-        BoxSelectBorder: t.color,
-        BoxSelectBG    : t.color,
+        "background-color": t.color,
+        BoxSelectBorder   : t.color,
+        BoxSelectBG       : t.color,
         // Read by the editor shell for the group designer's missing-entry flag.
-        ErrorColor     : t.color,
+        ErrorColor        : t.color,
       },
     };
   }
@@ -128,7 +129,15 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     this._rebuildCrumbs();
+    this.setCSS();
     this.syncGraph();
+  }
+
+  /** Applies the themed canvas background; a live theme edit re-runs it. */
+  setCSS() {
+    super.setCSS();
+    // Container's styletag targets div.containerx, which never matches the host.
+    this.style.backgroundColor = this.getDefault("background-color") as string;
   }
 
   /** Points the view at a graph; graphPath is the datapath edits dispatch against. */

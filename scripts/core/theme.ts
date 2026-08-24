@@ -265,18 +265,18 @@ export const DefaultTheme = {
     Width             : 140,
     HeaderHeight      : 24,
     SocketRowHeight   : 20,
-    "background-color": "rgba(64, 64, 64, 0.9)",
-    "border-color"    : "#888888",
+    "background-color": "rgba(248, 248, 248, 0.95)",
+    "border-color"    : "#b8b8b8",
     "border-radius"   : 4,
-    HeaderBG          : "rgba(96, 96, 96, 0.9)",
-    SelectOutline     : "#ffaa33",
+    HeaderBG          : "rgba(214, 214, 214, 0.95)",
+    SelectOutline     : "#e8930c",
     DefaultText: new CSSFont({
       font   : "sans-serif",
       weight : "normal",
       variant: "normal",
       style  : "normal",
       size   : 12,
-      color  : "rgba(230, 230, 230, 1.0)",
+      color  : "rgba(35, 35, 35, 1.0)",
     }),
     SocketText: new CSSFont({
       font   : "sans-serif",
@@ -284,18 +284,19 @@ export const DefaultTheme = {
       variant: "normal",
       style  : "normal",
       size   : 11,
-      color  : "rgba(230, 230, 230, 1.0)",
+      color  : "rgba(35, 35, 35, 1.0)",
     }),
   },
 
   nodegraphview: {
-    BoxSelectBorder: "#ffaa33",
-    BoxSelectBG    : "rgba(255, 170, 51, 0.1)",
-    ErrorColor     : "#ff6666",
+    "background-color": "rgb(225, 225, 225)",
+    BoxSelectBorder   : "#e8930c",
+    BoxSelectBG       : "rgba(232, 147, 12, 0.1)",
+    ErrorColor        : "#cc3333",
   },
 
   nodelinkcanvas: {
-    LinkColor: "#aaaaaa",
+    LinkColor: "#777777",
     LinkWidth: 2,
   },
 

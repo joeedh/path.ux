@@ -154,6 +154,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     super.setCSS();
 
     const radius = this.getDefault("border-radius") as number;
+    // Container's styletag targets div.containerx, which never matches the host.
+    this.style.backgroundColor = this.getDefault("background-color") as string;
     this.style.border = `1px solid ${this.getDefault("border-color")}`;
     this.style.borderRadius = radius + "px";
     this.style.outline = this.selected ? `2px solid ${this.getDefault("SelectOutline")}` : "";
