@@ -1,19 +1,16 @@
 //shims HTMLElement in workers; must evaluate before `class UIBase extends HTMLElement`
 import "./base/ui_worker_shim";
 import { getDPI } from "./base/ui_base_dpi";
-import { contextWrangler } from "../screen/area_wrangler";
 import type { Area } from "../screen/ScreenArea";
-import {
-  PackFlags,
-  type DefaultTypes,
-  type DisableData,
-  type IUIBaseConstructor,
-  type FormatNumberArgs,
-  type PickArgs,
-  type StyleRecord,
-  type ToolTipState,
-  type TotalRect,
-  type UIBaseDefinition,
+import type {
+  DefaultTypes,
+  DisableData,
+  IUIBaseConstructor,
+  FormatNumberArgs,
+  PickArgs,
+  ToolTipState,
+  TotalRect,
+  UIBaseDefinition,
 } from "./base/ui_base_types";
 
 export * from "./base/ui_base_types";
@@ -28,36 +25,14 @@ import { Animator } from "./anim";
 import "./units";
 import * as util from "../path-controller/util/util";
 import { Vector2, Vector3, Vector4 } from "../path-controller/util/vectormath";
-import * as math from "../path-controller/util/math";
 import * as toolprop from "../path-controller/toolsys/toolprop";
-import {
-  pushModalLight,
-  popModalLight,
-  copyEvent,
-  pathDebugEvent,
-  haveModal,
-  keymap,
-  pushPointerModal,
-  ModalState,
-} from "../path-controller/util/simple_events";
-import { getDataPathToolOp } from "../path-controller/controller/controller";
-import * as units from "./units";
-import { rgb_to_hsv, hsv_to_rgb } from "../util/colorutils";
+import { ModalState } from "../path-controller/util/simple_events";
 
 export * from "./ui_theme";
 
-import {
-  theme,
-  parsepx,
-  compatMap,
-  color2css,
-  css2color,
-  ThemeRecord,
-  ThemeScrollBars,
-} from "./ui_theme";
+import { theme } from "./ui_theme";
 
-import { DefaultTheme } from "./theme";
-import type { ThemeSchema, ThemeKeysFor } from "./theme_schema";
+import type { ThemeKeysFor } from "./theme_schema";
 
 export {
   ElementClasses,
@@ -82,7 +57,7 @@ import * as dom from "./base/ui_base_dom";
 import * as graph from "./base/ui_base_graph";
 import * as props from "./base/ui_base_props";
 import * as init from "./base/ui_base_init";
-import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
+import { EventCBSymbol } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
 
@@ -95,7 +70,6 @@ import { Icons } from "../icon_enum";
 
 export { setIconMap } from "../icon_enum";
 
-import { initAspectClass } from "./aspect";
 import * as aspect from "./aspect";
 
 window.__theme = theme;
@@ -106,29 +80,16 @@ export { ClassIdSymbol };
 
 export * from "./base/ui_icons";
 
-import { DataPathError, normalizePath } from "../path-controller/controller/controller";
 import type {
   DataPathWatcher,
   DataPathWatcherOpts,
   PathWatchCallback,
   PathWatchInfo,
 } from "../path-controller/controller/controller";
-import { IntProperty, NumberConstraints, PropFlags } from "../path-controller/toolsys/toolprop";
-import {
-  DependSocket,
-  EventNode,
-  PropertySocket,
-  PropSocketModes,
-  SocketTypes,
-  theEventGraph,
-  SocketType,
-} from "../path-controller/dag/eventdag";
+import { EventNode, PropertySocket, SocketType } from "../path-controller/dag/eventdag";
 import type { IContextBase } from "./context_base";
-import { CSSFont } from "./cssfont";
 
 export { CSSFont } from "./cssfont";
-import type { DataPathSetOp } from "../path-controller/controller/controller_ops";
-import { tagManager } from "./tagReRegister";
 import type { Screen } from "../screen/FrameManager";
 
 interface TimeoutQueueItem {
