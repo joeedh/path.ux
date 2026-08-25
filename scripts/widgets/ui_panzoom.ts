@@ -3,6 +3,8 @@ import type { UIBaseDefinition } from "../core/ui_base";
 import { Container } from "../core/ui";
 import { IContextBase } from "../core/context_base";
 import { t } from "../core/theme_schema";
+import { ToolOp, UndoFlags } from "../path-controller/toolsys/toolsys";
+import type { ContextLike } from "../path-controller/controller/controller_abstract";
 import { Vector2 } from "../path-controller/util/vectormath";
 
 export interface PanZoomRect {
@@ -78,7 +80,8 @@ const PAN_MENU_SLOP_PX = 3;
 /**
  * A container whose single content child pans and zooms under a CSS matrix.
  * Wheel zooms about the cursor; middle-drag, right-drag, or space plus
- * left-drag pans. A right-drag that moved swallows the contextmenu event its
+ * left-drag pans, by spawning a modal {@link PanZoomPanOp} on
+ * ctx.toolstack. A right-drag that moved swallows the contextmenu event its
  * release fires, so descendants' context menus open only on a stationary
  * right-click. Children go into {@link content}; every transform change
  * dispatches a "transform" CustomEvent whose detail carries the
@@ -91,15 +94,8 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   content: Container<CTX>;
   transform = new PanZoomTransform();
 
-  private _panning = false;
-  private _panButton = 0;
-  private _panMoved = false;
   private _suppressMenu = false;
   private _spaceDown = false;
-  private _lastX = 0;
-  private _lastY = 0;
-  private _panStartX = 0;
-  private _panStartY = 0;
   private _onKey = (e: KeyboardEvent) => {
     if (e.code === "Space") {
       this._spaceDown = e.type === "keydown";
@@ -155,43 +151,13 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
 
     this.addEventListener("pointerdown", (e: PointerEvent) => {
       if (e.button === 1 || e.button === 2 || (e.button === 0 && this._spaceDown)) {
-        this._panning = true;
-        this._panButton = e.button;
-        this._panMoved = false;
-        this._suppressMenu = false;
-        this._lastX = this._panStartX = e.clientX;
-        this._lastY = this._panStartY = e.clientY;
-        this.setPointerCapture(e.pointerId);
         e.preventDefault();
         e.stopPropagation();
+        this._suppressMenu = false;
+        const ctx = this.ctx as ContextLike;
+        ctx.toolstack.execTool(ctx, new PanZoomPanOp(this, e), e);
       }
     });
-
-    this.addEventListener("pointermove", (e: PointerEvent) => {
-      if (!this._panning) {
-        return;
-      }
-      if (
-        Math.abs(e.clientX - this._panStartX) >= PAN_MENU_SLOP_PX ||
-        Math.abs(e.clientY - this._panStartY) >= PAN_MENU_SLOP_PX
-      ) {
-        this._panMoved = true;
-      }
-      this.transform.panBy(e.clientX - this._lastX, e.clientY - this._lastY);
-      this._lastX = e.clientX;
-      this._lastY = e.clientY;
-      this._updateTransform();
-    });
-
-    const endPan = (e: PointerEvent) => {
-      if (this._panning) {
-        this._panning = false;
-        this._suppressMenu = this._panButton === 2 && this._panMoved;
-        this.releasePointerCapture(e.pointerId);
-      }
-    };
-    this.addEventListener("pointerup", endPan);
-    this.addEventListener("pointercancel", endPan);
 
     // Capture phase, so a moved right-drag's contextmenu is swallowed before
     // any descendant's own contextmenu handler sees it.
@@ -219,6 +185,11 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
     window.removeEventListener("keydown", this._onKey);
     window.removeEventListener("keyup", this._onKey);
     super.remove();
+  }
+
+  /** Swallows the contextmenu event the current right-drag's release fires. */
+  suppressNextMenu() {
+    this._suppressMenu = true;
   }
 
   /** Inserts elem beneath the transformed content, in this widget's own
@@ -278,3 +249,89 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   }
 }
 UIBase.internalRegister(PanZoomContainer);
+
+/**
+ * The modal pan gesture: moves translate the container's transform, release
+ * ends it. Navigation is not document state, so the op carries
+ * UndoFlags.NO_UNDO and commits nothing. A right-drag that moved past
+ * PAN_MENU_SLOP_PX asks the container to swallow the contextmenu event its
+ * release fires.
+ */
+export class PanZoomPanOp<CTX extends IContextBase = IContextBase> extends ToolOp<
+  {},
+  {},
+  ContextLike
+> {
+  private _pz: PanZoomContainer<CTX> | undefined;
+  private _button = 0;
+  private _moved = false;
+  private _startX = 0;
+  private _startY = 0;
+  private _lastX = 0;
+  private _lastY = 0;
+
+  constructor(pz?: PanZoomContainer<CTX>, e?: PointerEvent) {
+    super();
+    this._pz = pz;
+    if (e !== undefined) {
+      this._button = e.button;
+      this._lastX = this._startX = e.clientX;
+      this._lastY = this._startY = e.clientY;
+    }
+  }
+
+  static tooldef() {
+    return {
+      uiname     : "Pan",
+      description: "Drag to pan the view",
+      toolpath   : "panzoom.pan",
+      is_modal   : true,
+      undoflag   : UndoFlags.NO_UNDO,
+      inputs     : {},
+      outputs    : {},
+    };
+  }
+
+  on_pointermove(e: PointerEvent) {
+    const pz = this._pz;
+    if (pz === undefined) {
+      return;
+    }
+    if (
+      Math.abs(e.clientX - this._startX) >= PAN_MENU_SLOP_PX ||
+      Math.abs(e.clientY - this._startY) >= PAN_MENU_SLOP_PX
+    ) {
+      this._moved = true;
+    }
+    const t = pz.transform;
+    pz.setTransform(t.scale, [
+      t.pan[0] + e.clientX - this._lastX,
+      t.pan[1] + e.clientY - this._lastY,
+    ]);
+    this._lastX = e.clientX;
+    this._lastY = e.clientY;
+  }
+
+  on_pointerup(_e: PointerEvent) {
+    this._finish();
+  }
+
+  on_pointercancel(_e: PointerEvent) {
+    this._finish();
+  }
+
+  private _finish() {
+    const pz = this._pz;
+    this._pz = undefined;
+    if (pz !== undefined && this._button === 2 && this._moved) {
+      pz.suppressNextMenu();
+    }
+    this.modalEnd(false);
+  }
+
+  override modalEnd(was_cancelled?: boolean) {
+    this._pz = undefined;
+    super.modalEnd(was_cancelled);
+  }
+}
+ToolOp.register(PanZoomPanOp as unknown as Parameters<typeof ToolOp.register>[0]);

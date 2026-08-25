@@ -441,6 +441,34 @@ class Tool2 extends Tool1<{
 }
 ```
 
+### Modal drag gestures
+
+Editors and widgets do not implement modal dragging behaviours themselves —
+no `_dragging` flags, no pointermove/pointerup listeners tracking a drag.
+A pointerdown handler decides that a gesture has started and spawns a modal
+ToolOp (`is_modal: true` in its tooldef) via
+`ctx.toolstack.execTool(ctx, new Op(...), event)`; passing the event routes
+the pointer capture to the op, which then receives `on_pointermove` /
+`on_pointerup` / `on_pointercancel` and keyboard events until it calls
+`modalEnd`. The node editor's `scripts/editors/nodeeditor/gesture_ops.ts`
+and `PanZoomPanOp` in `scripts/widgets/ui_panzoom.ts` are the reference
+implementations.
+
+Every ToolOp must be properly undo/redo-able. A gesture op that only
+previews (or changes pure view state such as selection or the camera)
+carries `UndoFlags.NO_UNDO` and commits any document change on release by
+dispatching a separate, undoable op — for the node editor, through the
+view's delegate — so the committed op is the single entry the gesture
+leaves on the undo stack. Escape cancels the gesture and restores whatever
+its preview changed. Per the modal-tool rule in
+`scripts/path-controller/toolsys/toolsys.ts`, an op may hold direct widget
+pointers during the drag but must clear them in `modalEnd`.
+
+Client apps often layer a toolmode system on top of an editor, where the
+active toolmode's pointerdown decides which modal ToolOp to spawn. Not all
+clients do this; path.ux's own editors spawn their ops directly and leave
+any toolmode layer to the client.
+
 ## Submodule
 
 The `scripts/path-controller/` directory is a git submodule. Commit changes there separately before updating the parent repo's submodule pointer.

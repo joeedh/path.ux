@@ -416,6 +416,19 @@ them along with every other menu in the app.
 
 ### Gestures
 
+Drag gestures run as modal ToolOps rather than as widget-held pointer state.
+The view's (or pan/zoom container's) pointerdown handler spawns the op with
+`ctx.toolstack.execTool(ctx, new Op(...), event)`, and the toolsys routes
+pointer and keyboard events to the op until it ends. `gesture_ops.ts` holds
+`NodeMoveModalOp`, `BoxSelectModalOp` and `LinkDragModalOp`; the pan gesture
+is `PanZoomPanOp` in `ui_panzoom.ts`. Each carries `UndoFlags.NO_UNDO`: a
+gesture that changes the document commits on release through the
+[delegate](#the-delegate-seam), so the dispatched graph op
+(`graph.move_node`, `graph.connect`, …) is the single undoable entry the
+gesture leaves behind, and Escape cancels the gesture and restores its
+preview. A client that layers a toolmode system over the editor spawns the
+same ops from its toolmodes' pointerdown handlers.
+
 - **Pan / zoom** — middle-drag, right-drag, or hold space and left-drag to
   pan; the wheel zooms. A right-drag that moved swallows the contextmenu
   event its release fires, so context menus open only on a stationary
@@ -662,9 +675,17 @@ class NodeGraphView<CTX> extends Container<CTX> {
   duplicateSelected(): void;
   replaceNode(nodeId: GraphId, newType: string): void;
   arrangeNodes(): void;
+  clearSelection(): void;
+  boxSelect(min: readonly [number, number], max: readonly [number, number], additive: boolean): void; // graph-space
   getViewState(): NodeGraphViewState; // { pan, zoom, descent }
   setViewState(state: NodeGraphViewState): void;
 }
+
+// Modal gesture ops the view spawns on pointerdown (all UndoFlags.NO_UNDO;
+// document changes commit through the delegate on release).
+class NodeMoveModalOp {} // nodeview.translate_node
+class BoxSelectModalOp {} // nodeview.box_select
+class LinkDragModalOp {} // nodeview.link_drag
 
 class NodeEditor<CTX> extends Area<CTX> {
   // custom element node-editor-x; ships unregistered

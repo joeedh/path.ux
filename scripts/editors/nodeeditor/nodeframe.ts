@@ -39,8 +39,9 @@ export function socketRow(node: GraphNode, dir: SocketDir, key: string): number 
  * One node's on-screen frame: a header row carrying the node's name, socket
  * terminals down both sides, and the node's own createUI as the body. The
  * frame positions itself in graph coordinates — the pan/zoom content's CSS
- * matrix maps those to the screen — and drags in graph space by dividing
- * screen deltas by the scale getScale supplies. A completed drag reaches the
+ * matrix maps those to the screen. The frame owns no drag: a press outside
+ * the body reports through onMoveStart, and the owning view spawns the modal
+ * ToolOp that drives previewPos and getScale. A completed drag reaches the
  * document only through onMoveCommit; the owning editor dispatches the op.
  */
 export class NodeFrame<CTX extends IContextBase = IContextBase> extends Container<
@@ -55,6 +56,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   getScale: () => number = () => 1;
   onSelect?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
+  onMoveStart?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
   onMovePreview?: (frame: NodeFrame<CTX>) => void;
   onMoveCommit?: (frame: NodeFrame<CTX>, x: number, y: number) => void;
   onSocketDown?: (frame: NodeFrame<CTX>, key: string, dir: SocketDir, e: PointerEvent) => void;
@@ -70,10 +72,6 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   private _rows: HTMLDivElement[] = [];
   private _body: Container<CTX> | undefined;
   private _propsRoot: HTMLDivElement | undefined;
-  private _dragging = false;
-  private _dragStartX = 0;
-  private _dragStartY = 0;
-  private _dragBase = new Vector2();
 
   static define(): UIBaseDefinition {
     return {
@@ -220,7 +218,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this.shadow.appendChild(this._header);
 
     this.style.cursor = "move";
-    this._wireDrag(this);
+    this._wirePress(this);
 
     const inKeys = Object.keys(this.node.inputs);
     const outKeys = Object.keys(this.node.outputs);
@@ -303,7 +301,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return span;
   }
 
-  private _wireDrag(handle: HTMLElement) {
+  private _wirePress(handle: HTMLElement) {
     handle.addEventListener("pointerdown", (e: PointerEvent) => {
       if (e.button !== 0) {
         return;
@@ -318,44 +316,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         return;
       }
 
-      this._dragging = true;
-      this._dragStartX = e.clientX;
-      this._dragStartY = e.clientY;
-      this._dragBase.load(this.node.pos);
-      handle.setPointerCapture(e.pointerId);
       e.preventDefault();
+      this.onMoveStart?.(this, e);
     });
-
-    handle.addEventListener("pointermove", (e: PointerEvent) => {
-      if (!this._dragging) {
-        return;
-      }
-
-      const s = this.getScale();
-      this.previewPos = new Vector2([
-        this._dragBase[0] + (e.clientX - this._dragStartX) / s,
-        this._dragBase[1] + (e.clientY - this._dragStartY) / s,
-      ]);
-      this.syncPosition();
-      this.onMovePreview?.(this);
-    });
-
-    const end = (e: PointerEvent) => {
-      if (!this._dragging) {
-        return;
-      }
-
-      this._dragging = false;
-      handle.releasePointerCapture(e.pointerId);
-
-      const dropped = this.previewPos;
-      this.previewPos = undefined;
-      if (dropped !== undefined) {
-        this.onMoveCommit?.(this, dropped[0], dropped[1]);
-      }
-    };
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
   }
 }
 UIBase.internalRegister(NodeFrame);

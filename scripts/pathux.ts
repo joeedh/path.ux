@@ -36,6 +36,7 @@ export * from "./editors/nodeeditor/delegate";
 export * from "./editors/nodeeditor/nodeframe";
 export * from "./editors/nodeeditor/linkcanvas";
 export * from "./editors/nodeeditor/linkdrag";
+export * from "./editors/nodeeditor/gesture_ops";
 export * from "./editors/nodeeditor/addmenu";
 export * from "./editors/nodeeditor/groupui";
 export * from "./editors/nodeeditor/nodegraphview";

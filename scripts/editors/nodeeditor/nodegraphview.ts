@@ -24,6 +24,7 @@ import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { ToolOpDelegate } from "./delegate";
 import type { ArrangeMove, GraphEdit, NodeGraphDelegate } from "./delegate";
 import { LinkDrag } from "./linkdrag";
+import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
 import { buildAddNodeMenu } from "./addmenu";
 import { Menu, createMenu, startMenu } from "../../widgets/ui_menu";
 import { t } from "../../core/theme_schema";
@@ -36,15 +37,14 @@ export interface NodeGraphViewState {
   descent: GraphId[];
 }
 
-const CLICK_SLOP_PX = 3;
-
 /**
  * The hostable node-graph widget: one pan/zoom surface holding a NodeFrame per
  * node, a link canvas beneath them, breadcrumbs for group descent, and
  * click/box selection. It is a plain internally-registered widget, so any
  * host — an Area subclass, a dialog, a dock panel — can create and embed one.
- * Every mutating gesture routes through {@link delegate}; the view itself
- * never writes the graph.
+ * Drag gestures (node move, box select, link drag) run as modal ToolOps the
+ * view spawns on pointerdown; see gesture_ops.ts. Every mutating gesture
+ * routes through {@link delegate}; the view itself never writes the graph.
  */
 export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Container<
   CTX,
@@ -70,8 +70,6 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   private _crumbs!: HTMLDivElement;
   private _pendingView: NodeGraphViewState | undefined = undefined;
-  private _marquee: HTMLDivElement | undefined = undefined;
-  private _boxStart: [number, number] | undefined = undefined;
 
   static define(): UIBaseDefinition {
     return {
@@ -115,9 +113,6 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.addEventListener("transform", () => this._redrawLinks());
 
     this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
-    this.panzoom.addEventListener("pointermove", (e: PointerEvent) => this._boxMove(e));
-    this.panzoom.addEventListener("pointerup", (e: PointerEvent) => this._boxUp(e));
-    this.panzoom.addEventListener("pointercancel", (e: PointerEvent) => this._boxUp(e));
 
     this.linkDrag = new LinkDrag(this);
 
@@ -294,6 +289,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.setNode(node);
       frame.getScale = () => this.panzoom.transform.scale;
       frame.onSelect = (f, e) => this._selectFrame(f, e);
+      frame.onMoveStart = (f, e) =>
+        this.ctx.toolstack.execTool(this.ctx, new NodeMoveModalOp(f, e), e);
       frame.onMovePreview = (f) => this._previewMove(f);
       frame.onMoveCommit = (f, x, y) => this._commitMove(f, x, y);
       frame.onSocketDown = (f, key, dir, e) => this._socketDown(f, key, dir, e);
@@ -405,24 +402,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     this.linkDrag.update(this._localPoint(e));
-
-    const move = (ev: PointerEvent) => this.linkDrag.update(this._localPoint(ev));
-    const up = (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointercancel", cancel);
-      this.linkDrag.drop(this._localPoint(ev));
-    };
-    const cancel = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      this.linkDrag.cancel();
-    };
-
-    // The listeners are on window so the drag survives leaving the widget;
-    // they live only while the drag does.
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up, { once: true });
-    window.addEventListener("pointercancel", cancel, { once: true });
+    this.ctx.toolstack.execTool(this.ctx, new LinkDragModalOp(this), e);
   }
 
   /**
@@ -672,75 +652,26 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     if (e.button !== 0 || e.defaultPrevented) {
       return;
     }
-
-    const r = this.panzoom.getBoundingClientRect();
-    this._boxStart = [e.clientX - r.x, e.clientY - r.y];
-    this.panzoom.setPointerCapture(e.pointerId);
+    this.ctx.toolstack.execTool(this.ctx, new BoxSelectModalOp(this, e), e);
   }
 
-  private _boxMove(e: PointerEvent) {
-    if (this._boxStart === undefined) {
-      return;
-    }
-
-    const r = this.panzoom.getBoundingClientRect();
-    const x = e.clientX - r.x;
-    const y = e.clientY - r.y;
-
-    if (this._marquee === undefined) {
-      this._marquee = document.createElement("div");
-      this._marquee.style.cssText = "position: absolute; pointer-events: none;";
-      this._marquee.style.border = `1px dashed ${this.getDefault("BoxSelectBorder") as string}`;
-      this._marquee.style.background = this.getDefault("BoxSelectBG") as string;
-      this.panzoom.shadow.appendChild(this._marquee);
-    }
-
-    const [sx, sy] = this._boxStart;
-    this._marquee.style.left = Math.min(sx, x) + "px";
-    this._marquee.style.top = Math.min(sy, y) + "px";
-    this._marquee.style.width = Math.abs(x - sx) + "px";
-    this._marquee.style.height = Math.abs(y - sy) + "px";
+  /** Clears the selection and repaints the frames. */
+  clearSelection() {
+    this.selection.clear();
+    this._applySelection();
   }
 
-  private _boxUp(e: PointerEvent) {
-    if (this._boxStart === undefined) {
-      return;
-    }
-
-    this.panzoom.releasePointerCapture(e.pointerId);
-    this._marquee?.remove();
-    this._marquee = undefined;
-
-    const start = this._boxStart;
-    this._boxStart = undefined;
-
-    const r = this.panzoom.getBoundingClientRect();
-    const end: [number, number] = [e.clientX - r.x, e.clientY - r.y];
-
-    if (
-      Math.abs(end[0] - start[0]) < CLICK_SLOP_PX &&
-      Math.abs(end[1] - start[1]) < CLICK_SLOP_PX
-    ) {
-      if (!e.shiftKey) {
-        this.selection.clear();
-        this._applySelection();
-      }
-      return;
-    }
-
-    const a = this.panzoom.transform.unproject(start);
-    const b = this.panzoom.transform.unproject(end);
-    const minX = Math.min(a[0], b[0]);
-    const minY = Math.min(a[1], b[1]);
-    const maxX = Math.max(a[0], b[0]);
-    const maxY = Math.max(a[1], b[1]);
-
-    if (!e.shiftKey) {
+  /**
+   * Selects the frames whose rects intersect the graph-space box from min to
+   * max; additive keeps the current selection.
+   */
+  boxSelect(min: readonly [number, number], max: readonly [number, number], additive: boolean) {
+    if (!additive) {
       this.selection.clear();
     }
     for (const [nid, frame] of this.frames) {
       const fr = frame.rect();
-      if (fr.x < maxX && fr.x + fr.width > minX && fr.y < maxY && fr.y + fr.height > minY) {
+      if (fr.x < max[0] && fr.x + fr.width > min[0] && fr.y < max[1] && fr.y + fr.height > min[1]) {
         this.selection.add(nid);
       }
     }
