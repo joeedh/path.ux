@@ -121,6 +121,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Which sockets the built rows cover, and which carry an inline editor. */
   private _rowSig = "";
 
+  /** Which props the built body rows cover, and the path they bind under. */
+  private _propSig = "";
+
   /** The inline default editors, kept so a rebuild can tear each one down. */
   private _editors: Container<CTX>[] = [];
 
@@ -240,8 +243,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
-  /** Rebuilds header text, socket rows and prop rows; used after a rename, a
-   *  type swap, or a link change that reveals or hides an inline editor. */
+  /** Syncs the header and rebuilds the socket and prop rows whose structure
+   *  changed; a value edit reaches its widget through its own path watch, so
+   *  only a rename, a type swap, or a link change costs a rebuild here. */
   syncContents() {
     this._syncHeader();
     this._rebuildSocketRows();
@@ -330,12 +334,27 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._styleRows();
   }
 
+  /** The props the body rows cover, and the path they bind under. */
+  private _propSignature(): string {
+    if (this.nodePath === "") {
+      return "";
+    }
+    return `${this.nodePath}|${Object.keys(this.node.props).join(",")}`;
+  }
+
   /** Rebuilds the body's prop rows; an input's default belongs to its socket row. */
   private _rebuildPropRows() {
     const root = this._propsRoot;
     if (root === undefined) {
       return;
     }
+
+    const sig = this._propSignature();
+    if (sig === this._propSig) {
+      return;
+    }
+    this._propSig = sig;
+
     // Removed one widget at a time so each row tears down its path watches.
     while (root.firstChild !== null) {
       (root.firstChild as ChildNode).remove();

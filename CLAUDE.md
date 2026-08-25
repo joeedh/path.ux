@@ -7,7 +7,9 @@ HTML5 UI library with Blender RNA-style data binding.
 - plans should always be committed to the repo
 - plans should be pressure tested with an agent with fresh context when created, 
   and the pressure tested results folded back into the plan
-
+- when executing plans the status of each stage/task/phase/wave/etc
+  should be written into the plan itself and marked as completed when done.
+  
 ## ToDos
 - A todos list lives in `todos.md` and is committed to the repo. Check items off
   as they are completed.
