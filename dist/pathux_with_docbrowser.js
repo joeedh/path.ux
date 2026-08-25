@@ -380,6 +380,68 @@ var init_polyfill = __esm({
   }
 });
 
+// scripts/core/base/ui_worker_shim.ts
+var init_ui_worker_shim = __esm({
+  "scripts/core/base/ui_worker_shim.ts"() {
+    "use strict";
+    if (typeof HTMLElement === "undefined") {
+      window.HTMLElement = class HTMLElement {
+      };
+      window.customElements = {
+        define: () => {
+        }
+      };
+      window.devicePixelRatio = 1;
+      window.PointerEvent = class PointerEvent {
+      };
+    }
+  }
+});
+
+// scripts/core/base/ui_base_dpi.ts
+function getDPI() {
+  return window.devicePixelRatio;
+}
+var init_ui_base_dpi = __esm({
+  "scripts/core/base/ui_base_dpi.ts"() {
+    "use strict";
+  }
+});
+
+// scripts/core/base/ui_base_types.ts
+var PackFlags;
+var init_ui_base_types = __esm({
+  "scripts/core/base/ui_base_types.ts"() {
+    "use strict";
+    PackFlags = {
+      INHERIT_WIDTH: 1,
+      INHERIT_HEIGHT: 2,
+      VERTICAL: 4,
+      USE_ICONS: 8,
+      SMALL_ICON: 16,
+      LARGE_ICON: 32,
+      FORCE_PROP_LABELS: 64,
+      //force propeties (Container.prototype.prop()) to always have labels
+      PUT_FLAG_CHECKS_IN_COLUMNS: 128,
+      //group flag property checkmarks in columns (doesn't apply to icons)
+      WRAP_CHECKBOXES: 256,
+      //internal flags
+      STRIP_HORIZ: 512,
+      STRIP_VERT: 1024,
+      STRIP: 512 | 1024,
+      SIMPLE_NUMSLIDERS: 2048,
+      FORCE_ROLLER_SLIDER: 4096,
+      HIDE_CHECK_MARKS: 1 << 13,
+      NO_NUMSLIDER_TEXTBOX: 1 << 14,
+      CUSTOM_ICON_SHEET: 1 << 15,
+      CUSTOM_ICON_SHEET_START: 20,
+      //custom icon sheet bits are shifted to here
+      NO_UPDATE: 1 << 16,
+      LABEL_ON_RIGHT: 1 << 17
+    };
+  }
+});
+
 // scripts/path-controller/util/mobile-detect.ts
 function equalIC(a2, b) {
   return a2 != null && a2.toLowerCase() === b?.toLowerCase();
@@ -4899,7 +4961,7 @@ var init_nstructjs_es6 = __esm({
           const fieldCls = StructFieldTypeMap[type];
           return fieldCls.useHelperJS(field);
         }
-        const toJSON2 = sintern2.toJSON;
+        const toJSON3 = sintern2.toJSON;
         const fields2 = stt.fields;
         const thestruct = this;
         const json = {};
@@ -4917,10 +4979,10 @@ var init_nstructjs_es6 = __esm({
             if (DEBUG.tinyeval) {
               console.log("\n\n\n", f2.get, "Helper JS Ret", val, "\n\n\n");
             }
-            json2 = toJSON2(this, val, obj, f2, t1);
+            json2 = toJSON3(this, val, obj, f2, t1);
           } else {
             val = f2.name === "this" ? obj : obj[f2.name];
-            json2 = toJSON2(this, val, obj, f2, t1);
+            json2 = toJSON3(this, val, obj, f2, t1);
           }
           if (f2.name !== "this") {
             json[f2.name] = json2;
@@ -8042,37 +8104,6 @@ IDGen {
   }
 });
 
-// scripts/path-controller/config/config.ts
-var config_exports = {};
-__export(config_exports, {
-  config: () => config,
-  default: () => config_default,
-  setConfig: () => setConfig
-});
-function setConfig(obj) {
-  for (const k in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, k)) {
-      const key = k;
-      config[key] = obj[key];
-    }
-  }
-}
-var config, config_default;
-var init_config = __esm({
-  "scripts/path-controller/config/config.ts"() {
-    "use strict";
-    config = {
-      doubleClickTime: 500,
-      //auto load 1d bspline templates, can hurt startup time
-      autoLoadSplineTemplates: true,
-      //timeout for press-and-hold (touch) version of double clicking
-      doubleClickHoldTime: 750,
-      DEBUG: {}
-    };
-    config_default = config;
-  }
-});
-
 // scripts/path-controller/util/vectormath.ts
 var vectormath_exports = {};
 __export(vectormath_exports, {
@@ -8084,7 +8115,7 @@ __export(vectormath_exports, {
   Vector4: () => Vector4
 });
 function createVector2(parent, structName) {
-  return class Vector26 extends parent {
+  return class Vector27 extends parent {
     0;
     1;
     [Symbol.iterator] = parent.prototype[Symbol.iterator];
@@ -8282,7 +8313,7 @@ function createVector2(parent, structName) {
       return d0 * d0 + d1 * d1;
     }
     copy() {
-      return new Vector26(this);
+      return new Vector27(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -8382,7 +8413,7 @@ function createVector2(parent, structName) {
   };
 }
 function createVector3(parent, structName) {
-  return class Vector36 extends parent {
+  return class Vector37 extends parent {
     0;
     1;
     2;
@@ -8624,7 +8655,7 @@ function createVector3(parent, structName) {
       return d0 * d0 + d1 * d1 + d2 * d2;
     }
     copy() {
-      return new Vector36(this);
+      return new Vector37(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -8749,7 +8780,7 @@ function createVector3(parent, structName) {
   };
 }
 function createVector4(parent, structName) {
-  return class Vector45 extends parent {
+  return class Vector46 extends parent {
     0;
     1;
     2;
@@ -9036,7 +9067,7 @@ function createVector4(parent, structName) {
       return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
     }
     copy() {
-      return new Vector45(this);
+      return new Vector46(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -10673,6 +10704,1455 @@ var init_vectormath = __esm({
   }
 });
 
+// scripts/path-controller/util/colorutils.ts
+function rgb_to_hsv(r, g, b) {
+  let computedV;
+  if (r == null || g == null || b == null || isNaN(r) || isNaN(g) || isNaN(b)) {
+    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
+  }
+  const minRGB = Math.min(r, Math.min(g, b));
+  const maxRGB = Math.max(r, Math.max(g, b));
+  if (minRGB === maxRGB) {
+    computedV = minRGB;
+    const ret2 = rgb_to_hsv_rets.next();
+    ret2[0] = 0, ret2[1] = 0, ret2[2] = computedV;
+    return ret2;
+  }
+  const d = r === minRGB ? g - b : b === minRGB ? r - g : b - r;
+  const h = r === minRGB ? 3 : b === minRGB ? 1 : 5;
+  const computedH = 60 * (h - d / (maxRGB - minRGB)) / 360;
+  const computedS = (maxRGB - minRGB) / maxRGB;
+  computedV = maxRGB;
+  const ret = rgb_to_hsv_rets.next();
+  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+  return ret;
+}
+function hsv_to_rgb(h, s, v) {
+  const ret = hsv_to_rgb_rets.next();
+  ret[0] = ret[1] = ret[2] = 0;
+  h *= 360;
+  const c = v * s;
+  const x = c * (1 - Math.abs(h / 60 % 2 - 1));
+  const m = v - c;
+  let color;
+  function RgbF_Create(r, g, b) {
+    ret[0] = r;
+    ret[1] = g;
+    ret[2] = b;
+    return ret;
+  }
+  if (h >= 0 && h < 60) {
+    color = RgbF_Create(c + m, x + m, m);
+  } else if (h >= 60 && h < 120) {
+    color = RgbF_Create(x + m, c + m, m);
+  } else if (h >= 120 && h < 180) {
+    color = RgbF_Create(m, c + m, x + m);
+  } else if (h >= 180 && h < 240) {
+    color = RgbF_Create(m, x + m, c + m);
+  } else if (h >= 240 && h < 300) {
+    color = RgbF_Create(x + m, m, c + m);
+  } else if (h >= 300) {
+    color = RgbF_Create(c + m, m, x + m);
+  } else {
+    color = RgbF_Create(m, m, m);
+  }
+  return color;
+}
+function cmyk_to_rgb(c, m, y, k) {
+  const ret = cmyk_to_rgb_rets.next();
+  if (k === 1) {
+    ret.zero();
+    return ret;
+  }
+  c = c - c * k + k;
+  m = m - m * k + k;
+  y = y - y * k + k;
+  ret[0] = 1 - c;
+  ret[1] = 1 - m;
+  ret[2] = 1 - y;
+  return ret;
+}
+function rgb_to_cmyk(r, g, b) {
+  const ret = rgb_to_cmyk_rets.next();
+  let C = 1 - r;
+  let M = 1 - g;
+  let Y = 1 - b;
+  let var_K = 1;
+  if (C < var_K) var_K = C;
+  if (M < var_K) var_K = M;
+  if (Y < var_K) var_K = Y;
+  if (var_K === 1) {
+    C = 0;
+    M = 0;
+    Y = 0;
+  } else {
+    C = (C - var_K) / (1 - var_K);
+    M = (M - var_K) / (1 - var_K);
+    Y = (Y - var_K) / (1 - var_K);
+  }
+  const K = var_K;
+  ret[0] = C;
+  ret[1] = M;
+  ret[2] = Y;
+  ret[3] = K;
+  return ret;
+}
+var rgb_to_hsv_rets, hsv_to_rgb_rets, rgb_to_cmyk_rets, cmyk_to_rgb_rets;
+var init_colorutils = __esm({
+  "scripts/path-controller/util/colorutils.ts"() {
+    "use strict";
+    init_util();
+    init_vectormath();
+    rgb_to_hsv_rets = new cachering2(() => [0, 0, 0], 64);
+    hsv_to_rgb_rets = new cachering2(() => [0, 0, 0], 64);
+    rgb_to_cmyk_rets = new cachering2(() => new Vector4(), 512);
+    cmyk_to_rgb_rets = new cachering2(() => new Vector3(), 512);
+  }
+});
+
+// scripts/util/colorutils.ts
+var init_colorutils2 = __esm({
+  "scripts/util/colorutils.ts"() {
+    "use strict";
+    init_colorutils();
+  }
+});
+
+// scripts/util/struct.ts
+var struct_default2;
+var init_struct2 = __esm({
+  "scripts/util/struct.ts"() {
+    "use strict";
+    init_struct();
+    init_struct();
+    struct_default2 = struct_default;
+  }
+});
+
+// scripts/util/util.ts
+var init_util2 = __esm({
+  "scripts/util/util.ts"() {
+    "use strict";
+    init_util();
+  }
+});
+
+// scripts/core/cssfont.ts
+var _digest, CSSFont;
+var init_cssfont = __esm({
+  "scripts/core/cssfont.ts"() {
+    "use strict";
+    init_struct2();
+    init_util2();
+    _digest = new HashDigest();
+    CSSFont = class _CSSFont {
+      _size;
+      font;
+      style;
+      weight;
+      variant;
+      color;
+      static STRUCT;
+      constructor(args = {}) {
+        this._size = args.size ? args.size : 12;
+        this.font = args.font ?? "";
+        this.style = args.style !== void 0 ? args.style : "normal";
+        this.weight = args.weight !== void 0 ? args.weight : "normal";
+        this.variant = args.variant !== void 0 ? args.variant : "normal";
+        this.color = args.color ?? "";
+      }
+      calcHashUpdate(digest = _digest.reset()) {
+        digest.add(this._size || 0);
+        digest.add(this.font);
+        digest.add(this.style);
+        digest.add(this.weight);
+        digest.add(this.variant);
+        digest.add(this.color);
+        return digest.get();
+      }
+      set size(val) {
+        this._size = val;
+      }
+      get size() {
+        if (isMobile()) {
+          const mul = 1;
+          if (mul) {
+            return this._size * mul;
+          }
+        }
+        return this._size;
+      }
+      copyTo(b) {
+        b._size = this._size;
+        b.font = this.font;
+        b.style = this.style;
+        b.color = this.color;
+        b.variant = this.variant;
+        b.weight = this.weight;
+      }
+      copy() {
+        const ret = new _CSSFont();
+        this.copyTo(ret);
+        return ret;
+      }
+      genCSS(size = this.size) {
+        return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
+      }
+      //deprecated, use genKey()
+      hash() {
+        return this.genKey();
+      }
+      genKey() {
+        let color = this.color;
+        if (typeof this.color === "object" || typeof this.color === "function") {
+          color = JSON.stringify(color);
+        }
+        return this.genCSS() + ":" + this.size + ":" + color;
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+      }
+    };
+    CSSFont.STRUCT = `
+CSSFont {
+  size     : float | obj._size;
+  font     : string | obj.font || "";
+  style    : string | obj.font || "";
+  color    : string | ""+obj.color;
+  variant  : string | obj.variant || "";
+  weight   : string | ""+obj.weight;
+}
+`;
+    struct_default2.register(CSSFont);
+  }
+});
+
+// scripts/core/theme.ts
+var DefaultTheme;
+var init_theme = __esm({
+  "scripts/core/theme.ts"() {
+    "use strict";
+    init_cssfont();
+    DefaultTheme = {
+      base: {
+        mobileTextSizeMultiplier: 1,
+        AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
+        BasePackFlag: 0,
+        BoxDepressed: "rgba(130,130,130, 1)",
+        BoxHighlight: "rgba(151,208,239, 1)",
+        "flex-grow": "unset",
+        mobileSizeMultiplier: 1,
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        LabelText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        TitleText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgba(207,207,207, 0.5)",
+        "border-color": "rgba(34,34,34, 1)",
+        "border-radius": 12.010619764585666,
+        "focus-border-width": 2,
+        oneAxisPadding: 2,
+        padding: 1
+      },
+      button: {
+        DefaultText: new CSSFont({
+          font: "poppins",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35,35,35, 1)"
+        }),
+        "background-color": "rgba(238,238,238, 0.8672412740773168)",
+        "border-color": "rgba(255,255,255, 1)",
+        "border-radius": 4,
+        "border-style": "solid",
+        "border-width": 2,
+        disabled: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgb(109,109,109)"
+          }),
+          "background-color": "rgb(19,19,19)",
+          "border-color": "#f58f8f",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        height: 25,
+        highlight: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(255,255,255, 1)"
+          }),
+          "background-color": "rgba(138,222,255, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-radius": 4,
+          "border-style": "solid",
+          "border-width": 2
+        },
+        "highlight-pressed": {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(35,35,35, 1)"
+          }),
+          "background-color": "rgba(113,113,113, 1)",
+          "border-color": "#DADCE0",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        margin: 4,
+        "margin-left": 4,
+        "margin-right": 4,
+        padding: 1,
+        pressed: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(35,35,35, 1)"
+          }),
+          "background-color": "rgba(113,113,113, 1)",
+          "border-color": "#DADCE0",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        width: 25
+      },
+      checkbox: {
+        CheckSide: "left",
+        height: 32,
+        width: 32,
+        "background-color": "rgb(168,168,168)"
+      },
+      colorfield: {
+        circleSize: 11,
+        colorBoxHeight: 24,
+        fieldSize: 400,
+        height: 256,
+        hueHeight: 32,
+        width: 256
+      },
+      colorpickerbutton: {
+        height: 32,
+        width: 95
+      },
+      curvewidget: {
+        CanvasBG: "rgb(44,44,44)",
+        CanvasHeight: 256,
+        CanvasWidth: 256
+      },
+      dropbox: {
+        dropTextBG: "rgba(233,233,233, 1)",
+        height: 25,
+        width: 32
+      },
+      iconbutton: {
+        highlight: {
+          "background-color": "rgba(133,182,255,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        depressed: {
+          "background-color": "rgba(42,61,77,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        "background-color": "rgba(15,15,15, 0)",
+        "border-color": "black",
+        "border-radius": 5,
+        "border-width": 1,
+        height: 32,
+        "margin-bottom": 1,
+        "margin-left": 2,
+        "margin-right": 2,
+        "margin-top": 1,
+        padding: 2,
+        width: 32
+      },
+      iconcheck: {
+        highlight: {
+          "background-color": "rgba(133,182,255,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        depressed: {
+          "background-color": "rgba(42,61,77,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        "background-color": "rgba(15,15,15, 0)",
+        "border-color": "rgba(237,209,209, 1)",
+        "border-radius": 5,
+        "border-width": 0,
+        drawCheck: true,
+        height: 32,
+        "margin-bottom": 1,
+        "margin-left": 2,
+        "margin-right": 2,
+        "margin-top": 1,
+        padding: 2,
+        width: 32
+      },
+      label: {
+        LabelText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(35, 35, 35, 1.0)"
+        })
+      },
+      listbox: {
+        ListActive: "rgba(200, 205, 215, 1.0)",
+        ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
+        ListHighlight: "rgba(155, 220, 255, 0.5)",
+        ItemHeight: 24,
+        height: 200,
+        width: 110
+      },
+      panzoom: {
+        ZoomMin: 0.1,
+        ZoomMax: 8,
+        ZoomWheelRate: 1.1
+      },
+      nodeframe: {
+        Width: 140,
+        HeaderHeight: 24,
+        SocketRowHeight: 20,
+        "background-color": "rgba(248, 248, 248, 0.95)",
+        "border-color": "#b8b8b8",
+        "border-radius": 4,
+        HeaderBG: "rgba(214, 214, 214, 0.95)",
+        SelectOutline: "#e8930c",
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        SocketText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 11,
+          color: "rgba(35, 35, 35, 1.0)"
+        })
+      },
+      nodegraphview: {
+        "background-color": "rgb(225, 225, 225)",
+        BoxSelectBorder: "#e8930c",
+        BoxSelectBG: "rgba(232, 147, 12, 0.1)",
+        ErrorColor: "#cc3333"
+      },
+      nodelinkcanvas: {
+        LinkColor: "#777777",
+        LinkWidth: 2,
+        LinkSelectColor: "#e8930c",
+        LinkSelectWidth: 3
+      },
+      menu: {
+        MenuBG: "rgba(250, 250, 250, 1.0)",
+        "item-radius": 0,
+        MenuBorder: "1px solid grey",
+        MenuHighlight: "rgba(155, 220, 255, 1.0)",
+        MenuSeparator: {
+          width: "100%",
+          height: 2,
+          padding: 0,
+          margin: 0,
+          border: "none",
+          "background-color": "grey"
+        },
+        "box-shadow": "5px 5px 25px rgba(0,0,0,0.75)",
+        MenuSpacing: 5,
+        MenuText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(25, 25, 25, 1.0)"
+        }),
+        HotkeyText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(68, 68, 68, 1.0)"
+        }),
+        // addItemExtra sets the hotkey span's color separately from its font
+        HotkeyTextColor: "rgba(68, 68, 68, 1.0)",
+        "padding-top": 0,
+        "padding-left": 0,
+        "padding-right": 0,
+        "padding-bottom": 0,
+        "border-color": "grey",
+        "border-radius": 5,
+        "border-style": "solid",
+        "border-width": 1
+      },
+      notification: {
+        DefaultText: new CSSFont({
+          font: "poppins",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgb(55,55,55)"
+        }),
+        "background-color": "rgba(72,72,72,0)",
+        "border-radius": 5,
+        "border-color": "grey",
+        "border-width": 1,
+        "border-style": "solid",
+        ProgressBarBG: "rgb(74,148,183)",
+        ProgressBar: "rgb(250,132,58)"
+      },
+      numslider: {
+        "arrow-color": "50%",
+        "background-color": "rgba(219,219,219, 1)",
+        "border-color": "rgba(255,255,255, 1)",
+        "border-radius": 1,
+        height: 22,
+        highlight: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgb(0,0,0)"
+          }),
+          "background-color": "rgba(151,208,239, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        pressed: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(0,0,0, 1)"
+          }),
+          "arrow-color": "rgb(28,28,28)",
+          "background-color": "rgba(178,178,178, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        width: 115
+        /*
+        'highlight-pressed'            : {
+          DefaultText       : new CSSFont({
+            font   : 'poppins',
+            weight : 'bold',
+            variant: 'normal',
+            style  : 'normal',
+            size   : 12,
+            color  : 'rgb(245,245,245)'
+          }),
+          'background-color': 'rgb(126,126,126)',
+          'border-color'    : '#DADCE0',
+          'border-style'    : 'solid',
+          'border-width'    : 1,
+        },*/
+      },
+      numslider_simple: {
+        SlideHeight: 10,
+        TextBoxWidth: 45,
+        "background-color": "rgba(219,219,219, 1)",
+        height: 18,
+        labelOnTop: true,
+        addLabel: true,
+        width: 135
+      },
+      numslider_textbox: {
+        TextBoxHeight: 25,
+        TextBoxWidth: 50,
+        "background-color": "rgba(219,219,219, 1)",
+        height: 25,
+        labelOnTop: true,
+        addLabel: false,
+        width: 120
+      },
+      panel: {
+        header: {
+          iconSize: 16
+        },
+        HeaderBorderRadius: 5.329650280441558,
+        HeaderRadius: 4,
+        TitleBackground: "rgba(177,219,255, 1)",
+        TitleBorder: "rgba(104,104,104, 1)",
+        TitleText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(0,0,0, 1)"
+        }),
+        "background-color": "rgba(184,184,184, 0.7594818376068376)",
+        "border-color": "rgba(0,0,0, 0.5598061397157866)",
+        "border-radius": 4,
+        "border-style": "groove",
+        "border-width": 1.141,
+        "margin-bottom": 0,
+        "margin-bottom-closed": 0,
+        "margin-left": 5.6584810220495445,
+        "margin-right": 0,
+        "margin-top": 0,
+        "margin-top-closed": 0,
+        "padding-bottom": 0,
+        "padding-left": 0,
+        "padding-right": 0,
+        "padding-top": 0
+      },
+      richtext: {
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 16,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgb(245, 245, 245)"
+      },
+      screenborder: {
+        "border-inner": "grey",
+        "border-outer": "rgba(228,228,228, 1)",
+        "border-width": 2,
+        "mouse-threshold": 8
+      },
+      /*
+      scrollbars: new ThemeScrollBars({
+        border  : undefined,
+        color   : undefined,
+        color2  : undefined,
+        contrast: undefined,
+        width   : undefined,
+      }),*/
+      sidebar: {
+        "background-color": "rgba(55, 55, 55, 0.5)"
+      },
+      strip: {
+        "background-color": "rgba(75,75,75, 0.33213141025641024)",
+        "border-color": "rgba(0,0,0, 0.31325409987877156)",
+        "border-radius": 8.76503417507447,
+        "border-style": "solid",
+        "border-width": 1,
+        margin: 2,
+        oneAxisPadding: 2,
+        padding: 1,
+        "flex-grow": "unset"
+      },
+      tabs: {
+        "focus-on-tab-click": "false",
+        "movable-tabs": "true",
+        TabPadding_mobile: 20,
+        //padding perpindicular to the label text
+        TabPadding: 0,
+        TabActive: "rgba(212,212,212, 1)",
+        TabBarRadius: 6,
+        TabHighlight: "rgba(50, 50, 50, 0.2)",
+        TabInactive: "rgba(183,183,183, 1)",
+        TabStrokeStyle1: "rgba(0,0,0, 1)",
+        TabStrokeStyle2: "rgba(0,0,0, 1)",
+        TabText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "bold",
+          style: "normal",
+          size: 15,
+          color: "rgba(0,0,0, 1)"
+        }),
+        "background-color": "rgba(222,222,222, 1)"
+      },
+      textbox: {
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(3,3,3, 1)"
+        }),
+        "border-color": "rgba(0,0,0,0)",
+        "border-width": 1,
+        "border-radius": 4,
+        "border-style": "solid",
+        "background-color": "rgba(245,245,245, 1)"
+      },
+      tooltip: {
+        ToolTipText: new CSSFont({
+          font: "sans-serif",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgba(255,255,255, 1)",
+        "border-color": "rgba(139,139,139, 1)",
+        "border-radius": 3,
+        "border-style": "solid",
+        "border-width": 1,
+        padding: 5,
+        // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
+        // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
+        timeout: 4e3
+      },
+      treeview: {
+        itemIndent: 10,
+        rowHeight: 18
+      },
+      vecPopupButton: {
+        height: 18,
+        padding: 3,
+        width: 100
+      }
+    };
+  }
+});
+
+// scripts/path-controller/config/config.ts
+var config_exports = {};
+__export(config_exports, {
+  config: () => config,
+  default: () => config_default,
+  setConfig: () => setConfig
+});
+function setConfig(obj) {
+  for (const k in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, k)) {
+      const key = k;
+      config[key] = obj[key];
+    }
+  }
+}
+var config, config_default;
+var init_config = __esm({
+  "scripts/path-controller/config/config.ts"() {
+    "use strict";
+    config = {
+      doubleClickTime: 500,
+      //auto load 1d bspline templates, can hurt startup time
+      autoLoadSplineTemplates: true,
+      //timeout for press-and-hold (touch) version of double clicking
+      doubleClickHoldTime: 750,
+      DEBUG: {}
+    };
+    config_default = config;
+  }
+});
+
+// scripts/config/const.ts
+function readClipboard() {
+  if (!document.hasFocus()) {
+    return;
+  }
+  const cb = navigator.clipboard;
+  if (!cb?.read) {
+    return;
+  }
+  cb.read().then((data) => {
+    for (const item of data) {
+      for (let i = 0; i < item.types.length; i++) {
+        const type = item.types[i];
+        if (!(type in _clipboards)) {
+          _clipboards[type] = {
+            name: type,
+            mime: type,
+            data: void 0
+          };
+        }
+        item.getType(type).then((blob) => new Response(blob).text()).then((text2) => {
+          _clipboards[type].data = text2;
+        });
+      }
+    }
+  }).catch(function() {
+  });
+}
+function startClipboardReader() {
+  if (_clipboardTimer === void 0) {
+    _clipboardTimer = window.setInterval(readClipboard, CLIPBOARD_POLL_MS);
+  }
+}
+function stopClipboardReader() {
+  if (_clipboardTimer !== void 0) {
+    window.clearInterval(_clipboardTimer);
+    _clipboardTimer = void 0;
+  }
+}
+async function queryClipboardPermission() {
+  const perms = navigator.permissions;
+  if (!perms?.query) {
+    return void 0;
+  }
+  try {
+    return await perms.query({ name: "clipboard-read" });
+  } catch {
+    return void 0;
+  }
+}
+function onPageLoad(cb) {
+  if (document.readyState === "complete") {
+    cb();
+  } else {
+    window.addEventListener("load", cb, { once: true });
+  }
+}
+function onUserGesture(cb) {
+  const events = ["pointerdown", "keydown", "touchstart"];
+  const handler = () => {
+    for (const type of events) {
+      window.removeEventListener(type, handler, true);
+    }
+    cb();
+  };
+  for (const type of events) {
+    window.addEventListener(type, handler, { capture: true, passive: true });
+  }
+}
+var _clipboards, CLIPBOARD_POLL_MS, _clipboardTimer, cconst, const_default;
+var init_const = __esm({
+  "scripts/config/const.ts"() {
+    "use strict";
+    init_config();
+    _clipboards = {};
+    CLIPBOARD_POLL_MS = 200;
+    _clipboardTimer = void 0;
+    if (typeof document !== "undefined") {
+      onPageLoad(
+        () => onUserGesture(() => {
+          queryClipboardPermission().then((status) => {
+            if (!status) {
+              startClipboardReader();
+              return;
+            }
+            const sync = () => {
+              if (status.state === "granted") {
+                startClipboardReader();
+              } else {
+                stopClipboardReader();
+              }
+            };
+            status.addEventListener("change", sync);
+            if (status.state === "prompt") {
+              readClipboard();
+            }
+            sync();
+          });
+        })
+      );
+    }
+    cconst = {
+      getClipboardData(desiredMimes = "text/plain") {
+        if (typeof desiredMimes === "string") {
+          desiredMimes = [desiredMimes];
+        }
+        for (const m of desiredMimes) {
+          const cb = _clipboards[m];
+          if (cb?.data) {
+            return cb;
+          }
+        }
+        return void 0;
+      },
+      setClipboardData(name2, mime, data) {
+        _clipboards[mime] = { name: name2, mime, data };
+        const clipboard = navigator.clipboard;
+        if (!clipboard) {
+          return;
+        }
+        try {
+          clipboard.write([
+            new ClipboardItem({
+              [mime]: new Blob([data], { type: mime })
+            })
+          ]).catch((error2) => {
+            if (mime.startsWith("text") && mime !== "text/plain") {
+              cconst.setClipboardData(name2, "text/plain", data);
+            } else {
+              console.error(error2);
+            }
+          });
+        } catch (error2) {
+          console.log(error2.stack);
+          console.log("failed to write to system clipboard");
+        }
+      },
+      colorSchemeType: "light",
+      docManualPath: "../simple_docsys/doc_build/",
+      docEditorPath: "../simple_docsys.js",
+      useNumSliderTextboxes: true,
+      numSliderArrowLimit: 15,
+      simpleNumSliders: false,
+      menusCanPopupAbove: false,
+      menu_close_time: 500,
+      doubleClickTime: 500,
+      doubleClickHoldTime: 750,
+      DEBUG: {
+        paranoidEvents: false,
+        screenborders: false,
+        areaContextPushes: false,
+        allBordersMovable: false,
+        doOnce: false,
+        modalEvents: false,
+        areaConstraintSolver: false,
+        datapaths: false,
+        lastToolPanel: false,
+        domEvents: false,
+        domEventAddRemove: false,
+        debugUIUpdatePerf: false,
+        screenAreaPosSizeAccesses: false,
+        buttonEvents: false
+      },
+      autoLoadSplineTemplates: true,
+      addHelpPickers: true,
+      closableAreaTabs: true,
+      autoSizeUpdate: true,
+      showPathsInToolTips: true,
+      enableThemeAutoUpdate: true,
+      useNativeToolTips: true,
+      noElectronMenus: false,
+      loadConstants(args) {
+        for (const k in args) {
+          if (k === "loadConstants") continue;
+          cconst[k] = args[k];
+        }
+        setConfig(cconst);
+      }
+    };
+    const_default = cconst;
+    window.DEBUG = cconst.DEBUG;
+    if (typeof document !== "undefined") {
+      const cfg = document.getElementById("pathux-config");
+      if (cfg) {
+        cconst.loadConstants(JSON.parse(cfg.innerText));
+      }
+    }
+    if (typeof window?.PATHUX_CONFIG !== "undefined") {
+      cconst.loadConstants(window.PATHUX_CONFIG);
+    }
+  }
+});
+
+// scripts/core/ui_theme.ts
+function parsepx(css) {
+  return parseFloat(css.trim().replace("px", ""));
+}
+function color2css2(c, alpha_override) {
+  const r = ~~(c[0] * 255);
+  const g = ~~(c[1] * 255);
+  const b = ~~(c[2] * 255);
+  let a2 = c.length < 4 ? 1 : c[3];
+  a2 = alpha_override !== void 0 ? alpha_override : a2;
+  if (c.length === 3 && alpha_override === void 0) {
+    return `rgb(${r},${g},${b})`;
+  } else {
+    return `rgba(${r},${g},${b}, ${a2})`;
+  }
+}
+function color2web(color) {
+  function tostr(n) {
+    n = ~~(n * 255);
+    let s = n.toString(16);
+    if (s.length > 2) {
+      s = s.slice(0, 2);
+    }
+    while (s.length < 2) {
+      s = "0" + s;
+    }
+    return s;
+  }
+  if (color.length === 3 || color[3] === 1) {
+    const r = tostr(color[0]);
+    const g = tostr(color[1]);
+    const b = tostr(color[2]);
+    return "#" + r + g + b;
+  } else {
+    const r = tostr(color[0]);
+    const g = tostr(color[1]);
+    const b = tostr(color[2]);
+    const a2 = tostr(color[3]);
+    return "#" + r + g + b + a2;
+  }
+}
+function css2color(color) {
+  if (!color) {
+    return new Vector4([0, 0, 0, 1]);
+  }
+  color = ("" + color).trim();
+  const ret = css2color_rets.next();
+  if (color[0] === "#") {
+    color = color.slice(1, color.length);
+    const parts = [];
+    for (let i2 = 0; i2 < color.length >> 1; i2++) {
+      const part = "0x" + color.slice(i2 * 2, i2 * 2 + 2);
+      parts.push(parseInt(part));
+    }
+    ret.zero();
+    let i;
+    for (i = 0; i < Math.min(parts.length, ret.length); i++) {
+      ret[i] = parts[i] / 255;
+    }
+    if (i < 4) {
+      ret[3] = 1;
+    }
+    return ret;
+  }
+  if (color in basic_colors) {
+    ret.load(basic_colors[color]);
+    ret[3] = 1;
+    return ret;
+  }
+  const hasAlpha = color.startsWith("rgba(");
+  const colorParts = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
+  for (let i = 0; i < colorParts.length; i++) {
+    ret[i] = parseFloat(colorParts[i]);
+    if (i < 3) {
+      ret[i] /= 255;
+    }
+  }
+  if (ret.length === 3) {
+    ret.push(1);
+  }
+  if (!hasAlpha) {
+    ret[3] = 1;
+  }
+  return ret;
+}
+function web2color(str) {
+  if (typeof str === "string" && str.trim()[0] !== "#") {
+    str = "#" + str.trim();
+  }
+  return css2color(str);
+}
+function validateWebColor(str) {
+  if (typeof str !== "string") return false;
+  return str.trim().search(validate_pat) === 0;
+}
+function validateCSSColor(color) {
+  if (color.toLowerCase() in basic_colors) {
+    return true;
+  }
+  let rgba = color.toLowerCase().replace(/[ \t]/g, "");
+  rgba = rgba.trim();
+  if (validate_rgba.test(rgba) || validate_rgb.exec(rgba)) {
+    return true;
+  }
+  return validateWebColor(color);
+}
+function invertTheme() {
+  const_default.colorSchemeType = const_default.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+  function inverted(color) {
+    if (Array.isArray(color)) {
+      for (let i = 0; i < 3; i++) {
+        color[i] = 1 - color[i];
+      }
+      return color;
+    }
+    const c = css2color(color);
+    return color2css2(inverted(Array.from(c)));
+  }
+  const bg = const_default.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  document.body.style.backgroundColor = bg;
+  for (const styleKey in theme) {
+    const style = theme[styleKey];
+    if (typeof style !== "object" || style instanceof CSSFont) {
+      continue;
+    }
+    const styleRec = style;
+    for (const k in styleRec) {
+      const v = styleRec[k];
+      if (v instanceof CSSFont) {
+        v.color = inverted(v.color);
+      } else if (typeof v === "string") {
+        const vLower = v.trim().toLowerCase();
+        let iscolor = vLower.search("rgb") >= 0;
+        iscolor = iscolor || vLower in basic_colors;
+        iscolor = iscolor || validateWebColor(vLower);
+        if (iscolor) {
+          styleRec[k] = inverted(vLower);
+        }
+      }
+    }
+  }
+}
+function setColorSchemeType(mode) {
+  if (mode !== const_default.colorSchemeType) {
+    invertTheme();
+    const_default.colorSchemeType = mode;
+  }
+}
+function exportTheme(themeIn = theme, addVarDecl = true) {
+  const theme1 = themeIn;
+  const sortkeys = (obj) => {
+    const keys2 = [];
+    for (const k in obj) {
+      keys2.push(k);
+    }
+    keys2.sort();
+    return keys2;
+  };
+  let s = addVarDecl ? "var theme = {\n" : "{\n";
+  function writekey(v, indent = "") {
+    if (typeof v === "string") {
+      let vs;
+      if (v.search("\n") >= 0) {
+        vs = "`" + v + "`";
+      } else {
+        vs = "'" + v + "'";
+      }
+      return vs;
+    } else if (v instanceof ThemeScrollBars) {
+      return `new ThemeScrollBars({
+${indent}  border   : ${writekey(v.border)},
+${indent}  color    : ${writekey(v.color)},
+${indent}  color2   : ${writekey(v.color2)},
+${indent}  contrast : ${writekey(v.contrast)},
+${indent}  width     : ${writekey(v.width)}
+${indent}})`;
+    } else if (typeof v === "object") {
+      if (v instanceof CSSFont) {
+        return `new CSSFont({
+${indent}  font    : ${writekey(v.font)},
+${indent}  weight  : ${writekey(v.weight)},
+${indent}  variant : ${writekey(v.variant)},
+${indent}  style   : ${writekey(v.style)},
+${indent}  size    : ${writekey(v._size)},
+${indent}  color   : ${writekey(v.color)}
+${indent}})`;
+      } else {
+        let s2 = "{\n";
+        for (let k of sortkeys(v)) {
+          const v2 = v[k];
+          if (k.search(" ") >= 0 || k.search("-") >= 0) {
+            k = "'" + k + "'";
+          }
+          s2 += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
+        }
+        s2 += indent + "}";
+        return s2;
+      }
+    } else {
+      return "" + v;
+    }
+  }
+  for (const k of sortkeys(theme1)) {
+    let k2 = k;
+    if (k.search(/[- \t.]/) >= 0) {
+      k2 = "'" + k + "'";
+    }
+    s += "  " + k2 + ": ";
+    const v = theme1[k];
+    if (typeof v !== "object" || v instanceof CSSFont) {
+      s += writekey(v, "  ") + ",\n";
+    } else {
+      s += " {\n";
+      let s2 = "";
+      let maxwid = 0;
+      for (let k22 of sortkeys(v)) {
+        if (k22.search("-") >= 0 || k22.search(" ") >= 0) {
+          k22 = "'" + k22 + "'";
+        }
+        maxwid = Math.max(maxwid, k22.length);
+      }
+      for (let k22 of sortkeys(v)) {
+        const v2 = v[k22];
+        if (k22.search("-") >= 0 || k22.search(" ") >= 0) {
+          k22 = "'" + k22 + "'";
+        }
+        let pad = "";
+        for (let i = 0; i < maxwid - k22.length; i++) {
+          pad += " ";
+        }
+        s2 += "    " + k22 + pad + ": " + writekey(v2, "    ") + ",\n";
+      }
+      s += s2;
+      s += "  },\n\n";
+    }
+  }
+  s += "};\n";
+  return s;
+}
+function copyTheme(themeObj) {
+  if (themeObj instanceof CSSFont) {
+    return themeObj.copy();
+  }
+  const ret = {};
+  for (const k in themeObj) {
+    const v = themeObj[k];
+    if (typeof v === "function") {
+      continue;
+    }
+    if (typeof v === "object") {
+      ret[k] = copyTheme(v);
+    } else {
+      ret[k] = v;
+    }
+  }
+  return ret;
+}
+var ThemeScrollBars, compatMap, ColorSchemeTypes, css2color_rets, basic_colors, validate_pat, num, validate_rgba, validate_rgb, theme;
+var init_ui_theme = __esm({
+  "scripts/core/ui_theme.ts"() {
+    "use strict";
+    init_util();
+    init_vectormath();
+    init_const();
+    init_cssfont();
+    ThemeScrollBars = class {
+      border;
+      color;
+      color2;
+      contrast;
+      width;
+      constructor({
+        border,
+        color,
+        color2,
+        contrast,
+        width
+      }) {
+        this.border = border;
+        this.color = color;
+        this.color2 = color2;
+        this.contrast = contrast;
+        this.width = width;
+      }
+    };
+    compatMap = {
+      BoxMargin: "padding",
+      BoxBG: "background",
+      BoxRadius: "border-radius",
+      background: "background-color",
+      defaultWidth: "width",
+      defaultHeight: "height",
+      DefaultWidth: "width",
+      DefaultHeight: "height",
+      BoxBorder: "border-color",
+      BoxLineWidth: "border-width",
+      BoxSubBG: "background-color",
+      BoxSub2BG: "background-color",
+      DefaultPanelBG: "background-color",
+      InnerPanelBG: "background-color",
+      Background: "background-color",
+      numslider_width: "width",
+      numslider_height: "height"
+    };
+    ColorSchemeTypes = {
+      LIGHT: "light",
+      DARK: "dark"
+    };
+    css2color_rets = cachering2.fromConstructor(Vector4, 64);
+    basic_colors = {
+      white: [1, 1, 1],
+      grey: [0.5, 0.5, 0.5],
+      gray: [0.5, 0.5, 0.5],
+      black: [0, 0, 0],
+      red: [1, 0, 0],
+      yellow: [1, 1, 0],
+      green: [0, 1, 0],
+      teal: [0, 1, 1],
+      cyan: [0, 1, 1],
+      blue: [0, 0, 1],
+      orange: [1, 0.5, 0.25],
+      brown: [0.5, 0.4, 0.3],
+      purple: [1, 0, 1],
+      pink: [1, 0.5, 0.5]
+    };
+    validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+    num = "(([0-9]+.[0-9]+)|[0-9a-f]+)";
+    validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
+    validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
+    theme = {};
+  }
+});
+
+// scripts/core/base/ui_theme_key.ts
+function setTheme(theme2) {
+  for (const k in theme2) {
+    const v = theme2[k];
+    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
+      theme[k] = v;
+      continue;
+    }
+    if (!(k in theme)) {
+      theme[k] = {};
+    }
+    const vRec = v;
+    for (let k2 in vRec) {
+      if (k2 in compatMap) {
+        const k3 = compatMap[k2];
+        if (vRec[k3] === void 0) {
+          vRec[k3] = vRec[k2];
+        }
+        delete vRec[k2];
+        k2 = k3;
+      }
+      const substyle = theme[k];
+      substyle[k2] = vRec[k2];
+    }
+  }
+}
+function styleScrollBars(color = "grey", color2, contrast = 0.5, width = 15, border = "1px groove black", selector = "*") {
+  if (!color2) {
+    const c = css2color(color);
+    const a2 = c.length > 3 ? c[3] : 1;
+    c.load3(rgb_to_hsv(c[0], c[1], c[2]));
+    let inv = c.slice(0, c.length);
+    inv[2] = 1 - inv[2];
+    inv[2] += (c[2] - inv[2]) * (1 - contrast);
+    inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
+    inv.length = 4;
+    inv[3] = a2;
+    color2 = color2css2(inv);
+  }
+  const buf = `
+
+${selector} {
+  scrollbar-width : ${width <= 16 ? "thin" : "auto"};
+  scrollbar-color : ${color2} ${color};
+}
+
+${selector}::-webkit-scrollbar {
+  width : ${width}px;
+  background-color : ${color};
+}
+
+${selector}::-webkit-scrollbar-track {
+  background-color : ${color};
+  border : ${border};
+}
+
+${selector}::-webkit-scrollbar-thumb {
+  background-color : ${color2};
+  border : ${border};
+}
+    `;
+  return buf;
+}
+function calcThemeKey(digest = _digest2.reset()) {
+  const anyTheme = theme;
+  for (const k in anyTheme) {
+    const obj = anyTheme[k];
+    if (typeof obj !== "object") {
+      continue;
+    }
+    for (const k2 in obj) {
+      const v2 = obj[k2];
+      if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
+        digest.add(v2);
+      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
+        v2.calcHashUpdate(digest);
+      }
+    }
+  }
+  return digest.get();
+}
+function flagThemeUpdate() {
+  _themeUpdateKey = calcThemeKey();
+}
+var ErrorColors, _testSetScrollbars, _digest2, _themeUpdateKey;
+var init_ui_theme_key = __esm({
+  "scripts/core/base/ui_theme_key.ts"() {
+    "use strict";
+    init_util();
+    init_colorutils2();
+    init_cssfont();
+    init_theme();
+    init_ui_theme();
+    ErrorColors = {
+      WARNING: "yellow",
+      ERROR: "red",
+      OK: "green"
+    };
+    setTheme(DefaultTheme);
+    _testSetScrollbars = function(color = "grey", contrast = 0.5, width = 15, border = "solid") {
+      return styleScrollBars(color, void 0, contrast, width, border, "*");
+    };
+    _digest2 = new HashDigest();
+    _themeUpdateKey = calcThemeKey();
+    window._flagThemeUpdate = flagThemeUpdate;
+  }
+});
+
 // scripts/path-controller/util/simple_events.ts
 function consolelog(..._args) {
 }
@@ -10689,8 +12169,8 @@ function debugDomEvents() {
     init2(et);
     return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
   }
-  const addEventListener = EventTarget.prototype.addEventListener;
-  const removeEventListener = EventTarget.prototype.removeEventListener;
+  const addEventListener2 = EventTarget.prototype.addEventListener;
+  const removeEventListener2 = EventTarget.prototype.removeEventListener;
   EventTarget.prototype.addEventListener = function(type, cb, options) {
     init2(this);
     const cbRec = cb;
@@ -10699,7 +12179,7 @@ function debugDomEvents() {
     }
     const key = getkey(this, type, options);
     cbRec[cbsymbol].add(key);
-    return addEventListener.call(this, type, cb, options);
+    return addEventListener2.call(this, type, cb, options);
   };
   EventTarget.prototype.removeEventListener = function(type, cb, options) {
     init2(this);
@@ -10714,7 +12194,7 @@ function debugDomEvents() {
       return;
     }
     cbRec[cbsymbol].delete(key);
-    return removeEventListener.call(this, type, cb, options);
+    return removeEventListener2.call(this, type, cb, options);
   };
 }
 function singletonMouseEventsInit() {
@@ -11690,650 +13170,194 @@ var init_area_wrangler = __esm({
   }
 });
 
-// scripts/path-controller/curve/curve1d_base.ts
-function getCurve(type, throw_on_error = true) {
-  for (const cls of CurveConstructors) {
-    if (cls.name === type) return cls;
-    if (cls.define().name === type) return cls;
-  }
-  if (throw_on_error) {
-    throw new Error("Unknown curve type " + type);
-  } else {
-    console.warn("Unknown curve type", type);
-    return getCurve("ease");
-  }
+// scripts/core/base/ui_base_modal.ts
+function _setTextboxClass(cls) {
+  TextBox = cls;
 }
-function evalHermiteTable(table, t2, range = unitRange) {
-  t2 = (t2 - range[0]) / (range[1] - range[0]);
-  let s = t2 * (table.length / 4);
-  let i = Math.floor(s);
-  s -= i;
-  i *= 4;
-  const a2 = table[i] + (table[i + 1] - table[i]) * s;
-  const b = table[i + 2] + (table[i + 3] - table[i + 2]) * s;
-  return a2 + (b - a2) * s;
-}
-function genHermiteTable(evaluate, steps, range = [0, 1]) {
-  const table = new Array(steps);
-  const [min, max] = range;
-  const eps = 1e-4;
-  const dt = (max - min - eps * 4.001) / (steps - 1);
-  let t2 = min + eps * 4;
-  let lastdv1 = 0;
-  let lastf3 = 0;
-  for (let j = 0; j < steps; j++, t2 += dt) {
-    const f2 = evaluate(t2 - eps);
-    const f3 = evaluate(t2);
-    const f4 = evaluate(t2 + eps);
-    let dv1 = (f4 - f2) / (eps * 2);
-    dv1 /= steps;
-    if (j > 0) {
-      const j2 = j - 1;
-      table[j2 * 4] = lastf3;
-      table[j2 * 4 + 1] = lastf3 + lastdv1 / 3;
-      table[j2 * 4 + 2] = f3 - dv1 / 3;
-      table[j2 * 4 + 3] = f3;
-    }
-    lastdv1 = dv1;
-    lastf3 = f3;
+function pushModal(elem, handlers = elem, autoStopPropagation = true, pointerId, pointerElem = elem) {
+  if (elem._modaldata !== void 0) {
+    console.warn("UIBase.prototype.pushModal called when already in modal mode");
+    elem.popModal();
   }
-  return table;
-}
-var CurveConstructors, CURVE_VERSION, CurveFlags, TangentModes, _udigest, CurveTypeData, unitRange;
-var init_curve1d_base = __esm({
-  "scripts/path-controller/curve/curve1d_base.ts"() {
-    "use strict";
-    init_struct();
-    init_util();
-    CurveConstructors = [];
-    CURVE_VERSION = 1.1;
-    CurveFlags = {
-      SELECT: 1,
-      TRANSFORM: 2
-    };
-    TangentModes = {
-      SMOOTH: 1,
-      BREAK: 2
-    };
-    _udigest = new HashDigest();
-    CurveTypeData = class _CurveTypeData {
-      static STRUCT;
-      type;
-      parent;
-      fastmode;
-      constructor() {
-        this.type = this.constructor.define().typeName;
-        this.parent = void 0;
-        this.fastmode = false;
-        this.uidata = void 0;
-      }
-      get hasGUI() {
-        throw new Error("get hasGUI(): implement me!");
-      }
-      static register(cls) {
-        if (cls.define === _CurveTypeData.define) {
-          throw new Error("missing define() static method");
-        }
-        const def = cls.define();
-        if (!def.name) {
-          throw new Error(cls.name + ".define() result is missing 'name' field");
-        }
-        if (!def.typeName) {
-          throw new Error(
-            cls.name + ".define() is missing .typeName, which should equal class name; needed for minificaiton"
-          );
-        }
-        CurveConstructors.push(cls);
-      }
-      static define() {
-        return {
-          uiname: "Some Curve",
-          name: "somecurve",
-          typeName: "CurveTypeData"
-        };
-      }
-      calcHashKey(digest = _udigest.reset()) {
-        const d = digest;
-        d.add(this.type);
-        return d.get();
-      }
-      toJSON() {
-        return {
-          type: this.type
-        };
-      }
-      equals(b) {
-        return this.type === b.type;
-      }
-      loadJSON(obj) {
-        this.type = obj.type;
-        return this;
-      }
-      redraw() {
-        if (this.parent) this.parent.redraw();
-      }
-      makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
-      }
-      killGUI(container, canvas, g, draw_transform, extra) {
-        if (container && typeof container === "object" && "clear" in container) {
-          container.clear();
-        }
-      }
-      evaluate(s) {
-        throw new Error("implement me!");
-      }
-      integrate(s1, quadSteps = 64) {
-        let ret = 0;
-        const ds = s1 / quadSteps;
-        for (let i = 0, s = 0; i < quadSteps; i++, s += ds) {
-          ret += this.evaluate(s) * ds;
-        }
-        return ret;
-      }
-      derivative(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.evaluate(s) - this.evaluate(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.evaluate(s + df) - this.evaluate(s)) / df;
-        } else {
-          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
-        }
-      }
-      derivative2(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.derivative(s) - this.derivative(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.derivative(s + df) - this.derivative(s)) / df;
-        } else {
-          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
-        }
-      }
-      inverse(y) {
-        const steps = 9;
-        const ds = 1 / steps;
-        let s = 0;
-        let best = void 0;
-        let ret = void 0;
-        for (let i = 0; i < steps; i++, s += ds) {
-          let s1 = s;
-          let s2 = s + ds;
-          let mid = 0;
-          for (let j = 0; j < 11; j++) {
-            const y1 = this.evaluate(s1);
-            const y2 = this.evaluate(s2);
-            mid = (s1 + s2) * 0.5;
-            if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
-              s2 = mid;
-            } else {
-              s1 = mid;
-            }
-          }
-          const ymid = this.evaluate(mid);
-          if (best === void 0 || Math.abs(y - ymid) < best) {
-            best = Math.abs(y - ymid);
-            ret = mid;
-          }
-        }
-        return ret === void 0 ? 0 : ret;
-      }
-      onActive(_parent, _draw_transform) {
-      }
-      onInactive(_parent, _draw_transform) {
-      }
-      reset() {
-      }
-      destroy() {
-      }
-      update() {
-        if (this.parent) this.parent._on_change();
-      }
-      draw(canvas, g, draw_transform) {
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-      }
-    };
-    CurveTypeData.STRUCT = `
-CurveTypeData {
-  type : string;
-}
-`;
-    struct_default.register(CurveTypeData);
-    unitRange = [0, 1];
-  }
-});
-
-// scripts/path-controller/util/events.ts
-function copyMouseEvent(e) {
-  const ret = {};
-  function bind(func) {
+  const _areaWrangler = contextWrangler.copy();
+  contextWrangler.copy();
+  function bindFunc(func) {
     return function(...args) {
-      return ret._orig.apply(func, args);
+      _areaWrangler.copyTo(contextWrangler);
+      return func.apply(handlers, args);
     };
   }
-  const exclude2 = /* @__PURE__ */ new Set(["__proto__"]);
-  ret._orig = e;
-  for (const k in e) {
-    let v = e[k];
-    if (exclude2.has(k)) {
+  const handlers2 = {};
+  for (const k in handlers) {
+    const func = handlers[k];
+    if (typeof func !== "function") {
       continue;
     }
-    if (typeof v === "function") {
-      v = bind(v);
-    }
-    ret[k] = v;
+    handlers2[k] = bindFunc(func);
   }
-  ret.ctrlKey = e.ctrlKey;
-  ret.shiftKey = e.shiftKey;
-  ret.altKey = e.altKey;
-  for (let i = 0; i < 2; i++) {
-    const key = i ? "targetTouches" : "touches";
-    if (e[key]) {
-      ret[key] = [];
-      for (const t2 of e[key]) {
-        const t22 = {};
-        ret[key].push(t22);
-        for (const k in t2) {
-          t22[k] = t2[k];
-        }
+  if (pointerId !== void 0 && pointerElem) {
+    elem._modaldata = pushPointerModal(handlers2, void 0, void 0, autoStopPropagation);
+  } else {
+    elem._modaldata = pushModalLight(handlers2, autoStopPropagation);
+  }
+  return elem._modaldata;
+}
+function popModal(elem) {
+  if (elem._modaldata === void 0) {
+    console.warn("Invalid call to UIBase.prototype.popModal");
+    return;
+  }
+  popModalLight(elem._modaldata);
+  elem._modaldata = void 0;
+}
+function updateDisable(elem, val) {
+  if (!!val === !!elem.__disabledState) {
+    return;
+  }
+  elem.__disabledState = !!val;
+  if (val && !elem._disdata) {
+    const style = elem.getDefault("disabled") ?? elem.getDefault("internalDisabled") ?? {
+      "background-color": elem.getDefault("DisabledBG")
+    };
+    elem._disdata = {
+      style: {},
+      defaults: {}
+    };
+    for (const k in style) {
+      elem._disdata.style[k] = elem.saneStyle[k];
+      elem._disdata.defaults[k] = elem.default_overrides[k];
+      const v = style[k];
+      if (typeof v === "object" && v instanceof CSSFont) {
+        elem.saneStyle[k] = style[k].genCSS();
+      } else if (typeof v === "object") {
+        continue;
+      } else {
+        elem.saneStyle[k] = style[k];
+      }
+      elem.default_overrides[k] = style[k];
+    }
+    elem.__disabledState = !!val;
+    elem.on_disabled();
+  } else if (!val && elem._disdata) {
+    for (const k in elem._disdata.style) {
+      elem.saneStyle[k] = elem._disdata.style[k];
+    }
+    for (const k in elem._disdata.defaults) {
+      const v = elem._disdata.defaults[k];
+      if (v === void 0) {
+        delete elem.default_overrides[k];
+      } else {
+        elem.default_overrides[k] = v;
       }
     }
+    elem._disdata = void 0;
+    elem.__disabledState = !!val;
+    elem.on_enabled();
   }
-  return ret;
-}
-function getDom(dom, eventtype) {
-  if (eventtype.startsWith("key")) return window;
-  return dom;
-}
-function isModalHead(owner) {
-  return modalStack.length === 0 || modalStack[modalStack.length - 1] === owner;
-}
-function pushModal(dom, handlers) {
-  console.warn("Deprecated call to pathux.events.pushModal; use api in simple_events.js instead");
-  const h = new EventHandler();
-  for (const k in handlers) {
-    h[k] = handlers[k];
-  }
-  handlers.popModal = () => {
-    return h.popModal();
+  elem.__disabledState = !!val;
+  const visit = (n) => {
+    if (n instanceof UIBase) {
+      let changed = !!n.__disabledState;
+      n.__updateDisable(n.disabled);
+      changed = changed !== !!n.__disabledState;
+      if (changed) {
+        n.update();
+        n.setCSS();
+      }
+    }
   };
-  h.pushModal(dom, false);
-  return h;
+  elem._forEachChildWidget(visit);
 }
-var EventDispatcher, DomEventTypes, modalStack, EventHandler;
-var init_events = __esm({
-  "scripts/path-controller/util/events.ts"() {
+function clipboardHotkeyInit(elem) {
+  elem._clipboard_over = false;
+  elem._last_clipboard_keyevt = void 0;
+  elem._clipboard_keystart = () => {
+    if (elem._clipboard_events) {
+      return;
+    }
+    elem._clipboard_events = true;
+    window.addEventListener("keydown", elem._clipboard_keydown, {
+      capture: true,
+      passive: false
+    });
+  };
+  elem._clipboard_keyend = () => {
+    if (!elem._clipboard_events) {
+      return;
+    }
+    elem._clipboard_events = false;
+    window.removeEventListener("keydown", elem._clipboard_keydown, { capture: true });
+  };
+  elem._clipboard_keydown = (e, internal_mode) => {
+    if (!elem.isConnected || !const_default.getClipboardData) {
+      elem._clipboard_keyend();
+      return;
+    }
+    if (e === elem._last_clipboard_keyevt || !elem._clipboard_over) {
+      return;
+    }
+    const is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+    const is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+    if (!is_copy && !is_paste) {
+      return;
+    }
+    if (!internal_mode) {
+      const screen = elem.ctx.screen;
+      let picked = screen.pickElement(screen.mpos[0], screen.mpos[1]);
+      let checkTree = is_paste && elem.constructor.define().pasteForAllChildren;
+      checkTree = checkTree || is_copy && elem.constructor.define().copyForAllChildren;
+      while (checkTree && !(TextBox && picked instanceof TextBox) && picked !== elem && picked?.parentWidget) {
+        console.log("  " + picked._id);
+        picked = picked.parentWidget;
+      }
+      console.warn("COLOR", elem._id, picked ? picked._id : "none");
+      if (picked !== elem) {
+        elem._clipboard_keyend();
+        return;
+      }
+    } else {
+      console.warn("COLOR", elem._id);
+    }
+    elem._last_clipboard_keyevt = e;
+    if (is_copy) {
+      elem.clipboardCopy();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (is_paste) {
+      elem.clipboardPaste();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+  const start = () => {
+    elem._clipboard_over = true;
+    elem._clipboard_keystart();
+  };
+  const stop = () => {
+    elem._clipboard_over = false;
+    elem._clipboard_keyend();
+  };
+  elem.doOnce(() => {
+    elem.tabIndex = 0;
+  });
+  elem.addEventListener("keydown", ((e) => {
+    return elem._clipboard_keydown(e, true);
+  }));
+  elem.addEventListener("pointerover", start, { capture: true, passive: true });
+  elem.addEventListener("pointerout", stop, { capture: true, passive: true });
+  elem.addEventListener("focus", stop, { capture: true, passive: true });
+}
+var TextBox;
+var init_ui_base_modal = __esm({
+  "scripts/core/base/ui_base_modal.ts"() {
     "use strict";
+    init_area_wrangler();
     init_simple_events();
-    init_simple_events();
-    EventDispatcher = class {
-      _cbs;
-      constructor() {
-        this._cbs = {};
-      }
-      _fireEvent(type, data) {
-        let stop = false;
-        const wrapped = {
-          stopPropagation() {
-            stop = true;
-          },
-          data
-        };
-        if (type in this._cbs) {
-          for (const cb of this._cbs[type]) {
-            cb(wrapped);
-            if (stop) {
-              break;
-            }
-          }
-        }
-      }
-      on(type, cb) {
-        if (!(type in this._cbs)) {
-          this._cbs[type] = [];
-        }
-        this._cbs[type].push(cb);
-        return this;
-      }
-      off(type, cb) {
-        if (!(type in this._cbs)) {
-          console.warn("event handler not in list", type, cb);
-          return this;
-        }
-        const stack = this._cbs[type];
-        if (!stack.includes(cb)) {
-          console.warn("event handler not in list", type, cb);
-          return this;
-        }
-        stack.remove(cb);
-        return this;
-      }
-    };
-    DomEventTypes = {
-      on_mousemove: "mousemove",
-      on_mousedown: "mousedown",
-      on_mouseup: "mouseup",
-      on_touchstart: "touchstart",
-      on_touchcancel: "touchcanel",
-      on_touchmove: "touchmove",
-      on_touchend: "touchend",
-      on_mousewheel: "mousewheel",
-      on_keydown: "keydown",
-      on_keyup: "keyup",
-      on_pointerdown: "pointerdown",
-      on_pointermove: "pointermove",
-      on_pointercancel: "pointercancel",
-      on_pointerup: "pointerup"
-    };
-    modalStack = [];
-    EventHandler = class {
-      _modalstate;
-      constructor() {
-        this._modalstate = void 0;
-      }
-      pushPointerModal(dom, pointerId) {
-        if (this._modalstate) {
-          console.warn("pushPointerModal called twiced!");
-          return;
-        }
-        this._modalstate = pushPointerModal(
-          this,
-          dom,
-          pointerId
-        );
-      }
-      pushModal(_dom, _is_root) {
-        if (this._modalstate) {
-          console.warn("pushModal called twiced!");
-          return;
-        }
-        this._modalstate = pushModalLight(this);
-      }
-      popModal() {
-        if (this._modalstate !== void 0) {
-          const modalstate = this._modalstate;
-          popModalLight(
-            modalstate
-          );
-          this._modalstate = void 0;
-        }
-      }
-    };
-  }
-});
-
-// scripts/path-controller/toolsys/toolprop_abstract.ts
-var toolprop_abstract_exports = {};
-__export(toolprop_abstract_exports, {
-  Curve1DPropertyIF: () => Curve1DPropertyIF,
-  EnumPropertyIF: () => EnumPropertyIF,
-  FlagPropertyIF: () => FlagPropertyIF,
-  FloatPropertyIF: () => FloatPropertyIF,
-  IntPropertyIF: () => IntPropertyIF,
-  ListPropertyIF: () => ListPropertyIF,
-  NumPropertyIF: () => NumPropertyIF,
-  PropFlags: () => PropFlags,
-  PropSubTypes: () => PropSubTypes,
-  PropTypes: () => PropTypes,
-  StringPropertyIF: () => StringPropertyIF,
-  StringSetPropertyIF: () => StringSetPropertyIF,
-  ToolPropertyIF: () => ToolPropertyIF,
-  Vec2PropertyIF: () => Vec2PropertyIF,
-  Vec3PropertyIF: () => Vec3PropertyIF,
-  Vec4PropertyIF: () => Vec4PropertyIF
-});
-var PropTypes, PropSubTypes, PropFlags, ToolPropertyIF, StringPropertyIF, NumPropertyIF, IntPropertyIF, FloatPropertyIF, EnumPropertyIF, FlagPropertyIF, Vec2PropertyIF, Vec3PropertyIF, Vec4PropertyIF, ListPropertyIF, StringSetPropertyIF, Curve1DPropertyIF;
-var init_toolprop_abstract = __esm({
-  "scripts/path-controller/toolsys/toolprop_abstract.ts"() {
-    "use strict";
-    PropTypes = {
-      INT: 1,
-      STRING: 2,
-      BOOL: 4,
-      ENUM: 8,
-      FLAG: 16,
-      FLOAT: 32,
-      VEC2: 64,
-      VEC3: 128,
-      VEC4: 256,
-      MATRIX4: 512,
-      QUAT: 1024,
-      PROPLIST: 4096,
-      STRSET: 8192,
-      CURVE: 16384,
-      FLOAT_ARRAY: 32768,
-      REPORT: 65536,
-      ARRAY_BUFFER: 65536 << 1
-      //ITER : 8192<<1
-    };
-    PropSubTypes = {
-      COLOR: 1
-    };
-    PropFlags = {
-      SELECT: 1,
-      PRIVATE: 2,
-      LABEL: 4,
-      USE_ICONS: 64,
-      USE_CUSTOM_GETSET: 128,
-      //used by controller.js interface
-      SAVE_LAST_VALUE: 256,
-      READ_ONLY: 512,
-      SIMPLE_SLIDER: 1 << 10,
-      FORCE_ROLLER_SLIDER: 1 << 11,
-      USE_BASE_UNDO: 1 << 12,
-      //internal to simple_controller.js
-      EDIT_AS_BASE_UNIT: 1 << 13,
-      //user textbox input should be interpreted in display unit
-      NO_UNDO: 1 << 14,
-      USE_CUSTOM_PROP_GETTER: 1 << 15,
-      //hrm, not sure I need this
-      FORCE_ENUM_CHECKBOXES: 1 << 16,
-      NO_DEFAULT: 1 << 17
-    };
-    ToolPropertyIF = class {
-      subtype;
-      apiname;
-      uiname;
-      description;
-      flag;
-      icon;
-      constructor(type, subtype, apiname, uiname, description, flag, icon) {
-        if (type === void 0) {
-          type = this.constructor.PROP_TYPE_ID;
-        }
-        this.data = void 0;
-        this.type = type;
-        this.subtype = subtype;
-        this.apiname = apiname;
-        this.uiname = uiname;
-        this.description = description;
-        this.flag = flag;
-        this.icon = icon;
-      }
-      equals(b) {
-        throw new Error("implement me");
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-      _fire(type, arg1, arg2) {
-      }
-      on(type, cb) {
-      }
-      off(type, cb) {
-      }
-      getValue() {
-        return void 0;
-      }
-      setValue(val) {
-      }
-      setStep(step) {
-      }
-      setRange(min, max) {
-      }
-      setUnit(unit) {
-      }
-      //some clients have seperate ui range
-      setUIRange(min, max) {
-      }
-      setIcon(icon) {
-      }
-    };
-    StringPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.STRING);
-      }
-    };
-    NumPropertyIF = class extends ToolPropertyIF {
-    };
-    IntPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.INT);
-      }
-      setRadix(radix) {
-        throw new Error("implement me");
-      }
-    };
-    FloatPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.FLOAT);
-      }
-      setDecimalPlaces(n) {
-      }
-    };
-    EnumPropertyIF = class extends ToolPropertyIF {
-      values;
-      keys;
-      ui_value_names;
-      iconmap;
-      constructor(value, valid_values) {
-        super(PropTypes.ENUM);
-        this.values = {};
-        this.keys = {};
-        this.ui_value_names = {};
-        this.iconmap = {};
-        if (valid_values === void 0) return;
-        if (valid_values instanceof Array || valid_values instanceof String) {
-          for (let i = 0; i < valid_values.length; i++) {
-            this.values[valid_values[i]] = valid_values[i];
-            this.keys[valid_values[i]] = valid_values[i];
-          }
-        } else {
-          for (const k in valid_values) {
-            this.values[k] = valid_values[k];
-            this.keys[valid_values[k]] = k;
-          }
-        }
-        for (const k in this.values) {
-          let uin = k[0].toUpperCase() + k.slice(1, k.length);
-          uin = uin.replace(/\_/g, " ");
-          this.ui_value_names[k] = uin;
-        }
-      }
-      addIcons(iconmap) {
-        if (this.iconmap === void 0) {
-          this.iconmap = {};
-        }
-        for (const k in iconmap) {
-          this.iconmap[k] = iconmap[k];
-        }
-      }
-    };
-    FlagPropertyIF = class extends EnumPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.FLAG);
-      }
-    };
-    Vec2PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC2);
-      }
-    };
-    Vec3PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC3);
-      }
-    };
-    Vec4PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC4);
-      }
-    };
-    ListPropertyIF = class extends ToolPropertyIF {
-      /*
-       * Prop must be a ToolProperty subclass instance
-       * */
-      prop;
-      constructor(prop) {
-        super(PropTypes.PROPLIST);
-        this.prop = prop;
-      }
-      get length() {
-        return 0;
-      }
-      set length(val) {
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-      /**
-       * clear list
-       * */
-      clear() {
-      }
-      push(item = this.prop.copy()) {
-      }
-      [Symbol.iterator]() {
-        return [][Symbol.iterator]();
-      }
-    };
-    StringSetPropertyIF = class extends ToolPropertyIF {
-      constructor(value, definition = []) {
-        super(PropTypes.STRSET);
-      }
-      /*
-       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
-       * If destructive is true, then existing set will be cleared.
-       * */
-      setValue(values, destructive = true, soft_fail = true) {
-      }
-      getValue() {
-        return void 0;
-      }
-      addIcons(iconmap) {
-      }
-      addUINames(map3) {
-      }
-      addDescriptions(map3) {
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-    };
-    Curve1DPropertyIF = class extends ToolPropertyIF {
-      constructor(curve, uiname) {
-        super(PropTypes.CURVE);
-        this.data = curve;
-      }
-      getValue() {
-        return this.data;
-      }
-      setValue(curve) {
-        if (curve === void 0) {
-          return;
-        }
-        const json = JSON.parse(JSON.stringify(curve));
-        this.data.load(json);
-      }
-      copyTo(b) {
-        b.setValue(this.data);
-      }
-    };
+    init_const();
+    init_cssfont();
+    init_ui_base();
+    TextBox = void 0;
   }
 });
 
@@ -12881,6 +13905,1201 @@ var init_units2 = __esm({
   "scripts/core/units.ts"() {
     "use strict";
     init_units();
+  }
+});
+
+// scripts/core/tagReRegister.ts
+var ExternalTagManager, tagManager;
+var init_tagReRegister = __esm({
+  "scripts/core/tagReRegister.ts"() {
+    "use strict";
+    ExternalTagManager = class extends Map {
+      constructor() {
+        super();
+      }
+      replaceTag(tag) {
+        if (this.has(tag)) {
+          const tag2 = this.get(tag);
+          let i = 0;
+          if (tag2.endsWith("-r")) {
+            const parts = tag2.split("-");
+            i = parseInt(parts.at(-2)) + 1;
+          }
+          const tag3 = `${tag}-${i}-r`;
+          this.set(tag, tag3);
+          return tag3;
+        }
+        this.set(tag, tag);
+        return tag;
+      }
+    };
+    tagManager = new ExternalTagManager();
+  }
+});
+
+// scripts/core/base/ui_element_registry.ts
+function calcElemCBKey(elem, type, options) {
+  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
+}
+function setTagPrefix(prefix2) {
+  if (registered_has_happened) {
+    throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
+  }
+  tagPrefix = "" + prefix2;
+}
+function getTagPrefix() {
+  return tagPrefix;
+}
+function prefix(name2) {
+  return tagPrefix + name2;
+}
+function registerInternal(cls, prefixedTag) {
+  const clsAny = cls;
+  clsAny[ClassIdSymbol] = class_idgen++;
+  registered_has_happened = true;
+  internalElementNames[cls.define().tagname] = prefixedTag;
+  customElements.define(prefixedTag, cls);
+}
+function getInternalName(name2) {
+  return internalElementNames[name2];
+}
+function createElement(name2, internal = false) {
+  const mappedTag = tagManager.get(name2);
+  if (mappedTag !== void 0) {
+    return document.createElement(mappedTag);
+  } else if (!internal && name2 in externalElementNames) {
+    return document.createElement(name2);
+  } else if (name2 in internalElementNames) {
+    return document.createElement(internalElementNames[name2]);
+  } else {
+    return document.createElement(name2);
+  }
+}
+function isRegistered2(cls) {
+  return customElements.get(cls.define().tagname) === cls;
+}
+function registerElement(cls) {
+  registered_has_happened = true;
+  const clsAny = cls;
+  clsAny[ClassIdSymbol] = class_idgen++;
+  const def = cls.define();
+  if (typeof customElements?.get === "undefined") {
+    return;
+  }
+  if (customElements.get(def.tagname) === cls) {
+    return;
+  }
+  const tagName = tagManager.replaceTag(def.tagname);
+  ElementClasses.push(cls);
+  externalElementNames[tagName] = tagName;
+  customElements.define(tagName, cls);
+}
+function getRegisteredTagNames() {
+  const names = new Set(Object.keys(internalElementNames));
+  for (const cls of ElementClasses) {
+    try {
+      names.add(cls.define().tagname);
+    } catch {
+    }
+  }
+  return [...names].sort();
+}
+function report(...args) {
+  if (time_ms() - _last_report > 350) {
+    console.warn(...args);
+    _last_report = time_ms();
+  }
+}
+function getDefault(key, elem) {
+  console.warn("Deprecated call to ui_base.js:getDefault");
+  const base = theme.base;
+  if (key in base) {
+    return base[key];
+  } else {
+    throw new Error("Unknown default " + key);
+  }
+}
+function IsMobile() {
+  console.warn("ui_base.IsMobile is deprecated; use util.isMobile instead");
+  return isMobile();
+}
+var ElementClasses, dpistack, UIFlags, registered_has_happened, tagPrefix, class_idgen, internalElementNames, externalElementNames, EventCBSymbol, _last_report, keys, marginPaddingCSSKeys;
+var init_ui_element_registry = __esm({
+  "scripts/core/base/ui_element_registry.ts"() {
+    "use strict";
+    init_util();
+    init_ui_theme();
+    init_ui_consts();
+    init_tagReRegister();
+    ElementClasses = [];
+    dpistack = [];
+    UIFlags = {};
+    registered_has_happened = false;
+    tagPrefix = "";
+    class_idgen = 1;
+    internalElementNames = {};
+    externalElementNames = {};
+    EventCBSymbol = /* @__PURE__ */ Symbol("wrapped event callback");
+    if (typeof document !== "undefined") {
+      const prefixElem = document.getElementById("pathux-tag-prefix");
+      if (prefixElem) {
+        console.log("Found pathux-tag-prefix element");
+        const prefixText = prefixElem.innerText.trim();
+        setTagPrefix(prefixText);
+      }
+    }
+    _last_report = time_ms();
+    keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
+    keys = keys.concat(["padding-block-start", "padding-block-end"]);
+    keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
+    keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
+    marginPaddingCSSKeys = keys;
+  }
+});
+
+// scripts/core/base/ui_base_theme_lookup.ts
+function _doMobileDefault(elem, key, val, obj) {
+  if (!isMobile()) {
+    return val;
+  }
+  const mobilekey = key + "_mobile";
+  if (obj && mobilekey in obj) {
+    return obj[mobilekey];
+  }
+  key = key.toLowerCase();
+  let ok = false;
+  for (const re of _mobile_theme_patterns) {
+    if (key.search(re) >= 0) {
+      ok = true;
+      break;
+    }
+  }
+  if (ok && theme.base.mobileSizeMultiplier) {
+    val = val * theme.base.mobileSizeMultiplier;
+  }
+  return val;
+}
+function hasDefault(elem, key) {
+  let p = elem;
+  while (p) {
+    if (key in p.default_overrides) {
+      return true;
+    }
+    p = p.parentWidget;
+  }
+  return elem.hasClassDefault(key);
+}
+function hasSubDefault(elem, key, subkey) {
+  return elem._hasSubDefault(key, subkey, theme) || !!(elem._themeOverride && elem._hasSubDefault(key, subkey, elem._themeOverride));
+}
+function _hasSubDefault(elem, key, subkey, _themeDef) {
+  const obj = elem.getDefault(key);
+  if (!obj || typeof obj !== "object") {
+    return false;
+  }
+  return subkey in obj;
+}
+function hasClassSubDefault(elem, key, subkey, inherit3 = true) {
+  return elem._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(elem._themeOverride && elem._hasClassSubDefault(key, subkey, inherit3, void 0, elem._themeOverride));
+}
+function _hasClassSubDefault(elem, key, subkey, inherit3 = true, style = elem.getStyleClass(), themeDef) {
+  if (!themeDef) return false;
+  const th = themeDef[style];
+  if (inherit3) {
+    if (elem._hasClassSubDefault(key, subkey, false, style, themeDef)) {
+      return true;
+    }
+    let ret = false;
+    const def = elem.constructor.define();
+    if (def.parentStyle) {
+      ret = ret || elem._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
+    }
+    ret = ret || elem._hasClassSubDefault(key, subkey, false, "base", themeDef);
+    return ret;
+  }
+  if (!th) {
+    return false;
+  }
+  const obj = th[key];
+  if (!obj || typeof obj !== "object") {
+    return false;
+  }
+  return subkey in obj;
+}
+function getSubDefault(elem, key, subkey, backupkey = subkey, defaultval, inherit3 = true) {
+  if (!key) {
+    return elem.getDefault(subkey, void 0, defaultval, inherit3);
+  }
+  const style = elem.getDefault(key, void 0, void 0, inherit3);
+  if (!style || typeof style !== "object" || !(subkey in style)) {
+    if (defaultval !== void 0) {
+      return defaultval;
+    } else if (backupkey) {
+      return elem.getDefault(backupkey, void 0, void 0, inherit3);
+    }
+  }
+  return style[subkey];
+}
+function getDefault2(elem, key, checkForMobile, defaultval, inherit3) {
+  const ret = elem.getDefault_intern(key, checkForMobile, defaultval, inherit3);
+  if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
+    let s = ret.trim().toLowerCase();
+    s = s.slice(0, s.length - 2).trim();
+    const f2 = parseFloat(s);
+    if (!isNaN(f2) && isFinite(f2)) {
+      return f2;
+    }
+  }
+  return ret;
+}
+function getDefault_intern(elem, key, checkForMobile = true, defaultval, inherit3 = true) {
+  if (elem.my_default_overrides[key] !== void 0) {
+    const v = elem.my_default_overrides[key];
+    return checkForMobile ? elem._doMobileDefault(key, v, elem.my_default_overrides) : v;
+  }
+  let p = elem;
+  while (p) {
+    if (p.default_overrides[key] !== void 0) {
+      const v = p.default_overrides[key];
+      return checkForMobile ? elem._doMobileDefault(key, v, p.default_overrides) : v;
+    }
+    p = p.parentWidget;
+  }
+  return elem.getClassDefault(key, checkForMobile, defaultval, inherit3);
+}
+function walkStyleChain(cls) {
+  let p = cls;
+  const lastp = void 0;
+  while (p && p !== lastp && p !== UIBase && p !== Object) {
+    const def = p.define();
+    if (def?.style) {
+      return def.style;
+    }
+    if (!p.prototype || !Object.getPrototypeOf(p.prototype)) break;
+    p = Object.getPrototypeOf(p.prototype).constructor;
+  }
+  return void 0;
+}
+function getStyleClass(elem, ignoreOverride = false) {
+  if (!ignoreOverride && elem._override_class !== void 0) {
+    return elem._override_class;
+  }
+  return walkStyleChain(elem.constructor) ?? "base";
+}
+function getStyleRecord(elem, styleClass, key, inherit3 = true) {
+  let result;
+  const chunks = styleClass.split(".");
+  if (chunks.length === 0) {
+    return void 0;
+  }
+  const chunk1 = chunks[0];
+  function testKey(obj) {
+    if (key === void 0 || obj === void 0) {
+      return true;
+    }
+    for (let i = 1; i < chunks.length; i++) {
+      obj = obj[chunks[i]];
+      if (typeof obj !== "object") {
+        return false;
+      }
+    }
+    return key in obj;
+  }
+  let p = elem;
+  while (p) {
+    const def1 = p.class_default_overrides[chunk1];
+    if (def1 && testKey(def1)) {
+      result = def1;
+    }
+    const def2 = p.class_default_overrides[styleClass];
+    if (def2 && (key === void 0 || key in def2)) {
+      result = def2;
+    }
+    if (def1 !== def2 && def1 !== void 0 && def2 !== void 0) {
+      console.warn(
+        'You defined a class override both as a "key1.key2" value and a nested object, e.g. "key1: {key2: {}}"',
+        'The former (e.g. the one with class key "key1.key2") will be used'
+      );
+      result = def2;
+      break;
+    } else if (def1 !== void 0) {
+      result = def1;
+      break;
+    } else if (def2 !== void 0) {
+      return def2;
+    }
+    if (!inherit3) {
+      break;
+    }
+    p = p.parentWidget;
+  }
+  if (result === void 0) {
+    const th = elem._themeOverride;
+    if (th && typeof th[chunk1] === "object" && testKey(th[chunk1])) {
+      result = th[chunk1];
+    }
+    if (typeof theme[chunk1] === "object" && testKey(theme[chunk1])) {
+      result = theme[chunk1];
+    }
+  }
+  if (result !== void 0) {
+    for (let i = 1; i < chunks.length; i++) {
+      if (typeof result[chunks[i]] !== "object") {
+        console.warn("Invalid style class key", styleClass, "starting from base", result);
+        return void 0;
+      }
+      result = result[chunks[i]];
+    }
+  }
+  return result;
+}
+function hasClassDefault(elem, key) {
+  const style = elem.getStyleClass();
+  const record = getStyleRecord(elem, style, key);
+  return record !== void 0 && key in record;
+}
+function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit3 = true) {
+  const style = elem.getStyleClass();
+  if (style === "none") {
+    return void 0;
+  }
+  let record = getStyleRecord(elem, style, key, inherit3);
+  let value = record ? record[key] : void 0;
+  if (value === void 0 && defaultval !== void 0) {
+    return defaultval;
+  } else if (value === void 0 && inherit3) {
+    if (elem._override_class !== void 0) {
+      const record2 = getStyleRecord(elem, elem.getStyleClass(true), key, inherit3);
+      value = record2 ? record2[key] : void 0;
+      if (value !== void 0) {
+        record = record2;
+      }
+    }
+    const def = elem.constructor.define();
+    if (value === void 0 && def.parentStyle) {
+      const record2 = getStyleRecord(elem, def.parentStyle, key, inherit3);
+      value = record2 ? record2[key] : void 0;
+      if (value !== void 0) {
+        record = record2;
+      }
+    }
+  }
+  if (value === void 0) {
+    for (let i = 0; i < 2; i++) {
+      const th = i ? elem._themeOverride : theme;
+      if (typeof th?.base === "object" && key in th.base) {
+        value = th.base[key];
+        record = th.base;
+        break;
+      }
+    }
+  }
+  return checkForMobile ? elem._doMobileDefault(key, value, record) : value;
+}
+function overrideTheme(elem, themeOverride) {
+  elem._themeOverride = themeOverride;
+  elem._forEachChildWidget((child) => {
+    child.overrideTheme(themeOverride);
+  });
+  if (elem.ctx) {
+    elem.flushSetCSS();
+    elem.flushUpdate();
+  }
+}
+var _mobile_theme_patterns;
+var init_ui_base_theme_lookup = __esm({
+  "scripts/core/base/ui_base_theme_lookup.ts"() {
+    "use strict";
+    init_util();
+    init_ui_theme();
+    init_ui_base();
+    _mobile_theme_patterns = [
+      /.*width.*/,
+      /.*height.*/,
+      /.*size.*/,
+      /.*margin.*/,
+      /.*pad/,
+      /.*radius.*/
+    ];
+  }
+});
+
+// scripts/core/base/ui_base_tooltips.ts
+function abortToolTips(elem, delayMs = 500) {
+  if (elem._has_own_tooltips) {
+    elem._has_own_tooltips.stop_timer();
+  }
+  if (elem._tooltip_ref) {
+    elem._tooltip_ref.remove();
+    elem._tooltip_ref = void 0;
+  }
+  elem._tool_tip_abort_delay = time_ms() + delayMs;
+  return elem;
+}
+function updateToolTipHandlers(elem) {
+  if (!elem._useNativeToolTips_set && !const_default.useNativeToolTips !== !elem._useNativeToolTips) {
+    elem._useNativeToolTips = const_default.useNativeToolTips;
+  }
+  if (!!elem.useNativeToolTips === !elem._has_own_tooltips) {
+    return;
+  }
+  if (!elem.useNativeToolTips) {
+    const state = elem._has_own_tooltips = {
+      start_timer: () => {
+        elem._tooltip_timer = time_ms();
+      },
+      stop_timer: () => {
+        elem._tooltip_timer = void 0;
+      },
+      reset_timer: () => {
+        if (elem._tooltip_timer !== void 0) {
+          elem._tooltip_timer = time_ms();
+        }
+      },
+      start_events: ["mouseover"],
+      reset_events: [
+        "mousemove",
+        "mousedown",
+        "mouseup",
+        "touchstart",
+        "touchend",
+        "keydown",
+        "focus"
+      ],
+      stop_events: ["mouseleave", "blur", "mouseout"],
+      handlers: {}
+    };
+    const bind_handler = (type, etype) => {
+      const handler = (e) => {
+        if (elem._tool_tip_abort_delay !== void 0 && time_ms() < elem._tool_tip_abort_delay) {
+          elem._tooltip_timer = void 0;
+          return;
+        }
+        state[type](e);
+      };
+      if (etype in state.handlers) {
+        console.error(type, "is in handlers already");
+        return state.handlers[etype];
+      }
+      state.handlers[etype] = handler;
+      return handler;
+    };
+    let i = 0;
+    const lists = [state.start_events, state.stop_events, state.reset_events];
+    for (const type of ["start_timer", "stop_timer", "reset_timer"]) {
+      for (const etype of lists[i]) {
+        elem.addEventListener(etype, bind_handler(type, etype), { passive: true });
+      }
+      i++;
+    }
+  } else {
+    console.warn(elem.id, "removing tooltip handlers");
+    const state = elem._has_own_tooltips;
+    for (const k in state.handlers) {
+      const handler = state.handlers[k];
+      elem.removeEventListener(k, handler);
+    }
+    elem._has_own_tooltips = void 0;
+    elem._tooltip_timer = void 0;
+  }
+}
+function updateToolTips(elem) {
+  if (elem._description_final === void 0 || elem._description_final === null || elem._description_final.trim().length === 0) {
+    return;
+  }
+  if (!elem.ctx || !elem.ctx.screen) {
+    return;
+  }
+  elem.updateToolTipHandlers();
+  if (elem.useNativeToolTips || elem._tooltip_timer === void 0) {
+    return;
+  }
+  if (elem._tool_tip_abort_delay !== void 0 && time_ms() < elem._tool_tip_abort_delay) {
+    return;
+  }
+  elem._tool_tip_abort_delay = void 0;
+  const screen = elem.ctx.screen;
+  const timelimit = 500;
+  let ok = time_ms() - elem._tooltip_timer > timelimit;
+  const x = screen.mpos[0];
+  const y = screen.mpos[1];
+  const rects = elem.getClientRects();
+  const r = rects ? rects[0] : void 0;
+  if (!r) {
+    ok = false;
+  } else {
+    ok = ok && x >= r.x && x < r.x + r.width;
+    ok = ok && y >= r.y && y < r.y + r.height;
+  }
+  ok = ok && !haveModal();
+  ok = ok && screen.pickElement(x, y) === elem;
+  ok = ok && !!elem._description_final;
+  if (ok) {
+    const _ToolTip = window._ToolTip;
+    elem._tooltip_ref = _ToolTip.show(elem._description_final, elem.ctx.screen, x, y);
+  } else {
+    if (elem._tooltip_ref) {
+      elem._tooltip_ref.remove();
+    }
+    elem._tooltip_ref = void 0;
+  }
+  if (time_ms() - elem._tooltip_timer > timelimit) {
+    elem._tooltip_timer = void 0;
+  }
+}
+var init_ui_base_tooltips = __esm({
+  "scripts/core/base/ui_base_tooltips.ts"() {
+    "use strict";
+    init_util();
+    init_const();
+    init_simple_events();
+  }
+});
+
+// scripts/path-controller/curve/curve1d_base.ts
+function getCurve(type, throw_on_error = true) {
+  for (const cls of CurveConstructors) {
+    if (cls.name === type) return cls;
+    if (cls.define().name === type) return cls;
+  }
+  if (throw_on_error) {
+    throw new Error("Unknown curve type " + type);
+  } else {
+    console.warn("Unknown curve type", type);
+    return getCurve("ease");
+  }
+}
+function evalHermiteTable(table, t2, range = unitRange) {
+  t2 = (t2 - range[0]) / (range[1] - range[0]);
+  let s = t2 * (table.length / 4);
+  let i = Math.floor(s);
+  s -= i;
+  i *= 4;
+  const a2 = table[i] + (table[i + 1] - table[i]) * s;
+  const b = table[i + 2] + (table[i + 3] - table[i + 2]) * s;
+  return a2 + (b - a2) * s;
+}
+function genHermiteTable(evaluate, steps, range = [0, 1]) {
+  const table = new Array(steps);
+  const [min, max] = range;
+  const eps = 1e-4;
+  const dt = (max - min - eps * 4.001) / (steps - 1);
+  let t2 = min + eps * 4;
+  let lastdv1 = 0;
+  let lastf3 = 0;
+  for (let j = 0; j < steps; j++, t2 += dt) {
+    const f2 = evaluate(t2 - eps);
+    const f3 = evaluate(t2);
+    const f4 = evaluate(t2 + eps);
+    let dv1 = (f4 - f2) / (eps * 2);
+    dv1 /= steps;
+    if (j > 0) {
+      const j2 = j - 1;
+      table[j2 * 4] = lastf3;
+      table[j2 * 4 + 1] = lastf3 + lastdv1 / 3;
+      table[j2 * 4 + 2] = f3 - dv1 / 3;
+      table[j2 * 4 + 3] = f3;
+    }
+    lastdv1 = dv1;
+    lastf3 = f3;
+  }
+  return table;
+}
+var CurveConstructors, CURVE_VERSION, CurveFlags, TangentModes, _udigest, CurveTypeData, unitRange;
+var init_curve1d_base = __esm({
+  "scripts/path-controller/curve/curve1d_base.ts"() {
+    "use strict";
+    init_struct();
+    init_util();
+    CurveConstructors = [];
+    CURVE_VERSION = 1.1;
+    CurveFlags = {
+      SELECT: 1,
+      TRANSFORM: 2
+    };
+    TangentModes = {
+      SMOOTH: 1,
+      BREAK: 2
+    };
+    _udigest = new HashDigest();
+    CurveTypeData = class _CurveTypeData {
+      static STRUCT;
+      type;
+      parent;
+      fastmode;
+      constructor() {
+        this.type = this.constructor.define().typeName;
+        this.parent = void 0;
+        this.fastmode = false;
+        this.uidata = void 0;
+      }
+      get hasGUI() {
+        throw new Error("get hasGUI(): implement me!");
+      }
+      static register(cls) {
+        if (cls.define === _CurveTypeData.define) {
+          throw new Error("missing define() static method");
+        }
+        const def = cls.define();
+        if (!def.name) {
+          throw new Error(cls.name + ".define() result is missing 'name' field");
+        }
+        if (!def.typeName) {
+          throw new Error(
+            cls.name + ".define() is missing .typeName, which should equal class name; needed for minificaiton"
+          );
+        }
+        CurveConstructors.push(cls);
+      }
+      static define() {
+        return {
+          uiname: "Some Curve",
+          name: "somecurve",
+          typeName: "CurveTypeData"
+        };
+      }
+      calcHashKey(digest = _udigest.reset()) {
+        const d = digest;
+        d.add(this.type);
+        return d.get();
+      }
+      toJSON() {
+        return {
+          type: this.type
+        };
+      }
+      equals(b) {
+        return this.type === b.type;
+      }
+      loadJSON(obj) {
+        this.type = obj.type;
+        return this;
+      }
+      redraw() {
+        if (this.parent) this.parent.redraw();
+      }
+      makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
+      }
+      killGUI(container, canvas, g, draw_transform, extra) {
+        if (container && typeof container === "object" && "clear" in container) {
+          container.clear();
+        }
+      }
+      evaluate(s) {
+        throw new Error("implement me!");
+      }
+      integrate(s1, quadSteps = 64) {
+        let ret = 0;
+        const ds = s1 / quadSteps;
+        for (let i = 0, s = 0; i < quadSteps; i++, s += ds) {
+          ret += this.evaluate(s) * ds;
+        }
+        return ret;
+      }
+      derivative(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.evaluate(s) - this.evaluate(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.evaluate(s + df) - this.evaluate(s)) / df;
+        } else {
+          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
+        }
+      }
+      derivative2(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.derivative(s) - this.derivative(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.derivative(s + df) - this.derivative(s)) / df;
+        } else {
+          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
+        }
+      }
+      inverse(y) {
+        const steps = 9;
+        const ds = 1 / steps;
+        let s = 0;
+        let best = void 0;
+        let ret = void 0;
+        for (let i = 0; i < steps; i++, s += ds) {
+          let s1 = s;
+          let s2 = s + ds;
+          let mid = 0;
+          for (let j = 0; j < 11; j++) {
+            const y1 = this.evaluate(s1);
+            const y2 = this.evaluate(s2);
+            mid = (s1 + s2) * 0.5;
+            if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
+              s2 = mid;
+            } else {
+              s1 = mid;
+            }
+          }
+          const ymid = this.evaluate(mid);
+          if (best === void 0 || Math.abs(y - ymid) < best) {
+            best = Math.abs(y - ymid);
+            ret = mid;
+          }
+        }
+        return ret === void 0 ? 0 : ret;
+      }
+      onActive(_parent, _draw_transform) {
+      }
+      onInactive(_parent, _draw_transform) {
+      }
+      reset() {
+      }
+      destroy() {
+      }
+      update() {
+        if (this.parent) this.parent._on_change();
+      }
+      draw(canvas, g, draw_transform) {
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+      }
+    };
+    CurveTypeData.STRUCT = `
+CurveTypeData {
+  type : string;
+}
+`;
+    struct_default.register(CurveTypeData);
+    unitRange = [0, 1];
+  }
+});
+
+// scripts/path-controller/util/events.ts
+function copyMouseEvent(e) {
+  const ret = {};
+  function bind(func) {
+    return function(...args) {
+      return ret._orig.apply(func, args);
+    };
+  }
+  const exclude2 = /* @__PURE__ */ new Set(["__proto__"]);
+  ret._orig = e;
+  for (const k in e) {
+    let v = e[k];
+    if (exclude2.has(k)) {
+      continue;
+    }
+    if (typeof v === "function") {
+      v = bind(v);
+    }
+    ret[k] = v;
+  }
+  ret.ctrlKey = e.ctrlKey;
+  ret.shiftKey = e.shiftKey;
+  ret.altKey = e.altKey;
+  for (let i = 0; i < 2; i++) {
+    const key = i ? "targetTouches" : "touches";
+    if (e[key]) {
+      ret[key] = [];
+      for (const t2 of e[key]) {
+        const t22 = {};
+        ret[key].push(t22);
+        for (const k in t2) {
+          t22[k] = t2[k];
+        }
+      }
+    }
+  }
+  return ret;
+}
+function getDom(dom, eventtype) {
+  if (eventtype.startsWith("key")) return window;
+  return dom;
+}
+function isModalHead(owner) {
+  return modalStack.length === 0 || modalStack[modalStack.length - 1] === owner;
+}
+function pushModal2(dom, handlers) {
+  console.warn("Deprecated call to pathux.events.pushModal; use api in simple_events.js instead");
+  const h = new EventHandler();
+  for (const k in handlers) {
+    h[k] = handlers[k];
+  }
+  handlers.popModal = () => {
+    return h.popModal();
+  };
+  h.pushModal(dom, false);
+  return h;
+}
+var EventDispatcher, DomEventTypes, modalStack, EventHandler;
+var init_events = __esm({
+  "scripts/path-controller/util/events.ts"() {
+    "use strict";
+    init_simple_events();
+    init_simple_events();
+    EventDispatcher = class {
+      _cbs;
+      constructor() {
+        this._cbs = {};
+      }
+      _fireEvent(type, data) {
+        let stop = false;
+        const wrapped = {
+          stopPropagation() {
+            stop = true;
+          },
+          data
+        };
+        if (type in this._cbs) {
+          for (const cb of this._cbs[type]) {
+            cb(wrapped);
+            if (stop) {
+              break;
+            }
+          }
+        }
+      }
+      on(type, cb) {
+        if (!(type in this._cbs)) {
+          this._cbs[type] = [];
+        }
+        this._cbs[type].push(cb);
+        return this;
+      }
+      off(type, cb) {
+        if (!(type in this._cbs)) {
+          console.warn("event handler not in list", type, cb);
+          return this;
+        }
+        const stack = this._cbs[type];
+        if (!stack.includes(cb)) {
+          console.warn("event handler not in list", type, cb);
+          return this;
+        }
+        stack.remove(cb);
+        return this;
+      }
+    };
+    DomEventTypes = {
+      on_mousemove: "mousemove",
+      on_mousedown: "mousedown",
+      on_mouseup: "mouseup",
+      on_touchstart: "touchstart",
+      on_touchcancel: "touchcanel",
+      on_touchmove: "touchmove",
+      on_touchend: "touchend",
+      on_mousewheel: "mousewheel",
+      on_keydown: "keydown",
+      on_keyup: "keyup",
+      on_pointerdown: "pointerdown",
+      on_pointermove: "pointermove",
+      on_pointercancel: "pointercancel",
+      on_pointerup: "pointerup"
+    };
+    modalStack = [];
+    EventHandler = class {
+      _modalstate;
+      constructor() {
+        this._modalstate = void 0;
+      }
+      pushPointerModal(dom, pointerId) {
+        if (this._modalstate) {
+          console.warn("pushPointerModal called twiced!");
+          return;
+        }
+        this._modalstate = pushPointerModal(
+          this,
+          dom,
+          pointerId
+        );
+      }
+      pushModal(_dom, _is_root) {
+        if (this._modalstate) {
+          console.warn("pushModal called twiced!");
+          return;
+        }
+        this._modalstate = pushModalLight(this);
+      }
+      popModal() {
+        if (this._modalstate !== void 0) {
+          const modalstate = this._modalstate;
+          popModalLight(
+            modalstate
+          );
+          this._modalstate = void 0;
+        }
+      }
+    };
+  }
+});
+
+// scripts/path-controller/toolsys/toolprop_abstract.ts
+var toolprop_abstract_exports = {};
+__export(toolprop_abstract_exports, {
+  Curve1DPropertyIF: () => Curve1DPropertyIF,
+  EnumPropertyIF: () => EnumPropertyIF,
+  FlagPropertyIF: () => FlagPropertyIF,
+  FloatPropertyIF: () => FloatPropertyIF,
+  IntPropertyIF: () => IntPropertyIF,
+  ListPropertyIF: () => ListPropertyIF,
+  NumPropertyIF: () => NumPropertyIF,
+  PropFlags: () => PropFlags,
+  PropSubTypes: () => PropSubTypes,
+  PropTypes: () => PropTypes,
+  StringPropertyIF: () => StringPropertyIF,
+  StringSetPropertyIF: () => StringSetPropertyIF,
+  ToolPropertyIF: () => ToolPropertyIF,
+  Vec2PropertyIF: () => Vec2PropertyIF,
+  Vec3PropertyIF: () => Vec3PropertyIF,
+  Vec4PropertyIF: () => Vec4PropertyIF
+});
+var PropTypes, PropSubTypes, PropFlags, ToolPropertyIF, StringPropertyIF, NumPropertyIF, IntPropertyIF, FloatPropertyIF, EnumPropertyIF, FlagPropertyIF, Vec2PropertyIF, Vec3PropertyIF, Vec4PropertyIF, ListPropertyIF, StringSetPropertyIF, Curve1DPropertyIF;
+var init_toolprop_abstract = __esm({
+  "scripts/path-controller/toolsys/toolprop_abstract.ts"() {
+    "use strict";
+    PropTypes = {
+      INT: 1,
+      STRING: 2,
+      BOOL: 4,
+      ENUM: 8,
+      FLAG: 16,
+      FLOAT: 32,
+      VEC2: 64,
+      VEC3: 128,
+      VEC4: 256,
+      MATRIX4: 512,
+      QUAT: 1024,
+      PROPLIST: 4096,
+      STRSET: 8192,
+      CURVE: 16384,
+      FLOAT_ARRAY: 32768,
+      REPORT: 65536,
+      ARRAY_BUFFER: 65536 << 1
+      //ITER : 8192<<1
+    };
+    PropSubTypes = {
+      COLOR: 1
+    };
+    PropFlags = {
+      SELECT: 1,
+      PRIVATE: 2,
+      LABEL: 4,
+      USE_ICONS: 64,
+      USE_CUSTOM_GETSET: 128,
+      //used by controller.js interface
+      SAVE_LAST_VALUE: 256,
+      READ_ONLY: 512,
+      SIMPLE_SLIDER: 1 << 10,
+      FORCE_ROLLER_SLIDER: 1 << 11,
+      USE_BASE_UNDO: 1 << 12,
+      //internal to simple_controller.js
+      EDIT_AS_BASE_UNIT: 1 << 13,
+      //user textbox input should be interpreted in display unit
+      NO_UNDO: 1 << 14,
+      USE_CUSTOM_PROP_GETTER: 1 << 15,
+      //hrm, not sure I need this
+      FORCE_ENUM_CHECKBOXES: 1 << 16,
+      NO_DEFAULT: 1 << 17
+    };
+    ToolPropertyIF = class {
+      subtype;
+      apiname;
+      uiname;
+      description;
+      flag;
+      icon;
+      constructor(type, subtype, apiname, uiname, description, flag, icon) {
+        if (type === void 0) {
+          type = this.constructor.PROP_TYPE_ID;
+        }
+        this.data = void 0;
+        this.type = type;
+        this.subtype = subtype;
+        this.apiname = apiname;
+        this.uiname = uiname;
+        this.description = description;
+        this.flag = flag;
+        this.icon = icon;
+      }
+      equals(b) {
+        throw new Error("implement me");
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+      _fire(type, arg1, arg2) {
+      }
+      on(type, cb) {
+      }
+      off(type, cb) {
+      }
+      getValue() {
+        return void 0;
+      }
+      setValue(val) {
+      }
+      setStep(step) {
+      }
+      setRange(min, max) {
+      }
+      setUnit(unit) {
+      }
+      //some clients have seperate ui range
+      setUIRange(min, max) {
+      }
+      setIcon(icon) {
+      }
+    };
+    StringPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.STRING);
+      }
+    };
+    NumPropertyIF = class extends ToolPropertyIF {
+    };
+    IntPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.INT);
+      }
+      setRadix(radix) {
+        throw new Error("implement me");
+      }
+    };
+    FloatPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.FLOAT);
+      }
+      setDecimalPlaces(n) {
+      }
+    };
+    EnumPropertyIF = class extends ToolPropertyIF {
+      values;
+      keys;
+      ui_value_names;
+      iconmap;
+      constructor(value, valid_values) {
+        super(PropTypes.ENUM);
+        this.values = {};
+        this.keys = {};
+        this.ui_value_names = {};
+        this.iconmap = {};
+        if (valid_values === void 0) return;
+        if (valid_values instanceof Array || valid_values instanceof String) {
+          for (let i = 0; i < valid_values.length; i++) {
+            this.values[valid_values[i]] = valid_values[i];
+            this.keys[valid_values[i]] = valid_values[i];
+          }
+        } else {
+          for (const k in valid_values) {
+            this.values[k] = valid_values[k];
+            this.keys[valid_values[k]] = k;
+          }
+        }
+        for (const k in this.values) {
+          let uin = k[0].toUpperCase() + k.slice(1, k.length);
+          uin = uin.replace(/\_/g, " ");
+          this.ui_value_names[k] = uin;
+        }
+      }
+      addIcons(iconmap) {
+        if (this.iconmap === void 0) {
+          this.iconmap = {};
+        }
+        for (const k in iconmap) {
+          this.iconmap[k] = iconmap[k];
+        }
+      }
+    };
+    FlagPropertyIF = class extends EnumPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.FLAG);
+      }
+    };
+    Vec2PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC2);
+      }
+    };
+    Vec3PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC3);
+      }
+    };
+    Vec4PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC4);
+      }
+    };
+    ListPropertyIF = class extends ToolPropertyIF {
+      /*
+       * Prop must be a ToolProperty subclass instance
+       * */
+      prop;
+      constructor(prop) {
+        super(PropTypes.PROPLIST);
+        this.prop = prop;
+      }
+      get length() {
+        return 0;
+      }
+      set length(val) {
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+      /**
+       * clear list
+       * */
+      clear() {
+      }
+      push(item = this.prop.copy()) {
+      }
+      [Symbol.iterator]() {
+        return [][Symbol.iterator]();
+      }
+    };
+    StringSetPropertyIF = class extends ToolPropertyIF {
+      constructor(value, definition = []) {
+        super(PropTypes.STRSET);
+      }
+      /*
+       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+       * If destructive is true, then existing set will be cleared.
+       * */
+      setValue(values, destructive = true, soft_fail = true) {
+      }
+      getValue() {
+        return void 0;
+      }
+      addIcons(iconmap) {
+      }
+      addUINames(map3) {
+      }
+      addDescriptions(map3) {
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+    };
+    Curve1DPropertyIF = class extends ToolPropertyIF {
+      constructor(curve, uiname) {
+        super(PropTypes.CURVE);
+        this.data = curve;
+      }
+      getValue() {
+        return this.data;
+      }
+      setValue(curve) {
+        if (curve === void 0) {
+          return;
+        }
+        const json = JSON.parse(JSON.stringify(curve));
+        this.data.load(json);
+      }
+      copyTo(b) {
+        b.setValue(this.data);
+      }
+    };
   }
 });
 
@@ -16303,15 +18522,15 @@ var init_toolsys = __esm({
         }
         return this;
       }
-      hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        return SavedToolDefaults.has(this.constructor, key, toolprop3);
+      hasDefault(toolprop4, key = toolprop4.apiname ?? "") {
+        return SavedToolDefaults.has(this.constructor, key, toolprop4);
       }
-      getDefault(toolprop3, key = toolprop3.apiname ?? "") {
+      getDefault(toolprop4, key = toolprop4.apiname ?? "") {
         const cls = this.constructor;
-        if (SavedToolDefaults.has(cls, key, toolprop3)) {
-          return SavedToolDefaults.get(cls, key, toolprop3);
+        if (SavedToolDefaults.has(cls, key, toolprop4)) {
+          return SavedToolDefaults.get(cls, key, toolprop4);
         } else {
-          return toolprop3.getValue();
+          return toolprop4.getValue();
         }
       }
       saveDefaultInputs() {
@@ -16667,15 +18886,15 @@ toolsys.PropKey {
         }
         return this;
       }
-      hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        return SavedToolDefaults.has(this._getTypeClass(), key, toolprop3);
+      hasDefault(toolprop4, key = toolprop4.apiname ?? "") {
+        return SavedToolDefaults.has(this._getTypeClass(), key, toolprop4);
       }
-      getDefault(toolprop3, key = toolprop3.apiname ?? "") {
+      getDefault(toolprop4, key = toolprop4.apiname ?? "") {
         const cls = this._getTypeClass();
-        if (SavedToolDefaults.has(cls, key, toolprop3)) {
-          return SavedToolDefaults.get(cls, key, toolprop3);
+        if (SavedToolDefaults.has(cls, key, toolprop4)) {
+          return SavedToolDefaults.get(cls, key, toolprop4);
         } else {
-          return toolprop3.getValue();
+          return toolprop4.getValue();
         }
       }
       connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
@@ -19600,6 +21819,4673 @@ var init_anim = __esm({
   }
 });
 
+// scripts/core/base/ui_base_anim.ts
+function flash(elem, colorIn, rect_element = elem, timems = 355, autoFocus = true) {
+  if (typeof colorIn === "string") {
+    colorIn = Array.from(css2color(colorIn));
+  }
+  const color = new Vector4().loadXYZW(colorIn[0], colorIn[1], colorIn[2], colorIn[3] ?? 1);
+  const csscolor = color2css2(color);
+  if (elem._flashtimer !== void 0 && elem._flashcolor !== csscolor) {
+    window.setTimeout(() => {
+      elem.flash(color, rect_element, timems, autoFocus);
+    }, 100);
+    return;
+  } else if (elem._flashtimer !== void 0) {
+    return;
+  }
+  const rect = rect_element.getBoundingClientRect();
+  if (rect === void 0) {
+    return;
+  }
+  let timer;
+  let tick = 0;
+  const max = ~~(timems / 20);
+  const x = rect.x;
+  const y = rect.y;
+  const cb = () => {
+    if (timer === void 0) {
+      return;
+    }
+    const a2 = 1 - tick / max;
+    div.style["backgroundColor"] = color2css2(color, a2 * a2 * 0.5);
+    if (tick > max) {
+      window.clearInterval(timer);
+      elem._flashtimer = void 0;
+      elem._flashcolor = void 0;
+      timer = void 0;
+      div.remove();
+      if (autoFocus) {
+        elem._flash_focus();
+      }
+    }
+    tick++;
+  };
+  window.setTimeout(cb, 5);
+  timer = window.setInterval(cb, 20);
+  elem._flashtimer = timer;
+  const div = document.createElement("div");
+  div.style["pointerEvents"] = "none";
+  div.tabIndex = -1;
+  div.style["zIndex"] = "900";
+  div.style["display"] = "float";
+  div.style["position"] = UIBase.PositionKey;
+  div.style["margin"] = "0px";
+  div.style["left"] = x + "px";
+  div.style["top"] = y + "px";
+  div.style["backgroundColor"] = color2css2(color, 0.5);
+  div.style["width"] = rect.width + "px";
+  div.style["height"] = rect.height + "px";
+  div.setAttribute("class", "UIBaseFlash");
+  const screen = elem.getScreen();
+  if (screen !== void 0) {
+    screen._enterPopupSafe();
+  }
+  document.body.appendChild(div);
+  if (autoFocus) {
+    elem._flash_focus();
+  }
+  elem._flashcolor = csscolor;
+  if (screen !== void 0) {
+    screen._exitPopupSafe();
+  }
+}
+function animateOld(elem, _extra_handlers = {}, domAnimateOptions) {
+  const transform = new DOMMatrix(elem.saneStyle["transform"]);
+  const update_trans = () => {
+    const t2 = transform;
+    const css = "matrix(" + t2.a + "," + t2.b + "," + t2.c + "," + t2.d + "," + t2.e + "," + t2.f + ")";
+    elem.saneStyle["transform"] = css;
+  };
+  let handlers = {
+    background_get() {
+      return css2color(this.background);
+    },
+    background_set(c) {
+      if (typeof c !== "string") {
+        c = color2css2(c);
+      }
+      this.background = c;
+    },
+    dx_get() {
+      return transform.m41;
+    },
+    dx_set(x) {
+      transform.m41 = x;
+      update_trans();
+    },
+    dy_get() {
+      return transform.m42;
+    },
+    dy_set(x) {
+      transform.m42 = x;
+      update_trans();
+    }
+  };
+  const pixkeys = [
+    "width",
+    "height",
+    "left",
+    "top",
+    "right",
+    "bottom",
+    "border-radius",
+    "border-width",
+    "margin",
+    "padding",
+    "margin-left",
+    "margin-right",
+    "margin-top",
+    "margin-bottom",
+    "padding-left",
+    "padding-right",
+    "padding-bottom",
+    "padding-top"
+  ];
+  handlers = Object.assign(handlers, _extra_handlers);
+  const makePixHandler = (k, k2) => {
+    handlers[k2 + "_get"] = () => {
+      const s = elem.saneStyle[k];
+      if (s.endsWith("px")) {
+        return parsepx(s);
+      } else {
+        return 0;
+      }
+    };
+    handlers[k2 + "_set"] = (val) => {
+      elem.saneStyle[k] = val + "px";
+    };
+  };
+  for (const k of pixkeys) {
+    if (!(k in handlers)) {
+      makePixHandler(k, `style.${k}`);
+      makePixHandler(k, `style["${k}"]`);
+      makePixHandler(k, `style['${k}']`);
+    }
+  }
+  const handler = {
+    get: (target, key, receiver) => {
+      console.log(key, handlers[key + "_get"], handlers);
+      if (key + "_get" in handlers) {
+        return handlers[key + "_get"].call(target);
+      } else {
+        return target[key];
+      }
+    },
+    set: (target, key, val, receiver) => {
+      console.log(key);
+      if (key + "_set" in handlers) {
+        handlers[key + "_set"].call(target, val);
+      } else {
+        target[key] = val;
+      }
+      return true;
+    }
+  };
+  const proxy = new Proxy(elem, handler);
+  const anim = new Animator(proxy);
+  anim.onend = () => {
+    elem._active_animations.remove(anim);
+  };
+  elem._active_animations.push(anim);
+  return anim;
+}
+function abortAnimations(elem) {
+  for (const anim of list2(elem._active_animations)) {
+    anim.end();
+  }
+  elem._active_animations = [];
+}
+var init_ui_base_anim = __esm({
+  "scripts/core/base/ui_base_anim.ts"() {
+    "use strict";
+    init_util();
+    init_vectormath();
+    init_anim();
+    init_ui_theme();
+    init_ui_base();
+  }
+});
+
+// scripts/core/base/ui_base_css.ts
+function noMarginsOrPadding(elem) {
+  let keys2 = ["margin", "padding", "margin-block-start", "margin-block-end"];
+  keys2 = keys2.concat(["padding-block-start", "padding-block-end"]);
+  keys2 = keys2.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
+  keys2 = keys2.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
+  const style = elem.saneStyle;
+  for (const k of keys2) {
+    style[k] = "0px";
+  }
+  return elem;
+}
+function noMargins(elem) {
+  elem.saneStyle["margin"] = elem.saneStyle["margin-left"] = elem.saneStyle["margin-right"] = "0px";
+  elem.saneStyle["margin-top"] = elem.saneStyle["margin-bottom"] = "0px";
+  return elem;
+}
+function noPadding(elem) {
+  elem.saneStyle["padding"] = elem.saneStyle["padding-left"] = elem.saneStyle["padding-right"] = "0px";
+  elem.saneStyle["padding-top"] = elem.saneStyle["padding-bottom"] = "0px";
+  return elem;
+}
+function getTotalRect(elem) {
+  let found = false;
+  const min = new Vector2([1e17, 1e17]);
+  const max = new Vector2([-1e17, -1e17]);
+  const doaabb = (n) => {
+    const rs = n.getClientRects();
+    for (const r of rs) {
+      min[0] = Math.min(min[0], r.x);
+      min[1] = Math.min(min[1], r.y);
+      max[0] = Math.max(max[0], r.x + r.width);
+      max[1] = Math.max(max[1], r.y + r.height);
+      found = true;
+    }
+  };
+  doaabb(elem);
+  elem._forEachChildWidget((n) => {
+    doaabb(n);
+  });
+  if (!found) {
+    return void 0;
+  }
+  return {
+    width: max[0] - min[0],
+    height: max[1] - min[1],
+    x: min[0],
+    y: min[1],
+    left: min[0],
+    top: min[1],
+    right: max[0],
+    bottom: max[1]
+  };
+}
+function parseNumber(elem, value, args = {}) {
+  let str = ("" + value).trim().toLowerCase();
+  const baseUnit = args.baseUnit || elem.baseUnit;
+  const isInt = args.isInt || elem.isInt;
+  let sign = 1;
+  if (str.startsWith("-")) {
+    str = str.slice(1, str.length).trim();
+    sign = -1;
+  }
+  const hexre = /-?[0-9a-f]+h$/;
+  let result;
+  if (str.startsWith("0b")) {
+    str = str.slice(2, str.length).trim();
+    result = parseInt(str, 2);
+  } else if (str.startsWith("0x")) {
+    str = str.slice(2, str.length).trim();
+    result = parseInt(str, 16);
+  } else if (str.search(hexre) === 0) {
+    str = str.slice(0, str.length - 1).trim();
+    result = parseInt(str, 16);
+  } else {
+    result = parseValue(str, baseUnit);
+  }
+  if (isInt) {
+    result = ~~result;
+  }
+  return result * sign;
+}
+function formatNumber(elem, value, args = {}) {
+  const baseUnit = args.baseUnit || elem.baseUnit;
+  const displayUnit = args.displayUnit || elem.displayUnit;
+  const isInt = args.isInt || elem.isInt;
+  const radix = args.radix || elem.radix || 10;
+  const decimalPlaces = args.decimalPlaces || elem.decimalPlaces;
+  if (isInt && radix !== 10) {
+    const ret = Math.floor(value).toString(radix);
+    if (radix === 2) return "0b" + ret;
+    else if (radix === 16) return ret + "h";
+  }
+  return buildString(value, baseUnit, decimalPlaces, displayUnit);
+}
+function buildBoxCSS(elem, subkey, apply) {
+  const keys2 = ["left", "right", "top", "bottom"];
+  let sub;
+  if (subkey) {
+    sub = elem.getAttribute(subkey) || {};
+  }
+  const def = (key) => {
+    if (sub && subkey) {
+      return elem.getSubDefault(subkey, key);
+    }
+    return elem.getDefault(key);
+  };
+  let boxcode = "";
+  for (let i = 0; i < 2; i++) {
+    const key = i ? "padding" : "margin";
+    if (apply) {
+      elem.saneStyle[key] = "unset";
+    }
+    const val = def(key);
+    if (val !== void 0) {
+      if (apply) {
+        for (let j = 0; j < 4; j++) {
+          elem.saneStyle[key + "-" + keys2[j]] = val + "px";
+        }
+      } else {
+        boxcode += `${key}: ${val}px;
+`;
+      }
+    }
+    for (let j = 0; j < 4; j++) {
+      const key2 = `${key}-${keys2[j]}`;
+      const val2 = def(key2);
+      if (val2 === void 0) {
+        continue;
+      }
+      if (apply) {
+        elem.saneStyle[key2] = val2 + "px";
+      } else {
+        boxcode += `${key2}: ${val2}px;
+`;
+      }
+    }
+  }
+  const border = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+  if (apply) {
+    elem.saneStyle["border-radius"] = def("border-radius") + "px";
+    elem.saneStyle["border"] = border;
+    return "";
+  }
+  boxcode += `border-radius: ${def("border-radius")}px;
+`;
+  boxcode += `border: ${border};
+`;
+  return boxcode;
+}
+function setBoxCSS(elem, subkey) {
+  buildBoxCSS(elem, subkey, true);
+}
+function genBoxCSS(elem, subkey) {
+  return buildBoxCSS(elem, subkey, false);
+}
+function setCSS(elem, setBG = true) {
+  if (setBG) {
+    const bg = elem.getDefault("background-color");
+    if (bg) {
+      elem.saneStyle["background-color"] = "" + bg;
+    }
+  }
+  const zoom = elem.getZoom();
+  if (zoom === 1) {
+    return;
+  }
+  let transform = "" + elem.saneStyle["transform"];
+  transform = transform.replace(/[ \t\n\r]+/g, " ");
+  transform = transform.replace(/, /g, ",");
+  const transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
+  elem.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
+}
+function flushSetCSS(elem) {
+  elem._init();
+  elem.setCSS();
+  elem._forEachChildWidget((c) => {
+    if (!(c.packflag & PackFlags.NO_UPDATE)) {
+      c.flushSetCSS();
+    }
+  });
+}
+var init_ui_base_css = __esm({
+  "scripts/core/base/ui_base_css.ts"() {
+    "use strict";
+    init_vectormath();
+    init_units2();
+    init_ui_base_types();
+  }
+});
+
+// scripts/path-controller/util/parseutil.ts
+var parseutil_exports = {};
+__export(parseutil_exports, {
+  PUTLParseError: () => PUTLParseError,
+  getTraceBack: () => getTraceBack,
+  lexer: () => lexer2,
+  parser: () => parser2,
+  tokdef: () => tokdef2,
+  token: () => token2
+});
+function getTraceBack(limit, start) {
+  try {
+    throw new Error();
+  } catch (error2) {
+    let stack = error2.stack.split("\n");
+    stack = stack.slice(1, stack.length);
+    if (start === void 0) {
+      start = 0;
+    }
+    for (let i = 0; i < stack.length; i++) {
+      let l = stack[i];
+      let j = l.length - 1;
+      while (j > 0 && l[j] !== "/") {
+        j--;
+      }
+      let k = j;
+      while (k >= 0 && l[k] !== "(") {
+        k--;
+      }
+      const func = l.slice(0, k).trim();
+      const file = l.slice(j + 1, l.length - 1);
+      l = `  ${func} (${file})`;
+      if (l.search(/parseutil\.js/) >= 0) {
+        start = Math.max(start, i);
+      }
+      stack[i] = l;
+    }
+    if (limit !== void 0) {
+      stack.length = Math.min(stack.length, limit);
+    }
+    if (start !== void 0) {
+      stack = stack.slice(start, stack.length);
+    }
+    return stack.join("\n");
+  }
+}
+function test_parser() {
+  const basic_types = /* @__PURE__ */ new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
+  const reserved_tokens = /* @__PURE__ */ new Set([
+    "int",
+    "float",
+    "double",
+    "vec2",
+    "vec3",
+    "vec4",
+    "mat4",
+    "string",
+    "static_string",
+    "array"
+  ]);
+  function tk2(name2, re, func) {
+    return new tokdef2(name2, re, func);
+  }
+  const tokens2 = [
+    tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t2) {
+      if (reserved_tokens.has(t2.value)) {
+        t2.type = t2.value.toUpperCase();
+      }
+      return t2;
+    }),
+    tk2("OPEN", /\{/),
+    tk2("CLOSE", /}/),
+    tk2("COLON", /:/),
+    tk2("JSCRIPT", /\|/, function(t2) {
+      let js = "";
+      const lex2 = t2.lexer;
+      while (lex2.lexpos < lex2.lexdata.length) {
+        const c = lex2.lexdata[lex2.lexpos];
+        if (c === "\n") break;
+        js += c;
+        lex2.lexpos++;
+      }
+      if (js.endsWith(";")) {
+        js = js.slice(0, js.length - 1);
+        lex2.lexpos--;
+      }
+      t2.value = js;
+      return t2;
+    }),
+    tk2("LPARAM", /\(/),
+    tk2("RPARAM", /\)/),
+    tk2("COMMA", /,/),
+    tk2("NUM", /[0-9]/),
+    tk2("SEMI", /;/),
+    tk2("NEWLINE", /\n/, function(t2) {
+      t2.lexer.lineno += 1;
+    }),
+    tk2("SPACE", / |\t/, function(_t) {
+    })
+  ];
+  for (const rt of reserved_tokens) {
+    tokens2.push(tk2(rt.toUpperCase()));
+  }
+  function errfunc(_lexer) {
+    return true;
+  }
+  const a2 = "";
+  const lex = new lexer2(tokens2, errfunc);
+  console.log("Testing lexical scanner...");
+  lex.input(a2);
+  let tok;
+  while (tok = lex.next()) {
+    console.log(tok.toString());
+  }
+  const p = new parser2(lex);
+  p.input(a2);
+  function p_Array(p2) {
+    p2.expect("ARRAY");
+    p2.expect("LPARAM");
+    let arraytype = p_Type(p2);
+    let itername = "";
+    if (p2.optional("COMMA")) {
+      itername = arraytype;
+      arraytype = p_Type(p2);
+    }
+    p2.expect("RPARAM");
+    return { type: "array", data: { type: arraytype, iname: itername } };
+  }
+  function p_Type(p2) {
+    const tok2 = p2.peek();
+    if (!tok2) {
+      p2.error(void 0, "Expected a type");
+      return;
+    }
+    if (tok2.type === "ID") {
+      p2.next();
+      return { type: "struct", data: '"' + tok2.value + '"' };
+    } else if (basic_types.has(tok2.type.toLowerCase())) {
+      p2.next();
+      return { type: tok2.type.toLowerCase() };
+    } else if (tok2.type === "ARRAY") {
+      return p_Array(p2);
+    } else {
+      p2.error(tok2, "invalid type " + tok2.type);
+    }
+  }
+  function p_Field(p2) {
+    const field = {
+      name: "",
+      type: void 0,
+      set: void 0,
+      get: void 0
+    };
+    console.log("-----", p2.peek().type);
+    field.name = p2.expect("ID", "struct field name");
+    p2.expect("COLON");
+    field.type = p_Type(p2);
+    field.set = void 0;
+    field.get = void 0;
+    let tok2 = p2.peek();
+    if (tok2?.type === "JSCRIPT") {
+      field.get = tok2.value;
+      p2.next();
+    }
+    tok2 = p2.peek();
+    if (tok2?.type === "JSCRIPT") {
+      field.set = tok2.value;
+      p2.next();
+    }
+    p2.expect("SEMI");
+    return field;
+  }
+  function p_Struct(p2) {
+    const st = {
+      name: "",
+      fields: []
+    };
+    st.name = p2.expect("ID", "struct name");
+    p2.expect("OPEN");
+    while (1) {
+      if (p2.at_end()) {
+        p2.error(void 0);
+      } else if (p2.optional("CLOSE")) {
+        break;
+      } else {
+        st.fields.push(p_Field(p2));
+      }
+    }
+    return st;
+  }
+  const ret = p_Struct(p);
+  console.log(JSON.stringify(ret));
+}
+var token2, tokdef2, PUTLParseError, lexer2, parser2;
+var init_parseutil = __esm({
+  "scripts/path-controller/util/parseutil.ts"() {
+    "use strict";
+    token2 = class {
+      type;
+      value;
+      lexpos;
+      lexlen;
+      lineno;
+      lexer;
+      parser;
+      constructor(type, val, lexpos, lexlen, lineno, lexer4, parser3) {
+        this.type = type;
+        this.value = val;
+        this.lexpos = lexpos;
+        this.lexlen = lexlen;
+        this.lineno = lineno;
+        this.lexer = lexer4;
+        this.parser = parser3;
+      }
+      setValue(val) {
+        this.value = val;
+        return this;
+      }
+      toString() {
+        if (this.value !== void 0)
+          return "token(type=" + this.type + ", value='" + this.value + "')";
+        else return "token(type=" + this.type + ")";
+      }
+    };
+    tokdef2 = class {
+      name;
+      re;
+      func;
+      constructor(name2, regexpr, func) {
+        this.name = name2;
+        this.re = regexpr;
+        this.func = func;
+      }
+    };
+    PUTLParseError = class extends Error {
+    };
+    lexer2 = class _lexer {
+      tokdef;
+      tokens;
+      lexpos;
+      lexdata;
+      lineno;
+      errfunc;
+      tokints;
+      print_tokens;
+      print_debug;
+      statestack;
+      states;
+      statedata;
+      peeked_tokens;
+      constructor(tokdef3, errfunc) {
+        this.tokdef = tokdef3;
+        this.tokens = [];
+        this.lexpos = 0;
+        this.lexdata = "";
+        this.lineno = 0;
+        this.errfunc = errfunc;
+        this.tokints = {};
+        this.print_tokens = false;
+        this.print_debug = false;
+        for (let i = 0; i < tokdef3.length; i++) {
+          this.tokints[tokdef3[i].name] = i;
+        }
+        this.statestack = [["__main__", 0]];
+        this.states = { "__main__": [tokdef3, errfunc] };
+        this.statedata = 0;
+        this.peeked_tokens = [];
+      }
+      copy() {
+        const ret = new _lexer(this.tokdef, this.errfunc);
+        for (const k in this.states) {
+          let state = this.states[k];
+          state = [state[0], state[1]];
+          ret.states[k] = state;
+        }
+        ret.statedata = this.statedata;
+        return ret;
+      }
+      //errfunc is optional, defines state-specific error function
+      add_state(name2, tokdef3, errfunc) {
+        if (errfunc === void 0) {
+          errfunc = function(_lexer2) {
+            return true;
+          };
+        }
+        this.states[name2] = [tokdef3, errfunc];
+      }
+      tok_int(_name) {
+      }
+      //statedata is optional.
+      //it stores state-specific data in lexer.statedata.
+      push_state(state, statedata) {
+        this.statestack.push([state, statedata]);
+        const stateEntry = this.states[state];
+        this.statedata = statedata;
+        this.tokdef = stateEntry[0];
+        this.errfunc = stateEntry[1];
+      }
+      pop_state() {
+        const item = this.statestack[this.statestack.length - 1];
+        const state = this.states[item[0]];
+        this.tokdef = state[0];
+        this.errfunc = state[1];
+        this.statedata = item[1];
+      }
+      input(str) {
+        while (this.statestack.length > 1) {
+          this.pop_state();
+        }
+        this.lexdata = str;
+        this.lexpos = 0;
+        this.lineno = 0;
+        this.tokens = [];
+        this.peeked_tokens = [];
+      }
+      error() {
+        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
+        console.log("Syntax error near line " + this.lineno);
+        const next = Math.min(this.lexpos + 8, this.lexdata.length);
+        console.log("  " + this.lexdata.slice(this.lexpos, next));
+        throw new PUTLParseError("Parse error");
+      }
+      peek() {
+        const tok = this.next(true);
+        if (tok === void 0) return void 0;
+        this.peeked_tokens.push(tok);
+        return tok;
+      }
+      peek_i(i) {
+        while (this.peeked_tokens.length <= i) {
+          const t2 = this.peek();
+          if (t2 === void 0) return void 0;
+        }
+        return this.peeked_tokens[i];
+      }
+      at_end() {
+        return this.lexpos >= this.lexdata.length && this.peeked_tokens.length === 0;
+      }
+      next(ignore_peek) {
+        if (ignore_peek !== true && this.peeked_tokens.length > 0) {
+          const tok2 = this.peeked_tokens[0];
+          if (this.print_debug) {
+            console.log("PEEK_SHIFTING", "" + tok2);
+          }
+          this.peeked_tokens.shift();
+          if (this.print_tokens) {
+            console.log(tok2.toString());
+          }
+          return tok2;
+        }
+        if (this.lexpos >= this.lexdata.length) return void 0;
+        const ts = this.tokdef;
+        const tlen = ts.length;
+        const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
+        const results = [];
+        for (let i = 0; i < tlen; i++) {
+          const t2 = ts[i];
+          if (t2.re === void 0) continue;
+          const res = t2.re.exec(lexdata);
+          if (res?.index === 0) {
+            results.push([t2, res]);
+          }
+        }
+        let max_res = 0;
+        let theres = void 0;
+        for (let i = 0; i < results.length; i++) {
+          const res = results[i];
+          if (res[1][0].length > max_res) {
+            theres = res;
+            max_res = res[1][0].length;
+          }
+        }
+        if (theres === void 0) {
+          this.error();
+          return;
+        }
+        const def = theres[0];
+        const lexlen = max_res;
+        let tok = new token2(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, void 0);
+        this.lexpos += max_res;
+        if (def.func) {
+          const tok2 = def.func(tok);
+          if (tok2 === void 0) {
+            return this.next(ignore_peek);
+          }
+          tok = tok2;
+        }
+        if (this.print_tokens) {
+          console.log(tok.toString());
+        }
+        if (!ignore_peek && this.print_debug) {
+          console.log("CONSUME", tok.toString(), "\n" + getTraceBack());
+        }
+        return tok;
+      }
+    };
+    parser2 = class _parser {
+      lexer;
+      errfunc;
+      start;
+      userdata;
+      constructor(lexer4, errfunc) {
+        this.lexer = lexer4;
+        this.errfunc = errfunc;
+        this.start = void 0;
+        this.userdata = void 0;
+      }
+      copy() {
+        const ret = new _parser(this.lexer.copy(), this.errfunc);
+        ret.start = this.start;
+        return ret;
+      }
+      parse(data, err_on_unconsumed) {
+        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
+        if (data !== void 0) this.lexer.input(data);
+        const ret = this.start(this);
+        if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
+          this.error(void 0, "parser did not consume entire input");
+        }
+        return ret;
+      }
+      input(data) {
+        this.lexer.input(data);
+      }
+      error(tok, msg) {
+        if (msg === void 0) msg = "";
+        let estr;
+        if (tok === void 0) estr = "Parse error at end of input: " + msg;
+        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
+        let buf = "1| ";
+        const ld = this.lexer.lexdata;
+        let l = 1;
+        for (let i = 0; i < ld.length; i++) {
+          const c = ld[i];
+          if (c === "\n") {
+            l++;
+            buf += "\n" + l + "| ";
+          } else {
+            buf += c;
+          }
+        }
+        console.log("------------------");
+        console.log(buf);
+        console.log("==================");
+        console.log(estr);
+        if (this.errfunc && !this.errfunc(tok)) {
+          return;
+        }
+        throw new PUTLParseError(estr);
+      }
+      peek() {
+        const tok = this.lexer.peek();
+        if (tok !== void 0) tok.parser = this;
+        return tok;
+      }
+      peek_i(i) {
+        const tok = this.lexer.peek_i(i);
+        if (tok !== void 0) tok.parser = this;
+        return tok;
+      }
+      peeknext() {
+        return this.peek_i(0);
+      }
+      next() {
+        const tok = this.lexer.next();
+        if (tok !== void 0) tok.parser = this;
+        return tok;
+      }
+      optional(type) {
+        const tok = this.peek_i(0);
+        if (tok?.type === type) {
+          this.next();
+          return true;
+        }
+        return false;
+      }
+      at_end() {
+        return this.lexer.at_end();
+      }
+      expect(type, msg) {
+        const tok = this.next();
+        if (msg === void 0) msg = type;
+        if (tok?.type != type) {
+          this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
+        }
+        return tok.value;
+      }
+    };
+  }
+});
+
+// scripts/path-controller/controller/controller_ops.ts
+var DataPathSetOp;
+var init_controller_ops = __esm({
+  "scripts/path-controller/controller/controller_ops.ts"() {
+    "use strict";
+    init_toolsys();
+    init_toolprop();
+    init_util();
+    DataPathSetOp = class _DataPathSetOp extends ToolOp {
+      propType;
+      _undo;
+      hadError;
+      id;
+      __ctx;
+      constructor() {
+        super();
+        this.propType = -1;
+        this._undo = void 0;
+        this.hadError = false;
+      }
+      setValue(ctx, val, object) {
+        var _stack = [];
+        try {
+          const prop = this.inputs.prop;
+          const path = this.inputs.dataPath.getValue();
+          if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            const rdef = ctx.api.resolvePath(ctx, path);
+            if (rdef?.subkey !== void 0) {
+              let subkey = rdef.subkey;
+              if (typeof subkey === "string") {
+                subkey = rdef.prop.values[subkey];
+              }
+              this.inputs.flagBit.setValue(subkey);
+              this.inputs.useFlagBit.setValue(true);
+            }
+          }
+          const execCtx = __using(_stack, prop.execWithContext());
+          execCtx.dataref = object;
+          execCtx.ctx = ctx;
+          execCtx.datapath = path;
+          try {
+            prop.setValue(val);
+            this.hadError = false;
+          } catch (_error2) {
+            console.error("Error setting datapath", path);
+            this.hadError = true;
+          }
+        } catch (_) {
+          var _error = _, _hasError = true;
+        } finally {
+          __callDispose(_stack, _error, _hasError);
+        }
+      }
+      static create(ctx, datapath, value, id, massSetPath) {
+        const rdef = ctx.api.resolvePath(ctx, datapath);
+        if (rdef?.prop === void 0) {
+          console.warn("DataPathSetOp failed", rdef, rdef?.prop);
+          return;
+        }
+        const prop = rdef.prop;
+        const tool = new _DataPathSetOp();
+        tool.propType = prop.type;
+        tool.inputs.destType.setValue(prop.type);
+        if (prop && prop.flag & PropFlags.USE_BASE_UNDO) {
+          tool.inputs.fullSaveUndo.setValue(true);
+        }
+        let mask = PropTypes.FLAG | PropTypes.ENUM;
+        mask |= PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT;
+        if (rdef.subkey !== void 0 && prop.type & mask) {
+          if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            let i = datapath.length - 1;
+            while (i >= 0 && datapath[i] !== "[" && datapath[i] !== "=") {
+              i--;
+            }
+            if (i >= 0) {
+              if (!value && prop.type === PropTypes.ENUM) {
+                return void 0;
+              }
+              datapath = datapath.slice(0, i).trim();
+            }
+            tool.inputs.prop = new IntProperty();
+          } else {
+            tool.inputs.prop = new FloatProperty();
+          }
+          let subkey = rdef.subkey;
+          if (typeof subkey !== "number" && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            subkey = prop.values[subkey];
+          }
+          if (prop.type === PropTypes.FLAG) {
+            tool.inputs.flagBit.setValue(subkey);
+            tool.inputs.useFlagBit.setValue(true);
+          }
+          if (prop.type === PropTypes.ENUM) {
+            value = subkey;
+          } else if (prop.type === PropTypes.FLAG) {
+            let value2 = ctx.api.getValue(ctx, datapath);
+            if (typeof value2 !== "number") {
+              value2 = typeof value2 === "boolean" ? value & 1 : 0;
+            }
+            if (value) {
+              value2 = value2 | subkey;
+            } else {
+              value2 = value2 & ~subkey;
+            }
+            value = value2;
+          }
+        } else {
+          tool.inputs.prop = prop.copy();
+        }
+        tool.inputs.dataPath.setValue(datapath);
+        if (massSetPath) {
+          tool.inputs.massSetPath.setValue(massSetPath);
+        } else {
+          tool.inputs.massSetPath.setValue("");
+        }
+        tool.id = id;
+        tool.setValue(ctx, value, rdef.obj);
+        return tool;
+      }
+      hash(massSetPath, dataPath, prop, id) {
+        massSetPath = massSetPath === void 0 ? "" : massSetPath;
+        massSetPath = massSetPath === null ? "" : massSetPath;
+        const ret = "" + massSetPath + ":" + dataPath + ":" + prop + ":" + id;
+        return ret;
+      }
+      hashThis() {
+        return this.hash(
+          this.inputs.massSetPath.getValue(),
+          this.inputs.dataPath.getValue(),
+          this.propType,
+          this.id
+        );
+      }
+      undoPre(ctx) {
+        if (this.inputs.fullSaveUndo.getValue()) {
+          return super.undoPre(ctx);
+        }
+        if (this.__ctx) ctx = this.__ctx;
+        this._undo = {};
+        let paths = /* @__PURE__ */ new Set();
+        if (this.inputs.massSetPath.getValue().trim()) {
+          const massSetPath = this.inputs.massSetPath.getValue().trim();
+          paths = new Set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
+        }
+        paths.add(this.inputs.dataPath.getValue());
+        for (const path of paths) {
+          let val = ctx.api.getValue(ctx, path);
+          if (typeof val === "object" && val !== null) {
+            val = val.copy();
+          }
+          this._undo[path] = val;
+        }
+      }
+      undo(ctx) {
+        if (this.__ctx) ctx = this.__ctx;
+        if (this.inputs.fullSaveUndo.getValue()) {
+          return super.undo(ctx);
+        }
+        for (const path in this._undo) {
+          const rdef = ctx.api.resolvePath(ctx, path);
+          if (rdef !== void 0 && (rdef.prop?.type ?? 0) & (PropTypes.ENUM | PropTypes.FLAG)) {
+            var _stack = [];
+            try {
+              const old = rdef.obj[rdef.key];
+              if (rdef.subkey) {
+                let key = rdef.subkey;
+                const prop = rdef.prop;
+                if (typeof key !== "number") {
+                  key = prop.values[key];
+                }
+                if (prop.type === PropTypes.FLAG) {
+                  if (this._undo[path]) {
+                    rdef.obj[rdef.key] |= key;
+                  } else {
+                    rdef.obj[rdef.key] &= ~key;
+                  }
+                } else {
+                  rdef.obj[rdef.key] = key;
+                }
+              } else {
+                rdef.obj[rdef.key] = this._undo[path];
+              }
+              const rprop = rdef.prop;
+              const execCtx = __using(_stack, rprop.execWithContext());
+              execCtx.dataref = rdef.obj;
+              execCtx.datapath = path;
+              execCtx.ctx = ctx;
+              rprop._fire("change", rdef.obj[rdef.key], old);
+            } catch (_) {
+              var _error = _, _hasError = true;
+            } finally {
+              __callDispose(_stack, _error, _hasError);
+            }
+          } else {
+            try {
+              ctx.api.setValue(ctx, path, this._undo[path]);
+            } catch (error2) {
+              print_stack2(error2);
+              console.warn("Failed to set property in undo for DataPathSetOp");
+            }
+          }
+        }
+      }
+      exec(ctx) {
+        if (this.__ctx) {
+          ctx = this.__ctx;
+        }
+        const path = this.inputs.dataPath.getValue();
+        const massSetPath = this.inputs.massSetPath.getValue().trim();
+        try {
+          ctx.api.setValue(ctx, path, this.inputs.prop.getValue());
+          this.hadError = false;
+        } catch (error2) {
+          console.log(error2.stack);
+          console.log(error2.message);
+          console.log("error setting " + path);
+          this.hadError = true;
+        }
+        if (massSetPath) {
+          let value = this.inputs.prop.getValue();
+          const useFlagBit = this.inputs.useFlagBit.getValue();
+          if (useFlagBit && this.inputs.destType.getValue() === PropTypes.FLAG) {
+            const bit = this.inputs.flagBit.getValue();
+            value = !!(value & bit);
+          }
+          try {
+            ctx.api.massSetProp(ctx, massSetPath, value);
+          } catch (error2) {
+            console.log(error2.stack);
+            console.log(error2.message);
+            console.log("error setting " + path);
+            this.hadError = true;
+          }
+        }
+      }
+      modalStart(ctx) {
+        if (ctx.toLocked === void 0) {
+          console.warn(
+            "Warning: no toLocked in context class, this may lead to subtle undo behaviours"
+          );
+          console.warn(
+            "  (ctx locking creates a copy with values of the context at the time it as locked)"
+          );
+        }
+        this.__ctx = ctx.toLocked ? ctx.toLocked() : ctx;
+        const result = super.modalStart(this.__ctx);
+        this.exec(this.__ctx);
+        this.modalEnd(false);
+        return result;
+      }
+      static tooldef() {
+        return {
+          uiname: "Property Set",
+          toolpath: "app.prop_set",
+          icon: -1,
+          flag: ToolFlags.PRIVATE,
+          is_modal: true,
+          inputs: {
+            dataPath: new StringProperty(),
+            massSetPath: new StringProperty(),
+            fullSaveUndo: new BoolProperty(false),
+            flagBit: new IntProperty(),
+            useFlagBit: new BoolProperty(),
+            destType: new EnumProperty(PropTypes.INT, PropTypes)
+          }
+        };
+      }
+    };
+    ToolOp.register(DataPathSetOp);
+  }
+});
+
+// scripts/path-controller/curve/curve1d_basic.ts
+function feq(a2, b) {
+  return Math.abs(a2 - b) < 1e-5;
+}
+var _udigest4, EquationCurve, GuassianCurve;
+var init_curve1d_basic = __esm({
+  "scripts/path-controller/curve/curve1d_basic.ts"() {
+    "use strict";
+    init_struct();
+    init_curve1d_base();
+    init_vectormath();
+    init_util();
+    _udigest4 = new HashDigest();
+    EquationCurve = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.EquationCurve {
+  equation : string;
+}
+`
+      );
+      equation;
+      _last_equation;
+      _last_xrange;
+      _func;
+      _haserror;
+      constructor() {
+        super();
+        this.equation = "x";
+        this._last_equation = "";
+        this._last_xrange = new Vector2();
+        this._func = void 0;
+        this._haserror = false;
+      }
+      get hasGUI() {
+        return this.uidata !== void 0;
+      }
+      static define() {
+        return {
+          uiname: "Equation",
+          name: "equation",
+          typeName: "EquationCurve"
+        };
+      }
+      calcHashKey(digest = _udigest4.reset()) {
+        const d = digest;
+        super.calcHashKey(d);
+        d.add(this.equation);
+        d.add(this.parent.xRange[0]);
+        d.add(this.parent.xRange[1]);
+        return d.get();
+      }
+      equals(b) {
+        return super.equals(b) && this.equation === b.equation;
+      }
+      toJSON() {
+        const ret = super.toJSON();
+        return Object.assign(ret, {
+          equation: this.equation
+        });
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        if (obj.equation !== void 0) {
+          this.equation = obj.equation;
+        }
+        return this;
+      }
+      makeGUI(container, canvas, drawTransform) {
+        this.uidata = {
+          canvas,
+          g: canvas.g,
+          draw_trans: drawTransform
+        };
+        const row = container.row();
+        const text2 = this.uidata.textbox = row.textbox(
+          void 0,
+          "" + this.equation
+        );
+        text2.onchange = (val) => {
+          console.log(val);
+          this.equation = val;
+          this.update();
+          this.redraw();
+        };
+        container.label("Equation");
+      }
+      killGUI(_container) {
+        if (this.uidata !== void 0) {
+          const ud = this.uidata;
+          if (ud.textbox) {
+            ud.textbox.remove();
+          }
+        }
+        this.uidata = void 0;
+      }
+      updateTextBox() {
+        if (this.uidata) {
+          const ud = this.uidata;
+          if (ud.textbox) {
+            ud.textbox.text = this.equation;
+          }
+        }
+      }
+      evaluate(s) {
+        let update2 = !!this.hermite || this._last_equation !== this.equation;
+        update2 = update2 || this._last_xrange.vectorDistance(this.parent.xRange) > 0;
+        update2 = update2 || !this._func;
+        if (update2) {
+          this._last_xrange.load(this.parent.xRange);
+          this._last_equation = this.equation;
+          this.updateTextBox();
+          this.#makeFunc();
+          this._evaluate(0);
+          if (this._haserror) {
+            console.warn("ERROR!");
+            return 0;
+          }
+        }
+        return this._func(s);
+      }
+      #makeFunc() {
+        this._func = void 0;
+        var func;
+        const code2 = `
+    (function() {
+      const sin = Math.sin,
+        cos = Math.cos,
+        pi = Math.PI,
+        PI = Math.PI,
+        e = Math.E,
+        E = Math.E,
+        tan = Math.tan,
+        abs = Math.abs,
+        floor = Math.floor,
+        ceil = Math.ceil,
+        acos = Math.acos,
+        asin = Math.asin,
+        atan = Math.atan,
+        cosh = Math.cos,
+        sinh = Math.sinh,
+        log = Math.log,
+        pow = Math.pow,
+        exp = Math.exp,
+        sqrt = Math.sqrt,
+        cbrt = Math.cbrt,
+        min = Math.min,
+        max = Math.max;
+      return function(x) {
+        return ${this.equation};
+      }
+    })();
+    `;
+        try {
+          func = (0, eval)(code2);
+          this._haserror = false;
+        } catch (error2) {
+          this._haserror = true;
+          console.warn("Compile error!", error2.message);
+        }
+        this._func = func;
+      }
+      _evaluate(s) {
+        try {
+          const f2 = this._func(s);
+          this._haserror = false;
+          if (isNaN(f2)) {
+            return;
+          }
+        } catch (_error) {
+          this._haserror = true;
+          console.warn("ERROR!");
+        }
+      }
+      derivative(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.evaluate(s) - this.evaluate(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.evaluate(s + df) - this.evaluate(s)) / df;
+        } else {
+          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
+        }
+      }
+      derivative2(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.derivative(s) - this.derivative(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.derivative(s + df) - this.derivative(s)) / df;
+        } else {
+          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
+        }
+      }
+      inverse(y) {
+        const steps = 9;
+        const ds = 1 / steps;
+        let s = 0;
+        let best = void 0;
+        let ret = void 0;
+        for (let i = 0; i < steps; i++, s += ds) {
+          let s1 = s;
+          let s2 = s + ds;
+          let mid = 0;
+          for (let j = 0; j < 11; j++) {
+            this.evaluate(s1);
+            this.evaluate(s2);
+            mid = (s1 + s2) * 0.5;
+            if (Math.abs(this.evaluate(s1) - y) < Math.abs(this.evaluate(s2) - y)) {
+              s2 = mid;
+            } else {
+              s1 = mid;
+            }
+          }
+          const ymid = this.evaluate(mid);
+          if (best === void 0 || Math.abs(y - ymid) < best) {
+            best = Math.abs(y - ymid);
+            ret = mid;
+          }
+        }
+        return ret === void 0 ? 0 : ret;
+      }
+      onActive(_parent, _draw_transform) {
+      }
+      onInactive(_parent, _draw_transform) {
+      }
+      reset() {
+        this.equation = "x";
+      }
+      destroy() {
+      }
+      draw(_canvas, g, _draw_transform) {
+        g.save();
+        if (this._haserror) {
+          g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
+          g.beginPath();
+          g.rect(0, 0, 1, 1);
+          g.fill();
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.lineTo(1, 1);
+          g.moveTo(0, 1);
+          g.lineTo(1, 0);
+          g.lineWidth *= 3;
+          g.stroke();
+          g.restore();
+          return;
+        }
+        g.restore();
+      }
+    };
+    CurveTypeData.register(EquationCurve);
+    GuassianCurve = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.GuassianCurve {
+  height    : float;
+  offset    : float;
+  deviation : float;
+}
+`
+      );
+      height;
+      offset;
+      deviation;
+      constructor() {
+        super();
+        this.height = 1;
+        this.offset = 1;
+        this.deviation = 0.3;
+      }
+      get hasGUI() {
+        return this.uidata !== void 0;
+      }
+      static define() {
+        return {
+          uiname: "Guassian",
+          name: "guassian",
+          typeName: "GuassianCurve"
+        };
+      }
+      calcHashKey(digest = _udigest4.reset()) {
+        super.calcHashKey(digest);
+        const d = digest;
+        d.add(this.height);
+        d.add(this.offset);
+        d.add(this.deviation);
+        return d.get();
+      }
+      equals(b) {
+        let r = super.equals(b);
+        const gb = b;
+        r = r && feq(this.height, gb.height);
+        r = r && feq(this.offset, gb.offset);
+        r = r && feq(this.deviation, gb.deviation);
+        return r;
+      }
+      toJSON() {
+        const ret = super.toJSON();
+        return Object.assign(ret, {
+          height: this.height,
+          offset: this.offset,
+          deviation: this.deviation
+        });
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.height = obj.height !== void 0 ? obj.height : 1;
+        this.offset = obj.offset;
+        this.deviation = obj.deviation;
+        return this;
+      }
+      makeGUI(container, canvas, drawTransform) {
+        this.uidata = {
+          canvas,
+          g: canvas.g,
+          draw_trans: drawTransform,
+          hslider: container.slider(void 0, "Height", this.height, -10, 10, 0.05),
+          oslider: container.slider(void 0, "Offset", this.offset, -10, 10, 0.05),
+          dslider: container.slider(void 0, "STD Deviation", this.deviation, -10, 10, 0.05)
+        };
+        this.uidata.hslider.on_change = () => {
+          this.height = this.uidata.hslider.value;
+          this.redraw();
+          this.update();
+        };
+        this.uidata.oslider.on_change = () => {
+          this.offset = this.uidata.oslider.value;
+          this.redraw();
+          this.update();
+        };
+        this.uidata.dslider.on_change = () => {
+          this.deviation = this.uidata.dslider.value;
+          this.redraw();
+          this.update();
+        };
+      }
+      killGUI(_container) {
+        if (this.uidata !== void 0) {
+          const ud = this.uidata;
+          ud.hslider.remove();
+          ud.oslider.remove();
+          ud.dslider.remove();
+        }
+        this.uidata = void 0;
+      }
+      evaluate(s) {
+        const r = this.height * Math.exp(-((s - this.offset) * (s - this.offset)) / (2 * this.deviation * this.deviation));
+        return r;
+      }
+      derivative(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.evaluate(s) - this.evaluate(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.evaluate(s + df) - this.evaluate(s)) / df;
+        } else {
+          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
+        }
+      }
+      derivative2(s) {
+        const df = 1e-4;
+        if (s > 1 - df * 3) {
+          return (this.derivative(s) - this.derivative(s - df)) / df;
+        } else if (s < df * 3) {
+          return (this.derivative(s + df) - this.derivative(s)) / df;
+        } else {
+          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
+        }
+      }
+      inverse(y) {
+        const steps = 9;
+        const ds = 1 / steps;
+        let s = 0;
+        let best = void 0;
+        let ret = void 0;
+        for (let i = 0; i < steps; i++, s += ds) {
+          let s1 = s;
+          let s2 = s + ds;
+          let mid = 0;
+          for (let j = 0; j < 11; j++) {
+            const y1 = this.evaluate(s1);
+            const y2 = this.evaluate(s2);
+            mid = (s1 + s2) * 0.5;
+            if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
+              s2 = mid;
+            } else {
+              s1 = mid;
+            }
+          }
+          const ymid = this.evaluate(mid);
+          if (best === void 0 || Math.abs(y - ymid) < best) {
+            best = Math.abs(y - ymid);
+            ret = mid;
+          }
+        }
+        return ret === void 0 ? 0 : ret;
+      }
+    };
+    CurveTypeData.register(GuassianCurve);
+  }
+});
+
+// scripts/path-controller/curve/ease.ts
+var Ease, ease_default;
+var init_ease = __esm({
+  "scripts/path-controller/curve/ease.ts"() {
+    "use strict";
+    Ease = class _Ease {
+      constructor() {
+        throw "Ease cannot be instantiated.";
+      }
+      // static methods and properties
+      /**
+       * @method linear
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static linear = function(t2) {
+        return t2;
+      };
+      /**
+       * Identical to linear.
+       * @method none
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static none = _Ease.linear;
+      /**
+       * Mimics the simple -100 to 100 easing in Adobe Flash/Animate.
+       * @method get
+       * @param {Number} amount A value from -1 (ease in) to 1 (ease out) indicating the strength and direction of the ease.
+       * @static
+       * @return {Function}
+       **/
+      static get(amount) {
+        if (amount < -1) {
+          amount = -1;
+        } else if (amount > 1) {
+          amount = 1;
+        }
+        return function(t2) {
+          if (amount == 0) {
+            return t2;
+          }
+          if (amount < 0) {
+            return t2 * (t2 * -amount + 1 + amount);
+          }
+          return t2 * ((2 - t2) * amount + (1 - amount));
+        };
+      }
+      /**
+       * Configurable exponential ease.
+       * @method getPowIn
+       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+       * @static
+       * @return {Function}
+       **/
+      static getPowIn(pow) {
+        return function(t2) {
+          return Math.pow(t2, pow);
+        };
+      }
+      /**
+       * Configurable exponential ease.
+       * @method getPowOut
+       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+       * @static
+       * @return {Function}
+       **/
+      static getPowOut(pow) {
+        return function(t2) {
+          return 1 - Math.pow(1 - t2, pow);
+        };
+      }
+      /**
+       * Configurable exponential ease.
+       * @method getPowInOut
+       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+       * @static
+       * @return {Function}
+       **/
+      static getPowInOut(pow) {
+        return function(t2) {
+          if ((t2 *= 2) < 1) return 0.5 * Math.pow(t2, pow);
+          return 1 - 0.5 * Math.abs(Math.pow(2 - t2, pow));
+        };
+      }
+      /**
+       * @method quadIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quadIn = _Ease.getPowIn(2);
+      /**
+       * @method quadOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quadOut = _Ease.getPowOut(2);
+      /**
+       * @method quadInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quadInOut = _Ease.getPowInOut(2);
+      /**
+       * @method cubicIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static cubicIn = _Ease.getPowIn(3);
+      /**
+       * @method cubicOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static cubicOut = _Ease.getPowOut(3);
+      /**
+       * @method cubicInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static cubicInOut = _Ease.getPowInOut(3);
+      /**
+       * @method quartIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quartIn = _Ease.getPowIn(4);
+      /**
+       * @method quartOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quartOut = _Ease.getPowOut(4);
+      /**
+       * @method quartInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quartInOut = _Ease.getPowInOut(4);
+      /**
+       * @method quintIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quintIn = _Ease.getPowIn(5);
+      /**
+       * @method quintOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quintOut = _Ease.getPowOut(5);
+      /**
+       * @method quintInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static quintInOut = _Ease.getPowInOut(5);
+      /**
+       * @method sineIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static sineIn = function(t2) {
+        return 1 - Math.cos(t2 * Math.PI / 2);
+      };
+      /**
+       * @method sineOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static sineOut = function(t2) {
+        return Math.sin(t2 * Math.PI / 2);
+      };
+      /**
+       * @method sineInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static sineInOut = function(t2) {
+        return -0.5 * (Math.cos(Math.PI * t2) - 1);
+      };
+      /**
+       * Configurable "back in" ease.
+       * @method getBackIn
+       * @param {Number} amount The strength of the ease.
+       * @static
+       * @return {Function}
+       **/
+      static getBackIn(amount) {
+        return function(t2) {
+          return t2 * t2 * ((amount + 1) * t2 - amount);
+        };
+      }
+      /**
+       * @method backIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static backIn = _Ease.getBackIn(1.7);
+      /**
+       * Configurable "back out" ease.
+       * @method getBackOut
+       * @param {Number} amount The strength of the ease.
+       * @static
+       * @return {Function}
+       **/
+      static getBackOut(amount) {
+        return function(t2) {
+          return --t2 * t2 * ((amount + 1) * t2 + amount) + 1;
+        };
+      }
+      /**
+       * @method backOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static backOut = _Ease.getBackOut(1.7);
+      /**
+       * Configurable "back in out" ease.
+       * @method getBackInOut
+       * @param {Number} amount The strength of the ease.
+       * @static
+       * @return {Function}
+       **/
+      static getBackInOut(amount) {
+        amount *= 1.525;
+        return function(t2) {
+          if ((t2 *= 2) < 1) return 0.5 * (t2 * t2 * ((amount + 1) * t2 - amount));
+          return 0.5 * ((t2 -= 2) * t2 * ((amount + 1) * t2 + amount) + 2);
+        };
+      }
+      /**
+       * @method backInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static backInOut = _Ease.getBackInOut(1.7);
+      /**
+       * @method circIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static circIn = function(t2) {
+        return -(Math.sqrt(1 - t2 * t2) - 1);
+      };
+      /**
+       * @method circOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static circOut = function(t2) {
+        return Math.sqrt(1 - --t2 * t2);
+      };
+      /**
+       * @method circInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static circInOut = function(t2) {
+        if ((t2 *= 2) < 1) return -0.5 * (Math.sqrt(1 - t2 * t2) - 1);
+        return 0.5 * (Math.sqrt(1 - (t2 -= 2) * t2) + 1);
+      };
+      /**
+       * @method bounceIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static bounceIn = function(t2) {
+        return 1 - _Ease.bounceOut(1 - t2);
+      };
+      /**
+       * @method bounceOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static bounceOut = function(t2) {
+        if (t2 < 1 / 2.75) {
+          return 7.5625 * t2 * t2;
+        } else if (t2 < 2 / 2.75) {
+          return 7.5625 * (t2 -= 1.5 / 2.75) * t2 + 0.75;
+        } else if (t2 < 2.5 / 2.75) {
+          return 7.5625 * (t2 -= 2.25 / 2.75) * t2 + 0.9375;
+        } else {
+          return 7.5625 * (t2 -= 2.625 / 2.75) * t2 + 0.984375;
+        }
+      };
+      /**
+       * @method bounceInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static bounceInOut = function(t2) {
+        if (t2 < 0.5) return _Ease.bounceIn(t2 * 2) * 0.5;
+        return _Ease.bounceOut(t2 * 2 - 1) * 0.5 + 0.5;
+      };
+      /**
+       * Configurable elastic ease.
+       * @method getElasticIn
+       * @param {Number} amplitude
+       * @param {Number} period
+       * @static
+       * @return {Function}
+       **/
+      static getElasticIn(amplitude, period) {
+        const pi2 = Math.PI * 2;
+        return function(t2) {
+          if (t2 == 0 || t2 == 1) return t2;
+          const s = period / pi2 * Math.asin(1 / amplitude);
+          return -(amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
+        };
+      }
+      /**
+       * @method elasticIn
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static elasticIn = _Ease.getElasticIn(1, 0.3);
+      /**
+       * Configurable elastic ease.
+       * @method getElasticOut
+       * @param {Number} amplitude
+       * @param {Number} period
+       * @static
+       * @return {Function}
+       **/
+      static getElasticOut(amplitude, period) {
+        const pi2 = Math.PI * 2;
+        return function(t2) {
+          if (t2 == 0 || t2 == 1) return t2;
+          const s = period / pi2 * Math.asin(1 / amplitude);
+          return amplitude * Math.pow(2, -10 * t2) * Math.sin((t2 - s) * pi2 / period) + 1;
+        };
+      }
+      /**
+       * @method elasticOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static elasticOut = _Ease.getElasticOut(1, 0.3);
+      /**
+       * Configurable elastic ease.
+       * @method getElasticInOut
+       * @param {Number} amplitude
+       * @param {Number} period
+       * @static
+       * @return {Function}
+       **/
+      static getElasticInOut(amplitude, period) {
+        const pi2 = Math.PI * 2;
+        return function(t2) {
+          const s = period / pi2 * Math.asin(1 / amplitude);
+          if ((t2 *= 2) < 1)
+            return -0.5 * (amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
+          return amplitude * Math.pow(2, -10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period) * 0.5 + 1;
+        };
+      }
+      /**
+       * @method elasticInOut
+       * @param {Number} t
+       * @static
+       * @return {Number}
+       **/
+      static elasticInOut = _Ease.getElasticInOut(1, 0.3 * 1.5);
+    };
+    ease_default = Ease;
+  }
+});
+
+// scripts/path-controller/curve/curve1d_anim.ts
+function bez32(a2, b, c, t2) {
+  const r1 = a2 + (b - a2) * t2;
+  const r2 = b + (c - b) * t2;
+  return r1 + (r2 - r1) * t2;
+}
+function bez42(a2, b, c, d, t2) {
+  const r1 = bez32(a2, b, c, t2);
+  const r2 = bez32(b, c, d, t2);
+  return r1 + (r2 - r1) * t2;
+}
+var ParamKey, BOOL_FLAG, _udigest5, SimpleCurveBase, BounceCurve, ElasticCurve, EaseCurve, RandCurve;
+var init_curve1d_anim = __esm({
+  "scripts/path-controller/curve/curve1d_anim.ts"() {
+    "use strict";
+    init_struct();
+    init_curve1d_base();
+    init_ease();
+    init_util();
+    ParamKey = class {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `ParamKey {
+      key : string;
+      val : float;
+    }`
+      );
+      key;
+      val;
+      constructor(key, val) {
+        this.key = key ?? "";
+        this.val = val ?? 0;
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+      }
+    };
+    BOOL_FLAG = 1e17;
+    _udigest5 = new HashDigest();
+    SimpleCurveBase = class extends CurveTypeData {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.SimpleCurveBase {
+  params : array(ParamKey) | obj._saveParams();
+}
+`
+      );
+      params;
+      constructor() {
+        super();
+        const def = this.constructor.define();
+        this.type = def.typeName;
+        const params = def.params;
+        this.params = {};
+        for (const k in params) {
+          this.params[k] = params[k][1];
+        }
+      }
+      get hasGUI() {
+        return true;
+      }
+      calcHashKey(digest = _udigest5.reset()) {
+        const d = digest;
+        super.calcHashKey(d);
+        for (const k in this.params) {
+          digest.add(k);
+          digest.add(this.params[k]);
+        }
+        return d.get();
+      }
+      equals(b) {
+        const sb = b;
+        if (this.type !== sb.type) {
+          return false;
+        }
+        for (const k in this.params) {
+          if (Math.abs(this.params[k] - sb.params[k]) > 1e-6) {
+            return false;
+          }
+        }
+        return true;
+      }
+      redraw() {
+        if (this.parent) this.parent.redraw();
+      }
+      makeGUI(container) {
+        const def = this.constructor.define();
+        const params = def.params;
+        const elemKeyMap = /* @__PURE__ */ new Map();
+        for (const k in params) {
+          const p = params[k];
+          if (p[2] === BOOL_FLAG) {
+            const check = container.check(void 0, p[0]);
+            check.checked = !!this.params[k];
+            elemKeyMap.set(check, k);
+            const this2 = this;
+            check.on_change = function() {
+              this2.params[elemKeyMap.get(this)] = this.checked ? 1 : 0;
+              this2.update();
+              this2.redraw();
+            };
+          } else {
+            const slider = container.slider(void 0, {
+              name: p[0],
+              defaultval: this.params[k],
+              min: p[2],
+              max: p[3]
+            });
+            slider.baseUnit = slider.displayUnit = "none";
+            elemKeyMap.set(slider, k);
+            const this2 = this;
+            slider.on_change = function() {
+              this2.params[elemKeyMap.get(this)] = Number(this.value);
+              this2.update();
+              this2.redraw();
+            };
+          }
+        }
+      }
+      killGUI(container) {
+        container.clear();
+      }
+      evaluate(_s) {
+        throw new Error("implement me!");
+      }
+      reset() {
+      }
+      update() {
+        super.update();
+      }
+      draw(_canvas, g, _draw_transform) {
+        const steps = 128;
+        let s = 0;
+        const ds = 1 / (steps - 1);
+        g.beginPath();
+        for (let i = 0; i < steps; i++, s += ds) {
+          const co = this.evaluate(s);
+          if (i) {
+            g.lineTo(co, co);
+          } else {
+            g.moveTo(co, co);
+          }
+        }
+        g.stroke();
+      }
+      _saveParams() {
+        const ret = [];
+        for (const k in this.params) {
+          ret.push(new ParamKey(k, this.params[k]));
+        }
+        return ret;
+      }
+      toJSON() {
+        return Object.assign(super.toJSON(), {
+          params: this.params
+        });
+      }
+      loadJSON(obj) {
+        const params = obj.params;
+        for (const k in params) {
+          this.params[k] = params[k];
+        }
+        return this;
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+        super.loadSTRUCT(reader);
+        const ps = this.params;
+        this.params = {};
+        const pdef = this.constructor.define().params;
+        if (!pdef) {
+          console.warn("Missing define function for curve", this.constructor.name);
+          return;
+        }
+        for (const pair of ps) {
+          if (pair.key in pdef) {
+            this.params[pair.key] = pair.val;
+          }
+        }
+        for (const k in pdef) {
+          if (!(k in this.params)) {
+            this.params[k] = pdef[k][1];
+          }
+        }
+      }
+    };
+    BounceCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.BounceCurve {
+}`
+      );
+      static define() {
+        return {
+          params: {
+            decay: ["Decay", 1, 0.1, 5],
+            scale: ["Scale", 1, 0.01, 10],
+            freq: ["Freq", 1, 0.01, 50],
+            phase: ["Phase", 0, -Math.PI * 2, Math.PI * 2],
+            offset: ["Offset", 0, -2, 2]
+          },
+          name: "bounce",
+          uiname: "Bounce",
+          typeName: "BounceCurve"
+        };
+      }
+      _evaluate(t2) {
+        const params = this.params;
+        const decay = params.decay + 1;
+        const scale = params.scale;
+        const freq = params.freq;
+        const phase = params.phase;
+        t2 *= freq;
+        let t22 = Math.abs(Math.cos(phase + t2 * Math.PI * 2)) * scale;
+        t22 *= Math.exp(decay * t2) / Math.exp(decay);
+        return t22;
+      }
+      evaluate(t2) {
+        const s = this._evaluate(0);
+        const e = this._evaluate(1);
+        return (this._evaluate(t2) - s) / (e - s) + this.params.offset;
+      }
+    };
+    CurveTypeData.register(BounceCurve);
+    ElasticCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.ElasticCurve {
+}`
+      );
+      _func;
+      _last_hash;
+      constructor() {
+        super();
+        this._func = void 0;
+        this._last_hash = void 0;
+      }
+      static define() {
+        return {
+          params: {
+            mode: ["Out Mode", false, BOOL_FLAG, BOOL_FLAG],
+            amplitude: ["Amplitude", 1, 0.01, 10],
+            period: ["Period", 1, 0.01, 5]
+          },
+          name: "elastic",
+          uiname: "Elastic",
+          typeName: "ElasticCurve"
+        };
+      }
+      evaluate(t2) {
+        const hash = ~~(this.params.mode * 127 + this.params.amplitude * 256 + this.params.period * 512);
+        if (hash !== this._last_hash || !this._func) {
+          this._last_hash = hash;
+          if (this.params.mode) {
+            this._func = ease_default.getElasticOut(this.params.amplitude, this.params.period);
+          } else {
+            this._func = ease_default.getElasticIn(this.params.amplitude, this.params.period);
+          }
+        }
+        return this._func(t2);
+      }
+    };
+    CurveTypeData.register(ElasticCurve);
+    EaseCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.EaseCurve {
+}`
+      );
+      constructor() {
+        super();
+      }
+      static define() {
+        return {
+          params: {
+            mode_in: ["in", true, BOOL_FLAG, BOOL_FLAG],
+            mode_out: ["out", true, BOOL_FLAG, BOOL_FLAG],
+            amplitude: ["Amplitude", 1, 0.01, 4]
+          },
+          name: "ease",
+          uiname: "Ease",
+          typeName: "EaseCurve"
+        };
+      }
+      evaluate(t2) {
+        const amp = this.params.amplitude;
+        const a1 = this.params.mode_in ? 1 - amp : 1 / 3;
+        const a2 = this.params.mode_out ? amp : 2 / 3;
+        return bez42(0, a1, a2, 1, t2);
+      }
+    };
+    CurveTypeData.register(EaseCurve);
+    RandCurve = class extends SimpleCurveBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+curve1d.RandCurve {
+}`
+      );
+      random;
+      _seed;
+      constructor() {
+        super();
+        this.random = new MersenneRandom(0);
+        this._seed = 0;
+      }
+      get seed() {
+        return this._seed;
+      }
+      set seed(v) {
+        this.random.seed(v);
+        this._seed = v;
+      }
+      static define() {
+        return {
+          params: {
+            amplitude: ["Amplitude", 1, 0.01, 4],
+            decay: ["Decay", 1, 0, 5],
+            in_mode: ["In", true, BOOL_FLAG, BOOL_FLAG]
+          },
+          name: "random",
+          uiname: "Random",
+          typeName: "RandCurve"
+        };
+      }
+      evaluate(t2) {
+        const r = this.random.random();
+        const decay = this.params.decay + 1;
+        const in_mode = this.params.in_mode;
+        if (in_mode) {
+          t2 = 1 - t2;
+        }
+        let d;
+        if (in_mode) {
+          d = Math.exp(t2 * decay) / Math.exp(decay);
+        } else {
+          d = Math.exp(t2 * decay) / Math.exp(decay);
+        }
+        t2 = t2 + (r - t2) * d;
+        if (in_mode) {
+          t2 = 1 - t2;
+        }
+        return t2;
+      }
+    };
+    CurveTypeData.register(RandCurve);
+  }
+});
+
+// scripts/path-controller/curve/curve1d_all.ts
+var init_curve1d_all = __esm({
+  "scripts/path-controller/curve/curve1d_all.ts"() {
+    "use strict";
+    init_curve1d_basic();
+    init_curve1d_bspline();
+    init_curve1d_anim();
+  }
+});
+
+// scripts/path-controller/curve/curve1d_toolprop.ts
+var Curve1DProperty;
+var init_curve1d_toolprop = __esm({
+  "scripts/path-controller/curve/curve1d_toolprop.ts"() {
+    "use strict";
+    init_curve1d();
+    init_toolprop();
+    init_nstructjs();
+    init_curve1d_all();
+    Curve1DProperty = class extends ToolProperty {
+      static PROP_TYPE_ID = PropTypes.CURVE;
+      static STRUCT = inlineRegister(
+        this,
+        `
+      Curve1DProperty {
+        data:   Curve1D;
+      }
+    `
+      );
+      data;
+      constructor(curve, apiname, uiname, description, flag, icon) {
+        super(PropTypes.CURVE, void 0, apiname, uiname, description, flag, icon);
+        this.data = new Curve1D();
+        if (curve !== void 0) {
+          this.setValue(curve);
+        }
+        this.wasSet = false;
+      }
+      calcMemSize() {
+        return 1024;
+      }
+      /** Compares the curves' authored state through JSON mode, which writes only STRUCT fields. Each side passes through a load round trip first, because loadSTRUCT canonicalizes derived ordering (the bspline point sort) that a freshly edited curve has not applied yet. */
+      equals(b) {
+        const authored = (c) => {
+          const settled = readJSON(writeJSON(c), Curve1D);
+          return JSON.stringify(writeJSON(settled));
+        };
+        return authored(this.data) === authored(b.data);
+      }
+      getValue() {
+        return this.data;
+      }
+      evaluate(t2) {
+        return this.data.evaluate(t2);
+      }
+      setValue(curve) {
+        if (curve === void 0) {
+          return;
+        }
+        this.data.load(curve);
+        super.setValue(curve);
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.setValue(this.data);
+      }
+    };
+    ToolProperty.internalRegister(Curve1DProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/allprops.ts
+function isNumProperty(p) {
+  if (p === void 0) return false;
+  return p instanceof IntProperty || p instanceof FloatProperty;
+}
+function isVecProperty(prop) {
+  if (!prop || typeof prop !== "object" || prop === null) return false;
+  let ok = false;
+  ok = ok || prop instanceof Vec2PropertyIF;
+  ok = ok || prop instanceof Vec3PropertyIF;
+  ok = ok || prop instanceof Vec4PropertyIF;
+  ok = ok || prop instanceof Vec2Property;
+  ok = ok || prop instanceof Vec3Property;
+  ok = ok || prop instanceof Vec4Property;
+  ok = ok || prop instanceof QuatProperty;
+  ok = ok || prop.type === PropTypes.VEC2;
+  ok = ok || prop.type === PropTypes.VEC3;
+  ok = ok || prop.type === PropTypes.VEC4;
+  ok = ok || prop.type === PropTypes.QUAT;
+  return ok;
+}
+var init_allprops = __esm({
+  "scripts/path-controller/toolsys/allprops.ts"() {
+    "use strict";
+    init_toolprop();
+    init_toolprop_abstract();
+    init_toolprop_abstract();
+  }
+});
+
+// scripts/path-controller/toolsys/toolpath.ts
+function buildParser() {
+  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
+  const tokens2 = [
+    t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
+      if (tok.value === "true" || tok.value === "false") {
+        tok.type = "BOOL";
+        tok.value = tok.value === "true";
+      }
+      return tok;
+    }),
+    t2("LPAREN", /\(/),
+    t2("RPAREN", /\)/),
+    t2("LSBRACKET", /\[/),
+    t2("RSBRACKET", /\]/),
+    t2("DOT", /\./),
+    t2("COMMA", /\,/),
+    t2("EQUALS", /\=/),
+    t2("STRLIT", /"[^"]*"/, (tok) => {
+      tok.value = tok.value.slice(1, tok.value.length - 1);
+      return tok;
+    }),
+    t2("STRLIT", /'[^']*'/, (tok) => {
+      tok.value = tok.value.slice(1, tok.value.length - 1);
+      return tok;
+    }),
+    t2("NUMBER", /-?[0-9]+/, (tok) => {
+      tok.value = parseInt(tok.value);
+      return tok;
+    }),
+    t2("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
+      tok.value = parseFloat(tok.value);
+      return tok;
+    }),
+    t2("WS", /[ \n\r\t]/, () => void 0)
+    //ignore whitespace
+  ];
+  const lexerror = () => {
+    console.warn("Parse error");
+    return true;
+  };
+  const valid_datatypes = {
+    STRLIT: 1,
+    NUMBER: 1,
+    BOOL: 1,
+    ID: 1
+  };
+  function p_Start(p2) {
+    const args = {};
+    while (!p2.at_end()) {
+      const keyword = p2.expect("ID");
+      p2.expect("EQUALS");
+      const t3 = p2.next();
+      if (!(t3.type in valid_datatypes)) {
+        throw new PUTLParseError("parse error: unexpected " + t3.type);
+      }
+      args[keyword] = t3.value;
+    }
+    return args;
+  }
+  const lex = new lexer2(tokens2, lexerror);
+  const p = new parser2(lex);
+  p.start = p_Start;
+  return p;
+}
+function parseToolPath(str, check_tool_exists = true) {
+  if (!initToolPaths_run) {
+    initToolPaths_run = true;
+    initToolPaths();
+  }
+  const startstr = str;
+  const i1 = str.search(/\(/);
+  const i2 = str.search(/\)/);
+  let argsStr = "";
+  if (i1 >= 0 && i2 >= 0) {
+    argsStr = str.slice(i1 + 1, i2).trim();
+    str = str.slice(0, i1).trim();
+  }
+  if (!(str in ToolPaths)) {
+    initToolPaths();
+  }
+  if (!(str in ToolPaths) && check_tool_exists) {
+    throw new DataPathError("unknown tool " + str);
+  }
+  let args;
+  try {
+    args = Parser.parse(argsStr);
+  } catch (error2) {
+    console.log(error2);
+    throw new DataPathError(`"${startstr}"
+  ${error2.message}`);
+  }
+  const toolclass = ToolPaths[str];
+  if (toolclass !== void 0) {
+    args = toolclass.parseArgs(args);
+  }
+  return {
+    toolclass,
+    args
+  };
+}
+function testToolParser() {
+  const ret = parseToolPath("view3d.sometool(selectmode=1 str='str' bool=true)", false);
+  return ret;
+}
+function initToolPaths() {
+  for (const cls of ToolClasses) {
+    if (!cls.hasOwnProperty("tooldef")) {
+      continue;
+    }
+    const def = cls.tooldef();
+    const path = def.toolpath;
+    ToolPaths[path] = cls;
+  }
+}
+var ToolPaths, initToolPaths_run, Parser;
+var init_toolpath = __esm({
+  "scripts/path-controller/toolsys/toolpath.ts"() {
+    "use strict";
+    init_toolsys();
+    init_parseutil();
+    init_controller_base();
+    ToolPaths = {};
+    initToolPaths_run = false;
+    Parser = buildParser();
+    window.parseToolPath = parseToolPath;
+  }
+});
+
+// scripts/path-controller/toolsys/index.ts
+var init_toolsys2 = __esm({
+  "scripts/path-controller/toolsys/index.ts"() {
+    "use strict";
+    init_toolprop_abstract();
+    init_allprops();
+    init_toolpath();
+    init_toolsys();
+    init_toolprop();
+  }
+});
+
+// scripts/path-controller/controller/pathwatch.ts
+function warnNoSnapshot(path) {
+  if (warnedNoSnapshotPaths.has(path)) {
+    return;
+  }
+  warnedNoSnapshotPaths.add(path);
+  console.warn(
+    `warning for ${path}: object does not have a [pathux.CreateSnapshot]() method, the automatic path watching will not be able to detect changes`
+  );
+}
+function getPathStructureGen() {
+  return structureGen;
+}
+function bumpPathStructureGen() {
+  structureGen++;
+}
+function addRef(map3, key, ref) {
+  let set2 = map3.get(key);
+  if (!set2) {
+    set2 = /* @__PURE__ */ new Set();
+    map3.set(key, set2);
+  }
+  set2.add(ref);
+}
+function dropRef(map3, key, ref) {
+  if (key === void 0) return;
+  const set2 = map3.get(key);
+  if (!set2) return;
+  set2.delete(ref);
+  if (set2.size === 0) {
+    map3.delete(key);
+  }
+}
+function normalizePath(path) {
+  path = path.trim();
+  if (path.startsWith("/")) {
+    path = path.slice(1);
+  }
+  return path;
+}
+function pathsOverlap(a2, b) {
+  if (a2 === b) return true;
+  if (a2.length < b.length) {
+    const t2 = a2;
+    a2 = b;
+    b = t2;
+  }
+  if (!a2.startsWith(b)) return false;
+  const c = a2[b.length];
+  return c === "." || c === "[";
+}
+function markSet(set2) {
+  if (!set2) return;
+  for (const ref of [...set2]) {
+    const w = ref.deref();
+    if (!w) {
+      set2.delete(ref);
+      continue;
+    }
+    w.markDirty();
+  }
+}
+function notifyPathChange(path, prop) {
+  if (path !== void 0) {
+    const key = normalizePath(path);
+    for (const [subPath, set2] of pathSubs) {
+      if (pathsOverlap(subPath, key)) {
+        markSet(set2);
+      }
+    }
+  } else if (prop !== void 0) {
+    markSet(propSubs.get(prop));
+  } else {
+    bumpPathStructureGen();
+    for (const set2 of pathSubs.values()) {
+      markSet(set2);
+    }
+  }
+}
+function scheduleFlush() {
+  if (flushScheduled) return;
+  flushScheduled = true;
+  const run = () => {
+    flushScheduled = false;
+    flushPathNotifications();
+  };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(run);
+  } else {
+    queueMicrotask(run);
+  }
+}
+function flushPathNotifications() {
+  while (dirty.size > 0) {
+    const batch = [...dirty];
+    dirty.clear();
+    for (const w of batch) {
+      w.flush();
+    }
+  }
+}
+function getPathWatchStats() {
+  let pathRefs = 0;
+  for (const set2 of pathSubs.values()) {
+    pathRefs += set2.size;
+  }
+  let propRefs2 = 0;
+  for (const set2 of propSubs.values()) {
+    propRefs2 += set2.size;
+  }
+  return {
+    paths: pathSubs.size,
+    pathRefs,
+    props: propSubs.size,
+    propRefs: propRefs2,
+    dirty: dirty.size
+  };
+}
+function clearPathWatchers() {
+  pathSubs.clear();
+  propSubs.clear();
+  dirty.clear();
+  warnedNoSnapshotPaths.clear();
+}
+var CreateSnapshot, pathSubs, propSubs, warnedNoSnapshotPaths, dirty, flushScheduled, structureGen, finalizer, DataPathWatcher;
+var init_pathwatch = __esm({
+  "scripts/path-controller/controller/pathwatch.ts"() {
+    "use strict";
+    init_util();
+    init_vectormath();
+    CreateSnapshot = /* @__PURE__ */ Symbol("create snapshot");
+    pathSubs = /* @__PURE__ */ new Map();
+    propSubs = /* @__PURE__ */ new Map();
+    warnedNoSnapshotPaths = /* @__PURE__ */ new Set();
+    dirty = /* @__PURE__ */ new Set();
+    flushScheduled = false;
+    structureGen = 1;
+    finalizer = typeof FinalizationRegistry !== "undefined" ? new FinalizationRegistry((rec) => {
+      dropRef(pathSubs, rec.pathKey, rec.ref);
+      dropRef(propSubs, rec.propKey, rec.ref);
+    }) : void 0;
+    DataPathWatcher = class _DataPathWatcher {
+      path;
+      onChange;
+      debounce;
+      api;
+      getCtx;
+      rec;
+      removed = false;
+      subscribed = false;
+      dirtyFlag = false;
+      lastGen = -1;
+      prop = void 0;
+      snapshot = void 0;
+      hasSnapshot = false;
+      /** false when the snapshot is an identity ref that cannot detect in-place
+       * mutation; push flushes then fire unconditionally instead of diffing. */
+      snapshotReliable = true;
+      timer = void 0;
+      constructor(api, ctx, path, onChange, opts = {}) {
+        this.api = api;
+        this.getCtx = typeof ctx === "function" ? ctx : () => ctx;
+        this.path = normalizePath(path);
+        this.onChange = onChange;
+        this.debounce = opts.debounce ?? "raf";
+        this.rec = { pathKey: void 0, propKey: void 0, ref: new WeakRef(this) };
+      }
+      /** Register with the path/prop indices and prime the initial callback
+       * (delivered on the next flush). Idempotent. */
+      subscribe() {
+        if (this.subscribed || this.removed) {
+          return this;
+        }
+        this.subscribed = true;
+        this.rec.pathKey = this.path;
+        addRef(pathSubs, this.path, this.rec.ref);
+        this.resolveMeta();
+        finalizer?.register(this, this.rec, this);
+        this.markDirty();
+        return this;
+      }
+      /** Unsubscribe and prune. Idempotent; the watcher is dead afterwards. */
+      remove() {
+        if (this.removed) return;
+        this.removed = true;
+        this.subscribed = false;
+        if (this.timer !== void 0) {
+          clearTimeout(this.timer);
+          this.timer = void 0;
+        }
+        dirty.delete(this);
+        dropRef(pathSubs, this.rec.pathKey, this.rec.ref);
+        dropRef(propSubs, this.rec.propKey, this.rec.ref);
+        this.rec.pathKey = this.rec.propKey = void 0;
+        finalizer?.unregister(this);
+      }
+      /** Push side: flag for the next flush (or fire now for `"immediate"`). */
+      markDirty() {
+        if (this.removed) return;
+        if (this.debounce === "immediate") {
+          this.check("push", true);
+          return;
+        }
+        this.dirtyFlag = true;
+        dirty.add(this);
+        scheduleFlush();
+      }
+      /** Poll side: re-read, diff against the snapshot, fire on change. */
+      poll() {
+        return this.check("poll", false);
+      }
+      /** Per-frame driver for poll mode (the compat safety net). */
+      tick() {
+        return this.poll();
+      }
+      /**
+       * Drop the snapshot and re-deliver the current value unconditionally.
+       * For widgets that gate {@link PathWatchCallback} reactions (e.g. a textbox
+       * ignoring updates while focused): call `refresh()` when the gate lifts to
+       * catch anything delivered-but-ignored in between.
+       */
+      refresh() {
+        this.hasSnapshot = false;
+        return this.check("push", true);
+      }
+      /** Push side: if dirty, re-read + diff + fire (debounced). */
+      flush() {
+        if (this.removed || !this.dirtyFlag) {
+          return false;
+        }
+        if (typeof this.debounce === "object") {
+          if (this.timer !== void 0) {
+            clearTimeout(this.timer);
+          }
+          this.timer = setTimeout(() => {
+            this.timer = void 0;
+            if (this.dirtyFlag && !this.removed) {
+              this.dirtyFlag = false;
+              this.check("push", true);
+            }
+          }, this.debounce.trailing);
+          return false;
+        }
+        this.dirtyFlag = false;
+        return this.check("push", true);
+      }
+      /** Resolve once and cache leaf metadata; (re-)file the reverse index used
+       * by type-scoped notifications (`updateChanged<T>`). */
+      resolveMeta() {
+        const ctx = this.getCtx();
+        if (!ctx) return;
+        this.lastGen = structureGen;
+        let res;
+        try {
+          res = this.api.resolvePath(ctx, this.path, true);
+        } catch {
+          res = void 0;
+        }
+        this.prop = res?.prop;
+        const propKey = res?.dpath?.apiname;
+        if (propKey !== this.rec.propKey) {
+          dropRef(propSubs, this.rec.propKey, this.rec.ref);
+          this.rec.propKey = propKey;
+          if (propKey !== void 0 && this.subscribed) {
+            addRef(propSubs, propKey, this.rec.ref);
+          }
+        }
+      }
+      read(ctx) {
+        try {
+          return this.api.getValue(ctx, this.path);
+        } catch {
+          return void 0;
+        }
+      }
+      /**
+       * Prop-aware structural equality: componentwise for vectors/arrays (so
+       * in-place mutation is detected against the copied snapshot), `.equals()`
+       * for value objects that provide it (Curve1D etc.), `Object.is` for
+       * scalars/enums/flags.
+       */
+      static valuesEqual(a2, b) {
+        if (Object.is(a2, b)) return true;
+        if (a2 === null || b === null || a2 === void 0 || b === void 0) return false;
+        const aArr = Array.isArray(a2) || ArrayBuffer.isView(a2);
+        const bArr = Array.isArray(b) || ArrayBuffer.isView(b);
+        if (aArr || bArr) {
+          if (!aArr || !bArr) return false;
+          const av = a2;
+          const bv = b;
+          if (av.length !== bv.length) return false;
+          for (let i = 0; i < av.length; i++) {
+            if (!Object.is(av[i], bv[i])) return false;
+          }
+          return true;
+        }
+        const eq = a2.equals;
+        if (typeof a2 === "object" && typeof eq === "function") {
+          try {
+            return !!eq.call(a2, b);
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      }
+      snapshotValue(v) {
+        this.hasSnapshot = true;
+        this.snapshotReliable = true;
+        if (v === null || typeof v !== "object") {
+          this.snapshot = v;
+          return;
+        }
+        const cp = v;
+        if (cp[CreateSnapshot]) {
+          try {
+            this.snapshot = cp[CreateSnapshot]();
+            return;
+          } catch (error2) {
+            print_stack2(error2);
+          }
+        }
+        if (Array.isArray(v) || ArrayBuffer.isView(v)) {
+          this.snapshot = Array.from(v);
+          return;
+        }
+        if (v instanceof Matrix4) {
+          this.snapshot = v.copy();
+          return;
+        }
+        this.snapshot = v;
+        this.snapshotReliable = false;
+        warnNoSnapshot(this.path);
+      }
+      check(source, fireOnUnreliable) {
+        if (this.removed) return false;
+        const ctx = this.getCtx();
+        if (!ctx) return false;
+        if (this.lastGen !== structureGen) {
+          this.resolveMeta();
+        }
+        const value = this.read(ctx);
+        const resolved = value !== void 0;
+        if (resolved && this.prop === void 0 && this.rec.propKey === void 0) {
+          this.resolveMeta();
+        }
+        let changed = !this.hasSnapshot || !_DataPathWatcher.valuesEqual(this.snapshot, value);
+        if (!changed && fireOnUnreliable && !this.snapshotReliable) {
+          changed = true;
+        }
+        if (!changed) return false;
+        this.dirtyFlag = false;
+        dirty.delete(this);
+        this.snapshotValue(value);
+        this.onChange(value, { resolved, path: this.path, prop: this.prop, source });
+        return true;
+      }
+    };
+  }
+});
+
+// scripts/path-controller/controller/controller_abstract.ts
+var ModelInterface;
+var init_controller_abstract = __esm({
+  "scripts/path-controller/controller/controller_abstract.ts"() {
+    "use strict";
+    init_util();
+    init_toolprop_abstract();
+    init_toolsys2();
+    init_controller_base();
+    init_pathwatch();
+    ModelInterface = class {
+      prefix;
+      constructor() {
+        this.prefix = "";
+      }
+      getToolDef(path) {
+        throw new Error("implement me");
+      }
+      getToolPathHotkey(ctx, path) {
+        return void 0;
+      }
+      createTool(ctxOrPath, pathOrInputs, inputsOrUnused, unused) {
+        throw new Error("implement me");
+      }
+      //returns tool class, or undefined if one cannot be found for path
+      parseToolPath(path) {
+        throw new Error("implement me");
+      }
+      /**
+       * runs .undo,.redo if toolstack head is same as tool
+       *
+       * otherwise, .execTool(ctx, tool) is called.
+       *
+       * @param compareInputs : check if toolstack head has identical input values, defaults to false
+       * */
+      execOrRedo(ctx, toolop, compareInputs = false) {
+        return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
+      }
+      execTool(ctx, path, inputs, unused, event) {
+        return new Promise((accept, reject) => {
+          let tool = path;
+          try {
+            if (typeof tool == "string" || !(tool instanceof ToolOp)) {
+              tool = this.createTool(ctx, tool, inputs, unused);
+            }
+          } catch (error2) {
+            print_stack2(error2);
+            reject(error2);
+            return;
+          }
+          if (typeof path !== "string") {
+            for (const k in inputs) {
+              if (!(k in tool.inputs)) {
+                console.warn('Unknown tool property "' + k + '"', "in tool", tool);
+                continue;
+              }
+              tool.inputs[k].setValue(inputs[k]);
+            }
+          }
+          accept(tool);
+          try {
+            ctx.toolstack.execTool(ctx, tool, event);
+          } catch (error2) {
+            print_stack2(error2);
+            throw error2;
+          }
+        });
+      }
+      //used by simple_controller.js for tagging error messages
+      pushReportContext(name2) {
+      }
+      //used by simple_controller.js for tagging error messages
+      popReportContext() {
+      }
+      static toolRegistered(tool) {
+        throw new Error("implement me");
+      }
+      static registerTool(tool) {
+        throw new Error("implement me");
+      }
+      //not yet supported by path.ux's controller implementation
+      massSetProp(ctx, mass_set_path, value) {
+        throw new Error("implement me");
+      }
+      /** takes a mass_set_path and returns an array of individual paths */
+      resolveMassSetPaths(ctx, mass_set_path) {
+        throw new Error("implement me");
+      }
+      /**
+       * @example
+       *
+       * return {
+       *   obj      : [object owning property key]
+       *   parent   : [parent of obj]
+       *   key      : [property key]
+       *   subkey   : used by flag properties, represents a key within the property
+       *   value    : [value of property]
+       *   prop     : [optional toolprop.ToolProperty representing the property definition]
+       *   struct   : [optional datastruct representing the type, if value is an object]
+       *   mass_set : mass setter string, if controller implementation supports it
+       * }
+       */
+      resolvePath(ctx, path, ignoreExistence, rootStruct) {
+        return void 0;
+      }
+      setValue(ctx, path, val, rootStruct) {
+        const res = this.resolvePath(ctx, path, void 0, rootStruct);
+        const prop = res.prop;
+        if (prop !== void 0 && prop.flag & PropFlags.READ_ONLY) {
+          throw new DataPathError("Tried to set read only property");
+        }
+        if (prop !== void 0 && prop.flag & PropFlags.USE_CUSTOM_GETSET) {
+          var _stack = [];
+          try {
+            const execCtx = __using(_stack, prop.execWithContext());
+            execCtx.dataref = res.obj;
+            execCtx.ctx = ctx;
+            execCtx.datapath = path;
+            if (res.subkey !== void 0) {
+              let val2 = prop.getValue();
+              if (typeof val2 === "object" && val2 !== null && "copy" in val2) {
+                val2 = val2.copy();
+              }
+              if (prop.type === PropTypes.FLAG) {
+                if (val) {
+                  val2 = val2 | prop.values[res.subkey];
+                } else {
+                  val2 = val2 & ~prop.values[res.subkey];
+                }
+                val = val2;
+              } else if (prop.type === PropTypes.ENUM) {
+                val = prop.values[res.subkey];
+              } else {
+                val2[res.subkey] = val;
+                val = val2;
+              }
+            }
+            prop.setValue(val);
+            notifyPathChange(path);
+            return;
+          } catch (_) {
+            var _error = _, _hasError = true;
+          } finally {
+            __callDispose(_stack, _error, _hasError);
+          }
+        }
+        if (prop !== void 0) {
+          if (prop.type === PropTypes.CURVE && !val) {
+            throw new DataPathError("can't set curve data to nothing");
+          }
+          let use_range = prop.type & (PropTypes.INT | PropTypes.FLOAT);
+          use_range = use_range || (res.subkey ? prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4) : 0);
+          use_range = use_range && prop.range ? 1 : 0;
+          use_range = use_range && prop.range !== void 0 && !(prop.range[0] === 0 && prop.range[1] === 0) ? 1 : 0;
+          use_range = use_range && typeof val === "number" ? 1 : 0;
+          if (use_range && prop.range !== void 0) {
+            val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+          }
+        }
+        const old = res.obj[res.key];
+        if (res.subkey !== void 0 && res.prop?.type === PropTypes.ENUM) {
+          const ival = res.prop.values[res.subkey];
+          if (val) {
+            res.obj[res.key] = ival;
+          }
+        } else if (res.prop?.type === PropTypes.FLAG) {
+          if (res.subkey !== void 0) {
+            const ival = res.prop.values[res.subkey];
+            if (val) {
+              res.obj[res.key] = res.obj[res.key] | ival;
+            } else {
+              res.obj[res.key] = res.obj[res.key] & ~ival;
+            }
+          } else if (typeof val === "number" || typeof val === "boolean") {
+            val = typeof val === "boolean" ? val & 1 : val;
+            res.obj[res.key] = val;
+          } else {
+            throw new DataPathError("Expected a number for a bitmask property");
+          }
+        } else if (res.subkey !== void 0 && isVecProperty(res.prop)) {
+          if (res.key !== "") {
+            res.obj[res.key][res.subkey] = val;
+          } else {
+            res.obj[res.subkey] = val;
+          }
+        } else if (res.key === "" && isVecProperty(res.prop)) {
+          for (let i = 0; i < res.obj.length; i++) {
+            res.obj[i] = val[i];
+          }
+        } else if (!(prop !== void 0 && prop instanceof DataList)) {
+          res.obj[res.key] = val;
+        }
+        if (prop !== void 0 && prop instanceof DataList) {
+          prop.set(this, res.obj, res.key, val);
+        } else if (prop !== void 0) {
+          var _stack2 = [];
+          try {
+            const execCtx = __using(_stack2, prop.execWithContext());
+            execCtx.dataref = res.obj;
+            execCtx.datapath = path;
+            execCtx.ctx = ctx;
+            prop._fire("change", res.obj[res.key], old);
+          } catch (_2) {
+            var _error2 = _2, _hasError2 = true;
+          } finally {
+            __callDispose(_stack2, _error2, _hasError2);
+          }
+        }
+        notifyPathChange(path);
+      }
+      getDescription(ctx, path) {
+        const rdef = this.resolvePath(ctx, path);
+        if (rdef === void 0) {
+          throw new DataPathError("invalid path " + path);
+        }
+        if (!rdef.prop || !(rdef.prop instanceof ToolProperty)) {
+          return "";
+        }
+        const prop = rdef.prop;
+        if (rdef.subkey !== void 0) {
+          let subkey = rdef.subkey;
+          if (prop.type !== void 0 && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
+            if (typeof subkey === "string") {
+              subkey = parseInt(subkey);
+            }
+            const vecProp = prop;
+            if (vecProp.descriptions && subkey in vecProp.descriptions) {
+              return vecProp.descriptions[subkey];
+            }
+          } else if (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG) {
+            if (!(subkey in prop.values) && subkey in prop.keys) {
+              subkey = prop.keys[subkey];
+            }
+            if (prop.descriptions && subkey in prop.descriptions) {
+              return prop.descriptions[subkey];
+            }
+          } else if (prop.type === PropTypes.PROPLIST) {
+            const val = rdef.value;
+            if (typeof val === "object" && val instanceof ToolProperty) {
+              return val.description ?? "";
+            }
+          }
+        }
+        return prop.description ? prop.description : prop.uiname ?? "";
+      }
+      validPath(ctx, path, rootStruct) {
+        try {
+          this.getValue(ctx, path, rootStruct);
+          return true;
+        } catch (error2) {
+          if (!(error2 instanceof DataPathError)) {
+            throw error2;
+          }
+        }
+        return false;
+      }
+      getPropName(ctx, path) {
+        let i = path.length - 1;
+        while (i >= 0 && path[i] !== ".") {
+          i--;
+        }
+        path = path.slice(i + 1, path.length).trim();
+        if (path.endsWith("]")) {
+          i = path.length - 1;
+          while (i >= 0 && path[i] !== "[") {
+            i--;
+          }
+          path = path.slice(0, i).trim();
+          return this.getPropName(ctx, path);
+        }
+        return path;
+      }
+      getValue(ctx, path, rootStruct) {
+        if (typeof ctx == "string") {
+          throw new Error("You forgot to pass context to getValue");
+        }
+        const ret = this.resolvePath(ctx, path, void 0, rootStruct);
+        if (ret === void 0) {
+          throw new DataPathError("invalid path " + path);
+        }
+        let exec = ret.prop !== void 0 && ret.prop.flag & PropFlags.USE_CUSTOM_GETSET;
+        exec = exec && !(ret.prop?.type !== void 0 && ret.prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT));
+        if (exec) {
+          const prop = ret.prop;
+          let val;
+          {
+            var _stack = [];
+            try {
+              const execCtx = __using(_stack, prop.execWithContext());
+              execCtx.dataref = ret.obj;
+              execCtx.datapath = path;
+              execCtx.ctx = ctx;
+              val = prop.getValue();
+            } catch (_) {
+              var _error = _, _hasError = true;
+            } finally {
+              __callDispose(_stack, _error, _hasError);
+            }
+          }
+          if (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG) {
+            if (typeof val === "string" && val in prop.values) {
+              val = prop.values[val];
+            }
+          }
+          if (ret.subkey && prop.type === PropTypes.ENUM) {
+            val = val === prop.values[ret.subkey];
+          } else if (ret.subkey && prop.type === PropTypes.FLAG) {
+            val = val & prop.values[ret.subkey];
+          }
+          return val;
+        }
+        return ret.value;
+      }
+    };
+  }
+});
+
+// scripts/path-controller/controller/controller.ts
+function toolkey(cls) {
+  if (!(Symbol.ToolID in cls)) {
+    cls[Symbol.ToolID] = tool_idgen++;
+  }
+  return cls[Symbol.ToolID];
+}
+function pushReportName(name2) {
+  if (reportstack.length > 1024) {
+    console.trace("eerk, reportstack overflowed");
+    reportstack.length = 0;
+    reportstack.push("api");
+  }
+  reportstack.push(name2);
+}
+function report2(msg) {
+  const name2 = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
+  console2.context(name2).warn(msg);
+}
+function popReportName() {
+  reportstack.pop();
+}
+function resolveStructName(cls, explicit) {
+  if (explicit !== void 0) {
+    return explicit;
+  }
+  if (cls.hasOwnProperty("structName") && typeof cls.structName === "string") {
+    return cls.structName;
+  }
+  return cls.name;
+}
+function initSimpleController() {
+  initToolPaths();
+}
+function getDataPathToolOp() {
+  return dpt;
+}
+function setDataPathToolOp(cls) {
+  ToolOp.unregister(DataPathSetOp);
+  if (!ToolOp.isRegistered(cls)) {
+    ToolOp.register(cls);
+  }
+  dpt = cls;
+}
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
+var init_controller = __esm({
+  "scripts/path-controller/controller/controller.ts"() {
+    "use strict";
+    init_toolprop();
+    init_parseutil();
+    init_util();
+    init_toolsys();
+    init_toolprop();
+    init_util();
+    init_controller_ops();
+    init_curve1d_toolprop();
+    init_toolsys2();
+    init_controller_base();
+    init_pathwatch();
+    init_controller_base();
+    init_pathwatch();
+    init_controller_base();
+    init_toolpath();
+    init_controller_abstract();
+    init_controller_base();
+    init_toolprop();
+    PUTLParseError2 = PUTLParseError;
+    tk = (name2, re, func) => new tokdef2(name2, re, func);
+    tokens = [
+      tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
+      tk("NUM", /-?[0-9]+/, (t2) => {
+        t2.value = parseInt(t2.value);
+        return t2;
+      }),
+      tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t2) => {
+        t2.value = parseFloat(t2.value);
+        return t2;
+      }),
+      tk("STRLIT", /'.*?'/, (t2) => {
+        t2.value = t2.value.slice(1, t2.value.length - 1);
+        return t2;
+      }),
+      tk("STRLIT", /".*?"/, (t2) => {
+        t2.value = t2.value.slice(1, t2.value.length - 1);
+        return t2;
+      }),
+      tk("DOT", /\./),
+      tk("EQUALS", /(\=)|(\=\=)/),
+      tk("LSBRACKET", /\[/),
+      tk("RSBRACKET", /\]/),
+      tk("AND", /\&/),
+      tk("WS", /[ \t\n\r]+/, () => void 0)
+      //drop token
+    ];
+    lexer3 = new lexer2(tokens, (t2) => {
+      console.warn("Parse error", t2);
+      throw new DataPathError();
+    });
+    pathParser = new parser2(lexer3);
+    parserStack = new Array(32);
+    for (let i = 0; i < parserStack.length; i++) {
+      parserStack[i] = pathParser.copy();
+    }
+    parserStackCur = 0;
+    tool_idgen = 1;
+    Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
+    reportstack = ["api"];
+    DataStruct2 = class _DataStruct {
+      members;
+      name;
+      pathmap;
+      flag;
+      dpath;
+      inheritFlag;
+      constructor(members = [], name2 = "unnamed") {
+        this.members = [];
+        this.name = name2;
+        this.pathmap = {};
+        this.flag = 0;
+        this.dpath = void 0;
+        this.inheritFlag = 0;
+        for (const m of members ?? []) {
+          this.add(m);
+        }
+      }
+      clear() {
+        this.pathmap = {};
+        this.members = [];
+        return this;
+      }
+      copy() {
+        const ret = new _DataStruct();
+        ret.name = this.name;
+        ret.flag = this.flag;
+        ret.inheritFlag = this.inheritFlag;
+        for (const m of this.members) {
+          const m2 = m.copy();
+          if (m2.type === DataTypes.PROP) {
+            m2.data = m2.data.copy();
+          }
+          ret.add(m2);
+        }
+        return ret;
+      }
+      /**
+       * Like .struct, but the type of struct is looked up
+       * for objects at runtime.  Note that to work correctly each object
+       * must create its own struct definition via api.mapStruct
+       *
+       * @param path
+       * @param apiname
+       * @param uiname
+       * @param default_struct : default struct if one can't be looked up
+       * @returns {*}
+       */
+      dynamicStruct(path, apiname, uiname, default_struct) {
+        const ret = default_struct ? default_struct : new _DataStruct();
+        const dpath = new DataPath(
+          path,
+          apiname,
+          ret,
+          DataTypes.DYNAMIC_STRUCT
+        );
+        ret.inheritFlag |= this.inheritFlag;
+        ret.dpath = dpath;
+        this.add(dpath);
+        return ret;
+      }
+      struct(path, apiname, uiname, existing_struct) {
+        const ret = existing_struct ? existing_struct : new _DataStruct();
+        const dpath = new DataPath(path, apiname, ret, DataTypes.STRUCT);
+        ret.inheritFlag |= this.inheritFlag;
+        ret.dpath = dpath;
+        this.add(dpath);
+        return ret;
+      }
+      customGet(getter) {
+        this.dpath.customGet(getter);
+        return this;
+      }
+      customGetSet(getter, setter) {
+        this.dpath.customGetSet(getter, setter);
+        return this;
+      }
+      color3(path, apiname, uiname, description = uiname) {
+        const ret = this.vec3(path, apiname, uiname, description);
+        ret.data.subtype = PropSubTypes2.COLOR;
+        ret.range(0, 1);
+        ret.simpleSlider();
+        ret.noUnits();
+        return ret;
+      }
+      color4(path, apiname, uiname, description = uiname) {
+        const ret = this.vec4(path, apiname, uiname, description);
+        ret.data.subtype = PropSubTypes2.COLOR;
+        ret.range(0, 1);
+        ret.simpleSlider();
+        ret.noUnits();
+        return ret;
+      }
+      arrayList(path, apiname, structdef, uiname, description) {
+        const ret = this.list(path, apiname, {
+          getIter(api, list5) {
+            return list5[Symbol.iterator]();
+          },
+          getLength(api, list5) {
+            return list5.length;
+          },
+          get(api, list5, key) {
+            return list5[key];
+          },
+          set(api, list5, key, val) {
+            if (typeof key === "string") {
+              key = parseInt(key);
+            }
+            if (key < 0 || key >= list5.length) {
+              throw new DataPathError("Invalid index " + key);
+            }
+            list5[key] = val;
+          },
+          getKey(api, list5, value) {
+            return list5.indexOf(value);
+          },
+          getStruct(api, list5, key) {
+            return structdef;
+          }
+        });
+        return ret;
+      }
+      color3List(path, apiname, uiname, description) {
+        return this.vectorList(3, path, apiname, uiname, description, PropSubTypes2.COLOR);
+      }
+      color4List(path, apiname, uiname, description) {
+        return this.vectorList(4, path, apiname, uiname, description, PropSubTypes2.COLOR);
+      }
+      vectorList(size, path, apiname, uiname, description, subtype) {
+        let type;
+        switch (size) {
+          case 2:
+            type = Vec2Property;
+            break;
+          case 3:
+          case 4:
+            type = Vec4Property;
+        }
+        if (type === void 0) {
+          throw new DataPathError("Invalid size for vectorList; expected 2 3 or 4");
+        }
+        const pstruct = new _DataStruct(void 0, "Vector");
+        pstruct.vec3("", "co", "Coords", "Coordinates");
+        const ret = this.list(path, apiname, {
+          getIter(api, list5) {
+            return list5[Symbol.iterator]();
+          },
+          getLength(api, list5) {
+            return list5.length;
+          },
+          get(api, list5, key) {
+            return list5[key];
+          },
+          set(api, list5, key, val) {
+            if (typeof key == "string") {
+              key = parseInt(key);
+            }
+            if (key < 0 || key >= list5.length) {
+              throw new DataPathError("Invalid index " + key);
+            }
+            list5[key] = val;
+          },
+          getKey(api, list5, value) {
+            return list5.indexOf(value);
+          },
+          getStruct(api, list5, key) {
+            return pstruct;
+          }
+        });
+        return ret;
+      }
+      bool(path, apiname, uiname, description) {
+        const prop = new BoolProperty(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      vec2(path, apiname, uiname, description) {
+        const prop = new Vec2Property(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      vec3(path, apiname, uiname, description) {
+        const prop = new Vec3Property(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      vec4(path, apiname, uiname, description) {
+        const prop = new Vec4Property(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      float(path, apiname, uiname, description) {
+        const prop = new FloatProperty(0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      textblock(path, apiname, uiname, description) {
+        const prop = new StringProperty(void 0, apiname, uiname, description);
+        prop.multiLine = true;
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      report(path, apiname, uiname, description) {
+        const prop = new ReportProperty(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      string(path, apiname, uiname, description) {
+        const prop = new StringProperty(void 0, apiname, uiname, description);
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      int(path, apiname, uiname, description, prop) {
+        if (!prop) {
+          prop = new IntProperty(0, apiname, uiname, description);
+        }
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      curve1d(path, apiname, uiname, description) {
+        const prop = new Curve1DProperty(void 0);
+        prop.apiname = apiname;
+        prop.uiname = uiname;
+        prop.description = description;
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      enum(path, apiname, enumdef, uiname, description) {
+        let prop;
+        if (enumdef instanceof EnumProperty) {
+          prop = enumdef;
+        } else {
+          prop = new EnumProperty(void 0, enumdef, apiname, uiname, description);
+        }
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      list(path, apiname, funcs) {
+        const array = new DataList(funcs);
+        const dpath = new DataPath(path, apiname, array);
+        dpath.type = DataTypes.ARRAY;
+        this.add(dpath);
+        return dpath;
+      }
+      flags(path, apiname, enumdef, uiname, description) {
+        let prop;
+        if (enumdef === void 0 || !(enumdef instanceof ToolProperty)) {
+          prop = new FlagProperty(void 0, enumdef, apiname, uiname, description);
+        } else {
+          prop = enumdef;
+        }
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      remove(m) {
+        if (typeof m === "string") {
+          m = this.pathmap[m];
+        }
+        if (!(m.apiname in this.pathmap)) {
+          throw new Error("Member not in struct " + m.apiname);
+        }
+        delete this.pathmap[m.apiname];
+        this.members.remove(m);
+      }
+      fromToolProp(path, prop, apiname = prop.apiname?.length ? prop.apiname : path) {
+        const dpath = new DataPath(path, apiname, prop);
+        this.add(dpath);
+        return dpath;
+      }
+      add(dpath) {
+        if (dpath.apiname in this.pathmap) {
+          if (window.DEBUG?.datapaths) {
+            console.warn(
+              "Overriding existing member '" + dpath.apiname + "' in datapath struct",
+              this.name
+            );
+          }
+          this.remove(this.pathmap[dpath.apiname]);
+        }
+        dpath.flag |= this.inheritFlag;
+        this.members.push(dpath);
+        dpath.parent = this;
+        this.pathmap[dpath.apiname] = dpath;
+        return this;
+      }
+    };
+    _map_struct_idgen = 1;
+    _map_structs = {};
+    _map_structs_by_name = {};
+    _dummypath = new DataPath();
+    DummyIntProperty = new IntProperty();
+    CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
+    CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
+    DataAPI2 = class extends ModelInterface {
+      rootContextStruct;
+      structs = [];
+      /** Message from the most recent failed resolvePath (incl. "did you mean" hints). */
+      lastResolveError = void 0;
+      constructor() {
+        super();
+        this.rootContextStruct = void 0;
+        this.structs = [];
+      }
+      static toolRegistered(cls) {
+        return ToolOp.isRegistered(cls);
+      }
+      static registerTool(cls) {
+        console.warn("Outdated function simple_controller.DataAPI.registerTool called");
+        return ToolOp.register(cls);
+      }
+      getStructs() {
+        return this.structs;
+      }
+      setRoot(sdef) {
+        this.rootContextStruct = sdef;
+      }
+      hasStruct(cls) {
+        return cls.hasOwnProperty(CLS_API_KEY);
+      }
+      getStruct(cls) {
+        return this.mapStruct(cls, false);
+      }
+      /**
+       * Signal that `prop` changed on the model reached by `path`. Strongly typed:
+       * pass the model type as the type argument, and `path` is restricted to the
+       * datapaths that resolve to that type while `prop` is restricted to that
+       * struct's members — both checked at compile time against the generated
+       * {@link StructCatalog}.
+       *
+       * ```ts
+       * api.updateFrom<BrushSettings>("workspace.brush", "size"); // ok
+       * api.updateFrom<BrushSettings>("workspace.brush", "nope"); // ✗ not a member
+       * api.updateFrom<BrushSettings>("canvas", "size");          // ✗ not a BrushSettings path
+       * ```
+       *
+       * (With the empty standalone seam both params are `never`, so this is only
+       * callable once the app's generated catalog is included — same opt-in model as
+       * the typed `getDefault`/`prop` paths.)
+       */
+      updateFrom(path, prop) {
+        this.notifyChange(`${path}.${prop}`);
+      }
+      /**
+       * Coarser sibling of {@link updateFrom}: some instance of `T` had `prop`
+       * change, without a known root path (e.g. raw model mutation that holds an
+       * instance but not its path). Wakes every subscription whose endpoint resolves
+       * to `(T, prop)`.
+       */
+      updateChanged(prop) {
+        this.notifyChange(void 0, prop);
+      }
+      /**
+       * Low-level change signal: marks matching subscriptions dirty and coalesces
+       * their callbacks onto the next animation frame (see {@link notifyPathChange}).
+       *
+       *  - `notifyChange(path)` wakes watchers on `path` and its subtree/ancestors;
+       *  - `notifyChange(undefined, prop)` is the type-scoped wake used by
+       *    {@link updateChanged};
+       *  - `notifyChange()` bumps the structural epoch and wakes every watcher —
+       *    use it for tree-shape changes (active-object switch, list
+       *    insert/remove, context swap) that invalidate resolved paths.
+       */
+      notifyChange(path, prop) {
+        if (typeof window !== "undefined" && window.DEBUG?.datapaths) {
+          console.log("[datapath] notifyChange", { path, prop });
+        }
+        notifyPathChange(path, prop);
+      }
+      /**
+       * Subscribe to changes on `path`: creates a {@link DataPathWatcher} that
+       * owns change detection (read + snapshot + prop-aware compare) and invokes
+       * `cb` when the value changes — pushed via {@link notifyChange} (rAF
+       * coalesced) or polled via `watcher.tick()`.
+       *
+       * `ctx` may be a getter so long-lived watchers always see the current
+       * context. The caller must hold the returned watcher and call
+       * `watcher.remove()` (or {@link unsubscribe}) when done; the registry only
+       * holds a weak ref.
+       */
+      watch(ctx, path, cb, opts) {
+        return new DataPathWatcher(this, ctx, path, cb, opts).subscribe();
+      }
+      /** Register an unsubscribed {@link DataPathWatcher} (see {@link watch}). */
+      subscribe(watcher) {
+        return watcher.subscribe();
+      }
+      /** Unsubscribe a watcher created with {@link watch}; alias of `watcher.remove()`. */
+      unsubscribe(watcher) {
+        watcher.remove();
+      }
+      /**
+       * Look up a struct definition by its stable name (see `resolveStructName`):
+       * an explicit name passed to `mapStruct`, else the nstructjs registered name
+       * (`cls.structName`), else `cls.name`. Unlike `getStruct(cls)` this does not
+       * need a class reference, so it survives bundler name-mangling as long as the
+       * struct was registered with an nstructjs/explicit name.
+       */
+      getStructByName(name2) {
+        return _map_structs_by_name[name2];
+      }
+      mergeStructs(dest, src) {
+        for (const m of src.members) {
+          dest.add(m.copy());
+        }
+      }
+      inheritStruct(cls, parent, auto_create_parent = false, name2) {
+        let st = this.mapStruct(parent, auto_create_parent);
+        if (st === void 0) {
+          throw new Error("parent has no struct definition");
+        }
+        st = st.copy();
+        this._addClass(cls, st, name2);
+        return st;
+      }
+      /**
+       * Look up struct definition for a class.
+       *
+       * @param cls: the class
+       * @param auto_create: If true, automatically create definition if not already existing.
+       * @returns {IterableIterator<*>}
+       */
+      _addClass(cls, dstruct, name2) {
+        const key = _map_struct_idgen++;
+        cls[CLS_API_KEY] = key;
+        const stableName = resolveStructName(cls, name2);
+        dstruct.name = stableName;
+        this.structs.push(dstruct);
+        _map_structs[key] = dstruct;
+        const existing = _map_structs_by_name[stableName];
+        if (existing !== void 0 && existing !== dstruct) {
+          console.warn(
+            `mapStruct: duplicate struct name "${stableName}"; keeping the first registration. Pass an explicit name to mapStruct/inheritStruct to disambiguate.`
+          );
+        } else {
+          _map_structs_by_name[stableName] = dstruct;
+        }
+      }
+      /* Associate cls with a DataStruct
+       * via callback, which will be called
+       * with an instance of cls as its argument*/
+      mapStructCustom(cls, callback, name2) {
+        this.mapStruct(cls, true, name2);
+        cls[CLS_API_KEY_CUSTOM] = callback;
+      }
+      mapStruct(cls, auto_create = true, name2) {
+        let key;
+        if (!cls.hasOwnProperty(CLS_API_KEY)) {
+          key = void 0;
+        } else {
+          key = cls[CLS_API_KEY];
+        }
+        if (key === void 0 && auto_create) {
+          let dstruct;
+          if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
+            dstruct = _map_structs_by_name[name2];
+          } else {
+            dstruct = new DataStruct2(void 0, resolveStructName(cls, name2));
+          }
+          this._addClass(cls, dstruct, name2);
+          return dstruct;
+        } else if (key === void 0) {
+          throw new Error("class does not have a struct definition: " + resolveStructName(cls, name2));
+        }
+        return _map_structs[key];
+      }
+      //used for tagging error messages
+      pushReportContext(name2) {
+        pushReportName(name2);
+      }
+      //used for tagging error messages
+      popReportContext() {
+        popReportName();
+      }
+      /*
+        massSetProp operate on lists.  The idea is to
+        write a filter str inside a data path, e.g.
+      
+        ctx.api.massSetProp(ctx, "obj.list[{$.select}].value", 1);
+      
+      
+        * */
+      massSetProp(ctx, massSetPath, value) {
+        for (const path of this.resolveMassSetPaths(ctx, massSetPath)) {
+          this.setValue(ctx, path, value);
+        }
+      }
+      /**
+       *
+       * Mass set paths take the form list[{$.prop}]`, where the filter is inside of the list.
+       * Note: `$.prop` cannot be an expression unless you enable eval with `struct.list().evalMassSetFilter()`.
+       * An example of a more complicated expression might be:
+       * `canvas.paths[{$.id % 2 === 0}].material.color`
+       */
+      resolveMassSetPaths(ctx, massSetPath) {
+        if (massSetPath.startsWith("/")) {
+          massSetPath = massSetPath.slice(1, massSetPath.length);
+        }
+        const start = massSetPath.search("{");
+        const end = massSetPath.search("}");
+        if (start < 0 || end < 0) {
+          console.log(
+            `
+Mass set paths take the form \`list[{$.prop}]\`, where the filter is inside of the list.
+Note: \`$.prop\` cannot be an expression unless you enable eval with \`struct.list().evalMassSetFilter()\`.
+An example of a more complicated expression might be: 
+\`canvas.paths[{$.id % 2 === 0}].material.color\``.trim()
+          );
+          throw new DataPathError("Invalid mass set datapath: " + massSetPath);
+        }
+        const prefix2 = massSetPath.slice(0, start - 1);
+        const filter = massSetPath.slice(start + 1, end);
+        const suffix = massSetPath.slice(end + 2, massSetPath.length);
+        const rdef1 = this.resolvePath(ctx, prefix2);
+        if (rdef1 === void 0) {
+          throw new DataPathError('unknown path: "' + prefix2 + '"');
+        }
+        const rdef = rdef1;
+        if (!(rdef.prop instanceof DataList)) {
+          throw new DataPathError(
+            "massSetPath expected a path resolving to a DataList: " + massSetPath
+          );
+        }
+        const paths = [];
+        const list5 = rdef.prop;
+        const api = ctx.api ?? this;
+        function applyFilter(obj) {
+          const forceEval = rdef.dpath.flag & DataFlags.USE_EVAL_MASS_SET_PATHS;
+          if (obj === void 0) {
+            return void 0;
+          } else if (!forceEval && (typeof obj === "object" || typeof obj === "function")) {
+            const st = api.mapStruct(obj.constructor, false);
+            let path = filter;
+            if (path.startsWith("$")) {
+              path = path.slice(1, filter.length).trim();
+            }
+            if (path.startsWith(".")) {
+              path = path.slice(1, filter.length).trim();
+            }
+            try {
+              return api.getValue(obj, path, st);
+            } catch (error2) {
+              if (!(error2 instanceof DataPathError)) {
+                print_stack2(error2);
+                console.error("Error in datapath callback");
+              }
+              return false;
+            }
+          } else {
+            const code2 = `
+        (function filter($) {
+          return ${filter};
+        })
+        `;
+            const func = (0, eval)(code2);
+            return func(obj);
+          }
+        }
+        for (const obj of list5.getIter(this, rdef.value)) {
+          if (!applyFilter(obj)) {
+            continue;
+          }
+          const key = "" + list5.getKey(this, rdef.value, obj);
+          const path = `${prefix2}[${key}]${suffix}`;
+          try {
+            this.getValue(ctx, path);
+          } catch (error2) {
+            if (!(error2 instanceof DataPathError)) {
+              print_stack2(error2);
+              console.error(path + ": Error in datapath API");
+            }
+            continue;
+          }
+          paths.push(path);
+        }
+        return paths;
+      }
+      resolvePath(ctx, inpath, ignoreExistence = false, dstruct) {
+        const parser3 = parserStack[parserStackCur++];
+        let ret;
+        if (inpath[0] === "/") {
+          inpath = inpath.slice(1, inpath.length).trim();
+        }
+        this.lastResolveError = void 0;
+        try {
+          ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser3, dstruct);
+        } catch (error2) {
+          if (error2 instanceof DataPathError) {
+            this.lastResolveError = error2.message;
+          } else {
+            print_stack2(error2);
+            report2("error while evaluating path " + inpath);
+          }
+          if (window.DEBUG?.datapaths) {
+            print_stack2(error2);
+          }
+          ret = void 0;
+        }
+        parserStackCur--;
+        if (ret?.prop && ret.dpath && ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
+          ret.prop = this.getPropOverride(ctx, inpath, ret.dpath, ret.obj);
+        }
+        if (ret?.prop && ret.dpath?.ui_name_get) {
+          const dummy = {
+            datactx: ctx,
+            datapath: inpath,
+            dataref: ret.obj
+          };
+          const name2 = ret.dpath.ui_name_get.call(dummy);
+          ret.prop.uiname = "" + name2;
+        }
+        return ret;
+      }
+      getPropOverride(ctx, path, dpath, obj, prop = dpath.data) {
+        var _stack = [];
+        try {
+          const execCtx = __using(_stack, prop.execWithContext());
+          execCtx.ctx = ctx;
+          execCtx.datapath = path;
+          execCtx.dataref = obj;
+          const newprop = getTempProp(prop.type);
+          prop.copyTo(newprop);
+          dpath.propGetter.call(prop, newprop);
+          return newprop;
+        } catch (_) {
+          var _error = _, _hasError = true;
+        } finally {
+          __callDispose(_stack, _error, _hasError);
+        }
+      }
+      /**
+         get meta information for a datapath.
+      
+         @param ignoreExistence: don't try to get actual data associated with path,
+          just want meta information
+         */
+      resolvePath_intern(ctx, inpath, ignoreExistence = false, p = pathParser, dstruct) {
+        inpath = inpath.replace("==", "=");
+        p.input(inpath);
+        dstruct = dstruct || this.rootContextStruct;
+        let obj = ctx;
+        let lastobj = ctx;
+        let subkey;
+        let lastobj2;
+        let lastkey;
+        let prop;
+        let lastdpath;
+        function p_key() {
+          const t2 = p.peeknext();
+          if (t2.type === "NUM" || t2.type === "STRLIT") {
+            p.next();
+            return t2.value;
+          } else {
+            throw new PUTLParseError2("Expected list key");
+          }
+        }
+        let _i = 0;
+        while (!p.at_end()) {
+          let key = p.expect("ID");
+          let dpath = dstruct.pathmap[key];
+          lastdpath = dpath;
+          if (dpath === void 0) {
+            if (key === "length" && prop !== void 0 && prop instanceof DataList) {
+              prop.getLength(this, obj);
+              prop = DummyIntProperty;
+              prop.name = "length";
+              prop.flag = PropFlags.READ_ONLY;
+              dpath = _dummypath;
+              dpath.type = DataTypes.PROP;
+              dpath.data = prop;
+              dpath.struct = dpath.parent = dstruct;
+              dpath.flag = DataFlags.READ_ONLY;
+              dpath.path = "length";
+            } else if (key === "active" && prop !== void 0 && prop instanceof DataList) {
+              const act = prop.getActive(this, obj);
+              if (act === void 0 && !ignoreExistence) {
+                throw new DataPathError("no active elem ent for list");
+              }
+              const actkey = obj !== void 0 && act !== void 0 ? prop.getKey(this, obj, act) : void 0;
+              dstruct = prop.getStruct(this, obj, actkey);
+              if (dstruct === void 0) {
+                throw new DataPathError(
+                  "couldn't get data type for " + inpath + "'s element '" + key + "'"
+                );
+              }
+              _dummypath.parent = dpath;
+              dpath = _dummypath;
+              lastobj = obj;
+              obj = act;
+              dpath.type = DataTypes.STRUCT;
+              dpath.data = dstruct;
+              dpath.path = key;
+              p.optional("DOT");
+              continue;
+            } else {
+              throw new DataPathError(
+                `${inpath}: unknown property "${key}"` + suggestPropertyKeys(key, Object.keys(dstruct.pathmap))
+              );
+            }
+          }
+          let dynstructobj = void 0;
+          if (dpath.type === DataTypes.STRUCT) {
+            dstruct = dpath.data;
+            prop = void 0;
+          } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
+            let ok = false;
+            prop = void 0;
+            if (obj !== void 0) {
+              let obj2;
+              if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
+                const fakeprop = dpath.getSet;
+                fakeprop.ctx = ctx;
+                fakeprop.dataref = obj;
+                fakeprop.datapath = inpath;
+                obj2 = fakeprop.get();
+                fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
+              } else {
+                obj2 = obj[dpath.path];
+              }
+              dynstructobj = obj2;
+              if (obj2 !== void 0) {
+                if (CLS_API_KEY_CUSTOM in obj2.constructor) {
+                  dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2);
+                } else {
+                  dstruct = this.mapStruct(obj2.constructor, false);
+                }
+              } else {
+                dstruct = dpath.data;
+              }
+              if (dstruct === void 0) {
+                dstruct = dpath.data;
+              }
+              ok = dstruct !== void 0;
+            }
+            if (!ok) {
+              throw new DataPathError("dynamic struct error for path: " + inpath);
+            }
+          } else {
+            prop = dpath.data;
+          }
+          if (prop && dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
+            prop = this.getPropOverride(ctx, inpath, dpath, obj);
+          }
+          if (dpath.path.search(/\./) >= 0) {
+            const keys2 = dpath.path.split(/\./);
+            for (const key2 of keys2) {
+              lastobj2 = lastobj;
+              lastobj = obj;
+              lastkey = key2;
+              if (obj === void 0 && !ignoreExistence) {
+                throw new DataPathError("no data for " + inpath);
+              } else if (obj !== void 0) {
+                obj = obj[key2.trim()];
+              }
+            }
+          } else {
+            lastobj2 = lastobj;
+            lastobj = obj;
+            lastkey = dpath.path;
+            if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
+              const fakeprop = dpath.getSet;
+              if (!fakeprop && dpath.type === DataTypes.PROP) {
+                var _stack = [];
+                try {
+                  const prop2 = dpath.data;
+                  const execCtx = __using(_stack, prop2.execWithContext(ctx));
+                  execCtx.ctx = ctx;
+                  execCtx.dataref = obj;
+                  execCtx.datapath = inpath;
+                  try {
+                    obj = prop2.getValue();
+                  } catch (error2) {
+                    print_stack2(error2);
+                    obj = void 0;
+                  }
+                  if (typeof obj === "string" && prop2.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+                    obj = prop2.values[obj];
+                  }
+                } catch (_) {
+                  var _error = _, _hasError = true;
+                } finally {
+                  __callDispose(_stack, _error, _hasError);
+                }
+              } else {
+                fakeprop.ctx = ctx;
+                fakeprop.dataref = obj;
+                fakeprop.datapath = inpath;
+                obj = fakeprop.get();
+                fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
+              }
+            } else if (obj === void 0 && !ignoreExistence) {
+              throw new DataPathError("no data for " + inpath);
+            } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
+              obj = dynstructobj;
+            } else if (obj !== void 0 && dpath.path !== "") {
+              obj = obj[dpath.path];
+            }
+          }
+          const t2 = p.peeknext();
+          if (t2 === void 0) {
+            break;
+          }
+          if (t2.type === "DOT") {
+            p.next();
+          } else if (t2.type === "EQUALS" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            p.expect("EQUALS");
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
+            let val = p.expect(type);
+            const val1 = val;
+            if (typeof val == "string") {
+              val = prop.values[val];
+            }
+            if (val === void 0) {
+              throw new DataPathError("unknown value " + val1);
+            }
+            if (val in prop.keys) {
+              subkey = prop.keys[val];
+            }
+            key = dpath.path;
+            obj = !!(lastobj[key] == val);
+          } else if (t2.type === "AND" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            p.expect("AND");
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
+            let val = p.expect(type);
+            const val1 = val;
+            if (typeof val == "string") {
+              val = prop.values[val];
+            }
+            if (val === void 0) {
+              throw new DataPathError("unknown value " + val1);
+            }
+            if (val in prop.keys) {
+              subkey = prop.keys[val];
+            }
+            key = dpath.path;
+            obj = !!(lastobj[key] & val);
+          } else if (t2.type === "LSBRACKET" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+            p.expect("LSBRACKET");
+            const t22 = p.peeknext();
+            const type = t22?.type === "ID" ? "ID" : "NUM";
+            let val = p.expect(type);
+            const val1 = val;
+            const enumProp = prop;
+            if (typeof val == "string") {
+              val = enumProp.values[val];
+            }
+            if (val === void 0) {
+              console.warn(inpath, enumProp.values, val1, prop);
+              throw new DataPathError("unknown value " + val1);
+            }
+            if (val in enumProp.keys) {
+              subkey = enumProp.keys[val];
+            }
+            let bitfield;
+            key = dpath.path;
+            if (!(enumProp.flag & PropFlags.USE_CUSTOM_GETSET)) {
+              bitfield = lastobj ? lastobj[key] : 0;
+            } else {
+              var _stack2 = [];
+              try {
+                const execCtx = __using(_stack2, enumProp.execWithContext());
+                execCtx.dataref = lastobj;
+                execCtx.datapath = inpath;
+                execCtx.ctx = ctx;
+                try {
+                  bitfield = enumProp.getValue();
+                } catch (error2) {
+                  print_stack2(error2);
+                  bitfield = NaN;
+                }
+              } catch (_2) {
+                var _error2 = _2, _hasError2 = true;
+              } finally {
+                __callDispose(_stack2, _error2, _hasError2);
+              }
+            }
+            if (lastobj === void 0 && !ignoreExistence) {
+              throw new DataPathError("no data for path " + inpath);
+            } else if (lastobj !== void 0) {
+              if (enumProp.type === PropTypes.ENUM) {
+                obj = !!(bitfield === val);
+              } else {
+                obj = !!(bitfield & val);
+              }
+            }
+            p.expect("RSBRACKET");
+          } else if (t2.type === "LSBRACKET" && prop !== void 0 && isVecProperty(prop)) {
+            p.expect("LSBRACKET");
+            const num2 = p.expect("NUM");
+            p.expect("RSBRACKET");
+            subkey = num2;
+            if (prop !== void 0 && !(prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
+              lastobj = obj;
+            }
+            obj = obj[num2];
+          } else if (t2.type === "LSBRACKET") {
+            p.expect("LSBRACKET");
+            if (lastobj && lastkey && typeof lastkey === "string" && lastkey.length > 0) {
+              lastobj = lastobj[lastkey];
+            }
+            lastkey = p_key();
+            p.expect("RSBRACKET");
+            if (!(prop instanceof DataList)) {
+              throw new DataPathError("bad property, not a list");
+            }
+            obj = prop.get(this, lastobj, lastkey);
+            dstruct = prop.getStruct(this, lastobj, lastkey);
+            if (!dstruct) {
+              throw new DataPathError(inpath + ": list has no entry " + lastkey);
+            }
+            if (p.peeknext() !== void 0 && p.peeknext()?.type === "DOT") {
+              p.next();
+            }
+          }
+          if (_i++ > 1e3) {
+            console.warn("infinite loop in resolvePath parser");
+            break;
+          }
+        }
+        if (prop && prop.type & (PropTypes.ENUM | PropFlags.FLAG)) {
+          prop.checkMeta();
+        }
+        return {
+          dpath: lastdpath,
+          parent: lastobj2,
+          obj: lastobj,
+          value: obj,
+          key: lastkey,
+          dstruct,
+          prop,
+          subkey
+        };
+      }
+      _parsePathOverrides(path) {
+        const parts = ["", void 0, void 0];
+        const TOOLPATH = 0;
+        const NAME = 1;
+        const HOTKEY = 2;
+        let part = TOOLPATH;
+        for (let i = 0; i < path.length; i++) {
+          const c = path[i];
+          const n = i < path.length - 1 ? path[i + 1] : "";
+          if (c === "|") {
+            part = NAME;
+            parts[NAME] = "";
+            continue;
+          } else if (c === ":" && n === ":") {
+            part = HOTKEY;
+            parts[HOTKEY] = "";
+            i++;
+            continue;
+          }
+          parts[part] += c;
+        }
+        return {
+          path: parts[TOOLPATH].trim(),
+          uiname: parts[NAME] ? parts[NAME].trim() : void 0,
+          hotkey: parts[HOTKEY] ? parts[HOTKEY].trim() : void 0
+        };
+      }
+      /** Get tooldef for path, applying any modifications, e.g.:
+       *  "app.some_tool()|Label::CustomHotkeyString"
+       * */
+      getToolDef(toolpath) {
+        const { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
+        const cls = this.parseToolPath(path);
+        if (cls === void 0) {
+          throw new DataPathError('unknown path "' + path + '"');
+        }
+        const def = cls.tooldef();
+        def.uiname = uiname ?? def.uiname ?? path;
+        if (hotkey) {
+          def.hotkey = hotkey;
+        }
+        return def;
+      }
+      getToolPathHotkey(ctx, toolpath) {
+        const { path, hotkey } = this._parsePathOverrides(toolpath);
+        if (hotkey) {
+          return hotkey;
+        }
+        try {
+          return this.#getToolPathHotkey_intern(ctx, path);
+        } catch (error2) {
+          print_stack2(error2);
+          console2.context("api").log("failed to fetch tool path: " + path);
+          return void 0;
+        }
+      }
+      #getToolPathHotkey_intern(ctx, path) {
+        const screen = ctx.screen;
+        const this2 = this;
+        function searchKeymap(keymap4) {
+          if (keymap4 === void 0) {
+            return void 0;
+          }
+          let ret;
+          function search(cb) {
+            if (ret) {
+              return;
+            }
+            for (const hk of keymap4) {
+              if (typeof hk.action === "string" && cb(hk.action)) {
+                ret = hk.buildString();
+              }
+            }
+          }
+          search((tool) => tool.trim() === path.trim());
+          search((tool) => this2._parsePathOverrides(tool).path === path.trim());
+          return ret;
+        }
+        if (screen.sareas.length === 0) {
+          return searchKeymap(screen.keymap);
+        }
+        const areacls = screen.sareas[0].area.constructor;
+        const area = areacls.getActiveArea();
+        if (area) {
+          for (const keymap4 of area.getKeyMaps()) {
+            const ret = searchKeymap(keymap4);
+            if (ret !== void 0) {
+              return ret;
+            }
+          }
+        }
+        for (const sarea of screen.sareas) {
+          if (!sarea.area) continue;
+          for (const keymap4 of sarea.area.getKeyMaps()) {
+            const ret = searchKeymap(keymap4);
+            if (ret) {
+              return ret;
+            }
+          }
+        }
+        return this.keymap ? searchKeymap(this.keymap) : void 0;
+      }
+      parseToolPath(path) {
+        try {
+          return parseToolPath(path).toolclass;
+        } catch (error2) {
+          if (error2 instanceof DataPathError) {
+            console.warn("warning, bad tool path " + path);
+            return void 0;
+          } else {
+            throw error2;
+          }
+        }
+      }
+      parseToolArgs(path) {
+        return parseToolPath(path).args;
+      }
+      createTool(ctx, path, inputs = {}) {
+        let cls;
+        let args;
+        if (typeof path == "string") {
+          const tpath = parseToolPath(path);
+          cls = tpath.toolclass;
+          args = tpath.args;
+        } else {
+          cls = path;
+          args = {};
+        }
+        if (!cls) {
+          debugger;
+          console.error("Unknown tool " + path);
+        }
+        args = { ...args };
+        const tooldef = cls._getFinalToolDef();
+        if (inputs !== void 0) {
+          for (const k in inputs) {
+            if (!(k in tooldef.inputs)) {
+              console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
+              continue;
+            }
+            if (!(k in args)) {
+              args[k] = inputs[k];
+            }
+          }
+        }
+        const tool = cls.invoke(ctx, args);
+        if (inputs !== void 0) {
+          for (const k in inputs) {
+            if (!(k in tool.inputs)) {
+              console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
+              continue;
+            }
+            tool.inputs[k].setValue(inputs[k]);
+          }
+        }
+        return tool;
+      }
+    };
+    dpt = DataPathSetOp;
+    setImplementationClass(DataAPI2);
+  }
+});
+
+// scripts/core/base/ui_base_datapath.ts
+function setPathValueUndo(elem, ctx, path, val) {
+  elem.pathSocketUpdate(ctx, path);
+  const mass_set_path = elem.getAttribute("mass_set_path");
+  const rdef = ctx.api.resolvePath(ctx, path);
+  const prop = rdef.prop;
+  if (ctx.api.getValue(ctx, path) === val) {
+    return;
+  }
+  const toolstack = elem.ctx.toolstack;
+  let head = toolstack.head;
+  const bad = head === void 0 || !(head instanceof getDataPathToolOp()) || head.hashThis() !== head.hash(mass_set_path, path, prop.type, elem._id) || elem.pathUndoGen !== elem._lastPathUndoGen;
+  if (!bad) {
+    toolstack.undo(ctx);
+    const tool = head;
+    tool.setValue(ctx, val, rdef.obj);
+    toolstack.redo(ctx);
+  } else {
+    elem._lastPathUndoGen = elem.pathUndoGen;
+    const toolop = getDataPathToolOp().create(ctx, path, val, elem._id, mass_set_path ?? void 0);
+    if (!toolop) {
+      return;
+    }
+    ctx.toolstack.execTool(elem.ctx, toolop);
+    head = toolstack.head;
+  }
+  if (!head || head.hadError) {
+    throw new Error("toolpath error");
+  }
+}
+function loadNumConstraints(elem, prop, dom = elem, onModifiedCallback) {
+  let modified = false;
+  if (!prop) {
+    let path;
+    if (dom.hasAttribute("datapath")) {
+      path = dom.getAttribute("datapath");
+    }
+    if (path === void 0 && elem.hasAttribute("datapath")) {
+      path = elem.getAttribute("datapath");
+    }
+    if (typeof path === "string") {
+      prop = elem.getPathMeta(elem.ctx, path) ?? prop;
+    }
+  }
+  const loadAttr = (propkey, domkey, thiskey) => {
+    const anyElem = elem;
+    const old = anyElem[thiskey];
+    if (dom.hasAttribute(domkey)) {
+      anyElem[thiskey] = parseFloat(dom.getAttribute(domkey));
+    } else if (prop) {
+      anyElem[thiskey] = prop[propkey];
+    }
+    if (anyElem[thiskey] !== old) {
+      modified = true;
+    }
+  };
+  for (const key of NumberConstraints) {
+    const thiskey = key;
+    const domkey = key;
+    if (key === "range") {
+      continue;
+    }
+    loadAttr(key, domkey, thiskey);
+  }
+  if (elem.range === void 0) {
+    elem.range = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+  }
+  const oldmin = elem.range[0];
+  const oldmax = elem.range[1];
+  const range = prop ? prop.range : void 0;
+  if (range && !dom.hasAttribute("min")) {
+    elem.range[0] = range[0];
+  } else if (dom.hasAttribute("min")) {
+    elem.range[0] = parseFloat(dom.getAttribute("min"));
+  }
+  if (range && !dom.hasAttribute("max")) {
+    elem.range[1] = range[1];
+  } else if (dom.hasAttribute("max")) {
+    elem.range[1] = parseFloat(dom.getAttribute("max"));
+  }
+  if (elem.range[0] !== oldmin || elem.range[1] !== oldmax) {
+    modified = true;
+  }
+  const oldint = elem.isInt;
+  if (dom.getAttribute("integer")) {
+    let val = dom.getAttribute("integer");
+    val = ("" + val).toLowerCase();
+    elem.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
+  } else if (prop && prop instanceof IntProperty) {
+    elem.isInt = true;
+  }
+  if (!elem.isInt !== !oldint) {
+    modified = true;
+  }
+  const oldedit = elem.editAsBaseUnit;
+  if (elem.editAsBaseUnit === void 0) {
+    if (prop && prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+      elem.editAsBaseUnit = true;
+    } else {
+      elem.editAsBaseUnit = false;
+    }
+  }
+  if (!elem.editAsBaseUnit !== !oldedit) {
+    modified = true;
+  }
+  if (modified) {
+    elem.setCSS();
+    if (onModifiedCallback) {
+      onModifiedCallback.call(elem);
+    }
+  }
+}
+function pushReportContext(elem, key) {
+  const api = elem.ctx.api;
+  if (api.pushReportContext) {
+    api.pushReportContext(key);
+  }
+}
+function popReportContext(elem) {
+  const api = elem.ctx.api;
+  if (api.popReportContext) api.popReportContext();
+}
+function setPathValue(elem, ctx, path, val) {
+  elem.pathSocketUpdate(ctx, path);
+  if (elem.useDataPathUndo) {
+    elem.pushReportContext(elem._reportCtxName);
+    try {
+      elem.setPathValueUndo(ctx, path, val);
+    } catch (error2) {
+      elem.popReportContext();
+      if (!(error2 instanceof DataPathError)) {
+        throw error2;
+      } else {
+        return;
+      }
+    }
+    elem.popReportContext();
+    return;
+  }
+  elem.pushReportContext(elem._reportCtxName);
+  try {
+    if (elem.hasAttribute("mass_set_path")) {
+      ctx.api.massSetProp(ctx, elem.getAttribute("mass_set_path"), val);
+      ctx.api.setValue(ctx, path, val);
+    } else {
+      ctx.api.setValue(ctx, path, val);
+    }
+  } catch (error2) {
+    elem.popReportContext();
+    if (!(error2 instanceof DataPathError)) {
+      throw error2;
+    }
+    return;
+  }
+  elem.popReportContext();
+}
+function getPathMeta(elem, ctx, path) {
+  elem.pushReportContext(elem._reportCtxName);
+  const ret = ctx.api.resolvePath(ctx, path);
+  elem.popReportContext();
+  return ret !== void 0 ? ret.prop : void 0;
+}
+function getPathDescription(elem, ctx, path) {
+  let ret;
+  elem.pushReportContext(elem._reportCtxName);
+  try {
+    ret = ctx.api.getDescription(ctx, path);
+  } catch (error2) {
+    elem.popReportContext();
+    if (error2 instanceof DataPathError) {
+      return void 0;
+    } else {
+      throw error2;
+    }
+  }
+  elem.popReportContext();
+  return ret;
+}
+function addPathWatch(elem, pathOrAttr = "datapath", opts) {
+  if (!elem._ctx) {
+    return void 0;
+  }
+  const raw = elem.hasAttribute(pathOrAttr) ? elem.getAttribute(pathOrAttr) : pathOrAttr;
+  const path = normalizePath(raw);
+  if (!path) {
+    return void 0;
+  }
+  for (const w2 of elem._pathWatchers) {
+    if (w2.path === path) {
+      return w2;
+    }
+  }
+  const onChange = opts?.onChange ?? ((v, info) => elem.updateFromPath(v, info));
+  const w = elem._ctx.api.watch(() => elem._ctx, path, onChange, opts);
+  elem._pathWatchers.push(w);
+  return w;
+}
+function refreshPathWatches(elem) {
+  for (const w of elem._pathWatchers) {
+    w.refresh();
+  }
+}
+function clearPathWatches(elem) {
+  for (const w of elem._pathWatchers) {
+    w.remove();
+  }
+  elem._pathWatchers.length = 0;
+  elem._pathWatchInit = false;
+}
+function updatePathWatchers(elem, dataPathPolling) {
+  if (!elem._ctx) {
+    return;
+  }
+  const dp = elem.getAttribute("datapath");
+  if (!elem._pathWatchInit || dp !== elem._watchedDataPathAttr) {
+    elem.clearPathWatches();
+    elem._pathWatchInit = true;
+    elem._watchedDataPathAttr = dp;
+    elem.watchPath();
+  }
+  const poll = elem.pollDataPath === true || dataPathPolling && elem.pollDataPath !== false;
+  if (poll) {
+    for (const w of elem._pathWatchers) {
+      w.tick();
+    }
+  }
+}
+var init_ui_base_datapath = __esm({
+  "scripts/core/base/ui_base_datapath.ts"() {
+    "use strict";
+    init_controller();
+    init_toolprop();
+  }
+});
+
 // scripts/path-controller/util/math.ts
 var math_exports = {};
 __export(math_exports, {
@@ -22053,5605 +28939,385 @@ var init_math = __esm({
   }
 });
 
-// scripts/path-controller/util/parseutil.ts
-var parseutil_exports = {};
-__export(parseutil_exports, {
-  PUTLParseError: () => PUTLParseError,
-  getTraceBack: () => getTraceBack,
-  lexer: () => lexer2,
-  parser: () => parser2,
-  tokdef: () => tokdef2,
-  token: () => token2
-});
-function getTraceBack(limit, start) {
-  try {
-    throw new Error();
-  } catch (error2) {
-    let stack = error2.stack.split("\n");
-    stack = stack.slice(1, stack.length);
-    if (start === void 0) {
-      start = 0;
+// scripts/core/base/ui_base_pick.ts
+function calcZ(elem) {
+  let p = elem;
+  let n = elem;
+  while (n) {
+    if (n instanceof HTMLElement && !isNaN(parseFloat("" + n.style["zIndex"]))) {
+      const z = parseFloat(n.style["zIndex"]);
+      return z;
     }
-    for (let i = 0; i < stack.length; i++) {
-      let l = stack[i];
-      let j = l.length - 1;
-      while (j > 0 && l[j] !== "/") {
-        j--;
+    n = n.parentNode;
+    if (!n) {
+      n = p = p.parentWidget;
+    }
+  }
+  return 0;
+}
+function pickElements(elem, x, y, args = {}) {
+  const nodeclass = args.nodeclass || UIBase;
+  const excluded_classes = args.excluded_classes;
+  x -= window.scrollX;
+  y -= window.scrollY;
+  const elems = elem.shadow.elementsFromPoint(x, y);
+  const excluded = (n) => excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
+  const visit = /* @__PURE__ */ new WeakSet();
+  const result = /* @__PURE__ */ new Set();
+  const recurse = (elems2) => {
+    for (const n of elems2) {
+      if (n instanceof UIBase) {
+        const ns = n.shadow.elementsFromPoint(x, y);
+        if (!excluded(n) && (!nodeclass || n instanceof nodeclass)) {
+          result.add(n);
+        }
+        ns.forEach((n2) => visit.add(n2));
+        recurse(ns.filter((n2) => !visit.has(n2)));
       }
-      let k = j;
-      while (k >= 0 && l[k] !== "(") {
-        k--;
+    }
+  };
+  recurse(elems);
+  return Array.from(result);
+}
+function pickElement(x, y, args = {}) {
+  const nodeclass = args.nodeclass || UIBase;
+  const excluded_classes = args.excluded_classes;
+  const clip2 = args.clip;
+  x -= window.scrollX;
+  y -= window.scrollY;
+  let elem = document.elementFromPoint(x, y);
+  if (!elem) {
+    return;
+  }
+  const path = [elem];
+  let lastelem = elem;
+  let i = 0;
+  while (elem instanceof UIBase) {
+    if (i++ > 1e3) {
+      console.error("Infinite loop error");
+      break;
+    }
+    elem = elem.shadow.elementFromPoint(x, y);
+    if (elem === lastelem) {
+      break;
+    }
+    if (elem) {
+      path.push(elem);
+    }
+    lastelem = elem;
+  }
+  path.reverse();
+  for (let i2 = 0; i2 < path.length; i2++) {
+    const node = path[i2];
+    let ok = node instanceof nodeclass;
+    if (excluded_classes) {
+      for (const cls of excluded_classes) {
+        ok = ok && !(node instanceof cls);
       }
-      const func = l.slice(0, k).trim();
-      const file = l.slice(j + 1, l.length - 1);
-      l = `  ${func} (${file})`;
-      if (l.search(/parseutil\.js/) >= 0) {
-        start = Math.max(start, i);
-      }
-      stack[i] = l;
     }
-    if (limit !== void 0) {
-      stack.length = Math.min(stack.length, limit);
+    if (clip2) {
+      const rect = node.getBoundingClientRect();
+      const clip22 = aabb_intersect_2d(
+        clip2.pos,
+        clip2.size,
+        [rect.x, rect.y],
+        [rect.width, rect.height]
+      );
+      ok = ok && Boolean(clip22);
     }
-    if (start !== void 0) {
-      stack = stack.slice(start, stack.length);
+    if (ok) {
+      return node;
     }
-    return stack.join("\n");
   }
 }
-function test_parser() {
-  const basic_types = /* @__PURE__ */ new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
-  const reserved_tokens = /* @__PURE__ */ new Set([
-    "int",
-    "float",
-    "double",
-    "vec2",
-    "vec3",
-    "vec4",
-    "mat4",
-    "string",
-    "static_string",
-    "array"
-  ]);
-  function tk2(name2, re, func) {
-    return new tokdef2(name2, re, func);
+var init_ui_base_pick = __esm({
+  "scripts/core/base/ui_base_pick.ts"() {
+    "use strict";
+    init_math();
+    init_ui_base();
   }
-  const tokens2 = [
-    tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t2) {
-      if (reserved_tokens.has(t2.value)) {
-        t2.type = t2.value.toUpperCase();
-      }
-      return t2;
-    }),
-    tk2("OPEN", /\{/),
-    tk2("CLOSE", /}/),
-    tk2("COLON", /:/),
-    tk2("JSCRIPT", /\|/, function(t2) {
-      let js = "";
-      const lex2 = t2.lexer;
-      while (lex2.lexpos < lex2.lexdata.length) {
-        const c = lex2.lexdata[lex2.lexpos];
-        if (c === "\n") break;
-        js += c;
-        lex2.lexpos++;
-      }
-      if (js.endsWith(";")) {
-        js = js.slice(0, js.length - 1);
-        lex2.lexpos--;
-      }
-      t2.value = js;
-      return t2;
-    }),
-    tk2("LPARAM", /\(/),
-    tk2("RPARAM", /\)/),
-    tk2("COMMA", /,/),
-    tk2("NUM", /[0-9]/),
-    tk2("SEMI", /;/),
-    tk2("NEWLINE", /\n/, function(t2) {
-      t2.lexer.lineno += 1;
-    }),
-    tk2("SPACE", / |\t/, function(_t) {
-    })
-  ];
-  for (const rt of reserved_tokens) {
-    tokens2.push(tk2(rt.toUpperCase()));
-  }
-  function errfunc(_lexer) {
-    return true;
-  }
-  const a2 = "";
-  const lex = new lexer2(tokens2, errfunc);
-  console.log("Testing lexical scanner...");
-  lex.input(a2);
-  let tok;
-  while (tok = lex.next()) {
-    console.log(tok.toString());
-  }
-  const p = new parser2(lex);
-  p.input(a2);
-  function p_Array(p2) {
-    p2.expect("ARRAY");
-    p2.expect("LPARAM");
-    let arraytype = p_Type(p2);
-    let itername = "";
-    if (p2.optional("COMMA")) {
-      itername = arraytype;
-      arraytype = p_Type(p2);
-    }
-    p2.expect("RPARAM");
-    return { type: "array", data: { type: arraytype, iname: itername } };
-  }
-  function p_Type(p2) {
-    const tok2 = p2.peek();
-    if (!tok2) {
-      p2.error(void 0, "Expected a type");
+});
+
+// scripts/core/base/ui_base_dom.ts
+function getElementById(elem, id) {
+  let ret;
+  const rec = (n) => {
+    if (ret) {
       return;
     }
-    if (tok2.type === "ID") {
-      p2.next();
-      return { type: "struct", data: '"' + tok2.value + '"' };
-    } else if (basic_types.has(tok2.type.toLowerCase())) {
-      p2.next();
-      return { type: tok2.type.toLowerCase() };
-    } else if (tok2.type === "ARRAY") {
-      return p_Array(p2);
-    } else {
-      p2.error(tok2, "invalid type " + tok2.type);
+    if (n.getAttribute("id") === id || n.id === id) {
+      ret = n;
     }
-  }
-  function p_Field(p2) {
-    const field = {
-      name: "",
-      type: void 0,
-      set: void 0,
-      get: void 0
-    };
-    console.log("-----", p2.peek().type);
-    field.name = p2.expect("ID", "struct field name");
-    p2.expect("COLON");
-    field.type = p_Type(p2);
-    field.set = void 0;
-    field.get = void 0;
-    let tok2 = p2.peek();
-    if (tok2?.type === "JSCRIPT") {
-      field.get = tok2.value;
-      p2.next();
-    }
-    tok2 = p2.peek();
-    if (tok2?.type === "JSCRIPT") {
-      field.set = tok2.value;
-      p2.next();
-    }
-    p2.expect("SEMI");
-    return field;
-  }
-  function p_Struct(p2) {
-    const st = {
-      name: "",
-      fields: []
-    };
-    st.name = p2.expect("ID", "struct name");
-    p2.expect("OPEN");
-    while (1) {
-      if (p2.at_end()) {
-        p2.error(void 0);
-      } else if (p2.optional("CLOSE")) {
-        break;
-      } else {
-        st.fields.push(p_Field(p2));
+    if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
+      rec(n.contents);
+    } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
+      for (const k in n.tabs) {
+        const tab2 = n.tabs[k];
+        if (tab2) {
+          rec(tab2);
+        }
       }
     }
-    return st;
-  }
-  const ret = p_Struct(p);
-  console.log(JSON.stringify(ret));
-}
-var token2, tokdef2, PUTLParseError, lexer2, parser2;
-var init_parseutil = __esm({
-  "scripts/path-controller/util/parseutil.ts"() {
-    "use strict";
-    token2 = class {
-      type;
-      value;
-      lexpos;
-      lexlen;
-      lineno;
-      lexer;
-      parser;
-      constructor(type, val, lexpos, lexlen, lineno, lexer4, parser3) {
-        this.type = type;
-        this.value = val;
-        this.lexpos = lexpos;
-        this.lexlen = lexlen;
-        this.lineno = lineno;
-        this.lexer = lexer4;
-        this.parser = parser3;
-      }
-      setValue(val) {
-        this.value = val;
-        return this;
-      }
-      toString() {
-        if (this.value !== void 0)
-          return "token(type=" + this.type + ", value='" + this.value + "')";
-        else return "token(type=" + this.type + ")";
-      }
-    };
-    tokdef2 = class {
-      name;
-      re;
-      func;
-      constructor(name2, regexpr, func) {
-        this.name = name2;
-        this.re = regexpr;
-        this.func = func;
-      }
-    };
-    PUTLParseError = class extends Error {
-    };
-    lexer2 = class _lexer {
-      tokdef;
-      tokens;
-      lexpos;
-      lexdata;
-      lineno;
-      errfunc;
-      tokints;
-      print_tokens;
-      print_debug;
-      statestack;
-      states;
-      statedata;
-      peeked_tokens;
-      constructor(tokdef3, errfunc) {
-        this.tokdef = tokdef3;
-        this.tokens = [];
-        this.lexpos = 0;
-        this.lexdata = "";
-        this.lineno = 0;
-        this.errfunc = errfunc;
-        this.tokints = {};
-        this.print_tokens = false;
-        this.print_debug = false;
-        for (let i = 0; i < tokdef3.length; i++) {
-          this.tokints[tokdef3[i].name] = i;
-        }
-        this.statestack = [["__main__", 0]];
-        this.states = { "__main__": [tokdef3, errfunc] };
-        this.statedata = 0;
-        this.peeked_tokens = [];
-      }
-      copy() {
-        const ret = new _lexer(this.tokdef, this.errfunc);
-        for (const k in this.states) {
-          let state = this.states[k];
-          state = [state[0], state[1]];
-          ret.states[k] = state;
-        }
-        ret.statedata = this.statedata;
-        return ret;
-      }
-      //errfunc is optional, defines state-specific error function
-      add_state(name2, tokdef3, errfunc) {
-        if (errfunc === void 0) {
-          errfunc = function(_lexer2) {
-            return true;
-          };
-        }
-        this.states[name2] = [tokdef3, errfunc];
-      }
-      tok_int(_name) {
-      }
-      //statedata is optional.
-      //it stores state-specific data in lexer.statedata.
-      push_state(state, statedata) {
-        this.statestack.push([state, statedata]);
-        const stateEntry = this.states[state];
-        this.statedata = statedata;
-        this.tokdef = stateEntry[0];
-        this.errfunc = stateEntry[1];
-      }
-      pop_state() {
-        const item = this.statestack[this.statestack.length - 1];
-        const state = this.states[item[0]];
-        this.tokdef = state[0];
-        this.errfunc = state[1];
-        this.statedata = item[1];
-      }
-      input(str) {
-        while (this.statestack.length > 1) {
-          this.pop_state();
-        }
-        this.lexdata = str;
-        this.lexpos = 0;
-        this.lineno = 0;
-        this.tokens = [];
-        this.peeked_tokens = [];
-      }
-      error() {
-        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
-        console.log("Syntax error near line " + this.lineno);
-        const next = Math.min(this.lexpos + 8, this.lexdata.length);
-        console.log("  " + this.lexdata.slice(this.lexpos, next));
-        throw new PUTLParseError("Parse error");
-      }
-      peek() {
-        const tok = this.next(true);
-        if (tok === void 0) return void 0;
-        this.peeked_tokens.push(tok);
-        return tok;
-      }
-      peek_i(i) {
-        while (this.peeked_tokens.length <= i) {
-          const t2 = this.peek();
-          if (t2 === void 0) return void 0;
-        }
-        return this.peeked_tokens[i];
-      }
-      at_end() {
-        return this.lexpos >= this.lexdata.length && this.peeked_tokens.length === 0;
-      }
-      next(ignore_peek) {
-        if (ignore_peek !== true && this.peeked_tokens.length > 0) {
-          const tok2 = this.peeked_tokens[0];
-          if (this.print_debug) {
-            console.log("PEEK_SHIFTING", "" + tok2);
-          }
-          this.peeked_tokens.shift();
-          if (this.print_tokens) {
-            console.log(tok2.toString());
-          }
-          return tok2;
-        }
-        if (this.lexpos >= this.lexdata.length) return void 0;
-        const ts = this.tokdef;
-        const tlen = ts.length;
-        const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
-        const results = [];
-        for (let i = 0; i < tlen; i++) {
-          const t2 = ts[i];
-          if (t2.re === void 0) continue;
-          const res = t2.re.exec(lexdata);
-          if (res?.index === 0) {
-            results.push([t2, res]);
-          }
-        }
-        let max_res = 0;
-        let theres = void 0;
-        for (let i = 0; i < results.length; i++) {
-          const res = results[i];
-          if (res[1][0].length > max_res) {
-            theres = res;
-            max_res = res[1][0].length;
-          }
-        }
-        if (theres === void 0) {
-          this.error();
-          return;
-        }
-        const def = theres[0];
-        const lexlen = max_res;
-        let tok = new token2(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, void 0);
-        this.lexpos += max_res;
-        if (def.func) {
-          const tok2 = def.func(tok);
-          if (tok2 === void 0) {
-            return this.next(ignore_peek);
-          }
-          tok = tok2;
-        }
-        if (this.print_tokens) {
-          console.log(tok.toString());
-        }
-        if (!ignore_peek && this.print_debug) {
-          console.log("CONSUME", tok.toString(), "\n" + getTraceBack());
-        }
-        return tok;
-      }
-    };
-    parser2 = class _parser {
-      lexer;
-      errfunc;
-      start;
-      userdata;
-      constructor(lexer4, errfunc) {
-        this.lexer = lexer4;
-        this.errfunc = errfunc;
-        this.start = void 0;
-        this.userdata = void 0;
-      }
-      copy() {
-        const ret = new _parser(this.lexer.copy(), this.errfunc);
-        ret.start = this.start;
-        return ret;
-      }
-      parse(data, err_on_unconsumed) {
-        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
-        if (data !== void 0) this.lexer.input(data);
-        const ret = this.start(this);
-        if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
-          this.error(void 0, "parser did not consume entire input");
-        }
-        return ret;
-      }
-      input(data) {
-        this.lexer.input(data);
-      }
-      error(tok, msg) {
-        if (msg === void 0) msg = "";
-        let estr;
-        if (tok === void 0) estr = "Parse error at end of input: " + msg;
-        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
-        let buf = "1| ";
-        const ld = this.lexer.lexdata;
-        let l = 1;
-        for (let i = 0; i < ld.length; i++) {
-          const c = ld[i];
-          if (c === "\n") {
-            l++;
-            buf += "\n" + l + "| ";
-          } else {
-            buf += c;
-          }
-        }
-        console.log("------------------");
-        console.log(buf);
-        console.log("==================");
-        console.log(estr);
-        if (this.errfunc && !this.errfunc(tok)) {
-          return;
-        }
-        throw new PUTLParseError(estr);
-      }
-      peek() {
-        const tok = this.lexer.peek();
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      peek_i(i) {
-        const tok = this.lexer.peek_i(i);
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      peeknext() {
-        return this.peek_i(0);
-      }
-      next() {
-        const tok = this.lexer.next();
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      optional(type) {
-        const tok = this.peek_i(0);
-        if (tok?.type === type) {
-          this.next();
-          return true;
-        }
-        return false;
-      }
-      at_end() {
-        return this.lexer.at_end();
-      }
-      expect(type, msg) {
-        const tok = this.next();
-        if (msg === void 0) msg = type;
-        if (tok?.type != type) {
-          this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
-        }
-        return tok.value;
-      }
-    };
-  }
-});
-
-// scripts/path-controller/controller/controller_ops.ts
-var DataPathSetOp;
-var init_controller_ops = __esm({
-  "scripts/path-controller/controller/controller_ops.ts"() {
-    "use strict";
-    init_toolsys();
-    init_toolprop();
-    init_util();
-    DataPathSetOp = class _DataPathSetOp extends ToolOp {
-      propType;
-      _undo;
-      hadError;
-      id;
-      __ctx;
-      constructor() {
-        super();
-        this.propType = -1;
-        this._undo = void 0;
-        this.hadError = false;
-      }
-      setValue(ctx, val, object) {
-        var _stack = [];
-        try {
-          const prop = this.inputs.prop;
-          const path = this.inputs.dataPath.getValue();
-          if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            const rdef = ctx.api.resolvePath(ctx, path);
-            if (rdef?.subkey !== void 0) {
-              let subkey = rdef.subkey;
-              if (typeof subkey === "string") {
-                subkey = rdef.prop.values[subkey];
-              }
-              this.inputs.flagBit.setValue(subkey);
-              this.inputs.useFlagBit.setValue(true);
-            }
-          }
-          const execCtx = __using(_stack, prop.execWithContext());
-          execCtx.dataref = object;
-          execCtx.ctx = ctx;
-          execCtx.datapath = path;
-          try {
-            prop.setValue(val);
-            this.hadError = false;
-          } catch (_error2) {
-            console.error("Error setting datapath", path);
-            this.hadError = true;
-          }
-        } catch (_) {
-          var _error = _, _hasError = true;
-        } finally {
-          __callDispose(_stack, _error, _hasError);
+    for (const n2 of n.childNodes) {
+      if (n2 instanceof HTMLElement) {
+        rec(n2);
+        if (ret) {
+          break;
         }
       }
-      static create(ctx, datapath, value, id, massSetPath) {
-        const rdef = ctx.api.resolvePath(ctx, datapath);
-        if (rdef?.prop === void 0) {
-          console.warn("DataPathSetOp failed", rdef, rdef?.prop);
-          return;
-        }
-        const prop = rdef.prop;
-        const tool = new _DataPathSetOp();
-        tool.propType = prop.type;
-        tool.inputs.destType.setValue(prop.type);
-        if (prop && prop.flag & PropFlags.USE_BASE_UNDO) {
-          tool.inputs.fullSaveUndo.setValue(true);
-        }
-        let mask = PropTypes.FLAG | PropTypes.ENUM;
-        mask |= PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT;
-        if (rdef.subkey !== void 0 && prop.type & mask) {
-          if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            let i = datapath.length - 1;
-            while (i >= 0 && datapath[i] !== "[" && datapath[i] !== "=") {
-              i--;
-            }
-            if (i >= 0) {
-              if (!value && prop.type === PropTypes.ENUM) {
-                return void 0;
-              }
-              datapath = datapath.slice(0, i).trim();
-            }
-            tool.inputs.prop = new IntProperty();
-          } else {
-            tool.inputs.prop = new FloatProperty();
-          }
-          let subkey = rdef.subkey;
-          if (typeof subkey !== "number" && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            subkey = prop.values[subkey];
-          }
-          if (prop.type === PropTypes.FLAG) {
-            tool.inputs.flagBit.setValue(subkey);
-            tool.inputs.useFlagBit.setValue(true);
-          }
-          if (prop.type === PropTypes.ENUM) {
-            value = subkey;
-          } else if (prop.type === PropTypes.FLAG) {
-            let value2 = ctx.api.getValue(ctx, datapath);
-            if (typeof value2 !== "number") {
-              value2 = typeof value2 === "boolean" ? value & 1 : 0;
-            }
-            if (value) {
-              value2 = value2 | subkey;
-            } else {
-              value2 = value2 & ~subkey;
-            }
-            value = value2;
-          }
-        } else {
-          tool.inputs.prop = prop.copy();
-        }
-        tool.inputs.dataPath.setValue(datapath);
-        if (massSetPath) {
-          tool.inputs.massSetPath.setValue(massSetPath);
-        } else {
-          tool.inputs.massSetPath.setValue("");
-        }
-        tool.id = id;
-        tool.setValue(ctx, value, rdef.obj);
-        return tool;
-      }
-      hash(massSetPath, dataPath, prop, id) {
-        massSetPath = massSetPath === void 0 ? "" : massSetPath;
-        massSetPath = massSetPath === null ? "" : massSetPath;
-        const ret = "" + massSetPath + ":" + dataPath + ":" + prop + ":" + id;
-        return ret;
-      }
-      hashThis() {
-        return this.hash(
-          this.inputs.massSetPath.getValue(),
-          this.inputs.dataPath.getValue(),
-          this.propType,
-          this.id
-        );
-      }
-      undoPre(ctx) {
-        if (this.inputs.fullSaveUndo.getValue()) {
-          return super.undoPre(ctx);
-        }
-        if (this.__ctx) ctx = this.__ctx;
-        this._undo = {};
-        let paths = /* @__PURE__ */ new Set();
-        if (this.inputs.massSetPath.getValue().trim()) {
-          const massSetPath = this.inputs.massSetPath.getValue().trim();
-          paths = new Set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
-        }
-        paths.add(this.inputs.dataPath.getValue());
-        for (const path of paths) {
-          let val = ctx.api.getValue(ctx, path);
-          if (typeof val === "object" && val !== null) {
-            val = val.copy();
-          }
-          this._undo[path] = val;
-        }
-      }
-      undo(ctx) {
-        if (this.__ctx) ctx = this.__ctx;
-        if (this.inputs.fullSaveUndo.getValue()) {
-          return super.undo(ctx);
-        }
-        for (const path in this._undo) {
-          const rdef = ctx.api.resolvePath(ctx, path);
-          if (rdef !== void 0 && (rdef.prop?.type ?? 0) & (PropTypes.ENUM | PropTypes.FLAG)) {
-            var _stack = [];
-            try {
-              const old = rdef.obj[rdef.key];
-              if (rdef.subkey) {
-                let key = rdef.subkey;
-                const prop = rdef.prop;
-                if (typeof key !== "number") {
-                  key = prop.values[key];
-                }
-                if (prop.type === PropTypes.FLAG) {
-                  if (this._undo[path]) {
-                    rdef.obj[rdef.key] |= key;
-                  } else {
-                    rdef.obj[rdef.key] &= ~key;
-                  }
-                } else {
-                  rdef.obj[rdef.key] = key;
-                }
-              } else {
-                rdef.obj[rdef.key] = this._undo[path];
-              }
-              const rprop = rdef.prop;
-              const execCtx = __using(_stack, rprop.execWithContext());
-              execCtx.dataref = rdef.obj;
-              execCtx.datapath = path;
-              execCtx.ctx = ctx;
-              rprop._fire("change", rdef.obj[rdef.key], old);
-            } catch (_) {
-              var _error = _, _hasError = true;
-            } finally {
-              __callDispose(_stack, _error, _hasError);
-            }
-          } else {
-            try {
-              ctx.api.setValue(ctx, path, this._undo[path]);
-            } catch (error2) {
-              print_stack2(error2);
-              console.warn("Failed to set property in undo for DataPathSetOp");
-            }
+    }
+    if (n instanceof UIBase && n.shadow) {
+      for (const n2 of n.shadow.childNodes) {
+        if (n2 instanceof HTMLElement) {
+          rec(n2);
+          if (ret) {
+            break;
           }
         }
       }
-      exec(ctx) {
-        if (this.__ctx) {
-          ctx = this.__ctx;
-        }
-        const path = this.inputs.dataPath.getValue();
-        const massSetPath = this.inputs.massSetPath.getValue().trim();
-        try {
-          ctx.api.setValue(ctx, path, this.inputs.prop.getValue());
-          this.hadError = false;
-        } catch (error2) {
-          console.log(error2.stack);
-          console.log(error2.message);
-          console.log("error setting " + path);
-          this.hadError = true;
-        }
-        if (massSetPath) {
-          let value = this.inputs.prop.getValue();
-          const useFlagBit = this.inputs.useFlagBit.getValue();
-          if (useFlagBit && this.inputs.destType.getValue() === PropTypes.FLAG) {
-            const bit = this.inputs.flagBit.getValue();
-            value = !!(value & bit);
-          }
-          try {
-            ctx.api.massSetProp(ctx, massSetPath, value);
-          } catch (error2) {
-            console.log(error2.stack);
-            console.log(error2.message);
-            console.log("error setting " + path);
-            this.hadError = true;
-          }
-        }
-      }
-      modalStart(ctx) {
-        if (ctx.toLocked === void 0) {
-          console.warn(
-            "Warning: no toLocked in context class, this may lead to subtle undo behaviours"
-          );
-          console.warn(
-            "  (ctx locking creates a copy with values of the context at the time it as locked)"
-          );
-        }
-        this.__ctx = ctx.toLocked ? ctx.toLocked() : ctx;
-        const result = super.modalStart(this.__ctx);
-        this.exec(this.__ctx);
-        this.modalEnd(false);
-        return result;
-      }
-      static tooldef() {
-        return {
-          uiname: "Property Set",
-          toolpath: "app.prop_set",
-          icon: -1,
-          flag: ToolFlags.PRIVATE,
-          is_modal: true,
-          inputs: {
-            dataPath: new StringProperty(),
-            massSetPath: new StringProperty(),
-            fullSaveUndo: new BoolProperty(false),
-            flagBit: new IntProperty(),
-            useFlagBit: new BoolProperty(),
-            destType: new EnumProperty(PropTypes.INT, PropTypes)
-          }
-        };
-      }
-    };
-    ToolOp.register(DataPathSetOp);
-  }
-});
-
-// scripts/path-controller/curve/curve1d_basic.ts
-function feq(a2, b) {
-  return Math.abs(a2 - b) < 1e-5;
-}
-var _udigest4, EquationCurve, GuassianCurve;
-var init_curve1d_basic = __esm({
-  "scripts/path-controller/curve/curve1d_basic.ts"() {
-    "use strict";
-    init_struct();
-    init_curve1d_base();
-    init_vectormath();
-    init_util();
-    _udigest4 = new HashDigest();
-    EquationCurve = class extends CurveTypeData {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.EquationCurve {
-  equation : string;
-}
-`
-      );
-      equation;
-      _last_equation;
-      _last_xrange;
-      _func;
-      _haserror;
-      constructor() {
-        super();
-        this.equation = "x";
-        this._last_equation = "";
-        this._last_xrange = new Vector2();
-        this._func = void 0;
-        this._haserror = false;
-      }
-      get hasGUI() {
-        return this.uidata !== void 0;
-      }
-      static define() {
-        return {
-          uiname: "Equation",
-          name: "equation",
-          typeName: "EquationCurve"
-        };
-      }
-      calcHashKey(digest = _udigest4.reset()) {
-        const d = digest;
-        super.calcHashKey(d);
-        d.add(this.equation);
-        d.add(this.parent.xRange[0]);
-        d.add(this.parent.xRange[1]);
-        return d.get();
-      }
-      equals(b) {
-        return super.equals(b) && this.equation === b.equation;
-      }
-      toJSON() {
-        const ret = super.toJSON();
-        return Object.assign(ret, {
-          equation: this.equation
-        });
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        if (obj.equation !== void 0) {
-          this.equation = obj.equation;
-        }
-        return this;
-      }
-      makeGUI(container, canvas, drawTransform) {
-        this.uidata = {
-          canvas,
-          g: canvas.g,
-          draw_trans: drawTransform
-        };
-        const row = container.row();
-        const text2 = this.uidata.textbox = row.textbox(
-          void 0,
-          "" + this.equation
-        );
-        text2.onchange = (val) => {
-          console.log(val);
-          this.equation = val;
-          this.update();
-          this.redraw();
-        };
-        container.label("Equation");
-      }
-      killGUI(_container) {
-        if (this.uidata !== void 0) {
-          const ud = this.uidata;
-          if (ud.textbox) {
-            ud.textbox.remove();
-          }
-        }
-        this.uidata = void 0;
-      }
-      updateTextBox() {
-        if (this.uidata) {
-          const ud = this.uidata;
-          if (ud.textbox) {
-            ud.textbox.text = this.equation;
-          }
-        }
-      }
-      evaluate(s) {
-        let update = !!this.hermite || this._last_equation !== this.equation;
-        update = update || this._last_xrange.vectorDistance(this.parent.xRange) > 0;
-        update = update || !this._func;
-        if (update) {
-          this._last_xrange.load(this.parent.xRange);
-          this._last_equation = this.equation;
-          this.updateTextBox();
-          this.#makeFunc();
-          this._evaluate(0);
-          if (this._haserror) {
-            console.warn("ERROR!");
-            return 0;
-          }
-        }
-        return this._func(s);
-      }
-      #makeFunc() {
-        this._func = void 0;
-        var func;
-        const code2 = `
-    (function() {
-      const sin = Math.sin,
-        cos = Math.cos,
-        pi = Math.PI,
-        PI = Math.PI,
-        e = Math.E,
-        E = Math.E,
-        tan = Math.tan,
-        abs = Math.abs,
-        floor = Math.floor,
-        ceil = Math.ceil,
-        acos = Math.acos,
-        asin = Math.asin,
-        atan = Math.atan,
-        cosh = Math.cos,
-        sinh = Math.sinh,
-        log = Math.log,
-        pow = Math.pow,
-        exp = Math.exp,
-        sqrt = Math.sqrt,
-        cbrt = Math.cbrt,
-        min = Math.min,
-        max = Math.max;
-      return function(x) {
-        return ${this.equation};
-      }
-    })();
-    `;
-        try {
-          func = (0, eval)(code2);
-          this._haserror = false;
-        } catch (error2) {
-          this._haserror = true;
-          console.warn("Compile error!", error2.message);
-        }
-        this._func = func;
-      }
-      _evaluate(s) {
-        try {
-          const f2 = this._func(s);
-          this._haserror = false;
-          if (isNaN(f2)) {
-            return;
-          }
-        } catch (_error) {
-          this._haserror = true;
-          console.warn("ERROR!");
-        }
-      }
-      derivative(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.evaluate(s) - this.evaluate(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.evaluate(s + df) - this.evaluate(s)) / df;
-        } else {
-          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
-        }
-      }
-      derivative2(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.derivative(s) - this.derivative(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.derivative(s + df) - this.derivative(s)) / df;
-        } else {
-          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
-        }
-      }
-      inverse(y) {
-        const steps = 9;
-        const ds = 1 / steps;
-        let s = 0;
-        let best = void 0;
-        let ret = void 0;
-        for (let i = 0; i < steps; i++, s += ds) {
-          let s1 = s;
-          let s2 = s + ds;
-          let mid = 0;
-          for (let j = 0; j < 11; j++) {
-            this.evaluate(s1);
-            this.evaluate(s2);
-            mid = (s1 + s2) * 0.5;
-            if (Math.abs(this.evaluate(s1) - y) < Math.abs(this.evaluate(s2) - y)) {
-              s2 = mid;
-            } else {
-              s1 = mid;
-            }
-          }
-          const ymid = this.evaluate(mid);
-          if (best === void 0 || Math.abs(y - ymid) < best) {
-            best = Math.abs(y - ymid);
-            ret = mid;
-          }
-        }
-        return ret === void 0 ? 0 : ret;
-      }
-      onActive(_parent, _draw_transform) {
-      }
-      onInactive(_parent, _draw_transform) {
-      }
-      reset() {
-        this.equation = "x";
-      }
-      destroy() {
-      }
-      draw(_canvas, g, _draw_transform) {
-        g.save();
-        if (this._haserror) {
-          g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
-          g.beginPath();
-          g.rect(0, 0, 1, 1);
-          g.fill();
-          g.beginPath();
-          g.moveTo(0, 0);
-          g.lineTo(1, 1);
-          g.moveTo(0, 1);
-          g.lineTo(1, 0);
-          g.lineWidth *= 3;
-          g.stroke();
-          g.restore();
-          return;
-        }
-        g.restore();
-      }
-    };
-    CurveTypeData.register(EquationCurve);
-    GuassianCurve = class extends CurveTypeData {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.GuassianCurve {
-  height    : float;
-  offset    : float;
-  deviation : float;
-}
-`
-      );
-      height;
-      offset;
-      deviation;
-      constructor() {
-        super();
-        this.height = 1;
-        this.offset = 1;
-        this.deviation = 0.3;
-      }
-      get hasGUI() {
-        return this.uidata !== void 0;
-      }
-      static define() {
-        return {
-          uiname: "Guassian",
-          name: "guassian",
-          typeName: "GuassianCurve"
-        };
-      }
-      calcHashKey(digest = _udigest4.reset()) {
-        super.calcHashKey(digest);
-        const d = digest;
-        d.add(this.height);
-        d.add(this.offset);
-        d.add(this.deviation);
-        return d.get();
-      }
-      equals(b) {
-        let r = super.equals(b);
-        const gb = b;
-        r = r && feq(this.height, gb.height);
-        r = r && feq(this.offset, gb.offset);
-        r = r && feq(this.deviation, gb.deviation);
-        return r;
-      }
-      toJSON() {
-        const ret = super.toJSON();
-        return Object.assign(ret, {
-          height: this.height,
-          offset: this.offset,
-          deviation: this.deviation
-        });
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        this.height = obj.height !== void 0 ? obj.height : 1;
-        this.offset = obj.offset;
-        this.deviation = obj.deviation;
-        return this;
-      }
-      makeGUI(container, canvas, drawTransform) {
-        this.uidata = {
-          canvas,
-          g: canvas.g,
-          draw_trans: drawTransform,
-          hslider: container.slider(void 0, "Height", this.height, -10, 10, 0.05),
-          oslider: container.slider(void 0, "Offset", this.offset, -10, 10, 0.05),
-          dslider: container.slider(void 0, "STD Deviation", this.deviation, -10, 10, 0.05)
-        };
-        this.uidata.hslider.on_change = () => {
-          this.height = this.uidata.hslider.value;
-          this.redraw();
-          this.update();
-        };
-        this.uidata.oslider.on_change = () => {
-          this.offset = this.uidata.oslider.value;
-          this.redraw();
-          this.update();
-        };
-        this.uidata.dslider.on_change = () => {
-          this.deviation = this.uidata.dslider.value;
-          this.redraw();
-          this.update();
-        };
-      }
-      killGUI(_container) {
-        if (this.uidata !== void 0) {
-          const ud = this.uidata;
-          ud.hslider.remove();
-          ud.oslider.remove();
-          ud.dslider.remove();
-        }
-        this.uidata = void 0;
-      }
-      evaluate(s) {
-        const r = this.height * Math.exp(-((s - this.offset) * (s - this.offset)) / (2 * this.deviation * this.deviation));
-        return r;
-      }
-      derivative(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.evaluate(s) - this.evaluate(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.evaluate(s + df) - this.evaluate(s)) / df;
-        } else {
-          return (this.evaluate(s + df) - this.evaluate(s - df)) / (2 * df);
-        }
-      }
-      derivative2(s) {
-        const df = 1e-4;
-        if (s > 1 - df * 3) {
-          return (this.derivative(s) - this.derivative(s - df)) / df;
-        } else if (s < df * 3) {
-          return (this.derivative(s + df) - this.derivative(s)) / df;
-        } else {
-          return (this.derivative(s + df) - this.derivative(s - df)) / (2 * df);
-        }
-      }
-      inverse(y) {
-        const steps = 9;
-        const ds = 1 / steps;
-        let s = 0;
-        let best = void 0;
-        let ret = void 0;
-        for (let i = 0; i < steps; i++, s += ds) {
-          let s1 = s;
-          let s2 = s + ds;
-          let mid = 0;
-          for (let j = 0; j < 11; j++) {
-            const y1 = this.evaluate(s1);
-            const y2 = this.evaluate(s2);
-            mid = (s1 + s2) * 0.5;
-            if (Math.abs(y1 - y) < Math.abs(y2 - y)) {
-              s2 = mid;
-            } else {
-              s1 = mid;
-            }
-          }
-          const ymid = this.evaluate(mid);
-          if (best === void 0 || Math.abs(y - ymid) < best) {
-            best = Math.abs(y - ymid);
-            ret = mid;
-          }
-        }
-        return ret === void 0 ? 0 : ret;
-      }
-    };
-    CurveTypeData.register(GuassianCurve);
-  }
-});
-
-// scripts/path-controller/curve/ease.ts
-var Ease, ease_default;
-var init_ease = __esm({
-  "scripts/path-controller/curve/ease.ts"() {
-    "use strict";
-    Ease = class _Ease {
-      constructor() {
-        throw "Ease cannot be instantiated.";
-      }
-      // static methods and properties
-      /**
-       * @method linear
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static linear = function(t2) {
-        return t2;
-      };
-      /**
-       * Identical to linear.
-       * @method none
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static none = _Ease.linear;
-      /**
-       * Mimics the simple -100 to 100 easing in Adobe Flash/Animate.
-       * @method get
-       * @param {Number} amount A value from -1 (ease in) to 1 (ease out) indicating the strength and direction of the ease.
-       * @static
-       * @return {Function}
-       **/
-      static get(amount) {
-        if (amount < -1) {
-          amount = -1;
-        } else if (amount > 1) {
-          amount = 1;
-        }
-        return function(t2) {
-          if (amount == 0) {
-            return t2;
-          }
-          if (amount < 0) {
-            return t2 * (t2 * -amount + 1 + amount);
-          }
-          return t2 * ((2 - t2) * amount + (1 - amount));
-        };
-      }
-      /**
-       * Configurable exponential ease.
-       * @method getPowIn
-       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
-       * @static
-       * @return {Function}
-       **/
-      static getPowIn(pow) {
-        return function(t2) {
-          return Math.pow(t2, pow);
-        };
-      }
-      /**
-       * Configurable exponential ease.
-       * @method getPowOut
-       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
-       * @static
-       * @return {Function}
-       **/
-      static getPowOut(pow) {
-        return function(t2) {
-          return 1 - Math.pow(1 - t2, pow);
-        };
-      }
-      /**
-       * Configurable exponential ease.
-       * @method getPowInOut
-       * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
-       * @static
-       * @return {Function}
-       **/
-      static getPowInOut(pow) {
-        return function(t2) {
-          if ((t2 *= 2) < 1) return 0.5 * Math.pow(t2, pow);
-          return 1 - 0.5 * Math.abs(Math.pow(2 - t2, pow));
-        };
-      }
-      /**
-       * @method quadIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quadIn = _Ease.getPowIn(2);
-      /**
-       * @method quadOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quadOut = _Ease.getPowOut(2);
-      /**
-       * @method quadInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quadInOut = _Ease.getPowInOut(2);
-      /**
-       * @method cubicIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static cubicIn = _Ease.getPowIn(3);
-      /**
-       * @method cubicOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static cubicOut = _Ease.getPowOut(3);
-      /**
-       * @method cubicInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static cubicInOut = _Ease.getPowInOut(3);
-      /**
-       * @method quartIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quartIn = _Ease.getPowIn(4);
-      /**
-       * @method quartOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quartOut = _Ease.getPowOut(4);
-      /**
-       * @method quartInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quartInOut = _Ease.getPowInOut(4);
-      /**
-       * @method quintIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quintIn = _Ease.getPowIn(5);
-      /**
-       * @method quintOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quintOut = _Ease.getPowOut(5);
-      /**
-       * @method quintInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static quintInOut = _Ease.getPowInOut(5);
-      /**
-       * @method sineIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static sineIn = function(t2) {
-        return 1 - Math.cos(t2 * Math.PI / 2);
-      };
-      /**
-       * @method sineOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static sineOut = function(t2) {
-        return Math.sin(t2 * Math.PI / 2);
-      };
-      /**
-       * @method sineInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static sineInOut = function(t2) {
-        return -0.5 * (Math.cos(Math.PI * t2) - 1);
-      };
-      /**
-       * Configurable "back in" ease.
-       * @method getBackIn
-       * @param {Number} amount The strength of the ease.
-       * @static
-       * @return {Function}
-       **/
-      static getBackIn(amount) {
-        return function(t2) {
-          return t2 * t2 * ((amount + 1) * t2 - amount);
-        };
-      }
-      /**
-       * @method backIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static backIn = _Ease.getBackIn(1.7);
-      /**
-       * Configurable "back out" ease.
-       * @method getBackOut
-       * @param {Number} amount The strength of the ease.
-       * @static
-       * @return {Function}
-       **/
-      static getBackOut(amount) {
-        return function(t2) {
-          return --t2 * t2 * ((amount + 1) * t2 + amount) + 1;
-        };
-      }
-      /**
-       * @method backOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static backOut = _Ease.getBackOut(1.7);
-      /**
-       * Configurable "back in out" ease.
-       * @method getBackInOut
-       * @param {Number} amount The strength of the ease.
-       * @static
-       * @return {Function}
-       **/
-      static getBackInOut(amount) {
-        amount *= 1.525;
-        return function(t2) {
-          if ((t2 *= 2) < 1) return 0.5 * (t2 * t2 * ((amount + 1) * t2 - amount));
-          return 0.5 * ((t2 -= 2) * t2 * ((amount + 1) * t2 + amount) + 2);
-        };
-      }
-      /**
-       * @method backInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static backInOut = _Ease.getBackInOut(1.7);
-      /**
-       * @method circIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static circIn = function(t2) {
-        return -(Math.sqrt(1 - t2 * t2) - 1);
-      };
-      /**
-       * @method circOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static circOut = function(t2) {
-        return Math.sqrt(1 - --t2 * t2);
-      };
-      /**
-       * @method circInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static circInOut = function(t2) {
-        if ((t2 *= 2) < 1) return -0.5 * (Math.sqrt(1 - t2 * t2) - 1);
-        return 0.5 * (Math.sqrt(1 - (t2 -= 2) * t2) + 1);
-      };
-      /**
-       * @method bounceIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static bounceIn = function(t2) {
-        return 1 - _Ease.bounceOut(1 - t2);
-      };
-      /**
-       * @method bounceOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static bounceOut = function(t2) {
-        if (t2 < 1 / 2.75) {
-          return 7.5625 * t2 * t2;
-        } else if (t2 < 2 / 2.75) {
-          return 7.5625 * (t2 -= 1.5 / 2.75) * t2 + 0.75;
-        } else if (t2 < 2.5 / 2.75) {
-          return 7.5625 * (t2 -= 2.25 / 2.75) * t2 + 0.9375;
-        } else {
-          return 7.5625 * (t2 -= 2.625 / 2.75) * t2 + 0.984375;
-        }
-      };
-      /**
-       * @method bounceInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static bounceInOut = function(t2) {
-        if (t2 < 0.5) return _Ease.bounceIn(t2 * 2) * 0.5;
-        return _Ease.bounceOut(t2 * 2 - 1) * 0.5 + 0.5;
-      };
-      /**
-       * Configurable elastic ease.
-       * @method getElasticIn
-       * @param {Number} amplitude
-       * @param {Number} period
-       * @static
-       * @return {Function}
-       **/
-      static getElasticIn(amplitude, period) {
-        const pi2 = Math.PI * 2;
-        return function(t2) {
-          if (t2 == 0 || t2 == 1) return t2;
-          const s = period / pi2 * Math.asin(1 / amplitude);
-          return -(amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
-        };
-      }
-      /**
-       * @method elasticIn
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static elasticIn = _Ease.getElasticIn(1, 0.3);
-      /**
-       * Configurable elastic ease.
-       * @method getElasticOut
-       * @param {Number} amplitude
-       * @param {Number} period
-       * @static
-       * @return {Function}
-       **/
-      static getElasticOut(amplitude, period) {
-        const pi2 = Math.PI * 2;
-        return function(t2) {
-          if (t2 == 0 || t2 == 1) return t2;
-          const s = period / pi2 * Math.asin(1 / amplitude);
-          return amplitude * Math.pow(2, -10 * t2) * Math.sin((t2 - s) * pi2 / period) + 1;
-        };
-      }
-      /**
-       * @method elasticOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static elasticOut = _Ease.getElasticOut(1, 0.3);
-      /**
-       * Configurable elastic ease.
-       * @method getElasticInOut
-       * @param {Number} amplitude
-       * @param {Number} period
-       * @static
-       * @return {Function}
-       **/
-      static getElasticInOut(amplitude, period) {
-        const pi2 = Math.PI * 2;
-        return function(t2) {
-          const s = period / pi2 * Math.asin(1 / amplitude);
-          if ((t2 *= 2) < 1)
-            return -0.5 * (amplitude * Math.pow(2, 10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period));
-          return amplitude * Math.pow(2, -10 * (t2 -= 1)) * Math.sin((t2 - s) * pi2 / period) * 0.5 + 1;
-        };
-      }
-      /**
-       * @method elasticInOut
-       * @param {Number} t
-       * @static
-       * @return {Number}
-       **/
-      static elasticInOut = _Ease.getElasticInOut(1, 0.3 * 1.5);
-    };
-    ease_default = Ease;
-  }
-});
-
-// scripts/path-controller/curve/curve1d_anim.ts
-function bez32(a2, b, c, t2) {
-  const r1 = a2 + (b - a2) * t2;
-  const r2 = b + (c - b) * t2;
-  return r1 + (r2 - r1) * t2;
-}
-function bez42(a2, b, c, d, t2) {
-  const r1 = bez32(a2, b, c, t2);
-  const r2 = bez32(b, c, d, t2);
-  return r1 + (r2 - r1) * t2;
-}
-var ParamKey, BOOL_FLAG, _udigest5, SimpleCurveBase, BounceCurve, ElasticCurve, EaseCurve, RandCurve;
-var init_curve1d_anim = __esm({
-  "scripts/path-controller/curve/curve1d_anim.ts"() {
-    "use strict";
-    init_struct();
-    init_curve1d_base();
-    init_ease();
-    init_util();
-    ParamKey = class {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `ParamKey {
-      key : string;
-      val : float;
-    }`
-      );
-      key;
-      val;
-      constructor(key, val) {
-        this.key = key ?? "";
-        this.val = val ?? 0;
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-      }
-    };
-    BOOL_FLAG = 1e17;
-    _udigest5 = new HashDigest();
-    SimpleCurveBase = class extends CurveTypeData {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.SimpleCurveBase {
-  params : array(ParamKey) | obj._saveParams();
-}
-`
-      );
-      params;
-      constructor() {
-        super();
-        const def = this.constructor.define();
-        this.type = def.typeName;
-        const params = def.params;
-        this.params = {};
-        for (const k in params) {
-          this.params[k] = params[k][1];
-        }
-      }
-      get hasGUI() {
-        return true;
-      }
-      calcHashKey(digest = _udigest5.reset()) {
-        const d = digest;
-        super.calcHashKey(d);
-        for (const k in this.params) {
-          digest.add(k);
-          digest.add(this.params[k]);
-        }
-        return d.get();
-      }
-      equals(b) {
-        const sb = b;
-        if (this.type !== sb.type) {
-          return false;
-        }
-        for (const k in this.params) {
-          if (Math.abs(this.params[k] - sb.params[k]) > 1e-6) {
-            return false;
-          }
-        }
-        return true;
-      }
-      redraw() {
-        if (this.parent) this.parent.redraw();
-      }
-      makeGUI(container) {
-        const def = this.constructor.define();
-        const params = def.params;
-        const elemKeyMap = /* @__PURE__ */ new Map();
-        for (const k in params) {
-          const p = params[k];
-          if (p[2] === BOOL_FLAG) {
-            const check = container.check(void 0, p[0]);
-            check.checked = !!this.params[k];
-            elemKeyMap.set(check, k);
-            const this2 = this;
-            check.on_change = function() {
-              this2.params[elemKeyMap.get(this)] = this.checked ? 1 : 0;
-              this2.update();
-              this2.redraw();
-            };
-          } else {
-            const slider = container.slider(void 0, {
-              name: p[0],
-              defaultval: this.params[k],
-              min: p[2],
-              max: p[3]
-            });
-            slider.baseUnit = slider.displayUnit = "none";
-            elemKeyMap.set(slider, k);
-            const this2 = this;
-            slider.on_change = function() {
-              this2.params[elemKeyMap.get(this)] = Number(this.value);
-              this2.update();
-              this2.redraw();
-            };
-          }
-        }
-      }
-      killGUI(container) {
-        container.clear();
-      }
-      evaluate(_s) {
-        throw new Error("implement me!");
-      }
-      reset() {
-      }
-      update() {
-        super.update();
-      }
-      draw(_canvas, g, _draw_transform) {
-        const steps = 128;
-        let s = 0;
-        const ds = 1 / (steps - 1);
-        g.beginPath();
-        for (let i = 0; i < steps; i++, s += ds) {
-          const co = this.evaluate(s);
-          if (i) {
-            g.lineTo(co, co);
-          } else {
-            g.moveTo(co, co);
-          }
-        }
-        g.stroke();
-      }
-      _saveParams() {
-        const ret = [];
-        for (const k in this.params) {
-          ret.push(new ParamKey(k, this.params[k]));
-        }
-        return ret;
-      }
-      toJSON() {
-        return Object.assign(super.toJSON(), {
-          params: this.params
-        });
-      }
-      loadJSON(obj) {
-        const params = obj.params;
-        for (const k in params) {
-          this.params[k] = params[k];
-        }
-        return this;
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-        super.loadSTRUCT(reader);
-        const ps = this.params;
-        this.params = {};
-        const pdef = this.constructor.define().params;
-        if (!pdef) {
-          console.warn("Missing define function for curve", this.constructor.name);
-          return;
-        }
-        for (const pair of ps) {
-          if (pair.key in pdef) {
-            this.params[pair.key] = pair.val;
-          }
-        }
-        for (const k in pdef) {
-          if (!(k in this.params)) {
-            this.params[k] = pdef[k][1];
-          }
-        }
-      }
-    };
-    BounceCurve = class extends SimpleCurveBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.BounceCurve {
-}`
-      );
-      static define() {
-        return {
-          params: {
-            decay: ["Decay", 1, 0.1, 5],
-            scale: ["Scale", 1, 0.01, 10],
-            freq: ["Freq", 1, 0.01, 50],
-            phase: ["Phase", 0, -Math.PI * 2, Math.PI * 2],
-            offset: ["Offset", 0, -2, 2]
-          },
-          name: "bounce",
-          uiname: "Bounce",
-          typeName: "BounceCurve"
-        };
-      }
-      _evaluate(t2) {
-        const params = this.params;
-        const decay = params.decay + 1;
-        const scale = params.scale;
-        const freq = params.freq;
-        const phase = params.phase;
-        t2 *= freq;
-        let t22 = Math.abs(Math.cos(phase + t2 * Math.PI * 2)) * scale;
-        t22 *= Math.exp(decay * t2) / Math.exp(decay);
-        return t22;
-      }
-      evaluate(t2) {
-        const s = this._evaluate(0);
-        const e = this._evaluate(1);
-        return (this._evaluate(t2) - s) / (e - s) + this.params.offset;
-      }
-    };
-    CurveTypeData.register(BounceCurve);
-    ElasticCurve = class extends SimpleCurveBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.ElasticCurve {
-}`
-      );
-      _func;
-      _last_hash;
-      constructor() {
-        super();
-        this._func = void 0;
-        this._last_hash = void 0;
-      }
-      static define() {
-        return {
-          params: {
-            mode: ["Out Mode", false, BOOL_FLAG, BOOL_FLAG],
-            amplitude: ["Amplitude", 1, 0.01, 10],
-            period: ["Period", 1, 0.01, 5]
-          },
-          name: "elastic",
-          uiname: "Elastic",
-          typeName: "ElasticCurve"
-        };
-      }
-      evaluate(t2) {
-        const hash = ~~(this.params.mode * 127 + this.params.amplitude * 256 + this.params.period * 512);
-        if (hash !== this._last_hash || !this._func) {
-          this._last_hash = hash;
-          if (this.params.mode) {
-            this._func = ease_default.getElasticOut(this.params.amplitude, this.params.period);
-          } else {
-            this._func = ease_default.getElasticIn(this.params.amplitude, this.params.period);
-          }
-        }
-        return this._func(t2);
-      }
-    };
-    CurveTypeData.register(ElasticCurve);
-    EaseCurve = class extends SimpleCurveBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.EaseCurve {
-}`
-      );
-      constructor() {
-        super();
-      }
-      static define() {
-        return {
-          params: {
-            mode_in: ["in", true, BOOL_FLAG, BOOL_FLAG],
-            mode_out: ["out", true, BOOL_FLAG, BOOL_FLAG],
-            amplitude: ["Amplitude", 1, 0.01, 4]
-          },
-          name: "ease",
-          uiname: "Ease",
-          typeName: "EaseCurve"
-        };
-      }
-      evaluate(t2) {
-        const amp = this.params.amplitude;
-        const a1 = this.params.mode_in ? 1 - amp : 1 / 3;
-        const a2 = this.params.mode_out ? amp : 2 / 3;
-        return bez42(0, a1, a2, 1, t2);
-      }
-    };
-    CurveTypeData.register(EaseCurve);
-    RandCurve = class extends SimpleCurveBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-curve1d.RandCurve {
-}`
-      );
-      random;
-      _seed;
-      constructor() {
-        super();
-        this.random = new MersenneRandom(0);
-        this._seed = 0;
-      }
-      get seed() {
-        return this._seed;
-      }
-      set seed(v) {
-        this.random.seed(v);
-        this._seed = v;
-      }
-      static define() {
-        return {
-          params: {
-            amplitude: ["Amplitude", 1, 0.01, 4],
-            decay: ["Decay", 1, 0, 5],
-            in_mode: ["In", true, BOOL_FLAG, BOOL_FLAG]
-          },
-          name: "random",
-          uiname: "Random",
-          typeName: "RandCurve"
-        };
-      }
-      evaluate(t2) {
-        const r = this.random.random();
-        const decay = this.params.decay + 1;
-        const in_mode = this.params.in_mode;
-        if (in_mode) {
-          t2 = 1 - t2;
-        }
-        let d;
-        if (in_mode) {
-          d = Math.exp(t2 * decay) / Math.exp(decay);
-        } else {
-          d = Math.exp(t2 * decay) / Math.exp(decay);
-        }
-        t2 = t2 + (r - t2) * d;
-        if (in_mode) {
-          t2 = 1 - t2;
-        }
-        return t2;
-      }
-    };
-    CurveTypeData.register(RandCurve);
-  }
-});
-
-// scripts/path-controller/curve/curve1d_all.ts
-var init_curve1d_all = __esm({
-  "scripts/path-controller/curve/curve1d_all.ts"() {
-    "use strict";
-    init_curve1d_basic();
-    init_curve1d_bspline();
-    init_curve1d_anim();
-  }
-});
-
-// scripts/path-controller/curve/curve1d_toolprop.ts
-var Curve1DProperty;
-var init_curve1d_toolprop = __esm({
-  "scripts/path-controller/curve/curve1d_toolprop.ts"() {
-    "use strict";
-    init_curve1d();
-    init_toolprop();
-    init_nstructjs();
-    init_curve1d_all();
-    Curve1DProperty = class extends ToolProperty {
-      static PROP_TYPE_ID = PropTypes.CURVE;
-      static STRUCT = inlineRegister(
-        this,
-        `
-      Curve1DProperty {
-        data:   Curve1D;
-      }
-    `
-      );
-      data;
-      constructor(curve, apiname, uiname, description, flag, icon) {
-        super(PropTypes.CURVE, void 0, apiname, uiname, description, flag, icon);
-        this.data = new Curve1D();
-        if (curve !== void 0) {
-          this.setValue(curve);
-        }
-        this.wasSet = false;
-      }
-      calcMemSize() {
-        return 1024;
-      }
-      /** Compares the curves' authored state through JSON mode, which writes only STRUCT fields. Each side passes through a load round trip first, because loadSTRUCT canonicalizes derived ordering (the bspline point sort) that a freshly edited curve has not applied yet. */
-      equals(b) {
-        const authored = (c) => {
-          const settled = readJSON(writeJSON(c), Curve1D);
-          return JSON.stringify(writeJSON(settled));
-        };
-        return authored(this.data) === authored(b.data);
-      }
-      getValue() {
-        return this.data;
-      }
-      evaluate(t2) {
-        return this.data.evaluate(t2);
-      }
-      setValue(curve) {
-        if (curve === void 0) {
-          return;
-        }
-        this.data.load(curve);
-        super.setValue(curve);
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.setValue(this.data);
-      }
-    };
-    ToolProperty.internalRegister(Curve1DProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/allprops.ts
-function isNumProperty(p) {
-  if (p === void 0) return false;
-  return p instanceof IntProperty || p instanceof FloatProperty;
-}
-function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null) return false;
-  let ok = false;
-  ok = ok || prop instanceof Vec2PropertyIF;
-  ok = ok || prop instanceof Vec3PropertyIF;
-  ok = ok || prop instanceof Vec4PropertyIF;
-  ok = ok || prop instanceof Vec2Property;
-  ok = ok || prop instanceof Vec3Property;
-  ok = ok || prop instanceof Vec4Property;
-  ok = ok || prop instanceof QuatProperty;
-  ok = ok || prop.type === PropTypes.VEC2;
-  ok = ok || prop.type === PropTypes.VEC3;
-  ok = ok || prop.type === PropTypes.VEC4;
-  ok = ok || prop.type === PropTypes.QUAT;
-  return ok;
-}
-var init_allprops = __esm({
-  "scripts/path-controller/toolsys/allprops.ts"() {
-    "use strict";
-    init_toolprop();
-    init_toolprop_abstract();
-    init_toolprop_abstract();
-  }
-});
-
-// scripts/path-controller/toolsys/toolpath.ts
-function buildParser() {
-  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
-  const tokens2 = [
-    t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
-      if (tok.value === "true" || tok.value === "false") {
-        tok.type = "BOOL";
-        tok.value = tok.value === "true";
-      }
-      return tok;
-    }),
-    t2("LPAREN", /\(/),
-    t2("RPAREN", /\)/),
-    t2("LSBRACKET", /\[/),
-    t2("RSBRACKET", /\]/),
-    t2("DOT", /\./),
-    t2("COMMA", /\,/),
-    t2("EQUALS", /\=/),
-    t2("STRLIT", /"[^"]*"/, (tok) => {
-      tok.value = tok.value.slice(1, tok.value.length - 1);
-      return tok;
-    }),
-    t2("STRLIT", /'[^']*'/, (tok) => {
-      tok.value = tok.value.slice(1, tok.value.length - 1);
-      return tok;
-    }),
-    t2("NUMBER", /-?[0-9]+/, (tok) => {
-      tok.value = parseInt(tok.value);
-      return tok;
-    }),
-    t2("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
-      tok.value = parseFloat(tok.value);
-      return tok;
-    }),
-    t2("WS", /[ \n\r\t]/, () => void 0)
-    //ignore whitespace
-  ];
-  const lexerror = () => {
-    console.warn("Parse error");
-    return true;
+    }
   };
-  const valid_datatypes = {
-    STRLIT: 1,
-    NUMBER: 1,
-    BOOL: 1,
-    ID: 1
-  };
-  function p_Start(p2) {
-    const args = {};
-    while (!p2.at_end()) {
-      const keyword = p2.expect("ID");
-      p2.expect("EQUALS");
-      const t3 = p2.next();
-      if (!(t3.type in valid_datatypes)) {
-        throw new PUTLParseError("parse error: unexpected " + t3.type);
-      }
-      args[keyword] = t3.value;
+  rec(elem);
+  return ret;
+}
+function findArea(elem) {
+  let p = elem;
+  while (p) {
+    if (p[Symbol.IsAreaTag]) {
+      return p;
     }
-    return args;
+    p = p.parentWidget;
   }
-  const lex = new lexer2(tokens2, lexerror);
-  const p = new parser2(lex);
-  p.start = p_Start;
   return p;
 }
-function parseToolPath(str, check_tool_exists = true) {
-  if (!initToolPaths_run) {
-    initToolPaths_run = true;
-    initToolPaths();
+function addEventListener(elem, type, cb, options) {
+  if (const_default.DEBUG.domEventAddRemove) {
+    console.log("addEventListener", type, elem._id, options);
   }
-  const startstr = str;
-  const i1 = str.search(/\(/);
-  const i2 = str.search(/\)/);
-  let argsStr = "";
-  if (i1 >= 0 && i2 >= 0) {
-    argsStr = str.slice(i1 + 1, i2).trim();
-    str = str.slice(0, i1).trim();
-  }
-  if (!(str in ToolPaths)) {
-    initToolPaths();
-  }
-  if (!(str in ToolPaths) && check_tool_exists) {
-    throw new DataPathError("unknown tool " + str);
-  }
-  let args;
-  try {
-    args = Parser.parse(argsStr);
-  } catch (error2) {
-    console.log(error2);
-    throw new DataPathError(`"${startstr}"
-  ${error2.message}`);
-  }
-  const toolclass = ToolPaths[str];
-  if (toolclass !== void 0) {
-    args = toolclass.parseArgs(args);
-  }
-  return {
-    toolclass,
-    args
-  };
-}
-function testToolParser() {
-  const ret = parseToolPath("view3d.sometool(selectmode=1 str='str' bool=true)", false);
-  return ret;
-}
-function initToolPaths() {
-  for (const cls of ToolClasses) {
-    if (!cls.hasOwnProperty("tooldef")) {
-      continue;
+  const cb2 = (e) => {
+    if (const_default.DEBUG.paranoidEvents) {
+      if (elem.isDead()) {
+        elem.removeEventListener(type, cb, options);
+        return;
+      }
     }
-    const def = cls.tooldef();
-    const path = def.toolpath;
-    ToolPaths[path] = cls;
+    if (const_default.DEBUG.domEvents) {
+      pathDebugEvent(e);
+    }
+    const area = elem.findArea();
+    if (area) {
+      area.push_ctx_active();
+      try {
+        const ret = cb.call(elem, e);
+        area.pop_ctx_active();
+        return ret;
+      } catch (error2) {
+        area.pop_ctx_active();
+        throw error2;
+      }
+    } else {
+      if (const_default.DEBUG.areaContextPushes) {
+        console.warn("Element is not part of an area?", elem);
+      }
+      return cb.call(elem, e);
+    }
+  };
+  const cbAny = cb;
+  if (!cbAny[EventCBSymbol]) {
+    cbAny[EventCBSymbol] = /* @__PURE__ */ new Map();
   }
-}
-var ToolPaths, initToolPaths_run, Parser;
-var init_toolpath = __esm({
-  "scripts/path-controller/toolsys/toolpath.ts"() {
-    "use strict";
-    init_toolsys();
-    init_parseutil();
-    init_controller_base();
-    ToolPaths = {};
-    initToolPaths_run = false;
-    Parser = buildParser();
-    window.parseToolPath = parseToolPath;
+  const key = calcElemCBKey(elem, type, options);
+  cbAny[EventCBSymbol].set(key, cb2);
+  if (const_default.DEBUG.paranoidEvents) {
+    elem.__cbs.push([type, cb2, options]);
   }
-});
-
-// scripts/path-controller/toolsys/index.ts
-var init_toolsys2 = __esm({
-  "scripts/path-controller/toolsys/index.ts"() {
-    "use strict";
-    init_toolprop_abstract();
-    init_allprops();
-    init_toolpath();
-    init_toolsys();
-    init_toolprop();
-  }
-});
-
-// scripts/path-controller/controller/pathwatch.ts
-function warnNoSnapshot(path) {
-  if (warnedNoSnapshotPaths.has(path)) {
-    return;
-  }
-  warnedNoSnapshotPaths.add(path);
-  console.warn(
-    `warning for ${path}: object does not have a [pathux.CreateSnapshot]() method, the automatic path watching will not be able to detect changes`
+  return HTMLElement.prototype.addEventListener.call(
+    elem,
+    type,
+    cb2,
+    options
   );
 }
-function getPathStructureGen() {
-  return structureGen;
-}
-function bumpPathStructureGen() {
-  structureGen++;
-}
-function addRef(map3, key, ref) {
-  let set2 = map3.get(key);
-  if (!set2) {
-    set2 = /* @__PURE__ */ new Set();
-    map3.set(key, set2);
-  }
-  set2.add(ref);
-}
-function dropRef(map3, key, ref) {
-  if (key === void 0) return;
-  const set2 = map3.get(key);
-  if (!set2) return;
-  set2.delete(ref);
-  if (set2.size === 0) {
-    map3.delete(key);
-  }
-}
-function normalizePath(path) {
-  path = path.trim();
-  if (path.startsWith("/")) {
-    path = path.slice(1);
-  }
-  return path;
-}
-function pathsOverlap(a2, b) {
-  if (a2 === b) return true;
-  if (a2.length < b.length) {
-    const t2 = a2;
-    a2 = b;
-    b = t2;
-  }
-  if (!a2.startsWith(b)) return false;
-  const c = a2[b.length];
-  return c === "." || c === "[";
-}
-function markSet(set2) {
-  if (!set2) return;
-  for (const ref of [...set2]) {
-    const w = ref.deref();
-    if (!w) {
-      set2.delete(ref);
-      continue;
-    }
-    w.markDirty();
-  }
-}
-function notifyPathChange(path, prop) {
-  if (path !== void 0) {
-    const key = normalizePath(path);
-    for (const [subPath, set2] of pathSubs) {
-      if (pathsOverlap(subPath, key)) {
-        markSet(set2);
+function removeEventListener(elem, type, cb, options) {
+  if (const_default.DEBUG.paranoidEvents) {
+    for (const item of elem.__cbs) {
+      if (item[0] == type && item[1] === cb._cb2 && "" + item[2] === "" + options) {
+        elem.__cbs.remove(item);
+        break;
       }
     }
-  } else if (prop !== void 0) {
-    markSet(propSubs.get(prop));
+  }
+  if (const_default.DEBUG.domEventAddRemove) {
+    console.log("removeEventListener", type, elem._id, options);
+  }
+  const key = calcElemCBKey(elem, type, options);
+  if (!cb[EventCBSymbol]?.has(key)) {
+    return HTMLElement.prototype.removeEventListener.call(
+      elem,
+      type,
+      cb,
+      options
+    );
   } else {
-    bumpPathStructureGen();
-    for (const set2 of pathSubs.values()) {
-      markSet(set2);
-    }
-  }
-}
-function scheduleFlush() {
-  if (flushScheduled) return;
-  flushScheduled = true;
-  const run = () => {
-    flushScheduled = false;
-    flushPathNotifications();
-  };
-  if (typeof requestAnimationFrame === "function") {
-    requestAnimationFrame(run);
-  } else {
-    queueMicrotask(run);
-  }
-}
-function flushPathNotifications() {
-  while (dirty.size > 0) {
-    const batch = [...dirty];
-    dirty.clear();
-    for (const w of batch) {
-      w.flush();
-    }
-  }
-}
-function getPathWatchStats() {
-  let pathRefs = 0;
-  for (const set2 of pathSubs.values()) {
-    pathRefs += set2.size;
-  }
-  let propRefs2 = 0;
-  for (const set2 of propSubs.values()) {
-    propRefs2 += set2.size;
-  }
-  return {
-    paths: pathSubs.size,
-    pathRefs,
-    props: propSubs.size,
-    propRefs: propRefs2,
-    dirty: dirty.size
-  };
-}
-function clearPathWatchers() {
-  pathSubs.clear();
-  propSubs.clear();
-  dirty.clear();
-  warnedNoSnapshotPaths.clear();
-}
-var CreateSnapshot, pathSubs, propSubs, warnedNoSnapshotPaths, dirty, flushScheduled, structureGen, finalizer, DataPathWatcher;
-var init_pathwatch = __esm({
-  "scripts/path-controller/controller/pathwatch.ts"() {
-    "use strict";
-    init_util();
-    init_vectormath();
-    CreateSnapshot = /* @__PURE__ */ Symbol("create snapshot");
-    pathSubs = /* @__PURE__ */ new Map();
-    propSubs = /* @__PURE__ */ new Map();
-    warnedNoSnapshotPaths = /* @__PURE__ */ new Set();
-    dirty = /* @__PURE__ */ new Set();
-    flushScheduled = false;
-    structureGen = 1;
-    finalizer = typeof FinalizationRegistry !== "undefined" ? new FinalizationRegistry((rec) => {
-      dropRef(pathSubs, rec.pathKey, rec.ref);
-      dropRef(propSubs, rec.propKey, rec.ref);
-    }) : void 0;
-    DataPathWatcher = class _DataPathWatcher {
-      path;
-      onChange;
-      debounce;
-      api;
-      getCtx;
-      rec;
-      removed = false;
-      subscribed = false;
-      dirtyFlag = false;
-      lastGen = -1;
-      prop = void 0;
-      snapshot = void 0;
-      hasSnapshot = false;
-      /** false when the snapshot is an identity ref that cannot detect in-place
-       * mutation; push flushes then fire unconditionally instead of diffing. */
-      snapshotReliable = true;
-      timer = void 0;
-      constructor(api, ctx, path, onChange, opts = {}) {
-        this.api = api;
-        this.getCtx = typeof ctx === "function" ? ctx : () => ctx;
-        this.path = normalizePath(path);
-        this.onChange = onChange;
-        this.debounce = opts.debounce ?? "raf";
-        this.rec = { pathKey: void 0, propKey: void 0, ref: new WeakRef(this) };
-      }
-      /** Register with the path/prop indices and prime the initial callback
-       * (delivered on the next flush). Idempotent. */
-      subscribe() {
-        if (this.subscribed || this.removed) {
-          return this;
-        }
-        this.subscribed = true;
-        this.rec.pathKey = this.path;
-        addRef(pathSubs, this.path, this.rec.ref);
-        this.resolveMeta();
-        finalizer?.register(this, this.rec, this);
-        this.markDirty();
-        return this;
-      }
-      /** Unsubscribe and prune. Idempotent; the watcher is dead afterwards. */
-      remove() {
-        if (this.removed) return;
-        this.removed = true;
-        this.subscribed = false;
-        if (this.timer !== void 0) {
-          clearTimeout(this.timer);
-          this.timer = void 0;
-        }
-        dirty.delete(this);
-        dropRef(pathSubs, this.rec.pathKey, this.rec.ref);
-        dropRef(propSubs, this.rec.propKey, this.rec.ref);
-        this.rec.pathKey = this.rec.propKey = void 0;
-        finalizer?.unregister(this);
-      }
-      /** Push side: flag for the next flush (or fire now for `"immediate"`). */
-      markDirty() {
-        if (this.removed) return;
-        if (this.debounce === "immediate") {
-          this.check("push", true);
-          return;
-        }
-        this.dirtyFlag = true;
-        dirty.add(this);
-        scheduleFlush();
-      }
-      /** Poll side: re-read, diff against the snapshot, fire on change. */
-      poll() {
-        return this.check("poll", false);
-      }
-      /** Per-frame driver for poll mode (the compat safety net). */
-      tick() {
-        return this.poll();
-      }
-      /**
-       * Drop the snapshot and re-deliver the current value unconditionally.
-       * For widgets that gate {@link PathWatchCallback} reactions (e.g. a textbox
-       * ignoring updates while focused): call `refresh()` when the gate lifts to
-       * catch anything delivered-but-ignored in between.
-       */
-      refresh() {
-        this.hasSnapshot = false;
-        return this.check("push", true);
-      }
-      /** Push side: if dirty, re-read + diff + fire (debounced). */
-      flush() {
-        if (this.removed || !this.dirtyFlag) {
-          return false;
-        }
-        if (typeof this.debounce === "object") {
-          if (this.timer !== void 0) {
-            clearTimeout(this.timer);
-          }
-          this.timer = setTimeout(() => {
-            this.timer = void 0;
-            if (this.dirtyFlag && !this.removed) {
-              this.dirtyFlag = false;
-              this.check("push", true);
-            }
-          }, this.debounce.trailing);
-          return false;
-        }
-        this.dirtyFlag = false;
-        return this.check("push", true);
-      }
-      /** Resolve once and cache leaf metadata; (re-)file the reverse index used
-       * by type-scoped notifications (`updateChanged<T>`). */
-      resolveMeta() {
-        const ctx = this.getCtx();
-        if (!ctx) return;
-        this.lastGen = structureGen;
-        let res;
-        try {
-          res = this.api.resolvePath(ctx, this.path, true);
-        } catch {
-          res = void 0;
-        }
-        this.prop = res?.prop;
-        const propKey = res?.dpath?.apiname;
-        if (propKey !== this.rec.propKey) {
-          dropRef(propSubs, this.rec.propKey, this.rec.ref);
-          this.rec.propKey = propKey;
-          if (propKey !== void 0 && this.subscribed) {
-            addRef(propSubs, propKey, this.rec.ref);
-          }
-        }
-      }
-      read(ctx) {
-        try {
-          return this.api.getValue(ctx, this.path);
-        } catch {
-          return void 0;
-        }
-      }
-      /**
-       * Prop-aware structural equality: componentwise for vectors/arrays (so
-       * in-place mutation is detected against the copied snapshot), `.equals()`
-       * for value objects that provide it (Curve1D etc.), `Object.is` for
-       * scalars/enums/flags.
-       */
-      static valuesEqual(a2, b) {
-        if (Object.is(a2, b)) return true;
-        if (a2 === null || b === null || a2 === void 0 || b === void 0) return false;
-        const aArr = Array.isArray(a2) || ArrayBuffer.isView(a2);
-        const bArr = Array.isArray(b) || ArrayBuffer.isView(b);
-        if (aArr || bArr) {
-          if (!aArr || !bArr) return false;
-          const av = a2;
-          const bv = b;
-          if (av.length !== bv.length) return false;
-          for (let i = 0; i < av.length; i++) {
-            if (!Object.is(av[i], bv[i])) return false;
-          }
-          return true;
-        }
-        const eq = a2.equals;
-        if (typeof a2 === "object" && typeof eq === "function") {
-          try {
-            return !!eq.call(a2, b);
-          } catch {
-            return false;
-          }
-        }
-        return false;
-      }
-      snapshotValue(v) {
-        this.hasSnapshot = true;
-        this.snapshotReliable = true;
-        if (v === null || typeof v !== "object") {
-          this.snapshot = v;
-          return;
-        }
-        const cp = v;
-        if (cp[CreateSnapshot]) {
-          try {
-            this.snapshot = cp[CreateSnapshot]();
-            return;
-          } catch (error2) {
-            print_stack2(error2);
-          }
-        }
-        if (Array.isArray(v) || ArrayBuffer.isView(v)) {
-          this.snapshot = Array.from(v);
-          return;
-        }
-        if (v instanceof Matrix4) {
-          this.snapshot = v.copy();
-          return;
-        }
-        this.snapshot = v;
-        this.snapshotReliable = false;
-        warnNoSnapshot(this.path);
-      }
-      check(source, fireOnUnreliable) {
-        if (this.removed) return false;
-        const ctx = this.getCtx();
-        if (!ctx) return false;
-        if (this.lastGen !== structureGen) {
-          this.resolveMeta();
-        }
-        const value = this.read(ctx);
-        const resolved = value !== void 0;
-        if (resolved && this.prop === void 0 && this.rec.propKey === void 0) {
-          this.resolveMeta();
-        }
-        let changed = !this.hasSnapshot || !_DataPathWatcher.valuesEqual(this.snapshot, value);
-        if (!changed && fireOnUnreliable && !this.snapshotReliable) {
-          changed = true;
-        }
-        if (!changed) return false;
-        this.dirtyFlag = false;
-        dirty.delete(this);
-        this.snapshotValue(value);
-        this.onChange(value, { resolved, path: this.path, prop: this.prop, source });
-        return true;
-      }
-    };
-  }
-});
-
-// scripts/path-controller/controller/controller_abstract.ts
-var ModelInterface;
-var init_controller_abstract = __esm({
-  "scripts/path-controller/controller/controller_abstract.ts"() {
-    "use strict";
-    init_util();
-    init_toolprop_abstract();
-    init_toolsys2();
-    init_controller_base();
-    init_pathwatch();
-    ModelInterface = class {
-      prefix;
-      constructor() {
-        this.prefix = "";
-      }
-      getToolDef(path) {
-        throw new Error("implement me");
-      }
-      getToolPathHotkey(ctx, path) {
-        return void 0;
-      }
-      createTool(ctxOrPath, pathOrInputs, inputsOrUnused, unused) {
-        throw new Error("implement me");
-      }
-      //returns tool class, or undefined if one cannot be found for path
-      parseToolPath(path) {
-        throw new Error("implement me");
-      }
-      /**
-       * runs .undo,.redo if toolstack head is same as tool
-       *
-       * otherwise, .execTool(ctx, tool) is called.
-       *
-       * @param compareInputs : check if toolstack head has identical input values, defaults to false
-       * */
-      execOrRedo(ctx, toolop, compareInputs = false) {
-        return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
-      }
-      execTool(ctx, path, inputs, unused, event) {
-        return new Promise((accept, reject) => {
-          let tool = path;
-          try {
-            if (typeof tool == "string" || !(tool instanceof ToolOp)) {
-              tool = this.createTool(ctx, tool, inputs, unused);
-            }
-          } catch (error2) {
-            print_stack2(error2);
-            reject(error2);
-            return;
-          }
-          if (typeof path !== "string") {
-            for (const k in inputs) {
-              if (!(k in tool.inputs)) {
-                console.warn('Unknown tool property "' + k + '"', "in tool", tool);
-                continue;
-              }
-              tool.inputs[k].setValue(inputs[k]);
-            }
-          }
-          accept(tool);
-          try {
-            ctx.toolstack.execTool(ctx, tool, event);
-          } catch (error2) {
-            print_stack2(error2);
-            throw error2;
-          }
-        });
-      }
-      //used by simple_controller.js for tagging error messages
-      pushReportContext(name2) {
-      }
-      //used by simple_controller.js for tagging error messages
-      popReportContext() {
-      }
-      static toolRegistered(tool) {
-        throw new Error("implement me");
-      }
-      static registerTool(tool) {
-        throw new Error("implement me");
-      }
-      //not yet supported by path.ux's controller implementation
-      massSetProp(ctx, mass_set_path, value) {
-        throw new Error("implement me");
-      }
-      /** takes a mass_set_path and returns an array of individual paths */
-      resolveMassSetPaths(ctx, mass_set_path) {
-        throw new Error("implement me");
-      }
-      /**
-       * @example
-       *
-       * return {
-       *   obj      : [object owning property key]
-       *   parent   : [parent of obj]
-       *   key      : [property key]
-       *   subkey   : used by flag properties, represents a key within the property
-       *   value    : [value of property]
-       *   prop     : [optional toolprop.ToolProperty representing the property definition]
-       *   struct   : [optional datastruct representing the type, if value is an object]
-       *   mass_set : mass setter string, if controller implementation supports it
-       * }
-       */
-      resolvePath(ctx, path, ignoreExistence, rootStruct) {
-        return void 0;
-      }
-      setValue(ctx, path, val, rootStruct) {
-        const res = this.resolvePath(ctx, path, void 0, rootStruct);
-        const prop = res.prop;
-        if (prop !== void 0 && prop.flag & PropFlags.READ_ONLY) {
-          throw new DataPathError("Tried to set read only property");
-        }
-        if (prop !== void 0 && prop.flag & PropFlags.USE_CUSTOM_GETSET) {
-          var _stack = [];
-          try {
-            const execCtx = __using(_stack, prop.execWithContext());
-            execCtx.dataref = res.obj;
-            execCtx.ctx = ctx;
-            execCtx.datapath = path;
-            if (res.subkey !== void 0) {
-              let val2 = prop.getValue();
-              if (typeof val2 === "object" && val2 !== null && "copy" in val2) {
-                val2 = val2.copy();
-              }
-              if (prop.type === PropTypes.FLAG) {
-                if (val) {
-                  val2 = val2 | prop.values[res.subkey];
-                } else {
-                  val2 = val2 & ~prop.values[res.subkey];
-                }
-                val = val2;
-              } else if (prop.type === PropTypes.ENUM) {
-                val = prop.values[res.subkey];
-              } else {
-                val2[res.subkey] = val;
-                val = val2;
-              }
-            }
-            prop.setValue(val);
-            notifyPathChange(path);
-            return;
-          } catch (_) {
-            var _error = _, _hasError = true;
-          } finally {
-            __callDispose(_stack, _error, _hasError);
-          }
-        }
-        if (prop !== void 0) {
-          if (prop.type === PropTypes.CURVE && !val) {
-            throw new DataPathError("can't set curve data to nothing");
-          }
-          let use_range = prop.type & (PropTypes.INT | PropTypes.FLOAT);
-          use_range = use_range || (res.subkey ? prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4) : 0);
-          use_range = use_range && prop.range ? 1 : 0;
-          use_range = use_range && prop.range !== void 0 && !(prop.range[0] === 0 && prop.range[1] === 0) ? 1 : 0;
-          use_range = use_range && typeof val === "number" ? 1 : 0;
-          if (use_range && prop.range !== void 0) {
-            val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
-          }
-        }
-        const old = res.obj[res.key];
-        if (res.subkey !== void 0 && res.prop?.type === PropTypes.ENUM) {
-          const ival = res.prop.values[res.subkey];
-          if (val) {
-            res.obj[res.key] = ival;
-          }
-        } else if (res.prop?.type === PropTypes.FLAG) {
-          if (res.subkey !== void 0) {
-            const ival = res.prop.values[res.subkey];
-            if (val) {
-              res.obj[res.key] = res.obj[res.key] | ival;
-            } else {
-              res.obj[res.key] = res.obj[res.key] & ~ival;
-            }
-          } else if (typeof val === "number" || typeof val === "boolean") {
-            val = typeof val === "boolean" ? val & 1 : val;
-            res.obj[res.key] = val;
-          } else {
-            throw new DataPathError("Expected a number for a bitmask property");
-          }
-        } else if (res.subkey !== void 0 && isVecProperty(res.prop)) {
-          if (res.key !== "") {
-            res.obj[res.key][res.subkey] = val;
-          } else {
-            res.obj[res.subkey] = val;
-          }
-        } else if (res.key === "" && isVecProperty(res.prop)) {
-          for (let i = 0; i < res.obj.length; i++) {
-            res.obj[i] = val[i];
-          }
-        } else if (!(prop !== void 0 && prop instanceof DataList)) {
-          res.obj[res.key] = val;
-        }
-        if (prop !== void 0 && prop instanceof DataList) {
-          prop.set(this, res.obj, res.key, val);
-        } else if (prop !== void 0) {
-          var _stack2 = [];
-          try {
-            const execCtx = __using(_stack2, prop.execWithContext());
-            execCtx.dataref = res.obj;
-            execCtx.datapath = path;
-            execCtx.ctx = ctx;
-            prop._fire("change", res.obj[res.key], old);
-          } catch (_2) {
-            var _error2 = _2, _hasError2 = true;
-          } finally {
-            __callDispose(_stack2, _error2, _hasError2);
-          }
-        }
-        notifyPathChange(path);
-      }
-      getDescription(ctx, path) {
-        const rdef = this.resolvePath(ctx, path);
-        if (rdef === void 0) {
-          throw new DataPathError("invalid path " + path);
-        }
-        if (!rdef.prop || !(rdef.prop instanceof ToolProperty)) {
-          return "";
-        }
-        const prop = rdef.prop;
-        if (rdef.subkey !== void 0) {
-          let subkey = rdef.subkey;
-          if (prop.type !== void 0 && prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
-            if (typeof subkey === "string") {
-              subkey = parseInt(subkey);
-            }
-            const vecProp = prop;
-            if (vecProp.descriptions && subkey in vecProp.descriptions) {
-              return vecProp.descriptions[subkey];
-            }
-          } else if (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG) {
-            if (!(subkey in prop.values) && subkey in prop.keys) {
-              subkey = prop.keys[subkey];
-            }
-            if (prop.descriptions && subkey in prop.descriptions) {
-              return prop.descriptions[subkey];
-            }
-          } else if (prop.type === PropTypes.PROPLIST) {
-            const val = rdef.value;
-            if (typeof val === "object" && val instanceof ToolProperty) {
-              return val.description ?? "";
-            }
-          }
-        }
-        return prop.description ? prop.description : prop.uiname ?? "";
-      }
-      validPath(ctx, path, rootStruct) {
-        try {
-          this.getValue(ctx, path, rootStruct);
-          return true;
-        } catch (error2) {
-          if (!(error2 instanceof DataPathError)) {
-            throw error2;
-          }
-        }
-        return false;
-      }
-      getPropName(ctx, path) {
-        let i = path.length - 1;
-        while (i >= 0 && path[i] !== ".") {
-          i--;
-        }
-        path = path.slice(i + 1, path.length).trim();
-        if (path.endsWith("]")) {
-          i = path.length - 1;
-          while (i >= 0 && path[i] !== "[") {
-            i--;
-          }
-          path = path.slice(0, i).trim();
-          return this.getPropName(ctx, path);
-        }
-        return path;
-      }
-      getValue(ctx, path, rootStruct) {
-        if (typeof ctx == "string") {
-          throw new Error("You forgot to pass context to getValue");
-        }
-        const ret = this.resolvePath(ctx, path, void 0, rootStruct);
-        if (ret === void 0) {
-          throw new DataPathError("invalid path " + path);
-        }
-        let exec = ret.prop !== void 0 && ret.prop.flag & PropFlags.USE_CUSTOM_GETSET;
-        exec = exec && !(ret.prop?.type !== void 0 && ret.prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT));
-        if (exec) {
-          const prop = ret.prop;
-          let val;
-          {
-            var _stack = [];
-            try {
-              const execCtx = __using(_stack, prop.execWithContext());
-              execCtx.dataref = ret.obj;
-              execCtx.datapath = path;
-              execCtx.ctx = ctx;
-              val = prop.getValue();
-            } catch (_) {
-              var _error = _, _hasError = true;
-            } finally {
-              __callDispose(_stack, _error, _hasError);
-            }
-          }
-          if (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG) {
-            if (typeof val === "string" && val in prop.values) {
-              val = prop.values[val];
-            }
-          }
-          if (ret.subkey && prop.type === PropTypes.ENUM) {
-            val = val === prop.values[ret.subkey];
-          } else if (ret.subkey && prop.type === PropTypes.FLAG) {
-            val = val & prop.values[ret.subkey];
-          }
-          return val;
-        }
-        return ret.value;
-      }
-    };
-  }
-});
-
-// scripts/path-controller/controller/controller.ts
-function toolkey(cls) {
-  if (!(Symbol.ToolID in cls)) {
-    cls[Symbol.ToolID] = tool_idgen++;
-  }
-  return cls[Symbol.ToolID];
-}
-function pushReportName(name2) {
-  if (reportstack.length > 1024) {
-    console.trace("eerk, reportstack overflowed");
-    reportstack.length = 0;
-    reportstack.push("api");
-  }
-  reportstack.push(name2);
-}
-function report(msg) {
-  const name2 = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
-  console2.context(name2).warn(msg);
-}
-function popReportName() {
-  reportstack.pop();
-}
-function resolveStructName(cls, explicit) {
-  if (explicit !== void 0) {
-    return explicit;
-  }
-  if (cls.hasOwnProperty("structName") && typeof cls.structName === "string") {
-    return cls.structName;
-  }
-  return cls.name;
-}
-function initSimpleController() {
-  initToolPaths();
-}
-function getDataPathToolOp() {
-  return dpt;
-}
-function setDataPathToolOp(cls) {
-  ToolOp.unregister(DataPathSetOp);
-  if (!ToolOp.isRegistered(cls)) {
-    ToolOp.register(cls);
-  }
-  dpt = cls;
-}
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
-var init_controller = __esm({
-  "scripts/path-controller/controller/controller.ts"() {
-    "use strict";
-    init_toolprop();
-    init_parseutil();
-    init_util();
-    init_toolsys();
-    init_toolprop();
-    init_util();
-    init_controller_ops();
-    init_curve1d_toolprop();
-    init_toolsys2();
-    init_controller_base();
-    init_pathwatch();
-    init_controller_base();
-    init_pathwatch();
-    init_controller_base();
-    init_toolpath();
-    init_controller_abstract();
-    init_controller_base();
-    init_toolprop();
-    PUTLParseError2 = PUTLParseError;
-    tk = (name2, re, func) => new tokdef2(name2, re, func);
-    tokens = [
-      tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
-      tk("NUM", /-?[0-9]+/, (t2) => {
-        t2.value = parseInt(t2.value);
-        return t2;
-      }),
-      tk("NUMBER", /-?[0-9]+\.[0-9]*/, (t2) => {
-        t2.value = parseFloat(t2.value);
-        return t2;
-      }),
-      tk("STRLIT", /'.*?'/, (t2) => {
-        t2.value = t2.value.slice(1, t2.value.length - 1);
-        return t2;
-      }),
-      tk("STRLIT", /".*?"/, (t2) => {
-        t2.value = t2.value.slice(1, t2.value.length - 1);
-        return t2;
-      }),
-      tk("DOT", /\./),
-      tk("EQUALS", /(\=)|(\=\=)/),
-      tk("LSBRACKET", /\[/),
-      tk("RSBRACKET", /\]/),
-      tk("AND", /\&/),
-      tk("WS", /[ \t\n\r]+/, () => void 0)
-      //drop token
-    ];
-    lexer3 = new lexer2(tokens, (t2) => {
-      console.warn("Parse error", t2);
-      throw new DataPathError();
-    });
-    pathParser = new parser2(lexer3);
-    parserStack = new Array(32);
-    for (let i = 0; i < parserStack.length; i++) {
-      parserStack[i] = pathParser.copy();
-    }
-    parserStackCur = 0;
-    tool_idgen = 1;
-    Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
-    reportstack = ["api"];
-    DataStruct2 = class _DataStruct {
-      members;
-      name;
-      pathmap;
-      flag;
-      dpath;
-      inheritFlag;
-      constructor(members = [], name2 = "unnamed") {
-        this.members = [];
-        this.name = name2;
-        this.pathmap = {};
-        this.flag = 0;
-        this.dpath = void 0;
-        this.inheritFlag = 0;
-        for (const m of members ?? []) {
-          this.add(m);
-        }
-      }
-      clear() {
-        this.pathmap = {};
-        this.members = [];
-        return this;
-      }
-      copy() {
-        const ret = new _DataStruct();
-        ret.name = this.name;
-        ret.flag = this.flag;
-        ret.inheritFlag = this.inheritFlag;
-        for (const m of this.members) {
-          const m2 = m.copy();
-          if (m2.type === DataTypes.PROP) {
-            m2.data = m2.data.copy();
-          }
-          ret.add(m2);
-        }
-        return ret;
-      }
-      /**
-       * Like .struct, but the type of struct is looked up
-       * for objects at runtime.  Note that to work correctly each object
-       * must create its own struct definition via api.mapStruct
-       *
-       * @param path
-       * @param apiname
-       * @param uiname
-       * @param default_struct : default struct if one can't be looked up
-       * @returns {*}
-       */
-      dynamicStruct(path, apiname, uiname, default_struct) {
-        const ret = default_struct ? default_struct : new _DataStruct();
-        const dpath = new DataPath(
-          path,
-          apiname,
-          ret,
-          DataTypes.DYNAMIC_STRUCT
-        );
-        ret.inheritFlag |= this.inheritFlag;
-        ret.dpath = dpath;
-        this.add(dpath);
-        return ret;
-      }
-      struct(path, apiname, uiname, existing_struct) {
-        const ret = existing_struct ? existing_struct : new _DataStruct();
-        const dpath = new DataPath(path, apiname, ret, DataTypes.STRUCT);
-        ret.inheritFlag |= this.inheritFlag;
-        ret.dpath = dpath;
-        this.add(dpath);
-        return ret;
-      }
-      customGet(getter) {
-        this.dpath.customGet(getter);
-        return this;
-      }
-      customGetSet(getter, setter) {
-        this.dpath.customGetSet(getter, setter);
-        return this;
-      }
-      color3(path, apiname, uiname, description = uiname) {
-        const ret = this.vec3(path, apiname, uiname, description);
-        ret.data.subtype = PropSubTypes2.COLOR;
-        ret.range(0, 1);
-        ret.simpleSlider();
-        ret.noUnits();
-        return ret;
-      }
-      color4(path, apiname, uiname, description = uiname) {
-        const ret = this.vec4(path, apiname, uiname, description);
-        ret.data.subtype = PropSubTypes2.COLOR;
-        ret.range(0, 1);
-        ret.simpleSlider();
-        ret.noUnits();
-        return ret;
-      }
-      arrayList(path, apiname, structdef, uiname, description) {
-        const ret = this.list(path, apiname, {
-          getIter(api, list5) {
-            return list5[Symbol.iterator]();
-          },
-          getLength(api, list5) {
-            return list5.length;
-          },
-          get(api, list5, key) {
-            return list5[key];
-          },
-          set(api, list5, key, val) {
-            if (typeof key === "string") {
-              key = parseInt(key);
-            }
-            if (key < 0 || key >= list5.length) {
-              throw new DataPathError("Invalid index " + key);
-            }
-            list5[key] = val;
-          },
-          getKey(api, list5, value) {
-            return list5.indexOf(value);
-          },
-          getStruct(api, list5, key) {
-            return structdef;
-          }
-        });
-        return ret;
-      }
-      color3List(path, apiname, uiname, description) {
-        return this.vectorList(3, path, apiname, uiname, description, PropSubTypes2.COLOR);
-      }
-      color4List(path, apiname, uiname, description) {
-        return this.vectorList(4, path, apiname, uiname, description, PropSubTypes2.COLOR);
-      }
-      vectorList(size, path, apiname, uiname, description, subtype) {
-        let type;
-        switch (size) {
-          case 2:
-            type = Vec2Property;
-            break;
-          case 3:
-          case 4:
-            type = Vec4Property;
-        }
-        if (type === void 0) {
-          throw new DataPathError("Invalid size for vectorList; expected 2 3 or 4");
-        }
-        const pstruct = new _DataStruct(void 0, "Vector");
-        pstruct.vec3("", "co", "Coords", "Coordinates");
-        const ret = this.list(path, apiname, {
-          getIter(api, list5) {
-            return list5[Symbol.iterator]();
-          },
-          getLength(api, list5) {
-            return list5.length;
-          },
-          get(api, list5, key) {
-            return list5[key];
-          },
-          set(api, list5, key, val) {
-            if (typeof key == "string") {
-              key = parseInt(key);
-            }
-            if (key < 0 || key >= list5.length) {
-              throw new DataPathError("Invalid index " + key);
-            }
-            list5[key] = val;
-          },
-          getKey(api, list5, value) {
-            return list5.indexOf(value);
-          },
-          getStruct(api, list5, key) {
-            return pstruct;
-          }
-        });
-        return ret;
-      }
-      bool(path, apiname, uiname, description) {
-        const prop = new BoolProperty(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      vec2(path, apiname, uiname, description) {
-        const prop = new Vec2Property(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      vec3(path, apiname, uiname, description) {
-        const prop = new Vec3Property(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      vec4(path, apiname, uiname, description) {
-        const prop = new Vec4Property(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      float(path, apiname, uiname, description) {
-        const prop = new FloatProperty(0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      textblock(path, apiname, uiname, description) {
-        const prop = new StringProperty(void 0, apiname, uiname, description);
-        prop.multiLine = true;
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      report(path, apiname, uiname, description) {
-        const prop = new ReportProperty(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      string(path, apiname, uiname, description) {
-        const prop = new StringProperty(void 0, apiname, uiname, description);
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      int(path, apiname, uiname, description, prop) {
-        if (!prop) {
-          prop = new IntProperty(0, apiname, uiname, description);
-        }
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      curve1d(path, apiname, uiname, description) {
-        const prop = new Curve1DProperty(void 0);
-        prop.apiname = apiname;
-        prop.uiname = uiname;
-        prop.description = description;
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      enum(path, apiname, enumdef, uiname, description) {
-        let prop;
-        if (enumdef instanceof EnumProperty) {
-          prop = enumdef;
-        } else {
-          prop = new EnumProperty(void 0, enumdef, apiname, uiname, description);
-        }
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      list(path, apiname, funcs) {
-        const array = new DataList(funcs);
-        const dpath = new DataPath(path, apiname, array);
-        dpath.type = DataTypes.ARRAY;
-        this.add(dpath);
-        return dpath;
-      }
-      flags(path, apiname, enumdef, uiname, description) {
-        let prop;
-        if (enumdef === void 0 || !(enumdef instanceof ToolProperty)) {
-          prop = new FlagProperty(void 0, enumdef, apiname, uiname, description);
-        } else {
-          prop = enumdef;
-        }
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      remove(m) {
-        if (typeof m === "string") {
-          m = this.pathmap[m];
-        }
-        if (!(m.apiname in this.pathmap)) {
-          throw new Error("Member not in struct " + m.apiname);
-        }
-        delete this.pathmap[m.apiname];
-        this.members.remove(m);
-      }
-      fromToolProp(path, prop, apiname = prop.apiname?.length ? prop.apiname : path) {
-        const dpath = new DataPath(path, apiname, prop);
-        this.add(dpath);
-        return dpath;
-      }
-      add(dpath) {
-        if (dpath.apiname in this.pathmap) {
-          if (window.DEBUG?.datapaths) {
-            console.warn(
-              "Overriding existing member '" + dpath.apiname + "' in datapath struct",
-              this.name
-            );
-          }
-          this.remove(this.pathmap[dpath.apiname]);
-        }
-        dpath.flag |= this.inheritFlag;
-        this.members.push(dpath);
-        dpath.parent = this;
-        this.pathmap[dpath.apiname] = dpath;
-        return this;
-      }
-    };
-    _map_struct_idgen = 1;
-    _map_structs = {};
-    _map_structs_by_name = {};
-    _dummypath = new DataPath();
-    DummyIntProperty = new IntProperty();
-    CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
-    CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
-    DataAPI2 = class extends ModelInterface {
-      rootContextStruct;
-      structs = [];
-      /** Message from the most recent failed resolvePath (incl. "did you mean" hints). */
-      lastResolveError = void 0;
-      constructor() {
-        super();
-        this.rootContextStruct = void 0;
-        this.structs = [];
-      }
-      static toolRegistered(cls) {
-        return ToolOp.isRegistered(cls);
-      }
-      static registerTool(cls) {
-        console.warn("Outdated function simple_controller.DataAPI.registerTool called");
-        return ToolOp.register(cls);
-      }
-      getStructs() {
-        return this.structs;
-      }
-      setRoot(sdef) {
-        this.rootContextStruct = sdef;
-      }
-      hasStruct(cls) {
-        return cls.hasOwnProperty(CLS_API_KEY);
-      }
-      getStruct(cls) {
-        return this.mapStruct(cls, false);
-      }
-      /**
-       * Signal that `prop` changed on the model reached by `path`. Strongly typed:
-       * pass the model type as the type argument, and `path` is restricted to the
-       * datapaths that resolve to that type while `prop` is restricted to that
-       * struct's members — both checked at compile time against the generated
-       * {@link StructCatalog}.
-       *
-       * ```ts
-       * api.updateFrom<BrushSettings>("workspace.brush", "size"); // ok
-       * api.updateFrom<BrushSettings>("workspace.brush", "nope"); // ✗ not a member
-       * api.updateFrom<BrushSettings>("canvas", "size");          // ✗ not a BrushSettings path
-       * ```
-       *
-       * (With the empty standalone seam both params are `never`, so this is only
-       * callable once the app's generated catalog is included — same opt-in model as
-       * the typed `getDefault`/`prop` paths.)
-       */
-      updateFrom(path, prop) {
-        this.notifyChange(`${path}.${prop}`);
-      }
-      /**
-       * Coarser sibling of {@link updateFrom}: some instance of `T` had `prop`
-       * change, without a known root path (e.g. raw model mutation that holds an
-       * instance but not its path). Wakes every subscription whose endpoint resolves
-       * to `(T, prop)`.
-       */
-      updateChanged(prop) {
-        this.notifyChange(void 0, prop);
-      }
-      /**
-       * Low-level change signal: marks matching subscriptions dirty and coalesces
-       * their callbacks onto the next animation frame (see {@link notifyPathChange}).
-       *
-       *  - `notifyChange(path)` wakes watchers on `path` and its subtree/ancestors;
-       *  - `notifyChange(undefined, prop)` is the type-scoped wake used by
-       *    {@link updateChanged};
-       *  - `notifyChange()` bumps the structural epoch and wakes every watcher —
-       *    use it for tree-shape changes (active-object switch, list
-       *    insert/remove, context swap) that invalidate resolved paths.
-       */
-      notifyChange(path, prop) {
-        if (typeof window !== "undefined" && window.DEBUG?.datapaths) {
-          console.log("[datapath] notifyChange", { path, prop });
-        }
-        notifyPathChange(path, prop);
-      }
-      /**
-       * Subscribe to changes on `path`: creates a {@link DataPathWatcher} that
-       * owns change detection (read + snapshot + prop-aware compare) and invokes
-       * `cb` when the value changes — pushed via {@link notifyChange} (rAF
-       * coalesced) or polled via `watcher.tick()`.
-       *
-       * `ctx` may be a getter so long-lived watchers always see the current
-       * context. The caller must hold the returned watcher and call
-       * `watcher.remove()` (or {@link unsubscribe}) when done; the registry only
-       * holds a weak ref.
-       */
-      watch(ctx, path, cb, opts) {
-        return new DataPathWatcher(this, ctx, path, cb, opts).subscribe();
-      }
-      /** Register an unsubscribed {@link DataPathWatcher} (see {@link watch}). */
-      subscribe(watcher) {
-        return watcher.subscribe();
-      }
-      /** Unsubscribe a watcher created with {@link watch}; alias of `watcher.remove()`. */
-      unsubscribe(watcher) {
-        watcher.remove();
-      }
-      /**
-       * Look up a struct definition by its stable name (see `resolveStructName`):
-       * an explicit name passed to `mapStruct`, else the nstructjs registered name
-       * (`cls.structName`), else `cls.name`. Unlike `getStruct(cls)` this does not
-       * need a class reference, so it survives bundler name-mangling as long as the
-       * struct was registered with an nstructjs/explicit name.
-       */
-      getStructByName(name2) {
-        return _map_structs_by_name[name2];
-      }
-      mergeStructs(dest, src) {
-        for (const m of src.members) {
-          dest.add(m.copy());
-        }
-      }
-      inheritStruct(cls, parent, auto_create_parent = false, name2) {
-        let st = this.mapStruct(parent, auto_create_parent);
-        if (st === void 0) {
-          throw new Error("parent has no struct definition");
-        }
-        st = st.copy();
-        this._addClass(cls, st, name2);
-        return st;
-      }
-      /**
-       * Look up struct definition for a class.
-       *
-       * @param cls: the class
-       * @param auto_create: If true, automatically create definition if not already existing.
-       * @returns {IterableIterator<*>}
-       */
-      _addClass(cls, dstruct, name2) {
-        const key = _map_struct_idgen++;
-        cls[CLS_API_KEY] = key;
-        const stableName = resolveStructName(cls, name2);
-        dstruct.name = stableName;
-        this.structs.push(dstruct);
-        _map_structs[key] = dstruct;
-        const existing = _map_structs_by_name[stableName];
-        if (existing !== void 0 && existing !== dstruct) {
-          console.warn(
-            `mapStruct: duplicate struct name "${stableName}"; keeping the first registration. Pass an explicit name to mapStruct/inheritStruct to disambiguate.`
-          );
-        } else {
-          _map_structs_by_name[stableName] = dstruct;
-        }
-      }
-      /* Associate cls with a DataStruct
-       * via callback, which will be called
-       * with an instance of cls as its argument*/
-      mapStructCustom(cls, callback, name2) {
-        this.mapStruct(cls, true, name2);
-        cls[CLS_API_KEY_CUSTOM] = callback;
-      }
-      mapStruct(cls, auto_create = true, name2) {
-        let key;
-        if (!cls.hasOwnProperty(CLS_API_KEY)) {
-          key = void 0;
-        } else {
-          key = cls[CLS_API_KEY];
-        }
-        if (key === void 0 && auto_create) {
-          let dstruct;
-          if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
-            dstruct = _map_structs_by_name[name2];
-          } else {
-            dstruct = new DataStruct2(void 0, resolveStructName(cls, name2));
-          }
-          this._addClass(cls, dstruct, name2);
-          return dstruct;
-        } else if (key === void 0) {
-          throw new Error("class does not have a struct definition: " + resolveStructName(cls, name2));
-        }
-        return _map_structs[key];
-      }
-      //used for tagging error messages
-      pushReportContext(name2) {
-        pushReportName(name2);
-      }
-      //used for tagging error messages
-      popReportContext() {
-        popReportName();
-      }
-      /*
-        massSetProp operate on lists.  The idea is to
-        write a filter str inside a data path, e.g.
-      
-        ctx.api.massSetProp(ctx, "obj.list[{$.select}].value", 1);
-      
-      
-        * */
-      massSetProp(ctx, massSetPath, value) {
-        for (const path of this.resolveMassSetPaths(ctx, massSetPath)) {
-          this.setValue(ctx, path, value);
-        }
-      }
-      /**
-       *
-       * Mass set paths take the form list[{$.prop}]`, where the filter is inside of the list.
-       * Note: `$.prop` cannot be an expression unless you enable eval with `struct.list().evalMassSetFilter()`.
-       * An example of a more complicated expression might be:
-       * `canvas.paths[{$.id % 2 === 0}].material.color`
-       */
-      resolveMassSetPaths(ctx, massSetPath) {
-        if (massSetPath.startsWith("/")) {
-          massSetPath = massSetPath.slice(1, massSetPath.length);
-        }
-        const start = massSetPath.search("{");
-        const end = massSetPath.search("}");
-        if (start < 0 || end < 0) {
-          console.log(
-            `
-Mass set paths take the form \`list[{$.prop}]\`, where the filter is inside of the list.
-Note: \`$.prop\` cannot be an expression unless you enable eval with \`struct.list().evalMassSetFilter()\`.
-An example of a more complicated expression might be: 
-\`canvas.paths[{$.id % 2 === 0}].material.color\``.trim()
-          );
-          throw new DataPathError("Invalid mass set datapath: " + massSetPath);
-        }
-        const prefix = massSetPath.slice(0, start - 1);
-        const filter = massSetPath.slice(start + 1, end);
-        const suffix = massSetPath.slice(end + 2, massSetPath.length);
-        const rdef1 = this.resolvePath(ctx, prefix);
-        if (rdef1 === void 0) {
-          throw new DataPathError('unknown path: "' + prefix + '"');
-        }
-        const rdef = rdef1;
-        if (!(rdef.prop instanceof DataList)) {
-          throw new DataPathError(
-            "massSetPath expected a path resolving to a DataList: " + massSetPath
-          );
-        }
-        const paths = [];
-        const list5 = rdef.prop;
-        const api = ctx.api ?? this;
-        function applyFilter(obj) {
-          const forceEval = rdef.dpath.flag & DataFlags.USE_EVAL_MASS_SET_PATHS;
-          if (obj === void 0) {
-            return void 0;
-          } else if (!forceEval && (typeof obj === "object" || typeof obj === "function")) {
-            const st = api.mapStruct(obj.constructor, false);
-            let path = filter;
-            if (path.startsWith("$")) {
-              path = path.slice(1, filter.length).trim();
-            }
-            if (path.startsWith(".")) {
-              path = path.slice(1, filter.length).trim();
-            }
-            try {
-              return api.getValue(obj, path, st);
-            } catch (error2) {
-              if (!(error2 instanceof DataPathError)) {
-                print_stack2(error2);
-                console.error("Error in datapath callback");
-              }
-              return false;
-            }
-          } else {
-            const code2 = `
-        (function filter($) {
-          return ${filter};
-        })
-        `;
-            const func = (0, eval)(code2);
-            return func(obj);
-          }
-        }
-        for (const obj of list5.getIter(this, rdef.value)) {
-          if (!applyFilter(obj)) {
-            continue;
-          }
-          const key = "" + list5.getKey(this, rdef.value, obj);
-          const path = `${prefix}[${key}]${suffix}`;
-          try {
-            this.getValue(ctx, path);
-          } catch (error2) {
-            if (!(error2 instanceof DataPathError)) {
-              print_stack2(error2);
-              console.error(path + ": Error in datapath API");
-            }
-            continue;
-          }
-          paths.push(path);
-        }
-        return paths;
-      }
-      resolvePath(ctx, inpath, ignoreExistence = false, dstruct) {
-        const parser3 = parserStack[parserStackCur++];
-        let ret;
-        if (inpath[0] === "/") {
-          inpath = inpath.slice(1, inpath.length).trim();
-        }
-        this.lastResolveError = void 0;
-        try {
-          ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser3, dstruct);
-        } catch (error2) {
-          if (error2 instanceof DataPathError) {
-            this.lastResolveError = error2.message;
-          } else {
-            print_stack2(error2);
-            report("error while evaluating path " + inpath);
-          }
-          if (window.DEBUG?.datapaths) {
-            print_stack2(error2);
-          }
-          ret = void 0;
-        }
-        parserStackCur--;
-        if (ret?.prop && ret.dpath && ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
-          ret.prop = this.getPropOverride(ctx, inpath, ret.dpath, ret.obj);
-        }
-        if (ret?.prop && ret.dpath?.ui_name_get) {
-          const dummy = {
-            datactx: ctx,
-            datapath: inpath,
-            dataref: ret.obj
-          };
-          const name2 = ret.dpath.ui_name_get.call(dummy);
-          ret.prop.uiname = "" + name2;
-        }
-        return ret;
-      }
-      getPropOverride(ctx, path, dpath, obj, prop = dpath.data) {
-        var _stack = [];
-        try {
-          const execCtx = __using(_stack, prop.execWithContext());
-          execCtx.ctx = ctx;
-          execCtx.datapath = path;
-          execCtx.dataref = obj;
-          const newprop = getTempProp(prop.type);
-          prop.copyTo(newprop);
-          dpath.propGetter.call(prop, newprop);
-          return newprop;
-        } catch (_) {
-          var _error = _, _hasError = true;
-        } finally {
-          __callDispose(_stack, _error, _hasError);
-        }
-      }
-      /**
-         get meta information for a datapath.
-      
-         @param ignoreExistence: don't try to get actual data associated with path,
-          just want meta information
-         */
-      resolvePath_intern(ctx, inpath, ignoreExistence = false, p = pathParser, dstruct) {
-        inpath = inpath.replace("==", "=");
-        p.input(inpath);
-        dstruct = dstruct || this.rootContextStruct;
-        let obj = ctx;
-        let lastobj = ctx;
-        let subkey;
-        let lastobj2;
-        let lastkey;
-        let prop;
-        let lastdpath;
-        function p_key() {
-          const t2 = p.peeknext();
-          if (t2.type === "NUM" || t2.type === "STRLIT") {
-            p.next();
-            return t2.value;
-          } else {
-            throw new PUTLParseError2("Expected list key");
-          }
-        }
-        let _i = 0;
-        while (!p.at_end()) {
-          let key = p.expect("ID");
-          let dpath = dstruct.pathmap[key];
-          lastdpath = dpath;
-          if (dpath === void 0) {
-            if (key === "length" && prop !== void 0 && prop instanceof DataList) {
-              prop.getLength(this, obj);
-              prop = DummyIntProperty;
-              prop.name = "length";
-              prop.flag = PropFlags.READ_ONLY;
-              dpath = _dummypath;
-              dpath.type = DataTypes.PROP;
-              dpath.data = prop;
-              dpath.struct = dpath.parent = dstruct;
-              dpath.flag = DataFlags.READ_ONLY;
-              dpath.path = "length";
-            } else if (key === "active" && prop !== void 0 && prop instanceof DataList) {
-              const act = prop.getActive(this, obj);
-              if (act === void 0 && !ignoreExistence) {
-                throw new DataPathError("no active elem ent for list");
-              }
-              const actkey = obj !== void 0 && act !== void 0 ? prop.getKey(this, obj, act) : void 0;
-              dstruct = prop.getStruct(this, obj, actkey);
-              if (dstruct === void 0) {
-                throw new DataPathError(
-                  "couldn't get data type for " + inpath + "'s element '" + key + "'"
-                );
-              }
-              _dummypath.parent = dpath;
-              dpath = _dummypath;
-              lastobj = obj;
-              obj = act;
-              dpath.type = DataTypes.STRUCT;
-              dpath.data = dstruct;
-              dpath.path = key;
-              p.optional("DOT");
-              continue;
-            } else {
-              throw new DataPathError(
-                `${inpath}: unknown property "${key}"` + suggestPropertyKeys(key, Object.keys(dstruct.pathmap))
-              );
-            }
-          }
-          let dynstructobj = void 0;
-          if (dpath.type === DataTypes.STRUCT) {
-            dstruct = dpath.data;
-            prop = void 0;
-          } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
-            let ok = false;
-            prop = void 0;
-            if (obj !== void 0) {
-              let obj2;
-              if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
-                const fakeprop = dpath.getSet;
-                fakeprop.ctx = ctx;
-                fakeprop.dataref = obj;
-                fakeprop.datapath = inpath;
-                obj2 = fakeprop.get();
-                fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
-              } else {
-                obj2 = obj[dpath.path];
-              }
-              dynstructobj = obj2;
-              if (obj2 !== void 0) {
-                if (CLS_API_KEY_CUSTOM in obj2.constructor) {
-                  dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2);
-                } else {
-                  dstruct = this.mapStruct(obj2.constructor, false);
-                }
-              } else {
-                dstruct = dpath.data;
-              }
-              if (dstruct === void 0) {
-                dstruct = dpath.data;
-              }
-              ok = dstruct !== void 0;
-            }
-            if (!ok) {
-              throw new DataPathError("dynamic struct error for path: " + inpath);
-            }
-          } else {
-            prop = dpath.data;
-          }
-          if (prop && dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER) {
-            prop = this.getPropOverride(ctx, inpath, dpath, obj);
-          }
-          if (dpath.path.search(/\./) >= 0) {
-            const keys2 = dpath.path.split(/\./);
-            for (const key2 of keys2) {
-              lastobj2 = lastobj;
-              lastobj = obj;
-              lastkey = key2;
-              if (obj === void 0 && !ignoreExistence) {
-                throw new DataPathError("no data for " + inpath);
-              } else if (obj !== void 0) {
-                obj = obj[key2.trim()];
-              }
-            }
-          } else {
-            lastobj2 = lastobj;
-            lastobj = obj;
-            lastkey = dpath.path;
-            if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
-              const fakeprop = dpath.getSet;
-              if (!fakeprop && dpath.type === DataTypes.PROP) {
-                var _stack = [];
-                try {
-                  const prop2 = dpath.data;
-                  const execCtx = __using(_stack, prop2.execWithContext(ctx));
-                  execCtx.ctx = ctx;
-                  execCtx.dataref = obj;
-                  execCtx.datapath = inpath;
-                  try {
-                    obj = prop2.getValue();
-                  } catch (error2) {
-                    print_stack2(error2);
-                    obj = void 0;
-                  }
-                  if (typeof obj === "string" && prop2.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-                    obj = prop2.values[obj];
-                  }
-                } catch (_) {
-                  var _error = _, _hasError = true;
-                } finally {
-                  __callDispose(_stack, _error, _hasError);
-                }
-              } else {
-                fakeprop.ctx = ctx;
-                fakeprop.dataref = obj;
-                fakeprop.datapath = inpath;
-                obj = fakeprop.get();
-                fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = void 0;
-              }
-            } else if (obj === void 0 && !ignoreExistence) {
-              throw new DataPathError("no data for " + inpath);
-            } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
-              obj = dynstructobj;
-            } else if (obj !== void 0 && dpath.path !== "") {
-              obj = obj[dpath.path];
-            }
-          }
-          const t2 = p.peeknext();
-          if (t2 === void 0) {
-            break;
-          }
-          if (t2.type === "DOT") {
-            p.next();
-          } else if (t2.type === "EQUALS" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            p.expect("EQUALS");
-            const t22 = p.peeknext();
-            const type = t22?.type === "ID" ? "ID" : "NUM";
-            let val = p.expect(type);
-            const val1 = val;
-            if (typeof val == "string") {
-              val = prop.values[val];
-            }
-            if (val === void 0) {
-              throw new DataPathError("unknown value " + val1);
-            }
-            if (val in prop.keys) {
-              subkey = prop.keys[val];
-            }
-            key = dpath.path;
-            obj = !!(lastobj[key] == val);
-          } else if (t2.type === "AND" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            p.expect("AND");
-            const t22 = p.peeknext();
-            const type = t22?.type === "ID" ? "ID" : "NUM";
-            let val = p.expect(type);
-            const val1 = val;
-            if (typeof val == "string") {
-              val = prop.values[val];
-            }
-            if (val === void 0) {
-              throw new DataPathError("unknown value " + val1);
-            }
-            if (val in prop.keys) {
-              subkey = prop.keys[val];
-            }
-            key = dpath.path;
-            obj = !!(lastobj[key] & val);
-          } else if (t2.type === "LSBRACKET" && prop !== void 0 && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
-            p.expect("LSBRACKET");
-            const t22 = p.peeknext();
-            const type = t22?.type === "ID" ? "ID" : "NUM";
-            let val = p.expect(type);
-            const val1 = val;
-            const enumProp = prop;
-            if (typeof val == "string") {
-              val = enumProp.values[val];
-            }
-            if (val === void 0) {
-              console.warn(inpath, enumProp.values, val1, prop);
-              throw new DataPathError("unknown value " + val1);
-            }
-            if (val in enumProp.keys) {
-              subkey = enumProp.keys[val];
-            }
-            let bitfield;
-            key = dpath.path;
-            if (!(enumProp.flag & PropFlags.USE_CUSTOM_GETSET)) {
-              bitfield = lastobj ? lastobj[key] : 0;
-            } else {
-              var _stack2 = [];
-              try {
-                const execCtx = __using(_stack2, enumProp.execWithContext());
-                execCtx.dataref = lastobj;
-                execCtx.datapath = inpath;
-                execCtx.ctx = ctx;
-                try {
-                  bitfield = enumProp.getValue();
-                } catch (error2) {
-                  print_stack2(error2);
-                  bitfield = NaN;
-                }
-              } catch (_2) {
-                var _error2 = _2, _hasError2 = true;
-              } finally {
-                __callDispose(_stack2, _error2, _hasError2);
-              }
-            }
-            if (lastobj === void 0 && !ignoreExistence) {
-              throw new DataPathError("no data for path " + inpath);
-            } else if (lastobj !== void 0) {
-              if (enumProp.type === PropTypes.ENUM) {
-                obj = !!(bitfield === val);
-              } else {
-                obj = !!(bitfield & val);
-              }
-            }
-            p.expect("RSBRACKET");
-          } else if (t2.type === "LSBRACKET" && prop !== void 0 && isVecProperty(prop)) {
-            p.expect("LSBRACKET");
-            const num2 = p.expect("NUM");
-            p.expect("RSBRACKET");
-            subkey = num2;
-            if (prop !== void 0 && !(prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
-              lastobj = obj;
-            }
-            obj = obj[num2];
-          } else if (t2.type === "LSBRACKET") {
-            p.expect("LSBRACKET");
-            if (lastobj && lastkey && typeof lastkey === "string" && lastkey.length > 0) {
-              lastobj = lastobj[lastkey];
-            }
-            lastkey = p_key();
-            p.expect("RSBRACKET");
-            if (!(prop instanceof DataList)) {
-              throw new DataPathError("bad property, not a list");
-            }
-            obj = prop.get(this, lastobj, lastkey);
-            dstruct = prop.getStruct(this, lastobj, lastkey);
-            if (!dstruct) {
-              throw new DataPathError(inpath + ": list has no entry " + lastkey);
-            }
-            if (p.peeknext() !== void 0 && p.peeknext()?.type === "DOT") {
-              p.next();
-            }
-          }
-          if (_i++ > 1e3) {
-            console.warn("infinite loop in resolvePath parser");
-            break;
-          }
-        }
-        if (prop && prop.type & (PropTypes.ENUM | PropFlags.FLAG)) {
-          prop.checkMeta();
-        }
-        return {
-          dpath: lastdpath,
-          parent: lastobj2,
-          obj: lastobj,
-          value: obj,
-          key: lastkey,
-          dstruct,
-          prop,
-          subkey
-        };
-      }
-      _parsePathOverrides(path) {
-        const parts = ["", void 0, void 0];
-        const TOOLPATH = 0;
-        const NAME = 1;
-        const HOTKEY = 2;
-        let part = TOOLPATH;
-        for (let i = 0; i < path.length; i++) {
-          const c = path[i];
-          const n = i < path.length - 1 ? path[i + 1] : "";
-          if (c === "|") {
-            part = NAME;
-            parts[NAME] = "";
-            continue;
-          } else if (c === ":" && n === ":") {
-            part = HOTKEY;
-            parts[HOTKEY] = "";
-            i++;
-            continue;
-          }
-          parts[part] += c;
-        }
-        return {
-          path: parts[TOOLPATH].trim(),
-          uiname: parts[NAME] ? parts[NAME].trim() : void 0,
-          hotkey: parts[HOTKEY] ? parts[HOTKEY].trim() : void 0
-        };
-      }
-      /** Get tooldef for path, applying any modifications, e.g.:
-       *  "app.some_tool()|Label::CustomHotkeyString"
-       * */
-      getToolDef(toolpath) {
-        const { path, uiname, hotkey } = this._parsePathOverrides(toolpath);
-        const cls = this.parseToolPath(path);
-        if (cls === void 0) {
-          throw new DataPathError('unknown path "' + path + '"');
-        }
-        const def = cls.tooldef();
-        def.uiname = uiname ?? def.uiname ?? path;
-        if (hotkey) {
-          def.hotkey = hotkey;
-        }
-        return def;
-      }
-      getToolPathHotkey(ctx, toolpath) {
-        const { path, hotkey } = this._parsePathOverrides(toolpath);
-        if (hotkey) {
-          return hotkey;
-        }
-        try {
-          return this.#getToolPathHotkey_intern(ctx, path);
-        } catch (error2) {
-          print_stack2(error2);
-          console2.context("api").log("failed to fetch tool path: " + path);
-          return void 0;
-        }
-      }
-      #getToolPathHotkey_intern(ctx, path) {
-        const screen = ctx.screen;
-        const this2 = this;
-        function searchKeymap(keymap4) {
-          if (keymap4 === void 0) {
-            return void 0;
-          }
-          let ret;
-          function search(cb) {
-            if (ret) {
-              return;
-            }
-            for (const hk of keymap4) {
-              if (typeof hk.action === "string" && cb(hk.action)) {
-                ret = hk.buildString();
-              }
-            }
-          }
-          search((tool) => tool.trim() === path.trim());
-          search((tool) => this2._parsePathOverrides(tool).path === path.trim());
-          return ret;
-        }
-        if (screen.sareas.length === 0) {
-          return searchKeymap(screen.keymap);
-        }
-        const areacls = screen.sareas[0].area.constructor;
-        const area = areacls.getActiveArea();
-        if (area) {
-          for (const keymap4 of area.getKeyMaps()) {
-            const ret = searchKeymap(keymap4);
-            if (ret !== void 0) {
-              return ret;
-            }
-          }
-        }
-        for (const sarea of screen.sareas) {
-          if (!sarea.area) continue;
-          for (const keymap4 of sarea.area.getKeyMaps()) {
-            const ret = searchKeymap(keymap4);
-            if (ret) {
-              return ret;
-            }
-          }
-        }
-        return this.keymap ? searchKeymap(this.keymap) : void 0;
-      }
-      parseToolPath(path) {
-        try {
-          return parseToolPath(path).toolclass;
-        } catch (error2) {
-          if (error2 instanceof DataPathError) {
-            console.warn("warning, bad tool path " + path);
-            return void 0;
-          } else {
-            throw error2;
-          }
-        }
-      }
-      parseToolArgs(path) {
-        return parseToolPath(path).args;
-      }
-      createTool(ctx, path, inputs = {}) {
-        let cls;
-        let args;
-        if (typeof path == "string") {
-          const tpath = parseToolPath(path);
-          cls = tpath.toolclass;
-          args = tpath.args;
-        } else {
-          cls = path;
-          args = {};
-        }
-        if (!cls) {
-          debugger;
-          console.error("Unknown tool " + path);
-        }
-        args = { ...args };
-        const tooldef = cls._getFinalToolDef();
-        if (inputs !== void 0) {
-          for (const k in inputs) {
-            if (!(k in tooldef.inputs)) {
-              console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
-              continue;
-            }
-            if (!(k in args)) {
-              args[k] = inputs[k];
-            }
-          }
-        }
-        const tool = cls.invoke(ctx, args);
-        if (inputs !== void 0) {
-          for (const k in inputs) {
-            if (!(k in tool.inputs)) {
-              console.warn(cls.tooldef().uiname + ': Unknown tool property "' + k + '"');
-              continue;
-            }
-            tool.inputs[k].setValue(inputs[k]);
-          }
-        }
-        return tool;
-      }
-    };
-    dpt = DataPathSetOp;
-    setImplementationClass(DataAPI2);
-  }
-});
-
-// scripts/path-controller/util/colorutils.ts
-function rgb_to_hsv(r, g, b) {
-  let computedV;
-  if (r == null || g == null || b == null || isNaN(r) || isNaN(g) || isNaN(b)) {
-    throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
-  }
-  const minRGB = Math.min(r, Math.min(g, b));
-  const maxRGB = Math.max(r, Math.max(g, b));
-  if (minRGB === maxRGB) {
-    computedV = minRGB;
-    const ret2 = rgb_to_hsv_rets.next();
-    ret2[0] = 0, ret2[1] = 0, ret2[2] = computedV;
-    return ret2;
-  }
-  const d = r === minRGB ? g - b : b === minRGB ? r - g : b - r;
-  const h = r === minRGB ? 3 : b === minRGB ? 1 : 5;
-  const computedH = 60 * (h - d / (maxRGB - minRGB)) / 360;
-  const computedS = (maxRGB - minRGB) / maxRGB;
-  computedV = maxRGB;
-  const ret = rgb_to_hsv_rets.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
-  return ret;
-}
-function hsv_to_rgb(h, s, v) {
-  const ret = hsv_to_rgb_rets.next();
-  ret[0] = ret[1] = ret[2] = 0;
-  h *= 360;
-  const c = v * s;
-  const x = c * (1 - Math.abs(h / 60 % 2 - 1));
-  const m = v - c;
-  let color;
-  function RgbF_Create(r, g, b) {
-    ret[0] = r;
-    ret[1] = g;
-    ret[2] = b;
+    const cb2 = cb[EventCBSymbol].get(key);
+    const ret = HTMLElement.prototype.removeEventListener.call(
+      elem,
+      type,
+      cb2,
+      options
+    );
+    cb[EventCBSymbol].delete(key);
     return ret;
   }
-  if (h >= 0 && h < 60) {
-    color = RgbF_Create(c + m, x + m, m);
-  } else if (h >= 60 && h < 120) {
-    color = RgbF_Create(x + m, c + m, m);
-  } else if (h >= 120 && h < 180) {
-    color = RgbF_Create(m, c + m, x + m);
-  } else if (h >= 180 && h < 240) {
-    color = RgbF_Create(m, x + m, c + m);
-  } else if (h >= 240 && h < 300) {
-    color = RgbF_Create(x + m, m, c + m);
-  } else if (h >= 300) {
-    color = RgbF_Create(c + m, m, x + m);
-  } else {
-    color = RgbF_Create(m, m, m);
-  }
-  return color;
 }
-function cmyk_to_rgb(c, m, y, k) {
-  const ret = cmyk_to_rgb_rets.next();
-  if (k === 1) {
-    ret.zero();
-    return ret;
-  }
-  c = c - c * k + k;
-  m = m - m * k + k;
-  y = y - y * k + k;
-  ret[0] = 1 - c;
-  ret[1] = 1 - m;
-  ret[2] = 1 - y;
-  return ret;
-}
-function rgb_to_cmyk(r, g, b) {
-  const ret = rgb_to_cmyk_rets.next();
-  let C = 1 - r;
-  let M = 1 - g;
-  let Y = 1 - b;
-  let var_K = 1;
-  if (C < var_K) var_K = C;
-  if (M < var_K) var_K = M;
-  if (Y < var_K) var_K = Y;
-  if (var_K === 1) {
-    C = 0;
-    M = 0;
-    Y = 0;
-  } else {
-    C = (C - var_K) / (1 - var_K);
-    M = (M - var_K) / (1 - var_K);
-    Y = (Y - var_K) / (1 - var_K);
-  }
-  const K = var_K;
-  ret[0] = C;
-  ret[1] = M;
-  ret[2] = Y;
-  ret[3] = K;
-  return ret;
-}
-var rgb_to_hsv_rets, hsv_to_rgb_rets, rgb_to_cmyk_rets, cmyk_to_rgb_rets;
-var init_colorutils = __esm({
-  "scripts/path-controller/util/colorutils.ts"() {
-    "use strict";
-    init_util();
-    init_vectormath();
-    rgb_to_hsv_rets = new cachering2(() => [0, 0, 0], 64);
-    hsv_to_rgb_rets = new cachering2(() => [0, 0, 0], 64);
-    rgb_to_cmyk_rets = new cachering2(() => new Vector4(), 512);
-    cmyk_to_rgb_rets = new cachering2(() => new Vector3(), 512);
-  }
-});
-
-// scripts/util/colorutils.ts
-var init_colorutils2 = __esm({
-  "scripts/util/colorutils.ts"() {
-    "use strict";
-    init_colorutils();
-  }
-});
-
-// scripts/config/const.ts
-function readClipboard() {
-  if (!document.hasFocus()) {
-    return;
-  }
-  const cb = navigator.clipboard;
-  if (!cb?.read) {
-    return;
-  }
-  cb.read().then((data) => {
-    for (const item of data) {
-      for (let i = 0; i < item.types.length; i++) {
-        const type = item.types[i];
-        if (!(type in _clipboards)) {
-          _clipboards[type] = {
-            name: type,
-            mime: type,
-            data: void 0
-          };
-        }
-        item.getType(type).then((blob) => new Response(blob).text()).then((text2) => {
-          _clipboards[type].data = text2;
-        });
-      }
+function replaceChild(elem, newnode, oldnode) {
+  for (let i = 0; i < elem.childNodes.length; i++) {
+    if (elem.childNodes[i] === oldnode) {
+      HTMLElement.prototype.replaceChild.call(elem, newnode, oldnode);
+      return oldnode;
     }
-  }).catch(function() {
-  });
-}
-function startClipboardReader() {
-  if (_clipboardTimer === void 0) {
-    _clipboardTimer = window.setInterval(readClipboard, CLIPBOARD_POLL_MS);
   }
-}
-function stopClipboardReader() {
-  if (_clipboardTimer !== void 0) {
-    window.clearInterval(_clipboardTimer);
-    _clipboardTimer = void 0;
-  }
-}
-async function queryClipboardPermission() {
-  const perms = navigator.permissions;
-  if (!perms?.query) {
-    return void 0;
-  }
-  try {
-    return await perms.query({ name: "clipboard-read" });
-  } catch {
-    return void 0;
-  }
-}
-function onPageLoad(cb) {
-  if (document.readyState === "complete") {
-    cb();
-  } else {
-    window.addEventListener("load", cb, { once: true });
-  }
-}
-function onUserGesture(cb) {
-  const events = ["pointerdown", "keydown", "touchstart"];
-  const handler = () => {
-    for (const type of events) {
-      window.removeEventListener(type, handler, true);
+  for (let i = 0; i < elem.shadow.childNodes.length; i++) {
+    if (elem.shadow.childNodes[i] === oldnode) {
+      elem.shadow.replaceChild(newnode, oldnode);
+      return oldnode;
     }
-    cb();
+  }
+  console.error("Unknown child node", oldnode);
+  return oldnode;
+}
+function swapWith(elem, b) {
+  let p1 = elem.parentNode;
+  let p2 = b.parentNode;
+  if (p1 === elem.parentWidget?.shadow || !p1) {
+    p1 = elem.parentWidget;
+  }
+  if (p2 === b.parentWidget?.shadow || !p2) {
+    p2 = b.parentWidget;
+  }
+  if (!p1 || !p2) {
+    console.error("Invalid call to UIBase.prototype.swapWith", elem, b, p1, p2);
+    return false;
+  }
+  const getPos = (n, p) => {
+    let i = Array.prototype.indexOf.call(p.childNodes, n);
+    if (i < 0 && p.shadow) {
+      p = p.shadow;
+      i = Array.prototype.indexOf.call(p.childNodes, n);
+    }
+    return [i, p];
   };
-  for (const type of events) {
-    window.addEventListener(type, handler, { capture: true, passive: true });
-  }
+  const [i1, n1] = getPos(elem, p1);
+  const [i2, n2] = getPos(b, p2);
+  console.log("i1, i2, n1, n2", i1, i2, n1, n2);
+  const tmp1 = document.createElement("div");
+  const tmp2 = document.createElement("div");
+  n1.insertBefore(tmp1, elem);
+  n2.insertBefore(tmp2, b);
+  n1.replaceChild(b, tmp1);
+  n2.replaceChild(elem, tmp2);
+  const ptmp = elem.parentWidget;
+  elem.parentWidget = b.parentWidget;
+  b.parentWidget = ptmp;
+  tmp1.remove();
+  tmp2.remove();
+  return true;
 }
-var _clipboards, CLIPBOARD_POLL_MS, _clipboardTimer, cconst, const_default;
-var init_const = __esm({
-  "scripts/config/const.ts"() {
-    "use strict";
-    init_config();
-    _clipboards = {};
-    CLIPBOARD_POLL_MS = 200;
-    _clipboardTimer = void 0;
-    if (typeof document !== "undefined") {
-      onPageLoad(
-        () => onUserGesture(() => {
-          queryClipboardPermission().then((status) => {
-            if (!status) {
-              startClipboardReader();
-              return;
-            }
-            const sync = () => {
-              if (status.state === "granted") {
-                startClipboardReader();
-              } else {
-                stopClipboardReader();
-              }
-            };
-            status.addEventListener("change", sync);
-            if (status.state === "prompt") {
-              readClipboard();
-            }
-            sync();
-          });
-        })
-      );
-    }
-    cconst = {
-      getClipboardData(desiredMimes = "text/plain") {
-        if (typeof desiredMimes === "string") {
-          desiredMimes = [desiredMimes];
-        }
-        for (const m of desiredMimes) {
-          const cb = _clipboards[m];
-          if (cb?.data) {
-            return cb;
-          }
-        }
-        return void 0;
-      },
-      setClipboardData(name2, mime, data) {
-        _clipboards[mime] = { name: name2, mime, data };
-        const clipboard = navigator.clipboard;
-        if (!clipboard) {
-          return;
-        }
-        try {
-          clipboard.write([
-            new ClipboardItem({
-              [mime]: new Blob([data], { type: mime })
-            })
-          ]).catch((error2) => {
-            if (mime.startsWith("text") && mime !== "text/plain") {
-              cconst.setClipboardData(name2, "text/plain", data);
-            } else {
-              console.error(error2);
-            }
-          });
-        } catch (error2) {
-          console.log(error2.stack);
-          console.log("failed to write to system clipboard");
-        }
-      },
-      colorSchemeType: "light",
-      docManualPath: "../simple_docsys/doc_build/",
-      docEditorPath: "../simple_docsys.js",
-      useNumSliderTextboxes: true,
-      numSliderArrowLimit: 15,
-      simpleNumSliders: false,
-      menusCanPopupAbove: false,
-      menu_close_time: 500,
-      doubleClickTime: 500,
-      doubleClickHoldTime: 750,
-      DEBUG: {
-        paranoidEvents: false,
-        screenborders: false,
-        areaContextPushes: false,
-        allBordersMovable: false,
-        doOnce: false,
-        modalEvents: false,
-        areaConstraintSolver: false,
-        datapaths: false,
-        lastToolPanel: false,
-        domEvents: false,
-        domEventAddRemove: false,
-        debugUIUpdatePerf: false,
-        screenAreaPosSizeAccesses: false,
-        buttonEvents: false
-      },
-      autoLoadSplineTemplates: true,
-      addHelpPickers: true,
-      closableAreaTabs: true,
-      autoSizeUpdate: true,
-      showPathsInToolTips: true,
-      enableThemeAutoUpdate: true,
-      useNativeToolTips: true,
-      noElectronMenus: false,
-      loadConstants(args) {
-        for (const k in args) {
-          if (k === "loadConstants") continue;
-          cconst[k] = args[k];
-        }
-        setConfig(cconst);
-      }
-    };
-    const_default = cconst;
-    window.DEBUG = cconst.DEBUG;
-    if (typeof document !== "undefined") {
-      const cfg = document.getElementById("pathux-config");
-      if (cfg) {
-        cconst.loadConstants(JSON.parse(cfg.innerText));
-      }
-    }
-    if (typeof window?.PATHUX_CONFIG !== "undefined") {
-      cconst.loadConstants(window.PATHUX_CONFIG);
-    }
-  }
-});
-
-// scripts/util/struct.ts
-var struct_default2;
-var init_struct2 = __esm({
-  "scripts/util/struct.ts"() {
-    "use strict";
-    init_struct();
-    init_struct();
-    struct_default2 = struct_default;
-  }
-});
-
-// scripts/util/util.ts
-var init_util2 = __esm({
-  "scripts/util/util.ts"() {
-    "use strict";
-    init_util();
-  }
-});
-
-// scripts/core/cssfont.ts
-var _digest, CSSFont;
-var init_cssfont = __esm({
-  "scripts/core/cssfont.ts"() {
-    "use strict";
-    init_struct2();
-    init_util2();
-    _digest = new HashDigest();
-    CSSFont = class _CSSFont {
-      _size;
-      font;
-      style;
-      weight;
-      variant;
-      color;
-      static STRUCT;
-      constructor(args = {}) {
-        this._size = args.size ? args.size : 12;
-        this.font = args.font ?? "";
-        this.style = args.style !== void 0 ? args.style : "normal";
-        this.weight = args.weight !== void 0 ? args.weight : "normal";
-        this.variant = args.variant !== void 0 ? args.variant : "normal";
-        this.color = args.color ?? "";
-      }
-      calcHashUpdate(digest = _digest.reset()) {
-        digest.add(this._size || 0);
-        digest.add(this.font);
-        digest.add(this.style);
-        digest.add(this.weight);
-        digest.add(this.variant);
-        digest.add(this.color);
-        return digest.get();
-      }
-      set size(val) {
-        this._size = val;
-      }
-      get size() {
-        if (isMobile()) {
-          const mul = 1;
-          if (mul) {
-            return this._size * mul;
-          }
-        }
-        return this._size;
-      }
-      copyTo(b) {
-        b._size = this._size;
-        b.font = this.font;
-        b.style = this.style;
-        b.color = this.color;
-        b.variant = this.variant;
-        b.weight = this.weight;
-      }
-      copy() {
-        const ret = new _CSSFont();
-        this.copyTo(ret);
-        return ret;
-      }
-      genCSS(size = this.size) {
-        return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
-      }
-      //deprecated, use genKey()
-      hash() {
-        return this.genKey();
-      }
-      genKey() {
-        let color = this.color;
-        if (typeof this.color === "object" || typeof this.color === "function") {
-          color = JSON.stringify(color);
-        }
-        return this.genCSS() + ":" + this.size + ":" + color;
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-      }
-    };
-    CSSFont.STRUCT = `
-CSSFont {
-  size     : float | obj._size;
-  font     : string | obj.font || "";
-  style    : string | obj.font || "";
-  color    : string | ""+obj.color;
-  variant  : string | obj.variant || "";
-  weight   : string | ""+obj.weight;
-}
-`;
-    struct_default2.register(CSSFont);
-  }
-});
-
-// scripts/core/ui_theme.ts
-function parsepx2(css) {
-  return parseFloat(css.trim().replace("px", ""));
-}
-function color2css3(c, alpha_override) {
-  const r = ~~(c[0] * 255);
-  const g = ~~(c[1] * 255);
-  const b = ~~(c[2] * 255);
-  let a2 = c.length < 4 ? 1 : c[3];
-  a2 = alpha_override !== void 0 ? alpha_override : a2;
-  if (c.length === 3 && alpha_override === void 0) {
-    return `rgb(${r},${g},${b})`;
+function traverse(elem, type_or_set) {
+  let classes;
+  let is_set = type_or_set instanceof Set;
+  is_set = is_set || Array.isArray(type_or_set);
+  if (!is_set) {
+    classes = [type_or_set];
   } else {
-    return `rgba(${r},${g},${b}, ${a2})`;
+    classes = type_or_set;
   }
-}
-function color2web(color) {
-  function tostr(n) {
-    n = ~~(n * 255);
-    let s = n.toString(16);
-    if (s.length > 2) {
-      s = s.slice(0, 2);
-    }
-    while (s.length < 2) {
-      s = "0" + s;
-    }
-    return s;
-  }
-  if (color.length === 3 || color[3] === 1) {
-    const r = tostr(color[0]);
-    const g = tostr(color[1]);
-    const b = tostr(color[2]);
-    return "#" + r + g + b;
-  } else {
-    const r = tostr(color[0]);
-    const g = tostr(color[1]);
-    const b = tostr(color[2]);
-    const a2 = tostr(color[3]);
-    return "#" + r + g + b + a2;
-  }
-}
-function css2color2(color) {
-  if (!color) {
-    return new Vector4([0, 0, 0, 1]);
-  }
-  color = ("" + color).trim();
-  const ret = css2color_rets.next();
-  if (color[0] === "#") {
-    color = color.slice(1, color.length);
-    const parts = [];
-    for (let i2 = 0; i2 < color.length >> 1; i2++) {
-      const part = "0x" + color.slice(i2 * 2, i2 * 2 + 2);
-      parts.push(parseInt(part));
-    }
-    ret.zero();
-    let i;
-    for (i = 0; i < Math.min(parts.length, ret.length); i++) {
-      ret[i] = parts[i] / 255;
-    }
-    if (i < 4) {
-      ret[3] = 1;
-    }
-    return ret;
-  }
-  if (color in basic_colors) {
-    ret.load(basic_colors[color]);
-    ret[3] = 1;
-    return ret;
-  }
-  const hasAlpha = color.startsWith("rgba(");
-  const colorParts = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
-  for (let i = 0; i < colorParts.length; i++) {
-    ret[i] = parseFloat(colorParts[i]);
-    if (i < 3) {
-      ret[i] /= 255;
-    }
-  }
-  if (ret.length === 3) {
-    ret.push(1);
-  }
-  if (!hasAlpha) {
-    ret[3] = 1;
-  }
-  return ret;
-}
-function web2color(str) {
-  if (typeof str === "string" && str.trim()[0] !== "#") {
-    str = "#" + str.trim();
-  }
-  return css2color2(str);
-}
-function validateWebColor(str) {
-  if (typeof str !== "string") return false;
-  return str.trim().search(validate_pat) === 0;
-}
-function validateCSSColor(color) {
-  if (color.toLowerCase() in basic_colors) {
-    return true;
-  }
-  let rgba = color.toLowerCase().replace(/[ \t]/g, "");
-  rgba = rgba.trim();
-  if (validate_rgba.test(rgba) || validate_rgb.exec(rgba)) {
-    return true;
-  }
-  return validateWebColor(color);
-}
-function invertTheme() {
-  const_default.colorSchemeType = const_default.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
-  function inverted(color) {
-    if (Array.isArray(color)) {
-      for (let i = 0; i < 3; i++) {
-        color[i] = 1 - color[i];
+  const visit = /* @__PURE__ */ new Set();
+  return (function* () {
+    const stack = [elem];
+    while (stack.length > 0) {
+      const n = stack.pop();
+      visit.add(n);
+      if (!n?.childNodes) {
+        continue;
       }
-      return color;
-    }
-    const c = css2color2(color);
-    return color2css3(inverted(Array.from(c)));
-  }
-  const bg = const_default.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
-  document.body.style.backgroundColor = bg;
-  for (const styleKey in theme) {
-    const style = theme[styleKey];
-    if (typeof style !== "object" || style instanceof CSSFont) {
-      continue;
-    }
-    const styleRec = style;
-    for (const k in styleRec) {
-      const v = styleRec[k];
-      if (v instanceof CSSFont) {
-        v.color = inverted(v.color);
-      } else if (typeof v === "string") {
-        const vLower = v.trim().toLowerCase();
-        let iscolor = vLower.search("rgb") >= 0;
-        iscolor = iscolor || vLower in basic_colors;
-        iscolor = iscolor || validateWebColor(vLower);
-        if (iscolor) {
-          styleRec[k] = inverted(vLower);
+      for (const cls of classes) {
+        if (n instanceof cls) {
+          yield n;
         }
       }
-    }
-  }
-}
-function setColorSchemeType(mode) {
-  if (mode !== const_default.colorSchemeType) {
-    invertTheme();
-    const_default.colorSchemeType = mode;
-  }
-}
-function exportTheme(themeIn = theme, addVarDecl = true) {
-  const theme1 = themeIn;
-  const sortkeys = (obj) => {
-    const keys2 = [];
-    for (const k in obj) {
-      keys2.push(k);
-    }
-    keys2.sort();
-    return keys2;
-  };
-  let s = addVarDecl ? "var theme = {\n" : "{\n";
-  function writekey(v, indent = "") {
-    if (typeof v === "string") {
-      let vs;
-      if (v.search("\n") >= 0) {
-        vs = "`" + v + "`";
-      } else {
-        vs = "'" + v + "'";
+      for (const c of n.childNodes) {
+        if (!visit.has(c)) {
+          stack.push(c);
+        }
       }
-      return vs;
-    } else if (v instanceof ThemeScrollBars) {
-      return `new ThemeScrollBars({
-${indent}  border   : ${writekey(v.border)},
-${indent}  color    : ${writekey(v.color)},
-${indent}  color2   : ${writekey(v.color2)},
-${indent}  contrast : ${writekey(v.contrast)},
-${indent}  width     : ${writekey(v.width)}
-${indent}})`;
-    } else if (typeof v === "object") {
-      if (v instanceof CSSFont) {
-        return `new CSSFont({
-${indent}  font    : ${writekey(v.font)},
-${indent}  weight  : ${writekey(v.weight)},
-${indent}  variant : ${writekey(v.variant)},
-${indent}  style   : ${writekey(v.style)},
-${indent}  size    : ${writekey(v._size)},
-${indent}  color   : ${writekey(v.color)}
-${indent}})`;
-      } else {
-        let s2 = "{\n";
-        for (let k of sortkeys(v)) {
-          const v2 = v[k];
-          if (k.search(" ") >= 0 || k.search("-") >= 0) {
-            k = "'" + k + "'";
+      if (n.shadow) {
+        for (const c of n.shadow.childNodes) {
+          if (!visit.has(c)) {
+            stack.push(c);
           }
-          s2 += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
         }
-        s2 += indent + "}";
-        return s2;
       }
-    } else {
-      return "" + v;
     }
-  }
-  for (const k of sortkeys(theme1)) {
-    let k2 = k;
-    if (k.search(/[- \t.]/) >= 0) {
-      k2 = "'" + k + "'";
-    }
-    s += "  " + k2 + ": ";
-    const v = theme1[k];
-    if (typeof v !== "object" || v instanceof CSSFont) {
-      s += writekey(v, "  ") + ",\n";
-    } else {
-      s += " {\n";
-      let s2 = "";
-      let maxwid = 0;
-      for (let k22 of sortkeys(v)) {
-        if (k22.search("-") >= 0 || k22.search(" ") >= 0) {
-          k22 = "'" + k22 + "'";
-        }
-        maxwid = Math.max(maxwid, k22.length);
-      }
-      for (let k22 of sortkeys(v)) {
-        const v2 = v[k22];
-        if (k22.search("-") >= 0 || k22.search(" ") >= 0) {
-          k22 = "'" + k22 + "'";
-        }
-        let pad = "";
-        for (let i = 0; i < maxwid - k22.length; i++) {
-          pad += " ";
-        }
-        s2 += "    " + k22 + pad + ": " + writekey(v2, "    ") + ",\n";
-      }
-      s += s2;
-      s += "  },\n\n";
-    }
-  }
-  s += "};\n";
-  return s;
+  })();
 }
-function copyTheme(themeObj) {
-  if (themeObj instanceof CSSFont) {
-    return themeObj.copy();
+function appendChild(elem, child) {
+  if (child instanceof UIBase) {
+    child.ctx = elem.ctx;
+    child.parentWidget = elem;
+    child.useDataPathUndo = elem.useDataPathUndo;
   }
-  const ret = {};
-  for (const k in themeObj) {
-    const v = themeObj[k];
-    if (typeof v === "function") {
-      continue;
-    }
-    if (typeof v === "object") {
-      ret[k] = copyTheme(v);
-    } else {
-      ret[k] = v;
-    }
-  }
-  return ret;
+  return HTMLElement.prototype.appendChild.call(elem, child);
 }
-var ThemeScrollBars, compatMap, ColorSchemeTypes, css2color_rets, basic_colors, validate_pat, num, validate_rgba, validate_rgb, theme;
-var init_ui_theme = __esm({
-  "scripts/core/ui_theme.ts"() {
+function remove(elem, trigger_on_destroy = true) {
+  if (elem.tabIndex >= 0) {
+    elem.regenTabOrder();
+  }
+  elem.clearPathWatches();
+  HTMLElement.prototype.remove.call(elem);
+  if (trigger_on_destroy) {
+    elem._ondestroy();
+  }
+  if (elem.on_remove) {
+    elem.on_remove();
+  }
+  elem.parentWidget = void 0;
+}
+function removeChild(elem, child, trigger_on_destroy = true) {
+  HTMLElement.prototype.removeChild.call(elem, child);
+  if (child instanceof UIBase) {
+    child.clearPathWatches();
+  }
+  if (child instanceof UIBase && child.on_remove) {
+    child.on_remove();
+  }
+  if (trigger_on_destroy && child instanceof UIBase) {
+    child._ondestroy();
+  }
+  if (child instanceof UIBase) {
+    child.parentWidget = void 0;
+  }
+  return child;
+}
+function regenTabOrder(elem) {
+  const screen = elem.getScreen();
+  if (screen !== void 0) {
+    screen.needsTabRecalc = true;
+  }
+}
+function initElement(elem) {
+  elem._init_done = true;
+  if (!elem.hasAttribute("id") && elem._id) {
+    elem.setAttribute("id", elem._id);
+  }
+}
+var init_ui_base_dom = __esm({
+  "scripts/core/base/ui_base_dom.ts"() {
     "use strict";
-    init_util();
-    init_vectormath();
     init_const();
-    init_cssfont();
-    ThemeScrollBars = class {
-      border;
-      color;
-      color2;
-      contrast;
-      width;
-      constructor({
-        border,
-        color,
-        color2,
-        contrast,
-        width
-      }) {
-        this.border = border;
-        this.color = color;
-        this.color2 = color2;
-        this.contrast = contrast;
-        this.width = width;
-      }
-    };
-    compatMap = {
-      BoxMargin: "padding",
-      BoxBG: "background",
-      BoxRadius: "border-radius",
-      background: "background-color",
-      defaultWidth: "width",
-      defaultHeight: "height",
-      DefaultWidth: "width",
-      DefaultHeight: "height",
-      BoxBorder: "border-color",
-      BoxLineWidth: "border-width",
-      BoxSubBG: "background-color",
-      BoxSub2BG: "background-color",
-      DefaultPanelBG: "background-color",
-      InnerPanelBG: "background-color",
-      Background: "background-color",
-      numslider_width: "width",
-      numslider_height: "height"
-    };
-    ColorSchemeTypes = {
-      LIGHT: "light",
-      DARK: "dark"
-    };
-    css2color_rets = cachering2.fromConstructor(Vector4, 64);
-    basic_colors = {
-      white: [1, 1, 1],
-      grey: [0.5, 0.5, 0.5],
-      gray: [0.5, 0.5, 0.5],
-      black: [0, 0, 0],
-      red: [1, 0, 0],
-      yellow: [1, 1, 0],
-      green: [0, 1, 0],
-      teal: [0, 1, 1],
-      cyan: [0, 1, 1],
-      blue: [0, 0, 1],
-      orange: [1, 0.5, 0.25],
-      brown: [0.5, 0.4, 0.3],
-      purple: [1, 0, 1],
-      pink: [1, 0.5, 0.5]
-    };
-    validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
-    num = "(([0-9]+.[0-9]+)|[0-9a-f]+)";
-    validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
-    validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
-    theme = {};
-  }
-});
-
-// scripts/core/theme.ts
-var DefaultTheme;
-var init_theme = __esm({
-  "scripts/core/theme.ts"() {
-    "use strict";
-    init_cssfont();
-    DefaultTheme = {
-      base: {
-        mobileTextSizeMultiplier: 1,
-        AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
-        BasePackFlag: 0,
-        BoxDepressed: "rgba(130,130,130, 1)",
-        BoxHighlight: "rgba(151,208,239, 1)",
-        "flex-grow": "unset",
-        mobileSizeMultiplier: 1,
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        LabelText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        TitleText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgba(207,207,207, 0.5)",
-        "border-color": "rgba(34,34,34, 1)",
-        "border-radius": 12.010619764585666,
-        "focus-border-width": 2,
-        oneAxisPadding: 2,
-        padding: 1
-      },
-      button: {
-        DefaultText: new CSSFont({
-          font: "poppins",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35,35,35, 1)"
-        }),
-        "background-color": "rgba(238,238,238, 0.8672412740773168)",
-        "border-color": "rgba(255,255,255, 1)",
-        "border-radius": 4,
-        "border-style": "solid",
-        "border-width": 2,
-        disabled: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgb(109,109,109)"
-          }),
-          "background-color": "rgb(19,19,19)",
-          "border-color": "#f58f8f",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        height: 25,
-        highlight: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(255,255,255, 1)"
-          }),
-          "background-color": "rgba(138,222,255, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-radius": 4,
-          "border-style": "solid",
-          "border-width": 2
-        },
-        "highlight-pressed": {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(35,35,35, 1)"
-          }),
-          "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        margin: 4,
-        "margin-left": 4,
-        "margin-right": 4,
-        padding: 1,
-        pressed: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(35,35,35, 1)"
-          }),
-          "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        width: 25
-      },
-      checkbox: {
-        CheckSide: "left",
-        height: 32,
-        width: 32,
-        "background-color": "rgb(168,168,168)"
-      },
-      colorfield: {
-        circleSize: 11,
-        colorBoxHeight: 24,
-        fieldSize: 400,
-        height: 256,
-        hueHeight: 32,
-        width: 256
-      },
-      colorpickerbutton: {
-        height: 32,
-        width: 95
-      },
-      curvewidget: {
-        CanvasBG: "rgb(44,44,44)",
-        CanvasHeight: 256,
-        CanvasWidth: 256
-      },
-      dropbox: {
-        dropTextBG: "rgba(233,233,233, 1)",
-        height: 25,
-        width: 32
-      },
-      iconbutton: {
-        highlight: {
-          "background-color": "rgba(133,182,255,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        depressed: {
-          "background-color": "rgba(42,61,77,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        "background-color": "rgba(15,15,15, 0)",
-        "border-color": "black",
-        "border-radius": 5,
-        "border-width": 1,
-        height: 32,
-        "margin-bottom": 1,
-        "margin-left": 2,
-        "margin-right": 2,
-        "margin-top": 1,
-        padding: 2,
-        width: 32
-      },
-      iconcheck: {
-        highlight: {
-          "background-color": "rgba(133,182,255,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        depressed: {
-          "background-color": "rgba(42,61,77,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        "background-color": "rgba(15,15,15, 0)",
-        "border-color": "rgba(237,209,209, 1)",
-        "border-radius": 5,
-        "border-width": 0,
-        drawCheck: true,
-        height: 32,
-        "margin-bottom": 1,
-        "margin-left": 2,
-        "margin-right": 2,
-        "margin-top": 1,
-        padding: 2,
-        width: 32
-      },
-      label: {
-        LabelText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        })
-      },
-      listbox: {
-        ListActive: "rgba(200, 205, 215, 1.0)",
-        ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
-        ListHighlight: "rgba(155, 220, 255, 0.5)",
-        ItemHeight: 24,
-        height: 200,
-        width: 110
-      },
-      panzoom: {
-        ZoomMin: 0.1,
-        ZoomMax: 8,
-        ZoomWheelRate: 1.1
-      },
-      nodeframe: {
-        Width: 140,
-        HeaderHeight: 24,
-        SocketRowHeight: 20,
-        "background-color": "rgba(248, 248, 248, 0.95)",
-        "border-color": "#b8b8b8",
-        "border-radius": 4,
-        HeaderBG: "rgba(214, 214, 214, 0.95)",
-        SelectOutline: "#e8930c",
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        SocketText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 11,
-          color: "rgba(35, 35, 35, 1.0)"
-        })
-      },
-      nodegraphview: {
-        "background-color": "rgb(225, 225, 225)",
-        BoxSelectBorder: "#e8930c",
-        BoxSelectBG: "rgba(232, 147, 12, 0.1)",
-        ErrorColor: "#cc3333"
-      },
-      nodelinkcanvas: {
-        LinkColor: "#777777",
-        LinkWidth: 2,
-        LinkSelectColor: "#e8930c",
-        LinkSelectWidth: 3
-      },
-      menu: {
-        MenuBG: "rgba(250, 250, 250, 1.0)",
-        "item-radius": 0,
-        MenuBorder: "1px solid grey",
-        MenuHighlight: "rgba(155, 220, 255, 1.0)",
-        MenuSeparator: {
-          width: "100%",
-          height: 2,
-          padding: 0,
-          margin: 0,
-          border: "none",
-          "background-color": "grey"
-        },
-        "box-shadow": "5px 5px 25px rgba(0,0,0,0.75)",
-        MenuSpacing: 5,
-        MenuText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(25, 25, 25, 1.0)"
-        }),
-        HotkeyText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(68, 68, 68, 1.0)"
-        }),
-        // addItemExtra sets the hotkey span's color separately from its font
-        HotkeyTextColor: "rgba(68, 68, 68, 1.0)",
-        "padding-top": 0,
-        "padding-left": 0,
-        "padding-right": 0,
-        "padding-bottom": 0,
-        "border-color": "grey",
-        "border-radius": 5,
-        "border-style": "solid",
-        "border-width": 1
-      },
-      notification: {
-        DefaultText: new CSSFont({
-          font: "poppins",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgb(55,55,55)"
-        }),
-        "background-color": "rgba(72,72,72,0)",
-        "border-radius": 5,
-        "border-color": "grey",
-        "border-width": 1,
-        "border-style": "solid",
-        ProgressBarBG: "rgb(74,148,183)",
-        ProgressBar: "rgb(250,132,58)"
-      },
-      numslider: {
-        "arrow-color": "50%",
-        "background-color": "rgba(219,219,219, 1)",
-        "border-color": "rgba(255,255,255, 1)",
-        "border-radius": 1,
-        height: 22,
-        highlight: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgb(0,0,0)"
-          }),
-          "background-color": "rgba(151,208,239, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        pressed: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(0,0,0, 1)"
-          }),
-          "arrow-color": "rgb(28,28,28)",
-          "background-color": "rgba(178,178,178, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        width: 115
-        /*
-        'highlight-pressed'            : {
-          DefaultText       : new CSSFont({
-            font   : 'poppins',
-            weight : 'bold',
-            variant: 'normal',
-            style  : 'normal',
-            size   : 12,
-            color  : 'rgb(245,245,245)'
-          }),
-          'background-color': 'rgb(126,126,126)',
-          'border-color'    : '#DADCE0',
-          'border-style'    : 'solid',
-          'border-width'    : 1,
-        },*/
-      },
-      numslider_simple: {
-        SlideHeight: 10,
-        TextBoxWidth: 45,
-        "background-color": "rgba(219,219,219, 1)",
-        height: 18,
-        labelOnTop: true,
-        addLabel: true,
-        width: 135
-      },
-      numslider_textbox: {
-        TextBoxHeight: 25,
-        TextBoxWidth: 50,
-        "background-color": "rgba(219,219,219, 1)",
-        height: 25,
-        labelOnTop: true,
-        addLabel: false,
-        width: 120
-      },
-      panel: {
-        header: {
-          iconSize: 16
-        },
-        HeaderBorderRadius: 5.329650280441558,
-        HeaderRadius: 4,
-        TitleBackground: "rgba(177,219,255, 1)",
-        TitleBorder: "rgba(104,104,104, 1)",
-        TitleText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(0,0,0, 1)"
-        }),
-        "background-color": "rgba(184,184,184, 0.7594818376068376)",
-        "border-color": "rgba(0,0,0, 0.5598061397157866)",
-        "border-radius": 4,
-        "border-style": "groove",
-        "border-width": 1.141,
-        "margin-bottom": 0,
-        "margin-bottom-closed": 0,
-        "margin-left": 5.6584810220495445,
-        "margin-right": 0,
-        "margin-top": 0,
-        "margin-top-closed": 0,
-        "padding-bottom": 0,
-        "padding-left": 0,
-        "padding-right": 0,
-        "padding-top": 0
-      },
-      richtext: {
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 16,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgb(245, 245, 245)"
-      },
-      screenborder: {
-        "border-inner": "grey",
-        "border-outer": "rgba(228,228,228, 1)",
-        "border-width": 2,
-        "mouse-threshold": 8
-      },
-      /*
-      scrollbars: new ThemeScrollBars({
-        border  : undefined,
-        color   : undefined,
-        color2  : undefined,
-        contrast: undefined,
-        width   : undefined,
-      }),*/
-      sidebar: {
-        "background-color": "rgba(55, 55, 55, 0.5)"
-      },
-      strip: {
-        "background-color": "rgba(75,75,75, 0.33213141025641024)",
-        "border-color": "rgba(0,0,0, 0.31325409987877156)",
-        "border-radius": 8.76503417507447,
-        "border-style": "solid",
-        "border-width": 1,
-        margin: 2,
-        oneAxisPadding: 2,
-        padding: 1,
-        "flex-grow": "unset"
-      },
-      tabs: {
-        "focus-on-tab-click": "false",
-        "movable-tabs": "true",
-        TabPadding_mobile: 20,
-        //padding perpindicular to the label text
-        TabPadding: 0,
-        TabActive: "rgba(212,212,212, 1)",
-        TabBarRadius: 6,
-        TabHighlight: "rgba(50, 50, 50, 0.2)",
-        TabInactive: "rgba(183,183,183, 1)",
-        TabStrokeStyle1: "rgba(0,0,0, 1)",
-        TabStrokeStyle2: "rgba(0,0,0, 1)",
-        TabText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "bold",
-          style: "normal",
-          size: 15,
-          color: "rgba(0,0,0, 1)"
-        }),
-        "background-color": "rgba(222,222,222, 1)"
-      },
-      textbox: {
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(3,3,3, 1)"
-        }),
-        "border-color": "rgba(0,0,0,0)",
-        "border-width": 1,
-        "border-radius": 4,
-        "border-style": "solid",
-        "background-color": "rgba(245,245,245, 1)"
-      },
-      tooltip: {
-        ToolTipText: new CSSFont({
-          font: "sans-serif",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgba(255,255,255, 1)",
-        "border-color": "rgba(139,139,139, 1)",
-        "border-radius": 3,
-        "border-style": "solid",
-        "border-width": 1,
-        padding: 5,
-        // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
-        // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
-        timeout: 4e3
-      },
-      treeview: {
-        itemIndent: 10,
-        rowHeight: 18
-      },
-      vecPopupButton: {
-        height: 18,
-        padding: 3,
-        width: 100
-      }
-    };
-  }
-});
-
-// scripts/icon_enum.ts
-function setIconMap(icons) {
-  for (const k in icons) {
-    Icons[k] = icons[k];
-  }
-}
-var a, Icons;
-var init_icon_enum = __esm({
-  "scripts/icon_enum.ts"() {
-    "use strict";
-    a = 0;
-    Icons = {
-      FOLDER: a++,
-      FILE: a++,
-      TINY_X: a++,
-      SMALL_PLUS: a++,
-      SMALL_MINUS: a++,
-      UNDO: a++,
-      REDO: a++,
-      HELP: a++,
-      UNCHECKED: a++,
-      CHECKED: a++,
-      LARGE_CHECK: a++,
-      CURSOR_ARROW: a++,
-      NOTE_EXCL: a++,
-      SCROLL_DOWN: a++,
-      SCROLL_UP: a++,
-      BACKSPACE: a++,
-      LEFT_ARROW: a++,
-      RIGHT_ARROW: a++,
-      UI_EXPAND: a++,
-      //triangle
-      UI_COLLAPSE: a++,
-      //triangle
-      BOLD: a++,
-      ITALIC: a++,
-      UNDERLINE: a++,
-      STRIKETHRU: a++,
-      TREE_EXPAND: a++,
-      TREE_COLLAPSE: a++,
-      ZOOM_OUT: a++,
-      ZOOM_IN: a++,
-      // eslint-disable-next-line no-useless-assignment
-      LARGE_X: a++
-    };
-    Icons.ENUM_CHECKED = Icons.CHECKED;
-    Icons.ENUM_UNCHECKED = Icons.UNCHECKED;
-  }
-});
-
-// scripts/core/aspect.ts
-function _setUIBase(uibase) {
-  UIBase = uibase;
-}
-function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
-  const object = objectIn;
-  const cls = object.constructor;
-  if (!cls[AspectKeys]) {
-    let validProperty2 = function(obj, key) {
-      const descr = Object.getOwnPropertyDescriptor(obj, key);
-      if (descr && (descr.get || descr.set)) {
-        return false;
-      }
-      let p2 = obj.constructor;
-      do {
-        if (p2.prototype) {
-          const descr2 = Object.getOwnPropertyDescriptor(
-            p2.prototype,
-            key
-          );
-          if (descr2 && (descr2.set || descr2.get)) {
-            return false;
-          }
-        }
-        p2 = Object.getPrototypeOf(p2);
-      } while (p2 && p2 !== Object.getPrototypeOf(p2));
-      return true;
-    };
-    var validProperty = validProperty2;
-    cls[AspectKeys] = [];
-    let keys2 = [];
-    let p = Object.getPrototypeOf(object);
-    while (p) {
-      keys2 = keys2.concat(Reflect.ownKeys(p));
-      p = Object.getPrototypeOf(p);
-    }
-    const keySet = new Set(keys2);
-    for (const k of keySet) {
-      let v;
-      if (typeof k === "string" && k.startsWith("_")) {
-        continue;
-      }
-      if (k === "constructor") {
-        continue;
-      }
-      if (blacklist.has(k) || exclude.has(k)) {
-        continue;
-      }
-      if (!validProperty2(object, k)) {
-        continue;
-      }
-      try {
-        v = object[k];
-      } catch (error2) {
-        continue;
-      }
-      if (typeof v !== "function") {
-        continue;
-      }
-      cls[AspectKeys].push(k);
-    }
-  }
-  object.__aspect_methods = /* @__PURE__ */ new Set();
-  for (const k of cls[AspectKeys]) {
-    AfterAspect.bind(object, k);
-  }
-}
-function clearAspectCallbacks(obj) {
-  for (const key of obj.__aspect_methods) {
-    obj[key].clear();
-  }
-}
-var exclude, UIBase, AspectKeys, AfterAspect;
-var init_aspect = __esm({
-  "scripts/core/aspect.ts"() {
-    "use strict";
-    exclude = /* @__PURE__ */ new Set([
-      "toString",
-      "constructor",
-      "prototype",
-      "__proto__",
-      "toLocaleString",
-      "hasOwnProperty",
-      "shadow"
-    ]);
-    UIBase = void 0;
-    AspectKeys = /* @__PURE__ */ Symbol("aspect-keys");
-    AfterAspect = class _AfterAspect {
-      owner;
-      key;
-      chain;
-      chain2;
-      root;
-      _method;
-      _method_bound;
-      constructor(owner, key) {
-        this.owner = owner;
-        this.key = key;
-        this.chain = [[owner[key], void 0]];
-        this.chain2 = [[owner[key], void 0]];
-        this.root = [[owner[key], void 0]];
-        const this2 = this;
-        const method = this._method = function() {
-          const chain = this2.chain;
-          const chain2 = this2.chain2;
-          chain2.length = chain.length;
-          for (let i = 0; i < chain.length; i++) {
-            chain2[i] = chain[i];
-          }
-          for (let i = 0; i < chain2.length; i++) {
-            const [cb, node, once] = chain2[i];
-            if (node) {
-              let isDead = !node.isConnected;
-              if (UIBase && node instanceof UIBase) {
-                isDead = isDead || !!node.isDead?.();
-              }
-              if (isDead) {
-                chain.remove(chain2[i]);
-                continue;
-              }
-            }
-            if (once && chain.includes(chain2[i])) {
-              chain.remove(chain2[i]);
-            }
-            if (cb?.apply) {
-              method.value = cb.apply(this, arguments);
-            }
-          }
-          const ret = method.value;
-          method.value = void 0;
-          return ret;
-        };
-        this._method_bound = false;
-        method.after = this.after.bind(this);
-        method.once = this.once.bind(this);
-        method.remove = this.remove.bind(this);
-        owner[key].after = this.after.bind(this);
-        owner[key].once = this.once.bind(this);
-        owner[key].remove = this.remove.bind(this);
-      }
-      static bind(owner, key) {
-        owner.__aspect_methods.add(key);
-        return new _AfterAspect(owner, key);
-      }
-      remove(cb) {
-        for (const item of this.chain) {
-          if (item[0] === cb) {
-            this.chain.remove(item);
-            return true;
-          }
-        }
-        return false;
-      }
-      once(cb, node) {
-        return this.after(cb, node, true);
-      }
-      _checkbind() {
-        if (!this._method_bound) {
-          this.owner[this.key] = this._method;
-        }
-      }
-      clear() {
-        this._checkbind();
-        this.chain = [[this.root[0][0], this.root[0][1]]];
-        this.chain2 = [[this.root[0][0], this.root[0][1]]];
-        return this;
-      }
-      before(cb, node, once) {
-        this._checkbind();
-        if (cb === void 0) {
-          console.warn("invalid call to .after(); cb was undefined");
-          return this.owner;
-        }
-        this.chain = [[cb, node, once]].concat(this.chain);
-        return this.owner;
-      }
-      after(cb, node, once) {
-        this._checkbind();
-        if (cb === void 0) {
-          console.warn("invalid call to .after(); cb was undefined");
-          return this.owner;
-        }
-        this.chain.push([cb, node, once]);
-        return this.owner;
-      }
-    };
+    init_simple_events();
+    init_ui_element_registry();
+    init_ui_base();
   }
 });
 
@@ -28128,218 +29794,472 @@ var init_eventdag = __esm({
   }
 });
 
-// scripts/core/tagReRegister.ts
-var ExternalTagManager, tagManager;
-var init_tagReRegister = __esm({
-  "scripts/core/tagReRegister.ts"() {
-    "use strict";
-    ExternalTagManager = class extends Map {
-      constructor() {
-        super();
-      }
-      replaceTag(tag) {
-        if (this.has(tag)) {
-          const tag2 = this.get(tag);
-          let i = 0;
-          if (tag2.endsWith("-r")) {
-            const parts = tag2.split("-");
-            i = parseInt(parts.at(-2)) + 1;
-          }
-          const tag3 = `${tag}-${i}-r`;
-          this.set(tag, tag3);
-          return tag3;
+// scripts/core/base/ui_base_graph.ts
+function isNumArray(a2) {
+  if (!(a2 instanceof Array)) {
+    return false;
+  }
+  const b = a2;
+  for (let i = 0; i < a2.length; i++) {
+    if (b[i] !== void 0 && typeof b[i] !== "number" && typeof b[i] !== "boolean") {
+      return false;
+    }
+  }
+  return true;
+}
+function graphExec(elem) {
+  const node = elem.graphNode;
+  if (node === void 0) {
+    return;
+  }
+  if (node.inputs.depend.isUpdated) {
+    node.outputs.depend.flagUpdate();
+  }
+  for (const k in node.inputs) {
+    const sock = node.inputs[k];
+    if (!(sock instanceof PropertySocket)) {
+      continue;
+    }
+    let val = sock.value;
+    let first2 = true;
+    for (const sockb of sock.edges) {
+      if (first2) {
+        val = sockb.value;
+        first2 = false;
+      } else {
+        switch (sock.mixMode) {
+          case PropSocketModes.REPLACE:
+            val = sockb.value;
+            break;
+          case PropSocketModes.MIN:
+            val = Math.min(val, sockb.value);
+            break;
+          case PropSocketModes.MAX:
+            val = Math.max(val, sockb.value);
+            break;
         }
-        this.set(tag, tag);
-        return tag;
+      }
+    }
+    sock.value = val;
+  }
+  for (const k in node.outputs) {
+    const sock = node.outputs[k];
+    if (!(sock instanceof PropertySocket)) {
+      continue;
+    }
+    const v = sock.value;
+    let changed;
+    if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
+      changed = v !== sock.oldValue;
+      sock.oldValue = v;
+    } else if (typeof v === "object") {
+      if (isNumArray(v)) {
+        if (!sock.oldValue) {
+          sock.oldValue = Array.from(v);
+        } else {
+          if (sock.oldValue.length !== v.length) {
+            changed = true;
+          } else {
+            for (let i = 0; i < sock.oldValue.length; i++) {
+              changed = sock.oldValue[i] !== v[i];
+            }
+          }
+          if (sock.oldValue.length !== v.length) {
+            sock.oldValue.length = v.length;
+          }
+          for (let i = 0; i < v.length; i++) {
+            sock.oldValue[i] = v.value[i];
+          }
+        }
+      } else {
+        if (sock.oldValue === void 0) {
+          sock.oldValue = JSON.stringify(v);
+        } else {
+          const json = JSON.stringify(v);
+          changed = json !== sock.oldValue;
+          sock.oldValue = json;
+        }
+      }
+    }
+    if (changed) {
+      console.log("Propagating prop update");
+      sock.flagUpdate();
+    }
+  }
+}
+function ensureGraph(elem) {
+  if (!theEventGraph.has(elem)) {
+    theEventGraph.add(elem);
+  }
+}
+function flagPropSocketUpdate(elem, path) {
+  const sock = elem.getPropertySocket(path, SocketTypes.OUTPUT);
+  if (sock) {
+    console.warn(`Flag socket "${path}" for update`);
+    sock.flagUpdate();
+  }
+}
+function getPropertySocket(elem, prop, socktype) {
+  const node = elem.graphNode;
+  const sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
+  if (sockets[prop]) {
+    return sockets[prop];
+  }
+  return void 0;
+}
+function ensurePropertySocket(elem, prop, socktype) {
+  elem.ensureGraph();
+  const node = elem.graphNode;
+  const sockets = socktype === "inputs" ? node.inputs : node.outputs;
+  if (sockets[prop]) {
+    return sockets[prop];
+  }
+  const sock = new PropertySocket();
+  sock.bind(elem, prop);
+  node.addSocket(socktype, prop, sock);
+  if (prop === "value") {
+    sock.callback(() => {
+      if (elem.getValue) {
+        return elem.getValue();
+      }
+      return elem.value;
+    });
+  }
+  return sock;
+}
+function dependsOn(elem, dstProp, source, srcProp, srcCallback) {
+  const sockdst = elem.ensurePropertySocket(dstProp, SocketTypes.INPUT);
+  const socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
+  if (srcCallback) {
+    socksrc.callback(srcCallback);
+  }
+  sockdst.connect(socksrc);
+  return sockdst;
+}
+function updateEventGraph(elem) {
+  if (!elem.isConnected) {
+    elem._reflagGraph = true;
+  } else if (elem._reflagGraph) {
+    elem._reflagGraph = false;
+    for (const [, sock] of Object.entries(elem.graphNode.inputs)) {
+      sock.flagUpdate();
+    }
+  }
+}
+var uiBaseNodeDef;
+var init_ui_base_graph = __esm({
+  "scripts/core/base/ui_base_graph.ts"() {
+    "use strict";
+    init_eventdag();
+    uiBaseNodeDef = {
+      flag: 0,
+      typeName: "UIBase",
+      uiName: "UIBase",
+      inputs: {
+        depend: new DependSocket()
+      },
+      outputs: {
+        depend: new DependSocket()
       }
     };
-    tagManager = new ExternalTagManager();
   }
 });
 
-// scripts/core/ui_base.ts
-function _setTextboxClass(cls) {
-  TextBox = cls;
-}
-function calcElemCBKey(elem, type, options) {
-  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
-}
-function setTagPrefix(prefix) {
-  if (registered_has_happened) {
-    throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
+// scripts/core/base/ui_base_props.ts
+function setParentWidget(elem, val) {
+  if (val) {
+    elem._wasAddedToNodeAtSomeTime = true;
   }
-  tagPrefix = "" + prefix;
+  elem._parentWidget = val;
 }
-function getTagPrefix() {
-  return tagPrefix;
-}
-function setTheme(theme2) {
-  for (const k in theme2) {
-    const v = theme2[k];
-    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
-      theme[k] = v;
-      continue;
+function getUseDataPathUndo(elem) {
+  let p = elem;
+  while (p) {
+    if (p._useDataPathUndo !== void 0) {
+      return p._useDataPathUndo;
     }
-    if (!(k in theme)) {
-      theme[k] = {};
-    }
-    const vRec = v;
-    for (let k2 in vRec) {
-      if (k2 in compatMap) {
-        const k3 = compatMap[k2];
-        if (vRec[k3] === void 0) {
-          vRec[k3] = vRec[k2];
-        }
-        delete vRec[k2];
-        k2 = k3;
-      }
-      const substyle = theme[k];
-      substyle[k2] = vRec[k2];
-    }
+    p = p.parentWidget;
   }
+  return true;
 }
-function report2(...args) {
-  if (time_ms() - _last_report > 350) {
-    console.warn(...args);
-    _last_report = time_ms();
-  }
-}
-function getDefault(key, elem) {
-  console.warn("Deprecated call to ui_base.js:getDefault");
-  const base = theme.base;
-  if (key in base) {
-    return base[key];
-  } else {
-    throw new Error("Unknown default " + key);
-  }
-}
-function IsMobile() {
-  console.warn("ui_base.IsMobile is deprecated; use util.isMobile instead");
-  return isMobile();
-}
-function iconSheetFromPackFlag(flag) {
-  if (flag & PackFlags.CUSTOM_ICON_SHEET) {
-    return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
-  }
-  if (flag & PackFlags.SMALL_ICON && !PackFlags.LARGE_ICON) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
-function getIconManager() {
-  return iconmanager;
-}
-function setIconManager(manager3, IconSheetsOverride) {
-  iconmanager.load(manager3);
-  if (IconSheetsOverride !== void 0) {
-    for (const k in IconSheetsOverride) {
-      IconSheets[k] = IconSheetsOverride[k];
-    }
-  }
-}
-function makeIconDiv(icon, sheet = 0) {
-  const drawsize = iconmanager.getTileSize(sheet);
-  const icontest = document.createElement("div");
-  icontest.style["width"] = icontest.style["minWidth"] = drawsize + "px";
-  icontest.style["height"] = icontest.style["minHeight"] = drawsize + "px";
-  icontest.style["margin"] = "0px";
-  icontest.style["padding"] = "0px";
-  iconmanager.setCSS(icon, icontest, sheet);
-  return icontest;
-}
-function styleScrollBars(color = "grey", color2, contrast = 0.5, width = 15, border = "1px groove black", selector = "*") {
-  if (!color2) {
-    const c = css2color2(color);
-    const a2 = c.length > 3 ? c[3] : 1;
-    c.load3(rgb_to_hsv(c[0], c[1], c[2]));
-    let inv = c.slice(0, c.length);
-    inv[2] = 1 - inv[2];
-    inv[2] += (c[2] - inv[2]) * (1 - contrast);
-    inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
-    inv.length = 4;
-    inv[3] = a2;
-    color2 = color2css3(inv);
-  }
-  const buf = `
-
-${selector} {
-  scrollbar-width : ${width <= 16 ? "thin" : "auto"};
-  scrollbar-color : ${color2} ${color};
-}
-
-${selector}::-webkit-scrollbar {
-  width : ${width}px;
-  background-color : ${color};
-}
-
-${selector}::-webkit-scrollbar-track {
-  background-color : ${color};
-  border : ${border};
-}
-
-${selector}::-webkit-scrollbar-thumb {
-  background-color : ${color2};
-  border : ${border};
-}
-    `;
-  return buf;
-}
-function calcThemeKey(digest = _digest2.reset()) {
-  const anyTheme = theme;
-  for (const k in anyTheme) {
-    const obj = anyTheme[k];
-    if (typeof obj !== "object") {
-      continue;
-    }
-    for (const k2 in obj) {
-      const v2 = obj[k2];
-      if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
-        digest.add(v2);
-      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
-        v2.calcHashUpdate(digest);
-      }
-    }
-  }
-  return digest.get();
-}
-function flagThemeUpdate() {
-  _themeUpdateKey = calcThemeKey();
-}
-function timeout_cb() {
-  if (setTimeoutQueue.size === 0) {
-    haveTimeout = false;
+function setDescription(elem, val) {
+  if (val === null) {
+    elem._description = void 0;
     return;
   }
-  for (const item of new Set(setTimeoutQueue)) {
-    const { cb, timeout, time } = item;
-    if (time_ms() - time < timeout) {
-      continue;
-    }
-    setTimeoutQueue.delete(item);
-    try {
-      cb();
-    } catch (error2) {
-      console.error(error2.stack);
-    }
-  }
-  window.setTimeout(timeout_cb, 0);
-}
-function internalSetTimeout(cb, timeout = 0) {
-  if (timeout !== void 0 && timeout > 100) {
-    window.setTimeout(cb, timeout);
+  elem._description = val;
+  if (val === void 0) {
     return;
   }
-  setTimeoutQueue.add({
-    cb,
-    timeout,
-    time: time_ms()
+  if (const_default.showPathsInToolTips && elem.hasAttribute("datapath")) {
+    let s = "" + elem._description;
+    const path = elem.getAttribute("datapath");
+    s += "\n    path: " + path;
+    if (elem.hasAttribute("mass_set_path")) {
+      const m = elem.getAttribute("mass_set_path");
+      s += "\n    massSetPath: " + m;
+    }
+    elem._description_final = s;
+  } else {
+    elem._description_final = elem._description;
+  }
+  if (const_default.useNativeToolTips) {
+    elem.title = "" + elem._description_final;
+  }
+}
+function setBackground(elem, bg) {
+  elem.__background = bg;
+  if (bg !== void 0) {
+    elem.overrideDefault("background-color", bg, true);
+    elem.saneStyle["backgroundColor"] = bg;
+  } else {
+    elem.clearOverride("background-color");
+  }
+}
+function getDisabled(elem) {
+  if (elem.parentWidget?.disabled) {
+    return true;
+  }
+  return !!elem._client_disabled_set || !!elem._internalDisabled;
+}
+function setCtx(elem, c) {
+  elem._ctx = c;
+  elem._forEachChildWidget((n) => {
+    n.ctx = c;
   });
-  if (!haveTimeout) {
-    haveTimeout = true;
-    window.setTimeout(timeout_cb, 0);
+}
+function getZoom(elem) {
+  if (elem.parentWidget !== void 0) {
+    return elem.parentWidget.getZoom();
+  }
+  return 1;
+}
+function getDPI2(elem, staticGetDPI) {
+  if (elem.parentWidget !== void 0) {
+    return elem.parentWidget.getDPI();
+  }
+  return staticGetDPI();
+}
+function toJSON2(elem) {
+  const ret = {};
+  if (elem.hasAttribute("datapath")) {
+    ret.datapath = elem.getAttribute("datapath");
+  }
+  return ret;
+}
+function clearOverride(elem, key, localOnly) {
+  delete elem.my_default_overrides[key];
+  if (!localOnly) delete elem.default_overrides[key];
+}
+function overrideDefault(elem, key, val, localOnly) {
+  elem.my_default_overrides[key] = val;
+  if (!localOnly) {
+    elem.default_overrides[key] = val;
   }
 }
+function overrideClassDefault(elem, style, key, val) {
+  if (!(style in elem.class_default_overrides)) {
+    elem.class_default_overrides[style] = {};
+  }
+  elem.class_default_overrides[style][key] = val;
+}
+var init_ui_base_props = __esm({
+  "scripts/core/base/ui_base_props.ts"() {
+    "use strict";
+    init_const();
+  }
+});
+
+// scripts/core/aspect.ts
+function _setUIBase(uibase) {
+  UIBase2 = uibase;
+}
+function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
+  const object = objectIn;
+  const cls = object.constructor;
+  if (!cls[AspectKeys]) {
+    let validProperty2 = function(obj, key) {
+      const descr = Object.getOwnPropertyDescriptor(obj, key);
+      if (descr && (descr.get || descr.set)) {
+        return false;
+      }
+      let p2 = obj.constructor;
+      do {
+        if (p2.prototype) {
+          const descr2 = Object.getOwnPropertyDescriptor(
+            p2.prototype,
+            key
+          );
+          if (descr2 && (descr2.set || descr2.get)) {
+            return false;
+          }
+        }
+        p2 = Object.getPrototypeOf(p2);
+      } while (p2 && p2 !== Object.getPrototypeOf(p2));
+      return true;
+    };
+    var validProperty = validProperty2;
+    cls[AspectKeys] = [];
+    let keys2 = [];
+    let p = Object.getPrototypeOf(object);
+    while (p) {
+      keys2 = keys2.concat(Reflect.ownKeys(p));
+      p = Object.getPrototypeOf(p);
+    }
+    const keySet = new Set(keys2);
+    for (const k of keySet) {
+      let v;
+      if (typeof k === "string" && k.startsWith("_")) {
+        continue;
+      }
+      if (k === "constructor") {
+        continue;
+      }
+      if (blacklist.has(k) || exclude.has(k)) {
+        continue;
+      }
+      if (!validProperty2(object, k)) {
+        continue;
+      }
+      try {
+        v = object[k];
+      } catch (error2) {
+        continue;
+      }
+      if (typeof v !== "function") {
+        continue;
+      }
+      cls[AspectKeys].push(k);
+    }
+  }
+  object.__aspect_methods = /* @__PURE__ */ new Set();
+  for (const k of cls[AspectKeys]) {
+    AfterAspect.bind(object, k);
+  }
+}
+function clearAspectCallbacks(obj) {
+  for (const key of obj.__aspect_methods) {
+    obj[key].clear();
+  }
+}
+var exclude, UIBase2, AspectKeys, AfterAspect;
+var init_aspect = __esm({
+  "scripts/core/aspect.ts"() {
+    "use strict";
+    exclude = /* @__PURE__ */ new Set([
+      "toString",
+      "constructor",
+      "prototype",
+      "__proto__",
+      "toLocaleString",
+      "hasOwnProperty",
+      "shadow"
+    ]);
+    UIBase2 = void 0;
+    AspectKeys = /* @__PURE__ */ Symbol("aspect-keys");
+    AfterAspect = class _AfterAspect {
+      owner;
+      key;
+      chain;
+      chain2;
+      root;
+      _method;
+      _method_bound;
+      constructor(owner, key) {
+        this.owner = owner;
+        this.key = key;
+        this.chain = [[owner[key], void 0]];
+        this.chain2 = [[owner[key], void 0]];
+        this.root = [[owner[key], void 0]];
+        const this2 = this;
+        const method = this._method = function() {
+          const chain = this2.chain;
+          const chain2 = this2.chain2;
+          chain2.length = chain.length;
+          for (let i = 0; i < chain.length; i++) {
+            chain2[i] = chain[i];
+          }
+          for (let i = 0; i < chain2.length; i++) {
+            const [cb, node, once] = chain2[i];
+            if (node) {
+              let isDead = !node.isConnected;
+              if (UIBase2 && node instanceof UIBase2) {
+                isDead = isDead || !!node.isDead?.();
+              }
+              if (isDead) {
+                chain.remove(chain2[i]);
+                continue;
+              }
+            }
+            if (once && chain.includes(chain2[i])) {
+              chain.remove(chain2[i]);
+            }
+            if (cb?.apply) {
+              method.value = cb.apply(this, arguments);
+            }
+          }
+          const ret = method.value;
+          method.value = void 0;
+          return ret;
+        };
+        this._method_bound = false;
+        method.after = this.after.bind(this);
+        method.once = this.once.bind(this);
+        method.remove = this.remove.bind(this);
+        owner[key].after = this.after.bind(this);
+        owner[key].once = this.once.bind(this);
+        owner[key].remove = this.remove.bind(this);
+      }
+      static bind(owner, key) {
+        owner.__aspect_methods.add(key);
+        return new _AfterAspect(owner, key);
+      }
+      remove(cb) {
+        for (const item of this.chain) {
+          if (item[0] === cb) {
+            this.chain.remove(item);
+            return true;
+          }
+        }
+        return false;
+      }
+      once(cb, node) {
+        return this.after(cb, node, true);
+      }
+      _checkbind() {
+        if (!this._method_bound) {
+          this.owner[this.key] = this._method;
+        }
+      }
+      clear() {
+        this._checkbind();
+        this.chain = [[this.root[0][0], this.root[0][1]]];
+        this.chain2 = [[this.root[0][0], this.root[0][1]]];
+        return this;
+      }
+      before(cb, node, once) {
+        this._checkbind();
+        if (cb === void 0) {
+          console.warn("invalid call to .after(); cb was undefined");
+          return this.owner;
+        }
+        this.chain = [[cb, node, once]].concat(this.chain);
+        return this.owner;
+      }
+      after(cb, node, once) {
+        this._checkbind();
+        if (cb === void 0) {
+          console.warn("invalid call to .after(); cb was undefined");
+          return this.owner;
+        }
+        this.chain.push([cb, node, once]);
+        return this.owner;
+      }
+    };
+  }
+});
+
+// scripts/core/base/ui_draw.ts
 function drawRoundBox2(elem, options) {
   drawRoundBox(
     elem,
@@ -28416,7 +30336,6 @@ function _getFont_new(elem, size, font = "DefaultText", do_dpi = true) {
       "theme style:",
       elem.constructor.define().style ?? "base"
     );
-    debugger;
   }
   return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
 }
@@ -28424,11 +30343,10 @@ function getFont(elem, size, font = "DefaultText", do_dpi = true) {
   return _getFont_new(elem, size, font, do_dpi);
 }
 function _getFont(elem, size, font = "DefaultText", do_dpi = true) {
-  const font2 = elem.getDefault(font);
-  if (font2 !== void 0) {
-    return _getFont_new(elem, size, font, do_dpi);
+  if (elem.getDefault(font) === void 0) {
+    throw new Error("unknown font " + font);
   }
-  throw new Error("unknown font " + font);
+  return _getFont_new(elem, size, font, do_dpi);
 }
 function _ensureFont(elem, canvas, g, size) {
   if (canvas.font) {
@@ -28512,7 +30430,7 @@ function drawText(elem, x, y, text2, args = {}) {
       size = elem.getDefault("DefaultText").size;
     }
   }
-  size *= UIBase2.getDPI();
+  size *= getDPI();
   if (color === void 0) {
     if (fontIn instanceof CSSFont && fontIn.color) {
       color = fontIn.color;
@@ -28528,7 +30446,7 @@ function drawText(elem, x, y, text2, args = {}) {
     g.font = font;
   }
   if (typeof color === "object") {
-    color = color2css3(color);
+    color = color2css2(color);
   }
   g.fillStyle = color;
   g.fillText(text2, x + 0.5, y + 0.5);
@@ -28536,170 +30454,367 @@ function drawText(elem, x, y, text2, args = {}) {
     g.font = "";
   }
 }
-function saveUIData(node, key) {
-  if (key === void 0) {
-    throw new Error("ui_base.saveUIData(): key cannot be undefined");
+var _mc;
+var init_ui_draw = __esm({
+  "scripts/core/base/ui_draw.ts"() {
+    "use strict";
+    init_cssfont();
+    init_ui_theme();
+    init_ui_base_dpi();
   }
-  const paths = [];
-  const rec = (n, path, ni, is_shadow) => {
-    path = path.slice(0, path.length);
-    const pi = path.length;
-    for (let i = 0; i < PTOT; i++) {
-      path.push(void 0);
-    }
-    path[pi] = ni;
-    path[pi + 1] = is_shadow ? 1 : 0;
-    if (n instanceof UIBase2) {
-      const path2 = path.slice(0, path.length);
-      const data = n.saveData();
-      let bad = !data;
-      bad = bad || typeof data === "object" && Object.keys(data).length === 0;
-      if (!bad) {
-        path2.push(data);
-        if (path2[pi + 2]) {
-          paths.push(path2);
+});
+
+// scripts/core/base/ui_base_init.ts
+function initUIBase(elem) {
+  EventNode.init(elem);
+  elem._tool_tip_abort_delay = void 0;
+  elem._tooltip_ref = void 0;
+  elem._textBoxEvents = false;
+  elem._themeOverride = void 0;
+  elem._last_theme_update_key = _themeUpdateKey;
+  elem._client_disabled_set = void 0;
+  elem._useNativeToolTips = const_default.useNativeToolTips;
+  elem._useNativeToolTips_set = false;
+  elem._has_own_tooltips = void 0;
+  elem._tooltip_timer = time_ms();
+  elem.pathUndoGen = 0;
+  elem._lastPathUndoGen = 0;
+  elem._useDataPathUndo = void 0;
+  elem._active_animations = [];
+  elem._screenStyleTag = document.createElement("style");
+  elem._screenStyleUpdateHash = 0;
+  initAspectClass(
+    elem,
+    /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
+  );
+  elem.shadow = elem.attachShadow({ mode: "open" });
+  const styleElem = document.createElement("style");
+  styleElem.innerHTML = `
+        /* This hides the host element when it has the hidden attribute */
+        :host([hidden]) {
+          display: none !important;
         }
-      }
+    `;
+  elem.shadow.appendChild(styleElem);
+  if (const_default.DEBUG.paranoidEvents) {
+    elem.__cbs = [];
+  }
+  elem.shadow.appendChild(elem._screenStyleTag);
+  const _origAppendChild = elem.shadow.appendChild.bind(elem.shadow);
+  elem.shadow._appendChild = _origAppendChild;
+  elem.shadow.appendChild = (child) => {
+    if (child && typeof child === "object" && child instanceof UIBase) {
+      child.parentWidget = elem;
     }
-    for (let i = 0; i < n.childNodes.length; i++) {
-      const n2 = n.childNodes[i];
-      rec(n2, path, i, false);
-    }
-    const shadow = n.shadow;
-    if (!shadow) return;
-    for (let i = 0; i < shadow.childNodes.length; i++) {
-      const n2 = shadow.childNodes[i];
-      rec(n2, path, i, true);
-    }
+    return _origAppendChild(child);
   };
-  rec(node, [], 0, false);
-  return JSON.stringify({
-    key,
-    paths,
-    _ui_version: 1
+  elem._wasAddedToNodeAtSomeTime = false;
+  elem.visibleToPick = true;
+  elem._override_class = void 0;
+  elem.parentWidget = void 0;
+  const tagname = elem.constructor.define().tagname;
+  elem._id = tagname.replace(/-/g, "_") + _idgen2++;
+  elem.default_overrides = {};
+  elem.my_default_overrides = {};
+  elem.class_default_overrides = {};
+  elem._description_final = void 0;
+  elem._modaldata = void 0;
+  elem.packflag = elem.getDefault("BasePackFlag");
+  elem._internalDisabled = false;
+  elem.__disabledState = false;
+  elem._disdata = void 0;
+  elem._description = void 0;
+  const style = document.createElement("style");
+  style.textContent = `
+    .DefaultText {
+      font: ` + _getFont(elem) + `;
+    }
+    `;
+  elem.shadow.appendChild(style);
+  elem._init_done = false;
+  const do_touch = (e, type, button) => {
+    if (haveModal()) {
+      return;
+    }
+    button = button === void 0 ? 0 : button;
+    const e2 = copyEvent(e);
+    if (e.touches.length > 0) {
+      const t2 = e.touches[0];
+      e2.pageX = t2.pageX;
+      e2.pageY = t2.pageY;
+      e2.screenX = t2.screenX;
+      e2.screenY = t2.screenY;
+      e2.clientX = t2.clientX;
+      e2.clientY = t2.clientY;
+      e2.x = t2.clientX;
+      e2.y = t2.clientY;
+    }
+    e2.button = button;
+    const e3 = new MouseEvent(type, e2);
+    e3.was_touch = true;
+    e3.stopPropagation = e.stopPropagation.bind(e);
+    e3.preventDefault = e.preventDefault.bind(e);
+    e3.touches = e.touches;
+    elem.dispatchEvent(e3);
+  };
+  elem.addEventListener(
+    "touchstart",
+    (e) => {
+      do_touch(e, "mousedown", 0);
+    },
+    { passive: false }
+  );
+  elem.addEventListener(
+    "touchmove",
+    (e) => {
+      do_touch(e, "mousemove");
+    },
+    { passive: false }
+  );
+  elem.addEventListener(
+    "touchcancel",
+    (e) => {
+      do_touch(e, "mouseup", 2);
+    },
+    { passive: false }
+  );
+  elem.addEventListener(
+    "touchend",
+    (e) => {
+      do_touch(e, "mouseup", 0);
+    },
+    { passive: false }
+  );
+  if (elem.constructor.define().havePickClipboard) {
+    elem._clipboardHotkeyInit();
+  }
+}
+function ondestroy(elem) {
+  if (elem.tabIndex >= 0) {
+    elem.regenTabOrder();
+  }
+  if (const_default.DEBUG.paranoidEvents) {
+    for (const item of elem.__cbs) {
+      elem.removeEventListener(item[0], item[1], item[2]);
+    }
+    elem.__cbs = [];
+  }
+  if (elem.ondestroy !== void 0) {
+    elem.ondestroy();
+  }
+}
+function flushUpdate(elem, force) {
+  elem._init();
+  elem.update();
+  elem._forEachChildWidget((c) => {
+    if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
+      if (!c.ctx) {
+        c.ctx = elem.ctx;
+      }
+      c.flushUpdate(force);
+    }
   });
 }
-function loadUIData(node, buf) {
-  if (buf === void 0 || buf === null) {
-    return;
-  }
-  const obj = JSON.parse(buf);
-  for (let path of obj.paths) {
-    let n = node;
-    if (n === void 0) {
-      break;
-    }
-    const data = path[path.length - 1];
-    path = path.slice(2, path.length - 1);
-    for (let pi = 0; pi < path.length; pi += PTOT) {
-      const ni = path[pi];
-      const shadow = path[pi + 1];
-      let list5;
-      if (shadow) {
-        list5 = n.shadow;
-        if (list5) {
-          list5 = list5.childNodes;
-        }
+function forEachChildWidget(elem, cb, thisvar) {
+  const rec = (n) => {
+    if (n instanceof UIBase) {
+      if (thisvar !== void 0) {
+        cb.call(thisvar, n);
       } else {
-        list5 = n.childNodes;
+        cb(n);
       }
-      if (list5?.[ni] === void 0) {
-        n = void 0;
-        break;
+    } else {
+      for (const n2 of n.childNodes) {
+        rec(n2);
       }
-      n = list5[ni];
+      if (n.shadow !== void 0) {
+        for (const n2 of n.shadow.childNodes) {
+          rec(n2);
+        }
+      }
     }
-    if (n !== void 0 && n instanceof UIBase2) {
-      n._init();
-      n.loadData(data);
+  };
+  for (const n of elem.childNodes) {
+    rec(n);
+  }
+  if (elem.shadow) {
+    for (const n of elem.shadow.childNodes) {
+      rec(n);
     }
   }
 }
-var PackFlags, TextBox, ElementClasses, ErrorColors, registered_has_happened, tagPrefix, EventCBSymbol, class_idgen, _last_report, keys, marginPaddingCSSKeys, _IconManager, CustomIcon, IconManager, iconmanager, IconSheets, dpistack, UIFlags, internalElementNames, externalElementNames, _mobile_theme_patterns, _idgen2, _testSetScrollbars, _digest2, _themeUpdateKey, setTimeoutQueue, haveTimeout, UIBase2, _mc, PTOT;
-var init_ui_base = __esm({
-  "scripts/core/ui_base.ts"() {
-    "use strict";
-    init_area_wrangler();
-    init_anim();
-    init_units2();
-    init_util();
-    init_vectormath();
-    init_math();
-    init_simple_events();
-    init_controller();
-    init_units2();
-    init_colorutils2();
-    init_ui_theme();
-    init_ui_theme();
-    init_theme();
-    init_ui_theme();
-    init_const();
-    init_icon_enum();
-    init_icon_enum();
-    init_icon_enum();
-    init_aspect();
-    init_aspect();
-    init_ui_consts();
-    init_controller();
-    init_toolprop();
-    init_eventdag();
-    init_cssfont();
-    init_cssfont();
-    init_tagReRegister();
-    PackFlags = {
-      INHERIT_WIDTH: 1,
-      INHERIT_HEIGHT: 2,
-      VERTICAL: 4,
-      USE_ICONS: 8,
-      SMALL_ICON: 16,
-      LARGE_ICON: 32,
-      FORCE_PROP_LABELS: 64,
-      //force propeties (Container.prototype.prop()) to always have labels
-      PUT_FLAG_CHECKS_IN_COLUMNS: 128,
-      //group flag property checkmarks in columns (doesn't apply to icons)
-      WRAP_CHECKBOXES: 256,
-      //internal flags
-      STRIP_HORIZ: 512,
-      STRIP_VERT: 1024,
-      STRIP: 512 | 1024,
-      SIMPLE_NUMSLIDERS: 2048,
-      FORCE_ROLLER_SLIDER: 4096,
-      HIDE_CHECK_MARKS: 1 << 13,
-      NO_NUMSLIDER_TEXTBOX: 1 << 14,
-      CUSTOM_ICON_SHEET: 1 << 15,
-      CUSTOM_ICON_SHEET_START: 20,
-      //custom icon sheet bits are shifted to here
-      NO_UPDATE: 1 << 16,
-      LABEL_ON_RIGHT: 1 << 17
-    };
-    TextBox = void 0;
-    ElementClasses = [];
-    window.__cconst = const_default;
-    ErrorColors = {
-      WARNING: "yellow",
-      ERROR: "red",
-      OK: "green"
-    };
-    window.__theme = theme;
-    registered_has_happened = false;
-    tagPrefix = "";
-    EventCBSymbol = /* @__PURE__ */ Symbol("wrapped event callback");
-    if (typeof document !== "undefined") {
-      const prefixElem = document.getElementById("pathux-tag-prefix");
-      if (prefixElem) {
-        console.log("Found pathux-tag-prefix element");
-        const prefixText = prefixElem.innerText.trim();
-        setTagPrefix(prefixText);
+function doOnce(elem, func, timeout) {
+  if (func._doOnce === void 0) {
+    func._doOnce_reqs = /* @__PURE__ */ new Set();
+    func._doOnce = function(thisvar, trace2) {
+      if (func._doOnce_reqs.has(thisvar._id)) {
+        return;
       }
+      func._doOnce_reqs.add(thisvar._id);
+      function f2() {
+        if (thisvar.isDead()) {
+          func._doOnce_reqs.delete(thisvar._id);
+          if (func === thisvar._init || !const_default.DEBUG.doOnce) {
+            return;
+          }
+          console.warn("Ignoring doOnce call for dead element", thisvar._id, func, trace2);
+          return;
+        }
+        if (!thisvar.ctx) {
+          if (const_default.DEBUG.doOnce) {
+            console.warn("doOnce call is waiting for context...", thisvar._id, func);
+          }
+          internalSetTimeout(f2, 0);
+          return;
+        }
+        func._doOnce_reqs.delete(thisvar._id);
+        func.call(thisvar);
+      }
+      internalSetTimeout(f2, timeout);
+    };
+  }
+  const trace = new Error().stack;
+  func._doOnce(elem, trace);
+}
+function update(elem) {
+  elem.updateToolTips();
+  elem.updateEventGraph();
+  elem._updatePathWatchers();
+  if (elem.ctx && elem._description === void 0 && elem.getAttribute("datapath")) {
+    const d = elem.getPathDescription(elem.ctx, elem.getAttribute("datapath"));
+    elem.description = d;
+  }
+  if (!elem._init_done) {
+    elem._init();
+  }
+  if (elem._init_done && !elem.constructor.define().subclassChecksTheme) {
+    if (elem.checkThemeUpdate()) {
+      console.log("theme update!");
+      elem.setCSS();
     }
-    class_idgen = 1;
-    setTheme(DefaultTheme);
-    _last_report = time_ms();
-    keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
-    keys = keys.concat(["padding-block-start", "padding-block-end"]);
-    keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
-    keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
-    marginPaddingCSSKeys = keys;
+  }
+}
+function onadd(elem) {
+  if (!elem._init_done) {
+    elem.doOnce(elem._init);
+  }
+  if (elem.tabIndex >= 0) {
+    elem.regenTabOrder();
+  }
+}
+var _idgen2;
+var init_ui_base_init = __esm({
+  "scripts/core/base/ui_base_init.ts"() {
+    "use strict";
+    init_const();
+    init_eventdag();
+    init_simple_events();
+    init_util();
+    init_aspect();
+    init_ui_base();
+    init_ui_draw();
+    init_ui_base_types();
+    init_ui_theme_key();
+    _idgen2 = 0;
+  }
+});
+
+// scripts/icon_enum.ts
+function setIconMap(icons) {
+  for (const k in icons) {
+    Icons[k] = icons[k];
+  }
+}
+var a, Icons;
+var init_icon_enum = __esm({
+  "scripts/icon_enum.ts"() {
+    "use strict";
+    a = 0;
+    Icons = {
+      FOLDER: a++,
+      FILE: a++,
+      TINY_X: a++,
+      SMALL_PLUS: a++,
+      SMALL_MINUS: a++,
+      UNDO: a++,
+      REDO: a++,
+      HELP: a++,
+      UNCHECKED: a++,
+      CHECKED: a++,
+      LARGE_CHECK: a++,
+      CURSOR_ARROW: a++,
+      NOTE_EXCL: a++,
+      SCROLL_DOWN: a++,
+      SCROLL_UP: a++,
+      BACKSPACE: a++,
+      LEFT_ARROW: a++,
+      RIGHT_ARROW: a++,
+      UI_EXPAND: a++,
+      //triangle
+      UI_COLLAPSE: a++,
+      //triangle
+      BOLD: a++,
+      ITALIC: a++,
+      UNDERLINE: a++,
+      STRIKETHRU: a++,
+      TREE_EXPAND: a++,
+      TREE_COLLAPSE: a++,
+      ZOOM_OUT: a++,
+      ZOOM_IN: a++,
+      // eslint-disable-next-line no-useless-assignment
+      LARGE_X: a++
+    };
+    Icons.ENUM_CHECKED = Icons.CHECKED;
+    Icons.ENUM_UNCHECKED = Icons.UNCHECKED;
+  }
+});
+
+// scripts/core/base/ui_icons.ts
+function withDrawSize(manager3, sheet, cb) {
+  const base = manager3.iconsheets[sheet];
+  const found = manager3.findSheet(sheet);
+  const ds = found.drawsize;
+  found.drawsize = base.drawsize;
+  const ret = cb(found);
+  found.drawsize = ds;
+  return ret;
+}
+function iconSheetFromPackFlag(flag) {
+  if (flag & PackFlags.CUSTOM_ICON_SHEET) {
+    return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
+  }
+  return 1;
+}
+function getIconManager() {
+  return iconmanager;
+}
+function setIconManager(manager3, IconSheetsOverride) {
+  iconmanager.load(manager3);
+  if (IconSheetsOverride !== void 0) {
+    for (const k in IconSheetsOverride) {
+      IconSheets[k] = IconSheetsOverride[k];
+    }
+  }
+}
+function makeIconDiv(icon, sheet = 0) {
+  const drawsize = iconmanager.getTileSize(sheet);
+  const icontest = document.createElement("div");
+  icontest.style["width"] = icontest.style["minWidth"] = drawsize + "px";
+  icontest.style["height"] = icontest.style["minHeight"] = drawsize + "px";
+  icontest.style["margin"] = "0px";
+  icontest.style["padding"] = "0px";
+  iconmanager.setCSS(icon, icontest, sheet);
+  return icontest;
+}
+var _IconManager, CustomIcon, IconManager, iconmanager, IconSheets;
+var init_ui_icons = __esm({
+  "scripts/core/base/ui_icons.ts"() {
+    "use strict";
+    init_util();
+    init_icon_enum();
+    init_ui_theme();
+    init_ui_base_dpi();
+    init_ui_base_types();
     _IconManager = class {
       tilex;
       tilesize;
@@ -28724,7 +30839,7 @@ var init_ui_base = __esm({
       }
       onReady() {
         if (this.ready) {
-          return new Promise((accept, reject) => {
+          return new Promise((accept) => {
             accept(this);
           });
         }
@@ -28927,12 +31042,7 @@ var init_ui_base = __esm({
         return this;
       }
       canvasDraw(elem, canvas, g, icon, x = 0, y = 0, sheet = 0) {
-        const base = this.iconsheets[sheet];
-        const found = this.findSheet(sheet);
-        const ds = found.drawsize;
-        found.drawsize = base.drawsize;
-        found.canvasDraw(elem, canvas, g, icon, x, y);
-        found.drawsize = ds;
+        withDrawSize(this, sheet, (found) => found.canvasDraw(elem, canvas, g, icon, x, y));
       }
       findClosestSheet(size) {
         const sheets = this.iconsheets.concat([]);
@@ -28953,7 +31063,7 @@ var init_ui_base = __esm({
           sheet = 0;
         }
         const base = this.iconsheets[sheet];
-        const dpi = UIBase2.getDPI();
+        const dpi = getDPI();
         let minsheet = void 0;
         const goal = dpi * base.drawsize;
         for (const sheet2 of this.iconsheets) {
@@ -28966,29 +31076,16 @@ var init_ui_base = __esm({
       }
       getTileSize(sheet = 0) {
         return this.iconsheets[sheet].drawsize;
-        return this.findSheet(sheet).drawsize;
       }
       getRealSize(sheet = 0) {
         return this.iconsheets[sheet].tilesize;
-        return this.findSheet(sheet).tilesize;
       }
       //icon is an integer
       getCSS(icon, sheet = 0) {
-        const base = this.iconsheets[sheet];
-        const found = this.findSheet(sheet);
-        const ds = found.drawsize;
-        found.drawsize = base.drawsize;
-        const ret = found.getCSS(icon);
-        found.drawsize = ds;
-        return ret;
+        return withDrawSize(this, sheet, (found) => found.getCSS(icon));
       }
       setCSS(icon, dom, sheet = 0, fitsize) {
-        const base = this.iconsheets[sheet];
-        const found = this.findSheet(sheet);
-        const ds = found.drawsize;
-        found.drawsize = base.drawsize;
-        found.setCSS(icon, dom, fitsize);
-        found.drawsize = ds;
+        withDrawSize(this, sheet, (found) => found.setCSS(icon, dom, fitsize));
       }
     };
     if (typeof document !== "undefined") {
@@ -29010,41 +31107,178 @@ var init_ui_base = __esm({
       LARGE: 1,
       XLARGE: 2
     };
-    dpistack = [];
-    UIFlags = {};
-    internalElementNames = {};
-    externalElementNames = {};
-    _mobile_theme_patterns = [
-      /.*width.*/,
-      /.*height.*/,
-      /.*size.*/,
-      /.*margin.*/,
-      /.*pad/,
-      /.*radius.*/
-    ];
-    _idgen2 = 0;
-    _testSetScrollbars = function(color = "grey", contrast = 0.5, width = 15, border = "solid") {
-      const buf = styleScrollBars(color, void 0, contrast, width, border, "*");
-      return buf;
-    };
-    _digest2 = new HashDigest();
-    _themeUpdateKey = calcThemeKey();
-    window._flagThemeUpdate = flagThemeUpdate;
+  }
+});
+
+// scripts/core/base/ui_savedata.ts
+function saveUIData(node, key) {
+  if (key === void 0) {
+    throw new Error("ui_base.saveUIData(): key cannot be undefined");
+  }
+  const paths = [];
+  const rec = (n, path, ni, is_shadow) => {
+    path = path.slice(0, path.length);
+    const pi = path.length;
+    for (let i = 0; i < PTOT; i++) {
+      path.push(void 0);
+    }
+    path[pi] = ni;
+    path[pi + 1] = is_shadow ? 1 : 0;
+    if (n instanceof UIBase) {
+      const path2 = path.slice(0, path.length);
+      const data = n.saveData();
+      let bad = !data;
+      bad = bad || typeof data === "object" && Object.keys(data).length === 0;
+      if (!bad) {
+        path2.push(data);
+        if (path2[pi + 2]) {
+          paths.push(path2);
+        }
+      }
+    }
+    for (let i = 0; i < n.childNodes.length; i++) {
+      const n2 = n.childNodes[i];
+      rec(n2, path, i, false);
+    }
+    const shadow = n.shadow;
+    if (!shadow) return;
+    for (let i = 0; i < shadow.childNodes.length; i++) {
+      const n2 = shadow.childNodes[i];
+      rec(n2, path, i, true);
+    }
+  };
+  rec(node, [], 0, false);
+  return JSON.stringify({
+    key,
+    paths,
+    _ui_version: 1
+  });
+}
+function loadUIData(node, buf) {
+  if (buf === void 0 || buf === null) {
+    return;
+  }
+  const obj = JSON.parse(buf);
+  for (let path of obj.paths) {
+    let n = node;
+    if (n === void 0) {
+      break;
+    }
+    const data = path[path.length - 1];
+    path = path.slice(2, path.length - 1);
+    for (let pi = 0; pi < path.length; pi += PTOT) {
+      const ni = path[pi];
+      const shadow = path[pi + 1];
+      let list5;
+      if (shadow) {
+        list5 = n.shadow;
+        if (list5) {
+          list5 = list5.childNodes;
+        }
+      } else {
+        list5 = n.childNodes;
+      }
+      if (list5?.[ni] === void 0) {
+        n = void 0;
+        break;
+      }
+      n = list5[ni];
+    }
+    if (n !== void 0 && n instanceof UIBase) {
+      n._init();
+      n.loadData(data);
+    }
+  }
+}
+var PTOT;
+var init_ui_savedata = __esm({
+  "scripts/core/base/ui_savedata.ts"() {
+    "use strict";
+    init_ui_base();
+    PTOT = 2;
+  }
+});
+
+// scripts/core/ui_base.ts
+function timeout_cb() {
+  if (setTimeoutQueue.size === 0) {
+    haveTimeout = false;
+    return;
+  }
+  for (const item of new Set(setTimeoutQueue)) {
+    const { cb, timeout, time } = item;
+    if (time_ms() - time < timeout) {
+      continue;
+    }
+    setTimeoutQueue.delete(item);
+    try {
+      cb();
+    } catch (error2) {
+      console.error(error2.stack);
+    }
+  }
+  window.setTimeout(timeout_cb, 0);
+}
+function internalSetTimeout(cb, timeout = 0) {
+  if (timeout !== void 0 && timeout > 100) {
+    window.setTimeout(cb, timeout);
+    return;
+  }
+  setTimeoutQueue.add({
+    cb,
+    timeout,
+    time: time_ms()
+  });
+  if (!haveTimeout) {
+    haveTimeout = true;
+    window.setTimeout(timeout_cb, 0);
+  }
+}
+var setTimeoutQueue, haveTimeout, UIBase;
+var init_ui_base = __esm({
+  "scripts/core/ui_base.ts"() {
+    "use strict";
+    init_ui_worker_shim();
+    init_ui_base_dpi();
+    init_ui_base_types();
+    init_ui_theme_key();
+    init_ui_theme_key();
+    init_ui_base_modal();
+    init_units2();
+    init_util();
+    init_ui_theme();
+    init_ui_theme();
+    init_ui_element_registry();
+    init_ui_element_registry();
+    init_ui_base_theme_lookup();
+    init_ui_base_tooltips();
+    init_ui_base_modal();
+    init_ui_base_anim();
+    init_ui_base_css();
+    init_ui_base_datapath();
+    init_ui_base_pick();
+    init_ui_base_dom();
+    init_ui_base_graph();
+    init_ui_base_props();
+    init_ui_base_init();
+    init_ui_theme();
+    init_const();
+    init_icon_enum();
+    init_icon_enum();
+    init_icon_enum();
+    init_aspect();
+    init_ui_consts();
+    init_ui_icons();
+    init_eventdag();
+    init_cssfont();
+    init_ui_draw();
+    init_ui_savedata();
+    window.__cconst = const_default;
+    window.__theme = theme;
     setTimeoutQueue = /* @__PURE__ */ new Set();
     haveTimeout = false;
     window.setTimeoutQueue = setTimeoutQueue;
-    if (typeof HTMLElement === "undefined") {
-      window.HTMLElement = class HTMLElement {
-      };
-      window.customElements = {
-        define: () => {
-        }
-      };
-      window.devicePixelRatio = 1;
-      window.PointerEvent = class PointerEvent {
-      };
-    }
-    UIBase2 = class _UIBase extends HTMLElement {
+    UIBase = class _UIBase extends HTMLElement {
       static PositionKey;
       /**
        * Global datapath poll safety net. While `true` (the default) every widget
@@ -29060,7 +31294,6 @@ var init_ui_base = __esm({
       _tooltip_ref;
       _textBoxEvents;
       _themeOverride;
-      _checkTheme;
       _last_theme_update_key;
       _client_disabled_set;
       _useNativeToolTips;
@@ -29083,10 +31316,9 @@ var init_ui_base = __esm({
       default_overrides;
       my_default_overrides;
       class_default_overrides;
-      _last_description;
       _description_final;
       _modaldata;
-      #packflag;
+      #packflag = 0;
       get packflag() {
         return this.#packflag;
       }
@@ -29224,306 +31456,40 @@ var init_ui_base = __esm({
       }
       ondestroy;
       getValue;
-      #reflagGraph = false;
-      static graphNodeDef = EventNode.register(this, {
-        flag: 0,
-        typeName: this.name,
-        uiName: this.name,
-        inputs: {
-          depend: new DependSocket()
-        },
-        outputs: {
-          depend: new DependSocket()
-        }
-      });
+      _reflagGraph = false;
+      static graphNodeDef = EventNode.register(this, uiBaseNodeDef);
       /** Returns previous icon flags */
       useIcons;
       graphExec() {
-        const node = this.graphNode;
-        if (node === void 0) {
-          return;
-        }
-        if (node.inputs.depend.isUpdated) {
-          node.outputs.depend.flagUpdate();
-        }
-        for (const k in node.inputs) {
-          const sock = node.inputs[k];
-          if (!(sock instanceof PropertySocket)) {
-            continue;
-          }
-          let val = sock.value;
-          let first2 = true;
-          for (const sockb of sock.edges) {
-            if (first2) {
-              val = sockb.value;
-              first2 = false;
-            } else {
-              switch (sock.mixMode) {
-                case PropSocketModes.REPLACE:
-                  val = sockb.value;
-                  break;
-                case PropSocketModes.MIN:
-                  val = Math.min(val, sockb.value);
-                  break;
-                case PropSocketModes.MAX:
-                  val = Math.max(val, sockb.value);
-                  break;
-              }
-            }
-          }
-          sock.value = val;
-        }
-        function isNumArray(a2) {
-          if (!(a2 instanceof Array)) {
-            return false;
-          }
-          const b = a2;
-          for (let i = 0; i < a2.length; i++) {
-            if (b[i] !== void 0 && typeof b[i] !== "number" && typeof b[i] !== "boolean") {
-              return false;
-            }
-          }
-          return true;
-        }
-        for (const k in node.outputs) {
-          const sock = node.outputs[k];
-          if (!(sock instanceof PropertySocket)) {
-            continue;
-          }
-          const v = sock.value;
-          let changed;
-          if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
-            changed = v !== sock.oldValue;
-            sock.oldValue = v;
-          } else if (typeof v === "object") {
-            if (isNumArray(v)) {
-              if (!sock.oldValue) {
-                sock.oldValue = Array.from(v);
-              } else {
-                if (sock.oldValue.length !== v.length) {
-                  changed = true;
-                } else {
-                  for (let i = 0; i < sock.oldValue.length; i++) {
-                    changed = sock.oldValue[i] !== v[i];
-                  }
-                }
-                if (sock.oldValue.length !== v.length) {
-                  sock.oldValue.length = v.length;
-                }
-                for (let i = 0; i < v.length; i++) {
-                  sock.oldValue[i] = v.value[i];
-                }
-              }
-            } else {
-              if (sock.oldValue === void 0) {
-                sock.oldValue = JSON.stringify(v);
-              } else {
-                const json = JSON.stringify(v);
-                changed = json !== sock.oldValue;
-                sock.oldValue = json;
-              }
-            }
-          }
-          if (changed) {
-            console.log("Propagating prop update");
-            sock.flagUpdate();
-          }
-        }
+        graphExec(this);
       }
       ensureGraph() {
-        if (!theEventGraph.has(this)) {
-          theEventGraph.add(this);
-        }
+        ensureGraph(this);
       }
       playwrightId(id) {
         this.setAttribute("data-testid", id);
         return this;
       }
       flagPropSocketUpdate(path) {
-        const sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
-        if (sock) {
-          console.warn(`Flag socket "${path}" for update`);
-          sock.flagUpdate();
-        }
+        flagPropSocketUpdate(this, path);
         return this;
       }
       getPropertySocket(prop, socktype) {
-        const node = this.graphNode;
-        const sockets = socktype === SocketTypes.INPUT ? node.inputs : node.outputs;
-        if (sockets[prop]) {
-          return sockets[prop];
-        }
-        return void 0;
+        return getPropertySocket(this, prop, socktype);
       }
       ensurePropertySocket(prop, socktype) {
-        this.ensureGraph();
-        const node = this.graphNode;
-        const sockets = socktype === "inputs" ? node.inputs : node.outputs;
-        if (sockets[prop]) {
-          return sockets[prop];
-        }
-        const sock = new PropertySocket();
-        sock.bind(this, prop);
-        node.addSocket(socktype, prop, sock);
-        if (prop === "value") {
-          sock.callback((v) => {
-            if (this.getValue) {
-              return this.getValue();
-            }
-            return this.value;
-          });
-        }
-        return sock;
+        return ensurePropertySocket(this, prop, socktype);
       }
       /*
         widget.dependsOn("hidden", checkbox, "value")
        */
       dependsOn(dstProp, source, srcProp, srcCallback, dstCallback) {
-        const sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
-        const socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
-        if (srcCallback) {
-          socksrc.callback(srcCallback);
-        }
-        sockdst.connect(socksrc);
-        return sockdst;
+        return dependsOn(this, dstProp, source, srcProp, srcCallback);
       }
       constructor() {
         super();
-        EventNode.init(this);
-        this._tool_tip_abort_delay = void 0;
-        this._tooltip_ref = void 0;
-        this._textBoxEvents = false;
-        this._themeOverride = void 0;
-        this._checkTheme = true;
-        this._last_theme_update_key = _themeUpdateKey;
-        this._client_disabled_set = void 0;
-        this._useNativeToolTips = const_default.useNativeToolTips;
-        this._useNativeToolTips_set = false;
-        this._has_own_tooltips = void 0;
-        this._tooltip_timer = time_ms();
-        this.pathUndoGen = 0;
-        this._lastPathUndoGen = 0;
-        this._useDataPathUndo = void 0;
-        this._active_animations = [];
-        this._screenStyleTag = document.createElement("style");
-        this._screenStyleUpdateHash = 0;
-        initAspectClass(
-          this,
-          /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
-        );
-        this.shadow = this.attachShadow({ mode: "open" });
-        const styleElem = document.createElement("style");
-        styleElem.innerHTML = `
-        /* This hides the host element when it has the hidden attribute */
-        :host([hidden]) {
-          display: none !important;
-        }
-    `;
-        this.shadow.appendChild(styleElem);
-        if (const_default.DEBUG.paranoidEvents) {
-          this.__cbs = [];
-        }
-        this.shadow.appendChild(this._screenStyleTag);
-        const _origAppendChild = this.shadow.appendChild.bind(this.shadow);
-        this.shadow._appendChild = _origAppendChild;
-        this.shadow.appendChild = (child) => {
-          if (child && typeof child === "object" && child instanceof _UIBase) {
-            child.parentWidget = this;
-          }
-          return _origAppendChild(child);
-        };
-        this._wasAddedToNodeAtSomeTime = false;
-        this.visibleToPick = true;
-        this._override_class = void 0;
-        this.parentWidget = void 0;
-        const tagname = this.constructor.define().tagname;
-        this._id = tagname.replace(/-/g, "_") + _idgen2++;
-        this.default_overrides = {};
-        this.my_default_overrides = {};
-        this.class_default_overrides = {};
-        this._last_description = void 0;
-        this._description_final = void 0;
-        this._modaldata = void 0;
-        this.packflag = this.getDefault("BasePackFlag");
-        this._internalDisabled = false;
-        this.__disabledState = false;
-        this._disdata = void 0;
-        this._description = void 0;
-        const style = document.createElement("style");
-        style.textContent = `
-    .DefaultText {
-      font: ` + _getFont(this) + `;
-    }
-    `;
-        this.shadow.appendChild(style);
-        this._init_done = false;
-        const do_touch = (e, type, button) => {
-          if (haveModal()) {
-            return;
-          }
-          button = button === void 0 ? 0 : button;
-          const e2 = copyEvent(e);
-          if (e.touches.length === 0) {
-          } else {
-            const t2 = e.touches[0];
-            e2.pageX = t2.pageX;
-            e2.pageY = t2.pageY;
-            e2.screenX = t2.screenX;
-            e2.screenY = t2.screenY;
-            e2.clientX = t2.clientX;
-            e2.clientY = t2.clientY;
-            e2.x = t2.clientX;
-            e2.y = t2.clientY;
-          }
-          e2.button = button;
-          const e3 = new MouseEvent(type, e2);
-          e3.was_touch = true;
-          e3.stopPropagation = e.stopPropagation.bind(e);
-          e3.preventDefault = e.preventDefault.bind(e);
-          e3.touches = e.touches;
-          this.dispatchEvent(e3);
-        };
-        this.addEventListener(
-          "touchstart",
-          (e) => {
-            do_touch(e, "mousedown", 0);
-          },
-          { passive: false }
-        );
-        this.addEventListener(
-          "touchmove",
-          (e) => {
-            do_touch(e, "mousemove");
-          },
-          { passive: false }
-        );
-        this.addEventListener(
-          "touchcancel",
-          (e) => {
-            do_touch(e, "mouseup", 2);
-          },
-          { passive: false }
-        );
-        this.addEventListener(
-          "touchend",
-          (e) => {
-            do_touch(e, "mouseup", 0);
-          },
-          { passive: false }
-        );
-        if (this.constructor.define().havePickClipboard) {
-          this._clipboardHotkeyInit();
-        }
+        initUIBase(this);
       }
-      /*
-        set default_overrides(v) {
-          console.error("default_overrides was set", v);
-          this._default_overrides = v;
-        }
-      
-        get default_overrides() {
-          return this._default_overrides;
-        }//*/
       get useNativeToolTips() {
         return this._useNativeToolTips;
       }
@@ -29535,20 +31501,10 @@ var init_ui_base = __esm({
         return this._parentWidget;
       }
       set parentWidget(val) {
-        if (val) {
-          this._wasAddedToNodeAtSomeTime = true;
-        }
-        this._parentWidget = val;
+        setParentWidget(this, val);
       }
       get useDataPathUndo() {
-        let p = this;
-        while (p) {
-          if (p._useDataPathUndo !== void 0) {
-            return p._useDataPathUndo;
-          }
-          p = p.parentWidget;
-        }
-        return true;
+        return getUseDataPathUndo(this);
       }
       /**
          causes calls to setPathValue to go through
@@ -29563,47 +31519,16 @@ var init_ui_base = __esm({
         return this._description;
       }
       set description(val) {
-        if (val === null) {
-          this._description = void 0;
-          return;
-        }
-        this._description = val;
-        if (val === void 0 || val === null) {
-          return;
-        }
-        if (const_default.showPathsInToolTips && this.hasAttribute("datapath")) {
-          let s = "" + this._description;
-          const path = this.getAttribute("datapath");
-          s += "\n    path: " + path;
-          if (this.hasAttribute("mass_set_path")) {
-            const m = this.getAttribute("mass_set_path");
-            s += "\n    massSetPath: " + m;
-          }
-          this._description_final = s;
-        } else {
-          this._description_final = this._description;
-        }
-        if (const_default.useNativeToolTips) {
-          this.title = "" + this._description_final;
-        }
+        setDescription(this, val);
       }
       get background() {
         return this.__background;
       }
       set background(bg) {
-        this.__background = bg;
-        if (bg !== void 0) {
-          this.overrideDefault("background-color", bg, true);
-          this.saneStyle["backgroundColor"] = bg;
-        } else {
-          this.clearOverride("background-color");
-        }
+        setBackground(this, bg);
       }
       get disabled() {
-        if (this.parentWidget?.disabled) {
-          return true;
-        }
-        return !!this._client_disabled_set || !!this._internalDisabled;
+        return getDisabled(this);
       }
       set disabled(v) {
         this._client_disabled_set = v;
@@ -29620,10 +31545,7 @@ var init_ui_base = __esm({
         return this._ctx;
       }
       set ctx(c) {
-        this._ctx = c;
-        this._forEachChildWidget((n) => {
-          n.ctx = c;
-        });
+        setCtx(this, c);
       }
       get _reportCtxName() {
         return "" + this._id;
@@ -29642,55 +31564,25 @@ var init_ui_base = __esm({
          scaling ratio (e.g. for high-resolution displays)
          */
       static getDPI() {
-        return window.devicePixelRatio;
-        return window.devicePixelRatio;
+        return getDPI();
       }
       static prefix(name2) {
-        return tagPrefix + name2;
+        return prefix(name2);
       }
       static internalRegister(cls) {
-        const clsAny = cls;
-        clsAny[ClassIdSymbol] = class_idgen++;
-        registered_has_happened = true;
-        internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
-        customElements.define(
-          this.prefix(cls.define().tagname),
-          cls
-        );
+        registerInternal(cls, this.prefix(cls.define().tagname));
       }
       static getInternalName(name2) {
-        return internalElementNames[name2];
+        return getInternalName(name2);
       }
       static createElement(name2, internal = false) {
-        const mappedTag = tagManager.get(name2);
-        if (mappedTag !== void 0) {
-          return document.createElement(mappedTag);
-        } else if (!internal && name2 in externalElementNames) {
-          return document.createElement(name2);
-        } else if (name2 in internalElementNames) {
-          return document.createElement(internalElementNames[name2]);
-        } else {
-          return document.createElement(name2);
-        }
+        return createElement(name2, internal);
       }
       static isRegistered(cls) {
-        return customElements.get(cls.define().tagname) === cls;
+        return isRegistered2(cls);
       }
       static register(cls) {
-        registered_has_happened = true;
-        const clsAny = cls;
-        clsAny[ClassIdSymbol] = class_idgen++;
-        const def = cls.define();
-        if (typeof customElements?.get === "undefined") {
-          return;
-        }
-        if (customElements.get(def.tagname) === cls) {
-          return;
-        }
-        const tagName = tagManager.replaceTag(def.tagname);
-        ElementClasses.push(cls);
-        externalElementNames[tagName] = tagName;
-        customElements.define(tagName, cls);
+        registerElement(cls);
       }
       static unregister(cls) {
       }
@@ -29700,14 +31592,7 @@ var init_ui_base = __esm({
        * Used by the data-path generator to emit the JSX widget-tag registry.
        */
       static getRegisteredTagNames() {
-        const names = new Set(Object.keys(internalElementNames));
-        for (const cls of ElementClasses) {
-          try {
-            names.add(cls.define().tagname);
-          } catch {
-          }
-        }
-        return [...names].sort();
+        return getRegisteredTagNames();
       }
       /**
        * Defines core attributes of the class
@@ -29754,318 +31639,59 @@ var init_ui_base = __esm({
         return this;
       }
       getElementById(id) {
-        let ret;
-        const rec = (n) => {
-          if (ret) {
-            return;
-          }
-          if (n.getAttribute("id") === id || n.id === id) {
-            ret = n;
-          }
-          if (n instanceof _UIBase && n.constructor.define().tagname === "panelframe-x") {
-            rec(n.contents);
-          } else if (n instanceof _UIBase && n.constructor.define().tagname === "tabcontainer-x") {
-            for (const k in n.tabs) {
-              const tab2 = n.tabs[k];
-              if (tab2) {
-                rec(tab2);
-              }
-            }
-          }
-          for (const n2 of n.childNodes) {
-            if (n2 instanceof HTMLElement) {
-              rec(n2);
-              if (ret) {
-                break;
-              }
-            }
-          }
-          if (n instanceof _UIBase && n.shadow) {
-            for (const n2 of n.shadow.childNodes) {
-              if (n2 instanceof HTMLElement) {
-                rec(n2);
-                if (ret) {
-                  break;
-                }
-              }
-            }
-          }
-        };
-        rec(this);
-        return ret;
+        return getElementById(this, id);
       }
       unhide() {
         this.hide(false);
       }
       findArea() {
-        let p = this;
-        while (p) {
-          if (p[Symbol.IsAreaTag]) {
-            return p;
-          }
-          p = p.parentWidget;
-        }
-        return p;
+        return findArea(this);
       }
       addEventListener(type, cb, options) {
-        if (const_default.DEBUG.domEventAddRemove) {
-          console.log("addEventListener", type, this._id, options);
-        }
-        const cb2 = (e) => {
-          if (const_default.DEBUG.paranoidEvents) {
-            if (this.isDead()) {
-              this.removeEventListener(type, cb, options);
-              return;
-            }
-          }
-          if (const_default.DEBUG.domEvents) {
-            pathDebugEvent(e);
-          }
-          const area = this.findArea();
-          if (area) {
-            area.push_ctx_active();
-            try {
-              const ret = cb.call(this, e);
-              area.pop_ctx_active();
-              return ret;
-            } catch (error2) {
-              area.pop_ctx_active();
-              throw error2;
-            }
-          } else {
-            if (const_default.DEBUG.areaContextPushes) {
-              console.warn("Element is not part of an area?", this);
-            }
-            return cb.call(this, e);
-          }
-        };
-        const cbAny = cb;
-        if (!cbAny[EventCBSymbol]) {
-          cbAny[EventCBSymbol] = /* @__PURE__ */ new Map();
-        }
-        const key = calcElemCBKey(this, type, options);
-        cbAny[EventCBSymbol].set(key, cb2);
-        if (const_default.DEBUG.paranoidEvents) {
-          this.__cbs.push([type, cb2, options]);
-        }
-        return super.addEventListener(type, cb2, options);
+        addEventListener(this, type, cb, options);
       }
       removeEventListener(type, cb, options) {
-        if (const_default.DEBUG.paranoidEvents) {
-          for (const item of this.__cbs) {
-            if (item[0] == type && item[1] === cb._cb2 && "" + item[2] === "" + options) {
-              this.__cbs.remove(item);
-              break;
-            }
-          }
-        }
-        if (const_default.DEBUG.domEventAddRemove) {
-          console.log("removeEventListener", type, this._id, options);
-        }
-        const key = calcElemCBKey(this, type, options);
-        if (!cb[EventCBSymbol]?.has(key)) {
-          return super.removeEventListener(type, cb, options);
-        } else {
-          const cb2 = cb[EventCBSymbol].get(key);
-          const ret = super.removeEventListener(type, cb2, options);
-          cb[EventCBSymbol].delete(key);
-          return ret;
-        }
+        removeEventListener(this, type, cb, options);
       }
       connectedCallback() {
       }
       noMarginsOrPadding() {
-        let keys2 = ["margin", "padding", "margin-block-start", "margin-block-end"];
-        keys2 = keys2.concat(["padding-block-start", "padding-block-end"]);
-        keys2 = keys2.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
-        keys2 = keys2.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
-        const style = this.saneStyle;
-        for (const k of keys2) {
-          style[k] = "0px";
-        }
-        return this;
+        return noMarginsOrPadding(this);
       }
       /**
        * find owning screen and tell it to update
        * the global tab order
        * */
       regenTabOrder() {
-        const screen = this.getScreen();
-        if (screen !== void 0) {
-          screen.needsTabRecalc = true;
-        }
+        regenTabOrder(this);
         return this;
       }
       noMargins() {
-        this.saneStyle["margin"] = this.saneStyle["margin-left"] = this.saneStyle["margin-right"] = "0px";
-        this.saneStyle["margin-top"] = this.saneStyle["margin-bottom"] = "0px";
-        return this;
+        return noMargins(this);
       }
       get saneStyle() {
         return this.style;
       }
       noPadding() {
-        this.saneStyle["padding"] = this.saneStyle["padding-left"] = this.saneStyle["padding-right"] = "0px";
-        this.saneStyle["padding-top"] = this.saneStyle["padding-bottom"] = "0px";
-        return this;
+        return noPadding(this);
       }
       getTotalRect() {
-        let found = false;
-        const min = new Vector2([1e17, 1e17]);
-        const max = new Vector2([-1e17, -1e17]);
-        const doaabb = (n) => {
-          const rs = n.getClientRects();
-          for (const r of rs) {
-            min[0] = Math.min(min[0], r.x);
-            min[1] = Math.min(min[1], r.y);
-            max[0] = Math.max(max[0], r.x + r.width);
-            max[1] = Math.max(max[1], r.y + r.height);
-            found = true;
-          }
-        };
-        doaabb(this);
-        this._forEachChildWidget((n) => {
-          doaabb(n);
-        });
-        if (found) {
-          return {
-            width: max[0] - min[0],
-            height: max[1] - min[1],
-            x: min[0],
-            y: min[1],
-            left: min[0],
-            top: min[1],
-            right: max[0],
-            bottom: max[1]
-          };
-        } else {
-          return void 0;
-        }
+        return getTotalRect(this);
       }
       parseNumber(value, args = {}) {
-        let str = ("" + value).trim().toLowerCase();
-        const baseUnit = args.baseUnit || this.baseUnit;
-        const isInt = args.isInt || this.isInt;
-        let sign = 1;
-        if (str.startsWith("-")) {
-          str = str.slice(1, str.length).trim();
-          sign = -1;
-        }
-        const hexre = /-?[0-9a-f]+h$/;
-        let result;
-        if (str.startsWith("0b")) {
-          str = str.slice(2, str.length).trim();
-          result = parseInt(str, 2);
-        } else if (str.startsWith("0x")) {
-          str = str.slice(2, str.length).trim();
-          result = parseInt(str, 16);
-        } else if (str.search(hexre) === 0) {
-          str = str.slice(0, str.length - 1).trim();
-          result = parseInt(str, 16);
-        } else {
-          result = parseValue(str, baseUnit);
-        }
-        if (isInt) {
-          result = ~~result;
-        }
-        return result * sign;
+        return parseNumber(this, value, args);
       }
       formatNumber(value, args = {}) {
-        const baseUnit = args.baseUnit || this.baseUnit;
-        const displayUnit = args.displayUnit || this.displayUnit;
-        const isInt = args.isInt || this.isInt;
-        const radix = args.radix || this.radix || 10;
-        const decimalPlaces = args.decimalPlaces || this.decimalPlaces;
-        if (isInt && radix !== 10) {
-          const ret = Math.floor(value).toString(radix);
-          if (radix === 2) return "0b" + ret;
-          else if (radix === 16) return ret + "h";
-        }
-        return buildString(value, baseUnit, decimalPlaces, displayUnit);
+        return formatNumber(this, value, args);
       }
       setBoxCSS(subkey) {
-        const keys2 = ["left", "right", "top", "bottom"];
-        let sub;
-        if (subkey) {
-          sub = this.getAttribute(subkey) || {};
-        }
-        const def = (key) => {
-          if (sub && subkey) {
-            return this.getSubDefault(subkey, key);
-          }
-          return this.getDefault(key);
-        };
-        for (let i = 0; i < 2; i++) {
-          const key = i ? "padding" : "margin";
-          this.saneStyle[key] = "unset";
-          const val = def(key);
-          if (val !== void 0) {
-            for (let j = 0; j < 4; j++) {
-              this.saneStyle[key + "-" + keys2[j]] = val + "px";
-            }
-          }
-          for (let j = 0; j < 4; j++) {
-            const key2 = `${key}-${keys2[j]}`;
-            const val2 = def(key2);
-            if (val2 !== void 0) {
-              this.saneStyle[key2] = val2 + "px";
-            }
-          }
-        }
-        this.saneStyle["border-radius"] = def("border-radius") + "px";
-        this.saneStyle["border"] = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+        setBoxCSS(this, subkey);
       }
       genBoxCSS(subkey) {
-        let boxcode = "";
-        const keys2 = ["left", "right", "top", "bottom"];
-        let sub;
-        if (subkey) {
-          sub = this.getAttribute(subkey) || {};
-        }
-        const def = (key) => {
-          if (sub && subkey) {
-            return this.getSubDefault(subkey, key);
-          }
-          return this.getDefault(key);
-        };
-        for (let i = 0; i < 2; i++) {
-          const key = i ? "padding" : "margin";
-          const val = def(key);
-          if (val !== void 0) {
-            boxcode += `${key}: ${val} px;
-`;
-          }
-          for (let j = 0; j < 4; j++) {
-            const key2 = `${key}-${keys2[j]}`;
-            const val2 = def(key2);
-            if (val2 !== void 0) {
-              boxcode += `${key2}: ${val}px;
-`;
-            }
-          }
-        }
-        boxcode += `border-radius: ${def("border-radius")}px;
-`;
-        boxcode += `border: ${def("border-width")}px ${def("border-style")} ${def("border-color")};
-`;
-        return boxcode;
+        return genBoxCSS(this, subkey);
       }
       setCSS(setBG = true) {
-        if (setBG) {
-          const bg = this.getDefault("background-color");
-          if (bg) {
-            this.saneStyle["background-color"] = "" + bg;
-          }
-        }
-        const zoom = this.getZoom();
-        if (zoom === 1) {
-          return;
-        }
-        let transform = "" + this.saneStyle["transform"];
-        transform = transform.replace(/[ \t\n\r]+/g, " ");
-        transform = transform.replace(/, /g, ",");
-        const transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
-        this.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
+        setCSS(this, setBG);
       }
       //TS patch into this.update.after
       setCSSAfter(cb) {
@@ -30077,193 +31703,22 @@ var init_ui_base = __esm({
         return anyThis.setCSS.once(cb, arg);
       }
       flushSetCSS() {
-        this._init();
-        this.setCSS();
-        this._forEachChildWidget((c) => {
-          if (!(c.packflag & PackFlags.NO_UPDATE)) {
-            c.flushSetCSS();
-          }
-        });
+        flushSetCSS(this);
       }
       replaceChild(newnode, oldnode) {
-        for (let i = 0; i < this.childNodes.length; i++) {
-          if (this.childNodes[i] === oldnode) {
-            super.replaceChild(newnode, oldnode);
-            return oldnode;
-          }
-        }
-        for (let i = 0; i < this.shadow.childNodes.length; i++) {
-          if (this.shadow.childNodes[i] === oldnode) {
-            this.shadow.replaceChild(newnode, oldnode);
-            return oldnode;
-          }
-        }
-        console.error("Unknown child node", oldnode);
-        return oldnode;
+        return replaceChild(this, newnode, oldnode);
       }
       swapWith(b) {
-        let p1 = this.parentNode;
-        let p2 = b.parentNode;
-        if (p1 === this.parentWidget?.shadow || !p1) {
-          p1 = this.parentWidget;
-        }
-        if (p2 === b.parentWidget?.shadow || !p2) {
-          p2 = b.parentWidget;
-        }
-        if (!p1 || !p2) {
-          console.error("Invalid call to UIBase.prototype.swapWith", this, b, p1, p2);
-          return false;
-        }
-        const getPos = (n, p) => {
-          let i = Array.prototype.indexOf.call(p.childNodes, n);
-          if (i < 0 && p.shadow) {
-            p = p.shadow;
-            i = Array.prototype.indexOf.call(p.childNodes, n);
-          }
-          return [i, p];
-        };
-        const [i1, n1] = getPos(this, p1);
-        const [i2, n2] = getPos(b, p2);
-        console.log("i1, i2, n1, n2", i1, i2, n1, n2);
-        const tmp1 = document.createElement("div");
-        const tmp2 = document.createElement("div");
-        n1.insertBefore(tmp1, this);
-        n2.insertBefore(tmp2, b);
-        n1.replaceChild(b, tmp1);
-        n2.replaceChild(this, tmp2);
-        const ptmp = this.parentWidget;
-        this.parentWidget = b.parentWidget;
-        b.parentWidget = ptmp;
-        tmp1.remove();
-        tmp2.remove();
-        return true;
+        return swapWith(this, b);
       }
       traverse(type_or_set) {
-        const this2 = this;
-        let classes;
-        let is_set = type_or_set instanceof Set;
-        is_set = is_set || Array.isArray(type_or_set);
-        if (!is_set) {
-          classes = [type_or_set];
-        } else {
-          classes = type_or_set;
-        }
-        const visit = /* @__PURE__ */ new Set();
-        return (function* () {
-          const stack = [this2];
-          while (stack.length > 0) {
-            const n = stack.pop();
-            visit.add(n);
-            if (!n?.childNodes) {
-              continue;
-            }
-            for (const cls of classes) {
-              if (n instanceof cls) {
-                yield n;
-              }
-            }
-            for (const c of n.childNodes) {
-              if (!visit.has(c)) {
-                stack.push(c);
-              }
-            }
-            if (n.shadow) {
-              for (const c of n.shadow.childNodes) {
-                if (!visit.has(c)) {
-                  stack.push(c);
-                }
-              }
-            }
-          }
-        })();
+        return traverse(this, type_or_set);
       }
       appendChild(child) {
-        if (child instanceof _UIBase) {
-          child.ctx = this.ctx;
-          child.parentWidget = this;
-          child.useDataPathUndo = this.useDataPathUndo;
-        }
-        return super.appendChild(child);
+        return appendChild(this, child);
       }
       _clipboardHotkeyInit() {
-        this._clipboard_over = false;
-        this._last_clipboard_keyevt = void 0;
-        this._clipboard_keystart = () => {
-          if (this._clipboard_events) {
-            return;
-          }
-          this._clipboard_events = true;
-          window.addEventListener("keydown", this._clipboard_keydown, {
-            capture: true,
-            passive: false
-          });
-        };
-        this._clipboard_keyend = () => {
-          if (!this._clipboard_events) {
-            return;
-          }
-          this._clipboard_events = false;
-          window.removeEventListener("keydown", this._clipboard_keydown, { capture: true });
-        };
-        this._clipboard_keydown = (e, internal_mode) => {
-          if (!this.isConnected || !const_default.getClipboardData) {
-            this._clipboard_keyend();
-            return;
-          }
-          if (e === this._last_clipboard_keyevt || !this._clipboard_over) {
-            return;
-          }
-          const is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-          const is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-          if (!is_copy && !is_paste) {
-            return;
-          }
-          if (!internal_mode) {
-            const screen = this.ctx.screen;
-            let elem = screen.pickElement(screen.mpos[0], screen.mpos[1]);
-            let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
-            checkTree = checkTree || is_copy && this.constructor.define().copyForAllChildren;
-            while (checkTree && !(TextBox && elem instanceof TextBox) && elem !== this && elem?.parentWidget) {
-              console.log("  " + elem._id);
-              elem = elem.parentWidget;
-            }
-            console.warn("COLOR", this._id, elem ? elem._id : "none");
-            if (elem !== this) {
-              this._clipboard_keyend();
-              return;
-            }
-          } else {
-            console.warn("COLOR", this._id);
-          }
-          this._last_clipboard_keyevt = e;
-          if (is_copy) {
-            this.clipboardCopy();
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          if (is_paste) {
-            this.clipboardPaste();
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        };
-        const start = (e) => {
-          this._clipboard_over = true;
-          this._clipboard_keystart();
-        };
-        const stop = (e) => {
-          this._clipboard_over = false;
-          this._clipboard_keyend();
-        };
-        this.doOnce(() => {
-          this.tabIndex = 0;
-        });
-        this.addEventListener("keydown", ((e) => {
-          return this._clipboard_keydown(e, true);
-        }));
-        this.addEventListener("pointerover", start, { capture: true, passive: true });
-        this.addEventListener("pointerout", stop, { capture: true, passive: true });
-        this.addEventListener("focus", stop, { capture: true, passive: true });
+        clipboardHotkeyInit(this);
       }
       /** set havePickClipboard to true in define() to
        *  enable mouseover pick clipboarding */
@@ -30275,38 +31730,13 @@ var init_ui_base = __esm({
       }
       //delayed init
       init() {
-        this._init_done = true;
-        if (!this.hasAttribute("id") && this._id) {
-          this.setAttribute("id", this._id);
-        }
+        initElement(this);
       }
       _ondestroy() {
-        if (this.tabIndex >= 0) {
-          this.regenTabOrder();
-        }
-        if (const_default.DEBUG.paranoidEvents) {
-          for (const item of this.__cbs) {
-            this.removeEventListener(item[0], item[1], item[2]);
-          }
-          this.__cbs = [];
-        }
-        if (this.ondestroy !== void 0) {
-          this.ondestroy();
-        }
+        ondestroy(this);
       }
       remove(trigger_on_destroy = true) {
-        if (this.tabIndex >= 0) {
-          this.regenTabOrder();
-        }
-        this.clearPathWatches();
-        super.remove();
-        if (trigger_on_destroy) {
-          this._ondestroy();
-        }
-        if (this.on_remove) {
-          this.on_remove();
-        }
-        this.parentWidget = void 0;
+        remove(this, trigger_on_destroy);
       }
       /*
        *
@@ -30317,32 +31747,10 @@ var init_ui_base = __esm({
       on_remove() {
       }
       removeChild(child, trigger_on_destroy = true) {
-        super.removeChild(child);
-        if (child instanceof _UIBase) {
-          child.clearPathWatches();
-        }
-        if (child instanceof _UIBase && child.on_remove) {
-          child.on_remove();
-        }
-        if (trigger_on_destroy && child instanceof _UIBase) {
-          child._ondestroy();
-        }
-        if (child instanceof _UIBase) {
-          child.parentWidget = void 0;
-        }
-        return child;
+        return removeChild(this, child, trigger_on_destroy);
       }
       flushUpdate(force = false) {
-        this._init();
-        this.update();
-        this._forEachChildWidget((c) => {
-          if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
-            if (!c.ctx) {
-              c.ctx = this.ctx;
-            }
-            c.flushUpdate(force);
-          }
-        });
+        flushUpdate(this, force);
       }
       //used by container nodes
       /**
@@ -30355,32 +31763,7 @@ var init_ui_base = __esm({
        * descended from ui_base.UIBase
        **/
       _forEachChildWidget(cb, thisvar) {
-        const rec = (n) => {
-          if (n instanceof _UIBase) {
-            if (thisvar !== void 0) {
-              cb.call(thisvar, n);
-            } else {
-              cb(n);
-            }
-          } else {
-            for (const n2 of n.childNodes) {
-              rec(n2);
-            }
-            if (n.shadow !== void 0) {
-              for (const n2 of n.shadow.childNodes) {
-                rec(n2);
-              }
-            }
-          }
-        };
-        for (const n of this.childNodes) {
-          rec(n);
-        }
-        if (this.shadow) {
-          for (const n of this.shadow.childNodes) {
-            rec(n);
-          }
-        }
+        forEachChildWidget(this, cb, thisvar);
       }
       checkInit() {
         return this._init();
@@ -30400,267 +31783,34 @@ var init_ui_base = __esm({
         return window.innerHeight;
       }
       calcZ() {
-        let p = this;
-        let n = this;
-        while (n) {
-          if (n instanceof HTMLElement && !isNaN(parseFloat("" + n.style["zIndex"]))) {
-            const z = parseFloat(n.style["zIndex"]);
-            return z;
-          }
-          n = n.parentNode;
-          if (!n) {
-            n = p = p.parentWidget;
-          }
-        }
-        return 0;
+        return calcZ(this);
       }
       /** returns path to a specific element, see document.elementsFromPoint */
       pickElements(x, y, args = {}, marginy = 0, nodeclass = _UIBase, excluded_classes) {
-        nodeclass = args.nodeclass || _UIBase;
-        excluded_classes = args.excluded_classes;
-        x -= window.scrollX;
-        y -= window.scrollY;
-        const elems = this.shadow.elementsFromPoint(x, y);
-        const excluded = (n) => excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
-        const visit = /* @__PURE__ */ new WeakSet();
-        const result = /* @__PURE__ */ new Set();
-        const recurse = (elems2) => {
-          for (const n of elems2) {
-            if (n instanceof _UIBase) {
-              const ns = n.shadow.elementsFromPoint(x, y);
-              if (!excluded(n) && (!nodeclass || n instanceof nodeclass)) {
-                result.add(n);
-              }
-              ns.forEach((n2) => visit.add(n2));
-              recurse(ns.filter((n2) => !visit.has(n2)));
-            }
-          }
-        };
-        recurse(elems);
-        return Array.from(result);
+        return pickElements(this, x, y, args);
       }
       pickElement(x, y, args = {}, marginy = 0, nodeclass = _UIBase, excluded_classes) {
-        nodeclass = args.nodeclass || _UIBase;
-        excluded_classes = args.excluded_classes;
-        const clip2 = args.clip;
-        x -= window.scrollX;
-        y -= window.scrollY;
-        let elem = document.elementFromPoint(x, y);
-        if (!elem) {
-          return;
-        }
-        const path = [elem];
-        let lastelem = elem;
-        let i = 0;
-        while (elem instanceof _UIBase) {
-          if (i++ > 1e3) {
-            console.error("Infinite loop error");
-            break;
-          }
-          elem = elem.shadow.elementFromPoint(x, y);
-          if (elem === lastelem) {
-            break;
-          }
-          if (elem) {
-            path.push(elem);
-          }
-          lastelem = elem;
-        }
-        path.reverse();
-        for (let i2 = 0; i2 < path.length; i2++) {
-          const node = path[i2];
-          let ok = node instanceof nodeclass;
-          if (excluded_classes) {
-            for (const cls of excluded_classes) {
-              ok = ok && !(node instanceof cls);
-            }
-          }
-          if (clip2) {
-            const rect = node.getBoundingClientRect();
-            const clip22 = aabb_intersect_2d(
-              clip2.pos,
-              clip2.size,
-              [rect.x, rect.y],
-              [rect.width, rect.height]
-            );
-            ok = ok && Boolean(clip22);
-          }
-          if (ok) {
-            return node;
-          }
-        }
+        return pickElement(x, y, args);
       }
       __updateDisable(val) {
-        if (!!val === !!this.__disabledState) {
-          return;
-        }
-        this.__disabledState = !!val;
-        if (val && !this._disdata) {
-          const style = this.getDefault("disabled") ?? this.getDefault("internalDisabled") ?? {
-            "background-color": this.getDefault("DisabledBG")
-          };
-          this._disdata = {
-            style: {},
-            defaults: {}
-          };
-          for (const k in style) {
-            this._disdata.style[k] = this.saneStyle[k];
-            this._disdata.defaults[k] = this.default_overrides[k];
-            const v = style[k];
-            if (typeof v === "object" && v instanceof CSSFont) {
-              this.saneStyle[k] = style[k].genCSS();
-            } else if (typeof v === "object") {
-              continue;
-            } else {
-              this.saneStyle[k] = style[k];
-            }
-            this.default_overrides[k] = style[k];
-          }
-          this.__disabledState = !!val;
-          this.on_disabled();
-        } else if (!val && this._disdata) {
-          for (const k in this._disdata.style) {
-            this.saneStyle[k] = this._disdata.style[k];
-          }
-          for (const k in this._disdata.defaults) {
-            const v = this._disdata.defaults[k];
-            if (v === void 0) {
-              delete this.default_overrides[k];
-            } else {
-              this.default_overrides[k] = v;
-            }
-          }
-          this._disdata = void 0;
-          this.__disabledState = !!val;
-          this.on_enabled();
-        }
-        this.__disabledState = !!val;
-        const visit = (n) => {
-          if (n instanceof _UIBase) {
-            let changed = !!n.__disabledState;
-            n.__updateDisable(n.disabled);
-            changed = changed !== !!n.__disabledState;
-            if (changed) {
-              n.update();
-              n.setCSS();
-            }
-          }
-        };
-        this._forEachChildWidget(visit);
+        updateDisable(this, val);
       }
       on_disabled() {
       }
       on_enabled() {
       }
       pushModal(handlers = this, autoStopPropagation = true, pointerId, pointerElem = this) {
-        if (this._modaldata !== void 0) {
-          console.warn("UIBase.prototype.pushModal called when already in modal mode");
-          this.popModal();
-        }
-        const _areaWrangler = contextWrangler.copy();
-        contextWrangler.copy();
-        function bindFunc(func) {
-          return function(...args) {
-            _areaWrangler.copyTo(contextWrangler);
-            return func.apply(handlers, args);
-          };
-        }
-        const handlers2 = {};
-        for (const k in handlers) {
-          const func = handlers[k];
-          if (typeof func !== "function") {
-            continue;
-          }
-          handlers2[k] = bindFunc(func);
-        }
-        if (pointerId !== void 0 && pointerElem) {
-          this._modaldata = pushPointerModal(handlers2, void 0, void 0, autoStopPropagation);
-        } else {
-          this._modaldata = pushModalLight(handlers2, autoStopPropagation);
-        }
-        return this._modaldata;
+        return pushModal(this, handlers, autoStopPropagation, pointerId, pointerElem);
       }
       popModal() {
-        if (this._modaldata === void 0) {
-          console.warn("Invalid call to UIBase.prototype.popModal");
-          return;
-        }
-        popModalLight(this._modaldata);
-        this._modaldata = void 0;
+        popModal(this);
       }
       /** child classes can override this to prevent focus on flash*/
       _flash_focus() {
         this.focus();
       }
       flash(colorIn, rect_element = this, timems = 355, autoFocus = true) {
-        if (typeof colorIn === "string") {
-          colorIn = Array.from(css2color2(colorIn));
-        }
-        const color = new Vector4().loadXYZW(colorIn[0], colorIn[1], colorIn[2], colorIn[3] ?? 1);
-        const csscolor = color2css3(color);
-        if (this._flashtimer !== void 0 && this._flashcolor !== csscolor) {
-          window.setTimeout(() => {
-            this.flash(color, rect_element, timems, autoFocus);
-          }, 100);
-          return;
-        } else if (this._flashtimer !== void 0) {
-          return;
-        }
-        const rect = rect_element.getBoundingClientRect();
-        if (rect === void 0) {
-          return;
-        }
-        let timer;
-        let tick = 0;
-        const max = ~~(timems / 20);
-        const x = rect.x;
-        const y = rect.y;
-        const cb = () => {
-          if (timer === void 0) {
-            return;
-          }
-          const a2 = 1 - tick / max;
-          div.style["backgroundColor"] = color2css3(color, a2 * a2 * 0.5);
-          if (tick > max) {
-            window.clearInterval(timer);
-            this._flashtimer = void 0;
-            this._flashcolor = void 0;
-            timer = void 0;
-            div.remove();
-            if (autoFocus) {
-              this._flash_focus();
-            }
-          }
-          tick++;
-        };
-        window.setTimeout(cb, 5);
-        timer = window.setInterval(cb, 20);
-        this._flashtimer = timer;
-        const div = document.createElement("div");
-        div.style["pointerEvents"] = "none";
-        div.tabIndex = -1;
-        div.style["zIndex"] = "900";
-        div.style["display"] = "float";
-        div.style["position"] = _UIBase.PositionKey;
-        div.style["margin"] = "0px";
-        div.style["left"] = x + "px";
-        div.style["top"] = y + "px";
-        div.style["backgroundColor"] = color2css3(color, 0.5);
-        div.style["width"] = rect.width + "px";
-        div.style["height"] = rect.height + "px";
-        div.setAttribute("class", "UIBaseFlash");
-        const screen = this.getScreen();
-        if (screen !== void 0) {
-          screen._enterPopupSafe();
-        }
-        document.body.appendChild(div);
-        if (autoFocus) {
-          this._flash_focus();
-        }
-        this._flashcolor = csscolor;
-        if (screen !== void 0) {
-          screen._exitPopupSafe();
-        }
+        flash(this, colorIn, rect_element, timems, autoFocus);
       }
       destroy() {
       }
@@ -30669,11 +31819,7 @@ var init_ui_base = __esm({
       on_resize(newsize, oldsize, _set_key) {
       }
       toJSON() {
-        const ret = {};
-        if (this.hasAttribute("datapath")) {
-          ret.datapath = this.getAttribute("datapath");
-        }
-        return ret;
+        return toJSON2(this);
       }
       loadJSON(obj) {
         if (!this._init_done) {
@@ -30691,198 +31837,29 @@ var init_ui_base = __esm({
         this.pathUndoGen++;
       }
       setPathValueUndo(ctx, path, val) {
-        this.pathSocketUpdate(ctx, path);
-        const mass_set_path = this.getAttribute("mass_set_path");
-        const rdef = ctx.api.resolvePath(ctx, path);
-        const prop = rdef.prop;
-        if (ctx.api.getValue(ctx, path) === val) {
-          return;
-        }
-        const toolstack = this.ctx.toolstack;
-        let head = toolstack.head;
-        const bad = head === void 0 || !(head instanceof getDataPathToolOp()) || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id) || this.pathUndoGen !== this._lastPathUndoGen;
-        if (!bad) {
-          toolstack.undo(ctx);
-          const tool = head;
-          tool.setValue(ctx, val, rdef.obj);
-          toolstack.redo(ctx);
-        } else {
-          this._lastPathUndoGen = this.pathUndoGen;
-          const toolop = getDataPathToolOp().create(
-            ctx,
-            path,
-            val,
-            this._id,
-            mass_set_path ?? void 0
-          );
-          if (!toolop) {
-            return;
-          }
-          ctx.toolstack.execTool(this.ctx, toolop);
-          head = toolstack.head;
-        }
-        if (!head || head.hadError) {
-          throw new Error("toolpath error");
-        }
+        setPathValueUndo(this, ctx, path, val);
       }
       loadNumConstraints(prop, dom = this, onModifiedCallback) {
-        let modified = false;
-        if (!prop) {
-          let path;
-          if (dom.hasAttribute("datapath")) {
-            path = dom.getAttribute("datapath");
-          }
-          if (path === void 0 && this.hasAttribute("datapath")) {
-            path = this.getAttribute("datapath");
-          }
-          if (typeof path === "string") {
-            prop = this.getPathMeta(this.ctx, path) ?? prop;
-          }
-        }
-        const loadAttr = (propkey, domkey, thiskey) => {
-          const anyThis = this;
-          const old = anyThis[thiskey];
-          if (dom.hasAttribute(domkey)) {
-            anyThis[thiskey] = parseFloat(dom.getAttribute(domkey));
-          } else if (prop) {
-            anyThis[thiskey] = prop[propkey];
-          }
-          if (anyThis[thiskey] !== old) {
-            modified = true;
-          }
-        };
-        for (const key of NumberConstraints) {
-          const thiskey = key;
-          const domkey = key;
-          if (key === "range") {
-            continue;
-          }
-          loadAttr(key, domkey, thiskey);
-        }
-        if (this.range === void 0) {
-          this.range = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
-        }
-        const oldmin = this.range[0];
-        const oldmax = this.range[1];
-        const range = prop ? prop.range : void 0;
-        if (range && !dom.hasAttribute("min")) {
-          this.range[0] = range[0];
-        } else if (dom.hasAttribute("min")) {
-          this.range[0] = parseFloat(dom.getAttribute("min"));
-        }
-        if (range && !dom.hasAttribute("max")) {
-          this.range[1] = range[1];
-        } else if (dom.hasAttribute("max")) {
-          this.range[1] = parseFloat(dom.getAttribute("max"));
-        }
-        if (this.range[0] !== oldmin || this.range[1] !== oldmax) {
-          modified = true;
-        }
-        const oldint = this.isInt;
-        if (dom.getAttribute("integer")) {
-          let val = dom.getAttribute("integer");
-          val = ("" + val).toLowerCase();
-          this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-        } else if (prop && prop instanceof IntProperty) {
-          this.isInt = true;
-        }
-        if (!this.isInt !== !oldint) {
-          modified = true;
-        }
-        const oldedit = this.editAsBaseUnit;
-        if (this.editAsBaseUnit === void 0) {
-          if (prop && prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
-            this.editAsBaseUnit = true;
-          } else {
-            this.editAsBaseUnit = false;
-          }
-        }
-        if (!this.editAsBaseUnit !== !oldedit) {
-          modified = true;
-        }
-        if (modified) {
-          this.setCSS();
-          if (onModifiedCallback) {
-            onModifiedCallback.call(this);
-          }
-        }
+        loadNumConstraints(this, prop, dom, onModifiedCallback);
       }
-      /*
-          adds a method call to the event queue,
-          but only if that method (for this instance, as differentiated
-          by ._id) isn't there already.
-      
-          also, method won't be ran until this.ctx exists
-        */
       pushReportContext(key) {
-        const api = this.ctx.api;
-        if (api.pushReportContext) {
-          api.pushReportContext(key);
-        }
+        pushReportContext(this, key);
       }
       popReportContext() {
-        const api = this.ctx.api;
-        if (api.popReportContext) api.popReportContext();
+        popReportContext(this);
       }
       pathSocketUpdate(ctx, path) {
         this.flagPropSocketUpdate("value");
         return this;
       }
       setPathValue(ctx, path, val) {
-        this.pathSocketUpdate(ctx, path);
-        if (this.useDataPathUndo) {
-          this.pushReportContext(this._reportCtxName);
-          try {
-            this.setPathValueUndo(ctx, path, val);
-          } catch (error2) {
-            this.popReportContext();
-            if (!(error2 instanceof DataPathError)) {
-              throw error2;
-            } else {
-              return;
-            }
-          }
-          this.popReportContext();
-          return;
-        }
-        this.pushReportContext(this._reportCtxName);
-        try {
-          if (this.hasAttribute("mass_set_path")) {
-            ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
-            ctx.api.setValue(ctx, path, val);
-          } else {
-            ctx.api.setValue(ctx, path, val);
-          }
-        } catch (error2) {
-          this.popReportContext();
-          if (!(error2 instanceof DataPathError)) {
-            throw error2;
-          }
-          return;
-        }
-        this.popReportContext();
+        setPathValue(this, ctx, path, val);
       }
       getPathMeta(ctx, path) {
-        this.pushReportContext(this._reportCtxName);
-        const ret = ctx.api.resolvePath(ctx, path);
-        this.popReportContext();
-        return ret !== void 0 ? ret.prop : void 0;
+        return getPathMeta(this, ctx, path);
       }
       getPathDescription(ctx, path) {
-        let ret;
-        this.pushReportContext(this._reportCtxName);
-        try {
-          ret = ctx.api.getDescription(ctx, path);
-        } catch (error2) {
-          this.popReportContext();
-          if (error2 instanceof DataPathError) {
-            return void 0;
-          } else {
-            throw error2;
-          }
-        }
-        this.popReportContext();
-        return ret;
+        return getPathDescription(this, ctx, path);
       }
       // we never pass Screen with a <CTX> due to potential for
       // circular type errors
@@ -30893,37 +31870,7 @@ var init_ui_base = __esm({
         return !this.isConnected;
       }
       doOnce(func, timeout) {
-        if (func._doOnce === void 0) {
-          func._doOnce_reqs = /* @__PURE__ */ new Set();
-          func._doOnce = function(thisvar, trace2) {
-            if (func._doOnce_reqs.has(thisvar._id)) {
-              return;
-            }
-            func._doOnce_reqs.add(thisvar._id);
-            function f2() {
-              if (thisvar.isDead()) {
-                func._doOnce_reqs.delete(thisvar._id);
-                if (func === thisvar._init || !const_default.DEBUG.doOnce) {
-                  return;
-                }
-                console.warn("Ignoring doOnce call for dead element", thisvar._id, func, trace2);
-                return;
-              }
-              if (!thisvar.ctx) {
-                if (const_default.DEBUG.doOnce) {
-                  console.warn("doOnce call is waiting for context...", thisvar._id, func);
-                }
-                internalSetTimeout(f2, 0);
-                return;
-              }
-              func._doOnce_reqs.delete(thisvar._id);
-              func.call(thisvar);
-            }
-            internalSetTimeout(f2, timeout);
-          };
-        }
-        const trace = new Error().stack;
-        func._doOnce(this, trace);
+        doOnce(this, func, timeout);
       }
       float(x = 0, y = 0, zindex, positionKey = _UIBase.PositionKey) {
         this.saneStyle.position = positionKey;
@@ -30957,136 +31904,16 @@ var init_ui_base = __esm({
         return false;
       }
       abortToolTips(delayMs = 500) {
-        if (this._has_own_tooltips) {
-          this._has_own_tooltips.stop_timer();
-        }
-        if (this._tooltip_ref) {
-          this._tooltip_ref.remove();
-          this._tooltip_ref = void 0;
-        }
-        this._tool_tip_abort_delay = time_ms() + delayMs;
-        return this;
+        return abortToolTips(this, delayMs);
       }
       updateToolTipHandlers() {
-        if (!this._useNativeToolTips_set && !const_default.useNativeToolTips !== !this._useNativeToolTips) {
-          this._useNativeToolTips = const_default.useNativeToolTips;
-        }
-        if (!!this.useNativeToolTips === !this._has_own_tooltips) {
-          return;
-        }
-        if (!this.useNativeToolTips) {
-          const state = this._has_own_tooltips = {
-            start_timer: (e) => {
-              this._tooltip_timer = time_ms();
-            },
-            stop_timer: (e) => {
-              this._tooltip_timer = void 0;
-            },
-            reset_timer: (e) => {
-              if (this._tooltip_timer !== void 0) {
-                this._tooltip_timer = time_ms();
-              }
-            },
-            start_events: ["mouseover"],
-            reset_events: [
-              "mousemove",
-              "mousedown",
-              "mouseup",
-              "touchstart",
-              "touchend",
-              "keydown",
-              "focus"
-            ],
-            stop_events: ["mouseleave", "blur", "mouseout"],
-            handlers: {}
-          };
-          const bind_handler = (type, etype) => {
-            const handler = (e) => {
-              if (this._tool_tip_abort_delay !== void 0 && time_ms() < this._tool_tip_abort_delay) {
-                this._tooltip_timer = void 0;
-                return;
-              }
-              state[type](e);
-            };
-            if (etype in state.handlers) {
-              console.error(type, "is in handlers already");
-              return state.handlers[etype];
-            }
-            state.handlers[etype] = handler;
-            return handler;
-          };
-          let i = 0;
-          const lists = [state.start_events, state.stop_events, state.reset_events];
-          for (const type of ["start_timer", "stop_timer", "reset_timer"]) {
-            for (const etype of lists[i]) {
-              this.addEventListener(etype, bind_handler(type, etype), { passive: true });
-            }
-            i++;
-          }
-        } else {
-          console.warn(this.id, "removing tooltip handlers");
-          const state = this._has_own_tooltips;
-          for (const k in state.handlers) {
-            const handler = state.handlers[k];
-            this.removeEventListener(k, handler);
-          }
-          this._has_own_tooltips = void 0;
-          this._tooltip_timer = void 0;
-        }
+        updateToolTipHandlers(this);
       }
       updateToolTips() {
-        if (this._description_final === void 0 || this._description_final === null || this._description_final.trim().length === 0) {
-          return;
-        }
-        if (!this.ctx || !this.ctx.screen) {
-          return;
-        }
-        this.updateToolTipHandlers();
-        if (this.useNativeToolTips || this._tooltip_timer === void 0) {
-          return;
-        }
-        if (this._tool_tip_abort_delay !== void 0 && time_ms() < this._tool_tip_abort_delay) {
-          return;
-        }
-        this._tool_tip_abort_delay = void 0;
-        const screen = this.ctx.screen;
-        const timelimit = 500;
-        let ok = time_ms() - this._tooltip_timer > timelimit;
-        const x = screen.mpos[0];
-        const y = screen.mpos[1];
-        const rects = this.getClientRects();
-        const r = rects ? rects[0] : void 0;
-        if (!r) {
-          ok = false;
-        } else {
-          ok = ok && x >= r.x && x < r.x + r.width;
-          ok = ok && y >= r.y && y < r.y + r.height;
-        }
-        ok = ok && !haveModal();
-        ok = ok && screen.pickElement(x, y) === this;
-        ok = ok && !!this._description_final;
-        if (ok) {
-          const _ToolTip = window._ToolTip;
-          this._tooltip_ref = _ToolTip.show(this._description_final, this.ctx.screen, x, y);
-        } else {
-          if (this._tooltip_ref) {
-            this._tooltip_ref.remove();
-          }
-          this._tooltip_ref = void 0;
-        }
-        if (time_ms() - this._tooltip_timer > timelimit) {
-          this._tooltip_timer = void 0;
-        }
+        updateToolTips(this);
       }
       updateEventGraph() {
-        if (!this.isConnected) {
-          this.#reflagGraph = true;
-        } else if (this.#reflagGraph) {
-          this.#reflagGraph = false;
-          for (const [, sock] of Object.entries(this.graphNode.inputs)) {
-            sock.flagUpdate();
-          }
-        }
+        updateEventGraph(this);
       }
       //TS patch into this.update.after
       updateAfter(cb) {
@@ -31122,93 +31949,33 @@ var init_ui_base = __esm({
        * {@link updateFromPath} (multi-path widgets).
        */
       addPathWatch(pathOrAttr = "datapath", opts) {
-        if (!this._ctx) {
-          return void 0;
-        }
-        const raw = this.hasAttribute(pathOrAttr) ? this.getAttribute(pathOrAttr) : pathOrAttr;
-        const path = normalizePath(raw);
-        if (!path) {
-          return void 0;
-        }
-        for (const w2 of this._pathWatchers) {
-          if (w2.path === path) {
-            return w2;
-          }
-        }
-        const onChange = opts?.onChange ?? ((v, info) => this.updateFromPath(v, info));
-        const w = this._ctx.api.watch(() => this._ctx, path, onChange, opts);
-        this._pathWatchers.push(w);
-        return w;
+        return addPathWatch(this, pathOrAttr, opts);
       }
       /** Re-deliver every watched path's current value through
        * {@link updateFromPath}, bypassing the change diff. Call after a widget
        * stops gating reactions (e.g. a textbox losing focus). */
       refreshPathWatches() {
-        for (const w of this._pathWatchers) {
-          w.refresh();
-        }
+        refreshPathWatches(this);
       }
       /** Unsubscribe every path watcher; they are rebuilt (via {@link watchPath})
        * on the next `update()` while the widget stays in the tree. */
       clearPathWatches() {
-        for (const w of this._pathWatchers) {
-          w.remove();
-        }
-        this._pathWatchers.length = 0;
-        this._pathWatchInit = false;
+        clearPathWatches(this);
       }
       /** Lifecycle driver: (re)builds watchers once ctx/datapath are available and
        * runs the poll-mode compat bridge (see {@link UIBase.dataPathPolling}). */
       _updatePathWatchers() {
-        if (!this._ctx) {
-          return;
-        }
-        const dp = this.getAttribute("datapath");
-        if (!this._pathWatchInit || dp !== this._watchedDataPathAttr) {
-          this.clearPathWatches();
-          this._pathWatchInit = true;
-          this._watchedDataPathAttr = dp;
-          this.watchPath();
-        }
-        const poll = this.pollDataPath === true || _UIBase.dataPathPolling && this.pollDataPath !== false;
-        if (poll) {
-          for (const w of this._pathWatchers) {
-            w.tick();
-          }
-        }
+        updatePathWatchers(this, _UIBase.dataPathPolling);
       }
       //called regularly
       update() {
-        this.updateToolTips();
-        this.updateEventGraph();
-        this._updatePathWatchers();
-        if (this.ctx && this._description === void 0 && this.getAttribute("datapath")) {
-          const d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
-          this.description = d;
-        }
-        if (!this._init_done) {
-          this._init();
-        }
-        if (this._init_done && !this.constructor.define().subclassChecksTheme) {
-          if (this.checkThemeUpdate()) {
-            console.log("theme update!");
-            this.setCSS();
-          }
-        }
+        update(this);
       }
       onadd() {
-        if (!this._init_done) {
-          this.doOnce(this._init);
-        }
-        if (this.tabIndex >= 0) {
-          this.regenTabOrder();
-        }
+        onadd(this);
       }
       getZoom() {
-        if (this.parentWidget !== void 0) {
-          return this.parentWidget.getZoom();
-        }
-        return 1;
+        return getZoom(this);
       }
       /**try to use this method
       
@@ -31216,10 +31983,7 @@ var init_ui_base = __esm({
          for zoom ratio use getZoom()
          */
       getDPI() {
-        if (this.parentWidget !== void 0) {
-          return this.parentWidget.getDPI();
-        }
-        return _UIBase.getDPI();
+        return getDPI2(this, _UIBase.getDPI);
       }
       /**
        * for saving ui state.
@@ -31244,231 +32008,53 @@ var init_ui_base = __esm({
         return this;
       }
       clearOverride(key, localOnly = false) {
-        delete this.my_default_overrides[key];
-        if (!localOnly) delete this.default_overrides[key];
+        clearOverride(this, key, localOnly);
         return this;
       }
       overrideDefault(key, val, localOnly = false) {
-        this.my_default_overrides[key] = val;
-        if (!localOnly) {
-          this.default_overrides[key] = val;
-        }
+        overrideDefault(this, key, val, localOnly);
         return this;
       }
       overrideClass(style) {
         this._override_class = style;
       }
       overrideClassDefault(style, key, val) {
-        if (!(style in this.class_default_overrides)) {
-          this.class_default_overrides[style] = {};
-        }
-        this.class_default_overrides[style][key] = val;
+        overrideClassDefault(this, style, key, val);
       }
       _doMobileDefault(key, val, obj) {
-        if (!isMobile()) {
-          return val;
-        }
-        const mobilekey = key + "_mobile";
-        if (obj && mobilekey in obj) {
-          return obj[mobilekey];
-        }
-        key = key.toLowerCase();
-        let ok = false;
-        for (const re of _mobile_theme_patterns) {
-          if (key.search(re) >= 0) {
-            ok = true;
-            break;
-          }
-        }
-        if (ok && theme.base.mobileSizeMultiplier) {
-          val = val * theme.base.mobileSizeMultiplier;
-        }
-        return val;
+        return _doMobileDefault(this, key, val, obj);
       }
       hasDefault(key) {
-        let p = this;
-        while (p) {
-          if (key in p.default_overrides) {
-            return true;
-          }
-          p = p.parentWidget;
-        }
-        return this.hasClassDefault(key);
+        return hasDefault(this, key);
       }
       hasSubDefault(key, subkey) {
-        return this._hasSubDefault(key, subkey, theme) || !!(this._themeOverride && this._hasSubDefault(key, subkey, this._themeOverride));
+        return hasSubDefault(this, key, subkey);
       }
       _hasSubDefault(key, subkey, _themeDef) {
-        const obj = this.getDefault(key);
-        if (!obj || typeof obj !== "object") {
-          return false;
-        }
-        return subkey in obj;
+        return _hasSubDefault(this, key, subkey, _themeDef);
       }
       hasClassSubDefault(key, subkey, inherit3 = true) {
-        return this._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(this._themeOverride && this._hasClassSubDefault(key, subkey, inherit3, void 0, this._themeOverride));
+        return hasClassSubDefault(this, key, subkey, inherit3);
       }
       _hasClassSubDefault(key, subkey, inherit3 = true, style = this.getStyleClass(), themeDef) {
-        if (!themeDef) return false;
-        const th = themeDef[style];
-        if (inherit3) {
-          if (this._hasClassSubDefault(key, subkey, false, style, themeDef)) {
-            return true;
-          }
-          let ret = false;
-          const def = this.constructor.define();
-          if (def.parentStyle) {
-            ret = ret || this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
-          }
-          ret = ret || this._hasClassSubDefault(key, subkey, false, "base", themeDef);
-          return ret;
-        }
-        if (!th) {
-          return false;
-        }
-        const obj = th[key];
-        if (!obj || typeof obj !== "object") {
-          return false;
-        }
-        return subkey in obj;
+        return _hasClassSubDefault(this, key, subkey, inherit3, style, themeDef);
       }
       /** get a sub style from a theme style class.
        *  note that if key is falsy then it just forwards to this.getDefault directly*/
       getSubDefault(key, subkey, backupkey = subkey, defaultval, inherit3 = true) {
-        if (subkey && subkey in this.my_default_overrides) {
-        }
-        if (!key) {
-          return this.getDefault(subkey, void 0, defaultval, inherit3);
-        }
-        const style = this.getDefault(key, void 0, void 0, inherit3);
-        if (!style || typeof style !== "object" || !(subkey in style)) {
-          if (defaultval !== void 0) {
-            return defaultval;
-          } else if (backupkey) {
-            return this.getDefault(backupkey, void 0, void 0, inherit3);
-          }
-        }
-        return style[subkey];
+        return getSubDefault(this, key, subkey, backupkey, defaultval, inherit3);
       }
       getDefault(key, checkForMobile, defaultval, inherit3) {
-        const ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit3);
-        if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
-          let s = ret.trim().toLowerCase();
-          s = s.slice(0, s.length - 2).trim();
-          const f2 = parseFloat(s);
-          if (!isNaN(f2) && isFinite(f2)) {
-            return f2;
-          }
-        }
-        return ret;
+        return getDefault2(this, key, checkForMobile, defaultval, inherit3);
       }
       getDefault_intern(key, checkForMobile = true, defaultval, inherit3 = true) {
-        if (this.my_default_overrides[key] !== void 0) {
-          const v = this.my_default_overrides[key];
-          return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
-        }
-        let p = this;
-        while (p) {
-          if (p.default_overrides[key] !== void 0) {
-            const v = p.default_overrides[key];
-            return checkForMobile ? this._doMobileDefault(key, v, p.default_overrides) : v;
-          }
-          p = p.parentWidget;
-        }
-        return this.getClassDefault(key, checkForMobile, defaultval, inherit3);
+        return getDefault_intern(this, key, checkForMobile, defaultval, inherit3);
       }
       getStyleClass(ignoreOverride = false) {
-        if (!ignoreOverride && this._override_class !== void 0) {
-          return this._override_class;
-        }
-        let p = this.constructor;
-        const lastp = void 0;
-        while (p && p !== lastp && p !== _UIBase && p !== Object) {
-          const def = p.define();
-          if (def?.style) {
-            return def.style;
-          }
-          if (!p.prototype || !Object.getPrototypeOf(p.prototype)) break;
-          p = Object.getPrototypeOf(p.prototype).constructor;
-        }
-        return "base";
-      }
-      /**
-       * returns theme record data (including class overrides) associated with
-       * styleClass.  If key is not undefined it will be used to only
-       * include overrides that contains that key
-       */
-      getStyleRecord(styleClass, key, inherit3 = true) {
-        let result;
-        const chunks = styleClass.split(".");
-        if (chunks.length === 0) {
-          return void 0;
-        }
-        const chunk1 = chunks[0];
-        function testKey(obj) {
-          if (key === void 0 || obj === void 0) {
-            return true;
-          }
-          for (let i = 1; i < chunks.length; i++) {
-            obj = obj[chunks[i]];
-            if (typeof obj !== "object") {
-              return false;
-            }
-          }
-          return key in obj;
-        }
-        let p = this;
-        while (p) {
-          const def1 = p.class_default_overrides[chunk1];
-          if (def1 && testKey(def1)) {
-            result = def1;
-          }
-          const def2 = p.class_default_overrides[styleClass];
-          if (def2 && (key === void 0 || key in def2)) {
-            result = def2;
-          }
-          if (def1 !== def2 && def1 !== void 0 && def2 !== void 0) {
-            console.warn(
-              'You defined a class override both as a "key1.key2" value and a nested object, e.g. "key1: {key2: {}}"',
-              'The former (e.g. the one with class key "key1.key2") will be used'
-            );
-            result = def2;
-            break;
-          } else if (def1 !== void 0) {
-            result = def1;
-            break;
-          } else if (def2 !== void 0) {
-            return def2;
-          }
-          if (!inherit3) {
-            break;
-          }
-          p = p.parentWidget;
-        }
-        if (result === void 0) {
-          const th = this._themeOverride;
-          if (th && typeof th[chunk1] === "object" && testKey(th[chunk1])) {
-            result = th[chunk1];
-          }
-          if (typeof theme[chunk1] === "object" && testKey(theme[chunk1])) {
-            result = theme[chunk1];
-          }
-        }
-        if (result !== void 0) {
-          for (let i = 1; i < chunks.length; i++) {
-            if (typeof result[chunks[i]] !== "object") {
-              console.warn("Invalid style class key", styleClass, "starting from base", result);
-              return void 0;
-            }
-            result = result[chunks[i]];
-          }
-        }
-        return result;
+        return getStyleClass(this, ignoreOverride);
       }
       hasClassDefault(key) {
-        const style = this.getStyleClass();
-        const record = this.getStyleRecord(style, key);
-        return record !== void 0 && key in record;
+        return hasClassDefault(this, key);
       }
       /**
        * Get a class default value for a given key
@@ -31481,52 +32067,10 @@ var init_ui_base = __esm({
        * @returns The default value for the given key
        */
       getClassDefault(key, checkForMobile = true, defaultval, inherit3 = true) {
-        const style = this.getStyleClass();
-        if (style === "none") {
-          return void 0;
-        }
-        let record = this.getStyleRecord(style, key, inherit3);
-        let value = record ? record[key] : void 0;
-        if (value === void 0 && defaultval !== void 0) {
-          return defaultval;
-        } else if (value === void 0 && inherit3) {
-          if (this._override_class !== void 0) {
-            const record2 = this.getStyleRecord(this.getStyleClass(true), key, inherit3);
-            value = record2 ? record2[key] : void 0;
-            if (value !== void 0) {
-              record = record2;
-            }
-          }
-          const def = this.constructor.define();
-          if (value === void 0 && def.parentStyle) {
-            const record2 = this.getStyleRecord(def.parentStyle, key, inherit3);
-            value = record2 ? record2[key] : void 0;
-            if (value !== void 0) {
-              record = record2;
-            }
-          }
-        }
-        if (value === void 0) {
-          for (let i = 0; i < 2; i++) {
-            const th = i ? this._themeOverride : theme;
-            if (typeof th?.base === "object" && key in th.base) {
-              value = th.base[key];
-              record = th.base;
-              break;
-            }
-          }
-        }
-        return checkForMobile ? this._doMobileDefault(key, value, record) : value;
+        return getClassDefault(this, key, checkForMobile, defaultval, inherit3);
       }
       overrideTheme(themeOverride) {
-        this._themeOverride = themeOverride;
-        this._forEachChildWidget((child) => {
-          child.overrideTheme(themeOverride);
-        });
-        if (this.ctx) {
-          this.flushSetCSS();
-          this.flushUpdate();
-        }
+        overrideTheme(this, themeOverride);
         return this;
       }
       getStyle() {
@@ -31541,115 +32085,14 @@ var init_ui_base = __esm({
        * */
       /** @deprecated Use DOM animation API*/
       animateOld(_extra_handlers = {}, domAnimateOptions) {
-        const transform = new DOMMatrix(this.saneStyle["transform"]);
-        const update_trans = () => {
-          const t2 = transform;
-          const css = "matrix(" + t2.a + "," + t2.b + "," + t2.c + "," + t2.d + "," + t2.e + "," + t2.f + ")";
-          this.saneStyle["transform"] = css;
-        };
-        let handlers = {
-          background_get() {
-            return css2color2(this.background);
-          },
-          background_set(c) {
-            if (typeof c !== "string") {
-              c = color2css3(c);
-            }
-            this.background = c;
-          },
-          dx_get() {
-            return transform.m41;
-          },
-          dx_set(x) {
-            transform.m41 = x;
-            update_trans();
-          },
-          dy_get() {
-            return transform.m42;
-          },
-          dy_set(x) {
-            transform.m42 = x;
-            update_trans();
-          }
-        };
-        const pixkeys = [
-          "width",
-          "height",
-          "left",
-          "top",
-          "right",
-          "bottom",
-          "border-radius",
-          "border-width",
-          "margin",
-          "padding",
-          "margin-left",
-          "margin-right",
-          "margin-top",
-          "margin-bottom",
-          "padding-left",
-          "padding-right",
-          "padding-bottom",
-          "padding-top"
-        ];
-        handlers = Object.assign(handlers, _extra_handlers);
-        const makePixHandler = (k, k2) => {
-          handlers[k2 + "_get"] = () => {
-            const s = this.saneStyle[k];
-            if (s.endsWith("px")) {
-              return parsepx2(s);
-            } else {
-              return 0;
-            }
-          };
-          handlers[k2 + "_set"] = (val) => {
-            this.saneStyle[k] = val + "px";
-          };
-        };
-        for (const k of pixkeys) {
-          if (!(k in handlers)) {
-            makePixHandler(k, `style.${k}`);
-            makePixHandler(k, `style["${k}"]`);
-            makePixHandler(k, `style['${k}']`);
-          }
-        }
-        const handler = {
-          get: (target, key, receiver) => {
-            console.log(key, handlers[key + "_get"], handlers);
-            if (key + "_get" in handlers) {
-              return handlers[key + "_get"].call(target);
-            } else {
-              return target[key];
-            }
-          },
-          set: (target, key, val, receiver) => {
-            console.log(key);
-            if (key + "_set" in handlers) {
-              handlers[key + "_set"].call(target, val);
-            } else {
-              target[key] = val;
-            }
-            return true;
-          }
-        };
-        const proxy = new Proxy(this, handler);
-        const anim = new Animator(proxy);
-        anim.onend = () => {
-          this._active_animations.remove(anim);
-        };
-        this._active_animations.push(anim);
-        return anim;
+        return animateOld(this, _extra_handlers, domAnimateOptions);
       }
       abortAnimations() {
-        for (const anim of list2(this._active_animations)) {
-          anim.end();
-        }
-        this._active_animations = [];
+        abortAnimations(this);
       }
     };
-    PTOT = 2;
-    UIBase2.PositionKey = "fixed";
-    _setUIBase(UIBase2);
+    UIBase.PositionKey = "fixed";
+    _setUIBase(UIBase);
   }
 });
 
@@ -31685,7 +32128,7 @@ var init_ui_button = __esm({
     init_ui_base();
     init_theme_schema();
     const_default.DEBUG.buttonEvents = true;
-    ButtonEventBase = class extends UIBase2 {
+    ButtonEventBase = class extends UIBase {
       _auto_depress;
       _highlight;
       #_pressed = false;
@@ -31953,7 +32396,7 @@ var init_ui_button = __esm({
         }
       }
     };
-    UIBase2.register(Button);
+    UIBase.register(Button);
     OldButton = class extends ButtonEventBase {
       _last_but_update_key;
       _name;
@@ -32049,7 +32492,7 @@ var init_ui_button = __esm({
         }
       }
       updateDefaultSize() {
-        const dpi = UIBase2.getDPI();
+        const dpi = UIBase.getDPI();
         let height = ~~this.getDefault("height") + this.getDefault("padding");
         const size = this.getDefault("DefaultText").size * 1.33;
         if (height === void 0 || size === void 0 || isNaN(height) || isNaN(size)) {
@@ -32141,8 +32584,8 @@ var init_ui_button = __esm({
       }
       _repos_canvas() {
         const dpi = this.getDPI();
-        let w = parsepx2(this.dom.style.width);
-        let h = parsepx2(this.dom.style.height);
+        let w = parsepx(this.dom.style.width);
+        let h = parsepx(this.dom.style.height);
         const w2 = ~~(w * dpi);
         const h2 = ~~(h * dpi);
         w = w2 / dpi;
@@ -32238,7 +32681,7 @@ var init_ui_button = __esm({
         });
       }
     };
-    UIBase2.internalRegister(OldButton);
+    UIBase.internalRegister(OldButton);
   }
 });
 
@@ -32754,7 +33197,7 @@ var init_dropbox = __esm({
         if (const_default.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
           const con = screen.popup(this, 500, 400, false, 0);
           con.style["zIndex"] = `${ZIndexes.measuringHidden}`;
-          con.style["position"] = UIBase2.PositionKey;
+          con.style["position"] = UIBase.PositionKey;
           document.body.appendChild(con);
           con.style["visibility"] = "hidden";
           con.add(menu);
@@ -32887,7 +33330,7 @@ var init_dropbox = __esm({
         this._redraw();
       }
     };
-    UIBase2.internalRegister(DropBox);
+    UIBase.internalRegister(DropBox);
   }
 });
 
@@ -33220,7 +33663,7 @@ function invokeMenuCallback(cb, id) {
   }
 }
 function newMenu(title, ctx) {
-  const menu = UIBase2.createElement("menu-x");
+  const menu = UIBase.createElement("menu-x");
   if (ctx !== void 0) {
     menu.ctx = ctx;
   }
@@ -33236,7 +33679,7 @@ var init_menu = __esm({
     init_constants();
     init_menu_types();
     init_wrangler();
-    Menu = class _Menu extends UIBase2 {
+    Menu = class _Menu extends UIBase {
       static SEP;
       /** The src button that created this menu, used to switch menus when hovering over other buttons. */
       srcWidget;
@@ -33313,7 +33756,7 @@ var init_menu = __esm({
         };
       }
       /** The `zindex` argument is accepted for signature compatibility and ignored; menus always float at `ZIndexes.menu`. */
-      float(x = 0, y = 0, zindex, positionKey = UIBase2.PositionKey) {
+      float(x = 0, y = 0, zindex, positionKey = UIBase.PositionKey) {
         const rects = this.dom.getClientRects();
         const maxx = this.getWinWidth() - 10;
         const maxy = this.getWinHeight() - 10;
@@ -33440,7 +33883,7 @@ var init_menu = __esm({
         const dom2 = document.createElement("div");
         this.dom.setAttribute("class", "menu");
         dom2.setAttribute("class", "menu");
-        const sbox = this.textbox = UIBase2.createElement("textbox-x");
+        const sbox = this.textbox = UIBase.createElement("textbox-x");
         this.textbox.parentWidget = this;
         dom2.appendChild(sbox);
         dom2.appendChild(this.dom);
@@ -33543,7 +33986,7 @@ var init_menu = __esm({
         if (hotkey) {
           dom.hotkey = hotkey;
           g.font = getFont(this, void 0, "HotkeyText");
-          hwid = Math.ceil(g.measureText(hotkey).width / UIBase2.getDPI());
+          hwid = Math.ceil(g.measureText(hotkey).width / UIBase.getDPI());
           twid += hwid + 8;
         }
         span.innerText = text2;
@@ -33804,7 +34247,7 @@ var init_menu = __esm({
       }
     };
     Menu.SEP = SEP;
-    UIBase2.internalRegister(Menu);
+    UIBase.internalRegister(Menu);
   }
 });
 
@@ -35696,8 +36139,8 @@ var require_tinymce = __commonJS({
       var contains$1 = function(str, substr) {
         return str.indexOf(substr) !== -1;
       };
-      var startsWith = function(str, prefix) {
-        return checkRange(str, prefix, 0);
+      var startsWith = function(str, prefix2) {
+        return checkRange(str, prefix2, 0);
       };
       var blank = function(r2) {
         return function(s) {
@@ -36016,10 +36459,10 @@ var require_tinymce = __commonJS({
       var empty = function(element) {
         element.dom().textContent = "";
         each(children(element), function(rogue) {
-          remove(rogue);
+          remove2(rogue);
         });
       };
-      var remove = function(element) {
+      var remove2 = function(element) {
         var dom2 = element.dom();
         if (dom2.parentNode !== null) {
           dom2.parentNode.removeChild(dom2);
@@ -36030,7 +36473,7 @@ var require_tinymce = __commonJS({
         if (children$1.length > 0) {
           before$1(wrapper, children$1);
         }
-        remove(wrapper);
+        remove2(wrapper);
       };
       var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
       var name2 = function(element) {
@@ -38488,7 +38931,7 @@ var require_tinymce = __commonJS({
           return new RegExp("^" + str.replace(/([?+*])/g, ".$1") + "$");
         };
         var addValidElements = function(validElements) {
-          var ei, el, ai, al, matches2, element, attr, attrData, elementName, attrName, attrType, attributes2, attributesOrder, prefix, outputName, globalAttributes, globalAttributesOrder, value2;
+          var ei, el, ai, al, matches2, element, attr, attrData, elementName, attrName, attrType, attributes2, attributesOrder, prefix2, outputName, globalAttributes, globalAttributesOrder, value2;
           var elementRuleRegExp = /^([#+\-])?([^\[!\/]+)(?:\/([^\[!]+))?(?:(!?)\[([^\]]+)\])?$/, attrRuleRegExp = /^([!\-])?(\w+[\\:]:\w+|[^=:<]+)?(?:([=:<])(.*))?$/, hasPatternsRegExp = /[*?+]/;
           if (validElements) {
             validElements = split(validElements, ",");
@@ -38499,7 +38942,7 @@ var require_tinymce = __commonJS({
             for (ei = 0, el = validElements.length; ei < el; ei++) {
               matches2 = elementRuleRegExp.exec(validElements[ei]);
               if (matches2) {
-                prefix = matches2[1];
+                prefix2 = matches2[1];
                 elementName = matches2[2];
                 outputName = matches2[3];
                 attrData = matches2[5];
@@ -38509,10 +38952,10 @@ var require_tinymce = __commonJS({
                   attributes: attributes2,
                   attributesOrder
                 };
-                if (prefix === "#") {
+                if (prefix2 === "#") {
                   element.paddEmpty = true;
                 }
-                if (prefix === "-") {
+                if (prefix2 === "-") {
                   element.removeEmpty = true;
                 }
                 if (matches2[4] === "!") {
@@ -38532,7 +38975,7 @@ var require_tinymce = __commonJS({
                       attr = {};
                       attrType = matches2[1];
                       attrName = matches2[2].replace(/[\\:]:/g, ":");
-                      prefix = matches2[3];
+                      prefix2 = matches2[3];
                       value2 = matches2[4];
                       if (attrType === "!") {
                         element.attributesRequired = element.attributesRequired || [];
@@ -38544,8 +38987,8 @@ var require_tinymce = __commonJS({
                         attributesOrder.splice(inArray(attributesOrder, attrName), 1);
                         continue;
                       }
-                      if (prefix) {
-                        if (prefix === "=") {
+                      if (prefix2) {
+                        if (prefix2 === "=") {
                           element.attributesDefault = element.attributesDefault || [];
                           element.attributesDefault.push({
                             name: attrName,
@@ -38553,7 +38996,7 @@ var require_tinymce = __commonJS({
                           });
                           attr.defaultValue = value2;
                         }
-                        if (prefix === ":") {
+                        if (prefix2 === ":") {
                           element.attributesForced = element.attributesForced || [];
                           element.attributesForced.push({
                             name: attrName,
@@ -38561,7 +39004,7 @@ var require_tinymce = __commonJS({
                           });
                           attr.forcedValue = value2;
                         }
-                        if (prefix === "<") {
+                        if (prefix2 === "<") {
                           attr.validValues = makeMap$2(value2, "?");
                         }
                       }
@@ -38638,17 +39081,17 @@ var require_tinymce = __commonJS({
           if (validChildren) {
             each$3(split(validChildren, ","), function(rule) {
               var matches2 = childRuleRegExp.exec(rule);
-              var parent2, prefix;
+              var parent2, prefix2;
               if (matches2) {
-                prefix = matches2[1];
-                if (prefix) {
+                prefix2 = matches2[1];
+                if (prefix2) {
                   parent2 = children2[matches2[2]];
                 } else {
                   parent2 = children2[matches2[2]] = { "#comment": {} };
                 }
                 parent2 = children2[matches2[2]];
                 each$3(split(matches2[3], "|"), function(child2) {
-                  if (prefix === "-") {
+                  if (prefix2 === "-") {
                     delete parent2[child2];
                   } else {
                     parent2[child2] = {};
@@ -38871,21 +39314,21 @@ var require_tinymce = __commonJS({
             var matches2, name3, value2, isEncoded;
             var urlConverter = settings.url_converter;
             var urlConverterScope = settings.url_converter_scope || this;
-            var compress2 = function(prefix, suffix, noJoin) {
+            var compress2 = function(prefix2, suffix, noJoin) {
               var top, right, bottom, left;
-              top = styles[prefix + "-top" + suffix];
+              top = styles[prefix2 + "-top" + suffix];
               if (!top) {
                 return;
               }
-              right = styles[prefix + "-right" + suffix];
+              right = styles[prefix2 + "-right" + suffix];
               if (!right) {
                 return;
               }
-              bottom = styles[prefix + "-bottom" + suffix];
+              bottom = styles[prefix2 + "-bottom" + suffix];
               if (!bottom) {
                 return;
               }
-              left = styles[prefix + "-left" + suffix];
+              left = styles[prefix2 + "-left" + suffix];
               if (!left) {
                 return;
               }
@@ -38904,11 +39347,11 @@ var require_tinymce = __commonJS({
               if (i > -1 && noJoin) {
                 return;
               }
-              styles[prefix + suffix] = i === -1 ? box[0] : box.join(" ");
-              delete styles[prefix + "-top" + suffix];
-              delete styles[prefix + "-right" + suffix];
-              delete styles[prefix + "-bottom" + suffix];
-              delete styles[prefix + "-left" + suffix];
+              styles[prefix2 + suffix] = i === -1 ? box[0] : box.join(" ");
+              delete styles[prefix2 + "-top" + suffix];
+              delete styles[prefix2 + "-right" + suffix];
+              delete styles[prefix2 + "-bottom" + suffix];
+              delete styles[prefix2 + "-left" + suffix];
             };
             var canCompress = function(key) {
               var value3 = styles[key], i2;
@@ -41726,7 +42169,7 @@ var require_tinymce = __commonJS({
           frag.removeChild(container);
           return frag;
         };
-        var remove2 = function(node, keepChildren) {
+        var remove3 = function(node, keepChildren) {
           var $node = $$(node);
           if (keepChildren) {
             $node.each(function() {
@@ -41835,8 +42278,8 @@ var require_tinymce = __commonJS({
         var isHidden = function(elm) {
           return $$(elm).css("display") === "none";
         };
-        var uniqueId2 = function(prefix) {
-          return (!prefix ? "mce_" : prefix) + counter++;
+        var uniqueId2 = function(prefix2) {
+          return (!prefix2 ? "mce_" : prefix2) + counter++;
         };
         var getOuterHTML = function(elm) {
           var node = typeof elm === "string" ? get2(elm) : elm;
@@ -41851,7 +42294,7 @@ var require_tinymce = __commonJS({
               }
             } catch (ex) {
             }
-            remove2(DomQuery(this).html(html), true);
+            remove3(DomQuery(this).html(html), true);
           });
         };
         var insertAfter2 = function(node, reference) {
@@ -41987,7 +42430,7 @@ var require_tinymce = __commonJS({
               pa.insertBefore(splitElm, parentElm);
             }
             pa.insertBefore(trimNode(self2, aft), parentElm);
-            remove2(parentElm);
+            remove3(parentElm);
             return replacementElm || splitElm;
           }
         };
@@ -42112,7 +42555,7 @@ var require_tinymce = __commonJS({
           create: create2,
           createHTML,
           createFragment: createFragment2,
-          remove: remove2,
+          remove: remove3,
           setStyle,
           getStyle: getStyle2,
           setStyles,
@@ -42470,7 +42913,7 @@ var require_tinymce = __commonJS({
           runListeners(id, "added");
           return addOnConstructor;
         };
-        var remove2 = function(name3) {
+        var remove3 = function(name3) {
           delete urls[name3];
           delete lookup[name3];
         };
@@ -42552,7 +42995,7 @@ var require_tinymce = __commonJS({
           dependencies,
           requireLangPack,
           add: add2,
-          remove: remove2,
+          remove: remove3,
           createUrl,
           addComponents,
           load,
@@ -42893,12 +43336,12 @@ var require_tinymce = __commonJS({
         };
       };
       var unique = 0;
-      var generate = function(prefix) {
+      var generate = function(prefix2) {
         var date = /* @__PURE__ */ new Date();
         var time = date.getTime();
         var random2 = Math.floor(Math.random() * 1e9);
         unique++;
-        return prefix + "_" + random2 + unique + String(time);
+        return prefix2 + "_" + random2 + unique + String(time);
       };
       var add$4 = function(element, classes) {
         each(classes, function(x) {
@@ -43792,9 +44235,9 @@ var require_tinymce = __commonJS({
       };
       var moveEndPoint = function(rng, start2) {
         var container, offset, childNodes;
-        var prefix = start2 ? "start" : "end";
-        container = rng[prefix + "Container"];
-        offset = rng[prefix + "Offset"];
+        var prefix2 = start2 ? "start" : "end";
+        container = rng[prefix2 + "Container"];
+        offset = rng[prefix2 + "Offset"];
         if (isElement$1(container) && container.nodeName === "TR") {
           childNodes = container.childNodes;
           container = childNodes[Math.min(start2 ? offset : offset - 1, childNodes.length - 1)];
@@ -46199,13 +46642,13 @@ var require_tinymce = __commonJS({
         var dataImageUri = /data:[^;]+;base64,([a-z0-9\+\/=]+)/gi;
         var chunks = [];
         var uris = {};
-        var prefix = generate("img");
+        var prefix2 = generate("img");
         var matches2;
         var index = 0;
         var count3 = 0;
         while (matches2 = dataImageUri.exec(html)) {
           var uri = matches2[0];
-          var imageId = prefix + "_" + count3++;
+          var imageId = prefix2 + "_" + count3++;
           uris[imageId] = uri;
           if (index < matches2.index) {
             chunks.push(html.substr(index, matches2.index - index));
@@ -46215,7 +46658,7 @@ var require_tinymce = __commonJS({
         }
         if (index === 0) {
           return {
-            prefix,
+            prefix: prefix2,
             uris,
             html
           };
@@ -46224,7 +46667,7 @@ var require_tinymce = __commonJS({
             chunks.push(html.substr(index));
           }
           return {
-            prefix,
+            prefix: prefix2,
             uris,
             html: chunks.join("")
           };
@@ -46859,7 +47302,7 @@ var require_tinymce = __commonJS({
         var allBrs = descendants$1(elm, "br");
         var brs = filter(getLastChildren$1(elm).slice(-1), isBr$1);
         if (allBrs.length === brs.length) {
-          each(brs, remove);
+          each(brs, remove2);
         }
       };
       var fillWithPaddingBr = function(elm) {
@@ -46870,7 +47313,7 @@ var require_tinymce = __commonJS({
         lastChild(elm).each(function(lastChild2) {
           prevSibling(lastChild2).each(function(lastChildPrevSibling) {
             if (isBlock(elm) && isBr$1(lastChild2) && isBlock(lastChildPrevSibling)) {
-              remove(lastChild2);
+              remove2(lastChild2);
             }
           });
         });
@@ -46941,7 +47384,7 @@ var require_tinymce = __commonJS({
       var mergeTextNodes = function(prevNode, nextNode, normalizeWhitespace) {
         var whitespaceOffset = rTrim(prevNode.data).length;
         prevNode.appendData(nextNode.data);
-        remove(Element2.fromDom(nextNode));
+        remove2(Element2.fromDom(nextNode));
         if (normalizeWhitespace) {
           normalizeWhitespaceAfter(prevNode, whitespaceOffset);
         }
@@ -47034,7 +47477,7 @@ var require_tinymce = __commonJS({
       var deleteNormalized = function(elm, afterDeletePosOpt, normalizeWhitespace) {
         var prevTextOpt = prevSibling(elm).filter(isText);
         var nextTextOpt = nextSibling(elm).filter(isText);
-        remove(elm);
+        remove2(elm);
         return lift3(prevTextOpt, nextTextOpt, afterDeletePosOpt, function(prev, next, pos) {
           var prevNode = prev.dom(), nextNode = next.dom();
           var offset = prevNode.data.length;
@@ -47305,7 +47748,7 @@ var require_tinymce = __commonJS({
           var additionalCleanupNodes = parent(lastBlock).is(cell) ? [] : siblings(lastBlock);
           each(additionalCleanupNodes.concat(children(cell)), function(node) {
             if (!eq$2(node, lastBlock) && !contains$2(node, lastBlock)) {
-              remove(node);
+              remove2(node);
             }
           });
         }
@@ -48261,13 +48704,13 @@ var require_tinymce = __commonJS({
         }
         skipFocus ? activateEditor(editor2) : focusEditor(editor2);
       };
-      var traverse = function(node, fn) {
+      var traverse2 = function(node, fn) {
         fn(node);
         if (node.firstChild) {
-          traverse(node.firstChild, fn);
+          traverse2(node.firstChild, fn);
         }
         if (node.next) {
-          traverse(node.next, fn);
+          traverse2(node.next, fn);
         }
       };
       var findMatchingNodes = function(nodeFilters, attributeFilters, node) {
@@ -48275,7 +48718,7 @@ var require_tinymce = __commonJS({
         var attrMatches = {};
         var matches2 = [];
         if (node.firstChild) {
-          traverse(node.firstChild, function(node2) {
+          traverse2(node.firstChild, function(node2) {
             each(nodeFilters, function(filter2) {
               if (filter2.name === node2.name) {
                 if (nodeMatches[filter2.name]) {
@@ -48819,7 +49262,7 @@ var require_tinymce = __commonJS({
         var caretContainer = createCaretContainer(false);
         var innerMost = insertFormatNodesIntoCaretContainer(formatNodes, caretContainer.dom());
         before(Element2.fromDom(targetNode), caretContainer);
-        remove(Element2.fromDom(targetNode));
+        remove2(Element2.fromDom(targetNode));
         return CaretPosition$1(innerMost, 0);
       };
       var isFormatElement = function(editor2, element) {
@@ -51351,7 +51794,7 @@ var require_tinymce = __commonJS({
         var span = Element2.fromHtml('<span data-mce-bogus="all">' + ZWSP + "</span>");
         before(startPoint.element, span);
         return markerInfo(span, function() {
-          return remove(span);
+          return remove2(span);
         });
       };
       var elementMarker = function(element) {
@@ -51832,7 +52275,7 @@ var require_tinymce = __commonJS({
       };
       var removeEmpty = function(text2) {
         if (text2.dom().length === 0) {
-          remove(text2);
+          remove2(text2);
           return Option.none();
         }
         return Option.some(text2);
@@ -51846,13 +52289,13 @@ var require_tinymce = __commonJS({
         var nextText = lastChild2.bind(nextSibling).filter(isText).bind(removeEmpty);
         lift2(prevText, firstChild2.filter(isText), function(prev, start2) {
           prependData(start2.dom(), prev.dom().data);
-          remove(prev);
+          remove2(prev);
         });
         lift2(nextText, lastChild2.filter(isText), function(next, end2) {
           var oldLength = end2.dom().length;
           end2.dom().appendData(next.dom().data);
           rng.setEnd(end2.dom(), oldLength);
-          remove(next);
+          remove2(next);
         });
         rng.collapse(false);
       };
@@ -52795,8 +53238,8 @@ var require_tinymce = __commonJS({
         });
       };
       var count2 = 0;
-      var uniqueId = function(prefix) {
-        return (prefix || "blobid") + count2++;
+      var uniqueId = function(prefix2) {
+        return (prefix2 || "blobid") + count2++;
       };
       var imageToBlobInfo = function(blobCache, img, resolve2, reject) {
         var base64, blobInfo;
@@ -54048,8 +54491,8 @@ var require_tinymce = __commonJS({
         var now = (/* @__PURE__ */ new Date()).getTime();
         return "s" + now.toString(36) + rnd() + rnd() + rnd();
       };
-      var uuid = function(prefix) {
-        return prefix + count$1++ + seed2();
+      var uuid = function(prefix2) {
+        return prefix2 + count$1++ + seed2();
       };
       var BlobCache = function() {
         var cache = [];
@@ -54765,7 +55208,7 @@ var require_tinymce = __commonJS({
           }
           dom.setAttribs(elm2, item2.attrs);
         };
-        var createElement = function(sItem) {
+        var createElement2 = function(sItem) {
           var elm2;
           item = typeof sItem === "string" ? {
             name: sItem,
@@ -54805,7 +55248,7 @@ var require_tinymce = __commonJS({
             return elm2;
           }
           if (parentCandidate) {
-            parent2 = createElement(parentCandidate);
+            parent2 = createElement2(parentCandidate);
             parent2.appendChild(elm2);
           }
           if (siblings2) {
@@ -54814,7 +55257,7 @@ var require_tinymce = __commonJS({
               parent2.appendChild(elm2);
             }
             Tools.each(siblings2, function(sibling2) {
-              var siblingElm = createElement(sibling2);
+              var siblingElm = createElement2(sibling2);
               parent2.insertBefore(siblingElm, elm2);
             });
           }
@@ -54822,7 +55265,7 @@ var require_tinymce = __commonJS({
         };
         if (ancestry && ancestry.length) {
           item = ancestry[0];
-          elm = createElement(item);
+          elm = createElement2(item);
           fragment = dom.create("div");
           fragment.appendChild(wrapInHtml(elm, ancestry.slice(1), item.siblings));
           return fragment;
@@ -56843,14 +57286,14 @@ var require_tinymce = __commonJS({
       };
       var extractChildren = function(block) {
         var children2 = getChildrenUntilBlockBoundary(block);
-        each(children2, remove);
+        each(children2, remove2);
         return children2;
       };
       var removeEmptyRoot = function(rootNode, block) {
         var parents2 = parentsAndSelf(block, rootNode);
         return find(parents2.reverse(), function(element) {
           return isEmpty$1(element);
-        }).each(remove);
+        }).each(remove2);
       };
       var isEmptyBefore = function(el) {
         return filter(prevSiblings(el), function(el2) {
@@ -56874,7 +57317,7 @@ var require_tinymce = __commonJS({
       };
       var sidelongBlockMerge = function(rootNode, fromBlock, toBlock) {
         if (isEmpty$1(toBlock)) {
-          remove(toBlock);
+          remove2(toBlock);
           if (isEmpty$1(fromBlock)) {
             fillWithPaddingBr(fromBlock);
           }
@@ -56897,7 +57340,7 @@ var require_tinymce = __commonJS({
       var trimBr = function(first3, block) {
         positionIn(first3, block.dom()).map(function(position) {
           return position.getNode();
-        }).map(Element2.fromDom).filter(isBr$1).each(remove);
+        }).map(Element2.fromDom).filter(isBr$1).each(remove2);
       };
       var mergeBlockInto = function(rootNode, fromBlock, toBlock) {
         trimBr(true, fromBlock);
@@ -57109,7 +57552,7 @@ var require_tinymce = __commonJS({
         });
       };
       var deleteOffscreenSelection = function(rootElement) {
-        each(descendants$1(rootElement, ".mce-offscreen-selection"), remove);
+        each(descendants$1(rootElement, ".mce-offscreen-selection"), remove2);
       };
       var backspaceDeleteRange = function(editor2, forward) {
         var selectedNode = editor2.selection.getNode();
@@ -59375,10 +59818,10 @@ var require_tinymce = __commonJS({
         var removeContentEditableSelection = function() {
           if (selectedContentEditableNode) {
             selectedContentEditableNode.removeAttribute("data-mce-selected");
-            descendant(Element2.fromDom(editor2.getBody()), "#" + realSelectionId).each(remove);
+            descendant(Element2.fromDom(editor2.getBody()), "#" + realSelectionId).each(remove2);
             selectedContentEditableNode = null;
           }
-          descendant(Element2.fromDom(editor2.getBody()), "#" + realSelectionId).each(remove);
+          descendant(Element2.fromDom(editor2.getBody()), "#" + realSelectionId).each(remove2);
           selectedContentEditableNode = null;
         };
         var destroy2 = function() {
@@ -63591,7 +64034,7 @@ init_toolprop();
 init_ui_base();
 init_ui_base();
 var keymap2 = keymap;
-var TextBoxBase = class extends UIBase2 {
+var TextBoxBase = class extends UIBase {
   static define() {
     return {
       tagname: "text-box-base",
@@ -63964,14 +64407,14 @@ var TextBox2 = class extends TextBoxBase {
     }
   }
 };
-UIBase2.internalRegister(TextBox2);
+UIBase.internalRegister(TextBox2);
 function checkForTextBox(screen, x, y) {
   let p = screen.pickElement(x, y);
   while (p) {
     if (p.draggable) {
       return true;
     }
-    if (p instanceof UIBase2) {
+    if (p instanceof UIBase) {
       for (let i = 0; i < 2; i++) {
         const nodes = i ? p.childNodes : p.shadow.childNodes;
         for (const child of nodes) {
@@ -64003,7 +64446,7 @@ init_simple_events();
 init_ui_button();
 var keymap3 = keymap;
 var PropTypes2 = PropTypes;
-var UIBase3 = UIBase2;
+var UIBase3 = UIBase;
 var PackFlags2 = PackFlags;
 var IconLabel = class extends UIBase3 {
   _icon;
@@ -64796,7 +65239,7 @@ init_controller_base();
 function styl(el) {
   return el.style;
 }
-var Label = class extends UIBase2 {
+var Label = class extends UIBase {
   _label = "";
   _lastText = "";
   _font = void 0;
@@ -64913,8 +65356,8 @@ var Label = class extends UIBase2 {
     this._updatePathWatchers();
   }
 };
-UIBase2.internalRegister(Label);
-var Container3 = class _Container extends UIBase2 {
+UIBase.internalRegister(Label);
+var Container3 = class _Container extends UIBase {
   // these use accessors so child classes can override them with getters/setters
   #dataPrefix = "";
   get dataPrefix() {
@@ -64981,23 +65424,23 @@ var Container3 = class _Container extends UIBase2 {
   }
   /** recursively change path prefix for all children*/
   changePathPrefix(newprefix) {
-    let prefix = this.dataPrefix.trim();
+    let prefix2 = this.dataPrefix.trim();
     this.dataPrefix = newprefix;
-    if (prefix.length > 0) {
-      prefix += ".";
+    if (prefix2.length > 0) {
+      prefix2 += ".";
     }
     const rec = (n, con) => {
       if (n instanceof _Container && n !== this) {
-        if (n.dataPrefix.startsWith(prefix)) {
-          n.dataPrefix = n.dataPrefix.slice(prefix.length, n.dataPrefix.length);
+        if (n.dataPrefix.startsWith(prefix2)) {
+          n.dataPrefix = n.dataPrefix.slice(prefix2.length, n.dataPrefix.length);
           n.dataPrefix = con._joinPrefix(n.dataPrefix);
           con = n;
         }
       }
-      if (n instanceof UIBase2 && n.hasAttribute("datapath")) {
+      if (n instanceof UIBase && n.hasAttribute("datapath")) {
         let path = n.getAttribute("datapath");
-        if (path.startsWith(prefix)) {
-          path = path.slice(prefix.length, path.length);
+        if (path.startsWith(prefix2)) {
+          path = path.slice(prefix2.length, path.length);
           path = con._joinPrefix(path);
           n.setAttribute("datapath", path);
           n.description = n.description;
@@ -65281,7 +65724,7 @@ var Container3 = class _Container extends UIBase2 {
     super.update();
   }
   appendChild(child) {
-    if (child instanceof UIBase2) {
+    if (child instanceof UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
       this.shadow.appendChild(child);
@@ -65294,13 +65737,13 @@ var Container3 = class _Container extends UIBase2 {
   }
   clear(trigger_on_destroy = true) {
     for (const child of this.childWidgets) {
-      if (child instanceof UIBase2) {
+      if (child instanceof UIBase) {
         child.remove(trigger_on_destroy);
       }
     }
   }
   prepend(child) {
-    if (child instanceof UIBase2) {
+    if (child instanceof UIBase) {
       this._prepend(child);
     } else {
       super.prepend(child);
@@ -65362,7 +65805,7 @@ var Container3 = class _Container extends UIBase2 {
   
      **/
   menu(title, list5, packflag = 0) {
-    const dbox = UIBase2.createElement("dropbox-x");
+    const dbox = UIBase.createElement("dropbox-x");
     dbox._name = title;
     dbox.setAttribute("simple", "true");
     dbox.setAttribute("name", title);
@@ -65491,7 +65934,7 @@ var Container3 = class _Container extends UIBase2 {
       path = this._joinPrefix(inpath);
     }
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase2.createElement("textbox-x");
+    const ret = UIBase.createElement("textbox-x");
     if (path !== void 0) {
       ret.setAttribute("datapath", path);
     }
@@ -65514,7 +65957,7 @@ var Container3 = class _Container extends UIBase2 {
     if (inpath) {
       path = this._joinPrefix(inpath);
     }
-    const ret = UIBase2.createElement("label-x");
+    const ret = UIBase.createElement("label-x");
     if (label === void 0 && inpath) {
       const rdef = this.ctx.api.resolvePath(this.ctx, path);
       if (rdef) {
@@ -65534,7 +65977,7 @@ var Container3 = class _Container extends UIBase2 {
     return ret;
   }
   label(text2) {
-    const ret = UIBase2.createElement("label-x");
+    const ret = UIBase.createElement("label-x");
     ret.text = text2;
     this._add(ret);
     return ret;
@@ -65561,7 +66004,7 @@ var Container3 = class _Container extends UIBase2 {
   }
   iconbutton(icon, description, cb, thisvar, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase2.createElement("iconbutton-x");
+    const ret = UIBase.createElement("iconbutton-x");
     ret.packflag |= packflag;
     ret.setAttribute("icon", "" + icon);
     ret.description = description;
@@ -65573,7 +66016,7 @@ var Container3 = class _Container extends UIBase2 {
   }
   button(label, cb, thisvar, id, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase2.createElement("button-x");
+    const ret = UIBase.createElement("button-x");
     ret.packflag |= packflag;
     ret.setAttribute("name", label);
     ret.setAttribute("buttonid", "" + id);
@@ -65581,7 +66024,7 @@ var Container3 = class _Container extends UIBase2 {
     this._add(ret);
     return ret;
   }
-  _joinPrefix(path, prefix = this.dataPrefix.trim()) {
+  _joinPrefix(path, prefix2 = this.dataPrefix.trim()) {
     if (path === void 0) {
       return void 0;
     }
@@ -65589,15 +66032,15 @@ var Container3 = class _Container extends UIBase2 {
     if (path[0] === "/") {
       return path;
     }
-    if (prefix.length > 0 && path.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
+    if (prefix2.length > 0 && path.length > 0 && !prefix2.endsWith(".") && !path.startsWith(".")) {
       path = "." + path;
     }
-    return prefix + path;
+    return prefix2 + path;
   }
   colorbutton(inpath, packflag, mass_set_path) {
     packflag = (packflag ?? 0) | this.inherit_packflag & ~PackFlags.NO_UPDATE;
     mass_set_path = inpath !== void 0 ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
-    const ret = UIBase2.createElement("color-picker-button-x");
+    const ret = UIBase.createElement("color-picker-button-x");
     if (inpath !== void 0) {
       inpath = this._joinPrefix(inpath);
       ret.setAttribute("datapath", inpath);
@@ -65610,7 +66053,7 @@ var Container3 = class _Container extends UIBase2 {
     return ret;
   }
   noteframe(packflag = 0) {
-    const ret = UIBase2.createElement("noteframe-x");
+    const ret = UIBase.createElement("noteframe-x");
     ret.packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE | packflag;
     this._add(ret);
     return ret;
@@ -65618,7 +66061,7 @@ var Container3 = class _Container extends UIBase2 {
   curve1d(inpath, packflag = 0, mass_set_path) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    const ret = UIBase2.createElement("curve-widget-x");
+    const ret = UIBase.createElement("curve-widget-x");
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
     if (inpath) {
@@ -65630,7 +66073,7 @@ var Container3 = class _Container extends UIBase2 {
     return ret;
   }
   vecpopup(inpath, packflag = 0, mass_set_path) {
-    const button = UIBase2.createElement("vector-popup-button-x");
+    const button = UIBase.createElement("vector-popup-button-x");
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     let name2 = "vector";
@@ -65781,7 +66224,7 @@ var Container3 = class _Container extends UIBase2 {
       } else if (prop.subtype === PropSubTypes2.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
       } else {
-        const ret = UIBase2.createElement("vector-panel-x");
+        const ret = UIBase.createElement("vector-panel-x");
         mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
         ret.packflag |= packflag | this.inherit_packflag & ~PackFlags.NO_UPDATE;
         ret.inherit_packflag |= packflag | this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -65920,7 +66363,7 @@ var Container3 = class _Container extends UIBase2 {
     throw new DataPathError(`Unsupported property: ${inpath}`);
   }
   iconcheck(inpath, icon, description, mass_set_path) {
-    const ret = UIBase2.createElement("iconcheck-x");
+    const ret = UIBase.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name ?? "";
     if (inpath) {
@@ -65937,10 +66380,10 @@ var Container3 = class _Container extends UIBase2 {
     const path = inpath !== void 0 ? this._joinPrefix(inpath) : void 0;
     let ret;
     if (packflag & PackFlags.USE_ICONS) {
-      ret = UIBase2.createElement("iconcheck-x");
+      ret = UIBase.createElement("iconcheck-x");
       ret.iconsheet = iconSheetFromPackFlag(packflag);
     } else {
-      ret = UIBase2.createElement("check-x");
+      ret = UIBase.createElement("check-x");
       ret.label = name2;
     }
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
@@ -66149,7 +66592,7 @@ var Container3 = class _Container extends UIBase2 {
     if (inpath !== void 0) {
       path = this._joinPrefix(inpath);
     }
-    const ret = UIBase2.createElement("dropbox-x");
+    const ret = UIBase.createElement("dropbox-x");
     if (enumDef !== void 0) {
       if (enumDef instanceof EnumProperty) {
         ret.prop = enumDef;
@@ -66267,15 +66710,15 @@ var Container3 = class _Container extends UIBase2 {
     const extraTextBox = const_default.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
     if (extraTextBox) {
       if (simple) {
-        ret = UIBase2.createElement("numslider-simple-x");
+        ret = UIBase.createElement("numslider-simple-x");
       } else {
-        ret = UIBase2.createElement("numslider-textbox-x");
+        ret = UIBase.createElement("numslider-textbox-x");
       }
     } else {
       if (simple) {
-        ret = UIBase2.createElement("numslider-simple-x");
+        ret = UIBase.createElement("numslider-simple-x");
       } else {
-        ret = UIBase2.createElement("numslider-x");
+        ret = UIBase.createElement("numslider-x");
       }
     }
     ret.packflag |= packflag;
@@ -66324,7 +66767,7 @@ var Container3 = class _Container extends UIBase2 {
     elem.massSetPrefix = this.massSetPrefix;
   }
   treeview() {
-    const ret = UIBase2.createElement("tree-view-x");
+    const ret = UIBase.createElement("tree-view-x");
     ret.ctx = this.ctx;
     this.add(ret);
     this._container_inherit(ret);
@@ -66332,7 +66775,7 @@ var Container3 = class _Container extends UIBase2 {
   }
   panel(name2, id, packflag = 0, tooltip) {
     id = id === void 0 ? name2 : id;
-    const ret = UIBase2.createElement("panelframe-x");
+    const ret = UIBase.createElement("panelframe-x");
     this._container_inherit(ret, packflag);
     if (tooltip) {
       ret.setHeaderToolTip(tooltip);
@@ -66350,14 +66793,14 @@ var Container3 = class _Container extends UIBase2 {
     return ret.contents;
   }
   row(packflag = 0) {
-    const ret = UIBase2.createElement("rowframe-x");
+    const ret = UIBase.createElement("rowframe-x");
     this._container_inherit(ret, packflag);
     this._add(ret);
     ret.ctx = this.ctx;
     return ret;
   }
   listbox(path, packflag = 0) {
-    const ret = UIBase2.createElement("listbox-x");
+    const ret = UIBase.createElement("listbox-x");
     this._container_inherit(ret, packflag);
     this._add(ret);
     if (path !== void 0) {
@@ -66366,20 +66809,20 @@ var Container3 = class _Container extends UIBase2 {
     return ret;
   }
   table(packflag = 0) {
-    const ret = UIBase2.createElement("tableframe-x");
+    const ret = UIBase.createElement("tableframe-x");
     this._container_inherit(ret, packflag);
     this._add(ret);
     return ret;
   }
   twocol(parentDepth = 1, packflag = 0) {
-    const ret = UIBase2.createElement("two-column-x");
+    const ret = UIBase.createElement("two-column-x");
     ret.parentDepth = parentDepth;
     this._container_inherit(ret, packflag);
     this._add(ret);
     return ret;
   }
   col(packflag = 0) {
-    const ret = UIBase2.createElement("colframe-x");
+    const ret = UIBase.createElement("colframe-x");
     this._container_inherit(ret, packflag);
     this._add(ret);
     return ret;
@@ -66398,7 +66841,7 @@ var Container3 = class _Container extends UIBase2 {
     if (inpath) {
       path = this._joinPrefix(inpath);
     }
-    const ret = UIBase2.createElement("colorpicker-x");
+    const ret = UIBase.createElement("colorpicker-x");
     if (themeOverride) {
       ret.overrideClass(themeOverride);
     }
@@ -66422,7 +66865,7 @@ var Container3 = class _Container extends UIBase2 {
   textarea(datapath, value = "", packflag = 0, mass_set_path) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-    const ret = UIBase2.createElement("rich-text-editor-x");
+    const ret = UIBase.createElement("rich-text-editor-x");
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
     if (value !== void 0) {
@@ -66439,7 +66882,7 @@ var Container3 = class _Container extends UIBase2 {
   viewer(datapath, value = "", packflag = 0, mass_set_path) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-    const ret = UIBase2.createElement("html-viewer-x");
+    const ret = UIBase.createElement("html-viewer-x");
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
     if (value !== void 0) {
@@ -66452,7 +66895,7 @@ var Container3 = class _Container extends UIBase2 {
   }
   //
   tabs(position = "top", packflag = 0) {
-    const ret = UIBase2.createElement("tabcontainer-x");
+    const ret = UIBase.createElement("tabcontainer-x");
     ret.constructor.setDefault(
       ret
     );
@@ -66467,7 +66910,7 @@ var Container3 = class _Container extends UIBase2 {
     return this;
   }
 };
-UIBase2.internalRegister(Container3);
+UIBase.internalRegister(Container3);
 
 // scripts/core/ui_containers.ts
 init_ui_base();
@@ -66508,7 +66951,7 @@ var RowFrame = class extends Container3 {
     return this;
   }
 };
-UIBase2.internalRegister(RowFrame);
+UIBase.internalRegister(RowFrame);
 var ColumnFrame = class extends Container3 {
   static define() {
     return {
@@ -66532,7 +66975,7 @@ var ColumnFrame = class extends Container3 {
     return this;
   }
 };
-UIBase2.internalRegister(ColumnFrame);
+UIBase.internalRegister(ColumnFrame);
 var TwoColumnFrame = class extends Container3 {
   _colWidth = 256;
   parentDepth = 1;
@@ -66578,7 +67021,7 @@ var TwoColumnFrame = class extends Container3 {
     }
   }
 };
-UIBase2.internalRegister(TwoColumnFrame);
+UIBase.internalRegister(TwoColumnFrame);
 function parsepx3(css) {
   return parseFloat(css);
 }
@@ -66623,7 +67066,7 @@ var SliderDefaults = {
   step: 0.1,
   sliderDisplayExp: 1
 };
-function loadNumConstraints(self2, defaults = SliderDefaults, skip = /* @__PURE__ */ new Set()) {
+function loadNumConstraints2(self2, defaults = SliderDefaults, skip = /* @__PURE__ */ new Set()) {
   for (const key of NumberConstraints) {
     if (skip.has(key)) {
       continue;
@@ -66652,7 +67095,7 @@ var NumSlider = class extends ValueButtonBase {
   _value;
   constructor() {
     super();
-    loadNumConstraints(this);
+    loadNumConstraints2(this);
     this._last_label = void 0;
     this.mdown = false;
     this.ma = void 0;
@@ -66709,7 +67152,7 @@ var NumSlider = class extends ValueButtonBase {
     };
   }
   updateWidth(w_add = 0) {
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const wid = ~~(this.getDefault("width") * dpi);
     if (w_add || wid !== this._last_width) {
       this._last_width = wid;
@@ -66758,7 +67201,7 @@ var NumSlider = class extends ValueButtonBase {
     }
   }
   swapWithTextbox() {
-    const tbox = UIBase2.createElement("textbox-x");
+    const tbox = UIBase.createElement("textbox-x");
     if (this.modalRunning) {
       this.popModal();
     }
@@ -67102,7 +67545,7 @@ var NumSlider = class extends ValueButtonBase {
   }
   setCSS(unused_setBG, fromRedraw) {
     const dpi = this.getDPI();
-    const ts = this.getDefault("DefaultText").size * UIBase2.getDPI();
+    const ts = this.getDefault("DefaultText").size * UIBase.getDPI();
     const label = this._genLabel();
     let tw = measureText(this, label, {
       size: ts,
@@ -67187,7 +67630,7 @@ var NumSlider = class extends ValueButtonBase {
     } else if (pressed) {
       subkey = "pressed";
     }
-    const getDefault2 = (key, backupval, subkey2 = subkey) => {
+    const getDefault3 = (key, backupval, subkey2 = subkey) => {
       if (subkey2 === "highlight-pressed" && !this.hasClassSubDefault(subkey2, key, false)) {
         return this.getSubDefault("pressed", key, void 0, backupval);
       }
@@ -67197,11 +67640,11 @@ var NumSlider = class extends ValueButtonBase {
         return this.getSubDefault(subkey2, key, void 0, backupval);
       }
     };
-    let r = getDefault2("border-radius");
+    let r = getDefault3("border-radius");
     if (this.isInt) {
       r *= 0.25;
     }
-    const boxbg = getDefault2("background-color");
+    const boxbg = getDefault3("background-color");
     drawRoundBox(
       this,
       this.dom,
@@ -67210,7 +67653,7 @@ var NumSlider = class extends ValueButtonBase {
       void 0,
       r,
       "fill",
-      disabled ? getDefault2("DisabledBG") : boxbg
+      disabled ? getDefault3("DisabledBG") : boxbg
     );
     drawRoundBox(
       this,
@@ -67220,9 +67663,9 @@ var NumSlider = class extends ValueButtonBase {
       void 0,
       r,
       "stroke",
-      disabled ? getDefault2("DisabledBG") : getDefault2("border-color")
+      disabled ? getDefault3("DisabledBG") : getDefault3("border-color")
     );
-    const ts = getDefault2("DefaultText").size;
+    const ts = getDefault3("DefaultText").size;
     const text2 = this._genLabel();
     const cx = ts + this._getArrowSize();
     const cy = this.dom.height / 2;
@@ -67235,7 +67678,7 @@ var NumSlider = class extends ValueButtonBase {
         canvas: this.dom,
         g: this.g,
         size: ts,
-        font: getDefault2("DefaultText")
+        font: getDefault3("DefaultText")
       });
       g.restore();
     } else {
@@ -67243,7 +67686,7 @@ var NumSlider = class extends ValueButtonBase {
         canvas: this.dom,
         g: this.g,
         size: ts,
-        font: getDefault2("DefaultText")
+        font: getDefault3("DefaultText")
       });
     }
     const parseArrowColor = (arrowcolor2) => {
@@ -67251,7 +67694,7 @@ var NumSlider = class extends ValueButtonBase {
       if (arrowcolor2.endsWith("%")) {
         arrowcolor2 = arrowcolor2.slice(0, arrowcolor2.length - 1).trim();
         const perc = parseFloat(arrowcolor2) / 100;
-        const c = css2color2(this.getDefault("background-color"));
+        const c = css2color(this.getDefault("background-color"));
         let f2 = (c[0] + c[1] + c[2]) * perc;
         f2 = ~~(f2 * 255);
         arrowcolor2 = `rgba(${f2},${f2},${f2},0.95)`;
@@ -67285,17 +67728,17 @@ var NumSlider = class extends ValueButtonBase {
         } else {
           arrowcolorValue = this.getDefault("BoxHighlight") ?? "";
         }
-        const colorVector = css2color2(arrowcolorValue);
-        const base = css2color2(
+        const colorVector = css2color(arrowcolorValue);
+        const base = css2color(
           this.getSubDefault("pressed", "arrow-color", void 0, "33%") ?? ""
         );
         colorVector.interp(base, 0.25);
-        arrowcolorValue = color2css3(colorVector);
+        arrowcolorValue = color2css2(colorVector);
       } else {
         arrowcolorValue = this.getSubDefault("highlight", "arrow-color") ?? "";
       }
     } else {
-      arrowcolorValue = getDefault2("arrow-color", "33%") ?? "";
+      arrowcolorValue = getDefault3("arrow-color", "33%") ?? "";
     }
     if (this._pressed) {
     }
@@ -67334,11 +67777,11 @@ var NumSlider = class extends ValueButtonBase {
     g.fill();
   }
   _getArrowSize() {
-    return UIBase2.getDPI() * 10;
+    return UIBase.getDPI() * 10;
   }
 };
-UIBase2.internalRegister(NumSlider);
-var NumSliderSimpleBase = class extends UIBase2 {
+UIBase.internalRegister(NumSlider);
+var NumSliderSimpleBase = class extends UIBase {
   canvas;
   g;
   highlight;
@@ -67349,7 +67792,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
   _last_slider_key;
   constructor() {
     super();
-    loadNumConstraints(this);
+    loadNumConstraints2(this);
     this.baseUnit = void 0;
     this.displayUnit = void 0;
     this.editAsBaseUnit = void 0;
@@ -67431,7 +67874,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
       return;
     }
     const x = e.x - rect.left;
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const val = this._invertButtonX(x * dpi);
     this.value = val;
   }
@@ -67571,7 +68014,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
     const canvas = this.canvas;
     const w = canvas.width;
     const h = canvas.height;
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     let color = this.getDefault("background-color");
     const sh = ~~(this.getDefault("SlideHeight") * dpi + 0.5);
     g.clearRect(0, 0, canvas.width, canvas.height);
@@ -67627,7 +68070,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
     x -= rect.left;
     y -= rect.top;
     const co = this._getButtonPos();
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const dv = new Vector2([co[0] / dpi - x, co[1] / dpi - y]);
     const dis = dv.vectorLength();
     return dis < co[2] / dpi;
@@ -67659,12 +68102,12 @@ var NumSliderSimpleBase = class extends UIBase2 {
     return [x, boxw * 0.5, boxw * 0.5];
   }
   setCSS() {
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     this.style["minWidth"] = this.getDefault("width") + "px";
     this.style["width"] = this.getDefault("width") + "px";
     this.canvas.style["width"] = "" + this.canvas.width / dpi + "px";
     this.canvas.style["height"] = "" + this.canvas.height / dpi + "px`";
-    this.canvas.height = this.getDefault("height") * UIBase2.getDPI();
+    this.canvas.height = this.getDefault("height") * UIBase.getDPI();
     this._redraw();
   }
   updateSize() {
@@ -67675,7 +68118,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
     if (rect === void 0) {
       return;
     }
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const canvas = this.canvas;
     const w = ~~(rect.width * dpi);
     const h = ~~(rect.height * dpi);
@@ -67707,7 +68150,7 @@ var NumSliderSimpleBase = class extends UIBase2 {
     updateSliderFromDom(this);
   }
 };
-UIBase2.internalRegister(NumSliderSimpleBase);
+UIBase.internalRegister(NumSliderSimpleBase);
 var SliderWithTextbox = class extends ColumnFrame {
   _value;
   _name;
@@ -67725,7 +68168,7 @@ var SliderWithTextbox = class extends ColumnFrame {
     this._labelOnTop = void 0;
     this._last_label_on_top = void 0;
     this.container = this;
-    this._textbox = UIBase2.createElement("textbox-x");
+    this._textbox = UIBase.createElement("textbox-x");
     this._textbox.width = 55;
     this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
     this._textbox.setAttribute("class", "numslider_simple_textbox");
@@ -67843,9 +68286,9 @@ var SliderWithTextbox = class extends ColumnFrame {
     return this.numslider.displayUnit;
   }
   set displayUnit(val) {
-    const update = val !== this.displayUnit;
+    const update2 = val !== this.displayUnit;
     this.numslider.displayUnit = this._textbox.displayUnit = val;
-    if (update) {
+    if (update2) {
       this.updateTextBox();
     }
   }
@@ -67853,9 +68296,9 @@ var SliderWithTextbox = class extends ColumnFrame {
     return this._textbox.baseUnit;
   }
   set baseUnit(val) {
-    const update = val !== this.baseUnit;
+    const update2 = val !== this.baseUnit;
     this.numslider.baseUnit = this._textbox.baseUnit = val;
-    if (update) {
+    if (update2) {
       this.updateTextBox();
     }
   }
@@ -68050,7 +68493,7 @@ var SliderWithTextbox = class extends ColumnFrame {
 var NumSliderSimple = class extends SliderWithTextbox {
   constructor() {
     super();
-    this.numslider = UIBase2.createElement("numslider-simple-base-x");
+    this.numslider = UIBase.createElement("numslider-simple-base-x");
   }
   static define() {
     return {
@@ -68062,11 +68505,11 @@ var NumSliderSimple = class extends SliderWithTextbox {
     this.numslider._redraw();
   }
 };
-UIBase2.internalRegister(NumSliderSimple);
+UIBase.internalRegister(NumSliderSimple);
 var NumSliderWithTextBox = class extends SliderWithTextbox {
   constructor() {
     super();
-    this.numslider = UIBase2.createElement("numslider-x");
+    this.numslider = UIBase.createElement("numslider-x");
   }
   static define() {
     return {
@@ -68088,7 +68531,7 @@ var NumSliderWithTextBox = class extends SliderWithTextbox {
     this.numslider._redraw();
   }
 };
-UIBase2.internalRegister(NumSliderWithTextBox);
+UIBase.internalRegister(NumSliderWithTextBox);
 
 // scripts/xmlpage/xmlpage.ts
 init_ui_base();
@@ -68236,11 +68679,11 @@ var Handler = class {
       const anyThis = this;
       anyThis[tagname](elemEl);
     } else {
-      const elem2 = UIBase2.createElement(tagname.toLowerCase());
+      const elem2 = UIBase.createElement(tagname.toLowerCase());
       for (const k of elemEl.getAttributeNames()) {
         elem2.setAttribute(k, elemEl.getAttribute(k) ?? "");
       }
-      if (elem2 instanceof UIBase2) {
+      if (elem2 instanceof UIBase) {
         if (!elem2.hasAttribute("datapath") && elem2.hasAttribute("path")) {
           elem2.setAttribute("datapath", elem2.getAttribute("path") ?? "");
         }
@@ -68345,7 +68788,7 @@ var Handler = class {
         }
       }
     }
-    if (elem2 instanceof UIBase2) {
+    if (elem2 instanceof UIBase) {
       elem2.setCSSAfter(() => {
         setStyle();
       });
@@ -68444,7 +68887,7 @@ var Handler = class {
         elem2.setAttribute(k, elem.getAttribute(k) ?? "");
       }
     }
-    if (!(elem2 instanceof UIBase2)) {
+    if (!(elem2 instanceof UIBase)) {
       return;
     }
     if (elem.hasAttribute("theme-class")) {
@@ -68502,7 +68945,7 @@ var Handler = class {
       }
     }
     function doBox(key) {
-      if (elem.hasAttribute(key) && elem2 instanceof UIBase2) {
+      if (elem.hasAttribute(key) && elem2 instanceof UIBase) {
         let val = (elem.getAttribute(key) ?? "").toLowerCase().trim();
         if (val.endsWith("px")) {
           val = val.slice(0, val.length - 2).trim();
@@ -68538,22 +68981,22 @@ var Handler = class {
   }
   _handlePathPrefix(elem, con) {
     if (elem.hasAttribute("path")) {
-      let prefix = con.dataPrefix;
+      let prefix2 = con.dataPrefix;
       const path = (elem.getAttribute("path") ?? "").trim();
-      if (prefix.length > 0) {
-        prefix += ".";
+      if (prefix2.length > 0) {
+        prefix2 += ".";
       }
-      prefix += path;
-      con.dataPrefix = prefix;
+      prefix2 += path;
+      con.dataPrefix = prefix2;
     }
     if (elem.hasAttribute("massSetPath")) {
-      let prefix = con.massSetPrefix;
+      let prefix2 = con.massSetPrefix;
       const path = (elem.getAttribute("massSetPath") ?? "").trim();
-      if (prefix.length > 0) {
-        prefix += ".";
+      if (prefix2.length > 0) {
+        prefix2 += ".";
       }
-      prefix += path;
-      con.massSetPrefix = prefix;
+      prefix2 += path;
+      con.massSetPrefix = prefix2;
     }
   }
   /** noInheritCustomAttrs: don't transfer ng or data- attributes to the container element*/
@@ -68836,7 +69279,7 @@ var Handler = class {
     const iconStr = elem.getAttribute("icon");
     let icon;
     if (iconStr) {
-      icon = UIBase2.getIconEnum()[iconStr];
+      icon = UIBase.getIconEnum()[iconStr];
     }
     const ret = this.container.iconbutton(icon ?? 0, title);
     if (elem.hasAttribute("id")) {
@@ -68880,7 +69323,7 @@ var Handler = class {
 };
 function initPage(ctx, xml, parentContainer, templateVars = {}, templateScope = {}) {
   const tree = parseXML(xml);
-  const container = UIBase2.createElement("container-x");
+  const container = UIBase.createElement("container-x");
   container.ctx = ctx;
   if (ctx) {
     container._init();
@@ -69500,7 +69943,7 @@ var RichEditor = class extends TextBoxBase {
       }
     `;
     this.shadow.appendChild(this.styletag);
-    const controls = this.controls = UIBase2.createElement(
+    const controls = this.controls = UIBase.createElement(
       "rowframe-x"
     );
     const makeicon = (icon, description, cb) => {
@@ -69671,8 +70114,8 @@ var RichEditor = class extends TextBoxBase {
     };
   }
 };
-UIBase2.internalRegister(RichEditor);
-var RichViewer = class extends UIBase2 {
+UIBase.internalRegister(RichEditor);
+var RichViewer = class extends UIBase {
   contents;
   _value;
   constructor() {
@@ -69719,7 +70162,7 @@ var RichViewer = class extends UIBase2 {
     };
   }
 };
-UIBase2.internalRegister(RichViewer);
+UIBase.internalRegister(RichViewer);
 
 // scripts/widgets/ui_widgets2.ts
 init_util();
@@ -69755,7 +70198,7 @@ var VectorPopupButton = class extends Button {
     if (evt.button && evt.button !== 0) {
       return;
     }
-    const panel = UIBase2.createElement("vector-panel-x");
+    const panel = UIBase.createElement("vector-panel-x");
     const screen = this.ctx.screen;
     const popup = screen.popup(this, this);
     popup.add(panel);
@@ -69798,7 +70241,7 @@ var VectorPopupButton = class extends Button {
     }
   }
 };
-UIBase2.internalRegister(VectorPopupButton);
+UIBase.internalRegister(VectorPopupButton);
 var VectorPanel = class extends ColumnFrame {
   _value;
   axes;
@@ -69937,7 +70380,7 @@ var VectorPanel = class extends ColumnFrame {
       this.sliders.push(slider);
     }
     if (this.hasUniformSlider) {
-      const uslider = this.uslider = UIBase2.createElement("numslider-x");
+      const uslider = this.uslider = UIBase.createElement("numslider-x");
       row._prepend(uslider);
       uslider["range"] = this.range;
       uslider["baseUnit"] = this.baseUnit;
@@ -70074,10 +70517,10 @@ var VectorPanel = class extends ColumnFrame {
       this.doOnce(this.rebuild);
     }
     if (meta?.range) {
-      const update = this.range[0] !== meta.range[0] || this.range[1] !== meta.range[1];
+      const update2 = this.range[0] !== meta.range[0] || this.range[1] !== meta.range[1];
       this.range[0] = meta.range[0];
       this.range[1] = meta.range[1];
-      if (update) {
+      if (update2) {
         this.doOnce(this.rebuild);
       }
     }
@@ -70170,8 +70613,8 @@ var VectorPanel = class extends ColumnFrame {
     };
   }
 };
-UIBase2.internalRegister(VectorPanel);
-var ToolTip = class extends UIBase2 {
+UIBase.internalRegister(VectorPanel);
+var ToolTip = class extends UIBase {
   div;
   _start_time;
   timeout;
@@ -70190,7 +70633,7 @@ var ToolTip = class extends UIBase2 {
    * pointer is the timer.
    */
   static show(message2, screen, x, y, timeout) {
-    const ret = UIBase2.createElement(this.define().tagname);
+    const ret = UIBase.createElement(this.define().tagname);
     ret._start_time = time_ms();
     ret.timeout = timeout ?? ret.getDefault("timeout");
     ret.text = message2;
@@ -70200,7 +70643,7 @@ var ToolTip = class extends UIBase2 {
     const sscreen = screen;
     x = Math.min(Math.max(x, 0), sscreen.size[0] - size2[0]);
     y = Math.min(Math.max(y, 0), sscreen.size[1] - size2[1]);
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     x += 10 / dpi;
     y += 15 / dpi;
     ret._popup = sscreen.popup(ret, x, y);
@@ -70272,7 +70715,7 @@ var ToolTip = class extends UIBase2 {
     };
   }
 };
-UIBase2.internalRegister(ToolTip);
+UIBase.internalRegister(ToolTip);
 window._ToolTip = ToolTip;
 
 // scripts/path-controller/curve/curve1d_utils.ts
@@ -70577,7 +71020,7 @@ var Curve1DWidget = class extends ColumnFrame {
     this.updateSize();
   }
   updateSize() {
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const w = ~~(this.getDefault("CanvasWidth") * dpi);
     const h = ~~(this.getDefault("CanvasHeight") * dpi);
     let bad = w !== this.canvas.width || h !== this.canvas.height;
@@ -70696,7 +71139,7 @@ var Curve1DWidget = class extends ColumnFrame {
     };
   }
 };
-UIBase2.internalRegister(Curve1DWidget);
+UIBase.internalRegister(Curve1DWidget);
 
 // scripts/core/ui_forward.ts
 var defaultForwardKeys = [
@@ -70747,7 +71190,7 @@ function forwardContainerMethods(cls, propertyKey, keys2 = defaultForwardKeys) {
 
 // scripts/widgets/ui_panel.ts
 init_ui_base();
-var UIBase5 = UIBase2;
+var UIBase5 = UIBase;
 var PackFlags3 = PackFlags;
 var PanelContents2 = class extends ColumnFrame {
   get openClosedIcon() {
@@ -70860,9 +71303,9 @@ var PanelFrame = class extends ColumnFrame {
     return this._closed;
   }
   set closed(val) {
-    const update = !!val !== !!this.closed;
+    const update2 = !!val !== !!this.closed;
     this._closed = val;
-    if (update) {
+    if (update2) {
       this._updateClosed(true);
     }
   }
@@ -70967,7 +71410,7 @@ var PanelFrame = class extends ColumnFrame {
     if (!this.titleframe || !this.__label) {
       return;
     }
-    const getDefault2 = (key, defval) => {
+    const getDefault3 = (key, defval) => {
       const val = this.getDefault(key);
       return val !== void 0 ? val : defval;
     };
@@ -70976,9 +71419,9 @@ var PanelFrame = class extends ColumnFrame {
     if (header_radius === void 0) {
       header_radius = this.getDefault("border-radius");
     }
-    const boxmargin = getDefault2("padding", 0);
-    let paddingleft = getDefault2("padding-left", 0);
-    let paddingright = getDefault2("padding-right", 0);
+    const boxmargin = getDefault3("padding", 0);
+    let paddingleft = getDefault3("padding-left", 0);
+    let paddingright = getDefault3("padding-right", 0);
     paddingleft += boxmargin;
     paddingright += boxmargin;
     this.titleframe.background = this.getDefault("TitleBackground");
@@ -71003,14 +71446,14 @@ var PanelFrame = class extends ColumnFrame {
     let margintop;
     let marginbottom;
     if (this._closed) {
-      margintop = getDefault2("margin-top-closed", 0);
-      marginbottom = getDefault2("margin-bottom-closed", 5);
+      margintop = getDefault3("margin-top-closed", 0);
+      marginbottom = getDefault3("margin-bottom-closed", 5);
     } else {
-      margintop = getDefault2("margin-top", 0);
-      marginbottom = getDefault2("margin-bottom", 0);
+      margintop = getDefault3("margin-top", 0);
+      marginbottom = getDefault3("margin-bottom", 0);
     }
-    const marginleft = getDefault2("margin-left", 0);
-    const marginright = getDefault2("margin-right", 0);
+    const marginleft = getDefault3("margin-left", 0);
+    const marginright = getDefault3("margin-right", 0);
     this.style.marginLeft = marginleft + "px";
     this.style.marginRight = marginright + "px";
     this.style.marginTop = margintop + "px";
@@ -71030,14 +71473,14 @@ var PanelFrame = class extends ColumnFrame {
   }
   update() {
     const text2 = this.getAttribute("label");
-    let update = text2 !== this.__label.text;
+    let update2 = text2 !== this.__label.text;
     if (this.checkThemeUpdate()) {
-      update = true;
+      update2 = true;
       this._setVisible(this.closed, true);
       this.setCSS();
       this.flushSetCSS();
     }
-    if (update) {
+    if (update2) {
       this.headerLabel = this.getAttribute("label") ?? "";
       this.__label._updateFont();
       this.setCSS();
@@ -71144,7 +71587,7 @@ function colorClipboardPaste() {
   }
   let color;
   try {
-    color = css2color2(entry.data);
+    color = css2color(entry.data);
   } catch (error2) {
     const err = error2;
     console.log(err.stack);
@@ -71250,7 +71693,7 @@ var SimpleBox = class {
     this.r = 0;
   }
 };
-var HueField = class extends UIBase2 {
+var HueField = class extends UIBase {
   canvas;
   g;
   hsva;
@@ -71398,8 +71841,8 @@ var HueField = class extends UIBase2 {
     this._redraw();
   }
 };
-UIBase2.internalRegister(HueField);
-var SatValField = class extends UIBase2 {
+UIBase.internalRegister(HueField);
+var SatValField = class extends UIBase {
   canvas;
   g;
   hsva;
@@ -71646,7 +72089,7 @@ var SatValField = class extends UIBase2 {
     this._redraw();
   }
 };
-UIBase2.internalRegister(SatValField);
+UIBase.internalRegister(SatValField);
 var ColorField = class extends ColumnFrame {
   hsva;
   rgba;
@@ -71663,10 +72106,10 @@ var ColorField = class extends ColumnFrame {
     this._last_dpi = void 0;
     this._recalcRGBA();
     this._lastThemeStyle = this.constructor.define().style;
-    const satvalfield = UIBase2.createElement("satvalfield-x");
+    const satvalfield = UIBase.createElement("satvalfield-x");
     this.satvalfield = satvalfield;
     satvalfield.hsva = this.hsva;
-    const huefield = UIBase2.createElement("huefield-x");
+    const huefield = UIBase.createElement("huefield-x");
     this.huefield = huefield;
     huefield.hsva = this.hsva;
     huefield._onchange = () => {
@@ -71721,9 +72164,9 @@ var ColorField = class extends ColumnFrame {
   }
   updateDPI(force_update = false, _in_update = false) {
     const dpi = this.getDPI();
-    let update = force_update;
-    update = update || dpi != this._last_dpi;
-    if (update) {
+    let update2 = force_update;
+    update2 = update2 || dpi != this._last_dpi;
+    if (update2) {
       this._last_dpi = dpi;
       if (!_in_update) this._redraw();
       return true;
@@ -71794,7 +72237,7 @@ var ColorField = class extends ColumnFrame {
     this.huefield._redraw();
   }
 };
-UIBase2.internalRegister(ColorField);
+UIBase.internalRegister(ColorField);
 var ColorPicker = class extends ColumnFrame {
   _lastThemeStyle;
   field;
@@ -71946,7 +72389,7 @@ var ColorPicker = class extends ColumnFrame {
   }
   init() {
     super.init();
-    this.field = UIBase2.createElement("colorfield-x");
+    this.field = UIBase.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
     this.field.packflag |= this.inherit_packflag;
     this.field.packflag |= this.packflag;
@@ -72079,8 +72522,8 @@ var ColorPicker = class extends ColumnFrame {
     this._setDataPath();
   }
 };
-UIBase2.internalRegister(ColorPicker);
-var ColorPickerButton = class extends UIBase2 {
+UIBase.internalRegister(ColorPicker);
+var ColorPickerButton = class extends UIBase {
   _highlight;
   _depress;
   _label;
@@ -72278,7 +72721,7 @@ var ColorPickerButton = class extends UIBase2 {
     }
     g.fillStyle = grid2;
     g.fill();
-    const color = color2css3(this.rgba);
+    const color = color2css2(this.rgba);
     drawRoundBox(
       this,
       canvas,
@@ -72389,7 +72832,7 @@ var ColorPickerButton = class extends UIBase2 {
     this._redraw();
   }
 };
-UIBase2.internalRegister(ColorPickerButton);
+UIBase.internalRegister(ColorPickerButton);
 
 // scripts/util/vectormath.ts
 init_vectormath();
@@ -72508,10 +72951,10 @@ var TabItemContainer2 = class extends ColumnFrame {
     this._tab.ontabcontextmenu = v;
   }
 };
-UIBase2.internalRegister(TabItemContainer2);
+UIBase.internalRegister(TabItemContainer2);
 var TabDragEvent = class extends PointerEvent {
 };
-var TabItem = class extends UIBase2 {
+var TabItem = class extends UIBase {
   name;
   icon;
   tooltip;
@@ -72668,7 +73111,7 @@ var TabItem = class extends UIBase2 {
     ];
   }
   setCSS() {
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const x = this.pos[0] / dpi;
     const y = this.pos[1] / dpi;
     const w = this.size[0] / dpi;
@@ -72688,7 +73131,7 @@ var TabItem = class extends UIBase2 {
     this.saneStyle["height"] = h + "px";
   }
 };
-UIBase2.internalRegister(TabItem);
+UIBase.internalRegister(TabItem);
 var ModalTabMove = class extends EventHandler {
   dom;
   tab;
@@ -72779,7 +73222,7 @@ var ModalTabMove = class extends EventHandler {
   }
   _on_move(e, x, y) {
     const r = this.tbar.getClientRects()[0];
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     if (r === void 0) {
       this.finish();
       return;
@@ -72843,7 +73286,7 @@ var ModalTabMove = class extends EventHandler {
       this.dragcanvas.height = ~~tab2.size[1];
       this.dragcanvas.style["width"] = tab2.size[0] / dpi + "px";
       this.dragcanvas.style["height"] = tab2.size[1] / dpi + "px";
-      this.dragcanvas.style["position"] = UIBase2.PositionKey;
+      this.dragcanvas.style["position"] = UIBase.PositionKey;
       this.dragcanvas.style["left"] = e.x + "px";
       this.dragcanvas.style["top"] = e.y + "px";
       this.dragcanvas.style["zIndex"] = "500";
@@ -72890,7 +73333,7 @@ var ModalTabMove = class extends EventHandler {
     }
   }
 };
-var TabBar = class extends UIBase2 {
+var TabBar = class extends UIBase {
   _wrapperDiv;
   _contentsWrapper;
   iconsheet;
@@ -73405,7 +73848,7 @@ var TabBar = class extends UIBase2 {
     return tab2;
   }
   addTab(name2, id, tooltip = "", movable = false) {
-    const tab2 = UIBase2.createElement("tab-item-x", true);
+    const tab2 = UIBase.createElement("tab-item-x", true);
     this.shadow.appendChild(tab2);
     tab2.parentWidget = this;
     tab2.name = name2;
@@ -73472,9 +73915,9 @@ var TabBar = class extends UIBase2 {
     const rheight = getpx(this.canvas.style["height"]);
     const width = ~~(rwidth * dpi);
     const height = ~~(rheight * dpi);
-    let update = force_update;
-    update = update || canvas.width !== width || canvas.height !== height;
-    if (update) {
+    let update2 = force_update;
+    update2 = update2 || canvas.width !== width || canvas.height !== height;
+    if (update2) {
       canvas.width = width;
       canvas.height = height;
       this._redraw();
@@ -73603,7 +74046,7 @@ var TabBar = class extends UIBase2 {
         tab2.dom = document.createElement("div");
         tab2.dom.style["margin"] = tab2.dom.style["padding"] = "0px";
         document.body.appendChild(tab2.dom);
-        tab2.dom.style["position"] = UIBase2.PositionKey;
+        tab2.dom.style["position"] = UIBase.PositionKey;
         tab2.dom.style["display"] = "flex";
         tab2.dom.style["flexDirection"] = this.horiz ? "row" : "column";
         tab2.dom.style["pointerEvents"] = "none";
@@ -73708,9 +74151,9 @@ var TabBar = class extends UIBase2 {
     if (tab2.noSwitch) {
       return;
     }
-    const update = tab2 !== this.tabs.active;
+    const update2 = tab2 !== this.tabs.active;
     this.tabs.active = tab2;
-    if (update) {
+    if (update2) {
       if (!isMobile() && this.getDefault("focus-on-tab-click")) {
         tab2.focus({ preventScroll: true, focusVisible: false });
       }
@@ -73961,8 +74404,8 @@ var TabBar = class extends UIBase2 {
     this.updateCanvas(force_update);
   }
 };
-UIBase2.internalRegister(TabBar);
-var TabContainer3 = class extends UIBase2 {
+UIBase.internalRegister(TabBar);
+var TabContainer3 = class extends UIBase {
   _style;
   tbar;
   tabs;
@@ -73986,7 +74429,7 @@ var TabContainer3 = class extends UIBase2 {
     this.inherit_packflag = 0;
     this.packflag = 0;
     this.tabFontScale = 1;
-    this.tbar = UIBase2.createElement("tabbar-x");
+    this.tbar = UIBase.createElement("tabbar-x");
     this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
@@ -74229,7 +74672,7 @@ var TabContainer3 = class extends UIBase2 {
     if (id === void 0) {
       id = tab_idgen++;
     }
-    const col = UIBase2.createElement("tab-item-container-x");
+    const col = UIBase.createElement("tab-item-container-x");
     col.parentTabs = this;
     this.tabs[id] = col;
     col.dataPrefix = this.dataPrefix;
@@ -74341,7 +74784,7 @@ var TabContainer3 = class extends UIBase2 {
     }
   }
 };
-UIBase2.internalRegister(TabContainer3);
+UIBase.internalRegister(TabContainer3);
 
 // scripts/widgets/ui_listbox.ts
 init_ui_base();
@@ -74405,7 +74848,7 @@ var ListItem = class extends RowFrame {
     this.setBackground();
   }
 };
-UIBase2.internalRegister(ListItem);
+UIBase.internalRegister(ListItem);
 var ListBoxChangeEvent = class extends Event {
   selection;
   constructor(selection) {
@@ -74585,8 +75028,8 @@ var ListBox = class extends Container3 {
     e.stopPropagation();
     const startX = e.x;
     const startY = e.y;
-    const startW = parsepx2(this.style.width) || this.getDefault("width");
-    const startH = parsepx2(this.style.height) || this.getDefault("height");
+    const startW = parsepx(this.style.width) || this.getDefault("width");
+    const startH = parsepx(this.style.height) || this.getDefault("height");
     const axes = this._resizeAxes;
     const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
     this.pushModal({
@@ -74613,8 +75056,8 @@ var ListBox = class extends Container3 {
   }
   _endResize() {
     this.popModal();
-    this.overrideDefault("width", parsepx2(this.style.width));
-    this.overrideDefault("height", parsepx2(this.style.height));
+    this.overrideDefault("width", parsepx(this.style.width));
+    this.overrideDefault("height", parsepx(this.style.height));
   }
   addEventListener(type, listener, options) {
     super.addEventListener(type, listener, options);
@@ -74642,8 +75085,8 @@ var ListBox = class extends Container3 {
   saveData() {
     const data = { ...super.saveData() };
     if (this._userSized) {
-      data.width = parsepx2(this.style.width);
-      data.height = parsepx2(this.style.height);
+      data.width = parsepx(this.style.width);
+      data.height = parsepx(this.style.height);
       data._userSized = true;
     }
     return data;
@@ -74791,7 +75234,7 @@ var ListBox = class extends Container3 {
     dataList.setActive(api, list5, obj);
   }
   addItem(name2, id) {
-    const item = UIBase2.createElement("listitem-x");
+    const item = UIBase.createElement("listitem-x");
     item.listId = id === void 0 ? this._idgen++ : id;
     if (typeof item.listId === "number") {
       this._idgen = Math.max(this._idgen, item.listId + 1);
@@ -74849,7 +75292,7 @@ var ListBox = class extends Container3 {
     }
   }
 };
-UIBase2.internalRegister(ListBox);
+UIBase.internalRegister(ListBox);
 var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
   _undo;
   static tooldef() {
@@ -74925,7 +75368,7 @@ ToolOp.register(ListBoxSetActiveToolOp);
 init_ui_base();
 init_util();
 init_simple_events();
-var ProgressCircle = class extends UIBase2 {
+var ProgressCircle = class extends UIBase {
   canvas;
   g;
   animreq;
@@ -75062,17 +75505,17 @@ var ProgressCircle = class extends UIBase2 {
     if (!this.isConnected && this.timer) {
       this.endTimer();
     }
-    const size = ~~(this.size * UIBase2.getDPI());
+    const size = ~~(this.size * UIBase.getDPI());
     if (size !== this.canvas.width) {
       this.setCSS();
     }
   }
   setCSS() {
     const c = this.canvas;
-    let size = ~~(this.size * UIBase2.getDPI());
+    let size = ~~(this.size * UIBase.getDPI());
     if (c.width !== size) {
       c.width = c.height = size;
-      size /= UIBase2.getDPI();
+      size /= UIBase.getDPI();
       c.style["width"] = size + "px";
       c.style["height"] = size + "px";
       c.style["display"] = "flex";
@@ -75092,7 +75535,7 @@ var ProgressCircle = class extends UIBase2 {
     };
   }
 };
-UIBase2.register(ProgressCircle);
+UIBase.register(ProgressCircle);
 
 // scripts/widgets/ui_table.ts
 init_ui_base();
@@ -75120,7 +75563,7 @@ var TableRow = class extends Container3 {
     return child;
   }
 };
-UIBase2.internalRegister(TableRow);
+UIBase.internalRegister(TableRow);
 var TableFrame = class extends Container3 {
   constructor() {
     super();
@@ -75152,7 +75595,7 @@ var TableFrame = class extends Container3 {
       tr.appendChild(td);
       td.style["margin"] = tr.style["margin"];
       td.style["padding"] = tr.style["padding"];
-      const container = UIBase2.createElement("rowframe-x");
+      const container = UIBase.createElement("rowframe-x");
       container.ctx = this2.ctx;
       container.parentWidget = this2;
       container.setAttribute("class", cls);
@@ -75274,7 +75717,7 @@ var TableFrame = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(TableFrame);
+UIBase.internalRegister(TableFrame);
 
 // scripts/widgets/ui_noteframe.ts
 var ui_noteframe_exports = {};
@@ -75292,8 +75735,8 @@ __export(ui_noteframe_exports, {
 });
 init_ui_base();
 init_ui_base();
-var UIBase6 = UIBase2;
-var Note = class extends UIBase2 {
+var UIBase6 = UIBase;
+var Note = class extends UIBase {
   _noteid;
   height;
   showExclMark;
@@ -75363,8 +75806,8 @@ var Note = class extends UIBase2 {
     this.style["border-radius"] = "7px";
     this.style["padding"] = "2px";
     this.style["color"] = this.getDefault("DefaultText").color;
-    const clr = css2color2(this.color);
-    const clrCss = color2css3([clr[0], clr[1], clr[2], 0.25]);
+    const clr = css2color(this.color);
+    const clrCss = color2css2([clr[0], clr[1], clr[2], 0.25]);
     this.style["background-color"] = clrCss;
     this.setCSS();
   }
@@ -75508,7 +75951,7 @@ function getNoteFrames(screen) {
         rec(node);
       }
     }
-    if (n instanceof UIBase2 && n.shadow !== void 0 && n.shadow.childNodes) {
+    if (n instanceof UIBase && n.shadow !== void 0 && n.shadow.childNodes) {
       for (const node of n.shadow.childNodes) {
         rec(node);
       }
@@ -75532,13 +75975,13 @@ function sendNote(screen, msg, color, timeout = 3e3, showExclMark = true) {
 }
 window._sendNote = sendNote;
 function error(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css3([1, 0, 0, 1]), timeout);
+  return sendNote(screen, msg, color2css2([1, 0, 0, 1]), timeout);
 }
 function warning(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css3([0.78, 0.78, 0.2, 1]), timeout);
+  return sendNote(screen, msg, color2css2([0.78, 0.78, 0.2, 1]), timeout);
 }
 function message(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css3([0.2, 0.9, 0.1, 1]), timeout, false);
+  return sendNote(screen, msg, color2css2([0.2, 0.9, 0.1, 1]), timeout, false);
 }
 function progbarNote(screen, msg, percent, color, timeout) {
   noteframes = getNoteFrames(screen);
@@ -75717,7 +76160,7 @@ var LastToolPanel = class extends ColumnFrame {
     };
   }
 };
-UIBase2.internalRegister(LastToolPanel);
+UIBase.internalRegister(LastToolPanel);
 
 // scripts/widgets/ui_panzoom.ts
 init_ui_base();
@@ -75779,7 +76222,7 @@ var PanZoomContainer = class extends Container3 {
   };
   constructor() {
     super();
-    this.content = UIBase2.createElement("container-x");
+    this.content = UIBase.createElement("container-x");
     this.content.parentWidget = this;
     this.shadow.appendChild(this.content);
   }
@@ -75896,7 +76339,7 @@ var PanZoomContainer = class extends Container3 {
     return this.content.appendChild(n);
   }
 };
-UIBase2.internalRegister(PanZoomContainer);
+UIBase.internalRegister(PanZoomContainer);
 var PanZoomPanOp = class extends ToolOp {
   _pz;
   _button = 0;
@@ -78188,7 +78631,7 @@ function buildForwardedUI(root, ctx, node, nodePath) {
   }
 }
 function propEditRow(ctx, label, path, socket) {
-  const row = UIBase2.createElement("container-x");
+  const row = UIBase.createElement("container-x");
   row.ctx = ctx;
   row._init();
   row.classList.add("nodeeditor-prop-row");
@@ -78275,11 +78718,11 @@ function buildGroupDesigner(root, opts) {
       );
       row.appendChild(down);
     }
-    const remove = document.createElement("button");
-    remove.textContent = "\u2715";
-    remove.title = "Stop exposing this entry";
-    remove.addEventListener("click", () => dispatch({ kind: "removeEntry", ...common, index }));
-    row.appendChild(remove);
+    const remove2 = document.createElement("button");
+    remove2.textContent = "\u2715";
+    remove2.title = "Stop exposing this entry";
+    remove2.addEventListener("click", () => dispatch({ kind: "removeEntry", ...common, index }));
+    row.appendChild(remove2);
     root.appendChild(row);
   });
   const addRow = document.createElement("div");
@@ -78573,7 +79016,7 @@ var NodeFrame = class extends Container3 {
     this._socketsRoot = document.createElement("div");
     this._socketsRoot.className = "nodeframe-sockets";
     this.shadow.appendChild(this._socketsRoot);
-    this._body = UIBase2.createElement("container-x");
+    this._body = UIBase.createElement("container-x");
     this._body.style.cursor = "auto";
     this._body.parentWidget = this;
     this.shadow.appendChild(this._body);
@@ -78672,7 +79115,7 @@ var NodeFrame = class extends Container3 {
     });
   }
 };
-UIBase2.internalRegister(NodeFrame);
+UIBase.internalRegister(NodeFrame);
 
 // scripts/editors/nodeeditor/linkcanvas.ts
 init_ui_base();
@@ -78700,7 +79143,7 @@ function linkDistance(s, x, y, samples = 24) {
   }
   return best;
 }
-var LinkCanvas = class extends UIBase2 {
+var LinkCanvas = class extends UIBase {
   canvas;
   g;
   constructor() {
@@ -78760,7 +79203,7 @@ var LinkCanvas = class extends UIBase2 {
     }
   }
 };
-UIBase2.internalRegister(LinkCanvas);
+UIBase.internalRegister(LinkCanvas);
 
 // scripts/editors/nodeeditor/linkdrag.ts
 init_ui_base();
@@ -78816,7 +79259,7 @@ var LinkDrag = class {
       socketAnchor(origin.frame.metrics(), origin.dir, row)
     );
     const r = this.view.panzoom.getBoundingClientRect();
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     overlay.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
     const seg = origin.dir === "out" ? { x1: a2[0], y1: a2[1], x2: local[0], y2: local[1] } : { x1: local[0], y1: local[1], x2: a2[0], y2: a2[1] };
     overlay.drawLinks([seg], dpi);
@@ -78905,7 +79348,7 @@ var LinkDrag = class {
     }
   }
   _makeOverlay() {
-    const overlay = UIBase2.createElement("nodelinkcanvas-x");
+    const overlay = UIBase.createElement("nodelinkcanvas-x");
     overlay.ctx = this.view.ctx;
     overlay.style.position = "absolute";
     overlay.style.left = overlay.style.top = "0px";
@@ -79776,14 +80219,14 @@ var NodeGraphView = class extends Container3 {
     this._crumbs = document.createElement("div");
     this._crumbs.style.cssText = "display: flex; gap: 4px; padding: 2px; align-items: center;";
     this.shadow.appendChild(this._crumbs);
-    this.panzoom = UIBase2.createElement("panzoom-x");
+    this.panzoom = UIBase.createElement("panzoom-x");
     this.panzoom.parentWidget = this;
     this.shadow.appendChild(this.panzoom);
     this.panzoom.ctx = this.ctx;
     this.panzoom._init();
     this.panzoom.style.flexGrow = "1";
     this.panzoom.style.minHeight = "0";
-    this.links = UIBase2.createElement("nodelinkcanvas-x");
+    this.links = UIBase.createElement("nodelinkcanvas-x");
     this.links.ctx = this.ctx;
     this.panzoom.addUnderlay(this.links);
     this.links._init();
@@ -79946,7 +80389,7 @@ var NodeGraphView = class extends Container3 {
       if (this.frames.has(node.id)) {
         continue;
       }
-      const frame = UIBase2.createElement("nodeframe-x");
+      const frame = UIBase.createElement("nodeframe-x");
       frame.setNode(node);
       frame.getScale = () => this.panzoom.transform.scale;
       frame.onSelect = (f2, e) => this._selectFrame(f2, e);
@@ -80341,7 +80784,7 @@ var NodeGraphView = class extends Container3 {
     }
     this._linkRefs = links;
     const r = this.panzoom.getBoundingClientRect();
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     this.links.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
     this.links.drawLinks(
       links.map((l) => l.seg),
@@ -80417,7 +80860,7 @@ var NodeGraphView = class extends Container3 {
     this._applySelection();
   }
 };
-UIBase2.internalRegister(NodeGraphView);
+UIBase.internalRegister(NodeGraphView);
 
 // scripts/util/simple_events.ts
 init_simple_events();
@@ -80467,7 +80910,7 @@ var ToolBase = class extends ToolOp {
       console.log("Error, modaldata was not undefined");
       popModalLight(this.modaldata);
     }
-    this.overdraw = UIBase2.createElement("overdraw-x");
+    this.overdraw = UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
     const handlers = {};
     const keys2 = Object.getOwnPropertyNames(this);
@@ -80678,7 +81121,7 @@ var SplitTool = class extends ToolBase {
       console.trace("double call to modalStart()");
       return;
     }
-    this.overdraw = UIBase2.createElement("overdraw-x");
+    this.overdraw = UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
     super.toolModalStart(ctx);
   }
@@ -80775,7 +81218,7 @@ var RemoveAreaTool = class extends ToolBase {
       console.trace("double call to modalStart()");
       return;
     }
-    this.overdraw = UIBase2.createElement("overdraw-x");
+    this.overdraw = UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
     super.toolModalStart(ctx);
   }
@@ -81510,7 +81953,7 @@ var ScreenHalfEdge = class {
     return this.sarea._sarea_id + ":" + this.border._id;
   }
 };
-var ScreenBorder = class _ScreenBorder extends UIBase2 {
+var ScreenBorder = class _ScreenBorder extends UIBase {
   screen;
   v1;
   v2;
@@ -81678,7 +82121,7 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
       this._style = document.createElement("style");
       this.appendChild(this._style);
     }
-    const dpi = UIBase2.getDPI();
+    const dpi = UIBase.getDPI();
     const pad = this.getDefault("mouse-threshold") / dpi;
     let wid = this.getDefault("border-width");
     const v1 = this.v1;
@@ -81763,7 +82206,7 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     this._innerstyle.textContent = innerbuf;
     this.setAttribute("class", "screenborder_" + this._id);
     this.inner.setAttribute("class", "screenborder_inner_" + this._id);
-    this.style["position"] = UIBase2.PositionKey;
+    this.style["position"] = UIBase.PositionKey;
     this.style["left"] = x + "px";
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";
@@ -81798,7 +82241,7 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
     return _ScreenBorder.hash(this.v1, this.v2);
   }
 };
-UIBase2.internalRegister(ScreenBorder);
+UIBase.internalRegister(ScreenBorder);
 
 // scripts/util/math.ts
 init_math();
@@ -81807,8 +82250,8 @@ init_math();
 init_util2();
 init_ui_base();
 var SVG_URL = "http://www.w3.org/2000/svg";
-var Vector25 = Vector2;
-var CanvasOverdraw = class extends UIBase2 {
+var Vector26 = Vector2;
+var CanvasOverdraw = class extends UIBase {
   canvas;
   g;
   screen;
@@ -81878,7 +82321,7 @@ var CanvasOverdraw = class extends UIBase2 {
     this.shadow.appendChild(this.svg);
   }
 };
-var Overdraw = class extends UIBase2 {
+var Overdraw = class extends UIBase {
   visibleToPick;
   screen;
   shapes;
@@ -81951,7 +82394,7 @@ var Overdraw = class extends UIBase2 {
   drawTextBubbles(texts, cos2, colors) {
     const boxes = [];
     const elems = [];
-    const cent = new Vector25();
+    const cent = new Vector26();
     for (let i = 0; i < texts.length; i++) {
       const co = cos2[i];
       const text2 = texts[i];
@@ -81969,7 +82412,7 @@ var Overdraw = class extends UIBase2 {
       if (sizeMatch === null) {
         size = this.getDefault("DefaultText").size;
       } else {
-        size = parsepx2(sizeMatch[0]);
+        size = parsepx(sizeMatch[0]);
       }
       const measureFn = measureTextBlock;
       const tsize = measureFn(this, text2, void 0, void 0, size, font);
@@ -81977,14 +82420,14 @@ var Overdraw = class extends UIBase2 {
         ~~tsize.width,
         ~~tsize.height
       ];
-      const pad = parsepx2(box.style["padding"]);
+      const pad = parsepx(box.style["padding"]);
       box.minsize[0] += pad * 2;
       box.minsize[1] += pad * 2;
-      const x = parsepx2(box.style["left"]);
-      const y = parsepx2(box.style["top"]);
+      const x = parsepx(box.style["left"]);
+      const y = parsepx(box.style["top"]);
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector25([x, y]);
+      box.startpos = new Vector26([x, y]);
       box.setCSS = function() {
         this.style["padding"] = "0px";
         this.style["margin"] = "0px";
@@ -82014,10 +82457,10 @@ var Overdraw = class extends UIBase2 {
           s2[0] = box2.params[2];
           s2[1] = box2.params[3];
           const overlap = aabb_overlap_area(
-            new Vector25(box1.params),
-            new Vector25(s1),
-            new Vector25(box2.params),
-            new Vector25(s2)
+            new Vector26(box1.params),
+            new Vector26(s1),
+            new Vector26(box2.params),
+            new Vector26(s2)
           );
           ret += overlap;
         }
@@ -82078,7 +82521,7 @@ var Overdraw = class extends UIBase2 {
     }
     mergedArgs.color = mergedArgs.color ? mergedArgs.color : "white";
     if (typeof mergedArgs.color === "object") {
-      mergedArgs.color = color2css3(mergedArgs.color);
+      mergedArgs.color = color2css2(mergedArgs.color);
     }
     mergedArgs["padding"] = mergedArgs["padding"] === void 0 ? "5px" : mergedArgs["padding"];
     mergedArgs["border-color"] = mergedArgs["border-color"] ? mergedArgs["border-color"] : "grey";
@@ -82160,7 +82603,7 @@ var Overdraw = class extends UIBase2 {
     };
   }
 };
-UIBase2.internalRegister(Overdraw);
+UIBase.internalRegister(Overdraw);
 
 // scripts/screen/FrameManager_popup.ts
 init_util();
@@ -82222,13 +82665,13 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
   }
   const x = (typeof elem_or_x === "number" ? elem_or_x : rx) ?? 0;
   y = y ?? ry ?? 0;
-  const container = UIBase2.createElement("container-x");
+  const container = UIBase.createElement("container-x");
   container.ctx = screen.ctx;
   container._init();
-  const remove = container.remove;
+  const remove2 = container.remove;
   container.remove = (...args) => {
     removePopup(screen, container);
-    return remove.apply(container, args);
+    return remove2.apply(container, args);
   };
   container.overrideClass("popup");
   container.background = container.getDefault("background-color");
@@ -82237,7 +82680,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
   container.style["borderStyle"] = container.getDefault("border-style");
   container.style["borderWidth"] = container.getDefault("border-width") + "px";
   container.style["boxShadow"] = container.getDefault("box-shadow");
-  container.style["position"] = UIBase2.PositionKey;
+  container.style["position"] = UIBase.PositionKey;
   container.style["zIndex"] = `${ZIndexes.popup}`;
   container.style["left"] = x + "px";
   container.style["top"] = y + "px";
@@ -82525,7 +82968,7 @@ var DockPanel = class extends PanelFrame {
     this.manager?._onPanelCollapse(this);
   }
 };
-UIBase2.internalRegister(DockPanel);
+UIBase.internalRegister(DockPanel);
 var _dockpin_idgen = 0;
 var PanelManager = class {
   host;
@@ -83002,9 +83445,9 @@ ${body}}
   }
   _makeFloatFrame(panel, pos, size) {
     const def = panel.def;
-    const frame = UIBase2.createElement("colframe-x");
+    const frame = UIBase.createElement("colframe-x");
     frame.ctx = this.host.ctx;
-    frame.style.position = UIBase2.PositionKey;
+    frame.style.position = UIBase.PositionKey;
     frame.style.left = pos[0] + "px";
     frame.style.top = pos[1] + "px";
     frame.style.zIndex = `${ZIndexes.floatingPanel}`;
@@ -83047,10 +83490,10 @@ ${body}}
     const screen = this.host.ctx ? this._screen() : void 0;
     if (screen) {
       addPopup(screen, frame);
-      const remove = frame.remove.bind(frame);
+      const remove2 = frame.remove.bind(frame);
       frame.remove = () => {
         removePopup(screen, frame);
-        return remove();
+        return remove2();
       };
     }
     return frame;
@@ -83174,7 +83617,7 @@ ${body}}
     if (!this.host.ctx) {
       return;
     }
-    const od = UIBase2.createElement("overdraw-x");
+    const od = UIBase.createElement("overdraw-x");
     od.start(this._screen());
     const fr = frame.getBoundingClientRect();
     const hr = this.host.getBoundingClientRect();
@@ -83496,7 +83939,7 @@ ${body}}
     if (visible.length === 0) {
       return;
     }
-    const tc = UIBase2.createElement("tabcontainer-x");
+    const tc = UIBase.createElement("tabcontainer-x");
     tc.ctx = this.host.ctx;
     tc.setAttribute("bar_pos", "top");
     stack.tabs = tc;
@@ -83648,7 +84091,7 @@ ${body}}
     wrap.style.setProperty("overflow", "auto", "important");
     wrap.style.setProperty("min-width", "0", "important");
     r.stackWrap = wrap;
-    const rail = UIBase2.createElement("tabbar-x");
+    const rail = UIBase.createElement("tabbar-x");
     rail.ctx = this.host.ctx;
     rail.setAttribute("bar_pos", r.side);
     r.rail = rail;
@@ -83733,7 +84176,7 @@ ${body}}
     if (!def) {
       throw new Error(`unknown panel id "${id}" (missing panel() declaration)`);
     }
-    const panel = UIBase2.createElement("dock-panel-x");
+    const panel = UIBase.createElement("dock-panel-x");
     panel.panelId = id;
     panel.def = def;
     panel.manager = this;
@@ -83801,7 +84244,7 @@ var BorderSides = {
   TOP: 3
 };
 Symbol.IsAreaTag = /* @__PURE__ */ Symbol.for("IsAreaTag");
-var Area = class extends UIBase2 {
+var Area = class extends UIBase {
   static STRUCT;
   // used to avoid circular module ref with UIBase
   [Symbol.IsAreaTag] = true;
@@ -83854,10 +84297,10 @@ var Area = class extends UIBase2 {
     this.size = void 0;
     this.minSize = [5, 5];
     this.maxSize = [void 0, void 0];
-    const appendChild = this.shadow.appendChild.bind(this.shadow);
+    const appendChild2 = this.shadow.appendChild.bind(this.shadow);
     this.shadow.appendChild = (child) => {
-      appendChild(child);
-      if (child instanceof UIBase2) {
+      appendChild2(child);
+      if (child instanceof UIBase) {
         child.parentWidget = this;
       }
       return child;
@@ -83865,7 +84308,7 @@ var Area = class extends UIBase2 {
     const prepend = this.shadow.prepend.bind(this.shadow);
     this.shadow.prepend = (child) => {
       prepend(child);
-      if (child instanceof UIBase2) {
+      if (child instanceof UIBase) {
         child.parentWidget = this;
       }
     };
@@ -83897,7 +84340,7 @@ var Area = class extends UIBase2 {
     if (def.areaname in areaclasses) {
       delete areaclasses[def.areaname];
     }
-    UIBase2.unregister(cls);
+    UIBase.unregister(cls);
   }
   /*
     addEventListener(type, cb, options) {
@@ -83949,9 +84392,9 @@ var Area = class extends UIBase2 {
     }
     areaclasses[def.areaname] = cls;
     if (isInternal) {
-      UIBase2.internalRegister(cls);
+      UIBase.internalRegister(cls);
     } else {
-      UIBase2.register(cls);
+      UIBase.register(cls);
     }
   }
   static makeAreasEnum(filter) {
@@ -83971,7 +84414,7 @@ var Area = class extends UIBase2 {
     };
   }
   static newSTRUCT() {
-    return UIBase2.createElement(this.define().tagname);
+    return UIBase.createElement(this.define().tagname);
   }
   init() {
     super.init();
@@ -84036,7 +84479,7 @@ var Area = class extends UIBase2 {
   }
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
-    const ret = UIBase2.createElement(this.constructor.define().tagname);
+    const ret = UIBase.createElement(this.constructor.define().tagname);
     return ret;
   }
   on_resize(size, oldsize) {
@@ -84105,7 +84548,7 @@ var Area = class extends UIBase2 {
     return this.owning_sarea?.switcher;
   }
   makeAreaSwitcher(container) {
-    const ret = UIBase2.createElement("area-docker-x");
+    const ret = UIBase.createElement("area-docker-x");
     container.add(ret);
     return ret;
   }
@@ -84153,7 +84596,7 @@ var Area = class extends UIBase2 {
       this.helppicker.iconsheet = 0;
     }
     if (addNoteArea) {
-      const notef = UIBase2.createElement("noteframe-x");
+      const notef = UIBase.createElement("noteframe-x");
       notef.ctx = this.ctx;
       this.noteArea = notef;
       row._add(notef);
@@ -84162,7 +84605,7 @@ var Area = class extends UIBase2 {
   }
   setCSS() {
     if (this.size !== void 0) {
-      this.style["position"] = UIBase2.PositionKey;
+      this.style["position"] = UIBase.PositionKey;
       this.style["width"] = this.size[0] + "px";
       this.style["height"] = this.size[1] + "px";
     }
@@ -84263,8 +84706,8 @@ pathux.Area {
 }
 `;
 struct_default.register(Area);
-UIBase2.internalRegister(Area);
-var ScreenArea2 = class extends UIBase2 {
+UIBase.internalRegister(Area);
+var ScreenArea2 = class extends UIBase {
   static STRUCT;
   keymap;
   screen;
@@ -84431,7 +84874,7 @@ var ScreenArea2 = class extends UIBase2 {
     this._size.load(val);
   }
   static newSTRUCT() {
-    return UIBase2.createElement("screenarea-x");
+    return UIBase.createElement("screenarea-x");
   }
   static define() {
     return {
@@ -84543,7 +84986,7 @@ var ScreenArea2 = class extends UIBase2 {
     for (const editor2 of obj.editors) {
       const areaname = editor2.areaname;
       const tagname = areaclasses[areaname].define().tagname;
-      const area = UIBase2.createElement(tagname);
+      const area = UIBase.createElement(tagname);
       area.owning_sarea = this;
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
@@ -84594,7 +85037,7 @@ var ScreenArea2 = class extends UIBase2 {
     return p && isScreen(p) ? p : void 0;
   }
   copy(screen) {
-    const ret = UIBase2.createElement("screenarea-x");
+    const ret = UIBase.createElement("screenarea-x");
     ret.screen = screen;
     ret.ctx = this.ctx;
     ret.pos[0] = this.pos[0];
@@ -84684,7 +85127,7 @@ var ScreenArea2 = class extends UIBase2 {
     const h = this.chromeHeight;
     this.area.style["width"] = "100%";
     if (h > 0) {
-      this.area.style["position"] = UIBase2.PositionKey;
+      this.area.style["position"] = UIBase.PositionKey;
       this.area.style["left"] = "0px";
       this.area.style["top"] = h + "px";
       this.area.style["height"] = "calc(100% - " + h + "px)";
@@ -84783,7 +85226,7 @@ var ScreenArea2 = class extends UIBase2 {
     return this;
   }
   setCSS() {
-    this.style["position"] = UIBase2.PositionKey;
+    this.style["position"] = UIBase.PositionKey;
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
     this.style["width"] = this.size[0] + "px";
@@ -84821,7 +85264,7 @@ var ScreenArea2 = class extends UIBase2 {
       }
     }
     const result = super.appendChild(child);
-    if (child instanceof UIBase2) {
+    if (child instanceof UIBase) {
       child.parentWidget = this;
       child.onadd();
     }
@@ -84843,7 +85286,7 @@ var ScreenArea2 = class extends UIBase2 {
     if (this.switcher && this.switcher.parentWidget === row && this.switcher.parentNode) {
       return;
     }
-    const dockerTag = UIBase2.getInternalName("area-docker-x");
+    const dockerTag = UIBase.getInternalName("area-docker-x");
     row._forEachChildWidget((child) => {
       if (child.tagName.toLowerCase() === dockerTag && child !== this.switcher) {
         HTMLElement.prototype.remove.call(child);
@@ -84895,7 +85338,7 @@ var ScreenArea2 = class extends UIBase2 {
       this._deleteEditors(name2);
     }
     if (!(name2 in this.editormap)) {
-      this.editormap[name2] = UIBase2.createElement(def.tagname);
+      this.editormap[name2] = UIBase.createElement(def.tagname);
       this.editormap[name2].ctx = this.ctx;
       this.editormap[name2].parentWidget = this;
       this.editormap[name2].owning_sarea = this;
@@ -85038,7 +85481,7 @@ var ScreenArea2 = class extends UIBase2 {
       if (typeof area !== "object") {
         for (const k in areaclasses) {
           const tagname = areaclasses[k].define().tagname;
-          area = UIBase2.createElement(tagname);
+          area = UIBase.createElement(tagname);
           const areaname = area.constructor.define().areaname;
           this.editors.push(area);
           this.editormap[areaname] = area;
@@ -85085,7 +85528,7 @@ pathux.ScreenArea {
 }
 `;
 struct_default.register(ScreenArea2);
-UIBase2.internalRegister(ScreenArea2);
+UIBase.internalRegister(ScreenArea2);
 
 // scripts/editors/nodeeditor/nodeeditor.ts
 init_struct();
@@ -85107,7 +85550,7 @@ var NodeEditor = class extends Area {
   _rootPath = "";
   constructor() {
     super();
-    this.view = UIBase2.createElement("nodegraphview-x");
+    this.view = UIBase.createElement("nodegraphview-x");
   }
   static define() {
     return {
@@ -85119,7 +85562,7 @@ var NodeEditor = class extends Area {
   }
   init() {
     super.init();
-    this.container = UIBase2.createElement("colframe-x");
+    this.container = UIBase.createElement("colframe-x");
     this.container.ctx = this.ctx;
     this.shadow.appendChild(this.container);
     this.headerRow = this.makeHeader(this.container, false);
@@ -85180,7 +85623,7 @@ var NodeEditor = class extends Area {
     });
   }
   copy() {
-    const ret = UIBase2.createElement(this.constructor.define().tagname);
+    const ret = UIBase.createElement(this.constructor.define().tagname);
     ret.setGraph(this.view.rootGraph, this.view.graphPath);
     ret.view.setViewState(this.view.getViewState());
     return ret;
@@ -86249,14 +86692,14 @@ var ThemeEditor = class extends Container3 {
     const read = () => {
       const css = String(slot.get() ?? "");
       try {
-        cw.setRGBA(css2color2(css.toLowerCase().trim()));
+        cw.setRGBA(css2color(css.toLowerCase().trim()));
       } catch {
         console.warn("Failed to set color " + key, css);
       }
     };
     read();
     cw.label = key;
-    cw.on_change = () => this.setSlot(slot, color2css3(cw.rgba), cw);
+    cw.on_change = () => this.setSlot(slot, color2css2(cw.rgba), cw);
     this.onRefresh(cw, slot, read);
     return cw;
   }
@@ -86315,11 +86758,11 @@ var ThemeEditor = class extends Container3 {
     }
     const cw = panel.colorbutton(void 0);
     cw.label = "color";
-    cw.setRGBA(css2color2(font().color));
+    cw.setRGBA(css2color(font().color));
     cw.on_change = () => edit(cw, (next) => {
-      next.color = color2css3(cw.rgba);
+      next.color = color2css2(cw.rgba);
     });
-    this.onRefresh(cw, slot, () => cw.setRGBA(css2color2(font().color)));
+    this.onRefresh(cw, slot, () => cw.setRGBA(css2color(font().color)));
     const slider = panel.slider(void 0, "size", font().size);
     slider.setAttribute("min", "1");
     slider.setAttribute("max", "100");
@@ -86365,7 +86808,7 @@ var ThemeEditor = class extends Container3 {
     }
   }
 };
-UIBase2.internalRegister(ThemeEditor);
+UIBase.internalRegister(ThemeEditor);
 
 // scripts/widgets/ui_treeview.ts
 init_ui_base();
@@ -86407,7 +86850,7 @@ var TreeItem = class extends Container3 {
     if (this._icon2) {
       this._icon2 = id;
     } else {
-      this._icon2 = UIBase2.createElement("icon-label-x");
+      this._icon2 = UIBase.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
       this.header.insert(1, this._icon2);
@@ -86455,7 +86898,7 @@ var TreeItem = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(TreeItem);
+UIBase.internalRegister(TreeItem);
 var TreeView = class extends Container3 {
   items;
   strokes;
@@ -86469,7 +86912,7 @@ var TreeView = class extends Container3 {
     super.init();
     this.style.display = "flex";
     this.style.flexDirection = "column";
-    this.overdraw = UIBase2.createElement("overdraw-x");
+    this.overdraw = UIBase.createElement("overdraw-x");
     console.log(this.overdraw.startNode);
     this.overdraw.startNode(this);
     this.style.margin = this.style.padding = "0px";
@@ -86581,7 +87024,7 @@ var TreeView = class extends Container3 {
     od.style.margin = "0px";
     od.style.padding = "0px";
     od.svg.style.margin = "0px";
-    od.style.position = UIBase2.PositionKey;
+    od.style.position = UIBase.PositionKey;
     od.style.width = r.width - 1 + "px";
     od.style.height = r.height - 1 + "px";
     od.style.left = x + "px";
@@ -86592,7 +87035,7 @@ var TreeView = class extends Container3 {
     this.updateOverdraw();
   }
   item(name2, args = {}) {
-    const ret = UIBase2.createElement("tree-item-x");
+    const ret = UIBase.createElement("tree-item-x");
     this.add(ret);
     ret._init();
     ret.text = name2;
@@ -86626,7 +87069,7 @@ var TreeView = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(TreeView);
+UIBase.internalRegister(TreeView);
 
 // scripts/graph/index.ts
 var graph_exports = {};
@@ -86890,8 +87333,8 @@ function startDrag(box) {
       }
       const dx = x - lastx;
       const dy = y - lasty;
-      let hx = parsepx2(box.style.left);
-      let hy = parsepx2(box.style.top);
+      let hx = parsepx(box.style.left);
+      let hy = parsepx(box.style.top);
       hx += dx;
       hy += dy;
       console.log(hx, hy);
@@ -86930,8 +87373,8 @@ var DragBox = class extends Container3 {
   constructor() {
     super();
     this._done = false;
-    this.header = UIBase2.createElement("rowframe-x");
-    this.contents = UIBase2.createElement("container-x");
+    this.header = UIBase.createElement("rowframe-x");
+    this.contents = UIBase.createElement("container-x");
     this.header.style.borderRadius = "20px";
     this.header.parentWidget = this;
     this.contents.parentWidget = this;
@@ -87058,7 +87501,7 @@ var DragBox = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(DragBox);
+UIBase.internalRegister(DragBox);
 
 // scripts/widgets/ui_dialog.ts
 init_ui_base();
@@ -87104,13 +87547,13 @@ function startTitleDrag(sarea, e) {
   });
 }
 function makeTitleBar(sarea, title) {
-  const bar = UIBase2.createElement("rowframe-x");
+  const bar = UIBase.createElement("rowframe-x");
   bar.ctx = sarea.ctx;
   bar.parentWidget = sarea;
   sarea.shadow.appendChild(bar);
   bar._init();
   bar.noMarginsOrPadding();
-  bar.style.position = UIBase2.PositionKey;
+  bar.style.position = UIBase.PositionKey;
   bar.style.left = "0px";
   bar.style.top = "0px";
   bar.style.width = "100%";
@@ -87138,7 +87581,7 @@ function makeTitleBar(sarea, title) {
   return bar;
 }
 function makePopupArea(area_class, screen, args = {}) {
-  const sarea = UIBase2.createElement("screenarea-x");
+  const sarea = UIBase.createElement("screenarea-x");
   const width = args.width || screen.size[0] * 0.7;
   const height = args.height || screen.size[1] * 0.7;
   const addEscapeKeyHandler = args.addEscapeKeyHandler !== false;
@@ -87348,7 +87791,7 @@ Right-click the tab to close it.`;
   getArea() {
     let p = this.parentWidget;
     let lastp = p;
-    const name2 = UIBase2.getInternalName("screenarea-x");
+    const name2 = UIBase.getInternalName("screenarea-x");
     while (p && p.tagName.toLowerCase() !== name2) {
       lastp = p;
       p = p.parentWidget;
@@ -87460,7 +87903,7 @@ Right-click the tab to close it.`;
     if (!mpos) {
       mpos = this.ctx.screen.mpos;
     }
-    const menu = UIBase2.createElement("menu-x");
+    const menu = UIBase.createElement("menu-x");
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
     menu.srcWidget = tab2;
@@ -87536,7 +87979,7 @@ Right-click the tab to close it.`;
   /** Build and show the right-click context menu for a single editor tab.
    *  Currently exposes a `Close` action; designed to grow other items later. */
   openTabContextMenu(editor2, event) {
-    const menu = UIBase2.createElement("menu-x");
+    const menu = UIBase.createElement("menu-x");
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
     menu._init();
@@ -87550,7 +87993,7 @@ Right-click the tab to close it.`;
     return menu;
   }
 };
-UIBase2.internalRegister(AreaDocker);
+UIBase.internalRegister(AreaDocker);
 
 // scripts/screen/FrameManager.ts
 init_const();
@@ -87582,7 +88025,7 @@ function purgeUpdateStack() {
     update_stack[i] = void 0;
   }
 }
-var Screen2 = class extends UIBase2 {
+var Screen2 = class extends UIBase {
   static STRUCT = struct_default.inlineRegister(
     this,
     `pathux.Screen {
@@ -87701,7 +88144,7 @@ var Screen2 = class extends UIBase2 {
   set ctx(val) {
     this._ctx = val;
     const rec = (n) => {
-      if (n instanceof UIBase2) {
+      if (n instanceof UIBase) {
         n.ctx = val;
       }
       for (const n2 of n.childNodes) {
@@ -87721,7 +88164,7 @@ var Screen2 = class extends UIBase2 {
     }
   }
   static fromJSON(obj, schedule_resize = false) {
-    const ret = UIBase2.createElement(this.define().tagname);
+    const ret = UIBase.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
   static define() {
@@ -87730,7 +88173,7 @@ var Screen2 = class extends UIBase2 {
     };
   }
   static newSTRUCT() {
-    return UIBase2.createElement(this.define().tagname);
+    return UIBase.createElement(this.define().tagname);
   }
   setPosSize(x, y, w, h) {
     this.pos[0] = x;
@@ -87852,7 +88295,7 @@ var Screen2 = class extends UIBase2 {
     });
   }
   newScreenArea() {
-    const ret = UIBase2.createElement("screenarea-x");
+    const ret = UIBase.createElement("screenarea-x");
     ret.ctx = this.ctx;
     if (ret.ctx) {
       ret.init();
@@ -87860,7 +88303,7 @@ var Screen2 = class extends UIBase2 {
     return ret;
   }
   copy() {
-    const ret = UIBase2.createElement(
+    const ret = UIBase.createElement(
       this.constructor.define().tagname
     );
     ret.ctx = this.ctx;
@@ -87963,7 +88406,7 @@ var Screen2 = class extends UIBase2 {
     return ret;
   }
   draggablePopup(x, y) {
-    const ret = UIBase2.createElement("drag-box-x");
+    const ret = UIBase.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -87972,7 +88415,7 @@ var Screen2 = class extends UIBase2 {
       removePopup(this, ret);
     };
     ret.style["zIndex"] = `${ZIndexes.floatingPanel}`;
-    ret.style["position"] = UIBase2.PositionKey;
+    ret.style["position"] = UIBase.PositionKey;
     ret.style["left"] = x + "px";
     ret.style["top"] = y + "px";
     document.body.appendChild(ret);
@@ -88162,7 +88605,7 @@ var Screen2 = class extends UIBase2 {
     this.clear();
     super.loadJSON(obj);
     for (const sarea of obj.sareas) {
-      const sarea2 = UIBase2.createElement("screenarea-x");
+      const sarea2 = UIBase.createElement("screenarea-x");
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
       this.appendChild(sarea2);
@@ -88288,7 +88731,7 @@ var Screen2 = class extends UIBase2 {
     const visit = {};
     const rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === void 0 || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase2);
+      bad = bad || !(n instanceof UIBase);
       if (n._id in visit || n.hidden) {
         return;
       }
@@ -88459,7 +88902,7 @@ var Screen2 = class extends UIBase2 {
           n.push_ctx_active(true);
           push(AREA_CTX_POP);
         }
-        if (!n.hidden && n !== this2 && n instanceof UIBase2) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase) {
           if (!n._ctx) {
             n._ctx = ctx;
           }
@@ -88477,7 +88920,7 @@ var Screen2 = class extends UIBase2 {
           t2 = time_ms();
         }
         for (const n2 of n.childNodes) {
-          if (!(n2 instanceof UIBase2) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase) || !(n2.packflag & PackFlags.NO_UPDATE)) {
             push(n2);
           }
         }
@@ -88485,11 +88928,11 @@ var Screen2 = class extends UIBase2 {
           continue;
         }
         for (const n2 of n.shadow.childNodes) {
-          if (!(n2 instanceof UIBase2) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase) || !(n2.packflag & PackFlags.NO_UPDATE)) {
             push(n2);
           }
         }
-        if (n instanceof UIBase2) {
+        if (n instanceof UIBase) {
           if (!(n.packflag & PackFlags.NO_UPDATE)) {
             scopestack.push(n);
             push(SCOPE_POP);
@@ -88738,7 +89181,7 @@ var Screen2 = class extends UIBase2 {
   }
   _get_debug_overlay() {
     if (!this._debug_overlay) {
-      this._debug_overlay = UIBase2.createElement("overdraw-x");
+      this._debug_overlay = UIBase.createElement("overdraw-x");
       const s = this._debug_overlay;
       s.startNode(this, this);
     }
@@ -88765,9 +89208,9 @@ var Screen2 = class extends UIBase2 {
         y -= s * 0.5;
         x = Math.min(Math.max(x, 0), this.size[0] - s);
         y = Math.min(Math.max(y, 0), this.size[1] - s);
-        let ret = UIBase2.createElement("div");
+        let ret = UIBase.createElement("div");
         ret.setAttribute("class", "__debug");
-        ret.style["position"] = UIBase2.PositionKey;
+        ret.style["position"] = UIBase.PositionKey;
         ret.style["left"] = x + "px";
         ret.style["top"] = y + "px";
         ret.style["height"] = s + "px";
@@ -88780,9 +89223,9 @@ var Screen2 = class extends UIBase2 {
         document.body.appendChild(ret);
         const colors = ["orange", "black", "white"];
         for (let i = 2; i >= 0; i--) {
-          ret = UIBase2.createElement("div");
+          ret = UIBase.createElement("div");
           ret.setAttribute("class", "__debug");
-          ret.style["position"] = UIBase2.PositionKey;
+          ret.style["position"] = UIBase.PositionKey;
           ret.style["left"] = x + "px";
           ret.style["top"] = y + "px";
           ret.style["height"] = s + "px";
@@ -89251,7 +89694,7 @@ var Screen2 = class extends UIBase2 {
     const v2 = co2 instanceof ScreenVert ? co2 : this.getScreenVert(co2, suffix, true);
     const hash = ScreenBorder.hash(v1, v2);
     if (!(hash in this._edgemap)) {
-      const sb = this._edgemap[hash] = UIBase2.createElement(
+      const sb = this._edgemap[hash] = UIBase.createElement(
         "screenborder-x"
       );
       sb._hash = hash;
@@ -89453,7 +89896,7 @@ var Screen2 = class extends UIBase2 {
     delete sarea.editormap[area.constructor.define().areaname];
     sarea.area = void 0;
     HTMLElement.prototype.remove.call(area);
-    const sarea2 = UIBase2.createElement("screenarea-x", true);
+    const sarea2 = UIBase.createElement("screenarea-x", true);
     sarea2.floating = true;
     sarea2.pos = new Vector2(sarea.pos);
     sarea2.pos.addScalar(5);
@@ -89554,7 +89997,7 @@ var Screen2 = class extends UIBase2 {
     }
   }
 };
-UIBase2.internalRegister(Screen2);
+UIBase.internalRegister(Screen2);
 _setScreenClass(Screen2);
 var get_screen_cb;
 var _on_keydown;
@@ -89698,14 +90141,14 @@ var SideBar = class extends Container3 {
     return this._closed;
   }
   get width() {
-    return parsepx2("" + this.getAttribute("width"));
+    return parsepx("" + this.getAttribute("width"));
   }
   set width(val) {
     this.setAttribute("width", "" + val + "px");
     this.update();
   }
   get height() {
-    return parsepx2("" + this.getAttribute("height"));
+    return parsepx("" + this.getAttribute("height"));
   }
   set height(val) {
     this.setAttribute("height", "" + val + "px");
@@ -89774,14 +90217,14 @@ var SideBar = class extends Container3 {
     }
   }
 };
-UIBase2.register(SideBar);
+UIBase.register(SideBar);
 var Editor = class _Editor extends Area {
   container;
   sidebar;
   static makeMenuBar;
   constructor() {
     super();
-    this.container = UIBase2.createElement("container-x");
+    this.container = UIBase.createElement("container-x");
     this.container.parentWidget = this;
     this.shadow.appendChild(this.container);
   }
@@ -89840,7 +90283,7 @@ var Editor = class _Editor extends Area {
     if (this.sidebar) {
       this.sidebar.remove();
     }
-    const sidebar = this.sidebar = UIBase2.createElement("sidebar-base-x");
+    const sidebar = this.sidebar = UIBase.createElement("sidebar-base-x");
     sidebar.parentWidget = this;
     sidebar.ctx = this.ctx;
     this.shadow.appendChild(sidebar);
@@ -90943,7 +91386,7 @@ function loadFile3(appstate, args, data) {
     ret.screen.ctx = appstate.ctx;
     const screenClass = appstate.screenClass;
     if (!(ret.screen instanceof screenClass)) {
-      const newScreen = UIBase2.createElement(screenClass.define().tagname);
+      const newScreen = UIBase.createElement(screenClass.define().tagname);
       newScreen.ctx = appstate.ctx;
       for (const sarea of ret.screen.sareas) {
         newScreen.appendChild(sarea);
@@ -91009,9 +91452,9 @@ var MenuBarEditor = class extends Editor {
         this._height = rect.height;
       }
     }
-    const update = force || this._height !== this.minSize[1];
+    const update2 = force || this._height !== this.minSize[1];
     this.minSize[1] = this.maxSize[1] = this._height;
-    if (update && this.ctx && this.getScreen()) {
+    if (update2 && this.ctx && this.getScreen()) {
       this.getScreen().solveAreaConstraints();
     }
   }
@@ -91365,12 +91808,12 @@ var SimpleScreen = class extends Screen2 {
   }
   setCSS() {
     super.setCSS();
-    this.style["position"] = UIBase2.PositionKey;
+    this.style["position"] = UIBase.PositionKey;
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
   }
 };
-UIBase2.register(SimpleScreen);
+UIBase.register(SimpleScreen);
 var AppState = class _AppState {
   _ctxClass;
   startArgs;
@@ -91536,7 +91979,7 @@ var AppState = class _AppState {
       return;
     }
     screen.update();
-    const sarea = UIBase2.createElement("screenarea-x");
+    const sarea = UIBase.createElement("screenarea-x");
     screen.appendChild(sarea);
     const h = 55;
     const min = new Vector2().addScalar(1e17);
@@ -91574,10 +92017,10 @@ var AppState = class _AppState {
       this.screen.unlisten();
       this.screen.remove();
     }
-    const screen = this.screen = UIBase2.createElement(
+    const screen = this.screen = UIBase.createElement(
       this.screenClass.define().tagname
     );
-    const sarea = UIBase2.createElement("screenarea-x");
+    const sarea = UIBase.createElement("screenarea-x");
     screen.ctx = this.ctx;
     sarea.ctx = this.ctx;
     document.body.appendChild(screen);
@@ -92010,7 +92453,7 @@ DocHistory {
   }
 };
 struct_default.register(DocHistory);
-var DocsBrowser = class extends UIBase2 {
+var DocsBrowser = class extends UIBase {
   _sourceData;
   saveCallback = null;
   handlesDocURL = true;
@@ -92049,7 +92492,7 @@ DocsBrowser {
     this.saveReq = 0;
     this.saveReqStart = time_ms();
     this._last_save = time_ms();
-    this.header = UIBase2.createElement("rowframe-x");
+    this.header = UIBase.createElement("rowframe-x");
     this.shadow.appendChild(this.header);
     this.doOnce(this.makeHeader);
     this.root = document.createElement("iframe");
@@ -92422,15 +92865,15 @@ DocsBrowser {
       return;
     }
     const tags = [];
-    const traverse = (n) => {
+    const traverse2 = (n) => {
       if (n.tagName === "IMG" && !n.getAttribute("_PATCHED_")) {
         tags.push(n);
       }
       for (const c of Array.from(n.children)) {
-        traverse(c);
+        traverse2(c);
       }
     };
-    traverse(this.contentDiv);
+    traverse2(this.contentDiv);
     console.log("Image Tags found:", tags);
     for (const t2 of tags) {
       this.patchImage(t2);
@@ -92681,10 +93124,10 @@ DocsBrowser {
         }
       }
     };
-    const traverse = (n) => {
+    const traverse2 = (n) => {
       visit = () => {
         for (const c of Array.from(n.childNodes)) {
-          traverse(c);
+          traverse2(c);
         }
       };
       if (n.constructor.name === "Text") {
@@ -92698,7 +93141,7 @@ DocsBrowser {
         }
       }
     };
-    traverse(this.contentDiv);
+    traverse2(this.contentDiv);
     return buf;
   }
   getDocPath() {
@@ -92804,7 +93247,7 @@ DocsBrowser {
     this.root.style["backgroundColor"] = "grey";
   }
   static newSTRUCT() {
-    return UIBase2.createElement("docs-browser-x");
+    return UIBase.createElement("docs-browser-x");
   }
   loadSTRUCT(reader) {
     reader(this);
@@ -92818,7 +93261,7 @@ DocsBrowser {
     };
   }
 };
-UIBase2.internalRegister(DocsBrowser);
+UIBase.internalRegister(DocsBrowser);
 struct_default.register(DocsBrowser);
 export {
   AbstractCurve,
@@ -93063,7 +93506,7 @@ export {
   TreeItem,
   TreeView,
   TwoColumnFrame,
-  UIBase2 as UIBase,
+  UIBase,
   UIFlags,
   UndoFlags,
   Unit,
@@ -93137,7 +93580,7 @@ export {
   cmyk_to_rgb,
   colinear,
   colinear2d,
-  color2css3 as color2css,
+  color2css2 as color2css,
   color2web,
   compatMap,
   compile,
@@ -93152,7 +93595,7 @@ export {
   corner_normal,
   createMenu,
   createThemeFile,
-  css2color2 as css2color,
+  css2color,
   customHandlers,
   customPropertyTypes,
   defaultDecimalPlaces,
@@ -93287,7 +93730,7 @@ export {
   parseValueIntern,
   parseVarComments,
   parseXML,
-  parsepx2 as parsepx,
+  parsepx,
   parseutil_exports as parseutil,
   pathDebugEvent,
   pathKey,
@@ -93313,7 +93756,7 @@ export {
   registerToolStackGetter2 as registerToolStackGetter,
   removePopup,
   renameVar,
-  report2 as report,
+  report,
   reverse_keymap,
   rgb_to_cmyk,
   rgb_to_hsv,

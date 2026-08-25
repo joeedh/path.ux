@@ -223,6 +223,22 @@ at most one blank line and never inserts one, so this is stable under
 degrades hover-docs for the public API, since TS does not inherit JSDoc through a
 delegation, so spend it last. R3: trim the 8-line `SELF` JSDoc at 993–998 (−6).
 
+## Status
+
+Complete. `scripts/core/ui_base.ts` is 1197 lines, down from 4985. Every step
+below landed as its own commit, `3d6a8056` through `1d874972`, each gated green
+on typecheck, 301 tests and `format:check`.
+
+Two departures from the written plan:
+
+- Step P0's `TotalRect` / `FormatNumberArgs` / `PickArgs` and the `#reflagGraph`
+  rename happened inside the steps that needed them rather than up front.
+- Closing the last five lines to the 1200 target took a nineteenth extraction —
+  `regenTabOrder` and `init` into `base/ui_base_dom.ts` — instead of reserve
+  levers R2 and R1, which would have been cosmetic.
+
+Verification results are recorded under Verification below.
+
 ## Order of work
 
 Prep first, then the module-level moves, which are near-zero risk and prove the
@@ -230,7 +246,7 @@ Prep first, then the module-level moves, which are near-zero risk and prove the
 class clusters least-coupled first, with the constructor last. Each step is one
 commit gated on `pnpm run typecheck && pnpm run test && pnpm run format:check`.
 
-**Step 0 — retarget the one real import cycle, as a standalone commit.**
+**[x] Step 0 — retarget the one real import cycle, as a standalone commit.**
 `ui_base.ts:759` does `import { DataPathSetOp } from "../pathux";`, and its only
 use is a type position at 3217. `DataPathSetOp` lives at
 `scripts/path-controller/controller/controller_ops.ts:27` and is not re-exported
@@ -238,7 +254,7 @@ from `controller.ts`, so name that module directly:
 `import type { DataPathSetOp } from "../path-controller/controller/controller_ops";`.
 `controller_ops.ts` imports nothing from `scripts/core/`.
 
-**Step P0 — prep, no extraction.** Delete the retained dead code from cleanup 2.
+**[x] Step P0 — prep, no extraction.** Delete the retained dead code from cleanup 2.
 Rename `#reflagGraph` to `_reflagGraph`. Introduce `TotalRect`,
 `FormatNumberArgs` and `PickArgs`, still inside `ui_base.ts`, and apply them to
 the five signatures from cleanup 1. This lands at ~4930 lines and de-risks steps
@@ -248,21 +264,21 @@ the five signatures from cleanup 1. This lands at ~4930 lines and de-risks steps
 
 Step 1 creates `scripts/core/base/`.
 
-1. `base/ui_base_types.ts` — zero runtime deps; surfaces any `import type`
+1. [x] `base/ui_base_types.ts` — zero runtime deps; surfaces any `import type`
    friction, and the new directory's `../` depth, immediately.
-2. `base/ui_base_dpi.ts`, then `base/ui_worker_shim.ts`. Verify the shim still
+2. [x] `base/ui_base_dpi.ts`, then `base/ui_worker_shim.ts`. Verify the shim still
    runs before the class evaluates.
-3. `base/ui_icons.ts` (488) — the biggest single win, with no class coupling.
+3. [x] `base/ui_icons.ts` (488) — the biggest single win, with no class coupling.
    This is the canary for the `ui_base` ⇄ `ui_icons` cycle and for `export *`
    preserving `iconmanager`, `IconSheets` and `makeIconDiv`.
-4. `base/ui_draw.ts` (351) — already free functions taking `elem`, so a straight
+4. [x] `base/ui_draw.ts` (351) — already free functions taking `elem`, so a straight
    move plus the font-alias collapse.
-5. `base/ui_savedata.ts` (130). `ui_base.ts` imports `saveUIData` and `PTOT` back
+5. [x] `base/ui_savedata.ts` (130). `ui_base.ts` imports `saveUIData` and `PTOT` back
    for the retained 3-line `saveData` and `loadData`.
-6. `base/ui_theme_key.ts` — the highest module-order risk. Do it while the file
+6. [x] `base/ui_theme_key.ts` — the highest module-order risk. Do it while the file
    is still mostly intact so a regression bisects easily. Gate additionally on
    `pnpm run gen:themes && pnpm run typecheck:themes`.
-7. `base/ui_element_registry.ts`, plus the first delegation batch: the static
+7. [x] `base/ui_element_registry.ts`, plus the first delegation batch: the static
    registration methods, minus `internalRegister`. Gate on the theme-editor and
    custom-element registration tests.
 
@@ -271,28 +287,28 @@ delegation is proven on statics.
 
 ### Phase B — class clusters
 
-8. `base/ui_base_theme_lookup.ts` — the largest class win (312) and nearly
+8. [x] `base/ui_base_theme_lookup.ts` — the largest class win (312) and nearly
    self-contained. Fold in the `walkStyleChain` collapse. Gate on
    `theme_editor.test.ts`, `theme_editor_widget.test.ts` and `gen:themes`.
-9. `base/ui_base_tooltips.ts` — 152, three methods, isolated; carries the
+9. [x] `base/ui_base_tooltips.ts` — 152, three methods, isolated; carries the
    `TextBox` late-bind hack.
-10. `base/ui_base_modal.ts` — 234. `_clipboardHotkeyInit` is one 115-line method.
+10. [x] `base/ui_base_modal.ts` — 234. `_clipboardHotkeyInit` is one 115-line method.
     Gate on `clipboardDefer.test.ts`.
-11. `base/ui_base_anim.ts` — 279.
-12. `base/ui_base_css.ts` — 195.
-13. `base/ui_base_datapath.ts` — 277. Gate on `pathWatch.test.ts`,
+11. [x] `base/ui_base_anim.ts` — 279.
+12. [x] `base/ui_base_css.ts` — 195.
+13. [x] `base/ui_base_datapath.ts` — 277. Gate on `pathWatch.test.ts`,
     `datapathErrors.test.ts`, `datapathWalker.test.ts`, `massSetPaths.test.ts`
     and `pnpm run gen:paths`. `UIBase.dataPathPolling` is read at 3816; pass it
     in rather than importing the class there.
-14. `base/ui_base_pick.ts` — 109.
-15. `base/ui_base_dom.ts` — 264. This is the `super.` to
+14. [x] `base/ui_base_pick.ts` — 109.
+15. [x] `base/ui_base_dom.ts` — 264. This is the `super.` to
     `HTMLElement.prototype.*.call` step; do it alone so a DOM-semantics
     regression is unambiguous. Gate on `dock_panels.test.ts`,
     `screenarea_switch_editor.test.ts`, `ui_tabs_*` and `ui_listbox_*`.
-16. `base/ui_base_graph.ts` — 160; depends on the P0 rename. Gate on the eight
+16. [x] `base/ui_base_graph.ts` — 160; depends on the P0 rename. Gate on the eight
     `graph_*.test.ts` files.
-17. `base/ui_base_props.ts` — 72; many small accessors, low risk.
-18. `base/ui_base_init.ts` — last. The constructor alone is 205 of the saving but
+17. [x] `base/ui_base_props.ts` — 72; many small accessors, low risk.
+18. [x] `base/ui_base_init.ts` — last. The constructor alone is 205 of the saving but
     has the highest blast radius (field initialization order, `attachShadow`,
     `_idgen`). Every other test is green by then, so breakage is unambiguously
     the constructor.
@@ -357,3 +373,32 @@ Two behavioral checks the test suite does not cover directly:
 Finally, launch the example app with `pnpm nwjs` and exercise icons, tooltips,
 the theme editor, node editor drag gestures and dock panels — the areas whose
 code moved furthest.
+
+### Results
+
+- [x] `pnpm run typecheck` clean, 301/301 tests, `format:check` clean at every
+      step.
+- [x] Barrel diff empty at every phase boundary and at the end — 555 names, the
+      same 555 as the pre-split baseline.
+- [x] `types/core/ui_base.d.ts` member diff reduced to what the plan predicted.
+      Beyond `_reflagGraph`, the emitted diff also showed `_checkTheme` and
+      `_last_description` disappearing, which is the cleanup-2 deletion of two
+      fields that were assigned in the constructor and read nowhere in the repo,
+      and it showed the five signatures from cleanup 1 naming `TotalRect`,
+      `FormatNumberArgs` and `PickArgs` where they had spelled the same shapes
+      inline. One genuine regression surfaced and was fixed in `962b18d1`: an
+      `any` on the extracted `getPathMeta`'s `ctx` parameter widened the method's
+      inferred return from `ToolPropertyTypes | undefined` to `any`.
+- [x] `gen:themes --strict` (62 classes) and `typecheck:themes` clean;
+      `gen:paths` walks to 98 paths, 63 widget tags, 5 structs.
+- [x] Live binding survives `export *`: in the running app, `flagThemeUpdate()`
+      moved `_themeUpdateKey` from 1229370366 to 1148709559 and a widget's
+      `checkThemeUpdate()`, which reads it from another module, saw the change.
+- [x] `ui_worker_shim.ts` evaluates first — `import "./base/ui_worker_shim";` is
+      `ui_base.ts:2`, and `gen:themes` runs the no-`HTMLElement` path.
+- [x] Example app: 2034 widgets built across menus, dock panels, tab bars,
+      sliders, color pickers and the theme editor. Icons render, the File menu
+      pops and tears down its modal on Escape, dock-panel tabs switch, and
+      `getDPI` / `getZoom` / `getTotalRect` / `formatNumber` return correct
+      values over CDP. The example app registers no node editor area, so its
+      drag gestures were not exercised.
