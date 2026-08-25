@@ -1,3 +1,6 @@
+//shims HTMLElement in workers; must evaluate before `class UIBase extends HTMLElement`
+import "./base/ui_worker_shim";
+import { getDPI } from "./base/ui_base_dpi";
 import { contextWrangler } from "../screen/area_wrangler";
 import type { Area } from "../screen/ScreenArea";
 import {
@@ -896,19 +899,6 @@ export function internalSetTimeout(cb: () => void, timeout = 0): void {
 
 window.setTimeoutQueue = setTimeoutQueue as unknown as typeof window.setTimeoutQueue;
 
-// inside a worker?
-if (typeof HTMLElement === "undefined") {
-  // @ts-expect-error
-  window.HTMLElement = class HTMLElement {};
-  // @ts-expect-error
-  window.customElements = {
-    define: () => {},
-  };
-  window.devicePixelRatio = 1.0;
-  // @ts-expect-error
-  window.PointerEvent = class PointerEvent {};
-}
-
 /** Bookkeeping stamped onto a listener so the wrapper it was registered as can be found again. */
 type EventCBHolder = {
   [EventCBSymbol]?: Map<string, EventListener>;
@@ -1600,7 +1590,7 @@ export class UIBase<
    scaling ratio (e.g. for high-resolution displays)
    */
   static getDPI(): number {
-    return window.devicePixelRatio;
+    return getDPI();
   }
 
   static prefix(name: string): string {
