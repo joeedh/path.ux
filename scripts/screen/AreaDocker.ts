@@ -8,7 +8,8 @@ import { Container } from "../core/ui";
 import type { Area, ScreenArea } from "./ScreenArea";
 import { Icons } from "../core/ui_base";
 
-import { type Menu, startMenu } from "../widgets/ui_menu";
+import type { Menu } from "../menu/menu";
+import { startMenu } from "../menu/menu_ops";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { IContextBase } from "../core/context_base";
 import type { TabContainer, TabItem } from "../widgets/ui_tabs";

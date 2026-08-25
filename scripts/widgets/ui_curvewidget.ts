@@ -5,7 +5,7 @@ import { Curve1D } from "../path-controller/curve/curve1d";
 import { makeGenEnum } from "../path-controller/curve/curve1d_utils";
 import type { CurveTypeData } from "../path-controller/curve/curve1d";
 import { IContextBase } from "../core/context_base";
-import type { DropBox } from "../widgets/ui_menu";
+import type { DropBox } from "../menu/dropbox";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
 /** Slider-like widget interface — slider() returns UIBase but these members exist at runtime. */

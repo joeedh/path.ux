@@ -55,7 +55,8 @@ function myRequire(mod: string): unknown {
   return (globalThis as any).require(mod);
 }
 
-import { Menu, DropBox } from "../../widgets/ui_menu";
+import { Menu } from "../../menu/menu";
+import { DropBox } from "../../menu/dropbox";
 import { getIconManager, UIBase } from "../../core/ui_base";
 import cconst from "../../config/const";
 

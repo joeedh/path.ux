@@ -4,7 +4,8 @@
 import "../../widgets/ui_numsliders";
 import "../../widgets/ui_widgets";
 import "../../widgets/ui_textbox";
-import "../../widgets/ui_menu";
+import "../../menu/menu";
+import "../../menu/dropbox";
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import { UIBase } from "../../core/ui_base";
 import type { Container } from "../../core/ui";

@@ -21,7 +21,7 @@ import {
   varSlots,
 } from "../core/ui_theme_utils";
 import type { ThemePath, ThemeRecordWithVar, ThemeVarsDef } from "../core/ui_theme_utils";
-import type { MenuTemplate } from "./ui_menu";
+import type { MenuTemplate } from "../menu/menu_types";
 import type { PanelContents } from "./ui_panel";
 
 interface CatKey {

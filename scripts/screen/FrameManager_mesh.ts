@@ -5,7 +5,8 @@ import cconst from "../config/const";
 import { UIBase } from "../core/ui_base";
 
 import { Vector2 } from "../path-controller/util/vectormath";
-import { createMenu, Menu } from "../widgets/ui_menu";
+import { Menu } from "../menu/menu";
+import { createMenu } from "../menu/menu_ops";
 import { IContextBase } from "../core/context_base";
 import type { ScreenArea, ScreenAreaAny } from "./ScreenArea";
 import type { Screen } from "./FrameManager";

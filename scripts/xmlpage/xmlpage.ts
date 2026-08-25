@@ -1,7 +1,7 @@
 import { PackFlags, UIBase } from "../core/ui_base";
 import { sliderDomAttributes } from "../widgets/ui_numsliders";
 import * as util from "../util/util";
-import { Menu } from "../widgets/ui_menu";
+import { Menu } from "../menu/menu";
 import { Icons } from "../core/ui_base";
 import { Container } from "../core/ui";
 import type { IContextBase } from "../core/context_base";

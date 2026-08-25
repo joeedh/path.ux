@@ -22,7 +22,7 @@ import("../lib/tinymce/tinymce.cjs").then(() => {
 
 import * as util from "../util/util";
 import { Vector2 } from "../util/vectormath";
-import { DropBox } from "../widgets/ui_menu";
+import { DropBox } from "../menu/dropbox";
 
 /* Interfaces for tinymce integration */
 interface TinyMCEBlobInfo {

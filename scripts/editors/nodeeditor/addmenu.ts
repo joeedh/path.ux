@@ -1,5 +1,7 @@
 import type { IContextBase } from "../../core/context_base";
-import { Menu, MenuTemplate, createMenu } from "../../widgets/ui_menu";
+import { Menu } from "../../menu/menu";
+import { createMenu } from "../../menu/menu_ops";
+import type { MenuTemplate } from "../../menu/menu_types";
 import { NodeClasses } from "../../graph/node";
 import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
 

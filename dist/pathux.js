@@ -32269,38 +32269,16 @@ var init_html5_fileapi = __esm({
   }
 });
 
-// scripts/widgets/ui_menu.ts
-function debugmenu(...args) {
-  if (window.DEBUG?.menu) {
-    console.warn("%cmenu:", "color:blue", ...args);
+// scripts/menu/menu_types.ts
+var SEP;
+var init_menu_types = __esm({
+  "scripts/menu/menu_types.ts"() {
+    "use strict";
+    SEP = /* @__PURE__ */ Symbol("MenuSep");
   }
-}
-function startMenuEventWrangling(screen) {
-  if (typeof document === "undefined") {
-    return;
-  }
-  menuWrangler.screen = screen;
-  if (wrangerStarted) {
-    return;
-  }
-  wrangerStarted = true;
-  for (const k in DomEventTypes) {
-    if (menuWrangler[k] === void 0) {
-      continue;
-    }
-    const eventType = DomEventTypes[k];
-    const handler = menuWrangler[k].bind(menuWrangler);
-    window.addEventListener(eventType, handler, { passive: false, capture: true });
-  }
-  menuWrangler.screen = screen;
-  menuWrangler.startTimer();
-}
-function setWranglerScreen(screen) {
-  startMenuEventWrangling(screen);
-}
-function getWranglerScreen() {
-  return menuWrangler.screen;
-}
+});
+
+// scripts/menu/menu_ops.ts
 function createMenu(ctx, title, templ) {
   const menu = UIBase2.createElement("menu-x");
   menu.ctx = ctx;
@@ -32404,19 +32382,790 @@ function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
   menu._popup.flushUpdate();
   menu._popup.flushSetCSS();
 }
-var PropTypes3, SEP, Menu, DropBox, MenuWrangler, menuWrangler, wrangerStarted;
-var init_ui_menu = __esm({
-  "scripts/widgets/ui_menu.ts"() {
+var init_menu_ops = __esm({
+  "scripts/menu/menu_ops.ts"() {
+    "use strict";
+    init_util();
+    init_ui_base();
+    init_simple_events();
+    init_menu();
+    init_wrangler();
+  }
+});
+
+// scripts/menu/dropbox.ts
+var PropTypes3, DropBox;
+var init_dropbox = __esm({
+  "scripts/menu/dropbox.ts"() {
     "use strict";
     init_util();
     init_const();
     init_ui_base();
     init_toolprop();
     init_ui_button();
-    init_events();
-    init_simple_events();
+    init_menu_ops();
     PropTypes3 = PropTypes;
-    SEP = /* @__PURE__ */ Symbol("MenuSep");
+    DropBox = class extends OldButton {
+      _menu;
+      prop;
+      lockTimer;
+      _template;
+      _searchMenuMode;
+      altKey;
+      _value;
+      _last_datapath;
+      _last_dbox_key;
+      _popup;
+      _background;
+      width = 0;
+      on_select;
+      _onselect;
+      _onchangeCallback = null;
+      constructor() {
+        super();
+        this.lockTimer = 0;
+        this._template = void 0;
+        this._searchMenuMode = false;
+        this.altKey = void 0;
+        this._value = 0;
+        this._last_datapath = void 0;
+        this.r = 5;
+        this._menu = void 0;
+        this._auto_depress = false;
+        this._onpress = this._onpress.bind(this);
+      }
+      get searchMenuMode() {
+        return this._searchMenuMode;
+      }
+      set searchMenuMode(v) {
+        this._searchMenuMode = v;
+      }
+      get template() {
+        return this._template;
+      }
+      set template(v) {
+        this._template = v;
+      }
+      get value() {
+        return this._value;
+      }
+      set value(v) {
+        this.setValue(v);
+      }
+      get menu() {
+        return this._menu;
+      }
+      set menu(val) {
+        this._menu = val;
+        if (val !== void 0) {
+          this._name = val.title;
+          this.updateName();
+        }
+      }
+      static define() {
+        return {
+          tagname: "dropbox-x",
+          style: "dropbox"
+        };
+      }
+      init() {
+        super.init();
+        this.setAttribute("menu-button", "true");
+        this.updateWidth();
+      }
+      setCSS() {
+        this.style["userSelect"] = "none";
+        this.dom.style["userSelect"] = "none";
+        let keys2;
+        if (this.getAttribute("simple")) {
+          keys2 = ["margin-left", "margin-right", "padding-left", "padding-right"];
+        } else {
+          keys2 = [
+            "margin",
+            "margin-left",
+            "margin-right",
+            "margin-top",
+            "margin-bottom",
+            "padding",
+            "padding-left",
+            "padding-right",
+            "padding-top",
+            "padding-bottom"
+          ];
+        }
+        const setDefault = (key) => {
+          if (this.hasDefault(key)) {
+            this.style[key] = this.getDefault(key, void 0, 0) + "px";
+          }
+        };
+        for (const k of keys2) {
+          setDefault(k);
+        }
+      }
+      _genLabel() {
+        let s = super._genLabel();
+        let ret = "";
+        if (s.length === 0) {
+          s = "(error)";
+        }
+        this.altKey = s[0].toUpperCase().charCodeAt(0);
+        for (let i = 0; i < s.length; i++) {
+          if (s[i] === "&" && i < s.length - 1 && s[i + 1] !== "&") {
+            this.altKey = s[i + 1].toUpperCase().charCodeAt(0);
+          } else if (s[i] === "&" && i < s.length - 1 && s[i + 1] === "&") {
+            continue;
+          } else {
+            ret += s[i];
+          }
+        }
+        return ret;
+      }
+      updateWidth() {
+        const dpi = this.getDPI();
+        let tw = this.g.measureText(this._genLabel()).width / dpi;
+        tw = ~~tw;
+        tw += 15;
+        if (!this.getAttribute("simple")) {
+          tw += 35;
+        }
+        if (tw !== this._last_w) {
+          this._last_w = tw;
+          this.dom.style["width"] = tw + "px";
+          this.style["width"] = tw + "px";
+          this.width = tw;
+          this.overrideDefault("width", tw);
+          this._repos_canvas();
+          this._redraw();
+        }
+        return 0;
+      }
+      updateBorders() {
+        super.updateBorders(this);
+      }
+      updateFromPath(val, info) {
+        if (!this.ctx) {
+          return;
+        }
+        if (!info.resolved) {
+          this.disabled = true;
+          this.setCSS();
+          this._redraw();
+          return;
+        } else {
+          this.disabled = false;
+          this.setCSS();
+          this._redraw();
+        }
+        let prop = info.prop;
+        prop = prop?.prop ? prop.prop : prop;
+        if (!prop) {
+          return;
+        }
+        if (this.prop === void 0) {
+          this.prop = prop;
+        }
+        prop = this.prop;
+        let name2;
+        if (prop.type & (PropTypes3.ENUM | PropTypes3.FLAG)) {
+          name2 = prop.ui_value_names[prop.keys[val]];
+        } else {
+          name2 = "" + val;
+        }
+        if (name2 !== this.getAttribute("name")) {
+          this.setAttribute("name", name2);
+          this.updateName();
+        }
+      }
+      update() {
+        const path = this.getAttribute("datapath");
+        if (path && path !== this._last_datapath) {
+          this._last_datapath = path;
+          this.prop = void 0;
+        }
+        super.update();
+        const key = this.getDefault("dropTextBG");
+        if (key !== this._last_dbox_key) {
+          this._last_dbox_key = key;
+          this.setCSS();
+          this._redraw();
+        }
+      }
+      _build_menu_template() {
+        if (this._menu?.parentNode !== void 0) {
+          this._menu.remove();
+        }
+        let template = this._template;
+        if (typeof template === "function") {
+          template = template();
+        }
+        this._menu = createMenu(this.ctx, "", template);
+        return this._menu;
+      }
+      _build_menu() {
+        if (this._template) {
+          this._build_menu_template();
+          return;
+        }
+        const prop = this.prop;
+        if (prop === void 0) {
+          return;
+        }
+        if (this._menu?.parentNode !== void 0) {
+          this._menu.remove();
+        }
+        const menu = this._menu = UIBase2.createElement("menu-x");
+        menu.setAttribute("name", "");
+        menu._dropbox = this;
+        const valmap = {};
+        const enummap = prop.values;
+        const iconmap = prop.iconmap;
+        const uimap = prop.ui_value_names;
+        const desr = prop.descriptions || {};
+        for (const k in enummap) {
+          let uk = k;
+          valmap[enummap[k]] = k;
+          if (uimap !== void 0 && k in uimap) {
+            uk = uimap[k];
+          }
+          const tooltip = desr[k];
+          if (iconmap?.[k]) {
+            menu.addItemExtra(uk, enummap[k], void 0, iconmap[k], void 0, tooltip);
+          } else {
+            menu.addItem(uk, enummap[k], void 0, tooltip);
+          }
+        }
+        menu._onselect = (id) => {
+          this._pressed = false;
+          this._pressed = false;
+          this._redraw();
+          this._menu = void 0;
+          let callProp = true;
+          if (this.hasAttribute("datapath")) {
+            const datapath = this.getAttribute("datapath");
+            const rdef = this.ctx.api.resolvePath(this.ctx, datapath);
+            const rdata = rdef.dpath?.data;
+            callProp = !rdata || !(rdata instanceof ToolProperty);
+          }
+          this._value = this._convertVal(id) ?? id;
+          if (callProp) {
+            this.prop.setValue(id);
+          }
+          this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
+          if (this.on_select) {
+            this.on_select(id);
+          }
+          if (this.hasAttribute("datapath") && this.ctx) {
+            this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
+          }
+        };
+      }
+      _onpress = (e) => {
+        const _e = e;
+        this.abortToolTips(1e3);
+        if (this._menu !== void 0) {
+          this.lockTimer = time_ms();
+          this._pressed = false;
+          this._redraw();
+          const menu2 = this._menu;
+          this._menu = void 0;
+          menu2.close();
+          return;
+        }
+        if (time_ms() - this.lockTimer < 200) {
+          return;
+        }
+        this._build_menu();
+        const builtMenu = this._menu;
+        if (builtMenu === void 0) {
+          return;
+        }
+        builtMenu.autoSearchMode = false;
+        builtMenu.srcWidget = this;
+        builtMenu._dropbox = this;
+        this.dom._background = this.getDefault("BoxDepressed");
+        this._background = this.getDefault("BoxDepressed");
+        this._redraw();
+        this._pressed = true;
+        this.setCSS();
+        const onclose = builtMenu._onclose;
+        builtMenu._onclose = () => {
+          this.lockTimer = time_ms();
+          this._pressed = false;
+          this._redraw();
+          const menu2 = this._menu;
+          if (menu2) {
+            this._menu = void 0;
+            menu2._dropbox = void 0;
+          }
+          if (onclose) {
+            onclose.call(menu2);
+          }
+        };
+        const menu = builtMenu;
+        const screen = this.getScreen();
+        let x = _e.x;
+        let y = _e.y;
+        const rects = this.dom.getBoundingClientRect();
+        const rheight = rects.height;
+        x = rects.x;
+        y = rects.y + rheight;
+        if (const_default.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
+          const con2 = screen.popup(this, 500, 400, false, 0);
+          con2.style["zIndex"] = "-10000";
+          con2.style["position"] = UIBase2.PositionKey;
+          document.body.appendChild(con2);
+          con2.style["visibility"] = "hidden";
+          con2.add(menu);
+          menu.start();
+          const time = time_ms();
+          const timer = window.setInterval(() => {
+            if (time_ms() - time > 1500) {
+              window.clearInterval(timer);
+              return;
+            }
+            const r = menu.dom.getBoundingClientRect();
+            if (!r || r.height < 55) {
+              return;
+            }
+            window.clearInterval(timer);
+            y -= r.height + rheight;
+            menu.dom.remove();
+            con2.remove();
+            const popup = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
+            popup.noMarginsOrPadding();
+            popup.add(menu);
+            menu.start();
+            popup.style["left"] = x + "px";
+            popup.style["top"] = y + "px";
+          }, 1);
+          return;
+        }
+        if (!screen) return;
+        const con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
+        con.noMarginsOrPadding();
+        con.add(menu);
+        if (this.searchMenuMode) {
+          menu.startFancy();
+        } else {
+          menu.start();
+        }
+      };
+      _redraw() {
+        if (this.getAttribute("simple")) {
+          this.g.clearRect(0, 0, this.dom.width, this.dom.height);
+          if (this._highlight) {
+            drawRoundBox2(this, {
+              canvas: this.dom,
+              g: this.g,
+              color: this.getDefault("BoxHighlight")
+            });
+          }
+          if (this._focus) {
+            drawRoundBox2(this, {
+              canvas: this.dom,
+              g: this.g,
+              color: this.getDefault("BoxHighlight"),
+              op: "stroke",
+              no_clear: true
+            });
+            drawRoundBox(this, this.dom, this.g, void 0, void 0, 2, "stroke");
+          }
+          this._draw_text();
+          return;
+        }
+        super._redraw(false);
+        const g = this.g;
+        const w = this.dom.width;
+        const h = this.dom.height;
+        const dpi = this.getDPI();
+        const p = 10 * dpi;
+        const p2 = dpi;
+        const bg = this.getDefault("dropTextBG");
+        if (bg !== void 0) {
+          g.fillStyle = bg;
+          g.beginPath();
+          g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
+          g.fill();
+        }
+        g.fillStyle = "rgba(50, 50, 50, 0.2)";
+        g.strokeStyle = "rgba(50, 50, 50, 0.8)";
+        g.beginPath();
+        const sz = 0.3;
+        g.moveTo(w - h * 0.5 - p, p);
+        g.lineTo(w - p, p);
+        g.moveTo(w - h * 0.5 - p, p + sz * h / 3);
+        g.lineTo(w - p, p + sz * h / 3);
+        g.moveTo(w - h * 0.5 - p, p + sz * h * 2 / 3);
+        g.lineTo(w - p, p + sz * h * 2 / 3);
+        g.lineWidth = 1;
+        g.stroke();
+        this._draw_text();
+      }
+      _convertVal(val) {
+        if (typeof val === "string" && this.prop) {
+          if (val in this.prop.values) {
+            return this.prop.values[val];
+          } else if (val in this.prop.keys) {
+            return this.prop.keys[val];
+          } else {
+            return void 0;
+          }
+        }
+        return val;
+      }
+      setValue(val, setLabelOnly = false) {
+        if (val === void 0 || val === this._value) {
+          return;
+        }
+        val = this._convertVal(val);
+        if (val === void 0) {
+          console.warn("Bad val", val);
+          return;
+        }
+        this._value = val;
+        if (this.prop !== void 0 && !setLabelOnly) {
+          this.prop.setValue(val);
+          let val2 = val;
+          if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
+          val2 = this.prop.ui_value_names[val2];
+          this.setAttribute("name", "" + val2);
+          this._name = "" + val2;
+        } else {
+          this.setAttribute("name", "" + val);
+          this._name = "" + val;
+        }
+        if (this._onchangeCallback && !setLabelOnly) {
+          this._onchangeCallback(val);
+        }
+        this.setCSS();
+        this.refreshPathWatches();
+        this._redraw();
+      }
+    };
+    UIBase2.internalRegister(DropBox);
+  }
+});
+
+// scripts/menu/wrangler.ts
+function debugmenu(...args) {
+  if (window.DEBUG?.menu) {
+    console.warn("%cmenu:", "color:blue", ...args);
+  }
+}
+function startMenuEventWrangling(screen) {
+  if (typeof document === "undefined") {
+    return;
+  }
+  menuWrangler.screen = screen;
+  if (wranglerStarted) {
+    return;
+  }
+  wranglerStarted = true;
+  for (const k in DomEventTypes) {
+    if (menuWrangler[k] === void 0) {
+      continue;
+    }
+    const eventType = DomEventTypes[k];
+    const handler = menuWrangler[k].bind(menuWrangler);
+    window.addEventListener(eventType, handler, { passive: false, capture: true });
+  }
+  menuWrangler.screen = screen;
+  menuWrangler.startTimer();
+}
+function setWranglerScreen(screen) {
+  startMenuEventWrangling(screen);
+}
+function getWranglerScreen() {
+  return menuWrangler.screen;
+}
+var MenuWrangler, menuWrangler, wranglerStarted;
+var init_wrangler = __esm({
+  "scripts/menu/wrangler.ts"() {
+    "use strict";
+    init_util();
+    init_const();
+    init_simple_events();
+    init_events();
+    init_menu();
+    init_dropbox();
+    MenuWrangler = class {
+      screen;
+      menustack;
+      lastPickElemTime;
+      _closetimer;
+      closeOnMouseUp;
+      closereq;
+      timer;
+      spawnreq;
+      constructor() {
+        this.screen = void 0;
+        this.menustack = [];
+        this.lastPickElemTime = time_ms();
+        this._closetimer = 0;
+        this.closeOnMouseUp = void 0;
+        this.closereq = void 0;
+        this.timer = void 0;
+      }
+      get closetimer() {
+        return this._closetimer;
+      }
+      set closetimer(v) {
+        debugmenu("set closertime", v);
+        this._closetimer = v;
+      }
+      get menu() {
+        return this.menustack.length > 0 ? this.menustack[this.menustack.length - 1] : void 0;
+      }
+      pushMenu(menu) {
+        debugmenu("pushMenu");
+        this.spawnreq = void 0;
+        if (this.menustack.length === 0) {
+          this.closeOnMouseUp = menu.closeOnMouseUp === true;
+        }
+        this.menustack.push(menu);
+      }
+      popMenu(_menu) {
+        debugmenu("popMenu");
+        return this.menustack.pop();
+      }
+      endMenus() {
+        debugmenu("endMenus");
+        for (const menu of this.menustack) {
+          menu.close();
+        }
+        this.menustack = [];
+      }
+      searchKeyDown(e) {
+        const menu = this.menu;
+        if (!menu) return;
+        e.stopPropagation();
+        menu._ignoreFocusEvents = true;
+        menu.textbox.focus();
+        menu._ignoreFocusEvents = false;
+        switch (e.keyCode) {
+          case keymap["Enter"]:
+            menu.click();
+            break;
+          case keymap["Escape"]:
+            menu.close();
+            break;
+          case keymap["Up"]:
+            menu.selectPrev(false);
+            break;
+          case keymap["Down"]:
+            menu.selectNext(false);
+            break;
+        }
+      }
+      on_keydown(e) {
+        window.menu = this.menu;
+        if (this.menu === void 0) {
+          return;
+        }
+        if (this.menu.hasSearchBox) {
+          return this.searchKeyDown(e);
+        }
+        const menu = this.menu;
+        switch (e.keyCode) {
+          case keymap["Left"]:
+          //left
+          case keymap["Right"]:
+            if (menu._dropbox) {
+              let dropbox = menu._dropbox;
+              if (e.keyCode === keymap["Left"]) {
+                dropbox = dropbox.previousElementSibling;
+              } else {
+                dropbox = dropbox.nextElementSibling;
+              }
+              if (dropbox !== null && dropbox instanceof DropBox) {
+                this.endMenus();
+                dropbox._onpress(e);
+              }
+            }
+            break;
+          case keymap["Up"]:
+            menu.selectPrev();
+            break;
+          case keymap["Down"]:
+            menu.selectNext();
+            break;
+          case 13:
+          //return key
+          case 32:
+            menu.click();
+            break;
+          case 27:
+            menu.close();
+            break;
+        }
+      }
+      on_pointerdown(e) {
+        if (this.menu === void 0 || this.screen === void 0) {
+          this.closetimer = time_ms();
+          return;
+        }
+        const screen = this.screen;
+        const x = e.pageX;
+        const y = e.pageY;
+        const element = screen.pickElement(x, y);
+        if (element !== void 0 && (element instanceof DropBox || isMobile())) {
+          this.endMenus();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+      on_pointerup(e) {
+        if (this.menu === void 0 || this.screen === void 0) {
+          this.closetimer = time_ms();
+          return;
+        }
+        const screen = this.screen;
+        const x = e.pageX;
+        const y = e.pageY;
+        let element = screen.pickElement(x, y, void 0, void 0, DropBox);
+        if (element !== void 0) {
+          this.closeOnMouseUp = false;
+        } else {
+          element = screen.pickElement(x, y, void 0, void 0, Menu);
+          if (element && this.closeOnMouseUp) {
+            element.click();
+          }
+        }
+      }
+      findMenu(x, y) {
+        const screen = this.screen;
+        if (!screen) return void 0;
+        const element = screen.pickElement(x, y);
+        if (element === void 0) {
+          return;
+        }
+        if (element instanceof Menu) {
+          return element;
+        }
+        let w = element;
+        while (w) {
+          if (w instanceof Menu) {
+            return w;
+          }
+          w = w.parentWidget;
+        }
+        return void 0;
+      }
+      on_pointermove(e) {
+        if (this.menu?.hasSearchBox) {
+          this.closetimer = time_ms();
+          this.closereq = void 0;
+          return;
+        }
+        if (this.menu === void 0 || this.screen === void 0) {
+          this.closetimer = time_ms();
+          this.closereq = void 0;
+          return;
+        }
+        const screen = this.screen;
+        const x = e.pageX;
+        const y = e.pageY;
+        let element;
+        const menu = this.menu;
+        if (menu) {
+          const r = menu.getBoundingClientRect();
+          const pad = 15;
+          if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad * 2 && y <= r.y + r.height + pad * 2) {
+            element = menu;
+          }
+        }
+        if (!element) {
+          element = screen.pickElement(x, y);
+          this.lastPickElemTime = time_ms();
+        }
+        if (element === void 0) {
+          return;
+        }
+        if (element instanceof Menu) {
+          this.closetimer = time_ms();
+          this.closereq = void 0;
+          return;
+        }
+        const elem = element;
+        let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
+        destroy = destroy && this.menu.srcWidget !== elem;
+        if (destroy) {
+          let menu2 = this.menu;
+          while (menu2 !== elem.menu) {
+            menu2 = menu2?.parentMenu;
+            destroy = destroy && (menu2 === void 0 || menu2 !== elem.menu);
+          }
+        }
+        if (destroy) {
+          this.endMenus();
+          this.closetimer = time_ms();
+          this.closereq = void 0;
+          elem._onpress?.(e);
+          return;
+        }
+        let ok = false;
+        let w = elem;
+        while (w) {
+          if (w instanceof Menu) {
+            ok = true;
+            break;
+          }
+          if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)) {
+            ok = true;
+            break;
+          }
+          w = w.parentWidget;
+        }
+        if (!ok) {
+          this.closereq = this.menu;
+        } else {
+          this.closetimer = time_ms();
+          this.closereq = void 0;
+        }
+      }
+      update() {
+        let closetime = const_default.menu_close_time;
+        closetime = closetime === void 0 ? 50 : closetime;
+        let close = this.closereq && this.closereq === this.menu;
+        close = close && time_ms() - this.closetimer > closetime;
+        if (close) {
+          this.closereq = void 0;
+          this.endMenus();
+        }
+      }
+      startTimer() {
+        if (this.timer) {
+          this.stopTimer();
+        }
+        this.timer = setInterval(() => {
+          debugmenu("start menu wrangler interval");
+          this.update();
+        }, 150);
+      }
+      stopTimer() {
+        if (this.timer) {
+          debugmenu("stop menu wrangler interval");
+          clearInterval(this.timer);
+          this.timer = void 0;
+        }
+      }
+    };
+    menuWrangler = new MenuWrangler();
+    window._menuWrangler = menuWrangler;
+    wranglerStarted = false;
+    window._startMenuEventWrangling = startMenuEventWrangling;
+  }
+});
+
+// scripts/menu/menu.ts
+var Menu;
+var init_menu = __esm({
+  "scripts/menu/menu.ts"() {
+    "use strict";
+    init_util();
+    init_ui_base();
+    init_menu_types();
+    init_wrangler();
     Menu = class _Menu extends UIBase2 {
       static SEP;
       /** The src button that created this menu, used to switch menus when hovering over other buttons. */
@@ -32974,19 +33723,19 @@ var init_ui_menu = __esm({
           font : ${menuText.genCSS()};
           background-color: ${this.getDefault("MenuBG")};
         }
-        
+
         .menuseparator {
           ${sepcss}
         }
-        
+
         .menuitem:focus {
           display : flex;
           text-align: left;
-          
+
           border : none;
           outline : none;
           border-radius : ${itemRadius}px;
-          
+
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${menuText.color};
           -moz-user-focus: normal;
@@ -33017,713 +33766,6 @@ var init_ui_menu = __esm({
     };
     Menu.SEP = SEP;
     UIBase2.internalRegister(Menu);
-    DropBox = class extends OldButton {
-      _menu;
-      prop;
-      lockTimer;
-      _template;
-      _searchMenuMode;
-      altKey;
-      _value;
-      _last_datapath;
-      _last_dbox_key;
-      _popup;
-      _background;
-      width = 0;
-      on_select;
-      _onselect;
-      _onchangeCallback = null;
-      constructor() {
-        super();
-        this.lockTimer = 0;
-        this._template = void 0;
-        this._searchMenuMode = false;
-        this.altKey = void 0;
-        this._value = 0;
-        this._last_datapath = void 0;
-        this.r = 5;
-        this._menu = void 0;
-        this._auto_depress = false;
-        this._onpress = this._onpress.bind(this);
-      }
-      get searchMenuMode() {
-        return this._searchMenuMode;
-      }
-      set searchMenuMode(v) {
-        this._searchMenuMode = v;
-      }
-      get template() {
-        return this._template;
-      }
-      set template(v) {
-        this._template = v;
-      }
-      get value() {
-        return this._value;
-      }
-      set value(v) {
-        this.setValue(v);
-      }
-      get menu() {
-        return this._menu;
-      }
-      set menu(val) {
-        this._menu = val;
-        if (val !== void 0) {
-          this._name = val.title;
-          this.updateName();
-        }
-      }
-      static define() {
-        return {
-          tagname: "dropbox-x",
-          style: "dropbox"
-        };
-      }
-      init() {
-        super.init();
-        this.setAttribute("menu-button", "true");
-        this.updateWidth();
-      }
-      setCSS() {
-        this.style["userSelect"] = "none";
-        this.dom.style["userSelect"] = "none";
-        let keys2;
-        if (this.getAttribute("simple")) {
-          keys2 = ["margin-left", "margin-right", "padding-left", "padding-right"];
-        } else {
-          keys2 = [
-            "margin",
-            "margin-left",
-            "margin-right",
-            "margin-top",
-            "margin-bottom",
-            "padding",
-            "padding-left",
-            "padding-right",
-            "padding-top",
-            "padding-bottom"
-          ];
-        }
-        const setDefault = (key) => {
-          if (this.hasDefault(key)) {
-            this.style[key] = this.getDefault(key, void 0, 0) + "px";
-          }
-        };
-        for (const k of keys2) {
-          setDefault(k);
-        }
-      }
-      _genLabel() {
-        let s = super._genLabel();
-        let ret = "";
-        if (s.length === 0) {
-          s = "(error)";
-        }
-        this.altKey = s[0].toUpperCase().charCodeAt(0);
-        for (let i = 0; i < s.length; i++) {
-          if (s[i] === "&" && i < s.length - 1 && s[i + 1] !== "&") {
-            this.altKey = s[i + 1].toUpperCase().charCodeAt(0);
-          } else if (s[i] === "&" && i < s.length - 1 && s[i + 1] === "&") {
-            continue;
-          } else {
-            ret += s[i];
-          }
-        }
-        return ret;
-      }
-      updateWidth() {
-        const dpi = this.getDPI();
-        let tw = this.g.measureText(this._genLabel()).width / dpi;
-        tw = ~~tw;
-        tw += 15;
-        if (!this.getAttribute("simple")) {
-          tw += 35;
-        }
-        if (tw !== this._last_w) {
-          this._last_w = tw;
-          this.dom.style["width"] = tw + "px";
-          this.style["width"] = tw + "px";
-          this.width = tw;
-          this.overrideDefault("width", tw);
-          this._repos_canvas();
-          this._redraw();
-        }
-        return 0;
-      }
-      updateBorders() {
-        super.updateBorders(this);
-      }
-      updateFromPath(val, info) {
-        if (!this.ctx) {
-          return;
-        }
-        if (!info.resolved) {
-          this.disabled = true;
-          this.setCSS();
-          this._redraw();
-          return;
-        } else {
-          this.disabled = false;
-          this.setCSS();
-          this._redraw();
-        }
-        let prop = info.prop;
-        prop = prop?.prop ? prop.prop : prop;
-        if (!prop) {
-          return;
-        }
-        if (this.prop === void 0) {
-          this.prop = prop;
-        }
-        prop = this.prop;
-        let name2;
-        if (prop.type & (PropTypes3.ENUM | PropTypes3.FLAG)) {
-          name2 = prop.ui_value_names[prop.keys[val]];
-        } else {
-          name2 = "" + val;
-        }
-        if (name2 !== this.getAttribute("name")) {
-          this.setAttribute("name", name2);
-          this.updateName();
-        }
-      }
-      update() {
-        const path = this.getAttribute("datapath");
-        if (path && path !== this._last_datapath) {
-          this._last_datapath = path;
-          this.prop = void 0;
-        }
-        super.update();
-        const key = this.getDefault("dropTextBG");
-        if (key !== this._last_dbox_key) {
-          this._last_dbox_key = key;
-          this.setCSS();
-          this._redraw();
-        }
-      }
-      _build_menu_template() {
-        if (this._menu?.parentNode !== void 0) {
-          this._menu.remove();
-        }
-        let template = this._template;
-        if (typeof template === "function") {
-          template = template();
-        }
-        this._menu = createMenu(this.ctx, "", template);
-        return this._menu;
-      }
-      _build_menu() {
-        if (this._template) {
-          this._build_menu_template();
-          return;
-        }
-        const prop = this.prop;
-        if (prop === void 0) {
-          return;
-        }
-        if (this._menu?.parentNode !== void 0) {
-          this._menu.remove();
-        }
-        const menu = this._menu = UIBase2.createElement("menu-x");
-        menu.setAttribute("name", "");
-        menu._dropbox = this;
-        const valmap = {};
-        const enummap = prop.values;
-        const iconmap = prop.iconmap;
-        const uimap = prop.ui_value_names;
-        const desr = prop.descriptions || {};
-        for (const k in enummap) {
-          let uk = k;
-          valmap[enummap[k]] = k;
-          if (uimap !== void 0 && k in uimap) {
-            uk = uimap[k];
-          }
-          const tooltip = desr[k];
-          if (iconmap?.[k]) {
-            menu.addItemExtra(uk, enummap[k], void 0, iconmap[k], void 0, tooltip);
-          } else {
-            menu.addItem(uk, enummap[k], void 0, tooltip);
-          }
-        }
-        menu._onselect = (id) => {
-          this._pressed = false;
-          this._pressed = false;
-          this._redraw();
-          this._menu = void 0;
-          let callProp = true;
-          if (this.hasAttribute("datapath")) {
-            const datapath = this.getAttribute("datapath");
-            const rdef = this.ctx.api.resolvePath(this.ctx, datapath);
-            const rdata = rdef.dpath?.data;
-            callProp = !rdata || !(rdata instanceof ToolProperty);
-          }
-          this._value = this._convertVal(id) ?? id;
-          if (callProp) {
-            this.prop.setValue(id);
-          }
-          this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-          if (this.on_select) {
-            this.on_select(id);
-          }
-          if (this.hasAttribute("datapath") && this.ctx) {
-            this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
-          }
-        };
-      }
-      _onpress = (e) => {
-        const _e = e;
-        this.abortToolTips(1e3);
-        if (this._menu !== void 0) {
-          this.lockTimer = time_ms();
-          this._pressed = false;
-          this._redraw();
-          const menu2 = this._menu;
-          this._menu = void 0;
-          menu2.close();
-          return;
-        }
-        if (time_ms() - this.lockTimer < 200) {
-          return;
-        }
-        this._build_menu();
-        const builtMenu = this._menu;
-        if (builtMenu === void 0) {
-          return;
-        }
-        builtMenu.autoSearchMode = false;
-        builtMenu.srcWidget = this;
-        builtMenu._dropbox = this;
-        this.dom._background = this.getDefault("BoxDepressed");
-        this._background = this.getDefault("BoxDepressed");
-        this._redraw();
-        this._pressed = true;
-        this.setCSS();
-        const onclose = builtMenu._onclose;
-        builtMenu._onclose = () => {
-          this.lockTimer = time_ms();
-          this._pressed = false;
-          this._redraw();
-          const menu2 = this._menu;
-          if (menu2) {
-            this._menu = void 0;
-            menu2._dropbox = void 0;
-          }
-          if (onclose) {
-            onclose.call(menu2);
-          }
-        };
-        const menu = builtMenu;
-        const screen = this.getScreen();
-        let x = _e.x;
-        let y = _e.y;
-        const rects = this.dom.getBoundingClientRect();
-        const rheight = rects.height;
-        x = rects.x;
-        y = rects.y + rheight;
-        if (!window.haveElectron) {
-        }
-        if (const_default.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
-          const con2 = screen.popup(this, 500, 400, false, 0);
-          con2.style["zIndex"] = "-10000";
-          con2.style["position"] = UIBase2.PositionKey;
-          document.body.appendChild(con2);
-          con2.style["visibility"] = "hidden";
-          con2.add(menu);
-          menu.start();
-          const time = time_ms();
-          const timer = window.setInterval(() => {
-            if (time_ms() - time > 1500) {
-              window.clearInterval(timer);
-              return;
-            }
-            const r = menu.dom.getBoundingClientRect();
-            if (!r || r.height < 55) {
-              return;
-            }
-            window.clearInterval(timer);
-            y -= r.height + rheight;
-            menu.dom.remove();
-            con2.remove();
-            const popup = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
-            popup.noMarginsOrPadding();
-            popup.add(menu);
-            menu.start();
-            popup.style["left"] = x + "px";
-            popup.style["top"] = y + "px";
-          }, 1);
-          return;
-        }
-        if (!screen) return;
-        const con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
-        con.noMarginsOrPadding();
-        con.add(menu);
-        if (this.searchMenuMode) {
-          menu.startFancy();
-        } else {
-          menu.start();
-        }
-      };
-      _redraw() {
-        if (this.getAttribute("simple")) {
-          this.g.clearRect(0, 0, this.dom.width, this.dom.height);
-          if (this._highlight) {
-            drawRoundBox2(this, {
-              canvas: this.dom,
-              g: this.g,
-              color: this.getDefault("BoxHighlight")
-            });
-          }
-          if (this._focus) {
-            drawRoundBox2(this, {
-              canvas: this.dom,
-              g: this.g,
-              color: this.getDefault("BoxHighlight"),
-              op: "stroke",
-              no_clear: true
-            });
-            drawRoundBox(this, this.dom, this.g, void 0, void 0, 2, "stroke");
-          }
-          this._draw_text();
-          return;
-        }
-        super._redraw(false);
-        const g = this.g;
-        const w = this.dom.width;
-        const h = this.dom.height;
-        const dpi = this.getDPI();
-        const p = 10 * dpi;
-        const p2 = dpi;
-        const bg = this.getDefault("dropTextBG");
-        if (bg !== void 0) {
-          g.fillStyle = bg;
-          g.beginPath();
-          g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
-          g.fill();
-        }
-        g.fillStyle = "rgba(50, 50, 50, 0.2)";
-        g.strokeStyle = "rgba(50, 50, 50, 0.8)";
-        g.beginPath();
-        const sz = 0.3;
-        g.moveTo(w - h * 0.5 - p, p);
-        g.lineTo(w - p, p);
-        g.moveTo(w - h * 0.5 - p, p + sz * h / 3);
-        g.lineTo(w - p, p + sz * h / 3);
-        g.moveTo(w - h * 0.5 - p, p + sz * h * 2 / 3);
-        g.lineTo(w - p, p + sz * h * 2 / 3);
-        g.lineWidth = 1;
-        g.stroke();
-        this._draw_text();
-      }
-      _convertVal(val) {
-        if (typeof val === "string" && this.prop) {
-          if (val in this.prop.values) {
-            return this.prop.values[val];
-          } else if (val in this.prop.keys) {
-            return this.prop.keys[val];
-          } else {
-            return void 0;
-          }
-        }
-        return val;
-      }
-      setValue(val, setLabelOnly = false) {
-        if (val === void 0 || val === this._value) {
-          return;
-        }
-        val = this._convertVal(val);
-        if (val === void 0) {
-          console.warn("Bad val", val);
-          return;
-        }
-        this._value = val;
-        if (this.prop !== void 0 && !setLabelOnly) {
-          this.prop.setValue(val);
-          let val2 = val;
-          if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
-          val2 = this.prop.ui_value_names[val2];
-          this.setAttribute("name", "" + val2);
-          this._name = "" + val2;
-        } else {
-          this.setAttribute("name", "" + val);
-          this._name = "" + val;
-        }
-        if (this._onchangeCallback && !setLabelOnly) {
-          this._onchangeCallback(val);
-        }
-        this.setCSS();
-        this.refreshPathWatches();
-        this._redraw();
-      }
-    };
-    UIBase2.internalRegister(DropBox);
-    MenuWrangler = class {
-      screen;
-      menustack;
-      lastPickElemTime;
-      _closetimer;
-      closeOnMouseUp;
-      closereq;
-      timer;
-      spawnreq;
-      constructor() {
-        this.screen = void 0;
-        this.menustack = [];
-        this.lastPickElemTime = time_ms();
-        this._closetimer = 0;
-        this.closeOnMouseUp = void 0;
-        this.closereq = void 0;
-        this.timer = void 0;
-      }
-      get closetimer() {
-        return this._closetimer;
-      }
-      set closetimer(v) {
-        debugmenu("set closertime", v);
-        this._closetimer = v;
-      }
-      get menu() {
-        return this.menustack.length > 0 ? this.menustack[this.menustack.length - 1] : void 0;
-      }
-      pushMenu(menu) {
-        debugmenu("pushMenu");
-        this.spawnreq = void 0;
-        if (this.menustack.length === 0) {
-          this.closeOnMouseUp = menu.closeOnMouseUp === true;
-        }
-        this.menustack.push(menu);
-      }
-      popMenu(_menu) {
-        debugmenu("popMenu");
-        return this.menustack.pop();
-      }
-      endMenus() {
-        debugmenu("endMenus");
-        for (const menu of this.menustack) {
-          menu.close();
-        }
-        this.menustack = [];
-      }
-      searchKeyDown(e) {
-        const menu = this.menu;
-        if (!menu) return;
-        e.stopPropagation();
-        menu._ignoreFocusEvents = true;
-        menu.textbox.focus();
-        menu._ignoreFocusEvents = false;
-        switch (e.keyCode) {
-          case keymap["Enter"]:
-            menu.click();
-            break;
-          case keymap["Escape"]:
-            menu.close();
-            break;
-          case keymap["Up"]:
-            menu.selectPrev(false);
-            break;
-          case keymap["Down"]:
-            menu.selectNext(false);
-            break;
-        }
-      }
-      on_keydown(e) {
-        window.menu = this.menu;
-        if (this.menu === void 0) {
-          return;
-        }
-        if (this.menu.hasSearchBox) {
-          return this.searchKeyDown(e);
-        }
-        const menu = this.menu;
-        switch (e.keyCode) {
-          case keymap["Left"]:
-          //left
-          case keymap["Right"]:
-            if (menu._dropbox) {
-              let dropbox = menu._dropbox;
-              if (e.keyCode === keymap["Left"]) {
-                dropbox = dropbox.previousElementSibling;
-              } else {
-                dropbox = dropbox.nextElementSibling;
-              }
-              if (dropbox !== null && dropbox instanceof DropBox) {
-                this.endMenus();
-                dropbox._onpress(e);
-              }
-            }
-            break;
-          case keymap["Up"]:
-            menu.selectPrev();
-            break;
-          case keymap["Down"]:
-            menu.selectNext();
-            break;
-          case 13:
-          //return key
-          case 32:
-            menu.click();
-            break;
-          case 27:
-            menu.close();
-            break;
-        }
-      }
-      on_pointerdown(e) {
-        if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
-          return;
-        }
-        const screen = this.screen;
-        const x = e.pageX;
-        const y = e.pageY;
-        const element = screen.pickElement(x, y);
-        if (element !== void 0 && (element instanceof DropBox || isMobile())) {
-          this.endMenus();
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }
-      on_pointerup(e) {
-        if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
-          return;
-        }
-        const screen = this.screen;
-        const x = e.pageX;
-        const y = e.pageY;
-        let element = screen.pickElement(x, y, void 0, void 0, DropBox);
-        if (element !== void 0) {
-          this.closeOnMouseUp = false;
-        } else {
-          element = screen.pickElement(x, y, void 0, void 0, Menu);
-          if (element && this.closeOnMouseUp) {
-            element.click();
-          }
-        }
-      }
-      findMenu(x, y) {
-        const screen = this.screen;
-        if (!screen) return void 0;
-        const element = screen.pickElement(x, y);
-        if (element === void 0) {
-          return;
-        }
-        if (element instanceof Menu) {
-          return element;
-        }
-        let w = element;
-        while (w) {
-          if (w instanceof Menu) {
-            return w;
-            break;
-          }
-          w = w.parentWidget;
-        }
-        return void 0;
-      }
-      on_pointermove(e) {
-        if (this.menu?.hasSearchBox) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
-          return;
-        }
-        if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
-          return;
-        }
-        const screen = this.screen;
-        const x = e.pageX;
-        const y = e.pageY;
-        let element;
-        const menu = this.menu;
-        if (menu) {
-          const r = menu.getBoundingClientRect();
-          const pad = 15;
-          if (r && x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad * 2 && y <= r.y + r.height + pad * 2) {
-            element = menu;
-          }
-        }
-        if (!element) {
-          element = screen.pickElement(x, y);
-          this.lastPickElemTime = time_ms();
-        }
-        if (element === void 0) {
-          return;
-        }
-        if (element instanceof Menu) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
-          return;
-        }
-        const elem = element;
-        let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
-        destroy = destroy && this.menu.srcWidget !== elem;
-        if (destroy) {
-          let menu2 = this.menu;
-          while (menu2 !== elem.menu) {
-            menu2 = menu2?.parentMenu;
-            destroy = destroy && (menu2 === void 0 || menu2 !== elem.menu);
-          }
-        }
-        if (destroy) {
-          this.endMenus();
-          this.closetimer = time_ms();
-          this.closereq = void 0;
-          elem._onpress?.(e);
-          return;
-        }
-        let ok = false;
-        let w = elem;
-        while (w) {
-          if (w instanceof Menu) {
-            ok = true;
-            break;
-          }
-          if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)) {
-            ok = true;
-            break;
-          }
-          w = w.parentWidget;
-        }
-        if (!ok) {
-          this.closereq = this.menu;
-        } else {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
-        }
-      }
-      update() {
-        let closetime = const_default.menu_close_time;
-        closetime = closetime === void 0 ? 50 : closetime;
-        let close = this.closereq && this.closereq === this.menu;
-        close = close && time_ms() - this.closetimer > closetime;
-        if (close) {
-          this.closereq = void 0;
-          this.endMenus();
-        }
-      }
-      startTimer() {
-        if (this.timer) {
-          this.stopTimer();
-        }
-        this.timer = setInterval(() => {
-          debugmenu("start menu wrangler interval");
-          this.update();
-        }, 150);
-      }
-      stopTimer() {
-        if (this.timer) {
-          debugmenu("stop menu wrangler interval");
-          clearInterval(this.timer);
-          this.timer = void 0;
-        }
-      }
-    };
-    menuWrangler = new MenuWrangler();
-    window._menuWrangler = menuWrangler;
-    wrangerStarted = false;
-    window._startMenuEventWrangling = startMenuEventWrangling;
   }
 });
 
@@ -34106,7 +34148,7 @@ var _menu_init, _init, iconcache, _menubarRetain, _popupRetain, platform;
 var init_nwjs_api = __esm({
   "scripts/platforms/nwjs/nwjs_api.ts"() {
     "use strict";
-    init_ui_menu();
+    init_dropbox();
     init_ui_base();
     init_const();
     init_platform_base();
@@ -34482,7 +34524,7 @@ var _nativeTheme, _menu_init2, _init2, electron_menu_idgen, ipcRenderer, Electro
 var init_electron_api = __esm({
   "scripts/platforms/electron/electron_api.ts"() {
     "use strict";
-    init_ui_menu();
+    init_dropbox();
     init_ui_base();
     init_const();
     init_platform_base();
@@ -36029,7 +36071,8 @@ init_cssfont();
 init_ui_base();
 init_theme_schema();
 init_toolprop();
-init_ui_menu();
+init_menu();
+init_menu_ops();
 init_ui_consts();
 init_const();
 init_toolsys();
@@ -39334,7 +39377,7 @@ UIBase2.internalRegister(NumSliderWithTextBox);
 // scripts/xmlpage/xmlpage.ts
 init_ui_base();
 init_util2();
-init_ui_menu();
+init_menu();
 init_ui_base();
 var domTransferAttrs = /* @__PURE__ */ new Set(["id", "title", "tab-index"]);
 var domEventAttrs = /* @__PURE__ */ new Set([
@@ -49365,7 +49408,8 @@ var ToolOpDelegate = class {
 };
 
 // scripts/editors/nodeeditor/groupui.ts
-init_ui_menu();
+init_menu();
+init_dropbox();
 init_ui_base();
 function exposedEntryState(graph, entry) {
   const node = graph.nodeIdMap.get(entry.nodeId);
@@ -50417,7 +50461,7 @@ var LinkDragModalOp = class extends ToolOp {
 ToolOp.register(LinkDragModalOp);
 
 // scripts/editors/nodeeditor/addmenu.ts
-init_ui_menu();
+init_menu_ops();
 function addMenuItems() {
   const items = [];
   for (const [typeName, cls] of NodeClasses2) {
@@ -50966,7 +51010,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
 
 // scripts/editors/nodeeditor/nodegraphview.ts
 init_ui_base();
-init_ui_menu();
+init_menu_ops();
 init_theme_schema();
 var LINK_PICK_PX = 8;
 function linkKey(ref) {
@@ -52672,7 +52716,8 @@ init_ui_base();
 init_const();
 init_ui_base();
 init_vectormath();
-init_ui_menu();
+init_menu();
+init_menu_ops();
 var SnapLimit = 1;
 var BORDER_ZINDEX_BASE = 25;
 function snap(c, snap_limit = SnapLimit) {
@@ -58431,7 +58476,7 @@ init_util();
 init_const();
 init_vectormath();
 init_ui_base();
-init_ui_menu();
+init_menu_ops();
 init_toolprop();
 function dockerdebug(...args) {
   if (const_default.DEBUG.areadocker) {
@@ -58804,12 +58849,12 @@ init_simple_events();
 init_util();
 init_vectormath();
 init_math();
-init_ui_menu();
+init_wrangler();
 init_struct();
 init_simple_events();
 init_simple_events();
 init_ui_base();
-init_ui_menu();
+init_menu_ops();
 var list4 = Array.from;
 startMenuEventWrangling();
 var _events_started = false;
@@ -59350,8 +59395,6 @@ var Screen2 = class extends UIBase2 {
     return s;
   }
   _ondestroy() {
-    if (getWranglerScreen() === this) {
-    }
     this.unlisten();
     const recurse = (n, second_pass, parent) => {
       if (n.__pass === second_pass) {
@@ -62932,7 +62975,7 @@ var SimpleContext = class {
 };
 
 // scripts/simple/simple.ts
-init_ui_menu();
+init_menu();
 
 // scripts/pathux.ts
 init_polyfill();
@@ -62941,7 +62984,11 @@ init_cssfont();
 init_ui_theme();
 init_units2();
 init_ui_button();
-init_ui_menu();
+init_menu_types();
+init_menu();
+init_dropbox();
+init_wrangler();
+init_menu_ops();
 init_html5_fileapi();
 init_platform_base();
 init_electron_api();

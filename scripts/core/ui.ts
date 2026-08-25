@@ -22,8 +22,10 @@ import type { UIBaseDefinition } from "./ui_base";
 import { t } from "./theme_schema";
 import type { KnownDataPath } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
-import { createMenu, Menu } from "../widgets/ui_menu";
-import type { DropBox, MenuTemplate } from "../widgets/ui_menu";
+import { Menu } from "../menu/menu";
+import { createMenu } from "../menu/menu_ops";
+import type { DropBox } from "../menu/dropbox";
+import type { MenuTemplate } from "../menu/menu_types";
 import { IsRowFrameTag } from "./ui_consts";
 
 import cconst from "../config/const";

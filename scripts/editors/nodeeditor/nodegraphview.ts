@@ -27,7 +27,8 @@ import type { GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
 import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
 import { buildAddNodeMenu } from "./addmenu";
-import { Menu, createMenu, startMenu } from "../../widgets/ui_menu";
+import { Menu } from "../../menu/menu";
+import { createMenu, startMenu } from "../../menu/menu_ops";
 import { t } from "../../core/theme_schema";
 import { buildForwardedUI } from "./groupui";
 

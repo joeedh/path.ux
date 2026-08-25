@@ -14,7 +14,8 @@ import { Vector2, Number2 } from "../path-controller/util/vectormath";
 import { ScreenArea, Area, ScreenAreaAny, AreaAny } from "./ScreenArea";
 import * as FrameManager_ops from "./FrameManager_ops";
 import * as math from "../path-controller/util/math";
-import * as ui_menu from "../widgets/ui_menu";
+import type { Menu } from "../menu/menu";
+import { startMenuEventWrangling, setWranglerScreen } from "../menu/wrangler";
 import "../path-controller/util/struct";
 import { KeyMap } from "../path-controller/util/simple_events";
 import { keymap } from "../path-controller/util/simple_events";
@@ -43,7 +44,7 @@ import "../widgets/ui_listbox";
 import "../widgets/ui_table";
 import { AreaFlags } from "./ScreenArea";
 import { checkForTextBox } from "../widgets/ui_textbox";
-import { startMenu } from "../widgets/ui_menu";
+import { startMenu } from "../menu/menu_ops";
 import { IsScreenTag, ZIndexes } from "./constants";
 import { addPopup, removePopup, clampPopup, makePopup } from "./FrameManager_popup";
 import { IContextBase } from "../core/context_base";
@@ -53,7 +54,7 @@ import "./AreaDocker";
 
 const list = Array.from;
 
-ui_menu.startMenuEventWrangling();
+startMenuEventWrangling();
 
 let _events_started = false;
 
@@ -559,7 +560,7 @@ export class Screen<
     this._popup_safe = Math.max(this._popup_safe - 1, 0);
   }
 
-  popupMenu(menu: ui_menu.Menu, x: number, y: number) {
+  popupMenu(menu: Menu, x: number, y: number) {
     startMenu(menu, x, y);
 
     for (let i = 0; i < 3; i++) {
@@ -748,7 +749,7 @@ export class Screen<
   }
 
   listen(args = { updateSize: true }) {
-    ui_menu.setWranglerScreen(this);
+    setWranglerScreen(this);
 
     const ctx = this.ctx;
     startEvents(() => ctx.screen);
@@ -784,10 +785,6 @@ export class Screen<
   }
 
   _ondestroy() {
-    if (ui_menu.getWranglerScreen() === (this as unknown as Screen)) {
-      //ui_menu.setWranglerScreen(undefined);
-    }
-
     this.unlisten();
 
     //unlike other ondestroy functions, this one physically dismantles the DOM tree

@@ -8,4 +8,4 @@ export * from "./iconsheet";
 export * from "./file";
 export * from "./context_class";
 export * from "./menubar";
-export { Menu } from "../widgets/ui_menu";
+export { Menu } from "../menu/menu";
