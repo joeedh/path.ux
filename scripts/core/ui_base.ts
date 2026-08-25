@@ -566,11 +566,7 @@ export class UIBase<
    * the global tab order
    * */
   regenTabOrder(): this {
-    const screen = this.getScreen();
-    if (screen !== undefined) {
-      screen.needsTabRecalc = true;
-    }
-
+    dom.regenTabOrder(this);
     return this;
   }
 
@@ -662,11 +658,7 @@ export class UIBase<
 
   //delayed init
   init(): void {
-    this._init_done = true;
-
-    if (!this.hasAttribute("id") && this._id) {
-      this.setAttribute("id", this._id);
-    }
+    dom.initElement(this);
   }
 
   _ondestroy(): void {

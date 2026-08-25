@@ -360,3 +360,19 @@ export function removeChild<T extends Node>(
   }
   return child;
 }
+
+/** Flags the owning screen to recalculate the global tab order. */
+export function regenTabOrder(elem: AnyUIBase): void {
+  const screen = elem.getScreen();
+  if (screen !== undefined) {
+    screen.needsTabRecalc = true;
+  }
+}
+
+export function initElement(elem: AnyUIBase): void {
+  elem._init_done = true;
+
+  if (!elem.hasAttribute("id") && elem._id) {
+    elem.setAttribute("id", elem._id);
+  }
+}
