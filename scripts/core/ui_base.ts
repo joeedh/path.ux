@@ -78,6 +78,7 @@ export {
 import * as registry from "./base/ui_element_registry";
 import * as themeLookup from "./base/ui_base_theme_lookup";
 import * as tooltips from "./base/ui_base_tooltips";
+import * as modal from "./base/ui_base_modal";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -2087,51 +2088,11 @@ export class UIBase<
     pointerId?: number,
     pointerElem: UIBase = this
   ): unknown {
-    if (this._modaldata !== undefined) {
-      console.warn("UIBase.prototype.pushModal called when already in modal mode");
-      this.popModal();
-    }
-
-    const _areaWrangler = contextWrangler.copy();
-
-    contextWrangler.copy();
-
-    function bindFunc(func: Function): (...args: unknown[]) => unknown {
-      return function (this: unknown, ...args: unknown[]) {
-        _areaWrangler.copyTo(contextWrangler);
-
-        return func.apply(handlers, args);
-      };
-    }
-
-    const handlers2: Record<string, Function> = {};
-    for (const k in handlers) {
-      const func = handlers[k];
-
-      if (typeof func !== "function") {
-        continue;
-      }
-
-      handlers2[k] = bindFunc(func);
-    }
-
-    if (pointerId !== undefined && pointerElem) {
-      this._modaldata = pushPointerModal(handlers2, undefined, undefined, autoStopPropagation);
-    } else {
-      this._modaldata = pushModalLight(handlers2, autoStopPropagation);
-    }
-
-    return this._modaldata;
+    return modal.pushModal(this, handlers, autoStopPropagation, pointerId, pointerElem);
   }
 
   popModal(): void {
-    if (this._modaldata === undefined) {
-      console.warn("Invalid call to UIBase.prototype.popModal");
-      return;
-    }
-
-    popModalLight(this._modaldata!);
-    this._modaldata = undefined;
+    modal.popModal(this);
   }
 
   /** child classes can override this to prevent focus on flash*/
