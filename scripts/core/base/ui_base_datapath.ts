@@ -230,7 +230,7 @@ export function setPathValue<T = unknown>(elem: AnyUIBase, ctx: any, path: strin
   elem.popReportContext();
 }
 
-export function getPathMeta(elem: AnyUIBase, ctx: any, path: string) {
+export function getPathMeta(elem: AnyUIBase, ctx: IContextBase, path: string) {
   elem.pushReportContext(elem._reportCtxName);
   const ret = ctx.api.resolvePath(ctx, path);
   elem.popReportContext();
