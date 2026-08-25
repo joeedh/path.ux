@@ -1,5 +1,5 @@
 import * as util from "../path-controller/util/util";
-import * as ui from "../core/ui";
+import { RowFrame } from "../core/ui_containers";
 import * as ui_base from "../core/ui_base";
 import { Icons, css2color, color2css, getFont } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
@@ -191,10 +191,7 @@ export class ProgBarNote<CTX extends IContextBase = IContextBase> extends Note<C
 
 UIBase.internalRegister(ProgBarNote);
 
-export class NoteFrame<CTX extends IContextBase = IContextBase> extends ui.RowFrame<
-  CTX,
-  "NoteFrame"
-> {
+export class NoteFrame<CTX extends IContextBase = IContextBase> extends RowFrame<CTX, "NoteFrame"> {
   _h: number;
 
   constructor() {

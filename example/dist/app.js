@@ -11497,11 +11497,12 @@ var init_simple_events = __esm({
 });
 
 // scripts/core/ui_consts.ts
-var ClassIdSymbol;
+var ClassIdSymbol, IsRowFrameTag;
 var init_ui_consts = __esm({
   "scripts/core/ui_consts.ts"() {
     "use strict";
     ClassIdSymbol = /* @__PURE__ */ Symbol("pathux-class-id");
+    IsRowFrameTag = /* @__PURE__ */ Symbol("IsRowFrame");
   }
 });
 
@@ -18604,20 +18605,20 @@ curve1d.BSplineCurve {
       }
       start_transform(_useSelected = true) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        const dpi = 1 / ui2.draw_trans[0];
+        const ui = this.uidata;
+        const dpi = 1 / ui.draw_trans[0];
         for (const p of this.points) {
           p.startco.load(p.co);
         }
         const transform_op = new BSplineTransformOp();
-        transform_op.inputs.dataPath.setValue(ui2.datapath);
+        transform_op.inputs.dataPath.setValue(ui.datapath);
         transform_op.inputs.dpi.setValue(dpi);
-        ui2.dom.ctx.api.execTool(ui2.dom.ctx, transform_op);
+        ui.dom.ctx.api.execTool(ui.dom.ctx, transform_op);
       }
       _on_mousedown(e) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        ui2.start_mpos.load(this.transform_mpos(e.x, e.y));
+        const ui = this.uidata;
+        ui.start_mpos.load(this.transform_mpos(e.x, e.y));
         this.fastmode = true;
         const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
@@ -18632,10 +18633,10 @@ curve1d.BSplineCurve {
           } else {
             this.points.highlight.flag ^= CurveFlags.SELECT;
           }
-          if (ui2.datapath) {
+          if (ui.datapath) {
             const state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
-            ui2.dom.ctx.api.execTool(ui2.dom.ctx, "curve1d.bspline_select_point", {
-              dataPath: ui2.datapath,
+            ui.dom.ctx.api.execTool(ui.dom.ctx, "curve1d.bspline_select_point", {
+              dataPath: ui.datapath,
               state,
               unique: !e.shiftKey,
               point: this.points.highlight.eid
@@ -18647,16 +18648,16 @@ curve1d.BSplineCurve {
           this.redraw();
         } else {
           const uidata = this.uidata;
-          const ui3 = uidata;
-          if (ui3.datapath) {
-            const start_mpos = ui3.start_mpos;
-            ui3.dom.ctx.api.execTool(ui3.dom.ctx, "curve1d.bspline_add_point", {
-              dataPath: ui3.datapath,
+          const ui2 = uidata;
+          if (ui2.datapath) {
+            const start_mpos = ui2.start_mpos;
+            ui2.dom.ctx.api.execTool(ui2.dom.ctx, "curve1d.bspline_add_point", {
+              dataPath: ui2.datapath,
               x: start_mpos[0],
               y: start_mpos[1]
             });
           } else {
-            this.addFromMouse(ui3.start_mpos[0], ui3.start_mpos[1]);
+            this.addFromMouse(ui2.start_mpos[0], ui2.start_mpos[1]);
             if (this.parent) {
               this.parent._fireEvent("update", this.parent);
             }
@@ -18706,8 +18707,8 @@ curve1d.BSplineCurve {
       }
       do_highlight(x, y) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        const trans = ui2.draw_trans;
+        const ui = this.uidata;
+        const trans = ui.draw_trans;
         let mindis = 1e17;
         let minp = void 0;
         const limit = 19 / trans[0];
@@ -18729,12 +18730,12 @@ curve1d.BSplineCurve {
       }
       do_transform(x, y) {
         if (!this.uidata || !this.parent) return;
-        const ui2 = this.uidata;
-        const off = new Vector2([x, y]).sub(ui2.start_mpos);
+        const ui = this.uidata;
+        const off = new Vector2([x, y]).sub(ui.start_mpos);
         const xRange = this.parent.xRange;
         const yRange = this.parent.yRange;
-        for (let i2 = 0; i2 < ui2.transpoints.length; i2++) {
-          const p = ui2.transpoints[i2];
+        for (let i2 = 0; i2 < ui.transpoints.length; i2++) {
+          const p = ui.transpoints[i2];
           p.co.load(p.startco).add(off);
           p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
           p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
@@ -18744,28 +18745,28 @@ curve1d.BSplineCurve {
         this.redraw();
       }
       transform_mpos(x, y) {
-        const ui2 = this.uidata;
-        const r = ui2.canvas.getClientRects()[0];
+        const ui = this.uidata;
+        const r = ui.canvas.getClientRects()[0];
         const dpi = devicePixelRatio;
         x -= r.left;
         y -= r.top;
         x *= dpi;
         y *= dpi;
-        const trans = ui2.draw_trans;
+        const trans = ui.draw_trans;
         x = x / trans[0] - trans[1][0];
         y = -y / trans[0] - trans[1][1];
         return [x, y];
       }
       _on_mousemove(e) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        if (e.isTouch && ui2.transforming) {
+        const ui = this.uidata;
+        if (e.isTouch && ui.transforming) {
           e.preventDefault();
         }
         const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
         const y = mpos[1];
-        if (ui2.transforming) {
+        if (ui.transforming) {
           this.do_transform(x, y);
           this.evaluate(0.5);
         } else {
@@ -18774,8 +18775,8 @@ curve1d.BSplineCurve {
       }
       end_transform() {
         if (this.uidata) {
-          const ui2 = this.uidata;
-          ui2.transforming = false;
+          const ui = this.uidata;
+          ui.transforming = false;
         }
         this.fastmode = false;
         this.updateKnots();
@@ -18808,10 +18809,10 @@ curve1d.BSplineCurve {
         if (this.uidata === void 0) {
           return;
         }
-        const ui2 = this.uidata;
-        ui2.canvas = canvas;
-        ui2.g = g;
-        ui2.draw_trans = draw_trans;
+        const ui = this.uidata;
+        ui.canvas = canvas;
+        ui.g = g;
+        ui.draw_trans = draw_trans;
         g.lineWidth *= 1.5;
         const strokeStyle = g.strokeStyle;
         for (let ssi = 0; ssi < 1; ssi++) {
@@ -60663,7 +60664,7 @@ var require_tinymce = __commonJS({
           this.editor = editor2;
           this.setupCommands(editor2);
         }
-        EditorCommands2.prototype.execCommand = function(command, ui2, value2, args) {
+        EditorCommands2.prototype.execCommand = function(command, ui, value2, args) {
           var func, customCommand, state = false;
           var self2 = this;
           if (self2.editor.removed) {
@@ -60676,7 +60677,7 @@ var require_tinymce = __commonJS({
           }
           args = self2.editor.fire("BeforeExecCommand", {
             command,
-            ui: ui2,
+            ui,
             value: value2
           });
           if (args.isDefaultPrevented()) {
@@ -60684,19 +60685,19 @@ var require_tinymce = __commonJS({
           }
           customCommand = command.toLowerCase();
           if (func = self2.commands.exec[customCommand]) {
-            func(customCommand, ui2, value2);
+            func(customCommand, ui, value2);
             self2.editor.fire("ExecCommand", {
               command,
-              ui: ui2,
+              ui,
               value: value2
             });
             return true;
           }
           each$e(this.editor.plugins, function(p) {
-            if (p.execCommand && p.execCommand(command, ui2, value2)) {
+            if (p.execCommand && p.execCommand(command, ui, value2)) {
               self2.editor.fire("ExecCommand", {
                 command,
-                ui: ui2,
+                ui,
                 value: value2
               });
               state = true;
@@ -60706,22 +60707,22 @@ var require_tinymce = __commonJS({
           if (state) {
             return state;
           }
-          if (self2.editor.theme && self2.editor.theme.execCommand && self2.editor.theme.execCommand(command, ui2, value2)) {
+          if (self2.editor.theme && self2.editor.theme.execCommand && self2.editor.theme.execCommand(command, ui, value2)) {
             self2.editor.fire("ExecCommand", {
               command,
-              ui: ui2,
+              ui,
               value: value2
             });
             return true;
           }
           try {
-            state = self2.editor.getDoc().execCommand(command, ui2, value2);
+            state = self2.editor.getDoc().execCommand(command, ui, value2);
           } catch (ex) {
           }
           if (state) {
             self2.editor.fire("ExecCommand", {
               command,
-              ui: ui2,
+              ui,
               value: value2
             });
             return true;
@@ -60769,8 +60770,8 @@ var require_tinymce = __commonJS({
         EditorCommands2.prototype.addCommand = function(command, callback, scope) {
           var _this = this;
           command = command.toLowerCase();
-          this.commands.exec[command] = function(command2, ui2, value2, args) {
-            return callback.call(scope || _this.editor, ui2, value2, args);
+          this.commands.exec[command] = function(command2, ui, value2, args) {
+            return callback.call(scope || _this.editor, ui, value2, args);
           };
         };
         EditorCommands2.prototype.queryCommandSupported = function(command) {
@@ -60802,14 +60803,14 @@ var require_tinymce = __commonJS({
           command = command.toLowerCase();
           return !!this.commands.exec[command];
         };
-        EditorCommands2.prototype.execNativeCommand = function(command, ui2, value2) {
-          if (ui2 === void 0) {
-            ui2 = false;
+        EditorCommands2.prototype.execNativeCommand = function(command, ui, value2) {
+          if (ui === void 0) {
+            ui = false;
           }
           if (value2 === void 0) {
             value2 = null;
           }
-          return this.editor.getDoc().execCommand(command, ui2, value2);
+          return this.editor.getDoc().execCommand(command, ui, value2);
         };
         EditorCommands2.prototype.isFormatMatch = function(name3) {
           return this.editor.formatter.match(name3);
@@ -60894,13 +60895,13 @@ var require_tinymce = __commonJS({
             "Bold,Italic,Underline,Strikethrough,Superscript,Subscript": function(command) {
               self2.toggleFormat(command);
             },
-            "ForeColor,HiliteColor": function(command, ui2, value2) {
+            "ForeColor,HiliteColor": function(command, ui, value2) {
               self2.toggleFormat(command, value2);
             },
-            "FontName": function(command, ui2, value2) {
+            "FontName": function(command, ui, value2) {
               fontNameAction(editor2, value2);
             },
-            "FontSize": function(command, ui2, value2) {
+            "FontSize": function(command, ui, value2) {
               fontSizeAction(editor2, value2);
             },
             "RemoveFormat": function(command) {
@@ -60909,7 +60910,7 @@ var require_tinymce = __commonJS({
             "mceBlockQuote": function() {
               self2.toggleFormat("blockquote");
             },
-            "FormatBlock": function(command, ui2, value2) {
+            "FormatBlock": function(command, ui, value2) {
               return self2.toggleFormat(value2 || "p");
             },
             "mceCleanup": function() {
@@ -60917,7 +60918,7 @@ var require_tinymce = __commonJS({
               editor2.setContent(editor2.getContent());
               editor2.selection.moveToBookmark(bookmark);
             },
-            "mceRemoveNode": function(command, ui2, value2) {
+            "mceRemoveNode": function(command, ui, value2) {
               var node = value2 || editor2.selection.getNode();
               if (node !== editor2.getBody()) {
                 self2.storeSelection();
@@ -60925,7 +60926,7 @@ var require_tinymce = __commonJS({
                 self2.restoreSelection();
               }
             },
-            "mceSelectNodeDepth": function(command, ui2, value2) {
+            "mceSelectNodeDepth": function(command, ui, value2) {
               var counter = 0;
               editor2.dom.getParent(editor2.selection.getNode(), function(node) {
                 if (node.nodeType === 1 && counter++ === value2) {
@@ -60934,26 +60935,26 @@ var require_tinymce = __commonJS({
                 }
               }, editor2.getBody());
             },
-            "mceSelectNode": function(command, ui2, value2) {
+            "mceSelectNode": function(command, ui, value2) {
               editor2.selection.select(value2);
             },
-            "mceInsertContent": function(command, ui2, value2) {
+            "mceInsertContent": function(command, ui, value2) {
               insertAtCaret$1(editor2, value2);
             },
-            "mceInsertRawHTML": function(command, ui2, value2) {
+            "mceInsertRawHTML": function(command, ui, value2) {
               editor2.selection.setContent("tiny_mce_marker");
               var content = editor2.getContent();
               editor2.setContent(content.replace(/tiny_mce_marker/g, function() {
                 return value2;
               }));
             },
-            "mceInsertNewLine": function(command, ui2, value2) {
+            "mceInsertNewLine": function(command, ui, value2) {
               insert$3(editor2, value2);
             },
-            "mceToggleFormat": function(command, ui2, value2) {
+            "mceToggleFormat": function(command, ui, value2) {
               self2.toggleFormat(value2);
             },
-            "mceSetContent": function(command, ui2, value2) {
+            "mceSetContent": function(command, ui, value2) {
               editor2.setContent(value2);
             },
             "Indent,Outdent": function(command) {
@@ -60968,10 +60969,10 @@ var require_tinymce = __commonJS({
               editor2.hasVisual = !editor2.hasVisual;
               editor2.addVisual();
             },
-            "mceReplaceContent": function(command, ui2, value2) {
+            "mceReplaceContent": function(command, ui, value2) {
               editor2.execCommand("mceInsertContent", false, value2.replace(/\{\$selection\}/g, editor2.selection.getContent({ format: "text" })));
             },
-            "mceInsertLink": function(command, ui2, value2) {
+            "mceInsertLink": function(command, ui, value2) {
               var anchor;
               if (typeof value2 === "string") {
                 value2 = { href: value2 };
@@ -61002,7 +61003,7 @@ var require_tinymce = __commonJS({
             "mceNewDocument": function() {
               editor2.setContent("");
             },
-            "InsertLineBreak": function(command, ui2, value2) {
+            "InsertLineBreak": function(command, ui, value2) {
               insert$2(editor2, value2);
               return true;
             }
@@ -62115,8 +62116,8 @@ var require_tinymce = __commonJS({
         Editor4.prototype.addShortcut = function(pattern, desc, cmdFunc, scope) {
           this.shortcuts.add(pattern, desc, cmdFunc, scope);
         };
-        Editor4.prototype.execCommand = function(cmd, ui2, value2, args) {
-          return this.editorCommands.execCommand(cmd, ui2, value2, args);
+        Editor4.prototype.execCommand = function(cmd, ui, value2, args) {
+          return this.editorCommands.execCommand(cmd, ui, value2, args);
         };
         Editor4.prototype.queryCommandState = function(cmd) {
           return this.editorCommands.queryCommandState(cmd);
@@ -62747,7 +62748,7 @@ var require_tinymce = __commonJS({
           toggleGlobalEvents(editors.length > 0);
           return editor2;
         },
-        execCommand: function(cmd, ui2, value2) {
+        execCommand: function(cmd, ui, value2) {
           var self2 = this, editor2 = self2.get(value2);
           switch (cmd) {
             case "mceAddEditor":
@@ -62773,7 +62774,7 @@ var require_tinymce = __commonJS({
               return true;
           }
           if (self2.activeEditor) {
-            return self2.activeEditor.execCommand(cmd, ui2, value2);
+            return self2.activeEditor.execCommand(cmd, ui, value2);
           }
           return false;
         },
@@ -64729,6 +64730,7 @@ init_ui_base();
 init_theme_schema();
 init_toolprop();
 init_ui_menu();
+init_ui_consts();
 init_const();
 init_toolsys();
 init_controller_base();
@@ -65087,7 +65089,7 @@ var Container3 = class _Container extends UIBase2 {
       horiz = obj.horiz;
     }
     if (horiz === void 0) {
-      horiz = this instanceof RowFrame;
+      horiz = IsRowFrameTag in this;
       horiz = horiz || this.saneStyle["flex-direction"] === "row";
     }
     const flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
@@ -66407,10 +66409,12 @@ var Container3 = class _Container extends UIBase2 {
   }
 };
 UIBase2.internalRegister(Container3);
+
+// scripts/core/ui_containers.ts
+init_ui_base();
+init_ui_consts();
 var RowFrame = class extends Container3 {
-  constructor() {
-    super();
-  }
+  [IsRowFrameTag] = true;
   static define() {
     return {
       tagname: "rowframe-x"
@@ -66444,15 +66448,9 @@ var RowFrame = class extends Container3 {
     this.style["paddingTop"] = this.style["paddingBottom"] = "" + m2 + "px";
     return this;
   }
-  update() {
-    super.update();
-  }
 };
 UIBase2.internalRegister(RowFrame);
 var ColumnFrame = class extends Container3 {
-  constructor() {
-    super();
-  }
   static define() {
     return {
       tagname: "colframe-x"
@@ -66463,9 +66461,6 @@ var ColumnFrame = class extends Container3 {
     this.style["display"] = "flex";
     this.style["flexDirection"] = "column";
     this.style["justifyContent"] = "right";
-  }
-  update() {
-    super.update();
   }
   oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
     this.style["marginTop"] = this.style["marginBottom"] = "" + m + "px";
@@ -66479,21 +66474,9 @@ var ColumnFrame = class extends Container3 {
   }
 };
 UIBase2.internalRegister(ColumnFrame);
-var TableFrame = class extends Container3 {
-  static define() {
-    return {
-      tagname: "tableframe-x"
-    };
-  }
-};
 var TwoColumnFrame = class extends Container3 {
   _colWidth = 256;
   parentDepth = 1;
-  constructor() {
-    super();
-    this._colWidth = 256;
-    this.parentDepth = 1;
-  }
   get colWidth() {
     if (this.hasAttribute("colWidth")) {
       return parsepx3(this.getAttribute("colWidth"));
@@ -74371,7 +74354,7 @@ var ListBoxChangeEvent = class extends Event {
     this.selection = selection;
   }
 };
-var ListBox2 = class extends Container3 {
+var ListBox = class extends Container3 {
   items;
   idmap;
   lastListRef;
@@ -74807,7 +74790,7 @@ var ListBox2 = class extends Container3 {
     }
   }
 };
-UIBase2.internalRegister(ListBox2);
+UIBase2.internalRegister(ListBox);
 var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
   _undo;
   static tooldef() {
@@ -75079,7 +75062,7 @@ var TableRow = class extends Container3 {
   }
 };
 UIBase2.internalRegister(TableRow);
-var TableFrame2 = class extends Container3 {
+var TableFrame = class extends Container3 {
   constructor() {
     super();
     this.dom = document.createElement("table");
@@ -75232,7 +75215,7 @@ var TableFrame2 = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(TableFrame2);
+UIBase2.internalRegister(TableFrame);
 
 // scripts/widgets/ui_noteframe.ts
 var ui_noteframe_exports = {};

@@ -1,6 +1,6 @@
 import { UIBase, Icons } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
-import { RowFrame } from "../core/ui";
+import { RowFrame } from "../core/ui_containers";
 import { CSSFont } from "../core/cssfont";
 import { TextBoxBase } from "./ui_textbox";
 import { keymap } from "../path-controller/util/simple_events";

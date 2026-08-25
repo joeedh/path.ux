@@ -22,7 +22,9 @@ import type { UIBaseDefinition } from "./ui_base";
 import { t } from "./theme_schema";
 import type { KnownDataPath } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
-import { createMenu, DropBox, Menu, MenuTemplate } from "../widgets/ui_menu";
+import { createMenu, Menu } from "../widgets/ui_menu";
+import type { DropBox, MenuTemplate } from "../widgets/ui_menu";
+import { IsRowFrameTag } from "./ui_consts";
 
 import cconst from "../config/const";
 import { IContextBase } from "./context_base";
@@ -33,7 +35,12 @@ import { InheritFlag, ToolOp } from "../path-controller/toolsys/toolsys";
 import type { RichViewer } from "../widgets/ui_richedit";
 import type { NumSliderTypes } from "../widgets/ui_numsliders";
 import type { ColorPicker, ColorPickerButton } from "../widgets/ui_colorpicker2";
-import { ListBox } from "../widgets/ui_listbox";
+import type { ListBox } from "../widgets/ui_listbox";
+// Type-only: a value import of ui_containers would evaluate `class RowFrame extends
+// Container` while Container is still in its temporal dead zone. ui_containers imports
+// this module; this module must never import it at runtime, not even for side effects.
+import type { RowFrame, ColumnFrame, TwoColumnFrame } from "./ui_containers";
+import type { TableFrame } from "../widgets/ui_table";
 import { DataPathError } from "../path-controller/controller/controller_base";
 import { ToolOpAny } from "../path-controller/controller/controller_abstract";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
@@ -509,7 +516,7 @@ export class Container<
     }
 
     if (horiz === undefined) {
-      horiz = this instanceof RowFrame;
+      horiz = IsRowFrameTag in this;
       horiz = horiz || this.saneStyle["flex-direction"] === "row";
     }
 
@@ -2374,196 +2381,3 @@ export class Container<
 }
 
 UIBase.internalRegister(Container);
-
-export class RowFrame<
-  CTX extends IContextBase = IContextBase,
-  SELF extends string = "RowFrame",
-> extends Container<CTX, SELF> {
-  constructor() {
-    super();
-  }
-
-  static define() {
-    return {
-      tagname: "rowframe-x",
-    };
-  }
-
-  //try to set styling as early as possible
-  connectedCallback() {
-    super.connectedCallback();
-
-    this.style["display"] = "flex";
-    this.style["flexDirection"] = this.reversed ? "row-reverse" : "row";
-  }
-
-  init() {
-    super.init();
-
-    this.style["display"] = "flex";
-    this.style["flexDirection"] = this.reversed ? "row-reverse" : "row";
-
-    if (!this.style["alignItems"] || this.style["alignItems"] == "") {
-      this.style["alignItems"] = "center";
-    }
-
-    if (this.getDefault("slider-style") === "simple") {
-      this.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-      this.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-    }
-  }
-
-  oneAxisMargin(m: number | string = this.getDefault("oneAxisMargin") as number, m2 = 0) {
-    this.style["marginLeft"] = this.style["marginRight"] = m + "px";
-    this.style["marginTop"] = this.style["marginBottom"] = "" + m2 + "px";
-
-    return this;
-  }
-
-  oneAxisPadding(m: number | string = this.getDefault("oneAxisPadding") as number, m2 = 0) {
-    this.style["paddingLeft"] = this.style["paddingRight"] = "" + m + "px";
-    this.style["paddingTop"] = this.style["paddingBottom"] = "" + m2 + "px";
-
-    return this;
-  }
-
-  update() {
-    super.update();
-  }
-}
-
-UIBase.internalRegister(RowFrame);
-
-export class ColumnFrame<
-  CTX extends IContextBase = IContextBase,
-  SELF extends string = "ColumnFrame",
-> extends Container<CTX, SELF> {
-  constructor() {
-    super();
-  }
-
-  static define() {
-    return {
-      tagname: "colframe-x",
-    };
-  }
-
-  init() {
-    super.init();
-
-    this.style["display"] = "flex";
-    this.style["flexDirection"] = "column";
-    this.style["justifyContent"] = "right";
-  }
-
-  update() {
-    super.update();
-  }
-
-  oneAxisMargin(m: number | string = this.getDefault("oneAxisMargin") as number, m2 = 0) {
-    this.style["marginTop"] = this.style["marginBottom"] = "" + m + "px";
-    this.style["marginLeft"] = this.style["marginRight"] = m2 + "px";
-
-    return this;
-  }
-
-  oneAxisPadding(m: number | string = this.getDefault("oneAxisPadding") as number, m2 = 0) {
-    this.style["paddingTop"] = this.style["paddingBottom"] = "" + m + "px";
-    this.style["paddingLeft"] = this.style["paddingRight"] = "" + m2 + "px";
-
-    return this;
-  }
-}
-
-UIBase.internalRegister(ColumnFrame);
-
-export class TableFrame<CTX extends IContextBase = IContextBase> extends Container<
-  CTX,
-  "TableFrame"
-> {
-  static define() {
-    return {
-      tagname: "tableframe-x",
-    };
-  }
-}
-
-// TableFrame was not registered in the original; keep it consistent
-// (the original file did not have a TableFrame class, but it's referenced
-// in createElement("tableframe-x") calls)
-
-export class TwoColumnFrame<CTX extends IContextBase = IContextBase> extends Container<
-  CTX,
-  "TwoColumnFrame"
-> {
-  _colWidth = 256;
-  parentDepth = 1;
-
-  constructor() {
-    super();
-
-    this._colWidth = 256;
-    this.parentDepth = 1;
-  }
-
-  get colWidth() {
-    if (this.hasAttribute("colWidth")) {
-      return parsepx(this.getAttribute("colWidth")!);
-    }
-
-    return this._colWidth;
-  }
-
-  set colWidth(v: number) {
-    if (this.hasAttribute("colWidth")) {
-      this.setAttribute("colWidth", "" + v);
-    } else {
-      this._colWidth = v;
-    }
-  }
-
-  static define() {
-    return {
-      tagname: "two-column-x",
-    };
-  }
-
-  init() {
-    super.init();
-
-    this.style["display"] = "flex";
-    this.style["flexDirection"] = "column";
-  }
-
-  update() {
-    super.update();
-
-    let p: UIBase<CTX> | undefined = this as unknown as UIBase<CTX>;
-
-    for (let i = 0; i < this.parentDepth; i++) {
-      p = p.parentWidget ? (p.parentWidget as UIBase<CTX>) : p;
-    }
-
-    if (!p) {
-      return;
-    }
-
-    const r = p.getBoundingClientRect();
-
-    if (!r) {
-      return;
-    }
-
-    const style = r.width > this.colWidth * 2.0 ? "row" : "column";
-
-    if (this.style["flexDirection"] !== style) {
-      this.style["flexDirection"] = style;
-    }
-  }
-}
-
-UIBase.internalRegister(TwoColumnFrame);
-
-function parsepx(css: string): number {
-  return parseFloat(css);
-}

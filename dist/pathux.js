@@ -11474,11 +11474,12 @@ var init_simple_events = __esm({
 });
 
 // scripts/core/ui_consts.ts
-var ClassIdSymbol;
+var ClassIdSymbol, IsRowFrameTag;
 var init_ui_consts = __esm({
   "scripts/core/ui_consts.ts"() {
     "use strict";
     ClassIdSymbol = /* @__PURE__ */ Symbol("pathux-class-id");
+    IsRowFrameTag = /* @__PURE__ */ Symbol("IsRowFrame");
   }
 });
 
@@ -18581,20 +18582,20 @@ curve1d.BSplineCurve {
       }
       start_transform(_useSelected = true) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        const dpi = 1 / ui2.draw_trans[0];
+        const ui = this.uidata;
+        const dpi = 1 / ui.draw_trans[0];
         for (const p of this.points) {
           p.startco.load(p.co);
         }
         const transform_op = new BSplineTransformOp();
-        transform_op.inputs.dataPath.setValue(ui2.datapath);
+        transform_op.inputs.dataPath.setValue(ui.datapath);
         transform_op.inputs.dpi.setValue(dpi);
-        ui2.dom.ctx.api.execTool(ui2.dom.ctx, transform_op);
+        ui.dom.ctx.api.execTool(ui.dom.ctx, transform_op);
       }
       _on_mousedown(e) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        ui2.start_mpos.load(this.transform_mpos(e.x, e.y));
+        const ui = this.uidata;
+        ui.start_mpos.load(this.transform_mpos(e.x, e.y));
         this.fastmode = true;
         const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
@@ -18609,10 +18610,10 @@ curve1d.BSplineCurve {
           } else {
             this.points.highlight.flag ^= CurveFlags.SELECT;
           }
-          if (ui2.datapath) {
+          if (ui.datapath) {
             const state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
-            ui2.dom.ctx.api.execTool(ui2.dom.ctx, "curve1d.bspline_select_point", {
-              dataPath: ui2.datapath,
+            ui.dom.ctx.api.execTool(ui.dom.ctx, "curve1d.bspline_select_point", {
+              dataPath: ui.datapath,
               state,
               unique: !e.shiftKey,
               point: this.points.highlight.eid
@@ -18624,16 +18625,16 @@ curve1d.BSplineCurve {
           this.redraw();
         } else {
           const uidata = this.uidata;
-          const ui3 = uidata;
-          if (ui3.datapath) {
-            const start_mpos = ui3.start_mpos;
-            ui3.dom.ctx.api.execTool(ui3.dom.ctx, "curve1d.bspline_add_point", {
-              dataPath: ui3.datapath,
+          const ui2 = uidata;
+          if (ui2.datapath) {
+            const start_mpos = ui2.start_mpos;
+            ui2.dom.ctx.api.execTool(ui2.dom.ctx, "curve1d.bspline_add_point", {
+              dataPath: ui2.datapath,
               x: start_mpos[0],
               y: start_mpos[1]
             });
           } else {
-            this.addFromMouse(ui3.start_mpos[0], ui3.start_mpos[1]);
+            this.addFromMouse(ui2.start_mpos[0], ui2.start_mpos[1]);
             if (this.parent) {
               this.parent._fireEvent("update", this.parent);
             }
@@ -18683,8 +18684,8 @@ curve1d.BSplineCurve {
       }
       do_highlight(x, y) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        const trans = ui2.draw_trans;
+        const ui = this.uidata;
+        const trans = ui.draw_trans;
         let mindis = 1e17;
         let minp = void 0;
         const limit = 19 / trans[0];
@@ -18706,12 +18707,12 @@ curve1d.BSplineCurve {
       }
       do_transform(x, y) {
         if (!this.uidata || !this.parent) return;
-        const ui2 = this.uidata;
-        const off = new Vector2([x, y]).sub(ui2.start_mpos);
+        const ui = this.uidata;
+        const off = new Vector2([x, y]).sub(ui.start_mpos);
         const xRange = this.parent.xRange;
         const yRange = this.parent.yRange;
-        for (let i = 0; i < ui2.transpoints.length; i++) {
-          const p = ui2.transpoints[i];
+        for (let i = 0; i < ui.transpoints.length; i++) {
+          const p = ui.transpoints[i];
           p.co.load(p.startco).add(off);
           p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
           p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
@@ -18721,28 +18722,28 @@ curve1d.BSplineCurve {
         this.redraw();
       }
       transform_mpos(x, y) {
-        const ui2 = this.uidata;
-        const r = ui2.canvas.getClientRects()[0];
+        const ui = this.uidata;
+        const r = ui.canvas.getClientRects()[0];
         const dpi = devicePixelRatio;
         x -= r.left;
         y -= r.top;
         x *= dpi;
         y *= dpi;
-        const trans = ui2.draw_trans;
+        const trans = ui.draw_trans;
         x = x / trans[0] - trans[1][0];
         y = -y / trans[0] - trans[1][1];
         return [x, y];
       }
       _on_mousemove(e) {
         if (!this.uidata) return;
-        const ui2 = this.uidata;
-        if (e.isTouch && ui2.transforming) {
+        const ui = this.uidata;
+        if (e.isTouch && ui.transforming) {
           e.preventDefault();
         }
         const mpos = this.transform_mpos(e.x, e.y);
         const x = mpos[0];
         const y = mpos[1];
-        if (ui2.transforming) {
+        if (ui.transforming) {
           this.do_transform(x, y);
           this.evaluate(0.5);
         } else {
@@ -18751,8 +18752,8 @@ curve1d.BSplineCurve {
       }
       end_transform() {
         if (this.uidata) {
-          const ui2 = this.uidata;
-          ui2.transforming = false;
+          const ui = this.uidata;
+          ui.transforming = false;
         }
         this.fastmode = false;
         this.updateKnots();
@@ -18785,10 +18786,10 @@ curve1d.BSplineCurve {
         if (this.uidata === void 0) {
           return;
         }
-        const ui2 = this.uidata;
-        ui2.canvas = canvas;
-        ui2.g = g;
-        ui2.draw_trans = draw_trans;
+        const ui = this.uidata;
+        ui.canvas = canvas;
+        ui.g = g;
+        ui.draw_trans = draw_trans;
         g.lineWidth *= 1.5;
         const strokeStyle = g.strokeStyle;
         for (let ssi = 0; ssi < 1; ssi++) {
@@ -36029,6 +36030,7 @@ init_ui_base();
 init_theme_schema();
 init_toolprop();
 init_ui_menu();
+init_ui_consts();
 init_const();
 init_toolsys();
 init_controller_base();
@@ -36387,7 +36389,7 @@ var Container3 = class _Container extends UIBase2 {
       horiz = obj.horiz;
     }
     if (horiz === void 0) {
-      horiz = this instanceof RowFrame;
+      horiz = IsRowFrameTag in this;
       horiz = horiz || this.saneStyle["flex-direction"] === "row";
     }
     const flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
@@ -37707,10 +37709,12 @@ var Container3 = class _Container extends UIBase2 {
   }
 };
 UIBase2.internalRegister(Container3);
+
+// scripts/core/ui_containers.ts
+init_ui_base();
+init_ui_consts();
 var RowFrame = class extends Container3 {
-  constructor() {
-    super();
-  }
+  [IsRowFrameTag] = true;
   static define() {
     return {
       tagname: "rowframe-x"
@@ -37744,15 +37748,9 @@ var RowFrame = class extends Container3 {
     this.style["paddingTop"] = this.style["paddingBottom"] = "" + m2 + "px";
     return this;
   }
-  update() {
-    super.update();
-  }
 };
 UIBase2.internalRegister(RowFrame);
 var ColumnFrame = class extends Container3 {
-  constructor() {
-    super();
-  }
   static define() {
     return {
       tagname: "colframe-x"
@@ -37763,9 +37761,6 @@ var ColumnFrame = class extends Container3 {
     this.style["display"] = "flex";
     this.style["flexDirection"] = "column";
     this.style["justifyContent"] = "right";
-  }
-  update() {
-    super.update();
   }
   oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
     this.style["marginTop"] = this.style["marginBottom"] = "" + m + "px";
@@ -37779,21 +37774,9 @@ var ColumnFrame = class extends Container3 {
   }
 };
 UIBase2.internalRegister(ColumnFrame);
-var TableFrame = class extends Container3 {
-  static define() {
-    return {
-      tagname: "tableframe-x"
-    };
-  }
-};
 var TwoColumnFrame = class extends Container3 {
   _colWidth = 256;
   parentDepth = 1;
-  constructor() {
-    super();
-    this._colWidth = 256;
-    this.parentDepth = 1;
-  }
   get colWidth() {
     if (this.hasAttribute("colWidth")) {
       return parsepx3(this.getAttribute("colWidth"));
@@ -45671,7 +45654,7 @@ var ListBoxChangeEvent = class extends Event {
     this.selection = selection;
   }
 };
-var ListBox2 = class extends Container3 {
+var ListBox = class extends Container3 {
   items;
   idmap;
   lastListRef;
@@ -46107,7 +46090,7 @@ var ListBox2 = class extends Container3 {
     }
   }
 };
-UIBase2.internalRegister(ListBox2);
+UIBase2.internalRegister(ListBox);
 var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
   _undo;
   static tooldef() {
@@ -46379,7 +46362,7 @@ var TableRow = class extends Container3 {
   }
 };
 UIBase2.internalRegister(TableRow);
-var TableFrame2 = class extends Container3 {
+var TableFrame = class extends Container3 {
   constructor() {
     super();
     this.dom = document.createElement("table");
@@ -46532,7 +46515,7 @@ var TableFrame2 = class extends Container3 {
     };
   }
 };
-UIBase2.internalRegister(TableFrame2);
+UIBase2.internalRegister(TableFrame);
 
 // scripts/widgets/ui_noteframe.ts
 var ui_noteframe_exports = {};
@@ -63058,7 +63041,7 @@ export {
   LinkCanvas,
   LinkDrag,
   LinkDragModalOp,
-  ListBox2 as ListBox,
+  ListBox,
   ListBoxChangeEvent,
   ListBoxSetActiveToolOp,
   ListItem,

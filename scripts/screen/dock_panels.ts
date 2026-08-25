@@ -32,6 +32,8 @@
  */
 
 import { Container } from "../core/ui";
+//side-effect import: registers colframe-x, created directly below
+import "../core/ui_containers";
 import { UIBase, Icons, loadUIData, saveUIData } from "../core/ui_base";
 //side-effect import: registers tabbar-x/tabcontainer-x, used by rail
 //mode and tabbed stacks

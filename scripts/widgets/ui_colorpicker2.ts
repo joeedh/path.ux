@@ -5,7 +5,7 @@ import type { CSSFont } from "../core/cssfont";
 import * as util from "../path-controller/util/util";
 import { Number4, Vector2, Vector3, Vector4 } from "../path-controller/util/vectormath";
 import { UIBase, drawRoundBox, getFont } from "../core/ui_base";
-import { ColumnFrame } from "../core/ui";
+import { ColumnFrame } from "../core/ui_containers";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
 import { keymap } from "../path-controller/util/simple_events";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";

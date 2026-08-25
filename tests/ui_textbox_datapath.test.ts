@@ -4,7 +4,7 @@ import type { Container } from "../scripts/core/ui";
 import type { TextBox } from "../scripts/widgets/ui_textbox";
 /* both classes are used only as types above, so the element registrations they
  * perform on import need naming explicitly or the import is elided */
-import "../scripts/core/ui";
+import "../scripts/core/ui_containers";
 import "../scripts/widgets/ui_textbox";
 import { DataAPI, clearPathWatchers } from "../scripts/path-controller/controller/controller";
 

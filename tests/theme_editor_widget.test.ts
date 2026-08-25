@@ -5,7 +5,7 @@ import { test, expect, beforeAll, vi } from "vitest";
 vi.setConfig({ testTimeout: 60000 });
 
 import { UIBase, iconmanager, theme } from "../scripts/core/ui_base";
-import "../scripts/core/ui";
+import "../scripts/core/ui_containers";
 //the editor builds panels, sliders and colour buttons from the widget registry
 import "../scripts/pathux";
 import { CSSFont } from "../scripts/core/cssfont";

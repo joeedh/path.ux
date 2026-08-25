@@ -1,5 +1,6 @@
 import { UIBase, Icons, saveUIData, loadUIData } from "../core/ui_base";
-import { ColumnFrame, Container } from "../core/ui";
+import { Container } from "../core/ui";
+import { ColumnFrame } from "../core/ui_containers";
 import { Curve1D } from "../path-controller/curve/curve1d";
 import { makeGenEnum } from "../path-controller/curve/curve1d_utils";
 import type { CurveTypeData } from "../path-controller/curve/curve1d";

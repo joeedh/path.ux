@@ -1,7 +1,7 @@
 import { test, expect, beforeAll } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
 import type { Container } from "../scripts/core/ui";
-import "../scripts/core/ui";
+import "../scripts/core/ui_containers";
 import {
   PanelManager,
   PanelLayoutState,

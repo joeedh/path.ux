@@ -3,7 +3,7 @@
 import { JSONAny } from "../path-controller/util/jsonUtils";
 import * as util from "../path-controller/util/util";
 import * as events from "../path-controller/util/events";
-import * as ui from "../core/ui";
+import { ColumnFrame } from "../core/ui_containers";
 import { keymap } from "../path-controller/util/events";
 import { IContextBase } from "../core/context_base";
 import { UIBase, iconmanager, loadUIData, measureText, saveUIData } from "../core/ui_base";
@@ -121,7 +121,7 @@ class TabClickEvent<CTX extends IContextBase = IContextBase> extends PointerEven
   }
 }
 
-export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ui.ColumnFrame<
+export class TabItemContainer<CTX extends IContextBase = IContextBase> extends ColumnFrame<
   CTX,
   "TabItemContainer"
 > {
@@ -129,7 +129,7 @@ export class TabItemContainer<CTX extends IContextBase = IContextBase> extends u
 
   static define() {
     return {
-      ...ui.ColumnFrame.define(),
+      ...ColumnFrame.define(),
       tagname: "tab-item-container-x",
     };
   }
@@ -2575,8 +2575,6 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
 
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
-
-    //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
 
     col.parentWidget = this as unknown as UIBase<CTX>;
 

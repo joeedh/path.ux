@@ -1,7 +1,8 @@
 import nstructjs from "../../path-controller/util/struct";
 import type { StructReader } from "../../util/nstructjs";
 import { UIBase } from "../../core/ui_base";
-import type { ColumnFrame, Container } from "../../core/ui";
+import type { Container } from "../../core/ui";
+import type { ColumnFrame } from "../../core/ui_containers";
 import { IContextBase } from "../../core/context_base";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { Area } from "../../screen/ScreenArea";

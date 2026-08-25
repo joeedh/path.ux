@@ -12,7 +12,8 @@
  * {@link ScreenArea.close}'s cancelable `areaclose` event.
  */
 import { UIBase, Icons } from "../core/ui_base";
-import type { Container, RowFrame } from "../core/ui";
+import type { Container } from "../core/ui";
+import type { RowFrame } from "../core/ui_containers";
 import type { Area, ScreenArea } from "../screen/ScreenArea";
 import { AreaFlags } from "../screen/ScreenArea";
 import type { Screen } from "../screen/FrameManager";

@@ -1,5 +1,6 @@
 import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData } from "../core/ui_base";
-import { Container, ColumnFrame } from "../core/ui";
+import { Container } from "../core/ui";
+import { ColumnFrame } from "../core/ui_containers";
 import { IContextBase } from "../core/context_base";
 import { validateCSSColor, color2css, css2color, ThemeScrollBars } from "../core/ui_theme";
 import type { ThemeItem, ThemeRecord } from "../core/ui_theme";

@@ -4,7 +4,7 @@ import "./ui_richedit";
 import * as util from "../path-controller/util/util";
 import * as ui_base from "../core/ui_base";
 import { Vector2, Vector3, Vector4, Quat } from "../path-controller/util/vectormath";
-import { RowFrame, ColumnFrame } from "../core/ui";
+import { RowFrame, ColumnFrame } from "../core/ui_containers";
 import { isVecProperty, PropFlags } from "../path-controller/toolsys";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 

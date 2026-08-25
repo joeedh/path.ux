@@ -1,5 +1,6 @@
 import { UIBase } from "../core/ui_base";
-import { Container, RowFrame } from "../core/ui";
+import { Container } from "../core/ui";
+import { RowFrame } from "../core/ui_containers";
 import { IContextBase } from "../core/context_base";
 import { parsepx } from "../core/ui_theme";
 import { keymap } from "../path-controller/util/events";
