@@ -81,6 +81,7 @@ import * as pick from "./base/ui_base_pick";
 import * as dom from "./base/ui_base_dom";
 import * as graph from "./base/ui_base_graph";
 import * as props from "./base/ui_base_props";
+import * as init from "./base/ui_base_init";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -129,8 +130,6 @@ export { CSSFont } from "./cssfont";
 import type { DataPathSetOp } from "../path-controller/controller/controller_ops";
 import { tagManager } from "./tagReRegister";
 import type { Screen } from "../screen/FrameManager";
-
-let _idgen = 0;
 
 interface TimeoutQueueItem {
   cb: () => void;
@@ -224,40 +223,40 @@ export class UIBase<
   /* -- instance properties -- */
   _tool_tip_abort_delay: number | undefined;
   _tooltip_ref: { remove(): void } | undefined;
-  _textBoxEvents: boolean;
+  _textBoxEvents!: boolean;
   _themeOverride: Record<string, Record<string, unknown>> | undefined;
-  _last_theme_update_key: number;
+  _last_theme_update_key!: number;
   _client_disabled_set: boolean | undefined;
-  _useNativeToolTips: boolean;
-  _useNativeToolTips_set: boolean;
+  _useNativeToolTips!: boolean;
+  _useNativeToolTips_set!: boolean;
   _has_own_tooltips: ToolTipState | undefined;
   _tooltip_timer: number | undefined;
-  pathUndoGen: number;
-  _lastPathUndoGen: number;
+  pathUndoGen!: number;
+  _lastPathUndoGen!: number;
   _useDataPathUndo: boolean | undefined;
-  _active_animations: Animator[];
-  _screenStyleTag: HTMLStyleElement;
-  _screenStyleUpdateHash: number;
+  _active_animations!: Animator[];
+  _screenStyleTag!: HTMLStyleElement;
+  _screenStyleUpdateHash!: number;
   shadow!: ShadowRoot;
   __cbs: [string, EventListener, AddEventListenerOptions | boolean | undefined][] = [];
-  _wasAddedToNodeAtSomeTime: boolean;
-  visibleToPick: boolean;
+  _wasAddedToNodeAtSomeTime!: boolean;
+  visibleToPick!: boolean;
   _override_class: string | undefined;
   _parentWidget: UIBase<CTX, unknown> | undefined;
-  _id: string;
-  default_overrides: Record<string, unknown>;
-  my_default_overrides: Record<string, unknown>;
-  class_default_overrides: Record<string, Record<string, unknown>>;
+  _id!: string;
+  default_overrides!: Record<string, unknown>;
+  my_default_overrides!: Record<string, unknown>;
+  class_default_overrides!: Record<string, Record<string, unknown>>;
   _description_final: string | undefined;
   _modaldata?: ModalState;
-  accessor packflag: number;
-  _internalDisabled: boolean;
-  __disabledState: boolean;
+  accessor packflag: number = 0;
+  _internalDisabled!: boolean;
+  __disabledState!: boolean;
   _disdata: DisableData | undefined;
   // will be set later
   _ctx: CTX = undefined as unknown as CTX;
   _description: string | undefined;
-  _init_done: boolean;
+  _init_done!: boolean;
   __background?: string;
   _flashtimer?: number;
   _flashcolor: string | undefined;
@@ -359,208 +358,7 @@ export class UIBase<
   constructor() {
     super();
 
-    EventNode.init(this);
-
-    this._tool_tip_abort_delay = undefined;
-    this._tooltip_ref = undefined;
-
-    this._textBoxEvents = false;
-
-    this._themeOverride = undefined;
-
-    this._last_theme_update_key = _themeUpdateKey;
-
-    this._client_disabled_set = undefined;
-    //this._parent_disabled_set = 0;
-
-    this._useNativeToolTips = cconst.useNativeToolTips;
-    this._useNativeToolTips_set = false;
-    this._has_own_tooltips = undefined;
-    this._tooltip_timer = util.time_ms();
-
-    this.pathUndoGen = 0;
-    this._lastPathUndoGen = 0;
-    this._useDataPathUndo = undefined;
-
-    this._active_animations = [];
-
-    //ref to Link element referencing Screen style node
-    //Screen.update_intern sets the contents of this
-    this._screenStyleTag = document.createElement("style");
-    this._screenStyleUpdateHash = 0;
-
-    initAspectClass(
-      this,
-      new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
-    );
-
-    this.shadow = this.attachShadow({ mode: "open" });
-
-    // this is the stupidest thing ever
-    const styleElem = document.createElement("style");
-    styleElem.innerHTML = `
-        /* This hides the host element when it has the hidden attribute */
-        :host([hidden]) {
-          display: none !important;
-        }
-    `;
-    this.shadow.appendChild(styleElem);
-
-    if (cconst.DEBUG.paranoidEvents) {
-      this.__cbs = [];
-    }
-
-    this.shadow.appendChild(this._screenStyleTag);
-    const _origAppendChild = this.shadow.appendChild.bind(this.shadow) as <T extends Node>(
-      child: T
-    ) => T;
-    (this.shadow as ShadowRoot & { _appendChild: <T extends Node>(child: T) => T })._appendChild =
-      _origAppendChild;
-
-    ///*
-    this.shadow.appendChild = <T extends Node>(child: T): T => {
-      if (child && typeof child === "object" && child instanceof UIBase) {
-        child.parentWidget = this as any;
-      }
-
-      return _origAppendChild(child);
-    };
-    //*/
-
-    this._wasAddedToNodeAtSomeTime = false;
-
-    this.visibleToPick = true;
-
-    this._override_class = undefined;
-    this.parentWidget = undefined;
-
-    /*
-    this.shadow._appendChild = this.shadow.appendChild;
-    this.shadow.appendChild = (child) => {
-      if (child instanceof UIBase) {
-        child.ctx = this.ctx;
-        child.parentWidget = this;
-
-        if (child._useDataPathUndo === undefined) {
-          child.useDataPathUndo = this.useDataPathUndo;
-        }
-      }
-
-      return this.shadow._appendChild(child);
-    };
-    //*/
-
-    const tagname = this.constructor.define().tagname;
-    this._id = tagname.replace(/-/g, "_") + _idgen++;
-
-    this.default_overrides = {}; //inherited by child widgets
-    this.my_default_overrides = {}; //not inherited to child widgets
-    this.class_default_overrides = {};
-
-    this._description_final = undefined;
-
-    //getting css to flow down properly can be a pain, so
-    //some packing settings are set as bitflags here,
-    //see PackFlags
-
-    /*
-    setInterval(() => {
-      this.update();
-    }, 200);
-    //*/
-
-    this._modaldata = undefined;
-    this.packflag = this.getDefault("BasePackFlag");
-    this._internalDisabled = false;
-    this.__disabledState = false;
-    this._disdata = undefined;
-
-    this._description = undefined;
-
-    const style = document.createElement("style");
-    style.textContent =
-      `
-    .DefaultText {
-      font: ` +
-      _getFont(this) +
-      `;
-    }
-    `;
-    this.shadow.appendChild(style);
-    this._init_done = false;
-
-    /* Deprecated touch -> mouse event conversion,
-       use pointer events instead. */
-    const do_touch = (e: TouchEvent, type: string, button?: number) => {
-      if (haveModal()) {
-        return;
-      }
-
-      button = button === undefined ? 0 : button;
-      const e2 = copyEvent(e);
-
-      if (e.touches.length === 0) {
-        //hrm, what to do, what to do. . .
-      } else {
-        const t = e.touches[0];
-
-        e2.pageX = t.pageX;
-        e2.pageY = t.pageY;
-        e2.screenX = t.screenX;
-        e2.screenY = t.screenY;
-        e2.clientX = t.clientX;
-        e2.clientY = t.clientY;
-        e2.x = t.clientX;
-        e2.y = t.clientY;
-      }
-
-      e2.button = button;
-
-      const e3 = new MouseEvent(type, e2 as MouseEventInit) as MouseEvent & {
-        was_touch: boolean;
-        touches: TouchList;
-      };
-
-      e3.was_touch = true;
-      e3.stopPropagation = e.stopPropagation.bind(e);
-      e3.preventDefault = e.preventDefault.bind(e);
-      (e3 as MouseEvent & { touches: TouchList }).touches = e.touches;
-
-      this.dispatchEvent(e3);
-    };
-
-    this.addEventListener(
-      "touchstart",
-      (e) => {
-        do_touch(e as TouchEvent, "mousedown", 0);
-      },
-      { passive: false }
-    );
-    this.addEventListener(
-      "touchmove",
-      (e) => {
-        do_touch(e as TouchEvent, "mousemove");
-      },
-      { passive: false }
-    );
-    this.addEventListener(
-      "touchcancel",
-      (e) => {
-        do_touch(e as TouchEvent, "mouseup", 2);
-      },
-      { passive: false }
-    );
-    this.addEventListener(
-      "touchend",
-      (e) => {
-        do_touch(e as TouchEvent, "mouseup", 0);
-      },
-      { passive: false }
-    );
-
-    if (this.constructor.define().havePickClipboard) {
-      this._clipboardHotkeyInit();
-    }
+    init.initUIBase(this);
   }
 
   get useNativeToolTips() {
@@ -911,21 +709,7 @@ export class UIBase<
   }
 
   _ondestroy(): void {
-    if (this.tabIndex >= 0) {
-      this.regenTabOrder();
-    }
-
-    if (cconst.DEBUG.paranoidEvents) {
-      for (const item of this.__cbs) {
-        this.removeEventListener(item[0], item[1], item[2]);
-      }
-
-      this.__cbs = [];
-    }
-
-    if (this.ondestroy !== undefined) {
-      this.ondestroy();
-    }
+    init.ondestroy(this);
   }
 
   remove(trigger_on_destroy = true): void {
@@ -945,20 +729,7 @@ export class UIBase<
   }
 
   flushUpdate(force = false): void {
-    //check init
-    this._init();
-
-    this.update();
-
-    this._forEachChildWidget((c) => {
-      if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
-        if (!c.ctx) {
-          c.ctx = this.ctx;
-        }
-
-        c.flushUpdate(force);
-      }
-    });
+    init.flushUpdate(this, force);
   }
 
   //used by container nodes
@@ -972,35 +743,7 @@ export class UIBase<
    * descended from ui_base.UIBase
    **/
   _forEachChildWidget(cb: (n: UIBase<CTX>) => void, thisvar?: unknown): void {
-    const rec = (n: Node & { shadow?: ShadowRoot }) => {
-      if (n instanceof UIBase) {
-        if (thisvar !== undefined) {
-          cb.call(thisvar, n);
-        } else {
-          cb(n);
-        }
-      } else {
-        for (const n2 of n.childNodes) {
-          rec(n2);
-        }
-
-        if (n.shadow !== undefined) {
-          for (const n2 of n.shadow.childNodes) {
-            rec(n2);
-          }
-        }
-      }
-    };
-
-    for (const n of this.childNodes) {
-      rec(n);
-    }
-
-    if (this.shadow) {
-      for (const n of this.shadow.childNodes) {
-        rec(n);
-      }
-    }
+    init.forEachChildWidget(this, cb as (n: UIBase) => void, thisvar);
   }
 
   checkInit(): boolean {
@@ -1172,47 +915,7 @@ export class UIBase<
     },
     timeout?: number
   ): void {
-    if (func._doOnce === undefined) {
-      func._doOnce_reqs = new Set();
-
-      func._doOnce = function (thisvar, trace) {
-        if (func._doOnce_reqs!.has(thisvar._id)) {
-          return;
-        }
-
-        func._doOnce_reqs!.add(thisvar._id);
-
-        function f() {
-          if (thisvar.isDead()) {
-            func._doOnce_reqs!.delete(thisvar._id);
-
-            if (func === thisvar._init || !cconst.DEBUG.doOnce) {
-              return;
-            }
-
-            console.warn("Ignoring doOnce call for dead element", thisvar._id, func, trace);
-            return;
-          }
-
-          if (!thisvar.ctx) {
-            if (cconst.DEBUG.doOnce) {
-              console.warn("doOnce call is waiting for context...", thisvar._id, func);
-            }
-
-            internalSetTimeout(f, 0);
-            return;
-          }
-
-          func._doOnce_reqs!.delete(thisvar._id);
-          func.call(thisvar);
-        }
-
-        internalSetTimeout(f, timeout);
-      };
-    }
-
-    const trace = new Error().stack;
-    func._doOnce(this, trace!);
+    init.doOnce(this, func, timeout);
   }
 
   float(x = 0, y = 0, zindex?: number | string, positionKey = UIBase.PositionKey): this {
@@ -1336,41 +1039,11 @@ export class UIBase<
 
   //called regularly
   update(): void {
-    this.updateToolTips();
-    this.updateEventGraph();
-    this._updatePathWatchers();
-
-    if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
-      const d = this.getPathDescription(this.ctx, this.getAttribute("datapath")!);
-
-      this.description = d;
-    }
-
-    if (!this._init_done) {
-      this._init();
-    }
-
-    if (this._init_done && !this.constructor.define().subclassChecksTheme) {
-      if (this.checkThemeUpdate()) {
-        console.log("theme update!");
-
-        this.setCSS();
-      }
-    }
+    init.update(this);
   }
 
   onadd(): void {
-    //if (this.parentWidget !== undefined) {
-    //  this._useDataPathUndo = this.parentWidget._useDataPathUndo;
-    //}
-
-    if (!this._init_done) {
-      this.doOnce(this._init);
-    }
-
-    if (this.tabIndex >= 0) {
-      this.regenTabOrder();
-    }
+    init.onadd(this);
   }
 
   getZoom(): number {
