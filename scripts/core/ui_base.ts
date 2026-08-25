@@ -75,6 +75,7 @@ import * as themeLookup from "./base/ui_base_theme_lookup";
 import * as tooltips from "./base/ui_base_tooltips";
 import * as modal from "./base/ui_base_modal";
 import * as anims from "./base/ui_base_anim";
+import * as css from "./base/ui_base_css";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -1144,18 +1145,7 @@ export class UIBase<
   connectedCallback(): void {}
 
   noMarginsOrPadding(): this {
-    let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
-    keys = keys.concat(["padding-block-start", "padding-block-end"]);
-
-    keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
-    keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
-
-    const style = this.saneStyle as any;
-    for (const k of keys) {
-      style[k] = "0px";
-    }
-
-    return this;
+    return css.noMarginsOrPadding(this);
   }
 
   /**
@@ -1172,12 +1162,7 @@ export class UIBase<
   }
 
   noMargins(): this {
-    this.saneStyle["margin"] =
-      this.saneStyle["margin-left"] =
-      this.saneStyle["margin-right"] =
-        "0px";
-    this.saneStyle["margin-top"] = this.saneStyle["margin-bottom"] = "0px";
-    return this;
+    return css.noMargins(this);
   }
 
   get saneStyle(): { [k: string]: string } {
@@ -1185,222 +1170,31 @@ export class UIBase<
   }
 
   noPadding(): this {
-    this.saneStyle["padding"] =
-      this.saneStyle["padding-left"] =
-      this.saneStyle["padding-right"] =
-        "0px";
-    this.saneStyle["padding-top"] = this.saneStyle["padding-bottom"] = "0px";
-    return this;
+    return css.noPadding(this);
   }
 
   getTotalRect(): TotalRect | undefined {
-    let found = false;
-
-    const min = new Vector2([1e17, 1e17]);
-    const max = new Vector2([-1e17, -1e17]);
-
-    const doaabb = (n: HTMLElement) => {
-      const rs = n.getClientRects();
-
-      for (const r of rs) {
-        min[0] = Math.min(min[0], r.x);
-        min[1] = Math.min(min[1], r.y);
-        max[0] = Math.max(max[0], r.x + r.width);
-        max[1] = Math.max(max[1], r.y + r.height);
-
-        found = true;
-      }
-    };
-
-    doaabb(this);
-
-    this._forEachChildWidget((n) => {
-      doaabb(n);
-    });
-
-    if (found) {
-      return {
-        width : max[0] - min[0],
-        height: max[1] - min[1],
-        x     : min[0],
-        y     : min[1],
-        left  : min[0],
-        top   : min[1],
-        right : max[0],
-        bottom: max[1],
-      };
-    } else {
-      return undefined;
-    }
+    return css.getTotalRect(this);
   }
 
   parseNumber(value: string | number, args: { baseUnit?: string; isInt?: boolean } = {}): number {
-    let str = ("" + value).trim().toLowerCase();
-
-    const baseUnit = args.baseUnit || this.baseUnit;
-    const isInt = args.isInt || this.isInt;
-
-    let sign = 1.0;
-
-    if (str.startsWith("-")) {
-      str = str.slice(1, str.length).trim();
-      sign = -1;
-    }
-
-    const hexre = /-?[0-9a-f]+h$/;
-    let result: number;
-
-    if (str.startsWith("0b")) {
-      str = str.slice(2, str.length).trim();
-      result = parseInt(str, 2);
-    } else if (str.startsWith("0x")) {
-      str = str.slice(2, str.length).trim();
-      result = parseInt(str, 16);
-    } else if (str.search(hexre) === 0) {
-      str = str.slice(0, str.length - 1).trim();
-      result = parseInt(str, 16);
-    } else {
-      result = units.parseValue(str, baseUnit);
-    }
-
-    if (isInt) {
-      result = ~~result;
-    }
-
-    return result * sign;
+    return css.parseNumber(this, value, args);
   }
 
   formatNumber(value: number, args: FormatNumberArgs = {}): string {
-    const baseUnit = args.baseUnit || this.baseUnit;
-    const displayUnit = args.displayUnit || this.displayUnit;
-    const isInt = args.isInt || this.isInt;
-    const radix = args.radix || this.radix || 10;
-    const decimalPlaces = args.decimalPlaces || this.decimalPlaces;
-
-    //console.log(this.baseUnit, this.displayUnit);
-
-    if (isInt && radix !== 10) {
-      const ret = Math.floor(value).toString(radix);
-
-      if (radix === 2) return "0b" + ret;
-      else if (radix === 16) return ret + "h";
-    }
-
-    return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
+    return css.formatNumber(this, value, args);
   }
 
   setBoxCSS(subkey?: string): void {
-    const keys = ["left", "right", "top", "bottom"];
-
-    let sub: any | undefined;
-    if (subkey) {
-      sub = this.getAttribute(subkey) || {};
-    }
-
-    const def = (key: string) => {
-      if (sub && subkey) {
-        return this.getSubDefault(subkey, key);
-      }
-
-      return this.getDefault(key);
-    };
-
-    for (let i = 0; i < 2; i++) {
-      const key = i ? "padding" : "margin";
-
-      this.saneStyle[key] = "unset";
-
-      const val = def(key);
-      if (val !== undefined) {
-        //handle default first
-        for (let j = 0; j < 4; j++) {
-          this.saneStyle[key + "-" + keys[j]] = val + "px";
-        }
-      }
-
-      for (let j = 0; j < 4; j++) {
-        //now do box sides
-        const key2 = `${key}-${keys[j]}`;
-        const val2 = def(key2);
-
-        if (val2 !== undefined) {
-          this.saneStyle[key2] = val2 + "px";
-        }
-      }
-    }
-
-    this.saneStyle["border-radius"] = def("border-radius") + "px";
-    this.saneStyle["border"] =
-      `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+    css.setBoxCSS(this, subkey);
   }
 
   genBoxCSS(subkey?: string): string {
-    let boxcode = "";
-
-    const keys = ["left", "right", "top", "bottom"];
-
-    let sub: any | undefined;
-    if (subkey) {
-      sub = this.getAttribute(subkey) || {};
-    }
-
-    const def = (key: string) => {
-      if (sub && subkey) {
-        return this.getSubDefault(subkey, key);
-      }
-
-      return this.getDefault(key);
-    };
-
-    for (let i = 0; i < 2; i++) {
-      const key = i ? "padding" : "margin";
-
-      const val = def(key);
-      if (val !== undefined) {
-        boxcode += `${key}: ${val} px;\n`;
-      }
-
-      for (let j = 0; j < 4; j++) {
-        const key2 = `${key}-${keys[j]}`;
-        const val2 = def(key2);
-
-        if (val2 !== undefined) {
-          boxcode += `${key2}: ${val}px;\n`;
-        }
-      }
-    }
-
-    boxcode += `border-radius: ${def("border-radius")}px;\n`;
-    boxcode += `border: ${def("border-width")}px ${def("border-style")} ${def("border-color")};\n`;
-
-    return boxcode;
+    return css.genBoxCSS(this, subkey);
   }
 
   setCSS(setBG = true): void {
-    if (setBG) {
-      const bg = this.getDefault("background-color");
-      if (bg) {
-        this.saneStyle["background-color"] = "" + bg;
-      }
-    }
-
-    const zoom = this.getZoom();
-    if (zoom === 1.0) {
-      return;
-    }
-
-    let transform = "" + this.saneStyle["transform"];
-
-    //try to preserve user set transform by selectively deleting scale
-    //kind of hackish. . .
-
-    //normalize whitespace
-    transform = transform.replace(/[ \t\n\r]+/g, " ");
-    transform = transform.replace(/, /g, ",");
-
-    //cut out scale
-    const transform2 = transform.replace(/scale\([^)]+\)/, "").trim();
-    this.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
+    css.setCSS(this, setBG);
   }
 
   //TS patch into this.update.after
@@ -1415,16 +1209,7 @@ export class UIBase<
   }
 
   flushSetCSS(): void {
-    //check init
-    this._init();
-
-    this.setCSS();
-
-    this._forEachChildWidget((c) => {
-      if (!(c.packflag & PackFlags.NO_UPDATE)) {
-        c.flushSetCSS();
-      }
-    });
+    css.flushSetCSS(this);
   }
 
   replaceChild<T extends Node>(newnode: Node, oldnode: T): T {
