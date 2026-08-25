@@ -2,6 +2,10 @@
 
 HTML5 UI library with Blender RNA-style data binding.
 
+## ToDos
+- a todos list exists in todos.md; it should be committed to the repo,
+  when items are complete they should be checked off.
+
 ### Comments
 
 - **Comments are plain declarative prose — no epigrams.** State the constraint or decision
@@ -190,6 +194,22 @@ controller overview: how model classes are wrapped (`DataAPI` / `DataStruct` /
 `DataPath`), how the UI references values by path, and how to look up structs by
 name (`getStructByName`).
 
+See [documentation/container.md](documentation/container.md) for how `Container` binds those
+paths. `container.prop(path)` resolves the path, reads the `ToolProperty` at the end of it,
+and builds whichever widget that property's type calls for — a slider for `INT`/`FLOAT`, a
+checkbox for `BOOL`, a dropdown or checkbox strip for `ENUM`, a checkbox strip for `FLAG`, a
+color button or component sliders for a vector, a textbox or label for `STRING`, a curve
+widget for `CURVE` — with the property's UI name, tooltip, range, step, unit, enum items and
+icons already applied. The other build methods (`slider`, `simpleslider`, `check`,
+`checkenum`, `listenum`, `textbox`, `textarea`, `colorbutton`, `colorPicker`, `curve1d`,
+`vecpopup`, `pathlabel`) take the same paths and bind the same way. Sliders come in three
+elements — roller (`numslider-x`), simple bar (`numslider-simple-x`), and roller with
+textbox (`numslider-textbox-x`) — chosen from the property's `SIMPLE_SLIDER` /
+`FORCE_ROLLER_SLIDER` flags, the container's `PackFlags`, and the `cconst.simpleNumSliders`
+/ `cconst.useNumSliderTextboxes` app defaults. Containers also carry `dataPrefix` and
+`massSetPrefix` down to their children, and mass-set paths
+(`scene.objects[{$.select}].size`) apply one edit across a selection as a single undo step.
+
 Valid `path` strings for `container.prop("...")`, related widget methods, and
 `<prop path="...">` xmlpage tags are catalogued in `generated/API_PATHS.md`
 (human/LLM-readable) and `generated/api-paths.json` (machine-readable), with each
@@ -246,11 +266,40 @@ the next `update()` if the widget is reused; the registry holds only weak
 refs (a `FinalizationRegistry` prunes anything missed). See
 `tests/pathWatch.test.ts` for the behavioral contract.
 
-## Theme typing (`getDefault`)
+## Theming
 
-Theme lookups go through `UIBase.getDefault(key)` (style-class scoped, with
-`parentStyle`/`base` fallback). The keys are catalogued so `getDefault` can be
-type-checked, mirroring the data-path catalog above.
+See [documentation/theming.md](documentation/theming.md) for the full write-up:
+theme variables, the generated theme file, the editor widget and its variable
+mode, and the export button a client app wraps it in.
+
+A theme is a record of style classes, each mapping keys to values (colors,
+numbers, booleans, `CSSFont`, `ThemeScrollBars`, and nested sub-records such as
+`disabled`/`highlight`). Widgets read values with `UIBase.getDefault(key)`,
+which searches the widget's own style class (from `define().style`), then
+`parentStyle`, then `base`.
+
+- `scripts/core/theme.ts` holds path.ux's `DefaultTheme`. `setTheme(record)`
+  (in `scripts/core/ui_base.ts`) merges an app theme into the live global
+  `theme` object rather than replacing it, so an app only supplies the keys it
+  overrides. After a runtime change call `flagThemeUpdate()` and repaint with
+  `screen.completeSetCSS()` / `screen.completeUpdate()`.
+- An app's theme file is the source of truth: a TypeScript module holding a
+  `themeVars` block and a `theme` record referencing those variables through
+  `getVars`, loaded with `setTheme(instanceThemeVars(theme, themeVars))`.
+  `example/theme.ts` is a working one; `example/core/app.ts` loads it.
+- The variable system lives in `scripts/core/ui_theme_utils.ts`
+  (`getVars`, `instanceThemeVars`, `createThemeFile`, `parseVarComments`), the
+  color and export helpers in `scripts/core/ui_theme.ts`, and the editor widget
+  (`theme-editor-x`) in `scripts/widgets/theme_editor.ts`. All of it is
+  re-exported from the `pathux` entry point.
+- The editor edits the live theme in place; the edits are runtime-only until an
+  app-supplied Export button regenerates the theme file with `createThemeFile`.
+
+### Theme typing (`getDefault`)
+
+The theme file governs values; the keys widgets read are typed separately. The
+keys are catalogued so `getDefault` can be type-checked, mirroring the data-path
+catalog above.
 
 - **Declare** the keys a widget uses in its `static define().theme`, mapping each
   to a `t.*` token from `scripts/core/theme_schema.ts` (`t.number`, `t.color`,

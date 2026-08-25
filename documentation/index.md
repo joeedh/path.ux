@@ -19,6 +19,7 @@ Blender, a 3D animation/modeling/visualization app.
 - [Overview](manual/architecture.html)
 - [Context](manual/context.html)
 - [Controller](manual/controller.html)
+- [Containers and Property Binding](manual/container.html)
 - [Tool Properties](manual/toolprop.html)
 - [Tool System](manual/toolsystem.html)
 - [STRUCT](manual/nstructjs.html)

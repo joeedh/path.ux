@@ -294,6 +294,7 @@ export const theme = {
       size   : 12,
       color  : "rgb(68, 68, 68)",
     }),
+    HotkeyTextColor : "rgb(68, 68, 68)",
     "border-color"  : "grey",
     "border-radius" : vars.radius,
     "border-style"  : "solid",

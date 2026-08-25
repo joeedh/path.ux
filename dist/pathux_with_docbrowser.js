@@ -8084,7 +8084,7 @@ __export(vectormath_exports, {
   Vector4: () => Vector4
 });
 function createVector2(parent, structName) {
-  return class Vector25 extends parent {
+  return class Vector26 extends parent {
     0;
     1;
     [Symbol.iterator] = parent.prototype[Symbol.iterator];
@@ -8282,7 +8282,7 @@ function createVector2(parent, structName) {
       return d0 * d0 + d1 * d1;
     }
     copy() {
-      return new Vector25(this);
+      return new Vector26(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -13418,6 +13418,17 @@ toolprop.FloatArrayProperty {
       getValue() {
         return this.value;
       }
+      equals(b) {
+        if (this.value.length !== b.value.length) {
+          return false;
+        }
+        for (let i = 0; i < this.value.length; i++) {
+          if (this.value[i] !== b.value[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
       clear() {
         this.value.length = 0;
         return this;
@@ -13486,6 +13497,19 @@ toolprop.FloatArrayProperty {
       }
       getValue() {
         return this.data;
+      }
+      equals(b) {
+        if (this.data.byteLength !== b.data.byteLength) {
+          return false;
+        }
+        const va = new Uint8Array(this.data);
+        const vb = new Uint8Array(b.data);
+        for (let i = 0; i < va.length; i++) {
+          if (va[i] !== vb[i]) {
+            return false;
+          }
+        }
+        return true;
       }
       copyTo(b) {
         super.copyTo(b);
@@ -23986,8 +24010,13 @@ var init_curve1d_toolprop = __esm({
       calcMemSize() {
         return 1024;
       }
-      equals(_b) {
-        return false;
+      /** Compares the curves' authored state through JSON mode, which writes only STRUCT fields. Each side passes through a load round trip first, because loadSTRUCT canonicalizes derived ordering (the bspline point sort) that a freshly edited curve has not applied yet. */
+      equals(b) {
+        const authored = (c) => {
+          const settled = readJSON(writeJSON(c), Curve1D);
+          return JSON.stringify(writeJSON(settled));
+        };
+        return authored(this.data) === authored(b.data);
       }
       getValue() {
         return this.data;
@@ -27074,6 +27103,47 @@ var init_theme = __esm({
         height: 200,
         width: 110
       },
+      panzoom: {
+        ZoomMin: 0.1,
+        ZoomMax: 8,
+        ZoomWheelRate: 1.1
+      },
+      nodeframe: {
+        Width: 140,
+        HeaderHeight: 24,
+        SocketRowHeight: 20,
+        "background-color": "rgba(248, 248, 248, 0.95)",
+        "border-color": "#b8b8b8",
+        "border-radius": 4,
+        HeaderBG: "rgba(214, 214, 214, 0.95)",
+        SelectOutline: "#e8930c",
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        SocketText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 11,
+          color: "rgba(35, 35, 35, 1.0)"
+        })
+      },
+      nodegraphview: {
+        "background-color": "rgb(225, 225, 225)",
+        BoxSelectBorder: "#e8930c",
+        BoxSelectBG: "rgba(232, 147, 12, 0.1)",
+        ErrorColor: "#cc3333"
+      },
+      nodelinkcanvas: {
+        LinkColor: "#777777",
+        LinkWidth: 2
+      },
       menu: {
         MenuBG: "rgba(250, 250, 250, 1.0)",
         "item-radius": 0,
@@ -27097,6 +27167,16 @@ var init_theme = __esm({
           size: 12,
           color: "rgba(25, 25, 25, 1.0)"
         }),
+        HotkeyText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(68, 68, 68, 1.0)"
+        }),
+        // addItemExtra sets the hotkey span's color separately from its font
+        HotkeyTextColor: "rgba(68, 68, 68, 1.0)",
         "padding-top": 0,
         "padding-left": 0,
         "padding-right": 0,
@@ -45634,8 +45714,8 @@ var require_tinymce = __commonJS({
         var isNamedAnchor2 = node.name === "a" && !node.attr("href") && node.attr("id");
         return node.attr("name") || node.attr("id") && !node.firstChild || node.attr("data-mce-bookmark") || isNamedAnchor2;
       };
-      var Node2 = (function() {
-        function Node3(name3, type2) {
+      var Node6 = (function() {
+        function Node7(name3, type2) {
           this.name = name3;
           this.type = type2;
           if (type2 === 1) {
@@ -45643,8 +45723,8 @@ var require_tinymce = __commonJS({
             this.attributes.map = {};
           }
         }
-        Node3.create = function(name3, attrs) {
-          var node = new Node3(name3, typeLookup[name3] || 1);
+        Node7.create = function(name3, attrs) {
+          var node = new Node7(name3, typeLookup[name3] || 1);
           if (attrs) {
             each$1(attrs, function(value2, attrName) {
               node.attr(attrName, value2);
@@ -45652,7 +45732,7 @@ var require_tinymce = __commonJS({
           }
           return node;
         };
-        Node3.prototype.replace = function(node) {
+        Node7.prototype.replace = function(node) {
           var self2 = this;
           if (node.parent) {
             node.remove();
@@ -45661,7 +45741,7 @@ var require_tinymce = __commonJS({
           self2.remove();
           return self2;
         };
-        Node3.prototype.attr = function(name3, value2) {
+        Node7.prototype.attr = function(name3, value2) {
           var self2 = this;
           var attrs;
           if (typeof name3 !== "string") {
@@ -45707,9 +45787,9 @@ var require_tinymce = __commonJS({
             return attrs.map[name3];
           }
         };
-        Node3.prototype.clone = function() {
+        Node7.prototype.clone = function() {
           var self2 = this;
-          var clone2 = new Node3(self2.name, self2.type);
+          var clone2 = new Node7(self2.name, self2.type);
           var selfAttrs;
           if (selfAttrs = self2.attributes) {
             var cloneAttrs = [];
@@ -45730,13 +45810,13 @@ var require_tinymce = __commonJS({
           clone2.shortEnded = self2.shortEnded;
           return clone2;
         };
-        Node3.prototype.wrap = function(wrapper) {
+        Node7.prototype.wrap = function(wrapper) {
           var self2 = this;
           self2.parent.insert(wrapper, self2);
           wrapper.append(self2);
           return self2;
         };
-        Node3.prototype.unwrap = function() {
+        Node7.prototype.unwrap = function() {
           var self2 = this;
           for (var node = self2.firstChild; node; ) {
             var next = node.next;
@@ -45745,7 +45825,7 @@ var require_tinymce = __commonJS({
           }
           self2.remove();
         };
-        Node3.prototype.remove = function() {
+        Node7.prototype.remove = function() {
           var self2 = this, parent2 = self2.parent, next = self2.next, prev = self2.prev;
           if (parent2) {
             if (parent2.firstChild === self2) {
@@ -45768,7 +45848,7 @@ var require_tinymce = __commonJS({
           }
           return self2;
         };
-        Node3.prototype.append = function(node) {
+        Node7.prototype.append = function(node) {
           var self2 = this;
           if (node.parent) {
             node.remove();
@@ -45784,7 +45864,7 @@ var require_tinymce = __commonJS({
           node.parent = self2;
           return node;
         };
-        Node3.prototype.insert = function(node, refNode, before2) {
+        Node7.prototype.insert = function(node, refNode, before2) {
           if (node.parent) {
             node.remove();
           }
@@ -45811,7 +45891,7 @@ var require_tinymce = __commonJS({
           node.parent = parent2;
           return node;
         };
-        Node3.prototype.getAll = function(name3) {
+        Node7.prototype.getAll = function(name3) {
           var self2 = this;
           var collection = [];
           for (var node = self2.firstChild; node; node = walk$2(node, self2)) {
@@ -45821,7 +45901,7 @@ var require_tinymce = __commonJS({
           }
           return collection;
         };
-        Node3.prototype.empty = function() {
+        Node7.prototype.empty = function() {
           var self2 = this;
           if (self2.firstChild) {
             var nodes = [];
@@ -45837,7 +45917,7 @@ var require_tinymce = __commonJS({
           self2.firstChild = self2.lastChild = null;
           return self2;
         };
-        Node3.prototype.isEmpty = function(elements, whitespace2, predicate) {
+        Node7.prototype.isEmpty = function(elements, whitespace2, predicate) {
           if (whitespace2 === void 0) {
             whitespace2 = {};
           }
@@ -45875,10 +45955,10 @@ var require_tinymce = __commonJS({
           }
           return true;
         };
-        Node3.prototype.walk = function(prev) {
+        Node7.prototype.walk = function(prev) {
           return walk$2(this, null, prev);
         };
-        return Node3;
+        return Node7;
       })();
       var makeMap$3 = Tools.makeMap;
       var Writer = function(settings) {
@@ -46566,7 +46646,7 @@ var require_tinymce = __commonJS({
         return args.content;
       };
       var getContentInternal = function(editor2, args, format) {
-        return Option.from(editor2.getBody()).fold(constant(args.format === "tree" ? new Node2("body", 11) : ""), function(body) {
+        return Option.from(editor2.getBody()).fold(constant(args.format === "tree" ? new Node6("body", 11) : ""), function(body) {
           return getContentFromBody(editor2, args, format, body);
         });
       };
@@ -48183,7 +48263,7 @@ var require_tinymce = __commonJS({
       };
       var defaultFormat = "html";
       var isTreeNode = function(content) {
-        return content instanceof Node2;
+        return content instanceof Node6;
       };
       var moveSelection = function(editor2) {
         if (hasFocus$1(editor2)) {
@@ -50138,7 +50218,7 @@ var require_tinymce = __commonJS({
         }
       };
       var isTreeNode$1 = function(content) {
-        return content instanceof Node2;
+        return content instanceof Node6;
       };
       var runSerializerFiltersOnFragment = function(editor2, fragment) {
         filter$3(editor2.serializer.getNodeFilters(), editor2.serializer.getAttributeFilters(), fragment);
@@ -52769,9 +52849,9 @@ var require_tinymce = __commonJS({
       var paddEmptyNode = function(settings, args, blockElements, node) {
         var brPreferred = settings.padd_empty_with_br || args.insert;
         if (brPreferred && blockElements[node.name]) {
-          node.empty().append(new Node2("br", 1)).shortEnded = true;
+          node.empty().append(new Node6("br", 1)).shortEnded = true;
         } else {
-          node.empty().append(new Node2("#text", 3)).value = nbsp;
+          node.empty().append(new Node6("#text", 3)).value = nbsp;
         }
       };
       var isPaddedWithNbsp = function(node) {
@@ -52875,7 +52955,7 @@ var require_tinymce = __commonJS({
                   parent2 = parent2.parent;
                 }
                 if (lastParent === parent2 && settings.padd_empty_with_br !== true) {
-                  textNode = new Node2("#text", 3);
+                  textNode = new Node6("#text", 3);
                   textNode.value = nbsp;
                   node.replace(textNode);
                 }
@@ -52935,7 +53015,7 @@ var require_tinymce = __commonJS({
                 if (node.prev && node.prev.name === "li") {
                   node.prev.append(node);
                 } else {
-                  var li = new Node2("li", 1);
+                  var li = new Node6("li", 1);
                   li.attr("style", "list-style-type: none");
                   node.wrap(li);
                 }
@@ -53062,11 +53142,11 @@ var require_tinymce = __commonJS({
                   sibling2.insert(node, sibling2.firstChild, true);
                   continue;
                 }
-                node.wrap(filterNode(new Node2("ul", 1)));
+                node.wrap(filterNode(new Node6("ul", 1)));
                 continue;
               }
               if (schema.isValidChild(node.parent.name, "div") && schema.isValidChild("div", node.name)) {
-                node.wrap(filterNode(new Node2("div", 1)));
+                node.wrap(filterNode(new Node6("div", 1)));
               } else {
                 if (specialElements[node.name]) {
                   node.empty().remove();
@@ -53208,7 +53288,7 @@ var require_tinymce = __commonJS({
             trim2(rootBlockNode);
           };
           var createNode = function(name4, type2) {
-            var node2 = new Node2(name4, type2);
+            var node2 = new Node6(name4, type2);
             var list6;
             if (name4 in nodeFilters) {
               list6 = matchedNodes[name4];
@@ -53396,7 +53476,7 @@ var require_tinymce = __commonJS({
               }
             }
           }, schema);
-          var rootNode = node = new Node2(args.context || settings.root_name, 11);
+          var rootNode = node = new Node6(args.context || settings.root_name, 11);
           parser3.parse(html, args.format);
           if (validate2 && invalidChildren.length) {
             if (!args.context) {
@@ -59811,7 +59891,7 @@ var require_tinymce = __commonJS({
           while (i--) {
             node = nodes[i];
             if (node.isEmpty(nonEmptyElements) && node.getAll("br").length === 0) {
-              node.append(new Node2("br", 1)).shortEnded = true;
+              node.append(new Node6("br", 1)).shortEnded = true;
             }
           }
         });
@@ -63375,7 +63455,7 @@ var require_tinymce = __commonJS({
         html: {
           Styles,
           Entities,
-          Node: Node2,
+          Node: Node6,
           Schema,
           SaxParser: SaxParser$1,
           DomParser,
@@ -75595,6 +75675,3263 @@ var LastToolPanel = class extends ColumnFrame {
 };
 UIBase2.internalRegister(LastToolPanel);
 
+// scripts/widgets/ui_panzoom.ts
+init_ui_base();
+init_theme_schema();
+init_toolsys();
+init_vectormath();
+var PanZoomTransform = class {
+  scale = 1;
+  pan = new Vector2([0, 0]);
+  minScale = 0.1;
+  maxScale = 8;
+  /** The screen point a content point maps to. */
+  project(p) {
+    return new Vector2([p[0] * this.scale + this.pan[0], p[1] * this.scale + this.pan[1]]);
+  }
+  /** The content point a screen point maps to. */
+  unproject(p) {
+    return new Vector2([(p[0] - this.pan[0]) / this.scale, (p[1] - this.pan[1]) / this.scale]);
+  }
+  panBy(dx, dy) {
+    this.pan[0] += dx;
+    this.pan[1] += dy;
+    return this;
+  }
+  /** Sets the (clamped) scale while keeping the screen point center fixed. */
+  setScale(scale, center) {
+    const s = Math.min(Math.max(scale, this.minScale), this.maxScale);
+    const k = s / this.scale;
+    this.pan[0] = center[0] - (center[0] - this.pan[0]) * k;
+    this.pan[1] = center[1] - (center[1] - this.pan[1]) * k;
+    this.scale = s;
+    return this;
+  }
+  zoomBy(factor, center) {
+    return this.setScale(this.scale * factor, center);
+  }
+  /** Fits rect (content space) inside the view and centers it. */
+  zoomToRect(rect, viewWidth, viewHeight) {
+    const fit = Math.min(viewWidth / rect.width, viewHeight / rect.height);
+    this.scale = Math.min(Math.max(fit, this.minScale), this.maxScale);
+    this.pan[0] = viewWidth * 0.5 - (rect.x + rect.width * 0.5) * this.scale;
+    this.pan[1] = viewHeight * 0.5 - (rect.y + rect.height * 0.5) * this.scale;
+    return this;
+  }
+  toCSS() {
+    return `matrix(${this.scale}, 0, 0, ${this.scale}, ${this.pan[0]}, ${this.pan[1]})`;
+  }
+};
+var PAN_MENU_SLOP_PX = 3;
+var PanZoomContainer = class extends Container3 {
+  content;
+  transform = new PanZoomTransform();
+  _suppressMenu = false;
+  _spaceDown = false;
+  _onKey = (e) => {
+    if (e.code === "Space") {
+      this._spaceDown = e.type === "keydown";
+    }
+  };
+  constructor() {
+    super();
+    this.content = UIBase2.createElement("container-x");
+    this.content.parentWidget = this;
+    this.shadow.appendChild(this.content);
+  }
+  static define() {
+    return {
+      tagname: "panzoom-x",
+      style: "panzoom",
+      theme: {
+        ZoomMin: t.number,
+        ZoomMax: t.number,
+        ZoomWheelRate: t.number
+      }
+    };
+  }
+  init() {
+    super.init();
+    this.style.overflow = "hidden";
+    this.style.position = "relative";
+    this.content.ctx = this.ctx;
+    this.content._init();
+    this.content.style.position = "absolute";
+    this.content.style.transformOrigin = "0 0";
+    this.transform.minScale = this.getDefault("ZoomMin");
+    this.transform.maxScale = this.getDefault("ZoomMax");
+    this.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rate = this.getDefault("ZoomWheelRate");
+        this.transform.zoomBy(Math.pow(rate, -e.deltaY / 120), this._local(e));
+        this._updateTransform();
+      },
+      { passive: false }
+    );
+    this.addEventListener("pointerdown", (e) => {
+      if (e.button === 1 || e.button === 2 || e.button === 0 && this._spaceDown) {
+        e.preventDefault();
+        e.stopPropagation();
+        this._suppressMenu = false;
+        const ctx = this.ctx;
+        ctx.toolstack.execTool(ctx, new PanZoomPanOp(this, e), e);
+      }
+    });
+    this.addEventListener(
+      "contextmenu",
+      (e) => {
+        if (this._suppressMenu) {
+          this._suppressMenu = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      { capture: true }
+    );
+    window.addEventListener("keydown", this._onKey);
+    window.addEventListener("keyup", this._onKey);
+    this._updateTransform();
+    this.setCSS();
+  }
+  remove() {
+    window.removeEventListener("keydown", this._onKey);
+    window.removeEventListener("keyup", this._onKey);
+    super.remove();
+  }
+  /** Swallows the contextmenu event the current right-drag's release fires. */
+  suppressNextMenu() {
+    this._suppressMenu = true;
+  }
+  /** Inserts elem beneath the transformed content, in this widget's own
+   *  (untransformed) coordinate space. Underlays receive no pointer events. */
+  addUnderlay(elem) {
+    elem.style.position = "absolute";
+    elem.style.left = elem.style.top = "0px";
+    elem.style.pointerEvents = "none";
+    this.shadow.insertBefore(elem, this.content);
+    return elem;
+  }
+  /** The screen point (widget-local) a content point maps to. */
+  project(p) {
+    return this.transform.project(p);
+  }
+  /** The content point a widget-local screen point maps to. */
+  unproject(p) {
+    return this.transform.unproject(p);
+  }
+  /** Sets scale and pan directly, applying the CSS matrix and firing "transform". */
+  setTransform(scale, pan) {
+    this.transform.scale = Math.min(
+      Math.max(scale, this.transform.minScale),
+      this.transform.maxScale
+    );
+    this.transform.pan.loadXY(pan[0], pan[1]);
+    this._updateTransform();
+  }
+  /** Fits rect (content space) inside the widget's current bounds. */
+  zoomToRect(rect) {
+    const r = this.getBoundingClientRect();
+    this.transform.zoomToRect(rect, r.width, r.height);
+    this._updateTransform();
+  }
+  _local(e) {
+    const r = this.getBoundingClientRect();
+    return [e.clientX - r.x, e.clientY - r.y];
+  }
+  _updateTransform() {
+    this.content.style.transform = this.transform.toCSS();
+    this.dispatchEvent(new CustomEvent("transform", { detail: { transform: this.transform } }));
+  }
+  add(...args) {
+    return this.content.add(...args);
+  }
+  appendChild(n) {
+    return this.content.appendChild(n);
+  }
+};
+UIBase2.internalRegister(PanZoomContainer);
+var PanZoomPanOp = class extends ToolOp {
+  _pz;
+  _button = 0;
+  _moved = false;
+  _startX = 0;
+  _startY = 0;
+  _lastX = 0;
+  _lastY = 0;
+  constructor(pz, e) {
+    super();
+    this._pz = pz;
+    if (e !== void 0) {
+      this._button = e.button;
+      this._lastX = this._startX = e.clientX;
+      this._lastY = this._startY = e.clientY;
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Pan",
+      description: "Drag to pan the view",
+      toolpath: "panzoom.pan",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const pz = this._pz;
+    if (pz === void 0) {
+      return;
+    }
+    if (Math.abs(e.clientX - this._startX) >= PAN_MENU_SLOP_PX || Math.abs(e.clientY - this._startY) >= PAN_MENU_SLOP_PX) {
+      this._moved = true;
+    }
+    const t2 = pz.transform;
+    pz.setTransform(t2.scale, [
+      t2.pan[0] + e.clientX - this._lastX,
+      t2.pan[1] + e.clientY - this._lastY
+    ]);
+    this._lastX = e.clientX;
+    this._lastY = e.clientY;
+  }
+  on_pointerup(_e) {
+    this._finish();
+  }
+  on_pointercancel(_e) {
+    this._finish();
+  }
+  _finish() {
+    const pz = this._pz;
+    this._pz = void 0;
+    if (pz !== void 0 && this._button === 2 && this._moved) {
+      pz.suppressNextMenu();
+    }
+    this.modalEnd(false);
+  }
+  modalEnd(was_cancelled) {
+    this._pz = void 0;
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(PanZoomPanOp);
+
+// scripts/graph/graph_types.ts
+var NO_ID = -1;
+
+// scripts/graph/graph.ts
+init_nstructjs();
+var GRAPH_VERSION = 1;
+var GraphLink = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.GraphLink {
+  srcNode : string | JSON.stringify(this.srcNode);
+  srcKey  : string;
+  dstNode : string | JSON.stringify(this.dstNode);
+  dstKey  : string;
+}
+`
+  );
+  srcNode = NO_ID;
+  srcKey = "";
+  dstNode = NO_ID;
+  dstKey = "";
+  constructor(srcNode = NO_ID, srcKey = "", dstNode = NO_ID, dstKey = "") {
+    this.srcNode = srcNode;
+    this.srcKey = srcKey;
+    this.dstNode = dstNode;
+    this.dstKey = dstKey;
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.srcNode = JSON.parse(this.srcNode);
+    this.dstNode = JSON.parse(this.dstNode);
+  }
+};
+var Graph = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.Graph {
+  VERSION : float;
+  idgen   : int;
+  nodes   : array(abstract(graph.Node));
+  links   : array(graph.GraphLink) | this._linkList();
+}
+`
+  );
+  VERSION = GRAPH_VERSION;
+  nodes = [];
+  nodeIdMap = /* @__PURE__ */ new Map();
+  /** Nodes flagged dirty since the client last cleared them; maintained by Node.flagDirty. */
+  dirtyNodes = /* @__PURE__ */ new Set();
+  /** Loads a group definition by reference. The library never decides where a ref points. */
+  groupLoader;
+  /** Saves a group definition by reference; the seam beside groupLoader for group designers. */
+  groupSaver;
+  /** Set on a group instance's subgraph; flagSortDirty bubbles through it to the owning graph. */
+  groupOwner = void 0;
+  /** Last-known-good group definitions, kept across resolveGroups runs. */
+  knownDefs = /* @__PURE__ */ new Map();
+  idgen = 0;
+  /** Populated by the reader during load and drained by loadSTRUCT; writes go through _linkList. */
+  links = [];
+  sortCache = void 0;
+  /** Adds the node, allocating an id when it has none. A node keeps a preassigned id. */
+  add(node) {
+    if (node.graph !== void 0 && node.graph !== this) {
+      throw new Error(`node ${String(node.id)} already belongs to another graph`);
+    }
+    if (node.id === NO_ID) {
+      node.id = this.idgen++;
+    } else if (typeof node.id === "number") {
+      this.idgen = Math.max(this.idgen, node.id + 1);
+    }
+    node.graph = this;
+    this.nodes.push(node);
+    this.nodeIdMap.set(node.id, node);
+    this.flagSortDirty();
+  }
+  /** Removes the node and severs every edge into or out of it. Unknown nodes are ignored. */
+  remove(node) {
+    const i = this.nodes.indexOf(node);
+    if (i < 0) {
+      return;
+    }
+    for (const key in node.inputs) {
+      this._severEdges(node.inputs[key]);
+    }
+    for (const key in node.outputs) {
+      this._severEdges(node.outputs[key]);
+    }
+    this.nodes.splice(i, 1);
+    this.nodeIdMap.delete(node.id);
+    this.dirtyNodes.delete(node);
+    node.graph = void 0;
+    this.flagSortDirty();
+  }
+  /**
+   * Connects an output socket to an input socket, in either argument order. Refuses two
+   * sockets of the same direction and sockets whose nodes are not both in this graph.
+   * A single-link input replaces its existing edge, the way a node editor's link drag
+   * expects; connecting an already-connected pair is a no-op.
+   */
+  connect(sockA, sockB) {
+    if (sockA.dir === sockB.dir) {
+      throw new Error("connect takes one output socket and one input socket");
+    }
+    const src = sockA.dir === "out" ? sockA : sockB;
+    const dst = sockA.dir === "out" ? sockB : sockA;
+    const srcNode = src.owningNode;
+    const dstNode = dst.owningNode;
+    if (srcNode?.graph !== this || dstNode?.graph !== this) {
+      throw new Error("connect refuses an edge between nodes of different graphs");
+    }
+    if (src.edges.includes(dst)) {
+      return;
+    }
+    if (!dst.multiSocket) {
+      for (const e of [...dst.edges]) {
+        this.disconnect(e, dst);
+      }
+    }
+    src.edges.push(dst);
+    dst.edges.push(src);
+    dst.flagDirty();
+    this.flagSortDirty();
+  }
+  /** Severs the edge between the two sockets; a pair that is not connected is a no-op. */
+  disconnect(sockA, sockB) {
+    const ai = sockA.edges.indexOf(sockB);
+    const bi = sockB.edges.indexOf(sockA);
+    if (ai < 0 && bi < 0) {
+      return;
+    }
+    if (ai >= 0) sockA.edges.splice(ai, 1);
+    if (bi >= 0) sockB.edges.splice(bi, 1);
+    const dst = sockA.dir === "in" ? sockA : sockB;
+    dst.flagDirty();
+    this.flagSortDirty();
+  }
+  flagSortDirty() {
+    this.sortCache = void 0;
+    this.groupOwner?.graph?.flagSortDirty();
+  }
+  /**
+   * The refusal sentence for structural edits, or undefined where they are allowed.
+   * A group instance's subgraph answers with the sentence; ops consult this in canRun.
+   */
+  structuralEditsRefused() {
+    return this.groupOwner !== void 0 ? "a group instance takes value edits only; structural edits belong to the group's definition" : void 0;
+  }
+  /**
+   * Loads and reconciles every group instance in the graph through groupLoader,
+   * recursing into loaded definitions. Failures are reported rather than thrown, and
+   * a definition that fails to reload keeps the one an earlier run resolved.
+   */
+  async resolveGroups() {
+    const report3 = { synced: [], failed: [] };
+    const rt = {
+      loader: this.groupLoader,
+      pending: /* @__PURE__ */ new Map(),
+      known: this.knownDefs,
+      chain: [],
+      report: report3
+    };
+    for (const n of [...this.nodes]) {
+      await n._resolveGroup(rt);
+    }
+    return report3;
+  }
+  /**
+   * Topological order plus strongly connected components, via iterative Tarjan.
+   * Cyclic nodes appear in cycles and not in order, so a client with its own cyclic
+   * solver receives the components it needs. Cached until flagSortDirty().
+   */
+  sort() {
+    if (this.sortCache !== void 0) {
+      return this.sortCache;
+    }
+    const nodes = [];
+    for (const n of this.nodes) {
+      nodes.push(...n.expandNode());
+    }
+    const nodeSet = new Set(nodes);
+    const succOf = (n) => {
+      const out = [];
+      for (const key in n.outputs) {
+        for (const target of n.outputs[key].resolvedEdges()) {
+          const owner = target.owningNode;
+          if (owner !== void 0 && nodeSet.has(owner)) {
+            out.push(owner);
+          }
+        }
+      }
+      return out;
+    };
+    const index = /* @__PURE__ */ new Map();
+    const lowlink = /* @__PURE__ */ new Map();
+    const onStack = /* @__PURE__ */ new Set();
+    const sccStack = [];
+    let counter = 0;
+    const components = [];
+    for (const root of nodes) {
+      if (index.has(root)) {
+        continue;
+      }
+      index.set(root, counter);
+      lowlink.set(root, counter);
+      counter++;
+      sccStack.push(root);
+      onStack.add(root);
+      const frames = [{ node: root, succs: succOf(root), i: 0 }];
+      while (frames.length > 0) {
+        const f2 = frames[frames.length - 1];
+        if (f2.i < f2.succs.length) {
+          const w = f2.succs[f2.i++];
+          if (!index.has(w)) {
+            index.set(w, counter);
+            lowlink.set(w, counter);
+            counter++;
+            sccStack.push(w);
+            onStack.add(w);
+            frames.push({ node: w, succs: succOf(w), i: 0 });
+          } else if (onStack.has(w)) {
+            lowlink.set(f2.node, Math.min(lowlink.get(f2.node), index.get(w)));
+          }
+          continue;
+        }
+        frames.pop();
+        const parent = frames[frames.length - 1];
+        if (parent !== void 0) {
+          lowlink.set(parent.node, Math.min(lowlink.get(parent.node), lowlink.get(f2.node)));
+        }
+        if (lowlink.get(f2.node) === index.get(f2.node)) {
+          const comp = [];
+          let w;
+          do {
+            w = sccStack.pop();
+            onStack.delete(w);
+            comp.push(w);
+          } while (w !== f2.node);
+          components.push(comp);
+        }
+      }
+    }
+    const order = [];
+    const cycles = [];
+    for (let i = components.length - 1; i >= 0; i--) {
+      const comp = components[i];
+      if (comp.length === 1 && !succOf(comp[0]).includes(comp[0])) {
+        order.push(comp[0]);
+      } else {
+        cycles.push(comp);
+      }
+    }
+    this.sortCache = { order, cycles };
+    return this.sortCache;
+  }
+  /** Removes sock from the edge lists of everything it connects to, dirtying the far side. */
+  _severEdges(sock) {
+    for (const other of [...sock.edges]) {
+      const i = other.edges.indexOf(sock);
+      if (i >= 0) {
+        other.edges.splice(i, 1);
+      }
+      if (other.dir === "in") {
+        other.flagDirty();
+      }
+    }
+    sock.edges.length = 0;
+  }
+  _linkList() {
+    const out = [];
+    for (const n of this.nodes) {
+      for (const key in n.outputs) {
+        const sock = n.outputs[key];
+        for (const e of sock.edges) {
+          const dst = e.owningNode;
+          if (dst === void 0) {
+            continue;
+          }
+          out.push(new GraphLink(n.id, sock.name, dst.id, e.name));
+        }
+      }
+    }
+    return out;
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.nodeIdMap.clear();
+    for (const n of this.nodes) {
+      n.graph = this;
+      this.nodeIdMap.set(n.id, n);
+    }
+    for (const link of this.links) {
+      const srcSock = this.nodeIdMap.get(link.srcNode)?.outputs[link.srcKey];
+      const dstSock = this.nodeIdMap.get(link.dstNode)?.inputs[link.dstKey];
+      if (srcSock === void 0 || dstSock === void 0) {
+        console.warn(
+          `dropping a link naming a missing endpoint: ${String(link.srcNode)}.${link.srcKey} -> ${String(link.dstNode)}.${link.dstKey}`
+        );
+        continue;
+      }
+      srcSock.edges.push(dstSock);
+      dstSock.edges.push(srcSock);
+    }
+    this.links = [];
+    this.VERSION = GRAPH_VERSION;
+    this.flagSortDirty();
+  }
+};
+
+// scripts/graph/socket.ts
+init_nstructjs();
+var visitPass = 0;
+var NodeSocketBase = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.NodeSocketBase {
+  socketId    : string | JSON.stringify(this.socketId);
+  name        : string;
+  type        : string;
+  dir         : string;
+  multiSocket : bool;
+  defaultProp ?: abstract(ToolProperty);
+}
+`
+  );
+  static socketDef() {
+    return { typeName: "NodeSocketBase", type: "" };
+  }
+  socketId = NO_ID;
+  /** The record key this socket sits under in its owning node's inputs or outputs. */
+  name = "";
+  type;
+  dir;
+  /** Derived, output sockets only. Written by the client through setValue, read through getValue. */
+  value = void 0;
+  /** Authored, input sockets only. undefined means no editable default. */
+  defaultProp;
+  edges = [];
+  /** True by default on output sockets, false by default on input sockets. */
+  multiSocket;
+  isDirty = false;
+  /** Set on load when this socket was kept from the file but is absent from the node type's definition. */
+  orphaned = false;
+  color;
+  owningNode = void 0;
+  /** Coerced value memoized on an input; stale whenever memoValid is false. */
+  memo = void 0;
+  memoValid = false;
+  edgeStamp = 0;
+  dirtyStamp = 0;
+  constructor(dir = "in") {
+    const def = this.constructor.socketDef();
+    this.type = def.type;
+    this.dir = dir;
+    this.multiSocket = dir === "out";
+    this.color = def.color ?? "#888888";
+  }
+  /**
+   * On an output, the stored value. On an input, the value resolved through the edges:
+   * coerced from the source, reduced when multi-connected, or the default when
+   * unconnected. Returns undefined on an unconnected input whose type has no default.
+   */
+  getValue() {
+    if (this.dir === "out") {
+      if (DEV_BUILD && this.defaultProp !== void 0) {
+        throw new Error("defaultProp is meaningful on input sockets only");
+      }
+      return this.value;
+    }
+    const sources = this.resolvedEdges();
+    if (sources.length === 0) {
+      return this.defaultProp?.getValue();
+    }
+    if (sources.length === 1 && sources[0].type === this.type) {
+      return sources[0].getValue();
+    }
+    if (this.memoValid) {
+      return this.memo;
+    }
+    const values = [];
+    for (const src of sources) {
+      const v = this.coercedValueOf(src);
+      if (v !== void 0) {
+        values.push(v);
+      }
+    }
+    const result = this.reduce !== void 0 && values.length > 1 ? this.reduce(values) : values[0];
+    this.memo = result;
+    this.memoValid = true;
+    this.isDirty = false;
+    return result;
+  }
+  /** Output sockets only. Stores the value and dirties the inputs connected to it. */
+  setValue(value) {
+    if (DEV_BUILD && this.dir === "in") {
+      throw new Error("setValue is meaningful on output sockets only");
+    }
+    this.value = value;
+    this.flagDirty();
+  }
+  /** Loads the coerced value from b, or with dryRun reports whether coercion is possible. */
+  coerce(b, options) {
+    const possible = b.type === this.type || this.canCoerceFrom(b.type) || b.canCoerceTo(this.type);
+    if (!possible || options?.dryRun === true) {
+      return possible;
+    }
+    const v = this.coercedValueOf(b);
+    if (this.dir === "in") {
+      this.memo = v;
+      this.memoValid = true;
+    } else {
+      this.value = v;
+    }
+    return true;
+  }
+  /** Reports whether this socket's value can be converted to `type`. */
+  canCoerceTo(type) {
+    return type === this.type;
+  }
+  /** This socket's value converted to `type`; called only after canCoerceTo(type) answers true. */
+  convertTo(type) {
+    return type === this.type ? this.getValue() : void 0;
+  }
+  /** Reports whether this socket itself can convert values of `type`; the destination half of coercion's double dispatch. */
+  canCoerceFrom(type) {
+    return type === this.type;
+  }
+  /** b's value converted to this socket's type; called only after canCoerceFrom(b.type) answers true. */
+  convertFrom(b) {
+    return b.type === this.type ? b.getValue() : void 0;
+  }
+  coercedValueOf(b) {
+    if (b.type === this.type) {
+      return b.getValue();
+    }
+    if (this.canCoerceFrom(b.type)) {
+      return this.convertFrom(b);
+    }
+    if (b.canCoerceTo(this.type)) {
+      return b.convertTo(this.type);
+    }
+    return void 0;
+  }
+  /**
+   * The sockets on the far side of a group boundary. undefined marks a real endpoint,
+   * which is what the base class is. Group proxies override this (stage 5).
+   */
+  resolveProxy() {
+    return void 0;
+  }
+  /** Edges with group proxies resolved away. Terminates on a proxy chain that cycles. */
+  resolvedEdges() {
+    const pass = ++visitPass;
+    const out = [];
+    const stack = [...this.edges];
+    while (stack.length > 0) {
+      const sock = stack.pop();
+      if (sock.edgeStamp === pass) {
+        continue;
+      }
+      sock.edgeStamp = pass;
+      const proxied = sock.resolveProxy();
+      if (proxied === void 0) {
+        out.push(sock);
+      } else {
+        stack.push(...proxied);
+      }
+    }
+    return out;
+  }
+  /**
+   * The socket or default an input's value comes from, without resolving the value.
+   * An output socket is its own source.
+   */
+  resolveSource() {
+    if (this.dir === "out") {
+      return this;
+    }
+    const sources = this.resolvedEdges();
+    return sources.length > 0 ? sources[0] : this.defaultProp;
+  }
+  /**
+   * Marks this socket dirty and, from an output, every input connected through
+   * resolvedEdges(). A dirtied input flags its owning node; the visit stamp
+   * terminates the walk on a cyclic edge set.
+   */
+  flagDirty() {
+    const pass = ++visitPass;
+    const stack = [this];
+    while (stack.length > 0) {
+      const sock = stack.pop();
+      if (sock.dirtyStamp === pass) {
+        continue;
+      }
+      sock.dirtyStamp = pass;
+      sock.isDirty = true;
+      sock.memoValid = false;
+      if (sock.dir === "in") {
+        sock.owningNode?.flagDirty();
+      } else {
+        stack.push(...sock.resolvedEdges());
+      }
+    }
+  }
+  clearDirty() {
+    this.isDirty = false;
+  }
+  /** Copies the authored configuration onto a socket of the same class. Identity, topology (edges) and derived state stay with each instance. */
+  copyTo(b) {
+    b.dir = this.dir;
+    b.multiSocket = this.multiSocket;
+    b.color = this.color;
+    b.defaultProp = this.defaultProp?.copy();
+  }
+  copy() {
+    const b = new this.constructor(this.dir);
+    this.copyTo(b);
+    return b;
+  }
+  /** Declares this socket in the data API. Inert until stage 7 lands the graph datapath that reaches a socket. */
+  static defineAPI(api, st) {
+    void api;
+    void st;
+  }
+  /** UI for editing the default value, as a container.prop(path) call. Inert until stage 7 supplies the datapath. */
+  createUI(container) {
+    void container;
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.socketId = JSON.parse(this.socketId);
+    this.dir = this.dir === "out" ? "out" : "in";
+    if (this.dir === "out") {
+      this.defaultProp = void 0;
+    }
+  }
+};
+var DEV_BUILD = NodeSocketBase.name === "NodeSocketBase";
+var SocketClasses = /* @__PURE__ */ new Map();
+function registerSocketType(cls) {
+  if (cls.socketDef === NodeSocketBase.socketDef) {
+    throw new Error(cls.name + " is missing its socketDef() static method");
+  }
+  const def = cls.socketDef();
+  if (!def.typeName) {
+    throw new Error(
+      cls.name + ".socketDef() is missing typeName, which should equal the class name; needed for minification"
+    );
+  }
+  if (!def.type) {
+    throw new Error(def.typeName + ".socketDef() is missing its wire type string");
+  }
+  if (DEV_BUILD && def.typeName !== cls.name) {
+    throw new Error(
+      cls.name + ": socketDef().typeName '" + def.typeName + "' does not match the class name"
+    );
+  }
+  SocketClasses.set(def.typeName, cls);
+}
+function getSocketClass(typeName) {
+  return SocketClasses.get(typeName);
+}
+
+// scripts/graph/node.ts
+init_nstructjs();
+init_toolprop();
+init_vectormath();
+init_controller();
+var mergedDefs = /* @__PURE__ */ new Map();
+function finalDef(cls) {
+  const cached = mergedDefs.get(cls);
+  if (cached !== void 0) {
+    return cached;
+  }
+  const def = { typeName: "" };
+  const inputs = {};
+  const outputs = {};
+  const props = {};
+  let p = cls;
+  while (p !== void 0 && p !== Node3 && typeof p.graphDef === "function") {
+    const pdef = p.graphDef();
+    if (!def.typeName) def.typeName = pdef.typeName ?? "";
+    def.uiName ??= pdef.uiName;
+    def.description ??= pdef.description;
+    def.icon ??= pdef.icon;
+    def.color ??= pdef.color;
+    def.size ??= pdef.size;
+    def.typeVersion ??= pdef.typeVersion;
+    for (const k in pdef.inputs) {
+      if (!(k in inputs)) inputs[k] = pdef.inputs[k];
+    }
+    for (const k in pdef.outputs) {
+      if (!(k in outputs)) outputs[k] = pdef.outputs[k];
+    }
+    for (const k in pdef.props) {
+      if (!(k in props)) props[k] = pdef.props[k];
+    }
+    p = Object.getPrototypeOf(p);
+  }
+  def.inputs = inputs;
+  def.outputs = outputs;
+  def.props = props;
+  mergedDefs.set(cls, def);
+  return def;
+}
+function resolveDefValue(v, node) {
+  return typeof v === "function" ? v(node) : v;
+}
+var DEFAULT_NODE_SIZE = [140, 80];
+var Node3 = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.Node {
+  id          : string | JSON.stringify(this.id);
+  label       ?: string;
+  pos         : vec2;
+  size        : vec2;
+  typeVersion : int;
+  props       : array(abstract(ToolProperty)) | this._propList();
+  inputs      : array(abstract(graph.NodeSocketBase)) | this._socketList(this.inputs);
+  outputs     : array(abstract(graph.NodeSocketBase)) | this._socketList(this.outputs);
+}
+`
+  );
+  static graphDef() {
+    return { typeName: "Node" };
+  }
+  /** The merged definition of this node's type; shared by every instance of the class. */
+  def;
+  inputs;
+  outputs;
+  /** Authored properties, sparse on a group instance. Each key equals its property's apiname. */
+  props;
+  /** The user's rename, absent until the user renames this node. */
+  label;
+  id = NO_ID;
+  /** Assigned by Graph.add, cleared by Graph.remove. */
+  graph = void 0;
+  pos = new Vector2();
+  size;
+  typeVersion;
+  dirty = false;
+  constructor() {
+    const def = finalDef(this.constructor);
+    this.def = def;
+    this.typeVersion = def.typeVersion ?? 0;
+    this.size = new Vector2(def.size ?? DEFAULT_NODE_SIZE);
+    const inputs = {};
+    for (const k in def.inputs) {
+      inputs[k] = this._adoptSocket(k, def.inputs[k].copy(), "in");
+    }
+    this.inputs = inputs;
+    const outputs = {};
+    for (const k in def.outputs) {
+      outputs[k] = this._adoptSocket(k, def.outputs[k].copy(), "out");
+    }
+    this.outputs = outputs;
+    this.props = {};
+    for (const k in def.props) {
+      this._adoptProp(k, def.props[k].copy());
+    }
+  }
+  _adoptSocket(key, sock, dir) {
+    sock.name = key;
+    sock.dir = dir;
+    sock.owningNode = this;
+    return sock;
+  }
+  /** Enforces the record-key ≡ apiname invariant node serialization depends on. */
+  _adoptProp(key, prop) {
+    if (!prop.apiname) {
+      prop.apiname = key;
+    } else if (prop.apiname !== key) {
+      throw new Error(
+        `${this.def.typeName}: props key '${key}' does not equal apiname '${prop.apiname}'`
+      );
+    }
+    for (const k in prop.callbacks) {
+      prop.callbacks[k] = [...prop.callbacks[k]];
+    }
+    prop.on("change", () => this.flagDirty());
+    this.props[key] = prop;
+  }
+  flagDirty() {
+    this.dirty = true;
+    this.graph?.dirtyNodes.add(this);
+  }
+  /** The nodes this node contributes to a flattened sort. A group instance returns its inner nodes. */
+  expandNode() {
+    return [this];
+  }
+  /** Resolution hook for Graph.resolveGroups; a plain node has nothing to resolve. */
+  async _resolveGroup(rt) {
+    void rt;
+  }
+  clearDirty() {
+    this.dirty = false;
+    this.graph?.dirtyNodes.delete(this);
+  }
+  /** Precedence: the user's rename, then a definition callback, then a definition constant. */
+  getUIName() {
+    return this.label ?? resolveDefValue(this.def.uiName, this) ?? this.def.typeName;
+  }
+  getDescription() {
+    return resolveDefValue(this.def.description, this) ?? "";
+  }
+  /** An Icons id; -1 means no icon. */
+  getIcon() {
+    return resolveDefValue(this.def.icon, this) ?? -1;
+  }
+  /** Declares this node type's datapaths on st. Subclasses extend via super.defineAPI. */
+  static defineAPI(api, st) {
+    void api;
+    st.string("", "name", "Name").customGet(function() {
+      return this.dataref.getUIName();
+    }).readOnly();
+    st.string("", "description", "Description").customGet(function() {
+      return this.dataref.getDescription();
+    }).readOnly();
+    st.int("", "icon", "Icon").customGet(function() {
+      return this.dataref.getIcon();
+    }).readOnly();
+    st.list("", "props", {
+      get(_api, node, key) {
+        return nodePropValue(node, key);
+      },
+      set(_api, node, key, val) {
+        const target = nodePropTarget(node, key);
+        if (target === void 0) {
+          throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);
+        }
+        target.setValue(val);
+      },
+      getKey(_api, node, val) {
+        return nodePropKeys(node).find((k) => nodePropValue(node, k) === val);
+      },
+      getLength(_api, node) {
+        return nodePropKeys(node).length;
+      },
+      getIter(_api, node) {
+        return nodePropKeys(node).map((k) => nodePropValue(node, k))[Symbol.iterator]();
+      },
+      getStruct(_api, node, key) {
+        return nodePropTarget(node, key) !== void 0 ? NODE_PROP_LEAF : void 0;
+      }
+    });
+  }
+  /** UI for editing this node's properties. Inert until stage 7 supplies the datapaths. */
+  createUI(container) {
+    void container;
+  }
+  _propList() {
+    return Object.values(this.props);
+  }
+  _socketList(socks) {
+    return Object.values(socks);
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.id = JSON.parse(this.id);
+    const def = this.def;
+    const fileProps = this.props;
+    this.props = {};
+    for (const p of fileProps) {
+      if (!(p instanceof ToolProperty) || !p.apiname) {
+        console.warn(`${def.typeName}: dropping bad property data on load:`, p);
+        continue;
+      }
+      this._adoptProp(p.apiname, p);
+    }
+    for (const k in def.props) {
+      if (!(k in this.props)) {
+        this._adoptProp(k, def.props[k].copy());
+      }
+    }
+    this.inputs = this._loadSockets(
+      this.inputs,
+      def.inputs,
+      "in"
+    );
+    this.outputs = this._loadSockets(
+      this.outputs,
+      def.outputs,
+      "out"
+    );
+  }
+  /**
+   * Rebuilds a socket record from the file's list, reconciled against the definition:
+   * a definition socket absent from the file is created at its default, and a file
+   * socket absent from the definition is kept, flagged orphaned.
+   */
+  _loadSockets(fileSocks, defSocks, dir) {
+    const socks = {};
+    for (const s of fileSocks) {
+      if (!(s instanceof NodeSocketBase) || !s.name) {
+        console.warn(`${this.def.typeName}: dropping bad socket data on load:`, s);
+        continue;
+      }
+      this._adoptSocket(s.name, s, dir);
+      s.orphaned = defSocks === void 0 || !(s.name in defSocks);
+      socks[s.name] = s;
+    }
+    for (const k in defSocks) {
+      if (!(k in socks)) {
+        socks[k] = this._adoptSocket(k, defSocks[k].copy(), dir);
+      }
+    }
+    return socks;
+  }
+};
+var NODE_PROP_LEAF = new DataStruct2(void 0, "NodePropLeaf");
+function nodePropTarget(node, key) {
+  return node.props[key] ?? node.inputs[key]?.defaultProp;
+}
+function nodePropKeys(node) {
+  const keys2 = Object.keys(node.props);
+  for (const k in node.inputs) {
+    if (node.inputs[k].defaultProp !== void 0 && !(k in node.props)) {
+      keys2.push(k);
+    }
+  }
+  return keys2;
+}
+function nodePropValue(node, key) {
+  const target = nodePropTarget(node, key);
+  if (target === void 0) {
+    return void 0;
+  }
+  if (target.wasSet) {
+    return target.getValue();
+  }
+  const owner = node.graph?.groupOwner;
+  const defNode = owner?.definition?.subgraph.nodeIdMap.get(node.id);
+  if (defNode !== void 0 && nodePropTarget(defNode, key) !== void 0) {
+    return nodePropValue(defNode, key);
+  }
+  return target.getValue();
+}
+var DEV_BUILD2 = Node3.name === "Node";
+var NodeClasses2 = /* @__PURE__ */ new Map();
+function registerNodeType(cls) {
+  if (cls.graphDef === Node3.graphDef) {
+    throw new Error(cls.name + " is missing its graphDef() static method");
+  }
+  const def = cls.graphDef();
+  if (!def.typeName) {
+    throw new Error(
+      cls.name + ".graphDef() is missing typeName, which should equal the class name; needed for minification"
+    );
+  }
+  if (DEV_BUILD2 && def.typeName !== cls.name) {
+    throw new Error(
+      cls.name + ": graphDef().typeName '" + def.typeName + "' does not match the class name"
+    );
+  }
+  NodeClasses2.set(def.typeName, cls);
+}
+function getNodeClass(typeName) {
+  return NodeClasses2.get(typeName);
+}
+
+// scripts/graph/graph_api.ts
+function defineGraphAPI(api) {
+  const st = api.mapStruct(Graph, true);
+  if ("nodes" in st.pathmap) {
+    return st;
+  }
+  st.list("nodes", "nodes", {
+    get(_api, list5, key) {
+      return list5.find((n) => String(n.id) === String(key));
+    },
+    getKey(_api, _list, obj) {
+      return obj?.id;
+    },
+    getLength(_api, list5) {
+      return list5.length;
+    },
+    getIter(_api, list5) {
+      return list5[Symbol.iterator]();
+    },
+    getStruct(api2, list5, key) {
+      const node = list5.find((n) => String(n.id) === String(key));
+      if (node === void 0) {
+        return void 0;
+      }
+      return nodeStructFor(api2, node.constructor);
+    }
+  });
+  return st;
+}
+function nodeStructFor(api, cls) {
+  if (api.hasStruct(cls)) {
+    return api.getStruct(cls);
+  }
+  const st = api.mapStruct(cls, true);
+  cls.defineAPI(api, st);
+  return st;
+}
+
+// scripts/graph/group.ts
+init_nstructjs();
+init_util();
+var defOfSubgraph = /* @__PURE__ */ new WeakMap();
+function definitionOfSubgraph(g) {
+  return defOfSubgraph.get(g);
+}
+function copyGraph(g) {
+  return readJSON(writeJSON(g), Graph);
+}
+function setProxy(sock, counterpart) {
+  sock.resolveProxy = () => {
+    const far = counterpart();
+    if (far === void 0) {
+      return [];
+    }
+    if (far.edges.length > 0) {
+      return [...far.edges];
+    }
+    return far.dir === "in" && far.defaultProp !== void 0 ? [far] : [];
+  };
+}
+var ExposedEntry = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.ExposedEntry {
+  kind    : string;
+  nodeId  : string | JSON.stringify(this.nodeId);
+  propKey : string;
+  label   ?: string;
+}
+`
+  );
+  kind;
+  nodeId;
+  /** Empty on a nodeUI entry. */
+  propKey;
+  /** The outside-facing name; the target's own uiName applies when absent. */
+  label;
+  constructor(kind = "prop", nodeId = NO_ID, propKey = "", label) {
+    this.kind = kind;
+    this.nodeId = nodeId;
+    this.propKey = propKey;
+    this.label = label;
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.kind = this.kind === "nodeUI" ? "nodeUI" : "prop";
+    this.nodeId = JSON.parse(this.nodeId);
+  }
+};
+var GroupInputNode = class extends Node3 {
+  static STRUCT = inlineRegister(this, `graph.GroupInputNode {}`);
+  static graphDef() {
+    return { typeName: "GroupInputNode", uiName: "Group Input" };
+  }
+  loadSTRUCT(reader) {
+    super.loadSTRUCT(reader);
+    for (const k in this.outputs) {
+      this.outputs[k].orphaned = false;
+    }
+  }
+};
+registerNodeType(GroupInputNode);
+var GroupOutputNode = class extends Node3 {
+  static STRUCT = inlineRegister(this, `graph.GroupOutputNode {}`);
+  static graphDef() {
+    return { typeName: "GroupOutputNode", uiName: "Group Output" };
+  }
+  loadSTRUCT(reader) {
+    super.loadSTRUCT(reader);
+    for (const k in this.inputs) {
+      this.inputs[k].orphaned = false;
+    }
+  }
+};
+registerNodeType(GroupOutputNode);
+var GroupDef = class {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.GroupDef {
+  subgraph : graph.Graph;
+  inputs   : array(abstract(graph.NodeSocketBase)) | this._sockList(this.inputs);
+  outputs  : array(abstract(graph.NodeSocketBase)) | this._sockList(this.outputs);
+  exposed  : array(graph.ExposedEntry);
+}
+`
+  );
+  subgraph = new Graph();
+  /** Boundary socket templates; instances copy these onto their own inputs and outputs. */
+  inputs = {};
+  outputs = {};
+  /** The ordered rows of the group's forwarded UI. */
+  exposed = [];
+  constructor() {
+    defOfSubgraph.set(this.subgraph, this);
+  }
+  /** The subgraph's input proxy node, created on first use. */
+  inputNode() {
+    let n = this.subgraph.nodes.find((x) => x instanceof GroupInputNode);
+    if (n === void 0) {
+      n = new GroupInputNode();
+      this.subgraph.add(n);
+    }
+    return n;
+  }
+  /** The subgraph's output proxy node, created on first use. */
+  outputNode() {
+    let n = this.subgraph.nodes.find((x) => x instanceof GroupOutputNode);
+    if (n === void 0) {
+      n = new GroupOutputNode();
+      this.subgraph.add(n);
+    }
+    return n;
+  }
+  /**
+   * Declares a boundary input from a template socket and mirrors its connect point on
+   * the input proxy node. Returns the inner socket for the definition author to wire.
+   */
+  declareInput(key, sock) {
+    sock.name = key;
+    sock.dir = "in";
+    this.inputs[key] = sock;
+    const node = this.inputNode();
+    const inner = sock.copy();
+    inner.name = key;
+    inner.dir = "out";
+    inner.multiSocket = true;
+    inner.defaultProp = void 0;
+    inner.owningNode = node;
+    node.outputs[key] = inner;
+    return inner;
+  }
+  /** The output-side counterpart of declareInput. Returns the inner socket. */
+  declareOutput(key, sock) {
+    const node = this.outputNode();
+    const inner = sock.copy();
+    inner.name = key;
+    inner.dir = "in";
+    inner.multiSocket = false;
+    inner.owningNode = node;
+    node.inputs[key] = inner;
+    sock.name = key;
+    sock.dir = "out";
+    sock.multiSocket = true;
+    sock.defaultProp = void 0;
+    this.outputs[key] = sock;
+    return inner;
+  }
+  /** Retires a boundary input: the template, the mirror socket and its inner edges. */
+  removeInput(key) {
+    delete this.inputs[key];
+    const node = this.subgraph.nodes.find((x) => x instanceof GroupInputNode);
+    const sock = node?.outputs[key];
+    if (node !== void 0 && sock !== void 0) {
+      for (const e of [...sock.edges]) {
+        this.subgraph.disconnect(sock, e);
+      }
+      delete node.outputs[key];
+    }
+  }
+  /** The output-side counterpart of removeInput. */
+  removeOutput(key) {
+    delete this.outputs[key];
+    const node = this.subgraph.nodes.find((x) => x instanceof GroupOutputNode);
+    const sock = node?.inputs[key];
+    if (node !== void 0 && sock !== void 0) {
+      for (const e of [...sock.edges]) {
+        this.subgraph.disconnect(sock, e);
+      }
+      delete node.inputs[key];
+    }
+  }
+  /**
+   * Hash of the definition's authored content, computed on demand. A GroupNode compares
+   * it with syncedHash to decide whether to reconcile; it is never stored as truth.
+   */
+  contentHash() {
+    return new HashDigest().add(JSON.stringify(writeJSON(this))).get().toString(16);
+  }
+  _sockList(socks) {
+    return Object.values(socks);
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.inputs = this._loadBoundary(this.inputs, "in");
+    this.outputs = this._loadBoundary(this.outputs, "out");
+    defOfSubgraph.set(this.subgraph, this);
+  }
+  _loadBoundary(list5, dir) {
+    const socks = {};
+    for (const s of list5) {
+      if (!(s instanceof NodeSocketBase) || !s.name) {
+        console.warn("GroupDef: dropping bad boundary socket data on load:", s);
+        continue;
+      }
+      s.dir = dir;
+      socks[s.name] = s;
+    }
+    return socks;
+  }
+};
+var GroupNode = class _GroupNode extends Node3 {
+  static STRUCT = inlineRegister(
+    this,
+    `
+graph.GroupNode {
+  ref        : string;
+  syncedHash : string;
+  subgraph   : graph.Graph;
+}
+`
+  );
+  static graphDef() {
+    return { typeName: "GroupNode", uiName: "Group" };
+  }
+  /** The definition reference; the client's groupLoader decides what it points at. */
+  ref = "";
+  /** The contentHash this instance last reconciled to; "" marks a never-synced instance. */
+  syncedHash = "";
+  subgraph = new Graph();
+  _def = void 0;
+  constructor() {
+    super();
+    this.subgraph.groupOwner = this;
+  }
+  /** The resolved definition; undefined until resolveGroups or setDefinition binds one. */
+  get definition() {
+    return this._def;
+  }
+  /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
+  static defineAPI(api, st) {
+    super.defineAPI(api, st);
+    st.struct("subgraph", "group", "Group", defineGraphAPI(api));
+  }
+  /** Reports whether target sits anywhere on def's chain of resolved group definitions. */
+  static chainContains(def, target, seen = /* @__PURE__ */ new Set()) {
+    if (def === target) {
+      return true;
+    }
+    if (seen.has(def)) {
+      return false;
+    }
+    seen.add(def);
+    for (const n of def.subgraph.nodes) {
+      if (n instanceof _GroupNode && n._def !== void 0 && _GroupNode.chainContains(n._def, target, seen)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Binds this instance to a definition, refusing a binding that would make a group
+   * contain itself. Syncing still happens through Graph.resolveGroups, which re-checks
+   * containment there; this is the link-time half of the two-checkpoint rule.
+   */
+  setDefinition(ref, def) {
+    const host = this.graph !== void 0 ? defOfSubgraph.get(this.graph) : void 0;
+    if (host !== void 0 && _GroupNode.chainContains(def, host)) {
+      throw new Error("a group cannot contain itself, directly or through another group");
+    }
+    this.ref = ref;
+    this._def = def;
+  }
+  /** The inner client nodes, recursively flattened; the proxy nodes are excluded. */
+  expandNode() {
+    const out = [];
+    for (const n of this.subgraph.nodes) {
+      if (n instanceof GroupInputNode || n instanceof GroupOutputNode) {
+        continue;
+      }
+      out.push(...n.expandNode());
+    }
+    return out;
+  }
+  async _resolveGroup(rt) {
+    if (this.ref === "") {
+      return;
+    }
+    const ref = this.ref;
+    let p = rt.pending.get(ref);
+    if (p === void 0) {
+      p = (async () => {
+        try {
+          return rt.loader !== void 0 ? await rt.loader(ref) : void 0;
+        } catch {
+          return void 0;
+        }
+      })();
+      rt.pending.set(ref, p);
+    }
+    let def = await p;
+    if (def === void 0) {
+      def = rt.known.get(ref);
+      rt.report.failed.push({
+        ref,
+        reason: def !== void 0 ? "the definition failed to load; keeping the one from an earlier run" : "the definition failed to load"
+      });
+      if (def === void 0) {
+        return;
+      }
+    } else {
+      rt.known.set(ref, def);
+    }
+    if (rt.chain.includes(def)) {
+      rt.report.failed.push({
+        ref,
+        reason: "a group cannot contain itself, directly or through another group"
+      });
+      return;
+    }
+    rt.chain.push(def);
+    try {
+      for (const n of [...def.subgraph.nodes]) {
+        await n._resolveGroup(rt);
+      }
+    } finally {
+      rt.chain.pop();
+    }
+    this._def = def;
+    const hash = def.contentHash();
+    if (this.syncedHash !== hash) {
+      this._reconcile(def);
+      this.syncedHash = hash;
+    }
+    for (const k in this.inputs) {
+      this.inputs[k].orphaned = !(k in def.inputs);
+    }
+    for (const k in this.outputs) {
+      this.outputs[k].orphaned = !(k in def.outputs);
+    }
+    rt.report.synced.push(this);
+  }
+  /** Reconciliation's coarse hook; the default fans out to the finer hooks below. */
+  onDefChanged(diff) {
+    for (const s of diff.removedSockets) {
+      this.onSocketRemoved(s);
+    }
+    for (const s of diff.addedSockets) {
+      this.onSocketAdded(s);
+    }
+    for (const n of diff.removedInnerNodes) {
+      this.onInnerNodeRemoved(n);
+    }
+  }
+  /** Adopts a boundary socket the definition added. */
+  onSocketAdded(sock) {
+    const rec = sock.dir === "in" ? this.inputs : this.outputs;
+    this._adoptSocket(sock.name, sock, sock.dir);
+    rec[sock.name] = sock;
+  }
+  /**
+   * Retires a boundary socket the definition removed. A still-connected socket is kept
+   * and flagged orphaned so the editor can show the dangling links as an error; an
+   * unconnected one is deleted.
+   */
+  onSocketRemoved(sock) {
+    const rec = sock.dir === "in" ? this.inputs : this.outputs;
+    if (rec[sock.name] !== sock) {
+      return;
+    }
+    if (sock.edges.length > 0) {
+      sock.orphaned = true;
+      return;
+    }
+    delete rec[sock.name];
+  }
+  /** Notification that reconciliation dropped an inner node; the rebuild already removed it. */
+  onInnerNodeRemoved(node) {
+    void node;
+  }
+  _reconcile(def) {
+    const oldNodes = new Map(this.subgraph.nodeIdMap);
+    const fresh = copyGraph(def.subgraph);
+    fresh.groupOwner = this;
+    for (const n of fresh.nodes) {
+      for (const k in n.props) {
+        n.props[k].wasSet = false;
+      }
+      for (const k in n.inputs) {
+        const p = n.inputs[k].defaultProp;
+        if (p !== void 0) {
+          p.wasSet = false;
+        }
+      }
+    }
+    for (const n of fresh.nodes) {
+      const old = oldNodes.get(n.id);
+      if (old === void 0) {
+        continue;
+      }
+      for (const k in n.props) {
+        this._transplantOverride(old.props[k], n.props[k]);
+      }
+      for (const k in n.inputs) {
+        this._transplantOverride(old.inputs[k]?.defaultProp, n.inputs[k].defaultProp);
+      }
+    }
+    const addedInnerNodes = fresh.nodes.filter((n) => !oldNodes.has(n.id));
+    const removedInnerNodes = [...oldNodes.values()].filter((n) => !fresh.nodeIdMap.has(n.id));
+    this.subgraph = fresh;
+    const addedSockets = [];
+    const removedSockets = [];
+    this._diffBoundary(def.inputs, this.inputs, "in", addedSockets, removedSockets);
+    this._diffBoundary(def.outputs, this.outputs, "out", addedSockets, removedSockets);
+    this.onDefChanged({ addedSockets, removedSockets, addedInnerNodes, removedInnerNodes });
+    this._wireProxies();
+    this.flagDirty();
+    this.graph?.flagSortDirty();
+  }
+  /** Copies an instance-side override (wasSet) from the old property onto its rebuilt copy. */
+  _transplantOverride(oldProp, newProp) {
+    if (oldProp === void 0 || newProp === void 0) {
+      return;
+    }
+    if (!oldProp.wasSet || oldProp.constructor !== newProp.constructor) {
+      return;
+    }
+    if (!newProp.equals(oldProp)) {
+      newProp.setValue(oldProp.getValue());
+    }
+    newProp.wasSet = true;
+  }
+  /**
+   * Diffs one boundary record against the definition's templates, in place for kept
+   * sockets so the parent graph's edges survive. Added and removed sockets are applied
+   * by the hooks rather than here; a socket whose type changed is severed and replaced,
+   * because its key now names the new socket.
+   */
+  _diffBoundary(defSocks, instSocks, dir, added, removed) {
+    for (const k in defSocks) {
+      const tmpl = defSocks[k];
+      const cur = instSocks[k];
+      if (cur !== void 0 && cur.constructor === tmpl.constructor) {
+        const oldDefault = cur.defaultProp;
+        tmpl.copyTo(cur);
+        cur.dir = dir;
+        cur.orphaned = false;
+        this._transplantOverride(oldDefault, cur.defaultProp);
+        continue;
+      }
+      if (cur !== void 0) {
+        this._severParentEdges(cur);
+        delete instSocks[k];
+        removed.push(cur);
+      }
+      const s = tmpl.copy();
+      s.name = k;
+      s.dir = dir;
+      if (dir === "out") {
+        s.defaultProp = void 0;
+      }
+      added.push(s);
+    }
+    for (const k in instSocks) {
+      if (!(k in defSocks)) {
+        removed.push(instSocks[k]);
+      }
+    }
+  }
+  /** Removes sock from the edge lists of everything it connects to, dirtying the far side. */
+  _severParentEdges(sock) {
+    for (const other of [...sock.edges]) {
+      const i = other.edges.indexOf(sock);
+      if (i >= 0) {
+        other.edges.splice(i, 1);
+      }
+      if (other.dir === "in") {
+        other.flagDirty();
+      }
+    }
+    sock.edges.length = 0;
+    this.graph?.flagSortDirty();
+  }
+  /** Installs proxy resolution across the boundary, in both directions per key. */
+  _wireProxies() {
+    const gin = this.subgraph.nodes.find((n) => n instanceof GroupInputNode);
+    const gout = this.subgraph.nodes.find(
+      (n) => n instanceof GroupOutputNode
+    );
+    for (const k in this.inputs) {
+      setProxy(this.inputs[k], () => gin?.outputs[k]);
+    }
+    for (const k in this.outputs) {
+      setProxy(this.outputs[k], () => gout?.inputs[k]);
+    }
+    if (gin !== void 0) {
+      for (const k in gin.outputs) {
+        setProxy(gin.outputs[k], () => this.inputs[k]);
+      }
+    }
+    if (gout !== void 0) {
+      for (const k in gout.inputs) {
+        setProxy(gout.inputs[k], () => this.outputs[k]);
+      }
+    }
+  }
+  loadSTRUCT(reader) {
+    super.loadSTRUCT(reader);
+    for (const k in this.inputs) {
+      this.inputs[k].orphaned = false;
+    }
+    for (const k in this.outputs) {
+      this.outputs[k].orphaned = false;
+    }
+    this.subgraph.groupOwner = this;
+    this._wireProxies();
+  }
+};
+registerNodeType(GroupNode);
+
+// scripts/graph/graph_ops.ts
+init_toolsys();
+init_toolprop();
+function graphAt(ctx, path) {
+  const g = ctx.api.getValue(ctx, path);
+  if (!(g instanceof Graph)) {
+    throw new Error(`'${path}' does not resolve to a graph`);
+  }
+  return g;
+}
+function nodeAt(graph, idJSON) {
+  const node = graph.nodeIdMap.get(JSON.parse(idJSON));
+  if (node === void 0) {
+    throw new Error(`no node with id ${idJSON}`);
+  }
+  return node;
+}
+function captureEdges(node) {
+  const out = [];
+  for (const k in node.inputs) {
+    for (const e of node.inputs[k].edges) {
+      out.push({ srcId: e.owningNode.id, srcKey: e.name, dstId: node.id, dstKey: k });
+    }
+  }
+  for (const k in node.outputs) {
+    for (const e of node.outputs[k].edges) {
+      out.push({ srcId: node.id, srcKey: k, dstId: e.owningNode.id, dstKey: e.name });
+    }
+  }
+  return out;
+}
+function restoreEdges(graph, records) {
+  for (const r of records) {
+    const src = graph.nodeIdMap.get(r.srcId)?.outputs[r.srcKey];
+    const dst = graph.nodeIdMap.get(r.dstId)?.inputs[r.dstKey];
+    if (src !== void 0 && dst !== void 0) {
+      graph.connect(src, dst);
+    }
+  }
+}
+function structuralOkay(ctx, toolop) {
+  if (toolop === void 0) {
+    return true;
+  }
+  let graph;
+  try {
+    graph = graphAt(ctx, toolop.inputs.graphPath.getValue());
+  } catch (err) {
+    console.warn(err instanceof Error ? err.message : String(err));
+    return false;
+  }
+  const refusal = graph.structuralEditsRefused();
+  if (refusal !== void 0) {
+    console.warn(refusal);
+    return false;
+  }
+  return true;
+}
+function strInput() {
+  return new StringProperty().ignoreLastValue();
+}
+function floatInput(value) {
+  return new FloatProperty(value).ignoreLastValue();
+}
+function linkInputs() {
+  return {
+    graphPath: strInput(),
+    srcNode: strInput(),
+    srcSocket: strInput(),
+    dstNode: strInput(),
+    dstSocket: strInput()
+  };
+}
+function linkEndpoints(ctx, inputs) {
+  const graph = graphAt(ctx, inputs.graphPath.getValue());
+  const srcNode = nodeAt(graph, inputs.srcNode.getValue());
+  const dstNode = nodeAt(graph, inputs.dstNode.getValue());
+  const srcKey = inputs.srcSocket.getValue();
+  const dstKey = inputs.dstSocket.getValue();
+  const src = srcNode.outputs[srcKey];
+  const dst = dstNode.inputs[dstKey];
+  if (src === void 0) {
+    throw new Error(`${srcNode.def.typeName} has no output socket '${srcKey}'`);
+  }
+  if (dst === void 0) {
+    throw new Error(`${dstNode.def.typeName} has no input socket '${dstKey}'`);
+  }
+  return { graph, src, dst, dstNode, dstKey };
+}
+var AddNodeOp = class extends ToolOp {
+  static tooldef() {
+    return {
+      uiname: "Add Node",
+      toolpath: "graph.add_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeType: strInput(),
+        x: floatInput(0),
+        y: floatInput(0)
+      },
+      outputs: {
+        nodeId: new StringProperty()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  /** Nothing to record: undo removes the node outputs.nodeId names. */
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const typeName = this.inputs.nodeType.getValue();
+    const cls = getNodeClass(typeName);
+    if (cls === void 0) {
+      throw new Error(`unknown node type '${typeName}'`);
+    }
+    const node = new cls();
+    const prior = this.outputs.nodeId.getValue();
+    if (prior) {
+      node.id = JSON.parse(prior);
+    }
+    node.pos[0] = this.inputs.x.getValue();
+    node.pos[1] = this.inputs.y.getValue();
+    graph.add(node);
+    this.outputs.nodeId.setValue(JSON.stringify(node.id));
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.remove(nodeAt(graph, this.outputs.nodeId.getValue()));
+  }
+};
+var DeleteNodeOp = class extends ToolOp {
+  _node;
+  _edges = [];
+  static tooldef() {
+    return {
+      uiname: "Delete Node",
+      toolpath: "graph.delete_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  undoPre(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const node = nodeAt(graph, this.inputs.nodeId.getValue());
+    this._node = node;
+    this._edges = captureEdges(node);
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.remove(nodeAt(graph, this.inputs.nodeId.getValue()));
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.add(this._node);
+    restoreEdges(graph, this._edges);
+  }
+};
+var ConnectOp = class extends ToolOp {
+  _existed = false;
+  _displaced = [];
+  static tooldef() {
+    return {
+      uiname: "Connect",
+      toolpath: "graph.connect",
+      inputs: linkInputs()
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  undoPre(ctx) {
+    const { src, dst, dstNode, dstKey } = linkEndpoints(ctx, this.inputs);
+    this._existed = src.edges.includes(dst);
+    this._displaced = [];
+    if (!this._existed && !dst.multiSocket) {
+      for (const e of dst.edges) {
+        this._displaced.push({
+          srcId: e.owningNode.id,
+          srcKey: e.name,
+          dstId: dstNode.id,
+          dstKey
+        });
+      }
+    }
+  }
+  exec(ctx) {
+    const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
+    graph.connect(src, dst);
+  }
+  undo(ctx) {
+    const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
+    if (!this._existed) {
+      graph.disconnect(src, dst);
+    }
+    restoreEdges(graph, this._displaced);
+  }
+};
+var DisconnectOp = class extends ToolOp {
+  _existed = false;
+  static tooldef() {
+    return {
+      uiname: "Disconnect",
+      toolpath: "graph.disconnect",
+      inputs: linkInputs()
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  undoPre(ctx) {
+    const { src, dst } = linkEndpoints(ctx, this.inputs);
+    this._existed = src.edges.includes(dst);
+  }
+  exec(ctx) {
+    const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
+    graph.disconnect(src, dst);
+  }
+  undo(ctx) {
+    const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
+    if (this._existed) {
+      graph.connect(src, dst);
+    }
+  }
+};
+var MoveNodeOp = class extends ToolOp {
+  _oldX = 0;
+  _oldY = 0;
+  static tooldef() {
+    return {
+      uiname: "Move Node",
+      toolpath: "graph.move_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput(),
+        x: floatInput(0),
+        y: floatInput(0)
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  _node(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    return nodeAt(graph, this.inputs.nodeId.getValue());
+  }
+  undoPre(ctx) {
+    const node = this._node(ctx);
+    this._oldX = node.pos[0];
+    this._oldY = node.pos[1];
+  }
+  exec(ctx) {
+    const node = this._node(ctx);
+    node.pos[0] = this.inputs.x.getValue();
+    node.pos[1] = this.inputs.y.getValue();
+  }
+  undo(ctx) {
+    const node = this._node(ctx);
+    node.pos[0] = this._oldX;
+    node.pos[1] = this._oldY;
+  }
+};
+var RenameNodeOp = class extends ToolOp {
+  _oldLabel;
+  static tooldef() {
+    return {
+      uiname: "Rename Node",
+      toolpath: "graph.rename_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput(),
+        label: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  _node(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    return nodeAt(graph, this.inputs.nodeId.getValue());
+  }
+  undoPre(ctx) {
+    this._oldLabel = this._node(ctx).label;
+  }
+  exec(ctx) {
+    const label = this.inputs.label.getValue();
+    this._node(ctx).label = label === "" ? void 0 : label;
+  }
+  undo(ctx) {
+    this._node(ctx).label = this._oldLabel;
+  }
+};
+var ReplaceNodeOp = class extends ToolOp {
+  _old;
+  _edges = [];
+  _exposed;
+  static tooldef() {
+    return {
+      uiname: "Replace Node",
+      toolpath: "graph.replace_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput(),
+        newType: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  undoPre(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const node = nodeAt(graph, this.inputs.nodeId.getValue());
+    this._old = node;
+    this._edges = captureEdges(node);
+    const def = definitionOfSubgraph(graph);
+    this._exposed = def !== void 0 ? [...def.exposed] : void 0;
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const old = nodeAt(graph, this.inputs.nodeId.getValue());
+    const typeName = this.inputs.newType.getValue();
+    const cls = getNodeClass(typeName);
+    if (cls === void 0) {
+      throw new Error(`unknown node type '${typeName}'`);
+    }
+    const edges = captureEdges(old);
+    graph.remove(old);
+    const node = new cls();
+    node.id = old.id;
+    node.label = old.label;
+    node.pos.load(old.pos);
+    graph.add(node);
+    for (const r of edges) {
+      const src = graph.nodeIdMap.get(r.srcId)?.outputs[r.srcKey];
+      const dst = graph.nodeIdMap.get(r.dstId)?.inputs[r.dstKey];
+      if (src !== void 0 && dst !== void 0 && dst.coerce(src, { dryRun: true })) {
+        graph.connect(src, dst);
+      }
+    }
+    const def = definitionOfSubgraph(graph);
+    if (def !== void 0) {
+      def.exposed = def.exposed.filter(
+        (e) => e.nodeId !== node.id || e.kind !== "prop" || nodePropTarget(node, e.propKey) !== void 0
+      );
+    }
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.remove(nodeAt(graph, this.inputs.nodeId.getValue()));
+    graph.add(this._old);
+    restoreEdges(graph, this._edges);
+    const def = definitionOfSubgraph(graph);
+    if (def !== void 0 && this._exposed !== void 0) {
+      def.exposed = this._exposed;
+    }
+  }
+};
+var SetNodePropOp = class _SetNodePropOp extends ToolOp {
+  _oldValue;
+  _oldWasSet = false;
+  static tooldef() {
+    return {
+      uiname: "Set Node Property",
+      toolpath: "graph.set_node_prop",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput(),
+        propKey: strInput()
+      }
+    };
+  }
+  /** The value input is typed by cloning the target property, so tooldef cannot declare it. */
+  static create(ctx, graphPath, nodeIdJSON, propKey, value) {
+    const tool = new _SetNodePropOp();
+    tool.inputs.graphPath.setValue(graphPath);
+    tool.inputs.nodeId.setValue(nodeIdJSON);
+    tool.inputs.propKey.setValue(propKey);
+    const graph = graphAt(ctx, graphPath);
+    const node = nodeAt(graph, nodeIdJSON);
+    const target = nodePropTarget(node, propKey);
+    if (target === void 0) {
+      throw new Error(`${node.def.typeName}: no prop or input default '${propKey}'`);
+    }
+    const prop = target.copy().ignoreLastValue();
+    prop.setValue(value);
+    tool.inputs.value = prop;
+    return tool;
+  }
+  _target(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const node = nodeAt(graph, this.inputs.nodeId.getValue());
+    const key = this.inputs.propKey.getValue();
+    const target = nodePropTarget(node, key);
+    if (target === void 0) {
+      throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);
+    }
+    return target;
+  }
+  undoPre(ctx) {
+    const target = this._target(ctx);
+    this._oldWasSet = target.wasSet;
+    let val = target.getValue();
+    if (typeof val === "object" && val !== null) {
+      val = val.copy();
+    }
+    this._oldValue = val;
+  }
+  exec(ctx) {
+    this._target(ctx).setValue(this.inputs.value.getValue());
+  }
+  undo(ctx) {
+    const target = this._target(ctx);
+    target.setValue(this._oldValue);
+    target.wasSet = this._oldWasSet;
+  }
+};
+for (const cls of [
+  AddNodeOp,
+  DeleteNodeOp,
+  ConnectOp,
+  DisconnectOp,
+  MoveNodeOp,
+  RenameNodeOp,
+  ReplaceNodeOp,
+  SetNodePropOp
+]) {
+  ToolOp.register(cls);
+}
+
+// scripts/editors/nodeeditor/delegate.ts
+init_toolsys();
+function isExposureEdit(edit) {
+  return edit.kind === "exposeEntry" || edit.kind === "reorderEntry" || edit.kind === "repointEntry" || edit.kind === "removeEntry";
+}
+var ToolOpDelegate = class {
+  check(ctx, edit) {
+    let value;
+    try {
+      value = ctx.api.getValue(ctx, edit.graphPath);
+    } catch {
+      value = void 0;
+    }
+    if (!(value instanceof Graph)) {
+      return { ok: false, reason: `'${edit.graphPath}' does not resolve to a graph` };
+    }
+    const graph = value;
+    if (isExposureEdit(edit)) {
+      return { ok: true };
+    }
+    const refusal = graph.structuralEditsRefused();
+    if (refusal !== void 0) {
+      return { ok: false, reason: refusal };
+    }
+    switch (edit.kind) {
+      case "addNode":
+      case "replaceNode": {
+        const typeName = edit.kind === "addNode" ? edit.nodeType : edit.newType;
+        if (getNodeClass(typeName) === void 0) {
+          return { ok: false, reason: `unknown node type '${typeName}'` };
+        }
+        break;
+      }
+      case "duplicateNode": {
+        if (graph.nodeIdMap.get(edit.nodeId) === void 0) {
+          return { ok: false, reason: `no node with id ${JSON.stringify(edit.nodeId)}` };
+        }
+        break;
+      }
+      case "connect": {
+        const src = graph.nodeIdMap.get(edit.srcNode)?.outputs[edit.srcSocket];
+        const dst = graph.nodeIdMap.get(edit.dstNode)?.inputs[edit.dstSocket];
+        if (src === void 0 || dst === void 0) {
+          return { ok: false, reason: "a link endpoint does not exist" };
+        }
+        if (!dst.coerce(src, { dryRun: true })) {
+          return {
+            ok: false,
+            reason: `a '${src.type}' output cannot connect to a '${dst.type}' input`
+          };
+        }
+        break;
+      }
+    }
+    return { ok: true };
+  }
+  perform(ctx, edit) {
+    switch (edit.kind) {
+      case "moveNode": {
+        const tool = new MoveNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.x.setValue(edit.x);
+        tool.inputs.y.setValue(edit.y);
+        ctx.toolstack.execTool(ctx, tool);
+        break;
+      }
+      case "addNode": {
+        const tool = new AddNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeType.setValue(edit.nodeType);
+        tool.inputs.x.setValue(edit.x);
+        tool.inputs.y.setValue(edit.y);
+        ctx.toolstack.execTool(ctx, tool);
+        break;
+      }
+      case "deleteNode": {
+        const tool = new DeleteNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        ctx.toolstack.execTool(ctx, tool);
+        break;
+      }
+      case "replaceNode": {
+        const tool = new ReplaceNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.newType.setValue(edit.newType);
+        ctx.toolstack.execTool(ctx, tool);
+        break;
+      }
+      case "connect":
+      case "disconnect": {
+        const tool = edit.kind === "connect" ? new ConnectOp() : new DisconnectOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.srcNode.setValue(JSON.stringify(edit.srcNode));
+        tool.inputs.srcSocket.setValue(edit.srcSocket);
+        tool.inputs.dstNode.setValue(JSON.stringify(edit.dstNode));
+        tool.inputs.dstSocket.setValue(edit.dstSocket);
+        ctx.toolstack.execTool(ctx, tool);
+        break;
+      }
+      case "arrange": {
+        const macro = new ToolMacro();
+        for (const move of edit.moves) {
+          const tool = new MoveNodeOp();
+          tool.inputs.graphPath.setValue(edit.graphPath);
+          tool.inputs.nodeId.setValue(JSON.stringify(move.nodeId));
+          tool.inputs.x.setValue(move.x);
+          tool.inputs.y.setValue(move.y);
+          macro.add(tool);
+        }
+        ctx.toolstack.execTool(ctx, macro);
+        break;
+      }
+      case "duplicateNode": {
+        this._performDuplicate(ctx, edit);
+        break;
+      }
+      case "exposeEntry":
+      case "reorderEntry":
+      case "repointEntry":
+      case "removeEntry": {
+        this._performExposure(ctx, edit);
+        break;
+      }
+    }
+  }
+  _performDuplicate(ctx, edit) {
+    const graph = this._graph(ctx, edit.graphPath);
+    const source = graph?.nodeIdMap.get(edit.nodeId);
+    if (source === void 0) {
+      return;
+    }
+    const macro = new ToolMacro();
+    const addOp = new AddNodeOp();
+    addOp.inputs.graphPath.setValue(edit.graphPath);
+    addOp.inputs.nodeType.setValue(source.def.typeName);
+    addOp.inputs.x.setValue(edit.x);
+    addOp.inputs.y.setValue(edit.y);
+    macro.add(addOp);
+    for (const key of nodePropKeys(source)) {
+      const target = nodePropTarget(source, key);
+      if (target === void 0 || !target.wasSet) {
+        continue;
+      }
+      const setOp = new SetNodePropOp();
+      setOp.inputs.graphPath.setValue(edit.graphPath);
+      setOp.inputs.propKey.setValue(key);
+      const prop = target.copy().ignoreLastValue();
+      setOp.inputs.value = prop;
+      macro.add(setOp);
+      macro.connectCB(
+        addOp,
+        setOp,
+        (src, dst) => {
+          dst.inputs.nodeId.setValue(
+            src.outputs.nodeId.getValue()
+          );
+        },
+        void 0
+      );
+    }
+    ctx.toolstack.execTool(ctx, macro);
+  }
+  _performExposure(ctx, edit) {
+    const exposed = edit.def.exposed;
+    switch (edit.kind) {
+      case "exposeEntry":
+        exposed.push(edit.entry);
+        break;
+      case "reorderEntry": {
+        if (edit.from < 0 || edit.from >= exposed.length) {
+          return;
+        }
+        const [entry] = exposed.splice(edit.from, 1);
+        const to = Math.min(Math.max(edit.to, 0), exposed.length);
+        exposed.splice(to, 0, entry);
+        break;
+      }
+      case "repointEntry": {
+        const entry = exposed[edit.index];
+        if (entry === void 0) {
+          return;
+        }
+        entry.nodeId = edit.nodeId;
+        entry.propKey = edit.propKey;
+        break;
+      }
+      case "removeEntry":
+        exposed.splice(edit.index, 1);
+        break;
+    }
+    void this._graph(ctx, edit.graphPath)?.groupSaver?.(edit.ref, edit.def);
+  }
+  _graph(ctx, path) {
+    let value;
+    try {
+      value = ctx.api.getValue(ctx, path);
+    } catch {
+      value = void 0;
+    }
+    return value instanceof Graph ? value : void 0;
+  }
+};
+
+// scripts/editors/nodeeditor/groupui.ts
+function exposedEntryState(graph, entry) {
+  const node = graph.nodeIdMap.get(entry.nodeId);
+  if (node === void 0) {
+    return "missing";
+  }
+  if (entry.kind === "nodeUI") {
+    return "ok";
+  }
+  if (nodePropTarget(node, entry.propKey) !== void 0) {
+    return "ok";
+  }
+  if (node instanceof GroupNode && node.definition === void 0) {
+    return "unresolved";
+  }
+  return "missing";
+}
+function forwardedRows(node, nodePath) {
+  const def = node.definition;
+  if (def === void 0) {
+    return [];
+  }
+  const rows = [];
+  for (const entry of def.exposed) {
+    const state = exposedEntryState(node.subgraph, entry);
+    const target = node.subgraph.nodeIdMap.get(entry.nodeId);
+    const label = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    const row = { entry, state, label };
+    if (state === "ok" && target !== void 0) {
+      if (entry.kind === "prop") {
+        row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}']`;
+      } else {
+        row.target = target;
+      }
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+function buildForwardedUI(root, ctx, node, nodePath) {
+  for (const row of forwardedRows(node, nodePath)) {
+    if (row.state !== "ok") {
+      continue;
+    }
+    if (row.path !== void 0) {
+      root.appendChild(propEditRow(ctx, row.label, row.path));
+      continue;
+    }
+    const target = row.target;
+    if (target instanceof GroupNode) {
+      buildForwardedUI(root, ctx, target, `${nodePath}.group.nodes[${JSON.stringify(target.id)}]`);
+      continue;
+    }
+    for (const key of nodePropKeys(target)) {
+      const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}']`;
+      root.appendChild(propEditRow(ctx, key, path));
+    }
+  }
+}
+function _isVecValue(v) {
+  return Array.isArray(v) || v instanceof Float32Array || v instanceof Float64Array;
+}
+function propEditRow(ctx, label, path, onChange) {
+  const row = document.createElement("div");
+  row.className = "nodeeditor-prop-row";
+  row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
+  const name2 = document.createElement("span");
+  name2.textContent = label;
+  name2.title = path;
+  row.appendChild(name2);
+  let current;
+  try {
+    current = ctx.api.getValue(ctx, path);
+  } catch {
+    current = void 0;
+  }
+  if (typeof current === "boolean") {
+    const input2 = document.createElement("input");
+    input2.type = "checkbox";
+    input2.checked = current;
+    input2.title = `Toggle ${label}`;
+    input2.addEventListener("change", () => {
+      ctx.api.setValue(ctx, path, input2.checked);
+      onChange?.();
+    });
+    row.appendChild(input2);
+    return row;
+  }
+  if (_isVecValue(current)) {
+    const vec = Array.from(current);
+    for (let i = 0; i < vec.length; i++) {
+      const input2 = document.createElement("input");
+      input2.type = "text";
+      input2.value = String(vec[i]);
+      input2.title = `Edit ${label}[${i}]`;
+      input2.style.width = "36px";
+      input2.style.minWidth = "0";
+      input2.addEventListener("change", () => {
+        const n = parseFloat(input2.value);
+        if (Number.isNaN(n)) {
+          input2.value = String(vec[i]);
+          return;
+        }
+        vec[i] = n;
+        input2.value = String(n);
+        ctx.api.setValue(ctx, path, vec);
+        onChange?.();
+      });
+      row.appendChild(input2);
+    }
+    return row;
+  }
+  const input = document.createElement("input");
+  input.type = "text";
+  input.title = `Edit ${label}`;
+  input.value = current === void 0 ? "" : String(current);
+  input.style.flex = "1";
+  input.style.minWidth = "0";
+  input.addEventListener("change", () => {
+    if (typeof current === "number") {
+      const n = parseFloat(input.value);
+      if (Number.isNaN(n)) {
+        input.value = String(current);
+        return;
+      }
+      current = n;
+      input.value = String(n);
+    } else {
+      current = input.value;
+    }
+    ctx.api.setValue(ctx, path, current);
+    onChange?.();
+  });
+  row.appendChild(input);
+  return row;
+}
+function buildGroupDesigner(root, opts) {
+  root.textContent = "";
+  const dispatch = (edit) => {
+    if (opts.delegate.check(opts.ctx, edit).ok) {
+      opts.delegate.perform(opts.ctx, edit);
+    }
+    buildGroupDesigner(root, opts);
+    opts.onChanged?.();
+  };
+  const common = { graphPath: opts.graphPath, ref: opts.ref, def: opts.def };
+  const exposed = opts.def.exposed;
+  exposed.forEach((entry, index) => {
+    const state = exposedEntryState(opts.def.subgraph, entry);
+    if (state === "unresolved") {
+      return;
+    }
+    const target = opts.def.subgraph.nodeIdMap.get(entry.nodeId);
+    const row = document.createElement("div");
+    row.className = "nodeeditor-exposure-row";
+    row.dataset.exposureIndex = String(index);
+    row.dataset.exposureState = state;
+    row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
+    const name2 = document.createElement("span");
+    name2.textContent = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    row.appendChild(name2);
+    if (state === "missing") {
+      const flag = document.createElement("span");
+      flag.textContent = "missing";
+      flag.title = "This entry's target no longer exists; repoint or remove it";
+      flag.style.color = opts.errorColor ?? "#ff6666";
+      row.appendChild(flag);
+      const nodeIdIn2 = document.createElement("input");
+      nodeIdIn2.type = "text";
+      nodeIdIn2.title = "Node id to repoint this entry at";
+      nodeIdIn2.style.width = "48px";
+      row.appendChild(nodeIdIn2);
+      const keyIn2 = document.createElement("input");
+      keyIn2.type = "text";
+      keyIn2.title = "Property key to repoint this entry at";
+      keyIn2.style.width = "64px";
+      row.appendChild(keyIn2);
+      const repoint = document.createElement("button");
+      repoint.textContent = "Repoint";
+      repoint.title = "Point this entry at a different property";
+      repoint.addEventListener("click", () => {
+        dispatch({
+          kind: "repointEntry",
+          ...common,
+          index,
+          nodeId: _parseNodeId(nodeIdIn2.value),
+          propKey: keyIn2.value.trim()
+        });
+      });
+      row.appendChild(repoint);
+    } else {
+      const up = document.createElement("button");
+      up.textContent = "\u2191";
+      up.title = "Move this entry up";
+      up.addEventListener(
+        "click",
+        () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 })
+      );
+      row.appendChild(up);
+      const down = document.createElement("button");
+      down.textContent = "\u2193";
+      down.title = "Move this entry down";
+      down.addEventListener(
+        "click",
+        () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 })
+      );
+      row.appendChild(down);
+    }
+    const remove = document.createElement("button");
+    remove.textContent = "\u2715";
+    remove.title = "Stop exposing this entry";
+    remove.addEventListener("click", () => dispatch({ kind: "removeEntry", ...common, index }));
+    row.appendChild(remove);
+    root.appendChild(row);
+  });
+  const addRow = document.createElement("div");
+  addRow.className = "nodeeditor-exposure-add";
+  addRow.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
+  const nodeIdIn = document.createElement("input");
+  nodeIdIn.type = "text";
+  nodeIdIn.title = "Node id of the property's owner";
+  nodeIdIn.style.width = "48px";
+  addRow.appendChild(nodeIdIn);
+  const keyIn = document.createElement("input");
+  keyIn.type = "text";
+  keyIn.title = "Property key to expose; leave empty to forward the node's whole UI";
+  keyIn.style.width = "64px";
+  addRow.appendChild(keyIn);
+  const add = document.createElement("button");
+  add.textContent = "Expose";
+  add.title = "Expose this property on every instance of the group";
+  add.addEventListener("click", () => {
+    const key = keyIn.value.trim();
+    const entry = new ExposedEntry(
+      key === "" ? "nodeUI" : "prop",
+      _parseNodeId(nodeIdIn.value),
+      key
+    );
+    dispatch({ kind: "exposeEntry", ...common, entry });
+  });
+  addRow.appendChild(add);
+  root.appendChild(addRow);
+}
+function _parseNodeId(text2) {
+  const raw = text2.trim();
+  return /^-?\d+$/.test(raw) ? Number(raw) : raw;
+}
+
+// scripts/editors/nodeeditor/nodeframe.ts
+init_ui_base();
+init_theme_schema();
+function socketAnchor(m, dir, row) {
+  const x = dir === "in" ? m.x : m.x + m.width;
+  const y = m.y + m.headerHeight + (row + 0.5) * m.socketRowHeight;
+  return [x, y];
+}
+function socketRow(node, dir, key) {
+  return Object.keys(dir === "in" ? node.inputs : node.outputs).indexOf(key);
+}
+var NodeFrame = class extends Container3 {
+  node;
+  selected = false;
+  /** Graph-space position while a drag is live; undefined at rest. */
+  previewPos = void 0;
+  getScale = () => 1;
+  onSelect;
+  onMoveStart;
+  onMovePreview;
+  onMoveCommit;
+  onSocketDown;
+  /** Extra rows the owning view appends beneath the node's own createUI. */
+  buildExtraUI;
+  /** The node's datapath. When set, the body renders an editable row per node
+   *  prop and per unconnected input default, writing through ctx.api. */
+  nodePath = "";
+  _header;
+  _rows = [];
+  _body;
+  _propsRoot;
+  static define() {
+    return {
+      tagname: "nodeframe-x",
+      style: "nodeframe",
+      theme: {
+        Width: t.number,
+        HeaderHeight: t.number,
+        SocketRowHeight: t.number,
+        "background-color": t.color,
+        "border-color": t.color,
+        "border-radius": t.number,
+        HeaderBG: t.color,
+        SelectOutline: t.color,
+        DefaultText: t.font,
+        SocketText: t.font
+      }
+    };
+  }
+  setNode(node) {
+    this.node = node;
+  }
+  init() {
+    super.init();
+    this.style.position = "absolute";
+    this.style.width = this.metrics().width + "px";
+    this.style.userSelect = "none";
+    this._buildUI();
+    this.setCSS();
+    this.syncPosition();
+  }
+  /** Graph-space geometry for this frame's socket anchors. */
+  metrics() {
+    const pos = this.previewPos ?? this.node.pos;
+    return {
+      x: pos[0],
+      y: pos[1],
+      width: this.getDefault("Width"),
+      headerHeight: this.getDefault("HeaderHeight"),
+      socketRowHeight: this.getDefault("SocketRowHeight")
+    };
+  }
+  /** Graph-space bounds, sized from the socket rows; body height is excluded. */
+  rect() {
+    const m = this.metrics();
+    const rows = Math.max(
+      Object.keys(this.node.inputs).length,
+      Object.keys(this.node.outputs).length
+    );
+    return {
+      x: m.x,
+      y: m.y,
+      width: m.width,
+      height: m.headerHeight + rows * m.socketRowHeight
+    };
+  }
+  /** Writes the frame's graph-space position (preview during a drag) to CSS. */
+  syncPosition() {
+    const pos = this.previewPos ?? this.node.pos;
+    this.style.left = pos[0] + "px";
+    this.style.top = pos[1] + "px";
+  }
+  setSelected(sel) {
+    this.selected = sel;
+    this.style.outline = sel ? `2px solid ${this.getDefault("SelectOutline")}` : "";
+  }
+  /** Applies the themed colors and fonts; a live theme edit re-runs it. */
+  setCSS() {
+    super.setCSS();
+    const radius = this.getDefault("border-radius");
+    this.style.backgroundColor = this.getDefault("background-color");
+    this.style.border = `1px solid ${this.getDefault("border-color")}`;
+    this.style.borderRadius = radius + "px";
+    this.style.outline = this.selected ? `2px solid ${this.getDefault("SelectOutline")}` : "";
+    if (this._header === void 0) {
+      return;
+    }
+    const m = this.metrics();
+    const font = this.getDefault("DefaultText");
+    this._header.style.font = font.genCSS();
+    this._header.style.color = font.color;
+    this._header.style.lineHeight = m.headerHeight + "px";
+    this._header.style.background = this.getDefault("HeaderBG");
+    this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
+    const rowFont = this.getDefault("SocketText");
+    for (const row of this._rows) {
+      row.style.font = rowFont.genCSS();
+      row.style.color = rowFont.color;
+      row.style.lineHeight = m.socketRowHeight + "px";
+    }
+  }
+  /** Rebuilds header text and socket rows; used after a rename or type swap. */
+  syncContents() {
+    this._header.textContent = this.node.getUIName();
+    this._rebuildPropRows();
+  }
+  /** Rebuilds the editable prop/default rows; a connected input contributes none. */
+  _rebuildPropRows() {
+    const root = this._propsRoot;
+    if (root === void 0) {
+      return;
+    }
+    root.textContent = "";
+    if (this.nodePath === "") {
+      return;
+    }
+    for (const key of nodePropKeys(this.node)) {
+      if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
+        continue;
+      }
+      const path = `${this.nodePath}.props['${key}']`;
+      root.appendChild(propEditRow(this.ctx, key, path, () => this.syncContents()));
+    }
+  }
+  _buildUI() {
+    const m = this.metrics();
+    this._header = document.createElement("div");
+    this._header.textContent = this.node.getUIName();
+    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.style.cssText = `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; padding: 0 6px; overflow: hidden; white-space: nowrap;`;
+    this.shadow.appendChild(this._header);
+    this.style.cursor = "move";
+    this._wirePress(this);
+    const inKeys = Object.keys(this.node.inputs);
+    const outKeys = Object.keys(this.node.outputs);
+    const rows = Math.max(inKeys.length, outKeys.length);
+    for (let i = 0; i < rows; i++) {
+      const row = document.createElement("div");
+      row.style.cssText = `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; display: flex; justify-content: space-between; padding: 0 4px;`;
+      row.appendChild(this._terminal(inKeys[i], "in"));
+      row.appendChild(this._terminal(outKeys[i], "out"));
+      this.shadow.appendChild(row);
+      this._rows.push(row);
+    }
+    this._body = UIBase2.createElement("container-x");
+    this._body.style.cursor = "auto";
+    this._body.parentWidget = this;
+    this.shadow.appendChild(this._body);
+    this._body.ctx = this.ctx;
+    this._body._init();
+    this._propsRoot = document.createElement("div");
+    this._propsRoot.className = "nodeframe-props";
+    this._propsRoot.style.cssText = "display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;";
+    this._body.shadow.appendChild(this._propsRoot);
+    this._rebuildPropRows();
+    this.node.createUI(this._body);
+    this.buildExtraUI?.(this, this._body);
+  }
+  /** The terminal dot for a socket, for the view to restyle during a drag. */
+  terminalDot(key, dir) {
+    const sel = `.nodeframe-terminal[data-socket-key="${key}"][data-socket-dir="${dir}"]`;
+    return this.shadow.querySelector(sel) ?? void 0;
+  }
+  /** A terminal dot plus name, or an empty spacer where this side has no row. */
+  _terminal(key, dir) {
+    const span = document.createElement("span");
+    if (key === void 0) {
+      return span;
+    }
+    const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
+    const color = typeof sock.color === "string" ? sock.color : "#ccc";
+    const dot = document.createElement("span");
+    dot.className = "nodeframe-terminal";
+    dot.dataset.socketKey = key;
+    dot.dataset.socketDir = dir;
+    dot.title = `${key} (${sock.type})`;
+    dot.style.cssText = `display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${color}; margin: 0 3px;`;
+    dot.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || this.onSocketDown === void 0) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      this.onSocketDown(this, key, dir, e);
+    });
+    const name2 = document.createElement("span");
+    name2.textContent = key;
+    if (dir === "in") {
+      span.appendChild(dot);
+      span.appendChild(name2);
+    } else {
+      span.appendChild(name2);
+      span.appendChild(dot);
+    }
+    return span;
+  }
+  _wirePress(handle) {
+    handle.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) {
+        return;
+      }
+      e.stopPropagation();
+      this.onSelect?.(this, e);
+      if (this._body !== void 0 && e.composedPath().includes(this._body)) {
+        return;
+      }
+      e.preventDefault();
+      this.onMoveStart?.(this, e);
+    });
+  }
+};
+UIBase2.internalRegister(NodeFrame);
+
+// scripts/editors/nodeeditor/linkcanvas.ts
+init_ui_base();
+init_theme_schema();
+var LinkCanvas = class extends UIBase2 {
+  canvas;
+  g;
+  constructor() {
+    super();
+    this.canvas = document.createElement("canvas");
+    this.g = this.canvas.getContext("2d");
+    this.shadow.appendChild(this.canvas);
+  }
+  static define() {
+    return {
+      tagname: "nodelinkcanvas-x",
+      style: "nodelinkcanvas",
+      theme: {
+        LinkColor: t.string,
+        LinkWidth: t.number
+      }
+    };
+  }
+  /** Matches the canvas backing store to the given CSS size at dpi. */
+  resize(width, height, dpi = 1) {
+    const w = Math.max(1, Math.round(width * dpi));
+    const h = Math.max(1, Math.round(height * dpi));
+    if (this.canvas.width !== w || this.canvas.height !== h) {
+      this.canvas.width = w;
+      this.canvas.height = h;
+    }
+    this.canvas.style.width = width + "px";
+    this.canvas.style.height = height + "px";
+  }
+  /** Repaints every segment as a cubic bezier with horizontal tangents. */
+  drawLinks(segments, dpi = 1) {
+    const g = this.g;
+    if (g === null) {
+      return;
+    }
+    g.setTransform(dpi, 0, 0, dpi, 0, 0);
+    g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    g.strokeStyle = this.getDefault("LinkColor") ?? "#aaaaaa";
+    g.lineWidth = this.getDefault("LinkWidth") ?? 2;
+    for (const s of segments) {
+      const bulge = Math.max(24, Math.abs(s.x2 - s.x1) * 0.5);
+      g.beginPath();
+      g.moveTo(s.x1, s.y1);
+      g.bezierCurveTo(s.x1 + bulge, s.y1, s.x2 - bulge, s.y2, s.x2, s.y2);
+      g.stroke();
+    }
+  }
+};
+UIBase2.internalRegister(LinkCanvas);
+
+// scripts/editors/nodeeditor/linkdrag.ts
+init_ui_base();
+var LINK_DROP_PX = 12;
+var LinkDrag = class {
+  view;
+  _origin = void 0;
+  _detach = void 0;
+  _overlay = void 0;
+  _dimmed = [];
+  constructor(view) {
+    this.view = view;
+  }
+  get active() {
+    return this._origin !== void 0;
+  }
+  /** Starts a drag from the terminal named key; false when it has no socket. */
+  begin(frame, key, dir) {
+    const node = frame.node;
+    const sock = dir === "in" ? node.inputs[key] : node.outputs[key];
+    if (sock === void 0) {
+      return false;
+    }
+    let origin = { frame, key, dir, sock };
+    if (dir === "in" && !sock.multiSocket && sock.edges.length > 0) {
+      const far = sock.edges[0];
+      const farNode = far.owningNode;
+      const farFrame = farNode !== void 0 ? this.view.frames.get(farNode.id) : void 0;
+      if (farNode !== void 0 && farFrame !== void 0) {
+        this._detach = {
+          srcNode: farNode.id,
+          srcSocket: far.name,
+          dstNode: node.id,
+          dstSocket: key
+        };
+        origin = { frame: farFrame, key: far.name, dir: "out", sock: far };
+      }
+    }
+    this._origin = origin;
+    this._makeOverlay();
+    this._dimRefusedTargets();
+    return true;
+  }
+  /** Redraws the in-flight segment to the given point. */
+  update(local) {
+    const origin = this._origin;
+    const overlay = this._overlay;
+    if (origin === void 0 || overlay === void 0) {
+      return;
+    }
+    const row = socketRow(origin.frame.node, origin.dir, origin.key);
+    const a2 = this.view.panzoom.transform.project(
+      socketAnchor(origin.frame.metrics(), origin.dir, row)
+    );
+    const r = this.view.panzoom.getBoundingClientRect();
+    const dpi = UIBase2.getDPI();
+    overlay.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
+    const seg = origin.dir === "out" ? { x1: a2[0], y1: a2[1], x2: local[0], y2: local[1] } : { x1: local[0], y1: local[1], x2: a2[0], y2: a2[1] };
+    overlay.drawLinks([seg], dpi);
+  }
+  /** Ends the drag, dispatching the edits the drop point calls for. */
+  drop(local) {
+    const origin = this._origin;
+    if (origin === void 0) {
+      return;
+    }
+    const target = this._nearestTarget(local);
+    const detach = this._detach;
+    this._cleanup();
+    if (detach !== void 0) {
+      const backOnOrigin = target !== void 0 && target.frame.node.id === detach.dstNode && target.key === detach.dstSocket;
+      if (backOnOrigin) {
+        return;
+      }
+      this._dispatch({ kind: "disconnect", graphPath: this.view.currentGraphPath, ...detach });
+      if (target !== void 0 && target.ok) {
+        this._dispatch(this._connectEdit(origin, target));
+      }
+      this.view.syncGraph();
+      return;
+    }
+    if (target !== void 0 && target.ok) {
+      this._dispatch(this._connectEdit(origin, target));
+    }
+    this.view.syncGraph();
+  }
+  cancel() {
+    this._cleanup();
+  }
+  /** The connect edit for a drop, normalized to output-to-input order. */
+  _connectEdit(origin, target) {
+    const graphPath = this.view.currentGraphPath;
+    if (origin.dir === "out") {
+      return {
+        kind: "connect",
+        graphPath,
+        srcNode: origin.frame.node.id,
+        srcSocket: origin.key,
+        dstNode: target.frame.node.id,
+        dstSocket: target.key
+      };
+    }
+    return {
+      kind: "connect",
+      graphPath,
+      srcNode: target.frame.node.id,
+      srcSocket: target.key,
+      dstNode: origin.frame.node.id,
+      dstSocket: origin.key
+    };
+  }
+  _targetOk(frame, key) {
+    const origin = this._origin;
+    const edit = this._connectEdit(origin, { frame, key, ok: true });
+    return this.view.delegate.check(this.view.ctx, edit).ok;
+  }
+  /** The opposite-direction terminal nearest to local, within LINK_DROP_PX. */
+  _nearestTarget(local) {
+    const origin = this._origin;
+    const targetDir = origin.dir === "out" ? "in" : "out";
+    const tf = this.view.panzoom.transform;
+    let best;
+    let bestDist = LINK_DROP_PX;
+    for (const frame of this.view.frames.values()) {
+      const node = frame.node;
+      const keys2 = Object.keys(targetDir === "in" ? node.inputs : node.outputs);
+      for (let row = 0; row < keys2.length; row++) {
+        const p = tf.project(socketAnchor(frame.metrics(), targetDir, row));
+        const dist = Math.hypot(p[0] - local[0], p[1] - local[1]);
+        if (dist <= bestDist) {
+          bestDist = dist;
+          best = { frame, key: keys2[row], ok: this._targetOk(frame, keys2[row]) };
+        }
+      }
+    }
+    return best;
+  }
+  _dispatch(edit) {
+    if (this.view.delegate.check(this.view.ctx, edit).ok) {
+      this.view.delegate.perform(this.view.ctx, edit);
+    }
+  }
+  _makeOverlay() {
+    const overlay = UIBase2.createElement("nodelinkcanvas-x");
+    overlay.ctx = this.view.ctx;
+    overlay.style.position = "absolute";
+    overlay.style.left = overlay.style.top = "0px";
+    overlay.style.pointerEvents = "none";
+    this.view.panzoom.shadow.appendChild(overlay);
+    overlay._init();
+    this._overlay = overlay;
+  }
+  _dimRefusedTargets() {
+    const origin = this._origin;
+    const targetDir = origin.dir === "out" ? "in" : "out";
+    for (const frame of this.view.frames.values()) {
+      const node = frame.node;
+      const keys2 = Object.keys(targetDir === "in" ? node.inputs : node.outputs);
+      for (const key of keys2) {
+        if (this._targetOk(frame, key)) {
+          continue;
+        }
+        const dot = frame.terminalDot(key, targetDir);
+        if (dot !== void 0) {
+          dot.style.opacity = "0.35";
+          this._dimmed.push(dot);
+        }
+      }
+    }
+  }
+  _cleanup() {
+    for (const dot of this._dimmed) {
+      dot.style.opacity = "";
+    }
+    this._dimmed = [];
+    this._overlay?.remove();
+    this._overlay = void 0;
+    this._origin = void 0;
+    this._detach = void 0;
+  }
+};
+
+// scripts/editors/nodeeditor/gesture_ops.ts
+init_toolsys();
+init_vectormath();
+var CLICK_SLOP_PX = 3;
+function localPoint(view, e) {
+  const r = view.panzoom.getBoundingClientRect();
+  return [e.clientX - r.x, e.clientY - r.y];
+}
+var NodeMoveModalOp = class extends ToolOp {
+  _frame;
+  _startX = 0;
+  _startY = 0;
+  _base = new Vector2();
+  constructor(frame, e) {
+    super();
+    this._frame = frame;
+    if (frame !== void 0) {
+      this._base.load(frame.node.pos);
+    }
+    if (e !== void 0) {
+      this._startX = e.clientX;
+      this._startY = e.clientY;
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Move Node",
+      description: "Drag a node to a new position",
+      toolpath: "nodeview.translate_node",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const frame = this._frame;
+    if (frame === void 0) {
+      return;
+    }
+    const s = frame.getScale();
+    frame.previewPos = new Vector2([
+      this._base[0] + (e.clientX - this._startX) / s,
+      this._base[1] + (e.clientY - this._startY) / s
+    ]);
+    frame.syncPosition();
+    frame.onMovePreview?.(frame);
+  }
+  on_pointerup(_e) {
+    this._commit();
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  on_keydown(e) {
+    if (e.key === "Escape") {
+      this.modalEnd(true);
+    } else if (e.key === "Enter" || e.key === " ") {
+      this._commit();
+    }
+  }
+  _commit() {
+    const frame = this._frame;
+    this._frame = void 0;
+    if (frame !== void 0) {
+      const dropped = frame.previewPos;
+      frame.previewPos = void 0;
+      if (dropped !== void 0) {
+        frame.onMoveCommit?.(frame, dropped[0], dropped[1]);
+      }
+    }
+    this.modalEnd(false);
+  }
+  modalEnd(was_cancelled) {
+    const frame = this._frame;
+    this._frame = void 0;
+    if (frame !== void 0 && frame.previewPos !== void 0) {
+      frame.previewPos = void 0;
+      frame.syncPosition();
+      frame.onMovePreview?.(frame);
+      frame.style.opacity = "";
+    }
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(NodeMoveModalOp);
+var BoxSelectModalOp = class extends ToolOp {
+  _view;
+  _start;
+  _marquee;
+  constructor(view, e) {
+    super();
+    this._view = view;
+    if (view !== void 0 && e !== void 0) {
+      this._start = localPoint(view, e);
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Box Select",
+      description: "Drag a box to select the nodes it touches",
+      toolpath: "nodeview.box_select",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const view = this._view;
+    const start = this._start;
+    if (view === void 0 || start === void 0) {
+      return;
+    }
+    const [x, y] = localPoint(view, e);
+    if (this._marquee === void 0) {
+      this._marquee = document.createElement("div");
+      this._marquee.style.cssText = "position: absolute; pointer-events: none;";
+      this._marquee.style.border = `1px dashed ${view.getDefault("BoxSelectBorder")}`;
+      this._marquee.style.background = view.getDefault("BoxSelectBG");
+      view.panzoom.shadow.appendChild(this._marquee);
+    }
+    this._marquee.style.left = Math.min(start[0], x) + "px";
+    this._marquee.style.top = Math.min(start[1], y) + "px";
+    this._marquee.style.width = Math.abs(x - start[0]) + "px";
+    this._marquee.style.height = Math.abs(y - start[1]) + "px";
+  }
+  on_pointerup(e) {
+    const view = this._view;
+    const start = this._start;
+    if (view === void 0 || start === void 0) {
+      this.modalEnd(false);
+      return;
+    }
+    const end = localPoint(view, e);
+    if (Math.abs(end[0] - start[0]) < CLICK_SLOP_PX && Math.abs(end[1] - start[1]) < CLICK_SLOP_PX) {
+      if (!e.shiftKey) {
+        view.clearSelection();
+      }
+      this.modalEnd(false);
+      return;
+    }
+    const a2 = view.panzoom.transform.unproject(start);
+    const b = view.panzoom.transform.unproject(end);
+    view.boxSelect(
+      [Math.min(a2[0], b[0]), Math.min(a2[1], b[1])],
+      [Math.max(a2[0], b[0]), Math.max(a2[1], b[1])],
+      e.shiftKey
+    );
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  modalEnd(was_cancelled) {
+    this._marquee?.remove();
+    this._marquee = void 0;
+    this._view = void 0;
+    this._start = void 0;
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(BoxSelectModalOp);
+var LinkDragModalOp = class extends ToolOp {
+  _view;
+  constructor(view) {
+    super();
+    this._view = view;
+  }
+  static tooldef() {
+    return {
+      uiname: "Drag Link",
+      description: "Drag a link between two sockets",
+      toolpath: "nodeview.link_drag",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const view = this._view;
+    if (view !== void 0) {
+      view.linkDrag.update(localPoint(view, e));
+    }
+  }
+  on_pointerup(e) {
+    const view = this._view;
+    this._view = void 0;
+    if (view !== void 0) {
+      view.linkDrag.drop(localPoint(view, e));
+    }
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  modalEnd(was_cancelled) {
+    const view = this._view;
+    this._view = void 0;
+    if (view !== void 0 && view.linkDrag.active) {
+      view.linkDrag.cancel();
+    }
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(LinkDragModalOp);
+
+// scripts/editors/nodeeditor/addmenu.ts
+init_ui_menu();
+function addMenuItems() {
+  const items = [];
+  for (const [typeName, cls] of NodeClasses2) {
+    if (cls === GroupNode || cls === GroupInputNode || cls === GroupOutputNode) {
+      continue;
+    }
+    const probe = new cls();
+    items.push({
+      typeName,
+      uiName: probe.getUIName(),
+      description: probe.getDescription()
+    });
+  }
+  return items;
+}
+function addNodeMenuTemplate(onPick, items = addMenuItems()) {
+  return items.map((item) => ({
+    name: item.uiName,
+    id: item.typeName,
+    tooltip: item.description || `Add a ${item.uiName} node`,
+    callback: () => onPick(item.typeName)
+  }));
+}
+function buildAddNodeMenu(ctx, onPick, items = addMenuItems()) {
+  return createMenu(ctx, "Add Node", addNodeMenuTemplate(onPick, items));
+}
+
 // scripts/path-controller/util/solver.ts
 var solver_exports = {};
 __export(solver_exports, {
@@ -75812,7 +79149,7 @@ var PackNode = class {
     return "" + this._id;
   }
 };
-function copyGraph(nodes) {
+function copyGraph2(nodes) {
   const ret = [];
   const idmap = {};
   for (const n of nodes) {
@@ -75893,7 +79230,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     speed = args.speed ?? 1;
   }
   const orignodes = nodes;
-  nodes = copyGraph(nodes);
+  nodes = copyGraph2(nodes);
   let decay = 1;
   let decayi = 0;
   const min = new Vector2().addScalar(1e17);
@@ -76065,7 +79402,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     disableArea = false;
     const add = Math.random() * (besterr ?? 0) * Math.exp(-i * 0.1);
     if (besterr === void 0 || err < besterr + add) {
-      best = copyGraph(nodes);
+      best = copyGraph2(nodes);
       besterr = err;
     }
     i++;
@@ -76114,1979 +79451,546 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
   }
 }
 
-// scripts/path-controller/controller.ts
-var controller_exports = {};
-__export(controller_exports, {
-  AbstractCurve: () => AbstractCurve,
-  ArrayBufferProperty: () => ArrayBufferProperty,
-  BSplineCurve: () => BSplineCurve,
-  BSplineTransformOp: () => BSplineTransformOp,
-  BoolProperty: () => BoolProperty,
-  BounceCurve: () => BounceCurve,
-  COLINEAR: () => COLINEAR,
-  COLINEAR_ISECT: () => COLINEAR_ISECT,
-  CURVE_VERSION: () => CURVE_VERSION,
-  ClosestCurveRets: () => ClosestCurveRets,
-  ClosestModes: () => ClosestModes,
-  Constraint: () => Constraint,
-  Context: () => Context,
-  ContextFlags: () => ContextFlags,
-  ContextOverlay: () => ContextOverlay,
-  CreateSnapshot: () => CreateSnapshot,
-  Curve1D: () => Curve1D,
-  Curve1DPoint: () => Curve1DPoint,
-  Curve1DProperty: () => Curve1DProperty,
-  Curve1dBSplineAddOp: () => Curve1dBSplineAddOp,
-  Curve1dBSplineDeleteOp: () => Curve1dBSplineDeleteOp,
-  Curve1dBSplineLoadTemplOp: () => Curve1dBSplineLoadTemplOp,
-  Curve1dBSplineOpBase: () => Curve1dBSplineOpBase,
-  Curve1dBSplineResetOp: () => Curve1dBSplineResetOp,
-  Curve1dBSplineSelectOp: () => Curve1dBSplineSelectOp,
-  CurveConstructors: () => CurveConstructors,
-  CurveFlags: () => CurveFlags,
-  CurveTypeData: () => CurveTypeData,
-  DataAPI: () => DataAPI2,
-  DataFlags: () => DataFlags,
-  DataList: () => DataList,
-  DataPath: () => DataPath,
-  DataPathError: () => DataPathError,
-  DataPathSetOp: () => DataPathSetOp,
-  DataPathWatcher: () => DataPathWatcher,
-  DataStruct: () => DataStruct2,
-  DataTypes: () => DataTypes,
-  DoubleClickHandler: () => DoubleClickHandler,
-  EaseCurve: () => EaseCurve,
-  ElasticCurve: () => ElasticCurve,
-  EnumKeyPair: () => EnumKeyPair,
-  EnumProperty: () => EnumProperty,
-  EnumPropertyBase: () => EnumPropertyBase,
-  EquationCurve: () => EquationCurve,
-  EulerOrders: () => EulerOrders,
-  FEPS: () => FEPS,
-  FEPS_DATA: () => FEPS_DATA,
-  FLOAT_MAX: () => FLOAT_MAX,
-  FLOAT_MIN: () => FLOAT_MIN,
-  FlagProperty: () => FlagProperty,
-  FloatArrayProperty: () => FloatArrayProperty,
-  FloatConstrinats: () => FloatConstrinats,
-  FloatProperty: () => FloatProperty,
-  GuassianCurve: () => GuassianCurve,
-  HotKey: () => HotKey,
-  IndexRange: () => IndexRange,
-  InheritFlag: () => InheritFlag2,
-  IntProperty: () => IntProperty,
-  IntegerConstraints: () => IntegerConstraints,
-  KeyMap: () => KeyMap,
-  LINECROSS: () => LINECROSS,
-  ListProperty: () => ListProperty,
-  LockedContext: () => LockedContext,
-  MacroClasses: () => MacroClasses,
-  MacroLink: () => MacroLink,
-  MakeUINameWordMap: () => MakeUINameWordMap,
-  Mat4Property: () => Mat4Property,
-  Mat4Stack: () => Mat4Stack,
-  Matrix4: () => Matrix4,
-  Matrix4UI: () => Matrix4UI,
-  MinMax: () => MinMax,
-  MinMax1: () => MinMax1,
-  ModelInterface: () => ModelInterface,
-  NumProperty: () => NumProperty,
-  NumberConstraints: () => NumberConstraints,
-  NumberConstraintsBase: () => NumberConstraintsBase,
-  OverlayClasses: () => OverlayClasses,
-  PackNode: () => PackNode,
-  PackNodeVertex: () => PackNodeVertex,
-  ParamKey: () => ParamKey,
-  Parser: () => Parser,
-  PlaneOps: () => PlaneOps,
-  PropClasses: () => PropClasses,
-  PropFlags: () => PropFlags,
-  PropSubTypes: () => PropSubTypes2,
-  PropTypes: () => PropTypes,
-  Quat: () => Quat,
-  QuatProperty: () => QuatProperty,
-  RandCurve: () => RandCurve,
-  ReportProperty: () => ReportProperty,
-  SQRT2: () => SQRT2,
-  SavedToolDefaults: () => SavedToolDefaults,
-  SimpleCurveBase: () => SimpleCurveBase,
-  Solver: () => Solver,
-  SplineTemplateIcons: () => SplineTemplateIcons,
-  SplineTemplates: () => SplineTemplates,
-  StringProperty: () => StringProperty,
-  StringPropertyBase: () => StringPropertyBase,
-  StringSetProperty: () => StringSetProperty,
-  StructFlags: () => StructFlags,
-  TangentModes: () => TangentModes,
-  ToolClasses: () => ToolClasses,
-  ToolFlags: () => ToolFlags,
-  ToolMacro: () => ToolMacro,
-  ToolOp: () => ToolOp,
-  ToolOpIface: () => ToolOpIface,
-  ToolPaths: () => ToolPaths,
-  ToolProperty: () => ToolProperty,
-  ToolPropertyCache: () => ToolPropertyCache,
-  ToolStack: () => ToolStack,
-  UndoFlags: () => UndoFlags,
-  Vec2Property: () => Vec2Property,
-  Vec3Property: () => Vec3Property,
-  Vec4Property: () => Vec4Property,
-  VecPropertyBase: () => VecPropertyBase,
-  Vector2: () => Vector2,
-  Vector3: () => Vector3,
-  Vector4: () => Vector4,
-  _NumberPropertyBase: () => _NumberPropertyBase,
-  _old_isect_ray_plane: () => _old_isect_ray_plane,
-  _setModalAreaClass: () => _setModalAreaClass,
-  _setScreenClass: () => _setScreenClass,
-  aabb_intersect_2d: () => aabb_intersect_2d,
-  aabb_intersect_3d: () => aabb_intersect_3d,
-  aabb_isect_2d: () => aabb_isect_2d,
-  aabb_isect_3d: () => aabb_isect_3d,
-  aabb_isect_cylinder_3d: () => aabb_isect_cylinder_3d,
-  aabb_isect_line_2d: () => aabb_isect_line_2d,
-  aabb_isect_line_3d: () => aabb_isect_line_3d,
-  aabb_overlap_area: () => aabb_overlap_area,
-  aabb_sphere_dist: () => aabb_sphere_dist,
-  aabb_sphere_isect: () => aabb_sphere_isect,
-  aabb_sphere_isect_2d: () => aabb_sphere_isect_2d,
-  aabb_union: () => aabb_union,
-  aabb_union_2d: () => aabb_union_2d,
-  angle_between_vecs: () => angle_between_vecs,
-  barycentric_v2: () => barycentric_v2,
-  binomial: () => binomial,
-  buildParser: () => buildParser,
-  buildToolOpAPI: () => buildToolOpAPI,
-  buildToolSysAPI: () => buildToolSysAPI,
-  bumpPathStructureGen: () => bumpPathStructureGen,
-  calc_projection_axes: () => calc_projection_axes,
-  circ_from_line_tan: () => circ_from_line_tan,
-  circ_from_line_tan_2d: () => circ_from_line_tan_2d,
-  clearPathWatchers: () => clearPathWatchers,
-  clip_line_w: () => clip_line_w,
-  closestPoint: () => closestPoint,
-  closest_point_on_line: () => closest_point_on_line,
-  closest_point_on_quad: () => closest_point_on_quad,
-  closest_point_on_tri: () => closest_point_on_tri,
-  cmyk_to_rgb: () => cmyk_to_rgb,
-  colinear: () => colinear,
-  colinear2d: () => colinear2d,
-  config: () => config_exports,
-  copyEvent: () => copyEvent,
-  corner_normal: () => corner_normal,
-  customPropertyTypes: () => customPropertyTypes,
-  defaultDecimalPlaces: () => defaultDecimalPlaces,
-  defaultRadix: () => defaultRadix,
-  dihedral_v3_sqr: () => dihedral_v3_sqr,
-  dist_to_line: () => dist_to_line,
-  dist_to_line_2d: () => dist_to_line_2d,
-  dist_to_line_sqr: () => dist_to_line_sqr,
-  dist_to_tri_v3: () => dist_to_tri_v3,
-  dist_to_tri_v3_old: () => dist_to_tri_v3_old,
-  dist_to_tri_v3_sqr: () => dist_to_tri_v3_sqr,
-  evalHermiteTable: () => evalHermiteTable,
-  eventWasMouseDown: () => eventWasMouseDown,
-  eventWasTouch: () => eventWasTouch,
-  eventgraph: () => eventdag_exports,
-  excludedKeys: () => excludedKeys,
-  expand_line: () => expand_line,
-  expand_rect2d: () => expand_rect2d,
-  feps: () => feps,
-  flushPathNotifications: () => flushPathNotifications,
-  genHermiteTable: () => genHermiteTable,
-  gen_circle: () => gen_circle,
-  getCurve: () => getCurve,
-  getDataPathToolOp: () => getDataPathToolOp,
-  getPathStructureGen: () => getPathStructureGen,
-  getPathWatchStats: () => getPathWatchStats,
-  getTempProp: () => getTempProp,
-  getVecClass: () => getVecClass,
-  get_boundary_winding: () => get_boundary_winding,
-  get_rect_lines: () => get_rect_lines,
-  get_rect_points: () => get_rect_points,
-  get_tri_circ: () => get_tri_circ,
-  graphGetIslands: () => graphGetIslands,
-  graphPack: () => graphPack,
-  haveModal: () => haveModal,
-  hsv_to_rgb: () => hsv_to_rgb,
-  html5_fileapi: () => html5_fileapi_exports,
-  initSimpleController: () => initSimpleController,
-  initSplineTemplates: () => initSplineTemplates,
-  initToolPaths: () => initToolPaths,
-  inrect_2d: () => inrect_2d,
-  isLeftClick: () => isLeftClick,
-  isMouseDown: () => isMouseDown,
-  isNum: () => isNum,
-  isNumber: () => isNumber,
-  isect_ray_plane: () => isect_ray_plane,
-  keymap: () => keymap,
-  keymap_latin_1: () => keymap_latin_1,
-  line_isect: () => line_isect,
-  line_line_cross: () => line_line_cross,
-  line_line_isect: () => line_line_isect,
-  lzstring: () => lz_string_default,
-  makeCircleMesh: () => makeCircleMesh,
-  makeDerivedOverlay: () => makeDerivedOverlay,
-  math: () => math_exports,
-  minmax_verts: () => minmax_verts,
-  modalstack: () => modalstack,
-  mySafeJSONParse: () => mySafeJSONParse,
-  mySafeJSONStringify: () => mySafeJSONStringify,
-  normal_poly: () => normal_poly,
-  normal_quad: () => normal_quad,
-  normal_quad_old: () => normal_quad_old,
-  normal_tri: () => normal_tri,
-  normalizePath: () => normalizePath,
-  notifyPathChange: () => notifyPathChange,
-  nstructjs: () => struct_default,
-  parseToolPath: () => parseToolPath,
-  parseutil: () => parseutil_exports,
-  pathDebugEvent: () => pathDebugEvent,
-  pathParser: () => pathParser,
-  point_in_aabb: () => point_in_aabb,
-  point_in_aabb_2d: () => point_in_aabb_2d,
-  point_in_hex: () => point_in_hex,
-  point_in_tri: () => point_in_tri,
-  popModalLight: () => popModalLight,
-  popReportName: () => popReportName,
-  project: () => project,
-  pushModalLight: () => pushModalLight,
-  pushPointerModal: () => pushPointerModal,
-  pushReportName: () => pushReportName,
-  quadIsConvex: () => quadIsConvex,
-  quad_bilinear: () => quad_bilinear,
-  quad_uv_2d: () => quad_uv_2d,
-  registerTool: () => registerTool,
-  reverse_keymap: () => reverse_keymap,
-  rgb_to_cmyk: () => rgb_to_cmyk,
-  rgb_to_hsv: () => rgb_to_hsv,
-  rot2d: () => rot2d,
-  setContextClass: () => setContextClass,
-  setDataPathToolOp: () => setDataPathToolOp,
-  setDefaultUndoHandlers: () => setDefaultUndoHandlers,
-  setImplementationClass: () => setImplementationClass,
-  setNotifier: () => setNotifier,
-  setPropTypes: () => setPropTypes,
-  simple_tri_aabb_isect: () => simple_tri_aabb_isect,
-  singleMouseEvent: () => singleMouseEvent,
-  solver: () => solver_exports,
-  suggestPropertyKeys: () => suggestPropertyKeys,
-  test: () => test,
-  testToolParser: () => testToolParser,
-  tet_volume: () => tet_volume,
-  toLockedImpl: () => toLockedImpl,
-  toolprop_abstract: () => toolprop_abstract_exports,
-  tri_angles: () => tri_angles,
-  tri_area: () => tri_area,
-  trilinear_co: () => trilinear_co,
-  trilinear_co2: () => trilinear_co2,
-  trilinear_v3: () => trilinear_v3,
-  unproject: () => unproject,
-  updateToolDefaults: () => updateToolDefaults,
-  updateToolSysAPI: () => updateToolSysAPI,
-  util: () => util_exports,
-  vectormath: () => vectormath_exports,
-  winding: () => winding,
-  winding_axis: () => winding_axis
-});
-
-// scripts/path-controller/controller/contextNew.ts
-var ContextLocker = class {
-  ctx;
-  constructor(ctx) {
-    this.ctx = ctx;
-  }
-  /**
-   * Serializes the current context into a 'locked' read-only form.
-   * Needed for consistent undo/redo.
-   **/
-  lock(ctx, saveProperty, loadProperty) {
-    if (ctx === void 0) {
-      throw new Error("ctx was undefined! in ContextLocker.lock()!");
-    }
-    const props = {};
-    function getAllKeys2(obj) {
-      const keys3 = /* @__PURE__ */ new Set();
-      while (obj && obj !== Object) {
-        for (const k in Object.getOwnPropertyDescriptors(obj)) {
-          if (typeof k === "string") {
-            keys3.add(k);
-          }
-        }
-        for (const k in obj) {
-          if (typeof k === "string") {
-            keys3.add(k);
-          }
-        }
-        obj = Object.getPrototypeOf(obj);
-      }
-      return keys3;
-    }
-    const keys2 = new Set(getAllKeys2(ctx));
-    keys2.forEach((key) => {
-      if (typeof key === "string" && (key.endsWith("_save") || key.endsWith("_load"))) {
-        return;
-      }
-      if (typeof key === "symbol") {
-        props[key] = ctx[key];
-        return;
-      }
-      const hasSave = `${key}_save` in ctx;
-      const hasLoad = `${key}_load` in ctx;
-      const savedKey = (s) => "$$" + s;
-      function loadProp(key2, hasLoad2) {
-        if (hasLoad2) {
-          return ctx[key2 + "_load"](ctx, props[savedKey(key2)]);
-        } else if (typeof loadProperty === "function") {
-          return loadProperty(ctx, key2, props[savedKey(key2)]);
-        } else {
-          return props[savedKey(key2)];
-        }
-      }
-      function saveProp(key2, hasSave2) {
-        if (hasSave2) {
-          return ctx[key2 + "_save"](ctx);
-        } else if (typeof saveProperty === "function") {
-          return saveProperty.call(void 0, ctx, key2, ctx[key2]);
-        } else {
-          return ctx[key2];
-        }
-      }
-      if (hasSave || hasLoad) {
-        Object.defineProperty(props, savedKey(key), {
-          value: saveProp(key, hasSave),
-          enumerable: false,
-          configurable: true
-        });
-        Object.defineProperty(props, key, {
-          configurable: true,
-          enumerable: true,
-          get() {
-            return loadProp(key, hasLoad);
-          },
-          set(value) {
-            throw new Error(`cannot set property ${key} in locked context`);
-          }
-        });
-      } else {
-        props[key] = ctx[key];
-      }
-    });
-    return props;
-  }
-};
-function toLockedImpl() {
-  return new ContextLocker(this).lock(this, this.saveProperty, this.loadProperty);
-}
-
-// scripts/path-controller/controller.ts
-init_context();
-init_controller();
-init_controller_abstract();
-init_controller_ops();
-init_controller_abstract();
-init_controller_base();
-init_toolsys();
-init_toolprop();
-init_toolpath();
-init_curve1d_all();
-init_curve1d();
-init_curve1d_base();
-init_curve1d_toolprop();
-init_eventdag();
-init_indexRange();
-init_util();
-init_vectormath();
-init_math();
-init_toolprop_abstract();
-init_html5_fileapi();
-init_parseutil();
-init_config();
-init_struct();
-init_lz_string();
-init_vectormath();
-init_math();
-init_colorutils();
-init_simple_events();
-init_curve1d_bspline();
-
-// scripts/platforms/platform.ts
-var platform_exports = {};
-__export(platform_exports, {
-  getPlatformAsync: () => getPlatformAsync,
-  platform: () => platform4
-});
-var promise;
-if (window.haveNwjs) {
-  promise = Promise.resolve().then(() => (init_nwjs_api(), nwjs_api_exports));
-} else if (window.haveElectron) {
-  promise = Promise.resolve().then(() => (init_electron_api(), electron_api_exports));
-} else {
-  promise = Promise.resolve().then(() => (init_web_api(), web_api_exports));
-}
-var platform4;
-promise.then((module) => {
-  platform4 = module.platform;
-  promise = void 0;
-});
-function getPlatformAsync() {
-  if (promise) {
-    return new Promise((accept, reject) => {
-      promise.then((mod) => {
-        accept(mod.platform);
-      });
-    });
-  }
-  return new Promise((accept, reject) => {
-    accept(platform4);
-  });
-}
-
-// scripts/widgets/theme_editor.ts
+// scripts/editors/nodeeditor/nodegraphview.ts
 init_ui_base();
-init_ui_theme();
-init_cssfont();
-var ThemeChangeEvent = class extends Event {
-  category;
-  key;
-  record;
-  /** The variable that was edited, when the change came through one. */
-  varKey;
-  constructor(category, key, record, varKey) {
-    super("change");
-    this.category = category;
-    this.key = key;
-    this.record = record;
-    this.varKey = varKey;
-  }
-};
-var FONT_FIELDS = ["font", "variant", "weight", "style"];
-var VAR_NAME_WIDTH = 110;
-var VAR_VALUE_WIDTH = 150;
-var VAR_COMMENT_WIDTH = 150;
-function strcmp(a2, b) {
-  a2 = a2.trim().toLowerCase();
-  b = b.trim().toLowerCase();
-  return a2 < b ? -1 : a2 === b ? 0 : 1;
-}
-function themeItemKind(name2, value) {
-  if (name2.toLowerCase().search("flag") >= 0) {
-    return "skip";
-  }
-  if (typeof value === "string") {
-    return validateCSSColor(value.toLowerCase().trim()) ? "color" : "string";
-  } else if (typeof value === "number") {
-    return "number";
-  } else if (typeof value === "boolean") {
-    return "boolean";
-  } else if (value instanceof CSSFont) {
-    return "font";
-  } else if (typeof value === "object" && value !== null) {
-    return "record";
-  }
-  return "skip";
-}
-function varFits(kind, value) {
-  const other = themeItemKind("", value);
-  if (kind === "color" || kind === "string") {
-    return other === "color" || other === "string";
-  }
-  return other === kind;
-}
-function groupThemeCategories(rec, categoryMap) {
-  const categories = {};
-  for (const k of Object.keys(rec)) {
-    const mapped = categoryMap[k];
-    let catkey;
-    if (typeof mapped === "string") {
-      catkey = { category: mapped, help: "", key: k };
-    } else if (mapped) {
-      catkey = { ...mapped, key: mapped.key || k };
-    } else {
-      catkey = { category: k, help: "", key: k };
-    }
-    if (!(catkey.category in categories)) {
-      categories[catkey.category] = [];
-    }
-    categories[catkey.category].push(catkey);
-  }
-  return Object.keys(categories).sort(strcmp).map((category) => ({
-    category,
-    keys: categories[category].sort((a2, b) => strcmp(a2.key, b.key))
-  }));
-}
-function resolveRecord(path) {
-  let rec = theme;
-  for (const key of path) {
-    rec = rec[key];
-  }
-  return rec;
-}
-function findRecord(path) {
-  let rec = theme;
-  for (const key of path) {
-    if (typeof rec !== "object" || rec === null) {
-      return void 0;
-    }
-    rec = rec[key];
-  }
-  return typeof rec === "object" && rec !== null ? rec : void 0;
-}
-var ThemeEditor = class extends Container3 {
-  categoryMap;
-  _refreshes = [];
-  _refreshing = false;
-  _varTheme;
-  _vars = {};
-  _varComments = {};
-  //live path of a bound slot, as pathKey, to the variable it reads
-  _bindings = /* @__PURE__ */ new Map();
-  //live path of an authored slot, as pathKey, to the path it is written at
-  _authored = /* @__PURE__ */ new Map();
-  //the row whose gesture is writing, so a broadcast does not refresh it
-  _origin;
-  _varsPanel;
-  constructor() {
-    super();
-    this.categoryMap = {};
-  }
+init_ui_menu();
+init_theme_schema();
+var NodeGraphView = class extends Container3 {
+  delegate = new ToolOpDelegate();
+  /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
+  onOpenDefinition;
+  graphPath = "";
+  rootGraph = void 0;
+  /** GroupNode ids from the root graph down to the graph on screen. */
+  descent = [];
+  selection = /* @__PURE__ */ new Set();
+  frames = /* @__PURE__ */ new Map();
+  panzoom;
+  links;
+  linkDrag;
+  _crumbs;
+  _pendingView = void 0;
   static define() {
     return {
-      tagname: "theme-editor-x",
-      style: "theme-editor"
-    };
-  }
-  init() {
-    super.init();
-    this.build();
-  }
-  addEventListener(type, listener, options) {
-    super.addEventListener(type, listener, options);
-  }
-  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
-  doFolder(catkey, obj, container = this, panel, path, bindable = true) {
-    const key = catkey.key;
-    if (!path) {
-      path = [key];
-    }
-    if (!panel) {
-      panel = container.panel(key, void 0, void 0, catkey.help);
-      panel.style.marginLeft = "15px";
-    }
-    this.addPropMenu(panel, catkey, obj, container, path);
-    const row = panel.row();
-    const col1 = row.col();
-    const col2 = row.col();
-    let placed = 0;
-    for (const k of Object.keys(obj)) {
-      const v = obj[k];
-      const kind = themeItemKind(k, v);
-      if (kind === "skip") {
-        continue;
-      }
-      if (kind === "record") {
-        this.doFolder(
-          { ...catkey, key: k },
-          v,
-          panel,
-          void 0,
-          [...path, k],
-          bindable && !(v instanceof ThemeScrollBars)
-        );
-      } else {
-        const col = placed % 2 === 0 ? col1 : col2;
-        const livePath = [...path, k];
-        this.valueRow(col, k, this.slotFor(livePath, key, k), kind);
-        if (bindable && this._varTheme) {
-          this.bindMenu(col, livePath, kind);
-        }
-      }
-      placed++;
-    }
-    if (placed === 0) {
-      panel.remove();
-    } else {
-      panel.closed = true;
-    }
-  }
-  /** Adds the "+" menu that creates a new property in `obj`. */
-  addPropMenu(panel, catkey, obj, container, path) {
-    const row = panel.row();
-    const textbox = row.textbox(void 0, "");
-    const add = (value) => {
-      const propkey = (textbox.text || "").trim();
-      if (!propkey) {
-        console.error("Cannot have empty theme property name");
-        return;
-      }
-      obj[propkey] = value;
-      this.rebuildFolder(panel, catkey, obj, container, path);
-      this.notify(catkey.key, propkey, obj);
-    };
-    row.menu("+", [
-      { name: "Float", callback: () => add(0) },
-      { name: "Color", callback: () => add("grey") },
-      { name: "Subfolder", callback: () => add({ test: 0 }) },
-      { name: "Font", callback: () => add(new CSSFont()) },
-      { name: "String", callback: () => add("") }
-    ]);
-  }
-  /** Rebuilds `panel` in place, preserving which of its sub-panels are open. */
-  rebuildFolder(panel, catkey, obj, container, path) {
-    const uidata = saveUIData(panel, "theme-panel");
-    panel.clear();
-    this.doFolder(catkey, obj, container, panel, path);
-    loadUIData(panel, uidata);
-    panel.flushUpdate();
-    panel.flushSetCSS();
-  }
-  /** Repaints the screen against the edited theme and reports the change. */
-  notify(category, key, record, varKey) {
-    flagThemeUpdate();
-    this.dispatchEvent(new ThemeChangeEvent(category, key, record, varKey));
-    const on_change = this.on_change;
-    if (on_change) {
-      on_change(category, key, record);
-    }
-    if (this.ctx) {
-      this.ctx.screen.completeSetCSS();
-      this.ctx.screen.completeUpdate();
-    }
-  }
-  /**
-   * Hands the editor the untransformed theme the live one was instanced from,
-   * plus its variables. Both are deep-copied, so editing here never reaches the
-   * caller's module state. Without this the widget edits the live theme only.
-   * Passing the theme's own source brings each variable's comment across.
-   */
-  setVarTheme(varTheme, vars, existingThemeFile) {
-    this._varTheme = copyVarItem(varTheme);
-    this._vars = {};
-    for (const key of Object.keys(vars)) {
-      this._vars[key] = copyThemeItem(vars[key]);
-    }
-    this._varComments = existingThemeFile ? parseVarComments(existingThemeFile) : {};
-    this.rebuildBindings();
-    if (this._init_done) {
-      this.build();
-    }
-  }
-  /** The editor's own copy of the authored theme, or undefined in plain mode. */
-  getVarTheme() {
-    return this._varTheme ? copyVarItem(this._varTheme) : void 0;
-  }
-  /** The editor's own copy of the variable values. */
-  getThemeVars() {
-    const ret = {};
-    for (const key of Object.keys(this._vars)) {
-      ret[key] = copyThemeItem(this._vars[key]);
-    }
-    return ret;
-  }
-  /**
-   * Writes the edited theme back out as TypeScript source. The editor owns the
-   * authored record, so an edit at a bound slot is written as the variable it
-   * came from rather than dropped. Comments typed in the Variables panel win
-   * over the ones read out of `existingThemeFile`.
-   */
-  createFile({
-    existingThemeFile,
-    importPath,
-    onAssemble
-  } = {}) {
-    const varTheme = this.getVarTheme();
-    if (!varTheme) {
-      throw new Error("the theme editor has no authored theme to write");
-    }
-    return createThemeFile({
-      theme: varTheme,
-      vars: this.getThemeVars(),
-      varComments: {
-        ...existingThemeFile ? parseVarComments(existingThemeFile) : {},
-        ...this._varComments
-      },
-      importPath,
-      onAssemble
-    });
-  }
-  /** Re-reads which live slots are bound to which variable, and where each was authored. */
-  rebuildBindings() {
-    this._bindings = /* @__PURE__ */ new Map();
-    this._authored = /* @__PURE__ */ new Map();
-    if (!this._varTheme) {
-      return;
-    }
-    const walk = (rec, path) => {
-      for (const key in rec) {
-        const here = [...path, key];
-        this._authored.set(pathKey(toLivePath(here)), here);
-        const v = rec[key];
-        if (isPlainRecord(v)) {
-          walk(v, here);
-        }
+      tagname: "nodegraphview-x",
+      style: "nodegraphview",
+      theme: {
+        "background-color": t.color,
+        BoxSelectBorder: t.color,
+        BoxSelectBG: t.color,
+        // Read by the editor shell for the group designer's missing-entry flag.
+        ErrorColor: t.color
       }
     };
-    walk(this._varTheme, []);
-    for (const varKey of Object.keys(this._vars)) {
-      for (const slot of varSlots(this._varTheme, varKey)) {
-        const live = pathKey(slot.livePath);
-        if (this._bindings.has(live)) {
-          console.warn(
-            `theme slot ${live} is bound twice, to "${this._bindings.get(live)}" and "${varKey}"`
-          );
-          continue;
-        }
-        this._bindings.set(live, varKey);
-      }
-    }
-  }
-  /**
-   * Where a live slot is written in the authored theme. A slot the theme file
-   * never mentioned is authored at its live path, so nothing else of the
-   * library's defaults is exported alongside it.
-   */
-  varPathFor(livePath) {
-    return this._authored.get(pathKey(livePath)) ?? [...livePath];
-  }
-  /**
-   * Points the live slot at `livePath` at `varKey` and takes the variable's
-   * value. Creating the authored entry seeds any sub-record it has to make from
-   * the live values, because `setTheme` assigns one by reference.
-   */
-  bindLiveSlot(livePath, varKey) {
-    if (!this._varTheme || !(varKey in this._vars)) {
-      return;
-    }
-    bindSlot(this._varTheme, this.varPathFor(livePath), varKey, theme);
-    const parent = findRecord(livePath.slice(0, -1));
-    if (parent) {
-      parent[livePath[livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
-    }
-    this.rebuildBindings();
-    this.rebuild();
-    this.notify(livePath[0], livePath[livePath.length - 1], void 0, varKey);
-  }
-  /** Writes the variable's current value into the authored slot and stops reading it. */
-  detachLiveSlot(livePath) {
-    const varPath = this._authored.get(pathKey(livePath));
-    if (!this._varTheme || !varPath) {
-      return;
-    }
-    unbindSlot(this._varTheme, this._vars, varPath);
-    this.rebuildBindings();
-    this.rebuild();
-    this.notify(livePath[0], livePath[livePath.length - 1]);
-  }
-  /** Adds a variable, returning the name it was stored under. */
-  addThemeVar(name2, value) {
-    const key = addVar(this._vars, name2, copyThemeItem(value));
-    this.rebuild();
-    this.notify("themeVars", key, void 0, key);
-    return key;
-  }
-  /**
-   * Removes a variable, inlining its current value at every slot that read it.
-   * Nothing on screen changes.
-   */
-  deleteThemeVar(key) {
-    if (!this._varTheme) {
-      return;
-    }
-    deleteVar(this._varTheme, this._vars, key);
-    delete this._varComments[key];
-    this.rebuildBindings();
-    this.rebuild();
-    this.notify("themeVars", key);
-  }
-  /** Renames a variable, rewriting every slot that reads it. */
-  renameThemeVar(from, to) {
-    if (!this._varTheme) {
-      return from;
-    }
-    const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
-    this.rebuildBindings();
-    this.rebuild();
-    this.notify("themeVars", key, void 0, key);
-    return key;
-  }
-  /** The comment a variable is exported with. */
-  setVarComment(key, comment) {
-    this._varComments[key] = comment;
-  }
-  /**
-   * Makes a variable out of a slot's current value and binds the slot to it.
-   * The name is taken from the slot and deduped; the Variables panel opens so
-   * it can be renamed there.
-   */
-  varFromSlot(livePath) {
-    if (!this._varTheme) {
-      return void 0;
-    }
-    const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]];
-    const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
-    let name2 = stem;
-    for (let i = 2; name2 in this._vars; i++) {
-      name2 = `${stem}_${i}`;
-    }
-    addVar(this._vars, name2, copyThemeItem(value));
-    this.bindLiveSlot(livePath, name2);
-    if (this._varsPanel && !this._varsPanel.isDead()) {
-      this._varsPanel.closed = false;
-    }
-    return name2;
-  }
-  /** The menu binding one theme slot to a variable, detaching it, or making one. */
-  bindMenu(col, livePath, kind) {
-    const bound = this._bindings.get(pathKey(livePath));
-    const dbox = col.menu(bound !== void 0 ? `= ${bound}` : "\u2026", []);
-    dbox.description = bound !== void 0 ? `This value follows the theme variable "${bound}"` : "Read this value from a theme variable";
-    dbox.template = () => this.bindTemplate(livePath, kind);
-  }
-  bindTemplate(livePath, kind) {
-    const entries = [];
-    const bound = this._bindings.get(pathKey(livePath));
-    for (const key of Object.keys(this._vars)) {
-      if (key === bound || !varFits(kind, this._vars[key])) {
-        continue;
-      }
-      entries.push({
-        name: key,
-        tooltip: `Take this value from "${key}", and follow it from now on`,
-        callback: () => this.bindLiveSlot(livePath, key)
-      });
-    }
-    entries.push({
-      name: "New variable from this value",
-      tooltip: "Make a variable holding this value, and read it here",
-      callback: () => this.varFromSlot(livePath)
-    });
-    if (bound !== void 0) {
-      entries.push({
-        name: "Detach",
-        tooltip: `Keep the value "${bound}" has now, and stop following it`,
-        callback: () => this.detachLiveSlot(livePath)
-      });
-    }
-    return entries;
-  }
-  /** The panel listing every variable, above the theme's own categories. */
-  buildVarsPanel() {
-    const panel = this.panel(
-      "Variables",
-      "theme-variables",
-      void 0,
-      "Values shared by the theme slots bound to them"
-    );
-    this._varsPanel = panel;
-    for (const key of Object.keys(this._vars)) {
-      this.varRow(panel, key);
-    }
-    this.addVarMenu(panel);
-    panel.closed = true;
-  }
-  varRow(panel, key) {
-    const row = panel.row();
-    const name2 = row.textbox(void 0, key);
-    name2.width = VAR_NAME_WIDTH;
-    name2.description = "The name this variable is written under in the theme file";
-    name2.on_change = () => {
-      try {
-        this.renameThemeVar(key, name2.text);
-      } catch (e) {
-        console.error(e.message);
-        name2.text = key;
-      }
-    };
-    const slot = {
-      varKey: key,
-      get: () => this._vars[key],
-      set: (value) => this.writeVar(key, value, "themeVars", key)
-    };
-    const kind = themeItemKind(key, this._vars[key]);
-    const valueCol = row.col();
-    valueCol.style["width"] = `${VAR_VALUE_WIDTH}px`;
-    this.valueRow(valueCol, kind === "font" ? key : "", slot, kind);
-    const uses = this._varTheme ? varSlots(this._varTheme, key).length : 0;
-    row.label(uses === 1 ? "1 slot" : `${uses} slots`);
-    const comment = row.textbox(void 0, this._varComments[key] ?? "");
-    comment.width = VAR_COMMENT_WIDTH;
-    comment.description = "A note written above this variable in the exported theme file";
-    comment.on_change = () => this.setVarComment(key, comment.text);
-    const del = row.menu("\xD7", [
-      {
-        name: "Delete",
-        tooltip: `Write the value "${key}" has now into all ${uses} slots, and remove it`,
-        callback: () => this.deleteThemeVar(key)
-      }
-    ]);
-    del.description = `Remove "${key}"`;
-  }
-  /** Adds the "+" menu that creates a variable under the name typed beside it. */
-  addVarMenu(panel) {
-    const row = panel.row();
-    const textbox = row.textbox(void 0, "");
-    textbox.width = VAR_NAME_WIDTH;
-    textbox.description = "A name for the variable the menu beside this adds";
-    const add = (value) => {
-      try {
-        this.addThemeVar(textbox.text || "", value);
-      } catch (e) {
-        console.error(e.message);
-      }
-    };
-    const menu = row.menu("+", [
-      { name: "Float", tooltip: "Add a number variable", callback: () => add(0) },
-      { name: "Color", tooltip: "Add a colour variable", callback: () => add("grey") },
-      { name: "String", tooltip: "Add a text variable", callback: () => add("") },
-      { name: "Boolean", tooltip: "Add an on-or-off variable", callback: () => add(false) },
-      { name: "Font", tooltip: "Add a font variable", callback: () => add(new CSSFont()) }
-    ]);
-    menu.description = "Add a variable of the kind chosen here";
-  }
-  /** Rebuilds every row, once the widget is built at all. */
-  rebuild() {
-    if (this._init_done) {
-      this.build();
-    }
-  }
-  /**
-   * The slot editing the live theme value at `livePath`. A bound slot writes its
-   * variable instead, so every other slot on that variable follows. `category`
-   * and `key` name the change the write reports.
-   */
-  slotFor(livePath, category, key) {
-    const parent = livePath.slice(0, -1);
-    const leaf = livePath[livePath.length - 1];
-    const varKey = this._bindings.get(pathKey(livePath));
-    if (varKey !== void 0) {
-      return {
-        varKey,
-        get: () => resolveRecord(parent)[leaf],
-        set: (value) => this.writeVar(varKey, value, category, key)
-      };
-    }
-    return {
-      get: () => resolveRecord(parent)[leaf],
-      set: (value) => {
-        resolveRecord(parent)[leaf] = value;
-        this.notify(category, key);
-      }
-    };
-  }
-  /**
-   * Writes a variable and fans its value out to every slot reading it, one
-   * independent copy each. Sharing a `CSSFont` between slots would work until a
-   * detach, after which edits would bleed between them.
-   */
-  writeVar(varKey, value, category, key) {
-    if (!this._varTheme || !(varKey in this._vars)) {
-      return;
-    }
-    this._vars[varKey] = copyThemeItem(value);
-    for (const slot of varSlots(this._varTheme, varKey)) {
-      const parent = findRecord(slot.livePath.slice(0, -1));
-      if (parent) {
-        parent[slot.livePath[slot.livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
-      }
-    }
-    this.refreshVarRows(varKey, this._origin);
-    this.notify(category, key, void 0, varKey);
-  }
-  /**
-   * Writes through a slot, unless a refresh is in flight. Assigning a widget's
-   * value fires its own `on_change`, so a refresh that did not suppress the
-   * write would send it straight back to the slot it came from.
-   */
-  setSlot(slot, value, origin) {
-    if (this._refreshing) {
-      return;
-    }
-    const was = this._origin;
-    this._origin = origin;
-    try {
-      slot.set(value);
-    } finally {
-      this._origin = was;
-    }
-  }
-  /** Records a row's re-read, so another row writing the same value can trigger it. */
-  onRefresh(widget, slot, refresh) {
-    this._refreshes.push({ widget, slot, refresh });
-  }
-  /**
-   * Re-reads every row bound to `varKey`, dropping the rows a rebuild detached.
-   * The row that was edited is left alone, so a refresh cannot fight a gesture
-   * still in progress.
-   */
-  refreshVarRows(varKey, except) {
-    this._refreshes = this._refreshes.filter((entry) => !entry.widget.isDead());
-    const was = this._refreshing;
-    this._refreshing = true;
-    try {
-      for (const entry of this._refreshes) {
-        if (entry.slot.varKey === varKey && entry.widget !== except) {
-          entry.refresh();
-        }
-      }
-    } finally {
-      this._refreshing = was;
-    }
-  }
-  valueRow(col, key, slot, kind) {
-    switch (kind) {
-      case "color":
-        return this.colorRow(col, key, slot);
-      case "string":
-        return this.stringRow(col, key, slot);
-      case "number":
-        return this.numberRow(col, key, slot);
-      case "boolean":
-        return this.boolRow(col, key, slot);
-      case "font":
-        return this.fontPanel(col, key, slot);
-    }
-    return void 0;
-  }
-  colorRow(col, key, slot) {
-    const cw = col.colorbutton(void 0);
-    const read = () => {
-      const css = String(slot.get() ?? "");
-      try {
-        cw.setRGBA(css2color2(css.toLowerCase().trim()));
-      } catch {
-        console.warn("Failed to set color " + key, css);
-      }
-    };
-    read();
-    cw.label = key;
-    cw.on_change = () => this.setSlot(slot, color2css3(cw.rgba), cw);
-    this.onRefresh(cw, slot, read);
-    return cw;
-  }
-  stringRow(col, key, slot) {
-    col.label(key);
-    const box = col.textbox();
-    box.text = String(slot.get() ?? "");
-    box.on_change = () => this.setSlot(slot, box.text, box);
-    this.onRefresh(box, slot, () => {
-      box.text = String(slot.get() ?? "");
-    });
-    return box;
-  }
-  numberRow(col, key, slot) {
-    const slider = col.slider(void 0, key, Number(slot.get() ?? 0), 0, 256, 0.01, false);
-    slider.baseUnit = slider.displayUnit = "none";
-    slider.on_change = () => this.setSlot(slot, slider.value, slider);
-    this.onRefresh(slider, slot, () => {
-      slider.value = Number(slot.get() ?? 0);
-    });
-    return slider;
-  }
-  boolRow(col, key, slot) {
-    const check = col.check(void 0, key);
-    check.value = !!slot.get();
-    check.on_change = () => this.setSlot(slot, !!check.value, check);
-    this.onRefresh(check, slot, () => {
-      check.value = !!slot.get();
-    });
-    return check;
-  }
-  /**
-   * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
-   * whole new font, because a slot bound to a variable holds one independent
-   * copy per referencing theme key and mutating this one would leave the rest
-   * stale.
-   */
-  fontPanel(col, key, slot) {
-    const panel = col.panel(key);
-    const font = () => slot.get() ?? new CSSFont();
-    const edit = (origin, apply) => {
-      const next = font().copy();
-      apply(next);
-      this.setSlot(slot, next, origin);
-    };
-    for (const field of FONT_FIELDS) {
-      panel.label(field);
-      const tbox = panel.textbox(void 0, font()[field]);
-      tbox.width = tbox.getDefault("width");
-      tbox.on_change = () => edit(tbox, (next) => {
-        next[field] = tbox.text;
-      });
-      this.onRefresh(tbox, slot, () => {
-        tbox.text = font()[field];
-      });
-    }
-    const cw = panel.colorbutton(void 0);
-    cw.label = "color";
-    cw.setRGBA(css2color2(font().color));
-    cw.on_change = () => edit(cw, (next) => {
-      next.color = color2css3(cw.rgba);
-    });
-    this.onRefresh(cw, slot, () => cw.setRGBA(css2color2(font().color)));
-    const slider = panel.slider(void 0, "size", font().size);
-    slider.setAttribute("min", "1");
-    slider.setAttribute("max", "100");
-    slider.baseUnit = slider.displayUnit = "none";
-    slider.on_change = () => edit(slider, (next) => {
-      next.size = slider.value;
-    });
-    this.onRefresh(slider, slot, () => {
-      slider.value = font().size;
-    });
-    panel.closed = true;
-    return panel;
-  }
-  build() {
-    const uidata = saveUIData(this, "theme");
-    this.clear();
-    this._refreshes = [];
-    this._varsPanel = void 0;
-    if (this._varTheme) {
-      this.buildVarsPanel();
-    }
-    for (const { category, keys: keys2 } of groupThemeCategories(theme, this.categoryMap)) {
-      const panel = keys2.length > 1 ? this.panel(category) : void 0;
-      for (const catkey of keys2) {
-        const v = theme[catkey.key];
-        if (typeof v === "object" && v !== null) {
-          this.doFolder(catkey, v, panel ?? this);
-        }
-      }
-      if (panel) {
-        panel.closed = true;
-      }
-    }
-    loadUIData(this, uidata);
-    for (let i = 0; i < 2; i++) {
-      this.flushSetCSS();
-      this.flushUpdate();
-    }
-    if (this.ctx) {
-      window.setTimeout(() => {
-        this.ctx.screen.completeSetCSS();
-      }, 100);
-    }
-  }
-};
-UIBase2.internalRegister(ThemeEditor);
-
-// scripts/util/math.ts
-init_math();
-
-// scripts/util/ScreenOverdraw.ts
-init_util2();
-init_ui_base();
-var SVG_URL = "http://www.w3.org/2000/svg";
-var Vector24 = Vector2;
-var CanvasOverdraw = class extends UIBase2 {
-  canvas;
-  g;
-  screen;
-  shapes;
-  otherChildren;
-  font;
-  svg;
-  constructor() {
-    super();
-    this.canvas = document.createElement("canvas");
-    this.shadow.appendChild(this.canvas);
-    this.g = this.canvas.getContext("2d");
-    this.screen = void 0;
-    this.shapes = [];
-    this.otherChildren = [];
-    this.font = void 0;
-    const style = document.createElement("style");
-    style.textContent = `
-      .overdrawx {
-        pointer-events : none;
-      }
-    `;
-    this.shadow.appendChild(style);
-  }
-  static define() {
-    return {
-      tagname: "screen-overdraw-canvas-x"
-    };
-  }
-  startNode(node, screen) {
-    if (screen) {
-      this.screen = screen;
-      this.ctx = screen.ctx;
-    }
-    if (!this.parentNode) {
-      node.appendChild(this);
-    }
-    this.style.display = "float";
-    this.style.zIndex = "" + this.zindex_base;
-    this.style.position = "absolute";
-    this.style.left = "0px";
-    this.style.top = "0px";
-    this.style.width = "100%";
-    this.style.height = "100%";
-    this.style.pointerEvents = "none";
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style.width = "100%";
-    this.svg.style.height = "100%";
-    this.svg.style.pointerEvents = "none";
-    this.shadow.appendChild(this.svg);
-  }
-  start(screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-    screen.parentNode.appendChild(this);
-    this.style.display = "float";
-    this.style.zIndex = "" + this.zindex_base;
-    this.style.position = "absolute";
-    this.style.left = "0px";
-    this.style.top = "0px";
-    this.style.width = screen.size[0] + "px";
-    this.style.height = screen.size[1] + "px";
-    this.style.pointerEvents = "none";
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style.width = "100%";
-    this.svg.style.height = "100%";
-    this.shadow.appendChild(this.svg);
-  }
-};
-var Overdraw = class extends UIBase2 {
-  visibleToPick;
-  screen;
-  shapes;
-  otherChildren;
-  font;
-  zindex_base;
-  svg;
-  constructor() {
-    super();
-    this.visibleToPick = false;
-    this.screen = void 0;
-    this.shapes = [];
-    this.otherChildren = [];
-    this.font = void 0;
-    const style = document.createElement("style");
-    style.textContent = `
-      .overdrawx {
-        pointer-events : none;
-      }
-    `;
-    this.shadow.appendChild(style);
-    this.zindex_base = 1e3;
-  }
-  startNode(node, screen, cssPosition = "relative") {
-    if (screen) {
-      this.screen = screen;
-      this.ctx = screen.ctx;
-    }
-    if (!this.parentNode) {
-      node.appendChild(this);
-    }
-    this.style.zIndex = "" + this.zindex_base;
-    this.style.position = cssPosition;
-    this.style.margin = this.style.padding = "0px";
-    this.style.width = "100%";
-    this.style.height = "100%";
-    this.style.pointerEvents = "none";
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style.width = "100%";
-    this.svg.style.height = "100%";
-    this.svg.style.pointerEvents = "none";
-    this.shadow.appendChild(this.svg);
-  }
-  start(screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-    screen.parentNode.appendChild(this);
-    this.style.display = "float";
-    this.style.zIndex = "" + this.zindex_base;
-    this.style.position = "absolute";
-    this.style.left = "0px";
-    this.style.top = "0px";
-    this.style.width = screen.size[0] + "px";
-    this.style.height = screen.size[1] + "px";
-    this.style.pointerEvents = "none";
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style.width = "100%";
-    this.svg.style.height = "100%";
-    this.shadow.appendChild(this.svg);
-  }
-  clear() {
-    for (const child of list2(this.svg.childNodes)) {
-      child.remove();
-    }
-    for (const child of this.otherChildren) {
-      child.remove();
-    }
-    this.otherChildren.length = 0;
-  }
-  drawTextBubbles(texts, cos2, colors) {
-    const boxes = [];
-    const elems = [];
-    const cent = new Vector24();
-    for (let i = 0; i < texts.length; i++) {
-      const co = cos2[i];
-      const text2 = texts[i];
-      let color;
-      if (colors !== void 0) {
-        color = colors[i];
-      }
-      cent.add(co);
-      const box = this.text(texts[i], co[0], co[1], { color });
-      boxes.push(box);
-      const font = box.style["font"];
-      const pat = /[0-9]+px/;
-      const sizeMatch = font.match(pat);
-      let size;
-      if (sizeMatch === null) {
-        size = this.getDefault("DefaultText").size;
-      } else {
-        size = parsepx2(sizeMatch[0]);
-      }
-      const measureFn = measureTextBlock;
-      const tsize = measureFn(this, text2, void 0, void 0, size, font);
-      box.minsize = [
-        ~~tsize.width,
-        ~~tsize.height
-      ];
-      const pad = parsepx2(box.style["padding"]);
-      box.minsize[0] += pad * 2;
-      box.minsize[1] += pad * 2;
-      const x = parsepx2(box.style["left"]);
-      const y = parsepx2(box.style["top"]);
-      box.grads = new Array(4);
-      box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector24([x, y]);
-      box.setCSS = function() {
-        this.style["padding"] = "0px";
-        this.style["margin"] = "0px";
-        this.style["left"] = ~~this.params[0] + "px";
-        this.style["top"] = ~~this.params[1] + "px";
-        this.style["width"] = ~~this.params[2] + "px";
-        this.style["height"] = ~~this.params[3] + "px";
-      };
-      box.setCSS();
-      elems.push(box);
-    }
-    if (boxes.length === 0) {
-      return;
-    }
-    cent.mulScalar(1 / boxes.length);
-    function error2() {
-      const s1 = [0, 0];
-      const s2 = [0, 0];
-      let ret = 0;
-      for (const box1 of boxes) {
-        for (const box2 of boxes) {
-          if (box2 === box1) {
-            continue;
-          }
-          s1[0] = box1.params[2];
-          s1[1] = box1.params[3];
-          s2[0] = box2.params[2];
-          s2[1] = box2.params[3];
-          const overlap = aabb_overlap_area(
-            new Vector24(box1.params),
-            new Vector24(s1),
-            new Vector24(box2.params),
-            new Vector24(s2)
-          );
-          ret += overlap;
-        }
-        ret += box1.startpos.vectorDistance(box1.params) * 0.25;
-      }
-      return ret;
-    }
-    function solve() {
-      let r1 = error2();
-      if (r1 === 0) {
-        return;
-      }
-      const df = 1e-4;
-      let totgs = 0;
-      for (const box of boxes) {
-        for (let i = 0; i < box.params.length; i++) {
-          const orig = box.params[i];
-          box.params[i] += df;
-          const r2 = error2();
-          box.params[i] = orig;
-          box.grads[i] = (r2 - r1) / df;
-          totgs += box.grads[i] ** 2;
-        }
-      }
-      if (totgs === 0) {
-        return;
-      }
-      r1 /= totgs;
-      const k = 0.4;
-      for (const box of boxes) {
-        for (let i = 0; i < box.params.length; i++) {
-          box.params[i] += -r1 * box.grads[i] * k;
-        }
-        box.params[2] = Math.max(box.params[2], box.minsize[0]);
-        box.params[3] = Math.max(box.params[3], box.minsize[1]);
-        box.setCSS();
-      }
-    }
-    for (let i = 0; i < 15; i++) {
-      solve();
-    }
-    for (const box of boxes) {
-      elems.push(this.line(box.startpos, box.params));
-    }
-    return elems;
-  }
-  text(text2, x, y, args = {}) {
-    const mergedArgs = Object.assign(
-      {},
-      args
-    );
-    if (mergedArgs.font === void 0) {
-      if (this.font !== void 0) mergedArgs.font = this.font;
-      else mergedArgs.font = this.getDefault("DefaultText").genCSS();
-    }
-    if (!mergedArgs["background-color"]) {
-      mergedArgs["background-color"] = "rgba(75, 75, 75, 0.75)";
-    }
-    mergedArgs.color = mergedArgs.color ? mergedArgs.color : "white";
-    if (typeof mergedArgs.color === "object") {
-      mergedArgs.color = color2css3(mergedArgs.color);
-    }
-    mergedArgs["padding"] = mergedArgs["padding"] === void 0 ? "5px" : mergedArgs["padding"];
-    mergedArgs["border-color"] = mergedArgs["border-color"] ? mergedArgs["border-color"] : "grey";
-    mergedArgs["border-radius"] = mergedArgs["border-radius"] ? mergedArgs["border-radius"] : "25px";
-    mergedArgs["border-width"] = mergedArgs["border-width"] !== void 0 ? mergedArgs["border-width"] : "2px";
-    if (typeof mergedArgs["border-width"] === "number") {
-      mergedArgs["border-width"] = "" + mergedArgs["border-width"] + "px";
-    }
-    if (typeof mergedArgs["border-radius"] === "number") {
-      mergedArgs["border-radius"] = "" + mergedArgs["border-radius"] + "px";
-    }
-    const box = document.createElement("div");
-    box.setAttribute("class", "overdrawx");
-    box.style["position"] = "fixed";
-    box.style["width"] = "min-content";
-    box.style["height"] = "min-content";
-    box.style["borderWidth"] = mergedArgs["border-width"];
-    box.style["borderRadius"] = "25px";
-    box.style["pointerEvents"] = "none";
-    box.style["zIndex"] = "" + (this.zindex_base + 1);
-    box.style["backgroundColor"] = mergedArgs["background-color"];
-    box.style["padding"] = mergedArgs["padding"];
-    box.style["left"] = x + "px";
-    box.style["top"] = y + "px";
-    box.style["display"] = "flex";
-    box.style["justifyContent"] = "center";
-    box.style["alignItems"] = "center";
-    box.innerText = text2;
-    box.style["font"] = mergedArgs.font;
-    box.style["color"] = mergedArgs.color;
-    this.otherChildren.push(box);
-    this.shadow.appendChild(box);
-    return box;
-  }
-  circle(p, r, stroke = "black", fill = "none") {
-    const circle = document.createElementNS(SVG_URL, "circle");
-    circle.setAttribute("cx", "" + p[0]);
-    circle.setAttribute("cy", "" + p[1]);
-    circle.setAttribute("r", "" + r);
-    if (fill) {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
-    } else {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
-    }
-    this.svg.appendChild(circle);
-    return circle;
-  }
-  line(v1, v2, color = "black") {
-    const line = document.createElementNS(SVG_URL, "line");
-    line.setAttribute("x1", "" + v1[0]);
-    line.setAttribute("y1", "" + v1[1]);
-    line.setAttribute("x2", "" + v2[0]);
-    line.setAttribute("y2", "" + v2[1]);
-    line.setAttribute("style", `stroke:${color};stroke-width:2`);
-    this.svg.appendChild(line);
-    return line;
-  }
-  rect(p, size, color = "black") {
-    const line = document.createElementNS(SVG_URL, "rect");
-    line.setAttribute("x", "" + p[0]);
-    line.setAttribute("y", "" + p[1]);
-    line.setAttribute("width", "" + size[0]);
-    line.setAttribute("height", "" + size[1]);
-    line.setAttribute("style", `fill:${color};stroke-width:2`);
-    line.setColor = (color2) => {
-      line.setAttribute("style", `fill:${color2};stroke-width:2`);
-    };
-    this.svg.appendChild(line);
-    return line;
-  }
-  end() {
-    this.clear();
-    this.remove();
-  }
-  static define() {
-    return {
-      tagname: "overdraw-x",
-      style: "overdraw"
-    };
-  }
-};
-UIBase2.internalRegister(Overdraw);
-
-// scripts/widgets/ui_treeview.ts
-init_ui_base();
-init_math();
-var TreeItem = class extends Container3 {
-  treeParent;
-  treeChildren;
-  treeView;
-  treeDepth;
-  header;
-  _icon1;
-  _icon2;
-  opened;
-  _label;
-  _labelText;
-  constructor() {
-    super();
-    this.treeParent = void 0;
-    this.treeChildren = [];
-    this.treeView = void 0;
-    this.treeDepth = 0;
-    this.header = this.row();
-    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
-    this._icon1.iconsheet = 0;
-    this._icon1.drawButtonBG = false;
-    this._icon2 = void 0;
-    this._icon1.onclick = () => {
-      if (this.opened) {
-        this.close();
-      } else {
-        this.open();
-      }
-    };
-    this.opened = true;
-    this._label = this.header.label("unlabeled");
-    this._labelText = "unlabeled";
-  }
-  set icon(id) {
-    if (this._icon2) {
-      this._icon2 = id;
-    } else {
-      this._icon2 = UIBase2.createElement("icon-label-x");
-      this._icon2.icon = id;
-      this._icon2.iconsheet = 0;
-      this.header.insert(1, this._icon2);
-    }
-  }
-  get icon() {
-    if (this._icon2) return this._icon2.icon;
-    else return -1;
-  }
-  open() {
-    this._icon1.icon = Icons.TREE_COLLAPSE;
-    this.opened = true;
-    this.treeView._open(this);
-  }
-  close() {
-    this._icon1.icon = Icons.TREE_EXPAND;
-    this.opened = false;
-    this.treeView._close(this);
-  }
-  set text(b) {
-    if (typeof b === "string") {
-      this._label.text = b;
-      this._labelText = b;
-    } else if (b instanceof HTMLElement) {
-      this._label.remove();
-      this.header.add(b);
-      this._label = b;
-      this._labelText = b;
-    }
-  }
-  get text() {
-    return this._labelText;
-  }
-  item(name2, args = {}) {
-    args.treeParent = this;
-    return this.parentWidget.item(name2, args);
-  }
-  init() {
-    super.init();
-  }
-  static define() {
-    return {
-      tagname: "tree-item-x",
-      style: "treeview"
-    };
-  }
-};
-UIBase2.internalRegister(TreeItem);
-var TreeView = class extends Container3 {
-  items;
-  strokes;
-  overdraw;
-  constructor() {
-    super();
-    this.items = [];
-    this.strokes = [];
   }
   init() {
     super.init();
     this.style.display = "flex";
     this.style.flexDirection = "column";
-    this.overdraw = UIBase2.createElement("overdraw-x");
-    console.log(this.overdraw.startNode);
-    this.overdraw.startNode(this);
-    this.style.margin = this.style.padding = "0px";
-    this.updateOverdraw();
-  }
-  _forAllChildren(item, cb) {
-    const visit = (n) => {
-      cb(n);
-      for (const c of n.treeChildren) {
-        visit(c);
-      }
-    };
-    for (const c of item.treeChildren) {
-      visit(c);
+    this.style.width = "100%";
+    this.style.height = "100%";
+    this._crumbs = document.createElement("div");
+    this._crumbs.style.cssText = "display: flex; gap: 4px; padding: 2px; align-items: center;";
+    this.shadow.appendChild(this._crumbs);
+    this.panzoom = UIBase2.createElement("panzoom-x");
+    this.panzoom.parentWidget = this;
+    this.shadow.appendChild(this.panzoom);
+    this.panzoom.ctx = this.ctx;
+    this.panzoom._init();
+    this.panzoom.style.flexGrow = "1";
+    this.panzoom.style.minHeight = "0";
+    this.links = UIBase2.createElement("nodelinkcanvas-x");
+    this.links.ctx = this.ctx;
+    this.panzoom.addUnderlay(this.links);
+    this.links._init();
+    this.panzoom.addEventListener("transform", () => this._redrawLinks());
+    this.panzoom.addEventListener("pointerdown", (e) => this._boxDown(e));
+    this.linkDrag = new LinkDrag(this);
+    if (this._pendingView !== void 0) {
+      const v = this._pendingView;
+      this._pendingView = void 0;
+      this.descent = [...v.descent];
+      this.panzoom.setTransform(v.zoom, v.pan);
     }
-  }
-  _open(item) {
-    this._forAllChildren(item, (c) => {
-      if (c.opened) {
-        c.unhide();
-      }
-    });
-    this._makeStrokes();
-  }
-  _close(item) {
-    this._forAllChildren(item, (c) => {
-      c.hide();
-    });
-    this._makeStrokes();
-  }
-  _makeStrokes() {
-    if (!this.overdraw) {
-      return;
-    }
-    for (const elem of this.strokes) {
-      elem.remove();
-    }
-    this.strokes.length = 0;
-    const hidden = (item) => {
-      return item.hidden;
-    };
-    const items = this.items;
-    if (items.length == 0) {
-      return;
-    }
-    this.overdraw.clear();
-    const next = (i2) => {
-      i2++;
-      while (i2 < items.length && hidden(items[i2])) {
-        i2++;
-      }
-      return i2;
-    };
-    let i = 0;
-    if (hidden(items[i])) i = next(i);
-    const origin = this.overdraw.getBoundingClientRect();
-    const overdraw = this.overdraw;
-    const line = function(x1, y1, x2, y2) {
-      const ox = origin.x;
-      const oy = origin.y;
-      x1 -= ox;
-      y1 -= oy;
-      x2 -= ox;
-      y2 -= oy;
-      overdraw.line([x1, y1], [x2, y2]);
-    };
-    console.log("making lines", i);
-    const indent = this.getDefault("itemIndent");
-    const rowh = this.getDefault("rowHeight");
-    const getx = (depth) => {
-      return (depth + 2.2) * indent + origin.x;
-    };
-    this.overdraw.style.zIndex = "0";
-    for (; i < items.length; i = next(i)) {
-      const item = this.items[i];
-      const item2idx = next(i);
-      const item2 = item2idx < items.length ? items[item2idx] : void 0;
-      const r = item._icon1.getBoundingClientRect();
-      if (!r) continue;
-      const x1 = getx(item.treeDepth);
-      const y1 = origin.y + (i + 1) * rowh - rowh * 0.25;
-      if (item2 && item2.treeDepth > item.treeDepth) {
-        const y2 = y1 + rowh * 0.75;
-        line(x1, y1, x1, y2);
-        line(x1, y2, getx(item2.treeDepth) - 3, y2);
-      } else if (item2?.treeDepth === item.treeDepth) {
-        line(x1, y1, x1, y1 + rowh * 0.5);
-      }
-    }
-  }
-  updateOverdraw() {
-    const mm = new MinMax(2);
-    let ok = false;
-    for (const item of this.items) {
-      for (const r2 of item.getClientRects()) {
-        mm.minmax([r2.x, r2.y]);
-        mm.minmax([r2.x + r2.width, r2.y + r2.height]);
-        ok = true;
-      }
-    }
-    if (!ok) {
-      return;
-    }
-    const r = this.getClientRects()[0];
-    if (!r) return;
-    const x = r.left;
-    const y = r.top;
-    const od = this.overdraw;
-    od.style.margin = "0px";
-    od.style.padding = "0px";
-    od.svg.style.margin = "0px";
-    od.style.position = UIBase2.PositionKey;
-    od.style.width = r.width - 1 + "px";
-    od.style.height = r.height - 1 + "px";
-    od.style.left = x + "px";
-    od.style.top = y + "px";
-  }
-  update() {
-    super.update();
-    this.updateOverdraw();
-  }
-  item(name2, args = {}) {
-    const ret = UIBase2.createElement("tree-item-x");
-    this.add(ret);
-    ret._init();
-    ret.text = name2;
-    if (args.icon) {
-      ret.icon = args.icon;
-    }
-    ret.treeParent = args.treeParent;
-    ret.treeView = this;
-    ret.style.maxHeight = this.getDefault("rowHeight") + "px";
-    if (ret.treeParent) {
-      ret.treeParent.treeChildren.push(ret);
-      ret.treeDepth = ret.treeParent.treeDepth + 1;
-    }
-    let p = ret.treeParent;
-    let i = 1;
-    while (p) {
-      p = p.treeParent;
-      i++;
-    }
-    ret.style.marginLeft = i * this.getDefault("itemIndent") + "px";
-    this.items.push(ret);
-    this.doOnce(() => {
-      this._makeStrokes();
-    });
-    return ret;
-  }
-  static define() {
-    return {
-      tagname: "tree-view-x",
-      style: "treeview"
-    };
-  }
-};
-UIBase2.internalRegister(TreeView);
-
-// scripts/widgets/dragbox.ts
-init_ui_base();
-init_simple_events();
-init_ui_theme();
-function startDrag(box) {
-  if (box._modal) {
-    popModalLight(box._modal);
-    box._modal = void 0;
-    return;
-  }
-  let first2 = true;
-  let lastx = 0;
-  let lasty = 0;
-  const handlers = {
-    on_mousemove(e) {
-      const x = e.x;
-      const y = e.y;
-      if (first2) {
-        lastx = x;
-        lasty = y;
-        first2 = false;
-        return;
-      }
-      const dx = x - lastx;
-      const dy = y - lasty;
-      let hx = parsepx2(box.style.left);
-      let hy = parsepx2(box.style.top);
-      hx += dx;
-      hy += dy;
-      console.log(hx, hy);
-      box.style.left = hx + "px";
-      box.style.top = hy + "px";
-      lastx = x;
-      lasty = y;
-    },
-    end() {
-      if (box._modal) {
-        popModalLight(box._modal);
-        box._modal = void 0;
-      }
-    },
-    on_mouseup(e) {
-      this.end();
-    },
-    on_keydown(e) {
-      switch (e.keyCode) {
-        case keymap["Escape"]:
-        case keymap["Return"]:
-          this.end();
-          break;
-      }
-    }
-  };
-  box._modal = pushModalLight(handlers);
-}
-var DragBox = class extends Container3 {
-  _done;
-  header;
-  contents;
-  _modal;
-  _onend;
-  onend;
-  constructor() {
-    super();
-    this._done = false;
-    this.header = UIBase2.createElement("rowframe-x");
-    this.contents = UIBase2.createElement("container-x");
-    this.header.style.borderRadius = "20px";
-    this.header.parentWidget = this;
-    this.contents.parentWidget = this;
-    this.shadow.appendChild(this.header);
-    this.shadow.appendChild(this.contents);
-  }
-  init() {
-    super.init();
-    const header = this.header;
-    header.ctx = this.ctx;
-    this.contents.ctx = this.ctx;
-    header._init();
-    this.contents._init();
-    this.style.minWidth = "350px";
-    header.style.height = "35px";
-    const icon = header.iconbutton(Icons.DELETE, "Hide", () => {
-      this.end();
-    });
-    icon.iconsheet = 0;
-    this.addEventListener(
-      "mousedown",
-      (e) => {
-        console.log("start drag");
-        startDrag(this);
-        e.preventDefault();
-      },
-      { capture: false }
-    );
-    header.background = this.getDefault("background-color");
+    this._rebuildCrumbs();
     this.setCSS();
+    this.syncGraph();
   }
-  add(...args) {
-    return this.contents.add(...args);
-  }
-  prepend(...args) {
-    return this.contents.prepend(...args);
-  }
-  appendChild(n) {
-    return this.contents.appendChild(n);
-  }
-  col(...args) {
-    return this.contents.col(...args);
-  }
-  row(...args) {
-    return this.contents.row(...args);
-  }
-  strip(...args) {
-    return this.contents.strip(...args);
-  }
-  button(...args) {
-    return this.contents.button(...args);
-  }
-  iconbutton(...args) {
-    return this.contents.iconbutton(...args);
-  }
-  iconcheck(...args) {
-    return this.contents.iconcheck(...args);
-  }
-  tool(...args) {
-    return this.contents.tool(...args);
-  }
-  menu(...args) {
-    return this.contents.menu(...args);
-  }
-  prop(...args) {
-    return this.contents.prop(...args);
-  }
-  listenum(...args) {
-    return this.contents.listenum(...args);
-  }
-  check(...args) {
-    return this.contents.check(...args);
-  }
-  iconenum(...args) {
-    return this.contents.iconenum(...args);
-  }
-  slider(...args) {
-    return this.contents.slider(...args);
-  }
-  simpleslider(...args) {
-    return this.contents.simpleslider(...args);
-  }
-  curve(...args) {
-    return this.contents.curve(...args);
-  }
-  textbox(...args) {
-    return this.contents.textbox(...args);
-  }
-  textarea(...args) {
-    return this.contents.textarea(...args);
-  }
-  viewer(...args) {
-    return this.contents.viewer(...args);
-  }
-  panel(...args) {
-    return this.contents.panel(...args);
-  }
-  tabs(...args) {
-    return this.contents.tabs(...args);
-  }
-  table(...args) {
-    return this.contents.table(...args);
-  }
-  end() {
-    if (this._done) {
-      return;
-    }
-    this.remove();
-    if (this._onend) {
-      this._onend();
-    }
-    if (this.onend) {
-      this.onend();
-    }
-  }
+  /** Applies the themed canvas background; a live theme edit re-runs it. */
   setCSS() {
     super.setCSS();
-    this.background = this.getDefault("background-color");
+    this.style.backgroundColor = this.getDefault("background-color");
   }
-  static define() {
+  /** Points the view at a graph; graphPath is the datapath edits dispatch against. */
+  setGraph(graph, graphPath) {
+    this.rootGraph = graph;
+    this.graphPath = graphPath;
+    this.descent = [];
+    this.selection.clear();
+    this._refresh();
+  }
+  /** The graph on screen: the root, or the descent tail's instance subgraph. */
+  get currentGraph() {
+    let g = this.rootGraph;
+    for (const nid of this.descent) {
+      const node = g?.nodeIdMap.get(nid);
+      if (!(node instanceof GroupNode)) {
+        return void 0;
+      }
+      g = node.subgraph;
+    }
+    return g;
+  }
+  /** The datapath of the graph on screen, descending .nodes[id].group per entry. */
+  get currentGraphPath() {
+    let path = this.graphPath;
+    for (const nid of this.descent) {
+      path += `.nodes[${JSON.stringify(nid)}].group`;
+    }
+    return path;
+  }
+  /** Descends into a group instance's subgraph (read-only for structural edits). */
+  descendInto(node) {
+    if (!(node instanceof GroupNode)) {
+      return;
+    }
+    this.descent.push(node.id);
+    this.selection.clear();
+    this._refresh();
+  }
+  /** Returns to depth entries of descent; popTo(0) shows the root graph. */
+  popTo(depth) {
+    this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
+    this.selection.clear();
+    this._refresh();
+  }
+  getViewState() {
+    if (this.panzoom !== void 0) {
+      const t2 = this.panzoom.transform;
+      return { pan: [t2.pan[0], t2.pan[1]], zoom: t2.scale, descent: [...this.descent] };
+    }
+    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent: [...this.descent] };
+  }
+  /** Restores a persisted view state; safe to call before init runs. */
+  setViewState(state) {
+    if (this.panzoom !== void 0) {
+      this.descent = [...state.descent];
+      this.panzoom.setTransform(state.zoom, state.pan);
+      this._refresh();
+    } else {
+      this._pendingView = {
+        pan: [state.pan[0], state.pan[1]],
+        zoom: state.zoom,
+        descent: [...state.descent]
+      };
+      this.descent = [...state.descent];
+    }
+  }
+  _refresh() {
+    if (this.panzoom === void 0) {
+      return;
+    }
+    this._rebuildCrumbs();
+    this.syncGraph();
+  }
+  _rebuildCrumbs() {
+    this._crumbs.textContent = "";
+    const rootBtn = document.createElement("button");
+    rootBtn.textContent = "Root";
+    rootBtn.title = "Show the root graph";
+    rootBtn.addEventListener("click", () => this.popTo(0));
+    this._crumbs.appendChild(rootBtn);
+    let g = this.rootGraph;
+    for (let i = 0; i < this.descent.length; i++) {
+      const nid = this.descent[i];
+      const node = g?.nodeIdMap.get(nid);
+      const btn = document.createElement("button");
+      btn.textContent = node?.getUIName() ?? String(nid);
+      btn.title = "Show this group instance (read-only)";
+      const depth = i + 1;
+      btn.addEventListener("click", () => this.popTo(depth));
+      this._crumbs.appendChild(btn);
+      g = node instanceof GroupNode ? node.subgraph : void 0;
+    }
+    if (this.descent.length > 0) {
+      const note = document.createElement("span");
+      note.textContent = "read-only";
+      note.title = "A group instance takes value edits only; structural edits belong to the group's definition";
+      note.style.cssText = "font-size: 11px; opacity: 0.7;";
+      this._crumbs.appendChild(note);
+      const tailId = this.descent[this.descent.length - 1];
+      let tailGraph = this.rootGraph;
+      for (let i = 0; i + 1 < this.descent.length; i++) {
+        const n = tailGraph?.nodeIdMap.get(this.descent[i]);
+        tailGraph = n instanceof GroupNode ? n.subgraph : void 0;
+      }
+      const tail = tailGraph?.nodeIdMap.get(tailId);
+      if (tail instanceof GroupNode && this.onOpenDefinition !== void 0) {
+        const open = document.createElement("button");
+        open.textContent = "Open Definition";
+        open.title = "Edit this group's definition";
+        open.addEventListener("click", () => this.onOpenDefinition?.(tail));
+        this._crumbs.appendChild(open);
+      }
+    }
+  }
+  /** Reconciles frames against the graph on screen; call after any graph change. */
+  syncGraph() {
+    const graph = this.currentGraph;
+    for (const [nid, frame] of [...this.frames]) {
+      if (graph?.nodeIdMap.get(nid) !== frame.node) {
+        frame.remove();
+        this.frames.delete(nid);
+      }
+    }
+    if (graph === void 0) {
+      this._redrawLinks();
+      return;
+    }
+    for (const node of graph.nodes) {
+      if (this.frames.has(node.id)) {
+        continue;
+      }
+      const frame = UIBase2.createElement("nodeframe-x");
+      frame.setNode(node);
+      frame.getScale = () => this.panzoom.transform.scale;
+      frame.onSelect = (f2, e) => this._selectFrame(f2, e);
+      frame.onMoveStart = (f2, e) => this.ctx.toolstack.execTool(this.ctx, new NodeMoveModalOp(f2, e), e);
+      frame.onMovePreview = (f2) => this._previewMove(f2);
+      frame.onMoveCommit = (f2, x, y) => this._commitMove(f2, x, y);
+      frame.onSocketDown = (f2, key, dir, e) => this._socketDown(f2, key, dir, e);
+      frame.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._openNodeMenu(frame, this._localPoint(e));
+      });
+      const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
+      if (node instanceof GroupNode) {
+        frame.buildExtraUI = (f2, body) => {
+          const root = document.createElement("div");
+          root.className = "nodeeditor-forwarded";
+          body.shadow.appendChild(root);
+          buildForwardedUI(root, this.ctx, f2.node, nodePath);
+        };
+      } else {
+        frame.nodePath = nodePath;
+      }
+      frame.parentWidget = this.panzoom;
+      this.panzoom.appendChild(frame);
+      frame.ctx = this.ctx;
+      frame._init();
+      this.frames.set(node.id, frame);
+    }
+    for (const nid of [...this.selection]) {
+      if (!this.frames.has(nid)) {
+        this.selection.delete(nid);
+      }
+    }
+    for (const [nid, frame] of this.frames) {
+      frame.syncPosition();
+      frame.syncContents();
+      frame.setSelected(this.selection.has(nid));
+    }
+    this._redrawLinks();
+  }
+  _selectFrame(frame, e) {
+    const id = frame.node.id;
+    if (e.shiftKey) {
+      if (this.selection.has(id)) {
+        this.selection.delete(id);
+      } else {
+        this.selection.add(id);
+      }
+    } else {
+      this.selection.clear();
+      this.selection.add(id);
+    }
+    this._applySelection();
+  }
+  _applySelection() {
+    for (const [nid, frame] of this.frames) {
+      frame.setSelected(this.selection.has(nid));
+    }
+  }
+  _moveEdit(frame, x, y) {
     return {
-      tagname: "drag-box-x",
-      style: "panel"
+      kind: "moveNode",
+      graphPath: this.currentGraphPath,
+      nodeId: frame.node.id,
+      x,
+      y
     };
   }
+  _previewMove(frame) {
+    const pos = frame.previewPos ?? frame.node.pos;
+    const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
+    frame.style.opacity = verdict.ok ? "" : "0.5";
+    this._redrawLinks();
+  }
+  _commitMove(frame, x, y) {
+    frame.style.opacity = "";
+    const edit = this._moveEdit(frame, x, y);
+    if (this.delegate.check(this.ctx, edit).ok) {
+      this.delegate.perform(this.ctx, edit);
+    }
+    this.syncGraph();
+  }
+  /** Dispatches an edit through the delegate, check first. */
+  _dispatch(edit) {
+    if (this.delegate.check(this.ctx, edit).ok) {
+      this.delegate.perform(this.ctx, edit);
+    }
+  }
+  /** The pan/zoom-widget-local point of a mouse event. */
+  _localPoint(e) {
+    const r = this.panzoom.getBoundingClientRect();
+    return [e.clientX - r.x, e.clientY - r.y];
+  }
+  _socketDown(frame, key, dir, e) {
+    if (!this.linkDrag.begin(frame, key, dir)) {
+      return;
+    }
+    this.linkDrag.update(this._localPoint(e));
+    this.ctx.toolstack.execTool(this.ctx, new LinkDragModalOp(this), e);
+  }
+  /**
+   * Adds a node of the named registered type at a graph-space point, defaulting
+   * to the view's center. This is the entry point a host's own add menu calls.
+   */
+  addNodeAt(typeName, at) {
+    if (at === void 0) {
+      const r = this.panzoom.getBoundingClientRect();
+      at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
+    }
+    this._dispatch({
+      kind: "addNode",
+      graphPath: this.currentGraphPath,
+      nodeType: typeName,
+      x: at[0],
+      y: at[1]
+    });
+    this.syncGraph();
+  }
+  /** Opens the add-node menu at a widget-local point; a pick adds there. */
+  openAddMenu(local) {
+    const menu = buildAddNodeMenu(this.ctx, (typeName) => {
+      this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
+    });
+    this._startMenu(menu, local, true);
+    return menu;
+  }
+  /**
+   * Starts a menu as a screen popup at a panzoom-local point, with the type
+   * filter box when searchMode is set. A context without a screen (the
+   * headless tests) gets the built menu back unstarted.
+   */
+  _startMenu(menu, local, searchMode = false) {
+    if (this.ctx.screen === void 0) {
+      return;
+    }
+    menu.closeOnMouseUp = false;
+    const r = this.panzoom.getBoundingClientRect();
+    startMenu(menu, r.x + local[0], r.y + local[1], searchMode);
+  }
+  deleteSelected() {
+    for (const nid of [...this.selection]) {
+      this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+    }
+    this.syncGraph();
+  }
+  duplicateSelected() {
+    const graph = this.currentGraph;
+    for (const nid of [...this.selection]) {
+      const node = graph?.nodeIdMap.get(nid);
+      if (node === void 0) {
+        continue;
+      }
+      this._dispatch({
+        kind: "duplicateNode",
+        graphPath: this.currentGraphPath,
+        nodeId: nid,
+        x: node.pos[0] + 20,
+        y: node.pos[1] + 20
+      });
+    }
+    this.syncGraph();
+  }
+  replaceNode(nodeId, newType) {
+    this._dispatch({ kind: "replaceNode", graphPath: this.currentGraphPath, nodeId, newType });
+    this.syncGraph();
+  }
+  /**
+   * Repacks the graph with graphpack, one island at a time, then lays the
+   * islands out left to right so they stay disjoint (the solver itself is
+   * randomized). The result commits as one arrange edit — one undo entry.
+   */
+  arrangeNodes() {
+    const graph = this.currentGraph;
+    if (graph === void 0 || graph.nodes.length === 0) {
+      return;
+    }
+    const packs = /* @__PURE__ */ new Map();
+    for (const node of graph.nodes) {
+      const frame = this.frames.get(node.id);
+      const r = frame?.rect() ?? { x: node.pos[0], y: node.pos[1], width: 140, height: 64 };
+      const pn = new PackNode();
+      pn.pos.loadXY(r.x, r.y);
+      pn.oldpos.load(pn.pos);
+      pn.size.loadXY(r.width, r.height);
+      packs.set(node.id, pn);
+    }
+    const relAnchor = (frame, dir, row) => {
+      const m = frame.metrics();
+      const a2 = socketAnchor(m, dir, row);
+      return [a2[0] - m.x, a2[1] - m.y];
+    };
+    for (const node of graph.nodes) {
+      const dstPn = packs.get(node.id);
+      const dstFrame = this.frames.get(node.id);
+      for (const key of Object.keys(node.inputs)) {
+        for (const edge of node.inputs[key].edges) {
+          const srcNode = edge.owningNode;
+          const srcPn = srcNode !== void 0 ? packs.get(srcNode.id) : void 0;
+          if (srcNode === void 0 || srcPn === void 0) {
+            continue;
+          }
+          const srcFrame = this.frames.get(srcNode.id);
+          const srcOff = srcFrame !== void 0 ? relAnchor(srcFrame, "out", socketRow(srcNode, "out", edge.name)) : [0, 0];
+          const dstOff = dstFrame !== void 0 ? relAnchor(dstFrame, "in", socketRow(node, "in", key)) : [0, 0];
+          const v1 = new PackNodeVertex(srcPn, srcOff);
+          const v2 = new PackNodeVertex(dstPn, dstOff);
+          srcPn.verts.push(v1);
+          dstPn.verts.push(v2);
+          v1.edges.push(v2);
+          v2.edges.push(v1);
+        }
+      }
+    }
+    const islands = graphGetIslands([...packs.values()]);
+    let cursorX = 0;
+    for (const island of islands) {
+      graphPack(island, { margin: 20, steps: 8 });
+      let maxX = cursorX;
+      for (const pn of island) {
+        pn.pos[0] += cursorX;
+        maxX = Math.max(maxX, pn.pos[0] + pn.size[0]);
+      }
+      cursorX = maxX + 40;
+    }
+    const moves = [];
+    for (const [nid, pn] of packs) {
+      moves.push({ nodeId: nid, x: pn.pos[0], y: pn.pos[1] });
+    }
+    this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
+    this.syncGraph();
+  }
+  /** The context menu for one node: delete, duplicate, replace. */
+  _openNodeMenu(frame, local) {
+    const nid = frame.node.id;
+    const menu = createMenu(this.ctx, "", [
+      {
+        name: "Delete",
+        tooltip: "Delete this node",
+        callback: () => {
+          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+          this.syncGraph();
+        }
+      },
+      {
+        name: "Duplicate",
+        tooltip: "Duplicate this node, keeping its overridden values",
+        callback: () => {
+          this._dispatch({
+            kind: "duplicateNode",
+            graphPath: this.currentGraphPath,
+            nodeId: nid,
+            x: frame.node.pos[0] + 20,
+            y: frame.node.pos[1] + 20
+          });
+          this.syncGraph();
+        }
+      },
+      {
+        name: "Replace\u2026",
+        tooltip: "Swap this node's type, keeping links where sockets match",
+        callback: () => {
+          const picker = buildAddNodeMenu(
+            this.ctx,
+            (typeName) => this.replaceNode(nid, typeName)
+          );
+          this._startMenu(picker, local, true);
+        }
+      }
+    ]);
+    this._startMenu(menu, local);
+  }
+  _redrawLinks() {
+    if (this.links === void 0) {
+      return;
+    }
+    const graph = this.currentGraph;
+    const segments = [];
+    const tf = this.panzoom.transform;
+    if (graph !== void 0) {
+      for (const node of graph.nodes) {
+        const dstFrame = this.frames.get(node.id);
+        if (dstFrame === void 0) {
+          continue;
+        }
+        for (const key of Object.keys(node.inputs)) {
+          const sock = node.inputs[key];
+          const dstRow = socketRow(node, "in", key);
+          for (const edge of sock.edges) {
+            const srcNode = edge.owningNode;
+            if (srcNode === void 0) {
+              continue;
+            }
+            const srcFrame = this.frames.get(srcNode.id);
+            const srcRow = socketRow(srcNode, "out", edge.name);
+            if (srcFrame === void 0 || srcRow < 0 || dstRow < 0) {
+              continue;
+            }
+            const a2 = tf.project(socketAnchor(srcFrame.metrics(), "out", srcRow));
+            const b = tf.project(socketAnchor(dstFrame.metrics(), "in", dstRow));
+            segments.push({ x1: a2[0], y1: a2[1], x2: b[0], y2: b[1] });
+          }
+        }
+      }
+    }
+    const r = this.panzoom.getBoundingClientRect();
+    const dpi = UIBase2.getDPI();
+    this.links.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
+    this.links.drawLinks(segments, dpi);
+  }
+  _boxDown(e) {
+    if (e.button !== 0 || e.defaultPrevented) {
+      return;
+    }
+    this.ctx.toolstack.execTool(this.ctx, new BoxSelectModalOp(this, e), e);
+  }
+  /** Clears the selection and repaints the frames. */
+  clearSelection() {
+    this.selection.clear();
+    this._applySelection();
+  }
+  /**
+   * Selects the frames whose rects intersect the graph-space box from min to
+   * max; additive keeps the current selection.
+   */
+  boxSelect(min, max, additive) {
+    if (!additive) {
+      this.selection.clear();
+    }
+    for (const [nid, frame] of this.frames) {
+      const fr = frame.rect();
+      if (fr.x < max[0] && fr.x + fr.width > min[0] && fr.y < max[1] && fr.y + fr.height > min[1]) {
+        this.selection.add(nid);
+      }
+    }
+    this._applySelection();
+  }
 };
-UIBase2.internalRegister(DragBox);
+UIBase2.internalRegister(NodeGraphView);
 
 // scripts/util/simple_events.ts
 init_simple_events();
@@ -79470,6 +81374,368 @@ UIBase2.internalRegister(ScreenBorder);
 
 // scripts/screen/constants.ts
 var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
+
+// scripts/util/math.ts
+init_math();
+
+// scripts/util/ScreenOverdraw.ts
+init_util2();
+init_ui_base();
+var SVG_URL = "http://www.w3.org/2000/svg";
+var Vector25 = Vector2;
+var CanvasOverdraw = class extends UIBase2 {
+  canvas;
+  g;
+  screen;
+  shapes;
+  otherChildren;
+  font;
+  svg;
+  constructor() {
+    super();
+    this.canvas = document.createElement("canvas");
+    this.shadow.appendChild(this.canvas);
+    this.g = this.canvas.getContext("2d");
+    this.screen = void 0;
+    this.shapes = [];
+    this.otherChildren = [];
+    this.font = void 0;
+    const style = document.createElement("style");
+    style.textContent = `
+      .overdrawx {
+        pointer-events : none;
+      }
+    `;
+    this.shadow.appendChild(style);
+  }
+  static define() {
+    return {
+      tagname: "screen-overdraw-canvas-x"
+    };
+  }
+  startNode(node, screen) {
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
+    this.style.display = "float";
+    this.style.zIndex = "" + this.zindex_base;
+    this.style.position = "absolute";
+    this.style.left = "0px";
+    this.style.top = "0px";
+    this.style.width = "100%";
+    this.style.height = "100%";
+    this.style.pointerEvents = "none";
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style.width = "100%";
+    this.svg.style.height = "100%";
+    this.svg.style.pointerEvents = "none";
+    this.shadow.appendChild(this.svg);
+  }
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+    screen.parentNode.appendChild(this);
+    this.style.display = "float";
+    this.style.zIndex = "" + this.zindex_base;
+    this.style.position = "absolute";
+    this.style.left = "0px";
+    this.style.top = "0px";
+    this.style.width = screen.size[0] + "px";
+    this.style.height = screen.size[1] + "px";
+    this.style.pointerEvents = "none";
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style.width = "100%";
+    this.svg.style.height = "100%";
+    this.shadow.appendChild(this.svg);
+  }
+};
+var Overdraw = class extends UIBase2 {
+  visibleToPick;
+  screen;
+  shapes;
+  otherChildren;
+  font;
+  zindex_base;
+  svg;
+  constructor() {
+    super();
+    this.visibleToPick = false;
+    this.screen = void 0;
+    this.shapes = [];
+    this.otherChildren = [];
+    this.font = void 0;
+    const style = document.createElement("style");
+    style.textContent = `
+      .overdrawx {
+        pointer-events : none;
+      }
+    `;
+    this.shadow.appendChild(style);
+    this.zindex_base = 1e3;
+  }
+  startNode(node, screen, cssPosition = "relative") {
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
+    this.style.zIndex = "" + this.zindex_base;
+    this.style.position = cssPosition;
+    this.style.margin = this.style.padding = "0px";
+    this.style.width = "100%";
+    this.style.height = "100%";
+    this.style.pointerEvents = "none";
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style.width = "100%";
+    this.svg.style.height = "100%";
+    this.svg.style.pointerEvents = "none";
+    this.shadow.appendChild(this.svg);
+  }
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+    screen.parentNode.appendChild(this);
+    this.style.display = "float";
+    this.style.zIndex = "" + this.zindex_base;
+    this.style.position = "absolute";
+    this.style.left = "0px";
+    this.style.top = "0px";
+    this.style.width = screen.size[0] + "px";
+    this.style.height = screen.size[1] + "px";
+    this.style.pointerEvents = "none";
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style.width = "100%";
+    this.svg.style.height = "100%";
+    this.shadow.appendChild(this.svg);
+  }
+  clear() {
+    for (const child of list2(this.svg.childNodes)) {
+      child.remove();
+    }
+    for (const child of this.otherChildren) {
+      child.remove();
+    }
+    this.otherChildren.length = 0;
+  }
+  drawTextBubbles(texts, cos2, colors) {
+    const boxes = [];
+    const elems = [];
+    const cent = new Vector25();
+    for (let i = 0; i < texts.length; i++) {
+      const co = cos2[i];
+      const text2 = texts[i];
+      let color;
+      if (colors !== void 0) {
+        color = colors[i];
+      }
+      cent.add(co);
+      const box = this.text(texts[i], co[0], co[1], { color });
+      boxes.push(box);
+      const font = box.style["font"];
+      const pat = /[0-9]+px/;
+      const sizeMatch = font.match(pat);
+      let size;
+      if (sizeMatch === null) {
+        size = this.getDefault("DefaultText").size;
+      } else {
+        size = parsepx2(sizeMatch[0]);
+      }
+      const measureFn = measureTextBlock;
+      const tsize = measureFn(this, text2, void 0, void 0, size, font);
+      box.minsize = [
+        ~~tsize.width,
+        ~~tsize.height
+      ];
+      const pad = parsepx2(box.style["padding"]);
+      box.minsize[0] += pad * 2;
+      box.minsize[1] += pad * 2;
+      const x = parsepx2(box.style["left"]);
+      const y = parsepx2(box.style["top"]);
+      box.grads = new Array(4);
+      box.params = [x, y, box.minsize[0], box.minsize[1]];
+      box.startpos = new Vector25([x, y]);
+      box.setCSS = function() {
+        this.style["padding"] = "0px";
+        this.style["margin"] = "0px";
+        this.style["left"] = ~~this.params[0] + "px";
+        this.style["top"] = ~~this.params[1] + "px";
+        this.style["width"] = ~~this.params[2] + "px";
+        this.style["height"] = ~~this.params[3] + "px";
+      };
+      box.setCSS();
+      elems.push(box);
+    }
+    if (boxes.length === 0) {
+      return;
+    }
+    cent.mulScalar(1 / boxes.length);
+    function error2() {
+      const s1 = [0, 0];
+      const s2 = [0, 0];
+      let ret = 0;
+      for (const box1 of boxes) {
+        for (const box2 of boxes) {
+          if (box2 === box1) {
+            continue;
+          }
+          s1[0] = box1.params[2];
+          s1[1] = box1.params[3];
+          s2[0] = box2.params[2];
+          s2[1] = box2.params[3];
+          const overlap = aabb_overlap_area(
+            new Vector25(box1.params),
+            new Vector25(s1),
+            new Vector25(box2.params),
+            new Vector25(s2)
+          );
+          ret += overlap;
+        }
+        ret += box1.startpos.vectorDistance(box1.params) * 0.25;
+      }
+      return ret;
+    }
+    function solve() {
+      let r1 = error2();
+      if (r1 === 0) {
+        return;
+      }
+      const df = 1e-4;
+      let totgs = 0;
+      for (const box of boxes) {
+        for (let i = 0; i < box.params.length; i++) {
+          const orig = box.params[i];
+          box.params[i] += df;
+          const r2 = error2();
+          box.params[i] = orig;
+          box.grads[i] = (r2 - r1) / df;
+          totgs += box.grads[i] ** 2;
+        }
+      }
+      if (totgs === 0) {
+        return;
+      }
+      r1 /= totgs;
+      const k = 0.4;
+      for (const box of boxes) {
+        for (let i = 0; i < box.params.length; i++) {
+          box.params[i] += -r1 * box.grads[i] * k;
+        }
+        box.params[2] = Math.max(box.params[2], box.minsize[0]);
+        box.params[3] = Math.max(box.params[3], box.minsize[1]);
+        box.setCSS();
+      }
+    }
+    for (let i = 0; i < 15; i++) {
+      solve();
+    }
+    for (const box of boxes) {
+      elems.push(this.line(box.startpos, box.params));
+    }
+    return elems;
+  }
+  text(text2, x, y, args = {}) {
+    const mergedArgs = Object.assign(
+      {},
+      args
+    );
+    if (mergedArgs.font === void 0) {
+      if (this.font !== void 0) mergedArgs.font = this.font;
+      else mergedArgs.font = this.getDefault("DefaultText").genCSS();
+    }
+    if (!mergedArgs["background-color"]) {
+      mergedArgs["background-color"] = "rgba(75, 75, 75, 0.75)";
+    }
+    mergedArgs.color = mergedArgs.color ? mergedArgs.color : "white";
+    if (typeof mergedArgs.color === "object") {
+      mergedArgs.color = color2css3(mergedArgs.color);
+    }
+    mergedArgs["padding"] = mergedArgs["padding"] === void 0 ? "5px" : mergedArgs["padding"];
+    mergedArgs["border-color"] = mergedArgs["border-color"] ? mergedArgs["border-color"] : "grey";
+    mergedArgs["border-radius"] = mergedArgs["border-radius"] ? mergedArgs["border-radius"] : "25px";
+    mergedArgs["border-width"] = mergedArgs["border-width"] !== void 0 ? mergedArgs["border-width"] : "2px";
+    if (typeof mergedArgs["border-width"] === "number") {
+      mergedArgs["border-width"] = "" + mergedArgs["border-width"] + "px";
+    }
+    if (typeof mergedArgs["border-radius"] === "number") {
+      mergedArgs["border-radius"] = "" + mergedArgs["border-radius"] + "px";
+    }
+    const box = document.createElement("div");
+    box.setAttribute("class", "overdrawx");
+    box.style["position"] = "fixed";
+    box.style["width"] = "min-content";
+    box.style["height"] = "min-content";
+    box.style["borderWidth"] = mergedArgs["border-width"];
+    box.style["borderRadius"] = "25px";
+    box.style["pointerEvents"] = "none";
+    box.style["zIndex"] = "" + (this.zindex_base + 1);
+    box.style["backgroundColor"] = mergedArgs["background-color"];
+    box.style["padding"] = mergedArgs["padding"];
+    box.style["left"] = x + "px";
+    box.style["top"] = y + "px";
+    box.style["display"] = "flex";
+    box.style["justifyContent"] = "center";
+    box.style["alignItems"] = "center";
+    box.innerText = text2;
+    box.style["font"] = mergedArgs.font;
+    box.style["color"] = mergedArgs.color;
+    this.otherChildren.push(box);
+    this.shadow.appendChild(box);
+    return box;
+  }
+  circle(p, r, stroke = "black", fill = "none") {
+    const circle = document.createElementNS(SVG_URL, "circle");
+    circle.setAttribute("cx", "" + p[0]);
+    circle.setAttribute("cy", "" + p[1]);
+    circle.setAttribute("r", "" + r);
+    if (fill) {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
+    } else {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
+    }
+    this.svg.appendChild(circle);
+    return circle;
+  }
+  line(v1, v2, color = "black") {
+    const line = document.createElementNS(SVG_URL, "line");
+    line.setAttribute("x1", "" + v1[0]);
+    line.setAttribute("y1", "" + v1[1]);
+    line.setAttribute("x2", "" + v2[0]);
+    line.setAttribute("y2", "" + v2[1]);
+    line.setAttribute("style", `stroke:${color};stroke-width:2`);
+    this.svg.appendChild(line);
+    return line;
+  }
+  rect(p, size, color = "black") {
+    const line = document.createElementNS(SVG_URL, "rect");
+    line.setAttribute("x", "" + p[0]);
+    line.setAttribute("y", "" + p[1]);
+    line.setAttribute("width", "" + size[0]);
+    line.setAttribute("height", "" + size[1]);
+    line.setAttribute("style", `fill:${color};stroke-width:2`);
+    line.setColor = (color2) => {
+      line.setAttribute("style", `fill:${color2};stroke-width:2`);
+    };
+    this.svg.appendChild(line);
+    return line;
+  }
+  end() {
+    this.clear();
+    this.remove();
+  }
+  static define() {
+    return {
+      tagname: "overdraw-x",
+      style: "overdraw"
+    };
+  }
+};
+UIBase2.internalRegister(Overdraw);
 
 // scripts/screen/dock_panels.ts
 init_ui_base();
@@ -82220,6 +84486,1979 @@ pathux.ScreenArea {
 `;
 struct_default.register(ScreenArea2);
 UIBase2.internalRegister(ScreenArea2);
+
+// scripts/editors/nodeeditor/nodeeditor.ts
+init_struct();
+init_ui_base();
+init_vectormath();
+var NodeEditor = class extends Area {
+  static STRUCT;
+  container;
+  view;
+  /** The header row makeHeader returned; a subclass adds its own controls here. */
+  headerRow;
+  /** STRUCT carriers; the live values stay in the view. */
+  pan = new Vector2();
+  zoom = 1;
+  descent = [];
+  _designerRoot = void 0;
+  _designing = void 0;
+  /** The root graph's datapath, from setGraph; exposure edits dispatch here. */
+  _rootPath = "";
+  constructor() {
+    super();
+    this.view = UIBase2.createElement("nodegraphview-x");
+  }
+  static define() {
+    return {
+      tagname: "node-editor-x",
+      areaname: "node_editor",
+      uiname: "Node Editor",
+      icon: -1
+    };
+  }
+  init() {
+    super.init();
+    this.container = UIBase2.createElement("colframe-x");
+    this.container.ctx = this.ctx;
+    this.shadow.appendChild(this.container);
+    this.headerRow = this.makeHeader(this.container, false);
+    const center = this.makePanels(this.container);
+    this.view.parentWidget = center;
+    center.shadow.appendChild(this.view);
+    this.view.ctx = this.ctx;
+    this.view._init();
+    this.view.style.flexGrow = "1";
+  }
+  definePanels(panels) {
+    panels.panel({
+      id: "group_designer",
+      title: "Group Designer",
+      dock: "right",
+      build: (container) => {
+        const root = document.createElement("div");
+        this._designerRoot = root;
+        container.shadow.appendChild(root);
+        this._renderDesigner();
+      }
+    });
+  }
+  /** Forwards to the view; graphPath is the datapath the view's edits dispatch against. */
+  setGraph(graph, graphPath) {
+    this._rootPath = graphPath;
+    this.view.setGraph(graph, graphPath);
+  }
+  /**
+   * Points the view at a group definition's subgraph for structural editing
+   * and shows the definition's exposure list in the Group Designer panel.
+   * defPath must resolve to def.subgraph in the host's data API; exposure
+   * edits dispatch against the root graph recorded by setGraph, whose
+   * groupSaver persists the definition.
+   */
+  editDefinition(ref, def, defPath) {
+    this._designing = { ref, def };
+    this.view.setGraph(def.subgraph, defPath);
+    this._renderDesigner();
+  }
+  _renderDesigner() {
+    const root = this._designerRoot;
+    if (root === void 0) {
+      return;
+    }
+    if (this._designing === void 0) {
+      root.textContent = "Open a group definition to edit its exposed UI.";
+      return;
+    }
+    buildGroupDesigner(root, {
+      ctx: this.ctx,
+      def: this._designing.def,
+      ref: this._designing.ref,
+      graphPath: this._rootPath,
+      delegate: this.view.delegate,
+      onChanged: () => this.view.syncGraph(),
+      errorColor: this.view.getDefault("ErrorColor")
+    });
+  }
+  copy() {
+    const ret = UIBase2.createElement(this.constructor.define().tagname);
+    ret.setGraph(this.view.rootGraph, this.view.graphPath);
+    ret.view.setViewState(this.view.getViewState());
+    return ret;
+  }
+  _structPan() {
+    return new Vector2(this.view.getViewState().pan);
+  }
+  _structZoom() {
+    return this.view.getViewState().zoom;
+  }
+  _structDescent() {
+    return this.view.getViewState().descent.map((id) => JSON.stringify(id));
+  }
+  loadSTRUCT(reader) {
+    reader(this);
+    this.view.setViewState({
+      pan: [this.pan[0], this.pan[1]],
+      zoom: this.zoom,
+      descent: this.descent.map((s) => JSON.parse(s))
+    });
+  }
+};
+NodeEditor.STRUCT = struct_default.STRUCT.inherit(NodeEditor, Area, "pathux.NodeEditor") + `
+  pan     : vec2 | obj._structPan();
+  zoom    : float | obj._structZoom();
+  descent : array(string) | obj._structDescent();
+}
+`;
+struct_default.register(NodeEditor);
+
+// scripts/path-controller/controller.ts
+var controller_exports = {};
+__export(controller_exports, {
+  AbstractCurve: () => AbstractCurve,
+  ArrayBufferProperty: () => ArrayBufferProperty,
+  BSplineCurve: () => BSplineCurve,
+  BSplineTransformOp: () => BSplineTransformOp,
+  BoolProperty: () => BoolProperty,
+  BounceCurve: () => BounceCurve,
+  COLINEAR: () => COLINEAR,
+  COLINEAR_ISECT: () => COLINEAR_ISECT,
+  CURVE_VERSION: () => CURVE_VERSION,
+  ClosestCurveRets: () => ClosestCurveRets,
+  ClosestModes: () => ClosestModes,
+  Constraint: () => Constraint,
+  Context: () => Context,
+  ContextFlags: () => ContextFlags,
+  ContextOverlay: () => ContextOverlay,
+  CreateSnapshot: () => CreateSnapshot,
+  Curve1D: () => Curve1D,
+  Curve1DPoint: () => Curve1DPoint,
+  Curve1DProperty: () => Curve1DProperty,
+  Curve1dBSplineAddOp: () => Curve1dBSplineAddOp,
+  Curve1dBSplineDeleteOp: () => Curve1dBSplineDeleteOp,
+  Curve1dBSplineLoadTemplOp: () => Curve1dBSplineLoadTemplOp,
+  Curve1dBSplineOpBase: () => Curve1dBSplineOpBase,
+  Curve1dBSplineResetOp: () => Curve1dBSplineResetOp,
+  Curve1dBSplineSelectOp: () => Curve1dBSplineSelectOp,
+  CurveConstructors: () => CurveConstructors,
+  CurveFlags: () => CurveFlags,
+  CurveTypeData: () => CurveTypeData,
+  DataAPI: () => DataAPI2,
+  DataFlags: () => DataFlags,
+  DataList: () => DataList,
+  DataPath: () => DataPath,
+  DataPathError: () => DataPathError,
+  DataPathSetOp: () => DataPathSetOp,
+  DataPathWatcher: () => DataPathWatcher,
+  DataStruct: () => DataStruct2,
+  DataTypes: () => DataTypes,
+  DoubleClickHandler: () => DoubleClickHandler,
+  EaseCurve: () => EaseCurve,
+  ElasticCurve: () => ElasticCurve,
+  EnumKeyPair: () => EnumKeyPair,
+  EnumProperty: () => EnumProperty,
+  EnumPropertyBase: () => EnumPropertyBase,
+  EquationCurve: () => EquationCurve,
+  EulerOrders: () => EulerOrders,
+  FEPS: () => FEPS,
+  FEPS_DATA: () => FEPS_DATA,
+  FLOAT_MAX: () => FLOAT_MAX,
+  FLOAT_MIN: () => FLOAT_MIN,
+  FlagProperty: () => FlagProperty,
+  FloatArrayProperty: () => FloatArrayProperty,
+  FloatConstrinats: () => FloatConstrinats,
+  FloatProperty: () => FloatProperty,
+  GuassianCurve: () => GuassianCurve,
+  HotKey: () => HotKey,
+  IndexRange: () => IndexRange,
+  InheritFlag: () => InheritFlag2,
+  IntProperty: () => IntProperty,
+  IntegerConstraints: () => IntegerConstraints,
+  KeyMap: () => KeyMap,
+  LINECROSS: () => LINECROSS,
+  ListProperty: () => ListProperty,
+  LockedContext: () => LockedContext,
+  MacroClasses: () => MacroClasses,
+  MacroLink: () => MacroLink,
+  MakeUINameWordMap: () => MakeUINameWordMap,
+  Mat4Property: () => Mat4Property,
+  Mat4Stack: () => Mat4Stack,
+  Matrix4: () => Matrix4,
+  Matrix4UI: () => Matrix4UI,
+  MinMax: () => MinMax,
+  MinMax1: () => MinMax1,
+  ModelInterface: () => ModelInterface,
+  NumProperty: () => NumProperty,
+  NumberConstraints: () => NumberConstraints,
+  NumberConstraintsBase: () => NumberConstraintsBase,
+  OverlayClasses: () => OverlayClasses,
+  PackNode: () => PackNode,
+  PackNodeVertex: () => PackNodeVertex,
+  ParamKey: () => ParamKey,
+  Parser: () => Parser,
+  PlaneOps: () => PlaneOps,
+  PropClasses: () => PropClasses,
+  PropFlags: () => PropFlags,
+  PropSubTypes: () => PropSubTypes2,
+  PropTypes: () => PropTypes,
+  Quat: () => Quat,
+  QuatProperty: () => QuatProperty,
+  RandCurve: () => RandCurve,
+  ReportProperty: () => ReportProperty,
+  SQRT2: () => SQRT2,
+  SavedToolDefaults: () => SavedToolDefaults,
+  SimpleCurveBase: () => SimpleCurveBase,
+  Solver: () => Solver,
+  SplineTemplateIcons: () => SplineTemplateIcons,
+  SplineTemplates: () => SplineTemplates,
+  StringProperty: () => StringProperty,
+  StringPropertyBase: () => StringPropertyBase,
+  StringSetProperty: () => StringSetProperty,
+  StructFlags: () => StructFlags,
+  TangentModes: () => TangentModes,
+  ToolClasses: () => ToolClasses,
+  ToolFlags: () => ToolFlags,
+  ToolMacro: () => ToolMacro,
+  ToolOp: () => ToolOp,
+  ToolOpIface: () => ToolOpIface,
+  ToolPaths: () => ToolPaths,
+  ToolProperty: () => ToolProperty,
+  ToolPropertyCache: () => ToolPropertyCache,
+  ToolStack: () => ToolStack,
+  UndoFlags: () => UndoFlags,
+  Vec2Property: () => Vec2Property,
+  Vec3Property: () => Vec3Property,
+  Vec4Property: () => Vec4Property,
+  VecPropertyBase: () => VecPropertyBase,
+  Vector2: () => Vector2,
+  Vector3: () => Vector3,
+  Vector4: () => Vector4,
+  _NumberPropertyBase: () => _NumberPropertyBase,
+  _old_isect_ray_plane: () => _old_isect_ray_plane,
+  _setModalAreaClass: () => _setModalAreaClass,
+  _setScreenClass: () => _setScreenClass,
+  aabb_intersect_2d: () => aabb_intersect_2d,
+  aabb_intersect_3d: () => aabb_intersect_3d,
+  aabb_isect_2d: () => aabb_isect_2d,
+  aabb_isect_3d: () => aabb_isect_3d,
+  aabb_isect_cylinder_3d: () => aabb_isect_cylinder_3d,
+  aabb_isect_line_2d: () => aabb_isect_line_2d,
+  aabb_isect_line_3d: () => aabb_isect_line_3d,
+  aabb_overlap_area: () => aabb_overlap_area,
+  aabb_sphere_dist: () => aabb_sphere_dist,
+  aabb_sphere_isect: () => aabb_sphere_isect,
+  aabb_sphere_isect_2d: () => aabb_sphere_isect_2d,
+  aabb_union: () => aabb_union,
+  aabb_union_2d: () => aabb_union_2d,
+  angle_between_vecs: () => angle_between_vecs,
+  barycentric_v2: () => barycentric_v2,
+  binomial: () => binomial,
+  buildParser: () => buildParser,
+  buildToolOpAPI: () => buildToolOpAPI,
+  buildToolSysAPI: () => buildToolSysAPI,
+  bumpPathStructureGen: () => bumpPathStructureGen,
+  calc_projection_axes: () => calc_projection_axes,
+  circ_from_line_tan: () => circ_from_line_tan,
+  circ_from_line_tan_2d: () => circ_from_line_tan_2d,
+  clearPathWatchers: () => clearPathWatchers,
+  clip_line_w: () => clip_line_w,
+  closestPoint: () => closestPoint,
+  closest_point_on_line: () => closest_point_on_line,
+  closest_point_on_quad: () => closest_point_on_quad,
+  closest_point_on_tri: () => closest_point_on_tri,
+  cmyk_to_rgb: () => cmyk_to_rgb,
+  colinear: () => colinear,
+  colinear2d: () => colinear2d,
+  config: () => config_exports,
+  copyEvent: () => copyEvent,
+  corner_normal: () => corner_normal,
+  customPropertyTypes: () => customPropertyTypes,
+  defaultDecimalPlaces: () => defaultDecimalPlaces,
+  defaultRadix: () => defaultRadix,
+  dihedral_v3_sqr: () => dihedral_v3_sqr,
+  dist_to_line: () => dist_to_line,
+  dist_to_line_2d: () => dist_to_line_2d,
+  dist_to_line_sqr: () => dist_to_line_sqr,
+  dist_to_tri_v3: () => dist_to_tri_v3,
+  dist_to_tri_v3_old: () => dist_to_tri_v3_old,
+  dist_to_tri_v3_sqr: () => dist_to_tri_v3_sqr,
+  evalHermiteTable: () => evalHermiteTable,
+  eventWasMouseDown: () => eventWasMouseDown,
+  eventWasTouch: () => eventWasTouch,
+  eventgraph: () => eventdag_exports,
+  excludedKeys: () => excludedKeys,
+  expand_line: () => expand_line,
+  expand_rect2d: () => expand_rect2d,
+  feps: () => feps,
+  flushPathNotifications: () => flushPathNotifications,
+  genHermiteTable: () => genHermiteTable,
+  gen_circle: () => gen_circle,
+  getCurve: () => getCurve,
+  getDataPathToolOp: () => getDataPathToolOp,
+  getPathStructureGen: () => getPathStructureGen,
+  getPathWatchStats: () => getPathWatchStats,
+  getTempProp: () => getTempProp,
+  getVecClass: () => getVecClass,
+  get_boundary_winding: () => get_boundary_winding,
+  get_rect_lines: () => get_rect_lines,
+  get_rect_points: () => get_rect_points,
+  get_tri_circ: () => get_tri_circ,
+  graphGetIslands: () => graphGetIslands,
+  graphPack: () => graphPack,
+  haveModal: () => haveModal,
+  hsv_to_rgb: () => hsv_to_rgb,
+  html5_fileapi: () => html5_fileapi_exports,
+  initSimpleController: () => initSimpleController,
+  initSplineTemplates: () => initSplineTemplates,
+  initToolPaths: () => initToolPaths,
+  inrect_2d: () => inrect_2d,
+  isLeftClick: () => isLeftClick,
+  isMouseDown: () => isMouseDown,
+  isNum: () => isNum,
+  isNumber: () => isNumber,
+  isect_ray_plane: () => isect_ray_plane,
+  keymap: () => keymap,
+  keymap_latin_1: () => keymap_latin_1,
+  line_isect: () => line_isect,
+  line_line_cross: () => line_line_cross,
+  line_line_isect: () => line_line_isect,
+  lzstring: () => lz_string_default,
+  makeCircleMesh: () => makeCircleMesh,
+  makeDerivedOverlay: () => makeDerivedOverlay,
+  math: () => math_exports,
+  minmax_verts: () => minmax_verts,
+  modalstack: () => modalstack,
+  mySafeJSONParse: () => mySafeJSONParse,
+  mySafeJSONStringify: () => mySafeJSONStringify,
+  normal_poly: () => normal_poly,
+  normal_quad: () => normal_quad,
+  normal_quad_old: () => normal_quad_old,
+  normal_tri: () => normal_tri,
+  normalizePath: () => normalizePath,
+  notifyPathChange: () => notifyPathChange,
+  nstructjs: () => struct_default,
+  parseToolPath: () => parseToolPath,
+  parseutil: () => parseutil_exports,
+  pathDebugEvent: () => pathDebugEvent,
+  pathParser: () => pathParser,
+  point_in_aabb: () => point_in_aabb,
+  point_in_aabb_2d: () => point_in_aabb_2d,
+  point_in_hex: () => point_in_hex,
+  point_in_tri: () => point_in_tri,
+  popModalLight: () => popModalLight,
+  popReportName: () => popReportName,
+  project: () => project,
+  pushModalLight: () => pushModalLight,
+  pushPointerModal: () => pushPointerModal,
+  pushReportName: () => pushReportName,
+  quadIsConvex: () => quadIsConvex,
+  quad_bilinear: () => quad_bilinear,
+  quad_uv_2d: () => quad_uv_2d,
+  registerTool: () => registerTool,
+  reverse_keymap: () => reverse_keymap,
+  rgb_to_cmyk: () => rgb_to_cmyk,
+  rgb_to_hsv: () => rgb_to_hsv,
+  rot2d: () => rot2d,
+  setContextClass: () => setContextClass,
+  setDataPathToolOp: () => setDataPathToolOp,
+  setDefaultUndoHandlers: () => setDefaultUndoHandlers,
+  setImplementationClass: () => setImplementationClass,
+  setNotifier: () => setNotifier,
+  setPropTypes: () => setPropTypes,
+  simple_tri_aabb_isect: () => simple_tri_aabb_isect,
+  singleMouseEvent: () => singleMouseEvent,
+  solver: () => solver_exports,
+  suggestPropertyKeys: () => suggestPropertyKeys,
+  test: () => test,
+  testToolParser: () => testToolParser,
+  tet_volume: () => tet_volume,
+  toLockedImpl: () => toLockedImpl,
+  toolprop_abstract: () => toolprop_abstract_exports,
+  tri_angles: () => tri_angles,
+  tri_area: () => tri_area,
+  trilinear_co: () => trilinear_co,
+  trilinear_co2: () => trilinear_co2,
+  trilinear_v3: () => trilinear_v3,
+  unproject: () => unproject,
+  updateToolDefaults: () => updateToolDefaults,
+  updateToolSysAPI: () => updateToolSysAPI,
+  util: () => util_exports,
+  vectormath: () => vectormath_exports,
+  winding: () => winding,
+  winding_axis: () => winding_axis
+});
+
+// scripts/path-controller/controller/contextNew.ts
+var ContextLocker = class {
+  ctx;
+  constructor(ctx) {
+    this.ctx = ctx;
+  }
+  /**
+   * Serializes the current context into a 'locked' read-only form.
+   * Needed for consistent undo/redo.
+   **/
+  lock(ctx, saveProperty, loadProperty) {
+    if (ctx === void 0) {
+      throw new Error("ctx was undefined! in ContextLocker.lock()!");
+    }
+    const props = {};
+    function getAllKeys2(obj) {
+      const keys3 = /* @__PURE__ */ new Set();
+      while (obj && obj !== Object) {
+        for (const k in Object.getOwnPropertyDescriptors(obj)) {
+          if (typeof k === "string") {
+            keys3.add(k);
+          }
+        }
+        for (const k in obj) {
+          if (typeof k === "string") {
+            keys3.add(k);
+          }
+        }
+        obj = Object.getPrototypeOf(obj);
+      }
+      return keys3;
+    }
+    const keys2 = new Set(getAllKeys2(ctx));
+    keys2.forEach((key) => {
+      if (typeof key === "string" && (key.endsWith("_save") || key.endsWith("_load"))) {
+        return;
+      }
+      if (typeof key === "symbol") {
+        props[key] = ctx[key];
+        return;
+      }
+      const hasSave = `${key}_save` in ctx;
+      const hasLoad = `${key}_load` in ctx;
+      const savedKey = (s) => "$$" + s;
+      function loadProp(key2, hasLoad2) {
+        if (hasLoad2) {
+          return ctx[key2 + "_load"](ctx, props[savedKey(key2)]);
+        } else if (typeof loadProperty === "function") {
+          return loadProperty(ctx, key2, props[savedKey(key2)]);
+        } else {
+          return props[savedKey(key2)];
+        }
+      }
+      function saveProp(key2, hasSave2) {
+        if (hasSave2) {
+          return ctx[key2 + "_save"](ctx);
+        } else if (typeof saveProperty === "function") {
+          return saveProperty.call(void 0, ctx, key2, ctx[key2]);
+        } else {
+          return ctx[key2];
+        }
+      }
+      if (hasSave || hasLoad) {
+        Object.defineProperty(props, savedKey(key), {
+          value: saveProp(key, hasSave),
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(props, key, {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return loadProp(key, hasLoad);
+          },
+          set(value) {
+            throw new Error(`cannot set property ${key} in locked context`);
+          }
+        });
+      } else {
+        props[key] = ctx[key];
+      }
+    });
+    return props;
+  }
+};
+function toLockedImpl() {
+  return new ContextLocker(this).lock(this, this.saveProperty, this.loadProperty);
+}
+
+// scripts/path-controller/controller.ts
+init_context();
+init_controller();
+init_controller_abstract();
+init_controller_ops();
+init_controller_abstract();
+init_controller_base();
+init_toolsys();
+init_toolprop();
+init_toolpath();
+init_curve1d_all();
+init_curve1d();
+init_curve1d_base();
+init_curve1d_toolprop();
+init_eventdag();
+init_indexRange();
+init_util();
+init_vectormath();
+init_math();
+init_toolprop_abstract();
+init_html5_fileapi();
+init_parseutil();
+init_config();
+init_struct();
+init_lz_string();
+init_vectormath();
+init_math();
+init_colorutils();
+init_simple_events();
+init_curve1d_bspline();
+
+// scripts/platforms/platform.ts
+var platform_exports = {};
+__export(platform_exports, {
+  getPlatformAsync: () => getPlatformAsync,
+  platform: () => platform4
+});
+var promise;
+if (window.haveNwjs) {
+  promise = Promise.resolve().then(() => (init_nwjs_api(), nwjs_api_exports));
+} else if (window.haveElectron) {
+  promise = Promise.resolve().then(() => (init_electron_api(), electron_api_exports));
+} else {
+  promise = Promise.resolve().then(() => (init_web_api(), web_api_exports));
+}
+var platform4;
+promise.then((module) => {
+  platform4 = module.platform;
+  promise = void 0;
+});
+function getPlatformAsync() {
+  if (promise) {
+    return new Promise((accept, reject) => {
+      promise.then((mod) => {
+        accept(mod.platform);
+      });
+    });
+  }
+  return new Promise((accept, reject) => {
+    accept(platform4);
+  });
+}
+
+// scripts/widgets/theme_editor.ts
+init_ui_base();
+init_ui_theme();
+init_cssfont();
+var ThemeChangeEvent = class extends Event {
+  category;
+  key;
+  record;
+  /** The variable that was edited, when the change came through one. */
+  varKey;
+  constructor(category, key, record, varKey) {
+    super("change");
+    this.category = category;
+    this.key = key;
+    this.record = record;
+    this.varKey = varKey;
+  }
+};
+var FONT_FIELDS = ["font", "variant", "weight", "style"];
+var VAR_NAME_WIDTH = 110;
+var VAR_VALUE_WIDTH = 150;
+var VAR_COMMENT_WIDTH = 150;
+function strcmp(a2, b) {
+  a2 = a2.trim().toLowerCase();
+  b = b.trim().toLowerCase();
+  return a2 < b ? -1 : a2 === b ? 0 : 1;
+}
+function themeItemKind(name2, value) {
+  if (name2.toLowerCase().search("flag") >= 0) {
+    return "skip";
+  }
+  if (typeof value === "string") {
+    return validateCSSColor(value.toLowerCase().trim()) ? "color" : "string";
+  } else if (typeof value === "number") {
+    return "number";
+  } else if (typeof value === "boolean") {
+    return "boolean";
+  } else if (value instanceof CSSFont) {
+    return "font";
+  } else if (typeof value === "object" && value !== null) {
+    return "record";
+  }
+  return "skip";
+}
+function varFits(kind, value) {
+  const other = themeItemKind("", value);
+  if (kind === "color" || kind === "string") {
+    return other === "color" || other === "string";
+  }
+  return other === kind;
+}
+function groupThemeCategories(rec, categoryMap) {
+  const categories = {};
+  for (const k of Object.keys(rec)) {
+    const mapped = categoryMap[k];
+    let catkey;
+    if (typeof mapped === "string") {
+      catkey = { category: mapped, help: "", key: k };
+    } else if (mapped) {
+      catkey = { ...mapped, key: mapped.key || k };
+    } else {
+      catkey = { category: k, help: "", key: k };
+    }
+    if (!(catkey.category in categories)) {
+      categories[catkey.category] = [];
+    }
+    categories[catkey.category].push(catkey);
+  }
+  return Object.keys(categories).sort(strcmp).map((category) => ({
+    category,
+    keys: categories[category].sort((a2, b) => strcmp(a2.key, b.key))
+  }));
+}
+function resolveRecord(path) {
+  let rec = theme;
+  for (const key of path) {
+    rec = rec[key];
+  }
+  return rec;
+}
+function findRecord(path) {
+  let rec = theme;
+  for (const key of path) {
+    if (typeof rec !== "object" || rec === null) {
+      return void 0;
+    }
+    rec = rec[key];
+  }
+  return typeof rec === "object" && rec !== null ? rec : void 0;
+}
+var ThemeEditor = class extends Container3 {
+  categoryMap;
+  _refreshes = [];
+  _refreshing = false;
+  _varTheme;
+  _vars = {};
+  _varComments = {};
+  //live path of a bound slot, as pathKey, to the variable it reads
+  _bindings = /* @__PURE__ */ new Map();
+  //live path of an authored slot, as pathKey, to the path it is written at
+  _authored = /* @__PURE__ */ new Map();
+  //the row whose gesture is writing, so a broadcast does not refresh it
+  _origin;
+  _varsPanel;
+  constructor() {
+    super();
+    this.categoryMap = {};
+  }
+  static define() {
+    return {
+      tagname: "theme-editor-x",
+      style: "theme-editor"
+    };
+  }
+  init() {
+    super.init();
+    this.build();
+  }
+  addEventListener(type, listener, options) {
+    super.addEventListener(type, listener, options);
+  }
+  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
+  doFolder(catkey, obj, container = this, panel, path, bindable = true) {
+    const key = catkey.key;
+    if (!path) {
+      path = [key];
+    }
+    if (!panel) {
+      panel = container.panel(key, void 0, void 0, catkey.help);
+      panel.style.marginLeft = "15px";
+    }
+    this.addPropMenu(panel, catkey, obj, container, path);
+    const row = panel.row();
+    const col1 = row.col();
+    const col2 = row.col();
+    let placed = 0;
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      const kind = themeItemKind(k, v);
+      if (kind === "skip") {
+        continue;
+      }
+      if (kind === "record") {
+        this.doFolder(
+          { ...catkey, key: k },
+          v,
+          panel,
+          void 0,
+          [...path, k],
+          bindable && !(v instanceof ThemeScrollBars)
+        );
+      } else {
+        const col = placed % 2 === 0 ? col1 : col2;
+        const livePath = [...path, k];
+        this.valueRow(col, k, this.slotFor(livePath, key, k), kind);
+        if (bindable && this._varTheme) {
+          this.bindMenu(col, livePath, kind);
+        }
+      }
+      placed++;
+    }
+    if (placed === 0) {
+      panel.remove();
+    } else {
+      panel.closed = true;
+    }
+  }
+  /** Adds the "+" menu that creates a new property in `obj`. */
+  addPropMenu(panel, catkey, obj, container, path) {
+    const row = panel.row();
+    const textbox = row.textbox(void 0, "");
+    const add = (value) => {
+      const propkey = (textbox.text || "").trim();
+      if (!propkey) {
+        console.error("Cannot have empty theme property name");
+        return;
+      }
+      obj[propkey] = value;
+      this.rebuildFolder(panel, catkey, obj, container, path);
+      this.notify(catkey.key, propkey, obj);
+    };
+    row.menu("+", [
+      { name: "Float", callback: () => add(0) },
+      { name: "Color", callback: () => add("grey") },
+      { name: "Subfolder", callback: () => add({ test: 0 }) },
+      { name: "Font", callback: () => add(new CSSFont()) },
+      { name: "String", callback: () => add("") }
+    ]);
+  }
+  /** Rebuilds `panel` in place, preserving which of its sub-panels are open. */
+  rebuildFolder(panel, catkey, obj, container, path) {
+    const uidata = saveUIData(panel, "theme-panel");
+    panel.clear();
+    this.doFolder(catkey, obj, container, panel, path);
+    loadUIData(panel, uidata);
+    panel.flushUpdate();
+    panel.flushSetCSS();
+  }
+  /** Repaints the screen against the edited theme and reports the change. */
+  notify(category, key, record, varKey) {
+    flagThemeUpdate();
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record, varKey));
+    const on_change = this.on_change;
+    if (on_change) {
+      on_change(category, key, record);
+    }
+    if (this.ctx) {
+      this.ctx.screen.completeSetCSS();
+      this.ctx.screen.completeUpdate();
+    }
+  }
+  /**
+   * Hands the editor the untransformed theme the live one was instanced from,
+   * plus its variables. Both are deep-copied, so editing here never reaches the
+   * caller's module state. Without this the widget edits the live theme only.
+   * Passing the theme's own source brings each variable's comment across.
+   */
+  setVarTheme(varTheme, vars, existingThemeFile) {
+    this._varTheme = copyVarItem(varTheme);
+    this._vars = {};
+    for (const key of Object.keys(vars)) {
+      this._vars[key] = copyThemeItem(vars[key]);
+    }
+    this._varComments = existingThemeFile ? parseVarComments(existingThemeFile) : {};
+    this.rebuildBindings();
+    if (this._init_done) {
+      this.build();
+    }
+  }
+  /** The editor's own copy of the authored theme, or undefined in plain mode. */
+  getVarTheme() {
+    return this._varTheme ? copyVarItem(this._varTheme) : void 0;
+  }
+  /** The editor's own copy of the variable values. */
+  getThemeVars() {
+    const ret = {};
+    for (const key of Object.keys(this._vars)) {
+      ret[key] = copyThemeItem(this._vars[key]);
+    }
+    return ret;
+  }
+  /**
+   * Writes the edited theme back out as TypeScript source. The editor owns the
+   * authored record, so an edit at a bound slot is written as the variable it
+   * came from rather than dropped. Comments typed in the Variables panel win
+   * over the ones read out of `existingThemeFile`.
+   */
+  createFile({
+    existingThemeFile,
+    importPath,
+    onAssemble
+  } = {}) {
+    const varTheme = this.getVarTheme();
+    if (!varTheme) {
+      throw new Error("the theme editor has no authored theme to write");
+    }
+    return createThemeFile({
+      theme: varTheme,
+      vars: this.getThemeVars(),
+      varComments: {
+        ...existingThemeFile ? parseVarComments(existingThemeFile) : {},
+        ...this._varComments
+      },
+      importPath,
+      onAssemble
+    });
+  }
+  /** Re-reads which live slots are bound to which variable, and where each was authored. */
+  rebuildBindings() {
+    this._bindings = /* @__PURE__ */ new Map();
+    this._authored = /* @__PURE__ */ new Map();
+    if (!this._varTheme) {
+      return;
+    }
+    const walk = (rec, path) => {
+      for (const key in rec) {
+        const here = [...path, key];
+        this._authored.set(pathKey(toLivePath(here)), here);
+        const v = rec[key];
+        if (isPlainRecord(v)) {
+          walk(v, here);
+        }
+      }
+    };
+    walk(this._varTheme, []);
+    for (const varKey of Object.keys(this._vars)) {
+      for (const slot of varSlots(this._varTheme, varKey)) {
+        const live = pathKey(slot.livePath);
+        if (this._bindings.has(live)) {
+          console.warn(
+            `theme slot ${live} is bound twice, to "${this._bindings.get(live)}" and "${varKey}"`
+          );
+          continue;
+        }
+        this._bindings.set(live, varKey);
+      }
+    }
+  }
+  /**
+   * Where a live slot is written in the authored theme. A slot the theme file
+   * never mentioned is authored at its live path, so nothing else of the
+   * library's defaults is exported alongside it.
+   */
+  varPathFor(livePath) {
+    return this._authored.get(pathKey(livePath)) ?? [...livePath];
+  }
+  /**
+   * Points the live slot at `livePath` at `varKey` and takes the variable's
+   * value. Creating the authored entry seeds any sub-record it has to make from
+   * the live values, because `setTheme` assigns one by reference.
+   */
+  bindLiveSlot(livePath, varKey) {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+    bindSlot(this._varTheme, this.varPathFor(livePath), varKey, theme);
+    const parent = findRecord(livePath.slice(0, -1));
+    if (parent) {
+      parent[livePath[livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
+    }
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0], livePath[livePath.length - 1], void 0, varKey);
+  }
+  /** Writes the variable's current value into the authored slot and stops reading it. */
+  detachLiveSlot(livePath) {
+    const varPath = this._authored.get(pathKey(livePath));
+    if (!this._varTheme || !varPath) {
+      return;
+    }
+    unbindSlot(this._varTheme, this._vars, varPath);
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify(livePath[0], livePath[livePath.length - 1]);
+  }
+  /** Adds a variable, returning the name it was stored under. */
+  addThemeVar(name2, value) {
+    const key = addVar(this._vars, name2, copyThemeItem(value));
+    this.rebuild();
+    this.notify("themeVars", key, void 0, key);
+    return key;
+  }
+  /**
+   * Removes a variable, inlining its current value at every slot that read it.
+   * Nothing on screen changes.
+   */
+  deleteThemeVar(key) {
+    if (!this._varTheme) {
+      return;
+    }
+    deleteVar(this._varTheme, this._vars, key);
+    delete this._varComments[key];
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key);
+  }
+  /** Renames a variable, rewriting every slot that reads it. */
+  renameThemeVar(from, to) {
+    if (!this._varTheme) {
+      return from;
+    }
+    const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
+    this.rebuildBindings();
+    this.rebuild();
+    this.notify("themeVars", key, void 0, key);
+    return key;
+  }
+  /** The comment a variable is exported with. */
+  setVarComment(key, comment) {
+    this._varComments[key] = comment;
+  }
+  /**
+   * Makes a variable out of a slot's current value and binds the slot to it.
+   * The name is taken from the slot and deduped; the Variables panel opens so
+   * it can be renamed there.
+   */
+  varFromSlot(livePath) {
+    if (!this._varTheme) {
+      return void 0;
+    }
+    const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]];
+    const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
+    let name2 = stem;
+    for (let i = 2; name2 in this._vars; i++) {
+      name2 = `${stem}_${i}`;
+    }
+    addVar(this._vars, name2, copyThemeItem(value));
+    this.bindLiveSlot(livePath, name2);
+    if (this._varsPanel && !this._varsPanel.isDead()) {
+      this._varsPanel.closed = false;
+    }
+    return name2;
+  }
+  /** The menu binding one theme slot to a variable, detaching it, or making one. */
+  bindMenu(col, livePath, kind) {
+    const bound = this._bindings.get(pathKey(livePath));
+    const dbox = col.menu(bound !== void 0 ? `= ${bound}` : "\u2026", []);
+    dbox.description = bound !== void 0 ? `This value follows the theme variable "${bound}"` : "Read this value from a theme variable";
+    dbox.template = () => this.bindTemplate(livePath, kind);
+  }
+  bindTemplate(livePath, kind) {
+    const entries = [];
+    const bound = this._bindings.get(pathKey(livePath));
+    for (const key of Object.keys(this._vars)) {
+      if (key === bound || !varFits(kind, this._vars[key])) {
+        continue;
+      }
+      entries.push({
+        name: key,
+        tooltip: `Take this value from "${key}", and follow it from now on`,
+        callback: () => this.bindLiveSlot(livePath, key)
+      });
+    }
+    entries.push({
+      name: "New variable from this value",
+      tooltip: "Make a variable holding this value, and read it here",
+      callback: () => this.varFromSlot(livePath)
+    });
+    if (bound !== void 0) {
+      entries.push({
+        name: "Detach",
+        tooltip: `Keep the value "${bound}" has now, and stop following it`,
+        callback: () => this.detachLiveSlot(livePath)
+      });
+    }
+    return entries;
+  }
+  /** The panel listing every variable, above the theme's own categories. */
+  buildVarsPanel() {
+    const panel = this.panel(
+      "Variables",
+      "theme-variables",
+      void 0,
+      "Values shared by the theme slots bound to them"
+    );
+    this._varsPanel = panel;
+    for (const key of Object.keys(this._vars)) {
+      this.varRow(panel, key);
+    }
+    this.addVarMenu(panel);
+    panel.closed = true;
+  }
+  varRow(panel, key) {
+    const row = panel.row();
+    const name2 = row.textbox(void 0, key);
+    name2.width = VAR_NAME_WIDTH;
+    name2.description = "The name this variable is written under in the theme file";
+    name2.on_change = () => {
+      try {
+        this.renameThemeVar(key, name2.text);
+      } catch (e) {
+        console.error(e.message);
+        name2.text = key;
+      }
+    };
+    const slot = {
+      varKey: key,
+      get: () => this._vars[key],
+      set: (value) => this.writeVar(key, value, "themeVars", key)
+    };
+    const kind = themeItemKind(key, this._vars[key]);
+    const valueCol = row.col();
+    valueCol.style["width"] = `${VAR_VALUE_WIDTH}px`;
+    this.valueRow(valueCol, kind === "font" ? key : "", slot, kind);
+    const uses = this._varTheme ? varSlots(this._varTheme, key).length : 0;
+    row.label(uses === 1 ? "1 slot" : `${uses} slots`);
+    const comment = row.textbox(void 0, this._varComments[key] ?? "");
+    comment.width = VAR_COMMENT_WIDTH;
+    comment.description = "A note written above this variable in the exported theme file";
+    comment.on_change = () => this.setVarComment(key, comment.text);
+    const del = row.menu("\xD7", [
+      {
+        name: "Delete",
+        tooltip: `Write the value "${key}" has now into all ${uses} slots, and remove it`,
+        callback: () => this.deleteThemeVar(key)
+      }
+    ]);
+    del.description = `Remove "${key}"`;
+  }
+  /** Adds the "+" menu that creates a variable under the name typed beside it. */
+  addVarMenu(panel) {
+    const row = panel.row();
+    const textbox = row.textbox(void 0, "");
+    textbox.width = VAR_NAME_WIDTH;
+    textbox.description = "A name for the variable the menu beside this adds";
+    const add = (value) => {
+      try {
+        this.addThemeVar(textbox.text || "", value);
+      } catch (e) {
+        console.error(e.message);
+      }
+    };
+    const menu = row.menu("+", [
+      { name: "Float", tooltip: "Add a number variable", callback: () => add(0) },
+      { name: "Color", tooltip: "Add a colour variable", callback: () => add("grey") },
+      { name: "String", tooltip: "Add a text variable", callback: () => add("") },
+      { name: "Boolean", tooltip: "Add an on-or-off variable", callback: () => add(false) },
+      { name: "Font", tooltip: "Add a font variable", callback: () => add(new CSSFont()) }
+    ]);
+    menu.description = "Add a variable of the kind chosen here";
+  }
+  /** Rebuilds every row, once the widget is built at all. */
+  rebuild() {
+    if (this._init_done) {
+      this.build();
+    }
+  }
+  /**
+   * The slot editing the live theme value at `livePath`. A bound slot writes its
+   * variable instead, so every other slot on that variable follows. `category`
+   * and `key` name the change the write reports.
+   */
+  slotFor(livePath, category, key) {
+    const parent = livePath.slice(0, -1);
+    const leaf = livePath[livePath.length - 1];
+    const varKey = this._bindings.get(pathKey(livePath));
+    if (varKey !== void 0) {
+      return {
+        varKey,
+        get: () => resolveRecord(parent)[leaf],
+        set: (value) => this.writeVar(varKey, value, category, key)
+      };
+    }
+    return {
+      get: () => resolveRecord(parent)[leaf],
+      set: (value) => {
+        resolveRecord(parent)[leaf] = value;
+        this.notify(category, key);
+      }
+    };
+  }
+  /**
+   * Writes a variable and fans its value out to every slot reading it, one
+   * independent copy each. Sharing a `CSSFont` between slots would work until a
+   * detach, after which edits would bleed between them.
+   */
+  writeVar(varKey, value, category, key) {
+    if (!this._varTheme || !(varKey in this._vars)) {
+      return;
+    }
+    this._vars[varKey] = copyThemeItem(value);
+    for (const slot of varSlots(this._varTheme, varKey)) {
+      const parent = findRecord(slot.livePath.slice(0, -1));
+      if (parent) {
+        parent[slot.livePath[slot.livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
+      }
+    }
+    this.refreshVarRows(varKey, this._origin);
+    this.notify(category, key, void 0, varKey);
+  }
+  /**
+   * Writes through a slot, unless a refresh is in flight. Assigning a widget's
+   * value fires its own `on_change`, so a refresh that did not suppress the
+   * write would send it straight back to the slot it came from.
+   */
+  setSlot(slot, value, origin) {
+    if (this._refreshing) {
+      return;
+    }
+    const was = this._origin;
+    this._origin = origin;
+    try {
+      slot.set(value);
+    } finally {
+      this._origin = was;
+    }
+  }
+  /** Records a row's re-read, so another row writing the same value can trigger it. */
+  onRefresh(widget, slot, refresh) {
+    this._refreshes.push({ widget, slot, refresh });
+  }
+  /**
+   * Re-reads every row bound to `varKey`, dropping the rows a rebuild detached.
+   * The row that was edited is left alone, so a refresh cannot fight a gesture
+   * still in progress.
+   */
+  refreshVarRows(varKey, except) {
+    this._refreshes = this._refreshes.filter((entry) => !entry.widget.isDead());
+    const was = this._refreshing;
+    this._refreshing = true;
+    try {
+      for (const entry of this._refreshes) {
+        if (entry.slot.varKey === varKey && entry.widget !== except) {
+          entry.refresh();
+        }
+      }
+    } finally {
+      this._refreshing = was;
+    }
+  }
+  valueRow(col, key, slot, kind) {
+    switch (kind) {
+      case "color":
+        return this.colorRow(col, key, slot);
+      case "string":
+        return this.stringRow(col, key, slot);
+      case "number":
+        return this.numberRow(col, key, slot);
+      case "boolean":
+        return this.boolRow(col, key, slot);
+      case "font":
+        return this.fontPanel(col, key, slot);
+    }
+    return void 0;
+  }
+  colorRow(col, key, slot) {
+    const cw = col.colorbutton(void 0);
+    const read = () => {
+      const css = String(slot.get() ?? "");
+      try {
+        cw.setRGBA(css2color2(css.toLowerCase().trim()));
+      } catch {
+        console.warn("Failed to set color " + key, css);
+      }
+    };
+    read();
+    cw.label = key;
+    cw.on_change = () => this.setSlot(slot, color2css3(cw.rgba), cw);
+    this.onRefresh(cw, slot, read);
+    return cw;
+  }
+  stringRow(col, key, slot) {
+    col.label(key);
+    const box = col.textbox();
+    box.text = String(slot.get() ?? "");
+    box.on_change = () => this.setSlot(slot, box.text, box);
+    this.onRefresh(box, slot, () => {
+      box.text = String(slot.get() ?? "");
+    });
+    return box;
+  }
+  numberRow(col, key, slot) {
+    const slider = col.slider(void 0, key, Number(slot.get() ?? 0), 0, 256, 0.01, false);
+    slider.baseUnit = slider.displayUnit = "none";
+    slider.on_change = () => this.setSlot(slot, slider.value, slider);
+    this.onRefresh(slider, slot, () => {
+      slider.value = Number(slot.get() ?? 0);
+    });
+    return slider;
+  }
+  boolRow(col, key, slot) {
+    const check = col.check(void 0, key);
+    check.value = !!slot.get();
+    check.on_change = () => this.setSlot(slot, !!check.value, check);
+    this.onRefresh(check, slot, () => {
+      check.value = !!slot.get();
+    });
+    return check;
+  }
+  /**
+   * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
+   * whole new font, because a slot bound to a variable holds one independent
+   * copy per referencing theme key and mutating this one would leave the rest
+   * stale.
+   */
+  fontPanel(col, key, slot) {
+    const panel = col.panel(key);
+    const font = () => slot.get() ?? new CSSFont();
+    const edit = (origin, apply) => {
+      const next = font().copy();
+      apply(next);
+      this.setSlot(slot, next, origin);
+    };
+    for (const field of FONT_FIELDS) {
+      panel.label(field);
+      const tbox = panel.textbox(void 0, font()[field]);
+      tbox.width = tbox.getDefault("width");
+      tbox.on_change = () => edit(tbox, (next) => {
+        next[field] = tbox.text;
+      });
+      this.onRefresh(tbox, slot, () => {
+        tbox.text = font()[field];
+      });
+    }
+    const cw = panel.colorbutton(void 0);
+    cw.label = "color";
+    cw.setRGBA(css2color2(font().color));
+    cw.on_change = () => edit(cw, (next) => {
+      next.color = color2css3(cw.rgba);
+    });
+    this.onRefresh(cw, slot, () => cw.setRGBA(css2color2(font().color)));
+    const slider = panel.slider(void 0, "size", font().size);
+    slider.setAttribute("min", "1");
+    slider.setAttribute("max", "100");
+    slider.baseUnit = slider.displayUnit = "none";
+    slider.on_change = () => edit(slider, (next) => {
+      next.size = slider.value;
+    });
+    this.onRefresh(slider, slot, () => {
+      slider.value = font().size;
+    });
+    panel.closed = true;
+    return panel;
+  }
+  build() {
+    const uidata = saveUIData(this, "theme");
+    this.clear();
+    this._refreshes = [];
+    this._varsPanel = void 0;
+    if (this._varTheme) {
+      this.buildVarsPanel();
+    }
+    for (const { category, keys: keys2 } of groupThemeCategories(theme, this.categoryMap)) {
+      const panel = keys2.length > 1 ? this.panel(category) : void 0;
+      for (const catkey of keys2) {
+        const v = theme[catkey.key];
+        if (typeof v === "object" && v !== null) {
+          this.doFolder(catkey, v, panel ?? this);
+        }
+      }
+      if (panel) {
+        panel.closed = true;
+      }
+    }
+    loadUIData(this, uidata);
+    for (let i = 0; i < 2; i++) {
+      this.flushSetCSS();
+      this.flushUpdate();
+    }
+    if (this.ctx) {
+      window.setTimeout(() => {
+        this.ctx.screen.completeSetCSS();
+      }, 100);
+    }
+  }
+};
+UIBase2.internalRegister(ThemeEditor);
+
+// scripts/widgets/ui_treeview.ts
+init_ui_base();
+init_math();
+var TreeItem = class extends Container3 {
+  treeParent;
+  treeChildren;
+  treeView;
+  treeDepth;
+  header;
+  _icon1;
+  _icon2;
+  opened;
+  _label;
+  _labelText;
+  constructor() {
+    super();
+    this.treeParent = void 0;
+    this.treeChildren = [];
+    this.treeView = void 0;
+    this.treeDepth = 0;
+    this.header = this.row();
+    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
+    this._icon1.iconsheet = 0;
+    this._icon1.drawButtonBG = false;
+    this._icon2 = void 0;
+    this._icon1.onclick = () => {
+      if (this.opened) {
+        this.close();
+      } else {
+        this.open();
+      }
+    };
+    this.opened = true;
+    this._label = this.header.label("unlabeled");
+    this._labelText = "unlabeled";
+  }
+  set icon(id) {
+    if (this._icon2) {
+      this._icon2 = id;
+    } else {
+      this._icon2 = UIBase2.createElement("icon-label-x");
+      this._icon2.icon = id;
+      this._icon2.iconsheet = 0;
+      this.header.insert(1, this._icon2);
+    }
+  }
+  get icon() {
+    if (this._icon2) return this._icon2.icon;
+    else return -1;
+  }
+  open() {
+    this._icon1.icon = Icons.TREE_COLLAPSE;
+    this.opened = true;
+    this.treeView._open(this);
+  }
+  close() {
+    this._icon1.icon = Icons.TREE_EXPAND;
+    this.opened = false;
+    this.treeView._close(this);
+  }
+  set text(b) {
+    if (typeof b === "string") {
+      this._label.text = b;
+      this._labelText = b;
+    } else if (b instanceof HTMLElement) {
+      this._label.remove();
+      this.header.add(b);
+      this._label = b;
+      this._labelText = b;
+    }
+  }
+  get text() {
+    return this._labelText;
+  }
+  item(name2, args = {}) {
+    args.treeParent = this;
+    return this.parentWidget.item(name2, args);
+  }
+  init() {
+    super.init();
+  }
+  static define() {
+    return {
+      tagname: "tree-item-x",
+      style: "treeview"
+    };
+  }
+};
+UIBase2.internalRegister(TreeItem);
+var TreeView = class extends Container3 {
+  items;
+  strokes;
+  overdraw;
+  constructor() {
+    super();
+    this.items = [];
+    this.strokes = [];
+  }
+  init() {
+    super.init();
+    this.style.display = "flex";
+    this.style.flexDirection = "column";
+    this.overdraw = UIBase2.createElement("overdraw-x");
+    console.log(this.overdraw.startNode);
+    this.overdraw.startNode(this);
+    this.style.margin = this.style.padding = "0px";
+    this.updateOverdraw();
+  }
+  _forAllChildren(item, cb) {
+    const visit = (n) => {
+      cb(n);
+      for (const c of n.treeChildren) {
+        visit(c);
+      }
+    };
+    for (const c of item.treeChildren) {
+      visit(c);
+    }
+  }
+  _open(item) {
+    this._forAllChildren(item, (c) => {
+      if (c.opened) {
+        c.unhide();
+      }
+    });
+    this._makeStrokes();
+  }
+  _close(item) {
+    this._forAllChildren(item, (c) => {
+      c.hide();
+    });
+    this._makeStrokes();
+  }
+  _makeStrokes() {
+    if (!this.overdraw) {
+      return;
+    }
+    for (const elem of this.strokes) {
+      elem.remove();
+    }
+    this.strokes.length = 0;
+    const hidden = (item) => {
+      return item.hidden;
+    };
+    const items = this.items;
+    if (items.length == 0) {
+      return;
+    }
+    this.overdraw.clear();
+    const next = (i2) => {
+      i2++;
+      while (i2 < items.length && hidden(items[i2])) {
+        i2++;
+      }
+      return i2;
+    };
+    let i = 0;
+    if (hidden(items[i])) i = next(i);
+    const origin = this.overdraw.getBoundingClientRect();
+    const overdraw = this.overdraw;
+    const line = function(x1, y1, x2, y2) {
+      const ox = origin.x;
+      const oy = origin.y;
+      x1 -= ox;
+      y1 -= oy;
+      x2 -= ox;
+      y2 -= oy;
+      overdraw.line([x1, y1], [x2, y2]);
+    };
+    console.log("making lines", i);
+    const indent = this.getDefault("itemIndent");
+    const rowh = this.getDefault("rowHeight");
+    const getx = (depth) => {
+      return (depth + 2.2) * indent + origin.x;
+    };
+    this.overdraw.style.zIndex = "0";
+    for (; i < items.length; i = next(i)) {
+      const item = this.items[i];
+      const item2idx = next(i);
+      const item2 = item2idx < items.length ? items[item2idx] : void 0;
+      const r = item._icon1.getBoundingClientRect();
+      if (!r) continue;
+      const x1 = getx(item.treeDepth);
+      const y1 = origin.y + (i + 1) * rowh - rowh * 0.25;
+      if (item2 && item2.treeDepth > item.treeDepth) {
+        const y2 = y1 + rowh * 0.75;
+        line(x1, y1, x1, y2);
+        line(x1, y2, getx(item2.treeDepth) - 3, y2);
+      } else if (item2?.treeDepth === item.treeDepth) {
+        line(x1, y1, x1, y1 + rowh * 0.5);
+      }
+    }
+  }
+  updateOverdraw() {
+    const mm = new MinMax(2);
+    let ok = false;
+    for (const item of this.items) {
+      for (const r2 of item.getClientRects()) {
+        mm.minmax([r2.x, r2.y]);
+        mm.minmax([r2.x + r2.width, r2.y + r2.height]);
+        ok = true;
+      }
+    }
+    if (!ok) {
+      return;
+    }
+    const r = this.getClientRects()[0];
+    if (!r) return;
+    const x = r.left;
+    const y = r.top;
+    const od = this.overdraw;
+    od.style.margin = "0px";
+    od.style.padding = "0px";
+    od.svg.style.margin = "0px";
+    od.style.position = UIBase2.PositionKey;
+    od.style.width = r.width - 1 + "px";
+    od.style.height = r.height - 1 + "px";
+    od.style.left = x + "px";
+    od.style.top = y + "px";
+  }
+  update() {
+    super.update();
+    this.updateOverdraw();
+  }
+  item(name2, args = {}) {
+    const ret = UIBase2.createElement("tree-item-x");
+    this.add(ret);
+    ret._init();
+    ret.text = name2;
+    if (args.icon) {
+      ret.icon = args.icon;
+    }
+    ret.treeParent = args.treeParent;
+    ret.treeView = this;
+    ret.style.maxHeight = this.getDefault("rowHeight") + "px";
+    if (ret.treeParent) {
+      ret.treeParent.treeChildren.push(ret);
+      ret.treeDepth = ret.treeParent.treeDepth + 1;
+    }
+    let p = ret.treeParent;
+    let i = 1;
+    while (p) {
+      p = p.treeParent;
+      i++;
+    }
+    ret.style.marginLeft = i * this.getDefault("itemIndent") + "px";
+    this.items.push(ret);
+    this.doOnce(() => {
+      this._makeStrokes();
+    });
+    return ret;
+  }
+  static define() {
+    return {
+      tagname: "tree-view-x",
+      style: "treeview"
+    };
+  }
+};
+UIBase2.internalRegister(TreeView);
+
+// scripts/graph/index.ts
+var graph_exports = {};
+__export(graph_exports, {
+  AddNodeOp: () => AddNodeOp,
+  ConnectOp: () => ConnectOp,
+  DeleteNodeOp: () => DeleteNodeOp,
+  DisconnectOp: () => DisconnectOp,
+  ExposedEntry: () => ExposedEntry,
+  FloatSocket: () => FloatSocket,
+  Graph: () => Graph,
+  GraphLink: () => GraphLink,
+  GroupDef: () => GroupDef,
+  GroupInputNode: () => GroupInputNode,
+  GroupNode: () => GroupNode,
+  GroupOutputNode: () => GroupOutputNode,
+  MoveNodeOp: () => MoveNodeOp,
+  NO_ID: () => NO_ID,
+  Node: () => Node3,
+  NodeClasses: () => NodeClasses2,
+  NodeSocketBase: () => NodeSocketBase,
+  RenameNodeOp: () => RenameNodeOp,
+  ReplaceNodeOp: () => ReplaceNodeOp,
+  SetNodePropOp: () => SetNodePropOp,
+  SocketClasses: () => SocketClasses,
+  Vec3Socket: () => Vec3Socket,
+  buildGraphFromDSL: () => buildGraphFromDSL,
+  defineGraphAPI: () => defineGraphAPI,
+  definitionOfSubgraph: () => definitionOfSubgraph,
+  getNodeClass: () => getNodeClass,
+  getSocketClass: () => getSocketClass,
+  nodePropKeys: () => nodePropKeys,
+  nodePropTarget: () => nodePropTarget,
+  nodePropValue: () => nodePropValue,
+  nodeStructFor: () => nodeStructFor,
+  registerNodeType: () => registerNodeType,
+  registerSocketType: () => registerSocketType,
+  validateGraphDSL: () => validateGraphDSL
+});
+
+// scripts/graph/sockets_std.ts
+init_nstructjs();
+init_toolprop();
+init_vectormath();
+var FloatSocket = class extends NodeSocketBase {
+  static STRUCT = inlineRegister(this, `graph.FloatSocket {}`);
+  static socketDef() {
+    return { typeName: "FloatSocket", type: "float", uiName: "Float", color: "#a1a1a1" };
+  }
+  constructor(dir = "in") {
+    super(dir);
+    if (dir === "in") {
+      this.defaultProp = new FloatProperty(0);
+    }
+  }
+};
+registerSocketType(FloatSocket);
+var Vec3Socket = class extends NodeSocketBase {
+  static STRUCT = inlineRegister(this, `graph.Vec3Socket {}`);
+  static socketDef() {
+    return { typeName: "Vec3Socket", type: "vec3", uiName: "Vector3", color: "#8a8ad0" };
+  }
+  constructor(dir = "in") {
+    super(dir);
+    if (dir === "in") {
+      this.defaultProp = new Vec3Property([0, 0, 0]);
+    }
+  }
+  // float→vec3 is destination knowledge: the float splats across the components.
+  canCoerceFrom(type) {
+    return type === "float" || super.canCoerceFrom(type);
+  }
+  convertFrom(b) {
+    if (b.type === "float") {
+      const v = b.getValue();
+      return typeof v === "number" ? new Vector3([v, v, v]) : void 0;
+    }
+    return super.convertFrom(b);
+  }
+  // vec3→float is source knowledge, so FloatSocket stays ignorant of vectors.
+  canCoerceTo(type) {
+    return type === "float" || super.canCoerceTo(type);
+  }
+  /** A vec3 reads as a float through the component average, the inverse of the splat. */
+  convertTo(type) {
+    if (type === "float") {
+      const v = this.getValue();
+      return v === void 0 ? void 0 : (v[0] + v[1] + v[2]) / 3;
+    }
+    return super.convertTo(type);
+  }
+};
+registerSocketType(Vec3Socket);
+
+// scripts/graph/dsl.ts
+function validateGraphDSL(input, registries) {
+  return buildGraphFromDSL(input, registries).diagnostics;
+}
+function buildGraphFromDSL(input, registries) {
+  const graph = new Graph();
+  const diagnostics = [];
+  const byId = /* @__PURE__ */ new Map();
+  const report3 = (code2, path, detail) => {
+    diagnostics.push({ code: code2, message: `${path}: ${detail}`, path });
+  };
+  if (!isRecord(input)) {
+    report3("bad-shape", "", "the input is not an object with nodes and links");
+    return { graph, diagnostics };
+  }
+  const buildNode = (entry, path) => {
+    if (!isRecord(entry)) {
+      report3("bad-shape", path, "the entry is not a {id, type, props} object");
+      return;
+    }
+    const { id, type } = entry;
+    if (typeof id !== "string" && typeof id !== "number") {
+      report3("bad-shape", path, "the entry is missing a string or number id");
+      return;
+    }
+    if (typeof type !== "string") {
+      report3("bad-shape", path, `node '${id}' is missing a node type string`);
+      return;
+    }
+    if (byId.has(id)) {
+      report3("duplicate-node-id", path, `id '${id}' repeats an earlier node; entry dropped`);
+      return;
+    }
+    const cls = registries.nodeTypes.get(type);
+    if (cls === void 0) {
+      report3("unknown-node-type", path, `node '${id}' has unknown node type '${type}'`);
+      return;
+    }
+    const node = new cls();
+    node.id = id;
+    graph.add(node);
+    byId.set(id, node);
+    if (entry.props === void 0) {
+      return;
+    }
+    if (!isRecord(entry.props)) {
+      report3("bad-shape", `${path}.props`, `node '${id}' has a non-object props field`);
+      return;
+    }
+    for (const key in entry.props) {
+      applyProp(node, key, entry.props[key], `${path}.props.${key}`);
+    }
+  };
+  const applyProp = (node, key, value, path) => {
+    const target = node.props[key] ?? node.inputs[key]?.defaultProp;
+    if (target === void 0) {
+      report3(
+        "unknown-prop",
+        path,
+        `node type '${node.def.typeName}' has no prop or input default '${key}'`
+      );
+      return;
+    }
+    try {
+      target.copy().setValue(value);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      report3("bad-prop-value", path, `the property refused the value: ${detail}`);
+      return;
+    }
+    target.setValue(value);
+  };
+  const buildLink = (entry, path) => {
+    if (!Array.isArray(entry) || entry.length !== 4 || typeof entry[0] !== "string" && typeof entry[0] !== "number" || typeof entry[1] !== "string" || typeof entry[2] !== "string" && typeof entry[2] !== "number" || typeof entry[3] !== "string") {
+      report3("bad-shape", path, "the entry is not [fromNode, outputKey, toNode, inputKey]");
+      return;
+    }
+    const [fromId, outKey, toId, inKey] = entry;
+    const from = byId.get(fromId);
+    if (from === void 0) {
+      report3("unknown-link-node", path, `no node with id '${fromId}'`);
+      return;
+    }
+    const to = byId.get(toId);
+    if (to === void 0) {
+      report3("unknown-link-node", path, `no node with id '${toId}'`);
+      return;
+    }
+    const src = from.outputs[outKey];
+    if (src === void 0) {
+      report3(
+        "unknown-link-socket",
+        path,
+        `node '${fromId}' (${from.def.typeName}) has no output socket '${outKey}'`
+      );
+      return;
+    }
+    const dst = to.inputs[inKey];
+    if (dst === void 0) {
+      report3(
+        "unknown-link-socket",
+        path,
+        `node '${toId}' (${to.def.typeName}) has no input socket '${inKey}'`
+      );
+      return;
+    }
+    if (!dst.coerce(src, { dryRun: true })) {
+      report3(
+        "link-type-mismatch",
+        path,
+        `'${src.type}' output '${outKey}' cannot feed '${dst.type}' input '${inKey}'; no coercion between the types`
+      );
+      return;
+    }
+    if (src.edges.includes(dst)) {
+      report3("duplicate-link", path, "the entry repeats an earlier link; dropped");
+      return;
+    }
+    if (!dst.multiSocket && dst.edges.length > 0) {
+      report3(
+        "link-input-occupied",
+        path,
+        `input '${inKey}' on node '${toId}' takes one link and already has one; dropped`
+      );
+      return;
+    }
+    graph.connect(src, dst);
+  };
+  if (input.nodes !== void 0 && !Array.isArray(input.nodes)) {
+    report3("bad-shape", "nodes", "nodes is not an array");
+  } else {
+    (input.nodes ?? []).forEach((entry, i) => buildNode(entry, `nodes[${i}]`));
+  }
+  if (input.links !== void 0 && !Array.isArray(input.links)) {
+    report3("bad-shape", "links", "links is not an array");
+  } else {
+    (input.links ?? []).forEach((entry, i) => buildLink(entry, `links[${i}]`));
+  }
+  return { graph, diagnostics };
+}
+function isRecord(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+// scripts/widgets/dragbox.ts
+init_ui_base();
+init_simple_events();
+init_ui_theme();
+function startDrag(box) {
+  if (box._modal) {
+    popModalLight(box._modal);
+    box._modal = void 0;
+    return;
+  }
+  let first2 = true;
+  let lastx = 0;
+  let lasty = 0;
+  const handlers = {
+    on_mousemove(e) {
+      const x = e.x;
+      const y = e.y;
+      if (first2) {
+        lastx = x;
+        lasty = y;
+        first2 = false;
+        return;
+      }
+      const dx = x - lastx;
+      const dy = y - lasty;
+      let hx = parsepx2(box.style.left);
+      let hy = parsepx2(box.style.top);
+      hx += dx;
+      hy += dy;
+      console.log(hx, hy);
+      box.style.left = hx + "px";
+      box.style.top = hy + "px";
+      lastx = x;
+      lasty = y;
+    },
+    end() {
+      if (box._modal) {
+        popModalLight(box._modal);
+        box._modal = void 0;
+      }
+    },
+    on_mouseup(e) {
+      this.end();
+    },
+    on_keydown(e) {
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+        case keymap["Return"]:
+          this.end();
+          break;
+      }
+    }
+  };
+  box._modal = pushModalLight(handlers);
+}
+var DragBox = class extends Container3 {
+  _done;
+  header;
+  contents;
+  _modal;
+  _onend;
+  onend;
+  constructor() {
+    super();
+    this._done = false;
+    this.header = UIBase2.createElement("rowframe-x");
+    this.contents = UIBase2.createElement("container-x");
+    this.header.style.borderRadius = "20px";
+    this.header.parentWidget = this;
+    this.contents.parentWidget = this;
+    this.shadow.appendChild(this.header);
+    this.shadow.appendChild(this.contents);
+  }
+  init() {
+    super.init();
+    const header = this.header;
+    header.ctx = this.ctx;
+    this.contents.ctx = this.ctx;
+    header._init();
+    this.contents._init();
+    this.style.minWidth = "350px";
+    header.style.height = "35px";
+    const icon = header.iconbutton(Icons.DELETE, "Hide", () => {
+      this.end();
+    });
+    icon.iconsheet = 0;
+    this.addEventListener(
+      "mousedown",
+      (e) => {
+        console.log("start drag");
+        startDrag(this);
+        e.preventDefault();
+      },
+      { capture: false }
+    );
+    header.background = this.getDefault("background-color");
+    this.setCSS();
+  }
+  add(...args) {
+    return this.contents.add(...args);
+  }
+  prepend(...args) {
+    return this.contents.prepend(...args);
+  }
+  appendChild(n) {
+    return this.contents.appendChild(n);
+  }
+  col(...args) {
+    return this.contents.col(...args);
+  }
+  row(...args) {
+    return this.contents.row(...args);
+  }
+  strip(...args) {
+    return this.contents.strip(...args);
+  }
+  button(...args) {
+    return this.contents.button(...args);
+  }
+  iconbutton(...args) {
+    return this.contents.iconbutton(...args);
+  }
+  iconcheck(...args) {
+    return this.contents.iconcheck(...args);
+  }
+  tool(...args) {
+    return this.contents.tool(...args);
+  }
+  menu(...args) {
+    return this.contents.menu(...args);
+  }
+  prop(...args) {
+    return this.contents.prop(...args);
+  }
+  listenum(...args) {
+    return this.contents.listenum(...args);
+  }
+  check(...args) {
+    return this.contents.check(...args);
+  }
+  iconenum(...args) {
+    return this.contents.iconenum(...args);
+  }
+  slider(...args) {
+    return this.contents.slider(...args);
+  }
+  simpleslider(...args) {
+    return this.contents.simpleslider(...args);
+  }
+  curve(...args) {
+    return this.contents.curve(...args);
+  }
+  textbox(...args) {
+    return this.contents.textbox(...args);
+  }
+  textarea(...args) {
+    return this.contents.textarea(...args);
+  }
+  viewer(...args) {
+    return this.contents.viewer(...args);
+  }
+  panel(...args) {
+    return this.contents.panel(...args);
+  }
+  tabs(...args) {
+    return this.contents.tabs(...args);
+  }
+  table(...args) {
+    return this.contents.table(...args);
+  }
+  end() {
+    if (this._done) {
+      return;
+    }
+    this.remove();
+    if (this._onend) {
+      this._onend();
+    }
+    if (this.onend) {
+      this.onend();
+    }
+  }
+  setCSS() {
+    super.setCSS();
+    this.background = this.getDefault("background-color");
+  }
+  static define() {
+    return {
+      tagname: "drag-box-x",
+      style: "panel"
+    };
+  }
+};
+UIBase2.internalRegister(DragBox);
 
 // scripts/widgets/ui_dialog.ts
 init_ui_base();
@@ -88150,8 +92389,10 @@ export {
   BorderMask,
   BorderSides,
   BounceCurve,
+  BoxSelectModalOp,
   Button,
   ButtonEventBase,
+  CLICK_SLOP_PX,
   COLINEAR,
   COLINEAR_ISECT,
   CSSFont,
@@ -88246,8 +92487,12 @@ export {
   IsMobile,
   KeyMap,
   LINECROSS,
+  LINK_DROP_PX,
   Label,
   LastToolPanel,
+  LinkCanvas,
+  LinkDrag,
+  LinkDragModalOp,
   ListBox2 as ListBox,
   ListBoxChangeEvent,
   ListBoxSetActiveToolOp,
@@ -88270,6 +92515,10 @@ export {
   MinMax1,
   ModalTabMove,
   ModelInterface,
+  NodeEditor,
+  NodeFrame,
+  NodeGraphView,
+  NodeMoveModalOp,
   Note,
   NoteFrame,
   NumProperty,
@@ -88285,6 +92534,9 @@ export {
   PackFlags,
   PackNode,
   PackNodeVertex,
+  PanZoomContainer,
+  PanZoomPanOp,
+  PanZoomTransform,
   PanelContents2 as PanelContents,
   PanelDockMask,
   PanelFlags,
@@ -88356,6 +92608,7 @@ export {
   ToolFlags,
   ToolMacro,
   ToolOp,
+  ToolOpDelegate,
   ToolOpIface,
   ToolPaths,
   ToolProperty,
@@ -88405,11 +92658,16 @@ export {
   aabb_sphere_isect_2d,
   aabb_union,
   aabb_union_2d,
+  addMenuItems,
+  addNodeMenuTemplate,
   addVar,
   angle_between_vecs,
   barycentric_v2,
   bindSlot,
   binomial,
+  buildAddNodeMenu,
+  buildForwardedUI,
+  buildGroupDesigner,
   buildParser,
   buildString,
   buildToolOpAPI,
@@ -88476,9 +92734,11 @@ export {
   expand_line,
   expand_rect2d,
   exportTheme,
+  exposedEntryState,
   feps,
   flagThemeUpdate,
   flushPathNotifications,
+  forwardedRows,
   genHermiteTable,
   gen_circle,
   getAreaIntName,
@@ -88558,6 +92818,7 @@ export {
   mount,
   mySafeJSONParse,
   mySafeJSONStringify,
+  graph_exports as nodegraph,
   normal_poly,
   normal_quad,
   normal_quad_old,
@@ -88586,6 +92847,7 @@ export {
   popReportName,
   progbarNote,
   project,
+  propEditRow,
   purgeUpdateStack,
   pushModalLight,
   pushPointerModal,
@@ -88628,6 +92890,8 @@ export {
   simple_tri_aabb_isect,
   singleMouseEvent,
   sliderDomAttributes,
+  socketAnchor,
+  socketRow,
   solver_exports as solver,
   startEvents,
   startMenu,

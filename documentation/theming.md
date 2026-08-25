@@ -1,15 +1,17 @@
+
+
 <!-- toc -->
 
 - [Overview](#overview)
 - [Theme variables](#theme-variables)
-  - [Variants](#variants)
+  * [Variants](#variants)
 - [The theme file](#the-theme-file)
-  - [Example theme file](#example-theme-file)
-  - [Variable comments](#variable-comments)
+  * [Example theme file](#example-theme-file)
+  * [Variable comments](#variable-comments)
 - [The theme editor widget](#the-theme-editor-widget)
-  - [Variable mode](#variable-mode)
+  * [Variable mode](#variable-mode)
 - [A theme editor area with an export button](#a-theme-editor-area-with-an-export-button)
-  - [The export handler](#the-export-handler)
+  * [The export handler](#the-export-handler)
 - [Typed theme lookups](#typed-theme-lookups)
 <!-- regenerate with pnpm markdown-toc -->
 

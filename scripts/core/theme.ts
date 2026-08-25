@@ -323,6 +323,16 @@ export const DefaultTheme = {
       size   : 12,
       color  : "rgba(25, 25, 25, 1.0)",
     }),
+    HotkeyText: new CSSFont({
+      font   : "sans-serif",
+      weight : "normal",
+      variant: "normal",
+      style  : "normal",
+      size   : 12,
+      color  : "rgba(68, 68, 68, 1.0)",
+    }),
+    // addItemExtra sets the hotkey span's color separately from its font
+    HotkeyTextColor : "rgba(68, 68, 68, 1.0)",
     "padding-top"   : 0,
     "padding-left"  : 0,
     "padding-right" : 0,

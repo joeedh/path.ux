@@ -100,6 +100,12 @@ container.slider("scene.tool.brush.radius");
 container.check("settings.snap.enabled");
 ```
 
+`container.prop(path)` goes further: it reads the `ToolProperty` at the end of the path and
+builds whichever widget that property's type calls for, with its UI name, range, step, enum
+items and icons already applied. What each `Container` method does with a bound path — the
+`prop()` type table, the three slider styles, path prefixes, mass set, and undo — is in
+[container.md](container.md).
+
 `DataAPI.resolvePath(ctx, path)` is the low-level resolver behind these calls; on failure it
 records a message (including "did you mean" hints) on `api.lastResolveError`. In this app the
 set of valid paths is catalogued — see `generated/API_PATHS.md` and run `pnpm run gen:paths`
