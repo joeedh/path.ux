@@ -74,7 +74,7 @@ The spec names three things that do not exist yet. Each is assigned to a stage:
    `GroupNode.defineAPI` declares its instance subgraph as a `DataList` (per-key
    `getStruct` callback, controller_base.ts:514, resolving each inner node's struct through
    `api.mapStruct` — heterogeneous lists are the documented use of that callback), so paths
-   like `nodes[5].group.nodes[3].props['scale']` compose from existing machinery with no new
+   like `nodes[5].group.nodes[3].props['scale'].value` compose from existing machinery with no new
    controller feature. Sparse overrides are handled at the property leaf with `customGetSet`
    (controller.ts:282): the getter resolves instance-override-else-definition, the setter
    materializes the property on the instance (which sets `wasSet`) and writes it. Nested

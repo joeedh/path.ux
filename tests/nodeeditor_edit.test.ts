@@ -398,11 +398,23 @@ test("editing a forwarded property on an instance materializes the override", as
   const root = document.createElement("div");
   buildForwardedUI(root, ctx, grp, `graph.nodes[${JSON.stringify(grp.id)}]`);
 
-  const input = root.querySelector("input")!;
-  expect(input.value).toBe("0.5");
+  // The row hosts a real prop editor bound to the instance-side value path.
+  const row = root.querySelector(".nodeeditor-prop-row") as UIBase;
+  expect(row).not.toBeNull();
+  const widget = row.shadow.querySelector("[datapath]") as UIBase;
+  expect(widget).not.toBeNull();
 
-  input.value = "0.9";
-  input.dispatchEvent(new Event("change"));
+  const path = widget.getAttribute("datapath")!;
+  expect(path).toBe(
+    `graph.nodes[${JSON.stringify(grp.id)}].group` +
+      `.nodes[${JSON.stringify(inner.id)}].props['bias'].value`
+  );
+  expect(widget.getPathValue(ctx, path)).toBe(0.5);
+
+  // The widget's binding is asserted above; the write goes through the same
+  // datapath. (setPathValue would route via the saved-defaults cache, which a
+  // bare test ToolStack never initializes.)
+  ctx.api.setValue(ctx, path, 0.9);
 
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
   expect(copy.props.bias.wasSet).toBe(true);

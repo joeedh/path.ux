@@ -301,9 +301,21 @@ graph.NodeSocketBase {
     void st;
   }
 
-  /** UI for editing the default value, as a container.prop(path) call. Inert until stage 7 supplies the datapath. */
-  createUI<CTX extends IContextBase>(container: Container<CTX>): void {
-    void container;
+  /**
+   * Builds the editor row for this socket's default value; datapath addresses it
+   * through the owning node's props list. The base implementation covers the
+   * built-in property types via container.prop; a socket class carrying a custom
+   * property type overrides this to build its own widget.
+   */
+  createUI<CTX extends IContextBase>(
+    container: Container<CTX>,
+    datapath: string,
+    label?: string
+  ): void {
+    const w = container.prop(datapath);
+    if (label !== undefined) {
+      w?.setAttribute("name", label);
+    }
   }
 
   loadSTRUCT(reader: StructReader<this>): void {
@@ -349,6 +361,12 @@ export function registerSocketType(cls: SocketTypeConstructor): void {
     throw new Error(
       cls.name + ": socketDef().typeName '" + def.typeName + "' does not match the class name"
     );
+  }
+
+  // A class without its own STRUCT serializes as its nearest registered ancestor
+  // plus nothing; inlineRegister merges that ancestor's fields into the empty body.
+  if (!nstructjs.isRegistered(cls)) {
+    nstructjs.inlineRegister(cls, `graph.${def.typeName} {\n}\n`);
   }
 
   SocketClasses.set(def.typeName, cls);

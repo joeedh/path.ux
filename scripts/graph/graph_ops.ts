@@ -27,6 +27,15 @@ function nodeAt(graph: Graph, idJSON: string): Node {
   return node;
 }
 
+/**
+ * Wakes the pathwatch watchers on an op's graph. Called at the end of every exec and
+ * undo (redo re-runs exec), so the editor refreshes on undo/redo without the caller
+ * syncing by hand.
+ */
+function notifyGraph(ctx: ContextLike, op: { inputs: { graphPath: StringProperty } }): void {
+  ctx.api.notifyChange(op.inputs.graphPath.getValue());
+}
+
 /** One severed or displaced link, held as ids and socket keys so undo can reconnect it. */
 interface EdgeRecord {
   srcId: GraphId;
@@ -193,11 +202,13 @@ export class AddNodeOp extends ToolOp<
 
     graph.add(node);
     this.outputs.nodeId.setValue(JSON.stringify(node.id));
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.remove(nodeAt(graph, this.outputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
   }
 }
 
@@ -234,12 +245,14 @@ export class DeleteNodeOp extends ToolOp<{
   override exec(ctx: ContextLike): void {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.remove(nodeAt(graph, this.inputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.add(this._node!);
     restoreEdges(graph, this._edges);
+    notifyGraph(ctx, this);
   }
 }
 
@@ -280,6 +293,7 @@ export class ConnectOp extends ToolOp<LinkInputs> {
   override exec(ctx: ContextLike): void {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
     graph.connect(src, dst);
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
@@ -288,6 +302,7 @@ export class ConnectOp extends ToolOp<LinkInputs> {
       graph.disconnect(src, dst);
     }
     restoreEdges(graph, this._displaced);
+    notifyGraph(ctx, this);
   }
 }
 
@@ -315,6 +330,7 @@ export class DisconnectOp extends ToolOp<LinkInputs> {
   override exec(ctx: ContextLike): void {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
     graph.disconnect(src, dst);
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
@@ -322,6 +338,7 @@ export class DisconnectOp extends ToolOp<LinkInputs> {
     if (this._existed) {
       graph.connect(src, dst);
     }
+    notifyGraph(ctx, this);
   }
 }
 
@@ -367,12 +384,14 @@ export class MoveNodeOp extends ToolOp<{
     const node = this._node(ctx);
     node.pos[0] = this.inputs.x.getValue();
     node.pos[1] = this.inputs.y.getValue();
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
     const node = this._node(ctx);
     node.pos[0] = this._oldX;
     node.pos[1] = this._oldY;
+    notifyGraph(ctx, this);
   }
 }
 
@@ -412,10 +431,12 @@ export class RenameNodeOp extends ToolOp<{
   override exec(ctx: ContextLike): void {
     const label = this.inputs.label.getValue();
     this._node(ctx).label = label === "" ? undefined : label;
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
     this._node(ctx).label = this._oldLabel;
+    notifyGraph(ctx, this);
   }
 }
 
@@ -495,6 +516,7 @@ export class ReplaceNodeOp extends ToolOp<{
           e.nodeId !== node.id || e.kind !== "prop" || nodePropTarget(node, e.propKey) !== undefined
       );
     }
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
@@ -507,6 +529,7 @@ export class ReplaceNodeOp extends ToolOp<{
     if (def !== undefined && this._exposed !== undefined) {
       def.exposed = this._exposed;
     }
+    notifyGraph(ctx, this);
   }
 }
 
@@ -587,6 +610,7 @@ export class SetNodePropOp extends ToolOp<{
 
   override exec(ctx: ContextLike): void {
     this._target(ctx).setValue(this.inputs.value.getValue());
+    notifyGraph(ctx, this);
   }
 
   override undo(ctx: ContextLike): void {
@@ -594,6 +618,7 @@ export class SetNodePropOp extends ToolOp<{
     target.setValue(this._oldValue);
     // setValue marks the property set; the pre-edit state may have been unmaterialized.
     target.wasSet = this._oldWasSet;
+    notifyGraph(ctx, this);
   }
 }
 

@@ -204,6 +204,27 @@ test("getSocketClass resolves a registered typeName", () => {
   expect(getSocketClass("NotRegistered")).toBeUndefined();
 });
 
+test("registerSocketType auto-registers a STRUCT so a custom subclass round-trips", () => {
+  class CustomSocket extends FloatSocket {
+    static override socketDef(): SocketTypeDef {
+      return { typeName: "CustomSocket", type: "float", color: "#123456" };
+    }
+  }
+
+  registerSocketType(CustomSocket);
+
+  const sock = new CustomSocket("in");
+  sock.socketId = 11;
+  sock.defaultProp!.setValue(5);
+
+  const loaded = readJSON(writeJSON(sock), CustomSocket);
+
+  expect(loaded).toBeInstanceOf(CustomSocket);
+  expect(loaded.socketId).toBe(11);
+  expect(loaded.defaultProp!.getValue()).toBe(5);
+  expect(getSocketClass("CustomSocket")).toBe(CustomSocket);
+});
+
 test("dev asserts fire for defaultProp on an output and setValue on an input", () => {
   const out = new FloatSocket("out");
   out.defaultProp = new FloatSocket("in").defaultProp;

@@ -1,6 +1,17 @@
+// Plain imports keep the widget modules' module-scope internalRegister calls,
+// so the elements container.prop builds (sliders, checkboxes, textboxes,
+// dropdowns) upgrade even when the host skips the pathux entry point.
+import "../../widgets/ui_numsliders";
+import "../../widgets/ui_widgets";
+import "../../widgets/ui_textbox";
+import "../../widgets/ui_menu";
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
+import { UIBase } from "../../core/ui_base";
+import type { Container } from "../../core/ui";
+import type { IContextBase } from "../../core/context_base";
 import { Graph } from "../../graph/graph";
 import { Node as GraphNode, nodePropKeys, nodePropTarget } from "../../graph/node";
+import type { NodeSocketBase } from "../../graph/socket";
 import { ExposedEntry, GroupDef, GroupNode } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 import type { NodeGraphDelegate } from "./delegate";
@@ -39,6 +50,9 @@ export interface ForwardedRow {
   /** The instance-side datapath an ok prop entry reads and writes. */
   path?: string;
 
+  /** Set when an ok prop entry addresses an input default; its class builds the row. */
+  socket?: NodeSocketBase;
+
   /** The instance-side node an ok nodeUI entry renders. */
   target?: GraphNode;
 }
@@ -63,7 +77,8 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
 
     if (state === "ok" && target !== undefined) {
       if (entry.kind === "prop") {
-        row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}']`;
+        row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}'].value`;
+        row.socket = entry.propKey in target.props ? undefined : target.inputs[entry.propKey];
       } else {
         row.target = target;
       }
@@ -74,14 +89,14 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
 }
 
 /**
- * Renders a group instance's forwarded UI into root as raw-DOM label + input
- * rows. Writes go through ctx.api.setValue on the instance-side props path.
- * A nodeUI entry naming an inner group recurses; one naming a plain node
- * renders that node's prop rows. Entries that are not ok are skipped.
+ * Renders a group instance's forwarded UI into root as one prop editor row per
+ * entry. Writes go through the datapath on the instance-side props path. A
+ * nodeUI entry naming an inner group recurses; one naming a plain node renders
+ * that node's prop rows. Entries that are not ok are skipped.
  */
 export function buildForwardedUI(
   root: HTMLElement,
-  ctx: ContextLike,
+  ctx: IContextBase,
   node: GroupNode,
   nodePath: string
 ): void {
@@ -91,7 +106,7 @@ export function buildForwardedUI(
     }
 
     if (row.path !== undefined) {
-      root.appendChild(propEditRow(ctx, row.label, row.path));
+      root.appendChild(propEditRow(ctx, row.label, row.path, row.socket));
       continue;
     }
 
@@ -101,107 +116,40 @@ export function buildForwardedUI(
       continue;
     }
     for (const key of nodePropKeys(target)) {
-      const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}']`;
-      root.appendChild(propEditRow(ctx, key, path));
+      const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
+      const socket = key in target.props ? undefined : target.inputs[key];
+      root.appendChild(propEditRow(ctx, key, path, socket));
     }
   }
-}
-
-/** Vector prop values read back as an Array or Float32Array subclass. */
-function _isVecValue(v: unknown): v is ArrayLike<number> {
-  return Array.isArray(v) || v instanceof Float32Array || v instanceof Float64Array;
 }
 
 /**
- * A label plus input row editing the value at a datapath, shared by the
- * forwarded group UI and the node frames' inline default rows. The input
- * matches the current value's type: a checkbox for a boolean, one numeric
- * field per lane for a vector, a parsing text field otherwise. onChange fires
- * after each committed write.
+ * The editor row for the value at a datapath, shared by the forwarded group UI
+ * and the node frames' inline default rows. A socket builds its own row through
+ * its createUI; otherwise container.prop picks the widget the bound property
+ * type maps to. A path the API cannot resolve renders an inert label.
  */
-export function propEditRow(
-  ctx: ContextLike,
+export function propEditRow<CTX extends IContextBase>(
+  ctx: CTX,
   label: string,
   path: string,
-  onChange?: () => void
-): HTMLDivElement {
-  const row = document.createElement("div");
-  row.className = "nodeeditor-prop-row";
-  row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
+  socket?: NodeSocketBase
+): Container<CTX> {
+  const row = UIBase.createElement("container-x") as Container<CTX>;
+  row.ctx = ctx;
+  row._init();
+  // init writes the class attribute, so the marker class is added after it.
+  row.classList.add("nodeeditor-prop-row");
 
-  const name = document.createElement("span");
-  name.textContent = label;
-  name.title = path;
-  row.appendChild(name);
-
-  let current: unknown;
   try {
-    current = ctx.api.getValue(ctx, path);
-  } catch {
-    current = undefined;
-  }
-
-  if (typeof current === "boolean") {
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = current;
-    input.title = `Toggle ${label}`;
-    input.addEventListener("change", () => {
-      ctx.api.setValue(ctx, path, input.checked);
-      onChange?.();
-    });
-    row.appendChild(input);
-    return row;
-  }
-
-  if (_isVecValue(current)) {
-    const vec = Array.from(current);
-    for (let i = 0; i < vec.length; i++) {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = String(vec[i]);
-      input.title = `Edit ${label}[${i}]`;
-      input.style.width = "36px";
-      input.style.minWidth = "0";
-      input.addEventListener("change", () => {
-        const n = parseFloat(input.value);
-        if (Number.isNaN(n)) {
-          input.value = String(vec[i]);
-          return;
-        }
-        vec[i] = n;
-        input.value = String(n);
-        ctx.api.setValue(ctx, path, vec);
-        onChange?.();
-      });
-      row.appendChild(input);
-    }
-    return row;
-  }
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.title = `Edit ${label}`;
-  input.value = current === undefined ? "" : String(current);
-  input.style.flex = "1";
-  input.style.minWidth = "0";
-  input.addEventListener("change", () => {
-    if (typeof current === "number") {
-      const n = parseFloat(input.value);
-      if (Number.isNaN(n)) {
-        input.value = String(current);
-        return;
-      }
-      current = n;
-      input.value = String(n);
+    if (socket !== undefined) {
+      socket.createUI(row, path, label);
     } else {
-      current = input.value;
+      row.prop(path)?.setAttribute("name", label);
     }
-    ctx.api.setValue(ctx, path, current);
-    onChange?.();
-  });
-  row.appendChild(input);
-
+  } catch {
+    row.label(`${label} (unavailable)`);
+  }
   return row;
 }
 

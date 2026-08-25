@@ -41,7 +41,7 @@ test("a node's props resolve by id and key, reading and writing", () => {
   g.add(m);
   const ctx = makeCtx(g);
 
-  const path = `graph.nodes[${m.id}].props['bias']`;
+  const path = `graph.nodes[${m.id}].props['bias'].value`;
   expect(ctx.api.getValue(ctx, path)).toBe(1);
 
   ctx.api.setValue(ctx, path, 3);
@@ -50,7 +50,7 @@ test("a node's props resolve by id and key, reading and writing", () => {
   expect(ctx.api.getValue(ctx, path)).toBe(3);
 
   // A key with no node prop lands on the input's editable default.
-  ctx.api.setValue(ctx, `graph.nodes[${m.id}].props['b']`, 2.5);
+  ctx.api.setValue(ctx, `graph.nodes[${m.id}].props['b'].value`, 2.5);
   expect(m.inputs.b.defaultProp!.getValue()).toBe(2.5);
 });
 
@@ -88,7 +88,7 @@ test("a group instance's unmaterialized prop reads the definition; a write mater
   const ctx = makeCtx(host);
 
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
-  const path = `graph.nodes[${grp.id}].group.nodes[${copy.id}].props['bias']`;
+  const path = `graph.nodes[${grp.id}].group.nodes[${copy.id}].props['bias'].value`;
 
   // Unmaterialized: the read follows the definition's live value.
   inner.props.bias.setValue(4);
@@ -126,7 +126,7 @@ test("a two-level nested group resolves along the same path shape", async () => 
   const path =
     `graph.nodes[${outer.id}].group` +
     `.nodes[${midGrp.id}].group` +
-    `.nodes[${leaf.id}].props['bias']`;
+    `.nodes[${leaf.id}].props['bias'].value`;
 
   expect(ctx.api.getValue(ctx, path)).toBe(7);
 

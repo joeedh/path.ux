@@ -8,7 +8,6 @@ import { IContextBase } from "../../core/context_base";
 import "../../widgets/ui_panzoom";
 import "./linkcanvas";
 import type { PanZoomContainer } from "../../widgets/ui_panzoom";
-import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import {
   PackNode,
   PackNodeVertex,
@@ -207,10 +206,20 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
   }
 
+  /** Rebuilds frames when a graph op — or its undo/redo — notifies the graph's datapath. */
+  override watchPath(): void {
+    super.watchPath();
+    if (this.graphPath !== "") {
+      this.addPathWatch(this.currentGraphPath, { onChange: () => this.syncGraph() });
+    }
+  }
+
   private _refresh() {
     if (this.panzoom === undefined) {
       return;
     }
+    // The watched path follows graphPath and descent; the next update() rebuilds it.
+    this.clearPathWatches();
     this._rebuildCrumbs();
     this.syncGraph();
   }
@@ -306,7 +315,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           const root = document.createElement("div");
           root.className = "nodeeditor-forwarded";
           body.shadow.appendChild(root);
-          buildForwardedUI(root, this.ctx as unknown as ContextLike, f.node as GroupNode, nodePath);
+          buildForwardedUI(root, this.ctx, f.node as GroupNode, nodePath);
         };
       } else {
         // A group instance's editable values are its forwarded rows above.

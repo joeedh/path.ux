@@ -1,5 +1,6 @@
 import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
+import { CreateSnapshot } from "../path-controller/controller/pathwatch";
 import { Node } from "./node";
 import type { NodeSocketBase } from "./socket";
 import type { GraphId } from "./graph_types";
@@ -117,6 +118,24 @@ graph.Graph {
   private links: GraphLink[] = [];
 
   private sortCache: GraphSortResult | undefined = undefined;
+
+  /**
+   * Structural snapshot for path watchers: node identity, label, position and edges.
+   * Prop values are deliberately absent — a prop widget watches its own descendant
+   * path, which the same notification wakes.
+   */
+  [CreateSnapshot](): unknown[] {
+    const out: unknown[] = [];
+    for (const n of this.nodes) {
+      out.push(n.id, n.def.typeName, n.label ?? "", n.pos[0], n.pos[1]);
+      for (const key in n.inputs) {
+        for (const e of n.inputs[key].edges) {
+          out.push(`${String(e.owningNode?.id)}:${e.name}>${String(n.id)}:${key}`);
+        }
+      }
+    }
+    return out;
+  }
 
   /** Adds the node, allocating an id when it has none. A node keeps a preassigned id. */
   add(node: Node): void {

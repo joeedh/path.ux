@@ -263,7 +263,7 @@ test("every structural op refuses on an instance subgraph; SetNodePropOp does no
   // ...and undoing the first edit dematerializes: reads follow the definition again.
   ctx.toolstack.undo();
   expect(copy.props.bias.wasSet).toBe(false);
-  expect(ctx.api.getValue(ctx, `${sub}.nodes[${copy.id}].props['bias']`)).toBe(4);
+  expect(ctx.api.getValue(ctx, `${sub}.nodes[${copy.id}].props['bias'].value`)).toBe(4);
 
   warn.mockRestore();
 });

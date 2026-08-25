@@ -65,9 +65,21 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
   /** The node's datapath. When set, the body renders an editable row per node
-   *  prop and per unconnected input default, writing through ctx.api. */
-  nodePath = "";
+   *  prop and per unconnected input default, writing through the datapath. */
+  get nodePath(): string {
+    return this._nodePath;
+  }
 
+  set nodePath(path: string) {
+    if (path === this._nodePath) {
+      return;
+    }
+    this._nodePath = path;
+    // Re-arms watchPath on the next update; the view assigns the path after init.
+    this.clearPathWatches();
+  }
+
+  private _nodePath = "";
   private _header!: HTMLDivElement;
   private _rows: HTMLDivElement[] = [];
   private _body: Container<CTX> | undefined;
@@ -179,10 +191,26 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
+  /** Watches the node's own path for header changes; prop rows own their values. */
+  override watchPath() {
+    super.watchPath();
+    if (this.nodePath !== "") {
+      this.addPathWatch(this.nodePath, { onChange: () => this._syncHeader() });
+    }
+  }
+
   /** Rebuilds header text and socket rows; used after a rename or type swap. */
   syncContents() {
-    this._header.textContent = this.node.getUIName();
+    this._syncHeader();
     this._rebuildPropRows();
+  }
+
+  private _syncHeader() {
+    if (this._header === undefined) {
+      return;
+    }
+    this._header.textContent = this.node.getUIName();
+    this._header.title = this.node.getDescription() || this.node.getUIName();
   }
 
   /** Rebuilds the editable prop/default rows; a connected input contributes none. */
@@ -191,7 +219,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     if (root === undefined) {
       return;
     }
-    root.textContent = "";
+    // Removed one widget at a time so each row tears down its path watches.
+    while (root.firstChild !== null) {
+      (root.firstChild as ChildNode).remove();
+    }
     if (this.nodePath === "") {
       return;
     }
@@ -200,9 +231,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
         continue;
       }
-      const path = `${this.nodePath}.props['${key}']`;
-      // syncContents re-renders a title that tracks the value it names.
-      root.appendChild(propEditRow(this.ctx, key, path, () => this.syncContents()));
+      const path = `${this.nodePath}.props['${key}'].value`;
+      const socket = key in this.node.props ? undefined : this.node.inputs[key];
+      const row = propEditRow(this.ctx, key, path, socket);
+      row.parentWidget = this._body!;
+      root.appendChild(row);
     }
   }
 
@@ -226,9 +259,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     for (let i = 0; i < rows; i++) {
       const row = document.createElement("div");
+      // Positioned so each terminal dot can anchor to the frame's outer edge.
       row.style.cssText =
         `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; ` +
-        "display: flex; justify-content: space-between; padding: 0 4px;";
+        "display: flex; justify-content: space-between; padding: 0 4px; position: relative;";
 
       row.appendChild(this._terminal(inKeys[i], "in"));
       row.appendChild(this._terminal(outKeys[i], "out"));
@@ -274,9 +308,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     dot.dataset.socketKey = key;
     dot.dataset.socketDir = dir;
     dot.title = `${key} (${sock.type})`;
+    // Centered on the frame's outer edge, where socketAnchor and link-drop hit
+    // testing place the terminal; -5px cancels the frame's 1px border.
     dot.style.cssText =
-      "display: inline-block; width: 8px; height: 8px; border-radius: 50%; " +
-      `background: ${color}; margin: 0 3px;`;
+      "position: absolute; top: 50%; transform: translateY(-50%); " +
+      "width: 8px; height: 8px; border-radius: 50%; " +
+      `background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
 
     dot.addEventListener("pointerdown", (e: PointerEvent) => {
       if (e.button !== 0 || this.onSocketDown === undefined) {

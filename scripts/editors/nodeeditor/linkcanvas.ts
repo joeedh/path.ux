@@ -12,11 +12,10 @@ export interface LinkSegment {
 }
 
 /**
- * The link underlay: a screen-space canvas beneath the node frames, redrawn
- * whenever the transform or the topology changes. The owning editor projects
- * socket anchors and hands finished segments to drawLinks. The 2D context is
- * nullable — happy-dom provides none — so every draw call degrades to a no-op
- * there while sizing and bookkeeping still run.
+ * Draws the links beneath the node frames (in screen space). The owning editor
+ * projects socket anchors, passes finished segments to `drawLinks`, and
+ * repaints whenever the transform or the topology changes. Drawing is skipped
+ * when the 2D context is absent (happy-dom provides none); sizing still runs.
  */
 export class LinkCanvas<CTX extends IContextBase = IContextBase> extends UIBase<
   CTX,
@@ -45,7 +44,7 @@ export class LinkCanvas<CTX extends IContextBase = IContextBase> extends UIBase<
     };
   }
 
-  /** Matches the canvas backing store to the given CSS size at dpi. */
+  /** Matches the canvas backing store to the given CSS size at `dpi`. */
   resize(width: number, height: number, dpi = 1) {
     const w = Math.max(1, Math.round(width * dpi));
     const h = Math.max(1, Math.round(height * dpi));

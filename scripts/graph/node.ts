@@ -1,5 +1,6 @@
 import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
+import { CreateSnapshot } from "../path-controller/controller/pathwatch";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { Vector2 } from "../path-controller/util/vectormath";
 import { DataStruct } from "../path-controller/controller/controller";
@@ -253,12 +254,12 @@ graph.Node {
       })
       .readOnly();
 
-    // The list's path is empty, so callbacks receive the node itself. Reads descend
-    // a group boundary via nodePropValue; a write lands on the node's own property,
-    // which is what materializes an instance override.
+    // The list's path is empty, so callbacks receive the node itself. An element
+    // resolves as a stable {node, key} ref; the editable value sits one member
+    // deeper, at props['key'].value, where widgets see the target's own metadata.
     st.list<Node, string, unknown>("", "props", {
       get(_api: DataAPI, node: Node, key: string) {
-        return nodePropValue(node, key);
+        return nodePropTarget(node, key) !== undefined ? nodePropRef(node, key) : undefined;
       },
       set(_api: DataAPI, node: Node, key: string, val: unknown) {
         const target = nodePropTarget(node, key);
@@ -268,20 +269,30 @@ graph.Node {
         target.setValue(val);
       },
       getKey(_api: DataAPI, node: Node, val: unknown) {
-        return nodePropKeys(node).find((k) => nodePropValue(node, k) === val);
+        const ref = val as NodePropRef | undefined;
+        return ref !== undefined && ref.node === node ? ref.key : undefined;
       },
       getLength(_api: DataAPI, node: Node) {
         return nodePropKeys(node).length;
       },
       getIter(_api: DataAPI, node: Node) {
         return nodePropKeys(node)
-          .map((k) => nodePropValue(node, k))
+          .map((k) => nodePropRef(node, k))
           [Symbol.iterator]();
       },
       getStruct(_api: DataAPI, node: Node, key: string) {
-        return nodePropTarget(node, key) !== undefined ? NODE_PROP_LEAF : undefined;
+        const target = nodePropTarget(node, key);
+        return target !== undefined ? nodePropStruct(target) : undefined;
       },
     });
+  }
+
+  /**
+   * Header snapshot for a path watcher on the node's own path: the derived name
+   * and description, which is what a frame paints outside its prop widgets.
+   */
+  [CreateSnapshot](): unknown[] {
+    return [this.getUIName(), this.getDescription()];
   }
 
   /** UI for editing this node's properties. Inert until stage 7 supplies the datapaths. */
@@ -365,8 +376,59 @@ graph.Node {
   }
 }
 
-/** The struct a props entry resolves through; the entry itself is a bare value. */
-const NODE_PROP_LEAF = new DataStruct(undefined, "NodePropLeaf");
+/** One props entry as the data API sees it; the editable value is its value member. */
+export interface NodePropRef {
+  node: Node;
+  key: string;
+}
+
+const propRefs = new WeakMap<Node, Map<string, NodePropRef>>();
+
+/** The ref a (node, key) pair resolves to, cached so repeated reads compare equal. */
+function nodePropRef(node: Node, key: string): NodePropRef {
+  let map = propRefs.get(node);
+  if (map === undefined) {
+    map = new Map();
+    propRefs.set(node, map);
+  }
+  let ref = map.get(key);
+  if (ref === undefined) {
+    ref = { node, key };
+    map.set(key, ref);
+  }
+  return ref;
+}
+
+const propStructs = new WeakMap<ToolProperty, DataStruct>();
+
+/**
+ * The struct a props entry resolves through: one member, value, bound to a copy
+ * of the target property so widgets read its metadata (range, enum items, ui
+ * name). Reads route through nodePropValue, which descends a group boundary for
+ * an unmaterialized property; a write lands on the node's own property through
+ * nodePropTarget, which is what materializes an instance override. The bound
+ * copy is required: customGetSet mutates the property it is bound to.
+ */
+function nodePropStruct(target: ToolProperty): DataStruct {
+  let st = propStructs.get(target);
+  if (st === undefined) {
+    st = new DataStruct(undefined, "NodeProp");
+    st.fromToolProp<ToolProperty, unknown>(
+      "",
+      target.copy() as ToolProperty,
+      "value"
+    ).customGetSet<NodePropRef>(
+      function () {
+        return nodePropValue(this.dataref.node, this.dataref.key);
+      },
+      function (val) {
+        nodePropTarget(this.dataref.node, this.dataref.key)!.setValue(val);
+      }
+    );
+    propStructs.set(target, st);
+  }
+  return st;
+}
 
 /** The property a key addresses on node: its own prop first, else the input's editable default. */
 export function nodePropTarget(node: Node, key: string): ToolProperty | undefined {
@@ -431,6 +493,12 @@ export function registerNodeType(cls: NodeTypeConstructor): void {
     throw new Error(
       cls.name + ": graphDef().typeName '" + def.typeName + "' does not match the class name"
     );
+  }
+
+  // A class without its own STRUCT serializes as its nearest registered ancestor
+  // plus nothing; inlineRegister merges that ancestor's fields into the empty body.
+  if (!nstructjs.isRegistered(cls)) {
+    nstructjs.inlineRegister(cls, `graph.${def.typeName} {\n}\n`);
   }
 
   NodeClasses.set(def.typeName, cls);

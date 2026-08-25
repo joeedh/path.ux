@@ -123,7 +123,11 @@ interface NodeDef {
 DSL and deserialization all read. It throws if `graphDef` or `typeName` is
 missing, and dev builds additionally throw when `typeName` differs from the
 class name — the name must survive minification, which is why it is spelled
-out rather than read from `cls.name`.
+out rather than read from `cls.name`. Registration also covers serialization:
+a class without its own `STRUCT` is auto-registered with nstructjs as
+`graph.<typeName>`, inheriting its nearest registered ancestor's fields, so a
+plain subclass round-trips without writing STRUCT boilerplate. A class that
+adds persistent fields of its own still declares its own `STRUCT`.
 
 `NodeDefValue<T>` is either a plain value or `(node) => T`, so a label can
 track live state; the quick-start `uiName` above re-renders as `value`
@@ -154,7 +158,9 @@ direction (`"in"` or `"out"`) and living in its owning node's `inputs` or
 `outputs` record. `registerSocketType(cls)` registers the class for
 serialization and the DSL; a socket class declares a `socketDef()` with a
 `typeName` (the class name) and a `type` — the wire-type string link
-compatibility is judged by.
+compatibility is judged by. Like `registerNodeType`, it auto-registers a
+`graph.<typeName>` STRUCT for a class that lacks its own, so a custom socket
+subclass round-trips through serialization without STRUCT boilerplate.
 
 ### Value resolution
 
@@ -215,6 +221,15 @@ An input attaches a `defaultProp` in its constructor so unconnected inputs
 stay editable. Override `canCoerceTo`/`convertTo` (and, for
 destination-side knowledge, `canCoerceFrom`/`convertFrom`) to interoperate
 with other wire types, and `reduce` to combine multi-link values.
+
+The editor asks the socket class itself to build the default's editor row:
+`createUI(container, datapath, label?)` receives the container to fill and the
+datapath addressing the default value (through the owning node's `props`
+list). The base implementation calls `container.prop(datapath)`, which picks
+the standard path.ux widget for the bound property type — a slider for a
+number, a checkbox for a boolean, a dropdown for an enum, and so on. A socket
+class carrying a custom `ToolProperty` type overrides `createUI` to build its
+own widget against the same datapath.
 
 ## The graph
 
@@ -339,7 +354,7 @@ built from its class's `defineAPI` on first use. The resulting datapaths:
 | path                                | resolves to                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------- |
 | `nodegraph.nodes[3]`                | the node with id `3` (a string id is quoted: `nodes["v1"]`)               |
-| `nodegraph.nodes[3].props['value']` | one node property; writing on a group-inner node materializes an override |
+| `nodegraph.nodes[3].props['value'].value` | one node property's value; writing on a group-inner node materializes an override |
 | `nodegraph.nodes[3].group`          | a `GroupNode`'s subgraph, itself a graph struct — the descent nests       |
 
 ## ToolOps
@@ -386,12 +401,16 @@ Each `NodeFrame` shows the node's name in a header, one terminal row per
 socket, and a body. The body opens with an editable row per node property and
 per unconnected input default (the view supplies the node's datapath through
 `frame.nodePath`; a connected input contributes no row, since its default is
-inert). The row's input matches the value's type — a checkbox for a boolean,
-one numeric field per lane for a vector, a text field otherwise — and writes
-through `ctx.api` on the node's `props` datapath. Beneath those rows sits
-whatever the node's own `createUI` override adds (the base implementation
-renders nothing), and a group instance's frame shows its forwarded UI instead
-of prop rows (see [Exposed UI](#exposed-ui)).
+inert). Each row hosts a standard path.ux prop editor bound to the value's
+`props['key'].value` datapath — `container.prop` picks the widget the bound
+property type maps to, and an input default's row is built by its socket
+class's `createUI`, so a custom property type brings its own widget (see
+[Writing a socket type](#writing-a-socket-type)). The widgets read and write
+through `ctx.api`, so edits dispatch the datapath set op and path watchers
+refresh every bound row. Beneath those rows sits whatever the node's own
+`createUI` override adds (the base implementation renders nothing), and a
+group instance's frame shows its forwarded UI instead of prop rows (see
+[Exposed UI](#exposed-ui)).
 
 ### Theming
 
@@ -589,6 +608,7 @@ STRUCT registration follows the usual `Area` pattern (`STRUCT.inherit` plus
 function registerNodeType(cls: typeof Node): void;
 function getNodeClass(typeName: string): typeof Node | undefined;
 function registerSocketType(cls: typeof NodeSocketBase): void;
+function getSocketClass(typeName: string): typeof NodeSocketBase | undefined;
 
 class Node<Inputs, Outputs> {
   id: GraphId; // number (graph-allocated) or string (client-chosen)
@@ -612,6 +632,7 @@ class NodeSocketBase<Type extends string, Value> {
   flagDirty(): void;
   coerce(b: NodeSocketBase, opts?: { dryRun?: boolean }): boolean;
   reduce?: (values: Value[]) => Value; // combines multi-link input values
+  createUI(container: Container, datapath: string, label?: string): void; // default: container.prop(datapath)
 }
 
 class Graph {
