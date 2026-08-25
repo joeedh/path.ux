@@ -79,6 +79,7 @@ import * as css from "./base/ui_base_css";
 import * as datapath from "./base/ui_base_datapath";
 import * as pick from "./base/ui_base_pick";
 import * as dom from "./base/ui_base_dom";
+import * as graph from "./base/ui_base_graph";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -310,133 +311,17 @@ export class UIBase<
 
   _reflagGraph = false;
 
-  static graphNodeDef = EventNode.register(this, {
-    flag    : 0,
-    typeName: this.name,
-    uiName  : this.name,
-    inputs: {
-      depend: new DependSocket(),
-    },
-    outputs: {
-      depend: new DependSocket(),
-    },
-  });
+  static graphNodeDef = EventNode.register(this, graph.uiBaseNodeDef);
 
   /** Returns previous icon flags */
   useIcons?: (bool_or_icon_number?: boolean | number) => number;
 
   graphExec(): void {
-    const node = this.graphNode;
-    if (node === undefined) {
-      return;
-    }
-
-    if (node.inputs.depend.isUpdated) {
-      node.outputs.depend.flagUpdate();
-    }
-
-    for (const k in node.inputs) {
-      const sock = node.inputs[k];
-
-      if (!(sock instanceof PropertySocket)) {
-        continue;
-      }
-
-      let val = sock.value;
-      let first = true;
-
-      for (const sockb of sock.edges) {
-        if (first) {
-          val = sockb.value;
-          first = false;
-        } else {
-          switch (sock.mixMode) {
-            case PropSocketModes.REPLACE:
-              val = sockb.value;
-              break;
-            case PropSocketModes.MIN:
-              val = Math.min(val, sockb.value as number); // XXX bad cast!
-              break;
-            case PropSocketModes.MAX:
-              val = Math.max(val, sockb.value as number); // XXX bad cast!
-              break;
-          }
-        }
-      }
-
-      sock.value = val;
-    }
-
-    function isNumArray(a: any) {
-      if (!(a instanceof Array)) {
-        return false;
-      }
-
-      const b = a as unknown as number[];
-
-      for (let i = 0; i < a.length; i++) {
-        if (b[i] !== undefined && typeof b[i] !== "number" && typeof b[i] !== "boolean") {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    for (const k in node.outputs) {
-      const sock = node.outputs[k];
-
-      if (!(sock instanceof PropertySocket)) {
-        continue;
-      }
-
-      const v = sock.value;
-      let changed;
-      if (typeof v === "boolean" || typeof v === "string" || typeof v === "number") {
-        changed = v !== sock.oldValue;
-        sock.oldValue = v;
-      } else if (typeof v === "object") {
-        if (isNumArray(v)) {
-          if (!sock.oldValue) {
-            sock.oldValue = Array.from(v);
-          } else {
-            if (sock.oldValue.length !== v.length) {
-              changed = true;
-            } else {
-              for (let i = 0; i < sock.oldValue.length; i++) {
-                changed = sock.oldValue[i] !== v[i];
-              }
-            }
-
-            if (sock.oldValue.length !== v.length) {
-              sock.oldValue.length = v.length;
-            }
-            for (let i = 0; i < v.length; i++) {
-              sock.oldValue[i] = v.value[i];
-            }
-          }
-        } else {
-          if (sock.oldValue === undefined) {
-            sock.oldValue = JSON.stringify(v);
-          } else {
-            const json = JSON.stringify(v);
-            changed = json !== sock.oldValue;
-            sock.oldValue = json;
-          }
-        }
-      }
-
-      if (changed) {
-        console.log("Propagating prop update");
-        sock.flagUpdate();
-      }
-    }
+    graph.graphExec(this);
   }
 
   ensureGraph(): void {
-    if (!theEventGraph.has(this)) {
-      theEventGraph.add(this);
-    }
+    graph.ensureGraph(this);
   }
 
   playwrightId(id: string): this {
@@ -445,50 +330,16 @@ export class UIBase<
   }
 
   flagPropSocketUpdate(path: string): this {
-    const sock = this.getPropertySocket(path, SocketTypes.OUTPUT);
-    if (sock) {
-      console.warn(`Flag socket "${path}" for update`);
-      sock.flagUpdate();
-    }
+    graph.flagPropSocketUpdate(this, path);
     return this;
   }
 
   getPropertySocket(prop: string, socktype: string): PropertySocket | undefined {
-    const node = this.graphNode;
-    const sockets = socktype === SocketTypes.INPUT ? node!.inputs : node!.outputs;
-
-    if (sockets[prop]) {
-      return sockets[prop] as PropertySocket;
-    }
-
-    return undefined;
+    return graph.getPropertySocket(this, prop, socktype);
   }
 
   ensurePropertySocket(prop: string, socktype: SocketType): PropertySocket {
-    this.ensureGraph();
-
-    const node = this.graphNode!;
-    const sockets = socktype === "inputs" ? node!.inputs : node!.outputs;
-
-    if (sockets[prop]) {
-      return sockets[prop] as PropertySocket;
-    }
-
-    const sock = new PropertySocket();
-    sock.bind(this, prop);
-    node.addSocket(socktype, prop, sock);
-
-    if (prop === "value") {
-      sock.callback((v) => {
-        if (this.getValue) {
-          return this.getValue();
-        }
-
-        return this.value;
-      });
-    }
-
-    return sock;
+    return graph.ensurePropertySocket(this, prop, socktype);
   }
 
   /*
@@ -501,16 +352,7 @@ export class UIBase<
     srcCallback?: (v: unknown) => unknown,
     dstCallback?: (v: unknown) => unknown
   ): PropertySocket {
-    const sockdst = this.ensurePropertySocket(dstProp, SocketTypes.INPUT);
-    const socksrc = source.ensurePropertySocket(srcProp, SocketTypes.OUTPUT);
-
-    if (srcCallback) {
-      socksrc.callback(srcCallback);
-    }
-
-    sockdst.connect(socksrc);
-
-    return sockdst;
+    return graph.dependsOn(this, dstProp, source, srcProp, srcCallback);
   }
 
   constructor() {
@@ -1493,15 +1335,7 @@ export class UIBase<
   }
 
   updateEventGraph(): void {
-    if (!this.isConnected) {
-      this._reflagGraph = true;
-    } else if (this._reflagGraph) {
-      this._reflagGraph = false;
-
-      for (const [, sock] of Object.entries(this.graphNode!.inputs)) {
-        sock.flagUpdate();
-      }
-    }
+    graph.updateEventGraph(this);
   }
 
   //TS patch into this.update.after
