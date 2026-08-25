@@ -1,15 +1,16 @@
 import * as util from "../path-controller/util/util";
 import cconst from "../config/const";
 import { UIBase, drawRoundBox2, drawRoundBox, IUIBaseConstructor } from "../core/ui_base";
+import { ZIndexes } from "../screen/constants";
 import * as toolprop from "../path-controller/toolsys/toolprop";
 import { OldButton } from "../widgets/ui_button";
 import type { IContextBase } from "../core/context_base";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 import type { Screen } from "../screen/FrameManager";
 import type { PopupContainer } from "../screen/FrameManager_popup";
-import type { Menu } from "./menu";
+import { newMenu, type Menu } from "./menu";
 import type { MenuTemplate } from "./menu_types";
-import { createMenu } from "./menu_ops";
+import { createMenu, openMenuPopup } from "./menu_ops";
 
 const PropTypes = toolprop.PropTypes;
 
@@ -290,9 +291,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._menu.remove();
     }
 
-    const menu = (this._menu = UIBase.createElement("menu-x") as unknown as Menu<CTX>);
+    const menu = (this._menu = newMenu<CTX>(""));
 
-    menu.setAttribute("name", "");
     menu._dropbox = this;
 
     const valmap: Record<string | number, string> = {};
@@ -320,12 +320,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     }
 
     menu._onselect = (id: string | number) => {
-      this._pressed = false;
-
-      this._pressed = false;
-      this._redraw();
-
-      this._menu = undefined;
+      this._closeOut(false);
 
       //check if datapath system will be calling .prop.setValue instead of us
       let callProp = true;
@@ -354,19 +349,30 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     };
   }
 
+  /**
+   * Unpresses the button and detaches the current menu, returning it for the caller to
+   * close or unhook. `setLockTimer` starts the reopen lockout `_onpress` checks.
+   */
+  _closeOut(setLockTimer: boolean): Menu<CTX> | undefined {
+    if (setLockTimer) {
+      this.lockTimer = util.time_ms();
+    }
+
+    this._pressed = false;
+    this._redraw();
+
+    const menu = this._menu;
+    this._menu = undefined;
+
+    return menu;
+  }
+
   override _onpress = (e: unknown) => {
     const _e = e as { x: number; y: number; stopPropagation?(): void; preventDefault?(): void };
     this.abortToolTips(1000);
 
     if (this._menu !== undefined) {
-      this.lockTimer = util.time_ms();
-
-      this._pressed = false;
-      this._redraw();
-
-      const menu = this._menu;
-      this._menu = undefined;
-      menu.close();
+      this._closeOut(true)?.close();
       return;
     }
 
@@ -395,14 +401,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     const onclose = builtMenu._onclose;
     builtMenu._onclose = () => {
-      this.lockTimer = util.time_ms();
-
-      this._pressed = false;
-      this._redraw();
-
-      const menu = this._menu;
+      const menu = this._closeOut(true);
       if (menu) {
-        this._menu = undefined;
         menu._dropbox = undefined;
       }
 
@@ -427,7 +427,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     if (cconst.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
       const con = screen.popup(this, 500, 400, false, 0) as unknown as PopupContainer;
 
-      con.style["zIndex"] = "-10000";
+      con.style["zIndex"] = `${ZIndexes.measuringHidden}`;
       con.style["position"] = UIBase.PositionKey;
       document.body.appendChild(con);
 
@@ -457,14 +457,13 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
         menu.dom.remove();
         con.remove();
 
-        const popup =
-          (this._popup =
-          menu._popup =
-            screen!.popup(this, x, y, false, 0) as unknown as PopupContainer);
-        popup.noMarginsOrPadding();
-
-        popup.add(menu);
-        menu.start();
+        const popup = (this._popup = openMenuPopup(
+          menu as unknown as Menu,
+          screen! as unknown as Screen,
+          this as unknown as UIBase,
+          x,
+          y
+        ));
 
         popup.style["left"] = x + "px";
         popup.style["top"] = y + "px";
@@ -475,18 +474,14 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     if (!screen) return;
 
-    const con =
-      (this._popup =
-      menu._popup =
-        screen.popup(this, x, y, false, 0) as unknown as PopupContainer);
-    con.noMarginsOrPadding();
-
-    con.add(menu);
-    if (this.searchMenuMode) {
-      menu.startFancy();
-    } else {
-      menu.start();
-    }
+    this._popup = openMenuPopup(
+      menu as unknown as Menu,
+      screen as unknown as Screen,
+      this as unknown as UIBase,
+      x,
+      y,
+      { search: this.searchMenuMode }
+    );
   };
 
   _redraw() {

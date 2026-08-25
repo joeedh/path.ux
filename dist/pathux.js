@@ -32269,6 +32269,23 @@ var init_html5_fileapi = __esm({
   }
 });
 
+// scripts/screen/constants.ts
+var IsScreenTag, ZIndexes;
+var init_constants = __esm({
+  "scripts/screen/constants.ts"() {
+    "use strict";
+    IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
+    ZIndexes = {
+      popup: 2205,
+      floatingPanel: 205,
+      menu: 50,
+      measuring: -10,
+      measuringHidden: -1e4,
+      popupTitlebar: 3
+    };
+  }
+});
+
 // scripts/menu/menu_types.ts
 var SEP;
 var init_menu_types = __esm({
@@ -32280,12 +32297,15 @@ var init_menu_types = __esm({
 
 // scripts/menu/menu_ops.ts
 function createMenu(ctx, title, templ) {
-  const menu = UIBase2.createElement("menu-x");
-  menu.ctx = ctx;
-  menu.setAttribute("name", title);
+  const menu = newMenu(title, ctx);
   const menuSEP = menu.constructor.SEP;
   let id = 0;
   const cbs = {};
+  const bindCallback = (cbfunc, arg) => {
+    return function() {
+      cbfunc(arg);
+    };
+  };
   const doItem = (item) => {
     if (item !== void 0 && item instanceof Menu) {
       menu.addItem(item);
@@ -32310,11 +32330,9 @@ function createMenu(ctx, title, templ) {
         hotkey = def.hotkey;
       }
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
-      cbs[id] = /* @__PURE__ */ (function(toolpath) {
-        return function() {
-          ctx.api.execTool(ctx, toolpath);
-        };
-      })(item);
+      cbs[id] = () => {
+        ctx.api.execTool(ctx, item);
+      };
       id++;
     } else if (item === menuSEP) {
       menu.seperator();
@@ -32323,19 +32341,14 @@ function createMenu(ctx, title, templ) {
         item(document.createElement("div"))
       );
     } else if (item instanceof Array) {
-      let hotkey = item.length > 1 ? item[2] : void 0;
-      const icon = item.length > 2 ? item[3] : void 0;
-      const tooltip = item.length > 3 ? item[4] : void 0;
-      const id2 = item.length > 4 ? item[5] : id++;
-      if (hotkey !== void 0 && hotkey instanceof HotKey) {
-        hotkey = hotkey.buildString();
-      }
-      menu.addItemExtra(item[0], id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
-        return function() {
-          cbfunc(arg);
-        };
-      })(item[1], id2);
+      doItem({
+        name: item[0],
+        callback: item[1],
+        hotkey: item.length > 1 ? item[2] : void 0,
+        icon: item.length > 2 ? item[3] : void 0,
+        tooltip: item.length > 3 ? item[4] : void 0,
+        id: item.length > 4 ? item[5] : void 0
+      });
     } else if (typeof item === "object") {
       const objItem = item;
       const { name: name2, callback, icon, tooltip } = objItem;
@@ -32345,11 +32358,7 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
-      cbs[id2] = /* @__PURE__ */ (function(cbfunc, arg) {
-        return function() {
-          cbfunc(arg);
-        };
-      })(callback, id2);
+      cbs[id2] = bindCallback(callback, id2);
     }
   };
   for (const item of templ) {
@@ -32360,11 +32369,10 @@ function createMenu(ctx, title, templ) {
   };
   return menu;
 }
-function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
-  menuWrangler.endMenus();
-  const screen = menu.ctx.screen;
+function openMenuPopup(menu, screen, owner, x, y, opts = {}) {
+  const { search = false, safetyDelay = 0 } = opts;
   const con = menu._popup = screen.popup(
-    menu,
+    owner,
     x,
     y,
     false,
@@ -32372,11 +32380,20 @@ function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
   );
   con.noMarginsOrPadding();
   con.add(menu);
-  if (searchMenuMode) {
-    menu.startFancy();
+  if (search) {
+    menu.startSearch();
   } else {
     menu.start();
   }
+  return con;
+}
+function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
+  menuWrangler.endMenus();
+  const screen = menu.ctx.screen;
+  openMenuPopup(menu, screen, menu, x, y, {
+    search: searchMenuMode,
+    safetyDelay
+  });
   menu.flushUpdate();
   menu.flushSetCSS();
   menu._popup.flushUpdate();
@@ -32386,7 +32403,6 @@ var init_menu_ops = __esm({
   "scripts/menu/menu_ops.ts"() {
     "use strict";
     init_util();
-    init_ui_base();
     init_simple_events();
     init_menu();
     init_wrangler();
@@ -32401,8 +32417,10 @@ var init_dropbox = __esm({
     init_util();
     init_const();
     init_ui_base();
+    init_constants();
     init_toolprop();
     init_ui_button();
+    init_menu();
     init_menu_ops();
     PropTypes3 = PropTypes;
     DropBox = class extends OldButton {
@@ -32613,8 +32631,7 @@ var init_dropbox = __esm({
         if (this._menu?.parentNode !== void 0) {
           this._menu.remove();
         }
-        const menu = this._menu = UIBase2.createElement("menu-x");
-        menu.setAttribute("name", "");
+        const menu = this._menu = newMenu("");
         menu._dropbox = this;
         const valmap = {};
         const enummap = prop.values;
@@ -32635,10 +32652,7 @@ var init_dropbox = __esm({
           }
         }
         menu._onselect = (id) => {
-          this._pressed = false;
-          this._pressed = false;
-          this._redraw();
-          this._menu = void 0;
+          this._closeOut(false);
           let callProp = true;
           if (this.hasAttribute("datapath")) {
             const datapath = this.getAttribute("datapath");
@@ -32659,16 +32673,25 @@ var init_dropbox = __esm({
           }
         };
       }
+      /**
+       * Unpresses the button and detaches the current menu, returning it for the caller to
+       * close or unhook. `setLockTimer` starts the reopen lockout `_onpress` checks.
+       */
+      _closeOut(setLockTimer) {
+        if (setLockTimer) {
+          this.lockTimer = time_ms();
+        }
+        this._pressed = false;
+        this._redraw();
+        const menu = this._menu;
+        this._menu = void 0;
+        return menu;
+      }
       _onpress = (e) => {
         const _e = e;
         this.abortToolTips(1e3);
         if (this._menu !== void 0) {
-          this.lockTimer = time_ms();
-          this._pressed = false;
-          this._redraw();
-          const menu2 = this._menu;
-          this._menu = void 0;
-          menu2.close();
+          this._closeOut(true)?.close();
           return;
         }
         if (time_ms() - this.lockTimer < 200) {
@@ -32689,12 +32712,8 @@ var init_dropbox = __esm({
         this.setCSS();
         const onclose = builtMenu._onclose;
         builtMenu._onclose = () => {
-          this.lockTimer = time_ms();
-          this._pressed = false;
-          this._redraw();
-          const menu2 = this._menu;
+          const menu2 = this._closeOut(true);
           if (menu2) {
-            this._menu = void 0;
             menu2._dropbox = void 0;
           }
           if (onclose) {
@@ -32710,12 +32729,12 @@ var init_dropbox = __esm({
         x = rects.x;
         y = rects.y + rheight;
         if (const_default.menusCanPopupAbove && screen && y > screen.size[1] * 0.5 && !this.searchMenuMode) {
-          const con2 = screen.popup(this, 500, 400, false, 0);
-          con2.style["zIndex"] = "-10000";
-          con2.style["position"] = UIBase2.PositionKey;
-          document.body.appendChild(con2);
-          con2.style["visibility"] = "hidden";
-          con2.add(menu);
+          const con = screen.popup(this, 500, 400, false, 0);
+          con.style["zIndex"] = `${ZIndexes.measuringHidden}`;
+          con.style["position"] = UIBase2.PositionKey;
+          document.body.appendChild(con);
+          con.style["visibility"] = "hidden";
+          con.add(menu);
           menu.start();
           const time = time_ms();
           const timer = window.setInterval(() => {
@@ -32730,25 +32749,28 @@ var init_dropbox = __esm({
             window.clearInterval(timer);
             y -= r.height + rheight;
             menu.dom.remove();
-            con2.remove();
-            const popup = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
-            popup.noMarginsOrPadding();
-            popup.add(menu);
-            menu.start();
+            con.remove();
+            const popup = this._popup = openMenuPopup(
+              menu,
+              screen,
+              this,
+              x,
+              y
+            );
             popup.style["left"] = x + "px";
             popup.style["top"] = y + "px";
           }, 1);
           return;
         }
         if (!screen) return;
-        const con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
-        con.noMarginsOrPadding();
-        con.add(menu);
-        if (this.searchMenuMode) {
-          menu.startFancy();
-        } else {
-          menu.start();
-        }
+        this._popup = openMenuPopup(
+          menu,
+          screen,
+          this,
+          x,
+          y,
+          { search: this.searchMenuMode }
+        );
       };
       _redraw() {
         if (this.getAttribute("simple")) {
@@ -32916,6 +32938,23 @@ var init_wrangler = __esm({
       get menu() {
         return this.menustack.length > 0 ? this.menustack[this.menustack.length - 1] : void 0;
       }
+      /** Restarts the mouse-out close countdown and withdraws a pending close request. */
+      _resetCloseTimer() {
+        this.closetimer = time_ms();
+        this.closereq = void 0;
+      }
+      /**
+       * Returns the screen and page coordinates for an event's element pick. Returns undefined
+       * when no menu or screen is live, restarting the close countdown (a pending close request
+       * is deliberately left standing).
+       */
+      _pickPreamble(e) {
+        if (this.menu === void 0 || this.screen === void 0) {
+          this.closetimer = time_ms();
+          return void 0;
+        }
+        return { screen: this.screen, x: e.pageX, y: e.pageY };
+      }
       pushMenu(menu) {
         debugmenu("pushMenu");
         this.spawnreq = void 0;
@@ -33000,13 +33039,11 @@ var init_wrangler = __esm({
         }
       }
       on_pointerdown(e) {
-        if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
+        const pick = this._pickPreamble(e);
+        if (!pick) {
           return;
         }
-        const screen = this.screen;
-        const x = e.pageX;
-        const y = e.pageY;
+        const { screen, x, y } = pick;
         const element = screen.pickElement(x, y);
         if (element !== void 0 && (element instanceof DropBox || isMobile())) {
           this.endMenus();
@@ -33015,13 +33052,11 @@ var init_wrangler = __esm({
         }
       }
       on_pointerup(e) {
-        if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
+        const pick = this._pickPreamble(e);
+        if (!pick) {
           return;
         }
-        const screen = this.screen;
-        const x = e.pageX;
-        const y = e.pageY;
+        const { screen, x, y } = pick;
         let element = screen.pickElement(x, y, void 0, void 0, DropBox);
         if (element !== void 0) {
           this.closeOnMouseUp = false;
@@ -33053,13 +33088,11 @@ var init_wrangler = __esm({
       }
       on_pointermove(e) {
         if (this.menu?.hasSearchBox) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
+          this._resetCloseTimer();
           return;
         }
         if (this.menu === void 0 || this.screen === void 0) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
+          this._resetCloseTimer();
           return;
         }
         const screen = this.screen;
@@ -33082,8 +33115,7 @@ var init_wrangler = __esm({
           return;
         }
         if (element instanceof Menu) {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
+          this._resetCloseTimer();
           return;
         }
         const elem = element;
@@ -33098,8 +33130,7 @@ var init_wrangler = __esm({
         }
         if (destroy) {
           this.endMenus();
-          this.closetimer = time_ms();
-          this.closereq = void 0;
+          this._resetCloseTimer();
           elem._onpress?.(e);
           return;
         }
@@ -33119,8 +33150,7 @@ var init_wrangler = __esm({
         if (!ok) {
           this.closereq = this.menu;
         } else {
-          this.closetimer = time_ms();
-          this.closereq = void 0;
+          this._resetCloseTimer();
         }
       }
       update() {
@@ -33158,12 +33188,29 @@ var init_wrangler = __esm({
 });
 
 // scripts/menu/menu.ts
+function invokeMenuCallback(cb, id) {
+  try {
+    cb(id);
+  } catch (error2) {
+    print_stack2(error2);
+    console.log("Error in menu callback");
+  }
+}
+function newMenu(title, ctx) {
+  const menu = UIBase2.createElement("menu-x");
+  if (ctx !== void 0) {
+    menu.ctx = ctx;
+  }
+  menu.setAttribute("name", title);
+  return menu;
+}
 var Menu;
 var init_menu = __esm({
   "scripts/menu/menu.ts"() {
     "use strict";
     init_util();
     init_ui_base();
+    init_constants();
     init_menu_types();
     init_wrangler();
     Menu = class _Menu extends UIBase2 {
@@ -33232,6 +33279,7 @@ var init_menu = __esm({
         const style = this.menustyle = document.createElement("style");
         this.buildStyle();
         this.dom.setAttribute("tabindex", "-1");
+        this.addEventListener("contextmenu", (e) => e.preventDefault());
         this.shadow.appendChild(style);
         this.shadow.appendChild(this.container);
       }
@@ -33241,6 +33289,7 @@ var init_menu = __esm({
           style: "menu"
         };
       }
+      /** The `zindex` argument is accepted for signature compatibility and ignored; menus always float at `ZIndexes.menu`. */
       float(x = 0, y = 0, zindex, positionKey = UIBase2.PositionKey) {
         const rects = this.dom.getClientRects();
         const maxx = this.getWinWidth() - 10;
@@ -33254,7 +33303,7 @@ var init_menu = __esm({
             x = maxx - rect.width - 1;
           }
         }
-        return super.float(x, y, 50, positionKey);
+        return super.float(x, y, ZIndexes.menu, positionKey);
       }
       click() {
         if (this._was_clicked) {
@@ -33270,20 +33319,10 @@ var init_menu = __esm({
         this._was_clicked = true;
         const activeItem = this.activeItem;
         if (this._onselect) {
-          try {
-            this._onselect(this.activeItem._id);
-          } catch (error2) {
-            print_stack2(error2);
-            console.log("Error in menu callback");
-          }
+          invokeMenuCallback(this._onselect, activeItem._id);
         }
         if (this.on_select) {
-          try {
-            this.on_select(activeItem._id);
-          } catch (error2) {
-            print_stack2(error2);
-            console.log("Error in menu callback");
-          }
+          invokeMenuCallback(this.on_select, activeItem._id);
         }
         this.close();
       }
@@ -33348,9 +33387,6 @@ var init_menu = __esm({
       selectNext(focus = true) {
         return this._select(1, focus);
       }
-      start_fancy(prepend, setActive = true) {
-        return this.startFancy(prepend, setActive);
-      }
       setActive(item, focus = true) {
         if (this.activeItem === item) {
           return;
@@ -33369,7 +33405,12 @@ var init_menu = __esm({
         }
         this.activeItem = item;
       }
+      /** @deprecated Use {@link startSearch}. */
       startFancy(prepend, setActive = true) {
+        return this.startSearch(prepend, setActive);
+      }
+      /** Starts the menu with a search textbox that filters the items. */
+      startSearch(prepend, setActive = true) {
         this.hasSearchBox = true;
         this.started = true;
         menuWrangler.pushMenu(this);
@@ -33439,7 +33480,7 @@ var init_menu = __esm({
         dokey("padding-right");
         dokey("padding-bottom");
         if (this.items.length > 15 && this.autoSearchMode) {
-          return this.start_fancy(prepend, setActive);
+          return this.startSearch(prepend, setActive);
         }
         if (prepend) {
           this.container.prepend(this.dom);
@@ -33465,16 +33506,7 @@ var init_menu = __esm({
         dom.style["display"] = "inline-flex";
         dom.hotkey = hotkey;
         dom.icon = icon;
-        let icon_div;
-        if (1) {
-          icon_div = makeIconDiv(icon, IconSheets.SMALL);
-        } else {
-          const tilesize = iconmanager2.getTileSize(IconSheets.SMALL);
-          icon_div = document.createElement("span");
-          icon_div.style["padding"] = icon_div.style["margin"] = "0px";
-          icon_div.style["width"] = tilesize + "px";
-          icon_div.style["height"] = tilesize + "px";
-        }
+        const icon_div = makeIconDiv(icon, IconSheets.SMALL);
         icon_div.style["display"] = "inline-flex";
         icon_div.style["marginRight"] = "1px";
         icon_div.style["align"] = "left";
@@ -33613,30 +33645,17 @@ var init_menu = __esm({
             this.click();
           };
           li.addEventListener("contextmenu", (e) => e.preventDefault());
-          this.addEventListener("contextmenu", (e) => e.preventDefault());
-          li.addEventListener("pointerup", onclick, { capture: true });
-          li.addEventListener("click", onclick, { capture: true });
-          li.addEventListener("pointerdown", onclick, { capture: true });
-          li.addEventListener("focus", (e) => {
-            onfocus(e);
-            onfocus(e);
-          });
-          li.addEventListener("pointermove", (e) => {
+          for (const type of ["pointerup", "click", "pointerdown"]) {
+            li.addEventListener(type, onclick, { capture: true });
+          }
+          li.addEventListener("focus", onfocus);
+          const hoverFocus = (e) => {
             onfocus(e);
             li.focus();
-          });
-          li.addEventListener("mouseover", (e) => {
-            onfocus(e);
-            li.focus();
-          });
-          li.addEventListener("mouseenter", (e) => {
-            onfocus(e);
-            li.focus();
-          });
-          li.addEventListener("pointerover", (e) => {
-            onfocus(e);
-            li.focus();
-          });
+          };
+          for (const type of ["pointermove", "mouseover", "mouseenter", "pointerover"]) {
+            li.addEventListener(type, hoverFocus);
+          }
           this.dom.appendChild(li);
         }
         return li;
@@ -33756,12 +33775,9 @@ var init_menu = __esm({
         return this;
       }
       menu(title) {
-        const ret = UIBase2.createElement("menu-x");
-        ret.setAttribute("name", title);
+        const ret = newMenu(title);
         this.addItem(ret);
         return ret;
-      }
-      calcSize() {
       }
     };
     Menu.SEP = SEP;
@@ -42031,7 +42047,7 @@ function forwardContainerMethods(cls, propertyKey, keys2 = defaultForwardKeys) {
 
 // scripts/widgets/ui_panel.ts
 init_ui_base();
-var UIBase4 = UIBase2;
+var UIBase5 = UIBase2;
 var PackFlags3 = PackFlags;
 var PanelContents2 = class extends ColumnFrame {
   get openClosedIcon() {
@@ -42057,7 +42073,7 @@ var PanelContents2 = class extends ColumnFrame {
     };
   }
 };
-UIBase4.internalRegister(PanelContents2);
+UIBase5.internalRegister(PanelContents2);
 var PanelFrame = class extends ColumnFrame {
   titleframe;
   contents;
@@ -42070,7 +42086,7 @@ var PanelFrame = class extends ColumnFrame {
     return this._iconcheckWidget;
   }
   createContents() {
-    const ret = UIBase4.createElement("panel-contents-x");
+    const ret = UIBase5.createElement("panel-contents-x");
     this._container_inherit(ret);
     this._add(ret);
     return ret;
@@ -42082,7 +42098,7 @@ var PanelFrame = class extends ColumnFrame {
     this.contents._panel = this;
     this.contents.panelFrame = this;
     this._panel = this;
-    this._iconcheckWidget = UIBase4.createElement("iconcheck-x");
+    this._iconcheckWidget = UIBase5.createElement("iconcheck-x");
     this._iconcheckWidget.noEmboss = true;
     Object.defineProperty(this.contents, "closed", {
       get: () => {
@@ -42383,7 +42399,7 @@ var PanelFrame = class extends ColumnFrame {
     }
   }
 };
-UIBase4.internalRegister(PanelFrame);
+UIBase5.internalRegister(PanelFrame);
 forwardContainerMethods(PanelFrame, "contents");
 
 // scripts/widgets/ui_colorpicker2.ts
@@ -46576,7 +46592,7 @@ __export(ui_noteframe_exports, {
 });
 init_ui_base();
 init_ui_base();
-var UIBase5 = UIBase2;
+var UIBase6 = UIBase2;
 var Note = class extends UIBase2 {
   _noteid;
   height;
@@ -46656,7 +46672,7 @@ var Note = class extends UIBase2 {
     super.setCSS(false);
   }
 };
-UIBase5.internalRegister(Note);
+UIBase6.internalRegister(Note);
 var ProgBarNote = class extends Note {
   _percent;
   barWidth;
@@ -46708,7 +46724,7 @@ var ProgBarNote = class extends Note {
     super.init();
   }
 };
-UIBase5.internalRegister(ProgBarNote);
+UIBase6.internalRegister(ProgBarNote);
 var NoteFrame = class extends RowFrame {
   _h;
   constructor() {
@@ -46760,7 +46776,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
   addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
-    const note = UIBase5.createElement(tagname);
+    const note = UIBase6.createElement(tagname);
     note.color = color;
     note.setLabel(msg);
     note.style["text-align"] = "center";
@@ -46780,7 +46796,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
 };
-UIBase5.internalRegister(NoteFrame);
+UIBase6.internalRegister(NoteFrame);
 function getNoteFrames(screen) {
   const ret = [];
   const rec = (n) => {
@@ -53084,17 +53100,6 @@ var ScreenBorder = class _ScreenBorder extends UIBase2 {
 };
 UIBase2.internalRegister(ScreenBorder);
 
-// scripts/screen/constants.ts
-var IsScreenTag = /* @__PURE__ */ Symbol("IsScreenTag");
-var ZIndexes = {
-  popup: 2205,
-  floatingPanel: 205,
-  menu: 50,
-  measuring: -10,
-  measuringHidden: -1e4,
-  popupTitlebar: 3
-};
-
 // scripts/util/math.ts
 init_math();
 
@@ -53461,6 +53466,7 @@ UIBase2.internalRegister(Overdraw);
 init_util();
 init_simple_events();
 init_ui_base();
+init_constants();
 function addPopup(screen, popup) {
   screen._popups.push(popup);
 }
@@ -53635,6 +53641,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
 // scripts/screen/dock_panels.ts
 init_ui_base();
 init_simple_events();
+init_constants();
 init_struct();
 init_vectormath();
 var PanelSides = ["left", "right", "top", "bottom"];
@@ -55073,6 +55080,7 @@ init_simple_events();
 init_const();
 init_struct();
 init_area_wrangler();
+init_constants();
 init_vectormath();
 init_area_wrangler();
 function isScreen(obj) {
@@ -58354,6 +58362,7 @@ UIBase2.internalRegister(DragBox);
 
 // scripts/widgets/ui_dialog.ts
 init_ui_base();
+init_constants();
 init_simple_events();
 var POPUP_TITLEBAR_HEIGHT = 24;
 function startTitleDrag(sarea, e) {
@@ -58855,6 +58864,7 @@ init_simple_events();
 init_simple_events();
 init_ui_base();
 init_menu_ops();
+init_constants();
 var list4 = Array.from;
 startMenuEventWrangling();
 var _events_started = false;
@@ -63439,6 +63449,7 @@ export {
   mount,
   mySafeJSONParse,
   mySafeJSONStringify,
+  newMenu,
   graph_exports as nodegraph,
   normal_poly,
   normal_quad,
@@ -63449,6 +63460,7 @@ export {
   notifyPathChange,
   struct_default as nstructjs,
   nwjs_api_exports as nwjs_api,
+  openMenuPopup,
   parseToolPath,
   parseValue,
   parseValueIntern,

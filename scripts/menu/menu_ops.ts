@@ -4,8 +4,13 @@ import { HotKey } from "../path-controller/util/simple_events";
 import type { IContextBase } from "../core/context_base";
 import type { Screen } from "../screen/FrameManager";
 import type { PopupContainer } from "../screen/FrameManager_popup";
-import { Menu } from "./menu";
-import type { MenuItemCallback, MenuTemplate, MenuTemplateItem } from "./menu_types";
+import { Menu, newMenu } from "./menu";
+import type {
+  MenuItemCallback,
+  MenuTemplate,
+  MenuTemplateEntry,
+  MenuTemplateItem,
+} from "./menu_types";
 import { menuWrangler } from "./wrangler";
 
 export function createMenu<CTX extends IContextBase = IContextBase>(
@@ -13,13 +18,17 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
   title: string,
   templ: MenuTemplate
 ): Menu<CTX> {
-  const menu = UIBase.createElement("menu-x") as unknown as Menu<CTX>;
-  menu.ctx = ctx;
-  menu.setAttribute("name", title);
+  const menu = newMenu(title, ctx);
 
   const menuSEP = (menu.constructor as typeof Menu).SEP;
   let id = 0;
   const cbs: Record<string | number, () => void> = {};
+
+  const bindCallback = (cbfunc: Function, arg: string | number) => {
+    return function () {
+      cbfunc(arg);
+    };
+  };
 
   const doItem = (item: MenuTemplateItem) => {
     if (item !== undefined && item instanceof Menu) {
@@ -49,11 +58,9 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
-      cbs[id] = (function (toolpath: string) {
-        return function () {
-          ctx.api.execTool(ctx, toolpath);
-        };
-      })(item);
+      cbs[id] = () => {
+        ctx.api.execTool(ctx, item);
+      };
 
       id++;
     } else if (item === menuSEP) {
@@ -63,34 +70,20 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
         (item as MenuItemCallback)(document.createElement("div")) as unknown as MenuTemplateItem
       );
     } else if (item instanceof Array) {
-      //old array-based api for custom entries
-      let hotkey: string | HotKey | undefined =
-        item.length > 1 ? (item[2] as string | HotKey | undefined) : undefined;
-      const icon = item.length > 2 ? ((item as any)[3] as number | undefined) : undefined;
-      const tooltip = item.length > 3 ? ((item as any)[4] as string | undefined) : undefined;
-      const id2 = item.length > 4 ? ((item as any)[5] as string | number) : id++;
-
-      if (hotkey !== undefined && hotkey instanceof HotKey) {
-        hotkey = hotkey.buildString();
-      }
-
-      menu.addItemExtra(item[0], id2, hotkey, icon, undefined, tooltip);
-
-      cbs[id2 as string | number] = (function (cbfunc: Function, arg: string | number) {
-        return function () {
-          cbfunc(arg);
-        };
-      })(item[1] as Function, id2 as string | number);
+      // Old array-based custom entries, normalized into the object form. The off-by-one
+      // length guards (`> 1` reads index 2, and so on) are load-bearing for consumers
+      // and are kept as-is, as is `item[5]` carrying an explicit id.
+      doItem({
+        name    : item[0],
+        callback: item[1],
+        hotkey  : item.length > 1 ? (item[2] as string | HotKey | undefined) : undefined,
+        icon    : item.length > 2 ? ((item as any)[3] as number | undefined) : undefined,
+        tooltip : item.length > 3 ? ((item as any)[4] as string | undefined) : undefined,
+        id      : item.length > 4 ? ((item as any)[5] as string | number) : undefined,
+      } as MenuTemplateEntry);
     } else if (typeof item === "object") {
-      //new object-based api for custom entries
-      const objItem = item as {
-        name: string;
-        callback: Function;
-        hotkey?: string | HotKey;
-        icon?: number;
-        tooltip?: string;
-        id?: string | number;
-      };
+      //object-based api for custom entries
+      const objItem = item as MenuTemplateEntry;
       const { name, callback, icon, tooltip } = objItem;
       let { hotkey } = objItem;
 
@@ -101,11 +94,7 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
       menu.addItemExtra(name, id2, hotkey as string | undefined, icon, undefined, tooltip);
 
-      cbs[id2] = (function (cbfunc: Function, arg: string | number) {
-        return function () {
-          cbfunc(arg);
-        };
-      })(callback, id2);
+      cbs[id2] = bindCallback(callback, id2);
     }
   };
 
@@ -120,6 +109,39 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
   return menu;
 }
 
+/**
+ * Opens `menu` in a screen popup owned by `owner` and starts it, in search mode when
+ * `search` is set. Stores the popup on `menu._popup` and returns it.
+ */
+export function openMenuPopup(
+  menu: Menu,
+  screen: Screen,
+  owner: UIBase,
+  x: number,
+  y: number,
+  opts: { search?: boolean; safetyDelay?: number } = {}
+): PopupContainer {
+  const { search = false, safetyDelay = 0 } = opts;
+
+  const con = (menu._popup = screen.popup(
+    owner,
+    x,
+    y,
+    false,
+    safetyDelay
+  ) as unknown as PopupContainer);
+  con.noMarginsOrPadding();
+
+  con.add(menu);
+  if (search) {
+    menu.startSearch();
+  } else {
+    menu.start();
+  }
+
+  return con;
+}
+
 export function startMenu(
   menu: Menu,
   x: number,
@@ -130,25 +152,14 @@ export function startMenu(
   menuWrangler.endMenus();
 
   const screen = (menu.ctx as IContextBase).screen as unknown as Screen;
-  const con = (menu._popup = screen.popup(
-    menu as unknown as UIBase,
-    x,
-    y,
-    false,
-    safetyDelay
-  ) as unknown as PopupContainer);
-  con.noMarginsOrPadding();
-
-  con.add(menu);
-  if (searchMenuMode) {
-    menu.startFancy();
-  } else {
-    menu.start();
-  }
+  openMenuPopup(menu, screen, menu as unknown as UIBase, x, y, {
+    search: searchMenuMode,
+    safetyDelay,
+  });
 
   menu.flushUpdate();
   menu.flushSetCSS();
 
-  menu._popup.flushUpdate();
-  menu._popup.flushSetCSS();
+  menu._popup!.flushUpdate();
+  menu._popup!.flushSetCSS();
 }

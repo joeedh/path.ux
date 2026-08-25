@@ -55,6 +55,26 @@ export class MenuWrangler {
     return this.menustack.length > 0 ? this.menustack[this.menustack.length - 1] : undefined;
   }
 
+  /** Restarts the mouse-out close countdown and withdraws a pending close request. */
+  _resetCloseTimer() {
+    this.closetimer = util.time_ms();
+    this.closereq = undefined;
+  }
+
+  /**
+   * Returns the screen and page coordinates for an event's element pick. Returns undefined
+   * when no menu or screen is live, restarting the close countdown (a pending close request
+   * is deliberately left standing).
+   */
+  _pickPreamble(e: PointerEvent): { screen: Screen; x: number; y: number } | undefined {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = util.time_ms();
+      return undefined;
+    }
+
+    return { screen: this.screen, x: e.pageX, y: e.pageY };
+  }
+
   pushMenu(menu: Menu) {
     debugmenu("pushMenu");
 
@@ -158,14 +178,12 @@ export class MenuWrangler {
   }
 
   on_pointerdown(e: PointerEvent) {
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = util.time_ms();
+    const pick = this._pickPreamble(e);
+    if (!pick) {
       return;
     }
 
-    const screen = this.screen;
-    const x = e.pageX;
-    const y = e.pageY;
+    const { screen, x, y } = pick;
 
     const element = screen.pickElement(x, y);
 
@@ -177,14 +195,12 @@ export class MenuWrangler {
   }
 
   on_pointerup(e: PointerEvent) {
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = util.time_ms();
+    const pick = this._pickPreamble(e);
+    if (!pick) {
       return;
     }
 
-    const screen = this.screen;
-    const x = e.pageX;
-    const y = e.pageY;
+    const { screen, x, y } = pick;
 
     let element = screen.pickElement(x, y, undefined, undefined, DropBox);
     if (element !== undefined) {
@@ -228,14 +244,12 @@ export class MenuWrangler {
 
   on_pointermove(e: PointerEvent) {
     if (this.menu?.hasSearchBox) {
-      this.closetimer = util.time_ms();
-      this.closereq = undefined;
+      this._resetCloseTimer();
       return;
     }
 
     if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = util.time_ms();
-      this.closereq = undefined;
+      this._resetCloseTimer();
       return;
     }
 
@@ -271,8 +285,7 @@ export class MenuWrangler {
     }
 
     if (element instanceof Menu) {
-      this.closetimer = util.time_ms();
-      this.closereq = undefined;
+      this._resetCloseTimer();
       return;
     }
 
@@ -296,8 +309,7 @@ export class MenuWrangler {
       //destroy entire menu stack
       this.endMenus();
 
-      this.closetimer = util.time_ms();
-      this.closereq = undefined;
+      this._resetCloseTimer();
 
       //start new menu
       elem._onpress?.(e);
@@ -327,8 +339,7 @@ export class MenuWrangler {
     if (!ok) {
       this.closereq = this.menu;
     } else {
-      this.closetimer = util.time_ms();
-      this.closereq = undefined;
+      this._resetCloseTimer();
     }
   }
 

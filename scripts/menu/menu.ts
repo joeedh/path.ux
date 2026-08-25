@@ -1,11 +1,22 @@
 import * as util from "../path-controller/util/util";
-import { UIBase, IconSheets, makeIconDiv, iconmanager, getFont } from "../core/ui_base";
+import { UIBase, IconSheets, makeIconDiv, getFont } from "../core/ui_base";
+import { ZIndexes } from "../screen/constants";
 import type { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
 import type { PopupContainer } from "../screen/FrameManager_popup";
 import { SEP, type MenuItem } from "./menu_types";
 import { menuWrangler } from "./wrangler";
 import type { DropBox } from "./dropbox";
+
+/** Runs a menu-item callback, logging rather than propagating an exception it throws. */
+function invokeMenuCallback(cb: (id: string | number) => void, id: string | number) {
+  try {
+    cb(id);
+  } catch (error: unknown) {
+    util.print_stack(error as Error);
+    console.log("Error in menu callback");
+  }
+}
 
 export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, unknown, "Menu"> {
   static SEP: typeof SEP;
@@ -93,6 +104,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
     //the menu wrangler handles key events
 
+    this.addEventListener("contextmenu", (e) => e.preventDefault());
+
     this.shadow.appendChild(style);
     this.shadow.appendChild(this.container);
   }
@@ -104,6 +117,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     };
   }
 
+  /** The `zindex` argument is accepted for signature compatibility and ignored; menus always float at `ZIndexes.menu`. */
   float(x = 0, y = 0, zindex?: number | string, positionKey = UIBase.PositionKey): this {
     const rects = this.dom.getClientRects();
     const maxx = this.getWinWidth() - 10;
@@ -120,7 +134,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       }
     }
 
-    return super.float(x, y, 50, positionKey);
+    return super.float(x, y, ZIndexes.menu, positionKey);
   }
 
   click() {
@@ -142,20 +156,10 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     const activeItem = this.activeItem;
 
     if (this._onselect) {
-      try {
-        this._onselect(this.activeItem._id);
-      } catch (error: unknown) {
-        util.print_stack(error as Error);
-        console.log("Error in menu callback");
-      }
+      invokeMenuCallback(this._onselect, activeItem._id);
     }
     if (this.on_select) {
-      try {
-        this.on_select(activeItem._id);
-      } catch (error: unknown) {
-        util.print_stack(error as Error);
-        console.log("Error in menu callback");
-      }
+      invokeMenuCallback(this.on_select, activeItem._id);
     }
 
     this.close();
@@ -239,10 +243,6 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return this._select(1, focus);
   }
 
-  start_fancy(prepend?: boolean, setActive = true) {
-    return this.startFancy(prepend, setActive);
-  }
-
   setActive(item: MenuItem | undefined, focus = true) {
     if (this.activeItem === item) {
       return;
@@ -267,7 +267,13 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     this.activeItem = item;
   }
 
+  /** @deprecated Use {@link startSearch}. */
   startFancy(prepend?: boolean, setActive = true) {
+    return this.startSearch(prepend, setActive);
+  }
+
+  /** Starts the menu with a search textbox that filters the items. */
+  startSearch(prepend?: boolean, setActive = true) {
     this.hasSearchBox = true;
     this.started = true;
     menuWrangler.pushMenu(this);
@@ -356,7 +362,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     dokey("padding-bottom");
 
     if (this.items.length > 15 && this.autoSearchMode) {
-      return this.start_fancy(prepend, setActive);
+      return this.startSearch(prepend, setActive);
     }
 
     if (prepend) {
@@ -406,19 +412,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     dom.hotkey = hotkey;
     dom.icon = icon;
 
-    let icon_div: HTMLElement;
-
-    if (1) {
-      //icon >= 0) {
-      icon_div = makeIconDiv(icon, IconSheets.SMALL);
-    } else {
-      const tilesize = iconmanager.getTileSize(IconSheets.SMALL);
-
-      icon_div = document.createElement("span");
-      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
-      icon_div.style["width"] = tilesize + "px";
-      icon_div.style["height"] = tilesize + "px";
-    }
+    const icon_div = makeIconDiv(icon, IconSheets.SMALL);
 
     icon_div.style["display"] = "inline-flex";
     icon_div.style["marginRight"] = "1px";
@@ -624,34 +618,20 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       };
 
       li.addEventListener("contextmenu", (e) => e.preventDefault());
-      this.addEventListener("contextmenu", (e) => e.preventDefault());
 
-      li.addEventListener("pointerup", onclick, { capture: true });
-      li.addEventListener("click", onclick, { capture: true });
-      li.addEventListener("pointerdown", onclick, { capture: true });
+      for (const type of ["pointerup", "click", "pointerdown"]) {
+        li.addEventListener(type, onclick, { capture: true });
+      }
 
-      li.addEventListener("focus", (e) => {
-        onfocus(e);
-        onfocus(e);
-      });
+      li.addEventListener("focus", onfocus);
 
-      li.addEventListener("pointermove", (e) => {
+      const hoverFocus = (e: Event) => {
         onfocus(e);
         li.focus();
-      });
-      li.addEventListener("mouseover", (e) => {
-        onfocus(e);
-        li.focus();
-      });
-      li.addEventListener("mouseenter", (e) => {
-        onfocus(e);
-        li.focus();
-      });
-
-      li.addEventListener("pointerover", (e) => {
-        onfocus(e);
-        li.focus();
-      });
+      };
+      for (const type of ["pointermove", "mouseover", "mouseenter", "pointerover"]) {
+        li.addEventListener(type, hoverFocus);
+      }
 
       this.dom.appendChild(li);
     }
@@ -792,15 +772,27 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   }
 
   menu(title: string) {
-    const ret = UIBase.createElement("menu-x") as unknown as Menu;
-
-    ret.setAttribute("name", title);
+    const ret = newMenu(title);
     this.addItem(ret);
 
     return ret;
   }
+}
 
-  calcSize() {}
+/** Creates an unstarted `menu-x` element with the given title. */
+export function newMenu<CTX extends IContextBase = IContextBase>(
+  title: string,
+  ctx?: CTX
+): Menu<CTX> {
+  const menu = UIBase.createElement("menu-x") as unknown as Menu<CTX>;
+
+  if (ctx !== undefined) {
+    menu.ctx = ctx;
+  }
+
+  menu.setAttribute("name", title);
+
+  return menu;
 }
 
 Menu.SEP = SEP;
