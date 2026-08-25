@@ -77,6 +77,7 @@ import * as modal from "./base/ui_base_modal";
 import * as anims from "./base/ui_base_anim";
 import * as css from "./base/ui_base_css";
 import * as datapath from "./base/ui_base_datapath";
+import * as pick from "./base/ui_base_pick";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -1526,23 +1527,7 @@ export class UIBase<
   }
 
   calcZ(): number {
-    let p: UIBase | undefined = this;
-    let n: Node | null | UIBase | undefined = this;
-
-    while (n) {
-      if (n instanceof HTMLElement && !isNaN(parseFloat("" + n.style["zIndex"]))) {
-        const z = parseFloat(n.style["zIndex"]);
-        return z;
-      }
-
-      n = n.parentNode;
-
-      if (!n) {
-        n = p = p!.parentWidget;
-      }
-    }
-
-    return 0;
+    return pick.calcZ(this);
   }
 
   /** returns path to a specific element, see document.elementsFromPoint */
@@ -1554,34 +1539,7 @@ export class UIBase<
     nodeclass: IUIBaseConstructor = UIBase,
     excluded_classes?: IUIBaseConstructor[]
   ): T[] {
-    nodeclass = args.nodeclass || UIBase;
-    excluded_classes = args.excluded_classes;
-
-    x -= window.scrollX;
-    y -= window.scrollY;
-
-    const elems = this.shadow.elementsFromPoint(x, y);
-
-    const excluded = (n: UIBase) =>
-      excluded_classes ? excluded_classes.find((n2) => n instanceof n2) : false;
-    const visit = new WeakSet<Element>();
-
-    const result = new Set<T>();
-    const recurse = (elems2: Element[]) => {
-      for (const n of elems2) {
-        if (n instanceof UIBase) {
-          const ns = n.shadow.elementsFromPoint(x, y);
-          if (!excluded(n) && (!nodeclass || n instanceof nodeclass)) {
-            result.add(n as T);
-          }
-          ns.forEach((n2) => visit.add(n2));
-          recurse(ns.filter((n2) => !visit.has(n2)));
-        }
-      }
-    };
-    recurse(elems);
-
-    return Array.from(result);
+    return pick.pickElements<T>(this, x, y, args);
   }
 
   pickElement<T extends UIBase<CTX> = UIBase<CTX>>(
@@ -1593,73 +1551,7 @@ export class UIBase<
     nodeclass: IUIBaseConstructor = UIBase,
     excluded_classes?: IUIBaseConstructor[]
   ): T | undefined {
-    nodeclass = args.nodeclass || UIBase;
-    excluded_classes = args.excluded_classes;
-    const clip = args.clip;
-
-    x -= window.scrollX;
-    y -= window.scrollY;
-
-    let elem: Element | null = document.elementFromPoint(x, y);
-
-    if (!elem) {
-      return;
-    }
-
-    const path = [elem];
-    let lastelem: Element | null = elem;
-    let i = 0;
-
-    while (elem instanceof UIBase) {
-      if (i++ > 1000) {
-        console.error("Infinite loop error");
-        break;
-      }
-
-      elem = elem.shadow.elementFromPoint(x, y);
-
-      if (elem === lastelem) {
-        break;
-      }
-
-      if (elem) {
-        path.push(elem);
-      }
-
-      lastelem = elem;
-    }
-
-    path.reverse();
-
-    //console.warn(path);
-
-    for (let i = 0; i < path.length; i++) {
-      const node = path[i];
-      let ok = node instanceof nodeclass;
-
-      if (excluded_classes) {
-        for (const cls of excluded_classes) {
-          ok = ok && !(node instanceof cls);
-        }
-      }
-
-      if (clip) {
-        const rect = node.getBoundingClientRect();
-        // avoid GC
-        const clip2 = math.aabb_intersect_2d(
-          clip.pos,
-          clip.size,
-          [rect.x, rect.y],
-          [rect.width, rect.height]
-        );
-
-        ok = ok && Boolean(clip2);
-      }
-
-      if (ok) {
-        return node as T;
-      }
-    }
+    return pick.pickElement<T>(x, y, args);
   }
 
   __updateDisable(val: boolean): void {
