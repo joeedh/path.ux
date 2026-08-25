@@ -77,6 +77,7 @@ export {
 } from "./base/ui_element_registry";
 import * as registry from "./base/ui_element_registry";
 import * as themeLookup from "./base/ui_base_theme_lookup";
+import * as tooltips from "./base/ui_base_tooltips";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -2629,167 +2630,15 @@ export class UIBase<
   }
 
   abortToolTips(delayMs = 500): this {
-    if (this._has_own_tooltips) {
-      this._has_own_tooltips.stop_timer();
-    }
-
-    if (this._tooltip_ref) {
-      this._tooltip_ref.remove();
-      this._tooltip_ref = undefined;
-    }
-
-    this._tool_tip_abort_delay = util.time_ms() + delayMs;
-
-    return this;
+    return tooltips.abortToolTips(this, delayMs);
   }
 
   updateToolTipHandlers(): void {
-    if (!this._useNativeToolTips_set && !cconst.useNativeToolTips !== !this._useNativeToolTips) {
-      this._useNativeToolTips = cconst.useNativeToolTips;
-    }
-
-    if (!!this.useNativeToolTips === !this._has_own_tooltips) {
-      return;
-    }
-
-    if (!this.useNativeToolTips) {
-      const state = (this._has_own_tooltips = {
-        start_timer: (e) => {
-          this._tooltip_timer = util.time_ms();
-          //console.warn(this._id, "tooltip timer start", e.type);
-        },
-        stop_timer: (e) => {
-          //console.warn(this._id, "tooltip timer end", util.time_ms()-this._tooltip_timer, e.type);
-          this._tooltip_timer = undefined;
-        },
-        reset_timer: (e) => {
-          //console.warn(this._id, "tooltip timer reset", util.time_ms()-this._tooltip_timer, e.type);
-          if (this._tooltip_timer !== undefined) {
-            this._tooltip_timer = util.time_ms();
-          }
-        },
-        start_events: ["mouseover"],
-        reset_events: [
-          "mousemove",
-          "mousedown",
-          "mouseup",
-          "touchstart",
-          "touchend",
-          "keydown",
-          "focus",
-        ],
-        stop_events : ["mouseleave", "blur", "mouseout"],
-        handlers    : {},
-      });
-
-      const bind_handler = (type: string, etype: string): EventListener => {
-        const handler = (e: Event) => {
-          if (
-            this._tool_tip_abort_delay !== undefined &&
-            util.time_ms() < this._tool_tip_abort_delay
-          ) {
-            this._tooltip_timer = undefined;
-            return;
-          }
-
-          (state as any)[type](e);
-        };
-
-        if (etype in state.handlers) {
-          console.error(type, "is in handlers already");
-          return (state.handlers as any)[etype]!;
-        }
-
-        (state.handlers as any)[etype] = handler;
-        return handler;
-      };
-
-      let i = 0;
-      const lists = [state.start_events, state.stop_events, state.reset_events];
-
-      for (const type of ["start_timer", "stop_timer", "reset_timer"]) {
-        for (const etype of lists[i]) {
-          this.addEventListener(etype, bind_handler(type, etype), { passive: true });
-        }
-
-        i++;
-      }
-    } else {
-      console.warn(this.id, "removing tooltip handlers");
-      const state = this._has_own_tooltips;
-
-      for (const k in state!.handlers) {
-        const handler = state!.handlers[k];
-        this.removeEventListener(k, handler);
-      }
-
-      this._has_own_tooltips = undefined;
-      this._tooltip_timer = undefined;
-    }
+    tooltips.updateToolTipHandlers(this);
   }
 
   updateToolTips(): void {
-    if (
-      this._description_final === undefined ||
-      this._description_final === null ||
-      this._description_final.trim().length === 0
-    ) {
-      return;
-    }
-
-    if (!this.ctx || !this.ctx.screen) {
-      return;
-    }
-
-    this.updateToolTipHandlers();
-
-    if (this.useNativeToolTips || this._tooltip_timer === undefined) {
-      return;
-    }
-
-    if (this._tool_tip_abort_delay !== undefined && util.time_ms() < this._tool_tip_abort_delay) {
-      return;
-    }
-
-    this._tool_tip_abort_delay = undefined;
-
-    const screen = this.ctx.screen;
-
-    const timelimit = 500;
-    let ok = util.time_ms() - this._tooltip_timer! > timelimit;
-
-    const x = screen.mpos[0];
-    const y = screen.mpos[1];
-
-    const rects = this.getClientRects();
-    const r: DOMRect | undefined = rects ? rects[0] : undefined;
-
-    if (!r) {
-      ok = false;
-    } else {
-      ok = ok && x >= r.x && x < r.x + r.width;
-      ok = ok && y >= r.y && y < r.y + r.height;
-    }
-
-    ok = ok && !haveModal();
-    ok = ok && screen.pickElement(x, y) === this;
-    ok = ok && !!this._description_final;
-
-    if (ok) {
-      const _ToolTip = window._ToolTip;
-      this._tooltip_ref = _ToolTip.show(this._description_final!, this.ctx.screen, x, y);
-    } else {
-      if (this._tooltip_ref) {
-        this._tooltip_ref.remove();
-      }
-
-      this._tooltip_ref = undefined;
-    }
-
-    //console.warn(this._id, "tooltip timer end");
-    if (util.time_ms() - this._tooltip_timer > timelimit) {
-      this._tooltip_timer = undefined;
-    }
+    tooltips.updateToolTips(this);
   }
 
   updateEventGraph(): void {
