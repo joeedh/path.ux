@@ -21,6 +21,7 @@ import type { IContextBase } from "../core/context_base";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 import type { CSSFont } from "../core/cssfont";
 import type { Screen } from "../screen/FrameManager";
+import type { PopupContainer } from "../screen/FrameManager_popup";
 
 const PropTypes = toolprop.PropTypes;
 
@@ -78,13 +79,6 @@ interface MenuItem extends HTMLLIElement {
   icon?: number;
   label?: string;
 }
-
-/** Type for popup container returned by Screen.popup() */
-type PopupContainer<CTX extends IContextBase = IContextBase> = UIBase<CTX> & {
-  noMarginsOrPadding(): void;
-  end(): void;
-  add(child: UIBase<CTX>): void;
-};
 
 /* Window augmentations for _menuWrangler, menu, _startMenuEventWrangling
  * are already declared in global.d.ts — use type assertions when setting. */

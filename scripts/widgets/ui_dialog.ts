@@ -17,6 +17,7 @@ import type { RowFrame } from "../core/ui_containers";
 import type { Area, ScreenArea } from "../screen/ScreenArea";
 import { AreaFlags } from "../screen/ScreenArea";
 import type { Screen } from "../screen/FrameManager";
+import { ZIndexes } from "../screen/constants";
 import type { IContextBase } from "../core/context_base";
 import {
   keymap,
@@ -140,7 +141,7 @@ function makeTitleBar<CTX extends IContextBase>(
     "1px solid " + ((bar.getDefault("border-color") as string) || "rgba(0,0,0,0.5)");
   bar.style.cursor = "move";
   //the editor below has its own stacking context; without this the titlebar loses to it
-  bar.style.zIndex = "3";
+  bar.style.zIndex = `${ZIndexes.popupTitlebar}`;
 
   //always, even untitled: `space-between` needs something at the near end or the button slides
   //back to it

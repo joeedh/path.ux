@@ -44,12 +44,12 @@ import "../widgets/ui_table";
 import { AreaFlags } from "./ScreenArea";
 import { checkForTextBox } from "../widgets/ui_textbox";
 import { startMenu } from "../widgets/ui_menu";
-import { IsScreenTag } from "./constants";
+import { IsScreenTag, ZIndexes } from "./constants";
+import { addPopup, removePopup, clampPopup, makePopup } from "./FrameManager_popup";
 import { IContextBase } from "../core/context_base";
 import { StructReader } from "../util/nstructjs";
 import { IAreaConstructor } from "./area_base";
 import "./AreaDocker";
-import { Container } from "../pathux";
 
 const list = Array.from;
 
@@ -594,40 +594,7 @@ export class Screen<
       return ret;
     }
 
-    const z = ret.style["zIndex"];
-
-    ret.style["zIndex"] = "-10";
-
-    const cb = () => {
-      const rect = ret.getClientRects()[0];
-      const size = this.size;
-
-      if (!rect) {
-        this.doOnce(cb);
-        return;
-      }
-
-      //console.log("rect", rect);
-
-      if (rect.bottom > size[1]) {
-        ret.style["top"] = size[1] - rect.height - 10 + "px";
-      } else if (rect.top < 0) {
-        ret.style["top"] = "10px";
-      }
-      if (rect.right > size[0]) {
-        ret.style["left"] = size[0] - rect.width - 10 + "px";
-      } else if (rect.left < 0) {
-        ret.style["left"] = "10px";
-      }
-
-      ret.style["zIndex"] = z;
-
-      ret.flushUpdate();
-      ret.flushSetCSS();
-    };
-
-    setTimeout(cb, popupDelay);
-    //this.doOnce(cb);
+    clampPopup(this as unknown as Screen, ret, popupDelay);
 
     return ret;
   }
@@ -638,14 +605,12 @@ export class Screen<
     ret.parentWidget = this;
     ret._init();
 
-    this._popups.push(ret);
+    addPopup(this as unknown as Screen, ret);
     (ret as any)._onend = () => {
-      if (this._popups.includes(ret)) {
-        this._popups.remove(ret);
-      }
+      removePopup(this as unknown as Screen, ret);
     };
 
-    ret.style["zIndex"] = "205";
+    ret.style["zIndex"] = `${ZIndexes.floatingPanel}`;
     ret.style["position"] = UIBase.PositionKey;
     ret.style["left"] = x + "px";
     ret.style["top"] = y + "px";
@@ -655,233 +620,9 @@ export class Screen<
     return ret;
   }
 
-  /** makes a popup at x,y and returns a new container-x for it */
+  /** Makes a popup at x,y and returns a new container-x for it: see {@link makePopup}. */
   _popup(owning_node: UIBase, elem_or_x: UIBase | number, y?: number, closeOnMouseOut = true) {
-    let sarea = this.sareas.active;
-    let w = owning_node as UIBase | undefined;
-
-    while (w) {
-      if (w instanceof ScreenArea) {
-        sarea = w;
-        break;
-      }
-      w = w.parentWidget;
-    }
-
-    let rx: number | undefined;
-    let ry: number | undefined;
-    if (typeof elem_or_x === "object") {
-      const r = elem_or_x.getClientRects()[0];
-      rx = r.x;
-      ry = r.y;
-    } else {
-      rx = elem_or_x;
-    }
-
-    const x = (typeof elem_or_x === "number" ? elem_or_x : rx) ?? 0;
-    y = y ?? ry ?? 0;
-
-    const container = UIBase.createElement("container-x") as Container & {
-      background: string;
-      end: () => void;
-    };
-
-    container.ctx = this.ctx;
-    container._init();
-
-    const remove = container.remove;
-    container.remove = (...args: Parameters<UIBase["remove"]>) => {
-      if (this._popups.includes(container)) {
-        this._popups.remove(container);
-      }
-
-      return remove.apply(container, args);
-    };
-
-    container.overrideClass("popup");
-
-    container.background = container.getDefault("background-color");
-    container.style["borderRadius"] = container.getDefault("border-radius") + "px";
-    container.style["borderColor"] = container.getDefault("border-color");
-    container.style["borderStyle"] = container.getDefault("border-style");
-    container.style["borderWidth"] = container.getDefault("border-width") + "px";
-    container.style["boxShadow"] = container.getDefault("box-shadow");
-
-    container.style["position"] = UIBase.PositionKey;
-    container.style["zIndex"] = "2205";
-    container.style["left"] = x + "px";
-    container.style["top"] = y + "px";
-    container.style["margin"] = "0px";
-
-    container.parentWidget = this;
-    container.updateAfter(() => {
-      container.style["zIndex"] = "2205";
-    });
-
-    /*causes weird bugs
-    container.update = () => {
-      _update.call(container);
-
-      let rects = container.getClientRects();
-      mm.reset();
-
-      for (let r of rects) {
-        p[0] = r.x;
-        p[1] = r.y;
-        mm.minmax(p);
-
-        p[0] += r.width;
-        p[1] += r.height;
-        mm.minmax(p);
-      }
-
-      let x = mm.min[0], y = mm.min[1];
-
-      x = Math.min(x, this.size[0]-(mm.max[0]-mm.min[0]));
-      y = Math.min(y, this.size[1]-(mm.max[1]-mm.min[1]));
-
-      container.style["left"] = x + "px";
-      container.style["top"] = y + "px";
-    }//*/
-
-    document.body.appendChild(container);
-    //this.shadow.appendChild(container);
-    this.setCSS();
-
-    this._popups.push(container);
-
-    // eslint-disable-next-line prefer-const
-    let mousepick:
-      | ((e: MouseEvent, x?: number, y?: number, do_timeout?: boolean) => void)
-      | undefined;
-    // eslint-disable-next-line prefer-const
-    let keydown: (e: KeyboardEvent) => void | undefined;
-
-    let done = false;
-    const end = () => {
-      if (this._popup_safe) {
-        return;
-      }
-
-      if (done) return;
-
-      //this.ctx.screen.removeEventListener("touchstart", touchpick, true);
-      //this.ctx.screen.removeEventListener("touchmove", touchpick, true);
-      this.ctx.screen.removeEventListener("mousedown", mousepick, true);
-      this.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true } as any);
-      this.ctx.screen.removeEventListener("mouseup", mousepick, true);
-      window.removeEventListener("keydown", keydown);
-
-      done = true;
-      container.remove();
-    };
-
-    container.end = end;
-
-    const _remove = container.remove;
-    container.remove = function (...args: Parameters<typeof _remove>) {
-      if (arguments.length == 0) {
-        end();
-      }
-      _remove.apply(this, args);
-    };
-
-    container._ondestroy = () => {
-      end();
-    };
-
-    let bad_time = util.time_ms();
-    let last_pick_time = util.time_ms();
-
-    mousepick = (e: MouseEvent, x?: number, y?: number, do_timeout = true) => {
-      if (!container.isConnected) {
-        end();
-        return;
-      }
-
-      if (sarea?.area) {
-        sarea.area.push_ctx_active();
-        sarea.area.pop_ctx_active();
-      }
-      //console.log("=======================================================popup touch start");
-      //console.log(e);
-
-      if (util.time_ms() - last_pick_time < 350) {
-        return;
-      }
-      last_pick_time = util.time_ms();
-
-      x = x === undefined ? e.x : x;
-      y = y === undefined ? e.y : y;
-
-      //let elem = this.pickElement(x, y, 2, 2, undefined, [ScreenBorder]);
-      let elem = this.pickElement(x, y, {
-        excluded_classes: [ScreenBorder],
-        mouseEvent      : e,
-      });
-
-      if (elem === undefined) {
-        if (closeOnMouseOut) {
-          end();
-        }
-        return;
-      }
-
-      let ok = false;
-
-      while (elem) {
-        if (elem === container) {
-          ok = true;
-          break;
-        }
-        elem = elem.parentWidget;
-      }
-
-      if (!ok) {
-        do_timeout = !do_timeout || util.time_ms() - bad_time > 100;
-
-        if (closeOnMouseOut && do_timeout) {
-          end();
-        }
-      } else {
-        bad_time = util.time_ms();
-      }
-    };
-
-    keydown = (e: KeyboardEvent) => {
-      if (!container.isConnected) {
-        window.removeEventListener("keydown", keydown);
-        return;
-      }
-
-      switch (e.keyCode) {
-        case keymap["Escape"]:
-          end();
-          break;
-      }
-    };
-
-    this.ctx.screen.addEventListener("mousedown", mousepick, true);
-    this.ctx.screen.addEventListener("mousemove", mousepick, { passive: true });
-    this.ctx.screen.addEventListener("mouseup", mousepick, true);
-    window.addEventListener("keydown", keydown);
-
-    /*
-    container.addEventListener("mouseleave", (e) => {
-      console.log("popup mouse leave");
-      if (closeOnMouseOut)
-        end();
-    });
-    container.addEventListener("mouseout", (e) => {
-      console.log("popup mouse out");
-      if (closeOnMouseOut)
-        end();
-    });
-    //*/
-
-    this.calcTabOrder();
-
-    return container;
+    return makePopup(this as unknown as Screen, owning_node, elem_or_x, y, closeOnMouseOut);
   }
 
   _recalcAABB(save = true) {

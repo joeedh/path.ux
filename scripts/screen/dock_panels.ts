@@ -50,6 +50,9 @@ import { PanelFrame } from "../widgets/ui_panel";
 import "../util/ScreenOverdraw";
 import type { Overdraw } from "../util/ScreenOverdraw";
 import type { IContextBase } from "../core/context_base";
+import type { Screen } from "./FrameManager";
+import { addPopup, removePopup } from "./FrameManager_popup";
+import { ZIndexes } from "./constants";
 import nstructjs from "../path-controller/util/struct";
 import type { StructReader } from "../util/nstructjs";
 import { Vector2 } from "../path-controller/util/vectormath";
@@ -979,8 +982,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
   }
 
   private _screen() {
-    return (this.host.ctx as unknown as { screen: UIBase<CTX> & { _popups: UIBase<CTX>[] } })
-      .screen;
+    return (this.host.ctx as unknown as { screen: Screen }).screen;
   }
 
   /** Detach a floating frame, keeping the panel widget alive. */
@@ -1012,7 +1014,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     frame.style.position = UIBase.PositionKey;
     frame.style.left = pos[0] + "px";
     frame.style.top = pos[1] + "px";
-    frame.style.zIndex = "205";
+    frame.style.zIndex = `${ZIndexes.floatingPanel}`;
     frame.style.borderRadius = "6px";
     frame.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.35)";
 
@@ -1064,17 +1066,11 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     //register as a screen popup so pickElement sees the frame first
     const screen = this.host.ctx ? this._screen() : undefined;
     if (screen) {
-      (screen._popups as unknown as UIBase<CTX>[]).push(frame);
+      addPopup(screen, frame as unknown as UIBase);
 
       const remove = frame.remove.bind(frame);
       frame.remove = () => {
-        const popups = screen._popups as unknown as {
-          includes(f: unknown): boolean;
-          remove(f: unknown): void;
-        };
-        if (popups.includes(frame)) {
-          popups.remove(frame);
-        }
+        removePopup(screen, frame as unknown as UIBase);
         return remove();
       };
     }

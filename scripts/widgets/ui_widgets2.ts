@@ -15,15 +15,8 @@ import { UIBase, PackFlags } from "../core/ui_base";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { Button } from "./ui_button";
 import { IContextBase } from "../core/context_base";
-
-/** Type for the container returned by Screen.popup() */
-type PopupContainer = UIBase & {
-  background: string;
-  end(): void;
-  add(child: UIBase): void;
-  button(label: string, cb?: () => void): UIBase;
-  flushUpdate(): void;
-};
+import type { PopupContainer } from "../screen/FrameManager_popup";
+import type { Screen } from "../screen/FrameManager";
 
 type AnySlider = UIBase & Record<string, unknown>;
 
@@ -66,7 +59,7 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
     const panel = UIBase.createElement<UIBase>("vector-panel-x");
     const screen = this.ctx.screen;
 
-    const popup = screen.popup(this, this) as PopupContainer;
+    const popup = screen.popup(this, this) as unknown as PopupContainer;
 
     popup.add(panel);
     popup.button("ok", () => {
@@ -588,14 +581,7 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
   div: HTMLDivElement;
   _start_time: number | undefined;
   timeout: number | undefined;
-  _popup:
-    | {
-        background: string;
-        end(): void;
-        style: CSSStyleDeclaration;
-        add(child: UIBase): void;
-      }
-    | undefined;
+  _popup: PopupContainer | undefined;
 
   constructor() {
     super();
@@ -630,19 +616,7 @@ export class ToolTip<CTX extends IContextBase = IContextBase> extends UIBase<
 
     const pad = 5;
     const size2 = [size[0] + pad, size[1] + pad];
-    const sscreen = screen as unknown as {
-      popup(
-        owning: UIBase,
-        x: number,
-        y: number
-      ): {
-        background: string;
-        end(): void;
-        style: CSSStyleDeclaration;
-        add(child: UIBase): void;
-      };
-      size: [number, number];
-    };
+    const sscreen = screen as unknown as Screen;
 
     x = Math.min(Math.max(x, 0), sscreen.size[0] - size2[0]);
     y = Math.min(Math.max(y, 0), sscreen.size[1] - size2[1]);

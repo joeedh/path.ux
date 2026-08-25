@@ -86,6 +86,7 @@ import * as nodegraph from "./graph/index";
 export { nodegraph };
 
 export * from "./screen/FrameManager";
+export * from "./screen/FrameManager_popup";
 export * from "./screen/ScreenArea";
 export * from "./screen/dock_panels";
 export * from "./util/ScreenOverdraw";
