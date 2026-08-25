@@ -64,9 +64,19 @@ import {
 import { DefaultTheme } from "./theme";
 import type { ThemeSchema, ThemeKeysFor } from "./theme_schema";
 
-//global list of elements to, hopefully, prevent minification tree shaking
-//of live elements
-export const ElementClasses: (typeof UIBase)[] = [];
+export {
+  ElementClasses,
+  UIFlags,
+  dpistack,
+  getDefault,
+  getTagPrefix,
+  marginPaddingCSSKeys,
+  report,
+  setTagPrefix,
+  IsMobile,
+} from "./base/ui_element_registry";
+import * as registry from "./base/ui_element_registry";
+import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
 
@@ -84,93 +94,11 @@ import * as aspect from "./aspect";
 
 window.__theme = theme;
 
-let registered_has_happened = false;
-let tagPrefix = "";
-const EventCBSymbol: unique symbol = Symbol("wrapped event callback");
-
-function calcElemCBKey(
-  elem: UIBase,
-  type: string,
-  options: AddEventListenerOptions | boolean | undefined
-): string {
-  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
-}
-
-/**
- * Sets tag prefix for pathux html elements.
- * Must be called prior to loading other modules.
- * Since this is tricky, you can alternatively
- * add a script tag with the prefix with the id "pathux-tag-prefix",
- * e.g.<pre> <script type="text/plain" id="pathux-tag-prefix">prefix</script> </pre>
- * */
-export function setTagPrefix(prefix: string): void {
-  if (registered_has_happened) {
-    throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
-  }
-
-  tagPrefix = "" + prefix;
-}
-
-export function getTagPrefix(): string {
-  return tagPrefix;
-}
-
-if (typeof document !== "undefined") {
-  const prefixElem = document.getElementById("pathux-tag-prefix");
-  if (prefixElem) {
-    console.log("Found pathux-tag-prefix element");
-    const prefixText = (prefixElem as HTMLElement).innerText.trim();
-    setTagPrefix(prefixText);
-  }
-}
-
 import { ClassIdSymbol } from "./ui_consts";
 
 export { ClassIdSymbol };
 
-let class_idgen = 1;
-
-let _last_report = util.time_ms();
-
-export function report(...args: unknown[]): void {
-  if (util.time_ms() - _last_report > 350) {
-    console.warn(...args);
-    _last_report = util.time_ms();
-  }
-}
-
-//this function is deprecated
-export function getDefault(key: string, elem?: UIBase): unknown {
-  console.warn("Deprecated call to ui_base.js:getDefault");
-
-  const base = theme.base as ThemeRecord;
-  if (key in base) {
-    return base[key];
-  } else {
-    throw new Error("Unknown default " + key);
-  }
-}
-
-//XXX implement me!
-export function IsMobile(): boolean {
-  console.warn("ui_base.IsMobile is deprecated; use util.isMobile instead");
-  return util.isMobile();
-}
-
-let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
-keys = keys.concat(["padding-block-start", "padding-block-end"]);
-
-keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
-keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
-export const marginPaddingCSSKeys = keys;
-
 export * from "./base/ui_icons";
-
-export const dpistack: number[] = [];
-export const UIFlags: Record<string, number> = {};
-
-const internalElementNames: Record<string, string> = {};
-const externalElementNames: Record<string, string> = {};
 
 import { DataPathError, normalizePath } from "../path-controller/controller/controller";
 import type {
@@ -957,68 +885,30 @@ export class UIBase<
   }
 
   static prefix(name: string): string {
-    return tagPrefix + name;
+    return registry.prefix(name);
   }
 
   static internalRegister(cls: IUIBaseConstructor): void {
-    const clsAny = cls as any;
-    clsAny[ClassIdSymbol] = class_idgen++;
-
-    registered_has_happened = true;
-
-    internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
-    // note: we override HTMLElement.prototype.animate in a type incompatible way
-    customElements.define(
-      this.prefix(cls.define().tagname),
-      cls as unknown as CustomElementConstructor
-    );
+    registry.registerInternal(cls, this.prefix(cls.define().tagname));
   }
 
   static getInternalName(name: string): string | undefined {
-    return internalElementNames[name];
+    return registry.getInternalName(name);
   }
 
   static createElement<T extends UIBase | HTMLElement = HTMLElement>(
     name: string,
     internal = false
   ): T {
-    const mappedTag = tagManager.get(name);
-    if (mappedTag !== undefined) {
-      return document.createElement(mappedTag) as unknown as T;
-    } else if (!internal && name in externalElementNames) {
-      return document.createElement(name) as unknown as T;
-    } else if (name in internalElementNames) {
-      return document.createElement(internalElementNames[name]) as unknown as T;
-    } else {
-      return document.createElement(name) as unknown as T;
-    }
+    return registry.createElement<T>(name, internal);
   }
 
   static isRegistered(cls: IUIBaseConstructor) {
-    return customElements.get(cls.define().tagname) === cls;
+    return registry.isRegistered(cls);
   }
 
   static register(cls: IUIBaseConstructor): void {
-    registered_has_happened = true;
-    const clsAny = cls as any;
-    clsAny[ClassIdSymbol] = class_idgen++;
-
-    const def = cls.define();
-
-    if (typeof customElements?.get === "undefined") {
-      // running in nodejs?
-      return;
-    }
-    if (customElements.get(def.tagname) === cls) {
-      // already registered
-      return;
-    }
-
-    const tagName = tagManager.replaceTag(def.tagname);
-    ElementClasses.push(cls as any);
-
-    externalElementNames[tagName] = tagName;
-    customElements.define(tagName, cls as unknown as CustomElementConstructor);
+    registry.registerElement(cls);
   }
 
   static unregister(cls: IUIBaseConstructor): void {
@@ -1033,15 +923,7 @@ export class UIBase<
    * Used by the data-path generator to emit the JSX widget-tag registry.
    */
   static getRegisteredTagNames(): string[] {
-    const names = new Set<string>(Object.keys(internalElementNames));
-    for (const cls of ElementClasses) {
-      try {
-        names.add(cls.define().tagname);
-      } catch {
-        // some define()s touch ctx/DOM; skip what we can't read
-      }
-    }
-    return [...names].sort();
+    return registry.getRegisteredTagNames();
   }
   /**
    * Defines core attributes of the class
