@@ -18,6 +18,10 @@ import {
 
 export * from "./base/ui_base_types";
 
+//runs setTheme(DefaultTheme) on evaluation, so it must load before anything reads `theme`
+export * from "./base/ui_theme_key";
+import { _themeUpdateKey } from "./base/ui_theme_key";
+
 //avoid circular module references
 let TextBox: (new (...args: unknown[]) => HTMLElement) | undefined = undefined;
 
@@ -78,12 +82,6 @@ export { setIconMap } from "../icon_enum";
 import { initAspectClass } from "./aspect";
 import * as aspect from "./aspect";
 
-export const ErrorColors = {
-  WARNING: "yellow",
-  ERROR  : "red",
-  OK     : "green",
-};
-
 window.__theme = theme;
 
 let registered_has_happened = false;
@@ -131,50 +129,6 @@ import { ClassIdSymbol } from "./ui_consts";
 export { ClassIdSymbol };
 
 let class_idgen = 1;
-
-export function setTheme(theme2: ThemeRecord): void {
-  //merge theme
-  for (const k in theme2) {
-    const v = theme2[k];
-
-    if (
-      typeof v !== "object" ||
-      v === null ||
-      v instanceof CSSFont ||
-      v instanceof ThemeScrollBars
-    ) {
-      theme[k] = v;
-      continue;
-    }
-
-    if (!(k in theme)) {
-      theme[k] = {};
-    }
-
-    const vRec = v;
-    for (let k2 in vRec) {
-      //if (v0 && !(k2 in v0)) {
-      //  continue;
-      //}
-
-      if (k2 in compatMap) {
-        const k3 = compatMap[k2 as keyof typeof compatMap]!;
-
-        if (vRec[k3] === undefined) {
-          vRec[k3] = vRec[k2];
-        }
-
-        delete vRec[k2];
-        k2 = k3;
-      }
-
-      const substyle = theme[k] as ThemeRecord;
-      substyle[k2] = vRec[k2];
-    }
-  }
-}
-
-setTheme(DefaultTheme);
 
 let _last_report = util.time_ms();
 
@@ -253,116 +207,6 @@ const _mobile_theme_patterns = [
 ];
 
 let _idgen = 0;
-
-export const _testSetScrollbars = function (
-  color = "grey",
-  contrast = 0.5,
-  width = 15,
-  border = "solid"
-): string {
-  const buf = styleScrollBars(color, undefined, contrast, width, border, "*");
-  /* CTX is an app-level global */
-  //ctx.screen.mergeGlobalCSS(buf);
-
-  //document.body.style["overflow"] = "scroll";
-
-  /*
-  if (!window._tsttag) {
-    window._tsttag = document.createElement("style");
-    document.body.prepend(_tsttag);
-  }
-
-  _tsttag.textContent = buf;
-  //*/
-
-  return buf;
-};
-
-export function styleScrollBars(
-  color: string = "grey",
-  color2?: string | undefined,
-  contrast = 0.5,
-  width = 15,
-  border = "1px groove black",
-  selector = "*"
-): string {
-  if (!color2) {
-    const c = css2color(color);
-    const a = c.length > 3 ? c[3] : 1.0;
-
-    c.load3(rgb_to_hsv(c[0], c[1], c[2]));
-    let inv = c.slice(0, c.length);
-
-    inv[2] = 1.0 - inv[2];
-    inv[2] += (c[2] - inv[2]) * (1.0 - contrast);
-
-    inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
-
-    inv.length = 4;
-    inv[3] = a;
-
-    color2 = color2css(inv);
-  }
-
-  const buf = `
-
-${selector} {
-  scrollbar-width : ${width <= 16 ? "thin" : "auto"};
-  scrollbar-color : ${color2} ${color};
-}
-
-${selector}::-webkit-scrollbar {
-  width : ${width}px;
-  background-color : ${color};
-}
-
-${selector}::-webkit-scrollbar-track {
-  background-color : ${color};
-  border : ${border};
-}
-
-${selector}::-webkit-scrollbar-thumb {
-  background-color : ${color2};
-  border : ${border};
-}
-    `;
-
-  //console.log(buf);
-  return buf;
-}
-
-const _digest = new util.HashDigest();
-
-export function calcThemeKey(digest = _digest.reset()): number {
-  const anyTheme = theme as any;
-  for (const k in anyTheme) {
-    const obj = anyTheme[k];
-
-    if (typeof obj !== "object") {
-      continue;
-    }
-
-    for (const k2 in obj) {
-      const v2 = obj[k2];
-
-      if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
-        digest.add(v2);
-      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
-        v2.calcHashUpdate(digest);
-      }
-    }
-  }
-
-  return digest.get();
-}
-
-export let _themeUpdateKey = calcThemeKey();
-
-export function flagThemeUpdate(): void {
-  _themeUpdateKey = calcThemeKey();
-}
-
-window._flagThemeUpdate = flagThemeUpdate;
 
 interface TimeoutQueueItem {
   cb: () => void;
