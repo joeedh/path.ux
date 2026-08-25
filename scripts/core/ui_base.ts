@@ -45,16 +45,6 @@ export function _setTextboxClass(cls: new (...args: unknown[]) => HTMLElement): 
   TextBox = cls;
 }
 
-//import * as ui_save from './ui_save.js';
-
-/*
-if (window.document && document.body) {
-  console.log("ensuring body.style.margin/padding are zero");
-  document.body.style["margin"] = "0px";
-  document.body.style["padding"] = "0px";
-}
- */
-
 import { Animator } from "./anim";
 import "./units";
 import * as util from "../path-controller/util/util";
@@ -617,13 +607,10 @@ export class IconManager {
 
   getTileSize(sheet = 0): number {
     return this.iconsheets[sheet].drawsize;
-    return this.findSheet(sheet).drawsize;
   }
 
   getRealSize(sheet = 0): number {
     return this.iconsheets[sheet].tilesize;
-    return this.findSheet(sheet).tilesize;
-    //return this.iconsheets[sheet].tilesize;
   }
 
   //icon is an integer
@@ -688,11 +675,8 @@ export function iconSheetFromPackFlag(flag: number): number {
     return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
   }
 
-  if (flag & PackFlags.SMALL_ICON && !PackFlags.LARGE_ICON) {
-    return 0; //IconSheets.SMALL; //0
-  } else {
-    return 1; //IconSheets.LARGE; //1
-  }
+  //IconSheets is app-overridable, so the sheet index is hardcoded here
+  return 1;
 }
 
 export function getIconManager(): IconManager {
@@ -943,7 +927,6 @@ if (typeof HTMLElement === "undefined") {
   window.customElements = {
     define: () => {},
   };
-  // @ts-nocheck
   window.devicePixelRatio = 1.0;
   // @ts-expect-error
   window.PointerEvent = class PointerEvent {};
@@ -981,7 +964,41 @@ interface ToolTipState {
 }
 
 export type EventIF = { [k: string]: Event };
-//type EventsMap<T extends EventIF> = T & HTMLElementEventMap;
+
+/** Bookkeeping stamped onto a listener so the wrapper it was registered as can be found again. */
+type EventCBHolder = {
+  [EventCBSymbol]?: Map<string, EventListener>;
+  _cb2?: EventListener;
+};
+
+/** Bounding box of a widget and every child widget, in client coordinates. */
+export interface TotalRect {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** Overrides for the unit/format state {@link UIBase.formatNumber} otherwise reads off the widget. */
+export interface FormatNumberArgs {
+  baseUnit?: string;
+  displayUnit?: string;
+  isInt?: boolean;
+  radix?: number;
+  decimalPlaces?: number;
+}
+
+/** Filters applied to a {@link UIBase.pickElement} / {@link UIBase.pickElements} hit test. */
+export interface PickArgs {
+  nodeclass?: IUIBaseConstructor;
+  excluded_classes?: IUIBaseConstructor[];
+  clip?: { pos: number[]; size: number[] };
+  mouseEvent?: MouseEvent | PointerEvent;
+}
 
 /**
  * ExtraEvents specifies custom events that are not part of HTMLElementEventMap,
@@ -1017,7 +1034,6 @@ export class UIBase<
   _tooltip_ref: { remove(): void } | undefined;
   _textBoxEvents: boolean;
   _themeOverride: Record<string, Record<string, unknown>> | undefined;
-  _checkTheme: boolean;
   _last_theme_update_key: number;
   _client_disabled_set: boolean | undefined;
   _useNativeToolTips: boolean;
@@ -1040,7 +1056,6 @@ export class UIBase<
   default_overrides: Record<string, unknown>;
   my_default_overrides: Record<string, unknown>;
   class_default_overrides: Record<string, Record<string, unknown>>;
-  _last_description: string | undefined;
   _description_final: string | undefined;
   _modaldata?: ModalState;
   accessor packflag: number;
@@ -1103,7 +1118,7 @@ export class UIBase<
   getValue?: () => unknown;
   declare on_change: ((val: unknown) => void) | null;
 
-  #reflagGraph = false;
+  _reflagGraph = false;
 
   static graphNodeDef = EventNode.register(this, {
     flag    : 0,
@@ -1320,7 +1335,6 @@ export class UIBase<
 
     this._themeOverride = undefined;
 
-    this._checkTheme = true;
     this._last_theme_update_key = _themeUpdateKey;
 
     this._client_disabled_set = undefined;
@@ -1410,7 +1424,6 @@ export class UIBase<
     this.my_default_overrides = {}; //not inherited to child widgets
     this.class_default_overrides = {};
 
-    this._last_description = undefined;
     this._description_final = undefined;
 
     //getting css to flow down properly can be a pain, so
@@ -1516,16 +1529,6 @@ export class UIBase<
       this._clipboardHotkeyInit();
     }
   }
-
-  /*
-  set default_overrides(v) {
-    console.error("default_overrides was set", v);
-    this._default_overrides = v;
-  }
-
-  get default_overrides() {
-    return this._default_overrides;
-  }//*/
 
   get useNativeToolTips() {
     return this._useNativeToolTips;
@@ -1682,15 +1685,7 @@ export class UIBase<
    scaling ratio (e.g. for high-resolution displays)
    */
   static getDPI(): number {
-    //if (dpistack.length > 0) {
-    //  return dpistack[this.dpistack.length-1];
-    //} else {
-    //if (util.isMobile()) {
-    return window.devicePixelRatio; // * visualViewport.scale;
-    //}
-
     return window.devicePixelRatio;
-    //}
   }
 
   static prefix(name: string): string {
@@ -1976,10 +1971,7 @@ export class UIBase<
   ): void;
   removeEventListener<K extends keyof HTMLElementEventMap>(
     type: K,
-    cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & {
-      [EventCBSymbol]?: Map<string, EventListener>;
-      _cb2?: EventListener;
-    },
+    cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & EventCBHolder,
     options?: AddEventListenerOptions | boolean
   ): void {
     if (cconst.DEBUG.paranoidEvents) {
@@ -2061,18 +2053,7 @@ export class UIBase<
     return this;
   }
 
-  getTotalRect():
-    | {
-        width: number;
-        height: number;
-        x: number;
-        y: number;
-        left: number;
-        top: number;
-        right: number;
-        bottom: number;
-      }
-    | undefined {
+  getTotalRect(): TotalRect | undefined {
     let found = false;
 
     const min = new Vector2([1e17, 1e17]);
@@ -2149,16 +2130,7 @@ export class UIBase<
     return result * sign;
   }
 
-  formatNumber(
-    value: number,
-    args: {
-      baseUnit?: string;
-      displayUnit?: string;
-      isInt?: boolean;
-      radix?: number;
-      decimalPlaces?: number;
-    } = {}
-  ): string {
+  formatNumber(value: number, args: FormatNumberArgs = {}): string {
     const baseUnit = args.baseUnit || this.baseUnit;
     const displayUnit = args.displayUnit || this.displayUnit;
     const isInt = args.isInt || this.isInt;
@@ -2763,12 +2735,7 @@ export class UIBase<
   pickElements<T extends UIBase<CTX> = UIBase<CTX>>(
     x: number,
     y: number,
-    args: {
-      nodeclass?: IUIBaseConstructor;
-      excluded_classes?: IUIBaseConstructor[];
-      clip?: { pos: number[]; size: number[] };
-      mouseEvent?: MouseEvent | PointerEvent;
-    } = {},
+    args: PickArgs = {},
     marginy = 0,
     nodeclass: IUIBaseConstructor = UIBase,
     excluded_classes?: IUIBaseConstructor[]
@@ -2806,12 +2773,7 @@ export class UIBase<
   pickElement<T extends UIBase<CTX> = UIBase<CTX>>(
     x: number,
     y: number,
-    args: {
-      nodeclass?: IUIBaseConstructor;
-      excluded_classes?: IUIBaseConstructor[];
-      clip?: { pos: number[]; size: number[] };
-      mouseEvent?: MouseEvent | PointerEvent;
-    } = {},
+    args: PickArgs = {},
     /** @deprecated */
     marginy = 0,
     nodeclass: IUIBaseConstructor = UIBase,
@@ -3332,14 +3294,6 @@ export class UIBase<
     }
   }
 
-  /*
-    adds a method call to the event queue,
-    but only if that method (for this instance, as differentiated
-    by ._id) isn't there already.
-
-    also, method won't be ran until this.ctx exists
-  */
-
   pushReportContext(key: string): void {
     const api = this.ctx.api;
     if (api.pushReportContext) {
@@ -3698,9 +3652,9 @@ export class UIBase<
 
   updateEventGraph(): void {
     if (!this.isConnected) {
-      this.#reflagGraph = true;
-    } else if (this.#reflagGraph) {
-      this.#reflagGraph = false;
+      this._reflagGraph = true;
+    } else if (this._reflagGraph) {
+      this._reflagGraph = false;
 
       for (const [, sock] of Object.entries(this.graphNode!.inputs)) {
         sock.flagUpdate();
@@ -4626,7 +4580,6 @@ export function _getFont_new(
       "theme style:",
       elem.constructor.define().style ?? "base"
     );
-    debugger;
   }
 
   return fontObj?.genCSS(size) ?? `${size ?? 12}px sans-serif`;
@@ -4982,4 +4935,3 @@ UIBase.PositionKey = "fixed";
 
 //avoid explicit circular references
 aspect._setUIBase(UIBase);
-//ui_save.setUIBase(UIBase);
