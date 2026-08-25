@@ -2,6 +2,12 @@
 
 HTML5 UI library with Blender RNA-style data binding.
 
+## Plans
+- plans live in documentation/plans
+- plans should always be committed to the repo
+- plans should be pressure tested with an agent with fresh context when created, 
+  and the pressure tested results folded back into the plan
+
 ## ToDos
 - A todos list lives in `todos.md` and is committed to the repo. Check items off
   as they are completed.
