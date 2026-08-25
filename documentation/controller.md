@@ -5,6 +5,7 @@
 - [Datapath Controller](#datapath-controller)
   * [Object Wrapping Example](#object-wrapping-example)
   * [Defining Properties](#defining-properties)
+  * [DataPath Modifiers](#datapath-modifiers)
   * [Using Paths From the UI](#using-paths-from-the-ui)
   * [Looking Up Structs by Name](#looking-up-structs-by-name)
   * [Update Notifications (subscribe / notify)](#update-notifications-subscribe--notify)
@@ -85,9 +86,74 @@ The core types live in `scripts/path-controller/controller/controller.ts`, re-ex
 - Nested: `struct` (a fixed sub-struct), `dynamicStruct` (sub-struct resolved at runtime),
   `list` / `arrayList` (collections)
 
-Common chained modifiers: `.range(min, max)`, `.step(...)`, `.icons({KEY: id})`,
-`.noUnits()`, `.readOnly()`, `.customGet(getter)` / `.customGetSet(getter, setter)`,
-`.uiNameGetter(...)`. See `api_define.ts` in the app for worked examples.
+See `api_define.ts` in the app for worked examples.
+
+## DataPath Modifiers
+
+Every builder method returns the `DataPath` itself, so a definition is written as one
+chain. Most modifiers forward to a setter on the underlying `ToolProperty`
+(`.range` → `setRange`, `.step` → `setStep`), which is why the UI can read all of this back
+from a bound path without the widget being told anything. They live on `DataPath` in
+`scripts/path-controller/controller/controller_base.ts`.
+
+```js
+st.float("radius", "radius", "Radius", "Brush radius")
+  .range(0, 100)
+  .uiRange(0, 10)
+  .step(0.1)
+  .decimalPlaces(2)
+  .unit("pixel")
+  .simpleSlider();
+```
+
+**Names, tooltips and icons.** `.description(text)` sets the tooltip. `.uiNameGetter(fn)`
+computes the display name at read time instead of fixing it at definition time.
+`.icon(id)` and `.icon2(id)` set a property's primary and secondary icon. For enum and flag
+properties, `.uiNames({KEY: "Label"})`, `.descriptions({KEY: "tooltip"})`,
+`.icons({KEY: id})` and `.icons2({KEY: id})` supply per-value metadata — this is what makes
+an enum render as a labeled dropdown or an icon strip.
+
+**Numeric range and slider feel.** `.range(min, max)` is the hard clamp on the value.
+`.uiRange(min, max)` is the span a slider's bar maps across, falling back to `.range` when
+unset, so dragging can cover a useful sub-range while typing still reaches the full one.
+`.step(s)` sets the increment and `.relativeStep(s)` makes it proportional to the current
+value. `.decimalPlaces(n)` and `.radix(r)` control display. `.expRate(e)` and
+`.sliderDisplayExp(f)` apply non-linear response in roll mode, `.slideSpeed(f)` scales drag
+sensitivity, and `.uniformSlider()` adds a component-linking slider to a vector property.
+
+**Units.** `.baseUnit(u)` declares the unit values are stored in and `.displayUnit(u)` the
+unit they are shown in; `.unit(u)` sets both. Registered names are `meter`, `centimeter`,
+`millimeter`, `inch`, `foot`, `square_foot`, `mile`, `degree`, `radian`, `pixel` and
+`percent` (`scripts/path-controller/units/units.ts`). `.noUnits()` sets both to `"none"`,
+which is what you want for a bare number. `.editAsBaseUnit()` makes typed input be read as
+the base unit rather than the display unit.
+
+**Which widget gets built.** `.simpleSlider()` and `.rollerSlider()` pick the slider style
+for a numeric property and clear each other. `.checkStrip()` makes an enum render as
+checkboxes rather than a dropdown. These decide the widget from the definition, so no call
+site has to pass a pack flag — see [container.md](container.md).
+
+**Access and undo.** `.readOnly()` makes the property display-only (`.read_only()` is a
+deprecated alias that warns). `.noUndo()` keeps edits off the undo stack.
+`.fullSaveUndo()` tells `DataPathSetOp` to snapshot whole app state for undo instead of
+just the value, for a property whose edit has effects the value alone does not capture.
+
+**Custom get/set.** `.customGet(fn)`, `.customSet(fn)` and `.customGetSet(get, set)`
+replace how the value is read and written, for a property that is computed rather than
+stored. Inside these callbacks `this` is an internal `ToolProperty` carrying `this.dataref`
+(the owning object), `this.ctx` (the context) and `this.datapath`, so the getter can reach
+the model without a closure over it.
+
+**Reacting and reshaping.** `.on("change", cb)` registers a callback fired when the value
+changes, with `.off(type, cb)` to remove it; the same `this.dataref` convention applies.
+`.dynamicMeta(cb)` handles an enum whose values are not known at definition time — the
+callback runs before the property is read and calls `updateDefinition` to rebuild the value
+set. `.customPropCallback(cb)` hands you a fresh copy of the property to modify per read,
+for overriding a range or unit that depends on the object being displayed.
+
+**Mass set.** `.evalMassSetFilter()` on a list allows a mass-set filter to be an arbitrary
+expression (`scene.paths[{$.id % 2 === 0}]`) rather than a plain property test
+(`scene.paths[{$.select}]`). It is off by default because it enables `eval`.
 
 ## Using Paths From the UI
 

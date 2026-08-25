@@ -3,52 +3,14 @@
 HTML5 UI library with Blender RNA-style data binding.
 
 ## ToDos
-- a todos list exists in todos.md; it should be committed to the repo,
-  when items are complete they should be checked off.
+- A todos list lives in `todos.md` and is committed to the repo. Check items off
+  as they are completed.
 
-### Comments
+## Comments
 
-- **Comments are plain declarative prose — no epigrams.** State the constraint or decision
-  directly: "An empty answer is deliberate and is passed to the model as-is", not "Empty is an
-  answer — silence, said out loud." If a sentence needs a second read to parse, rewrite it.
-  The same rule applies to this file and the prose in `docs/`. Specific patterns to catch:
-  - **Inverted syntax and personification** — the sentence performs rather than informs.
-  - **Metaphorical equations** — "The leak scan is the refusal", "what ships is identity",
-    "the project as commands". The connector word varies — do not get hung up on "is"
-    versus "as". Say what happens instead: "Refuses if the leak scan finds a known name
-    still in the body."
-  - **Fragment openers that defer the subject** — "The redactor to scan a report with: the one
-    that wrote it, else one built from the project as it stands." Lead with a complete sentence
-    and name each case as you reach it.
-  - **Double negatives** — "the palette cannot be relied on not to". State the positive claim.
-  - **Pronouns and ellipses that point outside the sentence** — "the second case", "asking
-    twice is how…" — each sentence should carry its own referents.
-  - **"Clause A, else B" constructions** — "Resolve a push's destination: the named window
-    when it still exists, else the focused window falling back to the most recently focused
-    one." Spell out the cases as ordinary sentences instead: "Pushes to the named window if it
-    still exists. Otherwise pushes to the focused window, or the most recently focused window
-    if none is focused."
-  - **Adverbs hung off the end of a noun phrase** — "the next pointerdown anywhere", "the
-    handler above". The adverb postmodifies the noun, but the reader cannot tell on first pass
-    whether it attaches to the noun or to the clause's verb, and an event or API name coined
-    from a verb ("pointerdown") re-parses as a clause when an adverb follows it. Attach the
-    qualification to a verb, or state it as its own fact: "the listener is on `window`".
-  - **Non-assertive words under a definite** — "any", "anywhere", "ever" range over
-    alternatives, so they fight a definite description that names exactly one thing. "A press
-    anywhere dismisses it" reads fine; "the next pointerdown anywhere" does not.
-  - **Rhetorical emphasis** — `**bold**` and `*italics*` in a comment mark the sentence the
-    author found most interesting, not the one the reader needs first. Put the load-bearing
-    claim in the first sentence and drop the markup.
-  - **A head noun that is not what the code is** — a module of commands documented as "The
-    prompt an asset is generated from, as commands" asserts that the module is a prompt, then
-    retracts it through a preposition. Lead with the head noun that names the declaration —
-    "Commands for the prompt an asset is generated from" — and demote the rest to a
-    complement. A trailing ", as X" or ", in the form of X" is the same metaphorical equation
-    above smuggled in through an adjunct.
-- **Reserve backticks for code symbols.** Backticks belong on identifiers, types, commands,
-  and file globs the reader will type. A file path cited as a reference —
-  `(docs/plans/archive/chunked-prompts.md §5)` — does not, because marking it up gives it the
-  same weight as the identifiers around it and dilutes them.
+Comments are prose, so the Prose rules below govern them as well. The rules in this section
+are the ones that apply only to code.
+
 - **A comment describes the code directly beneath it.** A comment placed above an `if` is read
   as a caption for the branch it guards, so one that explains the opposite case belongs on the
   `else`, or should be reworded to describe the test itself. Misplacing a comment this way is a
@@ -74,17 +36,16 @@ HTML5 UI library with Blender RNA-style data binding.
   looking at the surrounding code still could not derive it — an ordering constraint, a platform
   quirk, a decision with a live alternative. "Why this is the good version" and "what would go
   wrong under the naive one" are commit-message material.
-- **Bracket a subordinate alternative rather than fencing it with commas.** Parentheses mark the
-  material as skippable, so the reader gets a complete sentence either way; paired commas leave
-  it unclear whether the second comma closes an interpolation or opens a new clause. Write
-  "Dropping onto itself (or onto a neighbor it would split against) is not a rip". Drop any comma
-  that would follow the closing bracket — it separates the subject from its verb.
-- **A doc comment continues its declaration; it does not restate it.** Prefer a noun phrase or a
-  bare predicate — "Pointer ids currently down.", "Detected via the presence of multiple pointer
-  ids." — to a full sentence that re-supplies the subject the declaration already names. A doc
-  comment that reads as a standalone paragraph is usually rationale in disguise.
-- **An inline `//` note is a fragment with no terminal period; a `/** … \*/` doc comment is a
-  punctuated sentence.\*\* One line each, unless the fact genuinely needs two.
+- **A doc comment continues its declaration; it does not restate it.** Do not re-supply the
+  subject the declaration already names, and do not narrate the signature. A field or property
+  takes a noun phrase or a bare predicate — "Pointer ids currently down.", "Detected via the
+  presence of multiple pointer ids." A class, function or method takes a predicate, because the
+  reader needs to know what it does — "Draws the links beneath the node frames in screen space."
+  A headless noun phrase over a class or a function is a fragment opener; do not use one.
+  A doc comment that reads as a standalone paragraph is usually rationale in disguise.
+- **Inline notes and doc comments are punctuated differently.** An inline `//` note is a
+  fragment with no terminal period; a `/** … */` doc comment is a punctuated sentence. One
+  line each, unless the fact genuinely needs two.
 - **Non-doc comments use `//`.** Doc comments use proper `/** … */` brackets. Don't use
   `/* … */` for ordinary inline commentary.
 - **Non-doc comments are at most 3 lines.** A longer block comment is allowed sparingly —
@@ -95,6 +56,66 @@ HTML5 UI library with Blender RNA-style data binding.
 - **Temporary comments are marked `CLAUDENOTE:`.** Any scratch/working comment Claude
   writes gets that prefix, and all of them must be removed before the final commit of a
   plan (or at the end of the plan, whichever comes first).
+
+### Prose
+
+These rules govern every piece of prose in the repository. They apply to code comments, to
+this file, and to everything under `documentation/`.
+
+- **Write plain declarative prose — no epigrams.** State the constraint or decision
+  directly: "An empty answer is deliberate and is passed to the model as-is", not "Empty is an
+  answer — silence, said out loud." If a sentence needs a second read to parse, rewrite it.
+  Specific patterns to catch:
+  - **Inverted syntax and personification** — the sentence performs rather than informs.
+  - **Metaphorical equations** — "The leak scan is the refusal", "what ships is identity",
+    "the project as commands". The connector word varies — do not get hung up on "is"
+    versus "as". Say what happens instead: "Refuses if the leak scan finds a known name
+    still in the body."
+  - **Fragment openers that defer the subject — never use this pattern.** Naming a placeholder
+    and then withholding the real content behind a colon or a dash is always wrong: "The
+    redactor to scan a report with: the one that wrote it, else one built from the project as it
+    stands." Lead with a complete sentence and name each case as you reach it. A doc comment is
+    not an exception, and deleting the label is not the fix, because the apposition left behind
+    is still headless. Supply a predicate instead. Write "Draws the links beneath the node
+    frames in screen space." rather than "The link underlay: a screen-space canvas beneath the
+    node frames." or the bare "Screen-space canvas beneath the node frames."
+  - **Double negatives** — "the palette cannot be relied on not to". State the positive claim.
+  - **Pronouns and ellipses that point outside the sentence** — "the second case", "asking
+    twice is how…" — each sentence should carry its own referents.
+  - **"Clause A, else B" constructions** — "Resolve a push's destination: the named window
+    when it still exists, else the focused window falling back to the most recently focused
+    one." Spell out the cases as ordinary sentences instead: "Pushes to the named window if it
+    still exists. Otherwise pushes to the focused window, or the most recently focused window
+    if none is focused."
+  - **Adverbs hung off the end of a noun phrase** — "the next pointerdown anywhere", "the
+    handler above". The adverb postmodifies the noun, but the reader cannot tell on first pass
+    whether it attaches to the noun or to the clause's verb, and an event or API name coined
+    from a verb ("pointerdown") re-parses as a clause when an adverb follows it. Attach the
+    qualification to a verb, or state it as its own fact: "the listener is on `window`".
+  - **Non-assertive words under a definite** — "any", "anywhere", "ever" range over
+    alternatives, so they fight a definite description that names exactly one thing. "A press
+    anywhere dismisses it" reads fine; "the next pointerdown anywhere" does not.
+  - **Rhetorical emphasis** — bold and italics inside a sentence mark the clause the author
+    found most interesting, not the one the reader needs first. Put the load-bearing claim in
+    the first sentence and drop the markup. A bolded lead-in that labels a Markdown bullet is
+    structure rather than emphasis, and is fine.
+  - **A head noun that is not what the thing is** — a module of commands documented as "The
+    prompt an asset is generated from, as commands" asserts that the module is a prompt, then
+    retracts it through a preposition. Lead with the head noun that names the thing —
+    "Commands for the prompt an asset is generated from" — and demote the rest to a
+    complement. A trailing ", as X" or ", in the form of X" is the same metaphorical equation
+    above smuggled in through an adjunct.
+- **Reserve backticks for code symbols.** Backticks belong on identifiers, types, commands,
+  and file globs the reader will type. A file path cited mid-sentence as a reference —
+  documentation/NodeEditor.md §3 — takes none, because marking it up gives it the same weight
+  as the identifiers around it and dilutes them. Markdown link text is the one exception and
+  keeps its backticks, where the marking separates a path from the prose around it rather than
+  competing with nearby identifiers.
+- **Bracket a subordinate alternative rather than fencing it with commas.** Parentheses mark the
+  material as skippable, so the reader gets a complete sentence either way; paired commas leave
+  it unclear whether the second comma closes an interpolation or opens a new clause. Write
+  "Dropping onto itself (or onto a neighbor it would split against) is not a rip". Drop any comma
+  that would follow the closing bracket — it separates the subject from its verb.
 
 ## Build
 
@@ -137,9 +158,9 @@ pnpm cdp click 100 200          # click at viewport coordinates
 pnpm cdp key Enter              # press a key (Playwright key names)
 ```
 
-Gotcha: screenshots are captured at the window's `devicePixelRatio` (often
-1.25 on Windows) while `click` takes CSS-pixel coordinates — divide
-screenshot pixel positions by `devicePixelRatio` before clicking.
+Screenshots are captured at the window's `devicePixelRatio` (often 1.25 on
+Windows) while `click` takes CSS-pixel coordinates. Divide screenshot pixel
+positions by `devicePixelRatio` before clicking.
 
 For richer automation, import `connectApp()` from `buildtools/cdp.mjs`
 in a Node script: it returns `{ browser, page }` where `page` is a Playwright
@@ -283,9 +304,10 @@ which searches the widget's own style class (from `define().style`), then
   `theme` object rather than replacing it, so an app only supplies the keys it
   overrides. After a runtime change call `flagThemeUpdate()` and repaint with
   `screen.completeSetCSS()` / `screen.completeUpdate()`.
-- An app's theme file is the source of truth: a TypeScript module holding a
-  `themeVars` block and a `theme` record referencing those variables through
-  `getVars`, loaded with `setTheme(instanceThemeVars(theme, themeVars))`.
+- An app's theme file is the source of truth for its theme values. It is a
+  TypeScript module holding a `themeVars` block and a `theme` record referencing
+  those variables through `getVars`, loaded with
+  `setTheme(instanceThemeVars(theme, themeVars))`.
   `example/theme.ts` is a working one; `example/core/app.ts` loads it.
 - The variable system lives in `scripts/core/ui_theme_utils.ts`
   (`getVars`, `instanceThemeVars`, `createThemeFile`, `parseVarComments`), the
@@ -353,6 +375,11 @@ leaving the old callback in place and `@deprecated`.
 
 ## Widgets
 
+- [Containers and property binding](documentation/container.md) — how `Container.prop`
+  and the other build methods (`slider`, `check`, `listenum`, `colorbutton`, …) turn a
+  `ToolProperty`-typed datapath into a widget: which widget each property type gets, the
+  `PropFlags` and `PackFlags` that steer the choice, the three slider styles, path
+  prefixes, mass set, and undo.
 - [Menus](documentation/menus.md) — `Menu`, `DropBox` and the menu wrangler
   (`scripts/widgets/ui_menu.ts`): menu templates (tool paths, separators,
   custom entries, submenus), `container.menu`, `createMenu`/`startMenu` for

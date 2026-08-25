@@ -24317,15 +24317,15 @@ function getPathWatchStats() {
   for (const set2 of pathSubs.values()) {
     pathRefs += set2.size;
   }
-  let propRefs = 0;
+  let propRefs2 = 0;
   for (const set2 of propSubs.values()) {
-    propRefs += set2.size;
+    propRefs2 += set2.size;
   }
   return {
     paths: pathSubs.size,
     pathRefs,
     props: propSubs.size,
-    propRefs,
+    propRefs: propRefs2,
     dirty: dirty.size
   };
 }
@@ -75923,6 +75923,7 @@ var NO_ID = -1;
 
 // scripts/graph/graph.ts
 init_nstructjs();
+init_pathwatch();
 var GRAPH_VERSION = 1;
 var GraphLink = class {
   static STRUCT = inlineRegister(
@@ -75981,6 +75982,23 @@ graph.Graph {
   /** Populated by the reader during load and drained by loadSTRUCT; writes go through _linkList. */
   links = [];
   sortCache = void 0;
+  /**
+   * Structural snapshot for path watchers: node identity, label, position and edges.
+   * Prop values are deliberately absent — a prop widget watches its own descendant
+   * path, which the same notification wakes.
+   */
+  [CreateSnapshot]() {
+    const out = [];
+    for (const n of this.nodes) {
+      out.push(n.id, n.def.typeName, n.label ?? "", n.pos[0], n.pos[1]);
+      for (const key in n.inputs) {
+        for (const e of n.inputs[key].edges) {
+          out.push(`${String(e.owningNode?.id)}:${e.name}>${String(n.id)}:${key}`);
+        }
+      }
+    }
+    return out;
+  }
   /** Adds the node, allocating an id when it has none. A node keeps a preassigned id. */
   add(node) {
     if (node.graph !== void 0 && node.graph !== this) {
@@ -76445,9 +76463,17 @@ graph.NodeSocketBase {
     void api;
     void st;
   }
-  /** UI for editing the default value, as a container.prop(path) call. Inert until stage 7 supplies the datapath. */
-  createUI(container) {
-    void container;
+  /**
+   * Builds the editor row for this socket's default value; datapath addresses it
+   * through the owning node's props list. The base implementation covers the
+   * built-in property types via container.prop; a socket class carrying a custom
+   * property type overrides this to build its own widget.
+   */
+  createUI(container, datapath, label) {
+    const w = container.prop(datapath);
+    if (label !== void 0) {
+      w?.setAttribute("name", label);
+    }
   }
   loadSTRUCT(reader) {
     reader(this);
@@ -76478,6 +76504,11 @@ function registerSocketType(cls) {
       cls.name + ": socketDef().typeName '" + def.typeName + "' does not match the class name"
     );
   }
+  if (!isRegistered(cls)) {
+    inlineRegister(cls, `graph.${def.typeName} {
+}
+`);
+  }
   SocketClasses.set(def.typeName, cls);
 }
 function getSocketClass(typeName) {
@@ -76486,6 +76517,7 @@ function getSocketClass(typeName) {
 
 // scripts/graph/node.ts
 init_nstructjs();
+init_pathwatch();
 init_toolprop();
 init_vectormath();
 init_controller();
@@ -76646,7 +76678,7 @@ graph.Node {
     }).readOnly();
     st.list("", "props", {
       get(_api, node, key) {
-        return nodePropValue(node, key);
+        return nodePropTarget(node, key) !== void 0 ? nodePropRef(node, key) : void 0;
       },
       set(_api, node, key, val) {
         const target = nodePropTarget(node, key);
@@ -76656,18 +76688,27 @@ graph.Node {
         target.setValue(val);
       },
       getKey(_api, node, val) {
-        return nodePropKeys(node).find((k) => nodePropValue(node, k) === val);
+        const ref = val;
+        return ref !== void 0 && ref.node === node ? ref.key : void 0;
       },
       getLength(_api, node) {
         return nodePropKeys(node).length;
       },
       getIter(_api, node) {
-        return nodePropKeys(node).map((k) => nodePropValue(node, k))[Symbol.iterator]();
+        return nodePropKeys(node).map((k) => nodePropRef(node, k))[Symbol.iterator]();
       },
       getStruct(_api, node, key) {
-        return nodePropTarget(node, key) !== void 0 ? NODE_PROP_LEAF : void 0;
+        const target = nodePropTarget(node, key);
+        return target !== void 0 ? nodePropStruct(target) : void 0;
       }
     });
+  }
+  /**
+   * Header snapshot for a path watcher on the node's own path: the derived name
+   * and description, which is what a frame paints outside its prop widgets.
+   */
+  [CreateSnapshot]() {
+    return [this.getUIName(), this.getDescription()];
   }
   /** UI for editing this node's properties. Inert until stage 7 supplies the datapaths. */
   createUI(container) {
@@ -76732,7 +76773,41 @@ graph.Node {
     return socks;
   }
 };
-var NODE_PROP_LEAF = new DataStruct2(void 0, "NodePropLeaf");
+var propRefs = /* @__PURE__ */ new WeakMap();
+function nodePropRef(node, key) {
+  let map3 = propRefs.get(node);
+  if (map3 === void 0) {
+    map3 = /* @__PURE__ */ new Map();
+    propRefs.set(node, map3);
+  }
+  let ref = map3.get(key);
+  if (ref === void 0) {
+    ref = { node, key };
+    map3.set(key, ref);
+  }
+  return ref;
+}
+var propStructs = /* @__PURE__ */ new WeakMap();
+function nodePropStruct(target) {
+  let st = propStructs.get(target);
+  if (st === void 0) {
+    st = new DataStruct2(void 0, "NodeProp");
+    st.fromToolProp(
+      "",
+      target.copy(),
+      "value"
+    ).customGetSet(
+      function() {
+        return nodePropValue(this.dataref.node, this.dataref.key);
+      },
+      function(val) {
+        nodePropTarget(this.dataref.node, this.dataref.key).setValue(val);
+      }
+    );
+    propStructs.set(target, st);
+  }
+  return st;
+}
 function nodePropTarget(node, key) {
   return node.props[key] ?? node.inputs[key]?.defaultProp;
 }
@@ -76776,6 +76851,11 @@ function registerNodeType(cls) {
     throw new Error(
       cls.name + ": graphDef().typeName '" + def.typeName + "' does not match the class name"
     );
+  }
+  if (!isRegistered(cls)) {
+    inlineRegister(cls, `graph.${def.typeName} {
+}
+`);
   }
   NodeClasses2.set(def.typeName, cls);
 }
@@ -77351,6 +77431,9 @@ function nodeAt(graph, idJSON) {
   }
   return node;
 }
+function notifyGraph(ctx, op) {
+  ctx.api.notifyChange(op.inputs.graphPath.getValue());
+}
 function captureEdges(node) {
   const out = [];
   for (const k in node.inputs) {
@@ -77461,10 +77544,12 @@ var AddNodeOp = class extends ToolOp {
     node.pos[1] = this.inputs.y.getValue();
     graph.add(node);
     this.outputs.nodeId.setValue(JSON.stringify(node.id));
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.remove(nodeAt(graph, this.outputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
   }
 };
 var DeleteNodeOp = class extends ToolOp {
@@ -77492,11 +77577,13 @@ var DeleteNodeOp = class extends ToolOp {
   exec(ctx) {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.remove(nodeAt(graph, this.inputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     graph.add(this._node);
     restoreEdges(graph, this._edges);
+    notifyGraph(ctx, this);
   }
 };
 var ConnectOp = class extends ToolOp {
@@ -77530,6 +77617,7 @@ var ConnectOp = class extends ToolOp {
   exec(ctx) {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
     graph.connect(src, dst);
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
@@ -77537,6 +77625,7 @@ var ConnectOp = class extends ToolOp {
       graph.disconnect(src, dst);
     }
     restoreEdges(graph, this._displaced);
+    notifyGraph(ctx, this);
   }
 };
 var DisconnectOp = class extends ToolOp {
@@ -77558,12 +77647,14 @@ var DisconnectOp = class extends ToolOp {
   exec(ctx) {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
     graph.disconnect(src, dst);
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const { graph, src, dst } = linkEndpoints(ctx, this.inputs);
     if (this._existed) {
       graph.connect(src, dst);
     }
+    notifyGraph(ctx, this);
   }
 };
 var MoveNodeOp = class extends ToolOp {
@@ -77597,11 +77688,13 @@ var MoveNodeOp = class extends ToolOp {
     const node = this._node(ctx);
     node.pos[0] = this.inputs.x.getValue();
     node.pos[1] = this.inputs.y.getValue();
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const node = this._node(ctx);
     node.pos[0] = this._oldX;
     node.pos[1] = this._oldY;
+    notifyGraph(ctx, this);
   }
 };
 var RenameNodeOp = class extends ToolOp {
@@ -77630,9 +77723,11 @@ var RenameNodeOp = class extends ToolOp {
   exec(ctx) {
     const label = this.inputs.label.getValue();
     this._node(ctx).label = label === "" ? void 0 : label;
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     this._node(ctx).label = this._oldLabel;
+    notifyGraph(ctx, this);
   }
 };
 var ReplaceNodeOp = class extends ToolOp {
@@ -77689,6 +77784,7 @@ var ReplaceNodeOp = class extends ToolOp {
         (e) => e.nodeId !== node.id || e.kind !== "prop" || nodePropTarget(node, e.propKey) !== void 0
       );
     }
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
@@ -77699,6 +77795,7 @@ var ReplaceNodeOp = class extends ToolOp {
     if (def !== void 0 && this._exposed !== void 0) {
       def.exposed = this._exposed;
     }
+    notifyGraph(ctx, this);
   }
 };
 var SetNodePropOp = class _SetNodePropOp extends ToolOp {
@@ -77753,11 +77850,13 @@ var SetNodePropOp = class _SetNodePropOp extends ToolOp {
   }
   exec(ctx) {
     this._target(ctx).setValue(this.inputs.value.getValue());
+    notifyGraph(ctx, this);
   }
   undo(ctx) {
     const target = this._target(ctx);
     target.setValue(this._oldValue);
     target.wasSet = this._oldWasSet;
+    notifyGraph(ctx, this);
   }
 };
 for (const cls of [
@@ -77980,6 +78079,8 @@ var ToolOpDelegate = class {
 };
 
 // scripts/editors/nodeeditor/groupui.ts
+init_ui_menu();
+init_ui_base();
 function exposedEntryState(graph, entry) {
   const node = graph.nodeIdMap.get(entry.nodeId);
   if (node === void 0) {
@@ -78009,7 +78110,8 @@ function forwardedRows(node, nodePath) {
     const row = { entry, state, label };
     if (state === "ok" && target !== void 0) {
       if (entry.kind === "prop") {
-        row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}']`;
+        row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}'].value`;
+        row.socket = entry.propKey in target.props ? void 0 : target.inputs[entry.propKey];
       } else {
         row.target = target;
       }
@@ -78024,7 +78126,7 @@ function buildForwardedUI(root, ctx, node, nodePath) {
       continue;
     }
     if (row.path !== void 0) {
-      root.appendChild(propEditRow(ctx, row.label, row.path));
+      root.appendChild(propEditRow(ctx, row.label, row.path, row.socket));
       continue;
     }
     const target = row.target;
@@ -78033,86 +78135,26 @@ function buildForwardedUI(root, ctx, node, nodePath) {
       continue;
     }
     for (const key of nodePropKeys(target)) {
-      const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}']`;
-      root.appendChild(propEditRow(ctx, key, path));
+      const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
+      const socket = key in target.props ? void 0 : target.inputs[key];
+      root.appendChild(propEditRow(ctx, key, path, socket));
     }
   }
 }
-function _isVecValue(v) {
-  return Array.isArray(v) || v instanceof Float32Array || v instanceof Float64Array;
-}
-function propEditRow(ctx, label, path, onChange) {
-  const row = document.createElement("div");
-  row.className = "nodeeditor-prop-row";
-  row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
-  const name2 = document.createElement("span");
-  name2.textContent = label;
-  name2.title = path;
-  row.appendChild(name2);
-  let current;
+function propEditRow(ctx, label, path, socket) {
+  const row = UIBase2.createElement("container-x");
+  row.ctx = ctx;
+  row._init();
+  row.classList.add("nodeeditor-prop-row");
   try {
-    current = ctx.api.getValue(ctx, path);
-  } catch {
-    current = void 0;
-  }
-  if (typeof current === "boolean") {
-    const input2 = document.createElement("input");
-    input2.type = "checkbox";
-    input2.checked = current;
-    input2.title = `Toggle ${label}`;
-    input2.addEventListener("change", () => {
-      ctx.api.setValue(ctx, path, input2.checked);
-      onChange?.();
-    });
-    row.appendChild(input2);
-    return row;
-  }
-  if (_isVecValue(current)) {
-    const vec = Array.from(current);
-    for (let i2 = 0; i2 < vec.length; i2++) {
-      const input2 = document.createElement("input");
-      input2.type = "text";
-      input2.value = String(vec[i2]);
-      input2.title = `Edit ${label}[${i2}]`;
-      input2.style.width = "36px";
-      input2.style.minWidth = "0";
-      input2.addEventListener("change", () => {
-        const n = parseFloat(input2.value);
-        if (Number.isNaN(n)) {
-          input2.value = String(vec[i2]);
-          return;
-        }
-        vec[i2] = n;
-        input2.value = String(n);
-        ctx.api.setValue(ctx, path, vec);
-        onChange?.();
-      });
-      row.appendChild(input2);
-    }
-    return row;
-  }
-  const input = document.createElement("input");
-  input.type = "text";
-  input.title = `Edit ${label}`;
-  input.value = current === void 0 ? "" : String(current);
-  input.style.flex = "1";
-  input.style.minWidth = "0";
-  input.addEventListener("change", () => {
-    if (typeof current === "number") {
-      const n = parseFloat(input.value);
-      if (Number.isNaN(n)) {
-        input.value = String(current);
-        return;
-      }
-      current = n;
-      input.value = String(n);
+    if (socket !== void 0) {
+      socket.createUI(row, path, label);
     } else {
-      current = input.value;
+      row.prop(path)?.setAttribute("name", label);
     }
-    ctx.api.setValue(ctx, path, current);
-    onChange?.();
-  });
-  row.appendChild(input);
+  } catch {
+    row.label(`${label} (unavailable)`);
+  }
   return row;
 }
 function buildGroupDesigner(root, opts) {
@@ -78252,8 +78294,18 @@ var NodeFrame = class extends Container3 {
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI;
   /** The node's datapath. When set, the body renders an editable row per node
-   *  prop and per unconnected input default, writing through ctx.api. */
-  nodePath = "";
+   *  prop and per unconnected input default, writing through the datapath. */
+  get nodePath() {
+    return this._nodePath;
+  }
+  set nodePath(path) {
+    if (path === this._nodePath) {
+      return;
+    }
+    this._nodePath = path;
+    this.clearPathWatches();
+  }
+  _nodePath = "";
   _header;
   _rows = [];
   _body;
@@ -78348,10 +78400,24 @@ var NodeFrame = class extends Container3 {
       row.style.lineHeight = m.socketRowHeight + "px";
     }
   }
+  /** Watches the node's own path for header changes; prop rows own their values. */
+  watchPath() {
+    super.watchPath();
+    if (this.nodePath !== "") {
+      this.addPathWatch(this.nodePath, { onChange: () => this._syncHeader() });
+    }
+  }
   /** Rebuilds header text and socket rows; used after a rename or type swap. */
   syncContents() {
-    this._header.textContent = this.node.getUIName();
+    this._syncHeader();
     this._rebuildPropRows();
+  }
+  _syncHeader() {
+    if (this._header === void 0) {
+      return;
+    }
+    this._header.textContent = this.node.getUIName();
+    this._header.title = this.node.getDescription() || this.node.getUIName();
   }
   /** Rebuilds the editable prop/default rows; a connected input contributes none. */
   _rebuildPropRows() {
@@ -78359,7 +78425,9 @@ var NodeFrame = class extends Container3 {
     if (root === void 0) {
       return;
     }
-    root.textContent = "";
+    while (root.firstChild !== null) {
+      root.firstChild.remove();
+    }
     if (this.nodePath === "") {
       return;
     }
@@ -78367,8 +78435,11 @@ var NodeFrame = class extends Container3 {
       if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
         continue;
       }
-      const path = `${this.nodePath}.props['${key}']`;
-      root.appendChild(propEditRow(this.ctx, key, path, () => this.syncContents()));
+      const path = `${this.nodePath}.props['${key}'].value`;
+      const socket = key in this.node.props ? void 0 : this.node.inputs[key];
+      const row = propEditRow(this.ctx, key, path, socket);
+      row.parentWidget = this._body;
+      root.appendChild(row);
     }
   }
   _buildUI() {
@@ -78385,7 +78456,7 @@ var NodeFrame = class extends Container3 {
     const rows = Math.max(inKeys.length, outKeys.length);
     for (let i2 = 0; i2 < rows; i2++) {
       const row = document.createElement("div");
-      row.style.cssText = `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; display: flex; justify-content: space-between; padding: 0 4px;`;
+      row.style.cssText = `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; display: flex; justify-content: space-between; padding: 0 4px; position: relative;`;
       row.appendChild(this._terminal(inKeys[i2], "in"));
       row.appendChild(this._terminal(outKeys[i2], "out"));
       this.shadow.appendChild(row);
@@ -78423,7 +78494,7 @@ var NodeFrame = class extends Container3 {
     dot.dataset.socketKey = key;
     dot.dataset.socketDir = dir;
     dot.title = `${key} (${sock.type})`;
-    dot.style.cssText = `display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${color}; margin: 0 3px;`;
+    dot.style.cssText = `position: absolute; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
     dot.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || this.onSocketDown === void 0) {
         return;
@@ -78482,7 +78553,7 @@ var LinkCanvas = class extends UIBase2 {
       }
     };
   }
-  /** Matches the canvas backing store to the given CSS size at dpi. */
+  /** Matches the canvas backing store to the given CSS size at `dpi`. */
   resize(width, height, dpi = 1) {
     const w = Math.max(1, Math.round(width * dpi));
     const h = Math.max(1, Math.round(height * dpi));
@@ -79586,10 +79657,18 @@ var NodeGraphView = class extends Container3 {
       this.descent = [...state.descent];
     }
   }
+  /** Rebuilds frames when a graph op — or its undo/redo — notifies the graph's datapath. */
+  watchPath() {
+    super.watchPath();
+    if (this.graphPath !== "") {
+      this.addPathWatch(this.currentGraphPath, { onChange: () => this.syncGraph() });
+    }
+  }
   _refresh() {
     if (this.panzoom === void 0) {
       return;
     }
+    this.clearPathWatches();
     this._rebuildCrumbs();
     this.syncGraph();
   }
@@ -94976,7 +95055,7 @@ var AppScreen = class extends Screen2 {
       new HotKey("S", [], () => {
         _appstate.screen.splitTool();
       }),
-      new HotKey("P", ["ctrl", "alt"], (ctx) => {
+      new HotKey("P", ["ctrl", "shift"], (ctx) => {
         this.showCommandPalette(ctx);
       })
     ]);

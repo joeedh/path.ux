@@ -79,6 +79,10 @@ choice lives with the property definition rather than at each call site:
 - `SIMPLE_SLIDER` / `FORCE_ROLLER_SLIDER` — pick the slider style (see below). Set from the
   `DataPath` builder with `.simpleSlider()` / `.rollerSlider()`.
 
+The builder's full set of modifiers — range, step, units, icons, per-value enum names,
+custom get/set, and the rest — is in
+[controller.md](controller.md#datapath-modifiers).
+
 ### Pack flags
 
 `packflag` is a bitfield (`PackFlags`, in `scripts/core/ui_base.ts`) passed down from the
@@ -109,11 +113,21 @@ Three elements can come out of the call:
 - `numslider-simple-x` — a bar that fills between `min` and `max`.
 - `numslider-textbox-x` — the roller with a textbox beside it.
 
-Which one is built depends, in order: the property's `SIMPLE_SLIDER` and
-`FORCE_ROLLER_SLIDER` flags are folded into `packflag`; `FORCE_ROLLER_SLIDER` overrides
-`SIMPLE_NUMSLIDERS`; `cconst.simpleNumSliders` supplies the app-wide default when neither
-flag is present; and `cconst.useNumSliderTextboxes` (minus `NO_NUMSLIDER_TEXTBOX`) decides
-whether the textbox variant is used for the roller.
+`slider()` decides, and the decision happens there rather than in `prop()`. Tracing
+`prop()` alone is misleading: its `INT`/`FLOAT` branch tests only
+`PackFlags.SIMPLE_NUMSLIDERS` to pick between `slider` and `simpleslider`, and both calls
+converge on `slider()`, which re-resolves the path and folds the property's own
+`SIMPLE_SLIDER` and `FORCE_ROLLER_SLIDER` flags into `packflag` there. From that merged
+value: `FORCE_ROLLER_SLIDER` overrides `SIMPLE_NUMSLIDERS`; `cconst.simpleNumSliders`
+supplies the app-wide default when neither flag is present; and
+`cconst.useNumSliderTextboxes` (minus `NO_NUMSLIDER_TEXTBOX`) decides whether the roller
+gets the textbox variant.
+
+Those two `cconst` fields are library-wide defaults declared in `scripts/config/const.ts`
+(`useNumSliderTextboxes: true`, `simpleNumSliders: false`). An app using the `simple`
+framework re-exposes them on its `AppSettings` (`scripts/simple/app.ts`), seeded from the
+same `cconst` values; assigning either one changes what subsequently-built sliders look
+like across the whole app.
 
 Both methods take either positional arguments or a `SliderArgs` object, and the object form
 is preferred:

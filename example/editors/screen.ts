@@ -34,7 +34,7 @@ export class AppScreen extends Screen {
       new HotKey("S", [], () => {
         _appstate.screen!.splitTool();
       }),
-      new HotKey("P", ["ctrl", "alt"], (ctx) => {
+      new HotKey("P", ["ctrl", "shift"], (ctx) => {
         this.showCommandPalette(ctx);
       }),
     ]);
