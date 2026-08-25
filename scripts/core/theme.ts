@@ -296,8 +296,10 @@ export const DefaultTheme = {
   },
 
   nodelinkcanvas: {
-    LinkColor: "#777777",
-    LinkWidth: 2,
+    LinkColor      : "#777777",
+    LinkWidth      : 2,
+    LinkSelectColor: "#e8930c",
+    LinkSelectWidth: 3,
   },
 
   menu: {

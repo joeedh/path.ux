@@ -190,12 +190,13 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
       const node = frame.node;
       const keys = Object.keys(targetDir === "in" ? node.inputs : node.outputs);
 
-      for (let row = 0; row < keys.length; row++) {
+      for (const key of keys) {
+        const row = socketRow(node, targetDir, key);
         const p = tf.project(socketAnchor(frame.metrics(), targetDir, row));
         const dist = Math.hypot(p[0] - local[0], p[1] - local[1]);
         if (dist <= bestDist) {
           bestDist = dist;
-          best = { frame, key: keys[row], ok: this._targetOk(frame, keys[row]) };
+          best = { frame, key, ok: this._targetOk(frame, key) };
         }
       }
     }

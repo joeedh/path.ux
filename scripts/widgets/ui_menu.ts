@@ -1577,8 +1577,10 @@ export class MenuWrangler {
 
     this.spawnreq = undefined;
 
-    if (this.menustack.length === 0 && menu.closeOnMouseUp) {
-      this.closeOnMouseUp = true;
+    // Assigned rather than latched: the flag belongs to the root menu, so a
+    // menu that opts out does not inherit the previous root menu's opt-in.
+    if (this.menustack.length === 0) {
+      this.closeOnMouseUp = menu.closeOnMouseUp === true;
     }
 
     this.menustack.push(menu);

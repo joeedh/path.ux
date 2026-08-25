@@ -19,9 +19,11 @@ import { GroupNode } from "../../graph/group";
 import type { Node as GraphNode } from "../../graph/node";
 import type { GraphId, SocketDir } from "../../graph/graph_types";
 import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
+import type { FrameMove } from "./nodeframe";
+import { linkDistance } from "./linkcanvas";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { ToolOpDelegate } from "./delegate";
-import type { ArrangeMove, GraphEdit, NodeGraphDelegate } from "./delegate";
+import type { GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
 import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
 import { buildAddNodeMenu } from "./addmenu";
@@ -36,10 +38,24 @@ export interface NodeGraphViewState {
   descent: GraphId[];
 }
 
+/** One link, named by its two endpoints. */
+export interface LinkRef {
+  srcNode: GraphId;
+  srcSocket: string;
+  dstNode: GraphId;
+  dstSocket: string;
+}
+
+/** Screen-pixel radius within which a press picks a link. */
+export const LINK_PICK_PX = 8;
+
+/** Identifies a link across a rebuild, for the view's link selection. */
+export function linkKey(ref: LinkRef): string {
+  return JSON.stringify([ref.srcNode, ref.srcSocket, ref.dstNode, ref.dstSocket]);
+}
+
 /**
- * The hostable node-graph widget: one pan/zoom surface holding a NodeFrame per
- * node, a link canvas beneath them, breadcrumbs for group descent, and
- * click/box selection. It is a plain internally-registered widget, so any
+ * Main node node graph widget. It is a plain internally-registered widget, so any
  * host — an Area subclass, a dialog, a dock panel — can create and embed one.
  * Drag gestures (node move, box select, link drag) run as modal ToolOps the
  * view spawns on pointerdown; see gesture_ops.ts. Every mutating gesture
@@ -61,6 +77,10 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   descent: GraphId[] = [];
 
   selection = new Set<GraphId>();
+
+  /** The selected links, by {@link linkKey}; pruned against the live graph. */
+  linkSelection = new Set<string>();
+
   frames = new Map<GraphId, NodeFrame<CTX>>();
 
   panzoom!: PanZoomContainer<CTX>;
@@ -69,6 +89,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   private _crumbs!: HTMLDivElement;
   private _pendingView: NodeGraphViewState | undefined = undefined;
+
+  /** The links on screen, kept for picking; rebuilt with every repaint. */
+  private _linkRefs: { ref: LinkRef; seg: LinkSegment }[] = [];
+
+  /** A selection change a press on an already-selected node put off, in case
+   *  the press turns into a drag; a click without a drag applies it. */
+  private _pendingSelect: { id: GraphId; shift: boolean } | undefined = undefined;
 
   static define(): UIBaseDefinition {
     return {
@@ -140,6 +167,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.graphPath = graphPath;
     this.descent = [];
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
 
@@ -172,6 +200,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
     this.descent.push(node.id);
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
 
@@ -179,6 +208,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   popTo(depth: number) {
     this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
 
@@ -299,9 +329,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.getScale = () => this.panzoom.transform.scale;
       frame.onSelect = (f, e) => this._selectFrame(f, e);
       frame.onMoveStart = (f, e) =>
-        this.ctx.toolstack.execTool(this.ctx, new NodeMoveModalOp(f, e), e);
-      frame.onMovePreview = (f) => this._previewMove(f);
-      frame.onMoveCommit = (f, x, y) => this._commitMove(f, x, y);
+        this.ctx.toolstack.execTool(
+          this.ctx,
+          new NodeMoveModalOp(this._dragSet(f, e.shiftKey), e),
+          e
+        );
+      frame.onMoveClick = (f) => this._clickFrame(f);
+      frame.onMovePreview = (fs) => this._previewMove(fs);
+      frame.onMoveCommit = (moves) => this._commitMove(moves);
       frame.onSocketDown = (f, key, dir, e) => this._socketDown(f, key, dir, e);
       frame.addEventListener("contextmenu", (e: MouseEvent) => {
         e.preventDefault();
@@ -344,25 +379,66 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._redrawLinks();
   }
 
+  /**
+   * Selects on press. A press on an already-selected node leaves the selection
+   * alone so a drag can move the whole group, and defers what the press would
+   * otherwise have done to _clickFrame.
+   */
   private _selectFrame(frame: NodeFrame<CTX>, e: PointerEvent) {
     const id = frame.node.id;
-    if (e.shiftKey) {
-      if (this.selection.has(id)) {
-        this.selection.delete(id);
-      } else {
-        this.selection.add(id);
-      }
+    this._pendingSelect = undefined;
+
+    if (this.selection.has(id)) {
+      this._pendingSelect = { id, shift: e.shiftKey };
+      return;
+    }
+
+    if (!e.shiftKey) {
+      this.selection.clear();
+      this.linkSelection.clear();
+    }
+    this.selection.add(id);
+    this._applySelection();
+  }
+
+  /** Applies the selection change _selectFrame deferred, once a press on an
+   *  already-selected node has released without moving. */
+  private _clickFrame(frame: NodeFrame<CTX>) {
+    const pending = this._pendingSelect;
+    this._pendingSelect = undefined;
+    if (pending === undefined || pending.id !== frame.node.id) {
+      return;
+    }
+
+    if (pending.shift) {
+      this.selection.delete(pending.id);
     } else {
       this.selection.clear();
-      this.selection.add(id);
+      this.linkSelection.clear();
+      this.selection.add(pending.id);
     }
     this._applySelection();
+  }
+
+  /** The frames a drag led by lead moves; shift takes the rest of the selection. */
+  private _dragSet(lead: NodeFrame<CTX>, withSelection: boolean): NodeFrame<CTX>[] {
+    const frames = [lead];
+    if (!withSelection) {
+      return frames;
+    }
+    for (const [nid, frame] of this.frames) {
+      if (frame !== lead && this.selection.has(nid)) {
+        frames.push(frame);
+      }
+    }
+    return frames;
   }
 
   private _applySelection() {
     for (const [nid, frame] of this.frames) {
       frame.setSelected(this.selection.has(nid));
     }
+    this._redrawLinks();
   }
 
   private _moveEdit(frame: NodeFrame<CTX>, x: number, y: number): GraphEdit {
@@ -375,19 +451,41 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     };
   }
 
-  private _previewMove(frame: NodeFrame<CTX>) {
-    const pos = frame.previewPos ?? frame.node.pos;
-    const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
-    frame.style.opacity = verdict.ok ? "" : "0.5";
+  private _previewMove(frames: readonly NodeFrame<CTX>[]) {
+    for (const frame of frames) {
+      const pos = frame.previewPos ?? frame.node.pos;
+      const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
+      frame.style.opacity = verdict.ok ? "" : "0.5";
+    }
     this._redrawLinks();
   }
 
-  private _commitMove(frame: NodeFrame<CTX>, x: number, y: number) {
-    frame.style.opacity = "";
-    const edit = this._moveEdit(frame, x, y);
-    if (this.delegate.check(this.ctx, edit).ok) {
-      this.delegate.perform(this.ctx, edit);
+  /** Commits a finished drag; a group move goes as one moveNodes edit, so the
+   *  gesture leaves a single undo entry. */
+  private _commitMove(moves: readonly FrameMove<CTX>[]) {
+    for (const move of moves) {
+      move.frame.style.opacity = "";
     }
+
+    if (moves.length === 1) {
+      const edit = this._moveEdit(moves[0].frame, moves[0].x, moves[0].y);
+      this._dispatch(edit);
+    } else if (moves.length > 1) {
+      const accepted: NodeMove[] = [];
+      for (const move of moves) {
+        if (this.delegate.check(this.ctx, this._moveEdit(move.frame, move.x, move.y)).ok) {
+          accepted.push({ nodeId: move.frame.node.id, x: move.x, y: move.y });
+        }
+      }
+      if (accepted.length > 0) {
+        this._dispatch({
+          kind     : "moveNodes",
+          graphPath: this.currentGraphPath,
+          moves    : accepted,
+        });
+      }
+    }
+
     // A refused drop snaps back here: the frame re-reads node.pos, which perform never changed.
     this.syncGraph();
   }
@@ -458,7 +556,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     startMenu(menu as unknown as Menu, r.x + local[0], r.y + local[1], searchMode);
   }
 
+  /** Deletes the selected nodes and severs the selected links. */
   deleteSelected() {
+    for (const ref of this.selectedLinks()) {
+      this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+    }
+    this.linkSelection.clear();
+
     for (const nid of [...this.selection]) {
       this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
     }
@@ -561,7 +665,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       cursorX = maxX + 40;
     }
 
-    const moves: ArrangeMove[] = [];
+    const moves: NodeMove[] = [];
     for (const [nid, pn] of packs) {
       moves.push({ nodeId: nid, x: pn.pos[0], y: pn.pos[1] });
     }
@@ -615,7 +719,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     const graph = this.currentGraph;
-    const segments: LinkSegment[] = [];
+    const links: { ref: LinkRef; seg: LinkSegment }[] = [];
     const tf = this.panzoom.transform;
 
     if (graph !== undefined) {
@@ -640,18 +744,83 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
               continue;
             }
 
+            const ref: LinkRef = {
+              srcNode  : srcNode.id,
+              srcSocket: edge.name,
+              dstNode  : node.id,
+              dstSocket: key,
+            };
             const a = tf.project(socketAnchor(srcFrame.metrics(), "out", srcRow));
             const b = tf.project(socketAnchor(dstFrame.metrics(), "in", dstRow));
-            segments.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
+            links.push({
+              ref,
+              seg: {
+                x1      : a[0],
+                y1      : a[1],
+                x2      : b[0],
+                y2      : b[1],
+                selected: this.linkSelection.has(linkKey(ref)),
+              },
+            });
           }
         }
       }
     }
 
+    // A link the graph no longer holds drops out of the selection with it.
+    const live = new Set(links.map((l) => linkKey(l.ref)));
+    for (const key of [...this.linkSelection]) {
+      if (!live.has(key)) {
+        this.linkSelection.delete(key);
+      }
+    }
+
+    this._linkRefs = links;
+
     const r = this.panzoom.getBoundingClientRect();
     const dpi = UIBase.getDPI();
     this.links.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
-    this.links.drawLinks(segments, dpi);
+    this.links.drawLinks(
+      links.map((l) => l.seg),
+      dpi
+    );
+  }
+
+  /** The link nearest to a widget-local point, within LINK_PICK_PX. */
+  private _pickLink(local: readonly [number, number]): LinkRef | undefined {
+    let best: LinkRef | undefined;
+    let bestDist = LINK_PICK_PX;
+
+    for (const link of this._linkRefs) {
+      const dist = linkDistance(link.seg, local[0], local[1]);
+      if (dist <= bestDist) {
+        bestDist = dist;
+        best = link.ref;
+      }
+    }
+    return best;
+  }
+
+  /** Selects one link; shift toggles it and keeps whatever else is selected. */
+  selectLink(ref: LinkRef, additive = false) {
+    const key = linkKey(ref);
+    if (additive) {
+      if (this.linkSelection.has(key)) {
+        this.linkSelection.delete(key);
+      } else {
+        this.linkSelection.add(key);
+      }
+    } else {
+      this.selection.clear();
+      this.linkSelection.clear();
+      this.linkSelection.add(key);
+    }
+    this._applySelection();
+  }
+
+  /** The selected links, resolved against the links currently on screen. */
+  selectedLinks(): LinkRef[] {
+    return this._linkRefs.filter((l) => this.linkSelection.has(linkKey(l.ref))).map((l) => l.ref);
   }
 
   private _boxDown(e: PointerEvent) {
@@ -661,12 +830,23 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     if (e.button !== 0 || e.defaultPrevented) {
       return;
     }
+
+    // The link canvas is an underlay taking no pointer events, so the press
+    // that lands on a link arrives here rather than on the curve.
+    const hit = this._pickLink(this._localPoint(e));
+    if (hit !== undefined) {
+      e.preventDefault();
+      this.selectLink(hit, e.shiftKey);
+      return;
+    }
+
     this.ctx.toolstack.execTool(this.ctx, new BoxSelectModalOp(this, e), e);
   }
 
-  /** Clears the selection and repaints the frames. */
+  /** Clears the node and link selection and repaints. */
   clearSelection() {
     this.selection.clear();
+    this.linkSelection.clear();
     this._applySelection();
   }
 
@@ -677,6 +857,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   boxSelect(min: readonly [number, number], max: readonly [number, number], additive: boolean) {
     if (!additive) {
       this.selection.clear();
+      this.linkSelection.clear();
     }
     for (const [nid, frame] of this.frames) {
       const fr = frame.rect();

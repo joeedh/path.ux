@@ -15,8 +15,8 @@ import { getNodeClass, nodePropKeys, nodePropTarget } from "../../graph/node";
 import type { GroupDef, ExposedEntry } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 
-/** One node's destination in an arrange edit. */
-export interface ArrangeMove {
+/** One node's destination in a multi-node move. */
+export interface NodeMove {
   nodeId: GraphId;
   x: number;
   y: number;
@@ -25,6 +25,7 @@ export interface ArrangeMove {
 /** One proposed graph mutation, described as data so a host can route it. */
 export type GraphEdit =
   | { kind: "moveNode"; graphPath: string; nodeId: GraphId; x: number; y: number }
+  | { kind: "moveNodes"; graphPath: string; moves: NodeMove[] }
   | { kind: "addNode"; graphPath: string; nodeType: string; x: number; y: number }
   | { kind: "deleteNode"; graphPath: string; nodeId: GraphId }
   | { kind: "duplicateNode"; graphPath: string; nodeId: GraphId; x: number; y: number }
@@ -45,7 +46,7 @@ export type GraphEdit =
       dstNode: GraphId;
       dstSocket: string;
     }
-  | { kind: "arrange"; graphPath: string; moves: ArrangeMove[] }
+  | { kind: "arrange"; graphPath: string; moves: NodeMove[] }
   | { kind: "exposeEntry"; graphPath: string; ref: string; def: GroupDef; entry: ExposedEntry }
   | {
       kind: "reorderEntry";
@@ -96,9 +97,9 @@ function isExposureEdit(edit: GraphEdit): boolean {
  * instance's subgraph — plus per-kind feasibility (a connect's sockets must
  * exist and coerce, an addNode's type must be registered). perform dispatches
  * the graph module's ToolOps on ctx.toolstack; the composite kinds (arrange,
- * duplicateNode) go through one ToolMacro so each is a single undo entry. The
- * exposure kinds mutate the definition's exposed list in place and save it
- * through the graph's groupSaver seam; they carry no undo.
+ * moveNodes, duplicateNode) go through one ToolMacro so each is a single undo
+ * entry. The exposure kinds mutate the definition's exposed list in place and
+ * save it through the graph's groupSaver seam; they carry no undo.
  */
 export class ToolOpDelegate implements NodeGraphDelegate {
   check(ctx: ContextLike, edit: GraphEdit): EditVerdict {
@@ -202,7 +203,8 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         ctx.toolstack.execTool(ctx, tool);
         break;
       }
-      case "arrange": {
+      case "arrange":
+      case "moveNodes": {
         const macro = new ToolMacro<ContextLike>();
         for (const move of edit.moves) {
           const tool = new MoveNodeOp();

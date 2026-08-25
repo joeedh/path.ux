@@ -27142,7 +27142,9 @@ var init_theme = __esm({
       },
       nodelinkcanvas: {
         LinkColor: "#777777",
-        LinkWidth: 2
+        LinkWidth: 2,
+        LinkSelectColor: "#e8930c",
+        LinkSelectWidth: 3
       },
       menu: {
         MenuBG: "rgba(250, 250, 250, 1.0)",
@@ -33508,8 +33510,8 @@ var init_ui_menu = __esm({
       pushMenu(menu) {
         debugmenu("pushMenu");
         this.spawnreq = void 0;
-        if (this.menustack.length === 0 && menu.closeOnMouseUp) {
-          this.closeOnMouseUp = true;
+        if (this.menustack.length === 0) {
+          this.closeOnMouseUp = menu.closeOnMouseUp === true;
         }
         this.menustack.push(menu);
       }
@@ -77974,7 +77976,8 @@ var ToolOpDelegate = class {
         ctx.toolstack.execTool(ctx, tool);
         break;
       }
-      case "arrange": {
+      case "arrange":
+      case "moveNodes": {
         const macro = new ToolMacro();
         for (const move of edit.moves) {
           const tool = new MoveNodeOp();
@@ -78272,13 +78275,24 @@ function _parseNodeId(text2) {
 // scripts/editors/nodeeditor/nodeframe.ts
 init_ui_base();
 init_theme_schema();
+function rowHeight(m, row) {
+  return m.rowHeights?.[row] ?? m.socketRowHeight;
+}
 function socketAnchor(m, dir, row) {
   const x = dir === "in" ? m.x : m.x + m.width;
-  const y = m.y + m.headerHeight + (row + 0.5) * m.socketRowHeight;
-  return [x, y];
+  let y = m.y + m.headerHeight;
+  for (let i = 0; i < row; i++) {
+    y += rowHeight(m, i);
+  }
+  return [x, y + rowHeight(m, row) * 0.5];
 }
 function socketRow(node, dir, key) {
-  return Object.keys(dir === "in" ? node.inputs : node.outputs).indexOf(key);
+  const outs = Object.keys(node.outputs);
+  if (dir === "out") {
+    return outs.indexOf(key);
+  }
+  const row = Object.keys(node.inputs).indexOf(key);
+  return row < 0 ? -1 : outs.length + row;
 }
 var NodeFrame = class extends Container3 {
   node;
@@ -78288,13 +78302,17 @@ var NodeFrame = class extends Container3 {
   getScale = () => 1;
   onSelect;
   onMoveStart;
+  /** Reports that a press on this frame released without becoming a drag. */
+  onMoveClick;
+  /** Reports the frames a live drag is moving; this frame leads them. */
   onMovePreview;
+  /** Reports a completed drag of this frame and any dragged alongside it. */
   onMoveCommit;
   onSocketDown;
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI;
-  /** The node's datapath. When set, the body renders an editable row per node
-   *  prop and per unconnected input default, writing through the datapath. */
+  /** The node's datapath. When set, an unconnected input's socket row carries an
+   *  editor for its default and the body renders a row per node prop. */
   get nodePath() {
     return this._nodePath;
   }
@@ -78308,8 +78326,13 @@ var NodeFrame = class extends Container3 {
   _nodePath = "";
   _header;
   _rows = [];
+  _socketsRoot;
   _body;
   _propsRoot;
+  /** Which sockets the built rows cover, and which carry an inline editor. */
+  _rowSig = "";
+  /** The inline default editors, kept so a rebuild can tear each one down. */
+  _editors = [];
   static define() {
     return {
       tagname: "nodeframe-x",
@@ -78343,27 +78366,26 @@ var NodeFrame = class extends Container3 {
   /** Graph-space geometry for this frame's socket anchors. */
   metrics() {
     const pos = this.previewPos ?? this.node.pos;
+    const uniform = this.getDefault("SocketRowHeight");
+    const rowHeights = this._rows.map((row) => row.offsetHeight || uniform);
     return {
       x: pos[0],
       y: pos[1],
       width: this.getDefault("Width"),
       headerHeight: this.getDefault("HeaderHeight"),
-      socketRowHeight: this.getDefault("SocketRowHeight")
+      socketRowHeight: uniform,
+      rowHeights
     };
   }
   /** Graph-space bounds, sized from the socket rows; body height is excluded. */
   rect() {
     const m = this.metrics();
-    const rows = Math.max(
-      Object.keys(this.node.inputs).length,
-      Object.keys(this.node.outputs).length
-    );
-    return {
-      x: m.x,
-      y: m.y,
-      width: m.width,
-      height: m.headerHeight + rows * m.socketRowHeight
-    };
+    const rows = this._rows.length || Object.keys(this.node.inputs).length + Object.keys(this.node.outputs).length;
+    let height = m.headerHeight;
+    for (let i = 0; i < rows; i++) {
+      height += rowHeight(m, i);
+    }
+    return { x: m.x, y: m.y, width: m.width, height };
   }
   /** Writes the frame's graph-space position (preview during a drag) to CSS. */
   syncPosition() {
@@ -78393,12 +78415,7 @@ var NodeFrame = class extends Container3 {
     this._header.style.lineHeight = m.headerHeight + "px";
     this._header.style.background = this.getDefault("HeaderBG");
     this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
-    const rowFont = this.getDefault("SocketText");
-    for (const row of this._rows) {
-      row.style.font = rowFont.genCSS();
-      row.style.color = rowFont.color;
-      row.style.lineHeight = m.socketRowHeight + "px";
-    }
+    this._styleRows();
   }
   /** Watches the node's own path for header changes; prop rows own their values. */
   watchPath() {
@@ -78407,9 +78424,11 @@ var NodeFrame = class extends Container3 {
       this.addPathWatch(this.nodePath, { onChange: () => this._syncHeader() });
     }
   }
-  /** Rebuilds header text and socket rows; used after a rename or type swap. */
+  /** Rebuilds header text, socket rows and prop rows; used after a rename, a
+   *  type swap, or a link change that reveals or hides an inline editor. */
   syncContents() {
     this._syncHeader();
+    this._rebuildSocketRows();
     this._rebuildPropRows();
   }
   _syncHeader() {
@@ -78419,7 +78438,69 @@ var NodeFrame = class extends Container3 {
     this._header.textContent = this.node.getUIName();
     this._header.title = this.node.getDescription() || this.node.getUIName();
   }
-  /** Rebuilds the editable prop/default rows; a connected input contributes none. */
+  _styleRows() {
+    const font = this.getDefault("SocketText");
+    const height = this.getDefault("SocketRowHeight");
+    for (const row of this._rows) {
+      row.style.font = font.genCSS();
+      row.style.color = font.color;
+      row.style.lineHeight = height + "px";
+    }
+  }
+  /** The sockets the rows cover, and which of them carry an inline editor. */
+  _rowSignature(inline) {
+    const parts = Object.keys(this.node.outputs).map((key) => `out:${key}`);
+    for (const key of Object.keys(this.node.inputs)) {
+      parts.push(`in:${key}${inline.has(key) ? "=" : ""}`);
+    }
+    return parts.join(",");
+  }
+  /** The inputs whose default is editable inline: unshadowed, and unconnected. */
+  _inlineKeys() {
+    const keys2 = /* @__PURE__ */ new Set();
+    if (this.nodePath === "") {
+      return keys2;
+    }
+    for (const key of Object.keys(this.node.inputs)) {
+      const sock = this.node.inputs[key];
+      if (sock.defaultProp !== void 0 && sock.edges.length === 0 && !(key in this.node.props)) {
+        keys2.add(key);
+      }
+    }
+    return keys2;
+  }
+  /** Rebuilds the socket rows when the sockets or their inline editors change. */
+  _rebuildSocketRows() {
+    const root = this._socketsRoot;
+    if (root === void 0) {
+      return;
+    }
+    const inline = this._inlineKeys();
+    const sig = this._rowSignature(inline);
+    if (sig === this._rowSig) {
+      return;
+    }
+    this._rowSig = sig;
+    for (const editor2 of this._editors) {
+      editor2.remove();
+    }
+    this._editors = [];
+    for (const row of this._rows) {
+      row.remove();
+    }
+    this._rows = [];
+    for (const key of Object.keys(this.node.outputs)) {
+      this._rows.push(this._socketRow(key, "out", false));
+    }
+    for (const key of Object.keys(this.node.inputs)) {
+      this._rows.push(this._socketRow(key, "in", inline.has(key)));
+    }
+    for (const row of this._rows) {
+      root.appendChild(row);
+    }
+    this._styleRows();
+  }
+  /** Rebuilds the body's prop rows; an input's default belongs to its socket row. */
   _rebuildPropRows() {
     const root = this._propsRoot;
     if (root === void 0) {
@@ -78431,13 +78512,8 @@ var NodeFrame = class extends Container3 {
     if (this.nodePath === "") {
       return;
     }
-    for (const key of nodePropKeys(this.node)) {
-      if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
-        continue;
-      }
-      const path = `${this.nodePath}.props['${key}'].value`;
-      const socket = key in this.node.props ? void 0 : this.node.inputs[key];
-      const row = propEditRow(this.ctx, key, path, socket);
+    for (const key of Object.keys(this.node.props)) {
+      const row = propEditRow(this.ctx, key, `${this.nodePath}.props['${key}'].value`);
       row.parentWidget = this._body;
       root.appendChild(row);
     }
@@ -78451,17 +78527,9 @@ var NodeFrame = class extends Container3 {
     this.shadow.appendChild(this._header);
     this.style.cursor = "move";
     this._wirePress(this);
-    const inKeys = Object.keys(this.node.inputs);
-    const outKeys = Object.keys(this.node.outputs);
-    const rows = Math.max(inKeys.length, outKeys.length);
-    for (let i = 0; i < rows; i++) {
-      const row = document.createElement("div");
-      row.style.cssText = `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; display: flex; justify-content: space-between; padding: 0 4px; position: relative;`;
-      row.appendChild(this._terminal(inKeys[i], "in"));
-      row.appendChild(this._terminal(outKeys[i], "out"));
-      this.shadow.appendChild(row);
-      this._rows.push(row);
-    }
+    this._socketsRoot = document.createElement("div");
+    this._socketsRoot.className = "nodeframe-sockets";
+    this.shadow.appendChild(this._socketsRoot);
     this._body = UIBase2.createElement("container-x");
     this._body.style.cursor = "auto";
     this._body.parentWidget = this;
@@ -78472,6 +78540,7 @@ var NodeFrame = class extends Container3 {
     this._propsRoot.className = "nodeframe-props";
     this._propsRoot.style.cssText = "display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;";
     this._body.shadow.appendChild(this._propsRoot);
+    this._rebuildSocketRows();
     this._rebuildPropRows();
     this.node.createUI(this._body);
     this.buildExtraUI?.(this, this._body);
@@ -78481,12 +78550,40 @@ var NodeFrame = class extends Container3 {
     const sel = `.nodeframe-terminal[data-socket-key="${key}"][data-socket-dir="${dir}"]`;
     return this.shadow.querySelector(sel) ?? void 0;
   }
-  /** A terminal dot plus name, or an empty spacer where this side has no row. */
-  _terminal(key, dir) {
-    const span = document.createElement("span");
-    if (key === void 0) {
-      return span;
+  /** One socket's row: its terminal dot, plus an inline default editor where
+   *  the socket has one and its name where it does not. */
+  _socketRow(key, dir, inline) {
+    const height = this.getDefault("SocketRowHeight");
+    const row = document.createElement("div");
+    row.style.cssText = `min-height: ${height}px; display: flex; align-items: center; position: relative; justify-content: ${dir === "in" ? "flex-start" : "flex-end"}; gap: 4px; padding: 0 4px; box-sizing: border-box;`;
+    const dot = this._terminalDot(key, dir);
+    const label = inline ? this._inlineEditor(key) : void 0;
+    if (dir === "in") {
+      row.appendChild(dot);
+      row.appendChild(label ?? this._terminalName(key));
+    } else {
+      row.appendChild(this._terminalName(key));
+      row.appendChild(dot);
     }
+    return row;
+  }
+  _terminalName(key) {
+    const name2 = document.createElement("span");
+    name2.textContent = key;
+    name2.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
+    return name2;
+  }
+  /** The editor for an input's default value, bound through the props datapath. */
+  _inlineEditor(key) {
+    const path = `${this.nodePath}.props['${key}'].value`;
+    const row = propEditRow(this.ctx, key, path, this.node.inputs[key]);
+    row.parentWidget = this;
+    row.style.flex = "1 1 auto";
+    row.style.minWidth = "0";
+    this._editors.push(row);
+    return row;
+  }
+  _terminalDot(key, dir) {
     const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
     const dot = document.createElement("span");
@@ -78494,7 +78591,7 @@ var NodeFrame = class extends Container3 {
     dot.dataset.socketKey = key;
     dot.dataset.socketDir = dir;
     dot.title = `${key} (${sock.type})`;
-    dot.style.cssText = `position: absolute; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
+    dot.style.cssText = `position: absolute; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
     dot.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || this.onSocketDown === void 0) {
         return;
@@ -78503,16 +78600,19 @@ var NodeFrame = class extends Container3 {
       e.stopPropagation();
       this.onSocketDown(this, key, dir, e);
     });
-    const name2 = document.createElement("span");
-    name2.textContent = key;
-    if (dir === "in") {
-      span.appendChild(dot);
-      span.appendChild(name2);
-    } else {
-      span.appendChild(name2);
-      span.appendChild(dot);
+    return dot;
+  }
+  /** Whether a press landed on one of the node's own widgets rather than the frame. */
+  _onNodeWidget(e) {
+    for (const node of e.composedPath()) {
+      if (node === this._body) {
+        return true;
+      }
+      if (node instanceof HTMLElement && node.classList.contains("nodeeditor-prop-row")) {
+        return true;
+      }
     }
-    return span;
+    return false;
   }
   _wirePress(handle) {
     handle.addEventListener("pointerdown", (e) => {
@@ -78521,7 +78621,7 @@ var NodeFrame = class extends Container3 {
       }
       e.stopPropagation();
       this.onSelect?.(this, e);
-      if (this._body !== void 0 && e.composedPath().includes(this._body)) {
+      if (this._onNodeWidget(e)) {
         return;
       }
       e.preventDefault();
@@ -78534,6 +78634,29 @@ UIBase2.internalRegister(NodeFrame);
 // scripts/editors/nodeeditor/linkcanvas.ts
 init_ui_base();
 init_theme_schema();
+function linkBulge(s) {
+  return Math.max(24, Math.abs(s.x2 - s.x1) * 0.5);
+}
+function linkCurvePoint(s, t2) {
+  const bulge = linkBulge(s);
+  const u = 1 - t2;
+  const a2 = u * u * u;
+  const b = 3 * u * u * t2;
+  const c = 3 * u * t2 * t2;
+  const d = t2 * t2 * t2;
+  return [
+    a2 * s.x1 + b * (s.x1 + bulge) + c * (s.x2 - bulge) + d * s.x2,
+    a2 * s.y1 + b * s.y1 + c * s.y2 + d * s.y2
+  ];
+}
+function linkDistance(s, x, y, samples = 24) {
+  let best = Infinity;
+  for (let i = 0; i <= samples; i++) {
+    const p = linkCurvePoint(s, i / samples);
+    best = Math.min(best, Math.hypot(p[0] - x, p[1] - y));
+  }
+  return best;
+}
 var LinkCanvas = class extends UIBase2 {
   canvas;
   g;
@@ -78549,7 +78672,9 @@ var LinkCanvas = class extends UIBase2 {
       style: "nodelinkcanvas",
       theme: {
         LinkColor: t.string,
-        LinkWidth: t.number
+        LinkWidth: t.number,
+        LinkSelectColor: t.string,
+        LinkSelectWidth: t.number
       }
     };
   }
@@ -78572,14 +78697,23 @@ var LinkCanvas = class extends UIBase2 {
     }
     g.setTransform(dpi, 0, 0, dpi, 0, 0);
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    g.strokeStyle = this.getDefault("LinkColor") ?? "#aaaaaa";
-    g.lineWidth = this.getDefault("LinkWidth") ?? 2;
-    for (const s of segments) {
-      const bulge = Math.max(24, Math.abs(s.x2 - s.x1) * 0.5);
-      g.beginPath();
-      g.moveTo(s.x1, s.y1);
-      g.bezierCurveTo(s.x1 + bulge, s.y1, s.x2 - bulge, s.y2, s.x2, s.y2);
-      g.stroke();
+    const color = this.getDefault("LinkColor") ?? "#aaaaaa";
+    const width = this.getDefault("LinkWidth") ?? 2;
+    const selColor = this.getDefault("LinkSelectColor") ?? "#e8930c";
+    const selWidth = this.getDefault("LinkSelectWidth") ?? width + 2;
+    for (const pass of [false, true]) {
+      g.strokeStyle = pass ? selColor : color;
+      g.lineWidth = pass ? selWidth : width;
+      for (const s of segments) {
+        if (s.selected === true !== pass) {
+          continue;
+        }
+        const bulge = linkBulge(s);
+        g.beginPath();
+        g.moveTo(s.x1, s.y1);
+        g.bezierCurveTo(s.x1 + bulge, s.y1, s.x2 - bulge, s.y2, s.x2, s.y2);
+        g.stroke();
+      }
     }
   }
 };
@@ -78710,12 +78844,13 @@ var LinkDrag = class {
     for (const frame of this.view.frames.values()) {
       const node = frame.node;
       const keys2 = Object.keys(targetDir === "in" ? node.inputs : node.outputs);
-      for (let row = 0; row < keys2.length; row++) {
+      for (const key of keys2) {
+        const row = socketRow(node, targetDir, key);
         const p = tf.project(socketAnchor(frame.metrics(), targetDir, row));
         const dist = Math.hypot(p[0] - local[0], p[1] - local[1]);
         if (dist <= bestDist) {
           bestDist = dist;
-          best = { frame, key: keys2[row], ok: this._targetOk(frame, keys2[row]) };
+          best = { frame, key, ok: this._targetOk(frame, key) };
         }
       }
     }
@@ -78775,16 +78910,15 @@ function localPoint(view, e) {
   return [e.clientX - r.x, e.clientY - r.y];
 }
 var NodeMoveModalOp = class extends ToolOp {
-  _frame;
+  _frames = [];
+  _bases = [];
   _startX = 0;
   _startY = 0;
-  _base = new Vector2();
-  constructor(frame, e) {
+  _moved = false;
+  constructor(frames, e) {
     super();
-    this._frame = frame;
-    if (frame !== void 0) {
-      this._base.load(frame.node.pos);
-    }
+    this._frames = frames !== void 0 ? [...frames] : [];
+    this._bases = this._frames.map((f2) => new Vector2(f2.node.pos));
     if (e !== void 0) {
       this._startX = e.clientX;
       this._startY = e.clientY;
@@ -78802,17 +78936,22 @@ var NodeMoveModalOp = class extends ToolOp {
     };
   }
   on_pointermove(e) {
-    const frame = this._frame;
-    if (frame === void 0) {
+    const lead = this._frames[0];
+    if (lead === void 0) {
       return;
     }
-    const s = frame.getScale();
-    frame.previewPos = new Vector2([
-      this._base[0] + (e.clientX - this._startX) / s,
-      this._base[1] + (e.clientY - this._startY) / s
-    ]);
-    frame.syncPosition();
-    frame.onMovePreview?.(frame);
+    const dx = e.clientX - this._startX;
+    const dy = e.clientY - this._startY;
+    if (Math.abs(dx) >= CLICK_SLOP_PX || Math.abs(dy) >= CLICK_SLOP_PX) {
+      this._moved = true;
+    }
+    const s = lead.getScale();
+    for (let i = 0; i < this._frames.length; i++) {
+      const frame = this._frames[i];
+      frame.previewPos = new Vector2([this._bases[i][0] + dx / s, this._bases[i][1] + dy / s]);
+      frame.syncPosition();
+    }
+    lead.onMovePreview?.(this._frames);
   }
   on_pointerup(_e) {
     this._commit();
@@ -78828,25 +78967,45 @@ var NodeMoveModalOp = class extends ToolOp {
     }
   }
   _commit() {
-    const frame = this._frame;
-    this._frame = void 0;
-    if (frame !== void 0) {
+    const frames = this._frames;
+    const moved = this._moved;
+    this._frames = [];
+    const lead = frames[0];
+    const moves = [];
+    for (const frame of frames) {
       const dropped = frame.previewPos;
       frame.previewPos = void 0;
-      if (dropped !== void 0) {
-        frame.onMoveCommit?.(frame, dropped[0], dropped[1]);
+      frame.style.opacity = "";
+      if (dropped !== void 0 && moved) {
+        moves.push({ frame, x: dropped[0], y: dropped[1] });
+      } else {
+        frame.syncPosition();
+      }
+    }
+    if (lead !== void 0) {
+      if (moves.length > 0) {
+        lead.onMoveCommit?.(moves);
+      } else {
+        lead.onMoveClick?.(lead);
       }
     }
     this.modalEnd(false);
   }
   modalEnd(was_cancelled) {
-    const frame = this._frame;
-    this._frame = void 0;
-    if (frame !== void 0 && frame.previewPos !== void 0) {
+    const frames = this._frames;
+    this._frames = [];
+    let reverted = false;
+    for (const frame of frames) {
+      if (frame.previewPos === void 0) {
+        continue;
+      }
       frame.previewPos = void 0;
       frame.syncPosition();
-      frame.onMovePreview?.(frame);
       frame.style.opacity = "";
+      reverted = true;
+    }
+    if (reverted) {
+      frames[0].onMovePreview?.(frames);
     }
     super.modalEnd(was_cancelled);
   }
@@ -79526,6 +79685,10 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
 init_ui_base();
 init_ui_menu();
 init_theme_schema();
+var LINK_PICK_PX = 8;
+function linkKey(ref) {
+  return JSON.stringify([ref.srcNode, ref.srcSocket, ref.dstNode, ref.dstSocket]);
+}
 var NodeGraphView = class extends Container3 {
   delegate = new ToolOpDelegate();
   /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
@@ -79535,12 +79698,19 @@ var NodeGraphView = class extends Container3 {
   /** GroupNode ids from the root graph down to the graph on screen. */
   descent = [];
   selection = /* @__PURE__ */ new Set();
+  /** The selected links, by {@link linkKey}; pruned against the live graph. */
+  linkSelection = /* @__PURE__ */ new Set();
   frames = /* @__PURE__ */ new Map();
   panzoom;
   links;
   linkDrag;
   _crumbs;
   _pendingView = void 0;
+  /** The links on screen, kept for picking; rebuilt with every repaint. */
+  _linkRefs = [];
+  /** A selection change a press on an already-selected node put off, in case
+   *  the press turns into a drag; a click without a drag applies it. */
+  _pendingSelect = void 0;
   static define() {
     return {
       tagname: "nodegraphview-x",
@@ -79598,6 +79768,7 @@ var NodeGraphView = class extends Container3 {
     this.graphPath = graphPath;
     this.descent = [];
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
   /** The graph on screen: the root, or the descent tail's instance subgraph. */
@@ -79627,12 +79798,14 @@ var NodeGraphView = class extends Container3 {
     }
     this.descent.push(node.id);
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
   /** Returns to depth entries of descent; popTo(0) shows the root graph. */
   popTo(depth) {
     this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
     this.selection.clear();
+    this.linkSelection.clear();
     this._refresh();
   }
   getViewState() {
@@ -79734,9 +79907,14 @@ var NodeGraphView = class extends Container3 {
       frame.setNode(node);
       frame.getScale = () => this.panzoom.transform.scale;
       frame.onSelect = (f2, e) => this._selectFrame(f2, e);
-      frame.onMoveStart = (f2, e) => this.ctx.toolstack.execTool(this.ctx, new NodeMoveModalOp(f2, e), e);
-      frame.onMovePreview = (f2) => this._previewMove(f2);
-      frame.onMoveCommit = (f2, x, y) => this._commitMove(f2, x, y);
+      frame.onMoveStart = (f2, e) => this.ctx.toolstack.execTool(
+        this.ctx,
+        new NodeMoveModalOp(this._dragSet(f2, e.shiftKey), e),
+        e
+      );
+      frame.onMoveClick = (f2) => this._clickFrame(f2);
+      frame.onMovePreview = (fs) => this._previewMove(fs);
+      frame.onMoveCommit = (moves) => this._commitMove(moves);
       frame.onSocketDown = (f2, key, dir, e) => this._socketDown(f2, key, dir, e);
       frame.addEventListener("contextmenu", (e) => {
         e.preventDefault();
@@ -79772,24 +79950,60 @@ var NodeGraphView = class extends Container3 {
     }
     this._redrawLinks();
   }
+  /**
+   * Selects on press. A press on an already-selected node leaves the selection
+   * alone so a drag can move the whole group, and defers what the press would
+   * otherwise have done to _clickFrame.
+   */
   _selectFrame(frame, e) {
     const id = frame.node.id;
-    if (e.shiftKey) {
-      if (this.selection.has(id)) {
-        this.selection.delete(id);
-      } else {
-        this.selection.add(id);
-      }
+    this._pendingSelect = void 0;
+    if (this.selection.has(id)) {
+      this._pendingSelect = { id, shift: e.shiftKey };
+      return;
+    }
+    if (!e.shiftKey) {
+      this.selection.clear();
+      this.linkSelection.clear();
+    }
+    this.selection.add(id);
+    this._applySelection();
+  }
+  /** Applies the selection change _selectFrame deferred, once a press on an
+   *  already-selected node has released without moving. */
+  _clickFrame(frame) {
+    const pending = this._pendingSelect;
+    this._pendingSelect = void 0;
+    if (pending === void 0 || pending.id !== frame.node.id) {
+      return;
+    }
+    if (pending.shift) {
+      this.selection.delete(pending.id);
     } else {
       this.selection.clear();
-      this.selection.add(id);
+      this.linkSelection.clear();
+      this.selection.add(pending.id);
     }
     this._applySelection();
+  }
+  /** The frames a drag led by lead moves; shift takes the rest of the selection. */
+  _dragSet(lead, withSelection) {
+    const frames = [lead];
+    if (!withSelection) {
+      return frames;
+    }
+    for (const [nid, frame] of this.frames) {
+      if (frame !== lead && this.selection.has(nid)) {
+        frames.push(frame);
+      }
+    }
+    return frames;
   }
   _applySelection() {
     for (const [nid, frame] of this.frames) {
       frame.setSelected(this.selection.has(nid));
     }
+    this._redrawLinks();
   }
   _moveEdit(frame, x, y) {
     return {
@@ -79800,17 +80014,37 @@ var NodeGraphView = class extends Container3 {
       y
     };
   }
-  _previewMove(frame) {
-    const pos = frame.previewPos ?? frame.node.pos;
-    const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
-    frame.style.opacity = verdict.ok ? "" : "0.5";
+  _previewMove(frames) {
+    for (const frame of frames) {
+      const pos = frame.previewPos ?? frame.node.pos;
+      const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
+      frame.style.opacity = verdict.ok ? "" : "0.5";
+    }
     this._redrawLinks();
   }
-  _commitMove(frame, x, y) {
-    frame.style.opacity = "";
-    const edit = this._moveEdit(frame, x, y);
-    if (this.delegate.check(this.ctx, edit).ok) {
-      this.delegate.perform(this.ctx, edit);
+  /** Commits a finished drag; a group move goes as one moveNodes edit, so the
+   *  gesture leaves a single undo entry. */
+  _commitMove(moves) {
+    for (const move of moves) {
+      move.frame.style.opacity = "";
+    }
+    if (moves.length === 1) {
+      const edit = this._moveEdit(moves[0].frame, moves[0].x, moves[0].y);
+      this._dispatch(edit);
+    } else if (moves.length > 1) {
+      const accepted = [];
+      for (const move of moves) {
+        if (this.delegate.check(this.ctx, this._moveEdit(move.frame, move.x, move.y)).ok) {
+          accepted.push({ nodeId: move.frame.node.id, x: move.x, y: move.y });
+        }
+      }
+      if (accepted.length > 0) {
+        this._dispatch({
+          kind: "moveNodes",
+          graphPath: this.currentGraphPath,
+          moves: accepted
+        });
+      }
     }
     this.syncGraph();
   }
@@ -79871,7 +80105,12 @@ var NodeGraphView = class extends Container3 {
     const r = this.panzoom.getBoundingClientRect();
     startMenu(menu, r.x + local[0], r.y + local[1], searchMode);
   }
+  /** Deletes the selected nodes and severs the selected links. */
   deleteSelected() {
+    for (const ref of this.selectedLinks()) {
+      this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+    }
+    this.linkSelection.clear();
     for (const nid of [...this.selection]) {
       this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
     }
@@ -80008,7 +80247,7 @@ var NodeGraphView = class extends Container3 {
       return;
     }
     const graph = this.currentGraph;
-    const segments = [];
+    const links = [];
     const tf = this.panzoom.transform;
     if (graph !== void 0) {
       for (const node of graph.nodes) {
@@ -80029,27 +80268,92 @@ var NodeGraphView = class extends Container3 {
             if (srcFrame === void 0 || srcRow < 0 || dstRow < 0) {
               continue;
             }
+            const ref = {
+              srcNode: srcNode.id,
+              srcSocket: edge.name,
+              dstNode: node.id,
+              dstSocket: key
+            };
             const a2 = tf.project(socketAnchor(srcFrame.metrics(), "out", srcRow));
             const b = tf.project(socketAnchor(dstFrame.metrics(), "in", dstRow));
-            segments.push({ x1: a2[0], y1: a2[1], x2: b[0], y2: b[1] });
+            links.push({
+              ref,
+              seg: {
+                x1: a2[0],
+                y1: a2[1],
+                x2: b[0],
+                y2: b[1],
+                selected: this.linkSelection.has(linkKey(ref))
+              }
+            });
           }
         }
       }
     }
+    const live = new Set(links.map((l) => linkKey(l.ref)));
+    for (const key of [...this.linkSelection]) {
+      if (!live.has(key)) {
+        this.linkSelection.delete(key);
+      }
+    }
+    this._linkRefs = links;
     const r = this.panzoom.getBoundingClientRect();
     const dpi = UIBase2.getDPI();
     this.links.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
-    this.links.drawLinks(segments, dpi);
+    this.links.drawLinks(
+      links.map((l) => l.seg),
+      dpi
+    );
+  }
+  /** The link nearest to a widget-local point, within LINK_PICK_PX. */
+  _pickLink(local) {
+    let best;
+    let bestDist = LINK_PICK_PX;
+    for (const link of this._linkRefs) {
+      const dist = linkDistance(link.seg, local[0], local[1]);
+      if (dist <= bestDist) {
+        bestDist = dist;
+        best = link.ref;
+      }
+    }
+    return best;
+  }
+  /** Selects one link; shift toggles it and keeps whatever else is selected. */
+  selectLink(ref, additive = false) {
+    const key = linkKey(ref);
+    if (additive) {
+      if (this.linkSelection.has(key)) {
+        this.linkSelection.delete(key);
+      } else {
+        this.linkSelection.add(key);
+      }
+    } else {
+      this.selection.clear();
+      this.linkSelection.clear();
+      this.linkSelection.add(key);
+    }
+    this._applySelection();
+  }
+  /** The selected links, resolved against the links currently on screen. */
+  selectedLinks() {
+    return this._linkRefs.filter((l) => this.linkSelection.has(linkKey(l.ref))).map((l) => l.ref);
   }
   _boxDown(e) {
     if (e.button !== 0 || e.defaultPrevented) {
       return;
     }
+    const hit = this._pickLink(this._localPoint(e));
+    if (hit !== void 0) {
+      e.preventDefault();
+      this.selectLink(hit, e.shiftKey);
+      return;
+    }
     this.ctx.toolstack.execTool(this.ctx, new BoxSelectModalOp(this, e), e);
   }
-  /** Clears the selection and repaints the frames. */
+  /** Clears the node and link selection and repaints. */
   clearSelection() {
     this.selection.clear();
+    this.linkSelection.clear();
     this._applySelection();
   }
   /**
@@ -80059,6 +80363,7 @@ var NodeGraphView = class extends Container3 {
   boxSelect(min, max, additive) {
     if (!additive) {
       this.selection.clear();
+      this.linkSelection.clear();
     }
     for (const [nid, frame] of this.frames) {
       const fr = frame.rect();
@@ -92567,6 +92872,7 @@ export {
   KeyMap,
   LINECROSS,
   LINK_DROP_PX,
+  LINK_PICK_PX,
   Label,
   LastToolPanel,
   LinkCanvas,
@@ -92877,6 +93183,9 @@ export {
   line_isect,
   line_line_cross,
   line_line_isect,
+  linkCurvePoint,
+  linkDistance,
+  linkKey,
   loadFile,
   loadPage,
   loadUIData,

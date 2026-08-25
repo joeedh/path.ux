@@ -397,20 +397,33 @@ view.setGraph(myGraph, "nodegraph");
 datapath its edits dispatch against. After mutating the graph outside the
 view, call `view.syncGraph()` to reconcile the frames.
 
-Each `NodeFrame` shows the node's name in a header, one terminal row per
-socket, and a body. The body opens with an editable row per node property and
-per unconnected input default (the view supplies the node's datapath through
-`frame.nodePath`; a connected input contributes no row, since its default is
-inert). Each row hosts a standard path.ux prop editor bound to the value's
+Each `NodeFrame` shows the node's name in a header, one row per socket, and a
+body. Every socket owns a full-width row of its own: the outputs take the rows
+directly under the header, then the inputs, which is what `socketRow(node, dir,
+key)` indexes and what `socketAnchor` places the terminal dots against.
+
+An unconnected input whose socket declares a `defaultProp` carries the editor
+for that default inside its own row, beside its terminal — the view supplies
+the node's datapath through `frame.nodePath`. Connecting the input replaces the
+editor with the socket's name, since a driven default is inert, and
+disconnecting brings it back; the rows rebuild from `syncContents()` whenever
+the sockets or their editors change. A node property that is not an input's
+default keeps its row in the body.
+
+Each row hosts a standard path.ux prop editor bound to the value's
 `props['key'].value` datapath — `container.prop` picks the widget the bound
 property type maps to, and an input default's row is built by its socket
 class's `createUI`, so a custom property type brings its own widget (see
 [Writing a socket type](#writing-a-socket-type)). The widgets read and write
 through `ctx.api`, so edits dispatch the datapath set op and path watchers
-refresh every bound row. Beneath those rows sits whatever the node's own
-`createUI` override adds (the base implementation renders nothing), and a
+refresh every bound row. Beneath the body's prop rows sits whatever the node's
+own `createUI` override adds (the base implementation renders nothing), and a
 group instance's frame shows its forwarded UI instead of prop rows (see
 [Exposed UI](#exposed-ui)).
+
+An inline editor makes its row taller than the themed `SocketRowHeight`, so
+`FrameMetrics` carries the measured `rowHeights` and `socketAnchor` accumulates
+them; a row the array does not cover falls back to the uniform height.
 
 ### Theming
 
@@ -426,7 +439,8 @@ rather than by patching CSS. Three style classes carry the keys:
 - `nodegraphview` — the box-select marquee (`BoxSelectBorder`,
   `BoxSelectBG`) and `ErrorColor`, which the editor shell passes into the
   group designer's missing-entry flag.
-- `nodelinkcanvas` — `LinkColor` and `LinkWidth` for the drawn links.
+- `nodelinkcanvas` — `LinkColor` and `LinkWidth` for the drawn links, and
+  `LinkSelectColor` / `LinkSelectWidth` for a selected one.
 
 A socket terminal's dot keeps the color its socket type declares
 (`SocketDef.color`); that is per-type identity, not theme. The add and
@@ -453,11 +467,19 @@ same ops from its toolmodes' pointerdown handlers.
   event its release fires, so context menus open only on a stationary
   right-click.
 - **Select** — click a frame; shift-click toggles; drag on empty canvas box-
-  selects (shift extends); click on empty canvas clears.
-- **Move** — drag a frame's header or empty background (a press inside the
-  body belongs to the node's own widgets). The delegate is consulted
-  mid-drag, a refused position renders the frame at half opacity, and a
-  refused drop snaps back.
+  selects (shift extends); click on empty canvas clears both selections.
+  Pressing an already-selected frame changes nothing, so the press can go on
+  to drag the whole selection; the collapse-to-one (or the shift-toggle-off)
+  applies on release if the press did not move. Click a link to select it —
+  shift toggles — and `deleteSelected()` severs the selected links along with
+  the selected nodes. `selection` holds node ids, `linkSelection` holds link
+  keys, and `selectedLinks()` resolves the latter against the links on screen.
+- **Move** — drag a frame's header or empty background (a press on the node's
+  own widgets, an inline socket editor included, belongs to the widget). Hold
+  shift to drag every selected node along with it; the group commits as one
+  `moveNodes` edit, so the drag leaves a single undo entry. The delegate is
+  consulted mid-drag, a refused position renders that frame at half opacity,
+  and a refused drop snaps back.
 - **Link** — drag from a socket terminal to a terminal on the other side;
   terminals whose connect the delegate refuses dim for the drag's duration.
   Starting on a connected single-link input detaches its edge: an empty drop
@@ -478,8 +500,10 @@ same ops from its toolmodes' pointerdown handlers.
 - **Arrange** — `arrangeNodes()` auto-lays-out the graph with graphpack, one
   island at a time, and commits the result as a single undo entry.
 
-`deleteSelected()` and `duplicateSelected()` act on the current selection;
-`selection` is a `Set` of node ids.
+`deleteSelected()` and `duplicateSelected()` act on the current selection.
+`selection` is a `Set` of node ids and `linkSelection` a `Set` of link keys;
+`deleteSelected()` severs the selected links and deletes the selected nodes,
+while `duplicateSelected()` ignores the link selection.
 
 ### Group descent
 
@@ -511,8 +535,8 @@ interface NodeGraphDelegate {
 }
 ```
 
-The edit kinds are `moveNode`, `addNode`, `deleteNode`, `duplicateNode`,
-`replaceNode`, `connect`, `disconnect`, `arrange`, and the four exposure
+The edit kinds are `moveNode`, `moveNodes`, `addNode`, `deleteNode`,
+`duplicateNode`, `replaceNode`, `connect`, `disconnect`, `arrange`, and the four exposure
 kinds (`exposeEntry`, `reorderEntry`, `repointEntry`, `removeEntry`). A
 `check` verdict must match what `perform` would decide, which is what lets a
 refusal show mid-gesture rather than on drop.
@@ -684,6 +708,7 @@ class NodeGraphView<CTX> extends Container<CTX> {
   delegate: NodeGraphDelegate; // default: ToolOpDelegate
   onOpenDefinition?: (node: GroupNode) => void;
   selection: Set<GraphId>;
+  linkSelection: Set<string>; // keys from linkKey()
   setGraph(graph: Graph | undefined, graphPath: string): void;
   get currentGraph(): Graph | undefined; // the graph on screen after descent
   get currentGraphPath(): string;
@@ -692,15 +717,26 @@ class NodeGraphView<CTX> extends Container<CTX> {
   syncGraph(): void; // reconcile frames after external changes
   addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
   openAddMenu(local: readonly [number, number]): Menu<CTX>; // started as a screen popup when ctx has a screen
-  deleteSelected(): void;
+  deleteSelected(): void; // severs the selected links too
   duplicateSelected(): void;
   replaceNode(nodeId: GraphId, newType: string): void;
   arrangeNodes(): void;
-  clearSelection(): void;
+  selectLink(ref: LinkRef, additive: boolean): void;
+  selectedLinks(): LinkRef[]; // resolved against the links on screen
+  clearSelection(): void; // clears both selections
   boxSelect(min: readonly [number, number], max: readonly [number, number], additive: boolean): void; // graph-space
   getViewState(): NodeGraphViewState; // { pan, zoom, descent }
   setViewState(state: NodeGraphViewState): void;
 }
+
+interface LinkRef {
+  srcNode: GraphId;
+  srcSocket: string;
+  dstNode: GraphId;
+  dstSocket: string;
+}
+function linkKey(ref: LinkRef): string;
+const LINK_PICK_PX: number; // screen-space pick radius around a link
 
 // Modal gesture ops the view spawns on pointerdown (all UndoFlags.NO_UNDO;
 // document changes commit through the delegate on release).

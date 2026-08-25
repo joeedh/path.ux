@@ -13,7 +13,7 @@ import { FloatSocket } from "../scripts/graph/sockets_std";
 import { ExposedEntry, GroupDef, GroupNode } from "../scripts/graph/group";
 import { ConnectOp } from "../scripts/graph/graph_ops";
 import { defineGraphAPI } from "../scripts/graph/graph_api";
-import { socketAnchor } from "../scripts/editors/nodeeditor/nodeframe";
+import { socketAnchor, socketRow } from "../scripts/editors/nodeeditor/nodeframe";
 import type { NodeFrame } from "../scripts/editors/nodeeditor/nodeframe";
 // The plain import keeps the view module's module-scope internalRegister call;
 // a type-only use would let the transpiler elide it.
@@ -119,7 +119,8 @@ function makeView(ctx: unknown): NodeGraphView {
 }
 
 /** The widget-local screen point over a frame's socket terminal. */
-function anchorOf(view: NodeGraphView, frame: NodeFrame, dir: "in" | "out", row: number) {
+function anchorOf(view: NodeGraphView, frame: NodeFrame, dir: "in" | "out", key: string) {
+  const row = socketRow(frame.node, dir, key);
   const p = view.panzoom.transform.project(socketAnchor(frame.metrics(), dir, row));
   return [p[0], p[1]] as [number, number];
 }
@@ -142,7 +143,7 @@ test("a completed link drag issues the ConnectOp through the default delegate", 
   expect(view.linkDrag.begin(srcFrame, "value", "out")).toBe(true);
   expect(view.linkDrag.active).toBe(true);
 
-  const drop = anchorOf(view, dstFrame, "in", 0);
+  const drop = anchorOf(view, dstFrame, "in", "a");
   view.linkDrag.update(drop);
   view.linkDrag.drop(drop);
 
@@ -174,7 +175,7 @@ test("an incompatible drop dims its terminal during the drag and issues nothing"
   view.linkDrag.begin(srcFrame, "value", "out");
   expect(strFrame.terminalDot("s", "in")!.style.opacity).toBe("0.35");
 
-  view.linkDrag.drop(anchorOf(view, strFrame, "in", 0));
+  view.linkDrag.drop(anchorOf(view, strFrame, "in", "s"));
   expect(strFrame.terminalDot("s", "in")!.style.opacity).toBe("");
   expect(str.inputs.s.edges.length).toBe(0);
   expect(ctx.toolstack.length).toBe(0);
@@ -202,7 +203,7 @@ test("an installed delegate receives the drop's connect edit and no op issues", 
   view.delegate = testDelegate;
 
   view.linkDrag.begin(view.frames.get(src.id)!, "value", "out");
-  view.linkDrag.drop(anchorOf(view, view.frames.get(m.id)!, "in", 0));
+  view.linkDrag.drop(anchorOf(view, view.frames.get(m.id)!, "in", "a"));
 
   expect(received).toEqual([
     {
@@ -241,7 +242,7 @@ test("targets a delegate's check refuses dim for the drag's duration", () => {
   expect(mFrame.terminalDot("a", "in")!.style.opacity).toBe("0.35");
   expect(mFrame.terminalDot("b", "in")!.style.opacity).toBe("0.35");
 
-  view.linkDrag.drop(anchorOf(view, mFrame, "in", 0));
+  view.linkDrag.drop(anchorOf(view, mFrame, "in", "a"));
   expect(mFrame.terminalDot("a", "in")!.style.opacity).toBe("");
   expect(m.inputs.a.edges.length).toBe(0);
   expect(ctx.toolstack.length).toBe(0);
@@ -263,7 +264,7 @@ test("dragging a connected input detaches it: a drop back keeps the link, an emp
   const dstFrame = view.frames.get(m.id)!;
 
   view.linkDrag.begin(dstFrame, "a", "in");
-  view.linkDrag.drop(anchorOf(view, dstFrame, "in", 0));
+  view.linkDrag.drop(anchorOf(view, dstFrame, "in", "a"));
   expect(m.inputs.a.edges.length).toBe(1);
   expect(ctx.toolstack.length).toBe(0);
 

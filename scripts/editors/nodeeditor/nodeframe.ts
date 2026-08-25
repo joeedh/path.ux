@@ -6,7 +6,6 @@ import { t } from "../../core/theme_schema";
 import type { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import type { Node as GraphNode } from "../../graph/node";
-import { nodePropKeys } from "../../graph/node";
 import type { SocketDir } from "../../graph/graph_types";
 import { propEditRow } from "./groupui";
 
@@ -16,33 +15,59 @@ export interface FrameMetrics {
   y: number;
   width: number;
   headerHeight: number;
+
+  /** Height of a socket row carrying no inline editor. */
   socketRowHeight: number;
+
+  /** Measured height per socket row; a row absent from it uses socketRowHeight. */
+  rowHeights?: readonly number[];
+}
+
+/** One frame's destination in a completed move gesture. */
+export interface FrameMove<CTX extends IContextBase = IContextBase> {
+  frame: NodeFrame<CTX>;
+  x: number;
+  y: number;
+}
+
+/** The height of row, falling back to the uniform themed row height. */
+function rowHeight(m: FrameMetrics, row: number): number {
+  return m.rowHeights?.[row] ?? m.socketRowHeight;
 }
 
 /**
  * Graph-space anchor of a socket terminal: the frame's left edge for an input,
- * the right edge for an output, centered on the socket's row. Input and output
- * rows share indices, both starting directly under the header.
+ * the right edge for an output, centered on the socket's row. Row indices run
+ * over the frame's sockets as a whole, so row 0 sits directly under the header.
  */
 export function socketAnchor(m: FrameMetrics, dir: SocketDir, row: number): [number, number] {
   const x = dir === "in" ? m.x : m.x + m.width;
-  const y = m.y + m.headerHeight + (row + 0.5) * m.socketRowHeight;
-  return [x, y];
-}
 
-/** Row index of the socket named key on its side, or -1 when absent. */
-export function socketRow(node: GraphNode, dir: SocketDir, key: string): number {
-  return Object.keys(dir === "in" ? node.inputs : node.outputs).indexOf(key);
+  let y = m.y + m.headerHeight;
+  for (let i = 0; i < row; i++) {
+    y += rowHeight(m, i);
+  }
+
+  return [x, y + rowHeight(m, row) * 0.5];
 }
 
 /**
- * One node's on-screen frame: a header row carrying the node's name, socket
- * terminals down both sides, and the node's own createUI as the body. The
- * frame positions itself in graph coordinates — the pan/zoom content's CSS
- * matrix maps those to the screen. The frame owns no drag: a press outside
- * the body reports through onMoveStart, and the owning view spawns the modal
- * ToolOp that drives previewPos and getScale. A completed drag reaches the
- * document only through onMoveCommit; the owning editor dispatches the op.
+ * Row index of the socket named key, or -1 when absent. Outputs take the rows
+ * directly under the header and inputs the rows after them, so every socket
+ * owns a full-width row.
+ */
+export function socketRow(node: GraphNode, dir: SocketDir, key: string): number {
+  const outs = Object.keys(node.outputs);
+  if (dir === "out") {
+    return outs.indexOf(key);
+  }
+
+  const row = Object.keys(node.inputs).indexOf(key);
+  return row < 0 ? -1 : outs.length + row;
+}
+
+/**
+ * Generic node UX container; draws background, a title bar, and sockets.
  */
 export class NodeFrame<CTX extends IContextBase = IContextBase> extends Container<
   CTX,
@@ -57,15 +82,22 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   getScale: () => number = () => 1;
   onSelect?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
   onMoveStart?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
-  onMovePreview?: (frame: NodeFrame<CTX>) => void;
-  onMoveCommit?: (frame: NodeFrame<CTX>, x: number, y: number) => void;
+
+  /** Reports that a press on this frame released without becoming a drag. */
+  onMoveClick?: (frame: NodeFrame<CTX>) => void;
+
+  /** Reports the frames a live drag is moving; this frame leads them. */
+  onMovePreview?: (frames: readonly NodeFrame<CTX>[]) => void;
+
+  /** Reports a completed drag of this frame and any dragged alongside it. */
+  onMoveCommit?: (moves: readonly FrameMove<CTX>[]) => void;
   onSocketDown?: (frame: NodeFrame<CTX>, key: string, dir: SocketDir, e: PointerEvent) => void;
 
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
-  /** The node's datapath. When set, the body renders an editable row per node
-   *  prop and per unconnected input default, writing through the datapath. */
+  /** The node's datapath. When set, an unconnected input's socket row carries an
+   *  editor for its default and the body renders a row per node prop. */
   get nodePath(): string {
     return this._nodePath;
   }
@@ -82,8 +114,15 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   private _nodePath = "";
   private _header!: HTMLDivElement;
   private _rows: HTMLDivElement[] = [];
+  private _socketsRoot: HTMLDivElement | undefined;
   private _body: Container<CTX> | undefined;
   private _propsRoot: HTMLDivElement | undefined;
+
+  /** Which sockets the built rows cover, and which carry an inline editor. */
+  private _rowSig = "";
+
+  /** The inline default editors, kept so a rebuild can tear each one down. */
+  private _editors: Container<CTX>[] = [];
 
   static define(): UIBaseDefinition {
     return {
@@ -123,28 +162,35 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Graph-space geometry for this frame's socket anchors. */
   metrics(): FrameMetrics {
     const pos = this.previewPos ?? this.node.pos;
+    const uniform = this.getDefault("SocketRowHeight") as number;
+
+    // An inline default editor makes its row taller than the themed height, so
+    // the anchors follow what the rows actually measure. happy-dom reports 0.
+    const rowHeights = this._rows.map((row) => row.offsetHeight || uniform);
+
     return {
       x              : pos[0],
       y              : pos[1],
       width          : this.getDefault("Width") as number,
       headerHeight   : this.getDefault("HeaderHeight") as number,
-      socketRowHeight: this.getDefault("SocketRowHeight") as number,
+      socketRowHeight: uniform,
+      rowHeights,
     };
   }
 
   /** Graph-space bounds, sized from the socket rows; body height is excluded. */
   rect(): { x: number; y: number; width: number; height: number } {
     const m = this.metrics();
-    const rows = Math.max(
-      Object.keys(this.node.inputs).length,
-      Object.keys(this.node.outputs).length
-    );
-    return {
-      x     : m.x,
-      y     : m.y,
-      width : m.width,
-      height: m.headerHeight + rows * m.socketRowHeight,
-    };
+    const rows =
+      this._rows.length ||
+      Object.keys(this.node.inputs).length + Object.keys(this.node.outputs).length;
+
+    let height = m.headerHeight;
+    for (let i = 0; i < rows; i++) {
+      height += rowHeight(m, i);
+    }
+
+    return { x: m.x, y: m.y, width: m.width, height };
   }
 
   /** Writes the frame's graph-space position (preview during a drag) to CSS. */
@@ -183,12 +229,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._header.style.background = this.getDefault("HeaderBG") as string;
     this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
 
-    const rowFont = this.getDefault("SocketText") as CSSFont;
-    for (const row of this._rows) {
-      row.style.font = rowFont.genCSS();
-      row.style.color = rowFont.color;
-      row.style.lineHeight = m.socketRowHeight + "px";
-    }
+    this._styleRows();
   }
 
   /** Watches the node's own path for header changes; prop rows own their values. */
@@ -199,9 +240,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
-  /** Rebuilds header text and socket rows; used after a rename or type swap. */
+  /** Rebuilds header text, socket rows and prop rows; used after a rename, a
+   *  type swap, or a link change that reveals or hides an inline editor. */
   syncContents() {
     this._syncHeader();
+    this._rebuildSocketRows();
     this._rebuildPropRows();
   }
 
@@ -213,7 +256,81 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._header.title = this.node.getDescription() || this.node.getUIName();
   }
 
-  /** Rebuilds the editable prop/default rows; a connected input contributes none. */
+  private _styleRows() {
+    const font = this.getDefault("SocketText") as CSSFont;
+    const height = this.getDefault("SocketRowHeight") as number;
+
+    for (const row of this._rows) {
+      row.style.font = font.genCSS();
+      row.style.color = font.color;
+      row.style.lineHeight = height + "px";
+    }
+  }
+
+  /** The sockets the rows cover, and which of them carry an inline editor. */
+  private _rowSignature(inline: ReadonlySet<string>): string {
+    const parts = Object.keys(this.node.outputs).map((key) => `out:${key}`);
+    for (const key of Object.keys(this.node.inputs)) {
+      parts.push(`in:${key}${inline.has(key) ? "=" : ""}`);
+    }
+    return parts.join(",");
+  }
+
+  /** The inputs whose default is editable inline: unshadowed, and unconnected. */
+  private _inlineKeys(): Set<string> {
+    const keys = new Set<string>();
+    if (this.nodePath === "") {
+      return keys;
+    }
+
+    for (const key of Object.keys(this.node.inputs)) {
+      const sock = this.node.inputs[key];
+      if (sock.defaultProp !== undefined && sock.edges.length === 0 && !(key in this.node.props)) {
+        keys.add(key);
+      }
+    }
+    return keys;
+  }
+
+  /** Rebuilds the socket rows when the sockets or their inline editors change. */
+  private _rebuildSocketRows() {
+    const root = this._socketsRoot;
+    if (root === undefined) {
+      return;
+    }
+
+    const inline = this._inlineKeys();
+    const sig = this._rowSignature(inline);
+    if (sig === this._rowSig) {
+      return;
+    }
+    this._rowSig = sig;
+
+    // Each editor is removed through its own widget, so it tears down its path
+    // watches; dropping the row div around it would not.
+    for (const editor of this._editors) {
+      editor.remove();
+    }
+    this._editors = [];
+    for (const row of this._rows) {
+      row.remove();
+    }
+    this._rows = [];
+
+    for (const key of Object.keys(this.node.outputs)) {
+      this._rows.push(this._socketRow(key, "out", false));
+    }
+    for (const key of Object.keys(this.node.inputs)) {
+      this._rows.push(this._socketRow(key, "in", inline.has(key)));
+    }
+
+    for (const row of this._rows) {
+      root.appendChild(row);
+    }
+    this._styleRows();
+  }
+
+  /** Rebuilds the body's prop rows; an input's default belongs to its socket row. */
   private _rebuildPropRows() {
     const root = this._propsRoot;
     if (root === undefined) {
@@ -227,13 +344,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       return;
     }
 
-    for (const key of nodePropKeys(this.node)) {
-      if ((this.node.inputs[key]?.edges.length ?? 0) > 0) {
-        continue;
-      }
-      const path = `${this.nodePath}.props['${key}'].value`;
-      const socket = key in this.node.props ? undefined : this.node.inputs[key];
-      const row = propEditRow(this.ctx, key, path, socket);
+    for (const key of Object.keys(this.node.props)) {
+      const row = propEditRow(this.ctx, key, `${this.nodePath}.props['${key}'].value`);
       row.parentWidget = this._body!;
       root.appendChild(row);
     }
@@ -253,22 +365,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this.style.cursor = "move";
     this._wirePress(this);
 
-    const inKeys = Object.keys(this.node.inputs);
-    const outKeys = Object.keys(this.node.outputs);
-    const rows = Math.max(inKeys.length, outKeys.length);
-
-    for (let i = 0; i < rows; i++) {
-      const row = document.createElement("div");
-      // Positioned so each terminal dot can anchor to the frame's outer edge.
-      row.style.cssText =
-        `height: ${m.socketRowHeight}px; line-height: ${m.socketRowHeight}px; ` +
-        "display: flex; justify-content: space-between; padding: 0 4px; position: relative;";
-
-      row.appendChild(this._terminal(inKeys[i], "in"));
-      row.appendChild(this._terminal(outKeys[i], "out"));
-      this.shadow.appendChild(row);
-      this._rows.push(row);
-    }
+    this._socketsRoot = document.createElement("div");
+    this._socketsRoot.className = "nodeframe-sockets";
+    this.shadow.appendChild(this._socketsRoot);
 
     this._body = UIBase.createElement("container-x") as Container<CTX>;
     this._body.style.cursor = "auto";
@@ -282,6 +381,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._propsRoot.style.cssText =
       "display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;";
     this._body.shadow.appendChild(this._propsRoot);
+
+    this._rebuildSocketRows();
     this._rebuildPropRows();
 
     this.node.createUI(this._body);
@@ -294,25 +395,63 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return (this.shadow.querySelector(sel) as HTMLElement | null) ?? undefined;
   }
 
-  /** A terminal dot plus name, or an empty spacer where this side has no row. */
-  private _terminal(key: string | undefined, dir: SocketDir): HTMLSpanElement {
-    const span = document.createElement("span");
-    if (key === undefined) {
-      return span;
-    }
+  /** One socket's row: its terminal dot, plus an inline default editor where
+   *  the socket has one and its name where it does not. */
+  private _socketRow(key: string, dir: SocketDir, inline: boolean): HTMLDivElement {
+    const height = this.getDefault("SocketRowHeight") as number;
 
+    const row = document.createElement("div");
+    // Positioned so the terminal dot can anchor to the frame's outer edge.
+    row.style.cssText =
+      `min-height: ${height}px; display: flex; align-items: center; position: relative; ` +
+      `justify-content: ${dir === "in" ? "flex-start" : "flex-end"}; ` +
+      "gap: 4px; padding: 0 4px; box-sizing: border-box;";
+
+    const dot = this._terminalDot(key, dir);
+    const label = inline ? this._inlineEditor(key) : undefined;
+
+    if (dir === "in") {
+      row.appendChild(dot);
+      row.appendChild(label ?? this._terminalName(key));
+    } else {
+      row.appendChild(this._terminalName(key));
+      row.appendChild(dot);
+    }
+    return row;
+  }
+
+  private _terminalName(key: string): HTMLSpanElement {
+    const name = document.createElement("span");
+    name.textContent = key;
+    name.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
+    return name;
+  }
+
+  /** The editor for an input's default value, bound through the props datapath. */
+  private _inlineEditor(key: string): HTMLElement {
+    const path = `${this.nodePath}.props['${key}'].value`;
+    const row = propEditRow(this.ctx, key, path, this.node.inputs[key]);
+    row.parentWidget = this;
+    row.style.flex = "1 1 auto";
+    row.style.minWidth = "0";
+    this._editors.push(row);
+    return row;
+  }
+
+  private _terminalDot(key: string, dir: SocketDir): HTMLSpanElement {
     const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
+
     const dot = document.createElement("span");
     dot.className = "nodeframe-terminal";
     dot.dataset.socketKey = key;
     dot.dataset.socketDir = dir;
     dot.title = `${key} (${sock.type})`;
-    // Centered on the frame's outer edge, where socketAnchor and link-drop hit
+    // Centered on the frame's outer edge where socketAnchor and link-drop hit
     // testing place the terminal; -5px cancels the frame's 1px border.
     dot.style.cssText =
       "position: absolute; top: 50%; transform: translateY(-50%); " +
-      "width: 8px; height: 8px; border-radius: 50%; " +
+      "width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; " +
       `background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
 
     dot.addEventListener("pointerdown", (e: PointerEvent) => {
@@ -325,17 +464,20 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       this.onSocketDown(this, key, dir, e);
     });
 
-    const name = document.createElement("span");
-    name.textContent = key;
+    return dot;
+  }
 
-    if (dir === "in") {
-      span.appendChild(dot);
-      span.appendChild(name);
-    } else {
-      span.appendChild(name);
-      span.appendChild(dot);
+  /** Whether a press landed on one of the node's own widgets rather than the frame. */
+  private _onNodeWidget(e: PointerEvent): boolean {
+    for (const node of e.composedPath()) {
+      if (node === this._body) {
+        return true;
+      }
+      if (node instanceof HTMLElement && node.classList.contains("nodeeditor-prop-row")) {
+        return true;
+      }
     }
-    return span;
+    return false;
   }
 
   private _wirePress(handle: HTMLElement) {
@@ -348,8 +490,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       e.stopPropagation();
       this.onSelect?.(this, e);
 
-      // A press inside the body belongs to the node's own widgets.
-      if (this._body !== undefined && e.composedPath().includes(this._body)) {
+      if (this._onNodeWidget(e)) {
         return;
       }
 

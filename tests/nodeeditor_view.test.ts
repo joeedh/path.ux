@@ -191,10 +191,16 @@ test("socketAnchor lands on the frame edge at the socket's row", () => {
   expect(socketAnchor(m, "in", 1)).toEqual([100, 104]);
   expect(socketAnchor(m, "out", 0)).toEqual([240, 84]);
 
+  // A row carrying an inline editor is taller, and the rows after it shift down.
+  const tall = { ...m, rowHeights: [40, 20] };
+  expect(socketAnchor(tall, "in", 0)).toEqual([100, 94]);
+  expect(socketAnchor(tall, "in", 1)).toEqual([100, 124]);
+
+  // Every socket owns a row: the outputs first, then the inputs.
   const node = new ViewMath();
-  expect(socketRow(node, "in", "a")).toBe(0);
-  expect(socketRow(node, "in", "b")).toBe(1);
   expect(socketRow(node, "out", "out")).toBe(0);
+  expect(socketRow(node, "in", "a")).toBe(1);
+  expect(socketRow(node, "in", "b")).toBe(2);
   expect(socketRow(node, "in", "missing")).toBe(-1);
 });
 
@@ -242,7 +248,7 @@ test("a structural gesture inside a descended instance is refused through check"
   expect(verdict).toEqual({ ok: false, reason: REFUSAL });
 
   const before = [copy.pos[0], copy.pos[1]];
-  frame.onMoveCommit!(frame, 50, 60);
+  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
   expect([copy.pos[0], copy.pos[1]]).toEqual(before);
   expect(ctx.toolstack.length).toBe(0);
 });
@@ -257,7 +263,7 @@ test("a move commits through the default delegate as the MoveNodeOp", () => {
   view.setGraph(g, "graph");
 
   const frame = view.frames.get(src.id)!;
-  frame.onMoveCommit!(frame, 50, 60);
+  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
 
   expect([src.pos[0], src.pos[1]]).toEqual([50, 60]);
   expect(frame.style.left).toBe("50px");
@@ -285,11 +291,139 @@ test("an installed delegate receives the move and no op issues", () => {
   view.delegate = testDelegate;
 
   const frame = view.frames.get(src.id)!;
-  frame.onMoveCommit!(frame, 50, 60);
+  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
 
   expect(received).toEqual([
     { kind: "moveNode", graphPath: "graph", nodeId: src.id, x: 50, y: 60 },
   ]);
   expect([src.pos[0], src.pos[1]]).toEqual([0, 0]);
   expect(ctx.toolstack.length).toBe(0);
+});
+
+test("a group move commits as one moveNodes edit, undoable in a single step", () => {
+  const g = new Graph();
+  const a = new ViewSrc();
+  const b = new ViewSrc();
+  b.pos.loadXY(100, 0);
+  g.add(a);
+  g.add(b);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const frameA = view.frames.get(a.id)!;
+  const frameB = view.frames.get(b.id)!;
+  frameA.onMoveCommit!([
+    { frame: frameA, x: 10, y: 20 },
+    { frame: frameB, x: 110, y: 20 },
+  ]);
+
+  expect([a.pos[0], a.pos[1]]).toEqual([10, 20]);
+  expect([b.pos[0], b.pos[1]]).toEqual([110, 20]);
+  expect(ctx.toolstack.length).toBe(1);
+
+  ctx.toolstack.undo();
+  expect([a.pos[0], a.pos[1]]).toEqual([0, 0]);
+  expect([b.pos[0], b.pos[1]]).toEqual([100, 0]);
+});
+
+test("a press on a selected node keeps the selection; a click without a drag collapses it", () => {
+  const g = new Graph();
+  const a = new ViewSrc();
+  const b = new ViewSrc();
+  g.add(a);
+  g.add(b);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+
+  const frameA = view.frames.get(a.id)!;
+  const frameB = view.frames.get(b.id)!;
+
+  frameA.onSelect!(frameA, { shiftKey: false } as PointerEvent);
+  frameB.onSelect!(frameB, { shiftKey: true } as PointerEvent);
+  expect([...view.selection].sort()).toEqual([a.id, b.id].sort());
+
+  // The press that would start a drag leaves both selected.
+  frameA.onSelect!(frameA, { shiftKey: false } as PointerEvent);
+  expect(view.selection.size).toBe(2);
+
+  // Releasing without a drag makes it an ordinary click.
+  frameA.onMoveClick!(frameA);
+  expect([...view.selection]).toEqual([a.id]);
+});
+
+test("a shift press on a selected node defers the deselect until the release", () => {
+  const g = new Graph();
+  const a = new ViewSrc();
+  g.add(a);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+
+  const frame = view.frames.get(a.id)!;
+  frame.onSelect!(frame, { shiftKey: false } as PointerEvent);
+  frame.onSelect!(frame, { shiftKey: true } as PointerEvent);
+  expect(view.selection.has(a.id)).toBe(true);
+
+  frame.onMoveClick!(frame);
+  expect(view.selection.has(a.id)).toBe(false);
+});
+
+test("a link is selectable and delete severs it", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  const m = new ViewMath();
+  m.pos.loadXY(300, 0);
+  g.add(src);
+  g.add(m);
+  g.connect(src.outputs.value, m.inputs.a);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const ref = {
+    srcNode  : src.id,
+    srcSocket: "value",
+    dstNode  : m.id,
+    dstSocket: "a",
+  };
+  expect(view.selectedLinks()).toEqual([]);
+
+  view.selectLink(ref);
+  expect(view.selectedLinks()).toEqual([ref]);
+
+  view.deleteSelected();
+  expect(m.inputs.a.edges.length).toBe(0);
+  expect(ctx.toolstack.length).toBe(1);
+
+  ctx.toolstack.undo();
+  expect(m.inputs.a.edges.length).toBe(1);
+});
+
+test("selecting a link drops the node selection, and a vanished link leaves it", () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  const m = new ViewMath();
+  g.add(src);
+  g.add(m);
+  g.connect(src.outputs.value, m.inputs.a);
+
+  const view = makeView(makeCtx(g));
+  view.setGraph(g, "graph");
+
+  const frame = view.frames.get(src.id)!;
+  frame.onSelect!(frame, { shiftKey: false } as PointerEvent);
+  expect(view.selection.size).toBe(1);
+
+  const ref = { srcNode: src.id, srcSocket: "value", dstNode: m.id, dstSocket: "a" };
+  view.selectLink(ref);
+  expect(view.selection.size).toBe(0);
+  expect(view.linkSelection.size).toBe(1);
+
+  g.disconnect(src.outputs.value, m.inputs.a);
+  view.syncGraph();
+  expect(view.linkSelection.size).toBe(0);
 });

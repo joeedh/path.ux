@@ -2,7 +2,7 @@ import { ToolOp, UndoFlags } from "../../path-controller/toolsys/toolsys";
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { IContextBase } from "../../core/context_base";
-import type { NodeFrame } from "./nodeframe";
+import type { FrameMove, NodeFrame } from "./nodeframe";
 import type { NodeGraphView } from "./nodegraphview";
 
 /** A press that moved less than this in both axes counts as a click. */
@@ -28,26 +28,27 @@ function localPoint<CTX extends IContextBase>(
  */
 
 /**
- * Drags one node frame in graph space. Preview goes through
- * frame.previewPos; release commits through frame.onMoveCommit, and a
- * sub-move release (a plain click on the header) commits nothing.
+ * Drags node frames in graph space; the pressed frame leads and the rest come
+ * from the view's selection. Preview goes through each frame's previewPos, and
+ * release commits every frame in one call to the lead's onMoveCommit. A release
+ * within CLICK_SLOP_PX moves nothing and reports onMoveClick instead, which is
+ * where the view resolves a selection it deferred at press time.
  */
 export class NodeMoveModalOp<CTX extends IContextBase = IContextBase> extends ToolOp<
   {},
   {},
   ContextLike
 > {
-  private _frame: NodeFrame<CTX> | undefined;
+  private _frames: NodeFrame<CTX>[] = [];
+  private _bases: Vector2[] = [];
   private _startX = 0;
   private _startY = 0;
-  private _base = new Vector2();
+  private _moved = false;
 
-  constructor(frame?: NodeFrame<CTX>, e?: PointerEvent) {
+  constructor(frames?: readonly NodeFrame<CTX>[], e?: PointerEvent) {
     super();
-    this._frame = frame;
-    if (frame !== undefined) {
-      this._base.load(frame.node.pos);
-    }
+    this._frames = frames !== undefined ? [...frames] : [];
+    this._bases = this._frames.map((f) => new Vector2(f.node.pos));
     if (e !== undefined) {
       this._startX = e.clientX;
       this._startY = e.clientY;
@@ -67,17 +68,24 @@ export class NodeMoveModalOp<CTX extends IContextBase = IContextBase> extends To
   }
 
   on_pointermove(e: PointerEvent) {
-    const frame = this._frame;
-    if (frame === undefined) {
+    const lead = this._frames[0];
+    if (lead === undefined) {
       return;
     }
-    const s = frame.getScale();
-    frame.previewPos = new Vector2([
-      this._base[0] + (e.clientX - this._startX) / s,
-      this._base[1] + (e.clientY - this._startY) / s,
-    ]);
-    frame.syncPosition();
-    frame.onMovePreview?.(frame);
+
+    const dx = e.clientX - this._startX;
+    const dy = e.clientY - this._startY;
+    if (Math.abs(dx) >= CLICK_SLOP_PX || Math.abs(dy) >= CLICK_SLOP_PX) {
+      this._moved = true;
+    }
+
+    const s = lead.getScale();
+    for (let i = 0; i < this._frames.length; i++) {
+      const frame = this._frames[i];
+      frame.previewPos = new Vector2([this._bases[i][0] + dx / s, this._bases[i][1] + dy / s]);
+      frame.syncPosition();
+    }
+    lead.onMovePreview?.(this._frames);
   }
 
   on_pointerup(_e: PointerEvent) {
@@ -97,26 +105,49 @@ export class NodeMoveModalOp<CTX extends IContextBase = IContextBase> extends To
   }
 
   private _commit() {
-    const frame = this._frame;
-    this._frame = undefined;
-    if (frame !== undefined) {
+    const frames = this._frames;
+    const moved = this._moved;
+    this._frames = [];
+
+    const lead = frames[0];
+    const moves: FrameMove<CTX>[] = [];
+    for (const frame of frames) {
       const dropped = frame.previewPos;
       frame.previewPos = undefined;
-      if (dropped !== undefined) {
-        frame.onMoveCommit?.(frame, dropped[0], dropped[1]);
+      frame.style.opacity = "";
+      if (dropped !== undefined && moved) {
+        moves.push({ frame, x: dropped[0], y: dropped[1] });
+      } else {
+        frame.syncPosition();
+      }
+    }
+
+    if (lead !== undefined) {
+      if (moves.length > 0) {
+        lead.onMoveCommit?.(moves);
+      } else {
+        lead.onMoveClick?.(lead);
       }
     }
     this.modalEnd(false);
   }
 
   override modalEnd(was_cancelled?: boolean) {
-    const frame = this._frame;
-    this._frame = undefined;
-    if (frame !== undefined && frame.previewPos !== undefined) {
+    const frames = this._frames;
+    this._frames = [];
+
+    let reverted = false;
+    for (const frame of frames) {
+      if (frame.previewPos === undefined) {
+        continue;
+      }
       frame.previewPos = undefined;
       frame.syncPosition();
-      frame.onMovePreview?.(frame);
       frame.style.opacity = "";
+      reverted = true;
+    }
+    if (reverted) {
+      frames[0].onMovePreview?.(frames);
     }
     super.modalEnd(was_cancelled);
   }
