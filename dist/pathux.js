@@ -8059,7 +8059,7 @@ IDGen {
       }
     };
     if (!insideJest()) {
-      window.setInterval(() => {
+      const sweep = window.setInterval(() => {
         const bad = [];
         for (const promise2 of PendingTimeoutPromises) {
           if (promise2.bad) {
@@ -8077,6 +8077,7 @@ IDGen {
           }
         }
       }, 250);
+      sweep.unref?.();
     }
   }
 });
@@ -15547,6 +15548,12 @@ var init_toolprop = __esm({
         if (this.displayUnit === "undefined") {
           this.displayUnit = void 0;
         }
+        if (this.apiname === "undefined") {
+          this.apiname = void 0;
+        }
+        if (this.uiname === "undefined") {
+          this.uiname = void 0;
+        }
       }
     };
     ToolProperty.STRUCT = `
@@ -15554,7 +15561,7 @@ ToolProperty {
   apiname        : string | ""+this.apiname;
   type           : int;
   flag           : int;
-  subtype        : int;
+  subtype        : int | this.subtype ? this.subtype : 0;
   icon           : int;
   icon2          : int;
   baseUnit       : string | ""+this.baseUnit;
