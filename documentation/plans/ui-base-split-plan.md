@@ -400,5 +400,12 @@ code moved furthest.
       sliders, color pickers and the theme editor. Icons render, the File menu
       pops and tears down its modal on Escape, dock-panel tabs switch, and
       `getDPI` / `getZoom` / `getTotalRect` / `formatNumber` return correct
-      values over CDP. The example app registers no node editor area, so its
-      drag gestures were not exercised.
+      values over CDP.
+- [x] Node editor drag gestures, after switching an area to the example's
+      `node_editor` (`example/editors/nodeeditor/nodeeditor_tab.ts:60`). A node
+      drag re-routes its links and leaves exactly one `graph.move_node` on the
+      undo stack; undo restores the position. A box select over empty canvas
+      changes the selection and adds nothing to the stack. A socket-to-socket
+      drag commits one `graph.connect`. Escape mid-drag cancels: the node stays
+      put and no op lands, against a control run of the same drag without
+      Escape that moves the node and pushes one.
