@@ -756,7 +756,7 @@ import type { IContextBase } from "./context_base";
 import { CSSFont } from "./cssfont";
 
 export { CSSFont } from "./cssfont";
-import { DataPathSetOp } from "../pathux";
+import type { DataPathSetOp } from "../path-controller/controller/controller_ops";
 import { tagManager } from "./tagReRegister";
 import type { Screen } from "../screen/FrameManager";
 
