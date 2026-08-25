@@ -10,3 +10,5 @@
 [ ]: the height of nodes occasionally grows 2x then snaps back
 [ ]: add a delete hotkey in the node editor binding to the delete
      node toolop.
+[x]: split scripts/core/ui_base.ts into scripts/core/base/, per
+     documentation/plans/ui-base-split-plan.md.
