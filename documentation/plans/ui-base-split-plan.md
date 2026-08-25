@@ -80,27 +80,36 @@ load-bearing, as is each of the three big module-level blocks (icons 488, draw
    No two `export *`-ed modules may export the same name — an ambiguous name is
    silently dropped from the namespace object and would break `ui_base.xxx`
    consumers.
-7. The directory is `scripts/core/base/`, not `scripts/core/ui_base/`, so
+7. The public API must not grow. `pathux.ts:12` re-exports `ui_base` with
+   `export *`, so anything an `export *`-ed module exports lands in the `pathux`
+   barrel. Only the symbols `ui_base.ts` exports today may be exported from those
+   six modules. Every function created by the split — the delegated method bodies
+   and the new dedup helpers (`buildBoxCSS`, `walkStyleChain`, `withDrawSize`,
+   the free `getDPI`, `uiBaseNodeDef`) — is internal. Inside an `export *`-ed
+   module an internal helper simply stays unexported; a helper two modules share
+   belongs in an implementation module, never in an `export *`-ed one. Check the
+   barrel after each phase, not just the `.d.ts` diff for `ui_base`.
+8. The directory is `scripts/core/base/`, not `scripts/core/ui_base/`, so
    `./ui_base` cannot ambiguously resolve to either `ui_base.ts` or
    `ui_base/index.ts`. Do not add a `base/index.ts` either: `ui_base.ts` names
    each module explicitly, and a barrel would give the re-exported names a
    second path.
-8. Extracted modules sit one directory deeper than `ui_base.ts`, so every
+9. Extracted modules sit one directory deeper than `ui_base.ts`, so every
    relative specifier they inherit gains a `../` — `../ui_theme`,
    `../../path-controller/util/util`, `../../util/colorutils`,
    `../../config/const`. They import `theme`, `parsepx` and
    `ThemeRecord` from `../ui_theme` directly, never round-tripping through
    `../ui_base`.
-9. `export let _themeUpdateKey` (line 876) is a mutable binding. `export *`
-   re-exports live bindings, so `ui_base._themeUpdateKey` still tracks
-   `flagThemeUpdate()`. Confirm with a test that reads it after a theme change.
-10. `setTheme(DefaultTheme)` at line 207 runs at module init and must still
+10. `export let _themeUpdateKey` (line 876) is a mutable binding. `export *`
+    re-exports live bindings, so `ui_base._themeUpdateKey` still tracks
+    `flagThemeUpdate()`. Confirm with a test that reads it after a theme change.
+11. `setTheme(DefaultTheme)` at line 207 runs at module init and must still
     execute before anything reads `theme`. Keep it co-located with `setTheme` in
     `ui_theme_key.ts`, imported first from `ui_base.ts`.
-11. `ui_worker_shim.ts` must be a static import so its body runs before
+12. `ui_worker_shim.ts` must be a static import so its body runs before
     `class UIBase extends HTMLElement` evaluates. ESM depth-first evaluation
     guarantees this regardless of where the import line sits.
-12. Run `pnpm run format` after each step; the projection assumes
+13. Run `pnpm run format` after each step; the projection assumes
     prettier-formatted output at `printWidth: 100`.
 
 ### Two deliberate deviations from "nothing changes"
@@ -303,7 +312,12 @@ file is over 1200, spend R2, then R1.
 
 Take a baseline before step 0: run `pnpm run emitTypes` and copy `types/` aside
 as a pre-split snapshot. (A stale `.tmp-types/` may be sitting in the working
-tree from an earlier session — regenerate rather than trusting it.)
+tree from an earlier session — regenerate rather than trusting it.) Take a
+barrel baseline in the same commit — `pnpm run build`, then
+`node -e 'import("./dist/pathux.js").then(m => console.log(Object.keys(m).sort().join("\n")))'`
+into a file. The `.d.ts` diff cannot catch a leaked helper, because the leak
+arrives through an `export * from "./base/…"` line that reads as one unchanged
+line either way.
 
 After every step:
 
@@ -326,6 +340,11 @@ The declaration diff for `types/core/ui_base.d.ts` must be empty except for the
 one `_reflagGraph` field line. Anything else in that diff is an API-surface
 regression and has to be fixed before the step lands. A new
 `types/core/base/` directory appearing is expected and harmless.
+
+Re-dump the `dist/pathux.js` export names at the same points and diff against the
+barrel baseline. That diff must be empty — no name added, none lost. An added
+name means an internal helper is exported from an `export *`-ed module; unexport
+it, or move it into an implementation module, before the step lands.
 
 Two behavioral checks the test suite does not cover directly:
 
