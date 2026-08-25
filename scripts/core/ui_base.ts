@@ -22,12 +22,7 @@ export * from "./base/ui_base_types";
 export * from "./base/ui_theme_key";
 import { _themeUpdateKey } from "./base/ui_theme_key";
 
-//avoid circular module references
-let TextBox: (new (...args: unknown[]) => HTMLElement) | undefined = undefined;
-
-export function _setTextboxClass(cls: new (...args: unknown[]) => HTMLElement): void {
-  TextBox = cls;
-}
+export { _setTextboxClass } from "./base/ui_base_modal";
 
 import { Animator } from "./anim";
 import "./units";
@@ -1577,119 +1572,7 @@ export class UIBase<
   }
 
   _clipboardHotkeyInit(): void {
-    this._clipboard_over = false;
-    this._last_clipboard_keyevt = undefined;
-
-    this._clipboard_keystart = () => {
-      if (this._clipboard_events) {
-        return;
-      }
-
-      this._clipboard_events = true;
-      window.addEventListener("keydown", this._clipboard_keydown, {
-        capture: true,
-        passive: false,
-      });
-    };
-
-    this._clipboard_keyend = () => {
-      if (!this._clipboard_events) {
-        return;
-      }
-
-      this._clipboard_events = false;
-      window.removeEventListener("keydown", this._clipboard_keydown, { capture: true });
-    };
-
-    this._clipboard_keydown = (e: KeyboardEvent, internal_mode?: boolean) => {
-      if (!this.isConnected || !cconst.getClipboardData) {
-        this._clipboard_keyend();
-        return;
-      }
-
-      if (e === this._last_clipboard_keyevt || !this._clipboard_over) {
-        return;
-      }
-
-      /* the user's mouse cursor might not be over the element
-       *  if they've tabbed to it */
-
-      const is_copy =
-        e.keyCode === keymap["C"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-      const is_paste =
-        e.keyCode === keymap["V"] && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
-
-      if (!is_copy && !is_paste) {
-        //early out, remember that pickElement is highly expensive to run
-        return;
-      }
-
-      //pasteForAllChildren
-      if (!internal_mode) {
-        const screen = this.ctx.screen;
-        let elem: UIBase | undefined = screen.pickElement(screen.mpos[0], screen.mpos[1]);
-
-        let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
-        checkTree = checkTree || (is_copy && this.constructor.define().copyForAllChildren);
-
-        while (
-          checkTree &&
-          !(TextBox && elem instanceof TextBox) &&
-          elem !== this &&
-          elem?.parentWidget
-        ) {
-          console.log("  " + elem._id);
-
-          elem = elem.parentWidget;
-        }
-
-        console.warn("COLOR", this._id, elem ? elem._id : "none");
-
-        if (elem !== this) {
-          //remove global keyhandler
-          this._clipboard_keyend();
-          return;
-        }
-      } else {
-        console.warn("COLOR", this._id);
-      }
-
-      this._last_clipboard_keyevt = e;
-
-      if (is_copy) {
-        this.clipboardCopy();
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      if (is_paste) {
-        this.clipboardPaste();
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    const start = (e: Event) => {
-      this._clipboard_over = true;
-      this._clipboard_keystart();
-    };
-
-    const stop = (e: Event) => {
-      this._clipboard_over = false;
-      this._clipboard_keyend();
-    };
-
-    this.doOnce(() => {
-      this.tabIndex = 0; //enable self key events when element has focus
-    });
-
-    this.addEventListener("keydown", ((e: KeyboardEvent) => {
-      return this._clipboard_keydown(e, true);
-    }) as EventListener);
-
-    this.addEventListener("pointerover", start, { capture: true, passive: true });
-    this.addEventListener("pointerout", stop, { capture: true, passive: true });
-    this.addEventListener("focus", stop, { capture: true, passive: true });
+    modal.clipboardHotkeyInit(this);
   }
 
   /** set havePickClipboard to true in define() to
@@ -1994,89 +1877,7 @@ export class UIBase<
   }
 
   __updateDisable(val: boolean): void {
-    if (!!val === !!this.__disabledState) {
-      return;
-    }
-
-    this.__disabledState = !!val;
-
-    if (val && !this._disdata) {
-      const style: any = this.getDefault("disabled") ??
-        this.getDefault("internalDisabled") ?? {
-          "background-color": this.getDefault("DisabledBG"),
-        };
-
-      this._disdata = {
-        style   : {},
-        defaults: {},
-      };
-
-      for (const k in style) {
-        //save old style information
-        this._disdata.style[k] = this.saneStyle[k];
-        this._disdata.defaults[k] = this.default_overrides[k];
-
-        const v = style[k];
-
-        if (typeof v === "object" && v instanceof CSSFont) {
-          this.saneStyle[k] = style[k].genCSS();
-        } else if (typeof v === "object") {
-          continue;
-        } else {
-          this.saneStyle[k] = style[k];
-        }
-        this.default_overrides[k] = style[k];
-      }
-
-      this.__disabledState = !!val;
-      this.on_disabled();
-    } else if (!val && this._disdata) {
-      //load old style information
-      for (const k in this._disdata.style) {
-        this.saneStyle[k] = this._disdata.style[k];
-      }
-
-      for (const k in this._disdata.defaults) {
-        const v = this._disdata.defaults[k];
-
-        if (v === undefined) {
-          delete this.default_overrides[k];
-        } else {
-          this.default_overrides[k] = v;
-        }
-      }
-
-      //this.background = this.saneStyle["background-color"];
-      this._disdata = undefined;
-
-      this.__disabledState = !!val;
-      this.on_enabled();
-    }
-
-    this.__disabledState = !!val;
-
-    const visit = (n: UIBase | HTMLElement | Node) => {
-      if (n instanceof UIBase) {
-        let changed = !!n.__disabledState;
-
-        /*
-        if (val) {
-          n._parent_disabled_set = Math.max(n._parent_disabled_set + 1, 0);
-        } else {
-          n._parent_disabled_set = Math.max(n._parent_disabled_set - 1, 0);
-        }//*/
-
-        n.__updateDisable(n.disabled);
-
-        changed = changed !== !!n.__disabledState;
-        if (changed) {
-          n.update();
-          n.setCSS();
-        }
-      }
-    };
-
-    this._forEachChildWidget(visit);
+    modal.updateDisable(this, val);
   }
 
   on_disabled(): void {}
