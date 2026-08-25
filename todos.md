@@ -5,3 +5,8 @@
 [x]: holding shift and dragging a node should drag all selected nodes, if 
      the node is already selected it should not deselected if it dragged.
 [x]: you should be able to select node edges.
+[ ]: value sockets in the node editor in the example app 
+     constantly flash between 0 and the real value.
+[ ]: the height of nodes occasionally grows 2x then snaps back
+[ ]: add a delete hotkey in the node editor binding to the delete
+     node toolop.
