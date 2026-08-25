@@ -388,6 +388,13 @@ constraint flags, and implementation notes are documented in
 
 ## Popups and utilities
 
+The popup machinery lives in `scripts/screen/FrameManager_popup.ts`
+(`makePopup`, `clampPopup`, `addPopup`/`removePopup`, and the exported
+`PopupContainer` interface — a `Container` with an `end()` method, which
+is what `screen.popup` returns). Popup and menu z-order comes from the
+`ZIndexes` constants in `scripts/screen/constants.ts`. `screen.popup`
+is a thin delegate into that module.
+
 - `screen.popupMenu(menu, x, y)` — show a `Menu` widget.
 - `screen.popup(owner, x, y)` — an auto-dismissing popup container
   (closes on outside click / Escape), kept inside the window.

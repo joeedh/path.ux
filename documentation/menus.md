@@ -1,10 +1,13 @@
 # Menus
 
-Menus, dropdown boxes and the popup menu bar live in
-`scripts/widgets/ui_menu.ts`, re-exported from `pathux.js`. The module has three
-parts: the `Menu` widget (a popup list of items), the `DropBox` widget (a button
-that opens one), and `MenuWrangler` (the singleton that routes keyboard and
-pointer events to whichever menu is open).
+Menus, dropdown boxes and the popup menu bar live in `scripts/menu/`,
+re-exported from `pathux.js`. The folder has five files: `menu.ts` (the `Menu`
+widget, a popup list of items), `dropbox.ts` (the `DropBox` button that opens
+one), `wrangler.ts` (`MenuWrangler`, the singleton that routes keyboard and
+pointer events to whichever menu is open), `menu_ops.ts` (`createMenu`,
+`startMenu`, `openMenuPopup`) and `menu_types.ts` (the template types).
+`scripts/widgets/ui_menu.ts` remains as a deprecated re-export shim for old deep
+imports.
 
 <!-- toc -->
 
@@ -164,8 +167,7 @@ Set `searchMenuMode = true` on a dropbox to open it as a filterable list.
 known as data:
 
 ```js
-const menu = UIBase.createElement("menu-x");
-menu.ctx = this.ctx;
+const menu = newMenu("", this.ctx);
 menu._init();
 
 menu.addItem("Plain row", "plain");
@@ -184,7 +186,7 @@ startMenu(menu, x, y, false, 0);
   `Menu`. The id defaults to the item itself.
 - `addItemExtra(text, id, hotkey?, icon?, add?, tooltip?)` — the row form with an
   icon column and a right-aligned hotkey.
-- `seperator()`, `menu(title)`, `close()`, `start()`, `startFancy()`.
+- `seperator()`, `menu(title)`, `close()`, `start()`, `startSearch()`.
 - `on_select(id)` is the public callback. `_onselect(id)` is the internal one
   `createMenu` installs for template dispatch; both fire when both are set.
 - `_onclose` runs when the menu closes for any reason.
@@ -238,8 +240,10 @@ Set `window.DEBUG.menu = true` for the wrangler's push/pop/close tracing.
 
 A menu with more than 15 items opens in search mode on its own, unless
 `autoSearchMode` is set to `false`. Search mode adds a text box that filters rows
-by substring, fixes the list at 300 pixels tall and scrolls it. `startFancy()`
+by substring, fixes the list at 300 pixels tall and scrolls it. `startSearch()`
 enters it explicitly, and `DropBox.searchMenuMode` forces it for that dropbox.
+`startFancy()` is a deprecated alias of `startSearch()`; the old `start_fancy()`
+shim is removed.
 
 ## Tooltips
 
@@ -269,8 +273,9 @@ See `scripts/screen/area_base.ts`.
 
 ## Gotchas
 
-- A menu widget needs `ctx` before it is started. `createMenu` sets it; a
-  hand-built `menu-x` must be given `menu.ctx` and `_init()`.
+- A menu widget needs `ctx` before it is started. `createMenu` sets it, and
+  `newMenu(title, ctx?)` creates a named, unstarted `menu-x` with it set; a
+  hand-built menu still needs `_init()`.
 - Ids are not namespaced across a menu and its submenus. `createMenu` allocates
   integers from zero per menu, so supply explicit ids when a single `on_select`
   handles several menus.

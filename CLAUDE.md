@@ -381,10 +381,10 @@ leaving the old callback in place and `@deprecated`.
   `PropFlags` and `PackFlags` that steer the choice, the three slider styles, path
   prefixes, mass set, and undo.
 - [Menus](documentation/menus.md) — `Menu`, `DropBox` and the menu wrangler
-  (`scripts/widgets/ui_menu.ts`): menu templates (tool paths, separators,
-  custom entries, submenus), `container.menu`, `createMenu`/`startMenu` for
-  context menus, enum dropdowns, and `Editor.registerAppMenu` for the app
-  menu bar.
+  (`scripts/menu/`; `scripts/widgets/ui_menu.ts` is a deprecated re-export
+  shim): menu templates (tool paths, separators, custom entries, submenus),
+  `container.menu`, `createMenu`/`startMenu` for context menus, enum
+  dropdowns, and `Editor.registerAppMenu` for the app menu bar.
 - [ListBox](documentation/listbox.md) — scrollable single-select list, in
   either manual (`addItem`) or `DataList`-backed mode, with a typed `"change"`
   event and user-resizable corner grip.

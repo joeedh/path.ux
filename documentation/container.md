@@ -18,7 +18,8 @@
 # Containers and Property Binding
 
 `Container` (`scripts/core/ui.ts`) is the base class every layout widget extends
-(`RowFrame`, `ColumnFrame`, `Panel`, `ScreenArea` contents, and so on). Its build methods
+(`RowFrame`, `ColumnFrame`, `Panel`, `ScreenArea` contents, and so on; the row and
+column subclasses live in `scripts/core/ui_containers.ts`). Its build methods
 take a data path string rather than a value, and the widget they create binds itself to
 that path: it reads the path's `ToolProperty` for its type, UI name, tooltip, range, step,
 unit, enum items and icons, and it writes back through `api.setValue` so undo, mass-set and
