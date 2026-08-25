@@ -78,6 +78,7 @@ import * as anims from "./base/ui_base_anim";
 import * as css from "./base/ui_base_css";
 import * as datapath from "./base/ui_base_datapath";
 import * as pick from "./base/ui_base_pick";
+import * as dom from "./base/ui_base_dom";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -970,55 +971,7 @@ export class UIBase<
   }
 
   getElementById(id: string): HTMLElement | undefined {
-    let ret: HTMLElement | UIBase<CTX> | undefined;
-
-    const rec = (n: HTMLElement | UIBase<CTX>) => {
-      if (ret) {
-        return;
-      }
-
-      if (n.getAttribute("id") === id || n.id === id) {
-        ret = n;
-      }
-
-      if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
-        rec((n as unknown as { contents: HTMLElement }).contents);
-      } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
-        for (const k in (n as unknown as { tabs: Record<string, HTMLElement> }).tabs) {
-          const tab = (n as unknown as { tabs: Record<string, HTMLElement> }).tabs[k];
-
-          if (tab) {
-            rec(tab);
-          }
-        }
-      }
-
-      for (const n2 of n.childNodes) {
-        if (n2 instanceof HTMLElement) {
-          rec(n2);
-
-          if (ret) {
-            break;
-          }
-        }
-      }
-
-      if (n instanceof UIBase && n.shadow) {
-        for (const n2 of n.shadow.childNodes) {
-          if (n2 instanceof HTMLElement) {
-            rec(n2);
-
-            if (ret) {
-              break;
-            }
-          }
-        }
-      }
-    };
-
-    rec(this);
-
-    return ret as HTMLElement;
+    return dom.getElementById(this, id);
   }
 
   unhide(): void {
@@ -1026,16 +979,7 @@ export class UIBase<
   }
 
   findArea(): Area | undefined {
-    let p: any | undefined = this;
-
-    while (p) {
-      if (p[Symbol.IsAreaTag]) {
-        return p;
-      }
-      p = p.parentWidget;
-    }
-
-    return p;
+    return dom.findArea(this);
   }
 
   addEventListener<K extends keyof HTMLElementEventMap>(
@@ -1053,58 +997,7 @@ export class UIBase<
     cb: EventListenerOrEventListenerObject,
     options?: AddEventListenerOptions | boolean
   ): void {
-    if (cconst.DEBUG.domEventAddRemove) {
-      console.log("addEventListener", type, this._id, options);
-    }
-
-    const cb2 = (e: Event) => {
-      if (cconst.DEBUG.paranoidEvents) {
-        if (this.isDead()) {
-          this.removeEventListener(type, cb as any, options);
-          return;
-        }
-      }
-
-      if (cconst.DEBUG.domEvents) {
-        pathDebugEvent(e);
-      }
-
-      const area = this.findArea() as
-        | (UIBase & { push_ctx_active(): void; pop_ctx_active(): void })
-        | undefined;
-
-      if (area) {
-        area.push_ctx_active();
-        try {
-          const ret = (cb as EventListener).call(this as unknown as HTMLElement, e as any);
-          area.pop_ctx_active();
-          return ret;
-        } catch (error) {
-          area.pop_ctx_active();
-          throw error;
-        }
-      } else {
-        if (cconst.DEBUG.areaContextPushes) {
-          console.warn("Element is not part of an area?", this);
-        }
-
-        return (cb as EventListener).call(this as unknown as HTMLElement, e as any);
-      }
-    };
-
-    const cbAny = cb as any;
-    if (!cbAny[EventCBSymbol]) {
-      cbAny[EventCBSymbol] = new Map();
-    }
-
-    const key = calcElemCBKey(this, type, options);
-    cbAny[EventCBSymbol].set(key, cb2);
-
-    if (cconst.DEBUG.paranoidEvents) {
-      this.__cbs.push([type, cb2, options]);
-    }
-
-    return super.addEventListener(type, cb2, options as AddEventListenerOptions);
+    dom.addEventListener(this, type, cb, options);
   }
 
   removeEventListener(
@@ -1117,31 +1010,7 @@ export class UIBase<
     cb: ((this: HTMLElement, ev: HTMLElementEventMap[K]) => any) & EventCBHolder,
     options?: AddEventListenerOptions | boolean
   ): void {
-    if (cconst.DEBUG.paranoidEvents) {
-      for (const item of this.__cbs) {
-        if (item[0] == type && item[1] === cb._cb2 && "" + item[2] === "" + options) {
-          this.__cbs.remove(item);
-          break;
-        }
-      }
-    }
-
-    if (cconst.DEBUG.domEventAddRemove) {
-      console.log("removeEventListener", type, this._id, options);
-    }
-
-    const key = calcElemCBKey(this, type as string, options);
-
-    if (!cb[EventCBSymbol]?.has(key)) {
-      return super.removeEventListener(type as string, cb as any, options as EventListenerOptions);
-    } else {
-      const cb2 = cb[EventCBSymbol].get(key)!;
-
-      const ret = super.removeEventListener(type as string, cb2, options as EventListenerOptions);
-
-      cb[EventCBSymbol].delete(key);
-      return ret;
-    }
+    dom.removeEventListener(this, type as string, cb as EventListener, options);
   }
 
   connectedCallback(): void {}
@@ -1215,80 +1084,11 @@ export class UIBase<
   }
 
   replaceChild<T extends Node>(newnode: Node, oldnode: T): T {
-    for (let i = 0; i < this.childNodes.length; i++) {
-      if ((this.childNodes[i] as unknown as T) === oldnode) {
-        super.replaceChild(newnode, oldnode);
-        return oldnode;
-      }
-    }
-
-    for (let i = 0; i < this.shadow.childNodes.length; i++) {
-      if ((this.shadow.childNodes[i] as unknown as T) === oldnode) {
-        this.shadow.replaceChild(newnode, oldnode);
-        return oldnode;
-      }
-    }
-
-    console.error("Unknown child node", oldnode);
-    return oldnode;
+    return dom.replaceChild(this, newnode, oldnode);
   }
 
   swapWith(b: UIBase<CTX>): boolean {
-    let p1: Node | undefined | null | UIBase<CTX> = this.parentNode;
-    let p2: Node | undefined | null | UIBase<CTX> = b.parentNode;
-
-    if (p1 === this.parentWidget?.shadow || !p1) {
-      p1 = this.parentWidget;
-    }
-
-    if (p2 === b.parentWidget?.shadow || !p2) {
-      p2 = b.parentWidget;
-    }
-
-    if (!p1 || !p2) {
-      console.error("Invalid call to UIBase.prototype.swapWith", this, b, p1, p2);
-      return false;
-    }
-
-    const getPos = (
-      n: Node | UIBase,
-      p: (Node | UIBase) & { shadow?: ShadowRoot }
-    ): [number, Node] => {
-      let i = Array.prototype.indexOf.call(p.childNodes, n);
-
-      if (i < 0 && p.shadow) {
-        p = p.shadow;
-        i = Array.prototype.indexOf.call(p.childNodes, n);
-      }
-
-      return [i, p];
-    };
-
-    const [i1, n1] = getPos(this, p1);
-    const [i2, n2] = getPos(b, p2);
-
-    console.log("i1, i2, n1, n2", i1, i2, n1, n2);
-
-    const tmp1 = document.createElement("div");
-    const tmp2 = document.createElement("div");
-
-    n1.insertBefore(tmp1, this);
-    n2.insertBefore(tmp2, b);
-
-    //HTMLElement.prototype.remove.call(this);
-    //HTMLElement.prototype.remove.call(b);
-
-    n1.replaceChild(b, tmp1);
-    n2.replaceChild(this, tmp2);
-
-    const ptmp = this.parentWidget;
-    this.parentWidget = b.parentWidget;
-    b.parentWidget = ptmp;
-
-    tmp1.remove();
-    tmp2.remove();
-
-    return true;
+    return dom.swapWith(this, b);
   }
 
   traverse(
@@ -1297,65 +1097,11 @@ export class UIBase<
       | Set<new (...args: unknown[]) => UIBase>
       | (new (...args: unknown[]) => UIBase)[]
   ): Generator<UIBase> {
-    const this2: UIBase = this;
-
-    let classes: Iterable<new (...args: unknown[]) => UIBase>;
-
-    let is_set = type_or_set instanceof Set;
-    is_set = is_set || Array.isArray(type_or_set);
-
-    if (!is_set) {
-      classes = [type_or_set as new (...args: unknown[]) => UIBase];
-    } else {
-      classes = type_or_set as Iterable<new (...args: unknown[]) => UIBase>;
-    }
-
-    const visit = new Set<Node>();
-
-    return (function* () {
-      const stack: (Node & { shadow?: ShadowRoot })[] = [this2];
-
-      while (stack.length > 0) {
-        const n = stack.pop()!;
-
-        visit.add(n);
-
-        if (!n?.childNodes) {
-          continue;
-        }
-
-        for (const cls of classes) {
-          if (n instanceof cls) {
-            yield n;
-          }
-        }
-
-        for (const c of n.childNodes) {
-          if (!visit.has(c)) {
-            stack.push(c);
-          }
-        }
-
-        if (n.shadow) {
-          for (const c of n.shadow.childNodes) {
-            if (!visit.has(c)) {
-              stack.push(c);
-            }
-          }
-        }
-      }
-    })();
+    return dom.traverse(this, type_or_set);
   }
 
   appendChild<T extends Node>(child: T): T {
-    if (child instanceof UIBase) {
-      child.ctx = this.ctx;
-      child.parentWidget = this;
-
-      child.useDataPathUndo = this.useDataPathUndo;
-    }
-
-    return super.appendChild(child);
+    return dom.appendChild(this, child);
   }
 
   _clipboardHotkeyInit(): void {
@@ -1400,23 +1146,7 @@ export class UIBase<
   }
 
   remove(trigger_on_destroy = true): void {
-    if (this.tabIndex >= 0) {
-      this.regenTabOrder();
-    }
-
-    this.clearPathWatches();
-
-    super.remove();
-
-    if (trigger_on_destroy) {
-      this._ondestroy();
-    }
-
-    if (this.on_remove) {
-      this.on_remove();
-    }
-
-    this.parentWidget = undefined;
+    dom.remove(this, trigger_on_destroy);
   }
 
   /*
@@ -1428,20 +1158,7 @@ export class UIBase<
   on_remove(): void {}
 
   removeChild<T extends Node | UIBase<CTX>>(child: T, trigger_on_destroy = true): T {
-    super.removeChild(child);
-    if (child instanceof UIBase) {
-      child.clearPathWatches();
-    }
-    if (child instanceof UIBase && child.on_remove) {
-      child.on_remove();
-    }
-    if (trigger_on_destroy && child instanceof UIBase) {
-      child._ondestroy();
-    }
-    if (child instanceof UIBase) {
-      child.parentWidget = undefined;
-    }
-    return child;
+    return dom.removeChild(this, child as unknown as Node, trigger_on_destroy) as unknown as T;
   }
 
   flushUpdate(force = false): void {
