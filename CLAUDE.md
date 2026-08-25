@@ -361,13 +361,30 @@ catalog above.
 
 ## Conventions
 
- Do not add type annotations if types can be inferred
+ Do not add type annotations if types can be inferred from the assignment.
+ Annotate function parameters, return types where the type is non-obvious, and
+ variables whose inferred type would be too wide (`unknown` out of `JSON.parse`).
+ Leave `const x = 5`, `let s = "hello"` and the like to inference.
+ The same rule applies to agents delegated conversion work — tell them.
  TypeScript: `strictNullChecks: true` in all tsconfigs
  No `any`: except at `JSON.parse` boundaries, immediately narrowed
  Formatting: prettier (see `.prettierrc`)
  Tests: vitest for unit tests, Playwright for DOM widget tests
  Modules: ES modules (`"type": "module"` in package.json)
  Entry point: `scripts/pathux.ts` → re-exported from root `pathux.js`
+
+### The `pathux` barrel
+
+Splitting a module that `pathux.ts` re-exports must not add any name to the barrel
+unless the original module already exported it. `pathux.ts` re-exports with
+`export *`, so a name exported from any module in that chain silently becomes
+public API, and a `.d.ts` diff does not catch it — the leak arrives through an
+`export * from "…"` line that reads identically either way.
+
+Keep an internal helper unexported inside a module the barrel reaches. Put a
+helper two modules share in a module that is imported but never `export *`-ed.
+Verify by diffing the sorted `Object.keys()` of the built `dist/pathux.js`
+against a pre-refactor baseline.
 
 ## DOM events (future direction)
 
