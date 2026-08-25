@@ -1,42 +1,19 @@
 import { contextWrangler } from "../screen/area_wrangler";
 import type { Area } from "../screen/ScreenArea";
-export type DefaultTypes = string | number | boolean | CSSFont;
-export interface IUIBaseConstructor<T extends UIBase = UIBase> {
-  new (): T;
+import {
+  PackFlags,
+  type DefaultTypes,
+  type DisableData,
+  type IUIBaseConstructor,
+  type FormatNumberArgs,
+  type PickArgs,
+  type StyleRecord,
+  type ToolTipState,
+  type TotalRect,
+  type UIBaseDefinition,
+} from "./base/ui_base_types";
 
-  define(): UIBaseDefinition;
-  setDefault<T2 extends T>(element: T2): T2;
-}
-
-export const PackFlags = {
-  INHERIT_WIDTH : 1,
-  INHERIT_HEIGHT: 2,
-  VERTICAL      : 4,
-  USE_ICONS     : 8,
-  SMALL_ICON    : 16,
-  LARGE_ICON    : 32,
-
-  FORCE_PROP_LABELS         : 64, //force propeties (Container.prototype.prop()) to always have labels
-  PUT_FLAG_CHECKS_IN_COLUMNS: 128, //group flag property checkmarks in columns (doesn't apply to icons)
-
-  WRAP_CHECKBOXES: 256,
-
-  //internal flags
-  STRIP_HORIZ            : 512,
-  STRIP_VERT             : 1024,
-  STRIP                  : 512 | 1024,
-  SIMPLE_NUMSLIDERS      : 2048,
-  FORCE_ROLLER_SLIDER    : 4096,
-  HIDE_CHECK_MARKS       : 1 << 13,
-  NO_NUMSLIDER_TEXTBOX   : 1 << 14,
-  CUSTOM_ICON_SHEET      : 1 << 15,
-  CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
-  NO_UPDATE              : 1 << 16,
-  LABEL_ON_RIGHT         : 1 << 17,
-} as const;
-
-/* Helper for CSSStyleDeclaration string indexing, common throughout this file */
-type StyleRecord = CSSStyleDeclaration & Record<string, string>;
+export * from "./base/ui_base_types";
 
 //avoid circular module references
 let TextBox: (new (...args: unknown[]) => HTMLElement) | undefined = undefined;
@@ -932,73 +909,11 @@ if (typeof HTMLElement === "undefined") {
   window.PointerEvent = class PointerEvent {};
 }
 
-export interface UIBaseDefinition {
-  tagname: string;
-  style?: string;
-  subclassChecksTheme?: boolean;
-  havePickClipboard?: boolean;
-  pasteForAllChildren?: boolean;
-  copyForAllChildren?: boolean;
-  parentStyle?: string;
-  /**
-   * Theme keys this element consumes, mapped to `t.*` schema tokens (see
-   * theme_schema.ts). Read by the `gen:themes` build step; an element inherits
-   * its parent class's declarations, so only list keys it adds or overrides.
-   */
-  theme?: ThemeSchema;
-}
-
-interface DisableData {
-  style: Record<string, string>;
-  defaults: Record<string, unknown>;
-}
-
-interface ToolTipState {
-  start_timer: (e?: Event) => void;
-  stop_timer: (e?: Event) => void;
-  reset_timer: (e?: Event) => void;
-  start_events: string[];
-  reset_events: string[];
-  stop_events: string[];
-  handlers: Record<string, EventListener>;
-}
-
-export type EventIF = { [k: string]: Event };
-
 /** Bookkeeping stamped onto a listener so the wrapper it was registered as can be found again. */
 type EventCBHolder = {
   [EventCBSymbol]?: Map<string, EventListener>;
   _cb2?: EventListener;
 };
-
-/** Bounding box of a widget and every child widget, in client coordinates. */
-export interface TotalRect {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-/** Overrides for the unit/format state {@link UIBase.formatNumber} otherwise reads off the widget. */
-export interface FormatNumberArgs {
-  baseUnit?: string;
-  displayUnit?: string;
-  isInt?: boolean;
-  radix?: number;
-  decimalPlaces?: number;
-}
-
-/** Filters applied to a {@link UIBase.pickElement} / {@link UIBase.pickElements} hit test. */
-export interface PickArgs {
-  nodeclass?: IUIBaseConstructor;
-  excluded_classes?: IUIBaseConstructor[];
-  clip?: { pos: number[]; size: number[] };
-  mouseEvent?: MouseEvent | PointerEvent;
-}
 
 /**
  * ExtraEvents specifies custom events that are not part of HTMLElementEventMap,
