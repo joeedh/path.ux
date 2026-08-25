@@ -76,6 +76,7 @@ import * as tooltips from "./base/ui_base_tooltips";
 import * as modal from "./base/ui_base_modal";
 import * as anims from "./base/ui_base_anim";
 import * as css from "./base/ui_base_css";
+import * as datapath from "./base/ui_base_datapath";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -1732,53 +1733,7 @@ export class UIBase<
   }
 
   setPathValueUndo(ctx: CTX, path: string, val: unknown): void {
-    this.pathSocketUpdate(ctx, path);
-
-    const mass_set_path = this.getAttribute("mass_set_path");
-    const rdef = ctx.api.resolvePath(ctx, path)!;
-    const prop = rdef.prop!;
-
-    if (ctx.api.getValue(ctx, path) === val) {
-      return;
-    }
-
-    const toolstack = this.ctx.toolstack;
-    let head = toolstack.head;
-
-    const bad =
-      head === undefined ||
-      !(head instanceof getDataPathToolOp()) ||
-      head!.hashThis() !== head!.hash(mass_set_path, path, prop.type, this._id) ||
-      this.pathUndoGen !== this._lastPathUndoGen;
-
-    if (!bad) {
-      toolstack.undo(ctx);
-      const tool = head as InstanceType<ReturnType<typeof getDataPathToolOp>>;
-      tool.setValue(ctx, val, rdef.obj);
-      toolstack.redo(ctx);
-    } else {
-      this._lastPathUndoGen = this.pathUndoGen;
-
-      const toolop = getDataPathToolOp().create(
-        ctx,
-        path,
-        val,
-        this._id,
-        mass_set_path ?? undefined
-      );
-
-      /* getDataPathToolOp.create can return false in case of no-op paths. */
-      if (!toolop) {
-        return;
-      }
-
-      ctx.toolstack.execTool(this.ctx, toolop);
-      head = toolstack.head;
-    }
-
-    if (!head || (head as unknown as DataPathSetOp).hadError) {
-      throw new Error("toolpath error");
-    }
+    datapath.setPathValueUndo(this, ctx, path, val);
   }
 
   loadNumConstraints(
@@ -1786,124 +1741,15 @@ export class UIBase<
     dom: HTMLElement | UIBase<CTX> = this,
     onModifiedCallback?: (this: UIBase) => void
   ): void {
-    let modified = false;
-
-    if (!prop) {
-      let path;
-
-      if (dom.hasAttribute("datapath")) {
-        path = dom.getAttribute("datapath");
-      }
-
-      if (path === undefined && this.hasAttribute("datapath")) {
-        path = this.getAttribute("datapath");
-      }
-
-      if (typeof path === "string") {
-        prop = this.getPathMeta(this.ctx, path) ?? prop;
-      }
-    }
-
-    const loadAttr = (propkey: string, domkey: string, thiskey: string) => {
-      const anyThis = this as any;
-      const old = anyThis[thiskey];
-
-      if (dom.hasAttribute(domkey)) {
-        anyThis[thiskey] = parseFloat(dom.getAttribute(domkey)!);
-      } else if (prop) {
-        anyThis[thiskey] = prop[propkey as keyof typeof prop];
-      }
-
-      if (anyThis[thiskey] !== old) {
-        modified = true;
-      }
-    };
-
-    for (const key of NumberConstraints) {
-      const thiskey = key;
-      const domkey = key;
-
-      if (key === "range") {
-        //handled later
-        continue;
-      }
-
-      loadAttr(key, domkey, thiskey);
-    }
-
-    if (this.range === undefined) {
-      this.range = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
-    }
-
-    const oldmin = this.range[0];
-    const oldmax = this.range[1];
-
-    const range = prop ? prop.range : undefined;
-    if (range && !dom.hasAttribute("min")) {
-      this.range[0] = range[0];
-    } else if (dom.hasAttribute("min")) {
-      this.range[0] = parseFloat(dom.getAttribute("min")!);
-    }
-
-    if (range && !dom.hasAttribute("max")) {
-      this.range[1] = range[1];
-    } else if (dom.hasAttribute("max")) {
-      this.range[1] = parseFloat(dom.getAttribute("max")!);
-    }
-
-    if (this.range[0] !== oldmin || this.range[1] !== oldmax) {
-      modified = true;
-    }
-
-    const oldint = this.isInt;
-
-    if (dom.getAttribute("integer")) {
-      let val = dom.getAttribute("integer");
-      val = ("" + val).toLowerCase();
-
-      //handles anonymouse <numslider-x integer> case
-      this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-    } else if (prop && prop instanceof IntProperty) {
-      this.isInt = true;
-    }
-
-    if (!this.isInt !== !oldint) {
-      modified = true;
-    }
-
-    const oldedit = this.editAsBaseUnit;
-
-    if (this.editAsBaseUnit === undefined) {
-      if (prop && prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
-        this.editAsBaseUnit = true;
-      } else {
-        this.editAsBaseUnit = false;
-      }
-    }
-
-    if (!this.editAsBaseUnit !== !oldedit) {
-      modified = true;
-    }
-
-    if (modified) {
-      this.setCSS();
-
-      if (onModifiedCallback) {
-        onModifiedCallback.call(this);
-      }
-    }
+    datapath.loadNumConstraints(this, prop, dom, onModifiedCallback as () => void);
   }
 
   pushReportContext(key: string): void {
-    const api = this.ctx.api;
-    if (api.pushReportContext) {
-      api.pushReportContext(key);
-    }
+    datapath.pushReportContext(this, key);
   }
 
   popReportContext(): void {
-    const api = this.ctx.api;
-    if (api.popReportContext) api.popReportContext();
+    datapath.popReportContext(this);
   }
 
   pathSocketUpdate(ctx: unknown, path: string): this {
@@ -1912,76 +1758,15 @@ export class UIBase<
   }
 
   setPathValue<T = unknown>(ctx: CTX, path: string, val: T): void {
-    this.pathSocketUpdate(ctx, path);
-
-    if (this.useDataPathUndo) {
-      this.pushReportContext(this._reportCtxName);
-
-      try {
-        this.setPathValueUndo(ctx, path, val);
-      } catch (error) {
-        this.popReportContext();
-
-        if (!(error instanceof DataPathError)) {
-          throw error;
-        } else {
-          return;
-        }
-      }
-
-      this.popReportContext();
-      return;
-    }
-
-    this.pushReportContext(this._reportCtxName);
-
-    try {
-      if (this.hasAttribute("mass_set_path")) {
-        ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path")!, val);
-        ctx.api.setValue(ctx, path, val);
-      } else {
-        ctx.api.setValue(ctx, path, val);
-      }
-    } catch (error) {
-      this.popReportContext();
-
-      if (!(error instanceof DataPathError)) {
-        throw error;
-      }
-
-      return;
-    }
-
-    this.popReportContext();
+    datapath.setPathValue(this, ctx, path, val);
   }
 
   getPathMeta(ctx: CTX, path: string) {
-    this.pushReportContext(this._reportCtxName);
-    const ret = ctx.api.resolvePath(ctx, path);
-    this.popReportContext();
-
-    return ret !== undefined ? ret.prop : undefined;
+    return datapath.getPathMeta(this, ctx, path);
   }
 
   getPathDescription(ctx: CTX, path: string): string | undefined {
-    let ret;
-    this.pushReportContext(this._reportCtxName);
-
-    try {
-      ret = ctx.api.getDescription(ctx, path);
-    } catch (error) {
-      this.popReportContext();
-
-      if (error instanceof DataPathError) {
-        //console.warn("Invalid data path '" + path + "'");
-        return undefined;
-      } else {
-        throw error;
-      }
-    }
-
-    this.popReportContext();
-    return ret;
+    return datapath.getPathDescription(this, ctx, path);
   }
 
   // we never pass Screen with a <CTX> due to potential for
@@ -2149,79 +1934,26 @@ export class UIBase<
     pathOrAttr: string = "datapath",
     opts?: DataPathWatcherOpts & { onChange?: PathWatchCallback }
   ): DataPathWatcher<CTX> | undefined {
-    if (!this._ctx) {
-      return undefined;
-    }
-
-    const raw = this.hasAttribute(pathOrAttr) ? this.getAttribute(pathOrAttr)! : pathOrAttr;
-    const path = normalizePath(raw);
-
-    if (!path) {
-      return undefined;
-    }
-
-    for (const w of this._pathWatchers) {
-      if (w.path === path) {
-        return w;
-      }
-    }
-
-    const onChange: PathWatchCallback =
-      opts?.onChange ?? ((v, info) => this.updateFromPath(v, info));
-
-    /* ctx is passed as a getter so watchers survive context swaps */
-    const w = this._ctx.api.watch(() => this._ctx, path, onChange, opts);
-    this._pathWatchers.push(w);
-
-    return w;
+    return datapath.addPathWatch(this, pathOrAttr, opts);
   }
 
   /** Re-deliver every watched path's current value through
    * {@link updateFromPath}, bypassing the change diff. Call after a widget
    * stops gating reactions (e.g. a textbox losing focus). */
   refreshPathWatches(): void {
-    for (const w of this._pathWatchers) {
-      w.refresh();
-    }
+    datapath.refreshPathWatches(this);
   }
 
   /** Unsubscribe every path watcher; they are rebuilt (via {@link watchPath})
    * on the next `update()` while the widget stays in the tree. */
   clearPathWatches(): void {
-    for (const w of this._pathWatchers) {
-      w.remove();
-    }
-
-    this._pathWatchers.length = 0;
-    this._pathWatchInit = false;
+    datapath.clearPathWatches(this);
   }
 
   /** Lifecycle driver: (re)builds watchers once ctx/datapath are available and
    * runs the poll-mode compat bridge (see {@link UIBase.dataPathPolling}). */
   _updatePathWatchers(): void {
-    if (!this._ctx) {
-      return;
-    }
-
-    const dp = this.getAttribute("datapath");
-
-    if (!this._pathWatchInit || dp !== this._watchedDataPathAttr) {
-      this.clearPathWatches();
-
-      this._pathWatchInit = true;
-      this._watchedDataPathAttr = dp;
-
-      this.watchPath();
-    }
-
-    const poll =
-      this.pollDataPath === true || (UIBase.dataPathPolling && this.pollDataPath !== false);
-
-    if (poll) {
-      for (const w of this._pathWatchers) {
-        w.tick();
-      }
-    }
+    datapath.updatePathWatchers(this, UIBase.dataPathPolling);
   }
 
   //called regularly
