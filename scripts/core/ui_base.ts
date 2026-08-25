@@ -80,6 +80,7 @@ import * as datapath from "./base/ui_base_datapath";
 import * as pick from "./base/ui_base_pick";
 import * as dom from "./base/ui_base_dom";
 import * as graph from "./base/ui_base_graph";
+import * as props from "./base/ui_base_props";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -576,25 +577,11 @@ export class UIBase<
   }
 
   set parentWidget(val: UIBase<CTX> | undefined) {
-    if (val) {
-      this._wasAddedToNodeAtSomeTime = true;
-    }
-
-    this._parentWidget = val;
+    props.setParentWidget(this, val);
   }
 
   get useDataPathUndo() {
-    let p = this as UIBase<CTX> | undefined;
-
-    while (p) {
-      if (p._useDataPathUndo !== undefined) {
-        return p._useDataPathUndo;
-      }
-      p = p.parentWidget;
-    }
-
-    /* Default to true. */
-    return true;
+    return props.getUseDataPathUndo(this);
   }
 
   /**
@@ -612,36 +599,7 @@ export class UIBase<
   }
 
   set description(val) {
-    if (val === null) {
-      this._description = undefined;
-      return;
-    }
-
-    this._description = val;
-
-    if (val === undefined || val === null) {
-      return;
-    }
-
-    if (cconst.showPathsInToolTips && this.hasAttribute("datapath")) {
-      let s = "" + this._description;
-
-      const path = this.getAttribute("datapath");
-      s += "\n    path: " + path;
-
-      if (this.hasAttribute("mass_set_path")) {
-        const m = this.getAttribute("mass_set_path");
-        s += "\n    massSetPath: " + m;
-      }
-
-      this._description_final = s;
-    } else {
-      this._description_final = this._description;
-    }
-
-    if (cconst.useNativeToolTips) {
-      this.title = "" + this._description_final;
-    }
+    props.setDescription(this, val);
   }
 
   get background() {
@@ -649,24 +607,11 @@ export class UIBase<
   }
 
   set background(bg: string | undefined) {
-    this.__background = bg;
-
-    if (bg !== undefined) {
-      this.overrideDefault("background-color", bg, true);
-      this.saneStyle["backgroundColor"] = bg;
-    } else {
-      this.clearOverride("background-color");
-    }
+    props.setBackground(this, bg);
   }
 
   get disabled() {
-    //hrm, I could just propegate checks upward. . .
-
-    if (this.parentWidget?.disabled) {
-      return true;
-    }
-
-    return !!this._client_disabled_set || !!this._internalDisabled; // || !!this._parent_disabled_set;
+    return props.getDisabled(this);
   }
 
   set disabled(v) {
@@ -689,11 +634,7 @@ export class UIBase<
   }
 
   set ctx(c: CTX) {
-    this._ctx = c;
-
-    this._forEachChildWidget((n) => {
-      n.ctx = c;
-    });
+    props.setCtx(this, c);
   }
 
   get _reportCtxName() {
@@ -1155,13 +1096,7 @@ export class UIBase<
   on_resize(newsize: number[] | Vector2, oldsize?: number[] | Vector2, _set_key?: boolean): void {}
 
   toJSON(): Record<string, unknown> {
-    const ret: Record<string, unknown> = {};
-
-    if (this.hasAttribute("datapath")) {
-      ret.datapath = this.getAttribute("datapath");
-    }
-
-    return ret;
+    return props.toJSON(this);
   }
 
   loadJSON(obj: Record<string, unknown>): void {
@@ -1439,11 +1374,7 @@ export class UIBase<
   }
 
   getZoom(): number {
-    if (this.parentWidget !== undefined) {
-      return this.parentWidget.getZoom();
-    }
-
-    return 1.0;
+    return props.getZoom(this);
   }
 
   /**try to use this method
@@ -1452,11 +1383,7 @@ export class UIBase<
    for zoom ratio use getZoom()
    */
   getDPI(): number {
-    if (this.parentWidget !== undefined) {
-      return this.parentWidget.getDPI();
-    }
-
-    return UIBase.getDPI();
+    return props.getDPI(this, UIBase.getDPI);
   }
 
   /**
@@ -1484,18 +1411,12 @@ export class UIBase<
   }
 
   clearOverride(key: string, localOnly = false): this {
-    delete this.my_default_overrides[key];
-    if (!localOnly) delete this.default_overrides[key];
+    props.clearOverride(this, key, localOnly);
     return this;
   }
 
   overrideDefault(key: string, val: unknown, localOnly = false): this {
-    this.my_default_overrides[key] = val;
-
-    if (!localOnly) {
-      this.default_overrides[key] = val;
-    }
-
+    props.overrideDefault(this, key, val, localOnly);
     return this;
   }
 
@@ -1504,11 +1425,7 @@ export class UIBase<
   }
 
   overrideClassDefault(style: string, key: string, val: unknown): void {
-    if (!(style in this.class_default_overrides)) {
-      this.class_default_overrides[style] = {};
-    }
-
-    this.class_default_overrides[style][key] = val;
+    props.overrideClassDefault(this, style, key, val);
   }
 
   _doMobileDefault(key: string, val: unknown, obj?: Record<string, unknown>): unknown {
