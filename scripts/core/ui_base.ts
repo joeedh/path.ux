@@ -79,6 +79,7 @@ import * as registry from "./base/ui_element_registry";
 import * as themeLookup from "./base/ui_base_theme_lookup";
 import * as tooltips from "./base/ui_base_tooltips";
 import * as modal from "./base/ui_base_modal";
+import * as anims from "./base/ui_base_anim";
 import { EventCBSymbol, calcElemCBKey } from "./base/ui_element_registry";
 
 export { theme } from "./ui_theme";
@@ -2106,98 +2107,7 @@ export class UIBase<
     timems = 355,
     autoFocus = true
   ): void {
-    if (typeof colorIn === "string") {
-      colorIn = Array.from(css2color(colorIn));
-    }
-    const color = new Vector4().loadXYZW(colorIn[0], colorIn[1], colorIn[2], colorIn[3] ?? 1.0);
-    const csscolor = color2css(color);
-
-    if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
-      window.setTimeout(() => {
-        this.flash(color, rect_element, timems, autoFocus);
-      }, 100);
-
-      return;
-    } else if (this._flashtimer !== undefined) {
-      return;
-    }
-
-    //let rect = rect_element.getClientRects()[0];
-    const rect = rect_element.getBoundingClientRect();
-
-    if (rect === undefined) {
-      return;
-    }
-
-    //okay, dom apparently calls onchange() on .remove, so we have
-    //to put the timer code first to avoid loops
-    let timer: number | undefined;
-    let tick = 0;
-    const max = ~~(timems / 20);
-
-    const x = rect.x;
-    const y = rect.y;
-
-    const cb = () => {
-      if (timer === undefined) {
-        return;
-      }
-
-      const a = 1.0 - tick / max;
-      div.style["backgroundColor"] = color2css(color, a * a * 0.5);
-
-      if (tick > max) {
-        window.clearInterval(timer);
-
-        this._flashtimer = undefined;
-        this._flashcolor = undefined;
-        timer = undefined;
-
-        div.remove();
-
-        if (autoFocus) {
-          this._flash_focus();
-        }
-      }
-
-      tick++;
-    };
-
-    window.setTimeout(cb, 5);
-    timer = window.setInterval(cb, 20);
-    this._flashtimer = timer;
-
-    const div = document.createElement("div");
-
-    div.style["pointerEvents"] = "none";
-    div.tabIndex = -1;
-    div.style["zIndex"] = "900";
-    div.style["display"] = "float";
-    div.style["position"] = UIBase.PositionKey;
-    div.style["margin"] = "0px";
-    div.style["left"] = x + "px";
-    div.style["top"] = y + "px";
-
-    div.style["backgroundColor"] = color2css(color, 0.5);
-    div.style["width"] = rect.width + "px";
-    div.style["height"] = rect.height + "px";
-    div.setAttribute("class", "UIBaseFlash");
-
-    const screen = this.getScreen();
-    if (screen !== undefined) {
-      screen._enterPopupSafe();
-    }
-
-    document.body.appendChild(div);
-    if (autoFocus) {
-      this._flash_focus();
-    }
-
-    this._flashcolor = csscolor;
-
-    if (screen !== undefined) {
-      screen._exitPopupSafe();
-    }
+    anims.flash(this, colorIn, rect_element, timems, autoFocus);
   }
 
   destroy(): void {}
@@ -2964,129 +2874,11 @@ export class UIBase<
     _extra_handlers: Record<string, Function> | Keyframe[] | PropertyIndexedKeyframes | null = {},
     domAnimateOptions?: KeyframeAnimationOptions | number
   ): Animator {
-    const transform = new DOMMatrix(this.saneStyle["transform"]);
-
-    const update_trans = () => {
-      const t = transform;
-      const css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
-      this.saneStyle["transform"] = css;
-    };
-
-    let handlers: Record<string, Function> = {
-      background_get(this: UIBase) {
-        return css2color(this.background);
-      },
-
-      background_set(this: UIBase, c: string | number[]) {
-        if (typeof c !== "string") {
-          c = color2css(c);
-        }
-        this.background = c;
-      },
-
-      dx_get() {
-        return transform.m41;
-      },
-      dx_set(x: number) {
-        transform.m41 = x;
-        update_trans();
-      },
-
-      dy_get() {
-        return transform.m42;
-      },
-      dy_set(x: number) {
-        transform.m42 = x;
-        update_trans();
-      },
-    };
-
-    const pixkeys = [
-      "width",
-      "height",
-      "left",
-      "top",
-      "right",
-      "bottom",
-      "border-radius",
-      "border-width",
-      "margin",
-      "padding",
-      "margin-left",
-      "margin-right",
-      "margin-top",
-      "margin-bottom",
-      "padding-left",
-      "padding-right",
-      "padding-bottom",
-      "padding-top",
-    ];
-    handlers = Object.assign(handlers, _extra_handlers);
-
-    const makePixHandler = (k: string, k2: string) => {
-      handlers[k2 + "_get"] = () => {
-        const s = this.saneStyle[k];
-
-        if (s.endsWith("px")) {
-          return parsepx(s);
-        } else {
-          return 0.0;
-        }
-      };
-
-      handlers[k2 + "_set"] = (val: number | string) => {
-        this.saneStyle[k] = val + "px";
-      };
-    };
-
-    for (const k of pixkeys) {
-      if (!(k in handlers)) {
-        makePixHandler(k, `style.${k}`);
-        makePixHandler(k, `style["${k}"]`);
-        makePixHandler(k, `style['${k}']`);
-      }
-    }
-
-    const handler: ProxyHandler<UIBase> = {
-      get: (target: UIBase, key: string, receiver: unknown) => {
-        console.log(key, handlers[key + "_get"], handlers);
-
-        if (key + "_get" in handlers) {
-          return handlers[key + "_get"].call(target);
-        } else {
-          return (target as any)[key];
-        }
-      },
-      set: (target: UIBase, key: string, val: unknown, receiver: unknown) => {
-        console.log(key);
-
-        if (key + "_set" in handlers) {
-          handlers[key + "_set"].call(target, val);
-        } else {
-          (target as any)[key] = val;
-        }
-
-        return true;
-      },
-    };
-
-    const proxy = new Proxy(this, handler);
-    const anim = new Animator(proxy as any);
-
-    anim.onend = () => {
-      this._active_animations.remove(anim);
-    };
-
-    this._active_animations.push(anim);
-    return anim;
+    return anims.animateOld(this, _extra_handlers, domAnimateOptions);
   }
 
   abortAnimations(): void {
-    for (const anim of util.list(this._active_animations)) {
-      anim.end();
-    }
-
-    this._active_animations = [];
+    anims.abortAnimations(this);
   }
 }
 
