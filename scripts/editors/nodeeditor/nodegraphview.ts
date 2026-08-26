@@ -351,7 +351,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           const root = document.createElement("div");
           root.className = "nodeeditor-forwarded";
           body.shadow.appendChild(root);
-          buildForwardedUI(root, this.ctx, f.node as GroupNode, nodePath);
+          buildForwardedUI(root, this.ctx, f.node as GroupNode, nodePath, body.inherit_packflag);
         };
       } else {
         // A group instance's editable values are its forwarded rows above.
@@ -361,6 +361,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.parentWidget = this.panzoom;
       this.panzoom.appendChild(frame);
       frame.ctx = this.ctx;
+      frame.inherit_packflag |= this.inherit_packflag;
       frame._init();
       this.frames.set(node.id, frame);
     }

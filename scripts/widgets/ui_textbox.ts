@@ -110,23 +110,6 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this.setAttribute("start-selected", v ? "true" : "false");
   }
 
-  /** realtime dom attribute getter, defaults to true in absence of attribute*/
-  get realtime() {
-    let ret = this.getAttribute("realtime");
-
-    if (!ret) {
-      return true;
-    }
-
-    ret = ret.toLowerCase().trim();
-
-    return ret === "yes" || ret === "true" || ret === "on";
-  }
-
-  set realtime(val: boolean) {
-    this.setAttribute("realtime", val ? "true" : "false");
-  }
-
   get isModal() {
     let ret = this.getAttribute("modal");
 

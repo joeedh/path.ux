@@ -7,8 +7,8 @@ import "../../widgets/ui_textbox";
 import "../../menu/menu";
 import "../../menu/dropbox";
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
-import { UIBase } from "../../core/ui_base";
-import type { Container } from "../../core/ui";
+import { PackFlags, UIBase } from "../../core/ui_base";
+import { Container } from "../../core/ui";
 import type { IContextBase } from "../../core/context_base";
 import { Graph } from "../../graph/graph";
 import { Node as GraphNode, nodePropKeys, nodePropTarget } from "../../graph/node";
@@ -99,7 +99,8 @@ export function buildForwardedUI(
   root: HTMLElement,
   ctx: IContextBase,
   node: GroupNode,
-  nodePath: string
+  nodePath: string,
+  inherit_packflag: number
 ): void {
   for (const row of forwardedRows(node, nodePath)) {
     if (row.state !== "ok") {
@@ -107,19 +108,29 @@ export function buildForwardedUI(
     }
 
     if (row.path !== undefined) {
-      root.appendChild(propEditRow(ctx, row.label, row.path, row.socket));
+      const propRow = propEditRow(ctx, row.label, row.path, inherit_packflag, row.socket);
+      if (propRow) {
+        propRow.inherit_packflag |= inherit_packflag;
+      }
+      root.appendChild(propRow);
       continue;
     }
 
     const target = row.target!;
     if (target instanceof GroupNode) {
-      buildForwardedUI(root, ctx, target, `${nodePath}.group.nodes[${JSON.stringify(target.id)}]`);
+      buildForwardedUI(
+        root,
+        ctx,
+        target,
+        `${nodePath}.group.nodes[${JSON.stringify(target.id)}]`,
+        inherit_packflag
+      );
       continue;
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
       const socket = key in target.props ? undefined : target.inputs[key];
-      root.appendChild(propEditRow(ctx, key, path, socket));
+      root.appendChild(propEditRow(ctx, key, path, inherit_packflag, socket));
     }
   }
 }
@@ -134,9 +145,11 @@ export function propEditRow<CTX extends IContextBase>(
   ctx: CTX,
   label: string,
   path: string,
+  inherit_packflag: number,
   socket?: NodeSocketBase
 ): Container<CTX> {
   const row = UIBase.createElement("container-x") as Container<CTX>;
+  row.inherit_packflag |= inherit_packflag;
   row.ctx = ctx;
   row._init();
   // init writes the class attribute, so the marker class is added after it.

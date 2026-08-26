@@ -1,6 +1,6 @@
 import nstructjs from "../../path-controller/util/struct";
 import type { StructReader } from "../../util/nstructjs";
-import { UIBase } from "../../core/ui_base";
+import { PackFlags, UIBase } from "../../core/ui_base";
 import type { Container } from "../../core/ui";
 import type { ColumnFrame } from "../../core/ui_containers";
 import { IContextBase } from "../../core/context_base";
@@ -76,6 +76,13 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     this.view.parentWidget = center;
     center.shadow.appendChild(this.view);
     this.view.ctx = this.ctx;
+
+    // packflags must be assigned prior to init()
+    if (!this.realtime) {
+      this.view.inherit_packflag |= PackFlags.NO_REALTIME;
+      this.view.packflag |= PackFlags.NO_REALTIME;
+    }
+
     this.view._init();
     this.view.style.flexGrow = "1";
   }

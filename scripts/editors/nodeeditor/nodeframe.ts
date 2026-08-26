@@ -364,8 +364,14 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
 
     for (const key of Object.keys(this.node.props)) {
-      const row = propEditRow(this.ctx, key, `${this.nodePath}.props['${key}'].value`);
+      const row = propEditRow(
+        this.ctx,
+        key,
+        `${this.nodePath}.props['${key}'].value`,
+        this.inherit_packflag
+      );
       row.parentWidget = this._body!;
+      row.packflag |= this.inherit_packflag;
       root.appendChild(row);
     }
   }
@@ -449,10 +455,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** The editor for an input's default value, bound through the props datapath. */
   private _inlineEditor(key: string): HTMLElement {
     const path = `${this.nodePath}.props['${key}'].value`;
-    const row = propEditRow(this.ctx, key, path, this.node.inputs[key]);
+    const row = propEditRow(this.ctx, key, path, this.inherit_packflag, this.node.inputs[key]);
     row.parentWidget = this;
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
+    row.packflag |= this.inherit_packflag;
     this._editors.push(row);
     return row;
   }

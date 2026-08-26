@@ -397,7 +397,7 @@ test("editing a forwarded property on an instance materializes the override", as
 
   const ctx = makeCtx(host);
   const root = document.createElement("div");
-  buildForwardedUI(root, ctx, grp, `graph.nodes[${JSON.stringify(grp.id)}]`);
+  buildForwardedUI(root, ctx, grp, `graph.nodes[${JSON.stringify(grp.id)}]`, 0);
 
   // The row hosts a real prop editor bound to the instance-side value path.
   const row = root.querySelector(".nodeeditor-prop-row") as UIBase;

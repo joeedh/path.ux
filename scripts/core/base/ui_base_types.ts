@@ -36,6 +36,9 @@ export const PackFlags = {
   CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
   NO_UPDATE              : 1 << 16,
   LABEL_ON_RIGHT         : 1 << 17,
+  // do not flush change events in modal paths such as
+  // e.g. numsliders, text boxes, etc.
+  NO_REALTIME            : 1 << 18,
 } as const;
 
 /* Helper for CSSStyleDeclaration string indexing, common throughout this file */

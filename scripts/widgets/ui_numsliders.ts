@@ -629,7 +629,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
           dvalue = Math.pow(Math.abs(dvalue), expRate) * dsign;
         }
 
-        this.value = startvalue + dvalue;
+        const realtime = this.realtime;
+
+        // we will fire on_change ourselves in a bit
+        this.setValue(startvalue + dvalue, false, realtime, true);
 
         /*
         if (e.shiftKey) {
@@ -643,7 +646,9 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
         this.updateWidth();
         this._redraw(false);
-        fire();
+        if (this.realtime) {
+          fire();
+        }
       },
 
       on_pointerup: (e: PointerEvent) => {
@@ -651,6 +656,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
         this.undoBreakPoint();
         cancel(false);
+        fire();
 
         e.preventDefault();
         e.stopPropagation();
@@ -682,7 +688,12 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       this._pressed = false;
 
       if (restore_value) {
-        this.value = startvalue;
+        this.setValue(startvalue, true, true, true);
+      } else if (!this.realtime) {
+        this.setValue(this.value, true, true, true);
+      }
+
+      if (!this.realtime || restore_value) {
         this.updateWidth();
         fire();
       }
@@ -1112,14 +1123,14 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     };
   }
 
-  setValue(val: number, fire_onchange = true, setDataPath = true) {
+  setValue(val: number, fire_onchange = true, setDataPath = true, force = false) {
     val = Math.min(Math.max(val, this.range![0]), this.range![1]);
 
     if (this.isInt) {
       val = Math.floor(val);
     }
 
-    if (this._value !== val) {
+    if (force || this._value !== val) {
       this._value = val;
       this._redraw();
 
@@ -1158,7 +1169,7 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     }
   }
 
-  _setFromMouse(e: PointerEvent) {
+  _setFromMouse(e: PointerEvent, isDragging?: boolean) {
     const rect = this.getClientRects()[0];
     if (rect === undefined) {
       return;
@@ -1168,7 +1179,8 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     const dpi = UIBase.getDPI();
 
     const val = this._invertButtonX(x * dpi);
-    this.value = val;
+    const fire = !isDragging || this.realtime;
+    this.setValue(val, fire, fire);
   }
 
   _startModal(e: PointerEvent | undefined) {
@@ -1195,11 +1207,15 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
 
       this.popModal();
       handlers = undefined;
+
+      if (!this.realtime) {
+        this.setValue(this._value, true, true, true);
+      }
     };
 
     handlers = {
       pointermove: (e: PointerEvent) => {
-        this._setFromMouse(e);
+        this._setFromMouse(e, true);
       },
 
       pointerover : (e: PointerEvent) => {},
@@ -1759,15 +1775,7 @@ export class SliderWithTextbox<
   }
 
   get realTimeTextBox() {
-    let ret = this.getAttribute("realtime");
-
-    if (!ret) {
-      return false;
-    }
-
-    ret = ret.toLowerCase().trim();
-
-    return ret === "true" || ret === "on" || ret === "yes";
+    return this.realtime;
   }
 
   set realTimeTextBox(val) {
@@ -1815,11 +1823,16 @@ export class SliderWithTextbox<
     }
 
     const strip = this.container.row();
+
     //strip.style['justify-content'] = 'space-between';
     strip.add(this.numslider);
 
     const textbox = this._textbox;
     this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
+
+    // propagate pack flags
+    this.numslider.packflag = this.packflag & ~ui_base.PackFlags.NO_UPDATE;
+    textbox.packflag = this.packflag & ~ui_base.PackFlags.NO_UPDATE;
 
     const apply_textbox = () => {
       const text = textbox.text as unknown as string;
@@ -1978,6 +1991,10 @@ export class SliderWithTextbox<
 
     updateSliderFromDom(this, this.numslider);
     updateSliderFromDom(this, this._textbox);
+
+    // propagate pack flags
+    this.numslider.packflag = this.packflag & ~ui_base.PackFlags.NO_UPDATE;
+    this._textbox.packflag = this.packflag & ~ui_base.PackFlags.NO_UPDATE;
 
     if (redraw) {
       this.setCSS();

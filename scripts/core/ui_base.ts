@@ -2,15 +2,16 @@
 import "./base/ui_worker_shim";
 import { getDPI } from "./base/ui_base_dpi";
 import type { Area } from "../screen/ScreenArea";
-import type {
-  DefaultTypes,
-  DisableData,
-  IUIBaseConstructor,
-  FormatNumberArgs,
-  PickArgs,
-  ToolTipState,
-  TotalRect,
-  UIBaseDefinition,
+import {
+  type DefaultTypes,
+  type DisableData,
+  type IUIBaseConstructor,
+  type FormatNumberArgs,
+  type PickArgs,
+  type ToolTipState,
+  type TotalRect,
+  type UIBaseDefinition,
+  PackFlags,
 } from "./base/ui_base_types";
 
 export * from "./base/ui_base_types";
@@ -276,6 +277,45 @@ export class UIBase<
 
   /** Returns previous icon flags */
   useIcons?: (bool_or_icon_number?: boolean | number) => number;
+
+  /**
+   * Should the widget update data during modal events, e.g. numslider dragging
+   * or text editing.
+   */
+  get realtime() {
+    let ret = this.getAttribute("realtime");
+
+    if (!ret) {
+      // see if we have a packflag level no_realtime flag
+      if (this.packflag & PackFlags.NO_REALTIME) {
+        return false;
+      }
+
+      // do we have a no_realtime flag on the datapath prop's flags?
+      const datapath = this.getAttribute("datapath");
+      if (datapath) {
+        const prop = this.getPathMeta(this.ctx, datapath);
+        if (prop && prop.flag & toolprop.PropFlags.NO_REALTIME) {
+          return false;
+        }
+      }
+
+      // default to true
+      return true;
+    }
+
+    ret = ret.toLowerCase().trim();
+
+    return ret === "yes" || ret === "true" || ret === "on";
+  }
+
+  set realtime(val: boolean) {
+    this.setAttribute("realtime", val ? "true" : "false");
+  }
+
+  clearRealtimeOverride(): void {
+    this.removeAttribute("realtime");
+  }
 
   graphExec(): void {
     graph.graphExec(this);
