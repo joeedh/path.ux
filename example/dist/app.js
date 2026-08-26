@@ -438,7 +438,7 @@ var init_ui_base_types = __esm({
       //custom icon sheet bits are shifted to here
       NO_UPDATE: 1 << 16,
       LABEL_ON_RIGHT: 1 << 17,
-      // do not flush change events in modal paths such as 
+      // do not flush change events in modal paths such as
       // e.g. numsliders, text boxes, etc.
       NO_REALTIME: 1 << 18
     };
@@ -13980,7 +13980,7 @@ var init_toolprop_abstract = __esm({
       FORCE_ENUM_CHECKBOXES: 1 << 16,
       NO_DEFAULT: 1 << 17,
       // ux widgets should not update the prop in real time during e.g.
-      // sliding, text editing, etc.
+      // sliding, text editing, etc.  Currently untested.
       NO_REALTIME: 1 << 18
     };
     ToolPropertyIF = class {
@@ -31477,7 +31477,7 @@ var init_ui_base = __esm({
       static graphNodeDef = EventNode.register(this, uiBaseNodeDef);
       /** Returns previous icon flags */
       useIcons;
-      /** 
+      /**
        * Should the widget update data during modal events, e.g. numslider dragging
        * or text editing.
        */
@@ -64128,7 +64128,6 @@ var TextBox2 = class extends TextBoxBase {
     };
     this.shadow.appendChild(this.dom);
     this.dom.addEventListener("focus", (e) => {
-      console.log("Textbox focus", this.isModal);
       this._focus = 1;
       if (this.isModal) {
         this._startModal();
@@ -64136,7 +64135,6 @@ var TextBox2 = class extends TextBoxBase {
       }
     });
     this.dom.addEventListener("blur", (e) => {
-      console.log("Textbox blur");
       this._focus = 0;
       if (this._modal) {
         this._endModal(true);
@@ -64167,12 +64165,10 @@ var TextBox2 = class extends TextBoxBase {
     if (this.startSelected) {
       this.select();
     }
-    console.warn("textbox modal");
     if (this._modal) {
       this._endModal(true);
     }
     this._editing = true;
-    let ignore = 0;
     const finish = (ok) => {
       this._endModal(ok);
     };
@@ -64186,12 +64182,6 @@ var TextBox2 = class extends TextBoxBase {
           finish(false);
           break;
       }
-      return;
-      if (ignore) return;
-      const e2 = new KeyboardEvent(e.type, e);
-      ignore = 1;
-      this.dom.dispatchEvent(e2);
-      ignore = 0;
     };
     this._modal = true;
     this.pushModal(
@@ -64204,7 +64194,6 @@ var TextBox2 = class extends TextBoxBase {
         on_keyup: keydown,
         on_mousedown: (e) => {
           e.stopPropagation();
-          console.log("mouse down", e, e.x, e.y);
         }
       },
       false
@@ -64216,7 +64205,6 @@ var TextBox2 = class extends TextBoxBase {
     return this._editing;
   }
   _endModal(ok) {
-    console.log("textbox end modal");
     this._editing = false;
     this._modal = false;
     this.popModal();
@@ -64225,6 +64213,9 @@ var TextBox2 = class extends TextBoxBase {
       this.onend(ok);
     } else {
       this._updatePathVal(this.dom.value);
+    }
+    if (this.on_change) {
+      this.on_change(this.dom.value);
     }
     this.blur();
   }
@@ -64425,7 +64416,6 @@ var TextBox2 = class extends TextBoxBase {
   _updatePathVal(text2) {
     if (this.hasAttribute("datapath") && this.ctx !== void 0) {
       const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      console.log(prop);
       if (prop) {
         this._prop_update(prop, text2);
       }
@@ -78674,7 +78664,13 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
     }
     const target = row.target;
     if (target instanceof GroupNode) {
-      buildForwardedUI(root, ctx, target, `${nodePath}.group.nodes[${JSON.stringify(target.id)}]`, inherit_packflag);
+      buildForwardedUI(
+        root,
+        ctx,
+        target,
+        `${nodePath}.group.nodes[${JSON.stringify(target.id)}]`,
+        inherit_packflag
+      );
       continue;
     }
     for (const key of nodePropKeys(target)) {
@@ -79069,7 +79065,12 @@ var NodeFrame = class extends Container3 {
       return;
     }
     for (const key of Object.keys(this.node.props)) {
-      const row = propEditRow(this.ctx, key, `${this.nodePath}.props['${key}'].value`, this.inherit_packflag);
+      const row = propEditRow(
+        this.ctx,
+        key,
+        `${this.nodePath}.props['${key}'].value`,
+        this.inherit_packflag
+      );
       row.parentWidget = this._body;
       row.packflag |= this.inherit_packflag;
       root.appendChild(row);

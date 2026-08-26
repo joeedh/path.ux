@@ -33,6 +33,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   _had_error = false;
   _modal: unknown = undefined;
   _focus = 0;
+  _startValue = "";
   onend?: (ok: boolean) => void;
   accessor radix = 16;
 
@@ -74,30 +75,42 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this.shadow.appendChild(this.dom);
 
     this.dom.addEventListener("focus", (e: Event) => {
-      console.log("Textbox focus", this.isModal);
-
       this._focus = 1;
 
       if (this.isModal) {
         this._startModal();
         this.setCSS();
+      } else {
+        this._startValue = this.dom.value;
       }
     });
 
     this.dom.addEventListener("blur", (e: Event) => {
-      console.log("Textbox blur");
-
       this._focus = 0;
 
       if (this._modal) {
         this._endModal(true);
         this.setCSS();
+      } else if (this.revertOnAbort) {
+        this.dom.value = this._startValue;
+        this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._startValue);
+        this.on_change?.(this._startValue);
       }
 
       /* re-deliver any path change that arrived (and was ignored) while
        * the textbox had focus */
       this.refreshPathWatches();
     });
+  }
+
+  /** Whether to revert to the original value on abort (escape key). */
+  get revertOnAbort() {
+    const value = this.getAttribute("revert-on-abort");
+    return value === "true" || value === "yes" || value === "on";
+  }
+
+  set revertOnAbort(value: boolean) {
+    this.setAttribute("revert-on-abort", value ? "true" : "false");
   }
 
   get startSelected() {
@@ -131,15 +144,11 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this.select();
     }
 
-    console.warn("textbox modal");
-
     if (this._modal) {
       this._endModal(true);
     }
 
     this._editing = true;
-
-    let ignore = 0;
 
     const finish = (ok: boolean) => {
       this._endModal(ok);
@@ -153,18 +162,9 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
           finish(true);
           break;
         case keymap.Escape:
-          finish(false);
+          finish(!this.revertOnAbort);
           break;
       }
-
-      return;
-      if (ignore) return;
-
-      const e2 = new KeyboardEvent(e.type, e);
-
-      ignore = 1;
-      this.dom.dispatchEvent(e2);
-      ignore = 0;
     };
 
     this._modal = true;
@@ -180,7 +180,6 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
         on_mousedown: (e: PointerEvent) => {
           e.stopPropagation();
-          console.log("mouse down", e, e.x, e.y);
         },
       },
       false
@@ -196,12 +195,14 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   }
 
   _endModal(ok: boolean) {
-    console.log("textbox end modal");
-
     this._editing = false;
 
     this._modal = false;
     this.popModal();
+
+    if (!this.realtime && ok && this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.dom.value);
+    }
 
     this.blur();
 
@@ -209,6 +210,10 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this.onend(ok);
     } else {
       this._updatePathVal(this.dom.value);
+    }
+
+    if (this.on_change) {
+      this.on_change(this.dom.value);
     }
 
     this.blur();
@@ -474,7 +479,6 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   _updatePathVal(text: string) {
     if (this.hasAttribute("datapath") && this.ctx !== undefined) {
       const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath")!);
-      console.log(prop);
 
       if (prop) {
         this._prop_update(prop, text);
@@ -508,7 +512,6 @@ export function checkForTextBox<CTX extends IContextBase = IContextBase>(
   y: number
 ) {
   let p: any = screen.pickElement(x, y);
-  //console.log(p, x, y);
 
   while (p) {
     //don't prevent draggable elements from dragging

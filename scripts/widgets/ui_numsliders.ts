@@ -229,7 +229,8 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
   }
 
   swapWithTextbox() {
-    const tbox = UIBase.createElement<UIBase>("textbox-x");
+    const tbox = UIBase.createElement<UIBase>("textbox-x") as TextBox<CTX>;
+    tbox.revertOnAbort = true;
 
     if (this.modalRunning) {
       this.popModal();
@@ -298,9 +299,9 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       }
     };
 
-    (tbox as unknown as { onend: (ok: boolean) => void }).onend = finish;
+    tbox.onend = finish;
     tbox.focus();
-    (tbox as unknown as { select: () => void }).select();
+    tbox.select();
 
     //this.shadow.appendChild(tbox);
     return;
@@ -1602,6 +1603,7 @@ export class SliderWithTextbox<
 
     this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
     this._textbox.setAttribute("class", "numslider_simple_textbox");
+    this._textbox.revertOnAbort = true;
     this._textbox.startSelected = true;
 
     this._last_value = undefined;
