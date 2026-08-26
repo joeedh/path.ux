@@ -64090,11 +64090,13 @@ var TextBoxBase = class extends UIBase {
 var TextBox2 = class extends TextBoxBase {
   dom;
   _editing = false;
+  _abortMode = "ok";
   _width = "min-content";
   _textBoxEvents = true;
   _had_error = false;
   _modal = void 0;
   _focus = 0;
+  _startValue = "";
   onend;
   #radix = 16;
   get radix() {
@@ -64126,12 +64128,34 @@ var TextBox2 = class extends TextBoxBase {
     this.dom.oninput = (e) => {
       this._change(this.dom.value);
     };
+    this.dom.addEventListener("keydown", (e) => {
+      this._abortMode = "ok";
+      switch (e.keyCode) {
+        case keymap2.Escape:
+          if (this.revertOnAbort) {
+            this.dom.value = this._startValue;
+            this._abortMode = "abort";
+            if (this.onend) {
+              this.onend(false);
+            } else if (this.realtime) {
+              this._change(this.dom.value);
+            }
+          }
+        // eslint-disable-next-line no-fallthrough
+        case keymap2.Enter:
+          this.blur();
+          break;
+      }
+    });
     this.shadow.appendChild(this.dom);
     this.dom.addEventListener("focus", (e) => {
       this._focus = 1;
+      this._abortMode = "ok";
       if (this.isModal) {
         this._startModal();
         this.setCSS();
+      } else {
+        this._startValue = this.dom.value;
       }
     });
     this.dom.addEventListener("blur", (e) => {
@@ -64139,9 +64163,24 @@ var TextBox2 = class extends TextBoxBase {
       if (this._modal) {
         this._endModal(true);
         this.setCSS();
+      } else if (this._abortMode !== "abort") {
+        if (this.onend) {
+          this.onend(true);
+        } else if (!this.realtime) {
+          this._change(this.dom.value, true);
+        }
       }
       this.refreshPathWatches();
+      this._abortMode = "ok";
     });
+  }
+  /** Whether to revert to the original value on abort (escape key). */
+  get revertOnAbort() {
+    const value = this.getAttribute("revert-on-abort");
+    return value === "true" || value === "yes" || value === "on";
+  }
+  set revertOnAbort(value) {
+    this.setAttribute("revert-on-abort", value ? "true" : "false");
   }
   get startSelected() {
     const b = (this.getAttribute("start-selected") ?? "").toLowerCase();
@@ -64162,6 +64201,7 @@ var TextBox2 = class extends TextBoxBase {
     this.setAttribute("modal", val ? "true" : "false");
   }
   _startModal() {
+    this._startValue = this.dom.value;
     if (this.startSelected) {
       this.select();
     }
@@ -64179,7 +64219,7 @@ var TextBox2 = class extends TextBoxBase {
           finish(true);
           break;
         case keymap2.Escape:
-          finish(false);
+          finish(!this.revertOnAbort);
           break;
       }
     };
@@ -64208,10 +64248,12 @@ var TextBox2 = class extends TextBoxBase {
     this._editing = false;
     this._modal = false;
     this.popModal();
-    this.blur();
+    if (!ok && this.revertOnAbort) {
+      this.dom.value = this._startValue;
+    }
     if (this.onend) {
       this.onend(ok);
-    } else {
+    } else if (!this.realtime && ok) {
       this._updatePathVal(this.dom.value);
     }
     if (this.on_change) {
@@ -64228,7 +64270,7 @@ var TextBox2 = class extends TextBoxBase {
   init() {
     super.init();
     if (!this.hasAttribute("modal")) {
-      this.isModal = true;
+      this.isModal = false;
     }
     this.style["display"] = "flex";
     this.style["width"] = typeof this._width === "number" ? this._width + "px" : this._width;
@@ -64421,8 +64463,8 @@ var TextBox2 = class extends TextBoxBase {
       }
     }
   }
-  _change(text2) {
-    if (this.realtime) {
+  _change(text2, force = false) {
+    if (this.realtime || force) {
       this._updatePathVal(text2);
     }
     if (this.on_change) {
@@ -64433,6 +64475,16 @@ var TextBox2 = class extends TextBoxBase {
 UIBase.internalRegister(TextBox2);
 function checkForTextBox(screen, x, y) {
   let p = screen.pickElement(x, y);
+  const getActive = (elem) => {
+    if (elem instanceof UIBase && elem.shadow.activeElement) {
+      return getActive(elem.shadow.activeElement);
+    }
+    return elem;
+  };
+  const active = getActive(document.activeElement);
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+    return true;
+  }
   while (p) {
     if (p.draggable) {
       return true;
@@ -67231,6 +67283,7 @@ var NumSlider = class extends ValueButtonBase {
   }
   swapWithTextbox() {
     const tbox = UIBase.createElement("textbox-x");
+    tbox.revertOnAbort = true;
     if (this.modalRunning) {
       this.popModal();
     }
@@ -68213,6 +68266,7 @@ var SliderWithTextbox = class extends ColumnFrame {
     this._textbox.width = 55;
     this._textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
     this._textbox.setAttribute("class", "numslider_simple_textbox");
+    this._textbox.revertOnAbort = true;
     this._textbox.startSelected = true;
     this._last_value = void 0;
   }
@@ -68410,7 +68464,11 @@ var SliderWithTextbox = class extends ColumnFrame {
     if (this.realTimeTextBox) {
       textbox.on_change = apply_textbox;
     }
-    textbox.onend = apply_textbox;
+    textbox.onend = (ok) => {
+      if (ok || this.realtime) {
+        apply_textbox();
+      }
+    };
     textbox.ctx = this.ctx;
     textbox.packflag = textbox.packflag | this.inherit_packflag;
     this._textbox.overrideDefault?.("width", this.getDefault("TextBoxWidth"));

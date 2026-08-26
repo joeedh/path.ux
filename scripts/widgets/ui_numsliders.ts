@@ -1868,7 +1868,13 @@ export class SliderWithTextbox<
       textbox.on_change = apply_textbox;
     }
 
-    textbox.onend = apply_textbox;
+    textbox.onend = (ok: boolean) => {
+      // on abort the textbox has restored its start value, which only needs
+      // applying back if realtime already wrote each keystroke
+      if (ok || this.realtime) {
+        apply_textbox();
+      }
+    };
 
     textbox.ctx = this.ctx;
     textbox.packflag = textbox.packflag | this.inherit_packflag;

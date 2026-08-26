@@ -28,6 +28,7 @@ export class TextBoxBase<
 export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBase<CTX, "TextBox"> {
   dom: HTMLInputElement;
   _editing = false;
+  _abortMode: "ok" | "abort" = "ok";
   _width: string | number = "min-content";
   _textBoxEvents = true;
   _had_error = false;
@@ -72,10 +73,35 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       this._change(this.dom.value);
     };
 
+    // blur widget on enter/escape
+    this.dom.addEventListener("keydown", (e: KeyboardEvent) => {
+      this._abortMode = "ok";
+
+      switch (e.keyCode) {
+        case keymap.Escape:
+          if (this.revertOnAbort) {
+            this.dom.value = this._startValue;
+            this._abortMode = "abort";
+
+            if (this.onend) {
+              this.onend(false);
+            } else if (this.realtime) {
+              // realtime already committed each keystroke, so the revert needs committing too
+              this._change(this.dom.value);
+            }
+          }
+        // eslint-disable-next-line no-fallthrough
+        case keymap.Enter:
+          this.blur();
+          break;
+      }
+    });
+
     this.shadow.appendChild(this.dom);
 
     this.dom.addEventListener("focus", (e: Event) => {
       this._focus = 1;
+      this._abortMode = "ok";
 
       if (this.isModal) {
         this._startModal();
@@ -91,15 +117,18 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
       if (this._modal) {
         this._endModal(true);
         this.setCSS();
-      } else if (this.revertOnAbort) {
-        this.dom.value = this._startValue;
-        this.setPathValue(this.ctx, this.getAttribute("datapath")!, this._startValue);
-        this.on_change?.(this._startValue);
+      } else if (this._abortMode !== "abort") {
+        if (this.onend) {
+          this.onend(true);
+        } else if (!this.realtime) {
+          this._change(this.dom.value, true);
+        }
       }
 
       /* re-deliver any path change that arrived (and was ignored) while
        * the textbox had focus */
       this.refreshPathWatches();
+      this._abortMode = "ok";
     });
   }
 
@@ -140,6 +169,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
   }
 
   _startModal() {
+    this._startValue = this.dom.value;
     if (this.startSelected) {
       this.select();
     }
@@ -200,15 +230,13 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     this._modal = false;
     this.popModal();
 
-    if (!this.realtime && ok && this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.dom.value);
+    if (!ok && this.revertOnAbort) {
+      this.dom.value = this._startValue;
     }
-
-    this.blur();
 
     if (this.onend) {
       this.onend(ok);
-    } else {
+    } else if (!this.realtime && ok) {
       this._updatePathVal(this.dom.value);
     }
 
@@ -232,7 +260,7 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
 
     //set isModal default
     if (!this.hasAttribute("modal")) {
-      this.isModal = true;
+      this.isModal = false;
     }
 
     this.style["display"] = "flex";
@@ -486,8 +514,8 @@ export class TextBox<CTX extends IContextBase = IContextBase> extends TextBoxBas
     }
   }
 
-  _change(text: string) {
-    if (this.realtime) {
+  _change(text: string, force = false) {
+    if (this.realtime || force) {
       this._updatePathVal(text);
     }
 
@@ -512,6 +540,20 @@ export function checkForTextBox<CTX extends IContextBase = IContextBase>(
   y: number
 ) {
   let p: any = screen.pickElement(x, y);
+
+  // the DOM spec apparently says document.activeElement should cross shadow boundaries, but no
+  // it doesn't.
+  const getActive = (elem: Element | null) => {
+    if (elem instanceof UIBase && elem.shadow.activeElement) {
+      return getActive(elem.shadow.activeElement);
+    }
+    return elem;
+  };
+
+  const active = getActive(document.activeElement);
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+    return true;
+  }
 
   while (p) {
     //don't prevent draggable elements from dragging
