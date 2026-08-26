@@ -1035,7 +1035,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
       area.pos = new Vector2(obj.pos as number[]);
       area.size = new Vector2(obj.size as number[]);
-      area.ctx = this.ctx;
+      if (area.ctx === undefined) {
+        area.ctx = this.ctx;
+      }
 
       area.inactive = true;
       area.loadJSON(editor);
@@ -1047,7 +1049,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     }
 
     if (this.area !== undefined) {
-      this.area.ctx = this.ctx;
+      if (this.area.ctx === undefined) {
+        this.area.ctx = this.ctx;
+      }
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
 
@@ -1125,7 +1129,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     ret.ctx = this.ctx;
 
     if (ret.area !== undefined) {
-      ret.area.ctx = this.ctx;
+      ret.area.ctx = this?.area?.ctx ?? this.ctx;
 
       ret.area.owning_sarea = ret;
       ret.area.parentWidget = ret;
@@ -1384,7 +1388,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         this.editormap[def.areaname!] = child;
       }
 
-      child.ctx = this.ctx;
+      if (child.ctx === undefined) {
+        child.ctx = this.ctx;
+      }
       child.pos = this._areaPos;
       child.size = this._areaSize;
 
@@ -1499,7 +1505,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     //areaclasses[name]
     if (!(name in this.editormap)) {
       this.editormap[name] = UIBase.createElement(def.tagname) as Area<CTX>;
-      this.editormap[name].ctx = this.ctx;
+      if (this.editormap[name].ctx === undefined) {
+        this.editormap[name].ctx = this.ctx;
+      }
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
       this.editormap[name].inactive = false;
@@ -1541,7 +1549,13 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
     //. . .and set references to pos/size
     this._syncAreaBox();
     this.area.owning_sarea = this;
-    this.area.ctx = this.ctx;
+
+    // only assign ctx if area doesn't already have it;
+    // areas (and elements in general) area allowed to have their own
+    // contexts.
+    if (this.area.ctx === undefined) {
+      this.area.ctx = this.ctx;
+    }
 
     this.area.packflag |= this.packflag;
 
@@ -1746,7 +1760,9 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
           return;
         }
 
-        this.area!.ctx = this.ctx;
+        if (this.area!.ctx === undefined) {
+          this.area!.ctx = this.ctx;
+        }
         this.area!._init(); //ensure init has been called already
         this.area!.on_area_active();
         this.area!.onadd();

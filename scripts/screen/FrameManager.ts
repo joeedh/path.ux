@@ -256,11 +256,12 @@ export class Screen<
   }
 
   set ctx(val) {
+    const oldCtx = this._ctx;
     this._ctx = val;
 
     //fully recurse tree
     const rec = (n: Node & { shadow?: ShadowRoot; ctx?: unknown }) => {
-      if (n instanceof UIBase) {
+      if (n instanceof UIBase && (n.ctx === oldCtx || n.ctx === undefined)) {
         n.ctx = val;
       }
 
@@ -475,7 +476,9 @@ export class Screen<
 
     for (const sarea of ret.sareas) {
       sarea.ctx = this.ctx;
-      sarea.area!.ctx = this.ctx;
+      if (sarea.area!.ctx === undefined) {
+        sarea.area!.ctx = this.ctx;
+      }
 
       sarea.area!.push_ctx_active();
       sarea._init();
@@ -483,7 +486,9 @@ export class Screen<
       sarea.area!.pop_ctx_active();
 
       for (const area of sarea.editors) {
-        area.ctx = this.ctx;
+        if (area.ctx === undefined) {
+          area.ctx = this.ctx;
+        }
 
         area.push_ctx_active();
         area._init();
@@ -1204,7 +1209,7 @@ export class Screen<
 
     //ensure each area has proper ctx set
     for (const sarea of this.sareas) {
-      if (!sarea.ctx) {
+      if (sarea.ctx === undefined) {
         sarea.ctx = this.ctx;
       }
     }
@@ -1404,7 +1409,9 @@ export class Screen<
       s2.pos[1] += h * t;
     }
 
-    s2.ctx = this.ctx;
+    if (s2.ctx === undefined) {
+      s2.ctx = this.ctx;
+    }
     this.appendChild(s2);
 
     s1.on_resize(s1.size);
@@ -2475,7 +2482,9 @@ export class Screen<
 
     if (child instanceof ScreenArea) {
       child.screen = this;
-      child.ctx = this.ctx;
+      if (child.ctx === undefined) {
+        child.ctx = this.ctx;
+      }
       child.parentWidget = this;
 
       this.sareas.push(child);

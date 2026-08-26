@@ -696,7 +696,9 @@ export class Container<
 
   appendChild<T extends Node>(child: T): T {
     if (child instanceof UIBase) {
-      child.ctx = this.ctx;
+      if (child.ctx === undefined) {
+        child.ctx = this.ctx;
+      }
       child.parentWidget = this;
       this.shadow.appendChild(child);
 
@@ -737,7 +739,9 @@ export class Container<
 
   insert(i: number, ch: UIBase<CTX>) {
     ch.parentWidget = this;
-    ch.ctx = this.ctx;
+    if (ch.ctx === undefined) {
+      ch.ctx = this.ctx;
+    }
 
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
@@ -756,7 +760,9 @@ export class Container<
       throw new Error("eek!");
     }
 
-    child.ctx = this.ctx;
+    if (child.ctx === undefined) {
+      child.ctx = this.ctx;
+    }
     child.parentWidget = this;
     child._useDataPathUndo = this._useDataPathUndo;
 
