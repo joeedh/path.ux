@@ -172,6 +172,16 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._refresh();
   }
 
+  /**
+   * Re-points the view at a fresh parse of the graph already on screen — same file, new object —
+   * keeping selection, descent and pan/zoom, and reconciling frames by node id via `syncGraph`
+   * rather than tearing every one down. Use `setGraph` to point at a different graph instead.
+   */
+  refreshGraph(graph: Graph | undefined) {
+    this.rootGraph = graph;
+    this._refresh();
+  }
+
   /** The graph on screen: the root, or the descent tail's instance subgraph. */
   get currentGraph(): Graph | undefined {
     let g = this.rootGraph;
@@ -304,12 +314,17 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
   }
 
-  /** Reconciles frames against the graph on screen; call after any graph change. */
+  /**
+   * Reconciles frames against the graph on screen; call after any graph change. A frame is kept
+   * across a reparse as long as its node's id still exists — `setNode` points it at the new
+   * object, and `syncContents` rebuilds only what actually changed — so swapping in an
+   * independently-parsed but value-equal graph does not tear every frame down.
+   */
   syncGraph() {
     const graph = this.currentGraph;
 
     for (const [nid, frame] of [...this.frames]) {
-      if (graph?.nodeIdMap.get(nid) !== frame.node) {
+      if (graph?.nodeIdMap.get(nid) === undefined) {
         frame.remove();
         this.frames.delete(nid);
       }
@@ -321,7 +336,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     for (const node of graph.nodes) {
-      if (this.frames.has(node.id)) {
+      const existing = this.frames.get(node.id);
+      if (existing !== undefined) {
+        existing.setNode(node);
         continue;
       }
 

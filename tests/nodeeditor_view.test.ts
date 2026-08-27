@@ -115,6 +115,31 @@ test("a bare NodeGraphView works with no Area and no editor registration", () =>
   expect(view.frames.get(src.id)!.node).toBe(src);
 });
 
+test("refreshGraph reconciles by node id, keeping the frame and selection across a reparse", () => {
+  const g1 = new Graph();
+  const src1 = new ViewSrc();
+  g1.add(src1);
+
+  const view = makeView(makeCtx(g1));
+  view.setGraph(g1, "graph");
+  const frame = view.frames.get(src1.id)!;
+  view.selection.add(src1.id);
+
+  // Stands in for an independent reparse of the same file: same node id, distinct objects
+  // throughout, the way `readGraphFile` produces a fresh Graph and Node set each read.
+  const g2 = new Graph();
+  const src2 = new ViewSrc();
+  src2.id = src1.id;
+  g2.add(src2);
+
+  view.refreshGraph(g2);
+
+  expect(view.rootGraph).toBe(g2);
+  expect(view.frames.get(src1.id)).toBe(frame);
+  expect(frame.node).toBe(src2);
+  expect(view.selection.has(src1.id)).toBe(true);
+});
+
 test("the editor ships unregistered; Area.register makes it reachable", () => {
   // Direct `new` on an undefined custom element throws Illegal constructor on
   // the web platform, so non-registration is asserted rather than constructed
