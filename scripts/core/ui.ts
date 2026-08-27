@@ -46,6 +46,7 @@ import type { TableFrame } from "../widgets/ui_table";
 import { DataPathError } from "../path-controller/controller/controller_base";
 import { ToolOpAny } from "../path-controller/controller/controller_abstract";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
+import type { RichEditor } from "../widgets/ui_richedit";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }) {
@@ -1108,7 +1109,7 @@ export class Container<
 
     ret.iconsheet = iconSheetFromPackFlag(packflag);
 
-    ret.onclick = cb as unknown as ((this: GlobalEventHandlers, ev: MouseEvent) => unknown) | null;
+    ret.onclick = cb ?? null;
 
     this._add(ret);
 
@@ -1483,7 +1484,7 @@ export class Container<
             i++;
           }
 
-          return row as unknown as UIBase<CTX>;
+          return row;
         }
 
         if (packflag & PackFlags.WRAP_CHECKBOXES) {
@@ -1541,7 +1542,7 @@ export class Container<
             }
           }
 
-          return strip2 as unknown as UIBase<CTX>;
+          return strip2;
         }
 
         if (con === this) {
@@ -1571,10 +1572,10 @@ export class Container<
         };
 
         rebuild();
-        let last_hash = (prop as unknown as { calcHash(): number }).calcHash();
+        let last_hash = prop.calcHash();
 
         con.updateAfter(() => {
-          const hash = (prop as unknown as { calcHash(): number }).calcHash();
+          const hash = prop.calcHash();
 
           if (last_hash !== hash) {
             last_hash = hash;
@@ -1582,7 +1583,7 @@ export class Container<
           }
         });
 
-        return con as unknown as UIBase<CTX>;
+        return con;
       }
     }
 
@@ -1682,16 +1683,13 @@ export class Container<
 
     if (path !== undefined) {
       const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop =
-        resolved !== undefined
-          ? (resolved.prop as unknown as EnumProperty | FlagProperty)
-          : undefined;
+      prop = resolved !== undefined ? (resolved.prop as EnumProperty | FlagProperty) : undefined;
     }
 
     if (path !== undefined) {
       if (prop === undefined) {
         console.warn("Bad path in checkenum", path);
-        return undefined as unknown as UIBase<CTX>;
+        return this.label("(error)");
       }
 
       frame = this.strip();
@@ -1781,10 +1779,7 @@ export class Container<
 
     if (path !== undefined && prop === undefined) {
       const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop =
-        resolved !== undefined
-          ? (resolved.prop as unknown as FlagProperty | EnumProperty)
-          : undefined;
+      prop = resolved !== undefined ? (resolved.prop as FlagProperty | EnumProperty) : undefined;
     }
 
     if (!name && prop) {
@@ -1815,8 +1810,8 @@ export class Container<
           check.style["padding"] = "0px";
           check.style["margin"] = "0px";
 
-          styl((check as unknown as { dom: HTMLElement }).dom)["padding"] = "0px";
-          styl((check as unknown as { dom: HTMLElement }).dom)["margin"] = "0px";
+          styl(check.dom)["padding"] = "0px";
+          styl(check.dom)["margin"] = "0px";
 
           check.description = prop.descriptions[key];
         }
@@ -1825,7 +1820,7 @@ export class Container<
           name = prop.getUIName();
         }
 
-        (frame.label(name!) as unknown as Label).font = "TitleText";
+        frame.label(name!).font = "TitleText";
 
         const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
 
@@ -1892,14 +1887,14 @@ export class Container<
           name?: string;
           enumDef?: EnumProperty | FlagProperty | EnumDef;
           defaultval?: string | number;
-          callback?: Function;
+          callback?: DropBox["on_select"];
           iconmap?: Record<string, number>;
           packflag?: number;
           mass_set_path?: string;
         },
     enumDef?: EnumProperty | FlagProperty | EnumDef,
     defaultval?: number | string,
-    callback?: Function,
+    callback?: DropBox["on_select"],
     iconmap?: IconMap,
     packflag = 0
   ): DropBox<CTX> {
@@ -1944,7 +1939,7 @@ export class Container<
       const res = this.ctx.api.resolvePath(this.ctx, path!, true);
 
       if (res !== undefined) {
-        ret.prop = res.prop as unknown as EnumProperty;
+        ret.prop = res.prop as EnumProperty;
 
         name ??= res.prop!.getUIName();
         label ??= name;
@@ -1962,12 +1957,10 @@ export class Container<
     ret.setAttribute("name", name as string);
 
     if (defaultval) {
-      (ret as unknown as { setValue(v: unknown): void }).setValue(defaultval);
+      ret.setValue(defaultval);
     }
 
-    ret.on_change = callback as unknown as typeof ret.on_change;
-    ret.on_select = callback as unknown as typeof ret.on_select;
-
+    ret.on_select = callback
     ret.packflag |= packflag;
 
     if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
@@ -2127,7 +2120,7 @@ export class Container<
     }
 
     if (defaultval !== undefined) {
-      (ret as unknown as { setValue(v: number): void }).setValue(defaultval);
+      ret.setValue(defaultval);
     }
 
     if (is_int) {
@@ -2160,14 +2153,19 @@ export class Container<
   }
 
   _container_inherit(elem: UIBase<CTX>, packflag = 0) {
+    if (!(elem instanceof Container)) {
+      console.warn(elem, '_container_inheritt: element is not a container')
+      return
+    }
+
     //don't inherit NO_UPDATE
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
     elem.packflag |= packflag;
-    (elem as unknown as Container).inherit_packflag |= packflag;
-    (elem as unknown as Container).dataPrefix = this.dataPrefix;
-    (elem as unknown as Container).massSetPrefix = this.massSetPrefix;
+    elem.inherit_packflag |= packflag;
+    elem.dataPrefix = this.dataPrefix;
+    elem.massSetPrefix = this.massSetPrefix;
   }
 
   treeview(): TreeView<CTX> {
@@ -2189,7 +2187,7 @@ export class Container<
     this._container_inherit(ret, packflag);
 
     if (tooltip) {
-      (ret as unknown as { setHeaderToolTip(t: string): void }).setHeaderToolTip(tooltip);
+      ret.setHeaderToolTip(tooltip);
     }
 
     ret.setAttribute("label", name);
@@ -2212,7 +2210,7 @@ export class Container<
   }
 
   row(packflag = 0): RowFrame<CTX> {
-    const ret = UIBase.createElement("rowframe-x") as unknown as RowFrame<CTX>;
+    const ret = UIBase.createElement("rowframe-x")  as RowFrame<CTX>;
 
     this._container_inherit(ret, packflag);
     this._add(ret);
@@ -2246,7 +2244,7 @@ export class Container<
   }
 
   twocol(parentDepth = 1, packflag = 0) {
-    const ret = UIBase.createElement("two-column-x") as unknown as TwoColumnFrame<CTX>;
+    const ret = UIBase.createElement("two-column-x") as TwoColumnFrame<CTX>;
 
     ret.parentDepth = parentDepth;
 
@@ -2257,11 +2255,11 @@ export class Container<
   }
 
   col(packflag = 0): ColumnFrame<CTX> {
-    const ret = UIBase.createElement("colframe-x") as unknown as ColumnFrame<CTX>;
+    const ret = UIBase.createElement("colframe-x") as ColumnFrame<CTX>;
 
-    this._container_inherit(ret as unknown as UIBase<CTX>, packflag);
+    this._container_inherit(ret, packflag);
 
-    this._add(ret as unknown as UIBase<CTX>);
+    this._add(ret);
     return ret;
   }
 
@@ -2278,9 +2276,9 @@ export class Container<
     if (typeof packflag_or_args === "object") {
       const args = packflag_or_args;
 
-      packflag = args.packflag !== undefined ? (args.packflag as number) : 0;
-      mass_set_path = args.massSetPath as string | undefined;
-      themeOverride = args.themeOverride as string | undefined;
+      packflag = args.packflag ?? 0;
+      mass_set_path = args.massSetPath
+      themeOverride = args.themeOverride
     } else {
       packflag = packflag_or_args;
     }
@@ -2305,8 +2303,8 @@ export class Container<
     ret.parentWidget = this;
     ret._init();
     ret.packflag |= packflag;
-    (ret as unknown as Container).inherit_packflag |= packflag;
-    (ret.constructor as unknown as { setDefault(el: UIBase<CTX>): void }).setDefault(ret);
+    ret.inherit_packflag |= packflag;
+    ret.constructor.setDefault(ret);
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
@@ -2325,7 +2323,7 @@ export class Container<
 
     mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
 
-    const ret = UIBase.createElement("rich-text-editor-x") as UIBase<CTX> & Record<string, unknown>;
+    const ret = UIBase.createElement("rich-text-editor-x") as RichEditor<CTX>;
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -2361,23 +2359,23 @@ export class Container<
     if (datapath) ret.setAttribute("datapath", datapath);
     if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
 
-    this.add(ret as UIBase<CTX>);
-    return ret as UIBase<CTX>;
+    this.add(ret );
+    return ret
   }
 
   //
   tabs(position: "top" | "bottom" | "left" | "right" = "top", packflag = 0) {
-    const ret = UIBase.createElement("tabcontainer-x") as UIBase<CTX>;
+    const ret = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;;
 
-    (ret.constructor as unknown as { setDefault(el: UIBase<CTX>): void }).setDefault(
-      ret as UIBase<CTX>
-    );
+    ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
 
-    this._container_inherit(ret, packflag);
+    // XXX nee to fix tabcontainer's base class type conflict 
+    // with it's on_change method
+    this._container_inherit(ret as unknown as UIBase<CTX>, packflag);
+    this._add(ret as unknown as UIBase<CTX>);
 
-    this._add(ret);
-    return ret as unknown as TabContainer<CTX>;
+    return ret
   }
 
   asDialogFooter() {
