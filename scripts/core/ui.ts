@@ -1864,7 +1864,7 @@ export class Container<
     return frame;
   }
 
-  /*
+  /**
     enummap is an object that maps
     ui names to keys, e.g.:
 
@@ -1960,7 +1960,7 @@ export class Container<
       ret.setValue(defaultval);
     }
 
-    ret.on_select = callback
+    ret.on_select = callback;
     ret.packflag |= packflag;
 
     if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
@@ -2152,18 +2152,18 @@ export class Container<
     return ret;
   }
 
-  _container_inherit(elem: UIBase<CTX>, packflag = 0) {
-    if (!(elem instanceof Container)) {
-      console.warn(elem, '_container_inheritt: element is not a container')
-      return
-    }
-
+  _container_inherit(
+    elem: UIBase<CTX, any> & { inherit_packflag?: number; dataPrefix?: string; massSetPrefix?: string },
+    packflag = 0
+  ) {
     //don't inherit NO_UPDATE
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
     elem.packflag |= packflag;
-    elem.inherit_packflag |= packflag;
+
+    if (elem.inherit_packflag !== undefined) {    
+      elem.inherit_packflag |= packflag;
+    }
     elem.dataPrefix = this.dataPrefix;
     elem.massSetPrefix = this.massSetPrefix;
   }
@@ -2210,7 +2210,7 @@ export class Container<
   }
 
   row(packflag = 0): RowFrame<CTX> {
-    const ret = UIBase.createElement("rowframe-x")  as RowFrame<CTX>;
+    const ret = UIBase.createElement("rowframe-x") as RowFrame<CTX>;
 
     this._container_inherit(ret, packflag);
     this._add(ret);
@@ -2277,8 +2277,8 @@ export class Container<
       const args = packflag_or_args;
 
       packflag = args.packflag ?? 0;
-      mass_set_path = args.massSetPath
-      themeOverride = args.themeOverride
+      mass_set_path = args.massSetPath;
+      themeOverride = args.themeOverride;
     } else {
       packflag = packflag_or_args;
     }
@@ -2359,23 +2359,23 @@ export class Container<
     if (datapath) ret.setAttribute("datapath", datapath);
     if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
 
-    this.add(ret );
-    return ret
+    this.add(ret);
+    return ret;
   }
 
   //
   tabs(position: "top" | "bottom" | "left" | "right" = "top", packflag = 0) {
-    const ret = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;;
+    const ret = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;
 
     ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
 
-    // XXX nee to fix tabcontainer's base class type conflict 
+    // XXX nee to fix tabcontainer's base class type conflict
     // with it's on_change method
-    this._container_inherit(ret as unknown as UIBase<CTX>, packflag);
+    this._container_inherit(ret, packflag);
     this._add(ret as unknown as UIBase<CTX>);
 
-    return ret
+    return ret;
   }
 
   asDialogFooter() {

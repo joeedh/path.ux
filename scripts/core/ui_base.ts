@@ -159,7 +159,7 @@ type EventCBHolder = {
  */
 export class UIBase<
   CTX extends IContextBase = IContextBase,
-  VALUE extends unknown | any = unknown,
+  VALUE extends unknown | any = any,
   /**
    * Widget class name used to look up this element's theme keys in
    * {@link ThemeKeyRegistry} (see theme_schema.ts / generated/themes.ts).
@@ -269,7 +269,7 @@ export class UIBase<
   }
   ondestroy?: () => void;
   getValue?: () => unknown;
-  declare on_change: ((val: unknown) => void) | null;
+  declare on_change: ((val: VALUE) => void) | null;
 
   _reflagGraph = false;
 

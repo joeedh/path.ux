@@ -845,7 +845,7 @@ export class IconCheck<CTX extends IContextBase = IContextBase> extends IconButt
       this.setCSS();
 
       if (this.on_change) {
-        this.on_change(val);
+        this.on_change(Boolean(val));
       }
     }
   }

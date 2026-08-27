@@ -2207,9 +2207,9 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
   _tab?: TabItemContainer<CTX>;
 
   // @ts-ignore TODO: fix this later
-  on_change?: (tab: TabItem<CTX>, event?: PointerEvent | KeyboardEvent) => void;
+  on_change: ((tab: TabItem<CTX>, event?: PointerEvent | KeyboardEvent) => void) | null;
   // @ts-ignore TODO: fix this later
-  onselect?: (e: any) => void;
+  onselect: ((e: any) => void) | null;
   horiz: boolean = false;
   constructor() {
     super();

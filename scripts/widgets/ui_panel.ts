@@ -64,7 +64,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
 
   private createContents() {
     const ret = UIBase.createElement("panel-contents-x") as unknown as PanelContents<CTX>;
-    this._container_inherit(ret as unknown as ui_base.UIBase<CTX>);
+    this._container_inherit(ret);
     this._add(ret as unknown as ui_base.UIBase<CTX>);
     return ret;
   }

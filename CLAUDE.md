@@ -3,14 +3,16 @@
 HTML5 UI library with Blender RNA-style data binding.
 
 ## Plans
+
 - plans live in documentation/plans
 - plans should always be committed to the repo
-- plans should be pressure tested with an agent with fresh context when created, 
+- plans should be pressure tested with an agent with fresh context when created,
   and the pressure tested results folded back into the plan
 - when executing plans the status of each stage/task/phase/wave/etc
   should be written into the plan itself and marked as completed when done.
   
 ## ToDos
+
 - A todos list lives in `todos.md` and is committed to the repo. Check items off
   as they are completed.
 
@@ -19,38 +21,6 @@ HTML5 UI library with Blender RNA-style data binding.
 Comments are prose, so the Prose rules below govern them as well. The rules in this section
 are the ones that apply only to code.
 
-- **A comment describes the code directly beneath it.** A comment placed above an `if` is read
-  as a caption for the branch it guards, so one that explains the opposite case belongs on the
-  `else`, or should be reworded to describe the test itself. Misplacing a comment this way is a
-  correctness bug, not a style one.
-- **Delete commented-out code — never leave it as commentary.** Git history holds it. A
-  commented-out call, import or block explains nothing about the code that survives, and it
-  goes stale silently because nothing type-checks it.
-- **Never restate what the code already says.** `inputs: {}, //tool properties` and
-  `case keymap.Escape: //esc` add a maintenance burden and no information. A comment earns its
-  place by giving a reason, a constraint, or a consequence.
-- **Cite a named constant rather than its value.** A comment saying "thirty seconds" beside
-  `LINGER_MS` is wrong the first time the constant changes; write `` `LINGER_MS` ``.
-- **Rename instead of commenting a name.** If the sentence's work is translating an
-  identifier — what `snapMode` means, what a bare `-1` means — rename the identifier or
-  introduce a named constant, then delete the sentence. Comment a name only when the name
-  cannot be fixed. Try to avoid names longer than three words or 25 characters
-  (10 characters or less is preferred).
-- **Comment the consequence, not the arguments.** Options passed at a call site (`capture`,
-  `passive`, a flag, a lifetime) are already on screen. Say what the reader cannot see: what
-  the call does to everything around it. "Does not inhibit the event from reaching other
-  consumers" earns its line; "registered `passive` so it cannot call `preventDefault`" does not.
-- **State facts; do not defend the design.** Rationale belongs in a comment only when a reader
-  looking at the surrounding code still could not derive it — an ordering constraint, a platform
-  quirk, a decision with a live alternative. "Why this is the good version" and "what would go
-  wrong under the naive one" are commit-message material.
-- **A doc comment continues its declaration; it does not restate it.** Do not re-supply the
-  subject the declaration already names, and do not narrate the signature. A field or property
-  takes a noun phrase or a bare predicate — "Pointer ids currently down.", "Detected via the
-  presence of multiple pointer ids." A class, function or method takes a predicate, because the
-  reader needs to know what it does — "Draws the links beneath the node frames in screen space."
-  A headless noun phrase over a class or a function is a fragment opener; do not use one.
-  A doc comment that reads as a standalone paragraph is usually rationale in disguise.
 - **Inline notes and doc comments are punctuated differently.** An inline `//` note is a
   fragment with no terminal period; a `/** … */` doc comment is a punctuated sentence. One
   line each, unless the fact genuinely needs two.
@@ -168,20 +138,8 @@ controller overview: how model classes are wrapped (`DataAPI` / `DataStruct` /
 name (`getStructByName`).
 
 See [documentation/container.md](documentation/container.md) for how `Container` binds those
-paths. `container.prop(path)` resolves the path, reads the `ToolProperty` at the end of it,
-and builds whichever widget that property's type calls for — a slider for `INT`/`FLOAT`, a
-checkbox for `BOOL`, a dropdown or checkbox strip for `ENUM`, a checkbox strip for `FLAG`, a
-color button or component sliders for a vector, a textbox or label for `STRING`, a curve
-widget for `CURVE` — with the property's UI name, tooltip, range, step, unit, enum items and
-icons already applied. The other build methods (`slider`, `simpleslider`, `check`,
-`checkenum`, `listenum`, `textbox`, `textarea`, `colorbutton`, `colorPicker`, `curve1d`,
-`vecpopup`, `pathlabel`) take the same paths and bind the same way. Sliders come in three
-elements — roller (`numslider-x`), simple bar (`numslider-simple-x`), and roller with
-textbox (`numslider-textbox-x`) — chosen from the property's `SIMPLE_SLIDER` /
-`FORCE_ROLLER_SLIDER` flags, the container's `PackFlags`, and the `cconst.simpleNumSliders`
-/ `cconst.useNumSliderTextboxes` app defaults. Containers also carry `dataPrefix` and
-`massSetPrefix` down to their children, and mass-set paths
-(`scene.objects[{$.select}].size`) apply one edit across a selection as a single undo step.
+paths.  Note: many pathux widgets will modify the data model through an undoable
+DataPathSetOp unless you explicitly disable this.
 
 Valid `path` strings for `container.prop("...")`, related widget methods, and
 `<prop path="...">` xmlpage tags are catalogued in `generated/API_PATHS.md`
@@ -542,5 +500,6 @@ default branch (path.ux has no pinned exceptions) must be committed and pushed, 
 no work is lost when the checkout goes away.
 
 ## Commit Messages
-Commit messages should be terse and use bullet points.  The message should lead with 
+
+Commit messages should be terse and use bullet points.  The message should lead with
 what the purpose of the commit is and high level information.

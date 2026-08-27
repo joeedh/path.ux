@@ -13906,7 +13906,6 @@ var init_units = __esm({
       }
     };
     Unit.register(RadianUnit);
-    window._getBaseUnit = () => Unit.baseUnit;
     numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
     numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
     hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
@@ -13968,9 +13967,6 @@ var init_units = __esm({
       }
     };
     Unit.register(PercentUnit);
-    window.unitConvert = convert;
-    window._parseValueTest = parseValue;
-    window._buildStringTest = buildString;
   }
 });
 
@@ -65331,7 +65327,7 @@ var IconCheck = class extends IconButton {
       this._updatePressed(!!val);
       this.setCSS();
       if (this.on_change) {
-        this.on_change(val);
+        this.on_change(Boolean(val));
       }
     }
   }
@@ -66830,7 +66826,7 @@ var Container3 = class _Container extends UIBase {
     }
     return frame;
   }
-  /*
+  /**
       enummap is an object that maps
       ui names to keys, e.g.:
   
@@ -67031,13 +67027,11 @@ var Container3 = class _Container extends UIBase {
     return ret;
   }
   _container_inherit(elem, packflag = 0) {
-    if (!(elem instanceof _Container)) {
-      console.warn(elem, "_container_inheritt: element is not a container");
-      return;
-    }
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     elem.packflag |= packflag;
-    elem.inherit_packflag |= packflag;
+    if (elem.inherit_packflag !== void 0) {
+      elem.inherit_packflag |= packflag;
+    }
     elem.dataPrefix = this.dataPrefix;
     elem.massSetPrefix = this.massSetPrefix;
   }
@@ -67171,7 +67165,6 @@ var Container3 = class _Container extends UIBase {
   //
   tabs(position = "top", packflag = 0) {
     const ret = UIBase.createElement("tabcontainer-x");
-    ;
     ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
     this._container_inherit(ret, packflag);

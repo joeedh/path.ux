@@ -104,10 +104,6 @@ interface Window {
   IndexRangeStack: unknown[];
   makeCompiledVectormathCode: (mode?: string) => string;
 
-  /* ── Units ─────────────────────────────────────────────────── */
-  _getBaseUnit: () => unknown;
-  unitConvert: (...args: unknown[]) => number;
-
   /* ── Polyfill / compatibility ──────────────────────────────── */
   destroyAllCSS: () => void;
   list: (iter: Iterable<unknown>) => unknown[];
@@ -151,8 +147,6 @@ interface Window {
   _testLoadFile: (exts?: string[]) => void;
   _testSaveFile: () => void;
   _testToolStackIO: () => void;
-  _parseValueTest: (...args: unknown[]) => unknown;
-  _buildStringTest: (...args: unknown[]) => unknown;
   ta: unknown;
   rc: unknown;
   cw: unknown;
