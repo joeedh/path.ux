@@ -2,10 +2,10 @@
 useful classes for wrangling important base classes
 */
 
-import {nstructjs, util, DataAPI, DataStruct, CreateSnapshot} from '../pathux.js';
+import { nstructjs, util, DataAPI, DataStruct, CreateSnapshot } from "../pathux.js";
 
 export const BlockFlag = {
-  NO_SAVE : 1
+  NO_SAVE: 1,
 };
 
 export interface IBlockDef {
@@ -32,7 +32,7 @@ export class DataBlock {
   }
 
   [CreateSnapshot]() {
-    return this.lib_id
+    return this.lib_id;
   }
 
   static blockDefine(): IBlockDef {
@@ -42,7 +42,7 @@ export class DataBlock {
       defaultName: "",
       flag       : 0, //see BlockFlags
       icon       : -1,
-    }
+    };
   }
 
   static defineAPI(api: DataAPI): DataStruct {
@@ -62,10 +62,10 @@ export class DataBlock {
     reader(this);
   }
 
-  dataLink(getblock: (ref: DataRef) => DataBlock | undefined,
-           getblock_addUser: (ref: DataRef) => DataBlock | undefined) {
-
-  }
+  dataLink(
+    getblock: (ref: DataRef) => DataBlock | undefined,
+    getblock_addUser: (ref: DataRef) => DataBlock | undefined
+  ) {}
 
   copy(): DataBlock {
     throw new Error("implement me!");
@@ -82,7 +82,9 @@ export class DataBlock {
 
     for (const cls2 of BlockClasses) {
       if (cls2.blockDefine().typeName === cls.blockDefine().typeName) {
-        throw new Error("typeName " + cls.blockDefine().typeName + " is already taken by " + cls2.name);
+        throw new Error(
+          "typeName " + cls.blockDefine().typeName + " is already taken by " + cls2.name
+        );
       }
     }
 
@@ -95,7 +97,7 @@ DataBlock {
   lib_id     : int;
   lib_users  : int;
 }
-`
+`;
 nstructjs.register(DataBlock);
 
 export class DataRef {
@@ -198,7 +200,8 @@ export class BlockSet extends Array<DataBlock> {
   }
 
   uniqueName(name: string) {
-    const basename = name; let i = 2;
+    const basename = name;
+    let i = 2;
 
     while (this.blockNameMap.has(name)) {
       name = basename + i;
@@ -306,7 +309,7 @@ export class DataLib {
 
   get allblocks() {
     const this2 = this;
-    return (function*() {
+    return (function* () {
       for (const bset of this2.blocksets) {
         for (const block of bset) {
           yield block;
@@ -468,7 +471,7 @@ export function buildAPI(api: DataAPI) {
       },
       getLength(api, list) {
         return list.length;
-      }
+      },
     });
   }
 }

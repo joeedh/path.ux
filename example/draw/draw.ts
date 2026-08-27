@@ -1,15 +1,14 @@
-import {nstructjs, Vector2, Vector3, Vector4, Matrix4, util,
-        color2css} from '../pathux.js';
+import { nstructjs, Vector2, Vector3, Vector4, Matrix4, util, color2css } from "../pathux.js";
 
 export const DrawFlags = {
-  BLUR  : 1,
-  COLOR : 2
+  BLUR : 1,
+  COLOR: 2,
 };
 
 export const PathTypes = {
-  PATH    : 0,
-  CIRCLE  : 1,
-  RECT    : 2
+  PATH  : 0,
+  CIRCLE: 1,
+  RECT  : 2,
 };
 
 export type CanvasElement = CanvasPoint | CanvasEdge | CanvasPath;
@@ -22,7 +21,7 @@ export class Material {
   flag: number;
 
   constructor() {
-    this.color = new Vector4([0,0,0,1]);
+    this.color = new Vector4([0, 0, 0, 1]);
     this.blur = 0;
     this.flag = 0;
   }
@@ -51,7 +50,9 @@ export class CanvasPoint extends Vector2 {
     this.id = -1;
   }
 }
-CanvasPoint.STRUCT = nstructjs.inherit(CanvasPoint, Vector2) + `
+CanvasPoint.STRUCT =
+  nstructjs.inherit(CanvasPoint, Vector2) +
+  `
   id    : int;
   edges : array(e, int) | e.id;
 }
@@ -75,7 +76,9 @@ export class CanvasEdge extends Vector2 {
     this.v2 = undefined;
   }
 }
-CanvasEdge.STRUCT = nstructjs.inherit(CanvasEdge, Vector2) + `
+CanvasEdge.STRUCT =
+  nstructjs.inherit(CanvasEdge, Vector2) +
+  `
   id       : int;
   material : Material;
   v1       : int | obj.v1.id;
@@ -102,7 +105,9 @@ export class CanvasPath {
     this.verts = [];
   }
 }
-CanvasPath.STRUCT = nstructjs.inherit(CanvasPath, Vector2) + `
+CanvasPath.STRUCT =
+  nstructjs.inherit(CanvasPath, Vector2) +
+  `
   id       : int;
   material : Material;
   verts    : array(e, int) | e.id;
@@ -205,7 +210,7 @@ export class Canvas {
 
     for (const v1 of this.verts) {
       const v2 = new CanvasPoint(v1);
-      v2.id  = v1.id;
+      v2.id = v1.id;
 
       b.idmap[v2.id] = v2;
       b.verts.push(v2);
@@ -229,7 +234,7 @@ export class Canvas {
     }
 
     for (const p1 of this.paths) {
-      const vs = p1.verts.map(v => b.idmap[v.id] as CanvasPoint);
+      const vs = p1.verts.map((v) => b.idmap[v.id] as CanvasPoint);
       const p2 = new CanvasPath();
 
       p2.verts = vs;
@@ -281,7 +286,7 @@ export class Canvas {
     this.paths.remove(p);
 
     if (this.paths.active === p) {
-      this.paths.active = this.paths[this.paths.length-1];
+      this.paths.active = this.paths[this.paths.length - 1];
     }
   }
 
@@ -336,8 +341,8 @@ export class Canvas {
   loadSTRUCT(reader: nstructjs.StructReader<this>) {
     reader(this);
 
-    const idmap = this.idmap = {} as Record<number, CanvasElement>;
-    const indexmap = this.indexMap = {} as Record<number, number>;
+    const idmap = (this.idmap = {} as Record<number, CanvasElement>);
+    const indexmap = (this.indexMap = {} as Record<number, number>);
 
     const lists: ElementArray<CanvasElement>[] = [
       this.verts as ElementArray<CanvasElement>,
@@ -362,20 +367,19 @@ export class Canvas {
       }
     }
 
-
     for (const e of this.edges) {
       e.v1 = idmap[e.v1 as unknown as number] as CanvasPoint;
       e.v2 = idmap[e.v2 as unknown as number] as CanvasPoint;
     }
 
     for (const v of this.verts) {
-      for (let i=0; i<v.edges.length; i++) {
+      for (let i = 0; i < v.edges.length; i++) {
         v.edges[i] = idmap[v.edges[i] as unknown as number] as CanvasEdge;
       }
     }
 
     for (const p of this.paths) {
-      for (let i=0; i<p.verts.length; i++) {
+      for (let i = 0; i < p.verts.length; i++) {
         p.verts[i] = idmap[p.verts[i] as unknown as number] as CanvasPoint;
         p.verts[i].paths.push(p);
       }
@@ -393,7 +397,8 @@ export class Canvas {
       window.clearInterval(this.drawTask);
     }
 
-    let time = 0; let first=true;
+    let time = 0;
+    let first = true;
 
     let time2 = 0;
 
@@ -432,10 +437,16 @@ export class Canvas {
     requestAnimationFrame(f);
   }
 
-  draw(canvas: HTMLCanvasElement, g: CanvasRenderingContext2D, idstart?: number,
-       idend: number = this.idgen, force = false, use_idx = false) {
+  draw(
+    canvas: HTMLCanvasElement,
+    g: CanvasRenderingContext2D,
+    idstart?: number,
+    idend: number = this.idgen,
+    force = false,
+    use_idx = false
+  ) {
     if (this.paths.active === undefined) {
-      this.paths.active = this.paths[this.paths.length-1];
+      this.paths.active = this.paths[this.paths.length - 1];
     }
 
     const doblur = this.drawflag & DrawFlags.BLUR;
@@ -451,15 +462,15 @@ export class Canvas {
       return;
     }
 
-    let i=0;
+    let i = 0;
 
     if (use_idx && idstart in this.indexMap) {
-      i = Math.max(this.indexMap[idstart]-10, 0);
+      i = Math.max(this.indexMap[idstart] - 10, 0);
     } else if (use_idx) {
       i = idstart;
     }
 
-    for (; i<this.paths.length; i++) {
+    for (; i < this.paths.length; i++) {
       const p = this.paths[i];
 
       if (!use_idx && p.id < idstart) {
@@ -475,8 +486,7 @@ export class Canvas {
       }
 
       let blur = p.material.blur;
-      if (!doblur)
-        blur = 0;
+      if (!doblur) blur = 0;
 
       const bluroff = 10000;
 
@@ -488,7 +498,6 @@ export class Canvas {
 
         g.fillStyle = !docolor ? "black" : color2css(color);
         g.shadowColor = color2css([color[0], color[1], color[2]]);
-
 
         g.translate(-bluroff, -bluroff);
         g.shadowOffsetX = bluroff;
@@ -502,7 +511,7 @@ export class Canvas {
         const r = p.verts[1].vectorDistance(p.verts[0]);
         g.arc(p.verts[0][0], p.verts[0][1], r, -Math.PI, Math.PI);
       } else {
-        let first=true;
+        let first = true;
 
         for (const v of p.verts) {
           if (first) {
@@ -522,7 +531,7 @@ export class Canvas {
       }
     }
   }
-};
+}
 
 Canvas.STRUCT = `
 Canvas {

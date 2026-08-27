@@ -265,10 +265,10 @@ export class WorkspaceEditor extends Editor {
 
   static define() {
     return {
-      tagname: "workspace-editor-x",
+      tagname : "workspace-editor-x",
       areaname: "workspace",
-      uiname: "Workspace",
-      icon: -1,
+      uiname  : "Workspace",
+      icon    : -1,
     };
   }
 }

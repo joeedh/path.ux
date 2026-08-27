@@ -1,5 +1,5 @@
-import {Editor} from "../editor_base.js";
-import {nstructjs, util, TableFrame} from '../../pathux.js';
+import { Editor } from "../editor_base.js";
+import { nstructjs, util, TableFrame } from "../../pathux.js";
 
 export class LogEditor extends Editor {
   table!: TableFrame;
@@ -11,9 +11,7 @@ export class LogEditor extends Editor {
   }
 
   getKeyMaps() {
-    return [
-
-    ]
+    return [];
   }
 
   init() {
@@ -29,10 +27,10 @@ export class LogEditor extends Editor {
 
     const lines = [];
 
-    for (let i=toolstack.length-1; i >= 0 && i>=toolstack.length-count; i--) {
+    for (let i = toolstack.length - 1; i >= 0 && i >= toolstack.length - count; i--) {
       lines.push({
-        line  : toolstack[i].genToolString(),
-        index : i
+        line : toolstack[i].genToolString(),
+        index: i,
       });
     }
 
@@ -40,8 +38,7 @@ export class LogEditor extends Editor {
   }
 
   rebuild() {
-    if (!this.ctx || !this.table)
-      return;
+    if (!this.ctx || !this.table) return;
 
     const table2 = this.container.table();
     table2.remove();
@@ -89,15 +86,19 @@ export class LogEditor extends Editor {
     }
   }
 
-  static define() {return {
-    tagname  : "log-editor-x",
-    areaname : "log",
-    uiname   : "Command Log",
-    icon     : -1
-  }}
-};
+  static define() {
+    return {
+      tagname : "log-editor-x",
+      areaname: "log",
+      uiname  : "Command Log",
+      icon    : -1,
+    };
+  }
+}
 Editor.register(LogEditor);
-LogEditor.STRUCT = nstructjs.STRUCT.inherit(LogEditor, Editor) + `
+LogEditor.STRUCT =
+  nstructjs.STRUCT.inherit(LogEditor, Editor) +
+  `
 }
 `;
 nstructjs.register(LogEditor);

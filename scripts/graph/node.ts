@@ -43,6 +43,16 @@ export interface NodeTypeConstructor {
   graphDef(): NodeDef;
 }
 
+declare const brand: unique symbol;
+type PrimTag<T, Tag extends string> = T & { readonly [brand]: Tag };
+type OpaqueTag<T, Tag extends string> = { readonly [brand]: Tag };
+
+/**
+ * An opaque wrapper to prevent node prop keys (e.g. 'in:socket1', 'out:socket2', 'some-node-prop')
+ * from mixing with real names in the type system.
+ */
+export type NodePropName = OpaqueTag<string, "NodePropName">;
+
 const mergedDefs = new Map<NodeTypeConstructor, NodeDef>();
 
 /** The class's definition merged with its ancestors', cached per class. */
@@ -105,15 +115,15 @@ export class Node<Inputs extends Sockets = Sockets, Outputs extends Sockets = So
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-graph.Node {
+pathux.GraphNode {
   id          : string | JSON.stringify(this.id);
   label       ?: string;
   pos         : vec2;
   size        : vec2;
   typeVersion : int;
   props       : array(abstract(ToolProperty)) | this._propList();
-  inputs      : array(abstract(graph.NodeSocketBase)) | this._socketList(this.inputs);
-  outputs     : array(abstract(graph.NodeSocketBase)) | this._socketList(this.outputs);
+  inputs      : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.inputs);
+  outputs     : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.outputs);
 }
 `
   );
@@ -127,6 +137,10 @@ graph.Node {
 
   inputs: Inputs;
   outputs: Outputs;
+
+  public get allSockets() {
+    return Object.values(this.inputs).concat(Object.values(this.outputs));
+  }
 
   /** Authored properties, sparse on a group instance. Each key equals its property's apiname. */
   props: Record<string, ToolProperty>;
@@ -145,6 +159,25 @@ graph.Node {
   typeVersion: number;
 
   dirty = false;
+
+  static decomposePropName(prop: NodePropName): { type: "in" | "out" | "prop"; name: string } {
+    // keep up to date with NodeSocketBase.nodePropName!!
+    let name = prop as unknown as string;
+    let type: "in" | "out" | "prop" = "prop";
+
+    if (name.startsWith("in:")) {
+      type = "in";
+      name = name.slice(3);
+    } else if (name.startsWith("out:")) {
+      type = "out";
+      name = name.slice(4);
+    }
+    return { type, name };
+  }
+  static composePropName(type: "in" | "out" | "prop", name: string): NodePropName {
+    // keep up to date with NodeSocketBase.nodePropName!!
+    return (type === "prop" ? name : `${type}:${name}`) as unknown as NodePropName;
+  }
 
   constructor() {
     const def = finalDef(this.constructor as NodeTypeConstructor);
@@ -254,23 +287,24 @@ graph.Node {
       })
       .readOnly();
 
-    // The list's path is empty, so callbacks receive the node itself. An element
-    // resolves as a stable {node, key} ref; the editable value sits one member
-    // deeper, at props['key'].value, where widgets see the target's own metadata.
+    // unified entry into node.props/inputs/outputs
+    // input key are prefixed with 'in:' outputs with 'out:'
     st.list<Node, string, unknown>("", "props", {
       get(_api: DataAPI, node: Node, key: string) {
-        return nodePropTarget(node, key) !== undefined ? nodePropRef(node, key) : undefined;
+        return nodePropTarget(node, key as unknown as NodePropName) !== undefined
+          ? nodePropRef(node, key as unknown as NodePropName)
+          : undefined;
       },
       set(_api: DataAPI, node: Node, key: string, val: unknown) {
-        const target = nodePropTarget(node, key);
+        const target = nodePropTarget(node, key as unknown as NodePropName);
         if (target === undefined) {
-          throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);
+          throw new Error(`${node.def.typeName}: no prop or input/output default '${key}'`);
         }
         target.setValue(val);
       },
       getKey(_api: DataAPI, node: Node, val: unknown) {
         const ref = val as NodePropRef | undefined;
-        return ref !== undefined && ref.node === node ? ref.key : undefined;
+        return ref?.node === node ? ref.key : undefined;
       },
       getLength(_api: DataAPI, node: Node) {
         return nodePropKeys(node).length;
@@ -281,7 +315,7 @@ graph.Node {
           [Symbol.iterator]();
       },
       getStruct(_api: DataAPI, node: Node, key: string) {
-        const target = nodePropTarget(node, key);
+        const target = nodePropTarget(node, key as unknown as NodePropName);
         return target !== undefined ? nodePropStruct(target) : undefined;
       },
     });
@@ -379,13 +413,13 @@ graph.Node {
 /** One props entry as the data API sees it; the editable value is its value member. */
 export interface NodePropRef {
   node: Node;
-  key: string;
+  key: NodePropName;
 }
 
-const propRefs = new WeakMap<Node, Map<string, NodePropRef>>();
+const propRefs = new WeakMap<Node, Map<NodePropName, NodePropRef>>();
 
 /** The ref a (node, key) pair resolves to, cached so repeated reads compare equal. */
-function nodePropRef(node: Node, key: string): NodePropRef {
+function nodePropRef(node: Node, key: NodePropName): NodePropRef {
   let map = propRefs.get(node);
   if (map === undefined) {
     map = new Map();
@@ -430,17 +464,43 @@ function nodePropStruct(target: ToolProperty): DataStruct {
   return st;
 }
 
-/** The property a key addresses on node: its own prop first, else the input's editable default. */
-export function nodePropTarget(node: Node, key: string): ToolProperty | undefined {
-  return node.props[key] ?? node.inputs[key]?.defaultProp;
+/** If nodePropName references a socket returns that socket, otherwise undefined.*/
+export function nodePropSocket(node: Node, nodePropName: NodePropName): NodeSocketBase | undefined {
+  const { type, name } = Node.decomposePropName(nodePropName);
+  switch (type) {
+    case "in":
+      return node.inputs[name];
+    case "out":
+      return node.outputs[name];
+    case "prop":
+      return undefined;
+  }
 }
 
-/** The keys the props datapath exposes: node props plus inputs carrying an editable default. */
-export function nodePropKeys(node: Node): string[] {
-  const keys = Object.keys(node.props);
+/** The property a key addresses on node: its own prop first, else the input's editable default. */
+export function nodePropTarget(node: Node, nodePropName: NodePropName): ToolProperty | undefined {
+  const { type, name } = Node.decomposePropName(nodePropName);
+  switch (type) {
+    case "in":
+      return node.inputs[name]?.defaultProp;
+    case "out":
+      return node.outputs[name]?.defaultProp;
+    case "prop":
+      return node.props[name];
+  }
+}
+
+/** The keys the props datapath exposes: node props plus inputs/outputs carrying an editable default. */
+export function nodePropKeys(node: Node): NodePropName[] {
+  const keys = Object.keys(node.props) as unknown as NodePropName[];
   for (const k in node.inputs) {
-    if (node.inputs[k].defaultProp !== undefined && !(k in node.props)) {
-      keys.push(k);
+    if (node.inputs[k].defaultIsEditable) {
+      keys.push(node.inputs[k].nodePropName);
+    }
+  }
+  for (const k in node.outputs) {
+    if (node.outputs[k].defaultIsEditable) {
+      keys.push(node.inputs[k].nodePropName);
     }
   }
   return keys;
@@ -453,7 +513,7 @@ export function nodePropKeys(node: Node): string[] {
  * has no bound definition (a nested copy; reconciliation re-copies it whenever the
  * definition's content moves, so the copied value stays current).
  */
-export function nodePropValue(node: Node, key: string): unknown {
+export function nodePropValue(node: Node, key: NodePropName): unknown {
   const target = nodePropTarget(node, key);
   if (target === undefined) {
     return undefined;

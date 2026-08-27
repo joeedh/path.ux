@@ -11,7 +11,13 @@ import { PackFlags, UIBase } from "../../core/ui_base";
 import { Container } from "../../core/ui";
 import type { IContextBase } from "../../core/context_base";
 import { Graph } from "../../graph/graph";
-import { Node as GraphNode, nodePropKeys, nodePropTarget } from "../../graph/node";
+import {
+  Node as GraphNode,
+  nodePropKeys,
+  NodePropName,
+  nodePropSocket,
+  nodePropTarget,
+} from "../../graph/node";
 import type { NodeSocketBase } from "../../graph/socket";
 import { ExposedEntry, GroupDef, GroupNode } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
@@ -73,13 +79,17 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
   for (const entry of def.exposed) {
     const state = exposedEntryState(node.subgraph, entry);
     const target = node.subgraph.nodeIdMap.get(entry.nodeId);
-    const label = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    const label =
+      entry.label ||
+      GraphNode.decomposePropName(entry.propKey).name ||
+      target?.getUIName() ||
+      String(entry.nodeId);
     const row: ForwardedRow = { entry, state, label };
 
     if (state === "ok" && target !== undefined) {
       if (entry.kind === "prop") {
         row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}'].value`;
-        row.socket = entry.propKey in target.props ? undefined : target.inputs[entry.propKey];
+        row.socket = nodePropSocket(target, entry.propKey);
       } else {
         row.target = target;
       }
@@ -129,8 +139,21 @@ export function buildForwardedUI(
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
-      const socket = key in target.props ? undefined : target.inputs[key];
-      root.appendChild(propEditRow(ctx, key, path, inherit_packflag, socket));
+      const { name, type } = GraphNode.decomposePropName(key);
+      let socket: NodeSocketBase | undefined;
+      switch (type) {
+        case "in":
+          socket = target.inputs[name];
+          break;
+        case "out":
+          socket = target.outputs[name];
+          break;
+        case "prop":
+          // socket is left undefined
+          break;
+      }
+
+      root.appendChild(propEditRow(ctx, name, path, inherit_packflag, socket));
     }
   }
 }
@@ -213,7 +236,11 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
     row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
 
     const name = document.createElement("span");
-    name.textContent = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    name.textContent =
+      entry.label ||
+      GraphNode.decomposePropName(entry.propKey).name ||
+      target?.getUIName() ||
+      String(entry.nodeId);
     row.appendChild(name);
 
     if (state === "missing") {
@@ -244,7 +271,7 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
           ...common,
           index,
           nodeId : _parseNodeId(nodeIdIn.value),
-          propKey: keyIn.value.trim(),
+          propKey: keyIn.value.trim() as unknown as NodePropName,
         });
       });
       row.appendChild(repoint);

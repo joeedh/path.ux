@@ -5,6 +5,7 @@ const {
   registerNodeType,
   FloatSocket,
   Vec3Socket,
+  StringSocket,
   Graph,
   GroupDef,
   GroupNode,
@@ -18,11 +19,32 @@ export class DemoValue extends Node {
       typeName: "DemoValue",
       uiName  : (node) => `Value ${(node.props.value.getValue() as number).toFixed(2)}`,
       props   : { value: new FloatProperty(1.0) },
-      outputs : { out: new FloatSocket("out") },
+      inputs: {
+        strIn: new StringSocket("in").setUX((prop) =>
+          prop.setMultiline(true).setDescription("Input string")
+        ),
+      },
+      outputs : { out: new FloatSocket("out"), str: new StringSocket("out") },
     };
+  }
+
+  constructor() {
+    super();
   }
 }
 registerNodeType(DemoValue);
+
+/** A constant source; its title tracks the value property. */
+export class DemoText extends Node {
+  static override graphDef(): nodegraph.NodeDef {
+    return {
+      typeName: "DemoText",
+      uiName  : (node) => `Text ${node.outputs.text.getValue()}`,
+      outputs : { text: new StringSocket("out") },
+    };
+  }
+}
+registerNodeType(DemoText);
 
 /** Its scale and clamp props render as inline rows; an unconnected a or b
  *  input contributes an editable default row as well. */
@@ -94,7 +116,7 @@ function makeDemoGroupDef() {
 /** The in-memory definition store the stub loader/saver pair reads and writes. */
 export const demoGroupDefs = new Map([["demo_group", makeDemoGroupDef()]]);
 
-function makeDemoGraph() {
+export function makeDemoGraph() {
   const g = new Graph();
   g.groupLoader = async (ref) => demoGroupDefs.get(ref);
   g.groupSaver = async (ref, def) => {
@@ -126,9 +148,6 @@ function makeDemoGraph() {
   g.connect(reduce.outputs.out, vec.inputs.vec);
   return g;
 }
-
-/** The graph the node editor tab opens; resolved lazily by the tab. */
-export const theDemoGraph = makeDemoGraph();
 
 /** The datapaths api_define.ts publishes these graphs at. */
 export const DEMO_GRAPH_PATH = "nodegraph";

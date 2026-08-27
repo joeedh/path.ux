@@ -25,7 +25,9 @@ export class MenuBarEditor extends Editor {
   }
 
   copy() {
-    const ret = UIBase.createElement<MenuBarEditor>((this.constructor as unknown as typeof MenuBarEditor).define().tagname);
+    const ret = UIBase.createElement<MenuBarEditor>(
+      (this.constructor as unknown as typeof MenuBarEditor).define().tagname
+    );
     ret.ctx = this.ctx;
     return ret;
   }

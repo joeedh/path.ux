@@ -1,5 +1,11 @@
 import { ToolOp } from "../pathux.js";
-import { ListProperty, StringProperty, Vec2Property, Vec4Property, FloatProperty } from "../pathux.js";
+import {
+  ListProperty,
+  StringProperty,
+  Vec2Property,
+  Vec4Property,
+  FloatProperty,
+} from "../pathux.js";
 import { Vector2 } from "../pathux.js";
 import { Brushes } from "./brush.js";
 import { DynamicsProperty, DynamicsState, DynamicsStateProperty } from "../core/dynamics.js";

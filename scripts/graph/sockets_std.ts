@@ -1,5 +1,10 @@
 import * as nstructjs from "../path-controller/util/nstructjs";
-import { FloatProperty, Vec3Property } from "../path-controller/toolsys/toolprop";
+import {
+  FloatProperty,
+  Vec3Property,
+  StringProperty,
+  PropFlags,
+} from "../path-controller/toolsys/toolprop";
 import { Vector3 } from "../path-controller/util/vectormath";
 import type { SocketDir } from "./graph_types";
 import { NodeSocketBase, registerSocketType } from "./socket";
@@ -15,9 +20,7 @@ export class FloatSocket extends NodeSocketBase<"float", number> {
   constructor(dir: SocketDir = "in") {
     super(dir);
 
-    if (dir === "in") {
-      this.defaultProp = new FloatProperty(0);
-    }
+    this.defaultProp = new FloatProperty(0);
   }
 }
 registerSocketType(FloatSocket);
@@ -32,9 +35,7 @@ export class Vec3Socket extends NodeSocketBase<"vec3", Vector3> {
   constructor(dir: SocketDir = "in") {
     super(dir);
 
-    if (dir === "in") {
-      this.defaultProp = new Vec3Property([0, 0, 0]);
-    }
+    this.defaultProp = new Vec3Property([0, 0, 0]);
   }
 
   // float→vec3 is destination knowledge: the float splats across the components.
@@ -65,3 +66,18 @@ export class Vec3Socket extends NodeSocketBase<"vec3", Vector3> {
   }
 }
 registerSocketType(Vec3Socket);
+
+export class StringSocket extends NodeSocketBase<"string", string, StringProperty> {
+  static STRUCT = nstructjs.inlineRegister(this, `graph.StringSocket {}`);
+
+  static socketDef(): SocketTypeDef {
+    return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
+  }
+
+  constructor(dir: SocketDir = "in") {
+    super(dir);
+
+    this.defaultProp = new StringProperty("");
+  }
+}
+registerSocketType(StringSocket);

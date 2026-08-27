@@ -1,3 +1,4 @@
+import { ViewContext } from "../../core/context";
 import {
   Area,
   NodeEditor,
@@ -7,27 +8,27 @@ import {
   nodegraph,
 } from "../../pathux.js";
 import type { IAreaDef } from "../../pathux.js";
-import { DEMO_GRAPH_PATH, DEMO_GROUP_DEF_PATH, theDemoGraph } from "./demo_nodes.js";
+import { DEMO_GRAPH_PATH, DEMO_GROUP_DEF_PATH } from "./demo_nodes.js";
 
 /**
  * The example app's node editor: the library's unregistered NodeEditor plus the
  * app's context conventions, registered here at consumer scope the way every
  * example editor is.
  */
-export class NodeEditorTab extends NodeEditor {
+export class NodeEditorTab extends NodeEditor<ViewContext> {
   push_ctx_active() {
-    contextWrangler.updateLastRef(this.constructor, this);
-    contextWrangler.push(this.constructor, this);
+    contextWrangler.updateLastRef(this.constructor, this as unknown as Area);
+    contextWrangler.push(this.constructor, this as unknown as Area);
   }
 
   pop_ctx_active() {
-    contextWrangler.pop(this.constructor, this);
+    contextWrangler.pop(this.constructor, this as unknown as Area);
   }
 
   init() {
     super.init();
 
-    this.setGraph(theDemoGraph, DEMO_GRAPH_PATH);
+    this.setGraph(this.ctx.nodegraph, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
 
     const add = this.headerRow.menu(
@@ -37,7 +38,7 @@ export class NodeEditorTab extends NodeEditor {
     add.description = "Add a node at the view's center";
 
     // group instances render unresolved until the stub loader answers.
-    void theDemoGraph.resolveGroups().then(() => this.view.syncGraph());
+    void this.ctx.nodegraph.resolveGroups().then(() => this.view.syncGraph());
   }
 
   private _openDefinition(node: nodegraph.GroupNode) {

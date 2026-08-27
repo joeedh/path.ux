@@ -1,11 +1,12 @@
 import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
-import { ToolProperty } from "../path-controller/toolsys/toolprop";
+import { PropFlags, ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { DataAPI, DataStruct } from "../path-controller/controller/controller";
 import type { IContextBase } from "../core/context_base";
 import type { Container } from "../core/ui";
 import type { Color, GraphId, ISocketOwner, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
+import type { NodePropName } from "./node";
 
 /** Per-type description a socket class returns from its static socketDef(). */
 export interface SocketTypeDef {
@@ -15,6 +16,7 @@ export interface SocketTypeDef {
   type: string;
   uiName?: string;
   color?: Color;
+  // to set descriptions use the socket's defaultProp
 }
 
 export interface SocketTypeConstructor {
@@ -30,17 +32,21 @@ let visitPass = 0;
  * its value through its edges on demand and stores nothing of its own. See
  * documentation/research/nodeEditor.md for the design this implements.
  */
-export class NodeSocketBase<Type extends string = string, Value = unknown> {
+export class NodeSocketBase<
+  Type extends string = string,
+  Value = unknown,
+  Prop extends ToolProperty<Value> = ToolProperty<Value>,
+> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-graph.NodeSocketBase {
-  socketId    : string | JSON.stringify(this.socketId);
-  name        : string;
-  type        : string;
-  dir         : string;
-  multiSocket : bool;
-  defaultProp ?: abstract(ToolProperty);
+pathux.NodeSocketBase {
+  socketId     : string | JSON.stringify(this.socketId);
+  name         : string;
+  type         : string;
+  dir          : string;
+  multiSocket  : bool;
+  defaultProp  : abstract(ToolProperty);
 }
 `
   );
@@ -54,14 +60,35 @@ graph.NodeSocketBase {
   /** The record key this socket sits under in its owning node's inputs or outputs. */
   name = "";
 
+  // the node property alias name for this socket
+  get nodePropName() {
+    return `${this.dir}:${this.name}` as unknown as NodePropName;
+  }
+
   type: Type;
   dir: SocketDir;
 
   /** Derived, output sockets only. Written by the client through setValue, read through getValue. */
   private value: Value | undefined = undefined;
 
-  /** Authored, input sockets only. undefined means no editable default. */
-  defaultProp?: ToolProperty;
+  /**
+   * Default value.  For input sockets this contains default value.
+   * For both input and output sockets contains various UX related properties.
+   *
+   * Client classes must create this.
+   */
+  declare defaultProp: Prop;
+  /**
+   * if true, on load UX-related properties like numeric ranges,
+   * tooltips etc will be merged from the default prop.
+   **/
+  protected mergeDefaultProp = true;
+
+  /** Is the default value editable. */
+  get defaultIsEditable(): boolean {
+    return this.useDefaultValue && !(this.defaultProp.flag & PropFlags.READ_ONLY);
+  }
+  useDefaultValue = true;
 
   edges: NodeSocketBase[] = [];
 
@@ -96,22 +123,32 @@ graph.NodeSocketBase {
   }
 
   /**
+   * Chaining-friendly way to set default prop properties
+   * e.g. new Socket().setDefault(prop => prop.setReadOnly().setDescription("sdfd"))
+   */
+  setUX(cb: (prop: Prop) => void): this {
+    cb(this.defaultProp);
+    return this;
+  }
+
+  /**
    * On an output, the stored value. On an input, the value resolved through the edges:
    * coerced from the source, reduced when multi-connected, or the default when
    * unconnected. Returns undefined on an unconnected input whose type has no default.
    */
   getValue(): Value | undefined {
     if (this.dir === "out") {
-      if (DEV_BUILD && this.defaultProp !== undefined) {
-        throw new Error("defaultProp is meaningful on input sockets only");
+      if (this.value === undefined && this.useDefaultValue) {
+        return this.defaultProp.getValue();
       }
+
       return this.value;
     }
 
     const sources = this.resolvedEdges();
 
     if (sources.length === 0) {
-      return this.defaultProp?.getValue() as Value | undefined;
+      return !this.useDefaultValue ? undefined : (this.defaultProp.getValue() as Value);
     }
 
     // A same-type single source passes through; there is nothing to memoize.
@@ -246,7 +283,8 @@ graph.NodeSocketBase {
     }
 
     const sources = this.resolvedEdges();
-    return sources.length > 0 ? sources[0] : this.defaultProp;
+    const defaultProp = this.useDefaultValue ? this.defaultProp : undefined;
+    return sources.length > 0 ? sources[0] : defaultProp;
   }
 
   /**
@@ -286,7 +324,7 @@ graph.NodeSocketBase {
     b.dir = this.dir;
     b.multiSocket = this.multiSocket;
     b.color = this.color;
-    b.defaultProp = this.defaultProp?.copy() as ToolProperty | undefined;
+    b.defaultProp = this.defaultProp.copy();
   }
 
   copy(): this {
@@ -319,15 +357,22 @@ graph.NodeSocketBase {
   }
 
   loadSTRUCT(reader: StructReader<this>): void {
+    const defaultDefault = this.defaultProp;
     reader(this);
 
     // GraphId is number | string; the STRUCT field carries it JSON-encoded so the two stay distinct.
     this.socketId = JSON.parse(this.socketId as unknown as string) as GraphId;
     this.dir = this.dir === "out" ? "out" : "in";
 
-    if (this.dir === "out") {
-      // The constructor ran with the default "in" dir and may have authored an input default.
-      this.defaultProp = undefined;
+    const value =
+      this.defaultProp === undefined ? defaultDefault.getValue() : this.defaultProp.getValue();
+
+    if (this.defaultProp === undefined) {
+      // old files
+      this.defaultProp = defaultDefault;
+    } else if (this.mergeDefaultProp) {
+      defaultDefault.copyTo(this.defaultProp);
+      this.defaultProp.setValue(value);
     }
   }
 }

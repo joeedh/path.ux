@@ -541,6 +541,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       const r = this.panzoom.getBoundingClientRect();
       at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
     }
+
     this._dispatch({
       kind     : "addNode",
       graphPath: this.currentGraphPath,

@@ -116,7 +116,7 @@ export function buildGraphFromDSL(
       report(
         "unknown-prop",
         path,
-        `node type '${node.def.typeName}' has no prop or input default '${key}'`
+        `node type '${node.def.typeName}' has no prop or default '${key}'`
       );
       return;
     }

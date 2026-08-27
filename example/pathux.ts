@@ -1,2 +1,1 @@
-export * from '../scripts/pathux';
-
+export * from "../scripts/pathux";

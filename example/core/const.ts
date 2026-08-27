@@ -25,10 +25,10 @@ export class Version {
   }
 
   toInt() {
-    let f = this.major<<24;
+    let f = this.major << 24;
 
-    f |= this.minor<<16;
-    f |= this.micro<<8;
+    f |= this.minor << 16;
+    f |= this.micro << 8;
     f |= this.dev;
 
     return f;

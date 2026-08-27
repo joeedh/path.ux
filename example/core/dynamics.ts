@@ -1,14 +1,14 @@
-import {PropTypes, ToolProperty, Vector2, nstructjs} from "../pathux.js";
+import { PropTypes, ToolProperty, Vector2, nstructjs } from "../pathux.js";
 
 export const DynamicModes = {
-  MULTIPLY : 1,
-  REPLACE  : 2
+  MULTIPLY: 1,
+  REPLACE : 2,
 };
 
 export const PenKeys = {
-  PRESSURE : 0,
-  TILTX    : 1,
-  TILTY    : 2
+  PRESSURE: 0,
+  TILTX   : 1,
+  TILTY   : 2,
 };
 
 // PropTypes is a readonly bitmask map; the example adds two app-specific property
@@ -142,8 +142,7 @@ export class Dynamics {
   }
 
   load(b: Dynamics | undefined) {
-    if (!b)
-      return this;
+    if (!b) return this;
 
     this.clear();
 
@@ -168,7 +167,6 @@ Dynamics {
 `;
 nstructjs.register(Dynamics);
 
-
 export class DynamicsState {
   static STRUCT: string;
 
@@ -181,14 +179,13 @@ export class DynamicsState {
   }
 
   interp(b: DynamicsState, t: number) {
-    this.pressure += (b.pressure - this.pressure)*t;
+    this.pressure += (b.pressure - this.pressure) * t;
     this.tilt.interp(b.tilt, t);
     return this;
   }
 
   load(b: DynamicsState | undefined) {
-    if (!b)
-      return this;
+    if (!b) return this;
 
     this.pressure = b.pressure;
     this.tilt = b.tilt.copy();
@@ -213,7 +210,7 @@ nstructjs.register(DynamicsState);
 const i = 21;
 while (i < 45) {
   let ok = true;
-  const bit = 1<<i;
+  const bit = 1 << i;
   for (const k in PropTypes) {
     if ((PropTypes as Record<string, number>)[k] === bit) {
       ok = false;
@@ -222,8 +219,8 @@ while (i < 45) {
   }
 
   if (ok) {
-    PropTypesExt.DYNAMICS = (1<<i);
-    PropTypesExt.DYNAMICS_STATE = (1<<(i+1));
+    PropTypesExt.DYNAMICS = 1 << i;
+    PropTypesExt.DYNAMICS_STATE = 1 << (i + 1);
     break;
   }
 }
@@ -254,7 +251,6 @@ export class DynamicsProperty extends ToolProperty<Dynamics> {
     b.data.load(this.data);
   }
 }
-
 
 export class DynamicsStateProperty extends ToolProperty<DynamicsState> {
   constructor(value?: DynamicsState) {

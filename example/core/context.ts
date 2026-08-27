@@ -1,18 +1,26 @@
-import {WorkspaceEditor} from "../editors/workspace/workspace.js";
-import {Editor} from "../editors/editor_base.js";
-import {theDemoGraph, demoGroupDefs} from "../editors/nodeeditor/demo_nodes.js";
+import { WorkspaceEditor } from "../editors/workspace/workspace.js";
+import { Editor } from "../editors/editor_base.js";
+import { demoGroupDefs } from "../editors/nodeeditor/demo_nodes.js";
 
-import {Context, ContextOverlay, ContextFlags, Area, getLastToolStruct, ContextLike} from '../pathux.js';
-import {DocsBrowserEditor} from "../editors/docbrowser/docbrowser.js";
+import {
+  Context,
+  ContextOverlay,
+  ContextFlags,
+  Area,
+  getLastToolStruct,
+  ContextLike,
+} from "../pathux.js";
+import { DocsBrowserEditor } from "../editors/docbrowser/docbrowser.js";
 
-import {message, warning, error, sendNote, SavedToolDefaults} from '../pathux.js';
+import { message, warning, error, sendNote, SavedToolDefaults } from "../pathux.js";
 
-import type {AppState} from "./app.js";
-import type {ModelData} from "./state.js";
-import type {DataAPI, ToolStack} from '../pathux.js';
-import type {DataLib} from "./datablock.js";
-import type {AppScreen} from "../editors/screen.js";
-import type {Canvas} from "../draw/draw.js";
+import type { AppState } from "./app.js";
+import type { ModelData } from "./state.js";
+import type { DataAPI, ToolStack } from "../pathux.js";
+import type { DataLib } from "./datablock.js";
+import type { AppScreen } from "../editors/screen.js";
+import type { Canvas } from "../draw/draw.js";
+import { Graph } from "../../scripts/graph/graph.js";
 
 // The application context surfaced to tools and the data API. The runtime values are
 // forwarded from BaseOverlay/ViewOverlay getters; this interface gives consumers
@@ -28,10 +36,12 @@ export interface AppContext extends ContextLike<AppState, ToolStack> {
 }
 
 export class BaseOverlay extends ContextOverlay {
-  static contextDefine() {return {
-    name : "view",
-    flag : ContextFlags.IS_VIEW
-  }}
+  static contextDefine() {
+    return {
+      name: "view",
+      flag: ContextFlags.IS_VIEW,
+    };
+  }
 
   get toolstack() {
     return (this.state as AppState).toolstack;
@@ -64,7 +74,9 @@ export class BaseOverlay extends ContextOverlay {
   }
 
   get data(): ModelData | undefined {
-    return (this.state as AppState).datalib.getBlockSet("model_data")!.active as ModelData | undefined;
+    return (this.state as AppState).datalib.getBlockSet("model_data")!.active as
+      | ModelData
+      | undefined;
   }
 
   get canvas() {
@@ -76,7 +88,7 @@ export class BaseOverlay extends ContextOverlay {
   }
 
   get nodegraph() {
-    return theDemoGraph;
+    return this.data!.demoNodeGraph;
   }
 
   get demogroup() {
@@ -95,10 +107,12 @@ export class BaseOverlay extends ContextOverlay {
 Context.register(BaseOverlay);
 
 export class ViewOverlay extends ContextOverlay {
-  static contextDefine() {return {
-    name : "view",
-    flag : ContextFlags.IS_VIEW
-  }}
+  static contextDefine() {
+    return {
+      name: "view",
+      flag: ContextFlags.IS_VIEW,
+    };
+  }
 
   get screen() {
     return (this.state as AppState).screen;
@@ -122,6 +136,8 @@ export class ContextBase extends Context {
   declare toolstack: ToolStack;
   declare screen: AppScreen;
   declare datalib: DataLib;
+  declare nodegraph: Graph;
+  declare data: ModelData | undefined;
 
   saveProperty(k: string) {
     const v = this[k];

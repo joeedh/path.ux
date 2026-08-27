@@ -1,7 +1,7 @@
-import {Vector4, DataAPI, DataStruct, DataPath, nstructjs, Curve1D} from '../pathux.js';
-import {Icons} from '../editors/icon_enum.js';
-import {Canvas} from '../draw/draw.js';
-import {DataBlock} from './datablock.js';
+import { Vector4, DataAPI, nstructjs, Curve1D } from "../pathux.js";
+import { Canvas } from "../draw/draw.js";
+import { DataBlock } from "./datablock.js";
+import { makeDemoGraph } from "../editors/nodeeditor/demo_nodes.js";
 
 export class ModelData extends DataBlock {
   angle1: number;
@@ -14,11 +14,12 @@ export class ModelData extends DataBlock {
   color: Vector4;
   text: string;
   boolval: boolean;
+  demoNodeGraph = makeDemoGraph();
 
   constructor() {
     super();
 
-    this.angle1 = Math.PI*0.5;
+    this.angle1 = Math.PI * 0.5;
     this.angle2 = 90.0;
 
     this.canvas = new Canvas();
@@ -29,7 +30,7 @@ export class ModelData extends DataBlock {
     this.value = 0;
     this.enum = 0;
     this.color = new Vector4([0, 0, 0, 1]);
-    this.text = '';
+    this.text = "";
     this.boolval = true;
   }
 
@@ -37,8 +38,8 @@ export class ModelData extends DataBlock {
     return {
       uiName     : "Model Data",
       typeName   : "model_data",
-      defaultName: "Model Data"
-    }
+      defaultName: "Model Data",
+    };
   }
 
   static defineAPI(api: DataAPI) {
@@ -67,16 +68,19 @@ export class ModelData extends DataBlock {
   }
 }
 
-ModelData.STRUCT = nstructjs.inherit(ModelData, DataBlock, 'example.ModelData') + `
-  color     : vec4;
-  enum      : int;
-  value     : float;
-  text      : string;
-  canvas    : Canvas;
-  curvemap  : Curve1D;
-  angle1    : float;
-  angle2    : float;
-  boolval   : bool;
+ModelData.STRUCT =
+  nstructjs.inherit(ModelData, DataBlock, "example.ModelData") +
+  `
+  color         : vec4;
+  enum          : int;
+  value         : float;
+  text          : string;
+  canvas        : Canvas;
+  curvemap      : Curve1D;
+  angle1        : float;
+  angle2        : float;
+  boolval       : bool;
+  demoNodeGraph : pathux.Graph;
 }
 `;
 nstructjs.register(ModelData);

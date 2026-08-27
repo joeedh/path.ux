@@ -5,7 +5,7 @@ import { IContextBase } from "../../core/context_base";
 import { t } from "../../core/theme_schema";
 import type { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
-import type { Node as GraphNode } from "../../graph/node";
+import { Node as GraphNode, NodePropName, nodePropSocket } from "../../graph/node";
 import type { SocketDir } from "../../graph/graph_types";
 import { propEditRow } from "./groupui";
 
@@ -272,25 +272,33 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   }
 
   /** The sockets the rows cover, and which of them carry an inline editor. */
-  private _rowSignature(inline: ReadonlySet<string>): string {
-    const parts = Object.keys(this.node.outputs).map((key) => `out:${key}`);
+  private _rowSignature(inline: ReadonlySet<NodePropName>): string {
+    const parts = [] as string[];
+    for (const key of Object.keys(this.node.outputs)) {
+      const sock = this.node.outputs[key];
+      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+    }
     for (const key of Object.keys(this.node.inputs)) {
-      parts.push(`in:${key}${inline.has(key) ? "=" : ""}`);
+      const sock = this.node.inputs[key];
+      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     return parts.join(",");
   }
 
   /** The inputs whose default is editable inline: unshadowed, and unconnected. */
-  private _inlineKeys(): Set<string> {
-    const keys = new Set<string>();
+  private _inlineKeys(): Set<NodePropName> {
+    const keys = new Set<NodePropName>();
     if (this.nodePath === "") {
       return keys;
     }
 
-    for (const key of Object.keys(this.node.inputs)) {
-      const sock = this.node.inputs[key];
-      if (sock.defaultProp !== undefined && sock.edges.length === 0 && !(key in this.node.props)) {
-        keys.add(key);
+    const allSocks = [this.node.inputs, this.node.outputs];
+    for (const socks of allSocks) {
+      for (const key in socks) {
+        const sock = socks[key];
+        if (sock.useDefaultValue && sock.edges.length === 0 && !(key in this.node.props)) {
+          keys.add(sock.nodePropName);
+        }
       }
     }
     return keys;
@@ -322,10 +330,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._rows = [];
 
     for (const key of Object.keys(this.node.outputs)) {
-      this._rows.push(this._socketRow(key, "out", false));
+      const sock = this.node.outputs[key];
+      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
     }
     for (const key of Object.keys(this.node.inputs)) {
-      this._rows.push(this._socketRow(key, "in", inline.has(key)));
+      const sock = this.node.inputs[key];
+      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
     }
 
     for (const row of this._rows) {
@@ -422,8 +432,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   /** One socket's row: its terminal dot, plus an inline default editor where
    *  the socket has one and its name where it does not. */
-  private _socketRow(key: string, dir: SocketDir, inline: boolean): HTMLDivElement {
+  private _socketRow(socketPropName: NodePropName, inline: boolean): HTMLDivElement {
     const height = this.getDefault("SocketRowHeight") as number;
+    const { type: dir } = GraphNode.decomposePropName(socketPropName);
+    if (dir === "prop") {
+      throw new Error("_socketRow called with socket name not nodePropName");
+    }
 
     const row = document.createElement("div");
     // Positioned so the terminal dot can anchor to the frame's outer edge.
@@ -432,30 +446,33 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       `justify-content: ${dir === "in" ? "flex-start" : "flex-end"}; ` +
       "gap: 4px; padding: 0 4px; box-sizing: border-box;";
 
-    const dot = this._terminalDot(key, dir);
-    const label = inline ? this._inlineEditor(key) : undefined;
+    const dot = this._terminalDot(socketPropName);
+    const label = inline ? this._inlineEditor(socketPropName) : undefined;
 
     if (dir === "in") {
       row.appendChild(dot);
-      row.appendChild(label ?? this._terminalName(key));
+      row.appendChild(label ?? this._terminalName(socketPropName));
     } else {
-      row.appendChild(this._terminalName(key));
+      row.appendChild(label ?? this._terminalName(socketPropName));
       row.appendChild(dot);
     }
     return row;
   }
 
-  private _terminalName(key: string): HTMLSpanElement {
+  private _terminalName(key: NodePropName): HTMLSpanElement {
     const name = document.createElement("span");
-    name.textContent = key;
+    name.textContent = GraphNode.decomposePropName(key).name;
     name.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
     return name;
   }
 
-  /** The editor for an input's default value, bound through the props datapath. */
-  private _inlineEditor(key: string): HTMLElement {
-    const path = `${this.nodePath}.props['${key}'].value`;
-    const row = propEditRow(this.ctx, key, path, this.inherit_packflag, this.node.inputs[key]);
+  /** The editor for a sockets default value, bound through the props datapath. */
+  private _inlineEditor(socketPropName: NodePropName): HTMLElement {
+    const { name: socketName, type: dir } = GraphNode.decomposePropName(socketPropName);
+
+    const path = `${this.nodePath}.props['${socketPropName}'].value`;
+    const sock = nodePropSocket(this.node, socketPropName);
+    const row = propEditRow(this.ctx, socketName, path, this.inherit_packflag, sock);
     row.parentWidget = this;
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
@@ -464,15 +481,17 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return row;
   }
 
-  private _terminalDot(key: string, dir: SocketDir): HTMLSpanElement {
-    const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
+  private _terminalDot(socketPropName: NodePropName): HTMLSpanElement {
+    const { type: dir, name: socketName } = GraphNode.decomposePropName(socketPropName);
+
+    const sock = dir === "in" ? this.node.inputs[socketName] : this.node.outputs[socketName];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
 
     const dot = document.createElement("span");
     dot.className = "nodeframe-terminal";
-    dot.dataset.socketKey = key;
+    dot.dataset.socketKey = socketName;
     dot.dataset.socketDir = dir;
-    dot.title = `${key} (${sock.type})`;
+    dot.title = `${socketName} (${sock.type})`;
     // Centered on the frame's outer edge where socketAnchor and link-drop hit
     // testing place the terminal; -5px cancels the frame's 1px border.
     dot.style.cssText =
@@ -487,7 +506,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       e.preventDefault();
       // Keeps the press from selecting the frame or starting a box-select.
       e.stopPropagation();
-      this.onSocketDown(this, key, dir, e);
+      // non-socket prop keys should've been caught in calling functions
+      this.onSocketDown(this, socketName, dir as SocketDir, e);
     });
 
     return dot;

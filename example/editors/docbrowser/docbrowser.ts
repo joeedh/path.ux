@@ -10,7 +10,7 @@ import {
   Matrix4,
   cconst,
   PlatformAPI,
-  platform as Platform
+  platform as Platform,
 } from "../../pathux.js";
 // DocsBrowser lives in the optional pathux_with_docbrowser bundle, not the main
 // pathux entry; import it from source so the example bundle includes it and the
@@ -69,7 +69,7 @@ function dirname(path: string) {
 
 function relative(a1: string, b1: string) {
   let a = a1;
-    let b = b1;
+  let b = b1;
 
   let i = 1;
   while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {

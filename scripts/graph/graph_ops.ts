@@ -4,7 +4,7 @@ import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { ContextLike } from "../path-controller/controller/controller_abstract";
 import { Graph } from "./graph";
 import { getNodeClass, nodePropTarget } from "./node";
-import type { Node } from "./node";
+import type { Node, NodePropName } from "./node";
 import { definitionOfSubgraph } from "./group";
 import type { ExposedEntry } from "./group";
 import type { GraphId } from "./graph_types";
@@ -541,6 +541,7 @@ export class ReplaceNodeOp extends ToolOp<{
 export class SetNodePropOp extends ToolOp<{
   graphPath: StringProperty;
   nodeId: StringProperty;
+  /** holds a NodePropName. */
   propKey: StringProperty;
   value: ToolProperty;
   [k: string]: ToolProperty;
@@ -565,13 +566,13 @@ export class SetNodePropOp extends ToolOp<{
     ctx: ContextLike,
     graphPath: string,
     nodeIdJSON: string,
-    propKey: string,
+    propKey: NodePropName,
     value: unknown
   ): SetNodePropOp {
     const tool = new SetNodePropOp();
     tool.inputs.graphPath.setValue(graphPath);
     tool.inputs.nodeId.setValue(nodeIdJSON);
-    tool.inputs.propKey.setValue(propKey);
+    tool.inputs.propKey.setValue(propKey as unknown as string);
 
     const graph = graphAt(ctx, graphPath);
     const node = nodeAt(graph, nodeIdJSON);
@@ -582,14 +583,14 @@ export class SetNodePropOp extends ToolOp<{
 
     const prop = (target.copy() as ToolProperty).ignoreLastValue();
     prop.setValue(value);
-    (tool.inputs as Record<string, unknown>).value = prop;
+    tool.inputs.value = prop;
     return tool;
   }
 
   private _target(ctx: ContextLike): ToolProperty {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
     const node = nodeAt(graph, this.inputs.nodeId.getValue());
-    const key = this.inputs.propKey.getValue();
+    const key = this.inputs.propKey.getValue() as unknown as NodePropName;
     const target = nodePropTarget(node, key);
     if (target === undefined) {
       throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);

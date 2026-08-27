@@ -18,7 +18,7 @@ export class GraphLink {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-graph.GraphLink {
+pathux.GraphLink {
   srcNode : string | JSON.stringify(this.srcNode);
   srcKey  : string;
   dstNode : string | JSON.stringify(this.dstNode);
@@ -83,11 +83,11 @@ export class Graph {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-graph.Graph {
+pathux.Graph {
   VERSION : float;
   idgen   : int;
-  nodes   : array(abstract(graph.Node));
-  links   : array(graph.GraphLink) | this._linkList();
+  nodes   : array(abstract(pathux.GraphNode));
+  links   : array(pathux.GraphLink) | this._linkList();
 }
 `
   );

@@ -8,11 +8,11 @@ import { CSSFont, getVars, ThemeScrollBars } from "./pathux.js";
 
 export const themeVars = {
   // the colour a widget takes on under the mouse
-  accent: "rgba(151,208,239, 1)",
+  accent    : "rgba(151,208,239, 1)",
   // what sits behind a widget that draws no background of its own
   background: "rgba(207,207,207, 0.5)",
   // how round a box's corners are
-  radius: 5,
+  radius    : 5,
   // the font ordinary text is drawn in
   bodyFont: new CSSFont({
     font   : "sans-serif",

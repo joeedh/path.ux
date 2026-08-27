@@ -7,7 +7,7 @@ import { Graph } from "./graph";
 import { defineGraphAPI } from "./graph_api";
 import type { GroupResolveRuntime } from "./graph";
 import { Node, registerNodeType } from "./node";
-import type { NodeDef, Sockets } from "./node";
+import type { NodeDef, NodePropName, Sockets } from "./node";
 import { NodeSocketBase } from "./socket";
 import type { GraphId, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
@@ -42,7 +42,7 @@ function setProxy(sock: NodeSocketBase, counterpart: () => NodeSocketBase | unde
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.dir === "in" && far.defaultProp !== undefined ? [far] : [];
+    return far.defaultProp !== undefined ? [far] : [];
   };
 }
 
@@ -68,7 +68,7 @@ graph.ExposedEntry {
   nodeId: GraphId;
 
   /** Empty on a nodeUI entry. */
-  propKey: string;
+  propKey: NodePropName;
 
   /** The outside-facing name; the target's own uiName applies when absent. */
   label?: string;
@@ -81,7 +81,7 @@ graph.ExposedEntry {
   ) {
     this.kind = kind;
     this.nodeId = nodeId;
-    this.propKey = propKey;
+    this.propKey = propKey as unknown as NodePropName;
     this.label = label;
   }
 
@@ -146,9 +146,9 @@ export class GroupDef {
     this,
     `
 graph.GroupDef {
-  subgraph : graph.Graph;
-  inputs   : array(abstract(graph.NodeSocketBase)) | this._sockList(this.inputs);
-  outputs  : array(abstract(graph.NodeSocketBase)) | this._sockList(this.outputs);
+  subgraph : pathux.Graph;
+  inputs   : array(abstract(pathux.NodeSocketBase)) | this._sockList(this.inputs);
+  outputs  : array(abstract(pathux.NodeSocketBase)) | this._sockList(this.outputs);
   exposed  : array(graph.ExposedEntry);
 }
 `
@@ -201,7 +201,6 @@ graph.GroupDef {
     inner.name = key;
     inner.dir = "out";
     inner.multiSocket = true;
-    inner.defaultProp = undefined;
     inner.owningNode = node;
     node.outputs[key] = inner;
     return inner;
@@ -222,7 +221,6 @@ graph.GroupDef {
     sock.name = key;
     sock.dir = "out";
     sock.multiSocket = true;
-    sock.defaultProp = undefined;
     this.outputs[key] = sock;
     return inner;
   }
@@ -312,7 +310,7 @@ export class GroupNode extends Node {
 graph.GroupNode {
   ref        : string;
   syncedHash : string;
-  subgraph   : graph.Graph;
+  subgraph   : pathux.Graph;
 }
 `
   );
@@ -524,10 +522,9 @@ graph.GroupNode {
       for (const k in n.props) {
         n.props[k].wasSet = false;
       }
-      for (const k in n.inputs) {
-        const p = n.inputs[k].defaultProp;
-        if (p !== undefined) {
-          p.wasSet = false;
+      for (const sock of n.allSockets) {
+        if (sock.useDefaultValue) {
+          sock.defaultProp.wasSet = false;
         }
       }
     }
@@ -542,6 +539,9 @@ graph.GroupNode {
       }
       for (const k in n.inputs) {
         this._transplantOverride(old.inputs[k]?.defaultProp, n.inputs[k].defaultProp);
+      }
+      for (const k in n.outputs) {
+        this._transplantOverride(old.outputs[k]?.defaultProp, n.outputs[k].defaultProp);
       }
     }
 
@@ -597,7 +597,7 @@ graph.GroupNode {
       const tmpl = defSocks[k];
       const cur: NodeSocketBase | undefined = instSocks[k];
 
-      if (cur !== undefined && cur.constructor === tmpl.constructor) {
+      if (cur?.constructor === tmpl.constructor) {
         const oldDefault = cur.defaultProp;
         tmpl.copyTo(cur);
         cur.dir = dir;
@@ -615,9 +615,6 @@ graph.GroupNode {
       const s = tmpl.copy();
       s.name = k;
       s.dir = dir;
-      if (dir === "out") {
-        s.defaultProp = undefined;
-      }
       added.push(s);
     }
 

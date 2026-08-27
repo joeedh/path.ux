@@ -1,5 +1,5 @@
-import {ToolOp, UndoFlags, Vector2} from '../../pathux.js';
-import type {AppContext} from "../../core/context.js";
+import { ToolOp, UndoFlags, Vector2 } from "../../pathux.js";
+import type { AppContext } from "../../core/context.js";
 
 export class PanOp extends ToolOp<{}, {}, AppContext> {
   start_mpos: Vector2 | undefined;
@@ -12,13 +12,15 @@ export class PanOp extends ToolOp<{}, {}, AppContext> {
     this.last_mpos = start_mpos !== undefined ? new Vector2(start_mpos) : undefined;
   }
 
-  static tooldef() {return {
-    uiname      : "Pan",
-    description : "Pan",
-    toolpath    : "canvas.pan",
-    is_modal    : true,
-    undoflag    : UndoFlags.NO_UNDO
-  }}
+  static tooldef() {
+    return {
+      uiname     : "Pan",
+      description: "Pan",
+      toolpath   : "canvas.pan",
+      is_modal   : true,
+      undoflag   : UndoFlags.NO_UNDO,
+    };
+  }
 
   finish() {
     this.modalEnd(false);

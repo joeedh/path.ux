@@ -11,7 +11,7 @@ import {
   ReplaceNodeOp,
   SetNodePropOp,
 } from "../../graph/graph_ops";
-import { getNodeClass, nodePropKeys, nodePropTarget } from "../../graph/node";
+import { getNodeClass, nodePropKeys, NodePropName, nodePropTarget } from "../../graph/node";
 import type { GroupDef, ExposedEntry } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 
@@ -63,7 +63,7 @@ export type GraphEdit =
       def: GroupDef;
       index: number;
       nodeId: GraphId;
-      propKey: string;
+      propKey: NodePropName;
     }
   | { kind: "removeEntry"; graphPath: string; ref: string; def: GroupDef; index: number };
 
@@ -255,13 +255,13 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     // before its own exec, which is what makes the late id safe to record.
     for (const key of nodePropKeys(source)) {
       const target = nodePropTarget(source, key);
-      if (target === undefined || !target.wasSet) {
+      if (!target?.wasSet) {
         continue;
       }
 
       const setOp = new SetNodePropOp();
       setOp.inputs.graphPath.setValue(edit.graphPath);
-      setOp.inputs.propKey.setValue(key);
+      setOp.inputs.propKey.setValue(key as unknown as string);
       const prop = (target.copy() as ToolProperty).ignoreLastValue();
       (setOp.inputs as Record<string, unknown>).value = prop;
 

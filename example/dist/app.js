@@ -14047,7 +14047,8 @@ var init_toolprop_abstract = __esm({
       NO_DEFAULT: 1 << 17,
       // ux widgets should not update the prop in real time during e.g.
       // sliding, text editing, etc.  Currently untested.
-      NO_REALTIME: 1 << 18
+      NO_REALTIME: 1 << 18,
+      MULTILINE_STRING: 1 << 19
     };
     ToolPropertyIF = class {
       subtype;
@@ -14508,6 +14509,11 @@ var init_base = __esm({
       equals(b) {
         throw new Error("implement me");
       }
+      setReadOnly() {
+        this.flag |= PropFlags.READ_ONLY;
+        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
+        return this;
+      }
       private() {
         this.flag |= PropFlags.PRIVATE;
         this.flag &= ~PropFlags.SAVE_LAST_VALUE;
@@ -14694,6 +14700,15 @@ var init_base = __esm({
         this.icon2 = icon;
         return this;
       }
+      /** Sets whether sliders/textboxes/etc send updates in real time or wait for editing to stop. */
+      setRealtime(realtime) {
+        if (!realtime) {
+          this.flag |= PropFlags.NO_REALTIME;
+        } else {
+          this.flag &= ~PropFlags.NO_REALTIME;
+        }
+        return this;
+      }
       loadSTRUCT(reader) {
         reader(this);
         if (this.uiRange?.[0] === -1e17 && this.uiRange[1] === 1e17) {
@@ -14869,7 +14884,6 @@ var init_string = __esm({
     }
   `
       );
-      multiLine = false;
       constructor(type, value, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
         this.multiLine = false;
@@ -14892,6 +14906,26 @@ var init_string = __esm({
       setValue(val) {
         this.data = val;
         super.setValue(val);
+      }
+      /** Should a textarea be used to edit this property? */
+      setMultiline(multiline) {
+        if (multiline) {
+          this.flag |= PropFlags.MULTILINE;
+        } else {
+          this.flag &= ~PropFlags.MULTILINE;
+        }
+        return this;
+      }
+      /** Should a textarea be used to edit this property? */
+      get multiLine() {
+        return (this.flag & PropFlags.MULTILINE) !== 0;
+      }
+      set multiLine(multiline) {
+        if (multiline) {
+          this.flag |= PropFlags.MULTILINE;
+        } else {
+          this.flag &= ~PropFlags.MULTILINE;
+        }
       }
     };
     StringProperty = class extends StringPropertyBase {
@@ -18046,7 +18080,8 @@ var init_context = __esm({
         });
       }
       toLocked() {
-        return new LockedContext(this);
+        const locked = new LockedContext(this);
+        return locked;
       }
       pushOverlay(overlay) {
         if (!overlay.hasOwnProperty(Symbol.ContextID)) {
@@ -20952,9 +20987,9 @@ curve1d.BSplineCurve {
           this.recalc = RecalcFlags.ALL;
           this.redraw();
         };
-        const Icons7 = row.constructor.getIconEnum();
-        const icon = Icons7.LARGE_X !== void 0 ? Icons7.LARGE_X : Icons7.TINY_X;
-        if (Icons7.LARGE_X === void 0) {
+        const Icons6 = row.constructor.getIconEnum();
+        const icon = Icons6.LARGE_X !== void 0 ? Icons6.LARGE_X : Icons6.TINY_X;
+        if (Icons6.LARGE_X === void 0) {
           console.error("Curve widget expects Icons.LARGE_X icon for delete button.");
         }
         row.iconbutton(icon, "Delete Point", () => {
@@ -76855,7 +76890,7 @@ var GraphLink = class {
   static STRUCT = inlineRegister(
     this,
     `
-graph.GraphLink {
+pathux.GraphLink {
   srcNode : string | JSON.stringify(this.srcNode);
   srcKey  : string;
   dstNode : string | JSON.stringify(this.dstNode);
@@ -76883,11 +76918,11 @@ var Graph = class {
   static STRUCT = inlineRegister(
     this,
     `
-graph.Graph {
+pathux.Graph {
   VERSION : float;
   idgen   : int;
-  nodes   : array(abstract(graph.Node));
-  links   : array(graph.GraphLink) | this._linkList();
+  nodes   : array(abstract(pathux.GraphNode));
+  links   : array(pathux.GraphLink) | this._linkList();
 }
 `
   );
@@ -77175,18 +77210,19 @@ graph.Graph {
 
 // scripts/graph/socket.ts
 init_nstructjs();
+init_toolprop();
 var visitPass = 0;
 var NodeSocketBase = class {
   static STRUCT = inlineRegister(
     this,
     `
-graph.NodeSocketBase {
-  socketId    : string | JSON.stringify(this.socketId);
-  name        : string;
-  type        : string;
-  dir         : string;
-  multiSocket : bool;
-  defaultProp ?: abstract(ToolProperty);
+pathux.NodeSocketBase {
+  socketId     : string | JSON.stringify(this.socketId);
+  name         : string;
+  type         : string;
+  dir          : string;
+  multiSocket  : bool;
+  defaultProp  : abstract(ToolProperty);
 }
 `
   );
@@ -77196,12 +77232,24 @@ graph.NodeSocketBase {
   socketId = NO_ID;
   /** The record key this socket sits under in its owning node's inputs or outputs. */
   name = "";
+  // the node property alias name for this socket
+  get nodePropName() {
+    return `${this.dir}:${this.name}`;
+  }
   type;
   dir;
   /** Derived, output sockets only. Written by the client through setValue, read through getValue. */
   value = void 0;
-  /** Authored, input sockets only. undefined means no editable default. */
-  defaultProp;
+  /**
+   * if true, on load UX-related properties like numeric ranges,
+   * tooltips etc will be merged from the default prop.
+   **/
+  mergeDefaultProp = true;
+  /** Is the default value editable. */
+  get defaultIsEditable() {
+    return this.useDefaultValue && !(this.defaultProp.flag & PropFlags.READ_ONLY);
+  }
+  useDefaultValue = true;
   edges = [];
   /** True by default on output sockets, false by default on input sockets. */
   multiSocket;
@@ -77223,20 +77271,28 @@ graph.NodeSocketBase {
     this.color = def.color ?? "#888888";
   }
   /**
+   * Chaining-friendly way to set default prop properties
+   * e.g. new Socket().setDefault(prop => prop.setReadOnly().setDescription("sdfd"))
+   */
+  setUX(cb) {
+    cb(this.defaultProp);
+    return this;
+  }
+  /**
    * On an output, the stored value. On an input, the value resolved through the edges:
    * coerced from the source, reduced when multi-connected, or the default when
    * unconnected. Returns undefined on an unconnected input whose type has no default.
    */
   getValue() {
     if (this.dir === "out") {
-      if (DEV_BUILD && this.defaultProp !== void 0) {
-        throw new Error("defaultProp is meaningful on input sockets only");
+      if (this.value === void 0 && this.useDefaultValue) {
+        return this.defaultProp.getValue();
       }
       return this.value;
     }
     const sources = this.resolvedEdges();
     if (sources.length === 0) {
-      return this.defaultProp?.getValue();
+      return !this.useDefaultValue ? void 0 : this.defaultProp.getValue();
     }
     if (sources.length === 1 && sources[0].type === this.type) {
       return sources[0].getValue();
@@ -77344,7 +77400,8 @@ graph.NodeSocketBase {
       return this;
     }
     const sources = this.resolvedEdges();
-    return sources.length > 0 ? sources[0] : this.defaultProp;
+    const defaultProp = this.useDefaultValue ? this.defaultProp : void 0;
+    return sources.length > 0 ? sources[0] : defaultProp;
   }
   /**
    * Marks this socket dirty and, from an output, every input connected through
@@ -77377,7 +77434,7 @@ graph.NodeSocketBase {
     b.dir = this.dir;
     b.multiSocket = this.multiSocket;
     b.color = this.color;
-    b.defaultProp = this.defaultProp?.copy();
+    b.defaultProp = this.defaultProp.copy();
   }
   copy() {
     const b = new this.constructor(this.dir);
@@ -77402,11 +77459,16 @@ graph.NodeSocketBase {
     }
   }
   loadSTRUCT(reader) {
+    const defaultDefault = this.defaultProp;
     reader(this);
     this.socketId = JSON.parse(this.socketId);
     this.dir = this.dir === "out" ? "out" : "in";
-    if (this.dir === "out") {
-      this.defaultProp = void 0;
+    const value = this.defaultProp === void 0 ? defaultDefault.getValue() : this.defaultProp.getValue();
+    if (this.defaultProp === void 0) {
+      this.defaultProp = defaultDefault;
+    } else if (this.mergeDefaultProp) {
+      defaultDefault.copyTo(this.defaultProp);
+      this.defaultProp.setValue(value);
     }
   }
 };
@@ -77492,15 +77554,15 @@ var Node3 = class {
   static STRUCT = inlineRegister(
     this,
     `
-graph.Node {
+pathux.GraphNode {
   id          : string | JSON.stringify(this.id);
   label       ?: string;
   pos         : vec2;
   size        : vec2;
   typeVersion : int;
   props       : array(abstract(ToolProperty)) | this._propList();
-  inputs      : array(abstract(graph.NodeSocketBase)) | this._socketList(this.inputs);
-  outputs     : array(abstract(graph.NodeSocketBase)) | this._socketList(this.outputs);
+  inputs      : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.inputs);
+  outputs     : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.outputs);
 }
 `
   );
@@ -77511,6 +77573,9 @@ graph.Node {
   def;
   inputs;
   outputs;
+  get allSockets() {
+    return Object.values(this.inputs).concat(Object.values(this.outputs));
+  }
   /** Authored properties, sparse on a group instance. Each key equals its property's apiname. */
   props;
   /** The user's rename, absent until the user renames this node. */
@@ -77522,6 +77587,21 @@ graph.Node {
   size;
   typeVersion;
   dirty = false;
+  static decomposePropName(prop) {
+    let name2 = prop;
+    let type = "prop";
+    if (name2.startsWith("in:")) {
+      type = "in";
+      name2 = name2.slice(3);
+    } else if (name2.startsWith("out:")) {
+      type = "out";
+      name2 = name2.slice(4);
+    }
+    return { type, name: name2 };
+  }
+  static composePropName(type, name2) {
+    return type === "prop" ? name2 : `${type}:${name2}`;
+  }
   constructor() {
     const def = finalDef(this.constructor);
     this.def = def;
@@ -77609,13 +77689,13 @@ graph.Node {
       set(_api, node, key, val) {
         const target = nodePropTarget(node, key);
         if (target === void 0) {
-          throw new Error(`${node.def.typeName}: no prop or input default '${key}'`);
+          throw new Error(`${node.def.typeName}: no prop or input/output default '${key}'`);
         }
         target.setValue(val);
       },
       getKey(_api, node, val) {
         const ref = val;
-        return ref !== void 0 && ref.node === node ? ref.key : void 0;
+        return ref?.node === node ? ref.key : void 0;
       },
       getLength(_api, node) {
         return nodePropKeys(node).length;
@@ -77734,14 +77814,38 @@ function nodePropStruct(target) {
   }
   return st;
 }
-function nodePropTarget(node, key) {
-  return node.props[key] ?? node.inputs[key]?.defaultProp;
+function nodePropSocket(node, nodePropName) {
+  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  switch (type) {
+    case "in":
+      return node.inputs[name2];
+    case "out":
+      return node.outputs[name2];
+    case "prop":
+      return void 0;
+  }
+}
+function nodePropTarget(node, nodePropName) {
+  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  switch (type) {
+    case "in":
+      return node.inputs[name2]?.defaultProp;
+    case "out":
+      return node.outputs[name2]?.defaultProp;
+    case "prop":
+      return node.props[name2];
+  }
 }
 function nodePropKeys(node) {
   const keys2 = Object.keys(node.props);
   for (const k in node.inputs) {
-    if (node.inputs[k].defaultProp !== void 0 && !(k in node.props)) {
-      keys2.push(k);
+    if (node.inputs[k].defaultIsEditable) {
+      keys2.push(node.inputs[k].nodePropName);
+    }
+  }
+  for (const k in node.outputs) {
+    if (node.outputs[k].defaultIsEditable) {
+      keys2.push(node.inputs[k].nodePropName);
     }
   }
   return keys2;
@@ -77846,7 +77950,7 @@ function setProxy(sock, counterpart) {
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.dir === "in" && far.defaultProp !== void 0 ? [far] : [];
+    return far.defaultProp !== void 0 ? [far] : [];
   };
 }
 var ExposedEntry = class {
@@ -77910,9 +78014,9 @@ var GroupDef = class {
     this,
     `
 graph.GroupDef {
-  subgraph : graph.Graph;
-  inputs   : array(abstract(graph.NodeSocketBase)) | this._sockList(this.inputs);
-  outputs  : array(abstract(graph.NodeSocketBase)) | this._sockList(this.outputs);
+  subgraph : pathux.Graph;
+  inputs   : array(abstract(pathux.NodeSocketBase)) | this._sockList(this.inputs);
+  outputs  : array(abstract(pathux.NodeSocketBase)) | this._sockList(this.outputs);
   exposed  : array(graph.ExposedEntry);
 }
 `
@@ -77957,7 +78061,6 @@ graph.GroupDef {
     inner.name = key;
     inner.dir = "out";
     inner.multiSocket = true;
-    inner.defaultProp = void 0;
     inner.owningNode = node;
     node.outputs[key] = inner;
     return inner;
@@ -77974,7 +78077,6 @@ graph.GroupDef {
     sock.name = key;
     sock.dir = "out";
     sock.multiSocket = true;
-    sock.defaultProp = void 0;
     this.outputs[key] = sock;
     return inner;
   }
@@ -78038,7 +78140,7 @@ var GroupNode = class _GroupNode extends Node3 {
 graph.GroupNode {
   ref        : string;
   syncedHash : string;
-  subgraph   : graph.Graph;
+  subgraph   : pathux.Graph;
 }
 `
   );
@@ -78208,10 +78310,9 @@ graph.GroupNode {
       for (const k in n.props) {
         n.props[k].wasSet = false;
       }
-      for (const k in n.inputs) {
-        const p = n.inputs[k].defaultProp;
-        if (p !== void 0) {
-          p.wasSet = false;
+      for (const sock of n.allSockets) {
+        if (sock.useDefaultValue) {
+          sock.defaultProp.wasSet = false;
         }
       }
     }
@@ -78225,6 +78326,9 @@ graph.GroupNode {
       }
       for (const k in n.inputs) {
         this._transplantOverride(old.inputs[k]?.defaultProp, n.inputs[k].defaultProp);
+      }
+      for (const k in n.outputs) {
+        this._transplantOverride(old.outputs[k]?.defaultProp, n.outputs[k].defaultProp);
       }
     }
     const addedInnerNodes = fresh.nodes.filter((n) => !oldNodes.has(n.id));
@@ -78262,7 +78366,7 @@ graph.GroupNode {
     for (const k in defSocks) {
       const tmpl = defSocks[k];
       const cur = instSocks[k];
-      if (cur !== void 0 && cur.constructor === tmpl.constructor) {
+      if (cur?.constructor === tmpl.constructor) {
         const oldDefault = cur.defaultProp;
         tmpl.copyTo(cur);
         cur.dir = dir;
@@ -78278,9 +78382,6 @@ graph.GroupNode {
       const s = tmpl.copy();
       s.name = k;
       s.dir = dir;
-      if (dir === "out") {
-        s.defaultProp = void 0;
-      }
       added.push(s);
     }
     for (const k in instSocks) {
@@ -78942,7 +79043,7 @@ var ToolOpDelegate = class {
     macro.add(addOp);
     for (const key of nodePropKeys(source)) {
       const target = nodePropTarget(source, key);
-      if (target === void 0 || !target.wasSet) {
+      if (!target?.wasSet) {
         continue;
       }
       const setOp = new SetNodePropOp();
@@ -79034,12 +79135,12 @@ function forwardedRows(node, nodePath) {
   for (const entry of def.exposed) {
     const state = exposedEntryState(node.subgraph, entry);
     const target = node.subgraph.nodeIdMap.get(entry.nodeId);
-    const label = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    const label = entry.label || Node3.decomposePropName(entry.propKey).name || target?.getUIName() || String(entry.nodeId);
     const row = { entry, state, label };
     if (state === "ok" && target !== void 0) {
       if (entry.kind === "prop") {
         row.path = `${nodePath}.group.nodes[${JSON.stringify(entry.nodeId)}].props['${entry.propKey}'].value`;
-        row.socket = entry.propKey in target.props ? void 0 : target.inputs[entry.propKey];
+        row.socket = nodePropSocket(target, entry.propKey);
       } else {
         row.target = target;
       }
@@ -79074,8 +79175,19 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
-      const socket = key in target.props ? void 0 : target.inputs[key];
-      root.appendChild(propEditRow(ctx, key, path, inherit_packflag, socket));
+      const { name: name2, type } = Node3.decomposePropName(key);
+      let socket;
+      switch (type) {
+        case "in":
+          socket = target.inputs[name2];
+          break;
+        case "out":
+          socket = target.outputs[name2];
+          break;
+        case "prop":
+          break;
+      }
+      root.appendChild(propEditRow(ctx, name2, path, inherit_packflag, socket));
     }
   }
 }
@@ -79119,7 +79231,7 @@ function buildGroupDesigner(root, opts) {
     row.dataset.exposureState = state;
     row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
     const name2 = document.createElement("span");
-    name2.textContent = entry.label || entry.propKey || target?.getUIName() || String(entry.nodeId);
+    name2.textContent = entry.label || Node3.decomposePropName(entry.propKey).name || target?.getUIName() || String(entry.nodeId);
     row.appendChild(name2);
     if (state === "missing") {
       const flag = document.createElement("span");
@@ -79388,9 +79500,14 @@ var NodeFrame = class extends Container3 {
   }
   /** The sockets the rows cover, and which of them carry an inline editor. */
   _rowSignature(inline) {
-    const parts = Object.keys(this.node.outputs).map((key) => `out:${key}`);
+    const parts = [];
+    for (const key of Object.keys(this.node.outputs)) {
+      const sock = this.node.outputs[key];
+      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+    }
     for (const key of Object.keys(this.node.inputs)) {
-      parts.push(`in:${key}${inline.has(key) ? "=" : ""}`);
+      const sock = this.node.inputs[key];
+      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     return parts.join(",");
   }
@@ -79400,10 +79517,13 @@ var NodeFrame = class extends Container3 {
     if (this.nodePath === "") {
       return keys2;
     }
-    for (const key of Object.keys(this.node.inputs)) {
-      const sock = this.node.inputs[key];
-      if (sock.defaultProp !== void 0 && sock.edges.length === 0 && !(key in this.node.props)) {
-        keys2.add(key);
+    const allSocks = [this.node.inputs, this.node.outputs];
+    for (const socks of allSocks) {
+      for (const key in socks) {
+        const sock = socks[key];
+        if (sock.useDefaultValue && sock.edges.length === 0 && !(key in this.node.props)) {
+          keys2.add(sock.nodePropName);
+        }
       }
     }
     return keys2;
@@ -79429,10 +79549,12 @@ var NodeFrame = class extends Container3 {
     }
     this._rows = [];
     for (const key of Object.keys(this.node.outputs)) {
-      this._rows.push(this._socketRow(key, "out", false));
+      const sock = this.node.outputs[key];
+      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
     }
     for (const key of Object.keys(this.node.inputs)) {
-      this._rows.push(this._socketRow(key, "in", inline.has(key)));
+      const sock = this.node.inputs[key];
+      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
     }
     for (const row of this._rows) {
       root.appendChild(row);
@@ -79509,31 +79631,37 @@ var NodeFrame = class extends Container3 {
   }
   /** One socket's row: its terminal dot, plus an inline default editor where
    *  the socket has one and its name where it does not. */
-  _socketRow(key, dir, inline) {
+  _socketRow(socketPropName, inline) {
     const height = this.getDefault("SocketRowHeight");
+    const { type: dir } = Node3.decomposePropName(socketPropName);
+    if (dir === "prop") {
+      throw new Error("_socketRow called with socket name not nodePropName");
+    }
     const row = document.createElement("div");
     row.style.cssText = `min-height: ${height}px; display: flex; align-items: center; position: relative; justify-content: ${dir === "in" ? "flex-start" : "flex-end"}; gap: 4px; padding: 0 4px; box-sizing: border-box;`;
-    const dot = this._terminalDot(key, dir);
-    const label = inline ? this._inlineEditor(key) : void 0;
+    const dot = this._terminalDot(socketPropName);
+    const label = inline ? this._inlineEditor(socketPropName) : void 0;
     if (dir === "in") {
       row.appendChild(dot);
-      row.appendChild(label ?? this._terminalName(key));
+      row.appendChild(label ?? this._terminalName(socketPropName));
     } else {
-      row.appendChild(this._terminalName(key));
+      row.appendChild(label ?? this._terminalName(socketPropName));
       row.appendChild(dot);
     }
     return row;
   }
   _terminalName(key) {
     const name2 = document.createElement("span");
-    name2.textContent = key;
+    name2.textContent = Node3.decomposePropName(key).name;
     name2.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
     return name2;
   }
-  /** The editor for an input's default value, bound through the props datapath. */
-  _inlineEditor(key) {
-    const path = `${this.nodePath}.props['${key}'].value`;
-    const row = propEditRow(this.ctx, key, path, this.inherit_packflag, this.node.inputs[key]);
+  /** The editor for a sockets default value, bound through the props datapath. */
+  _inlineEditor(socketPropName) {
+    const { name: socketName, type: dir } = Node3.decomposePropName(socketPropName);
+    const path = `${this.nodePath}.props['${socketPropName}'].value`;
+    const sock = nodePropSocket(this.node, socketPropName);
+    const row = propEditRow(this.ctx, socketName, path, this.inherit_packflag, sock);
     row.parentWidget = this;
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
@@ -79541,14 +79669,15 @@ var NodeFrame = class extends Container3 {
     this._editors.push(row);
     return row;
   }
-  _terminalDot(key, dir) {
-    const sock = dir === "in" ? this.node.inputs[key] : this.node.outputs[key];
+  _terminalDot(socketPropName) {
+    const { type: dir, name: socketName } = Node3.decomposePropName(socketPropName);
+    const sock = dir === "in" ? this.node.inputs[socketName] : this.node.outputs[socketName];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
     const dot = document.createElement("span");
     dot.className = "nodeframe-terminal";
-    dot.dataset.socketKey = key;
+    dot.dataset.socketKey = socketName;
     dot.dataset.socketDir = dir;
-    dot.title = `${key} (${sock.type})`;
+    dot.title = `${socketName} (${sock.type})`;
     dot.style.cssText = `position: absolute; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
     dot.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || this.onSocketDown === void 0) {
@@ -79556,7 +79685,7 @@ var NodeFrame = class extends Container3 {
       }
       e.preventDefault();
       e.stopPropagation();
-      this.onSocketDown(this, key, dir, e);
+      this.onSocketDown(this, socketName, dir, e);
     });
     return dot;
   }
@@ -80729,6 +80858,15 @@ var NodeGraphView = class extends Container3 {
     this.linkSelection.clear();
     this._refresh();
   }
+  /**
+   * Re-points the view at a fresh parse of the graph already on screen — same file, new object —
+   * keeping selection, descent and pan/zoom, and reconciling frames by node id via `syncGraph`
+   * rather than tearing every one down. Use `setGraph` to point at a different graph instead.
+   */
+  refreshGraph(graph) {
+    this.rootGraph = graph;
+    this._refresh();
+  }
   /** The graph on screen: the root, or the descent tail's instance subgraph. */
   get currentGraph() {
     let g = this.rootGraph;
@@ -80844,11 +80982,16 @@ var NodeGraphView = class extends Container3 {
       }
     }
   }
-  /** Reconciles frames against the graph on screen; call after any graph change. */
+  /**
+   * Reconciles frames against the graph on screen; call after any graph change. A frame is kept
+   * across a reparse as long as its node's id still exists — `setNode` points it at the new
+   * object, and `syncContents` rebuilds only what actually changed — so swapping in an
+   * independently-parsed but value-equal graph does not tear every frame down.
+   */
   syncGraph() {
     const graph = this.currentGraph;
     for (const [nid, frame] of [...this.frames]) {
-      if (graph?.nodeIdMap.get(nid) !== frame.node) {
+      if (graph?.nodeIdMap.get(nid) === void 0) {
         frame.remove();
         this.frames.delete(nid);
       }
@@ -80858,7 +81001,9 @@ var NodeGraphView = class extends Container3 {
       return;
     }
     for (const node of graph.nodes) {
-      if (this.frames.has(node.id)) {
+      const existing = this.frames.get(node.id);
+      if (existing !== void 0) {
+        existing.setNode(node);
         continue;
       }
       const frame = UIBase.createElement("nodeframe-x");
@@ -80906,6 +81051,7 @@ var NodeGraphView = class extends Container3 {
       frame.syncPosition();
       frame.syncContents();
       frame.setSelected(this.selection.has(nid));
+      frame.flushUpdate();
     }
     this._redrawLinks();
   }
@@ -87584,6 +87730,7 @@ __export(graph_exports, {
   ReplaceNodeOp: () => ReplaceNodeOp,
   SetNodePropOp: () => SetNodePropOp,
   SocketClasses: () => SocketClasses,
+  StringSocket: () => StringSocket,
   Vec3Socket: () => Vec3Socket,
   buildGraphFromDSL: () => buildGraphFromDSL,
   defineGraphAPI: () => defineGraphAPI,
@@ -87591,6 +87738,7 @@ __export(graph_exports, {
   getNodeClass: () => getNodeClass,
   getSocketClass: () => getSocketClass,
   nodePropKeys: () => nodePropKeys,
+  nodePropSocket: () => nodePropSocket,
   nodePropTarget: () => nodePropTarget,
   nodePropValue: () => nodePropValue,
   nodeStructFor: () => nodeStructFor,
@@ -87610,9 +87758,7 @@ var FloatSocket = class extends NodeSocketBase {
   }
   constructor(dir = "in") {
     super(dir);
-    if (dir === "in") {
-      this.defaultProp = new FloatProperty(0);
-    }
+    this.defaultProp = new FloatProperty(0);
   }
 };
 registerSocketType(FloatSocket);
@@ -87623,9 +87769,7 @@ var Vec3Socket = class extends NodeSocketBase {
   }
   constructor(dir = "in") {
     super(dir);
-    if (dir === "in") {
-      this.defaultProp = new Vec3Property([0, 0, 0]);
-    }
+    this.defaultProp = new Vec3Property([0, 0, 0]);
   }
   // float→vec3 is destination knowledge: the float splats across the components.
   canCoerceFrom(type) {
@@ -87652,6 +87796,17 @@ var Vec3Socket = class extends NodeSocketBase {
   }
 };
 registerSocketType(Vec3Socket);
+var StringSocket = class extends NodeSocketBase {
+  static STRUCT = inlineRegister(this, `graph.StringSocket {}`);
+  static socketDef() {
+    return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
+  }
+  constructor(dir = "in") {
+    super(dir);
+    this.defaultProp = new StringProperty("");
+  }
+};
+registerSocketType(StringSocket);
 
 // scripts/graph/dsl.ts
 function validateGraphDSL(input, registries) {
@@ -87712,7 +87867,7 @@ function buildGraphFromDSL(input, registries) {
       report3(
         "unknown-prop",
         path,
-        `node type '${node.def.typeName}' has no prop or input default '${key}'`
+        `node type '${node.def.typeName}' has no prop or default '${key}'`
       );
       return;
     }
@@ -94314,8 +94469,7 @@ var Canvas = class {
         break;
       }
       let blur = p.material.blur;
-      if (!doblur)
-        blur = 0;
+      if (!doblur) blur = 0;
       const bluroff = 1e4;
       if (blur) {
         g.save();
@@ -94351,7 +94505,6 @@ var Canvas = class {
     }
   }
 };
-;
 Canvas.STRUCT = `
 Canvas {
   verts : array(CanvasPoint);
@@ -94418,7 +94571,9 @@ var DataBlock = class _DataBlock {
     }
     for (const cls2 of BlockClasses) {
       if (cls2.blockDefine().typeName === cls.blockDefine().typeName) {
-        throw new Error("typeName " + cls.blockDefine().typeName + " is already taken by " + cls2.name);
+        throw new Error(
+          "typeName " + cls.blockDefine().typeName + " is already taken by " + cls2.name
+        );
       }
     }
     BlockClasses.push(cls);
@@ -94726,6 +94881,133 @@ function buildAPI(api) {
   }
 }
 
+// example/editors/nodeeditor/demo_nodes.ts
+var {
+  Node: Node6,
+  registerNodeType: registerNodeType2,
+  FloatSocket: FloatSocket2,
+  Vec3Socket: Vec3Socket2,
+  StringSocket: StringSocket2,
+  Graph: Graph4,
+  GroupDef: GroupDef3,
+  GroupNode: GroupNode2,
+  ExposedEntry: ExposedEntry2
+} = graph_exports;
+var DemoValue = class extends Node6 {
+  static graphDef() {
+    return {
+      typeName: "DemoValue",
+      uiName: (node) => `Value ${node.props.value.getValue().toFixed(2)}`,
+      props: { value: new FloatProperty(1) },
+      inputs: {
+        strIn: new StringSocket2("in").setUX(
+          (prop) => prop.setMultiline(true).setDescription("Input string")
+        )
+      },
+      outputs: { out: new FloatSocket2("out"), str: new StringSocket2("out") }
+    };
+  }
+  constructor() {
+    super();
+  }
+};
+registerNodeType2(DemoValue);
+var DemoText = class extends Node6 {
+  static graphDef() {
+    return {
+      typeName: "DemoText",
+      uiName: (node) => `Text ${node.outputs.text.getValue()}`,
+      outputs: { text: new StringSocket2("out") }
+    };
+  }
+};
+registerNodeType2(DemoText);
+var DemoMath = class extends Node6 {
+  static graphDef() {
+    return {
+      typeName: "DemoMath",
+      uiName: "Math",
+      props: { scale: new FloatProperty(1), clamp: new BoolProperty(false) },
+      inputs: { a: new FloatSocket2("in"), b: new FloatSocket2("in") },
+      outputs: { out: new FloatSocket2("out") }
+    };
+  }
+};
+registerNodeType2(DemoMath);
+var DemoReduce = class extends Node6 {
+  static graphDef() {
+    const values = new FloatSocket2("in");
+    values.multiSocket = true;
+    return {
+      typeName: "DemoReduce",
+      uiName: "Sum",
+      inputs: { values },
+      outputs: { out: new FloatSocket2("out") }
+    };
+  }
+};
+registerNodeType2(DemoReduce);
+var DemoVector = class extends Node6 {
+  static graphDef() {
+    return {
+      typeName: "DemoVector",
+      uiName: "Vector",
+      inputs: { vec: new Vec3Socket2("in") },
+      outputs: { out: new Vec3Socket2("out") }
+    };
+  }
+};
+registerNodeType2(DemoVector);
+function makeDemoGroupDef() {
+  const def = new GroupDef3();
+  const bias = new DemoValue();
+  bias.pos.loadXY(60, 200);
+  def.subgraph.add(bias);
+  const math2 = new DemoMath();
+  math2.pos.loadXY(260, 60);
+  def.subgraph.add(math2);
+  const innerIn = def.declareInput("value", new FloatSocket2("in"));
+  const innerOut = def.declareOutput("result", new FloatSocket2("out"));
+  def.inputNode().pos.loadXY(40, 40);
+  def.outputNode().pos.loadXY(480, 60);
+  def.subgraph.connect(innerIn, math2.inputs.a);
+  def.subgraph.connect(bias.outputs.out, math2.inputs.b);
+  def.subgraph.connect(math2.outputs.out, innerOut);
+  def.exposed.push(new ExposedEntry2("prop", bias.id, "value", "Bias"));
+  return def;
+}
+var demoGroupDefs = /* @__PURE__ */ new Map([["demo_group", makeDemoGroupDef()]]);
+function makeDemoGraph() {
+  const g = new Graph4();
+  g.groupLoader = async (ref) => demoGroupDefs.get(ref);
+  g.groupSaver = async (ref, def) => {
+    demoGroupDefs.set(ref, def);
+  };
+  const v1 = new DemoValue();
+  v1.pos.loadXY(40, 40);
+  const v2 = new DemoValue();
+  v2.pos.loadXY(40, 200);
+  const math2 = new DemoMath();
+  math2.pos.loadXY(280, 60);
+  const reduce = new DemoReduce();
+  reduce.pos.loadXY(280, 240);
+  const vec = new DemoVector();
+  vec.pos.loadXY(520, 240);
+  const grp = new GroupNode2();
+  grp.ref = "demo_group";
+  grp.pos.loadXY(520, 40);
+  for (const n of [v1, v2, math2, reduce, vec, grp]) {
+    g.add(n);
+  }
+  g.connect(v1.outputs.out, math2.inputs.a);
+  g.connect(v1.outputs.out, reduce.inputs.values);
+  g.connect(v2.outputs.out, reduce.inputs.values);
+  g.connect(reduce.outputs.out, vec.inputs.vec);
+  return g;
+}
+var DEMO_GRAPH_PATH = "nodegraph";
+var DEMO_GROUP_DEF_PATH = "demogroup";
+
 // example/core/state.ts
 var ModelData = class _ModelData extends DataBlock {
   angle1;
@@ -94738,6 +95020,7 @@ var ModelData = class _ModelData extends DataBlock {
   color;
   text;
   boolval;
+  demoNodeGraph = makeDemoGraph();
   constructor() {
     super();
     this.angle1 = Math.PI * 0.5;
@@ -94781,15 +95064,16 @@ var ModelData = class _ModelData extends DataBlock {
   }
 };
 ModelData.STRUCT = struct_default.inherit(ModelData, DataBlock, "example.ModelData") + `
-  color     : vec4;
-  enum      : int;
-  value     : float;
-  text      : string;
-  canvas    : Canvas;
-  curvemap  : Curve1D;
-  angle1    : float;
-  angle2    : float;
-  boolval   : bool;
+  color         : vec4;
+  enum          : int;
+  value         : float;
+  text          : string;
+  canvas        : Canvas;
+  curvemap      : Curve1D;
+  angle1        : float;
+  angle2        : float;
+  boolval       : bool;
+  demoNodeGraph : pathux.Graph;
 }
 `;
 struct_default.register(ModelData);
@@ -94851,7 +95135,6 @@ var Brush = class {
     Brushes.push(cls);
   }
 };
-;
 var CircleBrush = class extends Brush {
   constructor() {
     super();
@@ -94976,8 +95259,7 @@ var Dynamics = class _Dynamics {
     return new _Dynamics().load(this);
   }
   load(b) {
-    if (!b)
-      return this;
+    if (!b) return this;
     this.clear();
     for (const key of b.keys) {
       this.addKey(key.copy());
@@ -95011,8 +95293,7 @@ var DynamicsState = class _DynamicsState {
     return this;
   }
   load(b) {
-    if (!b)
-      return this;
+    if (!b) return this;
     this.pressure = b.pressure;
     this.tilt = b.tilt.copy();
     return this;
@@ -95373,115 +95654,6 @@ function defineAPI() {
   return api;
 }
 
-// example/editors/nodeeditor/demo_nodes.ts
-var {
-  Node: Node6,
-  registerNodeType: registerNodeType2,
-  FloatSocket: FloatSocket2,
-  Vec3Socket: Vec3Socket2,
-  Graph: Graph4,
-  GroupDef: GroupDef3,
-  GroupNode: GroupNode2,
-  ExposedEntry: ExposedEntry2
-} = graph_exports;
-var DemoValue = class extends Node6 {
-  static graphDef() {
-    return {
-      typeName: "DemoValue",
-      uiName: (node) => `Value ${node.props.value.getValue().toFixed(2)}`,
-      props: { value: new FloatProperty(1) },
-      outputs: { out: new FloatSocket2("out") }
-    };
-  }
-};
-registerNodeType2(DemoValue);
-var DemoMath = class extends Node6 {
-  static graphDef() {
-    return {
-      typeName: "DemoMath",
-      uiName: "Math",
-      props: { scale: new FloatProperty(1), clamp: new BoolProperty(false) },
-      inputs: { a: new FloatSocket2("in"), b: new FloatSocket2("in") },
-      outputs: { out: new FloatSocket2("out") }
-    };
-  }
-};
-registerNodeType2(DemoMath);
-var DemoReduce = class extends Node6 {
-  static graphDef() {
-    const values = new FloatSocket2("in");
-    values.multiSocket = true;
-    return {
-      typeName: "DemoReduce",
-      uiName: "Sum",
-      inputs: { values },
-      outputs: { out: new FloatSocket2("out") }
-    };
-  }
-};
-registerNodeType2(DemoReduce);
-var DemoVector = class extends Node6 {
-  static graphDef() {
-    return {
-      typeName: "DemoVector",
-      uiName: "Vector",
-      inputs: { vec: new Vec3Socket2("in") },
-      outputs: { out: new Vec3Socket2("out") }
-    };
-  }
-};
-registerNodeType2(DemoVector);
-function makeDemoGroupDef() {
-  const def = new GroupDef3();
-  const bias = new DemoValue();
-  bias.pos.loadXY(60, 200);
-  def.subgraph.add(bias);
-  const math2 = new DemoMath();
-  math2.pos.loadXY(260, 60);
-  def.subgraph.add(math2);
-  const innerIn = def.declareInput("value", new FloatSocket2("in"));
-  const innerOut = def.declareOutput("result", new FloatSocket2("out"));
-  def.inputNode().pos.loadXY(40, 40);
-  def.outputNode().pos.loadXY(480, 60);
-  def.subgraph.connect(innerIn, math2.inputs.a);
-  def.subgraph.connect(bias.outputs.out, math2.inputs.b);
-  def.subgraph.connect(math2.outputs.out, innerOut);
-  def.exposed.push(new ExposedEntry2("prop", bias.id, "value", "Bias"));
-  return def;
-}
-var demoGroupDefs = /* @__PURE__ */ new Map([["demo_group", makeDemoGroupDef()]]);
-function makeDemoGraph() {
-  const g = new Graph4();
-  g.groupLoader = async (ref) => demoGroupDefs.get(ref);
-  g.groupSaver = async (ref, def) => {
-    demoGroupDefs.set(ref, def);
-  };
-  const v1 = new DemoValue();
-  v1.pos.loadXY(40, 40);
-  const v2 = new DemoValue();
-  v2.pos.loadXY(40, 200);
-  const math2 = new DemoMath();
-  math2.pos.loadXY(280, 60);
-  const reduce = new DemoReduce();
-  reduce.pos.loadXY(280, 240);
-  const vec = new DemoVector();
-  vec.pos.loadXY(520, 240);
-  const grp = new GroupNode2();
-  grp.ref = "demo_group";
-  grp.pos.loadXY(520, 40);
-  for (const n of [v1, v2, math2, reduce, vec, grp]) {
-    g.add(n);
-  }
-  g.connect(v1.outputs.out, math2.inputs.a);
-  g.connect(v1.outputs.out, reduce.inputs.values);
-  g.connect(v2.outputs.out, reduce.inputs.values);
-  g.connect(reduce.outputs.out, vec.inputs.vec);
-  return g;
-}
-var theDemoGraph = makeDemoGraph();
-var DEMO_GRAPH_PATH = "nodegraph";
-var DEMO_GROUP_DEF_PATH = "demogroup";
-
 // example/core/context.ts
 var BaseOverlay = class extends ContextOverlay {
   static contextDefine() {
@@ -95523,7 +95695,7 @@ var BaseOverlay = class extends ContextOverlay {
     return Area.getActiveArea(WorkspaceEditor);
   }
   get nodegraph() {
-    return theDemoGraph;
+    return this.data.demoNodeGraph;
   }
   get demogroup() {
     return demoGroupDefs.get("demo_group")?.subgraph;
@@ -95607,7 +95779,7 @@ var ViewContext = class extends ContextBase {
 };
 
 // example/editors/icon_enum.ts
-var Icons6 = {
+var Icons5 = {
   FOLDER: 0,
   //file folder
   FILE: 1,
@@ -95666,7 +95838,7 @@ var DrawOp2 = class extends ToolOp {
       name: "draw",
       uiname: "Draw",
       toolpath: "canvas.draw",
-      icon: Icons6.ZOOM_OUT,
+      icon: Icons5.ZOOM_OUT,
       is_modal: true,
       inputs: {
         brushType: new StringProperty("circle"),
@@ -96550,14 +96722,14 @@ var NodeEditorTab = class extends NodeEditor {
   }
   init() {
     super.init();
-    this.setGraph(theDemoGraph, DEMO_GRAPH_PATH);
+    this.setGraph(this.ctx.nodegraph, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
     const add = this.headerRow.menu(
       "Add",
       addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName))
     );
     add.description = "Add a node at the view's center";
-    void theDemoGraph.resolveGroups().then(() => this.view.syncGraph());
+    void this.ctx.nodegraph.resolveGroups().then(() => this.view.syncGraph());
   }
   _openDefinition(node) {
     const def = node.definition;
@@ -96643,7 +96815,9 @@ var MenuBarEditor2 = class extends Editor2 {
     this.areaDragToolEnabled = false;
   }
   copy() {
-    const ret = UIBase.createElement(this.constructor.define().tagname);
+    const ret = UIBase.createElement(
+      this.constructor.define().tagname
+    );
     ret.ctx = this.ctx;
     return ret;
   }
@@ -97023,7 +97197,7 @@ var iconmanager2 = new IconManager(
   16
 );
 setIconManager(iconmanager2);
-setIconMap(Icons6);
+setIconMap(Icons5);
 var AppState2 = class {
   toolstack;
   api;
