@@ -65483,22 +65483,1068 @@ var Check1 = class extends OldButton {
 };
 UIBase3.internalRegister(Check1);
 
+// scripts/core/utils/container_menu.ts
+init_ui_base();
+init_menu();
+init_menu_ops();
+init_toolsys();
+init_toolsys2();
+init_ui_base();
+function dynamicMenuImpl(self2, title, list5, packflag = 0) {
+  return self2.menu(title, list5, packflag);
+}
+function menuImpl(self2, title, list5, packflag = 0) {
+  const dbox = UIBase.createElement("dropbox-x");
+  dbox._name = title;
+  dbox.setAttribute("simple", "true");
+  dbox.setAttribute("name", title);
+  if (list5 instanceof Menu) {
+    dbox._build_menu = function() {
+      if (this._menu?.parentNode !== void 0) {
+        this._menu.remove();
+      }
+      this._menu = createMenu(this.ctx, title, list5);
+      return this._menu;
+    };
+  } else if (list5) {
+    dbox.template = list5;
+  }
+  self2._container_inherit(dbox, packflag);
+  self2._add(dbox);
+  return dbox;
+}
+function toolPanelImpl(self2, path_or_cls, args = {}) {
+  let cls;
+  if (typeof path_or_cls === "string") {
+    cls = self2.ctx.api.parseToolPath(path_or_cls);
+  } else {
+    cls = path_or_cls;
+  }
+  const tdef = cls._getFinalToolDef();
+  const packflag = args.packflag ?? 0;
+  const label = args.label ?? tdef.uiname ?? tdef.toolpath;
+  const createCb = args.createCb ?? args.create_cb;
+  const container = args.container ?? self2.panel(label);
+  let defaultsPath = args.defaultsPath ?? "toolDefaults";
+  if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
+    defaultsPath += ".";
+  }
+  const path = defaultsPath + tdef.toolpath;
+  container.useIcons(false);
+  const inputs = (tdef.inputs instanceof InheritFlag2 ? tdef.inputs.slots : tdef.inputs) ?? {};
+  for (const k in inputs) {
+    const prop = inputs[k];
+    if (prop.flag & PropFlags.PRIVATE) {
+      continue;
+    }
+    const apiname = prop.apiname ?? k;
+    const path2 = path + "." + apiname;
+    container.prop(path2);
+  }
+  container.tool(path_or_cls, packflag, createCb, label);
+  return container;
+}
+function toolImpl(self2, path_or_cls, packflag_or_args = 0, createCb, label) {
+  let cls;
+  let packflag;
+  if (typeof packflag_or_args === "object") {
+    const args = packflag_or_args;
+    packflag = args.packflag ?? 0;
+    createCb = args.createCb;
+    label = args.label;
+  } else {
+    packflag = packflag_or_args ?? 0;
+  }
+  if (typeof path_or_cls == "string") {
+    if (path_or_cls.search(/\|/) >= 0) {
+      const parts = path_or_cls.split("|");
+      if (label === void 0 && parts.length > 1) {
+        label = parts[1].trim();
+      }
+      path_or_cls = parts[0].trim();
+    }
+    if (self2.ctx === void 0) {
+      console.warn("self.ctx was undefined in tool()");
+      return;
+    }
+    cls = self2.ctx.api.parseToolPath(path_or_cls);
+    if (cls === void 0) {
+      console.warn('Unknown tool for toolpath "' + path_or_cls + '"');
+      return;
+    }
+  } else {
+    cls = path_or_cls;
+  }
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  if (createCb === void 0) {
+    const toolpath = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath;
+    createCb = (cls2) => {
+      return self2.ctx.api.createTool(self2.ctx, toolpath);
+    };
+  }
+  const cb = () => {
+    const toolob = createCb(cls);
+    self2.ctx.api.execTool(self2.ctx, toolob);
+  };
+  const def = typeof path_or_cls === "string" ? self2.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
+  let tooltip = def.description ?? def.uiname ?? "";
+  if (def.hotkey !== void 0) {
+    tooltip += "\n	" + def.hotkey;
+  } else {
+    let path = path_or_cls;
+    if (typeof path != "string") {
+      path = def.toolpath;
+    }
+    const hotkey = self2.ctx.api.getToolPathHotkey(self2.ctx, path);
+    if (hotkey) {
+      tooltip += "\n	Hotkey: " + hotkey;
+    }
+  }
+  let ret;
+  if (def.icon !== void 0 && packflag & PackFlags.USE_ICONS) {
+    label = label === void 0 ? tooltip : label;
+    const check = self2.iconbutton(def.icon ?? -1, label, cb);
+    check.iconsheet = iconSheetFromPackFlag(packflag);
+    check.packflag |= packflag;
+    check.description = tooltip;
+    ret = check;
+  } else {
+    label = label === void 0 ? def.uiname ?? def.toolpath : label;
+    ret = self2.button(label, cb);
+    ret.description = tooltip;
+    ret.packflag |= packflag;
+  }
+  return ret;
+}
+
+// scripts/core/utils/container_widgets.ts
+init_util();
+init_ui_base();
+function textboxImpl(self2, inpath, text2, cb, packflag = 0) {
+  let path;
+  if (inpath) {
+    path = self2._joinPrefix(inpath);
+  }
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const ret = UIBase.createElement("textbox-x");
+  if (path !== void 0) {
+    ret.setAttribute("datapath", path);
+  }
+  ret.ctx = self2.ctx;
+  ret.parentWidget = self2;
+  ret._init();
+  self2._add(ret);
+  ret.setCSS();
+  ret.update();
+  ret.packflag |= packflag;
+  ret.on_change = cb ?? null;
+  if (text2 !== void 0) {
+    ret.text = "" + text2;
+  }
+  return ret;
+}
+function pathlabelImpl(self2, inpath, label, packflag = 0) {
+  let path;
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  if (inpath) {
+    path = self2._joinPrefix(inpath);
+  }
+  const ret = UIBase.createElement("label-x");
+  if (label === void 0 && inpath) {
+    const rdef = self2.ctx.api.resolvePath(self2.ctx, path);
+    if (rdef) {
+      label = rdef.prop.uiname ?? rdef.dpath.apiname;
+    } else {
+      console.warn(
+        `pathlabel: bad path "${path}"` + (self2.ctx.api.lastResolveError ? ": " + self2.ctx.api.lastResolveError : "")
+      );
+      label = "(error)";
+    }
+  }
+  ret.text = label;
+  ret.packflag = packflag;
+  ret.setAttribute("datapath", path);
+  self2._add(ret);
+  ret.setCSS();
+  return ret;
+}
+function labelImpl(self2, text2) {
+  const ret = UIBase.createElement("label-x");
+  ret.text = text2;
+  self2._add(ret);
+  return ret;
+}
+function helppickerImpl(self2) {
+  const ret = self2.iconbutton(
+    Icons.HELP,
+    "Read what a control does by pointing at it; tap empty space to stop",
+    () => {
+      self2.getScreen()?.hintPickerTool();
+    }
+  );
+  if (isMobile()) {
+  }
+  if (ret.ctx) {
+    ret._init();
+    ret.setCSS();
+  }
+  return ret;
+}
+function iconbuttonImpl(self2, icon, description, cb, thisvar, packflag = 0) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const ret = UIBase.createElement("iconbutton-x");
+  ret.packflag |= packflag;
+  ret.setAttribute("icon", "" + icon);
+  ret.description = description;
+  ret.icon = icon;
+  ret.iconsheet = iconSheetFromPackFlag(packflag);
+  ret.onclick = cb ?? null;
+  self2._add(ret);
+  return ret;
+}
+function buttonImpl(self2, label, cb, thisvar, id, packflag = 0) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const ret = UIBase.createElement("button-x");
+  ret.packflag |= packflag;
+  ret.setAttribute("name", label);
+  ret.setAttribute("buttonid", "" + id);
+  ret.onclick = (cb && thisvar ? cb.bind(thisvar) : cb) ?? null;
+  self2._add(ret);
+  return ret;
+}
+function colorbuttonImpl(self2, inpath, packflag, mass_set_path) {
+  packflag = (packflag ?? 0) | self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  mass_set_path = inpath !== void 0 ? self2._getMassPath(self2.ctx, inpath, mass_set_path) : "";
+  const ret = UIBase.createElement("color-picker-button-x");
+  if (inpath !== void 0) {
+    inpath = self2._joinPrefix(inpath);
+    ret.setAttribute("datapath", inpath);
+  }
+  if (mass_set_path !== void 0) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
+  ret.packflag |= packflag;
+  self2._add(ret);
+  return ret;
+}
+function noteframeImpl(self2, packflag = 0) {
+  const ret = UIBase.createElement("noteframe-x");
+  ret.packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE | packflag;
+  self2._add(ret);
+  return ret;
+}
+function curve1dImpl(self2, inpath, packflag = 0, mass_set_path) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  const ret = UIBase.createElement("curve-widget-x");
+  ret.ctx = self2.ctx;
+  ret.packflag |= packflag;
+  if (inpath) {
+    inpath = self2._joinPrefix(inpath);
+    ret.setAttribute("datapath", inpath);
+  }
+  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  self2.add(ret);
+  return ret;
+}
+function vecpopupImpl(self2, inpath, packflag = 0, mass_set_path) {
+  const button = UIBase.createElement("vector-popup-button-x");
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  let name2 = "vector";
+  if (inpath) {
+    inpath = self2._joinPrefix(inpath);
+    button.setAttribute("datapath", inpath);
+    if (mass_set_path) {
+      button.setAttribute("mass_set_path", mass_set_path);
+    }
+    const rdef = self2.ctx.api.resolvePath(self2.ctx, inpath);
+    if (rdef?.prop) {
+      name2 = rdef.prop.uiname ?? rdef.prop.apiname ?? name2;
+    }
+  }
+  button.setAttribute("name", name2);
+  button.packflag |= packflag;
+  self2.add(button);
+  return button;
+}
+function colorPickerImpl(self2, inpath, packflag_or_args = 0, mass_set_path, themeOverride) {
+  let packflag;
+  if (typeof packflag_or_args === "object") {
+    const args = packflag_or_args;
+    packflag = args.packflag ?? 0;
+    mass_set_path = args.massSetPath;
+    themeOverride = args.themeOverride;
+  } else {
+    packflag = packflag_or_args;
+  }
+  let path;
+  if (inpath) {
+    path = self2._joinPrefix(inpath);
+  }
+  const ret = UIBase.createElement("colorpicker-x");
+  if (themeOverride) {
+    ret.overrideClass(themeOverride);
+  }
+  packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+  self2._container_inherit(ret, packflag);
+  ret.ctx = self2.ctx;
+  ret.parentWidget = self2;
+  ret._init();
+  ret.packflag |= packflag;
+  ret.inherit_packflag |= packflag;
+  ret.constructor.setDefault(ret);
+  if (path !== void 0) {
+    ret.setAttribute("datapath", path);
+  }
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
+  self2._add(ret);
+  return ret;
+}
+function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  mass_set_path = self2._getMassPath(self2.ctx, datapath, mass_set_path);
+  const ret = UIBase.createElement("rich-text-editor-x");
+  ret.ctx = self2.ctx;
+  ret.packflag |= packflag;
+  if (value !== void 0) {
+    ret.value = value;
+  }
+  if (datapath) ret.setAttribute("datapath", datapath);
+  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  self2.add(ret);
+  return ret;
+}
+function viewerImpl(self2, datapath, value = "", packflag = 0, mass_set_path) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  mass_set_path = self2._getMassPath(self2.ctx, datapath, mass_set_path);
+  const ret = UIBase.createElement("html-viewer-x");
+  ret.ctx = self2.ctx;
+  ret.packflag |= packflag;
+  if (value !== void 0) {
+    ret.value = value;
+  }
+  if (datapath) ret.setAttribute("datapath", datapath);
+  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  self2.add(ret);
+  return ret;
+}
+
+// scripts/core/utils/container_enum.ts
+init_ui_base();
+init_toolsys2();
+function styl(el) {
+  return el.style;
+}
+function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
+  const ret = UIBase.createElement("iconcheck-x");
+  ret.icon = icon;
+  ret.description = name ?? "";
+  if (inpath) {
+    ret.setAttribute("datapath", inpath);
+  }
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
+  self2.add(ret);
+  return ret;
+}
+function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const path = inpath !== void 0 ? self2._joinPrefix(inpath) : void 0;
+  let ret;
+  if (packflag & PackFlags.USE_ICONS) {
+    ret = UIBase.createElement("iconcheck-x");
+    ret.iconsheet = iconSheetFromPackFlag(packflag);
+  } else {
+    ret = UIBase.createElement("check-x");
+    ret.label = name2;
+  }
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  ret.packflag |= packflag;
+  ret.noMarginsOrPadding();
+  if (inpath) {
+    ret.setAttribute("datapath", path);
+  }
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
+  self2._add(ret);
+  return ret;
+}
+function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+  if (typeof name2 === "object" && name2 !== null) {
+    const args = name2;
+    name2 = args.name;
+    packflag = args.packflag;
+    enummap = args.enummap;
+    defaultval = args.defaultval;
+    callback = args.callback;
+    iconmap = args.iconmap;
+    mass_set_path = args.mass_set_path;
+  }
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  packflag = packflag === void 0 ? 0 : packflag;
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const path = self2._joinPrefix(inpath);
+  let prop;
+  let frame;
+  if (path !== void 0) {
+    const resolved = self2.ctx.api.resolvePath(self2.ctx, path, true);
+    prop = resolved !== void 0 ? resolved.prop : void 0;
+  }
+  if (path !== void 0) {
+    let makecb2 = function(key) {
+      return () => {
+        if (ignorecb) return;
+        ignorecb = true;
+        for (const k in checks) {
+          if (k !== key) {
+            checks[k].checked = false;
+          }
+        }
+        ignorecb = false;
+        if (callback) {
+          callback(key);
+        }
+      };
+    };
+    var makecb = makecb2;
+    if (prop === void 0) {
+      console.warn("Bad path in checkenum", path);
+      return self2.label("(error)");
+    }
+    frame = self2.strip();
+    frame.oneAxisPadding();
+    const makeIconCheck = (key) => {
+      const check = frame.check(inpath + "[" + key + "]", "", packflag);
+      check.packflag |= PackFlags.HIDE_CHECK_MARKS;
+      check.icon = prop.iconmap[key];
+      check.drawCheck = false;
+      check.style["padding"] = "0px";
+      check.style["margin"] = "0px";
+      styl(check.dom)["padding"] = "0px";
+      styl(check.dom)["margin"] = "0px";
+      return check;
+    };
+    const makeCheck = (key) => {
+      return frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
+    };
+    const useIcons = packflag & PackFlags.USE_ICONS;
+    if (!useIcons) {
+      if (name2 === void 0) {
+        name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
+      }
+      frame.label(name2).font = "TitleText";
+    }
+    const checks = {};
+    let ignorecb = false;
+    for (const key in prop.values) {
+      const check = useIcons ? makeIconCheck(key) : makeCheck(key);
+      checks[key] = check;
+      if (mass_set_path) {
+        check.setAttribute("mass_set_path", mass_set_path);
+      }
+      check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
+      if (!check.description) {
+        check.description = "" + prop.ui_value_names[key];
+      }
+      check.on_change = makecb2(key);
+    }
+  }
+  return frame;
+}
+function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_set_path, prop) {
+  packflag = packflag === void 0 ? 0 : packflag;
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const path = self2._joinPrefix(inpath);
+  let frame;
+  if (path !== void 0 && prop === void 0) {
+    const resolved = self2.ctx.api.resolvePath(self2.ctx, path, true);
+    prop = resolved !== void 0 ? resolved.prop : void 0;
+  }
+  if (!name2 && prop) {
+    name2 = prop.getUIName();
+  }
+  if (path !== void 0) {
+    if (prop === void 0) {
+      console.warn("Bad path in checkenum", path);
+      return void 0;
+    }
+    frame = self2.panel(name2, name2, packflag);
+    frame.oneAxisPadding();
+    frame.setCSSAfter(() => frame.background = self2.getDefault("BoxSub2BG"));
+    if (packflag & PackFlags.USE_ICONS) {
+      for (const key in prop.values) {
+        const check = frame.check(
+          inpath + " == " + prop.values[key],
+          "",
+          packflag
+        );
+        check.icon = prop.iconmap[key];
+        check.drawCheck = false;
+        check.style["padding"] = "0px";
+        check.style["margin"] = "0px";
+        styl(check.dom)["padding"] = "0px";
+        styl(check.dom)["margin"] = "0px";
+        check.description = prop.descriptions[key];
+      }
+    } else {
+      let makecb2 = function(key) {
+        return () => {
+          if (ignorecb) return;
+          ignorecb = true;
+          for (const k in checks) {
+            if (k !== key) {
+              checks[k].checked = false;
+            }
+          }
+          ignorecb = false;
+          if (callback) {
+            callback(key);
+          }
+        };
+      };
+      var makecb = makecb2;
+      if (name2 === void 0) {
+        name2 = prop.getUIName();
+      }
+      frame.label(name2).font = "TitleText";
+      const checks = {};
+      let ignorecb = false;
+      for (const key in prop.values) {
+        const check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
+        checks[key] = check;
+        if (mass_set_path) {
+          check.setAttribute("mass_set_path", mass_set_path);
+        }
+        check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
+        if (!check.description) {
+          check.description = "" + prop.ui_value_names[key];
+        }
+        check.on_change = makecb2(key);
+      }
+    }
+  }
+  return frame;
+}
+function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  let mass_set_path;
+  if (name2 && typeof name2 === "object") {
+    const args = name2;
+    name2 = args.name;
+    enumDef = args.enumDef;
+    defaultval = args.defaultval;
+    callback = args.callback;
+    iconmap = args.iconmap;
+    packflag = args.packflag ?? 0;
+    mass_set_path = args.mass_set_path;
+  }
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  let path;
+  let label = name2;
+  if (inpath !== void 0) {
+    path = self2._joinPrefix(inpath);
+  }
+  const ret = UIBase.createElement("dropbox-x");
+  if (enumDef !== void 0) {
+    if (enumDef instanceof EnumProperty) {
+      ret.prop = enumDef;
+      label ??= enumDef.getUIName();
+    } else {
+      ret.prop = new EnumProperty(defaultval, enumDef, path, name2);
+    }
+    if (iconmap) {
+      ret.prop.addIcons(iconmap);
+    }
+  } else {
+    const res = self2.ctx.api.resolvePath(self2.ctx, path, true);
+    if (res !== void 0) {
+      ret.prop = res.prop;
+      name2 ??= res.prop.getUIName();
+      label ??= name2;
+    }
+  }
+  mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+  if (path !== void 0) {
+    ret.setAttribute("datapath", path);
+  }
+  if (mass_set_path !== void 0) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
+  ret.setAttribute("name", name2);
+  if (defaultval) {
+    ret.setValue(defaultval);
+  }
+  ret.on_select = callback;
+  ret.packflag |= packflag;
+  if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
+    const container = self2.row();
+    let l;
+    if (packflag & PackFlags.LABEL_ON_RIGHT) {
+      container._add(ret);
+      l = container.label(label);
+      if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
+        l.style["marginLeft"] = "5px";
+      }
+    } else {
+      container.label(label);
+      container._add(ret);
+    }
+  } else {
+    self2._add(ret);
+  }
+  return ret;
+}
+
+// scripts/core/utils/container_prop.ts
+init_ui_base();
+init_toolsys2();
+init_toolprop();
+init_controller_base();
+init_const();
+function propImpl(self2, inpath, packflag = 0, mass_set_path) {
+  if (!self2.ctx) {
+    console.warn(self2.id + ".ctx was undefined");
+    let p = self2.parentWidget;
+    while (p) {
+      if (p.ctx) {
+        console.warn("Fetched self.ctx from parent");
+        self2.ctx = p.ctx;
+        break;
+      }
+      p = p.parentWidget;
+    }
+    if (!self2.ctx) {
+      throw new Error("ui.Container.prototype.prop(): self.ctx was undefined");
+    }
+  }
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  const rdef = self2.ctx.api.resolvePath(self2.ctx, self2._joinPrefix(inpath), true);
+  if (rdef?.prop === void 0) {
+    const fullpath = self2._joinPrefix(inpath);
+    const detail = self2.ctx.api.lastResolveError ? ": " + self2.ctx.api.lastResolveError : "";
+    console.warn("Unknown property at path", fullpath, detail);
+    throw new DataPathError(`Unknown property at path "${fullpath}"${detail}`);
+  }
+  const prop = rdef.prop;
+  const useDataPathUndo = self2.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
+  const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
+  if (prop.type === PropTypes.REPORT) {
+    return self2.pathlabel(inpath, uiName);
+  } else if (prop.type === PropTypes.STRING) {
+    let ret;
+    if (prop.flag & PropFlags.READ_ONLY) {
+      ret = self2.pathlabel(inpath, uiName);
+    } else if (prop.multiLine) {
+      ret = self2.textarea(inpath, rdef.value, packflag, mass_set_path);
+      ret.useDataPathUndo = useDataPathUndo;
+    } else {
+      const strip = self2.strip();
+      strip.label(uiName);
+      ret = strip.textbox(inpath);
+      ret.useDataPathUndo = useDataPathUndo;
+      mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+      if (mass_set_path) {
+        ret.setAttribute("mass_set_path", mass_set_path);
+      }
+    }
+    ret.packflag |= packflag;
+    return ret;
+  } else if (prop.type === PropTypes.CURVE) {
+    const ret = self2.curve1d(inpath, packflag, mass_set_path);
+    ret.useDataPathUndo = useDataPathUndo;
+    return ret;
+  } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
+    let ret;
+    if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
+      ret = self2.simpleslider(inpath, { packflag });
+    } else {
+      ret = self2.slider(inpath, { packflag });
+    }
+    ret.useDataPathUndo = useDataPathUndo;
+    ret.packflag |= packflag;
+    mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+    if (mass_set_path) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+    return ret;
+  } else if (prop.type === PropTypes.BOOL) {
+    const ret = self2.check(inpath, uiName, packflag, mass_set_path);
+    ret.useDataPathUndo = useDataPathUndo;
+    return ret;
+  } else if (prop.type === PropTypes.ENUM) {
+    if (rdef.subkey !== void 0) {
+      const subkey = rdef.subkey;
+      let name2 = prop.ui_value_names[rdef.subkey];
+      if (name2 === void 0) {
+        name2 = ToolProperty.makeUIName("" + rdef.subkey);
+      }
+      const check = self2.check(inpath, name2, packflag, mass_set_path);
+      const tooltip = prop.descriptions[subkey];
+      check.useDataPathUndo = useDataPathUndo;
+      check.description = tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
+      if (check instanceof Check) {
+        check.icon = prop.iconmap[rdef.subkey];
+      }
+      return check;
+    }
+    if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
+      return self2.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(useDataPathUndo);
+    } else {
+      if (prop.flag & PropFlags.USE_ICONS) {
+        packflag |= PackFlags.USE_ICONS;
+      } else if (prop.flag & PropFlags.FORCE_ENUM_CHECKBOXES) {
+        packflag &= ~PackFlags.USE_ICONS;
+      }
+      if (packflag & PackFlags.FORCE_PROP_LABELS) {
+        const strip = self2.strip();
+        strip.label(uiName);
+        return strip.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
+      } else {
+        return self2.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
+      }
+    }
+  } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
+    if (rdef.subkey !== void 0) {
+      let ret;
+      if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
+        ret = self2.simpleslider(inpath, { packflag });
+      else ret = self2.slider(inpath, { packflag });
+      ret.packflag |= packflag;
+      mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+      if (mass_set_path) {
+        ret.setAttribute("mass_set_path", mass_set_path);
+      }
+      return ret.setUndo(useDataPathUndo);
+    } else if (prop.subtype === PropSubTypes2.COLOR) {
+      return self2.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
+    } else {
+      const ret = UIBase.createElement("vector-panel-x");
+      mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
+      ret.packflag |= packflag | self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+      ret.inherit_packflag |= packflag | self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+      if (inpath) {
+        ret.setAttribute("datapath", self2._joinPrefix(inpath));
+      }
+      if (mass_set_path) {
+        ret.setAttribute("mass_set_path", mass_set_path);
+      }
+      self2.add(ret);
+      return ret.setUndo(useDataPathUndo);
+    }
+  } else if (prop.type === PropTypes.FLAG) {
+    if (rdef.subkey !== void 0) {
+      const tooltip = prop.descriptions[rdef.subkey];
+      let name2 = prop.ui_value_names[rdef.subkey];
+      if (typeof rdef.subkey === "number") {
+        name2 = prop.keys[rdef.subkey];
+        if (name2 && name2 in prop.ui_value_names) {
+          name2 = prop.ui_value_names[name2];
+        } else {
+          name2 = ToolProperty.makeUIName(name2 ? name2 : "(error)");
+        }
+      }
+      if (name2 === void 0) {
+        name2 = "(error)";
+      }
+      const ret = self2.check(inpath, name2, packflag, mass_set_path);
+      ret.icon = prop.iconmap[rdef.subkey];
+      if (tooltip) {
+        ret.description = tooltip;
+      }
+      return ret.setUndo(useDataPathUndo);
+    } else {
+      let con = self2;
+      if (packflag & PackFlags.FORCE_PROP_LABELS) {
+        con = self2.strip();
+        con.label(uiName);
+      }
+      if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
+        let i = 0;
+        const row = con.row();
+        const col1 = row.col();
+        const col2 = row.col();
+        for (const k in prop.values) {
+          let name2 = prop.ui_value_names[k];
+          const tooltip = prop.descriptions[k];
+          if (name2 === void 0) {
+            name2 = ToolProperty.makeUIName(k);
+          }
+          const con2 = i & 1 ? col2 : col1;
+          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          if (tooltip) {
+            check.description = tooltip;
+          }
+          check.setUndo(useDataPathUndo);
+          i++;
+        }
+        return row;
+      }
+      if (packflag & PackFlags.WRAP_CHECKBOXES) {
+        let isrow = self2.style["flexDirection"] === "row";
+        isrow = isrow || self2.style["flexDirection"] === "row-reverse";
+        let wrapChars;
+        let strip2;
+        let con2;
+        if (isrow) {
+          wrapChars = self2.getDefault("checkRowWrapLimit", void 0, 24);
+          strip2 = self2.col().strip();
+          strip2.packflag |= packflag;
+          strip2.inherit_packflag |= packflag;
+          con2 = strip2.row();
+        } else {
+          wrapChars = self2.getDefault("checkColWrapLimit", void 0, 5);
+          strip2 = self2.row().strip();
+          strip2.packflag |= packflag;
+          strip2.inherit_packflag |= packflag;
+          con2 = strip2.col();
+        }
+        let x = 0;
+        let y = 0;
+        for (const k in prop.values) {
+          let name2 = prop.ui_value_names[k];
+          const tooltip = prop.descriptions[k];
+          if (name2 === void 0) {
+            name2 = ToolProperty.makeUIName(k);
+          }
+          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          check.setUndo(useDataPathUndo);
+          if (tooltip) {
+            check.description = tooltip;
+          }
+          x += name2.length;
+          y += 1;
+          if (isrow && x > wrapChars) {
+            x = 0;
+            con2 = strip2.row();
+          } else if (!isrow && y > wrapChars) {
+            y = 0;
+            con2 = strip2.col();
+          }
+        }
+        return strip2;
+      }
+      if (con === self2) {
+        con = self2.strip();
+      }
+      const rebuild = () => {
+        con.clear();
+        for (const k in prop.values) {
+          let name2 = prop.ui_value_names[k];
+          const tooltip = prop.descriptions[k];
+          if (name2 === void 0) {
+            name2 = ToolProperty.makeUIName(k);
+          }
+          const check = con.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          check.useDataPathUndo = useDataPathUndo;
+          if (tooltip) {
+            check.description = tooltip;
+          }
+          check.setUndo(useDataPathUndo);
+        }
+      };
+      rebuild();
+      let last_hash = prop.calcHash();
+      con.updateAfter(() => {
+        const hash = prop.calcHash();
+        if (last_hash !== hash) {
+          last_hash = hash;
+          rebuild();
+        }
+      });
+      return con;
+    }
+  }
+  throw new DataPathError(`Unsupported property: ${inpath}`);
+}
+function simplesliderImpl(self2, datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
+  if (typeof name2 === "object") {
+    return self2.slider(datapath, {
+      ...name2,
+      packflag: (name2.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
+    });
+  } else {
+    return self2.slider(
+      datapath,
+      name2,
+      defaultval,
+      min,
+      max,
+      step,
+      isInt,
+      do_redraw,
+      callback,
+      packflag | PackFlags.SIMPLE_NUMSLIDERS
+    );
+  }
+}
+function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+  if (typeof name2 === "object") {
+    const args = name2;
+    decimalPlaces = args.decimalPlaces;
+    name2 = args.name;
+    defaultval = args.defaultval;
+    min = args.min;
+    max = args.max;
+    step = args.step;
+    is_int = args.is_int || args.isInt;
+    do_redraw = args.do_redraw;
+    callback = args.callback;
+    packflag = args.packflag ?? 0;
+  }
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
+  let ret;
+  if (datapath) {
+    datapath = self2._joinPrefix(datapath);
+    const rdef = self2.ctx.api.resolvePath(self2.ctx, datapath, true);
+    if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
+      packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+    }
+    if (rdef?.prop && rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
+      packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+    }
+  }
+  let simple = packflag & PackFlags.SIMPLE_NUMSLIDERS || const_default.simpleNumSliders;
+  simple = simple && !(packflag & PackFlags.FORCE_ROLLER_SLIDER);
+  const extraTextBox = const_default.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
+  if (extraTextBox) {
+    if (simple) {
+      ret = UIBase.createElement("numslider-simple-x");
+    } else {
+      ret = UIBase.createElement("numslider-textbox-x");
+    }
+  } else {
+    if (simple) {
+      ret = UIBase.createElement("numslider-simple-x");
+    } else {
+      ret = UIBase.createElement("numslider-x");
+    }
+  }
+  ret.packflag |= packflag;
+  if (datapath) {
+    ret.setAttribute("datapath", datapath);
+  }
+  if (name2) {
+    ret.setAttribute("name", name2);
+  }
+  if (min !== void 0) {
+    ret.setAttribute("min", "" + min);
+  }
+  if (max !== void 0) {
+    ret.setAttribute("max", "" + max);
+  }
+  if (defaultval !== void 0) {
+    ret.setValue(defaultval);
+  }
+  if (is_int) {
+    ret.setAttribute("integer", "" + is_int);
+  }
+  if (decimalPlaces !== void 0) {
+    ret.decimalPlaces = decimalPlaces;
+  }
+  if (step) {
+    ret.setAttribute("step", "" + step);
+  }
+  if (callback) {
+    ret.on_change = callback;
+  }
+  self2._add(ret);
+  if (self2.ctx) {
+    ret.setCSS();
+    ret.update();
+  }
+  if (do_redraw) {
+    ret._redraw();
+  }
+  return ret;
+}
+
+// scripts/core/utils/container_layout.ts
+init_ui_base();
+function treeviewImpl(self2) {
+  const ret = UIBase.createElement("tree-view-x");
+  ret.ctx = self2.ctx;
+  self2.add(ret);
+  self2._container_inherit(ret);
+  return ret;
+}
+function panelImpl(self2, name2, id, packflag = 0, tooltip) {
+  id = id === void 0 ? name2 : id;
+  const ret = UIBase.createElement("panelframe-x");
+  self2._container_inherit(ret, packflag);
+  if (tooltip) {
+    ret.setHeaderToolTip(tooltip);
+  }
+  ret.setAttribute("label", name2);
+  ret.setAttribute("id", id);
+  self2._add(ret);
+  if (self2.ctx) {
+    ret.ctx = self2.ctx;
+    ret.contents.ctx = self2.ctx;
+    ret._init();
+  }
+  ret.contents.dataPrefix = self2.dataPrefix;
+  ret.contents.massSetPrefix = self2.massSetPrefix;
+  return ret.contents;
+}
+function rowImpl(self2, packflag = 0) {
+  const ret = UIBase.createElement("rowframe-x");
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  ret.ctx = self2.ctx;
+  return ret;
+}
+function listboxImpl(self2, path, packflag = 0) {
+  const ret = UIBase.createElement("listbox-x");
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  if (path !== void 0) {
+    ret.setAttribute("datapath", self2._joinPrefix(path));
+  }
+  return ret;
+}
+function tableImpl(self2, packflag = 0) {
+  const ret = UIBase.createElement("tableframe-x");
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  return ret;
+}
+function twocolImpl(self2, parentDepth = 1, packflag = 0) {
+  const ret = UIBase.createElement("two-column-x");
+  ret.parentDepth = parentDepth;
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  return ret;
+}
+function colImpl(self2, packflag = 0) {
+  const ret = UIBase.createElement("colframe-x");
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  return ret;
+}
+function tabsImpl(self2, position = "top", packflag = 0) {
+  const ret = UIBase.createElement("tabcontainer-x");
+  ret.constructor.setDefault(ret);
+  ret.setAttribute("bar_pos", position);
+  self2._container_inherit(ret, packflag);
+  self2._add(ret);
+  return ret;
+}
+
 // scripts/core/ui.ts
 init_util();
 init_units2();
-init_toolsys2();
 init_html5_fileapi();
 init_cssfont();
 init_ui_base();
 init_theme_schema();
 init_toolprop();
-init_menu();
-init_menu_ops();
 init_ui_consts();
-init_const();
-init_toolsys();
-init_controller_base();
-function styl(el) {
+function styl2(el) {
   return el.style;
 }
 var Label = class extends UIBase {
@@ -65614,7 +66660,7 @@ var Label = class extends UIBase {
       this._last_font = key;
       this._updateFont();
     }
-    styl(this.dom)["pointerEvents"] = styl(this)["pointerEvents"];
+    styl2(this.dom)["pointerEvents"] = styl2(this)["pointerEvents"];
     this._updatePathWatchers();
   }
 };
@@ -66059,7 +67105,7 @@ var Container3 = class _Container extends UIBase {
   }
   //TODO: make sure this works on Electron?
   dynamicMenu(title, list5, packflag = 0) {
-    return this.menu(title, list5, packflag);
+    return dynamicMenuImpl(this, title, list5, packflag);
   }
   /**example usage:
   
@@ -66073,224 +67119,36 @@ var Container3 = class _Container extends UIBase {
   
      **/
   menu(title, list5, packflag = 0) {
-    const dbox = UIBase.createElement("dropbox-x");
-    dbox._name = title;
-    dbox.setAttribute("simple", "true");
-    dbox.setAttribute("name", title);
-    if (list5 instanceof Menu) {
-      dbox._build_menu = function() {
-        if (this._menu?.parentNode !== void 0) {
-          this._menu.remove();
-        }
-        this._menu = createMenu(this.ctx, title, list5);
-        return this._menu;
-      };
-    } else if (list5) {
-      dbox.template = list5;
-    }
-    this._container_inherit(dbox, packflag);
-    this._add(dbox);
-    return dbox;
+    return menuImpl(this, title, list5, packflag);
   }
   toolPanel(path_or_cls, args = {}) {
-    let cls;
-    if (typeof path_or_cls === "string") {
-      cls = this.ctx.api.parseToolPath(path_or_cls);
-    } else {
-      cls = path_or_cls;
-    }
-    const tdef = cls._getFinalToolDef();
-    const packflag = args.packflag ?? 0;
-    const label = args.label ?? tdef.uiname ?? tdef.toolpath;
-    const createCb = args.createCb ?? args.create_cb;
-    const container = args.container ?? this.panel(label);
-    let defaultsPath = args.defaultsPath ?? "toolDefaults";
-    if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
-      defaultsPath += ".";
-    }
-    const path = defaultsPath + tdef.toolpath;
-    container.useIcons(false);
-    const inputs = (tdef.inputs instanceof InheritFlag2 ? tdef.inputs.slots : tdef.inputs) ?? {};
-    for (const k in inputs) {
-      const prop = inputs[k];
-      if (prop.flag & PropFlags.PRIVATE) {
-        continue;
-      }
-      const apiname = prop.apiname ?? k;
-      const path2 = path + "." + apiname;
-      container.prop(path2);
-    }
-    container.tool(path_or_cls, packflag, createCb, label);
-    return container;
+    return toolPanelImpl(this, path_or_cls, args);
   }
   tool(path_or_cls, packflag_or_args = 0, createCb, label) {
-    let cls;
-    let packflag;
-    if (typeof packflag_or_args === "object") {
-      const args = packflag_or_args;
-      packflag = args.packflag ?? 0;
-      createCb = args.createCb;
-      label = args.label;
-    } else {
-      packflag = packflag_or_args ?? 0;
-    }
-    if (typeof path_or_cls == "string") {
-      if (path_or_cls.search(/\|/) >= 0) {
-        const parts = path_or_cls.split("|");
-        if (label === void 0 && parts.length > 1) {
-          label = parts[1].trim();
-        }
-        path_or_cls = parts[0].trim();
-      }
-      if (this.ctx === void 0) {
-        console.warn("this.ctx was undefined in tool()");
-        return;
-      }
-      cls = this.ctx.api.parseToolPath(path_or_cls);
-      if (cls === void 0) {
-        console.warn('Unknown tool for toolpath "' + path_or_cls + '"');
-        return;
-      }
-    } else {
-      cls = path_or_cls;
-    }
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    if (createCb === void 0) {
-      const toolpath = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath;
-      createCb = (cls2) => {
-        return this.ctx.api.createTool(this.ctx, toolpath);
-      };
-    }
-    const cb = () => {
-      const toolob = createCb(cls);
-      this.ctx.api.execTool(this.ctx, toolob);
-    };
-    const def = typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
-    let tooltip = def.description ?? def.uiname ?? "";
-    if (def.hotkey !== void 0) {
-      tooltip += "\n	" + def.hotkey;
-    } else {
-      let path = path_or_cls;
-      if (typeof path != "string") {
-        path = def.toolpath;
-      }
-      const hotkey = this.ctx.api.getToolPathHotkey(this.ctx, path);
-      if (hotkey) {
-        tooltip += "\n	Hotkey: " + hotkey;
-      }
-    }
-    let ret;
-    if (def.icon !== void 0 && packflag & PackFlags.USE_ICONS) {
-      label = label === void 0 ? tooltip : label;
-      const check = this.iconbutton(def.icon ?? -1, label, cb);
-      check.iconsheet = iconSheetFromPackFlag(packflag);
-      check.packflag |= packflag;
-      check.description = tooltip;
-      ret = check;
-    } else {
-      label = label === void 0 ? def.uiname ?? def.toolpath : label;
-      ret = this.button(label, cb);
-      ret.description = tooltip;
-      ret.packflag |= packflag;
-    }
-    return ret;
+    return toolImpl(this, path_or_cls, packflag_or_args, createCb, label);
   }
   //supports number types
   textbox(inpath, text2, cb, packflag = 0) {
-    let path;
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase.createElement("textbox-x");
-    if (path !== void 0) {
-      ret.setAttribute("datapath", path);
-    }
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
-    ret._init();
-    this._add(ret);
-    ret.setCSS();
-    ret.update();
-    ret.packflag |= packflag;
-    ret.on_change = cb ?? null;
-    if (text2 !== void 0) {
-      ret.text = "" + text2;
-    }
-    return ret;
+    return textboxImpl(this, inpath, text2, cb, packflag);
   }
   pathlabel(inpath, label, packflag = 0) {
-    let path;
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-    const ret = UIBase.createElement("label-x");
-    if (label === void 0 && inpath) {
-      const rdef = this.ctx.api.resolvePath(this.ctx, path);
-      if (rdef) {
-        label = rdef.prop.uiname ?? rdef.dpath.apiname;
-      } else {
-        console.warn(
-          `pathlabel: bad path "${path}"` + (this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "")
-        );
-        label = "(error)";
-      }
-    }
-    ret.text = label;
-    ret.packflag = packflag;
-    ret.setAttribute("datapath", path);
-    this._add(ret);
-    ret.setCSS();
-    return ret;
+    return pathlabelImpl(this, inpath, label, packflag);
   }
   label(text2) {
-    const ret = UIBase.createElement("label-x");
-    ret.text = text2;
-    this._add(ret);
-    return ret;
+    return labelImpl(this, text2);
   }
   /**
    * Makes a button that starts the help picker: point at anything to read what it does, which is
    * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
    */
   helppicker() {
-    const ret = this.iconbutton(
-      Icons.HELP,
-      "Read what a control does by pointing at it; tap empty space to stop",
-      () => {
-        this.getScreen()?.hintPickerTool();
-      }
-    );
-    if (isMobile()) {
-    }
-    if (ret.ctx) {
-      ret._init();
-      ret.setCSS();
-    }
-    return ret;
+    return helppickerImpl(this);
   }
   iconbutton(icon, description, cb, thisvar, packflag = 0) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase.createElement("iconbutton-x");
-    ret.packflag |= packflag;
-    ret.setAttribute("icon", "" + icon);
-    ret.description = description;
-    ret.icon = icon;
-    ret.iconsheet = iconSheetFromPackFlag(packflag);
-    ret.onclick = cb ?? null;
-    this._add(ret);
-    return ret;
+    return iconbuttonImpl(this, icon, description, cb, thisvar, packflag);
   }
   button(label, cb, thisvar, id, packflag = 0) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const ret = UIBase.createElement("button-x");
-    ret.packflag |= packflag;
-    ret.setAttribute("name", label);
-    ret.setAttribute("buttonid", "" + id);
-    ret.onclick = (cb && thisvar ? cb.bind(thisvar) : cb) ?? null;
-    this._add(ret);
-    return ret;
+    return buttonImpl(this, label, cb, thisvar, id, packflag);
   }
   _joinPrefix(path, prefix2 = this.dataPrefix.trim()) {
     if (path === void 0) {
@@ -66306,60 +67164,16 @@ var Container3 = class _Container extends UIBase {
     return prefix2 + path;
   }
   colorbutton(inpath, packflag, mass_set_path) {
-    packflag = (packflag ?? 0) | this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    mass_set_path = inpath !== void 0 ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
-    const ret = UIBase.createElement("color-picker-button-x");
-    if (inpath !== void 0) {
-      inpath = this._joinPrefix(inpath);
-      ret.setAttribute("datapath", inpath);
-    }
-    if (mass_set_path !== void 0) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-    ret.packflag |= packflag;
-    this._add(ret);
-    return ret;
+    return colorbuttonImpl(this, inpath, packflag, mass_set_path);
   }
   noteframe(packflag = 0) {
-    const ret = UIBase.createElement("noteframe-x");
-    ret.packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE | packflag;
-    this._add(ret);
-    return ret;
+    return noteframeImpl(this, packflag);
   }
   curve1d(inpath, packflag = 0, mass_set_path) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    const ret = UIBase.createElement("curve-widget-x");
-    ret.ctx = this.ctx;
-    ret.packflag |= packflag;
-    if (inpath) {
-      inpath = this._joinPrefix(inpath);
-      ret.setAttribute("datapath", inpath);
-    }
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-    this.add(ret);
-    return ret;
+    return curve1dImpl(this, inpath, packflag, mass_set_path);
   }
   vecpopup(inpath, packflag = 0, mass_set_path) {
-    const button = UIBase.createElement("vector-popup-button-x");
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let name2 = "vector";
-    if (inpath) {
-      inpath = this._joinPrefix(inpath);
-      button.setAttribute("datapath", inpath);
-      if (mass_set_path) {
-        button.setAttribute("mass_set_path", mass_set_path);
-      }
-      const rdef = this.ctx.api.resolvePath(this.ctx, inpath);
-      if (rdef?.prop) {
-        name2 = rdef.prop.uiname ?? rdef.prop.apiname ?? name2;
-      }
-    }
-    button.setAttribute("name", name2);
-    button.packflag |= packflag;
-    this.add(button);
-    return button;
+    return vecpopupImpl(this, inpath, packflag, mass_set_path);
   }
   _getMassPath(ctx, inpath, mass_set_path) {
     if (inpath === void 0) {
@@ -66374,457 +67188,33 @@ var Container3 = class _Container extends UIBase {
     return this._joinPrefix(mass_set_path, this.massSetPrefix);
   }
   prop(inpath, packflag = 0, mass_set_path) {
-    if (!this.ctx) {
-      console.warn(this.id + ".ctx was undefined");
-      let p = this.parentWidget;
-      while (p) {
-        if (p.ctx) {
-          console.warn("Fetched this.ctx from parent");
-          this.ctx = p.ctx;
-          break;
-        }
-        p = p.parentWidget;
-      }
-      if (!this.ctx) {
-        throw new Error("ui.Container.prototype.prop(): this.ctx was undefined");
-      }
-    }
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath), true);
-    if (rdef?.prop === void 0) {
-      const fullpath = this._joinPrefix(inpath);
-      const detail = this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "";
-      console.warn("Unknown property at path", fullpath, detail);
-      throw new DataPathError(`Unknown property at path "${fullpath}"${detail}`);
-    }
-    const prop = rdef.prop;
-    const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
-    const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
-    if (prop.type === PropTypes.REPORT) {
-      return this.pathlabel(inpath, uiName);
-    } else if (prop.type === PropTypes.STRING) {
-      let ret;
-      if (prop.flag & PropFlags.READ_ONLY) {
-        ret = this.pathlabel(inpath, uiName);
-      } else if (prop.multiLine) {
-        ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
-        ret.useDataPathUndo = useDataPathUndo;
-      } else {
-        const strip = this.strip();
-        strip.label(uiName);
-        ret = strip.textbox(inpath);
-        ret.useDataPathUndo = useDataPathUndo;
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-      }
-      ret.packflag |= packflag;
-      return ret;
-    } else if (prop.type === PropTypes.CURVE) {
-      const ret = this.curve1d(inpath, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
-      return ret;
-    } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
-      let ret;
-      if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
-        ret = this.simpleslider(inpath, { packflag });
-      } else {
-        ret = this.slider(inpath, { packflag });
-      }
-      ret.useDataPathUndo = useDataPathUndo;
-      ret.packflag |= packflag;
-      mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-      if (mass_set_path) {
-        ret.setAttribute("mass_set_path", mass_set_path);
-      }
-      return ret;
-    } else if (prop.type === PropTypes.BOOL) {
-      const ret = this.check(inpath, uiName, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
-      return ret;
-    } else if (prop.type === PropTypes.ENUM) {
-      if (rdef.subkey !== void 0) {
-        const subkey = rdef.subkey;
-        let name2 = prop.ui_value_names[rdef.subkey];
-        if (name2 === void 0) {
-          name2 = ToolProperty.makeUIName("" + rdef.subkey);
-        }
-        const check = this.check(inpath, name2, packflag, mass_set_path);
-        const tooltip = prop.descriptions[subkey];
-        check.useDataPathUndo = useDataPathUndo;
-        check.description = tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
-        if (check instanceof Check) {
-          check.icon = prop.iconmap[rdef.subkey];
-        }
-        return check;
-      }
-      if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
-        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(
-          useDataPathUndo
-        );
-      } else {
-        if (prop.flag & PropFlags.USE_ICONS) {
-          packflag |= PackFlags.USE_ICONS;
-        } else if (prop.flag & PropFlags.FORCE_ENUM_CHECKBOXES) {
-          packflag &= ~PackFlags.USE_ICONS;
-        }
-        if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          const strip = this.strip();
-          strip.label(uiName);
-          return strip.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
-        } else {
-          return this.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
-        }
-      }
-    } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
-      if (rdef.subkey !== void 0) {
-        let ret;
-        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
-          ret = this.simpleslider(inpath, { packflag });
-        else ret = this.slider(inpath, { packflag });
-        ret.packflag |= packflag;
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-        return ret.setUndo(useDataPathUndo);
-      } else if (prop.subtype === PropSubTypes2.COLOR) {
-        return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
-      } else {
-        const ret = UIBase.createElement("vector-panel-x");
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-        ret.packflag |= packflag | this.inherit_packflag & ~PackFlags.NO_UPDATE;
-        ret.inherit_packflag |= packflag | this.inherit_packflag & ~PackFlags.NO_UPDATE;
-        if (inpath) {
-          ret.setAttribute("datapath", this._joinPrefix(inpath));
-        }
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-        this.add(ret);
-        return ret.setUndo(useDataPathUndo);
-      }
-    } else if (prop.type === PropTypes.FLAG) {
-      if (rdef.subkey !== void 0) {
-        const tooltip = prop.descriptions[rdef.subkey];
-        let name2 = prop.ui_value_names[rdef.subkey];
-        if (typeof rdef.subkey === "number") {
-          name2 = prop.keys[rdef.subkey];
-          if (name2 && name2 in prop.ui_value_names) {
-            name2 = prop.ui_value_names[name2];
-          } else {
-            name2 = ToolProperty.makeUIName(name2 ? name2 : "(error)");
-          }
-        }
-        if (name2 === void 0) {
-          name2 = "(error)";
-        }
-        const ret = this.check(inpath, name2, packflag, mass_set_path);
-        ret.icon = prop.iconmap[rdef.subkey];
-        if (tooltip) {
-          ret.description = tooltip;
-        }
-        return ret.setUndo(useDataPathUndo);
-      } else {
-        let con = this;
-        if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          con = this.strip();
-          con.label(uiName);
-        }
-        if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
-          let i = 0;
-          const row = con.row();
-          const col1 = row.col();
-          const col2 = row.col();
-          for (const k in prop.values) {
-            let name2 = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-            if (name2 === void 0) {
-              name2 = ToolProperty.makeUIName(k);
-            }
-            const con2 = i & 1 ? col2 : col1;
-            const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
-            if (tooltip) {
-              check.description = tooltip;
-            }
-            check.setUndo(useDataPathUndo);
-            i++;
-          }
-          return row;
-        }
-        if (packflag & PackFlags.WRAP_CHECKBOXES) {
-          let isrow = this.style["flexDirection"] === "row";
-          isrow = isrow || this.style["flexDirection"] === "row-reverse";
-          let wrapChars;
-          let strip2;
-          let con2;
-          if (isrow) {
-            wrapChars = this.getDefault("checkRowWrapLimit", void 0, 24);
-            strip2 = this.col().strip();
-            strip2.packflag |= packflag;
-            strip2.inherit_packflag |= packflag;
-            con2 = strip2.row();
-          } else {
-            wrapChars = this.getDefault("checkColWrapLimit", void 0, 5);
-            strip2 = this.row().strip();
-            strip2.packflag |= packflag;
-            strip2.inherit_packflag |= packflag;
-            con2 = strip2.col();
-          }
-          let x = 0;
-          let y = 0;
-          for (const k in prop.values) {
-            let name2 = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-            if (name2 === void 0) {
-              name2 = ToolProperty.makeUIName(k);
-            }
-            const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
-            check.setUndo(useDataPathUndo);
-            if (tooltip) {
-              check.description = tooltip;
-            }
-            x += name2.length;
-            y += 1;
-            if (isrow && x > wrapChars) {
-              x = 0;
-              con2 = strip2.row();
-            } else if (!isrow && y > wrapChars) {
-              y = 0;
-              con2 = strip2.col();
-            }
-          }
-          return strip2;
-        }
-        if (con === this) {
-          con = this.strip();
-        }
-        const rebuild = () => {
-          con.clear();
-          for (const k in prop.values) {
-            let name2 = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-            if (name2 === void 0) {
-              name2 = ToolProperty.makeUIName(k);
-            }
-            const check = con.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
-            check.useDataPathUndo = useDataPathUndo;
-            if (tooltip) {
-              check.description = tooltip;
-            }
-            check.setUndo(useDataPathUndo);
-          }
-        };
-        rebuild();
-        let last_hash = prop.calcHash();
-        con.updateAfter(() => {
-          const hash = prop.calcHash();
-          if (last_hash !== hash) {
-            last_hash = hash;
-            rebuild();
-          }
-        });
-        return con;
-      }
-    }
-    throw new DataPathError(`Unsupported property: ${inpath}`);
+    return propImpl(this, inpath, packflag, mass_set_path);
   }
   iconcheck(inpath, icon, description, mass_set_path) {
-    const ret = UIBase.createElement("iconcheck-x");
-    ret.icon = icon;
-    ret.description = name ?? "";
-    if (inpath) {
-      ret.setAttribute("datapath", inpath);
-    }
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-    this.add(ret);
-    return ret;
+    return iconcheckImpl(this, inpath, icon, description, mass_set_path);
   }
   check(inpath, name2, packflag = 0, mass_set_path) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const path = inpath !== void 0 ? this._joinPrefix(inpath) : void 0;
-    let ret;
-    if (packflag & PackFlags.USE_ICONS) {
-      ret = UIBase.createElement("iconcheck-x");
-      ret.iconsheet = iconSheetFromPackFlag(packflag);
-    } else {
-      ret = UIBase.createElement("check-x");
-      ret.label = name2;
-    }
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    ret.packflag |= packflag;
-    ret.noMarginsOrPadding();
-    if (inpath) {
-      ret.setAttribute("datapath", path);
-    }
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-    this._add(ret);
-    return ret;
+    return checkImpl(this, inpath, name2, packflag, mass_set_path);
   }
   /*
    *
    * new (optional) form: checkenum(inpath, args)
    * */
   checkenum(inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-    if (typeof name2 === "object" && name2 !== null) {
-      const args = name2;
-      name2 = args.name;
-      packflag = args.packflag;
-      enummap = args.enummap;
-      defaultval = args.defaultval;
-      callback = args.callback;
-      iconmap = args.iconmap;
-      mass_set_path = args.mass_set_path;
-    }
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    packflag = packflag === void 0 ? 0 : packflag;
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const path = this._joinPrefix(inpath);
-    let prop;
-    let frame;
-    if (path !== void 0) {
-      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== void 0 ? resolved.prop : void 0;
-    }
-    if (path !== void 0) {
-      let makecb2 = function(key) {
-        return () => {
-          if (ignorecb) return;
-          ignorecb = true;
-          for (const k in checks) {
-            if (k !== key) {
-              checks[k].checked = false;
-            }
-          }
-          ignorecb = false;
-          if (callback) {
-            callback(key);
-          }
-        };
-      };
-      var makecb = makecb2;
-      if (prop === void 0) {
-        console.warn("Bad path in checkenum", path);
-        return this.label("(error)");
-      }
-      frame = this.strip();
-      frame.oneAxisPadding();
-      const makeIconCheck = (key) => {
-        const check = frame.check(inpath + "[" + key + "]", "", packflag);
-        check.packflag |= PackFlags.HIDE_CHECK_MARKS;
-        check.icon = prop.iconmap[key];
-        check.drawCheck = false;
-        check.style["padding"] = "0px";
-        check.style["margin"] = "0px";
-        styl(check.dom)["padding"] = "0px";
-        styl(check.dom)["margin"] = "0px";
-        return check;
-      };
-      const makeCheck = (key) => {
-        return frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
-      };
-      const useIcons = packflag & PackFlags.USE_ICONS;
-      if (!useIcons) {
-        if (name2 === void 0) {
-          name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
-        }
-        frame.label(name2).font = "TitleText";
-      }
-      const checks = {};
-      let ignorecb = false;
-      for (const key in prop.values) {
-        const check = useIcons ? makeIconCheck(key) : makeCheck(key);
-        checks[key] = check;
-        if (mass_set_path) {
-          check.setAttribute("mass_set_path", mass_set_path);
-        }
-        check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-        if (!check.description) {
-          check.description = "" + prop.ui_value_names[key];
-        }
-        check.on_change = makecb2(key);
-      }
-    }
-    return frame;
+    return checkenumImpl(
+      this,
+      inpath,
+      name2,
+      packflag,
+      enummap,
+      defaultval,
+      callback,
+      iconmap,
+      mass_set_path
+    );
   }
   checkenum_panel(inpath, name2, packflag = 0, callback, mass_set_path, prop) {
-    packflag = packflag === void 0 ? 0 : packflag;
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    const path = this._joinPrefix(inpath);
-    let frame;
-    if (path !== void 0 && prop === void 0) {
-      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== void 0 ? resolved.prop : void 0;
-    }
-    if (!name2 && prop) {
-      name2 = prop.getUIName();
-    }
-    if (path !== void 0) {
-      if (prop === void 0) {
-        console.warn("Bad path in checkenum", path);
-        return void 0;
-      }
-      frame = this.panel(name2, name2, packflag);
-      frame.oneAxisPadding();
-      frame.setCSSAfter(() => frame.background = this.getDefault("BoxSub2BG"));
-      if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values) {
-          const check = frame.check(
-            inpath + " == " + prop.values[key],
-            "",
-            packflag
-          );
-          check.icon = prop.iconmap[key];
-          check.drawCheck = false;
-          check.style["padding"] = "0px";
-          check.style["margin"] = "0px";
-          styl(check.dom)["padding"] = "0px";
-          styl(check.dom)["margin"] = "0px";
-          check.description = prop.descriptions[key];
-        }
-      } else {
-        let makecb2 = function(key) {
-          return () => {
-            if (ignorecb) return;
-            ignorecb = true;
-            for (const k in checks) {
-              if (k !== key) {
-                checks[k].checked = false;
-              }
-            }
-            ignorecb = false;
-            if (callback) {
-              callback(key);
-            }
-          };
-        };
-        var makecb = makecb2;
-        if (name2 === void 0) {
-          name2 = prop.getUIName();
-        }
-        frame.label(name2).font = "TitleText";
-        const checks = {};
-        let ignorecb = false;
-        for (const key in prop.values) {
-          const check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
-          checks[key] = check;
-          if (mass_set_path) {
-            check.setAttribute("mass_set_path", mass_set_path);
-          }
-          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-          if (!check.description) {
-            check.description = "" + prop.ui_value_names[key];
-          }
-          check.on_change = makecb2(key);
-        }
-      }
-    }
-    return frame;
+    return checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
   }
   /**
       enummap is an object that maps
@@ -66842,73 +67232,7 @@ var Container3 = class _Container extends UIBase {
       defaultval cannot be undefined
     */
   listenum(inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let mass_set_path;
-    if (name2 && typeof name2 === "object") {
-      const args = name2;
-      name2 = args.name;
-      enumDef = args.enumDef;
-      defaultval = args.defaultval;
-      callback = args.callback;
-      iconmap = args.iconmap;
-      packflag = args.packflag ?? 0;
-      mass_set_path = args.mass_set_path;
-    }
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    let path;
-    let label = name2;
-    if (inpath !== void 0) {
-      path = this._joinPrefix(inpath);
-    }
-    const ret = UIBase.createElement("dropbox-x");
-    if (enumDef !== void 0) {
-      if (enumDef instanceof EnumProperty) {
-        ret.prop = enumDef;
-        label ??= enumDef.getUIName();
-      } else {
-        ret.prop = new EnumProperty(defaultval, enumDef, path, name2);
-      }
-      if (iconmap) {
-        ret.prop.addIcons(iconmap);
-      }
-    } else {
-      const res = this.ctx.api.resolvePath(this.ctx, path, true);
-      if (res !== void 0) {
-        ret.prop = res.prop;
-        name2 ??= res.prop.getUIName();
-        label ??= name2;
-      }
-    }
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    if (path !== void 0) {
-      ret.setAttribute("datapath", path);
-    }
-    if (mass_set_path !== void 0) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-    ret.setAttribute("name", name2);
-    if (defaultval) {
-      ret.setValue(defaultval);
-    }
-    ret.on_select = callback;
-    ret.packflag |= packflag;
-    if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
-      const container = this.row();
-      let l;
-      if (packflag & PackFlags.LABEL_ON_RIGHT) {
-        container._add(ret);
-        l = container.label(label);
-        if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
-          l.style["marginLeft"] = "5px";
-        }
-      } else {
-        container.label(label);
-        container._add(ret);
-      }
-    } else {
-      this._add(ret);
-    }
-    return ret;
+    return listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag);
   }
   getroot() {
     let p = this;
@@ -66918,25 +67242,19 @@ var Container3 = class _Container extends UIBase {
     return p;
   }
   simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-    if (typeof name2 === "object") {
-      return this.slider(datapath, {
-        ...name2,
-        packflag: (name2.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
-      });
-    } else {
-      return this.slider(
-        datapath,
-        name2,
-        defaultval,
-        min,
-        max,
-        step,
-        isInt,
-        do_redraw,
-        callback,
-        packflag | PackFlags.SIMPLE_NUMSLIDERS
-      );
-    }
+    return simplesliderImpl(
+      this,
+      datapath,
+      name2,
+      defaultval,
+      min,
+      max,
+      step,
+      isInt,
+      do_redraw,
+      callback,
+      packflag
+    );
   }
   /**
    *
@@ -66947,84 +67265,20 @@ var Container3 = class _Container extends UIBase {
    * });
    * */
   slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-    if (typeof name2 === "object") {
-      const args = name2;
-      decimalPlaces = args.decimalPlaces;
-      name2 = args.name;
-      defaultval = args.defaultval;
-      min = args.min;
-      max = args.max;
-      step = args.step;
-      is_int = args.is_int || args.isInt;
-      do_redraw = args.do_redraw;
-      callback = args.callback;
-      packflag = args.packflag ?? 0;
-    }
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let ret;
-    if (datapath) {
-      datapath = this._joinPrefix(datapath);
-      const rdef = this.ctx.api.resolvePath(this.ctx, datapath, true);
-      if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
-        packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-      }
-      if (rdef?.prop && rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
-        packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-      }
-    }
-    let simple = packflag & PackFlags.SIMPLE_NUMSLIDERS || const_default.simpleNumSliders;
-    simple = simple && !(packflag & PackFlags.FORCE_ROLLER_SLIDER);
-    const extraTextBox = const_default.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
-    if (extraTextBox) {
-      if (simple) {
-        ret = UIBase.createElement("numslider-simple-x");
-      } else {
-        ret = UIBase.createElement("numslider-textbox-x");
-      }
-    } else {
-      if (simple) {
-        ret = UIBase.createElement("numslider-simple-x");
-      } else {
-        ret = UIBase.createElement("numslider-x");
-      }
-    }
-    ret.packflag |= packflag;
-    if (datapath) {
-      ret.setAttribute("datapath", datapath);
-    }
-    if (name2) {
-      ret.setAttribute("name", name2);
-    }
-    if (min !== void 0) {
-      ret.setAttribute("min", "" + min);
-    }
-    if (max !== void 0) {
-      ret.setAttribute("max", "" + max);
-    }
-    if (defaultval !== void 0) {
-      ret.setValue(defaultval);
-    }
-    if (is_int) {
-      ret.setAttribute("integer", "" + is_int);
-    }
-    if (decimalPlaces !== void 0) {
-      ret.decimalPlaces = decimalPlaces;
-    }
-    if (step) {
-      ret.setAttribute("step", "" + step);
-    }
-    if (callback) {
-      ret.on_change = callback;
-    }
-    this._add(ret);
-    if (this.ctx) {
-      ret.setCSS();
-      ret.update();
-    }
-    if (do_redraw) {
-      ret._redraw();
-    }
-    return ret;
+    return sliderImpl(
+      this,
+      datapath,
+      name2,
+      defaultval,
+      min,
+      max,
+      step,
+      is_int,
+      do_redraw,
+      callback,
+      packflag,
+      decimalPlaces
+    );
   }
   _container_inherit(elem, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -67036,140 +67290,41 @@ var Container3 = class _Container extends UIBase {
     elem.massSetPrefix = this.massSetPrefix;
   }
   treeview() {
-    const ret = UIBase.createElement("tree-view-x");
-    ret.ctx = this.ctx;
-    this.add(ret);
-    this._container_inherit(ret);
-    return ret;
+    return treeviewImpl(this);
   }
   panel(name2, id, packflag = 0, tooltip) {
-    id = id === void 0 ? name2 : id;
-    const ret = UIBase.createElement("panelframe-x");
-    this._container_inherit(ret, packflag);
-    if (tooltip) {
-      ret.setHeaderToolTip(tooltip);
-    }
-    ret.setAttribute("label", name2);
-    ret.setAttribute("id", id);
-    this._add(ret);
-    if (this.ctx) {
-      ret.ctx = this.ctx;
-      ret.contents.ctx = this.ctx;
-      ret._init();
-    }
-    ret.contents.dataPrefix = this.dataPrefix;
-    ret.contents.massSetPrefix = this.massSetPrefix;
-    return ret.contents;
+    return panelImpl(this, name2, id, packflag, tooltip);
   }
   row(packflag = 0) {
-    const ret = UIBase.createElement("rowframe-x");
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    ret.ctx = this.ctx;
-    return ret;
+    return rowImpl(this, packflag);
   }
   listbox(path, packflag = 0) {
-    const ret = UIBase.createElement("listbox-x");
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    if (path !== void 0) {
-      ret.setAttribute("datapath", this._joinPrefix(path));
-    }
-    return ret;
+    return listboxImpl(this, path, packflag);
   }
   table(packflag = 0) {
-    const ret = UIBase.createElement("tableframe-x");
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    return ret;
+    return tableImpl(this, packflag);
   }
   twocol(parentDepth = 1, packflag = 0) {
-    const ret = UIBase.createElement("two-column-x");
-    ret.parentDepth = parentDepth;
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    return ret;
+    return twocolImpl(this, parentDepth, packflag);
   }
   col(packflag = 0) {
-    const ret = UIBase.createElement("colframe-x");
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    return ret;
+    return colImpl(this, packflag);
   }
   colorPicker(inpath, packflag_or_args = 0, mass_set_path, themeOverride) {
-    let packflag;
-    if (typeof packflag_or_args === "object") {
-      const args = packflag_or_args;
-      packflag = args.packflag ?? 0;
-      mass_set_path = args.massSetPath;
-      themeOverride = args.themeOverride;
-    } else {
-      packflag = packflag_or_args;
-    }
-    let path;
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-    const ret = UIBase.createElement("colorpicker-x");
-    if (themeOverride) {
-      ret.overrideClass(themeOverride);
-    }
-    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-    this._container_inherit(ret, packflag);
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
-    ret._init();
-    ret.packflag |= packflag;
-    ret.inherit_packflag |= packflag;
-    ret.constructor.setDefault(ret);
-    if (path !== void 0) {
-      ret.setAttribute("datapath", path);
-    }
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-    this._add(ret);
-    return ret;
+    return colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride);
   }
   textarea(datapath, value = "", packflag = 0, mass_set_path) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-    const ret = UIBase.createElement("rich-text-editor-x");
-    ret.ctx = this.ctx;
-    ret.packflag |= packflag;
-    if (value !== void 0) {
-      ret.value = value;
-    }
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-    this.add(ret);
-    return ret;
+    return textareaImpl(this, datapath, value, packflag, mass_set_path);
   }
   /**
    * html5 viewer
    * */
   viewer(datapath, value = "", packflag = 0, mass_set_path) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-    const ret = UIBase.createElement("html-viewer-x");
-    ret.ctx = this.ctx;
-    ret.packflag |= packflag;
-    if (value !== void 0) {
-      ret.value = value;
-    }
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-    this.add(ret);
-    return ret;
+    return viewerImpl(this, datapath, value, packflag, mass_set_path);
   }
   //
   tabs(position = "top", packflag = 0) {
-    const ret = UIBase.createElement("tabcontainer-x");
-    ret.constructor.setDefault(ret);
-    ret.setAttribute("bar_pos", position);
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-    return ret;
+    return tabsImpl(this, position, packflag);
   }
   asDialogFooter() {
     this.style["marginTop"] = "15px";

@@ -3,50 +3,64 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
-import type { TextBox } from "../widgets/ui_textbox";
-import { Button, Check, IconButton, IconCheck } from "../widgets/ui_widgets";
 import * as util from "../path-controller/util/util";
 import * as units from "../core/units";
-import {
-  FlagProperty,
-  EnumProperty,
-  ToolProperty,
-  PropFlags,
-  PropSubTypes,
-  ToolPropertyTypes,
-} from "../path-controller/toolsys";
+import { FlagProperty, EnumProperty } from "../path-controller/toolsys";
 import "../path-controller/util/html5_fileapi";
 import { CSSFont } from "./cssfont";
-import { theme, iconSheetFromPackFlag, UIBase, PackFlags, Icons } from "./ui_base";
+import { theme, UIBase, PackFlags } from "./ui_base";
 import type { UIBaseDefinition } from "./ui_base";
 import { t } from "./theme_schema";
 import type { KnownDataPath } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
-import { Menu } from "../menu/menu";
-import { createMenu } from "../menu/menu_ops";
 import type { DropBox } from "../menu/dropbox";
 import type { MenuTemplate } from "../menu/menu_types";
 import { IsRowFrameTag } from "./ui_consts";
 
-import cconst from "../config/const";
 import { IContextBase } from "./context_base";
-import type { PanelFrame } from "../widgets/ui_panel";
-import type { TabContainer } from "../widgets/ui_tabs";
 import type { TreeView } from "../widgets/ui_treeview";
-import { InheritFlag, ToolOp } from "../path-controller/toolsys/toolsys";
-import type { RichViewer } from "../widgets/ui_richedit";
-import type { NumSliderTypes } from "../widgets/ui_numsliders";
-import type { ColorPicker, ColorPickerButton } from "../widgets/ui_colorpicker2";
-import type { ListBox } from "../widgets/ui_listbox";
+import { ToolOp } from "../path-controller/toolsys/toolsys";
 // Type-only: a value import of ui_containers would evaluate `class RowFrame extends
 // Container` while Container is still in its temporal dead zone. ui_containers imports
 // this module; this module must never import it at runtime, not even for side effects.
-import type { RowFrame, ColumnFrame, TwoColumnFrame } from "./ui_containers";
+import type { RowFrame, ColumnFrame } from "./ui_containers";
 import type { TableFrame } from "../widgets/ui_table";
-import { DataPathError } from "../path-controller/controller/controller_base";
 import { ToolOpAny } from "../path-controller/controller/controller_abstract";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
-import type { RichEditor } from "../widgets/ui_richedit";
+import { dynamicMenuImpl, menuImpl, toolPanelImpl, toolImpl } from "./utils/container_menu";
+import {
+  textboxImpl,
+  pathlabelImpl,
+  labelImpl,
+  helppickerImpl,
+  iconbuttonImpl,
+  buttonImpl,
+  colorbuttonImpl,
+  noteframeImpl,
+  curve1dImpl,
+  vecpopupImpl,
+  colorPickerImpl,
+  textareaImpl,
+  viewerImpl,
+} from "./utils/container_widgets";
+import {
+  iconcheckImpl,
+  checkImpl,
+  checkenumImpl,
+  checkenumPanelImpl,
+  listenumImpl,
+} from "./utils/container_enum";
+import { propImpl, simplesliderImpl, sliderImpl } from "./utils/container_prop";
+import {
+  treeviewImpl,
+  panelImpl,
+  rowImpl,
+  listboxImpl,
+  tableImpl,
+  twocolImpl,
+  colImpl,
+  tabsImpl,
+} from "./utils/container_layout";
 
 /* Style coercion: CSSStyleDeclaration doesn't allow arbitrary string indexing. */
 function styl(el: { style: CSSStyleDeclaration }) {
@@ -791,8 +805,7 @@ export class Container<
 
   //TODO: make sure this works on Electron?
   dynamicMenu(title: string, list: MenuTemplate, packflag = 0) {
-    //actually, .menu works for now
-    return this.menu(title, list, packflag);
+    return dynamicMenuImpl(this, title, list, packflag);
   }
 
   /**example usage:
@@ -807,29 +820,7 @@ export class Container<
 
    **/
   menu(title: string, list: MenuTemplate, packflag = 0) {
-    const dbox = UIBase.createElement("dropbox-x") as DropBox<CTX>;
-
-    dbox._name = title;
-    dbox.setAttribute("simple", "true");
-    dbox.setAttribute("name", title);
-
-    if (list instanceof Menu) {
-      dbox._build_menu = function (this: DropBox<CTX>) {
-        if (this._menu?.parentNode !== undefined) {
-          this._menu.remove();
-        }
-
-        this._menu = createMenu(this.ctx, title, list);
-        return this._menu;
-      };
-    } else if (list) {
-      dbox.template = list;
-    }
-
-    this._container_inherit(dbox, packflag);
-
-    this._add(dbox);
-    return dbox;
+    return menuImpl(this, title, list, packflag);
   }
 
   toolPanel(
@@ -844,45 +835,7 @@ export class Container<
       defaultsPath?: string;
     } = {}
   ) {
-    let cls: any;
-
-    if (typeof path_or_cls === "string") {
-      cls = this.ctx.api.parseToolPath(path_or_cls);
-    } else {
-      cls = path_or_cls;
-    }
-
-    const tdef = cls._getFinalToolDef();
-    const packflag = (args.packflag as number) ?? 0;
-    const label = args.label ?? tdef.uiname ?? tdef.toolpath!;
-    const createCb = (args.createCb ?? args.create_cb) as Function | undefined;
-    const container = (args.container ?? this.panel(label)) as Container<CTX>;
-    let defaultsPath = (args.defaultsPath as string) ?? "toolDefaults";
-
-    if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
-      defaultsPath += ".";
-    }
-
-    const path = defaultsPath + tdef.toolpath;
-
-    container.useIcons(false);
-
-    const inputs = (tdef.inputs instanceof InheritFlag ? tdef.inputs.slots : tdef.inputs) ?? {};
-    for (const k in inputs) {
-      const prop = inputs[k];
-
-      if (prop.flag & PropFlags.PRIVATE) {
-        continue;
-      }
-
-      const apiname = prop.apiname ?? k;
-      const path2 = path + "." + apiname;
-
-      container.prop(path2);
-    }
-
-    container.tool(path_or_cls, packflag, createCb, label);
-    return container;
+    return toolPanelImpl(this, path_or_cls, args);
   }
 
   tool(
@@ -893,181 +846,20 @@ export class Container<
     createCb?: Function,
     label?: string
   ) {
-    let cls: typeof ToolOp | undefined;
-    let packflag: number;
-
-    if (typeof packflag_or_args === "object") {
-      const args = packflag_or_args;
-
-      packflag = args.packflag ?? 0;
-      createCb = args.createCb;
-      label = args.label;
-    } else {
-      packflag = packflag_or_args ?? 0;
-    }
-
-    if (typeof path_or_cls == "string") {
-      if (path_or_cls.search(/\|/) >= 0) {
-        const parts = path_or_cls.split("|");
-
-        if (label === undefined && parts.length > 1) {
-          label = parts[1].trim();
-        }
-
-        path_or_cls = parts[0].trim();
-      }
-
-      if (this.ctx === undefined) {
-        console.warn("this.ctx was undefined in tool()");
-        return;
-      }
-
-      cls = this.ctx.api.parseToolPath(path_or_cls);
-
-      if (cls === undefined) {
-        console.warn('Unknown tool for toolpath "' + path_or_cls + '"');
-        return;
-      }
-    } else {
-      cls = path_or_cls;
-    }
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    if (createCb === undefined) {
-      const toolpath =
-        typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath!;
-      createCb = (cls: typeof ToolOp) => {
-        return this.ctx.api.createTool(this.ctx, toolpath);
-      };
-    }
-
-    const cb = () => {
-      const toolob = createCb!(cls);
-      this.ctx.api.execTool(this.ctx, toolob);
-    };
-
-    const def =
-      typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
-    let tooltip = def.description ?? def.uiname ?? "";
-
-    //is there a hotkey hardcoded in the class?
-    if (def.hotkey !== undefined) {
-      tooltip += "\n\t" + def.hotkey;
-    } else {
-      //if not, use getToolPathHotkey api
-      let path = path_or_cls;
-
-      if (typeof path != "string") {
-        path = def.toolpath!;
-      }
-
-      const hotkey = this.ctx.api.getToolPathHotkey(this.ctx, path);
-      if (hotkey) {
-        tooltip += "\n\tHotkey: " + hotkey;
-      }
-    }
-
-    let ret: IconButton<CTX> | Button<CTX>;
-
-    if (def.icon !== undefined && packflag & PackFlags.USE_ICONS) {
-      label = label === undefined ? tooltip : label;
-
-      const check = this.iconbutton(def.icon ?? -1, label, cb);
-
-      check.iconsheet = iconSheetFromPackFlag(packflag);
-      check.packflag |= packflag;
-      check.description = tooltip;
-      ret = check;
-    } else {
-      label = label === undefined ? def.uiname ?? def.toolpath! : label;
-
-      ret = this.button(label, cb);
-      ret.description = tooltip;
-      ret.packflag |= packflag;
-    }
-
-    return ret;
+    return toolImpl(this, path_or_cls, packflag_or_args, createCb, label);
   }
 
   //supports number types
   textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.on_change, packflag = 0) {
-    let path: string | undefined;
-
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const ret = UIBase.createElement("textbox-x") as TextBox<CTX>;
-
-    if (path !== undefined) {
-      ret.setAttribute("datapath", path);
-    }
-
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
-    ret._init();
-    this._add(ret);
-
-    ret.setCSS();
-    ret.update();
-
-    ret.packflag |= packflag;
-    ret.on_change = cb ?? null;
-
-    /* `update()` above already subscribed the datapath and delivered its first
-     * value, so an unconditional assignment here would overwrite it — with the
-     * string "undefined" when no literal was passed. Only an explicit literal
-     * wins over the binding. */
-    if (text !== undefined) {
-      ret.text = "" + text;
-    }
-
-    return ret;
+    return textboxImpl(this, inpath, text, cb, packflag);
   }
 
   pathlabel(inpath?: KnownDataPath, label?: string, packflag = 0) {
-    let path: string | undefined;
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-
-    const ret = UIBase.createElement("label-x") as Label<CTX>;
-
-    if (label === undefined && inpath) {
-      const rdef = this.ctx.api.resolvePath(this.ctx, path!);
-      if (rdef) {
-        label = rdef.prop!.uiname ?? rdef.dpath.apiname;
-      } else {
-        console.warn(
-          `pathlabel: bad path "${path}"` +
-            (this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "")
-        );
-        label = "(error)";
-      }
-    }
-
-    ret.text = label!;
-    ret.packflag = packflag;
-    ret.setAttribute("datapath", path!);
-
-    this._add(ret);
-    ret.setCSS();
-
-    return ret;
+    return pathlabelImpl(this, inpath, label, packflag);
   }
 
   label(text: string) {
-    const ret = UIBase.createElement("label-x") as Label<CTX>;
-
-    ret.text = text;
-    this._add(ret);
-    return ret;
+    return labelImpl(this, text);
   }
 
   /**
@@ -1075,45 +867,11 @@ export class Container<
    * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
    */
   helppicker() {
-    const ret = this.iconbutton(
-      Icons.HELP,
-      "Read what a control does by pointing at it; tap empty space to stop",
-      () => {
-        this.getScreen()?.hintPickerTool();
-      }
-    );
-
-    if (util.isMobile()) {
-      //ret.iconsheet = 2;
-      //XXX look up in mobile theme properly
-    }
-
-    if (ret.ctx) {
-      ret._init();
-      ret.setCSS();
-    }
-
-    return ret;
+    return helppickerImpl(this);
   }
 
   iconbutton(icon: number, description: string, cb?: () => void, thisvar?: unknown, packflag = 0) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const ret = UIBase.createElement("iconbutton-x") as IconButton<CTX>;
-
-    ret.packflag |= packflag;
-
-    ret.setAttribute("icon", "" + icon);
-    ret.description = description;
-    ret.icon = icon;
-
-    ret.iconsheet = iconSheetFromPackFlag(packflag);
-
-    ret.onclick = cb ?? null;
-
-    this._add(ret);
-
-    return ret;
+    return iconbuttonImpl(this, icon, description, cb, thisvar, packflag);
   }
 
   button(
@@ -1123,18 +881,7 @@ export class Container<
     id?: string | number,
     packflag = 0
   ) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const ret = UIBase.createElement("button-x") as Button<CTX>;
-
-    ret.packflag |= packflag;
-
-    ret.setAttribute("name", label);
-    ret.setAttribute("buttonid", "" + id); //XXX no longer used?
-    ret.onclick = (cb && thisvar ? cb.bind(thisvar) : cb) ?? null;
-
-    this._add(ret);
-    return ret;
+    return buttonImpl(this, label, cb, thisvar, id, packflag);
   }
 
   _joinPrefix(path?: string, prefix = this.dataPrefix.trim()): string | undefined {
@@ -1155,85 +902,19 @@ export class Container<
   }
 
   colorbutton(inpath: string | undefined, packflag?: number, mass_set_path?: string) {
-    packflag = (packflag ?? 0) | (this.inherit_packflag & ~PackFlags.NO_UPDATE);
-
-    mass_set_path = inpath !== undefined ? this._getMassPath(this.ctx, inpath, mass_set_path) : "";
-
-    const ret = UIBase.createElement("color-picker-button-x") as ColorPickerButton<CTX>;
-
-    if (inpath !== undefined) {
-      inpath = this._joinPrefix(inpath)!;
-      ret.setAttribute("datapath", inpath);
-    }
-
-    if (mass_set_path !== undefined) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-
-    ret.packflag |= packflag;
-
-    this._add(ret);
-    return ret;
+    return colorbuttonImpl(this, inpath, packflag, mass_set_path);
   }
 
   noteframe(packflag = 0) {
-    const ret = UIBase.createElement("noteframe-x") as UIBase<CTX>;
-
-    ret.packflag |= (this.inherit_packflag & ~PackFlags.NO_UPDATE) | packflag;
-
-    this._add(ret as UIBase<CTX>);
-    return ret as UIBase<CTX>;
+    return noteframeImpl(this, packflag);
   }
 
   curve1d(inpath?: string, packflag = 0, mass_set_path?: string) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-    const ret = UIBase.createElement("curve-widget-x") as UIBase<CTX>;
-
-    ret.ctx = this.ctx;
-    ret.packflag |= packflag;
-
-    if (inpath) {
-      inpath = this._joinPrefix(inpath)!;
-      ret.setAttribute("datapath", inpath);
-    }
-
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-
-    this.add(ret as UIBase<CTX>);
-
-    return ret as UIBase<CTX>;
+    return curve1dImpl(this, inpath, packflag, mass_set_path);
   }
 
   vecpopup(inpath?: string, packflag = 0, mass_set_path?: string) {
-    const button = UIBase.createElement("vector-popup-button-x") as UIBase<CTX>;
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let name = "vector";
-
-    if (inpath) {
-      inpath = this._joinPrefix(inpath)!;
-
-      button.setAttribute("datapath", inpath);
-      if (mass_set_path) {
-        button.setAttribute("mass_set_path", mass_set_path);
-      }
-
-      const rdef = this.ctx.api.resolvePath(this.ctx, inpath);
-      if (rdef?.prop) {
-        name = rdef.prop.uiname ?? rdef.prop.apiname ?? name;
-      }
-    }
-
-    button.setAttribute("name", name);
-    button.packflag |= packflag;
-
-    this.add(button as UIBase<CTX>);
-    return button as UIBase<CTX>;
+    return vecpopupImpl(this, inpath, packflag, mass_set_path);
   }
 
   _getMassPath(ctx: CTX, inpath?: string, mass_set_path?: string): string | undefined {
@@ -1252,342 +933,7 @@ export class Container<
   }
 
   prop(inpath: KnownDataPath, packflag = 0, mass_set_path?: string): UIBase<CTX> {
-    if (!this.ctx) {
-      console.warn(this.id + ".ctx was undefined");
-      let p = this.parentWidget as UIBase<CTX> | undefined;
-
-      while (p) {
-        if (p.ctx) {
-          console.warn("Fetched this.ctx from parent");
-          this.ctx = p.ctx;
-          break;
-        }
-
-        p = p.parentWidget as UIBase<CTX> | undefined;
-      }
-
-      if (!this.ctx) {
-        throw new Error("ui.Container.prototype.prop(): this.ctx was undefined");
-      }
-    }
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath)!, true);
-
-    if (rdef?.prop === undefined) {
-      const fullpath = this._joinPrefix(inpath);
-      const detail = this.ctx.api.lastResolveError ? ": " + this.ctx.api.lastResolveError : "";
-      console.warn("Unknown property at path", fullpath, detail);
-      throw new DataPathError(`Unknown property at path "${fullpath}"${detail}`);
-    }
-    const prop = rdef.prop as ToolPropertyTypes;
-    const useDataPathUndo = this.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
-
-    const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
-
-    if (prop.type === PropTypes.REPORT) {
-      return this.pathlabel(inpath, uiName);
-    } else if (prop.type === PropTypes.STRING) {
-      let ret: UIBase<CTX>;
-
-      if (prop.flag & PropFlags.READ_ONLY) {
-        ret = this.pathlabel(inpath, uiName);
-      } else if (prop.multiLine) {
-        ret = this.textarea(inpath, rdef.value as string, packflag, mass_set_path);
-        ret.useDataPathUndo = useDataPathUndo;
-      } else {
-        const strip = this.strip();
-
-        strip.label(uiName);
-
-        ret = strip.textbox(inpath) as UIBase<CTX>;
-        ret.useDataPathUndo = useDataPathUndo;
-
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-      }
-
-      ret.packflag |= packflag;
-      return ret;
-    } else if (prop.type === PropTypes.CURVE) {
-      const ret = this.curve1d(inpath, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
-      return ret;
-    } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
-      let ret: UIBase<CTX>;
-      if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
-        ret = this.simpleslider(inpath, { packflag: packflag });
-      } else {
-        ret = this.slider(inpath, { packflag: packflag });
-      }
-
-      ret.useDataPathUndo = useDataPathUndo;
-      ret.packflag |= packflag;
-
-      mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-      if (mass_set_path) {
-        ret.setAttribute("mass_set_path", mass_set_path);
-      }
-
-      return ret;
-    } else if (prop.type === PropTypes.BOOL) {
-      const ret = this.check(inpath, uiName, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
-      return ret;
-    } else if (prop.type === PropTypes.ENUM) {
-      if (rdef.subkey !== undefined) {
-        const subkey = rdef.subkey as string;
-        let name = prop.ui_value_names[rdef.subkey as string];
-
-        if (name === undefined) {
-          name = ToolProperty.makeUIName("" + rdef.subkey);
-        }
-
-        const check = this.check(inpath, name, packflag, mass_set_path);
-        const tooltip = prop.descriptions[subkey];
-
-        check.useDataPathUndo = useDataPathUndo;
-
-        check.description =
-          tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
-        if (check instanceof Check) {
-          check.icon = prop.iconmap[rdef.subkey as string];
-        }
-        return check;
-      }
-
-      if (
-        !(packflag & PackFlags.USE_ICONS) &&
-        !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))
-      ) {
-        return this.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(
-          useDataPathUndo
-        );
-      } else {
-        if (prop.flag & PropFlags.USE_ICONS) {
-          packflag |= PackFlags.USE_ICONS;
-        } else if (prop.flag & PropFlags.FORCE_ENUM_CHECKBOXES) {
-          packflag &= ~PackFlags.USE_ICONS;
-        }
-
-        if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          const strip = this.strip();
-          strip.label(uiName);
-
-          return strip.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
-        } else {
-          return this.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
-        }
-      }
-    } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
-      if (rdef.subkey !== undefined) {
-        let ret: UIBase<CTX>;
-
-        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
-          ret = this.simpleslider(inpath, { packflag: packflag });
-        else ret = this.slider(inpath, { packflag: packflag });
-
-        ret.packflag |= packflag;
-
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-
-        return ret.setUndo(useDataPathUndo);
-      } else if ((prop.subtype as number) === PropSubTypes.COLOR) {
-        return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
-        //return this.colorPicker(inpath, packflag, mass_set_path);
-      } else {
-        const ret = UIBase.createElement("vector-panel-x") as UIBase<CTX> & {
-          inherit_packflag: number;
-        };
-
-        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-        ret.packflag |= packflag | (this.inherit_packflag & ~PackFlags.NO_UPDATE);
-        ret.inherit_packflag |= packflag | (this.inherit_packflag & ~PackFlags.NO_UPDATE);
-
-        if (inpath) {
-          ret.setAttribute("datapath", this._joinPrefix(inpath)!);
-        }
-
-        if (mass_set_path) {
-          ret.setAttribute("mass_set_path", mass_set_path);
-        }
-
-        this.add(ret as UIBase<CTX>);
-        return (ret as UIBase<CTX>).setUndo(useDataPathUndo);
-      }
-    } else if (prop.type === PropTypes.FLAG) {
-      if (rdef.subkey !== undefined) {
-        const tooltip = prop.descriptions[rdef.subkey as string];
-        let name = prop.ui_value_names[rdef.subkey as string];
-
-        if (typeof rdef.subkey === "number") {
-          name = prop.keys[rdef.subkey] as string;
-          if (name && name in prop.ui_value_names) {
-            name = prop.ui_value_names[name];
-          } else {
-            name = ToolProperty.makeUIName(name ? name : "(error)");
-          }
-        }
-
-        if (name === undefined) {
-          name = "(error)";
-        }
-
-        const ret = this.check(inpath, name, packflag, mass_set_path);
-        ret.icon = prop.iconmap[rdef.subkey as string];
-
-        if (tooltip) {
-          ret.description = tooltip;
-        }
-
-        return ret.setUndo(useDataPathUndo);
-      } else {
-        let con: Container<CTX> = this;
-
-        if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          con = this.strip();
-          con.label(uiName);
-        }
-
-        if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
-          let i = 0;
-          const row = con.row();
-          const col1 = row.col();
-          const col2 = row.col();
-
-          for (const k in prop.values) {
-            let name = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-
-            if (name === undefined) {
-              name = ToolProperty.makeUIName(k);
-            }
-
-            const con2 = i & 1 ? col2 : col1;
-            const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
-
-            if (tooltip) {
-              check.description = tooltip;
-            }
-
-            check.setUndo(useDataPathUndo);
-
-            i++;
-          }
-
-          return row;
-        }
-
-        if (packflag & PackFlags.WRAP_CHECKBOXES) {
-          let isrow = this.style["flexDirection"] === "row";
-          isrow = isrow || this.style["flexDirection"] === "row-reverse";
-
-          let wrapChars: number;
-
-          let strip2: Container<CTX>;
-          let con2: Container<CTX>;
-
-          if (isrow) {
-            wrapChars = this.getDefault("checkRowWrapLimit", undefined, 24) as number;
-            strip2 = this.col().strip();
-            strip2.packflag |= packflag;
-            strip2.inherit_packflag |= packflag;
-
-            con2 = strip2.row();
-          } else {
-            wrapChars = this.getDefault("checkColWrapLimit", undefined, 5) as number;
-            strip2 = this.row().strip();
-            strip2.packflag |= packflag;
-            strip2.inherit_packflag |= packflag;
-
-            con2 = strip2.col();
-          }
-
-          let x = 0;
-          let y = 0;
-
-          for (const k in prop.values) {
-            let name = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-
-            if (name === undefined) {
-              name = ToolProperty.makeUIName(k);
-            }
-
-            const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
-            check.setUndo(useDataPathUndo);
-
-            if (tooltip) {
-              check.description = tooltip;
-            }
-
-            x += name.length;
-            y += 1;
-
-            if (isrow && x > wrapChars) {
-              x = 0;
-              con2 = strip2.row();
-            } else if (!isrow && y > wrapChars) {
-              y = 0;
-              con2 = strip2.col();
-            }
-          }
-
-          return strip2;
-        }
-
-        if (con === this) {
-          con = this.strip();
-        }
-
-        const rebuild = () => {
-          con.clear();
-
-          for (const k in prop.values) {
-            let name = prop.ui_value_names[k];
-            const tooltip = prop.descriptions[k];
-
-            if (name === undefined) {
-              name = ToolProperty.makeUIName(k);
-            }
-
-            const check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
-            check.useDataPathUndo = useDataPathUndo;
-
-            if (tooltip) {
-              check.description = tooltip;
-            }
-
-            check.setUndo(useDataPathUndo);
-          }
-        };
-
-        rebuild();
-        let last_hash = prop.calcHash();
-
-        con.updateAfter(() => {
-          const hash = prop.calcHash();
-
-          if (last_hash !== hash) {
-            last_hash = hash;
-            rebuild();
-          }
-        });
-
-        return con;
-      }
-    }
-
-    throw new DataPathError(`Unsupported property: ${inpath}`);
+    return propImpl(this, inpath, packflag, mass_set_path);
   }
 
   iconcheck(
@@ -1596,53 +942,11 @@ export class Container<
     description?: string,
     mass_set_path?: string
   ) {
-    const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
-    ret.icon = icon;
-    ret.description = name ?? "";
-
-    if (inpath) {
-      ret.setAttribute("datapath", inpath);
-    }
-
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-
-    this.add(ret);
-
-    return ret;
+    return iconcheckImpl(this, inpath, icon, description, mass_set_path);
   }
 
   check(inpath: KnownDataPath | undefined, name: string, packflag = 0, mass_set_path?: string) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const path = inpath !== undefined ? this._joinPrefix(inpath) : undefined;
-
-    //let prop = this.ctx.getProp(path);
-    let ret: Check<CTX> | IconCheck<CTX>;
-    if (packflag & PackFlags.USE_ICONS) {
-      ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
-      ret.iconsheet = iconSheetFromPackFlag(packflag);
-    } else {
-      ret = UIBase.createElement("check-x") as Check<CTX>;
-      ret.label = name;
-    }
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-    ret.packflag |= packflag;
-    ret.noMarginsOrPadding();
-
-    if (inpath) {
-      ret.setAttribute("datapath", path!);
-    }
-
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-
-    this._add(ret);
-    return ret;
+    return checkImpl(this, inpath, name, packflag, mass_set_path);
   }
 
   /*
@@ -1659,108 +963,17 @@ export class Container<
     iconmap?: unknown,
     mass_set_path?: string
   ): UIBase<CTX> {
-    if (typeof name === "object" && name !== null) {
-      const args = name;
-
-      name = args.name as string | undefined;
-      packflag = args.packflag as number | undefined;
-      enummap = args.enummap;
-      defaultval = args.defaultval;
-      callback = args.callback as Function | undefined;
-      iconmap = args.iconmap;
-      mass_set_path = args.mass_set_path as string | undefined;
-    }
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-    packflag = packflag === undefined ? 0 : packflag;
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const path = this._joinPrefix(inpath);
-
-    let prop: EnumProperty | FlagProperty | undefined;
-    let frame: Container<CTX> | undefined;
-
-    if (path !== undefined) {
-      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== undefined ? (resolved.prop as EnumProperty | FlagProperty) : undefined;
-    }
-
-    if (path !== undefined) {
-      if (prop === undefined) {
-        console.warn("Bad path in checkenum", path);
-        return this.label("(error)");
-      }
-
-      frame = this.strip();
-      frame.oneAxisPadding();
-
-      const makeIconCheck = (key: string) => {
-        const check = frame!.check(inpath + "[" + key + "]", "", packflag) as IconCheck<CTX>;
-
-        check.packflag |= PackFlags.HIDE_CHECK_MARKS;
-
-        check.icon = prop.iconmap[key];
-        check.drawCheck = false;
-
-        check.style["padding"] = "0px";
-        check.style["margin"] = "0px";
-
-        styl(check.dom)["padding"] = "0px";
-        styl(check.dom)["margin"] = "0px";
-
-        return check;
-      };
-      const makeCheck = (key: string) => {
-        return frame!.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
-      };
-
-      const useIcons = packflag & PackFlags.USE_ICONS;
-      if (!useIcons) {
-        if (name === undefined) {
-          name = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
-        }
-        frame!.label(name!).font = "TitleText";
-      }
-
-      const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
-
-      let ignorecb = false;
-      function makecb(key: string) {
-        return () => {
-          if (ignorecb) return;
-
-          ignorecb = true;
-          for (const k in checks) {
-            if (k !== key) {
-              checks[k].checked = false;
-            }
-          }
-          ignorecb = false;
-
-          if (callback) {
-            callback(key);
-          }
-        };
-      }
-
-      for (const key in prop.values) {
-        const check = useIcons ? makeIconCheck(key) : makeCheck(key);
-        checks[key] = check;
-
-        if (mass_set_path) {
-          check.setAttribute("mass_set_path", mass_set_path);
-        }
-
-        check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-        if (!check.description) {
-          check.description = "" + prop.ui_value_names[key];
-        }
-        check.on_change = makecb(key);
-      }
-    }
-
-    return frame!;
+    return checkenumImpl(
+      this,
+      inpath,
+      name,
+      packflag,
+      enummap,
+      defaultval,
+      callback,
+      iconmap,
+      mass_set_path
+    );
   }
 
   checkenum_panel(
@@ -1771,97 +984,7 @@ export class Container<
     mass_set_path?: string,
     prop?: FlagProperty | EnumProperty
   ): Container<CTX> | undefined {
-    packflag = packflag === undefined ? 0 : packflag;
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    const path = this._joinPrefix(inpath);
-    let frame: Container<CTX> | undefined;
-
-    if (path !== undefined && prop === undefined) {
-      const resolved = this.ctx.api.resolvePath(this.ctx, path, true);
-      prop = resolved !== undefined ? (resolved.prop as FlagProperty | EnumProperty) : undefined;
-    }
-
-    if (!name && prop) {
-      name = prop.getUIName();
-    }
-
-    if (path !== undefined) {
-      if (prop === undefined) {
-        console.warn("Bad path in checkenum", path);
-        return undefined;
-      }
-
-      frame = this.panel(name!, name, packflag);
-      frame.oneAxisPadding();
-      frame.setCSSAfter(() => (frame!.background = this.getDefault("BoxSub2BG") as string));
-
-      if (packflag & PackFlags.USE_ICONS) {
-        for (const key in prop.values) {
-          const check = frame.check(
-            inpath + " == " + prop.values[key],
-            "",
-            packflag
-          ) as IconCheck<CTX>;
-
-          check.icon = prop.iconmap[key];
-          check.drawCheck = false;
-
-          check.style["padding"] = "0px";
-          check.style["margin"] = "0px";
-
-          styl(check.dom)["padding"] = "0px";
-          styl(check.dom)["margin"] = "0px";
-
-          check.description = prop.descriptions[key];
-        }
-      } else {
-        if (name === undefined) {
-          name = prop.getUIName();
-        }
-
-        frame.label(name!).font = "TitleText";
-
-        const checks: Record<string, IconCheck<CTX> | Check<CTX>> = {};
-
-        let ignorecb = false;
-
-        function makecb(key: string) {
-          return () => {
-            if (ignorecb) return;
-
-            ignorecb = true;
-            for (const k in checks) {
-              if (k !== key) {
-                checks[k].checked = false;
-              }
-            }
-            ignorecb = false;
-
-            if (callback) {
-              callback(key);
-            }
-          };
-        }
-
-        for (const key in prop.values) {
-          const check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
-          checks[key] = check;
-
-          if (mass_set_path) {
-            check.setAttribute("mass_set_path", mass_set_path);
-          }
-
-          check.description = prop.descriptions[prop.keys[parseInt("" + key)]];
-          if (!check.description) {
-            check.description = "" + prop.ui_value_names[key];
-          }
-          check.on_change = makecb(key);
-        }
-      }
-    }
-
-    return frame;
+    return checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
   }
 
   /**
@@ -1898,91 +1021,7 @@ export class Container<
     iconmap?: IconMap,
     packflag = 0
   ): DropBox<CTX> {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let mass_set_path: string | undefined;
-
-    if (name && typeof name === "object") {
-      const args = name;
-
-      name = args.name;
-      enumDef = args.enumDef;
-      defaultval = args.defaultval;
-      callback = args.callback;
-      iconmap = args.iconmap;
-      packflag = args.packflag ?? 0;
-      mass_set_path = args.mass_set_path;
-    }
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-
-    let path: string | undefined;
-    let label = name as string | undefined;
-
-    if (inpath !== undefined) {
-      path = this._joinPrefix(inpath);
-    }
-
-    const ret = UIBase.createElement("dropbox-x") as DropBox<CTX>;
-
-    if (enumDef !== undefined) {
-      if (enumDef instanceof EnumProperty) {
-        ret.prop = enumDef;
-        label ??= enumDef.getUIName();
-      } else {
-        ret.prop = new EnumProperty(defaultval, enumDef as EnumDef, path, name as string);
-      }
-
-      if (iconmap) {
-        ret.prop.addIcons(iconmap);
-      }
-    } else {
-      const res = this.ctx.api.resolvePath(this.ctx, path!, true);
-
-      if (res !== undefined) {
-        ret.prop = res.prop as EnumProperty;
-
-        name ??= res.prop!.getUIName();
-        label ??= name;
-      }
-    }
-
-    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
-    if (path !== undefined) {
-      ret.setAttribute("datapath", path);
-    }
-    if (mass_set_path !== undefined) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-
-    ret.setAttribute("name", name as string);
-
-    if (defaultval) {
-      ret.setValue(defaultval);
-    }
-
-    ret.on_select = callback;
-    ret.packflag |= packflag;
-
-    if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
-      const container = this.row();
-      let l: UIBase<CTX>;
-
-      if (packflag & PackFlags.LABEL_ON_RIGHT) {
-        container._add(ret as UIBase<CTX>);
-        l = container.label(label);
-
-        if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
-          l.style["marginLeft"] = "5px";
-        }
-      } else {
-        container.label(label);
-        container._add(ret);
-      }
-    } else {
-      this._add(ret);
-    }
-
-    return ret;
+    return listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag);
   }
 
   getroot(): Container<CTX> {
@@ -2007,26 +1046,19 @@ export class Container<
     callback?: Function,
     packflag = 0
   ) {
-    if (typeof name === "object") {
-      return this.slider(datapath, {
-        ...name,
-        packflag: (name.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS,
-      });
-      //new-style api call
-    } else {
-      return this.slider(
-        datapath,
-        name,
-        defaultval,
-        min,
-        max,
-        step,
-        isInt,
-        do_redraw,
-        callback,
-        packflag | PackFlags.SIMPLE_NUMSLIDERS
-      );
-    }
+    return simplesliderImpl(
+      this,
+      datapath,
+      name,
+      defaultval,
+      min,
+      max,
+      step,
+      isInt,
+      do_redraw,
+      callback,
+      packflag
+    );
   }
 
   /**
@@ -2050,110 +1082,28 @@ export class Container<
     packflag = 0,
     decimalPlaces?: number
   ) {
-    if (typeof name === "object") {
-      //new-style api call
-
-      const args = name;
-      decimalPlaces = args.decimalPlaces;
-      name = args.name;
-      defaultval = args.defaultval;
-      min = args.min;
-      max = args.max;
-      step = args.step;
-      is_int = args.is_int || args.isInt;
-      do_redraw = args.do_redraw;
-      callback = args.callback;
-      packflag = args.packflag ?? 0;
-    }
-
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-    let ret: NumSliderTypes<CTX>;
-
-    if (datapath) {
-      datapath = this._joinPrefix(datapath)!;
-
-      const rdef = this.ctx.api.resolvePath(this.ctx, datapath, true);
-      if (rdef?.prop && rdef.prop.flag & PropFlags.SIMPLE_SLIDER) {
-        packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-      }
-      if (rdef?.prop && rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER) {
-        packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-      }
-    }
-
-    let simple: boolean | number =
-      packflag & PackFlags.SIMPLE_NUMSLIDERS || cconst.simpleNumSliders;
-    simple = simple && !(packflag & PackFlags.FORCE_ROLLER_SLIDER);
-
-    const extraTextBox =
-      cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
-
-    if (extraTextBox) {
-      if (simple) {
-        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-simple-x");
-      } else {
-        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-textbox-x");
-      }
-    } else {
-      if (simple) {
-        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-simple-x");
-      } else {
-        ret = UIBase.createElement<NumSliderTypes<CTX>>("numslider-x");
-      }
-    }
-
-    ret.packflag |= packflag;
-
-    if (datapath) {
-      ret.setAttribute("datapath", datapath);
-    }
-
-    if (name) {
-      ret.setAttribute("name", name as string);
-    }
-
-    if (min !== undefined) {
-      ret.setAttribute("min", "" + min);
-    }
-    if (max !== undefined) {
-      ret.setAttribute("max", "" + max);
-    }
-
-    if (defaultval !== undefined) {
-      ret.setValue(defaultval);
-    }
-
-    if (is_int) {
-      ret.setAttribute("integer", "" + is_int);
-    }
-
-    if (decimalPlaces !== undefined) {
-      ret.decimalPlaces = decimalPlaces;
-    }
-
-    if (step) {
-      ret.setAttribute("step", "" + step);
-    }
-    if (callback) {
-      ret.on_change = callback as typeof ret.on_change;
-    }
-
-    this._add(ret);
-
-    if (this.ctx) {
-      ret.setCSS();
-      ret.update();
-    }
-
-    if (do_redraw) {
-      ret._redraw();
-    }
-
-    return ret;
+    return sliderImpl(
+      this,
+      datapath,
+      name,
+      defaultval,
+      min,
+      max,
+      step,
+      is_int,
+      do_redraw,
+      callback,
+      packflag,
+      decimalPlaces
+    );
   }
 
   _container_inherit(
-    elem: UIBase<CTX, any> & { inherit_packflag?: number; dataPrefix?: string; massSetPrefix?: string },
+    elem: UIBase<CTX, any> & {
+      inherit_packflag?: number;
+      dataPrefix?: string;
+      massSetPrefix?: string;
+    },
     packflag = 0
   ) {
     //don't inherit NO_UPDATE
@@ -2161,7 +1111,7 @@ export class Container<
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     elem.packflag |= packflag;
 
-    if (elem.inherit_packflag !== undefined) {    
+    if (elem.inherit_packflag !== undefined) {
       elem.inherit_packflag |= packflag;
     }
     elem.dataPrefix = this.dataPrefix;
@@ -2169,98 +1119,31 @@ export class Container<
   }
 
   treeview(): TreeView<CTX> {
-    const ret = UIBase.createElement("tree-view-x") as TreeView<CTX>;
-    ret.ctx = this.ctx;
-    this.add(ret);
-
-    this._container_inherit(ret);
-
-    return ret;
+    return treeviewImpl(this);
   }
 
   panel(name: string, id?: string, packflag = 0, tooltip?: string) {
-    id = id === undefined ? name : id;
-
-    // XXX todo: add <CTX> after panelFrame is moved to TS
-    const ret = UIBase.createElement("panelframe-x") as PanelFrame<CTX>;
-
-    this._container_inherit(ret, packflag);
-
-    if (tooltip) {
-      ret.setHeaderToolTip(tooltip);
-    }
-
-    ret.setAttribute("label", name);
-    ret.setAttribute("id", id);
-
-    this._add(ret);
-
-    if (this.ctx) {
-      //check init was called
-      ret.ctx = this.ctx;
-      ret.contents.ctx = this.ctx;
-      ret._init();
-      //ret.headerLabel = name;
-    }
-
-    ret.contents.dataPrefix = this.dataPrefix;
-    ret.contents.massSetPrefix = this.massSetPrefix;
-
-    return ret.contents;
+    return panelImpl(this, name, id, packflag, tooltip);
   }
 
   row(packflag = 0): RowFrame<CTX> {
-    const ret = UIBase.createElement("rowframe-x") as RowFrame<CTX>;
-
-    this._container_inherit(ret, packflag);
-    this._add(ret);
-
-    ret.ctx = this.ctx;
-
-    return ret;
+    return rowImpl(this, packflag);
   }
 
   listbox<IDType extends string | number = string | number>(path?: string, packflag = 0) {
-    const ret = UIBase.createElement("listbox-x") as ListBox<CTX, IDType>;
-
-    this._container_inherit(ret, packflag);
-
-    this._add(ret);
-
-    if (path !== undefined) {
-      ret.setAttribute("datapath", this._joinPrefix(path)!);
-    }
-
-    return ret;
+    return listboxImpl<CTX, SELF, IDType>(this, path, packflag);
   }
 
   table(packflag = 0): TableFrame<CTX> {
-    const ret = UIBase.createElement("tableframe-x") as TableFrame<CTX>;
-
-    this._container_inherit(ret, packflag);
-
-    this._add(ret);
-    return ret;
+    return tableImpl(this, packflag);
   }
 
   twocol(parentDepth = 1, packflag = 0) {
-    const ret = UIBase.createElement("two-column-x") as TwoColumnFrame<CTX>;
-
-    ret.parentDepth = parentDepth;
-
-    this._container_inherit(ret, packflag);
-
-    this._add(ret);
-    return ret;
+    return twocolImpl(this, parentDepth, packflag);
   }
 
   col(packflag = 0): ColumnFrame<CTX> {
-    const ret = UIBase.createElement("colframe-x") as ColumnFrame<CTX>;
-
-    this._container_inherit(ret, packflag);
-
-    this._add(ret);
-    return ret;
+    return colImpl(this, packflag);
   }
 
   colorPicker(
@@ -2271,111 +1154,23 @@ export class Container<
     mass_set_path?: string,
     themeOverride?: string
   ) {
-    let packflag: number;
-
-    if (typeof packflag_or_args === "object") {
-      const args = packflag_or_args;
-
-      packflag = args.packflag ?? 0;
-      mass_set_path = args.massSetPath;
-      themeOverride = args.themeOverride;
-    } else {
-      packflag = packflag_or_args;
-    }
-
-    let path: string | undefined;
-
-    if (inpath) {
-      path = this._joinPrefix(inpath);
-    }
-
-    const ret = UIBase.createElement("colorpicker-x") as ColorPicker<CTX>;
-
-    if (themeOverride) {
-      ret.overrideClass(themeOverride);
-    }
-
-    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-
-    this._container_inherit(ret, packflag);
-
-    ret.ctx = this.ctx;
-    ret.parentWidget = this;
-    ret._init();
-    ret.packflag |= packflag;
-    ret.inherit_packflag |= packflag;
-    ret.constructor.setDefault(ret);
-
-    if (path !== undefined) {
-      ret.setAttribute("datapath", path);
-    }
-
-    if (mass_set_path) {
-      ret.setAttribute("mass_set_path", mass_set_path);
-    }
-
-    this._add(ret);
-    return ret;
+    return colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride);
   }
 
   textarea(datapath?: string, value = "", packflag = 0, mass_set_path?: string) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-
-    const ret = UIBase.createElement("rich-text-editor-x") as RichEditor<CTX>;
-    ret.ctx = this.ctx;
-
-    ret.packflag |= packflag;
-
-    if (value !== undefined) {
-      ret.value = value;
-    }
-
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-
-    this.add(ret);
-    return ret;
+    return textareaImpl(this, datapath, value, packflag, mass_set_path);
   }
 
   /**
    * html5 viewer
    * */
   viewer(datapath?: string, value = "", packflag = 0, mass_set_path?: string) {
-    packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
-
-    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
-
-    const ret = UIBase.createElement("html-viewer-x") as RichViewer<CTX>;
-    ret.ctx = this.ctx;
-
-    ret.packflag |= packflag;
-
-    if (value !== undefined) {
-      ret.value = value;
-    }
-
-    if (datapath) ret.setAttribute("datapath", datapath);
-    if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
-
-    this.add(ret);
-    return ret;
+    return viewerImpl(this, datapath, value, packflag, mass_set_path);
   }
 
   //
   tabs(position: "top" | "bottom" | "left" | "right" = "top", packflag = 0) {
-    const ret = UIBase.createElement("tabcontainer-x") as TabContainer<CTX>;
-
-    ret.constructor.setDefault(ret);
-    ret.setAttribute("bar_pos", position);
-
-    // XXX nee to fix tabcontainer's base class type conflict
-    // with it's on_change method
-    this._container_inherit(ret, packflag);
-    this._add(ret as unknown as UIBase<CTX>);
-
-    return ret;
+    return tabsImpl(this, position, packflag);
   }
 
   asDialogFooter() {
