@@ -65690,6 +65690,8 @@ var TextArea = class extends UIBase {
     this.dom.addEventListener("input", () => {
       if (this.realtime) {
         this.setValue(this.dom.value, true, true);
+      } else {
+        this.resetIdleTimer();
       }
     });
     const down = (e) => {
@@ -65750,22 +65752,32 @@ var TextArea = class extends UIBase {
   }
   startIdleTimer() {
     this.stopIdleTimer();
-    this.idleTimer = setInterval(() => {
-      const datapath = this.getAttribute("datapath");
-      if (!datapath) {
-        return;
-      }
-      const val = this.getPathValue(this.ctx, datapath);
-      if (typeof val === "string" && this.dom.value !== val) {
-        this.setValue(this.dom.value, true, true);
-      }
-    }, this.idleTimeout);
+    this.resetIdleTimer();
+    this.idleTimer = setInterval(
+      () => {
+        if (performance.now() - this.lastIdleTime < this.idleTimeout) {
+          return;
+        }
+        const datapath = this.getAttribute("datapath");
+        if (!datapath) {
+          return;
+        }
+        const val = this.getPathValue(this.ctx, datapath);
+        if (typeof val === "string" && this.dom.value !== val) {
+          this.setValue(this.dom.value, true, true);
+        }
+      },
+      Math.min(100, this.idleTimeout)
+    );
   }
   stopIdleTimer() {
     if (this.idleTimer) {
       clearInterval(this.idleTimer);
       this.idleTimer = void 0;
     }
+  }
+  resetIdleTimer() {
+    this.lastIdleTime = performance.now();
   }
   destroy() {
     this.stopIdleTimer();
