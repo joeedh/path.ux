@@ -1224,6 +1224,15 @@ export class UIBase<
   abortAnimations(): void {
     anims.abortAnimations(this);
   }
+
+  get hasFocus(): boolean {
+    let p = document.activeElement;
+    while (p) {
+      if (p === this) return true;
+      p = p.shadowRoot ? p.shadowRoot.activeElement : null;
+    }
+    return false;
+  }
 }
 
 export * from "./base/ui_draw";

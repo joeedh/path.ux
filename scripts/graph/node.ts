@@ -109,7 +109,7 @@ const DEFAULT_NODE_SIZE: [number, number] = [140, 80];
 /**
  * A graph node: typed sockets plus authored ToolProperty state. A type is described
  * by its static graphDef(); the constructor materializes the definition's sockets and
- * properties onto the instance. See documentation/research/nodeEditor.md.
+ * properties onto the instance. See documentation/NodeEditor.md.
  */
 export class Node<Inputs extends Sockets = Sockets, Outputs extends Sockets = Sockets> {
   static STRUCT = nstructjs.inlineRegister(
@@ -405,7 +405,19 @@ pathux.GraphNode {
         socks[k] = this._adoptSocket(k, defSocks[k].copy(), dir);
       }
     }
+    for (const k in defSocks) {
+      const defSock = defSocks[k];
+      const sock = socks[k];
+      if (sock === undefined) {
+        continue;
+      }
 
+      if (defSock.mergeDefaultProp) {
+        const value = sock.getValue();
+        defSock.defaultProp.copyTo(sock.defaultProp);
+        sock.defaultProp.setValue(value);
+      }
+    }
     return socks;
   }
 }
@@ -500,7 +512,7 @@ export function nodePropKeys(node: Node): NodePropName[] {
   }
   for (const k in node.outputs) {
     if (node.outputs[k].defaultIsEditable) {
-      keys.push(node.inputs[k].nodePropName);
+      keys.push(node.outputs[k].nodePropName);
     }
   }
   return keys;

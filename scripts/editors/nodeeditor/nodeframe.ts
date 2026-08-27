@@ -276,11 +276,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     const parts = [] as string[];
     for (const key of Object.keys(this.node.outputs)) {
       const sock = this.node.outputs[key];
-      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+      parts.push(`in:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     for (const key of Object.keys(this.node.inputs)) {
       const sock = this.node.inputs[key];
-      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+      parts.push(`out:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     return parts.join(",");
   }
@@ -296,7 +296,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     for (const socks of allSocks) {
       for (const key in socks) {
         const sock = socks[key];
-        if (sock.useDefaultValue && sock.edges.length === 0 && !(key in this.node.props)) {
+        if (
+          sock.useDefaultValue &&
+          sock.defaultIsEditable &&
+          sock.edges.length === 0 &&
+          !(key in this.node.props)
+        ) {
           keys.add(sock.nodePropName);
         }
       }

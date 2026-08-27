@@ -2,18 +2,9 @@ import { test, expect } from "vitest";
 import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
 import { Node } from "../scripts/graph/node";
 import type { NodeDef, NodeTypeConstructor } from "../scripts/graph/node";
-import { NodeSocketBase } from "../scripts/graph/socket";
-import type { SocketTypeDef } from "../scripts/graph/socket";
-import { FloatSocket, Vec3Socket } from "../scripts/graph/sockets_std";
+import { FloatSocket, Vec3Socket, StringSocket } from "../scripts/graph/sockets_std";
 import { buildGraphFromDSL, validateGraphDSL } from "../scripts/graph/dsl";
 import type { DSLRegistries } from "../scripts/graph/dsl";
-
-// A wire type nothing coerces to or from, for the mismatch diagnostic.
-class StrSocket extends NodeSocketBase<"str", string> {
-  static override socketDef(): SocketTypeDef {
-    return { typeName: "StrSocket", type: "str" };
-  }
-}
 
 class DslSrc extends Node {
   static override graphDef(): NodeDef {
@@ -39,7 +30,7 @@ class DslText extends Node {
   static override graphDef(): NodeDef {
     return {
       typeName: "DslText",
-      inputs  : { text: new StrSocket("in") },
+      inputs  : { text: new StringSocket("in") },
     };
   }
 }
@@ -70,7 +61,7 @@ test("a valid description builds a graph that sorts", () => {
     {
       nodes: [
         { id: "src", type: "DslSrc" },
-        { id: "m1", type: "DslMath", props: { bias: 3, b: 2.5 } },
+        { id: "m1", type: "DslMath", props: { bias: 3 }, inputs: { b: 2.5 } },
         { id: "m2", type: "DslMath" },
       ],
       links: [
@@ -89,7 +80,7 @@ test("a valid description builds a graph that sorts", () => {
   const m2 = graph.nodeIdMap.get("m2")!;
   expect(src).toBeInstanceOf(DslSrc);
 
-  // A props key lands on the node prop when one exists, else on the input's default.
+  // props, inputs and outputs are disambiguated blocks; no cross-block fallback.
   expect(m1.props.bias.getValue()).toBe(3);
   expect(m1.props.bias.wasSet).toBe(true);
   expect(m1.inputs.b.defaultProp!.getValue()).toBe(2.5);
@@ -141,6 +132,45 @@ test("a link naming a nonexistent socket is dropped with one named diagnostic", 
   expect(diagnostics[0].path).toBe("links[0]");
 
   expect(graph.nodeIdMap.get("src")!.outputs.value.edges).toEqual([]);
+});
+
+test("props no longer falls back to an input or output default", () => {
+  const { diagnostics } = buildGraphFromDSL(
+    {
+      nodes: [{ id: "m", type: "DslMath", props: { b: 2.5 } }],
+    },
+    registries
+  );
+
+  expect(diagnostics.length).toBe(1);
+  expect(diagnostics[0].code).toBe("unknown-prop");
+  expect(diagnostics[0].path).toBe("nodes[0].props.b");
+});
+
+test("an outputs block sets the matching output socket's editable default", () => {
+  const { graph, diagnostics } = buildGraphFromDSL(
+    {
+      nodes: [{ id: "m", type: "DslMath", outputs: { out: 5 } }],
+    },
+    registries
+  );
+
+  expect(diagnostics).toEqual([]);
+  const m = graph.nodeIdMap.get("m")!;
+  expect(m.outputs.out.defaultProp!.getValue()).toBe(5);
+});
+
+test("an inputs block naming an unknown socket is dropped with one named diagnostic", () => {
+  const { diagnostics } = buildGraphFromDSL(
+    {
+      nodes: [{ id: "m", type: "DslMath", inputs: { nope: 1 } }],
+    },
+    registries
+  );
+
+  expect(diagnostics.length).toBe(1);
+  expect(diagnostics[0].code).toBe("unknown-prop");
+  expect(diagnostics[0].path).toBe("nodes[0].inputs.nope");
 });
 
 test("a prop value the property refuses keeps the default, with one diagnostic", () => {

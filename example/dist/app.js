@@ -14048,7 +14048,8 @@ var init_toolprop_abstract = __esm({
       // ux widgets should not update the prop in real time during e.g.
       // sliding, text editing, etc.  Currently untested.
       NO_REALTIME: 1 << 18,
-      MULTILINE_STRING: 1 << 19
+      MULTILINE_STRING: 1 << 19,
+      RICH_TEXT_STRING: 1 << 20
     };
     ToolPropertyIF = class {
       subtype;
@@ -14879,14 +14880,18 @@ var init_string = __esm({
         this,
         `
     StringPropertyBase {
-      data           : string;
-      multiLine      : bool;
+      data                  : string;
+      multiLineIdleTimeout ?: int;
     }
   `
       );
+      /**
+       * Idle timeout for multiline textboxes (that aren't in realtime mode).
+       * Uses a default value if undefined.  In miliseconds.
+       */
+      multiLineIdleTimeout;
       constructor(type, value, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
-        this.multiLine = false;
         this.setValue(value ?? "");
       }
       calcMemSize() {
@@ -14897,8 +14902,8 @@ var init_string = __esm({
       }
       copyTo(b) {
         super.copyTo(b);
+        b.multiLineIdleTimeout = this.multiLineIdleTimeout;
         b.data = this.data;
-        b.multiLine = this.multiLine;
       }
       getValue() {
         return this.data;
@@ -14907,24 +14912,35 @@ var init_string = __esm({
         this.data = val;
         super.setValue(val);
       }
-      /** Should a textarea be used to edit this property? */
-      setMultiline(multiline) {
-        if (multiline) {
-          this.flag |= PropFlags.MULTILINE;
-        } else {
-          this.flag &= ~PropFlags.MULTILINE;
-        }
+      setIdleTimeout(timeout) {
+        this.multiLineIdleTimeout = timeout;
         return this;
       }
       /** Should a textarea be used to edit this property? */
+      setMultiline(multiline) {
+        if (multiline) {
+          this.flag |= PropFlags.MULTILINE_STRING;
+        } else {
+          this.flag &= ~PropFlags.MULTILINE_STRING;
+        }
+        return this;
+      }
+      setRichText(state) {
+        if (state) {
+          this.flag |= PropFlags.RICH_TEXT_STRING;
+        } else {
+          this.flag &= ~PropFlags.RICH_TEXT_STRING;
+        }
+      }
+      /** Should a textarea be used to edit this property? */
       get multiLine() {
-        return (this.flag & PropFlags.MULTILINE) !== 0;
+        return (this.flag & PropFlags.MULTILINE_STRING) !== 0;
       }
       set multiLine(multiline) {
         if (multiline) {
-          this.flag |= PropFlags.MULTILINE;
+          this.flag |= PropFlags.MULTILINE_STRING;
         } else {
-          this.flag &= ~PropFlags.MULTILINE;
+          this.flag &= ~PropFlags.MULTILINE_STRING;
         }
       }
     };
@@ -26311,7 +26327,7 @@ An example of a more complicated expression might be:
             break;
           }
         }
-        if (prop && prop.type & (PropTypes.ENUM | PropFlags.FLAG)) {
+        if (prop && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
           prop.checkMeta();
         }
         return {
@@ -26384,8 +26400,8 @@ An example of a more complicated expression might be:
       #getToolPathHotkey_intern(ctx, path) {
         const screen = ctx.screen;
         const this2 = this;
-        function searchKeymap(keymap5) {
-          if (keymap5 === void 0) {
+        function searchKeymap(keymap6) {
+          if (keymap6 === void 0) {
             return void 0;
           }
           let ret;
@@ -26393,7 +26409,7 @@ An example of a more complicated expression might be:
             if (ret) {
               return;
             }
-            for (const hk of keymap5) {
+            for (const hk of keymap6) {
               if (typeof hk.action === "string" && cb(hk.action)) {
                 ret = hk.buildString();
               }
@@ -26409,8 +26425,8 @@ An example of a more complicated expression might be:
         const areacls = screen.sareas[0].area.constructor;
         const area = areacls.getActiveArea();
         if (area) {
-          for (const keymap5 of area.getKeyMaps()) {
-            const ret = searchKeymap(keymap5);
+          for (const keymap6 of area.getKeyMaps()) {
+            const ret = searchKeymap(keymap6);
             if (ret !== void 0) {
               return ret;
             }
@@ -26418,8 +26434,8 @@ An example of a more complicated expression might be:
         }
         for (const sarea of screen.sareas) {
           if (!sarea.area) continue;
-          for (const keymap5 of sarea.area.getKeyMaps()) {
-            const ret = searchKeymap(keymap5);
+          for (const keymap6 of sarea.area.getKeyMaps()) {
+            const ret = searchKeymap(keymap6);
             if (ret) {
               return ret;
             }
@@ -32356,6 +32372,14 @@ var init_ui_base = __esm({
       }
       abortAnimations() {
         abortAnimations(this);
+      }
+      get hasFocus() {
+        let p = document.activeElement;
+        while (p) {
+          if (p === this) return true;
+          p = p.shadowRoot ? p.shadowRoot.activeElement : null;
+        }
+        return false;
       }
     };
     UIBase.PositionKey = "fixed";
@@ -65652,9 +65676,184 @@ function toolImpl(self2, path_or_cls, packflag_or_args = 0, createCb, label) {
   return ret;
 }
 
+// scripts/widgets/ui_textarea.ts
+init_events();
+init_ui_base();
+init_toolprop();
+var keymap4 = keymap;
+var TextArea = class extends UIBase {
+  constructor(ui) {
+    super();
+    this.ui = ui;
+    this.dom = document.createElement("textarea");
+    this.shadow.appendChild(this.dom);
+    this.dom.addEventListener("input", () => {
+      if (this.realtime) {
+        this.setValue(this.dom.value, true, true);
+      }
+    });
+    const down = (e) => {
+      if (this.hasFocus && this.ctx.screen.pickElement(e.clientX, e.clientY) !== this) {
+        this.blur();
+      }
+    };
+    this.dom.addEventListener("focus", () => {
+      this.setCSS();
+      if (!this.realtime) {
+        this.startIdleTimer();
+      }
+      window.addEventListener("pointerdown", down, { capture: true });
+    });
+    this.dom.addEventListener("blur", () => {
+      this.stopIdleTimer();
+      window.removeEventListener("pointerdown", down);
+      if (!this.realtime) {
+        this.setValue(this.dom.value, true, true);
+      }
+      this.setCSS(false);
+    });
+    this.dom.addEventListener("keydown", (e) => {
+      if (keymap4[e.keyCode] === "Escape") {
+        this.blur();
+      }
+    });
+  }
+  ui;
+  dom;
+  commitOnIdle = true;
+  lastIdleTime = 0;
+  idleTimeout = 500;
+  idleTimer = void 0;
+  customWidth;
+  customHeight;
+  static define() {
+    return { tagname: "text-area-x", style: "textbox" };
+  }
+  get value() {
+    return this.dom.value;
+  }
+  set value(val) {
+    this.setValue(val, true, true);
+  }
+  setValue(val, fireChange, setDataPath) {
+    this.dom.value = val;
+    if (fireChange) {
+      this.on_change?.(val);
+    }
+    if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
+    }
+  }
+  init() {
+    super.init();
+    this.setCSS();
+  }
+  startIdleTimer() {
+    this.stopIdleTimer();
+    this.idleTimer = setInterval(() => {
+      const datapath = this.getAttribute("datapath");
+      if (!datapath) {
+        return;
+      }
+      const val = this.getPathValue(this.ctx, datapath);
+      if (typeof val === "string" && this.dom.value !== val) {
+        this.setValue(this.dom.value, true, true);
+      }
+    }, this.idleTimeout);
+  }
+  stopIdleTimer() {
+    if (this.idleTimer) {
+      clearInterval(this.idleTimer);
+      this.idleTimer = void 0;
+    }
+  }
+  destroy() {
+    this.stopIdleTimer();
+    super.destroy();
+  }
+  updateFromPath(val, info) {
+    if (!this.ctx) {
+      return;
+    }
+    if (this.hasFocus || this._flashtimer !== void 0) {
+      return;
+    }
+    const datapath = info.path;
+    if (!info.resolved || val === null) {
+      this.internalDisabled = true;
+      return;
+    } else {
+      this.internalDisabled = false;
+    }
+    const prop = info.prop ?? this.getPathMeta(this.ctx, datapath);
+    if (!prop) {
+      console.error("datapath error " + datapath, val);
+      return;
+    }
+    if (prop instanceof StringPropertyBase && prop.multiLineIdleTimeout !== void 0) {
+      this.idleTimeout = prop.multiLineIdleTimeout;
+    }
+    if ("" + val !== this.value) {
+      this.setValue("" + val, true, false);
+    }
+  }
+  setCSS(focus = this.hasFocus) {
+    super.setCSS();
+    this.background = this.getDefault("background-color");
+    this.dom.style.margin = this.dom.style.padding = "0px";
+    const bgColor = this.getDefault("background-color");
+    if (bgColor) {
+      this.dom.style.backgroundColor = bgColor;
+    }
+    const borderRadius = this.getDefault("border-radius");
+    this.style.borderRadius = borderRadius + "px";
+    this.dom.style.borderRadius = borderRadius + "px";
+    const bwid = this.getDefault("border-width");
+    const bcolor = this.getDefault("border-color");
+    const bstyle = this.getDefault("border-style");
+    const border = `${bwid}px ${bstyle} ${bcolor}`;
+    this.style.border = border;
+    this.style.borderColor = bcolor;
+    if (this.hasFocus) {
+      this.dom.style.border = `2px dashed ${this.getDefault("focus-border-color")}`;
+    } else {
+      this.dom.style.border = border;
+      this.dom.style.borderColor = bcolor;
+    }
+    const fontStyle = this.style["font"];
+    if (fontStyle) {
+      this.dom.style["font"] = fontStyle;
+    } else {
+      const defaultFont = this.getDefault("DefaultText");
+      this.dom.style["font"] = defaultFont.genCSS();
+      this.dom.style["color"] = defaultFont.color;
+    }
+    this.setAreaSizing();
+  }
+  setAreaSizing() {
+    this.dom.style.boxSizing = "border-box";
+    this.dom.style.width = this.customWidth ? this.customWidth + "px" : "100%";
+    this.dom.style.height = this.customHeight ? this.customHeight + "px" : "100%";
+  }
+  saveData() {
+    return {
+      offsetWidth: this.dom.offsetWidth,
+      offsetHeight: this.dom.offsetHeight
+    };
+  }
+  loadData(json) {
+    this.customWidth = json.offsetWidth;
+    this.customHeight = json.offsetHeight;
+    this.setAreaSizing();
+    return this;
+  }
+};
+UIBase.internalRegister(TextArea);
+
 // scripts/core/utils/container_widgets.ts
 init_util();
 init_ui_base();
+init_toolprop();
 function textboxImpl(self2, inpath, text2, cb, packflag = 0) {
   let path;
   if (inpath) {
@@ -65838,10 +66037,14 @@ function colorPickerImpl(self2, inpath, packflag_or_args = 0, mass_set_path, the
   self2._add(ret);
   return ret;
 }
-function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path) {
+function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, isRichText) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, datapath, mass_set_path);
-  const ret = UIBase.createElement("rich-text-editor-x");
+  const prop = datapath ? self2.getPathMeta(self2.ctx, datapath) : void 0;
+  if (prop !== void 0) {
+    isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
+  }
+  const ret = UIBase.createElement(isRichText ? "rich-text-editor-x" : "text-area-x");
   ret.ctx = self2.ctx;
   ret.packflag |= packflag;
   if (value !== void 0) {
@@ -77240,10 +77443,7 @@ pathux.NodeSocketBase {
   dir;
   /** Derived, output sockets only. Written by the client through setValue, read through getValue. */
   value = void 0;
-  /**
-   * if true, on load UX-related properties like numeric ranges,
-   * tooltips etc will be merged from the default prop.
-   **/
+  /** Whether deserialization copies UX-related properties (numeric ranges, tooltips, etc.) from the default prop. */
   mergeDefaultProp = true;
   /** Is the default value editable. */
   get defaultIsEditable() {
@@ -77271,8 +77471,8 @@ pathux.NodeSocketBase {
     this.color = def.color ?? "#888888";
   }
   /**
-   * Chaining-friendly way to set default prop properties
-   * e.g. new Socket().setDefault(prop => prop.setReadOnly().setDescription("sdfd"))
+   * Chaining-friendly way to set the default prop's UX properties, e.g.
+   * `new Socket().setUX((prop) => prop.setReadOnly().setDescription("..."))`.
    */
   setUX(cb) {
     cb(this.defaultProp);
@@ -77459,16 +77659,12 @@ pathux.NodeSocketBase {
     }
   }
   loadSTRUCT(reader) {
-    const defaultDefault = this.defaultProp;
+    const existingDefault = this.defaultProp;
     reader(this);
     this.socketId = JSON.parse(this.socketId);
     this.dir = this.dir === "out" ? "out" : "in";
-    const value = this.defaultProp === void 0 ? defaultDefault.getValue() : this.defaultProp.getValue();
     if (this.defaultProp === void 0) {
-      this.defaultProp = defaultDefault;
-    } else if (this.mergeDefaultProp) {
-      defaultDefault.copyTo(this.defaultProp);
-      this.defaultProp.setValue(value);
+      this.defaultProp = existingDefault;
     }
   }
 };
@@ -77776,6 +77972,18 @@ pathux.GraphNode {
         socks[k] = this._adoptSocket(k, defSocks[k].copy(), dir);
       }
     }
+    for (const k in defSocks) {
+      const defSock = defSocks[k];
+      const sock = socks[k];
+      if (sock === void 0) {
+        continue;
+      }
+      if (defSock.mergeDefaultProp) {
+        const value = sock.getValue();
+        defSock.defaultProp.copyTo(sock.defaultProp);
+        sock.defaultProp.setValue(value);
+      }
+    }
     return socks;
   }
 };
@@ -77845,7 +78053,7 @@ function nodePropKeys(node) {
   }
   for (const k in node.outputs) {
     if (node.outputs[k].defaultIsEditable) {
-      keys2.push(node.inputs[k].nodePropName);
+      keys2.push(node.outputs[k].nodePropName);
     }
   }
   return keys2;
@@ -77950,7 +78158,7 @@ function setProxy(sock, counterpart) {
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.defaultProp !== void 0 ? [far] : [];
+    return far.useDefaultValue ? [far] : [];
   };
 }
 var ExposedEntry = class {
@@ -79203,7 +79411,9 @@ function propEditRow(ctx, label, path, inherit_packflag, socket) {
     } else {
       row.prop(path)?.setAttribute("name", label);
     }
-  } catch {
+  } catch (error3) {
+    console.warn(error3.stack);
+    console.warn(error3.message);
     row.label(`${label} (unavailable)`);
   }
   return row;
@@ -79252,13 +79462,14 @@ function buildGroupDesigner(root, opts) {
       const repoint = document.createElement("button");
       repoint.textContent = "Repoint";
       repoint.title = "Point this entry at a different property";
+      const type = Node3.decomposePropName(entry.propKey).type;
       repoint.addEventListener("click", () => {
         dispatch({
           kind: "repointEntry",
           ...common,
           index,
           nodeId: _parseNodeId(nodeIdIn2.value),
-          propKey: keyIn2.value.trim()
+          propKey: Node3.composePropName(type, keyIn2.value.trim())
         });
       });
       row.appendChild(repoint);
@@ -79503,11 +79714,11 @@ var NodeFrame = class extends Container3 {
     const parts = [];
     for (const key of Object.keys(this.node.outputs)) {
       const sock = this.node.outputs[key];
-      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+      parts.push(`in:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     for (const key of Object.keys(this.node.inputs)) {
       const sock = this.node.inputs[key];
-      parts.push(`${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
+      parts.push(`out:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
     }
     return parts.join(",");
   }
@@ -79521,7 +79732,7 @@ var NodeFrame = class extends Container3 {
     for (const socks of allSocks) {
       for (const key in socks) {
         const sock = socks[key];
-        if (sock.useDefaultValue && sock.edges.length === 0 && !(key in this.node.props)) {
+        if (sock.useDefaultValue && sock.defaultIsEditable && sock.edges.length === 0 && !(key in this.node.props)) {
           keys2.add(sock.nodePropName);
         }
       }
@@ -87825,7 +88036,7 @@ function buildGraphFromDSL(input, registries) {
   }
   const buildNode = (entry, path) => {
     if (!isRecord(entry)) {
-      report3("bad-shape", path, "the entry is not a {id, type, props} object");
+      report3("bad-shape", path, "the entry is not a {id, type, props, inputs, outputs} object");
       return;
     }
     const { id, type } = entry;
@@ -87850,25 +88061,39 @@ function buildGraphFromDSL(input, registries) {
     node.id = id;
     graph.add(node);
     byId.set(id, node);
-    if (entry.props === void 0) {
+    applyBlock(node, entry.props, "props", (key) => node.props[key], "prop", `${path}.props`);
+    applyBlock(
+      node,
+      entry.inputs,
+      "inputs",
+      (key) => node.inputs[key]?.defaultProp,
+      "input default",
+      `${path}.inputs`
+    );
+    applyBlock(
+      node,
+      entry.outputs,
+      "outputs",
+      (key) => node.outputs[key]?.defaultProp,
+      "output default",
+      `${path}.outputs`
+    );
+  };
+  const applyBlock = (node, block, fieldName, resolve, kindLabel, path) => {
+    if (block === void 0) {
       return;
     }
-    if (!isRecord(entry.props)) {
-      report3("bad-shape", `${path}.props`, `node '${id}' has a non-object props field`);
+    if (!isRecord(block)) {
+      report3("bad-shape", path, `node '${node.id}' has a non-object ${fieldName} field`);
       return;
     }
-    for (const key in entry.props) {
-      applyProp(node, key, entry.props[key], `${path}.props.${key}`);
+    for (const key in block) {
+      applyProp(node, resolve(key), key, block[key], `${path}.${key}`, kindLabel);
     }
   };
-  const applyProp = (node, key, value, path) => {
-    const target = node.props[key] ?? node.inputs[key]?.defaultProp;
+  const applyProp = (node, target, key, value, path, kindLabel) => {
     if (target === void 0) {
-      report3(
-        "unknown-prop",
-        path,
-        `node type '${node.def.typeName}' has no prop or default '${key}'`
-      );
+      report3("unknown-prop", path, `node type '${node.def.typeName}' has no ${kindLabel} '${key}'`);
       return;
     }
     try {
@@ -89289,8 +89514,8 @@ var Screen2 = class extends UIBase {
     };
   }
   getHotKey(toolpath) {
-    const test2 = (keymap5) => {
-      for (const hk of keymap5) {
+    const test2 = (keymap6) => {
+      for (const hk of keymap6) {
         if (typeof hk.action != "string") continue;
         if (hk.action.trim().startsWith(toolpath.trim())) {
           return hk;
@@ -89301,8 +89526,8 @@ var Screen2 = class extends UIBase {
     if (ret) return ret;
     if (this.sareas.active?.keymap) {
       const area = this.sareas.active.area;
-      for (const keymap5 of area.getKeyMaps()) {
-        ret = test2(keymap5);
+      for (const keymap6 of area.getKeyMaps()) {
+        ret = test2(keymap6);
         if (ret) return ret;
       }
     }
@@ -89310,8 +89535,8 @@ var Screen2 = class extends UIBase {
       for (const sarea of this.sareas) {
         const area = sarea.area;
         if (!area) continue;
-        for (const keymap5 of area.getKeyMaps()) {
-          ret = test2(keymap5);
+        for (const keymap6 of area.getKeyMaps()) {
+          ret = test2(keymap6);
           if (ret) {
             return ret;
           }
@@ -89345,11 +89570,11 @@ var Screen2 = class extends UIBase {
         return;
       }
       area.push_ctx_active();
-      for (const keymap5 of area.getKeyMaps()) {
-        if (keymap5 === void 0) {
+      for (const keymap6 of area.getKeyMaps()) {
+        if (keymap6 === void 0) {
           continue;
         }
-        if (keymap5.handle(area.ctx, e)) {
+        if (keymap6.handle(area.ctx, e)) {
           handled = true;
           break;
         }
@@ -89364,8 +89589,8 @@ var Screen2 = class extends UIBase {
         }
         if (!sarea.area) continue;
         sarea.area.push_ctx_active();
-        for (const keymap5 of sarea.area.getKeyMaps()) {
-          if (keymap5.handle(sarea.area.ctx, e)) {
+        for (const keymap6 of sarea.area.getKeyMaps()) {
+          if (keymap6.handle(sarea.area.ctx, e)) {
             handled = true;
             break;
           }
@@ -94904,7 +95129,10 @@ var DemoValue = class extends Node6 {
           (prop) => prop.setMultiline(true).setDescription("Input string")
         )
       },
-      outputs: { out: new FloatSocket2("out"), str: new StringSocket2("out") }
+      outputs: {
+        out: new FloatSocket2("out"),
+        str: new StringSocket2("out").setUX((p) => p.setMultiline(true))
+      }
     };
   }
   constructor() {
@@ -94917,7 +95145,11 @@ var DemoText = class extends Node6 {
     return {
       typeName: "DemoText",
       uiName: (node) => `Text ${node.outputs.text.getValue()}`,
-      outputs: { text: new StringSocket2("out") }
+      outputs: {
+        text: new StringSocket2("out").setUX(
+          (p) => p.setMultiline(true).setIdleTimeout(1e3).setRealtime(false)
+        )
+      }
     };
   }
 };
@@ -95695,7 +95927,7 @@ var BaseOverlay = class extends ContextOverlay {
     return Area.getActiveArea(WorkspaceEditor);
   }
   get nodegraph() {
-    return this.data.demoNodeGraph;
+    return this.data?.demoNodeGraph;
   }
   get demogroup() {
     return demoGroupDefs.get("demo_group")?.subgraph;
@@ -96720,16 +96952,24 @@ var NodeEditorTab = class extends NodeEditor {
   pop_ctx_active() {
     contextWrangler.pop(this.constructor, this);
   }
-  init() {
-    super.init();
-    this.setGraph(this.ctx.nodegraph, DEMO_GRAPH_PATH);
+  fetchGraph() {
+    const nodegraph2 = this.ctx.nodegraph;
+    if (!nodegraph2) {
+      window.setTimeout(() => this.fetchGraph(), 50);
+      return;
+    }
+    this.setGraph(nodegraph2, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
     const add = this.headerRow.menu(
       "Add",
       addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName))
     );
     add.description = "Add a node at the view's center";
-    void this.ctx.nodegraph.resolveGroups().then(() => this.view.syncGraph());
+    void nodegraph2.resolveGroups().then(() => this.view.syncGraph());
+  }
+  init() {
+    super.init();
+    this.fetchGraph();
   }
   _openDefinition(node) {
     const def = node.definition;

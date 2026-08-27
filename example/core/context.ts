@@ -88,7 +88,7 @@ export class BaseOverlay extends ContextOverlay {
   }
 
   get nodegraph() {
-    return this.data!.demoNodeGraph;
+    return this.data?.demoNodeGraph;
   }
 
   get demogroup() {
@@ -136,7 +136,7 @@ export class ContextBase extends Context {
   declare toolstack: ToolStack;
   declare screen: AppScreen;
   declare datalib: DataLib;
-  declare nodegraph: Graph;
+  declare nodegraph: Graph | undefined;
   declare data: ModelData | undefined;
 
   saveProperty(k: string) {

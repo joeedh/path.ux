@@ -30,7 +30,7 @@ let visitPass = 0;
 /**
  * A typed, directed graph connection. Output sockets store values; an input resolves
  * its value through its edges on demand and stores nothing of its own. See
- * documentation/research/nodeEditor.md for the design this implements.
+ * documentation/NodeEditor.md for the design this implements.
  */
 export class NodeSocketBase<
   Type extends string = string,
@@ -78,11 +78,8 @@ pathux.NodeSocketBase {
    * Client classes must create this.
    */
   declare defaultProp: Prop;
-  /**
-   * if true, on load UX-related properties like numeric ranges,
-   * tooltips etc will be merged from the default prop.
-   **/
-  protected mergeDefaultProp = true;
+  /** Whether deserialization copies UX-related properties (numeric ranges, tooltips, etc.) from the default prop. */
+  mergeDefaultProp = true;
 
   /** Is the default value editable. */
   get defaultIsEditable(): boolean {
@@ -123,8 +120,8 @@ pathux.NodeSocketBase {
   }
 
   /**
-   * Chaining-friendly way to set default prop properties
-   * e.g. new Socket().setDefault(prop => prop.setReadOnly().setDescription("sdfd"))
+   * Chaining-friendly way to set the default prop's UX properties, e.g.
+   * `new Socket().setUX((prop) => prop.setReadOnly().setDescription("..."))`.
    */
   setUX(cb: (prop: Prop) => void): this {
     cb(this.defaultProp);
@@ -357,22 +354,16 @@ pathux.NodeSocketBase {
   }
 
   loadSTRUCT(reader: StructReader<this>): void {
-    const defaultDefault = this.defaultProp;
+    const existingDefault = this.defaultProp;
     reader(this);
 
     // GraphId is number | string; the STRUCT field carries it JSON-encoded so the two stay distinct.
     this.socketId = JSON.parse(this.socketId as unknown as string) as GraphId;
     this.dir = this.dir === "out" ? "out" : "in";
 
-    const value =
-      this.defaultProp === undefined ? defaultDefault.getValue() : this.defaultProp.getValue();
-
     if (this.defaultProp === undefined) {
       // old files
-      this.defaultProp = defaultDefault;
-    } else if (this.mergeDefaultProp) {
-      defaultDefault.copyTo(this.defaultProp);
-      this.defaultProp.setValue(value);
+      this.defaultProp = existingDefault;
     }
   }
 }

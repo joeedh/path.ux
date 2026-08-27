@@ -6,7 +6,7 @@ import type { SocketTypeConstructor } from "./socket";
 
 /**
  * The flat graph description a model authors, validated against the type registries
- * with diagnostics rather than a parse failure. See documentation/research/nodeEditor.md.
+ * with diagnostics rather than a parse failure. See documentation/NodeEditor.md.
  */
 export interface GraphDSL {
   nodes?: GraphDSLNode[];
@@ -17,8 +17,12 @@ export interface GraphDSLNode {
   id: string | number;
   /** A node typeName from the registry the DSL is validated against. */
   type: string;
-  /** Values by key: a node prop first, else an input socket's editable default. */
+  /** Values by key, set on the node's own props. No fallback to input/output defaults. */
   props?: Record<string, unknown>;
+  /** Values by key, set on the matching input socket's editable default. */
+  inputs?: Record<string, unknown>;
+  /** Values by key, set on the matching output socket's editable default. */
+  outputs?: Record<string, unknown>;
 }
 
 /** [fromNodeId, outputKey, toNodeId, inputKey]. */
@@ -69,7 +73,7 @@ export function buildGraphFromDSL(
 
   const buildNode = (entry: unknown, path: string): void => {
     if (!isRecord(entry)) {
-      report("bad-shape", path, "the entry is not a {id, type, props} object");
+      report("bad-shape", path, "the entry is not a {id, type, props, inputs, outputs} object");
       return;
     }
 
@@ -98,26 +102,55 @@ export function buildGraphFromDSL(
     graph.add(node);
     byId.set(id, node);
 
-    if (entry.props === undefined) {
+    applyBlock(node, entry.props, "props", (key) => node.props[key], "prop", `${path}.props`);
+    applyBlock(
+      node,
+      entry.inputs,
+      "inputs",
+      (key) => node.inputs[key]?.defaultProp,
+      "input default",
+      `${path}.inputs`
+    );
+    applyBlock(
+      node,
+      entry.outputs,
+      "outputs",
+      (key) => node.outputs[key]?.defaultProp,
+      "output default",
+      `${path}.outputs`
+    );
+  };
+
+  const applyBlock = (
+    node: Node,
+    block: unknown,
+    fieldName: string,
+    resolve: (key: string) => ToolProperty | undefined,
+    kindLabel: string,
+    path: string
+  ): void => {
+    if (block === undefined) {
       return;
     }
-    if (!isRecord(entry.props)) {
-      report("bad-shape", `${path}.props`, `node '${id}' has a non-object props field`);
+    if (!isRecord(block)) {
+      report("bad-shape", path, `node '${node.id}' has a non-object ${fieldName} field`);
       return;
     }
-    for (const key in entry.props) {
-      applyProp(node, key, entry.props[key], `${path}.props.${key}`);
+    for (const key in block) {
+      applyProp(node, resolve(key), key, block[key], `${path}.${key}`, kindLabel);
     }
   };
 
-  const applyProp = (node: Node, key: string, value: unknown, path: string): void => {
-    const target: ToolProperty | undefined = node.props[key] ?? node.inputs[key]?.defaultProp;
+  const applyProp = (
+    node: Node,
+    target: ToolProperty | undefined,
+    key: string,
+    value: unknown,
+    path: string,
+    kindLabel: string
+  ): void => {
     if (target === undefined) {
-      report(
-        "unknown-prop",
-        path,
-        `node type '${node.def.typeName}' has no prop or default '${key}'`
-      );
+      report("unknown-prop", path, `node type '${node.def.typeName}' has no ${kindLabel} '${key}'`);
       return;
     }
 

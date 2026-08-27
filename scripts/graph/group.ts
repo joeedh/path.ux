@@ -42,7 +42,7 @@ function setProxy(sock: NodeSocketBase, counterpart: () => NodeSocketBase | unde
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.defaultProp !== undefined ? [far] : [];
+    return far.useDefaultValue ? [far] : [];
   };
 }
 

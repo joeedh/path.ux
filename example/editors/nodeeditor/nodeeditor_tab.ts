@@ -25,10 +25,15 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
     contextWrangler.pop(this.constructor, this as unknown as Area);
   }
 
-  init() {
-    super.init();
+  private fetchGraph() {
+    const nodegraph = this.ctx.nodegraph;
 
-    this.setGraph(this.ctx.nodegraph, DEMO_GRAPH_PATH);
+    if (!nodegraph) {
+      window.setTimeout(() => this.fetchGraph(), 50);
+      return;
+    }
+
+    this.setGraph(nodegraph, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
 
     const add = this.headerRow.menu(
@@ -38,7 +43,12 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
     add.description = "Add a node at the view's center";
 
     // group instances render unresolved until the stub loader answers.
-    void this.ctx.nodegraph.resolveGroups().then(() => this.view.syncGraph());
+    void nodegraph.resolveGroups().then(() => this.view.syncGraph());
+  }
+
+  init() {
+    super.init();
+    this.fetchGraph();
   }
 
   private _openDefinition(node: nodegraph.GroupNode) {

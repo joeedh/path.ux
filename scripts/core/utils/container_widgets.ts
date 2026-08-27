@@ -7,6 +7,7 @@ import type { KnownDataPath } from "../datapath_registry";
 import type { RichViewer, RichEditor } from "../../widgets/ui_richedit";
 import type { ColorPicker, ColorPickerButton } from "../../widgets/ui_colorpicker2";
 import type { Container, Label } from "../ui";
+import type { TextArea } from "../../widgets/ui_textarea";
 
 export function textboxImpl<CTX extends IContextBase, SELF extends string>(
   self: Container<CTX, SELF>,
@@ -339,13 +340,21 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
   datapath?: string,
   value = "",
   packflag = 0,
-  mass_set_path?: string
+  mass_set_path?: string,
+  isRichText?: boolean
 ) {
   packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
 
   mass_set_path = self._getMassPath(self.ctx, datapath, mass_set_path);
 
-  const ret = UIBase.createElement("rich-text-editor-x") as RichEditor<CTX>;
+  const prop = datapath ? self.getPathMeta(self.ctx, datapath) : undefined;
+  if (prop !== undefined) {
+    isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
+  }
+
+  const ret = UIBase.createElement(isRichText ? "rich-text-editor-x" : "text-area-x") as
+    | RichEditor<CTX>
+    | TextArea<CTX>;
   ret.ctx = self.ctx;
 
   ret.packflag |= packflag;
@@ -390,3 +399,6 @@ export function viewerImpl<CTX extends IContextBase, SELF extends string>(
   self.add(ret);
   return ret;
 }
+
+import "../../widgets/ui_textarea";
+import { PropFlags } from "../../path-controller/toolsys/toolprop";

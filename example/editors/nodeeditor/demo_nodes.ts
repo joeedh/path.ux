@@ -24,7 +24,10 @@ export class DemoValue extends Node {
           prop.setMultiline(true).setDescription("Input string")
         ),
       },
-      outputs : { out: new FloatSocket("out"), str: new StringSocket("out") },
+      outputs: {
+        out: new FloatSocket("out"),
+        str: new StringSocket("out").setUX((p) => p.setMultiline(true)),
+      },
     };
   }
 
@@ -40,7 +43,13 @@ export class DemoText extends Node {
     return {
       typeName: "DemoText",
       uiName  : (node) => `Text ${node.outputs.text.getValue()}`,
-      outputs : { text: new StringSocket("out") },
+      outputs: {
+        text: new StringSocket("out").setUX(
+          (
+            p //
+          ) => p.setMultiline(true).setIdleTimeout(1000).setRealtime(false)
+        ),
+      },
     };
   }
 }

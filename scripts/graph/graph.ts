@@ -77,7 +77,7 @@ export interface GroupResolveRuntime {
 /**
  * A collection of nodes and the edges between their sockets. Node ids are allocated
  * per graph, never globally, so a subgraph serializes and copies standalone. See
- * documentation/research/nodeEditor.md.
+ * documentation/NodeEditor.md.
  */
 export class Graph {
   static STRUCT = nstructjs.inlineRegister(

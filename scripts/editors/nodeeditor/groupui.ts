@@ -184,7 +184,9 @@ export function propEditRow<CTX extends IContextBase>(
     } else {
       row.prop(path)?.setAttribute("name", label);
     }
-  } catch {
+  } catch (error) {
+    console.warn((error as any).stack);
+    console.warn((error as any).message);
     row.label(`${label} (unavailable)`);
   }
   return row;
@@ -265,13 +267,14 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
       const repoint = document.createElement("button");
       repoint.textContent = "Repoint";
       repoint.title = "Point this entry at a different property";
+      const type = GraphNode.decomposePropName(entry.propKey).type;
       repoint.addEventListener("click", () => {
         dispatch({
           kind: "repointEntry",
           ...common,
           index,
           nodeId : _parseNodeId(nodeIdIn.value),
-          propKey: keyIn.value.trim() as unknown as NodePropName,
+          propKey: GraphNode.composePropName(type, keyIn.value.trim()),
         });
       });
       row.appendChild(repoint);

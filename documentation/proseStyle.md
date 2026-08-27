@@ -57,4 +57,3 @@ this file, and to everything under `docs/`.
   it unclear whether the second comma closes an interpolation or opens a new clause. Write
   "Dropping onto itself (or onto a neighbor it would split against) is not a rip". Drop any comma
   that would follow the closing bracket — it separates the subject from its verb.
-

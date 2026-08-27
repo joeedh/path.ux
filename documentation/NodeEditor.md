@@ -145,34 +145,56 @@ what it changes.
 
 `props` holds `ToolProperty` templates. Each key must equal the property's
 `apiname` (the constructor throws otherwise), and every instance gets its own
-copy. An input socket's `defaultProp` (see below) is also reachable as a
-property, so `nodePropTarget(node, key)` answers either kind:
-`node.props[key]` first, then `node.inputs[key]?.defaultProp`.
-`nodePropKeys(node)` lists both. Property changes flag the node dirty
-automatically.
+copy. Property changes flag the node dirty automatically.
+
+A socket's `defaultProp` (see [Sockets](#sockets) below) is reachable the same
+way, through a `NodePropName` — an opaque string addressing one of a node's
+props, input defaults, or output defaults: a bare name (`"scale"`) means a
+node prop, `"in:a"` an input's default, `"out:out"` an output's default.
+`Node.composePropName(type, name)` / `Node.decomposePropName(nodePropName)`
+convert between the parts and the address; a socket's own `sock.nodePropName`
+getter already returns its address (`` `${dir}:${name}` ``). `nodePropTarget(node,
+nodePropName)` resolves an address to its `ToolProperty`, `nodePropSocket`
+resolves it to a socket (`undefined` for a plain node-prop address), and
+`nodePropKeys(node)` lists every address the node exposes: its own prop keys,
+plus every input and output whose default is editable
+(`sock.defaultIsEditable` — `useDefaultValue` and not read-only).
 
 ## Sockets
 
 A socket is an instance of a `NodeSocketBase` subclass, created with a
 direction (`"in"` or `"out"`) and living in its owning node's `inputs` or
-`outputs` record. `registerSocketType(cls)` registers the class for
-serialization and the DSL; a socket class declares a `socketDef()` with a
-`typeName` (the class name) and a `type` — the wire-type string link
-compatibility is judged by. Like `registerNodeType`, it auto-registers a
-`graph.<typeName>` STRUCT for a class that lacks its own, so a custom socket
-subclass round-trips through serialization without STRUCT boilerplate.
+`outputs` record. Every socket, input or output, carries a `defaultProp` — an
+editable per-instance default value — which its constructor must create (see
+[Writing a socket type](#writing-a-socket-type)). `registerSocketType(cls)`
+registers the class for serialization and the DSL; a socket class declares a
+`socketDef()` with a `typeName` (the class name) and a `type` — the wire-type
+string link compatibility is judged by. Like `registerNodeType`, it
+auto-registers a `graph.<typeName>` STRUCT for a class that lacks its own, so
+a custom socket subclass round-trips through serialization without STRUCT
+boilerplate.
 
 ### Value resolution
 
-Outputs store values: an evaluator calls `sock.setValue(v)` and downstream
-nodes see it. Inputs resolve on demand through `getValue()`:
+`getValue()` resolves through `defaultProp` on both directions when nothing
+downstream has actually driven the socket, gated by `useDefaultValue` (default
+`true`):
 
-- Unconnected: the value of `defaultProp`, the editable per-instance default
-  (reachable like a node property, through `nodePropTarget` and the `props`
-  datapath).
-- One link of the same wire type: the source's stored value, passed through.
-- Otherwise: each source value is coerced to the input's type, and multiple
-  values are combined by the socket's `reduce` function.
+- **Output**: the stored value if `setValue(v)` has been called; otherwise
+  `defaultProp`'s value when `useDefaultValue` is true, else `undefined`. This
+  is what lets an output-only node (no inputs at all) still produce a
+  configurable constant.
+- **Input**, unconnected: `defaultProp`'s value when `useDefaultValue` is
+  true, else `undefined`.
+- **Input**, one link of the same wire type: the source's resolved value,
+  passed through.
+- **Input**, otherwise: each source value is coerced to the input's type, and
+  multiple values are combined by the socket's `reduce` function.
+
+`defaultIsEditable` (`useDefaultValue && !` read-only) additionally gates
+whether the default is user-editable — an input or output frame row, and
+`nodePropKeys` (see [Node properties](#node-properties)) — a socket can carry
+a live default (`useDefaultValue`) without exposing it for editing.
 
 Resolved values are memoized; `flagDirty()` invalidates the cache and
 propagates downstream, flagging the owning nodes as it goes.
@@ -209,27 +231,49 @@ class FloatSocket extends NodeSocketBase<"float", number> {
 
   constructor(dir: SocketDir = "in") {
     super(dir);
-    if (dir === "in") {
-      this.defaultProp = new FloatProperty(0);
-    }
+    this.defaultProp = new FloatProperty(0);
   }
 }
 registerSocketType(FloatSocket);
 ```
 
-An input attaches a `defaultProp` in its constructor so unconnected inputs
-stay editable. Override `canCoerceTo`/`convertTo` (and, for
-destination-side knowledge, `canCoerceFrom`/`convertFrom`) to interoperate
-with other wire types, and `reduce` to combine multi-link values.
+The constructor must create `defaultProp` unconditionally — both directions
+carry one now, so an output socket can be given a configurable constant just
+like an unconnected input. `sockets_std.ts` ships `FloatSocket`, `Vec3Socket`
+and `StringSocket` as the stock types. `setUX(cb)` chains onto the
+constructor to configure the default prop's UX metadata without a local
+variable:
+
+```ts
+inputs: {
+  strIn: new StringSocket("in").setUX((prop) => prop.setMultiline(true).setDescription("...")),
+},
+```
+
+Set `useDefaultValue = false` on a socket that must not fall back to a
+default at all (an unconnected input reads as `undefined` rather than the
+prop's value), and use `setUX((prop) => prop.setReadOnly())` — reflected by
+`defaultIsEditable` — for one whose default should be visible but not
+user-editable. `protected mergeDefaultProp` (default `true`) controls
+deserialization: when the class's constructor-created default and the loaded
+socket's default are both present, the loaded value wins but the
+constructor's UX metadata (ranges, tooltips, etc.) overwrites what was saved,
+so a UX tweak to a socket type takes effect on old files without a version
+bump.
+
+Override `canCoerceTo`/`convertTo` (and, for destination-side knowledge,
+`canCoerceFrom`/`convertFrom`) to interoperate with other wire types, and
+`reduce` to combine multi-link values.
 
 The editor asks the socket class itself to build the default's editor row:
 `createUI(container, datapath, label?)` receives the container to fill and the
 datapath addressing the default value (through the owning node's `props`
-list). The base implementation calls `container.prop(datapath)`, which picks
-the standard path.ux widget for the bound property type — a slider for a
-number, a checkbox for a boolean, a dropdown for an enum, and so on. A socket
-class carrying a custom `ToolProperty` type overrides `createUI` to build its
-own widget against the same datapath.
+list, at the socket's `nodePropName` — `"in:key"` or `"out:key"`). The base
+implementation calls `container.prop(datapath)`, which picks the standard
+path.ux widget for the bound property type — a slider for a number, a
+checkbox for a boolean, a dropdown for an enum, and so on. A socket class
+carrying a custom `ToolProperty` type overrides `createUI` to build its own
+widget against the same datapath.
 
 ## The graph
 
@@ -314,26 +358,47 @@ it through `groupSaver`.
 ## The graph DSL
 
 `buildGraphFromDSL(input, { nodeTypes, socketTypes })` builds a graph from a
-plain-data description — the shape an LLM or a config file produces:
+plain-data description — the shape an LLM or a config file produces. A node
+entry carries up to three separate, disambiguated value blocks — `props`,
+`inputs`, `outputs` — each a plain `{ key: value }` record addressed by the
+socket or prop's own key, with no `in:`/`out:` prefix and no fallback between
+blocks:
 
 ```ts
 const { graph, diagnostics } = buildGraphFromDSL(
   {
     nodes: [
       { id: "v1", type: "ValueNode", props: { value: 2 } },
-      { id: "add", type: "AddNode" },
+      { id: "txt", type: "TextNode", outputs: { text: "hello" } },
+      { id: "add", type: "AddNode", inputs: { b: 1.5 } },
     ],
     links: [["v1", "out", "add", "a"]],
   },
-  { nodeTypes: [ValueNode, AddNode], socketTypes: [FloatSocket] }
+  { nodeTypes: [ValueNode, TextNode, AddNode], socketTypes: [FloatSocket, StringSocket] }
 );
 ```
+
+- `props` sets a value on `node.props[key]` only — a key that names a socket
+  instead of a prop is diagnosed `unknown-prop`, not silently redirected.
+- `inputs` sets a value on `node.inputs[key].defaultProp` only.
+- `outputs` sets a value on `node.outputs[key].defaultProp` only — this is how
+  a DSL-authored graph gives an output-only node (no inputs at all) a
+  configurable constant, e.g. `TextNode` above.
+
+Each key resolves within its own block, so the same key name can address a
+prop, an input and an output on the same node without collision — the block
+is what disambiguates it, not a prefix on the key. (`NodePropName`, the
+`in:`/`out:` prefixed address used elsewhere in the graph API — see
+[Node properties](#node-properties) — is an implementation detail the DSL
+never surfaces; keys here are always the bare socket/prop name.)
 
 It never throws. Every problem becomes a diagnostic with a stable code —
 `bad-shape`, `duplicate-node-id`, `unknown-node-type`, `unknown-prop`,
 `bad-prop-value`, `unknown-link-node`, `unknown-link-socket`,
 `link-type-mismatch`, `duplicate-link`, `link-input-occupied` — and the graph
-contains everything that was valid. When two links contend for a single-link
+contains everything that was valid. `unknown-prop` fires per block, so its
+path names which one (`nodes[2].props.b`, `nodes[2].inputs.b`, or
+`nodes[2].outputs.b`) failed. When two links contend for a single-link
 input, the first stated link wins and the later one is diagnosed, so the
 output does not depend on entry order. `validateGraphDSL` runs the same
 checks and returns only the diagnostics.
@@ -572,19 +637,35 @@ unregistered; a consumer subclasses or registers it directly (see below).
 ## Registering it in an app
 
 The example app's tab (`example/editors/nodeeditor/`) is the worked example
-of consumer-side registration. `demo_nodes.ts` defines the node types, a
-group definition behind a stub loader/saver pair, and the demo graph.
-`nodeeditor_tab.ts` subclasses the editor and registers it:
+of consumer-side registration. `demo_nodes.ts` defines the node types (using
+`FloatSocket`, `Vec3Socket` and `StringSocket`; `DemoValue` and `DemoText`
+show output-only defaults in practice — `DemoValue.outputs.str` and
+`DemoText.outputs.text` are configurable constants with no input driving
+them), a group definition behind a stub loader/saver pair, and a
+`makeDemoGraph()` factory. `nodeeditor_tab.ts` subclasses the editor and
+registers it:
 
 ```ts
 export class NodeEditorTab extends NodeEditor {
-  init() {
-    super.init();
-    this.setGraph(theDemoGraph, DEMO_GRAPH_PATH);
+  private fetchGraph() {
+    const nodegraph = this.ctx.nodegraph;
+    if (!nodegraph) {
+      // the graph lives on the active model_data block, which may not
+      // have loaded yet.
+      window.setTimeout(() => this.fetchGraph(), 50);
+      return;
+    }
+
+    this.setGraph(nodegraph, DEMO_GRAPH_PATH);
     this.view.onOpenDefinition = (node) => this._openDefinition(node);
 
     // group instances render unresolved until the stub loader answers.
-    void theDemoGraph.resolveGroups().then(() => this.view.syncGraph());
+    void nodegraph.resolveGroups().then(() => this.view.syncGraph());
+  }
+
+  init() {
+    super.init();
+    this.fetchGraph();
   }
 
   private _openDefinition(node: nodegraph.GroupNode) {
@@ -607,8 +688,11 @@ Area.register(NodeEditorTab);
 ```
 
 The app's data API mounts the graph struct at both paths the tab uses
-(`example/api/api_define.ts`), and its context supplies the values
-(`example/core/context.ts`):
+(`example/api/api_define.ts`); its context resolves them from the active
+`model_data` block (`example/core/context.ts`), and the block owns the graph
+as a real serialized field (`example/core/state.ts`) rather than a
+module-level singleton, so each document gets its own graph and it saves and
+loads with the rest of the document:
 
 ```ts
 // api_define.ts
@@ -616,10 +700,23 @@ const graphst = nodegraph.defineGraphAPI(api);
 cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 cstruct.struct("demogroup", "demogroup", "Demo Group Definition", graphst);
 
+// state.ts (ModelData)
+class ModelData extends DataBlock {
+  demoNodeGraph = makeDemoGraph();
+  // ...
+}
+ModelData.STRUCT = nstructjs.inherit(ModelData, DataBlock, "example.ModelData") + `
+  demoNodeGraph : pathux.Graph;
+}
+`;
+
 // context.ts (BaseOverlay)
-get nodegraph() { return theDemoGraph; }
+get nodegraph() { return this.data?.demoNodeGraph; }
 get demogroup() { return demoGroupDefs.get("demo_group")?.subgraph; }
 ```
+
+Because `nodegraph` can be `undefined` before the model data block exists,
+the tab's `fetchGraph()` polls rather than assuming it is ready in `init()`.
 
 STRUCT registration follows the usual `Area` pattern (`STRUCT.inherit` plus
 `nstructjs.register`).
@@ -634,6 +731,10 @@ function getNodeClass(typeName: string): typeof Node | undefined;
 function registerSocketType(cls: typeof NodeSocketBase): void;
 function getSocketClass(typeName: string): typeof NodeSocketBase | undefined;
 
+// Opaque (branded) string address for a node prop, input default, or output
+// default: a bare name ("scale"), or "in:key" / "out:key" for a socket default.
+type NodePropName = string;
+
 class Node<Inputs, Outputs> {
   id: GraphId; // number (graph-allocated) or string (client-chosen)
   pos: Vector2;
@@ -641,17 +742,29 @@ class Node<Inputs, Outputs> {
   inputs: Inputs; // Record<string, NodeSocketBase>
   outputs: Outputs;
   props: Record<string, ToolProperty>;
+  get allSockets(): NodeSocketBase[]; // inputs then outputs
   static graphDef(): NodeDef;
+  static decomposePropName(prop: NodePropName): { type: "in" | "out" | "prop"; name: string };
+  static composePropName(type: "in" | "out" | "prop", name: string): NodePropName;
   getUIName(): string;
 }
 
-class NodeSocketBase<Type extends string, Value> {
+function nodePropTarget(node: Node, key: NodePropName): ToolProperty | undefined;
+function nodePropSocket(node: Node, key: NodePropName): NodeSocketBase | undefined;
+function nodePropKeys(node: Node): NodePropName[]; // props, plus every editable input/output default
+function nodePropValue(node: Node, key: NodePropName): unknown; // descends the group boundary
+
+class NodeSocketBase<Type extends string, Value, Prop extends ToolProperty<Value>> {
   dir: SocketDir; // "in" | "out"
   type: Type; // the wire type
   multiSocket: boolean; // default: dir === "out"
-  defaultProp?: ToolProperty; // editable default on unconnected inputs
+  defaultProp: Prop; // editable default; every socket carries one, constructor-created
+  useDefaultValue: boolean; // default true; false disables the default fallback entirely
+  get defaultIsEditable(): boolean; // useDefaultValue && not read-only
+  get nodePropName(): NodePropName; // `${dir}:${name}`
+  setUX(cb: (prop: Prop) => void): this; // chaining helper to configure defaultProp
   edges: NodeSocketBase[];
-  getValue(): Value | undefined; // inputs resolve through edges, memoized
+  getValue(): Value | undefined; // both directions resolve through defaultProp when unset; inputs also through edges, memoized
   setValue(v: Value): void; // outputs store
   flagDirty(): void;
   coerce(b: NodeSocketBase, opts?: { dryRun?: boolean }): boolean;
@@ -692,14 +805,26 @@ class GroupNode extends Node {
 }
 
 class ExposedEntry {
-  constructor(kind: "prop" | "nodeUI", nodeId: GraphId, propKey: string, label?: string);
+  constructor(kind: "prop" | "nodeUI", nodeId: GraphId, propKey: NodePropName, label?: string);
 }
 
-function buildGraphFromDSL(input: unknown, opts): { graph: Graph; diagnostics: DSLDiagnostic[] };
-function validateGraphDSL(input: unknown, opts): DSLDiagnostic[];
+// Each node entry's props/inputs/outputs are independent { key: value } blocks —
+// no fallback between them, no in:/out: prefix on the keys (see The graph DSL).
+interface GraphDSLNode {
+  id: string | number;
+  type: string;
+  props?: Record<string, unknown>;
+  inputs?: Record<string, unknown>;
+  outputs?: Record<string, unknown>;
+}
+type GraphDSLLink = [fromNodeId: string | number, outputKey: string, toNodeId: string | number, inputKey: string];
+
+function buildGraphFromDSL(
+  input: unknown,
+  registries: { nodeTypes: ReadonlyMap<string, typeof Node>; socketTypes: ReadonlyMap<string, typeof NodeSocketBase> }
+): { graph: Graph; diagnostics: DSLDiagnostic[] };
+function validateGraphDSL(input: unknown, registries): DSLDiagnostic[];
 function defineGraphAPI(api: DataAPI): DataStruct;
-function nodePropTarget(node: Node, key: string): ToolProperty | undefined;
-function nodePropKeys(node: Node): string[];
 
 // --- editor layer ---
 
