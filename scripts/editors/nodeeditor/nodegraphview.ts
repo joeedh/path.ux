@@ -376,6 +376,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.syncPosition();
       frame.syncContents();
       frame.setSelected(this.selection.has(nid));
+      frame.flushUpdate();
     }
 
     this._redrawLinks();
