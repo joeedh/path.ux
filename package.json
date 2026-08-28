@@ -50,7 +50,7 @@
     "globals": "^17.4.0",
     "happy-dom": "^20.9.0",
     "markdown-toc": "^1.2.0",
-    "nstructjs": "^0.8.9",
+    "nstructjs": "^0.8.10",
     "nw": "0.112.0-sdk",
     "parse5": "6.0.0",
     "typedoc": "^0.28.19",
