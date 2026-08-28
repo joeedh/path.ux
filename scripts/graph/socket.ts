@@ -7,7 +7,7 @@ import type { Container } from "../core/ui";
 import type { Color, GraphId, ISocketOwner, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
 import type { NodePropName } from "./node";
-import { GRAPH_SCHEMA_VERSION } from './types';
+import { GRAPH_SCHEMA_VERSION } from "./types";
 
 /** Per-type description a socket class returns from its static socketDef(). */
 export interface SocketTypeDef {
@@ -356,14 +356,13 @@ pathux.NodeSocketBase {
     }
   }
 
-
   static getVersionSTRUCT(jsonOrObj: any): number {
     return jsonOrObj.VERSION ?? 0;
   }
 
-  /** 
+  /**
    * To chain migrateSTRUCTs up the class hiearachy,
-   * wrap any field exclusions in a closure, e.g. 
+   * wrap any field exclusions in a closure, e.g.
    * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
    */
   static migrateSTRUCT(version: number, jsonOrObj: any, migrate: nstructjs.StructMigrateFinisher) {
@@ -376,7 +375,7 @@ pathux.NodeSocketBase {
       } else {
         jsonOrObj.defaultProp = nstructjs.writeJSON(defaultProp);
         // set type index key.
-        // XXX if ToolProperty ever gets a formal type index get we'll 
+        // XXX if ToolProperty ever gets a formal type index get we'll
         // have to change _structName.
         jsonOrObj.defaultProp._structName = (defaultProp.constructor as any).structName;
       }
@@ -386,8 +385,7 @@ pathux.NodeSocketBase {
     }
 
     // a defaultProp built just above already matches the current class, so it has nothing to migrate
-    migrate(haveDefaultProp ? undefined : ['defaultProp'])
-
+    migrate(haveDefaultProp ? undefined : ["defaultProp"]);
 
     jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;
   }

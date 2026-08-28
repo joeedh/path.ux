@@ -130,7 +130,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
       return;
     }
     buildGroupDesigner(root, {
-      ctx       : this.ctx as unknown as ContextLike,
+      ctx       : this.view.graphContext,
       def       : this._designing.def,
       ref       : this._designing.ref,
       graphPath : this._rootPath,

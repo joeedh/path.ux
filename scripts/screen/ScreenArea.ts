@@ -1431,7 +1431,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     //parentWidget alone is not a reliable attachment signal: raw
     //HTMLElement.remove (used during editor switches) leaves it stale
-    if (this.switcher && this.switcher.parentWidget === row && this.switcher.parentNode) {
+    if (this.switcher?.parentWidget === row && this.switcher.parentNode) {
       return;
     }
 

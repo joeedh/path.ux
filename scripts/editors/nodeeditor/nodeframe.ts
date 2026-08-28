@@ -66,6 +66,154 @@ export function socketRow(node: GraphNode, dir: SocketDir, key: string): number 
   return row < 0 ? -1 : outs.length + row;
 }
 
+// we don't need the full pathux UIBase for this element
+export class TerminalDot<CTX extends IContextBase = IContextBase> extends HTMLElement {
+  private _showError = false;
+  private _forceHighlight = false;
+  lookupString: string;
+  nodeframe: NodeFrame<CTX>;
+  dom: this;
+
+  constructor(
+    nodeframe: NodeFrame<CTX>,
+    lookupString: string,
+    socketName: string,
+    dir: string,
+    color: string,
+    tooltip: string
+  ) {
+    super();
+    this.nodeframe = nodeframe;
+    this.lookupString = lookupString;
+    this.dom = this;
+    this.style.display = "inline";
+    this.ensureStyle(nodeframe);
+
+    const dot = this.dom;
+    dot.className = "nodeframe-terminal";
+    dot.dataset.socketKey = socketName;
+    dot.dataset.socketDir = dir;
+    dot.title = tooltip;
+    // Centered on the frame's outer edge where socketAnchor and link-drop hit
+    // testing place the terminal; -5px cancels the frame's 1px border.
+    dot.style.cssText =
+      "position: absolute; top: 50%; transform: translateY(-50%); " +
+      "width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; " +
+      `background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
+
+    this.resetStyles();
+
+    dot.addEventListener("pointerdown", (e: PointerEvent) => {
+      if (e.button !== 0 || nodeframe.onSocketDown === undefined) {
+        return;
+      }
+      e.preventDefault();
+      // Keeps the press from selecting the frame or starting a box-select.
+      e.stopPropagation();
+      // non-socket prop keys should've been caught in calling functions
+      nodeframe.onSocketDown(nodeframe, socketName, dir as SocketDir, e);
+    });
+  }
+
+  connectedCallback() {
+    this.nodeframe._onTerminalDotAdd(this);
+  }
+  disconnectedCallback() {
+    this.nodeframe._onTerminalDotRemove(this);
+  }
+
+  private resetStyles() {
+    while (this.dom.classList.length > 0) {
+      this.dom.classList.remove(this.dom.classList[0]);
+    }
+
+    this.dom.classList.add("__node_socket");
+    this.dom.classList.add("__node_socket_highlight");
+    if (this._forceHighlight) {
+      this.dom.classList.add("__node_socket_highlight_force");
+    }
+    if (this._showError) {
+      this.dom.classList.add("__node_socket_highlight_error");
+    }
+  }
+
+  get showError() {
+    return this._showError;
+  }
+
+  set showError(value: boolean) {
+    this._showError = value;
+    this.resetStyles();
+  }
+
+  get forceHighlight() {
+    return this._forceHighlight;
+  }
+
+  set forceHighlight(value: boolean) {
+    this._forceHighlight = value;
+    this.resetStyles();
+  }
+
+  ensureStyle(nodeframe: NodeFrame<CTX>) {
+    // set up CSS to expand hit region around sockets
+    const styleId = "pathux_graph__node_socket_style";
+    const shadowRoot = nodeframe.shadowRoot!;
+    if (!shadowRoot.getElementById(styleId)) {
+      const expand = nodeframe.getDefault("SocketHitExpand", undefined, 10);
+      const socketHigh = nodeframe.getDefault(
+        "SocketHighlightColor",
+        undefined,
+        "rgba(200,200,255,0.25)"
+      );
+      const socketError = nodeframe.getDefault("SocketErrorColor", undefined, "#ff0000");
+
+      const style = document.createElement("style");
+      style.id = styleId;
+
+      style.innerHTML = `
+
+.__node_socket::before {
+  content: '';
+  position: absolute;
+  cursor: auto;
+  inset: -${expand}px;
+}
+
+.__node_socket_highlight:hover::after {
+  content: '';
+  border-radius: 50%;
+  position: absolute;
+  cursor: auto;
+  background-color: ${socketHigh};
+  inset: -2px;
+}
+
+.__node_socket_highlight_error::after {
+  content: '';
+  border-radius: 50%;
+  position: absolute;
+  cursor: auto;
+  border: 2px solid ${socketError};
+  inset: -2px;
+}
+
+.__node_socket_highlight_force::after {
+  content: '';
+  border-radius: 50%;
+  position: absolute;
+  cursor: auto;
+  background-color: ${socketHigh};
+  inset: -2px;
+}
+
+        `;
+      shadowRoot.prepend(style);
+    }
+  }
+}
+customElements.define("nodeframe-graph-terminaldot-x", TerminalDot);
+
 /**
  * Generic node UX container; draws background, a title bar, and sockets.
  */
@@ -117,6 +265,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   private _socketsRoot: HTMLDivElement | undefined;
   private _body: Container<CTX> | undefined;
   private _propsRoot: HTMLDivElement | undefined;
+  private _terminalDotMap = new Map<string, TerminalDot<CTX>>();
 
   /** Which sockets the built rows cover, and which carry an inline editor. */
   private _rowSig = "";
@@ -132,18 +281,30 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       tagname: "nodeframe-x",
       style  : "nodeframe",
       theme: {
-        Width             : t.number,
-        HeaderHeight      : t.number,
-        SocketRowHeight   : t.number,
-        "background-color": t.color,
-        "border-color"    : t.color,
-        "border-radius"   : t.number,
-        HeaderBG          : t.color,
-        SelectOutline     : t.color,
-        DefaultText       : t.font,
-        SocketText        : t.font,
+        Width               : t.number,
+        HeaderHeight        : t.number,
+        SocketRowHeight     : t.number,
+        "background-color"  : t.color,
+        "border-color"      : t.color,
+        "border-radius"     : t.number,
+        HeaderBG            : t.color,
+        SelectOutline       : t.color,
+        DefaultText         : t.font,
+        SocketText          : t.font,
+        SocketHitExpand     : t.number, // in pixels
+        SocketHighlightColor: t.color,
+        SocketErrorColor    : t.color,
       },
     };
+  }
+
+  public _onTerminalDotAdd(dot: TerminalDot<CTX>) {
+    this._terminalDotMap.set(dot.lookupString, dot);
+  }
+  public _onTerminalDotRemove(dot: TerminalDot<CTX>) {
+    if (this._terminalDotMap.get(dot.lookupString) === dot) {
+      this._terminalDotMap.delete(dot.lookupString);
+    }
   }
 
   setNode(node: GraphNode) {
@@ -430,9 +591,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   }
 
   /** The terminal dot for a socket, for the view to restyle during a drag. */
-  terminalDot(key: string, dir: SocketDir): HTMLElement | undefined {
-    const sel = `.nodeframe-terminal[data-socket-key="${key}"][data-socket-dir="${dir}"]`;
-    return (this.shadow.querySelector(sel) as HTMLElement | null) ?? undefined;
+  terminalDot(key: string, dir: SocketDir): TerminalDot<CTX> | undefined {
+    return this._terminalDotMap.get(`${dir}:${key}`);
   }
 
   /** One socket's row: its terminal dot, plus an inline default editor where
@@ -455,11 +615,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     const label = inline ? this._inlineEditor(socketPropName) : undefined;
 
     if (dir === "in") {
-      row.appendChild(dot);
+      row.appendChild(dot.dom);
       row.appendChild(label ?? this._terminalName(socketPropName));
     } else {
       row.appendChild(label ?? this._terminalName(socketPropName));
-      row.appendChild(dot);
+      row.appendChild(dot.dom);
     }
     return row;
   }
@@ -486,36 +646,20 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return row;
   }
 
-  private _terminalDot(socketPropName: NodePropName): HTMLSpanElement {
+  private _terminalDot(socketPropName: NodePropName): TerminalDot<CTX> {
     const { type: dir, name: socketName } = GraphNode.decomposePropName(socketPropName);
 
     const sock = dir === "in" ? this.node.inputs[socketName] : this.node.outputs[socketName];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
 
-    const dot = document.createElement("span");
-    dot.className = "nodeframe-terminal";
-    dot.dataset.socketKey = socketName;
-    dot.dataset.socketDir = dir;
-    dot.title = `${socketName} (${sock.type})`;
-    // Centered on the frame's outer edge where socketAnchor and link-drop hit
-    // testing place the terminal; -5px cancels the frame's 1px border.
-    dot.style.cssText =
-      "position: absolute; top: 50%; transform: translateY(-50%); " +
-      "width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; " +
-      `background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
-
-    dot.addEventListener("pointerdown", (e: PointerEvent) => {
-      if (e.button !== 0 || this.onSocketDown === undefined) {
-        return;
-      }
-      e.preventDefault();
-      // Keeps the press from selecting the frame or starting a box-select.
-      e.stopPropagation();
-      // non-socket prop keys should've been caught in calling functions
-      this.onSocketDown(this, socketName, dir as SocketDir, e);
-    });
-
-    return dot;
+    return new TerminalDot<CTX>(
+      this,
+      `${dir}:${socketName}`,
+      socketName,
+      dir,
+      color,
+      `${socketName} (${sock.type})`
+    );
   }
 
   /** Whether a press landed on one of the node's own widgets rather than the frame. */

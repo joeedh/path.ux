@@ -6,8 +6,7 @@ import type { NodeSocketBase } from "./socket";
 import type { GraphId } from "./graph_types";
 import { NO_ID } from "./graph_types";
 import type { GroupDef, GroupNode } from "./group";
-import {GRAPH_SCHEMA_VERSION} from './types'
-
+import { GRAPH_SCHEMA_VERSION } from "./types";
 
 /**
  * One serialized edge. Direction is implied by position: srcKey names a record key in

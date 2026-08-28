@@ -1560,7 +1560,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
           return false; //tab groups have no rollout collapse
         }
         const panel = this.panels.get(id);
-        if (!panel || !panel.closed) {
+        if (!panel?.closed) {
           return false;
         }
         seen = true;

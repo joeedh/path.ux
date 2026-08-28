@@ -1,6 +1,13 @@
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
-import { ToolMacro } from "../../path-controller/toolsys/toolsys";
-import type { ToolProperty } from "../../path-controller/toolsys/toolprop";
+import { ToolMacro, ToolOp } from "../../path-controller/toolsys/toolsys";
+import {
+  ToolProperty,
+  StringProperty,
+  IntProperty,
+  EnumProperty,
+  FlagProperty,
+  ListProperty,
+} from "../../path-controller/toolsys/toolprop";
 import { Graph } from "../../graph/graph";
 import {
   AddNodeOp,
@@ -69,6 +76,22 @@ export type GraphEdit =
 
 export type EditVerdict = { ok: true } | { ok: false; reason: string };
 
+// array of node ids
+export type SelectionState = GraphId[];
+
+/*
+ * note: some clients may implement undoable undo
+ */
+export type GraphContext = ContextLike & {
+  clearSelection(): void;
+  selectAll(): void;
+  selectNodes(ids: GraphId[]): void;
+  deselectNodes(id: GraphId[]): void;
+
+  selectSockets(ids: GraphId[]): void;
+  deselectSockets(id: GraphId[]): void;
+};
+
 /**
  * The gesture seam: every mutating gesture in the node-graph view asks a
  * delegate to judge and perform its edit. The default implementation
@@ -77,8 +100,10 @@ export type EditVerdict = { ok: true } | { ok: false; reason: string };
  * match what perform would decide, so a refusal can show mid-gesture.
  */
 export interface NodeGraphDelegate {
-  check(ctx: ContextLike, edit: GraphEdit): EditVerdict;
-  perform(ctx: ContextLike, edit: GraphEdit): void;
+  undoStepBegin(ctx: GraphContext): void;
+  check(ctx: GraphContext, edit: GraphEdit): EditVerdict;
+  perform(ctx: GraphContext, edit: GraphEdit): void;
+  undoStepEnd(ctx: GraphContext): void;
 }
 
 /** The exposure kinds edit a group definition rather than the resolved graph. */
@@ -90,6 +115,66 @@ function isExposureEdit(edit: GraphEdit): boolean {
     edit.kind === "removeEntry"
   );
 }
+/*
+type SelectOpType = "select-nodes" | "deselect-nodes" | "clear" | "all" | 'select-sockets' | 'deselect-sockets';
+
+export class SelectOp<CTX extends GraphContext = GraphContext> extends ToolOp<
+  {
+    type: EnumProperty<SelectOpType>;
+    stringIds: ListProperty<ToolProperty<GraphId>>;
+  },
+  {},
+  CTX
+> {
+  static tooldef() {
+    return {
+      toolpath: 'pathux.graph.select',
+      inputs: {
+        type: new EnumProperty('select', {
+          select: 'select',
+          deselect: 'deselect',
+          clear: 'clear',
+          all: 'all'
+        }),
+        ids: new ListProperty()
+      },
+      outputs: {},
+      description: '',
+      uiname: '',
+    }
+  }
+
+  exec(ctx: CTX) {
+    const {type, ids} = this.getInputs()
+
+    const idsList: GraphId[] = []
+    for (const id of ids.getValue()) {
+      idsList.push(id.getValue())
+    }
+
+    switch (type) {
+      case 'select-nodes':
+        ctx.selectNodes(idsList)
+        break;
+      case 'deselect-nodes':
+        ctx.deselectNodes(idsList)
+        break;
+      case 'clear':
+        ctx.clearSelection()
+        break;
+      case 'all':
+        ctx.selectAll()
+        break;
+      case 'select-sockets':
+        ctx.selectSockets(idsList)
+        break;
+      case 'deselect-sockets':
+        ctx.deselectSockets(idsList)
+        break;
+    }
+  }
+}
+*/
 
 /**
  * The default delegate. check consults the graph's own refusal — every
@@ -102,7 +187,25 @@ function isExposureEdit(edit: GraphEdit): boolean {
  * save it through the graph's groupSaver seam; they carry no undo.
  */
 export class ToolOpDelegate implements NodeGraphDelegate {
-  check(ctx: ContextLike, edit: GraphEdit): EditVerdict {
+  private undoStepLvl = 0;
+  private pendingMacro?: ToolMacro<GraphContext>;
+
+  undoStepBegin(ctx: GraphContext): void {
+    if (this.undoStepLvl === 0) {
+      this.pendingMacro = new ToolMacro<GraphContext>();
+    }
+    this.undoStepLvl++;
+  }
+
+  undoStepEnd(ctx: GraphContext): void {
+    this.undoStepLvl--;
+    if (this.undoStepLvl === 0 && this.pendingMacro) {
+      ctx.toolstack.execTool(ctx, this.pendingMacro);
+      this.pendingMacro = undefined;
+    }
+  }
+
+  check(ctx: GraphContext, edit: GraphEdit): EditVerdict {
     let value: unknown;
     try {
       value = ctx.api.getValue(ctx, edit.graphPath);
@@ -157,7 +260,15 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     return { ok: true };
   }
 
-  perform(ctx: ContextLike, edit: GraphEdit): void {
+  private execTool(ctx: GraphContext, tool: ToolOp): void {
+    if (this.undoStepLvl > 0) {
+      this.pendingMacro?.add(tool);
+    } else {
+      ctx.toolstack.execTool(ctx, tool);
+    }
+  }
+
+  perform(ctx: GraphContext, edit: GraphEdit): void {
     switch (edit.kind) {
       case "moveNode": {
         const tool = new MoveNodeOp();
@@ -165,7 +276,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        ctx.toolstack.execTool(ctx, tool);
+        this.execTool(ctx, tool);
         break;
       }
       case "addNode": {
@@ -174,14 +285,14 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.nodeType.setValue(edit.nodeType);
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        ctx.toolstack.execTool(ctx, tool);
+        this.execTool(ctx, tool);
         break;
       }
       case "deleteNode": {
         const tool = new DeleteNodeOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
-        ctx.toolstack.execTool(ctx, tool);
+        this.execTool(ctx, tool);
         break;
       }
       case "replaceNode": {
@@ -189,7 +300,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.newType.setValue(edit.newType);
-        ctx.toolstack.execTool(ctx, tool);
+        this.execTool(ctx, tool);
         break;
       }
       case "connect":
@@ -200,12 +311,12 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.srcSocket.setValue(edit.srcSocket);
         tool.inputs.dstNode.setValue(JSON.stringify(edit.dstNode));
         tool.inputs.dstSocket.setValue(edit.dstSocket);
-        ctx.toolstack.execTool(ctx, tool);
+        this.execTool(ctx, tool);
         break;
       }
       case "arrange":
       case "moveNodes": {
-        const macro = new ToolMacro<ContextLike>();
+        const macro = new ToolMacro<GraphContext>();
         for (const move of edit.moves) {
           const tool = new MoveNodeOp();
           tool.inputs.graphPath.setValue(edit.graphPath);
@@ -214,7 +325,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
           tool.inputs.y.setValue(move.y);
           macro.add(tool);
         }
-        ctx.toolstack.execTool(ctx, macro);
+        this.execTool(ctx, macro);
         break;
       }
       case "duplicateNode": {
@@ -232,7 +343,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
   }
 
   private _performDuplicate(
-    ctx: ContextLike,
+    ctx: GraphContext,
     edit: Extract<GraphEdit, { kind: "duplicateNode" }>
   ): void {
     const graph = this._graph(ctx, edit.graphPath);
@@ -241,7 +352,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
       return;
     }
 
-    const macro = new ToolMacro<ContextLike>();
+    const macro = new ToolMacro<GraphContext>();
 
     const addOp = new AddNodeOp();
     addOp.inputs.graphPath.setValue(edit.graphPath);
@@ -278,11 +389,11 @@ export class ToolOpDelegate implements NodeGraphDelegate {
       );
     }
 
-    ctx.toolstack.execTool(ctx, macro);
+    this.execTool(ctx, macro);
   }
 
   private _performExposure(
-    ctx: ContextLike,
+    ctx: GraphContext,
     edit: Extract<
       GraphEdit,
       { kind: "exposeEntry" | "reorderEntry" | "repointEntry" | "removeEntry" }
@@ -321,7 +432,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     void this._graph(ctx, edit.graphPath)?.groupSaver?.(edit.ref, edit.def);
   }
 
-  private _graph(ctx: ContextLike, path: string): Graph | undefined {
+  private _graph(ctx: GraphContext, path: string): Graph | undefined {
     let value: unknown;
     try {
       value = ctx.api.getValue(ctx, path);

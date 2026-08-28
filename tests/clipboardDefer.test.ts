@@ -13,7 +13,7 @@ let current: ClipboardStubs | undefined = undefined;
 
 function installStubs(state: PermissionState): ClipboardStubs {
   const read = vi.fn(() => Promise.resolve([]));
-  const listeners: Array<() => void> = [];
+  const listeners: (() => void)[] = [];
   const status = {
     state,
     addEventListener(_type: string, cb: () => void) {

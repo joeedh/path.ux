@@ -349,9 +349,9 @@ pathux.GraphNode {
   static getVersionSTRUCT(json: any) {
     return json.VERSION ?? 0;
   }
-  /** 
+  /**
    * To chain migrateSTRUCTs up the class hiearachy,
-   * wrap any field exclusions in a closure, e.g. 
+   * wrap any field exclusions in a closure, e.g.
    * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
    */
   static migrateSTRUCT(version: number, jsonOrObj: any, migrate: nstructjs.StructMigrateFinisher) {

@@ -240,7 +240,7 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   }
 
   override add(...args: unknown[]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (this.content as any).add(...args);
   }
 

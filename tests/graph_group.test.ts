@@ -271,7 +271,7 @@ test("resolveGroups refuses a self-instantiating group, directly and through an 
   g2.groupLoader = async (ref) => (ref === "x" ? defX : ref === "y" ? defY : undefined);
 
   const report2 = await g2.resolveGroups();
-  expect(report2.failed.some((f) => /cannot contain itself/.test(f.reason))).toBe(true);
+  expect(report2.failed.some((f) => f.reason.includes('cannot contain itself'))).toBe(true);
 });
 
 test("the self-containing arrangement is refused at link time with the same sentence", () => {

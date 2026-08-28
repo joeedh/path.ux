@@ -21,7 +21,7 @@ import {
 import type { NodeSocketBase } from "../../graph/socket";
 import { ExposedEntry, GroupDef, GroupNode } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
-import type { NodeGraphDelegate } from "./delegate";
+import type { GraphContext, NodeGraphDelegate } from "./delegate";
 
 export type ExposureState = "ok" | "unresolved" | "missing";
 
@@ -193,7 +193,7 @@ export function propEditRow<CTX extends IContextBase>(
 }
 
 export interface GroupDesignerOpts {
-  ctx: ContextLike;
+  ctx: GraphContext;
   def: GroupDef;
   ref: string;
   graphPath: string;

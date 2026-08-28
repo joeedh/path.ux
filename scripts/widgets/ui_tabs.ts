@@ -1077,7 +1077,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   on_pointerup(e: PointerEvent) {
     const pan = this._pan;
 
-    if (!pan || e.pointerId !== pan.pointerId) {
+    if (e.pointerId !== pan?.pointerId) {
       return;
     }
 
@@ -1127,7 +1127,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   _panMove(e: PointerEvent): boolean {
     const pan = this._pan;
 
-    if (!pan || e.pointerId !== pan.pointerId) {
+    if (e.pointerId !== pan?.pointerId) {
       return false;
     }
 
@@ -1449,7 +1449,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
     const contents = this._contentsWrapper;
     const shadow = this.parentWidget.shadow;
 
-    if (!contents || contents.parentNode !== shadow) {
+    if (contents?.parentNode !== shadow) {
       return;
     }
 
@@ -1968,7 +1968,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
 
       //no divider after the last tab of a row — there is nothing on the far side of it
       const after = this.tabs[ti + 1];
-      const lastInRow = after === undefined || after.row !== tab.row;
+      const lastInRow = after?.row !== tab.row;
 
       if (!lastInRow && prev !== this.tabs.active && next !== this.tabs.active) {
         g.save();

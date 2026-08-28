@@ -112,7 +112,7 @@ export function updateToolTips(elem: AnyUIBase): void {
     return;
   }
 
-  if (!elem.ctx || !elem.ctx.screen) {
+  if (!elem.ctx?.screen) {
     return;
   }
 

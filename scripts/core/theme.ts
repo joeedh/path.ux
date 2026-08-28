@@ -262,14 +262,14 @@ export const DefaultTheme = {
   },
 
   nodeframe: {
-    Width             : 140,
-    HeaderHeight      : 24,
-    SocketRowHeight   : 20,
-    "background-color": "rgba(248, 248, 248, 0.95)",
-    "border-color"    : "#b8b8b8",
-    "border-radius"   : 4,
-    HeaderBG          : "rgba(214, 214, 214, 0.95)",
-    SelectOutline     : "#e8930c",
+    Width               : 140,
+    HeaderHeight        : 24,
+    SocketRowHeight     : 20,
+    "background-color"  : "rgba(248, 248, 248, 0.95)",
+    "border-color"      : "#b8b8b8",
+    "border-radius"     : 4,
+    HeaderBG            : "rgba(214, 214, 214, 0.95)",
+    SelectOutline       : "#e8930c",
     DefaultText: new CSSFont({
       font   : "sans-serif",
       weight : "normal",
@@ -286,6 +286,9 @@ export const DefaultTheme = {
       size   : 11,
       color  : "rgba(35, 35, 35, 1.0)",
     }),
+    SocketHitExpand     : 5,
+    SocketHighlightColor: "rgba(200, 200, 255, 0.25)",
+    SocketErrorColor    : "rgba(255, 75, 0, 1.0)",
   },
 
   nodegraphview: {

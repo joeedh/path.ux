@@ -6,6 +6,9 @@ import {
   contextWrangler,
   nstructjs,
   nodegraph,
+  KeyMap,
+  HotKey,
+  keymap,
 } from "../../pathux.js";
 import type { IAreaDef } from "../../pathux.js";
 import { DEMO_GRAPH_PATH, DEMO_GROUP_DEF_PATH } from "./demo_nodes.js";
@@ -44,6 +47,19 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
 
     // group instances render unresolved until the stub loader answers.
     void nodegraph.resolveGroups().then(() => this.view.syncGraph());
+  }
+
+  constructor() {
+    super();
+    const keyMap = new KeyMap([
+      new HotKey("Delete", [], () => {
+        this.view.deleteSelected();
+      }),
+      new HotKey("D", ["shift"], () => {
+        this.view.duplicateSelected();
+      }),
+    ]);
+    this.keymap = keyMap;
   }
 
   init() {

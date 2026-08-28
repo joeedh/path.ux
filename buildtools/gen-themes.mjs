@@ -177,7 +177,7 @@ function ownDefine(cls) {
 function resolveStyleClass(cls, UIBase) {
   for (const c of staticChain(cls, UIBase)) {
     const def = ownDefine(c);
-    if (def && def.style) return def.style;
+    if (def?.style) return def.style;
   }
   return "base";
 }
@@ -185,7 +185,7 @@ function resolveStyleClass(cls, UIBase) {
 function resolveParentStyle(cls, UIBase) {
   for (const c of staticChain(cls, UIBase)) {
     const def = ownDefine(c);
-    if (def && def.parentStyle) return def.parentStyle;
+    if (def?.parentStyle) return def.parentStyle;
   }
   return undefined;
 }
@@ -219,7 +219,7 @@ function collectDeclared(cls, UIBase) {
   };
   for (const c of chain) {
     const def = ownDefine(c);
-    if (def && def.theme && typeof def.theme === "object") deepMerge(merged, def.theme);
+    if (def?.theme && typeof def.theme === "object") deepMerge(merged, def.theme);
   }
   return merged;
 }
@@ -296,7 +296,7 @@ function resolveClass(cls, ctx) {
   // declares them, so a subclass isn't blamed for a parent's keys.
   const ownDef = ownDefine(cls);
   const ownDeclared =
-    ownDef && ownDef.theme && typeof ownDef.theme === "object" ? ownDef.theme : {};
+    ownDef?.theme && typeof ownDef.theme === "object" ? ownDef.theme : {};
   const known = new Set([
     ...styleKeySet(ctx, "base"),
     ...(parentStyle ? styleKeySet(ctx, parentStyle) : []),

@@ -64,7 +64,7 @@ function makeCtx(graph: Graph) {
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   ctx.toolstack = new ToolStack(ctx);
@@ -75,7 +75,7 @@ function id(n: Node): string {
   return JSON.stringify(n.id);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function addNode(ctx: any, type: string, x = 0, y = 0): Node {
   const tool = new AddNodeOp();
   tool.inputs.graphPath.setValue("graph");
@@ -86,7 +86,7 @@ function addNode(ctx: any, type: string, x = 0, y = 0): Node {
   return ctx.graph.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue()))!;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function connect(ctx: any, src: Node, srcKey: string, dst: Node, dstKey: string): void {
   const tool = new ConnectOp();
   tool.inputs.graphPath.setValue("graph");

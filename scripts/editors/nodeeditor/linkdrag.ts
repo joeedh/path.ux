@@ -5,9 +5,9 @@ import { IContextBase } from "../../core/context_base";
 import "./linkcanvas";
 import type { LinkCanvas } from "./linkcanvas";
 import type { NodeGraphView } from "./nodegraphview";
-import type { NodeFrame } from "./nodeframe";
+import type { NodeFrame, TerminalDot } from "./nodeframe";
 import { socketAnchor, socketRow } from "./nodeframe";
-import type { Node as GraphNode } from "../../graph/node";
+import { Node as GraphNode } from "../../graph/node";
 import type { NodeSocketBase } from "../../graph/socket";
 import type { GraphId, SocketDir } from "../../graph/graph_types";
 import type { GraphEdit } from "./delegate";
@@ -46,6 +46,7 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     | undefined = undefined;
   private _overlay: LinkCanvas<CTX> | undefined = undefined;
   private _dimmed: HTMLElement[] = [];
+  private _highlight?: TerminalDot<CTX>;
 
   constructor(view: NodeGraphView<CTX>) {
     this.view = view;
@@ -103,6 +104,24 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     const dpi = UIBase.getDPI();
     overlay.resize(Math.max(r.width, 1), Math.max(r.height, 1), dpi);
 
+    const target = this._nearestTarget(local);
+    let targetDot: TerminalDot<CTX> | undefined;
+    if (target?.ok) {
+      targetDot = target.frame.terminalDot(target.key, this.targetDir);
+    }
+
+    if (targetDot !== this._highlight) {
+      if (this._highlight) {
+        this._highlight.forceHighlight = false;
+        this._highlight.showError = false;
+      }
+
+      if (targetDot !== undefined) {
+        targetDot.forceHighlight = true;
+      }
+      this._highlight = targetDot;
+    }
+
     const seg =
       origin.dir === "out"
         ? { x1: a[0], y1: a[1], x2: local[0], y2: local[1] }
@@ -123,8 +142,7 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
 
     if (detach !== undefined) {
       const backOnOrigin =
-        target !== undefined &&
-        target.frame.node.id === detach.dstNode &&
+        target?.frame.node.id === detach.dstNode &&
         target.key === detach.dstSocket;
       if (backOnOrigin) {
         return;
@@ -174,13 +192,17 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
   private _targetOk(frame: NodeFrame<CTX>, key: string): boolean {
     const origin = this._origin!;
     const edit = this._connectEdit(origin, { frame, key, ok: true });
-    return this.view.delegate.check(this.view.ctx, edit).ok;
+    return this.view.delegate.check(this.view.graphContext, edit).ok;
+  }
+
+  private get targetDir(): "in" | "out" {
+    return this._origin?.dir === "out" ? "in" : "out";
   }
 
   /** The opposite-direction terminal nearest to local, within LINK_DROP_PX. */
   private _nearestTarget(local: readonly [number, number]): DropTarget<CTX> | undefined {
     const origin = this._origin!;
-    const targetDir: SocketDir = origin.dir === "out" ? "in" : "out";
+    const targetDir = this.targetDir;
     const tf = this.view.panzoom.transform;
 
     let best: DropTarget<CTX> | undefined;
@@ -204,8 +226,8 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
   }
 
   private _dispatch(edit: GraphEdit): void {
-    if (this.view.delegate.check(this.view.ctx, edit).ok) {
-      this.view.delegate.perform(this.view.ctx, edit);
+    if (this.view.delegate.check(this.view.graphContext, edit).ok) {
+      this.view.delegate.perform(this.view.graphContext, edit);
     }
   }
 
@@ -251,5 +273,9 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     this._overlay = undefined;
     this._origin = undefined;
     this._detach = undefined;
+    if (this._highlight) {
+      this._highlight.forceHighlight = false;
+      this._highlight.showError = false;
+    }
   }
 }

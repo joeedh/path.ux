@@ -23,7 +23,7 @@ import type { FrameMove } from "./nodeframe";
 import { linkDistance } from "./linkcanvas";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { ToolOpDelegate } from "./delegate";
-import type { GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
+import type { GraphContext, GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
 import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
 import { buildAddNodeMenu } from "./addmenu";
@@ -48,12 +48,14 @@ export interface LinkRef {
 }
 
 /** Screen-pixel radius within which a press picks a link. */
-export const LINK_PICK_PX = 8;
+export const LINK_PICK_PX = 18;
 
 /** Identifies a link across a rebuild, for the view's link selection. */
 export function linkKey(ref: LinkRef): string {
   return JSON.stringify([ref.srcNode, ref.srcSocket, ref.dstNode, ref.dstSocket]);
 }
+
+type ViewGraphContext<CTX extends IContextBase> = CTX & GraphContext;
 
 /**
  * Main node node graph widget. It is a plain internally-registered widget, so any
@@ -66,6 +68,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   CTX,
   "NodeGraphView"
 > {
+  declare graphContext: ViewGraphContext<CTX>;
   delegate: NodeGraphDelegate = new ToolOpDelegate();
 
   /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
@@ -112,8 +115,81 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     };
   }
 
+  private wrapGraphContext(ctx: any) {
+    const handlers = {
+      toLocked:
+        this.ctx.toLocked !== undefined
+          ? () => {
+              return this.wrapGraphContext(this.ctx.toLocked!());
+            }
+          : undefined,
+      selectNodes: (ids: GraphId[]) => {
+        for (const id of ids) {
+          this.selection.add(id);
+        }
+      },
+      deselectNodes: (ids: GraphId[]) => {
+        for (const id of ids) {
+          this.selection.delete(id);
+        }
+      },
+      selectLinks: (ids: string[]) => {
+        for (const id of ids) {
+          this.linkSelection.add(id as string);
+        }
+      },
+      deselectLinks: (ids: string[]) => {
+        for (const id of ids) {
+          this.linkSelection.delete(id as string);
+        }
+      },
+      clearSelection: () => {
+        this.selection.clear();
+        this.linkSelection.clear();
+      },
+      selectAll: () => {
+        // TODO: links? not sure
+
+        const currentGraph = this.currentGraph;
+        if (currentGraph === undefined) {
+          return;
+        }
+        this.selection.clear();
+        for (const node of currentGraph.nodes) {
+          this.selection.add(node.id);
+        }
+      },
+    };
+
+    return new Proxy(ctx, {
+      get: (target: any, prop: string | symbol) => {
+        if (prop in handlers) {
+          return (handlers as any)[prop];
+        }
+        return target[prop];
+      },
+      set: (target: any, prop: string | symbol, value: any) => {
+        if (prop in handlers) {
+          return false;
+        }
+        target[prop] = value;
+        return true;
+      },
+    }) as unknown as ViewGraphContext<CTX>;
+  }
+
+  private checkGraphContext() {
+    if (this.graphContext) {
+      return;
+    }
+
+    this.graphContext = this.wrapGraphContext(this.ctx);
+  }
+
   init() {
     super.init();
+
+    this.checkGraphContext();
 
     this.style.display = "flex";
     this.style.flexDirection = "column";
@@ -426,7 +502,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   private _clickFrame(frame: NodeFrame<CTX>) {
     const pending = this._pendingSelect;
     this._pendingSelect = undefined;
-    if (pending === undefined || pending.id !== frame.node.id) {
+    if (pending?.id !== frame.node.id) {
       return;
     }
 
@@ -474,7 +550,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   private _previewMove(frames: readonly NodeFrame<CTX>[]) {
     for (const frame of frames) {
       const pos = frame.previewPos ?? frame.node.pos;
-      const verdict = this.delegate.check(this.ctx, this._moveEdit(frame, pos[0], pos[1]));
+      const verdict = this.delegate.check(this.graphContext, this._moveEdit(frame, pos[0], pos[1]));
       frame.style.opacity = verdict.ok ? "" : "0.5";
     }
     this._redrawLinks();
@@ -493,7 +569,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     } else if (moves.length > 1) {
       const accepted: NodeMove[] = [];
       for (const move of moves) {
-        if (this.delegate.check(this.ctx, this._moveEdit(move.frame, move.x, move.y)).ok) {
+        if (this.delegate.check(this.graphContext, this._moveEdit(move.frame, move.x, move.y)).ok) {
           accepted.push({ nodeId: move.frame.node.id, x: move.x, y: move.y });
         }
       }
@@ -512,8 +588,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   /** Dispatches an edit through the delegate, check first. */
   private _dispatch(edit: GraphEdit) {
-    if (this.delegate.check(this.ctx, edit).ok) {
-      this.delegate.perform(this.ctx, edit);
+    this.checkGraphContext();
+    if (this.delegate.check(this.graphContext, edit).ok) {
+      this.delegate.perform(this.graphContext, edit);
     }
   }
 
@@ -577,35 +654,68 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     startMenu(menu as unknown as Menu, r.x + local[0], r.y + local[1], searchMode);
   }
 
+  // TODO: make this into a using keyword instead
+  // of using a closure pattern to do RAII
+  singleUndoStep<T = any>(cb: () => T): T {
+    let result: T;
+    try {
+      this.delegate.undoStepBegin(this.graphContext);
+      result = cb();
+    } finally {
+      this.delegate.undoStepEnd(this.graphContext);
+    }
+    return result;
+  }
+
   /** Deletes the selected nodes and severs the selected links. */
   deleteSelected() {
-    for (const ref of this.selectedLinks()) {
-      this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
-    }
-    this.linkSelection.clear();
+    this.singleUndoStep(() => {
+      for (const ref of this.selectedLinks()) {
+        this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+      }
+      this.linkSelection.clear();
 
-    for (const nid of [...this.selection]) {
-      this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-    }
-    this.syncGraph();
+      for (const nid of [...this.selection]) {
+        this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+      }
+      this.syncGraph();
+    });
   }
 
   duplicateSelected() {
-    const graph = this.currentGraph;
-    for (const nid of [...this.selection]) {
-      const node = graph?.nodeIdMap.get(nid);
-      if (node === undefined) {
-        continue;
-      }
-      this._dispatch({
-        kind     : "duplicateNode",
-        graphPath: this.currentGraphPath,
-        nodeId   : nid,
-        x        : node.pos[0] + 20,
-        y        : node.pos[1] + 20,
-      });
+    if (!this.currentGraph) {
+      return;
     }
+
+    const existingNodes = new Set(Array.from(this.currentGraph.nodes).map((n) => n.id));
+
+    this.singleUndoStep(() => {
+      const graph = this.currentGraph;
+      const selection = Array.from(this.selection);
+      this.selection.clear();
+
+      for (const nid of selection) {
+        const node = graph?.nodeIdMap.get(nid);
+        if (node === undefined) {
+          continue;
+        }
+        this._dispatch({
+          kind     : "duplicateNode",
+          graphPath: this.currentGraphPath,
+          nodeId   : nid,
+          x        : node.pos[0] + 20,
+          y        : node.pos[1] + 20,
+        });
+      }
+    });
     this.syncGraph();
+
+    // select new nodes
+    for (const node of this.currentGraph!.nodes) {
+      if (!existingNodes.has(node.id)) {
+        this.selection.add(node.id);
+      }
+    }
   }
 
   replaceNode(nodeId: GraphId, newType: string) {

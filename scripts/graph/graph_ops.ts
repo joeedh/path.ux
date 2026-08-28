@@ -8,6 +8,7 @@ import type { Node, NodePropName } from "./node";
 import { definitionOfSubgraph } from "./group";
 import type { ExposedEntry } from "./group";
 import type { GraphId } from "./graph_types";
+import { GraphContext } from "../pathux";
 
 /** Resolves a graphPath input to its Graph, throwing when the path lands elsewhere. */
 function graphAt(ctx: ContextLike, path: string): Graph {
@@ -183,7 +184,7 @@ export class AddNodeOp extends ToolOp<
   /** Nothing to record: undo removes the node outputs.nodeId names. */
   override undoPre(_ctx: ContextLike): void {}
 
-  override exec(ctx: ContextLike): void {
+  override exec(ctx: GraphContext): void {
     const graph = graphAt(ctx, this.inputs.graphPath.getValue());
 
     const typeName = this.inputs.nodeType.getValue();
@@ -203,6 +204,7 @@ export class AddNodeOp extends ToolOp<
     graph.add(node);
     this.outputs.nodeId.setValue(JSON.stringify(node.id));
     notifyGraph(ctx, this);
+    ctx.selectNodes([node.id]);
   }
 
   override undo(ctx: ContextLike): void {
