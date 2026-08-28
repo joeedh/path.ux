@@ -412,10 +412,18 @@ pathux.GraphNode {
         continue;
       }
 
-      if (defSock.mergeDefaultProp) {
+      // A socket with useDefaultValue false never reads its defaultProp; it carries one only
+      // because copyTo/serialization now require every socket to have one. getValue() on such
+      // a socket returns undefined, and restoring that through setValue below would corrupt the
+      // placeholder's own value, so it is left alone entirely.
+      if (defSock.mergeDefaultProp && sock.useDefaultValue) {
         const value = sock.getValue();
+        const wasSet = sock.defaultProp.wasSet;
         defSock.defaultProp.copyTo(sock.defaultProp);
         sock.defaultProp.setValue(value);
+        // setValue above exists only to restore the value copyTo just overwrote with the
+        // definition's own default; it must not make an untouched load look user-edited.
+        sock.defaultProp.wasSet = wasSet;
       }
     }
     return socks;
