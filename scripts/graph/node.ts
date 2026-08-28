@@ -11,6 +11,7 @@ import { NodeSocketBase } from "./socket";
 import type { Graph, GroupResolveRuntime } from "./graph";
 import type { Color, GraphId, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
+import { GRAPH_SCHEMA_VERSION } from "./types";
 
 export type Sockets = Record<string, NodeSocketBase>;
 
@@ -124,6 +125,7 @@ pathux.GraphNode {
   props       : array(abstract(ToolProperty)) | this._propList();
   inputs      : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.inputs);
   outputs     : array(abstract(pathux.NodeSocketBase)) | this._socketList(this.outputs);
+  VERSION     : int;
 }
 `
   );
@@ -137,6 +139,8 @@ pathux.GraphNode {
 
   inputs: Inputs;
   outputs: Outputs;
+
+  VERSION = GRAPH_SCHEMA_VERSION;
 
   public get allSockets() {
     return Object.values(this.inputs).concat(Object.values(this.outputs));
@@ -342,7 +346,24 @@ pathux.GraphNode {
     return Object.values(socks);
   }
 
+  static getVersionSTRUCT(json: any) {
+    return json.VERSION ?? 0;
+  }
+  /** 
+   * To chain migrateSTRUCTs up the class hiearachy,
+   * wrap any field exclusions in a closure, e.g. 
+   * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
+   */
+  static migrateSTRUCT(version: number, jsonOrObj: any, migrate: nstructjs.StructMigrateFinisher) {
+    if (!jsonOrObj.VERSION) {
+      jsonOrObj.VERSION = 0;
+    }
+    migrate();
+    jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;
+  }
+
   loadSTRUCT(reader: StructReader<this>): void {
+    this.VERSION = 0; // in case we don't have a VERSION written in json
     reader(this);
 
     // GraphId is number | string; the STRUCT field carries it JSON-encoded so the two stay distinct.

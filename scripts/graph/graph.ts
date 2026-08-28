@@ -6,8 +6,8 @@ import type { NodeSocketBase } from "./socket";
 import type { GraphId } from "./graph_types";
 import { NO_ID } from "./graph_types";
 import type { GroupDef, GroupNode } from "./group";
+import {GRAPH_SCHEMA_VERSION} from './types'
 
-const GRAPH_VERSION = 1.0;
 
 /**
  * One serialized edge. Direction is implied by position: srcKey names a record key in
@@ -92,7 +92,7 @@ pathux.Graph {
 `
   );
 
-  VERSION = GRAPH_VERSION;
+  VERSION = GRAPH_SCHEMA_VERSION;
 
   nodes: Node[] = [];
   nodeIdMap = new Map<GraphId, Node>();
@@ -431,7 +431,7 @@ pathux.Graph {
     }
     this.links = [];
 
-    this.VERSION = GRAPH_VERSION;
+    this.VERSION = GRAPH_SCHEMA_VERSION;
     this.flagSortDirty();
   }
 }

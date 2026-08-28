@@ -7,6 +7,7 @@ import type { Container } from "../core/ui";
 import type { Color, GraphId, ISocketOwner, SocketDir } from "./graph_types";
 import { NO_ID } from "./graph_types";
 import type { NodePropName } from "./node";
+import { GRAPH_SCHEMA_VERSION } from './types';
 
 /** Per-type description a socket class returns from its static socketDef(). */
 export interface SocketTypeDef {
@@ -47,6 +48,7 @@ pathux.NodeSocketBase {
   dir          : string;
   multiSocket  : bool;
   defaultProp  : abstract(ToolProperty);
+  VERSION      : int;
 }
 `
   );
@@ -55,6 +57,7 @@ pathux.NodeSocketBase {
     return { typeName: "NodeSocketBase", type: "" };
   }
 
+  VERSION = GRAPH_SCHEMA_VERSION;
   socketId: GraphId = NO_ID;
 
   /** The record key this socket sits under in its owning node's inputs or outputs. */
@@ -353,18 +356,49 @@ pathux.NodeSocketBase {
     }
   }
 
+
+  static getVersionSTRUCT(jsonOrObj: any): number {
+    return jsonOrObj.VERSION ?? 0;
+  }
+
+  /** 
+   * To chain migrateSTRUCTs up the class hiearachy,
+   * wrap any field exclusions in a closure, e.g. 
+   * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
+   */
+  static migrateSTRUCT(version: number, jsonOrObj: any, migrate: nstructjs.StructMigrateFinisher) {
+    const haveDefaultProp = Boolean(jsonOrObj.defaultProp);
+    if (!jsonOrObj.defaultProp) {
+      const defaultProp = new this().defaultProp;
+
+      if (jsonOrObj instanceof this) {
+        jsonOrObj.defaultProp = defaultProp;
+      } else {
+        jsonOrObj.defaultProp = nstructjs.writeJSON(defaultProp);
+        // set type index key.
+        // XXX if ToolProperty ever gets a formal type index get we'll 
+        // have to change _structName.
+        jsonOrObj.defaultProp._structName = (defaultProp.constructor as any).structName;
+      }
+    }
+    if (jsonOrObj.VERSION === undefined) {
+      jsonOrObj.VERSION = 0;
+    }
+
+    // a defaultProp built just above already matches the current class, so it has nothing to migrate
+    migrate(haveDefaultProp ? undefined : ['defaultProp'])
+
+
+    jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;
+  }
+
   loadSTRUCT(reader: StructReader<this>): void {
-    const existingDefault = this.defaultProp;
+    this.VERSION = 0; // old files may not load this properly
     reader(this);
 
     // GraphId is number | string; the STRUCT field carries it JSON-encoded so the two stay distinct.
     this.socketId = JSON.parse(this.socketId as unknown as string) as GraphId;
     this.dir = this.dir === "out" ? "out" : "in";
-
-    if (this.defaultProp === undefined) {
-      // old files
-      this.defaultProp = existingDefault;
-    }
   }
 }
 
