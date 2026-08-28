@@ -54,8 +54,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       nstructjs:
-        specifier: ^0.8.7
-        version: 0.8.7
+        specifier: ^0.8.12
+        version: 0.8.12
       nw:
         specifier: 0.112.0-sdk
         version: 0.112.0-sdk
@@ -774,10 +774,6 @@ packages:
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
 
-  almond@0.3.3:
-    resolution: {integrity: sha512-Eh5QhyxrKnTI0OuGpwTRvzRrnu1NF3F2kbQJRwpXj/uMy0uycwqw2/RhdDrD1cBTD1JFFHFrxGIU8HQztowR0g==}
-    engines: {node: '>=0.4.0'}
-
   ansi-red@0.1.1:
     resolution: {integrity: sha512-ewaIr5y+9CUTGFwZfpECUbFlGcC0GCw1oqR9RI6h1gQCd9Aj2GxSckCnPsVJnmfMZbwFYE+leZGASgkWl06Jow==}
     engines: {node: '>=0.10.0'}
@@ -1344,8 +1340,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  nstructjs@0.8.7:
-    resolution: {integrity: sha512-7ctMcZ1bX08CbfPCpUC9aFV52s8V3ZLW1RVedAMs0RESDLlbynv5sBBa8Z9tbzRaKrgQ9Aa2iMsoKyZAT7OCHQ==}
+  nstructjs@0.8.12:
+    resolution: {integrity: sha512-Y+9M4+qvNRKxsb1J+1dpYXgBDI/oiqg1ZzE2qzRdZxzBwNvzV4NUk5yEDCIIqP7Dt09SMUgjBjTg82EV2QwlQw==}
 
   nw@0.112.0-sdk:
     resolution: {integrity: sha512-o7D7EBDMe+E5LW3vjbaOHA5K1HJGfVItxeX7O415Md5mlc7XCQpD1c8VK2tsAf01iefCXrHY3Dbs85f69ndP5Q==}
@@ -2328,8 +2324,6 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  almond@0.3.3: {}
-
   ansi-red@0.1.1:
     dependencies:
       ansi-wrap: 0.1.0
@@ -2858,11 +2852,10 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  nstructjs@0.8.7:
+  nstructjs@0.8.12:
     dependencies:
       acorn: 7.4.1
       acorn-walk: 7.2.0
-      almond: 0.3.3
 
   nw@0.112.0-sdk:
     dependencies:
