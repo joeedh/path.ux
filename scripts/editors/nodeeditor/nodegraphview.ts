@@ -22,7 +22,7 @@ import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
 import type { FrameMove } from "./nodeframe";
 import { linkDistance } from "./linkcanvas";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
-import { ToolOpDelegate } from "./delegate";
+import { AsyncGateOp, ToolOpDelegate } from "./delegate";
 import type { GraphContext, GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
 import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
@@ -656,58 +656,65 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   // TODO: make this into a using keyword instead
   // of using a closure pattern to do RAII
-  singleUndoStep<T = any>(cb: () => T): T {
-    let result: T;
-    try {
-      this.delegate.undoStepBegin(this.graphContext);
-      result = cb();
-    } finally {
-      this.delegate.undoStepEnd(this.graphContext);
-    }
-    return result;
+  async singleUndoStep<T = any>(cb: () => T, shortLabel = "Edit", message = "Edit"): Promise<T> {
+    const gate = new AsyncGateOp<ViewGraphContext<CTX>>().init(
+      this.delegate,
+      shortLabel,
+      message,
+      cb
+    );
+    return (await gate.modalStart(this.graphContext)) as T;
   }
 
   /** Deletes the selected nodes and severs the selected links. */
-  deleteSelected() {
-    this.singleUndoStep(() => {
-      for (const ref of this.selectedLinks()) {
-        this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
-      }
-      this.linkSelection.clear();
+  async deleteSelected(): Promise<void> {
+    await this.singleUndoStep(
+      () => {
+        for (const ref of this.selectedLinks()) {
+          this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+        }
+        this.linkSelection.clear();
 
-      for (const nid of [...this.selection]) {
-        this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-      }
-      this.syncGraph();
-    });
+        for (const nid of [...this.selection]) {
+          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+        }
+        this.syncGraph();
+      },
+      "Delete",
+      "Delete selected nodes"
+    );
   }
 
-  duplicateSelected() {
+  async duplicateSelected(): Promise<void> {
     if (!this.currentGraph) {
       return;
     }
 
     const existingNodes = new Set(Array.from(this.currentGraph.nodes).map((n) => n.id));
 
-    this.singleUndoStep(() => {
-      const graph = this.currentGraph;
-      const selection = Array.from(this.selection);
-      this.selection.clear();
+    await this.singleUndoStep(
+      () => {
+        const graph = this.currentGraph;
+        const selection = Array.from(this.selection);
+        this.selection.clear();
 
-      for (const nid of selection) {
-        const node = graph?.nodeIdMap.get(nid);
-        if (node === undefined) {
-          continue;
+        for (const nid of selection) {
+          const node = graph?.nodeIdMap.get(nid);
+          if (node === undefined) {
+            continue;
+          }
+          this._dispatch({
+            kind     : "duplicateNode",
+            graphPath: this.currentGraphPath,
+            nodeId   : nid,
+            x        : node.pos[0] + 20,
+            y        : node.pos[1] + 20,
+          });
         }
-        this._dispatch({
-          kind     : "duplicateNode",
-          graphPath: this.currentGraphPath,
-          nodeId   : nid,
-          x        : node.pos[0] + 20,
-          y        : node.pos[1] + 20,
-        });
-      }
-    });
+      },
+      "Duplicate",
+      "Duplicate selected nodes"
+    );
     this.syncGraph();
 
     // select new nodes

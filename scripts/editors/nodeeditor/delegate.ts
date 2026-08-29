@@ -98,12 +98,15 @@ export type GraphContext = ContextLike & {
  * dispatches the graph module's ToolOps; a host with its own command system
  * installs a delegate that routes edits there instead. A check verdict must
  * match what perform would decide, so a refusal can show mid-gesture.
+ * undoStepBegin/undoStepEnd bracket a whole gesture (e.g. delete, duplicate)
+ * and may await real async work (a host opening/closing its own checkpoint);
+ * perform stays synchronous.
  */
 export interface NodeGraphDelegate {
-  undoStepBegin(ctx: GraphContext): void;
+  undoStepBegin(ctx: GraphContext, shortLabel: string, message: string): Promise<void>;
   check(ctx: GraphContext, edit: GraphEdit): EditVerdict;
   perform(ctx: GraphContext, edit: GraphEdit): void;
-  undoStepEnd(ctx: GraphContext): void;
+  undoStepEnd(ctx: GraphContext): Promise<void>;
 }
 
 /** The exposure kinds edit a group definition rather than the resolved graph. */
@@ -177,6 +180,70 @@ export class SelectOp<CTX extends GraphContext = GraphContext> extends ToolOp<
 */
 
 /**
+ * Locks pointer/keyboard input while an async undo step (delegate.undoStepBegin,
+ * cb, delegate.undoStepEnd) is in flight, so a second gesture can't open a
+ * competing checkpoint before the first one closes. The base modal promise
+ * (`ToolOp.modalStart`) always resolves, never rejects, so this class captures
+ * cb's own outcome and rethrows it once the lock releases.
+ */
+export class AsyncGateOp<CTX extends GraphContext = GraphContext> extends ToolOp<{}, {}, CTX, CTX> {
+  private stepDelegate!: NodeGraphDelegate;
+  private shortLabel = "";
+  private message = "";
+  private cb!: () => unknown;
+  private result: unknown;
+  private caughtError: unknown;
+  private failed = false;
+
+  static tooldef() {
+    return {
+      toolpath   : "pathux.graph.async_gate",
+      uiname     : "Async Undo Gate",
+      description: "Locks input while an async undo step runs.",
+      is_modal   : true,
+      inputs     : {},
+      outputs    : {},
+    };
+  }
+
+  init(delegate: NodeGraphDelegate, shortLabel: string, message: string, cb: () => unknown): this {
+    this.stepDelegate = delegate;
+    this.shortLabel = shortLabel;
+    this.message = message;
+    this.cb = cb;
+    return this;
+  }
+
+  override on_keydown(_e: KeyboardEvent): void {
+    // Escape must not release the lock while the async step is still pending
+  }
+
+  override modalStart(ctx: CTX): Promise<unknown> {
+    const gate = super.modalStart(ctx);
+    void this.run(ctx);
+    return gate.then(() => {
+      if (this.failed) {
+        throw this.caughtError;
+      }
+      return this.result;
+    });
+  }
+
+  private async run(ctx: CTX): Promise<void> {
+    try {
+      await this.stepDelegate.undoStepBegin(ctx, this.shortLabel, this.message);
+      this.result = await this.cb();
+    } catch (err) {
+      this.failed = true;
+      this.caughtError = err;
+    } finally {
+      await this.stepDelegate.undoStepEnd(ctx);
+      this.modalEnd();
+    }
+  }
+}
+
+/**
  * The default delegate. check consults the graph's own refusal — every
  * graph-mutating kind is a structural edit, so it is refused inside a group
  * instance's subgraph — plus per-kind feasibility (a connect's sockets must
@@ -190,14 +257,14 @@ export class ToolOpDelegate implements NodeGraphDelegate {
   private undoStepLvl = 0;
   private pendingMacro?: ToolMacro<GraphContext>;
 
-  undoStepBegin(ctx: GraphContext): void {
+  async undoStepBegin(ctx: GraphContext, _shortLabel: string, _message: string): Promise<void> {
     if (this.undoStepLvl === 0) {
       this.pendingMacro = new ToolMacro<GraphContext>();
     }
     this.undoStepLvl++;
   }
 
-  undoStepEnd(ctx: GraphContext): void {
+  async undoStepEnd(ctx: GraphContext): Promise<void> {
     this.undoStepLvl--;
     if (this.undoStepLvl === 0 && this.pendingMacro) {
       ctx.toolstack.execTool(ctx, this.pendingMacro);

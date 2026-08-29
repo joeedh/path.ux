@@ -585,13 +585,15 @@ same ops from its toolmodes' pointerdown handlers.
 `deleteSelected()` and `duplicateSelected()` act on the current selection.
 `selection` is a `Set` of node ids and `linkSelection` a `Set` of link keys;
 `deleteSelected()` severs the selected links and deletes the selected nodes,
-while `duplicateSelected()` ignores the link selection. Both run inside
-`view.singleUndoStep(cb)`, which brackets `cb` with the delegate's
-`undoStepBegin`/`undoStepEnd` so every edit a multi-node delete or duplicate
-dispatches lands as one undo entry rather than one per node.
-`duplicateSelected()` additionally clears the selection before dispatching
-and, once every duplicate exists, selects the new nodes in place of the
-originals.
+while `duplicateSelected()` ignores the link selection. Both are `async` and
+run inside `await view.singleUndoStep(cb, shortLabel?, message?)`, which
+brackets `cb` with the delegate's `undoStepBegin`/`undoStepEnd` so every edit
+a multi-node delete or duplicate dispatches lands as one undo entry rather
+than one per node — `shortLabel`/`message` pass through to `undoStepBegin`
+for a host delegate that names the batch (a checkpoint's commit message, for
+one). `duplicateSelected()` additionally clears the selection before
+dispatching and, once every duplicate exists, selects the new nodes in place
+of the originals.
 
 ### Group descent
 
@@ -618,10 +620,10 @@ routed through the view's `delegate`:
 
 ```ts
 interface NodeGraphDelegate {
-  undoStepBegin(ctx: GraphContext): void;
+  undoStepBegin(ctx: GraphContext, shortLabel: string, message: string): Promise<void>;
   check(ctx: GraphContext, edit: GraphEdit): EditVerdict; // { ok: true } | { ok: false; reason }
   perform(ctx: GraphContext, edit: GraphEdit): void;
-  undoStepEnd(ctx: GraphContext): void;
+  undoStepEnd(ctx: GraphContext): Promise<void>;
 }
 ```
 
@@ -649,19 +651,33 @@ duplicates selected. `selectSockets`/`deselectSockets` are declared on
 `undoStepBegin`/`undoStepEnd` bracket a gesture that dispatches more than one
 edit (`view.singleUndoStep`, used by `deleteSelected()` and
 `duplicateSelected()`), so a delegate that wants those edits to land as one
-undo entry has somewhere to open and close a batch. The default
-`ToolOpDelegate` opens a `ToolMacro` on the first nested call and executes it
-on the last; `addNode`, `deleteNode`, `moveNode` and the rest still dispatch
-individually outside a `singleUndoStep`, each its own undo entry, and
-`arrange`/`duplicateNode` still run as their own single-edit `ToolMacro`
-regardless. A host with its own command system replaces the whole delegate
-and routes the same edits there instead — the view never writes the graph
-itself — but every implementation now needs all four methods; two that
+undo entry has somewhere to open and close a batch. Both hooks return a real
+`Promise<void>` — a host delegate can `await` genuine async work there (for
+instance, opening and closing its own command-system checkpoint) — and
+`singleUndoStep`/`deleteSelected`/`duplicateSelected` are themselves `async`
+because of it: `await` always defers past the current synchronous turn, even
+against an already-resolved promise, so there is no way to keep these
+looking synchronous once a delegate hook does real async work. While one is
+in flight, `singleUndoStep` holds a modal input lock (`AsyncGateOp`) so a
+second gesture can't open a competing batch before the first one closes;
+`AsyncGateOp` overrides `on_keydown` to a no-op so Escape can't release that
+lock mid-flight. `cb`'s own success or failure survives the lock: `cb`
+throwing rejects the promise `singleUndoStep` returns, after `undoStepEnd`
+still runs.
+
+The default `ToolOpDelegate` opens a `ToolMacro` on the first nested call and
+executes it on the last, wrapped in an already-resolved promise since none of
+that work is actually async; `addNode`, `deleteNode`, `moveNode` and the rest
+still dispatch individually outside a `singleUndoStep`, each its own undo
+entry, and `arrange`/`duplicateNode` still run as their own single-edit
+`ToolMacro` regardless. A host with its own command system replaces the whole
+delegate and routes the same edits there instead — the view never writes the
+graph itself — but every implementation now needs all four methods; two that
 previously implemented only `check`/`perform` must add `undoStepBegin`/
-`undoStepEnd`, even as no-ops, or the object no longer satisfies
-`NodeGraphDelegate`. A delegate with no batched command of its own (each
-dispatch is already its own atomic write, as the exposure kinds are) can
-leave both as empty functions.
+`undoStepEnd`, even as no-ops resolving immediately, or the object no longer
+satisfies `NodeGraphDelegate`. A delegate with no batched command of its own
+(each dispatch is already its own atomic write, as the exposure kinds are)
+can leave both as `async` no-ops.
 
 ## The editor Area
 
@@ -892,9 +908,9 @@ class NodeGraphView<CTX> extends Container<CTX> {
   syncGraph(): void; // reconcile frames after external changes
   addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
   openAddMenu(local: readonly [number, number]): Menu<CTX>; // started as a screen popup when ctx has a screen
-  singleUndoStep<T>(cb: () => T): T; // brackets cb with delegate.undoStepBegin/undoStepEnd
-  deleteSelected(): void; // severs the selected links too; one undo step
-  duplicateSelected(): void; // one undo step; ends with the duplicates selected
+  singleUndoStep<T>(cb: () => T, shortLabel?: string, message?: string): Promise<T>; // brackets cb with delegate.undoStepBegin/undoStepEnd, locking input meanwhile
+  deleteSelected(): Promise<void>; // severs the selected links too; one undo step
+  duplicateSelected(): Promise<void>; // one undo step; ends with the duplicates selected
   replaceNode(nodeId: GraphId, newType: string): void;
   arrangeNodes(): void;
   selectLink(ref: LinkRef, additive: boolean): void;

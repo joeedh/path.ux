@@ -396,7 +396,7 @@ test("a shift press on a selected node defers the deselect until the release", (
   expect(view.selection.has(a.id)).toBe(false);
 });
 
-test("a link is selectable and delete severs it", () => {
+test("a link is selectable and delete severs it", async () => {
   const g = new Graph();
   const src = new ViewSrc();
   const m = new ViewMath();
@@ -420,12 +420,99 @@ test("a link is selectable and delete severs it", () => {
   view.selectLink(ref);
   expect(view.selectedLinks()).toEqual([ref]);
 
-  view.deleteSelected();
+  await view.deleteSelected();
   expect(m.inputs.a.edges.length).toBe(0);
   expect(ctx.toolstack.length).toBe(1);
 
   ctx.toolstack.undo();
   expect(m.inputs.a.edges.length).toBe(1);
+});
+
+test("duplicateSelected groups every duplicate into one undo step", async () => {
+  const g = new Graph();
+  const a = new ViewSrc();
+  const b = new ViewSrc();
+  b.pos.loadXY(100, 0);
+  g.add(a);
+  g.add(b);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  view.selection.add(a.id);
+  view.selection.add(b.id);
+  const before = new Set(g.nodes.map((n) => n.id));
+
+  await view.duplicateSelected();
+
+  expect(g.nodes.length).toBe(4);
+  expect(ctx.toolstack.length).toBe(1);
+
+  const newIds = g.nodes.map((n) => n.id).filter((id) => !before.has(id));
+  expect([...view.selection].sort()).toEqual(newIds.sort());
+
+  ctx.toolstack.undo();
+  expect(g.nodes.length).toBe(2);
+});
+
+test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, passing the given labels", async () => {
+  const g = new Graph();
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const calls: string[] = [];
+  const testDelegate: NodeGraphDelegate = {
+    undoStepBegin: async (_ctx, shortLabel, message) => {
+      await Promise.resolve();
+      calls.push(`begin:${shortLabel}:${message}`);
+    },
+    check  : () => ({ ok: true }),
+    perform: () => {},
+    undoStepEnd: async () => {
+      await Promise.resolve();
+      calls.push("end");
+    },
+  };
+  view.delegate = testDelegate;
+
+  const result = await view.singleUndoStep(() => {
+    calls.push("cb");
+    return 42;
+  }, "Label", "A test message");
+
+  expect(result).toBe(42);
+  expect(calls).toEqual(["begin:Label:A test message", "cb", "end"]);
+});
+
+test("singleUndoStep still runs undoStepEnd, and rejects, when cb throws", async () => {
+  const g = new Graph();
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  const calls: string[] = [];
+  const testDelegate: NodeGraphDelegate = {
+    undoStepBegin: async () => {
+      calls.push("begin");
+    },
+    check  : () => ({ ok: true }),
+    perform: () => {},
+    undoStepEnd: async () => {
+      calls.push("end");
+    },
+  };
+  view.delegate = testDelegate;
+
+  await expect(
+    view.singleUndoStep(() => {
+      calls.push("cb");
+      throw new Error("boom");
+    })
+  ).rejects.toThrow("boom");
+
+  expect(calls).toEqual(["begin", "cb", "end"]);
 });
 
 test("selecting a link drops the node selection, and a vanished link leaves it", () => {
