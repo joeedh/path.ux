@@ -456,6 +456,52 @@ test("duplicateSelected groups every duplicate into one undo step", async () => 
   expect(g.nodes.length).toBe(2);
 });
 
+test("duplicateSelected selects the new nodes before undoStepEnd runs, not after", async () => {
+  const g = new Graph();
+  const a = new ViewSrc();
+  const b = new ViewSrc();
+  b.pos.loadXY(100, 0);
+  g.add(a);
+  g.add(b);
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  view.selection.add(a.id);
+  view.selection.add(b.id);
+  const before = new Set(g.nodes.map((n) => n.id));
+
+  // Models the production delegate (GenGraphEditor's), whose perform() writes the graph
+  // synchronously — unlike the default ToolOpDelegate, which defers its own writes into
+  // undoStepEnd. The selection must be set by the time undoStepEnd starts, since that step is
+  // a slow checkpoint round trip in production and must not gate the highlight the writes
+  // already made visible.
+  let selectionAtEnd: string[] | undefined;
+  const testDelegate: NodeGraphDelegate = {
+    undoStepBegin: async () => {},
+    check  : () => ({ ok: true }),
+    perform: (_performCtx, edit) => {
+      if (edit.kind === "duplicateNode") {
+        g.add(new ViewSrc());
+      }
+    },
+    undoStepEnd: async () => {
+      selectionAtEnd = [...view.selection].sort();
+    },
+  };
+  view.delegate = testDelegate;
+
+  await view.duplicateSelected();
+
+  const newIds = g.nodes
+    .map((n) => n.id)
+    .filter((id) => !before.has(id))
+    .sort();
+  expect(newIds.length).toBe(2);
+  expect(selectionAtEnd).toEqual(newIds);
+});
+
 test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, passing the given labels", async () => {
   const g = new Graph();
   const ctx = makeCtx(g);

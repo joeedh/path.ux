@@ -690,11 +690,10 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       return;
     }
 
-    const existingNodes = new Set(Array.from(this.currentGraph.nodes).map((n) => n.id));
-
     await this.singleUndoStep(
       () => {
         const graph = this.currentGraph;
+        const existingNodes = new Set(Array.from(graph?.nodes ?? []).map((n) => n.id));
         const selection = Array.from(this.selection);
         this.selection.clear();
 
@@ -711,18 +710,20 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
             y        : node.pos[1] + 20,
           });
         }
+
+        this.syncGraph();
+
+        // select new nodes; painted immediately rather than after the checkpoint's async
+        // commit round-trip resolves
+        for (const node of graph?.nodes ?? []) {
+          if (!existingNodes.has(node.id)) {
+            this.selection.add(node.id);
+          }
+        }
       },
       "Duplicate",
       "Duplicate selected nodes"
     );
-    this.syncGraph();
-
-    // select new nodes
-    for (const node of this.currentGraph!.nodes) {
-      if (!existingNodes.has(node.id)) {
-        this.selection.add(node.id);
-      }
-    }
   }
 
   replaceNode(nodeId: GraphId, newType: string) {
