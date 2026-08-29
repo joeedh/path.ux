@@ -499,8 +499,13 @@ rather than by patching CSS. Three style classes carry the keys:
 - `nodeframe` — the frame geometry (`Width`, `HeaderHeight`,
   `SocketRowHeight`), the body's `background-color`, `border-color` and
   `border-radius`, the header's `HeaderBG`, the selection ring's
-  `SelectOutline`, and two `CSSFont`s: `DefaultText` for the header and
-  `SocketText` for the socket rows.
+  `SelectOutline`, two `CSSFont`s (`DefaultText` for the header and
+  `SocketText` for the socket rows), and three socket-highlight keys:
+  `SocketHitExpand` (pixels the pointer hit region extends past the dot,
+  independent of its drawn size), `SocketHighlightColor` (the hover ring and
+  the forced ring a link drag puts on its nearest valid target) and
+  `SocketErrorColor` (a host-driven error ring; nothing in path.ux itself
+  sets it yet — see [Gestures](#gestures) below).
 - `nodegraphview` — the box-select marquee (`BoxSelectBorder`,
   `BoxSelectBG`) and `ErrorColor`, which the editor shell passes into the
   group designer's missing-entry flag.
@@ -508,9 +513,15 @@ rather than by patching CSS. Three style classes carry the keys:
   `LinkSelectColor` / `LinkSelectWidth` for a selected one.
 
 A socket terminal's dot keeps the color its socket type declares
-(`SocketDef.color`); that is per-type identity, not theme. The add and
-context menus are ordinary path.ux menus, so the `menu` style class themes
-them along with every other menu in the app.
+(`SocketDef.color`); that is per-type identity, not theme. Each terminal is a
+`TerminalDot` custom element (`nodeframe-graph-terminaldot-x`) with its own
+hover highlight, independent of any drag: hovering any socket rings it in
+`SocketHighlightColor`, and `SocketHitExpand` grows the pointer-accepting
+area around the dot without growing what is drawn, so a small dot stays easy
+to hit. `frame.terminalDot(key, dir)` returns the element so a host can drive
+`.forceHighlight` (used by a link drag; see [Gestures](#gestures)) or
+`.showError` directly. The add and context menus are ordinary path.ux menus,
+so the `menu` style class themes them along with every other menu in the app.
 
 ### Gestures
 
@@ -546,9 +557,15 @@ same ops from its toolmodes' pointerdown handlers.
   consulted mid-drag, a refused position renders that frame at half opacity,
   and a refused drop snaps back.
 - **Link** — drag from a socket terminal to a terminal on the other side;
-  terminals whose connect the delegate refuses dim for the drag's duration.
-  Starting on a connected single-link input detaches its edge: an empty drop
-  severs the link, and a drop on another input moves it.
+  terminals whose connect the delegate refuses dim for the drag's duration,
+  and whichever valid terminal is nearest the pointer (within
+  `LINK_DROP_PX`) carries a forced highlight that follows the drag, on top
+  of the dimming. Starting on a connected single-link input detaches its
+  edge: an empty drop severs the link, and a drop on another input moves it.
+  `TerminalDot.showError` exists as a distinct error ring a host can set on
+  a dot it holds a reference to, but nothing in `LinkDrag` wires it up today
+  — the drag distinguishes valid from refused targets by highlight-or-dim
+  alone.
 - **Add** — the add-node menu belongs to the host, which folds it into a
   menu bar, an editor header, or a context menu of its own.
   `addNodeMenuTemplate(onPick, items?)` returns the type picker as
@@ -568,7 +585,13 @@ same ops from its toolmodes' pointerdown handlers.
 `deleteSelected()` and `duplicateSelected()` act on the current selection.
 `selection` is a `Set` of node ids and `linkSelection` a `Set` of link keys;
 `deleteSelected()` severs the selected links and deletes the selected nodes,
-while `duplicateSelected()` ignores the link selection.
+while `duplicateSelected()` ignores the link selection. Both run inside
+`view.singleUndoStep(cb)`, which brackets `cb` with the delegate's
+`undoStepBegin`/`undoStepEnd` so every edit a multi-node delete or duplicate
+dispatches lands as one undo entry rather than one per node.
+`duplicateSelected()` additionally clears the selection before dispatching
+and, once every duplicate exists, selects the new nodes in place of the
+originals.
 
 ### Group descent
 
@@ -595,8 +618,10 @@ routed through the view's `delegate`:
 
 ```ts
 interface NodeGraphDelegate {
-  check(ctx, edit: GraphEdit): EditVerdict; // { ok: true } | { ok: false; reason }
-  perform(ctx, edit: GraphEdit): void;
+  undoStepBegin(ctx: GraphContext): void;
+  check(ctx: GraphContext, edit: GraphEdit): EditVerdict; // { ok: true } | { ok: false; reason }
+  perform(ctx: GraphContext, edit: GraphEdit): void;
+  undoStepEnd(ctx: GraphContext): void;
 }
 ```
 
@@ -606,13 +631,37 @@ kinds (`exposeEntry`, `reorderEntry`, `repointEntry`, `removeEntry`). A
 `check` verdict must match what `perform` would decide, which is what lets a
 refusal show mid-gesture rather than on drop.
 
-The default `ToolOpDelegate` dispatches the graph module's ToolOps on
-`ctx.toolstack`. Composite kinds (`arrange`, `duplicateNode`) run as one
-`ToolMacro`, so each is a single undo entry. The exposure kinds mutate the
-definition's `exposed` list in place and save through the graph's
-`groupSaver`; they carry no undo. A host with its own command system replaces
-the delegate and routes the same edits there instead — the view never writes
-the graph itself.
+`GraphContext` is the view's own context, not the host's raw one: `view.ctx`
+plus a fixed set of selection operations (`selectNodes`, `deselectNodes`,
+`selectLinks`, `deselectLinks`, `clearSelection`, `selectAll`) that a
+`ToolOp.exec` or a delegate can call regardless of what host context it was
+handed. `view.graphContext` builds it once, lazily, by wrapping `view.ctx` in
+a `Proxy` that intercepts those names and falls through to the real context
+for everything else (including `toLocked()`, re-wrapped so a locked context
+keeps the same selection ops); every call site that used to pass `ctx`
+straight into `delegate.check`/`perform` now passes `view.graphContext`
+instead. `AddNodeOp` selects the node it creates through this seam, which is
+also how `duplicateSelected()` (see [Gestures](#gestures)) ends with the
+duplicates selected. `selectSockets`/`deselectSockets` are declared on
+`GraphContext` for a future per-socket selection but nothing backs them yet
+— `view.graphContext` does not implement them, so calling either throws.
+
+`undoStepBegin`/`undoStepEnd` bracket a gesture that dispatches more than one
+edit (`view.singleUndoStep`, used by `deleteSelected()` and
+`duplicateSelected()`), so a delegate that wants those edits to land as one
+undo entry has somewhere to open and close a batch. The default
+`ToolOpDelegate` opens a `ToolMacro` on the first nested call and executes it
+on the last; `addNode`, `deleteNode`, `moveNode` and the rest still dispatch
+individually outside a `singleUndoStep`, each its own undo entry, and
+`arrange`/`duplicateNode` still run as their own single-edit `ToolMacro`
+regardless. A host with its own command system replaces the whole delegate
+and routes the same edits there instead — the view never writes the graph
+itself — but every implementation now needs all four methods; two that
+previously implemented only `check`/`perform` must add `undoStepBegin`/
+`undoStepEnd`, even as no-ops, or the object no longer satisfies
+`NodeGraphDelegate`. A delegate with no batched command of its own (each
+dispatch is already its own atomic write, as the exposure kinds are) can
+leave both as empty functions.
 
 ## The editor Area
 
@@ -831,6 +880,7 @@ function defineGraphAPI(api: DataAPI): DataStruct;
 class NodeGraphView<CTX> extends Container<CTX> {
   // custom element nodegraphview-x
   delegate: NodeGraphDelegate; // default: ToolOpDelegate
+  get graphContext(): CTX & GraphContext; // view.ctx wrapped once, lazily, in a selection-op Proxy
   onOpenDefinition?: (node: GroupNode) => void;
   selection: Set<GraphId>;
   linkSelection: Set<string>; // keys from linkKey()
@@ -842,8 +892,9 @@ class NodeGraphView<CTX> extends Container<CTX> {
   syncGraph(): void; // reconcile frames after external changes
   addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
   openAddMenu(local: readonly [number, number]): Menu<CTX>; // started as a screen popup when ctx has a screen
-  deleteSelected(): void; // severs the selected links too
-  duplicateSelected(): void;
+  singleUndoStep<T>(cb: () => T): T; // brackets cb with delegate.undoStepBegin/undoStepEnd
+  deleteSelected(): void; // severs the selected links too; one undo step
+  duplicateSelected(): void; // one undo step; ends with the duplicates selected
   replaceNode(nodeId: GraphId, newType: string): void;
   arrangeNodes(): void;
   selectLink(ref: LinkRef, additive: boolean): void;
@@ -889,9 +940,32 @@ function buildAddNodeMenu<CTX>(
 ): Menu<CTX>;
 function addMenuItems(): AddMenuItem[]; // registered types minus the group machinery
 
+// Selection ops layered onto whatever context a client already passes; see
+// The delegate seam. selectSockets/deselectSockets are declared but not yet
+// backed by NodeGraphView, so calling either throws.
+type GraphContext = ContextLike & {
+  clearSelection(): void;
+  selectAll(): void;
+  selectNodes(ids: GraphId[]): void;
+  deselectNodes(ids: GraphId[]): void;
+  selectSockets(ids: GraphId[]): void;
+  deselectSockets(ids: GraphId[]): void;
+};
+
 interface NodeGraphDelegate {
-  check(ctx: ContextLike, edit: GraphEdit): EditVerdict;
-  perform(ctx: ContextLike, edit: GraphEdit): void;
+  undoStepBegin(ctx: GraphContext): void;
+  check(ctx: GraphContext, edit: GraphEdit): EditVerdict;
+  perform(ctx: GraphContext, edit: GraphEdit): void;
+  undoStepEnd(ctx: GraphContext): void;
+}
+
+// One socket's terminal, a custom element (nodeframe-graph-terminaldot-x)
+// wrapping the dot drawn at the frame's edge; frame.terminalDot(key, dir)
+// resolves one, and a link drag drives forceHighlight as it moves. Its own
+// hover ring runs off CSS and needs no host involvement.
+class TerminalDot<CTX> extends HTMLElement {
+  forceHighlight: boolean;
+  showError: boolean;
 }
 ```
 
