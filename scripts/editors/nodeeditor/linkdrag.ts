@@ -142,8 +142,7 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
 
     if (detach !== undefined) {
       const backOnOrigin =
-        target?.frame.node.id === detach.dstNode &&
-        target.key === detach.dstSocket;
+        target?.frame.node.id === detach.dstNode && target.key === detach.dstSocket;
       if (backOnOrigin) {
         return;
       }

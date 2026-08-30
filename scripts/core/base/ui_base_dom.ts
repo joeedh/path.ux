@@ -376,3 +376,15 @@ export function initElement(elem: AnyUIBase): void {
     elem.setAttribute("id", elem._id);
   }
 }
+
+export const elementIsRow = (elem: HTMLElement) => {
+  if (
+    (elem.style.display === "flex" && elem.style.flexDirection === "row") ||
+    elem.style.flexDirection === "row-reverse"
+  )
+    return true;
+  if (elem.style.display === "inline-flex") return true;
+  if (elem.style.display === "inline") return true;
+
+  return false;
+};

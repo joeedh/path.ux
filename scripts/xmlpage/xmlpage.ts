@@ -8,6 +8,26 @@ import type { IContextBase } from "../core/context_base";
 import { TableRowProxy } from "../widgets/ui_table";
 import { PanelContents, TabContainer, TabItemContainer } from "../pathux";
 
+// try to make setting attributes
+// in xml not run afoul of inherited packflags override them
+class _disableflags<CTX extends IContextBase> {
+  container: Container<CTX>;
+  disabled: number;
+
+  constructor(container: Container<CTX>, disabled: number) {
+    this.container = container;
+    this.disabled = disabled;
+    container.inherit_packflag &= ~disabled;
+  }
+
+  [Symbol.dispose]() {
+    this.container.inherit_packflag |= this.disabled;
+  }
+}
+function disableflags<CTX extends IContextBase>(container: Container<CTX>, disabled: number) {
+  return new _disableflags(container, disabled);
+}
+
 export const domTransferAttrs = new Set(["id", "title", "tab-index"]);
 export const domEventAttrs = new Set([
   "click",
@@ -72,25 +92,71 @@ function getIconFlag(elem: Element): number {
   return 0;
 }
 
-function getPackFlag(elem: Element): number {
+function getPackFlag(elem: Element): { packflag: number; disabled: number } {
   let packflag = getIconFlag(elem);
 
-  if (elem.hasAttribute("drawChecks")) {
-    if (!getbool(elem, "drawChecks")) {
-      packflag |= PackFlags.HIDE_CHECK_MARKS;
+  //when users explicitly disable something in xml they expect it
+  //to be disabled, so the flags must removed from container.inherit_flags
+  let disabledFlags = 0;
+
+  const boolflag = (name: string, flag: number) => {
+    if (getbool(elem, name)) {
+      packflag |= flag;
     } else {
-      packflag &= ~PackFlags.HIDE_CHECK_MARKS;
+      packflag &= ~flag;
+      disabledFlags |= flag;
+    }
+  };
+
+  boolflag("drawChecks", PackFlags.HIDE_CHECK_MARKS);
+  boolflag("simpleSlider", PackFlags.SIMPLE_NUMSLIDERS);
+  boolflag("rollarSlider", PackFlags.FORCE_ROLLER_SLIDER);
+  boolflag("showLabel", PackFlags.FORCE_PROP_LABELS);
+
+  // used to force a widget to not have a label,
+  // when it might otherwise due to its container's
+  // inhert_packflag.  overrides force-prop-labels
+  boolflag("noLabel", PackFlags.NO_PROP_LABELS);
+
+  if (elem.hasAttribute("labelPosition")) {
+    let pos = elem.getAttribute("labelPosition");
+    if (pos === "top") {
+      disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT;
+      packflag |= PackFlags.LABEL_ON_TOP;
+    } else if (pos === "left") {
+      disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_TOP;
+      packflag |= PackFlags.LABEL_ON_LEFT;
+    } else if (pos === "right") {
+      disabledFlags |= PackFlags.LABEL_ON_TOP | PackFlags.LABEL_ON_LEFT;
+      packflag |= PackFlags.LABEL_ON_RIGHT;
+    } else {
+      // uses whatever the container's row/col (top/left) state is.
     }
   }
 
-  if (getbool(elem, "simpleSlider")) {
-    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-  }
-  if (getbool(elem, "rollarSlider")) {
-    packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+  if (elem.hasAttribute("sliderTextBox") && elem instanceof Container) {
+    const textbox = getbool(elem, "sliderTextBox");
+
+    if (textbox) {
+      disabledFlags |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+    } else {
+      packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+    }
   }
 
-  return packflag;
+  if (elem.hasAttribute("sliderMode") && elem instanceof Container) {
+    const sliderMode = elem.getAttribute("sliderMode");
+
+    if (sliderMode === "slider") {
+      disabledFlags |= PackFlags.FORCE_ROLLER_SLIDER;
+      packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+    } else if (sliderMode === "roller") {
+      disabledFlags |= PackFlags.SIMPLE_NUMSLIDERS;
+      packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+    }
+  }
+
+  return { packflag, disabled: disabledFlags };
 }
 
 function myParseFloat(s: unknown): number {
@@ -246,7 +312,9 @@ class Handler {
           elem2.setAttribute("mass_set_path", mpath ?? "");
         }
 
+        elem2.packflag |= container.inherit_packflag;
         container.add(elem2);
+        this._basic(elemEl, elem2, container);
         this._style(elemEl, elem2);
 
         if (elem2 instanceof Container) {
@@ -268,8 +336,7 @@ class Handler {
           elem2b.setAttribute(attr, elemEl.getAttribute(attr) ?? "");
         }
 
-        this._basic(elemEl, elem2b);
-
+        this._basic(elemEl, elem2b, this.container);
         this.container.shadow.appendChild(elem2b);
 
         const anyElem2b = elem2b as any;
@@ -450,7 +517,14 @@ class Handler {
     }
   }
 
-  _basic(elem: Element, elem2: Element | UIBase, options: ContainerOptions = {}) {
+  _basic(
+    elem: Element,
+    elem2: Element | UIBase,
+    container: Container,
+    options: ContainerOptions = {}
+  ) {
+    const { packflag, disabled } = getPackFlag(elem);
+
     if (!options.noInheritCustomAttrs) {
       this._inheritCustomAttrs(elem, elem2);
     }
@@ -511,50 +585,11 @@ class Handler {
       elem2.useIcons(val as boolean | number);
     }
 
-    if (elem.hasAttribute("sliderTextBox") && elem2 instanceof Container) {
-      const textbox = getbool(elem, "sliderTextBox");
-
-      if (textbox) {
-        elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-      } else {
-        elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-      }
-
-      //console.error("textBox", textbox, elem2, elem.getAttribute("sliderTextBox"), elem2.packflag);
+    if (elem2 instanceof UIBase) {
+      elem2.packflag |= packflag | (container.inherit_packflag & ~disabled);
     }
-
-    if (elem.hasAttribute("sliderMode") && elem2 instanceof Container) {
-      const sliderMode = elem.getAttribute("sliderMode");
-
-      if (sliderMode === "slider") {
-        elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-
-        elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-      } else if (sliderMode === "roller") {
-        elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-
-        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-      }
-
-      //console.error("sliderMode", sliderMode, elem2, elem2.packflag & (PackFlags.SIMPLE_NUMSLIDERS | PackFlags.FORCE_ROLLER_SLIDER));
-    }
-
-    if (elem.hasAttribute("showLabel") && elem2 instanceof Container) {
-      const state = getbool(elem, "showLabel");
-
-      if (state) {
-        elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
-      } else {
-        elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
-      }
+    if (elem2 instanceof Container) {
+      elem2.inherit_packflag |= packflag | (container.inherit_packflag & ~disabled);
     }
 
     function doBox(key: string) {
@@ -638,12 +673,7 @@ class Handler {
       }
     }
 
-    const packflag = getPackFlag(elem);
-
-    con.packflag |= packflag;
-    con.inherit_packflag |= packflag;
-
-    this._basic(elem, con, options);
+    this._basic(elem, con, con, options);
 
     if (!options?.ignorePathPrefix) {
       this._handlePathPrefix(elem, con);
@@ -654,7 +684,7 @@ class Handler {
     const ret = this.container.noteframe();
 
     if (ret) {
-      this._basic(elem, ret);
+      this._basic(elem, ret, this.container);
     }
   }
 
@@ -683,9 +713,7 @@ class Handler {
     (this.container as PanelContents).closed = closed;
 
     this._container(elem, this.container);
-
     this.visit(elem);
-
     this.pop();
   }
 
@@ -726,13 +754,13 @@ class Handler {
       this._prop(elem, "textbox");
     } else {
       //let elem2 = this.container.textbox();
-      //this._basic(elem, elem2);
+      //this._basic(elem, elem2, this.container);
     }
   }
 
   label(elem: Element) {
     const elem2 = this.container.label(elem.innerHTML);
-    this._basic(elem, elem2);
+    this._basic(elem, elem2, this.container);
   }
 
   colorfield(elem: Element) {
@@ -745,7 +773,12 @@ class Handler {
   }
 
   _prop(elem: Element, key: string) {
-    const packflag = getPackFlag(elem);
+    // eslint-disable-next-line prefer-const
+    let { packflag, disabled } = getPackFlag(elem);
+    packflag |= this.container.inherit_packflag;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    using guard = disableflags(this.container, disabled);
+
     const path = elem.getAttribute("path");
 
     let elem2: Element | undefined;
@@ -778,8 +811,10 @@ class Handler {
           ? elem.getAttribute("theme-class") ?? undefined
           : undefined,
       }) as unknown as Element;
+    } else if (key === "prop") {
+      elem2 = this.container.prop(path ?? "", packflag);
     } else {
-      elem2 = (this.container as any)[key](path ?? undefined, packflag);
+      throw new Error("unknown element " + key);
     }
 
     if (!elem2) {
@@ -787,7 +822,7 @@ class Handler {
       span.innerHTML = "error";
       this.container.shadow.appendChild(span);
     } else {
-      this._basic(elem, elem2);
+      this._basic(elem, elem2, this.container);
 
       if (elem.hasAttribute("massSetPath") || this.container.massSetPrefix) {
         let mpath: string | undefined = elem.getAttribute("massSetPath") ?? undefined;
@@ -796,10 +831,10 @@ class Handler {
         }
 
         mpath = this.container._getMassPath(this.container.ctx, path ?? undefined, mpath);
-
         elem2.setAttribute("mass_set_path", mpath ?? "");
       }
     }
+    return elem2;
   }
 
   strip(elem: Element) {
@@ -842,7 +877,9 @@ class Handler {
 
   tool(elem: Element, key = "tool") {
     let path = elem.getAttribute("path");
-    let packflag = getPackFlag(elem);
+    let { packflag, disabled } = getPackFlag(elem);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    using guard = disableflags(this.container, disabled);
 
     let noIcons = false;
     let iconflags: number | undefined;
@@ -866,12 +903,12 @@ class Handler {
     const elem2: Element | undefined = (this.container as any)[key](path, packflag);
 
     if (elem2) {
-      this._basic(elem, elem2);
+      this._basic(elem, elem2, this.container);
     } else {
       const errElem = document.createElement("strip");
       errElem.innerHTML = "error";
       this.container.shadow.appendChild(errElem);
-      this._basic(elem, errElem);
+      this._basic(elem, errElem, this.container);
     }
 
     if (noIcons && iconflags !== undefined) {
@@ -881,24 +918,21 @@ class Handler {
   }
 
   listbox(elem: Element) {
-    const packflag = getPackFlag(elem);
+    const { packflag, disabled } = getPackFlag(elem);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    using guard = disableflags(this.container, disabled);
     const path = elem.getAttribute("path") ?? undefined;
-
     const ret = this.container.listbox(path ?? undefined, packflag);
 
     // ListBox reads `resize-axes` in init(); pass it (and resizable) through.
     if (elem.hasAttribute("resize-axes")) {
-      (ret as unknown as Element).setAttribute(
-        "resize-axes",
-        elem.getAttribute("resize-axes") ?? ""
-      );
+      ret.setAttribute("resize-axes", elem.getAttribute("resize-axes") ?? "");
     }
     if (elem.hasAttribute("resizable")) {
       (ret as unknown as { resizable: boolean }).resizable = getbool(elem, "resizable");
     }
 
-    this._basic(elem, ret as unknown as Element);
-
+    this._basic(elem, ret as Element, this.container);
     return ret;
   }
 
@@ -907,7 +941,9 @@ class Handler {
   }
 
   menu(elem: Element, isDropBox = false) {
-    const packflag = getPackFlag(elem);
+    const { packflag, disabled } = getPackFlag(elem);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    using guard = disableflags(this.container, disabled);
     const title = elem.getAttribute("name") ?? "";
 
     const list: unknown[] = [];
@@ -969,8 +1005,7 @@ class Handler {
       ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
 
-    this._basic(elem, ret as unknown as Element);
-
+    this._basic(elem, ret as unknown as Element, this.container);
     return ret;
   }
 
@@ -983,7 +1018,7 @@ class Handler {
       (ret as unknown as Element).setAttribute("id", elem.getAttribute("id") ?? "");
     }
 
-    this._basic(elem, ret as unknown as Element);
+    this._basic(elem, ret as unknown as Element, this.container);
   }
 
   iconbutton(elem: Element) {
@@ -1000,7 +1035,7 @@ class Handler {
       (ret as unknown as Element).setAttribute("id", elem.getAttribute("id") ?? "");
     }
 
-    this._basic(elem, ret as unknown as Element);
+    this._basic(elem, ret as unknown as Element, this.container);
   }
 
   tab(elem: Element) {

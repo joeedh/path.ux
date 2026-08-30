@@ -544,7 +544,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         this.ctx,
         key,
         `${this.nodePath}.props['${key}'].value`,
-        this.inherit_packflag
+        this.inherit_packflag,
+        this.node.customPropUX.get(key)
       );
       row.parentWidget = this._body!;
       row.packflag |= this.inherit_packflag;
@@ -637,7 +638,13 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     const path = `${this.nodePath}.props['${socketPropName}'].value`;
     const sock = nodePropSocket(this.node, socketPropName);
-    const row = propEditRow(this.ctx, socketName, path, this.inherit_packflag, sock);
+    const row = propEditRow(
+      this.ctx,
+      socketName,
+      path,
+      this.inherit_packflag,
+      sock?.createUI ? sock.createUI.bind(sock) : undefined
+    );
     row.parentWidget = this;
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";

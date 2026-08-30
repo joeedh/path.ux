@@ -22,6 +22,7 @@ import type { NodeSocketBase } from "../../graph/socket";
 import { ExposedEntry, GroupDef, GroupNode } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 import type { GraphContext, NodeGraphDelegate } from "./delegate";
+import { ToolProperty } from "../../path-controller/toolsys/toolprop";
 
 export type ExposureState = "ok" | "unresolved" | "missing";
 
@@ -117,8 +118,15 @@ export function buildForwardedUI(
       continue;
     }
 
+    let createUI = row.socket?.createUI;
+    if (row.socket && createUI) {
+      createUI = createUI.bind(row.socket);
+    } else if (!row.socket) {
+      createUI = node.customPropUX.get(GraphNode.decomposePropName(row.entry.propKey).name);
+    }
+
     if (row.path !== undefined) {
-      const propRow = propEditRow(ctx, row.label, row.path, inherit_packflag, row.socket);
+      const propRow = propEditRow(ctx, row.label, row.path, inherit_packflag, createUI);
       if (propRow) {
         propRow.inherit_packflag |= inherit_packflag;
       }
@@ -153,7 +161,15 @@ export function buildForwardedUI(
           break;
       }
 
-      root.appendChild(propEditRow(ctx, name, path, inherit_packflag, socket));
+      root.appendChild(
+        propEditRow(
+          ctx,
+          name,
+          path,
+          inherit_packflag,
+          socket?.createUI ? socket.createUI.bind(socket) : undefined
+        )
+      );
     }
   }
 }
@@ -169,7 +185,7 @@ export function propEditRow<CTX extends IContextBase>(
   label: string,
   path: string,
   inherit_packflag: number,
-  socket?: NodeSocketBase
+  createUI?: (row: Container<CTX>, path: string, label: string) => void
 ): Container<CTX> {
   const row = UIBase.createElement("container-x") as Container<CTX>;
   row.inherit_packflag |= inherit_packflag;
@@ -177,10 +193,14 @@ export function propEditRow<CTX extends IContextBase>(
   row._init();
   // init writes the class attribute, so the marker class is added after it.
   row.classList.add("nodeeditor-prop-row");
+  row.inherit_packflag |= PackFlags.FORCE_PROP_LABELS | PackFlags.LABEL_ON_TOP;
+
+  // ensure we have nice looking name that's capitalized
+  label = ToolProperty.makeUIName(label);
 
   try {
-    if (socket !== undefined) {
-      socket.createUI(row, path, label);
+    if (createUI !== undefined) {
+      createUI(row, path, label);
     } else {
       row.prop(path)?.setAttribute("name", label);
     }

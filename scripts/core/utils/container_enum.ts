@@ -39,13 +39,21 @@ export function iconcheckImpl<CTX extends IContextBase, SELF extends string>(
 export function checkImpl<CTX extends IContextBase, SELF extends string>(
   self: Container<CTX, SELF>,
   inpath: KnownDataPath | undefined,
-  name: string,
+  name?: string,
   packflag = 0,
   mass_set_path?: string
 ) {
   packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
 
   const path = inpath !== undefined ? self._joinPrefix(inpath) : undefined;
+
+  if (name === undefined && path) {
+    const prop = self.getPathMeta(self.ctx, path);
+    if (prop) {
+      name = prop.getUIName();
+    }
+  }
+  name = name ?? "(error)";
 
   //let prop = self.ctx.getProp(path);
   let ret: Check<CTX> | IconCheck<CTX>;
@@ -81,7 +89,17 @@ export function checkImpl<CTX extends IContextBase, SELF extends string>(
 export function checkenumImpl<CTX extends IContextBase, SELF extends string>(
   self: Container<CTX, SELF>,
   inpath: KnownDataPath | undefined,
-  name?: string | Record<string, unknown> | null,
+  name?:
+    | string
+    | {
+        name?: string;
+        packflag?: number;
+        enummap?: unknown;
+        defaultval?: unknown;
+        callback?: Function;
+        iconmap?: unknown;
+        mass_set_path?: string;
+      },
   packflag?: number,
   enummap?: unknown,
   defaultval?: unknown,
@@ -330,7 +348,6 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
   iconmap?: IconMap,
   packflag = 0
 ): DropBox<CTX> {
-  packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
   let mass_set_path: string | undefined;
 
   if (name && typeof name === "object") {
@@ -344,6 +361,8 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
     packflag = args.packflag ?? 0;
     mass_set_path = args.mass_set_path;
   }
+
+  packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
 
   mass_set_path = self._getMassPath(self.ctx, inpath, mass_set_path);
 
@@ -394,25 +413,6 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
 
   ret.on_select = callback;
   ret.packflag |= packflag;
-
-  if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
-    const container = self.row();
-    let l: UIBase<CTX>;
-
-    if (packflag & PackFlags.LABEL_ON_RIGHT) {
-      container._add(ret as UIBase<CTX>);
-      l = container.label(label);
-
-      if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
-        l.style["marginLeft"] = "5px";
-      }
-    } else {
-      container.label(label);
-      container._add(ret);
-    }
-  } else {
-    self._add(ret);
-  }
 
   return ret;
 }

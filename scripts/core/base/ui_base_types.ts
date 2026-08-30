@@ -35,10 +35,18 @@ export const PackFlags = {
   CUSTOM_ICON_SHEET      : 1 << 15,
   CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
   NO_UPDATE              : 1 << 16,
+  // force property labels to the right
   LABEL_ON_RIGHT         : 1 << 17,
   // do not flush change events in modal paths such as
   // e.g. numsliders, text boxes, etc.
   NO_REALTIME            : 1 << 18,
+  // force property labels to the right
+  LABEL_ON_TOP           : 1 << 19,
+  LABEL_ON_LEFT          : 1 << 20,
+  // used to force a widget to not have a label,
+  // when it might otherwise due to its container's
+  // inhert_packflag.  overrides FORCE_PROP_LABELS
+  NO_PROP_LABELS         : 1 << 21,
 } as const;
 
 /* Helper for CSSStyleDeclaration string indexing, common throughout this file */

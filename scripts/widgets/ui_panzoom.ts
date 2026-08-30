@@ -240,7 +240,6 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   }
 
   override add(...args: unknown[]) {
-     
     return (this.content as any).add(...args);
   }
 

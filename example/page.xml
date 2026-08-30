@@ -1,12 +1,12 @@
-<tabs pos="left" style="overflow-y : scroll">
+<tabs pos="left" style="overflow-y : scroll" show-prop-labels>
   <tab label="Theme" data-testid="tab-theme">
     <button id="export_theme">Export Theme</button>
     <theme-editor-x></theme-editor-x>
   </tab>
   <tab label="Tab" data-testid="tab-tab">
     <tool path="canvas.draw()" label="Exec Draw" useIcons="false"></tool>
-    <panel label="Panel" closed="false" path="data">
-      <strip mode="vertical">
+    <panel label="Panel" closed="false" path="data" show-prop-labels="true">
+      <strip mode="vertical" showPropLabels="true">
       <prop path="angle1"/>
       <prop path="angle2"/>
       </strip>

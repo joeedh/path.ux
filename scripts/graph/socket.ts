@@ -351,6 +351,9 @@ pathux.NodeSocketBase {
     label?: string
   ): void {
     const w = container.prop(datapath);
+    if (!w?.setAttribute) {
+      debugger;
+    }
     if (label !== undefined) {
       w?.setAttribute("name", label);
     }

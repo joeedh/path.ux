@@ -100,7 +100,6 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     super.init();
 
     this.setAttribute("menu-button", "true");
-
     this.updateWidth();
   }
 
@@ -109,6 +108,10 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     this.style["userSelect"] = "none";
     this.dom.style["userSelect"] = "none";
+
+    if (this.fitToWidth) {
+      this.style.width = "100%";
+    }
 
     let keys;
     if (this.getAttribute("simple")) {
@@ -162,9 +165,36 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     return ret;
   }
 
+  get fitToWidth() {
+    if (!this.hasAttribute("fit-to-width")) return false;
+    const attr = this.getAttribute("fit-to-width");
+    return attr !== "false" && attr !== "0";
+  }
+  set fitToWidth(v) {
+    if (v) {
+      this.setAttribute("fit-to-width", "true");
+    } else {
+      this.removeAttribute("fit-to-width");
+    }
+  }
+
   updateWidth() {
     const dpi = this.getDPI();
 
+    if (this.fitToWidth) {
+      //this.style.width = "100%";
+      const width = ~~(this.getBoundingClientRect().width * dpi);
+      if (width === this.dom.width) {
+        return;
+      }
+
+      this.dom.style.margin = this.dom.style.padding = "0px";
+      this.dom.width = width;
+      this.dom.style.width = width / dpi + "px";
+      this._repos_canvas();
+      this._redraw();
+      return;
+    }
     let tw = this.g.measureText(this._genLabel()).width / dpi;
     tw = ~~tw;
 

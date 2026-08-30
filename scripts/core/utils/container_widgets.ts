@@ -97,6 +97,7 @@ export function labelImpl<CTX extends IContextBase, SELF extends string>(
 ) {
   const ret = UIBase.createElement("label-x") as Label<CTX>;
 
+  ret.packflag |= self.inherit_packflag;
   ret.text = text;
   self._add(ret);
   return ret;

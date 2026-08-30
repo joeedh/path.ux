@@ -54,32 +54,31 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
 
   const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
 
+  // always show prop names when widgets are created from .prop()
+  packflag |=
+    PackFlags.FORCE_PROP_LABELS |
+    (packflag & (PackFlags.LABEL_ON_TOP | PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT));
+
   if (prop.type === PropTypes.REPORT) {
-    return self.pathlabel(inpath, uiName);
+    return self.pathlabel(inpath, uiName, packflag);
   } else if (prop.type === PropTypes.STRING) {
     let ret: UIBase<CTX>;
 
     if (prop.flag & PropFlags.READ_ONLY) {
-      ret = self.pathlabel(inpath, uiName);
+      ret = self.pathlabel(inpath, uiName, packflag);
     } else if (prop.multiLine) {
       ret = self.textarea(inpath, rdef.value as string, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
     } else {
-      const strip = self.strip();
+      ret = self.textbox(inpath, undefined, undefined, packflag) as UIBase<CTX>;
+    }
 
-      strip.label(uiName);
-
-      ret = strip.textbox(inpath) as UIBase<CTX>;
+    if (!(prop.flag & PropFlags.READ_ONLY)) {
       ret.useDataPathUndo = useDataPathUndo;
-
       mass_set_path = self._getMassPath(self.ctx, inpath, mass_set_path);
-
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
       }
     }
-
-    ret.packflag |= packflag;
     return ret;
   } else if (prop.type === PropTypes.CURVE) {
     const ret = self.curve1d(inpath, packflag, mass_set_path);
@@ -142,14 +141,7 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
         packflag &= ~PackFlags.USE_ICONS;
       }
 
-      if (packflag & PackFlags.FORCE_PROP_LABELS) {
-        const strip = self.strip();
-        strip.label(uiName);
-
-        return strip.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
-      } else {
-        return self.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
-      }
+      return self.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
     }
   } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
     if (rdef.subkey !== undefined) {
@@ -221,7 +213,16 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
       let con: Container<CTX> = self;
 
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
-        con = self.strip();
+        con = UIBase.createElement("container-x") as Container<CTX>;
+        con.ctx = self.ctx;
+        con.inherit_packflag = self.inherit_packflag;
+        con.packflag = self.packflag;
+        con.dataPrefix = self.dataPrefix;
+        con.init();
+        con.style.margin = con.style.padding = "0px";
+
+        // adds con to self via self._add()
+        self.addPropLabel(con, inpath, packflag);
         con.label(uiName);
       }
 

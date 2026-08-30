@@ -29,12 +29,12 @@ export function PropsPage(refs: PropsPageRefs = {}) {
         <button ref={refs.exportButton}>Export Theme</button>
         <theme-editor-x ref={refs.themeEditor}></theme-editor-x>
       </tab>
-      <tab label="Tab" data-testid="tab-tab">
+      <tab label="Tab" data-testid="tab-tab" showLabel="true">
         <tool path="canvas.draw()" useIcons="false">
           Exec Draw
         </tool>
-        <panel label="Panel" closed="false" path="data">
-          <strip mode="vertical">
+        <panel label="Panel" closed="false" path="data" showLabel="true">
+          <strip mode="vertical" showLabel="true">
             <prop path="angle1" />
             <prop path="angle2" />
           </strip>

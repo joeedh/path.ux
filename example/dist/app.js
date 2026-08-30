@@ -437,10 +437,18 @@ var init_ui_base_types = __esm({
       CUSTOM_ICON_SHEET_START: 20,
       //custom icon sheet bits are shifted to here
       NO_UPDATE: 1 << 16,
+      // force property labels to the right
       LABEL_ON_RIGHT: 1 << 17,
       // do not flush change events in modal paths such as
       // e.g. numsliders, text boxes, etc.
-      NO_REALTIME: 1 << 18
+      NO_REALTIME: 1 << 18,
+      // force property labels to the right
+      LABEL_ON_TOP: 1 << 19,
+      LABEL_ON_LEFT: 1 << 20,
+      // used to force a widget to not have a label,
+      // when it might otherwise due to its container's
+      // inhert_packflag.  overrides FORCE_PROP_LABELS
+      NO_PROP_LABELS: 1 << 21
     };
   }
 });
@@ -29799,6 +29807,7 @@ function initElement(elem) {
     elem.setAttribute("id", elem._id);
   }
 }
+var elementIsRow;
 var init_ui_base_dom = __esm({
   "scripts/core/base/ui_base_dom.ts"() {
     "use strict";
@@ -29806,6 +29815,13 @@ var init_ui_base_dom = __esm({
     init_simple_events();
     init_ui_element_registry();
     init_ui_base();
+    elementIsRow = (elem) => {
+      if (elem.style.display === "flex" && elem.style.flexDirection === "row" || elem.style.flexDirection === "row-reverse")
+        return true;
+      if (elem.style.display === "inline-flex") return true;
+      if (elem.style.display === "inline") return true;
+      return false;
+    };
   }
 });
 
@@ -33486,6 +33502,9 @@ var init_dropbox = __esm({
       setCSS() {
         this.style["userSelect"] = "none";
         this.dom.style["userSelect"] = "none";
+        if (this.fitToWidth) {
+          this.style.width = "100%";
+        }
         let keys2;
         if (this.getAttribute("simple")) {
           keys2 = ["margin-left", "margin-right", "padding-left", "padding-right"];
@@ -33530,8 +33549,32 @@ var init_dropbox = __esm({
         }
         return ret;
       }
+      get fitToWidth() {
+        if (!this.hasAttribute("fit-to-width")) return false;
+        const attr = this.getAttribute("fit-to-width");
+        return attr !== "false" && attr !== "0";
+      }
+      set fitToWidth(v) {
+        if (v) {
+          this.setAttribute("fit-to-width", "true");
+        } else {
+          this.removeAttribute("fit-to-width");
+        }
+      }
       updateWidth() {
         const dpi = this.getDPI();
+        if (this.fitToWidth) {
+          const width = ~~(this.getBoundingClientRect().width * dpi);
+          if (width === this.dom.width) {
+            return;
+          }
+          this.dom.style.margin = this.dom.style.padding = "0px";
+          this.dom.width = width;
+          this.dom.style.width = width / dpi + "px";
+          this._repos_canvas();
+          this._redraw();
+          return;
+        }
         let tw = this.g.measureText(this._genLabel()).width / dpi;
         tw = ~~tw;
         tw += 15;
@@ -66151,6 +66194,7 @@ function pathlabelImpl(self2, inpath, label, packflag = 0) {
 }
 function labelImpl(self2, text2) {
   const ret = UIBase.createElement("label-x");
+  ret.packflag |= self2.inherit_packflag;
   ret.text = text2;
   self2._add(ret);
   return ret;
@@ -66339,6 +66383,13 @@ function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
 function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const path = inpath !== void 0 ? self2._joinPrefix(inpath) : void 0;
+  if (name2 === void 0 && path) {
+    const prop = self2.getPathMeta(self2.ctx, path);
+    if (prop) {
+      name2 = prop.getUIName();
+    }
+  }
+  name2 = name2 ?? "(error)";
   let ret;
   if (packflag & PackFlags.USE_ICONS) {
     ret = UIBase.createElement("iconcheck-x");
@@ -66516,7 +66567,6 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
   return frame;
 }
 function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
-  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   let mass_set_path;
   if (name2 && typeof name2 === "object") {
     const args = name2;
@@ -66528,6 +66578,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
     packflag = args.packflag ?? 0;
     mass_set_path = args.mass_set_path;
   }
+  packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   let path;
   let label = name2;
@@ -66566,22 +66617,6 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   }
   ret.on_select = callback;
   ret.packflag |= packflag;
-  if (label && packflag & PackFlags.FORCE_PROP_LABELS) {
-    const container = self2.row();
-    let l;
-    if (packflag & PackFlags.LABEL_ON_RIGHT) {
-      container._add(ret);
-      l = container.label(label);
-      if (!l.style["marginLeft"] || l.style["marginLeft"] === "unset") {
-        l.style["marginLeft"] = "5px";
-      }
-    } else {
-      container.label(label);
-      container._add(ret);
-    }
-  } else {
-    self2._add(ret);
-  }
   return ret;
 }
 
@@ -66618,26 +66653,25 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   const prop = rdef.prop;
   const useDataPathUndo = self2.useDataPathUndo && !(prop.flag & PropFlags.NO_UNDO);
   const uiName = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath);
+  packflag |= PackFlags.FORCE_PROP_LABELS | packflag & (PackFlags.LABEL_ON_TOP | PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT);
   if (prop.type === PropTypes.REPORT) {
-    return self2.pathlabel(inpath, uiName);
+    return self2.pathlabel(inpath, uiName, packflag);
   } else if (prop.type === PropTypes.STRING) {
     let ret;
     if (prop.flag & PropFlags.READ_ONLY) {
-      ret = self2.pathlabel(inpath, uiName);
+      ret = self2.pathlabel(inpath, uiName, packflag);
     } else if (prop.multiLine) {
       ret = self2.textarea(inpath, rdef.value, packflag, mass_set_path);
-      ret.useDataPathUndo = useDataPathUndo;
     } else {
-      const strip = self2.strip();
-      strip.label(uiName);
-      ret = strip.textbox(inpath);
+      ret = self2.textbox(inpath, void 0, void 0, packflag);
+    }
+    if (!(prop.flag & PropFlags.READ_ONLY)) {
       ret.useDataPathUndo = useDataPathUndo;
       mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
       }
     }
-    ret.packflag |= packflag;
     return ret;
   } else if (prop.type === PropTypes.CURVE) {
     const ret = self2.curve1d(inpath, packflag, mass_set_path);
@@ -66685,13 +66719,7 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       } else if (prop.flag & PropFlags.FORCE_ENUM_CHECKBOXES) {
         packflag &= ~PackFlags.USE_ICONS;
       }
-      if (packflag & PackFlags.FORCE_PROP_LABELS) {
-        const strip = self2.strip();
-        strip.label(uiName);
-        return strip.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
-      } else {
-        return self2.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
-      }
+      return self2.checkenum(inpath, void 0, packflag).setUndo(useDataPathUndo);
     }
   } else if (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)) {
     if (rdef.subkey !== void 0) {
@@ -66745,7 +66773,14 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
     } else {
       let con = self2;
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
-        con = self2.strip();
+        con = UIBase.createElement("container-x");
+        con.ctx = self2.ctx;
+        con.inherit_packflag = self2.inherit_packflag;
+        con.packflag = self2.packflag;
+        con.dataPrefix = self2.dataPrefix;
+        con.init();
+        con.style.margin = con.style.padding = "0px";
+        self2.addPropLabel(con, inpath, packflag);
         con.label(uiName);
       }
       if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
@@ -66960,7 +66995,6 @@ function treeviewImpl(self2) {
 function panelImpl(self2, name2, id, packflag = 0, tooltip) {
   id = id === void 0 ? name2 : id;
   const ret = UIBase.createElement("panelframe-x");
-  self2._container_inherit(ret, packflag);
   if (tooltip) {
     ret.setHeaderToolTip(tooltip);
   }
@@ -66972,8 +67006,8 @@ function panelImpl(self2, name2, id, packflag = 0, tooltip) {
     ret.contents.ctx = self2.ctx;
     ret._init();
   }
-  ret.contents.dataPrefix = self2.dataPrefix;
-  ret.contents.massSetPrefix = self2.massSetPrefix;
+  self2._container_inherit(ret, packflag);
+  self2._container_inherit(ret.contents, packflag);
   return ret.contents;
 }
 function rowImpl(self2, packflag = 0) {
@@ -67029,6 +67063,7 @@ init_ui_base();
 init_theme_schema();
 init_toolprop();
 init_ui_consts();
+init_ui_base_dom();
 function styl2(el) {
   return el.style;
 }
@@ -67614,10 +67649,10 @@ var Container3 = class _Container extends UIBase {
   }
   //supports number types
   textbox(inpath, text2, cb, packflag = 0) {
-    return textboxImpl(this, inpath, text2, cb, packflag);
+    return this.addPropLabel(textboxImpl(this, inpath, text2, cb, packflag), void 0, packflag).widget;
   }
   pathlabel(inpath, label, packflag = 0) {
-    return pathlabelImpl(this, inpath, label, packflag);
+    return this.addPropLabel(pathlabelImpl(this, inpath, label, packflag), void 0, packflag).widget;
   }
   label(text2) {
     return labelImpl(this, text2);
@@ -67649,13 +67684,21 @@ var Container3 = class _Container extends UIBase {
     return prefix2 + path;
   }
   colorbutton(inpath, packflag, mass_set_path) {
-    return colorbuttonImpl(this, inpath, packflag, mass_set_path);
+    return this.addPropLabel(
+      colorbuttonImpl(this, inpath, packflag, mass_set_path),
+      void 0,
+      packflag
+    ).widget;
   }
   noteframe(packflag = 0) {
     return noteframeImpl(this, packflag);
   }
   curve1d(inpath, packflag = 0, mass_set_path) {
-    return curve1dImpl(this, inpath, packflag, mass_set_path);
+    return this.addPropLabel(
+      curve1dImpl(this, inpath, packflag, mass_set_path),
+      void 0,
+      packflag
+    ).widget;
   }
   vecpopup(inpath, packflag = 0, mass_set_path) {
     return vecpopupImpl(this, inpath, packflag, mass_set_path);
@@ -67676,7 +67719,7 @@ var Container3 = class _Container extends UIBase {
     return propImpl(this, inpath, packflag, mass_set_path);
   }
   iconcheck(inpath, icon, description, mass_set_path) {
-    return iconcheckImpl(this, inpath, icon, description, mass_set_path);
+    return this.addPropLabel(iconcheckImpl(this, inpath, icon, description, mass_set_path)).widget;
   }
   check(inpath, name2, packflag = 0, mass_set_path) {
     return checkImpl(this, inpath, name2, packflag, mass_set_path);
@@ -67686,20 +67729,27 @@ var Container3 = class _Container extends UIBase {
    * new (optional) form: checkenum(inpath, args)
    * */
   checkenum(inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-    return checkenumImpl(
-      this,
-      inpath,
-      name2,
-      packflag,
-      enummap,
-      defaultval,
-      callback,
-      iconmap,
-      mass_set_path
-    );
+    const label = typeof name2 === "object" ? name2.name : name2;
+    return this.addPropLabel(
+      checkenumImpl(
+        this,
+        inpath,
+        name2,
+        packflag,
+        enummap,
+        defaultval,
+        callback,
+        iconmap,
+        mass_set_path
+      ),
+      label,
+      packflag
+    ).widget;
   }
   checkenum_panel(inpath, name2, packflag = 0, callback, mass_set_path, prop) {
-    return checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
+    const label = name2;
+    const widget = checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
+    return widget ? this.addPropLabel(widget, label, packflag).widget : widget;
   }
   /**
       enummap is an object that maps
@@ -67717,7 +67767,58 @@ var Container3 = class _Container extends UIBase {
       defaultval cannot be undefined
     */
   listenum(inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
-    return listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag);
+    const label = typeof name2 === "string" ? name2 : name2?.name;
+    return this.addPropLabel(
+      listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag),
+      label,
+      packflag
+    ).widget;
+  }
+  /**
+   * To force a widget to never ever have a label
+   * add | PackFlags.NO_PROP_LABELS to its packflag
+   * (or pass that in here)
+   */
+  addPropLabel(widget, label, packflag = widget.packflag) {
+    packflag |= this.inherit_packflag;
+    if (!(packflag & PackFlags.FORCE_PROP_LABELS) || packflag & PackFlags.NO_PROP_LABELS) {
+      this._add(widget);
+      return { widget, container: this };
+    }
+    if (!label && widget.getAttribute("datapath")) {
+      const prop = this.getPathMeta(this.ctx, widget.getAttribute("datapath"));
+      if (prop) {
+        label = prop.getUIName();
+      }
+    }
+    if (!label) {
+      return { widget, container: this };
+    }
+    let strip;
+    if (packflag & PackFlags.LABEL_ON_TOP) {
+      if (elementIsRow(this)) {
+        strip = this.col();
+      } else {
+        strip = this;
+      }
+    } else if (packflag & (PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT)) {
+      if (!elementIsRow(this)) {
+        strip = this.row();
+      } else {
+        strip = this;
+      }
+    } else {
+      strip = this;
+    }
+    if (packflag & PackFlags.LABEL_ON_RIGHT) {
+      strip._add(widget);
+      const l = strip.label(label);
+      l.style.paddingLeft = "5px";
+    } else {
+      strip.label(label);
+      strip._add(widget);
+    }
+    return { widget, container: strip };
   }
   getroot() {
     let p = this;
@@ -67727,19 +67828,24 @@ var Container3 = class _Container extends UIBase {
     return p;
   }
   simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-    return simplesliderImpl(
-      this,
-      datapath,
-      name2,
-      defaultval,
-      min,
-      max,
-      step,
-      isInt,
-      do_redraw,
-      callback,
+    const label = typeof name2 === "string" ? name2 : name2?.name;
+    return this.addPropLabel(
+      simplesliderImpl(
+        this,
+        datapath,
+        name2,
+        defaultval,
+        min,
+        max,
+        step,
+        isInt,
+        do_redraw,
+        callback,
+        packflag
+      ),
+      label,
       packflag
-    );
+    ).widget;
   }
   /**
    *
@@ -67750,20 +67856,25 @@ var Container3 = class _Container extends UIBase {
    * });
    * */
   slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-    return sliderImpl(
-      this,
-      datapath,
-      name2,
-      defaultval,
-      min,
-      max,
-      step,
-      is_int,
-      do_redraw,
-      callback,
-      packflag,
-      decimalPlaces
-    );
+    const label = typeof name2 === "string" ? name2 : name2?.name;
+    return this.addPropLabel(
+      sliderImpl(
+        this,
+        datapath,
+        name2,
+        defaultval,
+        min,
+        max,
+        step,
+        is_int,
+        do_redraw,
+        callback,
+        packflag,
+        decimalPlaces
+      ),
+      label,
+      packflag
+    ).widget;
   }
   _container_inherit(elem, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -67796,10 +67907,19 @@ var Container3 = class _Container extends UIBase {
     return colImpl(this, packflag);
   }
   colorPicker(inpath, packflag_or_args = 0, mass_set_path, themeOverride) {
-    return colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride);
+    const packflag = typeof packflag_or_args === "object" ? packflag_or_args.packflag : packflag_or_args;
+    return this.addPropLabel(
+      colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride),
+      void 0,
+      packflag
+    ).widget;
   }
   textarea(datapath, value = "", packflag = 0, mass_set_path) {
-    return textareaImpl(this, datapath, value, packflag, mass_set_path);
+    return this.addPropLabel(
+      textareaImpl(this, datapath, value, packflag, mass_set_path),
+      void 0,
+      packflag
+    ).widget;
   }
   /**
    * html5 viewer
@@ -69462,6 +69582,21 @@ init_ui_base();
 init_util2();
 init_menu();
 init_ui_base();
+var _disableflags = class {
+  container;
+  disabled;
+  constructor(container, disabled) {
+    this.container = container;
+    this.disabled = disabled;
+    container.inherit_packflag &= ~disabled;
+  }
+  [Symbol.dispose]() {
+    this.container.inherit_packflag |= this.disabled;
+  }
+};
+function disableflags(container, disabled) {
+  return new _disableflags(container, disabled);
+}
 var domTransferAttrs = /* @__PURE__ */ new Set(["id", "title", "tab-index"]);
 var domEventAttrs = /* @__PURE__ */ new Set([
   "click",
@@ -69513,20 +69648,53 @@ function getIconFlag(elem) {
 }
 function getPackFlag(elem) {
   let packflag = getIconFlag(elem);
-  if (elem.hasAttribute("drawChecks")) {
-    if (!getbool(elem, "drawChecks")) {
-      packflag |= PackFlags.HIDE_CHECK_MARKS;
+  let disabledFlags = 0;
+  const boolflag = (name2, flag) => {
+    if (getbool(elem, name2)) {
+      packflag |= flag;
     } else {
-      packflag &= ~PackFlags.HIDE_CHECK_MARKS;
+      packflag &= ~flag;
+      disabledFlags |= flag;
+    }
+  };
+  boolflag("drawChecks", PackFlags.HIDE_CHECK_MARKS);
+  boolflag("simpleSlider", PackFlags.SIMPLE_NUMSLIDERS);
+  boolflag("rollarSlider", PackFlags.FORCE_ROLLER_SLIDER);
+  boolflag("showLabel", PackFlags.FORCE_PROP_LABELS);
+  boolflag("noLabel", PackFlags.NO_PROP_LABELS);
+  if (elem.hasAttribute("labelPosition")) {
+    let pos = elem.getAttribute("labelPosition");
+    if (pos === "top") {
+      disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT;
+      packflag |= PackFlags.LABEL_ON_TOP;
+    } else if (pos === "left") {
+      disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_TOP;
+      packflag |= PackFlags.LABEL_ON_LEFT;
+    } else if (pos === "right") {
+      disabledFlags |= PackFlags.LABEL_ON_TOP | PackFlags.LABEL_ON_LEFT;
+      packflag |= PackFlags.LABEL_ON_RIGHT;
+    } else {
     }
   }
-  if (getbool(elem, "simpleSlider")) {
-    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+  if (elem.hasAttribute("sliderTextBox") && elem instanceof Container3) {
+    const textbox = getbool(elem, "sliderTextBox");
+    if (textbox) {
+      disabledFlags |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+    } else {
+      packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+    }
   }
-  if (getbool(elem, "rollarSlider")) {
-    packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+  if (elem.hasAttribute("sliderMode") && elem instanceof Container3) {
+    const sliderMode = elem.getAttribute("sliderMode");
+    if (sliderMode === "slider") {
+      disabledFlags |= PackFlags.FORCE_ROLLER_SLIDER;
+      packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+    } else if (sliderMode === "roller") {
+      disabledFlags |= PackFlags.SIMPLE_NUMSLIDERS;
+      packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+    }
   }
-  return packflag;
+  return { packflag, disabled: disabledFlags };
 }
 function myParseFloat(s) {
   let str = "" + s;
@@ -69627,7 +69795,9 @@ var Handler = class {
           elem2.setAttribute("massSetPath", mpath ?? "");
           elem2.setAttribute("mass_set_path", mpath ?? "");
         }
+        elem2.packflag |= container.inherit_packflag;
         container.add(elem2);
+        this._basic(elemEl, elem2, container);
         this._style(elemEl, elem2);
         if (elem2 instanceof Container3) {
           this.push();
@@ -69643,7 +69813,7 @@ var Handler = class {
         for (const attr of elemEl.getAttributeNames()) {
           elem2b.setAttribute(attr, elemEl.getAttribute(attr) ?? "");
         }
-        this._basic(elemEl, elem2b);
+        this._basic(elemEl, elem2b, this.container);
         this.container.shadow.appendChild(elem2b);
         const anyElem2b = elem2b;
         anyElem2b["pathux_ctx"] = this.container.ctx;
@@ -69786,7 +69956,8 @@ var Handler = class {
       }
     }
   }
-  _basic(elem, elem2, options = {}) {
+  _basic(elem, elem2, container, options = {}) {
+    const { packflag, disabled } = getPackFlag(elem);
     if (!options.noInheritCustomAttrs) {
       this._inheritCustomAttrs(elem, elem2);
     }
@@ -69834,39 +70005,11 @@ var Handler = class {
       }
       elem2.useIcons(val);
     }
-    if (elem.hasAttribute("sliderTextBox") && elem2 instanceof Container3) {
-      const textbox = getbool(elem, "sliderTextBox");
-      if (textbox) {
-        elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-      } else {
-        elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-      }
+    if (elem2 instanceof UIBase) {
+      elem2.packflag |= packflag | container.inherit_packflag & ~disabled;
     }
-    if (elem.hasAttribute("sliderMode") && elem2 instanceof Container3) {
-      const sliderMode = elem.getAttribute("sliderMode");
-      if (sliderMode === "slider") {
-        elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-      } else if (sliderMode === "roller") {
-        elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
-      }
-    }
-    if (elem.hasAttribute("showLabel") && elem2 instanceof Container3) {
-      const state = getbool(elem, "showLabel");
-      if (state) {
-        elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
-      } else {
-        elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
-      }
+    if (elem2 instanceof Container3) {
+      elem2.inherit_packflag |= packflag | container.inherit_packflag & ~disabled;
     }
     function doBox(key) {
       if (elem.hasAttribute(key) && elem2 instanceof UIBase) {
@@ -69930,10 +70073,7 @@ var Handler = class {
         this.inheritDomAttrs[k] = elem.getAttribute(k) ?? "";
       }
     }
-    const packflag = getPackFlag(elem);
-    con.packflag |= packflag;
-    con.inherit_packflag |= packflag;
-    this._basic(elem, con, options);
+    this._basic(elem, con, con, options);
     if (!options?.ignorePathPrefix) {
       this._handlePathPrefix(elem, con);
     }
@@ -69941,7 +70081,7 @@ var Handler = class {
   noteframe(elem) {
     const ret = this.container.noteframe();
     if (ret) {
-      this._basic(elem, ret);
+      this._basic(elem, ret, this.container);
     }
   }
   cell(elem) {
@@ -70001,7 +70141,7 @@ var Handler = class {
   }
   label(elem) {
     const elem2 = this.container.label(elem.innerHTML);
-    this._basic(elem, elem2);
+    this._basic(elem, elem2, this.container);
   }
   colorfield(elem) {
     this._prop(elem, "colorfield");
@@ -70011,49 +70151,61 @@ var Handler = class {
     this._prop(elem, "prop");
   }
   _prop(elem, key) {
-    const packflag = getPackFlag(elem);
-    const path = elem.getAttribute("path");
-    let elem2;
-    if (key === "pathlabel") {
-      elem2 = this.container.pathlabel(
-        path ?? void 0,
-        elem.innerHTML,
-        packflag
-      );
-    } else if (key === "textbox") {
-      const tb = this.container.textbox(path ?? void 0, void 0, void 0, packflag);
-      elem2 = tb;
-      if (tb) {
-        tb.update();
-      }
-      if (elem.hasAttribute("modal")) {
-        elem2.setAttribute("modal", elem.getAttribute("modal") ?? "");
-      }
-      if (elem.hasAttribute("realtime")) {
-        elem2.setAttribute("realtime", elem.getAttribute("realtime") ?? "");
-      }
-    } else if (key === "colorfield") {
-      elem2 = this.container.colorPicker(path ?? void 0, {
-        packflag,
-        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? void 0 : void 0
-      });
-    } else {
-      elem2 = this.container[key](path ?? void 0, packflag);
-    }
-    if (!elem2) {
-      const span = document.createElement("span");
-      span.innerHTML = "error";
-      this.container.shadow.appendChild(span);
-    } else {
-      this._basic(elem, elem2);
-      if (elem.hasAttribute("massSetPath") || this.container.massSetPrefix) {
-        let mpath = elem.getAttribute("massSetPath") ?? void 0;
-        if (!mpath) {
-          mpath = elem.getAttribute("path") ?? void 0;
+    var _stack = [];
+    try {
+      let { packflag, disabled } = getPackFlag(elem);
+      packflag |= this.container.inherit_packflag;
+      const guard = __using(_stack, disableflags(this.container, disabled));
+      const path = elem.getAttribute("path");
+      let elem2;
+      if (key === "pathlabel") {
+        elem2 = this.container.pathlabel(
+          path ?? void 0,
+          elem.innerHTML,
+          packflag
+        );
+      } else if (key === "textbox") {
+        const tb = this.container.textbox(path ?? void 0, void 0, void 0, packflag);
+        elem2 = tb;
+        if (tb) {
+          tb.update();
         }
-        mpath = this.container._getMassPath(this.container.ctx, path ?? void 0, mpath);
-        elem2.setAttribute("mass_set_path", mpath ?? "");
+        if (elem.hasAttribute("modal")) {
+          elem2.setAttribute("modal", elem.getAttribute("modal") ?? "");
+        }
+        if (elem.hasAttribute("realtime")) {
+          elem2.setAttribute("realtime", elem.getAttribute("realtime") ?? "");
+        }
+      } else if (key === "colorfield") {
+        elem2 = this.container.colorPicker(path ?? void 0, {
+          packflag,
+          themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") ?? void 0 : void 0
+        });
+      } else if (key === "prop") {
+        elem2 = this.container.prop(path ?? "", packflag);
+      } else {
+        throw new Error("unknown element " + key);
       }
+      if (!elem2) {
+        const span = document.createElement("span");
+        span.innerHTML = "error";
+        this.container.shadow.appendChild(span);
+      } else {
+        this._basic(elem, elem2, this.container);
+        if (elem.hasAttribute("massSetPath") || this.container.massSetPrefix) {
+          let mpath = elem.getAttribute("massSetPath") ?? void 0;
+          if (!mpath) {
+            mpath = elem.getAttribute("path") ?? void 0;
+          }
+          mpath = this.container._getMassPath(this.container.ctx, path ?? void 0, mpath);
+          elem2.setAttribute("mass_set_path", mpath ?? "");
+        }
+      }
+      return elem2;
+    } catch (_) {
+      var _error = _, _hasError = true;
+    } finally {
+      __callDispose(_stack, _error, _hasError);
     }
   }
   strip(elem) {
@@ -70087,108 +70239,129 @@ var Handler = class {
     this.tool(elem, "toolPanel");
   }
   tool(elem, key = "tool") {
-    let path = elem.getAttribute("path");
-    let packflag = getPackFlag(elem);
-    let noIcons = false;
-    let iconflags;
-    if (getbool(elem, "useIcons")) {
-      packflag |= PackFlags.USE_ICONS;
-    } else if (elem.hasAttribute("useIcons")) {
-      packflag &= ~PackFlags.USE_ICONS;
-      noIcons = true;
-    }
-    const label = ("" + elem.textContent).trim();
-    if (label.length > 0) {
-      path += "|" + label;
-    }
-    if (noIcons) {
-      iconflags = this.container.useIcons(false);
-    }
-    const elem2 = this.container[key](path, packflag);
-    if (elem2) {
-      this._basic(elem, elem2);
-    } else {
-      const errElem = document.createElement("strip");
-      errElem.innerHTML = "error";
-      this.container.shadow.appendChild(errElem);
-      this._basic(elem, errElem);
-    }
-    if (noIcons && iconflags !== void 0) {
-      this.container.inherit_packflag |= iconflags;
-      this.container.packflag |= iconflags;
+    var _stack = [];
+    try {
+      let path = elem.getAttribute("path");
+      let { packflag, disabled } = getPackFlag(elem);
+      const guard = __using(_stack, disableflags(this.container, disabled));
+      let noIcons = false;
+      let iconflags;
+      if (getbool(elem, "useIcons")) {
+        packflag |= PackFlags.USE_ICONS;
+      } else if (elem.hasAttribute("useIcons")) {
+        packflag &= ~PackFlags.USE_ICONS;
+        noIcons = true;
+      }
+      const label = ("" + elem.textContent).trim();
+      if (label.length > 0) {
+        path += "|" + label;
+      }
+      if (noIcons) {
+        iconflags = this.container.useIcons(false);
+      }
+      const elem2 = this.container[key](path, packflag);
+      if (elem2) {
+        this._basic(elem, elem2, this.container);
+      } else {
+        const errElem = document.createElement("strip");
+        errElem.innerHTML = "error";
+        this.container.shadow.appendChild(errElem);
+        this._basic(elem, errElem, this.container);
+      }
+      if (noIcons && iconflags !== void 0) {
+        this.container.inherit_packflag |= iconflags;
+        this.container.packflag |= iconflags;
+      }
+    } catch (_) {
+      var _error = _, _hasError = true;
+    } finally {
+      __callDispose(_stack, _error, _hasError);
     }
   }
   listbox(elem) {
-    const packflag = getPackFlag(elem);
-    const path = elem.getAttribute("path") ?? void 0;
-    const ret = this.container.listbox(path ?? void 0, packflag);
-    if (elem.hasAttribute("resize-axes")) {
-      ret.setAttribute(
-        "resize-axes",
-        elem.getAttribute("resize-axes") ?? ""
-      );
+    var _stack = [];
+    try {
+      const { packflag, disabled } = getPackFlag(elem);
+      const guard = __using(_stack, disableflags(this.container, disabled));
+      const path = elem.getAttribute("path") ?? void 0;
+      const ret = this.container.listbox(path ?? void 0, packflag);
+      if (elem.hasAttribute("resize-axes")) {
+        ret.setAttribute("resize-axes", elem.getAttribute("resize-axes") ?? "");
+      }
+      if (elem.hasAttribute("resizable")) {
+        ret.resizable = getbool(elem, "resizable");
+      }
+      this._basic(elem, ret, this.container);
+      return ret;
+    } catch (_) {
+      var _error = _, _hasError = true;
+    } finally {
+      __callDispose(_stack, _error, _hasError);
     }
-    if (elem.hasAttribute("resizable")) {
-      ret.resizable = getbool(elem, "resizable");
-    }
-    this._basic(elem, ret);
-    return ret;
   }
   dropbox(elem) {
     return this.menu(elem, true);
   }
   menu(elem, isDropBox = false) {
-    const packflag = getPackFlag(elem);
-    const title = elem.getAttribute("name") ?? "";
-    const list5 = [];
-    for (const child of elem.childNodes) {
-      const childEl = child;
-      if (!childEl.tagName) continue;
-      if (childEl.tagName === "tool") {
-        let path = childEl.getAttribute("path") ?? "";
-        const label = childEl.innerHTML.trim();
-        if (label.length > 0) {
-          path += "|" + label;
+    var _stack = [];
+    try {
+      const { packflag, disabled } = getPackFlag(elem);
+      const guard = __using(_stack, disableflags(this.container, disabled));
+      const title = elem.getAttribute("name") ?? "";
+      const list5 = [];
+      for (const child of elem.childNodes) {
+        const childEl = child;
+        if (!childEl.tagName) continue;
+        if (childEl.tagName === "tool") {
+          let path = childEl.getAttribute("path") ?? "";
+          const label = childEl.innerHTML.trim();
+          if (label.length > 0) {
+            path += "|" + label;
+          }
+          list5.push(path);
+        } else if (childEl.tagName === "sep") {
+          list5.push(Menu.SEP);
+        } else if (childEl.tagName === "item") {
+          let id;
+          let icon;
+          let hotkey;
+          let description;
+          if (childEl.hasAttribute("id")) {
+            id = childEl.getAttribute("id") ?? void 0;
+          }
+          if (childEl.hasAttribute("icon")) {
+            const iconName = (childEl.getAttribute("icon") ?? "").toUpperCase().trim();
+            icon = Icons[iconName];
+          }
+          if (childEl.hasAttribute("hotkey")) {
+            hotkey = childEl.getAttribute("hotkey") ?? void 0;
+          }
+          if (childEl.hasAttribute("description")) {
+            description = childEl.getAttribute("description") ?? void 0;
+          }
+          list5.push({
+            name: childEl.innerHTML.trim(),
+            id,
+            icon,
+            hotkey,
+            description
+          });
         }
-        list5.push(path);
-      } else if (childEl.tagName === "sep") {
-        list5.push(Menu.SEP);
-      } else if (childEl.tagName === "item") {
-        let id;
-        let icon;
-        let hotkey;
-        let description;
-        if (childEl.hasAttribute("id")) {
-          id = childEl.getAttribute("id") ?? void 0;
-        }
-        if (childEl.hasAttribute("icon")) {
-          const iconName = (childEl.getAttribute("icon") ?? "").toUpperCase().trim();
-          icon = Icons[iconName];
-        }
-        if (childEl.hasAttribute("hotkey")) {
-          hotkey = childEl.getAttribute("hotkey") ?? void 0;
-        }
-        if (childEl.hasAttribute("description")) {
-          description = childEl.getAttribute("description") ?? void 0;
-        }
-        list5.push({
-          name: childEl.innerHTML.trim(),
-          id,
-          icon,
-          hotkey,
-          description
-        });
       }
+      const ret = this.container.menu(title, list5, packflag);
+      if (isDropBox) {
+        ret.removeAttribute("simple");
+      }
+      if (elem.hasAttribute("id")) {
+        ret.setAttribute("id", elem.getAttribute("id") ?? "");
+      }
+      this._basic(elem, ret, this.container);
+      return ret;
+    } catch (_) {
+      var _error = _, _hasError = true;
+    } finally {
+      __callDispose(_stack, _error, _hasError);
     }
-    const ret = this.container.menu(title, list5, packflag);
-    if (isDropBox) {
-      ret.removeAttribute("simple");
-    }
-    if (elem.hasAttribute("id")) {
-      ret.setAttribute("id", elem.getAttribute("id") ?? "");
-    }
-    this._basic(elem, ret);
-    return ret;
   }
   button(elem) {
     const title = elem.innerHTML.trim();
@@ -70196,7 +70369,7 @@ var Handler = class {
     if (elem.hasAttribute("id")) {
       ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
-    this._basic(elem, ret);
+    this._basic(elem, ret, this.container);
   }
   iconbutton(elem) {
     const title = elem.innerHTML.trim();
@@ -70209,7 +70382,7 @@ var Handler = class {
     if (elem.hasAttribute("id")) {
       ret.setAttribute("id", elem.getAttribute("id") ?? "");
     }
-    this._basic(elem, ret);
+    this._basic(elem, ret, this.container);
   }
   tab(elem) {
     this.push();
@@ -77905,6 +78078,9 @@ pathux.NodeSocketBase {
    */
   createUI(container, datapath, label) {
     const w = container.prop(datapath);
+    if (!w?.setAttribute) {
+      debugger;
+    }
     if (label !== void 0) {
       w?.setAttribute("name", label);
     }
@@ -77998,6 +78174,12 @@ function finalDef(cls) {
     def.color ??= pdef.color;
     def.size ??= pdef.size;
     def.typeVersion ??= pdef.typeVersion;
+    def.customPropUX = def.customPropUX ?? {};
+    for (const k in pdef.customPropUX ?? {}) {
+      if (!(k in def.customPropUX)) {
+        def.customPropUX[k] = pdef.customPropUX[k];
+      }
+    }
     for (const k in pdef.inputs) {
       if (!(k in inputs)) inputs[k] = pdef.inputs[k];
     }
@@ -78058,6 +78240,7 @@ pathux.GraphNode {
   size;
   typeVersion;
   dirty = false;
+  customPropUX = /* @__PURE__ */ new Map();
   static decomposePropName(prop) {
     let name2 = prop;
     let type = "prop";
@@ -78091,6 +78274,9 @@ pathux.GraphNode {
     this.props = {};
     for (const k in def.props) {
       this._adoptProp(k, def.props[k].copy());
+    }
+    for (const k in def.customPropUX) {
+      this.customPropUX.set(k, def.customPropUX[k]);
     }
   }
   _adoptSocket(key, sock, dir) {
@@ -79406,16 +79592,66 @@ init_toolsys();
 function isExposureEdit(edit) {
   return edit.kind === "exposeEntry" || edit.kind === "reorderEntry" || edit.kind === "repointEntry" || edit.kind === "removeEntry";
 }
+var AsyncGateOp = class extends ToolOp {
+  stepDelegate;
+  shortLabel = "";
+  message = "";
+  cb;
+  result;
+  caughtError;
+  failed = false;
+  static tooldef() {
+    return {
+      toolpath: "pathux.graph.async_gate",
+      uiname: "Async Undo Gate",
+      description: "Locks input while an async undo step runs.",
+      is_modal: true,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  init(delegate, shortLabel, message3, cb) {
+    this.stepDelegate = delegate;
+    this.shortLabel = shortLabel;
+    this.message = message3;
+    this.cb = cb;
+    return this;
+  }
+  on_keydown(_e) {
+  }
+  modalStart(ctx) {
+    const gate = super.modalStart(ctx);
+    void this.run(ctx);
+    return gate.then(() => {
+      if (this.failed) {
+        throw this.caughtError;
+      }
+      return this.result;
+    });
+  }
+  async run(ctx) {
+    try {
+      await this.stepDelegate.undoStepBegin(ctx, this.shortLabel, this.message);
+      this.result = await this.cb();
+    } catch (err) {
+      this.failed = true;
+      this.caughtError = err;
+    } finally {
+      await this.stepDelegate.undoStepEnd(ctx);
+      this.modalEnd();
+    }
+  }
+};
 var ToolOpDelegate = class {
   undoStepLvl = 0;
   pendingMacro;
-  undoStepBegin(ctx) {
+  async undoStepBegin(ctx, _shortLabel, _message) {
     if (this.undoStepLvl === 0) {
       this.pendingMacro = new ToolMacro();
     }
     this.undoStepLvl++;
   }
-  undoStepEnd(ctx) {
+  async undoStepEnd(ctx) {
     this.undoStepLvl--;
     if (this.undoStepLvl === 0 && this.pendingMacro) {
       ctx.toolstack.execTool(ctx, this.pendingMacro);
@@ -79634,6 +79870,7 @@ var ToolOpDelegate = class {
 init_menu();
 init_dropbox();
 init_ui_base();
+init_toolprop();
 function exposedEntryState(graph, entry) {
   const node = graph.nodeIdMap.get(entry.nodeId);
   if (node === void 0) {
@@ -79678,8 +79915,14 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
     if (row.state !== "ok") {
       continue;
     }
+    let createUI = row.socket?.createUI;
+    if (row.socket && createUI) {
+      createUI = createUI.bind(row.socket);
+    } else if (!row.socket) {
+      createUI = node.customPropUX.get(Node3.decomposePropName(row.entry.propKey).name);
+    }
     if (row.path !== void 0) {
-      const propRow = propEditRow(ctx, row.label, row.path, inherit_packflag, row.socket);
+      const propRow = propEditRow(ctx, row.label, row.path, inherit_packflag, createUI);
       if (propRow) {
         propRow.inherit_packflag |= inherit_packflag;
       }
@@ -79711,19 +79954,29 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
         case "prop":
           break;
       }
-      root.appendChild(propEditRow(ctx, name2, path, inherit_packflag, socket));
+      root.appendChild(
+        propEditRow(
+          ctx,
+          name2,
+          path,
+          inherit_packflag,
+          socket?.createUI ? socket.createUI.bind(socket) : void 0
+        )
+      );
     }
   }
 }
-function propEditRow(ctx, label, path, inherit_packflag, socket) {
+function propEditRow(ctx, label, path, inherit_packflag, createUI) {
   const row = UIBase.createElement("container-x");
   row.inherit_packflag |= inherit_packflag;
   row.ctx = ctx;
   row._init();
   row.classList.add("nodeeditor-prop-row");
+  row.inherit_packflag |= PackFlags.FORCE_PROP_LABELS | PackFlags.LABEL_ON_TOP;
+  label = ToolProperty.makeUIName(label);
   try {
-    if (socket !== void 0) {
-      socket.createUI(row, path, label);
+    if (createUI !== void 0) {
+      createUI(row, path, label);
     } else {
       row.prop(path)?.setAttribute("name", label);
     }
@@ -80247,7 +80500,8 @@ var NodeFrame = class extends Container3 {
         this.ctx,
         key,
         `${this.nodePath}.props['${key}'].value`,
-        this.inherit_packflag
+        this.inherit_packflag,
+        this.node.customPropUX.get(key)
       );
       row.parentWidget = this._body;
       row.packflag |= this.inherit_packflag;
@@ -80317,7 +80571,13 @@ var NodeFrame = class extends Container3 {
     const { name: socketName, type: dir } = Node3.decomposePropName(socketPropName);
     const path = `${this.nodePath}.props['${socketPropName}'].value`;
     const sock = nodePropSocket(this.node, socketPropName);
-    const row = propEditRow(this.ctx, socketName, path, this.inherit_packflag, sock);
+    const row = propEditRow(
+      this.ctx,
+      socketName,
+      path,
+      this.inherit_packflag,
+      sock?.createUI ? sock.createUI.bind(sock) : void 0
+    );
     row.parentWidget = this;
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
@@ -81948,58 +82208,65 @@ var NodeGraphView = class extends Container3 {
   }
   // TODO: make this into a using keyword instead
   // of using a closure pattern to do RAII
-  singleUndoStep(cb) {
-    let result;
-    try {
-      this.delegate.undoStepBegin(this.graphContext);
-      result = cb();
-    } finally {
-      this.delegate.undoStepEnd(this.graphContext);
-    }
-    return result;
+  async singleUndoStep(cb, shortLabel = "Edit", message3 = "Edit") {
+    const gate = new AsyncGateOp().init(
+      this.delegate,
+      shortLabel,
+      message3,
+      cb
+    );
+    return await gate.modalStart(this.graphContext);
   }
   /** Deletes the selected nodes and severs the selected links. */
-  deleteSelected() {
-    this.singleUndoStep(() => {
-      for (const ref of this.selectedLinks()) {
-        this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
-      }
-      this.linkSelection.clear();
-      for (const nid of [...this.selection]) {
-        this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-      }
-      this.syncGraph();
-    });
+  async deleteSelected() {
+    await this.singleUndoStep(
+      () => {
+        for (const ref of this.selectedLinks()) {
+          this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+        }
+        this.linkSelection.clear();
+        for (const nid of [...this.selection]) {
+          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+        }
+        this.syncGraph();
+      },
+      "Delete",
+      "Delete selected nodes"
+    );
   }
-  duplicateSelected() {
+  async duplicateSelected() {
     if (!this.currentGraph) {
       return;
     }
-    const existingNodes = new Set(Array.from(this.currentGraph.nodes).map((n) => n.id));
-    this.singleUndoStep(() => {
-      const graph = this.currentGraph;
-      const selection = Array.from(this.selection);
-      this.selection.clear();
-      for (const nid of selection) {
-        const node = graph?.nodeIdMap.get(nid);
-        if (node === void 0) {
-          continue;
+    await this.singleUndoStep(
+      () => {
+        const graph = this.currentGraph;
+        const existingNodes = new Set(Array.from(graph?.nodes ?? []).map((n) => n.id));
+        const selection = Array.from(this.selection);
+        this.selection.clear();
+        for (const nid of selection) {
+          const node = graph?.nodeIdMap.get(nid);
+          if (node === void 0) {
+            continue;
+          }
+          this._dispatch({
+            kind: "duplicateNode",
+            graphPath: this.currentGraphPath,
+            nodeId: nid,
+            x: node.pos[0] + 20,
+            y: node.pos[1] + 20
+          });
         }
-        this._dispatch({
-          kind: "duplicateNode",
-          graphPath: this.currentGraphPath,
-          nodeId: nid,
-          x: node.pos[0] + 20,
-          y: node.pos[1] + 20
-        });
-      }
-    });
-    this.syncGraph();
-    for (const node of this.currentGraph.nodes) {
-      if (!existingNodes.has(node.id)) {
-        this.selection.add(node.id);
-      }
-    }
+        this.syncGraph();
+        for (const node of graph?.nodes ?? []) {
+          if (!existingNodes.has(node.id)) {
+            this.selection.add(node.id);
+          }
+        }
+      },
+      "Duplicate",
+      "Duplicate selected nodes"
+    );
   }
   replaceNode(nodeId, newType) {
     this._dispatch({ kind: "replaceNode", graphPath: this.currentGraphPath, nodeId, newType });
@@ -97699,7 +97966,7 @@ struct_default.register(MenuBarEditor2);
 
 // example/page.tsx
 function PropsPage(refs = {}) {
-  return /* @__PURE__ */ jsx("tabs", { pos: "left", style: "overflow-y : scroll" }, /* @__PURE__ */ jsx("tab", { label: "Theme", "data-testid": "tab-theme" }, /* @__PURE__ */ jsx("button", { ref: refs.exportButton }, "Export Theme"), /* @__PURE__ */ jsx("theme-editor-x", { ref: refs.themeEditor })), /* @__PURE__ */ jsx("tab", { label: "Tab", "data-testid": "tab-tab" }, /* @__PURE__ */ jsx("tool", { path: "canvas.draw()", useIcons: "false" }, "Exec Draw"), /* @__PURE__ */ jsx("panel", { label: "Panel", closed: "false", path: "data" }, /* @__PURE__ */ jsx("strip", { mode: "vertical" }, /* @__PURE__ */ jsx("prop", { path: "angle1" }), /* @__PURE__ */ jsx("prop", { path: "angle2" })), /* @__PURE__ */ jsx("prop", { path: "vector_test" }), /* @__PURE__ */ jsx("column", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[0]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[1]" })), /* @__PURE__ */ jsx("row", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[2]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[3]" })), /* @__PURE__ */ jsx("strip", { ref: refs.eventStrip })), /* @__PURE__ */ jsx("panel", { label: "Canvas", path: "canvas" }, /* @__PURE__ */ jsx("prop", { path: "drawflag[BLUR]", useIcons: "false" }))), /* @__PURE__ */ jsx("tab", { label: "Graph Packing", ref: refs.graphTab, "data-testid": "tab-graph-packing" }), /* @__PURE__ */ jsx("tab", { label: "Curve Mapping", "data-testid": "tab-curve-mapping" }, /* @__PURE__ */ jsx("prop", { path: "data.curvemap" })), /* @__PURE__ */ jsx("tab", { label: "ListBox", "data-testid": "tab-listbox" }, /* @__PURE__ */ jsx("label", null, "Canvas paths (DataList-backed listbox):"), /* @__PURE__ */ jsx("listbox", { path: "canvas.paths", ref: refs.listbox, height: "220", "resize-axes": "xy" }), /* @__PURE__ */ jsx("panel", { label: "Active Path", path: "canvas.paths.active" }, /* @__PURE__ */ jsx("colorfield", { path: "material.color" }))), /* @__PURE__ */ jsx("tab", { label: "Last Command", "data-testid": "tab-last-command" }, /* @__PURE__ */ jsx("last-tool-panel-x", null)));
+  return /* @__PURE__ */ jsx("tabs", { pos: "left", style: "overflow-y : scroll" }, /* @__PURE__ */ jsx("tab", { label: "Theme", "data-testid": "tab-theme" }, /* @__PURE__ */ jsx("button", { ref: refs.exportButton }, "Export Theme"), /* @__PURE__ */ jsx("theme-editor-x", { ref: refs.themeEditor })), /* @__PURE__ */ jsx("tab", { label: "Tab", "data-testid": "tab-tab", showLabel: "true" }, /* @__PURE__ */ jsx("tool", { path: "canvas.draw()", useIcons: "false" }, "Exec Draw"), /* @__PURE__ */ jsx("panel", { label: "Panel", closed: "false", path: "data", showLabel: "true" }, /* @__PURE__ */ jsx("strip", { mode: "vertical", showLabel: "true" }, /* @__PURE__ */ jsx("prop", { path: "angle1" }), /* @__PURE__ */ jsx("prop", { path: "angle2" })), /* @__PURE__ */ jsx("prop", { path: "vector_test" }), /* @__PURE__ */ jsx("column", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[0]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[1]" })), /* @__PURE__ */ jsx("row", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[2]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[3]" })), /* @__PURE__ */ jsx("strip", { ref: refs.eventStrip })), /* @__PURE__ */ jsx("panel", { label: "Canvas", path: "canvas" }, /* @__PURE__ */ jsx("prop", { path: "drawflag[BLUR]", useIcons: "false" }))), /* @__PURE__ */ jsx("tab", { label: "Graph Packing", ref: refs.graphTab, "data-testid": "tab-graph-packing" }), /* @__PURE__ */ jsx("tab", { label: "Curve Mapping", "data-testid": "tab-curve-mapping" }, /* @__PURE__ */ jsx("prop", { path: "data.curvemap" })), /* @__PURE__ */ jsx("tab", { label: "ListBox", "data-testid": "tab-listbox" }, /* @__PURE__ */ jsx("label", null, "Canvas paths (DataList-backed listbox):"), /* @__PURE__ */ jsx("listbox", { path: "canvas.paths", ref: refs.listbox, height: "220", "resize-axes": "xy" }), /* @__PURE__ */ jsx("panel", { label: "Active Path", path: "canvas.paths.active" }, /* @__PURE__ */ jsx("colorfield", { path: "material.color" }))), /* @__PURE__ */ jsx("tab", { label: "Last Command", "data-testid": "tab-last-command" }, /* @__PURE__ */ jsx("last-tool-panel-x", null)));
 }
 
 // example/editors/properties/properties.ts

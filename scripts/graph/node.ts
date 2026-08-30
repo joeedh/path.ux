@@ -37,6 +37,10 @@ export interface NodeDef {
   props?: Record<string, ToolProperty>;
   /** Bumped when the type changes its socket or prop layout; written per node. */
   typeVersion?: number;
+  customPropUX?: Record<
+    string,
+    <CTX extends IContextBase>(row: Container<CTX>, path: string, label: string) => void
+  >;
 }
 
 export interface NodeTypeConstructor {
@@ -79,6 +83,13 @@ function finalDef(cls: NodeTypeConstructor): NodeDef {
     def.color ??= pdef.color;
     def.size ??= pdef.size;
     def.typeVersion ??= pdef.typeVersion;
+    def.customPropUX = def.customPropUX ?? {};
+
+    for (const k in pdef.customPropUX ?? {}) {
+      if (!(k in def.customPropUX)) {
+        def.customPropUX[k] = pdef.customPropUX![k];
+      }
+    }
 
     for (const k in pdef.inputs) {
       if (!(k in inputs)) inputs[k] = pdef.inputs[k];
@@ -163,6 +174,10 @@ pathux.GraphNode {
   typeVersion: number;
 
   dirty = false;
+  customPropUX = new Map<
+    string,
+    <CTX extends IContextBase>(row: Container<CTX>, path: string, label: string) => void
+  >();
 
   static decomposePropName(prop: NodePropName): { type: "in" | "out" | "prop"; name: string } {
     // keep up to date with NodeSocketBase.nodePropName!!
@@ -205,6 +220,10 @@ pathux.GraphNode {
     this.props = {};
     for (const k in def.props) {
       this._adoptProp(k, def.props[k].copy() as ToolProperty);
+    }
+
+    for (const k in def.customPropUX) {
+      this.customPropUX.set(k, def.customPropUX[k]);
     }
   }
 

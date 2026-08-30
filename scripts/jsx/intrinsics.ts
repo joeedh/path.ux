@@ -37,12 +37,17 @@ interface BaseAttrs {
   "data-testid"?: string;
 }
 
-interface ContainerAttrs extends BaseAttrs {
+interface LabelAttrs {
+  showLabel?: XBool;
+  noLabel?: XBool;
+  labelPosition?: "top" | "left" | "right";
+}
+
+interface ContainerAttrs extends BaseAttrs, LabelAttrs {
   ref?: Ref<Container>;
   path?: KnownDataPath;
   massSetPath?: string;
   useIcons?: IconMode;
-  showLabel?: XBool;
   sliderMode?: "slider" | "roller";
 }
 
@@ -51,7 +56,7 @@ interface LeafAttrs extends BaseAttrs {
   useIcons?: IconMode;
 }
 
-interface PathAttrs extends LeafAttrs {
+interface PathAttrs extends LeafAttrs, LabelAttrs {
   path: KnownDataPath;
   massSetPath?: string;
 }

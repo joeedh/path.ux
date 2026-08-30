@@ -16,10 +16,13 @@ import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop
 import type { DropBox } from "../menu/dropbox";
 import type { MenuTemplate } from "../menu/menu_types";
 import { IsRowFrameTag } from "./ui_consts";
-
+import { elementIsRow } from "./base/ui_base_dom";
 import { IContextBase } from "./context_base";
 import type { TreeView } from "../widgets/ui_treeview";
 import { ToolOp } from "../path-controller/toolsys/toolsys";
+import type { TextArea } from "../widgets/ui_textarea";
+import type { RichEditor } from "../widgets/ui_richedit";
+
 // Type-only: a value import of ui_containers would evaluate `class RowFrame extends
 // Container` while Container is still in its temporal dead zone. ui_containers imports
 // this module; this module must never import it at runtime, not even for side effects.
@@ -851,11 +854,13 @@ export class Container<
 
   //supports number types
   textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.on_change, packflag = 0) {
-    return textboxImpl(this, inpath, text, cb, packflag);
+    return this.addPropLabel(textboxImpl(this, inpath, text, cb, packflag), undefined, packflag)
+      .widget;
   }
 
   pathlabel(inpath?: KnownDataPath, label?: string, packflag = 0) {
-    return pathlabelImpl(this, inpath, label, packflag);
+    return this.addPropLabel(pathlabelImpl(this, inpath, label, packflag), undefined, packflag)
+      .widget;
   }
 
   label(text: string) {
@@ -902,7 +907,11 @@ export class Container<
   }
 
   colorbutton(inpath: string | undefined, packflag?: number, mass_set_path?: string) {
-    return colorbuttonImpl(this, inpath, packflag, mass_set_path);
+    return this.addPropLabel(
+      colorbuttonImpl(this, inpath, packflag, mass_set_path),
+      undefined,
+      packflag
+    ).widget;
   }
 
   noteframe(packflag = 0) {
@@ -910,7 +919,11 @@ export class Container<
   }
 
   curve1d(inpath?: string, packflag = 0, mass_set_path?: string) {
-    return curve1dImpl(this, inpath, packflag, mass_set_path);
+    return this.addPropLabel(
+      curve1dImpl(this, inpath, packflag, mass_set_path),
+      undefined,
+      packflag
+    ).widget;
   }
 
   vecpopup(inpath?: string, packflag = 0, mass_set_path?: string) {
@@ -942,10 +955,10 @@ export class Container<
     description?: string,
     mass_set_path?: string
   ) {
-    return iconcheckImpl(this, inpath, icon, description, mass_set_path);
+    return this.addPropLabel(iconcheckImpl(this, inpath, icon, description, mass_set_path)).widget;
   }
 
-  check(inpath: KnownDataPath | undefined, name: string, packflag = 0, mass_set_path?: string) {
+  check(inpath: KnownDataPath | undefined, name?: string, packflag = 0, mass_set_path?: string) {
     return checkImpl(this, inpath, name, packflag, mass_set_path);
   }
 
@@ -955,7 +968,7 @@ export class Container<
    * */
   checkenum(
     inpath: KnownDataPath | undefined,
-    name?: string | Record<string, unknown> | null,
+    name?: string | Parameters<typeof checkenumImpl>[2],
     packflag?: number,
     enummap?: unknown,
     defaultval?: unknown,
@@ -963,17 +976,23 @@ export class Container<
     iconmap?: unknown,
     mass_set_path?: string
   ): UIBase<CTX> {
-    return checkenumImpl(
-      this,
-      inpath,
-      name,
-      packflag,
-      enummap,
-      defaultval,
-      callback,
-      iconmap,
-      mass_set_path
-    );
+    const label = typeof name === "object" ? name.name : name;
+
+    return this.addPropLabel(
+      checkenumImpl(
+        this,
+        inpath,
+        name,
+        packflag,
+        enummap,
+        defaultval,
+        callback,
+        iconmap,
+        mass_set_path
+      ),
+      label,
+      packflag
+    ).widget;
   }
 
   checkenum_panel(
@@ -984,7 +1003,9 @@ export class Container<
     mass_set_path?: string,
     prop?: FlagProperty | EnumProperty
   ): Container<CTX> | undefined {
-    return checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
+    const label = name;
+    const widget = checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
+    return widget ? this.addPropLabel(widget, label, packflag).widget : widget;
   }
 
   /**
@@ -1021,7 +1042,68 @@ export class Container<
     iconmap?: IconMap,
     packflag = 0
   ): DropBox<CTX> {
-    return listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag);
+    const label = typeof name === "string" ? name : name?.name;
+    return this.addPropLabel(
+      listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag),
+      label,
+      packflag
+    ).widget;
+  }
+
+  /**
+   * To force a widget to never ever have a label
+   * add | PackFlags.NO_PROP_LABELS to its packflag
+   * (or pass that in here)
+   */
+  addPropLabel<T extends UIBase<CTX>>(
+    widget: T,
+    label?: string,
+    packflag: number = widget.packflag
+  ) {
+    packflag |= this.inherit_packflag;
+
+    if (!(packflag & PackFlags.FORCE_PROP_LABELS) || packflag & PackFlags.NO_PROP_LABELS) {
+      this._add(widget);
+      return { widget, container: this };
+    }
+
+    if (!label && widget.getAttribute("datapath")) {
+      const prop = this.getPathMeta(this.ctx, widget.getAttribute("datapath")!);
+      if (prop) {
+        label = prop.getUIName();
+      }
+    }
+    if (!label) {
+      return { widget, container: this };
+    }
+
+    let strip: Container<CTX>;
+    if (packflag & PackFlags.LABEL_ON_TOP) {
+      if (elementIsRow(this)) {
+        strip = this.col();
+      } else {
+        strip = this;
+      }
+    } else if (packflag & (PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT)) {
+      if (!elementIsRow(this)) {
+        strip = this.row();
+      } else {
+        strip = this;
+      }
+    } else {
+      strip = this;
+    }
+
+    if (packflag & PackFlags.LABEL_ON_RIGHT) {
+      strip._add(widget);
+      // XXX theme this padding!
+      const l = strip.label(label);
+      l.style.paddingLeft = "5px";
+    } else {
+      strip.label(label);
+      strip._add(widget);
+    }
+    return { widget, container: strip };
   }
 
   getroot(): Container<CTX> {
@@ -1046,19 +1128,24 @@ export class Container<
     callback?: Function,
     packflag = 0
   ) {
-    return simplesliderImpl(
-      this,
-      datapath,
-      name,
-      defaultval,
-      min,
-      max,
-      step,
-      isInt,
-      do_redraw,
-      callback,
+    const label = typeof name === "string" ? name : name?.name;
+    return this.addPropLabel(
+      simplesliderImpl(
+        this,
+        datapath,
+        name,
+        defaultval,
+        min,
+        max,
+        step,
+        isInt,
+        do_redraw,
+        callback,
+        packflag
+      ),
+      label,
       packflag
-    );
+    ).widget;
   }
 
   /**
@@ -1082,20 +1169,25 @@ export class Container<
     packflag = 0,
     decimalPlaces?: number
   ) {
-    return sliderImpl(
-      this,
-      datapath,
-      name,
-      defaultval,
-      min,
-      max,
-      step,
-      is_int,
-      do_redraw,
-      callback,
-      packflag,
-      decimalPlaces
-    );
+    const label = typeof name === "string" ? name : name?.name;
+    return this.addPropLabel(
+      sliderImpl(
+        this,
+        datapath,
+        name,
+        defaultval,
+        min,
+        max,
+        step,
+        is_int,
+        do_redraw,
+        callback,
+        packflag,
+        decimalPlaces
+      ),
+      label,
+      packflag
+    ).widget;
   }
 
   _container_inherit(
@@ -1154,11 +1246,25 @@ export class Container<
     mass_set_path?: string,
     themeOverride?: string
   ) {
-    return colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride);
+    const packflag = typeof packflag_or_args === "object" ? packflag_or_args.packflag : packflag_or_args;
+    return this.addPropLabel(
+      colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride),
+      undefined,
+      packflag
+    ).widget;
   }
 
-  textarea(datapath?: string, value = "", packflag = 0, mass_set_path?: string) {
-    return textareaImpl(this, datapath, value, packflag, mass_set_path);
+  textarea(
+    datapath?: string,
+    value = "",
+    packflag = 0,
+    mass_set_path?: string
+  ): TextArea<CTX> | RichEditor<CTX> {
+    return this.addPropLabel(
+      textareaImpl(this, datapath, value, packflag, mass_set_path),
+      undefined,
+      packflag
+    ).widget;
   }
 
   /**

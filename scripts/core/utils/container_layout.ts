@@ -34,8 +34,6 @@ export function panelImpl<CTX extends IContextBase, SELF extends string>(
   // XXX todo: add <CTX> after panelFrame is moved to TS
   const ret = UIBase.createElement("panelframe-x") as PanelFrame<CTX>;
 
-  self._container_inherit(ret, packflag);
-
   if (tooltip) {
     ret.setHeaderToolTip(tooltip);
   }
@@ -53,9 +51,8 @@ export function panelImpl<CTX extends IContextBase, SELF extends string>(
     //ret.headerLabel = name;
   }
 
-  ret.contents.dataPrefix = self.dataPrefix;
-  ret.contents.massSetPrefix = self.massSetPrefix;
-
+  self._container_inherit(ret, packflag);
+  self._container_inherit(ret.contents, packflag);
   return ret.contents;
 }
 
