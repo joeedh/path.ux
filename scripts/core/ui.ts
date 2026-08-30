@@ -1060,7 +1060,7 @@ export class Container<
     widget: T,
     label?: string,
     packflag: number = widget.packflag
-  ) {
+  ): { container: Container<CTX>; widget: T } {
     packflag |= this.inherit_packflag;
     if (typeof packflag !== "number" || isNaN(packflag) || !isFinite(packflag)) {
       throw new Error("invalid pack flag");
@@ -1080,24 +1080,6 @@ export class Container<
     if (!label) {
       return { widget, container: this };
     }
-
-    /*
-    let strip: Container<CTX>;
-    if (packflag & PackFlags.LABEL_ON_TOP) {
-      if (elementIsRow(this)) {
-        strip = this.col();
-      } else {
-        strip = this;
-      }
-    } else if (packflag & (PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT)) {
-      if (!elementIsRow(this)) {
-        strip = this.row();
-      } else {
-        strip = this;
-      }
-    } else {
-      strip = this;
-    }*/
 
     const strip = UIBase.createElement("widget-with-label-x") as WidgetWithLabel<CTX>;
     strip.ctx = this.ctx;
