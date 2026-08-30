@@ -1029,14 +1029,14 @@ export class Container<
       | string
       | {
           name?: string;
-          enumDef?: EnumProperty | FlagProperty | EnumDef;
+          enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef);
           defaultval?: string | number;
           callback?: DropBox["on_select"];
           iconmap?: Record<string, number>;
           packflag?: number;
           mass_set_path?: string;
         },
-    enumDef?: EnumProperty | FlagProperty | EnumDef,
+    enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef),
     defaultval?: number | string,
     callback?: DropBox["on_select"],
     iconmap?: IconMap,

@@ -335,14 +335,14 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
     | string
     | {
         name?: string;
-        enumDef?: EnumProperty | FlagProperty | EnumDef;
+        enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef);
         defaultval?: string | number;
         callback?: DropBox["on_select"];
         iconmap?: Record<string, number>;
         packflag?: number;
         mass_set_path?: string;
       },
-  enumDef?: EnumProperty | FlagProperty | EnumDef,
+  enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef),
   defaultval?: number | string,
   callback?: DropBox["on_select"],
   iconmap?: IconMap,
@@ -376,14 +376,22 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
   const ret = UIBase.createElement("dropbox-x") as DropBox<CTX>;
 
   if (enumDef !== undefined) {
-    if (enumDef instanceof EnumProperty) {
+    if (typeof enumDef === "function") {
+      const def = enumDef();
+      if (!(def instanceof EnumProperty)) {
+        enumDef = () => new EnumProperty(undefined, def);
+      }
+
+      ret.uiProp = enumDef as () => EnumProperty;
+      label ??= (enumDef() as EnumProperty).getUIName();
+    } else if (enumDef instanceof EnumProperty) {
       ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
       ret.uiProp = new EnumProperty(defaultval, enumDef as EnumDef, path, name as string);
     }
 
-    if (iconmap) {
+    if (iconmap && typeof ret.uiProp === "object") {
       ret.uiProp!.addIcons(iconmap);
     }
   } else {

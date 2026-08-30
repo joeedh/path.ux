@@ -33608,6 +33608,14 @@ var init_dropbox = __esm({
       updateBorders() {
         super.updateBorders(this);
       }
+      resolveUIProp() {
+        if (typeof this.uiProp === "object") {
+          return this.uiProp;
+        } else if (typeof this.uiProp === "function") {
+          return this.uiProp();
+        }
+        return void 0;
+      }
       updateFromPath(val, info) {
         if (!this.ctx) {
           return;
@@ -33622,7 +33630,7 @@ var init_dropbox = __esm({
           this.setCSS();
           this._redraw();
         }
-        let prop = this.uiProp ?? info.prop;
+        let prop = this.resolveUIProp() ?? info.prop;
         prop = prop?.prop ? prop.prop : prop;
         if (!prop) {
           return;
@@ -33672,7 +33680,7 @@ var init_dropbox = __esm({
           this._build_menu_template();
           return;
         }
-        const prop = this.uiProp ?? this.prop;
+        const prop = this.resolveUIProp() ?? this.prop;
         if (prop === void 0) {
           return;
         }
@@ -66600,13 +66608,20 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   }
   const ret = UIBase.createElement("dropbox-x");
   if (enumDef !== void 0) {
-    if (enumDef instanceof EnumProperty) {
+    if (typeof enumDef === "function") {
+      const def = enumDef();
+      if (!(def instanceof EnumProperty)) {
+        enumDef = () => new EnumProperty(void 0, def);
+      }
+      ret.uiProp = enumDef;
+      label ??= enumDef().getUIName();
+    } else if (enumDef instanceof EnumProperty) {
       ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
       ret.uiProp = new EnumProperty(defaultval, enumDef, path, name2);
     }
-    if (iconmap) {
+    if (iconmap && typeof ret.uiProp === "object") {
       ret.uiProp.addIcons(iconmap);
     }
   } else {
@@ -67950,25 +67965,23 @@ var WidgetWithLabel = class extends Container3 {
   }
   update() {
     super.update();
-    if ((window.dd1 ?? this.widget.packflag) !== this.lastPackFlag) {
+    if (this.widget.packflag !== this.lastPackFlag) {
       this.setCSS();
     }
   }
   setCSS() {
     super.setCSS();
-    this.lastPackFlag = window.dd1 ?? this.widget.packflag;
+    this.lastPackFlag = this.widget.packflag;
     this.widget.packflag = this.lastPackFlag;
     this.style.display = "flex";
     const f2 = this.lastPackFlag;
     if (!(f2 & PackFlags.FORCE_PROP_LABELS) || f2 & PackFlags.NO_PROP_LABELS) {
       this.style.display = "inline-flex";
       this.labelElem.style.display = "none";
-      console.log(this.labelElem.style.display);
       this.style.margin = this.style.padding = "0px";
       return;
     }
     this.labelElem.style.display = "inline";
-    console.log(this.labelElem.style.display);
     if (f2 & PackFlags.LABEL_ON_RIGHT && this.labelElem === this.shadow.childNodes[0]) {
       this.labelElem.remove();
       this.shadow.append(this.labelElem);
@@ -78160,9 +78173,6 @@ pathux.NodeSocketBase {
    */
   createUI(container, datapath, label) {
     const w = container.prop(datapath);
-    if (!w?.setAttribute) {
-      debugger;
-    }
     if (label !== void 0) {
       w?.setAttribute("name", label);
     }
@@ -80671,7 +80681,7 @@ var NodeFrame = class extends Container3 {
     const { type: dir, name: socketName } = Node3.decomposePropName(socketPropName);
     const sock = dir === "in" ? this.node.inputs[socketName] : this.node.outputs[socketName];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
-    return new TerminalDot(
+    const dot = new TerminalDot(
       this,
       `${dir}:${socketName}`,
       socketName,
@@ -80679,6 +80689,8 @@ var NodeFrame = class extends Container3 {
       color,
       `${socketName} (${sock.type})`
     );
+    this._onTerminalDotAdd(dot);
+    return dot;
   }
   /** Whether a press landed on one of the node's own widgets rather than the frame. */
   _onNodeWidget(e) {
