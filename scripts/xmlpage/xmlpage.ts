@@ -13,15 +13,19 @@ import { PanelContents, TabContainer, TabItemContainer } from "../pathux";
 class _disableflags<CTX extends IContextBase> {
   container: Container<CTX>;
   disabled: number;
+  /** The subset of `disabled` actually set on `container.inherit_packflag` before this suppressed it. */
+  wasSet: number;
 
   constructor(container: Container<CTX>, disabled: number) {
     this.container = container;
     this.disabled = disabled;
+    this.wasSet = container.inherit_packflag & disabled;
     container.inherit_packflag &= ~disabled;
   }
 
   [Symbol.dispose]() {
-    this.container.inherit_packflag |= this.disabled;
+    this.container.inherit_packflag &= ~this.disabled;
+    this.container.inherit_packflag |= this.wasSet;
   }
 }
 function disableflags<CTX extends IContextBase>(container: Container<CTX>, disabled: number) {
@@ -1110,7 +1114,15 @@ export function initPage(
   }
 
   if (parentContainer) {
-    (parentContainer as unknown as Container).add(container);
+    const parent = parentContainer as unknown as Container;
+    parent.add(container);
+
+    // parent may be a plain HTMLElement (loadPage/initPage also mount onto
+    // those), which has no inherit_packflag to propagate.
+    if (typeof parent.inherit_packflag === "number") {
+      container.packflag |= parent.inherit_packflag;
+      container.inherit_packflag |= parent.inherit_packflag;
+    }
   }
 
   const handler = new Handler(ctx, container);

@@ -69585,13 +69585,17 @@ init_ui_base();
 var _disableflags = class {
   container;
   disabled;
+  /** The subset of `disabled` actually set on `container.inherit_packflag` before this suppressed it. */
+  wasSet;
   constructor(container, disabled) {
     this.container = container;
     this.disabled = disabled;
+    this.wasSet = container.inherit_packflag & disabled;
     container.inherit_packflag &= ~disabled;
   }
   [Symbol.dispose]() {
-    this.container.inherit_packflag |= this.disabled;
+    this.container.inherit_packflag &= ~this.disabled;
+    this.container.inherit_packflag |= this.wasSet;
   }
 };
 function disableflags(container, disabled) {
@@ -70426,7 +70430,12 @@ function initPage(ctx, xml, parentContainer, templateVars = {}, templateScope = 
     container._init();
   }
   if (parentContainer) {
-    parentContainer.add(container);
+    const parent = parentContainer;
+    parent.add(container);
+    if (typeof parent.inherit_packflag === "number") {
+      container.packflag |= parent.inherit_packflag;
+      container.inherit_packflag |= parent.inherit_packflag;
+    }
   }
   const handler = new Handler(ctx, container);
   handler.templateVars = Object.assign({}, templateVars);
