@@ -1328,13 +1328,11 @@ export class WidgetWithLabel<CTX extends IContextBase> extends Container<CTX> {
     if (!(f & PackFlags.FORCE_PROP_LABELS) || f & PackFlags.NO_PROP_LABELS) {
       this.style.display = "inline-flex";
       this.labelElem.style.display = "none";
-      console.log(this.labelElem.style.display);
       this.style.margin = this.style.padding = "0px";
       return;
     }
 
     this.labelElem.style.display = "inline";
-    console.log(this.labelElem.style.display);
 
     // ensure label is in correct position
     if (f & PackFlags.LABEL_ON_RIGHT && this.labelElem === this.shadow.childNodes[0]) {

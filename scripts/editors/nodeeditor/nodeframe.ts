@@ -659,7 +659,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     const sock = dir === "in" ? this.node.inputs[socketName] : this.node.outputs[socketName];
     const color = typeof sock.color === "string" ? sock.color : "#ccc";
 
-    return new TerminalDot<CTX>(
+    const dot = new TerminalDot<CTX>(
       this,
       `${dir}:${socketName}`,
       socketName,
@@ -667,6 +667,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       color,
       `${socketName} (${sock.type})`
     );
+    // Registered eagerly rather than solely through connectedCallback, since a
+    // frame built off-document (e.g. under test) never fires it.
+    this._onTerminalDotAdd(dot);
+    return dot;
   }
 
   /** Whether a press landed on one of the node's own widgets rather than the frame. */

@@ -30,9 +30,9 @@ test("unconnected input with a defaultProp returns the default", () => {
   expect(sock.getValue()).toBe(3);
 });
 
-test("unconnected input without a defaultProp returns undefined", () => {
+test("unconnected input with useDefaultValue off returns undefined", () => {
   const sock = new FloatSocket("in");
-  sock.defaultProp = undefined;
+  sock.useDefaultValue = false;
 
   expect(sock.getValue()).toBeUndefined();
 });
@@ -74,6 +74,7 @@ test("coerce writes the converted value and dryRun does not", () => {
   src.setValue(new Vector3([3, 6, 9]));
 
   const dry = new FloatSocket("out");
+  dry.useDefaultValue = false;
   expect(dry.coerce(src, { dryRun: true })).toBe(true);
   expect(dry.getValue()).toBeUndefined();
 
@@ -171,14 +172,15 @@ test("a string socketId survives the round-trip as a string", () => {
   expect(loaded.socketId).toBe("lhs");
 });
 
-test("an output socket round-trips without acquiring a defaultProp", () => {
+test("an output socket round-trips with its default value intact", () => {
   const sock = new FloatSocket("out");
   sock.socketId = 3;
+  sock.defaultProp.setValue(42);
 
   const loaded = readJSON(writeJSON(sock), FloatSocket);
 
   expect(loaded.dir).toBe("out");
-  expect(loaded.defaultProp).toBeUndefined();
+  expect(loaded.defaultProp.getValue()).toBe(42);
   expect(loaded.multiSocket).toBe(true);
 });
 
@@ -225,11 +227,7 @@ test("registerSocketType auto-registers a STRUCT so a custom subclass round-trip
   expect(getSocketClass("CustomSocket")).toBe(CustomSocket);
 });
 
-test("dev asserts fire for defaultProp on an output and setValue on an input", () => {
-  const out = new FloatSocket("out");
-  out.defaultProp = new FloatSocket("in").defaultProp;
-  expect(() => out.getValue()).toThrow(/input sockets only/);
-
+test("dev asserts fire for setValue on an input", () => {
   const inp = new FloatSocket("in");
   expect(() => inp.setValue(1)).toThrow(/output sockets only/);
 });

@@ -3,12 +3,13 @@ import { UIBase, iconmanager } from "../scripts/core/ui_base";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
-import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
+import { FloatProperty, StringProperty } from "../scripts/path-controller/toolsys/toolprop";
 import { Node, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
 import { Graph } from "../scripts/graph/graph";
 import { NodeSocketBase, registerSocketType } from "../scripts/graph/socket";
 import type { SocketTypeDef } from "../scripts/graph/socket";
+import type { SocketDir } from "../scripts/graph/graph_types";
 import { FloatSocket } from "../scripts/graph/sockets_std";
 import { ExposedEntry, GroupDef, GroupNode } from "../scripts/graph/group";
 import { ConnectOp } from "../scripts/graph/graph_ops";
@@ -52,6 +53,11 @@ beforeAll(() => {
 class EditStrSocket extends NodeSocketBase<"editstr", string> {
   static socketDef(): SocketTypeDef {
     return { typeName: "EditStrSocket", type: "editstr", uiName: "Str" };
+  }
+
+  constructor(dir: SocketDir = "in") {
+    super(dir);
+    this.defaultProp = new StringProperty("");
   }
 }
 registerSocketType(EditStrSocket);
@@ -400,9 +406,14 @@ test("editing a forwarded property on an instance materializes the override", as
   buildForwardedUI(root, ctx, grp, `graph.nodes[${JSON.stringify(grp.id)}]`, 0);
 
   // The row hosts a real prop editor bound to the instance-side value path.
+  // A labeled prop is wrapped in its own widget-with-label-x element, which
+  // carries its own shadow root, so the datapath widget sits one shadow
+  // boundary deeper than the row itself.
   const row = root.querySelector(".nodeeditor-prop-row") as UIBase;
   expect(row).not.toBeNull();
-  const widget = row.shadow.querySelector("[datapath]") as UIBase;
+  const strip = row.shadow.querySelector("widget-with-label-x") as UIBase;
+  expect(strip).not.toBeNull();
+  const widget = strip.shadow.querySelector("[datapath]") as UIBase;
   expect(widget).not.toBeNull();
 
   const path = widget.getAttribute("datapath")!;

@@ -64,10 +64,21 @@ function makeCtx(graph: Graph) {
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-   
+
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   ctx.toolstack = new ToolStack(ctx);
+
+  // AddNodeOp selects the node it creates, so exercising it through the
+  // stack directly (without a full NodeGraphView) needs a stub GraphContext.
+  ctx.selection = new Set<unknown>();
+  ctx.selectNodes = (ids: unknown[]) => ids.forEach((id) => ctx.selection.add(id));
+  ctx.deselectNodes = (ids: unknown[]) => ids.forEach((id) => ctx.selection.delete(id));
+  ctx.selectSockets = () => {};
+  ctx.deselectSockets = () => {};
+  ctx.clearSelection = () => ctx.selection.clear();
+  ctx.selectAll = () => {};
+
   return ctx;
 }
 

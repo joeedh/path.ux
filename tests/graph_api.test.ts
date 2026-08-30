@@ -49,8 +49,8 @@ test("a node's props resolve by id and key, reading and writing", () => {
   expect(m.props.bias.wasSet).toBe(true);
   expect(ctx.api.getValue(ctx, path)).toBe(3);
 
-  // A key with no node prop lands on the input's editable default.
-  ctx.api.setValue(ctx, `graph.nodes[${m.id}].props['b'].value`, 2.5);
+  // An 'in:'-prefixed key with no node prop lands on the input's editable default.
+  ctx.api.setValue(ctx, `graph.nodes[${m.id}].props['in:b'].value`, 2.5);
   expect(m.inputs.b.defaultProp!.getValue()).toBe(2.5);
 });
 
