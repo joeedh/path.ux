@@ -17,7 +17,7 @@ const PropTypes = toolprop.PropTypes;
 export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX, "DropBox"> {
   // a custom toolproperty to pull ux types from,
   // useful if the underlying datapath property is a raw integer or string
-  uiProp?: toolprop.EnumProperty;
+  uiProp?: toolprop.EnumProperty | (() => toolprop.EnumProperty);
 
   // cached datapath property
   prop?: toolprop.EnumProperty;
@@ -229,6 +229,15 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     super.updateBorders(this as unknown as HTMLElement);
   }
 
+  private resolveUIProp() {
+    if (typeof this.uiProp === "object") {
+      return this.uiProp;
+    } else if (typeof this.uiProp === "function") {
+      return this.uiProp();
+    }
+    return undefined;
+  }
+
   updateFromPath(val: unknown, info: PathWatchInfo) {
     if (!this.ctx) {
       return;
@@ -246,7 +255,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._redraw();
     }
 
-    let prop = (this.uiProp ?? info.prop) as unknown as toolprop.EnumProperty | undefined;
+    let prop = (this.resolveUIProp() ?? info.prop) as toolprop.EnumProperty | undefined;
 
     prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
       ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
@@ -317,7 +326,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    const prop = this.uiProp ?? this.prop;
+    const prop = (this.resolveUIProp() ?? this.prop) as toolprop.EnumProperty;
 
     if (prop === undefined) {
       return;
