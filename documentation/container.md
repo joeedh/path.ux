@@ -93,13 +93,37 @@ everything built inside it. The ones that affect property binding:
 - `SIMPLE_NUMSLIDERS` — build simple sliders rather than rollers.
 - `FORCE_ROLLER_SLIDER` — the reverse, and it wins over `SIMPLE_NUMSLIDERS`.
 - `NO_NUMSLIDER_TEXTBOX` — leave off the slider's paired textbox.
-- `FORCE_PROP_LABELS` — put a label in front of a widget that would otherwise carry its
-  own name.
+- `FORCE_PROP_LABELS` — wrap the widget in a `widget-with-label-x` strip carrying its
+  property's UI name, for a widget that would otherwise show only its own value (a slider,
+  a color button, a checkbox) rather than a name beside it. `prop()` always ORs this flag
+  in, regardless of what was passed, so a property built through `prop()` always gets a
+  label unless `NO_PROP_LABELS` is also set.
+- `NO_PROP_LABELS` — opt one widget out of a label even though `FORCE_PROP_LABELS` is set
+  on it, directly or via `inherit_packflag`. Wins over `FORCE_PROP_LABELS`.
+- `LABEL_ON_TOP` / `LABEL_ON_LEFT` / `LABEL_ON_RIGHT` — place the label relative to the
+  widget when `FORCE_PROP_LABELS` is in effect. With none of the three set, the label falls
+  back to the strip's parent container's own layout direction (row → label to the left,
+  column → label on top), so a label set once on an ancestor with
+  `Container.inherit_packflag` reads correctly whether that ancestor happens to be a row or
+  a column. `LABEL_ON_TOP` stacks the label above the widget; `LABEL_ON_LEFT` /
+  `LABEL_ON_RIGHT` put it in a row beside the widget, before or after it. `xmlpage`'s
+  `labelPosition="top" | "left" | "right"` attribute maps to these three flags
+  (`showLabel` / `noLabel` map to `FORCE_PROP_LABELS` / `NO_PROP_LABELS`); omitting the
+  attribute leaves the parent-direction fallback in place.
 - `USE_ICONS` — enums and flags render as icon strips.
 - `PUT_FLAG_CHECKS_IN_COLUMNS` — lay a flag property's checkboxes out in two columns.
 - `WRAP_CHECKBOXES` — wrap a flag property's checkboxes at `checkRowWrapLimit` /
   `checkColWrapLimit` theme keys.
-- `LABEL_ON_RIGHT` — put a widget's label after it rather than before.
+
+Passing `packflag` to a build method only affects that one call. To make a label setting
+flow down an entire widget subtree — a panel where every property should show its name, or
+a node-graph property row where labels always sit on top — set it on
+`Container.inherit_packflag` instead: every container created underneath merges its
+parent's `inherit_packflag` into its own (`Container._container_inherit`), and every
+`prop()`/`slider()`/`colorbutton()`/etc. call ORs `self.inherit_packflag` into the flags it
+resolves. `NO_PROP_LABELS` propagates the same way (it is just another bit in
+`inherit_packflag`), so setting it on a sub-container turns labels back off for everything
+built underneath, without touching the ancestor that turned them on.
 
 ## Sliders
 
