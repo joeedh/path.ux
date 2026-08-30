@@ -32632,6 +32632,15 @@ var init_ui_base = __esm({
         }
         return false;
       }
+      get havePropLabel() {
+        if (this.packflag & PackFlags.NO_PROP_LABELS) {
+          return false;
+        }
+        if (this.packflag & PackFlags.FORCE_PROP_LABELS) {
+          return true;
+        }
+        return false;
+      }
     };
     UIBase.PositionKey = "fixed";
     _setUIBase(UIBase);
@@ -33432,8 +33441,12 @@ var init_dropbox = __esm({
     init_menu_ops();
     PropTypes3 = PropTypes;
     DropBox = class extends OldButton {
-      _menu;
+      // a custom toolproperty to pull ux types from,
+      // useful if the underlying datapath property is a raw integer or string
+      uiProp;
+      // cached datapath property
       prop;
+      _menu;
       lockTimer;
       _template;
       _searchMenuMode;
@@ -33609,7 +33622,7 @@ var init_dropbox = __esm({
           this.setCSS();
           this._redraw();
         }
-        let prop = info.prop;
+        let prop = this.uiProp ?? info.prop;
         prop = prop?.prop ? prop.prop : prop;
         if (!prop) {
           return;
@@ -33659,7 +33672,7 @@ var init_dropbox = __esm({
           this._build_menu_template();
           return;
         }
-        const prop = this.prop;
+        const prop = this.uiProp ?? this.prop;
         if (prop === void 0) {
           return;
         }
@@ -66588,13 +66601,13 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   const ret = UIBase.createElement("dropbox-x");
   if (enumDef !== void 0) {
     if (enumDef instanceof EnumProperty) {
-      ret.prop = enumDef;
+      ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
-      ret.prop = new EnumProperty(defaultval, enumDef, path, name2);
+      ret.uiProp = new EnumProperty(defaultval, enumDef, path, name2);
     }
     if (iconmap) {
-      ret.prop.addIcons(iconmap);
+      ret.uiProp.addIcons(iconmap);
     }
   } else {
     const res = self2.ctx.api.resolvePath(self2.ctx, path, true);
@@ -67063,7 +67076,6 @@ init_ui_base();
 init_theme_schema();
 init_toolprop();
 init_ui_consts();
-init_ui_base_dom();
 function styl2(el) {
   return el.style;
 }
@@ -67730,6 +67742,7 @@ var Container3 = class _Container extends UIBase {
    * */
   checkenum(inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
     const label = typeof name2 === "object" ? name2.name : name2;
+    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
     return this.addPropLabel(
       checkenumImpl(
         this,
@@ -67747,9 +67760,8 @@ var Container3 = class _Container extends UIBase {
     ).widget;
   }
   checkenum_panel(inpath, name2, packflag = 0, callback, mass_set_path, prop) {
-    const label = name2;
     const widget = checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
-    return widget ? this.addPropLabel(widget, label, packflag).widget : widget;
+    return widget ? this.addPropLabel(widget, name2, packflag).widget : widget;
   }
   /**
       enummap is an object that maps
@@ -67768,6 +67780,7 @@ var Container3 = class _Container extends UIBase {
     */
   listenum(inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
     const label = typeof name2 === "string" ? name2 : name2?.name;
+    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
     return this.addPropLabel(
       listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag),
       label,
@@ -67781,6 +67794,9 @@ var Container3 = class _Container extends UIBase {
    */
   addPropLabel(widget, label, packflag = widget.packflag) {
     packflag |= this.inherit_packflag;
+    if (typeof packflag !== "number" || isNaN(packflag) || !isFinite(packflag)) {
+      throw new Error("invalid pack flag");
+    }
     if (!(packflag & PackFlags.FORCE_PROP_LABELS) || packflag & PackFlags.NO_PROP_LABELS) {
       this._add(widget);
       return { widget, container: this };
@@ -67794,30 +67810,17 @@ var Container3 = class _Container extends UIBase {
     if (!label) {
       return { widget, container: this };
     }
-    let strip;
-    if (packflag & PackFlags.LABEL_ON_TOP) {
-      if (elementIsRow(this)) {
-        strip = this.col();
-      } else {
-        strip = this;
-      }
-    } else if (packflag & (PackFlags.LABEL_ON_LEFT | PackFlags.LABEL_ON_RIGHT)) {
-      if (!elementIsRow(this)) {
-        strip = this.row();
-      } else {
-        strip = this;
-      }
-    } else {
-      strip = this;
-    }
-    if (packflag & PackFlags.LABEL_ON_RIGHT) {
-      strip._add(widget);
-      const l = strip.label(label);
-      l.style.paddingLeft = "5px";
-    } else {
-      strip.label(label);
-      strip._add(widget);
-    }
+    const strip = UIBase.createElement("widget-with-label-x");
+    strip.ctx = this.ctx;
+    this._container_inherit(strip);
+    strip.widget = widget;
+    strip.labelElem = UIBase.createElement("label-x");
+    strip.labelElem.text = label;
+    strip._add(strip.labelElem);
+    strip._add(widget);
+    this._add(strip);
+    strip._init();
+    strip.setCSS();
     return { widget, container: strip };
   }
   getroot() {
@@ -67829,6 +67832,7 @@ var Container3 = class _Container extends UIBase {
   }
   simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
     const label = typeof name2 === "string" ? name2 : name2?.name;
+    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
     return this.addPropLabel(
       simplesliderImpl(
         this,
@@ -67857,6 +67861,7 @@ var Container3 = class _Container extends UIBase {
    * */
   slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
     const label = typeof name2 === "string" ? name2 : name2?.name;
+    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
     return this.addPropLabel(
       sliderImpl(
         this,
@@ -67938,6 +67943,57 @@ var Container3 = class _Container extends UIBase {
   }
 };
 UIBase.internalRegister(Container3);
+var WidgetWithLabel = class extends Container3 {
+  lastPackFlag = 0;
+  constructor() {
+    super();
+  }
+  update() {
+    super.update();
+    if ((window.dd1 ?? this.widget.packflag) !== this.lastPackFlag) {
+      this.setCSS();
+    }
+  }
+  setCSS() {
+    super.setCSS();
+    this.lastPackFlag = window.dd1 ?? this.widget.packflag;
+    this.widget.packflag = this.lastPackFlag;
+    this.style.display = "flex";
+    const f2 = this.lastPackFlag;
+    if (!(f2 & PackFlags.FORCE_PROP_LABELS) || f2 & PackFlags.NO_PROP_LABELS) {
+      this.style.display = "inline-flex";
+      this.labelElem.style.display = "none";
+      console.log(this.labelElem.style.display);
+      this.style.margin = this.style.padding = "0px";
+      return;
+    }
+    this.labelElem.style.display = "inline";
+    console.log(this.labelElem.style.display);
+    if (f2 & PackFlags.LABEL_ON_RIGHT && this.labelElem === this.shadow.childNodes[0]) {
+      this.labelElem.remove();
+      this.shadow.append(this.labelElem);
+    } else if (!(f2 & PackFlags.LABEL_ON_RIGHT) && this.labelElem !== this.shadow.childNodes[0]) {
+      this.labelElem.remove();
+      this.shadow.prepend(this.labelElem);
+    }
+    if (f2 & (PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT)) {
+      this.style.display = "inline-flex";
+      this.style.flexDirection = "row";
+    } else if (f2 & PackFlags.LABEL_ON_TOP) {
+      this.style.display = "flex";
+      this.style.flexDirection = "column";
+    } else {
+      this.style.display = this.parentWidget?.style.display ?? "flex";
+      this.style.flexDirection = this.parentWidget?.style.flexDirection ?? "column";
+    }
+  }
+  static define() {
+    return {
+      tagname: "widget-with-label-x"
+    };
+  }
+};
+UIBase.internalRegister(WidgetWithLabel);
 
 // scripts/core/ui_containers.ts
 init_ui_base();
@@ -68203,9 +68259,11 @@ var NumSlider = class extends ValueButtonBase {
     }
     super.updateFromPath(value, info);
   }
+  _last_packflag = 0;
   update() {
-    if (!!this._last_disabled !== !!this.disabled) {
+    if (!!this._last_disabled !== !!this.disabled || this._last_packflag !== this.packflag) {
       this._last_disabled = !!this.disabled;
+      this._last_packflag = this.packflag;
       this._redraw(false);
       this.setCSS(void 0, false);
     }
@@ -68641,10 +68699,12 @@ var NumSlider = class extends ValueButtonBase {
       }
       const valStr = buildString(numVal, this.baseUnit, this.decimalPlaces, this.displayUnit);
       text2 = valStr;
-      if (this._name) {
-        text2 = this._name + ": " + text2;
-      } else if (this.hasAttribute("name")) {
-        text2 = (this.getAttribute("name") ?? "") + ": " + text2;
+      if (!this.havePropLabel) {
+        if (this._name) {
+          text2 = this._name + ": " + text2;
+        } else if (this.hasAttribute("name")) {
+          text2 = (this.getAttribute("name") ?? "") + ": " + text2;
+        }
       }
     }
     return text2;
@@ -69176,7 +69236,7 @@ var NumSliderSimpleBase = class extends UIBase {
   }
   update() {
     super.update();
-    const key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
+    const key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight") + ":" + this.packflag;
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
       this.flushUpdate();
@@ -69235,8 +69295,13 @@ var SliderWithTextbox = class extends ColumnFrame {
    * If undefined value will be either this.getAtttribute("labelOnTop"),
    * if "labelOnTop" attribute exists, or it will be this.getDefault("labelOnTop")
    * (theme default)
+   *
+   * @deprecated use PackFlags.LABEL_ON_TOP
    **/
   get labelOnTop() {
+    if (this.packflag & PackFlags.LABEL_ON_TOP) {
+      return true;
+    }
     let ret = this._labelOnTop;
     if (ret === void 0 && this.hasAttribute("labelOnTop")) {
       let val = this.getAttribute("labelOnTop");
@@ -69253,6 +69318,11 @@ var SliderWithTextbox = class extends ColumnFrame {
     return !!ret;
   }
   set labelOnTop(v) {
+    if (v) {
+      this.packflag |= PackFlags.LABEL_ON_TOP;
+    } else {
+      this.packflag &= ~PackFlags.LABEL_ON_TOP;
+    }
     this._labelOnTop = v;
   }
   get numslider() {
@@ -69361,24 +69431,11 @@ var SliderWithTextbox = class extends ColumnFrame {
     this.doOnce(() => this.updateTextBox());
   }
   rebuild() {
-    this._last_label_on_top = this.labelOnTop;
     this.container.clear();
-    if (!this.labelOnTop) {
-      this.container = this.row();
-    } else {
-      this.container = this;
-    }
     if (this.hasAttribute("name")) {
       this._name = this.getAttribute("name") ?? void 0;
     } else {
       this._name = "slider";
-    }
-    if (this.addLabel) {
-      this.l = this.container.label(this._name);
-      this.l.overrideClass("numslider_textbox");
-      this.l.font = "TitleText";
-      this.l.style["display"] = "float";
-      this.l.style["position"] = "relative";
     }
     const strip = this.container.row();
     strip.add(this.numslider);
@@ -69502,6 +69559,19 @@ var SliderWithTextbox = class extends ColumnFrame {
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
+    }
+  }
+  _packflag = 0;
+  get packflag() {
+    return this._packflag;
+  }
+  set packflag(p) {
+    this._packflag = p;
+    if (this.numslider) {
+      this.numslider.packflag = p;
+    }
+    if (this._textbox) {
+      this._textbox.packflag = p;
     }
   }
   update() {
@@ -73669,6 +73739,9 @@ var ColorPickerButton = class extends UIBase {
     this.setCSS();
   }
   get noLabel() {
+    if (!this.hasAttribute("no-label") && this.packflag & PackFlags.FORCE_PROP_LABELS) {
+      return true;
+    }
     let ret = "" + this.getAttribute("no-label");
     ret = ret.toLowerCase();
     return ret === "true" || ret === "yes" || ret === "on";
@@ -95229,6 +95302,7 @@ export {
   Vector4,
   VectorPanel,
   VectorPopupButton,
+  WidgetWithLabel,
   ZIndexes,
   _NumberPropertyBase,
   _ensureFont,

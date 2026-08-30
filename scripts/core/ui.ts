@@ -977,6 +977,7 @@ export class Container<
     mass_set_path?: string
   ): UIBase<CTX> {
     const label = typeof name === "object" ? name.name : name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
 
     return this.addPropLabel(
       checkenumImpl(
@@ -1003,9 +1004,8 @@ export class Container<
     mass_set_path?: string,
     prop?: FlagProperty | EnumProperty
   ): Container<CTX> | undefined {
-    const label = name;
     const widget = checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
-    return widget ? this.addPropLabel(widget, label, packflag).widget : widget;
+    return widget ? this.addPropLabel(widget, name, packflag).widget : widget;
   }
 
   /**
@@ -1043,6 +1043,7 @@ export class Container<
     packflag = 0
   ): DropBox<CTX> {
     const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag),
       label,
@@ -1061,6 +1062,9 @@ export class Container<
     packflag: number = widget.packflag
   ) {
     packflag |= this.inherit_packflag;
+    if (typeof packflag !== "number" || isNaN(packflag) || !isFinite(packflag)) {
+      throw new Error("invalid pack flag");
+    }
 
     if (!(packflag & PackFlags.FORCE_PROP_LABELS) || packflag & PackFlags.NO_PROP_LABELS) {
       this._add(widget);
@@ -1077,6 +1081,7 @@ export class Container<
       return { widget, container: this };
     }
 
+    /*
     let strip: Container<CTX>;
     if (packflag & PackFlags.LABEL_ON_TOP) {
       if (elementIsRow(this)) {
@@ -1092,17 +1097,20 @@ export class Container<
       }
     } else {
       strip = this;
-    }
+    }*/
 
-    if (packflag & PackFlags.LABEL_ON_RIGHT) {
-      strip._add(widget);
-      // XXX theme this padding!
-      const l = strip.label(label);
-      l.style.paddingLeft = "5px";
-    } else {
-      strip.label(label);
-      strip._add(widget);
-    }
+    const strip = UIBase.createElement("widget-with-label-x") as WidgetWithLabel<CTX>;
+    strip.ctx = this.ctx;
+    this._container_inherit(strip);
+    strip.widget = widget;
+    strip.labelElem = UIBase.createElement("label-x") as Label<CTX>;
+    strip.labelElem.text = label;
+    strip._add(strip.labelElem);
+    strip._add(widget);
+    this._add(strip);
+    strip._init();
+    strip.setCSS();
+
     return { widget, container: strip };
   }
 
@@ -1129,6 +1137,7 @@ export class Container<
     packflag = 0
   ) {
     const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       simplesliderImpl(
         this,
@@ -1170,6 +1179,8 @@ export class Container<
     decimalPlaces?: number
   ) {
     const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
+
     return this.addPropLabel(
       sliderImpl(
         this,
@@ -1246,7 +1257,8 @@ export class Container<
     mass_set_path?: string,
     themeOverride?: string
   ) {
-    const packflag = typeof packflag_or_args === "object" ? packflag_or_args.packflag : packflag_or_args;
+    const packflag =
+      typeof packflag_or_args === "object" ? packflag_or_args.packflag : packflag_or_args;
     return this.addPropLabel(
       colorPickerImpl(this, inpath, packflag_or_args, mass_set_path, themeOverride),
       undefined,
@@ -1288,3 +1300,69 @@ export class Container<
 }
 
 UIBase.internalRegister(Container);
+
+export class WidgetWithLabel<CTX extends IContextBase> extends Container<CTX> {
+  declare labelElem: Label<CTX>;
+  declare widget: UIBase<CTX>;
+  private lastPackFlag = 0;
+
+  constructor() {
+    super();
+  }
+
+  update() {
+    super.update();
+    if (this.widget.packflag !== this.lastPackFlag) {
+      this.setCSS();
+    }
+  }
+
+  setCSS() {
+    super.setCSS();
+    this.lastPackFlag = this.widget.packflag;
+    this.widget.packflag = this.lastPackFlag;
+    this.style.display = "flex";
+
+    const f = this.lastPackFlag;
+
+    if (!(f & PackFlags.FORCE_PROP_LABELS) || f & PackFlags.NO_PROP_LABELS) {
+      this.style.display = "inline-flex";
+      this.labelElem.style.display = "none";
+      console.log(this.labelElem.style.display);
+      this.style.margin = this.style.padding = "0px";
+      return;
+    }
+
+    this.labelElem.style.display = "inline";
+    console.log(this.labelElem.style.display);
+
+    // ensure label is in correct position
+    if (f & PackFlags.LABEL_ON_RIGHT && this.labelElem === this.shadow.childNodes[0]) {
+      this.labelElem.remove();
+      this.shadow.append(this.labelElem);
+    } else if (!(f & PackFlags.LABEL_ON_RIGHT) && this.labelElem !== this.shadow.childNodes[0]) {
+      this.labelElem.remove();
+      this.shadow.prepend(this.labelElem);
+    }
+
+    if (f & (PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT)) {
+      this.style.display = "inline-flex";
+      this.style.flexDirection = "row";
+    } else if (f & PackFlags.LABEL_ON_TOP) {
+      this.style.display = "flex";
+      this.style.flexDirection = "column";
+    } else {
+      this.style.display = this.parentWidget?.style.display ?? "flex";
+      this.style.flexDirection = this.parentWidget?.style.flexDirection ?? "column";
+    }
+
+    // add label theme styling here
+  }
+
+  static define() {
+    return {
+      tagname: "widget-with-label-x",
+    };
+  }
+}
+UIBase.internalRegister(WidgetWithLabel as any);

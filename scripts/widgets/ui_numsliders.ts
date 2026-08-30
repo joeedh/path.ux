@@ -196,9 +196,11 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     super.updateFromPath(value, info);
   }
 
+  private _last_packflag = 0;
   update() {
-    if (!!this._last_disabled !== !!this.disabled) {
+    if (!!this._last_disabled !== !!this.disabled || this._last_packflag !== this.packflag) {
       this._last_disabled = !!this.disabled;
+      this._last_packflag = this.packflag;
       this._redraw(false);
       this.setCSS(undefined, false);
     }
@@ -815,10 +817,12 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       const valStr = units.buildString(numVal, this.baseUnit, this.decimalPlaces, this.displayUnit);
 
       text = valStr;
-      if (this._name) {
-        text = this._name + ": " + text;
-      } else if (this.hasAttribute("name")) {
-        text = (this.getAttribute("name") ?? "") + ": " + text;
+      if (!this.havePropLabel) {
+        if (this._name) {
+          text = this._name + ": " + text;
+        } else if (this.hasAttribute("name")) {
+          text = (this.getAttribute("name") ?? "") + ": " + text;
+        }
       }
     }
 
@@ -1551,7 +1555,9 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
       ":" +
       this.getDefault("height") +
       ":" +
-      this.getDefault("SlideHeight");
+      this.getDefault("SlideHeight") +
+      ":" +
+      this.packflag;
 
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
@@ -1632,8 +1638,13 @@ export class SliderWithTextbox<
    * If undefined value will be either this.getAtttribute("labelOnTop"),
    * if "labelOnTop" attribute exists, or it will be this.getDefault("labelOnTop")
    * (theme default)
+   *
+   * @deprecated use PackFlags.LABEL_ON_TOP
    **/
   get labelOnTop() {
+    if (this.packflag & ui_base.PackFlags.LABEL_ON_TOP) {
+      return true;
+    }
     let ret = this._labelOnTop;
 
     if (ret === undefined && this.hasAttribute("labelOnTop")) {
@@ -1654,6 +1665,11 @@ export class SliderWithTextbox<
   }
 
   set labelOnTop(v) {
+    if (v) {
+      this.packflag |= ui_base.PackFlags.LABEL_ON_TOP;
+    } else {
+      this.packflag &= ~ui_base.PackFlags.LABEL_ON_TOP;
+    }
     this._labelOnTop = v;
   }
 
@@ -1800,28 +1816,12 @@ export class SliderWithTextbox<
   }
 
   rebuild() {
-    this._last_label_on_top = this.labelOnTop;
-
     this.container.clear();
-
-    if (!this.labelOnTop) {
-      this.container = this.row();
-    } else {
-      this.container = this;
-    }
 
     if (this.hasAttribute("name")) {
       this._name = this.getAttribute("name") ?? undefined;
     } else {
       this._name = "slider";
-    }
-
-    if (this.addLabel) {
-      this.l = this.container.label(this._name!);
-      this.l.overrideClass("numslider_textbox");
-      this.l.font = "TitleText";
-      this.l.style["display"] = "float";
-      this.l.style["position"] = "relative";
     }
 
     const strip = this.container.row();
@@ -1988,6 +1988,20 @@ export class SliderWithTextbox<
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
+    }
+  }
+
+  _packflag = 0;
+  get packflag() {
+    return this._packflag;
+  }
+  set packflag(p) {
+    this._packflag = p;
+    if (this.numslider) {
+      this.numslider.packflag = p;
+    }
+    if (this._textbox) {
+      this._textbox.packflag = p;
     }
   }
 

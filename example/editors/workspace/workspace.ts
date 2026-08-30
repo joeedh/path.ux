@@ -8,6 +8,7 @@ import {
   KeyMap,
   PanelFlags,
   type PanelManager,
+  PackFlags,
 } from "../../pathux.js";
 import { Editor } from "../editor_base.js";
 import { PanOp } from "./workspace_ops.js";

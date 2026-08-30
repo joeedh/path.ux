@@ -1233,6 +1233,16 @@ export class UIBase<
     }
     return false;
   }
+
+  get havePropLabel() {
+    if (this.packflag & PackFlags.NO_PROP_LABELS) {
+      return false;
+    }
+    if (this.packflag & PackFlags.FORCE_PROP_LABELS) {
+      return true;
+    }
+    return false;
+  }
 }
 
 export * from "./base/ui_draw";

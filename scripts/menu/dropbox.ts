@@ -15,8 +15,14 @@ import { createMenu, openMenuPopup } from "./menu_ops";
 const PropTypes = toolprop.PropTypes;
 
 export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX, "DropBox"> {
-  _menu: Menu<CTX> | undefined;
+  // a custom toolproperty to pull ux types from,
+  // useful if the underlying datapath property is a raw integer or string
+  uiProp?: toolprop.EnumProperty;
+
+  // cached datapath property
   prop?: toolprop.EnumProperty;
+
+  _menu: Menu<CTX> | undefined;
   lockTimer: number;
   _template: MenuTemplate | (() => MenuTemplate) | undefined;
   _searchMenuMode: boolean;
@@ -240,7 +246,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._redraw();
     }
 
-    let prop = info.prop as unknown as toolprop.EnumProperty | undefined;
+    let prop = (this.uiProp ?? info.prop) as unknown as toolprop.EnumProperty | undefined;
 
     prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
       ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
@@ -311,7 +317,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    const prop = this.prop;
+    const prop = this.uiProp ?? this.prop;
 
     if (prop === undefined) {
       return;

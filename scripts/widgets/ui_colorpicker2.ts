@@ -4,7 +4,7 @@ import { TabContainer } from "./ui_tabs";
 import type { CSSFont } from "../core/cssfont";
 import * as util from "../path-controller/util/util";
 import { Number4, Vector2, Vector3, Vector4 } from "../path-controller/util/vectormath";
-import { UIBase, drawRoundBox, getFont } from "../core/ui_base";
+import { PackFlags, UIBase, drawRoundBox, getFont } from "../core/ui_base";
 import { ColumnFrame } from "../core/ui_containers";
 import { PropTypes } from "../path-controller/toolsys/toolprop";
 import { keymap } from "../path-controller/util/simple_events";
@@ -1430,6 +1430,10 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
   }
 
   get noLabel() {
+    if (!this.hasAttribute("no-label") && this.packflag & PackFlags.FORCE_PROP_LABELS) {
+      return true;
+    }
+
     let ret = "" + this.getAttribute("no-label");
     ret = ret.toLowerCase();
 

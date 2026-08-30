@@ -377,14 +377,14 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
 
   if (enumDef !== undefined) {
     if (enumDef instanceof EnumProperty) {
-      ret.prop = enumDef;
+      ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
-      ret.prop = new EnumProperty(defaultval, enumDef as EnumDef, path, name as string);
+      ret.uiProp = new EnumProperty(defaultval, enumDef as EnumDef, path, name as string);
     }
 
     if (iconmap) {
-      ret.prop.addIcons(iconmap);
+      ret.uiProp!.addIcons(iconmap);
     }
   } else {
     const res = self.ctx.api.resolvePath(self.ctx, path!, true);
