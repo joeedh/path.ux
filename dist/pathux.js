@@ -31624,7 +31624,6 @@ function update(elem) {
   }
   if (elem._init_done && !elem.constructor.define().subclassChecksTheme) {
     if (elem.checkThemeUpdate()) {
-      console.log("theme update!");
       elem.setCSS();
     }
   }
@@ -39722,6 +39721,7 @@ var Container3 = class _Container extends UIBase {
 UIBase.internalRegister(Container3);
 var WidgetWithLabel = class extends Container3 {
   lastPackFlag = 0;
+  lastToolTip;
   constructor() {
     super();
   }
@@ -39729,6 +39729,10 @@ var WidgetWithLabel = class extends Container3 {
     super.update();
     if (this.widget.packflag !== this.lastPackFlag) {
       this.setCSS();
+    }
+    if (this.widget.description !== this.lastToolTip) {
+      this.description = this.widget.description;
+      this.lastToolTip = this.widget.description;
     }
   }
   setCSS() {
@@ -49323,7 +49327,7 @@ pathux.NodeSocketBase {
   }
   /**
    * Chaining-friendly way to set the default prop's UX properties, e.g.
-   * `new Socket().setUX((prop) => prop.setReadOnly().setDescription("..."))`.
+   * `new Socket().setUX((prop) => prop.setReadOnly())`.
    */
   setUX(cb) {
     cb(this.defaultProp);
@@ -52004,10 +52008,11 @@ var NodeFrame = class extends Container3 {
   _terminalName(key, node) {
     const name2 = document.createElement("span");
     const font = getStyleRecord(this, "propLabels", "font", true)?.font;
-    name2.textContent = nodePropTarget(node, key)?.uiname ?? Node3.decomposePropName(key).name;
+    name2.textContent = nodePropTarget(node, key)?.uiname || Node3.decomposePropName(key).name;
     name2.style.overflow = "hidden";
     name2.style.whiteSpace = "nowrap";
     name2.style.textOverflow = "ellipsis";
+    name2.title = nodePropTarget(node, key)?.description ?? "";
     if (font) {
       name2.style.font = font.genCSS();
       name2.style.color = font.color;
@@ -60237,9 +60242,9 @@ var FloatSocket = class extends NodeSocketBase {
   static socketDef() {
     return { typeName: "FloatSocket", type: "float", uiName: "Float", color: "#a1a1a1" };
   }
-  constructor(dir = "in") {
+  constructor(dir = "in", { uiName = "", description = "" } = {}) {
     super(dir);
-    this.defaultProp = new FloatProperty(0);
+    this.defaultProp = new FloatProperty(0).setUIName(uiName).setDescription(description);
   }
 };
 registerSocketType(FloatSocket);
@@ -60248,9 +60253,9 @@ var Vec3Socket = class extends NodeSocketBase {
   static socketDef() {
     return { typeName: "Vec3Socket", type: "vec3", uiName: "Vector3", color: "#8a8ad0" };
   }
-  constructor(dir = "in") {
+  constructor(dir = "in", { uiName = "", description = "" } = {}) {
     super(dir);
-    this.defaultProp = new Vec3Property([0, 0, 0]);
+    this.defaultProp = new Vec3Property([0, 0, 0]).setUIName(uiName).setDescription(description);
   }
   // float→vec3 is destination knowledge: the float splats across the components.
   canCoerceFrom(type) {
@@ -60282,9 +60287,9 @@ var StringSocket = class extends NodeSocketBase {
   static socketDef() {
     return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
   }
-  constructor(dir = "in") {
+  constructor(dir = "in", { uiName = "", description = "" } = {}) {
     super(dir);
-    this.defaultProp = new StringProperty("");
+    this.defaultProp = new StringProperty("").setUIName(uiName).setDescription(description);
   }
 };
 registerSocketType(StringSocket);
