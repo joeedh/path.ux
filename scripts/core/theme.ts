@@ -1,4 +1,27 @@
 import { CSSFont } from "./cssfont";
+import { ThemeScrollBars } from "./ui_theme";
+import { getVars } from "./ui_theme_utils";
+
+export const themeVars = {
+  bodyFont: new CSSFont({
+    font   : "sans-serif",
+    weight : "normal",
+    variant: "normal",
+    style  : "normal",
+    size   : 14,
+    color  : "rgba(35, 35, 35, 1.0)",
+  }),
+  labelFont: new CSSFont({
+    font   : "sans-serif",
+    weight : "normal",
+    variant: "normal",
+    style  : "normal",
+    size   : 14,
+    color  : "rgba(35, 35, 35, 1.0)",
+  }),
+};
+
+const vars = getVars(themeVars);
 
 export const DefaultTheme = {
   base: {
@@ -9,22 +32,8 @@ export const DefaultTheme = {
     BoxHighlight            : "rgba(151,208,239, 1)",
     "flex-grow"             : "unset",
     mobileSizeMultiplier    : 1.0,
-    DefaultText: new CSSFont({
-      font   : "sans-serif",
-      weight : "normal",
-      variant: "normal",
-      style  : "normal",
-      size   : 14,
-      color  : "rgba(35, 35, 35, 1.0)",
-    }),
-    LabelText: new CSSFont({
-      font   : "sans-serif",
-      weight : "normal",
-      variant: "normal",
-      style  : "normal",
-      size   : 14,
-      color  : "rgba(35, 35, 35, 1.0)",
-    }),
+    DefaultText             : vars.bodyFont,
+    LabelText               : vars.labelFont,
     TitleText: new CSSFont({
       font   : "sans-serif",
       weight : "normal",
@@ -40,7 +49,9 @@ export const DefaultTheme = {
     oneAxisPadding          : 2,
     padding                 : 1,
   },
-
+  "propLabels": {
+    font: vars.bodyFont,
+  },
   button: {
     DefaultText: new CSSFont({
       font   : "poppins",
@@ -236,14 +247,7 @@ export const DefaultTheme = {
   },
 
   label: {
-    LabelText: new CSSFont({
-      font   : "sans-serif",
-      weight : "normal",
-      variant: "normal",
-      style  : "normal",
-      size   : 14,
-      color  : "rgba(35, 35, 35, 1.0)",
-    }),
+    LabelText: vars.labelFont,
   },
 
   listbox: {
@@ -491,14 +495,13 @@ export const DefaultTheme = {
     "mouse-threshold": 8,
   },
 
-  /*
   scrollbars: new ThemeScrollBars({
     border  : undefined,
     color   : undefined,
     color2  : undefined,
     contrast: undefined,
     width   : undefined,
-  }),*/
+  }),
 
   sidebar: {
     "background-color": "rgba(55, 55, 55, 0.5)",

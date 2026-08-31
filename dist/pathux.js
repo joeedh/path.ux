@@ -10,8 +10,13 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
 };
 var __export = (target, all) => {
   for (var name2 in all)
@@ -11210,570 +11215,6 @@ CSSFont {
   }
 });
 
-// scripts/core/theme.ts
-var DefaultTheme;
-var init_theme = __esm({
-  "scripts/core/theme.ts"() {
-    "use strict";
-    init_cssfont();
-    DefaultTheme = {
-      base: {
-        mobileTextSizeMultiplier: 1,
-        AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
-        BasePackFlag: 0,
-        BoxDepressed: "rgba(130,130,130, 1)",
-        BoxHighlight: "rgba(151,208,239, 1)",
-        "flex-grow": "unset",
-        mobileSizeMultiplier: 1,
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        LabelText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        TitleText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgba(207,207,207, 0.5)",
-        "border-color": "rgba(34,34,34, 1)",
-        "border-radius": 12.010619764585666,
-        "focus-border-width": 2,
-        oneAxisPadding: 2,
-        padding: 1
-      },
-      button: {
-        DefaultText: new CSSFont({
-          font: "poppins",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35,35,35, 1)"
-        }),
-        "background-color": "rgba(238,238,238, 0.8672412740773168)",
-        "border-color": "rgba(255,255,255, 1)",
-        "border-radius": 4,
-        "border-style": "solid",
-        "border-width": 2,
-        disabled: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgb(109,109,109)"
-          }),
-          "background-color": "rgb(19,19,19)",
-          "border-color": "#f58f8f",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        height: 25,
-        highlight: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(255,255,255, 1)"
-          }),
-          "background-color": "rgba(138,222,255, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-radius": 4,
-          "border-style": "solid",
-          "border-width": 2
-        },
-        "highlight-pressed": {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(35,35,35, 1)"
-          }),
-          "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        margin: 4,
-        "margin-left": 4,
-        "margin-right": 4,
-        padding: 1,
-        pressed: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(35,35,35, 1)"
-          }),
-          "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        width: 25
-      },
-      checkbox: {
-        CheckSide: "left",
-        height: 32,
-        width: 32,
-        "background-color": "rgb(168,168,168)"
-      },
-      colorfield: {
-        circleSize: 11,
-        colorBoxHeight: 24,
-        fieldSize: 400,
-        height: 256,
-        hueHeight: 32,
-        width: 256
-      },
-      colorpickerbutton: {
-        height: 32,
-        width: 95
-      },
-      curvewidget: {
-        CanvasBG: "rgb(44,44,44)",
-        CanvasHeight: 256,
-        CanvasWidth: 256
-      },
-      dropbox: {
-        dropTextBG: "rgba(233,233,233, 1)",
-        height: 25,
-        width: 32
-      },
-      iconbutton: {
-        highlight: {
-          "background-color": "rgba(133,182,255,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        depressed: {
-          "background-color": "rgba(42,61,77,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        "background-color": "rgba(15,15,15, 0)",
-        "border-color": "black",
-        "border-radius": 5,
-        "border-width": 1,
-        height: 32,
-        "margin-bottom": 1,
-        "margin-left": 2,
-        "margin-right": 2,
-        "margin-top": 1,
-        padding: 2,
-        width: 32
-      },
-      iconcheck: {
-        highlight: {
-          "background-color": "rgba(133,182,255,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        depressed: {
-          "background-color": "rgba(42,61,77,0.8)",
-          "border-color": "black",
-          "border-radius": 5,
-          "border-width": 1,
-          height: 32,
-          "margin-bottom": 1,
-          "margin-left": 2,
-          "margin-right": 2,
-          "margin-top": 1,
-          padding: 2,
-          width: 32
-        },
-        "background-color": "rgba(15,15,15, 0)",
-        "border-color": "rgba(237,209,209, 1)",
-        "border-radius": 5,
-        "border-width": 0,
-        drawCheck: true,
-        height: 32,
-        "margin-bottom": 1,
-        "margin-left": 2,
-        "margin-right": 2,
-        "margin-top": 1,
-        padding: 2,
-        width: 32
-      },
-      label: {
-        LabelText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(35, 35, 35, 1.0)"
-        })
-      },
-      listbox: {
-        ListActive: "rgba(200, 205, 215, 1.0)",
-        ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
-        ListHighlight: "rgba(155, 220, 255, 0.5)",
-        ItemHeight: 24,
-        height: 200,
-        width: 110
-      },
-      panzoom: {
-        ZoomMin: 0.1,
-        ZoomMax: 8,
-        ZoomWheelRate: 1.1
-      },
-      nodeframe: {
-        Width: 140,
-        HeaderHeight: 24,
-        SocketRowHeight: 20,
-        "background-color": "rgba(248, 248, 248, 0.95)",
-        "border-color": "#b8b8b8",
-        "border-radius": 4,
-        HeaderBG: "rgba(214, 214, 214, 0.95)",
-        SelectOutline: "#e8930c",
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        SocketText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 11,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        SocketHitExpand: 5,
-        SocketHighlightColor: "rgba(200, 200, 255, 0.25)",
-        SocketErrorColor: "rgba(255, 75, 0, 1.0)"
-      },
-      nodegraphview: {
-        "background-color": "rgb(225, 225, 225)",
-        BoxSelectBorder: "#e8930c",
-        BoxSelectBG: "rgba(232, 147, 12, 0.1)",
-        ErrorColor: "#cc3333"
-      },
-      nodelinkcanvas: {
-        LinkColor: "#777777",
-        LinkWidth: 2,
-        LinkSelectColor: "#e8930c",
-        LinkSelectWidth: 3
-      },
-      menu: {
-        MenuBG: "rgba(250, 250, 250, 1.0)",
-        "item-radius": 0,
-        MenuBorder: "1px solid grey",
-        MenuHighlight: "rgba(155, 220, 255, 1.0)",
-        MenuSeparator: {
-          width: "100%",
-          height: 2,
-          padding: 0,
-          margin: 0,
-          border: "none",
-          "background-color": "grey"
-        },
-        "box-shadow": "5px 5px 25px rgba(0,0,0,0.75)",
-        MenuSpacing: 5,
-        MenuText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(25, 25, 25, 1.0)"
-        }),
-        HotkeyText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(68, 68, 68, 1.0)"
-        }),
-        // addItemExtra sets the hotkey span's color separately from its font
-        HotkeyTextColor: "rgba(68, 68, 68, 1.0)",
-        "padding-top": 0,
-        "padding-left": 0,
-        "padding-right": 0,
-        "padding-bottom": 0,
-        "border-color": "grey",
-        "border-radius": 5,
-        "border-style": "solid",
-        "border-width": 1
-      },
-      notification: {
-        DefaultText: new CSSFont({
-          font: "poppins",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgb(55,55,55)"
-        }),
-        "background-color": "rgba(72,72,72,0)",
-        "border-radius": 5,
-        "border-color": "grey",
-        "border-width": 1,
-        "border-style": "solid",
-        ProgressBarBG: "rgb(74,148,183)",
-        ProgressBar: "rgb(250,132,58)"
-      },
-      numslider: {
-        "arrow-color": "50%",
-        "background-color": "rgba(219,219,219, 1)",
-        "border-color": "rgba(255,255,255, 1)",
-        "border-radius": 1,
-        height: 22,
-        highlight: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgb(0,0,0)"
-          }),
-          "background-color": "rgba(151,208,239, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        pressed: {
-          DefaultText: new CSSFont({
-            font: "poppins",
-            weight: "bold",
-            variant: "normal",
-            style: "normal",
-            size: 12,
-            color: "rgba(0,0,0, 1)"
-          }),
-          "arrow-color": "rgb(28,28,28)",
-          "background-color": "rgba(178,178,178, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-style": "solid",
-          "border-width": 1
-        },
-        width: 115
-        /*
-        'highlight-pressed'            : {
-          DefaultText       : new CSSFont({
-            font   : 'poppins',
-            weight : 'bold',
-            variant: 'normal',
-            style  : 'normal',
-            size   : 12,
-            color  : 'rgb(245,245,245)'
-          }),
-          'background-color': 'rgb(126,126,126)',
-          'border-color'    : '#DADCE0',
-          'border-style'    : 'solid',
-          'border-width'    : 1,
-        },*/
-      },
-      numslider_simple: {
-        SlideHeight: 10,
-        TextBoxWidth: 45,
-        "background-color": "rgba(219,219,219, 1)",
-        height: 18,
-        labelOnTop: true,
-        addLabel: true,
-        width: 135
-      },
-      numslider_textbox: {
-        TextBoxHeight: 25,
-        TextBoxWidth: 50,
-        "background-color": "rgba(219,219,219, 1)",
-        height: 25,
-        labelOnTop: true,
-        addLabel: false,
-        width: 120
-      },
-      panel: {
-        header: {
-          iconSize: 16
-        },
-        HeaderBorderRadius: 5.329650280441558,
-        HeaderRadius: 4,
-        TitleBackground: "rgba(177,219,255, 1)",
-        TitleBorder: "rgba(104,104,104, 1)",
-        TitleText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(0,0,0, 1)"
-        }),
-        "background-color": "rgba(184,184,184, 0.7594818376068376)",
-        "border-color": "rgba(0,0,0, 0.5598061397157866)",
-        "border-radius": 4,
-        "border-style": "groove",
-        "border-width": 1.141,
-        "margin-bottom": 0,
-        "margin-bottom-closed": 0,
-        "margin-left": 5.6584810220495445,
-        "margin-right": 0,
-        "margin-top": 0,
-        "margin-top-closed": 0,
-        "padding-bottom": 0,
-        "padding-left": 0,
-        "padding-right": 0,
-        "padding-top": 0
-      },
-      richtext: {
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 16,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgb(245, 245, 245)"
-      },
-      screenborder: {
-        "border-inner": "grey",
-        "border-outer": "rgba(228,228,228, 1)",
-        "border-width": 2,
-        "mouse-threshold": 8
-      },
-      /*
-      scrollbars: new ThemeScrollBars({
-        border  : undefined,
-        color   : undefined,
-        color2  : undefined,
-        contrast: undefined,
-        width   : undefined,
-      }),*/
-      sidebar: {
-        "background-color": "rgba(55, 55, 55, 0.5)"
-      },
-      strip: {
-        "background-color": "rgba(75,75,75, 0.33213141025641024)",
-        "border-color": "rgba(0,0,0, 0.31325409987877156)",
-        "border-radius": 8.76503417507447,
-        "border-style": "solid",
-        "border-width": 1,
-        margin: 2,
-        oneAxisPadding: 2,
-        padding: 1,
-        "flex-grow": "unset"
-      },
-      tabs: {
-        "focus-on-tab-click": "false",
-        "movable-tabs": "true",
-        TabPadding_mobile: 20,
-        //padding perpindicular to the label text
-        TabPadding: 0,
-        TabActive: "rgba(212,212,212, 1)",
-        TabBarRadius: 6,
-        TabHighlight: "rgba(50, 50, 50, 0.2)",
-        TabInactive: "rgba(183,183,183, 1)",
-        TabStrokeStyle1: "rgba(0,0,0, 1)",
-        TabStrokeStyle2: "rgba(0,0,0, 1)",
-        TabText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "bold",
-          style: "normal",
-          size: 15,
-          color: "rgba(0,0,0, 1)"
-        }),
-        "background-color": "rgba(222,222,222, 1)"
-      },
-      textbox: {
-        DefaultText: new CSSFont({
-          font: "sans-serif",
-          weight: "normal",
-          variant: "normal",
-          style: "normal",
-          size: 14,
-          color: "rgba(3,3,3, 1)"
-        }),
-        "border-color": "rgba(0,0,0,0)",
-        "border-width": 1,
-        "border-radius": 4,
-        "border-style": "solid",
-        "background-color": "rgba(245,245,245, 1)"
-      },
-      tooltip: {
-        ToolTipText: new CSSFont({
-          font: "sans-serif",
-          weight: "bold",
-          variant: "normal",
-          style: "normal",
-          size: 12,
-          color: "rgba(35, 35, 35, 1.0)"
-        }),
-        "background-color": "rgba(255,255,255, 1)",
-        "border-color": "rgba(139,139,139, 1)",
-        "border-radius": 3,
-        "border-style": "solid",
-        "border-width": 1,
-        padding: 5,
-        // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
-        // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
-        timeout: 4e3
-      },
-      treeview: {
-        itemIndent: 10,
-        rowHeight: 18
-      },
-      vecPopupButton: {
-        height: 18,
-        padding: 3,
-        width: 100
-      }
-    };
-  }
-});
-
 // scripts/path-controller/config/config.ts
 var config_exports = {};
 __export(config_exports, {
@@ -12328,6 +11769,1014 @@ var init_ui_theme = __esm({
     validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
     validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
     theme = {};
+  }
+});
+
+// scripts/core/ui_theme_utils.ts
+function getVars(vars2) {
+  const entries = Object.keys(vars2).map((key) => [key, new ThemeVar(key)]);
+  return Object.fromEntries(entries);
+}
+function instanceThemeVars(theme2, vars2) {
+  return copyRecord(theme2, vars2, "");
+}
+function copyRecord(rec, vars2, path) {
+  const ret = {};
+  for (const key in rec) {
+    ret[key] = copyThemeItem(rec[key], vars2, path ? `${path}.${key}` : key);
+  }
+  return ret;
+}
+function copyThemeItem(item, vars2 = {}, path = "") {
+  if (item instanceof ThemeVar) {
+    if (!(item.key in vars2)) {
+      throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
+    }
+    return copyThemeItem(vars2[item.key], vars2, path);
+  }
+  if (item instanceof CSSFont) {
+    return item.copy();
+  }
+  if (item instanceof ThemeScrollBars) {
+    return new ThemeScrollBars({ ...item });
+  }
+  if (Array.isArray(item)) {
+    throw new Error(`arrays are not theme values, at "${path}"`);
+  }
+  if (typeof item === "object" && item !== null) {
+    return copyRecord(item, vars2, path);
+  }
+  return item;
+}
+function copyVarItem(item) {
+  if (item instanceof ThemeVar) {
+    return new ThemeVar(item.key);
+  }
+  if (item instanceof CSSFont) {
+    return item.copy();
+  }
+  if (item instanceof ThemeScrollBars) {
+    return new ThemeScrollBars({ ...item });
+  }
+  if (typeof item === "object" && item !== null) {
+    const ret = {};
+    for (const key in item) {
+      if (key !== "__proto__") {
+        ret[key] = copyVarItem(item[key]);
+      }
+    }
+    return ret;
+  }
+  return item;
+}
+function pathKey(path) {
+  return JSON.stringify(path);
+}
+function isWalkable(item) {
+  return typeof item === "object" && item !== null && !(item instanceof ThemeVar);
+}
+function isPlainRecord(item) {
+  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
+}
+function itemAt(rec, path) {
+  let item = rec;
+  for (const key of path) {
+    if (!isWalkable(item)) {
+      return void 0;
+    }
+    item = item[key];
+  }
+  return item;
+}
+function hasItemAt(rec, path) {
+  if (path.length === 0) {
+    return true;
+  }
+  const parent = itemAt(rec, path.slice(0, -1));
+  return isWalkable(parent) && path[path.length - 1] in parent;
+}
+function assertKey(key) {
+  if (key === "__proto__") {
+    throw new Error('"__proto__" is not a usable theme key');
+  }
+}
+function setItemAt(rec, path, item, live) {
+  if (path.length === 0) {
+    throw new Error("cannot set the theme root");
+  }
+  let parent = rec;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    assertKey(key);
+    let next = parent[key];
+    if (!isWalkable(next)) {
+      const liveHere = live ? itemAt(live, path.slice(0, i + 1)) : void 0;
+      const created = liveHere instanceof ThemeScrollBars ? new ThemeScrollBars({}) : {};
+      if (i > 0 && isWalkable(liveHere)) {
+        seedLeaves(created, liveHere);
+      }
+      parent[key] = created;
+      next = created;
+    }
+    parent = next;
+  }
+  const last = path[path.length - 1];
+  assertKey(last);
+  parent[last] = item;
+}
+function seedLeaves(dst, src) {
+  for (const key in src) {
+    const v = src[key];
+    if (key === "__proto__" || isPlainRecord(v)) {
+      continue;
+    }
+    dst[key] = copyThemeItem(v);
+  }
+}
+function deleteItemAt(rec, path) {
+  const parent = itemAt(rec, path.slice(0, -1));
+  if (isWalkable(parent)) {
+    delete parent[path[path.length - 1]];
+  }
+}
+function toLivePath(path) {
+  if (path.length < 2) {
+    return [...path];
+  }
+  const key = path[1];
+  const mapped = key in compatMap ? compatMap[key] : key;
+  return [path[0], mapped, ...path.slice(2)];
+}
+function varSlots(varTheme, varKey) {
+  const found = [];
+  const walk = (rec, path) => {
+    for (const key in rec) {
+      const v = rec[key];
+      const here = [...path, key];
+      if (v instanceof ThemeVar) {
+        if (v.key === varKey) {
+          found.push({ varPath: here, livePath: toLivePath(here) });
+        }
+      } else if (isPlainRecord(v)) {
+        walk(v, here);
+      }
+    }
+  };
+  walk(varTheme, []);
+  return found;
+}
+function bindSlot(varTheme, varPath, varKey, live) {
+  setItemAt(varTheme, varPath, new ThemeVar(varKey), live);
+}
+function unbindSlot(varTheme, vars2, varPath) {
+  const item = itemAt(varTheme, varPath);
+  if (!(item instanceof ThemeVar)) {
+    throw new Error(`slot "${pathKey(varPath)}" is not bound to a variable`);
+  }
+  const value = copyThemeItem(item, vars2, pathKey(varPath));
+  setItemAt(varTheme, varPath, value);
+  return value;
+}
+function addVar(vars2, key, value) {
+  const name2 = key.trim();
+  if (!name2) {
+    throw new Error("a theme variable needs a name");
+  }
+  if (name2.search("\n") >= 0) {
+    throw new Error("a theme variable name cannot contain a newline");
+  }
+  assertKey(name2);
+  if (name2 in vars2) {
+    throw new Error(`theme variable "${name2}" already exists`);
+  }
+  vars2[name2] = value;
+  return name2;
+}
+function deleteVar(varTheme, vars2, key) {
+  if (!(key in vars2)) {
+    throw new Error(`no such theme variable "${key}"`);
+  }
+  const slots = varSlots(varTheme, key);
+  for (const slot of slots) {
+    setItemAt(varTheme, slot.varPath, copyThemeItem(vars2[key], vars2, pathKey(slot.varPath)));
+  }
+  delete vars2[key];
+  return slots;
+}
+function renameVar(varTheme, vars2, comments, from, to) {
+  const name2 = to.trim();
+  if (!(from in vars2)) {
+    throw new Error(`no such theme variable "${from}"`);
+  }
+  if (name2 === from) {
+    return from;
+  }
+  if (!name2) {
+    throw new Error("a theme variable needs a name");
+  }
+  if (name2.search("\n") >= 0) {
+    throw new Error("a theme variable name cannot contain a newline");
+  }
+  assertKey(name2);
+  if (name2 in vars2) {
+    throw new Error(`theme variable "${name2}" already exists`);
+  }
+  for (const slot of varSlots(varTheme, from)) {
+    setItemAt(varTheme, slot.varPath, new ThemeVar(name2));
+  }
+  const entries = Object.entries(vars2).map(([k, v]) => [
+    k === from ? name2 : k,
+    v
+  ]);
+  for (const k of Object.keys(vars2)) {
+    delete vars2[k];
+  }
+  for (const [k, v] of entries) {
+    vars2[k] = v;
+  }
+  if (from in comments) {
+    comments[name2] = comments[from];
+    delete comments[from];
+  }
+  return name2;
+}
+function createThemeFile({
+  theme: theme2,
+  vars: vars2,
+  existingThemeFile,
+  varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
+  importPath = "pathux",
+  onAssemble
+}) {
+  onAssemble = onAssemble ?? ((header2, vars3, theme3, footer2) => {
+    return header2 + vars3 + theme3 + footer2;
+  });
+  const items = [...Object.values(vars2), ...Object.values(theme2)];
+  const names = ["getVars", "instanceThemeVars"];
+  if (items.some((item) => usesClass(item, CSSFont))) {
+    names.push("CSSFont");
+  }
+  if (items.some((item) => usesClass(item, ThemeScrollBars))) {
+    names.push("ThemeScrollBars");
+  }
+  const header = `//XXX warning: auto-generated file!
+
+import { ${names.sort().join(", ")} } from ${quote(importPath)};
+import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
+
+`;
+  const varsSrc = `export const themeVars = ${writeRecord(vars2, "", varComments)} as const;
+
+`;
+  const themeSrc = `const vars = getVars(themeVars);
+
+export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
+
+`;
+  const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
+`;
+  return onAssemble(header, varsSrc, themeSrc, footer);
+}
+function parseVarComments(themeFile) {
+  const comments = {};
+  const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
+  const decl = new RegExp(`\\b${name2}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
+  if (!decl) {
+    return comments;
+  }
+  const block = readBlock(themeFile, decl.index + decl[0].length - 1);
+  let pending = [];
+  for (const { code: code2, comment, depth } of block) {
+    const key = KEY_LINE.exec(code2);
+    if (key && depth === 1) {
+      const lines = comment ? [...pending, comment] : pending;
+      if (lines.length > 0) {
+        comments[key[1] ?? key[2] ?? key[3]] = lines.join("\n");
+      }
+    } else if (code2.trim() === "" && comment) {
+      pending.push(comment);
+      continue;
+    }
+    pending = [];
+  }
+  return comments;
+}
+function readBlock(src, start) {
+  const lines = [];
+  let depth = 0;
+  let lineDepth = 0;
+  let code2 = "";
+  let comment = "";
+  let inComment = false;
+  let quoteChar = "";
+  const pushLine = () => {
+    lines.push({ code: code2, comment: comment.trim(), depth: lineDepth });
+    code2 = "";
+    comment = "";
+    inComment = false;
+  };
+  for (let i = start; i < src.length; i++) {
+    const c = src[i];
+    if (c === "\n") {
+      pushLine();
+      lineDepth = depth;
+      continue;
+    }
+    if (inComment) {
+      comment += c;
+      continue;
+    }
+    if (quoteChar) {
+      code2 += c;
+      if (c === "\\") {
+        code2 += src[++i] ?? "";
+      } else if (c === quoteChar) {
+        quoteChar = "";
+      }
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "/") {
+      inComment = true;
+      i++;
+      continue;
+    }
+    code2 += c;
+    if (c === '"' || c === "'" || c === "`") {
+      quoteChar = c;
+    } else if (c === "{" || c === "[" || c === "(") {
+      depth++;
+    } else if (c === "}" || c === "]" || c === ")") {
+      if (--depth === 0) {
+        pushLine();
+        break;
+      }
+    }
+  }
+  return lines;
+}
+function usesClass(item, cls) {
+  if (item instanceof cls) {
+    return true;
+  }
+  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars) {
+    return false;
+  }
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  return Object.values(item).some((child) => usesClass(child, cls));
+}
+function writeRecord(rec, indent, comments) {
+  const inner = indent + "  ";
+  let out = "{\n";
+  for (const key in rec) {
+    for (const line of comments?.[key]?.split("\n") ?? []) {
+      out += `${inner}//${line ? " " + line : ""}
+`;
+    }
+    out += `${inner}${writeKey(key)}: ${writeItem(rec[key], inner)},
+`;
+  }
+  return out + indent + "}";
+}
+function writeItem(item, indent) {
+  if (item instanceof ThemeVar) {
+    return /^[A-Za-z_$][\w$]*$/.test(item.key) ? `vars.${item.key}` : `vars[${quote(item.key)}]`;
+  }
+  if (item instanceof CSSFont) {
+    return `new CSSFont(${writeArgs(
+      {
+        size: item._size,
+        font: item.font,
+        style: item.style,
+        weight: item.weight,
+        variant: item.variant,
+        color: item.color
+      },
+      DEFAULT_FONT
+    )})`;
+  }
+  if (item instanceof ThemeScrollBars) {
+    return `new ThemeScrollBars(${writeArgs({
+      border: item.border,
+      color: item.color,
+      color2: item.color2,
+      contrast: item.contrast,
+      width: item.width
+    })})`;
+  }
+  if (Array.isArray(item)) {
+    throw new Error("arrays are not theme values");
+  }
+  if (typeof item === "object" && item !== null) {
+    return writeRecord(item, indent);
+  }
+  return typeof item === "string" ? quote(item) : String(item);
+}
+function writeArgs(args, defaults = {}) {
+  const parts = [];
+  for (const key in args) {
+    const val = args[key];
+    if (val === void 0 || val === defaults[key]) {
+      continue;
+    }
+    parts.push(`${key}: ${typeof val === "string" ? quote(val) : val}`);
+  }
+  return parts.length > 0 ? `{ ${parts.join(", ")} }` : "{}";
+}
+function writeKey(key) {
+  return /^[A-Za-z_$][\w$]*$/.test(key) ? key : quote(key);
+}
+function quote(str) {
+  return JSON.stringify(str);
+}
+var ThemeVar, KEY_LINE, DEFAULT_FONT;
+var init_ui_theme_utils = __esm({
+  "scripts/core/ui_theme_utils.ts"() {
+    "use strict";
+    init_cssfont();
+    init_ui_theme();
+    ThemeVar = class {
+      key;
+      constructor(key) {
+        this.key = key;
+      }
+    };
+    KEY_LINE = /^\s*(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:/;
+    DEFAULT_FONT = {
+      size: 12,
+      font: "",
+      style: "normal",
+      weight: "normal",
+      variant: "normal",
+      color: ""
+    };
+  }
+});
+
+// scripts/core/theme.ts
+var themeVars, vars, DefaultTheme;
+var init_theme = __esm({
+  "scripts/core/theme.ts"() {
+    "use strict";
+    init_cssfont();
+    init_ui_theme();
+    init_ui_theme_utils();
+    themeVars = {
+      bodyFont: new CSSFont({
+        font: "sans-serif",
+        weight: "normal",
+        variant: "normal",
+        style: "normal",
+        size: 14,
+        color: "rgba(35, 35, 35, 1.0)"
+      }),
+      labelFont: new CSSFont({
+        font: "sans-serif",
+        weight: "normal",
+        variant: "normal",
+        style: "normal",
+        size: 14,
+        color: "rgba(35, 35, 35, 1.0)"
+      })
+    };
+    vars = getVars(themeVars);
+    DefaultTheme = {
+      base: {
+        mobileTextSizeMultiplier: 1,
+        AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
+        BasePackFlag: 0,
+        BoxDepressed: "rgba(130,130,130, 1)",
+        BoxHighlight: "rgba(151,208,239, 1)",
+        "flex-grow": "unset",
+        mobileSizeMultiplier: 1,
+        DefaultText: vars.bodyFont,
+        LabelText: vars.labelFont,
+        TitleText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgba(207,207,207, 0.5)",
+        "border-color": "rgba(34,34,34, 1)",
+        "border-radius": 12.010619764585666,
+        "focus-border-width": 2,
+        oneAxisPadding: 2,
+        padding: 1
+      },
+      "propLabels": {
+        font: vars.bodyFont
+      },
+      button: {
+        DefaultText: new CSSFont({
+          font: "poppins",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35,35,35, 1)"
+        }),
+        "background-color": "rgba(238,238,238, 0.8672412740773168)",
+        "border-color": "rgba(255,255,255, 1)",
+        "border-radius": 4,
+        "border-style": "solid",
+        "border-width": 2,
+        disabled: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgb(109,109,109)"
+          }),
+          "background-color": "rgb(19,19,19)",
+          "border-color": "#f58f8f",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        height: 25,
+        highlight: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(255,255,255, 1)"
+          }),
+          "background-color": "rgba(138,222,255, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-radius": 4,
+          "border-style": "solid",
+          "border-width": 2
+        },
+        "highlight-pressed": {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(35,35,35, 1)"
+          }),
+          "background-color": "rgba(113,113,113, 1)",
+          "border-color": "#DADCE0",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        margin: 4,
+        "margin-left": 4,
+        "margin-right": 4,
+        padding: 1,
+        pressed: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(35,35,35, 1)"
+          }),
+          "background-color": "rgba(113,113,113, 1)",
+          "border-color": "#DADCE0",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        width: 25
+      },
+      checkbox: {
+        CheckSide: "left",
+        height: 32,
+        width: 32,
+        "background-color": "rgb(168,168,168)"
+      },
+      colorfield: {
+        circleSize: 11,
+        colorBoxHeight: 24,
+        fieldSize: 400,
+        height: 256,
+        hueHeight: 32,
+        width: 256
+      },
+      colorpickerbutton: {
+        height: 32,
+        width: 95
+      },
+      curvewidget: {
+        CanvasBG: "rgb(44,44,44)",
+        CanvasHeight: 256,
+        CanvasWidth: 256
+      },
+      dropbox: {
+        dropTextBG: "rgba(233,233,233, 1)",
+        height: 25,
+        width: 32
+      },
+      iconbutton: {
+        highlight: {
+          "background-color": "rgba(133,182,255,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        depressed: {
+          "background-color": "rgba(42,61,77,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        "background-color": "rgba(15,15,15, 0)",
+        "border-color": "black",
+        "border-radius": 5,
+        "border-width": 1,
+        height: 32,
+        "margin-bottom": 1,
+        "margin-left": 2,
+        "margin-right": 2,
+        "margin-top": 1,
+        padding: 2,
+        width: 32
+      },
+      iconcheck: {
+        highlight: {
+          "background-color": "rgba(133,182,255,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        depressed: {
+          "background-color": "rgba(42,61,77,0.8)",
+          "border-color": "black",
+          "border-radius": 5,
+          "border-width": 1,
+          height: 32,
+          "margin-bottom": 1,
+          "margin-left": 2,
+          "margin-right": 2,
+          "margin-top": 1,
+          padding: 2,
+          width: 32
+        },
+        "background-color": "rgba(15,15,15, 0)",
+        "border-color": "rgba(237,209,209, 1)",
+        "border-radius": 5,
+        "border-width": 0,
+        drawCheck: true,
+        height: 32,
+        "margin-bottom": 1,
+        "margin-left": 2,
+        "margin-right": 2,
+        "margin-top": 1,
+        padding: 2,
+        width: 32
+      },
+      label: {
+        LabelText: vars.labelFont
+      },
+      listbox: {
+        ListActive: "rgba(200, 205, 215, 1.0)",
+        ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
+        ListHighlight: "rgba(155, 220, 255, 0.5)",
+        ItemHeight: 24,
+        height: 200,
+        width: 110
+      },
+      panzoom: {
+        ZoomMin: 0.1,
+        ZoomMax: 8,
+        ZoomWheelRate: 1.1
+      },
+      nodeframe: {
+        Width: 140,
+        HeaderHeight: 24,
+        SocketRowHeight: 20,
+        "background-color": "rgba(248, 248, 248, 0.95)",
+        "border-color": "#b8b8b8",
+        "border-radius": 4,
+        HeaderBG: "rgba(214, 214, 214, 0.95)",
+        SelectOutline: "#e8930c",
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        SocketText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 11,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        SocketHitExpand: 5,
+        SocketHighlightColor: "rgba(200, 200, 255, 0.25)",
+        SocketErrorColor: "rgba(255, 75, 0, 1.0)"
+      },
+      nodegraphview: {
+        "background-color": "rgb(225, 225, 225)",
+        BoxSelectBorder: "#e8930c",
+        BoxSelectBG: "rgba(232, 147, 12, 0.1)",
+        ErrorColor: "#cc3333"
+      },
+      nodelinkcanvas: {
+        LinkColor: "#777777",
+        LinkWidth: 2,
+        LinkSelectColor: "#e8930c",
+        LinkSelectWidth: 3
+      },
+      menu: {
+        MenuBG: "rgba(250, 250, 250, 1.0)",
+        "item-radius": 0,
+        MenuBorder: "1px solid grey",
+        MenuHighlight: "rgba(155, 220, 255, 1.0)",
+        MenuSeparator: {
+          width: "100%",
+          height: 2,
+          padding: 0,
+          margin: 0,
+          border: "none",
+          "background-color": "grey"
+        },
+        "box-shadow": "5px 5px 25px rgba(0,0,0,0.75)",
+        MenuSpacing: 5,
+        MenuText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(25, 25, 25, 1.0)"
+        }),
+        HotkeyText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(68, 68, 68, 1.0)"
+        }),
+        // addItemExtra sets the hotkey span's color separately from its font
+        HotkeyTextColor: "rgba(68, 68, 68, 1.0)",
+        "padding-top": 0,
+        "padding-left": 0,
+        "padding-right": 0,
+        "padding-bottom": 0,
+        "border-color": "grey",
+        "border-radius": 5,
+        "border-style": "solid",
+        "border-width": 1
+      },
+      notification: {
+        DefaultText: new CSSFont({
+          font: "poppins",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgb(55,55,55)"
+        }),
+        "background-color": "rgba(72,72,72,0)",
+        "border-radius": 5,
+        "border-color": "grey",
+        "border-width": 1,
+        "border-style": "solid",
+        ProgressBarBG: "rgb(74,148,183)",
+        ProgressBar: "rgb(250,132,58)"
+      },
+      numslider: {
+        "arrow-color": "50%",
+        "background-color": "rgba(219,219,219, 1)",
+        "border-color": "rgba(255,255,255, 1)",
+        "border-radius": 1,
+        height: 22,
+        highlight: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgb(0,0,0)"
+          }),
+          "background-color": "rgba(151,208,239, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        pressed: {
+          DefaultText: new CSSFont({
+            font: "poppins",
+            weight: "bold",
+            variant: "normal",
+            style: "normal",
+            size: 12,
+            color: "rgba(0,0,0, 1)"
+          }),
+          "arrow-color": "rgb(28,28,28)",
+          "background-color": "rgba(178,178,178, 1)",
+          "border-color": "rgba(255,255,255, 1)",
+          "border-style": "solid",
+          "border-width": 1
+        },
+        width: 115
+        /*
+        'highlight-pressed'            : {
+          DefaultText       : new CSSFont({
+            font   : 'poppins',
+            weight : 'bold',
+            variant: 'normal',
+            style  : 'normal',
+            size   : 12,
+            color  : 'rgb(245,245,245)'
+          }),
+          'background-color': 'rgb(126,126,126)',
+          'border-color'    : '#DADCE0',
+          'border-style'    : 'solid',
+          'border-width'    : 1,
+        },*/
+      },
+      numslider_simple: {
+        SlideHeight: 10,
+        TextBoxWidth: 45,
+        "background-color": "rgba(219,219,219, 1)",
+        height: 18,
+        labelOnTop: true,
+        addLabel: true,
+        width: 135
+      },
+      numslider_textbox: {
+        TextBoxHeight: 25,
+        TextBoxWidth: 50,
+        "background-color": "rgba(219,219,219, 1)",
+        height: 25,
+        labelOnTop: true,
+        addLabel: false,
+        width: 120
+      },
+      panel: {
+        header: {
+          iconSize: 16
+        },
+        HeaderBorderRadius: 5.329650280441558,
+        HeaderRadius: 4,
+        TitleBackground: "rgba(177,219,255, 1)",
+        TitleBorder: "rgba(104,104,104, 1)",
+        TitleText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(0,0,0, 1)"
+        }),
+        "background-color": "rgba(184,184,184, 0.7594818376068376)",
+        "border-color": "rgba(0,0,0, 0.5598061397157866)",
+        "border-radius": 4,
+        "border-style": "groove",
+        "border-width": 1.141,
+        "margin-bottom": 0,
+        "margin-bottom-closed": 0,
+        "margin-left": 5.6584810220495445,
+        "margin-right": 0,
+        "margin-top": 0,
+        "margin-top-closed": 0,
+        "padding-bottom": 0,
+        "padding-left": 0,
+        "padding-right": 0,
+        "padding-top": 0
+      },
+      richtext: {
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 16,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgb(245, 245, 245)"
+      },
+      screenborder: {
+        "border-inner": "grey",
+        "border-outer": "rgba(228,228,228, 1)",
+        "border-width": 2,
+        "mouse-threshold": 8
+      },
+      scrollbars: new ThemeScrollBars({
+        border: void 0,
+        color: void 0,
+        color2: void 0,
+        contrast: void 0,
+        width: void 0
+      }),
+      sidebar: {
+        "background-color": "rgba(55, 55, 55, 0.5)"
+      },
+      strip: {
+        "background-color": "rgba(75,75,75, 0.33213141025641024)",
+        "border-color": "rgba(0,0,0, 0.31325409987877156)",
+        "border-radius": 8.76503417507447,
+        "border-style": "solid",
+        "border-width": 1,
+        margin: 2,
+        oneAxisPadding: 2,
+        padding: 1,
+        "flex-grow": "unset"
+      },
+      tabs: {
+        "focus-on-tab-click": "false",
+        "movable-tabs": "true",
+        TabPadding_mobile: 20,
+        //padding perpindicular to the label text
+        TabPadding: 0,
+        TabActive: "rgba(212,212,212, 1)",
+        TabBarRadius: 6,
+        TabHighlight: "rgba(50, 50, 50, 0.2)",
+        TabInactive: "rgba(183,183,183, 1)",
+        TabStrokeStyle1: "rgba(0,0,0, 1)",
+        TabStrokeStyle2: "rgba(0,0,0, 1)",
+        TabText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "bold",
+          style: "normal",
+          size: 15,
+          color: "rgba(0,0,0, 1)"
+        }),
+        "background-color": "rgba(222,222,222, 1)"
+      },
+      textbox: {
+        DefaultText: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(3,3,3, 1)"
+        }),
+        "border-color": "rgba(0,0,0,0)",
+        "border-width": 1,
+        "border-radius": 4,
+        "border-style": "solid",
+        "background-color": "rgba(245,245,245, 1)"
+      },
+      tooltip: {
+        ToolTipText: new CSSFont({
+          font: "sans-serif",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "background-color": "rgba(255,255,255, 1)",
+        "border-color": "rgba(139,139,139, 1)",
+        "border-radius": 3,
+        "border-style": "solid",
+        "border-width": 1,
+        padding: 5,
+        // How long a tooltip stays up, in milliseconds. Without a number here every tooltip ended on
+        // the update tick after it was shown, because `timeout ?? 0` is zero and zero has passed.
+        timeout: 4e3
+      },
+      treeview: {
+        itemIndent: 10,
+        rowHeight: 18
+      },
+      vecPopupButton: {
+        height: 18,
+        padding: 3,
+        width: 100
+      }
+    };
   }
 });
 
@@ -39130,11 +39579,13 @@ var Container3 = class _Container extends UIBase {
     this._container_inherit(strip);
     strip.widget = widget;
     strip.labelElem = UIBase.createElement("label-x");
-    strip.labelElem.text = label;
     strip._add(strip.labelElem);
     strip._add(widget);
     this._add(strip);
     strip._init();
+    strip.labelElem._init();
+    strip.labelElem.text = label;
+    strip.labelElem.setCSS();
     strip.setCSS();
     return { widget, container: strip };
   }
@@ -39234,10 +39685,16 @@ var Container3 = class _Container extends UIBase {
       packflag
     ).widget;
   }
-  textarea(datapath, value = "", packflag = 0, mass_set_path) {
+  textarea(datapath, value, packflag = 0, mass_set_path, isRichEdit, label) {
+    if (typeof value === "object") {
+      mass_set_path ??= value.massSetPath;
+      isRichEdit ??= value.isRichEdit;
+      label ??= value.label;
+      value = value.value;
+    }
     return this.addPropLabel(
-      textareaImpl(this, datapath, value, packflag, mass_set_path),
-      void 0,
+      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit),
+      label,
       packflag
     ).widget;
   }
@@ -39299,10 +39756,16 @@ var WidgetWithLabel = class extends Container3 {
       this.style.display = this.parentWidget?.style.display ?? "flex";
       this.style.flexDirection = this.parentWidget?.style.flexDirection ?? "column";
     }
+    this.labelElem.font = this.getDefault("font") || this.labelElem.font;
+    this.labelElem.setCSS();
   }
   static define() {
     return {
-      tagname: "widget-with-label-x"
+      tagname: "widget-with-label-x",
+      style: "propLabels",
+      theme: {
+        font: t.font
+      }
     };
   }
 };
@@ -41960,442 +42423,6 @@ function mount(ctx, parent, node) {
     }
   }
   return container;
-}
-
-// scripts/core/ui_theme_utils.ts
-init_cssfont();
-init_ui_theme();
-var ThemeVar = class {
-  key;
-  constructor(key) {
-    this.key = key;
-  }
-};
-function getVars(vars) {
-  const entries = Object.keys(vars).map((key) => [key, new ThemeVar(key)]);
-  return Object.fromEntries(entries);
-}
-function instanceThemeVars(theme2, vars) {
-  return copyRecord(theme2, vars, "");
-}
-function copyRecord(rec, vars, path) {
-  const ret = {};
-  for (const key in rec) {
-    ret[key] = copyThemeItem(rec[key], vars, path ? `${path}.${key}` : key);
-  }
-  return ret;
-}
-function copyThemeItem(item, vars = {}, path = "") {
-  if (item instanceof ThemeVar) {
-    if (!(item.key in vars)) {
-      throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
-    }
-    return copyThemeItem(vars[item.key], vars, path);
-  }
-  if (item instanceof CSSFont) {
-    return item.copy();
-  }
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
-  }
-  if (Array.isArray(item)) {
-    throw new Error(`arrays are not theme values, at "${path}"`);
-  }
-  if (typeof item === "object" && item !== null) {
-    return copyRecord(item, vars, path);
-  }
-  return item;
-}
-function copyVarItem(item) {
-  if (item instanceof ThemeVar) {
-    return new ThemeVar(item.key);
-  }
-  if (item instanceof CSSFont) {
-    return item.copy();
-  }
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
-  }
-  if (typeof item === "object" && item !== null) {
-    const ret = {};
-    for (const key in item) {
-      if (key !== "__proto__") {
-        ret[key] = copyVarItem(item[key]);
-      }
-    }
-    return ret;
-  }
-  return item;
-}
-function pathKey(path) {
-  return JSON.stringify(path);
-}
-function isWalkable(item) {
-  return typeof item === "object" && item !== null && !(item instanceof ThemeVar);
-}
-function isPlainRecord(item) {
-  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
-}
-function itemAt(rec, path) {
-  let item = rec;
-  for (const key of path) {
-    if (!isWalkable(item)) {
-      return void 0;
-    }
-    item = item[key];
-  }
-  return item;
-}
-function hasItemAt(rec, path) {
-  if (path.length === 0) {
-    return true;
-  }
-  const parent = itemAt(rec, path.slice(0, -1));
-  return isWalkable(parent) && path[path.length - 1] in parent;
-}
-function assertKey(key) {
-  if (key === "__proto__") {
-    throw new Error('"__proto__" is not a usable theme key');
-  }
-}
-function setItemAt(rec, path, item, live) {
-  if (path.length === 0) {
-    throw new Error("cannot set the theme root");
-  }
-  let parent = rec;
-  for (let i = 0; i < path.length - 1; i++) {
-    const key = path[i];
-    assertKey(key);
-    let next = parent[key];
-    if (!isWalkable(next)) {
-      const liveHere = live ? itemAt(live, path.slice(0, i + 1)) : void 0;
-      const created = liveHere instanceof ThemeScrollBars ? new ThemeScrollBars({}) : {};
-      if (i > 0 && isWalkable(liveHere)) {
-        seedLeaves(created, liveHere);
-      }
-      parent[key] = created;
-      next = created;
-    }
-    parent = next;
-  }
-  const last = path[path.length - 1];
-  assertKey(last);
-  parent[last] = item;
-}
-function seedLeaves(dst, src) {
-  for (const key in src) {
-    const v = src[key];
-    if (key === "__proto__" || isPlainRecord(v)) {
-      continue;
-    }
-    dst[key] = copyThemeItem(v);
-  }
-}
-function deleteItemAt(rec, path) {
-  const parent = itemAt(rec, path.slice(0, -1));
-  if (isWalkable(parent)) {
-    delete parent[path[path.length - 1]];
-  }
-}
-function toLivePath(path) {
-  if (path.length < 2) {
-    return [...path];
-  }
-  const key = path[1];
-  const mapped = key in compatMap ? compatMap[key] : key;
-  return [path[0], mapped, ...path.slice(2)];
-}
-function varSlots(varTheme, varKey) {
-  const found = [];
-  const walk = (rec, path) => {
-    for (const key in rec) {
-      const v = rec[key];
-      const here = [...path, key];
-      if (v instanceof ThemeVar) {
-        if (v.key === varKey) {
-          found.push({ varPath: here, livePath: toLivePath(here) });
-        }
-      } else if (isPlainRecord(v)) {
-        walk(v, here);
-      }
-    }
-  };
-  walk(varTheme, []);
-  return found;
-}
-function bindSlot(varTheme, varPath, varKey, live) {
-  setItemAt(varTheme, varPath, new ThemeVar(varKey), live);
-}
-function unbindSlot(varTheme, vars, varPath) {
-  const item = itemAt(varTheme, varPath);
-  if (!(item instanceof ThemeVar)) {
-    throw new Error(`slot "${pathKey(varPath)}" is not bound to a variable`);
-  }
-  const value = copyThemeItem(item, vars, pathKey(varPath));
-  setItemAt(varTheme, varPath, value);
-  return value;
-}
-function addVar(vars, key, value) {
-  const name2 = key.trim();
-  if (!name2) {
-    throw new Error("a theme variable needs a name");
-  }
-  if (name2.search("\n") >= 0) {
-    throw new Error("a theme variable name cannot contain a newline");
-  }
-  assertKey(name2);
-  if (name2 in vars) {
-    throw new Error(`theme variable "${name2}" already exists`);
-  }
-  vars[name2] = value;
-  return name2;
-}
-function deleteVar(varTheme, vars, key) {
-  if (!(key in vars)) {
-    throw new Error(`no such theme variable "${key}"`);
-  }
-  const slots = varSlots(varTheme, key);
-  for (const slot of slots) {
-    setItemAt(varTheme, slot.varPath, copyThemeItem(vars[key], vars, pathKey(slot.varPath)));
-  }
-  delete vars[key];
-  return slots;
-}
-function renameVar(varTheme, vars, comments, from, to) {
-  const name2 = to.trim();
-  if (!(from in vars)) {
-    throw new Error(`no such theme variable "${from}"`);
-  }
-  if (name2 === from) {
-    return from;
-  }
-  if (!name2) {
-    throw new Error("a theme variable needs a name");
-  }
-  if (name2.search("\n") >= 0) {
-    throw new Error("a theme variable name cannot contain a newline");
-  }
-  assertKey(name2);
-  if (name2 in vars) {
-    throw new Error(`theme variable "${name2}" already exists`);
-  }
-  for (const slot of varSlots(varTheme, from)) {
-    setItemAt(varTheme, slot.varPath, new ThemeVar(name2));
-  }
-  const entries = Object.entries(vars).map(([k, v]) => [
-    k === from ? name2 : k,
-    v
-  ]);
-  for (const k of Object.keys(vars)) {
-    delete vars[k];
-  }
-  for (const [k, v] of entries) {
-    vars[k] = v;
-  }
-  if (from in comments) {
-    comments[name2] = comments[from];
-    delete comments[from];
-  }
-  return name2;
-}
-function createThemeFile({
-  theme: theme2,
-  vars,
-  existingThemeFile,
-  varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
-  importPath = "pathux",
-  onAssemble
-}) {
-  onAssemble = onAssemble ?? ((header2, vars2, theme3, footer2) => {
-    return header2 + vars2 + theme3 + footer2;
-  });
-  const items = [...Object.values(vars), ...Object.values(theme2)];
-  const names = ["getVars", "instanceThemeVars"];
-  if (items.some((item) => usesClass(item, CSSFont))) {
-    names.push("CSSFont");
-  }
-  if (items.some((item) => usesClass(item, ThemeScrollBars))) {
-    names.push("ThemeScrollBars");
-  }
-  const header = `//XXX warning: auto-generated file!
-
-import { ${names.sort().join(", ")} } from ${quote(importPath)};
-import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
-
-`;
-  const varsSrc = `export const themeVars = ${writeRecord(vars, "", varComments)} as const;
-
-`;
-  const themeSrc = `const vars = getVars(themeVars);
-
-export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
-
-`;
-  const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
-`;
-  return onAssemble(header, varsSrc, themeSrc, footer);
-}
-var KEY_LINE = /^\s*(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:/;
-function parseVarComments(themeFile) {
-  const comments = {};
-  const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
-  const decl = new RegExp(`\\b${name2}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
-  if (!decl) {
-    return comments;
-  }
-  const block = readBlock(themeFile, decl.index + decl[0].length - 1);
-  let pending = [];
-  for (const { code: code2, comment, depth } of block) {
-    const key = KEY_LINE.exec(code2);
-    if (key && depth === 1) {
-      const lines = comment ? [...pending, comment] : pending;
-      if (lines.length > 0) {
-        comments[key[1] ?? key[2] ?? key[3]] = lines.join("\n");
-      }
-    } else if (code2.trim() === "" && comment) {
-      pending.push(comment);
-      continue;
-    }
-    pending = [];
-  }
-  return comments;
-}
-function readBlock(src, start) {
-  const lines = [];
-  let depth = 0;
-  let lineDepth = 0;
-  let code2 = "";
-  let comment = "";
-  let inComment = false;
-  let quoteChar = "";
-  const pushLine = () => {
-    lines.push({ code: code2, comment: comment.trim(), depth: lineDepth });
-    code2 = "";
-    comment = "";
-    inComment = false;
-  };
-  for (let i = start; i < src.length; i++) {
-    const c = src[i];
-    if (c === "\n") {
-      pushLine();
-      lineDepth = depth;
-      continue;
-    }
-    if (inComment) {
-      comment += c;
-      continue;
-    }
-    if (quoteChar) {
-      code2 += c;
-      if (c === "\\") {
-        code2 += src[++i] ?? "";
-      } else if (c === quoteChar) {
-        quoteChar = "";
-      }
-      continue;
-    }
-    if (c === "/" && src[i + 1] === "/") {
-      inComment = true;
-      i++;
-      continue;
-    }
-    code2 += c;
-    if (c === '"' || c === "'" || c === "`") {
-      quoteChar = c;
-    } else if (c === "{" || c === "[" || c === "(") {
-      depth++;
-    } else if (c === "}" || c === "]" || c === ")") {
-      if (--depth === 0) {
-        pushLine();
-        break;
-      }
-    }
-  }
-  return lines;
-}
-function usesClass(item, cls) {
-  if (item instanceof cls) {
-    return true;
-  }
-  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars) {
-    return false;
-  }
-  if (typeof item !== "object" || item === null) {
-    return false;
-  }
-  return Object.values(item).some((child) => usesClass(child, cls));
-}
-function writeRecord(rec, indent, comments) {
-  const inner = indent + "  ";
-  let out = "{\n";
-  for (const key in rec) {
-    for (const line of comments?.[key]?.split("\n") ?? []) {
-      out += `${inner}//${line ? " " + line : ""}
-`;
-    }
-    out += `${inner}${writeKey(key)}: ${writeItem(rec[key], inner)},
-`;
-  }
-  return out + indent + "}";
-}
-function writeItem(item, indent) {
-  if (item instanceof ThemeVar) {
-    return /^[A-Za-z_$][\w$]*$/.test(item.key) ? `vars.${item.key}` : `vars[${quote(item.key)}]`;
-  }
-  if (item instanceof CSSFont) {
-    return `new CSSFont(${writeArgs(
-      {
-        size: item._size,
-        font: item.font,
-        style: item.style,
-        weight: item.weight,
-        variant: item.variant,
-        color: item.color
-      },
-      DEFAULT_FONT
-    )})`;
-  }
-  if (item instanceof ThemeScrollBars) {
-    return `new ThemeScrollBars(${writeArgs({
-      border: item.border,
-      color: item.color,
-      color2: item.color2,
-      contrast: item.contrast,
-      width: item.width
-    })})`;
-  }
-  if (Array.isArray(item)) {
-    throw new Error("arrays are not theme values");
-  }
-  if (typeof item === "object" && item !== null) {
-    return writeRecord(item, indent);
-  }
-  return typeof item === "string" ? quote(item) : String(item);
-}
-var DEFAULT_FONT = {
-  size: 12,
-  font: "",
-  style: "normal",
-  weight: "normal",
-  variant: "normal",
-  color: ""
-};
-function writeArgs(args, defaults = {}) {
-  const parts = [];
-  for (const key in args) {
-    const val = args[key];
-    if (val === void 0 || val === defaults[key]) {
-      continue;
-    }
-    parts.push(`${key}: ${typeof val === "string" ? quote(val) : val}`);
-  }
-  return parts.length > 0 ? `{ ${parts.join(", ")} }` : "{}";
-}
-function writeKey(key) {
-  return /^[A-Za-z_$][\w$]*$/.test(key) ? key : quote(key);
-}
-function quote(str) {
-  return JSON.stringify(str);
 }
 
 // scripts/widgets/ui_richedit.ts
@@ -49462,8 +49489,6 @@ pathux.NodeSocketBase {
   }
   /** Declares this socket in the data API. Inert until stage 7 lands the graph datapath that reaches a socket. */
   static defineAPI(api, st) {
-    void api;
-    void st;
   }
   /**
    * Builds the editor row for this socket's default value; datapath addresses it
@@ -49671,14 +49696,19 @@ pathux.GraphNode {
       this.customPropUX.set(k, def.customPropUX[k]);
     }
   }
+  ensurePropUIName(prop, key) {
+    prop.uiname = !prop.uiname?.length ? ToolProperty.makeUIName(key) : prop.uiname;
+  }
   _adoptSocket(key, sock, dir) {
     sock.name = key;
     sock.dir = dir;
     sock.owningNode = this;
+    this.ensurePropUIName(sock.defaultProp, key);
     return sock;
   }
   /** Enforces the record-key ≡ apiname invariant node serialization depends on. */
   _adoptProp(key, prop) {
+    this.ensurePropUIName(prop, key);
     if (!prop.apiname) {
       prop.apiname = key;
     } else if (prop.apiname !== key) {
@@ -49853,6 +49883,7 @@ pathux.GraphNode {
         defSock.defaultProp.copyTo(sock.defaultProp);
         sock.defaultProp.setValue(value);
         sock.defaultProp.wasSet = wasSet;
+        this.ensurePropUIName(sock.defaultProp, sock.name);
       }
     }
     return socks;
@@ -51495,6 +51526,7 @@ function _parseNodeId(text2) {
 // scripts/editors/nodeeditor/nodeframe.ts
 init_ui_base();
 init_theme_schema();
+init_ui_base_theme_lookup();
 function rowHeight(m, row) {
   return m.rowHeights?.[row] ?? m.socketRowHeight;
 }
@@ -51532,7 +51564,15 @@ var TerminalDot = class extends HTMLElement {
     dot.dataset.socketKey = socketName;
     dot.dataset.socketDir = dir;
     dot.title = tooltip;
-    dot.style.cssText = `position: absolute; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
+    dot.style.cssText = `
+      position: absolute; top: 50%; 
+      transform: translateY(-50%); 
+      width: 8px; height: 8px; 
+      border-radius: 50%; 
+      flex: 0 0 auto; 
+      background: ${color}; 
+      ${dir === "in" ? "left" : "right"}: -5px;
+      `.split("\n").join("");
     this.resetStyles();
     dot.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || nodeframe.onSocketDown === void 0) {
@@ -51945,22 +51985,29 @@ var NodeFrame = class extends Container3 {
     const label = inline ? this._inlineEditor(socketPropName) : void 0;
     if (dir === "in") {
       row.appendChild(dot.dom);
-      row.appendChild(label ?? this._terminalName(socketPropName));
+      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
     } else {
-      row.appendChild(label ?? this._terminalName(socketPropName));
+      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
       row.appendChild(dot.dom);
     }
     return row;
   }
-  _terminalName(key) {
+  _terminalName(key, node) {
     const name2 = document.createElement("span");
-    name2.textContent = Node3.decomposePropName(key).name;
-    name2.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
+    const font = getStyleRecord(this, "propLabels", "font", true)?.font;
+    name2.textContent = nodePropTarget(node, key)?.uiname ?? Node3.decomposePropName(key).name;
+    name2.style.overflow = "hidden";
+    name2.style.whiteSpace = "nowrap";
+    name2.style.textOverflow = "ellipsis";
+    if (font) {
+      name2.style.font = font.genCSS();
+      name2.style.color = font.color;
+    }
     return name2;
   }
   /** The editor for a sockets default value, bound through the props datapath. */
   _inlineEditor(socketPropName) {
-    const { name: socketName, type: dir } = Node3.decomposePropName(socketPropName);
+    const { name: socketName } = Node3.decomposePropName(socketPropName);
     const path = `${this.nodePath}.props['${socketPropName}'].value`;
     const sock = nodePropSocket(this.node, socketPropName);
     const row = propEditRow(
@@ -59145,6 +59192,7 @@ function getPlatformAsync() {
 init_ui_base();
 init_ui_theme();
 init_cssfont();
+init_ui_theme_utils();
 var ThemeChangeEvent = class extends Event {
   category;
   key;
@@ -59358,11 +59406,11 @@ var ThemeEditor = class extends Container3 {
    * caller's module state. Without this the widget edits the live theme only.
    * Passing the theme's own source brings each variable's comment across.
    */
-  setVarTheme(varTheme, vars, existingThemeFile) {
+  setVarTheme(varTheme, vars2, existingThemeFile) {
     this._varTheme = copyVarItem(varTheme);
     this._vars = {};
-    for (const key of Object.keys(vars)) {
-      this._vars[key] = copyThemeItem(vars[key]);
+    for (const key of Object.keys(vars2)) {
+      this._vars[key] = copyThemeItem(vars2[key]);
     }
     this._varComments = existingThemeFile ? parseVarComments(existingThemeFile) : {};
     this.rebuildBindings();
@@ -65224,6 +65272,7 @@ init_menu();
 // scripts/pathux.ts
 init_polyfill();
 init_ui_base();
+init_ui_theme_utils();
 init_cssfont();
 init_ui_theme();
 init_units2();

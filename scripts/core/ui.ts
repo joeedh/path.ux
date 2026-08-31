@@ -1077,6 +1077,7 @@ export class Container<
         label = prop.getUIName();
       }
     }
+
     if (!label) {
       return { widget, container: this };
     }
@@ -1086,11 +1087,14 @@ export class Container<
     this._container_inherit(strip);
     strip.widget = widget;
     strip.labelElem = UIBase.createElement("label-x") as Label<CTX>;
-    strip.labelElem.text = label;
     strip._add(strip.labelElem);
     strip._add(widget);
     this._add(strip);
     strip._init();
+
+    strip.labelElem._init();
+    strip.labelElem.text = label;
+    strip.labelElem.setCSS();
     strip.setCSS();
 
     return { widget, container: strip };
@@ -1250,13 +1254,32 @@ export class Container<
 
   textarea(
     datapath?: string,
-    value = "",
+    value?:
+      | string
+      | {
+          value?: string;
+          massSetPath?: string;
+          isRichEdit?: boolean;
+          label?: string;
+        },
+    /** @deprecated */
     packflag = 0,
-    mass_set_path?: string
+    /** @deprecated */
+    mass_set_path?: string,
+    /** @deprecated */
+    isRichEdit?: boolean,
+    /** @deprecated */
+    label?: string
   ): TextArea<CTX> | RichEditor<CTX> {
+    if (typeof value === "object") {
+      mass_set_path ??= value.massSetPath;
+      isRichEdit ??= value.isRichEdit;
+      label ??= value.label;
+      value = value.value;
+    }
     return this.addPropLabel(
-      textareaImpl(this, datapath, value, packflag, mass_set_path),
-      undefined,
+      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit),
+      label,
       packflag
     ).widget;
   }
@@ -1336,12 +1359,19 @@ export class WidgetWithLabel<CTX extends IContextBase> extends Container<CTX> {
       this.style.flexDirection = this.parentWidget?.style.flexDirection ?? "column";
     }
 
+    this.labelElem.font = this.getDefault("font") || this.labelElem.font;
+    this.labelElem.setCSS();
+
     // add label theme styling here
   }
 
   static define() {
     return {
       tagname: "widget-with-label-x",
+      style  : "propLabels",
+      theme: {
+        font: t.font,
+      },
     };
   }
 }

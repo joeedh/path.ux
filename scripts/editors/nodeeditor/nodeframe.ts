@@ -3,11 +3,12 @@ import type { UIBaseDefinition } from "../../core/ui_base";
 import { Container } from "../../core/ui";
 import { IContextBase } from "../../core/context_base";
 import { t } from "../../core/theme_schema";
-import type { CSSFont } from "../../core/cssfont";
+import { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
-import { Node as GraphNode, NodePropName, nodePropSocket } from "../../graph/node";
+import { Node as GraphNode, NodePropName, nodePropSocket, nodePropTarget } from "../../graph/node";
 import type { SocketDir } from "../../graph/graph_types";
 import { propEditRow } from "./groupui";
+import { getStyleRecord } from "../../core/base/ui_base_theme_lookup";
 
 /** Graph-space geometry a frame's socket anchors derive from. */
 export interface FrameMetrics {
@@ -96,10 +97,17 @@ export class TerminalDot<CTX extends IContextBase = IContextBase> extends HTMLEl
     dot.title = tooltip;
     // Centered on the frame's outer edge where socketAnchor and link-drop hit
     // testing place the terminal; -5px cancels the frame's 1px border.
-    dot.style.cssText =
-      "position: absolute; top: 50%; transform: translateY(-50%); " +
-      "width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; " +
-      `background: ${color}; ${dir === "in" ? "left" : "right"}: -5px;`;
+    dot.style.cssText = `
+      position: absolute; top: 50%; 
+      transform: translateY(-50%); 
+      width: 8px; height: 8px; 
+      border-radius: 50%; 
+      flex: 0 0 auto; 
+      background: ${color}; 
+      ${dir === "in" ? "left" : "right"}: -5px;
+      `
+      .split("\n")
+      .join("");
 
     this.resetStyles();
 
@@ -617,24 +625,32 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     if (dir === "in") {
       row.appendChild(dot.dom);
-      row.appendChild(label ?? this._terminalName(socketPropName));
+      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
     } else {
-      row.appendChild(label ?? this._terminalName(socketPropName));
+      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
       row.appendChild(dot.dom);
     }
     return row;
   }
 
-  private _terminalName(key: NodePropName): HTMLSpanElement {
+  private _terminalName(key: NodePropName, node: GraphNode): HTMLSpanElement {
     const name = document.createElement("span");
-    name.textContent = GraphNode.decomposePropName(key).name;
-    name.style.cssText = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
+    const font = getStyleRecord(this, "propLabels", "font", true)?.font as CSSFont | undefined;
+
+    name.textContent = nodePropTarget(node, key)?.uiname ?? GraphNode.decomposePropName(key).name;
+    name.style.overflow = "hidden";
+    name.style.whiteSpace = "nowrap";
+    name.style.textOverflow = "ellipsis";
+    if (font) {
+      name.style.font = font.genCSS();
+      name.style.color = font.color;
+    }
     return name;
   }
 
   /** The editor for a sockets default value, bound through the props datapath. */
   private _inlineEditor(socketPropName: NodePropName): HTMLElement {
-    const { name: socketName, type: dir } = GraphNode.decomposePropName(socketPropName);
+    const { name: socketName } = GraphNode.decomposePropName(socketPropName);
 
     const path = `${this.nodePath}.props['${socketPropName}'].value`;
     const sock = nodePropSocket(this.node, socketPropName);

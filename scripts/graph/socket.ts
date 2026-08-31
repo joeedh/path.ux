@@ -335,8 +335,7 @@ pathux.NodeSocketBase {
 
   /** Declares this socket in the data API. Inert until stage 7 lands the graph datapath that reaches a socket. */
   static defineAPI(api: DataAPI, st: DataStruct): void {
-    void api;
-    void st;
+    //
   }
 
   /**

@@ -241,7 +241,7 @@ export function getStyleClass(elem: AnyUIBase, ignoreOverride = false): string {
  * styleClass.  If key is not undefined it will be used to only
  * include overrides that contains that key
  */
-function getStyleRecord(
+export function getStyleRecord(
   elem: AnyUIBase,
   styleClass: string,
   key?: string,

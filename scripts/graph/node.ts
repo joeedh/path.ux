@@ -227,15 +227,22 @@ pathux.GraphNode {
     }
   }
 
+  private ensurePropUIName(prop: ToolProperty, key: string): void {
+    prop.uiname = !prop.uiname?.length ? ToolProperty.makeUIName(key) : prop.uiname;
+  }
+
   protected _adoptSocket(key: string, sock: NodeSocketBase, dir: SocketDir): NodeSocketBase {
     sock.name = key;
     sock.dir = dir;
     sock.owningNode = this;
+    this.ensurePropUIName(sock.defaultProp, key);
+
     return sock;
   }
 
   /** Enforces the record-key ≡ apiname invariant node serialization depends on. */
   protected _adoptProp(key: string, prop: ToolProperty): void {
+    this.ensurePropUIName(prop, key);
     if (!prop.apiname) {
       prop.apiname = key;
     } else if (prop.apiname !== key) {
@@ -464,6 +471,7 @@ pathux.GraphNode {
         // setValue above exists only to restore the value copyTo just overwrote with the
         // definition's own default; it must not make an untouched load look user-edited.
         sock.defaultProp.wasSet = wasSet;
+        this.ensurePropUIName(sock.defaultProp, sock.name);
       }
     }
     return socks;

@@ -50,7 +50,9 @@ export const theme = {
     oneAxisPadding      : 2,
     padding             : 1,
   },
-
+  "propLabels": {
+    font: vars.bodyFont,
+  },
   button: {
     DefaultText: new CSSFont({
       font   : "poppins",
