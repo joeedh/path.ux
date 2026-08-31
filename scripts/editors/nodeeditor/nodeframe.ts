@@ -637,10 +637,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     const name = document.createElement("span");
     const font = getStyleRecord(this, "propLabels", "font", true)?.font as CSSFont | undefined;
 
-    name.textContent = nodePropTarget(node, key)?.uiname ?? GraphNode.decomposePropName(key).name;
+    name.textContent = nodePropTarget(node, key)?.uiname || GraphNode.decomposePropName(key).name;
     name.style.overflow = "hidden";
     name.style.whiteSpace = "nowrap";
     name.style.textOverflow = "ellipsis";
+    name.title = nodePropTarget(node, key)?.description ?? "";
     if (font) {
       name.style.font = font.genCSS();
       name.style.color = font.color;

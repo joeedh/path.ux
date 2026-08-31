@@ -11804,8 +11804,8 @@ function getVars(vars3) {
   const entries = Object.keys(vars3).map((key) => [key, new ThemeVar(key)]);
   return Object.fromEntries(entries);
 }
-function instanceThemeVars(theme3, vars3) {
-  return copyRecord(theme3, vars3, "");
+function instanceThemeVars(theme4, vars3) {
+  return copyRecord(theme4, vars3, "");
 }
 function copyRecord(rec, vars3, path) {
   const ret = {};
@@ -11819,7 +11819,11 @@ function copyThemeItem(item, vars3 = {}, path = "") {
     if (!(item.key in vars3)) {
       throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
     }
-    return copyThemeItem(vars3[item.key], vars3, path);
+    const value = vars3[item.key];
+    if (value instanceof ThemeVar) {
+      throw new Error(`theme variable "${item.key}" stands for another variable, at "${path}"`);
+    }
+    return copyThemeItem(value, vars3, path);
   }
   if (item instanceof CSSFont) {
     return item.copy();
@@ -12028,17 +12032,17 @@ function renameVar(varTheme, vars3, comments, from, to) {
   return name2;
 }
 function createThemeFile({
-  theme: theme3,
+  theme: theme4,
   vars: vars3,
   existingThemeFile,
   varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
   importPath = "pathux",
   onAssemble
 }) {
-  onAssemble = onAssemble ?? ((header2, vars4, theme4, footer2) => {
-    return header2 + vars4 + theme4 + footer2;
+  onAssemble = onAssemble ?? ((header2, vars4, theme5, footer2) => {
+    return header2 + vars4 + theme5 + footer2;
   });
-  const items = [...Object.values(vars3), ...Object.values(theme3)];
+  const items = [...Object.values(vars3), ...Object.values(theme4)];
   const names = ["getVars", "instanceThemeVars"];
   if (items.some((item) => usesClass(item, CSSFont))) {
     names.push("CSSFont");
@@ -12057,7 +12061,7 @@ import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
 `;
   const themeSrc = `const vars = getVars(themeVars);
 
-export const theme = ${writeRecord(theme3, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
+export const theme = ${writeRecord(theme4, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
 
 `;
   const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
@@ -12242,7 +12246,7 @@ var init_ui_theme_utils = __esm({
 });
 
 // scripts/core/theme.ts
-var themeVars, vars, DefaultTheme;
+var themeVars, vars, theme2, DefaultTheme;
 var init_theme = __esm({
   "scripts/core/theme.ts"() {
     "use strict";
@@ -12268,7 +12272,7 @@ var init_theme = __esm({
       })
     };
     vars = getVars(themeVars);
-    DefaultTheme = {
+    theme2 = {
       base: {
         mobileTextSizeMultiplier: 1,
         AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
@@ -12804,6 +12808,7 @@ var init_theme = __esm({
         width: 100
       }
     };
+    DefaultTheme = instanceThemeVars(theme2, themeVars);
   }
 });
 
@@ -52222,9 +52227,9 @@ var require_tinymce = __commonJS({
       var hasSection = function(sectionResult2, name3) {
         return sectionResult2.sections().hasOwnProperty(name3);
       };
-      var isSectionTheme = function(sectionResult2, name3, theme3) {
+      var isSectionTheme = function(sectionResult2, name3, theme4) {
         var section = sectionResult2.sections();
-        return hasSection(sectionResult2, name3) && section[name3].theme === theme3;
+        return hasSection(sectionResult2, name3) && section[name3].theme === theme4;
       };
       var getSectionConfig = function(sectionResult2, name3) {
         return hasSection(sectionResult2, name3) ? sectionResult2.sections()[name3] : {};
@@ -52437,8 +52442,8 @@ var require_tinymce = __commonJS({
       function NotificationManager(editor2) {
         var notifications = [];
         var getImplementation = function() {
-          var theme3 = editor2.theme;
-          return theme3 && theme3.getNotificationManagerImpl ? theme3.getNotificationManagerImpl() : NotificationManagerImpl();
+          var theme4 = editor2.theme;
+          return theme4 && theme4.getNotificationManagerImpl ? theme4.getNotificationManagerImpl() : NotificationManagerImpl();
         };
         var getTopNotification = function() {
           return Option.from(notifications[0]);
@@ -52534,8 +52539,8 @@ var require_tinymce = __commonJS({
       var WindowManager = function(editor2) {
         var dialogs = [];
         var getImplementation = function() {
-          var theme3 = editor2.theme;
-          return theme3 && theme3.getWindowManagerImpl ? theme3.getWindowManagerImpl() : WindowManagerImpl();
+          var theme4 = editor2.theme;
+          return theme4 && theme4.getWindowManagerImpl ? theme4.getWindowManagerImpl() : WindowManagerImpl();
         };
         var funcBind = function(scope, f2) {
           return function() {
@@ -61727,13 +61732,13 @@ var require_tinymce = __commonJS({
         });
       };
       var initTheme = function(editor2) {
-        var theme3 = editor2.settings.theme;
-        if (isString(theme3)) {
-          editor2.settings.theme = trimLegacyPrefix(theme3);
-          var Theme = ThemeManager.get(theme3);
-          editor2.theme = new Theme(editor2, ThemeManager.urls[theme3]);
+        var theme4 = editor2.settings.theme;
+        if (isString(theme4)) {
+          editor2.settings.theme = trimLegacyPrefix(theme4);
+          var Theme = ThemeManager.get(theme4);
+          editor2.theme = new Theme(editor2, ThemeManager.urls[theme4]);
           if (editor2.theme.init) {
-            editor2.theme.init(editor2, ThemeManager.urls[theme3] || editor2.documentBaseUrl.replace(/\/$/, ""), editor2.$);
+            editor2.theme.init(editor2, ThemeManager.urls[theme4] || editor2.documentBaseUrl.replace(/\/$/, ""), editor2.$);
           }
         } else {
           editor2.theme = {};
@@ -61744,8 +61749,8 @@ var require_tinymce = __commonJS({
       };
       var renderFromThemeFunc = function(editor2) {
         var elm = editor2.getElement();
-        var theme3 = editor2.settings.theme;
-        var info = theme3(editor2, elm);
+        var theme4 = editor2.settings.theme;
+        var info = theme4(editor2, elm);
         if (info.editorContainer.nodeType) {
           info.editorContainer.id = info.editorContainer.id || editor2.id + "_parent";
         }
@@ -61810,18 +61815,18 @@ var require_tinymce = __commonJS({
         }
       };
       var loadTheme = function(scriptLoader, editor2, suffix, callback) {
-        var settings = editor2.settings, theme3 = settings.theme;
-        if (isString(theme3)) {
-          if (!hasSkipLoadPrefix(theme3) && !ThemeManager.urls.hasOwnProperty(theme3)) {
+        var settings = editor2.settings, theme4 = settings.theme;
+        if (isString(theme4)) {
+          if (!hasSkipLoadPrefix(theme4) && !ThemeManager.urls.hasOwnProperty(theme4)) {
             var themeUrl = settings.theme_url;
             if (themeUrl) {
-              ThemeManager.load(theme3, editor2.documentBaseURI.toAbsolute(themeUrl));
+              ThemeManager.load(theme4, editor2.documentBaseURI.toAbsolute(themeUrl));
             } else {
-              ThemeManager.load(theme3, "themes/" + theme3 + "/theme" + suffix + ".js");
+              ThemeManager.load(theme4, "themes/" + theme4 + "/theme" + suffix + ".js");
             }
           }
           scriptLoader.loadQueue(function() {
-            ThemeManager.waitFor(theme3, callback);
+            ThemeManager.waitFor(theme4, callback);
           });
         } else {
           callback();
@@ -77632,7 +77637,7 @@ ToolOp.register(PanZoomPanOp);
 var NO_ID = -1;
 
 // scripts/graph/types.ts
-var GRAPH_SCHEMA_VERSION = 2;
+var GRAPH_SCHEMA_VERSION = 3;
 
 // scripts/graph/graph.ts
 init_nstructjs();
@@ -78227,6 +78232,10 @@ pathux.NodeSocketBase {
     }
     if (jsonOrObj.VERSION === void 0) {
       jsonOrObj.VERSION = 0;
+    }
+    if (jsonOrObj.VERSION <= 2) {
+      jsonOrObj.defaultProp.uiname = ToolProperty.makeUIName(jsonOrObj.name);
+      jsonOrObj.defaultProp.apiname = jsonOrObj.name;
     }
     migrate(haveDefaultProp ? void 0 : ["defaultProp"]);
     jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;
@@ -97239,7 +97248,7 @@ var themeVars2 = {
   })
 };
 var vars2 = getVars(themeVars2);
-var theme2 = {
+var theme3 = {
   base: {
     AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
     BasePackFlag: 0,
@@ -98159,7 +98168,7 @@ var PropsEditor = class extends Editor2 {
         },
         themeEditor: (ed) => {
           this.themeEditor = ed;
-          this.themeEditor.setVarTheme(theme2, themeVars2);
+          this.themeEditor.setVarTheme(theme3, themeVars2);
         },
         graphTab: (tab2) => this.buildGraphPack(tab2),
         // CanvasPath has no name field; label list entries by id for the demo.
@@ -98654,7 +98663,7 @@ var AppState2 = class {
   }
 };
 function start() {
-  setTheme(instanceThemeVars(theme2, themeVars2));
+  setTheme(instanceThemeVars(theme3, themeVars2));
   window._appstate = new AppState2();
   struct_default.validateStructs();
   let animreq;

@@ -322,8 +322,6 @@ export function update(elem: AnyUIBase): void {
 
   if (elem._init_done && !elem.constructor.define().subclassChecksTheme) {
     if (elem.checkThemeUpdate()) {
-      console.log("theme update!");
-
       elem.setCSS();
     }
   }

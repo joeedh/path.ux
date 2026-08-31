@@ -11804,8 +11804,8 @@ function getVars(vars2) {
   const entries = Object.keys(vars2).map((key) => [key, new ThemeVar(key)]);
   return Object.fromEntries(entries);
 }
-function instanceThemeVars(theme2, vars2) {
-  return copyRecord(theme2, vars2, "");
+function instanceThemeVars(theme3, vars2) {
+  return copyRecord(theme3, vars2, "");
 }
 function copyRecord(rec, vars2, path) {
   const ret = {};
@@ -11819,7 +11819,11 @@ function copyThemeItem(item, vars2 = {}, path = "") {
     if (!(item.key in vars2)) {
       throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
     }
-    return copyThemeItem(vars2[item.key], vars2, path);
+    const value = vars2[item.key];
+    if (value instanceof ThemeVar) {
+      throw new Error(`theme variable "${item.key}" stands for another variable, at "${path}"`);
+    }
+    return copyThemeItem(value, vars2, path);
   }
   if (item instanceof CSSFont) {
     return item.copy();
@@ -12028,17 +12032,17 @@ function renameVar(varTheme, vars2, comments, from, to) {
   return name2;
 }
 function createThemeFile({
-  theme: theme2,
+  theme: theme3,
   vars: vars2,
   existingThemeFile,
   varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
   importPath = "pathux",
   onAssemble
 }) {
-  onAssemble = onAssemble ?? ((header2, vars3, theme3, footer2) => {
-    return header2 + vars3 + theme3 + footer2;
+  onAssemble = onAssemble ?? ((header2, vars3, theme4, footer2) => {
+    return header2 + vars3 + theme4 + footer2;
   });
-  const items = [...Object.values(vars2), ...Object.values(theme2)];
+  const items = [...Object.values(vars2), ...Object.values(theme3)];
   const names = ["getVars", "instanceThemeVars"];
   if (items.some((item) => usesClass(item, CSSFont))) {
     names.push("CSSFont");
@@ -12057,7 +12061,7 @@ import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
 `;
   const themeSrc = `const vars = getVars(themeVars);
 
-export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
+export const theme = ${writeRecord(theme3, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
 
 `;
   const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
@@ -12242,7 +12246,7 @@ var init_ui_theme_utils = __esm({
 });
 
 // scripts/core/theme.ts
-var themeVars, vars, DefaultTheme;
+var themeVars, vars, theme2, DefaultTheme;
 var init_theme = __esm({
   "scripts/core/theme.ts"() {
     "use strict";
@@ -12268,7 +12272,7 @@ var init_theme = __esm({
       })
     };
     vars = getVars(themeVars);
-    DefaultTheme = {
+    theme2 = {
       base: {
         mobileTextSizeMultiplier: 1,
         AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
@@ -12804,13 +12808,14 @@ var init_theme = __esm({
         width: 100
       }
     };
+    DefaultTheme = instanceThemeVars(theme2, themeVars);
   }
 });
 
 // scripts/core/base/ui_theme_key.ts
-function setTheme(theme2) {
-  for (const k in theme2) {
-    const v = theme2[k];
+function setTheme(theme22) {
+  for (const k in theme22) {
+    const v = theme22[k];
     if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
       theme[k] = v;
       continue;
@@ -52222,9 +52227,9 @@ var require_tinymce = __commonJS({
       var hasSection = function(sectionResult2, name3) {
         return sectionResult2.sections().hasOwnProperty(name3);
       };
-      var isSectionTheme = function(sectionResult2, name3, theme2) {
+      var isSectionTheme = function(sectionResult2, name3, theme3) {
         var section = sectionResult2.sections();
-        return hasSection(sectionResult2, name3) && section[name3].theme === theme2;
+        return hasSection(sectionResult2, name3) && section[name3].theme === theme3;
       };
       var getSectionConfig = function(sectionResult2, name3) {
         return hasSection(sectionResult2, name3) ? sectionResult2.sections()[name3] : {};
@@ -52437,8 +52442,8 @@ var require_tinymce = __commonJS({
       function NotificationManager(editor2) {
         var notifications = [];
         var getImplementation = function() {
-          var theme2 = editor2.theme;
-          return theme2 && theme2.getNotificationManagerImpl ? theme2.getNotificationManagerImpl() : NotificationManagerImpl();
+          var theme3 = editor2.theme;
+          return theme3 && theme3.getNotificationManagerImpl ? theme3.getNotificationManagerImpl() : NotificationManagerImpl();
         };
         var getTopNotification = function() {
           return Option.from(notifications[0]);
@@ -52534,8 +52539,8 @@ var require_tinymce = __commonJS({
       var WindowManager = function(editor2) {
         var dialogs = [];
         var getImplementation = function() {
-          var theme2 = editor2.theme;
-          return theme2 && theme2.getWindowManagerImpl ? theme2.getWindowManagerImpl() : WindowManagerImpl();
+          var theme3 = editor2.theme;
+          return theme3 && theme3.getWindowManagerImpl ? theme3.getWindowManagerImpl() : WindowManagerImpl();
         };
         var funcBind = function(scope, f2) {
           return function() {
@@ -61727,13 +61732,13 @@ var require_tinymce = __commonJS({
         });
       };
       var initTheme = function(editor2) {
-        var theme2 = editor2.settings.theme;
-        if (isString(theme2)) {
-          editor2.settings.theme = trimLegacyPrefix(theme2);
-          var Theme = ThemeManager.get(theme2);
-          editor2.theme = new Theme(editor2, ThemeManager.urls[theme2]);
+        var theme3 = editor2.settings.theme;
+        if (isString(theme3)) {
+          editor2.settings.theme = trimLegacyPrefix(theme3);
+          var Theme = ThemeManager.get(theme3);
+          editor2.theme = new Theme(editor2, ThemeManager.urls[theme3]);
           if (editor2.theme.init) {
-            editor2.theme.init(editor2, ThemeManager.urls[theme2] || editor2.documentBaseUrl.replace(/\/$/, ""), editor2.$);
+            editor2.theme.init(editor2, ThemeManager.urls[theme3] || editor2.documentBaseUrl.replace(/\/$/, ""), editor2.$);
           }
         } else {
           editor2.theme = {};
@@ -61744,8 +61749,8 @@ var require_tinymce = __commonJS({
       };
       var renderFromThemeFunc = function(editor2) {
         var elm = editor2.getElement();
-        var theme2 = editor2.settings.theme;
-        var info = theme2(editor2, elm);
+        var theme3 = editor2.settings.theme;
+        var info = theme3(editor2, elm);
         if (info.editorContainer.nodeType) {
           info.editorContainer.id = info.editorContainer.id || editor2.id + "_parent";
         }
@@ -61810,18 +61815,18 @@ var require_tinymce = __commonJS({
         }
       };
       var loadTheme = function(scriptLoader, editor2, suffix, callback) {
-        var settings = editor2.settings, theme2 = settings.theme;
-        if (isString(theme2)) {
-          if (!hasSkipLoadPrefix(theme2) && !ThemeManager.urls.hasOwnProperty(theme2)) {
+        var settings = editor2.settings, theme3 = settings.theme;
+        if (isString(theme3)) {
+          if (!hasSkipLoadPrefix(theme3) && !ThemeManager.urls.hasOwnProperty(theme3)) {
             var themeUrl = settings.theme_url;
             if (themeUrl) {
-              ThemeManager.load(theme2, editor2.documentBaseURI.toAbsolute(themeUrl));
+              ThemeManager.load(theme3, editor2.documentBaseURI.toAbsolute(themeUrl));
             } else {
-              ThemeManager.load(theme2, "themes/" + theme2 + "/theme" + suffix + ".js");
+              ThemeManager.load(theme3, "themes/" + theme3 + "/theme" + suffix + ".js");
             }
           }
           scriptLoader.loadQueue(function() {
-            ThemeManager.waitFor(theme2, callback);
+            ThemeManager.waitFor(theme3, callback);
           });
         } else {
           callback();
@@ -77632,7 +77637,7 @@ ToolOp.register(PanZoomPanOp);
 var NO_ID = -1;
 
 // scripts/graph/types.ts
-var GRAPH_SCHEMA_VERSION = 2;
+var GRAPH_SCHEMA_VERSION = 3;
 
 // scripts/graph/graph.ts
 init_nstructjs();
@@ -78227,6 +78232,10 @@ pathux.NodeSocketBase {
     }
     if (jsonOrObj.VERSION === void 0) {
       jsonOrObj.VERSION = 0;
+    }
+    if (jsonOrObj.VERSION <= 2) {
+      jsonOrObj.defaultProp.uiname = ToolProperty.makeUIName(jsonOrObj.name);
+      jsonOrObj.defaultProp.apiname = jsonOrObj.name;
     }
     migrate(haveDefaultProp ? void 0 : ["defaultProp"]);
     jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;

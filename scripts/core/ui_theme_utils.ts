@@ -120,7 +120,12 @@ export function copyThemeItem(
       throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
     }
 
-    return copyThemeItem(vars[item.key], vars, path);
+    const value = vars[item.key];
+    if (value instanceof ThemeVar) {
+      throw new Error(`theme variable "${item.key}" stands for another variable, at "${path}"`);
+    }
+
+    return copyThemeItem(value, vars, path);
   }
 
   if (item instanceof CSSFont) {

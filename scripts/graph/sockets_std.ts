@@ -17,10 +17,13 @@ export class FloatSocket extends NodeSocketBase<"float", number> {
     return { typeName: "FloatSocket", type: "float", uiName: "Float", color: "#a1a1a1" };
   }
 
-  constructor(dir: SocketDir = "in") {
+  constructor(
+    dir: SocketDir = "in",
+    { uiName = "", description = "" }: { uiName?: string; description?: string } = {}
+  ) {
     super(dir);
 
-    this.defaultProp = new FloatProperty(0);
+    this.defaultProp = new FloatProperty(0).setUIName(uiName).setDescription(description);
   }
 }
 registerSocketType(FloatSocket);
@@ -32,10 +35,13 @@ export class Vec3Socket extends NodeSocketBase<"vec3", Vector3> {
     return { typeName: "Vec3Socket", type: "vec3", uiName: "Vector3", color: "#8a8ad0" };
   }
 
-  constructor(dir: SocketDir = "in") {
+  constructor(
+    dir: SocketDir = "in",
+    { uiName = "", description = "" }: { uiName?: string; description?: string } = {}
+  ) {
     super(dir);
 
-    this.defaultProp = new Vec3Property([0, 0, 0]);
+    this.defaultProp = new Vec3Property([0, 0, 0]).setUIName(uiName).setDescription(description);
   }
 
   // float→vec3 is destination knowledge: the float splats across the components.
@@ -74,10 +80,13 @@ export class StringSocket extends NodeSocketBase<"string", string, StringPropert
     return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
   }
 
-  constructor(dir: SocketDir = "in") {
+  constructor(
+    dir: SocketDir = "in",
+    { uiName = "", description = "" }: { uiName?: string; description?: string } = {}
+  ) {
     super(dir);
 
-    this.defaultProp = new StringProperty("");
+    this.defaultProp = new StringProperty("").setUIName(uiName).setDescription(description);
   }
 }
 registerSocketType(StringSocket);

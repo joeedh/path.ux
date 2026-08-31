@@ -11777,8 +11777,8 @@ function getVars(vars2) {
   const entries = Object.keys(vars2).map((key) => [key, new ThemeVar(key)]);
   return Object.fromEntries(entries);
 }
-function instanceThemeVars(theme2, vars2) {
-  return copyRecord(theme2, vars2, "");
+function instanceThemeVars(theme3, vars2) {
+  return copyRecord(theme3, vars2, "");
 }
 function copyRecord(rec, vars2, path) {
   const ret = {};
@@ -11792,7 +11792,11 @@ function copyThemeItem(item, vars2 = {}, path = "") {
     if (!(item.key in vars2)) {
       throw new Error(`unknown theme variable "${item.key}" at "${path}"`);
     }
-    return copyThemeItem(vars2[item.key], vars2, path);
+    const value = vars2[item.key];
+    if (value instanceof ThemeVar) {
+      throw new Error(`theme variable "${item.key}" stands for another variable, at "${path}"`);
+    }
+    return copyThemeItem(value, vars2, path);
   }
   if (item instanceof CSSFont) {
     return item.copy();
@@ -12001,17 +12005,17 @@ function renameVar(varTheme, vars2, comments, from, to) {
   return name2;
 }
 function createThemeFile({
-  theme: theme2,
+  theme: theme3,
   vars: vars2,
   existingThemeFile,
   varComments = existingThemeFile ? parseVarComments(existingThemeFile) : void 0,
   importPath = "pathux",
   onAssemble
 }) {
-  onAssemble = onAssemble ?? ((header2, vars3, theme3, footer2) => {
-    return header2 + vars3 + theme3 + footer2;
+  onAssemble = onAssemble ?? ((header2, vars3, theme4, footer2) => {
+    return header2 + vars3 + theme4 + footer2;
   });
-  const items = [...Object.values(vars2), ...Object.values(theme2)];
+  const items = [...Object.values(vars2), ...Object.values(theme3)];
   const names = ["getVars", "instanceThemeVars"];
   if (items.some((item) => usesClass(item, CSSFont))) {
     names.push("CSSFont");
@@ -12030,7 +12034,7 @@ import type { ThemeRecordWithVar, VarKeys } from ${quote(importPath)};
 `;
   const themeSrc = `const vars = getVars(themeVars);
 
-export const theme = ${writeRecord(theme2, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
+export const theme = ${writeRecord(theme3, "")} satisfies ThemeRecordWithVar<VarKeys<typeof vars>>;
 
 `;
   const footer = `export const instancedTheme = instanceThemeVars(theme, themeVars);
@@ -12215,7 +12219,7 @@ var init_ui_theme_utils = __esm({
 });
 
 // scripts/core/theme.ts
-var themeVars, vars, DefaultTheme;
+var themeVars, vars, theme2, DefaultTheme;
 var init_theme = __esm({
   "scripts/core/theme.ts"() {
     "use strict";
@@ -12241,7 +12245,7 @@ var init_theme = __esm({
       })
     };
     vars = getVars(themeVars);
-    DefaultTheme = {
+    theme2 = {
       base: {
         mobileTextSizeMultiplier: 1,
         AreaHeaderBG: "rgba(200, 200, 200, 0.95)",
@@ -12777,13 +12781,14 @@ var init_theme = __esm({
         width: 100
       }
     };
+    DefaultTheme = instanceThemeVars(theme2, themeVars);
   }
 });
 
 // scripts/core/base/ui_theme_key.ts
-function setTheme(theme2) {
-  for (const k in theme2) {
-    const v = theme2[k];
+function setTheme(theme22) {
+  for (const k in theme22) {
+    const v = theme22[k];
     if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
       theme[k] = v;
       continue;
@@ -48928,7 +48933,7 @@ ToolOp.register(PanZoomPanOp);
 var NO_ID = -1;
 
 // scripts/graph/types.ts
-var GRAPH_SCHEMA_VERSION = 2;
+var GRAPH_SCHEMA_VERSION = 3;
 
 // scripts/graph/graph.ts
 init_nstructjs();
@@ -49523,6 +49528,10 @@ pathux.NodeSocketBase {
     }
     if (jsonOrObj.VERSION === void 0) {
       jsonOrObj.VERSION = 0;
+    }
+    if (jsonOrObj.VERSION <= 2) {
+      jsonOrObj.defaultProp.uiname = ToolProperty.makeUIName(jsonOrObj.name);
+      jsonOrObj.defaultProp.apiname = jsonOrObj.name;
     }
     migrate(haveDefaultProp ? void 0 : ["defaultProp"]);
     jsonOrObj.VERSION = GRAPH_SCHEMA_VERSION;

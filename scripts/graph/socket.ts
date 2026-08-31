@@ -15,9 +15,10 @@ export interface SocketTypeDef {
   typeName: string;
   /** The wire type coercion dispatches on ("float", "vec3", ...). */
   type: string;
+  /** UI name of the socket type.*/
   uiName?: string;
   color?: Color;
-  // to set descriptions use the socket's defaultProp
+  // to set descriptions/tooltips use the socket's defaultProp
 }
 
 export interface SocketTypeConstructor {
@@ -124,7 +125,7 @@ pathux.NodeSocketBase {
 
   /**
    * Chaining-friendly way to set the default prop's UX properties, e.g.
-   * `new Socket().setUX((prop) => prop.setReadOnly().setDescription("..."))`.
+   * `new Socket().setUX((prop) => prop.setReadOnly())`.
    */
   setUX(cb: (prop: Prop) => void): this {
     cb(this.defaultProp);
@@ -383,6 +384,11 @@ pathux.NodeSocketBase {
       jsonOrObj.VERSION = 0;
     }
 
+    if (jsonOrObj.VERSION <= 2) {
+      jsonOrObj.defaultProp.uiname = ToolProperty.makeUIName(jsonOrObj.name);
+      jsonOrObj.defaultProp.apiname = jsonOrObj.name;
+    }
+
     // a defaultProp built just above already matches the current class, so it has nothing to migrate
     migrate(haveDefaultProp ? undefined : ["defaultProp"]);
 
@@ -396,6 +402,8 @@ pathux.NodeSocketBase {
     // GraphId is number | string; the STRUCT field carries it JSON-encoded so the two stay distinct.
     this.socketId = JSON.parse(this.socketId as unknown as string) as GraphId;
     this.dir = this.dir === "out" ? "out" : "in";
+
+    // note: this.defaultProp might be undefined in old files; is filed in migration
   }
 }
 

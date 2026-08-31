@@ -1,6 +1,6 @@
 import { CSSFont } from "./cssfont";
 import { ThemeScrollBars } from "./ui_theme";
-import { getVars } from "./ui_theme_utils";
+import { getVars, instanceThemeVars, ThemeVars } from "./ui_theme_utils";
 
 export const themeVars = {
   bodyFont: new CSSFont({
@@ -19,11 +19,11 @@ export const themeVars = {
     size   : 14,
     color  : "rgba(35, 35, 35, 1.0)",
   }),
-};
+} as const;
 
 const vars = getVars(themeVars);
 
-export const DefaultTheme = {
+const theme = {
   base: {
     mobileTextSizeMultiplier: 1.0,
     AreaHeaderBG            : "rgba(200, 200, 200, 0.95)",
@@ -588,3 +588,4 @@ export const DefaultTheme = {
     width  : 100,
   },
 };
+export const DefaultTheme = instanceThemeVars(theme, themeVars);

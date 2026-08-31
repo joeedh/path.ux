@@ -1310,6 +1310,7 @@ export class WidgetWithLabel<CTX extends IContextBase> extends Container<CTX> {
   declare labelElem: Label<CTX>;
   declare widget: UIBase<CTX>;
   private lastPackFlag = 0;
+  private lastToolTip: string | undefined;
 
   constructor() {
     super();
@@ -1319,6 +1320,10 @@ export class WidgetWithLabel<CTX extends IContextBase> extends Container<CTX> {
     super.update();
     if (this.widget.packflag !== this.lastPackFlag) {
       this.setCSS();
+    }
+    if (this.widget.description !== this.lastToolTip) {
+      this.description = this.widget.description;
+      this.lastToolTip = this.widget.description;
     }
   }
 
