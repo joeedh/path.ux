@@ -1,9 +1,11 @@
 # Asset gallery
 
-`scripts/widgets/ui_gallery.ts` holds a searchable, virtualized grid of
-thumbnails and the pieces it is built from. Nothing in it knows where the
-pixels come from: a host describes each entry with a `GalleryItem` whose
-`image` is either a decoded source or a thunk that produces one.
+`scripts/gallery/` holds a searchable, virtualized grid of thumbnails and the
+pieces it is built from (`thumbnail_cache.ts`, `gallery_events.ts`,
+`asset_thumb.ts`, `asset_gallery_grid.ts`, `asset_gallery.ts`,
+`pick_asset_popup.ts`, re-exported from `index.ts`). Nothing in it knows
+where the pixels come from: a host describes each entry with a `GalleryItem`
+whose `image` is either a decoded source or a thunk that produces one.
 
 - `AssetGallery` (`assetgallery-x`) — a search box above a grid. This is the
   widget to reach for.

@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { ThumbnailCache, type ThumbSource } from "../scripts/widgets/ui_gallery";
+import { ThumbnailCache, type ThumbSource } from "../scripts/gallery/thumbnail_cache";
 
 /** Stands in for an `ImageBitmap`, recording whether the cache released it. */
 function fakeBitmap(): ThumbSource & { closed: boolean } {

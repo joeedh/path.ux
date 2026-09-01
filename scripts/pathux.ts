@@ -25,7 +25,7 @@ export * from "./widgets/ui_panel";
 export * from "./widgets/ui_colorpicker2";
 export * from "./widgets/ui_tabs";
 export * from "./widgets/ui_listbox";
-export * from "./widgets/ui_gallery";
+export * from "./gallery/index";
 export * from "./menu/menu_types";
 export * from "./menu/menu";
 export * from "./menu/dropbox";
