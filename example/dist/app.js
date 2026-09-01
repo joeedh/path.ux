@@ -77221,6 +77221,126 @@ var AssetGalleryGrid = class extends UIBase {
   }
 };
 UIBase.internalRegister(AssetGalleryGrid);
+function matchesQuery(item, query) {
+  if (item.id.toLowerCase().includes(query)) {
+    return true;
+  }
+  if (item.label?.toLowerCase().includes(query)) {
+    return true;
+  }
+  return (item.searchTags ?? []).some((tag) => tag.toLowerCase().includes(query));
+}
+var AssetGallery = class extends ColumnFrame {
+  cache = sharedThumbnailCache;
+  grid;
+  allItems = [];
+  query = "";
+  static define() {
+    return {
+      tagname: "assetgallery-x",
+      style: "assetgallery",
+      theme: {
+        width: t.number,
+        height: t.number
+      }
+    };
+  }
+  init() {
+    super.init();
+    if (this.grid !== void 0) {
+      return;
+    }
+    const search = this.textbox(void 0, "", (value) => this.setQuery(String(value)));
+    search.description = "Show only items whose name or tags contain this text";
+    search.setAttribute("placeholder", "Search");
+    const grid = UIBase.createElement("assetgallerygrid-x");
+    grid.cache = this.cache;
+    grid.style.width = this.getDefault("width") + "px";
+    grid.style.height = this.getDefault("height") + "px";
+    this.add(grid);
+    this.grid = grid;
+    grid.addEventListener("change", (e) => {
+      this.dispatchEvent(new GalleryChangeEvent(e.selection));
+    });
+    grid.addEventListener("confirm", (e) => {
+      this.dispatchEvent(new GalleryConfirmEvent(e.selection));
+    });
+    this.applyQuery();
+  }
+  /** The items to offer, before filtering. Safe to call before the widget is in the DOM. */
+  setItems(items) {
+    this.allItems = items;
+    this.applyQuery();
+  }
+  /** The selected item, which the search box hiding it does not clear. */
+  get active() {
+    return this.grid?.active;
+  }
+  set active(item) {
+    if (this.grid !== void 0) {
+      this.grid.active = item;
+    }
+  }
+  /** The search text, as if it had been typed into the box. */
+  setQuery(query) {
+    this.query = query.trim().toLowerCase();
+    this.applyQuery();
+  }
+  applyQuery() {
+    if (this.grid === void 0) {
+      return;
+    }
+    const shown = this.query === "" ? this.allItems : this.allItems.filter((item) => matchesQuery(item, this.query));
+    this.grid.setItems(shown);
+  }
+};
+UIBase.internalRegister(AssetGallery);
+function pickAssetPopup(owner, args) {
+  return new Promise((resolve) => {
+    const popup = owner.ctx.screen.popup(
+      owner,
+      owner,
+      void 0,
+      false
+    );
+    let settled = false;
+    const finish = (item) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve(item);
+    };
+    const baseRemove = popup.remove.bind(popup);
+    popup.remove = (...rest) => {
+      finish(void 0);
+      return baseRemove(...rest);
+    };
+    const gallery = UIBase.createElement("assetgallery-x");
+    if (args.cache !== void 0) {
+      gallery.cache = args.cache;
+    }
+    popup.add(gallery);
+    gallery.setItems(args.items);
+    if (args.active !== void 0) {
+      const wanted = args.active;
+      gallery.active = typeof wanted === "string" ? args.items.find((item) => item.id === wanted) : wanted;
+    }
+    gallery.addEventListener("confirm", (e) => {
+      finish(e.selection.item);
+      popup.end();
+    });
+    const footer = popup.row();
+    const ok = footer.button("OK", () => {
+      finish(gallery.active);
+      popup.end();
+    });
+    ok.description = "Use the selected item";
+    const cancel = footer.button("Cancel", () => popup.end());
+    cancel.description = "Close without choosing anything";
+    popup.flushUpdate();
+  });
+}
 
 // scripts/widgets/ui_progress.ts
 init_ui_base();
@@ -98906,11 +99026,23 @@ var PropsEditor = class extends Editor2 {
       window.galleryEvents ??= [];
       window.galleryEvents.push(kind + ":" + id);
     };
-    grid.addEventListener("change", (e) => record("change", e.selection.id));
+    grid.addEventListener(
+      "change",
+      (e) => record("change", e.selection.id)
+    );
     grid.addEventListener(
       "confirm",
       (e) => record("confirm", e.selection.id)
     );
+    const gallery = UIBase.createElement("assetgallery-x");
+    gallery.setAttribute("data-testid", "gallery");
+    tab2.add(gallery);
+    gallery.setItems(items);
+    const pick = tab2.button("Pick\u2026", () => {
+      pickAssetPopup(pick, { items }).then((item) => record("picked", item?.id));
+    });
+    pick.setAttribute("data-testid", "gallery-pick");
+    pick.description = "Choose an item through the gallery popup";
   }
   buildGraphPackNodes(size) {
     const nodes = this._nodes = [];

@@ -30,4 +30,5 @@ Blender, a 3D animation/modeling/visualization app.
 
 - [Menus](manual/menus.html)
 - [ListBox](manual/listbox.html)
+- [Asset gallery](manual/gallery.html)
 - [Node editor](manual/NodeEditor.html)

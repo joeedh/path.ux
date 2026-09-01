@@ -315,6 +315,9 @@ leaving the old callback in place and `@deprecated`.
 - [ListBox](documentation/listbox.md) — scrollable single-select list, in
   either manual (`addItem`) or `DataList`-backed mode, with a typed `"change"`
   event and user-resizable corner grip.
+- [Asset gallery](documentation/gallery.md) — searchable, virtualized grid of
+  thumbnails (`AssetGallery`, `AssetGalleryGrid`, `AssetThumb`), the shared
+  `ThumbnailCache` behind it, and `pickAssetPopup` for choosing one item.
 - [Dock panels](documentation/dock_panels.md) — dockable/floatable editor
   panels (`PanelManager` in `scripts/screen/dock_panels.ts`): editors declare
   panels in `definePanels()`, users drag them between edge regions, float

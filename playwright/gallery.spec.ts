@@ -121,6 +121,50 @@ test("a click selects, and Enter or a double-click confirms", async ({ page }) =
   ]);
 });
 
+test("the search box filters the grid by label and by tag", async ({ page }) => {
+  await openGallery(page);
+
+  const gallery = page.locator('[data-testid="gallery"]');
+  const count = () =>
+    gallery.evaluate((el) => {
+      const nodes = [...el.shadowRoot!.querySelectorAll("*")];
+      const grid = nodes.find((n) => "itemCount" in n) as GridProbe | undefined;
+      return grid?.itemCount ?? -1;
+    });
+
+  const setQuery = (query: string) =>
+    gallery.evaluate((el, q) => (el as unknown as { setQuery(s: string): void }).setQuery(q), query);
+
+  expect(await count()).toBe(200);
+
+  // "item-7" also matches item-70 through item-79
+  await setQuery("item-7");
+  expect(await count()).toBe(11);
+
+  // every second item carries the "odd" tag
+  await setQuery("odd");
+  expect(await count()).toBe(100);
+
+  await setQuery("");
+  expect(await count()).toBe(200);
+});
+
+test("the popup resolves with the confirmed item and with nothing on cancel", async ({ page }) => {
+  await openGallery(page);
+
+  await page.getByTestId("gallery-pick").click();
+
+  const popupCell = page.locator("body > *").last().locator("canvas").nth(2);
+  await popupCell.dblclick();
+
+  await expect.poll(() => events(page)).toContain("picked:item-2");
+
+  await page.getByTestId("gallery-pick").click();
+  await page.keyboard.press("Escape");
+
+  await expect.poll(() => events(page)).toContain("picked:undefined");
+});
+
 test("narrowing the viewport re-columns the grid and resizes the pool", async ({ page }) => {
   const grid = await openGallery(page);
 

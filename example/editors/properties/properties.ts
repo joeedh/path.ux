@@ -11,9 +11,11 @@ import {
   mount,
   Container,
   TabContainer,
+  pickAssetPopup,
 } from "../../pathux.js";
 import type {
   ThemeEditor,
+  AssetGallery,
   AssetGalleryGrid,
   GalleryItem,
   GalleryChangeEvent,
@@ -207,6 +209,17 @@ export class PropsEditor extends Editor {
     grid.addEventListener("confirm", (e) =>
       record("confirm", (e as GalleryConfirmEvent).selection.id)
     );
+
+    const gallery = UIBase.createElement<AssetGallery>("assetgallery-x");
+    gallery.setAttribute("data-testid", "gallery");
+    tab.add(gallery);
+    gallery.setItems(items);
+
+    const pick = tab.button("Pick…", () => {
+      pickAssetPopup(pick, { items }).then((item) => record("picked", item?.id));
+    });
+    pick.setAttribute("data-testid", "gallery-pick");
+    pick.description = "Choose an item through the gallery popup";
   }
 
   buildGraphPackNodes(size: number) {
