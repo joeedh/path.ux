@@ -33872,8 +33872,19 @@ var init_dropbox = __esm({
     init_menu_ops();
     PropTypes3 = PropTypes;
     DropBox = class extends OldButton {
-      // a custom toolproperty to pull ux types from,
-      // useful if the underlying datapath property is a raw integer or string
+      /**
+       * Use this to create custom dropdown menus outside the normal datapath system.
+       * You can provide a custom EnumProperty or a function/async function
+       * that returns one.
+       * This allows for dynamic generation of the dropdown menu options.
+       * It also allows to drive simple StringProperties with dropbox menus.
+       *
+       * Supports both EnumProperty and an object literal of label/value pairs.
+       * Note: the object literal form will auto-prettify the labels.
+       * (e.g. camelCase to Camel Case).
+       *
+       * Note: EnumProperty supports per-item icons.
+       */
       uiProp;
       // cached datapath property
       prop;
@@ -34039,15 +34050,24 @@ var init_dropbox = __esm({
       updateBorders() {
         super.updateBorders(this);
       }
-      resolveUIProp() {
+      async resolveUIProp() {
+        let enumValue;
         if (typeof this.uiProp === "object") {
-          return this.uiProp;
+          enumValue = this.uiProp;
         } else if (typeof this.uiProp === "function") {
-          return this.uiProp();
+          const result = this.uiProp();
+          enumValue = result instanceof Promise ? await result : result;
         }
-        return void 0;
+        if (!(enumValue instanceof EnumProperty)) {
+          enumValue = new EnumProperty(void 0, enumValue);
+        }
+        return enumValue;
       }
       updateFromPath(val, info) {
+        this._updateFromPath(val, info);
+      }
+      // async implementation of this.updateFromPath
+      async _updateFromPath(val, info) {
         if (!this.ctx) {
           return;
         }
@@ -34061,7 +34081,7 @@ var init_dropbox = __esm({
           this.setCSS();
           this._redraw();
         }
-        let prop = this.resolveUIProp() ?? info.prop;
+        let prop = await this.resolveUIProp() ?? info.prop;
         prop = prop?.prop ? prop.prop : prop;
         if (!prop) {
           return;
@@ -34106,12 +34126,12 @@ var init_dropbox = __esm({
         this._menu = createMenu(this.ctx, "", template);
         return this._menu;
       }
-      _build_menu() {
+      async _build_menu() {
         if (this._template) {
           this._build_menu_template();
           return;
         }
-        const prop = this.resolveUIProp() ?? this.prop;
+        const prop = await this.resolveUIProp() ?? this.prop;
         if (prop === void 0) {
           return;
         }
@@ -34138,7 +34158,7 @@ var init_dropbox = __esm({
             menu.addItem(uk, enummap[k], void 0, tooltip);
           }
         }
-        menu._onselect = (id) => {
+        menu._onselect = async (id) => {
           this._closeOut(false);
           let callProp = true;
           if (this.hasAttribute("datapath")) {
@@ -34147,11 +34167,16 @@ var init_dropbox = __esm({
             const rdata = rdef.dpath?.data;
             callProp = !rdata || !(rdata instanceof ToolProperty);
           }
-          this._value = this._convertVal(id) ?? id;
-          if (callProp) {
-            this.prop.setValue(id);
+          const prop2 = await this.resolveUIProp() ?? this.prop;
+          this._value = this._convertVal(id, prop2) ?? id;
+          if (prop2 === void 0) {
+            console.error("Error in dropdown menu _onselect: no property resolved");
+            return;
           }
-          this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
+          if (callProp) {
+            prop2.setValue(id);
+          }
+          this.setAttribute("name", prop2.ui_value_names[valmap[id]]);
           if (this.on_select) {
             this.on_select(id);
           }
@@ -34174,7 +34199,7 @@ var init_dropbox = __esm({
         this._menu = void 0;
         return menu;
       }
-      _onpress = (e) => {
+      _onpress = async (e) => {
         const _e = e;
         this.abortToolTips(1e3);
         if (this._menu !== void 0) {
@@ -34184,7 +34209,7 @@ var init_dropbox = __esm({
         if (time_ms() - this.lockTimer < 200) {
           return;
         }
-        this._build_menu();
+        await this._build_menu();
         const builtMenu = this._menu;
         if (builtMenu === void 0) {
           return;
@@ -34310,12 +34335,12 @@ var init_dropbox = __esm({
         g.stroke();
         this._draw_text();
       }
-      _convertVal(val) {
-        if (typeof val === "string" && this.prop) {
-          if (val in this.prop.values) {
-            return this.prop.values[val];
-          } else if (val in this.prop.keys) {
-            return this.prop.keys[val];
+      _convertVal(val, prop) {
+        if (typeof val === "string" && prop) {
+          if (val in prop.values) {
+            return prop.values[val];
+          } else if (val in prop.keys) {
+            return prop.keys[val];
           } else {
             return void 0;
           }
@@ -34326,19 +34351,28 @@ var init_dropbox = __esm({
         if (val === void 0 || val === this._value) {
           return;
         }
-        val = this._convertVal(val);
+        if (this.prop) {
+          val = this._convertVal(val, this.prop);
+        }
         if (val === void 0) {
           console.warn("Bad val", val);
           return;
         }
         this._value = val;
+        const fromPropLabel = (prop, val2) => {
+          if (val2 in prop.keys) {
+            val2 = prop.keys[val2] ?? prop.keys["" + val2];
+          }
+          const label = prop.ui_value_names[val2] ?? "" + val2;
+          this.setAttribute("name", label);
+          this._name = label;
+        };
         if (this.prop !== void 0 && !setLabelOnly) {
-          this.prop.setValue(val);
-          let val2 = val;
-          if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
-          val2 = this.prop.ui_value_names[val2];
-          this.setAttribute("name", "" + val2);
-          this._name = "" + val2;
+          fromPropLabel(this.prop, val);
+        } else if (this.uiProp) {
+          this.resolveUIProp().then((prop) => {
+            fromPropLabel(prop, val);
+          });
         } else {
           this.setAttribute("name", "" + val);
           this._name = "" + val;
@@ -37611,12 +37645,12 @@ function menuImpl(self2, title, list5, packflag = 0) {
   dbox.setAttribute("simple", "true");
   dbox.setAttribute("name", title);
   if (list5 instanceof Menu) {
-    dbox._build_menu = function() {
+    dbox._build_menu = async function() {
       if (this._menu?.parentNode !== void 0) {
         this._menu.remove();
       }
       this._menu = createMenu(this.ctx, title, list5);
-      return this._menu;
+      return;
     };
   } else if (list5) {
     dbox.template = list5;
@@ -38364,7 +38398,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   if (enumDef !== void 0) {
     if (typeof enumDef === "function") {
       const def = enumDef();
-      if (!(def instanceof EnumProperty)) {
+      if (!(def instanceof EnumProperty) && !(def instanceof Promise)) {
         enumDef = () => new EnumProperty(void 0, def);
       }
       ret.uiProp = enumDef;
@@ -39533,6 +39567,8 @@ var Container3 = class _Container extends UIBase {
     return widget ? this.addPropLabel(widget, name2, packflag).widget : widget;
   }
   /**
+      Creates a dropbox menu widget for selecting enum items
+      
       enummap is an object that maps
       ui names to keys, e.g.:
   

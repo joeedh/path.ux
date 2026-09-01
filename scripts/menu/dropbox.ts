@@ -11,13 +11,27 @@ import type { PopupContainer } from "../screen/FrameManager_popup";
 import { newMenu, type Menu } from "./menu";
 import type { MenuTemplate } from "./menu_types";
 import { createMenu, openMenuPopup } from "./menu_ops";
+import { EnumDef } from "../path-controller/toolsys/toolprop";
 
 const PropTypes = toolprop.PropTypes;
 
 export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<CTX, "DropBox"> {
-  // a custom toolproperty to pull ux types from,
-  // useful if the underlying datapath property is a raw integer or string
-  uiProp?: toolprop.EnumProperty | (() => toolprop.EnumProperty);
+  /**
+   * Use this to create custom dropdown menus outside the normal datapath system.
+   * You can provide a custom EnumProperty or a function/async function
+   * that returns one.
+   * This allows for dynamic generation of the dropdown menu options.
+   * It also allows to drive simple StringProperties with dropbox menus.
+   *
+   * Supports both EnumProperty and an object literal of label/value pairs.
+   * Note: the object literal form will auto-prettify the labels.
+   * (e.g. camelCase to Camel Case).
+   *
+   * Note: EnumProperty supports per-item icons.
+   */
+  uiProp?:
+    | toolprop.EnumProperty
+    | (() => toolprop.EnumProperty | EnumDef | Promise<toolprop.EnumProperty | EnumDef>);
 
   // cached datapath property
   prop?: toolprop.EnumProperty;
@@ -229,16 +243,30 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     super.updateBorders(this as unknown as HTMLElement);
   }
 
-  private resolveUIProp() {
+  private async resolveUIProp(): Promise<toolprop.EnumProperty> {
+    let enumValue: toolprop.EnumProperty | EnumDef | undefined;
+
     if (typeof this.uiProp === "object") {
-      return this.uiProp;
+      enumValue = this.uiProp;
     } else if (typeof this.uiProp === "function") {
-      return this.uiProp();
+      const result = this.uiProp();
+
+      enumValue = result instanceof Promise ? await result : result;
     }
-    return undefined;
+
+    if (!(enumValue instanceof toolprop.EnumProperty)) {
+      enumValue = new toolprop.EnumProperty(undefined, enumValue);
+    }
+    return enumValue;
   }
 
   updateFromPath(val: unknown, info: PathWatchInfo) {
+    // XXX potential data races?
+    this._updateFromPath(val, info);
+  }
+
+  // async implementation of this.updateFromPath
+  private async _updateFromPath(val: unknown, info: PathWatchInfo) {
     if (!this.ctx) {
       return;
     }
@@ -255,7 +283,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       this._redraw();
     }
 
-    let prop = (this.resolveUIProp() ?? info.prop) as toolprop.EnumProperty | undefined;
+    let prop = ((await this.resolveUIProp()) ?? info.prop) as toolprop.EnumProperty | undefined;
 
     prop = (prop as unknown as { prop?: toolprop.EnumProperty })?.prop
       ? (prop as unknown as { prop: toolprop.EnumProperty }).prop
@@ -320,13 +348,13 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     return this._menu;
   }
 
-  _build_menu() {
+  async _build_menu() {
     if (this._template) {
       this._build_menu_template();
       return;
     }
 
-    const prop = (this.resolveUIProp() ?? this.prop) as toolprop.EnumProperty;
+    const prop = ((await this.resolveUIProp()) ?? this.prop) as toolprop.EnumProperty;
 
     if (prop === undefined) {
       return;
@@ -364,7 +392,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       }
     }
 
-    menu._onselect = (id: string | number) => {
+    menu._onselect = async (id: string | number) => {
       this._closeOut(false);
 
       //check if datapath system will be calling .prop.setValue instead of us
@@ -377,13 +405,19 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
         callProp = !rdata || !(rdata instanceof toolprop.ToolProperty);
       }
 
-      this._value = this._convertVal(id) ?? id;
+      const prop = (await this.resolveUIProp()) ?? this.prop;
+      this._value = this._convertVal(id, prop) ?? id;
 
-      if (callProp) {
-        this.prop!.setValue(id);
+      if (prop === undefined) {
+        console.error("Error in dropdown menu _onselect: no property resolved");
+        return;
       }
 
-      this.setAttribute("name", this.prop!.ui_value_names[valmap[id]]);
+      if (callProp) {
+        prop.setValue(id);
+      }
+
+      this.setAttribute("name", prop!.ui_value_names[valmap[id]]);
       if (this.on_select) {
         this.on_select(id);
       }
@@ -412,7 +446,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     return menu;
   }
 
-  override _onpress = (e: unknown) => {
+  override _onpress = async (e: unknown) => {
     const _e = e as { x: number; y: number; stopPropagation?(): void; preventDefault?(): void };
     this.abortToolTips(1000);
 
@@ -425,7 +459,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    this._build_menu();
+    await this._build_menu();
 
     // TypeScript can't see that _build_menu() sets this._menu, so cast to re-read
     const builtMenu = (this as DropBox<CTX>)._menu;
@@ -593,12 +627,12 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     this._draw_text();
   }
 
-  _convertVal(val: string | number) {
-    if (typeof val === "string" && this.prop) {
-      if (val in this.prop.values) {
-        return this.prop.values[val];
-      } else if (val in this.prop.keys) {
-        return this.prop.keys[val];
+  _convertVal(val: string | number, prop: toolprop.EnumProperty) {
+    if (typeof val === "string" && prop) {
+      if (val in prop.values) {
+        return prop.values[val];
+      } else if (val in prop.keys) {
+        return prop.keys[val];
       } else {
         return undefined;
       }
@@ -612,7 +646,10 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    val = this._convertVal(val);
+    // XXX bad compatibility code
+    if (this.prop) {
+      val = this._convertVal(val, this.prop);
+    }
 
     if (val === undefined) {
       console.warn("Bad val", val);
@@ -621,16 +658,27 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
 
     this._value = val;
 
+    const fromPropLabel = (prop: toolprop.EnumProperty, val: string | number) => {
+      // fetch value for this key
+      if (val in prop.keys) {
+        // deal with number vs string flakiness in objects
+        val = prop.keys[val] ?? prop.keys["" + val];
+      }
+      // fetch ui name
+      const label = prop.ui_value_names[val] ?? "" + val;
+      this.setAttribute("name", label);
+      this._name = label;
+    };
+
     if (this.prop !== undefined && !setLabelOnly) {
-      this.prop.setValue(val);
-      let val2 = val;
-
-      if (val2 in this.prop.keys) val2 = this.prop.keys[val2];
-      val2 = this.prop.ui_value_names[val2];
-
-      this.setAttribute("name", "" + val2);
-      this._name = "" + val2;
+      fromPropLabel(this.prop, val);
+    } else if (this.uiProp) {
+      //set label asyncronously
+      this.resolveUIProp().then((prop) => {
+        fromPropLabel(prop, val);
+      });
     } else {
+      // fallback to using the raw value as the label
       this.setAttribute("name", "" + val);
       this._name = "" + val;
     }

@@ -335,14 +335,22 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
     | string
     | {
         name?: string;
-        enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef);
+        enumDef?:
+          | EnumProperty
+          | FlagProperty
+          | EnumDef
+          | (() => EnumProperty | EnumDef | Promise<EnumProperty | EnumDef>);
         defaultval?: string | number;
         callback?: DropBox["on_select"];
         iconmap?: Record<string, number>;
         packflag?: number;
         mass_set_path?: string;
       },
-  enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef),
+  enumDef?:
+    | EnumProperty
+    | FlagProperty
+    | EnumDef
+    | (() => EnumProperty | EnumDef | Promise<EnumProperty | EnumDef>),
   defaultval?: number | string,
   callback?: DropBox["on_select"],
   iconmap?: IconMap,
@@ -378,11 +386,11 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
   if (enumDef !== undefined) {
     if (typeof enumDef === "function") {
       const def = enumDef();
-      if (!(def instanceof EnumProperty)) {
+      if (!(def instanceof EnumProperty) && !(def instanceof Promise)) {
         enumDef = () => new EnumProperty(undefined, def);
       }
 
-      ret.uiProp = enumDef as () => EnumProperty;
+      ret.uiProp = enumDef;
       label ??= (enumDef() as EnumProperty).getUIName();
     } else if (enumDef instanceof EnumProperty) {
       ret.uiProp = enumDef;

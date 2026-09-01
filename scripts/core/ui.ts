@@ -1007,6 +1007,8 @@ export class Container<
   }
 
   /**
+    Creates a dropbox menu widget for selecting enum items
+    
     enummap is an object that maps
     ui names to keys, e.g.:
 
@@ -1027,14 +1029,22 @@ export class Container<
       | string
       | {
           name?: string;
-          enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef);
+          enumDef?:
+            | EnumProperty
+            | FlagProperty
+            | EnumDef
+            | (() => EnumProperty | EnumDef | Promise<EnumProperty | EnumDef>);
           defaultval?: string | number;
           callback?: DropBox["on_select"];
           iconmap?: Record<string, number>;
           packflag?: number;
           mass_set_path?: string;
         },
-    enumDef?: EnumProperty | FlagProperty | EnumDef | (() => EnumProperty | EnumDef),
+    enumDef?:
+      | EnumProperty
+      | FlagProperty
+      | EnumDef
+      | (() => EnumProperty | EnumDef | Promise<EnumProperty | EnumDef>),
     defaultval?: number | string,
     callback?: DropBox["on_select"],
     iconmap?: IconMap,

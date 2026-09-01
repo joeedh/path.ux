@@ -45,13 +45,13 @@ export function menuImpl<CTX extends IContextBase, SELF extends string>(
   dbox.setAttribute("name", title);
 
   if (list instanceof Menu) {
-    dbox._build_menu = function (this: DropBox<CTX>) {
+    dbox._build_menu = async function (this: DropBox<CTX>) {
       if (this._menu?.parentNode !== undefined) {
         this._menu.remove();
       }
 
       this._menu = createMenu(this.ctx, title, list);
-      return this._menu;
+      return;
     };
   } else if (list) {
     dbox.template = list;

@@ -131,6 +131,16 @@ export class WorkspaceEditor extends Editor {
         strip.iconbutton(Icons.REDO, "Redo", () => {
           this.ctx.toolstack.redo(this.ctx);
         });
+        strip.listenum(undefined, {
+          enumDef: async () => {
+            return { a: 1, b: 2, c: 3 };
+          },
+          defaultval: 2,
+          name      : "Choose an option",
+          callback: (id) => {
+            console.log("Selected option:", id);
+          },
+        });
       },
     });
 
