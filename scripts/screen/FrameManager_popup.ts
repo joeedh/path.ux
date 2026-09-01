@@ -106,7 +106,7 @@ export function makePopup(
   closeOnMouseOut: PopupCloseMode = true,
   closeEventSource: EventTarget & GlobalEventHandlers = screen,
   /** In milliseconds. */
-  mouseOutCloseTimeout = 250
+  mouseOutCloseTimeout = 100
 ): PopupContainer {
   const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;

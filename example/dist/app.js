@@ -85243,7 +85243,7 @@ function clampPopup(screen, popup, popupDelay) {
   };
   setTimeout(cb, popupDelay);
 }
-function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, closeEventSource = screen, mouseOutCloseTimeout = 250) {
+function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, closeEventSource = screen, mouseOutCloseTimeout = 100) {
   const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
   let w = owning_node;

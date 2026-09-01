@@ -415,7 +415,7 @@ is a thin delegate into that module.
   Two further parameters follow `popupDelay`. `closeEventSource` is where the
   closing gestures are listened for, `screen` by default; pass `window` to see
   a press before anything in the page does, which is what a popup that means to
-  consume its own dismissing press needs. `mouseOutCloseTimeout` (250ms) is how
+  consume its own dismissing press needs. `mouseOutCloseTimeout` (100ms) is how
   long the pointer must sit outside before a move closes it — a press is not
   throttled, only sampled moves are.
 
