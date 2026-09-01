@@ -103,7 +103,10 @@ export function makePopup(
   owning_node: UIBase,
   elem_or_x: UIBase | number,
   y?: number,
-  closeOnMouseOut: PopupCloseMode = true
+  closeOnMouseOut: PopupCloseMode = true,
+  closeEventSource: EventTarget & GlobalEventHandlers = screen,
+  /** In milliseconds. */
+  mouseOutCloseTimeout = 250
 ): PopupContainer {
   const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
@@ -171,9 +174,10 @@ export function makePopup(
   addPopup(screen, container);
 
   // eslint-disable-next-line prefer-const
-  let mousepick:
-    | ((e: MouseEvent, x?: number, y?: number, do_timeout?: boolean) => void)
-    | undefined;
+  let mousepick: ((e: PointerEvent) => void) | undefined;
+  // eslint-disable-next-line prefer-const
+  let mousepickWithTimout: ((e: PointerEvent) => void) | undefined;
+
   // eslint-disable-next-line prefer-const
   let keydown: (e: KeyboardEvent) => void | undefined;
 
@@ -185,9 +189,14 @@ export function makePopup(
 
     if (done) return;
 
-    screen.ctx.screen.removeEventListener("mousedown", mousepick, true);
-    screen.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true } as any);
-    screen.ctx.screen.removeEventListener("mouseup", mousepick, true);
+    // the same target they were added to, or a popup opened against another one leaks all three
+    if (mousepick && mousepickWithTimout) {
+      closeEventSource.removeEventListener("pointerdown", mousepick, true);
+      closeEventSource.removeEventListener("pointermove", mousepickWithTimout, {
+        passive: true,
+      } as any);
+      closeEventSource.removeEventListener("pointerup", mousepick, true);
+    }
     window.removeEventListener("keydown", keydown);
 
     done = true;
@@ -210,8 +219,10 @@ export function makePopup(
 
   let bad_time = util.time_ms();
   let last_pick_time = util.time_ms();
+  /** Whether a press of its own has arrived, as opposed to the tail of the one that opened it. */
+  let pressed = false;
 
-  mousepick = (e: MouseEvent, x?: number, y?: number, do_timeout = true) => {
+  const mousepickBase = (e: PointerEvent, fromMove = false) => {
     if (!container.isConnected) {
       end();
       return;
@@ -223,19 +234,29 @@ export function makePopup(
     }
 
     // One handler serves all three events, so which gesture this is decides whether it may close.
-    // A gesture that cannot close leaves before the throttle below, or a stream of mousemoves
-    // would keep resetting it and the press that is meant to close would never be looked at.
-    if (!(e.type === "mousemove" ? closeOn.move : closeOn.click)) {
+    // A gesture that cannot close leaves before the throttle below, or a stream of moves would
+    // keep resetting it and the press that is meant to close would never be looked at.
+    if (!(fromMove ? closeOn.move : closeOn.click)) {
       return;
     }
 
-    if (util.time_ms() - last_pick_time < 350) {
-      return;
+    if (fromMove) {
+      // moves arrive as a stream, so they are sampled; a press is discrete and is not
+      if (util.time_ms() - last_pick_time < 350) {
+        return;
+      }
+      last_pick_time = util.time_ms();
+    } else {
+      // The gesture that opened the popup still owes its pointerup, and that release is not a
+      // press outside. It is ignored until a pointerdown of the popup's own has arrived.
+      if (e.type === "pointerup" && !pressed) {
+        return;
+      }
+      pressed = true;
     }
-    last_pick_time = util.time_ms();
 
-    x = x === undefined ? e.x : x;
-    y = y === undefined ? e.y : y;
+    const x = e.x;
+    const y = e.y;
 
     let elem = screen.pickElement(x, y, {
       excluded_classes: [ScreenBorder],
@@ -258,9 +279,8 @@ export function makePopup(
     }
 
     if (!ok) {
-      do_timeout = !do_timeout || util.time_ms() - bad_time > 100;
-
-      if (do_timeout) {
+      // a press closes at once; a move has to have sat outside for mouseOutCloseTimeout first
+      if (!fromMove || util.time_ms() - bad_time > mouseOutCloseTimeout) {
         end();
       }
     } else {
@@ -281,9 +301,14 @@ export function makePopup(
     }
   };
 
-  screen.ctx.screen.addEventListener("mousedown", mousepick, true);
-  screen.ctx.screen.addEventListener("mousemove", mousepick, { passive: true });
-  screen.ctx.screen.addEventListener("mouseup", mousepick, true);
+  mousepickWithTimout = (e: PointerEvent) => mousepickBase(e, true);
+  mousepick = mousepickBase;
+
+  closeEventSource.addEventListener("pointerdown", mousepick, true);
+  closeEventSource.addEventListener("pointermove", mousepickWithTimout, {
+    passive: true,
+  });
+  closeEventSource.addEventListener("pointerup", mousepick, true);
   window.addEventListener("keydown", keydown);
 
   screen.calcTabOrder();

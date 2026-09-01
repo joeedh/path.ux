@@ -587,6 +587,9 @@ export class Screen<
    * @param closeOnMouseOut : which outside gestures close the popup, see {@link PopupCloseMode}.
    * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
    *                     then move the popup so it's fully inside the window (if it's outsize).
+   * @param closeEventSource : where the closing gestures are listened for. Pass `window` to see
+   *                     them before anything in the page does.
+   * @param mouseOutCloseTimeout : how long the pointer must sit outside before a move closes it.
    *
    * */
   popup(
@@ -594,9 +597,18 @@ export class Screen<
     elem_or_x: UIBase | number,
     y?: number,
     closeOnMouseOut: PopupCloseMode = true,
-    popupDelay = 5
+    popupDelay = 5,
+    closeEventSource?: EventTarget & GlobalEventHandlers,
+    mouseOutCloseTimeout?: number
   ) {
-    const ret = this._popup(owning_node, elem_or_x, y, closeOnMouseOut);
+    const ret = this._popup(
+      owning_node,
+      elem_or_x,
+      y,
+      closeOnMouseOut,
+      closeEventSource,
+      mouseOutCloseTimeout
+    );
 
     for (let i = 0; i < 2; i++) {
       ret.flushUpdate();
@@ -638,9 +650,19 @@ export class Screen<
     owning_node: UIBase,
     elem_or_x: UIBase | number,
     y?: number,
-    closeOnMouseOut: PopupCloseMode = true
+    closeOnMouseOut: PopupCloseMode = true,
+    closeEventSource?: EventTarget & GlobalEventHandlers,
+    mouseOutCloseTimeout?: number
   ) {
-    return makePopup(this as unknown as Screen, owning_node, elem_or_x, y, closeOnMouseOut);
+    return makePopup(
+      this as unknown as Screen,
+      owning_node,
+      elem_or_x,
+      y,
+      closeOnMouseOut,
+      closeEventSource,
+      mouseOutCloseTimeout
+    );
   }
 
   _recalcAABB(save = true) {

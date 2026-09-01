@@ -623,6 +623,9 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
     while (this.pool.length < wanted) {
       const cell = UIBase.createElement("assetthumb-x") as AssetThumb<CTX>;
       cell.ctx = this.ctx;
+      // appended to the content div rather than added as a child, so the link a hit test walks
+      // back up to find the enclosing popup has to be made here
+      cell.parentWidget = this;
       this.content.appendChild(cell);
       cell._init();
 
@@ -912,29 +915,36 @@ export interface PickAssetArgs {
 }
 
 /**
- * Consumes the whole of a press, not just its `mousedown`. A dismissing press that stopped there
- * would still deliver its `mouseup` and `click` to the control underneath.
+ * Consumes the whole of a press, not just its `pointerdown`. A dismissing press that stopped
+ * there would still deliver the rest of the gesture to the control underneath, and the browser
+ * synthesises the mouse half of it separately.
  */
-function swallowPress(press: MouseEvent): void {
+const REST_OF_PRESS = ["pointerup", "mousedown", "mouseup", "click"];
+
+function swallowPress(press: Event): void {
   const stop = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
   };
   const done = () => {
-    window.removeEventListener("mouseup", stop, true);
-    window.removeEventListener("click", release, true);
-    window.removeEventListener("mousedown", done, true);
+    for (const type of REST_OF_PRESS) {
+      window.removeEventListener(type, consume, true);
+    }
+    window.removeEventListener("pointerdown", done, true);
   };
-  const release = (e: Event) => {
+  const consume = (e: Event) => {
     stop(e);
-    done();
+    if (e.type === "click") {
+      done();
+    }
   };
 
   stop(press);
-  window.addEventListener("mouseup", stop, true);
-  window.addEventListener("click", release, true);
+  for (const type of REST_OF_PRESS) {
+    window.addEventListener(type, consume, true);
+  }
   // a press released outside the window produces no click, so the next press clears these instead
-  window.addEventListener("mousedown", done, true);
+  window.addEventListener("pointerdown", done, true);
 }
 
 /**
@@ -948,11 +958,33 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
   args: PickAssetArgs
 ): Promise<GalleryItem | undefined> {
   return new Promise((resolve) => {
-    const popup = owner.ctx.screen.popup(
+    // eslint-disable-next-line prefer-const
+    let popup: PopupContainer<CTX> | undefined;
+
+    /**
+     * Consumes the press that dismisses the popup, so it does not also reach what was underneath.
+     * Closing stays `makePopup`'s job, through the "click" mode below. Both handlers sit on
+     * window, and `stopPropagation` does not stop a sibling listener on the same node, so this
+     * one has to be registered first to run first — closing removes it, and a listener removed
+     * during a dispatch is not called.
+     */
+    const onPressOutside = (e: PointerEvent) => {
+      if (popup !== undefined && !e.composedPath().includes(popup)) {
+        swallowPress(e);
+      }
+    };
+    window.addEventListener("pointerdown", onPressOutside, true);
+
+    // Closed by a press outside but not by the pointer leaving, since the author reads the rest
+    // of the screen while choosing. Listened for on window so the press is seen before the page
+    // acts on it, which is what lets the handler above consume it.
+    popup = owner.ctx.screen.popup(
       owner,
       args.at ? args.at.x : owner,
       args.at?.y,
-      false
+      "click",
+      undefined,
+      window
     ) as unknown as PopupContainer<CTX>;
 
     let settled = false;
@@ -964,25 +996,10 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
       resolve(item);
     };
 
-    /**
-     * Cancels on a press outside the popup, and consumes that press. `closeOnMouseOut: "click"`
-     * would close it too, but only after the press had already reached whatever was underneath —
-     * stopping it there is what requires closing from here rather than from `makePopup`.
-     */
-    const onPressOutside = (e: MouseEvent) => {
-      if (e.composedPath().includes(popup)) {
-        return;
-      }
-
-      swallowPress(e);
-      popup.end();
-    };
-    window.addEventListener("mousedown", onPressOutside, true);
-
     // every teardown path ends in remove(), Escape and the press-outside handler included
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest: Parameters<UIBase["remove"]>) => {
-      window.removeEventListener("mousedown", onPressOutside, true);
+      window.removeEventListener("pointerdown", onPressOutside, true);
       finish(undefined);
       return baseRemove(...rest);
     };

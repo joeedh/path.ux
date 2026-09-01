@@ -410,8 +410,19 @@ is a thin delegate into that module.
 
   `"click"` is what a popup the user browses before confirming wants — a
   picker or a form — since the default closes it as soon as the pointer
-  leaves. The press that closes a popup still reaches whatever is under it;
-  a popup that must swallow it handles the press itself and calls `end()`.
+  leaves.
+
+  Two further parameters follow `popupDelay`. `closeEventSource` is where the
+  closing gestures are listened for, `screen` by default; pass `window` to see
+  a press before anything in the page does, which is what a popup that means to
+  consume its own dismissing press needs. `mouseOutCloseTimeout` (250ms) is how
+  long the pointer must sit outside before a move closes it — a press is not
+  throttled, only sampled moves are.
+
+  The gestures are read from pointer events, so a hit test walks `parentWidget`
+  from what was pressed up to the container. A widget that appends children to
+  its shadow root rather than adding them has to set their `parentWidget`
+  itself, or a press inside it reads as a press outside the popup.
 - `screen.draggablePopup(x, y)` — a `drag-box-x` the user can move.
 - `screen.popupArea(EditorClass)` — a whole editor in a popup frame.
 - `screen.pickElement(x, y, args)` — hit-test the widget tree, popups

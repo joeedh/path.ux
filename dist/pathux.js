@@ -48387,6 +48387,7 @@ var AssetGalleryGrid = class extends UIBase {
     while (this.pool.length < wanted) {
       const cell = UIBase.createElement("assetthumb-x");
       cell.ctx = this.ctx;
+      cell.parentWidget = this;
       this.content.appendChild(cell);
       cell._init();
       cell.addEventListener("click", () => this.pick(cell.index));
@@ -48595,32 +48596,46 @@ var AssetGallery = class extends ColumnFrame {
   }
 };
 UIBase.internalRegister(AssetGallery);
+var REST_OF_PRESS = ["pointerup", "mousedown", "mouseup", "click"];
 function swallowPress(press) {
   const stop = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
   const done = () => {
-    window.removeEventListener("mouseup", stop, true);
-    window.removeEventListener("click", release, true);
-    window.removeEventListener("mousedown", done, true);
+    for (const type of REST_OF_PRESS) {
+      window.removeEventListener(type, consume, true);
+    }
+    window.removeEventListener("pointerdown", done, true);
   };
-  const release = (e) => {
+  const consume = (e) => {
     stop(e);
-    done();
+    if (e.type === "click") {
+      done();
+    }
   };
   stop(press);
-  window.addEventListener("mouseup", stop, true);
-  window.addEventListener("click", release, true);
-  window.addEventListener("mousedown", done, true);
+  for (const type of REST_OF_PRESS) {
+    window.addEventListener(type, consume, true);
+  }
+  window.addEventListener("pointerdown", done, true);
 }
 function pickAssetPopup(owner, args) {
   return new Promise((resolve) => {
-    const popup = owner.ctx.screen.popup(
+    let popup;
+    const onPressOutside = (e) => {
+      if (popup !== void 0 && !e.composedPath().includes(popup)) {
+        swallowPress(e);
+      }
+    };
+    window.addEventListener("pointerdown", onPressOutside, true);
+    popup = owner.ctx.screen.popup(
       owner,
       args.at ? args.at.x : owner,
       args.at?.y,
-      false
+      "click",
+      void 0,
+      window
     );
     let settled = false;
     const finish = (item) => {
@@ -48630,17 +48645,9 @@ function pickAssetPopup(owner, args) {
       settled = true;
       resolve(item);
     };
-    const onPressOutside = (e) => {
-      if (e.composedPath().includes(popup)) {
-        return;
-      }
-      swallowPress(e);
-      popup.end();
-    };
-    window.addEventListener("mousedown", onPressOutside, true);
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest) => {
-      window.removeEventListener("mousedown", onPressOutside, true);
+      window.removeEventListener("pointerdown", onPressOutside, true);
       finish(void 0);
       return baseRemove(...rest);
     };
@@ -56532,7 +56539,7 @@ function clampPopup(screen, popup, popupDelay) {
   };
   setTimeout(cb, popupDelay);
 }
-function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
+function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, closeEventSource = screen, mouseOutCloseTimeout = 250) {
   const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
   let w = owning_node;
@@ -56582,6 +56589,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
   screen.setCSS();
   addPopup(screen, container);
   let mousepick;
+  let mousepickWithTimout;
   let keydown;
   let done = false;
   const end = () => {
@@ -56589,9 +56597,13 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
       return;
     }
     if (done) return;
-    screen.ctx.screen.removeEventListener("mousedown", mousepick, true);
-    screen.ctx.screen.removeEventListener("mousemove", mousepick, { passive: true });
-    screen.ctx.screen.removeEventListener("mouseup", mousepick, true);
+    if (mousepick && mousepickWithTimout) {
+      closeEventSource.removeEventListener("pointerdown", mousepick, true);
+      closeEventSource.removeEventListener("pointermove", mousepickWithTimout, {
+        passive: true
+      });
+      closeEventSource.removeEventListener("pointerup", mousepick, true);
+    }
     window.removeEventListener("keydown", keydown);
     done = true;
     container.remove();
@@ -56609,7 +56621,8 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
   };
   let bad_time = time_ms();
   let last_pick_time = time_ms();
-  mousepick = (e, x2, y2, do_timeout = true) => {
+  let pressed = false;
+  const mousepickBase = (e, fromMove = false) => {
     if (!container.isConnected) {
       end();
       return;
@@ -56618,15 +56631,22 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
       sarea.area.push_ctx_active();
       sarea.area.pop_ctx_active();
     }
-    if (!(e.type === "mousemove" ? closeOn.move : closeOn.click)) {
+    if (!(fromMove ? closeOn.move : closeOn.click)) {
       return;
     }
-    if (time_ms() - last_pick_time < 350) {
-      return;
+    if (fromMove) {
+      if (time_ms() - last_pick_time < 350) {
+        return;
+      }
+      last_pick_time = time_ms();
+    } else {
+      if (e.type === "pointerup" && !pressed) {
+        return;
+      }
+      pressed = true;
     }
-    last_pick_time = time_ms();
-    x2 = x2 === void 0 ? e.x : x2;
-    y2 = y2 === void 0 ? e.y : y2;
+    const x2 = e.x;
+    const y2 = e.y;
     let elem = screen.pickElement(x2, y2, {
       excluded_classes: [ScreenBorder],
       mouseEvent: e
@@ -56644,8 +56664,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
       elem = elem.parentWidget;
     }
     if (!ok) {
-      do_timeout = !do_timeout || time_ms() - bad_time > 100;
-      if (do_timeout) {
+      if (!fromMove || time_ms() - bad_time > mouseOutCloseTimeout) {
         end();
       }
     } else {
@@ -56663,9 +56682,13 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
         break;
     }
   };
-  screen.ctx.screen.addEventListener("mousedown", mousepick, true);
-  screen.ctx.screen.addEventListener("mousemove", mousepick, { passive: true });
-  screen.ctx.screen.addEventListener("mouseup", mousepick, true);
+  mousepickWithTimout = (e) => mousepickBase(e, true);
+  mousepick = mousepickBase;
+  closeEventSource.addEventListener("pointerdown", mousepick, true);
+  closeEventSource.addEventListener("pointermove", mousepickWithTimout, {
+    passive: true
+  });
+  closeEventSource.addEventListener("pointerup", mousepick, true);
   window.addEventListener("keydown", keydown);
   screen.calcTabOrder();
   return container;
@@ -62327,10 +62350,20 @@ var Screen2 = class extends UIBase {
    * @param closeOnMouseOut : which outside gestures close the popup, see {@link PopupCloseMode}.
    * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
    *                     then move the popup so it's fully inside the window (if it's outsize).
+   * @param closeEventSource : where the closing gestures are listened for. Pass `window` to see
+   *                     them before anything in the page does.
+   * @param mouseOutCloseTimeout : how long the pointer must sit outside before a move closes it.
    *
    * */
-  popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 5) {
-    const ret = this._popup(owning_node, elem_or_x, y, closeOnMouseOut);
+  popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 5, closeEventSource, mouseOutCloseTimeout) {
+    const ret = this._popup(
+      owning_node,
+      elem_or_x,
+      y,
+      closeOnMouseOut,
+      closeEventSource,
+      mouseOutCloseTimeout
+    );
     for (let i = 0; i < 2; i++) {
       ret.flushUpdate();
       ret.flushSetCSS();
@@ -62358,8 +62391,16 @@ var Screen2 = class extends UIBase {
     return ret;
   }
   /** Makes a popup at x,y and returns a new container-x for it: see {@link makePopup}. */
-  _popup(owning_node, elem_or_x, y, closeOnMouseOut = true) {
-    return makePopup(this, owning_node, elem_or_x, y, closeOnMouseOut);
+  _popup(owning_node, elem_or_x, y, closeOnMouseOut = true, closeEventSource, mouseOutCloseTimeout) {
+    return makePopup(
+      this,
+      owning_node,
+      elem_or_x,
+      y,
+      closeOnMouseOut,
+      closeEventSource,
+      mouseOutCloseTimeout
+    );
   }
   _recalcAABB(save = true) {
     const mm = new MinMax(2);

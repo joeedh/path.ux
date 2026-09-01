@@ -132,9 +132,11 @@ default `closeOnMouseOut` ends a popup on a mousemove outside as well, which
 would close this one the moment the author looked at anything else.
 
 The dismissing press is consumed rather than passed on, so it does not also
-land on whatever was under the popup. That is why the gallery handles the press
-itself instead of asking for `closeOnMouseOut: "click"`: by the time
-`makePopup` sees the press it has already reached the control below.
+land on whatever was under the popup. Closing is `closeOnMouseOut: "click"`
+with `closeEventSource` set to `window`; the gallery adds its own
+`pointerdown` listener there beforehand, purely to stop the press going
+further. It has to be registered first to run first, since closing removes it
+and a listener removed during a dispatch is not called.
 
 `active` accepts an item or an id. `cache` accepts a `ThumbnailCache` to share
 with the rest of the host, so reopening the popup redraws from thumbnails that
