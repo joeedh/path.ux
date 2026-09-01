@@ -59,7 +59,6 @@ export interface TableRowProxy {
 
 export class TableRow<CTX extends IContextBase = IContextBase> extends Container<CTX, "TableRow"> {
   declare dom: HTMLTableRowElement;
-  declare shadow: ShadowRoot;
 
   constructor() {
     super();

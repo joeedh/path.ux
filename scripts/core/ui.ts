@@ -87,7 +87,6 @@ export type SliderArgs = {
 
 export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, unknown, "Label"> {
   declare dom: HTMLDivElement;
-  declare shadow: ShadowRoot;
   declare _useDataPathUndo: boolean | undefined;
 
   _label = "";
@@ -248,7 +247,6 @@ export class Container<
   CTX extends IContextBase = IContextBase,
   SELF extends string = "Container",
 > extends UIBase<CTX, unknown, SELF> {
-  declare shadow: ShadowRoot;
   declare _useDataPathUndo: boolean | undefined;
   declare div: HTMLElement;
 

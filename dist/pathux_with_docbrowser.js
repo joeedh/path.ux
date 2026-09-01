@@ -31450,6 +31450,7 @@ function initUIBase(elem) {
     /* @__PURE__ */ new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
   );
   elem.shadow = elem.attachShadow({ mode: "open" });
+  elem.shadow.parentWidget = elem;
   const styleElem = document.createElement("style");
   styleElem.innerHTML = `
         /* This hides the host element when it has the hidden attribute */

@@ -47,7 +47,9 @@ export function initUIBase(elem: AnyUIBase): void {
     new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"])
   );
 
-  elem.shadow = elem.attachShadow({ mode: "open" });
+  // needed so you can walk from normal html elements to the widget owning the shadow root
+  elem.shadow = elem.attachShadow({ mode: "open" }) as typeof elem.shadow;
+  elem.shadow.parentWidget = elem;
 
   const styleElem = document.createElement("style");
   styleElem.innerHTML = `
@@ -66,8 +68,9 @@ export function initUIBase(elem: AnyUIBase): void {
   const _origAppendChild = elem.shadow.appendChild.bind(elem.shadow) as <T extends Node>(
     child: T
   ) => T;
-  (elem.shadow as ShadowRoot & { _appendChild: <T extends Node>(child: T) => T })._appendChild =
-    _origAppendChild;
+  (
+    elem.shadow as typeof elem.shadow & { _appendChild: <T extends Node>(child: T) => T }
+  )._appendChild = _origAppendChild;
 
   elem.shadow.appendChild = <T extends Node>(child: T): T => {
     if (child && typeof child === "object" && child instanceof UIBase) {

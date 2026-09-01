@@ -199,7 +199,10 @@ export class UIBase<
   _active_animations!: Animator[];
   _screenStyleTag!: HTMLStyleElement;
   _screenStyleUpdateHash!: number;
-  shadow!: ShadowRoot;
+  shadow!: ShadowRoot & {
+    // ref to this (the element that owns the shadow root)
+    parentWidget: UIBase<CTX, unknown>;
+  };
   __cbs: [string, EventListener, AddEventListenerOptions | boolean | undefined][] = [];
   _wasAddedToNodeAtSomeTime!: boolean;
   visibleToPick!: boolean;
