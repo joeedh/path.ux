@@ -250,6 +250,19 @@ const theme = {
     LabelText: vars.labelFont,
   },
 
+  assetthumb: {
+    "background-color": "rgba(190, 190, 190, 1.0)",
+    highlight         : "rgba(155, 220, 255, 0.5)",
+    active            : "rgba(120, 160, 200, 1.0)",
+    focusRing         : "rgba(40, 40, 40, 1.0)",
+    border: {
+      color: "rgba(120, 120, 120, 1.0)",
+      width: 1,
+    },
+    margin            : 4,
+    padding           : 3,
+  },
+
   listbox: {
     ListActive         : "rgba(200, 205, 215, 1.0)",
     ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
