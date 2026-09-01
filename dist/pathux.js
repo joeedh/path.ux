@@ -48611,8 +48611,15 @@ function pickAssetPopup(owner, args) {
       settled = true;
       resolve(item);
     };
+    const onPressOutside = (e) => {
+      if (!e.composedPath().includes(popup)) {
+        popup.end();
+      }
+    };
+    window.addEventListener("mousedown", onPressOutside, true);
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest) => {
+      window.removeEventListener("mousedown", onPressOutside, true);
       finish(void 0);
       return baseRemove(...rest);
     };

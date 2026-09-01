@@ -123,9 +123,14 @@ if (item !== undefined) {
 ```
 
 The popup resolves with the chosen item, or with `undefined` when the user
-cancels — through the Cancel button, Escape, or clicking outside it. It does
-not close on the first click, since selecting and then pressing OK is the
-gesture it is built around.
+cancels — through the Cancel button, Escape, or pressing outside it. It does
+not close on the first click inside, since selecting and then pressing OK is
+the gesture it is built around.
+
+Moving the pointer out is not dismissal, only a press is. `Screen.popup`'s own
+`closeOnMouseOut` ends a popup on a mousemove outside as well, which would
+close this one the moment the author looked at anything else, so it is left off
+and the press-outside handler is the gallery's own.
 
 `active` accepts an item or an id. `cache` accepts a `ThumbnailCache` to share
 with the rest of the host, so reopening the popup redraws from thumbnails that

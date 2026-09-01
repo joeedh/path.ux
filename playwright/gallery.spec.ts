@@ -199,6 +199,25 @@ test("the popup resolves with the confirmed item and with nothing on cancel", as
   await expect.poll(() => events(page)).toContain("picked:undefined");
 });
 
+test("the popup cancels on a press outside it, but not on the pointer leaving", async ({ page }) => {
+  await openGallery(page);
+
+  await page.getByTestId("gallery-pick").click();
+  const popup = page.locator("body > *").last();
+  await expect(popup).toBeVisible();
+
+  // Moving out is not dismissal: the author has to be able to read the rest of the page.
+  const box = (await popup.boundingBox())!;
+  await page.mouse.move(box.x + box.width + 80, box.y + box.height + 80);
+  await page.waitForTimeout(200);
+  await expect(popup).toBeVisible();
+
+  await page.mouse.click(box.x + box.width + 80, box.y + box.height + 80);
+
+  await expect.poll(() => events(page)).toContain("picked:undefined");
+  await expect(popup).toBeHidden();
+});
+
 test("narrowing the viewport re-columns the grid and resizes the pool", async ({ page }) => {
   const grid = await openGallery(page);
 

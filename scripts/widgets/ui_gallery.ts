@@ -938,9 +938,22 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
       resolve(item);
     };
 
-    // every teardown path ends in remove(), Escape and the outside-click handler included
+    /**
+     * Cancels on a press outside the popup. path.ux's own `closeOnMouseOut` is left off above
+     * because it also ends the popup when the pointer merely moves out of it, and this one has
+     * to survive the author reading a thumbnail elsewhere on screen.
+     */
+    const onPressOutside = (e: MouseEvent) => {
+      if (!e.composedPath().includes(popup)) {
+        popup.end();
+      }
+    };
+    window.addEventListener("mousedown", onPressOutside, true);
+
+    // every teardown path ends in remove(), Escape and the press-outside handler included
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest: Parameters<UIBase["remove"]>) => {
+      window.removeEventListener("mousedown", onPressOutside, true);
       finish(undefined);
       return baseRemove(...rest);
     };
