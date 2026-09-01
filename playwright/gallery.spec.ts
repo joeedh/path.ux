@@ -121,6 +121,40 @@ test("a click selects, and Enter or a double-click confirms", async ({ page }) =
   ]);
 });
 
+// The focus cursor starts at item 0, so scrolling past it puts it outside the pool's range. A
+// cell taking focus retargets to the host, so the grid's tab-in recovery used to run on this
+// click, scroll item 0 back into view, and take the cell out from under the pointer with it.
+test("a click after scrolling selects rather than snapping back to the focused row", async ({
+  page,
+}) => {
+  const grid = await openGallery(page);
+  const cell = await cellTag(grid);
+
+  await grid.evaluate((el) => {
+    el.scrollTop = 1500;
+  });
+  await expect.poll(() => read(grid, "firstBoundIndex")).toBeGreaterThan(0);
+
+  const scrollTop = await grid.evaluate((el) => el.scrollTop);
+
+  // A cell fully inside the viewport, so Playwright's own scroll-into-view cannot move the grid.
+  const inView = await grid.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const cells = [...el.shadowRoot!.querySelector("div")!.children] as HTMLElement[];
+    const slot = cells.findIndex((c) => {
+      const rect = c.getBoundingClientRect();
+      return rect.top >= box.top && rect.bottom <= box.bottom;
+    });
+    return { slot, index: (cells[slot] as unknown as { index: number }).index };
+  });
+
+  await page.locator(cell).nth(inView.slot).click();
+
+  expect(await grid.evaluate((el) => el.scrollTop)).toBe(scrollTop);
+  expect(await read(grid, "focusIndex")).toBe(inView.index);
+  expect(await events(page)).toEqual([`change:item-${inView.index}`]);
+});
+
 test("the search box filters the grid by label and by tag", async ({ page }) => {
   await openGallery(page);
 

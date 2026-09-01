@@ -212,6 +212,8 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
 
     this.style.position = "absolute";
     this.style.display = "block";
+    // focusable from the start, or a click lands on the grid behind it instead of on the cell
+    this.tabIndex = -1;
     this.dom.style.padding = this.dom.style.margin = "0px";
     this.setSize(this._width, this._height);
   }
@@ -449,7 +451,13 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
 
     this.addEventListener("scroll", () => this.rebind());
     this.addEventListener("keydown", (e) => this.onKeyDown(e));
-    this.addEventListener("focus", () => {
+    this.addEventListener("focus", (e) => {
+      // A cell taking focus retargets to the host, so act only when the grid itself was focused.
+      // Without this, clicking a cell would scroll the focused index back into view and take the
+      // cell out from under the pointer.
+      if (e.composedPath()[0] !== this) {
+        return;
+      }
       // reached by tabbing in while the focused index is scrolled out of the pool's range
       if (this.cellFor(this._focusIndex) === undefined) {
         this.setFocusIndex(this._focusIndex);

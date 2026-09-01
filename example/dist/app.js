@@ -76795,6 +76795,7 @@ var AssetThumb = class extends UIBase {
     super.init();
     this.style.position = "absolute";
     this.style.display = "block";
+    this.tabIndex = -1;
     this.dom.style.padding = this.dom.style.margin = "0px";
     this.setSize(this._width, this._height);
   }
@@ -76955,7 +76956,10 @@ var AssetGalleryGrid = class extends UIBase {
     this.shadow.appendChild(this.content);
     this.addEventListener("scroll", () => this.rebind());
     this.addEventListener("keydown", (e) => this.onKeyDown(e));
-    this.addEventListener("focus", () => {
+    this.addEventListener("focus", (e) => {
+      if (e.composedPath()[0] !== this) {
+        return;
+      }
       if (this.cellFor(this._focusIndex) === void 0) {
         this.setFocusIndex(this._focusIndex);
       }
