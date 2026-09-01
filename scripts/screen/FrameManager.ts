@@ -46,7 +46,13 @@ import { AreaFlags } from "./ScreenArea";
 import { checkForTextBox } from "../widgets/ui_textbox";
 import { startMenu } from "../menu/menu_ops";
 import { IsScreenTag, ZIndexes } from "./constants";
-import { addPopup, removePopup, clampPopup, makePopup } from "./FrameManager_popup";
+import {
+  addPopup,
+  removePopup,
+  clampPopup,
+  makePopup,
+  type PopupCloseMode,
+} from "./FrameManager_popup";
 import { IContextBase } from "../core/context_base";
 import { StructReader } from "../util/nstructjs";
 import { IAreaConstructor } from "./area_base";
@@ -578,6 +584,7 @@ export class Screen<
 
   /**
    *
+   * @param closeOnMouseOut : which outside gestures close the popup, see {@link PopupCloseMode}.
    * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
    *                     then move the popup so it's fully inside the window (if it's outsize).
    *
@@ -586,7 +593,7 @@ export class Screen<
     owning_node: UIBase,
     elem_or_x: UIBase | number,
     y?: number,
-    closeOnMouseOut = true,
+    closeOnMouseOut: PopupCloseMode = true,
     popupDelay = 5
   ) {
     const ret = this._popup(owning_node, elem_or_x, y, closeOnMouseOut);
@@ -627,7 +634,12 @@ export class Screen<
   }
 
   /** Makes a popup at x,y and returns a new container-x for it: see {@link makePopup}. */
-  _popup(owning_node: UIBase, elem_or_x: UIBase | number, y?: number, closeOnMouseOut = true) {
+  _popup(
+    owning_node: UIBase,
+    elem_or_x: UIBase | number,
+    y?: number,
+    closeOnMouseOut: PopupCloseMode = true
+  ) {
     return makePopup(this as unknown as Screen, owning_node, elem_or_x, y, closeOnMouseOut);
   }
 

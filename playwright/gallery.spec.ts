@@ -218,6 +218,68 @@ test("the popup cancels on a press outside it, but not on the pointer leaving", 
   await expect(popup).toBeHidden();
 });
 
+/** Presses and clicks that made it past the popup's own capture-phase handler. */
+function pressesBelow(page: Page): Promise<number> {
+  return page.evaluate(() => (window as unknown as { pressesBelow: number }).pressesBelow);
+}
+
+test("the press that dismisses the popup is consumed rather than passed through", async ({
+  page,
+}) => {
+  await openGallery(page);
+
+  // Counted on document, which the capture path reaches only after window.
+  await page.evaluate(() => {
+    const w = window as unknown as { pressesBelow: number };
+    w.pressesBelow = 0;
+    for (const type of ["mousedown", "mouseup", "click"]) {
+      document.addEventListener(type, () => w.pressesBelow++, true);
+    }
+  });
+
+  await page.getByTestId("gallery-pick").click();
+  const popup = page.locator("body > *").last();
+  const box = (await popup.boundingBox())!;
+  const outside = { x: box.x + box.width + 80, y: box.y + box.height + 80 };
+
+  await page.evaluate(() => ((window as unknown as { pressesBelow: number }).pressesBelow = 0));
+  await page.mouse.click(outside.x, outside.y);
+
+  await expect.poll(() => events(page)).toContain("picked:undefined");
+  expect(await pressesBelow(page)).toBe(0);
+
+  // and the same press with nothing open still reaches the page
+  await page.mouse.click(outside.x, outside.y);
+  expect(await pressesBelow(page)).toBeGreaterThan(0);
+});
+
+test("closeOnMouseOut tells a press outside from the pointer moving out", async ({ page }) => {
+  await openGallery(page);
+
+  for (const mode of ["click", "move", "click-move"] as const) {
+    await page.getByTestId(`open-${mode}`).click();
+    const popup = page.getByTestId(`popup-${mode}`);
+    await expect(popup).toBeVisible();
+
+    // the popup opens at 100,100, so this is well clear of it and still inside the viewport
+    const away = { x: 700, y: 500 };
+
+    // The handler throttles itself to one look every 350ms, so the gesture is repeated past it
+    // rather than sent once. A real pointer produces a stream of these anyway.
+    await page.mouse.move(away.x, away.y);
+    await page.waitForTimeout(500);
+    await page.mouse.move(away.x + 10, away.y + 10);
+
+    if (mode === "click") {
+      await page.waitForTimeout(500);
+      await expect(popup).toBeVisible();
+      await page.mouse.click(away.x + 10, away.y + 10);
+    }
+
+    await expect(popup).toBeHidden();
+  }
+});
+
 test("narrowing the viewport re-columns the grid and resizes the pool", async ({ page }) => {
   const grid = await openGallery(page);
 

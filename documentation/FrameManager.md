@@ -396,8 +396,22 @@ is what `screen.popup` returns). Popup and menu z-order comes from the
 is a thin delegate into that module.
 
 - `screen.popupMenu(menu, x, y)` — show a `Menu` widget.
-- `screen.popup(owner, x, y)` — an auto-dismissing popup container
-  (closes on outside click / Escape), kept inside the window.
+- `screen.popup(owner, x, y, closeOnMouseOut)` — an auto-dismissing popup
+  container, kept inside the window. Escape always closes it; which pointer
+  gestures outside it do is `closeOnMouseOut`, a `PopupCloseMode`:
+
+  | Value | Closes on |
+  | --- | --- |
+  | `true` (default) | a press outside, and the pointer moving outside |
+  | `false` | neither; only Escape and `end()` |
+  | `"click"` | a press outside |
+  | `"move"` | the pointer moving outside |
+  | `"click-move"` | both, the same as `true` |
+
+  `"click"` is what a popup the user browses before confirming wants — a
+  picker or a form — since the default closes it as soon as the pointer
+  leaves. The press that closes a popup still reaches whatever is under it;
+  a popup that must swallow it handles the press itself and calls `end()`.
 - `screen.draggablePopup(x, y)` — a `drag-box-x` the user can move.
 - `screen.popupArea(EditorClass)` — a whole editor in a popup frame.
 - `screen.pickElement(x, y, args)` — hit-test the widget tree, popups

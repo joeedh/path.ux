@@ -20,6 +20,8 @@ import type {
   GalleryItem,
   GalleryChangeEvent,
   GalleryConfirmEvent,
+  PopupCloseMode,
+  PopupContainer,
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
@@ -220,6 +222,19 @@ export class PropsEditor extends Editor {
     });
     pick.setAttribute("data-testid", "gallery-pick");
     pick.description = "Choose an item through the gallery popup";
+
+    // one bare popup per close mode, so the specs can tell the modes apart by gesture alone
+    for (const mode of ["click", "move", "click-move"] as PopupCloseMode[]) {
+      const open = tab.button(String(mode), () => {
+        // opened at a fixed corner so the specs know where it is not
+        const popup = this.ctx.screen.popup(open, 100, 100, mode) as PopupContainer;
+        popup.label("popup " + String(mode));
+        popup.setAttribute("data-testid", "popup-" + String(mode));
+        popup.flushUpdate();
+      });
+      open.setAttribute("data-testid", "open-" + String(mode));
+      open.description = `Open a popup that closes on ${String(mode)}`;
+    }
   }
 
   buildGraphPackNodes(size: number) {

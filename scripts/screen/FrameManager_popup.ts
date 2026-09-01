@@ -17,6 +17,22 @@ import type { Screen } from "./FrameManager";
 export { ZIndexes };
 
 /**
+ * Which pointer gestures outside a popup close it. `true` and `false` are the original setting:
+ * both gestures, or neither. The strings split them, for a popup the pointer has to be able to
+ * leave — a picker the user browses and then confirms — without it disappearing.
+ */
+export type PopupCloseMode = boolean | "click" | "move" | "click-move";
+
+/** Whether `mode` closes on a press outside, and whether it closes on the pointer moving out. */
+function closeGestures(mode: PopupCloseMode): { click: boolean; move: boolean } {
+  if (typeof mode === "boolean") {
+    return { click: mode, move: mode };
+  }
+
+  return { click: mode !== "move", move: mode !== "click" };
+}
+
+/**
  * The container `Screen.popup` returns. `end()` closes the popup: it removes the
  * outside-click and Escape listeners and unregisters the container from the screen.
  * Calling `remove()` with no arguments funnels into `end()` as well, so hooking
@@ -79,16 +95,17 @@ export function clampPopup(screen: Screen, popup: UIBase, popupDelay: number) {
 
 /**
  * Builds the container `Screen.popup` returns: a themed container-x at `x, y`, appended
- * to document.body, registered with the screen, and wired to close on Escape and (when
- * `closeOnMouseOut`) on a press outside it.
+ * to document.body, registered with the screen, and wired to close on Escape and on
+ * whichever outside gestures `closeOnMouseOut` names.
  */
 export function makePopup(
   screen: Screen,
   owning_node: UIBase,
   elem_or_x: UIBase | number,
   y?: number,
-  closeOnMouseOut = true
+  closeOnMouseOut: PopupCloseMode = true
 ): PopupContainer {
+  const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
   let w = owning_node as UIBase | undefined;
 
@@ -205,6 +222,13 @@ export function makePopup(
       sarea.area.pop_ctx_active();
     }
 
+    // One handler serves all three events, so which gesture this is decides whether it may close.
+    // A gesture that cannot close leaves before the throttle below, or a stream of mousemoves
+    // would keep resetting it and the press that is meant to close would never be looked at.
+    if (!(e.type === "mousemove" ? closeOn.move : closeOn.click)) {
+      return;
+    }
+
     if (util.time_ms() - last_pick_time < 350) {
       return;
     }
@@ -219,9 +243,7 @@ export function makePopup(
     });
 
     if (elem === undefined) {
-      if (closeOnMouseOut) {
-        end();
-      }
+      end();
       return;
     }
 
@@ -238,7 +260,7 @@ export function makePopup(
     if (!ok) {
       do_timeout = !do_timeout || util.time_ms() - bad_time > 100;
 
-      if (closeOnMouseOut && do_timeout) {
+      if (do_timeout) {
         end();
       }
     } else {

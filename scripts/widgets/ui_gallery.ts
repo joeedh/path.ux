@@ -912,6 +912,32 @@ export interface PickAssetArgs {
 }
 
 /**
+ * Consumes the whole of a press, not just its `mousedown`. A dismissing press that stopped there
+ * would still deliver its `mouseup` and `click` to the control underneath.
+ */
+function swallowPress(press: MouseEvent): void {
+  const stop = (e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const done = () => {
+    window.removeEventListener("mouseup", stop, true);
+    window.removeEventListener("click", release, true);
+    window.removeEventListener("mousedown", done, true);
+  };
+  const release = (e: Event) => {
+    stop(e);
+    done();
+  };
+
+  stop(press);
+  window.addEventListener("mouseup", stop, true);
+  window.addEventListener("click", release, true);
+  // a press released outside the window produces no click, so the next press clears these instead
+  window.addEventListener("mousedown", done, true);
+}
+
+/**
  * Opens a gallery over `owner` and resolves with the item the user chose, or with undefined if
  * they cancelled. Confirming (double-click, Enter, or the OK button) resolves and closes;
  * clicking a thumbnail only moves the selection, since choosing and then pressing OK is the
@@ -939,14 +965,17 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
     };
 
     /**
-     * Cancels on a press outside the popup. path.ux's own `closeOnMouseOut` is left off above
-     * because it also ends the popup when the pointer merely moves out of it, and this one has
-     * to survive the author reading a thumbnail elsewhere on screen.
+     * Cancels on a press outside the popup, and consumes that press. `closeOnMouseOut: "click"`
+     * would close it too, but only after the press had already reached whatever was underneath —
+     * stopping it there is what requires closing from here rather than from `makePopup`.
      */
     const onPressOutside = (e: MouseEvent) => {
-      if (!e.composedPath().includes(popup)) {
-        popup.end();
+      if (e.composedPath().includes(popup)) {
+        return;
       }
+
+      swallowPress(e);
+      popup.end();
     };
     window.addEventListener("mousedown", onPressOutside, true);
 

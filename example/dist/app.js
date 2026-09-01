@@ -77299,6 +77299,25 @@ var AssetGallery = class extends ColumnFrame {
   }
 };
 UIBase.internalRegister(AssetGallery);
+function swallowPress(press) {
+  const stop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const done = () => {
+    window.removeEventListener("mouseup", stop, true);
+    window.removeEventListener("click", release, true);
+    window.removeEventListener("mousedown", done, true);
+  };
+  const release = (e) => {
+    stop(e);
+    done();
+  };
+  stop(press);
+  window.addEventListener("mouseup", stop, true);
+  window.addEventListener("click", release, true);
+  window.addEventListener("mousedown", done, true);
+}
 function pickAssetPopup(owner, args) {
   return new Promise((resolve) => {
     const popup = owner.ctx.screen.popup(
@@ -77316,9 +77335,11 @@ function pickAssetPopup(owner, args) {
       resolve(item);
     };
     const onPressOutside = (e) => {
-      if (!e.composedPath().includes(popup)) {
-        popup.end();
+      if (e.composedPath().includes(popup)) {
+        return;
       }
+      swallowPress(e);
+      popup.end();
     };
     window.addEventListener("mousedown", onPressOutside, true);
     const baseRemove = popup.remove.bind(popup);
@@ -85175,6 +85196,12 @@ init_util();
 init_simple_events();
 init_ui_base();
 init_constants();
+function closeGestures(mode) {
+  if (typeof mode === "boolean") {
+    return { click: mode, move: mode };
+  }
+  return { click: mode !== "move", move: mode !== "click" };
+}
 function addPopup(screen, popup) {
   screen._popups.push(popup);
 }
@@ -85210,6 +85237,7 @@ function clampPopup(screen, popup, popupDelay) {
   setTimeout(cb, popupDelay);
 }
 function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
+  const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
   let w = owning_node;
   while (w) {
@@ -85294,6 +85322,9 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
       sarea.area.push_ctx_active();
       sarea.area.pop_ctx_active();
     }
+    if (!(e.type === "mousemove" ? closeOn.move : closeOn.click)) {
+      return;
+    }
     if (time_ms() - last_pick_time < 350) {
       return;
     }
@@ -85305,9 +85336,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
       mouseEvent: e
     });
     if (elem === void 0) {
-      if (closeOnMouseOut) {
-        end();
-      }
+      end();
       return;
     }
     let ok = false;
@@ -85320,7 +85349,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true) {
     }
     if (!ok) {
       do_timeout = !do_timeout || time_ms() - bad_time > 100;
-      if (closeOnMouseOut && do_timeout) {
+      if (do_timeout) {
         end();
       }
     } else {
@@ -90999,6 +91028,7 @@ var Screen2 = class extends UIBase {
   }
   /**
    *
+   * @param closeOnMouseOut : which outside gestures close the popup, see {@link PopupCloseMode}.
    * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
    *                     then move the popup so it's fully inside the window (if it's outsize).
    *
@@ -99054,6 +99084,16 @@ var PropsEditor = class extends Editor2 {
     });
     pick.setAttribute("data-testid", "gallery-pick");
     pick.description = "Choose an item through the gallery popup";
+    for (const mode of ["click", "move", "click-move"]) {
+      const open = tab2.button(String(mode), () => {
+        const popup = this.ctx.screen.popup(open, 100, 100, mode);
+        popup.label("popup " + String(mode));
+        popup.setAttribute("data-testid", "popup-" + String(mode));
+        popup.flushUpdate();
+      });
+      open.setAttribute("data-testid", "open-" + String(mode));
+      open.description = `Open a popup that closes on ${String(mode)}`;
+    }
   }
   buildGraphPackNodes(size) {
     const nodes = this._nodes = [];
