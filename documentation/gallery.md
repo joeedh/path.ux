@@ -129,7 +129,9 @@ gesture it is built around.
 
 `active` accepts an item or an id. `cache` accepts a `ThumbnailCache` to share
 with the rest of the host, so reopening the popup redraws from thumbnails that
-are already decoded.
+are already decoded. `at` places the popup at client coordinates, which is what
+a host whose clicked control is a raw DOM node rather than a widget needs — it
+passes an enclosing widget as `owner` and the node's own rect as `at`.
 
 ## The thumbnail cache
 

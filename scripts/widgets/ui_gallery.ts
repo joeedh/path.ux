@@ -896,6 +896,11 @@ export interface PickAssetArgs {
   active?: GalleryItem | string;
   /** Shared with the caller so a reopened popup redraws from decoded thumbnails. */
   cache?: ThumbnailCache;
+  /**
+   * Where to open, in client coordinates. Defaults to `owner`'s own corner, which is wrong when
+   * the control that was clicked is a raw DOM node rather than the widget being passed as owner.
+   */
+  at?: { x: number; y: number };
 }
 
 /**
@@ -911,8 +916,8 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
   return new Promise((resolve) => {
     const popup = owner.ctx.screen.popup(
       owner,
-      owner,
-      undefined,
+      args.at ? args.at.x : owner,
+      args.at?.y,
       false
     ) as unknown as PopupContainer<CTX>;
 

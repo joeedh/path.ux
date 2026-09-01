@@ -48595,8 +48595,8 @@ function pickAssetPopup(owner, args) {
   return new Promise((resolve) => {
     const popup = owner.ctx.screen.popup(
       owner,
-      owner,
-      void 0,
+      args.at ? args.at.x : owner,
+      args.at?.y,
       false
     );
     let settled = false;
