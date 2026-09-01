@@ -12,7 +12,13 @@ import {
   Container,
   TabContainer,
 } from "../../pathux.js";
-import type { ThemeEditor } from "../../pathux.js";
+import type {
+  ThemeEditor,
+  AssetGalleryGrid,
+  GalleryItem,
+  GalleryChangeEvent,
+  GalleryConfirmEvent,
+} from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
 import { PropsPage } from "../../page.js";
@@ -84,6 +90,7 @@ export class PropsEditor extends Editor {
         listbox: (lb) => {
           lb.itemNames((obj) => "Path " + (obj as { id: number }).id);
         },
+        galleryTab  : (tab) => this.buildGallery(tab),
         eventStrip: (con) => {
           con.dataPrefix = "";
           const bval = con.prop("data.boolval");
@@ -147,6 +154,59 @@ export class PropsEditor extends Editor {
     );
     ret.ctx = this.ctx;
     return ret;
+  }
+
+  /**
+   * Fills the Gallery tab with a synthetic asset library. The thumbnails are drawn here rather
+   * than fetched so the demo (and the Playwright specs that drive it) need no image files.
+   */
+  buildGallery(tab: Container) {
+    const swatch = (index: number) => {
+      const size = 64;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+
+      const g = canvas.getContext("2d")!;
+      g.fillStyle = `hsl(${(index * 37) % 360}, 65%, 60%)`;
+      g.fillRect(0, 0, size, size);
+      g.fillStyle = "rgba(20, 20, 20, 1.0)";
+      g.font = "16px sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.fillText(String(index), size * 0.5, size * 0.5);
+
+      return canvas;
+    };
+
+    const items: GalleryItem[] = [];
+    for (let i = 0; i < 200; i++) {
+      items.push({
+        id        : "item-" + i,
+        label     : "Item " + i,
+        searchTags: [i % 2 === 0 ? "even" : "odd"],
+        image     : () => Promise.resolve(swatch(i)),
+      });
+    }
+
+    const grid = UIBase.createElement<AssetGalleryGrid>("assetgallerygrid-x");
+    grid.setAttribute("data-testid", "gallery-grid");
+    grid.style.width = "380px";
+    grid.style.height = "300px";
+
+    tab.add(grid);
+    grid.setItems(items);
+
+    // the specs read the last event back off the page rather than through a locator
+    const record = (kind: string, id: string | undefined) => {
+      (window as unknown as { galleryEvents: string[] }).galleryEvents ??= [];
+      (window as unknown as { galleryEvents: string[] }).galleryEvents.push(kind + ":" + id);
+    };
+    grid.addEventListener("change", (e) =>
+      record("change", (e as GalleryChangeEvent).selection.id)
+    );
+    grid.addEventListener("confirm", (e) =>
+      record("confirm", (e as GalleryConfirmEvent).selection.id)
+    );
   }
 
   buildGraphPackNodes(size: number) {

@@ -20,6 +20,7 @@ export interface PropsPageRefs {
   graphTab?: (tab: Container) => void;
   listbox?: (lb: ListBox) => void;
   eventStrip?: (con: Container) => void;
+  galleryTab?: (tab: Container) => void;
 }
 
 export function PropsPage(refs: PropsPageRefs = {}) {
@@ -64,6 +65,7 @@ export function PropsPage(refs: PropsPageRefs = {}) {
           <colorfield path="material.color" />
         </panel>
       </tab>
+      <tab label="Gallery" ref={refs.galleryTab} data-testid="tab-gallery" />
       <tab label="Last Command" data-testid="tab-last-command">
         <last-tool-panel-x />
       </tab>

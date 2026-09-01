@@ -250,6 +250,15 @@ const theme = {
     LabelText: vars.labelFont,
   },
 
+  assetgallery: {
+    "background-color": "rgba(160, 160, 160, 1.0)",
+    cellWidth         : 96,
+    cellHeight        : 96,
+    overscanRows      : 2,
+    height            : 320,
+    width             : 420,
+  },
+
   assetthumb: {
     "background-color": "rgba(190, 190, 190, 1.0)",
     highlight         : "rgba(155, 220, 255, 0.5)",

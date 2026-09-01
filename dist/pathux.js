@@ -12462,6 +12462,26 @@ var init_theme = __esm({
       label: {
         LabelText: vars.labelFont
       },
+      assetgallery: {
+        "background-color": "rgba(160, 160, 160, 1.0)",
+        cellWidth: 96,
+        cellHeight: 96,
+        overscanRows: 2,
+        height: 320,
+        width: 420
+      },
+      assetthumb: {
+        "background-color": "rgba(190, 190, 190, 1.0)",
+        highlight: "rgba(155, 220, 255, 0.5)",
+        active: "rgba(120, 160, 200, 1.0)",
+        focusRing: "rgba(40, 40, 40, 1.0)",
+        border: {
+          color: "rgba(120, 120, 120, 1.0)",
+          width: 1
+        },
+        margin: 4,
+        padding: 3
+      },
       listbox: {
         ListActive: "rgba(200, 205, 215, 1.0)",
         ListActiveHighlight: "rgba(120, 160, 200, 1.0)",
@@ -47929,6 +47949,575 @@ var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
 };
 ToolOp.register(ListBoxSetActiveToolOp);
 
+// scripts/widgets/ui_gallery.ts
+init_ui_base();
+init_theme_schema();
+init_events();
+function isBitmap(src) {
+  return typeof src.close === "function";
+}
+var ThumbnailCache = class {
+  entries = /* @__PURE__ */ new Map();
+  inFlight = /* @__PURE__ */ new Map();
+  _maxEntries;
+  constructor(maxEntries = 200) {
+    this._maxEntries = Math.max(1, maxEntries);
+  }
+  /** How many decoded thumbnails are held before the oldest is dropped. */
+  get maxEntries() {
+    return this._maxEntries;
+  }
+  set maxEntries(count2) {
+    this._maxEntries = Math.max(1, count2);
+    this.evict();
+  }
+  /** Number of decoded thumbnails currently held. */
+  get size() {
+    return this.entries.size;
+  }
+  /** Raises the capacity to `count` if it is lower. Never lowers it. */
+  ensureCapacity(count2) {
+    if (count2 > this._maxEntries) {
+      this.maxEntries = count2;
+    }
+  }
+  /** The decoded thumbnail for `id` if it is already held, without starting a load. */
+  peek(id) {
+    const src = this.entries.get(id);
+    if (src !== void 0) {
+      this.entries.delete(id);
+      this.entries.set(id, src);
+    }
+    return src;
+  }
+  /** The decoded thumbnail for `id`, running `loader` only when nothing else already is. */
+  get(id, loader) {
+    const held = this.peek(id);
+    if (held !== void 0) {
+      return Promise.resolve(held);
+    }
+    const running = this.inFlight.get(id);
+    if (running !== void 0) {
+      return running;
+    }
+    const load = (async () => {
+      try {
+        const src = await loader();
+        this.entries.set(id, src);
+        this.evict();
+        return src;
+      } finally {
+        this.inFlight.delete(id);
+      }
+    })();
+    this.inFlight.set(id, load);
+    return load;
+  }
+  /** Drops one entry and releases its bitmap. A load already running for `id` is unaffected. */
+  delete(id) {
+    const src = this.entries.get(id);
+    if (src === void 0) {
+      return;
+    }
+    this.entries.delete(id);
+    if (isBitmap(src)) {
+      src.close();
+    }
+  }
+  /** Drops every entry and releases every bitmap. */
+  clear() {
+    for (const id of [...this.entries.keys()]) {
+      this.delete(id);
+    }
+  }
+  evict() {
+    while (this.entries.size > this._maxEntries) {
+      const oldest = this.entries.keys().next();
+      if (oldest.done) {
+        return;
+      }
+      this.delete(oldest.value);
+    }
+  }
+};
+var sharedThumbnailCache = new ThumbnailCache();
+var AssetThumb = class extends UIBase {
+  dom;
+  g;
+  item;
+  /** Index into the grid's item list, or -1 while the cell is parked off the end. */
+  index = -1;
+  cache = sharedThumbnailCache;
+  _hover = false;
+  _focused = false;
+  _active = false;
+  _width = 96;
+  _height = 96;
+  /** Bumped on every rebind so a load that resolves late is discarded. */
+  _bindGen = 0;
+  constructor() {
+    super();
+    this.dom = document.createElement("canvas");
+    this.g = this.dom.getContext("2d");
+    this.shadow.appendChild(this.dom);
+    this.addEventListener("pointerenter", () => {
+      this._hover = true;
+      this.redraw();
+    });
+    this.addEventListener("pointerleave", () => {
+      this._hover = false;
+      this.redraw();
+    });
+  }
+  static define() {
+    return {
+      tagname: "assetthumb-x",
+      style: "assetthumb",
+      theme: {
+        "background-color": t.color,
+        highlight: t.color,
+        active: t.color,
+        focusRing: t.color,
+        border: {
+          color: t.color,
+          width: t.number
+        },
+        margin: t.number,
+        padding: t.number
+      }
+    };
+  }
+  init() {
+    super.init();
+    this.style.position = "absolute";
+    this.style.display = "block";
+    this.dom.style.padding = this.dom.style.margin = "0px";
+    this.setSize(this._width, this._height);
+  }
+  get hover() {
+    return this._hover;
+  }
+  get focused() {
+    return this._focused;
+  }
+  set focused(state) {
+    if (state !== this._focused) {
+      this._focused = state;
+      this.tabIndex = state ? 0 : -1;
+      this.redraw();
+    }
+  }
+  get isActive() {
+    return this._active;
+  }
+  set isActive(state) {
+    if (state !== this._active) {
+      this._active = state;
+      this.redraw();
+    }
+  }
+  /** Cell size in CSS pixels, excluding the theme's inter-cell margin. */
+  setSize(width, height) {
+    this._width = width;
+    this._height = height;
+    const dpi = this.getDPI();
+    this.dom.width = Math.max(1, Math.floor(width * dpi));
+    this.dom.height = Math.max(1, Math.floor(height * dpi));
+    this.dom.style.width = width + "px";
+    this.dom.style.height = height + "px";
+    this.style.width = width + "px";
+    this.style.height = height + "px";
+    this.redraw();
+  }
+  /** Moves the cell within the grid's scrolling content. */
+  setCellPos(x, y) {
+    this.style.transform = `translate(${x}px, ${y}px)`;
+  }
+  /**
+   * Points the cell at another item, or at nothing when `item` is undefined. A decode already
+   * running for the previous item is left to finish into the cache and is not painted here.
+   */
+  bindItem(item, cache = sharedThumbnailCache) {
+    this.cache = cache;
+    this.item = item;
+    this._bindGen++;
+    this.description = item ? item.tooltip ?? item.label ?? item.id : void 0;
+    this.title = this.description ?? "";
+    this.redraw();
+    if (item === void 0 || cache.peek(item.id) !== void 0) {
+      return;
+    }
+    const source = item.image;
+    const load = typeof source === "function" ? source : () => Promise.resolve(source);
+    const gen = this._bindGen;
+    cache.get(item.id, load).then(() => {
+      if (gen === this._bindGen) {
+        this.redraw();
+      }
+    }).catch((error2) => {
+      console.warn("AssetThumb: could not load", item.id, error2);
+    });
+  }
+  /** Repaints from the cache. Safe to call at any time, including before an image arrives. */
+  redraw() {
+    const g = this.g;
+    const dpi = this.getDPI();
+    const w = this.dom.width;
+    const h = this.dom.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = this.fillColor();
+    g.fillRect(0, 0, w, h);
+    const border = this.getDefault("border");
+    const borderWidth = (border?.width ?? 0) * dpi;
+    if (borderWidth > 0) {
+      g.strokeStyle = border.color;
+      g.lineWidth = borderWidth;
+      g.strokeRect(borderWidth * 0.5, borderWidth * 0.5, w - borderWidth, h - borderWidth);
+    }
+    this.drawImage(borderWidth + this.getDefault("padding") * dpi);
+    if (this._focused) {
+      const ring = Math.max(2 * dpi, borderWidth);
+      g.strokeStyle = this.getDefault("focusRing");
+      g.lineWidth = ring;
+      g.strokeRect(ring * 0.5, ring * 0.5, w - ring, h - ring);
+    }
+  }
+  fillColor() {
+    if (this._active) {
+      return this.getDefault("active");
+    }
+    if (this._hover) {
+      return this.getDefault("highlight");
+    }
+    return this.getDefault("background-color");
+  }
+  /** Letterboxes the cached thumbnail into the cell, inset by `inset` device pixels. */
+  drawImage(inset) {
+    const src = this.item ? this.cache.peek(this.item.id) : void 0;
+    if (src === void 0) {
+      return;
+    }
+    const boxW = this.dom.width - inset * 2;
+    const boxH = this.dom.height - inset * 2;
+    if (boxW <= 0 || boxH <= 0) {
+      return;
+    }
+    const scale = Math.min(boxW / src.width, boxH / src.height);
+    const drawW = src.width * scale;
+    const drawH = src.height * scale;
+    this.g.drawImage(src, inset + (boxW - drawW) * 0.5, inset + (boxH - drawH) * 0.5, drawW, drawH);
+  }
+};
+UIBase.internalRegister(AssetThumb);
+var GalleryChangeEvent = class extends Event {
+  selection;
+  constructor(selection) {
+    super("change");
+    this.selection = selection;
+  }
+};
+var GalleryConfirmEvent = class extends Event {
+  selection;
+  constructor(selection) {
+    super("confirm");
+    this.selection = selection;
+  }
+};
+var AssetGalleryGrid = class extends UIBase {
+  cache = sharedThumbnailCache;
+  content;
+  items = [];
+  pool = [];
+  metrics = {
+    cellWidth: 96,
+    cellHeight: 96,
+    margin: 4,
+    pitchX: 100,
+    pitchY: 100,
+    columns: 1,
+    rows: 0,
+    visibleRows: 1
+  };
+  firstIndex = -1;
+  _focusIndex = 0;
+  _active;
+  resizeObserver;
+  constructor() {
+    super();
+    this.content = document.createElement("div");
+    this.content.style.position = "relative";
+    this.content.style.width = "100%";
+    this.shadow.appendChild(this.content);
+    this.addEventListener("scroll", () => this.rebind());
+    this.addEventListener("keydown", (e) => this.onKeyDown(e));
+    this.addEventListener("focus", () => {
+      if (this.cellFor(this._focusIndex) === void 0) {
+        this.setFocusIndex(this._focusIndex);
+      }
+    });
+  }
+  static define() {
+    return {
+      tagname: "assetgallerygrid-x",
+      style: "assetgallery",
+      theme: {
+        "background-color": t.color,
+        cellWidth: t.number,
+        cellHeight: t.number,
+        overscanRows: t.number
+      }
+    };
+  }
+  init() {
+    super.init();
+    this.style.display = "block";
+    this.style.position = "relative";
+    this.style.overflowX = "hidden";
+    this.style.overflowY = "auto";
+    this.background = this.getDefault("background-color");
+    if (typeof ResizeObserver !== "undefined" && this.resizeObserver === void 0) {
+      this.resizeObserver = new ResizeObserver(() => this.rebuild());
+      this.resizeObserver.observe(this);
+    }
+    this.rebuild();
+  }
+  remove() {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = void 0;
+    return super.remove();
+  }
+  /** The items the grid draws, in display order. Replaces whatever was there. */
+  setItems(items) {
+    this.items = items;
+    if (this._active !== void 0 && !items.includes(this._active)) {
+      this._active = void 0;
+    }
+    this._focusIndex = Math.min(Math.max(this._focusIndex, 0), Math.max(0, items.length - 1));
+    this.rebuild();
+  }
+  /** How many items the grid is currently drawing. */
+  get itemCount() {
+    return this.items.length;
+  }
+  /** The selected item, which survives being scrolled out of view. */
+  get active() {
+    return this._active;
+  }
+  set active(item) {
+    this.setActive(item, false);
+  }
+  /** Where the keyboard cursor sits, as an index into the item list. */
+  get focusIndex() {
+    return this._focusIndex;
+  }
+  /** Number of pool cells, exposed so a test can check the pool tracks the viewport. */
+  get poolSize() {
+    return this.pool.length;
+  }
+  /** Columns the current viewport width fits, exposed for the same reason as `poolSize`. */
+  get columns() {
+    return this.metrics.columns;
+  }
+  /** Item index the first pool slot is bound to, exposed so a test can watch recycling. */
+  get firstBoundIndex() {
+    return this.firstIndex;
+  }
+  /** Selects `item`, dispatching `"change"` when `notify` is set and the selection moved. */
+  setActive(item, notify = true) {
+    if (item === this._active) {
+      return;
+    }
+    this._active = item;
+    for (const cell of this.pool) {
+      cell.isActive = cell.item !== void 0 && cell.item === item;
+    }
+    if (notify) {
+      this.dispatchEvent(new GalleryChangeEvent({ id: item?.id, item }));
+    }
+  }
+  /** Moves the keyboard cursor, scrolling the target row into view before rebinding. */
+  setFocusIndex(index) {
+    if (this.items.length === 0) {
+      return;
+    }
+    this._focusIndex = Math.min(Math.max(index, 0), this.items.length - 1);
+    this.scrollIndexIntoView(this._focusIndex);
+    this.rebind(true);
+    this.cellFor(this._focusIndex)?.focus();
+  }
+  /** Recomputes the layout and pool for the current viewport, then rebinds every cell. */
+  rebuild() {
+    this.measure();
+    this.resizePool();
+    this.content.style.height = this.metrics.rows * this.metrics.pitchY + this.metrics.margin + "px";
+    this.rebind(true);
+  }
+  measure() {
+    const cellWidth = this.getDefault("cellWidth");
+    const cellHeight = this.getDefault("cellHeight");
+    const margin = this.pool[0]?.getDefault("margin") ?? 4;
+    const pitchX = cellWidth + margin;
+    const pitchY = cellHeight + margin;
+    const viewWidth = this.clientWidth || cellWidth + margin * 2;
+    const viewHeight = this.clientHeight || cellHeight + margin * 2;
+    const columns = Math.max(1, Math.floor((viewWidth - margin) / pitchX));
+    this.metrics = {
+      cellWidth,
+      cellHeight,
+      margin,
+      pitchX,
+      pitchY,
+      columns,
+      rows: Math.ceil(this.items.length / columns),
+      visibleRows: Math.max(1, Math.ceil(viewHeight / pitchY))
+    };
+  }
+  resizePool() {
+    const { columns, visibleRows, cellWidth, cellHeight } = this.metrics;
+    const overscan = this.getDefault("overscanRows");
+    const wanted = Math.min(this.items.length, (visibleRows + 1 + overscan * 2) * columns);
+    while (this.pool.length > wanted) {
+      this.pool.pop().remove();
+    }
+    while (this.pool.length < wanted) {
+      const cell = UIBase.createElement("assetthumb-x");
+      cell.ctx = this.ctx;
+      this.content.appendChild(cell);
+      cell._init();
+      cell.addEventListener("click", () => this.pick(cell.index));
+      cell.addEventListener("dblclick", () => this.confirmAt(cell.index));
+      this.pool.push(cell);
+    }
+    for (const cell of this.pool) {
+      cell.setSize(cellWidth, cellHeight);
+    }
+    this.cache.ensureCapacity(this.pool.length * 2);
+    const margin = this.pool[0]?.getDefault("margin") ?? this.metrics.margin;
+    if (margin !== this.metrics.margin) {
+      this.measure();
+    }
+  }
+  /**
+   * Points each pool cell at the item its slot now holds. Cheap enough to call on every scroll
+   * event: unless the first bound index moved, or `force` is set, it does nothing.
+   */
+  rebind(force = false) {
+    const { columns, margin, pitchX, pitchY } = this.metrics;
+    const overscan = this.getDefault("overscanRows");
+    const firstRow = Math.max(0, Math.floor(this.scrollTop / pitchY) - overscan);
+    const firstIndex = firstRow * columns;
+    if (!force && firstIndex === this.firstIndex) {
+      return;
+    }
+    this.firstIndex = firstIndex;
+    let focusedCell;
+    for (let slot = 0; slot < this.pool.length; slot++) {
+      const cell = this.pool[slot];
+      const index = firstIndex + slot;
+      if (index >= this.items.length) {
+        cell.index = -1;
+        cell.style.display = "none";
+        cell.bindItem(void 0, this.cache);
+        cell.focused = false;
+        continue;
+      }
+      const item = this.items[index];
+      const col = index % columns;
+      const row = (index - col) / columns;
+      cell.index = index;
+      cell.style.display = "block";
+      cell.setCellPos(margin + col * pitchX, margin + row * pitchY);
+      if (cell.item !== item) {
+        cell.bindItem(item, this.cache);
+      }
+      cell.isActive = item === this._active;
+      cell.focused = index === this._focusIndex;
+      if (cell.focused) {
+        focusedCell = cell;
+      }
+    }
+    this.tabIndex = focusedCell === void 0 ? 0 : -1;
+  }
+  cellFor(index) {
+    return this.pool.find((cell) => cell.index === index);
+  }
+  scrollIndexIntoView(index) {
+    const { columns, pitchY, cellHeight, margin } = this.metrics;
+    const top = margin + Math.floor(index / columns) * pitchY;
+    const bottom = top + cellHeight;
+    const viewHeight = this.clientHeight || cellHeight;
+    if (top - margin < this.scrollTop) {
+      this.scrollTop = Math.max(0, top - margin);
+    } else if (bottom + margin > this.scrollTop + viewHeight) {
+      this.scrollTop = bottom + margin - viewHeight;
+    }
+  }
+  /** Selects the item at `index` without confirming it. */
+  pick(index) {
+    if (index < 0 || index >= this.items.length) {
+      return;
+    }
+    this._focusIndex = index;
+    this.rebind(true);
+    this.setActive(this.items[index]);
+  }
+  /** Selects the item at `index` and announces it as chosen. */
+  confirmAt(index) {
+    if (index < 0 || index >= this.items.length) {
+      return;
+    }
+    this.pick(index);
+    const item = this.items[index];
+    this.dispatchEvent(new GalleryConfirmEvent({ id: item.id, item }));
+  }
+  onKeyDown(e) {
+    if (this.items.length === 0) {
+      return;
+    }
+    const { columns, visibleRows } = this.metrics;
+    const page = Math.max(1, visibleRows) * columns;
+    let next;
+    switch (e.keyCode) {
+      case keymap["Up"]:
+        next = this._focusIndex - columns;
+        break;
+      case keymap["Down"]:
+        next = this._focusIndex + columns;
+        break;
+      case keymap["Left"]:
+        next = this._focusIndex - 1;
+        break;
+      case keymap["Right"]:
+        next = this._focusIndex + 1;
+        break;
+      case keymap["Home"]:
+        next = 0;
+        break;
+      case keymap["End"]:
+        next = this.items.length - 1;
+        break;
+      case keymap["PageUp"]:
+        next = this._focusIndex - page;
+        break;
+      case keymap["PageDown"]:
+        next = this._focusIndex + page;
+        break;
+      case keymap["Enter"]:
+        this.confirmAt(this._focusIndex);
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      default:
+        return;
+    }
+    this.setFocusIndex(next);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+};
+UIBase.internalRegister(AssetGalleryGrid);
+
 // scripts/widgets/ui_progress.ts
 init_ui_base();
 init_util();
@@ -65346,6 +65935,8 @@ export {
   AreaTypes,
   AreaWrangler,
   ArrayBufferProperty,
+  AssetGalleryGrid,
+  AssetThumb,
   AsyncGateOp,
   BSplineCurve,
   BSplineTransformOp,
@@ -65429,6 +66020,8 @@ export {
   FloatingPanelState,
   FootUnit,
   Fragment,
+  GalleryChangeEvent,
+  GalleryConfirmEvent,
   GuassianCurve,
   HotKey,
   HueField,
@@ -65564,6 +66157,7 @@ export {
   ThemeEditor,
   ThemeScrollBars,
   ThemeVar,
+  ThumbnailCache,
   ToolClasses,
   ToolFlags,
   ToolMacro,
@@ -65857,6 +66451,7 @@ export {
   setTagPrefix,
   setTheme,
   setWranglerScreen,
+  sharedThumbnailCache,
   simple_exports as simple,
   simple_tri_aabb_isect,
   singleMouseEvent,
