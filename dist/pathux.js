@@ -18266,6 +18266,9 @@ var init_controller_base = __esm({
       propGetter;
       getSet;
       ui_name_get;
+      // used by dynamicStruct and lists to check if a given struct is valid
+      // if empty all structs are considered valid
+      validStructs = [];
       constructor(path, apiname, prop, type = DataTypes.PROP) {
         this.type = type;
         this.data = prop;
@@ -18294,6 +18297,7 @@ var init_controller_base = __esm({
       }
       copy() {
         const ret = new _DataPath();
+        ret.validStructs = this.validStructs.slice(0);
         ret.flag = this.flag;
         ret.type = this.type;
         ret.data = this.data;
@@ -26457,7 +26461,7 @@ var init_controller = __esm({
        * @param default_struct : default struct if one can't be looked up
        * @returns {*}
        */
-      dynamicStruct(path, apiname, uiname, default_struct) {
+      dynamicStruct(path, apiname, uiname, default_struct, validStructs) {
         const ret = default_struct ? default_struct : new _DataStruct();
         const dpath = new DataPath(
           path,
@@ -26465,6 +26469,7 @@ var init_controller = __esm({
           ret,
           DataTypes.DYNAMIC_STRUCT
         );
+        dpath.validStructs = validStructs ?? [];
         ret.inheritFlag |= this.inheritFlag;
         ret.dpath = dpath;
         this.add(dpath);
@@ -26730,6 +26735,12 @@ var init_controller = __esm({
       static registerTool(cls) {
         console.warn("Outdated function simple_controller.DataAPI.registerTool called");
         return ToolOp.register(cls);
+      }
+      getStructsForList(dpath) {
+        return dpath.validStructs;
+      }
+      getStructsForStruct(dpath) {
+        return this.getStructsForList(dpath);
       }
       getStructs() {
         return this.structs;
@@ -34403,7 +34414,7 @@ var init_dropbox = __esm({
           const result = this.uiProp();
           enumValue = result instanceof Promise ? await result : result;
         }
-        if (!(enumValue instanceof EnumProperty)) {
+        if (enumValue && !(enumValue instanceof EnumProperty)) {
           enumValue = new EnumProperty(void 0, enumValue);
         }
         return enumValue;
@@ -34513,11 +34524,11 @@ var init_dropbox = __esm({
             callProp = !rdata || !(rdata instanceof ToolProperty);
           }
           const prop2 = await this.resolveUIProp() ?? this.prop;
-          this._value = this._convertVal(id, prop2) ?? id;
           if (prop2 === void 0) {
             console.error("Error in dropdown menu _onselect: no property resolved");
             return;
           }
+          this._value = this._convertVal(id, prop2) ?? id;
           if (callProp) {
             prop2.setValue(id);
           }
@@ -34716,7 +34727,9 @@ var init_dropbox = __esm({
           fromPropLabel(this.prop, val);
         } else if (this.uiProp) {
           this.resolveUIProp().then((prop) => {
-            fromPropLabel(prop, val);
+            if (prop) {
+              fromPropLabel(prop, val);
+            }
           });
         } else {
           this.setAttribute("name", "" + val);
@@ -38871,7 +38884,7 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       return check;
     }
     if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
-      return self2.listenum(inpath, { name: "listenum", packflag, mass_set_path }).setUndo(useDataPathUndo);
+      return self2.listenum(inpath, { packflag, mass_set_path }).setUndo(useDataPathUndo);
     } else {
       if (prop.flag & PropFlags.USE_ICONS) {
         packflag |= PackFlags.USE_ICONS;
@@ -38934,10 +38947,12 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
         con = UIBase.createElement("container-x");
         con.ctx = self2.ctx;
+        con._init();
+        con.style.display = self2.style.display;
+        con.style.flexDirection = self2.style.flexDirection;
         con.inherit_packflag = self2.inherit_packflag;
         con.packflag = self2.packflag;
         con.dataPrefix = self2.dataPrefix;
-        con.init();
         con.style.margin = con.style.padding = "0px";
         self2.addPropLabel(con, inpath, packflag);
         con.label(uiName);
@@ -39383,6 +39398,16 @@ var Container3 = class _Container extends UIBase {
     this.reversed = false;
     this._prefixstack = [];
     this._mass_prefixstack = [];
+  }
+  /**
+   * Declares the prefix this container was handed, so `prop(...)` autocompletes
+   * the paths under it and the ESLint rule can check them. Does not set the
+   * prefix — whoever built the container already did that, through
+   * `dataPrefix` / `pushDataPrefix` / `_container_inherit`. Passing the wrong
+   * literal here just moves the lint errors somewhere else.
+   */
+  withDataPrefix() {
+    return this;
   }
   noUndo() {
     this.setUndo(false);
@@ -51055,7 +51080,7 @@ pathux.NodeSocketBase {
 };
 var DEV_BUILD = NodeSocketBase.name === "NodeSocketBase";
 var SocketClasses = /* @__PURE__ */ new Map();
-function registerSocketType(cls) {
+function registerSocketType(cls, internal = false) {
   if (cls.socketDef === NodeSocketBase.socketDef) {
     throw new Error(cls.name + " is missing its socketDef() static method");
   }
@@ -51074,7 +51099,7 @@ function registerSocketType(cls) {
     );
   }
   if (!isRegistered(cls)) {
-    inlineRegister(cls, `graph.${def.typeName} {
+    inlineRegister(cls, `${internal ? "pathux" : "graph"}.${def.typeName} {
 }
 `);
   }
@@ -51522,44 +51547,6 @@ function getNodeClass(typeName) {
   return NodeClasses2.get(typeName);
 }
 
-// scripts/graph/graph_api.ts
-function defineGraphAPI(api) {
-  const st = api.mapStruct(Graph, true);
-  if ("nodes" in st.pathmap) {
-    return st;
-  }
-  st.list("nodes", "nodes", {
-    get(_api, list5, key) {
-      return list5.find((n) => String(n.id) === String(key));
-    },
-    getKey(_api, _list, obj) {
-      return obj?.id;
-    },
-    getLength(_api, list5) {
-      return list5.length;
-    },
-    getIter(_api, list5) {
-      return list5[Symbol.iterator]();
-    },
-    getStruct(api2, list5, key) {
-      const node = list5.find((n) => String(n.id) === String(key));
-      if (node === void 0) {
-        return void 0;
-      }
-      return nodeStructFor(api2, node.constructor);
-    }
-  });
-  return st;
-}
-function nodeStructFor(api, cls) {
-  if (api.hasStruct(cls)) {
-    return api.getStruct(cls);
-  }
-  const st = api.mapStruct(cls, true);
-  cls.defineAPI(api, st);
-  return st;
-}
-
 // scripts/graph/group.ts
 init_nstructjs();
 init_util();
@@ -51793,7 +51780,7 @@ graph.GroupNode {
   /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
   static defineAPI(api, st) {
     super.defineAPI(api, st);
-    st.struct("subgraph", "group", "Group", defineGraphAPI(api));
+    st.struct("subgraph", "group", "Group", api.getStruct(Graph));
   }
   /** Reports whether target sits anywhere on def's chain of resolved group definitions. */
   static chainContains(def, target, seen = /* @__PURE__ */ new Set()) {
@@ -61911,7 +61898,7 @@ __export(graph_exports, {
   StringSocket: () => StringSocket,
   Vec3Socket: () => Vec3Socket,
   buildGraphFromDSL: () => buildGraphFromDSL,
-  defineGraphAPI: () => defineGraphAPI,
+  defineGraphAPI: () => defineGraphAPI2,
   definitionOfSubgraph: () => definitionOfSubgraph,
   getNodeClass: () => getNodeClass,
   getSocketClass: () => getSocketClass,
@@ -61930,7 +61917,7 @@ init_nstructjs();
 init_toolprop();
 init_vectormath();
 var FloatSocket = class extends NodeSocketBase {
-  static STRUCT = inlineRegister(this, `graph.FloatSocket {}`);
+  static STRUCT = inlineRegister(this, `pathux.FloatSocket {}`);
   static socketDef() {
     return { typeName: "FloatSocket", type: "float", uiName: "Float", color: "#a1a1a1" };
   }
@@ -61939,9 +61926,9 @@ var FloatSocket = class extends NodeSocketBase {
     this.defaultProp = new FloatProperty(0).setUIName(uiName).setDescription(description);
   }
 };
-registerSocketType(FloatSocket);
+registerSocketType(FloatSocket, true);
 var Vec3Socket = class extends NodeSocketBase {
-  static STRUCT = inlineRegister(this, `graph.Vec3Socket {}`);
+  static STRUCT = inlineRegister(this, `pathux.Vec3Socket {}`);
   static socketDef() {
     return { typeName: "Vec3Socket", type: "vec3", uiName: "Vector3", color: "#8a8ad0" };
   }
@@ -61973,9 +61960,9 @@ var Vec3Socket = class extends NodeSocketBase {
     return super.convertTo(type);
   }
 };
-registerSocketType(Vec3Socket);
+registerSocketType(Vec3Socket, true);
 var StringSocket = class extends NodeSocketBase {
-  static STRUCT = inlineRegister(this, `graph.StringSocket {}`);
+  static STRUCT = inlineRegister(this, `pathux.StringSocket {}`);
   static socketDef() {
     return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
   }
@@ -61984,7 +61971,7 @@ var StringSocket = class extends NodeSocketBase {
     this.defaultProp = new StringProperty("").setUIName(uiName).setDescription(description);
   }
 };
-registerSocketType(StringSocket);
+registerSocketType(StringSocket, true);
 
 // scripts/graph/dsl.ts
 function validateGraphDSL(input, registries) {
@@ -62142,6 +62129,45 @@ function buildGraphFromDSL(input, registries) {
 }
 function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+// scripts/graph/graph_api.ts
+function defineGraphAPI2(api, st, validStructs) {
+  st ??= api.mapStruct(Graph, true);
+  if ("nodes" in st.pathmap) {
+    return st;
+  }
+  const list5 = st.list("nodes", "nodes", {
+    get(_api, list6, key) {
+      return list6.find((n) => String(n.id) === String(key));
+    },
+    getKey(_api, _list, obj) {
+      return obj?.id;
+    },
+    getLength(_api, list6) {
+      return list6.length;
+    },
+    getIter(_api, list6) {
+      return list6[Symbol.iterator]();
+    },
+    getStruct(api2, list6, key) {
+      const node = list6.find((n) => String(n.id) === String(key));
+      if (node === void 0) {
+        return void 0;
+      }
+      return nodeStructFor(api2, node.constructor);
+    }
+  });
+  list5.validStructs = validStructs ?? [];
+  return st;
+}
+function nodeStructFor(api, cls) {
+  if (api.hasStruct(cls)) {
+    return api.getStruct(cls);
+  }
+  const st = api.mapStruct(cls, true);
+  cls.defineAPI(api, st);
+  return st;
 }
 
 // scripts/widgets/dragbox.ts

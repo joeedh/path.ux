@@ -223,6 +223,39 @@ panel.prop("opacity");
 `changePathPrefix(newPrefix)` rewrites the prefix on a container and its children after the
 fact. `massSetPrefix` does the same for mass-set paths.
 
+### Declaring the prefix to the type system
+
+`dataPrefix` is a runtime string, so on its own it tells neither the editor nor the linter
+what `panel.prop("location")` resolves to. A container that was handed a prefix declares it
+with `withDataPrefix<Prefix>()`, which re-types the container without touching it:
+
+```ts
+buildUI(container: Container) {
+  const con = container.withDataPrefix<"scene.objects.active.">()
+  con.prop("location")   // autocompletes the paths under that prefix
+}
+```
+
+The prefix lands in `Container`'s third type parameter and is readable as the phantom
+`__dataPathPrefix` property. Two things use it. `prop` and the other path methods take
+`PathsUnderPrefix<Prefix>` (from `core/datapath_registry`), which is the tails of the
+registered paths starting with that prefix — so the editor completes `location` rather than
+the whole catalog. And the `pathux/valid-datapath` ESLint rule reads the tag off the
+receiver and checks prefix + path against generated/api-paths.json, reporting the joined
+path when it does not resolve. Without a declared prefix the rule has nothing to resolve
+against and falls back to accepting any known path suffix.
+
+Prefixed containers are not assignable to `Container<CTX>`, which is what stops one from
+being passed somewhere that expects a bare container. Plumbing that legitimately does not
+care takes `AnyContainer<CTX>` instead. The tails come from `IndexedDataPathRegistry`,
+which `npm run gen:paths` emits alongside `DataPathRegistry`; a prefix pointing into a list
+(`foo.items[n].`) needs it, since the plain registry holds no indexed paths.
+
+The type parameter does not survive `row()`, `col()` or `panel()` — those return their own
+container classes, which carry no prefix parameter yet, even though `_container_inherit`
+does copy `dataPrefix` to them at runtime. Call `withDataPrefix` again on the child to get
+the checking back.
+
 ## Mass set
 
 A mass-set path applies one edit to every member of a list, so a slider dragged in the UI

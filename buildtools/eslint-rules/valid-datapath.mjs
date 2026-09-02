@@ -6,9 +6,13 @@
  * `path` props in JSX (`<prop path="..." />`), against the catalog in
  * generated/api-paths.json.
  *
- * Relative/prefixed paths (resolved at runtime via Container._joinPrefix) are
- * accepted when they match a known path *suffix*, to avoid false positives.
- * If generated/api-paths.json is missing, the rule is a no-op.
+ * A container declares its data-path prefix as a literal type through
+ * `withDataPrefix<"foo.bar[n].">()`, which the checker surfaces as the phantom
+ * `__dataPathPrefix` property. When type information is available and the
+ * receiver carries a non-empty prefix, the argument is checked as prefix + path
+ * against the whole catalog. Without a prefix there is nothing to resolve
+ * against, so a relative path is accepted whenever it matches a known path
+ * suffix. If generated/api-paths.json is missing, the rule is a no-op.
  */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -45,9 +49,16 @@ function editDistance(a, b) {
   return prev[n];
 }
 
-function loadCatalog() {
+const DEFAULT_CATALOG = resolve(__dirname, "../../generated/api-paths.json");
+
+const catalogCache = new Map();
+
+function loadCatalog(file) {
+  if (catalogCache.has(file)) {
+    return catalogCache.get(file);
+  }
+  let result;
   try {
-    const file = resolve(__dirname, "../../generated/api-paths.json");
     const json = JSON.parse(readFileSync(file, "utf8"));
     const known = new Set();
     const suffixes = new Set();
@@ -60,13 +71,28 @@ function loadCatalog() {
         suffixes.add(segs.slice(i).join("."));
       }
     }
-    return { known, suffixes, all: [...known] };
+    result = { known, suffixes, all: [...known] };
   } catch {
-    return undefined;
+    result = undefined;
   }
+  catalogCache.set(file, result);
+  return result;
 }
 
-const catalog = loadCatalog();
+/**
+ * The catalog the current lint run reads. The helpers below close over this
+ * rather than taking it as an argument, so one run has to use one catalog —
+ * `create` reassigns it, and every rule instance in a run resolves the same
+ * path unless a config gives different ones per file glob.
+ */
+let catalog = loadCatalog(DEFAULT_CATALOG);
+
+/** Catalog to read: rule option, then env var, then the path.ux submodule copy. */
+function catalogPathFor(context) {
+  const fromOption = context.options?.[0]?.catalogPath;
+  const raw = fromOption ?? process.env.PATHUX_DATAPATH_CATALOG;
+  return raw ? resolve(context.cwd ?? process.cwd(), raw) : DEFAULT_CATALOG;
+}
 
 function matches(norm) {
   return catalog.known.has(norm) || catalog.suffixes.has(norm);
@@ -101,6 +127,36 @@ function isValid(rawPath) {
   return false;
 }
 
+/** Mirrors Container._joinPrefix: "/" escapes the prefix, "." is inserted if missing. */
+function joinPrefix(prefix, path) {
+  if (path.startsWith("/")) {
+    return path.slice(1).trim();
+  }
+  if (prefix.length > 0 && path.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
+    return `${prefix}.${path}`;
+  }
+  return prefix + path;
+}
+
+/** Tails of the catalog paths that sit under `prefix`, nearest to `rawPath` first. */
+function tailSuggestion(prefix, rawPath) {
+  const norm = normalizePath(prefix);
+  const target = normalizePath(rawPath.trim()).toLowerCase();
+  // A prefix may or may not carry its trailing ".", so drop one off each tail.
+  const tails = catalog.all
+    .filter((k) => k.startsWith(norm) && k.length > norm.length)
+    .map((k) => k.slice(norm.length).replace(/^\./, ""));
+  if (!tails.length) {
+    return "";
+  }
+  const ranked = tails
+    .map((k) => ({ k, d: editDistance(target, k.toLowerCase()) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 3)
+    .map((r) => r.k);
+  return ` Paths under this prefix include: ${ranked.join(", ")}.`;
+}
+
 function nearestSuggestion(rawPath) {
   if (!catalog?.all.length) {
     return "";
@@ -121,18 +177,71 @@ function nearestSuggestion(rawPath) {
   return bySuffix.length ? ` Closest paths ending in "${last}": ${bySuffix.join(", ")}.` : "";
 }
 
+/** Name of Container's phantom prefix tag (declared in scripts/core/ui.ts). */
+const PREFIX_TAG = "__dataPathPrefix";
+
+/**
+ * Reads the data-path prefix a container declared through `withDataPrefix()`.
+ * Returns undefined when there is no type information, the receiver is not a
+ * container, or its prefix is the empty default.
+ */
+function readPrefixTag(context, objNode) {
+  const services = context.sourceCode?.parserServices;
+  if (!services?.program || !services.esTreeNodeToTSNodeMap) {
+    return undefined;
+  }
+  const tsNode = services.esTreeNodeToTSNodeMap.get(objNode);
+  if (!tsNode) {
+    return undefined;
+  }
+  const checker = services.program.getTypeChecker();
+  const type = checker.getTypeAtLocation(tsNode);
+  // A union receiver (`Container | undefined`) resolves to the one prefix its
+  // container constituents agree on; disagreement means we cannot say.
+  const parts = type.isUnion?.() ? type.types : [type];
+  let found;
+  for (const part of parts) {
+    const sym = part.getProperty?.(PREFIX_TAG);
+    if (!sym) {
+      continue;
+    }
+    const tagType = checker.getTypeOfSymbolAtLocation(sym, tsNode);
+    if (!tagType.isStringLiteral?.()) {
+      return undefined;
+    }
+    if (found !== undefined && found !== tagType.value) {
+      return undefined;
+    }
+    found = tagType.value;
+  }
+  return found ? found : undefined;
+}
+
 const ATTR_RE = /\bpath\s*=\s*["']([^"']+)["']/g;
 
 export default {
   meta: {
     type    : "problem",
     docs: { description: "validate path.ux data-path strings against generated/api-paths.json" },
-    schema  : [],
+    schema: [
+      {
+        type                : "object",
+        properties: {
+          // Where to read the catalog, absolute or relative to the lint cwd.
+          // Also settable as PATHUX_DATAPATH_CATALOG, which the tests use.
+          catalogPath: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
-      unknownPath: 'Unknown data path "{{path}}".{{hint}}',
+      unknownPath        : 'Unknown data path "{{path}}".{{hint}}',
+      unknownPrefixedPath:
+        'Unknown data path "{{joined}}" ("{{path}}" under prefix "{{prefix}}").{{hint}}',
     },
   },
   create(context) {
+    catalog = loadCatalog(catalogPathFor(context));
     if (!catalog) {
       return {};
     }
@@ -143,6 +252,30 @@ export default {
         messageId: "unknownPath",
         data     : { path: rawPath, hint: nearestSuggestion(rawPath) },
       });
+    }
+
+    /**
+     * Checks a path against the prefix its container declared. Returns false
+     * when there is no declared prefix, leaving the caller on the untyped path.
+     */
+    function checkPrefixed(node, objNode, rawPath) {
+      const prefix = readPrefixTag(context, objNode);
+      if (prefix === undefined) {
+        return false;
+      }
+      const p = rawPath.trim();
+      if (!p || p.includes("{") || p.includes("$") || p.includes("`") || p.includes("(")) {
+        return true; // interpolated or a tool/method call — nothing static to check
+      }
+      const joined = normalizePath(joinPrefix(prefix, p));
+      if (!catalog.known.has(joined)) {
+        context.report({
+          node,
+          messageId: "unknownPrefixedPath",
+          data     : { joined, path: p, prefix, hint: tailSuggestion(prefix, p) },
+        });
+      }
+      return true;
     }
 
     return {
@@ -156,6 +289,9 @@ export default {
         }
         const arg = node.arguments[0];
         if (arg?.type !== "Literal" || typeof arg.value !== "string") {
+          return;
+        }
+        if (checkPrefixed(arg, callee.object, arg.value)) {
           return;
         }
         if (!isValid(arg.value)) {

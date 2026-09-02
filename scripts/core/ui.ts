@@ -11,7 +11,7 @@ import { CSSFont } from "./cssfont";
 import { theme, UIBase, PackFlags } from "./ui_base";
 import type { UIBaseDefinition } from "./ui_base";
 import { t } from "./theme_schema";
-import type { KnownDataPath } from "./datapath_registry";
+import type { PathsUnderPrefix } from "./datapath_registry";
 import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop";
 import type { DropBox } from "../menu/dropbox";
 import type { MenuTemplate } from "../menu/menu_types";
@@ -243,10 +243,34 @@ export class Label<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
 
 UIBase.internalRegister(Label);
 
+/**
+ * A container whose theme class and data-path prefix are both unconstrained.
+ * Use it for plumbing that passes containers around without caring about
+ * either — a `Container<CTX>` parameter would reject anything carrying a
+ * prefix, since {@link Container.__dataPathPrefix} makes the prefix part of
+ * the type.
+ */
+export type AnyContainer<CTX extends IContextBase = IContextBase> = Container<CTX, string, string>;
+
 export class Container<
   CTX extends IContextBase = IContextBase,
   SELF extends string = "Container",
+  /**
+   * Do not pass Container<CTX, SELF, DataPrefix> around, always
+   * get a container with a prefix with container.withDataPrefix()
+   */
+  DataPrefix extends string = "",
 > extends UIBase<CTX, unknown, SELF> {
+  /**
+   * Phantom tag holding the data-path prefix as a literal type. It is never
+   * assigned — `declare` erases it — and exists so the `pathux/valid-datapath`
+   * ESLint rule can read the prefix off the receiver of `prop(...)` and friends
+   * and check prefix + path against the generated catalog. Two containers with
+   * different prefixes are not assignable to each other, which is what keeps a
+   * prefixed container from being passed somewhere that expects a bare one.
+   */
+  declare readonly __dataPathPrefix: DataPrefix;
+
   declare _useDataPathUndo: boolean | undefined;
   declare div: HTMLElement;
 
@@ -278,6 +302,17 @@ export class Container<
 
     this._prefixstack = [];
     this._mass_prefixstack = [];
+  }
+
+  /**
+   * Declares the prefix this container was handed, so `prop(...)` autocompletes
+   * the paths under it and the ESLint rule can check them. Does not set the
+   * prefix — whoever built the container already did that, through
+   * `dataPrefix` / `pushDataPrefix` / `_container_inherit`. Passing the wrong
+   * literal here just moves the lint errors somewhere else.
+   */
+  withDataPrefix<T extends string>(): Container<CTX, SELF, T> {
+    return this as unknown as Container<CTX, SELF, T>;
   }
 
   noUndo() {
@@ -320,7 +355,7 @@ export class Container<
       prefix += ".";
     }
 
-    const rec = (n: UIBase<CTX>, con: Container<CTX>) => {
+    const rec = (n: UIBase<CTX>, con: AnyContainer<CTX>) => {
       if (n instanceof Container && n !== this) {
         if (n.dataPrefix.startsWith(prefix)) {
           n.dataPrefix = n.dataPrefix.slice(prefix.length, n.dataPrefix.length);
@@ -851,12 +886,17 @@ export class Container<
   }
 
   //supports number types
-  textbox(inpath?: KnownDataPath, text?: string, cb?: typeof this.on_change, packflag = 0) {
+  textbox(
+    inpath?: PathsUnderPrefix<DataPrefix>,
+    text?: string,
+    cb?: typeof this.on_change,
+    packflag = 0
+  ) {
     return this.addPropLabel(textboxImpl(this, inpath, text, cb, packflag), undefined, packflag)
       .widget;
   }
 
-  pathlabel(inpath?: KnownDataPath, label?: string, packflag = 0) {
+  pathlabel(inpath?: PathsUnderPrefix<DataPrefix>, label?: string, packflag = 0) {
     return this.addPropLabel(pathlabelImpl(this, inpath, label, packflag), undefined, packflag)
       .widget;
   }
@@ -943,7 +983,7 @@ export class Container<
     return this._joinPrefix(mass_set_path, this.massSetPrefix);
   }
 
-  prop(inpath: KnownDataPath, packflag = 0, mass_set_path?: string): UIBase<CTX> {
+  prop(inpath: PathsUnderPrefix<DataPrefix>, packflag = 0, mass_set_path?: string): UIBase<CTX> {
     return propImpl(this, inpath, packflag, mass_set_path);
   }
 
@@ -956,7 +996,12 @@ export class Container<
     return this.addPropLabel(iconcheckImpl(this, inpath, icon, description, mass_set_path)).widget;
   }
 
-  check(inpath: KnownDataPath | undefined, name?: string, packflag = 0, mass_set_path?: string) {
+  check(
+    inpath: PathsUnderPrefix<DataPrefix> | undefined,
+    name?: string,
+    packflag = 0,
+    mass_set_path?: string
+  ) {
     return checkImpl(this, inpath, name, packflag, mass_set_path);
   }
 
@@ -965,7 +1010,7 @@ export class Container<
    * new (optional) form: checkenum(inpath, args)
    * */
   checkenum(
-    inpath: KnownDataPath | undefined,
+    inpath: PathsUnderPrefix<DataPrefix> | undefined,
     name?: string | Parameters<typeof checkenumImpl>[2],
     packflag?: number,
     enummap?: unknown,
@@ -1024,7 +1069,7 @@ export class Container<
     defaultval cannot be undefined
   */
   listenum(
-    inpath: KnownDataPath | undefined,
+    inpath: PathsUnderPrefix<DataPrefix> | undefined,
     name?:
       | string
       | {
@@ -1068,7 +1113,7 @@ export class Container<
     widget: T,
     label?: string,
     packflag: number = widget.packflag
-  ): { container: Container<CTX>; widget: T } {
+  ): { container: AnyContainer<CTX>; widget: T } {
     packflag |= this.inherit_packflag;
     if (typeof packflag !== "number" || isNaN(packflag) || !isFinite(packflag)) {
       throw new Error("invalid pack flag");
@@ -1108,18 +1153,18 @@ export class Container<
     return { widget, container: strip };
   }
 
-  getroot(): Container<CTX> {
-    let p: Container<CTX> = this;
+  getroot(): AnyContainer<CTX> {
+    let p: AnyContainer<CTX> = this;
 
     while (p.parentWidget !== undefined) {
-      p = p.parentWidget as Container<CTX>;
+      p = p.parentWidget as AnyContainer<CTX>;
     }
 
     return p;
   }
 
   simpleslider(
-    datapath: KnownDataPath | undefined,
+    datapath: PathsUnderPrefix<DataPrefix> | undefined,
     name?: string | SliderArgs,
     defaultval?: number,
     min?: number,
@@ -1160,7 +1205,7 @@ export class Container<
    * });
    * */
   slider(
-    datapath: KnownDataPath | undefined,
+    datapath: PathsUnderPrefix<DataPrefix> | undefined,
     name?: string | SliderArgs,
     defaultval?: number,
     min?: number,

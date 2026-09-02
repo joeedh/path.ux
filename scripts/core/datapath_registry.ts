@@ -22,6 +22,34 @@
 
 export interface DataPathRegistry {}
 
+/**
+ * Indexed paths (`foo.bar[n].baz`), kept apart from {@link DataPathRegistry}
+ * because no caller writes the literal `[n]`. They exist so a container carrying
+ * a data-path prefix can offer the tails under that prefix — see
+ * {@link PathsUnderPrefix}. `npm run gen:paths` emits this alongside the other
+ * registry.
+ */
+export interface IndexedDataPathRegistry {}
+
 export type KnownDataPath = [keyof DataPathRegistry] extends [never]
   ? string
   : (keyof DataPathRegistry & string) | (string & {});
+
+/** Every registered path, indexed ones included, with no open-string fallback. */
+type RegisteredPath = (keyof DataPathRegistry & string) | (keyof IndexedDataPathRegistry & string);
+
+/** Distributes over `Paths`, keeping what follows `Prefix` in each one. */
+type TailUnder<Prefix extends string, Paths> = Paths extends `${Prefix}${infer Tail}`
+  ? Tail
+  : never;
+
+/**
+ * Paths a container whose data-path prefix is `Prefix` accepts. Autocompletes
+ * the tails of the registered paths starting with that prefix while still
+ * accepting any string, so runtime-resolved paths keep type-checking; the
+ * `pathux/valid-datapath` ESLint rule reports the ones that do not resolve.
+ * With the default empty prefix this is exactly {@link KnownDataPath}.
+ */
+export type PathsUnderPrefix<Prefix extends string> = [RegisteredPath] extends [never]
+  ? string
+  : TailUnder<Prefix, RegisteredPath> | (string & {});

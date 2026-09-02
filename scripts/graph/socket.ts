@@ -413,7 +413,7 @@ const DEV_BUILD = NodeSocketBase.name === "NodeSocketBase";
 
 export const SocketClasses = new Map<string, SocketTypeConstructor>();
 
-export function registerSocketType(cls: SocketTypeConstructor): void {
+export function registerSocketType(cls: SocketTypeConstructor, internal = false): void {
   if (cls.socketDef === NodeSocketBase.socketDef) {
     throw new Error(cls.name + " is missing its socketDef() static method");
   }
@@ -441,7 +441,7 @@ export function registerSocketType(cls: SocketTypeConstructor): void {
   // A class without its own STRUCT serializes as its nearest registered ancestor
   // plus nothing; inlineRegister merges that ancestor's fields into the empty body.
   if (!nstructjs.isRegistered(cls)) {
-    nstructjs.inlineRegister(cls, `graph.${def.typeName} {\n}\n`);
+    nstructjs.inlineRegister(cls, `${internal ? "pathux" : "graph"}.${def.typeName} {\n}\n`);
   }
 
   SocketClasses.set(def.typeName, cls);

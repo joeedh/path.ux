@@ -13,6 +13,8 @@ export default defineConfig([
     "**/dist/**",
     "**/build/**",
     "scripts/lib/tinymce/**",
+    // Deliberately-wrong data paths that validDatapathRule.test.ts lints itself.
+    "tests/fixtures/valid-datapath/**",
   ]),
   {
     files          : ["**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}"],

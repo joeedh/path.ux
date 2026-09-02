@@ -13,7 +13,7 @@ function styl(el: { style: CSSStyleDeclaration }) {
 }
 
 export function iconcheckImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: string | undefined,
   icon: number,
   description?: string,
@@ -37,7 +37,7 @@ export function iconcheckImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function checkImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: KnownDataPath | undefined,
   name?: string,
   packflag = 0,
@@ -87,7 +87,7 @@ export function checkImpl<CTX extends IContextBase, SELF extends string>(
  * new (optional) form: checkenum(inpath, args)
  * */
 export function checkenumImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: KnownDataPath | undefined,
   name?:
     | string
@@ -212,7 +212,7 @@ export function checkenumImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function checkenumPanelImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: string,
   name?: string,
   packflag = 0,
@@ -329,7 +329,7 @@ export function checkenumPanelImpl<CTX extends IContextBase, SELF extends string
   defaultval cannot be undefined
 */
 export function listenumImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: KnownDataPath | undefined,
   name?:
     | string

@@ -12,7 +12,7 @@ import { UIBase } from "../ui_base";
 import type { Container } from "../ui";
 
 export function dynamicMenuImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   title: string,
   list: MenuTemplate,
   packflag = 0
@@ -33,7 +33,7 @@ export function dynamicMenuImpl<CTX extends IContextBase, SELF extends string>(
 
  **/
 export function menuImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   title: string,
   list: MenuTemplate,
   packflag = 0
@@ -64,7 +64,7 @@ export function menuImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function toolPanelImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   path_or_cls: string | typeof ToolOp,
   args: {
     label?: string;
@@ -118,7 +118,7 @@ export function toolPanelImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function toolImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   path_or_cls: string | typeof ToolOp,
   packflag_or_args:
     | number

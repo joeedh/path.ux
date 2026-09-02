@@ -11,7 +11,7 @@ import type { TableFrame } from "../../widgets/ui_table";
 import type { Container } from "../ui";
 
 export function treeviewImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>
+  self: Container<CTX, SELF, string>
 ): TreeView<CTX> {
   const ret = UIBase.createElement("tree-view-x") as TreeView<CTX>;
   ret.ctx = self.ctx;
@@ -23,7 +23,7 @@ export function treeviewImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function panelImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   name: string,
   id?: string,
   packflag = 0,
@@ -57,7 +57,7 @@ export function panelImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function rowImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   packflag = 0
 ): RowFrame<CTX> {
   const ret = UIBase.createElement("rowframe-x") as RowFrame<CTX>;
@@ -74,7 +74,7 @@ export function listboxImpl<
   CTX extends IContextBase,
   SELF extends string,
   IDType extends string | number = string | number,
->(self: Container<CTX, SELF>, path?: string, packflag = 0) {
+>(self: Container<CTX, SELF, string>, path?: string, packflag = 0) {
   const ret = UIBase.createElement("listbox-x") as ListBox<CTX, IDType>;
 
   self._container_inherit(ret, packflag);
@@ -89,7 +89,7 @@ export function listboxImpl<
 }
 
 export function tableImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   packflag = 0
 ): TableFrame<CTX> {
   const ret = UIBase.createElement("tableframe-x") as TableFrame<CTX>;
@@ -101,7 +101,7 @@ export function tableImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function twocolImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   parentDepth = 1,
   packflag = 0
 ) {
@@ -116,7 +116,7 @@ export function twocolImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function colImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   packflag = 0
 ): ColumnFrame<CTX> {
   const ret = UIBase.createElement("colframe-x") as ColumnFrame<CTX>;
@@ -128,7 +128,7 @@ export function colImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function tabsImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   position: "top" | "bottom" | "left" | "right" = "top",
   packflag = 0
 ) {

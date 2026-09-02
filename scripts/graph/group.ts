@@ -2,7 +2,7 @@ import * as nstructjs from "../path-controller/util/nstructjs";
 import type { StructReader } from "../path-controller/util/nstructjs";
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { HashDigest } from "../path-controller/util/util";
-import type { DataAPI, DataStruct } from "../path-controller/controller/controller";
+import { DataAPI, DataStruct } from "../path-controller/controller/controller";
 import { Graph } from "./graph";
 import { defineGraphAPI } from "./graph_api";
 import type { GroupResolveRuntime } from "./graph";
@@ -342,7 +342,7 @@ graph.GroupNode {
   /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
   static override defineAPI(api: DataAPI, st: DataStruct): void {
     super.defineAPI(api, st);
-    st.struct("subgraph", "group", "Group", defineGraphAPI(api));
+    st.struct("subgraph", "group", "Group", api.getStruct(Graph));
   }
 
   /** Reports whether target sits anywhere on def's chain of resolved group definitions. */

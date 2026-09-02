@@ -12,3 +12,7 @@
      node toolop.
 [x]: split scripts/core/ui_base.ts into scripts/core/base/, per
      documentation/plans/ui-base-split-plan.md.
+[ ]: thread the Container DataPrefix type parameter through the child
+     containers (RowFrame, ColumnFrame, PanelFrame, TwoColumnFrame,
+     TableFrame) so con.row().prop(...) keeps prefix autocomplete and
+     strict valid-datapath checking. See CLAUDE.md "Data-path prefixes".

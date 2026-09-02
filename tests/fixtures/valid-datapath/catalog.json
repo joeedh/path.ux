@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "paths": {
+    "scene": {"kind": "struct"},
+    "scene.objects": {"kind": "list"},
+    "scene.objects[n].name": {"kind": "prop", "propType": "string"},
+    "scene.objects[n].size": {"kind": "prop", "propType": "float"},
+    "scene.objects[n].material": {"kind": "struct"},
+    "scene.objects[n].material.roughness": {"kind": "prop", "propType": "float"},
+    "workspace": {"kind": "struct"},
+    "workspace.brush": {"kind": "struct"},
+    "workspace.brush.strength": {"kind": "prop", "propType": "float"}
+  }
+}

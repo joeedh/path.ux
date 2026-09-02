@@ -85,6 +85,22 @@ function getListElementStruct(api, dpath) {
   }
 }
 
+/**
+ * The structs an element of `dpath` can resolve to. A list that declares
+ * `validStructs` (a polymorphic one, such as a graph's nodes) enumerates all of
+ * them, so every subclass's members reach the catalog. One that does not — the
+ * plain `struct.list(...)` form — falls back to the single struct its
+ * `getStruct` callback returns, and to nothing when even that is unavailable.
+ */
+function elementStructsFor(api, dpath) {
+  const valid = dpath.validStructs ?? [];
+  if (valid.length > 0) {
+    return valid;
+  }
+  const single = getListElementStruct(api, dpath);
+  return single ? [single] : [];
+}
+
 function walkStruct(api, struct, prefix, depth, opts, out, visited) {
   if (!struct || !Array.isArray(struct.members)) {
     return;
@@ -116,20 +132,18 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
         break;
       }
 
-      case DataTypes.STRUCT:
-      case DataTypes.DYNAMIC_STRUCT: {
-        const dynamic = dpath.type === DataTypes.DYNAMIC_STRUCT;
+      case DataTypes.STRUCT: {
         const childStruct = dpath.data;
         out.push({
           path,
-          kind: dynamic ? "dynamicStruct" : "struct",
+          kind: "struct",
           ownerStruct,
           // Name of the struct this path RESOLVES TO — i.e. the type whose
           // instance lives at `path`. This is the join key for StructCatalog's
           // `paths` union.
           structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
           indexed: prefix.includes("["),
-          dynamic,
+          dynamic: false,
         });
 
         const seen = visited.has(childStruct);
@@ -138,23 +152,58 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
         }
         break;
       }
+      case DataTypes.DYNAMIC_STRUCT: {
+        // The default struct plus any the path declares it may resolve to. The
+        // default is often one of them, so walk each struct once.
+        const childStructs = [...new Set([dpath.data, ...(dpath.validStructs ?? [])])];
+
+        for (const childStruct of childStructs) {
+          out.push({
+            path,
+            kind: "dynamicStruct",
+            ownerStruct,
+            // Name of the struct this path RESOLVES TO — i.e. the type whose
+            // instance lives at `path`. This is the join key for StructCatalog's
+            // `paths` union.
+            structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
+            indexed: prefix.includes("["),
+            dynamic: true,
+          });
+
+          const seen = visited.has(childStruct);
+          if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
+            walkStruct(api, childStruct, path, depth + 1, opts, out, new Set(visited).add(childStruct));
+          }
+        }
+        break;
+      }
 
       case DataTypes.ARRAY: {
-        const elemStruct = getListElementStruct(api, dpath);
-        out.push({
-          path,
-          kind: "list",
-          ownerStruct,
-          // For a list, an individual element resolves at `path[n]`; record the
-          // element struct so gen can emit `path[n]` as a valued path for it.
-          structName: elemStruct?.name && elemStruct.name !== "unnamed" ? elemStruct.name : undefined,
-          indexed: prefix.includes("["),
-        });
-
+        const elemStructs = elementStructsFor(api, dpath);
         const elemPrefix = `${path}[n]`;
-        const seen = elemStruct && visited.has(elemStruct);
-        if (elemStruct && !seen && depth + 1 <= opts.maxDepth) {
-          walkStruct(api, elemStruct, elemPrefix, depth + 1, opts, out, new Set(visited).add(elemStruct));
+
+        // The list itself is a path whether or not its element struct is known,
+        // so emit one entry per element struct and a bare one when there are none.
+        if (elemStructs.length === 0) {
+          out.push({ path, kind: "list", ownerStruct, indexed: prefix.includes("[") });
+          break;
+        }
+
+        for (const childStruct of elemStructs) {
+          out.push({
+            path,
+            kind: "list",
+            ownerStruct,
+            // For a list, an individual element resolves at `path[n]`; record the
+            // element struct so gen can emit `path[n]` as a valued path for it.
+            structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
+            indexed: prefix.includes("["),
+          });
+
+          const seen = visited.has(childStruct);
+          if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
+            walkStruct(api, childStruct, elemPrefix, depth + 1, opts, out, new Set(visited).add(childStruct));
+          }
         }
         break;
       }

@@ -11,7 +11,7 @@ import { NodeSocketBase, registerSocketType } from "./socket";
 import type { SocketTypeDef } from "./socket";
 
 export class FloatSocket extends NodeSocketBase<"float", number> {
-  static STRUCT = nstructjs.inlineRegister(this, `graph.FloatSocket {}`);
+  static STRUCT = nstructjs.inlineRegister(this, `pathux.FloatSocket {}`);
 
   static socketDef(): SocketTypeDef {
     return { typeName: "FloatSocket", type: "float", uiName: "Float", color: "#a1a1a1" };
@@ -26,10 +26,10 @@ export class FloatSocket extends NodeSocketBase<"float", number> {
     this.defaultProp = new FloatProperty(0).setUIName(uiName).setDescription(description);
   }
 }
-registerSocketType(FloatSocket);
+registerSocketType(FloatSocket, true);
 
 export class Vec3Socket extends NodeSocketBase<"vec3", Vector3> {
-  static STRUCT = nstructjs.inlineRegister(this, `graph.Vec3Socket {}`);
+  static STRUCT = nstructjs.inlineRegister(this, `pathux.Vec3Socket {}`);
 
   static socketDef(): SocketTypeDef {
     return { typeName: "Vec3Socket", type: "vec3", uiName: "Vector3", color: "#8a8ad0" };
@@ -71,10 +71,10 @@ export class Vec3Socket extends NodeSocketBase<"vec3", Vector3> {
     return super.convertTo(type);
   }
 }
-registerSocketType(Vec3Socket);
+registerSocketType(Vec3Socket, true);
 
 export class StringSocket extends NodeSocketBase<"string", string, StringProperty> {
-  static STRUCT = nstructjs.inlineRegister(this, `graph.StringSocket {}`);
+  static STRUCT = nstructjs.inlineRegister(this, `pathux.StringSocket {}`);
 
   static socketDef(): SocketTypeDef {
     return { typeName: "StringSocket", type: "string", uiName: "String", color: "#9c8f6a" };
@@ -89,4 +89,4 @@ export class StringSocket extends NodeSocketBase<"string", string, StringPropert
     this.defaultProp = new StringProperty("").setUIName(uiName).setDescription(description);
   }
 }
-registerSocketType(StringSocket);
+registerSocketType(StringSocket, true);

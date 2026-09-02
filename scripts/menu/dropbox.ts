@@ -243,7 +243,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     super.updateBorders(this as unknown as HTMLElement);
   }
 
-  private async resolveUIProp(): Promise<toolprop.EnumProperty> {
+  private async resolveUIProp(): Promise<toolprop.EnumProperty | undefined> {
     let enumValue: toolprop.EnumProperty | EnumDef | undefined;
 
     if (typeof this.uiProp === "object") {
@@ -254,7 +254,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       enumValue = result instanceof Promise ? await result : result;
     }
 
-    if (!(enumValue instanceof toolprop.EnumProperty)) {
+    if (enumValue && !(enumValue instanceof toolprop.EnumProperty)) {
       enumValue = new toolprop.EnumProperty(undefined, enumValue);
     }
     return enumValue;
@@ -406,13 +406,12 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       }
 
       const prop = (await this.resolveUIProp()) ?? this.prop;
-      this._value = this._convertVal(id, prop) ?? id;
-
       if (prop === undefined) {
         console.error("Error in dropdown menu _onselect: no property resolved");
         return;
       }
 
+      this._value = this._convertVal(id, prop) ?? id;
       if (callProp) {
         prop.setValue(id);
       }
@@ -675,7 +674,9 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     } else if (this.uiProp) {
       //set label asyncronously
       this.resolveUIProp().then((prop) => {
-        fromPropLabel(prop, val);
+        if (prop) {
+          fromPropLabel(prop, val);
+        }
       });
     } else {
       // fallback to using the raw value as the label

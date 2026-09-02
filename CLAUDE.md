@@ -145,8 +145,31 @@ Valid `path` strings for `container.prop("...")`, related widget methods, and
 `<prop path="...">` xmlpage tags are catalogued in `generated/API_PATHS.md`
 (human/LLM-readable) and `generated/api-paths.json` (machine-readable), with each
 path's type, UI name, range, unit, and enum items. `generated/datapaths.ts` exports
-a `KnownDataPath` union of the valid non-indexed paths. Regenerate after changing any
-`api_define` with `pnpm run gen:paths` (walks the app's `defineAPI()`).
+a `KnownDataPath` union of the valid non-indexed paths, plus an
+`IndexedDataPathRegistry` holding the `foo[n].bar` ones that a data-path prefix
+needs. Regenerate after changing any `api_define` with `pnpm run gen:paths`
+(walks the app's `defineAPI()`).
+
+### Data-path prefixes
+
+A container built under a prefix declares it with `withDataPrefix<Prefix>()`,
+which lands the literal in `Container`'s third type parameter and its phantom
+`__dataPathPrefix` property. `prop` and the other path methods then take
+`PathsUnderPrefix<Prefix>` (autocomplete), and the `pathux/valid-datapath` ESLint
+rule reads the tag off the receiver and checks prefix + path exactly instead of
+falling back to suffix matching. See
+[documentation/container.md](documentation/container.md) § Path prefixes.
+
+**TODO: the prefix parameter dies at every child container.** `row()`, `col()`,
+`panel()`, `twocol()` and `table()` return `RowFrame` / `ColumnFrame` /
+`PanelFrame` / `TwoColumnFrame` / `TableFrame`, none of which take a `DataPrefix`
+type parameter, so `con.row().prop("size")` drops back to loose suffix
+validation — even though `_container_inherit` does copy `dataPrefix` to the child
+at runtime, making the type wrong rather than merely absent. Migrating means
+adding `DataPrefix extends string = ""` to those five classes, threading it
+through their impls in `core/utils/container_layout.ts`, and returning
+`RowFrame<CTX, SELF, DataPrefix>` (and so on) from the `Container` methods that
+build them. Until that lands, call `withDataPrefix` again on the child.
 
 ## Datapath updates (push + coalesced)
 

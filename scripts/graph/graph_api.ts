@@ -10,13 +10,17 @@ type Mappable = Parameters<DataAPI["mapStruct"]>[0];
  * keyed by node id, each entry typed by its own class's defineAPI. Idempotent, so a
  * GroupNode's "group" member and the app's root can both call it.
  */
-export function defineGraphAPI(api: DataAPI): DataStruct {
-  const st = api.mapStruct(Graph as unknown as Mappable, true)!;
+export function defineGraphAPI(
+  api: DataAPI,
+  st?: DataStruct,
+  validStructs?: DataStruct[]
+): DataStruct {
+  st ??= api.mapStruct(Graph as unknown as Mappable, true)!;
   if ("nodes" in st.pathmap) {
     return st;
   }
 
-  st.list<Node[], number | string, Node | undefined>("nodes", "nodes", {
+  const list = st.list<Node[], number | string, Node | undefined>("nodes", "nodes", {
     get(_api: DataAPI, list: Node[], key: number | string) {
       return list.find((n) => String(n.id) === String(key));
     },
@@ -37,6 +41,7 @@ export function defineGraphAPI(api: DataAPI): DataStruct {
       return nodeStructFor(api2, node.constructor as NodeTypeConstructor);
     },
   });
+  list.validStructs = validStructs ?? [];
 
   return st;
 }

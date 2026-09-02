@@ -10,7 +10,7 @@ import type { Container, Label } from "../ui";
 import type { TextArea } from "../../widgets/ui_textarea";
 
 export function textboxImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath?: KnownDataPath,
   text?: string,
   cb?: typeof self.on_change,
@@ -53,7 +53,7 @@ export function textboxImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function pathlabelImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath?: KnownDataPath,
   label?: string,
   packflag = 0
@@ -92,7 +92,7 @@ export function pathlabelImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function labelImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   text: string
 ) {
   const ret = UIBase.createElement("label-x") as Label<CTX>;
@@ -108,7 +108,7 @@ export function labelImpl<CTX extends IContextBase, SELF extends string>(
  * the only way to reach a tooltip on a device that cannot hover. Tap empty space to leave.
  */
 export function helppickerImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>
+  self: Container<CTX, SELF, string>
 ) {
   const ret = self.iconbutton(
     Icons.HELP,
@@ -132,7 +132,7 @@ export function helppickerImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function iconbuttonImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   icon: number,
   description: string,
   cb?: () => void,
@@ -159,7 +159,7 @@ export function iconbuttonImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function buttonImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   label: string,
   cb?: (e?: PointerEvent) => void,
   thisvar?: unknown,
@@ -181,7 +181,7 @@ export function buttonImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function colorbuttonImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: string | undefined,
   packflag?: number,
   mass_set_path?: string
@@ -208,7 +208,7 @@ export function colorbuttonImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function noteframeImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   packflag = 0
 ) {
   const ret = UIBase.createElement("noteframe-x") as UIBase<CTX>;
@@ -220,7 +220,7 @@ export function noteframeImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function curve1dImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath?: string,
   packflag = 0,
   mass_set_path?: string
@@ -247,7 +247,7 @@ export function curve1dImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function vecpopupImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath?: string,
   packflag = 0,
   mass_set_path?: string
@@ -281,7 +281,7 @@ export function vecpopupImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function colorPickerImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath?: string,
   packflag_or_args:
     | number
@@ -337,7 +337,7 @@ export function colorPickerImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function textareaImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   datapath?: string,
   value = "",
   packflag = 0,
@@ -375,7 +375,7 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
  * html5 viewer
  * */
 export function viewerImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   datapath?: string,
   value = "",
   packflag = 0,

@@ -12,10 +12,10 @@ import { PropTypes } from "../../path-controller/toolsys/toolprop";
 import { DataPathError } from "../../path-controller/controller/controller_base";
 import type { NumSliderTypes } from "../../widgets/ui_numsliders";
 import cconst from "../../config/const";
-import type { Container, SliderArgs } from "../ui";
+import type { AnyContainer, Container, SliderArgs } from "../ui";
 
 export function propImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   inpath: KnownDataPath,
   packflag = 0,
   mass_set_path?: string
@@ -131,9 +131,7 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
       !(packflag & PackFlags.USE_ICONS) &&
       !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))
     ) {
-      return self
-        .listenum(inpath, { name: "listenum", packflag, mass_set_path })
-        .setUndo(useDataPathUndo);
+      return self.listenum(inpath, { packflag, mass_set_path }).setUndo(useDataPathUndo);
     } else {
       if (prop.flag & PropFlags.USE_ICONS) {
         packflag |= PackFlags.USE_ICONS;
@@ -210,15 +208,17 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
 
       return ret.setUndo(useDataPathUndo);
     } else {
-      let con: Container<CTX> = self;
+      let con: AnyContainer<CTX> = self;
 
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
-        con = UIBase.createElement("container-x") as Container<CTX>;
+        con = UIBase.createElement("container-x") as AnyContainer<CTX>;
         con.ctx = self.ctx;
+        con._init();
+        con.style.display = self.style.display;
+        con.style.flexDirection = self.style.flexDirection;
         con.inherit_packflag = self.inherit_packflag;
         con.packflag = self.packflag;
         con.dataPrefix = self.dataPrefix;
-        con.init();
         con.style.margin = con.style.padding = "0px";
 
         // adds con to self via self._add()
@@ -359,7 +359,7 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 export function simplesliderImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   datapath: KnownDataPath | undefined,
   name?: string | SliderArgs,
   defaultval?: number,
@@ -402,7 +402,7 @@ export function simplesliderImpl<CTX extends IContextBase, SELF extends string>(
  * });
  * */
 export function sliderImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF>,
+  self: Container<CTX, SELF, string>,
   datapath: KnownDataPath | undefined,
   name?: string | SliderArgs,
   defaultval?: number,
