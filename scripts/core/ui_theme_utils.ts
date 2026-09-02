@@ -26,7 +26,8 @@
  */
 
 import { CSSFont } from "./cssfont";
-import { compatMap, ThemeScrollBars } from "./ui_theme";
+import { TypedThemeObject, TypedThemeObjectConstructor } from "./theme_base_types";
+import { compatMap, ThemeScrollBars, BoxBorder } from "./ui_theme";
 import type { ThemeItem, ThemeRecord } from "./ui_theme";
 
 /** Placeholder standing in for a theme value until `instanceThemeVars` substitutes one. */
@@ -55,6 +56,7 @@ export type ThemeItemWithVar<Keys extends string> =
   | ThemeVar<Keys, ThemeItem>
   | ThemeRecordWithVar<Keys>
   | CSSFont
+  | BoxBorder
   | string
   | number
   | boolean
@@ -72,7 +74,7 @@ export interface ThemeRecordWithVar<Keys extends string> {
 export type Resolved<T> =
   T extends ThemeVar<string, infer Value>
     ? Value
-    : T extends CSSFont | ThemeScrollBars
+    : T extends CSSFont | ThemeScrollBars | BoxBorder
       ? T
       : T extends object
         ? { [K in keyof T]: Resolved<T[K]> }
@@ -95,14 +97,22 @@ export function instanceThemeVars<
   return copyRecord(theme, vars, "") as Resolved<Theme>;
 }
 
-function copyRecord(rec: ThemeRecordWithVar<string>, vars: ThemeVarsDef, path: string): ThemeItem {
-  const ret: Record<string, ThemeItem> = {};
-
+function copyRecordTo(
+  dest: Record<string, ThemeItem>,
+  rec: ThemeRecordWithVar<string>,
+  vars: ThemeVarsDef,
+  path: string
+): ThemeItem {
   for (const key in rec) {
-    ret[key] = copyThemeItem(rec[key], vars, path ? `${path}.${key}` : key);
+    dest[key] = copyThemeItem(rec[key], vars, path ? `${path}.${key}` : key);
   }
 
-  return ret;
+  return dest;
+}
+
+function copyRecord(rec: ThemeRecordWithVar<string>, vars: ThemeVarsDef, path: string): ThemeItem {
+  const ret: Record<string, ThemeItem> = {};
+  return copyRecordTo(ret, rec, vars, path);
 }
 
 /**
@@ -128,12 +138,11 @@ export function copyThemeItem(
     return copyThemeItem(value, vars, path);
   }
 
-  if (item instanceof CSSFont) {
-    return item.copy();
-  }
-
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
+  // handle vars within a TypedThemeObject
+  if (item instanceof TypedThemeObject) {
+    const copy = item.copy();
+    copyRecordTo(copy as unknown as ThemeRecord, item as unknown as ThemeRecord, vars, path);
+    return copy;
   }
 
   if (Array.isArray(item)) {
@@ -157,12 +166,8 @@ export function copyVarItem(item: ThemeItemWithVar<string>): ThemeItemWithVar<st
     return new ThemeVar(item.key);
   }
 
-  if (item instanceof CSSFont) {
+  if (item instanceof CSSFont || item instanceof BoxBorder || item instanceof ThemeScrollBars) {
     return item.copy();
-  }
-
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
   }
 
   if (typeof item === "object" && item !== null) {
@@ -203,7 +208,12 @@ function isWalkable(item: ThemeItemWithVar<string>): item is ThemeRecordWithVar<
 
 /** A sub-record, as opposed to a leaf value or one of the theme's value classes. */
 export function isPlainRecord(item: ThemeItemWithVar<string>): item is ThemeRecordWithVar<string> {
-  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
+  return (
+    isWalkable(item) &&
+    !(item instanceof CSSFont) &&
+    !(item instanceof ThemeScrollBars) &&
+    !(item instanceof BoxBorder)
+  );
 }
 
 /** The value at `path`, or `undefined` when any step of the walk is missing. */
@@ -517,6 +527,9 @@ export function createThemeFile<
   if (items.some((item) => usesClass(item, ThemeScrollBars))) {
     names.push("ThemeScrollBars");
   }
+  if (items.some((item) => usesClass(item, BoxBorder))) {
+    names.push("BoxBorder");
+  }
 
   const header =
     `//XXX warning: auto-generated file!\n\n` +
@@ -652,12 +665,17 @@ function readBlock(src: string, start: number): BlockLine[] {
 /** Whether `item` is an instance of `cls`, or a record holding one at any depth. */
 function usesClass(
   item: ThemeItemWithVar<string>,
-  cls: typeof CSSFont | typeof ThemeScrollBars
+  cls: typeof CSSFont | typeof ThemeScrollBars | typeof BoxBorder
 ): boolean {
   if (item instanceof cls) {
     return true;
   }
-  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars) {
+  if (
+    item instanceof ThemeVar ||
+    item instanceof CSSFont ||
+    item instanceof ThemeScrollBars ||
+    item instanceof BoxBorder
+  ) {
     return false;
   }
   if (typeof item !== "object" || item === null) {
@@ -712,6 +730,15 @@ function writeItem(item: ThemeItemWithVar<string>, indent: string): string {
       color2  : item.color2,
       contrast: item.contrast,
       width   : item.width,
+    })})`;
+  }
+
+  if (item instanceof BoxBorder) {
+    return `new BoxBorder(${writeArgs({
+      borderRadius: item.radius,
+      borderColor : item.color,
+      borderWidth : item.width,
+      borderStyle : item.style,
     })})`;
   }
 

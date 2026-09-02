@@ -1132,7 +1132,8 @@ export class UIBase<
   getSubDefault<T extends DefaultTypes = string>(
     key: string,
     subkey: string,
-    backupkey: string = subkey,
+    // pass null to avoid default =subkey
+    backupkey: string | null = subkey,
     defaultval?: T,
     inherit = true
   ): T {

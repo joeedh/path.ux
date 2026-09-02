@@ -212,6 +212,32 @@ export class PropsEditor extends Editor {
       record("confirm", (e as GalleryConfirmEvent).selection.id)
     );
 
+    // list mode with a renderer of its own, counted so the specs can see create run once per
+    // pooled row while bind runs for every item scrolled past
+    const rows = UIBase.createElement<AssetGalleryGrid>("assetgallerygrid-x");
+    rows.setAttribute("data-testid", "gallery-rows");
+    rows.style.width = "380px";
+    rows.style.height = "300px";
+    rows.mode = "list";
+
+    const counts = ((window as unknown as { rowCalls: Record<string, number> }).rowCalls = {
+      create: 0,
+      bind  : 0,
+    });
+    rows.rowRenderer = {
+      create(box) {
+        counts.create++;
+        box.dom.appendChild(document.createElement("span"));
+      },
+      bind(box, item) {
+        counts.bind++;
+        box.dom.firstElementChild!.textContent = item ? "row-" + item.id : "";
+      },
+    };
+
+    tab.add(rows);
+    rows.setItems(items);
+
     const gallery = UIBase.createElement<AssetGallery>("assetgallery-x");
     gallery.setAttribute("data-testid", "gallery");
     tab.add(gallery);

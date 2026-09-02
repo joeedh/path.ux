@@ -20,6 +20,7 @@ whose `image` is either a decoded source or a thunk that produces one.
 
 - [Quick start](#quick-start)
 - [Items](#items)
+- [Grid and list](#grid-and-list)
 - [Selecting and confirming](#selecting-and-confirming)
 - [Keyboard navigation](#keyboard-navigation)
 - [The popup](#the-popup)
@@ -73,6 +74,62 @@ items means decoding the dozen or so on screen.
 The search box matches a lowercased substring against `id`, `label` and each
 entry of `searchTags`. `tooltip` is the hover text, falling back to `label` and
 then to `id`.
+
+## Grid and list
+
+A gallery draws its items in one of two layouts, and `AssetGallery` puts a two-button
+toggle at the right end of the search row to switch between them.
+
+- `"grid"` is the default: cells of `cellWidth` × `cellHeight`, as many per row as fit.
+- `"list"` is one item per full-width row — a thumbnail in a leading square of the row's
+  height, and a box beside it that the host fills.
+
+```ts
+gallery.mode = "list";
+```
+
+The two modes share everything else: the same pool, the same cache, the same selection and
+the same events. Changing mode keeps the selection and the focus index and resets the
+scroll, because cells carry their layout from creation and the pool is rebuilt.
+
+`showModeToggle = false`, set before the gallery is added, hides the buttons for a host that
+drives `mode` from a control of its own. `AssetGallery` also implements `saveData`/`loadData`,
+so the mode rides the ordinary `saveUIData` path. `pickAssetPopup` remembers the mode the
+last popup was left in, and `PickAssetArgs.mode` overrides that.
+
+### Filling a row's box
+
+The box defaults to the item's `label` (falling back to `id`), word-wrapped. A host that
+wants anything else supplies a `GalleryRowRenderer`.
+
+```ts
+gallery.rowRenderer = {
+  create(box) {
+    box.dom.appendChild(document.createElement("h4"));
+    box.dom.appendChild(document.createElement("small"));
+  },
+  bind(box, item) {
+    const [name, size] = box.dom.children;
+    name.textContent = item?.label ?? "";
+    size.textContent = item === undefined ? "" : bytesFor(item.id);
+  },
+};
+```
+
+Rows are pooled and rebound as the gallery scrolls, so this is a bind protocol over a reused
+element rather than a per-item render. `create` runs once for each of the handful of rows the
+viewport holds; `bind` runs whenever that row's item, selection or keyboard focus changes, so
+it must be cheap and must not accumulate state. `bind` is also called with `undefined` when
+the row parks past the last item, which is where a renderer holding a subscription or an
+object URL drops it. `destroy` runs when the pooled row itself goes away.
+
+`box` carries the element to fill plus the row's `index`, `active`, `focused`, `width` and
+`height`. The box is laid out as a centred column and is `pointer-events: none`, so a press
+anywhere across the row selects it; a renderer with controls of its own sets
+`style.pointerEvents = "auto"` on those controls rather than on `box.dom`, which would take
+the whole box out of the row's hit area.
+
+Assigning a renderer rebuilds the pool, so set it once rather than per item.
 
 ## Selecting and confirming
 
@@ -146,6 +203,10 @@ are already decoded. `at` places the popup at client coordinates, which is what
 a host whose clicked control is a raw DOM node rather than a widget needs — it
 passes an enclosing widget as `owner` and the node's own rect as `at`.
 
+The frame is `PopupContainer`'s own, from the `popup` style class, like every other popup. The
+picker adds only `overflow: hidden`, because the grid paints an opaque square background that
+would otherwise cover the rounded corners.
+
 ## The thumbnail cache
 
 `ThumbnailCache` maps an item id to a decoded thumbnail. One instance,
@@ -197,8 +258,11 @@ declared through `static define().theme` with typed tokens.
 | `assetthumb` | `border` | `{color, width}` around the cell |
 | `assetthumb` | `margin` | space between cells |
 | `assetthumb` | `padding` | inset between the cell border and the image |
+| `assetthumb` | `boxPadding` | inset between the thumbnail square and the row's box |
+| `assetthumb` | `rowFont` | face the default row renderer writes the name in |
 | `assetgallery` | `background-color` | fill behind the cells |
-| `assetgallery` | `cellWidth` / `cellHeight` | cell size in CSS pixels |
+| `assetgallery` | `cellWidth` / `cellHeight` | grid cell size in CSS pixels |
+| `assetgallery` | `rowHeight` | list-mode row height in CSS pixels |
 | `assetgallery` | `overscanRows` | rows kept bound above and below the viewport |
 | `assetgallery` | `width` / `height` | the outer widget's default grid size |
 
@@ -215,6 +279,9 @@ declared through `static define().theme` with typed tokens.
 | `active` | The selected item, get or set |
 | `setQuery(text)` | Filters as if the text had been typed into the search box |
 | `cache` | The `ThumbnailCache` to draw through |
+| `mode` | `"grid"` or `"list"`, get or set |
+| `rowRenderer` | Fills the box beside each thumbnail in list mode |
+| `showModeToggle` | Whether the grid/list buttons are drawn; set before init |
 | `"change"` / `"confirm"` | Selection and choice events |
 
 **`AssetGalleryGrid`** (`assetgallerygrid-x`)
@@ -224,7 +291,16 @@ declared through `static define().theme` with typed tokens.
 | `setItems(items)` | The items to draw, in display order |
 | `active` / `setActive(item, notify?)` | The selection, optionally silent |
 | `focusIndex` / `setFocusIndex(i)` | The keyboard cursor |
+| `mode` / `rowRenderer` | The layout, and what fills a row's box |
 | `columns` / `poolSize` / `itemCount` / `firstBoundIndex` | Layout state |
+
+**`GalleryRowRenderer`**
+
+| Member | Description |
+| --- | --- |
+| `create?(box)` | Builds the reusable content, once per pooled row |
+| `bind(box, item)` | Points it at an item, or at nothing; also on selection and focus |
+| `destroy?(box)` | Releases what `create` allocated |
 
 **`ThumbnailCache`**
 

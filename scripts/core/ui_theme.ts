@@ -5,36 +5,209 @@ THEME REFACTOR:
 * Create a compatibility layer
 
 */
+import {
+  StringProperty,
+  EnumProperty,
+  FlagProperty,
+  IntProperty,
+  FloatProperty,
+  ToolProperty,
+  BoolProperty,
+  Vec4Property,
+  Vec3Property,
+} from "../path-controller/toolsys/toolprop";
+
 import * as util from "../path-controller/util/util";
 import { Vector3, Vector4 } from "../path-controller/util/vectormath";
 import cconst from "../config/const";
 import { CSSFont } from "./cssfont";
+import * as nstructjs from "nstructjs";
+import { TypedThemeObject, ThemeTypeArgsWithVars } from "./theme_base_types";
+export interface ThemeScrollBarsArgs {
+  border?: string;
+  color?: string;
+  color2?: string;
+  contrast?: number;
+  width?: number;
+}
 
-export class ThemeScrollBars {
+const _digest = new util.HashDigest();
+
+const ThemeScrollBarProps = {
+  border  : new StringProperty().setOptional().setUnit("pixel"),
+  color   : new Vec4Property().isColor().setOptional(),
+  color2  : new Vec4Property().isColor().setOptional(),
+  contrast: new FloatProperty().setOptional().noUnits(),
+  width   : new FloatProperty().setOptional().setUnit("pixel"),
+} as const;
+export class ThemeScrollBars extends TypedThemeObject<ThemeScrollBars, typeof ThemeScrollBarProps> {
+  static Props = ThemeScrollBarProps;
   border?: string;
   color?: string;
   color2?: string;
   contrast?: number;
   width?: number;
 
-  constructor({
-    border,
-    color,
-    color2,
-    contrast,
-    width,
-  }: {
-    border?: string;
-    color?: string;
-    color2?: string;
-    contrast?: number;
-    width?: number;
-  }) {
+  /**
+   * Used to create an instance that can accept theme vars.
+   * All child classes must have this.
+   */
+  static withVars(args: ThemeTypeArgsWithVars<ThemeScrollBarsArgs> = {}): ThemeRecord {
+    return new ThemeScrollBars(
+      args as unknown as ThemeScrollBarsArgs,
+      false
+    ) as unknown as ThemeRecord;
+  }
+
+  constructor(
+    { border, color, color2, contrast, width }: ThemeScrollBarsArgs = {},
+    validate = true
+  ) {
+    super(
+      {
+        border,
+        color,
+        color2,
+        contrast,
+        width,
+      },
+      validate
+    );
+
     this.border = border;
     this.color = color;
     this.color2 = color2;
     this.contrast = contrast;
     this.width = width;
+  }
+
+  copyTo(b: ThemeScrollBars) {
+    b.border = this.border;
+    b.color = this.color;
+    b.color2 = this.color2;
+    b.contrast = this.contrast;
+    b.width = this.width;
+  }
+  copy() {
+    const b = new ThemeScrollBars();
+    this.copyTo(b);
+    return b;
+  }
+
+  calcHashUpdate(digest = _digest.reset()): number {
+    digest.add(this.border || "");
+    digest.add(this.color || "");
+    digest.add(this.color2 || "");
+    digest.add(this.contrast || 0);
+    digest.add(this.width || 0);
+
+    return digest.get();
+  }
+}
+
+const BoxRecordProps = {
+  isOutline: new BoolProperty().setOptional(),
+  radius   : new FloatProperty().setOptional().setUnit("pixel"),
+  color    : new Vec4Property().isColor().setOptional(),
+  width    : new FloatProperty().setOptional().setUnit("pixel"),
+  style    : new StringProperty().setOptional(),
+  offset   : new FloatProperty().setOptional().setUnit("pixel"),
+} as const;
+
+export interface BoxRecordArgs {
+  radius?: number;
+  color?: string;
+  width?: number;
+  style?: string;
+  isOutline?: boolean;
+  offset?: number;
+}
+
+/**
+ * e.g. { border: new BoxBorder({ borderRadius: 5 }) }
+ * Note: sibling 'border-' keys will override values here.
+ * e.g. { border: new BoxBorder({ borderWidth: 2 }), 'border-width': 3 }
+ * final width is 3
+ *
+ * load into css with UIBase.setBoxCSS()
+ **/
+export class BoxBorder extends TypedThemeObject<BoxBorder, typeof BoxRecordProps> {
+  static Props = BoxRecordProps;
+
+  static STRUCT = nstructjs.inlineRegister(
+    this,
+    `
+    pathux.BoxBorder {
+      isOutline : bool;
+      radius    : double;
+      color     : string;
+      width     : double;
+      style     : string;
+      offset    : double;
+    }
+  `
+  );
+
+  /**
+   * Used to create an instance that can accept theme vars.
+   * All child classes must have this.
+   */
+  static withVars(args: ThemeTypeArgsWithVars<BoxRecordArgs> = {}): ThemeRecord {
+    return new BoxBorder(args as unknown as BoxRecordArgs, false) as unknown as ThemeRecord;
+  }
+
+  // use outline instead of border CSS properties
+  isOutline?: boolean;
+  radius?: number;
+  color?: string;
+  width?: number;
+  style?: string;
+  offset?: number;
+
+  public get prefix() {
+    return this.isOutline ? "outline" : "border";
+  }
+  constructor(args: BoxRecordArgs = {}, validate = false) {
+    super(args, validate);
+
+    const { radius, color, width, style, offset, isOutline } = args;
+
+    this.offset = offset;
+    this.isOutline = isOutline;
+    this.radius = radius;
+    this.color = color;
+    this.width = width;
+    this.style = style;
+  }
+
+  copyTo(b: BoxBorder) {
+    b.isOutline = this.isOutline;
+    b.radius = this.radius;
+    b.color = this.color;
+    b.width = this.width;
+    b.style = this.style;
+    b.offset = this.offset;
+  }
+
+  copy() {
+    const b = new BoxBorder();
+    this.copyTo(b);
+    return b;
+  }
+
+  loadSTRUCT(reader: nstructjs.StructReader<this>) {
+    reader(this);
+  }
+
+  calcHashUpdate(digest = _digest.reset()): number {
+    digest.add(this.radius || 0);
+    digest.add(this.color || "");
+    digest.add(this.width || 0);
+    digest.add(this.style || "");
+    digest.add(this.isOutline ? 1 : 0);
+    digest.add(this.offset ?? 0);
+
+    return digest.get();
   }
 }
 
@@ -42,6 +215,7 @@ export class ThemeScrollBars {
    editor left blank, and they round-trip back in. */
 export type ThemeItem =
   | ThemeRecord
+  | BoxBorder
   | CSSFont
   | string
   | number
@@ -281,7 +455,12 @@ export function invertTheme(): void {
   for (const styleKey in theme) {
     const style = theme[styleKey as keyof typeof theme];
 
-    if (typeof style !== "object" || style instanceof CSSFont) {
+    if (
+      typeof style !== "object" ||
+      style instanceof CSSFont ||
+      style instanceof BoxBorder ||
+      style instanceof ThemeScrollBars
+    ) {
       continue;
     }
 
@@ -289,7 +468,12 @@ export function invertTheme(): void {
     for (const k in styleRec) {
       const v = styleRec[k];
 
-      if (v instanceof CSSFont) {
+      if (v instanceof BoxBorder) {
+        v.color = v.color ? (inverted(v.color) as string) : undefined;
+      } else if (v instanceof ThemeScrollBars) {
+        v.color = v.color ? (inverted(v.color) as string) : undefined;
+        v.color2 = v.color2 ? (inverted(v.color2) as string) : undefined;
+      } else if (v instanceof CSSFont) {
         v.color = inverted(v.color) as string;
       } else if (typeof v === "string") {
         const vLower = v.trim().toLowerCase();
@@ -372,6 +556,21 @@ ${indent}})`;
         s += indent + "}";
         return s;
       }
+    } else if (v instanceof BoxBorder) {
+      return `new BoxBorder({
+${indent}  borderColor : ${writekey(v.color)},
+${indent}  borderWidth : ${writekey(v.width)},
+${indent}  borderRadius : ${writekey(v.radius)},
+${indent}  borderStyle : ${writekey(v.style)},
+    })`;
+    } else if (v instanceof ThemeScrollBars) {
+      return `new ThemeScrollBars({
+${indent}  border   : ${writekey(v.border)},
+${indent}  color    : ${writekey(v.color)},
+${indent}  color2   : ${writekey(v.color2)},
+${indent}  contrast : ${writekey(v.contrast)},
+${indent}  width     : ${writekey(v.width)}
+${indent}})`;
     } else {
       return "" + v;
     }
@@ -386,7 +585,12 @@ ${indent}})`;
     s += "  " + k2 + ": ";
 
     const v = theme1[k];
-    if (typeof v !== "object" || v instanceof CSSFont) {
+    if (
+      typeof v !== "object" ||
+      v instanceof CSSFont ||
+      v instanceof BoxBorder ||
+      v instanceof ThemeScrollBars
+    ) {
       s += writekey(v, "  ") + ",\n";
     } else {
       s += " {\n";
@@ -428,9 +632,13 @@ ${indent}})`;
 }
 
 export function copyTheme(
-  themeObj: ThemeRecord | CSSFont | Record<string, unknown>
-): CSSFont | Record<string, unknown> {
-  if (themeObj instanceof CSSFont) {
+  themeObj: ThemeRecord | CSSFont | BoxBorder | ThemeScrollBars | Record<string, unknown>
+): CSSFont | Record<string, unknown> | BoxBorder | ThemeScrollBars {
+  if (
+    themeObj instanceof CSSFont ||
+    themeObj instanceof BoxBorder ||
+    themeObj instanceof ThemeScrollBars
+  ) {
     return themeObj.copy();
   }
 

@@ -1,6 +1,8 @@
 import { CSSFont } from "./cssfont";
-import { ThemeScrollBars } from "./ui_theme";
+import { ThemeScrollBars, BoxBorder } from "./ui_theme";
 import { getVars, instanceThemeVars, ThemeVars } from "./ui_theme_utils";
+
+// see UIBase.setBoxCSS for how to load border/margin/padding/round/etc of a box
 
 export const themeVars = {
   bodyFont: new CSSFont({
@@ -19,6 +21,7 @@ export const themeVars = {
     size   : 14,
     color  : "rgba(35, 35, 35, 1.0)",
   }),
+  borderColor: "#DADCE0",
 } as const;
 
 const vars = getVars(themeVars);
@@ -62,10 +65,12 @@ const theme = {
       color  : "rgba(35,35,35, 1)",
     }),
     "background-color" : "rgba(238,238,238, 0.8672412740773168)",
-    "border-color"     : "rgba(255,255,255, 1)",
-    "border-radius"    : 4,
-    "border-style"     : "solid",
-    "border-width"     : 2,
+    border: new BoxBorder({
+      "color" : "rgba(255,255,255, 1)",
+      "radius": 4,
+      "style" : "solid",
+      "width" : 2,
+    }),
     disabled: {
       DefaultText: new CSSFont({
         font   : "poppins",
@@ -91,10 +96,12 @@ const theme = {
         color  : "rgba(255,255,255, 1)",
       }),
       "background-color": "rgba(138,222,255, 1)",
-      "border-color"    : "rgba(255,255,255, 1)",
-      "border-radius"   : 4,
-      "border-style"    : "solid",
-      "border-width"    : 2,
+      border: new BoxBorder({
+        "color" : "rgba(255,255,255, 1)",
+        "radius": 4,
+        "style" : "solid",
+        "width" : 2,
+      }),
     },
     "highlight-pressed": {
       DefaultText: new CSSFont({
@@ -106,7 +113,7 @@ const theme = {
         color  : "rgba(35,35,35, 1)",
       }),
       "background-color": "rgba(113,113,113, 1)",
-      "border-color"    : "#DADCE0",
+      "border-color"    : vars.borderColor,
       "border-style"    : "solid",
       "border-width"    : 1,
     },
@@ -124,7 +131,7 @@ const theme = {
         color  : "rgba(35,35,35, 1)",
       }),
       "background-color": "rgba(113,113,113, 1)",
-      "border-color"    : "#DADCE0",
+      "border-color"    : vars.borderColor,
       "border-style"    : "solid",
       "border-width"    : 1,
     },
@@ -254,6 +261,7 @@ const theme = {
     "background-color": "rgba(160, 160, 160, 1.0)",
     cellWidth         : 96,
     cellHeight        : 96,
+    rowHeight         : 64,
     overscanRows      : 2,
     height            : 320,
     width             : 420,
@@ -270,6 +278,15 @@ const theme = {
     },
     margin            : 4,
     padding           : 3,
+    boxPadding        : 6,
+    rowFont: new CSSFont({
+      font   : "sans-serif",
+      weight : "normal",
+      variant: "normal",
+      style  : "normal",
+      size   : 12,
+      color  : "rgba(35, 35, 35, 1.0)",
+    }),
   },
 
   listbox: {
@@ -333,7 +350,6 @@ const theme = {
 
   menu: {
     MenuBG          : "rgba(250, 250, 250, 1.0)",
-    "item-radius"   : 0,
     MenuBorder      : "1px solid grey",
     MenuHighlight   : "rgba(155, 220, 255, 1.0)",
     MenuSeparator: {
@@ -368,10 +384,30 @@ const theme = {
     "padding-left"  : 0,
     "padding-right" : 0,
     "padding-bottom": 0,
-    "border-color"  : "grey",
-    "border-radius" : 5,
-    "border-style"  : "solid",
-    "border-width"  : 1,
+    item: {
+      "padding-right" : 16,
+      "padding-left"  : 16,
+      "padding-top"   : 6,
+      "padding-bottom": 6,
+      "border": BoxBorder.withVars({
+        "color" : "transparent",
+        "radius": 0,
+        "style" : "none",
+        "width" : 0,
+      }),
+    },
+    "highlight-item": {
+      "padding-right" : 16,
+      "padding-left"  : 16,
+      "padding-top"   : 6,
+      "padding-bottom": 6,
+      "border": BoxBorder.withVars({
+        "color" : "transparent",
+        "radius": 0,
+        "style" : "none",
+        "width" : 0,
+      }),
+    },
   },
 
   notification: {
@@ -608,6 +644,20 @@ const theme = {
     height : 18,
     padding: 3,
     width  : 100,
+  },
+
+  popup: {
+    border: BoxBorder.withVars({
+      "color" : vars.borderColor,
+      "radius": 4,
+      "style" : "solid",
+      "width" : 1,
+    }),
+    "padding-bottom": 12,
+    "padding-left"  : 12,
+    "padding-right" : 12,
+    "padding-top"   : 12,
+    "boxShadow"     : "unset",
   },
 };
 export const DefaultTheme = instanceThemeVars(theme, themeVars);

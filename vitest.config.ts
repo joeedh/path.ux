@@ -33,5 +33,9 @@ export default defineConfig({
     // Widget tests need a DOM (custom elements + shadow DOM). The pure
     // data-api tests shim `window` in beforeAll and are unaffected by this.
     environment: "happy-dom",
+    // the theme editor builds a panel per style class of the whole default theme,
+    // including a sub-panel per CSSFont and BoxBorder, which outgrows node's default
+    // heap over a file's worth of editors
+    execArgv: ["--max-old-space-size=6144"],
   },
 });

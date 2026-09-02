@@ -1,7 +1,7 @@
 import { Vector2 } from "../../path-controller/util/vectormath";
 import * as units from "../units";
 import { PackFlags, type FormatNumberArgs, type TotalRect } from "./ui_base_types";
-import type { UIBase } from "../ui_base";
+import { BoxBorder, UIBase } from "../ui_base";
 
 type AnyUIBase = UIBase<any, any, any>;
 
@@ -138,20 +138,51 @@ export function formatNumber(elem: AnyUIBase, value: number, args: FormatNumberA
  * Writes them to `elem.saneStyle` when `apply` is set, and returns them as a css
  * declaration block otherwise.
  */
-function buildBoxCSS(elem: AnyUIBase, subkey: string | undefined, apply: boolean): string {
+function buildBoxCSS(elem: AnyUIBase, subkey?: string, apply?: boolean): string {
   const keys = ["left", "right", "top", "bottom"];
 
-  let sub: unknown | undefined;
-  if (subkey) {
-    sub = elem.getAttribute(subkey) || {};
-  }
+  const themeFetch = (key: string, inherit = true) => {
+    if (subkey) {
+      // null prevents the use of backupkey which defaults to key,
+      // this breaks borders
+      return elem.getSubDefault<string | BoxBorder>(
+        subkey,
+        key,
+        inherit ? undefined : null,
+        undefined,
+        inherit
+      );
+    }
+    return elem.getDefault<string | BoxBorder>(key, undefined, undefined, inherit);
+  };
+
+  // note: we support using either outline or border css properties,
+  // this is controlled by BoxBorder.isOutline
+
+  let borderRec = themeFetch("border", false) as BoxBorder | undefined | string;
+  const borderPrefix = "border";
+
+  const boxDef = (key: string) => {
+    let borderRec = themeFetch("border", false);
+
+    // prefers any explicit sibling border-XXX order borderXXX
+    // over boxborder's
+    if (borderRec instanceof BoxBorder) {
+      let borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
+
+      // use inherited value if non-inherited sibling and boxborder values both don't exist
+      return (
+        themeFetch(key, false) ?? borderRec?.[borderKey as keyof BoxBorder] ?? themeFetch(key, true)
+      );
+    }
+    return themeFetch(key);
+  };
 
   const def = (key: string) => {
-    if (sub && subkey) {
-      return elem.getSubDefault(subkey, key);
+    if (key.startsWith("border") || key.startsWith("outline")) {
+      return boxDef(key);
     }
-
-    return elem.getDefault(key);
+    return themeFetch(key);
   };
 
   let boxcode = "";
@@ -195,13 +226,13 @@ function buildBoxCSS(elem: AnyUIBase, subkey: string | undefined, apply: boolean
   const border = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
 
   if (apply) {
-    elem.saneStyle["border-radius"] = def("border-radius") + "px";
-    elem.saneStyle["border"] = border;
+    elem.saneStyle[borderPrefix + "-radius"] = def("border-radius") + "px";
+    elem.saneStyle[borderPrefix] = border;
     return "";
   }
 
-  boxcode += `border-radius: ${def("border-radius")}px;\n`;
-  boxcode += `border: ${border};\n`;
+  boxcode += `${borderPrefix}-radius: ${def("border-radius")}px;\n`;
+  boxcode += `${borderPrefix}: ${border};\n`;
 
   return boxcode;
 }

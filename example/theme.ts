@@ -4,15 +4,17 @@
  * Copy to scripts/editors/theme.js
  */
 
-import { CSSFont, getVars, ThemeScrollBars } from "./pathux.js";
+import { BoxBorder, CSSFont, getVars, ThemeScrollBars } from "./pathux.js";
 
 export const themeVars = {
   // the colour a widget takes on under the mouse
-  accent    : "rgba(151,208,239, 1)",
+  accent      : "rgba(151,208,239, 1)",
   // what sits behind a widget that draws no background of its own
-  background: "rgba(207,207,207, 0.5)",
+  background  : "rgba(207,207,207, 0.5)",
   // how round a box's corners are
-  radius    : 5,
+  radius      : 5,
+  borderColor : "rgba(255,155,5,1.0)",
+  borderRadius: 5,
   // the font ordinary text is drawn in
   bodyFont: new CSSFont({
     font   : "sans-serif",
@@ -35,7 +37,7 @@ export const theme = {
     mobileSizeMultiplier: 1.0,
     DefaultText         : vars.bodyFont,
     LabelText           : vars.bodyFont,
-    TitleText: new CSSFont({
+    TitleText: CSSFont.withVars({
       font   : "sans-serif",
       weight : "normal",
       variant: "normal",
@@ -63,10 +65,13 @@ export const theme = {
       color  : "rgba(35,35,35, 1)",
     }),
     "background-color" : "rgba(238,238,238, 0.8672412740773168)",
-    "border-color"     : "rgba(255,255,255, 1)",
-    "border-radius"    : 4,
-    "border-style"     : "solid",
-    "border-width"     : 2,
+    border: BoxBorder.withVars({
+      isOutline: true,
+      "color"  : "rgba(255,255,255, 1)",
+      "radius" : 4,
+      "style"  : "solid",
+      "width"  : 2,
+    }),
     disabled: {
       DefaultText: new CSSFont({
         font   : "poppins",
@@ -77,9 +82,13 @@ export const theme = {
         color  : "rgb(109,109,109)",
       }),
       "background-color": "rgb(19,19,19)",
-      "border-color"    : "#f58f8f",
-      "border-style"    : "solid",
-      "border-width"    : 1,
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color"  : "rgba(255,255,255, 1)",
+        "radius" : 4,
+        "style"  : "solid",
+        "width"  : 2,
+      }),
     },
     height             : 25,
     highlight: {
@@ -92,12 +101,16 @@ export const theme = {
         color  : "rgba(255,255,255, 1)",
       }),
       "background-color": "rgba(138,222,255, 1)",
-      "border-color"    : "rgba(255,255,255, 1)",
-      "border-radius"   : 4,
-      "border-style"    : "solid",
-      "border-width"    : 2,
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color"  : "rgba(255,255,255, 1)",
+        "radius" : 4,
+        "style"  : "solid",
+        "width"  : 2,
+      }),
     },
     "highlight-pressed": {
+      "background-color": "rgba(113,113,113, 1)",
       DefaultText: new CSSFont({
         font   : "poppins",
         weight : "bold",
@@ -106,10 +119,16 @@ export const theme = {
         size   : 12,
         color  : "rgba(35,35,35, 1)",
       }),
-      "background-color": "rgba(113,113,113, 1)",
-      "border-color"    : "#DADCE0",
-      "border-style"    : "solid",
-      "border-width"    : 1,
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color"  : "#DADCE0",
+        "radius" : 4,
+        "style"  : "solid",
+        "width"  : 2,
+      }),
+      margin            : 4,
+      "margin-left"     : 4,
+      "margin-right"    : 4,
     },
     margin             : 4,
     "margin-left"      : 4,
@@ -125,9 +144,13 @@ export const theme = {
         color  : "rgba(35,35,35, 1)",
       }),
       "background-color": "rgba(113,113,113, 1)",
-      "border-color"    : "#DADCE0",
-      "border-style"    : "solid",
-      "border-width"    : 1,
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color"  : "#DADCE0",
+        "radius" : 4,
+        "style"  : "solid",
+        "width"  : 2,
+      }),
     },
     width              : 25,
   },
@@ -266,9 +289,7 @@ export const theme = {
   },
 
   menu: {
-    "item-radius"   : 0,
     MenuBG          : "rgba(250,250,250,1.0)",
-    MenuBorder      : "1px solid grey",
     MenuHighlight   : "rgba(155, 220, 255, 1.0)",
     MenuSeparator: `
       width : 100%;
@@ -297,14 +318,40 @@ export const theme = {
       color  : "rgb(68, 68, 68)",
     }),
     HotkeyTextColor : "rgb(68, 68, 68)",
-    "border-color"  : "grey",
-    "border-radius" : vars.radius,
-    "border-style"  : "solid",
-    "border-width"  : 1,
+    "border": BoxBorder.withVars({
+      "color" : "grey",
+      "radius": vars.radius,
+      "style" : "solid",
+      "width" : 1,
+    }),
     "padding-top"   : 0,
     "padding-left"  : 0,
     "padding-right" : 0,
     "padding-bottom": 0,
+    item: {
+      "padding-right" : 16,
+      "padding-left"  : 16,
+      "padding-top"   : 8,
+      "padding-bottom": 8,
+      "border": BoxBorder.withVars({
+        "color" : "transparent",
+        "radius": vars.radius,
+        "style" : "none",
+        "width" : 0,
+      }),
+    },
+    "highlight-item": {
+      "padding-right" : 16,
+      "padding-left"  : 16,
+      "padding-top"   : 8,
+      "padding-bottom": 8,
+      "border": BoxBorder.withVars({
+        "color" : "transparent",
+        "radius": vars.radius,
+        "style" : "none",
+        "width" : 0,
+      }),
+    },
   },
 
   notification: {
@@ -516,6 +563,19 @@ export const theme = {
     rowHeight : 18,
   },
 
+  popup: {
+    border: BoxBorder.withVars({
+      "color" : vars.borderColor,
+      "radius": vars.borderRadius,
+      "style" : "solid",
+      "width" : 1,
+    }),
+    "padding-bottom": 2,
+    "padding-left"  : 2,
+    "padding-right" : 2,
+    "padding-top"   : 2,
+    "boxShadow"     : "unset",
+  },
   vecPopupButton: {
     height : 18,
     padding: 3,

@@ -17,6 +17,7 @@
  */
 import type { CSSFont } from "./cssfont";
 import type { ThemeScrollBars } from "./ui_theme";
+import type { BoxBorder } from "./ui_theme";
 
 /** A schema entry carrying a phantom TS type `T`. `__type` is never read at runtime. */
 export interface TypeToken<T> {
@@ -36,6 +37,7 @@ export const t = {
   color     : token<string>("color"),
   font      : token<CSSFont>("font"),
   scrollbars: token<ThemeScrollBars>("scrollbars"),
+  boxborder : token<BoxBorder>("boxborder"),
 } as const;
 
 /**

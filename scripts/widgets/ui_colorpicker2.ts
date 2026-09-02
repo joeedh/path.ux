@@ -1376,7 +1376,7 @@ UIBase.internalRegister(ColorPicker as unknown as typeof UIBase);
 
 export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends UIBase<
   CTX,
-  unknown,
+  Vector4,
   "ColorPickerButton"
 > {
   _highlight: boolean;
@@ -1408,6 +1408,24 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
 
     this.shadow.appendChild(this.labelDom);
     this.shadow.appendChild(this.dom);
+  }
+
+  get value(): Vector4 {
+    return this.rgba;
+  }
+  set value(v: Vector4) {
+    this.setValue(v, true, true);
+  }
+
+  setValue(v: Vector4, triggerOnChange = true, writeDataPath = true) {
+    this.rgba.load(v);
+    if (triggerOnChange) {
+      this.on_change?.(this.rgba);
+    }
+    if (writeDataPath && this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.rgba);
+    }
+    this._redraw();
   }
 
   get label() {
@@ -1529,9 +1547,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       this.rgba.load(widget.rgba);
       this.redraw();
 
-      if (this.on_change) {
-        this.on_change(this);
-      }
+      this.on_change?.(this.value);
     };
 
     (widget as unknown as { _onchange: (() => void) | undefined })._onchange = onchange;
@@ -1556,15 +1572,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
       return this;
     }
 
-    if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath")!, this.rgba);
-    }
-
-    if (this.on_change) {
-      this.on_change(this);
-    }
-
-    this._redraw();
+    this.setValue(this.rgba, true, true);
     return this;
   }
 

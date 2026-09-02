@@ -1,4 +1,4 @@
-import { test, expect, beforeAll, vi } from "vitest";
+import { test, expect, afterEach, beforeAll, vi } from "vitest";
 
 // each editor builds a panel per style class of the whole live theme, which
 // takes seconds once the suite's other files are running alongside it
@@ -42,6 +42,14 @@ beforeAll(() => {
   const sheets = (iconmanager as unknown as { iconsheets: { image: unknown }[] }).iconsheets;
   for (const sheet of sheets) {
     sheet.image ||= { src: "" };
+  }
+});
+
+// each test appends another editor, and an editor holds a panel per style class of
+// the whole live theme; left in the document they add up over the file
+afterEach(() => {
+  for (const editor of [...document.body.children]) {
+    editor.remove();
   }
 });
 
@@ -106,6 +114,21 @@ function widgets(root: UIBase, label: string): UIBase[] {
   }
 
   return found;
+}
+
+/**
+ * The widget bound to one datapath. Sub-panels for `CSSFont` and the other typed
+ * theme objects build their rows from a micro data API, so their widgets carry a
+ * path rather than the name the plain rows are found by.
+ */
+function boundWidget(root: UIBase, path: string): UIBase & { setValue(value: unknown): void } {
+  for (const w of root.traverse(UIBase)) {
+    if (w.getAttribute("datapath") === path) {
+      return w as UIBase & { setValue(value: unknown): void };
+    }
+  }
+
+  throw new Error("no widget bound to " + path);
 }
 
 test("a slider writes the live theme and reports the change", () => {
@@ -205,13 +228,7 @@ test("slots on one font variable hold independent copies", () => {
 
   expect(rec.TitleText).not.toBe(rec.DefaultText);
 
-  const slider = widgets(classPanel(editor, cls), "size")[0] as UIBase & {
-    value: number;
-    on_change: () => void;
-  };
-
-  slider.value = 22;
-  slider.on_change();
+  boundWidget(classPanel(editor, cls), "obj.size").setValue(22);
 
   expect((rec.TitleText as CSSFont).size).toBe(22);
   expect((rec.DefaultText as CSSFont).size).toBe(22);
@@ -326,14 +343,7 @@ test("a font field writes a whole new font rather than mutating the live one", (
   const before = new CSSFont({ size: 14, color: "black" });
   const { editor, cls, rec } = makeEditor({ DefaultText: before });
 
-  const slider = widgets(classPanel(editor, cls), "size")[0] as UIBase & {
-    value: number;
-    on_change: () => void;
-  };
-  expect(slider).toBeTruthy();
-
-  slider.value = 20;
-  slider.on_change();
+  boundWidget(classPanel(editor, cls), "obj.size").setValue(20);
 
   const after = rec.DefaultText as CSSFont;
   expect(after).toBeInstanceOf(CSSFont);

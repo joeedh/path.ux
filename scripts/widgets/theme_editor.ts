@@ -1,8 +1,14 @@
-import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData } from "../core/ui_base";
+import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData, PackFlags } from "../core/ui_base";
 import { Container } from "../core/ui";
 import { ColumnFrame } from "../core/ui_containers";
 import { IContextBase } from "../core/context_base";
-import { validateCSSColor, color2css, css2color, ThemeScrollBars } from "../core/ui_theme";
+import {
+  validateCSSColor,
+  color2css,
+  css2color,
+  ThemeScrollBars,
+  BoxBorder,
+} from "../core/ui_theme";
 import type { ThemeItem, ThemeRecord } from "../core/ui_theme";
 import { CSSFont } from "../core/cssfont";
 import {
@@ -23,6 +29,19 @@ import {
 import type { ThemePath, ThemeRecordWithVar, ThemeVarsDef } from "../core/ui_theme_utils";
 import type { MenuTemplate } from "../menu/menu_types";
 import type { PanelContents } from "./ui_panel";
+import { TypedThemeObject, TypedThemeObjectConstructor } from "../core/theme_base_types";
+import { DataAPI, DataPath, DataStruct } from "../path-controller/controller/controller";
+import { DataTypes } from "../path-controller/controller/controller_base";
+import {
+  PropTypes,
+  StringProperty,
+  Vec3Property,
+  Vec4Property,
+  BoolProperty,
+  EnumPropertyBase,
+  _NumberPropertyBase,
+} from "../path-controller/toolsys/toolprop";
+import { PropFlags, PropSubTypes } from "../path-controller/toolsys/toolprop_abstract";
 
 interface CatKey {
   key: string;
@@ -49,15 +68,22 @@ export class ThemeChangeEvent extends Event {
 }
 
 /** Which editor a theme value gets. `skip` values are left out of the panel. */
-export type ItemKind = "color" | "string" | "number" | "boolean" | "font" | "record" | "skip";
+export type ItemKind =
+  | "color"
+  | "string"
+  | "number"
+  | "boolean"
+  | "font"
+  | "record"
+  | "skip"
+  | "boxborder"
+  | "scrollbars";
 
 /** One group of the theme's top-level keys, as {@link ThemeEditor} lays them out. */
 export interface ThemeCategory {
   category: string;
   keys: CatKey[];
 }
-
-const FONT_FIELDS = ["font", "variant", "weight", "style"] as const;
 
 const VAR_NAME_WIDTH = 110;
 const VAR_VALUE_WIDTH = 150;
@@ -82,6 +108,10 @@ export function themeItemKind(name: string, value: ThemeItem): ItemKind {
     return "boolean";
   } else if (value instanceof CSSFont) {
     return "font";
+  } else if (value instanceof BoxBorder) {
+    return "boxborder";
+  } else if (value instanceof ThemeScrollBars) {
+    return "scrollbars";
   } else if (typeof value === "object" && value !== null) {
     return "record";
   }
@@ -176,6 +206,7 @@ export interface ValueSlot {
   set(value: ThemeItem): void;
   /** The variable this slot writes, when it is bound to one. */
   varKey?: string;
+  debug?: unknown;
 }
 
 /** A row's own re-read of its slot, run when something else writes the same value. */
@@ -340,6 +371,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       { name: "Color", callback: () => add("grey") },
       { name: "Subfolder", callback: () => add({ test: 0 }) },
       { name: "Font", callback: () => add(new CSSFont()) },
+      { name: "BoxBorder", callback: () => add(new BoxBorder()) },
+      { name: "ThemeScrollBars", callback: () => add(new ThemeScrollBars()) },
       { name: "String", callback: () => add("") },
     ]);
   }
@@ -786,7 +819,8 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     }
 
     return {
-      get: () => resolveRecord(parent)[leaf],
+      debug: { path: Array.from(livePath) },
+      get  : () => resolveRecord(parent)[leaf],
       set: (value) => {
         resolveRecord(parent)[leaf] = value;
         this.notify(category, key);
@@ -882,6 +916,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
         return this.boolRow(col, key, slot);
       case "font":
         return this.fontPanel(col, key, slot);
+      case "boxborder":
+        return this.boxRecordPanel(col, key, slot);
+      case "scrollbars":
+        return this.scrollBarsPanel(col, key, slot);
     }
 
     return undefined;
@@ -951,6 +989,214 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     return check;
   }
 
+  private typedObjectPanel<T extends TypedThemeObject<T, any>>(
+    col: ColumnFrame<CTX>,
+    key: string,
+    slot: ValueSlot,
+    cls: TypedThemeObjectConstructor<T>
+  ): UIBase<CTX> {
+    const panel = col.panel(key);
+    const getObj = () => (slot.get() as T | undefined) ?? new cls();
+    const props = cls.Props;
+
+    // NOTE: we cannot use captured variables here!
+    const edit = (
+      origin: UIBase<CTX>,
+      curSlot: ValueSlot,
+      apply: (obj: T) => void,
+      getObj2: typeof getObj
+    ) => {
+      const next = getObj2().copy();
+      apply(next);
+      this.setSlot(curSlot, next, origin);
+    };
+
+    // we can however capture here
+    const finalize = (propKey: string, widget: UIBase, row: Container, defaultVal?: unknown) => {
+      // watch for property changes
+      // btw UIBase does not actually have CTX as its context, see microCtx
+      // every row is bound through the micro data API, whose getters read the slot
+      // live, so re-delivering the path covers each widget type without a cast
+      this.onRefresh(widget as UIBase<CTX>, slot, () => {
+        widget.refreshPathWatches();
+      });
+
+      if (!(props[propKey].flag & PropFlags.OPTIONAL)) {
+        return;
+      }
+      // button to toggle between unset/clear and set/0
+      const getLabel = () => ((getObj() as any)[propKey] === undefined ? "+" : "-");
+      const unset = row.button(getLabel(), () => {
+        edit(
+          widget as UIBase<CTX>,
+          slot,
+          (next) => {
+            const erased = next as any;
+            erased[propKey] = erased[propKey] === undefined ? defaultVal : undefined;
+          },
+          getObj
+        );
+      });
+      unset.description = "Use default value";
+      unset.updateAfter(() => {
+        const label = getLabel();
+        if (label !== unset.name) {
+          unset.name = label;
+        }
+      });
+    };
+
+    if (!cls._cachedDataAPI) {
+      const st = new DataStruct(
+        Object.entries(props).map(
+          ([propKey, prop]) => new DataPath(propKey, propKey, prop, DataTypes.PROP)
+        )
+      );
+      const root = new DataStruct();
+
+      cls._cachedDataAPI = new DataAPI();
+      cls._cachedDataAPI._addClass({}, root, undefined, false);
+      cls._cachedDataAPI._addClass(cls, st, undefined, false);
+      cls._cachedDataAPI.rootContextStruct = root;
+
+      root.struct("obj", "obj", "obj", st);
+    }
+
+    const microSt = cls._cachedDataAPI!.rootContextStruct!.pathmap.obj!.data as DataStruct;
+
+    // micro ctx to forward datapath resolution
+    const editor = this;
+    const microCtx = {
+      get obj() {
+        // this capture is fine too
+        return getObj();
+      },
+      slot,
+      widgets: {} as Record<string, UIBase>,
+      // the editor's own ctx is undefined until it is parented under a screen,
+      // which is after the panels are built, so these forward lazily
+      get screen() {
+        return editor.ctx?.screen;
+      },
+      api: cls._cachedDataAPI,
+      get toolstack() {
+        return editor.ctx?.toolstack;
+      },
+    } as any;
+
+    const container = panel.col();
+    container.ctx = microCtx;
+
+    // `setCtx` overwrites every descendant, so the editor being parented under a
+    // screen would replace the micro ctx and strand the bridges below. Pinning the
+    // container swallows that cascade before it reaches them.
+    Object.defineProperty(container, "ctx", {
+      configurable: true,
+      get         : () => microCtx,
+      set         : () => {},
+    });
+    container.inherit_packflag |= PackFlags.NO_REALTIME;
+    container.packflag |= PackFlags.NO_REALTIME;
+
+    // creates a css string <=> Vector4 bridge
+    // so we can load/save css strings into our object
+    // instead of Vector4's
+    // NOTE: we cannot rely on captured variables here since
+    // the micro data API we're making is only made once!
+    const makeColorBridge = (propKey: string) => {
+      microSt.pathmap[propKey].customGetSet<any>(
+        function (this: any) {
+          return css2color(this.ctx.obj[propKey]);
+        },
+        function (this: any, value: any) {
+          // we have to clone the entire object whenever we changed it
+          // note: the microctx will automatically
+          // use the new copied value edit() creates
+          edit(
+            this.ctx.widgets[propKey],
+            this.ctx.slot,
+            (next) => {
+              const erasedNext = next as any;
+              erasedNext[propKey] = color2css(value);
+            },
+            () => this.ctx.obj
+          );
+        }
+      );
+    };
+
+    // we have to clone the entire object whenever we changed it
+    const makeBridge = (propKey: string) => {
+      microSt.pathmap[propKey].customGetSet<any>(
+        function (this: any) {
+          return this.ctx.obj[propKey];
+        },
+        function (this: any, value: any) {
+          edit(
+            this.ctx.widgets[propKey],
+            this.ctx.slot,
+            (next) => {
+              const erasedNext = next as any;
+              erasedNext[propKey] = value;
+            },
+            () => this.ctx.obj
+          );
+        }
+      );
+    };
+
+    // create widgets
+    for (let propKey in props) {
+      const prop = props[propKey];
+      const row = container.row();
+      const widget = row.prop("obj." + propKey);
+      widget.useDataPathUndo = false;
+      microCtx.widgets[propKey] = widget;
+
+      let defaultval: unknown;
+      if (prop instanceof StringProperty) {
+        defaultval = "";
+        makeBridge(propKey);
+      } else if (prop instanceof Vec3Property || prop instanceof Vec4Property) {
+        if (prop.subtype === PropSubTypes.COLOR) {
+          makeColorBridge(propKey);
+        } else {
+          makeBridge(propKey);
+        }
+        if (prop instanceof Vec3Property) {
+          defaultval = prop.subtype === PropSubTypes.COLOR ? "black" : [0, 0, 0];
+        } else {
+          defaultval = prop.subtype === PropSubTypes.COLOR ? "black" : [0, 0, 0, 1];
+        }
+      } else if (prop instanceof EnumPropertyBase) {
+        defaultval = prop.getValue();
+        makeBridge(propKey);
+      } else if (prop instanceof _NumberPropertyBase) {
+        defaultval = 0;
+        makeBridge(propKey);
+      } else if (prop instanceof BoolProperty) {
+        defaultval = false;
+        makeBridge(propKey);
+      } else {
+        throw new Error("Unsupported property type: " + prop.constructor.name);
+      }
+
+      // btw row does not actually have CTX as its ctx, see microCTX
+      finalize(propKey, widget, row as unknown as Container, defaultval);
+    }
+
+    panel.closed = true;
+    return panel;
+  }
+
+  private boxRecordPanel(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
+    return this.typedObjectPanel(col, key, slot, BoxBorder);
+  }
+
+  private scrollBarsPanel(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
+    return this.typedObjectPanel(col, key, slot, ThemeScrollBars);
+  }
+
   /**
    * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
    * whole new font, because a slot bound to a variable holds one independent
@@ -958,56 +1204,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
    * stale.
    */
   private fontPanel(col: ColumnFrame<CTX>, key: string, slot: ValueSlot): UIBase<CTX> {
-    const panel = col.panel(key);
-    const font = () => (slot.get() as CSSFont | undefined) ?? new CSSFont();
-
-    const edit = (origin: UIBase<CTX>, apply: (font: CSSFont) => void) => {
-      const next = font().copy();
-      apply(next);
-      this.setSlot(slot, next, origin);
-    };
-
-    for (const field of FONT_FIELDS) {
-      panel.label(field);
-
-      const tbox = panel.textbox(undefined, font()[field]);
-      tbox.width = tbox.getDefault<number>("width");
-
-      tbox.on_change = () =>
-        edit(tbox, (next) => {
-          next[field] = tbox.text;
-        });
-      this.onRefresh(tbox, slot, () => {
-        tbox.text = font()[field];
-      });
-    }
-
-    const cw = panel.colorbutton(undefined);
-    cw.label = "color";
-    cw.setRGBA(css2color(font().color));
-
-    cw.on_change = () =>
-      edit(cw, (next) => {
-        next.color = color2css(cw.rgba);
-      });
-    this.onRefresh(cw, slot, () => cw.setRGBA(css2color(font().color)));
-
-    const slider = panel.slider(undefined, "size", font().size);
-    slider.setAttribute("min", "1");
-    slider.setAttribute("max", "100");
-    slider.baseUnit = slider.displayUnit = "none";
-
-    slider.on_change = () =>
-      edit(slider, (next) => {
-        next.size = slider.value;
-      });
-    this.onRefresh(slider, slot, () => {
-      slider.value = font().size;
-    });
-
-    panel.closed = true;
-
-    return panel as unknown as UIBase<CTX>;
+    return this.typedObjectPanel(col, key, slot, CSSFont);
   }
 
   build(): void {

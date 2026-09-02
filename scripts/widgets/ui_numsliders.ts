@@ -1792,12 +1792,14 @@ export class SliderWithTextbox<
     }
   }
 
+  /** @deprecated use realtime instead */
   get realTimeTextBox() {
     return this.realtime;
   }
 
+  /** @deprecated use realtime instead */
   set realTimeTextBox(val) {
-    this.setAttribute("realtime", val ? "true" : "false");
+    this.realtime = val;
   }
 
   get value() {
@@ -1920,6 +1922,9 @@ export class SliderWithTextbox<
 
     if (this._lock_textbox || this._textbox.editing) return;
 
+    if (this._textbox.realtime !== this.realtime) {
+      this._textbox.realtime = this.realtime;
+    }
     this._textbox.text = this.formatNumber(this._value);
     this._textbox.update();
 

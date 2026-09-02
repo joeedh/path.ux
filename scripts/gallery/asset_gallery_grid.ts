@@ -6,6 +6,7 @@ import { keymap } from "../path-controller/util/events";
 import { AssetThumb } from "./asset_thumb";
 import { GalleryItem, ThumbnailCache, sharedThumbnailCache } from "./thumbnail_cache";
 import { GalleryChangeEvent, GalleryConfirmEvent } from "./gallery_events";
+import { defaultRowRenderer, type GalleryMode, type GalleryRowRenderer } from "./gallery_row";
 
 /** Cell geometry for the current viewport width, recomputed whenever the grid is rebuilt. */
 interface GridMetrics {
@@ -52,6 +53,8 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
   private firstIndex = -1;
   private _focusIndex = 0;
   private _active: GalleryItem | undefined;
+  private _mode: GalleryMode = "grid";
+  private _renderer: GalleryRowRenderer = defaultRowRenderer;
   private resizeObserver: ResizeObserver | undefined;
 
   constructor() {
@@ -86,6 +89,7 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
         "background-color": t.color,
         cellWidth         : t.number,
         cellHeight        : t.number,
+        rowHeight         : t.number,
         overscanRows      : t.number,
       },
     };
@@ -129,6 +133,35 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
   /** How many items the grid is currently drawing. */
   get itemCount(): number {
     return this.items.length;
+  }
+
+  /** Which layout the items are drawn in. The selection and focus index survive a change. */
+  get mode(): GalleryMode {
+    return this._mode;
+  }
+
+  set mode(mode: GalleryMode) {
+    if (mode === this._mode) {
+      return;
+    }
+
+    this._mode = mode;
+    this.scrollTop = 0;
+    // cells carry their layout from creation, so the pool is discarded rather than reshaped
+    this.repool();
+  }
+
+  /**
+   * Fills the box beside each thumbnail in list mode. Replacing it rebuilds the pool, so what
+   * the old renderer built is torn down through its own `destroy`.
+   */
+  get rowRenderer(): GalleryRowRenderer {
+    return this._renderer;
+  }
+
+  set rowRenderer(renderer: GalleryRowRenderer) {
+    this._renderer = renderer;
+    this.repool();
   }
 
   /** The selected item, which survives being scrolled out of view. */
@@ -199,18 +232,37 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
     this.rebind(true);
   }
 
+  /** Drops every pooled cell and lays the grid out again, so the cells are made afresh. */
+  private repool(): void {
+    while (this.pool.length > 0) {
+      this.pool.pop()!.remove();
+    }
+    this.firstIndex = -1;
+
+    // before init() the theme is not yet readable, and init() ends in a rebuild of its own
+    if (this._init_done) {
+      this.rebuild();
+    }
+  }
+
   private measure(): void {
-    const cellWidth = this.getDefault("cellWidth") as number;
-    const cellHeight = this.getDefault("cellHeight") as number;
+    const list = this._mode === "list";
     const margin = (this.pool[0]?.getDefault("margin") as number | undefined) ?? 4;
+
+    const gridWidth = this.getDefault("cellWidth") as number;
+    const gridHeight = this.getDefault("cellHeight") as number;
+
+    const viewWidth = this.clientWidth || gridWidth + margin * 2;
+    const viewHeight = this.clientHeight || gridHeight + margin * 2;
+
+    // a row spans the viewport, so its width follows the scrollbar rather than the theme
+    const cellWidth = list ? Math.max(gridHeight, viewWidth - margin * 2) : gridWidth;
+    const cellHeight = list ? (this.getDefault("rowHeight") as number) : gridHeight;
 
     const pitchX = cellWidth + margin;
     const pitchY = cellHeight + margin;
 
-    const viewWidth = this.clientWidth || cellWidth + margin * 2;
-    const viewHeight = this.clientHeight || cellHeight + margin * 2;
-
-    const columns = Math.max(1, Math.floor((viewWidth - margin) / pitchX));
+    const columns = list ? 1 : Math.max(1, Math.floor((viewWidth - margin) / pitchX));
 
     this.metrics = {
       cellWidth,
@@ -236,6 +288,9 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
     while (this.pool.length < wanted) {
       const cell = UIBase.createElement("assetthumb-x") as AssetThumb<CTX>;
       cell.ctx = this.ctx;
+      // both are read by init(), which _init() runs below
+      cell.mode = this._mode;
+      cell.renderer = this._renderer;
       // appended to the content div rather than added as a child, so the link a hit test walks
       // back up to find the enclosing popup has to be made here
       cell.parentWidget = this;

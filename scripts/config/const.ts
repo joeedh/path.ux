@@ -245,7 +245,7 @@ const cconst: PathUXConfigProvider = {
   simpleNumSliders     : false,
 
   menusCanPopupAbove : false,
-  menu_close_time    : 500,
+  menu_close_time    : 100,
   doubleClickTime    : 500,
   doubleClickHoldTime: 750,
 

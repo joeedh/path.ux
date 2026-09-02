@@ -1,5 +1,8 @@
 import nstructjs from "../util/struct";
 import * as util from "../util/util";
+import { TypedThemeObject, ThemeTypeArgsWithVars } from "./theme_base_types";
+import { FloatProperty, StringProperty, Vec4Property } from "../path-controller/toolsys/toolprop";
+import type { ThemeRecord } from "./ui_theme";
 
 const _digest = new util.HashDigest();
 
@@ -12,7 +15,19 @@ export interface CSSFontArgs {
   color?: string;
 }
 
-export class CSSFont {
+const CSSFontProps = {
+  size   : new FloatProperty().setUnit("pixel"),
+  font   : new StringProperty(),
+  style  : new StringProperty(),
+  weight : new StringProperty(),
+  variant: new StringProperty(),
+  // note: we don't actually store using vec4, just using it for validation as a color
+  color  : new Vec4Property().isColor(),
+} as const;
+
+export class CSSFont extends TypedThemeObject<CSSFont, typeof CSSFontProps> {
+  static Props = CSSFontProps;
+
   _size: number;
   font: string;
   style: string;
@@ -22,7 +37,17 @@ export class CSSFont {
 
   static STRUCT: string;
 
-  constructor(args: CSSFontArgs = {}) {
+  /**
+   * Used to create an instance that can accept theme vars.
+   * All child classes must have this.
+   */
+  static withVars(args: ThemeTypeArgsWithVars<CSSFontArgs> = {}): ThemeRecord {
+    return new CSSFont(args as unknown as CSSFontArgs, false) as unknown as ThemeRecord;
+  }
+
+  constructor(args: CSSFontArgs = {}, validate = false) {
+    super(args, validate);
+
     this._size = args.size ? args.size : 12;
     this.font = args.font ?? "";
     this.style = args.style !== undefined ? args.style : "normal";

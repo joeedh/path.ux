@@ -1,8 +1,15 @@
 import { UIBase } from "../core/ui_base";
 import type { UIBaseDefinition } from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
+import { CSSFont } from "../core/cssfont";
 import { t } from "../core/theme_schema";
 import { GalleryItem, ThumbnailCache, sharedThumbnailCache } from "./thumbnail_cache";
+import {
+  defaultRowRenderer,
+  type GalleryMode,
+  type GalleryRowBox,
+  type GalleryRowRenderer,
+} from "./gallery_row";
 
 /**
  * One pooled thumbnail cell. Cells are created once by the grid and rebound as it scrolls, so
@@ -11,6 +18,10 @@ import { GalleryItem, ThumbnailCache, sharedThumbnailCache } from "./thumbnail_c
  *
  * Hover, keyboard focus and selection are three independent states that compose: a cell can be
  * all three at once, which is why focus draws a ring rather than a fill.
+ *
+ * In list mode the same canvas paints the whole row and the image is confined to a leading
+ * square, with the host's detail box overlaid on the rest, so selection and focus need no
+ * separate treatment.
  */
 export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
   CTX,
@@ -24,6 +35,12 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
   /** Index into the grid's item list, or -1 while the cell is parked off the end. */
   index = -1;
 
+  /** Which layout the cell draws. Fixed at creation; the grid rebuilds its pool to change it. */
+  mode: GalleryMode = "grid";
+  /** Fills the detail box in list mode. Assign before the cell is initialized. */
+  renderer: GalleryRowRenderer = defaultRowRenderer;
+
+  private box: GalleryRowBox | undefined;
   private cache: ThumbnailCache = sharedThumbnailCache;
   private _hover = false;
   private _focused = false;
@@ -65,6 +82,8 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
         },
         margin            : t.number,
         padding           : t.number,
+        boxPadding        : t.number,
+        rowFont           : t.font,
       },
     };
   }
@@ -77,7 +96,48 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     // focusable from the start, or a click lands on the grid behind it instead of on the cell
     this.tabIndex = -1;
     this.dom.style.padding = this.dom.style.margin = "0px";
+
+    if (this.mode === "list" && this.box === undefined) {
+      this.box = this.makeBox();
+      this.renderer.create?.(this.box);
+    }
+
     this.setSize(this._width, this._height);
+  }
+
+  remove() {
+    if (this.box !== undefined) {
+      this.renderer.destroy?.(this.box);
+      this.box = undefined;
+    }
+    return super.remove();
+  }
+
+  private makeBox(): GalleryRowBox {
+    const dom = document.createElement("div");
+
+    dom.style.position = "absolute";
+    dom.style.boxSizing = "border-box";
+    dom.style.overflow = "hidden";
+    // a column so content still stacks the way it would in a block, centred against the thumbnail
+    dom.style.display = "flex";
+    dom.style.flexDirection = "column";
+    dom.style.justifyContent = "center";
+    // a press anywhere across the row selects it; a renderer's own controls opt back in
+    dom.style.pointerEvents = "none";
+    // asset names run long and carry no spaces to break at
+    dom.style.whiteSpace = "normal";
+    dom.style.overflowWrap = "anywhere";
+
+    const font = this.getDefault("rowFont") as unknown as CSSFont | undefined;
+    if (font !== undefined) {
+      dom.style.font = font.genCSS();
+      dom.style.color = font.color;
+    }
+
+    this.shadow.appendChild(dom);
+
+    return { dom, index: -1, active: false, focused: false, width: 0, height: 0 };
   }
 
   get hover(): boolean {
@@ -94,6 +154,7 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
       // only the focused cell is a tab stop, so the stop survives recycling
       this.tabIndex = state ? 0 : -1;
       this.redraw();
+      this.updateBox();
     }
   }
 
@@ -105,6 +166,7 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     if (state !== this._active) {
       this._active = state;
       this.redraw();
+      this.updateBox();
     }
   }
 
@@ -121,7 +183,41 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     this.style.width = width + "px";
     this.style.height = height + "px";
 
+    this.layoutBox();
     this.redraw();
+  }
+
+  /** Places the detail box over everything the leading thumbnail square does not cover. */
+  private layoutBox(): void {
+    const box = this.box;
+    if (box === undefined) {
+      return;
+    }
+
+    const pad = this.getDefault("boxPadding") as number;
+    const left = this._height + pad;
+
+    box.width = Math.max(0, this._width - left - pad);
+    box.height = Math.max(0, this._height - pad * 2);
+
+    box.dom.style.left = left + "px";
+    box.dom.style.top = pad + "px";
+    box.dom.style.width = box.width + "px";
+    box.dom.style.height = box.height + "px";
+  }
+
+  /** Hands the renderer the row's current item and state. */
+  private updateBox(): void {
+    const box = this.box;
+    if (box === undefined) {
+      return;
+    }
+
+    box.index = this.index;
+    box.active = this._active;
+    box.focused = this._focused;
+
+    this.renderer.bind(box, this.item);
   }
 
   /** Moves the cell within the grid's scrolling content. */
@@ -142,6 +238,7 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     this.title = this.description ?? "";
 
     this.redraw();
+    this.updateBox();
 
     if (item === undefined || cache.peek(item.id) !== undefined) {
       return;
@@ -207,14 +304,18 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     return this.getDefault("background-color");
   }
 
-  /** Letterboxes the cached thumbnail into the cell, inset by `inset` device pixels. */
+  /**
+   * Letterboxes the cached thumbnail into the cell, inset by `inset` device pixels. In list mode
+   * it goes into a leading square instead, leaving the rest of the row to the detail box.
+   */
   private drawImage(inset: number): void {
     const src = this.item ? this.cache.peek(this.item.id) : undefined;
     if (src === undefined) {
       return;
     }
 
-    const boxW = this.dom.width - inset * 2;
+    const across = this.mode === "list" ? this.dom.height : this.dom.width;
+    const boxW = across - inset * 2;
     const boxH = this.dom.height - inset * 2;
     if (boxW <= 0 || boxH <= 0) {
       return;

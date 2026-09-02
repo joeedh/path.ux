@@ -130,7 +130,10 @@ export function openMenuPopup(
     false,
     safetyDelay
   ) as unknown as PopupContainer);
-  con.noMarginsOrPadding();
+  // let the menu wrangler deal with close-on-mouse behaviours
+  con.stopEvents();
+  con.overrideClass("menu");
+  con.setCSS();
 
   con.add(menu);
   if (search) {

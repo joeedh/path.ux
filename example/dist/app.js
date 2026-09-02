@@ -11152,15 +11152,2926 @@ var init_util2 = __esm({
   }
 });
 
+// scripts/path-controller/toolsys/toolprop_abstract.ts
+var toolprop_abstract_exports = {};
+__export(toolprop_abstract_exports, {
+  Curve1DPropertyIF: () => Curve1DPropertyIF,
+  EnumPropertyIF: () => EnumPropertyIF,
+  FlagPropertyIF: () => FlagPropertyIF,
+  FloatPropertyIF: () => FloatPropertyIF,
+  IntPropertyIF: () => IntPropertyIF,
+  ListPropertyIF: () => ListPropertyIF,
+  NumPropertyIF: () => NumPropertyIF,
+  PropFlags: () => PropFlags,
+  PropSubTypes: () => PropSubTypes,
+  PropTypes: () => PropTypes,
+  StringPropertyIF: () => StringPropertyIF,
+  StringSetPropertyIF: () => StringSetPropertyIF,
+  ToolPropertyIF: () => ToolPropertyIF,
+  Vec2PropertyIF: () => Vec2PropertyIF,
+  Vec3PropertyIF: () => Vec3PropertyIF,
+  Vec4PropertyIF: () => Vec4PropertyIF
+});
+var PropTypes, PropSubTypes, PropFlags, ToolPropertyIF, StringPropertyIF, NumPropertyIF, IntPropertyIF, FloatPropertyIF, EnumPropertyIF, FlagPropertyIF, Vec2PropertyIF, Vec3PropertyIF, Vec4PropertyIF, ListPropertyIF, StringSetPropertyIF, Curve1DPropertyIF;
+var init_toolprop_abstract = __esm({
+  "scripts/path-controller/toolsys/toolprop_abstract.ts"() {
+    "use strict";
+    PropTypes = {
+      INT: 1,
+      STRING: 2,
+      BOOL: 4,
+      ENUM: 8,
+      FLAG: 16,
+      FLOAT: 32,
+      VEC2: 64,
+      VEC3: 128,
+      VEC4: 256,
+      MATRIX4: 512,
+      QUAT: 1024,
+      PROPLIST: 4096,
+      STRSET: 8192,
+      CURVE: 16384,
+      FLOAT_ARRAY: 32768,
+      REPORT: 65536,
+      ARRAY_BUFFER: 65536 << 1
+      //ITER : 8192<<1
+    };
+    PropSubTypes = {
+      COLOR: 1
+    };
+    PropFlags = {
+      SELECT: 1,
+      PRIVATE: 2,
+      LABEL: 4,
+      USE_ICONS: 64,
+      USE_CUSTOM_GETSET: 128,
+      //used by controller.js interface
+      SAVE_LAST_VALUE: 256,
+      READ_ONLY: 512,
+      SIMPLE_SLIDER: 1 << 10,
+      FORCE_ROLLER_SLIDER: 1 << 11,
+      USE_BASE_UNDO: 1 << 12,
+      //internal to simple_controller.js
+      EDIT_AS_BASE_UNIT: 1 << 13,
+      //user textbox input should be interpreted in display unit
+      NO_UNDO: 1 << 14,
+      USE_CUSTOM_PROP_GETTER: 1 << 15,
+      //hrm, not sure I need this
+      FORCE_ENUM_CHECKBOXES: 1 << 16,
+      NO_DEFAULT: 1 << 17,
+      // ux widgets should not update the prop in real time during e.g.
+      // sliding, text editing, etc.  Currently untested.
+      NO_REALTIME: 1 << 18,
+      MULTILINE_STRING: 1 << 19,
+      RICH_TEXT_STRING: 1 << 20,
+      OPTIONAL: 1 << 21
+    };
+    ToolPropertyIF = class {
+      subtype;
+      apiname;
+      uiname;
+      description;
+      flag;
+      icon;
+      constructor(type, subtype, apiname, uiname, description, flag, icon) {
+        if (type === void 0) {
+          type = this.constructor.PROP_TYPE_ID;
+        }
+        this.data = void 0;
+        this.type = type;
+        this.subtype = subtype;
+        this.apiname = apiname;
+        this.uiname = uiname;
+        this.description = description;
+        this.flag = flag;
+        this.icon = icon;
+      }
+      equals(b) {
+        throw new Error("implement me");
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+      _fire(type, arg1, arg2) {
+      }
+      on(type, cb) {
+      }
+      off(type, cb) {
+      }
+      getValue() {
+        return void 0;
+      }
+      setValue(val) {
+      }
+      setStep(step) {
+      }
+      setRange(min, max) {
+      }
+      setUnit(unit) {
+      }
+      //some clients have seperate ui range
+      setUIRange(min, max) {
+      }
+      setIcon(icon) {
+      }
+    };
+    StringPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.STRING);
+      }
+    };
+    NumPropertyIF = class extends ToolPropertyIF {
+    };
+    IntPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.INT);
+      }
+      setRadix(radix) {
+        throw new Error("implement me");
+      }
+    };
+    FloatPropertyIF = class extends ToolPropertyIF {
+      constructor() {
+        super(PropTypes.FLOAT);
+      }
+      setDecimalPlaces(n) {
+      }
+    };
+    EnumPropertyIF = class extends ToolPropertyIF {
+      values;
+      keys;
+      ui_value_names;
+      iconmap;
+      constructor(value, valid_values) {
+        super(PropTypes.ENUM);
+        this.values = {};
+        this.keys = {};
+        this.ui_value_names = {};
+        this.iconmap = {};
+        if (valid_values === void 0) return;
+        if (valid_values instanceof Array || valid_values instanceof String) {
+          for (let i2 = 0; i2 < valid_values.length; i2++) {
+            this.values[valid_values[i2]] = valid_values[i2];
+            this.keys[valid_values[i2]] = valid_values[i2];
+          }
+        } else {
+          for (const k in valid_values) {
+            this.values[k] = valid_values[k];
+            this.keys[valid_values[k]] = k;
+          }
+        }
+        for (const k in this.values) {
+          let uin = k[0].toUpperCase() + k.slice(1, k.length);
+          uin = uin.replace(/\_/g, " ");
+          this.ui_value_names[k] = uin;
+        }
+      }
+      addIcons(iconmap) {
+        if (this.iconmap === void 0) {
+          this.iconmap = {};
+        }
+        for (const k in iconmap) {
+          this.iconmap[k] = iconmap[k];
+        }
+      }
+    };
+    FlagPropertyIF = class extends EnumPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.FLAG);
+      }
+    };
+    Vec2PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC2);
+      }
+    };
+    Vec3PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC3);
+      }
+    };
+    Vec4PropertyIF = class extends ToolPropertyIF {
+      constructor(valid_values) {
+        super(PropTypes.VEC4);
+      }
+    };
+    ListPropertyIF = class extends ToolPropertyIF {
+      /*
+       * Prop must be a ToolProperty subclass instance
+       * */
+      prop;
+      constructor(prop) {
+        super(PropTypes.PROPLIST);
+        this.prop = prop;
+      }
+      get length() {
+        return 0;
+      }
+      set length(val) {
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+      /**
+       * clear list
+       * */
+      clear() {
+      }
+      push(item = this.prop.copy()) {
+      }
+      [Symbol.iterator]() {
+        return [][Symbol.iterator]();
+      }
+    };
+    StringSetPropertyIF = class extends ToolPropertyIF {
+      constructor(value, definition = []) {
+        super(PropTypes.STRSET);
+      }
+      /*
+       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+       * If destructive is true, then existing set will be cleared.
+       * */
+      setValue(values, destructive = true, soft_fail = true) {
+      }
+      getValue() {
+        return void 0;
+      }
+      addIcons(iconmap) {
+      }
+      addUINames(map3) {
+      }
+      addDescriptions(map3) {
+      }
+      copyTo(b) {
+      }
+      copy() {
+      }
+    };
+    Curve1DPropertyIF = class extends ToolPropertyIF {
+      constructor(curve, uiname) {
+        super(PropTypes.CURVE);
+        this.data = curve;
+      }
+      getValue() {
+        return this.data;
+      }
+      setValue(curve) {
+        if (curve === void 0) {
+          return;
+        }
+        const json = JSON.parse(JSON.stringify(curve));
+        this.data.load(json);
+      }
+      copyTo(b) {
+        b.setValue(this.data);
+      }
+    };
+  }
+});
+
+// scripts/path-controller/units/units.ts
+function myfloor(f2) {
+  return Math.floor(f2 + FLT_EPSILONE * 2);
+}
+function normString(s) {
+  s = s.replace(/ /g, "").replace(/\t/g, "");
+  return s.toLowerCase();
+}
+function myToFixed(f2, decimals) {
+  if (typeof f2 !== "number") {
+    return "(error)";
+  }
+  let s = f2.toFixed(decimals);
+  while (s.endsWith("0") && s.search(/\./) >= 0) {
+    s = s.slice(0, s.length - 1);
+  }
+  if (s.endsWith(".")) {
+    s = s.slice(0, s.length - 1);
+  }
+  if (s.length === 0) s = "0";
+  return s.trim();
+}
+function setBaseUnit(unit) {
+  Unit.baseUnit = unit;
+}
+function setMetric(val) {
+  Unit.isMetric = val;
+}
+function isnumber(s) {
+  s = ("" + s).trim();
+  function test2(re) {
+    return s.search(re) === 0;
+  }
+  return test2(intre) || test2(numre1) || test2(numre2) || test2(hexre1) || test2(hexre2) || test2(binre) || test2(expre);
+}
+function parseValueIntern(string, baseUnit) {
+  string = string.trim();
+  if (string[0] === ".") {
+    string = "0" + string;
+  }
+  if (typeof baseUnit === "string") {
+    const base = Unit.getUnit(baseUnit);
+    if (base === void 0 && baseUnit !== "none") {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+    baseUnit = base;
+  }
+  if (isnumber(string)) {
+    const f2 = parseFloat(string);
+    return f2;
+  }
+  if (baseUnit === void 0) {
+    console.warn("No base unit in units.js:parseValueIntern");
+  }
+  for (const unit of Units) {
+    if (unit.validate(string)) {
+      console.log(unit);
+      let value = unit.parse(string);
+      if (baseUnit) {
+        value = unit.toInternal(value);
+        return baseUnit.fromInternal(value);
+      } else {
+        return value;
+      }
+    }
+  }
+  return NaN;
+}
+function parseValue(string, baseUnit, displayUnit) {
+  const displayUnitCls = Unit.getUnit(displayUnit);
+  const baseUnitCls = Unit.getUnit(baseUnit);
+  let f2 = parseValueIntern(string, displayUnitCls || baseUnitCls);
+  if (displayUnitCls) {
+    f2 = displayUnitCls.toInternal(f2);
+  }
+  if (baseUnitCls) {
+    f2 = baseUnitCls.fromInternal(f2);
+  }
+  return f2;
+}
+function isNumber(string) {
+  if (isnumber(string)) {
+    return true;
+  }
+  for (const unit of Units) {
+    if (unit.validate(string)) {
+      return true;
+    }
+  }
+  return false;
+}
+function convert(value, unita, unitb) {
+  if (typeof unita === "string") {
+    unita = Unit.getUnit(unita);
+  }
+  if (typeof unitb === "string") {
+    unitb = Unit.getUnit(unitb);
+  }
+  if (unita && unitb) {
+    return unitb.fromInternal(unita.toInternal(value));
+  } else if (unitb) {
+    return unitb.fromInternal(value);
+  } else if (unita) {
+    return unita.toInternal(value);
+  } else {
+    return value;
+  }
+}
+function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {
+  if (typeof baseUnit === "string" && baseUnit !== "none") {
+    baseUnit = Unit.getUnit(baseUnit);
+  }
+  if (typeof displayUnit === "string" && displayUnit !== "none") {
+    displayUnit = Unit.getUnit(displayUnit);
+  }
+  if (displayUnit !== baseUnit) {
+    value = convert(value, baseUnit, displayUnit);
+  }
+  if (displayUnit && typeof displayUnit !== "string") {
+    return displayUnit.buildString(value, decimalPlaces);
+  } else {
+    return myToFixed(value, decimalPlaces);
+  }
+}
+var FLT_EPSILONE, Units, Unit, MeterUnit, InchUnit, CentimeterUnit, MillimeterUnit, foot_re, FootUnit, square_foot_re, SquareFootUnit, MileUnit, DegreeUnit, RadianUnit, numre1, numre2, hexre1, hexre2, binre, expre, intre, PixelUnit, PercentUnit;
+var init_units = __esm({
+  "scripts/path-controller/units/units.ts"() {
+    "use strict";
+    FLT_EPSILONE = 1192092895507812e-22;
+    Units = [];
+    Unit = class {
+      static baseUnit = "meter";
+      static isMetric = true;
+      static getUnit(name2) {
+        if (name2 === "none" || name2 === void 0) {
+          return void 0;
+        }
+        for (const cls of Units) {
+          if (cls.unitDefine().name === name2) {
+            return cls;
+          }
+        }
+        throw new Error("Unknown unit " + name2);
+      }
+      static register(cls) {
+        Units.push(cls);
+      }
+      //subclassed static methods start here
+      static unitDefine() {
+        return {
+          name: "",
+          uiname: "",
+          type: "",
+          //e.g. distance
+          icon: -1,
+          pattern: void 0
+          //a re literal to validate strings
+        };
+      }
+      static parse(string) {
+        return NaN;
+      }
+      static validate(string) {
+        string = normString(string);
+        const def = this.unitDefine();
+        const m = string.match(def.pattern);
+        if (!m) return false;
+        return m[0] === string;
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value;
+      }
+      static fromInternal(value) {
+        return value;
+      }
+      static buildString(value, decimals = 2) {
+        return "";
+      }
+    };
+    MeterUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "meter",
+          uiname: "Meter",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?m$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("m")) {
+          string = string.slice(0, string.length - 1);
+        }
+        return parseFloat(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value;
+      }
+      static fromInternal(value) {
+        return value;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + " m";
+      }
+    };
+    Unit.register(MeterUnit);
+    InchUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "inch",
+          uiname: "Inch",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?(in|inch)$/
+        };
+      }
+      static parse(string) {
+        string = string.toLowerCase();
+        const i2 = string.indexOf("i");
+        if (i2 >= 0) {
+          string = string.slice(0, i2);
+        }
+        return parseInt(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value * 0.0254;
+      }
+      static fromInternal(value) {
+        return value / 0.0254;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "in";
+      }
+    };
+    Unit.register(InchUnit);
+    CentimeterUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "centimeter",
+          uiname: "Centimeter",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?cm$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("cm")) {
+          string = string.slice(0, string.length - 2);
+        }
+        return parseFloat(string);
+      }
+      static toInternal(value) {
+        return value * 0.01;
+      }
+      static fromInternal(value) {
+        return value / 0.01;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "cm";
+      }
+    };
+    Unit.register(CentimeterUnit);
+    MillimeterUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "millimeter",
+          uiname: "Millimeter",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?mm$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("mm")) {
+          string = string.slice(0, string.length - 2);
+        }
+        return parseFloat(string);
+      }
+      static toInternal(value) {
+        return value * 1e-3;
+      }
+      static fromInternal(value) {
+        return value / 1e-3;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "mm";
+      }
+    };
+    Unit.register(MillimeterUnit);
+    foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
+    FootUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "foot",
+          uiname: "Foot",
+          type: "distance",
+          icon: -1,
+          pattern: foot_re
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        const i2 = string.search("ft");
+        let parts;
+        let vft = 0;
+        let vin = 0;
+        if (i2 >= 0) {
+          parts = string.split("ft");
+          const j = parts[1].search("in");
+          if (j >= 0) {
+            parts = [parts[0]].concat(parts[1].split("in"));
+            vin = parseFloat(parts[1]);
+          }
+          vft = parseFloat(parts[0]);
+        } else {
+          string = string.replace(/in/g, "");
+          vin = parseFloat(string);
+        }
+        return vin / 12 + vft;
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value * 0.3048;
+      }
+      static fromInternal(value) {
+        return value / 0.3048;
+      }
+      static buildString(value, decimals = 2) {
+        const vft = myfloor(value);
+        const vin = (value + FLT_EPSILONE * 2) * 12 % 12;
+        if (vft === 0) {
+          return myToFixed(vin, decimals) + " in";
+        }
+        let s = "" + vft + " ft";
+        if (vin !== 0) {
+          s += " " + myToFixed(vin, decimals) + " in";
+        }
+        return s;
+      }
+    };
+    Unit.register(FootUnit);
+    square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/;
+    SquareFootUnit = class extends FootUnit {
+      static unitDefine() {
+        return {
+          name: "square_foot",
+          uiname: "Square Feet",
+          type: "area",
+          icon: -1,
+          pattern: square_foot_re
+        };
+      }
+      static parse(string) {
+        string = string.replace(/\u00b2/g, "");
+        return super.parse(string);
+      }
+      static buildString(value, decimals = 2) {
+        const vft = myfloor(value);
+        const vin = (value + FLT_EPSILONE * 2) * 12 % 12;
+        if (vft === 0) {
+          return myToFixed(vin, decimals) + " in\xB2";
+        }
+        let s = "" + vft + " ft\xB2";
+        if (vin !== 0) {
+          s += " " + myToFixed(vin, decimals) + " in\xB2";
+        }
+        return s;
+      }
+    };
+    Unit.register(SquareFootUnit);
+    MileUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "mile",
+          uiname: "Mile",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d+)?miles$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        string = string.replace(/miles/, "");
+        return parseFloat(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value * 1609.34;
+      }
+      static fromInternal(value) {
+        return value / 1609.34;
+      }
+      static buildString(value, decimals = 3) {
+        return "" + myToFixed(value, decimals) + " miles";
+      }
+    };
+    Unit.register(MileUnit);
+    DegreeUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "degree",
+          uiname: "Degrees",
+          type: "angle",
+          icon: -1,
+          pattern: /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.search("d") >= 0) {
+          string = string.slice(0, string.search("d")).trim();
+        } else if (string.search("\xB0") >= 0) {
+          string = string.slice(0, string.search("\xB0")).trim();
+        }
+        return parseFloat(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value / 180 * Math.PI;
+      }
+      static fromInternal(value) {
+        return value * 180 / Math.PI;
+      }
+      static buildString(value, decimals = 3) {
+        return "" + myToFixed(value, decimals) + " \xB0";
+      }
+    };
+    Unit.register(DegreeUnit);
+    RadianUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "radian",
+          uiname: "Radians",
+          type: "angle",
+          icon: -1,
+          pattern: /-?\d+(\.\d+)?(r|rad|radian|radians)$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.search("r") >= 0) {
+          string = string.slice(0, string.search("r")).trim();
+        }
+        return parseFloat(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value;
+      }
+      static fromInternal(value) {
+        return value;
+      }
+      static buildString(value, decimals = 3) {
+        return "" + myToFixed(value, decimals) + " r";
+      }
+    };
+    Unit.register(RadianUnit);
+    numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
+    numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
+    hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
+    hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
+    binre = /[+\-]?0b[01]+$/;
+    expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
+    intre = /[+\-]?[0-9]+$/;
+    PixelUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "pixel",
+          uiname: "Pixel",
+          type: "distance",
+          icon: -1,
+          pattern: /-?\d+(\.\d*)?px$/
+        };
+      }
+      static parse(string) {
+        string = normString(string);
+        if (string.endsWith("px")) {
+          string = string.slice(0, string.length - 2).trim();
+        }
+        return parseFloat(string);
+      }
+      //convert to internal units,
+      //e.g. meters for distance
+      static toInternal(value) {
+        return value;
+      }
+      static fromInternal(value) {
+        return value;
+      }
+      static buildString(value, decimals = 2) {
+        return "" + myToFixed(value, decimals) + "px";
+      }
+    };
+    Unit.register(PixelUnit);
+    PercentUnit = class extends Unit {
+      static unitDefine() {
+        return {
+          name: "percent",
+          uiname: "Percent",
+          type: "distance",
+          icon: -1,
+          pattern: /[0-9]+(\.[0-9]+)?[ \t]*%/
+        };
+      }
+      static toInternal(value) {
+        return value / 100;
+      }
+      static fromInternal(value) {
+        return value * 100;
+      }
+      static parse(string) {
+        return parseFloat(string.replace(/%/g, ""));
+      }
+      static buildString(value, decimals = 2) {
+        return value.toFixed(decimals) + "%";
+      }
+    };
+    Unit.register(PercentUnit);
+  }
+});
+
+// scripts/core/units.ts
+var init_units2 = __esm({
+  "scripts/core/units.ts"() {
+    "use strict";
+    init_units();
+  }
+});
+
+// scripts/path-controller/toolsys/props/base.ts
+function setPropTypes(types) {
+  for (const k in types) {
+    PropTypes[k] = types[k];
+  }
+}
+var TOOLPROP_SCHEMA_VERSION, NumberConstraintsBase, IntegerConstraints, FloatConstrinats, NumberConstraints, PropSubTypes2, customPropertyTypes, PropClasses, customPropTypeBase, MakeUINameWordMap, defaultRadix, defaultDecimalPlaces, OnceTag, ExecScopeUsing, ExecScopeUsingStack, execScopeUsingStack, ToolProperty;
+var init_base = __esm({
+  "scripts/path-controller/toolsys/props/base.ts"() {
+    "use strict";
+    init_util();
+    init_toolprop_abstract();
+    init_struct();
+    TOOLPROP_SCHEMA_VERSION = 2;
+    NumberConstraintsBase = /* @__PURE__ */ new Set([
+      "range",
+      "expRate",
+      "step",
+      "uiRange",
+      "baseUnit",
+      "displayUnit",
+      "stepIsRelative",
+      "slideSpeed",
+      "sliderDisplayExp"
+    ]);
+    IntegerConstraints = new Set(
+      ["radix"].concat(list2(NumberConstraintsBase))
+    );
+    FloatConstrinats = new Set(
+      ["decimalPlaces"].concat(
+        list2(NumberConstraintsBase)
+      )
+    );
+    NumberConstraints = new Set(
+      list2(IntegerConstraints).concat(
+        list2(FloatConstrinats)
+      )
+    );
+    PropSubTypes2 = {
+      COLOR: 1
+    };
+    customPropertyTypes = [];
+    PropClasses = {};
+    customPropTypeBase = 17;
+    MakeUINameWordMap = {
+      sel: "select",
+      unsel: "deselect",
+      eid: "id",
+      props: "properties",
+      res: "resource"
+    };
+    defaultRadix = 10;
+    defaultDecimalPlaces = 4;
+    OnceTag = class {
+      cb;
+      constructor(cb) {
+        this.cb = cb;
+      }
+    };
+    ExecScopeUsing = class {
+      oldScope = {};
+      prop;
+      init(prop) {
+        this.prop = prop;
+        this.oldScope.ctx = prop.ctx;
+        this.oldScope.datapath = prop.datapath;
+        this.oldScope.dataref = prop.dataref;
+        return this;
+      }
+      get ctx() {
+        return this.prop.ctx;
+      }
+      set ctx(v) {
+        this.prop.ctx = v;
+      }
+      get dataref() {
+        return this.prop.dataref;
+      }
+      set dataref(v) {
+        this.prop.dataref = v;
+      }
+      get datapath() {
+        return this.prop.datapath;
+      }
+      set datapath(v) {
+        this.prop.datapath = v;
+      }
+      [Symbol.dispose]() {
+        const prop = this.prop;
+        const oldScope = this.oldScope;
+        prop.ctx = oldScope.ctx;
+        prop.datapath = oldScope.datapath;
+        prop.dataref = oldScope.dataref;
+        execScopeUsingStack._popStack();
+      }
+    };
+    ExecScopeUsingStack = class extends Array {
+      depth = 0;
+      constructor(size) {
+        super(size);
+        this.length = size;
+        for (let i2 = 0; i2 < size; i2++) {
+          this[i2] = new ExecScopeUsing();
+        }
+      }
+      withScope(prop) {
+        return this.pushStack().init(prop);
+      }
+      pushStack() {
+        return this[this.depth++];
+      }
+      _popStack() {
+        this.depth--;
+      }
+    };
+    execScopeUsingStack = new ExecScopeUsingStack(512);
+    ToolProperty = class _ToolProperty extends ToolPropertyIF {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+ToolProperty {
+  apiname        : string | ""+this.apiname;
+  type           : int;
+  flag           : int;
+  subtype       ?: int | this.subtype ? this.subtype : 0;
+  icon           : int;
+  icon2          : int;
+  baseUnit       : string | ""+this.baseUnit;
+  displayUnit    : string | ""+this.displayUnit;
+  range          : array(float) | this.range ? this.range : [-1e17, 1e17];
+  uiRange        : array(float) | this.uiRange ? this.uiRange : [-1e17, 1e17];
+  description    : string;
+  stepIsRelative : bool;
+  step           : float;
+  expRate        : float;
+  radix          : float;
+  decimalPlaces  : int;
+  uiname         : string | this.uiname || this.apiname || "";
+  wasSet         : bool;
+  schemaVersion  : int;        
+}`
+      );
+      static PROP_TYPE_ID;
+      wasSet;
+      icon2;
+      schemaVersion = TOOLPROP_SCHEMA_VERSION;
+      decimalPlaces;
+      radix;
+      step;
+      range;
+      uiRange;
+      baseUnit;
+      displayUnit;
+      stepIsRelative;
+      expRate;
+      slideSpeed;
+      callbacks;
+      /* These are used in subclasses but accessed generically */
+      update;
+      api_update;
+      // these fields are used by the data api system
+      dataref;
+      datapath;
+      constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
+        super(type);
+        this.type = type;
+        this.subtype = subtype;
+        this.wasSet = false;
+        this.apiname = apiname;
+        this.uiname = uiname !== void 0 ? uiname : apiname;
+        this.description = description;
+        this.flag = flag | PropFlags.SAVE_LAST_VALUE;
+        this.icon = icon;
+        this.icon2 = icon;
+        this.decimalPlaces = defaultDecimalPlaces;
+        this.radix = defaultRadix;
+        this.step = 0.05;
+        this.stepIsRelative = false;
+        this.expRate = 1.33;
+        this.slideSpeed = 1;
+        this.callbacks = {};
+      }
+      /**
+       * Validates and optionally transforms arg, see parseArgs in ToolOp.
+       * This is used for e.g. enum/flag property parsing.
+       */
+      parseArg(arg) {
+        return arg;
+      }
+      getUIName() {
+        return this.uiname ?? _ToolProperty.makeUIName(this.apiname ?? "error");
+      }
+      /** Get a data api execution context stack ( for use with the using keyword) */
+      execWithContext() {
+        return execScopeUsingStack.withScope(this);
+      }
+      static internalRegister(cls) {
+        PropClasses[new cls().type] = cls;
+      }
+      static getClass(type) {
+        return PropClasses[type];
+      }
+      static setDefaultRadix(n) {
+        defaultRadix = n;
+      }
+      static setDefaultDecimalPlaces(n) {
+        defaultDecimalPlaces = n;
+      }
+      static makeUIName(name2) {
+        const parts = [""];
+        let lastc = void 0;
+        const ischar = (c) => {
+          const code2 = c.charCodeAt(0);
+          let upper = code2 >= "A".charCodeAt(0);
+          upper = upper && code2 <= "Z".charCodeAt(0);
+          let lower = code2 >= "a".charCodeAt(0);
+          lower = lower && code2 <= "z".charCodeAt(0);
+          return upper || lower;
+        };
+        for (let i2 = 0; i2 < name2.length; i2++) {
+          const c = name2[i2];
+          if (c === "_" || c === "-" || c === "$") {
+            lastc = c;
+            parts.push("");
+            continue;
+          }
+          if (i2 > 0 && c === c.toUpperCase() && lastc !== lastc.toUpperCase()) {
+            if (ischar(c) && ischar(lastc)) {
+              parts.push("");
+            }
+          }
+          parts[parts.length - 1] += c;
+          lastc = c;
+        }
+        const subst = (word) => {
+          if (word in MakeUINameWordMap) {
+            return MakeUINameWordMap[word];
+          } else {
+            return word;
+          }
+        };
+        const result = parts.filter((f2) => f2.trim().length > 0).map((f2) => subst(f2)).map((f2) => f2[0].toUpperCase() + f2.slice(1, f2.length).toLowerCase()).join(" ").trim();
+        return result;
+      }
+      static register(cls) {
+        cls.PROP_TYPE_ID = 1 << customPropTypeBase;
+        PropTypes[cls.name] = cls.PROP_TYPE_ID;
+        customPropTypeBase++;
+        customPropertyTypes.push(cls);
+        PropClasses[new cls().type] = cls;
+        return cls.PROP_TYPE_ID;
+      }
+      static calcRelativeStep(step, value, logBase = 1.5) {
+        value = Math.log(Math.abs(value) + 1) / Math.log(logBase);
+        value = Math.max(value, step);
+        console.warn(termColor2("STEP", "red"), value);
+        return value;
+      }
+      setDescription(s) {
+        this.description = s;
+        return this;
+      }
+      setUIName(s) {
+        this.uiname = s;
+        return this;
+      }
+      calcMemSize() {
+        function strlen(s) {
+          return s !== void 0 ? s.length + 8 : 8;
+        }
+        let tot = 0;
+        tot += strlen(this.apiname) + strlen(this.uiname);
+        tot += strlen(this.description);
+        tot += 11 * 8;
+        tot += Object.keys(this.callbacks).length * 24;
+        return tot;
+      }
+      equals(b) {
+        throw new Error("implement me");
+      }
+      setReadOnly() {
+        this.flag |= PropFlags.READ_ONLY;
+        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
+        return this;
+      }
+      private() {
+        this.flag |= PropFlags.PRIVATE;
+        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
+        return this;
+      }
+      /** Save property in last value cache.  Now set by default,
+       *  to disable use .ignoreLastValue().
+       */
+      saveLastValue() {
+        this.flag |= PropFlags.SAVE_LAST_VALUE;
+        return this;
+      }
+      ignoreLastValue() {
+        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
+        return this;
+      }
+      report(...args) {
+        console.warn(...args);
+      }
+      _fire(type, arg1, arg2) {
+        if (this.callbacks[type] === void 0) {
+          return this;
+        }
+        let stack = this.callbacks[type];
+        stack = stack.concat([]);
+        for (let i2 = 0; i2 < stack.length; i2++) {
+          const cb = stack[i2];
+          if (cb instanceof OnceTag) {
+            let j = i2;
+            while (j < stack.length - 1) {
+              stack[j] = stack[j + 1];
+              j++;
+            }
+            stack[j] = void 0;
+            stack.length--;
+            i2--;
+            cb.cb.call(this, arg1, arg2);
+          } else {
+            cb.call(this, arg1, arg2);
+          }
+        }
+        return this;
+      }
+      clearEventCallbacks() {
+        this.callbacks = {};
+        return this;
+      }
+      once(type, cb) {
+        if (this.callbacks[type] === void 0) {
+          this.callbacks[type] = [];
+        }
+        for (const cb2 of this.callbacks[type]) {
+          if (cb2 instanceof OnceTag && cb2.cb === cb) {
+            return this;
+          }
+        }
+        const tag = new OnceTag(cb);
+        this.callbacks[type].push(tag);
+        return this;
+      }
+      on(type, cb) {
+        if (this.callbacks[type] === void 0) {
+          this.callbacks[type] = [];
+        }
+        this.callbacks[type].push(cb);
+        return this;
+      }
+      off(type, cb) {
+        this.callbacks[type].remove(cb);
+        return this;
+      }
+      toJSON() {
+        return {
+          type: this.type,
+          subtype: this.subtype,
+          apiname: this.apiname,
+          uiname: this.uiname,
+          description: this.description,
+          flag: this.flag,
+          icon: this.icon,
+          data: this.data,
+          range: this.range,
+          uiRange: this.uiRange,
+          step: this.step
+        };
+      }
+      loadJSON(obj) {
+        this.type = obj.type;
+        this.subtype = obj.subtype;
+        this.apiname = obj.apiname;
+        this.uiname = obj.uiname;
+        this.description = obj.description;
+        this.flag = obj.flag;
+        this.icon = obj.icon;
+        this.data = obj.data;
+        return this;
+      }
+      getValue() {
+        return this.data;
+      }
+      /** Marks the property set and fires `change`. Every subclass stores the value before
+       * chaining here, so the argument a listener receives is read back through `getValue`. */
+      setValue(val) {
+        if (this.constructor === _ToolProperty) {
+          throw new Error("implement me!");
+        }
+        this.wasSet = true;
+        this._fire("change", this.getValue());
+      }
+      copyTo(b) {
+        b.apiname = this.apiname;
+        b.uiname = this.uiname;
+        b.description = this.description;
+        b.icon = this.icon;
+        b.icon2 = this.icon2;
+        b.baseUnit = this.baseUnit;
+        b.subtype = this.subtype;
+        b.displayUnit = this.displayUnit;
+        b.flag = this.flag;
+        for (const k in this.callbacks) {
+          b.callbacks[k] = this.callbacks[k];
+        }
+      }
+      copy() {
+        const ret = new this.constructor();
+        this.copyTo(ret);
+        return ret;
+      }
+      setStep(step) {
+        this.step = step;
+        return this;
+      }
+      getStep(value = 1) {
+        if (this.stepIsRelative) {
+          return _ToolProperty.calcRelativeStep(this.step, value);
+        } else {
+          return this.step;
+        }
+      }
+      setRelativeStep(step) {
+        this.step = step;
+        this.stepIsRelative = true;
+        return this;
+      }
+      setRange(min, max) {
+        if (min === void 0 || max === void 0) {
+          throw new Error("min and/or max cannot be undefined");
+        }
+        this.range = [min, max];
+        return this;
+      }
+      noUnits() {
+        this.baseUnit = this.displayUnit = "none";
+        return this;
+      }
+      setBaseUnit(unit) {
+        this.baseUnit = unit;
+        return this;
+      }
+      setDisplayUnit(unit) {
+        this.displayUnit = unit;
+        return this;
+      }
+      setUnit(unit) {
+        this.baseUnit = this.displayUnit = unit;
+        return this;
+      }
+      setFlag(f2, combine = false) {
+        this.flag = combine ? this.flag | f2 : f2;
+        return this;
+      }
+      setUIRange(min, max) {
+        if (min === void 0 || max === void 0) {
+          throw new Error("min and/or max cannot be undefined");
+        }
+        this.uiRange = [min, max];
+        return this;
+      }
+      setIcon(icon) {
+        this.icon = icon;
+        return this;
+      }
+      setIcon2(icon) {
+        this.icon2 = icon;
+        return this;
+      }
+      /** Sets whether sliders/textboxes/etc send updates in real time or wait for editing to stop. */
+      setRealtime(realtime) {
+        if (!realtime) {
+          this.flag |= PropFlags.NO_REALTIME;
+        } else {
+          this.flag &= ~PropFlags.NO_REALTIME;
+        }
+        return this;
+      }
+      setOptional(state = true) {
+        if (state) {
+          this.flag |= PropFlags.OPTIONAL;
+        } else {
+          this.flag &= ~PropFlags.OPTIONAL;
+        }
+        return this;
+      }
+      loadSTRUCT(reader) {
+        this.schemaVersion = 0;
+        reader(this);
+        if (this.uiRange?.[0] === -1e17 && this.uiRange[1] === 1e17) {
+          this.uiRange = void 0;
+        }
+        if (this.baseUnit === "undefined") {
+          this.baseUnit = void 0;
+        }
+        if (this.displayUnit === "undefined") {
+          this.displayUnit = void 0;
+        }
+        if (this.apiname === "undefined") {
+          this.apiname = void 0;
+        }
+        if (this.uiname === "undefined") {
+          this.uiname = void 0;
+        }
+      }
+      static getVersionSTRUCT(jsonOrProp) {
+        return jsonOrProp.schemaVersion ?? 0;
+      }
+      static migrateSTRUCT(schemaVersion, jsonOrProp, migrate) {
+        if (!jsonOrProp.schemaVersion) {
+          jsonOrProp.schemaVersion = schemaVersion;
+        }
+        migrate();
+        jsonOrProp.schemaVersion = TOOLPROP_SCHEMA_VERSION;
+      }
+    };
+  }
+});
+
+// scripts/path-controller/toolsys/props/array.ts
+var FloatArrayProperty, ArrayBufferProperty;
+var init_array = __esm({
+  "scripts/path-controller/toolsys/props/array.ts"() {
+    "use strict";
+    init_struct();
+    init_toolprop_abstract();
+    init_base();
+    FloatArrayProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.FloatArrayProperty {
+  value : array(float);
+}`
+      );
+      static PROP_TYPE_ID = PropTypes.FLOAT_ARRAY;
+      value;
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.FLOAT_ARRAY, void 0, apiname, uiname, description, flag, icon);
+        this.value = [];
+        if (value !== void 0) {
+          this.setValue(value);
+        }
+      }
+      [Symbol.iterator]() {
+        return this.value[Symbol.iterator]();
+      }
+      setValue(value) {
+        if (value === void 0) {
+          throw new Error("value was undefined in FloatArrayProperty's setValue method");
+        }
+        this.value.length = 0;
+        for (const item of value) {
+          if (typeof item !== "number" && typeof item !== "boolean") {
+            console.log(value);
+            throw new Error("bad item for FloatArrayProperty " + item);
+          }
+          this.value.push(item);
+        }
+        super.setValue(this.value);
+      }
+      push(item) {
+        if (typeof item !== "number" && typeof item !== "boolean") {
+          throw new Error("bad item for FloatArrayProperty " + item);
+        }
+        this.value.push(item);
+      }
+      getValue() {
+        return this.value;
+      }
+      equals(b) {
+        if (this.value.length !== b.value.length) {
+          return false;
+        }
+        for (let i2 = 0; i2 < this.value.length; i2++) {
+          if (this.value[i2] !== b.value[i2]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      clear() {
+        this.value.length = 0;
+        return this;
+      }
+    };
+    ArrayBufferProperty = class extends ToolProperty {
+      data = new ArrayBuffer(0);
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    toolprop.ArrayBufferProperty {
+      data : arraybuffer(byte);
+    }
+  `
+      );
+      constructor(buffer) {
+        super(PropTypes.ARRAY_BUFFER);
+        this.data = buffer ?? this.data;
+      }
+      setValue(buffer) {
+        this.data = buffer;
+        super.setValue(buffer);
+      }
+      getValue() {
+        return this.data;
+      }
+      equals(b) {
+        if (this.data.byteLength !== b.data.byteLength) {
+          return false;
+        }
+        const va = new Uint8Array(this.data);
+        const vb = new Uint8Array(b.data);
+        for (let i2 = 0; i2 < va.length; i2++) {
+          if (va[i2] !== vb[i2]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.data = new Uint8Array(Array.from(new Uint8Array(this.data))).buffer;
+      }
+      calcMemSize() {
+        return super.calcMemSize() + this.data.byteLength;
+      }
+    };
+  }
+});
+
+// scripts/path-controller/toolsys/props/string.ts
+var StringPropertyBase, StringProperty, ReportProperty;
+var init_string = __esm({
+  "scripts/path-controller/toolsys/props/string.ts"() {
+    "use strict";
+    init_struct();
+    init_toolprop_abstract();
+    init_base();
+    StringPropertyBase = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    StringPropertyBase {
+      data                  : string;
+      multiLineIdleTimeout ?: int;
+    }
+  `
+      );
+      /**
+       * Idle timeout for multiline textboxes (that aren't in realtime mode).
+       * Uses a default value if undefined.  In miliseconds.
+       */
+      multiLineIdleTimeout;
+      constructor(type, value, apiname, uiname, description, flag, icon) {
+        super(type, void 0, apiname, uiname, description, flag, icon);
+        this.setValue(value ?? "");
+      }
+      calcMemSize() {
+        return super.calcMemSize() + (this.data !== void 0 ? this.data.length * 4 : 0) + 8;
+      }
+      equals(b) {
+        return this.data === b.data;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.multiLineIdleTimeout = this.multiLineIdleTimeout;
+        b.data = this.data;
+      }
+      getValue() {
+        return this.data;
+      }
+      setValue(val) {
+        this.data = val;
+        super.setValue(val);
+      }
+      setIdleTimeout(timeout) {
+        this.multiLineIdleTimeout = timeout;
+        return this;
+      }
+      /** Should a textarea be used to edit this property? */
+      setMultiline(multiline) {
+        if (multiline) {
+          this.flag |= PropFlags.MULTILINE_STRING;
+        } else {
+          this.flag &= ~PropFlags.MULTILINE_STRING;
+        }
+        return this;
+      }
+      setRichText(state) {
+        if (state) {
+          this.flag |= PropFlags.RICH_TEXT_STRING;
+        } else {
+          this.flag &= ~PropFlags.RICH_TEXT_STRING;
+        }
+      }
+      /** Should a textarea be used to edit this property? */
+      get multiLine() {
+        return (this.flag & PropFlags.MULTILINE_STRING) !== 0;
+      }
+      set multiLine(multiline) {
+        if (multiline) {
+          this.flag |= PropFlags.MULTILINE_STRING;
+        } else {
+          this.flag &= ~PropFlags.MULTILINE_STRING;
+        }
+      }
+      // getVersionSTRUCT is provided by ToolProperty
+      static migrateSTRUCT(schemaVersion, jsonOrProp, migrate) {
+        if (schemaVersion < 2) {
+          if (jsonOrProp.multiLine) {
+            jsonOrProp.flag |= PropFlags.MULTILINE_STRING;
+          }
+          delete jsonOrProp.multiLine;
+          jsonOrProp.multiLineIdleTimeout = new StringProperty().multiLineIdleTimeout;
+        }
+        super.migrateSTRUCT(schemaVersion, jsonOrProp, migrate);
+      }
+    };
+    StringProperty = class extends StringPropertyBase {
+      static PROP_TYPE_ID = PropTypes.STRING;
+      static STRUCT = struct_default.inlineRegister(this, `StringProperty {}`);
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.STRING, value, apiname, uiname, description, flag, icon);
+      }
+    };
+    ToolProperty.internalRegister(StringProperty);
+    ReportProperty = class extends StringPropertyBase {
+      static PROP_TYPE_ID = PropTypes.REPORT;
+      static STRUCT = struct_default.inlineRegister(this, "ReportProperty {}");
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.REPORT, value, apiname, uiname, description, flag, icon);
+        this.type = PropTypes.REPORT;
+      }
+    };
+    ToolProperty.internalRegister(ReportProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/number.ts
+var NumProperty, _NumberPropertyBase, IntProperty, FloatPropertyBase, FloatProperty;
+var init_number = __esm({
+  "scripts/path-controller/toolsys/props/number.ts"() {
+    "use strict";
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    NumProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.NumProperty {
+  range : array(float);
+  data  : float;
+}
+`
+      );
+      constructor(type, value, apiname, uiname, description, flag, icon) {
+        super(type, void 0, apiname, uiname, description, flag, icon);
+        this.data = 0;
+        this.range = [0, 0];
+      }
+      equals(b) {
+        return this.data == b.data;
+      }
+    };
+    _NumberPropertyBase = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop._NumberPropertyBase {
+  range            : array(float);
+  expRate          : float;
+  data             : float;
+  step             : float;
+  slideSpeed       : float;
+  sliderDisplayExp : float;
+}
+`
+      );
+      constructor(type, value, apiname, uiname, description, flag, icon) {
+        super(type, void 0, apiname, uiname, description, flag, icon);
+        this.data = 0;
+        this.sliderDisplayExp = 1;
+        this.slideSpeed = 1;
+        this.expRate = 1.33;
+        this.step = 0.1;
+        this.stepIsRelative = false;
+        this.range = [-1e17, 1e17];
+        this.uiRange = void 0;
+        if (value !== void 0 && value !== null) {
+          this.setValue(value);
+          this.wasSet = false;
+        }
+      }
+      parseArg(arg) {
+        if (typeof arg !== "number") {
+          throw new Error("expected a number for a number property");
+        }
+        return arg;
+      }
+      get ui_range() {
+        this.report("NumberProperty.ui_range is deprecated");
+        return this.uiRange;
+      }
+      set ui_range(val) {
+        this.report("NumberProperty.ui_range is deprecated");
+        this.uiRange = val;
+      }
+      calcMemSize() {
+        return super.calcMemSize() + 8 * 8;
+      }
+      equals(b) {
+        return this.data === b.data;
+      }
+      toJSON() {
+        const json = super.toJSON();
+        json.data = this.data;
+        json.expRate = this.expRate;
+        return json;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        const nb = b;
+        nb.displayUnit = this.displayUnit;
+        nb.baseUnit = this.baseUnit;
+        nb.expRate = this.expRate;
+        nb.step = this.step;
+        nb.range = this.range ? [this.range[0], this.range[1]] : void 0;
+        nb.uiRange = this.uiRange ? [this.uiRange[0], this.uiRange[1]] : void 0;
+        nb.slideSpeed = this.slideSpeed;
+        nb.sliderDisplayExp = this.sliderDisplayExp;
+        nb.data = this.data;
+      }
+      setSliderDisplayExp(f2) {
+        this.sliderDisplayExp = f2;
+        return this;
+      }
+      setSlideSpeed(f2) {
+        this.slideSpeed = f2;
+        return this;
+      }
+      /*
+       * non-linear exponent for number sliders
+       * in roll mode
+       * */
+      setExpRate(exp) {
+        this.expRate = exp;
+        return this;
+      }
+      setValue(val) {
+        if (val === void 0 || val === null) {
+          return;
+        }
+        if (typeof val !== "number") {
+          throw new Error("Invalid number " + val);
+        }
+        this.data = val;
+        super.setValue(val);
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        const get = (key) => {
+          if (key in obj) {
+            this[key] = obj[key];
+          }
+        };
+        get("range");
+        get("step");
+        get("expRate");
+        get("ui_range");
+        return this;
+      }
+    };
+    IntProperty = class extends _NumberPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.IntProperty {
+  data : int;
+}`
+      );
+      static PROP_TYPE_ID = PropTypes.INT;
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
+        this.baseUnit = this.displayUnit = "none";
+        this.radix = 10;
+      }
+      setValue(val) {
+        if (val === void 0 || val === null) {
+          return;
+        }
+        super.setValue(Math.floor(val));
+      }
+      setRadix(radix) {
+        this.radix = radix;
+      }
+      toJSON() {
+        const json = super.toJSON();
+        json.data = this.data;
+        json.radix = this.radix;
+        return json;
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.data = obj.data || this.data;
+        this.radix = obj.radix || this.radix;
+        return this;
+      }
+    };
+    ToolProperty.internalRegister(IntProperty);
+    FloatPropertyBase = class extends _NumberPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    FloatPropertyBase {
+      decimalPlaces : int;
+      data          : float;
+    }`
+      );
+      constructor(type, value, apiname, uiname, description, flag, icon) {
+        super(type, value, apiname, uiname, description, flag, icon);
+        this.decimalPlaces = 4;
+      }
+      setDecimalPlaces(n) {
+        this.decimalPlaces = n;
+        return this;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.data = this.data;
+      }
+      setValue(val) {
+        if (val === void 0 || val === null) {
+          return;
+        }
+        this.data = val;
+        super.setValue(val);
+      }
+      toJSON() {
+        const json = super.toJSON();
+        json.data = this.data;
+        json.decimalPlaces = this.decimalPlaces;
+        return json;
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        this.data = obj.data || this.data;
+        this.decimalPlaces = obj.decimalPlaces || this.decimalPlaces;
+        return this;
+      }
+    };
+    FloatProperty = class extends FloatPropertyBase {
+      static PROP_TYPE_ID = PropTypes.FLOAT;
+      static STRUCT = struct_default.inlineRegister(this, "FloatProperty {}");
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.FLOAT, value, apiname, uiname, description, flag, icon);
+      }
+    };
+    ToolProperty.internalRegister(FloatProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/bool.ts
+var BoolProperty;
+var init_bool = __esm({
+  "scripts/path-controller/toolsys/props/bool.ts"() {
+    "use strict";
+    init_struct();
+    init_toolprop_abstract();
+    init_base();
+    BoolProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.BoolProperty {
+  data : bool;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.BOOL;
+      constructor(value, apiname, uiname, description, flag, icon) {
+        super(PropTypes.BOOL, void 0, apiname, uiname, description, flag, icon);
+        this.data = !!value;
+      }
+      equals(b) {
+        return this.data == b.data;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.data = this.data;
+      }
+      setValue(val) {
+        this.data = !!val;
+        super.setValue(val);
+      }
+      getValue() {
+        return this.data;
+      }
+      toJSON() {
+        const ret = super.toJSON();
+        return ret;
+      }
+      loadJSON(obj) {
+        super.loadJSON(obj);
+        return this;
+      }
+    };
+    ToolProperty.internalRegister(BoolProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/enum.ts
+var first, EnumKeyPair, EnumPropertyBase, EnumProperty, FlagProperty;
+var init_enum = __esm({
+  "scripts/path-controller/toolsys/props/enum.ts"() {
+    "use strict";
+    init_util();
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    first = (iter) => {
+      if (iter === void 0) {
+        return void 0;
+      }
+      if (!(Symbol.iterator in iter)) {
+        for (const item in iter) {
+          return item;
+        }
+        return void 0;
+      }
+      for (const item of iter) {
+        return item;
+      }
+      return void 0;
+    };
+    EnumKeyPair = class _EnumKeyPair {
+      static loadMap(obj) {
+        if (!obj) {
+          return {};
+        }
+        const ret = {};
+        for (const k of obj) {
+          ret[k.key] = k.val;
+        }
+        return ret;
+      }
+      static saveMap(obj) {
+        obj = obj === void 0 ? {} : obj;
+        const ret = [];
+        for (const k in obj) {
+          ret.push(new _EnumKeyPair(k, obj[k]));
+        }
+        return ret;
+      }
+      static STRUCT;
+      key;
+      val;
+      key_is_int;
+      val_is_int;
+      constructor(key, val) {
+        this.key = "" + key;
+        this.val = "" + val;
+        this.key_is_int = typeof key === "number" || typeof key === "boolean";
+        this.val_is_int = typeof val === "number" || typeof val === "boolean";
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+        if (this.val_is_int) {
+          this.val = parseInt(this.val);
+        }
+        if (this.key_is_int) {
+          this.key = parseInt(this.key);
+        }
+      }
+    };
+    EnumKeyPair.STRUCT = `
+EnumKeyPair {
+  key        : string;
+  val        : string;
+  key_is_int : bool;
+  val_is_int : bool;
+}
+`;
+    struct_default.register(EnumKeyPair);
+    EnumPropertyBase = class _EnumPropertyBase extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    EnumPropertyBase {
+      data            : string             | ""+this.data;
+      data_is_int     : bool               | this._is_data_int();
+      _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
+      _values         : array(EnumKeyPair) | this._saveMap(this.values) ;
+      _ui_value_names : array(EnumKeyPair) | this._saveMap(this.ui_value_names) ;
+      _iconmap        : array(EnumKeyPair) | this._saveMap(this.iconmap) ;
+      _iconmap2       : array(EnumKeyPair) | this._saveMap(this.iconmap2) ;
+      _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;
+    }
+  `
+      );
+      dynamicMetaCB;
+      /** Maps keys to values */
+      values;
+      /** Maps values to keys */
+      keys;
+      /** Maps keys to UI strings */
+      ui_value_names;
+      /** Maps keys to descriptions */
+      descriptions;
+      /** Maps keys to icons */
+      iconmap;
+      /** Maps keys to pressed icons */
+      iconmap2;
+      /* These are transient fields used during loadSTRUCT */
+      _keys;
+      _values;
+      _ui_value_names;
+      _iconmap;
+      _iconmap2;
+      _descriptions;
+      data_is_int;
+      constructor(type, string_or_int, valid_values, apiname, uiname, description, flag, icon) {
+        super(type, void 0, apiname, uiname, description, flag, icon);
+        this.dynamicMetaCB = void 0;
+        this.values = {};
+        this.keys = {};
+        this.ui_value_names = {};
+        this.descriptions = {};
+        this.iconmap = {};
+        this.iconmap2 = {};
+        if (valid_values === void 0) return;
+        if (valid_values instanceof Array) {
+          for (let i2 = 0; i2 < valid_values.length; i2++) {
+            this.values[valid_values[i2]] = valid_values[i2];
+            this.keys[valid_values[i2]] = valid_values[i2];
+          }
+        } else {
+          for (const k in valid_values) {
+            this.values[k] = valid_values[k];
+            this.keys[valid_values[k]] = k;
+          }
+        }
+        if (string_or_int === void 0) {
+          this.data = first(valid_values);
+        } else {
+          this.setValue(string_or_int);
+        }
+        for (const k in this.values) {
+          const uiname2 = ToolProperty.makeUIName(k);
+          this.ui_value_names[k] = uiname2;
+          this.descriptions[k] = uiname2;
+        }
+        this.wasSet = false;
+      }
+      parseArg(arg) {
+        if (typeof arg === "string") {
+          if (!(arg in this.values)) {
+            throw new Error(`unknown key ${arg}`);
+          }
+          arg = this.values[arg];
+        }
+        return arg;
+      }
+      /**
+       * Provide a callback to update the enum or flags property dynamically
+       * Callback should call enumProp.updateDefinition to update the property.
+       *
+       * @param metaCB: (enumProp: EnumProperty|FlagsProperty) => void
+       */
+      dynamicMeta(metaCB) {
+        this.on("meta", metaCB);
+        return this;
+      }
+      checkMeta() {
+        this._fire("meta", this);
+      }
+      calcHash(digest = new HashDigest()) {
+        this.checkMeta();
+        for (const key in this.keys) {
+          digest.add(key);
+          digest.add(this.keys[key]);
+        }
+        return digest.get();
+      }
+      updateDefinition(enumdef_or_prop) {
+        const descriptions = this.descriptions;
+        const ui_value_names = this.ui_value_names;
+        this.values = {};
+        this.keys = {};
+        this.ui_value_names = {};
+        this.descriptions = {};
+        let enumdef;
+        if (enumdef_or_prop instanceof _EnumPropertyBase) {
+          enumdef = enumdef_or_prop.values;
+        } else {
+          enumdef = enumdef_or_prop;
+        }
+        for (const k in enumdef) {
+          const v = enumdef[k];
+          this.values[k] = v;
+          this.keys[v] = k;
+        }
+        if (enumdef_or_prop instanceof _EnumPropertyBase) {
+          const prop = enumdef_or_prop;
+          this.iconmap = Object.assign({}, prop.iconmap);
+          this.iconmap2 = Object.assign({}, prop.iconmap2);
+          this.ui_value_names = Object.assign({}, prop.ui_value_names);
+          this.descriptions = Object.assign({}, prop.descriptions);
+        } else {
+          for (const k in this.values) {
+            if (k in ui_value_names) {
+              this.ui_value_names[k] = ui_value_names[k];
+            } else {
+              this.ui_value_names[k] = ToolProperty.makeUIName(k);
+            }
+            if (k in descriptions) {
+              this.descriptions[k] = descriptions[k];
+            } else {
+              this.descriptions[k] = ToolProperty.makeUIName(k);
+            }
+          }
+        }
+        this._fire("metaChange", this);
+        return this;
+      }
+      calcMemSize() {
+        this.checkMeta();
+        let tot = super.calcMemSize();
+        for (const k in this.values) {
+          tot += (k.length * 4 + 16) * 4;
+        }
+        if (this.descriptions) {
+          for (const k in this.descriptions) {
+            tot += (k.length + this.descriptions[k].length) * 4;
+          }
+        }
+        return tot + 64;
+      }
+      equals(b) {
+        return this.getValue() === b.getValue();
+      }
+      addUINames(map3) {
+        for (const k in map3) {
+          this.ui_value_names[k] = map3[k];
+        }
+        return this;
+      }
+      addDescriptions(map3) {
+        for (const k in map3) {
+          this.descriptions[k] = map3[k];
+        }
+        return this;
+      }
+      addIcons2(iconmap2) {
+        if (this.iconmap2 === void 0) {
+          this.iconmap2 = {};
+        }
+        for (const k in iconmap2) {
+          this.iconmap2[k] = iconmap2[k];
+        }
+        return this;
+      }
+      addIcons(iconmap) {
+        if (this.iconmap === void 0) {
+          this.iconmap = {};
+        }
+        for (const k in iconmap) {
+          this.iconmap[k] = iconmap[k];
+        }
+        return this;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        const ep = b;
+        ep.data = this.data;
+        ep.callbacks.meta = Array.from(this.callbacks.meta ?? []);
+        ep.keys = Object.assign({}, this.keys);
+        ep.values = Object.assign({}, this.values);
+        ep.ui_value_names = this.ui_value_names;
+        ep.update = this.update;
+        ep.api_update = this.api_update;
+        ep.iconmap = this.iconmap;
+        ep.iconmap2 = this.iconmap2;
+        ep.descriptions = this.descriptions;
+      }
+      copy() {
+        const p = new this.constructor("");
+        this.copyTo(p);
+        return p;
+      }
+      getValue() {
+        const d = this.data;
+        if (d in this.values) return this.values[d];
+        else return d;
+      }
+      setValue(val) {
+        this.checkMeta();
+        if (val === void 0) return;
+        if (!(val in this.values) && val in this.keys) val = this.keys[val];
+        if (!(val in this.values)) {
+          this.report("Invalid value for enum!", val, this.values);
+          return;
+        }
+        this.data = val;
+        super.setValue(val);
+      }
+      _saveMap = EnumKeyPair.saveMap;
+      loadSTRUCT(reader) {
+        super.loadSTRUCT(reader);
+        this.keys = EnumKeyPair.loadMap(this._keys);
+        this.values = EnumKeyPair.loadMap(this._values);
+        this.ui_value_names = EnumKeyPair.loadMap(this._ui_value_names);
+        this.iconmap = EnumKeyPair.loadMap(this._iconmap);
+        this.iconmap2 = EnumKeyPair.loadMap(this._iconmap2);
+        this.descriptions = EnumKeyPair.loadMap(this._descriptions);
+        if (this.data_is_int) {
+          this.data = parseInt(this.data);
+          delete this.data_is_int;
+        } else if (this.data in this.keys) {
+          this.data = this.keys[this.data];
+        }
+      }
+      _is_data_int() {
+        return typeof this.data === "number";
+      }
+    };
+    EnumProperty = class extends EnumPropertyBase {
+      static PROP_TYPE_ID = PropTypes["ENUM"];
+      static STRUCT = struct_default.inlineRegister(this, `EnumProperty {}`);
+      constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
+        super(PropTypes.ENUM, string_or_int, valid_values, apiname, uiname, description, flag, icon);
+      }
+    };
+    ToolProperty.internalRegister(EnumProperty);
+    FlagProperty = class extends EnumPropertyBase {
+      static PROP_TYPE_ID = PropTypes["FLAG"];
+      static STRUCT = struct_default.inlineRegister(this, `FlagProperty {}`);
+      constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
+        super(PropTypes.FLAG, string_or_int, valid_values, apiname, uiname, description, flag, icon);
+        this.type = PropTypes.FLAG;
+        this.wasSet = false;
+      }
+      setValue(bitmask) {
+        this.checkMeta();
+        this.data = bitmask;
+        ToolProperty.prototype.setValue.call(this, bitmask);
+      }
+      /** A flag argument may name several bits at once, e.g. `"VERTEX|HANDLE"`. */
+      parseArg(arg) {
+        if (typeof arg === "string" && arg.includes("|")) {
+          let mask = 0;
+          for (const part of arg.split("|")) {
+            const key = part.trim();
+            if (!(key in this.values)) {
+              throw new Error(`unknown key ${key}`);
+            }
+            mask |= this.values[key];
+          }
+          return mask;
+        }
+        return super.parseArg(arg);
+      }
+    };
+    ToolProperty.internalRegister(FlagProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/vector.ts
+var VecPropertyBase, Vec2Property, Vec3Property, Vec4Property, QuatProperty;
+var init_vector = __esm({
+  "scripts/path-controller/toolsys/props/vector.ts"() {
+    "use strict";
+    init_vectormath();
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    init_number();
+    init_enum();
+    VecPropertyBase = class extends FloatPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    VecPropertyBase {
+      hasUniformSlider : bool | this.hasUniformSlider || false;
+      descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;
+      iconmap        : array(EnumKeyPair) | this._saveMap(this.iconmap) ;
+    }`
+      );
+      hasUniformSlider;
+      descriptions;
+      icons;
+      constructor(type, data, apiname, uiname, description) {
+        super(type, void 0, apiname, uiname, description);
+        this.hasUniformSlider = false;
+      }
+      setIsColor() {
+        this.subtype = (this.subtype ?? 0) | PropSubTypes2.COLOR;
+        return this;
+      }
+      calcMemSize() {
+        return super.calcMemSize() + this.data.length * 8;
+      }
+      equals(b) {
+        const d1 = this.data;
+        return d1.vectorDistance(b.data) < 1e-5;
+      }
+      uniformSlider(state = true) {
+        this.hasUniformSlider = state;
+        return this;
+      }
+      copyTo(b) {
+        const origVec = b.data;
+        super.copyTo(b);
+        b.data = origVec;
+        b.data.load(this.data);
+        b.hasUniformSlider = this.hasUniformSlider;
+        b.descriptions = this.descriptions ? { ...this.descriptions } : void 0;
+        b.icons = this.icons ? { ...this.icons } : void 0;
+      }
+      addIcons(iconmap) {
+        this.icons = { ...iconmap };
+        return this;
+      }
+      addDescriptions(descmap) {
+        this.descriptions = { ...descmap };
+        return this;
+      }
+      // needed by STRUCT script
+      _saveMap = EnumKeyPair.saveMap;
+      loadSTRUCT(reader) {
+        super.loadSTRUCT(reader);
+        reader(this);
+        this.descriptions = EnumKeyPair.loadMap(this.descriptions);
+        this.icons = EnumKeyPair.loadMap(this.icons);
+      }
+    };
+    Vec2Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec2Property {
+  data : vec2;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.VEC2;
+      constructor(data, apiname, uiname, description) {
+        super(PropTypes.VEC2, void 0, apiname, uiname, description);
+        this.type = PropTypes.VEC2;
+        this.data = new Vector2(data);
+      }
+      setValue(v) {
+        this.data.load(v);
+        ToolProperty.prototype.setValue.call(this, v);
+      }
+      getValue() {
+        return this.data;
+      }
+      copyTo(b) {
+        const origData = b.data;
+        super.copyTo(b);
+        b.data = origData;
+        origData.load(this.data);
+      }
+    };
+    ToolProperty.internalRegister(Vec2Property);
+    Vec3Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec3Property {
+  data : vec3;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.VEC3;
+      constructor(data, apiname, uiname, description) {
+        super(PropTypes.VEC3, void 0, apiname, uiname, description);
+        this.type = PropTypes.VEC3;
+        this.data = new Vector3(data);
+      }
+      isColor() {
+        this.subtype = PropSubTypes2.COLOR;
+        return this;
+      }
+      setValue(v) {
+        this.data.load(v);
+        ToolProperty.prototype.setValue.call(this, v);
+      }
+      getValue() {
+        return this.data;
+      }
+    };
+    ToolProperty.internalRegister(Vec3Property);
+    Vec4Property = class extends VecPropertyBase {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Vec4Property {
+  data : vec4;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.VEC4;
+      constructor(data, apiname, uiname, description) {
+        super(PropTypes.VEC4, void 0, apiname, uiname, description);
+        this.type = PropTypes.VEC4;
+        this.data = new Vector4(data);
+      }
+      setValue(v, w = 1) {
+        const vec = v;
+        const d = this.data;
+        d.load(vec);
+        if (vec.length < 3) {
+          d[2] = 0;
+        }
+        if (vec.length < 4) {
+          d[3] = w;
+        }
+        ToolProperty.prototype.setValue.call(this, d);
+      }
+      // set subtype to isColor and return this,
+      // used for chain.
+      isColor() {
+        this.subtype = PropSubTypes2.COLOR;
+        return this;
+      }
+      getValue() {
+        return this.data;
+      }
+      copyTo(b) {
+        const data = b.data;
+        super.copyTo(b);
+        b.data = data;
+        b.data.load(this.data);
+      }
+    };
+    ToolProperty.internalRegister(Vec4Property);
+    QuatProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.QuatProperty {
+  data : vec4;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.QUAT;
+      constructor(data, apiname, uiname, description) {
+        super(PropTypes.QUAT, void 0, apiname, uiname, description);
+        this.data = new Quat(data);
+      }
+      equals(b) {
+        const d = this.data;
+        return d.vectorDistance(b.data) < 1e-5;
+      }
+      setValue(v) {
+        this.data.load(v);
+        super.setValue(v);
+      }
+      getValue() {
+        return this.data;
+      }
+      copyTo(b) {
+        const data = b.data;
+        super.copyTo(b);
+        b.data = data;
+        b.data.load(this.data);
+      }
+    };
+    ToolProperty.internalRegister(QuatProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/matrix.ts
+var Mat4Property;
+var init_matrix = __esm({
+  "scripts/path-controller/toolsys/props/matrix.ts"() {
+    "use strict";
+    init_vectormath();
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    Mat4Property = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.Mat4Property {
+  data           : mat4;
+}
+`
+      );
+      static PROP_TYPE_ID = PropTypes.MATRIX4;
+      constructor(data, apiname, uiname, description) {
+        super(PropTypes.MATRIX4, void 0, apiname, uiname, description);
+        this.data = new Matrix4(data);
+      }
+      calcMemSize() {
+        return super.calcMemSize() + 16 * 8 + 32;
+      }
+      equals(b) {
+        const m1 = this.data.$matrix;
+        const m2 = b.data.$matrix;
+        for (let i2 = 1; i2 <= 4; i2++) {
+          for (let j = 1; j <= 4; j++) {
+            const key = `m${i2}${j}`;
+            if (Math.abs(m1[key] - m2[key]) > 1e-5) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+      setValue(v) {
+        this.data.load(v);
+        super.setValue(v);
+      }
+      getValue() {
+        return this.data;
+      }
+      copyTo(b) {
+        const data = b.data;
+        super.copyTo(b);
+        b.data = data;
+        b.data.load(this.data);
+      }
+    };
+    ToolProperty.internalRegister(Mat4Property);
+  }
+});
+
+// scripts/path-controller/toolsys/props/list.ts
+var ListProperty;
+var init_list = __esm({
+  "scripts/path-controller/toolsys/props/list.ts"() {
+    "use strict";
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    ListProperty = class _ListProperty extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.ListProperty {
+  prop  : abstract(ToolProperty);
+  value : array(abstract(ToolProperty));
+}`
+      );
+      static PROP_TYPE_ID = PropTypes.PROPLIST;
+      prop;
+      value;
+      /*
+       * Prop must be a ToolProperty subclass instance
+       * */
+      constructor(prop, list5 = [], uiname = "") {
+        super(PropTypes.PROPLIST);
+        this.uiname = uiname;
+        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
+        if (typeof prop == "number") {
+          const cls = PropClasses[prop];
+          if (cls !== void 0) {
+            prop = new cls();
+          }
+        } else if (prop !== void 0) {
+          if (prop instanceof ToolProperty) {
+            prop = prop.copy();
+          } else {
+            prop = new prop();
+          }
+        }
+        this.prop = prop;
+        this.value = [];
+        if (list5) {
+          for (const val of list5) {
+            this.push(val);
+          }
+        }
+        this.wasSet = false;
+      }
+      get length() {
+        return this.value.length;
+      }
+      set length(val) {
+        this.value.length = val;
+      }
+      splice(i2, deleteCount, ...newItems) {
+        const deletedItems = this.value.splice(i2, deleteCount, ...newItems);
+        this.length = this.value.length;
+        return deletedItems;
+      }
+      calcMemSize() {
+        let tot = super.calcMemSize();
+        let psize = this.prop ? this.prop.calcMemSize() + 8 : 8;
+        if (!this.prop && this.value.length > 0) {
+          psize = this.value[0].calcMemSize();
+        }
+        tot += psize * this.value.length + 8;
+        tot += 16;
+        return tot;
+      }
+      equals(b) {
+        const lb = b;
+        const l1 = this.value ? this.value.length : 0;
+        const l2 = lb.value ? lb.value.length : 0;
+        if (l1 !== l2) {
+          return false;
+        }
+        for (let i2 = 0; i2 < l1; i2++) {
+          const prop1 = this.value[i2];
+          const prop2 = lb.value[i2];
+          let bad = prop1.constructor !== prop2.constructor;
+          bad = bad || !prop1.equals(prop2);
+          if (bad) {
+            return false;
+          }
+        }
+        return true;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        const lb = b;
+        lb.prop = this.prop.copy();
+        lb.value = [];
+        for (const prop of this.value) {
+          lb.value.push(prop.copy());
+        }
+      }
+      copy() {
+        const ret = new _ListProperty(this.prop.copy());
+        this.copyTo(ret);
+        return ret;
+      }
+      push(item) {
+        if (item === void 0) {
+          item = this.prop.copy();
+        }
+        if (!(item instanceof ToolProperty)) {
+          const prop = this.prop.copy();
+          prop.setValue(item);
+          item = prop;
+        }
+        this.value.push(item);
+        return item;
+      }
+      clear() {
+        this.value.length = 0;
+        return this;
+      }
+      getListItem(i2) {
+        if (i2 < 0) {
+          i2 += this.length;
+        }
+        return this.value[i2].getValue();
+      }
+      setListItem(i2, val) {
+        if (i2 < 0) {
+          i2 += this.length;
+        }
+        this.value[i2].setValue(val);
+      }
+      setValue(value) {
+        this.clear();
+        for (const item of value) {
+          const prop = this.push();
+          if (typeof item !== "object") {
+            prop.setValue(item);
+          } else if (item instanceof prop.constructor) {
+            item.copyTo(prop);
+          } else {
+            this.report(item);
+            throw new Error("invalid value " + item);
+          }
+        }
+        super.setValue(value);
+      }
+      getValue() {
+        return this.value;
+      }
+      [Symbol.iterator]() {
+        const list5 = this.value;
+        return (function* () {
+          for (const item of list5) {
+            yield item.getValue();
+          }
+        })();
+      }
+    };
+    ToolProperty.internalRegister(ListProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/props/string_set.ts
+var StringSetProperty;
+var init_string_set = __esm({
+  "scripts/path-controller/toolsys/props/string_set.ts"() {
+    "use strict";
+    init_util();
+    init_toolprop_abstract();
+    init_struct();
+    init_base();
+    StringSetProperty = class extends ToolProperty {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolprop.StringSetProperty {
+  value  : iter(string);
+  values : iterkeys(string);
+}`
+      );
+      static PROP_TYPE_ID = PropTypes.STRSET;
+      value;
+      values;
+      ui_value_names;
+      descriptions;
+      iconmap;
+      iconmap2;
+      constructor(value, definition = []) {
+        super(PropTypes.STRSET);
+        const values = [];
+        this.value = new set();
+        const def = definition;
+        if (Array.isArray(def) || def instanceof set || def instanceof Set) {
+          for (const item of def) {
+            values.push(item);
+          }
+        } else if (typeof def === "object") {
+          for (const k in def) {
+            values.push(k);
+          }
+        } else if (typeof def === "string") {
+          values.push(def);
+        }
+        this.values = {};
+        this.ui_value_names = {};
+        this.descriptions = {};
+        this.iconmap = {};
+        this.iconmap2 = {};
+        for (const v of values) {
+          this.values[v] = v;
+          const uiname = ToolProperty.makeUIName(v);
+          this.ui_value_names[v] = uiname;
+        }
+        if (value !== void 0 && value !== null) {
+          this.setValue(value);
+        }
+        this.wasSet = false;
+      }
+      calcMemSize() {
+        let tot = super.calcMemSize();
+        for (const k in this.values) {
+          tot += (k.length + 16) * 5;
+        }
+        if (this.descriptions) {
+          for (const k in this.descriptions) {
+            tot += (k.length + this.descriptions[k].length + 8) * 4;
+          }
+        }
+        return tot + 64;
+      }
+      equals(b) {
+        return this.value.equals(b.value);
+      }
+      /*
+       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+       * If destructive is true, then existing set will be cleared.
+       * */
+      setValue(values, destructive = true, soft_fail = true) {
+        let bad = typeof values !== "string";
+        bad = bad && typeof values !== "object";
+        bad = bad && values !== void 0 && values !== null;
+        if (bad) {
+          if (soft_fail) {
+            this.report("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+            return;
+          } else {
+            throw new Error("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+          }
+        }
+        if (!values) {
+          this.value.clear();
+        } else if (typeof values === "string") {
+          if (destructive) this.value.clear();
+          if (!(values in this.values)) {
+            if (soft_fail) {
+              this.report(`"${values}" is not in this StringSetProperty`);
+              return;
+            } else {
+              throw new Error(`"${values}" is not in this StringSetProperty`);
+            }
+          }
+          this.value.add(values);
+        } else {
+          const data = [];
+          if (Array.isArray(values) || values instanceof set || values instanceof Set) {
+            for (const item of values) {
+              data.push(item);
+            }
+          } else {
+            for (const k in values) {
+              data.push(k);
+            }
+          }
+          for (const item of data) {
+            if (!(item in this.values)) {
+              if (soft_fail) {
+                this.report(`"${item}" is not in this StringSetProperty`);
+                continue;
+              } else {
+                throw new Error(`"${item}" is not in this StringSetProperty`);
+              }
+            }
+            this.value.add(item);
+          }
+        }
+        super.setValue(this.value);
+      }
+      getValue() {
+        return this.value;
+      }
+      addIcons2(iconmap2) {
+        if (iconmap2 === void 0) return this;
+        for (const k in iconmap2) {
+          this.iconmap2[k] = iconmap2[k];
+        }
+        return this;
+      }
+      addIcons(iconmap) {
+        if (iconmap === void 0) return this;
+        for (const k in iconmap) {
+          this.iconmap[k] = iconmap[k];
+        }
+        return this;
+      }
+      addUINames(map3) {
+        for (const k in map3) {
+          this.ui_value_names[k] = map3[k];
+        }
+        return this;
+      }
+      addDescriptions(map3) {
+        for (const k in map3) {
+          this.descriptions[k] = map3[k];
+        }
+        return this;
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        const sb = b;
+        for (const val of this.value) {
+          sb.value.add(val);
+        }
+        sb.values = {};
+        for (const k in this.values) {
+          sb.values[k] = this.values[k];
+        }
+        sb.ui_value_names = {};
+        for (const k in this.ui_value_names) {
+          sb.ui_value_names[k] = this.ui_value_names[k];
+        }
+        sb.iconmap = {};
+        sb.iconmap2 = {};
+        for (const k in this.iconmap) {
+          sb.iconmap[k] = this.iconmap[k];
+        }
+        for (const k in this.iconmap2) {
+          sb.iconmap2[k] = this.iconmap2[k];
+        }
+        sb.descriptions = {};
+        for (const k in this.descriptions) {
+          sb.descriptions[k] = this.descriptions[k];
+        }
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+        const values = this.values;
+        this.values = {};
+        for (const s of values) {
+          this.values[s] = s;
+        }
+        this.value = new set(this.value);
+      }
+    };
+    ToolProperty.internalRegister(StringSetProperty);
+  }
+});
+
+// scripts/path-controller/toolsys/toolprop.ts
+var init_toolprop = __esm({
+  "scripts/path-controller/toolsys/toolprop.ts"() {
+    "use strict";
+    init_toolprop_abstract();
+    init_units2();
+    init_base();
+    init_array();
+    init_string();
+    init_number();
+    init_bool();
+    init_enum();
+    init_vector();
+    init_matrix();
+    init_list();
+    init_string_set();
+  }
+});
+
+// scripts/core/theme_base_types.ts
+var TypedThemeObject;
+var init_theme_base_types = __esm({
+  "scripts/core/theme_base_types.ts"() {
+    "use strict";
+    init_toolprop();
+    TypedThemeObject = class {
+      /* Child classes MUST add a withVars static method!
+        E.g.: 
+        
+        static withVars(args?: ThemeTypeArgsWithVars<SomeArgs>): ThemeRecord { 
+          return new this(args as unknown as SomeArgs, false); 
+        }
+       */
+      /**
+       * Does NOT load values of args into properties, derived classes do that.
+       * Also doesn't enforce optionality, since the meaning of props has to do
+       * with the properties in the class itself, not the arguments.
+       */
+      constructor(args, validate) {
+        if (args && validate) {
+          const props = this.getProps();
+          const check = (ok, key, val) => {
+            if (!ok) {
+              throw new Error(`invalid value for "${key}": ${val}`);
+            }
+          };
+          for (const key in props) {
+            const prop = props[key];
+            const value = args[key];
+            if (value === void 0) {
+              continue;
+            }
+            if (prop instanceof StringPropertyBase) {
+              check(typeof value === "string", key, value);
+            } else if (prop instanceof EnumProperty) {
+              check(typeof value === typeof prop.getValue(), key, value);
+            } else if (prop instanceof FlagProperty) {
+              check(typeof value === "boolean", key, value);
+            } else if (prop instanceof IntProperty) {
+              check(typeof value === "number" && Number.isInteger(value), key, value);
+            } else if (prop instanceof FloatProperty) {
+              check(typeof value === "number" && !isNaN(value) && isFinite(value), key, value);
+            } else if (prop instanceof BoolProperty) {
+              check(typeof value === "boolean", key, value);
+            } else if (prop instanceof Vec4Property || prop instanceof Vec3Property) {
+              check(typeof value === "string", key, value);
+            } else {
+              console.warn(
+                `Warning: unsupported property type for "${key} in ${this.constructor.name}"`
+              );
+            }
+          }
+        }
+      }
+      getProps() {
+        return this.constructor.Props;
+      }
+      getLiteral() {
+        const ret = {};
+        for (const key of Object.keys(this.getProps())) {
+          ret[key] = this[key].getValue();
+        }
+        return ret;
+      }
+    };
+  }
+});
+
 // scripts/core/cssfont.ts
-var _digest, CSSFont;
+var _digest, CSSFontProps, CSSFont;
 var init_cssfont = __esm({
   "scripts/core/cssfont.ts"() {
     "use strict";
     init_struct2();
     init_util2();
+    init_theme_base_types();
+    init_toolprop();
     _digest = new HashDigest();
-    CSSFont = class _CSSFont {
+    CSSFontProps = {
+      size: new FloatProperty().setUnit("pixel"),
+      font: new StringProperty(),
+      style: new StringProperty(),
+      weight: new StringProperty(),
+      variant: new StringProperty(),
+      // note: we don't actually store using vec4, just using it for validation as a color
+      color: new Vec4Property().isColor()
+    };
+    CSSFont = class _CSSFont extends TypedThemeObject {
+      static Props = CSSFontProps;
       _size;
       font;
       style;
@@ -11168,7 +14079,15 @@ var init_cssfont = __esm({
       variant;
       color;
       static STRUCT;
-      constructor(args = {}) {
+      /**
+       * Used to create an instance that can accept theme vars.
+       * All child classes must have this.
+       */
+      static withVars(args = {}) {
+        return new _CSSFont(args, false);
+      }
+      constructor(args = {}, validate = false) {
+        super(args, validate);
         this._size = args.size ? args.size : 12;
         this.font = args.font ?? "";
         this.style = args.style !== void 0 ? args.style : "normal";
@@ -11417,7 +14336,7 @@ var init_const = __esm({
       numSliderArrowLimit: 15,
       simpleNumSliders: false,
       menusCanPopupAbove: false,
-      menu_close_time: 500,
+      menu_close_time: 100,
       doubleClickTime: 500,
       doubleClickHoldTime: 750,
       DEBUG: {
@@ -11588,13 +14507,18 @@ function invertTheme() {
   document.body.style.backgroundColor = bg;
   for (const styleKey in theme) {
     const style = theme[styleKey];
-    if (typeof style !== "object" || style instanceof CSSFont) {
+    if (typeof style !== "object" || style instanceof CSSFont || style instanceof BoxBorder || style instanceof ThemeScrollBars) {
       continue;
     }
     const styleRec = style;
     for (const k in styleRec) {
       const v = styleRec[k];
-      if (v instanceof CSSFont) {
+      if (v instanceof BoxBorder) {
+        v.color = v.color ? inverted(v.color) : void 0;
+      } else if (v instanceof ThemeScrollBars) {
+        v.color = v.color ? inverted(v.color) : void 0;
+        v.color2 = v.color2 ? inverted(v.color2) : void 0;
+      } else if (v instanceof CSSFont) {
         v.color = inverted(v.color);
       } else if (typeof v === "string") {
         const vLower = v.trim().toLowerCase();
@@ -11664,6 +14588,21 @@ ${indent}})`;
         s2 += indent + "}";
         return s2;
       }
+    } else if (v instanceof BoxBorder) {
+      return `new BoxBorder({
+${indent}  borderColor : ${writekey(v.color)},
+${indent}  borderWidth : ${writekey(v.width)},
+${indent}  borderRadius : ${writekey(v.radius)},
+${indent}  borderStyle : ${writekey(v.style)},
+    })`;
+    } else if (v instanceof ThemeScrollBars) {
+      return `new ThemeScrollBars({
+${indent}  border   : ${writekey(v.border)},
+${indent}  color    : ${writekey(v.color)},
+${indent}  color2   : ${writekey(v.color2)},
+${indent}  contrast : ${writekey(v.contrast)},
+${indent}  width     : ${writekey(v.width)}
+${indent}})`;
     } else {
       return "" + v;
     }
@@ -11675,7 +14614,7 @@ ${indent}})`;
     }
     s += "  " + k2 + ": ";
     const v = theme1[k];
-    if (typeof v !== "object" || v instanceof CSSFont) {
+    if (typeof v !== "object" || v instanceof CSSFont || v instanceof BoxBorder || v instanceof ThemeScrollBars) {
       s += writekey(v, "  ") + ",\n";
     } else {
       s += " {\n";
@@ -11706,7 +14645,7 @@ ${indent}})`;
   return s;
 }
 function copyTheme(themeObj) {
-  if (themeObj instanceof CSSFont) {
+  if (themeObj instanceof CSSFont || themeObj instanceof BoxBorder || themeObj instanceof ThemeScrollBars) {
     return themeObj.copy();
   }
   const ret = {};
@@ -11723,32 +14662,154 @@ function copyTheme(themeObj) {
   }
   return ret;
 }
-var ThemeScrollBars, compatMap, ColorSchemeTypes, css2color_rets, basic_colors, validate_pat, num, validate_rgba, validate_rgb, theme;
+var _digest2, ThemeScrollBarProps, ThemeScrollBars, BoxRecordProps, BoxBorder, compatMap, ColorSchemeTypes, css2color_rets, basic_colors, validate_pat, num, validate_rgba, validate_rgb, theme;
 var init_ui_theme = __esm({
   "scripts/core/ui_theme.ts"() {
     "use strict";
+    init_toolprop();
     init_util();
     init_vectormath();
     init_const();
     init_cssfont();
-    ThemeScrollBars = class {
+    init_nstructjs_es6();
+    init_theme_base_types();
+    _digest2 = new HashDigest();
+    ThemeScrollBarProps = {
+      border: new StringProperty().setOptional().setUnit("pixel"),
+      color: new Vec4Property().isColor().setOptional(),
+      color2: new Vec4Property().isColor().setOptional(),
+      contrast: new FloatProperty().setOptional().noUnits(),
+      width: new FloatProperty().setOptional().setUnit("pixel")
+    };
+    ThemeScrollBars = class _ThemeScrollBars extends TypedThemeObject {
+      static Props = ThemeScrollBarProps;
       border;
       color;
       color2;
       contrast;
       width;
-      constructor({
-        border,
-        color,
-        color2,
-        contrast,
-        width
-      }) {
+      /**
+       * Used to create an instance that can accept theme vars.
+       * All child classes must have this.
+       */
+      static withVars(args = {}) {
+        return new _ThemeScrollBars(
+          args,
+          false
+        );
+      }
+      constructor({ border, color, color2, contrast, width } = {}, validate = true) {
+        super(
+          {
+            border,
+            color,
+            color2,
+            contrast,
+            width
+          },
+          validate
+        );
         this.border = border;
         this.color = color;
         this.color2 = color2;
         this.contrast = contrast;
         this.width = width;
+      }
+      copyTo(b) {
+        b.border = this.border;
+        b.color = this.color;
+        b.color2 = this.color2;
+        b.contrast = this.contrast;
+        b.width = this.width;
+      }
+      copy() {
+        const b = new _ThemeScrollBars();
+        this.copyTo(b);
+        return b;
+      }
+      calcHashUpdate(digest = _digest2.reset()) {
+        digest.add(this.border || "");
+        digest.add(this.color || "");
+        digest.add(this.color2 || "");
+        digest.add(this.contrast || 0);
+        digest.add(this.width || 0);
+        return digest.get();
+      }
+    };
+    BoxRecordProps = {
+      isOutline: new BoolProperty().setOptional(),
+      radius: new FloatProperty().setOptional().setUnit("pixel"),
+      color: new Vec4Property().isColor().setOptional(),
+      width: new FloatProperty().setOptional().setUnit("pixel"),
+      style: new StringProperty().setOptional(),
+      offset: new FloatProperty().setOptional().setUnit("pixel")
+    };
+    BoxBorder = class _BoxBorder extends TypedThemeObject {
+      static Props = BoxRecordProps;
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.BoxBorder {
+      isOutline : bool;
+      radius    : double;
+      color     : string;
+      width     : double;
+      style     : string;
+      offset    : double;
+    }
+  `
+      );
+      /**
+       * Used to create an instance that can accept theme vars.
+       * All child classes must have this.
+       */
+      static withVars(args = {}) {
+        return new _BoxBorder(args, false);
+      }
+      // use outline instead of border CSS properties
+      isOutline;
+      radius;
+      color;
+      width;
+      style;
+      offset;
+      get prefix() {
+        return this.isOutline ? "outline" : "border";
+      }
+      constructor(args = {}, validate = false) {
+        super(args, validate);
+        const { radius, color, width, style, offset, isOutline } = args;
+        this.offset = offset;
+        this.isOutline = isOutline;
+        this.radius = radius;
+        this.color = color;
+        this.width = width;
+        this.style = style;
+      }
+      copyTo(b) {
+        b.isOutline = this.isOutline;
+        b.radius = this.radius;
+        b.color = this.color;
+        b.width = this.width;
+        b.style = this.style;
+        b.offset = this.offset;
+      }
+      copy() {
+        const b = new _BoxBorder();
+        this.copyTo(b);
+        return b;
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+      }
+      calcHashUpdate(digest = _digest2.reset()) {
+        digest.add(this.radius || 0);
+        digest.add(this.color || "");
+        digest.add(this.width || 0);
+        digest.add(this.style || "");
+        digest.add(this.isOutline ? 1 : 0);
+        digest.add(this.offset ?? 0);
+        return digest.get();
       }
     };
     compatMap = {
@@ -11807,12 +14868,15 @@ function getVars(vars3) {
 function instanceThemeVars(theme4, vars3) {
   return copyRecord(theme4, vars3, "");
 }
+function copyRecordTo(dest, rec, vars3, path) {
+  for (const key in rec) {
+    dest[key] = copyThemeItem(rec[key], vars3, path ? `${path}.${key}` : key);
+  }
+  return dest;
+}
 function copyRecord(rec, vars3, path) {
   const ret = {};
-  for (const key in rec) {
-    ret[key] = copyThemeItem(rec[key], vars3, path ? `${path}.${key}` : key);
-  }
-  return ret;
+  return copyRecordTo(ret, rec, vars3, path);
 }
 function copyThemeItem(item, vars3 = {}, path = "") {
   if (item instanceof ThemeVar) {
@@ -11825,11 +14889,10 @@ function copyThemeItem(item, vars3 = {}, path = "") {
     }
     return copyThemeItem(value, vars3, path);
   }
-  if (item instanceof CSSFont) {
-    return item.copy();
-  }
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
+  if (item instanceof TypedThemeObject) {
+    const copy = item.copy();
+    copyRecordTo(copy, item, vars3, path);
+    return copy;
   }
   if (Array.isArray(item)) {
     throw new Error(`arrays are not theme values, at "${path}"`);
@@ -11843,11 +14906,8 @@ function copyVarItem(item) {
   if (item instanceof ThemeVar) {
     return new ThemeVar(item.key);
   }
-  if (item instanceof CSSFont) {
+  if (item instanceof CSSFont || item instanceof BoxBorder || item instanceof ThemeScrollBars) {
     return item.copy();
-  }
-  if (item instanceof ThemeScrollBars) {
-    return new ThemeScrollBars({ ...item });
   }
   if (typeof item === "object" && item !== null) {
     const ret = {};
@@ -11867,7 +14927,7 @@ function isWalkable(item) {
   return typeof item === "object" && item !== null && !(item instanceof ThemeVar);
 }
 function isPlainRecord(item) {
-  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars);
+  return isWalkable(item) && !(item instanceof CSSFont) && !(item instanceof ThemeScrollBars) && !(item instanceof BoxBorder);
 }
 function itemAt(rec, path) {
   let item = rec;
@@ -12050,6 +15110,9 @@ function createThemeFile({
   if (items.some((item) => usesClass(item, ThemeScrollBars))) {
     names.push("ThemeScrollBars");
   }
+  if (items.some((item) => usesClass(item, BoxBorder))) {
+    names.push("BoxBorder");
+  }
   const header = `//XXX warning: auto-generated file!
 
 import { ${names.sort().join(", ")} } from ${quote(importPath)};
@@ -12149,7 +15212,7 @@ function usesClass(item, cls) {
   if (item instanceof cls) {
     return true;
   }
-  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars) {
+  if (item instanceof ThemeVar || item instanceof CSSFont || item instanceof ThemeScrollBars || item instanceof BoxBorder) {
     return false;
   }
   if (typeof item !== "object" || item === null) {
@@ -12196,6 +15259,14 @@ function writeItem(item, indent) {
       width: item.width
     })})`;
   }
+  if (item instanceof BoxBorder) {
+    return `new BoxBorder(${writeArgs({
+      borderRadius: item.radius,
+      borderColor: item.color,
+      borderWidth: item.width,
+      borderStyle: item.style
+    })})`;
+  }
   if (Array.isArray(item)) {
     throw new Error("arrays are not theme values");
   }
@@ -12226,6 +15297,7 @@ var init_ui_theme_utils = __esm({
   "scripts/core/ui_theme_utils.ts"() {
     "use strict";
     init_cssfont();
+    init_theme_base_types();
     init_ui_theme();
     ThemeVar = class {
       key;
@@ -12269,7 +15341,8 @@ var init_theme = __esm({
         style: "normal",
         size: 14,
         color: "rgba(35, 35, 35, 1.0)"
-      })
+      }),
+      borderColor: "#DADCE0"
     };
     vars = getVars(themeVars);
     theme2 = {
@@ -12311,10 +15384,12 @@ var init_theme = __esm({
           color: "rgba(35,35,35, 1)"
         }),
         "background-color": "rgba(238,238,238, 0.8672412740773168)",
-        "border-color": "rgba(255,255,255, 1)",
-        "border-radius": 4,
-        "border-style": "solid",
-        "border-width": 2,
+        border: new BoxBorder({
+          "color": "rgba(255,255,255, 1)",
+          "radius": 4,
+          "style": "solid",
+          "width": 2
+        }),
         disabled: {
           DefaultText: new CSSFont({
             font: "poppins",
@@ -12340,10 +15415,12 @@ var init_theme = __esm({
             color: "rgba(255,255,255, 1)"
           }),
           "background-color": "rgba(138,222,255, 1)",
-          "border-color": "rgba(255,255,255, 1)",
-          "border-radius": 4,
-          "border-style": "solid",
-          "border-width": 2
+          border: new BoxBorder({
+            "color": "rgba(255,255,255, 1)",
+            "radius": 4,
+            "style": "solid",
+            "width": 2
+          })
         },
         "highlight-pressed": {
           DefaultText: new CSSFont({
@@ -12355,7 +15432,7 @@ var init_theme = __esm({
             color: "rgba(35,35,35, 1)"
           }),
           "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
+          "border-color": vars.borderColor,
           "border-style": "solid",
           "border-width": 1
         },
@@ -12373,7 +15450,7 @@ var init_theme = __esm({
             color: "rgba(35,35,35, 1)"
           }),
           "background-color": "rgba(113,113,113, 1)",
-          "border-color": "#DADCE0",
+          "border-color": vars.borderColor,
           "border-style": "solid",
           "border-width": 1
         },
@@ -12493,6 +15570,7 @@ var init_theme = __esm({
         "background-color": "rgba(160, 160, 160, 1.0)",
         cellWidth: 96,
         cellHeight: 96,
+        rowHeight: 64,
         overscanRows: 2,
         height: 320,
         width: 420
@@ -12507,7 +15585,16 @@ var init_theme = __esm({
           width: 1
         },
         margin: 4,
-        padding: 3
+        padding: 3,
+        boxPadding: 6,
+        rowFont: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        })
       },
       listbox: {
         ListActive: "rgba(200, 205, 215, 1.0)",
@@ -12565,7 +15652,6 @@ var init_theme = __esm({
       },
       menu: {
         MenuBG: "rgba(250, 250, 250, 1.0)",
-        "item-radius": 0,
         MenuBorder: "1px solid grey",
         MenuHighlight: "rgba(155, 220, 255, 1.0)",
         MenuSeparator: {
@@ -12600,10 +15686,30 @@ var init_theme = __esm({
         "padding-left": 0,
         "padding-right": 0,
         "padding-bottom": 0,
-        "border-color": "grey",
-        "border-radius": 5,
-        "border-style": "solid",
-        "border-width": 1
+        item: {
+          "padding-right": 16,
+          "padding-left": 16,
+          "padding-top": 6,
+          "padding-bottom": 6,
+          "border": BoxBorder.withVars({
+            "color": "transparent",
+            "radius": 0,
+            "style": "none",
+            "width": 0
+          })
+        },
+        "highlight-item": {
+          "padding-right": 16,
+          "padding-left": 16,
+          "padding-top": 6,
+          "padding-bottom": 6,
+          "border": BoxBorder.withVars({
+            "color": "transparent",
+            "radius": 0,
+            "style": "none",
+            "width": 0
+          })
+        }
       },
       notification: {
         DefaultText: new CSSFont({
@@ -12826,6 +15932,19 @@ var init_theme = __esm({
         height: 18,
         padding: 3,
         width: 100
+      },
+      popup: {
+        border: BoxBorder.withVars({
+          "color": vars.borderColor,
+          "radius": 4,
+          "style": "solid",
+          "width": 1
+        }),
+        "padding-bottom": 12,
+        "padding-left": 12,
+        "padding-right": 12,
+        "padding-top": 12,
+        "boxShadow": "unset"
       }
     };
     DefaultTheme = instanceThemeVars(theme2, themeVars);
@@ -12836,7 +15955,7 @@ var init_theme = __esm({
 function setTheme(theme22) {
   for (const k in theme22) {
     const v = theme22[k];
-    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof ThemeScrollBars) {
+    if (typeof v !== "object" || v === null || v instanceof CSSFont || v instanceof BoxBorder || v instanceof ThemeScrollBars) {
       theme[k] = v;
       continue;
     }
@@ -12895,7 +16014,7 @@ ${selector}::-webkit-scrollbar-thumb {
     `;
   return buf;
 }
-function calcThemeKey(digest = _digest2.reset()) {
+function calcThemeKey(digest = _digest3.reset()) {
   const anyTheme = theme;
   for (const k in anyTheme) {
     const obj = anyTheme[k];
@@ -12906,7 +16025,7 @@ function calcThemeKey(digest = _digest2.reset()) {
       const v2 = obj[k2];
       if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
         digest.add(v2);
-      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
+      } else if (typeof v2 === "object" && (v2 instanceof CSSFont || v2 instanceof BoxBorder || v2 instanceof ThemeScrollBars)) {
         v2.calcHashUpdate(digest);
       }
     }
@@ -12916,7 +16035,7 @@ function calcThemeKey(digest = _digest2.reset()) {
 function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
 }
-var ErrorColors, _testSetScrollbars, _digest2, _themeUpdateKey;
+var ErrorColors, _testSetScrollbars, _digest3, _themeUpdateKey;
 var init_ui_theme_key = __esm({
   "scripts/core/base/ui_theme_key.ts"() {
     "use strict";
@@ -12924,6 +16043,7 @@ var init_ui_theme_key = __esm({
     init_colorutils2();
     init_cssfont();
     init_theme();
+    init_ui_theme();
     init_ui_theme();
     ErrorColors = {
       WARNING: "yellow",
@@ -12934,7 +16054,7 @@ var init_ui_theme_key = __esm({
     _testSetScrollbars = function(color = "grey", contrast = 0.5, width = 15, border = "solid") {
       return styleScrollBars(color, void 0, contrast, width, border, "*");
     };
-    _digest2 = new HashDigest();
+    _digest3 = new HashDigest();
     _themeUpdateKey = calcThemeKey();
     window._flagThemeUpdate = flagThemeUpdate;
   }
@@ -14148,2825 +17268,6 @@ var init_ui_base_modal = __esm({
   }
 });
 
-// scripts/path-controller/units/units.ts
-function myfloor(f2) {
-  return Math.floor(f2 + FLT_EPSILONE * 2);
-}
-function normString(s) {
-  s = s.replace(/ /g, "").replace(/\t/g, "");
-  return s.toLowerCase();
-}
-function myToFixed(f2, decimals) {
-  if (typeof f2 !== "number") {
-    return "(error)";
-  }
-  let s = f2.toFixed(decimals);
-  while (s.endsWith("0") && s.search(/\./) >= 0) {
-    s = s.slice(0, s.length - 1);
-  }
-  if (s.endsWith(".")) {
-    s = s.slice(0, s.length - 1);
-  }
-  if (s.length === 0) s = "0";
-  return s.trim();
-}
-function setBaseUnit(unit) {
-  Unit.baseUnit = unit;
-}
-function setMetric(val) {
-  Unit.isMetric = val;
-}
-function isnumber(s) {
-  s = ("" + s).trim();
-  function test2(re) {
-    return s.search(re) === 0;
-  }
-  return test2(intre) || test2(numre1) || test2(numre2) || test2(hexre1) || test2(hexre2) || test2(binre) || test2(expre);
-}
-function parseValueIntern(string, baseUnit) {
-  string = string.trim();
-  if (string[0] === ".") {
-    string = "0" + string;
-  }
-  if (typeof baseUnit === "string") {
-    const base = Unit.getUnit(baseUnit);
-    if (base === void 0 && baseUnit !== "none") {
-      console.warn("Unknown unit " + baseUnit);
-      return NaN;
-    }
-    baseUnit = base;
-  }
-  if (isnumber(string)) {
-    const f2 = parseFloat(string);
-    return f2;
-  }
-  if (baseUnit === void 0) {
-    console.warn("No base unit in units.js:parseValueIntern");
-  }
-  for (const unit of Units) {
-    if (unit.validate(string)) {
-      console.log(unit);
-      let value = unit.parse(string);
-      if (baseUnit) {
-        value = unit.toInternal(value);
-        return baseUnit.fromInternal(value);
-      } else {
-        return value;
-      }
-    }
-  }
-  return NaN;
-}
-function parseValue(string, baseUnit, displayUnit) {
-  const displayUnitCls = Unit.getUnit(displayUnit);
-  const baseUnitCls = Unit.getUnit(baseUnit);
-  let f2 = parseValueIntern(string, displayUnitCls || baseUnitCls);
-  if (displayUnitCls) {
-    f2 = displayUnitCls.toInternal(f2);
-  }
-  if (baseUnitCls) {
-    f2 = baseUnitCls.fromInternal(f2);
-  }
-  return f2;
-}
-function isNumber(string) {
-  if (isnumber(string)) {
-    return true;
-  }
-  for (const unit of Units) {
-    if (unit.validate(string)) {
-      return true;
-    }
-  }
-  return false;
-}
-function convert(value, unita, unitb) {
-  if (typeof unita === "string") {
-    unita = Unit.getUnit(unita);
-  }
-  if (typeof unitb === "string") {
-    unitb = Unit.getUnit(unitb);
-  }
-  if (unita && unitb) {
-    return unitb.fromInternal(unita.toInternal(value));
-  } else if (unitb) {
-    return unitb.fromInternal(value);
-  } else if (unita) {
-    return unita.toInternal(value);
-  } else {
-    return value;
-  }
-}
-function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {
-  if (typeof baseUnit === "string" && baseUnit !== "none") {
-    baseUnit = Unit.getUnit(baseUnit);
-  }
-  if (typeof displayUnit === "string" && displayUnit !== "none") {
-    displayUnit = Unit.getUnit(displayUnit);
-  }
-  if (displayUnit !== baseUnit) {
-    value = convert(value, baseUnit, displayUnit);
-  }
-  if (displayUnit && typeof displayUnit !== "string") {
-    return displayUnit.buildString(value, decimalPlaces);
-  } else {
-    return myToFixed(value, decimalPlaces);
-  }
-}
-var FLT_EPSILONE, Units, Unit, MeterUnit, InchUnit, CentimeterUnit, MillimeterUnit, foot_re, FootUnit, square_foot_re, SquareFootUnit, MileUnit, DegreeUnit, RadianUnit, numre1, numre2, hexre1, hexre2, binre, expre, intre, PixelUnit, PercentUnit;
-var init_units = __esm({
-  "scripts/path-controller/units/units.ts"() {
-    "use strict";
-    FLT_EPSILONE = 1192092895507812e-22;
-    Units = [];
-    Unit = class {
-      static baseUnit = "meter";
-      static isMetric = true;
-      static getUnit(name2) {
-        if (name2 === "none" || name2 === void 0) {
-          return void 0;
-        }
-        for (const cls of Units) {
-          if (cls.unitDefine().name === name2) {
-            return cls;
-          }
-        }
-        throw new Error("Unknown unit " + name2);
-      }
-      static register(cls) {
-        Units.push(cls);
-      }
-      //subclassed static methods start here
-      static unitDefine() {
-        return {
-          name: "",
-          uiname: "",
-          type: "",
-          //e.g. distance
-          icon: -1,
-          pattern: void 0
-          //a re literal to validate strings
-        };
-      }
-      static parse(string) {
-        return NaN;
-      }
-      static validate(string) {
-        string = normString(string);
-        const def = this.unitDefine();
-        const m = string.match(def.pattern);
-        if (!m) return false;
-        return m[0] === string;
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value;
-      }
-      static fromInternal(value) {
-        return value;
-      }
-      static buildString(value, decimals = 2) {
-        return "";
-      }
-    };
-    MeterUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "meter",
-          uiname: "Meter",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d*)?m$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.endsWith("m")) {
-          string = string.slice(0, string.length - 1);
-        }
-        return parseFloat(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value;
-      }
-      static fromInternal(value) {
-        return value;
-      }
-      static buildString(value, decimals = 2) {
-        return "" + myToFixed(value, decimals) + " m";
-      }
-    };
-    Unit.register(MeterUnit);
-    InchUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "inch",
-          uiname: "Inch",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d*)?(in|inch)$/
-        };
-      }
-      static parse(string) {
-        string = string.toLowerCase();
-        const i2 = string.indexOf("i");
-        if (i2 >= 0) {
-          string = string.slice(0, i2);
-        }
-        return parseInt(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value * 0.0254;
-      }
-      static fromInternal(value) {
-        return value / 0.0254;
-      }
-      static buildString(value, decimals = 2) {
-        return "" + myToFixed(value, decimals) + "in";
-      }
-    };
-    Unit.register(InchUnit);
-    CentimeterUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "centimeter",
-          uiname: "Centimeter",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d*)?cm$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.endsWith("cm")) {
-          string = string.slice(0, string.length - 2);
-        }
-        return parseFloat(string);
-      }
-      static toInternal(value) {
-        return value * 0.01;
-      }
-      static fromInternal(value) {
-        return value / 0.01;
-      }
-      static buildString(value, decimals = 2) {
-        return "" + myToFixed(value, decimals) + "cm";
-      }
-    };
-    Unit.register(CentimeterUnit);
-    MillimeterUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "millimeter",
-          uiname: "Millimeter",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d*)?mm$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.endsWith("mm")) {
-          string = string.slice(0, string.length - 2);
-        }
-        return parseFloat(string);
-      }
-      static toInternal(value) {
-        return value * 1e-3;
-      }
-      static fromInternal(value) {
-        return value / 1e-3;
-      }
-      static buildString(value, decimals = 2) {
-        return "" + myToFixed(value, decimals) + "mm";
-      }
-    };
-    Unit.register(MillimeterUnit);
-    foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
-    FootUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "foot",
-          uiname: "Foot",
-          type: "distance",
-          icon: -1,
-          pattern: foot_re
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        const i2 = string.search("ft");
-        let parts;
-        let vft = 0;
-        let vin = 0;
-        if (i2 >= 0) {
-          parts = string.split("ft");
-          const j = parts[1].search("in");
-          if (j >= 0) {
-            parts = [parts[0]].concat(parts[1].split("in"));
-            vin = parseFloat(parts[1]);
-          }
-          vft = parseFloat(parts[0]);
-        } else {
-          string = string.replace(/in/g, "");
-          vin = parseFloat(string);
-        }
-        return vin / 12 + vft;
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value * 0.3048;
-      }
-      static fromInternal(value) {
-        return value / 0.3048;
-      }
-      static buildString(value, decimals = 2) {
-        const vft = myfloor(value);
-        const vin = (value + FLT_EPSILONE * 2) * 12 % 12;
-        if (vft === 0) {
-          return myToFixed(vin, decimals) + " in";
-        }
-        let s = "" + vft + " ft";
-        if (vin !== 0) {
-          s += " " + myToFixed(vin, decimals) + " in";
-        }
-        return s;
-      }
-    };
-    Unit.register(FootUnit);
-    square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/;
-    SquareFootUnit = class extends FootUnit {
-      static unitDefine() {
-        return {
-          name: "square_foot",
-          uiname: "Square Feet",
-          type: "area",
-          icon: -1,
-          pattern: square_foot_re
-        };
-      }
-      static parse(string) {
-        string = string.replace(/\u00b2/g, "");
-        return super.parse(string);
-      }
-      static buildString(value, decimals = 2) {
-        const vft = myfloor(value);
-        const vin = (value + FLT_EPSILONE * 2) * 12 % 12;
-        if (vft === 0) {
-          return myToFixed(vin, decimals) + " in\xB2";
-        }
-        let s = "" + vft + " ft\xB2";
-        if (vin !== 0) {
-          s += " " + myToFixed(vin, decimals) + " in\xB2";
-        }
-        return s;
-      }
-    };
-    Unit.register(SquareFootUnit);
-    MileUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "mile",
-          uiname: "Mile",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d+)?miles$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        string = string.replace(/miles/, "");
-        return parseFloat(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value * 1609.34;
-      }
-      static fromInternal(value) {
-        return value / 1609.34;
-      }
-      static buildString(value, decimals = 3) {
-        return "" + myToFixed(value, decimals) + " miles";
-      }
-    };
-    Unit.register(MileUnit);
-    DegreeUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "degree",
-          uiname: "Degrees",
-          type: "angle",
-          icon: -1,
-          pattern: /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.search("d") >= 0) {
-          string = string.slice(0, string.search("d")).trim();
-        } else if (string.search("\xB0") >= 0) {
-          string = string.slice(0, string.search("\xB0")).trim();
-        }
-        return parseFloat(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value / 180 * Math.PI;
-      }
-      static fromInternal(value) {
-        return value * 180 / Math.PI;
-      }
-      static buildString(value, decimals = 3) {
-        return "" + myToFixed(value, decimals) + " \xB0";
-      }
-    };
-    Unit.register(DegreeUnit);
-    RadianUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "radian",
-          uiname: "Radians",
-          type: "angle",
-          icon: -1,
-          pattern: /-?\d+(\.\d+)?(r|rad|radian|radians)$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.search("r") >= 0) {
-          string = string.slice(0, string.search("r")).trim();
-        }
-        return parseFloat(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value;
-      }
-      static fromInternal(value) {
-        return value;
-      }
-      static buildString(value, decimals = 3) {
-        return "" + myToFixed(value, decimals) + " r";
-      }
-    };
-    Unit.register(RadianUnit);
-    numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
-    numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
-    hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
-    hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
-    binre = /[+\-]?0b[01]+$/;
-    expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
-    intre = /[+\-]?[0-9]+$/;
-    PixelUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "pixel",
-          uiname: "Pixel",
-          type: "distance",
-          icon: -1,
-          pattern: /-?\d+(\.\d*)?px$/
-        };
-      }
-      static parse(string) {
-        string = normString(string);
-        if (string.endsWith("px")) {
-          string = string.slice(0, string.length - 2).trim();
-        }
-        return parseFloat(string);
-      }
-      //convert to internal units,
-      //e.g. meters for distance
-      static toInternal(value) {
-        return value;
-      }
-      static fromInternal(value) {
-        return value;
-      }
-      static buildString(value, decimals = 2) {
-        return "" + myToFixed(value, decimals) + "px";
-      }
-    };
-    Unit.register(PixelUnit);
-    PercentUnit = class extends Unit {
-      static unitDefine() {
-        return {
-          name: "percent",
-          uiname: "Percent",
-          type: "distance",
-          icon: -1,
-          pattern: /[0-9]+(\.[0-9]+)?[ \t]*%/
-        };
-      }
-      static toInternal(value) {
-        return value / 100;
-      }
-      static fromInternal(value) {
-        return value * 100;
-      }
-      static parse(string) {
-        return parseFloat(string.replace(/%/g, ""));
-      }
-      static buildString(value, decimals = 2) {
-        return value.toFixed(decimals) + "%";
-      }
-    };
-    Unit.register(PercentUnit);
-  }
-});
-
-// scripts/core/units.ts
-var init_units2 = __esm({
-  "scripts/core/units.ts"() {
-    "use strict";
-    init_units();
-  }
-});
-
-// scripts/path-controller/toolsys/toolprop_abstract.ts
-var toolprop_abstract_exports = {};
-__export(toolprop_abstract_exports, {
-  Curve1DPropertyIF: () => Curve1DPropertyIF,
-  EnumPropertyIF: () => EnumPropertyIF,
-  FlagPropertyIF: () => FlagPropertyIF,
-  FloatPropertyIF: () => FloatPropertyIF,
-  IntPropertyIF: () => IntPropertyIF,
-  ListPropertyIF: () => ListPropertyIF,
-  NumPropertyIF: () => NumPropertyIF,
-  PropFlags: () => PropFlags,
-  PropSubTypes: () => PropSubTypes,
-  PropTypes: () => PropTypes,
-  StringPropertyIF: () => StringPropertyIF,
-  StringSetPropertyIF: () => StringSetPropertyIF,
-  ToolPropertyIF: () => ToolPropertyIF,
-  Vec2PropertyIF: () => Vec2PropertyIF,
-  Vec3PropertyIF: () => Vec3PropertyIF,
-  Vec4PropertyIF: () => Vec4PropertyIF
-});
-var PropTypes, PropSubTypes, PropFlags, ToolPropertyIF, StringPropertyIF, NumPropertyIF, IntPropertyIF, FloatPropertyIF, EnumPropertyIF, FlagPropertyIF, Vec2PropertyIF, Vec3PropertyIF, Vec4PropertyIF, ListPropertyIF, StringSetPropertyIF, Curve1DPropertyIF;
-var init_toolprop_abstract = __esm({
-  "scripts/path-controller/toolsys/toolprop_abstract.ts"() {
-    "use strict";
-    PropTypes = {
-      INT: 1,
-      STRING: 2,
-      BOOL: 4,
-      ENUM: 8,
-      FLAG: 16,
-      FLOAT: 32,
-      VEC2: 64,
-      VEC3: 128,
-      VEC4: 256,
-      MATRIX4: 512,
-      QUAT: 1024,
-      PROPLIST: 4096,
-      STRSET: 8192,
-      CURVE: 16384,
-      FLOAT_ARRAY: 32768,
-      REPORT: 65536,
-      ARRAY_BUFFER: 65536 << 1
-      //ITER : 8192<<1
-    };
-    PropSubTypes = {
-      COLOR: 1
-    };
-    PropFlags = {
-      SELECT: 1,
-      PRIVATE: 2,
-      LABEL: 4,
-      USE_ICONS: 64,
-      USE_CUSTOM_GETSET: 128,
-      //used by controller.js interface
-      SAVE_LAST_VALUE: 256,
-      READ_ONLY: 512,
-      SIMPLE_SLIDER: 1 << 10,
-      FORCE_ROLLER_SLIDER: 1 << 11,
-      USE_BASE_UNDO: 1 << 12,
-      //internal to simple_controller.js
-      EDIT_AS_BASE_UNIT: 1 << 13,
-      //user textbox input should be interpreted in display unit
-      NO_UNDO: 1 << 14,
-      USE_CUSTOM_PROP_GETTER: 1 << 15,
-      //hrm, not sure I need this
-      FORCE_ENUM_CHECKBOXES: 1 << 16,
-      NO_DEFAULT: 1 << 17,
-      // ux widgets should not update the prop in real time during e.g.
-      // sliding, text editing, etc.  Currently untested.
-      NO_REALTIME: 1 << 18,
-      MULTILINE_STRING: 1 << 19,
-      RICH_TEXT_STRING: 1 << 20
-    };
-    ToolPropertyIF = class {
-      subtype;
-      apiname;
-      uiname;
-      description;
-      flag;
-      icon;
-      constructor(type, subtype, apiname, uiname, description, flag, icon) {
-        if (type === void 0) {
-          type = this.constructor.PROP_TYPE_ID;
-        }
-        this.data = void 0;
-        this.type = type;
-        this.subtype = subtype;
-        this.apiname = apiname;
-        this.uiname = uiname;
-        this.description = description;
-        this.flag = flag;
-        this.icon = icon;
-      }
-      equals(b) {
-        throw new Error("implement me");
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-      _fire(type, arg1, arg2) {
-      }
-      on(type, cb) {
-      }
-      off(type, cb) {
-      }
-      getValue() {
-        return void 0;
-      }
-      setValue(val) {
-      }
-      setStep(step) {
-      }
-      setRange(min, max) {
-      }
-      setUnit(unit) {
-      }
-      //some clients have seperate ui range
-      setUIRange(min, max) {
-      }
-      setIcon(icon) {
-      }
-    };
-    StringPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.STRING);
-      }
-    };
-    NumPropertyIF = class extends ToolPropertyIF {
-    };
-    IntPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.INT);
-      }
-      setRadix(radix) {
-        throw new Error("implement me");
-      }
-    };
-    FloatPropertyIF = class extends ToolPropertyIF {
-      constructor() {
-        super(PropTypes.FLOAT);
-      }
-      setDecimalPlaces(n) {
-      }
-    };
-    EnumPropertyIF = class extends ToolPropertyIF {
-      values;
-      keys;
-      ui_value_names;
-      iconmap;
-      constructor(value, valid_values) {
-        super(PropTypes.ENUM);
-        this.values = {};
-        this.keys = {};
-        this.ui_value_names = {};
-        this.iconmap = {};
-        if (valid_values === void 0) return;
-        if (valid_values instanceof Array || valid_values instanceof String) {
-          for (let i2 = 0; i2 < valid_values.length; i2++) {
-            this.values[valid_values[i2]] = valid_values[i2];
-            this.keys[valid_values[i2]] = valid_values[i2];
-          }
-        } else {
-          for (const k in valid_values) {
-            this.values[k] = valid_values[k];
-            this.keys[valid_values[k]] = k;
-          }
-        }
-        for (const k in this.values) {
-          let uin = k[0].toUpperCase() + k.slice(1, k.length);
-          uin = uin.replace(/\_/g, " ");
-          this.ui_value_names[k] = uin;
-        }
-      }
-      addIcons(iconmap) {
-        if (this.iconmap === void 0) {
-          this.iconmap = {};
-        }
-        for (const k in iconmap) {
-          this.iconmap[k] = iconmap[k];
-        }
-      }
-    };
-    FlagPropertyIF = class extends EnumPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.FLAG);
-      }
-    };
-    Vec2PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC2);
-      }
-    };
-    Vec3PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC3);
-      }
-    };
-    Vec4PropertyIF = class extends ToolPropertyIF {
-      constructor(valid_values) {
-        super(PropTypes.VEC4);
-      }
-    };
-    ListPropertyIF = class extends ToolPropertyIF {
-      /*
-       * Prop must be a ToolProperty subclass instance
-       * */
-      prop;
-      constructor(prop) {
-        super(PropTypes.PROPLIST);
-        this.prop = prop;
-      }
-      get length() {
-        return 0;
-      }
-      set length(val) {
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-      /**
-       * clear list
-       * */
-      clear() {
-      }
-      push(item = this.prop.copy()) {
-      }
-      [Symbol.iterator]() {
-        return [][Symbol.iterator]();
-      }
-    };
-    StringSetPropertyIF = class extends ToolPropertyIF {
-      constructor(value, definition = []) {
-        super(PropTypes.STRSET);
-      }
-      /*
-       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
-       * If destructive is true, then existing set will be cleared.
-       * */
-      setValue(values, destructive = true, soft_fail = true) {
-      }
-      getValue() {
-        return void 0;
-      }
-      addIcons(iconmap) {
-      }
-      addUINames(map3) {
-      }
-      addDescriptions(map3) {
-      }
-      copyTo(b) {
-      }
-      copy() {
-      }
-    };
-    Curve1DPropertyIF = class extends ToolPropertyIF {
-      constructor(curve, uiname) {
-        super(PropTypes.CURVE);
-        this.data = curve;
-      }
-      getValue() {
-        return this.data;
-      }
-      setValue(curve) {
-        if (curve === void 0) {
-          return;
-        }
-        const json = JSON.parse(JSON.stringify(curve));
-        this.data.load(json);
-      }
-      copyTo(b) {
-        b.setValue(this.data);
-      }
-    };
-  }
-});
-
-// scripts/path-controller/toolsys/props/base.ts
-function setPropTypes(types) {
-  for (const k in types) {
-    PropTypes[k] = types[k];
-  }
-}
-var TOOLPROP_SCHEMA_VERSION, NumberConstraintsBase, IntegerConstraints, FloatConstrinats, NumberConstraints, PropSubTypes2, customPropertyTypes, PropClasses, customPropTypeBase, MakeUINameWordMap, defaultRadix, defaultDecimalPlaces, OnceTag, ExecScopeUsing, ExecScopeUsingStack, execScopeUsingStack, ToolProperty;
-var init_base = __esm({
-  "scripts/path-controller/toolsys/props/base.ts"() {
-    "use strict";
-    init_util();
-    init_toolprop_abstract();
-    init_struct();
-    TOOLPROP_SCHEMA_VERSION = 2;
-    NumberConstraintsBase = /* @__PURE__ */ new Set([
-      "range",
-      "expRate",
-      "step",
-      "uiRange",
-      "baseUnit",
-      "displayUnit",
-      "stepIsRelative",
-      "slideSpeed",
-      "sliderDisplayExp"
-    ]);
-    IntegerConstraints = new Set(
-      ["radix"].concat(list2(NumberConstraintsBase))
-    );
-    FloatConstrinats = new Set(
-      ["decimalPlaces"].concat(
-        list2(NumberConstraintsBase)
-      )
-    );
-    NumberConstraints = new Set(
-      list2(IntegerConstraints).concat(
-        list2(FloatConstrinats)
-      )
-    );
-    PropSubTypes2 = {
-      COLOR: 1
-    };
-    customPropertyTypes = [];
-    PropClasses = {};
-    customPropTypeBase = 17;
-    MakeUINameWordMap = {
-      sel: "select",
-      unsel: "deselect",
-      eid: "id",
-      props: "properties",
-      res: "resource"
-    };
-    defaultRadix = 10;
-    defaultDecimalPlaces = 4;
-    OnceTag = class {
-      cb;
-      constructor(cb) {
-        this.cb = cb;
-      }
-    };
-    ExecScopeUsing = class {
-      oldScope = {};
-      prop;
-      init(prop) {
-        this.prop = prop;
-        this.oldScope.ctx = prop.ctx;
-        this.oldScope.datapath = prop.datapath;
-        this.oldScope.dataref = prop.dataref;
-        return this;
-      }
-      get ctx() {
-        return this.prop.ctx;
-      }
-      set ctx(v) {
-        this.prop.ctx = v;
-      }
-      get dataref() {
-        return this.prop.dataref;
-      }
-      set dataref(v) {
-        this.prop.dataref = v;
-      }
-      get datapath() {
-        return this.prop.datapath;
-      }
-      set datapath(v) {
-        this.prop.datapath = v;
-      }
-      [Symbol.dispose]() {
-        const prop = this.prop;
-        const oldScope = this.oldScope;
-        prop.ctx = oldScope.ctx;
-        prop.datapath = oldScope.datapath;
-        prop.dataref = oldScope.dataref;
-        execScopeUsingStack._popStack();
-      }
-    };
-    ExecScopeUsingStack = class extends Array {
-      depth = 0;
-      constructor(size) {
-        super(size);
-        this.length = size;
-        for (let i2 = 0; i2 < size; i2++) {
-          this[i2] = new ExecScopeUsing();
-        }
-      }
-      withScope(prop) {
-        return this.pushStack().init(prop);
-      }
-      pushStack() {
-        return this[this.depth++];
-      }
-      _popStack() {
-        this.depth--;
-      }
-    };
-    execScopeUsingStack = new ExecScopeUsingStack(512);
-    ToolProperty = class _ToolProperty extends ToolPropertyIF {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-ToolProperty {
-  apiname        : string | ""+this.apiname;
-  type           : int;
-  flag           : int;
-  subtype       ?: int | this.subtype ? this.subtype : 0;
-  icon           : int;
-  icon2          : int;
-  baseUnit       : string | ""+this.baseUnit;
-  displayUnit    : string | ""+this.displayUnit;
-  range          : array(float) | this.range ? this.range : [-1e17, 1e17];
-  uiRange        : array(float) | this.uiRange ? this.uiRange : [-1e17, 1e17];
-  description    : string;
-  stepIsRelative : bool;
-  step           : float;
-  expRate        : float;
-  radix          : float;
-  decimalPlaces  : int;
-  uiname         : string | this.uiname || this.apiname || "";
-  wasSet         : bool;
-  schemaVersion  : int;        
-}`
-      );
-      static PROP_TYPE_ID;
-      wasSet;
-      icon2;
-      schemaVersion = TOOLPROP_SCHEMA_VERSION;
-      decimalPlaces;
-      radix;
-      step;
-      range;
-      uiRange;
-      baseUnit;
-      displayUnit;
-      stepIsRelative;
-      expRate;
-      slideSpeed;
-      callbacks;
-      /* These are used in subclasses but accessed generically */
-      update;
-      api_update;
-      // these fields are used by the data api system
-      dataref;
-      datapath;
-      constructor(type, subtype, apiname, uiname = "", description = "", flag = 0, icon = -1) {
-        super(type);
-        this.type = type;
-        this.subtype = subtype;
-        this.wasSet = false;
-        this.apiname = apiname;
-        this.uiname = uiname !== void 0 ? uiname : apiname;
-        this.description = description;
-        this.flag = flag | PropFlags.SAVE_LAST_VALUE;
-        this.icon = icon;
-        this.icon2 = icon;
-        this.decimalPlaces = defaultDecimalPlaces;
-        this.radix = defaultRadix;
-        this.step = 0.05;
-        this.stepIsRelative = false;
-        this.expRate = 1.33;
-        this.slideSpeed = 1;
-        this.callbacks = {};
-      }
-      /**
-       * Validates and optionally transforms arg, see parseArgs in ToolOp.
-       * This is used for e.g. enum/flag property parsing.
-       */
-      parseArg(arg) {
-        return arg;
-      }
-      getUIName() {
-        return this.uiname ?? _ToolProperty.makeUIName(this.apiname ?? "error");
-      }
-      /** Get a data api execution context stack ( for use with the using keyword) */
-      execWithContext() {
-        return execScopeUsingStack.withScope(this);
-      }
-      static internalRegister(cls) {
-        PropClasses[new cls().type] = cls;
-      }
-      static getClass(type) {
-        return PropClasses[type];
-      }
-      static setDefaultRadix(n) {
-        defaultRadix = n;
-      }
-      static setDefaultDecimalPlaces(n) {
-        defaultDecimalPlaces = n;
-      }
-      static makeUIName(name2) {
-        const parts = [""];
-        let lastc = void 0;
-        const ischar = (c) => {
-          const code2 = c.charCodeAt(0);
-          let upper = code2 >= "A".charCodeAt(0);
-          upper = upper && code2 <= "Z".charCodeAt(0);
-          let lower = code2 >= "a".charCodeAt(0);
-          lower = lower && code2 <= "z".charCodeAt(0);
-          return upper || lower;
-        };
-        for (let i2 = 0; i2 < name2.length; i2++) {
-          const c = name2[i2];
-          if (c === "_" || c === "-" || c === "$") {
-            lastc = c;
-            parts.push("");
-            continue;
-          }
-          if (i2 > 0 && c === c.toUpperCase() && lastc !== lastc.toUpperCase()) {
-            if (ischar(c) && ischar(lastc)) {
-              parts.push("");
-            }
-          }
-          parts[parts.length - 1] += c;
-          lastc = c;
-        }
-        const subst = (word) => {
-          if (word in MakeUINameWordMap) {
-            return MakeUINameWordMap[word];
-          } else {
-            return word;
-          }
-        };
-        const result = parts.filter((f2) => f2.trim().length > 0).map((f2) => subst(f2)).map((f2) => f2[0].toUpperCase() + f2.slice(1, f2.length).toLowerCase()).join(" ").trim();
-        return result;
-      }
-      static register(cls) {
-        cls.PROP_TYPE_ID = 1 << customPropTypeBase;
-        PropTypes[cls.name] = cls.PROP_TYPE_ID;
-        customPropTypeBase++;
-        customPropertyTypes.push(cls);
-        PropClasses[new cls().type] = cls;
-        return cls.PROP_TYPE_ID;
-      }
-      static calcRelativeStep(step, value, logBase = 1.5) {
-        value = Math.log(Math.abs(value) + 1) / Math.log(logBase);
-        value = Math.max(value, step);
-        console.warn(termColor2("STEP", "red"), value);
-        return value;
-      }
-      setDescription(s) {
-        this.description = s;
-        return this;
-      }
-      setUIName(s) {
-        this.uiname = s;
-        return this;
-      }
-      calcMemSize() {
-        function strlen(s) {
-          return s !== void 0 ? s.length + 8 : 8;
-        }
-        let tot = 0;
-        tot += strlen(this.apiname) + strlen(this.uiname);
-        tot += strlen(this.description);
-        tot += 11 * 8;
-        tot += Object.keys(this.callbacks).length * 24;
-        return tot;
-      }
-      equals(b) {
-        throw new Error("implement me");
-      }
-      setReadOnly() {
-        this.flag |= PropFlags.READ_ONLY;
-        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
-        return this;
-      }
-      private() {
-        this.flag |= PropFlags.PRIVATE;
-        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
-        return this;
-      }
-      /** Save property in last value cache.  Now set by default,
-       *  to disable use .ignoreLastValue().
-       */
-      saveLastValue() {
-        this.flag |= PropFlags.SAVE_LAST_VALUE;
-        return this;
-      }
-      ignoreLastValue() {
-        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
-        return this;
-      }
-      report(...args) {
-        console.warn(...args);
-      }
-      _fire(type, arg1, arg2) {
-        if (this.callbacks[type] === void 0) {
-          return this;
-        }
-        let stack = this.callbacks[type];
-        stack = stack.concat([]);
-        for (let i2 = 0; i2 < stack.length; i2++) {
-          const cb = stack[i2];
-          if (cb instanceof OnceTag) {
-            let j = i2;
-            while (j < stack.length - 1) {
-              stack[j] = stack[j + 1];
-              j++;
-            }
-            stack[j] = void 0;
-            stack.length--;
-            i2--;
-            cb.cb.call(this, arg1, arg2);
-          } else {
-            cb.call(this, arg1, arg2);
-          }
-        }
-        return this;
-      }
-      clearEventCallbacks() {
-        this.callbacks = {};
-        return this;
-      }
-      once(type, cb) {
-        if (this.callbacks[type] === void 0) {
-          this.callbacks[type] = [];
-        }
-        for (const cb2 of this.callbacks[type]) {
-          if (cb2 instanceof OnceTag && cb2.cb === cb) {
-            return this;
-          }
-        }
-        const tag = new OnceTag(cb);
-        this.callbacks[type].push(tag);
-        return this;
-      }
-      on(type, cb) {
-        if (this.callbacks[type] === void 0) {
-          this.callbacks[type] = [];
-        }
-        this.callbacks[type].push(cb);
-        return this;
-      }
-      off(type, cb) {
-        this.callbacks[type].remove(cb);
-        return this;
-      }
-      toJSON() {
-        return {
-          type: this.type,
-          subtype: this.subtype,
-          apiname: this.apiname,
-          uiname: this.uiname,
-          description: this.description,
-          flag: this.flag,
-          icon: this.icon,
-          data: this.data,
-          range: this.range,
-          uiRange: this.uiRange,
-          step: this.step
-        };
-      }
-      loadJSON(obj) {
-        this.type = obj.type;
-        this.subtype = obj.subtype;
-        this.apiname = obj.apiname;
-        this.uiname = obj.uiname;
-        this.description = obj.description;
-        this.flag = obj.flag;
-        this.icon = obj.icon;
-        this.data = obj.data;
-        return this;
-      }
-      getValue() {
-        return this.data;
-      }
-      /** Marks the property set and fires `change`. Every subclass stores the value before
-       * chaining here, so the argument a listener receives is read back through `getValue`. */
-      setValue(val) {
-        if (this.constructor === _ToolProperty) {
-          throw new Error("implement me!");
-        }
-        this.wasSet = true;
-        this._fire("change", this.getValue());
-      }
-      copyTo(b) {
-        b.apiname = this.apiname;
-        b.uiname = this.uiname;
-        b.description = this.description;
-        b.icon = this.icon;
-        b.icon2 = this.icon2;
-        b.baseUnit = this.baseUnit;
-        b.subtype = this.subtype;
-        b.displayUnit = this.displayUnit;
-        b.flag = this.flag;
-        for (const k in this.callbacks) {
-          b.callbacks[k] = this.callbacks[k];
-        }
-      }
-      copy() {
-        const ret = new this.constructor();
-        this.copyTo(ret);
-        return ret;
-      }
-      setStep(step) {
-        this.step = step;
-        return this;
-      }
-      getStep(value = 1) {
-        if (this.stepIsRelative) {
-          return _ToolProperty.calcRelativeStep(this.step, value);
-        } else {
-          return this.step;
-        }
-      }
-      setRelativeStep(step) {
-        this.step = step;
-        this.stepIsRelative = true;
-        return this;
-      }
-      setRange(min, max) {
-        if (min === void 0 || max === void 0) {
-          throw new Error("min and/or max cannot be undefined");
-        }
-        this.range = [min, max];
-        return this;
-      }
-      noUnits() {
-        this.baseUnit = this.displayUnit = "none";
-        return this;
-      }
-      setBaseUnit(unit) {
-        this.baseUnit = unit;
-        return this;
-      }
-      setDisplayUnit(unit) {
-        this.displayUnit = unit;
-        return this;
-      }
-      setUnit(unit) {
-        this.baseUnit = this.displayUnit = unit;
-        return this;
-      }
-      setFlag(f2, combine = false) {
-        this.flag = combine ? this.flag | f2 : f2;
-        return this;
-      }
-      setUIRange(min, max) {
-        if (min === void 0 || max === void 0) {
-          throw new Error("min and/or max cannot be undefined");
-        }
-        this.uiRange = [min, max];
-        return this;
-      }
-      setIcon(icon) {
-        this.icon = icon;
-        return this;
-      }
-      setIcon2(icon) {
-        this.icon2 = icon;
-        return this;
-      }
-      /** Sets whether sliders/textboxes/etc send updates in real time or wait for editing to stop. */
-      setRealtime(realtime) {
-        if (!realtime) {
-          this.flag |= PropFlags.NO_REALTIME;
-        } else {
-          this.flag &= ~PropFlags.NO_REALTIME;
-        }
-        return this;
-      }
-      loadSTRUCT(reader) {
-        this.schemaVersion = 0;
-        reader(this);
-        if (this.uiRange?.[0] === -1e17 && this.uiRange[1] === 1e17) {
-          this.uiRange = void 0;
-        }
-        if (this.baseUnit === "undefined") {
-          this.baseUnit = void 0;
-        }
-        if (this.displayUnit === "undefined") {
-          this.displayUnit = void 0;
-        }
-        if (this.apiname === "undefined") {
-          this.apiname = void 0;
-        }
-        if (this.uiname === "undefined") {
-          this.uiname = void 0;
-        }
-      }
-      static getVersionSTRUCT(jsonOrProp) {
-        return jsonOrProp.schemaVersion ?? 0;
-      }
-      static migrateSTRUCT(schemaVersion, jsonOrProp, migrate) {
-        if (!jsonOrProp.schemaVersion) {
-          jsonOrProp.schemaVersion = schemaVersion;
-        }
-        migrate();
-        jsonOrProp.schemaVersion = TOOLPROP_SCHEMA_VERSION;
-      }
-    };
-  }
-});
-
-// scripts/path-controller/toolsys/props/array.ts
-var FloatArrayProperty, ArrayBufferProperty;
-var init_array = __esm({
-  "scripts/path-controller/toolsys/props/array.ts"() {
-    "use strict";
-    init_struct();
-    init_toolprop_abstract();
-    init_base();
-    FloatArrayProperty = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.FloatArrayProperty {
-  value : array(float);
-}`
-      );
-      static PROP_TYPE_ID = PropTypes.FLOAT_ARRAY;
-      value;
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.FLOAT_ARRAY, void 0, apiname, uiname, description, flag, icon);
-        this.value = [];
-        if (value !== void 0) {
-          this.setValue(value);
-        }
-      }
-      [Symbol.iterator]() {
-        return this.value[Symbol.iterator]();
-      }
-      setValue(value) {
-        if (value === void 0) {
-          throw new Error("value was undefined in FloatArrayProperty's setValue method");
-        }
-        this.value.length = 0;
-        for (const item of value) {
-          if (typeof item !== "number" && typeof item !== "boolean") {
-            console.log(value);
-            throw new Error("bad item for FloatArrayProperty " + item);
-          }
-          this.value.push(item);
-        }
-        super.setValue(this.value);
-      }
-      push(item) {
-        if (typeof item !== "number" && typeof item !== "boolean") {
-          throw new Error("bad item for FloatArrayProperty " + item);
-        }
-        this.value.push(item);
-      }
-      getValue() {
-        return this.value;
-      }
-      equals(b) {
-        if (this.value.length !== b.value.length) {
-          return false;
-        }
-        for (let i2 = 0; i2 < this.value.length; i2++) {
-          if (this.value[i2] !== b.value[i2]) {
-            return false;
-          }
-        }
-        return true;
-      }
-      clear() {
-        this.value.length = 0;
-        return this;
-      }
-    };
-    ArrayBufferProperty = class extends ToolProperty {
-      data = new ArrayBuffer(0);
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    toolprop.ArrayBufferProperty {
-      data : arraybuffer(byte);
-    }
-  `
-      );
-      constructor(buffer) {
-        super(PropTypes.ARRAY_BUFFER);
-        this.data = buffer ?? this.data;
-      }
-      setValue(buffer) {
-        this.data = buffer;
-        super.setValue(buffer);
-      }
-      getValue() {
-        return this.data;
-      }
-      equals(b) {
-        if (this.data.byteLength !== b.data.byteLength) {
-          return false;
-        }
-        const va = new Uint8Array(this.data);
-        const vb = new Uint8Array(b.data);
-        for (let i2 = 0; i2 < va.length; i2++) {
-          if (va[i2] !== vb[i2]) {
-            return false;
-          }
-        }
-        return true;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.data = new Uint8Array(Array.from(new Uint8Array(this.data))).buffer;
-      }
-      calcMemSize() {
-        return super.calcMemSize() + this.data.byteLength;
-      }
-    };
-  }
-});
-
-// scripts/path-controller/toolsys/props/string.ts
-var StringPropertyBase, StringProperty, ReportProperty;
-var init_string = __esm({
-  "scripts/path-controller/toolsys/props/string.ts"() {
-    "use strict";
-    init_struct();
-    init_toolprop_abstract();
-    init_base();
-    StringPropertyBase = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    StringPropertyBase {
-      data                  : string;
-      multiLineIdleTimeout ?: int;
-    }
-  `
-      );
-      /**
-       * Idle timeout for multiline textboxes (that aren't in realtime mode).
-       * Uses a default value if undefined.  In miliseconds.
-       */
-      multiLineIdleTimeout;
-      constructor(type, value, apiname, uiname, description, flag, icon) {
-        super(type, void 0, apiname, uiname, description, flag, icon);
-        this.setValue(value ?? "");
-      }
-      calcMemSize() {
-        return super.calcMemSize() + (this.data !== void 0 ? this.data.length * 4 : 0) + 8;
-      }
-      equals(b) {
-        return this.data === b.data;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.multiLineIdleTimeout = this.multiLineIdleTimeout;
-        b.data = this.data;
-      }
-      getValue() {
-        return this.data;
-      }
-      setValue(val) {
-        this.data = val;
-        super.setValue(val);
-      }
-      setIdleTimeout(timeout) {
-        this.multiLineIdleTimeout = timeout;
-        return this;
-      }
-      /** Should a textarea be used to edit this property? */
-      setMultiline(multiline) {
-        if (multiline) {
-          this.flag |= PropFlags.MULTILINE_STRING;
-        } else {
-          this.flag &= ~PropFlags.MULTILINE_STRING;
-        }
-        return this;
-      }
-      setRichText(state) {
-        if (state) {
-          this.flag |= PropFlags.RICH_TEXT_STRING;
-        } else {
-          this.flag &= ~PropFlags.RICH_TEXT_STRING;
-        }
-      }
-      /** Should a textarea be used to edit this property? */
-      get multiLine() {
-        return (this.flag & PropFlags.MULTILINE_STRING) !== 0;
-      }
-      set multiLine(multiline) {
-        if (multiline) {
-          this.flag |= PropFlags.MULTILINE_STRING;
-        } else {
-          this.flag &= ~PropFlags.MULTILINE_STRING;
-        }
-      }
-      // getVersionSTRUCT is provided by ToolProperty
-      static migrateSTRUCT(schemaVersion, jsonOrProp, migrate) {
-        if (schemaVersion < 2) {
-          if (jsonOrProp.multiLine) {
-            jsonOrProp.flag |= PropFlags.MULTILINE_STRING;
-          }
-          delete jsonOrProp.multiLine;
-          jsonOrProp.multiLineIdleTimeout = new StringProperty().multiLineIdleTimeout;
-        }
-        super.migrateSTRUCT(schemaVersion, jsonOrProp, migrate);
-      }
-    };
-    StringProperty = class extends StringPropertyBase {
-      static PROP_TYPE_ID = PropTypes.STRING;
-      static STRUCT = struct_default.inlineRegister(this, `StringProperty {}`);
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.STRING, value, apiname, uiname, description, flag, icon);
-      }
-    };
-    ToolProperty.internalRegister(StringProperty);
-    ReportProperty = class extends StringPropertyBase {
-      static PROP_TYPE_ID = PropTypes.REPORT;
-      static STRUCT = struct_default.inlineRegister(this, "ReportProperty {}");
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.REPORT, value, apiname, uiname, description, flag, icon);
-        this.type = PropTypes.REPORT;
-      }
-    };
-    ToolProperty.internalRegister(ReportProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/number.ts
-var NumProperty, _NumberPropertyBase, IntProperty, FloatPropertyBase, FloatProperty;
-var init_number = __esm({
-  "scripts/path-controller/toolsys/props/number.ts"() {
-    "use strict";
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    NumProperty = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.NumProperty {
-  range : array(float);
-  data  : float;
-}
-`
-      );
-      constructor(type, value, apiname, uiname, description, flag, icon) {
-        super(type, void 0, apiname, uiname, description, flag, icon);
-        this.data = 0;
-        this.range = [0, 0];
-      }
-      equals(b) {
-        return this.data == b.data;
-      }
-    };
-    _NumberPropertyBase = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop._NumberPropertyBase {
-  range            : array(float);
-  expRate          : float;
-  data             : float;
-  step             : float;
-  slideSpeed       : float;
-  sliderDisplayExp : float;
-}
-`
-      );
-      constructor(type, value, apiname, uiname, description, flag, icon) {
-        super(type, void 0, apiname, uiname, description, flag, icon);
-        this.data = 0;
-        this.sliderDisplayExp = 1;
-        this.slideSpeed = 1;
-        this.expRate = 1.33;
-        this.step = 0.1;
-        this.stepIsRelative = false;
-        this.range = [-1e17, 1e17];
-        this.uiRange = void 0;
-        if (value !== void 0 && value !== null) {
-          this.setValue(value);
-          this.wasSet = false;
-        }
-      }
-      parseArg(arg) {
-        if (typeof arg !== "number") {
-          throw new Error("expected a number for a number property");
-        }
-        return arg;
-      }
-      get ui_range() {
-        this.report("NumberProperty.ui_range is deprecated");
-        return this.uiRange;
-      }
-      set ui_range(val) {
-        this.report("NumberProperty.ui_range is deprecated");
-        this.uiRange = val;
-      }
-      calcMemSize() {
-        return super.calcMemSize() + 8 * 8;
-      }
-      equals(b) {
-        return this.data === b.data;
-      }
-      toJSON() {
-        const json = super.toJSON();
-        json.data = this.data;
-        json.expRate = this.expRate;
-        return json;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        const nb = b;
-        nb.displayUnit = this.displayUnit;
-        nb.baseUnit = this.baseUnit;
-        nb.expRate = this.expRate;
-        nb.step = this.step;
-        nb.range = this.range ? [this.range[0], this.range[1]] : void 0;
-        nb.uiRange = this.uiRange ? [this.uiRange[0], this.uiRange[1]] : void 0;
-        nb.slideSpeed = this.slideSpeed;
-        nb.sliderDisplayExp = this.sliderDisplayExp;
-        nb.data = this.data;
-      }
-      setSliderDisplayExp(f2) {
-        this.sliderDisplayExp = f2;
-        return this;
-      }
-      setSlideSpeed(f2) {
-        this.slideSpeed = f2;
-        return this;
-      }
-      /*
-       * non-linear exponent for number sliders
-       * in roll mode
-       * */
-      setExpRate(exp) {
-        this.expRate = exp;
-        return this;
-      }
-      setValue(val) {
-        if (val === void 0 || val === null) {
-          return;
-        }
-        if (typeof val !== "number") {
-          throw new Error("Invalid number " + val);
-        }
-        this.data = val;
-        super.setValue(val);
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        const get = (key) => {
-          if (key in obj) {
-            this[key] = obj[key];
-          }
-        };
-        get("range");
-        get("step");
-        get("expRate");
-        get("ui_range");
-        return this;
-      }
-    };
-    IntProperty = class extends _NumberPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.IntProperty {
-  data : int;
-}`
-      );
-      static PROP_TYPE_ID = PropTypes.INT;
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
-        this.baseUnit = this.displayUnit = "none";
-        this.radix = 10;
-      }
-      setValue(val) {
-        if (val === void 0 || val === null) {
-          return;
-        }
-        super.setValue(Math.floor(val));
-      }
-      setRadix(radix) {
-        this.radix = radix;
-      }
-      toJSON() {
-        const json = super.toJSON();
-        json.data = this.data;
-        json.radix = this.radix;
-        return json;
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        this.data = obj.data || this.data;
-        this.radix = obj.radix || this.radix;
-        return this;
-      }
-    };
-    ToolProperty.internalRegister(IntProperty);
-    FloatPropertyBase = class extends _NumberPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    FloatPropertyBase {
-      decimalPlaces : int;
-      data          : float;
-    }`
-      );
-      constructor(type, value, apiname, uiname, description, flag, icon) {
-        super(type, value, apiname, uiname, description, flag, icon);
-        this.decimalPlaces = 4;
-      }
-      setDecimalPlaces(n) {
-        this.decimalPlaces = n;
-        return this;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.data = this.data;
-      }
-      setValue(val) {
-        if (val === void 0 || val === null) {
-          return;
-        }
-        this.data = val;
-        super.setValue(val);
-      }
-      toJSON() {
-        const json = super.toJSON();
-        json.data = this.data;
-        json.decimalPlaces = this.decimalPlaces;
-        return json;
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        this.data = obj.data || this.data;
-        this.decimalPlaces = obj.decimalPlaces || this.decimalPlaces;
-        return this;
-      }
-    };
-    FloatProperty = class extends FloatPropertyBase {
-      static PROP_TYPE_ID = PropTypes.FLOAT;
-      static STRUCT = struct_default.inlineRegister(this, "FloatProperty {}");
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.FLOAT, value, apiname, uiname, description, flag, icon);
-      }
-    };
-    ToolProperty.internalRegister(FloatProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/bool.ts
-var BoolProperty;
-var init_bool = __esm({
-  "scripts/path-controller/toolsys/props/bool.ts"() {
-    "use strict";
-    init_struct();
-    init_toolprop_abstract();
-    init_base();
-    BoolProperty = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.BoolProperty {
-  data : bool;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.BOOL;
-      constructor(value, apiname, uiname, description, flag, icon) {
-        super(PropTypes.BOOL, void 0, apiname, uiname, description, flag, icon);
-        this.data = !!value;
-      }
-      equals(b) {
-        return this.data == b.data;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.data = this.data;
-      }
-      setValue(val) {
-        this.data = !!val;
-        super.setValue(val);
-      }
-      getValue() {
-        return this.data;
-      }
-      toJSON() {
-        const ret = super.toJSON();
-        return ret;
-      }
-      loadJSON(obj) {
-        super.loadJSON(obj);
-        return this;
-      }
-    };
-    ToolProperty.internalRegister(BoolProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/enum.ts
-var first, EnumKeyPair, EnumPropertyBase, EnumProperty, FlagProperty;
-var init_enum = __esm({
-  "scripts/path-controller/toolsys/props/enum.ts"() {
-    "use strict";
-    init_util();
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    first = (iter) => {
-      if (iter === void 0) {
-        return void 0;
-      }
-      if (!(Symbol.iterator in iter)) {
-        for (const item in iter) {
-          return item;
-        }
-        return void 0;
-      }
-      for (const item of iter) {
-        return item;
-      }
-      return void 0;
-    };
-    EnumKeyPair = class _EnumKeyPair {
-      static loadMap(obj) {
-        if (!obj) {
-          return {};
-        }
-        const ret = {};
-        for (const k of obj) {
-          ret[k.key] = k.val;
-        }
-        return ret;
-      }
-      static saveMap(obj) {
-        obj = obj === void 0 ? {} : obj;
-        const ret = [];
-        for (const k in obj) {
-          ret.push(new _EnumKeyPair(k, obj[k]));
-        }
-        return ret;
-      }
-      static STRUCT;
-      key;
-      val;
-      key_is_int;
-      val_is_int;
-      constructor(key, val) {
-        this.key = "" + key;
-        this.val = "" + val;
-        this.key_is_int = typeof key === "number" || typeof key === "boolean";
-        this.val_is_int = typeof val === "number" || typeof val === "boolean";
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-        if (this.val_is_int) {
-          this.val = parseInt(this.val);
-        }
-        if (this.key_is_int) {
-          this.key = parseInt(this.key);
-        }
-      }
-    };
-    EnumKeyPair.STRUCT = `
-EnumKeyPair {
-  key        : string;
-  val        : string;
-  key_is_int : bool;
-  val_is_int : bool;
-}
-`;
-    struct_default.register(EnumKeyPair);
-    EnumPropertyBase = class _EnumPropertyBase extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    EnumPropertyBase {
-      data            : string             | ""+this.data;
-      data_is_int     : bool               | this._is_data_int();
-      _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
-      _values         : array(EnumKeyPair) | this._saveMap(this.values) ;
-      _ui_value_names : array(EnumKeyPair) | this._saveMap(this.ui_value_names) ;
-      _iconmap        : array(EnumKeyPair) | this._saveMap(this.iconmap) ;
-      _iconmap2       : array(EnumKeyPair) | this._saveMap(this.iconmap2) ;
-      _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;
-    }
-  `
-      );
-      dynamicMetaCB;
-      /** Maps keys to values */
-      values;
-      /** Maps values to keys */
-      keys;
-      /** Maps keys to UI strings */
-      ui_value_names;
-      /** Maps keys to descriptions */
-      descriptions;
-      /** Maps keys to icons */
-      iconmap;
-      /** Maps keys to pressed icons */
-      iconmap2;
-      /* These are transient fields used during loadSTRUCT */
-      _keys;
-      _values;
-      _ui_value_names;
-      _iconmap;
-      _iconmap2;
-      _descriptions;
-      data_is_int;
-      constructor(type, string_or_int, valid_values, apiname, uiname, description, flag, icon) {
-        super(type, void 0, apiname, uiname, description, flag, icon);
-        this.dynamicMetaCB = void 0;
-        this.values = {};
-        this.keys = {};
-        this.ui_value_names = {};
-        this.descriptions = {};
-        this.iconmap = {};
-        this.iconmap2 = {};
-        if (valid_values === void 0) return;
-        if (valid_values instanceof Array) {
-          for (let i2 = 0; i2 < valid_values.length; i2++) {
-            this.values[valid_values[i2]] = valid_values[i2];
-            this.keys[valid_values[i2]] = valid_values[i2];
-          }
-        } else {
-          for (const k in valid_values) {
-            this.values[k] = valid_values[k];
-            this.keys[valid_values[k]] = k;
-          }
-        }
-        if (string_or_int === void 0) {
-          this.data = first(valid_values);
-        } else {
-          this.setValue(string_or_int);
-        }
-        for (const k in this.values) {
-          const uiname2 = ToolProperty.makeUIName(k);
-          this.ui_value_names[k] = uiname2;
-          this.descriptions[k] = uiname2;
-        }
-        this.wasSet = false;
-      }
-      parseArg(arg) {
-        if (typeof arg === "string") {
-          if (!(arg in this.values)) {
-            throw new Error(`unknown key ${arg}`);
-          }
-          arg = this.values[arg];
-        }
-        return arg;
-      }
-      /**
-       * Provide a callback to update the enum or flags property dynamically
-       * Callback should call enumProp.updateDefinition to update the property.
-       *
-       * @param metaCB: (enumProp: EnumProperty|FlagsProperty) => void
-       */
-      dynamicMeta(metaCB) {
-        this.on("meta", metaCB);
-        return this;
-      }
-      checkMeta() {
-        this._fire("meta", this);
-      }
-      calcHash(digest = new HashDigest()) {
-        this.checkMeta();
-        for (const key in this.keys) {
-          digest.add(key);
-          digest.add(this.keys[key]);
-        }
-        return digest.get();
-      }
-      updateDefinition(enumdef_or_prop) {
-        const descriptions = this.descriptions;
-        const ui_value_names = this.ui_value_names;
-        this.values = {};
-        this.keys = {};
-        this.ui_value_names = {};
-        this.descriptions = {};
-        let enumdef;
-        if (enumdef_or_prop instanceof _EnumPropertyBase) {
-          enumdef = enumdef_or_prop.values;
-        } else {
-          enumdef = enumdef_or_prop;
-        }
-        for (const k in enumdef) {
-          const v = enumdef[k];
-          this.values[k] = v;
-          this.keys[v] = k;
-        }
-        if (enumdef_or_prop instanceof _EnumPropertyBase) {
-          const prop = enumdef_or_prop;
-          this.iconmap = Object.assign({}, prop.iconmap);
-          this.iconmap2 = Object.assign({}, prop.iconmap2);
-          this.ui_value_names = Object.assign({}, prop.ui_value_names);
-          this.descriptions = Object.assign({}, prop.descriptions);
-        } else {
-          for (const k in this.values) {
-            if (k in ui_value_names) {
-              this.ui_value_names[k] = ui_value_names[k];
-            } else {
-              this.ui_value_names[k] = ToolProperty.makeUIName(k);
-            }
-            if (k in descriptions) {
-              this.descriptions[k] = descriptions[k];
-            } else {
-              this.descriptions[k] = ToolProperty.makeUIName(k);
-            }
-          }
-        }
-        this._fire("metaChange", this);
-        return this;
-      }
-      calcMemSize() {
-        this.checkMeta();
-        let tot = super.calcMemSize();
-        for (const k in this.values) {
-          tot += (k.length * 4 + 16) * 4;
-        }
-        if (this.descriptions) {
-          for (const k in this.descriptions) {
-            tot += (k.length + this.descriptions[k].length) * 4;
-          }
-        }
-        return tot + 64;
-      }
-      equals(b) {
-        return this.getValue() === b.getValue();
-      }
-      addUINames(map3) {
-        for (const k in map3) {
-          this.ui_value_names[k] = map3[k];
-        }
-        return this;
-      }
-      addDescriptions(map3) {
-        for (const k in map3) {
-          this.descriptions[k] = map3[k];
-        }
-        return this;
-      }
-      addIcons2(iconmap2) {
-        if (this.iconmap2 === void 0) {
-          this.iconmap2 = {};
-        }
-        for (const k in iconmap2) {
-          this.iconmap2[k] = iconmap2[k];
-        }
-        return this;
-      }
-      addIcons(iconmap) {
-        if (this.iconmap === void 0) {
-          this.iconmap = {};
-        }
-        for (const k in iconmap) {
-          this.iconmap[k] = iconmap[k];
-        }
-        return this;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        const ep = b;
-        ep.data = this.data;
-        ep.callbacks.meta = Array.from(this.callbacks.meta ?? []);
-        ep.keys = Object.assign({}, this.keys);
-        ep.values = Object.assign({}, this.values);
-        ep.ui_value_names = this.ui_value_names;
-        ep.update = this.update;
-        ep.api_update = this.api_update;
-        ep.iconmap = this.iconmap;
-        ep.iconmap2 = this.iconmap2;
-        ep.descriptions = this.descriptions;
-      }
-      copy() {
-        const p = new this.constructor("");
-        this.copyTo(p);
-        return p;
-      }
-      getValue() {
-        const d = this.data;
-        if (d in this.values) return this.values[d];
-        else return d;
-      }
-      setValue(val) {
-        this.checkMeta();
-        if (val === void 0) return;
-        if (!(val in this.values) && val in this.keys) val = this.keys[val];
-        if (!(val in this.values)) {
-          this.report("Invalid value for enum!", val, this.values);
-          return;
-        }
-        this.data = val;
-        super.setValue(val);
-      }
-      _saveMap = EnumKeyPair.saveMap;
-      loadSTRUCT(reader) {
-        super.loadSTRUCT(reader);
-        this.keys = EnumKeyPair.loadMap(this._keys);
-        this.values = EnumKeyPair.loadMap(this._values);
-        this.ui_value_names = EnumKeyPair.loadMap(this._ui_value_names);
-        this.iconmap = EnumKeyPair.loadMap(this._iconmap);
-        this.iconmap2 = EnumKeyPair.loadMap(this._iconmap2);
-        this.descriptions = EnumKeyPair.loadMap(this._descriptions);
-        if (this.data_is_int) {
-          this.data = parseInt(this.data);
-          delete this.data_is_int;
-        } else if (this.data in this.keys) {
-          this.data = this.keys[this.data];
-        }
-      }
-      _is_data_int() {
-        return typeof this.data === "number";
-      }
-    };
-    EnumProperty = class extends EnumPropertyBase {
-      static PROP_TYPE_ID = PropTypes["ENUM"];
-      static STRUCT = struct_default.inlineRegister(this, `EnumProperty {}`);
-      constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
-        super(PropTypes.ENUM, string_or_int, valid_values, apiname, uiname, description, flag, icon);
-      }
-    };
-    ToolProperty.internalRegister(EnumProperty);
-    FlagProperty = class extends EnumPropertyBase {
-      static PROP_TYPE_ID = PropTypes["FLAG"];
-      static STRUCT = struct_default.inlineRegister(this, `FlagProperty {}`);
-      constructor(string_or_int, valid_values, apiname, uiname, description, flag, icon) {
-        super(PropTypes.FLAG, string_or_int, valid_values, apiname, uiname, description, flag, icon);
-        this.type = PropTypes.FLAG;
-        this.wasSet = false;
-      }
-      setValue(bitmask) {
-        this.checkMeta();
-        this.data = bitmask;
-        ToolProperty.prototype.setValue.call(this, bitmask);
-      }
-      /** A flag argument may name several bits at once, e.g. `"VERTEX|HANDLE"`. */
-      parseArg(arg) {
-        if (typeof arg === "string" && arg.includes("|")) {
-          let mask = 0;
-          for (const part of arg.split("|")) {
-            const key = part.trim();
-            if (!(key in this.values)) {
-              throw new Error(`unknown key ${key}`);
-            }
-            mask |= this.values[key];
-          }
-          return mask;
-        }
-        return super.parseArg(arg);
-      }
-    };
-    ToolProperty.internalRegister(FlagProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/vector.ts
-var VecPropertyBase, Vec2Property, Vec3Property, Vec4Property, QuatProperty;
-var init_vector = __esm({
-  "scripts/path-controller/toolsys/props/vector.ts"() {
-    "use strict";
-    init_vectormath();
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    init_number();
-    init_enum();
-    VecPropertyBase = class extends FloatPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    VecPropertyBase {
-      hasUniformSlider : bool | this.hasUniformSlider || false;
-      descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;
-      iconmap        : array(EnumKeyPair) | this._saveMap(this.iconmap) ;
-    }`
-      );
-      hasUniformSlider;
-      descriptions;
-      icons;
-      constructor(type, data, apiname, uiname, description) {
-        super(type, void 0, apiname, uiname, description);
-        this.hasUniformSlider = false;
-      }
-      setIsColor() {
-        this.subtype = (this.subtype ?? 0) | PropSubTypes2.COLOR;
-        return this;
-      }
-      calcMemSize() {
-        return super.calcMemSize() + this.data.length * 8;
-      }
-      equals(b) {
-        const d1 = this.data;
-        return d1.vectorDistance(b.data) < 1e-5;
-      }
-      uniformSlider(state = true) {
-        this.hasUniformSlider = state;
-        return this;
-      }
-      copyTo(b) {
-        const origVec = b.data;
-        super.copyTo(b);
-        b.data = origVec;
-        b.data.load(this.data);
-        b.hasUniformSlider = this.hasUniformSlider;
-        b.descriptions = this.descriptions ? { ...this.descriptions } : void 0;
-        b.icons = this.icons ? { ...this.icons } : void 0;
-      }
-      addIcons(iconmap) {
-        this.icons = { ...iconmap };
-        return this;
-      }
-      addDescriptions(descmap) {
-        this.descriptions = { ...descmap };
-        return this;
-      }
-      // needed by STRUCT script
-      _saveMap = EnumKeyPair.saveMap;
-      loadSTRUCT(reader) {
-        super.loadSTRUCT(reader);
-        reader(this);
-        this.descriptions = EnumKeyPair.loadMap(this.descriptions);
-        this.icons = EnumKeyPair.loadMap(this.icons);
-      }
-    };
-    Vec2Property = class extends VecPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.Vec2Property {
-  data : vec2;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.VEC2;
-      constructor(data, apiname, uiname, description) {
-        super(PropTypes.VEC2, void 0, apiname, uiname, description);
-        this.type = PropTypes.VEC2;
-        this.data = new Vector2(data);
-      }
-      setValue(v) {
-        this.data.load(v);
-        ToolProperty.prototype.setValue.call(this, v);
-      }
-      getValue() {
-        return this.data;
-      }
-      copyTo(b) {
-        const origData = b.data;
-        super.copyTo(b);
-        b.data = origData;
-        origData.load(this.data);
-      }
-    };
-    ToolProperty.internalRegister(Vec2Property);
-    Vec3Property = class extends VecPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.Vec3Property {
-  data : vec3;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.VEC3;
-      constructor(data, apiname, uiname, description) {
-        super(PropTypes.VEC3, void 0, apiname, uiname, description);
-        this.type = PropTypes.VEC3;
-        this.data = new Vector3(data);
-      }
-      isColor() {
-        this.subtype = PropSubTypes2.COLOR;
-        return this;
-      }
-      setValue(v) {
-        this.data.load(v);
-        ToolProperty.prototype.setValue.call(this, v);
-      }
-      getValue() {
-        return this.data;
-      }
-    };
-    ToolProperty.internalRegister(Vec3Property);
-    Vec4Property = class extends VecPropertyBase {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.Vec4Property {
-  data : vec4;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.VEC4;
-      constructor(data, apiname, uiname, description) {
-        super(PropTypes.VEC4, void 0, apiname, uiname, description);
-        this.type = PropTypes.VEC4;
-        this.data = new Vector4(data);
-      }
-      setValue(v, w = 1) {
-        const vec = v;
-        const d = this.data;
-        d.load(vec);
-        if (vec.length < 3) {
-          d[2] = 0;
-        }
-        if (vec.length < 4) {
-          d[3] = w;
-        }
-        ToolProperty.prototype.setValue.call(this, d);
-      }
-      isColor() {
-        this.subtype = PropSubTypes2.COLOR;
-        return this;
-      }
-      getValue() {
-        return this.data;
-      }
-      copyTo(b) {
-        const data = b.data;
-        super.copyTo(b);
-        b.data = data;
-        b.data.load(this.data);
-      }
-    };
-    ToolProperty.internalRegister(Vec4Property);
-    QuatProperty = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.QuatProperty {
-  data : vec4;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.QUAT;
-      constructor(data, apiname, uiname, description) {
-        super(PropTypes.QUAT, void 0, apiname, uiname, description);
-        this.data = new Quat(data);
-      }
-      equals(b) {
-        const d = this.data;
-        return d.vectorDistance(b.data) < 1e-5;
-      }
-      setValue(v) {
-        this.data.load(v);
-        super.setValue(v);
-      }
-      getValue() {
-        return this.data;
-      }
-      copyTo(b) {
-        const data = b.data;
-        super.copyTo(b);
-        b.data = data;
-        b.data.load(this.data);
-      }
-    };
-    ToolProperty.internalRegister(QuatProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/matrix.ts
-var Mat4Property;
-var init_matrix = __esm({
-  "scripts/path-controller/toolsys/props/matrix.ts"() {
-    "use strict";
-    init_vectormath();
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    Mat4Property = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.Mat4Property {
-  data           : mat4;
-}
-`
-      );
-      static PROP_TYPE_ID = PropTypes.MATRIX4;
-      constructor(data, apiname, uiname, description) {
-        super(PropTypes.MATRIX4, void 0, apiname, uiname, description);
-        this.data = new Matrix4(data);
-      }
-      calcMemSize() {
-        return super.calcMemSize() + 16 * 8 + 32;
-      }
-      equals(b) {
-        const m1 = this.data.$matrix;
-        const m2 = b.data.$matrix;
-        for (let i2 = 1; i2 <= 4; i2++) {
-          for (let j = 1; j <= 4; j++) {
-            const key = `m${i2}${j}`;
-            if (Math.abs(m1[key] - m2[key]) > 1e-5) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-      setValue(v) {
-        this.data.load(v);
-        super.setValue(v);
-      }
-      getValue() {
-        return this.data;
-      }
-      copyTo(b) {
-        const data = b.data;
-        super.copyTo(b);
-        b.data = data;
-        b.data.load(this.data);
-      }
-    };
-    ToolProperty.internalRegister(Mat4Property);
-  }
-});
-
-// scripts/path-controller/toolsys/props/list.ts
-var ListProperty;
-var init_list = __esm({
-  "scripts/path-controller/toolsys/props/list.ts"() {
-    "use strict";
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    ListProperty = class _ListProperty extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.ListProperty {
-  prop  : abstract(ToolProperty);
-  value : array(abstract(ToolProperty));
-}`
-      );
-      static PROP_TYPE_ID = PropTypes.PROPLIST;
-      prop;
-      value;
-      /*
-       * Prop must be a ToolProperty subclass instance
-       * */
-      constructor(prop, list5 = [], uiname = "") {
-        super(PropTypes.PROPLIST);
-        this.uiname = uiname;
-        this.flag &= ~PropFlags.SAVE_LAST_VALUE;
-        if (typeof prop == "number") {
-          const cls = PropClasses[prop];
-          if (cls !== void 0) {
-            prop = new cls();
-          }
-        } else if (prop !== void 0) {
-          if (prop instanceof ToolProperty) {
-            prop = prop.copy();
-          } else {
-            prop = new prop();
-          }
-        }
-        this.prop = prop;
-        this.value = [];
-        if (list5) {
-          for (const val of list5) {
-            this.push(val);
-          }
-        }
-        this.wasSet = false;
-      }
-      get length() {
-        return this.value.length;
-      }
-      set length(val) {
-        this.value.length = val;
-      }
-      splice(i2, deleteCount, ...newItems) {
-        const deletedItems = this.value.splice(i2, deleteCount, ...newItems);
-        this.length = this.value.length;
-        return deletedItems;
-      }
-      calcMemSize() {
-        let tot = super.calcMemSize();
-        let psize = this.prop ? this.prop.calcMemSize() + 8 : 8;
-        if (!this.prop && this.value.length > 0) {
-          psize = this.value[0].calcMemSize();
-        }
-        tot += psize * this.value.length + 8;
-        tot += 16;
-        return tot;
-      }
-      equals(b) {
-        const lb = b;
-        const l1 = this.value ? this.value.length : 0;
-        const l2 = lb.value ? lb.value.length : 0;
-        if (l1 !== l2) {
-          return false;
-        }
-        for (let i2 = 0; i2 < l1; i2++) {
-          const prop1 = this.value[i2];
-          const prop2 = lb.value[i2];
-          let bad = prop1.constructor !== prop2.constructor;
-          bad = bad || !prop1.equals(prop2);
-          if (bad) {
-            return false;
-          }
-        }
-        return true;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        const lb = b;
-        lb.prop = this.prop.copy();
-        lb.value = [];
-        for (const prop of this.value) {
-          lb.value.push(prop.copy());
-        }
-      }
-      copy() {
-        const ret = new _ListProperty(this.prop.copy());
-        this.copyTo(ret);
-        return ret;
-      }
-      push(item) {
-        if (item === void 0) {
-          item = this.prop.copy();
-        }
-        if (!(item instanceof ToolProperty)) {
-          const prop = this.prop.copy();
-          prop.setValue(item);
-          item = prop;
-        }
-        this.value.push(item);
-        return item;
-      }
-      clear() {
-        this.value.length = 0;
-        return this;
-      }
-      getListItem(i2) {
-        if (i2 < 0) {
-          i2 += this.length;
-        }
-        return this.value[i2].getValue();
-      }
-      setListItem(i2, val) {
-        if (i2 < 0) {
-          i2 += this.length;
-        }
-        this.value[i2].setValue(val);
-      }
-      setValue(value) {
-        this.clear();
-        for (const item of value) {
-          const prop = this.push();
-          if (typeof item !== "object") {
-            prop.setValue(item);
-          } else if (item instanceof prop.constructor) {
-            item.copyTo(prop);
-          } else {
-            this.report(item);
-            throw new Error("invalid value " + item);
-          }
-        }
-        super.setValue(value);
-      }
-      getValue() {
-        return this.value;
-      }
-      [Symbol.iterator]() {
-        const list5 = this.value;
-        return (function* () {
-          for (const item of list5) {
-            yield item.getValue();
-          }
-        })();
-      }
-    };
-    ToolProperty.internalRegister(ListProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/props/string_set.ts
-var StringSetProperty;
-var init_string_set = __esm({
-  "scripts/path-controller/toolsys/props/string_set.ts"() {
-    "use strict";
-    init_util();
-    init_toolprop_abstract();
-    init_struct();
-    init_base();
-    StringSetProperty = class extends ToolProperty {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-toolprop.StringSetProperty {
-  value  : iter(string);
-  values : iterkeys(string);
-}`
-      );
-      static PROP_TYPE_ID = PropTypes.STRSET;
-      value;
-      values;
-      ui_value_names;
-      descriptions;
-      iconmap;
-      iconmap2;
-      constructor(value, definition = []) {
-        super(PropTypes.STRSET);
-        const values = [];
-        this.value = new set();
-        const def = definition;
-        if (Array.isArray(def) || def instanceof set || def instanceof Set) {
-          for (const item of def) {
-            values.push(item);
-          }
-        } else if (typeof def === "object") {
-          for (const k in def) {
-            values.push(k);
-          }
-        } else if (typeof def === "string") {
-          values.push(def);
-        }
-        this.values = {};
-        this.ui_value_names = {};
-        this.descriptions = {};
-        this.iconmap = {};
-        this.iconmap2 = {};
-        for (const v of values) {
-          this.values[v] = v;
-          const uiname = ToolProperty.makeUIName(v);
-          this.ui_value_names[v] = uiname;
-        }
-        if (value !== void 0 && value !== null) {
-          this.setValue(value);
-        }
-        this.wasSet = false;
-      }
-      calcMemSize() {
-        let tot = super.calcMemSize();
-        for (const k in this.values) {
-          tot += (k.length + 16) * 5;
-        }
-        if (this.descriptions) {
-          for (const k in this.descriptions) {
-            tot += (k.length + this.descriptions[k].length + 8) * 4;
-          }
-        }
-        return tot + 64;
-      }
-      equals(b) {
-        return this.value.equals(b.value);
-      }
-      /*
-       * Values can be a string, undefined/null, or a list/set/object-literal of strings.
-       * If destructive is true, then existing set will be cleared.
-       * */
-      setValue(values, destructive = true, soft_fail = true) {
-        let bad = typeof values !== "string";
-        bad = bad && typeof values !== "object";
-        bad = bad && values !== void 0 && values !== null;
-        if (bad) {
-          if (soft_fail) {
-            this.report("Invalid argument to StringSetProperty.prototype.setValue() " + values);
-            return;
-          } else {
-            throw new Error("Invalid argument to StringSetProperty.prototype.setValue() " + values);
-          }
-        }
-        if (!values) {
-          this.value.clear();
-        } else if (typeof values === "string") {
-          if (destructive) this.value.clear();
-          if (!(values in this.values)) {
-            if (soft_fail) {
-              this.report(`"${values}" is not in this StringSetProperty`);
-              return;
-            } else {
-              throw new Error(`"${values}" is not in this StringSetProperty`);
-            }
-          }
-          this.value.add(values);
-        } else {
-          const data = [];
-          if (Array.isArray(values) || values instanceof set || values instanceof Set) {
-            for (const item of values) {
-              data.push(item);
-            }
-          } else {
-            for (const k in values) {
-              data.push(k);
-            }
-          }
-          for (const item of data) {
-            if (!(item in this.values)) {
-              if (soft_fail) {
-                this.report(`"${item}" is not in this StringSetProperty`);
-                continue;
-              } else {
-                throw new Error(`"${item}" is not in this StringSetProperty`);
-              }
-            }
-            this.value.add(item);
-          }
-        }
-        super.setValue(this.value);
-      }
-      getValue() {
-        return this.value;
-      }
-      addIcons2(iconmap2) {
-        if (iconmap2 === void 0) return this;
-        for (const k in iconmap2) {
-          this.iconmap2[k] = iconmap2[k];
-        }
-        return this;
-      }
-      addIcons(iconmap) {
-        if (iconmap === void 0) return this;
-        for (const k in iconmap) {
-          this.iconmap[k] = iconmap[k];
-        }
-        return this;
-      }
-      addUINames(map3) {
-        for (const k in map3) {
-          this.ui_value_names[k] = map3[k];
-        }
-        return this;
-      }
-      addDescriptions(map3) {
-        for (const k in map3) {
-          this.descriptions[k] = map3[k];
-        }
-        return this;
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        const sb = b;
-        for (const val of this.value) {
-          sb.value.add(val);
-        }
-        sb.values = {};
-        for (const k in this.values) {
-          sb.values[k] = this.values[k];
-        }
-        sb.ui_value_names = {};
-        for (const k in this.ui_value_names) {
-          sb.ui_value_names[k] = this.ui_value_names[k];
-        }
-        sb.iconmap = {};
-        sb.iconmap2 = {};
-        for (const k in this.iconmap) {
-          sb.iconmap[k] = this.iconmap[k];
-        }
-        for (const k in this.iconmap2) {
-          sb.iconmap2[k] = this.iconmap2[k];
-        }
-        sb.descriptions = {};
-        for (const k in this.descriptions) {
-          sb.descriptions[k] = this.descriptions[k];
-        }
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-        const values = this.values;
-        this.values = {};
-        for (const s of values) {
-          this.values[s] = s;
-        }
-        this.value = new set(this.value);
-      }
-    };
-    ToolProperty.internalRegister(StringSetProperty);
-  }
-});
-
-// scripts/path-controller/toolsys/toolprop.ts
-var init_toolprop = __esm({
-  "scripts/path-controller/toolsys/toolprop.ts"() {
-    "use strict";
-    init_toolprop_abstract();
-    init_units2();
-    init_base();
-    init_array();
-    init_string();
-    init_number();
-    init_bool();
-    init_enum();
-    init_vector();
-    init_matrix();
-    init_list();
-    init_string_set();
-  }
-});
-
 // scripts/core/tagReRegister.ts
 var ExternalTagManager, tagManager;
 var init_tagReRegister = __esm({
@@ -17343,7 +17644,7 @@ function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit3 
       }
     }
   }
-  if (value === void 0) {
+  if (inherit3 && value === void 0) {
     for (let i2 = 0; i2 < 2; i2++) {
       const th = i2 ? elem._themeOverride : theme;
       if (typeof th?.base === "object" && key in th.base) {
@@ -23078,15 +23379,33 @@ function formatNumber(elem, value, args = {}) {
 }
 function buildBoxCSS(elem, subkey, apply) {
   const keys2 = ["left", "right", "top", "bottom"];
-  let sub;
-  if (subkey) {
-    sub = elem.getAttribute(subkey) || {};
-  }
-  const def = (key) => {
-    if (sub && subkey) {
-      return elem.getSubDefault(subkey, key);
+  const themeFetch = (key, inherit3 = true) => {
+    if (subkey) {
+      return elem.getSubDefault(
+        subkey,
+        key,
+        inherit3 ? void 0 : null,
+        void 0,
+        inherit3
+      );
     }
-    return elem.getDefault(key);
+    return elem.getDefault(key, void 0, void 0, inherit3);
+  };
+  let borderRec = themeFetch("border", false);
+  const borderPrefix = "border";
+  const boxDef = (key) => {
+    let borderRec2 = themeFetch("border", false);
+    if (borderRec2 instanceof BoxBorder) {
+      let borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
+      return themeFetch(key, false) ?? borderRec2?.[borderKey] ?? themeFetch(key, true);
+    }
+    return themeFetch(key);
+  };
+  const def = (key) => {
+    if (key.startsWith("border") || key.startsWith("outline")) {
+      return boxDef(key);
+    }
+    return themeFetch(key);
   };
   let boxcode = "";
   for (let i2 = 0; i2 < 2; i2++) {
@@ -23121,13 +23440,13 @@ function buildBoxCSS(elem, subkey, apply) {
   }
   const border = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
   if (apply) {
-    elem.saneStyle["border-radius"] = def("border-radius") + "px";
-    elem.saneStyle["border"] = border;
+    elem.saneStyle[borderPrefix + "-radius"] = def("border-radius") + "px";
+    elem.saneStyle[borderPrefix] = border;
     return "";
   }
-  boxcode += `border-radius: ${def("border-radius")}px;
+  boxcode += `${borderPrefix}-radius: ${def("border-radius")}px;
 `;
-  boxcode += `border: ${border};
+  boxcode += `${borderPrefix}: ${border};
 `;
   return boxcode;
 }
@@ -23169,6 +23488,7 @@ var init_ui_base_css = __esm({
     init_vectormath();
     init_units2();
     init_ui_base_types();
+    init_ui_base();
   }
 });
 
@@ -26547,14 +26867,18 @@ var init_controller = __esm({
        *
        * @param cls: the class
        * @param auto_create: If true, automatically create definition if not already existing.
+       * @param useGlobalRegistry: add to the global resolveStructName registry, defaults true
        * @returns {IterableIterator<*>}
        */
-      _addClass(cls, dstruct, name2) {
+      _addClass(cls, dstruct, name2, useGlobalRegistry = true) {
         const key = _map_struct_idgen++;
         cls[CLS_API_KEY] = key;
         const stableName = resolveStructName(cls, name2);
         dstruct.name = stableName;
         this.structs.push(dstruct);
+        if (!useGlobalRegistry) {
+          return;
+        }
         _map_structs[key] = dstruct;
         const existing = _map_structs_by_name[stableName];
         if (existing !== void 0 && existing !== dstruct) {
@@ -31054,7 +31378,7 @@ var init_ui_base_props = __esm({
 
 // scripts/core/aspect.ts
 function _setUIBase(uibase) {
-  UIBase2 = uibase;
+  UIBase3 = uibase;
 }
 function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
   const object = objectIn;
@@ -31124,7 +31448,7 @@ function clearAspectCallbacks(obj) {
     obj[key].clear();
   }
 }
-var exclude, UIBase2, AspectKeys, AfterAspect;
+var exclude, UIBase3, AspectKeys, AfterAspect;
 var init_aspect = __esm({
   "scripts/core/aspect.ts"() {
     "use strict";
@@ -31137,7 +31461,7 @@ var init_aspect = __esm({
       "hasOwnProperty",
       "shadow"
     ]);
-    UIBase2 = void 0;
+    UIBase3 = void 0;
     AspectKeys = /* @__PURE__ */ Symbol("aspect-keys");
     AfterAspect = class _AfterAspect {
       owner;
@@ -31165,7 +31489,7 @@ var init_aspect = __esm({
             const [cb, node, once] = chain2[i2];
             if (node) {
               let isDead = !node.isConnected;
-              if (UIBase2 && node instanceof UIBase2) {
+              if (UIBase3 && node instanceof UIBase3) {
                 isDead = isDead || !!node.isDead?.();
               }
               if (isDead) {
@@ -33140,7 +33464,8 @@ var init_theme_schema = __esm({
       /** a CSS color string; same TS type as `string`, distinct intent */
       color: token3("color"),
       font: token3("font"),
-      scrollbars: token3("scrollbars")
+      scrollbars: token3("scrollbars"),
+      boxborder: token3("boxborder")
     };
   }
 });
@@ -33340,9 +33665,7 @@ var init_ui_button = __esm({
             height: t.number,
             padding: t.number,
             "background-color": t.color,
-            "border-color": t.color,
-            "border-width": t.number,
-            "border-radius": t.number,
+            border: t.boxborder,
             "focus-border-width": t.number,
             DefaultText: t.font,
             BoxHighlight: t.color
@@ -33873,7 +34196,9 @@ function openMenuPopup(menu, screen, owner, x, y, opts = {}) {
     false,
     safetyDelay
   );
-  con.noMarginsOrPadding();
+  con.stopEvents();
+  con.overrideClass("menu");
+  con.setCSS();
   con.add(menu);
   if (search) {
     menu.startSearch();
@@ -34686,16 +35011,15 @@ var init_wrangler = __esm({
           this._resetCloseTimer();
           return;
         }
+        const getRootMenu = (menu2) => {
+          while (menu2.parentMenu) {
+            menu2 = menu2.parentMenu;
+          }
+          return menu2;
+        };
         const elem = element;
         let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
-        destroy = destroy && this.menu.srcWidget !== elem;
-        if (destroy) {
-          let menu2 = this.menu;
-          while (menu2 !== elem.menu) {
-            menu2 = menu2?.parentMenu;
-            destroy = destroy && (menu2 === void 0 || menu2 !== elem.menu);
-          }
-        }
+        destroy = destroy && getRootMenu(this.menu).srcWidget !== elem;
         if (destroy) {
           this.endMenus();
           this._resetCloseTimer();
@@ -34709,7 +35033,7 @@ var init_wrangler = __esm({
             ok = true;
             break;
           }
-          if (w.hasAttribute("menu-button") && (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)) {
+          if (w.hasAttribute("menu-button") && (w.menu === getRootMenu(this.menu) || w.getAttribute("menu-id") === getRootMenu(this.menu).id)) {
             ok = true;
             break;
           }
@@ -35228,12 +35552,6 @@ var init_menu = __esm({
         }
         return li;
       }
-      _getBorderStyle() {
-        const r = this.getDefault("border-width");
-        const s = this.getDefault("border-style");
-        const c = this.getDefault("border-color");
-        return `${r}px ${s} ${c}`;
-      }
       buildStyle() {
         let pad1 = isMobile() ? 2 : 0;
         pad1 += this.getDefault("MenuSpacing");
@@ -35259,7 +35577,7 @@ var init_menu = __esm({
         if (this.hasDefault("item-radius")) {
           itemRadius = this.getDefault("item-radius");
         } else {
-          itemRadius = this.getDefault("border-radius");
+          itemRadius = this.getDefault("border")?.radius ?? this.getDefault("border-radius");
         }
         const menuText = this.getDefault("MenuText");
         this.menustyle.textContent = `
@@ -35281,9 +35599,7 @@ var init_menu = __esm({
           width          : max-content;
 
           margin : 0px;
-          padding : 0px;
-          border : ${this._getBorderStyle()};
-          border-radius : ${this.getDefault("border-radius")}px;
+          ${this.genBoxCSS()}
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
           color : ${menuText.color};
@@ -35297,14 +35613,17 @@ var init_menu = __esm({
           list-style-type:none;
           -moz-user-focus: normal;
 
-          margin : 0;
-          padding : 0px;
-          padding-right: 16px;
-          padding-left: 16px;
-          padding-top : ${pad1}px;
-          padding-bottom : ${pad1}px;
+          margin  : 0px;
+          ${// XXX should separate out border from padding/margin box properties
+        // e.g. if padding is present but border is not
+        this.hasSubDefault("item", "border") ? this.genBoxCSS("item") : `
+            padding-right: 16px;
+            padding-left: 16px;
+            padding-top : ${pad1}px;
+            padding-bottom : ${pad1}px;
 
-          border-radius : ${itemRadius}px;
+            border-radius : ${itemRadius}px;
+          `}
 
           color : ${menuText.color};
           font : ${menuText.genCSS()};
@@ -35319,9 +35638,13 @@ var init_menu = __esm({
           display : flex;
           text-align: left;
 
-          border : none;
-          outline : none;
-          border-radius : ${itemRadius}px;
+        ${// XXX should separate out border from padding/margin box properties
+        // e.g. if padding is present but border is not
+        this.hasSubDefault("highlight-item", "border") ? this.genBoxCSS("highlight-item") : `
+            border : none;
+            border-radius : ${itemRadius}px;
+          `}
+          outline: none;
 
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${menuText.color};
@@ -65578,9 +65901,9 @@ init_simple_events();
 init_ui_button();
 var keymap3 = keymap;
 var PropTypes2 = PropTypes;
-var UIBase3 = UIBase;
+var UIBase4 = UIBase;
 var PackFlags2 = PackFlags;
-var IconLabel = class extends UIBase3 {
+var IconLabel = class extends UIBase4 {
   _icon;
   iconsheet;
   constructor() {
@@ -65613,7 +65936,7 @@ var IconLabel = class extends UIBase3 {
     this.style["height"] = size + "px";
   }
 };
-UIBase3.internalRegister(IconLabel);
+UIBase4.internalRegister(IconLabel);
 var ValueButtonBase = class extends OldButton {
   _value;
   constructor() {
@@ -65649,7 +65972,7 @@ var ValueButtonBase = class extends OldButton {
     }
   }
 };
-var Check = class extends UIBase3 {
+var Check = class extends UIBase4 {
   icon = -1;
   iconsheet = 0;
   _checked;
@@ -65838,7 +66161,7 @@ var Check = class extends UIBase3 {
     }
     const canvas = this.canvas;
     const g = this.g;
-    const dpi = UIBase3.getDPI();
+    const dpi = UIBase4.getDPI();
     let tilesize = iconmanager.getTileSize(0);
     const pad = this.getDefault("padding");
     let csize = tilesize + pad * 2;
@@ -65870,7 +66193,7 @@ var Check = class extends UIBase3 {
     }
   }
   updateDPI() {
-    const dpi = UIBase3.getDPI();
+    const dpi = UIBase4.getDPI();
     if (dpi !== this._last_dpi) {
       this._last_dpi = dpi;
       this._redraw();
@@ -65891,8 +66214,8 @@ var Check = class extends UIBase3 {
     }
   }
 };
-UIBase3.internalRegister(Check);
-var IconButton = class extends UIBase3 {
+UIBase4.internalRegister(Check);
+var IconButton = class extends UIBase4 {
   _icon_pressed;
   _icon;
   iconsheet;
@@ -66150,7 +66473,7 @@ var IconButton = class extends UIBase3 {
     return size + margin * 2;
   }
 };
-UIBase3.internalRegister(IconButton);
+UIBase4.internalRegister(IconButton);
 var IconCheck = class extends IconButton {
   _checked;
   _drawCheck;
@@ -66324,7 +66647,7 @@ var IconCheck = class extends IconButton {
     super.setCSS();
   }
 };
-UIBase3.internalRegister(IconCheck);
+UIBase4.internalRegister(IconCheck);
 var Check1 = class extends OldButton {
   _value;
   constructor() {
@@ -66351,7 +66674,7 @@ var Check1 = class extends OldButton {
     });
   }
 };
-UIBase3.internalRegister(Check1);
+UIBase4.internalRegister(Check1);
 
 // scripts/core/utils/container_menu.ts
 init_ui_base();
@@ -69959,11 +70282,13 @@ var SliderWithTextbox = class extends ColumnFrame {
       this.updateTextBox();
     }
   }
+  /** @deprecated use realtime instead */
   get realTimeTextBox() {
     return this.realtime;
   }
+  /** @deprecated use realtime instead */
   set realTimeTextBox(val) {
-    this.setAttribute("realtime", val ? "true" : "false");
+    this.realtime = val;
   }
   get value() {
     return this._value;
@@ -70051,6 +70376,9 @@ var SliderWithTextbox = class extends ColumnFrame {
       return;
     }
     if (this._lock_textbox || this._textbox.editing) return;
+    if (this._textbox.realtime !== this.realtime) {
+      this._textbox.realtime = this.realtime;
+    }
     this._textbox.text = this.formatNumber(this._value);
     this._textbox.update();
     updateSliderFromDom(this, this.numslider);
@@ -72476,7 +72804,7 @@ function forwardContainerMethods(cls, propertyKey, keys2 = defaultForwardKeys) {
 
 // scripts/widgets/ui_panel.ts
 init_ui_base();
-var UIBase5 = UIBase;
+var UIBase6 = UIBase;
 var PackFlags3 = PackFlags;
 var PanelContents2 = class extends ColumnFrame {
   get openClosedIcon() {
@@ -72502,7 +72830,7 @@ var PanelContents2 = class extends ColumnFrame {
     };
   }
 };
-UIBase5.internalRegister(PanelContents2);
+UIBase6.internalRegister(PanelContents2);
 var PanelFrame = class extends ColumnFrame {
   titleframe;
   contents;
@@ -72515,7 +72843,7 @@ var PanelFrame = class extends ColumnFrame {
     return this._iconcheckWidget;
   }
   createContents() {
-    const ret = UIBase5.createElement("panel-contents-x");
+    const ret = UIBase6.createElement("panel-contents-x");
     this._container_inherit(ret);
     this._add(ret);
     return ret;
@@ -72527,7 +72855,7 @@ var PanelFrame = class extends ColumnFrame {
     this.contents._panel = this;
     this.contents.panelFrame = this;
     this._panel = this;
-    this._iconcheckWidget = UIBase5.createElement("iconcheck-x");
+    this._iconcheckWidget = UIBase6.createElement("iconcheck-x");
     this._iconcheckWidget.noEmboss = true;
     Object.defineProperty(this.contents, "closed", {
       get: () => {
@@ -72828,7 +73156,7 @@ var PanelFrame = class extends ColumnFrame {
     }
   }
 };
-UIBase5.internalRegister(PanelFrame);
+UIBase6.internalRegister(PanelFrame);
 forwardContainerMethods(PanelFrame, "contents");
 
 // scripts/widgets/ui_colorpicker2.ts
@@ -73834,6 +74162,22 @@ var ColorPickerButton = class extends UIBase {
     this.shadow.appendChild(this.labelDom);
     this.shadow.appendChild(this.dom);
   }
+  get value() {
+    return this.rgba;
+  }
+  set value(v) {
+    this.setValue(v, true, true);
+  }
+  setValue(v, triggerOnChange = true, writeDataPath = true) {
+    this.rgba.load(v);
+    if (triggerOnChange) {
+      this.on_change?.(this.rgba);
+    }
+    if (writeDataPath && this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
+    }
+    this._redraw();
+  }
   get label() {
     return this._label;
   }
@@ -73919,9 +74263,7 @@ var ColorPickerButton = class extends UIBase {
     const onchange = () => {
       this.rgba.load(widget.rgba);
       this.redraw();
-      if (this.on_change) {
-        this.on_change(this);
-      }
+      this.on_change?.(this.value);
     };
     widget._onchange = onchange;
     colorpicker.style["backgroundColor"] = widget.getDefault("background-color");
@@ -73937,13 +74279,7 @@ var ColorPickerButton = class extends UIBase {
     if (this.rgba.vectorDistance(old) < 1e-3) {
       return this;
     }
-    if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
-    }
-    if (this.on_change) {
-      this.on_change(this);
-    }
-    this._redraw();
+    this.setValue(this.rgba, true, true);
     return this;
   }
   on_disabled() {
@@ -76653,10 +76989,7 @@ var ListBoxSetActiveToolOp = class _ListBoxSetActiveToolOp extends ToolOp {
 };
 ToolOp.register(ListBoxSetActiveToolOp);
 
-// scripts/widgets/ui_gallery.ts
-init_ui_base();
-init_theme_schema();
-init_events();
+// scripts/gallery/thumbnail_cache.ts
 function isBitmap(src) {
   return typeof src.close === "function";
 }
@@ -76745,12 +77078,219 @@ var ThumbnailCache = class {
   }
 };
 var sharedThumbnailCache = new ThumbnailCache();
+
+// scripts/gallery/gallery_events.ts
+var GalleryChangeEvent = class extends Event {
+  selection;
+  constructor(selection) {
+    super("change");
+    this.selection = selection;
+  }
+};
+var GalleryConfirmEvent = class extends Event {
+  selection;
+  constructor(selection) {
+    super("confirm");
+    this.selection = selection;
+  }
+};
+
+// scripts/gallery/gallery_row.ts
+var defaultRowRenderer = {
+  bind(box, item) {
+    box.dom.textContent = item ? item.label ?? item.id : "";
+  }
+};
+
+// scripts/gallery/gallery_mode_button.ts
+init_ui_base();
+init_ui_theme();
+init_theme_schema();
+init_events();
+var GLYPH_UNITS = 16;
+function drawGlyph(g, mode, size, color) {
+  const s = size / GLYPH_UNITS;
+  g.fillStyle = color;
+  g.beginPath();
+  if (mode === "grid") {
+    for (const [x, y] of [
+      [1, 1],
+      [9, 1],
+      [1, 9],
+      [9, 9]
+    ]) {
+      g.roundRect(x * s, y * s, 6 * s, 6 * s, 1.5 * s);
+    }
+  } else {
+    for (const y of [1, 9]) {
+      g.roundRect(1 * s, y * s, 6 * s, 6 * s, 1.5 * s);
+    }
+  }
+  g.fill();
+  if (mode === "grid") {
+    return;
+  }
+  g.strokeStyle = color;
+  g.lineWidth = 1.5 * s;
+  g.lineCap = "round";
+  g.beginPath();
+  for (const y of [1, 9]) {
+    g.moveTo(9 * s, (y + 1.75) * s);
+    g.lineTo(15 * s, (y + 1.75) * s);
+    g.moveTo(9 * s, (y + 4.25) * s);
+    g.lineTo(13 * s, (y + 4.25) * s);
+  }
+  g.stroke();
+}
+var GalleryModeButton = class extends UIBase {
+  dom;
+  g;
+  /** Which layout pressing the button asks for. Set before the button is added. */
+  mode = "grid";
+  _selected = false;
+  _hover = false;
+  _size = 22;
+  constructor() {
+    super();
+    this.dom = document.createElement("canvas");
+    this.g = this.dom.getContext("2d");
+    this.shadow.appendChild(this.dom);
+    this.addEventListener("pointerenter", () => {
+      this._hover = true;
+      this.redraw();
+    });
+    this.addEventListener("pointerleave", () => {
+      this._hover = false;
+      this.redraw();
+    });
+    this.addEventListener("keydown", (e) => this.onKeyDown(e));
+  }
+  static define() {
+    return {
+      tagname: "gallerymodebutton-x",
+      style: "iconbutton",
+      theme: {
+        "background-color": t.color,
+        "border-color": t.color,
+        "border-radius": t.number,
+        "border-width": t.number,
+        depressed: {
+          "background-color": t.color,
+          "border-color": t.color
+        },
+        highlight: {
+          "background-color": t.color,
+          "border-color": t.color
+        }
+      }
+    };
+  }
+  init() {
+    super.init();
+    this.style.display = "block";
+    this.tabIndex = 0;
+    this.dom.style.padding = this.dom.style.margin = "0px";
+    this.setSize(this._size);
+  }
+  /** Whether this button's mode is the one the gallery is drawing in. */
+  get selected() {
+    return this._selected;
+  }
+  set selected(state) {
+    if (state !== this._selected) {
+      this._selected = state;
+      this.redraw();
+    }
+  }
+  /** Button side in CSS pixels. The glyph is inset within it. */
+  setSize(size) {
+    this._size = size;
+    const dpi = this.getDPI();
+    this.dom.width = this.dom.height = Math.max(1, Math.floor(size * dpi));
+    this.dom.style.width = this.dom.style.height = size + "px";
+    this.style.width = this.style.height = size + "px";
+    this.redraw();
+  }
+  redraw() {
+    const g = this.g;
+    const dpi = this.getDPI();
+    const size = this.dom.width;
+    const colors = this.stateColors();
+    const radius = this.getDefault("border-radius") * dpi;
+    const borderWidth = this.getDefault("border-width") * dpi;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const inset = borderWidth * 0.5;
+    g.beginPath();
+    g.roundRect(inset, inset, size - borderWidth, size - borderWidth, Math.max(0, radius));
+    g.fillStyle = colors["background-color"];
+    g.fill();
+    if (borderWidth > 0) {
+      g.strokeStyle = colors["border-color"];
+      g.lineWidth = borderWidth;
+      g.stroke();
+    }
+    const glyph = size * 0.72;
+    g.save();
+    g.translate((size - glyph) * 0.5, (size - glyph) * 0.5);
+    drawGlyph(g, this.mode, glyph, this.glyphColor(colors["background-color"]));
+    g.restore();
+  }
+  stateColors() {
+    if (this._selected) {
+      return this.getDefault("depressed");
+    }
+    if (this._hover) {
+      return this.getDefault("highlight");
+    }
+    return {
+      "background-color": this.getDefault("background-color"),
+      "border-color": this.getDefault("border-color")
+    };
+  }
+  /**
+   * The theme's text color, flipped to white where the depressed fill is too dark to read it
+   * against. Themes give the depressed state a dark fill without giving it a text color, so the
+   * glyph would otherwise disappear exactly when the mode is the one in use.
+   */
+  glyphColor(background) {
+    const font = this.getDefault("DefaultText");
+    const ink = font?.color || "black";
+    const bg = css2color(background);
+    const alpha = bg[3] ?? 1;
+    if (alpha < 0.5) {
+      return ink;
+    }
+    const luma = 0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2];
+    const dark = css2color(ink);
+    const inkLuma = 0.2126 * dark[0] + 0.7152 * dark[1] + 0.0722 * dark[2];
+    return Math.abs(luma - inkLuma) < 0.4 ? luma < 0.5 ? "white" : "black" : ink;
+  }
+  onKeyDown(e) {
+    if (e.keyCode !== keymap["Enter"] && e.keyCode !== keymap["Space"]) {
+      return;
+    }
+    this.click();
+    e.preventDefault();
+    e.stopPropagation();
+  }
+};
+UIBase.internalRegister(GalleryModeButton);
+
+// scripts/gallery/asset_thumb.ts
+init_ui_base();
+init_theme_schema();
 var AssetThumb = class extends UIBase {
   dom;
   g;
   item;
   /** Index into the grid's item list, or -1 while the cell is parked off the end. */
   index = -1;
+  /** Which layout the cell draws. Fixed at creation; the grid rebuilds its pool to change it. */
+  mode = "grid";
+  /** Fills the detail box in list mode. Assign before the cell is initialized. */
+  renderer = defaultRowRenderer;
+  box;
   cache = sharedThumbnailCache;
   _hover = false;
   _focused = false;
@@ -76787,7 +77327,9 @@ var AssetThumb = class extends UIBase {
           width: t.number
         },
         margin: t.number,
-        padding: t.number
+        padding: t.number,
+        boxPadding: t.number,
+        rowFont: t.font
       }
     };
   }
@@ -76797,7 +77339,37 @@ var AssetThumb = class extends UIBase {
     this.style.display = "block";
     this.tabIndex = -1;
     this.dom.style.padding = this.dom.style.margin = "0px";
+    if (this.mode === "list" && this.box === void 0) {
+      this.box = this.makeBox();
+      this.renderer.create?.(this.box);
+    }
     this.setSize(this._width, this._height);
+  }
+  remove() {
+    if (this.box !== void 0) {
+      this.renderer.destroy?.(this.box);
+      this.box = void 0;
+    }
+    return super.remove();
+  }
+  makeBox() {
+    const dom = document.createElement("div");
+    dom.style.position = "absolute";
+    dom.style.boxSizing = "border-box";
+    dom.style.overflow = "hidden";
+    dom.style.display = "flex";
+    dom.style.flexDirection = "column";
+    dom.style.justifyContent = "center";
+    dom.style.pointerEvents = "none";
+    dom.style.whiteSpace = "normal";
+    dom.style.overflowWrap = "anywhere";
+    const font = this.getDefault("rowFont");
+    if (font !== void 0) {
+      dom.style.font = font.genCSS();
+      dom.style.color = font.color;
+    }
+    this.shadow.appendChild(dom);
+    return { dom, index: -1, active: false, focused: false, width: 0, height: 0 };
   }
   get hover() {
     return this._hover;
@@ -76810,6 +77382,7 @@ var AssetThumb = class extends UIBase {
       this._focused = state;
       this.tabIndex = state ? 0 : -1;
       this.redraw();
+      this.updateBox();
     }
   }
   get isActive() {
@@ -76819,6 +77392,7 @@ var AssetThumb = class extends UIBase {
     if (state !== this._active) {
       this._active = state;
       this.redraw();
+      this.updateBox();
     }
   }
   /** Cell size in CSS pixels, excluding the theme's inter-cell margin. */
@@ -76832,7 +77406,34 @@ var AssetThumb = class extends UIBase {
     this.dom.style.height = height + "px";
     this.style.width = width + "px";
     this.style.height = height + "px";
+    this.layoutBox();
     this.redraw();
+  }
+  /** Places the detail box over everything the leading thumbnail square does not cover. */
+  layoutBox() {
+    const box = this.box;
+    if (box === void 0) {
+      return;
+    }
+    const pad = this.getDefault("boxPadding");
+    const left = this._height + pad;
+    box.width = Math.max(0, this._width - left - pad);
+    box.height = Math.max(0, this._height - pad * 2);
+    box.dom.style.left = left + "px";
+    box.dom.style.top = pad + "px";
+    box.dom.style.width = box.width + "px";
+    box.dom.style.height = box.height + "px";
+  }
+  /** Hands the renderer the row's current item and state. */
+  updateBox() {
+    const box = this.box;
+    if (box === void 0) {
+      return;
+    }
+    box.index = this.index;
+    box.active = this._active;
+    box.focused = this._focused;
+    this.renderer.bind(box, this.item);
   }
   /** Moves the cell within the grid's scrolling content. */
   setCellPos(x, y) {
@@ -76849,6 +77450,7 @@ var AssetThumb = class extends UIBase {
     this.description = item ? item.tooltip ?? item.label ?? item.id : void 0;
     this.title = this.description ?? "";
     this.redraw();
+    this.updateBox();
     if (item === void 0 || cache.peek(item.id) !== void 0) {
       return;
     }
@@ -76897,13 +77499,17 @@ var AssetThumb = class extends UIBase {
     }
     return this.getDefault("background-color");
   }
-  /** Letterboxes the cached thumbnail into the cell, inset by `inset` device pixels. */
+  /**
+   * Letterboxes the cached thumbnail into the cell, inset by `inset` device pixels. In list mode
+   * it goes into a leading square instead, leaving the rest of the row to the detail box.
+   */
   drawImage(inset) {
     const src = this.item ? this.cache.peek(this.item.id) : void 0;
     if (src === void 0) {
       return;
     }
-    const boxW = this.dom.width - inset * 2;
+    const across = this.mode === "list" ? this.dom.height : this.dom.width;
+    const boxW = across - inset * 2;
     const boxH = this.dom.height - inset * 2;
     if (boxW <= 0 || boxH <= 0) {
       return;
@@ -76915,20 +77521,11 @@ var AssetThumb = class extends UIBase {
   }
 };
 UIBase.internalRegister(AssetThumb);
-var GalleryChangeEvent = class extends Event {
-  selection;
-  constructor(selection) {
-    super("change");
-    this.selection = selection;
-  }
-};
-var GalleryConfirmEvent = class extends Event {
-  selection;
-  constructor(selection) {
-    super("confirm");
-    this.selection = selection;
-  }
-};
+
+// scripts/gallery/asset_gallery_grid.ts
+init_ui_base();
+init_theme_schema();
+init_events();
 var AssetGalleryGrid = class extends UIBase {
   cache = sharedThumbnailCache;
   content;
@@ -76947,6 +77544,8 @@ var AssetGalleryGrid = class extends UIBase {
   firstIndex = -1;
   _focusIndex = 0;
   _active;
+  _mode = "grid";
+  _renderer = defaultRowRenderer;
   resizeObserver;
   constructor() {
     super();
@@ -76973,6 +77572,7 @@ var AssetGalleryGrid = class extends UIBase {
         "background-color": t.color,
         cellWidth: t.number,
         cellHeight: t.number,
+        rowHeight: t.number,
         overscanRows: t.number
       }
     };
@@ -77007,6 +77607,29 @@ var AssetGalleryGrid = class extends UIBase {
   /** How many items the grid is currently drawing. */
   get itemCount() {
     return this.items.length;
+  }
+  /** Which layout the items are drawn in. The selection and focus index survive a change. */
+  get mode() {
+    return this._mode;
+  }
+  set mode(mode) {
+    if (mode === this._mode) {
+      return;
+    }
+    this._mode = mode;
+    this.scrollTop = 0;
+    this.repool();
+  }
+  /**
+   * Fills the box beside each thumbnail in list mode. Replacing it rebuilds the pool, so what
+   * the old renderer built is torn down through its own `destroy`.
+   */
+  get rowRenderer() {
+    return this._renderer;
+  }
+  set rowRenderer(renderer) {
+    this._renderer = renderer;
+    this.repool();
   }
   /** The selected item, which survives being scrolled out of view. */
   get active() {
@@ -77061,15 +77684,28 @@ var AssetGalleryGrid = class extends UIBase {
     this.content.style.height = this.metrics.rows * this.metrics.pitchY + this.metrics.margin + "px";
     this.rebind(true);
   }
+  /** Drops every pooled cell and lays the grid out again, so the cells are made afresh. */
+  repool() {
+    while (this.pool.length > 0) {
+      this.pool.pop().remove();
+    }
+    this.firstIndex = -1;
+    if (this._init_done) {
+      this.rebuild();
+    }
+  }
   measure() {
-    const cellWidth = this.getDefault("cellWidth");
-    const cellHeight = this.getDefault("cellHeight");
+    const list5 = this._mode === "list";
     const margin = this.pool[0]?.getDefault("margin") ?? 4;
+    const gridWidth = this.getDefault("cellWidth");
+    const gridHeight = this.getDefault("cellHeight");
+    const viewWidth = this.clientWidth || gridWidth + margin * 2;
+    const viewHeight = this.clientHeight || gridHeight + margin * 2;
+    const cellWidth = list5 ? Math.max(gridHeight, viewWidth - margin * 2) : gridWidth;
+    const cellHeight = list5 ? this.getDefault("rowHeight") : gridHeight;
     const pitchX = cellWidth + margin;
     const pitchY = cellHeight + margin;
-    const viewWidth = this.clientWidth || cellWidth + margin * 2;
-    const viewHeight = this.clientHeight || cellHeight + margin * 2;
-    const columns = Math.max(1, Math.floor((viewWidth - margin) / pitchX));
+    const columns = list5 ? 1 : Math.max(1, Math.floor((viewWidth - margin) / pitchX));
     this.metrics = {
       cellWidth,
       cellHeight,
@@ -77091,6 +77727,8 @@ var AssetGalleryGrid = class extends UIBase {
     while (this.pool.length < wanted) {
       const cell = UIBase.createElement("assetthumb-x");
       cell.ctx = this.ctx;
+      cell.mode = this._mode;
+      cell.renderer = this._renderer;
       cell.parentWidget = this;
       this.content.appendChild(cell);
       cell._init();
@@ -77226,6 +77864,14 @@ var AssetGalleryGrid = class extends UIBase {
   }
 };
 UIBase.internalRegister(AssetGalleryGrid);
+
+// scripts/gallery/asset_gallery.ts
+init_ui_base();
+init_theme_schema();
+var MODE_TOOLTIP = {
+  grid: "Show the assets as a grid of thumbnails",
+  list: "Show the assets as rows, with a name beside each thumbnail"
+};
 function matchesQuery(item, query) {
   if (item.id.toLowerCase().includes(query)) {
     return true;
@@ -77237,13 +77883,19 @@ function matchesQuery(item, query) {
 }
 var AssetGallery = class extends ColumnFrame {
   cache = sharedThumbnailCache;
+  /** Whether the grid/list toggle is drawn. Clear it before init to drive `mode` from elsewhere. */
+  showModeToggle = true;
   grid;
+  modeButtons = [];
   allItems = [];
   query = "";
+  pendingMode = "grid";
+  pendingRenderer;
   static define() {
     return {
       tagname: "assetgallery-x",
       style: "assetgallery",
+      parentStyle: "popup",
       theme: {
         width: t.number,
         height: t.number
@@ -77255,15 +77907,26 @@ var AssetGallery = class extends ColumnFrame {
     if (this.grid !== void 0) {
       return;
     }
-    const search = this.textbox(void 0, "", (value) => this.setQuery(String(value)));
+    const bar = this.row();
+    bar.style.width = "100%";
+    const search = bar.textbox(void 0, "", (value) => this.setQuery(String(value)));
     search.description = "Show only items whose name or tags contain this text";
     search.setAttribute("placeholder", "Search");
+    search.style.flex = "1 1 auto";
     const grid = UIBase.createElement("assetgallerygrid-x");
     grid.cache = this.cache;
     grid.style.width = this.getDefault("width") + "px";
     grid.style.height = this.getDefault("height") + "px";
     this.add(grid);
     this.grid = grid;
+    if (this.pendingRenderer !== void 0) {
+      grid.rowRenderer = this.pendingRenderer;
+      this.pendingRenderer = void 0;
+    }
+    grid.mode = this.pendingMode;
+    if (this.showModeToggle) {
+      this.buildModeToggle(bar);
+    }
     grid.addEventListener("change", (e) => {
       this.dispatchEvent(new GalleryChangeEvent(e.selection));
     });
@@ -77271,6 +77934,54 @@ var AssetGallery = class extends ColumnFrame {
       this.dispatchEvent(new GalleryConfirmEvent(e.selection));
     });
     this.applyQuery();
+  }
+  /** Adds the two abutting mode buttons at the trailing end of the search row. */
+  buildModeToggle(bar) {
+    for (const mode of ["grid", "list"]) {
+      const button = UIBase.createElement("gallerymodebutton-x");
+      button.mode = mode;
+      button.description = MODE_TOOLTIP[mode];
+      button.title = MODE_TOOLTIP[mode];
+      button.selected = mode === this.pendingMode;
+      button.addEventListener("click", () => {
+        this.mode = mode;
+      });
+      bar.add(button);
+      this.modeButtons.push(button);
+    }
+  }
+  /** Which layout the items are drawn in. The selection survives a change; the scroll does not. */
+  get mode() {
+    return this.grid?.mode ?? this.pendingMode;
+  }
+  set mode(mode) {
+    this.pendingMode = mode;
+    if (this.grid !== void 0) {
+      this.grid.mode = mode;
+    }
+    for (const button of this.modeButtons) {
+      button.selected = button.mode === mode;
+    }
+  }
+  /** Fills the box beside each thumbnail in list mode. See {@link GalleryRowRenderer}. */
+  get rowRenderer() {
+    return this.grid?.rowRenderer ?? this.pendingRenderer ?? defaultRowRenderer;
+  }
+  set rowRenderer(renderer) {
+    if (this.grid === void 0) {
+      this.pendingRenderer = renderer;
+      return;
+    }
+    this.grid.rowRenderer = renderer;
+  }
+  saveData() {
+    return { mode: this.mode };
+  }
+  loadData(obj) {
+    if (obj.mode === "grid" || obj.mode === "list") {
+      this.mode = obj.mode;
+    }
+    return this;
   }
   /** The items to offer, before filtering. Safe to call before the widget is in the DOM. */
   setItems(items) {
@@ -77300,6 +78011,10 @@ var AssetGallery = class extends ColumnFrame {
   }
 };
 UIBase.internalRegister(AssetGallery);
+
+// scripts/gallery/pick_asset_popup.ts
+init_ui_base();
+var lastMode = "grid";
 var REST_OF_PRESS = ["pointerup", "mousedown", "mouseup", "click"];
 function swallowPress(press) {
   const stop = (e) => {
@@ -77352,6 +78067,7 @@ function pickAssetPopup(owner, args) {
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest) => {
       window.removeEventListener("pointerdown", onPressOutside, true);
+      lastMode = gallery.mode;
       finish(void 0);
       return baseRemove(...rest);
     };
@@ -77359,8 +78075,13 @@ function pickAssetPopup(owner, args) {
     if (args.cache !== void 0) {
       gallery.cache = args.cache;
     }
+    if (args.rowRenderer !== void 0) {
+      gallery.rowRenderer = args.rowRenderer;
+    }
+    gallery.mode = args.mode ?? lastMode;
     popup.add(gallery);
     gallery.setItems(args.items);
+    popup.style.overflow = "hidden";
     if (args.active !== void 0) {
       const wanted = args.active;
       gallery.active = typeof wanted === "string" ? args.items.find((item) => item.id === wanted) : wanted;
@@ -77752,7 +78473,7 @@ __export(ui_noteframe_exports, {
 });
 init_ui_base();
 init_ui_base();
-var UIBase6 = UIBase;
+var UIBase7 = UIBase;
 var Note = class extends UIBase {
   _noteid;
   height;
@@ -77832,7 +78553,7 @@ var Note = class extends UIBase {
     super.setCSS(false);
   }
 };
-UIBase6.internalRegister(Note);
+UIBase7.internalRegister(Note);
 var ProgBarNote = class extends Note {
   _percent;
   barWidth;
@@ -77884,7 +78605,7 @@ var ProgBarNote = class extends Note {
     super.init();
   }
 };
-UIBase6.internalRegister(ProgBarNote);
+UIBase7.internalRegister(ProgBarNote);
 var NoteFrame = class extends RowFrame {
   _h;
   constructor() {
@@ -77936,7 +78657,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
   addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark = true) {
-    const note = UIBase6.createElement(tagname);
+    const note = UIBase7.createElement(tagname);
     note.color = color;
     note.setLabel(msg);
     note.style["text-align"] = "center";
@@ -77956,7 +78677,7 @@ var NoteFrame = class extends RowFrame {
     return note;
   }
 };
-UIBase6.internalRegister(NoteFrame);
+UIBase7.internalRegister(NoteFrame);
 function getNoteFrames(screen) {
   const ret = [];
   const rec = (n) => {
@@ -85243,6 +85964,142 @@ function clampPopup(screen, popup, popupDelay) {
   };
   setTimeout(cb, popupDelay);
 }
+var PopupContainer = class extends Container3 {
+  static define() {
+    return {
+      tagname: "screen-popup-x",
+      style: "popup"
+    };
+  }
+  setCSS() {
+    this.setBoxCSS();
+    this.noMargins();
+    this.background = this.getDefault("background-color");
+    this.style["boxShadow"] = this.getDefault("box-shadow");
+    return this;
+  }
+  remove(...args) {
+    if (args.length === 0 && this.onRemove) {
+      this.onRemove();
+      this.end();
+    }
+    return super.remove(...args);
+  }
+  _ondestroy() {
+    this.end();
+    super._ondestroy();
+  }
+  end() {
+    const screen = this.ctx.screen;
+    if (screen._popup_safe) {
+      return;
+    }
+    if (this.done) return;
+    this.stopEvents();
+    this.done = true;
+    this.remove();
+  }
+  startEvents() {
+    let bad_time = time_ms();
+    let last_pick_time = time_ms();
+    let pressed = false;
+    const mousepickBase = (e, fromMove = false) => {
+      if (!this.isConnected) {
+        this.end();
+        return;
+      }
+      if (this.sarea?.area) {
+        this.sarea.area.push_ctx_active();
+        this.sarea.area.pop_ctx_active();
+      }
+      if (!(fromMove ? this.closeGestures?.move : this.closeGestures?.click)) {
+        return;
+      }
+      if (fromMove) {
+        if (time_ms() - last_pick_time < 350) {
+          return;
+        }
+        last_pick_time = time_ms();
+      } else {
+        if (e.type === "pointerup" && !pressed) {
+          return;
+        }
+        pressed = true;
+      }
+      const x = e.x;
+      const y = e.y;
+      let elem = this.ctx.screen.pickElement(x, y, {
+        excluded_classes: [ScreenBorder],
+        mouseEvent: e
+      });
+      if (elem === void 0) {
+        this.end();
+        return;
+      }
+      let ok = false;
+      while (elem) {
+        if (elem === this) {
+          ok = true;
+          break;
+        }
+        elem = elem.parentWidget;
+      }
+      if (!ok) {
+        if (!fromMove || time_ms() - bad_time > this.mouseOutCloseTimeout) {
+          this.end();
+        }
+      } else {
+        bad_time = time_ms();
+      }
+    };
+    this.keydown = (e) => {
+      if (!this.isConnected) {
+        window.removeEventListener("keydown", this.keydown);
+        return;
+      }
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+          this.end();
+          break;
+      }
+    };
+    const mousepickWithTimout = (e) => mousepickBase(e, true);
+    this.mousepick = mousepickBase;
+    this.closeEventSource.addEventListener("pointerdown", this.mousepick, true);
+    this.closeEventSource.addEventListener("pointermove", mousepickWithTimout, {
+      passive: true
+    });
+    this.closeEventSource.addEventListener("pointerup", this.mousepick, true);
+    window.addEventListener("keydown", this.keydown);
+  }
+  stopEvents() {
+    if (this.mousepick) {
+      this.closeEventSource?.removeEventListener("pointerdown", this.mousepick, true);
+      if (this.mousepickWithTimout) {
+        this.closeEventSource?.removeEventListener("pointermove", this.mousepickWithTimout, {
+          passive: true
+        });
+      }
+      this.closeEventSource?.removeEventListener("pointerup", this.mousepick, true);
+      this.mousepick = void 0;
+      this.mousepickWithTimout = void 0;
+    }
+    if (this.keydown) {
+      window.removeEventListener("keydown", this.keydown);
+      this.keydown = void 0;
+    }
+  }
+  mouseOutCloseTimeout = 100;
+  done = false;
+  onRemove;
+  mousepick;
+  mousepickWithTimout;
+  keydown;
+  closeEventSource;
+  sarea;
+  closeGestures;
+};
+UIBase.internalRegister(PopupContainer);
 function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, closeEventSource = screen, mouseOutCloseTimeout = 100) {
   const closeOn = closeGestures(closeOnMouseOut);
   let sarea = screen.sareas.active;
@@ -85265,26 +86122,17 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, cl
   }
   const x = (typeof elem_or_x === "number" ? elem_or_x : rx) ?? 0;
   y = y ?? ry ?? 0;
-  const container = UIBase.createElement("container-x");
+  const container = UIBase.createElement("screen-popup-x");
   container.ctx = screen.ctx;
   container._init();
-  const remove2 = container.remove;
-  container.remove = (...args) => {
-    removePopup(screen, container);
-    return remove2.apply(container, args);
-  };
-  container.overrideClass("popup");
-  container.background = container.getDefault("background-color");
-  container.style["borderRadius"] = container.getDefault("border-radius") + "px";
-  container.style["borderColor"] = container.getDefault("border-color");
-  container.style["borderStyle"] = container.getDefault("border-style");
-  container.style["borderWidth"] = container.getDefault("border-width") + "px";
-  container.style["boxShadow"] = container.getDefault("box-shadow");
+  container.sarea = sarea;
+  container.mouseOutCloseTimeout = mouseOutCloseTimeout;
+  container.closeGestures = closeOn;
+  container.onRemove = () => removePopup(screen, container);
   container.style["position"] = UIBase.PositionKey;
   container.style["zIndex"] = `${ZIndexes.popup}`;
   container.style["left"] = x + "px";
   container.style["top"] = y + "px";
-  container.style["margin"] = "0px";
   container.parentWidget = screen;
   container.updateAfter(() => {
     container.style["zIndex"] = `${ZIndexes.popup}`;
@@ -85292,108 +86140,8 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, cl
   document.body.appendChild(container);
   screen.setCSS();
   addPopup(screen, container);
-  let mousepick;
-  let mousepickWithTimout;
-  let keydown;
-  let done = false;
-  const end = () => {
-    if (screen._popup_safe) {
-      return;
-    }
-    if (done) return;
-    if (mousepick && mousepickWithTimout) {
-      closeEventSource.removeEventListener("pointerdown", mousepick, true);
-      closeEventSource.removeEventListener("pointermove", mousepickWithTimout, {
-        passive: true
-      });
-      closeEventSource.removeEventListener("pointerup", mousepick, true);
-    }
-    window.removeEventListener("keydown", keydown);
-    done = true;
-    container.remove();
-  };
-  container.end = end;
-  const _remove = container.remove;
-  container.remove = function(...args) {
-    if (arguments.length == 0) {
-      end();
-    }
-    _remove.apply(this, args);
-  };
-  container._ondestroy = () => {
-    end();
-  };
-  let bad_time = time_ms();
-  let last_pick_time = time_ms();
-  let pressed = false;
-  const mousepickBase = (e, fromMove = false) => {
-    if (!container.isConnected) {
-      end();
-      return;
-    }
-    if (sarea?.area) {
-      sarea.area.push_ctx_active();
-      sarea.area.pop_ctx_active();
-    }
-    if (!(fromMove ? closeOn.move : closeOn.click)) {
-      return;
-    }
-    if (fromMove) {
-      if (time_ms() - last_pick_time < 350) {
-        return;
-      }
-      last_pick_time = time_ms();
-    } else {
-      if (e.type === "pointerup" && !pressed) {
-        return;
-      }
-      pressed = true;
-    }
-    const x2 = e.x;
-    const y2 = e.y;
-    let elem = screen.pickElement(x2, y2, {
-      excluded_classes: [ScreenBorder],
-      mouseEvent: e
-    });
-    if (elem === void 0) {
-      end();
-      return;
-    }
-    let ok = false;
-    while (elem) {
-      if (elem === container) {
-        ok = true;
-        break;
-      }
-      elem = elem.parentWidget;
-    }
-    if (!ok) {
-      if (!fromMove || time_ms() - bad_time > mouseOutCloseTimeout) {
-        end();
-      }
-    } else {
-      bad_time = time_ms();
-    }
-  };
-  keydown = (e) => {
-    if (!container.isConnected) {
-      window.removeEventListener("keydown", keydown);
-      return;
-    }
-    switch (e.keyCode) {
-      case keymap["Escape"]:
-        end();
-        break;
-    }
-  };
-  mousepickWithTimout = (e) => mousepickBase(e, true);
-  mousepick = mousepickBase;
-  closeEventSource.addEventListener("pointerdown", mousepick, true);
-  closeEventSource.addEventListener("pointermove", mousepickWithTimout, {
-    passive: true
-  });
-  closeEventSource.addEventListener("pointerup", mousepick, true);
-  window.addEventListener("keydown", keydown);
+  container.closeEventSource = closeEventSource;
+  container.startEvents();
   screen.calcTabOrder();
   return container;
 }
@@ -88720,6 +89468,10 @@ init_ui_base();
 init_ui_theme();
 init_cssfont();
 init_ui_theme_utils();
+init_controller();
+init_controller_base();
+init_toolprop();
+init_toolprop_abstract();
 var ThemeChangeEvent = class extends Event {
   category;
   key;
@@ -88734,7 +89486,6 @@ var ThemeChangeEvent = class extends Event {
     this.varKey = varKey;
   }
 };
-var FONT_FIELDS = ["font", "variant", "weight", "style"];
 var VAR_NAME_WIDTH = 110;
 var VAR_VALUE_WIDTH = 150;
 var VAR_COMMENT_WIDTH = 150;
@@ -88755,6 +89506,10 @@ function themeItemKind(name2, value) {
     return "boolean";
   } else if (value instanceof CSSFont) {
     return "font";
+  } else if (value instanceof BoxBorder) {
+    return "boxborder";
+  } else if (value instanceof ThemeScrollBars) {
+    return "scrollbars";
   } else if (typeof value === "object" && value !== null) {
     return "record";
   }
@@ -88902,6 +89657,8 @@ var ThemeEditor = class extends Container3 {
       { name: "Color", callback: () => add("grey") },
       { name: "Subfolder", callback: () => add({ test: 0 }) },
       { name: "Font", callback: () => add(new CSSFont()) },
+      { name: "BoxBorder", callback: () => add(new BoxBorder()) },
+      { name: "ThemeScrollBars", callback: () => add(new ThemeScrollBars()) },
       { name: "String", callback: () => add("") }
     ]);
   }
@@ -89240,6 +89997,7 @@ var ThemeEditor = class extends Container3 {
       };
     }
     return {
+      debug: { path: Array.from(livePath) },
       get: () => resolveRecord(parent)[leaf],
       set: (value) => {
         resolveRecord(parent)[leaf] = value;
@@ -89318,6 +90076,10 @@ var ThemeEditor = class extends Container3 {
         return this.boolRow(col, key, slot);
       case "font":
         return this.fontPanel(col, key, slot);
+      case "boxborder":
+        return this.boxRecordPanel(col, key, slot);
+      case "scrollbars":
+        return this.scrollBarsPanel(col, key, slot);
     }
     return void 0;
   }
@@ -89365,6 +90127,163 @@ var ThemeEditor = class extends Container3 {
     });
     return check;
   }
+  typedObjectPanel(col, key, slot, cls) {
+    const panel = col.panel(key);
+    const getObj = () => slot.get() ?? new cls();
+    const props = cls.Props;
+    const edit = (origin, curSlot, apply, getObj2) => {
+      const next = getObj2().copy();
+      apply(next);
+      this.setSlot(curSlot, next, origin);
+    };
+    const finalize = (propKey, widget, row, defaultVal) => {
+      this.onRefresh(widget, slot, () => {
+        widget.refreshPathWatches();
+      });
+      if (!(props[propKey].flag & PropFlags.OPTIONAL)) {
+        return;
+      }
+      const getLabel = () => getObj()[propKey] === void 0 ? "+" : "-";
+      const unset = row.button(getLabel(), () => {
+        edit(
+          widget,
+          slot,
+          (next) => {
+            const erased = next;
+            erased[propKey] = erased[propKey] === void 0 ? defaultVal : void 0;
+          },
+          getObj
+        );
+      });
+      unset.description = "Use default value";
+      unset.updateAfter(() => {
+        const label = getLabel();
+        if (label !== unset.name) {
+          unset.name = label;
+        }
+      });
+    };
+    if (!cls._cachedDataAPI) {
+      const st = new DataStruct2(
+        Object.entries(props).map(
+          ([propKey, prop]) => new DataPath(propKey, propKey, prop, DataTypes.PROP)
+        )
+      );
+      const root = new DataStruct2();
+      cls._cachedDataAPI = new DataAPI2();
+      cls._cachedDataAPI._addClass({}, root, void 0, false);
+      cls._cachedDataAPI._addClass(cls, st, void 0, false);
+      cls._cachedDataAPI.rootContextStruct = root;
+      root.struct("obj", "obj", "obj", st);
+    }
+    const microSt = cls._cachedDataAPI.rootContextStruct.pathmap.obj.data;
+    const editor2 = this;
+    const microCtx = {
+      get obj() {
+        return getObj();
+      },
+      slot,
+      widgets: {},
+      // the editor's own ctx is undefined until it is parented under a screen,
+      // which is after the panels are built, so these forward lazily
+      get screen() {
+        return editor2.ctx?.screen;
+      },
+      api: cls._cachedDataAPI,
+      get toolstack() {
+        return editor2.ctx?.toolstack;
+      }
+    };
+    const container = panel.col();
+    container.ctx = microCtx;
+    Object.defineProperty(container, "ctx", {
+      configurable: true,
+      get: () => microCtx,
+      set: () => {
+      }
+    });
+    container.inherit_packflag |= PackFlags.NO_REALTIME;
+    container.packflag |= PackFlags.NO_REALTIME;
+    const makeColorBridge = (propKey) => {
+      microSt.pathmap[propKey].customGetSet(
+        function() {
+          return css2color(this.ctx.obj[propKey]);
+        },
+        function(value) {
+          edit(
+            this.ctx.widgets[propKey],
+            this.ctx.slot,
+            (next) => {
+              const erasedNext = next;
+              erasedNext[propKey] = color2css2(value);
+            },
+            () => this.ctx.obj
+          );
+        }
+      );
+    };
+    const makeBridge = (propKey) => {
+      microSt.pathmap[propKey].customGetSet(
+        function() {
+          return this.ctx.obj[propKey];
+        },
+        function(value) {
+          edit(
+            this.ctx.widgets[propKey],
+            this.ctx.slot,
+            (next) => {
+              const erasedNext = next;
+              erasedNext[propKey] = value;
+            },
+            () => this.ctx.obj
+          );
+        }
+      );
+    };
+    for (let propKey in props) {
+      const prop = props[propKey];
+      const row = container.row();
+      const widget = row.prop("obj." + propKey);
+      widget.useDataPathUndo = false;
+      microCtx.widgets[propKey] = widget;
+      let defaultval;
+      if (prop instanceof StringProperty) {
+        defaultval = "";
+        makeBridge(propKey);
+      } else if (prop instanceof Vec3Property || prop instanceof Vec4Property) {
+        if (prop.subtype === PropSubTypes.COLOR) {
+          makeColorBridge(propKey);
+        } else {
+          makeBridge(propKey);
+        }
+        if (prop instanceof Vec3Property) {
+          defaultval = prop.subtype === PropSubTypes.COLOR ? "black" : [0, 0, 0];
+        } else {
+          defaultval = prop.subtype === PropSubTypes.COLOR ? "black" : [0, 0, 0, 1];
+        }
+      } else if (prop instanceof EnumPropertyBase) {
+        defaultval = prop.getValue();
+        makeBridge(propKey);
+      } else if (prop instanceof _NumberPropertyBase) {
+        defaultval = 0;
+        makeBridge(propKey);
+      } else if (prop instanceof BoolProperty) {
+        defaultval = false;
+        makeBridge(propKey);
+      } else {
+        throw new Error("Unsupported property type: " + prop.constructor.name);
+      }
+      finalize(propKey, widget, row, defaultval);
+    }
+    panel.closed = true;
+    return panel;
+  }
+  boxRecordPanel(col, key, slot) {
+    return this.typedObjectPanel(col, key, slot, BoxBorder);
+  }
+  scrollBarsPanel(col, key, slot) {
+    return this.typedObjectPanel(col, key, slot, ThemeScrollBars);
+  }
   /**
    * A closed sub-panel editing a {@link CSSFont}. Each field is written as a
    * whole new font, because a slot bound to a variable holds one independent
@@ -89372,43 +90291,7 @@ var ThemeEditor = class extends Container3 {
    * stale.
    */
   fontPanel(col, key, slot) {
-    const panel = col.panel(key);
-    const font = () => slot.get() ?? new CSSFont();
-    const edit = (origin, apply) => {
-      const next = font().copy();
-      apply(next);
-      this.setSlot(slot, next, origin);
-    };
-    for (const field of FONT_FIELDS) {
-      panel.label(field);
-      const tbox = panel.textbox(void 0, font()[field]);
-      tbox.width = tbox.getDefault("width");
-      tbox.on_change = () => edit(tbox, (next) => {
-        next[field] = tbox.text;
-      });
-      this.onRefresh(tbox, slot, () => {
-        tbox.text = font()[field];
-      });
-    }
-    const cw = panel.colorbutton(void 0);
-    cw.label = "color";
-    cw.setRGBA(css2color(font().color));
-    cw.on_change = () => edit(cw, (next) => {
-      next.color = color2css2(cw.rgba);
-    });
-    this.onRefresh(cw, slot, () => cw.setRGBA(css2color(font().color)));
-    const slider = panel.slider(void 0, "size", font().size);
-    slider.setAttribute("min", "1");
-    slider.setAttribute("max", "100");
-    slider.baseUnit = slider.displayUnit = "none";
-    slider.on_change = () => edit(slider, (next) => {
-      next.size = slider.value;
-    });
-    this.onRefresh(slider, slot, () => {
-      slider.value = font().size;
-    });
-    panel.closed = true;
-    return panel;
+    return this.typedObjectPanel(col, key, slot, CSSFont);
   }
   build() {
     const uidata = saveUIData(this, "theme");
@@ -98080,6 +98963,8 @@ var themeVars2 = {
   background: "rgba(207,207,207, 0.5)",
   // how round a box's corners are
   radius: 5,
+  borderColor: "rgba(255,155,5,1.0)",
+  borderRadius: 5,
   // the font ordinary text is drawn in
   bodyFont: new CSSFont({
     font: "sans-serif",
@@ -98100,7 +98985,7 @@ var theme3 = {
     mobileSizeMultiplier: 1,
     DefaultText: vars2.bodyFont,
     LabelText: vars2.bodyFont,
-    TitleText: new CSSFont({
+    TitleText: CSSFont.withVars({
       font: "sans-serif",
       weight: "normal",
       variant: "normal",
@@ -98128,10 +99013,13 @@ var theme3 = {
       color: "rgba(35,35,35, 1)"
     }),
     "background-color": "rgba(238,238,238, 0.8672412740773168)",
-    "border-color": "rgba(255,255,255, 1)",
-    "border-radius": 4,
-    "border-style": "solid",
-    "border-width": 2,
+    border: BoxBorder.withVars({
+      isOutline: true,
+      "color": "rgba(255,255,255, 1)",
+      "radius": 4,
+      "style": "solid",
+      "width": 2
+    }),
     disabled: {
       DefaultText: new CSSFont({
         font: "poppins",
@@ -98142,9 +99030,13 @@ var theme3 = {
         color: "rgb(109,109,109)"
       }),
       "background-color": "rgb(19,19,19)",
-      "border-color": "#f58f8f",
-      "border-style": "solid",
-      "border-width": 1
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color": "rgba(255,255,255, 1)",
+        "radius": 4,
+        "style": "solid",
+        "width": 2
+      })
     },
     height: 25,
     highlight: {
@@ -98157,12 +99049,16 @@ var theme3 = {
         color: "rgba(255,255,255, 1)"
       }),
       "background-color": "rgba(138,222,255, 1)",
-      "border-color": "rgba(255,255,255, 1)",
-      "border-radius": 4,
-      "border-style": "solid",
-      "border-width": 2
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color": "rgba(255,255,255, 1)",
+        "radius": 4,
+        "style": "solid",
+        "width": 2
+      })
     },
     "highlight-pressed": {
+      "background-color": "rgba(113,113,113, 1)",
       DefaultText: new CSSFont({
         font: "poppins",
         weight: "bold",
@@ -98171,10 +99067,16 @@ var theme3 = {
         size: 12,
         color: "rgba(35,35,35, 1)"
       }),
-      "background-color": "rgba(113,113,113, 1)",
-      "border-color": "#DADCE0",
-      "border-style": "solid",
-      "border-width": 1
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color": "#DADCE0",
+        "radius": 4,
+        "style": "solid",
+        "width": 2
+      }),
+      margin: 4,
+      "margin-left": 4,
+      "margin-right": 4
     },
     margin: 4,
     "margin-left": 4,
@@ -98190,9 +99092,13 @@ var theme3 = {
         color: "rgba(35,35,35, 1)"
       }),
       "background-color": "rgba(113,113,113, 1)",
-      "border-color": "#DADCE0",
-      "border-style": "solid",
-      "border-width": 1
+      border: BoxBorder.withVars({
+        isOutline: true,
+        "color": "#DADCE0",
+        "radius": 4,
+        "style": "solid",
+        "width": 2
+      })
     },
     width: 25
   },
@@ -98321,9 +99227,7 @@ var theme3 = {
     width: 110
   },
   menu: {
-    "item-radius": 0,
     MenuBG: "rgba(250,250,250,1.0)",
-    MenuBorder: "1px solid grey",
     MenuHighlight: "rgba(155, 220, 255, 1.0)",
     MenuSeparator: `
       width : 100%;
@@ -98352,14 +99256,40 @@ var theme3 = {
       color: "rgb(68, 68, 68)"
     }),
     HotkeyTextColor: "rgb(68, 68, 68)",
-    "border-color": "grey",
-    "border-radius": vars2.radius,
-    "border-style": "solid",
-    "border-width": 1,
+    "border": BoxBorder.withVars({
+      "color": "grey",
+      "radius": vars2.radius,
+      "style": "solid",
+      "width": 1
+    }),
     "padding-top": 0,
     "padding-left": 0,
     "padding-right": 0,
-    "padding-bottom": 0
+    "padding-bottom": 0,
+    item: {
+      "padding-right": 16,
+      "padding-left": 16,
+      "padding-top": 8,
+      "padding-bottom": 8,
+      "border": BoxBorder.withVars({
+        "color": "transparent",
+        "radius": vars2.radius,
+        "style": "none",
+        "width": 0
+      })
+    },
+    "highlight-item": {
+      "padding-right": 16,
+      "padding-left": 16,
+      "padding-top": 8,
+      "padding-bottom": 8,
+      "border": BoxBorder.withVars({
+        "color": "transparent",
+        "radius": vars2.radius,
+        "style": "none",
+        "width": 0
+      })
+    }
   },
   notification: {
     DefaultText: new CSSFont({
@@ -98555,6 +99485,19 @@ var theme3 = {
   treeview: {
     itemIndent: 10,
     rowHeight: 18
+  },
+  popup: {
+    border: BoxBorder.withVars({
+      "color": vars2.borderColor,
+      "radius": vars2.borderRadius,
+      "style": "solid",
+      "width": 1
+    }),
+    "padding-bottom": 2,
+    "padding-left": 2,
+    "padding-right": 2,
+    "padding-top": 2,
+    "boxShadow": "unset"
   },
   vecPopupButton: {
     height: 18,
@@ -99116,6 +100059,27 @@ var PropsEditor = class extends Editor2 {
       "confirm",
       (e) => record("confirm", e.selection.id)
     );
+    const rows = UIBase.createElement("assetgallerygrid-x");
+    rows.setAttribute("data-testid", "gallery-rows");
+    rows.style.width = "380px";
+    rows.style.height = "300px";
+    rows.mode = "list";
+    const counts = window.rowCalls = {
+      create: 0,
+      bind: 0
+    };
+    rows.rowRenderer = {
+      create(box) {
+        counts.create++;
+        box.dom.appendChild(document.createElement("span"));
+      },
+      bind(box, item) {
+        counts.bind++;
+        box.dom.firstElementChild.textContent = item ? "row-" + item.id : "";
+      }
+    };
+    tab2.add(rows);
+    rows.setItems(items);
     const gallery = UIBase.createElement("assetgallery-x");
     gallery.setAttribute("data-testid", "gallery");
     tab2.add(gallery);

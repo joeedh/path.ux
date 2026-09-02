@@ -1,5 +1,5 @@
 import * as util from "../path-controller/util/util";
-import { UIBase, IconSheets, makeIconDiv, getFont } from "../core/ui_base";
+import { UIBase, IconSheets, makeIconDiv, getFont, BoxBorder } from "../core/ui_base";
 import { ZIndexes } from "../screen/constants";
 import type { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
@@ -639,15 +639,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return li;
   }
 
-  _getBorderStyle() {
-    const r = this.getDefault("border-width");
-    const s = this.getDefault("border-style");
-    const c = this.getDefault("border-color");
-
-    return `${r}px ${s} ${c}`;
-  }
-
   buildStyle() {
+    // pad1 is only applied to items if the 'item' them subkey does not exist
     let pad1 = util.isMobile() ? 2 : 0;
     pad1 += this.getDefault("MenuSpacing") as number;
 
@@ -677,9 +670,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     let itemRadius: number;
 
     if (this.hasDefault("item-radius")) {
+      // this is only used if the item subkey doesn't exist
       itemRadius = this.getDefault("item-radius") as number;
     } else {
-      itemRadius = this.getDefault("border-radius") as number;
+      itemRadius =
+        (this.getDefault("border") as BoxBorder | undefined)?.radius ??
+        (this.getDefault("border-radius") as number);
     }
 
     const menuText = this.getDefault("MenuText") as CSSFont;
@@ -703,9 +699,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           width          : max-content;
 
           margin : 0px;
-          padding : 0px;
-          border : ${this._getBorderStyle()};
-          border-radius : ${this.getDefault("border-radius")}px;
+          ${this.genBoxCSS()}
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
           color : ${menuText.color};
@@ -719,14 +713,21 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           list-style-type:none;
           -moz-user-focus: normal;
 
-          margin : 0;
-          padding : 0px;
-          padding-right: 16px;
-          padding-left: 16px;
-          padding-top : ${pad1}px;
-          padding-bottom : ${pad1}px;
+          margin  : 0px;
+          ${
+            // XXX should separate out border from padding/margin box properties
+            // e.g. if padding is present but border is not
+            this.hasSubDefault("item", "border")
+              ? this.genBoxCSS("item")
+              : `
+            padding-right: 16px;
+            padding-left: 16px;
+            padding-top : ${pad1}px;
+            padding-bottom : ${pad1}px;
 
-          border-radius : ${itemRadius}px;
+            border-radius : ${itemRadius}px;
+          `
+          }
 
           color : ${menuText.color};
           font : ${menuText.genCSS()};
@@ -741,9 +742,17 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           display : flex;
           text-align: left;
 
-          border : none;
-          outline : none;
-          border-radius : ${itemRadius}px;
+        ${
+          // XXX should separate out border from padding/margin box properties
+          // e.g. if padding is present but border is not
+          this.hasSubDefault("highlight-item", "border")
+            ? this.genBoxCSS("highlight-item")
+            : `
+            border : none;
+            border-radius : ${itemRadius}px;
+          `
+        }
+          outline: none;
 
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${menuText.color};

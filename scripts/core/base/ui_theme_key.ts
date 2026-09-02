@@ -3,6 +3,7 @@ import { rgb_to_hsv, hsv_to_rgb } from "../../util/colorutils";
 import { CSSFont } from "../cssfont";
 import { DefaultTheme } from "../theme";
 import { theme, compatMap, color2css, css2color, ThemeRecord, ThemeScrollBars } from "../ui_theme";
+import { BoxBorder } from "../ui_theme";
 
 export const ErrorColors = {
   WARNING: "yellow",
@@ -19,6 +20,7 @@ export function setTheme(theme2: ThemeRecord): void {
       typeof v !== "object" ||
       v === null ||
       v instanceof CSSFont ||
+      v instanceof BoxBorder ||
       v instanceof ThemeScrollBars
     ) {
       theme[k] = v;
@@ -127,7 +129,10 @@ export function calcThemeKey(digest = _digest.reset()): number {
 
       if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
         digest.add(v2);
-      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
+      } else if (
+        typeof v2 === "object" &&
+        (v2 instanceof CSSFont || v2 instanceof BoxBorder || v2 instanceof ThemeScrollBars)
+      ) {
         v2.calcHashUpdate(digest);
       }
     }

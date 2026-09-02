@@ -139,7 +139,8 @@ export function getSubDefault<T extends DefaultTypes = string>(
   elem: AnyUIBase,
   key: string,
   subkey: string,
-  backupkey: string = subkey,
+  // pass null to avoid default =subkey
+  backupkey: string | null = subkey,
   defaultval?: T,
   inherit = true
 ): T {
@@ -372,7 +373,7 @@ export function getClassDefault(
       }
     }
   }
-  if (value === undefined) {
+  if (inherit && value === undefined) {
     for (let i = 0; i < 2; i++) {
       const th = i ? elem._themeOverride : theme;
       if (typeof th?.base === "object" && key in th.base) {

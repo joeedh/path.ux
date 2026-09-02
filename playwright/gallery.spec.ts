@@ -184,11 +184,12 @@ test("the search box filters the grid by label and by tag", async ({ page }) => 
 });
 
 test("the popup resolves with the confirmed item and with nothing on cancel", async ({ page }) => {
-  await openGallery(page);
+  const grid = await openGallery(page);
 
   await page.getByTestId("gallery-pick").click();
 
-  const popupCell = page.locator("body > *").last().locator("canvas").nth(2);
+  // by cell tag rather than by canvas, since the mode toggle draws canvases of its own
+  const popupCell = page.locator("body > *").last().locator(await cellTag(grid)).nth(2);
   await popupCell.dblclick();
 
   await expect.poll(() => events(page)).toContain("picked:item-2");
@@ -205,6 +206,8 @@ test("the popup cancels on a press outside it, but not on the pointer leaving", 
   await page.getByTestId("gallery-pick").click();
   const popup = page.locator("body > *").last();
   await expect(popup).toBeVisible();
+
+  await popup.screenshot({ path: `${SCEENSHOTS}/gallery-popup.png` });
 
   // Moving out is not dismissal: the author has to be able to read the rest of the page.
   const box = (await popup.boundingBox())!;
@@ -278,6 +281,100 @@ test("closeOnMouseOut tells a press outside from the pointer moving out", async 
 
     await expect(popup).toBeHidden();
   }
+});
+
+/** How many times the demo's list renderer has been asked to build and to bind. */
+function rowCalls(page: Page): Promise<{ create: number; bind: number }> {
+  return page.evaluate(
+    () => (window as unknown as { rowCalls: { create: number; bind: number } }).rowCalls
+  );
+}
+
+test("list mode draws one column of rows from a pool sized to the viewport", async ({ page }) => {
+  await openGallery(page);
+
+  const rows = page.locator('[data-testid="gallery-rows"]');
+  await expect(rows).toBeVisible();
+
+  expect(await read(rows, "columns")).toBe(1);
+
+  const pool = await read(rows, "poolSize");
+  // a 300px-tall viewport of 64px rows holds five, and overscan adds four more
+  expect(pool).toBeGreaterThan(5);
+  expect(pool).toBeLessThan(200);
+
+  // a row spans the viewport rather than taking the theme's grid cell width
+  const rowWidth = await rows.evaluate(
+    (el) => (el.shadowRoot!.querySelector("div")!.firstElementChild as HTMLElement).clientWidth
+  );
+  expect(rowWidth).toBeGreaterThan(300);
+
+  await expect(rows.getByText("row-item-0")).toBeVisible();
+
+  await page.screenshot({ path: `${SCEENSHOTS}/gallery-list.png` });
+});
+
+test("a row renderer builds once per pooled row and binds per item scrolled past", async ({
+  page,
+}) => {
+  await openGallery(page);
+
+  const rows = page.locator('[data-testid="gallery-rows"]');
+  const pool = await read(rows, "poolSize");
+
+  const before = await rowCalls(page);
+  expect(before.create).toBe(pool);
+
+  await rows.evaluate((el) => {
+    el.scrollTop = 1500;
+  });
+  await expect.poll(() => read(rows, "firstBoundIndex")).toBeGreaterThan(0);
+
+  const after = await rowCalls(page);
+  // the pool was rebound rather than rebuilt, so nothing new was created
+  expect(after.create).toBe(before.create);
+  expect(after.bind).toBeGreaterThan(before.bind);
+  expect(await read(rows, "poolSize")).toBe(pool);
+});
+
+test("the mode toggle switches the gallery's layout and keeps the selection", async ({ page }) => {
+  const grid = await openGallery(page);
+  const cell = await cellTag(grid);
+
+  const gallery = page.locator('[data-testid="gallery"]');
+  const mode = () => gallery.evaluate((el) => (el as unknown as { mode: string }).mode);
+  const active = () =>
+    gallery.evaluate((el) => (el as unknown as { active?: { id: string } }).active?.id);
+
+  expect(await mode()).toBe("grid");
+
+  await gallery.locator(cell).nth(3).click();
+  const picked = await active();
+  expect(picked).toBeDefined();
+
+  // located by their tooltips, which every control in this library is required to carry
+  const buttons = gallery.getByTitle(/^Show the assets as/);
+  await expect(buttons).toHaveCount(2);
+
+  await gallery.getByTitle("Show the assets as rows, with a name beside each thumbnail").click();
+  expect(await mode()).toBe("list");
+  expect(await active()).toBe(picked);
+
+  await gallery.getByTitle("Show the assets as a grid of thumbnails").click();
+  expect(await mode()).toBe("grid");
+
+  const toggle = (await buttons.first().boundingBox())!;
+  const rest = (await buttons.last().boundingBox())!;
+  await page.screenshot({
+    path: `${SCEENSHOTS}/gallery-mode-toggle.png`,
+    clip: {
+      x     : toggle.x - 6,
+      y     : toggle.y - 6,
+      width : rest.x + rest.width - toggle.x + 12,
+      height: toggle.height + 12,
+    },
+    scale: "css",
+  });
 });
 
 test("narrowing the viewport re-columns the grid and resizes the pool", async ({ page }) => {

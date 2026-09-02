@@ -4,10 +4,18 @@ import type { PopupContainer } from "../screen/FrameManager_popup";
 import { AssetGallery } from "./asset_gallery";
 import { GalleryItem, ThumbnailCache } from "./thumbnail_cache";
 import { GalleryConfirmEvent } from "./gallery_events";
+import type { GalleryMode, GalleryRowRenderer } from "./gallery_row";
+
+/** The layout the last popup was left in, so the author's choice survives reopening. */
+let lastMode: GalleryMode = "grid";
 
 /** What {@link pickAssetPopup} shows and how it starts out. */
 export interface PickAssetArgs {
   items: GalleryItem[];
+  /** Layout to open in. Defaults to whatever the previous popup was left in. */
+  mode?: GalleryMode;
+  /** Fills the box beside each thumbnail in list mode. */
+  rowRenderer?: GalleryRowRenderer;
   /** Selected when the popup opens, by item or by id. */
   active?: GalleryItem | string;
   /** Shared with the caller so a reopened popup redraws from decoded thumbnails. */
@@ -105,6 +113,7 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
     const baseRemove = popup.remove.bind(popup);
     popup.remove = (...rest: Parameters<UIBase["remove"]>) => {
       window.removeEventListener("pointerdown", onPressOutside, true);
+      lastMode = gallery.mode;
       finish(undefined);
       return baseRemove(...rest);
     };
@@ -113,8 +122,16 @@ export function pickAssetPopup<CTX extends IContextBase = IContextBase>(
     if (args.cache !== undefined) {
       gallery.cache = args.cache;
     }
+    if (args.rowRenderer !== undefined) {
+      gallery.rowRenderer = args.rowRenderer;
+    }
+    gallery.mode = args.mode ?? lastMode;
     popup.add(gallery);
     gallery.setItems(args.items);
+
+    // The frame is the popup style class's, but the grid inside paints an opaque square
+    // background that would cover its rounded corners.
+    popup.style.overflow = "hidden";
 
     if (args.active !== undefined) {
       const wanted = args.active;

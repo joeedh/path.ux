@@ -289,21 +289,18 @@ export class MenuWrangler {
       return;
     }
 
+    const getRootMenu = (menu: Menu): Menu => {
+      while (menu.parentMenu) {
+        menu = menu.parentMenu;
+      }
+      return menu;
+    };
+
     type DropBoxLike = UIBase & { menu?: Menu; _onpress?(e: PointerEvent): void };
     const elem = element as DropBoxLike;
 
     let destroy = elem.hasAttribute("menu-button") && element.hasAttribute("simple");
-    destroy = destroy && this.menu.srcWidget !== elem;
-
-    if (destroy) {
-      /* check that dropbox doesn't contain our parent menu either */
-
-      let menu2: Menu | undefined = this.menu;
-      while (menu2 !== elem.menu) {
-        menu2 = menu2?.parentMenu;
-        destroy = destroy && (menu2 === undefined || menu2 !== elem.menu);
-      }
-    }
+    destroy = destroy && getRootMenu(this.menu).srcWidget !== elem;
 
     if (destroy) {
       //destroy entire menu stack
@@ -327,7 +324,8 @@ export class MenuWrangler {
 
       if (
         w.hasAttribute("menu-button") &&
-        (w.menu === this.menu || w.getAttribute("menu-id") === this.menu?.id)
+        (w.menu === getRootMenu(this.menu) ||
+          w.getAttribute("menu-id") === getRootMenu(this.menu).id)
       ) {
         ok = true;
         break;

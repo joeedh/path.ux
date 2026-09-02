@@ -1,8 +1,9 @@
 import type { CSSFont } from "../cssfont";
+import type { ThemeScrollBars, BoxBorder } from "./../ui_theme";
 import type { ThemeSchema } from "../theme_schema";
 import type { UIBase } from "../ui_base";
 
-export type DefaultTypes = string | number | boolean | CSSFont;
+export type DefaultTypes = string | number | boolean | CSSFont | ThemeScrollBars | BoxBorder;
 
 export interface IUIBaseConstructor<T extends UIBase = UIBase> {
   new (): T;

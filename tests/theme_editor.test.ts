@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 
 import { CSSFont } from "../scripts/core/cssfont";
-import { ThemeScrollBars } from "../scripts/core/ui_theme";
+import { BoxBorder, ThemeScrollBars } from "../scripts/core/ui_theme";
 import type { ThemeRecord } from "../scripts/core/ui_theme";
 import { themeItemKind, groupThemeCategories } from "../scripts/widgets/theme_editor";
 
@@ -28,7 +28,8 @@ test("themeItemKind classifies the remaining theme value types", () => {
   expect(themeItemKind("a", true)).toBe("boolean");
   expect(themeItemKind("a", new CSSFont())).toBe("font");
   expect(themeItemKind("a", { b: 1 })).toBe("record");
-  expect(themeItemKind("a", new ThemeScrollBars({}))).toBe("record");
+  expect(themeItemKind("a", new BoxBorder({}))).toBe("boxborder");
+  expect(themeItemKind("a", new ThemeScrollBars({}))).toBe("scrollbars");
   expect(themeItemKind("a", undefined)).toBe("skip");
 });
 
