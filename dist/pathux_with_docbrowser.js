@@ -34277,6 +34277,8 @@ var init_dropbox = __esm({
       _searchMenuMode;
       altKey;
       _value;
+      /** Whether `setValue` has run, as opposed to `_value` still holding its initial 0. */
+      _valueSet = false;
       _last_datapath;
       _last_dbox_key;
       _popup;
@@ -34731,9 +34733,10 @@ var init_dropbox = __esm({
         return val;
       }
       setValue(val, setLabelOnly = false) {
-        if (val === void 0 || val === this._value) {
+        if (val === void 0 || val === this._value && this._valueSet) {
           return;
         }
+        this._valueSet = true;
         if (this.prop) {
           val = this._convertVal(val, this.prop);
         }
@@ -34806,7 +34809,7 @@ function setWranglerScreen(screen) {
 function getWranglerScreen() {
   return menuWrangler.screen;
 }
-var MenuWrangler, menuWrangler, wranglerStarted;
+var MENU_KEYS, MenuWrangler, menuWrangler, wranglerStarted;
 var init_wrangler = __esm({
   "scripts/menu/wrangler.ts"() {
     "use strict";
@@ -34816,6 +34819,15 @@ var init_wrangler = __esm({
     init_events();
     init_menu();
     init_dropbox();
+    MENU_KEYS = [
+      keymap["Left"],
+      keymap["Right"],
+      keymap["Up"],
+      keymap["Down"],
+      keymap["Enter"],
+      keymap["Space"],
+      keymap["Escape"]
+    ];
     MenuWrangler = class {
       screen;
       menustack;
@@ -34911,6 +34923,10 @@ var init_wrangler = __esm({
           return this.searchKeyDown(e);
         }
         const menu = this.menu;
+        if (MENU_KEYS.includes(e.keyCode)) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
         switch (e.keyCode) {
           case keymap["Left"]:
           //left
@@ -34934,12 +34950,11 @@ var init_wrangler = __esm({
           case keymap["Down"]:
             menu.selectNext();
             break;
-          case 13:
-          //return key
-          case 32:
+          case keymap["Enter"]:
+          case keymap["Space"]:
             menu.click();
             break;
-          case 27:
+          case keymap["Escape"]:
             menu.close();
             break;
         }
@@ -67487,8 +67502,10 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   if (mass_set_path !== void 0) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
-  ret.setAttribute("name", name2);
-  if (defaultval) {
+  if (name2 !== void 0) {
+    ret.setAttribute("name", name2);
+  }
+  if (defaultval !== void 0) {
     ret.setValue(defaultval);
   }
   ret.on_select = callback;
@@ -68685,6 +68702,7 @@ var Container3 = class _Container extends UIBase {
       }
     }
     if (!label) {
+      this._add(widget);
       return { widget, container: this };
     }
     const strip = UIBase.createElement("widget-with-label-x");
@@ -86052,7 +86070,9 @@ var PopupContainer = class extends Container3 {
       }
       switch (e.keyCode) {
         case keymap["Escape"]:
-          this.end();
+          if (this.isTopmostPopup()) {
+            this.end();
+          }
           break;
       }
     };
@@ -86064,6 +86084,15 @@ var PopupContainer = class extends Container3 {
     });
     this.closeEventSource.addEventListener("pointerup", this.mousepick, true);
     window.addEventListener("keydown", this.keydown);
+  }
+  /**
+   * Whether nothing was opened over this popup. Every popup listens for Escape on window, so
+   * without this a picker opened from a palette would take the palette down with it; the screen
+   * keeps `_popups` in the order they opened.
+   */
+  isTopmostPopup() {
+    const popups = this.ctx?.screen?._popups;
+    return !popups?.length || popups[popups.length - 1] === this;
   }
   stopEvents() {
     if (this.mousepick) {
