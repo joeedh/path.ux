@@ -50191,7 +50191,13 @@ var LastToolPanel = class extends ColumnFrame {
       if (!(prop.flag & PropFlags.SIMPLE_SLIDER)) {
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
-      const ret = panel.prop(path, packflag);
+      let ret;
+      try {
+        ret = panel.prop(path, packflag);
+      } catch (e) {
+        console.warn(e.stack);
+        console.warn(e.message);
+      }
       if (ret) {
       }
     }
