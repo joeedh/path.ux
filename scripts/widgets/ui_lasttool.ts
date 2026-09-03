@@ -195,7 +195,13 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
         packflag |= PackFlags.FORCE_ROLLER_SLIDER;
       }
 
-      const ret = panel.prop(path, packflag);
+      let ret: UIBase | undefined;
+      try {
+        ret = panel.prop(path, packflag);
+      } catch (e) {
+        console.warn((e as any)!.stack);
+        console.warn((e as any)!.message);
+      }
 
       if (ret) {
         //ret.onchange = function() {
