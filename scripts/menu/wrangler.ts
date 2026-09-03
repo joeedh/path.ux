@@ -8,6 +8,17 @@ import type { Screen } from "../screen/FrameManager";
 import { Menu } from "./menu";
 import { DropBox } from "./dropbox";
 
+/** The keys an open menu acts on, and so the ones it must not let past. */
+const MENU_KEYS = [
+  keymap["Left"],
+  keymap["Right"],
+  keymap["Up"],
+  keymap["Down"],
+  keymap["Enter"],
+  keymap["Space"],
+  keymap["Escape"],
+];
+
 function debugmenu(...args: unknown[]) {
   if (window.DEBUG?.menu) {
     console.warn("%cmenu:", "color:blue", ...args);
@@ -143,6 +154,15 @@ export class MenuWrangler {
 
     const menu = this.menu;
 
+    // The keys an open menu answers are consumed, the way the search box above already consumes
+    // them. This handler is on window in the capture phase, so anything left to propagate reaches
+    // the application's own keymap and any popup the menu was opened inside — an Escape meant for
+    // the menu would close the popup around it as well.
+    if (MENU_KEYS.includes(e.keyCode)) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     switch (e.keyCode) {
       case keymap["Left"]: //left
       case keymap["Right"]: //right
@@ -161,17 +181,17 @@ export class MenuWrangler {
           }
         }
         break;
-      case keymap["Up"]: //up
+      case keymap["Up"]:
         menu.selectPrev();
         break;
-      case keymap["Down"]: //down
+      case keymap["Down"]:
         menu.selectNext();
         break;
-      case 13: //return key
-      case 32: //space key
+      case keymap["Enter"]:
+      case keymap["Space"]:
         menu.click();
         break;
-      case 27: //escape key
+      case keymap["Escape"]:
         menu.close();
         break;
     }

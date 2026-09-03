@@ -1131,7 +1131,10 @@ export class Container<
       }
     }
 
+    // Nothing to label it with, so it is packed bare. Without the add it would be dropped, which
+    // is a widget that silently never appears rather than one that appears unlabelled.
     if (!label) {
+      this._add(widget);
       return { widget, container: this };
     }
 

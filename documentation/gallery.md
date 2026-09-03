@@ -190,6 +190,11 @@ Moving the pointer out is not dismissal, only a press is — `Screen.popup`'s
 default `closeOnMouseOut` ends a popup on a mousemove outside as well, which
 would close this one the moment the author looked at anything else.
 
+Escape closes only the popup on top. `Screen.popup`'s Escape handler is on
+window, and every open popup has one, so the check is against the screen's own
+`_popups` order — otherwise a picker opened from inside another popup would take
+that popup down with it.
+
 The dismissing press is consumed rather than passed on, so it does not also
 land on whatever was under the popup. Closing is `closeOnMouseOut: "click"`
 with `closeEventSource` set to `window`; the gallery adds its own

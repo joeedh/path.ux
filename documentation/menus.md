@@ -161,6 +161,11 @@ property machinery.
 
 Set `searchMenuMode = true` on a dropbox to open it as a filterable list.
 
+`defaultval` sets the button's label as well as the value, so pass one whenever
+the dropbox is not bound to a datapath — without it the button falls back to
+`name`, and with neither it draws `(error)`. `""` and `0` are ordinary enum
+values here and are applied like any other.
+
 ## Building a menu by hand
 
 `createMenu` covers most cases. Build the widget directly when the items are not
@@ -283,3 +288,7 @@ See `scripts/screen/area_base.ts`.
   press. Mutating the array after the fact is therefore visible on the next press.
 - Menus are popups on the screen, not children of the widget that opened them.
   They do not inherit that widget's style class.
+- An open menu consumes the keys it acts on — the arrows, Enter, Space and Escape
+  — in the wrangler's window-level capture handler. Anything the menu does not act
+  on still reaches the application's own keymap. This is what lets a dropbox live
+  inside a `Screen.popup` without Escape closing the popup as well as the menu.

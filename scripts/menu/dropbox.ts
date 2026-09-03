@@ -42,6 +42,8 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   _searchMenuMode: boolean;
   altKey: number | undefined;
   _value: number | string;
+  /** Whether `setValue` has run, as opposed to `_value` still holding its initial 0. */
+  _valueSet = false;
   _last_datapath: string | undefined;
   _last_dbox_key: unknown;
   _popup: PopupContainer | undefined;
@@ -641,9 +643,12 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
   }
 
   setValue(val: string | number | undefined, setLabelOnly = false) {
-    if (val === undefined || val === this._value) {
+    // `_value` starts at 0, which is an enum value like any other, so the first set has to run
+    // even when it matches — otherwise a dropbox whose value is 0 never gets its label.
+    if (val === undefined || (val === this._value && this._valueSet)) {
       return;
     }
+    this._valueSet = true;
 
     // XXX bad compatibility code
     if (this.prop) {

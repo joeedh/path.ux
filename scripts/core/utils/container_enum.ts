@@ -421,9 +421,15 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
     ret.setAttribute("mass_set_path", mass_set_path);
   }
 
-  ret.setAttribute("name", name as string);
+  // Left unset when there is no name, rather than written as the string "undefined", which is
+  // what the button would then draw until the value's own label arrives.
+  if (name !== undefined) {
+    ret.setAttribute("name", name as string);
+  }
 
-  if (defaultval) {
+  // Tested against undefined rather than for truth: "" and 0 are ordinary enum values, and a
+  // dropbox left unset draws the field's own label where its value should be.
+  if (defaultval !== undefined) {
     ret.setValue(defaultval);
   }
 

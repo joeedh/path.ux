@@ -209,7 +209,9 @@ export class PopupContainer<CTX extends IContextBase = IContextBase> extends Con
 
       switch (e.keyCode) {
         case keymap["Escape"]:
-          this.end();
+          if (this.isTopmostPopup()) {
+            this.end();
+          }
           break;
       }
     };
@@ -223,6 +225,16 @@ export class PopupContainer<CTX extends IContextBase = IContextBase> extends Con
     });
     this.closeEventSource!.addEventListener("pointerup", this.mousepick!, true);
     window.addEventListener("keydown", this.keydown!);
+  }
+
+  /**
+   * Whether nothing was opened over this popup. Every popup listens for Escape on window, so
+   * without this a picker opened from a palette would take the palette down with it; the screen
+   * keeps `_popups` in the order they opened.
+   */
+  isTopmostPopup(): boolean {
+    const popups = this.ctx?.screen?._popups;
+    return !popups?.length || popups[popups.length - 1] === (this as unknown as UIBase);
   }
 
   stopEvents() {
