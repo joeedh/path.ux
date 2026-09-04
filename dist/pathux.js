@@ -50856,6 +50856,12 @@ pathux.Graph {
 init_nstructjs();
 init_toolprop();
 var visitPass = 0;
+function sourceValue(src) {
+  if (src.dir === "in") {
+    return src.useDefaultValue ? src.defaultProp.getValue() : void 0;
+  }
+  return src.getValue();
+}
 var NodeSocketBase = class {
   static STRUCT = inlineRegister(
     this,
@@ -50938,7 +50944,7 @@ pathux.NodeSocketBase {
       return !this.useDefaultValue ? void 0 : this.defaultProp.getValue();
     }
     if (sources.length === 1 && sources[0].type === this.type) {
-      return sources[0].getValue();
+      return sourceValue(sources[0]);
     }
     if (this.memoValid) {
       return this.memo;
@@ -50993,11 +50999,11 @@ pathux.NodeSocketBase {
   }
   /** b's value converted to this socket's type; called only after canCoerceFrom(b.type) answers true. */
   convertFrom(b) {
-    return b.type === this.type ? b.getValue() : void 0;
+    return b.type === this.type ? sourceValue(b) : void 0;
   }
   coercedValueOf(b) {
     if (b.type === this.type) {
-      return b.getValue();
+      return sourceValue(b);
     }
     if (this.canCoerceFrom(b.type)) {
       return this.convertFrom(b);
@@ -51025,7 +51031,7 @@ pathux.NodeSocketBase {
         continue;
       }
       sock.edgeStamp = pass;
-      const proxied = sock.resolveProxy();
+      const proxied = sock.dir === this.dir ? void 0 : sock.resolveProxy();
       if (proxied === void 0) {
         out.push(sock);
       } else {
@@ -51623,7 +51629,7 @@ function setProxy(sock, counterpart) {
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.useDefaultValue ? [far] : [];
+    return far.dir === "in" && far.useDefaultValue ? [far] : [];
   };
 }
 var ExposedEntry = class {
