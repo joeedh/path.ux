@@ -8,7 +8,7 @@
 [x]: value sockets in the node editor in the example app 
      constantly flash between 0 and the real value.
 [x]: the height of nodes occasionally grows 2x then snaps back
-[ ]: add a delete hotkey in the node editor binding to the delete
+[x]: add a delete hotkey in the node editor binding to the delete
      node toolop.
 [x]: split scripts/core/ui_base.ts into scripts/core/base/, per
      documentation/plans/ui-base-split-plan.md.

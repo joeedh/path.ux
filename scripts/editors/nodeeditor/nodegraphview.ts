@@ -35,7 +35,7 @@ import { Menu } from "../../menu/menu";
 import type { MenuTemplate } from "../../menu/menu_types";
 import { createMenu, startMenu } from "../../menu/menu_ops";
 import { t } from "../../core/theme_schema";
-import { buildAddSocketRow, buildForwardedUI } from "./groupui";
+import { buildAddSocketRow, buildForwardedUI, forwardedSignature } from "./groupui";
 
 /** One step of the view's descent: a group node, and which of its two graphs it leads into. */
 export interface DescentEntry {
@@ -158,6 +158,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    */
   pendingResolve: Promise<void> | undefined = undefined;
 
+  /** Why the last dispatched edit was refused; a host shows it beside the control that asked. */
+  lastRefusal: string | undefined = undefined;
+
   selection = new Set<GraphId>();
 
   /** The selected links, by {@link linkKey}; pruned against the live graph. */
@@ -187,6 +190,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   /** Instances a root-level resolve was already attempted for, so a failed load does not retry per notification. */
   private _resolveTried = new WeakSet<GroupNode>();
+
+  /** The forwarded-UI signature each group frame was built with. */
+  private _forwardedSigs = new WeakMap<NodeFrame<CTX>, string>();
 
   static define(): UIBaseDefinition {
     return {
@@ -773,6 +779,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       const existing = this.frames.get(node.id);
       if (existing !== undefined) {
         existing.setNode(node);
+        if (node instanceof GroupNode) {
+          // The definition can arrive, or change, under a frame that stays.
+          const sig = forwardedSignature(node);
+          if (this._forwardedSigs.get(existing) !== sig) {
+            this._forwardedSigs.set(existing, sig);
+            existing.rebuildExtraUI();
+          }
+        }
         continue;
       }
 
@@ -809,6 +823,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           body.shadow.appendChild(root);
           buildForwardedUI(root, this.ctx, f.node as GroupNode, nodePath, body.inherit_packflag);
         };
+        this._forwardedSigs.set(frame, forwardedSignature(node));
       } else {
         // A group instance's editable values are its forwarded rows above.
         frame.nodePath = nodePath;
@@ -986,9 +1001,12 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    */
   private _dispatch(edit: GraphEdit): boolean {
     this.checkGraphContext();
-    if (!this.delegate.check(this.graphContext, edit).ok) {
+    const verdict = this.delegate.check(this.graphContext, edit);
+    if (!verdict.ok) {
+      this.lastRefusal = verdict.reason;
       return false;
     }
+    this.lastRefusal = undefined;
     this.delegate.perform(this.graphContext, edit);
     this._checkLevel();
     return true;
@@ -1058,6 +1076,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   groupSelected(): boolean {
     const ids = [...this.selection];
     if (ids.length === 0) {
+      this.lastRefusal = "nothing is selected";
       return false;
     }
     const done = this._dispatch({

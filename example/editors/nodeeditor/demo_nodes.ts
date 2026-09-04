@@ -125,12 +125,28 @@ function makeDemoGroupDef() {
 /** The in-memory definition store the stub loader/saver pair reads and writes. */
 export const demoGroupDefs = new Map([["demo_group", makeDemoGroupDef()]]);
 
-export function makeDemoGraph() {
-  const g = new Graph();
+/**
+ * Points a root graph's three store seams at demoGroupDefs. The seams are
+ * functions, so a graph loaded from a saved document needs wiring again.
+ */
+export function wireDemoStore(g: nodegraph.Graph): nodegraph.Graph {
   g.groupLoader = async (ref) => demoGroupDefs.get(ref);
   g.groupSaver = async (ref, def) => {
     demoGroupDefs.set(ref, def);
   };
+  g.newGroupRef = () => {
+    for (let i = 1; ; i++) {
+      const ref = `group_${i}`;
+      if (!demoGroupDefs.has(ref)) {
+        return ref;
+      }
+    }
+  };
+  return g;
+}
+
+export function makeDemoGraph() {
+  const g = wireDemoStore(new Graph());
 
   const v1 = new DemoValue();
   v1.pos.loadXY(40, 40);

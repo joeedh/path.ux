@@ -288,6 +288,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** The inline default editors, kept so a rebuild can tear each one down. */
   private _editors: Container<CTX>[] = [];
 
+  /** What buildExtraUI added to the body, so rebuildExtraUI can take it out again. */
+  private _extraNodes: ChildNode[] = [];
+
   static define(): UIBaseDefinition {
     return {
       tagname: "nodeframe-x",
@@ -629,7 +632,30 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._rebuildPropRows();
 
     this.node.createUI(this._body);
-    this.buildExtraUI?.(this, this._body);
+    this._runExtraUI();
+  }
+
+  private _runExtraUI() {
+    const body = this._body;
+    if (body === undefined || this.buildExtraUI === undefined) {
+      return;
+    }
+    const before = new Set(body.shadow.childNodes);
+    this.buildExtraUI(this, body);
+    this._extraNodes = [...body.shadow.childNodes].filter((n) => !before.has(n));
+  }
+
+  /**
+   * Tears down what buildExtraUI added and builds it again. The view calls it
+   * when a group instance's forwarded rows change under a frame that stays.
+   */
+  rebuildExtraUI() {
+    // Removed one at a time so each widget tears down its path watches.
+    for (const n of this._extraNodes) {
+      n.remove();
+    }
+    this._extraNodes = [];
+    this._runExtraUI();
   }
 
   /** The terminal dot for a socket, for the view to restyle during a drag. */

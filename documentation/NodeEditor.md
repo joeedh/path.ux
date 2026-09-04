@@ -28,7 +28,8 @@
   * [Evaluation order](#evaluation-order)
 - [Groups](#groups)
   * [Definitions and instances](#definitions-and-instances)
-  * [The loader and saver seams](#the-loader-and-saver-seams)
+  * [The store seams](#the-store-seams)
+  * [Grouping and ungrouping](#grouping-and-ungrouping)
   * [Exposed UI](#exposed-ui)
 - [The graph DSL](#the-graph-dsl)
 - [The data API](#the-data-api)
@@ -36,7 +37,7 @@
 - [The view widget](#the-view-widget)
   * [Theming](#theming)
   * [Gestures](#gestures)
-  * [Group descent](#group-descent)
+  * [Levels](#levels)
   * [View state](#view-state)
 - [The delegate seam](#the-delegate-seam)
 - [The editor Area](#the-editor-area)
@@ -328,26 +329,65 @@ def.subgraph.connect(someNode.outputs.out, innerOut);
 - The boundary is diffed in place, so links from the parent graph into the group survive a
   definition edit that leaves their sockets intact.
 
-### The loader and saver seams
+### The store seams
 
-- The graph does not know where definitions live.
-- `graph.groupLoader = async (ref) => GroupDef | undefined` supplies them.
-- `graph.groupSaver = async (ref, def) => void` persists edits (the exposure edits below
-  save through it).
-- An application backs the pair with whatever store it has; the example app uses an
-  in-memory `Map`.
+- The graph does not know where definitions live. Three optional seams on the root graph
+  connect it to whatever store the application has:
+  - `graph.groupLoader = async (ref) => GroupDef | undefined` supplies definitions.
+  - `graph.groupSaver = async (ref, def) => void` persists one; the view saves a
+    definition through it when a definition level is left (see [Levels](#levels)).
+  - `graph.newGroupRef = () => string` names a definition about to be created by
+    grouping. The library allocates no ref of its own: with neither the seam nor a `ref` on
+    the edit, `createGroup` is refused by sentence.
+- The example app backs all three with an in-memory `Map`, counting `group_1`, `group_2`
+  against it.
+- `definitionOfSubgraph(graph)` answers the `GroupDef` a definition's subgraph belongs to,
+  and `undefined` for a root graph or an instance's copy. The definition ops and the
+  delegate use it to refuse a definition edit aimed anywhere else.
+
+### Grouping and ungrouping
+
+- Every mutation is a plain function in `scripts/graph/grouping.ts` over a `Graph` or a
+  `GroupDef`, so a host without a toolstack applies the same rule; each answers a
+  `Refusal` (`{ refusal: sentence }`, tested with `isRefusal`) rather than throwing.
+- `groupPlan(graph, nodeIds)` derives the boundary from the cut: each link from an
+  outside output into a selected input becomes one group input, keyed and typed by the
+  first inner socket it reaches, and one outside output feeding two selected inputs yields
+  one input feeding both; each selected output feeding an outside input becomes one
+  group output. Colliding keys take a numeric suffix. A plan is refused for an empty
+  selection, a node that is not in the graph, or a graph where structural edits are
+  refused.
+- `createGroup(graph, plan, ref)` moves the selected nodes into a new definition's subgraph
+  with their ids, positions, links and values intact, and puts a `GroupNode` in their place
+  whose instance reconciles at once through `syncToDefinition()`. `dissolveGroup` and
+  `redoGroup` are what the op's undo and redo call.
+- `ungroup(graph, node)` inlines a JSON copy of the instance's subgraph, overrides
+  included: numeric ids are reallocated, a colliding string id is suffixed, internal links
+  are remade, and boundary links reconnect through what the proxies were wired to. The
+  definition stays in the store. `regroup` undoes it.
+- `cloneNode(node)` is a JSON round trip with a fresh id; a group's clone keeps its `ref`,
+  its subgraph and its overrides, and is given the source's definition directly.
+- The definition edits: `exposeEntry`, `reorderEntry`, `repointEntry`, `removeEntry` over
+  the exposed list, and `addBoundary(def, dir, key, socketType)` /
+  `removeBoundary(def, dir, key)` over the boundary. A boundary socket is not renamed;
+  instances key their sockets by name, so a rename is a remove plus an add, and every
+  instance's socket by that key is marked orphaned.
 
 ### Exposed UI
 
 - A definition's `exposed` array names what every instance shows on its node frame, in
   order.
 - Each `ExposedEntry(kind, nodeId, propKey, label?)` is either a `"prop"` entry (one inner
-  node's property, rendered as an editable row) or a `"nodeUI"` entry (an inner node's
-  whole UI; an inner group recurses).
+  node's property or input default, rendered as an editable row) or a `"nodeUI"` entry (an
+  inner node's whole UI; an inner group recurses).
 - Writes through a forwarded row go to the instance's own subgraph, so they materialize
   overrides rather than editing the definition.
-- The editor's Group Designer panel edits this list (expose, reorder, repoint, remove) and
-  saves it through `groupSaver`.
+- The editor's Group Designer panel edits this list and the boundary (see
+  [The editor Area](#the-editor-area)); every edit is an undoable op on the definition's
+  datapath, and the view saves the definition through `groupSaver` when the level is left.
+- A definition's subgraph folds the boundary keys and the exposed entries into its
+  structural snapshot (`Graph.snapshotExtra`), so an exposure edit wakes a watcher on the
+  definition's path the way a node edit does.
 
 ## The graph DSL
 
@@ -409,7 +449,8 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 | ------------------------------------ | --------------------------------------------------------------------------- |
 | `nodegraph.nodes[3]`                | the node with id `3` (a string id is quoted: `nodes["v1"]`)               |
 | `nodegraph.nodes[3].props['value'].value` | one node property's value; writing on a group-inner node materializes an override |
-| `nodegraph.nodes[3].group`          | a `GroupNode`'s subgraph, itself a graph struct — the descent nests       |
+| `nodegraph.nodes[3].group`          | a `GroupNode`'s instance subgraph, itself a graph struct — the descent nests |
+| `nodegraph.nodes[3].definition`     | the same node's definition subgraph; throws while the definition is unresolved |
 
 ## ToolOps
 
@@ -427,9 +468,17 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 | `graph.rename_node`   | set a node's label                                                                                         |
 | `graph.replace_node`  | swap a node's type, keeping id, position, label and every link whose sockets still coerce                  |
 | `graph.set_node_prop` | write a node property (build via `SetNodePropOp.create`, since the value input clones the target property) |
+| `graph.duplicate_node` | clone a node at a position; a group's clone keeps its ref, subgraph and overrides                          |
+| `graph.create_group`  | move the nodes named in `nodeIds` into a new definition saved through `storePath`'s `groupSaver` under `ref`; output `nodeId` names the instance |
+| `graph.ungroup`       | replace a group instance with a copy of its contents; output `nodeIds` names them                          |
+| `graph.expose_entry` / `graph.reorder_entry` / `graph.repoint_entry` / `graph.remove_entry` | the exposed list of the definition whose subgraph is at `graphPath` |
+| `graph.add_group_socket` / `graph.remove_group_socket` | the boundary of that definition; removal severs the inner links and undo remakes them |
 
 - The structural ops share a `canRun` that consults `structuralEditsRefused()`, so they
-  refuse inside a group instance's subgraph.
+  refuse inside a group instance's subgraph. The definition ops refuse on any graph that is
+  not a definition's subgraph, with the `NOT_A_DEFINITION` sentence.
+- `graph.add_node` takes an optional `ref`, honoured when the type is `GroupNode`: the
+  instance is added unresolved and the view's root-level watch resolves it.
 - `graph.set_node_prop` is deliberately not structural: it runs on instance subgraphs,
   materializes the override, and its undo restores the prior `wasSet` state — undoing a
   first-time write dematerializes the override entirely.
@@ -471,6 +520,15 @@ view.setGraph(myGraph, "nodegraph");
 - Beneath the body's prop rows sits whatever the node's own `createUI` override adds (the
   base implementation renders nothing), and a group instance's frame shows its forwarded UI
   instead of prop rows (see [Exposed UI](#exposed-ui)).
+- A group instance's frame carries a `GroupAccent` stripe down its left edge and a
+  `GroupHeaderBG` header; its header tooltip says how to enter it. Inside a definition the
+  two proxy frames take `ProxyHeaderBG` and end in an *Add input…* / *Add output…* row
+  (see [Levels](#levels)).
+- The forwarded rows follow the definition: `syncGraph()` compares each group frame's
+  `forwardedSignature` (the definition's identity plus every entry and its state) with the
+  one it was built with, and calls `frame.rebuildExtraUI()` when they differ. That is how a
+  frame built while its instance was still unresolved gains its rows once the loader
+  answers, and how a second view of the same graph picks up an exposure edit.
 - An inline editor makes its row taller than the themed `SocketRowHeight`, so `FrameMetrics`
   carries the measured `rowHeights` and `socketAnchor` accumulates them; a row the array
   does not cover falls back to the uniform height.
@@ -483,14 +541,16 @@ view.setGraph(myGraph, "nodegraph");
   - `nodeframe` — the frame geometry (`Width`, `HeaderHeight`, `SocketRowHeight`), the
     body's `background-color`, `border-color` and `border-radius`, the header's `HeaderBG`,
     the selection ring's `SelectOutline`, two `CSSFont`s (`DefaultText` for the header and
-    `SocketText` for the socket rows), and three socket-highlight keys: `SocketHitExpand`
+    `SocketText` for the socket rows), three socket-highlight keys: `SocketHitExpand`
     (pixels the pointer hit region extends past the dot, independent of its drawn size),
     `SocketHighlightColor` (the hover ring and the forced ring a link drag puts on its
     nearest valid target) and `SocketErrorColor` (a host-driven error ring; nothing in
-    path.ux itself sets it yet — see [Gestures](#gestures) below).
-  - `nodegraphview` — the box-select marquee (`BoxSelectBorder`, `BoxSelectBG`) and
+    path.ux itself sets it yet — see [Gestures](#gestures) below), and the group keys
+    `GroupAccent`, `GroupHeaderBG` and `ProxyHeaderBG`.
+  - `nodegraphview` — the box-select marquee (`BoxSelectBorder`, `BoxSelectBG`),
     `ErrorColor`, which the editor shell passes into the group designer's missing-entry
-    flag.
+    flag, and the crumb row and level keys: `CrumbBG`, `CrumbFont`, `CrumbActiveFont`,
+    `LevelDefinitionColor` and `LevelInstanceColor`.
   - `nodelinkcanvas` — `LinkColor` and `LinkWidth` for the drawn links, and
     `LinkSelectColor` / `LinkSelectWidth` for a selected one.
 - A socket terminal's dot keeps the color its socket type declares (`SocketDef.color`);
@@ -548,13 +608,25 @@ view.setGraph(myGraph, "nodegraph");
   `buildAddNodeMenu(ctx, onPick, items?)` builds it as a standalone `Menu`, and
   `view.addNodeAt(typeName, at?)` adds a node (at the view's center when `at` is omitted).
   `view.openAddMenu(local)` starts the picker as a popup in search mode (a filter textbox
-  above the list), adding at that point on pick. The example app puts an Add dropdown in
-  its editor header.
+  above the list), adding at that point on pick. `addGroupMenuTemplate(refs, onPick)` is
+  the picker for instances of existing definitions; the host supplies the refs, since only
+  it can list its store, and `view.addGroupAt(ref, at?)` adds one. The example app puts an
+  Add dropdown in its editor header, with a Group ▸ submenu built on every open.
 - **Node menu** — right-click a frame (without dragging) for a path.ux `Menu` with Delete,
   Duplicate (keeps overridden values) and Replace (keeps links where sockets still coerce);
-  Replace opens the same searchable type picker as Add.
+  Replace opens the same searchable type picker as Add. A group frame adds Edit Group, Show
+  Instance and Ungroup, and any frame adds Group Selected while something is selected.
+  Inside a definition, right-clicking a prop row offers Expose on group instead.
+- **Group** — `groupSelected()` moves the selection into a new group (Ctrl+G) and
+  `ungroupSelected()` replaces every selected group with its contents (Ctrl+Alt+G), as
+  one undo step; `ungroupNode(id)` does one.
 - **Arrange** — `arrangeNodes()` auto-lays-out the graph with graphpack, one island at a
   time, and commits the result as a single undo entry.
+- **Keys** — `hotkeys()` returns the view's `HotKey` list, declared once so an Area shell
+  and a host embedding the bare view install the same bindings: Delete, Shift+D duplicate,
+  Ctrl+G group, Ctrl+Alt+G ungroup, and Tab, which enters the definition of the one
+  selected group and with no group selected leaves the current level. `NodeEditor` installs
+  the list as its keymap.
 
 - `deleteSelected()` and `duplicateSelected()` act on the current selection.
 - `selection` is a `Set` of node ids and `linkSelection` a `Set` of link keys;
@@ -568,23 +640,50 @@ view.setGraph(myGraph, "nodegraph");
 - `duplicateSelected()` additionally clears the selection before dispatching and, once every
   duplicate exists, selects the new nodes in place of the originals.
 
-### Group descent
+### Levels
 
-- Descent starts from the host: call `descendInto(groupNode)` to show a group instance's
-  subgraph.
-- The breadcrumb row tracks the descent: a Root button, one button per group instance, and
-  a read-only note inside an instance (structural gestures are refused there by the
-  delegate, with the graph's own refusal sentence as the reason).
-- When the host sets `onOpenDefinition`, the breadcrumb also offers Open Definition on the
-  instance being viewed, and the host routes that wherever definitions are edited —
-  typically `NodeEditor.editDefinition`.
+- The view shows one graph at a time: the root, or a level reached through a group node.
+  `descent` is the trail of `DescentEntry { nodeId, into }` from the root, where `into` is
+  `"definition"` or `"instance"`; `currentGraph` and `currentGraphPath` follow it, and
+  `currentLevel()` answers `{ kind: "root" }`, `{ kind: "definition", node, ref, def }` or
+  `{ kind: "instance", node, ref, def? }`.
+- **Entering a group edits its definition.** `enterDefinition(node)` pushes a definition
+  level, where structural edits reach every instance; Tab, a double press on a group
+  frame's header (two `onMoveClick`s within `DOUBLE_PRESS_MS`), the frame's Edit Group
+  entry and the instance pill's *edit the definition* button all call it. It is refused for
+  a node that is no group, is not on screen, or has no resolved definition.
+- `enterInstance(node)` shows one instance's own subgraph, for the values it overrides; the
+  delegate refuses structural gestures there with the graph's own refusal sentence. An
+  instance nested inside an instance has no definition of its own, so its pill offers no
+  edit button and says the definition is not loaded at that depth.
+- `exitLevel()` and `popTo(depth)` go back up; `enterOrExit()` is Tab's behaviour.
+- **The crumb row.** `Graph ▸ group ▸ group`, each crumb a text button back to that level,
+  the last in `CrumbActiveFont`; after the trail a pill names the level (*definition ·
+  edits reach every instance* or *instance · values only*) in the level's color, and off
+  the root the canvas takes a 2 px inset outline in that color. `LEVEL_PILL_TEXT` holds the
+  two sentences.
+- **Saving and propagating.** A definition on screen is saved through the root graph's
+  `groupSaver` and every instance reconciled through `resolveGroups()` at three moments:
+  after a notification on the definition's path that changed its topology (positions left
+  out, so a move waits), when the level is left, and when the view is removed from the
+  document. The pass is asynchronous and exposed as `pendingResolve`; `exitLevel` and
+  `popTo` return it, so a caller can await it. It ends by notifying the root graph's path,
+  so another view of the same graph redraws its reconciled instances.
+- A level whose instance is gone is left: undo and delete are global, so on every
+  structural notification the view re-resolves its descent and pops to the deepest entry
+  that still resolves. A root-level notification also resolves any instance that has a ref
+  and no definition yet, which covers an instance added by ref, its redo, and a graph
+  loaded from a file.
+- A level change dispatches a `levelchange` DOM event on the view with `currentLevel()` as
+  its detail; `NodeEditor` listens to it to redraw the designer. Every frame is rebuilt on
+  a level change, since node ids repeat across levels.
 
 ### View state
 
-- `getViewState()` / `setViewState(state)` capture and restore the camera and descent stack
+- `getViewState()` / `setViewState(state)` capture and restore the camera and descent trail
   (`{ pan, zoom, descent }`).
 - `setViewState` is safe to call before `init` runs; `NodeEditor` uses the pair for STRUCT
-  persistence, so a saved screen layout reopens on the same subgraph at the same camera.
+  persistence, so a saved screen layout reopens on the same level at the same camera.
 
 ## The delegate seam
 
@@ -600,11 +699,19 @@ interface NodeGraphDelegate {
 }
 ```
 
-- The edit kinds are `moveNode`, `moveNodes`, `addNode`, `deleteNode`, `duplicateNode`,
-  `replaceNode`, `connect`, `disconnect`, `arrange`, and the four exposure kinds
-  (`exposeEntry`, `reorderEntry`, `repointEntry`, `removeEntry`).
+- The edit kinds are `moveNode`, `moveNodes`, `addNode` (with an optional `ref` for a
+  group instance), `deleteNode`, `duplicateNode`, `replaceNode`, `connect`, `disconnect`,
+  `arrange`, `createGroup { graphPath, storePath, nodeIds, ref? }`, `ungroup { nodeId }`,
+  the four exposure kinds (`exposeEntry`, `reorderEntry`, `repointEntry`, `removeEntry`)
+  and the two boundary kinds (`addBoundary { dir, key, socketType }`,
+  `removeBoundary { dir, key }`). Every definition kind carries the definition subgraph's
+  `graphPath`; `isDefinitionEdit(edit)` tells them apart for a host that routes edits
+  itself.
 - A `check` verdict must match what `perform` would decide, which is what lets a refusal
-  show mid-gesture rather than on drop.
+  show mid-gesture rather than on drop. The default delegate judges `createGroup` by
+  `groupPlan`'s refusal, every definition kind by `definitionOfSubgraph`, and the boundary
+  kinds by the socket registry too; a `createGroup` with no `ref` takes one from the
+  `storePath` graph's `newGroupRef` seam and is refused when there is none.
 - `GraphContext` is the view's own context, not the host's raw one: `view.ctx` plus a fixed
   set of selection operations (`selectNodes`, `deselectNodes`, `selectLinks`,
   `deselectLinks`, `clearSelection`, `selectAll`) that a `ToolOp.exec` or a delegate can call
@@ -653,17 +760,24 @@ interface NodeGraphDelegate {
   center, and a Group Designer dock panel.
 - The library ships it unregistered; a consumer subclasses or registers it directly (see
   below).
-- `setGraph(graph, graphPath)` forwards to the view and records the root path exposure edits
-  dispatch against.
-- `editDefinition(ref, def, defPath)` points the view at a group definition's subgraph for
-  structural editing and shows the definition's exposure list in the Group Designer.
-  `defPath` must resolve to `def.subgraph` in the host's data API.
-- The Group Designer panel lists the exposed entries in order with reorder and remove
-  controls, flags an entry whose target no longer exists with repoint controls, and offers
-  an Expose row (a property key, or an empty key to forward a node's whole UI). Every
-  mutation goes through the view's delegate.
-- STRUCT persistence carries the camera and descent stack, so the editor restores its view
-  on load.
+- `setGraph(graph, graphPath)` forwards to the view; the editor's keymap is
+  `view.hotkeys()`.
+- The Group Designer panel follows the view's level. On a definition level it is three
+  headed lists — Inputs, Outputs, Exposed — over path.ux containers: an input or output
+  row is its name, its socket type in the socket font, and ✕; an exposed row is its label,
+  ↑ ↓ ✕, and a *missing* flag in `ErrorColor` with a *Repoint…* menu where the target is
+  gone. Under each list one control adds: *Add input…* / *Add output…* (a socket type
+  menu, then a name box and Add; a refusal shows beneath the box) and *Expose…* (a menu of
+  the definition's inner nodes, each a submenu of that node's props plus *whole node*).
+  Nothing asks for an id. Every mutation is an edit through the view's delegate, and the
+  panel re-renders from the definition path's watch and on `levelchange`. Off a definition
+  it shows a hint.
+- `buildGroupDesigner(root, opts)`, `buildAddSocketRow(container, dir, opts)`,
+  `exposeMenuTemplate(ctx, def, onPick, kind?)` and `socketTypeMenuTemplate(onPick)` are
+  exported for a host that builds its own panel.
+- STRUCT persistence carries the camera and the descent trail (each entry JSON-encoded; a
+  file from before definition levels holds a bare instance id), so the editor restores its
+  level on load.
 
 ## Registering it in an app
 
@@ -672,9 +786,11 @@ interface NodeGraphDelegate {
 - `demo_nodes.ts` defines the node types (using `FloatSocket`, `Vec3Socket` and
   `StringSocket`; `DemoValue` and `DemoText` show output-only defaults in practice —
   `DemoValue.outputs.str` and `DemoText.outputs.text` are configurable constants with no
-  input driving them), a group definition behind a stub loader/saver pair, and a
-  `makeDemoGraph()` factory.
-- `nodeeditor_tab.ts` subclasses the editor and registers it:
+  input driving them), a group definition in an in-memory `Map` behind the three store
+  seams, and a `makeDemoGraph()` factory.
+- `nodeeditor_tab.ts` subclasses the editor and registers it. Its Add dropdown lists the
+  node types and a Group ▸ submenu of the store's refs, rebuilt on every open because
+  Ctrl+G adds to the store:
 
 ```ts
 export class NodeEditorTab extends NodeEditor {
@@ -688,22 +804,26 @@ export class NodeEditorTab extends NodeEditor {
     }
 
     this.setGraph(nodegraph, DEMO_GRAPH_PATH);
-    this.view.onOpenDefinition = (node) => this._openDefinition(node);
+
+    const add = this.headerRow.menu("Add", []);
+    add.template = () => this._addTemplate();
 
     // group instances render unresolved until the stub loader answers.
     void nodegraph.resolveGroups().then(() => this.view.syncGraph());
   }
 
+  private _addTemplate(): MenuTemplate {
+    const groups = createMenu(
+      this.ctx,
+      "Group",
+      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => this.view.addGroupAt(ref))
+    );
+    return [...addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName)), groups];
+  }
+
   init() {
     super.init();
     this.fetchGraph();
-  }
-
-  private _openDefinition(node: nodegraph.GroupNode) {
-    const def = node.definition;
-    if (def !== undefined) {
-      this.editDefinition(node.ref, def, DEMO_GROUP_DEF_PATH);
-    }
   }
 
   static define(): IAreaDef {
@@ -718,17 +838,17 @@ export class NodeEditorTab extends NodeEditor {
 Area.register(NodeEditorTab);
 ```
 
-- The app's data API mounts the graph struct at both paths the tab uses
-  (`example/api/api_define.ts`); its context resolves them from the active `model_data`
-  block (`example/core/context.ts`), and the block owns the graph as a real serialized field
-  (`example/core/state.ts`) rather than a module-level singleton, so each document gets its
-  own graph and it saves and loads with the rest of the document:
+- The app's data API mounts the graph struct at the one path the tab uses
+  (`example/api/api_define.ts`); a definition level is addressed beneath it through
+  `nodes[id].definition`, so no second mount is needed. The context resolves the graph from
+  the active `model_data` block (`example/core/context.ts`), and the block owns it as a
+  real serialized field (`example/core/state.ts`) rather than a module-level singleton, so
+  each document gets its own graph and it saves and loads with the rest of the document:
 
 ```ts
 // api_define.ts
 const graphst = nodegraph.defineGraphAPI(api);
 cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
-cstruct.struct("demogroup", "demogroup", "Demo Group Definition", graphst);
 
 // state.ts (ModelData)
 class ModelData extends DataBlock {
@@ -742,11 +862,16 @@ ModelData.STRUCT = nstructjs.inherit(ModelData, DataBlock, "example.ModelData") 
 
 // context.ts (BaseOverlay)
 get nodegraph() { return this.data?.demoNodeGraph; }
-get demogroup() { return demoGroupDefs.get("demo_group")?.subgraph; }
 ```
 
 - Because `nodegraph` can be `undefined` before the model data block exists, the tab's
   `fetchGraph()` polls rather than assuming it is ready in `init()`.
+- The store seams are functions, so a graph loaded from a saved document has none;
+  `ModelData.loadSTRUCT` wires them again with `wireDemoStore`. A host with its own store
+  does the same wherever it deserializes a root graph.
+- The app menu's Edit entries — Create Group, Ungroup, Edit Group, Exit Group — reach the
+  last-active `NodeEditorTab` through `Area.getActiveArea(NodeEditorTab)` and report
+  through `ctx.report` when no node editor is open (`example/editors/menu/menu.ts`).
 - STRUCT registration follows the usual `Area` pattern (`STRUCT.inherit` plus
   `nstructjs.register`).
 
@@ -757,7 +882,7 @@ get demogroup() { return demoGroupDefs.get("demo_group")?.subgraph; }
 
 function registerNodeType(cls: typeof Node): void;
 function getNodeClass(typeName: string): typeof Node | undefined;
-function registerSocketType(cls: typeof NodeSocketBase): void;
+function registerSocketType(cls: typeof NodeSocketBase, internal?: boolean): void; // internal only changes the STRUCT namespace
 function getSocketClass(typeName: string): typeof NodeSocketBase | undefined;
 
 // Opaque (branded) string address for a node prop, input default, or output
@@ -813,29 +938,56 @@ class Graph {
   structuralEditsRefused(): string | undefined;
   groupLoader?: (ref: string) => Promise<GroupDef | undefined>;
   groupSaver?: (ref: string, def: GroupDef) => Promise<void>;
+  newGroupRef?: () => string; // names a definition grouping is about to create
+  snapshotExtra?: () => unknown[]; // folded into the structural snapshot; a GroupDef sets it on its subgraph
   resolveGroups(): Promise<GroupResolveReport>;
 }
 
 class GroupDef {
   subgraph: Graph;
+  inputs: Record<string, NodeSocketBase>; // boundary templates; instances copy them
+  outputs: Record<string, NodeSocketBase>;
   exposed: ExposedEntry[];
+  inputNode(): GroupInputNode; // the subgraph's proxies, created on first use
+  outputNode(): GroupOutputNode;
   declareInput(key: string, sock: NodeSocketBase): NodeSocketBase; // returns the inner proxy socket
   declareOutput(key: string, sock: NodeSocketBase): NodeSocketBase;
   removeInput(key: string): void;
   removeOutput(key: string): void;
   contentHash(): string;
 }
+function definitionOfSubgraph(graph: Graph): GroupDef | undefined;
 
 class GroupNode extends Node {
   ref: string;
   definition: GroupDef | undefined;
   subgraph: Graph; // the instance's physical copy
   setDefinition(def: GroupDef): void; // refuses self-containment
+  syncToDefinition(): void; // reconcile this instance now
 }
 
 class ExposedEntry {
   constructor(kind: "prop" | "nodeUI", nodeId: GraphId, propKey: NodePropName, label?: string);
 }
+
+// --- grouping (pure functions; each answers a Refusal rather than throwing) ---
+
+type Refusal = { refusal: string };
+function isRefusal(x: unknown): x is Refusal;
+function groupPlan(graph: Graph, nodeIds: GraphId[]): GroupPlan | Refusal;
+function createGroup(graph: Graph, plan: GroupPlan, ref: string): { node: GroupNode; def: GroupDef };
+function dissolveGroup(graph: Graph, node: GroupNode, def: GroupDef): Dissolved; // createGroup's undo
+function redoGroup(graph: Graph, node: GroupNode, def: GroupDef, dissolved: Dissolved): void;
+function ungroup(graph: Graph, node: GroupNode): Ungrouped | Refusal;
+function regroup(graph: Graph, node: GroupNode, ungrouped: Ungrouped): void; // ungroup's undo
+function cloneNode(node: Node): Node; // JSON round trip with a fresh id
+interface ExposeRequest { kind: "prop" | "nodeUI"; nodeId: GraphId; propKey?: string; label?: string }
+function exposeEntry(def: GroupDef, req: ExposeRequest, at?: number): { entry: ExposedEntry; index: number } | Refusal;
+function reorderEntry(def: GroupDef, from: number, to: number): void | Refusal;
+function repointEntry(def: GroupDef, index: number, nodeId: GraphId, propKey: NodePropName): void | Refusal;
+function removeEntry(def: GroupDef, index: number): ExposedEntry | Refusal;
+function addBoundary(def: GroupDef, dir: SocketDir, key: string, socketType: string): { socket: NodeSocketBase } | Refusal;
+function removeBoundary(def: GroupDef, dir: SocketDir, key: string): { template: NodeSocketBase; links: LinkRecord[] } | Refusal;
 
 // Each node entry's props/inputs/outputs are independent { key: value } blocks —
 // no fallback between them, no in:/out: prefix on the keys (see The graph DSL).
@@ -861,16 +1013,29 @@ class NodeGraphView<CTX> extends Container<CTX> {
   // custom element nodegraphview-x
   delegate: NodeGraphDelegate; // default: ToolOpDelegate
   get graphContext(): CTX & GraphContext; // view.ctx wrapped once, lazily, in a selection-op Proxy
-  onOpenDefinition?: (node: GroupNode) => void;
   selection: Set<GraphId>;
   linkSelection: Set<string>; // keys from linkKey()
+  descent: DescentEntry[]; // the trail from the root
+  pendingResolve: Promise<void> | undefined; // the save-and-resolve pass in flight
+  lastRefusal: string | undefined; // why the last dispatched edit was refused; cleared by a success
   setGraph(graph: Graph | undefined, graphPath: string): void;
-  get currentGraph(): Graph | undefined; // the graph on screen after descent
-  get currentGraphPath(): string;
-  descendInto(node: Node): void;
-  popTo(depth: number): void;
+  get currentGraph(): Graph | undefined; // the graph on screen; undefined while a level's definition is unresolved
+  get currentGraphPath(): string; // ...nodes[id].definition or ...nodes[id].group per entry
+  currentLevel(): Level;
+  enterDefinition(node: Node): Promise<void>; // the returned promise is the pass the left level owed
+  enterInstance(node: Node): Promise<void>;
+  exitLevel(): Promise<void>;
+  popTo(depth: number): Promise<void>;
+  enterOrExit(): Promise<void>; // Tab
   syncGraph(): void; // reconcile frames after external changes
   addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
+  addGroupAt(ref: string, at?: readonly [number, number] | Vector2): void; // an instance of an existing definition
+  groupSelected(): boolean; // Ctrl+G; false when refused
+  ungroupSelected(): Promise<void>; // Ctrl+Alt+G; one undo step
+  ungroupNode(nodeId: GraphId): boolean;
+  exposeProp(nodeId: GraphId, propKey: NodePropName): boolean; // on a definition level
+  openPropMenu(frame: NodeFrame<CTX>, key: NodePropName, local: [number, number]): Menu<CTX>; // "Expose on group"
+  hotkeys(): HotKey[]; // Delete, Shift+D, Ctrl+G, Ctrl+Alt+G, Tab
   openAddMenu(local: readonly [number, number]): Menu<CTX>; // started as a screen popup when ctx has a screen
   singleUndoStep<T>(cb: () => T, shortLabel?: string, message?: string): Promise<T>; // brackets cb with delegate.undoStepBegin/undoStepEnd, locking input meanwhile
   deleteSelected(): Promise<void>; // severs the selected links too; one undo step
@@ -884,6 +1049,14 @@ class NodeGraphView<CTX> extends Container<CTX> {
   getViewState(): NodeGraphViewState; // { pan, zoom, descent }
   setViewState(state: NodeGraphViewState): void;
 }
+
+interface DescentEntry { nodeId: GraphId; into: "instance" | "definition" }
+type Level =
+  | { kind: "root" }
+  | { kind: "definition"; node: GroupNode; ref: string; def: GroupDef }
+  | { kind: "instance"; node: GroupNode; ref: string; def?: GroupDef };
+const DOUBLE_PRESS_MS: number; // two header presses within it enter the group
+const LEVEL_PILL_TEXT: { definition: string; instance: string };
 
 interface LinkRef {
   srcNode: GraphId;
@@ -905,7 +1078,6 @@ class NodeEditor<CTX> extends Area<CTX> {
   view: NodeGraphView<CTX>;
   headerRow: Container<CTX>; // the header makeHeader built; a subclass adds its own controls
   setGraph(graph: Graph | undefined, graphPath: string): void;
-  editDefinition(ref: string, def: GroupDef, defPath: string): void;
 }
 
 // The type picker behind Add and Replace, as menu entries or a standalone Menu.
@@ -919,6 +1091,16 @@ function buildAddNodeMenu<CTX>(
   items?: AddMenuItem[]
 ): Menu<CTX>;
 function addMenuItems(): AddMenuItem[]; // registered types minus the group machinery
+function addGroupMenuTemplate(refs: readonly string[], onPick: (ref: string) => void): MenuTemplate;
+
+// The group designer and its pieces, for a host that builds its own panel.
+interface DefinitionEditOpts { ctx: GraphContext; def: GroupDef; graphPath: string; delegate: NodeGraphDelegate; onChanged?: () => void }
+function buildGroupDesigner(root: HTMLElement, opts: DefinitionEditOpts & { errorColor?: string }): void;
+function buildAddSocketRow<CTX>(container: Container<CTX>, dir: SocketDir, opts: DefinitionEditOpts): Container<CTX>;
+function exposeMenuTemplate(ctx, def: GroupDef, onPick: (req: ExposeRequest) => void, kind?: "prop" | "nodeUI"): MenuTemplate;
+function socketTypeMenuTemplate(onPick: (typeName: string) => void): MenuTemplate;
+function buildForwardedUI(root: HTMLElement, ctx, node: GroupNode, nodePath: string, inherit_packflag: number): void;
+function forwardedSignature(node: GroupNode): string; // what the forwarded rows depend on; "" while unresolved
 
 // Selection ops layered onto whatever context a client already passes; see
 // The delegate seam. selectSockets/deselectSockets are declared but not yet

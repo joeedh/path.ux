@@ -1,6 +1,7 @@
 # Group node authoring
 
-Status: **planned**. The groups the graph module already has — `GroupDef`, `GroupNode`, the
+Status: **done** (2026-09-04; every stage below carries its own status). The groups the graph
+module already has — `GroupDef`, `GroupNode`, the
 proxy nodes, reconciliation, the designer panel — gain the gestures that make them usable
 from the editor: making a group out of a selection, taking one apart again, entering a
 group's definition to edit it, and editing its boundary and its forwarded rows with real
@@ -477,8 +478,21 @@ key; a missing entry offers Repoint and nothing else.
 
 ### Stage G5 — the example app
 
+Status: **done** (2026-09-04). The CDP walkthrough found two gaps, both fixed here. A
+graph loaded from a saved document has no store seams, because they are functions:
+`wireDemoStore` wires them again from `ModelData.loadSTRUCT`, and the doc says a host
+with its own store must do the same. And a group frame built before its definition
+resolved never gained its forwarded rows, since `syncGraph` reused the frame as it was;
+`NodeFrame.rebuildExtraUI()` and `forwardedSignature` fix that, which also lets a second
+view of the same root pick up an exposure edit. The view also records `lastRefusal` on a
+refused dispatch, so the example's Create Group entry can report why nothing was grouped.
+The Add dropdown's template is a function, rebuilt on every open, because Ctrl+G adds to
+the store. The Edit entries use string hotkeys the way the existing Undo and Redo do.
+
 Files: `example/editors/nodeeditor/nodeeditor_tab.ts`, `demo_nodes.ts`,
-`example/editors/menu/menu.ts`, `documentation/NodeEditor.md`, `todos.md`.
+`example/core/state.ts`, `example/editors/menu/menu.ts`,
+`scripts/editors/nodeeditor/nodeframe.ts`, `nodegraphview.ts`, `groupui.ts`,
+`documentation/NodeEditor.md`, `todos.md`, `tests/nodeeditor_edit.test.ts`.
 
 - `makeDemoGraph` sets `newGroupRef` counting against `demoGroupDefs`.
 - The tab's keymap comes from `view.hotkeys()`; its Add dropdown gains a Group ▸ submenu

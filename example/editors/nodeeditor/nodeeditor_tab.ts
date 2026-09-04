@@ -1,7 +1,15 @@
 import { ViewContext } from "../../core/context";
-import { Area, NodeEditor, addNodeMenuTemplate, contextWrangler, nstructjs } from "../../pathux.js";
-import type { IAreaDef } from "../../pathux.js";
-import { DEMO_GRAPH_PATH } from "./demo_nodes.js";
+import {
+  Area,
+  NodeEditor,
+  addGroupMenuTemplate,
+  addNodeMenuTemplate,
+  contextWrangler,
+  createMenu,
+  nstructjs,
+} from "../../pathux.js";
+import type { IAreaDef, MenuTemplate } from "../../pathux.js";
+import { DEMO_GRAPH_PATH, demoGroupDefs } from "./demo_nodes.js";
 
 /**
  * The example app's node editor: the library's unregistered NodeEditor plus the
@@ -28,14 +36,23 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
 
     this.setGraph(nodegraph, DEMO_GRAPH_PATH);
 
-    const add = this.headerRow.menu(
-      "Add",
-      addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName))
-    );
-    add.description = "Add a node at the view's center";
+    const add = this.headerRow.menu("Add", []);
+    // Built on every open, since Ctrl+G adds a definition to the store.
+    add.template = () => this._addTemplate();
+    add.description = "Add a node, or an instance of a group, at the view's center";
 
     // group instances render unresolved until the stub loader answers.
     void nodegraph.resolveGroups().then(() => this.view.syncGraph());
+  }
+
+  private _addTemplate(): MenuTemplate {
+    const groups = createMenu(
+      this.ctx,
+      "Group",
+      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => this.view.addGroupAt(ref))
+    );
+    groups.tooltip = "Add an instance of a group already in the store";
+    return [...addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName)), groups];
   }
 
   init() {

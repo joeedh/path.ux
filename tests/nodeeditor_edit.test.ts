@@ -474,10 +474,10 @@ test("the designer's reorder, remove and repoint controls dispatch the matching 
 
   press(control(rows()[0], "button-x", "↓"));
   expect(delegate.edits.at(-1)).toEqual({
-    kind: "reorderEntry",
+    kind     : "reorderEntry",
     graphPath: "graph",
-    from: 0,
-    to: 1,
+    from     : 0,
+    to       : 1,
   });
   expect(def.exposed[1].label).toBe("Bias");
 
@@ -589,6 +589,45 @@ test("a definition edit dispatched against a graph that is no definition is refu
   });
   expect(verdict.ok).toBe(false);
   expect(!verdict.ok && verdict.reason).toMatch(/definition/);
+});
+
+test("an instance frame gains its forwarded rows when the definition arrives, and follows exposure changes", async () => {
+  const def = new GroupDef();
+  const inner = new EditBias();
+  def.subgraph.add(inner);
+  def.exposed.push(new ExposedEntry("prop", inner.id, "bias", "Bias"));
+
+  const host = new Graph();
+  const grp = new GroupNode();
+  grp.ref = "grp";
+  host.add(grp);
+
+  // The frame is built while the instance is still unresolved.
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  const frame = view.frames.get(grp.id)!;
+  const rows = () => deepAll(frame, ".nodeeditor-prop-row").length;
+  expect(rows()).toBe(0);
+
+  host.groupLoader = async (ref) => (ref === "grp" ? def : undefined);
+  await host.resolveGroups();
+  view.syncGraph();
+  expect(view.frames.get(grp.id)).toBe(frame);
+  expect(rows()).toBe(1);
+
+  // A second exposure on the same definition reaches the frame on the next sync.
+  const second = new EditBias();
+  def.subgraph.add(second);
+  def.exposed.push(new ExposedEntry("prop", second.id, "bias", "More"));
+  await host.resolveGroups();
+  view.syncGraph();
+  expect(rows()).toBe(2);
+
+  // An unchanged signature leaves the rows alone.
+  const before = deepAll(frame, ".nodeeditor-prop-row");
+  view.syncGraph();
+  expect(deepAll(frame, ".nodeeditor-prop-row")).toEqual(before);
 });
 
 test("editing a forwarded property on an instance materializes the override", async () => {

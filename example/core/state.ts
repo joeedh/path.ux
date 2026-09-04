@@ -1,7 +1,7 @@
 import { Vector4, DataAPI, nstructjs, Curve1D } from "../pathux.js";
 import { Canvas } from "../draw/draw.js";
 import { DataBlock } from "./datablock.js";
-import { makeDemoGraph } from "../editors/nodeeditor/demo_nodes.js";
+import { makeDemoGraph, wireDemoStore } from "../editors/nodeeditor/demo_nodes.js";
 
 export class ModelData extends DataBlock {
   angle1: number;
@@ -46,6 +46,12 @@ export class ModelData extends DataBlock {
     const st = super.defineAPI(api);
 
     return st;
+  }
+
+  loadSTRUCT(reader: (obj: this) => void) {
+    super.loadSTRUCT(reader);
+    // the store seams are functions, so the loaded graph has none
+    wireDemoStore(this.demoNodeGraph);
   }
 
   copyTo(b: ModelData) {

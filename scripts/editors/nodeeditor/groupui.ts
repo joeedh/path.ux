@@ -108,6 +108,37 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
   return rows;
 }
 
+/**
+ * What an instance's forwarded UI depends on, as a string: the definition's identity
+ * and each entry with its state. A frame whose signature changed rebuilds its rows.
+ */
+export function forwardedSignature(node: GroupNode): string {
+  const def = node.definition;
+  if (def === undefined) {
+    return "";
+  }
+  const parts = def.exposed.map(
+    (e) =>
+      `${e.kind}:${String(e.nodeId)}:${e.propKey}:${e.label ?? ""}:` +
+      exposedEntryState(node.subgraph, e)
+  );
+  return `${defIds.id(def)}|${parts.join(",")}`;
+}
+
+/** Definition identities for forwardedSignature; a WeakMap so a dropped definition is not held. */
+const defIds = {
+  next: 1,
+  map : new WeakMap<GroupDef, number>(),
+  id(def: GroupDef): number {
+    let id = this.map.get(def);
+    if (id === undefined) {
+      id = this.next++;
+      this.map.set(def, id);
+    }
+    return id;
+  },
+};
+
 /** The text a row shows for an entry: its label, else the prop's name, else the node's. */
 function entryLabel(entry: ExposedEntry, target: GraphNode | undefined): string {
   return (
@@ -375,6 +406,8 @@ export function buildAddSocketRow<CTX extends IContextBase>(
   const showName = () => {
     hideName();
     nameRow = mark(row.row(), "nodeeditor-add-socket-name");
+    nameRow.style.gap = "6px";
+    nameRow.style.alignItems = "center";
 
     const socks = dir === "in" ? opts.def.inputs : opts.def.outputs;
     const sdef = SocketClasses.get(pending!)?.socketDef();
@@ -486,6 +519,8 @@ function buildBoundaryList<CTX extends IContextBase>(
   for (const key of Object.keys(socks)) {
     const row = mark(list.row(), "nodeeditor-boundary-row");
     row.dataset.socketKey = key;
+    row.style.gap = "6px";
+    row.style.alignItems = "center";
     row.label(key);
 
     const cls = socks[key].constructor as SocketTypeConstructor;
@@ -528,6 +563,8 @@ function buildExposedList<CTX extends IContextBase>(
     const row = mark(list.row(), "nodeeditor-exposure-row");
     row.dataset.exposureIndex = String(index);
     row.dataset.exposureState = state;
+    row.style.gap = "6px";
+    row.style.alignItems = "center";
 
     const name = mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
 
