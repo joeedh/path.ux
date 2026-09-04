@@ -30,6 +30,18 @@ export interface SocketTypeConstructor {
 let visitPass = 0;
 
 /**
+ * What one resolved source contributes to an input. An input socket among the sources is
+ * a group instance's boundary socket standing in for a link that was never made, so its
+ * default is the value; resolving it would lead back to the reader.
+ */
+function sourceValue(src: NodeSocketBase): unknown {
+  if (src.dir === "in") {
+    return src.useDefaultValue ? src.defaultProp.getValue() : undefined;
+  }
+  return src.getValue();
+}
+
+/**
  * A typed, directed graph connection. Output sockets store values; an input resolves
  * its value through its edges on demand and stores nothing of its own. See
  * documentation/NodeEditor.md for the design this implements.
@@ -154,7 +166,7 @@ pathux.NodeSocketBase {
 
     // A same-type single source passes through; there is nothing to memoize.
     if (sources.length === 1 && sources[0].type === this.type) {
-      return sources[0].getValue() as Value | undefined;
+      return sourceValue(sources[0]) as Value | undefined;
     }
 
     if (this.memoValid) {
@@ -225,12 +237,12 @@ pathux.NodeSocketBase {
 
   /** b's value converted to this socket's type; called only after canCoerceFrom(b.type) answers true. */
   protected convertFrom(b: NodeSocketBase): Value | undefined {
-    return b.type === this.type ? (b.getValue() as Value | undefined) : undefined;
+    return b.type === this.type ? (sourceValue(b) as Value | undefined) : undefined;
   }
 
   private coercedValueOf(b: NodeSocketBase): Value | undefined {
     if (b.type === this.type) {
-      return b.getValue() as Value | undefined;
+      return sourceValue(b) as Value | undefined;
     }
     if (this.canCoerceFrom(b.type)) {
       return this.convertFrom(b);
@@ -263,7 +275,9 @@ pathux.NodeSocketBase {
       }
       sock.edgeStamp = pass;
 
-      const proxied = sock.resolveProxy();
+      // A socket of this one's own direction is a boundary default standing in for a
+      // link that was never made; resolving it further would lead back to this side.
+      const proxied = sock.dir === this.dir ? undefined : sock.resolveProxy();
       if (proxied === undefined) {
         out.push(sock);
       } else {

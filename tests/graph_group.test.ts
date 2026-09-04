@@ -338,6 +338,18 @@ test("a group instance round-trips unsynced and reconciles identically after loa
   expect(liA.props.bias.getValue()).toBe(42);
 });
 
+test("an unconnected boundary input hands its default to the consumer inside the instance", async () => {
+  const { g, P, grp, innerA } = await makeSynced();
+  const iA = grp.subgraph.nodeIdMap.get(innerA.id)!;
+
+  g.disconnect(P.outputs.value, grp.inputs.a);
+  grp.inputs.a.defaultProp.setValue(3);
+
+  expect(iA.inputs.a.getValue()).toBe(3);
+  // and a boundary input with nothing behind it reads as unconnected
+  expect(iA.inputs.a.resolvedEdges()).toEqual([grp.inputs.a]);
+});
+
 test("a definition's boundary and exposed entries are part of its subgraph's snapshot, after a load too", () => {
   const def = new GroupDef();
   const inner = new GMath();

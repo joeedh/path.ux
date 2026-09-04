@@ -30,8 +30,10 @@ type ProxyHost = { resolveProxy(): NodeSocketBase[] | undefined };
 /**
  * Makes sock resolve through the group boundary to counterpart's edges. An unconnected
  * input counterpart with an editable default stands in as the source itself, so the far
- * side reads the boundary default. A missing counterpart resolves to nothing, which is
- * how an orphaned boundary socket goes dead as a signal path.
+ * side reads the boundary default; an unconnected output counterpart resolves to nothing,
+ * since standing in would lead back to the inner producer and read as a cycle. A missing
+ * counterpart resolves to nothing, which is how an orphaned boundary socket goes dead as
+ * a signal path.
  */
 function setProxy(sock: NodeSocketBase, counterpart: () => NodeSocketBase | undefined): void {
   (sock as unknown as ProxyHost).resolveProxy = () => {
@@ -42,7 +44,7 @@ function setProxy(sock: NodeSocketBase, counterpart: () => NodeSocketBase | unde
     if (far.edges.length > 0) {
       return [...far.edges];
     }
-    return far.useDefaultValue ? [far] : [];
+    return far.dir === "in" && far.useDefaultValue ? [far] : [];
   };
 }
 
