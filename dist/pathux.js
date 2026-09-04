@@ -15590,6 +15590,9 @@ var init_theme = __esm({
         "border-color": "#b8b8b8",
         "border-radius": 4,
         HeaderBG: "rgba(214, 214, 214, 0.95)",
+        GroupAccent: "#5f86b5",
+        GroupHeaderBG: "rgba(203, 211, 222, 0.95)",
+        ProxyHeaderBG: "rgba(222, 216, 200, 0.95)",
         SelectOutline: "#e8930c",
         DefaultText: new CSSFont({
           font: "sans-serif",
@@ -15615,7 +15618,26 @@ var init_theme = __esm({
         "background-color": "rgb(225, 225, 225)",
         BoxSelectBorder: "#e8930c",
         BoxSelectBG: "rgba(232, 147, 12, 0.1)",
-        ErrorColor: "#cc3333"
+        ErrorColor: "#cc3333",
+        CrumbBG: "rgb(236, 236, 236)",
+        CrumbFont: new CSSFont({
+          font: "sans-serif",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(70, 70, 70, 1.0)"
+        }),
+        CrumbActiveFont: new CSSFont({
+          font: "sans-serif",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 12,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        LevelDefinitionColor: "#4f7cb3",
+        LevelInstanceColor: "#8c8478"
       },
       nodelinkcanvas: {
         LinkColor: "#777777",
@@ -35474,7 +35496,7 @@ var init_menu = __esm({
         }
         if (item instanceof _Menu) {
           const dom = document.createElement("span");
-          dom.innerHTML = "" + item.title;
+          dom.innerHTML = item.title || (item.getAttribute("name") ?? "");
           dom._id = dom.id = "" + id;
           dom.setAttribute("class", "menu");
           li.style["width"] = "100%";
@@ -50546,6 +50568,8 @@ pathux.Graph {
   groupLoader;
   /** Saves a group definition by reference; the seam beside groupLoader for group designers. */
   groupSaver;
+  /** Allocates a reference for a definition about to be created; the third store seam. */
+  newGroupRef;
   /** Set on a group instance's subgraph; flagSortDirty bubbles through it to the owning graph. */
   groupOwner = void 0;
   /** Last-known-good group definitions, kept across resolveGroups runs. */
@@ -50569,8 +50593,17 @@ pathux.Graph {
         }
       }
     }
+    if (this.snapshotExtra !== void 0) {
+      out.push(...this.snapshotExtra());
+    }
     return out;
   }
+  /**
+   * Extra state folded into the structural snapshot. A group definition sets it
+   * to its boundary and exposed entries, so an edit to those wakes the watchers
+   * on the subgraph's path the way a node edit does.
+   */
+  snapshotExtra = void 0;
   /** Adds the node, allocating an id when it has none. A node keeps a preassigned id. */
   add(node) {
     if (node.graph !== void 0 && node.graph !== this) {
@@ -51668,7 +51701,26 @@ graph.GroupDef {
   /** The ordered rows of the group's forwarded UI. */
   exposed = [];
   constructor() {
+    this._adopt();
+  }
+  /** Binds the subgraph back to this definition; run again after a load replaces it. */
+  _adopt() {
     defOfSubgraph.set(this.subgraph, this);
+    this.subgraph.snapshotExtra = () => this._snapshotExtra();
+  }
+  /** The boundary keys and exposed entries, as the subgraph's snapshot sees them. */
+  _snapshotExtra() {
+    const out = [];
+    for (const key of Object.keys(this.inputs)) {
+      out.push(`in:${key}`);
+    }
+    for (const key of Object.keys(this.outputs)) {
+      out.push(`out:${key}`);
+    }
+    for (const e of this.exposed) {
+      out.push(`${e.kind}:${String(e.nodeId)}:${e.propKey}:${e.label ?? ""}`);
+    }
+    return out;
   }
   /** The subgraph's input proxy node, created on first use. */
   inputNode() {
@@ -51758,7 +51810,7 @@ graph.GroupDef {
     reader(this);
     this.inputs = this._loadBoundary(this.inputs, "in");
     this.outputs = this._loadBoundary(this.outputs, "out");
-    defOfSubgraph.set(this.subgraph, this);
+    this._adopt();
   }
   _loadBoundary(list5, dir) {
     const socks = {};
@@ -51785,7 +51837,10 @@ graph.GroupNode {
 `
   );
   static graphDef() {
-    return { typeName: "GroupNode", uiName: "Group" };
+    return {
+      typeName: "GroupNode",
+      uiName: (node) => node.ref || "Group"
+    };
   }
   /** The definition reference; the client's groupLoader decides what it points at. */
   ref = "";
@@ -51801,10 +51856,16 @@ graph.GroupNode {
   get definition() {
     return this._def;
   }
-  /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
+  /**
+   * Adds the instance subgraph as "group" and the resolved definition's as
+   * "definition", so paths descend nodes[i].group.nodes[j] or
+   * nodes[i].definition.nodes[j]. The controller walks the dotted member key by
+   * key, so the definition path throws on an instance that has not resolved.
+   */
   static defineAPI(api, st) {
     super.defineAPI(api, st);
     st.struct("subgraph", "group", "Group", api.getStruct(Graph));
+    st.struct("definition.subgraph", "definition", "Definition", api.getStruct(Graph));
   }
   /** Reports whether target sits anywhere on def's chain of resolved group definitions. */
   static chainContains(def, target, seen = /* @__PURE__ */ new Set()) {
@@ -51891,18 +51952,34 @@ graph.GroupNode {
       rt.chain.pop();
     }
     this._def = def;
-    const hash = def.contentHash();
-    if (this.syncedHash !== hash) {
-      this._reconcile(def);
-      this.syncedHash = hash;
+    if (this.syncedHash !== def.contentHash()) {
+      this.syncToDefinition();
+    } else {
+      this._deriveOrphans(def);
     }
+    rt.report.synced.push(this);
+  }
+  /**
+   * Rebuilds the instance from its bound definition now, overrides kept, and records
+   * the definition's hash. A no-op on an instance with no definition.
+   */
+  syncToDefinition() {
+    const def = this._def;
+    if (def === void 0) {
+      return;
+    }
+    this._reconcile(def);
+    this.syncedHash = def.contentHash();
+    this._deriveOrphans(def);
+  }
+  /** Orphan flags are not serialized, so they re-derive on every resolve. */
+  _deriveOrphans(def) {
     for (const k in this.inputs) {
       this.inputs[k].orphaned = !(k in def.inputs);
     }
     for (const k in this.outputs) {
       this.outputs[k].orphaned = !(k in def.outputs);
     }
-    rt.report.synced.push(this);
   }
   /** Reconciliation's coarse hook; the default fans out to the finer hooks below. */
   onDefChanged(diff) {
@@ -52081,6 +52158,475 @@ graph.GroupNode {
 };
 registerNodeType(GroupNode);
 
+// scripts/graph/grouping.ts
+init_nstructjs();
+function isRefusal(x) {
+  return typeof x === "object" && x !== null && "refusal" in x;
+}
+function captureLinks(node) {
+  const out = [];
+  for (const k in node.inputs) {
+    for (const e of node.inputs[k].edges) {
+      out.push({ srcId: e.owningNode.id, srcKey: e.name, dstId: node.id, dstKey: k });
+    }
+  }
+  for (const k in node.outputs) {
+    for (const e of node.outputs[k].edges) {
+      out.push({ srcId: node.id, srcKey: k, dstId: e.owningNode.id, dstKey: e.name });
+    }
+  }
+  return out;
+}
+function restoreLinks(graph, records) {
+  for (const r of records) {
+    const src = graph.nodeIdMap.get(r.srcId)?.outputs[r.srcKey];
+    const dst = graph.nodeIdMap.get(r.dstId)?.inputs[r.dstKey];
+    if (src !== void 0 && dst !== void 0) {
+      graph.connect(src, dst);
+    }
+  }
+}
+function isProxy(n) {
+  return n instanceof GroupInputNode || n instanceof GroupOutputNode;
+}
+function uniqueKey(key, used) {
+  let k = key;
+  for (let i = 2; used.has(k); i++) {
+    k = `${key}_${i}`;
+  }
+  used.add(k);
+  return k;
+}
+function groupPlan(graph, ids) {
+  const refused = graph.structuralEditsRefused();
+  if (refused !== void 0) {
+    return { refusal: refused };
+  }
+  if (ids.length === 0) {
+    return { refusal: "select at least one node to group" };
+  }
+  const nodes = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const id of ids) {
+    const n = graph.nodeIdMap.get(id);
+    if (n === void 0) {
+      return { refusal: `no node with id ${String(id)}` };
+    }
+    if (isProxy(n)) {
+      return { refusal: "the group's own input and output nodes stay where they are" };
+    }
+    if (!seen.has(n)) {
+      seen.add(n);
+      nodes.push(n);
+    }
+  }
+  const inputs = [];
+  const inKeys = /* @__PURE__ */ new Set();
+  for (const n of nodes) {
+    for (const k in n.inputs) {
+      const sock = n.inputs[k];
+      for (const e of sock.edges) {
+        if (seen.has(e.owningNode)) {
+          continue;
+        }
+        const entry = inputs.find((x) => x.source === e);
+        if (entry !== void 0) {
+          entry.targets.push(sock);
+        } else {
+          inputs.push({ key: uniqueKey(k, inKeys), source: e, targets: [sock] });
+        }
+      }
+    }
+  }
+  const outputs = [];
+  const outKeys = /* @__PURE__ */ new Set();
+  for (const n of nodes) {
+    for (const k in n.outputs) {
+      const sock = n.outputs[k];
+      const targets = sock.edges.filter((e) => !seen.has(e.owningNode));
+      if (targets.length > 0) {
+        outputs.push({ key: uniqueKey(k, outKeys), source: sock, targets });
+      }
+    }
+  }
+  return { nodes, inputs, outputs };
+}
+function boundsOf(nodes) {
+  const b = {
+    min: [Infinity, Infinity],
+    max: [-Infinity, -Infinity]
+  };
+  for (const n of nodes) {
+    b.min[0] = Math.min(b.min[0], n.pos[0]);
+    b.min[1] = Math.min(b.min[1], n.pos[1]);
+    b.max[0] = Math.max(b.max[0], n.pos[0] + n.size[0]);
+    b.max[1] = Math.max(b.max[1], n.pos[1] + n.size[1]);
+  }
+  return b;
+}
+var PROXY_GAP = 60;
+function createGroup(graph, ids, ref) {
+  const plan = groupPlan(graph, ids);
+  if (isRefusal(plan)) {
+    throw new Error(plan.refusal);
+  }
+  const { nodes } = plan;
+  const selected = new Set(nodes);
+  const internal = [];
+  const crossing = [];
+  for (const n of nodes) {
+    for (const r of captureLinks(n)) {
+      const inner = selected.has(graph.nodeIdMap.get(r.srcId)) && selected.has(graph.nodeIdMap.get(r.dstId));
+      if (inner) {
+        if (!internal.some((x) => sameLink(x, r))) {
+          internal.push(r);
+        }
+      } else {
+        crossing.push(r);
+      }
+    }
+  }
+  const bounds = boundsOf(nodes);
+  const centre = [
+    (bounds.min[0] + bounds.max[0]) / 2,
+    (bounds.min[1] + bounds.max[1]) / 2
+  ];
+  for (const n of nodes) {
+    graph.remove(n);
+  }
+  const def = new GroupDef();
+  for (const n of nodes) {
+    def.subgraph.add(n);
+  }
+  restoreLinks(def.subgraph, internal);
+  for (const entry of plan.inputs) {
+    const inner = def.declareInput(entry.key, entry.targets[0].copy());
+    for (const t2 of entry.targets) {
+      def.subgraph.connect(inner, t2);
+    }
+  }
+  for (const entry of plan.outputs) {
+    const inner = def.declareOutput(entry.key, entry.source.copy());
+    def.subgraph.connect(entry.source, inner);
+  }
+  const gin = def.inputNode();
+  gin.pos[0] = bounds.min[0] - PROXY_GAP - gin.size[0];
+  gin.pos[1] = centre[1] - gin.size[1] / 2;
+  const gout = def.outputNode();
+  gout.pos[0] = bounds.max[0] + PROXY_GAP;
+  gout.pos[1] = centre[1] - gout.size[1] / 2;
+  const node = new GroupNode();
+  node.pos[0] = centre[0] - node.size[0] / 2;
+  node.pos[1] = centre[1] - node.size[1] / 2;
+  graph.add(node);
+  node.setDefinition(ref, def);
+  node.syncToDefinition();
+  for (const entry of plan.inputs) {
+    graph.connect(entry.source, node.inputs[entry.key]);
+  }
+  for (const entry of plan.outputs) {
+    for (const t2 of entry.targets) {
+      graph.connect(node.outputs[entry.key], t2);
+    }
+  }
+  return { def, node, plan, crossing };
+}
+function sameLink(a2, b) {
+  return a2.srcId === b.srcId && a2.srcKey === b.srcKey && a2.dstId === b.dstId && a2.dstKey === b.dstKey;
+}
+function dissolveGroup(graph, created) {
+  const { def, node, crossing } = created;
+  const innerNodes = def.subgraph.nodes.filter((n) => !isProxy(n));
+  const innerSet = new Set(innerNodes);
+  const inner = [];
+  const internal = [];
+  for (const n of innerNodes) {
+    for (const r of captureLinks(n)) {
+      if (inner.some((x) => sameLink(x, r))) {
+        continue;
+      }
+      inner.push(r);
+      const a2 = def.subgraph.nodeIdMap.get(r.srcId);
+      const b = def.subgraph.nodeIdMap.get(r.dstId);
+      if (a2 !== void 0 && b !== void 0 && innerSet.has(a2) && innerSet.has(b)) {
+        internal.push(r);
+      }
+    }
+  }
+  graph.remove(node);
+  for (const n of innerNodes) {
+    def.subgraph.remove(n);
+  }
+  for (const n of innerNodes) {
+    graph.add(n);
+  }
+  restoreLinks(graph, internal);
+  restoreLinks(graph, crossing);
+  return { inner, internal };
+}
+function redoGroup(graph, created, dissolved) {
+  const { def, node, plan } = created;
+  for (const n of plan.nodes) {
+    graph.remove(n);
+  }
+  for (const n of plan.nodes) {
+    def.subgraph.add(n);
+  }
+  restoreLinks(def.subgraph, dissolved.inner);
+  graph.add(node);
+  for (const entry of plan.inputs) {
+    graph.connect(entry.source, node.inputs[entry.key]);
+  }
+  for (const entry of plan.outputs) {
+    for (const t2 of entry.targets) {
+      graph.connect(node.outputs[entry.key], t2);
+    }
+  }
+}
+function copyGraph2(g) {
+  return readJSON(writeJSON(g), Graph);
+}
+function cloneNode(node) {
+  const cls = node.constructor;
+  const copy = readJSON(writeJSON(node), cls);
+  copy.id = NO_ID;
+  copy.graph = void 0;
+  if (node instanceof GroupNode && copy instanceof GroupNode && node.definition !== void 0) {
+    copy.setDefinition(node.ref, node.definition);
+  }
+  return copy;
+}
+function ungroup(graph, node, ids) {
+  const refused = graph.structuralEditsRefused();
+  if (refused !== void 0) {
+    return { refusal: refused };
+  }
+  if (node.graph !== graph) {
+    return { refusal: `no group node with id ${String(node.id)}` };
+  }
+  const copy = copyGraph2(node.subgraph);
+  const inner = copy.nodes.filter((n) => !isProxy(n));
+  const gin = copy.nodes.find((n) => n instanceof GroupInputNode);
+  const gout = copy.nodes.find((n) => n instanceof GroupOutputNode);
+  const innerSet = new Set(inner);
+  const internal = [];
+  for (const n of inner) {
+    for (const r of captureLinks(n)) {
+      const a2 = copy.nodeIdMap.get(r.srcId);
+      const b2 = copy.nodeIdMap.get(r.dstId);
+      if (a2 !== void 0 && b2 !== void 0 && innerSet.has(a2) && innerSet.has(b2)) {
+        if (!internal.some((x) => sameLink(x, r))) {
+          internal.push(r);
+        }
+      }
+    }
+  }
+  const inTargets = /* @__PURE__ */ new Map();
+  if (gin !== void 0) {
+    for (const k in gin.outputs) {
+      inTargets.set(
+        k,
+        gin.outputs[k].edges.map((e) => ({ id: e.owningNode.id, key: e.name }))
+      );
+    }
+  }
+  const outSources = /* @__PURE__ */ new Map();
+  if (gout !== void 0) {
+    for (const k in gout.inputs) {
+      const e = gout.inputs[k].edges[0];
+      if (e !== void 0) {
+        outSources.set(k, { id: e.owningNode.id, key: e.name });
+      }
+    }
+  }
+  const links = captureLinks(node);
+  const outside = /* @__PURE__ */ new Map();
+  for (const k in node.inputs) {
+    outside.set(`in:${k}`, [...node.inputs[k].edges]);
+  }
+  for (const k in node.outputs) {
+    outside.set(`out:${k}`, [...node.outputs[k].edges]);
+  }
+  const b = boundsOf(inner);
+  const dx = node.pos[0] + node.size[0] / 2 - (b.min[0] + b.max[0]) / 2;
+  const dy = node.pos[1] + node.size[1] / 2 - (b.min[1] + b.max[1]) / 2;
+  graph.remove(node);
+  const idMap = /* @__PURE__ */ new Map();
+  for (const n of inner) {
+    const oldId = n.id;
+    for (const s of n.allSockets) {
+      s.edges.length = 0;
+    }
+    n.graph = void 0;
+    const fixed = ids?.get(oldId);
+    if (fixed !== void 0) {
+      n.id = fixed;
+    } else if (typeof oldId === "number") {
+      n.id = NO_ID;
+    } else {
+      const taken = [...graph.nodeIdMap.keys()].filter((k) => typeof k === "string");
+      n.id = uniqueKey(oldId, new Set(taken));
+    }
+    n.pos[0] += dx;
+    n.pos[1] += dy;
+    graph.add(n);
+    idMap.set(oldId, n.id);
+  }
+  restoreLinks(
+    graph,
+    internal.map((r) => ({ ...r, srcId: idMap.get(r.srcId), dstId: idMap.get(r.dstId) }))
+  );
+  for (const [k, targets] of inTargets) {
+    const sources = outside.get(`in:${k}`) ?? [];
+    for (const t2 of targets) {
+      const dst = graph.nodeIdMap.get(idMap.get(t2.id))?.inputs[t2.key];
+      if (dst === void 0) {
+        continue;
+      }
+      if (sources.length === 0) {
+        const bound = node.inputs[k];
+        if (bound !== void 0 && bound.useDefaultValue && dst.useDefaultValue) {
+          dst.defaultProp.setValue(bound.defaultProp.getValue());
+        }
+      }
+      for (const s of sources) {
+        graph.connect(s, dst);
+      }
+    }
+  }
+  for (const [k, src] of outSources) {
+    const out = graph.nodeIdMap.get(idMap.get(src.id))?.outputs[src.key];
+    if (out === void 0) {
+      continue;
+    }
+    for (const t2 of outside.get(`out:${k}`) ?? []) {
+      graph.connect(out, t2);
+    }
+  }
+  return { nodes: inner, idMap, links };
+}
+function regroup(graph, node, ungrouped) {
+  for (const n of ungrouped.nodes) {
+    graph.remove(n);
+  }
+  graph.add(node);
+  restoreLinks(graph, ungrouped.links);
+}
+function checkTarget(def, req) {
+  const node = def.subgraph.nodeIdMap.get(req.nodeId);
+  if (node === void 0) {
+    return { refusal: `no node with id ${String(req.nodeId)} in the definition` };
+  }
+  if (req.kind === "prop") {
+    const key = req.propKey ?? "";
+    if (nodePropTarget(node, key) === void 0) {
+      return { refusal: `${node.getUIName()} has no property '${key}'` };
+    }
+  }
+  return void 0;
+}
+function exposeEntry(def, req, at) {
+  const bad = checkTarget(def, req);
+  if (bad !== void 0) {
+    return bad;
+  }
+  const propKey = req.kind === "prop" ? req.propKey ?? "" : "";
+  if (def.exposed.some(
+    (e) => e.kind === req.kind && e.nodeId === req.nodeId && e.propKey === propKey
+  )) {
+    return { refusal: "that is already exposed" };
+  }
+  const index = at ?? def.exposed.length;
+  if (index < 0 || index > def.exposed.length) {
+    return { refusal: `no row ${index} to insert at` };
+  }
+  const entry = new ExposedEntry(req.kind, req.nodeId, propKey, req.label);
+  def.exposed.splice(index, 0, entry);
+  return { entry, index };
+}
+function reorderEntry(def, from, to) {
+  const n = def.exposed.length;
+  if (from < 0 || from >= n) {
+    return { refusal: `no row ${from} to move` };
+  }
+  if (to < 0 || to >= n) {
+    return { refusal: `no row ${to} to move to` };
+  }
+  const [entry] = def.exposed.splice(from, 1);
+  def.exposed.splice(to, 0, entry);
+  return void 0;
+}
+function repointEntry(def, index, nodeId, propKey) {
+  const entry = def.exposed[index];
+  if (entry === void 0) {
+    return { refusal: `no row ${index} to repoint` };
+  }
+  const bad = checkTarget(def, { kind: entry.kind, nodeId, propKey });
+  if (bad !== void 0) {
+    return bad;
+  }
+  const previous = { nodeId: entry.nodeId, propKey: entry.propKey };
+  entry.nodeId = nodeId;
+  entry.propKey = entry.kind === "prop" ? propKey ?? "" : "";
+  return { previous };
+}
+function removeEntry(def, index) {
+  const entry = def.exposed[index];
+  if (entry === void 0) {
+    return { refusal: `no row ${index} to remove` };
+  }
+  def.exposed.splice(index, 1);
+  return { entry };
+}
+function addBoundary(def, dir, key, socketType) {
+  if (key === "") {
+    return { refusal: "a boundary socket needs a name" };
+  }
+  const cls = getSocketClass(socketType);
+  if (cls === void 0) {
+    return { refusal: `unknown socket type '${socketType}'` };
+  }
+  const side = dir === "in" ? def.inputs : def.outputs;
+  if (key in side) {
+    return {
+      refusal: `the group already has an ${dir === "in" ? "input" : "output"} named '${key}'`
+    };
+  }
+  const socket = dir === "in" ? def.declareInput(key, new cls("in")) : def.declareOutput(key, new cls("out"));
+  return { socket };
+}
+function removeBoundary(def, dir, key) {
+  const side = dir === "in" ? def.inputs : def.outputs;
+  const template = side[key];
+  if (template === void 0) {
+    return { refusal: `the group has no ${dir === "in" ? "input" : "output"} named '${key}'` };
+  }
+  const proxy = dir === "in" ? def.inputNode().outputs[key] : def.outputNode().inputs[key];
+  const links = [];
+  if (proxy !== void 0) {
+    const owner = proxy.owningNode;
+    for (const e of proxy.edges) {
+      links.push(
+        dir === "in" ? { srcId: owner.id, srcKey: key, dstId: e.owningNode.id, dstKey: e.name } : { srcId: e.owningNode.id, srcKey: e.name, dstId: owner.id, dstKey: key }
+      );
+    }
+  }
+  if (dir === "in") {
+    def.removeInput(key);
+  } else {
+    def.removeOutput(key);
+  }
+  return { template, links };
+}
+function restoreBoundary(def, dir, key, removed) {
+  if (dir === "in") {
+    def.declareInput(key, removed.template);
+  } else {
+    def.declareOutput(key, removed.template);
+  }
+  restoreLinks(def.subgraph, removed.links);
+}
+
 // scripts/graph/graph_ops.ts
 init_toolsys();
 init_toolprop();
@@ -52142,6 +52688,28 @@ function structuralOkay(ctx, toolop) {
   }
   return true;
 }
+function definitionAt(ctx, path) {
+  const def = definitionOfSubgraph(graphAt(ctx, path));
+  if (def === void 0) {
+    throw new Error(`'${path}' is not a group definition`);
+  }
+  return def;
+}
+function definitionOkay(ctx, toolop) {
+  if (toolop === void 0) {
+    return true;
+  }
+  try {
+    definitionAt(ctx, toolop.inputs.graphPath.getValue());
+  } catch (err) {
+    console.warn(err instanceof Error ? err.message : String(err));
+    return false;
+  }
+  return true;
+}
+function intInput(value) {
+  return new IntProperty(value).ignoreLastValue();
+}
 function strInput() {
   return new StringProperty().ignoreLastValue();
 }
@@ -52182,7 +52750,8 @@ var AddNodeOp = class extends ToolOp {
         graphPath: strInput(),
         nodeType: strInput(),
         x: floatInput(0),
-        y: floatInput(0)
+        y: floatInput(0),
+        ref: strInput()
       },
       outputs: {
         nodeId: new StringProperty()
@@ -52209,6 +52778,9 @@ var AddNodeOp = class extends ToolOp {
     }
     node.pos[0] = this.inputs.x.getValue();
     node.pos[1] = this.inputs.y.getValue();
+    if (node instanceof GroupNode) {
+      node.ref = this.inputs.ref.getValue();
+    }
     graph.add(node);
     this.outputs.nodeId.setValue(JSON.stringify(node.id));
     notifyGraph(ctx, this);
@@ -52527,6 +53099,395 @@ var SetNodePropOp = class _SetNodePropOp extends ToolOp {
     notifyGraph(ctx, this);
   }
 };
+var DuplicateNodeOp = class extends ToolOp {
+  static tooldef() {
+    return {
+      uiname: "Duplicate Node",
+      toolpath: "graph.duplicate_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput(),
+        x: floatInput(0),
+        y: floatInput(0)
+      },
+      outputs: {
+        nodeId: new StringProperty()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return structuralOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const source = nodeAt(graph, this.inputs.nodeId.getValue());
+    const copy = cloneNode(source);
+    const prior = this.outputs.nodeId.getValue();
+    if (prior) {
+      copy.id = JSON.parse(prior);
+    }
+    copy.pos[0] = this.inputs.x.getValue();
+    copy.pos[1] = this.inputs.y.getValue();
+    graph.add(copy);
+    this.outputs.nodeId.setValue(JSON.stringify(copy.id));
+    notifyGraph(ctx, this);
+    ctx.selectNodes([copy.id]);
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.remove(nodeAt(graph, this.outputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
+  }
+};
+var CreateGroupOp = class extends ToolOp {
+  _created;
+  _dissolved;
+  static tooldef() {
+    return {
+      uiname: "Create Group",
+      toolpath: "graph.create_group",
+      inputs: {
+        graphPath: strInput(),
+        storePath: strInput(),
+        nodeIds: strInput(),
+        ref: strInput()
+      },
+      outputs: {
+        nodeId: new StringProperty()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    const op = toolop;
+    if (!structuralOkay(ctx, op)) {
+      return false;
+    }
+    if (op === void 0) {
+      return true;
+    }
+    if (op.inputs.ref.getValue() === "") {
+      console.warn("a new group needs a reference to be saved under");
+      return false;
+    }
+    const graph = graphAt(ctx, op.inputs.graphPath.getValue());
+    const plan = groupPlan(graph, JSON.parse(op.inputs.nodeIds.getValue()));
+    if (isRefusal(plan)) {
+      console.warn(plan.refusal);
+      return false;
+    }
+    return true;
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const ref = this.inputs.ref.getValue();
+    if (this._created !== void 0 && this._dissolved !== void 0) {
+      redoGroup(graph, this._created, this._dissolved);
+    } else {
+      const ids = JSON.parse(this.inputs.nodeIds.getValue());
+      this._created = createGroup(graph, ids, ref);
+    }
+    const { def, node } = this._created;
+    const store = graphAt(ctx, this.inputs.storePath.getValue());
+    void store.groupSaver?.(ref, def);
+    this.outputs.nodeId.setValue(JSON.stringify(node.id));
+    notifyGraph(ctx, this);
+    ctx.selectNodes([node.id]);
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    this._dissolved = dissolveGroup(graph, this._created);
+    notifyGraph(ctx, this);
+  }
+};
+var UngroupOp = class extends ToolOp {
+  _node;
+  _result;
+  static tooldef() {
+    return {
+      uiname: "Ungroup",
+      toolpath: "graph.ungroup",
+      inputs: {
+        graphPath: strInput(),
+        nodeId: strInput()
+      },
+      outputs: {
+        nodeIds: new StringProperty()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    const op = toolop;
+    if (!structuralOkay(ctx, op)) {
+      return false;
+    }
+    if (op === void 0) {
+      return true;
+    }
+    const graph = graphAt(ctx, op.inputs.graphPath.getValue());
+    if (!(graph.nodeIdMap.get(JSON.parse(op.inputs.nodeId.getValue())) instanceof GroupNode)) {
+      console.warn(`node ${op.inputs.nodeId.getValue()} is not a group`);
+      return false;
+    }
+    return true;
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const node = nodeAt(graph, this.inputs.nodeId.getValue());
+    if (!(node instanceof GroupNode)) {
+      throw new Error(`node ${this.inputs.nodeId.getValue()} is not a group`);
+    }
+    const prior = this.outputs.nodeIds.getValue();
+    const fixed = prior ? new Map(JSON.parse(prior)) : void 0;
+    const result = ungroup(graph, node, fixed);
+    if (isRefusal(result)) {
+      throw new Error(result.refusal);
+    }
+    this._node = node;
+    this._result = result;
+    this.outputs.nodeIds.setValue(JSON.stringify([...result.idMap]));
+    notifyGraph(ctx, this);
+    ctx.selectNodes(result.nodes.map((n) => n.id));
+  }
+  undo(ctx) {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    regroup(graph, this._node, this._result);
+    notifyGraph(ctx, this);
+  }
+};
+var ExposeEntryOp = class extends ToolOp {
+  _index = -1;
+  static tooldef() {
+    return {
+      uiname: "Expose on Group",
+      toolpath: "graph.expose_entry",
+      inputs: {
+        graphPath: strInput(),
+        kind: strInput(),
+        nodeId: strInput(),
+        propKey: strInput(),
+        label: strInput(),
+        at: intInput(-1)
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const at = this.inputs.at.getValue();
+    const label = this.inputs.label.getValue();
+    const r = exposeEntry(
+      def,
+      {
+        kind: this.inputs.kind.getValue() === "nodeUI" ? "nodeUI" : "prop",
+        nodeId: JSON.parse(this.inputs.nodeId.getValue()),
+        propKey: this.inputs.propKey.getValue(),
+        label: label === "" ? void 0 : label
+      },
+      at >= 0 ? at : void 0
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._index = r.index;
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    def.exposed.splice(this._index, 1);
+    notifyGraph(ctx, this);
+  }
+};
+var ReorderEntryOp = class extends ToolOp {
+  static tooldef() {
+    return {
+      uiname: "Reorder Exposed Row",
+      toolpath: "graph.reorder_entry",
+      inputs: {
+        graphPath: strInput(),
+        from: intInput(0),
+        to: intInput(0)
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = reorderEntry(def, this.inputs.from.getValue(), this.inputs.to.getValue());
+    if (r !== void 0) {
+      throw new Error(r.refusal);
+    }
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    reorderEntry(def, this.inputs.to.getValue(), this.inputs.from.getValue());
+    notifyGraph(ctx, this);
+  }
+};
+var RepointEntryOp = class extends ToolOp {
+  _previous;
+  static tooldef() {
+    return {
+      uiname: "Repoint Exposed Row",
+      toolpath: "graph.repoint_entry",
+      inputs: {
+        graphPath: strInput(),
+        index: intInput(0),
+        nodeId: strInput(),
+        propKey: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = repointEntry(
+      def,
+      this.inputs.index.getValue(),
+      JSON.parse(this.inputs.nodeId.getValue()),
+      this.inputs.propKey.getValue()
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._previous = r.previous;
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const prev = this._previous;
+    const entry = def.exposed[this.inputs.index.getValue()];
+    entry.nodeId = prev.nodeId;
+    entry.propKey = prev.propKey;
+    notifyGraph(ctx, this);
+  }
+};
+var RemoveEntryOp = class extends ToolOp {
+  _entry;
+  static tooldef() {
+    return {
+      uiname: "Remove Exposed Row",
+      toolpath: "graph.remove_entry",
+      inputs: {
+        graphPath: strInput(),
+        index: intInput(0)
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = removeEntry(def, this.inputs.index.getValue());
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._entry = r.entry;
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    def.exposed.splice(this.inputs.index.getValue(), 0, this._entry);
+    notifyGraph(ctx, this);
+  }
+};
+var AddGroupSocketOp = class extends ToolOp {
+  static tooldef() {
+    return {
+      uiname: "Add Group Socket",
+      toolpath: "graph.add_group_socket",
+      inputs: {
+        graphPath: strInput(),
+        dir: strInput(),
+        key: strInput(),
+        socketType: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  _dir() {
+    return this.inputs.dir.getValue() === "out" ? "out" : "in";
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = addBoundary(
+      def,
+      this._dir(),
+      this.inputs.key.getValue(),
+      this.inputs.socketType.getValue()
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    removeBoundary(def, this._dir(), this.inputs.key.getValue());
+    notifyGraph(ctx, this);
+  }
+};
+var RemoveGroupSocketOp = class extends ToolOp {
+  _removed;
+  static tooldef() {
+    return {
+      uiname: "Remove Group Socket",
+      toolpath: "graph.remove_group_socket",
+      inputs: {
+        graphPath: strInput(),
+        dir: strInput(),
+        key: strInput()
+      }
+    };
+  }
+  static canRun(ctx, toolop) {
+    return definitionOkay(ctx, toolop);
+  }
+  undoPre(_ctx) {
+  }
+  _dir() {
+    return this.inputs.dir.getValue() === "out" ? "out" : "in";
+  }
+  exec(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = removeBoundary(def, this._dir(), this.inputs.key.getValue());
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._removed = r;
+    notifyGraph(ctx, this);
+  }
+  undo(ctx) {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    restoreBoundary(def, this._dir(), this.inputs.key.getValue(), this._removed);
+    notifyGraph(ctx, this);
+  }
+};
 for (const cls of [
   AddNodeOp,
   DeleteNodeOp,
@@ -52535,16 +53496,36 @@ for (const cls of [
   MoveNodeOp,
   RenameNodeOp,
   ReplaceNodeOp,
-  SetNodePropOp
+  SetNodePropOp,
+  DuplicateNodeOp,
+  CreateGroupOp,
+  UngroupOp,
+  ExposeEntryOp,
+  ReorderEntryOp,
+  RepointEntryOp,
+  RemoveEntryOp,
+  AddGroupSocketOp,
+  RemoveGroupSocketOp
 ]) {
   ToolOp.register(cls);
 }
 
 // scripts/editors/nodeeditor/delegate.ts
 init_toolsys();
-function isExposureEdit(edit) {
-  return edit.kind === "exposeEntry" || edit.kind === "reorderEntry" || edit.kind === "repointEntry" || edit.kind === "removeEntry";
+function isDefinitionEdit(edit) {
+  switch (edit.kind) {
+    case "exposeEntry":
+    case "reorderEntry":
+    case "repointEntry":
+    case "removeEntry":
+    case "addBoundary":
+    case "removeBoundary":
+      return true;
+    default:
+      return false;
+  }
 }
+var NOT_A_DEFINITION = "forwarded rows and boundary sockets belong to a group's definition; open one to edit them";
 var AsyncGateOp = class extends ToolOp {
   stepDelegate;
   shortLabel = "";
@@ -52622,8 +53603,8 @@ var ToolOpDelegate = class {
       return { ok: false, reason: `'${edit.graphPath}' does not resolve to a graph` };
     }
     const graph = value;
-    if (isExposureEdit(edit)) {
-      return { ok: true };
+    if (isDefinitionEdit(edit)) {
+      return this._checkDefinitionEdit(graph, edit);
     }
     const refusal = graph.structuralEditsRefused();
     if (refusal !== void 0) {
@@ -52644,6 +53625,22 @@ var ToolOpDelegate = class {
         }
         break;
       }
+      case "createGroup": {
+        const plan = groupPlan(graph, edit.nodeIds);
+        if (isRefusal(plan)) {
+          return { ok: false, reason: plan.refusal };
+        }
+        if (this._refFor(ctx, edit) === void 0) {
+          return { ok: false, reason: "the host gave no name for the new group" };
+        }
+        break;
+      }
+      case "ungroup": {
+        if (!(graph.nodeIdMap.get(edit.nodeId) instanceof GroupNode)) {
+          return { ok: false, reason: `node ${JSON.stringify(edit.nodeId)} is not a group` };
+        }
+        break;
+      }
       case "connect": {
         const src = graph.nodeIdMap.get(edit.srcNode)?.outputs[edit.srcSocket];
         const dst = graph.nodeIdMap.get(edit.dstNode)?.inputs[edit.dstSocket];
@@ -52660,6 +53657,52 @@ var ToolOpDelegate = class {
       }
     }
     return { ok: true };
+  }
+  _checkDefinitionEdit(graph, edit) {
+    const def = definitionOfSubgraph(graph);
+    if (def === void 0) {
+      return { ok: false, reason: NOT_A_DEFINITION };
+    }
+    switch (edit.kind) {
+      case "exposeEntry":
+      case "repointEntry": {
+        const nodeId = edit.kind === "exposeEntry" ? edit.entry.nodeId : edit.nodeId;
+        const node = def.subgraph.nodeIdMap.get(nodeId);
+        if (node === void 0) {
+          return { ok: false, reason: `no node with id ${JSON.stringify(nodeId)}` };
+        }
+        const key = edit.kind === "exposeEntry" ? edit.entry.propKey : edit.propKey;
+        const wantsProp = edit.kind === "repointEntry" || edit.entry.kind === "prop";
+        if (wantsProp && nodePropTarget(node, key ?? "") === void 0) {
+          return { ok: false, reason: `${node.getUIName()} has no property '${key ?? ""}'` };
+        }
+        break;
+      }
+      case "addBoundary": {
+        if (getSocketClass(edit.socketType) === void 0) {
+          return { ok: false, reason: `unknown socket type '${edit.socketType}'` };
+        }
+        if (edit.key in (edit.dir === "in" ? def.inputs : def.outputs)) {
+          return { ok: false, reason: `the group already has a socket named '${edit.key}'` };
+        }
+        break;
+      }
+      case "removeBoundary": {
+        if (!(edit.key in (edit.dir === "in" ? def.inputs : def.outputs))) {
+          return { ok: false, reason: `the group has no socket named '${edit.key}'` };
+        }
+        break;
+      }
+    }
+    return { ok: true };
+  }
+  /** The ref a createGroup saves under: the edit's own, else the store's newGroupRef. */
+  _refFor(ctx, edit) {
+    if (edit.ref) {
+      return edit.ref;
+    }
+    const ref = this._graph(ctx, edit.storePath)?.newGroupRef?.();
+    return ref ? ref : void 0;
   }
   execTool(ctx, tool) {
     if (this.undoStepLvl > 0) {
@@ -52685,6 +53728,23 @@ var ToolOpDelegate = class {
         tool.inputs.nodeType.setValue(edit.nodeType);
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
+        tool.inputs.ref.setValue(edit.ref ?? "");
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "createGroup": {
+        const tool = new CreateGroupOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.storePath.setValue(edit.storePath);
+        tool.inputs.nodeIds.setValue(JSON.stringify(edit.nodeIds));
+        tool.inputs.ref.setValue(this._refFor(ctx, edit) ?? "");
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "ungroup": {
+        const tool = new UngroupOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         this.execTool(ctx, tool);
         break;
       }
@@ -52729,84 +53789,67 @@ var ToolOpDelegate = class {
         break;
       }
       case "duplicateNode": {
-        this._performDuplicate(ctx, edit);
+        const tool = new DuplicateNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.x.setValue(edit.x);
+        tool.inputs.y.setValue(edit.y);
+        this.execTool(ctx, tool);
         break;
       }
-      case "exposeEntry":
-      case "reorderEntry":
-      case "repointEntry":
-      case "removeEntry": {
-        this._performExposure(ctx, edit);
+      case "exposeEntry": {
+        const tool = new ExposeEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.kind.setValue(edit.entry.kind);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.entry.nodeId));
+        tool.inputs.propKey.setValue(edit.entry.propKey ?? "");
+        tool.inputs.label.setValue(edit.entry.label ?? "");
+        tool.inputs.at.setValue(edit.at ?? -1);
+        this.execTool(ctx, tool);
         break;
       }
-    }
-  }
-  _performDuplicate(ctx, edit) {
-    const graph = this._graph(ctx, edit.graphPath);
-    const source = graph?.nodeIdMap.get(edit.nodeId);
-    if (source === void 0) {
-      return;
-    }
-    const macro = new ToolMacro();
-    const addOp = new AddNodeOp();
-    addOp.inputs.graphPath.setValue(edit.graphPath);
-    addOp.inputs.nodeType.setValue(source.def.typeName);
-    addOp.inputs.x.setValue(edit.x);
-    addOp.inputs.y.setValue(edit.y);
-    macro.add(addOp);
-    for (const key of nodePropKeys(source)) {
-      const target = nodePropTarget(source, key);
-      if (!target?.wasSet) {
-        continue;
-      }
-      const setOp = new SetNodePropOp();
-      setOp.inputs.graphPath.setValue(edit.graphPath);
-      setOp.inputs.propKey.setValue(key);
-      const prop = target.copy().ignoreLastValue();
-      setOp.inputs.value = prop;
-      macro.add(setOp);
-      macro.connectCB(
-        addOp,
-        setOp,
-        (src, dst) => {
-          dst.inputs.nodeId.setValue(
-            src.outputs.nodeId.getValue()
-          );
-        },
-        void 0
-      );
-    }
-    this.execTool(ctx, macro);
-  }
-  _performExposure(ctx, edit) {
-    const exposed = edit.def.exposed;
-    switch (edit.kind) {
-      case "exposeEntry":
-        exposed.push(edit.entry);
-        break;
       case "reorderEntry": {
-        if (edit.from < 0 || edit.from >= exposed.length) {
-          return;
-        }
-        const [entry] = exposed.splice(edit.from, 1);
-        const to = Math.min(Math.max(edit.to, 0), exposed.length);
-        exposed.splice(to, 0, entry);
+        const tool = new ReorderEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.from.setValue(edit.from);
+        tool.inputs.to.setValue(edit.to);
+        this.execTool(ctx, tool);
         break;
       }
       case "repointEntry": {
-        const entry = exposed[edit.index];
-        if (entry === void 0) {
-          return;
-        }
-        entry.nodeId = edit.nodeId;
-        entry.propKey = edit.propKey;
+        const tool = new RepointEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.index.setValue(edit.index);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.propKey.setValue(edit.propKey);
+        this.execTool(ctx, tool);
         break;
       }
-      case "removeEntry":
-        exposed.splice(edit.index, 1);
+      case "removeEntry": {
+        const tool = new RemoveEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.index.setValue(edit.index);
+        this.execTool(ctx, tool);
         break;
+      }
+      case "addBoundary": {
+        const tool = new AddGroupSocketOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.dir.setValue(edit.dir);
+        tool.inputs.key.setValue(edit.key);
+        tool.inputs.socketType.setValue(edit.socketType);
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "removeBoundary": {
+        const tool = new RemoveGroupSocketOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.dir.setValue(edit.dir);
+        tool.inputs.key.setValue(edit.key);
+        this.execTool(ctx, tool);
+        break;
+      }
     }
-    void this._graph(ctx, edit.graphPath)?.groupSaver?.(edit.ref, edit.def);
   }
   _graph(ctx, path) {
     let value;
@@ -52823,7 +53866,9 @@ var ToolOpDelegate = class {
 init_menu();
 init_dropbox();
 init_ui_base();
+init_ui_base_theme_lookup();
 init_toolprop();
+init_menu_ops();
 function exposedEntryState(graph, entry) {
   const node = graph.nodeIdMap.get(entry.nodeId);
   if (node === void 0) {
@@ -52849,7 +53894,7 @@ function forwardedRows(node, nodePath) {
   for (const entry of def.exposed) {
     const state = exposedEntryState(node.subgraph, entry);
     const target = node.subgraph.nodeIdMap.get(entry.nodeId);
-    const label = entry.label || Node3.decomposePropName(entry.propKey).name || target?.getUIName() || String(entry.nodeId);
+    const label = entryLabel(entry, target);
     const row = { entry, state, label };
     if (state === "ok" && target !== void 0) {
       if (entry.kind === "prop") {
@@ -52862,6 +53907,31 @@ function forwardedRows(node, nodePath) {
     rows.push(row);
   }
   return rows;
+}
+function forwardedSignature(node) {
+  const def = node.definition;
+  if (def === void 0) {
+    return "";
+  }
+  const parts = def.exposed.map(
+    (e) => `${e.kind}:${String(e.nodeId)}:${e.propKey}:${e.label ?? ""}:` + exposedEntryState(node.subgraph, e)
+  );
+  return `${defIds.id(def)}|${parts.join(",")}`;
+}
+var defIds = {
+  next: 1,
+  map: /* @__PURE__ */ new WeakMap(),
+  id(def) {
+    let id = this.map.get(def);
+    if (id === void 0) {
+      id = this.next++;
+      this.map.set(def, id);
+    }
+    return id;
+  }
+};
+function entryLabel(entry, target) {
+  return entry.label || Node3.decomposePropName(entry.propKey).name || target?.getUIName() || String(entry.nodeId);
 }
 function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
   for (const row of forwardedRows(node, nodePath)) {
@@ -52940,117 +54010,270 @@ function propEditRow(ctx, label, path, inherit_packflag, createUI) {
   }
   return row;
 }
+function dispatchEdit(opts, edit) {
+  const verdict = opts.delegate.check(opts.ctx, edit);
+  if (!verdict.ok) {
+    return verdict.reason;
+  }
+  opts.delegate.perform(opts.ctx, edit);
+  opts.onChanged?.();
+  return void 0;
+}
+function sideWord(dir) {
+  return dir === "in" ? "input" : "output";
+}
+function mark(el, cls) {
+  el._init();
+  el.classList.add(cls);
+  return el;
+}
+function socketTypeMenuTemplate(onPick) {
+  const items = [];
+  for (const [typeName, cls] of SocketClasses) {
+    const sdef = cls.socketDef();
+    items.push({
+      name: sdef.uiName || typeName,
+      id: typeName,
+      tooltip: `A ${sdef.uiName || typeName} socket, carrying ${sdef.type} values`,
+      callback: () => onPick(typeName)
+    });
+  }
+  return items;
+}
+function exposeMenuTemplate(ctx, def, onPick, kind) {
+  const items = [];
+  for (const node of def.subgraph.nodes) {
+    if (node instanceof GroupInputNode || node instanceof GroupOutputNode) {
+      continue;
+    }
+    const nodeName = node.getUIName();
+    const entries = [];
+    if (kind !== "prop") {
+      entries.push({
+        name: "whole node",
+        id: "nodeUI",
+        tooltip: `Forward every property of ${nodeName} as one block`,
+        callback: () => onPick({ kind: "nodeUI", nodeId: node.id })
+      });
+    }
+    if (kind !== "nodeUI") {
+      for (const key of nodePropKeys(node)) {
+        const { name: name2, type } = Node3.decomposePropName(key);
+        if (type === "out") {
+          continue;
+        }
+        const propKey = key;
+        entries.push({
+          name: name2,
+          id: propKey,
+          tooltip: `Forward ${nodeName}'s ${name2} to every instance`,
+          callback: () => onPick({ kind: "prop", nodeId: node.id, propKey })
+        });
+      }
+    }
+    if (entries.length === 0) {
+      continue;
+    }
+    const sub = createMenu(ctx, nodeName, entries);
+    sub.tooltip = `What ${nodeName} can forward`;
+    items.push(sub);
+  }
+  return items;
+}
+function freeKey(base, socks) {
+  if (!(base in socks)) {
+    return base;
+  }
+  for (let i = 2; ; i++) {
+    const key = `${base}_${i}`;
+    if (!(key in socks)) {
+      return key;
+    }
+  }
+}
+function buildAddSocketRow(con, dir, opts) {
+  const word = sideWord(dir);
+  const row = mark(con.col(), "nodeeditor-add-socket");
+  row.dataset.dir = dir;
+  let pending;
+  let nameRow;
+  let note;
+  const hideName = () => {
+    nameRow?.remove();
+    note?.remove();
+    nameRow = note = void 0;
+  };
+  const showName = () => {
+    hideName();
+    nameRow = mark(row.row(), "nodeeditor-add-socket-name");
+    nameRow.style.gap = "6px";
+    nameRow.style.alignItems = "center";
+    const socks = dir === "in" ? opts.def.inputs : opts.def.outputs;
+    const sdef = SocketClasses.get(pending)?.socketDef();
+    const base = (sdef?.uiName || sdef?.type || word).toLowerCase().replace(/\s+/g, "_");
+    const box = nameRow.textbox(void 0, freeKey(base, socks));
+    box.description = `The new ${word}'s name, as every instance will show it`;
+    const add = nameRow.button("Add", () => {
+      const reason = dispatchEdit(opts, {
+        kind: "addBoundary",
+        graphPath: opts.graphPath,
+        dir,
+        key: box.text.trim(),
+        socketType: pending
+      });
+      if (reason !== void 0) {
+        note.text = reason;
+        note.hidden = false;
+        add.description = reason;
+        return;
+      }
+      hideName();
+      pending = void 0;
+    });
+    add.description = `Add the ${sdef?.uiName ?? pending} ${word} named in the box`;
+    note = mark(row.label(""), "nodeeditor-refusal");
+    note.hidden = true;
+  };
+  const pick = row.menu(
+    `Add ${word}\u2026`,
+    socketTypeMenuTemplate((typeName) => {
+      pending = typeName;
+      showName();
+    })
+  );
+  pick.description = `Add an ${word} socket to the group; every instance gains it`;
+  return row;
+}
 function buildGroupDesigner(root, opts) {
   root.textContent = "";
-  const dispatch = (edit) => {
-    if (opts.delegate.check(opts.ctx, edit).ok) {
-      opts.delegate.perform(opts.ctx, edit);
-    }
-    buildGroupDesigner(root, opts);
-    opts.onChanged?.();
+  const con = UIBase.createElement("container-x");
+  con.ctx = opts.ctx;
+  con._init();
+  con.classList.add("nodeeditor-designer");
+  root.appendChild(con);
+  const rerender = () => buildGroupDesigner(root, opts);
+  const host = {
+    opts,
+    rerender,
+    dispatch: (edit) => {
+      const reason = dispatchEdit(opts, edit);
+      if (reason !== void 0) {
+        note.text = reason;
+        note.hidden = false;
+        return;
+      }
+      rerender();
+    },
+    socketFont: getStyleRecord(con, "nodeframe", "SocketText")?.SocketText
   };
-  const common = { graphPath: opts.graphPath, ref: opts.ref, def: opts.def };
-  const exposed = opts.def.exposed;
-  exposed.forEach((entry, index) => {
+  buildBoundaryList(con, "in", host);
+  buildBoundaryList(con, "out", host);
+  buildExposedList(con, host);
+  const note = mark(con.label(""), "nodeeditor-refusal");
+  note.hidden = true;
+  if (opts.errorColor !== void 0) {
+    note.style.color = opts.errorColor;
+  }
+}
+function heading(con, text2) {
+  const lbl = mark(con.label(text2), "nodeeditor-designer-heading");
+  lbl.font = "TitleText";
+  return lbl;
+}
+function buildBoundaryList(con, dir, { opts, dispatch, rerender, socketFont }) {
+  const word = sideWord(dir);
+  const socks = dir === "in" ? opts.def.inputs : opts.def.outputs;
+  const list5 = mark(con.col(), `nodeeditor-boundary-${dir}`);
+  heading(list5, dir === "in" ? "Inputs" : "Outputs");
+  for (const key of Object.keys(socks)) {
+    const row = mark(list5.row(), "nodeeditor-boundary-row");
+    row.dataset.socketKey = key;
+    row.style.gap = "6px";
+    row.style.alignItems = "center";
+    row.label(key);
+    const cls = socks[key].constructor;
+    const sdef = cls.socketDef();
+    const type = mark(row.label(sdef.uiName || sdef.typeName), "nodeeditor-boundary-type");
+    if (socketFont !== void 0) {
+      type.font = socketFont;
+    }
+    const remove2 = row.button(
+      "\u2715",
+      () => dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key })
+    );
+    remove2.description = `Remove the ${word} '${key}'; every instance loses the socket and its links`;
+  }
+  buildAddSocketRow(list5, dir, {
+    ...opts,
+    onChanged: () => {
+      opts.onChanged?.();
+      rerender();
+    }
+  });
+}
+function buildExposedList(con, { opts, dispatch }) {
+  const list5 = mark(con.col(), "nodeeditor-exposed");
+  heading(list5, "Exposed");
+  const common = { graphPath: opts.graphPath };
+  opts.def.exposed.forEach((entry, index) => {
     const state = exposedEntryState(opts.def.subgraph, entry);
     if (state === "unresolved") {
       return;
     }
     const target = opts.def.subgraph.nodeIdMap.get(entry.nodeId);
-    const row = document.createElement("div");
-    row.className = "nodeeditor-exposure-row";
+    const row = mark(list5.row(), "nodeeditor-exposure-row");
     row.dataset.exposureIndex = String(index);
     row.dataset.exposureState = state;
-    row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
-    const name2 = document.createElement("span");
-    name2.textContent = entry.label || Node3.decomposePropName(entry.propKey).name || target?.getUIName() || String(entry.nodeId);
-    row.appendChild(name2);
+    row.style.gap = "6px";
+    row.style.alignItems = "center";
+    const name2 = mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
     if (state === "missing") {
-      const flag = document.createElement("span");
-      flag.textContent = "missing";
-      flag.title = "This entry's target no longer exists; repoint or remove it";
-      flag.style.color = opts.errorColor ?? "#ff6666";
-      row.appendChild(flag);
-      const nodeIdIn2 = document.createElement("input");
-      nodeIdIn2.type = "text";
-      nodeIdIn2.title = "Node id to repoint this entry at";
-      nodeIdIn2.style.width = "48px";
-      row.appendChild(nodeIdIn2);
-      const keyIn2 = document.createElement("input");
-      keyIn2.type = "text";
-      keyIn2.title = "Property key to repoint this entry at";
-      keyIn2.style.width = "64px";
-      row.appendChild(keyIn2);
-      const repoint = document.createElement("button");
-      repoint.textContent = "Repoint";
-      repoint.title = "Point this entry at a different property";
-      const type = Node3.decomposePropName(entry.propKey).type;
-      repoint.addEventListener("click", () => {
-        dispatch({
-          kind: "repointEntry",
-          ...common,
-          index,
-          nodeId: _parseNodeId(nodeIdIn2.value),
-          propKey: Node3.composePropName(type, keyIn2.value.trim())
-        });
-      });
-      row.appendChild(repoint);
+      const flag = mark(row.label("missing"), "nodeeditor-exposure-flag");
+      flag.description = "This row's target no longer exists; point it somewhere else or remove it";
+      if (opts.errorColor !== void 0) {
+        flag.style.color = opts.errorColor;
+      }
+      const repoint = row.menu(
+        "Repoint\u2026",
+        exposeMenuTemplate(
+          opts.ctx,
+          opts.def,
+          (req) => dispatch({
+            kind: "repointEntry",
+            ...common,
+            index,
+            nodeId: req.nodeId,
+            propKey: req.propKey ?? ""
+          }),
+          entry.kind
+        )
+      );
+      repoint.description = "Point this row at a property that exists, keeping its place in the list";
     } else {
-      const up = document.createElement("button");
-      up.textContent = "\u2191";
-      up.title = "Move this entry up";
-      up.addEventListener(
-        "click",
+      const up = row.button(
+        "\u2191",
         () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 })
       );
-      row.appendChild(up);
-      const down = document.createElement("button");
-      down.textContent = "\u2193";
-      down.title = "Move this entry down";
-      down.addEventListener(
-        "click",
+      up.description = "Show this row one place earlier on every instance";
+      const down = row.button(
+        "\u2193",
         () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 })
       );
-      row.appendChild(down);
+      down.description = "Show this row one place later on every instance";
     }
-    const remove2 = document.createElement("button");
-    remove2.textContent = "\u2715";
-    remove2.title = "Stop exposing this entry";
-    remove2.addEventListener("click", () => dispatch({ kind: "removeEntry", ...common, index }));
-    row.appendChild(remove2);
-    root.appendChild(row);
+    const remove2 = row.button("\u2715", () => dispatch({ kind: "removeEntry", ...common, index }));
+    remove2.description = "Stop forwarding this row; instances keep their values";
   });
-  const addRow = document.createElement("div");
-  addRow.className = "nodeeditor-exposure-add";
-  addRow.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
-  const nodeIdIn = document.createElement("input");
-  nodeIdIn.type = "text";
-  nodeIdIn.title = "Node id of the property's owner";
-  nodeIdIn.style.width = "48px";
-  addRow.appendChild(nodeIdIn);
-  const keyIn = document.createElement("input");
-  keyIn.type = "text";
-  keyIn.title = "Property key to expose; leave empty to forward the node's whole UI";
-  keyIn.style.width = "64px";
-  addRow.appendChild(keyIn);
-  const add = document.createElement("button");
-  add.textContent = "Expose";
-  add.title = "Expose this property on every instance of the group";
-  add.addEventListener("click", () => {
-    const key = keyIn.value.trim();
-    const entry = new ExposedEntry(
-      key === "" ? "nodeUI" : "prop",
-      _parseNodeId(nodeIdIn.value),
-      key
-    );
-    dispatch({ kind: "exposeEntry", ...common, entry });
-  });
-  addRow.appendChild(add);
-  root.appendChild(addRow);
-}
-function _parseNodeId(text2) {
-  const raw = text2.trim();
-  return /^-?\d+$/.test(raw) ? Number(raw) : raw;
+  const expose = list5.menu(
+    "Expose\u2026",
+    exposeMenuTemplate(
+      opts.ctx,
+      opts.def,
+      (req) => dispatch({ kind: "exposeEntry", ...common, entry: req })
+    )
+  );
+  mark(expose, "nodeeditor-exposure-add");
+  expose.description = "Forward a property of an inner node so every instance shows it";
 }
 
 // scripts/editors/nodeeditor/nodeframe.ts
@@ -53206,6 +54429,8 @@ var NodeFrame = class extends Container3 {
   selected = false;
   /** Graph-space position while a drag is live; undefined at rest. */
   previewPos = void 0;
+  /** Whether the latest press landed on the title bar rather than a socket row. */
+  headerPressed = false;
   getScale = () => 1;
   onSelect;
   onMoveStart;
@@ -53243,6 +54468,8 @@ var NodeFrame = class extends Container3 {
   _propSig = "";
   /** The inline default editors, kept so a rebuild can tear each one down. */
   _editors = [];
+  /** What buildExtraUI added to the body, so rebuildExtraUI can take it out again. */
+  _extraNodes = [];
   static define() {
     return {
       tagname: "nodeframe-x",
@@ -53255,6 +54482,9 @@ var NodeFrame = class extends Container3 {
         "border-color": t.color,
         "border-radius": t.number,
         HeaderBG: t.color,
+        GroupAccent: t.color,
+        GroupHeaderBG: t.color,
+        ProxyHeaderBG: t.color,
         SelectOutline: t.color,
         DefaultText: t.font,
         SocketText: t.font,
@@ -53335,9 +54565,27 @@ var NodeFrame = class extends Container3 {
     this._header.style.font = font.genCSS();
     this._header.style.color = font.color;
     this._header.style.lineHeight = m.headerHeight + "px";
-    this._header.style.background = this.getDefault("HeaderBG");
+    this._header.style.background = this.getDefault(this._headerKey());
     this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
+    this.style.borderLeft = this.node instanceof GroupNode ? `3px solid ${this.getDefault("GroupAccent")}` : `1px solid ${this.getDefault("border-color")}`;
     this._styleRows();
+  }
+  /** The theme key of the header tint: groups and proxies carry their own. */
+  _headerKey() {
+    if (this.node instanceof GroupNode) {
+      return "GroupHeaderBG";
+    }
+    if (this.node instanceof GroupInputNode || this.node instanceof GroupOutputNode) {
+      return "ProxyHeaderBG";
+    }
+    return "HeaderBG";
+  }
+  /** The title-bar tooltip; a group's says how to enter it. */
+  _headerTitle() {
+    if (this.node instanceof GroupNode) {
+      return `An instance of the group '${this.node.ref}'; press its title twice to edit the definition every instance shares`;
+    }
+    return this.node.getDescription() || this.node.getUIName();
   }
   /** Watches the node's own path for header changes; prop rows own their values. */
   watchPath() {
@@ -53359,7 +54607,7 @@ var NodeFrame = class extends Container3 {
       return;
     }
     this._header.textContent = this.node.getUIName();
-    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.title = this._headerTitle();
   }
   _styleRows() {
     const font = this.getDefault("SocketText");
@@ -53467,6 +54715,7 @@ var NodeFrame = class extends Container3 {
       );
       row.parentWidget = this._body;
       row.packflag |= this.inherit_packflag;
+      row.dataset.propKey = key;
       root.appendChild(row);
     }
   }
@@ -53474,7 +54723,7 @@ var NodeFrame = class extends Container3 {
     const m = this.metrics();
     this._header = document.createElement("div");
     this._header.textContent = this.node.getUIName();
-    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.title = this._headerTitle();
     this._header.style.cssText = `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; padding: 0 6px; overflow: hidden; white-space: nowrap;`;
     this.shadow.appendChild(this._header);
     this.style.cursor = "move";
@@ -53495,7 +54744,27 @@ var NodeFrame = class extends Container3 {
     this._rebuildSocketRows();
     this._rebuildPropRows();
     this.node.createUI(this._body);
-    this.buildExtraUI?.(this, this._body);
+    this._runExtraUI();
+  }
+  _runExtraUI() {
+    const body = this._body;
+    if (body === void 0 || this.buildExtraUI === void 0) {
+      return;
+    }
+    const before = new Set(body.shadow.childNodes);
+    this.buildExtraUI(this, body);
+    this._extraNodes = [...body.shadow.childNodes].filter((n) => !before.has(n));
+  }
+  /**
+   * Tears down what buildExtraUI added and builds it again. The view calls it
+   * when a group instance's forwarded rows change under a frame that stays.
+   */
+  rebuildExtraUI() {
+    for (const n of this._extraNodes) {
+      n.remove();
+    }
+    this._extraNodes = [];
+    this._runExtraUI();
   }
   /** The terminal dot for a socket, for the view to restyle during a drag. */
   terminalDot(key, dir) {
@@ -53552,6 +54821,7 @@ var NodeFrame = class extends Container3 {
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
     row.packflag |= this.inherit_packflag;
+    row.dataset.propKey = socketPropName;
     this._editors.push(row);
     return row;
   }
@@ -53588,6 +54858,7 @@ var NodeFrame = class extends Container3 {
         return;
       }
       e.stopPropagation();
+      this.headerPressed = e.composedPath().includes(this._header);
       this.onSelect?.(this, e);
       if (this._onNodeWidget(e)) {
         return;
@@ -54149,6 +55420,14 @@ function addNodeMenuTemplate(onPick, items = addMenuItems()) {
     callback: () => onPick(item.typeName)
   }));
 }
+function addGroupMenuTemplate(refs, onPick) {
+  return refs.map((ref) => ({
+    name: ref,
+    id: `group:${ref}`,
+    tooltip: `Add an instance of the group '${ref}'`,
+    callback: () => onPick(ref)
+  }));
+}
 function buildAddNodeMenu(ctx, onPick, items = addMenuItems()) {
   return createMenu(ctx, "Add Node", addNodeMenuTemplate(onPick, items));
 }
@@ -54370,7 +55649,7 @@ var PackNode = class {
     return "" + this._id;
   }
 };
-function copyGraph2(nodes) {
+function copyGraph3(nodes) {
   const ret = [];
   const idmap = {};
   for (const n of nodes) {
@@ -54451,7 +55730,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     speed = args.speed ?? 1;
   }
   const orignodes = nodes;
-  nodes = copyGraph2(nodes);
+  nodes = copyGraph3(nodes);
   let decay = 1;
   let decayi = 0;
   const min = new Vector2().addScalar(1e17);
@@ -54623,7 +55902,7 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
     disableArea = false;
     const add = Math.random() * (besterr ?? 0) * Math.exp(-i * 0.1);
     if (besterr === void 0 || err < besterr + add) {
-      best = copyGraph2(nodes);
+      best = copyGraph3(nodes);
       besterr = err;
     }
     i++;
@@ -54674,20 +55953,60 @@ function graphPack(nodes, margin_or_args = 15, steps = 10, updateCb) {
 
 // scripts/editors/nodeeditor/nodegraphview.ts
 init_ui_base();
+init_simple_events();
 init_menu_ops();
 init_theme_schema();
+var DOUBLE_PRESS_MS = 350;
+var LEVEL_PILL_TEXT = {
+  definition: "definition \xB7 edits reach every instance",
+  instance: "instance \xB7 values only"
+};
+function definitionSignature(def) {
+  const parts = [];
+  for (const n of def.subgraph.nodes) {
+    parts.push(n.id, n.def.typeName, n.label ?? "");
+    parts.push(Object.keys(n.inputs).join(","), Object.keys(n.outputs).join(","));
+    for (const key in n.inputs) {
+      for (const e of n.inputs[key].edges) {
+        parts.push(`${String(e.owningNode?.id)}:${e.name}>${String(n.id)}:${key}`);
+      }
+    }
+  }
+  for (const e of def.exposed) {
+    parts.push(e.kind, e.nodeId, e.propKey, e.label);
+  }
+  return JSON.stringify(parts);
+}
 var LINK_PICK_PX = 18;
+function propRowKey(e) {
+  for (const el of e.composedPath()) {
+    if (el instanceof HTMLElement && el.classList.contains("nodeeditor-prop-row")) {
+      const key = el.dataset.propKey;
+      return key === void 0 ? void 0 : key;
+    }
+  }
+  return void 0;
+}
+function isProxy2(node) {
+  return node instanceof GroupInputNode || node instanceof GroupOutputNode;
+}
 function linkKey(ref) {
   return JSON.stringify([ref.srcNode, ref.srcSocket, ref.dstNode, ref.dstSocket]);
 }
 var NodeGraphView = class extends Container3 {
   delegate = new ToolOpDelegate();
-  /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
-  onOpenDefinition;
   graphPath = "";
   rootGraph = void 0;
-  /** GroupNode ids from the root graph down to the graph on screen. */
+  /** The steps from the root graph down to the graph on screen. */
   descent = [];
+  /**
+   * The save-and-resolve pass in flight, if any: the definition being edited is
+   * saved through the root graph's groupSaver and every instance reconciled. Awaited
+   * by a caller that needs the instances current.
+   */
+  pendingResolve = void 0;
+  /** Why the last dispatched edit was refused; a host shows it beside the control that asked. */
+  lastRefusal = void 0;
   selection = /* @__PURE__ */ new Set();
   /** The selected links, by {@link linkKey}; pruned against the live graph. */
   linkSelection = /* @__PURE__ */ new Set();
@@ -54702,6 +56021,14 @@ var NodeGraphView = class extends Container3 {
   /** A selection change a press on an already-selected node put off, in case
    *  the press turns into a drag; a click without a drag applies it. */
   _pendingSelect = void 0;
+  /** The last title-bar click, for the double press that enters a group. */
+  _lastPress = void 0;
+  /** The definition signature the current level was last reconciled at. */
+  _defSig = "";
+  /** Instances a root-level resolve was already attempted for, so a failed load does not retry per notification. */
+  _resolveTried = /* @__PURE__ */ new WeakSet();
+  /** The forwarded-UI signature each group frame was built with. */
+  _forwardedSigs = /* @__PURE__ */ new WeakMap();
   static define() {
     return {
       tagname: "nodegraphview-x",
@@ -54711,7 +56038,12 @@ var NodeGraphView = class extends Container3 {
         BoxSelectBorder: t.color,
         BoxSelectBG: t.color,
         // Read by the editor shell for the group designer's missing-entry flag.
-        ErrorColor: t.color
+        ErrorColor: t.color,
+        CrumbBG: t.color,
+        CrumbFont: t.font,
+        CrumbActiveFont: t.font,
+        LevelDefinitionColor: t.color,
+        LevelInstanceColor: t.color
       }
     };
   }
@@ -54785,7 +56117,8 @@ var NodeGraphView = class extends Container3 {
     this.style.width = "100%";
     this.style.height = "100%";
     this._crumbs = document.createElement("div");
-    this._crumbs.style.cssText = "display: flex; gap: 4px; padding: 2px; align-items: center;";
+    this._crumbs.className = "nodeeditor-crumbs";
+    this._crumbs.style.cssText = "display: flex; gap: 2px; padding: 2px 6px; align-items: center; flex: 0 0 auto;";
     this.shadow.appendChild(this._crumbs);
     this.panzoom = UIBase.createElement("panzoom-x");
     this.panzoom.parentWidget = this;
@@ -54805,6 +56138,7 @@ var NodeGraphView = class extends Container3 {
       const v = this._pendingView;
       this._pendingView = void 0;
       this.descent = [...v.descent];
+      this._defSig = this._levelSignature();
       this.panzoom.setTransform(v.zoom, v.pan);
     }
     this._rebuildCrumbs();
@@ -54815,15 +56149,15 @@ var NodeGraphView = class extends Container3 {
   setCSS() {
     super.setCSS();
     this.style.backgroundColor = this.getDefault("background-color");
+    if (this._crumbs !== void 0) {
+      this._rebuildCrumbs();
+    }
   }
   /** Points the view at a graph; graphPath is the datapath edits dispatch against. */
   setGraph(graph, graphPath) {
     this.rootGraph = graph;
     this.graphPath = graphPath;
-    this.descent = [];
-    this.selection.clear();
-    this.linkSelection.clear();
-    this._refresh();
+    this._setDescent([]);
   }
   /**
    * Re-points the view at a fresh parse of the graph already on screen — same file, new object —
@@ -54834,70 +56168,275 @@ var NodeGraphView = class extends Container3 {
     this.rootGraph = graph;
     this._refresh();
   }
-  /** The graph on screen: the root, or the descent tail's instance subgraph. */
-  get currentGraph() {
+  /**
+   * Resolves the descent step by step. Stops short where an entry names no group
+   * node in its graph, or a definition entry whose instance has not resolved.
+   */
+  _walk(descent = this.descent) {
+    const steps = [];
     let g = this.rootGraph;
-    for (const nid of this.descent) {
-      const node = g?.nodeIdMap.get(nid);
+    for (const entry of descent) {
+      const node = g?.nodeIdMap.get(entry.nodeId);
       if (!(node instanceof GroupNode)) {
-        return void 0;
+        return { steps, complete: false };
       }
-      g = node.subgraph;
+      const into = entry.into === "definition" ? node.definition?.subgraph : node.subgraph;
+      if (into === void 0) {
+        return { steps, complete: false };
+      }
+      steps.push({ entry, node, graph: into });
+      g = into;
     }
-    return g;
+    return { steps, complete: true };
   }
-  /** The datapath of the graph on screen, descending .nodes[id].group per entry. */
+  /** The graph on screen; undefined while a descent entry no longer resolves. */
+  get currentGraph() {
+    const walk = this._walk();
+    if (!walk.complete) {
+      return void 0;
+    }
+    const tail = walk.steps[walk.steps.length - 1];
+    return tail !== void 0 ? tail.graph : this.rootGraph;
+  }
+  /** The datapath of the graph on screen, descending .nodes[id].group or .nodes[id].definition per entry. */
   get currentGraphPath() {
     let path = this.graphPath;
-    for (const nid of this.descent) {
-      path += `.nodes[${JSON.stringify(nid)}].group`;
+    for (const entry of this.descent) {
+      path += `.nodes[${JSON.stringify(entry.nodeId)}].${entry.into === "definition" ? "definition" : "group"}`;
     }
     return path;
   }
-  /** Descends into a group instance's subgraph (read-only for structural edits). */
-  descendInto(node) {
-    if (!(node instanceof GroupNode)) {
-      return;
+  /** What the view is showing. A descent that no longer resolves reads as the root until it is repaired. */
+  currentLevel() {
+    const walk = this._walk();
+    const tail = walk.steps[walk.steps.length - 1];
+    if (!walk.complete || tail === void 0) {
+      return { kind: "root" };
     }
-    this.descent.push(node.id);
-    this.selection.clear();
-    this.linkSelection.clear();
-    this._refresh();
+    const node = tail.node;
+    if (tail.entry.into === "definition") {
+      return { kind: "definition", node, ref: node.ref, def: node.definition };
+    }
+    return { kind: "instance", node, ref: node.ref, def: node.definition };
+  }
+  /**
+   * Enters a group's definition, where structural edits reach every instance. A
+   * definition level being left is saved and its instances reconciled first; the
+   * returned promise is that pass. From the instance level of the same node the
+   * instance entry is replaced rather than nested. Refused, resolving at once, for a
+   * node that is no group, is not on screen, or has no resolved definition.
+   */
+  enterDefinition(node) {
+    if (!(node instanceof GroupNode) || node.definition === void 0) {
+      return this._settled();
+    }
+    const level = this.currentLevel();
+    const replacing = level.kind === "instance" && level.node === node;
+    if (!replacing && this.currentGraph?.nodeIdMap.get(node.id) !== node) {
+      return this._settled();
+    }
+    const pass = this._leavePass();
+    const next = replacing ? this.descent.slice(0, -1) : [...this.descent];
+    next.push({ nodeId: node.id, into: "definition" });
+    this._setDescent(next);
+    return pass;
+  }
+  /** Shows a group instance's own subgraph, for the values it overrides; structural edits are refused there. */
+  enterInstance(node) {
+    if (!(node instanceof GroupNode) || this.currentGraph?.nodeIdMap.get(node.id) !== node) {
+      return this._settled();
+    }
+    const pass = this._leavePass();
+    this._setDescent([...this.descent, { nodeId: node.id, into: "instance" }]);
+    return pass;
+  }
+  /** Leaves the level on screen for the one above it; a definition is saved and propagated on the way out. */
+  exitLevel() {
+    return this.popTo(this.descent.length - 1);
   }
   /** Returns to depth entries of descent; popTo(0) shows the root graph. */
   popTo(depth) {
-    this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
+    depth = Math.min(Math.max(depth, 0), this.descent.length);
+    if (depth === this.descent.length) {
+      return this._settled();
+    }
+    const pass = this._leavePass();
+    this._setDescent(this.descent.slice(0, depth));
+    return pass;
+  }
+  /**
+   * Tab's behaviour: with exactly one group selected, enters its definition; with
+   * no group selected, leaves the current level. Any other selection does nothing.
+   */
+  enterOrExit() {
+    const graph = this.currentGraph;
+    const groups = [];
+    for (const nid of this.selection) {
+      const node = graph?.nodeIdMap.get(nid);
+      if (node instanceof GroupNode) {
+        groups.push(node);
+      }
+    }
+    if (groups.length === 1) {
+      return this.enterDefinition(groups[0]);
+    }
+    if (groups.length === 0) {
+      return this.exitLevel();
+    }
+    return this._settled();
+  }
+  /** The pass in flight, or an already-settled promise. */
+  _settled() {
+    return this.pendingResolve ?? Promise.resolve();
+  }
+  /** The pass a level being left owes: a definition saves and propagates, anything else owes nothing. */
+  _leavePass() {
+    const level = this.currentLevel();
+    return level.kind === "definition" ? this._runPass(level) : this._settled();
+  }
+  /**
+   * Saves def through the root graph's groupSaver (when the level is a definition),
+   * reconciles every instance through resolveGroups, then repaints and notifies the
+   * root path so another view of the same graph redraws too. Passes queue behind one
+   * another, so two never interleave; a failure is reported, not thrown.
+   */
+  _runPass(def) {
+    const root = this.rootGraph;
+    const ctx = this.ctx;
+    if (root === void 0 || ctx === void 0) {
+      return this._settled();
+    }
+    const run = async () => {
+      try {
+        if (def !== void 0 && root.groupSaver !== void 0) {
+          await root.groupSaver(def.ref, def.def);
+        }
+        await root.resolveGroups();
+      } catch (err) {
+        console.warn(err instanceof Error ? err.message : String(err));
+      }
+      if (this.rootGraph === root) {
+        this.syncGraph();
+      }
+      ctx.api.notifyChange(this.graphPath);
+    };
+    const pass = this._settled().then(run);
+    this.pendingResolve = pass;
+    const clear = () => {
+      if (this.pendingResolve === pass) {
+        this.pendingResolve = void 0;
+      }
+    };
+    void pass.then(clear, clear);
+    return pass;
+  }
+  /** Replaces the descent, drops the selection, repaints and announces the level. */
+  _setDescent(descent) {
+    this.descent = descent;
     this.selection.clear();
     this.linkSelection.clear();
+    this._lastPress = void 0;
+    this._defSig = this._levelSignature();
+    for (const frame of this.frames.values()) {
+      frame.remove();
+    }
+    this.frames.clear();
     this._refresh();
+    this.dispatchEvent(new CustomEvent("levelchange", { detail: this.currentLevel() }));
+  }
+  /** The definition signature of the level on screen; empty off a definition. */
+  _levelSignature() {
+    const level = this.currentLevel();
+    return level.kind === "definition" ? definitionSignature(level.def) : "";
+  }
+  /**
+   * Drops the descent entries that no longer resolve: undo and delete are global,
+   * so the instance a level rests on can vanish while the author is inside it.
+   */
+  _repairDescent() {
+    const walk = this._walk();
+    if (walk.complete) {
+      return false;
+    }
+    this._setDescent(this.descent.slice(0, walk.steps.length));
+    return true;
+  }
+  /**
+   * The watch's reaction to a graph op, or its undo or redo. Inside a definition, a
+   * change to its signature starts the save-and-resolve pass; at the root, a newly
+   * added instance with a ref and no definition gets one resolve attempt.
+   */
+  _onGraphNotified() {
+    if (this._repairDescent()) {
+      return;
+    }
+    this._checkLevel();
+    this.syncGraph();
+  }
+  _checkLevel() {
+    const level = this.currentLevel();
+    if (level.kind === "definition") {
+      const sig = definitionSignature(level.def);
+      if (sig !== this._defSig) {
+        this._defSig = sig;
+        void this._runPass(level);
+      }
+    } else if (level.kind === "root") {
+      this._resolveNewInstances();
+    }
+  }
+  _resolveNewInstances() {
+    const root = this.rootGraph;
+    if (root === void 0) {
+      return;
+    }
+    let found = false;
+    for (const node of root.nodes) {
+      if (node instanceof GroupNode && node.ref !== "" && node.definition === void 0 && !this._resolveTried.has(node)) {
+        this._resolveTried.add(node);
+        found = true;
+      }
+    }
+    if (found) {
+      void this._runPass();
+    }
   }
   getViewState() {
+    const descent = this.descent.map((e) => ({ ...e }));
     if (this.panzoom !== void 0) {
       const t2 = this.panzoom.transform;
-      return { pan: [t2.pan[0], t2.pan[1]], zoom: t2.scale, descent: [...this.descent] };
+      return { pan: [t2.pan[0], t2.pan[1]], zoom: t2.scale, descent };
     }
-    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent: [...this.descent] };
+    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent };
   }
   /** Restores a persisted view state; safe to call before init runs. */
   setViewState(state) {
+    const descent = state.descent.map((e) => ({ ...e }));
     if (this.panzoom !== void 0) {
-      this.descent = [...state.descent];
       this.panzoom.setTransform(state.zoom, state.pan);
-      this._refresh();
+      this._setDescent(descent);
     } else {
       this._pendingView = {
         pan: [state.pan[0], state.pan[1]],
         zoom: state.zoom,
-        descent: [...state.descent]
+        descent
       };
-      this.descent = [...state.descent];
+      this.descent = descent;
     }
   }
-  /** Rebuilds frames when a graph op — or its undo/redo — notifies the graph's datapath. */
+  /** Reacts to a graph op — or its undo/redo — notifying the graph on screen. */
   watchPath() {
     super.watchPath();
     if (this.graphPath !== "") {
-      this.addPathWatch(this.currentGraphPath, { onChange: () => this.syncGraph() });
+      this.addPathWatch(this.currentGraphPath, { onChange: () => this._onGraphNotified() });
+    }
+  }
+  /** A view leaving the document while inside a definition saves it on the way out. */
+  on_remove() {
+    super.on_remove();
+    const level = this.currentLevel();
+    if (level.kind === "definition") {
+      void this._runPass(level);
     }
   }
   _refresh() {
@@ -54908,46 +56447,65 @@ var NodeGraphView = class extends Container3 {
     this._rebuildCrumbs();
     this.syncGraph();
   }
+  /**
+   * The crumb trail — Graph ▸ group ▸ group, each a text button back to that
+   * level — followed by a pill naming the level, and the level band on the canvas.
+   */
   _rebuildCrumbs() {
-    this._crumbs.textContent = "";
-    const rootBtn = document.createElement("button");
-    rootBtn.textContent = "Root";
-    rootBtn.title = "Show the root graph";
-    rootBtn.addEventListener("click", () => this.popTo(0));
-    this._crumbs.appendChild(rootBtn);
-    let g = this.rootGraph;
-    for (let i = 0; i < this.descent.length; i++) {
-      const nid = this.descent[i];
-      const node = g?.nodeIdMap.get(nid);
+    const row = this._crumbs;
+    row.textContent = "";
+    row.style.background = this.getDefault("CrumbBG");
+    const font = this.getDefault("CrumbFont");
+    const activeFont = this.getDefault("CrumbActiveFont");
+    const walk = this._walk();
+    const names = ["Graph", ...walk.steps.map((s) => s.node.getUIName())];
+    names.forEach((name2, depth) => {
+      if (depth > 0) {
+        const sep = document.createElement("span");
+        sep.textContent = "\u25B8";
+        sep.style.cssText = `font: ${font.genCSS()}; color: ${font.color}; opacity: 0.5; padding: 0 2px;`;
+        row.appendChild(sep);
+      }
+      const last = depth === names.length - 1;
       const btn = document.createElement("button");
-      btn.textContent = node?.getUIName() ?? String(nid);
-      btn.title = "Show this group instance (read-only)";
-      const depth = i + 1;
-      btn.addEventListener("click", () => this.popTo(depth));
-      this._crumbs.appendChild(btn);
-      g = node instanceof GroupNode ? node.subgraph : void 0;
+      btn.className = "nodeeditor-crumb";
+      btn.textContent = name2;
+      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name2}`;
+      btn.style.cssText = "background: none; border: none; padding: 0 2px; cursor: pointer;";
+      btn.style.font = (last ? activeFont : font).genCSS();
+      btn.style.color = (last ? activeFont : font).color;
+      btn.addEventListener("click", () => void this.popTo(depth));
+      row.appendChild(btn);
+    });
+    const level = this.currentLevel();
+    if (level.kind === "root") {
+      this.panzoom.style.outline = "";
+      return;
     }
-    if (this.descent.length > 0) {
-      const note = document.createElement("span");
-      note.textContent = "read-only";
-      note.title = "A group instance takes value edits only; structural edits belong to the group's definition";
-      note.style.cssText = "font-size: 11px; opacity: 0.7;";
-      this._crumbs.appendChild(note);
-      const tailId = this.descent[this.descent.length - 1];
-      let tailGraph = this.rootGraph;
-      for (let i = 0; i + 1 < this.descent.length; i++) {
-        const n = tailGraph?.nodeIdMap.get(this.descent[i]);
-        tailGraph = n instanceof GroupNode ? n.subgraph : void 0;
-      }
-      const tail = tailGraph?.nodeIdMap.get(tailId);
-      if (tail instanceof GroupNode && this.onOpenDefinition !== void 0) {
-        const open = document.createElement("button");
-        open.textContent = "Open Definition";
-        open.title = "Edit this group's definition";
-        open.addEventListener("click", () => this.onOpenDefinition?.(tail));
-        this._crumbs.appendChild(open);
-      }
+    const color = this.getDefault(
+      level.kind === "definition" ? "LevelDefinitionColor" : "LevelInstanceColor"
+    );
+    const pill = document.createElement("span");
+    pill.className = "nodeeditor-level-pill";
+    pill.textContent = LEVEL_PILL_TEXT[level.kind];
+    pill.style.cssText = `margin-left: 8px; padding: 0 8px; border-radius: 9px; border: 1px solid ${color}; font: ${font.genCSS()}; color: ${color}; white-space: nowrap;`;
+    row.appendChild(pill);
+    if (level.kind === "definition") {
+      pill.title = "Changes here are saved to the group's definition and reach every instance of it";
+    } else if (level.def !== void 0) {
+      pill.title = "This instance's own values; its structure belongs to the definition";
+      const edit = document.createElement("button");
+      edit.className = "nodeeditor-crumb";
+      edit.textContent = "edit the definition";
+      edit.title = "Open this group's definition, where its structure is edited";
+      edit.style.cssText = `background: none; border: none; padding: 0 6px; cursor: pointer; font: ${font.genCSS()}; color: ${color}; text-decoration: underline;`;
+      edit.addEventListener("click", () => void this.enterDefinition(level.node));
+      row.appendChild(edit);
+    } else {
+      pill.title = "The definition is not loaded at this depth; edit it from the graph that holds this group";
     }
+    this.panzoom.style.outline = `2px solid ${color}`;
+    this.panzoom.style.outlineOffset = "-2px";
   }
   /**
    * Reconciles frames against the graph on screen; call after any graph change. A frame is kept
@@ -54967,10 +56525,18 @@ var NodeGraphView = class extends Container3 {
       this._redrawLinks();
       return;
     }
+    const level = this.currentLevel();
     for (const node of graph.nodes) {
       const existing = this.frames.get(node.id);
       if (existing !== void 0) {
         existing.setNode(node);
+        if (node instanceof GroupNode) {
+          const sig = forwardedSignature(node);
+          if (this._forwardedSigs.get(existing) !== sig) {
+            this._forwardedSigs.set(existing, sig);
+            existing.rebuildExtraUI();
+          }
+        }
         continue;
       }
       const frame = UIBase.createElement("nodeframe-x");
@@ -54989,7 +56555,12 @@ var NodeGraphView = class extends Container3 {
       frame.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this._openNodeMenu(frame, this._localPoint(e));
+        const key = propRowKey(e);
+        if (key !== void 0 && this.currentLevel().kind === "definition") {
+          this.openPropMenu(frame, key, this._localPoint(e));
+        } else {
+          this._openNodeMenu(frame, this._localPoint(e));
+        }
       });
       const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
       if (node instanceof GroupNode) {
@@ -54999,8 +56570,19 @@ var NodeGraphView = class extends Container3 {
           body.shadow.appendChild(root);
           buildForwardedUI(root, this.ctx, f2.node, nodePath, body.inherit_packflag);
         };
+        this._forwardedSigs.set(frame, forwardedSignature(node));
       } else {
         frame.nodePath = nodePath;
+      }
+      if (level.kind === "definition" && isProxy2(node)) {
+        const dir = node instanceof GroupInputNode ? "in" : "out";
+        frame.buildExtraUI = (_f, body) => buildAddSocketRow(body, dir, {
+          ctx: this.graphContext,
+          def: level.def,
+          graphPath: this.currentGraphPath,
+          delegate: this.delegate,
+          onChanged: () => this.syncGraph()
+        });
       }
       frame.parentWidget = this.panzoom;
       this.panzoom.appendChild(frame);
@@ -55041,11 +56623,22 @@ var NodeGraphView = class extends Container3 {
     this.selection.add(id);
     this._applySelection();
   }
-  /** Applies the selection change _selectFrame deferred, once a press on an
-   *  already-selected node has released without moving. */
+  /**
+   * A press that released without moving. Two on one frame's title bar within
+   * DOUBLE_PRESS_MS enter the group; otherwise it applies the selection change
+   * _selectFrame deferred for a press on an already-selected node.
+   */
   _clickFrame(frame) {
     const pending = this._pendingSelect;
     this._pendingSelect = void 0;
+    const now = Date.now();
+    const last = this._lastPress;
+    this._lastPress = frame.headerPressed ? { id: frame.node.id, at: now } : void 0;
+    if (last !== void 0 && last.id === frame.node.id && now - last.at <= DOUBLE_PRESS_MS && frame.headerPressed && frame.node instanceof GroupNode) {
+      this._lastPress = void 0;
+      void this.enterDefinition(frame.node);
+      return;
+    }
     if (pending?.id !== frame.node.id) {
       return;
     }
@@ -55120,12 +56713,22 @@ var NodeGraphView = class extends Container3 {
     }
     this.syncGraph();
   }
-  /** Dispatches an edit through the delegate, check first. */
+  /**
+   * Dispatches an edit through the delegate, check first, and answers whether it
+   * was performed. The level check runs afterwards as well as from the watch, so a
+   * definition edit that lands synchronously starts its pass without waiting a frame.
+   */
   _dispatch(edit) {
     this.checkGraphContext();
-    if (this.delegate.check(this.graphContext, edit).ok) {
-      this.delegate.perform(this.graphContext, edit);
+    const verdict = this.delegate.check(this.graphContext, edit);
+    if (!verdict.ok) {
+      this.lastRefusal = verdict.reason;
+      return false;
     }
+    this.lastRefusal = void 0;
+    this.delegate.perform(this.graphContext, edit);
+    this._checkLevel();
+    return true;
   }
   /** The pan/zoom-widget-local point of a mouse event. */
   _localPoint(e) {
@@ -55156,6 +56759,89 @@ var NodeGraphView = class extends Container3 {
       y: at[1]
     });
     this.syncGraph();
+  }
+  /**
+   * Adds an instance of an existing definition, named by ref, at a graph-space
+   * point defaulting to the view's center. The root-level watch resolves it.
+   */
+  addGroupAt(ref, at) {
+    if (at === void 0) {
+      const r = this.panzoom.getBoundingClientRect();
+      at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
+    }
+    this._dispatch({
+      kind: "addNode",
+      graphPath: this.currentGraphPath,
+      nodeType: "GroupNode",
+      ref,
+      x: at[0],
+      y: at[1]
+    });
+    this.syncGraph();
+  }
+  /**
+   * Moves the selected nodes into a new group and selects the instance left in their
+   * place. The ref comes from the root graph's newGroupRef seam, or from a host
+   * delegate that allocates its own; without either the edit is refused.
+   */
+  groupSelected() {
+    const ids = [...this.selection];
+    if (ids.length === 0) {
+      this.lastRefusal = "nothing is selected";
+      return false;
+    }
+    const done = this._dispatch({
+      kind: "createGroup",
+      graphPath: this.currentGraphPath,
+      storePath: this.graphPath,
+      nodeIds: ids
+    });
+    this.syncGraph();
+    return done;
+  }
+  /** Replaces one group instance with a copy of its contents. */
+  ungroupNode(nodeId) {
+    const done = this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId });
+    this.syncGraph();
+    return done;
+  }
+  /** Ungroups every selected group instance, as one undo step. */
+  async ungroupSelected() {
+    const graph = this.currentGraph;
+    const groups = [...this.selection].filter(
+      (nid) => graph?.nodeIdMap.get(nid) instanceof GroupNode
+    );
+    if (groups.length === 0) {
+      return;
+    }
+    if (groups.length === 1) {
+      this.ungroupNode(groups[0]);
+      return;
+    }
+    await this.singleUndoStep(
+      () => {
+        for (const nid of groups) {
+          this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
+        }
+        this.syncGraph();
+      },
+      "Ungroup",
+      "Ungroup selected groups"
+    );
+  }
+  /**
+   * The view's key bindings, declared once so an Area shell and a host embedding
+   * the bare view install the same list: Delete, Shift+D duplicate, Ctrl+G group,
+   * Ctrl+Alt+G ungroup, Tab to enter the selected group or leave the level.
+   */
+  hotkeys() {
+    return [
+      new HotKey("Delete", [], () => void this.deleteSelected(), "Delete"),
+      new HotKey("D", ["shift"], () => void this.duplicateSelected(), "Duplicate"),
+      new HotKey("G", ["ctrl"], () => void this.groupSelected(), "Create Group"),
+      new HotKey("G", ["ctrl", "alt"], () => void this.ungroupSelected(), "Ungroup"),
+      new HotKey("Tab", [], () => void this.enterOrExit(), "Edit Group")
+    ];
   }
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
   openAddMenu(local) {
@@ -55309,10 +56995,69 @@ var NodeGraphView = class extends Container3 {
     this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
     this.syncGraph();
   }
-  /** The context menu for one node: delete, duplicate, replace. */
+  /**
+   * The context menu for one node: delete, duplicate, replace; a group adds Edit
+   * Group, Show Instance and Ungroup, and any node adds Group Selected while
+   * something is selected.
+   */
+  /**
+   * The menu a prop row opens inside a definition: "Expose on group" (id
+   * "expose") forwards that property to every instance. Returned so a caller
+   * can drive it without a screen.
+   */
+  openPropMenu(frame, key, local) {
+    const nid = frame.node.id;
+    const { name: name2 } = Node3.decomposePropName(key);
+    const menu = createMenu(this.ctx, "", [
+      {
+        name: "Expose on group",
+        id: "expose",
+        tooltip: `Forward ${name2} so every instance of this group shows it`,
+        callback: () => void this.exposeProp(nid, key)
+      }
+    ]);
+    this._startMenu(menu, local);
+    return menu;
+  }
+  /** Forwards one property of a node in the definition on screen; false when refused. */
+  exposeProp(nodeId, propKey) {
+    return this._dispatch({
+      kind: "exposeEntry",
+      graphPath: this.currentGraphPath,
+      entry: { kind: "prop", nodeId, propKey }
+    });
+  }
   _openNodeMenu(frame, local) {
     const nid = frame.node.id;
-    const menu = createMenu(this.ctx, "", [
+    const node = frame.node;
+    const template = [];
+    if (node instanceof GroupNode) {
+      template.push(
+        {
+          name: "Edit Group",
+          tooltip: node.definition !== void 0 ? "Open this group's definition; edits there reach every instance" : "This group's definition has not loaded, so it cannot be edited here",
+          callback: () => void this.enterDefinition(node)
+        },
+        {
+          name: "Show Instance",
+          tooltip: "Look inside this one instance; it takes value edits only",
+          callback: () => void this.enterInstance(node)
+        },
+        {
+          name: "Ungroup",
+          tooltip: "Replace this group with a copy of what it contains",
+          callback: () => void this.ungroupNode(nid)
+        }
+      );
+    }
+    if (this.selection.size > 0) {
+      template.push({
+        name: "Group Selected",
+        tooltip: "Move the selected nodes into a new group",
+        callback: () => void this.groupSelected()
+      });
+    }
+    template.push(
       {
         name: "Delete",
         tooltip: "Delete this node",
@@ -55346,7 +57091,8 @@ var NodeGraphView = class extends Container3 {
           this._startMenu(picker, local, true);
         }
       }
-    ]);
+    );
+    const menu = createMenu(this.ctx, "", template);
     this._startMenu(menu, local);
   }
   _redrawLinks() {
@@ -60229,6 +61975,7 @@ UIBase.internalRegister(ScreenArea2);
 init_struct();
 init_ui_base();
 init_vectormath();
+init_simple_events();
 var NodeEditor = class extends Area {
   static STRUCT;
   container;
@@ -60240,12 +61987,21 @@ var NodeEditor = class extends Area {
   zoom = 1;
   descent = [];
   _designerRoot = void 0;
-  _designing = void 0;
-  /** The root graph's datapath, from setGraph; exposure edits dispatch here. */
-  _rootPath = "";
   constructor() {
     super();
     this.view = UIBase.createElement("nodegraphview-x");
+    this.keymap = new KeyMap(this.view.hotkeys());
+    this.view.addEventListener("levelchange", () => {
+      this.clearPathWatches();
+      this._renderDesigner();
+    });
+  }
+  /** On a definition level the designer follows the definition's path, so an exposure edit re-renders it. */
+  watchPath() {
+    super.watchPath();
+    if (this.view.currentLevel().kind === "definition") {
+      this.addPathWatch(this.view.currentGraphPath, { onChange: () => this._renderDesigner() });
+    }
   }
   static define() {
     return {
@@ -60287,35 +62043,23 @@ var NodeEditor = class extends Area {
   }
   /** Forwards to the view; graphPath is the datapath the view's edits dispatch against. */
   setGraph(graph, graphPath) {
-    this._rootPath = graphPath;
     this.view.setGraph(graph, graphPath);
   }
-  /**
-   * Points the view at a group definition's subgraph for structural editing
-   * and shows the definition's exposure list in the Group Designer panel.
-   * defPath must resolve to def.subgraph in the host's data API; exposure
-   * edits dispatch against the root graph recorded by setGraph, whose
-   * groupSaver persists the definition.
-   */
-  editDefinition(ref, def, defPath) {
-    this._designing = { ref, def };
-    this.view.setGraph(def.subgraph, defPath);
-    this._renderDesigner();
-  }
+  /** The designer follows the view's level: it edits the definition on screen, and shows a hint elsewhere. */
   _renderDesigner() {
     const root = this._designerRoot;
     if (root === void 0) {
       return;
     }
-    if (this._designing === void 0) {
+    const level = this.view.currentLevel();
+    if (level.kind !== "definition") {
       root.textContent = "Open a group definition to edit its exposed UI.";
       return;
     }
     buildGroupDesigner(root, {
       ctx: this.view.graphContext,
-      def: this._designing.def,
-      ref: this._designing.ref,
-      graphPath: this._rootPath,
+      def: level.def,
+      graphPath: this.view.currentGraphPath,
       delegate: this.view.delegate,
       onChanged: () => this.view.syncGraph(),
       errorColor: this.view.getDefault("ErrorColor")
@@ -60334,17 +62078,27 @@ var NodeEditor = class extends Area {
     return this.view.getViewState().zoom;
   }
   _structDescent() {
-    return this.view.getViewState().descent.map((id) => JSON.stringify(id));
+    return this.view.getViewState().descent.map((entry) => JSON.stringify(entry));
   }
   loadSTRUCT(reader) {
     reader(this);
     this.view.setViewState({
       pan: [this.pan[0], this.pan[1]],
       zoom: this.zoom,
-      descent: this.descent.map((s) => JSON.parse(s))
+      descent: this.descent.map(readDescentEntry)
     });
   }
 };
+function readDescentEntry(text2) {
+  const parsed = JSON.parse(text2);
+  if (typeof parsed === "object" && parsed !== null) {
+    return {
+      nodeId: parsed.nodeId,
+      into: parsed.into === "definition" ? "definition" : "instance"
+    };
+  }
+  return { nodeId: parsed, into: "instance" };
+}
 NodeEditor.STRUCT = struct_default.STRUCT.inherit(NodeEditor, Area, "pathux.NodeEditor") + `
   pan     : vec2 | obj._structPan();
   zoom    : float | obj._structZoom();
@@ -61909,10 +63663,14 @@ UIBase.internalRegister(TreeView);
 // scripts/graph/index.ts
 var graph_exports = {};
 __export(graph_exports, {
+  AddGroupSocketOp: () => AddGroupSocketOp,
   AddNodeOp: () => AddNodeOp,
   ConnectOp: () => ConnectOp,
+  CreateGroupOp: () => CreateGroupOp,
   DeleteNodeOp: () => DeleteNodeOp,
   DisconnectOp: () => DisconnectOp,
+  DuplicateNodeOp: () => DuplicateNodeOp,
+  ExposeEntryOp: () => ExposeEntryOp,
   ExposedEntry: () => ExposedEntry,
   FloatSocket: () => FloatSocket,
   Graph: () => Graph,
@@ -61926,24 +63684,46 @@ __export(graph_exports, {
   Node: () => Node3,
   NodeClasses: () => NodeClasses2,
   NodeSocketBase: () => NodeSocketBase,
+  RemoveEntryOp: () => RemoveEntryOp,
+  RemoveGroupSocketOp: () => RemoveGroupSocketOp,
   RenameNodeOp: () => RenameNodeOp,
+  ReorderEntryOp: () => ReorderEntryOp,
   ReplaceNodeOp: () => ReplaceNodeOp,
+  RepointEntryOp: () => RepointEntryOp,
   SetNodePropOp: () => SetNodePropOp,
   SocketClasses: () => SocketClasses,
   StringSocket: () => StringSocket,
+  UngroupOp: () => UngroupOp,
   Vec3Socket: () => Vec3Socket,
+  addBoundary: () => addBoundary,
   buildGraphFromDSL: () => buildGraphFromDSL,
+  captureLinks: () => captureLinks,
+  cloneNode: () => cloneNode,
+  createGroup: () => createGroup,
   defineGraphAPI: () => defineGraphAPI2,
   definitionOfSubgraph: () => definitionOfSubgraph,
+  dissolveGroup: () => dissolveGroup,
+  exposeEntry: () => exposeEntry,
   getNodeClass: () => getNodeClass,
   getSocketClass: () => getSocketClass,
+  groupPlan: () => groupPlan,
+  isRefusal: () => isRefusal,
   nodePropKeys: () => nodePropKeys,
   nodePropSocket: () => nodePropSocket,
   nodePropTarget: () => nodePropTarget,
   nodePropValue: () => nodePropValue,
   nodeStructFor: () => nodeStructFor,
+  redoGroup: () => redoGroup,
   registerNodeType: () => registerNodeType,
   registerSocketType: () => registerSocketType,
+  regroup: () => regroup,
+  removeBoundary: () => removeBoundary,
+  removeEntry: () => removeEntry,
+  reorderEntry: () => reorderEntry,
+  repointEntry: () => repointEntry,
+  restoreBoundary: () => restoreBoundary,
+  restoreLinks: () => restoreLinks,
+  ungroup: () => ungroup,
   validateGraphDSL: () => validateGraphDSL
 });
 
@@ -62050,6 +63830,17 @@ function buildGraphFromDSL(input, registries) {
     node.id = id;
     graph.add(node);
     byId.set(id, node);
+    if (entry.group !== void 0) {
+      if (node instanceof GroupNode && typeof entry.group === "string") {
+        node.ref = entry.group;
+      } else {
+        report3(
+          "unknown-prop",
+          `${path}.group`,
+          `node '${id}' names a group definition, which only a GroupNode entry can do`
+        );
+      }
+    }
     applyBlock(node, entry.props, "props", (key) => node.props[key], "prop", `${path}.props`);
     applyBlock(
       node,
@@ -67132,6 +68923,7 @@ export {
   CurveFlags,
   CurveTypeData,
   CustomIcon,
+  DOUBLE_PRESS_MS,
   DataAPI2 as DataAPI,
   DataFlags,
   DataList,
@@ -67187,6 +68979,7 @@ export {
   IntegerConstraints,
   IsMobile,
   KeyMap,
+  LEVEL_PILL_TEXT,
   LINECROSS,
   LINK_DROP_PX,
   LINK_PICK_PX,
@@ -67217,6 +69010,7 @@ export {
   MinMax1,
   ModalTabMove,
   ModelInterface,
+  NOT_A_DEFINITION,
   NodeEditor,
   NodeFrame,
   NodeGraphView,
@@ -67364,6 +69158,7 @@ export {
   aabb_sphere_isect_2d,
   aabb_union,
   aabb_union_2d,
+  addGroupMenuTemplate,
   addMenuItems,
   addNodeMenuTemplate,
   addPopup,
@@ -67373,6 +69168,7 @@ export {
   bindSlot,
   binomial,
   buildAddNodeMenu,
+  buildAddSocketRow,
   buildForwardedUI,
   buildGroupDesigner,
   buildParser,
@@ -67443,11 +69239,13 @@ export {
   expand_line,
   expand_rect2d,
   exportTheme,
+  exposeMenuTemplate,
   exposedEntryState,
   feps,
   flagThemeUpdate,
   flushPathNotifications,
   forwardedRows,
+  forwardedSignature,
   genHermiteTable,
   gen_circle,
   getAreaIntName,
@@ -67491,6 +69289,7 @@ export {
   internalSetTimeout,
   inv_sample,
   invertTheme,
+  isDefinitionEdit,
   isLeftClick,
   isMimeText,
   isMouseDown,
@@ -67610,6 +69409,7 @@ export {
   sliderDomAttributes,
   socketAnchor,
   socketRow,
+  socketTypeMenuTemplate,
   solver_exports as solver,
   startEvents,
   startMenu,
