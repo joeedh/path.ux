@@ -1,10 +1,11 @@
 import { test, expect } from "vitest";
 import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
-import { Node } from "../scripts/graph/node";
+import { Node, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef, NodeTypeConstructor } from "../scripts/graph/node";
 import { FloatSocket, Vec3Socket, StringSocket } from "../scripts/graph/sockets_std";
 import { buildGraphFromDSL, validateGraphDSL } from "../scripts/graph/dsl";
 import type { DSLRegistries } from "../scripts/graph/dsl";
+import { GroupDef, GroupNode } from "../scripts/graph/group";
 
 class DslSrc extends Node {
   static override graphDef(): NodeDef {
@@ -307,4 +308,67 @@ test("validateGraphDSL reports the same diagnostics as the builder", () => {
     "unknown-node-type",
     "unknown-link-node",
   ]);
+});
+
+/** A definition that doubles its one input: a DslMath adding the boundary input to itself. */
+function twiceDef(): GroupDef {
+  const def = new GroupDef();
+  const inner = new DslMath();
+  def.subgraph.add(inner);
+  const a = def.declareInput("a", new FloatSocket("in"));
+  def.subgraph.connect(a, inner.inputs.a);
+  def.subgraph.connect(a, inner.inputs.b);
+  const out = def.declareOutput("out", new FloatSocket("out"));
+  def.subgraph.connect(inner.outputs.out, out);
+  return def;
+}
+
+// An instance copies its definition's subgraph through nstructjs, which needs the type.
+registerNodeType(DslMath);
+
+const withGroups: DSLRegistries = {
+  ...registries,
+  nodeTypes: new Map([...registries.nodeTypes, ["GroupNode", GroupNode]]),
+  groups   : new Map([["twice", twiceDef()]]),
+};
+
+test("a GroupNode entry binds to its definition, so links reach its boundary", () => {
+  const { graph, diagnostics } = buildGraphFromDSL(
+    {
+      nodes: [
+        { id: "src", type: "DslSrc" },
+        { id: "g", type: "GroupNode", group: "twice" },
+        { id: "m", type: "DslMath" },
+      ],
+      links: [
+        ["src", "value", "g", "a"],
+        ["g", "out", "m", "a"],
+      ],
+    },
+    withGroups
+  );
+
+  expect(diagnostics).toEqual([]);
+  const g = graph.nodeIdMap.get("g") as GroupNode;
+  expect(g.definition).toBe(withGroups.groups!.get("twice"));
+  expect(g.inputs.a.edges.length).toBe(1);
+  expect(g.outputs.out.edges.length).toBe(1);
+  // the instance's inner node stands in the flattened order
+  expect(graph.sort().order.map((n) => n.def.typeName)).toEqual(["DslSrc", "DslMath", "DslMath"]);
+});
+
+test("a ref the group registry lacks is diagnosed; with no registry the instance waits", () => {
+  const input = { nodes: [{ id: "g", type: "GroupNode", group: "nope" }] };
+
+  const strict = buildGraphFromDSL(input, withGroups);
+  expect(strict.diagnostics.map((d) => d.code)).toEqual(["unknown-group"]);
+  expect(strict.diagnostics[0].path).toBe("nodes[0].group");
+
+  const lax = buildGraphFromDSL(input, {
+    ...registries,
+    nodeTypes: withGroups.nodeTypes,
+  });
+  expect(lax.diagnostics).toEqual([]);
+  expect((lax.graph.nodeIdMap.get("g") as GroupNode).ref).toBe("nope");
+  expect((lax.graph.nodeIdMap.get("g") as GroupNode).definition).toBeUndefined();
 });

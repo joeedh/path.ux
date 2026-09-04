@@ -422,10 +422,17 @@ const { graph, diagnostics } = buildGraphFromDSL(
   a prefix on the key. (`NodePropName`, the `in:`/`out:` prefixed address used elsewhere in
   the graph API — see [Node properties](#node-properties) — is an implementation detail the
   DSL never surfaces; keys here are always the bare socket/prop name.)
+- A `GroupNode` entry names its definition with `group: "<ref>"`. Pass the definitions
+  as a third registry, `groups: Map<string, GroupDef>`, and the instance is bound and
+  synced as it is built, so a link into its boundary sockets resolves in the same pass
+  and a ref the map lacks is diagnosed `unknown-group`. Without `groups` the instance is
+  built unresolved, for the host to `resolveGroups()` later; its links are then diagnosed
+  `unknown-link-socket`, since it has no sockets yet.
 - It never throws. Every problem becomes a diagnostic with a stable code — `bad-shape`,
-  `duplicate-node-id`, `unknown-node-type`, `unknown-prop`, `bad-prop-value`,
-  `unknown-link-node`, `unknown-link-socket`, `link-type-mismatch`, `duplicate-link`,
-  `link-input-occupied` — and the graph contains everything that was valid.
+  `duplicate-node-id`, `unknown-node-type`, `unknown-group`, `unknown-prop`,
+  `bad-prop-value`, `unknown-link-node`, `unknown-link-socket`, `link-type-mismatch`,
+  `duplicate-link`, `link-input-occupied` — and the graph contains everything that was
+  valid.
 - `unknown-prop` fires per block, so its path names which one (`nodes[2].props.b`,
   `nodes[2].inputs.b`, or `nodes[2].outputs.b`) failed.
 - When two links contend for a single-link input, the first stated link wins and the later

@@ -4,6 +4,7 @@ import { Node } from "./node";
 import type { NodeTypeConstructor } from "./node";
 import type { SocketTypeConstructor } from "./socket";
 import { GroupNode } from "./group";
+import type { GroupDef } from "./group";
 
 /**
  * The flat graph description a model authors, validated against the type registries
@@ -35,6 +36,13 @@ export type GraphDSLLink = [string | number, string, string | number, string];
 export interface DSLRegistries {
   nodeTypes: ReadonlyMap<string, NodeTypeConstructor>;
   socketTypes: ReadonlyMap<string, SocketTypeConstructor>;
+  /**
+   * Definitions by ref. Given, a GroupNode entry is bound and synced to its
+   * definition as it is built, so its boundary sockets exist by the time the
+   * links are read, and a ref the map lacks is diagnosed unknown-group. Absent,
+   * an instance is built unresolved for the host to resolve later.
+   */
+  groups?: ReadonlyMap<string, GroupDef>;
 }
 
 export interface DSLDiagnostic {
@@ -114,6 +122,16 @@ export function buildGraphFromDSL(
           `${path}.group`,
           `node '${id}' names a group definition, which only a GroupNode entry can do`
         );
+      }
+    }
+    if (node instanceof GroupNode && registries.groups !== undefined) {
+      const def = registries.groups.get(node.ref);
+      if (def === undefined) {
+        const named = node.ref === "" ? "names no group definition" : `names group '${node.ref}'`;
+        report("unknown-group", `${path}.group`, `node '${id}' ${named}, which is not known`);
+      } else {
+        node.setDefinition(node.ref, def);
+        node.syncToDefinition();
       }
     }
 
