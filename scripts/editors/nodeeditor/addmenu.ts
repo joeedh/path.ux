@@ -53,6 +53,23 @@ export function addNodeMenuTemplate(
 }
 
 /**
+ * A picker over the definitions a host's store holds, for placing an instance of
+ * one. The host lists the refs, since only it can; each entry reports its pick
+ * through onPick with the ref.
+ */
+export function addGroupMenuTemplate(
+  refs: readonly string[],
+  onPick: (ref: string) => void
+): MenuTemplate {
+  return refs.map((ref) => ({
+    name    : ref,
+    id      : `group:${ref}`,
+    tooltip : `Add an instance of the group '${ref}'`,
+    callback: () => onPick(ref),
+  }));
+}
+
+/**
  * The node-type picker as a Menu: one row per item, labelled by uiName and
  * keyed by the type name, reporting a pick through onPick. The same menu
  * serves both adding a node and choosing a replacement type. Start it with

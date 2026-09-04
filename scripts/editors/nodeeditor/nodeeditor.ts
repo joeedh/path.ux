@@ -110,9 +110,8 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
   /**
    * Points the view at a group definition's subgraph for structural editing
    * and shows the definition's exposure list in the Group Designer panel.
-   * defPath must resolve to def.subgraph in the host's data API; exposure
-   * edits dispatch against the root graph recorded by setGraph, whose
-   * groupSaver persists the definition.
+   * defPath must resolve to def.subgraph in the host's data API; the designer's
+   * edits dispatch against that path, and the ops find the definition through it.
    */
   editDefinition(ref: string, def: GroupDef, defPath: string) {
     this._designing = { ref, def };
@@ -132,8 +131,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     buildGroupDesigner(root, {
       ctx       : this.view.graphContext,
       def       : this._designing.def,
-      ref       : this._designing.ref,
-      graphPath : this._rootPath,
+      graphPath : this.view.graphPath,
       delegate  : this.view.delegate,
       onChanged : () => this.view.syncGraph(),
       errorColor: this.view.getDefault("ErrorColor") as string,

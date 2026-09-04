@@ -215,7 +215,7 @@ export function propEditRow<CTX extends IContextBase>(
 export interface GroupDesignerOpts {
   ctx: GraphContext;
   def: GroupDef;
-  ref: string;
+  /** The datapath of def.subgraph; the designer's edits dispatch against it. */
   graphPath: string;
   delegate: NodeGraphDelegate;
   onChanged?: () => void;
@@ -241,7 +241,7 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
     opts.onChanged?.();
   };
 
-  const common = { graphPath: opts.graphPath, ref: opts.ref, def: opts.def };
+  const common = { graphPath: opts.graphPath };
   const exposed = opts.def.exposed;
 
   exposed.forEach((entry, index) => {
@@ -346,12 +346,15 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
   add.title = "Expose this property on every instance of the group";
   add.addEventListener("click", () => {
     const key = keyIn.value.trim();
-    const entry = new ExposedEntry(
-      key === "" ? "nodeUI" : "prop",
-      _parseNodeId(nodeIdIn.value),
-      key
-    );
-    dispatch({ kind: "exposeEntry", ...common, entry });
+    dispatch({
+      kind: "exposeEntry",
+      ...common,
+      entry: {
+        kind   : key === "" ? "nodeUI" : "prop",
+        nodeId : _parseNodeId(nodeIdIn.value),
+        propKey: key,
+      },
+    });
   });
   addRow.appendChild(add);
 

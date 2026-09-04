@@ -339,6 +339,13 @@ each definition function mutates as named and refuses as named.
 
 ### Stage G2 — the ToolOps and the delegate
 
+Status: **done** (2026-09-04). `RepointEntryOp`'s undo writes the previous target back
+directly rather than through `repointEntry`, because the previous target is usually the
+missing one that prompted the repoint and validation would refuse it. The definition ops
+share `definitionAt`/`definitionOkay` in `graph_ops.ts`, and `delegate.ts` exports
+`isDefinitionEdit` and the `NOT_A_DEFINITION` sentence for hosts that route edits
+themselves.
+
 Files: `scripts/graph/graph_ops.ts`, `scripts/graph/dsl.ts`,
 `scripts/editors/nodeeditor/delegate.ts`, `scripts/editors/nodeeditor/nodeeditor.ts`,
 `scripts/editors/nodeeditor/addmenu.ts`, `tests/graph_ops.test.ts`,

@@ -1,26 +1,30 @@
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import { ToolMacro, ToolOp } from "../../path-controller/toolsys/toolsys";
-import {
-  ToolProperty,
-  StringProperty,
-  IntProperty,
-  EnumProperty,
-  FlagProperty,
-  ListProperty,
-} from "../../path-controller/toolsys/toolprop";
 import { Graph } from "../../graph/graph";
 import {
+  AddGroupSocketOp,
   AddNodeOp,
   ConnectOp,
+  CreateGroupOp,
   DeleteNodeOp,
   DisconnectOp,
+  DuplicateNodeOp,
+  ExposeEntryOp,
   MoveNodeOp,
+  RemoveEntryOp,
+  RemoveGroupSocketOp,
+  ReorderEntryOp,
+  RepointEntryOp,
   ReplaceNodeOp,
-  SetNodePropOp,
+  UngroupOp,
 } from "../../graph/graph_ops";
-import { getNodeClass, nodePropKeys, NodePropName, nodePropTarget } from "../../graph/node";
-import type { GroupDef, ExposedEntry } from "../../graph/group";
-import type { GraphId } from "../../graph/graph_types";
+import { getNodeClass, nodePropTarget } from "../../graph/node";
+import type { NodePropName } from "../../graph/node";
+import { definitionOfSubgraph, GroupNode } from "../../graph/group";
+import { groupPlan, isRefusal } from "../../graph/grouping";
+import type { ExposeRequest } from "../../graph/grouping";
+import { getSocketClass } from "../../graph/socket";
+import type { GraphId, SocketDir } from "../../graph/graph_types";
 
 /** One node's destination in a multi-node move. */
 export interface NodeMove {
@@ -29,12 +33,34 @@ export interface NodeMove {
   y: number;
 }
 
-/** One proposed graph mutation, described as data so a host can route it. */
+/**
+ * One proposed graph mutation, described as data so a host can route it. The
+ * definition kinds — the four exposure edits and the two boundary edits — name a
+ * definition's subgraph by graphPath and are refused on any other graph.
+ */
 export type GraphEdit =
   | { kind: "moveNode"; graphPath: string; nodeId: GraphId; x: number; y: number }
   | { kind: "moveNodes"; graphPath: string; moves: NodeMove[] }
-  | { kind: "addNode"; graphPath: string; nodeType: string; x: number; y: number }
+  | {
+      kind: "addNode";
+      graphPath: string;
+      nodeType: string;
+      x: number;
+      y: number;
+      /** The definition a GroupNode instances; ignored on any other type. */
+      ref?: string;
+    }
   | { kind: "deleteNode"; graphPath: string; nodeId: GraphId }
+  | {
+      kind: "createGroup";
+      graphPath: string;
+      /** The root graph, whose store seams save the new definition. */
+      storePath: string;
+      nodeIds: GraphId[];
+      /** Filled from the root graph's newGroupRef when absent. */
+      ref?: string;
+    }
+  | { kind: "ungroup"; graphPath: string; nodeId: GraphId }
   | { kind: "duplicateNode"; graphPath: string; nodeId: GraphId; x: number; y: number }
   | { kind: "replaceNode"; graphPath: string; nodeId: GraphId; newType: string }
   | {
@@ -54,25 +80,18 @@ export type GraphEdit =
       dstSocket: string;
     }
   | { kind: "arrange"; graphPath: string; moves: NodeMove[] }
-  | { kind: "exposeEntry"; graphPath: string; ref: string; def: GroupDef; entry: ExposedEntry }
-  | {
-      kind: "reorderEntry";
-      graphPath: string;
-      ref: string;
-      def: GroupDef;
-      from: number;
-      to: number;
-    }
+  | { kind: "exposeEntry"; graphPath: string; entry: ExposeRequest; at?: number }
+  | { kind: "reorderEntry"; graphPath: string; from: number; to: number }
   | {
       kind: "repointEntry";
       graphPath: string;
-      ref: string;
-      def: GroupDef;
       index: number;
       nodeId: GraphId;
       propKey: NodePropName;
     }
-  | { kind: "removeEntry"; graphPath: string; ref: string; def: GroupDef; index: number };
+  | { kind: "removeEntry"; graphPath: string; index: number }
+  | { kind: "addBoundary"; graphPath: string; dir: SocketDir; key: string; socketType: string }
+  | { kind: "removeBoundary"; graphPath: string; dir: SocketDir; key: string };
 
 export type EditVerdict = { ok: true } | { ok: false; reason: string };
 
@@ -109,75 +128,24 @@ export interface NodeGraphDelegate {
   undoStepEnd(ctx: GraphContext): Promise<void>;
 }
 
-/** The exposure kinds edit a group definition rather than the resolved graph. */
-function isExposureEdit(edit: GraphEdit): boolean {
-  return (
-    edit.kind === "exposeEntry" ||
-    edit.kind === "reorderEntry" ||
-    edit.kind === "repointEntry" ||
-    edit.kind === "removeEntry"
-  );
-}
-/*
-type SelectOpType = "select-nodes" | "deselect-nodes" | "clear" | "all" | 'select-sockets' | 'deselect-sockets';
-
-export class SelectOp<CTX extends GraphContext = GraphContext> extends ToolOp<
-  {
-    type: EnumProperty<SelectOpType>;
-    stringIds: ListProperty<ToolProperty<GraphId>>;
-  },
-  {},
-  CTX
-> {
-  static tooldef() {
-    return {
-      toolpath: 'pathux.graph.select',
-      inputs: {
-        type: new EnumProperty('select', {
-          select: 'select',
-          deselect: 'deselect',
-          clear: 'clear',
-          all: 'all'
-        }),
-        ids: new ListProperty()
-      },
-      outputs: {},
-      description: '',
-      uiname: '',
-    }
-  }
-
-  exec(ctx: CTX) {
-    const {type, ids} = this.getInputs()
-
-    const idsList: GraphId[] = []
-    for (const id of ids.getValue()) {
-      idsList.push(id.getValue())
-    }
-
-    switch (type) {
-      case 'select-nodes':
-        ctx.selectNodes(idsList)
-        break;
-      case 'deselect-nodes':
-        ctx.deselectNodes(idsList)
-        break;
-      case 'clear':
-        ctx.clearSelection()
-        break;
-      case 'all':
-        ctx.selectAll()
-        break;
-      case 'select-sockets':
-        ctx.selectSockets(idsList)
-        break;
-      case 'deselect-sockets':
-        ctx.deselectSockets(idsList)
-        break;
-    }
+/** The definition kinds edit a group definition rather than the graph on screen. */
+export function isDefinitionEdit(edit: GraphEdit): boolean {
+  switch (edit.kind) {
+    case "exposeEntry":
+    case "reorderEntry":
+    case "repointEntry":
+    case "removeEntry":
+    case "addBoundary":
+    case "removeBoundary":
+      return true;
+    default:
+      return false;
   }
 }
-*/
+
+/** The sentence a definition edit is refused with on a graph that is no definition. */
+export const NOT_A_DEFINITION =
+  "forwarded rows and boundary sockets belong to a group's definition; open one to edit them";
 
 /**
  * Locks pointer/keyboard input while an async undo step (delegate.undoStepBegin,
@@ -247,11 +215,11 @@ export class AsyncGateOp<CTX extends GraphContext = GraphContext> extends ToolOp
  * The default delegate. check consults the graph's own refusal — every
  * graph-mutating kind is a structural edit, so it is refused inside a group
  * instance's subgraph — plus per-kind feasibility (a connect's sockets must
- * exist and coerce, an addNode's type must be registered). perform dispatches
- * the graph module's ToolOps on ctx.toolstack; the composite kinds (arrange,
- * moveNodes, duplicateNode) go through one ToolMacro so each is a single undo
- * entry. The exposure kinds mutate the definition's exposed list in place and
- * save it through the graph's groupSaver seam; they carry no undo.
+ * exist and coerce, an addNode's type must be registered, a createGroup's plan
+ * must not refuse). perform dispatches the graph module's ToolOps on
+ * ctx.toolstack; the composite kinds (arrange, moveNodes) go through one
+ * ToolMacro so each is a single undo entry. The definition kinds run only on a
+ * definition's subgraph, and each is one undoable op.
  */
 export class ToolOpDelegate implements NodeGraphDelegate {
   private undoStepLvl = 0;
@@ -284,8 +252,8 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     }
     const graph = value;
 
-    if (isExposureEdit(edit)) {
-      return { ok: true };
+    if (isDefinitionEdit(edit)) {
+      return this._checkDefinitionEdit(graph, edit);
     }
 
     const refusal = graph.structuralEditsRefused();
@@ -308,6 +276,22 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         }
         break;
       }
+      case "createGroup": {
+        const plan = groupPlan(graph, edit.nodeIds);
+        if (isRefusal(plan)) {
+          return { ok: false, reason: plan.refusal };
+        }
+        if (this._refFor(ctx, edit) === undefined) {
+          return { ok: false, reason: "the host gave no name for the new group" };
+        }
+        break;
+      }
+      case "ungroup": {
+        if (!(graph.nodeIdMap.get(edit.nodeId) instanceof GroupNode)) {
+          return { ok: false, reason: `node ${JSON.stringify(edit.nodeId)} is not a group` };
+        }
+        break;
+      }
       case "connect": {
         const src = graph.nodeIdMap.get(edit.srcNode)?.outputs[edit.srcSocket];
         const dst = graph.nodeIdMap.get(edit.dstNode)?.inputs[edit.dstSocket];
@@ -325,6 +309,60 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     }
 
     return { ok: true };
+  }
+
+  private _checkDefinitionEdit(graph: Graph, edit: GraphEdit): EditVerdict {
+    const def = definitionOfSubgraph(graph);
+    if (def === undefined) {
+      return { ok: false, reason: NOT_A_DEFINITION };
+    }
+    switch (edit.kind) {
+      case "exposeEntry":
+      case "repointEntry": {
+        const nodeId = edit.kind === "exposeEntry" ? edit.entry.nodeId : edit.nodeId;
+        const node = def.subgraph.nodeIdMap.get(nodeId);
+        if (node === undefined) {
+          return { ok: false, reason: `no node with id ${JSON.stringify(nodeId)}` };
+        }
+        const key = edit.kind === "exposeEntry" ? edit.entry.propKey : edit.propKey;
+        const wantsProp = edit.kind === "repointEntry" || edit.entry.kind === "prop";
+        if (
+          wantsProp &&
+          nodePropTarget(node, (key ?? "") as unknown as NodePropName) === undefined
+        ) {
+          return { ok: false, reason: `${node.getUIName()} has no property '${key ?? ""}'` };
+        }
+        break;
+      }
+      case "addBoundary": {
+        if (getSocketClass(edit.socketType) === undefined) {
+          return { ok: false, reason: `unknown socket type '${edit.socketType}'` };
+        }
+        if (edit.key in (edit.dir === "in" ? def.inputs : def.outputs)) {
+          return { ok: false, reason: `the group already has a socket named '${edit.key}'` };
+        }
+        break;
+      }
+      case "removeBoundary": {
+        if (!(edit.key in (edit.dir === "in" ? def.inputs : def.outputs))) {
+          return { ok: false, reason: `the group has no socket named '${edit.key}'` };
+        }
+        break;
+      }
+    }
+    return { ok: true };
+  }
+
+  /** The ref a createGroup saves under: the edit's own, else the store's newGroupRef. */
+  private _refFor(
+    ctx: GraphContext,
+    edit: Extract<GraphEdit, { kind: "createGroup" }>
+  ): string | undefined {
+    if (edit.ref) {
+      return edit.ref;
+    }
+    const ref = this._graph(ctx, edit.storePath)?.newGroupRef?.();
+    return ref ? ref : undefined;
   }
 
   private execTool(ctx: GraphContext, tool: ToolOp): void {
@@ -352,6 +390,23 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.nodeType.setValue(edit.nodeType);
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
+        tool.inputs.ref.setValue(edit.ref ?? "");
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "createGroup": {
+        const tool = new CreateGroupOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.storePath.setValue(edit.storePath);
+        tool.inputs.nodeIds.setValue(JSON.stringify(edit.nodeIds));
+        tool.inputs.ref.setValue(this._refFor(ctx, edit) ?? "");
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "ungroup": {
+        const tool = new UngroupOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         this.execTool(ctx, tool);
         break;
       }
@@ -396,107 +451,67 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         break;
       }
       case "duplicateNode": {
-        this._performDuplicate(ctx, edit);
+        const tool = new DuplicateNodeOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.x.setValue(edit.x);
+        tool.inputs.y.setValue(edit.y);
+        this.execTool(ctx, tool);
         break;
       }
-      case "exposeEntry":
-      case "reorderEntry":
-      case "repointEntry":
-      case "removeEntry": {
-        this._performExposure(ctx, edit);
+      case "exposeEntry": {
+        const tool = new ExposeEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.kind.setValue(edit.entry.kind);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.entry.nodeId));
+        tool.inputs.propKey.setValue(edit.entry.propKey ?? "");
+        tool.inputs.label.setValue(edit.entry.label ?? "");
+        tool.inputs.at.setValue(edit.at ?? -1);
+        this.execTool(ctx, tool);
         break;
       }
-    }
-  }
-
-  private _performDuplicate(
-    ctx: GraphContext,
-    edit: Extract<GraphEdit, { kind: "duplicateNode" }>
-  ): void {
-    const graph = this._graph(ctx, edit.graphPath);
-    const source = graph?.nodeIdMap.get(edit.nodeId);
-    if (source === undefined) {
-      return;
-    }
-
-    const macro = new ToolMacro<GraphContext>();
-
-    const addOp = new AddNodeOp();
-    addOp.inputs.graphPath.setValue(edit.graphPath);
-    addOp.inputs.nodeType.setValue(source.def.typeName);
-    addOp.inputs.x.setValue(edit.x);
-    addOp.inputs.y.setValue(edit.y);
-    macro.add(addOp);
-
-    // The copy's id exists only once addOp runs, so each set op receives it
-    // through a connect callback; the macro runs each tool's undoPre directly
-    // before its own exec, which is what makes the late id safe to record.
-    for (const key of nodePropKeys(source)) {
-      const target = nodePropTarget(source, key);
-      if (!target?.wasSet) {
-        continue;
-      }
-
-      const setOp = new SetNodePropOp();
-      setOp.inputs.graphPath.setValue(edit.graphPath);
-      setOp.inputs.propKey.setValue(key as unknown as string);
-      const prop = (target.copy() as ToolProperty).ignoreLastValue();
-      (setOp.inputs as Record<string, unknown>).value = prop;
-
-      macro.add(setOp);
-      macro.connectCB(
-        addOp,
-        setOp,
-        (src, dst) => {
-          (dst as SetNodePropOp).inputs.nodeId.setValue(
-            (src as AddNodeOp).outputs.nodeId.getValue()
-          );
-        },
-        undefined
-      );
-    }
-
-    this.execTool(ctx, macro);
-  }
-
-  private _performExposure(
-    ctx: GraphContext,
-    edit: Extract<
-      GraphEdit,
-      { kind: "exposeEntry" | "reorderEntry" | "repointEntry" | "removeEntry" }
-    >
-  ): void {
-    const exposed = edit.def.exposed;
-
-    switch (edit.kind) {
-      case "exposeEntry":
-        exposed.push(edit.entry);
-        break;
       case "reorderEntry": {
-        if (edit.from < 0 || edit.from >= exposed.length) {
-          return;
-        }
-        const [entry] = exposed.splice(edit.from, 1);
-        const to = Math.min(Math.max(edit.to, 0), exposed.length);
-        exposed.splice(to, 0, entry);
+        const tool = new ReorderEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.from.setValue(edit.from);
+        tool.inputs.to.setValue(edit.to);
+        this.execTool(ctx, tool);
         break;
       }
       case "repointEntry": {
-        const entry = exposed[edit.index];
-        if (entry === undefined) {
-          return;
-        }
-        // Edited in place, so the entry keeps its position in the list.
-        entry.nodeId = edit.nodeId;
-        entry.propKey = edit.propKey;
+        const tool = new RepointEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.index.setValue(edit.index);
+        tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
+        tool.inputs.propKey.setValue(edit.propKey as unknown as string);
+        this.execTool(ctx, tool);
         break;
       }
-      case "removeEntry":
-        exposed.splice(edit.index, 1);
+      case "removeEntry": {
+        const tool = new RemoveEntryOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.index.setValue(edit.index);
+        this.execTool(ctx, tool);
         break;
+      }
+      case "addBoundary": {
+        const tool = new AddGroupSocketOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.dir.setValue(edit.dir);
+        tool.inputs.key.setValue(edit.key);
+        tool.inputs.socketType.setValue(edit.socketType);
+        this.execTool(ctx, tool);
+        break;
+      }
+      case "removeBoundary": {
+        const tool = new RemoveGroupSocketOp();
+        tool.inputs.graphPath.setValue(edit.graphPath);
+        tool.inputs.dir.setValue(edit.dir);
+        tool.inputs.key.setValue(edit.key);
+        this.execTool(ctx, tool);
+        break;
+      }
     }
-
-    void this._graph(ctx, edit.graphPath)?.groupSaver?.(edit.ref, edit.def);
   }
 
   private _graph(ctx: GraphContext, path: string): Graph | undefined {

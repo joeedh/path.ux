@@ -1,14 +1,32 @@
 import { ToolOp } from "../path-controller/toolsys/toolsys";
-import { FloatProperty, StringProperty } from "../path-controller/toolsys/toolprop";
+import { FloatProperty, IntProperty, StringProperty } from "../path-controller/toolsys/toolprop";
 import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { ContextLike } from "../path-controller/controller/controller_abstract";
 import { Graph } from "./graph";
 import { getNodeClass, nodePropTarget } from "./node";
 import type { Node, NodePropName } from "./node";
-import { definitionOfSubgraph } from "./group";
-import type { ExposedEntry } from "./group";
-import type { GraphId } from "./graph_types";
-import { GraphContext } from "../pathux";
+import { definitionOfSubgraph, GroupNode } from "./group";
+import type { ExposedEntry, GroupDef } from "./group";
+import type { GraphId, SocketDir } from "./graph_types";
+import {
+  addBoundary,
+  cloneNode,
+  createGroup,
+  dissolveGroup,
+  exposeEntry,
+  groupPlan,
+  isRefusal,
+  redoGroup,
+  regroup,
+  removeBoundary,
+  removeEntry,
+  reorderEntry,
+  repointEntry,
+  restoreBoundary,
+  ungroup,
+} from "./grouping";
+import type { CreatedGroup, Dissolved, Ungrouped } from "./grouping";
+import type { GraphContext } from "../editors/nodeeditor/delegate";
 
 /** Resolves a graphPath input to its Graph, throwing when the path lands elsewhere. */
 function graphAt(ctx: ContextLike, path: string): Graph {
@@ -101,6 +119,36 @@ function structuralOkay(
   return true;
 }
 
+/** Resolves a graphPath input to the GroupDef whose subgraph it is, throwing otherwise. */
+function definitionAt(ctx: ContextLike, path: string): GroupDef {
+  const def = definitionOfSubgraph(graphAt(ctx, path));
+  if (def === undefined) {
+    throw new Error(`'${path}' is not a group definition`);
+  }
+  return def;
+}
+
+/** Shared canRun for the definition ops: the graph must be a definition's subgraph. */
+function definitionOkay(
+  ctx: ContextLike,
+  toolop: { inputs: { graphPath: StringProperty } } | undefined
+): boolean {
+  if (toolop === undefined) {
+    return true;
+  }
+  try {
+    definitionAt(ctx, toolop.inputs.graphPath.getValue());
+  } catch (err) {
+    console.warn(err instanceof Error ? err.message : String(err));
+    return false;
+  }
+  return true;
+}
+
+function intInput(value: number): IntProperty {
+  return new IntProperty(value).ignoreLastValue();
+}
+
 type LinkInputs = {
   graphPath: StringProperty;
   srcNode: StringProperty;
@@ -150,7 +198,9 @@ function linkEndpoints(ctx: ContextLike, inputs: LinkInputs) {
 
 /**
  * Adds a node of a registered type at a position. The new node's id lands in
- * outputs.nodeId JSON-encoded, and a redo reuses it so later records stay valid.
+ * outputs.nodeId JSON-encoded, and a redo reuses it so later records stay valid. A
+ * GroupNode takes its definition reference from ref and resolves on the graph's next
+ * resolveGroups.
  */
 export class AddNodeOp extends ToolOp<
   {
@@ -158,6 +208,7 @@ export class AddNodeOp extends ToolOp<
     nodeType: StringProperty;
     x: FloatProperty;
     y: FloatProperty;
+    ref: StringProperty;
   },
   { nodeId: StringProperty }
 > {
@@ -170,6 +221,7 @@ export class AddNodeOp extends ToolOp<
         nodeType : strInput(),
         x        : floatInput(0),
         y        : floatInput(0),
+        ref      : strInput(),
       },
       outputs: {
         nodeId: new StringProperty(),
@@ -200,6 +252,9 @@ export class AddNodeOp extends ToolOp<
     }
     node.pos[0] = this.inputs.x.getValue();
     node.pos[1] = this.inputs.y.getValue();
+    if (node instanceof GroupNode) {
+      node.ref = this.inputs.ref.getValue();
+    }
 
     graph.add(node);
     this.outputs.nodeId.setValue(JSON.stringify(node.id));
@@ -625,6 +680,520 @@ export class SetNodePropOp extends ToolOp<{
   }
 }
 
+/**
+ * Adds a copy of a node beside it, through cloneNode, so a group instance keeps its
+ * ref, its subgraph, its overrides and its definition. Redo reuses the recorded id.
+ */
+export class DuplicateNodeOp extends ToolOp<
+  {
+    graphPath: StringProperty;
+    nodeId: StringProperty;
+    x: FloatProperty;
+    y: FloatProperty;
+  },
+  { nodeId: StringProperty }
+> {
+  static tooldef() {
+    return {
+      uiname  : "Duplicate Node",
+      toolpath: "graph.duplicate_node",
+      inputs: {
+        graphPath: strInput(),
+        nodeId   : strInput(),
+        x        : floatInput(0),
+        y        : floatInput(0),
+      },
+      outputs: {
+        nodeId: new StringProperty(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return structuralOkay(ctx, toolop as DuplicateNodeOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: GraphContext): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const source = nodeAt(graph, this.inputs.nodeId.getValue());
+
+    const copy = cloneNode(source);
+    const prior = this.outputs.nodeId.getValue();
+    if (prior) {
+      copy.id = JSON.parse(prior) as GraphId;
+    }
+    copy.pos[0] = this.inputs.x.getValue();
+    copy.pos[1] = this.inputs.y.getValue();
+
+    graph.add(copy);
+    this.outputs.nodeId.setValue(JSON.stringify(copy.id));
+    notifyGraph(ctx, this);
+    ctx.selectNodes([copy.id]);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    graph.remove(nodeAt(graph, this.outputs.nodeId.getValue()));
+    notifyGraph(ctx, this);
+  }
+}
+
+/**
+ * Moves the nodes nodeIds names into a new definition saved under ref through the
+ * store at storePath, and puts an instance in their place. Undo returns the same
+ * node objects to the graph and leaves the definition in the store holding only its
+ * proxies; redo refills that same definition.
+ */
+export class CreateGroupOp extends ToolOp<
+  {
+    graphPath: StringProperty;
+    storePath: StringProperty;
+    /** A JSON array of GraphIds. */
+    nodeIds: StringProperty;
+    ref: StringProperty;
+  },
+  { nodeId: StringProperty }
+> {
+  private _created: CreatedGroup | undefined;
+  private _dissolved: Dissolved | undefined;
+
+  static tooldef() {
+    return {
+      uiname  : "Create Group",
+      toolpath: "graph.create_group",
+      inputs: {
+        graphPath: strInput(),
+        storePath: strInput(),
+        nodeIds  : strInput(),
+        ref      : strInput(),
+      },
+      outputs: {
+        nodeId: new StringProperty(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    const op = toolop as CreateGroupOp | undefined;
+    if (!structuralOkay(ctx, op)) {
+      return false;
+    }
+    if (op === undefined) {
+      return true;
+    }
+    if (op.inputs.ref.getValue() === "") {
+      console.warn("a new group needs a reference to be saved under");
+      return false;
+    }
+    const graph = graphAt(ctx, op.inputs.graphPath.getValue());
+    const plan = groupPlan(graph, JSON.parse(op.inputs.nodeIds.getValue()) as GraphId[]);
+    if (isRefusal(plan)) {
+      console.warn(plan.refusal);
+      return false;
+    }
+    return true;
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: GraphContext): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const ref = this.inputs.ref.getValue();
+
+    if (this._created !== undefined && this._dissolved !== undefined) {
+      redoGroup(graph, this._created, this._dissolved);
+    } else {
+      const ids = JSON.parse(this.inputs.nodeIds.getValue()) as GraphId[];
+      this._created = createGroup(graph, ids, ref);
+    }
+    const { def, node } = this._created;
+
+    const store = graphAt(ctx, this.inputs.storePath.getValue());
+    void store.groupSaver?.(ref, def);
+
+    this.outputs.nodeId.setValue(JSON.stringify(node.id));
+    notifyGraph(ctx, this);
+    ctx.selectNodes([node.id]);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    this._dissolved = dissolveGroup(graph, this._created!);
+    notifyGraph(ctx, this);
+  }
+}
+
+/**
+ * Inlines a copy of an instance's subgraph where it stood and removes the instance.
+ * The ids the copies took land in outputs.nodeIds as a JSON array of [old, new]
+ * pairs, and a redo lands on the same ones.
+ */
+export class UngroupOp extends ToolOp<
+  {
+    graphPath: StringProperty;
+    nodeId: StringProperty;
+  },
+  { nodeIds: StringProperty }
+> {
+  private _node: GroupNode | undefined;
+  private _result: Ungrouped | undefined;
+
+  static tooldef() {
+    return {
+      uiname  : "Ungroup",
+      toolpath: "graph.ungroup",
+      inputs: {
+        graphPath: strInput(),
+        nodeId   : strInput(),
+      },
+      outputs: {
+        nodeIds: new StringProperty(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    const op = toolop as UngroupOp | undefined;
+    if (!structuralOkay(ctx, op)) {
+      return false;
+    }
+    if (op === undefined) {
+      return true;
+    }
+    const graph = graphAt(ctx, op.inputs.graphPath.getValue());
+    if (!(graph.nodeIdMap.get(JSON.parse(op.inputs.nodeId.getValue())) instanceof GroupNode)) {
+      console.warn(`node ${op.inputs.nodeId.getValue()} is not a group`);
+      return false;
+    }
+    return true;
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: GraphContext): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    const node = nodeAt(graph, this.inputs.nodeId.getValue());
+    if (!(node instanceof GroupNode)) {
+      throw new Error(`node ${this.inputs.nodeId.getValue()} is not a group`);
+    }
+
+    const prior = this.outputs.nodeIds.getValue();
+    const fixed = prior ? new Map(JSON.parse(prior) as [GraphId, GraphId][]) : undefined;
+    const result = ungroup(graph, node, fixed);
+    if (isRefusal(result)) {
+      throw new Error(result.refusal);
+    }
+
+    this._node = node;
+    this._result = result;
+    this.outputs.nodeIds.setValue(JSON.stringify([...result.idMap]));
+    notifyGraph(ctx, this);
+    ctx.selectNodes(result.nodes.map((n) => n.id));
+  }
+
+  override undo(ctx: ContextLike): void {
+    const graph = graphAt(ctx, this.inputs.graphPath.getValue());
+    regroup(graph, this._node!, this._result!);
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Adds a forwarded row to the definition at graphPath, appended unless at names a row. */
+export class ExposeEntryOp extends ToolOp<{
+  graphPath: StringProperty;
+  kind: StringProperty;
+  nodeId: StringProperty;
+  propKey: StringProperty;
+  label: StringProperty;
+  /** -1 appends. */
+  at: IntProperty;
+}> {
+  private _index = -1;
+
+  static tooldef() {
+    return {
+      uiname  : "Expose on Group",
+      toolpath: "graph.expose_entry",
+      inputs: {
+        graphPath: strInput(),
+        kind     : strInput(),
+        nodeId   : strInput(),
+        propKey  : strInput(),
+        label    : strInput(),
+        at       : intInput(-1),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as ExposeEntryOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const at = this.inputs.at.getValue();
+    const label = this.inputs.label.getValue();
+    const r = exposeEntry(
+      def,
+      {
+        kind   : this.inputs.kind.getValue() === "nodeUI" ? "nodeUI" : "prop",
+        nodeId : JSON.parse(this.inputs.nodeId.getValue()) as GraphId,
+        propKey: this.inputs.propKey.getValue(),
+        label  : label === "" ? undefined : label,
+      },
+      at >= 0 ? at : undefined
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._index = r.index;
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    def.exposed.splice(this._index, 1);
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Moves a forwarded row. */
+export class ReorderEntryOp extends ToolOp<{
+  graphPath: StringProperty;
+  from: IntProperty;
+  to: IntProperty;
+}> {
+  static tooldef() {
+    return {
+      uiname  : "Reorder Exposed Row",
+      toolpath: "graph.reorder_entry",
+      inputs: {
+        graphPath: strInput(),
+        from     : intInput(0),
+        to       : intInput(0),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as ReorderEntryOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = reorderEntry(def, this.inputs.from.getValue(), this.inputs.to.getValue());
+    if (r !== undefined) {
+      throw new Error(r.refusal);
+    }
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    reorderEntry(def, this.inputs.to.getValue(), this.inputs.from.getValue());
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Points a forwarded row at another target, keeping its label and position. */
+export class RepointEntryOp extends ToolOp<{
+  graphPath: StringProperty;
+  index: IntProperty;
+  nodeId: StringProperty;
+  propKey: StringProperty;
+}> {
+  private _previous: { nodeId: GraphId; propKey: string } | undefined;
+
+  static tooldef() {
+    return {
+      uiname  : "Repoint Exposed Row",
+      toolpath: "graph.repoint_entry",
+      inputs: {
+        graphPath: strInput(),
+        index    : intInput(0),
+        nodeId   : strInput(),
+        propKey  : strInput(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as RepointEntryOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = repointEntry(
+      def,
+      this.inputs.index.getValue(),
+      JSON.parse(this.inputs.nodeId.getValue()) as GraphId,
+      this.inputs.propKey.getValue()
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._previous = r.previous;
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const prev = this._previous!;
+    // restored without validation: the previous target may be the missing one that prompted the repoint
+    const entry = def.exposed[this.inputs.index.getValue()];
+    entry.nodeId = prev.nodeId;
+    entry.propKey = prev.propKey as unknown as NodePropName;
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Removes a forwarded row; undo puts the same entry back where it was. */
+export class RemoveEntryOp extends ToolOp<{
+  graphPath: StringProperty;
+  index: IntProperty;
+}> {
+  private _entry: ExposedEntry | undefined;
+
+  static tooldef() {
+    return {
+      uiname  : "Remove Exposed Row",
+      toolpath: "graph.remove_entry",
+      inputs: {
+        graphPath: strInput(),
+        index    : intInput(0),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as RemoveEntryOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = removeEntry(def, this.inputs.index.getValue());
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._entry = r.entry;
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    def.exposed.splice(this.inputs.index.getValue(), 0, this._entry!);
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Declares a boundary socket on the definition at graphPath. */
+export class AddGroupSocketOp extends ToolOp<{
+  graphPath: StringProperty;
+  dir: StringProperty;
+  key: StringProperty;
+  socketType: StringProperty;
+}> {
+  static tooldef() {
+    return {
+      uiname  : "Add Group Socket",
+      toolpath: "graph.add_group_socket",
+      inputs: {
+        graphPath : strInput(),
+        dir       : strInput(),
+        key       : strInput(),
+        socketType: strInput(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as AddGroupSocketOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  private _dir(): SocketDir {
+    return this.inputs.dir.getValue() === "out" ? "out" : "in";
+  }
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = addBoundary(
+      def,
+      this._dir(),
+      this.inputs.key.getValue(),
+      this.inputs.socketType.getValue()
+    );
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    removeBoundary(def, this._dir(), this.inputs.key.getValue());
+    notifyGraph(ctx, this);
+  }
+}
+
+/** Retires a boundary socket; undo declares it again and remakes its inner links. */
+export class RemoveGroupSocketOp extends ToolOp<{
+  graphPath: StringProperty;
+  dir: StringProperty;
+  key: StringProperty;
+}> {
+  private _removed: Exclude<ReturnType<typeof removeBoundary>, { refusal: string }> | undefined;
+
+  static tooldef() {
+    return {
+      uiname  : "Remove Group Socket",
+      toolpath: "graph.remove_group_socket",
+      inputs: {
+        graphPath: strInput(),
+        dir      : strInput(),
+        key      : strInput(),
+      },
+    };
+  }
+
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+    return definitionOkay(ctx, toolop as RemoveGroupSocketOp | undefined);
+  }
+
+  override undoPre(_ctx: ContextLike): void {}
+
+  private _dir(): SocketDir {
+    return this.inputs.dir.getValue() === "out" ? "out" : "in";
+  }
+
+  override exec(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    const r = removeBoundary(def, this._dir(), this.inputs.key.getValue());
+    if (isRefusal(r)) {
+      throw new Error(r.refusal);
+    }
+    this._removed = r;
+    notifyGraph(ctx, this);
+  }
+
+  override undo(ctx: ContextLike): void {
+    const def = definitionAt(ctx, this.inputs.graphPath.getValue());
+    restoreBoundary(def, this._dir(), this.inputs.key.getValue(), this._removed!);
+    notifyGraph(ctx, this);
+  }
+}
+
 for (const cls of [
   AddNodeOp,
   DeleteNodeOp,
@@ -634,6 +1203,15 @@ for (const cls of [
   RenameNodeOp,
   ReplaceNodeOp,
   SetNodePropOp,
+  DuplicateNodeOp,
+  CreateGroupOp,
+  UngroupOp,
+  ExposeEntryOp,
+  ReorderEntryOp,
+  RepointEntryOp,
+  RemoveEntryOp,
+  AddGroupSocketOp,
+  RemoveGroupSocketOp,
 ]) {
   ToolOp.register(cls as unknown as Parameters<typeof ToolOp.register>[0]);
 }

@@ -9,15 +9,27 @@ import { FloatSocket } from "../scripts/graph/sockets_std";
 import { ExposedEntry, GroupDef, GroupNode } from "../scripts/graph/group";
 import { defineGraphAPI } from "../scripts/graph/graph_api";
 import {
+  AddGroupSocketOp,
   AddNodeOp,
   ConnectOp,
+  CreateGroupOp,
   DeleteNodeOp,
   DisconnectOp,
+  DuplicateNodeOp,
+  ExposeEntryOp,
   MoveNodeOp,
+  RemoveEntryOp,
+  RemoveGroupSocketOp,
   RenameNodeOp,
+  ReorderEntryOp,
+  RepointEntryOp,
   ReplaceNodeOp,
   SetNodePropOp,
+  UngroupOp,
 } from "../scripts/graph/graph_ops";
+import { buildGraphFromDSL } from "../scripts/graph/dsl";
+import { NodeClasses } from "../scripts/graph/node";
+import { SocketClasses } from "../scripts/graph/socket";
 
 beforeAll(() => {
   (globalThis as unknown as { window: unknown }).window ||= globalThis;
@@ -64,7 +76,6 @@ function makeCtx(graph: Graph) {
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   ctx.toolstack = new ToolStack(ctx);
@@ -86,7 +97,6 @@ function id(n: Node): string {
   return JSON.stringify(n.id);
 }
 
- 
 function addNode(ctx: any, type: string, x = 0, y = 0): Node {
   const tool = new AddNodeOp();
   tool.inputs.graphPath.setValue("graph");
@@ -97,7 +107,6 @@ function addNode(ctx: any, type: string, x = 0, y = 0): Node {
   return ctx.graph.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue()))!;
 }
 
- 
 function connect(ctx: any, src: Node, srcKey: string, dst: Node, dstKey: string): void {
   const tool = new ConnectOp();
   tool.inputs.graphPath.setValue("graph");
@@ -222,7 +231,8 @@ test("SetNodePropOp sets through the stack; undo restores value and wasSet", () 
   expect(m.props.bias.getValue()).toBe(5);
 });
 
-const REFUSAL = "a group instance takes value edits only; structural edits belong to the group's definition";
+const REFUSAL =
+  "a group instance takes value edits only; structural edits belong to the group's definition";
 
 async function makeGroup() {
   const def = new GroupDef();
@@ -315,4 +325,285 @@ test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure
   expect(m.inputs.a.edges).toEqual([src.outputs.value]);
   expect(m.inputs.b.edges).toEqual([src2.outputs.value]);
   expect(def.exposed).toEqual([eBias, eUI]);
+});
+
+function connectRaw(g: Graph, src: Node, srcKey: string, dst: Node, dstKey: string): void {
+  g.connect(src.outputs[srcKey], dst.inputs[dstKey]);
+}
+
+test("CreateGroupOp groups, saves through the store, undoes to the same objects and redoes into the same definition", () => {
+  const g = new Graph();
+  const saved: { ref: string; def: GroupDef }[] = [];
+  g.groupSaver = async (ref, def) => {
+    saved.push({ ref, def });
+  };
+  const ctx = makeCtx(g);
+  const src = addNode(ctx, "OpsSrc");
+  const m = addNode(ctx, "OpsMath");
+  const q = addNode(ctx, "OpsMath");
+  connectRaw(g, src, "value", m, "a");
+  connectRaw(g, m, "out", q, "a");
+
+  const tool = new CreateGroupOp();
+  tool.inputs.graphPath.setValue("graph");
+  tool.inputs.storePath.setValue("graph");
+  tool.inputs.nodeIds.setValue(JSON.stringify([m.id]));
+  tool.inputs.ref.setValue("grp");
+  ctx.toolstack.execTool(ctx, tool);
+
+  const grp = g.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue()))!;
+  expect(grp).toBeInstanceOf(GroupNode);
+  expect(g.nodes.includes(m)).toBe(false);
+  expect(saved.length).toBe(1);
+  expect(saved[0].ref).toBe("grp");
+  const def = saved[0].def;
+  expect(def.subgraph.nodeIdMap.get(m.id)).toBe(m);
+  expect(ctx.selection.has(grp.id)).toBe(true);
+  expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
+  expect(grp.outputs.out.edges).toEqual([q.inputs.a]);
+
+  ctx.toolstack.undo();
+  expect(g.nodeIdMap.get(m.id)).toBe(m);
+  expect(g.nodes.includes(grp)).toBe(false);
+  expect(src.outputs.value.edges).toEqual([m.inputs.a]);
+  expect(m.outputs.out.edges).toEqual([q.inputs.a]);
+  expect(def.subgraph.nodes.every((n) => !(n instanceof OpsMath))).toBe(true);
+
+  ctx.toolstack.redo();
+  expect(g.nodeIdMap.get(grp.id)).toBe(grp);
+  expect((grp as GroupNode).definition).toBe(def);
+  expect(def.subgraph.nodeIdMap.get(m.id)).toBe(m);
+  expect(saved.length).toBe(2);
+  expect(saved[1].def).toBe(def);
+  expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
+});
+
+test("CreateGroupOp refuses through canRun on an empty ref and on a refused plan", () => {
+  const ctx = makeCtx(new Graph());
+  const m = addNode(ctx, "OpsMath");
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  const tool = new CreateGroupOp();
+  tool.inputs.graphPath.setValue("graph");
+  tool.inputs.storePath.setValue("graph");
+  tool.inputs.nodeIds.setValue(JSON.stringify([m.id]));
+  expect(CreateGroupOp.canRun(ctx, tool)).toBe(false);
+
+  tool.inputs.ref.setValue("grp");
+  tool.inputs.nodeIds.setValue("[]");
+  expect(CreateGroupOp.canRun(ctx, tool)).toBe(false);
+  expect(warn.mock.calls.map((c) => c[0])).toEqual([
+    "a new group needs a reference to be saved under",
+    "select at least one node to group",
+  ]);
+  warn.mockRestore();
+});
+
+test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto the same ids", () => {
+  const ctx = makeCtx(new Graph());
+  const g: Graph = ctx.graph;
+  const src = addNode(ctx, "OpsSrc");
+  const m = addNode(ctx, "OpsMath");
+  connectRaw(g, src, "value", m, "a");
+
+  const create = new CreateGroupOp();
+  create.inputs.graphPath.setValue("graph");
+  create.inputs.storePath.setValue("graph");
+  create.inputs.nodeIds.setValue(JSON.stringify([m.id]));
+  create.inputs.ref.setValue("grp");
+  ctx.toolstack.execTool(ctx, create);
+  const grp = g.nodeIdMap.get(JSON.parse(create.outputs.nodeId.getValue())) as GroupNode;
+
+  const tool = new UngroupOp();
+  tool.inputs.graphPath.setValue("graph");
+  tool.inputs.nodeId.setValue(id(grp));
+  ctx.toolstack.execTool(ctx, tool);
+
+  const pairs = JSON.parse(tool.outputs.nodeIds.getValue()) as [number, number][];
+  expect(pairs.length).toBe(1);
+  const inlined = g.nodeIdMap.get(pairs[0][1])!;
+  expect(inlined).toBeInstanceOf(OpsMath);
+  expect(inlined).not.toBe(m);
+  expect(g.nodes.includes(grp)).toBe(false);
+  expect(src.outputs.value.edges).toEqual([inlined.inputs.a]);
+  expect(ctx.selection.has(inlined.id)).toBe(true);
+
+  ctx.toolstack.undo();
+  expect(g.nodeIdMap.get(grp.id)).toBe(grp);
+  expect(g.nodes.includes(inlined)).toBe(false);
+  expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
+
+  ctx.toolstack.redo();
+  expect(g.nodeIdMap.get(pairs[0][1])).toBeInstanceOf(OpsMath);
+  expect(g.nodes.includes(grp)).toBe(false);
+});
+
+test("DuplicateNodeOp copies a synced instance with its ref, definition and override", async () => {
+  const { host, grp, inner, def } = await makeGroup();
+  const ctx = makeCtx(host);
+  grp.subgraph.nodeIdMap.get(inner.id)!.props.bias.setValue(7);
+
+  const tool = new DuplicateNodeOp();
+  tool.inputs.graphPath.setValue("graph");
+  tool.inputs.nodeId.setValue(id(grp));
+  tool.inputs.x.setValue(30);
+  tool.inputs.y.setValue(40);
+  ctx.toolstack.execTool(ctx, tool);
+
+  const copy = host.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue())) as GroupNode;
+  expect(copy).toBeInstanceOf(GroupNode);
+  expect(copy).not.toBe(grp);
+  expect(copy.ref).toBe("grp");
+  expect(copy.definition).toBe(def);
+  expect(copy.subgraph.nodeIdMap.get(inner.id)!.props.bias.getValue()).toBe(7);
+  expect([copy.pos[0], copy.pos[1]]).toEqual([30, 40]);
+
+  ctx.toolstack.undo();
+  expect(host.nodes.length).toBe(1);
+  ctx.toolstack.redo();
+  expect(host.nodeIdMap.get(copy.id)).toBeInstanceOf(GroupNode);
+});
+
+test("AddNodeOp with a ref adds an unresolved instance that the next resolve binds", async () => {
+  const def = new GroupDef();
+  def.subgraph.add(new OpsMath());
+  const host = new Graph();
+  host.groupLoader = async (ref) => (ref === "grp" ? def : undefined);
+  const ctx = makeCtx(host);
+
+  const tool = new AddNodeOp();
+  tool.inputs.graphPath.setValue("graph");
+  tool.inputs.nodeType.setValue("GroupNode");
+  tool.inputs.ref.setValue("grp");
+  ctx.toolstack.execTool(ctx, tool);
+
+  const node = host.nodes[0] as GroupNode;
+  expect(node).toBeInstanceOf(GroupNode);
+  expect(node.ref).toBe("grp");
+  expect(node.definition).toBeUndefined();
+  await host.resolveGroups();
+  expect(node.definition).toBe(def);
+  expect(node.subgraph.nodes.some((n) => n instanceof OpsMath)).toBe(true);
+});
+
+test("the definition ops mutate a definition through the stack and undo, and refuse elsewhere", async () => {
+  const def = new GroupDef();
+  const m = new OpsMath();
+  def.subgraph.add(m);
+  const ctx = makeCtx(def.subgraph);
+
+  const expose = new ExposeEntryOp();
+  expose.inputs.graphPath.setValue("graph");
+  expose.inputs.kind.setValue("prop");
+  expose.inputs.nodeId.setValue(id(m));
+  expose.inputs.propKey.setValue("bias");
+  expose.inputs.label.setValue("Bias");
+  ctx.toolstack.execTool(ctx, expose);
+  expect(def.exposed.map((e) => e.label)).toEqual(["Bias"]);
+
+  const exposeUI = new ExposeEntryOp();
+  exposeUI.inputs.graphPath.setValue("graph");
+  exposeUI.inputs.kind.setValue("nodeUI");
+  exposeUI.inputs.nodeId.setValue(id(m));
+  exposeUI.inputs.at.setValue(0);
+  ctx.toolstack.execTool(ctx, exposeUI);
+  expect(def.exposed.map((e) => e.kind)).toEqual(["nodeUI", "prop"]);
+
+  const reorder = new ReorderEntryOp();
+  reorder.inputs.graphPath.setValue("graph");
+  reorder.inputs.from.setValue(0);
+  reorder.inputs.to.setValue(1);
+  ctx.toolstack.execTool(ctx, reorder);
+  expect(def.exposed.map((e) => e.kind)).toEqual(["prop", "nodeUI"]);
+
+  const repoint = new RepointEntryOp();
+  repoint.inputs.graphPath.setValue("graph");
+  repoint.inputs.index.setValue(0);
+  repoint.inputs.nodeId.setValue(id(m));
+  repoint.inputs.propKey.setValue("in:a");
+  ctx.toolstack.execTool(ctx, repoint);
+  expect(def.exposed[0].propKey).toBe("in:a");
+
+  const remove = new RemoveEntryOp();
+  remove.inputs.graphPath.setValue("graph");
+  remove.inputs.index.setValue(1);
+  ctx.toolstack.execTool(ctx, remove);
+  expect(def.exposed.map((e) => e.kind)).toEqual(["prop"]);
+
+  const addSock = new AddGroupSocketOp();
+  addSock.inputs.graphPath.setValue("graph");
+  addSock.inputs.dir.setValue("in");
+  addSock.inputs.key.setValue("x");
+  addSock.inputs.socketType.setValue("FloatSocket");
+  ctx.toolstack.execTool(ctx, addSock);
+  expect(def.inputs.x).toBeInstanceOf(FloatSocket);
+  def.subgraph.connect(def.inputNode().outputs.x, m.inputs.b);
+
+  const removeSock = new RemoveGroupSocketOp();
+  removeSock.inputs.graphPath.setValue("graph");
+  removeSock.inputs.dir.setValue("in");
+  removeSock.inputs.key.setValue("x");
+  ctx.toolstack.execTool(ctx, removeSock);
+  expect(def.inputs.x).toBeUndefined();
+  expect(m.inputs.b.edges).toEqual([]);
+
+  // undo all the way back, then redo all the way forward
+  ctx.toolstack.undo();
+  expect(def.inputs.x).toBeDefined();
+  expect(def.inputNode().outputs.x.edges).toEqual([m.inputs.b]);
+  ctx.toolstack.undo();
+  expect(def.inputs.x).toBeUndefined();
+  ctx.toolstack.undo();
+  expect(def.exposed.map((e) => e.kind)).toEqual(["prop", "nodeUI"]);
+  ctx.toolstack.undo();
+  expect(def.exposed[0].propKey).toBe("bias");
+  ctx.toolstack.undo();
+  expect(def.exposed.map((e) => e.kind)).toEqual(["nodeUI", "prop"]);
+  ctx.toolstack.undo();
+  expect(def.exposed.map((e) => e.kind)).toEqual(["prop"]);
+  ctx.toolstack.undo();
+  expect(def.exposed).toEqual([]);
+  for (let i = 0; i < 7; i++) {
+    ctx.toolstack.redo();
+  }
+  expect(def.exposed.map((e) => e.propKey)).toEqual(["in:a"]);
+  expect(def.inputs.x).toBeUndefined();
+
+  // every definition op refuses on a root graph and on an instance subgraph
+  const { host, grp } = await makeGroup();
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  for (const path of ["graph", `graph.nodes[${grp.id}].group`]) {
+    const hctx = makeCtx(host);
+    for (const op of [
+      new ExposeEntryOp(),
+      new ReorderEntryOp(),
+      new RepointEntryOp(),
+      new RemoveEntryOp(),
+      new AddGroupSocketOp(),
+      new RemoveGroupSocketOp(),
+    ]) {
+      op.inputs.graphPath.setValue(path);
+      const cls = op.constructor as typeof ExposeEntryOp;
+      expect(cls.canRun(hctx, op)).toBe(false);
+    }
+  }
+  expect(warn.mock.calls.every((c) => /is not a group definition/.test(String(c[0])))).toBe(true);
+  warn.mockRestore();
+});
+
+test("a DSL entry names its definition with group, and only a GroupNode may", () => {
+  const registries = { nodeTypes: NodeClasses, socketTypes: SocketClasses };
+  const { graph, diagnostics } = buildGraphFromDSL(
+    {
+      nodes: [
+        { id: "g", type: "GroupNode", group: "blur" },
+        { id: "m", type: "OpsMath", group: "blur" },
+      ],
+    },
+    registries
+  );
+  const g = graph.nodeIdMap.get("g") as GroupNode;
+  expect(g.ref).toBe("blur");
+  expect(diagnostics.map((d) => d.code)).toEqual(["unknown-prop"]);
+  expect(diagnostics[0].path).toBe("nodes[1].group");
 });

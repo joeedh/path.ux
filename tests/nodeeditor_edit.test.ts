@@ -110,7 +110,6 @@ function makeCtx(graph: Graph) {
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-   
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   ctx.toolstack = new ToolStack(ctx);
@@ -348,18 +347,12 @@ test("the exposure list renders in order, skips unresolved, flags missing, and r
   def.exposed.push(new ExposedEntry("prop", unresolved.id, "hidden"));
   def.exposed.push(new ExposedEntry("prop", "no-such-id", "x", "Gone"));
 
-  const host = new Graph();
-  const saved: string[] = [];
-  host.groupSaver = async (ref) => {
-    saved.push(ref);
-  };
-
-  const ctx = makeCtx(host);
+  // The designer edits the definition, so its subgraph is what the path resolves to.
+  const ctx = makeCtx(def.subgraph);
   const root = document.createElement("div");
   buildGroupDesigner(root, {
     ctx,
     def,
-    ref      : "grp",
     graphPath: "graph",
     delegate : new ToolOpDelegate(),
   });
@@ -382,10 +375,26 @@ test("the exposure list renders in order, skips unresolved, flags missing, and r
   expect(def.exposed.length).toBe(3);
   expect(def.exposed[2].nodeId).toBe(inner.id);
   expect(def.exposed[2].propKey).toBe("bias");
-  expect(saved).toEqual(["grp"]);
+  expect(ctx.toolstack.length).toBe(1);
 
   expect(rows().map((r) => r.dataset.exposureIndex)).toEqual(["0", "2"]);
   expect(rows().map((r) => r.dataset.exposureState)).toEqual(["ok", "ok"]);
+
+  // the edit is an op: undo puts the missing target back
+  ctx.toolstack.undo();
+  expect(def.exposed[2].nodeId).toBe("no-such-id");
+});
+
+test("a definition edit dispatched against a graph that is no definition is refused", () => {
+  const host = new Graph();
+  const ctx = makeCtx(host);
+  const verdict = new ToolOpDelegate().check(ctx, {
+    kind     : "removeEntry",
+    graphPath: "graph",
+    index    : 0,
+  });
+  expect(verdict.ok).toBe(false);
+  expect(!verdict.ok && verdict.reason).toMatch(/definition/);
 });
 
 test("editing a forwarded property on an instance materializes the override", async () => {

@@ -3,6 +3,7 @@ import { Graph } from "./graph";
 import { Node } from "./node";
 import type { NodeTypeConstructor } from "./node";
 import type { SocketTypeConstructor } from "./socket";
+import { GroupNode } from "./group";
 
 /**
  * The flat graph description a model authors, validated against the type registries
@@ -17,6 +18,8 @@ export interface GraphDSLNode {
   id: string | number;
   /** A node typeName from the registry the DSL is validated against. */
   type: string;
+  /** The definition a GroupNode entry instances; refused on any other type. */
+  group?: string;
   /** Values by key, set on the node's own props. No fallback to input/output defaults. */
   props?: Record<string, unknown>;
   /** Values by key, set on the matching input socket's editable default. */
@@ -101,6 +104,18 @@ export function buildGraphFromDSL(
     node.id = id;
     graph.add(node);
     byId.set(id, node);
+
+    if (entry.group !== undefined) {
+      if (node instanceof GroupNode && typeof entry.group === "string") {
+        node.ref = entry.group;
+      } else {
+        report(
+          "unknown-prop",
+          `${path}.group`,
+          `node '${id}' names a group definition, which only a GroupNode entry can do`
+        );
+      }
+    }
 
     applyBlock(node, entry.props, "props", (key) => node.props[key], "prop", `${path}.props`);
     applyBlock(
