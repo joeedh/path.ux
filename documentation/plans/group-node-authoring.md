@@ -292,6 +292,10 @@ tests.
 
 ### Stage G1 — grouping and ungrouping, as pure graph operations
 
+Status: **done** (2026-09-04). `dissolveGroup` answers what `redoGroup` needs so a redo
+reuses the same definition, instance and node objects, and `ungroup`'s inverse is
+`regroup`. `removeBoundary` answers what `restoreBoundary` needs.
+
 Files: `scripts/graph/grouping.ts` (new), `scripts/graph/group.ts`, `scripts/graph/graph.ts`,
 `scripts/graph/index.ts`, `tests/graph_grouping.test.ts`.
 

@@ -105,6 +105,9 @@ pathux.Graph {
   /** Saves a group definition by reference; the seam beside groupLoader for group designers. */
   groupSaver?: (ref: string, def: GroupDef) => Promise<void>;
 
+  /** Allocates a reference for a definition about to be created; the third store seam. */
+  newGroupRef?: () => string;
+
   /** Set on a group instance's subgraph; flagSortDirty bubbles through it to the owning graph. */
   groupOwner: Node | undefined = undefined;
 

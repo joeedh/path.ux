@@ -316,7 +316,10 @@ graph.GroupNode {
   );
 
   static override graphDef(): NodeDef {
-    return { typeName: "GroupNode", uiName: "Group" };
+    return {
+      typeName: "GroupNode",
+      uiName  : (node) => (node as GroupNode).ref || "Group",
+    };
   }
 
   /** The definition reference; the client's groupLoader decides what it points at. */
@@ -448,21 +451,37 @@ graph.GroupNode {
     }
 
     this._def = def;
-    const hash = def.contentHash();
-    if (this.syncedHash !== hash) {
-      this._reconcile(def);
-      this.syncedHash = hash;
+    if (this.syncedHash !== def.contentHash()) {
+      this.syncToDefinition();
+    } else {
+      this._deriveOrphans(def);
     }
 
-    // Orphan flags are not serialized, so they re-derive even when the hash matched.
+    rt.report.synced.push(this);
+  }
+
+  /**
+   * Rebuilds the instance from its bound definition now, overrides kept, and records
+   * the definition's hash. A no-op on an instance with no definition.
+   */
+  syncToDefinition(): void {
+    const def = this._def;
+    if (def === undefined) {
+      return;
+    }
+    this._reconcile(def);
+    this.syncedHash = def.contentHash();
+    this._deriveOrphans(def);
+  }
+
+  /** Orphan flags are not serialized, so they re-derive on every resolve. */
+  private _deriveOrphans(def: GroupDef): void {
     for (const k in this.inputs) {
       this.inputs[k].orphaned = !(k in def.inputs);
     }
     for (const k in this.outputs) {
       this.outputs[k].orphaned = !(k in def.outputs);
     }
-
-    rt.report.synced.push(this);
   }
 
   /** Reconciliation's coarse hook; the default fans out to the finer hooks below. */

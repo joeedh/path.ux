@@ -4,6 +4,7 @@ export * from "./sockets_std";
 export * from "./node";
 export * from "./graph";
 export * from "./group";
+export * from "./grouping";
 export * from "./dsl";
 export * from "./graph_api";
 export * from "./graph_ops";
