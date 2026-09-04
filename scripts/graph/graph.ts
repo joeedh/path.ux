@@ -136,8 +136,18 @@ pathux.Graph {
         }
       }
     }
+    if (this.snapshotExtra !== undefined) {
+      out.push(...this.snapshotExtra());
+    }
     return out;
   }
+
+  /**
+   * Extra state folded into the structural snapshot. A group definition sets it
+   * to its boundary and exposed entries, so an edit to those wakes the watchers
+   * on the subgraph's path the way a node edit does.
+   */
+  snapshotExtra: (() => unknown[]) | undefined = undefined;
 
   /** Adds the node, allocating an id when it has none. A node keeps a preassigned id. */
   add(node: Node): void {

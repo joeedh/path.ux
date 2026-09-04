@@ -15,9 +15,10 @@ import {
   graphPack,
 } from "../../path-controller/util/graphpack";
 import { Graph } from "../../graph/graph";
-import { GroupNode } from "../../graph/group";
+import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
 import type { GroupDef } from "../../graph/group";
-import type { Node as GraphNode } from "../../graph/node";
+import { Node as GraphNode } from "../../graph/node";
+import type { NodePropName } from "../../graph/node";
 import type { GraphId, SocketDir } from "../../graph/graph_types";
 import { HotKey } from "../../path-controller/util/simple_events";
 import type { CSSFont } from "../../core/cssfont";
@@ -34,7 +35,7 @@ import { Menu } from "../../menu/menu";
 import type { MenuTemplate } from "../../menu/menu_types";
 import { createMenu, startMenu } from "../../menu/menu_ops";
 import { t } from "../../core/theme_schema";
-import { buildForwardedUI } from "./groupui";
+import { buildAddSocketRow, buildForwardedUI } from "./groupui";
 
 /** One step of the view's descent: a group node, and which of its two graphs it leads into. */
 export interface DescentEntry {
@@ -109,6 +110,21 @@ export interface LinkRef {
 export const LINK_PICK_PX = 18;
 
 /** Identifies a link across a rebuild, for the view's link selection. */
+/** The prop key of the frame's prop row under a pointer event, if it sits on one. */
+function propRowKey(e: Event): NodePropName | undefined {
+  for (const el of e.composedPath()) {
+    if (el instanceof HTMLElement && el.classList.contains("nodeeditor-prop-row")) {
+      const key = el.dataset.propKey;
+      return key === undefined ? undefined : (key as unknown as NodePropName);
+    }
+  }
+  return undefined;
+}
+
+function isProxy(node: GraphNode): node is GroupInputNode | GroupOutputNode {
+  return node instanceof GroupInputNode || node instanceof GroupOutputNode;
+}
+
 export function linkKey(ref: LinkRef): string {
   return JSON.stringify([ref.srcNode, ref.srcSocket, ref.dstNode, ref.dstSocket]);
 }
@@ -524,6 +540,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.linkSelection.clear();
     this._lastPress = undefined;
     this._defSig = this._levelSignature();
+
+    // Node ids repeat across levels, and a frame's extra UI is built once, so
+    // every frame is rebuilt for the level rather than reused by id.
+    for (const frame of this.frames.values()) {
+      frame.remove();
+    }
+    this.frames.clear();
+
     this._refresh();
     this.dispatchEvent(new CustomEvent("levelchange", { detail: this.currentLevel() }));
   }
@@ -744,6 +768,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       return;
     }
 
+    const level = this.currentLevel();
     for (const node of graph.nodes) {
       const existing = this.frames.get(node.id);
       if (existing !== undefined) {
@@ -768,7 +793,12 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.addEventListener("contextmenu", (e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        this._openNodeMenu(frame, this._localPoint(e));
+        const key = propRowKey(e);
+        if (key !== undefined && this.currentLevel().kind === "definition") {
+          this.openPropMenu(frame, key, this._localPoint(e));
+        } else {
+          this._openNodeMenu(frame, this._localPoint(e));
+        }
       });
 
       const nodePath = `${this.currentGraphPath}.nodes[${JSON.stringify(node.id)}]`;
@@ -782,6 +812,17 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       } else {
         // A group instance's editable values are its forwarded rows above.
         frame.nodePath = nodePath;
+      }
+      if (level.kind === "definition" && isProxy(node)) {
+        const dir: SocketDir = node instanceof GroupInputNode ? "in" : "out";
+        frame.buildExtraUI = (_f, body) =>
+          buildAddSocketRow(body, dir, {
+            ctx      : this.graphContext,
+            def      : level.def,
+            graphPath: this.currentGraphPath,
+            delegate : this.delegate,
+            onChanged: () => this.syncGraph(),
+          });
       }
 
       frame.parentWidget = this.panzoom;
@@ -1264,6 +1305,35 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * Group, Show Instance and Ungroup, and any node adds Group Selected while
    * something is selected.
    */
+  /**
+   * The menu a prop row opens inside a definition: "Expose on group" (id
+   * "expose") forwards that property to every instance. Returned so a caller
+   * can drive it without a screen.
+   */
+  openPropMenu(frame: NodeFrame<CTX>, key: NodePropName, local: [number, number]): Menu<CTX> {
+    const nid = frame.node.id;
+    const { name } = GraphNode.decomposePropName(key);
+    const menu = createMenu(this.ctx, "", [
+      {
+        name    : "Expose on group",
+        id      : "expose",
+        tooltip : `Forward ${name} so every instance of this group shows it`,
+        callback: () => void this.exposeProp(nid, key),
+      },
+    ]);
+    this._startMenu(menu, local);
+    return menu;
+  }
+
+  /** Forwards one property of a node in the definition on screen; false when refused. */
+  exposeProp(nodeId: GraphId, propKey: NodePropName): boolean {
+    return this._dispatch({
+      kind     : "exposeEntry",
+      graphPath: this.currentGraphPath,
+      entry    : { kind: "prop", nodeId, propKey: propKey as unknown as string },
+    });
+  }
+
   private _openNodeMenu(frame: NodeFrame<CTX>, local: [number, number]) {
     const nid = frame.node.id;
     const node = frame.node;

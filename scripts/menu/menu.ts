@@ -527,7 +527,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
     if (item instanceof Menu) {
       const dom = document.createElement("span") as HTMLSpanElement & { _id: string | number };
-      dom.innerHTML = "" + item.title;
+      // newMenu names a menu through its name attribute; title is only set by hand.
+      dom.innerHTML = item.title || (item.getAttribute("name") ?? "");
       dom._id = dom.id = "" + id;
       dom.setAttribute("class", "menu");
 

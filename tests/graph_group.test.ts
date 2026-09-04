@@ -6,8 +6,15 @@ import { Node, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
 import { Graph } from "../scripts/graph/graph";
 import { FloatSocket } from "../scripts/graph/sockets_std";
-import { GroupDef, GroupNode, GroupInputNode, GroupOutputNode } from "../scripts/graph/group";
+import {
+  ExposedEntry,
+  GroupDef,
+  GroupNode,
+  GroupInputNode,
+  GroupOutputNode,
+} from "../scripts/graph/group";
 import type { GroupDiff } from "../scripts/graph/group";
+import { CreateSnapshot } from "../scripts/path-controller/controller/pathwatch";
 
 class GSrc extends Node {
   static STRUCT = nstructjs.inlineRegister(this, `graph.GSrc {}`);
@@ -271,7 +278,7 @@ test("resolveGroups refuses a self-instantiating group, directly and through an 
   g2.groupLoader = async (ref) => (ref === "x" ? defX : ref === "y" ? defY : undefined);
 
   const report2 = await g2.resolveGroups();
-  expect(report2.failed.some((f) => f.reason.includes('cannot contain itself'))).toBe(true);
+  expect(report2.failed.some((f) => f.reason.includes("cannot contain itself"))).toBe(true);
 });
 
 test("the self-containing arrangement is refused at link time with the same sentence", () => {
@@ -329,4 +336,25 @@ test("a group instance round-trips unsynced and reconciles identically after loa
   expect(report.failed).toEqual([]);
   expect(lg.subgraph.nodeIdMap.get(innerA.id)).toBe(liA);
   expect(liA.props.bias.getValue()).toBe(42);
+});
+
+test("a definition's boundary and exposed entries are part of its subgraph's snapshot, after a load too", () => {
+  const def = new GroupDef();
+  const inner = new GMath();
+  def.subgraph.add(inner);
+  const snap = () => JSON.stringify(def.subgraph[CreateSnapshot]());
+
+  const before = snap();
+  def.exposed.push(new ExposedEntry("prop", inner.id, "bias", "Bias"));
+  const exposed = snap();
+  expect(exposed).not.toBe(before);
+
+  def.declareInput("a", new FloatSocket("in"));
+  expect(snap()).not.toBe(exposed);
+
+  const loaded = readJSON(writeJSON(def), GroupDef);
+  const loadedSnap = () => JSON.stringify(loaded.subgraph[CreateSnapshot]());
+  const loadedBefore = loadedSnap();
+  loaded.exposed.pop();
+  expect(loadedSnap()).not.toBe(loadedBefore);
 });

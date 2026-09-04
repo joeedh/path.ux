@@ -48,7 +48,19 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     // import, so createElement always resolves it.
     this.view = UIBase.createElement("nodegraphview-x") as NodeGraphView<CTX>;
     this.keymap = new KeyMap(this.view.hotkeys()) as unknown as KeyMap<CTX>;
-    this.view.addEventListener("levelchange", () => this._renderDesigner());
+    this.view.addEventListener("levelchange", () => {
+      // The watched path follows the level; the next update() rebuilds it.
+      this.clearPathWatches();
+      this._renderDesigner();
+    });
+  }
+
+  /** On a definition level the designer follows the definition's path, so an exposure edit re-renders it. */
+  override watchPath(): void {
+    super.watchPath();
+    if (this.view.currentLevel().kind === "definition") {
+      this.addPathWatch(this.view.currentGraphPath, { onChange: () => this._renderDesigner() });
+    }
   }
 
   static define(): IAreaDef {

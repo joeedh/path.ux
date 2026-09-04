@@ -589,6 +589,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       );
       row.parentWidget = this._body!;
       row.packflag |= this.inherit_packflag;
+      row.dataset.propKey = key;
       root.appendChild(row);
     }
   }
@@ -698,6 +699,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     row.style.flex = "1 1 auto";
     row.style.minWidth = "0";
     row.packflag |= this.inherit_packflag;
+    row.dataset.propKey = socketPropName as unknown as string;
     this._editors.push(row);
     return row;
   }

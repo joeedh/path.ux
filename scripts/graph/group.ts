@@ -164,7 +164,28 @@ graph.GroupDef {
   exposed: ExposedEntry[] = [];
 
   constructor() {
+    this._adopt();
+  }
+
+  /** Binds the subgraph back to this definition; run again after a load replaces it. */
+  private _adopt(): void {
     defOfSubgraph.set(this.subgraph, this);
+    this.subgraph.snapshotExtra = () => this._snapshotExtra();
+  }
+
+  /** The boundary keys and exposed entries, as the subgraph's snapshot sees them. */
+  private _snapshotExtra(): unknown[] {
+    const out: unknown[] = [];
+    for (const key of Object.keys(this.inputs)) {
+      out.push(`in:${key}`);
+    }
+    for (const key of Object.keys(this.outputs)) {
+      out.push(`out:${key}`);
+    }
+    for (const e of this.exposed) {
+      out.push(`${e.kind}:${String(e.nodeId)}:${e.propKey}:${e.label ?? ""}`);
+    }
+    return out;
   }
 
   /** The subgraph's input proxy node, created on first use. */
@@ -271,7 +292,7 @@ graph.GroupDef {
 
     this.inputs = this._loadBoundary(this.inputs as unknown as unknown[], "in");
     this.outputs = this._loadBoundary(this.outputs as unknown as unknown[], "out");
-    defOfSubgraph.set(this.subgraph, this);
+    this._adopt();
   }
 
   private _loadBoundary(list: unknown[], dir: SocketDir): Sockets {

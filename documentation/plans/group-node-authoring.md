@@ -444,8 +444,21 @@ it and two slower ones do not.
 
 ### Stage G4 — the group designer, rebuilt
 
-Files: `scripts/editors/nodeeditor/groupui.ts`, `nodeframe.ts`, `nodeeditor.ts`,
-`tests/nodeeditor_edit.test.ts`.
+Status: **done** (2026-09-04). Three details beyond the list below. `Graph` gains an optional
+`snapshotExtra` hook folded into its structural snapshot, and `GroupDef` sets it on its
+subgraph to the boundary keys and exposed entries, so an exposure edit wakes the watchers on
+the definition's path the way a node edit does; `NodeEditor.watchPath` watches
+`view.currentGraphPath` on a definition level and re-renders the designer from it. The view
+drops every frame when the level changes, because node ids repeat across levels and a
+frame's extra UI is built once. The expose menu's targets are the node's props and input
+defaults; an output's value is computed, so it is not offered. Two fixes fell out: a submenu
+built by `newMenu` had no label, because `Menu.addItem` read the element's `title` where
+`newMenu` sets the `name` attribute; and `Container.init` writes the `class` attribute, so a
+marker class must be added after `_init()` (the designer's `mark` helper).
+
+Files: `scripts/editors/nodeeditor/groupui.ts`, `nodeframe.ts`, `nodegraphview.ts`,
+`nodeeditor.ts`, `scripts/graph/graph.ts`, `scripts/graph/group.ts`, `scripts/menu/menu.ts`,
+`tests/nodeeditor_edit.test.ts`, `tests/graph_group.test.ts`.
 
 - `buildGroupDesigner` rebuilt to [The look](#the-look): the three lists over path.ux
   containers, every mutation an edit through the delegate, re-rendered on `levelchange` and

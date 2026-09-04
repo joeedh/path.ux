@@ -1,6 +1,14 @@
-import { test, expect, beforeAll } from "vitest";
+import { test, expect, beforeAll, vi } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
 import type { IContextBase } from "../scripts/core/context_base";
+import type { Label } from "../scripts/core/ui";
+import type { Button } from "../scripts/widgets/ui_button";
+import type { TextBox } from "../scripts/widgets/ui_textbox";
+import type { DropBox } from "../scripts/menu/dropbox";
+import type { Menu } from "../scripts/menu/menu";
+import type { MenuTemplate } from "../scripts/menu/menu_types";
+import { createMenu } from "../scripts/menu/menu_ops";
+import type { ExposeRequest } from "../scripts/graph/grouping";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
 import { FloatProperty, StringProperty } from "../scripts/path-controller/toolsys/toolprop";
@@ -20,9 +28,18 @@ import type { NodeFrame } from "../scripts/editors/nodeeditor/nodeframe";
 // a type-only use would let the transpiler elide it.
 import "../scripts/editors/nodeeditor/nodegraphview";
 import type { NodeGraphView } from "../scripts/editors/nodeeditor/nodegraphview";
-import { buildForwardedUI, buildGroupDesigner } from "../scripts/editors/nodeeditor/groupui";
+import {
+  buildForwardedUI,
+  buildGroupDesigner,
+  exposeMenuTemplate,
+  socketTypeMenuTemplate,
+} from "../scripts/editors/nodeeditor/groupui";
 import { ToolOpDelegate } from "../scripts/editors/nodeeditor/delegate";
-import type { GraphEdit, NodeGraphDelegate } from "../scripts/editors/nodeeditor/delegate";
+import type {
+  GraphContext,
+  GraphEdit,
+  NodeGraphDelegate,
+} from "../scripts/editors/nodeeditor/delegate";
 
 beforeAll(() => {
   // resolvePath / theme lookups touch window in node.
@@ -335,8 +352,74 @@ test("auto-arrange keeps islands separate and commits as one undo entry", () => 
   expect([a, b, c].map((n) => [n.pos[0], n.pos[1]])).toEqual(before);
 });
 
-test("the exposure list renders in order, skips unresolved, flags missing, and repoint preserves position", () => {
+/** Every element under root matching selector, shadow roots included, in tree order. */
+function deepAll(root: Element, selector: string): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const shadowOf = (el: Element) =>
+    el.shadowRoot ?? (el as unknown as { shadow?: ShadowRoot }).shadow;
+  const walk = (node: ParentNode) => {
+    for (const el of node.querySelectorAll<HTMLElement>("*")) {
+      if (el.matches(selector)) {
+        out.push(el);
+      }
+      const shadow = shadowOf(el);
+      if (shadow) {
+        walk(shadow);
+      }
+    }
+  };
+  walk(root);
+  const own = shadowOf(root);
+  if (own) {
+    walk(own);
+  }
+  return out;
+}
+
+/** The first element under root matching selector, shadow roots included. */
+function deepOne(root: Element, selector: string): HTMLElement {
+  const el = deepAll(root, selector)[0];
+  expect(el, selector).toBeDefined();
+  return el;
+}
+
+/** The path.ux buttons and dropboxes under root, by the name they show. */
+function control(root: Element, tag: "button-x" | "dropbox-x", name: string) {
+  return deepAll(root, tag).find((el) => el.getAttribute("name") === name);
+}
+
+function press(btn: Element | undefined) {
+  expect(btn).toBeDefined();
+  (btn as unknown as Button).onclick!(undefined as unknown as PointerEvent);
+}
+
+/** Picks id from a dropbox's template as its menu would; sub names the submenu holding it. */
+function pick(ctx: unknown, dbox: Element | undefined, id: string, sub?: string) {
+  expect(dbox).toBeDefined();
+  const template = (dbox as unknown as DropBox).template as MenuTemplate;
+  const menu = createMenu(ctx as IContextBase, "", template);
+  if (sub === undefined) {
+    menu._onselect!(id);
+    return;
+  }
+  const submenu = (template as Menu[]).find((m) => m.getAttribute("name") === sub);
+  expect(submenu, sub).toBeDefined();
+  submenu!._onselect!(id);
+}
+
+class RecordingDelegate extends ToolOpDelegate {
+  edits: GraphEdit[] = [];
+
+  override perform(ctx: GraphContext, edit: GraphEdit): void {
+    this.edits.push(edit);
+    super.perform(ctx, edit);
+  }
+}
+
+function designerFixture() {
   const def = new GroupDef();
+  def.declareInput("a", new FloatSocket("in"));
+  def.declareOutput("out", new FloatSocket("out"));
   const inner = new EditBias();
   def.subgraph.add(inner);
   const unresolved = new GroupNode();
@@ -349,40 +432,151 @@ test("the exposure list renders in order, skips unresolved, flags missing, and r
 
   // The designer edits the definition, so its subgraph is what the path resolves to.
   const ctx = makeCtx(def.subgraph);
+  const delegate = new RecordingDelegate();
   const root = document.createElement("div");
-  buildGroupDesigner(root, {
-    ctx,
-    def,
+  buildGroupDesigner(root, { ctx, def, graphPath: "graph", delegate });
+  return { def, inner, ctx, delegate, root };
+}
+
+test("the designer lists inputs, outputs and exposed rows; a missing row offers Repoint and nothing else", () => {
+  const { root } = designerFixture();
+
+  const boundary = (dir: string) =>
+    deepAll(deepOne(root, `.nodeeditor-boundary-${dir}`), ".nodeeditor-boundary-row");
+  expect(boundary("in").map((r) => r.dataset.socketKey)).toEqual(["a"]);
+  expect(boundary("out").map((r) => r.dataset.socketKey)).toEqual(["out"]);
+  const typeLabel = deepOne(boundary("in")[0], ".nodeeditor-boundary-type") as unknown as Label;
+  expect(typeLabel.text).toBe("Float");
+
+  const rows = deepAll(root, ".nodeeditor-exposure-row");
+  expect(rows.map((r) => r.dataset.exposureIndex)).toEqual(["0", "2"]);
+  expect(rows.map((r) => r.dataset.exposureState)).toEqual(["ok", "missing"]);
+  const names = rows.map(
+    (r) => (deepAll(r, ".nodeeditor-exposure-name")[0] as unknown as Label).text
+  );
+  expect(names).toEqual(["Bias", "Gone"]);
+
+  const buttonNames = (row: Element) => deepAll(row, "button-x").map((b) => b.getAttribute("name"));
+  expect(buttonNames(rows[0])).toEqual(["↑", "↓", "✕"]);
+  expect(buttonNames(rows[1])).toEqual(["✕"]);
+  expect(control(rows[1], "dropbox-x", "Repoint…")).toBeDefined();
+  expect(control(rows[0], "dropbox-x", "Repoint…")).toBeUndefined();
+
+  // Every control says what it does.
+  for (const el of deepAll(root, "button-x, dropbox-x")) {
+    expect((el as unknown as UIBase).description, el.getAttribute("name")!).toBeTruthy();
+  }
+});
+
+test("the designer's reorder, remove and repoint controls dispatch the matching edits", () => {
+  const { def, inner, ctx, delegate, root } = designerFixture();
+  const rows = () => deepAll(root, ".nodeeditor-exposure-row");
+
+  press(control(rows()[0], "button-x", "↓"));
+  expect(delegate.edits.at(-1)).toEqual({
+    kind: "reorderEntry",
     graphPath: "graph",
-    delegate : new ToolOpDelegate(),
+    from: 0,
+    to: 1,
   });
+  expect(def.exposed[1].label).toBe("Bias");
 
-  const rows = () => [...root.querySelectorAll<HTMLElement>(".nodeeditor-exposure-row")];
-  expect(rows().map((r) => r.dataset.exposureIndex)).toEqual(["0", "2"]);
-  expect(rows().map((r) => r.dataset.exposureState)).toEqual(["ok", "missing"]);
-  expect(rows()[0].querySelector("span")!.textContent).toBe("Bias");
-  expect(rows()[1].querySelector("span")!.textContent).toBe("Gone");
+  // The re-rendered list follows the new order.
+  expect(rows().map((r) => r.dataset.exposureIndex)).toEqual(["1", "2"]);
 
-  const missingRow = rows()[1];
-  const [nodeIdIn, keyIn] = [...missingRow.querySelectorAll("input")];
-  nodeIdIn.value = String(inner.id);
-  keyIn.value = "bias";
-  const repoint = [...missingRow.querySelectorAll("button")].find(
-    (btn) => btn.textContent === "Repoint"
-  )!;
-  repoint.click();
-
-  expect(def.exposed.length).toBe(3);
-  expect(def.exposed[2].nodeId).toBe(inner.id);
-  expect(def.exposed[2].propKey).toBe("bias");
-  expect(ctx.toolstack.length).toBe(1);
-
-  expect(rows().map((r) => r.dataset.exposureIndex)).toEqual(["0", "2"]);
+  pick(ctx, control(rows()[1], "dropbox-x", "Repoint…"), "bias", "EditBias");
+  expect(delegate.edits.at(-1)).toEqual({
+    kind     : "repointEntry",
+    graphPath: "graph",
+    index    : 2,
+    nodeId   : inner.id,
+    propKey  : "bias",
+  });
   expect(rows().map((r) => r.dataset.exposureState)).toEqual(["ok", "ok"]);
 
-  // the edit is an op: undo puts the missing target back
+  press(control(rows()[1], "button-x", "✕"));
+  expect(delegate.edits.at(-1)).toEqual({ kind: "removeEntry", graphPath: "graph", index: 2 });
+  expect(def.exposed.length).toBe(2);
+
+  press(control(deepOne(root, ".nodeeditor-boundary-in"), "button-x", "✕"));
+  expect(delegate.edits.at(-1)).toEqual({
+    kind     : "removeBoundary",
+    graphPath: "graph",
+    dir      : "in",
+    key      : "a",
+  });
+  expect(Object.keys(def.inputs)).toEqual([]);
+
+  // Each edit is an op on the stack; undo restores the last one.
+  expect(ctx.toolstack.length).toBe(4);
   ctx.toolstack.undo();
-  expect(def.exposed[2].nodeId).toBe("no-such-id");
+  expect(Object.keys(def.inputs)).toEqual(["a"]);
+});
+
+test("the add-input control picks a socket type, then names it; a refusal shows beneath the box", () => {
+  const { def, ctx, delegate, root } = designerFixture();
+  const addRow = () => deepAll(root, ".nodeeditor-add-socket[data-dir='in']")[0];
+
+  expect(deepAll(addRow(), ".nodeeditor-add-socket-name").length).toBe(0);
+  pick(ctx, control(addRow(), "dropbox-x", "Add input…"), "FloatSocket");
+
+  const nameRow = deepAll(addRow(), ".nodeeditor-add-socket-name")[0];
+  expect(nameRow).toBeDefined();
+  const box = deepAll(nameRow, "textbox-x")[0] as unknown as TextBox;
+  expect(box.text).toBe("float");
+
+  // A name already on the boundary is refused, and the refusal is shown.
+  box.text = "a";
+  press(control(nameRow, "button-x", "Add"));
+  expect(delegate.edits.length).toBe(0);
+  const note = deepAll(addRow(), ".nodeeditor-refusal")[0] as unknown as Label;
+  expect(note.hidden).toBe(false);
+  expect(note.text).toMatch(/a/);
+  expect((control(nameRow, "button-x", "Add") as unknown as UIBase).description).toBe(note.text);
+
+  box.text = "gain";
+  press(control(nameRow, "button-x", "Add"));
+  expect(delegate.edits.at(-1)).toEqual({
+    kind      : "addBoundary",
+    graphPath : "graph",
+    dir       : "in",
+    key       : "gain",
+    socketType: "FloatSocket",
+  });
+  expect(Object.keys(def.inputs)).toEqual(["a", "gain"]);
+  expect(
+    deepAll(deepOne(root, ".nodeeditor-boundary-in"), ".nodeeditor-boundary-row").map(
+      (r) => r.dataset.socketKey
+    )
+  ).toEqual(["a", "gain"]);
+});
+
+test("the expose menu names each inner node's properties and whole node, and never a proxy", () => {
+  const { def, inner, ctx } = designerFixture();
+  const picked: ExposeRequest[] = [];
+  const items = exposeMenuTemplate(ctx, def, (req) => picked.push(req)) as Menu[];
+
+  // The unresolved group is listed under its ref for its whole node; the proxies are not.
+  const titles = (menus: Menu[]) => menus.map((m) => m.getAttribute("name"));
+  expect(titles(items)).toEqual(["EditBias", "void"]);
+  const bias = items[0];
+  expect(bias.items.map((li) => li._id)).toEqual(["nodeUI", "bias"]);
+
+  bias._onselect!("bias");
+  bias._onselect!("nodeUI");
+  expect(picked).toEqual([
+    { kind: "prop", nodeId: inner.id, propKey: "bias" },
+    { kind: "nodeUI", nodeId: inner.id },
+  ]);
+
+  // Repointing a prop entry offers props only.
+  const propsOnly = exposeMenuTemplate(ctx, def, () => undefined, "prop") as Menu[];
+  expect(titles(propsOnly)).toEqual(["EditBias"]);
+  expect(propsOnly[0].items.map((li) => li._id)).toEqual(["bias"]);
+
+  const ids = socketTypeMenuTemplate(() => undefined).map((e) => (e as { id: string }).id);
+  expect(ids).toContain("FloatSocket");
+  expect(ids).toContain("EditStrSocket");
 });
 
 test("a definition edit dispatched against a graph that is no definition is refused", () => {
@@ -444,4 +638,76 @@ test("editing a forwarded property on an instance materializes the override", as
   // the definition's own value stays untouched; only the instance overrode it.
   expect(inner.props.bias.getValue()).toBe(0.5);
   expect(inner.props.bias.wasSet).toBe(false);
+});
+
+async function definitionView() {
+  const def = new GroupDef();
+  def.declareInput("a", new FloatSocket("in"));
+  const inner = new EditBias();
+  def.subgraph.add(inner);
+
+  const host = new Graph();
+  const grp = new GroupNode();
+  grp.ref = "grp";
+  host.add(grp);
+  host.groupLoader = async (ref) => (ref === "grp" ? def : undefined);
+  await host.resolveGroups();
+
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  return { def, inner, grp, ctx, view };
+}
+
+test("inside a definition a prop row's context menu exposes the property", async () => {
+  const { def, inner, grp, view } = await definitionView();
+  await view.enterDefinition(grp);
+  expect(view.currentLevel().kind).toBe("definition");
+
+  const frame = view.frames.get(inner.id)!;
+  const row = deepAll(frame, ".nodeeditor-prop-row").find((r) => r.dataset.propKey === "bias");
+  expect(row).toBeDefined();
+
+  const spy = vi.spyOn(view, "openPropMenu");
+  row!.dispatchEvent(
+    new MouseEvent("contextmenu", { bubbles: true, composed: true, cancelable: true })
+  );
+  expect(spy).toHaveBeenCalledTimes(1);
+  expect(spy.mock.calls[0][1]).toBe("bias");
+
+  const menu = spy.mock.results[0].value as Menu;
+  expect(menu.items.map((li) => li._id)).toEqual(["expose"]);
+  menu._onselect!("expose");
+  expect(def.exposed.map((e) => [e.kind, e.nodeId, e.propKey])).toEqual([
+    ["prop", inner.id, "bias"],
+  ]);
+
+  // At the root the same gesture opens the node menu instead.
+  await view.exitLevel();
+  const nodeMenu = vi.spyOn(view as unknown as { _openNodeMenu: () => void }, "_openNodeMenu");
+  const rootFrame = view.frames.get(grp.id)!;
+  rootFrame.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+  expect(spy).toHaveBeenCalledTimes(1);
+  expect(nodeMenu).toHaveBeenCalledTimes(1);
+});
+
+test("the proxy frames carry the add-socket row inside a definition and nowhere else", async () => {
+  const { def, grp, ctx, view } = await definitionView();
+  expect(deepAll(view, ".nodeeditor-add-socket").length).toBe(0);
+
+  await view.enterDefinition(grp);
+  const inFrame = view.frames.get(def.inputNode().id)!;
+  const addRow = deepAll(inFrame, ".nodeeditor-add-socket[data-dir='in']")[0];
+  expect(addRow).toBeDefined();
+
+  pick(ctx, control(addRow, "dropbox-x", "Add input…"), "FloatSocket");
+  const nameRow = deepAll(inFrame, ".nodeeditor-add-socket-name")[0];
+  press(control(nameRow, "button-x", "Add"));
+  expect(Object.keys(def.inputs)).toEqual(["a", "float"]);
+  expect(Object.keys(def.inputNode().outputs)).toEqual(["a", "float"]);
+  expect(ctx.toolstack.length).toBe(1);
+
+  // The frames belong to the level: leaving it rebuilds them without the row.
+  await view.exitLevel();
+  expect(deepAll(view, ".nodeeditor-add-socket").length).toBe(0);
 });

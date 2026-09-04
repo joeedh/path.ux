@@ -6,10 +6,12 @@ import "../../widgets/ui_widgets";
 import "../../widgets/ui_textbox";
 import "../../menu/menu";
 import "../../menu/dropbox";
-import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import { PackFlags, UIBase } from "../../core/ui_base";
 import { Container } from "../../core/ui";
+import type { Label } from "../../core/ui";
 import type { IContextBase } from "../../core/context_base";
+import type { CSSFont } from "../../core/cssfont";
+import { getStyleRecord } from "../../core/base/ui_base_theme_lookup";
 import { Graph } from "../../graph/graph";
 import {
   Node as GraphNode,
@@ -18,11 +20,21 @@ import {
   nodePropSocket,
   nodePropTarget,
 } from "../../graph/node";
-import type { NodeSocketBase } from "../../graph/socket";
-import { ExposedEntry, GroupDef, GroupNode } from "../../graph/group";
-import type { GraphId } from "../../graph/graph_types";
-import type { GraphContext, NodeGraphDelegate } from "./delegate";
+import { SocketClasses } from "../../graph/socket";
+import type { NodeSocketBase, SocketTypeConstructor } from "../../graph/socket";
+import {
+  ExposedEntry,
+  GroupDef,
+  GroupInputNode,
+  GroupNode,
+  GroupOutputNode,
+} from "../../graph/group";
+import type { ExposeRequest } from "../../graph/grouping";
+import type { SocketDir } from "../../graph/graph_types";
+import type { GraphContext, GraphEdit, NodeGraphDelegate } from "./delegate";
 import { ToolProperty } from "../../path-controller/toolsys/toolprop";
+import type { MenuTemplate } from "../../menu/menu_types";
+import { createMenu } from "../../menu/menu_ops";
 
 export type ExposureState = "ok" | "unresolved" | "missing";
 
@@ -80,11 +92,7 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
   for (const entry of def.exposed) {
     const state = exposedEntryState(node.subgraph, entry);
     const target = node.subgraph.nodeIdMap.get(entry.nodeId);
-    const label =
-      entry.label ||
-      GraphNode.decomposePropName(entry.propKey).name ||
-      target?.getUIName() ||
-      String(entry.nodeId);
+    const label = entryLabel(entry, target);
     const row: ForwardedRow = { entry, state, label };
 
     if (state === "ok" && target !== undefined) {
@@ -98,6 +106,16 @@ export function forwardedRows(node: GroupNode, nodePath: string): ForwardedRow[]
     rows.push(row);
   }
   return rows;
+}
+
+/** The text a row shows for an entry: its label, else the prop's name, else the node's. */
+function entryLabel(entry: ExposedEntry, target: GraphNode | undefined): string {
+  return (
+    entry.label ||
+    GraphNode.decomposePropName(entry.propKey).name ||
+    target?.getUIName() ||
+    String(entry.nodeId)
+  );
 }
 
 /**
@@ -212,157 +230,353 @@ export function propEditRow<CTX extends IContextBase>(
   return row;
 }
 
-export interface GroupDesignerOpts {
+/** What the designer and the proxy frames' add-socket row share. */
+export interface DefinitionEditOpts {
   ctx: GraphContext;
   def: GroupDef;
-  /** The datapath of def.subgraph; the designer's edits dispatch against it. */
+  /** The datapath of def.subgraph; the edits dispatch against it. */
   graphPath: string;
   delegate: NodeGraphDelegate;
   onChanged?: () => void;
+}
 
+export interface GroupDesignerOpts extends DefinitionEditOpts {
   /** Color of the missing-entry flag; the hosting editor passes its themed ErrorColor. */
   errorColor?: string;
 }
 
+/** Checks then performs; a refusal is reported and nothing runs. */
+function dispatchEdit(opts: DefinitionEditOpts, edit: GraphEdit): string | undefined {
+  const verdict = opts.delegate.check(opts.ctx, edit);
+  if (!verdict.ok) {
+    return verdict.reason;
+  }
+  opts.delegate.perform(opts.ctx, edit);
+  opts.onChanged?.();
+  return undefined;
+}
+
+/** The word for a boundary side as the controls name it. */
+function sideWord(dir: SocketDir): string {
+  return dir === "in" ? "input" : "output";
+}
+
+/** Initializes el, then adds the marker class; Container.init writes the class attribute. */
+function mark<T extends UIBase>(el: T, cls: string): T {
+  el._init();
+  el.classList.add(cls);
+  return el;
+}
+
+/** The socket types a boundary socket can take, each entry reporting its registered type name. */
+export function socketTypeMenuTemplate(onPick: (typeName: string) => void): MenuTemplate {
+  const items: MenuTemplate = [];
+  for (const [typeName, cls] of SocketClasses) {
+    const sdef = cls.socketDef();
+    items.push({
+      name    : sdef.uiName || typeName,
+      id      : typeName,
+      tooltip : `A ${sdef.uiName || typeName} socket, carrying ${sdef.type} values`,
+      callback: () => onPick(typeName),
+    });
+  }
+  return items;
+}
+
 /**
- * Renders the group designer's exposure list into root: the definition's
- * exposed entries in order, each with reorder and remove controls, a missing
- * entry flagged with repoint controls, an unresolved one skipped silently.
+ * The targets an exposure can name inside def: one submenu per inner node,
+ * listing the node's properties and, for kind undefined or "nodeUI", the whole
+ * node. Menu ids are the prop key, or "nodeUI" for the whole node.
+ */
+export function exposeMenuTemplate(
+  ctx: IContextBase,
+  def: GroupDef,
+  onPick: (req: ExposeRequest) => void,
+  kind?: "prop" | "nodeUI"
+): MenuTemplate {
+  const items: MenuTemplate = [];
+  for (const node of def.subgraph.nodes) {
+    if (node instanceof GroupInputNode || node instanceof GroupOutputNode) {
+      continue;
+    }
+    const nodeName = node.getUIName();
+    const entries: MenuTemplate = [];
+    if (kind !== "prop") {
+      entries.push({
+        name    : "whole node",
+        id      : "nodeUI",
+        tooltip : `Forward every property of ${nodeName} as one block`,
+        callback: () => onPick({ kind: "nodeUI", nodeId: node.id }),
+      });
+    }
+    if (kind !== "nodeUI") {
+      for (const key of nodePropKeys(node)) {
+        const { name, type } = GraphNode.decomposePropName(key);
+        // an output's value is computed, so a forwarded row for it would edit nothing
+        if (type === "out") {
+          continue;
+        }
+        const propKey = key as unknown as string;
+        entries.push({
+          name,
+          id      : propKey,
+          tooltip : `Forward ${nodeName}'s ${name} to every instance`,
+          callback: () => onPick({ kind: "prop", nodeId: node.id, propKey }),
+        });
+      }
+    }
+    if (entries.length === 0) {
+      continue;
+    }
+    const sub = createMenu(ctx, nodeName, entries);
+    sub.tooltip = `What ${nodeName} can forward`;
+    items.push(sub);
+  }
+  return items;
+}
+
+/** The lowest-numbered key of the form base, base_2, base_3 … absent from socks. */
+function freeKey(base: string, socks: Record<string, unknown>): string {
+  if (!(base in socks)) {
+    return base;
+  }
+  for (let i = 2; ; i++) {
+    const key = `${base}_${i}`;
+    if (!(key in socks)) {
+      return key;
+    }
+  }
+}
+
+/**
+ * The control that adds a boundary socket: an "Add input…" (or output) dropdown
+ * of socket types; picking one reveals a name box and an Add button that
+ * dispatches addBoundary. A refusal shows beneath the box and on the button.
+ */
+export function buildAddSocketRow<CTX extends IContextBase>(
+  con: Container<CTX>,
+  dir: SocketDir,
+  opts: DefinitionEditOpts
+): Container<CTX> {
+  const word = sideWord(dir);
+  const row = mark(con.col(), "nodeeditor-add-socket");
+  row.dataset.dir = dir;
+
+  let pending: string | undefined;
+  let nameRow: Container<CTX> | undefined;
+  let note: Label<CTX> | undefined;
+
+  const hideName = () => {
+    nameRow?.remove();
+    note?.remove();
+    nameRow = note = undefined;
+  };
+
+  const showName = () => {
+    hideName();
+    nameRow = mark(row.row(), "nodeeditor-add-socket-name");
+
+    const socks = dir === "in" ? opts.def.inputs : opts.def.outputs;
+    const sdef = SocketClasses.get(pending!)?.socketDef();
+    const base = (sdef?.uiName || sdef?.type || word).toLowerCase().replace(/\s+/g, "_");
+    const box = nameRow.textbox(undefined, freeKey(base, socks));
+    box.description = `The new ${word}'s name, as every instance will show it`;
+
+    const add = nameRow.button("Add", () => {
+      const reason = dispatchEdit(opts, {
+        kind     : "addBoundary",
+        graphPath: opts.graphPath,
+        dir,
+        key       : box.text.trim(),
+        socketType: pending!,
+      });
+      if (reason !== undefined) {
+        note!.text = reason;
+        note!.hidden = false;
+        add.description = reason;
+        return;
+      }
+      hideName();
+      pending = undefined;
+    });
+    add.description = `Add the ${sdef?.uiName ?? pending} ${word} named in the box`;
+
+    note = mark(row.label(""), "nodeeditor-refusal");
+    note.hidden = true;
+  };
+
+  const pick = row.menu(
+    `Add ${word}…`,
+    socketTypeMenuTemplate((typeName) => {
+      pending = typeName;
+      showName();
+    })
+  );
+  pick.description = `Add an ${word} socket to the group; every instance gains it`;
+
+  return row;
+}
+
+/**
+ * Renders the group designer into root: the definition's inputs, outputs and
+ * exposed rows as three headed lists, each with its remove, reorder and add
+ * controls. Nothing here asks for an id: targets and types come from menus.
  * Every mutation goes through the delegate (check first) and re-renders.
  */
 export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): void {
   root.textContent = "";
 
-  const dispatch = (edit: Parameters<NodeGraphDelegate["perform"]>[1]) => {
-    if (opts.delegate.check(opts.ctx, edit).ok) {
-      opts.delegate.perform(opts.ctx, edit);
-    }
-    buildGroupDesigner(root, opts);
-    opts.onChanged?.();
+  const con = UIBase.createElement("container-x") as Container<IContextBase>;
+  con.ctx = opts.ctx as unknown as IContextBase;
+  con._init();
+  con.classList.add("nodeeditor-designer");
+  root.appendChild(con);
+
+  const rerender = () => buildGroupDesigner(root, opts);
+  const host: DesignerHost = {
+    opts,
+    rerender,
+    dispatch: (edit) => {
+      const reason = dispatchEdit(opts, edit);
+      if (reason !== undefined) {
+        note.text = reason;
+        note.hidden = false;
+        return;
+      }
+      rerender();
+    },
+    socketFont: getStyleRecord(con, "nodeframe", "SocketText")?.SocketText as CSSFont | undefined,
   };
 
-  const common = { graphPath: opts.graphPath };
-  const exposed = opts.def.exposed;
+  buildBoundaryList(con, "in", host);
+  buildBoundaryList(con, "out", host);
+  buildExposedList(con, host);
 
-  exposed.forEach((entry, index) => {
+  // Built last so a refusal reads beneath the control that raised it.
+  const note = mark(con.label(""), "nodeeditor-refusal");
+  note.hidden = true;
+  if (opts.errorColor !== undefined) {
+    note.style.color = opts.errorColor;
+  }
+}
+
+interface DesignerHost {
+  opts: GroupDesignerOpts;
+  rerender: () => void;
+  dispatch: (edit: GraphEdit) => void;
+  socketFont: CSSFont | undefined;
+}
+
+function heading<CTX extends IContextBase>(con: Container<CTX>, text: string) {
+  const lbl = mark(con.label(text), "nodeeditor-designer-heading");
+  lbl.font = "TitleText";
+  return lbl;
+}
+
+function buildBoundaryList<CTX extends IContextBase>(
+  con: Container<CTX>,
+  dir: SocketDir,
+  { opts, dispatch, rerender, socketFont }: DesignerHost
+) {
+  const word = sideWord(dir);
+  const socks = dir === "in" ? opts.def.inputs : opts.def.outputs;
+  const list = mark(con.col(), `nodeeditor-boundary-${dir}`);
+  heading(list, dir === "in" ? "Inputs" : "Outputs");
+
+  for (const key of Object.keys(socks)) {
+    const row = mark(list.row(), "nodeeditor-boundary-row");
+    row.dataset.socketKey = key;
+    row.label(key);
+
+    const cls = socks[key].constructor as SocketTypeConstructor;
+    const sdef = cls.socketDef();
+    const type = mark(row.label(sdef.uiName || sdef.typeName), "nodeeditor-boundary-type");
+    if (socketFont !== undefined) {
+      type.font = socketFont;
+    }
+
+    const remove = row.button("✕", () =>
+      dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key })
+    );
+    remove.description = `Remove the ${word} '${key}'; every instance loses the socket and its links`;
+  }
+
+  buildAddSocketRow(list, dir, {
+    ...opts,
+    onChanged: () => {
+      opts.onChanged?.();
+      rerender();
+    },
+  });
+}
+
+function buildExposedList<CTX extends IContextBase>(
+  con: Container<CTX>,
+  { opts, dispatch }: DesignerHost
+) {
+  const list = mark(con.col(), "nodeeditor-exposed");
+  heading(list, "Exposed");
+
+  const common = { graphPath: opts.graphPath };
+  opts.def.exposed.forEach((entry, index) => {
     const state = exposedEntryState(opts.def.subgraph, entry);
     if (state === "unresolved") {
       return;
     }
 
     const target = opts.def.subgraph.nodeIdMap.get(entry.nodeId);
-    const row = document.createElement("div");
-    row.className = "nodeeditor-exposure-row";
+    const row = mark(list.row(), "nodeeditor-exposure-row");
     row.dataset.exposureIndex = String(index);
     row.dataset.exposureState = state;
-    row.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
 
-    const name = document.createElement("span");
-    name.textContent =
-      entry.label ||
-      GraphNode.decomposePropName(entry.propKey).name ||
-      target?.getUIName() ||
-      String(entry.nodeId);
-    row.appendChild(name);
+    const name = mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
 
     if (state === "missing") {
-      const flag = document.createElement("span");
-      flag.textContent = "missing";
-      flag.title = "This entry's target no longer exists; repoint or remove it";
-      flag.style.color = opts.errorColor ?? "#ff6666";
-      row.appendChild(flag);
+      const flag = mark(row.label("missing"), "nodeeditor-exposure-flag");
+      flag.description = "This row's target no longer exists; point it somewhere else or remove it";
+      if (opts.errorColor !== undefined) {
+        flag.style.color = opts.errorColor;
+      }
 
-      const nodeIdIn = document.createElement("input");
-      nodeIdIn.type = "text";
-      nodeIdIn.title = "Node id to repoint this entry at";
-      nodeIdIn.style.width = "48px";
-      row.appendChild(nodeIdIn);
-
-      const keyIn = document.createElement("input");
-      keyIn.type = "text";
-      keyIn.title = "Property key to repoint this entry at";
-      keyIn.style.width = "64px";
-      row.appendChild(keyIn);
-
-      const repoint = document.createElement("button");
-      repoint.textContent = "Repoint";
-      repoint.title = "Point this entry at a different property";
-      const type = GraphNode.decomposePropName(entry.propKey).type;
-      repoint.addEventListener("click", () => {
-        dispatch({
-          kind: "repointEntry",
-          ...common,
-          index,
-          nodeId : _parseNodeId(nodeIdIn.value),
-          propKey: GraphNode.composePropName(type, keyIn.value.trim()),
-        });
-      });
-      row.appendChild(repoint);
+      const repoint = row.menu(
+        "Repoint…",
+        exposeMenuTemplate(
+          opts.ctx as unknown as IContextBase,
+          opts.def,
+          (req) =>
+            dispatch({
+              kind: "repointEntry",
+              ...common,
+              index,
+              nodeId : req.nodeId,
+              propKey: (req.propKey ?? "") as unknown as NodePropName,
+            }),
+          entry.kind
+        )
+      );
+      repoint.description =
+        "Point this row at a property that exists, keeping its place in the list";
     } else {
-      const up = document.createElement("button");
-      up.textContent = "↑";
-      up.title = "Move this entry up";
-      up.addEventListener("click", () =>
+      const up = row.button("↑", () =>
         dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 })
       );
-      row.appendChild(up);
-
-      const down = document.createElement("button");
-      down.textContent = "↓";
-      down.title = "Move this entry down";
-      down.addEventListener("click", () =>
+      up.description = "Show this row one place earlier on every instance";
+      const down = row.button("↓", () =>
         dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 })
       );
-      row.appendChild(down);
+      down.description = "Show this row one place later on every instance";
     }
 
-    const remove = document.createElement("button");
-    remove.textContent = "✕";
-    remove.title = "Stop exposing this entry";
-    remove.addEventListener("click", () => dispatch({ kind: "removeEntry", ...common, index }));
-    row.appendChild(remove);
-
-    root.appendChild(row);
+    const remove = row.button("✕", () => dispatch({ kind: "removeEntry", ...common, index }));
+    remove.description = "Stop forwarding this row; instances keep their values";
   });
 
-  const addRow = document.createElement("div");
-  addRow.className = "nodeeditor-exposure-add";
-  addRow.style.cssText = "display: flex; gap: 4px; align-items: center; font-size: 11px;";
-
-  const nodeIdIn = document.createElement("input");
-  nodeIdIn.type = "text";
-  nodeIdIn.title = "Node id of the property's owner";
-  nodeIdIn.style.width = "48px";
-  addRow.appendChild(nodeIdIn);
-
-  const keyIn = document.createElement("input");
-  keyIn.type = "text";
-  keyIn.title = "Property key to expose; leave empty to forward the node's whole UI";
-  keyIn.style.width = "64px";
-  addRow.appendChild(keyIn);
-
-  const add = document.createElement("button");
-  add.textContent = "Expose";
-  add.title = "Expose this property on every instance of the group";
-  add.addEventListener("click", () => {
-    const key = keyIn.value.trim();
-    dispatch({
-      kind: "exposeEntry",
-      ...common,
-      entry: {
-        kind   : key === "" ? "nodeUI" : "prop",
-        nodeId : _parseNodeId(nodeIdIn.value),
-        propKey: key,
-      },
-    });
-  });
-  addRow.appendChild(add);
-
-  root.appendChild(addRow);
-}
-
-/** GraphId is number | string; a numeric string reads as the number id. */
-function _parseNodeId(text: string): GraphId {
-  const raw = text.trim();
-  return /^-?\d+$/.test(raw) ? Number(raw) : raw;
+  const expose = list.menu(
+    "Expose…",
+    exposeMenuTemplate(opts.ctx as unknown as IContextBase, opts.def, (req) =>
+      dispatch({ kind: "exposeEntry", ...common, entry: req })
+    )
+  );
+  mark(expose, "nodeeditor-exposure-add");
+  expose.description = "Forward a property of an inner node so every instance shows it";
 }
