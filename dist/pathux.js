@@ -63841,6 +63841,16 @@ function buildGraphFromDSL(input, registries) {
         );
       }
     }
+    if (node instanceof GroupNode && registries.groups !== void 0) {
+      const def = registries.groups.get(node.ref);
+      if (def === void 0) {
+        const named = node.ref === "" ? "names no group definition" : `names group '${node.ref}'`;
+        report3("unknown-group", `${path}.group`, `node '${id}' ${named}, which is not known`);
+      } else {
+        node.setDefinition(node.ref, def);
+        node.syncToDefinition();
+      }
+    }
     applyBlock(node, entry.props, "props", (key) => node.props[key], "prop", `${path}.props`);
     applyBlock(
       node,
