@@ -6,6 +6,7 @@ import { t } from "../../core/theme_schema";
 import { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { Node as GraphNode, NodePropName, nodePropSocket, nodePropTarget } from "../../graph/node";
+import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
 import type { SocketDir } from "../../graph/graph_types";
 import { propEditRow } from "./groupui";
 import { getStyleRecord } from "../../core/base/ui_base_theme_lookup";
@@ -235,6 +236,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Graph-space position while a drag is live; undefined at rest. */
   previewPos: Vector2 | undefined = undefined;
 
+  /** Whether the latest press landed on the title bar rather than a socket row. */
+  headerPressed = false;
+
   getScale: () => number = () => 1;
   onSelect?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
   onMoveStart?: (frame: NodeFrame<CTX>, e: PointerEvent) => void;
@@ -296,6 +300,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         "border-color"      : t.color,
         "border-radius"     : t.number,
         HeaderBG            : t.color,
+        GroupAccent         : t.color,
+        GroupHeaderBG       : t.color,
+        ProxyHeaderBG       : t.color,
         SelectOutline       : t.color,
         DefaultText         : t.font,
         SocketText          : t.font,
@@ -398,10 +405,35 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._header.style.color = font.color;
     // The font shorthand resets line-height, so the row centering is re-applied after it.
     this._header.style.lineHeight = m.headerHeight + "px";
-    this._header.style.background = this.getDefault("HeaderBG") as string;
+    this._header.style.background = this.getDefault(this._headerKey()) as string;
     this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
 
+    // A group instance reads as a container: an accent stripe down its left edge.
+    this.style.borderLeft =
+      this.node instanceof GroupNode
+        ? `3px solid ${this.getDefault("GroupAccent")}`
+        : `1px solid ${this.getDefault("border-color")}`;
+
     this._styleRows();
+  }
+
+  /** The theme key of the header tint: groups and proxies carry their own. */
+  private _headerKey(): "HeaderBG" | "GroupHeaderBG" | "ProxyHeaderBG" {
+    if (this.node instanceof GroupNode) {
+      return "GroupHeaderBG";
+    }
+    if (this.node instanceof GroupInputNode || this.node instanceof GroupOutputNode) {
+      return "ProxyHeaderBG";
+    }
+    return "HeaderBG";
+  }
+
+  /** The title-bar tooltip; a group's says how to enter it. */
+  private _headerTitle(): string {
+    if (this.node instanceof GroupNode) {
+      return `An instance of the group '${this.node.ref}'; press its title twice to edit the definition every instance shares`;
+    }
+    return this.node.getDescription() || this.node.getUIName();
   }
 
   /** Watches the node's own path for header changes; prop rows own their values. */
@@ -426,7 +458,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       return;
     }
     this._header.textContent = this.node.getUIName();
-    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.title = this._headerTitle();
   }
 
   private _styleRows() {
@@ -566,7 +598,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     this._header = document.createElement("div");
     this._header.textContent = this.node.getUIName();
-    this._header.title = this.node.getDescription() || this.node.getUIName();
+    this._header.title = this._headerTitle();
     this._header.style.cssText =
       `height: ${m.headerHeight}px; line-height: ${m.headerHeight}px; ` +
       "padding: 0 6px; overflow: hidden; white-space: nowrap;";
@@ -711,6 +743,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
       // Keeps the press from also starting the view's box-select.
       e.stopPropagation();
+      this.headerPressed = e.composedPath().includes(this._header);
       this.onSelect?.(this, e);
 
       if (this._onNodeWidget(e)) {

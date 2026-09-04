@@ -1,10 +1,13 @@
-import { test, expect, beforeAll } from "vitest";
+import { test, expect, beforeAll, vi } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
 import { Area } from "../scripts/screen/ScreenArea";
 import { areaclasses } from "../scripts/screen/area_base";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
+import { flushPathNotifications } from "../scripts/path-controller/controller/pathwatch";
 import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
+import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
+import { Vector2 } from "../scripts/path-controller/util/vectormath";
 import { Node, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
 import { Graph } from "../scripts/graph/graph";
@@ -12,7 +15,12 @@ import { FloatSocket } from "../scripts/graph/sockets_std";
 import { GroupDef, GroupNode } from "../scripts/graph/group";
 import { defineGraphAPI } from "../scripts/graph/graph_api";
 import { socketAnchor, socketRow } from "../scripts/editors/nodeeditor/nodeframe";
-import { NodeGraphView } from "../scripts/editors/nodeeditor/nodegraphview";
+import {
+  DOUBLE_PRESS_MS,
+  LEVEL_PILL_TEXT,
+  NodeGraphView,
+} from "../scripts/editors/nodeeditor/nodegraphview";
+import type { Level } from "../scripts/editors/nodeeditor/nodegraphview";
 import { NodeEditor } from "../scripts/editors/nodeeditor/nodeeditor";
 import type { GraphEdit, NodeGraphDelegate } from "../scripts/editors/nodeeditor/delegate";
 
@@ -62,13 +70,23 @@ class ViewMath extends Node {
 }
 registerNodeType(ViewMath);
 
+class ViewBias extends Node {
+  static override graphDef(): NodeDef {
+    return {
+      typeName: "ViewBias",
+      props   : { bias: new FloatProperty(0.5) },
+      outputs : { out: new FloatSocket("out") },
+    };
+  }
+}
+registerNodeType(ViewBias);
+
 function makeCtx(graph: Graph) {
   const api = new DataAPI();
   const root = new DataStruct();
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-   
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   ctx.toolstack = new ToolStack(ctx);
@@ -85,9 +103,8 @@ function makeView(ctx: unknown): NodeGraphView {
 const REFUSAL =
   "a group instance takes value edits only; structural edits belong to the group's definition";
 
-async function makeGroup() {
+async function makeGroup(inner: Node = new ViewMath()) {
   const def = new GroupDef();
-  const inner = new ViewMath();
   def.subgraph.add(inner);
 
   const host = new Graph();
@@ -98,6 +115,15 @@ async function makeGroup() {
   await host.resolveGroups();
 
   return { def, inner, host, grp };
+}
+
+/** The crumb trail's button texts, the pill included when one is shown. */
+function crumbTexts(view: NodeGraphView): string[] {
+  return [...view.shadow.querySelectorAll("button.nodeeditor-crumb")].map((b) => b.textContent!);
+}
+
+function pillText(view: NodeGraphView): string | undefined {
+  return view.shadow.querySelector(".nodeeditor-level-pill")?.textContent ?? undefined;
 }
 
 test("a bare NodeGraphView works with no Area and no editor registration", () => {
@@ -140,7 +166,7 @@ test("refreshGraph reconciles by node id, keeping the frame and selection across
   expect(view.selection.has(src1.id)).toBe(true);
 });
 
-test("the editor ships unregistered; Area.register makes it reachable", () => {
+test("the editor ships unregistered; Area.register makes it reachable, and it persists the descent", async () => {
   // Direct `new` on an undefined custom element throws Illegal constructor on
   // the web platform, so non-registration is asserted rather than constructed
   // around.
@@ -154,6 +180,29 @@ test("the editor ships unregistered; Area.register makes it reachable", () => {
   const ed = UIBase.createElement("node-editor-x") as NodeEditor;
   expect(ed).toBeInstanceOf(NodeEditor);
   expect(ed.view).toBeInstanceOf(NodeGraphView);
+  expect([...ed.keymap!].map((k) => k.buildString())).toEqual(
+    ed.view.hotkeys().map((k) => k.buildString())
+  );
+
+  // The STRUCT carrier holds each entry as JSON; a file from before definition
+  // levels holds a bare instance id.
+  const { host, grp } = await makeGroup();
+  ed.setGraph(host, "graph");
+  const entry = { nodeId: grp.id, into: "definition" as const };
+  ed.view.setViewState({ pan: [0, 0], zoom: 1, descent: [entry] });
+  expect(ed._structDescent()).toEqual([JSON.stringify(entry)]);
+
+  const reader = (obj: NodeEditor) => {
+    obj.pan = new Vector2([3, 4]);
+    obj.zoom = 1.5;
+    obj.descent = [JSON.stringify(grp.id)];
+  };
+  ed.loadSTRUCT(reader as unknown as Parameters<NodeEditor["loadSTRUCT"]>[0]);
+  expect(ed.view.getViewState()).toEqual({
+    pan    : [3, 4],
+    zoom   : 1.5,
+    descent: [{ nodeId: grp.id, into: "instance" }],
+  });
 
   // The custom-element definition is irrevocable; unregister removes only the
   // areaclasses entry, so no other test inherits it.
@@ -229,28 +278,48 @@ test("socketAnchor lands on the frame edge at the socket's row", () => {
   expect(socketRow(node, "in", "missing")).toBe(-1);
 });
 
-test("the breadcrumb reflects descent and returns", async () => {
-  const { host, grp, inner } = await makeGroup();
+test("entering a definition shows its subgraph at nodes[id].definition, and the trail and pill follow the level", async () => {
+  const { host, grp, inner, def } = await makeGroup();
   const view = makeView(makeCtx(host));
   view.setGraph(host, "graph");
 
-  const crumbs = () => [...view.shadow.querySelectorAll("button")].map((b) => b.textContent);
-  expect(crumbs()).toEqual(["Root"]);
-  expect(view.currentGraph).toBe(host);
-  expect(view.currentGraphPath).toBe("graph");
+  const levels: string[] = [];
+  view.addEventListener("levelchange", (e) => levels.push((e as CustomEvent<Level>).detail.kind));
 
-  view.descendInto(grp);
-  expect(view.currentGraph).toBe(grp.subgraph);
+  expect(crumbTexts(view)).toEqual(["Graph"]);
+  expect(pillText(view)).toBeUndefined();
+  expect(view.currentLevel()).toEqual({ kind: "root" });
+
+  view.selection.add(grp.id);
+  await view.enterDefinition(grp);
+  expect(view.currentGraph).toBe(def.subgraph);
+  expect(view.currentGraphPath).toBe(`graph.nodes[${JSON.stringify(grp.id)}].definition`);
+  expect(view.currentLevel()).toEqual({ kind: "definition", node: grp, ref: "grp", def });
+  expect(view.frames.get(inner.id)!.node).toBe(inner);
+  expect(view.selection.size).toBe(0);
+  expect(crumbTexts(view)).toEqual(["Graph", "grp"]);
+  expect(pillText(view)).toBe(LEVEL_PILL_TEXT.definition);
+  expect(view.panzoom.style.outline).not.toBe("");
+
+  // an instance level shows the copy, the values-only pill and the way to the definition
+  await view.popTo(0);
+  await view.enterInstance(grp);
+  expect(view.currentLevel()).toEqual({ kind: "instance", node: grp, ref: "grp", def });
   expect(view.currentGraphPath).toBe(`graph.nodes[${JSON.stringify(grp.id)}].group`);
-  expect(crumbs()).toEqual(["Root", grp.getUIName()]);
-  expect(view.frames.get(inner.id)).toBeDefined();
+  expect(view.frames.get(inner.id)!.node).toBe(grp.subgraph.nodeIdMap.get(inner.id));
+  expect(crumbTexts(view)).toEqual(["Graph", "grp", "edit the definition"]);
+  expect(pillText(view)).toBe(LEVEL_PILL_TEXT.instance);
 
-  const note = [...view.shadow.querySelectorAll("span")].find((s) => s.textContent === "read-only");
-  expect(note).toBeDefined();
+  // the pill's button replaces the instance entry rather than nesting under it
+  view.shadow.querySelectorAll<HTMLButtonElement>("button.nodeeditor-crumb")[2].click();
+  expect(view.descent).toEqual([{ nodeId: grp.id, into: "definition" }]);
 
-  view.shadow.querySelectorAll("button")[0].click();
+  // the first crumb returns to the root
+  view.shadow.querySelectorAll<HTMLButtonElement>("button.nodeeditor-crumb")[0].click();
   expect(view.currentGraph).toBe(host);
-  expect(crumbs()).toEqual(["Root"]);
+  expect(view.panzoom.style.outline).toBe("");
+  expect(levels).toEqual(["definition", "root", "instance", "definition", "root"]);
+  await view.pendingResolve;
 });
 
 test("a structural gesture inside a descended instance is refused through check", async () => {
@@ -258,7 +327,7 @@ test("a structural gesture inside a descended instance is refused through check"
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
-  view.descendInto(grp);
+  await view.enterInstance(grp);
 
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
   const frame = view.frames.get(copy.id)!;
@@ -480,7 +549,7 @@ test("duplicateSelected selects the new nodes before undoStepEnd runs, not after
   let selectionAtEnd: string[] | undefined;
   const testDelegate: NodeGraphDelegate = {
     undoStepBegin: async () => {},
-    check  : () => ({ ok: true }),
+    check        : () => ({ ok: true }),
     perform: (_performCtx, edit) => {
       if (edit.kind === "duplicateNode") {
         g.add(new ViewSrc());
@@ -514,8 +583,8 @@ test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, pass
       await Promise.resolve();
       calls.push(`begin:${shortLabel}:${message}`);
     },
-    check  : () => ({ ok: true }),
-    perform: () => {},
+    check        : () => ({ ok: true }),
+    perform      : () => {},
     undoStepEnd: async () => {
       await Promise.resolve();
       calls.push("end");
@@ -523,10 +592,14 @@ test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, pass
   };
   view.delegate = testDelegate;
 
-  const result = await view.singleUndoStep(() => {
-    calls.push("cb");
-    return 42;
-  }, "Label", "A test message");
+  const result = await view.singleUndoStep(
+    () => {
+      calls.push("cb");
+      return 42;
+    },
+    "Label",
+    "A test message"
+  );
 
   expect(result).toBe(42);
   expect(calls).toEqual(["begin:Label:A test message", "cb", "end"]);
@@ -543,8 +616,8 @@ test("singleUndoStep still runs undoStepEnd, and rejects, when cb throws", async
     undoStepBegin: async () => {
       calls.push("begin");
     },
-    check  : () => ({ ok: true }),
-    perform: () => {},
+    check        : () => ({ ok: true }),
+    perform      : () => {},
     undoStepEnd: async () => {
       calls.push("end");
     },
@@ -584,4 +657,233 @@ test("selecting a link drops the node selection, and a vanished link leaves it",
   g.disconnect(src.outputs.value, m.inputs.a);
   view.syncGraph();
   expect(view.linkSelection.size).toBe(0);
+});
+
+test("a property write inside a definition leaves the instance alone until leaving runs the pass", async () => {
+  const { host, grp, inner, def } = await makeGroup(new ViewBias());
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  const saved: [string, GroupDef][] = [];
+  host.groupSaver = async (ref, d) => {
+    saved.push([ref, d]);
+  };
+
+  await view.enterDefinition(grp);
+  const path = `${view.currentGraphPath}.nodes[${JSON.stringify(inner.id)}].props['bias'].value`;
+  ctx.api.setValue(ctx, path, 2);
+  expect(inner.props.bias.getValue()).toBe(2);
+
+  const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  expect(copy.props.bias.getValue()).toBe(0.5);
+  expect(view.pendingResolve).toBeUndefined();
+
+  await view.exitLevel();
+  expect(saved).toEqual([["grp", def]]);
+  expect(grp.subgraph.nodeIdMap.get(inner.id)!.props.bias.getValue()).toBe(2);
+  expect(view.currentGraph).toBe(host);
+});
+
+test("a structural op inside a definition reconciles the instances through pendingResolve, on undo too", async () => {
+  const { host, grp } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  const saved: string[] = [];
+  host.groupSaver = async (ref) => {
+    saved.push(ref);
+  };
+
+  await view.enterDefinition(grp);
+  view.addNodeAt("ViewSrc", [10, 10]);
+  expect(view.pendingResolve).toBeDefined();
+  await view.pendingResolve;
+  expect(saved).toEqual(["grp"]);
+  expect(grp.subgraph.nodes.some((n) => n instanceof ViewSrc)).toBe(true);
+
+  // the undo reaches the view through its watch on the definition's path
+  view.update();
+  flushPathNotifications();
+  expect(view.pendingResolve).toBeUndefined();
+
+  ctx.toolstack.undo();
+  flushPathNotifications();
+  expect(view.pendingResolve).toBeDefined();
+  await view.pendingResolve;
+  expect(saved).toEqual(["grp", "grp"]);
+  expect(grp.subgraph.nodes.some((n) => n instanceof ViewSrc)).toBe(false);
+});
+
+test("a move inside a definition runs no pass; leaving the level carries it", async () => {
+  const { host, grp, inner } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+  const saved: string[] = [];
+  host.groupSaver = async (ref) => {
+    saved.push(ref);
+  };
+
+  await view.enterDefinition(grp);
+  view.update();
+  flushPathNotifications();
+
+  const frame = view.frames.get(inner.id)!;
+  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  flushPathNotifications();
+  expect([inner.pos[0], inner.pos[1]]).toEqual([50, 60]);
+  expect(view.pendingResolve).toBeUndefined();
+  expect(saved).toEqual([]);
+
+  await view.exitLevel();
+  expect(saved).toEqual(["grp"]);
+  const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  expect([copy.pos[0], copy.pos[1]]).toEqual([50, 60]);
+});
+
+test("deleting the instance a level rests on pops the view to the root", async () => {
+  const { host, grp } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+
+  await view.enterDefinition(grp);
+  view.update();
+  flushPathNotifications();
+  expect(view.currentLevel().kind).toBe("definition");
+
+  host.remove(grp);
+  ctx.api.notifyChange("graph");
+  flushPathNotifications();
+  expect(view.descent).toEqual([]);
+  expect(view.currentGraph).toBe(host);
+  expect(crumbTexts(view)).toEqual(["Graph"]);
+});
+
+test("an instance added by ref resolves through the root-level watch", async () => {
+  const { host, def } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+
+  view.addGroupAt("grp", [5, 5]);
+  const added = host.nodes.filter((n): n is GroupNode => n instanceof GroupNode);
+  expect(added.length).toBe(2);
+  expect(added[1].definition).toBeUndefined();
+  expect(view.pendingResolve).toBeDefined();
+  await view.pendingResolve;
+  expect(added[1].definition).toBe(def);
+  expect(view.frames.has(added[1].id)).toBe(true);
+});
+
+test("groupSelected makes a group of the selection; ungroupSelected takes it apart", async () => {
+  const g = new Graph();
+  const src = new ViewSrc();
+  const m = new ViewMath();
+  g.add(src);
+  g.add(m);
+  g.connect(src.outputs.value, m.inputs.a);
+  g.newGroupRef = () => "g1";
+  const saved: string[] = [];
+  g.groupSaver = async (ref) => {
+    saved.push(ref);
+  };
+
+  const ctx = makeCtx(g);
+  const view = makeView(ctx);
+  view.setGraph(g, "graph");
+
+  expect(view.groupSelected()).toBe(false);
+  view.selection.add(m.id);
+  expect(view.groupSelected()).toBe(true);
+
+  const grp = g.nodes.find((n): n is GroupNode => n instanceof GroupNode)!;
+  expect(grp.ref).toBe("g1");
+  expect(saved).toEqual(["g1"]);
+  expect(g.nodes.includes(m)).toBe(false);
+  expect([...view.selection]).toEqual([grp.id]);
+  expect(view.frames.has(grp.id)).toBe(true);
+  expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
+
+  await view.ungroupSelected();
+  expect(g.nodes.some((n) => n instanceof GroupNode)).toBe(false);
+  expect(g.nodes.some((n) => n instanceof ViewMath)).toBe(true);
+  expect(ctx.toolstack.length).toBe(2);
+});
+
+test("hotkeys() names the five keys; Tab enters the one selected group and otherwise leaves", async () => {
+  const { host, grp } = await makeGroup();
+  const ctx = makeCtx(host);
+  const view = makeView(ctx);
+  view.setGraph(host, "graph");
+
+  const keys = view.hotkeys();
+  expect(keys.map((k) => k.buildString())).toEqual([
+    "Delete",
+    "Shift+D",
+    "Ctrl+G",
+    "Ctrl + Alt+G",
+    "Tab",
+  ]);
+  const tab = keys[4];
+
+  view.selection.add(grp.id);
+  tab.exec(ctx);
+  expect(view.currentLevel().kind).toBe("definition");
+
+  tab.exec(ctx);
+  expect(view.currentLevel().kind).toBe("root");
+  await view.pendingResolve;
+});
+
+test("two title-bar presses on a group frame within the window enter it; slower ones do not", async () => {
+  const { host, grp } = await makeGroup();
+  const view = makeView(makeCtx(host));
+  view.setGraph(host, "graph");
+
+  const frame = view.frames.get(grp.id)!;
+  frame.headerPressed = true;
+  const now = vi.spyOn(Date, "now");
+
+  now.mockReturnValue(1000);
+  frame.onMoveClick!(frame);
+  now.mockReturnValue(1000 + DOUBLE_PRESS_MS + 1);
+  frame.onMoveClick!(frame);
+  expect(view.currentLevel().kind).toBe("root");
+
+  now.mockReturnValue(1000 + DOUBLE_PRESS_MS + 1 + 100);
+  frame.onMoveClick!(frame);
+  expect(view.currentLevel().kind).toBe("definition");
+
+  // a press on a socket row is not a title-bar press
+  await view.popTo(0);
+  const again = view.frames.get(grp.id)!;
+  again.headerPressed = false;
+  now.mockReturnValue(5000);
+  again.onMoveClick!(again);
+  now.mockReturnValue(5100);
+  again.onMoveClick!(again);
+  expect(view.currentLevel().kind).toBe("root");
+  now.mockRestore();
+});
+
+test("view state round-trips with mixed entries", async () => {
+  const { host, grp } = await makeGroup();
+  const view = makeView(makeCtx(host));
+  view.setGraph(host, "graph");
+
+  const state = {
+    pan    : [1, 2] as [number, number],
+    zoom   : 2,
+    descent: [{ nodeId: grp.id, into: "definition" as const }],
+  };
+  view.setViewState(state);
+  expect(view.getViewState()).toEqual(state);
+  expect(view.currentLevel().kind).toBe("definition");
+
+  const nested = { ...state, descent: [{ nodeId: grp.id, into: "instance" as const }] };
+  view.setViewState(nested);
+  expect(view.getViewState()).toEqual(nested);
+  expect(view.currentLevel().kind).toBe("instance");
+  await view.pendingResolve;
 });

@@ -342,10 +342,16 @@ graph.GroupNode {
     return this._def;
   }
 
-  /** Adds the instance subgraph as "group", so paths descend nodes[i].group.nodes[j]. */
+  /**
+   * Adds the instance subgraph as "group" and the resolved definition's as
+   * "definition", so paths descend nodes[i].group.nodes[j] or
+   * nodes[i].definition.nodes[j]. The controller walks the dotted member key by
+   * key, so the definition path throws on an instance that has not resolved.
+   */
   static override defineAPI(api: DataAPI, st: DataStruct): void {
     super.defineAPI(api, st);
     st.struct("subgraph", "group", "Group", api.getStruct(Graph));
+    st.struct("definition.subgraph", "definition", "Definition", api.getStruct(Graph));
   }
 
   /** Reports whether target sits anywhere on def's chain of resolved group definitions. */

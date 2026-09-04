@@ -158,6 +158,5 @@ export function makeDemoGraph() {
   return g;
 }
 
-/** The datapaths api_define.ts publishes these graphs at. */
+/** The datapath api_define.ts publishes the demo graph at. */
 export const DEMO_GRAPH_PATH = "nodegraph";
-export const DEMO_GROUP_DEF_PATH = "demogroup";

@@ -1,22 +1,12 @@
 import { ViewContext } from "../../core/context";
-import {
-  Area,
-  NodeEditor,
-  addNodeMenuTemplate,
-  contextWrangler,
-  nstructjs,
-  nodegraph,
-  KeyMap,
-  HotKey,
-  keymap,
-} from "../../pathux.js";
+import { Area, NodeEditor, addNodeMenuTemplate, contextWrangler, nstructjs } from "../../pathux.js";
 import type { IAreaDef } from "../../pathux.js";
-import { DEMO_GRAPH_PATH, DEMO_GROUP_DEF_PATH } from "./demo_nodes.js";
+import { DEMO_GRAPH_PATH } from "./demo_nodes.js";
 
 /**
  * The example app's node editor: the library's unregistered NodeEditor plus the
  * app's context conventions, registered here at consumer scope the way every
- * example editor is.
+ * example editor is. The keymap comes from the view's own hotkeys().
  */
 export class NodeEditorTab extends NodeEditor<ViewContext> {
   push_ctx_active() {
@@ -37,7 +27,6 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
     }
 
     this.setGraph(nodegraph, DEMO_GRAPH_PATH);
-    this.view.onOpenDefinition = (node) => this._openDefinition(node);
 
     const add = this.headerRow.menu(
       "Add",
@@ -49,30 +38,9 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
     void nodegraph.resolveGroups().then(() => this.view.syncGraph());
   }
 
-  constructor() {
-    super();
-    const keyMap = new KeyMap([
-      new HotKey("Delete", [], () => {
-        this.view.deleteSelected();
-      }),
-      new HotKey("D", ["shift"], () => {
-        this.view.duplicateSelected();
-      }),
-    ]);
-    this.keymap = keyMap;
-  }
-
   init() {
     super.init();
     this.fetchGraph();
-  }
-
-  private _openDefinition(node: nodegraph.GroupNode) {
-    const def = node.definition;
-    if (def === undefined) {
-      return;
-    }
-    this.editDefinition(node.ref, def, DEMO_GROUP_DEF_PATH);
   }
 
   static define(): IAreaDef {

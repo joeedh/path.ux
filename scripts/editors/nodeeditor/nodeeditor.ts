@@ -5,17 +5,16 @@ import type { Container } from "../../core/ui";
 import type { ColumnFrame } from "../../core/ui_containers";
 import { IContextBase } from "../../core/context_base";
 import { Vector2 } from "../../path-controller/util/vectormath";
+import { KeyMap } from "../../path-controller/util/simple_events";
 import { Area } from "../../screen/ScreenArea";
 import type { IAreaDef } from "../../screen/ScreenArea";
 import type { PanelManager } from "../../screen/dock_panels";
-import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 // The plain import keeps the view module's module-scope internalRegister call;
 // a type-only use would let the transpiler elide it.
 import "./nodegraphview";
-import type { NodeGraphView } from "./nodegraphview";
+import type { DescentEntry, NodeGraphView } from "./nodegraphview";
 import { buildGroupDesigner } from "./groupui";
 import type { Graph } from "../../graph/graph";
-import type { GroupDef } from "../../graph/group";
 import type { GraphId } from "../../graph/graph_types";
 
 /**
@@ -23,7 +22,7 @@ import type { GraphId } from "../../graph/graph_types";
  * The library ships it unregistered — a consumer that wants it as a screen
  * editor calls Area.register(NodeEditor) itself, then setGraph on an instance.
  * The view carries all behavior; this class adds only the Area frame (header,
- * STRUCT persistence of the camera and descent).
+ * keymap, STRUCT persistence of the camera and descent, the designer panel).
  */
 export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
   static STRUCT: string;
@@ -40,10 +39,6 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
   descent: string[] = [];
 
   private _designerRoot: HTMLDivElement | undefined = undefined;
-  private _designing: { ref: string; def: GroupDef } | undefined = undefined;
-
-  /** The root graph's datapath, from setGraph; exposure edits dispatch here. */
-  private _rootPath = "";
 
   constructor() {
     super();
@@ -52,6 +47,8 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     // freshly constructed editor; NodeGraphView is internally registered at
     // import, so createElement always resolves it.
     this.view = UIBase.createElement("nodegraphview-x") as NodeGraphView<CTX>;
+    this.keymap = new KeyMap(this.view.hotkeys()) as unknown as KeyMap<CTX>;
+    this.view.addEventListener("levelchange", () => this._renderDesigner());
   }
 
   static define(): IAreaDef {
@@ -103,35 +100,24 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
 
   /** Forwards to the view; graphPath is the datapath the view's edits dispatch against. */
   setGraph(graph: Graph | undefined, graphPath: string) {
-    this._rootPath = graphPath;
     this.view.setGraph(graph, graphPath);
   }
 
-  /**
-   * Points the view at a group definition's subgraph for structural editing
-   * and shows the definition's exposure list in the Group Designer panel.
-   * defPath must resolve to def.subgraph in the host's data API; the designer's
-   * edits dispatch against that path, and the ops find the definition through it.
-   */
-  editDefinition(ref: string, def: GroupDef, defPath: string) {
-    this._designing = { ref, def };
-    this.view.setGraph(def.subgraph, defPath);
-    this._renderDesigner();
-  }
-
+  /** The designer follows the view's level: it edits the definition on screen, and shows a hint elsewhere. */
   private _renderDesigner() {
     const root = this._designerRoot;
     if (root === undefined) {
       return;
     }
-    if (this._designing === undefined) {
+    const level = this.view.currentLevel();
+    if (level.kind !== "definition") {
       root.textContent = "Open a group definition to edit its exposed UI.";
       return;
     }
     buildGroupDesigner(root, {
       ctx       : this.view.graphContext,
-      def       : this._designing.def,
-      graphPath : this.view.graphPath,
+      def       : level.def,
+      graphPath : this.view.currentGraphPath,
       delegate  : this.view.delegate,
       onChanged : () => this.view.syncGraph(),
       errorColor: this.view.getDefault("ErrorColor") as string,
@@ -154,7 +140,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
   }
 
   _structDescent(): string[] {
-    return this.view.getViewState().descent.map((id) => JSON.stringify(id));
+    return this.view.getViewState().descent.map((entry) => JSON.stringify(entry));
   }
 
   loadSTRUCT(reader: StructReader<this>) {
@@ -163,9 +149,21 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
     this.view.setViewState({
       pan    : [this.pan[0], this.pan[1]],
       zoom   : this.zoom,
-      descent: this.descent.map((s) => JSON.parse(s) as GraphId),
+      descent: this.descent.map(readDescentEntry),
     });
   }
+}
+
+/** A stored entry; a file from before definition levels holds a bare instance id. */
+function readDescentEntry(text: string): DescentEntry {
+  const parsed = JSON.parse(text) as DescentEntry | GraphId;
+  if (typeof parsed === "object" && parsed !== null) {
+    return {
+      nodeId: parsed.nodeId,
+      into  : parsed.into === "definition" ? "definition" : "instance",
+    };
+  }
+  return { nodeId: parsed, into: "instance" };
 }
 
 NodeEditor.STRUCT =

@@ -125,10 +125,10 @@ export function defineAPI() {
   cstruct.struct("canvas", "canvas", "Canvas", api.mapStruct(Canvas));
   cstruct.struct("workspace", "workspace", "Workspace", api.mapStruct(WorkspaceEditor));
 
-  // the demo graphs the node editor tab edits; resolved via context getters.
+  // the demo graph the node editor tab edits; resolved via a context getter.
+  // A group definition is reached through nodegraph.nodes[i].definition.
   const graphst = nodegraph.defineGraphAPI(api);
   cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
-  cstruct.struct("demogroup", "demogroup", "Demo Group Definition", graphst);
 
   const dstruct = cstruct.struct("data", "data", "Data");
   dstruct.curve1d("curvemap", "curvemap", "curvemap");

@@ -29,7 +29,6 @@ function makeCtx(graph: Graph) {
   root.struct("graph", "graph", "Graph", defineGraphAPI(api));
   api.setRoot(root);
 
-   
   const ctx: any = { state: {}, graph, api };
   ctx.toLocked = () => ctx;
   return ctx;
@@ -101,6 +100,26 @@ test("a group instance's unmaterialized prop reads the definition; a write mater
   expect(copy.props.bias.getValue()).toBe(9);
   expect(inner.props.bias.getValue()).toBe(4);
   expect(ctx.api.getValue(ctx, path)).toBe(9);
+});
+
+test("a definition's subgraph is addressed through nodes[id].definition; an unresolved instance has none", async () => {
+  const { inner, host, grp } = await makeGroup();
+  const ctx = makeCtx(host);
+
+  const path = `graph.nodes[${grp.id}].definition.nodes[${inner.id}].props['bias'].value`;
+  expect(ctx.api.getValue(ctx, path)).toBe(1);
+
+  // The write lands on the definition; the instance's copy stays unmaterialized.
+  ctx.api.setValue(ctx, path, 5);
+  expect(inner.props.bias.getValue()).toBe(5);
+  const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  expect(copy.props.bias.wasSet).toBe(false);
+
+  const bare = new GroupNode();
+  bare.ref = "grp";
+  host.add(bare);
+  const unresolved = `graph.nodes[${bare.id}].definition.nodes[${inner.id}].props['bias'].value`;
+  expect(() => ctx.api.getValue(ctx, unresolved)).toThrow();
 });
 
 test("a two-level nested group resolves along the same path shape", async () => {

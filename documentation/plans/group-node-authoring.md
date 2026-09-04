@@ -387,6 +387,14 @@ refusal sentence and for a definition kind on a root graph refuses; a DSL entry
 
 ### Stage G3 — levels: the view enters a definition
 
+Status: **done** (2026-09-04). Two details beyond the list below. The view runs the level
+check after its own `_dispatch` as well as from the path watch, so a definition edit that
+lands synchronously starts its pass without waiting a frame; the two are idempotent because
+the pass is keyed on the definition signature. A root-level resolve is attempted once per
+instance object (a `WeakSet`), since the pass ends by notifying the root path and an instance
+whose definition fails to load would otherwise resolve on every notification. Tab's handler is
+`enterOrExit()`. `NodeEditor.md` still describes `editDefinition`; G5 rewrites it.
+
 Files: `scripts/editors/nodeeditor/nodegraphview.ts`, `nodeframe.ts`, `nodeeditor.ts`,
 `scripts/graph/group.ts` (the `definition` API member), `scripts/core/theme.ts`,
 `example/editors/nodeeditor/nodeeditor_tab.ts`, `example/api/api_define.ts`,

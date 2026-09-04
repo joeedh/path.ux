@@ -312,6 +312,9 @@ const theme = {
     "border-color"      : "#b8b8b8",
     "border-radius"     : 4,
     HeaderBG            : "rgba(214, 214, 214, 0.95)",
+    GroupAccent         : "#5f86b5",
+    GroupHeaderBG       : "rgba(203, 211, 222, 0.95)",
+    ProxyHeaderBG       : "rgba(222, 216, 200, 0.95)",
     SelectOutline       : "#e8930c",
     DefaultText: new CSSFont({
       font   : "sans-serif",
@@ -335,10 +338,29 @@ const theme = {
   },
 
   nodegraphview: {
-    "background-color": "rgb(225, 225, 225)",
-    BoxSelectBorder   : "#e8930c",
-    BoxSelectBG       : "rgba(232, 147, 12, 0.1)",
-    ErrorColor        : "#cc3333",
+    "background-color"  : "rgb(225, 225, 225)",
+    BoxSelectBorder     : "#e8930c",
+    BoxSelectBG         : "rgba(232, 147, 12, 0.1)",
+    ErrorColor          : "#cc3333",
+    CrumbBG             : "rgb(236, 236, 236)",
+    CrumbFont: new CSSFont({
+      font   : "sans-serif",
+      weight : "normal",
+      variant: "normal",
+      style  : "normal",
+      size   : 12,
+      color  : "rgba(70, 70, 70, 1.0)",
+    }),
+    CrumbActiveFont: new CSSFont({
+      font   : "sans-serif",
+      weight : "bold",
+      variant: "normal",
+      style  : "normal",
+      size   : 12,
+      color  : "rgba(35, 35, 35, 1.0)",
+    }),
+    LevelDefinitionColor: "#4f7cb3",
+    LevelInstanceColor  : "#8c8478",
   },
 
   nodelinkcanvas: {

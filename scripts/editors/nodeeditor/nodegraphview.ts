@@ -16,8 +16,11 @@ import {
 } from "../../path-controller/util/graphpack";
 import { Graph } from "../../graph/graph";
 import { GroupNode } from "../../graph/group";
+import type { GroupDef } from "../../graph/group";
 import type { Node as GraphNode } from "../../graph/node";
 import type { GraphId, SocketDir } from "../../graph/graph_types";
+import { HotKey } from "../../path-controller/util/simple_events";
+import type { CSSFont } from "../../core/cssfont";
 import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
 import type { FrameMove } from "./nodeframe";
 import { linkDistance } from "./linkcanvas";
@@ -28,15 +31,70 @@ import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
 import { buildAddNodeMenu } from "./addmenu";
 import { Menu } from "../../menu/menu";
+import type { MenuTemplate } from "../../menu/menu_types";
 import { createMenu, startMenu } from "../../menu/menu_ops";
 import { t } from "../../core/theme_schema";
 import { buildForwardedUI } from "./groupui";
+
+/** One step of the view's descent: a group node, and which of its two graphs it leads into. */
+export interface DescentEntry {
+  nodeId: GraphId;
+  into: "instance" | "definition";
+}
 
 /** The view state an embedding editor persists: camera plus descent stack. */
 export interface NodeGraphViewState {
   pan: [number, number];
   zoom: number;
-  descent: GraphId[];
+  descent: DescentEntry[];
+}
+
+/**
+ * What the view is showing: the root graph, a definition whose edits reach every
+ * instance, or one instance shown for its values only. An instance nested inside
+ * another instance's copy carries no definition of its own.
+ */
+export type Level =
+  | { kind: "root" }
+  | { kind: "definition"; node: GroupNode; ref: string; def: GroupDef }
+  | { kind: "instance"; node: GroupNode; ref: string; def: GroupDef | undefined };
+
+/** Two title-bar presses on one frame within this window enter the group. */
+export const DOUBLE_PRESS_MS = 350;
+
+/** The text of the pill after the crumb trail, per level kind. */
+export const LEVEL_PILL_TEXT = {
+  definition: "definition · edits reach every instance",
+  instance  : "instance · values only",
+} as const;
+
+/**
+ * What a definition edit must change for its instances to need reconciling: node
+ * identity, sockets and links, plus the exposed rows. Positions are left out, so a
+ * drag inside a definition is carried by the exit pass rather than saved per frame.
+ */
+function definitionSignature(def: GroupDef): string {
+  const parts: unknown[] = [];
+  for (const n of def.subgraph.nodes) {
+    parts.push(n.id, n.def.typeName, n.label ?? "");
+    parts.push(Object.keys(n.inputs).join(","), Object.keys(n.outputs).join(","));
+    for (const key in n.inputs) {
+      for (const e of n.inputs[key].edges) {
+        parts.push(`${String(e.owningNode?.id)}:${e.name}>${String(n.id)}:${key}`);
+      }
+    }
+  }
+  for (const e of def.exposed) {
+    parts.push(e.kind, e.nodeId, e.propKey, e.label);
+  }
+  return JSON.stringify(parts);
+}
+
+/** One resolved step of a descent: the entry, its group node, and the graph it leads into. */
+interface DescentStep {
+  entry: DescentEntry;
+  node: GroupNode;
+  graph: Graph;
 }
 
 /** One link, named by its two endpoints. */
@@ -71,14 +129,18 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   declare graphContext: ViewGraphContext<CTX>;
   delegate: NodeGraphDelegate = new ToolOpDelegate();
 
-  /** Invoked by the breadcrumb's Open Definition button; the host decides where the definition opens. */
-  onOpenDefinition?: (node: GroupNode) => void;
-
   graphPath = "";
   rootGraph: Graph | undefined = undefined;
 
-  /** GroupNode ids from the root graph down to the graph on screen. */
-  descent: GraphId[] = [];
+  /** The steps from the root graph down to the graph on screen. */
+  descent: DescentEntry[] = [];
+
+  /**
+   * The save-and-resolve pass in flight, if any: the definition being edited is
+   * saved through the root graph's groupSaver and every instance reconciled. Awaited
+   * by a caller that needs the instances current.
+   */
+  pendingResolve: Promise<void> | undefined = undefined;
 
   selection = new Set<GraphId>();
 
@@ -101,16 +163,30 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    *  the press turns into a drag; a click without a drag applies it. */
   private _pendingSelect: { id: GraphId; shift: boolean } | undefined = undefined;
 
+  /** The last title-bar click, for the double press that enters a group. */
+  private _lastPress: { id: GraphId; at: number } | undefined = undefined;
+
+  /** The definition signature the current level was last reconciled at. */
+  private _defSig = "";
+
+  /** Instances a root-level resolve was already attempted for, so a failed load does not retry per notification. */
+  private _resolveTried = new WeakSet<GroupNode>();
+
   static define(): UIBaseDefinition {
     return {
       tagname: "nodegraphview-x",
       style  : "nodegraphview",
       theme: {
-        "background-color": t.color,
-        BoxSelectBorder   : t.color,
-        BoxSelectBG       : t.color,
+        "background-color"  : t.color,
+        BoxSelectBorder     : t.color,
+        BoxSelectBG         : t.color,
         // Read by the editor shell for the group designer's missing-entry flag.
-        ErrorColor        : t.color,
+        ErrorColor          : t.color,
+        CrumbBG             : t.color,
+        CrumbFont           : t.font,
+        CrumbActiveFont     : t.font,
+        LevelDefinitionColor: t.color,
+        LevelInstanceColor  : t.color,
       },
     };
   }
@@ -197,7 +273,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.style.height = "100%";
 
     this._crumbs = document.createElement("div");
-    this._crumbs.style.cssText = "display: flex; gap: 4px; padding: 2px; align-items: center;";
+    this._crumbs.className = "nodeeditor-crumbs";
+    this._crumbs.style.cssText =
+      "display: flex; gap: 2px; padding: 2px 6px; align-items: center; flex: 0 0 auto;";
     this.shadow.appendChild(this._crumbs);
 
     this.panzoom = UIBase.createElement("panzoom-x") as PanZoomContainer<CTX>;
@@ -223,6 +301,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       const v = this._pendingView;
       this._pendingView = undefined;
       this.descent = [...v.descent];
+      this._defSig = this._levelSignature();
       this.panzoom.setTransform(v.zoom, v.pan);
     }
 
@@ -236,16 +315,16 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     super.setCSS();
     // Container's styletag targets div.containerx, which never matches the host.
     this.style.backgroundColor = this.getDefault("background-color") as string;
+    if (this._crumbs !== undefined) {
+      this._rebuildCrumbs();
+    }
   }
 
   /** Points the view at a graph; graphPath is the datapath edits dispatch against. */
   setGraph(graph: Graph | undefined, graphPath: string) {
     this.rootGraph = graph;
     this.graphPath = graphPath;
-    this.descent = [];
-    this.selection.clear();
-    this.linkSelection.clear();
-    this._refresh();
+    this._setDescent([]);
   }
 
   /**
@@ -258,76 +337,303 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._refresh();
   }
 
-  /** The graph on screen: the root, or the descent tail's instance subgraph. */
-  get currentGraph(): Graph | undefined {
+  /**
+   * Resolves the descent step by step. Stops short where an entry names no group
+   * node in its graph, or a definition entry whose instance has not resolved.
+   */
+  private _walk(descent: readonly DescentEntry[] = this.descent): {
+    steps: DescentStep[];
+    complete: boolean;
+  } {
+    const steps: DescentStep[] = [];
     let g = this.rootGraph;
-    for (const nid of this.descent) {
-      const node = g?.nodeIdMap.get(nid);
+    for (const entry of descent) {
+      const node = g?.nodeIdMap.get(entry.nodeId);
       if (!(node instanceof GroupNode)) {
-        return undefined;
+        return { steps, complete: false };
       }
-      g = node.subgraph;
+      const into = entry.into === "definition" ? node.definition?.subgraph : node.subgraph;
+      if (into === undefined) {
+        return { steps, complete: false };
+      }
+      steps.push({ entry, node, graph: into });
+      g = into;
     }
-    return g;
+    return { steps, complete: true };
   }
 
-  /** The datapath of the graph on screen, descending .nodes[id].group per entry. */
+  /** The graph on screen; undefined while a descent entry no longer resolves. */
+  get currentGraph(): Graph | undefined {
+    const walk = this._walk();
+    if (!walk.complete) {
+      return undefined;
+    }
+    const tail = walk.steps[walk.steps.length - 1];
+    return tail !== undefined ? tail.graph : this.rootGraph;
+  }
+
+  /** The datapath of the graph on screen, descending .nodes[id].group or .nodes[id].definition per entry. */
   get currentGraphPath(): string {
     let path = this.graphPath;
-    for (const nid of this.descent) {
-      path += `.nodes[${JSON.stringify(nid)}].group`;
+    for (const entry of this.descent) {
+      path += `.nodes[${JSON.stringify(entry.nodeId)}].${entry.into === "definition" ? "definition" : "group"}`;
     }
     return path;
   }
 
-  /** Descends into a group instance's subgraph (read-only for structural edits). */
-  descendInto(node: GraphNode) {
-    if (!(node instanceof GroupNode)) {
-      return;
+  /** What the view is showing. A descent that no longer resolves reads as the root until it is repaired. */
+  currentLevel(): Level {
+    const walk = this._walk();
+    const tail = walk.steps[walk.steps.length - 1];
+    if (!walk.complete || tail === undefined) {
+      return { kind: "root" };
     }
-    this.descent.push(node.id);
-    this.selection.clear();
-    this.linkSelection.clear();
-    this._refresh();
+    const node = tail.node;
+    if (tail.entry.into === "definition") {
+      return { kind: "definition", node, ref: node.ref, def: node.definition! };
+    }
+    return { kind: "instance", node, ref: node.ref, def: node.definition };
+  }
+
+  /**
+   * Enters a group's definition, where structural edits reach every instance. A
+   * definition level being left is saved and its instances reconciled first; the
+   * returned promise is that pass. From the instance level of the same node the
+   * instance entry is replaced rather than nested. Refused, resolving at once, for a
+   * node that is no group, is not on screen, or has no resolved definition.
+   */
+  enterDefinition(node: GraphNode): Promise<void> {
+    if (!(node instanceof GroupNode) || node.definition === undefined) {
+      return this._settled();
+    }
+    const level = this.currentLevel();
+    const replacing = level.kind === "instance" && level.node === node;
+    if (!replacing && this.currentGraph?.nodeIdMap.get(node.id) !== node) {
+      return this._settled();
+    }
+
+    const pass = this._leavePass();
+    const next = replacing ? this.descent.slice(0, -1) : [...this.descent];
+    next.push({ nodeId: node.id, into: "definition" });
+    this._setDescent(next);
+    return pass;
+  }
+
+  /** Shows a group instance's own subgraph, for the values it overrides; structural edits are refused there. */
+  enterInstance(node: GraphNode): Promise<void> {
+    if (!(node instanceof GroupNode) || this.currentGraph?.nodeIdMap.get(node.id) !== node) {
+      return this._settled();
+    }
+    const pass = this._leavePass();
+    this._setDescent([...this.descent, { nodeId: node.id, into: "instance" }]);
+    return pass;
+  }
+
+  /** Leaves the level on screen for the one above it; a definition is saved and propagated on the way out. */
+  exitLevel(): Promise<void> {
+    return this.popTo(this.descent.length - 1);
   }
 
   /** Returns to depth entries of descent; popTo(0) shows the root graph. */
-  popTo(depth: number) {
-    this.descent.length = Math.min(Math.max(depth, 0), this.descent.length);
+  popTo(depth: number): Promise<void> {
+    depth = Math.min(Math.max(depth, 0), this.descent.length);
+    if (depth === this.descent.length) {
+      return this._settled();
+    }
+    const pass = this._leavePass();
+    this._setDescent(this.descent.slice(0, depth));
+    return pass;
+  }
+
+  /**
+   * Tab's behaviour: with exactly one group selected, enters its definition; with
+   * no group selected, leaves the current level. Any other selection does nothing.
+   */
+  enterOrExit(): Promise<void> {
+    const graph = this.currentGraph;
+    const groups: GroupNode[] = [];
+    for (const nid of this.selection) {
+      const node = graph?.nodeIdMap.get(nid);
+      if (node instanceof GroupNode) {
+        groups.push(node);
+      }
+    }
+    if (groups.length === 1) {
+      return this.enterDefinition(groups[0]);
+    }
+    if (groups.length === 0) {
+      return this.exitLevel();
+    }
+    return this._settled();
+  }
+
+  /** The pass in flight, or an already-settled promise. */
+  private _settled(): Promise<void> {
+    return this.pendingResolve ?? Promise.resolve();
+  }
+
+  /** The pass a level being left owes: a definition saves and propagates, anything else owes nothing. */
+  private _leavePass(): Promise<void> {
+    const level = this.currentLevel();
+    return level.kind === "definition" ? this._runPass(level) : this._settled();
+  }
+
+  /**
+   * Saves def through the root graph's groupSaver (when the level is a definition),
+   * reconciles every instance through resolveGroups, then repaints and notifies the
+   * root path so another view of the same graph redraws too. Passes queue behind one
+   * another, so two never interleave; a failure is reported, not thrown.
+   */
+  private _runPass(def?: { ref: string; def: GroupDef }): Promise<void> {
+    const root = this.rootGraph;
+    const ctx = this.ctx;
+    if (root === undefined || ctx === undefined) {
+      return this._settled();
+    }
+
+    const run = async () => {
+      try {
+        if (def !== undefined && root.groupSaver !== undefined) {
+          await root.groupSaver(def.ref, def.def);
+        }
+        await root.resolveGroups();
+      } catch (err) {
+        console.warn(err instanceof Error ? err.message : String(err));
+      }
+      if (this.rootGraph === root) {
+        this.syncGraph();
+      }
+      ctx.api.notifyChange(this.graphPath);
+    };
+
+    const pass = this._settled().then(run);
+    this.pendingResolve = pass;
+    const clear = () => {
+      if (this.pendingResolve === pass) {
+        this.pendingResolve = undefined;
+      }
+    };
+    void pass.then(clear, clear);
+    return pass;
+  }
+
+  /** Replaces the descent, drops the selection, repaints and announces the level. */
+  private _setDescent(descent: DescentEntry[]) {
+    this.descent = descent;
     this.selection.clear();
     this.linkSelection.clear();
+    this._lastPress = undefined;
+    this._defSig = this._levelSignature();
     this._refresh();
+    this.dispatchEvent(new CustomEvent("levelchange", { detail: this.currentLevel() }));
+  }
+
+  /** The definition signature of the level on screen; empty off a definition. */
+  private _levelSignature(): string {
+    const level = this.currentLevel();
+    return level.kind === "definition" ? definitionSignature(level.def) : "";
+  }
+
+  /**
+   * Drops the descent entries that no longer resolve: undo and delete are global,
+   * so the instance a level rests on can vanish while the author is inside it.
+   */
+  private _repairDescent(): boolean {
+    const walk = this._walk();
+    if (walk.complete) {
+      return false;
+    }
+    this._setDescent(this.descent.slice(0, walk.steps.length));
+    return true;
+  }
+
+  /**
+   * The watch's reaction to a graph op, or its undo or redo. Inside a definition, a
+   * change to its signature starts the save-and-resolve pass; at the root, a newly
+   * added instance with a ref and no definition gets one resolve attempt.
+   */
+  private _onGraphNotified() {
+    if (this._repairDescent()) {
+      return;
+    }
+    this._checkLevel();
+    this.syncGraph();
+  }
+
+  private _checkLevel() {
+    const level = this.currentLevel();
+    if (level.kind === "definition") {
+      const sig = definitionSignature(level.def);
+      if (sig !== this._defSig) {
+        this._defSig = sig;
+        void this._runPass(level);
+      }
+    } else if (level.kind === "root") {
+      this._resolveNewInstances();
+    }
+  }
+
+  private _resolveNewInstances() {
+    const root = this.rootGraph;
+    if (root === undefined) {
+      return;
+    }
+    let found = false;
+    for (const node of root.nodes) {
+      if (
+        node instanceof GroupNode &&
+        node.ref !== "" &&
+        node.definition === undefined &&
+        !this._resolveTried.has(node)
+      ) {
+        this._resolveTried.add(node);
+        found = true;
+      }
+    }
+    if (found) {
+      void this._runPass();
+    }
   }
 
   getViewState(): NodeGraphViewState {
+    const descent = this.descent.map((e) => ({ ...e }));
     if (this.panzoom !== undefined) {
       const t = this.panzoom.transform;
-      return { pan: [t.pan[0], t.pan[1]], zoom: t.scale, descent: [...this.descent] };
+      return { pan: [t.pan[0], t.pan[1]], zoom: t.scale, descent };
     }
-    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent: [...this.descent] };
+    return this._pendingView ?? { pan: [0, 0], zoom: 1, descent };
   }
 
   /** Restores a persisted view state; safe to call before init runs. */
   setViewState(state: NodeGraphViewState) {
+    const descent = state.descent.map((e) => ({ ...e }));
     if (this.panzoom !== undefined) {
-      this.descent = [...state.descent];
       this.panzoom.setTransform(state.zoom, state.pan);
-      this._refresh();
+      this._setDescent(descent);
     } else {
       this._pendingView = {
-        pan    : [state.pan[0], state.pan[1]],
-        zoom   : state.zoom,
-        descent: [...state.descent],
+        pan : [state.pan[0], state.pan[1]],
+        zoom: state.zoom,
+        descent,
       };
-      this.descent = [...state.descent];
+      this.descent = descent;
     }
   }
 
-  /** Rebuilds frames when a graph op — or its undo/redo — notifies the graph's datapath. */
+  /** Reacts to a graph op — or its undo/redo — notifying the graph on screen. */
   override watchPath(): void {
     super.watchPath();
     if (this.graphPath !== "") {
-      this.addPathWatch(this.currentGraphPath, { onChange: () => this.syncGraph() });
+      this.addPathWatch(this.currentGraphPath, { onChange: () => this._onGraphNotified() });
+    }
+  }
+
+  /** A view leaving the document while inside a definition saves it on the way out. */
+  override on_remove(): void {
+    super.on_remove();
+    const level = this.currentLevel();
+    if (level.kind === "definition") {
+      void this._runPass(level);
     }
   }
 
@@ -341,53 +647,80 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.syncGraph();
   }
 
+  /**
+   * The crumb trail — Graph ▸ group ▸ group, each a text button back to that
+   * level — followed by a pill naming the level, and the level band on the canvas.
+   */
   private _rebuildCrumbs() {
-    this._crumbs.textContent = "";
+    const row = this._crumbs;
+    row.textContent = "";
+    row.style.background = this.getDefault("CrumbBG") as string;
 
-    const rootBtn = document.createElement("button");
-    rootBtn.textContent = "Root";
-    rootBtn.title = "Show the root graph";
-    rootBtn.addEventListener("click", () => this.popTo(0));
-    this._crumbs.appendChild(rootBtn);
+    const font = this.getDefault("CrumbFont") as CSSFont;
+    const activeFont = this.getDefault("CrumbActiveFont") as CSSFont;
+    const walk = this._walk();
+    const names = ["Graph", ...walk.steps.map((s) => s.node.getUIName())];
 
-    let g = this.rootGraph;
-    for (let i = 0; i < this.descent.length; i++) {
-      const nid = this.descent[i];
-      const node = g?.nodeIdMap.get(nid);
+    names.forEach((name, depth) => {
+      if (depth > 0) {
+        const sep = document.createElement("span");
+        sep.textContent = "▸";
+        sep.style.cssText = `font: ${font.genCSS()}; color: ${font.color}; opacity: 0.5; padding: 0 2px;`;
+        row.appendChild(sep);
+      }
 
+      const last = depth === names.length - 1;
       const btn = document.createElement("button");
-      btn.textContent = node?.getUIName() ?? String(nid);
-      btn.title = "Show this group instance (read-only)";
-      const depth = i + 1;
-      btn.addEventListener("click", () => this.popTo(depth));
-      this._crumbs.appendChild(btn);
+      btn.className = "nodeeditor-crumb";
+      btn.textContent = name;
+      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name}`;
+      btn.style.cssText = "background: none; border: none; padding: 0 2px; cursor: pointer;";
+      btn.style.font = (last ? activeFont : font).genCSS();
+      btn.style.color = (last ? activeFont : font).color;
+      btn.addEventListener("click", () => void this.popTo(depth));
+      row.appendChild(btn);
+    });
 
-      g = node instanceof GroupNode ? node.subgraph : undefined;
+    const level = this.currentLevel();
+    if (level.kind === "root") {
+      this.panzoom.style.outline = "";
+      return;
     }
 
-    if (this.descent.length > 0) {
-      const note = document.createElement("span");
-      note.textContent = "read-only";
-      note.title =
-        "A group instance takes value edits only; structural edits belong to the group's definition";
-      note.style.cssText = "font-size: 11px; opacity: 0.7;";
-      this._crumbs.appendChild(note);
+    const color = this.getDefault(
+      level.kind === "definition" ? "LevelDefinitionColor" : "LevelInstanceColor"
+    ) as string;
 
-      const tailId = this.descent[this.descent.length - 1];
-      let tailGraph = this.rootGraph;
-      for (let i = 0; i + 1 < this.descent.length; i++) {
-        const n = tailGraph?.nodeIdMap.get(this.descent[i]);
-        tailGraph = n instanceof GroupNode ? n.subgraph : undefined;
-      }
-      const tail = tailGraph?.nodeIdMap.get(tailId);
-      if (tail instanceof GroupNode && this.onOpenDefinition !== undefined) {
-        const open = document.createElement("button");
-        open.textContent = "Open Definition";
-        open.title = "Edit this group's definition";
-        open.addEventListener("click", () => this.onOpenDefinition?.(tail));
-        this._crumbs.appendChild(open);
-      }
+    const pill = document.createElement("span");
+    pill.className = "nodeeditor-level-pill";
+    pill.textContent = LEVEL_PILL_TEXT[level.kind];
+    pill.style.cssText =
+      `margin-left: 8px; padding: 0 8px; border-radius: 9px; border: 1px solid ${color}; ` +
+      `font: ${font.genCSS()}; color: ${color}; white-space: nowrap;`;
+    row.appendChild(pill);
+
+    if (level.kind === "definition") {
+      pill.title =
+        "Changes here are saved to the group's definition and reach every instance of it";
+    } else if (level.def !== undefined) {
+      pill.title = "This instance's own values; its structure belongs to the definition";
+      const edit = document.createElement("button");
+      edit.className = "nodeeditor-crumb";
+      edit.textContent = "edit the definition";
+      edit.title = "Open this group's definition, where its structure is edited";
+      edit.style.cssText =
+        `background: none; border: none; padding: 0 6px; cursor: pointer; ` +
+        `font: ${font.genCSS()}; color: ${color}; text-decoration: underline;`;
+      edit.addEventListener("click", () => void this.enterDefinition(level.node));
+      row.appendChild(edit);
+    } else {
+      pill.title =
+        "The definition is not loaded at this depth; edit it from the graph that holds this group";
     }
+
+    // The level band: an inset outline on the canvas, at the edges where it does not compete with the frames.
+    this.panzoom.style.outline = `2px solid ${color}`;
+    this.panzoom.style.outlineOffset = "-2px";
   }
 
   /**
@@ -497,11 +830,30 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._applySelection();
   }
 
-  /** Applies the selection change _selectFrame deferred, once a press on an
-   *  already-selected node has released without moving. */
+  /**
+   * A press that released without moving. Two on one frame's title bar within
+   * DOUBLE_PRESS_MS enter the group; otherwise it applies the selection change
+   * _selectFrame deferred for a press on an already-selected node.
+   */
   private _clickFrame(frame: NodeFrame<CTX>) {
     const pending = this._pendingSelect;
     this._pendingSelect = undefined;
+
+    const now = Date.now();
+    const last = this._lastPress;
+    this._lastPress = frame.headerPressed ? { id: frame.node.id, at: now } : undefined;
+    if (
+      last !== undefined &&
+      last.id === frame.node.id &&
+      now - last.at <= DOUBLE_PRESS_MS &&
+      frame.headerPressed &&
+      frame.node instanceof GroupNode
+    ) {
+      this._lastPress = undefined;
+      void this.enterDefinition(frame.node);
+      return;
+    }
+
     if (pending?.id !== frame.node.id) {
       return;
     }
@@ -586,12 +938,19 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.syncGraph();
   }
 
-  /** Dispatches an edit through the delegate, check first. */
-  private _dispatch(edit: GraphEdit) {
+  /**
+   * Dispatches an edit through the delegate, check first, and answers whether it
+   * was performed. The level check runs afterwards as well as from the watch, so a
+   * definition edit that lands synchronously starts its pass without waiting a frame.
+   */
+  private _dispatch(edit: GraphEdit): boolean {
     this.checkGraphContext();
-    if (this.delegate.check(this.graphContext, edit).ok) {
-      this.delegate.perform(this.graphContext, edit);
+    if (!this.delegate.check(this.graphContext, edit).ok) {
+      return false;
     }
+    this.delegate.perform(this.graphContext, edit);
+    this._checkLevel();
+    return true;
   }
 
   /** The pan/zoom-widget-local point of a mouse event. */
@@ -627,6 +986,94 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       y        : at[1],
     });
     this.syncGraph();
+  }
+
+  /**
+   * Adds an instance of an existing definition, named by ref, at a graph-space
+   * point defaulting to the view's center. The root-level watch resolves it.
+   */
+  addGroupAt(ref: string, at?: readonly [number, number] | Vector2) {
+    if (at === undefined) {
+      const r = this.panzoom.getBoundingClientRect();
+      at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
+    }
+
+    this._dispatch({
+      kind     : "addNode",
+      graphPath: this.currentGraphPath,
+      nodeType : "GroupNode",
+      ref,
+      x: at[0],
+      y: at[1],
+    });
+    this.syncGraph();
+  }
+
+  /**
+   * Moves the selected nodes into a new group and selects the instance left in their
+   * place. The ref comes from the root graph's newGroupRef seam, or from a host
+   * delegate that allocates its own; without either the edit is refused.
+   */
+  groupSelected(): boolean {
+    const ids = [...this.selection];
+    if (ids.length === 0) {
+      return false;
+    }
+    const done = this._dispatch({
+      kind     : "createGroup",
+      graphPath: this.currentGraphPath,
+      storePath: this.graphPath,
+      nodeIds  : ids,
+    });
+    this.syncGraph();
+    return done;
+  }
+
+  /** Replaces one group instance with a copy of its contents. */
+  ungroupNode(nodeId: GraphId): boolean {
+    const done = this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId });
+    this.syncGraph();
+    return done;
+  }
+
+  /** Ungroups every selected group instance, as one undo step. */
+  async ungroupSelected(): Promise<void> {
+    const graph = this.currentGraph;
+    const groups = [...this.selection].filter(
+      (nid) => graph?.nodeIdMap.get(nid) instanceof GroupNode
+    );
+    if (groups.length === 0) {
+      return;
+    }
+    if (groups.length === 1) {
+      this.ungroupNode(groups[0]);
+      return;
+    }
+    await this.singleUndoStep(
+      () => {
+        for (const nid of groups) {
+          this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
+        }
+        this.syncGraph();
+      },
+      "Ungroup",
+      "Ungroup selected groups"
+    );
+  }
+
+  /**
+   * The view's key bindings, declared once so an Area shell and a host embedding
+   * the bare view install the same list: Delete, Shift+D duplicate, Ctrl+G group,
+   * Ctrl+Alt+G ungroup, Tab to enter the selected group or leave the level.
+   */
+  hotkeys(): HotKey[] {
+    return [
+      new HotKey("Delete", [], () => void this.deleteSelected(), "Delete"),
+      new HotKey("D", ["shift"], () => void this.duplicateSelected(), "Duplicate"),
+      new HotKey("G", ["ctrl"], () => void this.groupSelected(), "Create Group"),
+      new HotKey("G", ["ctrl", "alt"], () => void this.ungroupSelected(), "Ungroup"),
+      new HotKey("Tab", [], () => void this.enterOrExit(), "Edit Group"),
+    ];
   }
 
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
@@ -812,10 +1259,47 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.syncGraph();
   }
 
-  /** The context menu for one node: delete, duplicate, replace. */
+  /**
+   * The context menu for one node: delete, duplicate, replace; a group adds Edit
+   * Group, Show Instance and Ungroup, and any node adds Group Selected while
+   * something is selected.
+   */
   private _openNodeMenu(frame: NodeFrame<CTX>, local: [number, number]) {
     const nid = frame.node.id;
-    const menu = createMenu(this.ctx, "", [
+    const node = frame.node;
+    const template: MenuTemplate = [];
+
+    if (node instanceof GroupNode) {
+      template.push(
+        {
+          name    : "Edit Group",
+          tooltip:
+            node.definition !== undefined
+              ? "Open this group's definition; edits there reach every instance"
+              : "This group's definition has not loaded, so it cannot be edited here",
+          callback: () => void this.enterDefinition(node),
+        },
+        {
+          name    : "Show Instance",
+          tooltip : "Look inside this one instance; it takes value edits only",
+          callback: () => void this.enterInstance(node),
+        },
+        {
+          name    : "Ungroup",
+          tooltip : "Replace this group with a copy of what it contains",
+          callback: () => void this.ungroupNode(nid),
+        }
+      );
+    }
+    if (this.selection.size > 0) {
+      template.push({
+        name    : "Group Selected",
+        tooltip : "Move the selected nodes into a new group",
+        callback: () => void this.groupSelected(),
+      });
+    }
+
+    template.push(
       {
         name    : "Delete",
         tooltip : "Delete this node",
@@ -847,8 +1331,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           );
           this._startMenu(picker, local, true);
         },
-      },
-    ]);
+      }
+    );
+    const menu = createMenu(this.ctx, "", template);
     this._startMenu(menu, local);
   }
 

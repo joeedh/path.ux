@@ -1,6 +1,5 @@
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
 import { Editor } from "../editors/editor_base.js";
-import { demoGroupDefs } from "../editors/nodeeditor/demo_nodes.js";
 
 import {
   Context,
@@ -89,10 +88,6 @@ export class BaseOverlay extends ContextOverlay {
 
   get nodegraph() {
     return this.data?.demoNodeGraph;
-  }
-
-  get demogroup() {
-    return demoGroupDefs.get("demo_group")?.subgraph;
   }
 
   workspace_save() {
