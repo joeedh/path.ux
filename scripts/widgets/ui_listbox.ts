@@ -6,7 +6,7 @@ import { parsepx } from "../core/ui_theme";
 import { keymap } from "../path-controller/util/events";
 import { DataList } from "../path-controller/controller/controller_base";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
-import { ToolOp, ToolFlags } from "../path-controller/toolsys/toolsys";
+import { ToolOp, ToolFlags } from "../path-controller/toolsys/toolop";
 import { StringProperty, BoolProperty } from "../path-controller/toolsys/toolprop";
 
 export class ListItem<

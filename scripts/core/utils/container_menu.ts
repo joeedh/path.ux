@@ -4,7 +4,7 @@ import { Menu } from "../../menu/menu";
 import { createMenu } from "../../menu/menu_ops";
 import type { DropBox } from "../../menu/dropbox";
 import type { MenuTemplate } from "../../menu/menu_types";
-import { InheritFlag, ToolOp } from "../../path-controller/toolsys/toolsys";
+import { InheritFlag, ToolOp } from "../../path-controller/toolsys/toolop";
 import { PropFlags } from "../../path-controller/toolsys";
 import { ToolOpAny } from "../../path-controller/controller/controller_abstract";
 import type { Button, IconButton } from "../../widgets/ui_widgets";

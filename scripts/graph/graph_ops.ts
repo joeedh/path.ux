@@ -1,4 +1,4 @@
-import { ToolOp } from "../path-controller/toolsys/toolsys";
+import { ToolOp } from "../path-controller/toolsys/toolop";
 import { FloatProperty, IntProperty, StringProperty } from "../path-controller/toolsys/toolprop";
 import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { ContextLike } from "../path-controller/controller/controller_abstract";

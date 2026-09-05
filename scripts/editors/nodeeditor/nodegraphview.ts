@@ -966,14 +966,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   /** Commits a finished drag; a group move goes as one moveNodes edit, so the
    *  gesture leaves a single undo entry. */
-  private _commitMove(moves: readonly FrameMove<CTX>[]) {
+  private async _commitMove(moves: readonly FrameMove<CTX>[]): Promise<void> {
     for (const move of moves) {
       move.frame.style.opacity = "";
     }
 
     if (moves.length === 1) {
       const edit = this._moveEdit(moves[0].frame, moves[0].x, moves[0].y);
-      this._dispatch(edit);
+      await this._dispatch(edit);
     } else if (moves.length > 1) {
       const accepted: NodeMove[] = [];
       for (const move of moves) {
@@ -982,7 +982,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
         }
       }
       if (accepted.length > 0) {
-        this._dispatch({
+        await this._dispatch({
           kind     : "moveNodes",
           graphPath: this.currentGraphPath,
           moves    : accepted,
@@ -996,10 +996,11 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   /**
    * Dispatches an edit through the delegate, check first, and answers whether it
-   * was performed. The level check runs afterwards as well as from the watch, so a
-   * definition edit that lands synchronously starts its pass without waiting a frame.
+   * was performed. Resolves once the edit has been applied, so a caller may
+   * repaint from the model straight after awaiting it. The level check runs here
+   * as well as from the watch, so the pass starts without waiting a frame.
    */
-  private _dispatch(edit: GraphEdit): boolean {
+  private async _dispatch(edit: GraphEdit): Promise<boolean> {
     this.checkGraphContext();
     const verdict = this.delegate.check(this.graphContext, edit);
     if (!verdict.ok) {
@@ -1007,7 +1008,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       return false;
     }
     this.lastRefusal = undefined;
-    this.delegate.perform(this.graphContext, edit);
+    await this.delegate.perform(this.graphContext, edit);
     this._checkLevel();
     return true;
   }
@@ -1031,13 +1032,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * Adds a node of the named registered type at a graph-space point, defaulting
    * to the view's center. This is the entry point a host's own add menu calls.
    */
-  addNodeAt(typeName: string, at?: readonly [number, number] | Vector2) {
+  async addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): Promise<void> {
     if (at === undefined) {
       const r = this.panzoom.getBoundingClientRect();
       at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
     }
 
-    this._dispatch({
+    await this._dispatch({
       kind     : "addNode",
       graphPath: this.currentGraphPath,
       nodeType : typeName,
@@ -1051,13 +1052,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * Adds an instance of an existing definition, named by ref, at a graph-space
    * point defaulting to the view's center. The root-level watch resolves it.
    */
-  addGroupAt(ref: string, at?: readonly [number, number] | Vector2) {
+  async addGroupAt(ref: string, at?: readonly [number, number] | Vector2): Promise<void> {
     if (at === undefined) {
       const r = this.panzoom.getBoundingClientRect();
       at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
     }
 
-    this._dispatch({
+    await this._dispatch({
       kind     : "addNode",
       graphPath: this.currentGraphPath,
       nodeType : "GroupNode",
@@ -1073,13 +1074,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * place. The ref comes from the root graph's newGroupRef seam, or from a host
    * delegate that allocates its own; without either the edit is refused.
    */
-  groupSelected(): boolean {
+  async groupSelected(): Promise<boolean> {
     const ids = [...this.selection];
     if (ids.length === 0) {
       this.lastRefusal = "nothing is selected";
       return false;
     }
-    const done = this._dispatch({
+    const done = await this._dispatch({
       kind     : "createGroup",
       graphPath: this.currentGraphPath,
       storePath: this.graphPath,
@@ -1090,8 +1091,12 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   }
 
   /** Replaces one group instance with a copy of its contents. */
-  ungroupNode(nodeId: GraphId): boolean {
-    const done = this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId });
+  async ungroupNode(nodeId: GraphId): Promise<boolean> {
+    const done = await this._dispatch({
+      kind: "ungroup",
+      graphPath: this.currentGraphPath,
+      nodeId,
+    });
     this.syncGraph();
     return done;
   }
@@ -1106,13 +1111,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       return;
     }
     if (groups.length === 1) {
-      this.ungroupNode(groups[0]);
+      await this.ungroupNode(groups[0]);
       return;
     }
     await this.singleUndoStep(
-      () => {
+      async () => {
         for (const nid of groups) {
-          this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
+          await this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
         }
         this.syncGraph();
       },
@@ -1139,7 +1144,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
   openAddMenu(local: readonly [number, number]): Menu<CTX> {
     const menu = buildAddNodeMenu(this.ctx, (typeName: string) => {
-      this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
+      void this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
     });
     this._startMenu(menu, local, true);
     return menu;
@@ -1176,14 +1181,18 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   /** Deletes the selected nodes and severs the selected links. */
   async deleteSelected(): Promise<void> {
     await this.singleUndoStep(
-      () => {
+      async () => {
         for (const ref of this.selectedLinks()) {
-          this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+          await this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
         }
         this.linkSelection.clear();
 
         for (const nid of [...this.selection]) {
-          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+          await this._dispatch({
+            kind: "deleteNode",
+            graphPath: this.currentGraphPath,
+            nodeId: nid,
+          });
         }
         this.syncGraph();
       },
@@ -1198,7 +1207,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     await this.singleUndoStep(
-      () => {
+      async () => {
         const graph = this.currentGraph;
         const existingNodes = new Set(Array.from(graph?.nodes ?? []).map((n) => n.id));
         const selection = Array.from(this.selection);
@@ -1209,7 +1218,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           if (node === undefined) {
             continue;
           }
-          this._dispatch({
+          await this._dispatch({
             kind     : "duplicateNode",
             graphPath: this.currentGraphPath,
             nodeId   : nid,
@@ -1233,8 +1242,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     );
   }
 
-  replaceNode(nodeId: GraphId, newType: string) {
-    this._dispatch({ kind: "replaceNode", graphPath: this.currentGraphPath, nodeId, newType });
+  async replaceNode(nodeId: GraphId, newType: string): Promise<void> {
+    await this._dispatch({
+      kind: "replaceNode",
+      graphPath: this.currentGraphPath,
+      nodeId,
+      newType,
+    });
     this.syncGraph();
   }
 
@@ -1243,7 +1257,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * islands out left to right so they stay disjoint (the solver itself is
    * randomized). The result commits as one arrange edit — one undo entry.
    */
-  arrangeNodes() {
+  async arrangeNodes(): Promise<void> {
     const graph = this.currentGraph;
     if (graph === undefined || graph.nodes.length === 0) {
       return;
@@ -1315,7 +1329,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     for (const [nid, pn] of packs) {
       moves.push({ nodeId: nid, x: pn.pos[0], y: pn.pos[1] });
     }
-    this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
+    await this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
     this.syncGraph();
   }
 
@@ -1344,9 +1358,27 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     return menu;
   }
 
+  /** Deletes one node, named by the node menu rather than the selection. */
+  private async _deleteNode(nodeId: GraphId): Promise<void> {
+    await this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId });
+    this.syncGraph();
+  }
+
+  /** Duplicates one node, offset from the frame the node menu opened on. */
+  private async _duplicateNode(nodeId: GraphId, frame: NodeFrame<CTX>): Promise<void> {
+    await this._dispatch({
+      kind     : "duplicateNode",
+      graphPath: this.currentGraphPath,
+      nodeId,
+      x: frame.node.pos[0] + 20,
+      y: frame.node.pos[1] + 20,
+    });
+    this.syncGraph();
+  }
+
   /** Forwards one property of a node in the definition on screen; false when refused. */
-  exposeProp(nodeId: GraphId, propKey: NodePropName): boolean {
-    return this._dispatch({
+  async exposeProp(nodeId: GraphId, propKey: NodePropName): Promise<boolean> {
+    return await this._dispatch({
       kind     : "exposeEntry",
       graphPath: this.currentGraphPath,
       entry    : { kind: "prop", nodeId, propKey: propKey as unknown as string },
@@ -1392,32 +1424,20 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       {
         name    : "Delete",
         tooltip : "Delete this node",
-        callback: () => {
-          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-          this.syncGraph();
-        },
+        callback: () => void this._deleteNode(nid),
       },
       {
         name    : "Duplicate",
         tooltip : "Duplicate this node, keeping its overridden values",
-        callback: () => {
-          this._dispatch({
-            kind     : "duplicateNode",
-            graphPath: this.currentGraphPath,
-            nodeId   : nid,
-            x        : frame.node.pos[0] + 20,
-            y        : frame.node.pos[1] + 20,
-          });
-          this.syncGraph();
-        },
+        callback: () => void this._duplicateNode(nid, frame),
       },
       {
         name    : "Replace…",
         tooltip : "Swap this node's type, keeping links where sockets match",
         callback: () => {
-          const picker = buildAddNodeMenu(this.ctx, (typeName: string) =>
-            this.replaceNode(nid, typeName)
-          );
+          const picker = buildAddNodeMenu(this.ctx, (typeName: string) => {
+            void this.replaceNode(nid, typeName);
+          });
           this._startMenu(picker, local, true);
         },
       }

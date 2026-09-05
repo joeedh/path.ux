@@ -1,7 +1,7 @@
 import * as platform_mod from "../platforms/platform";
 import type { PlatformAPI } from "../platforms/platform_base";
 
-import { ToolOp, UndoFlags, type PropertySlots } from "../path-controller/toolsys/toolsys";
+import { ToolOp, UndoFlags, type PropertySlots } from "../path-controller/toolsys/toolop";
 import { BoolProperty } from "../path-controller/toolsys/toolprop";
 
 import { error, message } from "../widgets/ui_noteframe";

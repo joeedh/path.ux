@@ -63,8 +63,8 @@ export class MenuBarEditor extends Editor {
           hotkey  : "CTRL-G",
           tooltip : "Move the selected nodes into a new group",
           callback: () =>
-            this._withNodeView((view) => {
-              if (!view.groupSelected()) {
+            this._withNodeView(async (view) => {
+              if (!(await view.groupSelected())) {
                 (this.ctx as unknown as ViewContext).report(
                   `Nothing was grouped: ${view.lastRefusal}`,
                   "orange"

@@ -5,36 +5,31 @@ import cconst from "../config/const";
 import * as util from "../path-controller/util/util";
 import { Vector2 } from "../path-controller/util/vectormath";
 import * as ui_base from "../core/ui_base";
-import * as simple_toolsys from "../path-controller/toolsys/toolsys";
+import { ToolOp, UndoFlags } from "../path-controller/toolsys/toolop";
 import { ToolTip } from "../widgets/ui_widgets2";
 import type { Screen } from "./FrameManager";
 import type { Overdraw } from "../util/ScreenOverdraw";
 import type { SVGRectWithColor } from "../util/ScreenOverdraw";
 import type { ScreenBorder, ScreenBorderAny, ScreenVert } from "./FrameManager_mesh";
+import { ToolStack } from "../path-controller/toolsys/toolstack";
 
 // TODO: these tools do not need a toolstack; drop the getter and run them directly.
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let toolstack_getter = function (): simple_toolsys.ToolStack {
+let toolstack_getter = function (): ToolStack {
   throw new Error("must pass a toolstack getter to registerToolStackGetter");
 };
 
-export function registerToolStackGetter(func: () => simple_toolsys.ToolStack) {
+export function registerToolStackGetter(func: () => ToolStack) {
   toolstack_getter = func;
 }
-
-const UndoFlags = simple_toolsys.UndoFlags;
 
 import { pushModalLight, popModalLight, keymap, pushPointerModal } from "../util/simple_events";
 import { IContextBase } from "../core/context_base";
 import { ScreenArea, ScreenAreaAny } from "./ScreenArea";
 import { IAreaConstructor } from "./area_base";
 
-export class ToolBase<CTX extends IContextBase = IContextBase> extends simple_toolsys.ToolOp<
-  {},
-  {},
-  CTX
-> {
+export class ToolBase<CTX extends IContextBase = IContextBase> extends ToolOp<{}, {}, CTX> {
   screen: Screen<CTX>;
   _finished: boolean;
   overdraw?: Overdraw<CTX>;

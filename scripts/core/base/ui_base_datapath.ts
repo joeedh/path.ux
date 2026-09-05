@@ -8,6 +8,7 @@ import type {
   DataPathWatcherOpts,
   PathWatchCallback,
 } from "../../path-controller/controller/controller";
+import { ContextLike } from "../../path-controller/controller/controller_abstract";
 import type { DataPathSetOp } from "../../path-controller/controller/controller_ops";
 import * as toolprop from "../../path-controller/toolsys/toolprop";
 import { IntProperty, NumberConstraints, PropFlags } from "../../path-controller/toolsys/toolprop";
@@ -16,7 +17,12 @@ import type { UIBase } from "../ui_base";
 
 type AnyUIBase = UIBase<any, any, any>;
 
-export function setPathValueUndo(elem: AnyUIBase, ctx: any, path: string, val: unknown): void {
+export function setPathValueUndo(
+  elem: AnyUIBase,
+  ctx: ContextLike,
+  path: string,
+  val: unknown
+): void {
   elem.pathSocketUpdate(ctx, path);
 
   const mass_set_path = elem.getAttribute("mass_set_path");
@@ -51,7 +57,7 @@ export function setPathValueUndo(elem: AnyUIBase, ctx: any, path: string, val: u
       return;
     }
 
-    ctx.toolstack.execTool(elem.ctx, toolop);
+    ctx.toolstack.pushTool(elem.ctx, toolop);
     head = toolstack.head;
   }
 

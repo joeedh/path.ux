@@ -3,7 +3,7 @@ import type { UIBaseDefinition } from "../core/ui_base";
 import { Container } from "../core/ui";
 import { IContextBase } from "../core/context_base";
 import { t } from "../core/theme_schema";
-import { ToolOp, UndoFlags } from "../path-controller/toolsys/toolsys";
+import { ToolOp, UndoFlags } from "../path-controller/toolsys/toolop";
 import type { ContextLike } from "../path-controller/controller/controller_abstract";
 import { Vector2 } from "../path-controller/util/vectormath";
 

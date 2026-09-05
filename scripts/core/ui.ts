@@ -19,7 +19,7 @@ import { IsRowFrameTag } from "./ui_consts";
 import { elementIsRow } from "./base/ui_base_dom";
 import { IContextBase } from "./context_base";
 import type { TreeView } from "../widgets/ui_treeview";
-import { ToolOp } from "../path-controller/toolsys/toolsys";
+import { ToolOp } from "../path-controller/toolsys";
 import type { TextArea } from "../widgets/ui_textarea";
 import type { RichEditor } from "../widgets/ui_richedit";
 

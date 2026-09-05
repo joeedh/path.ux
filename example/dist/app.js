@@ -18694,6 +18694,140 @@ var init_controller_base = __esm({
   }
 });
 
+// scripts/path-controller/toolsys/tooldefaults.ts
+var ToolPropertyCache, SavedToolDefaults;
+var init_tooldefaults = __esm({
+  "scripts/path-controller/toolsys/tooldefaults.ts"() {
+    "use strict";
+    init_toolprop();
+    init_controller_base();
+    ToolPropertyCache = class _ToolPropertyCache {
+      /** @deprecated */
+      map;
+      pathmap;
+      accessors;
+      userSetMap;
+      constructor() {
+        this.map = /* @__PURE__ */ new Map();
+        this.pathmap = /* @__PURE__ */ new Map();
+        this.accessors = {};
+        this.userSetMap = /* @__PURE__ */ new Set();
+      }
+      static getPropKey(_cls, key, prop) {
+        return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
+      }
+      _buildAccessors(cls, key, prop, dstruct, api) {
+        const tdef = cls._getFinalToolDef();
+        this.api = api;
+        this.dstruct = dstruct;
+        if (!tdef.toolpath) {
+          console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
+          return;
+        }
+        const path = tdef.toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
+        let obj = this.accessors;
+        let st = dstruct;
+        let partial = "";
+        for (let i2 = 0; i2 < path.length; i2++) {
+          const k = path[i2];
+          let pathk = k;
+          if (i2 === 0) {
+            pathk = "accessors." + k;
+          }
+          if (i2 > 0) {
+            partial += ".";
+          }
+          partial += k;
+          if (!(k in obj)) {
+            obj[k] = {};
+          }
+          const st2 = api.mapStruct(obj[k], true, k);
+          if (!(st.pathmap && k in st.pathmap)) {
+            st.struct(pathk, k, k, st2);
+          }
+          st = st2;
+          this.pathmap.set(partial, obj[k]);
+          obj = obj[k];
+        }
+        const name2 = prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
+        const prop2 = prop.copy();
+        const dpath = new DataPath(name2, name2, prop2);
+        let uiname = prop.uiname;
+        if (!uiname || uiname.trim().length === 0) {
+          uiname = prop.apiname;
+        }
+        if (!uiname || uiname.trim().length === 0) {
+          uiname = key;
+        }
+        uiname = ToolProperty.makeUIName(uiname);
+        prop2.uiname = uiname;
+        prop2.description = prop2.description || prop2.uiname;
+        st.add(dpath);
+        obj[name2] = prop2.getValue();
+      }
+      _getAccessor(cls) {
+        const toolpath = cls.tooldef().toolpath;
+        if (!toolpath) return void 0;
+        return this.pathmap.get(toolpath.trim());
+      }
+      static getFullPath(cls, key, prop) {
+        const toolpath = cls.tooldef().toolpath.trim();
+        const propKey = _ToolPropertyCache.getPropKey(cls, key, prop);
+        return `${toolpath}.${propKey}`;
+      }
+      useDefault(cls, key, prop) {
+        return this.userSetMap.has(_ToolPropertyCache.getFullPath(cls, key, prop));
+      }
+      has(cls, key, prop) {
+        if (prop.flag & PropFlags.NO_DEFAULT) {
+          return false;
+        }
+        const obj = this._getAccessor(cls);
+        key = _ToolPropertyCache.getPropKey(cls, key, prop);
+        return !!obj && key in obj;
+      }
+      get(cls, key, prop) {
+        if (cls._IsToolMacro) {
+          return void 0;
+        }
+        const obj = this._getAccessor(cls);
+        key = this.constructor.getPropKey(cls, key, prop);
+        if (obj) {
+          return obj[key];
+        }
+        return void 0;
+      }
+      set(cls, key, prop) {
+        if (cls._IsToolMacro) {
+          return;
+        }
+        let toolpath = cls.tooldef().toolpath;
+        if (!toolpath) {
+          console.error("Malformed toolpath in toolop definition: undefined");
+          return;
+        }
+        toolpath = toolpath.trim();
+        let obj = this._getAccessor(cls);
+        if (!obj) {
+          console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
+          this._buildAccessors(cls, key, prop, this.dstruct, this.api);
+          obj = this.pathmap.get(toolpath);
+        }
+        if (!obj) {
+          console.error("Malformed toolpath in toolop definition: " + toolpath);
+          return;
+        }
+        key = this.constructor.getPropKey(cls, key, prop);
+        obj[key] = prop.copy().getValue();
+        const path = toolpath + "." + key;
+        this.userSetMap.add(path);
+        return this;
+      }
+    };
+    SavedToolDefaults = new ToolPropertyCache();
+  }
+});
+
 // scripts/path-controller/controller/context.ts
 function setNotifier(cls) {
   notifier = cls;
@@ -19218,12 +19352,31 @@ var init_context = __esm({
 function setContextClass(_cls) {
   console.warn("setContextClass is deprecated");
 }
-function setDefaultUndoHandlers(undoPre, undo) {
-  if (!undoPre || !undo) {
-    throw new Error("invalid parameters to setDefaultUndoHandlers");
+function updateToolDefaults(cls, api, datastruct) {
+  const def = cls._getFinalToolDef();
+  if (datastruct === void 0) {
+    datastruct = SavedToolDefaults.dstruct;
   }
-  defaultUndoHandlers.undoPre = undoPre;
-  defaultUndoHandlers.undo = undo;
+  if (api === void 0) {
+    api = SavedToolDefaults.api;
+  }
+  if (datastruct === void 0 || api === void 0) {
+    return;
+  }
+  buildToolOpAPI(api, cls);
+  for (const k in def.inputs) {
+    const prop = def.inputs[k];
+    if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
+      SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
+    }
+  }
+}
+function updateToolSysAPI(api) {
+  const datastruct = api.mapStruct(ToolPropertyCache, true);
+  datastruct.clear();
+  for (const cls of ToolClasses) {
+    updateToolDefaults(cls, api, datastruct);
+  }
 }
 function buildToolOpAPI(api, cls) {
   const st = api.mapStruct(cls, true);
@@ -19253,32 +19406,6 @@ function buildToolOpAPI(api, cls) {
   }
   return st;
 }
-function updateToolDefaults(cls, api, datastruct) {
-  const def = cls._getFinalToolDef();
-  if (datastruct === void 0) {
-    datastruct = SavedToolDefaults.dstruct;
-  }
-  if (api === void 0) {
-    api = SavedToolDefaults.api;
-  }
-  if (datastruct === void 0 || api === void 0) {
-    return;
-  }
-  buildToolOpAPI(api, cls);
-  for (const k in def.inputs) {
-    const prop = def.inputs[k];
-    if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
-      SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-    }
-  }
-}
-function updateToolSysAPI(api) {
-  const datastruct = api.mapStruct(ToolPropertyCache, true);
-  datastruct.clear();
-  for (const cls of ToolClasses) {
-    updateToolDefaults(cls, api, datastruct);
-  }
-}
 function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
   updateToolSysAPI(api);
   if (rootCtxStruct) {
@@ -19291,11 +19418,12 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
     rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
   }
   if (rootCtxClass && insertToolDefaultsIntoContext) {
-    let haveprop = function(k) {
+    let haveprop2 = function(k) {
       return Reflect.ownKeys(inst).includes(k) || Reflect.ownKeys(rootCtxClass.prototype).includes(k);
     };
+    var haveprop = haveprop2;
     const inst = new rootCtxClass({});
-    if (!haveprop("last_tool")) {
+    if (!haveprop2("last_tool")) {
       Object.defineProperty(rootCtxClass.prototype, "last_tool", {
         get() {
           return this.toolstack.head;
@@ -19306,7 +19434,7 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
         rootCtxClass.prototype.last_tool_load = () => void 0;
       }
     }
-    if (!haveprop("toolDefaults")) {
+    if (!haveprop2("toolDefaults")) {
       Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
         get() {
           return SavedToolDefaults;
@@ -19332,17 +19460,43 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
     }
   }
 }
-var ToolClasses, ToolFlags, UndoFlags, InheritFlag2, modalstack2, defaultUndoHandlers, ToolPropertyCache, SavedToolDefaults, ToolOp, PropKey, MacroLink, MacroClasses, macroidgen, ToolMacro, ToolStack;
 var init_toolsys = __esm({
   "scripts/path-controller/toolsys/toolsys.ts"() {
+    "use strict";
+    init_struct();
+    init_toolprop();
+    init_controller_base();
+    init_context();
+    init_toolop();
+    init_tooldefaults();
+  }
+});
+
+// scripts/path-controller/toolsys/toolop.ts
+function setDefaultUndoHandlers(undoPre, undo) {
+  if (!undoPre || !undo) {
+    throw new Error("invalid parameters to setDefaultUndoHandlers");
+  }
+  defaultUndoHandlers.undoPre = undoPre;
+  defaultUndoHandlers.undo = undo;
+}
+async function toolopCanRunAsync(ctx, cls, toolop) {
+  const result = cls.canRun(ctx, toolop);
+  if (result instanceof Promise) {
+    return result;
+  }
+  return Promise.resolve(result);
+}
+var ToolClasses, ToolFlags, UndoFlags, InheritFlag2, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
+var init_toolop = __esm({
+  "scripts/path-controller/toolsys/toolop.ts"() {
     "use strict";
     init_struct();
     init_events();
     init_simple_events();
     init_toolprop();
-    init_controller_base();
-    init_util();
-    init_context();
+    init_tooldefaults();
+    init_toolsys();
     ToolClasses = [];
     ToolFlags = {
       PRIVATE: 1
@@ -19368,130 +19522,6 @@ var init_toolsys = __esm({
         throw new Error("implement me");
       }
     };
-    ToolPropertyCache = class _ToolPropertyCache {
-      /** @deprecated */
-      map;
-      pathmap;
-      accessors;
-      userSetMap;
-      constructor() {
-        this.map = /* @__PURE__ */ new Map();
-        this.pathmap = /* @__PURE__ */ new Map();
-        this.accessors = {};
-        this.userSetMap = /* @__PURE__ */ new Set();
-      }
-      static getPropKey(_cls, key, prop) {
-        return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
-      }
-      _buildAccessors(cls, key, prop, dstruct, api) {
-        const tdef = cls._getFinalToolDef();
-        this.api = api;
-        this.dstruct = dstruct;
-        if (!tdef.toolpath) {
-          console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
-          return;
-        }
-        const path = tdef.toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
-        let obj = this.accessors;
-        let st = dstruct;
-        let partial = "";
-        for (let i2 = 0; i2 < path.length; i2++) {
-          const k = path[i2];
-          let pathk = k;
-          if (i2 === 0) {
-            pathk = "accessors." + k;
-          }
-          if (i2 > 0) {
-            partial += ".";
-          }
-          partial += k;
-          if (!(k in obj)) {
-            obj[k] = {};
-          }
-          const st2 = api.mapStruct(obj[k], true, k);
-          if (!(st.pathmap && k in st.pathmap)) {
-            st.struct(pathk, k, k, st2);
-          }
-          st = st2;
-          this.pathmap.set(partial, obj[k]);
-          obj = obj[k];
-        }
-        const name2 = prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
-        const prop2 = prop.copy();
-        const dpath = new DataPath(name2, name2, prop2);
-        let uiname = prop.uiname;
-        if (!uiname || uiname.trim().length === 0) {
-          uiname = prop.apiname;
-        }
-        if (!uiname || uiname.trim().length === 0) {
-          uiname = key;
-        }
-        uiname = ToolProperty.makeUIName(uiname);
-        prop2.uiname = uiname;
-        prop2.description = prop2.description || prop2.uiname;
-        st.add(dpath);
-        obj[name2] = prop2.getValue();
-      }
-      _getAccessor(cls) {
-        const toolpath = cls.tooldef().toolpath;
-        if (!toolpath) return void 0;
-        return this.pathmap.get(toolpath.trim());
-      }
-      static getFullPath(cls, key, prop) {
-        const toolpath = cls.tooldef().toolpath.trim();
-        const propKey = _ToolPropertyCache.getPropKey(cls, key, prop);
-        return `${toolpath}.${propKey}`;
-      }
-      useDefault(cls, key, prop) {
-        return this.userSetMap.has(_ToolPropertyCache.getFullPath(cls, key, prop));
-      }
-      has(cls, key, prop) {
-        if (prop.flag & PropFlags.NO_DEFAULT) {
-          return false;
-        }
-        const obj = this._getAccessor(cls);
-        key = _ToolPropertyCache.getPropKey(cls, key, prop);
-        return !!obj && key in obj;
-      }
-      get(cls, key, prop) {
-        if (cls === ToolMacro) {
-          return void 0;
-        }
-        const obj = this._getAccessor(cls);
-        key = this.constructor.getPropKey(cls, key, prop);
-        if (obj) {
-          return obj[key];
-        }
-        return void 0;
-      }
-      set(cls, key, prop) {
-        if (cls === ToolMacro) {
-          return;
-        }
-        let toolpath = cls.tooldef().toolpath;
-        if (!toolpath) {
-          console.error("Malformed toolpath in toolop definition: undefined");
-          return;
-        }
-        toolpath = toolpath.trim();
-        let obj = this._getAccessor(cls);
-        if (!obj) {
-          console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
-          this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-          obj = this.pathmap.get(toolpath);
-        }
-        if (!obj) {
-          console.error("Malformed toolpath in toolop definition: " + toolpath);
-          return;
-        }
-        key = this.constructor.getPropKey(cls, key, prop);
-        obj[key] = prop.copy().getValue();
-        const path = toolpath + "." + key;
-        this.userSetMap.add(path);
-        return this;
-      }
-    };
-    SavedToolDefaults = new ToolPropertyCache();
     ToolOp = class _ToolOp extends EventHandler {
       /**
          Main ToolOp constructor.  It reads the inputs/outputs properties from
@@ -19714,7 +19744,7 @@ var init_toolsys = __esm({
         }
         const parent = cls.prototype.__proto__?.constructor;
         if (!cls.hasOwnProperty("STRUCT")) {
-          if (parent !== _ToolOp && parent !== ToolMacro && parent !== Object) {
+          if (parent !== _ToolOp && !parent._IsToolMacro && parent !== Object) {
             this._regWithNstructjs(parent);
           }
           cls.STRUCT = struct_default.inherit(cls, parent) + "}\n";
@@ -19765,10 +19795,10 @@ var init_toolsys = __esm({
           toolop.on_tick();
         }
       }
-      static searchBoxOk(ctx) {
+      static async searchBoxOk(ctx) {
         const flag = this.tooldef().flag;
         let ret = !(flag && flag & ToolFlags.PRIVATE);
-        ret = ret && this.canRun(ctx);
+        ret = ret && await toolopCanRunAsync(ctx, this);
         return ret;
       }
       /**
@@ -20046,627 +20076,6 @@ toolsys.PropKey {
 }
 `;
     struct_default.register(PropKey);
-    MacroLink = class {
-      static STRUCT = struct_default.inlineRegister(
-        this,
-        `
-    toolsys.MacroLink {
-      source         : int;
-      dest           : int;
-      sourcePropKey  : string;
-      destPropKey    : string;
-      sourceProps    : string;
-      destProps      : string;
-    }
-    `
-      );
-      source;
-      dest;
-      sourceProps;
-      destProps;
-      sourcePropKey;
-      destPropKey;
-      constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
-        this.source = sourcetool_idx ?? -1;
-        this.dest = desttool_idx ?? -1;
-        this.sourceProps = srcprops;
-        this.destProps = dstprops;
-        this.sourcePropKey = srckey ?? "";
-        this.destPropKey = dstkey ?? "";
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-      }
-    };
-    MacroClasses = {};
-    macroidgen = 0;
-    ToolMacro = class _ToolMacro extends ToolOp {
-      static STRUCT;
-      tools;
-      curtool;
-      has_modal;
-      connects;
-      connectLinks;
-      _macro_class;
-      constructor() {
-        super();
-        this.tools = [];
-        this.curtool = 0;
-        this.has_modal = false;
-        this.connects = [];
-        this.connectLinks = [];
-        this._macro_class = void 0;
-      }
-      static tooldef() {
-        return {
-          uiname: "Tool Macro"
-        };
-      }
-      //toolop is an optional instance of this class, may be undefined
-      static canRun(_ctx, _toolop) {
-        return true;
-      }
-      _getTypeClass() {
-        if (this._macro_class?.ready) {
-          return this._macro_class;
-        }
-        if (!this._macro_class) {
-          this._macro_class = class MacroTypeClass extends ToolOp {
-            static tooldef() {
-              return this.__tooldef;
-            }
-          };
-          this._macro_class.__tooldef = {
-            toolpath: this.constructor.tooldef().toolpath || ""
-          };
-          this._macro_class.ready = false;
-        }
-        if (!this.tools || this.tools.length === 0) {
-          return this._macro_class;
-        }
-        let key = "";
-        for (const tool of this.tools) {
-          key = tool.constructor.name + ":";
-        }
-        if (this.constructor !== _ToolMacro) {
-          key += ":" + this.constructor.tooldef().toolpath;
-        }
-        for (const k in this.inputs) {
-          key += k + ":";
-        }
-        if (key in MacroClasses) {
-          this._macro_class = MacroClasses[key];
-          return this._macro_class;
-        }
-        let name2 = "Macro(";
-        let i2 = 0;
-        let is_modal;
-        for (const tool of this.tools) {
-          const def = tool.constructor.tooldef();
-          if (i2 > 0) {
-            name2 += ", ";
-          } else {
-            is_modal = def.is_modal;
-          }
-          if (def.uiname) {
-            name2 += def.uiname;
-          } else if (def.toolpath) {
-            name2 += def.toolpath;
-          } else {
-            name2 += tool.constructor.name;
-          }
-          i2++;
-        }
-        const inputs = {};
-        const selfInputs = this.inputs;
-        for (const k in selfInputs) {
-          inputs[k] = selfInputs[k].copy().clearEventCallbacks();
-          inputs[k].wasSet = false;
-        }
-        const tdef = {
-          uiname: name2,
-          toolpath: key,
-          inputs,
-          outputs: {},
-          is_modal
-        };
-        const cls = this._macro_class;
-        cls.__tooldef = tdef;
-        cls._macroTypeId = macroidgen++;
-        cls.ready = true;
-        MacroClasses[key] = cls;
-        return cls;
-      }
-      saveDefaultInputs() {
-        const inputs = this.inputs;
-        for (const k in inputs) {
-          const prop = inputs[k];
-          if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
-            SavedToolDefaults.set(this._getTypeClass(), k, prop);
-          }
-        }
-        return this;
-      }
-      hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        return SavedToolDefaults.has(this._getTypeClass(), key, toolprop3);
-      }
-      getDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        const cls = this._getTypeClass();
-        if (SavedToolDefaults.has(cls, key, toolprop3)) {
-          return SavedToolDefaults.get(cls, key, toolprop3);
-        } else {
-          return toolprop3.getValue();
-        }
-      }
-      connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
-        if (typeof dsttool === "function") {
-          return this.connectCB(
-            srctool,
-            srcoutput,
-            dsttool,
-            dstinput
-          );
-        }
-        const i1 = this.tools.indexOf(srctool);
-        const i2 = this.tools.indexOf(dsttool);
-        if (i1 < 0 || i2 < 0) {
-          throw new Error("tool not in macro");
-        }
-        const selfInputs = this.inputs;
-        if (srcprops === "inputs") {
-          const tool = this.tools[i1];
-          const toolInputs = tool.inputs;
-          const prop = toolInputs[srcoutput];
-          if (prop === selfInputs[srcoutput]) {
-            delete selfInputs[srcoutput];
-          }
-        }
-        if (dstprops === "inputs") {
-          const tool = this.tools[i2];
-          const toolInputs = tool.inputs;
-          const prop = toolInputs[dstinput];
-          if (selfInputs[dstinput] === prop) {
-            delete selfInputs[dstinput];
-          }
-        }
-        this.connectLinks.push(
-          new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops)
-        );
-        return this;
-      }
-      connectCB(srctool, dsttool, callback, thisvar) {
-        this.connects.push({
-          srctool,
-          dsttool,
-          callback,
-          thisvar
-        });
-        return this;
-      }
-      add(tool) {
-        if (tool.is_modal) {
-          this.is_modal = true;
-        }
-        const toolInputs = tool.inputs;
-        const selfInputs = this.inputs;
-        for (const k in toolInputs) {
-          const prop = toolInputs[k];
-          if (!(prop.flag & PropFlags.PRIVATE)) {
-            selfInputs[k] = prop;
-          }
-        }
-        this.tools.push(tool);
-        return this;
-      }
-      _do_connections(_tool) {
-        const i2 = this.tools.indexOf(_tool);
-        const tool = _tool;
-        for (const c of this.connectLinks) {
-          if (c.source === i2) {
-            const tool2 = this.tools[c.dest];
-            tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
-          }
-        }
-        for (const c2 of this.connects) {
-          if (c2.srctool === tool) {
-            c2.callback.call(c2.thisvar, c2.srctool, c2.dsttool);
-          }
-        }
-      }
-      /*
-        canRun(ctx) {
-          if (this.tools.length == 0)
-            return false;
-      
-          //poll first tool only in list
-          return this.tools[0].constructor.canRun(ctx);
-        }//*/
-      modalStart(ctx) {
-        this.loadDefaults(false);
-        this._promise = new Promise((accept, reject) => {
-          this._accept = accept;
-          this._reject = reject;
-        });
-        this.curtool = 0;
-        let i2;
-        for (i2 = 0; i2 < this.tools.length; i2++) {
-          if (this.tools[i2].is_modal) break;
-          this.tools[i2].undoPre(ctx);
-          this.tools[i2].execPre(ctx);
-          this.tools[i2].exec(ctx);
-          this.tools[i2].execPost(ctx);
-          this._do_connections(this.tools[i2]);
-        }
-        const on_modal_end = () => {
-          this._do_connections(this.tools[this.curtool]);
-          this.curtool++;
-          while (this.curtool < this.tools.length && !this.tools[this.curtool].is_modal) {
-            this.tools[this.curtool].undoPre(ctx);
-            this.tools[this.curtool].execPre(ctx);
-            this.tools[this.curtool].exec(ctx);
-            this.tools[this.curtool].execPost(ctx);
-            this._do_connections(this.tools[this.curtool]);
-            this.curtool++;
-          }
-          if (this.curtool < this.tools.length) {
-            this.tools[this.curtool].undoPre(ctx);
-            this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-          } else {
-            this._accept(this, false);
-          }
-        };
-        if (i2 < this.tools.length) {
-          this.curtool = i2;
-          this.tools[this.curtool].undoPre(ctx);
-          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-        }
-        return this._promise;
-      }
-      loadDefaults(force = true) {
-        return super.loadDefaults(force);
-      }
-      exec(ctx) {
-        this.loadDefaults(false);
-        for (let i2 = 0; i2 < this.tools.length; i2++) {
-          this.tools[i2].undoPre(ctx);
-          this.tools[i2].execPre(ctx);
-          this.tools[i2].exec(ctx);
-          this.tools[i2].execPost(ctx);
-          this._do_connections(this.tools[i2]);
-        }
-      }
-      calcUndoMem(_ctx) {
-        let tot = 0;
-        for (const tool of this.tools) {
-          tot += tool.calcUndoMem(_ctx);
-        }
-        return tot;
-      }
-      calcMemSize(ctx) {
-        let tot = 0;
-        for (const tool of this.tools) {
-          tot += tool.calcMemSize(ctx);
-        }
-        return tot;
-      }
-      undoPre() {
-        return;
-      }
-      undo(ctx) {
-        for (let i2 = this.tools.length - 1; i2 >= 0; i2--) {
-          this.tools[i2].undo(ctx);
-        }
-      }
-    };
-    ToolMacro.STRUCT = struct_default.inherit(
-      ToolMacro,
-      ToolOp,
-      "toolsys.ToolMacro"
-    ) + `
-  tools        : array(abstract(toolsys.ToolOp));
-  connectLinks : array(toolsys.MacroLink);
-}
-`;
-    struct_default.register(ToolMacro);
-    ToolStack = class extends Array {
-      static STRUCT;
-      memLimit;
-      enforceMemLimit;
-      cur;
-      ctx;
-      modalRunning;
-      modal_running;
-      toolctx;
-      _undo_branch;
-      _stack;
-      constructor(ctx) {
-        super();
-        this.memLimit = 512 * 1024 * 1024;
-        this.enforceMemLimit = false;
-        this.cur = -1;
-        this.ctx = ctx;
-        this.modalRunning = 0;
-        this._undo_branch = void 0;
-      }
-      prepend(tool) {
-        this.splice(0, 0, tool);
-      }
-      get head() {
-        return this[this.cur];
-      }
-      limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
-        if (maxmem === void 0) {
-          throw new Error("maxmem cannot be undefined");
-        }
-        let size = this.calcMemSize();
-        let start2 = 0;
-        while (start2 < this.cur - 2 && size > maxmem) {
-          size -= this[start2].calcMemSize(ctx);
-          start2++;
-        }
-        if (start2 === 0) {
-          return size;
-        }
-        for (let i2 = 0; i2 < start2; i2++) {
-          this[i2].onUndoDestroy();
-        }
-        this.cur -= start2;
-        for (let i2 = 0; i2 < this.length - start2; i2++) {
-          this[i2] = this[i2 + start2];
-        }
-        this.length -= start2;
-        return this.calcMemSize(ctx);
-      }
-      calcMemSize(ctx = this.ctx) {
-        let tot = 0;
-        for (const tool of this) {
-          try {
-            tot += tool.calcMemSize(ctx);
-          } catch (error3) {
-            print_stack2(error3);
-            console.error("Failed to execute a calcMemSize method");
-          }
-        }
-        return tot;
-      }
-      setRestrictedToolContext(ctx) {
-        this.toolctx = ctx;
-      }
-      reset(ctx) {
-        if (ctx !== void 0) {
-          this.ctx = ctx;
-        }
-        this.modalRunning = 0;
-        this.cur = -1;
-        this.length = 0;
-      }
-      /**
-       * runs .undo,.redo if toolstack head is same as tool
-       *
-       * otherwise, .execTool(ctx, tool) is called.
-       *
-       * @param compareInputs : check if toolstack head has identical input values, defaults to false
-       * */
-      execOrRedo(ctx, tool, compareInputs = false) {
-        const head = this.head;
-        const ok = compareInputs ? ToolOp.Equals(head, tool) : !!head && head.constructor === tool.constructor;
-        tool.__memsize = void 0;
-        if (ok) {
-          this.undo();
-          if (!compareInputs) {
-            this.execTool(ctx, tool);
-          } else {
-            this.rerun(this.head);
-          }
-          return false;
-        } else {
-          this.execTool(ctx, tool);
-          return true;
-        }
-      }
-      execTool(ctx, toolop, event) {
-        if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit, ctx);
-        }
-        if (!toolop.constructor.canRun(
-          ctx,
-          toolop
-        )) {
-          console.log("toolop.constructor.canRun returned false");
-          return;
-        }
-        if (!("toLocked" in ctx)) {
-          console.warn("warning: context does not support locking, could lead to undo errors");
-        }
-        const tctx = ctx.toLocked ? ctx.toLocked() : ctx;
-        let undoflag = toolop.constructor.tooldef().undoflag;
-        if (toolop.undoflag !== void 0) {
-          undoflag = toolop.undoflag;
-        }
-        undoflag = undoflag === void 0 ? 0 : undoflag;
-        toolop.execCtx = tctx;
-        if (!(undoflag & UndoFlags.NO_UNDO)) {
-          this.cur++;
-          this._undo_branch = this.slice(this.cur + 1, this.length);
-          this.length = this.cur + 1;
-          this[this.cur] = toolop;
-          toolop.undoPre(tctx);
-        }
-        if (toolop.is_modal) {
-          toolop.modal_ctx = ctx;
-          this.modal_running = true;
-          toolop._on_cancel = (tool) => {
-            if (!(tool.undoflag & UndoFlags.NO_UNDO)) {
-              this[this.cur].undo(ctx);
-              this.pop_i(this.cur);
-              this.cur--;
-            }
-          };
-          if (event !== void 0) {
-            toolop._pointerId = event.pointerId;
-          }
-          toolop.modalStart(ctx);
-        } else {
-          toolop.execPre(tctx);
-          toolop.exec(tctx);
-          toolop.execPost(tctx);
-          toolop.saveDefaultInputs();
-        }
-      }
-      toolCancel(ctx, tool) {
-        if (tool._was_redo) {
-          return;
-        }
-        if (tool !== this[this.cur]) {
-          console.warn("toolCancel called in error", this, tool);
-          return;
-        }
-        this.undo();
-        this.length = this.cur + 1;
-        if (this._undo_branch !== void 0) {
-          for (const item of this._undo_branch) {
-            this.push(item);
-          }
-        }
-      }
-      undo() {
-        if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit);
-        }
-        if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
-          const tool = this[this.cur];
-          tool.undo(tool.execCtx);
-          this.cur--;
-        }
-      }
-      //reruns a tool if it's at the head of the stack
-      rerun(tool) {
-        if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit);
-        }
-        if (tool === this[this.cur]) {
-          tool._was_redo = false;
-          if (!tool.execCtx) {
-            tool.execCtx = this.ctx;
-          }
-          tool.undo(tool.execCtx);
-          tool._was_redo = true;
-          tool.undoPre(tool.execCtx);
-          tool.execPre(tool.execCtx);
-          tool.exec(tool.execCtx);
-          tool.execPost(tool.execCtx);
-        } else {
-          console.warn("Tool wasn't at head of stack", tool);
-        }
-      }
-      redo() {
-        if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit);
-        }
-        if (this.cur >= -1 && this.cur + 1 < this.length) {
-          this.cur++;
-          const tool = this[this.cur];
-          if (!tool.execCtx) {
-            tool.execCtx = this.ctx;
-          }
-          tool._was_redo = true;
-          tool.redo(tool.execCtx);
-          tool.saveDefaultInputs();
-        }
-      }
-      save() {
-        const data = [];
-        struct_default.writeObject(data, this);
-        return data;
-      }
-      rewind() {
-        while (this.cur >= 0) {
-          const last = this.cur;
-          this.undo();
-          if (last === this.cur) {
-            break;
-          }
-        }
-        return this;
-      }
-      /**cb is a function(ctx), if it returns the value false then playback stops
-         promise will still be fulfilled.
-      
-         onstep is a callback, if it returns a promise that promise will be
-         waited on, otherwise execution is queue with window.setTimeout().
-         */
-      replay(cb, onStep, rewind = () => this.rewind()) {
-        rewind();
-        let last = this.cur;
-        const start2 = time_ms();
-        return new Promise((accept, reject) => {
-          const next = () => {
-            last = this.cur;
-            if (cb && cb(this.ctx) === false) {
-              accept(void 0);
-              return;
-            }
-            if (this.cur < this.length - 1) {
-              this.cur++;
-              const tool = this[this.cur];
-              if (!tool.execCtx) {
-                tool.execCtx = this.ctx;
-              }
-              tool.undoPre(tool.execCtx);
-              tool.execPre(tool.execCtx);
-              tool.exec(tool.execCtx);
-              tool.execPost(tool.execCtx);
-            }
-            if (last === this.cur) {
-              console.warn("time:", (time_ms() - start2) / 1e3);
-              accept(this);
-            } else {
-              const ret = onStep ? onStep() : true;
-              if (ret && ret instanceof Promise) {
-                ret.then(() => {
-                  next();
-                });
-              } else {
-                window.setTimeout(() => {
-                  next();
-                });
-              }
-            }
-          };
-          next();
-        });
-      }
-      loadSTRUCT(reader) {
-        reader(this);
-        for (const item of this._stack) {
-          this.push(item);
-        }
-        delete this._stack;
-      }
-      //note that this makes sure tool classes are registered with nstructjs
-      //during save
-      _save() {
-        for (const tool of this) {
-          const cls = tool.constructor;
-          if (!struct_default.isRegistered(cls)) {
-            cls._regWithNstructjs(cls);
-          }
-        }
-        return this;
-      }
-      /** Remove element at index (Array polyfill) */
-      pop_i(idx) {
-        if (idx < 0 || idx >= this.length) return void 0;
-        return this.splice(idx, 1)[0];
-      }
-    };
-    ToolStack.STRUCT = `
-toolsys.ToolStack {
-  cur    : int;
-  _stack : array(abstract(toolsys.ToolOp)) | this._save();
-}
-`;
-    struct_default.register(ToolStack);
   }
 });
 
@@ -20833,7 +20242,7 @@ var init_curve1d_bspline = __esm({
     "use strict";
     init_struct();
     init_config();
-    init_toolsys();
+    init_toolop();
     init_util();
     init_vectormath();
     init_indexRange();
@@ -24014,7 +23423,7 @@ var DataPathSetOp;
 var init_controller_ops = __esm({
   "scripts/path-controller/controller/controller_ops.ts"() {
     "use strict";
-    init_toolsys();
+    init_toolop();
     init_toolprop();
     init_util();
     DataPathSetOp = class _DataPathSetOp extends ToolOp {
@@ -25655,13 +25064,794 @@ var ToolPaths, initToolPaths_run, Parser;
 var init_toolpath = __esm({
   "scripts/path-controller/toolsys/toolpath.ts"() {
     "use strict";
-    init_toolsys();
+    init_toolop();
     init_parseutil();
     init_controller_base();
     ToolPaths = {};
     initToolPaths_run = false;
     Parser = buildParser();
     window.parseToolPath = parseToolPath;
+  }
+});
+
+// scripts/path-controller/toolsys/toolmacro.ts
+var MacroClasses, asyncCheck, macroidgen, MacroLink, ToolMacro;
+var init_toolmacro = __esm({
+  "scripts/path-controller/toolsys/toolmacro.ts"() {
+    "use strict";
+    init_struct();
+    init_tooldefaults();
+    init_toolprop();
+    init_toolop();
+    MacroClasses = {};
+    asyncCheck = async (p) => p instanceof Promise ? await p : void 0;
+    macroidgen = 0;
+    MacroLink = class {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+    toolsys.MacroLink {
+      source         : int;
+      dest           : int;
+      sourcePropKey  : string;
+      destPropKey    : string;
+      sourceProps    : string;
+      destProps      : string;
+    }
+    `
+      );
+      source;
+      dest;
+      sourceProps;
+      destProps;
+      sourcePropKey;
+      destPropKey;
+      constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
+        this.source = sourcetool_idx ?? -1;
+        this.dest = desttool_idx ?? -1;
+        this.sourceProps = srcprops;
+        this.destProps = dstprops;
+        this.sourcePropKey = srckey ?? "";
+        this.destPropKey = dstkey ?? "";
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+      }
+    };
+    ToolMacro = class _ToolMacro extends ToolOp {
+      static STRUCT;
+      // Flag indicating this class is a ToolMacro
+      // used to break a cyclical dependency between ToolMacro and ToolOp
+      static _IsToolMacro = true;
+      tools;
+      curtool;
+      has_modal;
+      connects;
+      connectLinks;
+      _macro_class;
+      constructor() {
+        super();
+        this.tools = [];
+        this.curtool = 0;
+        this.has_modal = false;
+        this.connects = [];
+        this.connectLinks = [];
+        this._macro_class = void 0;
+      }
+      static tooldef() {
+        return {
+          uiname: "Tool Macro"
+        };
+      }
+      //toolop is an optional instance of this class, may be undefined
+      static canRun(_ctx, _toolop) {
+        return true;
+      }
+      _getTypeClass() {
+        if (this._macro_class?.ready) {
+          return this._macro_class;
+        }
+        if (!this._macro_class) {
+          this._macro_class = class MacroTypeClass extends ToolOp {
+            static tooldef() {
+              return this.__tooldef;
+            }
+          };
+          this._macro_class.__tooldef = {
+            toolpath: this.constructor.tooldef().toolpath || ""
+          };
+          this._macro_class.ready = false;
+        }
+        if (!this.tools || this.tools.length === 0) {
+          return this._macro_class;
+        }
+        let key = "";
+        for (const tool of this.tools) {
+          key = tool.constructor.name + ":";
+        }
+        if (this.constructor !== _ToolMacro) {
+          key += ":" + this.constructor.tooldef().toolpath;
+        }
+        for (const k in this.inputs) {
+          key += k + ":";
+        }
+        if (key in MacroClasses) {
+          this._macro_class = MacroClasses[key];
+          return this._macro_class;
+        }
+        let name2 = "Macro(";
+        let i2 = 0;
+        let is_modal;
+        for (const tool of this.tools) {
+          const def = tool.constructor.tooldef();
+          if (i2 > 0) {
+            name2 += ", ";
+          } else {
+            is_modal = def.is_modal;
+          }
+          if (def.uiname) {
+            name2 += def.uiname;
+          } else if (def.toolpath) {
+            name2 += def.toolpath;
+          } else {
+            name2 += tool.constructor.name;
+          }
+          i2++;
+        }
+        const inputs = {};
+        const selfInputs = this.inputs;
+        for (const k in selfInputs) {
+          inputs[k] = selfInputs[k].copy().clearEventCallbacks();
+          inputs[k].wasSet = false;
+        }
+        const tdef = {
+          uiname: name2,
+          toolpath: key,
+          inputs,
+          outputs: {},
+          is_modal
+        };
+        const cls = this._macro_class;
+        cls.__tooldef = tdef;
+        cls._macroTypeId = macroidgen++;
+        cls.ready = true;
+        MacroClasses[key] = cls;
+        return cls;
+      }
+      saveDefaultInputs() {
+        const inputs = this.inputs;
+        for (const k in inputs) {
+          const prop = inputs[k];
+          if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
+            SavedToolDefaults.set(this._getTypeClass(), k, prop);
+          }
+        }
+        return this;
+      }
+      hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
+        return SavedToolDefaults.has(this._getTypeClass(), key, toolprop3);
+      }
+      getDefault(toolprop3, key = toolprop3.apiname ?? "") {
+        const cls = this._getTypeClass();
+        if (SavedToolDefaults.has(cls, key, toolprop3)) {
+          return SavedToolDefaults.get(cls, key, toolprop3);
+        } else {
+          return toolprop3.getValue();
+        }
+      }
+      connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
+        if (typeof dsttool === "function") {
+          return this.connectCB(
+            srctool,
+            srcoutput,
+            dsttool,
+            dstinput
+          );
+        }
+        const i1 = this.tools.indexOf(srctool);
+        const i2 = this.tools.indexOf(dsttool);
+        if (i1 < 0 || i2 < 0) {
+          throw new Error("tool not in macro");
+        }
+        const selfInputs = this.inputs;
+        if (srcprops === "inputs") {
+          const tool = this.tools[i1];
+          const toolInputs = tool.inputs;
+          const prop = toolInputs[srcoutput];
+          if (prop === selfInputs[srcoutput]) {
+            delete selfInputs[srcoutput];
+          }
+        }
+        if (dstprops === "inputs") {
+          const tool = this.tools[i2];
+          const toolInputs = tool.inputs;
+          const prop = toolInputs[dstinput];
+          if (selfInputs[dstinput] === prop) {
+            delete selfInputs[dstinput];
+          }
+        }
+        this.connectLinks.push(
+          new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops)
+        );
+        return this;
+      }
+      connectCB(srctool, dsttool, callback, thisvar) {
+        this.connects.push({
+          srctool,
+          dsttool,
+          callback,
+          thisvar
+        });
+        return this;
+      }
+      add(tool) {
+        if (tool.is_modal) {
+          this.is_modal = true;
+        }
+        const toolInputs = tool.inputs;
+        const selfInputs = this.inputs;
+        for (const k in toolInputs) {
+          const prop = toolInputs[k];
+          if (!(prop.flag & PropFlags.PRIVATE)) {
+            selfInputs[k] = prop;
+          }
+        }
+        this.tools.push(tool);
+        return this;
+      }
+      _do_connections(_tool) {
+        const i2 = this.tools.indexOf(_tool);
+        const tool = _tool;
+        for (const c of this.connectLinks) {
+          if (c.source === i2) {
+            const tool2 = this.tools[c.dest];
+            tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
+          }
+        }
+        for (const c2 of this.connects) {
+          if (c2.srctool === tool) {
+            c2.callback.call(c2.thisvar, c2.srctool, c2.dsttool);
+          }
+        }
+      }
+      /*
+        canRun(ctx) {
+          if (this.tools.length == 0)
+            return false;
+      
+          //poll first tool only in list
+          return this.tools[0].constructor.canRun(ctx);
+        }//*/
+      /** Note: resolves when the modalEnd is called */
+      async modalStart(ctx) {
+        this.loadDefaults(false);
+        this._promise = new Promise((accept, reject) => {
+          this._accept = accept;
+          this._reject = reject;
+        });
+        this.curtool = 0;
+        let i2;
+        for (i2 = 0; i2 < this.tools.length; i2++) {
+          if (this.tools[i2].is_modal) break;
+          await asyncCheck(this.tools[i2].undoPre(ctx));
+          await asyncCheck(this.tools[i2].execPre(ctx));
+          await asyncCheck(this.tools[i2].exec(ctx));
+          await asyncCheck(this.tools[i2].execPost(ctx));
+          this._do_connections(this.tools[i2]);
+        }
+        const on_modal_end = async () => {
+          this._do_connections(this.tools[this.curtool]);
+          this.curtool++;
+          while (this.curtool < this.tools.length && !this.tools[this.curtool].is_modal) {
+            await asyncCheck(this.tools[this.curtool].undoPre(ctx));
+            await asyncCheck(this.tools[this.curtool].execPre(ctx));
+            await asyncCheck(this.tools[this.curtool].exec(ctx));
+            await asyncCheck(this.tools[this.curtool].execPost(ctx));
+            this._do_connections(this.tools[this.curtool]);
+            this.curtool++;
+          }
+          if (this.curtool < this.tools.length) {
+            await asyncCheck(this.tools[this.curtool].undoPre(ctx));
+            this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+          } else {
+            this._accept(this, false);
+          }
+        };
+        if (i2 < this.tools.length) {
+          this.curtool = i2;
+          await asyncCheck(this.tools[this.curtool].undoPre(ctx));
+          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+        }
+        return await this._promise;
+      }
+      loadDefaults(force = true) {
+        return super.loadDefaults(force);
+      }
+      async exec(ctx) {
+        this.loadDefaults(false);
+        for (let i2 = 0; i2 < this.tools.length; i2++) {
+          await asyncCheck(this.tools[i2].undoPre(ctx));
+          await asyncCheck(this.tools[i2].execPre(ctx));
+          await asyncCheck(this.tools[i2].exec(ctx));
+          await asyncCheck(this.tools[i2].execPost(ctx));
+          this._do_connections(this.tools[i2]);
+        }
+      }
+      calcUndoMem(_ctx) {
+        let tot = 0;
+        for (const tool of this.tools) {
+          tot += tool.calcUndoMem(_ctx);
+        }
+        return tot;
+      }
+      calcMemSize(ctx) {
+        let tot = 0;
+        for (const tool of this.tools) {
+          tot += tool.calcMemSize(ctx);
+        }
+        return tot;
+      }
+      undoPre() {
+        return;
+      }
+      async undo(ctx) {
+        for (let i2 = this.tools.length - 1; i2 >= 0; i2--) {
+          await asyncCheck(this.tools[i2].undo(ctx));
+        }
+      }
+    };
+    ToolMacro.STRUCT = struct_default.inherit(
+      ToolMacro,
+      ToolOp,
+      "toolsys.ToolMacro"
+    ) + `
+  tools        : array(abstract(toolsys.ToolOp));
+  connectLinks : array(toolsys.MacroLink);
+}
+`;
+    struct_default.register(ToolMacro);
+  }
+});
+
+// scripts/path-controller/toolsys/toolstack.ts
+var asyncCheck2, ToolStack;
+var init_toolstack = __esm({
+  "scripts/path-controller/toolsys/toolstack.ts"() {
+    "use strict";
+    init_struct();
+    init_util();
+    init_toolop();
+    init_toolop();
+    asyncCheck2 = async (p) => p instanceof Promise ? await p : void 0;
+    ToolStack = class _ToolStack extends Array {
+      commandQueue = [];
+      static STRUCT;
+      memLimit;
+      enforceMemLimit;
+      cur;
+      ctx;
+      modalRunning;
+      modal_running;
+      toolctx;
+      _undo_branch;
+      _stack;
+      /**
+       * Milliseconds a queued toolstack operation may wait before it is reported
+       * as a probable deadlock. Zero disables the watchdog.
+       */
+      static lockWarnTimeoutMS = 5e3;
+      /** Called instead of the default console report when the watchdog fires. */
+      onPossibleDeadlock;
+      /** Resolves when the operation currently holding the lock releases it. */
+      _lockTail = Promise.resolve();
+      /** Label of the operation holding the lock, for deadlock reports. */
+      _lockLabel;
+      /** Operations waiting on the lock, not counting the holder. */
+      _lockQueue = 0;
+      constructor(ctx) {
+        super();
+        this.memLimit = 512 * 1024 * 1024;
+        this.enforceMemLimit = false;
+        this.cur = -1;
+        this.ctx = ctx;
+        this.modalRunning = 0;
+        this.modal_running = false;
+        this._undo_branch = void 0;
+      }
+      prepend(tool) {
+        this.splice(0, 0, tool);
+      }
+      get head() {
+        return this[this.cur];
+      }
+      limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
+        if (maxmem === void 0) {
+          throw new Error("maxmem cannot be undefined");
+        }
+        let size = this.calcMemSize();
+        let start2 = 0;
+        while (start2 < this.cur - 2 && size > maxmem) {
+          size -= this[start2].calcMemSize(ctx);
+          start2++;
+        }
+        if (start2 === 0) {
+          return size;
+        }
+        for (let i2 = 0; i2 < start2; i2++) {
+          this[i2].onUndoDestroy();
+        }
+        this.cur -= start2;
+        for (let i2 = 0; i2 < this.length - start2; i2++) {
+          this[i2] = this[i2 + start2];
+        }
+        this.length -= start2;
+        return this.calcMemSize(ctx);
+      }
+      calcMemSize(ctx = this.ctx) {
+        let tot = 0;
+        for (const tool of this) {
+          try {
+            tot += tool.calcMemSize(ctx);
+          } catch (error3) {
+            print_stack2(error3);
+            console.error("Failed to execute a calcMemSize method");
+          }
+        }
+        return tot;
+      }
+      setRestrictedToolContext(ctx) {
+        this.toolctx = ctx;
+      }
+      reset(ctx) {
+        if (ctx !== void 0) {
+          this.ctx = ctx;
+        }
+        this.modalRunning = 0;
+        this.modal_running = false;
+        this.cur = -1;
+        this.length = 0;
+      }
+      /** True while an operation holds the lock. */
+      get locked() {
+        return this._lockLabel !== void 0;
+      }
+      /** Operations waiting on the lock, not counting the one holding it. */
+      get lockQueueLength() {
+        return this._lockQueue;
+      }
+      /**
+       * Resolves once every operation queued so far has finished.
+       *
+       * Tools dispatched and not awaited — a gesture committing on release, a
+       * delegate running an op — land here.
+       */
+      async idle() {
+        while (this.locked || this._lockQueue > 0) {
+          await this._lockTail;
+        }
+      }
+      /**
+       * Runs cb with exclusive use of the toolstack, queued behind whatever is
+       * already running so no two operations interleave their awaits.
+       *
+       * Never call this from inside another protected region — the lock is not
+       * reentrant, and the inner call would wait forever on its own caller. Every
+       * internal caller uses the unlocked `_`-prefixed implementation instead.
+       */
+      async protect(label, cb) {
+        const prev = this._lockTail;
+        let release;
+        this._lockTail = new Promise((resolve) => release = resolve);
+        this._lockQueue++;
+        const watchdog = this._startDeadlockWatchdog(label);
+        try {
+          await prev;
+        } finally {
+          this._lockQueue--;
+          watchdog();
+        }
+        this._lockLabel = label;
+        try {
+          return await cb();
+        } finally {
+          this._lockLabel = void 0;
+          release();
+        }
+      }
+      /** Arms the deadlock report, returning the function that disarms it. */
+      _startDeadlockWatchdog(label) {
+        const timeout = _ToolStack.lockWarnTimeoutMS;
+        if (!timeout) {
+          return () => {
+          };
+        }
+        const start2 = time_ms();
+        const timer = setTimeout(() => {
+          const ms = time_ms() - start2;
+          if (this.onPossibleDeadlock) {
+            this.onPossibleDeadlock(label, this._lockLabel, ms);
+          } else {
+            console.error(
+              `ToolStack: possible deadlock, "${label}" has waited ${ms | 0}ms for "${this._lockLabel ?? "(nothing)"}" to release the toolstack`
+            );
+          }
+        }, timeout);
+        return () => clearTimeout(timer);
+      }
+      /**
+       * runs .undo,.redo if toolstack head is same as tool
+       *
+       * otherwise, .execTool(ctx, tool) is called.
+       *
+       * @param compareInputs : check if toolstack head has identical input values, defaults to false
+       * */
+      async execOrRedo(ctx, tool, compareInputs = false) {
+        return this.protect("execOrRedo", () => this._execOrRedo(ctx, tool, compareInputs));
+      }
+      async _execOrRedo(ctx, tool, compareInputs) {
+        const head = this.head;
+        const ok = compareInputs ? ToolOp.Equals(head, tool) : !!head && head.constructor === tool.constructor;
+        tool.__memsize = void 0;
+        if (ok) {
+          if (compareInputs) {
+            await this._rerun(head);
+          } else {
+            await this._undo();
+            await this._pushTool(ctx, tool);
+          }
+          return false;
+        } else {
+          await this._pushTool(ctx, tool);
+          return true;
+        }
+      }
+      getUndoFlag(toolop) {
+        let undoflag = toolop.constructor.tooldef().undoflag;
+        if (toolop.undoflag !== void 0) {
+          undoflag = toolop.undoflag;
+        }
+        undoflag = undoflag === void 0 ? 0 : undoflag;
+        return undoflag;
+      }
+      /**
+       * Pushes a tool onto the toolstack and returns a promise that resolves when
+       * the tool finishes. A modal tool resolves once it has taken the modal
+       * stack, not when the gesture ends.
+       *
+       * The push waits for any operation already running, so tools queue rather
+       * than interleave.
+       **/
+      pushTool(ctx, toolop, event) {
+        return this.protect("pushTool", () => this._pushTool(ctx, toolop, event));
+      }
+      async _pushTool(ctx, toolop, event) {
+        if (this.enforceMemLimit) {
+          this.limitMemory(this.memLimit, ctx);
+        }
+        const undoflag = this.getUndoFlag(toolop);
+        if (!(undoflag & UndoFlags.NO_UNDO)) {
+          this.cur++;
+          this._undo_branch = this.slice(this.cur + 1, this.length);
+          this[this.cur] = toolop;
+          this.length = this.cur + 1;
+        }
+        return await this._execToolTail(ctx, toolop, event);
+      }
+      async execTool(ctx, toolop, event) {
+        return await this.pushTool(ctx, toolop, event);
+      }
+      async _execToolTail(ctx, toolop, event) {
+        const undoflag = this.getUndoFlag(toolop);
+        if (!("toLocked" in ctx)) {
+          console.warn("warning: context does not support locking, could lead to undo errors");
+        }
+        const tctx = ctx.toLocked ? ctx.toLocked() : ctx;
+        toolop.execCtx = tctx;
+        if (!(undoflag & UndoFlags.NO_UNDO)) {
+          await asyncCheck2(toolop.undoPre(tctx));
+        }
+        if (toolop.is_modal) {
+          toolop.modal_ctx = ctx;
+          this.modal_running = true;
+          toolop._on_cancel = (tool) => {
+            if (tool.undoflag & UndoFlags.NO_UNDO) {
+              return;
+            }
+            void this.protect("modalCancel", async () => {
+              await asyncCheck2(this[this.cur].undo(ctx));
+              this.pop_i(this.cur);
+              this.cur--;
+            });
+          };
+          if (event !== void 0) {
+            toolop._pointerId = event.pointerId;
+          }
+          const modal = toolop.modalStart(ctx);
+          const clear = () => this.modal_running = false;
+          modal.then(clear, clear);
+        } else {
+          await toolop.execPre(tctx);
+          await toolop.exec(tctx);
+          await toolop.execPost(tctx);
+          toolop.saveDefaultInputs();
+        }
+      }
+      async toolCancel(ctx, tool) {
+        return this.protect("toolCancel", () => this._toolCancel(ctx, tool));
+      }
+      async _toolCancel(ctx, tool) {
+        if (tool._was_redo) {
+          return;
+        }
+        if (tool !== this[this.cur]) {
+          console.warn("toolCancel called in error", this, tool);
+          return;
+        }
+        await this._undo();
+        this.length = this.cur + 1;
+        if (this._undo_branch !== void 0) {
+          for (const item of this._undo_branch) {
+            this.push(item);
+          }
+        }
+      }
+      async undo() {
+        return this.protect("undo", () => this._undo());
+      }
+      async _undo() {
+        if (this.enforceMemLimit) {
+          this.limitMemory(this.memLimit);
+        }
+        if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
+          const tool = this[this.cur];
+          await asyncCheck2(tool.undo(tool.execCtx));
+          this.cur--;
+        }
+      }
+      //reruns a tool if it's at the head of the stack
+      async rerun(tool) {
+        return this.protect("rerun", () => this._rerun(tool));
+      }
+      async _rerun(tool) {
+        if (this.enforceMemLimit) {
+          this.limitMemory(this.memLimit);
+        }
+        if (tool === this[this.cur]) {
+          tool._was_redo = false;
+          if (!tool.execCtx) {
+            tool.execCtx = this.ctx;
+          }
+          await asyncCheck2(tool.undo(tool.execCtx));
+          tool._was_redo = true;
+          let p;
+          await asyncCheck2(tool.undoPre(tool.execCtx));
+          await asyncCheck2(tool.execPre(tool.execCtx));
+          await asyncCheck2(tool.exec(tool.execCtx));
+          await asyncCheck2(tool.execPost(tool.execCtx));
+        } else {
+          console.warn("Tool wasn't at head of stack", tool);
+        }
+      }
+      async redo() {
+        return this.protect("redo", () => this._redo());
+      }
+      async _redo() {
+        if (this.enforceMemLimit) {
+          this.limitMemory(this.memLimit);
+        }
+        if (this.cur >= -1 && this.cur + 1 < this.length) {
+          this.cur++;
+          const tool = this[this.cur];
+          if (!tool.execCtx) {
+            tool.execCtx = this.ctx;
+          }
+          tool._was_redo = true;
+          await asyncCheck2(tool.redo(tool.execCtx));
+          tool.saveDefaultInputs();
+        }
+      }
+      save() {
+        const data = [];
+        struct_default.writeObject(data, this);
+        return data;
+      }
+      async rewind() {
+        return this.protect("rewind", () => this._rewind());
+      }
+      async _rewind() {
+        while (this.cur >= 0) {
+          const last = this.cur;
+          await this._undo();
+          if (last === this.cur) {
+            break;
+          }
+        }
+        return this;
+      }
+      /**cb is a function(ctx), if it returns the value false then playback stops
+         promise will still be fulfilled.
+      
+         onstep is a callback, if it returns a promise that promise will be
+         waited on, otherwise execution is queue with window.setTimeout().
+      
+         Holds the toolstack for the whole playback, so neither callback may run
+         another toolstack operation.
+         */
+      async replay(cb, onStep, rewind) {
+        return this.protect("replay", () => this._replay(cb, onStep, rewind));
+      }
+      async _replay(cb, onStep, rewind = () => this._rewind()) {
+        await rewind();
+        let last = this.cur;
+        const start2 = time_ms();
+        return new Promise((accept, reject) => {
+          const next = async () => {
+            last = this.cur;
+            if (cb && cb(this.ctx) === false) {
+              accept(void 0);
+              return;
+            }
+            if (this.cur < this.length - 1) {
+              this.cur++;
+              const tool = this[this.cur];
+              if (!tool.execCtx) {
+                tool.execCtx = this.ctx;
+              }
+              await tool.undoPre(tool.execCtx);
+              await tool.execPre(tool.execCtx);
+              await tool.exec(tool.execCtx);
+              await tool.execPost(tool.execCtx);
+            }
+            if (last === this.cur) {
+              console.warn("time:", (time_ms() - start2) / 1e3);
+              accept(this);
+            } else {
+              const ret = onStep ? onStep() : true;
+              if (ret && ret instanceof Promise) {
+                ret.then(async () => {
+                  await next();
+                });
+              } else {
+                window.setTimeout(() => {
+                  next();
+                });
+              }
+            }
+          };
+          next();
+        });
+      }
+      loadSTRUCT(reader) {
+        reader(this);
+        for (const item of this._stack) {
+          this.push(item);
+        }
+        delete this._stack;
+      }
+      //note that this makes sure tool classes are registered with nstructjs
+      //during save
+      _save() {
+        for (const tool of this) {
+          const cls = tool.constructor;
+          if (!struct_default.isRegistered(cls)) {
+            cls._regWithNstructjs(cls);
+          }
+        }
+        return this;
+      }
+      /** Remove element at index (Array polyfill) */
+      pop_i(idx) {
+        if (idx < 0 || idx >= this.length) return void 0;
+        return this.splice(idx, 1)[0];
+      }
+    };
+    ToolStack.STRUCT = `
+toolsys.ToolStack {
+  cur    : int;
+  _stack : array(abstract(toolsys.ToolOp)) | this._save();
+}
+`;
+    struct_default.register(ToolStack);
   }
 });
 
@@ -25674,6 +25864,10 @@ var init_toolsys2 = __esm({
     init_toolpath();
     init_toolsys();
     init_toolprop();
+    init_toolop();
+    init_toolmacro();
+    init_tooldefaults();
+    init_toolstack();
   }
 });
 
@@ -26076,7 +26270,20 @@ var init_controller_abstract = __esm({
       execOrRedo(ctx, toolop, compareInputs = false) {
         return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
       }
+      execToolAsync(ctx, path, inputs, unused, event) {
+        return this.execToolImpl(ctx, path, inputs, unused, event, true);
+      }
+      /**
+       *  Unlike toolstack.execTool, this resolves before the tool is run
+       *  so the client can modify the class first.  Use execToolAsync
+       *  if you need to wait for the tool to execute.
+       *
+       *  Note: this will not wait for fully modal tools to complete.
+       */
       execTool(ctx, path, inputs, unused, event) {
+        return this.execToolImpl(ctx, path, inputs, unused, event, false);
+      }
+      execToolImpl(ctx, path, inputs, unused, event, resolveBeforeRun = true) {
         return new Promise((accept, reject) => {
           let tool = path;
           try {
@@ -26097,11 +26304,18 @@ var init_controller_abstract = __esm({
               tool.inputs[k].setValue(inputs[k]);
             }
           }
-          accept(tool);
+          if (resolveBeforeRun) {
+            accept(tool);
+          }
           try {
-            ctx.toolstack.execTool(ctx, tool, event);
+            if (!resolveBeforeRun) {
+              ctx.toolstack.execTool(ctx, tool, event).then(() => accept(tool)).catch(reject);
+            } else {
+              ctx.toolstack.execTool(ctx, tool, event);
+            }
           } catch (error3) {
             print_stack2(error3);
+            reject(error3);
             throw error3;
           }
         });
@@ -26399,14 +26613,14 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct2, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI2, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct3, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI3, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
     init_toolprop();
     init_parseutil();
     init_util();
-    init_toolsys();
+    init_toolop();
     init_toolprop();
     init_util();
     init_controller_ops();
@@ -26462,7 +26676,7 @@ var init_controller = __esm({
     tool_idgen = 1;
     Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
     reportstack = ["api"];
-    DataStruct2 = class _DataStruct {
+    DataStruct3 = class _DataStruct {
       members;
       name;
       pathmap;
@@ -26768,7 +26982,7 @@ var init_controller = __esm({
     DummyIntProperty = new IntProperty();
     CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
     CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
-    DataAPI2 = class extends ModelInterface {
+    DataAPI3 = class extends ModelInterface {
       rootContextStruct;
       structs = [];
       /** Message from the most recent failed resolvePath (incl. "did you mean" hints). */
@@ -26941,7 +27155,7 @@ var init_controller = __esm({
           if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
             dstruct = _map_structs_by_name[name2];
           } else {
-            dstruct = new DataStruct2(void 0, resolveStructName(cls, name2));
+            dstruct = new DataStruct3(void 0, resolveStructName(cls, name2));
           }
           this._addClass(cls, dstruct, name2);
           return dstruct;
@@ -27578,7 +27792,7 @@ An example of a more complicated expression might be:
       }
     };
     dpt = DataPathSetOp;
-    setImplementationClass(DataAPI2);
+    setImplementationClass(DataAPI3);
   }
 });
 
@@ -27605,7 +27819,7 @@ function setPathValueUndo(elem, ctx, path, val) {
     if (!toolop) {
       return;
     }
-    ctx.toolstack.execTool(elem.ctx, toolop);
+    ctx.toolstack.pushTool(elem.ctx, toolop);
     head = toolstack.head;
   }
   if (!head || head.hadError) {
@@ -66730,7 +66944,7 @@ UIBase4.internalRegister(Check1);
 init_ui_base();
 init_menu();
 init_menu_ops();
-init_toolsys();
+init_toolop();
 init_toolsys2();
 init_ui_base();
 function dynamicMenuImpl(self2, title, list5, packflag = 0) {
@@ -76481,7 +76695,7 @@ init_ui_base();
 init_ui_theme();
 init_events();
 init_controller_base();
-init_toolsys();
+init_toolop();
 init_toolprop();
 var ListItem = class extends RowFrame {
   highlight = false;
@@ -78802,7 +79016,7 @@ function progbarNote(screen, msg, percent, color, timeout) {
 // scripts/widgets/ui_lasttool.ts
 init_ui_base();
 init_toolprop();
-init_toolsys();
+init_toolop();
 init_toolprop();
 var LastKey = /* @__PURE__ */ Symbol("LastToolPanelId");
 var tool_idgen2 = 0;
@@ -78974,7 +79188,7 @@ UIBase.internalRegister(LastToolPanel);
 // scripts/widgets/ui_panzoom.ts
 init_ui_base();
 init_theme_schema();
-init_toolsys();
+init_toolop();
 init_vectormath();
 var PanZoomTransform = class {
   scale = 1;
@@ -80218,7 +80432,7 @@ var propStructs = /* @__PURE__ */ new WeakMap();
 function nodePropStruct(target) {
   let st = propStructs.get(target);
   if (st === void 0) {
-    st = new DataStruct2(void 0, "NodeProp");
+    st = new DataStruct3(void 0, "NodeProp");
     st.fromToolProp(
       "",
       target.copy(),
@@ -81338,7 +81552,7 @@ function restoreBoundary(def, dir, key, removed) {
 }
 
 // scripts/graph/graph_ops.ts
-init_toolsys();
+init_toolop();
 init_toolprop();
 function graphAt(ctx, path) {
   const g = ctx.api.getValue(ctx, path);
@@ -82221,7 +82435,8 @@ for (const cls of [
 }
 
 // scripts/editors/nodeeditor/delegate.ts
-init_toolsys();
+init_toolop();
+init_toolmacro();
 function isDefinitionEdit(edit) {
   switch (edit.kind) {
     case "exposeEntry":
@@ -82298,8 +82513,9 @@ var ToolOpDelegate = class {
   async undoStepEnd(ctx) {
     this.undoStepLvl--;
     if (this.undoStepLvl === 0 && this.pendingMacro) {
-      ctx.toolstack.execTool(ctx, this.pendingMacro);
+      const macro = this.pendingMacro;
       this.pendingMacro = void 0;
+      await ctx.toolstack.execTool(ctx, macro);
     }
   }
   check(ctx, edit) {
@@ -82414,14 +82630,14 @@ var ToolOpDelegate = class {
     const ref = this._graph(ctx, edit.storePath)?.newGroupRef?.();
     return ref ? ref : void 0;
   }
-  execTool(ctx, tool) {
+  async execTool(ctx, tool) {
     if (this.undoStepLvl > 0) {
       this.pendingMacro?.add(tool);
-    } else {
-      ctx.toolstack.execTool(ctx, tool);
+      return;
     }
+    await ctx.toolstack.execTool(ctx, tool);
   }
-  perform(ctx, edit) {
+  async perform(ctx, edit) {
     switch (edit.kind) {
       case "moveNode": {
         const tool = new MoveNodeOp();
@@ -82429,7 +82645,7 @@ var ToolOpDelegate = class {
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "addNode": {
@@ -82439,7 +82655,7 @@ var ToolOpDelegate = class {
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
         tool.inputs.ref.setValue(edit.ref ?? "");
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "createGroup": {
@@ -82448,21 +82664,21 @@ var ToolOpDelegate = class {
         tool.inputs.storePath.setValue(edit.storePath);
         tool.inputs.nodeIds.setValue(JSON.stringify(edit.nodeIds));
         tool.inputs.ref.setValue(this._refFor(ctx, edit) ?? "");
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "ungroup": {
         const tool = new UngroupOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "deleteNode": {
         const tool = new DeleteNodeOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "replaceNode": {
@@ -82470,7 +82686,7 @@ var ToolOpDelegate = class {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.newType.setValue(edit.newType);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "connect":
@@ -82481,7 +82697,7 @@ var ToolOpDelegate = class {
         tool.inputs.srcSocket.setValue(edit.srcSocket);
         tool.inputs.dstNode.setValue(JSON.stringify(edit.dstNode));
         tool.inputs.dstSocket.setValue(edit.dstSocket);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "arrange":
@@ -82495,7 +82711,7 @@ var ToolOpDelegate = class {
           tool.inputs.y.setValue(move.y);
           macro.add(tool);
         }
-        this.execTool(ctx, macro);
+        await this.execTool(ctx, macro);
         break;
       }
       case "duplicateNode": {
@@ -82504,7 +82720,7 @@ var ToolOpDelegate = class {
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "exposeEntry": {
@@ -82515,7 +82731,7 @@ var ToolOpDelegate = class {
         tool.inputs.propKey.setValue(edit.entry.propKey ?? "");
         tool.inputs.label.setValue(edit.entry.label ?? "");
         tool.inputs.at.setValue(edit.at ?? -1);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "reorderEntry": {
@@ -82523,7 +82739,7 @@ var ToolOpDelegate = class {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.from.setValue(edit.from);
         tool.inputs.to.setValue(edit.to);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "repointEntry": {
@@ -82532,14 +82748,14 @@ var ToolOpDelegate = class {
         tool.inputs.index.setValue(edit.index);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.propKey.setValue(edit.propKey);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "removeEntry": {
         const tool = new RemoveEntryOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.index.setValue(edit.index);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "addBoundary": {
@@ -82548,7 +82764,7 @@ var ToolOpDelegate = class {
         tool.inputs.dir.setValue(edit.dir);
         tool.inputs.key.setValue(edit.key);
         tool.inputs.socketType.setValue(edit.socketType);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "removeBoundary": {
@@ -82556,7 +82772,7 @@ var ToolOpDelegate = class {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.dir.setValue(edit.dir);
         tool.inputs.key.setValue(edit.key);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
     }
@@ -82720,12 +82936,12 @@ function propEditRow(ctx, label, path, inherit_packflag, createUI) {
   }
   return row;
 }
-function dispatchEdit(opts, edit) {
+async function dispatchEdit(opts, edit) {
   const verdict = opts.delegate.check(opts.ctx, edit);
   if (!verdict.ok) {
     return verdict.reason;
   }
-  opts.delegate.perform(opts.ctx, edit);
+  await opts.delegate.perform(opts.ctx, edit);
   opts.onChanged?.();
   return void 0;
 }
@@ -82823,8 +83039,8 @@ function buildAddSocketRow(con, dir, opts) {
     const base = (sdef?.uiName || sdef?.type || word).toLowerCase().replace(/\s+/g, "_");
     const box = nameRow.textbox(void 0, freeKey(base, socks));
     box.description = `The new ${word}'s name, as every instance will show it`;
-    const add = nameRow.button("Add", () => {
-      const reason = dispatchEdit(opts, {
+    const add = nameRow.button("Add", async () => {
+      const reason = await dispatchEdit(opts, {
         kind: "addBoundary",
         graphPath: opts.graphPath,
         dir,
@@ -82865,8 +83081,8 @@ function buildGroupDesigner(root, opts) {
   const host = {
     opts,
     rerender,
-    dispatch: (edit) => {
-      const reason = dispatchEdit(opts, edit);
+    dispatch: async (edit) => {
+      const reason = await dispatchEdit(opts, edit);
       if (reason !== void 0) {
         note.text = reason;
         note.hidden = false;
@@ -82907,10 +83123,9 @@ function buildBoundaryList(con, dir, { opts, dispatch, rerender, socketFont }) {
     if (socketFont !== void 0) {
       type.font = socketFont;
     }
-    const remove2 = row.button(
-      "\u2715",
-      () => dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key })
-    );
+    const remove2 = row.button("\u2715", () => {
+      void dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key });
+    });
     remove2.description = `Remove the ${word} '${key}'; every instance loses the socket and its links`;
   }
   buildAddSocketRow(list5, dir, {
@@ -82948,39 +83163,39 @@ function buildExposedList(con, { opts, dispatch }) {
         exposeMenuTemplate(
           opts.ctx,
           opts.def,
-          (req) => dispatch({
-            kind: "repointEntry",
-            ...common,
-            index,
-            nodeId: req.nodeId,
-            propKey: req.propKey ?? ""
-          }),
+          (req) => {
+            void dispatch({
+              kind: "repointEntry",
+              ...common,
+              index,
+              nodeId: req.nodeId,
+              propKey: req.propKey ?? ""
+            });
+          },
           entry.kind
         )
       );
       repoint.description = "Point this row at a property that exists, keeping its place in the list";
     } else {
-      const up = row.button(
-        "\u2191",
-        () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 })
-      );
+      const up = row.button("\u2191", () => {
+        void dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 });
+      });
       up.description = "Show this row one place earlier on every instance";
-      const down = row.button(
-        "\u2193",
-        () => dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 })
-      );
+      const down = row.button("\u2193", () => {
+        void dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 });
+      });
       down.description = "Show this row one place later on every instance";
     }
-    const remove2 = row.button("\u2715", () => dispatch({ kind: "removeEntry", ...common, index }));
+    const remove2 = row.button("\u2715", () => {
+      void dispatch({ kind: "removeEntry", ...common, index });
+    });
     remove2.description = "Stop forwarding this row; instances keep their values";
   });
   const expose = list5.menu(
     "Expose\u2026",
-    exposeMenuTemplate(
-      opts.ctx,
-      opts.def,
-      (req) => dispatch({ kind: "exposeEntry", ...common, entry: req })
-    )
+    exposeMenuTemplate(opts.ctx, opts.def, (req) => {
+      void dispatch({ kind: "exposeEntry", ...common, entry: req });
+    })
   );
   mark(expose, "nodeeditor-exposure-add");
   expose.description = "Forward a property of an inner node so every instance shows it";
@@ -83148,7 +83363,10 @@ var NodeFrame = class extends Container3 {
   onMoveClick;
   /** Reports the frames a live drag is moving; this frame leads them. */
   onMovePreview;
-  /** Reports a completed drag of this frame and any dragged alongside it. */
+  /**
+   * Reports a completed drag of this frame and any dragged alongside it.
+   * Resolves once the move has been applied and the view has resynced.
+   */
   onMoveCommit;
   onSocketDown;
   /** Extra rows the owning view appends beneath the node's own createUI. */
@@ -83743,8 +83961,11 @@ var LinkDrag = class {
     const seg = origin.dir === "out" ? { x1: a2[0], y1: a2[1], x2: local[0], y2: local[1] } : { x1: local[0], y1: local[1], x2: a2[0], y2: a2[1] };
     overlay.drawLinks([seg], dpi);
   }
-  /** Ends the drag, dispatching the edits the drop point calls for. */
-  drop(local) {
+  /**
+   * Ends the drag, dispatching the edits the drop point calls for. Resolves
+   * once they have been applied and the view has resynced.
+   */
+  async drop(local) {
     const origin = this._origin;
     if (origin === void 0) {
       return;
@@ -83757,15 +83978,19 @@ var LinkDrag = class {
       if (backOnOrigin) {
         return;
       }
-      this._dispatch({ kind: "disconnect", graphPath: this.view.currentGraphPath, ...detach });
+      await this._dispatch({
+        kind: "disconnect",
+        graphPath: this.view.currentGraphPath,
+        ...detach
+      });
       if (target !== void 0 && target.ok) {
-        this._dispatch(this._connectEdit(origin, target));
+        await this._dispatch(this._connectEdit(origin, target));
       }
       this.view.syncGraph();
       return;
     }
     if (target !== void 0 && target.ok) {
-      this._dispatch(this._connectEdit(origin, target));
+      await this._dispatch(this._connectEdit(origin, target));
     }
     this.view.syncGraph();
   }
@@ -83824,9 +84049,9 @@ var LinkDrag = class {
     }
     return best;
   }
-  _dispatch(edit) {
+  async _dispatch(edit) {
     if (this.view.delegate.check(this.view.graphContext, edit).ok) {
-      this.view.delegate.perform(this.view.graphContext, edit);
+      await this.view.delegate.perform(this.view.graphContext, edit);
     }
   }
   _makeOverlay() {
@@ -83874,7 +84099,7 @@ var LinkDrag = class {
 };
 
 // scripts/editors/nodeeditor/gesture_ops.ts
-init_toolsys();
+init_toolop();
 init_vectormath();
 var CLICK_SLOP_PX = 3;
 function localPoint(view, e) {
@@ -83956,7 +84181,7 @@ var NodeMoveModalOp = class extends ToolOp {
     }
     if (lead !== void 0) {
       if (moves.length > 0) {
-        lead.onMoveCommit?.(moves);
+        void lead.onMoveCommit?.(moves);
       } else {
         lead.onMoveClick?.(lead);
       }
@@ -84087,7 +84312,7 @@ var LinkDragModalOp = class extends ToolOp {
     const view = this._view;
     this._view = void 0;
     if (view !== void 0) {
-      view.linkDrag.drop(localPoint(view, e));
+      void view.linkDrag.drop(localPoint(view, e));
     }
     this.modalEnd(false);
   }
@@ -85399,13 +85624,13 @@ var NodeGraphView = class extends Container3 {
   }
   /** Commits a finished drag; a group move goes as one moveNodes edit, so the
    *  gesture leaves a single undo entry. */
-  _commitMove(moves) {
+  async _commitMove(moves) {
     for (const move of moves) {
       move.frame.style.opacity = "";
     }
     if (moves.length === 1) {
       const edit = this._moveEdit(moves[0].frame, moves[0].x, moves[0].y);
-      this._dispatch(edit);
+      await this._dispatch(edit);
     } else if (moves.length > 1) {
       const accepted = [];
       for (const move of moves) {
@@ -85414,7 +85639,7 @@ var NodeGraphView = class extends Container3 {
         }
       }
       if (accepted.length > 0) {
-        this._dispatch({
+        await this._dispatch({
           kind: "moveNodes",
           graphPath: this.currentGraphPath,
           moves: accepted
@@ -85425,10 +85650,11 @@ var NodeGraphView = class extends Container3 {
   }
   /**
    * Dispatches an edit through the delegate, check first, and answers whether it
-   * was performed. The level check runs afterwards as well as from the watch, so a
-   * definition edit that lands synchronously starts its pass without waiting a frame.
+   * was performed. Resolves once the edit has been applied, so a caller may
+   * repaint from the model straight after awaiting it. The level check runs here
+   * as well as from the watch, so the pass starts without waiting a frame.
    */
-  _dispatch(edit) {
+  async _dispatch(edit) {
     this.checkGraphContext();
     const verdict = this.delegate.check(this.graphContext, edit);
     if (!verdict.ok) {
@@ -85436,7 +85662,7 @@ var NodeGraphView = class extends Container3 {
       return false;
     }
     this.lastRefusal = void 0;
-    this.delegate.perform(this.graphContext, edit);
+    await this.delegate.perform(this.graphContext, edit);
     this._checkLevel();
     return true;
   }
@@ -85456,12 +85682,12 @@ var NodeGraphView = class extends Container3 {
    * Adds a node of the named registered type at a graph-space point, defaulting
    * to the view's center. This is the entry point a host's own add menu calls.
    */
-  addNodeAt(typeName, at) {
+  async addNodeAt(typeName, at) {
     if (at === void 0) {
       const r = this.panzoom.getBoundingClientRect();
       at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
     }
-    this._dispatch({
+    await this._dispatch({
       kind: "addNode",
       graphPath: this.currentGraphPath,
       nodeType: typeName,
@@ -85474,12 +85700,12 @@ var NodeGraphView = class extends Container3 {
    * Adds an instance of an existing definition, named by ref, at a graph-space
    * point defaulting to the view's center. The root-level watch resolves it.
    */
-  addGroupAt(ref, at) {
+  async addGroupAt(ref, at) {
     if (at === void 0) {
       const r = this.panzoom.getBoundingClientRect();
       at = this.panzoom.transform.unproject([r.width * 0.5, r.height * 0.5]);
     }
-    this._dispatch({
+    await this._dispatch({
       kind: "addNode",
       graphPath: this.currentGraphPath,
       nodeType: "GroupNode",
@@ -85494,13 +85720,13 @@ var NodeGraphView = class extends Container3 {
    * place. The ref comes from the root graph's newGroupRef seam, or from a host
    * delegate that allocates its own; without either the edit is refused.
    */
-  groupSelected() {
+  async groupSelected() {
     const ids = [...this.selection];
     if (ids.length === 0) {
       this.lastRefusal = "nothing is selected";
       return false;
     }
-    const done = this._dispatch({
+    const done = await this._dispatch({
       kind: "createGroup",
       graphPath: this.currentGraphPath,
       storePath: this.graphPath,
@@ -85510,8 +85736,12 @@ var NodeGraphView = class extends Container3 {
     return done;
   }
   /** Replaces one group instance with a copy of its contents. */
-  ungroupNode(nodeId) {
-    const done = this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId });
+  async ungroupNode(nodeId) {
+    const done = await this._dispatch({
+      kind: "ungroup",
+      graphPath: this.currentGraphPath,
+      nodeId
+    });
     this.syncGraph();
     return done;
   }
@@ -85525,13 +85755,13 @@ var NodeGraphView = class extends Container3 {
       return;
     }
     if (groups.length === 1) {
-      this.ungroupNode(groups[0]);
+      await this.ungroupNode(groups[0]);
       return;
     }
     await this.singleUndoStep(
-      () => {
+      async () => {
         for (const nid of groups) {
-          this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
+          await this._dispatch({ kind: "ungroup", graphPath: this.currentGraphPath, nodeId: nid });
         }
         this.syncGraph();
       },
@@ -85556,7 +85786,7 @@ var NodeGraphView = class extends Container3 {
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
   openAddMenu(local) {
     const menu = buildAddNodeMenu(this.ctx, (typeName) => {
-      this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
+      void this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
     });
     this._startMenu(menu, local, true);
     return menu;
@@ -85588,13 +85818,17 @@ var NodeGraphView = class extends Container3 {
   /** Deletes the selected nodes and severs the selected links. */
   async deleteSelected() {
     await this.singleUndoStep(
-      () => {
+      async () => {
         for (const ref of this.selectedLinks()) {
-          this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
+          await this._dispatch({ kind: "disconnect", graphPath: this.currentGraphPath, ...ref });
         }
         this.linkSelection.clear();
         for (const nid of [...this.selection]) {
-          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
+          await this._dispatch({
+            kind: "deleteNode",
+            graphPath: this.currentGraphPath,
+            nodeId: nid
+          });
         }
         this.syncGraph();
       },
@@ -85607,7 +85841,7 @@ var NodeGraphView = class extends Container3 {
       return;
     }
     await this.singleUndoStep(
-      () => {
+      async () => {
         const graph = this.currentGraph;
         const existingNodes = new Set(Array.from(graph?.nodes ?? []).map((n) => n.id));
         const selection = Array.from(this.selection);
@@ -85617,7 +85851,7 @@ var NodeGraphView = class extends Container3 {
           if (node === void 0) {
             continue;
           }
-          this._dispatch({
+          await this._dispatch({
             kind: "duplicateNode",
             graphPath: this.currentGraphPath,
             nodeId: nid,
@@ -85636,8 +85870,13 @@ var NodeGraphView = class extends Container3 {
       "Duplicate selected nodes"
     );
   }
-  replaceNode(nodeId, newType) {
-    this._dispatch({ kind: "replaceNode", graphPath: this.currentGraphPath, nodeId, newType });
+  async replaceNode(nodeId, newType) {
+    await this._dispatch({
+      kind: "replaceNode",
+      graphPath: this.currentGraphPath,
+      nodeId,
+      newType
+    });
     this.syncGraph();
   }
   /**
@@ -85645,7 +85884,7 @@ var NodeGraphView = class extends Container3 {
    * islands out left to right so they stay disjoint (the solver itself is
    * randomized). The result commits as one arrange edit — one undo entry.
    */
-  arrangeNodes() {
+  async arrangeNodes() {
     const graph = this.currentGraph;
     if (graph === void 0 || graph.nodes.length === 0) {
       return;
@@ -85702,7 +85941,7 @@ var NodeGraphView = class extends Container3 {
     for (const [nid, pn] of packs) {
       moves.push({ nodeId: nid, x: pn.pos[0], y: pn.pos[1] });
     }
-    this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
+    await this._dispatch({ kind: "arrange", graphPath: this.currentGraphPath, moves });
     this.syncGraph();
   }
   /**
@@ -85729,9 +85968,25 @@ var NodeGraphView = class extends Container3 {
     this._startMenu(menu, local);
     return menu;
   }
+  /** Deletes one node, named by the node menu rather than the selection. */
+  async _deleteNode(nodeId) {
+    await this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId });
+    this.syncGraph();
+  }
+  /** Duplicates one node, offset from the frame the node menu opened on. */
+  async _duplicateNode(nodeId, frame) {
+    await this._dispatch({
+      kind: "duplicateNode",
+      graphPath: this.currentGraphPath,
+      nodeId,
+      x: frame.node.pos[0] + 20,
+      y: frame.node.pos[1] + 20
+    });
+    this.syncGraph();
+  }
   /** Forwards one property of a node in the definition on screen; false when refused. */
-  exposeProp(nodeId, propKey) {
-    return this._dispatch({
+  async exposeProp(nodeId, propKey) {
+    return await this._dispatch({
       kind: "exposeEntry",
       graphPath: this.currentGraphPath,
       entry: { kind: "prop", nodeId, propKey }
@@ -85771,33 +86026,20 @@ var NodeGraphView = class extends Container3 {
       {
         name: "Delete",
         tooltip: "Delete this node",
-        callback: () => {
-          this._dispatch({ kind: "deleteNode", graphPath: this.currentGraphPath, nodeId: nid });
-          this.syncGraph();
-        }
+        callback: () => void this._deleteNode(nid)
       },
       {
         name: "Duplicate",
         tooltip: "Duplicate this node, keeping its overridden values",
-        callback: () => {
-          this._dispatch({
-            kind: "duplicateNode",
-            graphPath: this.currentGraphPath,
-            nodeId: nid,
-            x: frame.node.pos[0] + 20,
-            y: frame.node.pos[1] + 20
-          });
-          this.syncGraph();
-        }
+        callback: () => void this._duplicateNode(nid, frame)
       },
       {
         name: "Replace\u2026",
         tooltip: "Swap this node's type, keeping links where sockets match",
         callback: () => {
-          const picker = buildAddNodeMenu(
-            this.ctx,
-            (typeName) => this.replaceNode(nid, typeName)
-          );
+          const picker = buildAddNodeMenu(this.ctx, (typeName) => {
+            void this.replaceNode(nid, typeName);
+          });
           this._startMenu(picker, local, true);
         }
       }
@@ -85947,14 +86189,13 @@ init_const();
 init_util();
 init_vectormath();
 init_ui_base();
-init_toolsys();
+init_toolop();
 var toolstack_getter = function() {
   throw new Error("must pass a toolstack getter to registerToolStackGetter");
 };
 function registerToolStackGetter(func) {
   toolstack_getter = func;
 }
-var UndoFlags2 = UndoFlags;
 var ToolBase = class extends ToolOp {
   screen;
   _finished;
@@ -86060,7 +86301,7 @@ var AreaResizeTool = class extends ToolBase {
       icon: Icons.RESIZE,
       description: "change size of area",
       is_modal: true,
-      undoflag: UndoFlags2.NO_UNDO,
+      undoflag: UndoFlags.NO_UNDO,
       flag: 0,
       inputs: {},
       outputs: {}
@@ -86187,7 +86428,7 @@ var SplitTool = class extends ToolBase {
       icon: Icons.SMALL_PLUS,
       description: "split an area in two",
       is_modal: true,
-      undoflag: UndoFlags2.NO_UNDO,
+      undoflag: UndoFlags.NO_UNDO,
       flag: 0,
       inputs: {},
       outputs: {}
@@ -86284,7 +86525,7 @@ var RemoveAreaTool = class extends ToolBase {
       icon: Icons.SMALL_PLUS,
       description: "Collapse a window",
       is_modal: true,
-      undoflag: UndoFlags2.NO_UNDO,
+      undoflag: UndoFlags.NO_UNDO,
       flag: 0,
       inputs: {},
       outputs: {}
@@ -86384,7 +86625,7 @@ var AreaDragTool = class extends ToolBase {
       icon: Icons.TRANSLATE,
       description: "move or duplicate area",
       is_modal: true,
-      undoflag: UndoFlags2.NO_UNDO,
+      undoflag: UndoFlags.NO_UNDO,
       flag: 0,
       inputs: {},
       outputs: {}
@@ -86814,7 +87055,7 @@ var ToolTipViewer = class extends ToolBase {
       icon: Icons.HELP,
       description: "view tooltips",
       is_modal: true,
-      undoflag: UndoFlags2.NO_UNDO,
+      undoflag: UndoFlags.NO_UNDO,
       flag: 0,
       inputs: {},
       outputs: {}
@@ -90848,14 +91089,14 @@ __export(controller_exports, {
   CurveConstructors: () => CurveConstructors,
   CurveFlags: () => CurveFlags,
   CurveTypeData: () => CurveTypeData,
-  DataAPI: () => DataAPI2,
+  DataAPI: () => DataAPI3,
   DataFlags: () => DataFlags,
   DataList: () => DataList,
   DataPath: () => DataPath,
   DataPathError: () => DataPathError,
   DataPathSetOp: () => DataPathSetOp,
   DataPathWatcher: () => DataPathWatcher,
-  DataStruct: () => DataStruct2,
+  DataStruct: () => DataStruct3,
   DataTypes: () => DataTypes,
   DoubleClickHandler: () => DoubleClickHandler,
   EaseCurve: () => EaseCurve,
@@ -91020,7 +91261,9 @@ __export(controller_exports, {
   isLeftClick: () => isLeftClick,
   isMouseDown: () => isMouseDown,
   isNum: () => isNum,
+  isNumProperty: () => isNumProperty,
   isNumber: () => isNumber,
+  isVecProperty: () => isVecProperty,
   isect_ray_plane: () => isect_ray_plane,
   keymap: () => keymap,
   keymap_latin_1: () => keymap_latin_1,
@@ -91078,6 +91321,7 @@ __export(controller_exports, {
   testToolParser: () => testToolParser,
   tet_volume: () => tet_volume,
   toLockedImpl: () => toLockedImpl,
+  toolopCanRunAsync: () => toolopCanRunAsync,
   toolprop_abstract: () => toolprop_abstract_exports,
   tri_angles: () => tri_angles,
   tri_area: () => tri_area,
@@ -91189,9 +91433,7 @@ init_controller_abstract();
 init_controller_ops();
 init_controller_abstract();
 init_controller_base();
-init_toolsys();
-init_toolprop();
-init_toolpath();
+init_toolsys2();
 init_curve1d_all();
 init_curve1d();
 init_curve1d_base();
@@ -91946,13 +92188,13 @@ var ThemeEditor = class extends Container3 {
       });
     };
     if (!cls._cachedDataAPI) {
-      const st = new DataStruct2(
+      const st = new DataStruct3(
         Object.entries(props).map(
           ([propKey, prop]) => new DataPath(propKey, propKey, prop, DataTypes.PROP)
         )
       );
-      const root = new DataStruct2();
-      cls._cachedDataAPI = new DataAPI2();
+      const root = new DataStruct3();
+      cls._cachedDataAPI = new DataAPI3();
       cls._cachedDataAPI._addClass({}, root, void 0, false);
       cls._cachedDataAPI._addClass(cls, st, void 0, false);
       cls._cachedDataAPI.rootContextStruct = root;
@@ -96937,7 +97179,7 @@ function registerMenuBarEditor() {
 }
 
 // scripts/simple/app_ops.ts
-init_toolsys();
+init_toolop();
 init_toolprop();
 function getPlatform() {
   return platform4;
@@ -97048,6 +97290,8 @@ function register2() {
 // scripts/simple/app.ts
 init_struct();
 init_context();
+init_tooldefaults();
+init_toolstack();
 init_toolsys();
 init_controller();
 init_area_wrangler();
@@ -97155,7 +97399,7 @@ function GetContextClass(ctxClass) {
   };
 }
 function makeAPI(ctxClass) {
-  const api = new DataAPI2();
+  const api = new DataAPI3();
   for (const cls of DataModelClasses) {
     if (cls.defineAPI) {
       cls.defineAPI(api, api.mapStruct(cls, true));
@@ -100443,8 +100687,8 @@ function api_define_workspace(api) {
   st.struct("brush", "brush", "Brush", api.mapStruct(BrushSettings));
 }
 function defineAPI() {
-  const api = new DataAPI2();
-  const cstruct = new DataStruct2();
+  const api = new DataAPI3();
+  const cstruct = new DataStruct3();
   api.setRoot(cstruct);
   api_define_material(api);
   api_define_canvaspath(api);
@@ -101610,10 +101854,10 @@ var NodeEditorTab = class extends NodeEditor {
     const groups = createMenu(
       this.ctx,
       "Group",
-      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => this.view.addGroupAt(ref))
+      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => void this.view.addGroupAt(ref))
     );
     groups.tooltip = "Add an instance of a group already in the store";
-    return [...addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName)), groups];
+    return [...addNodeMenuTemplate((typeName) => void this.view.addNodeAt(typeName)), groups];
   }
   init() {
     super.init();
@@ -101722,8 +101966,8 @@ var MenuBarEditor2 = class extends Editor2 {
         name: "Create Group",
         hotkey: "CTRL-G",
         tooltip: "Move the selected nodes into a new group",
-        callback: () => this._withNodeView((view) => {
-          if (!view.groupSelected()) {
+        callback: () => this._withNodeView(async (view) => {
+          if (!await view.groupSelected()) {
             this.ctx.report(
               `Nothing was grouped: ${view.lastRefusal}`,
               "orange"

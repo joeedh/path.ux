@@ -1,7 +1,7 @@
 import { PackFlags, UIBase } from "../core/ui_base";
 import { ColumnFrame } from "../core/ui_containers";
 import { ListProperty, PropFlags, StringSetProperty } from "../path-controller/toolsys/toolprop";
-import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolsys";
+import { UndoFlags, ToolFlags, ToolOp } from "../path-controller/toolsys/toolop";
 
 import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { IContextBase } from "../core/context_base";

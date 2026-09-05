@@ -1,5 +1,5 @@
-import { ToolOp } from "../scripts/path-controller/toolsys/toolsys";
-import type { ToolDef } from "../scripts/path-controller/toolsys/toolsys";
+import { ToolOp } from "../scripts/path-controller/toolsys/toolop";
+import type { ToolDef } from "../scripts/path-controller/toolsys/toolop";
 import { initToolPaths, parseToolPath } from "../scripts/path-controller/toolsys/toolpath";
 import {
   BoolProperty,

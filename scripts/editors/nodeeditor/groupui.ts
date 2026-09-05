@@ -277,12 +277,15 @@ export interface GroupDesignerOpts extends DefinitionEditOpts {
 }
 
 /** Checks then performs; a refusal is reported and nothing runs. */
-function dispatchEdit(opts: DefinitionEditOpts, edit: GraphEdit): string | undefined {
+async function dispatchEdit(
+  opts: DefinitionEditOpts,
+  edit: GraphEdit
+): Promise<string | undefined> {
   const verdict = opts.delegate.check(opts.ctx, edit);
   if (!verdict.ok) {
     return verdict.reason;
   }
-  opts.delegate.perform(opts.ctx, edit);
+  await opts.delegate.perform(opts.ctx, edit);
   opts.onChanged?.();
   return undefined;
 }
@@ -415,8 +418,8 @@ export function buildAddSocketRow<CTX extends IContextBase>(
     const box = nameRow.textbox(undefined, freeKey(base, socks));
     box.description = `The new ${word}'s name, as every instance will show it`;
 
-    const add = nameRow.button("Add", () => {
-      const reason = dispatchEdit(opts, {
+    const add = nameRow.button("Add", async () => {
+      const reason = await dispatchEdit(opts, {
         kind     : "addBoundary",
         graphPath: opts.graphPath,
         dir,
@@ -469,8 +472,8 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
   const host: DesignerHost = {
     opts,
     rerender,
-    dispatch: (edit) => {
-      const reason = dispatchEdit(opts, edit);
+    dispatch: async (edit) => {
+      const reason = await dispatchEdit(opts, edit);
       if (reason !== undefined) {
         note.text = reason;
         note.hidden = false;
@@ -496,7 +499,7 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
 interface DesignerHost {
   opts: GroupDesignerOpts;
   rerender: () => void;
-  dispatch: (edit: GraphEdit) => void;
+  dispatch: (edit: GraphEdit) => Promise<void>;
   socketFont: CSSFont | undefined;
 }
 
@@ -530,9 +533,9 @@ function buildBoundaryList<CTX extends IContextBase>(
       type.font = socketFont;
     }
 
-    const remove = row.button("✕", () =>
-      dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key })
-    );
+    const remove = row.button("✕", () => {
+      void dispatch({ kind: "removeBoundary", graphPath: opts.graphPath, dir, key });
+    });
     remove.description = `Remove the ${word} '${key}'; every instance loses the socket and its links`;
   }
 
@@ -580,39 +583,42 @@ function buildExposedList<CTX extends IContextBase>(
         exposeMenuTemplate(
           opts.ctx as unknown as IContextBase,
           opts.def,
-          (req) =>
-            dispatch({
+          (req) => {
+            void dispatch({
               kind: "repointEntry",
               ...common,
               index,
               nodeId : req.nodeId,
               propKey: (req.propKey ?? "") as unknown as NodePropName,
-            }),
+            });
+          },
           entry.kind
         )
       );
       repoint.description =
         "Point this row at a property that exists, keeping its place in the list";
     } else {
-      const up = row.button("↑", () =>
-        dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 })
-      );
+      const up = row.button("↑", () => {
+        void dispatch({ kind: "reorderEntry", ...common, from: index, to: index - 1 });
+      });
       up.description = "Show this row one place earlier on every instance";
-      const down = row.button("↓", () =>
-        dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 })
-      );
+      const down = row.button("↓", () => {
+        void dispatch({ kind: "reorderEntry", ...common, from: index, to: index + 1 });
+      });
       down.description = "Show this row one place later on every instance";
     }
 
-    const remove = row.button("✕", () => dispatch({ kind: "removeEntry", ...common, index }));
+    const remove = row.button("✕", () => {
+      void dispatch({ kind: "removeEntry", ...common, index });
+    });
     remove.description = "Stop forwarding this row; instances keep their values";
   });
 
   const expose = list.menu(
     "Expose…",
-    exposeMenuTemplate(opts.ctx as unknown as IContextBase, opts.def, (req) =>
-      dispatch({ kind: "exposeEntry", ...common, entry: req })
-    )
+    exposeMenuTemplate(opts.ctx as unknown as IContextBase, opts.def, (req) => {
+      void dispatch({ kind: "exposeEntry", ...common, entry: req });
+    })
   );
   mark(expose, "nodeeditor-exposure-add");
   expose.description = "Forward a property of an inner node so every instance shows it";

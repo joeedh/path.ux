@@ -129,8 +129,11 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     overlay.drawLinks([seg], dpi);
   }
 
-  /** Ends the drag, dispatching the edits the drop point calls for. */
-  drop(local: readonly [number, number]): void {
+  /**
+   * Ends the drag, dispatching the edits the drop point calls for. Resolves
+   * once they have been applied and the view has resynced.
+   */
+  async drop(local: readonly [number, number]): Promise<void> {
     const origin = this._origin;
     if (origin === undefined) {
       return;
@@ -147,16 +150,20 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
         return;
       }
 
-      this._dispatch({ kind: "disconnect", graphPath: this.view.currentGraphPath, ...detach });
+      await this._dispatch({
+        kind     : "disconnect",
+        graphPath: this.view.currentGraphPath,
+        ...detach,
+      });
       if (target !== undefined && target.ok) {
-        this._dispatch(this._connectEdit(origin, target));
+        await this._dispatch(this._connectEdit(origin, target));
       }
       this.view.syncGraph();
       return;
     }
 
     if (target !== undefined && target.ok) {
-      this._dispatch(this._connectEdit(origin, target));
+      await this._dispatch(this._connectEdit(origin, target));
     }
     this.view.syncGraph();
   }
@@ -224,9 +231,9 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     return best;
   }
 
-  private _dispatch(edit: GraphEdit): void {
+  private async _dispatch(edit: GraphEdit): Promise<void> {
     if (this.view.delegate.check(this.view.graphContext, edit).ok) {
-      this.view.delegate.perform(this.view.graphContext, edit);
+      await this.view.delegate.perform(this.view.graphContext, edit);
     }
   }
 

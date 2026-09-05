@@ -249,8 +249,11 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Reports the frames a live drag is moving; this frame leads them. */
   onMovePreview?: (frames: readonly NodeFrame<CTX>[]) => void;
 
-  /** Reports a completed drag of this frame and any dragged alongside it. */
-  onMoveCommit?: (moves: readonly FrameMove<CTX>[]) => void;
+  /**
+   * Reports a completed drag of this frame and any dragged alongside it.
+   * Resolves once the move has been applied and the view has resynced.
+   */
+  onMoveCommit?: (moves: readonly FrameMove<CTX>[]) => void | Promise<void>;
   onSocketDown?: (frame: NodeFrame<CTX>, key: string, dir: SocketDir, e: PointerEvent) => void;
 
   /** Extra rows the owning view appends beneath the node's own createUI. */

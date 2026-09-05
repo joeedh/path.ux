@@ -49,10 +49,10 @@ export class NodeEditorTab extends NodeEditor<ViewContext> {
     const groups = createMenu(
       this.ctx,
       "Group",
-      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => this.view.addGroupAt(ref))
+      addGroupMenuTemplate([...demoGroupDefs.keys()], (ref) => void this.view.addGroupAt(ref))
     );
     groups.tooltip = "Add an instance of a group already in the store";
-    return [...addNodeMenuTemplate((typeName) => this.view.addNodeAt(typeName)), groups];
+    return [...addNodeMenuTemplate((typeName) => void this.view.addNodeAt(typeName)), groups];
   }
 
   init() {

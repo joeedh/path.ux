@@ -2,7 +2,9 @@ import nstructjs from "../path-controller/util/struct";
 import { Context, ContextOverlay, makeDerivedOverlay } from "../path-controller/controller/context";
 
 export const DataModelClasses: (typeof DataModel)[] = [];
-import { buildToolSysAPI, SavedToolDefaults, ToolStack } from "../path-controller/toolsys/toolsys";
+import { SavedToolDefaults } from "../path-controller/toolsys/tooldefaults";
+import { ToolStack } from "../path-controller/toolsys/toolstack";
+import { buildToolSysAPI } from "../path-controller/toolsys/toolsys";
 import { DataAPI } from "../path-controller/controller/controller";
 import { Screen } from "../screen/FrameManager";
 import { contextWrangler } from "../screen/area_wrangler";

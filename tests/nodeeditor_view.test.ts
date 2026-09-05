@@ -5,7 +5,7 @@ import { areaclasses } from "../scripts/screen/area_base";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { flushPathNotifications } from "../scripts/path-controller/controller/pathwatch";
-import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
+import { ToolStack } from "../scripts/path-controller/toolsys/toolstack";
 import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
 import { Vector2 } from "../scripts/path-controller/util/vectormath";
 import { Node, registerNodeType } from "../scripts/graph/node";
@@ -23,6 +23,18 @@ import {
 import type { Level } from "../scripts/editors/nodeeditor/nodegraphview";
 import { NodeEditor } from "../scripts/editors/nodeeditor/nodeeditor";
 import type { GraphEdit, NodeGraphDelegate } from "../scripts/editors/nodeeditor/delegate";
+
+/**
+ * Drains the toolstack and the microtask continuations a fire-and-forget UI
+ * callback leaves behind it — a menu pick or a button press dispatches an edit
+ * and repaints once it lands, with no promise the caller can hold.
+ */
+async function settle(ctx: { toolstack: { idle(): Promise<void> } }): Promise<void> {
+  for (let i = 0; i < 4; i++) {
+    await ctx.toolstack.idle();
+    await Promise.resolve();
+  }
+}
 
 beforeAll(() => {
   // resolvePath / theme lookups touch window in node.
@@ -327,6 +339,7 @@ test("a structural gesture inside a descended instance is refused through check"
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
   await view.enterInstance(grp);
 
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
@@ -339,15 +352,17 @@ test("a structural gesture inside a descended instance is refused through check"
     x        : 50,
     y        : 60,
   });
+  await settle(ctx);
   expect(verdict).toEqual({ ok: false, reason: REFUSAL });
 
   const before = [copy.pos[0], copy.pos[1]];
-  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await settle(ctx);
   expect([copy.pos[0], copy.pos[1]]).toEqual(before);
   expect(ctx.toolstack.length).toBe(0);
 });
 
-test("a move commits through the default delegate as the MoveNodeOp", () => {
+test("a move commits through the default delegate as the MoveNodeOp", async () => {
   const g = new Graph();
   const src = new ViewSrc();
   g.add(src);
@@ -355,18 +370,22 @@ test("a move commits through the default delegate as the MoveNodeOp", () => {
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   const frame = view.frames.get(src.id)!;
-  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await settle(ctx);
 
+  await settle(ctx);
   expect([src.pos[0], src.pos[1]]).toEqual([50, 60]);
   expect(frame.style.left).toBe("50px");
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
+  await settle(ctx);
   expect([src.pos[0], src.pos[1]]).toEqual([0, 0]);
 });
 
-test("an installed delegate receives the move and no op issues", () => {
+test("an installed delegate receives the move and no op issues", async () => {
   const g = new Graph();
   const src = new ViewSrc();
   g.add(src);
@@ -378,14 +397,14 @@ test("an installed delegate receives the move and no op issues", () => {
   const received: GraphEdit[] = [];
   const testDelegate: NodeGraphDelegate = {
     check  : () => ({ ok: true }),
-    perform: (_ctx, edit) => {
+    perform: async (_ctx, edit) => {
       received.push(edit);
     },
   };
   view.delegate = testDelegate;
 
   const frame = view.frames.get(src.id)!;
-  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
 
   expect(received).toEqual([
     { kind: "moveNode", graphPath: "graph", nodeId: src.id, x: 50, y: 60 },
@@ -394,7 +413,7 @@ test("an installed delegate receives the move and no op issues", () => {
   expect(ctx.toolstack.length).toBe(0);
 });
 
-test("a group move commits as one moveNodes edit, undoable in a single step", () => {
+test("a group move commits as one moveNodes edit, undoable in a single step", async () => {
   const g = new Graph();
   const a = new ViewSrc();
   const b = new ViewSrc();
@@ -405,19 +424,22 @@ test("a group move commits as one moveNodes edit, undoable in a single step", ()
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   const frameA = view.frames.get(a.id)!;
   const frameB = view.frames.get(b.id)!;
-  frameA.onMoveCommit!([
+  await frameA.onMoveCommit!([
     { frame: frameA, x: 10, y: 20 },
     { frame: frameB, x: 110, y: 20 },
   ]);
 
+  await settle(ctx);
   expect([a.pos[0], a.pos[1]]).toEqual([10, 20]);
   expect([b.pos[0], b.pos[1]]).toEqual([110, 20]);
   expect(ctx.toolstack.length).toBe(1);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
+  await settle(ctx);
   expect([a.pos[0], a.pos[1]]).toEqual([0, 0]);
   expect([b.pos[0], b.pos[1]]).toEqual([100, 0]);
 });
@@ -477,6 +499,7 @@ test("a link is selectable and delete severs it", async () => {
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   const ref = {
     srcNode  : src.id,
@@ -484,16 +507,20 @@ test("a link is selectable and delete severs it", async () => {
     dstNode  : m.id,
     dstSocket: "a",
   };
+  await settle(ctx);
   expect(view.selectedLinks()).toEqual([]);
 
   view.selectLink(ref);
+  await settle(ctx);
   expect(view.selectedLinks()).toEqual([ref]);
 
   await view.deleteSelected();
+  await settle(ctx);
   expect(m.inputs.a.edges.length).toBe(0);
   expect(ctx.toolstack.length).toBe(1);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
+  await settle(ctx);
   expect(m.inputs.a.edges.length).toBe(1);
 });
 
@@ -508,20 +535,26 @@ test("duplicateSelected groups every duplicate into one undo step", async () => 
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   view.selection.add(a.id);
+  await settle(ctx);
   view.selection.add(b.id);
+  await settle(ctx);
   const before = new Set(g.nodes.map((n) => n.id));
 
   await view.duplicateSelected();
 
+  await settle(ctx);
   expect(g.nodes.length).toBe(4);
   expect(ctx.toolstack.length).toBe(1);
 
   const newIds = g.nodes.map((n) => n.id).filter((id) => !before.has(id));
+  await settle(ctx);
   expect([...view.selection].sort()).toEqual(newIds.sort());
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
+  await settle(ctx);
   expect(g.nodes.length).toBe(2);
 });
 
@@ -536,9 +569,12 @@ test("duplicateSelected selects the new nodes before undoStepEnd runs, not after
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   view.selection.add(a.id);
+  await settle(ctx);
   view.selection.add(b.id);
+  await settle(ctx);
   const before = new Set(g.nodes.map((n) => n.id));
 
   // Models the production delegate (GenGraphEditor's), whose perform() writes the graph
@@ -550,7 +586,7 @@ test("duplicateSelected selects the new nodes before undoStepEnd runs, not after
   const testDelegate: NodeGraphDelegate = {
     undoStepBegin: async () => {},
     check        : () => ({ ok: true }),
-    perform: (_performCtx, edit) => {
+    perform: async (_performCtx, edit) => {
       if (edit.kind === "duplicateNode") {
         g.add(new ViewSrc());
       }
@@ -567,6 +603,7 @@ test("duplicateSelected selects the new nodes before undoStepEnd runs, not after
     .map((n) => n.id)
     .filter((id) => !before.has(id))
     .sort();
+  await settle(ctx);
   expect(newIds.length).toBe(2);
   expect(selectionAtEnd).toEqual(newIds);
 });
@@ -576,6 +613,7 @@ test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, pass
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   const calls: string[] = [];
   const testDelegate: NodeGraphDelegate = {
@@ -584,7 +622,7 @@ test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, pass
       calls.push(`begin:${shortLabel}:${message}`);
     },
     check        : () => ({ ok: true }),
-    perform      : () => {},
+    perform      : async () => {},
     undoStepEnd: async () => {
       await Promise.resolve();
       calls.push("end");
@@ -601,6 +639,7 @@ test("singleUndoStep awaits the delegate's async undoStepBegin/undoStepEnd, pass
     "A test message"
   );
 
+  await settle(ctx);
   expect(result).toBe(42);
   expect(calls).toEqual(["begin:Label:A test message", "cb", "end"]);
 });
@@ -610,6 +649,7 @@ test("singleUndoStep still runs undoStepEnd, and rejects, when cb throws", async
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
   const calls: string[] = [];
   const testDelegate: NodeGraphDelegate = {
@@ -617,13 +657,14 @@ test("singleUndoStep still runs undoStepEnd, and rejects, when cb throws", async
       calls.push("begin");
     },
     check        : () => ({ ok: true }),
-    perform      : () => {},
+    perform      : async () => {},
     undoStepEnd: async () => {
       calls.push("end");
     },
   };
   view.delegate = testDelegate;
 
+  await settle(ctx);
   await expect(
     view.singleUndoStep(() => {
       calls.push("cb");
@@ -631,6 +672,7 @@ test("singleUndoStep still runs undoStepEnd, and rejects, when cb throws", async
     })
   ).rejects.toThrow("boom");
 
+  await settle(ctx);
   expect(calls).toEqual(["begin", "cb", "end"]);
 });
 
@@ -664,6 +706,7 @@ test("a property write inside a definition leaves the instance alone until leavi
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
   const saved: [string, GroupDef][] = [];
   host.groupSaver = async (ref, d) => {
     saved.push([ref, d]);
@@ -672,13 +715,16 @@ test("a property write inside a definition leaves the instance alone until leavi
   await view.enterDefinition(grp);
   const path = `${view.currentGraphPath}.nodes[${JSON.stringify(inner.id)}].props['bias'].value`;
   ctx.api.setValue(ctx, path, 2);
+  await settle(ctx);
   expect(inner.props.bias.getValue()).toBe(2);
 
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  await settle(ctx);
   expect(copy.props.bias.getValue()).toBe(0.5);
   expect(view.pendingResolve).toBeUndefined();
 
   await view.exitLevel();
+  await settle(ctx);
   expect(saved).toEqual([["grp", def]]);
   expect(grp.subgraph.nodeIdMap.get(inner.id)!.props.bias.getValue()).toBe(2);
   expect(view.currentGraph).toBe(host);
@@ -689,27 +735,32 @@ test("a structural op inside a definition reconciles the instances through pendi
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
   const saved: string[] = [];
   host.groupSaver = async (ref) => {
     saved.push(ref);
   };
 
   await view.enterDefinition(grp);
-  view.addNodeAt("ViewSrc", [10, 10]);
+  await view.addNodeAt("ViewSrc", [10, 10]);
   expect(view.pendingResolve).toBeDefined();
   await view.pendingResolve;
+  await settle(ctx);
   expect(saved).toEqual(["grp"]);
   expect(grp.subgraph.nodes.some((n) => n instanceof ViewSrc)).toBe(true);
 
   // the undo reaches the view through its watch on the definition's path
   view.update();
+  await settle(ctx);
   flushPathNotifications();
+  await settle(ctx);
   expect(view.pendingResolve).toBeUndefined();
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   flushPathNotifications();
   expect(view.pendingResolve).toBeDefined();
   await view.pendingResolve;
+  await settle(ctx);
   expect(saved).toEqual(["grp", "grp"]);
   expect(grp.subgraph.nodes.some((n) => n instanceof ViewSrc)).toBe(false);
 });
@@ -719,6 +770,7 @@ test("a move inside a definition runs no pass; leaving the level carries it", as
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
   const saved: string[] = [];
   host.groupSaver = async (ref) => {
     saved.push(ref);
@@ -726,18 +778,23 @@ test("a move inside a definition runs no pass; leaving the level carries it", as
 
   await view.enterDefinition(grp);
   view.update();
+  await settle(ctx);
   flushPathNotifications();
 
   const frame = view.frames.get(inner.id)!;
-  frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await frame.onMoveCommit!([{ frame, x: 50, y: 60 }]);
+  await settle(ctx);
   flushPathNotifications();
+  await settle(ctx);
   expect([inner.pos[0], inner.pos[1]]).toEqual([50, 60]);
   expect(view.pendingResolve).toBeUndefined();
   expect(saved).toEqual([]);
 
   await view.exitLevel();
+  await settle(ctx);
   expect(saved).toEqual(["grp"]);
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
+  await settle(ctx);
   expect([copy.pos[0], copy.pos[1]]).toEqual([50, 60]);
 });
 
@@ -746,15 +803,21 @@ test("deleting the instance a level rests on pops the view to the root", async (
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
 
   await view.enterDefinition(grp);
   view.update();
+  await settle(ctx);
   flushPathNotifications();
+  await settle(ctx);
   expect(view.currentLevel().kind).toBe("definition");
 
   host.remove(grp);
+  await settle(ctx);
   ctx.api.notifyChange("graph");
+  await settle(ctx);
   flushPathNotifications();
+  await settle(ctx);
   expect(view.descent).toEqual([]);
   expect(view.currentGraph).toBe(host);
   expect(crumbTexts(view)).toEqual(["Graph"]);
@@ -765,13 +828,15 @@ test("an instance added by ref resolves through the root-level watch", async () 
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
 
-  view.addGroupAt("grp", [5, 5]);
+  await view.addGroupAt("grp", [5, 5]);
   const added = host.nodes.filter((n): n is GroupNode => n instanceof GroupNode);
   expect(added.length).toBe(2);
   expect(added[1].definition).toBeUndefined();
   expect(view.pendingResolve).toBeDefined();
   await view.pendingResolve;
+  await settle(ctx);
   expect(added[1].definition).toBe(def);
   expect(view.frames.has(added[1].id)).toBe(true);
 });
@@ -792,12 +857,16 @@ test("groupSelected makes a group of the selection; ungroupSelected takes it apa
   const ctx = makeCtx(g);
   const view = makeView(ctx);
   view.setGraph(g, "graph");
+  await settle(ctx);
 
-  expect(view.groupSelected()).toBe(false);
+  await settle(ctx);
+  expect(await view.groupSelected()).toBe(false);
   view.selection.add(m.id);
-  expect(view.groupSelected()).toBe(true);
+  await settle(ctx);
+  expect(await view.groupSelected()).toBe(true);
 
   const grp = g.nodes.find((n): n is GroupNode => n instanceof GroupNode)!;
+  await settle(ctx);
   expect(grp.ref).toBe("g1");
   expect(saved).toEqual(["g1"]);
   expect(g.nodes.includes(m)).toBe(false);
@@ -806,6 +875,7 @@ test("groupSelected makes a group of the selection; ungroupSelected takes it apa
   expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
 
   await view.ungroupSelected();
+  await settle(ctx);
   expect(g.nodes.some((n) => n instanceof GroupNode)).toBe(false);
   expect(g.nodes.some((n) => n instanceof ViewMath)).toBe(true);
   expect(ctx.toolstack.length).toBe(2);
@@ -816,8 +886,10 @@ test("hotkeys() names the five keys; Tab enters the one selected group and other
   const ctx = makeCtx(host);
   const view = makeView(ctx);
   view.setGraph(host, "graph");
+  await settle(ctx);
 
   const keys = view.hotkeys();
+  await settle(ctx);
   expect(keys.map((k) => k.buildString())).toEqual([
     "Delete",
     "Shift+D",
@@ -828,10 +900,13 @@ test("hotkeys() names the five keys; Tab enters the one selected group and other
   const tab = keys[4];
 
   view.selection.add(grp.id);
+  await settle(ctx);
   tab.exec(ctx);
+  await settle(ctx);
   expect(view.currentLevel().kind).toBe("definition");
 
   tab.exec(ctx);
+  await settle(ctx);
   expect(view.currentLevel().kind).toBe("root");
   await view.pendingResolve;
 });

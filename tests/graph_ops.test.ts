@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
-import { ToolStack } from "../scripts/path-controller/toolsys/toolsys";
+import { ToolStack } from "../scripts/path-controller/toolsys/toolstack";
 import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
 import { Node, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
@@ -97,81 +97,87 @@ function id(n: Node): string {
   return JSON.stringify(n.id);
 }
 
-function addNode(ctx: any, type: string, x = 0, y = 0): Node {
+async function addNode(ctx: any, type: string, x = 0, y = 0): Promise<Node> {
   const tool = new AddNodeOp();
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.nodeType.setValue(type);
   tool.inputs.x.setValue(x);
   tool.inputs.y.setValue(y);
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
   return ctx.graph.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue()))!;
 }
 
-function connect(ctx: any, src: Node, srcKey: string, dst: Node, dstKey: string): void {
+async function connect(
+  ctx: any,
+  src: Node,
+  srcKey: string,
+  dst: Node,
+  dstKey: string
+): Promise<void> {
   const tool = new ConnectOp();
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.srcNode.setValue(id(src));
   tool.inputs.srcSocket.setValue(srcKey);
   tool.inputs.dstNode.setValue(id(dst));
   tool.inputs.dstSocket.setValue(dstKey);
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 }
 
-test("AddNodeOp adds through the stack; undo removes; redo restores the same id", () => {
+test("AddNodeOp adds through the stack; undo removes; redo restores the same id", async () => {
   const ctx = makeCtx(new Graph());
-  const node = addNode(ctx, "OpsMath", 10, 20);
+  const node = await addNode(ctx, "OpsMath", 10, 20);
 
   expect(ctx.graph.nodes.length).toBe(1);
   expect(node).toBeInstanceOf(OpsMath);
   expect(node.pos[0]).toBe(10);
   expect(node.pos[1]).toBe(20);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(ctx.graph.nodes.length).toBe(0);
 
-  ctx.toolstack.redo();
+  await ctx.toolstack.redo();
   expect(ctx.graph.nodes.length).toBe(1);
   expect(ctx.graph.nodeIdMap.get(node.id)).toBeInstanceOf(OpsMath);
 });
 
-test("DeleteNodeOp removes; undo restores the node with its links", () => {
+test("DeleteNodeOp removes; undo restores the node with its links", async () => {
   const ctx = makeCtx(new Graph());
-  const src = addNode(ctx, "OpsSrc");
-  const m = addNode(ctx, "OpsMath");
-  connect(ctx, src, "value", m, "a");
+  const src = await addNode(ctx, "OpsSrc");
+  const m = await addNode(ctx, "OpsMath");
+  await connect(ctx, src, "value", m, "a");
 
   const tool = new DeleteNodeOp();
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.nodeId.setValue(id(m));
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   expect(ctx.graph.nodes.length).toBe(1);
   expect(src.outputs.value.edges).toEqual([]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(ctx.graph.nodeIdMap.get(m.id)).toBe(m);
   expect(m.inputs.a.edges).toEqual([src.outputs.value]);
 });
 
-test("ConnectOp links through the stack; undo restores a displaced link", () => {
+test("ConnectOp links through the stack; undo restores a displaced link", async () => {
   const ctx = makeCtx(new Graph());
-  const s1 = addNode(ctx, "OpsSrc");
-  const s2 = addNode(ctx, "OpsSrc");
-  const m = addNode(ctx, "OpsMath");
+  const s1 = await addNode(ctx, "OpsSrc");
+  const s2 = await addNode(ctx, "OpsSrc");
+  const m = await addNode(ctx, "OpsMath");
 
-  connect(ctx, s1, "value", m, "a");
-  connect(ctx, s2, "value", m, "a");
+  await connect(ctx, s1, "value", m, "a");
+  await connect(ctx, s2, "value", m, "a");
   expect(m.inputs.a.edges).toEqual([s2.outputs.value]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(m.inputs.a.edges).toEqual([s1.outputs.value]);
 });
 
-test("DisconnectOp severs through the stack; undo reconnects", () => {
+test("DisconnectOp severs through the stack; undo reconnects", async () => {
   const ctx = makeCtx(new Graph());
-  const src = addNode(ctx, "OpsSrc");
-  const m = addNode(ctx, "OpsMath");
-  connect(ctx, src, "value", m, "a");
+  const src = await addNode(ctx, "OpsSrc");
+  const m = await addNode(ctx, "OpsMath");
+  await connect(ctx, src, "value", m, "a");
 
   const tool = new DisconnectOp();
   tool.inputs.graphPath.setValue("graph");
@@ -179,55 +185,55 @@ test("DisconnectOp severs through the stack; undo reconnects", () => {
   tool.inputs.srcSocket.setValue("value");
   tool.inputs.dstNode.setValue(id(m));
   tool.inputs.dstSocket.setValue("a");
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
   expect(m.inputs.a.edges).toEqual([]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(m.inputs.a.edges).toEqual([src.outputs.value]);
 });
 
-test("MoveNodeOp and RenameNodeOp mutate and undo through the stack", () => {
+test("MoveNodeOp and RenameNodeOp mutate and undo through the stack", async () => {
   const ctx = makeCtx(new Graph());
-  const m = addNode(ctx, "OpsMath", 1, 2);
+  const m = await addNode(ctx, "OpsMath", 1, 2);
 
   const move = new MoveNodeOp();
   move.inputs.graphPath.setValue("graph");
   move.inputs.nodeId.setValue(id(m));
   move.inputs.x.setValue(50);
   move.inputs.y.setValue(60);
-  ctx.toolstack.execTool(ctx, move);
+  await ctx.toolstack.execTool(ctx, move);
   expect([m.pos[0], m.pos[1]]).toEqual([50, 60]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect([m.pos[0], m.pos[1]]).toEqual([1, 2]);
 
   const rename = new RenameNodeOp();
   rename.inputs.graphPath.setValue("graph");
   rename.inputs.nodeId.setValue(id(m));
   rename.inputs.label.setValue("Blend");
-  ctx.toolstack.execTool(ctx, rename);
+  await ctx.toolstack.execTool(ctx, rename);
   expect(m.getUIName()).toBe("Blend");
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(m.label).toBeUndefined();
   expect(m.getUIName()).toBe("OpsMath");
 });
 
-test("SetNodePropOp sets through the stack; undo restores value and wasSet", () => {
+test("SetNodePropOp sets through the stack; undo restores value and wasSet", async () => {
   const ctx = makeCtx(new Graph());
-  const m = addNode(ctx, "OpsMath");
+  const m = await addNode(ctx, "OpsMath");
   expect(m.props.bias.wasSet).toBe(false);
 
   const tool = SetNodePropOp.create(ctx, "graph", id(m), "bias", 5);
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
   expect(m.props.bias.getValue()).toBe(5);
   expect(m.props.bias.wasSet).toBe(true);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(m.props.bias.getValue()).toBe(1);
   expect(m.props.bias.wasSet).toBe(false);
 
-  ctx.toolstack.redo();
+  await ctx.toolstack.redo();
   expect(m.props.bias.getValue()).toBe(5);
 });
 
@@ -276,20 +282,20 @@ test("every structural op refuses on an instance subgraph; SetNodePropOp does no
   // A value edit runs on the instance, materializing the property...
   inner.props.bias.setValue(4);
   const tool = SetNodePropOp.create(ctx, sub, id(copy), "bias", 9);
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
   expect(copy.props.bias.wasSet).toBe(true);
   expect(copy.props.bias.getValue()).toBe(9);
   expect(inner.props.bias.getValue()).toBe(4);
 
   // ...and undoing the first edit dematerializes: reads follow the definition again.
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(copy.props.bias.wasSet).toBe(false);
   expect(ctx.api.getValue(ctx, `${sub}.nodes[${copy.id}].props['bias'].value`)).toBe(4);
 
   warn.mockRestore();
 });
 
-test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure rows", () => {
+test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure rows", async () => {
   const def = new GroupDef();
   const src = new OpsSrc();
   const src2 = new OpsSrc();
@@ -309,7 +315,7 @@ test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.nodeId.setValue(id(m));
   tool.inputs.newType.setValue("OpsMath2");
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   const nn = def.subgraph.nodeIdMap.get(m.id)!;
   expect(nn).toBeInstanceOf(OpsMath2);
@@ -320,7 +326,7 @@ test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure
   // The bias exposure row cannot be satisfied and goes; the nodeUI row stays.
   expect(def.exposed).toEqual([eUI]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.subgraph.nodeIdMap.get(m.id)).toBe(m);
   expect(m.inputs.a.edges).toEqual([src.outputs.value]);
   expect(m.inputs.b.edges).toEqual([src2.outputs.value]);
@@ -331,16 +337,16 @@ function connectRaw(g: Graph, src: Node, srcKey: string, dst: Node, dstKey: stri
   g.connect(src.outputs[srcKey], dst.inputs[dstKey]);
 }
 
-test("CreateGroupOp groups, saves through the store, undoes to the same objects and redoes into the same definition", () => {
+test("CreateGroupOp groups, saves through the store, undoes to the same objects and redoes into the same definition", async () => {
   const g = new Graph();
   const saved: { ref: string; def: GroupDef }[] = [];
   g.groupSaver = async (ref, def) => {
     saved.push({ ref, def });
   };
   const ctx = makeCtx(g);
-  const src = addNode(ctx, "OpsSrc");
-  const m = addNode(ctx, "OpsMath");
-  const q = addNode(ctx, "OpsMath");
+  const src = await addNode(ctx, "OpsSrc");
+  const m = await addNode(ctx, "OpsMath");
+  const q = await addNode(ctx, "OpsMath");
   connectRaw(g, src, "value", m, "a");
   connectRaw(g, m, "out", q, "a");
 
@@ -349,7 +355,7 @@ test("CreateGroupOp groups, saves through the store, undoes to the same objects 
   tool.inputs.storePath.setValue("graph");
   tool.inputs.nodeIds.setValue(JSON.stringify([m.id]));
   tool.inputs.ref.setValue("grp");
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   const grp = g.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue()))!;
   expect(grp).toBeInstanceOf(GroupNode);
@@ -362,14 +368,14 @@ test("CreateGroupOp groups, saves through the store, undoes to the same objects 
   expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
   expect(grp.outputs.out.edges).toEqual([q.inputs.a]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(g.nodeIdMap.get(m.id)).toBe(m);
   expect(g.nodes.includes(grp)).toBe(false);
   expect(src.outputs.value.edges).toEqual([m.inputs.a]);
   expect(m.outputs.out.edges).toEqual([q.inputs.a]);
   expect(def.subgraph.nodes.every((n) => !(n instanceof OpsMath))).toBe(true);
 
-  ctx.toolstack.redo();
+  await ctx.toolstack.redo();
   expect(g.nodeIdMap.get(grp.id)).toBe(grp);
   expect((grp as GroupNode).definition).toBe(def);
   expect(def.subgraph.nodeIdMap.get(m.id)).toBe(m);
@@ -378,9 +384,9 @@ test("CreateGroupOp groups, saves through the store, undoes to the same objects 
   expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
 });
 
-test("CreateGroupOp refuses through canRun on an empty ref and on a refused plan", () => {
+test("CreateGroupOp refuses through canRun on an empty ref and on a refused plan", async () => {
   const ctx = makeCtx(new Graph());
-  const m = addNode(ctx, "OpsMath");
+  const m = await addNode(ctx, "OpsMath");
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
   const tool = new CreateGroupOp();
@@ -399,11 +405,11 @@ test("CreateGroupOp refuses through canRun on an empty ref and on a refused plan
   warn.mockRestore();
 });
 
-test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto the same ids", () => {
+test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto the same ids", async () => {
   const ctx = makeCtx(new Graph());
   const g: Graph = ctx.graph;
-  const src = addNode(ctx, "OpsSrc");
-  const m = addNode(ctx, "OpsMath");
+  const src = await addNode(ctx, "OpsSrc");
+  const m = await addNode(ctx, "OpsMath");
   connectRaw(g, src, "value", m, "a");
 
   const create = new CreateGroupOp();
@@ -411,13 +417,13 @@ test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto 
   create.inputs.storePath.setValue("graph");
   create.inputs.nodeIds.setValue(JSON.stringify([m.id]));
   create.inputs.ref.setValue("grp");
-  ctx.toolstack.execTool(ctx, create);
+  await ctx.toolstack.execTool(ctx, create);
   const grp = g.nodeIdMap.get(JSON.parse(create.outputs.nodeId.getValue())) as GroupNode;
 
   const tool = new UngroupOp();
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.nodeId.setValue(id(grp));
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   const pairs = JSON.parse(tool.outputs.nodeIds.getValue()) as [number, number][];
   expect(pairs.length).toBe(1);
@@ -428,12 +434,12 @@ test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto 
   expect(src.outputs.value.edges).toEqual([inlined.inputs.a]);
   expect(ctx.selection.has(inlined.id)).toBe(true);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(g.nodeIdMap.get(grp.id)).toBe(grp);
   expect(g.nodes.includes(inlined)).toBe(false);
   expect(src.outputs.value.edges).toEqual([grp.inputs.a]);
 
-  ctx.toolstack.redo();
+  await ctx.toolstack.redo();
   expect(g.nodeIdMap.get(pairs[0][1])).toBeInstanceOf(OpsMath);
   expect(g.nodes.includes(grp)).toBe(false);
 });
@@ -448,7 +454,7 @@ test("DuplicateNodeOp copies a synced instance with its ref, definition and over
   tool.inputs.nodeId.setValue(id(grp));
   tool.inputs.x.setValue(30);
   tool.inputs.y.setValue(40);
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   const copy = host.nodeIdMap.get(JSON.parse(tool.outputs.nodeId.getValue())) as GroupNode;
   expect(copy).toBeInstanceOf(GroupNode);
@@ -458,9 +464,9 @@ test("DuplicateNodeOp copies a synced instance with its ref, definition and over
   expect(copy.subgraph.nodeIdMap.get(inner.id)!.props.bias.getValue()).toBe(7);
   expect([copy.pos[0], copy.pos[1]]).toEqual([30, 40]);
 
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(host.nodes.length).toBe(1);
-  ctx.toolstack.redo();
+  await ctx.toolstack.redo();
   expect(host.nodeIdMap.get(copy.id)).toBeInstanceOf(GroupNode);
 });
 
@@ -475,7 +481,7 @@ test("AddNodeOp with a ref adds an unresolved instance that the next resolve bin
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.nodeType.setValue("GroupNode");
   tool.inputs.ref.setValue("grp");
-  ctx.toolstack.execTool(ctx, tool);
+  await ctx.toolstack.execTool(ctx, tool);
 
   const node = host.nodes[0] as GroupNode;
   expect(node).toBeInstanceOf(GroupNode);
@@ -498,7 +504,7 @@ test("the definition ops mutate a definition through the stack and undo, and ref
   expose.inputs.nodeId.setValue(id(m));
   expose.inputs.propKey.setValue("bias");
   expose.inputs.label.setValue("Bias");
-  ctx.toolstack.execTool(ctx, expose);
+  await ctx.toolstack.execTool(ctx, expose);
   expect(def.exposed.map((e) => e.label)).toEqual(["Bias"]);
 
   const exposeUI = new ExposeEntryOp();
@@ -506,14 +512,14 @@ test("the definition ops mutate a definition through the stack and undo, and ref
   exposeUI.inputs.kind.setValue("nodeUI");
   exposeUI.inputs.nodeId.setValue(id(m));
   exposeUI.inputs.at.setValue(0);
-  ctx.toolstack.execTool(ctx, exposeUI);
+  await ctx.toolstack.execTool(ctx, exposeUI);
   expect(def.exposed.map((e) => e.kind)).toEqual(["nodeUI", "prop"]);
 
   const reorder = new ReorderEntryOp();
   reorder.inputs.graphPath.setValue("graph");
   reorder.inputs.from.setValue(0);
   reorder.inputs.to.setValue(1);
-  ctx.toolstack.execTool(ctx, reorder);
+  await ctx.toolstack.execTool(ctx, reorder);
   expect(def.exposed.map((e) => e.kind)).toEqual(["prop", "nodeUI"]);
 
   const repoint = new RepointEntryOp();
@@ -521,13 +527,13 @@ test("the definition ops mutate a definition through the stack and undo, and ref
   repoint.inputs.index.setValue(0);
   repoint.inputs.nodeId.setValue(id(m));
   repoint.inputs.propKey.setValue("in:a");
-  ctx.toolstack.execTool(ctx, repoint);
+  await ctx.toolstack.execTool(ctx, repoint);
   expect(def.exposed[0].propKey).toBe("in:a");
 
   const remove = new RemoveEntryOp();
   remove.inputs.graphPath.setValue("graph");
   remove.inputs.index.setValue(1);
-  ctx.toolstack.execTool(ctx, remove);
+  await ctx.toolstack.execTool(ctx, remove);
   expect(def.exposed.map((e) => e.kind)).toEqual(["prop"]);
 
   const addSock = new AddGroupSocketOp();
@@ -535,7 +541,7 @@ test("the definition ops mutate a definition through the stack and undo, and ref
   addSock.inputs.dir.setValue("in");
   addSock.inputs.key.setValue("x");
   addSock.inputs.socketType.setValue("FloatSocket");
-  ctx.toolstack.execTool(ctx, addSock);
+  await ctx.toolstack.execTool(ctx, addSock);
   expect(def.inputs.x).toBeInstanceOf(FloatSocket);
   def.subgraph.connect(def.inputNode().outputs.x, m.inputs.b);
 
@@ -543,28 +549,28 @@ test("the definition ops mutate a definition through the stack and undo, and ref
   removeSock.inputs.graphPath.setValue("graph");
   removeSock.inputs.dir.setValue("in");
   removeSock.inputs.key.setValue("x");
-  ctx.toolstack.execTool(ctx, removeSock);
+  await ctx.toolstack.execTool(ctx, removeSock);
   expect(def.inputs.x).toBeUndefined();
   expect(m.inputs.b.edges).toEqual([]);
 
   // undo all the way back, then redo all the way forward
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.inputs.x).toBeDefined();
   expect(def.inputNode().outputs.x.edges).toEqual([m.inputs.b]);
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.inputs.x).toBeUndefined();
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.exposed.map((e) => e.kind)).toEqual(["prop", "nodeUI"]);
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.exposed[0].propKey).toBe("bias");
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.exposed.map((e) => e.kind)).toEqual(["nodeUI", "prop"]);
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.exposed.map((e) => e.kind)).toEqual(["prop"]);
-  ctx.toolstack.undo();
+  await ctx.toolstack.undo();
   expect(def.exposed).toEqual([]);
   for (let i = 0; i < 7; i++) {
-    ctx.toolstack.redo();
+    await ctx.toolstack.redo();
   }
   expect(def.exposed.map((e) => e.propKey)).toEqual(["in:a"]);
   expect(def.inputs.x).toBeUndefined();

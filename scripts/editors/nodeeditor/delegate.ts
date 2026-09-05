@@ -1,5 +1,6 @@
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
-import { ToolMacro, ToolOp } from "../../path-controller/toolsys/toolsys";
+import { ToolOp } from "../../path-controller/toolsys/toolop";
+import { ToolMacro } from "../../path-controller/toolsys/toolmacro";
 import { Graph } from "../../graph/graph";
 import {
   AddGroupSocketOp,
@@ -118,13 +119,16 @@ export type GraphContext = ContextLike & {
  * installs a delegate that routes edits there instead. A check verdict must
  * match what perform would decide, so a refusal can show mid-gesture.
  * undoStepBegin/undoStepEnd bracket a whole gesture (e.g. delete, duplicate)
- * and may await real async work (a host opening/closing its own checkpoint);
- * perform stays synchronous.
+ * and may await real async work (a host opening/closing its own checkpoint).
+ *
+ * perform resolves once the edit has been applied, so a caller that repaints
+ * from the model must await it; the toolstack serializes tools, so a tool
+ * dispatched here has not run when perform is merely called.
  */
 export interface NodeGraphDelegate {
   undoStepBegin(ctx: GraphContext, shortLabel: string, message: string): Promise<void>;
   check(ctx: GraphContext, edit: GraphEdit): EditVerdict;
-  perform(ctx: GraphContext, edit: GraphEdit): void;
+  perform(ctx: GraphContext, edit: GraphEdit): Promise<void>;
   undoStepEnd(ctx: GraphContext): Promise<void>;
 }
 
@@ -235,8 +239,9 @@ export class ToolOpDelegate implements NodeGraphDelegate {
   async undoStepEnd(ctx: GraphContext): Promise<void> {
     this.undoStepLvl--;
     if (this.undoStepLvl === 0 && this.pendingMacro) {
-      ctx.toolstack.execTool(ctx, this.pendingMacro);
+      const macro = this.pendingMacro;
       this.pendingMacro = undefined;
+      await ctx.toolstack.execTool(ctx, macro);
     }
   }
 
@@ -365,15 +370,16 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     return ref ? ref : undefined;
   }
 
-  private execTool(ctx: GraphContext, tool: ToolOp): void {
+  private async execTool(ctx: GraphContext, tool: ToolOp): Promise<void> {
     if (this.undoStepLvl > 0) {
+      // held for undoStepEnd, which runs the whole gesture as one macro
       this.pendingMacro?.add(tool);
-    } else {
-      ctx.toolstack.execTool(ctx, tool);
+      return;
     }
+    await ctx.toolstack.execTool(ctx, tool);
   }
 
-  perform(ctx: GraphContext, edit: GraphEdit): void {
+  async perform(ctx: GraphContext, edit: GraphEdit): Promise<void> {
     switch (edit.kind) {
       case "moveNode": {
         const tool = new MoveNodeOp();
@@ -381,7 +387,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "addNode": {
@@ -391,7 +397,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
         tool.inputs.ref.setValue(edit.ref ?? "");
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "createGroup": {
@@ -400,21 +406,21 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.storePath.setValue(edit.storePath);
         tool.inputs.nodeIds.setValue(JSON.stringify(edit.nodeIds));
         tool.inputs.ref.setValue(this._refFor(ctx, edit) ?? "");
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "ungroup": {
         const tool = new UngroupOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "deleteNode": {
         const tool = new DeleteNodeOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "replaceNode": {
@@ -422,7 +428,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.newType.setValue(edit.newType);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "connect":
@@ -433,7 +439,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.srcSocket.setValue(edit.srcSocket);
         tool.inputs.dstNode.setValue(JSON.stringify(edit.dstNode));
         tool.inputs.dstSocket.setValue(edit.dstSocket);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "arrange":
@@ -447,7 +453,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
           tool.inputs.y.setValue(move.y);
           macro.add(tool);
         }
-        this.execTool(ctx, macro);
+        await this.execTool(ctx, macro);
         break;
       }
       case "duplicateNode": {
@@ -456,7 +462,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.x.setValue(edit.x);
         tool.inputs.y.setValue(edit.y);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "exposeEntry": {
@@ -467,7 +473,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.propKey.setValue(edit.entry.propKey ?? "");
         tool.inputs.label.setValue(edit.entry.label ?? "");
         tool.inputs.at.setValue(edit.at ?? -1);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "reorderEntry": {
@@ -475,7 +481,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.from.setValue(edit.from);
         tool.inputs.to.setValue(edit.to);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "repointEntry": {
@@ -484,14 +490,14 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.index.setValue(edit.index);
         tool.inputs.nodeId.setValue(JSON.stringify(edit.nodeId));
         tool.inputs.propKey.setValue(edit.propKey as unknown as string);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "removeEntry": {
         const tool = new RemoveEntryOp();
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.index.setValue(edit.index);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "addBoundary": {
@@ -500,7 +506,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.dir.setValue(edit.dir);
         tool.inputs.key.setValue(edit.key);
         tool.inputs.socketType.setValue(edit.socketType);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
       case "removeBoundary": {
@@ -508,7 +514,7 @@ export class ToolOpDelegate implements NodeGraphDelegate {
         tool.inputs.graphPath.setValue(edit.graphPath);
         tool.inputs.dir.setValue(edit.dir);
         tool.inputs.key.setValue(edit.key);
-        this.execTool(ctx, tool);
+        await this.execTool(ctx, tool);
         break;
       }
     }

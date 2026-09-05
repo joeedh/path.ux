@@ -1,4 +1,4 @@
-import { ToolOp, UndoFlags } from "../../path-controller/toolsys/toolsys";
+import { ToolOp, UndoFlags } from "../../path-controller/toolsys/toolop";
 import type { ContextLike } from "../../path-controller/controller/controller_abstract";
 import { Vector2 } from "../../path-controller/util/vectormath";
 import { IContextBase } from "../../core/context_base";
@@ -124,7 +124,8 @@ export class NodeMoveModalOp<CTX extends IContextBase = IContextBase> extends To
 
     if (lead !== undefined) {
       if (moves.length > 0) {
-        lead.onMoveCommit?.(moves);
+        // enqueued before modalEnd below, which is what frees the toolstack for it
+        void lead.onMoveCommit?.(moves);
       } else {
         lead.onMoveClick?.(lead);
       }
@@ -298,7 +299,8 @@ export class LinkDragModalOp<CTX extends IContextBase = IContextBase> extends To
     const view = this._view;
     this._view = undefined;
     if (view !== undefined) {
-      view.linkDrag.drop(localPoint(view, e));
+      // queued before modalEnd, which is what lets the commit take the freed toolstack
+      void view.linkDrag.drop(localPoint(view, e));
     }
     this.modalEnd(false);
   }
