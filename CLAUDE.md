@@ -488,6 +488,23 @@ class Tool2 extends Tool1<{
 }
 ```
 
+### Registration and registries
+
+`ToolOp.register` / `unregister` / `isRegistered` act on a **default registry**, and the
+module exports `ToolClasses`, `ToolPaths`, `MacroClasses` and `SavedToolDefaults` are that
+registry's own tables by identity — writing to one writes to `defaultRegistry`.
+
+A subsystem that needs its own tool namespace builds a `ToolRegistry` and assigns it to
+`api.registry`; everything reached through `ctx.api` then resolves against it. Because a
+`ToolOp` constructor has no ctx, `register` also stamps the registry on the class, and
+subclasses inherit that through the static prototype chain.
+
+**nstructjs registers by class name globally, and saved files in consumer projects depend on
+those names.** Registries are a runtime concept; struct names are never namespaced by one.
+
+Full write-up, including the toolpath-prefix caveat:
+[documentation/toolsystem.md](documentation/toolsystem.md) § Registration.
+
 ### Modal drag gestures
 
 Editors and widgets do not implement modal dragging behaviours themselves —

@@ -24,6 +24,6 @@ task 0.
 documentation/plans/datapath-set-fold.md.
 [ ]: bind tool defaults per DataAPI instead of per process, per
 documentation/plans/toolsys-tasks.md task 2.
-[ ]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
+[x]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
 module globals as its default instance, per
-documentation/plans/toolsys-tasks.md task 3.
+documentation/plans/tool-registry.md (task 3).

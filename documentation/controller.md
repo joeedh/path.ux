@@ -217,6 +217,13 @@ first struct (both classes share one `DataStruct`; this is what lets `SavedToolD
 re-register). A genuine collision between _different_ auto-derived structs logs a warning and
 keeps the first registration — pass an explicit name to disambiguate.
 
+Two consequences the tool system leans on. Each toolpath prefix under `ctx.toolDefaults` is
+mapped under the bare prefix, so two `ToolRegistry` instances holding `foo.a` and `foo.b`
+describe `foo` with one struct carrying both — their saved values stay separate. And a
+registry maps its own defaults cache **instance** rather than `ToolPropertyCache`, under a
+per-registry name, because that struct's shape comes from the tools the instance was filled
+with; keying it on the class would give every registry one struct to clear.
+
 ## Update Notifications (subscribe / notify)
 
 The controller pushes change notifications to subscribers instead of relying on the UI

@@ -3,7 +3,7 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: stages 1-5 done, stage 6 not started. Revised once after a fresh-context pressure
+Status: all six stages done. Revised once after a fresh-context pressure
 test, which invalidated the first draft's census, its import-cycle fix, and its stage
 boundaries. See [Findings](#findings) for the disposition of each.
 
@@ -447,8 +447,10 @@ claim held.
 
 - A `registry` field defaulting to `defaultRegistry`; `parseToolPath`, `createTool`,
   `getToolDef`, `getToolPathHotkey` read it. Free functions stay as wrappers. ✓ — only
-  `parseToolPath`, `parseToolArgs` and `createTool` needed editing, because `getToolDef` and
-  `getToolPathHotkey` already route through `this.parseToolPath`.
+  `parseToolPath`, `parseToolArgs` and `createTool` needed editing. `getToolDef` already
+  routes through `this.parseToolPath`; `getToolPathHotkey` reaches no registry at all, since
+  it matches toolpath strings against the screen's keymaps. (Corrected in stage 6 — the
+  stage 4 write-up claimed both went through `parseToolPath`.)
 - `ctx.toolDefaults` reaches the registry's cache rather than the module global, at all three
   wiring sites. ✓ — `buildToolSysAPI`'s installed getter closes over the `api` it was handed;
   `simple/app.ts` and `example/core/context.ts` read `this.api.registry.defaults`.
@@ -543,10 +545,23 @@ the nstructjs pass too. Barrel unchanged, 588 keys.
 
 ### Stage 6 — document
 
-- `CLAUDE.md` gains a short registry section and the nstructjs constraint.
+**Done.**
+
+- `CLAUDE.md` gains a short registry section and the nstructjs constraint. ✓ — a
+  "Registration and registries" subsection under `## ToolOp`, pointing at the full write-up.
 - Wherever the tool system is written up, say the module exports are the default registry's
-  tables.
-- Tick `todos.md`, and correct `toolsys-tasks.md`'s claim that tasks 2 and 3 are independent.
+  tables. ✓ — `documentation/toolsystem.md` gains a Registration section: the four tables
+  and their identity with `defaultRegistry`, defaults keyed by toolpath, how to build a
+  second registry, the class stamp and its inheritance, and the two constraints (global
+  struct names, prefixes shared by name). `documentation/controller.md`'s struct-aliasing
+  note gains the two consequences the tool system leans on.
+- Tick `todos.md`, and correct `toolsys-tasks.md`'s claim that tasks 2 and 3 are
+  independent. ✓ — the independence claim had already been retracted there; what needed
+  fixing was the sentence after it, "Task 3 goes first and fixes it", since task 3 did not.
+  Task 2's sketch is rewritten around what is actually left, and task 3 is marked done.
+
+The example in `toolsystem.md` had `ToolOp.register(SomeTool)` inside the class body. Fixed
+in passing.
 
 ## Later, not here
 

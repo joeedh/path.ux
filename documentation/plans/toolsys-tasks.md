@@ -4,12 +4,17 @@ Four tasks in `scripts/path-controller/` and `scripts/core/`. Task 0 is a live r
 and blocks task 1. Tasks 2 and 3 were thought independent and are not: task 3's pressure
 test found that `DataAPI.mapStruct` keys its `DataStruct` on the class object, so a second
 `buildToolSysAPI` clears the first API's accessors. Task 3 cannot show a working second
-registry until that is fixed, and it is task 2's bug. Task 3 goes first and fixes it.
+registry until that is fixed, and it is task 2's bug. Task 3 goes first.
+
+**Task 3 did not fix it.** It routed the defaults binding around `mapStruct` instead — each
+registry maps its own cache instance under its own name — so a second registry works while
+`_map_structs` is untouched. Task 2 is therefore smaller than it was in one respect and
+unchanged in the other; see its section.
 
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: tasks 0 and 1 done. Tasks 2 and 3 sketched only.
+Status: tasks 0, 1 and 3 done. Task 2 sketched only.
 
 <!-- toc -->
 
@@ -88,24 +93,42 @@ Plan: [`datapath-set-fold.md`](datapath-set-fold.md), **done**.
 
 ## Task 2 — bind tool defaults per `DataAPI` instead of per process
 
-Sketch only.
+Sketch only. Rewritten after task 3 landed, which settled one of its questions and did one
+half of its fix.
 
-- `ToolPropertyCache._buildAccessors` (`toolsys/tooldefaults.ts:41`) assigns `this.api` and
-  `this.dstruct` on every call, so the last `buildToolSysAPI` wins. A second `DataAPI` in the
-  same process silently steals the binding from the first.
-- The knock-on: `ToolOp.register` calls `updateToolDefaults(cls)` with no arguments, which
-  falls back to `SavedToolDefaults.api` (`toolsys/toolsys.ts:39-45`), so a tool registered
-  after both builds gets accessors in the second API only.
-- Fix: one `ToolPropertyCache` per API binding rather than one per process. Either key the
-  cache's `api`/`dstruct` by API, or hold a cache per registry once task 3 lands.
-- Needs a decision the plan must settle: whether saved default _values_ are per-API (two
-  graph panes forget each other's last-used values) or shared (one value table, many
-  bindings). Shared is almost certainly right; the bug is in the binding, not the values.
-- Submodule only. No path.ux changes.
+Two things are still broken, and they are independent of each other.
+
+**The cache's api/dstruct fields are last-writer-wins.**
+
+- `ToolPropertyCache._buildAccessors` (`toolsys/tooldefaults.ts:42-43`) assigns `this.api`
+  and `this.dstruct` on every call, so the last `buildToolSysAPI` wins. Two `DataAPI`s
+  sharing one registry — which is what the desktop app does, both on `defaultRegistry` —
+  means the second silently takes the binding from the first.
+- The knock-on: `ToolOp.register` reaches `ToolRegistry.updateDefaults(cls)` with no
+  arguments, which falls back to those two fields (`toolsys/toolregistry.ts:167-172`), so a
+  tool registered after both builds gets accessors in the second API only.
+- `ToolPropertyCache.set`'s recovery path (`tooldefaults.ts:182`) rebuilds through the same
+  two fields, so a tool saving a default writes through whichever API built last.
+
+**`mapStruct` is still keyed on the class object, module-globally.** Two `DataAPI`s share
+one `DataStruct` for any model class either of them maps, and `_addClass` only pushes it
+onto the mapping API's `structs`. This is the bigger and riskier half: `resolvePath` leans
+on the global map covering for an API that never mapped a class, so making it per-API
+changes what `getStruct(cls)` answers. Nothing outside the defaults binding was fixed.
+
+**Settled by task 3, no longer open here:** saved default _values_ are shared, one
+`ToolPropertyCache` per registry. The question was whether they should be per-API (two graph
+panes forgetting each other's last-used values); they are not. The bug was in the binding,
+as the sketch guessed.
+
+**No longer needed:** "hold a cache per registry once task 3 lands" — that landed.
+
+Submodule only. No path.ux changes.
 
 ## Task 3 — a `ToolRegistry` object, with the module globals as its default instance
 
-Sketch only.
+Plan: [`tool-registry.md`](tool-registry.md), **done** in six stages. The sketch below is
+what it was planned from; the plan records where it turned out wrong.
 
 - Move `ToolClasses` (`toolsys/toolop.ts:79`), `ToolPaths` + `initToolPaths_run`
   (`toolsys/toolpath.ts:5`), `MacroClasses` + `macroidgen` (`toolsys/toolmacro.ts:9,24`) and
