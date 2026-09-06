@@ -9,8 +9,6 @@ const eslintConfig = await quickbuild.quickBundleModule("eslint/config", { forma
 const { defineConfig, globalIgnores } = eslintConfig;
 //import { defineConfig } from 'eslint/config';
 
-import eslintConfigPrettier from "eslint-config-prettier/flat";
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import validDatapath from "./buildtools/eslint-rules/valid-datapath.mjs";
 
 export default defineConfig([
@@ -101,18 +99,5 @@ export default defineConfig([
     // Build-tool CLIs run under Node, not the browser.
     files          : ["buildtools/**/*.mjs"],
     languageOptions: { globals: globals.node },
-  },
-  eslintConfigPrettier,
-  eslintPluginPrettierRecommended,
-  {
-    rules: {
-      "prettier/prettier": [
-        // we use our own forked prettier, we can't invoke it from eslint
-        "off",
-        {
-          usePrettierrc: true,
-        },
-      ],
-    },
   },
 ]);
