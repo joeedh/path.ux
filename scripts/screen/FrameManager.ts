@@ -113,6 +113,10 @@ export class Screen<
   snapLimit: number;
   fullScreen: boolean;
 
+  /**
+   * Global CSS script, is pasted into every UIBase-derived shadow root
+   * see UIBase._screenStyleTag
+   */
   globalCSS: HTMLStyleElement;
   _do_updateSize: boolean;
   _resize_callbacks: ((size: Vector2) => void)[];
