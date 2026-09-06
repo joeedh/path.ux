@@ -4,8 +4,8 @@ Task 2 of [`toolsys-tasks.md`](toolsys-tasks.md): "bind tool defaults per `DataA
 of per process". The census below reframes it — after task 3 landed, neither half of the
 sketch has a live symptom, and the two halves turn out not to be independent.
 
-Status: stages 1-3 done; stage 4 not planned, and the review that could have called for
-it did not. Revised once after a
+Status: stages 1-3 done. Stage 4 (position 3) is not planned here, but the review's case
+against it did not hold — see [Follow-ups](#follow-ups) for the corrected costs. Revised once after a
 fresh-context pressure test, which found a third `DataAPI` the first census missed, a
 pre-existing hole in the global map, and a second job the field stage 2 wanted to delete is
 doing. See [Findings](#findings).
@@ -337,9 +337,41 @@ Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module
   would not. Its own commit, since it touches every resolution path.
 - **Moving `_map_structs` / `_map_structs_by_name` onto `DataAPI` is position 3, not a follow-up
   to the `WeakMap`.** The two look adjacent and are not: one changes representation, the other
-  changes semantics. Both tables have to move together — object-keyed lookup would keep handing
-  out the shared struct otherwise — and that is the change this plan rejected on cost with no
-  live symptom to show for it. It wants its own pressure test.
+  changes semantics, and both tables have to move together, since object-keyed lookup would keep
+  handing out the shared struct otherwise. It still wants its own plan and its own pressure test.
+
+  **Corrected after review.** The three costs first written here were wrong, and two of them
+  argue the other way:
+
+  - *"Six sites resolve a class on whatever api they were handed."* They were handed the right
+    api. `nodeStructFor` (`graph/graph_api.ts:49-57`) is already written per-api —
+    `hasStruct(api)`, else map and run `defineAPI(api, st)` — and the global table **degrades**
+    it: a second api skips `defineAPI` because the first already mapped the class, then resolves
+    to the first's struct. Per-api tables need no change there at all.
+  - *"`getStructByName` is used for serialized type tags."* Two APIs registering a class run the
+    same code and so derive the same stable name; the lookup becomes api-relative, which is the
+    meaning a type tag wants.
+  - *"A custom struct getter has no api."* Pass one — `CLS_API_KEY_CUSTOM`'s callback takes an
+    api as a second argument, which existing callbacks ignore.
+
+  `DataPath.validStructs` also favours the change: it is baked in at define time and `copy()`
+  slices it, so per-api `defineAPI` runs give each api's paths that api's structs, where today a
+  struct built for one api is spliced into another's tree.
+
+  What actually costs something:
+
+  - **Bootstrap stops being optional.** Every api must run its `defineAPI` / `defineGraphApi` /
+    `buildToolSysAPI` before anything resolves through it. A half-initialized api silently
+    borrows another's structs today; after, `mapStruct(cls, false)` throws. A correct crash
+    replacing a silent wrong answer, but a new crash surface for a host that builds an api per
+    pane.
+  - **Structs multiply by api**, and `defineAPI` runs once per api per node class. Bounded by
+    class count and the objects are small; measure it on a pane-heavy layout.
+  - **Two pins flip**: `toolregistry_second.test.ts`'s fourth test and `perApiStructs.test.ts`'s
+    first. That is the point of the change, and also the honest measure of its reach.
+  - **Stage 5's workaround becomes dead weight.** `ToolRegistry.structName`, and mapping the
+    cache *instance* rather than `ToolPropertyCache`, exist only because the tables are global.
+    Fold their removal into the change rather than leaving them.
 
 ## Open questions
 
