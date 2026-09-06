@@ -194,7 +194,6 @@ export class UIBase<
   _has_own_tooltips: ToolTipState | undefined;
   _tooltip_timer: number | undefined;
   pathUndoGen!: number;
-  _lastPathUndoGen!: number;
   _useDataPathUndo: boolean | undefined;
   _active_animations!: Animator[];
   _screenStyleTag!: HTMLStyleElement;

@@ -29,11 +29,10 @@ class Ctx {
   }
 }
 
-/** The four members `setPathValueUndo` reads off the widget it is called on. */
+/** The members `setPathValueUndo` reads off the widget it is called on. */
 class FakeWidget {
   _id = 1;
   pathUndoGen = 0;
-  _lastPathUndoGen = 0;
   attrs: Record<string, string> = {};
 
   constructor(readonly ctx: Ctx) {}
@@ -186,7 +185,7 @@ describe("a drag folds into one undo entry", () => {
     expect(ctx.points[0].x).toBe(0);
   });
 
-  test("the snapshot is retaken every frame", async () => {
+  test("the snapshot is taken once per run rather than once per frame", async () => {
     const original = DataPathSetOp.prototype.undoPre;
     let calls = 0;
 
@@ -203,19 +202,18 @@ describe("a drag folds into one undo entry", () => {
       DataPathSetOp.prototype.undoPre = original;
     }
 
-    // Once on the push and once per redo. fullSaveUndo runs through the same
-    // method, so this is the count that costs; foldOrExec takes it to 1
-    expect(calls).toBe(5);
+    // fullSaveUndo runs through this same method, so this is the count that costs
+    expect(calls).toBe(1);
   });
 
-  test("a folded frame writes the model twice", async () => {
+  test("a folded frame writes the model once", async () => {
     await drag("points[0].x", 1);
     xChanges = [];
 
     await drag("points[0].x", 2);
 
-    // The head is undone back to the pre-drag value and then re-executed
-    expect(xChanges).toEqual([0, 2]);
+    // The undo that used to restore the model before each re-exec is gone
+    expect(xChanges).toEqual([2]);
   });
 });
 
@@ -258,17 +256,16 @@ describe("mass set", () => {
 });
 
 describe("flag properties", () => {
-  test("a flag drag never folds", async () => {
+  test("a flag drag folds the same way a float one does", async () => {
     await drag("points[0].flags[RED]", true);
     await drag("points[0].flags[BLUE]", true);
 
     expect(ctx.points[0].flags).toBe(PointFlags.RED | PointFlags.BLUE);
 
-    // create chops the subkey off the path before hashing while the widget hashes
-    // the unchopped one, so the two can never match; foldOrExec asks both sides
-    expect(ctx.toolstack.length).toBe(2);
+    // Both sides are now foldKey() on real ops, so the comparison is symmetric.
+    // The widget used to hash the unchopped path against create's chopped one
+    expect(ctx.toolstack.length).toBe(1);
 
-    await ctx.toolstack.undo();
     await ctx.toolstack.undo();
     expect(ctx.points[0].flags).toBe(0);
   });

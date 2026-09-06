@@ -9,7 +9,6 @@ import type {
   PathWatchCallback,
 } from "../../path-controller/controller/controller";
 import { ContextLike } from "../../path-controller/controller/controller_abstract";
-import type { DataPathSetOp } from "../../path-controller/controller/controller_ops";
 import * as toolprop from "../../path-controller/toolsys/toolprop";
 import { IntProperty, NumberConstraints, PropFlags } from "../../path-controller/toolsys/toolprop";
 import * as util from "../../path-controller/util/util";
@@ -27,39 +26,22 @@ export async function setPathValueUndo<CTX extends ContextLike = ContextLike>(
   elem.pathSocketUpdate(ctx, path);
 
   const mass_set_path = elem.getAttribute("mass_set_path");
-  const rdef = ctx.api.resolvePath(ctx, path)!;
-  const prop = rdef.prop!;
 
   if (ctx.api.getValue(ctx, path) === val) {
     return;
   }
 
-  const toolstack = elem.ctx.toolstack;
-  let head = await toolstack.head;
+  // The generation rides in the op's id, so undoBreakPoint ends a run by changing
+  // the fold key, rather than by the widget remembering the last one it saw
+  const id = `${elem._id}:${elem.pathUndoGen}`;
+  const toolop = getDataPathToolOp().create(ctx, path, val, id, mass_set_path ?? undefined);
 
-  const bad =
-    head === undefined ||
-    !(head instanceof getDataPathToolOp()) ||
-    head!.hashThis() !== head!.hash(mass_set_path, path, prop.type, elem._id) ||
-    elem.pathUndoGen !== elem._lastPathUndoGen;
-
-  if (!bad) {
-    await toolstack.undo(ctx);
-    const tool = head as InstanceType<ReturnType<typeof getDataPathToolOp>>;
-    tool.setValue(ctx, val, rdef.obj);
-    await toolstack.redo(ctx);
-  } else {
-    elem._lastPathUndoGen = elem.pathUndoGen;
-
-    const toolop = getDataPathToolOp().create(ctx, path, val, elem._id, mass_set_path ?? undefined);
-
-    /* getDataPathToolOp.create can return false in case of no-op paths. */
-    if (!toolop) {
-      return;
-    }
-
-    await ctx.toolstack.execTool(elem.ctx, toolop);
+  /* getDataPathToolOp.create can return false in case of no-op paths. */
+  if (!toolop) {
+    return;
   }
+
+  await elem.ctx.toolstack.foldOrExec(elem.ctx, toolop);
 }
 
 export function loadNumConstraints<CTX extends ContextLike = ContextLike>(

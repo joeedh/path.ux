@@ -33,7 +33,6 @@ export function initUIBase(elem: AnyUIBase): void {
   elem._tooltip_timer = util.time_ms();
 
   elem.pathUndoGen = 0;
-  elem._lastPathUndoGen = 0;
   elem._useDataPathUndo = undefined;
 
   elem._active_animations = [];
