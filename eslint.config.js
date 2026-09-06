@@ -13,7 +13,12 @@ import validDatapath from "./buildtools/eslint-rules/valid-datapath.mjs";
 
 export default defineConfig([
   globalIgnores([
-    //
+    "index.d.ts",
+    "pathux.d.ts",
+    "pathux.js",
+    "pathux_with_docbrowser.js",
+    //old rollup config files
+    "rollup*.js",
     "scripts/path-controller/util/*.js",
     "**tinymce**",
     "**/node_modules/**",

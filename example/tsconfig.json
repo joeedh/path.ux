@@ -17,6 +17,6 @@
     "lib"               : ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
     "types"             : []
   },
-  "include"        : ["**/*.ts", "**/*.tsx"],
+  "include"        : ["**/*.ts", "**/*.tsx", "icogen.cjs", "electron_app.cjs"],
   "exclude"        : ["node_modules", "lib/**"]
 }
