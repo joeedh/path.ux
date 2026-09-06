@@ -8,7 +8,7 @@ cost. That rejection was reviewed and did not survive: three of its four stated 
 wrong, and two argued the other way. See that plan's
 [Follow-ups](per-api-structs.md#follow-ups) for the correction, which this plan continues.
 
-Status: **stages 1-3 done**, stage 4 not started. Pressure-tested once, by a fresh-context agent, and revised
+Status: **done**, all four stages. Pressure-tested once, by a fresh-context agent, and revised
 substantially. One blocking finding removed a stage; a second was downgraded to a one-line
 fix on review. See [What the pressure test changed](#what-the-pressure-test-changed).
 
@@ -228,6 +228,25 @@ Original bullets:
 **`ToolRegistry.structName` does not revert here, or anywhere in this plan.** See F2.
 
 ### Stage 4 — document, regenerate, measure
+
+**Done.**
+
+- `documentation/controller.md` § Who Owns a DataStruct rewritten to *a `DataAPI` owns every
+  struct it maps*, with the two call-site consequences: each api declares what it will resolve,
+  and `getStructByName` answers for the api you ask. The name-lookup section and the
+  tool-system paragraph were both retargeted — the latter now says the `structName` guard is
+  about two registries on **one** api, which is the case that survives.
+- `CLAUDE.md`'s short form rewritten to match.
+- `pnpm run gen:paths` re-run clean: 150 paths, 70 widget tags, 5 structs. (`generated/` is
+  gitignored here, so nothing to commit in this repo.)
+- **Measured, as a floor rather than the desktop figure.** One api over the 7 ops a bare
+  environment registers retains 17 structs, 49 `DataPath`s and 40 `ToolProperty` copies. A
+  desktop-shaped process registers roughly 29, so scale to about 70 structs, 200 `DataPath`s
+  and 165 property copies per api — order 10² KB per open pane, matching the estimate. A heap
+  snapshot of the running app is still worth taking; this is arithmetic, not a measurement of
+  the real thing.
+
+Original bullets:
 
 - Rewrite `documentation/controller.md` § Who Owns a DataStruct **and** `:244-255`, whose
   "false three ways" paragraph loses one of its three when the opt-out goes, **and**

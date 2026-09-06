@@ -147,15 +147,14 @@ controller overview: how model classes are wrapped (`DataAPI` / `DataStruct` /
 `DataPath`), how the UI references values by path, and how to look up structs by
 name (`getStructByName`).
 
-**A class mapped through the global registry has one `DataStruct` for the process; a
-`DataAPI` owns its root and its opt-outs.** `mapStruct` is an instance method but the
-mapping is not per-api — the struct is keyed by an id stamped on the class itself, so
-two APIs that map the same class get the same object. Before mutating a struct you got
-back, ask whether you created it or merely found it; `clear()` on a shared one silently
-empties another api's paths. `_addClass(cls, st, name, false)` is the opt-out, and it is
-the only per-api mapping there is. Full rule, including the three cases the broad
-phrasing gets wrong: [documentation/controller.md](documentation/controller.md) § Who
-Owns a DataStruct.
+**A `DataAPI` owns every struct it maps.** Two APIs that map the same class get one
+struct each and neither can reach the other's, so each api must run its own
+`defineGraphAPI` / `buildToolSysAPI` / `defineAPI` for everything it will resolve. An api
+that skips one gets a `DataPathError` naming the class, recorded on `lastResolveError`,
+and the path answers `undefined` — a bound widget disables rather than reading another
+api's data. `getStructByName` is per api for the same reason. Structs are shared only
+within one api, by passing a name it already registered. Full rule:
+[documentation/controller.md](documentation/controller.md) § Who Owns a DataStruct.
 
 See [documentation/container.md](documentation/container.md) for how `Container` binds those
 paths. Note: many pathux widgets will modify the data model through an undoable

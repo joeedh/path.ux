@@ -95,9 +95,12 @@ Plan: [`datapath-set-fold.md`](datapath-set-fold.md), **done**.
 
 Plan: [`per-api-structs.md`](per-api-structs.md), **done**, pressure-tested once. It
 recommends against the task as titled — see its Three positions section — and landed the two
-narrower positions instead: the registry now follows the APIs it was built against, and the
-`useGlobalRegistry` opt-out has per-api storage of its own. `_map_structs` is still keyed on
-the class, process-wide, deliberately. The sketch below is what it was planned from.
+narrower positions first: the registry follows the APIs it was built against, and the
+`useGlobalRegistry` opt-out got per-api storage. Its case against position 3 was then reviewed
+and did not survive, so the task **was** finished as titled, under
+[`per-api-struct-tables.md`](per-api-struct-tables.md): the struct tables are per `DataAPI`,
+and the opt-out is gone, having become the ordinary path. The sketch below is what it was
+planned from.
 
 Rewritten after task 3 landed, which settled one of its questions and did one half of its
 fix.

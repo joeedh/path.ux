@@ -190,7 +190,8 @@ if (st) {
 }
 ```
 
-It returns `undefined` for unknown names.
+It returns `undefined` for a name this api has not mapped. The lookup is per api — see
+[Who Owns a DataStruct](#who-owns-a-datastruct).
 
 **Which name?** Every struct is registered under the most stable name available, chosen in
 priority order (`resolveStructName`):
@@ -218,44 +219,47 @@ first struct (both classes share one `DataStruct`; this is what lets `SavedToolD
 re-register). A genuine collision between _different_ auto-derived structs logs a warning and
 keeps the first registration — pass an explicit name to disambiguate.
 
-Two consequences the tool system leans on. Each toolpath prefix under `ctx.toolDefaults` is
-mapped under the bare prefix, so two `ToolRegistry` instances holding `foo.a` and `foo.b`
-describe `foo` with one struct carrying both — their saved values stay separate. And a
-registry maps its own defaults cache **instance** rather than `ToolPropertyCache`, under a
-per-registry name, because that struct's shape comes from the tools the instance was filled
-with; keying it on the class would give every registry one struct to clear.
+Two consequences the tool system leans on, both about registries sharing **one api**. Each
+toolpath prefix under `ctx.toolDefaults` is mapped under the bare prefix, so two `ToolRegistry`
+instances on one api holding `foo.a` and `foo.b` describe `foo` with a single struct carrying
+both — their saved values stay separate. And a registry maps its own defaults cache
+**instance** rather than `ToolPropertyCache`, under a per-registry name, because that struct's
+shape comes from the tools the instance was filled with; keying it on the class would give two
+registries on one api a single struct, which `buildAPI`'s `clear()` then empties. `api.registry`
+is a mutable field, so that pairing is reachable and the guard stays.
 
 ## Who Owns a DataStruct
 
-**A class mapped through the global registry has one `DataStruct` for the process. A `DataAPI`
-owns its root and its opt-outs, and nothing else.**
+**A `DataAPI` owns every struct it maps.** Two APIs that both map `Foo` get one struct each,
+and neither can reach the other's.
 
-`mapStruct` is an instance method, so it reads as though each api gets its own mapping. It does
-not. The struct is keyed by an id stamped on the class itself, held in a module-level table, so
-two `DataAPI`s that both map `Foo` are handed the same object — the desktop shape of a shell api
-plus a per-pane api shares every struct below the two roots.
+Both tables behind that live on the api: `_structsByClass`, keyed on the class object, and
+`_structsByName`, keyed on the stable name `resolveStructName` derives. `api.structs` lists
+every struct the api has mapped, in creation order.
 
-The practical question at a call site is *did I create this struct, or did I just find it?* If
-you did not pass a name nobody else uses, you found it, and destructive edits — `clear()` above
-all — reach every api that can see it. `ToolRegistry` maps its defaults cache **instance** under
-a per-registry name for exactly this reason: keyed on `ToolPropertyCache`, one registry's
-`buildAPI` wiped another's accessors.
+Two consequences at a call site:
 
-Say it narrowly, because the broad version ("one `DataStruct` per class per process") is false
-three ways:
+- **Each api must declare what it will resolve.** `defineGraphAPI(api)`, `buildToolSysAPI(api,
+  …)`, an app's own `defineAPI` — each api runs its own. An api that skips one resolves nothing
+  through the classes it missed: `mapStruct(cls, false)`, which is what `getStruct` is, throws
+  a `DataPathError` naming the class, `resolvePath` records it on `lastResolveError`, and the
+  path answers `undefined`. A widget bound to it disables rather than reading someone else's
+  data.
+- **`getStructByName` answers for the api you ask.** Two APIs mapping one class derive the same
+  name and get different structs, so the name is meaningful only alongside an api. It still
+  survives bundler mangling, which is what it is for — see the priority order above.
 
-- `_addClass(cls, st, name, false)` opts out. That struct lives in the api's own `_localStructs`,
-  is invisible to every other api, and leaves no mark on the class — `theme_editor.ts` uses it
-  for the throwaway api it caches per theme-object class.
-- Explicit-name aliasing maps many classes onto one struct, deliberately (see above).
-- `inheritStruct` `copy()`s the parent, so parent and child are separate objects.
+`mapStruct` still shares a struct **within** one api when you ask it to: passing a name that api
+has already registered returns the existing struct rather than building a second. That is the
+aliasing described above, and it is the one route by which a struct has more than one owner.
+`inheritStruct` is not — it `copy()`s the parent, so parent and child are separate objects.
 
-The narrow rule survives all three: an opt-out is by definition not *through the global
-registry*; aliasing is still one struct per registered **name**, which is what the registry is
-keyed on; and `inheritStruct` registers its copy as the child's own global entry.
-
-`api.structs` lists the structs **that api created**, not what it can reach, so it is a
-debugging aid rather than an index — the second api to map a shared class does not list it.
+Structs are not shared **between** APIs at all, deliberately. Until
+[`plans/per-api-struct-tables.md`](plans/per-api-struct-tables.md) they were, through
+module-level tables, and the sharing was a hazard rather than a feature: `clear()` on a struct
+an api believed it owned emptied another's paths, which is why `ToolRegistry` still maps its
+defaults cache **instance** under a per-registry name rather than keying on `ToolPropertyCache`.
+That guard is kept, because two registries can still be pointed at one api.
 
 ## Update Notifications (subscribe / notify)
 

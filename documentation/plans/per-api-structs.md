@@ -338,7 +338,9 @@ Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module
 - **Moving `_map_structs` / `_map_structs_by_name` onto `DataAPI` is position 3, not a follow-up
   to the `WeakMap`.** The two look adjacent and are not: one changes representation, the other
   changes semantics, and both tables have to move together, since object-keyed lookup would keep
-  handing out the shared struct otherwise. It still wants its own plan and its own pressure test.
+  handing out the shared struct otherwise. **Done**, under
+  [`per-api-struct-tables.md`](per-api-struct-tables.md), pressure-tested separately as
+  required.
 
   **Corrected after review.** The three costs first written here were wrong, and two of them
   argue the other way:
