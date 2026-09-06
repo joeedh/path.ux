@@ -8,7 +8,7 @@ cost. That rejection was reviewed and did not survive: three of its four stated 
 wrong, and two argued the other way. See that plan's
 [Follow-ups](per-api-structs.md#follow-ups) for the correction, which this plan continues.
 
-Status: **not started.** Pressure-tested once, by a fresh-context agent, and revised
+Status: **stage 1 done**, stages 2-4 not started. Pressure-tested once, by a fresh-context agent, and revised
 substantially. One blocking finding removed a stage; a second was downgraded to a one-line
 fix on review. See [What the pressure test changed](#what-the-pressure-test-changed).
 
@@ -133,6 +133,18 @@ The first draft carried three claims marked unverified. All three are now settle
 One green commit pair per stage: submodule first, then the parent's gitlink.
 
 ### Stage 1 — make the failure legible
+
+**Done.** `pnpm typecheck` clean on both passes, `pnpm test` green at 47 files / 473 tests,
+barrel unchanged at 588 keys.
+
+- `mapStruct` now throws `DataPathError` (`controller.ts:889`). One line; `resolvePath`'s
+  control flow is untouched.
+- `tests/perApiStructs.test.ts` gains the `lastResolveError` test, routed through
+  `dynamicStruct` so it reaches `mapStruct(cls, false)` at `controller.ts:1253` rather than
+  dying earlier on a missing member. Reverting to a plain `Error` fails it.
+- ...and the graph pin: two APIs calling `defineGraphAPI` get **one** struct, the second
+  early-returning before declaring anything, with only the first api's `structs` listing it.
+- Nothing else in the suite needed editing.
 
 Was "pin the bootstrap crash". The pins mostly already exist, and the crash is correctly not a
 crash.
