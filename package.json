@@ -28,7 +28,8 @@
     "cdp": "node buildtools/cdp.mjs",
     "playwright": "npx playwright test",
     "eslint": "node node_modules/eslint/bin/eslint.js --config eslint.config.js --cache --cache-location .eslintcache",
-    "eslint:clean-cache": "rm .eslintcache"
+    "eslint:clean-cache": "rm .eslintcache",
+    "lint:prose": "node node_modules/comment-lint/bin/commentlint.js --concise"
   },
   "directories": {
     "doc": "documentation"
@@ -36,11 +37,12 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@pathtx/prettier": "3.3.10-dev",
+    "@pathtx/prettier": "3.10.0-dev",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
     "@types/parse5": "^7.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260406.1",
+    "comment-lint": "^0.5.0",
     "diff": "^5.2.2",
     "electron": "^43.0.0",
     "esbuild": "^0.28.0",
@@ -53,6 +55,7 @@
     "nstructjs": "^0.8.12",
     "nw": "0.112.0-sdk",
     "parse5": "6.0.0",
+    "path.ux": "link:",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
@@ -72,8 +75,12 @@
   "packageManager": "pnpm@10.30.3",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "electron",
-      "nw"
+      "comment-lint",
+      "esbuild",
+      "unrs-resolver"
+    ],
+    "ignoredBuiltDependencies": [
+      "esbuild"
     ]
   }
 }

@@ -19473,6 +19473,25 @@ var init_toolsys = __esm({
 });
 
 // scripts/path-controller/toolsys/toolop.ts
+async function runToolPhases(op, ctx, phases, onError) {
+  for (const phase of phases) {
+    try {
+      const result = op[phase](ctx);
+      if (result instanceof Promise) {
+        await result;
+      }
+    } catch (error2) {
+      if (onError) {
+        await onError(error2, phase);
+      }
+      throw error2;
+    }
+  }
+}
+function isFoldableToolOp(op) {
+  const candidate = op;
+  return typeof candidate?.foldKey === "function" && typeof candidate?.foldFrom === "function";
+}
 function setDefaultUndoHandlers(undoPre, undo) {
   if (!undoPre || !undo) {
     throw new Error("invalid parameters to setDefaultUndoHandlers");
@@ -19487,7 +19506,7 @@ async function toolopCanRunAsync(ctx, cls, toolop) {
   }
   return Promise.resolve(result);
 }
-var ToolClasses, ToolFlags, UndoFlags, InheritFlag2, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
+var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag2, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
 var init_toolop = __esm({
   "scripts/path-controller/toolsys/toolop.ts"() {
     "use strict";
@@ -19498,6 +19517,7 @@ var init_toolop = __esm({
     init_tooldefaults();
     init_toolsys();
     ToolClasses = [];
+    REDO_PHASES = ["undoPre", "execPre", "exec", "execPost"];
     ToolFlags = {
       PRIVATE: 1
     };
@@ -19916,15 +19936,22 @@ var init_toolop = __esm({
       undoPre(_ctx) {
         throw new Error("implement me!");
       }
+      /**
+       * Called when a lifecycle step threw, before the toolstack drops this op and
+       * restores the branch it replaced. Reverse a partial effect here if reversing is
+       * safe — the stack never calls `undo` on its own, because whether that is correct
+       * depends on the op and on which step failed. A throw from here is reported and
+       * discarded, so the original error still reaches the caller.
+       */
+      onExecError(_ctx, _error, _phase) {
+      }
       undo(_ctx) {
         throw new Error("implement me!");
       }
+      /** Returns the promise, so a caller can wait on an async phase and see it throw. */
       redo(ctx) {
         this._was_redo = true;
-        this.undoPre(ctx);
-        this.execPre(ctx);
-        this.exec(ctx);
-        this.execPost(ctx);
+        return runToolPhases(this, ctx, REDO_PHASES);
       }
       //for compatibility with fairmotion
       exec_pre(ctx) {
@@ -23429,14 +23456,12 @@ var init_controller_ops = __esm({
     DataPathSetOp = class _DataPathSetOp extends ToolOp {
       propType;
       _undo;
-      hadError;
       id;
       __ctx;
       constructor() {
         super();
         this.propType = -1;
         this._undo = void 0;
-        this.hadError = false;
       }
       setValue(ctx, val, object) {
         var _stack = [];
@@ -23458,13 +23483,7 @@ var init_controller_ops = __esm({
           execCtx.dataref = object;
           execCtx.ctx = ctx;
           execCtx.datapath = path;
-          try {
-            prop.setValue(val);
-            this.hadError = false;
-          } catch (_error2) {
-            console.error("Error setting datapath", path);
-            this.hadError = true;
-          }
+          prop.setValue(val);
         } catch (_) {
           var _error = _, _hasError = true;
         } finally {
@@ -23551,6 +23570,48 @@ var init_controller_ops = __esm({
           this.id
         );
       }
+      foldKey() {
+        return this.hashThis();
+      }
+      foldFrom(next, ctx) {
+        const opCtx = this.__ctx ?? ctx;
+        const apply = () => {
+          this.inputs.prop.setValue(next.inputs.prop.getValue());
+          this.inputs.flagBit.setValue(next.inputs.flagBit.getValue());
+          this.inputs.useFlagBit.setValue(next.inputs.useFlagBit.getValue());
+          this.exec(opCtx);
+        };
+        const extended = this.extendUndo(opCtx);
+        return extended instanceof Promise ? extended.then(apply) : apply();
+      }
+      /**
+       * Snapshots mass-set paths that were not in the set when `undoPre` ran, so a
+       * fold can keep that snapshot instead of retaking it.
+       *
+       * The filter re-evaluates every frame, so an object entering the selection
+       * mid-drag gets written by `exec` and would otherwise have nothing to restore.
+       * Existing entries are never overwritten — they hold the pre-drag values.
+       */
+      extendUndo(ctx) {
+        const undo = this._undo;
+        if (undo === void 0 || this.inputs.fullSaveUndo.getValue()) {
+          return;
+        }
+        const massSetPath = this.inputs.massSetPath.getValue().trim();
+        if (!massSetPath) {
+          return;
+        }
+        for (const path of ctx.api.resolveMassSetPaths(ctx, massSetPath)) {
+          if (path in undo) {
+            continue;
+          }
+          let val = ctx.api.getValue(ctx, path);
+          if (typeof val === "object" && val !== null) {
+            val = val.copy();
+          }
+          undo[path] = val;
+        }
+      }
       undoPre(ctx) {
         if (this.inputs.fullSaveUndo.getValue()) {
           return super.undoPre(ctx);
@@ -23627,15 +23688,7 @@ var init_controller_ops = __esm({
         }
         const path = this.inputs.dataPath.getValue();
         const massSetPath = this.inputs.massSetPath.getValue().trim();
-        try {
-          ctx.api.setValue(ctx, path, this.inputs.prop.getValue());
-          this.hadError = false;
-        } catch (error2) {
-          console.log(error2.stack);
-          console.log(error2.message);
-          console.log("error setting " + path);
-          this.hadError = true;
-        }
+        ctx.api.setValue(ctx, path, this.inputs.prop.getValue());
         if (massSetPath) {
           let value = this.inputs.prop.getValue();
           const useFlagBit = this.inputs.useFlagBit.getValue();
@@ -23643,14 +23696,7 @@ var init_controller_ops = __esm({
             const bit = this.inputs.flagBit.getValue();
             value = !!(value & bit);
           }
-          try {
-            ctx.api.massSetProp(ctx, massSetPath, value);
-          } catch (error2) {
-            console.log(error2.stack);
-            console.log(error2.message);
-            console.log("error setting " + path);
-            this.hadError = true;
-          }
+          ctx.api.massSetProp(ctx, massSetPath, value);
         }
       }
       modalStart(ctx) {
@@ -23664,8 +23710,11 @@ var init_controller_ops = __esm({
         }
         this.__ctx = ctx.toLocked ? ctx.toLocked() : ctx;
         const result = super.modalStart(this.__ctx);
-        this.exec(this.__ctx);
-        this.modalEnd(false);
+        try {
+          this.exec(this.__ctx);
+        } finally {
+          this.modalEnd(false);
+        }
         return result;
       }
       static tooldef() {
@@ -25462,7 +25511,7 @@ var init_toolstack = __esm({
         this.splice(0, 0, tool);
       }
       get head() {
-        return this[this.cur];
+        return this.protect("toolstackHead", async () => this[this.cur]);
       }
       limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
         if (maxmem === void 0) {
@@ -25589,7 +25638,7 @@ var init_toolstack = __esm({
         return this.protect("execOrRedo", () => this._execOrRedo(ctx, tool, compareInputs));
       }
       async _execOrRedo(ctx, tool, compareInputs) {
-        const head = this.head;
+        const head = this[this.cur];
         const ok = compareInputs ? ToolOp.Equals(head, tool) : !!head && head.constructor === tool.constructor;
         tool.__memsize = void 0;
         if (ok) {
@@ -25597,11 +25646,11 @@ var init_toolstack = __esm({
             await this._rerun(head);
           } else {
             await this._undo();
-            await this._pushTool(ctx, tool);
+            await this._execTool(ctx, tool);
           }
           return false;
         } else {
-          await this._pushTool(ctx, tool);
+          await this._execTool(ctx, tool);
           return true;
         }
       }
@@ -25614,66 +25663,123 @@ var init_toolstack = __esm({
         return undoflag;
       }
       /**
-       * Pushes a tool onto the toolstack and returns a promise that resolves when
-       * the tool finishes. A modal tool resolves once it has taken the modal
-       * stack, not when the gesture ends.
+       * Runs `toolop`, or folds it into the head when the two are the same foldable
+       * class and their keys match. Returns true when a new entry was pushed.
        *
-       * The push waits for any operation already running, so tools queue rather
-       * than interleave.
-       **/
-      pushTool(ctx, toolop, event) {
-        return this.protect("pushTool", () => this._pushTool(ctx, toolop, event));
+       * The test and the write share one protected region, so nothing can move the
+       * head between them — which is why a gesture coalesces here rather than by
+       * reading `head` and driving `undo`/`redo` itself.
+       */
+      async foldOrExec(ctx, toolop) {
+        return this.protect("foldOrExec", async () => {
+          const head = this[this.cur];
+          const atHead = this.cur === this.length - 1;
+          if (atHead && head?.constructor === toolop.constructor && isFoldableToolOp(head) && isFoldableToolOp(toolop) && head.foldKey() === toolop.foldKey()) {
+            await asyncCheck2(head.foldFrom(toolop, ctx));
+            return false;
+          }
+          await this._execTool(ctx, toolop);
+          return true;
+        });
       }
-      async _pushTool(ctx, toolop, event) {
+      async execTool(ctx, toolop, event) {
+        return this.protect("execTool", () => {
+          return this._execTool(ctx, toolop, event);
+        });
+      }
+      async _execTool(ctx, toolop, event) {
+        if (!this.locked) {
+          throw new Error("_execTool ran outside a protected region");
+        }
         if (this.enforceMemLimit) {
           this.limitMemory(this.memLimit, ctx);
         }
         const undoflag = this.getUndoFlag(toolop);
-        if (!(undoflag & UndoFlags.NO_UNDO)) {
-          this.cur++;
+        const pushed = !(undoflag & UndoFlags.NO_UNDO);
+        if (pushed) {
           this._undo_branch = this.slice(this.cur + 1, this.length);
+          this.cur++;
           this[this.cur] = toolop;
           this.length = this.cur + 1;
         }
-        return await this._execToolTail(ctx, toolop, event);
-      }
-      async execTool(ctx, toolop, event) {
-        return await this.pushTool(ctx, toolop, event);
-      }
-      async _execToolTail(ctx, toolop, event) {
-        const undoflag = this.getUndoFlag(toolop);
         if (!("toLocked" in ctx)) {
           console.warn("warning: context does not support locking, could lead to undo errors");
         }
         const tctx = ctx.toLocked ? ctx.toLocked() : ctx;
         toolop.execCtx = tctx;
-        if (!(undoflag & UndoFlags.NO_UNDO)) {
-          await asyncCheck2(toolop.undoPre(tctx));
-        }
-        if (toolop.is_modal) {
-          toolop.modal_ctx = ctx;
-          this.modal_running = true;
-          toolop._on_cancel = (tool) => {
-            if (tool.undoflag & UndoFlags.NO_UNDO) {
-              return;
-            }
-            void this.protect("modalCancel", async () => {
-              await asyncCheck2(this[this.cur].undo(ctx));
-              this.pop_i(this.cur);
-              this.cur--;
-            });
-          };
-          if (event !== void 0) {
-            toolop._pointerId = event.pointerId;
+        try {
+          if (pushed) {
+            await this._runPhases(toolop, tctx, ["undoPre"]);
           }
-          const modal = toolop.modalStart(ctx);
-          const clear = () => this.modal_running = false;
-          modal.then(clear, clear);
-        } else {
-          await toolop.execPre(tctx);
-          await toolop.exec(tctx);
-          await toolop.execPost(tctx);
-          toolop.saveDefaultInputs();
+          if (toolop.is_modal) {
+            toolop.modal_ctx = ctx;
+            this.modal_running = true;
+            const clear = () => this.modal_running = false;
+            toolop._on_cancel = (tool) => {
+              if (tool.undoflag & UndoFlags.NO_UNDO) {
+                return;
+              }
+              void this.protect("modalCancel", async () => {
+                await asyncCheck2(this[this.cur].undo(ctx));
+                this.pop_i(this.cur);
+                this.cur--;
+              });
+            };
+            if (event !== void 0) {
+              toolop._pointerId = event.pointerId;
+            }
+            try {
+              const modal = toolop.modalStart(ctx);
+              modal.then(clear, clear);
+            } catch (error2) {
+              clear();
+              await this._reportExecError(toolop, tctx, error2, "modalStart");
+              throw error2;
+            }
+          } else {
+            await this._runPhases(toolop, tctx, ["execPre", "exec", "execPost"]);
+            toolop.saveDefaultInputs();
+          }
+        } catch (error2) {
+          this._rollbackPush(pushed);
+          throw error2;
+        }
+      }
+      /**
+       * Runs lifecycle steps in order, reporting whichever one throws to the tool
+       * before rethrowing. Restoring the stack is left to the caller.
+       */
+      async _runPhases(toolop, ctx, phases) {
+        return runToolPhases(
+          toolop,
+          ctx,
+          phases,
+          (error2, phase) => this._reportExecError(toolop, ctx, error2, phase)
+        );
+      }
+      /**
+       * Hands a failed step to the tool. A throw from the handler is reported and
+       * dropped, so it cannot displace the error the caller is about to see.
+       */
+      async _reportExecError(toolop, ctx, error2, phase) {
+        try {
+          await asyncCheck2(toolop.onExecError(ctx, error2, phase));
+        } catch (hookError) {
+          print_stack2(hookError);
+          console.error("onExecError threw; reporting the error it was handed instead");
+        }
+      }
+      /** Drops the tool the current push added and restores the branch it displaced. */
+      _rollbackPush(pushed) {
+        if (!pushed) {
+          return;
+        }
+        this.pop_i(this.cur);
+        this.cur--;
+        if (this._undo_branch !== void 0) {
+          for (const item of this._undo_branch) {
+            this.push(item);
+          }
         }
       }
       async toolCancel(ctx, tool) {
@@ -25704,7 +25810,7 @@ var init_toolstack = __esm({
         }
         if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
           const tool = this[this.cur];
-          await asyncCheck2(tool.undo(tool.execCtx));
+          await this._runPhases(tool, tool.execCtx, ["undo"]);
           this.cur--;
         }
       }
@@ -25721,13 +25827,15 @@ var init_toolstack = __esm({
           if (!tool.execCtx) {
             tool.execCtx = this.ctx;
           }
-          await asyncCheck2(tool.undo(tool.execCtx));
+          await this._runPhases(tool, tool.execCtx, ["undo"]);
           tool._was_redo = true;
-          let p;
-          await asyncCheck2(tool.undoPre(tool.execCtx));
-          await asyncCheck2(tool.execPre(tool.execCtx));
-          await asyncCheck2(tool.exec(tool.execCtx));
-          await asyncCheck2(tool.execPost(tool.execCtx));
+          try {
+            await this._runPhases(tool, tool.execCtx, ["undoPre", "execPre", "exec", "execPost"]);
+          } catch (error2) {
+            this.pop_i(this.cur);
+            this.cur--;
+            throw error2;
+          }
         } else {
           console.warn("Tool wasn't at head of stack", tool);
         }
@@ -25746,7 +25854,12 @@ var init_toolstack = __esm({
             tool.execCtx = this.ctx;
           }
           tool._was_redo = true;
-          await asyncCheck2(tool.redo(tool.execCtx));
+          try {
+            await this._runPhases(tool, tool.execCtx, ["redo"]);
+          } catch (error2) {
+            this.cur--;
+            throw error2;
+          }
           tool.saveDefaultInputs();
         }
       }
@@ -25782,44 +25895,36 @@ var init_toolstack = __esm({
       }
       async _replay(cb, onStep, rewind = () => this._rewind()) {
         await rewind();
-        let last = this.cur;
         const start = time_ms();
-        return new Promise((accept, reject) => {
-          const next = async () => {
-            last = this.cur;
-            if (cb && cb(this.ctx) === false) {
-              accept(void 0);
-              return;
+        for (; ; ) {
+          const last = this.cur;
+          if (cb && cb(this.ctx) === false) {
+            return void 0;
+          }
+          if (this.cur < this.length - 1) {
+            this.cur++;
+            const tool = this[this.cur];
+            if (!tool.execCtx) {
+              tool.execCtx = this.ctx;
             }
-            if (this.cur < this.length - 1) {
-              this.cur++;
-              const tool = this[this.cur];
-              if (!tool.execCtx) {
-                tool.execCtx = this.ctx;
-              }
-              await tool.undoPre(tool.execCtx);
-              await tool.execPre(tool.execCtx);
-              await tool.exec(tool.execCtx);
-              await tool.execPost(tool.execCtx);
+            try {
+              await this._runPhases(tool, tool.execCtx, ["undoPre", "execPre", "exec", "execPost"]);
+            } catch (error2) {
+              this.cur--;
+              throw error2;
             }
-            if (last === this.cur) {
-              console.warn("time:", (time_ms() - start) / 1e3);
-              accept(this);
-            } else {
-              const ret = onStep ? onStep() : true;
-              if (ret && ret instanceof Promise) {
-                ret.then(async () => {
-                  await next();
-                });
-              } else {
-                window.setTimeout(() => {
-                  next();
-                });
-              }
-            }
-          };
-          next();
-        });
+          }
+          if (last === this.cur) {
+            console.warn("time:", (time_ms() - start) / 1e3);
+            return this;
+          }
+          const ret = onStep ? onStep() : true;
+          if (ret instanceof Promise) {
+            await ret;
+          } else {
+            await new Promise((accept) => window.setTimeout(accept));
+          }
+        }
       }
       loadSTRUCT(reader) {
         reader(this);
@@ -26270,20 +26375,11 @@ var init_controller_abstract = __esm({
       execOrRedo(ctx, toolop, compareInputs = false) {
         return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
       }
-      execToolAsync(ctx, path, inputs, unused, event) {
-        return this.execToolImpl(ctx, path, inputs, unused, event, true);
-      }
       /**
-       *  Unlike toolstack.execTool, this resolves before the tool is run
-       *  so the client can modify the class first.  Use execToolAsync
-       *  if you need to wait for the tool to execute.
-       *
-       *  Note: this will not wait for fully modal tools to complete.
+       *  Note: modal tools resolve on aquiring the modal stack,
+       *  not tool modal end.
        */
-      execTool(ctx, path, inputs, unused, event) {
-        return this.execToolImpl(ctx, path, inputs, unused, event, false);
-      }
-      execToolImpl(ctx, path, inputs, unused, event, resolveBeforeRun = true) {
+      execTool(ctx, path, inputs, unused, event, resolveBeforeRun = false) {
         return new Promise((accept, reject) => {
           let tool = path;
           try {
@@ -27797,34 +27893,18 @@ An example of a more complicated expression might be:
 });
 
 // scripts/core/base/ui_base_datapath.ts
-function setPathValueUndo(elem, ctx, path, val) {
+async function setPathValueUndo(elem, ctx, path, val) {
   elem.pathSocketUpdate(ctx, path);
   const mass_set_path = elem.getAttribute("mass_set_path");
-  const rdef = ctx.api.resolvePath(ctx, path);
-  const prop = rdef.prop;
   if (ctx.api.getValue(ctx, path) === val) {
     return;
   }
-  const toolstack = elem.ctx.toolstack;
-  let head = toolstack.head;
-  const bad = head === void 0 || !(head instanceof getDataPathToolOp()) || head.hashThis() !== head.hash(mass_set_path, path, prop.type, elem._id) || elem.pathUndoGen !== elem._lastPathUndoGen;
-  if (!bad) {
-    toolstack.undo(ctx);
-    const tool = head;
-    tool.setValue(ctx, val, rdef.obj);
-    toolstack.redo(ctx);
-  } else {
-    elem._lastPathUndoGen = elem.pathUndoGen;
-    const toolop = getDataPathToolOp().create(ctx, path, val, elem._id, mass_set_path ?? void 0);
-    if (!toolop) {
-      return;
-    }
-    ctx.toolstack.pushTool(elem.ctx, toolop);
-    head = toolstack.head;
+  const id = `${elem._id}:${elem.pathUndoGen}`;
+  const toolop = getDataPathToolOp().create(ctx, path, val, id, mass_set_path ?? void 0);
+  if (!toolop) {
+    return;
   }
-  if (!head || head.hadError) {
-    throw new Error("toolpath error");
-  }
+  await elem.ctx.toolstack.foldOrExec(elem.ctx, toolop);
 }
 function loadNumConstraints(elem, prop, dom = elem, onModifiedCallback) {
   let modified = false;
@@ -27922,17 +28002,15 @@ function setPathValue(elem, ctx, path, val) {
   elem.pathSocketUpdate(ctx, path);
   if (elem.useDataPathUndo) {
     elem.pushReportContext(elem._reportCtxName);
-    try {
-      elem.setPathValueUndo(ctx, path, val);
-    } catch (error2) {
-      elem.popReportContext();
-      if (!(error2 instanceof DataPathError)) {
-        throw error2;
-      } else {
+    const running = elem.setPathValueUndo(ctx, path, val);
+    elem.popReportContext();
+    running.catch((error2) => {
+      if (error2 instanceof DataPathError) {
         return;
       }
-    }
-    elem.popReportContext();
+      print_stack2(error2);
+      console.error(`failed to set datapath "${path}"`);
+    });
     return;
   }
   elem.pushReportContext(elem._reportCtxName);
@@ -28028,6 +28106,7 @@ var init_ui_base_datapath = __esm({
     "use strict";
     init_controller();
     init_toolprop();
+    init_util();
   }
 });
 
@@ -32031,7 +32110,6 @@ function initUIBase(elem) {
   elem._has_own_tooltips = void 0;
   elem._tooltip_timer = time_ms();
   elem.pathUndoGen = 0;
-  elem._lastPathUndoGen = 0;
   elem._useDataPathUndo = void 0;
   elem._active_animations = [];
   elem._screenStyleTag = document.createElement("style");
@@ -32856,7 +32934,6 @@ var init_ui_base = __esm({
       _has_own_tooltips;
       _tooltip_timer;
       pathUndoGen;
-      _lastPathUndoGen;
       _useDataPathUndo;
       _active_animations;
       _screenStyleTag;
@@ -33418,9 +33495,10 @@ var init_ui_base = __esm({
       }
       undoBreakPoint() {
         this.pathUndoGen++;
+        this.parentWidget?.undoBreakPoint();
       }
       setPathValueUndo(ctx, path, val) {
-        setPathValueUndo(this, ctx, path, val);
+        return setPathValueUndo(this, ctx, path, val);
       }
       loadNumConstraints(prop, dom = this, onModifiedCallback) {
         loadNumConstraints(this, prop, dom, onModifiedCallback);
@@ -33690,6 +33768,25 @@ var init_ui_base = __esm({
         }
         return false;
       }
+      /*
+      getMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T | undefined {
+        const inherits = ctor.metaDefine().inherits ?? false;
+        let elem: UIBase | undefined = this;
+        do {
+          const meta = getMeta(elem, ctor);
+          if (meta) {
+            return meta;
+          }
+          elem = elem.parentWidget;
+        } while (elem && inherits);
+        return undefined;
+      }
+      setMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>, meta: T): void {
+        setMeta(this, ctor, meta);
+      }
+      ensureMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T {
+        return ensureMeta(this, ctor);
+      }*/
     };
     UIBase.PositionKey = "fixed";
     _setUIBase(UIBase);
@@ -73784,6 +73881,9 @@ var SatValField = class extends UIBase {
       }
     });
     this.canvas.addEventListener("mousedown", (e) => {
+      this.undoBreakPoint();
+      this.parentWidget?.undoBreakPoint();
+      this.parentWidget?.parentWidget?.undoBreakPoint();
       if (this.modalRunning) {
         return;
       }
@@ -73820,6 +73920,9 @@ var SatValField = class extends UIBase {
       this.pushModal(mouseHandlers);
     });
     this.canvas.addEventListener("touchstart", (e) => {
+      this.undoBreakPoint();
+      this.parentWidget?.undoBreakPoint();
+      this.parentWidget?.parentWidget?.undoBreakPoint();
       if (this.modalRunning) {
         return;
       }
@@ -74193,7 +74296,16 @@ var ColorPicker = class extends ColumnFrame {
     };
     let tab2 = tabs.tab("HSV");
     const makeSlider = (tabFrame, label, cb) => {
-      return tabFrame.slider(void 0, label, 0, 0, 1, 1e-3, false, true, cb);
+      return tabFrame.slider(void 0, {
+        name: label,
+        defaultval: 0,
+        min: 0,
+        max: 1,
+        step: 1e-3,
+        is_int: false,
+        do_redraw: true,
+        callback: cb
+      });
     };
     node.h = makeSlider(tab2, "Hue", (e) => {
       const hsva = node.hsva;
@@ -79090,14 +79202,15 @@ var LastToolPanel = class extends ColumnFrame {
     }
     const def = tool.constructor.tooldef();
     const panel = this.panel(def.uiname);
-    this.on_change = () => {
+    this.on_change = async () => {
       if (this.ignoreOnChange) {
         return;
       }
       if (tool.modalRunning) {
         return;
       }
-      if (tool === ctx.toolstack.head) {
+      const head = await ctx.toolstack.head;
+      if (tool === head) {
         this.ignoreOnChange = true;
         ctx.toolstack.rerun(tool);
         this.ignoreOnChange = false;
@@ -91258,6 +91371,7 @@ __export(controller_exports, {
   initSplineTemplates: () => initSplineTemplates,
   initToolPaths: () => initToolPaths,
   inrect_2d: () => inrect_2d,
+  isFoldableToolOp: () => isFoldableToolOp,
   isLeftClick: () => isLeftClick,
   isMouseDown: () => isMouseDown,
   isNum: () => isNum,
@@ -91307,6 +91421,7 @@ __export(controller_exports, {
   rgb_to_cmyk: () => rgb_to_cmyk,
   rgb_to_hsv: () => rgb_to_hsv,
   rot2d: () => rot2d,
+  runToolPhases: () => runToolPhases,
   setContextClass: () => setContextClass,
   setDataPathToolOp: () => setDataPathToolOp,
   setDefaultUndoHandlers: () => setDefaultUndoHandlers,
@@ -99375,6 +99490,7 @@ export {
   inv_sample,
   invertTheme,
   isDefinitionEdit,
+  isFoldableToolOp,
   isLeftClick,
   isMimeText,
   isMouseDown,
@@ -99466,6 +99582,7 @@ export {
   rgb_to_cmyk,
   rgb_to_hsv,
   rot2d,
+  runToolPhases,
   sample,
   saveFile,
   saveUIData,

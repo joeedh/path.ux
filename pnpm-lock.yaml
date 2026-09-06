@@ -12,8 +12,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.9.1)
       '@pathtx/prettier':
-        specifier: 3.3.0-dev
-        version: 3.3.0-dev
+        specifier: 3.10.0-dev
+        version: 3.10.0-dev
       '@playwright/test':
         specifier: ^1.59.1
         version: 1.62.1
@@ -26,6 +26,9 @@ importers:
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260406.1
         version: 7.0.0-dev.20260406.1
+      comment-lint:
+        specifier: ^0.5.0
+        version: 0.5.0
       diff:
         specifier: ^5.2.2
         version: 5.2.2
@@ -62,6 +65,9 @@ importers:
       parse5:
         specifier: 6.0.0
         version: 6.0.0
+      path.ux:
+        specifier: 'link:'
+        version: 'link:'
       typedoc:
         specifier: ^0.28.19
         version: 0.28.20(typescript@6.0.3)
@@ -436,8 +442,8 @@ packages:
   '@oxc-project/types@0.147.0':
     resolution: {integrity: sha512-IJ3s6ltHLp45S0bh7phkX+gJO7A1Wuz2EaqpAhb8WjqDwbzMiWKHhyyT42tskaWjEYXtHtVCPpnBJVT9+dcRLg==}
 
-  '@pathtx/prettier@3.3.0-dev':
-    resolution: {integrity: sha512-snpubo5nOKDvCJiMjSObgUDsAluXeIlQrmydavW6t6PKPDJftJRwRGeIzD5XthgS5Nf5TlaIlMjhz5P1o9ZGfg==}
+  '@pathtx/prettier@3.10.0-dev':
+    resolution: {integrity: sha512-mS6FeyQlhT72iTxYz656qhOTeBbE0ViE79yXsM9zJ13pRrY3IJkEvnubBs5NLE1kTZXE+1Z//k4EPJhV3zu4hA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -806,6 +812,11 @@ packages:
   commander@14.0.3:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
+
+  comment-lint@0.5.0:
+    resolution: {integrity: sha512-2ANrtJT6WhFo/tlo4MqbyL++hGlv+rELZHOCFN6T+YfI+hDpYKHpU6121w2VuH+o+lauoggocymgrGGvVIFiEQ==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -1967,7 +1978,7 @@ snapshots:
 
   '@oxc-project/types@0.147.0': {}
 
-  '@pathtx/prettier@3.3.0-dev': {}
+  '@pathtx/prettier@3.10.0-dev': {}
 
   '@pkgr/core@0.3.6': {}
 
@@ -2298,6 +2309,8 @@ snapshots:
   coffee-script@1.12.7: {}
 
   commander@14.0.3: {}
+
+  comment-lint@0.5.0: {}
 
   concat-stream@1.6.2:
     dependencies:
