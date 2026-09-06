@@ -9,8 +9,8 @@ wrong, and two argued the other way. See that plan's
 [Follow-ups](per-api-structs.md#follow-ups) for the correction, which this plan continues.
 
 Status: **not started.** Pressure-tested once, by a fresh-context agent, and revised
-substantially — two blocking findings, one of which removed a stage. See
-[What the pressure test changed](#what-the-pressure-test-changed).
+substantially. One blocking finding removed a stage; a second was downgraded to a one-line
+fix on review. See [What the pressure test changed](#what-the-pressure-test-changed).
 
 <!-- toc -->
 
@@ -90,12 +90,12 @@ by the pressure test.
 
 - **A half-initialized api stops resolving.** `mapStruct(cls, false)` — which is what
   `getStruct` is — throws for a class this api never mapped, where today it borrows whichever
-  api mapped first. **That throw does not reach the caller.** `resolvePath` catches everything
-  (`controller.ts:1057-1073`); a plain `Error` takes the `else` branch, prints a stack, calls
-  `report(...)`, and returns `undefined`. So the symptom is a console stack plus a silently
-  disabled widget, and `getValue` re-throws as `"invalid path <path>"`
-  (`controller_abstract.ts:427-429`) — a message that never names the missing struct. Stage 1
-  exists to fix that before anything else moves.
+  api mapped first. `resolvePath` swallowing that and returning `undefined`
+  (`controller.ts:1057-1073`) is correct and by design; an unresolvable path is not an
+  exception. What is wrong is that `mapStruct` throws a plain `Error`, and only a
+  `DataPathError` sets `lastResolveError` — so the one useful message goes to the console as a
+  stack rather than onto the field built to carry it. Stage 1 fixes that; the control flow
+  needs no change.
 - **`getStructByName` becomes api-relative.** Two APIs registering a class run the same code
   and derive the same stable name, so the lookup still resolves — to that api's struct. An api
   that never mapped the class answers `undefined` instead of finding a global entry.
@@ -134,21 +134,23 @@ One green commit pair per stage: submodule first, then the parent's gitlink.
 
 ### Stage 1 — make the failure legible
 
-Was "pin the bootstrap crash". The pins mostly already exist, and the crash is not a crash.
+Was "pin the bootstrap crash". The pins mostly already exist, and the crash is correctly not a
+crash.
 
-- **Make an unmapped class produce a diagnosable failure.** Either throw a `DataPathError`
-  carrying the class and api, so `resolvePath` records it on `lastResolveError` instead of
-  swallowing it, or give `DataAPI` an explicit "has this been initialized" check a host can
-  call at construction. The second is better if a host can meaningfully answer it; the first
-  is unconditional. Decide in the stage, having read `report()` and `lastResolveError`'s
-  consumers.
+- **`mapStruct`'s "class does not have a struct definition" becomes a `DataPathError`**
+  (`controller.ts:889`). `resolvePath` goes on returning `undefined`, which is the contract —
+  it only changes which branch of the catch runs, so the message lands on `lastResolveError`
+  and the console stops getting a stack that reads like an unhandled throw. No initialization
+  check, and no control-flow change: an unresolvable path is not an exception.
+- `perApiStructs.test.ts:115-118` matches on the message, so it holds; add the assertion that
+  `lastResolveError` names the class after a failed resolve.
 - **Add the one genuinely new pin**: a second api calling `defineGraphAPI` early-returns with
   the first api's struct today. Nothing covers that.
 - Do **not** re-pin what is already pinned: `perApiStructs.test.ts:84-85,105` (a second api
   resolves through the first's struct), `:115-118` (unmapped throws),
   `toolregistry_second.test.ts:161` (cross-api by-name sharing). Listing them here is what
   makes stage 2's "nothing else should need editing" checkable.
-- Cost to undo: free, except the diagnostic, which is an improvement on its own terms.
+- Cost to undo: free, and the diagnostic stands on its own terms.
 
 ### Stage 2 — move the tables
 
@@ -249,11 +251,14 @@ different objects; only the by-name struct identity at `:161` changes.
 
 Eleven findings, two blocking. The two that changed the plan's shape:
 
-- **F1 — the central "correct crash" is not a crash.** `resolvePath` wraps everything in a
-  catch-all (`controller.ts:1057-1073`), and `mapStruct` throws a plain `Error`, not a
-  `DataPathError` — so it prints a stack and returns `undefined`. A widget binding just goes
-  `internalDisabled`. "A correct crash replacing a silent wrong answer" was wrong, and what
-  was open question 1 became stage 1.
+- **F1 — the central "correct crash" is not a crash, but that half is by design.** The finding
+  was right that `resolvePath`'s catch-all (`controller.ts:1057-1073`) swallows `mapStruct`'s
+  throw and that "a correct crash replacing a silent wrong answer" was wrong. It was wrong to
+  treat the swallowing as the defect: returning `undefined` for an unresolvable path is the
+  contract, and `lastResolveError` exists to carry the message past it. The real defect is
+  one line — `mapStruct` throws a plain `Error`, and only a `DataPathError` sets that field.
+  Downgraded from blocking to the first bullet of stage 1; the proposed initialization check
+  was dropped.
 - **F2 — reverting `ToolRegistry.structName` would reintroduce the bug tool-registry stage 5
   fixed.** The revert is only safe if one registry ever builds against one api, and the tree
   neither enforces nor believes that: `api.registry` is a plain mutable public field
