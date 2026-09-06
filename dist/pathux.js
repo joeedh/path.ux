@@ -440,13 +440,12 @@ function equalIC(a2, b) {
   return a2 != null && a2.toLowerCase() === b?.toLowerCase();
 }
 function containsIC(array, value) {
-  let valueLC;
   let i;
   const len = array.length;
   if (!len || !value) {
     return false;
   }
-  valueLC = value.toLowerCase();
+  const valueLC = value.toLowerCase();
   for (i = 0; i < len; ++i) {
     if (valueLC === array[i].toLowerCase()) {
       return true;
@@ -723,7 +722,7 @@ var init_mobile_detect = __esm({
     };
     impl.detectMobileBrowsers = {
       fullPattern: /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i,
-      shortPattern: /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i,
+      shortPattern: /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw-(n|u)|c55\/|capi|ccwa|cdm-|cell|chtm|cldc|cmd-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc-s|devi|dica|dmob|do(c|p)o|ds(12|-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(-|_)|g1 u|g560|gene|gf-5|g-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd-(m|p|t)|hei-|hi(pt|ta)|hp( i|ip)|hs-c|ht(c(-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i-(20|go|ma)|i230|iac( |-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|-[a-w])|libw|lynx|m1-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|-([1-8]|c))|phil|pire|pl(ay|uc)|pn-2|po(ck|rt|se)|prox|psio|pt-g|qa-a|qc(07|12|21|32|60|-[2-7]|i-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h-|oo|p-)|sdk\/|se(c(-|0|1)|47|mc|nd|ri)|sgh-|shar|sie(-|m)|sk-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h-|v-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl-|tdg-|tel(i|m)|tim-|t-mo|to(pl|sh)|ts(70|m-|m3|m5)|tx-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas-|your|zeto|zte-/i,
       tabletPattern: /android|ipad|playbook|silk/i
     };
     hasOwnProp = Object.prototype.hasOwnProperty;
@@ -815,8 +814,7 @@ var init_mobile_detect = __esm({
       return version ? impl.prepareVersionNo(version) : NaN;
     };
     impl.prepareVersionNo = function(version) {
-      let numbers;
-      numbers = version.split(/[a-z._ \/\-]/i);
+      const numbers = version.split(/[a-z._ /-]/i);
       if (numbers.length === 1) {
         version = numbers[0];
       }
@@ -837,16 +835,14 @@ var init_mobile_detect = __esm({
       if (cache.mobile !== void 0) {
         return;
       }
-      let phone;
-      let tablet;
       let phoneSized;
-      tablet = impl.findMatch(impl.mobileDetectRules.tablets, userAgent);
+      const tablet = impl.findMatch(impl.mobileDetectRules.tablets, userAgent);
       if (tablet) {
         cache.mobile = cache.tablet = tablet;
         cache.phone = null;
         return;
       }
-      phone = impl.findMatch(impl.mobileDetectRules.phones, userAgent);
+      const phone = impl.findMatch(impl.mobileDetectRules.phones, userAgent);
       if (phone) {
         cache.mobile = cache.phone = phone;
         cache.tablet = null;
@@ -6710,7 +6706,7 @@ function decompress(data) {
 function undefinedForGC() {
   return void 0;
 }
-var f64tmp, u16tmp, colormap2, termColorMap2, MovingAvg, timers, mobileDetect, mobileDetectValue, lastUserAgent, SmartConsoleContext, SmartConsole, console2, EmptySlot, debug_cacherings, cachering2, SetIter, set, HashIter, _hash_null, hashtable, IDGenInternalIDGen, IDGen, MersenneRandom, _mt, smallstr_hashes, MAXINT, hashsizes, FTAKEN, FKEY, FVAL, FTOT, FastHash, ImageReader, digestcache, HashDigest, NullItem, MapIter, map, UndefinedTag, IDMap, HTOT, MinHeapQueue, Queue, ArrayPool, DivLogger, PendingTimeoutPromises, TimeoutPromise;
+var f64tmp, u16tmp, colormap2, termColorMap2, MovingAvg, timers, mobileDetect, mobileDetectValue, lastUserAgent, SmartConsoleContext, SmartConsole, console2, EmptySlot, debug_cacherings, cachering2, SetIter, set, HashIter, _hash_null, hashtable, IDGenInternalIDGen, IDGen, MersenneRandom, _mt, smallstr_hashes, MAXINT, hashsizes, FTAKEN, FKEY, FVAL, FTOT, FastHash, ImageReader, HashDigest, digestcache, NullItem, MapIter, map, UndefinedTag, IDMap, HTOT, MinHeapQueue, Queue, ArrayPool, DivLogger, PendingTimeoutPromises, TimeoutPromise;
 var init_util = __esm({
   "scripts/path-controller/util/util.ts"() {
     "use strict";
@@ -7186,7 +7182,7 @@ var init_util = __esm({
         for (let i = 0; i < this.items.length; i++) {
           const item = this.items[i];
           if (item === EmptySlot) continue;
-          thisvar !== void 0 ? func.call(thisvar, item) : func(item);
+          void (thisvar !== void 0 ? func.call(thisvar, item) : func(item));
         }
       }
     };
@@ -8401,7 +8397,7 @@ __export(vectormath_exports, {
   Vector4: () => Vector4
 });
 function createVector2(parent, structName) {
-  return class Vector27 extends parent {
+  return class Vector26 extends parent {
     0;
     1;
     [Symbol.iterator] = parent.prototype[Symbol.iterator];
@@ -8599,7 +8595,7 @@ function createVector2(parent, structName) {
       return d0 * d0 + d1 * d1;
     }
     copy() {
-      return new Vector27(this);
+      return new Vector26(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -8699,7 +8695,7 @@ function createVector2(parent, structName) {
   };
 }
 function createVector3(parent, structName) {
-  return class Vector37 extends parent {
+  return class Vector36 extends parent {
     0;
     1;
     2;
@@ -8941,7 +8937,7 @@ function createVector3(parent, structName) {
       return d0 * d0 + d1 * d1 + d2 * d2;
     }
     copy() {
-      return new Vector37(this);
+      return new Vector36(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -9066,7 +9062,7 @@ function createVector3(parent, structName) {
   };
 }
 function createVector4(parent, structName) {
-  return class Vector46 extends parent {
+  return class Vector45 extends parent {
     0;
     1;
     2;
@@ -9353,7 +9349,7 @@ function createVector4(parent, structName) {
       return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
     }
     copy() {
-      return new Vector46(this);
+      return new Vector45(this);
     }
     vectorLengthSqr() {
       return this.dot(this);
@@ -9480,7 +9476,7 @@ function createVector4(parent, structName) {
 function myclamp(f2, a2, b) {
   return Math.min(Math.max(f2, a2), b);
 }
-var vec_temp_mats, DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, lookat_cache_vs3, lookat_cache_vs4, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, internal_matrix, Matrix4;
+var DOT_NORM_SNAP_LIMIT, FLT_EPSILON, M_SQRT2, Vector2, Vector3, Vector4, _quat_vs3_temps, Quat, EulerOrders, internal_matrix, Matrix4, lookat_cache_vs3, lookat_cache_ms, euler_rotate_mats, makenormalcache, temp_mats, preMultTemp, vec_temp_mats;
 var init_vectormath = __esm({
   "scripts/path-controller/util/vectormath.ts"() {
     "use strict";
@@ -9912,11 +9908,11 @@ var init_vectormath = __esm({
         return this.copyColumnTo(i, new Array(4));
       }
       load(b) {
-        if (arguments.length === 1 && typeof arguments[0] === "object") {
+        if (b !== void 0 && typeof b === "object") {
           let matrix;
-          if (arguments[0] instanceof _Matrix4) {
-            matrix = arguments[0].$matrix;
-            this.isPersp = arguments[0].isPersp;
+          if (b instanceof _Matrix4) {
+            matrix = b.$matrix;
+            this.isPersp = b.isPersp;
             this.$matrix.m11 = matrix.m11;
             this.$matrix.m12 = matrix.m12;
             this.$matrix.m13 = matrix.m13;
@@ -9934,7 +9930,7 @@ var init_vectormath = __esm({
             this.$matrix.m43 = matrix.m43;
             this.$matrix.m44 = matrix.m44;
             return this;
-          } else matrix = arguments[0];
+          } else matrix = b;
           if ("length" in matrix && matrix.length >= 16) {
             this.$matrix.m11 = matrix[0];
             this.$matrix.m12 = matrix[1];
@@ -10351,7 +10347,7 @@ var init_vectormath = __esm({
       rotate(angle, _x, _y, _z) {
         let x = 0;
         let y = 0;
-        let z = 0;
+        let z;
         if (typeof _x === "object" && _x !== null && "length" in _x) {
           x = _x[0] ?? 0;
           y = _x[1] ?? 0;
@@ -11003,7 +10999,9 @@ function rgb_to_hsv(r, g, b) {
   if (minRGB === maxRGB) {
     computedV = minRGB;
     const ret2 = rgb_to_hsv_rets.next();
-    ret2[0] = 0, ret2[1] = 0, ret2[2] = computedV;
+    ret2[0] = 0;
+    ret2[1] = 0;
+    ret2[2] = computedV;
     return ret2;
   }
   const d = r === minRGB ? g - b : b === minRGB ? r - g : b - r;
@@ -11012,7 +11010,9 @@ function rgb_to_hsv(r, g, b) {
   const computedS = (maxRGB - minRGB) / maxRGB;
   computedV = maxRGB;
   const ret = rgb_to_hsv_rets.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+  ret[0] = computedH;
+  ret[1] = computedS;
+  ret[2] = computedV;
   return ret;
 }
 function hsv_to_rgb(h, s, v) {
@@ -11296,7 +11296,7 @@ var init_toolprop_abstract = __esm({
         }
         for (const k in this.values) {
           let uin = k[0].toUpperCase() + k.slice(1, k.length);
-          uin = uin.replace(/\_/g, " ");
+          uin = uin.replace(/_/g, " ");
           this.ui_value_names[k] = uin;
         }
       }
@@ -11875,13 +11875,13 @@ var init_units = __esm({
       }
     };
     Unit.register(RadianUnit);
-    numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
-    numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
-    hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
-    hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
-    binre = /[+\-]?0b[01]+$/;
-    expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
-    intre = /[+\-]?[0-9]+$/;
+    numre1 = /[+-]?[0-9]+(\.[0-9]*)?$/;
+    numre2 = /[+-]?[0-9]?(\.[0-9]*)+$/;
+    hexre1 = /[+-]?[0-9a-fA-F]+h$/;
+    hexre2 = /[+-]?0x[0-9a-fA-F]+$/;
+    binre = /[+-]?0b[01]+$/;
+    expre = /[+-]?[0-9]+(\.[0-9]*)?[eE]-?[0-9]+$/;
+    intre = /[+-]?[0-9]+$/;
     PixelUnit = class extends Unit {
       static unitDefine() {
         return {
@@ -14428,7 +14428,7 @@ function css2color(color) {
     return ret;
   }
   const hasAlpha = color.startsWith("rgba(");
-  const colorParts = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
+  const colorParts = color.replace("rgba", "").replace("rgb", "").replace(/[()]/g, "").trim().split(",");
   for (let i = 0; i < colorParts.length; i++) {
     ret[i] = parseFloat(colorParts[i]);
     if (i < 3) {
@@ -14539,6 +14539,13 @@ ${indent}  color2   : ${writekey(v.color2)},
 ${indent}  contrast : ${writekey(v.contrast)},
 ${indent}  width     : ${writekey(v.width)}
 ${indent}})`;
+    } else if (v instanceof BoxBorder) {
+      return `new BoxBorder({
+${indent}  borderColor : ${writekey(v.color)},
+${indent}  borderWidth : ${writekey(v.width)},
+${indent}  borderRadius : ${writekey(v.radius)},
+${indent}  borderStyle : ${writekey(v.style)},
+    })`;
     } else if (typeof v === "object") {
       if (v instanceof CSSFont) {
         return `new CSSFont({
@@ -14561,21 +14568,6 @@ ${indent}})`;
         s2 += indent + "}";
         return s2;
       }
-    } else if (v instanceof BoxBorder) {
-      return `new BoxBorder({
-${indent}  borderColor : ${writekey(v.color)},
-${indent}  borderWidth : ${writekey(v.width)},
-${indent}  borderRadius : ${writekey(v.radius)},
-${indent}  borderStyle : ${writekey(v.style)},
-    })`;
-    } else if (v instanceof ThemeScrollBars) {
-      return `new ThemeScrollBars({
-${indent}  border   : ${writekey(v.border)},
-${indent}  color    : ${writekey(v.color)},
-${indent}  color2   : ${writekey(v.color2)},
-${indent}  contrast : ${writekey(v.contrast)},
-${indent}  width     : ${writekey(v.width)}
-${indent}})`;
     } else {
       return "" + v;
     }
@@ -14825,7 +14817,7 @@ var init_ui_theme = __esm({
       purple: [1, 0, 1],
       pink: [1, 0.5, 0.5]
     };
-    validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+    validate_pat = /#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
     num = "(([0-9]+.[0-9]+)|[0-9a-f]+)";
     validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
     validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
@@ -16057,47 +16049,6 @@ var init_ui_theme_key = __esm({
 
 // scripts/path-controller/util/simple_events.ts
 function consolelog(..._args) {
-}
-function debugDomEvents() {
-  const cbsymbol = /* @__PURE__ */ Symbol("event-callback");
-  const thsymbol = /* @__PURE__ */ Symbol("debug-info");
-  let idgen3 = 0;
-  function init2(et) {
-    if (!et[thsymbol]) {
-      et[thsymbol] = idgen3++;
-    }
-  }
-  function getkey(et, type, options) {
-    init2(et);
-    return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
-  }
-  const addEventListener2 = EventTarget.prototype.addEventListener;
-  const removeEventListener2 = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.addEventListener = function(type, cb, options) {
-    init2(this);
-    const cbRec = cb;
-    if (!cbRec[cbsymbol]) {
-      cbRec[cbsymbol] = /* @__PURE__ */ new Set();
-    }
-    const key = getkey(this, type, options);
-    cbRec[cbsymbol].add(key);
-    return addEventListener2.call(this, type, cb, options);
-  };
-  EventTarget.prototype.removeEventListener = function(type, cb, options) {
-    init2(this);
-    const cbRec = cb;
-    if (!cbRec[cbsymbol]) {
-      console.error("Invalid callback in removeEventListener for", type, this, cb);
-      return;
-    }
-    const key = getkey(this, type, options);
-    if (!cbRec[cbsymbol].has(key)) {
-      console.error("Callback not in removeEventListener;", type, this, cb);
-      return;
-    }
-    cbRec[cbsymbol].delete(key);
-    return removeEventListener2.call(this, type, cb, options);
-  };
 }
 function singletonMouseEventsInit() {
   if (typeof document === "undefined") {
@@ -17454,13 +17405,13 @@ function _hasSubDefault(elem, key, subkey, _themeDef) {
   }
   return subkey in obj;
 }
-function hasClassSubDefault(elem, key, subkey, inherit3 = true) {
-  return elem._hasClassSubDefault(key, subkey, inherit3, void 0, theme) || !!(elem._themeOverride && elem._hasClassSubDefault(key, subkey, inherit3, void 0, elem._themeOverride));
+function hasClassSubDefault(elem, key, subkey, inherit2 = true) {
+  return elem._hasClassSubDefault(key, subkey, inherit2, void 0, theme) || !!(elem._themeOverride && elem._hasClassSubDefault(key, subkey, inherit2, void 0, elem._themeOverride));
 }
-function _hasClassSubDefault(elem, key, subkey, inherit3 = true, style = elem.getStyleClass(), themeDef) {
+function _hasClassSubDefault(elem, key, subkey, inherit2 = true, style = elem.getStyleClass(), themeDef) {
   if (!themeDef) return false;
   const th = themeDef[style];
-  if (inherit3) {
+  if (inherit2) {
     if (elem._hasClassSubDefault(key, subkey, false, style, themeDef)) {
       return true;
     }
@@ -17481,22 +17432,22 @@ function _hasClassSubDefault(elem, key, subkey, inherit3 = true, style = elem.ge
   }
   return subkey in obj;
 }
-function getSubDefault(elem, key, subkey, backupkey = subkey, defaultval, inherit3 = true) {
+function getSubDefault(elem, key, subkey, backupkey = subkey, defaultval, inherit2 = true) {
   if (!key) {
-    return elem.getDefault(subkey, void 0, defaultval, inherit3);
+    return elem.getDefault(subkey, void 0, defaultval, inherit2);
   }
-  const style = elem.getDefault(key, void 0, void 0, inherit3);
+  const style = elem.getDefault(key, void 0, void 0, inherit2);
   if (!style || typeof style !== "object" || !(subkey in style)) {
     if (defaultval !== void 0) {
       return defaultval;
     } else if (backupkey) {
-      return elem.getDefault(backupkey, void 0, void 0, inherit3);
+      return elem.getDefault(backupkey, void 0, void 0, inherit2);
     }
   }
   return style[subkey];
 }
-function getDefault2(elem, key, checkForMobile, defaultval, inherit3) {
-  const ret = elem.getDefault_intern(key, checkForMobile, defaultval, inherit3);
+function getDefault2(elem, key, checkForMobile, defaultval, inherit2) {
+  const ret = elem.getDefault_intern(key, checkForMobile, defaultval, inherit2);
   if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
     let s = ret.trim().toLowerCase();
     s = s.slice(0, s.length - 2).trim();
@@ -17507,7 +17458,7 @@ function getDefault2(elem, key, checkForMobile, defaultval, inherit3) {
   }
   return ret;
 }
-function getDefault_intern(elem, key, checkForMobile = true, defaultval, inherit3 = true) {
+function getDefault_intern(elem, key, checkForMobile = true, defaultval, inherit2 = true) {
   if (elem.my_default_overrides[key] !== void 0) {
     const v = elem.my_default_overrides[key];
     return checkForMobile ? elem._doMobileDefault(key, v, elem.my_default_overrides) : v;
@@ -17520,7 +17471,7 @@ function getDefault_intern(elem, key, checkForMobile = true, defaultval, inherit
     }
     p = p.parentWidget;
   }
-  return elem.getClassDefault(key, checkForMobile, defaultval, inherit3);
+  return elem.getClassDefault(key, checkForMobile, defaultval, inherit2);
 }
 function walkStyleChain(cls) {
   let p = cls;
@@ -17541,7 +17492,7 @@ function getStyleClass(elem, ignoreOverride = false) {
   }
   return walkStyleChain(elem.constructor) ?? "base";
 }
-function getStyleRecord(elem, styleClass, key, inherit3 = true) {
+function getStyleRecord(elem, styleClass, key, inherit2 = true) {
   let result;
   const chunks = styleClass.split(".");
   if (chunks.length === 0) {
@@ -17583,7 +17534,7 @@ function getStyleRecord(elem, styleClass, key, inherit3 = true) {
     } else if (def2 !== void 0) {
       return def2;
     }
-    if (!inherit3) {
+    if (!inherit2) {
       break;
     }
     p = p.parentWidget;
@@ -17613,18 +17564,18 @@ function hasClassDefault(elem, key) {
   const record = getStyleRecord(elem, style, key);
   return record !== void 0 && key in record;
 }
-function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit3 = true) {
+function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit2 = true) {
   const style = elem.getStyleClass();
   if (style === "none") {
     return void 0;
   }
-  let record = getStyleRecord(elem, style, key, inherit3);
+  let record = getStyleRecord(elem, style, key, inherit2);
   let value = record ? record[key] : void 0;
   if (value === void 0 && defaultval !== void 0) {
     return defaultval;
-  } else if (value === void 0 && inherit3) {
+  } else if (value === void 0 && inherit2) {
     if (elem._override_class !== void 0) {
-      const record2 = getStyleRecord(elem, elem.getStyleClass(true), key, inherit3);
+      const record2 = getStyleRecord(elem, elem.getStyleClass(true), key, inherit2);
       value = record2 ? record2[key] : void 0;
       if (value !== void 0) {
         record = record2;
@@ -17632,14 +17583,14 @@ function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit3 
     }
     const def = elem.constructor.define();
     if (value === void 0 && def.parentStyle) {
-      const record2 = getStyleRecord(elem, def.parentStyle, key, inherit3);
+      const record2 = getStyleRecord(elem, def.parentStyle, key, inherit2);
       value = record2 ? record2[key] : void 0;
       if (value !== void 0) {
         record = record2;
       }
     }
   }
-  if (inherit3 && value === void 0) {
+  if (inherit2 && value === void 0) {
     for (let i = 0; i < 2; i++) {
       const th = i ? elem._themeOverride : theme;
       if (typeof th?.base === "object" && key in th.base) {
@@ -18063,10 +18014,6 @@ function copyMouseEvent(e) {
     }
   }
   return ret;
-}
-function getDom(dom, eventtype) {
-  if (eventtype.startsWith("key")) return window;
-  return dom;
 }
 function isModalHead(owner) {
   return modalStack.length === 0 || modalStack[modalStack.length - 1] === owner;
@@ -18689,24 +18636,32 @@ var init_tooldefaults = __esm({
       static getPropKey(_cls, key, prop) {
         return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
       }
-      _buildAccessors(cls, key, prop, dstruct, api) {
+      /** Splits a toolpath into its segments, or returns undefined if it is malformed. */
+      static _splitToolpath(cls) {
         const tdef = cls._getFinalToolDef();
-        this.api = api;
-        this.dstruct = dstruct;
         if (!tdef.toolpath) {
           console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
-          return;
+          return void 0;
         }
-        const path = tdef.toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
+        return tdef.toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
+      }
+      /** The apiname a property is stored and bound under. */
+      static _accessorName(key, prop) {
+        return prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
+      }
+      /**
+       * Seeds the stored value for one input and returns the object holding it. Reachable from
+       * the toolpath alone, so it works with no api and no struct.
+       */
+      _ensureValues(cls, key, prop) {
+        const path = _ToolPropertyCache._splitToolpath(cls);
+        if (path === void 0) {
+          return void 0;
+        }
         let obj = this.accessors;
-        let st = dstruct;
         let partial = "";
         for (let i = 0; i < path.length; i++) {
           const k = path[i];
-          let pathk = k;
-          if (i === 0) {
-            pathk = "accessors." + k;
-          }
           if (i > 0) {
             partial += ".";
           }
@@ -18714,15 +18669,40 @@ var init_tooldefaults = __esm({
           if (!(k in obj)) {
             obj[k] = {};
           }
+          this.pathmap.set(partial, obj[k]);
+          obj = obj[k];
+        }
+        const name2 = _ToolPropertyCache._accessorName(key, prop);
+        if (!(name2 in obj)) {
+          obj[name2] = prop.copy().getValue();
+        }
+        return obj;
+      }
+      /**
+       * Adds one input to `dstruct` as a datapath over the stored value. `_ensureValues` must
+       * have run for `cls`, since the prefix objects it maps are the ones that seeds.
+       */
+      _buildBinding(cls, key, prop, dstruct, api) {
+        const path = _ToolPropertyCache._splitToolpath(cls);
+        if (path === void 0) {
+          return;
+        }
+        let obj = this.accessors;
+        let st = dstruct;
+        for (let i = 0; i < path.length; i++) {
+          const k = path[i];
+          let pathk = k;
+          if (i === 0) {
+            pathk = "accessors." + k;
+          }
           const st2 = api.mapStruct(obj[k], true, k);
           if (!(st.pathmap && k in st.pathmap)) {
             st.struct(pathk, k, k, st2);
           }
           st = st2;
-          this.pathmap.set(partial, obj[k]);
           obj = obj[k];
         }
-        const name2 = prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
+        const name2 = _ToolPropertyCache._accessorName(key, prop);
         const prop2 = prop.copy();
         const dpath = new DataPath(name2, name2, prop2);
         let uiname = prop.uiname;
@@ -18736,7 +18716,10 @@ var init_tooldefaults = __esm({
         prop2.uiname = uiname;
         prop2.description = prop2.description || prop2.uiname;
         st.add(dpath);
-        obj[name2] = prop2.getValue();
+      }
+      _buildAccessors(cls, key, prop, dstruct, api) {
+        this._ensureValues(cls, key, prop);
+        this._buildBinding(cls, key, prop, dstruct, api);
       }
       _getAccessor(cls) {
         const toolpath = cls.tooldef().toolpath;
@@ -18783,8 +18766,8 @@ var init_tooldefaults = __esm({
         let obj = this._getAccessor(cls);
         if (!obj) {
           console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
-          this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-          obj = this.pathmap.get(toolpath);
+          obj = this._ensureValues(cls, key, prop);
+          this.registry?.updateDefaults(cls);
         }
         if (!obj) {
           console.error("Malformed toolpath in toolop definition: " + toolpath);
@@ -18801,647 +18784,647 @@ var init_tooldefaults = __esm({
   }
 });
 
-// scripts/path-controller/controller/context.ts
-function setNotifier(cls) {
-  notifier = cls;
-}
-function makeDerivedOverlay(parent) {
-  return class ContextOverlay2 extends parent {
-    ctx;
-    _state;
-    __allKeys;
-    constructor(appstate) {
-      super(appstate);
-      this.ctx = void 0;
-      this._state = appstate;
+// scripts/path-controller/util/parseutil.ts
+var parseutil_exports = {};
+__export(parseutil_exports, {
+  PUTLParseError: () => PUTLParseError,
+  getTraceBack: () => getTraceBack,
+  lexer: () => lexer2,
+  parser: () => parser2,
+  tokdef: () => tokdef2,
+  token: () => token2
+});
+function getTraceBack(limit, start) {
+  try {
+    throw new Error();
+  } catch (error2) {
+    let stack = error2.stack.split("\n");
+    stack = stack.slice(1, stack.length);
+    if (start === void 0) {
+      start = 0;
     }
-    get state() {
-      return this._state;
-    }
-    set state(state) {
-      this._state = state;
-    }
-    onRemove(_have_new_file = false) {
-    }
-    copy() {
-      return new this.constructor(this._state);
-    }
-    validate() {
-      throw new Error("Implement me!");
-    }
-    //base classes override this
-    static contextDefine() {
-      throw new Error("implement me!");
-      return {
-        name: "",
-        flag: 0
-      };
-    }
-    //don't override this
-    static resolveDef() {
-      if (this.hasOwnProperty(Symbol.CachedDef)) {
-        return this[Symbol.CachedDef];
+    for (let i = 0; i < stack.length; i++) {
+      let l = stack[i];
+      let j = l.length - 1;
+      while (j > 0 && l[j] !== "/") {
+        j--;
       }
-      const def2 = {};
-      Symbol.CachedDef = {};
-      let def = this.contextDefine();
-      if (def === void 0) {
-        def = {};
+      let k = j;
+      while (k >= 0 && l[k] !== "(") {
+        k--;
       }
-      for (const k in def) {
-        def2[k] = def[k];
+      const func = l.slice(0, k).trim();
+      const file = l.slice(j + 1, l.length - 1);
+      l = `  ${func} (${file})`;
+      if (l.search(/parseutil\.js/) >= 0) {
+        start = Math.max(start, i);
       }
-      if (!("flag" in def)) {
-        def2.flag = Context.inherit(0);
-      }
-      const parents = [];
-      let p = getClassParent(this);
-      while (p && p !== ContextOverlay2) {
-        parents.push(p);
-        p = getClassParent(p);
-      }
-      if (def2.flag instanceof InheritFlag) {
-        let flag = def2.flag.data;
-        for (const parent2 of parents) {
-          const pdef = parent2.contextDefine();
-          if (!pdef.flag) {
-            continue;
-          } else if (pdef.flag instanceof InheritFlag) {
-            flag |= pdef.flag.data;
-          } else {
-            flag |= pdef.flag;
-            break;
-          }
-        }
-        def2.flag = flag;
-      }
-      return def2;
+      stack[i] = l;
     }
-  };
-}
-function test() {
-  function testInheritance() {
-    class Test0 extends ContextOverlay {
-      static contextDefine() {
-        return {
-          flag: 1
-        };
-      }
+    if (limit !== void 0) {
+      stack.length = Math.min(stack.length, limit);
     }
-    class Test1 extends Test0 {
-      static contextDefine() {
-        return {
-          flag: 2
-        };
-      }
+    if (start !== void 0) {
+      stack = stack.slice(start, stack.length);
     }
-    class Test2 extends Test1 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(4)
-        };
-      }
-    }
-    class Test3 extends Test2 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(8)
-        };
-      }
-    }
-    class Test4 extends Test3 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(16)
-        };
-      }
-    }
-    return Test4.resolveDef().flag === 30;
+    return stack.join("\n");
   }
-  return testInheritance();
 }
-var notifier, ContextFlags, InheritFlag, __idgen, _ret_tmp, OverlayClasses, ContextOverlay, excludedKeys, LockedContext, next_key, idgen, Context;
-var init_context = __esm({
-  "scripts/path-controller/controller/context.ts"() {
+var token2, tokdef2, PUTLParseError, lexer2, parser2;
+var init_parseutil = __esm({
+  "scripts/path-controller/util/parseutil.ts"() {
     "use strict";
-    init_util();
-    init_config();
-    notifier = void 0;
-    ContextFlags = {
-      IS_VIEW: 1
-    };
-    InheritFlag = class {
-      data;
-      constructor(data) {
-        this.data = data;
+    token2 = class {
+      type;
+      value;
+      lexpos;
+      lexlen;
+      lineno;
+      lexer;
+      parser;
+      constructor(type, val, lexpos, lexlen, lineno, lexer4, parser3) {
+        this.type = type;
+        this.value = val;
+        this.lexpos = lexpos;
+        this.lexlen = lexlen;
+        this.lineno = lineno;
+        this.lexer = lexer4;
+        this.parser = parser3;
       }
-    };
-    __idgen = 1;
-    if (Symbol.ContextID === void 0) {
-      Symbol.ContextID = /* @__PURE__ */ Symbol("ContextID");
-    }
-    if (Symbol.CachedDef === void 0) {
-      Symbol.CachedDef = /* @__PURE__ */ Symbol("CachedDef");
-    }
-    _ret_tmp = [void 0];
-    OverlayClasses = [];
-    ContextOverlay = makeDerivedOverlay(Object);
-    excludedKeys = /* @__PURE__ */ new Set([
-      "onRemove",
-      "reset",
-      "toString",
-      "_fix",
-      "valueOf",
-      "copy",
-      "next",
-      "save",
-      "load",
-      "clear",
-      "hasOwnProperty",
-      "toLocaleString",
-      "constructor",
-      "propertyIsEnumerable",
-      "isPrototypeOf",
-      "state",
-      "saveProperty",
-      "loadProperty",
-      "getOwningOverlay",
-      "_props"
-    ]);
-    LockedContext = class {
-      props;
-      state;
-      api;
-      toolstack;
-      noWarnings;
-      ctx;
-      constructor(ctx, noWarnings) {
-        this.props = {};
-        this.state = ctx.state;
-        this.api = ctx.api;
-        this.toolstack = ctx.toolstack;
-        this.noWarnings = !!noWarnings;
-        this.ctx = ctx;
-        this.load(ctx);
-      }
-      toLocked() {
+      setValue(val) {
+        this.value = val;
         return this;
       }
-      error(...args) {
-        return this.ctx.error(...args);
-      }
-      warning(...args) {
-        return this.ctx.warning(
-          ...args
-        );
-      }
-      message(...args) {
-        return this.ctx.message(
-          ...args
-        );
-      }
-      progbar(...args) {
-        return this.ctx.progbar(
-          ...args
-        );
-      }
-      progressBar(...args) {
-        const ctxRec = this.ctx;
-        return ctxRec.progbar !== void 0 ? ctxRec.progbar(...args) : ctxRec.progressBar(...args);
-      }
-      load(ctx) {
-        const keys2 = ctx._props;
-        function wrapget(name2) {
-          return function(ctx2, data) {
-            return ctx.loadProperty(ctx2, name2, data);
-          };
-        }
-        for (const k of keys2) {
-          if (k === "state" || k === "toolstack" || k === "api") {
-            continue;
-          }
-          if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
-            continue;
-          }
-          try {
-            ctx[k];
-          } catch (_error) {
-            if (config_default.DEBUG.contextSystem) {
-              console.warn("failed to look up property in context: ", k);
-            }
-            continue;
-          }
-          let data;
-          let getter;
-          const overlay = ctx.getOwningOverlay(k);
-          if (overlay === void 0) {
-            continue;
-          }
-          try {
-            const oRec = overlay;
-            if (typeof k === "string" && oRec[k + "_save"] && oRec[k + "_load"]) {
-              data = oRec[k + "_save"]();
-              getter = oRec[k + "_load"];
-            } else {
-              data = ctx.saveProperty(k);
-              getter = wrapget(k);
-            }
-          } catch (_error) {
-            console.warn("Failed to save context property", k);
-            continue;
-          }
-          this.props[k] = {
-            data,
-            get: getter
-          };
-        }
-        const defineProp = (name2) => {
-          Object.defineProperty(this, name2, {
-            get: function() {
-              const def = this.props[name2];
-              return def.get(this.ctx, def.data);
-            }
-          });
-        };
-        for (const k in this.props) {
-          if (k !== "ctx") {
-            defineProp(k);
-          }
-        }
-        this.ctx = ctx;
-      }
-      setContext(ctx) {
-        this.ctx = ctx;
-        this.state = ctx.state;
-        this.api = ctx.api;
-        this.toolstack = ctx.toolstack;
+      toString() {
+        if (this.value !== void 0)
+          return "token(type=" + this.type + ", value='" + this.value + "')";
+        else return "token(type=" + this.type + ")";
       }
     };
-    next_key = {};
-    idgen = 1;
-    Context = class _Context {
-      state;
-      _props;
-      _stack;
-      _inside_map;
-      constructor(appstate) {
-        this.state = appstate;
-        this._props = /* @__PURE__ */ new Set();
-        this._stack = [];
-        this._inside_map = {};
+    tokdef2 = class {
+      name;
+      re;
+      func;
+      constructor(name2, regexpr, func) {
+        this.name = name2;
+        this.re = regexpr;
+        this.func = func;
       }
-      static isContextSubclass(cls) {
-        while (cls) {
-          if (cls === _Context) {
-            return true;
-          }
-          cls = cls.__proto__;
+    };
+    PUTLParseError = class extends Error {
+    };
+    lexer2 = class _lexer {
+      tokdef;
+      tokens;
+      lexpos;
+      lexdata;
+      lineno;
+      errfunc;
+      tokints;
+      print_tokens;
+      print_debug;
+      statestack;
+      states;
+      statedata;
+      peeked_tokens;
+      constructor(tokdef3, errfunc) {
+        this.tokdef = tokdef3;
+        this.tokens = [];
+        this.lexpos = 0;
+        this.lexdata = "";
+        this.lineno = 0;
+        this.errfunc = errfunc;
+        this.tokints = {};
+        this.print_tokens = false;
+        this.print_debug = false;
+        for (let i = 0; i < tokdef3.length; i++) {
+          this.tokints[tokdef3[i].name] = i;
         }
-        return false;
-      }
-      /** chrome's debug console corrupts this._inside_map,
-       this method fixes it*/
-      _fix() {
-        this._inside_map = {};
-      }
-      fix() {
-        this._fix();
-      }
-      error(message2, timeout = 1500) {
-        const state = this.state;
-        console.warn(message2);
-        if (state?.screen) {
-          return notifier.error(state.screen, message2, timeout);
-        }
-      }
-      warning(message2, timeout = 1500) {
-        const state = this.state;
-        console.warn(message2);
-        if (state?.screen) {
-          return notifier.warning(state.screen, message2, timeout);
-        }
-      }
-      message(msg, timeout = 1500) {
-        const state = this.state;
-        console.warn(msg);
-        if (state?.screen) {
-          return notifier.message(state.screen, msg, timeout);
-        }
-      }
-      progbar(msg, perc = 0, timeout = 1500, id = msg) {
-        const state = this.state;
-        if (state?.screen) {
-          return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
-        }
-      }
-      validateOverlays() {
-        const stack = this._stack;
-        const stack2 = [];
-        for (let i = 0; i < stack.length; i++) {
-          if (stack[i].validate()) {
-            stack2.push(stack[i]);
-          }
-        }
-        this._stack = stack2;
-      }
-      hasOverlay(cls) {
-        return this.getOverlay(cls) !== void 0;
-      }
-      getOverlay(cls) {
-        for (const overlay of this._stack) {
-          if (overlay.constructor === cls) {
-            return overlay;
-          }
-        }
-      }
-      clear(have_new_file = false) {
-        for (const overlay of this._stack) {
-          overlay.onRemove(have_new_file);
-        }
-        this._stack = [];
-      }
-      reset(have_new_file = false) {
-        this.clear(have_new_file);
-      }
-      override(overrides) {
-        if (overrides.copy === void 0) {
-          overrides.copy = function() {
-            return Object.assign({}, this);
-          };
-        }
-        const ctx = this.copy();
-        ctx.pushOverlay(overrides);
-        return ctx;
+        this.statestack = [["__main__", 0]];
+        this.states = { "__main__": [tokdef3, errfunc] };
+        this.statedata = 0;
+        this.peeked_tokens = [];
       }
       copy() {
-        const ret = new this.constructor(this.state);
-        for (const item of this._stack) {
-          ret.pushOverlay(item.copy());
+        const ret = new _lexer(this.tokdef, this.errfunc);
+        for (const k in this.states) {
+          let state = this.states[k];
+          state = [state[0], state[1]];
+          ret.states[k] = state;
+        }
+        ret.statedata = this.statedata;
+        return ret;
+      }
+      //errfunc is optional, defines state-specific error function
+      add_state(name2, tokdef3, errfunc) {
+        if (errfunc === void 0) {
+          errfunc = function(_lexer2) {
+            return true;
+          };
+        }
+        this.states[name2] = [tokdef3, errfunc];
+      }
+      tok_int(_name) {
+      }
+      //statedata is optional.
+      //it stores state-specific data in lexer.statedata.
+      push_state(state, statedata) {
+        this.statestack.push([state, statedata]);
+        const stateEntry = this.states[state];
+        this.statedata = statedata;
+        this.tokdef = stateEntry[0];
+        this.errfunc = stateEntry[1];
+      }
+      pop_state() {
+        const item = this.statestack[this.statestack.length - 1];
+        const state = this.states[item[0]];
+        this.tokdef = state[0];
+        this.errfunc = state[1];
+        this.statedata = item[1];
+      }
+      input(str) {
+        while (this.statestack.length > 1) {
+          this.pop_state();
+        }
+        this.lexdata = str;
+        this.lexpos = 0;
+        this.lineno = 0;
+        this.tokens = [];
+        this.peeked_tokens = [];
+      }
+      error() {
+        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
+        console.log("Syntax error near line " + this.lineno);
+        const next = Math.min(this.lexpos + 8, this.lexdata.length);
+        console.log("  " + this.lexdata.slice(this.lexpos, next));
+        throw new PUTLParseError("Parse error");
+      }
+      peek() {
+        const tok = this.next(true);
+        if (tok === void 0) return void 0;
+        this.peeked_tokens.push(tok);
+        return tok;
+      }
+      peek_i(i) {
+        while (this.peeked_tokens.length <= i) {
+          const t2 = this.peek();
+          if (t2 === void 0) return void 0;
+        }
+        return this.peeked_tokens[i];
+      }
+      at_end() {
+        return this.lexpos >= this.lexdata.length && this.peeked_tokens.length === 0;
+      }
+      next(ignore_peek) {
+        if (ignore_peek !== true && this.peeked_tokens.length > 0) {
+          const tok2 = this.peeked_tokens[0];
+          if (this.print_debug) {
+            console.log("PEEK_SHIFTING", "" + tok2);
+          }
+          this.peeked_tokens.shift();
+          if (this.print_tokens) {
+            console.log(tok2.toString());
+          }
+          return tok2;
+        }
+        if (this.lexpos >= this.lexdata.length) return void 0;
+        const ts = this.tokdef;
+        const tlen = ts.length;
+        const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
+        const results = [];
+        for (let i = 0; i < tlen; i++) {
+          const t2 = ts[i];
+          if (t2.re === void 0) continue;
+          const res = t2.re.exec(lexdata);
+          if (res?.index === 0) {
+            results.push([t2, res]);
+          }
+        }
+        let max_res = 0;
+        let theres = void 0;
+        for (let i = 0; i < results.length; i++) {
+          const res = results[i];
+          if (res[1][0].length > max_res) {
+            theres = res;
+            max_res = res[1][0].length;
+          }
+        }
+        if (theres === void 0) {
+          this.error();
+          return;
+        }
+        const def = theres[0];
+        const lexlen = max_res;
+        let tok = new token2(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, void 0);
+        this.lexpos += max_res;
+        if (def.func) {
+          const tok2 = def.func(tok);
+          if (tok2 === void 0) {
+            return this.next(ignore_peek);
+          }
+          tok = tok2;
+        }
+        if (this.print_tokens) {
+          console.log(tok.toString());
+        }
+        if (!ignore_peek && this.print_debug) {
+          console.log("CONSUME", tok.toString(), "\n" + getTraceBack());
+        }
+        return tok;
+      }
+    };
+    parser2 = class _parser {
+      lexer;
+      errfunc;
+      start;
+      userdata;
+      constructor(lexer4, errfunc) {
+        this.lexer = lexer4;
+        this.errfunc = errfunc;
+        this.start = void 0;
+        this.userdata = void 0;
+      }
+      copy() {
+        const ret = new _parser(this.lexer.copy(), this.errfunc);
+        ret.start = this.start;
+        return ret;
+      }
+      parse(data, err_on_unconsumed) {
+        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
+        if (data !== void 0) this.lexer.input(data);
+        const ret = this.start(this);
+        if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
+          this.error(void 0, "parser did not consume entire input");
         }
         return ret;
       }
-      static super() {
-        return next_key;
+      input(data) {
+        this.lexer.input(data);
       }
-      saveProperty(key) {
-        return this[key];
-      }
-      loadProperty(_ctx, _key, data) {
-        return data;
-      }
-      getOwningOverlay(name2, _val_out) {
-        const inside_map = this._inside_map;
-        const stack = this._stack;
-        if (config_default.DEBUG.contextSystem) {
-          console.log(name2, inside_map);
-        }
-        for (let i = stack.length - 1; i >= 0; i--) {
-          const overlay = stack[i];
-          let ret = next_key;
-          if (overlay[Symbol.ContextID] === void 0) {
-            throw new Error("context corruption");
-          }
-          const ikey = overlay[Symbol.ContextID];
-          if (config_default.DEBUG.contextSystem) {
-            console.log(ikey, overlay);
-          }
-          if (inside_map[ikey]) {
-            continue;
-          }
-          if (overlay.__allKeys?.has(name2)) {
-            if (config_default.DEBUG.contextSystem) {
-              console.log("getting value");
-            }
-            inside_map[ikey] = 1;
-            try {
-              ret = overlay[name2];
-            } catch (error2) {
-              inside_map[ikey] = 0;
-              throw error2;
-            }
-            inside_map[ikey] = 0;
-          }
-          if (ret !== next_key) {
-            if (_val_out !== void 0) {
-              _val_out[0] = ret;
-            }
-            return overlay;
+      error(tok, msg) {
+        if (msg === void 0) msg = "";
+        let estr;
+        if (tok === void 0) estr = "Parse error at end of input: " + msg;
+        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
+        let buf = "1| ";
+        const ld = this.lexer.lexdata;
+        let l = 1;
+        for (let i = 0; i < ld.length; i++) {
+          const c = ld[i];
+          if (c === "\n") {
+            l++;
+            buf += "\n" + l + "| ";
+          } else {
+            buf += c;
           }
         }
-        if (_val_out !== void 0) {
-          _val_out[0] = void 0;
-        }
-        return void 0;
-      }
-      ensureProperty(name2) {
-        if (this.hasOwnProperty(name2)) {
+        console.log("------------------");
+        console.log(buf);
+        console.log("==================");
+        console.log(estr);
+        if (this.errfunc && !this.errfunc(tok)) {
           return;
         }
-        this._props.add(name2);
-        Object.defineProperty(this, name2, {
-          get: function() {
-            const ret = _ret_tmp;
-            _ret_tmp[0] = void 0;
-            this.getOwningOverlay(name2, ret);
-            return ret[0];
-          },
-          set: function() {
-            throw new Error("Cannot set ctx properties");
-          }
-        });
+        throw new PUTLParseError(estr);
       }
-      toLocked() {
-        const locked = new LockedContext(this);
-        return locked;
+      peek() {
+        const tok = this.lexer.peek();
+        if (tok !== void 0) tok.parser = this;
+        return tok;
       }
-      pushOverlay(overlay) {
-        if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-          overlay[Symbol.ContextID] = idgen++;
-        }
-        const keys2 = /* @__PURE__ */ new Set();
-        for (const key of getAllKeys(overlay)) {
-          if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
-            keys2.add(key);
-          }
-        }
-        overlay.ctx = this;
-        if (overlay.__allKeys === void 0) {
-          overlay.__allKeys = keys2;
-        }
-        for (const k of keys2) {
-          let bad = typeof k === "symbol" || excludedKeys.has(k);
-          bad = bad || typeof k === "string" && k[0] === "_";
-          bad = bad || typeof k === "string" && k.endsWith("_save");
-          bad = bad || typeof k === "string" && k.endsWith("_load");
-          if (bad) {
-            continue;
-          }
-          this.ensureProperty(k);
-        }
-        if (this._stack.includes(overlay)) {
-          console.warn("Overlay already added once");
-          if (this._stack[this._stack.length - 1] === overlay) {
-            console.warn("  Definitely an error, overlay is already at top of stack");
-            return;
-          }
-        }
-        this._stack.push(overlay);
+      peek_i(i) {
+        const tok = this.lexer.peek_i(i);
+        if (tok !== void 0) tok.parser = this;
+        return tok;
       }
-      popOverlay(overlay) {
-        if (overlay !== this._stack[this._stack.length - 1]) {
-          console.warn("Context.popOverlay called in error", overlay);
-          return;
-        }
-        overlay.onRemove();
-        this._stack.pop();
+      peeknext() {
+        return this.peek_i(0);
       }
-      removeOverlay(overlay) {
-        if (!this._stack.includes(overlay)) {
-          console.warn("Context.removeOverlay called in error", overlay);
-          return;
-        }
-        overlay.onRemove();
-        this._stack.remove(overlay);
+      next() {
+        const tok = this.lexer.next();
+        if (tok !== void 0) tok.parser = this;
+        return tok;
       }
-      static inherit(data) {
-        return new InheritFlag(data);
-      }
-      static register(cls) {
-        if (cls[Symbol.ContextID]) {
-          console.warn("Tried to register same class twice:", cls);
-          return;
+      optional(type) {
+        const tok = this.peek_i(0);
+        if (tok?.type === type) {
+          this.next();
+          return true;
         }
-        cls[Symbol.ContextID] = __idgen++;
-        OverlayClasses.push(cls);
+        return false;
+      }
+      at_end() {
+        return this.lexer.at_end();
+      }
+      expect(type, msg) {
+        const tok = this.next();
+        if (msg === void 0) msg = type;
+        if (tok?.type != type) {
+          this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
+        }
+        return tok.value;
       }
     };
-    if (!test()) {
-      throw new Error("Context test failed");
-    }
   }
 });
 
-// scripts/path-controller/toolsys/toolsys.ts
-function setContextClass(_cls) {
-  console.warn("setContextClass is deprecated");
-}
-function updateToolDefaults(cls, api, datastruct) {
-  const def = cls._getFinalToolDef();
-  if (datastruct === void 0) {
-    datastruct = SavedToolDefaults.dstruct;
-  }
-  if (api === void 0) {
-    api = SavedToolDefaults.api;
-  }
-  if (datastruct === void 0 || api === void 0) {
-    return;
-  }
-  buildToolOpAPI(api, cls);
-  for (const k in def.inputs) {
-    const prop = def.inputs[k];
-    if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
-      SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-    }
-  }
-}
-function updateToolSysAPI(api) {
-  const datastruct = api.mapStruct(ToolPropertyCache, true);
-  datastruct.clear();
-  for (const cls of ToolClasses) {
-    updateToolDefaults(cls, api, datastruct);
-  }
-}
-function buildToolOpAPI(api, cls) {
-  const st = api.mapStruct(cls, true);
-  const def = cls._getFinalToolDef();
-  function makeProp(k) {
-    const prop = def.inputs[k];
-    if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
-      return;
-    }
-    prop.uiname = prop.uiname || ToolProperty.makeUIName(k);
-    const dpath = new DataPath(k, k, prop);
-    st.add(dpath);
-    dpath.customGetSet(
-      // we can type erase here safely,
-      // since this is part of a strongly typed
-      // runtime type system
-      function() {
-        return this.dataref.inputs[k].getValue();
-      },
-      function(val) {
-        this.dataref.inputs[k].setValue(val);
+// scripts/path-controller/toolsys/toolpath_parser.ts
+function buildParser() {
+  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
+  const tokens2 = [
+    t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
+      if (tok.value === "true" || tok.value === "false") {
+        tok.type = "BOOL";
+        tok.value = tok.value === "true";
       }
-    );
+      return tok;
+    }),
+    t2("LPAREN", /\(/),
+    t2("RPAREN", /\)/),
+    t2("LSBRACKET", /\[/),
+    t2("RSBRACKET", /\]/),
+    t2("DOT", /\./),
+    t2("COMMA", /,/),
+    t2("EQUALS", /=/),
+    t2("STRLIT", /"[^"]*"/, (tok) => {
+      tok.value = tok.value.slice(1, tok.value.length - 1);
+      return tok;
+    }),
+    t2("STRLIT", /'[^']*'/, (tok) => {
+      tok.value = tok.value.slice(1, tok.value.length - 1);
+      return tok;
+    }),
+    t2("NUMBER", /-?[0-9]+/, (tok) => {
+      tok.value = parseInt(tok.value);
+      return tok;
+    }),
+    t2("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
+      tok.value = parseFloat(tok.value);
+      return tok;
+    }),
+    t2("WS", /[ \n\r\t]/, () => void 0)
+    //ignore whitespace
+  ];
+  const lexerror = () => {
+    console.warn("Parse error");
+    return true;
+  };
+  const valid_datatypes = {
+    STRLIT: 1,
+    NUMBER: 1,
+    BOOL: 1,
+    ID: 1
+  };
+  function p_Start(p2) {
+    const args = {};
+    while (!p2.at_end()) {
+      const keyword = p2.expect("ID");
+      p2.expect("EQUALS");
+      const t3 = p2.next();
+      if (!(t3.type in valid_datatypes)) {
+        throw new PUTLParseError("parse error: unexpected " + t3.type);
+      }
+      args[keyword] = t3.value;
+    }
+    return args;
   }
-  for (const k in def.inputs) {
-    makeProp(k);
-  }
-  return st;
+  const lex = new lexer2(tokens2, lexerror);
+  const p = new parser2(lex);
+  p.start = p_Start;
+  return p;
 }
-function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
-  updateToolSysAPI(api);
-  if (rootCtxStruct) {
-    rootCtxStruct.struct(
-      "toolDefaults",
-      "toolDefaults",
-      "Tool Defaults",
-      api.mapStruct(ToolPropertyCache)
-    );
-    rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
-  }
-  if (rootCtxClass && insertToolDefaultsIntoContext) {
-    let haveprop2 = function(k) {
-      return Reflect.ownKeys(inst).includes(k) || Reflect.ownKeys(rootCtxClass.prototype).includes(k);
-    };
-    var haveprop = haveprop2;
-    const inst = new rootCtxClass({});
-    if (!haveprop2("last_tool")) {
-      Object.defineProperty(rootCtxClass.prototype, "last_tool", {
-        get() {
-          return this.toolstack.head;
-        }
-      });
-      if (Context.isContextSubclass(rootCtxClass)) {
-        rootCtxClass.prototype.last_tool_save = () => ({});
-        rootCtxClass.prototype.last_tool_load = () => void 0;
-      }
-    }
-    if (!haveprop2("toolDefaults")) {
-      Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
-        get() {
-          return SavedToolDefaults;
-        }
-      });
-      if (Context.isContextSubclass(rootCtxClass)) {
-        rootCtxClass.prototype.toolDefaults_save = () => ({});
-        rootCtxClass.prototype.toolDefaults_load = () => void 0;
-      }
-    }
-  }
-  if (!registerWithNStructjs) {
-    return;
-  }
-  for (const cls of ToolClasses) {
-    try {
-      if (!struct_default.isRegistered(cls)) {
-        ToolOp._regWithNstructjs(cls);
-      }
-    } catch (error2) {
-      console.log(error2.stack);
-      console.error("Failed to register a tool with nstructjs");
-    }
-  }
-}
-var init_toolsys = __esm({
-  "scripts/path-controller/toolsys/toolsys.ts"() {
+var Parser;
+var init_toolpath_parser = __esm({
+  "scripts/path-controller/toolsys/toolpath_parser.ts"() {
     "use strict";
-    init_struct();
-    init_toolprop();
+    init_parseutil();
+    Parser = buildParser();
+  }
+});
+
+// scripts/path-controller/toolsys/toolregistry.ts
+function registryOf(cls) {
+  return cls[REGISTRY_KEY] ?? defaultRegistry;
+}
+function defaultsFor(cls) {
+  return registryOf(cls).defaults;
+}
+var REGISTRY_KEY, structNameGen, ToolRegistry, defaultRegistry;
+var init_toolregistry = __esm({
+  "scripts/path-controller/toolsys/toolregistry.ts"() {
+    "use strict";
     init_controller_base();
-    init_context();
-    init_toolop();
+    init_toolprop();
     init_tooldefaults();
+    init_toolpath_parser();
+    REGISTRY_KEY = /* @__PURE__ */ Symbol("toolRegistry");
+    structNameGen = 0;
+    ToolRegistry = class {
+      classes = [];
+      paths = {};
+      macros = {};
+      /** Saved input values, keyed by toolpath rather than by class. */
+      defaults;
+      /** Whether `initToolPaths` has walked `classes` into `paths` yet. */
+      pathsScanned = false;
+      /**
+       * Next macro type id. Every registry carries the counter, but `_getTypeClass` only
+       * ever advances `defaultRegistry`'s, because ids repeating across registries would
+       * collide inside a saved file.
+       */
+      macroIdGen = 0;
+      /**
+       * The name `defaults`'s struct is registered under. Must differ between registries, or
+       * `mapStruct` hands the second one the first's struct by name.
+       */
+      structName;
+      /**
+       * The APIs `buildAPI` has run against. Weak because `defineGraphApi`-style callers build
+       * one per pane, and a strong list would pin every closed pane's struct graph.
+       */
+      _builtAPIs = [];
+      constructor(defaults = new ToolPropertyCache(), structName) {
+        this.defaults = defaults;
+        this.structName = structName ?? `ToolPropertyCache.${++structNameGen}`;
+        if (defaults.registry !== void 0) {
+          console.warn(
+            "A ToolPropertyCache belongs to one registry; this one already had",
+            defaults.registry
+          );
+        }
+        defaults.registry = this;
+      }
+      /** The APIs built against this registry, dropping any that have been collected. */
+      apis() {
+        const live = [];
+        let kept = 0;
+        for (const ref of this._builtAPIs) {
+          const api = ref.deref();
+          if (api !== void 0) {
+            this._builtAPIs[kept++] = ref;
+            live.push(api);
+          }
+        }
+        this._builtAPIs.length = kept;
+        return live;
+      }
+      register(cls) {
+        if (this.classes.includes(cls)) {
+          console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
+          return;
+        }
+        this.classes.push(cls);
+        this.stamp(cls);
+        this.updateDefaults(cls);
+      }
+      /**
+       * Marks `cls` as belonging here. The `ToolOp` constructor reads defaults and has no
+       * ctx to reach a registry through, so the class itself has to carry the answer.
+       *
+       * Macro type classes never reach `register`, so `_getTypeClass` calls this directly.
+       */
+      stamp(cls) {
+        cls[REGISTRY_KEY] = this;
+      }
+      unregister(cls) {
+        if (this.classes.includes(cls)) {
+          this.classes.remove(cls);
+        }
+        if (Object.prototype.hasOwnProperty.call(cls, REGISTRY_KEY) && cls[REGISTRY_KEY] === this) {
+          delete cls[REGISTRY_KEY];
+        }
+      }
+      isRegistered(cls) {
+        return this.classes.includes(cls);
+      }
+      /** Walks the registered classes into the toolpath map. */
+      initPaths() {
+        for (const cls of this.classes) {
+          if (!Object.prototype.hasOwnProperty.call(cls, "tooldef")) {
+            continue;
+          }
+          const def = cls.tooldef();
+          this.paths[def.toolpath] = cls;
+        }
+      }
+      /** Resolves `"some.tool(a=1 b='x')"` to the class and its parsed arguments. */
+      parseToolPath(str, checkExists = true) {
+        if (!this.pathsScanned) {
+          this.pathsScanned = true;
+          this.initPaths();
+        }
+        const startstr = str;
+        const i1 = str.search(/\(/);
+        const i2 = str.search(/\)/);
+        let argsStr = "";
+        if (i1 >= 0 && i2 >= 0) {
+          argsStr = str.slice(i1 + 1, i2).trim();
+          str = str.slice(0, i1).trim();
+        }
+        if (!(str in this.paths)) {
+          this.initPaths();
+        }
+        if (!(str in this.paths) && checkExists) {
+          throw new DataPathError("unknown tool " + str);
+        }
+        let args;
+        try {
+          args = Parser.parse(argsStr);
+        } catch (error2) {
+          console.log(error2);
+          throw new DataPathError(`"${startstr}"
+  ${error2.message}`);
+        }
+        const toolclass = this.paths[str];
+        if (toolclass !== void 0) {
+          args = toolclass.parseArgs(args);
+        }
+        return {
+          toolclass,
+          args
+        };
+      }
+      /**
+       * Builds the accessors this registry's defaults cache reads `cls`'s inputs through.
+       *
+       * `register` calls this with no api, which reaches every api built against this registry
+       * rather than whichever one happened to build last. An api gets a tool's `buildOpAPI`
+       * struct that way too, which is what `ctx.last_tool.<input>` resolves through.
+       */
+      updateDefaults(cls, api, datastruct) {
+        if (api !== void 0) {
+          this._updateDefaultsFor(cls, api, datastruct ?? this.structFor(api));
+          return;
+        }
+        for (const built of this.apis()) {
+          this._updateDefaultsFor(cls, built, this.structFor(built));
+        }
+      }
+      _updateDefaultsFor(cls, api, datastruct) {
+        const def = cls._getFinalToolDef();
+        this.buildOpAPI(api, cls);
+        for (const k in def.inputs) {
+          const prop = def.inputs[k];
+          if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
+            this.defaults._buildAccessors(cls, k, prop, datastruct, api);
+          }
+        }
+      }
+      /**
+       * The datapath binding for `defaults`, which `ctx.toolDefaults` resolves through.
+       *
+       * Keyed on the cache instance rather than on `ToolPropertyCache`, because the struct's
+       * shape comes from the registered tools rather than from the class: keying on the class
+       * gives every registry the same struct, and `buildAPI` then clears one registry's
+       * accessors while building another's. `mapStruct` keys on object identity, so an
+       * instance works the same way the accessor objects `_buildAccessors` maps do.
+       */
+      structFor(api) {
+        return api.mapStruct(this.defaults, true, this.structName);
+      }
+      /** Rebuilds `api`'s bindings for every class registered here. */
+      buildAPI(api) {
+        if (!this.apis().includes(api)) {
+          this._builtAPIs.push(new WeakRef(api));
+        }
+        const dstruct = this.structFor(api);
+        dstruct.clear();
+        for (const cls of this.classes) {
+          this.updateDefaults(cls, api, dstruct);
+        }
+        return dstruct;
+      }
+      /** Gives `cls` a struct whose paths read and write a live op's inputs. */
+      buildOpAPI(api, cls) {
+        const st = api.mapStruct(cls, true);
+        const def = cls._getFinalToolDef();
+        function makeProp(k) {
+          const prop = def.inputs[k];
+          if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
+            return;
+          }
+          prop.uiname = prop.uiname || ToolProperty.makeUIName(k);
+          const dpath = new DataPath(k, k, prop);
+          st.add(dpath);
+          dpath.customGetSet(
+            // we can type erase here safely,
+            // since this is part of a strongly typed
+            // runtime type system
+            function() {
+              return this.dataref.inputs[k].getValue();
+            },
+            function(val) {
+              this.dataref.inputs[k].setValue(val);
+            }
+          );
+        }
+        for (const k in def.inputs) {
+          makeProp(k);
+        }
+        return st;
+      }
+    };
+    defaultRegistry = new ToolRegistry(SavedToolDefaults, "ToolPropertyCache");
   }
 });
 
@@ -19479,7 +19462,7 @@ async function toolopCanRunAsync(ctx, cls, toolop) {
   }
   return Promise.resolve(result);
 }
-var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag2, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
+var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
 var init_toolop = __esm({
   "scripts/path-controller/toolsys/toolop.ts"() {
     "use strict";
@@ -19487,9 +19470,8 @@ var init_toolop = __esm({
     init_events();
     init_simple_events();
     init_toolprop();
-    init_tooldefaults();
-    init_toolsys();
-    ToolClasses = [];
+    init_toolregistry();
+    ToolClasses = defaultRegistry.classes;
     REDO_PHASES = ["undoPre", "execPre", "exec", "execPost"];
     ToolFlags = {
       PRIVATE: 1
@@ -19500,7 +19482,7 @@ var init_toolop = __esm({
       UNDO_BARRIER: 8,
       HAS_UNDO_DATA: 16
     };
-    InheritFlag2 = class {
+    InheritFlag = class {
       slots;
       constructor(slots = {}) {
         this.slots = slots;
@@ -19572,7 +19554,7 @@ var init_toolop = __esm({
               const pdef = p.tooldef();
               if (pdef[key] !== void 0) {
                 let slots2 = pdef[key];
-                if (slots2 instanceof InheritFlag2) {
+                if (slots2 instanceof InheritFlag) {
                   slots2 = slots2.slots;
                 }
                 for (const sk in slots2) {
@@ -19700,7 +19682,7 @@ var init_toolop = __esm({
       }
       /** @deprecated inheritance is now forced */
       static inherit(slots) {
-        return new InheritFlag2(slots);
+        return new InheritFlag(slots);
       }
       /**
       
@@ -19724,12 +19706,7 @@ var init_toolop = __esm({
       }
       // use `any` to avoid extremely nasty constructor typing errors
       static register(cls) {
-        if (ToolClasses.includes(cls)) {
-          console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
-          return;
-        }
-        ToolClasses.push(cls);
-        updateToolDefaults(cls);
+        defaultRegistry.register(cls);
       }
       static _regWithNstructjs(cls, structName = cls.name) {
         if (struct_default.isRegistered(cls)) {
@@ -19744,13 +19721,16 @@ var init_toolop = __esm({
         }
         struct_default.register(cls);
       }
+      /**
+       * Whether `cls` is in the *default* registry. `ToolOp`'s statics are that registry's
+       * API, so a class registered only into another one answers `false` here — which is the
+       * answer `setDataPathToolOp` wants, since it re-registers into the default.
+       */
       static isRegistered(cls) {
-        return ToolClasses.includes(cls);
+        return defaultRegistry.isRegistered(cls);
       }
       static unregister(cls) {
-        if (ToolClasses.includes(cls)) {
-          ToolClasses.remove(cls);
-        }
+        defaultRegistry.unregister(cls);
       }
       static _getFinalToolDef() {
         const def = this.tooldef();
@@ -19763,7 +19743,7 @@ var init_toolop = __esm({
               const pdef = p.tooldef();
               if (pdef[key] !== void 0) {
                 let slots2 = pdef[key];
-                if (slots2 instanceof InheritFlag2) {
+                if (slots2 instanceof InheritFlag) {
                   slots2 = slots2.slots;
                 }
                 for (const sk in slots2) {
@@ -19847,22 +19827,26 @@ var init_toolop = __esm({
         return this;
       }
       hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        return SavedToolDefaults.has(this.constructor, key, toolprop3);
+        const cls = this.constructor;
+        return defaultsFor(cls).has(cls, key, toolprop3);
       }
       getDefault(toolprop3, key = toolprop3.apiname ?? "") {
         const cls = this.constructor;
-        if (SavedToolDefaults.has(cls, key, toolprop3)) {
-          return SavedToolDefaults.get(cls, key, toolprop3);
+        const defaults = defaultsFor(cls);
+        if (defaults.has(cls, key, toolprop3)) {
+          return defaults.get(cls, key, toolprop3);
         } else {
           return toolprop3.getValue();
         }
       }
       saveDefaultInputs() {
+        const cls = this.constructor;
+        const defaults = defaultsFor(cls);
         const inputs = this.inputs;
         for (const k in inputs) {
           const prop = inputs[k];
           if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
-            SavedToolDefaults.set(this.constructor, k, prop);
+            defaults.set(cls, k, prop);
           }
         }
         return this;
@@ -20083,7 +20067,7 @@ toolsys.PropKey {
 function IndexRange(len) {
   return indexRangeStack[indexRangeStack.cur++].reset(0, len);
 }
-var indexRangeStack, _IndexRange, IndexRangeStack;
+var _IndexRange, IndexRangeStack, indexRangeStack;
 var init_indexRange = __esm({
   "scripts/path-controller/util/indexRange.ts"() {
     "use strict";
@@ -20142,8 +20126,6 @@ function mySafeJSONStringify(obj) {
     if (typeof v === "number") {
       if (v !== Math.floor(v)) {
         v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
       }
     }
     return v;
@@ -20236,7 +20218,7 @@ function initSplineTemplates() {
   makeSplineTemplateIcons();
   console.log("Loaded 1d spline templates");
 }
-var SplineTemplates, templates, SplineTemplateIcons, RecalcFlags, bin_cache, eval2_rets, CurvePointList, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineDeleteOp, Curve1dBSplineSelectOp, Curve1dBSplineAddOp, BSplineTransformOp, Curve1DPoint, _udigest2, BSplineCache, splineCache, _idgen, BSplineCurve, splineTemplatesLoaded;
+var SplineTemplates, templates, SplineTemplateIcons, RecalcFlags, bin_cache, eval2_rets, CurvePointList, Curve1dBSplineOpBase, Curve1dBSplineResetOp, Curve1dBSplineLoadTemplOp, Curve1dBSplineDeleteOp, Curve1dBSplineSelectOp, Curve1dBSplineAddOp, BSplineTransformOp, Curve1DPoint, _udigest2, BSplineCache, splineCache, _idgen, BSplineCurve, splineTemplatesLoaded, ENABLE_SPLINE_TEMPLATE_AUTOLOAD;
 var init_curve1d_bspline = __esm({
   "scripts/path-controller/curve/curve1d_bspline.ts"() {
     "use strict";
@@ -21805,9 +21787,10 @@ curve1d.BSplineCurve {
     };
     CurveTypeData.register(BSplineCurve);
     splineTemplatesLoaded = false;
-    if (0) {
+    ENABLE_SPLINE_TEMPLATE_AUTOLOAD = false;
+    if (ENABLE_SPLINE_TEMPLATE_AUTOLOAD && !insideNodeJS()) {
       window.setTimeout(() => {
-        if (config2.autoLoadSplineTemplates) {
+        if (config_default.autoLoadSplineTemplates) {
           initSplineTemplates();
         }
       }, 0);
@@ -21822,8 +21805,6 @@ function mySafeJSONStringify2(obj) {
     if (typeof v === "number") {
       if (v !== Math.floor(v)) {
         v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
       }
     }
     return v;
@@ -22814,25 +22795,24 @@ function formatNumber(elem, value, args = {}) {
 }
 function buildBoxCSS(elem, subkey, apply) {
   const keys2 = ["left", "right", "top", "bottom"];
-  const themeFetch = (key, inherit3 = true) => {
+  const themeFetch = (key, inherit2 = true) => {
     if (subkey) {
       return elem.getSubDefault(
         subkey,
         key,
-        inherit3 ? void 0 : null,
+        inherit2 ? void 0 : null,
         void 0,
-        inherit3
+        inherit2
       );
     }
-    return elem.getDefault(key, void 0, void 0, inherit3);
+    return elem.getDefault(key, void 0, void 0, inherit2);
   };
-  let borderRec = themeFetch("border", false);
   const borderPrefix = "border";
   const boxDef = (key) => {
-    let borderRec2 = themeFetch("border", false);
-    if (borderRec2 instanceof BoxBorder) {
-      let borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
-      return themeFetch(key, false) ?? borderRec2?.[borderKey] ?? themeFetch(key, true);
+    const borderRec = themeFetch("border", false);
+    if (borderRec instanceof BoxBorder) {
+      const borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
+      return themeFetch(key, false) ?? borderRec?.[borderKey] ?? themeFetch(key, true);
     }
     return themeFetch(key);
   };
@@ -22924,497 +22904,6 @@ var init_ui_base_css = __esm({
     init_units2();
     init_ui_base_types();
     init_ui_base();
-  }
-});
-
-// scripts/path-controller/util/parseutil.ts
-var parseutil_exports = {};
-__export(parseutil_exports, {
-  PUTLParseError: () => PUTLParseError,
-  getTraceBack: () => getTraceBack,
-  lexer: () => lexer2,
-  parser: () => parser2,
-  tokdef: () => tokdef2,
-  token: () => token2
-});
-function getTraceBack(limit, start) {
-  try {
-    throw new Error();
-  } catch (error2) {
-    let stack = error2.stack.split("\n");
-    stack = stack.slice(1, stack.length);
-    if (start === void 0) {
-      start = 0;
-    }
-    for (let i = 0; i < stack.length; i++) {
-      let l = stack[i];
-      let j = l.length - 1;
-      while (j > 0 && l[j] !== "/") {
-        j--;
-      }
-      let k = j;
-      while (k >= 0 && l[k] !== "(") {
-        k--;
-      }
-      const func = l.slice(0, k).trim();
-      const file = l.slice(j + 1, l.length - 1);
-      l = `  ${func} (${file})`;
-      if (l.search(/parseutil\.js/) >= 0) {
-        start = Math.max(start, i);
-      }
-      stack[i] = l;
-    }
-    if (limit !== void 0) {
-      stack.length = Math.min(stack.length, limit);
-    }
-    if (start !== void 0) {
-      stack = stack.slice(start, stack.length);
-    }
-    return stack.join("\n");
-  }
-}
-function test_parser() {
-  const basic_types = /* @__PURE__ */ new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
-  const reserved_tokens = /* @__PURE__ */ new Set([
-    "int",
-    "float",
-    "double",
-    "vec2",
-    "vec3",
-    "vec4",
-    "mat4",
-    "string",
-    "static_string",
-    "array"
-  ]);
-  function tk2(name2, re, func) {
-    return new tokdef2(name2, re, func);
-  }
-  const tokens2 = [
-    tk2("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t2) {
-      if (reserved_tokens.has(t2.value)) {
-        t2.type = t2.value.toUpperCase();
-      }
-      return t2;
-    }),
-    tk2("OPEN", /\{/),
-    tk2("CLOSE", /}/),
-    tk2("COLON", /:/),
-    tk2("JSCRIPT", /\|/, function(t2) {
-      let js = "";
-      const lex2 = t2.lexer;
-      while (lex2.lexpos < lex2.lexdata.length) {
-        const c = lex2.lexdata[lex2.lexpos];
-        if (c === "\n") break;
-        js += c;
-        lex2.lexpos++;
-      }
-      if (js.endsWith(";")) {
-        js = js.slice(0, js.length - 1);
-        lex2.lexpos--;
-      }
-      t2.value = js;
-      return t2;
-    }),
-    tk2("LPARAM", /\(/),
-    tk2("RPARAM", /\)/),
-    tk2("COMMA", /,/),
-    tk2("NUM", /[0-9]/),
-    tk2("SEMI", /;/),
-    tk2("NEWLINE", /\n/, function(t2) {
-      t2.lexer.lineno += 1;
-    }),
-    tk2("SPACE", / |\t/, function(_t) {
-    })
-  ];
-  for (const rt of reserved_tokens) {
-    tokens2.push(tk2(rt.toUpperCase()));
-  }
-  function errfunc(_lexer) {
-    return true;
-  }
-  const a2 = "";
-  const lex = new lexer2(tokens2, errfunc);
-  console.log("Testing lexical scanner...");
-  lex.input(a2);
-  let tok;
-  while (tok = lex.next()) {
-    console.log(tok.toString());
-  }
-  const p = new parser2(lex);
-  p.input(a2);
-  function p_Array(p2) {
-    p2.expect("ARRAY");
-    p2.expect("LPARAM");
-    let arraytype = p_Type(p2);
-    let itername = "";
-    if (p2.optional("COMMA")) {
-      itername = arraytype;
-      arraytype = p_Type(p2);
-    }
-    p2.expect("RPARAM");
-    return { type: "array", data: { type: arraytype, iname: itername } };
-  }
-  function p_Type(p2) {
-    const tok2 = p2.peek();
-    if (!tok2) {
-      p2.error(void 0, "Expected a type");
-      return;
-    }
-    if (tok2.type === "ID") {
-      p2.next();
-      return { type: "struct", data: '"' + tok2.value + '"' };
-    } else if (basic_types.has(tok2.type.toLowerCase())) {
-      p2.next();
-      return { type: tok2.type.toLowerCase() };
-    } else if (tok2.type === "ARRAY") {
-      return p_Array(p2);
-    } else {
-      p2.error(tok2, "invalid type " + tok2.type);
-    }
-  }
-  function p_Field(p2) {
-    const field = {
-      name: "",
-      type: void 0,
-      set: void 0,
-      get: void 0
-    };
-    console.log("-----", p2.peek().type);
-    field.name = p2.expect("ID", "struct field name");
-    p2.expect("COLON");
-    field.type = p_Type(p2);
-    field.set = void 0;
-    field.get = void 0;
-    let tok2 = p2.peek();
-    if (tok2?.type === "JSCRIPT") {
-      field.get = tok2.value;
-      p2.next();
-    }
-    tok2 = p2.peek();
-    if (tok2?.type === "JSCRIPT") {
-      field.set = tok2.value;
-      p2.next();
-    }
-    p2.expect("SEMI");
-    return field;
-  }
-  function p_Struct(p2) {
-    const st = {
-      name: "",
-      fields: []
-    };
-    st.name = p2.expect("ID", "struct name");
-    p2.expect("OPEN");
-    while (1) {
-      if (p2.at_end()) {
-        p2.error(void 0);
-      } else if (p2.optional("CLOSE")) {
-        break;
-      } else {
-        st.fields.push(p_Field(p2));
-      }
-    }
-    return st;
-  }
-  const ret = p_Struct(p);
-  console.log(JSON.stringify(ret));
-}
-var token2, tokdef2, PUTLParseError, lexer2, parser2;
-var init_parseutil = __esm({
-  "scripts/path-controller/util/parseutil.ts"() {
-    "use strict";
-    token2 = class {
-      type;
-      value;
-      lexpos;
-      lexlen;
-      lineno;
-      lexer;
-      parser;
-      constructor(type, val, lexpos, lexlen, lineno, lexer4, parser3) {
-        this.type = type;
-        this.value = val;
-        this.lexpos = lexpos;
-        this.lexlen = lexlen;
-        this.lineno = lineno;
-        this.lexer = lexer4;
-        this.parser = parser3;
-      }
-      setValue(val) {
-        this.value = val;
-        return this;
-      }
-      toString() {
-        if (this.value !== void 0)
-          return "token(type=" + this.type + ", value='" + this.value + "')";
-        else return "token(type=" + this.type + ")";
-      }
-    };
-    tokdef2 = class {
-      name;
-      re;
-      func;
-      constructor(name2, regexpr, func) {
-        this.name = name2;
-        this.re = regexpr;
-        this.func = func;
-      }
-    };
-    PUTLParseError = class extends Error {
-    };
-    lexer2 = class _lexer {
-      tokdef;
-      tokens;
-      lexpos;
-      lexdata;
-      lineno;
-      errfunc;
-      tokints;
-      print_tokens;
-      print_debug;
-      statestack;
-      states;
-      statedata;
-      peeked_tokens;
-      constructor(tokdef3, errfunc) {
-        this.tokdef = tokdef3;
-        this.tokens = [];
-        this.lexpos = 0;
-        this.lexdata = "";
-        this.lineno = 0;
-        this.errfunc = errfunc;
-        this.tokints = {};
-        this.print_tokens = false;
-        this.print_debug = false;
-        for (let i = 0; i < tokdef3.length; i++) {
-          this.tokints[tokdef3[i].name] = i;
-        }
-        this.statestack = [["__main__", 0]];
-        this.states = { "__main__": [tokdef3, errfunc] };
-        this.statedata = 0;
-        this.peeked_tokens = [];
-      }
-      copy() {
-        const ret = new _lexer(this.tokdef, this.errfunc);
-        for (const k in this.states) {
-          let state = this.states[k];
-          state = [state[0], state[1]];
-          ret.states[k] = state;
-        }
-        ret.statedata = this.statedata;
-        return ret;
-      }
-      //errfunc is optional, defines state-specific error function
-      add_state(name2, tokdef3, errfunc) {
-        if (errfunc === void 0) {
-          errfunc = function(_lexer2) {
-            return true;
-          };
-        }
-        this.states[name2] = [tokdef3, errfunc];
-      }
-      tok_int(_name) {
-      }
-      //statedata is optional.
-      //it stores state-specific data in lexer.statedata.
-      push_state(state, statedata) {
-        this.statestack.push([state, statedata]);
-        const stateEntry = this.states[state];
-        this.statedata = statedata;
-        this.tokdef = stateEntry[0];
-        this.errfunc = stateEntry[1];
-      }
-      pop_state() {
-        const item = this.statestack[this.statestack.length - 1];
-        const state = this.states[item[0]];
-        this.tokdef = state[0];
-        this.errfunc = state[1];
-        this.statedata = item[1];
-      }
-      input(str) {
-        while (this.statestack.length > 1) {
-          this.pop_state();
-        }
-        this.lexdata = str;
-        this.lexpos = 0;
-        this.lineno = 0;
-        this.tokens = [];
-        this.peeked_tokens = [];
-      }
-      error() {
-        if (this.errfunc !== void 0 && !this.errfunc(this)) return;
-        console.log("Syntax error near line " + this.lineno);
-        const next = Math.min(this.lexpos + 8, this.lexdata.length);
-        console.log("  " + this.lexdata.slice(this.lexpos, next));
-        throw new PUTLParseError("Parse error");
-      }
-      peek() {
-        const tok = this.next(true);
-        if (tok === void 0) return void 0;
-        this.peeked_tokens.push(tok);
-        return tok;
-      }
-      peek_i(i) {
-        while (this.peeked_tokens.length <= i) {
-          const t2 = this.peek();
-          if (t2 === void 0) return void 0;
-        }
-        return this.peeked_tokens[i];
-      }
-      at_end() {
-        return this.lexpos >= this.lexdata.length && this.peeked_tokens.length === 0;
-      }
-      next(ignore_peek) {
-        if (ignore_peek !== true && this.peeked_tokens.length > 0) {
-          const tok2 = this.peeked_tokens[0];
-          if (this.print_debug) {
-            console.log("PEEK_SHIFTING", "" + tok2);
-          }
-          this.peeked_tokens.shift();
-          if (this.print_tokens) {
-            console.log(tok2.toString());
-          }
-          return tok2;
-        }
-        if (this.lexpos >= this.lexdata.length) return void 0;
-        const ts = this.tokdef;
-        const tlen = ts.length;
-        const lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
-        const results = [];
-        for (let i = 0; i < tlen; i++) {
-          const t2 = ts[i];
-          if (t2.re === void 0) continue;
-          const res = t2.re.exec(lexdata);
-          if (res?.index === 0) {
-            results.push([t2, res]);
-          }
-        }
-        let max_res = 0;
-        let theres = void 0;
-        for (let i = 0; i < results.length; i++) {
-          const res = results[i];
-          if (res[1][0].length > max_res) {
-            theres = res;
-            max_res = res[1][0].length;
-          }
-        }
-        if (theres === void 0) {
-          this.error();
-          return;
-        }
-        const def = theres[0];
-        const lexlen = max_res;
-        let tok = new token2(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, void 0);
-        this.lexpos += max_res;
-        if (def.func) {
-          const tok2 = def.func(tok);
-          if (tok2 === void 0) {
-            return this.next(ignore_peek);
-          }
-          tok = tok2;
-        }
-        if (this.print_tokens) {
-          console.log(tok.toString());
-        }
-        if (!ignore_peek && this.print_debug) {
-          console.log("CONSUME", tok.toString(), "\n" + getTraceBack());
-        }
-        return tok;
-      }
-    };
-    parser2 = class _parser {
-      lexer;
-      errfunc;
-      start;
-      userdata;
-      constructor(lexer4, errfunc) {
-        this.lexer = lexer4;
-        this.errfunc = errfunc;
-        this.start = void 0;
-        this.userdata = void 0;
-      }
-      copy() {
-        const ret = new _parser(this.lexer.copy(), this.errfunc);
-        ret.start = this.start;
-        return ret;
-      }
-      parse(data, err_on_unconsumed) {
-        if (err_on_unconsumed === void 0) err_on_unconsumed = true;
-        if (data !== void 0) this.lexer.input(data);
-        const ret = this.start(this);
-        if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== void 0) {
-          this.error(void 0, "parser did not consume entire input");
-        }
-        return ret;
-      }
-      input(data) {
-        this.lexer.input(data);
-      }
-      error(tok, msg) {
-        if (msg === void 0) msg = "";
-        let estr;
-        if (tok === void 0) estr = "Parse error at end of input: " + msg;
-        else estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
-        let buf = "1| ";
-        const ld = this.lexer.lexdata;
-        let l = 1;
-        for (let i = 0; i < ld.length; i++) {
-          const c = ld[i];
-          if (c === "\n") {
-            l++;
-            buf += "\n" + l + "| ";
-          } else {
-            buf += c;
-          }
-        }
-        console.log("------------------");
-        console.log(buf);
-        console.log("==================");
-        console.log(estr);
-        if (this.errfunc && !this.errfunc(tok)) {
-          return;
-        }
-        throw new PUTLParseError(estr);
-      }
-      peek() {
-        const tok = this.lexer.peek();
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      peek_i(i) {
-        const tok = this.lexer.peek_i(i);
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      peeknext() {
-        return this.peek_i(0);
-      }
-      next() {
-        const tok = this.lexer.next();
-        if (tok !== void 0) tok.parser = this;
-        return tok;
-      }
-      optional(type) {
-        const tok = this.peek_i(0);
-        if (tok?.type === type) {
-          this.next();
-          return true;
-        }
-        return false;
-      }
-      at_end() {
-        return this.lexer.at_end();
-      }
-      expect(type, msg) {
-        const tok = this.next();
-        if (msg === void 0) msg = type;
-        if (tok?.type != type) {
-          this.error(tok, "Expected " + msg + ", not " + (tok ? tok.type : "end of input"));
-        }
-        return tok.value;
-      }
-    };
   }
 });
 
@@ -24968,146 +24457,638 @@ var init_allprops = __esm({
 });
 
 // scripts/path-controller/toolsys/toolpath.ts
-function buildParser() {
-  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
-  const tokens2 = [
-    t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
-      if (tok.value === "true" || tok.value === "false") {
-        tok.type = "BOOL";
-        tok.value = tok.value === "true";
-      }
-      return tok;
-    }),
-    t2("LPAREN", /\(/),
-    t2("RPAREN", /\)/),
-    t2("LSBRACKET", /\[/),
-    t2("RSBRACKET", /\]/),
-    t2("DOT", /\./),
-    t2("COMMA", /\,/),
-    t2("EQUALS", /\=/),
-    t2("STRLIT", /"[^"]*"/, (tok) => {
-      tok.value = tok.value.slice(1, tok.value.length - 1);
-      return tok;
-    }),
-    t2("STRLIT", /'[^']*'/, (tok) => {
-      tok.value = tok.value.slice(1, tok.value.length - 1);
-      return tok;
-    }),
-    t2("NUMBER", /-?[0-9]+/, (tok) => {
-      tok.value = parseInt(tok.value);
-      return tok;
-    }),
-    t2("NUMBER", /-?[0-9]+\.[0-9]*/, (tok) => {
-      tok.value = parseFloat(tok.value);
-      return tok;
-    }),
-    t2("WS", /[ \n\r\t]/, () => void 0)
-    //ignore whitespace
-  ];
-  const lexerror = () => {
-    console.warn("Parse error");
-    return true;
-  };
-  const valid_datatypes = {
-    STRLIT: 1,
-    NUMBER: 1,
-    BOOL: 1,
-    ID: 1
-  };
-  function p_Start(p2) {
-    const args = {};
-    while (!p2.at_end()) {
-      const keyword = p2.expect("ID");
-      p2.expect("EQUALS");
-      const t3 = p2.next();
-      if (!(t3.type in valid_datatypes)) {
-        throw new PUTLParseError("parse error: unexpected " + t3.type);
-      }
-      args[keyword] = t3.value;
-    }
-    return args;
-  }
-  const lex = new lexer2(tokens2, lexerror);
-  const p = new parser2(lex);
-  p.start = p_Start;
-  return p;
-}
 function parseToolPath(str, check_tool_exists = true) {
-  if (!initToolPaths_run) {
-    initToolPaths_run = true;
-    initToolPaths();
-  }
-  const startstr = str;
-  const i1 = str.search(/\(/);
-  const i2 = str.search(/\)/);
-  let argsStr = "";
-  if (i1 >= 0 && i2 >= 0) {
-    argsStr = str.slice(i1 + 1, i2).trim();
-    str = str.slice(0, i1).trim();
-  }
-  if (!(str in ToolPaths)) {
-    initToolPaths();
-  }
-  if (!(str in ToolPaths) && check_tool_exists) {
-    throw new DataPathError("unknown tool " + str);
-  }
-  let args;
-  try {
-    args = Parser.parse(argsStr);
-  } catch (error2) {
-    console.log(error2);
-    throw new DataPathError(`"${startstr}"
-  ${error2.message}`);
-  }
-  const toolclass = ToolPaths[str];
-  if (toolclass !== void 0) {
-    args = toolclass.parseArgs(args);
-  }
-  return {
-    toolclass,
-    args
-  };
+  return defaultRegistry.parseToolPath(str, check_tool_exists);
 }
 function testToolParser() {
   const ret = parseToolPath("view3d.sometool(selectmode=1 str='str' bool=true)", false);
   return ret;
 }
 function initToolPaths() {
-  for (const cls of ToolClasses) {
-    if (!cls.hasOwnProperty("tooldef")) {
-      continue;
-    }
-    const def = cls.tooldef();
-    const path = def.toolpath;
-    ToolPaths[path] = cls;
-  }
+  defaultRegistry.initPaths();
 }
-var ToolPaths, initToolPaths_run, Parser;
+var ToolPaths;
 var init_toolpath = __esm({
   "scripts/path-controller/toolsys/toolpath.ts"() {
     "use strict";
-    init_toolop();
-    init_parseutil();
-    init_controller_base();
-    ToolPaths = {};
-    initToolPaths_run = false;
-    Parser = buildParser();
+    init_toolregistry();
+    init_toolpath_parser();
+    ToolPaths = defaultRegistry.paths;
     window.parseToolPath = parseToolPath;
   }
 });
 
+// scripts/path-controller/controller/context.ts
+function setNotifier(cls) {
+  notifier = cls;
+}
+function makeDerivedOverlay(parent) {
+  return class ContextOverlay2 extends parent {
+    ctx;
+    _state;
+    __allKeys;
+    constructor(appstate) {
+      super(appstate);
+      this.ctx = void 0;
+      this._state = appstate;
+    }
+    get state() {
+      return this._state;
+    }
+    set state(state) {
+      this._state = state;
+    }
+    onRemove(_have_new_file = false) {
+    }
+    copy() {
+      return new this.constructor(this._state);
+    }
+    validate() {
+      throw new Error("Implement me!");
+    }
+    //base classes override this
+    static contextDefine() {
+      throw new Error("implement me!");
+      return {
+        name: "",
+        flag: 0
+      };
+    }
+    //don't override this
+    static resolveDef() {
+      if (Object.prototype.hasOwnProperty.call(this, Symbol.CachedDef)) {
+        return this[Symbol.CachedDef];
+      }
+      const def2 = {};
+      Symbol.CachedDef = {};
+      let def = this.contextDefine();
+      if (def === void 0) {
+        def = {};
+      }
+      for (const k in def) {
+        def2[k] = def[k];
+      }
+      if (!("flag" in def)) {
+        def2.flag = Context.inherit(0);
+      }
+      const parents = [];
+      let p = getClassParent(this);
+      while (p && p !== ContextOverlay2) {
+        parents.push(p);
+        p = getClassParent(p);
+      }
+      if (def2.flag instanceof InheritFlag2) {
+        let flag = def2.flag.data;
+        for (const parent2 of parents) {
+          const pdef = parent2.contextDefine();
+          if (!pdef.flag) {
+            continue;
+          } else if (pdef.flag instanceof InheritFlag2) {
+            flag |= pdef.flag.data;
+          } else {
+            flag |= pdef.flag;
+            break;
+          }
+        }
+        def2.flag = flag;
+      }
+      return def2;
+    }
+  };
+}
+function test() {
+  function testInheritance() {
+    class Test0 extends ContextOverlay {
+      static contextDefine() {
+        return {
+          flag: 1
+        };
+      }
+    }
+    class Test1 extends Test0 {
+      static contextDefine() {
+        return {
+          flag: 2
+        };
+      }
+    }
+    class Test2 extends Test1 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(4)
+        };
+      }
+    }
+    class Test3 extends Test2 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(8)
+        };
+      }
+    }
+    class Test4 extends Test3 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(16)
+        };
+      }
+    }
+    return Test4.resolveDef().flag === 30;
+  }
+  return testInheritance();
+}
+var notifier, ContextFlags, InheritFlag2, __idgen, _ret_tmp, OverlayClasses, ContextOverlay, excludedKeys, LockedContext, next_key, idgen, Context;
+var init_context = __esm({
+  "scripts/path-controller/controller/context.ts"() {
+    "use strict";
+    init_util();
+    init_config();
+    notifier = void 0;
+    ContextFlags = {
+      IS_VIEW: 1
+    };
+    InheritFlag2 = class {
+      data;
+      constructor(data) {
+        this.data = data;
+      }
+    };
+    __idgen = 1;
+    if (Symbol.ContextID === void 0) {
+      Symbol.ContextID = /* @__PURE__ */ Symbol("ContextID");
+    }
+    if (Symbol.CachedDef === void 0) {
+      Symbol.CachedDef = /* @__PURE__ */ Symbol("CachedDef");
+    }
+    _ret_tmp = [void 0];
+    OverlayClasses = [];
+    ContextOverlay = makeDerivedOverlay(Object);
+    excludedKeys = /* @__PURE__ */ new Set([
+      "onRemove",
+      "reset",
+      "toString",
+      "_fix",
+      "valueOf",
+      "copy",
+      "next",
+      "save",
+      "load",
+      "clear",
+      "hasOwnProperty",
+      "toLocaleString",
+      "constructor",
+      "propertyIsEnumerable",
+      "isPrototypeOf",
+      "state",
+      "saveProperty",
+      "loadProperty",
+      "getOwningOverlay",
+      "_props"
+    ]);
+    LockedContext = class {
+      props;
+      state;
+      api;
+      toolstack;
+      noWarnings;
+      ctx;
+      constructor(ctx, noWarnings) {
+        this.props = {};
+        this.state = ctx.state;
+        this.api = ctx.api;
+        this.toolstack = ctx.toolstack;
+        this.noWarnings = !!noWarnings;
+        this.ctx = ctx;
+        this.load(ctx);
+      }
+      toLocked() {
+        return this;
+      }
+      error(...args) {
+        return this.ctx.error(...args);
+      }
+      warning(...args) {
+        return this.ctx.warning(
+          ...args
+        );
+      }
+      message(...args) {
+        return this.ctx.message(
+          ...args
+        );
+      }
+      progbar(...args) {
+        return this.ctx.progbar(
+          ...args
+        );
+      }
+      progressBar(...args) {
+        const ctxRec = this.ctx;
+        return ctxRec.progbar !== void 0 ? ctxRec.progbar(...args) : ctxRec.progressBar(...args);
+      }
+      load(ctx) {
+        const keys2 = ctx._props;
+        function wrapget(name2) {
+          return function(ctx2, data) {
+            return ctx.loadProperty(ctx2, name2, data);
+          };
+        }
+        for (const k of keys2) {
+          if (k === "state" || k === "toolstack" || k === "api") {
+            continue;
+          }
+          if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+            continue;
+          }
+          try {
+            void ctx[k];
+          } catch (_error) {
+            if (config_default.DEBUG.contextSystem) {
+              console.warn("failed to look up property in context: ", k);
+            }
+            continue;
+          }
+          let data;
+          let getter;
+          const overlay = ctx.getOwningOverlay(k);
+          if (overlay === void 0) {
+            continue;
+          }
+          try {
+            const oRec = overlay;
+            if (typeof k === "string" && oRec[k + "_save"] && oRec[k + "_load"]) {
+              data = oRec[k + "_save"]();
+              getter = oRec[k + "_load"];
+            } else {
+              data = ctx.saveProperty(k);
+              getter = wrapget(k);
+            }
+          } catch (_error) {
+            console.warn("Failed to save context property", k);
+            continue;
+          }
+          this.props[k] = {
+            data,
+            get: getter
+          };
+        }
+        const defineProp = (name2) => {
+          Object.defineProperty(this, name2, {
+            get: function() {
+              const def = this.props[name2];
+              return def.get(this.ctx, def.data);
+            }
+          });
+        };
+        for (const k in this.props) {
+          if (k !== "ctx") {
+            defineProp(k);
+          }
+        }
+        this.ctx = ctx;
+      }
+      setContext(ctx) {
+        this.ctx = ctx;
+        this.state = ctx.state;
+        this.api = ctx.api;
+        this.toolstack = ctx.toolstack;
+      }
+    };
+    next_key = {};
+    idgen = 1;
+    Context = class _Context {
+      state;
+      _props;
+      _stack;
+      _inside_map;
+      constructor(appstate) {
+        this.state = appstate;
+        this._props = /* @__PURE__ */ new Set();
+        this._stack = [];
+        this._inside_map = {};
+      }
+      static isContextSubclass(cls) {
+        while (cls) {
+          if (cls === _Context) {
+            return true;
+          }
+          cls = cls.__proto__;
+        }
+        return false;
+      }
+      /** chrome's debug console corrupts this._inside_map,
+       this method fixes it*/
+      _fix() {
+        this._inside_map = {};
+      }
+      fix() {
+        this._fix();
+      }
+      error(message2, timeout = 1500) {
+        const state = this.state;
+        console.warn(message2);
+        if (state?.screen) {
+          return notifier.error(state.screen, message2, timeout);
+        }
+      }
+      warning(message2, timeout = 1500) {
+        const state = this.state;
+        console.warn(message2);
+        if (state?.screen) {
+          return notifier.warning(state.screen, message2, timeout);
+        }
+      }
+      message(msg, timeout = 1500) {
+        const state = this.state;
+        console.warn(msg);
+        if (state?.screen) {
+          return notifier.message(state.screen, msg, timeout);
+        }
+      }
+      progbar(msg, perc = 0, timeout = 1500, id = msg) {
+        const state = this.state;
+        if (state?.screen) {
+          return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
+        }
+      }
+      validateOverlays() {
+        const stack = this._stack;
+        const stack2 = [];
+        for (let i = 0; i < stack.length; i++) {
+          if (stack[i].validate()) {
+            stack2.push(stack[i]);
+          }
+        }
+        this._stack = stack2;
+      }
+      hasOverlay(cls) {
+        return this.getOverlay(cls) !== void 0;
+      }
+      getOverlay(cls) {
+        for (const overlay of this._stack) {
+          if (overlay.constructor === cls) {
+            return overlay;
+          }
+        }
+      }
+      clear(have_new_file = false) {
+        for (const overlay of this._stack) {
+          overlay.onRemove(have_new_file);
+        }
+        this._stack = [];
+      }
+      reset(have_new_file = false) {
+        this.clear(have_new_file);
+      }
+      override(overrides) {
+        if (overrides.copy === void 0) {
+          overrides.copy = function() {
+            return Object.assign({}, this);
+          };
+        }
+        const ctx = this.copy();
+        ctx.pushOverlay(overrides);
+        return ctx;
+      }
+      copy() {
+        const ret = new this.constructor(this.state);
+        for (const item of this._stack) {
+          ret.pushOverlay(item.copy());
+        }
+        return ret;
+      }
+      static super() {
+        return next_key;
+      }
+      saveProperty(key) {
+        return this[key];
+      }
+      loadProperty(_ctx, _key, data) {
+        return data;
+      }
+      getOwningOverlay(name2, _val_out) {
+        const inside_map = this._inside_map;
+        const stack = this._stack;
+        if (config_default.DEBUG.contextSystem) {
+          console.log(name2, inside_map);
+        }
+        for (let i = stack.length - 1; i >= 0; i--) {
+          const overlay = stack[i];
+          let ret = next_key;
+          if (overlay[Symbol.ContextID] === void 0) {
+            throw new Error("context corruption");
+          }
+          const ikey = overlay[Symbol.ContextID];
+          if (config_default.DEBUG.contextSystem) {
+            console.log(ikey, overlay);
+          }
+          if (inside_map[ikey]) {
+            continue;
+          }
+          if (overlay.__allKeys?.has(name2)) {
+            if (config_default.DEBUG.contextSystem) {
+              console.log("getting value");
+            }
+            inside_map[ikey] = 1;
+            try {
+              ret = overlay[name2];
+            } catch (error2) {
+              inside_map[ikey] = 0;
+              throw error2;
+            }
+            inside_map[ikey] = 0;
+          }
+          if (ret !== next_key) {
+            if (_val_out !== void 0) {
+              _val_out[0] = ret;
+            }
+            return overlay;
+          }
+        }
+        if (_val_out !== void 0) {
+          _val_out[0] = void 0;
+        }
+        return void 0;
+      }
+      ensureProperty(name2) {
+        if (Object.prototype.hasOwnProperty.call(this, name2)) {
+          return;
+        }
+        this._props.add(name2);
+        Object.defineProperty(this, name2, {
+          get: function() {
+            const ret = _ret_tmp;
+            _ret_tmp[0] = void 0;
+            this.getOwningOverlay(name2, ret);
+            return ret[0];
+          },
+          set: function() {
+            throw new Error("Cannot set ctx properties");
+          }
+        });
+      }
+      toLocked() {
+        const locked = new LockedContext(this);
+        return locked;
+      }
+      pushOverlay(overlay) {
+        if (!Object.prototype.hasOwnProperty.call(
+          overlay,
+          Symbol.ContextID
+        )) {
+          overlay[Symbol.ContextID] = idgen++;
+        }
+        const keys2 = /* @__PURE__ */ new Set();
+        for (const key of getAllKeys(overlay)) {
+          if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
+            keys2.add(key);
+          }
+        }
+        overlay.ctx = this;
+        if (overlay.__allKeys === void 0) {
+          overlay.__allKeys = keys2;
+        }
+        for (const k of keys2) {
+          let bad = typeof k === "symbol" || excludedKeys.has(k);
+          bad = bad || typeof k === "string" && k[0] === "_";
+          bad = bad || typeof k === "string" && k.endsWith("_save");
+          bad = bad || typeof k === "string" && k.endsWith("_load");
+          if (bad) {
+            continue;
+          }
+          this.ensureProperty(k);
+        }
+        if (this._stack.includes(overlay)) {
+          console.warn("Overlay already added once");
+          if (this._stack[this._stack.length - 1] === overlay) {
+            console.warn("  Definitely an error, overlay is already at top of stack");
+            return;
+          }
+        }
+        this._stack.push(overlay);
+      }
+      popOverlay(overlay) {
+        if (overlay !== this._stack[this._stack.length - 1]) {
+          console.warn("Context.popOverlay called in error", overlay);
+          return;
+        }
+        overlay.onRemove();
+        this._stack.pop();
+      }
+      removeOverlay(overlay) {
+        if (!this._stack.includes(overlay)) {
+          console.warn("Context.removeOverlay called in error", overlay);
+          return;
+        }
+        overlay.onRemove();
+        this._stack.remove(overlay);
+      }
+      static inherit(data) {
+        return new InheritFlag2(data);
+      }
+      static register(cls) {
+        if (cls[Symbol.ContextID]) {
+          console.warn("Tried to register same class twice:", cls);
+          return;
+        }
+        cls[Symbol.ContextID] = __idgen++;
+        OverlayClasses.push(cls);
+      }
+    };
+    if (!test()) {
+      throw new Error("Context test failed");
+    }
+  }
+});
+
+// scripts/path-controller/toolsys/toolsys.ts
+function setContextClass(_cls) {
+  console.warn("setContextClass is deprecated");
+}
+function updateToolDefaults(cls, api, datastruct) {
+  defaultRegistry.updateDefaults(cls, api, datastruct);
+}
+function updateToolSysAPI(api) {
+  api.registry.buildAPI(api);
+}
+function buildToolOpAPI(api, cls) {
+  return defaultRegistry.buildOpAPI(api, cls);
+}
+function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
+  updateToolSysAPI(api);
+  if (rootCtxStruct) {
+    rootCtxStruct.struct(
+      "toolDefaults",
+      "toolDefaults",
+      "Tool Defaults",
+      api.registry.structFor(api)
+    );
+    rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
+  }
+  if (rootCtxClass && insertToolDefaultsIntoContext) {
+    let haveprop2 = function(k) {
+      return Reflect.ownKeys(inst).includes(k) || Reflect.ownKeys(rootCtxClass.prototype).includes(k);
+    };
+    var haveprop = haveprop2;
+    const inst = new rootCtxClass({});
+    if (!haveprop2("last_tool")) {
+      Object.defineProperty(rootCtxClass.prototype, "last_tool", {
+        get() {
+          return this.toolstack.head;
+        }
+      });
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.last_tool_save = () => ({});
+        rootCtxClass.prototype.last_tool_load = () => void 0;
+      }
+    }
+    if (!haveprop2("toolDefaults")) {
+      Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
+        get() {
+          return api.registry.defaults;
+        }
+      });
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.toolDefaults_save = () => ({});
+        rootCtxClass.prototype.toolDefaults_load = () => void 0;
+      }
+    }
+  }
+  if (!registerWithNStructjs) {
+    return;
+  }
+  for (const cls of api.registry.classes) {
+    try {
+      if (!struct_default.isRegistered(cls)) {
+        ToolOp._regWithNstructjs(cls);
+      }
+    } catch (error2) {
+      console.log(error2.stack);
+      console.error("Failed to register a tool with nstructjs");
+    }
+  }
+}
+var init_toolsys = __esm({
+  "scripts/path-controller/toolsys/toolsys.ts"() {
+    "use strict";
+    init_struct();
+    init_context();
+    init_toolop();
+    init_toolregistry();
+  }
+});
+
 // scripts/path-controller/toolsys/toolmacro.ts
-var MacroClasses, asyncCheck, macroidgen, MacroLink, ToolMacro;
+var MacroClasses, asyncCheck, MacroLink, ToolMacro;
 var init_toolmacro = __esm({
   "scripts/path-controller/toolsys/toolmacro.ts"() {
     "use strict";
     init_struct();
-    init_tooldefaults();
     init_toolprop();
     init_toolop();
-    MacroClasses = {};
+    init_toolregistry();
+    MacroClasses = defaultRegistry.macros;
     asyncCheck = async (p) => p instanceof Promise ? await p : void 0;
-    macroidgen = 0;
     MacroLink = class {
       static STRUCT = struct_default.inlineRegister(
         this,
@@ -25173,6 +25154,7 @@ var init_toolmacro = __esm({
         if (this._macro_class?.ready) {
           return this._macro_class;
         }
+        const registry = registryOf(this.constructor);
         if (!this._macro_class) {
           this._macro_class = class MacroTypeClass extends ToolOp {
             static tooldef() {
@@ -25183,13 +25165,14 @@ var init_toolmacro = __esm({
             toolpath: this.constructor.tooldef().toolpath || ""
           };
           this._macro_class.ready = false;
+          registry.stamp(this._macro_class);
         }
         if (!this.tools || this.tools.length === 0) {
           return this._macro_class;
         }
         let key = "";
         for (const tool of this.tools) {
-          key = tool.constructor.name + ":";
+          key += tool.constructor.name + ":";
         }
         if (this.constructor !== _ToolMacro) {
           key += ":" + this.constructor.tooldef().toolpath;
@@ -25197,8 +25180,8 @@ var init_toolmacro = __esm({
         for (const k in this.inputs) {
           key += k + ":";
         }
-        if (key in MacroClasses) {
-          this._macro_class = MacroClasses[key];
+        if (key in registry.macros) {
+          this._macro_class = registry.macros[key];
           return this._macro_class;
         }
         let name2 = "Macro(";
@@ -25235,9 +25218,9 @@ var init_toolmacro = __esm({
         };
         const cls = this._macro_class;
         cls.__tooldef = tdef;
-        cls._macroTypeId = macroidgen++;
+        cls._macroTypeId = defaultRegistry.macroIdGen++;
         cls.ready = true;
-        MacroClasses[key] = cls;
+        registry.macros[key] = cls;
         return cls;
       }
       saveDefaultInputs() {
@@ -25245,18 +25228,21 @@ var init_toolmacro = __esm({
         for (const k in inputs) {
           const prop = inputs[k];
           if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
-            SavedToolDefaults.set(this._getTypeClass(), k, prop);
+            const cls = this._getTypeClass();
+            defaultsFor(cls).set(cls, k, prop);
           }
         }
         return this;
       }
       hasDefault(toolprop3, key = toolprop3.apiname ?? "") {
-        return SavedToolDefaults.has(this._getTypeClass(), key, toolprop3);
+        const cls = this._getTypeClass();
+        return defaultsFor(cls).has(cls, key, toolprop3);
       }
       getDefault(toolprop3, key = toolprop3.apiname ?? "") {
         const cls = this._getTypeClass();
-        if (SavedToolDefaults.has(cls, key, toolprop3)) {
-          return SavedToolDefaults.get(cls, key, toolprop3);
+        const defaults = defaultsFor(cls);
+        if (defaults.has(cls, key, toolprop3)) {
+          return defaults.get(cls, key, toolprop3);
         } else {
           return toolprop3.getValue();
         }
@@ -25945,6 +25931,7 @@ var init_toolsys2 = __esm({
     init_toolop();
     init_toolmacro();
     init_tooldefaults();
+    init_toolregistry();
     init_toolstack();
   }
 });
@@ -26319,11 +26306,18 @@ var init_controller_abstract = __esm({
     init_toolprop_abstract();
     init_toolsys2();
     init_controller_base();
+    init_toolregistry();
     init_pathwatch();
     ModelInterface = class {
       prefix;
+      /**
+       * The tool tables this api resolves toolpaths and tool defaults against. Assigning a
+       * second registry here is how a subsystem gets its own namespace.
+       */
+      registry;
       constructor() {
         this.prefix = "";
+        this.registry = defaultRegistry;
       }
       getToolDef(path) {
         throw new Error("implement me");
@@ -26639,12 +26633,6 @@ var init_controller_abstract = __esm({
 });
 
 // scripts/path-controller/controller/controller.ts
-function toolkey(cls) {
-  if (!(Symbol.ToolID in cls)) {
-    cls[Symbol.ToolID] = tool_idgen++;
-  }
-  return cls[Symbol.ToolID];
-}
 function pushReportName(name2) {
   if (reportstack.length > 1024) {
     console.trace("eerk, reportstack overflowed");
@@ -26664,7 +26652,7 @@ function resolveStructName(cls, explicit) {
   if (explicit !== void 0) {
     return explicit;
   }
-  if (cls.hasOwnProperty("structName") && typeof cls.structName === "string") {
+  if (Object.prototype.hasOwnProperty.call(cls, "structName") && typeof cls.structName === "string") {
     return cls.structName;
   }
   return cls.name;
@@ -26682,7 +26670,7 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, tool_idgen, reportstack, DataStruct3, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI3, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, reportstack, DataStruct, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
@@ -26725,10 +26713,10 @@ var init_controller = __esm({
         return t2;
       }),
       tk("DOT", /\./),
-      tk("EQUALS", /(\=)|(\=\=)/),
+      tk("EQUALS", /(=)|(==)/),
       tk("LSBRACKET", /\[/),
       tk("RSBRACKET", /\]/),
-      tk("AND", /\&/),
+      tk("AND", /&/),
       tk("WS", /[ \t\n\r]+/, () => void 0)
       //drop token
     ];
@@ -26742,10 +26730,9 @@ var init_controller = __esm({
       parserStack[i] = pathParser.copy();
     }
     parserStackCur = 0;
-    tool_idgen = 1;
     Symbol.ToolID = /* @__PURE__ */ Symbol("toolid");
     reportstack = ["api"];
-    DataStruct3 = class _DataStruct {
+    DataStruct = class _DataStruct {
       members;
       name;
       pathmap;
@@ -27051,7 +27038,7 @@ var init_controller = __esm({
     DummyIntProperty = new IntProperty();
     CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
     CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
-    DataAPI3 = class extends ModelInterface {
+    DataAPI = class extends ModelInterface {
       rootContextStruct;
       structs = [];
       /** Message from the most recent failed resolvePath (incl. "did you mean" hints). */
@@ -27081,7 +27068,7 @@ var init_controller = __esm({
         this.rootContextStruct = sdef;
       }
       hasStruct(cls) {
-        return cls.hasOwnProperty(CLS_API_KEY);
+        return Object.prototype.hasOwnProperty.call(cls, CLS_API_KEY);
       }
       getStruct(cls) {
         return this.mapStruct(cls, false);
@@ -27214,7 +27201,7 @@ var init_controller = __esm({
       }
       mapStruct(cls, auto_create = true, name2) {
         let key;
-        if (!cls.hasOwnProperty(CLS_API_KEY)) {
+        if (!Object.prototype.hasOwnProperty.call(cls, CLS_API_KEY)) {
           key = void 0;
         } else {
           key = cls[CLS_API_KEY];
@@ -27224,7 +27211,7 @@ var init_controller = __esm({
           if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
             dstruct = _map_structs_by_name[name2];
           } else {
-            dstruct = new DataStruct3(void 0, resolveStructName(cls, name2));
+            dstruct = new DataStruct(void 0, resolveStructName(cls, name2));
           }
           this._addClass(cls, dstruct, name2);
           return dstruct;
@@ -27806,7 +27793,7 @@ An example of a more complicated expression might be:
       }
       parseToolPath(path) {
         try {
-          return parseToolPath(path).toolclass;
+          return this.registry.parseToolPath(path).toolclass;
         } catch (error2) {
           if (error2 instanceof DataPathError) {
             console.warn("warning, bad tool path " + path);
@@ -27817,13 +27804,13 @@ An example of a more complicated expression might be:
         }
       }
       parseToolArgs(path) {
-        return parseToolPath(path).args;
+        return this.registry.parseToolPath(path).args;
       }
       createTool(ctx, path, inputs = {}) {
         let cls;
         let args;
         if (typeof path == "string") {
-          const tpath = parseToolPath(path);
+          const tpath = this.registry.parseToolPath(path);
           cls = tpath.toolclass;
           args = tpath.args;
         } else {
@@ -27861,7 +27848,7 @@ An example of a more complicated expression might be:
       }
     };
     dpt = DataPathSetOp;
-    setImplementationClass(DataAPI3);
+    setImplementationClass(DataAPI);
   }
 });
 
@@ -28180,8 +28167,6 @@ function quad_bilinear(v1, v2, v3, v4, u, v) {
   return -((v1 - v2) * u - v1 - (u * v1 - u * v2 + u * v3 - u * v4 - v1 + v4) * v);
 }
 function quad_uv_2d(p, v1, v2, v3, v4) {
-  let u;
-  let v;
   const v2x = v2[0] - v1[0];
   const v2y = v2[1] - v1[1];
   const v3x = v3[0] - v1[0];
@@ -28378,16 +28363,6 @@ function barycentric_v2(p, v1, v2, v3, axis1 = 0, axis2 = 1, out) {
   out[1] = v;
   return out;
 }
-function _linedis2(co, v1, v2) {
-  const v1x = v1[0] - co[0];
-  const v1y = v1[1] - co[1];
-  const v1z = v1[2] - co[2];
-  const v2x = v2[0] - co[0];
-  const v2y = v2[1] - co[1];
-  const v2z = v2[2] - co[2];
-  const dis = (((v1y - v2y) * v1y + (v1z - v2z) * v1z + (v1x - v2x) * v1x) * (v1y - v2y) - v1y) ** 2 + (((v1y - v2y) * v1y + (v1z - v2z) * v1z + (v1x - v2x) * v1x) * (v1z - v2z) - v1z) ** 2 + (((v1y - v2y) * v1y + (v1z - v2z) * v1z + (v1x - v2x) * v1x) * (v1x - v2x) - v1x) ** 2;
-  return dis;
-}
 function closest_point_on_quad(p, v1, v2, v3, v4, n, uvw) {
   const a2 = closest_point_on_tri(p, v1, v2, v3, n, uvw);
   const b = closest_point_on_tri(p, v1, v3, v4, n, uvw);
@@ -28545,17 +28520,6 @@ function dist_to_tri_v3_old(co, v1, v2, v3, no) {
   pparr[1] = coarr[axis2];
   pparr[2] = 0;
   let dis = 1e17;
-  function linedis2d(a2, b, c) {
-    const dx1 = a2[0] - b[0];
-    const dy1 = a2[1] - b[1];
-    let dx2 = c[0] - b[0];
-    let dy2 = c[1] - b[1];
-    let len = dx2 * dx2 + dy2 * dy2;
-    len = len > 1e-6 ? 1 / len : 0;
-    dx2 *= len;
-    dy2 *= len;
-    return Math.abs(dx1 * dy2 - dx2 * dy1);
-  }
   const tmp = dtvtmps.next();
   const tmp2 = dtvtmps.next();
   function linedis3d(a2, b, c) {
@@ -28738,11 +28702,6 @@ function dist_to_tri_v3_sqr(p, v1, v2, v3, n) {
     d = -d;
     lx += nx * d;
     ly += ny * d;
-    lz += nz * d;
-    if (0) {
-      console.log("d", d.toFixed(6));
-      console.log(lx * nx + ly * ny + lz * nz);
-    }
   }
   let mul = ((lx ** 2 + ly ** 2) * nz ** 2 + (lx * nx + ly * ny) ** 2) / ((lx ** 2 + ly ** 2) * nz ** 2);
   if (Math.random() > 0.999) {
@@ -28878,19 +28837,6 @@ function aabb_union_2d(pos1, size1, pos2, size2) {
   ret.pos.load(min);
   ret.pos.load(max);
   return ret;
-}
-function init_prototype(cls, proto) {
-  for (const k in proto) {
-    cls.prototype[k] = proto[k];
-  }
-  return cls.prototype;
-}
-function inherit2(cls, parent, proto) {
-  cls.prototype = Object.create(parent.prototype);
-  for (const k in proto) {
-    cls.prototype[k] = proto[k];
-  }
-  return cls.prototype;
 }
 function get_rect_points(p, size) {
   let cs;
@@ -29666,8 +29612,6 @@ function get_tri_circ(a2, b, c) {
   v2arr[2] = e2[2];
   v1.normalize();
   v2.normalize();
-  let cent;
-  let type;
   const p12arr = _gtc_p12;
   const p22arr = _gtc_p22;
   for (let _i = 0; _i < 3; _i++) {
@@ -29676,7 +29620,7 @@ function get_tri_circ(a2, b, c) {
     p22arr[i] = p2[i] + v2[i];
   }
   const isect = line_isect(p1, _gtc_p12, p2, _gtc_p22);
-  cent = isect[0];
+  const cent = isect[0];
   e1.load(a2);
   e2.load(b);
   e3.load(c);
@@ -30045,7 +29989,7 @@ function angle_between_vecs(v1, vcent, v2) {
     return Math.acos(d);
   }
 }
-var dtvtmps, quad_co_rets2, ClosestModes, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, aabb_intersect_vs, aabb_intersect_rets, $_mh, $_swapt, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _li_vi, dt2l_v1, dt2l_v3, dt2l_v4, dt2l_v5, _cplw_vs4, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos, sin, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
+var dtvtmps, quad_co_rets2, ClosestModes, AbstractCurve, ClosestCurveRets, poly_normal_tmps, pncent, barycentric_v2_rets, calc_proj_refs, tet_area_tmps, _avtmps, closest_p_tri_rets, cpt_v1, cpt_v2, cpt_v3, cpt_p, cpt_n, cpt_mat, cpt_mat2, cpt_b, _dt3s_n, aabb_intersect_vs, aabb_intersect_rets, feps, COLINEAR, LINECROSS, COLINEAR_ISECT, _cross_vec1, _cross_vec2, SQRT2, FEPS_DATA, FEPS, FLOAT_MIN, FLOAT_MAX, Matrix4UI, _static_grp_points4, _static_grp_points8, $vs_simple_tri_aabb_isect, MinMax1, MinMax, $ps_aabb_isect_line_2d, line_line_isect_rects2, line_line_isect_rects3, line_line_isect_rects4, _tmps_cn, _rets_cn, _asi_v5, _asi_v6, _asi2d_v1, _asi2d_v2, _asi2d_v3, _asi2d_v4, _asi2d_v6, asi_rect, aabb_sphere_isect_vs, _normal_tri_rets, $n2_normal_quad, _q1, _q2, _li_vi, dt2l_v1, dt2l_v3, dt2l_v4, dt2l_v5, _cplw_vs4, _closest_point_on_line_cache, _closest_point_rets, _closest_tmps, _circ_from_line_tan_vs, _circ_from_line_tan_ret, _circ_from_line_tan2d_vs, _circ_from_line_tan2d_ret, _gtc_e1, _gtc_e2, _gtc_e3, _gtc_p1, _gtc_p2, _gtc_v1, _gtc_v2, _gtc_p12, _gtc_p22, _get_tri_circ_ret, cos, sin, static_cent_gbw, PlaneOps, _isrp_ret, isect_ray_plane_rets, Mat4Stack, tril_rets, tril_co_rets, tril_co_tmps, tril_mat_1, tril_mat_2, wtable, pih_tmps, boxfaces_table, boxfaces_tmp, boxfacenormals_tmp, boxverts_tmp, angle_tri_v3_rets, angle_tri_v3_vs, angle_v2_temps, angle_v3_temps;
 var init_math = __esm({
   "scripts/path-controller/util/math.ts"() {
     "use strict";
@@ -31777,7 +31721,7 @@ var init_aspect = __esm({
         this.chain2 = [[owner[key], void 0]];
         this.root = [[owner[key], void 0]];
         const this2 = this;
-        const method = this._method = function() {
+        const method = this._method = function(...args) {
           const chain = this2.chain;
           const chain2 = this2.chain2;
           chain2.length = chain.length;
@@ -31800,7 +31744,7 @@ var init_aspect = __esm({
               chain.remove(chain2[i]);
             }
             if (cb?.apply) {
-              method.value = cb.apply(this, arguments);
+              method.value = cb.apply(this, args);
             }
           }
           const ret = method.value;
@@ -33667,22 +33611,22 @@ var init_ui_base = __esm({
       _hasSubDefault(key, subkey, _themeDef) {
         return _hasSubDefault(this, key, subkey, _themeDef);
       }
-      hasClassSubDefault(key, subkey, inherit3 = true) {
-        return hasClassSubDefault(this, key, subkey, inherit3);
+      hasClassSubDefault(key, subkey, inherit2 = true) {
+        return hasClassSubDefault(this, key, subkey, inherit2);
       }
-      _hasClassSubDefault(key, subkey, inherit3 = true, style = this.getStyleClass(), themeDef) {
-        return _hasClassSubDefault(this, key, subkey, inherit3, style, themeDef);
+      _hasClassSubDefault(key, subkey, inherit2 = true, style = this.getStyleClass(), themeDef) {
+        return _hasClassSubDefault(this, key, subkey, inherit2, style, themeDef);
       }
       /** get a sub style from a theme style class.
        *  note that if key is falsy then it just forwards to this.getDefault directly*/
-      getSubDefault(key, subkey, backupkey = subkey, defaultval, inherit3 = true) {
-        return getSubDefault(this, key, subkey, backupkey, defaultval, inherit3);
+      getSubDefault(key, subkey, backupkey = subkey, defaultval, inherit2 = true) {
+        return getSubDefault(this, key, subkey, backupkey, defaultval, inherit2);
       }
-      getDefault(key, checkForMobile, defaultval, inherit3) {
-        return getDefault2(this, key, checkForMobile, defaultval, inherit3);
+      getDefault(key, checkForMobile, defaultval, inherit2) {
+        return getDefault2(this, key, checkForMobile, defaultval, inherit2);
       }
-      getDefault_intern(key, checkForMobile = true, defaultval, inherit3 = true) {
-        return getDefault_intern(this, key, checkForMobile, defaultval, inherit3);
+      getDefault_intern(key, checkForMobile = true, defaultval, inherit2 = true) {
+        return getDefault_intern(this, key, checkForMobile, defaultval, inherit2);
       }
       getStyleClass(ignoreOverride = false) {
         return getStyleClass(this, ignoreOverride);
@@ -33700,8 +33644,8 @@ var init_ui_base = __esm({
        *                `this.constructor.define().style` to be checked (before parentStyle).
        * @returns The default value for the given key
        */
-      getClassDefault(key, checkForMobile = true, defaultval, inherit3 = true) {
-        return getClassDefault(this, key, checkForMobile, defaultval, inherit3);
+      getClassDefault(key, checkForMobile = true, defaultval, inherit2 = true) {
+        return getClassDefault(this, key, checkForMobile, defaultval, inherit2);
       }
       overrideTheme(themeOverride) {
         overrideTheme(this, themeOverride);
@@ -33818,7 +33762,25 @@ var init_ui_button = __esm({
         this._pressed = false;
       }
       bindEvents() {
-        let depress;
+        const depress = (e) => {
+          if (this._auto_depress) {
+            this._pressed = false;
+            if (this.disabled) return;
+            this._redraw();
+          }
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isMobile() || e.type === "pointerup" && e.button) {
+              return;
+            }
+          }
+          this._redraw();
+          if (this.onclick && e && e.pointerType !== "mouse") {
+            this.onclick(e);
+          }
+          this.undoBreakPoint();
+        };
         const press = (e) => {
           e.stopPropagation();
           if (!this.modalRunning) {
@@ -33860,25 +33822,6 @@ var init_ui_button = __esm({
           }
           this._redraw();
           e.preventDefault();
-        };
-        depress = (e) => {
-          if (this._auto_depress) {
-            this._pressed = false;
-            if (this.disabled) return;
-            this._redraw();
-          }
-          if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (isMobile() || e.type === "pointerup" && e.button) {
-              return;
-            }
-          }
-          this._redraw();
-          if (this.onclick && e && e.pointerType !== "mouse") {
-            this.onclick(e);
-          }
-          this.undoBreakPoint();
         };
         this.addEventListener("click", () => {
           this._pressed = false;
@@ -36488,16 +36431,6 @@ function getNativeTheme() {
   }
   return _nativeTheme;
 }
-function getElectronVersion() {
-  let key = navigator.userAgent;
-  let i = key.search("Electron");
-  key = key.slice(i + 9, key.length);
-  i = key.search(/[ \t]/);
-  if (i >= 0) {
-    key = key.slice(0, i);
-  }
-  return key.trim().split(".").map((f2) => parseInt(f2));
-}
 function getElectron() {
   return __require("electron");
 }
@@ -36610,9 +36543,6 @@ function checkInit2() {
     patchDropBox2();
     setInterval(on_tick, 350);
   }
-}
-function makeIconKey(icon, iconsheet, invertColors) {
-  return "" + icon + ":" + iconsheet + ":" + invertColors;
 }
 function getNativeIcon2(icon, iconsheet = 0, invertColors = false, size = 16) {
   let icongen;
@@ -38381,7 +38311,7 @@ function toolPanelImpl(self2, path_or_cls, args = {}) {
   }
   const path = defaultsPath + tdef.toolpath;
   container.useIcons(false);
-  const inputs = (tdef.inputs instanceof InheritFlag2 ? tdef.inputs.slots : tdef.inputs) ?? {};
+  const inputs = (tdef.inputs instanceof InheritFlag ? tdef.inputs.slots : tdef.inputs) ?? {};
   for (const k in inputs) {
     const prop = inputs[k];
     if (prop.flag & PropFlags.PRIVATE) {
@@ -39131,8 +39061,8 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   if (mass_set_path !== void 0) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
-  if (name2 !== void 0) {
-    ret.setAttribute("name", name2);
+  if (label !== void 0) {
+    ret.setAttribute("name", label);
   }
   if (defaultval !== void 0) {
     ret.setValue(defaultval);
@@ -40605,7 +40535,7 @@ var TwoColumnFrame = class extends Container3 {
   parentDepth = 1;
   get colWidth() {
     if (this.hasAttribute("colWidth")) {
-      return parsepx3(this.getAttribute("colWidth"));
+      return parsepx2(this.getAttribute("colWidth"));
     }
     return this._colWidth;
   }
@@ -40646,7 +40576,7 @@ var TwoColumnFrame = class extends Container3 {
   }
 };
 UIBase.internalRegister(TwoColumnFrame);
-function parsepx3(css) {
+function parsepx2(css) {
   return parseFloat(css);
 }
 
@@ -41069,7 +40999,6 @@ var NumSlider = class extends ValueButtonBase {
     }
     this.last_time = time_ms();
     let last_background = this.dom._background;
-    let cancel;
     this.ma = new MovingAvg(eventWasTouch(e) ? 8 : 2);
     const startvalue = this.value;
     let value = startvalue;
@@ -41079,6 +41008,21 @@ var NumSlider = class extends ValueButtonBase {
       if (this.on_change) {
         this.on_change(this);
       }
+    };
+    const cancel = (restore_value) => {
+      this._pressed = false;
+      if (restore_value) {
+        this.setValue(startvalue, true, true, true);
+      } else if (!this.realtime) {
+        this.setValue(this.value, true, true, true);
+      }
+      if (!this.realtime || restore_value) {
+        this.updateWidth();
+        fire();
+      }
+      this.dom._background = last_background;
+      this._redraw(false);
+      this.popModal();
     };
     const handlers = {
       on_keydown: (e2) => {
@@ -41146,21 +41090,6 @@ var NumSlider = class extends ValueButtonBase {
       }
     };
     this.pushModal(handlers);
-    cancel = (restore_value) => {
-      this._pressed = false;
-      if (restore_value) {
-        this.setValue(startvalue, true, true, true);
-      } else if (!this.realtime) {
-        this.setValue(this.value, true, true, true);
-      }
-      if (!this.realtime || restore_value) {
-        this.updateWidth();
-        fire();
-      }
-      this.dom._background = last_background;
-      this._redraw(false);
-      this.popModal();
-    };
   }
   get _pressed() {
     return this.__pressed;
@@ -42283,7 +42212,7 @@ function getPackFlag(elem) {
   boolflag("showLabel", PackFlags.FORCE_PROP_LABELS);
   boolflag("noLabel", PackFlags.NO_PROP_LABELS);
   if (elem.hasAttribute("labelPosition")) {
-    let pos = elem.getAttribute("labelPosition");
+    const pos = elem.getAttribute("labelPosition");
     if (pos === "top") {
       disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT;
       packflag |= PackFlags.LABEL_ON_TOP;
@@ -42862,7 +42791,9 @@ var Handler = class {
     var _stack = [];
     try {
       let path = elem.getAttribute("path");
-      let { packflag, disabled } = getPackFlag(elem);
+      const packFlagResult = getPackFlag(elem);
+      let packflag = packFlagResult.packflag;
+      const disabled = packFlagResult.disabled;
       const guard = __using(_stack, disableflags(this.container, disabled));
       let noIcons = false;
       let iconflags;
@@ -44322,8 +44253,10 @@ var Curve1DWidget = class extends ColumnFrame {
     this._redraw();
   }
   _redraw() {
-    this.canvas.width = this.canvas.width;
-    this.canvas.height = this.canvas.height;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    this.canvas.width = w;
+    this.canvas.height = h;
     const canvas = this.canvas;
     const g = this.g;
     g.beginPath();
@@ -45178,8 +45111,6 @@ var SatValField = class extends UIBase {
     });
     this.canvas.addEventListener("mousedown", (e) => {
       this.undoBreakPoint();
-      this.parentWidget?.undoBreakPoint();
-      this.parentWidget?.parentWidget?.undoBreakPoint();
       if (this.modalRunning) {
         return;
       }
@@ -45217,8 +45148,6 @@ var SatValField = class extends UIBase {
     });
     this.canvas.addEventListener("touchstart", (e) => {
       this.undoBreakPoint();
-      this.parentWidget?.undoBreakPoint();
-      this.parentWidget?.parentWidget?.undoBreakPoint();
       if (this.modalRunning) {
         return;
       }
@@ -46176,7 +46105,6 @@ function layoutTabRows({ sizes, available, pad }) {
     if (!rowEmpty && x + size + pad > available) {
       row++;
       x = pad;
-      rowEmpty = true;
     }
     rows.push(row);
     offsets.push(x);
@@ -46609,7 +46537,7 @@ var ModalTabMove = class extends EventHandler {
     }
     if (wrapped) {
       const under = tbar.tabAt(x, y, tab2);
-      if (under !== void 0 && under.movable) {
+      if (under?.movable) {
         tbar.swapTabs(tab2, under);
       }
     } else {
@@ -46666,8 +46594,8 @@ var TabBar = class extends UIBase {
   /** Rows the last layout used. 1 unless `multiRow` is on and the tabs overflowed. */
   rowCount = 1;
   /**
-   * Let a bar that is not wrapping scroll along its own axis, rather than running its last
-   * tabs off the end where nothing can reach them.
+   * Scrolls a non-wrapping bar along its own axis, instead of running its last tabs off the
+   * end where nothing can reach them.
    *
    * Needs {@link maxExtent} as well, and for the same reason wrapping does: a bar with no
    * idea how much room it has sizes itself to its tabs, and there is then nothing to scroll
@@ -46936,10 +46864,11 @@ var TabBar = class extends UIBase {
     }
   }
   /**
-   * Begin a right-drag pan, or decline it and let the context menu happen as it always has.
+   * Starts a right-drag pan, or declines so the context menu opens as it did before this
+   * existed.
    *
-   * Declining is what keeps this from stealing the menu: on a bar whose tabs all fit, a
-   * right-click is the act it was before this existed. On one that scrolls the menu is only
+   * Declining keeps this from stealing the menu: on a bar whose tabs all fit, a right-click
+   * still does only what it did before this existed. On one that scrolls, the menu is only
    * deferred — a right-click that never moves still opens it when the button comes back up.
    */
   _startPan(e) {
@@ -50081,10 +50010,10 @@ var TableFrame = class extends Container3 {
       check: void 0
     };
     function makefunc(f2) {
-      ret[f2] = function() {
+      ret[f2] = function(...args) {
         const container = maketd();
         container.background = tr.style["background-color"];
-        return container[f2].apply(container, arguments);
+        return container[f2].apply(container, args);
       };
     }
     let _bg = "";
@@ -50427,7 +50356,7 @@ init_toolprop();
 init_toolop();
 init_toolprop();
 var LastKey = /* @__PURE__ */ Symbol("LastToolPanelId");
-var tool_idgen2 = 0;
+var tool_idgen = 0;
 function getLastToolStruct(ctx) {
   let ret = ctx.state._last_tool;
   if (!ret) {
@@ -50580,7 +50509,7 @@ var LastToolPanel = class extends ColumnFrame {
     this.needsRebuild = this.needsRebuild || tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id);
     if (this.needsRebuild) {
       if (!(LastKey in tool)) {
-        tool[LastKey] = tool_idgen2++;
+        tool[LastKey] = tool_idgen++;
       }
       this._tool_id = tool[LastKey];
       this.rebuild();
@@ -51714,7 +51643,8 @@ pathux.GraphNode {
         return nodePropKeys(node).length;
       },
       getIter(_api, node) {
-        return nodePropKeys(node).map((k) => nodePropRef(node, k))[Symbol.iterator]();
+        const refs = nodePropKeys(node).map((k) => nodePropRef(node, k));
+        return refs[Symbol.iterator]();
       },
       getStruct(_api, node, key) {
         const target = nodePropTarget(node, key);
@@ -51841,7 +51771,7 @@ var propStructs = /* @__PURE__ */ new WeakMap();
 function nodePropStruct(target) {
   let st = propStructs.get(target);
   if (st === void 0) {
-    st = new DataStruct3(void 0, "NodeProp");
+    st = new DataStruct(void 0, "NodeProp");
     st.fromToolProp(
       "",
       target.copy(),
@@ -54560,7 +54490,7 @@ function buildExposedList(con, { opts, dispatch }) {
     row.dataset.exposureState = state;
     row.style.gap = "6px";
     row.style.alignItems = "center";
-    const name2 = mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
+    mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
     if (state === "missing") {
       const flag = mark(row.label("missing"), "nodeeditor-exposure-flag");
       flag.description = "This row's target no longer exists; point it somewhere else or remove it";
@@ -54997,8 +54927,8 @@ var NodeFrame = class extends Container3 {
       return;
     }
     this._rowSig = sig;
-    for (const editor2 of this._editors) {
-      editor2.remove();
+    for (const editor of this._editors) {
+      editor.remove();
     }
     this._editors = [];
     for (const row of this._rows) {
@@ -55392,13 +55322,13 @@ var LinkDrag = class {
         graphPath: this.view.currentGraphPath,
         ...detach
       });
-      if (target !== void 0 && target.ok) {
+      if (target?.ok) {
         await this._dispatch(this._connectEdit(origin, target));
       }
       this.view.syncGraph();
       return;
     }
-    if (target !== void 0 && target.ok) {
+    if (target?.ok) {
       await this._dispatch(this._connectEdit(origin, target));
     }
     this.view.syncGraph();
@@ -55438,7 +55368,6 @@ var LinkDrag = class {
   }
   /** The opposite-direction terminal nearest to local, within LINK_DROP_PX. */
   _nearestTarget(local) {
-    const origin = this._origin;
     const targetDir = this.targetDir;
     const tf = this.view.panzoom.transform;
     let best;
@@ -55731,7 +55660,7 @@ var LinkDragModalOp = class extends ToolOp {
   modalEnd(was_cancelled) {
     const view = this._view;
     this._view = void 0;
-    if (view !== void 0 && view.linkDrag.active) {
+    if (view?.linkDrag.active) {
       view.linkDrag.cancel();
     }
     super.modalEnd(was_cancelled);
@@ -56978,7 +56907,7 @@ var NodeGraphView = class extends Container3 {
     const now = Date.now();
     const last = this._lastPress;
     this._lastPress = frame.headerPressed ? { id: frame.node.id, at: now } : void 0;
-    if (last !== void 0 && last.id === frame.node.id && now - last.at <= DOUBLE_PRESS_MS && frame.headerPressed && frame.node instanceof GroupNode) {
+    if (last?.id === frame.node.id && now - last.at <= DOUBLE_PRESS_MS && frame.headerPressed && frame.node instanceof GroupNode) {
       this._lastPress = void 0;
       void this.enterDefinition(frame.node);
       return;
@@ -58124,29 +58053,29 @@ var AreaDragTool = class extends ToolBase {
             dst.area.remove();
             dst.area.pop_ctx_active();
           }
-          for (const editor2 of old) {
-            const def = editor2.constructor.define();
+          for (const editor of old) {
+            const def = editor.constructor.define();
             let bad = false;
-            for (const editor22 of src.editors) {
-              if (editor2.constructor === editor22.constructor) {
+            for (const editor2 of src.editors) {
+              if (editor.constructor === editor2.constructor) {
                 bad = true;
                 break;
               }
             }
             if (!bad) {
-              dst.editors.push(editor2);
-              dst.editormap[def.areaname] = editor2;
+              dst.editors.push(editor);
+              dst.editormap[def.areaname] = editor;
             }
           }
-          for (const editor2 of src.editors) {
-            const def = editor2.constructor.define();
-            dst.editormap[def.areaname] = editor2;
-            dst.editors.push(editor2);
-            if (editor2.owning_sarea) {
-              editor2.owning_sarea = dst;
+          for (const editor of src.editors) {
+            const def = editor.constructor.define();
+            dst.editormap[def.areaname] = editor;
+            dst.editors.push(editor);
+            if (editor.owning_sarea) {
+              editor.owning_sarea = dst;
             }
-            if (editor2.parentWidget) {
-              editor2.parentWidget = dst;
+            if (editor.parentWidget) {
+              editor.parentWidget = dst;
             }
           }
           dst.switcher?.flagUpdate();
@@ -58427,7 +58356,6 @@ function endLingeringTooltip() {
 }
 function lingerTooltip(tip) {
   endLingeringTooltip();
-  let timer;
   const close = () => {
     window.removeEventListener("pointerdown", onDown, true);
     clearTimeout(timer);
@@ -58439,7 +58367,7 @@ function lingerTooltip(tip) {
   const onDown = () => close();
   const entry = { close };
   window.addEventListener("pointerdown", onDown, { capture: true, passive: true });
-  timer = setTimeout(close, LINGER_MS);
+  const timer = setTimeout(close, LINGER_MS);
   lingering = entry;
 }
 var ToolTipViewer = class extends ToolBase {
@@ -58977,7 +58905,7 @@ init_math();
 init_util2();
 init_ui_base();
 var SVG_URL = "http://www.w3.org/2000/svg";
-var Vector26 = Vector2;
+var Vector25 = Vector2;
 var CanvasOverdraw = class extends UIBase {
   canvas;
   g;
@@ -59121,7 +59049,7 @@ var Overdraw = class extends UIBase {
   drawTextBubbles(texts, cos2, colors) {
     const boxes = [];
     const elems = [];
-    const cent = new Vector26();
+    const cent = new Vector25();
     for (let i = 0; i < texts.length; i++) {
       const co = cos2[i];
       const text2 = texts[i];
@@ -59154,7 +59082,7 @@ var Overdraw = class extends UIBase {
       const y = parsepx(box.style["top"]);
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector26([x, y]);
+      box.startpos = new Vector25([x, y]);
       box.setCSS = function() {
         this.style["padding"] = "0px";
         this.style["margin"] = "0px";
@@ -59184,10 +59112,10 @@ var Overdraw = class extends UIBase {
           s2[0] = box2.params[2];
           s2[1] = box2.params[3];
           const overlap = aabb_overlap_area(
-            new Vector26(box1.params),
-            new Vector26(s1),
-            new Vector26(box2.params),
-            new Vector26(s2)
+            new Vector25(box1.params),
+            new Vector25(s1),
+            new Vector25(box2.params),
+            new Vector25(s2)
           );
           ret += overlap;
         }
@@ -61772,8 +61700,8 @@ var ScreenArea2 = class extends UIBase {
     super.loadJSON(obj);
     this.pos.load(obj.pos);
     this.size.load(obj.size);
-    for (const editor2 of obj.editors) {
-      const areaname = editor2.areaname;
+    for (const editor of obj.editors) {
+      const areaname = editor.areaname;
       const tagname = areaclasses[areaname].define().tagname;
       const area = UIBase.createElement(tagname);
       area.owning_sarea = this;
@@ -61785,7 +61713,7 @@ var ScreenArea2 = class extends UIBase {
         area.ctx = this.ctx;
       }
       area.inactive = true;
-      area.loadJSON(editor2);
+      area.loadJSON(editor);
       area.owning_sarea = void 0;
       if (areaname === obj.area) {
         this.area = area;
@@ -61809,9 +61737,9 @@ var ScreenArea2 = class extends UIBase {
   _ondestroy() {
     super._ondestroy();
     this.dead = true;
-    for (const editor2 of this.editors) {
-      if (editor2 === this.area) continue;
-      editor2._ondestroy();
+    for (const editor of this.editors) {
+      if (editor === this.area) continue;
+      editor._ondestroy();
     }
   }
   getScreen() {
@@ -62104,25 +62032,25 @@ var ScreenArea2 = class extends UIBase {
     if (this.switcher) {
       HTMLElement.prototype.remove.call(this.switcher);
     }
-    for (const editor2 of this.editors.slice()) {
-      const areaname = editor2.constructor.define().areaname;
+    for (const editor of this.editors.slice()) {
+      const areaname = editor.constructor.define().areaname;
       if (areaname === keep) {
         continue;
       }
-      if (editor2 === this.area) {
-        editor2.pos = new Vector2(editor2.pos);
-        editor2.size = new Vector2(editor2.size);
-        editor2.inactive = true;
-        editor2.push_ctx_active();
-        editor2._init();
-        editor2.on_area_inactive();
-        editor2.pop_ctx_active();
+      if (editor === this.area) {
+        editor.pos = new Vector2(editor.pos);
+        editor.size = new Vector2(editor.size);
+        editor.inactive = true;
+        editor.push_ctx_active();
+        editor._init();
+        editor.on_area_inactive();
+        editor.pop_ctx_active();
         this.area = void 0;
       }
-      editor2.owning_sarea = void 0;
-      editor2.dead = true;
-      editor2.remove();
-      this.editors.remove(editor2);
+      editor.owning_sarea = void 0;
+      editor.dead = true;
+      editor.remove();
+      this.editors.remove(editor);
       delete this.editormap[areaname];
     }
   }
@@ -62498,14 +62426,14 @@ __export(controller_exports, {
   CurveConstructors: () => CurveConstructors,
   CurveFlags: () => CurveFlags,
   CurveTypeData: () => CurveTypeData,
-  DataAPI: () => DataAPI3,
+  DataAPI: () => DataAPI,
   DataFlags: () => DataFlags,
   DataList: () => DataList,
   DataPath: () => DataPath,
   DataPathError: () => DataPathError,
   DataPathSetOp: () => DataPathSetOp,
   DataPathWatcher: () => DataPathWatcher,
-  DataStruct: () => DataStruct3,
+  DataStruct: () => DataStruct,
   DataTypes: () => DataTypes,
   DoubleClickHandler: () => DoubleClickHandler,
   EaseCurve: () => EaseCurve,
@@ -62526,7 +62454,7 @@ __export(controller_exports, {
   GuassianCurve: () => GuassianCurve,
   HotKey: () => HotKey,
   IndexRange: () => IndexRange,
-  InheritFlag: () => InheritFlag2,
+  InheritFlag: () => InheritFlag,
   IntProperty: () => IntProperty,
   IntegerConstraints: () => IntegerConstraints,
   KeyMap: () => KeyMap,
@@ -62579,6 +62507,7 @@ __export(controller_exports, {
   ToolPaths: () => ToolPaths,
   ToolProperty: () => ToolProperty,
   ToolPropertyCache: () => ToolPropertyCache,
+  ToolRegistry: () => ToolRegistry,
   ToolStack: () => ToolStack,
   UndoFlags: () => UndoFlags,
   Vec2Property: () => Vec2Property,
@@ -62630,6 +62559,8 @@ __export(controller_exports, {
   customPropertyTypes: () => customPropertyTypes,
   defaultDecimalPlaces: () => defaultDecimalPlaces,
   defaultRadix: () => defaultRadix,
+  defaultRegistry: () => defaultRegistry,
+  defaultsFor: () => defaultsFor,
   dihedral_v3_sqr: () => dihedral_v3_sqr,
   dist_to_line: () => dist_to_line,
   dist_to_line_2d: () => dist_to_line_2d,
@@ -62713,6 +62644,7 @@ __export(controller_exports, {
   quad_bilinear: () => quad_bilinear,
   quad_uv_2d: () => quad_uv_2d,
   registerTool: () => registerTool,
+  registryOf: () => registryOf,
   reverse_keymap: () => reverse_keymap,
   rgb_to_cmyk: () => rgb_to_cmyk,
   rgb_to_hsv: () => rgb_to_hsv,
@@ -63599,20 +63531,20 @@ var ThemeEditor = class extends Container3 {
       });
     };
     if (!cls._cachedDataAPI) {
-      const st = new DataStruct3(
+      const st = new DataStruct(
         Object.entries(props).map(
           ([propKey, prop]) => new DataPath(propKey, propKey, prop, DataTypes.PROP)
         )
       );
-      const root = new DataStruct3();
-      cls._cachedDataAPI = new DataAPI3();
+      const root = new DataStruct();
+      cls._cachedDataAPI = new DataAPI();
       cls._cachedDataAPI._addClass({}, root, void 0, false);
       cls._cachedDataAPI._addClass(cls, st, void 0, false);
       cls._cachedDataAPI.rootContextStruct = root;
       root.struct("obj", "obj", "obj", st);
     }
     const microSt = cls._cachedDataAPI.rootContextStruct.pathmap.obj.data;
-    const editor2 = this;
+    const editor = this;
     const microCtx = {
       get obj() {
         return getObj();
@@ -63622,11 +63554,11 @@ var ThemeEditor = class extends Container3 {
       // the editor's own ctx is undefined until it is parented under a screen,
       // which is after the panels are built, so these forward lazily
       get screen() {
-        return editor2.ctx?.screen;
+        return editor.ctx?.screen;
       },
       api: cls._cachedDataAPI,
       get toolstack() {
-        return editor2.ctx?.toolstack;
+        return editor.ctx?.toolstack;
       }
     };
     const container = panel.col();
@@ -63675,7 +63607,7 @@ var ThemeEditor = class extends Container3 {
         }
       );
     };
-    for (let propKey in props) {
+    for (const propKey in props) {
       const prop = props[propKey];
       const row = container.row();
       const widget = row.prop("obj." + propKey);
@@ -64063,7 +63995,7 @@ __export(graph_exports, {
   captureLinks: () => captureLinks,
   cloneNode: () => cloneNode,
   createGroup: () => createGroup,
-  defineGraphAPI: () => defineGraphAPI2,
+  defineGraphAPI: () => defineGraphAPI,
   definitionOfSubgraph: () => definitionOfSubgraph,
   dissolveGroup: () => dissolveGroup,
   exposeEntry: () => exposeEntry,
@@ -64331,7 +64263,7 @@ function isRecord(v) {
 }
 
 // scripts/graph/graph_api.ts
-function defineGraphAPI2(api, st, validStructs) {
+function defineGraphAPI(api, st, validStructs) {
   st ??= api.mapStruct(Graph, true);
   if ("nodes" in st.pathmap) {
     return st;
@@ -64751,11 +64683,11 @@ var AreaDocker = class extends Container3 {
     this.updateMaxExtent();
     dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
     sarea.switcherData = uidata;
-    for (const editor2 of sarea.editors) {
-      if (editor2.closed) {
+    for (const editor of sarea.editors) {
+      if (editor.closed) {
         continue;
       }
-      const def = getAreaConstructor(editor2).define();
+      const def = getAreaConstructor(editor).define();
       let name2 = def.uiname;
       if (!name2) {
         name2 = def.areaname || def.tagname.replace(/-x/, "");
@@ -64765,17 +64697,17 @@ var AreaDocker = class extends Container3 {
       const closable = const_default.closableAreaTabs;
       const tooltip = closable ? said : `${said}
 Right-click the tab to close it.`;
-      const tab2 = tabs.tab(name2, editor2._id, tooltip);
+      const tab2 = tabs.tab(name2, editor._id, tooltip);
       const tabItem = tab2._tab;
       tabItem.closable = closable;
-      tabItem.ontabclose = () => this.closeEditor(editor2);
-      tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor2, e);
+      tabItem.ontabclose = () => this.closeEditor(editor);
+      tabItem.ontabcontextmenu = (e) => this.openTabContextMenu(editor, e);
       tabItem.addEventListener("tabdragstart", (e) => {
         dockerdebug("tab drag start!", e);
       });
       tabItem.addEventListener("tabdragmove", (e) => {
         this.mpos.loadXY(e.x, e.y);
-        if (!editor2.areaDragToolEnabled) {
+        if (!editor.areaDragToolEnabled) {
           return;
         }
         const rect = this.tbar.tbar.canvas.getBoundingClientRect();
@@ -65025,21 +64957,21 @@ Right-click the tab to close it.`;
    *  UI state alive in `ScreenArea.editors` / `editormap`. If the closed
    *  editor is the active one, switches to the first remaining non-closed
    *  editor; if none remains, the tab bar is rebuilt with only the `+` tab. */
-  closeEditor(editor2) {
+  closeEditor(editor) {
     const sarea = this.getScreenArea();
     if (!sarea) return;
-    if (editor2 === sarea.area) {
-      const other = sarea.editors.find((e) => e !== editor2 && !e.closed);
+    if (editor === sarea.area) {
+      const other = sarea.editors.find((e) => e !== editor && !e.closed);
       if (other) {
         sarea.switchEditor(other.constructor);
       }
     }
-    editor2.closed = true;
+    editor.closed = true;
     this.flagUpdate();
   }
   /** Build and show the right-click context menu for a single editor tab.
    *  Currently exposes a `Close` action; designed to grow other items later. */
-  openTabContextMenu(editor2, event) {
+  openTabContextMenu(editor, event) {
     const menu = UIBase.createElement("menu-x");
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
@@ -65047,7 +64979,7 @@ Right-click the tab to close it.`;
     menu.addItemExtra("Close", "close", void 0, Icons.TINY_X);
     menu.on_select = (val) => {
       if (val === "close") {
-        this.closeEditor(editor2);
+        this.closeEditor(editor);
       }
     };
     startMenu(menu, event.x, event.y, false, 0);
@@ -65100,6 +65032,10 @@ var Screen2 = class extends UIBase {
   [IsScreenTag] = true;
   snapLimit;
   fullScreen;
+  /**
+   * Global CSS script, is pasted into every UIBase-derived shadow root
+   * see UIBase._screenStyleTag
+   */
   globalCSS;
   _do_updateSize;
   _resize_callbacks;
@@ -65302,7 +65238,7 @@ var Screen2 = class extends UIBase {
               continue;
             }
             for (const [key, val] of Array.from(rule.styleMap.entries())) {
-              if (1) {
+              if (rule2.styleMap.has(key)) {
                 let sval = "";
                 if (Array.isArray(val)) {
                   for (const item of val) {
@@ -65622,13 +65558,13 @@ var Screen2 = class extends UIBase {
       this.update();
     }, 150);
   }
-  _calcSizeKey(w, h, x, y, dpi, scale) {
-    if (arguments.length !== 6) {
+  _calcSizeKey(...args) {
+    if (args.length !== 6) {
       throw new Error("eek");
     }
     let s = "";
-    for (let i = 0; i < arguments.length; i++) {
-      s += arguments[i].toFixed(0) + ":";
+    for (let i = 0; i < args.length; i++) {
+      s += args[i].toFixed(0) + ":";
     }
     return s;
   }
@@ -66127,9 +66063,6 @@ var Screen2 = class extends UIBase {
   regenBorders_stage2() {
     for (const b of this.screenborders) {
       b.halfedges = [];
-    }
-    function hashHalfEdge(border, sarea) {
-      return border._id + ":" + sarea._id;
     }
     function has_he(border, border2, sarea) {
       for (const he of border.halfedges) {
@@ -67025,7 +66958,7 @@ var Screen2 = class extends UIBase {
       e.preventDefault();
       return;
     }
-    if (!haveModal() && this.sareas.active !== void 0 && this.sareas.active.on_keydown) {
+    if (!haveModal() && this.sareas.active?.on_keydown) {
       return this.sareas.active.on_keydown(e);
     }
   }
@@ -67164,7 +67097,7 @@ __export(simple_exports, {
   getLastAppState: () => getLastAppState,
   iconSvg: () => iconSvg,
   loadDefaultIconSheet: () => loadDefaultIconSheet,
-  loadFile: () => loadFile3,
+  loadFile: () => loadFile2,
   makeAPI: () => makeAPI,
   registerMenuBarEditor: () => registerMenuBarEditor,
   saveFile: () => saveFile2
@@ -67271,8 +67204,8 @@ var SideBar = class extends Container3 {
     if (!this.parentWidget) {
       return;
     }
-    const editor2 = this.parentWidget;
-    if (!editor2.pos || !editor2.size) {
+    const editor = this.parentWidget;
+    if (!editor.pos || !editor.size) {
       return;
     }
     this.needsSetCSS = false;
@@ -67280,7 +67213,7 @@ var SideBar = class extends Container3 {
     let h = this.height;
     w = isNaN(w) ? 500 : w;
     h = isNaN(h) ? 500 : h;
-    h = Math.min(h, editor2.size[1] - 25);
+    h = Math.min(h, editor.size[1] - 25);
     this.style["position"] = "absolute";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
@@ -67290,7 +67223,7 @@ var SideBar = class extends Container3 {
       "AreaHeaderBG"
     );
     this.tabbar.style["height"] = h - 45 + "px";
-    this.style["left"] = editor2.size[0] - w + "px";
+    this.style["left"] = editor.size[0] - w + "px";
   }
   update() {
     sidebar_hash.reset();
@@ -67356,10 +67289,10 @@ var Editor = class _Editor extends Area {
    *  to handle inheritance.
    **/
   static register(cls) {
-    if (!cls.hasOwnProperty("define")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "define")) {
       throw new Error("missing define() method");
     }
-    if (!cls.hasOwnProperty("STRUCT")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "STRUCT")) {
       cls.STRUCT = struct_default.inherit(cls, this) + `
 }`;
       struct_default.register(cls);
@@ -68429,7 +68362,7 @@ function saveFile2(appstate, args, objects) {
     return new Uint8Array(data).buffer;
   }
 }
-function loadFile3(appstate, args, data) {
+function loadFile2(appstate, args, data) {
   if (args.useJSON === void 0) {
     args.useJSON = appstate.saveFilesInJSON;
   }
@@ -68701,7 +68634,6 @@ function register2() {
 // scripts/simple/app.ts
 init_struct();
 init_context();
-init_tooldefaults();
 init_toolstack();
 init_toolsys();
 init_controller();
@@ -68722,19 +68654,15 @@ var DataModel = class {
    *  and handles STRUCT inheritance.
    */
   static register(cls) {
-    if (!cls.hasOwnProperty("defineAPI")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "defineAPI")) {
     }
     DataModelClasses.push(cls);
-    if (cls.hasOwnProperty("STRUCT") && !struct_default.isRegistered(cls)) {
+    if (Object.prototype.hasOwnProperty.call(cls, "STRUCT") && !struct_default.isRegistered(cls)) {
       cls.STRUCT = struct_default.inlineRegister(cls, cls.STRUCT);
     }
   }
   loadSTRUCT(reader) {
     reader(this);
-  }
-};
-var EmptyContextClass = class extends Context {
-  static defineAPI(_api, _strct) {
   }
 };
 function GetContextClass(ctxClass) {
@@ -68779,7 +68707,7 @@ function GetContextClass(ctxClass) {
       return this.typedState.toolstack;
     }
     get toolDefaults() {
-      return SavedToolDefaults;
+      return this.api.registry.defaults;
     }
     get last_tool() {
       return this.toolstack.head;
@@ -68810,7 +68738,7 @@ function GetContextClass(ctxClass) {
   };
 }
 function makeAPI(ctxClass) {
-  const api = new DataAPI3();
+  const api = new DataAPI();
   for (const cls of DataModelClasses) {
     if (cls.defineAPI) {
       cls.defineAPI(api, api.mapStruct(cls, true));
@@ -69012,7 +68940,7 @@ var AppState = class _AppState {
   }
   loadFileSync(data, args = {}) {
     const fileArgs = this._makeFileArgs(args);
-    const ret = loadFile3(this, fileArgs, data);
+    const ret = loadFile2(this, fileArgs, data);
     if (fileArgs.doScreen) {
       try {
         this.ensureMenuBar();
@@ -69299,14 +69227,14 @@ export {
   CurveTypeData,
   CustomIcon,
   DOUBLE_PRESS_MS,
-  DataAPI3 as DataAPI,
+  DataAPI,
   DataFlags,
   DataList,
   DataPath,
   DataPathError,
   DataPathSetOp,
   DataPathWatcher,
-  DataStruct3 as DataStruct,
+  DataStruct,
   DataTypes,
   DegreeUnit,
   DockPanel,
@@ -69349,7 +69277,7 @@ export {
   Icons,
   InchUnit,
   IndexRange,
-  InheritFlag2 as InheritFlag,
+  InheritFlag,
   IntProperty,
   IntegerConstraints,
   IsMobile,
@@ -69486,6 +69414,7 @@ export {
   ToolPaths,
   ToolProperty,
   ToolPropertyCache,
+  ToolRegistry,
   ToolStack,
   ToolTip,
   TreeItem,
@@ -69588,7 +69517,9 @@ export {
   customPropertyTypes,
   defaultDecimalPlaces,
   defaultRadix,
+  defaultRegistry,
   defaultRowRenderer,
+  defaultsFor,
   deleteItemAt,
   deleteVar,
   dihedral_v3_sqr,
@@ -69750,6 +69681,7 @@ export {
   quad_uv_2d,
   registerTool,
   registerToolStackGetter2 as registerToolStackGetter,
+  registryOf,
   removePopup,
   renameVar,
   report,
