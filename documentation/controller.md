@@ -6,6 +6,7 @@
   - [DataPath Modifiers](#datapath-modifiers)
   - [Using Paths From the UI](#using-paths-from-the-ui)
   - [Looking Up Structs by Name](#looking-up-structs-by-name)
+  - [Who Owns a DataStruct](#who-owns-a-datastruct)
   - [Update Notifications (subscribe / notify)](#update-notifications-subscribe--notify)
 
 <!-- regenerate with pnpm markdown-toc -->
@@ -223,6 +224,38 @@ describe `foo` with one struct carrying both — their saved values stay separat
 registry maps its own defaults cache **instance** rather than `ToolPropertyCache`, under a
 per-registry name, because that struct's shape comes from the tools the instance was filled
 with; keying it on the class would give every registry one struct to clear.
+
+## Who Owns a DataStruct
+
+**A class mapped through the global registry has one `DataStruct` for the process. A `DataAPI`
+owns its root and its opt-outs, and nothing else.**
+
+`mapStruct` is an instance method, so it reads as though each api gets its own mapping. It does
+not. The struct is keyed by an id stamped on the class itself, held in a module-level table, so
+two `DataAPI`s that both map `Foo` are handed the same object — the desktop shape of a shell api
+plus a per-pane api shares every struct below the two roots.
+
+The practical question at a call site is *did I create this struct, or did I just find it?* If
+you did not pass a name nobody else uses, you found it, and destructive edits — `clear()` above
+all — reach every api that can see it. `ToolRegistry` maps its defaults cache **instance** under
+a per-registry name for exactly this reason: keyed on `ToolPropertyCache`, one registry's
+`buildAPI` wiped another's accessors.
+
+Say it narrowly, because the broad version ("one `DataStruct` per class per process") is false
+three ways:
+
+- `_addClass(cls, st, name, false)` opts out. That struct lives in the api's own `_localStructs`,
+  is invisible to every other api, and leaves no mark on the class — `theme_editor.ts` uses it
+  for the throwaway api it caches per theme-object class.
+- Explicit-name aliasing maps many classes onto one struct, deliberately (see above).
+- `inheritStruct` `copy()`s the parent, so parent and child are separate objects.
+
+The narrow rule survives all three: an opt-out is by definition not *through the global
+registry*; aliasing is still one struct per registered **name**, which is what the registry is
+keyed on; and `inheritStruct` registers its copy as the child's own global entry.
+
+`api.structs` lists the structs **that api created**, not what it can reach, so it is a
+debugging aid rather than an index — the second api to map a shared class does not list it.
 
 ## Update Notifications (subscribe / notify)
 

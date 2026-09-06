@@ -14,7 +14,7 @@ unchanged in the other; see its section.
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: tasks 0, 1 and 3 done. Task 2 sketched only.
+Status: all four tasks done. Task 2 landed narrowed rather than as titled; see below.
 
 <!-- toc -->
 
@@ -93,9 +93,11 @@ Plan: [`datapath-set-fold.md`](datapath-set-fold.md), **done**.
 
 ## Task 2 — bind tool defaults per `DataAPI` instead of per process
 
-Plan: [`per-api-structs.md`](per-api-structs.md), **not started**, pressure-tested once. It
-recommends against the task as titled — see its Three positions section. The sketch below is
-what it was planned from.
+Plan: [`per-api-structs.md`](per-api-structs.md), **done**, pressure-tested once. It
+recommends against the task as titled — see its Three positions section — and landed the two
+narrower positions instead: the registry now follows the APIs it was built against, and the
+`useGlobalRegistry` opt-out has per-api storage of its own. `_map_structs` is still keyed on
+the class, process-wide, deliberately. The sketch below is what it was planned from.
 
 Rewritten after task 3 landed, which settled one of its questions and did one half of its
 fix.

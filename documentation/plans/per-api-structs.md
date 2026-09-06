@@ -4,7 +4,8 @@ Task 2 of [`toolsys-tasks.md`](toolsys-tasks.md): "bind tool defaults per `DataA
 of per process". The census below reframes it — after task 3 landed, neither half of the
 sketch has a live symptom, and the two halves turn out not to be independent.
 
-Status: stages 1-2 done, stage 3 not started; stage 4 not planned. Revised once after a
+Status: stages 1-3 done; stage 4 not planned, and the review that could have called for
+it did not. Revised once after a
 fresh-context pressure test, which found a third `DataAPI` the first census missed, a
 pre-existing hole in the global map, and a second job the field stage 2 wanted to delete is
 doing. See [Findings](#findings).
@@ -21,6 +22,7 @@ doing. See [Findings](#findings).
   - [Stage 3 — make the sharing honest](#stage-3--make-the-sharing-honest)
   - [Stage 4 — only if review rejects the recommendation](#stage-4--only-if-review-rejects-the-recommendation)
 - [Hard constraints](#hard-constraints)
+- [Follow-ups](#follow-ups)
 - [Open questions](#open-questions)
 - [Findings](#findings)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
@@ -267,6 +269,29 @@ Mutation-tested, both halves load-bearing:
 
 ### Stage 3 — make the sharing honest
 
+**Done.** `pnpm typecheck` clean on both passes, `pnpm test` green at 47 files / 470 tests,
+barrel unchanged.
+
+- `DataAPI._localStructs` is a `WeakMap<object, DataStruct>` holding the structs mapped with
+  `useGlobalRegistry: false`. `_addClass` writes there and returns *before* stamping, so the
+  opt-out no longer leaves a global id with nothing behind it.
+- `mapStruct` checks it before the stamp, and `hasStruct` ORs the two, which lands the plan's
+  own finding that `hasStruct`, `getStruct` and `mapStruct` have to move together.
+  `graph/graph_api.ts:51-52` is the one site that pairs them.
+- The opt-out therefore stops poisoning the class process-wide. Before this, one
+  `theme_editor.ts:1056` call made `mapStruct(thatThemeClass, true)` return `undefined` on
+  every api forever, with auto-create unable to recover because the id was already there.
+- `getStructs()` deleted; it had no caller in either repo outside stage 1's own test. The
+  `structs` field stays, documented as *the structs this api created*, which is what stage 1
+  pinned.
+- Stage 1's two pins rewritten to the fixed behaviour, and a second opt-out test added for the
+  case the fix unlocks: a class that opted out on one api can still be mapped globally later.
+- Rule written into `documentation/controller.md` (§ Who Owns a DataStruct) and `CLAUDE.md`.
+
+Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module-level
+`WeakMap`. It is a representation change with the same semantics, worth doing on its own; see
+[Follow-ups](#follow-ups).
+
 - Fix the `useGlobalRegistry` hole: do not stamp `CLS_API_KEY` before the early return, or
   give the opt-out its own per-api storage. This is a real bug, not documentation.
 - Whichever of "populate `structs` on every api" or "delete `getStructs`" survives review.
@@ -302,6 +327,20 @@ Mutation-tested, both halves load-bearing:
 - [`tool-registry.md`](tool-registry.md) is the record of how the registry got here. Its
   stage 5 section explains why a registry's defaults struct is keyed on the cache instance.
 
+## Follow-ups
+
+- **Replace `CLS_API_KEY` + `_map_structs` with a module-level `WeakMap<class, DataStruct>`.**
+  The stamp is already own-property-only on both read paths, so a `WeakMap` matches its
+  semantics exactly while dropping `_map_struct_idgen`, the mutation of foreign classes, and
+  the leak of every mapped class. `CLS_API_KEY_CUSTOM` must **not** move with it: it is read
+  with `in` (`controller.ts:1240`), so it inherits down the prototype chain and a `WeakMap`
+  would not. Its own commit, since it touches every resolution path.
+- **Moving `_map_structs` / `_map_structs_by_name` onto `DataAPI` is position 3, not a follow-up
+  to the `WeakMap`.** The two look adjacent and are not: one changes representation, the other
+  changes semantics. Both tables have to move together — object-keyed lookup would keep handing
+  out the shared struct otherwise — and that is the change this plan rejected on cost with no
+  live symptom to show for it. It wants its own pressure test.
+
 ## Open questions
 
 Carried forward; the pressure test answered the rest.
@@ -310,9 +349,12 @@ Carried forward; the pressure test answered the rest.
    outside `tests/tooldefaults.test.ts:60-61` reads them in either repo, and `dstruct` is
    redundant with `ToolRegistry.structFor(api)`, which knows the same answer without
    last-writer-wins ambiguity.
-2. Should stage 3 fix the `useGlobalRegistry` stamp by not stamping, or by giving the opt-out
-   per-api storage? The second is a small piece of position 3 and might make position 3
-   cheaper later; the first is smaller now.
+2. ~~Should stage 3 fix the `useGlobalRegistry` stamp by not stamping, or by giving the opt-out
+   per-api storage?~~ **Decided: per-api storage, a `WeakMap` on the `DataAPI`.** Not stamping
+   is not the smaller option it looked like: `mapStruct(cls, false)` on an unstamped class
+   *throws* (`controller.ts:891`) rather than returning `undefined`, so that route converts a
+   silent miss into an exception at every `auto_create = false` site, `controller_base.ts:662`
+   included.
 
 ## Findings
 

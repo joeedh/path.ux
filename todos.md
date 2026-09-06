@@ -22,9 +22,11 @@ checking instead of dropping to suffix matching. See CLAUDE.md
 task 0.
 [x]: fold DataPathSetOp writes onto the toolstack (foldOrExec), per
 documentation/plans/datapath-set-fold.md.
-[ ]: bind tool defaults per DataAPI instead of per process, per
-documentation/plans/per-api-structs.md (task 2). Plan recommends
-narrowing the task; read it before starting.
+[x]: bind tool defaults per DataAPI instead of per process, per
+documentation/plans/per-api-structs.md (task 2). Landed narrowed, as the
+plan recommended: the registry follows its built APIs and the
+useGlobalRegistry opt-out got real per-api storage, rather than
+_map_structs going per-api.
 [x]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
 module globals as its default instance, per
 documentation/plans/tool-registry.md (task 3).

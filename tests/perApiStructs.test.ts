@@ -97,8 +97,8 @@ describe("what two DataAPIs share", () => {
   test("structs holds what that api created, not what it can reach", () => {
     // Model was created by whichever api asked first, so only that one lists it
     const st = apiA.mapStruct(Model as never, true);
-    const inA = apiA.getStructs().includes(st);
-    const inB = apiB.getStructs().includes(st);
+    const inA = apiA.structs.includes(st);
+    const inB = apiB.structs.includes(st);
 
     expect(inA).not.toBe(inB);
     expect(apiA.getStruct(Model as never)).toBe(st);
@@ -107,22 +107,35 @@ describe("what two DataAPIs share", () => {
 });
 
 describe("the useGlobalRegistry opt-out", () => {
-  test("marks a class mapped process-wide but gives it no struct", () => {
+  test("keeps the struct on its own api and off every other one", () => {
     class Private {}
     const priv = new DataStruct();
     const owner = new DataAPI<any>();
 
     owner._addClass(Private, priv, undefined, false);
 
-    // Wrong, and stage 3 fixes it: the stamp lands before the early return, so every api
-    // reports the class as mapped while none of them can reach the struct
     expect(owner.hasStruct(Private)).toBe(true);
-    expect(apiA.hasStruct(Private)).toBe(true);
-    expect(owner.mapStruct(Private as never, true)).toBe(undefined);
-    expect(apiA.mapStruct(Private as never, true)).toBe(undefined);
+    expect(owner.mapStruct(Private as never, true)).toBe(priv);
+    expect(owner.getStruct(Private)).toBe(priv);
+    expect(owner.structs).toContain(priv);
 
-    // The owning api can still reach it, but only through its own list
-    expect(owner.getStructs()).toContain(priv);
+    // No global mark, so another api sees an unmapped class rather than a broken mapping
+    expect(apiA.hasStruct(Private)).toBe(false);
+    expect(apiA.getStructByName("Private")).toBe(undefined);
+  });
+
+  test("leaves the class free to be mapped globally afterwards", () => {
+    class Shared {}
+    const owner = new DataAPI<any>();
+
+    owner._addClass(Shared, new DataStruct(), undefined, false);
+
+    // Auto-create can still fire, because the opt-out left no id behind to block it
+    const global = apiA.mapStruct(Shared as never, true);
+
+    expect(global).toBeInstanceOf(DataStruct);
+    expect(global).not.toBe(owner.mapStruct(Shared as never, true));
+    expect(apiB.mapStruct(Shared as never, true)).toBe(global);
   });
 });
 
