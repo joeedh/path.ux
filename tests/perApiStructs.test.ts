@@ -1,7 +1,8 @@
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { ToolOp } from "../scripts/path-controller/toolsys/toolop";
 import type { ToolDef } from "../scripts/path-controller/toolsys/toolop";
+import { defaultRegistry, ToolRegistry } from "../scripts/path-controller/toolsys/toolregistry";
 import { buildToolSysAPI } from "../scripts/path-controller/toolsys/toolsys";
 import { IntProperty } from "../scripts/path-controller/toolsys/toolprop";
 
@@ -85,6 +86,10 @@ describe("what two DataAPIs share", () => {
   });
 
   test("a tool registered after both builds reaches both", () => {
+    // The registry reaches every api it has been built against, rather than the newest
+    expect(defaultRegistry.apis()).toContain(apiA);
+    expect(defaultRegistry.apis()).toContain(apiB);
+
     expect(apiA.getValue(ctxA, "toolDefaults.perapi.late.count")).toBe(2);
     expect(apiB.getValue(ctxB, "toolDefaults.perapi.late.count")).toBe(2);
   });
@@ -118,6 +123,38 @@ describe("the useGlobalRegistry opt-out", () => {
 
     // The owning api can still reach it, but only through its own list
     expect(owner.getStructs()).toContain(priv);
+  });
+});
+
+describe("saving a default with no api built yet", () => {
+  test("seeds the value rather than throwing", () => {
+    class Orphan extends ToolOp<{ count: IntProperty }> {
+      static tooldef(): ToolDef {
+        return {
+          uiname  : "Orphan Tool",
+          toolpath: "perapi.orphan",
+          inputs  : { count: new IntProperty(3) },
+          outputs : {},
+        };
+      }
+    }
+
+    const registry = new ToolRegistry();
+    registry.register(Orphan);
+
+    const tool = new Orphan();
+    tool.inputs.count.setValue(9);
+
+    // set() warns that the tool is not in the map, then seeds it anyway
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      tool.saveDefaultInputs();
+    } finally {
+      warn.mockRestore();
+    }
+
+    expect(registry.defaults.get(Orphan, "count", tool.inputs.count)).toBe(9);
+    registry.unregister(Orphan);
   });
 });
 

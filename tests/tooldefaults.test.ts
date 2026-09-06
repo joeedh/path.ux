@@ -54,11 +54,11 @@ function recordWarnings(fn: () => void): string[] {
 }
 
 beforeAll(() => {
-  // The cache learns its api/dstruct from whatever this first pass walks, and until it
-  // has them updateToolDefaults returns early and every lookup below would miss
+  // The registry learns its apis from this first pass, and until it has one updateDefaults
+  // has nowhere to build, so every lookup below would miss
   buildToolSysAPI(api as DataAPI, false);
-  expect(SavedToolDefaults.api).toBeDefined();
-  expect(SavedToolDefaults.dstruct).toBeDefined();
+  expect(defaultRegistry.apis()).toContain(api);
+  expect(SavedToolDefaults.registry).toBe(defaultRegistry);
 
   macroKeys = new Set(Object.keys(MacroClasses));
 });

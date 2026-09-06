@@ -4,7 +4,7 @@ Task 2 of [`toolsys-tasks.md`](toolsys-tasks.md): "bind tool defaults per `DataA
 of per process". The census below reframes it — after task 3 landed, neither half of the
 sketch has a live symptom, and the two halves turn out not to be independent.
 
-Status: stage 1 done, stages 2-3 not started; stage 4 not planned. Revised once after a
+Status: stages 1-2 done, stage 3 not started; stage 4 not planned. Revised once after a
 fresh-context pressure test, which found a third `DataAPI` the first census missed, a
 pre-existing hole in the global map, and a second job the field stage 2 wanted to delete is
 doing. See [Findings](#findings).
@@ -183,7 +183,8 @@ it (position 1's work) is better value than generalizing it.
 
 ### Stage 1 — pin what sharing does
 
-**Done.** `tests/perApiStructs.test.ts`, five tests, all passing against unchanged code.
+**Done.** `tests/perApiStructs.test.ts`, five tests, all passing against unchanged code
+(stage 2 added a sixth).
 Dropping `buildOpAPI` from `updateDefaults` fails two of them, so the guard stage 2 needs is
 real.
 
@@ -204,6 +205,44 @@ real.
 - Cost to undo: free.
 
 ### Stage 2 — the registry owns its APIs
+
+**Done.** Both fields deleted. `pnpm typecheck` clean on both passes, `pnpm test` green at
+47 files / 469 tests, barrel unchanged at 588 keys.
+
+What shipped, against what the stage predicted:
+
+- `ToolRegistry._builtAPIs` is a `WeakRef<DataAPI>[]`, read through `apis()`, which derefs and
+  compacts in place. It does **not** hold the struct alongside each api, as the stage said it
+  would: `structFor(api)` recovers it from `mapStruct` by name, so there was nothing to store.
+- `updateDefaults(cls)` with no api iterates `apis()`, which reaches `buildOpAPI` on every
+  built api rather than only the newest. An empty list means `buildToolSysAPI` has not run yet
+  and there is nowhere to build into.
+- `_buildAccessors` split into `_ensureValues` (seeds `accessors` and `pathmap` from the
+  toolpath alone) and `_buildBinding` (adds the `DataPath` to a struct), plus two statics,
+  `_splitToolpath` and `_accessorName`, that both halves need.
+- The stage's warning about `prop2` resolved the other way: the split **does** copy twice. It
+  has to, since `_ensureValues` runs with no api and cannot see the normalized copy. The seeded
+  value is unaffected, because uiname normalization only writes `uiname` and `description`, so
+  the second copy costs an allocation and changes nothing.
+- `cache.api` / `cache.dstruct` are replaced by `cache.registry`, assigned by `ToolRegistry`'s
+  constructor, which warns if a cache is handed to a second registry. A cache has one owner for
+  its lifetime, so unlike a bound api it cannot go stale.
+- `set()`'s recovery path, for a tool whose accessors were never built, now calls
+  `_ensureValues` and then `this.registry?.updateDefaults(cls)`. Before the split it reached
+  `this.api.mapStruct` and threw `Cannot read properties of undefined` whenever no api had been
+  built; it now seeds, warns, and leaves the binding to the next `buildAPI`.
+- `tests/tooldefaults.test.ts:60-61` edited exactly as predicted, from "both fields are
+  defined" to "the registry owns this cache and has been built against this api".
+- One test added to `tests/perApiStructs.test.ts` for that recovery path, and one assertion
+  added that `apis()` holds both APIs rather than the newest.
+
+Mutation-tested, both halves load-bearing:
+
+- Seeding unconditionally instead of `if (!(name in obj))` — 1 failed / 14 passed.
+- `_buildAccessors` calling only `_buildBinding` — the file's `beforeAll` throws
+  `TypeError: Cannot convert undefined or null to object` out of `mapStruct(obj[k])` on a
+  prefix that was never seeded, so vitest reports the file as skipped rather than failed.
+  Skipped on a hook throw is a kill, not a vacuous pass.
 
 - `ToolRegistry` gains a pruned list of the APIs `buildAPI` has run against, each with the
   struct it built. `WeakRef` plus prune-on-iteration, because `defineGraphApi` builds one per
