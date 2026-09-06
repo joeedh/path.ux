@@ -15,14 +15,14 @@ import { IntProperty, NumberConstraints, PropFlags } from "../../path-controller
 import type { IContextBase } from "../context_base";
 import type { UIBase } from "../ui_base";
 
-type AnyUIBase = UIBase<any, any, any>;
+type AnyUIBase<CTX extends ContextLike> = UIBase<CTX, any, any>;
 
-export function setPathValueUndo(
-  elem: AnyUIBase,
-  ctx: ContextLike,
+export async function setPathValueUndo<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  ctx: CTX,
   path: string,
   val: unknown
-): void {
+): Promise<void> {
   elem.pathSocketUpdate(ctx, path);
 
   const mass_set_path = elem.getAttribute("mass_set_path");
@@ -34,7 +34,7 @@ export function setPathValueUndo(
   }
 
   const toolstack = elem.ctx.toolstack;
-  let head = toolstack.head;
+  let head = await toolstack.head;
 
   const bad =
     head === undefined ||
@@ -43,10 +43,10 @@ export function setPathValueUndo(
     elem.pathUndoGen !== elem._lastPathUndoGen;
 
   if (!bad) {
-    toolstack.undo(ctx);
+    await toolstack.undo(ctx);
     const tool = head as InstanceType<ReturnType<typeof getDataPathToolOp>>;
     tool.setValue(ctx, val, rdef.obj);
-    toolstack.redo(ctx);
+    await toolstack.redo(ctx);
   } else {
     elem._lastPathUndoGen = elem.pathUndoGen;
 
@@ -57,20 +57,15 @@ export function setPathValueUndo(
       return;
     }
 
-    ctx.toolstack.pushTool(elem.ctx, toolop);
-    head = toolstack.head;
-  }
-
-  if (!head || (head as unknown as DataPathSetOp).hadError) {
-    throw new Error("toolpath error");
+    await ctx.toolstack.execTool(elem.ctx, toolop);
   }
 }
 
-export function loadNumConstraints(
-  elem: AnyUIBase,
+export function loadNumConstraints<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
   prop: toolprop.ToolProperty | undefined,
-  dom: HTMLElement | AnyUIBase = elem,
-  onModifiedCallback?: (this: AnyUIBase) => void
+  dom: HTMLElement | AnyUIBase<CTX> = elem,
+  onModifiedCallback?: (this: AnyUIBase<CTX>) => void
 ): void {
   let modified = false;
 
@@ -179,20 +174,19 @@ export function loadNumConstraints(
     }
   }
 }
-
-export function pushReportContext(elem: AnyUIBase, key: string): void {
+export function pushReportContext<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, key: string): void { 
   const api = elem.ctx.api;
   if (api.pushReportContext) {
     api.pushReportContext(key);
   }
 }
 
-export function popReportContext(elem: AnyUIBase): void {
+export function popReportContext<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
   const api = elem.ctx.api;
   if (api.popReportContext) api.popReportContext();
 }
 
-export function setPathValue<T = unknown>(elem: AnyUIBase, ctx: any, path: string, val: T): void {
+export function setPathValue<T = unknown, CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string, val: T): void {
   elem.pathSocketUpdate(ctx, path);
 
   if (elem.useDataPathUndo) {
@@ -236,7 +230,7 @@ export function setPathValue<T = unknown>(elem: AnyUIBase, ctx: any, path: strin
   elem.popReportContext();
 }
 
-export function getPathMeta(elem: AnyUIBase, ctx: IContextBase, path: string) {
+export function getPathMeta<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string) {
   elem.pushReportContext(elem._reportCtxName);
   const ret = ctx.api.resolvePath(ctx, path);
   elem.popReportContext();
@@ -244,7 +238,7 @@ export function getPathMeta(elem: AnyUIBase, ctx: IContextBase, path: string) {
   return ret !== undefined ? ret.prop : undefined;
 }
 
-export function getPathDescription(elem: AnyUIBase, ctx: any, path: string): string | undefined {
+export function getPathDescription<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string): string | undefined {
   let ret;
   elem.pushReportContext(elem._reportCtxName);
 
@@ -295,13 +289,13 @@ export function addPathWatch<CTX extends IContextBase>(
   return w;
 }
 
-export function refreshPathWatches(elem: AnyUIBase): void {
+export function refreshPathWatches<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
   for (const w of elem._pathWatchers) {
     w.refresh();
   }
 }
 
-export function clearPathWatches(elem: AnyUIBase): void {
+export function clearPathWatches<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
   for (const w of elem._pathWatchers) {
     w.remove();
   }
@@ -310,7 +304,7 @@ export function clearPathWatches(elem: AnyUIBase): void {
   elem._pathWatchInit = false;
 }
 
-export function updatePathWatchers(elem: AnyUIBase, dataPathPolling: boolean): void {
+export function updatePathWatchers<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, dataPathPolling: boolean): void {
   if (!elem._ctx) {
     return;
   }

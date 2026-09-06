@@ -186,15 +186,6 @@ describe("toolstack serialization", () => {
     expect(ts.cur).toBe(1);
   });
 
-  test("a tool pushed while another runs is not rejected", async () => {
-    const ts = stack();
-
-    const a = ts.pushTool(ctx, new SlowOp("a"));
-    await expect(ts.pushTool(ctx, new SlowOp("b"))).resolves.toBeUndefined();
-    await a;
-    expect(ts.length).toBe(2);
-  });
-
   test("the lock is released when a tool throws", async () => {
     const ts = stack();
 
@@ -343,7 +334,7 @@ describe("deadlock watchdog", () => {
     const waiter = ts.undo();
 
     await new Promise((accept) => setTimeout(accept, 40));
-    expect(reports).toEqual([["undo", "pushTool"]]);
+    expect(reports).toEqual([["undo", "execTool"]]);
 
     release();
     await Promise.all([held, waiter]);

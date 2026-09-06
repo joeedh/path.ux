@@ -119,7 +119,7 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
 
     const panel = this.panel(def.uiname);
 
-    this.on_change = () => {
+    this.on_change = async () => {
       if (this.ignoreOnChange) {
         return;
       }
@@ -128,7 +128,8 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
         return;
       }
 
-      if (tool === ctx.toolstack.head) {
+      const head = await ctx.toolstack.head
+      if (tool === head) {
         this.ignoreOnChange = true;
         ctx.toolstack.rerun(tool);
         this.ignoreOnChange = false;
