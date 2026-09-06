@@ -4,9 +4,10 @@ Task 2 of [`toolsys-tasks.md`](toolsys-tasks.md): "bind tool defaults per `DataA
 of per process". The census below reframes it — after task 3 landed, neither half of the
 sketch has a live symptom, and the two halves turn out not to be independent.
 
-Status: not started. Revised once after a fresh-context pressure test, which found a third
-`DataAPI` the first census missed, a pre-existing hole in the global map, and a second job
-the field stage 2 wanted to delete is doing. See [Findings](#findings).
+Status: stage 1 done, stages 2-3 not started; stage 4 not planned. Revised once after a
+fresh-context pressure test, which found a third `DataAPI` the first census missed, a
+pre-existing hole in the global map, and a second job the field stage 2 wanted to delete is
+doing. See [Findings](#findings).
 
 <!-- toc -->
 
@@ -182,6 +183,10 @@ it (position 1's work) is better value than generalizing it.
 
 ### Stage 1 — pin what sharing does
 
+**Done.** `tests/perApiStructs.test.ts`, five tests, all passing against unchanged code.
+Dropping `buildOpAPI` from `updateDefaults` fails two of them, so the guard stage 2 needs is
+real.
+
 - Tests only, no production changes. **path.ux only; no submodule half, so no commit pair.**
 - Two APIs, both built: assert the root structs differ while the structs below them are the
   same objects, and assert a late-registered tool reaches both.
@@ -262,9 +267,10 @@ it (position 1's work) is better value than generalizing it.
 
 Carried forward; the pressure test answered the rest.
 
-1. Stage 2 deletes two public fields from a barrel-exported class. Deprecate for a release
-   instead, or delete outright? Nothing outside `tests/tooldefaults.test.ts:60-61` reads them
-   in either repo, which argues for deleting.
+1. ~~Deprecate or delete the two public fields?~~ **Decided: delete outright.** Nothing
+   outside `tests/tooldefaults.test.ts:60-61` reads them in either repo, and `dstruct` is
+   redundant with `ToolRegistry.structFor(api)`, which knows the same answer without
+   last-writer-wins ambiguity.
 2. Should stage 3 fix the `useGlobalRegistry` stamp by not stamping, or by giving the opt-out
    per-api storage? The second is a small piece of position 3 and might make position 3
    cheaper later; the first is smaller now.
