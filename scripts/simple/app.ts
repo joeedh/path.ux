@@ -2,7 +2,6 @@ import nstructjs from "../path-controller/util/struct";
 import { Context, ContextOverlay, makeDerivedOverlay } from "../path-controller/controller/context";
 
 export const DataModelClasses: (typeof DataModel)[] = [];
-import { SavedToolDefaults } from "../path-controller/toolsys/tooldefaults";
 import { ToolStack } from "../path-controller/toolsys/toolstack";
 import { buildToolSysAPI } from "../path-controller/toolsys/toolsys";
 import { DataAPI } from "../path-controller/controller/controller";
@@ -110,7 +109,7 @@ function GetContextClass(ctxClass: Function): typeof Context {
     }
 
     get toolDefaults() {
-      return SavedToolDefaults;
+      return this.api.registry.defaults;
     }
 
     get last_tool() {

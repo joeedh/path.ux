@@ -11,7 +11,7 @@ import {
 } from "../pathux.js";
 import { DocsBrowserEditor } from "../editors/docbrowser/docbrowser.js";
 
-import { sendNote, SavedToolDefaults } from "../pathux.js";
+import { sendNote } from "../pathux.js";
 
 import type { AppState } from "./app.js";
 import type { ModelData } from "./state.js";
@@ -48,15 +48,15 @@ export class BaseOverlay extends ContextOverlay {
 
   //toolDefaults is used by path.ux, see api_define.js
   get toolDefaults() {
-    return SavedToolDefaults;
+    return this.api.registry.defaults;
   }
 
   toolDefaults_save() {
-    return SavedToolDefaults;
+    return this.toolDefaults;
   }
 
   toolDefaults_load() {
-    return SavedToolDefaults;
+    return this.toolDefaults;
   }
 
   //set up last_tool for path.ux

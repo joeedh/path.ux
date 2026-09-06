@@ -9,14 +9,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
  */
 
 const entries: Record<string, () => Promise<unknown>> = {
-  toolregistry: () => import("../scripts/path-controller/toolsys/toolregistry"),
-  tooldefaults: () => import("../scripts/path-controller/toolsys/tooldefaults"),
-  toolop      : () => import("../scripts/path-controller/toolsys/toolop"),
-  toolpath    : () => import("../scripts/path-controller/toolsys/toolpath"),
-  toolmacro   : () => import("../scripts/path-controller/toolsys/toolmacro"),
-  toolsys     : () => import("../scripts/path-controller/toolsys/toolsys"),
-  barrel      : () => import("../scripts/path-controller/toolsys/index"),
-  controller  : () => import("../scripts/path-controller/controller"),
+  toolregistry      : () => import("../scripts/path-controller/toolsys/toolregistry"),
+  tooldefaults      : () => import("../scripts/path-controller/toolsys/tooldefaults"),
+  toolop            : () => import("../scripts/path-controller/toolsys/toolop"),
+  toolpath          : () => import("../scripts/path-controller/toolsys/toolpath"),
+  toolpathParser    : () => import("../scripts/path-controller/toolsys/toolpath_parser"),
+  toolmacro         : () => import("../scripts/path-controller/toolsys/toolmacro"),
+  toolsys           : () => import("../scripts/path-controller/toolsys/toolsys"),
+  barrel            : () => import("../scripts/path-controller/toolsys/index"),
+  controller        : () => import("../scripts/path-controller/controller"),
+  controllerAbstract: () => import("../scripts/path-controller/controller/controller_abstract"),
 };
 
 // resetModules re-evaluates the sources against an nstructjs whose own registry it does

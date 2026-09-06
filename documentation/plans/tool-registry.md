@@ -3,7 +3,7 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: stages 1-3 done, stages 4-6 not started. Revised once after a fresh-context pressure
+Status: stages 1-4 done, stages 5-6 not started. Revised once after a fresh-context pressure
 test, which invalidated the first draft's census, its import-cycle fix, and its stage
 boundaries. See [Findings](#findings) for the disposition of each.
 
@@ -434,11 +434,41 @@ set of defaults. Safe to change — nothing in path.ux persists the cache or rea
 
 ### Stage 4 — `ModelInterface` carries a registry
 
+**Done.** The 453 tests that predate the stage passed unedited, so the "no behaviour change"
+claim held.
+
 - A `registry` field defaulting to `defaultRegistry`; `parseToolPath`, `createTool`,
-  `getToolDef`, `getToolPathHotkey` read it. Free functions stay as wrappers.
+  `getToolDef`, `getToolPathHotkey` read it. Free functions stay as wrappers. ✓ — only
+  `parseToolPath`, `parseToolArgs` and `createTool` needed editing, because `getToolDef` and
+  `getToolPathHotkey` already route through `this.parseToolPath`.
 - `ctx.toolDefaults` reaches the registry's cache rather than the module global, at all three
-  wiring sites.
-- Still one registry in play, so still no behaviour change.
+  wiring sites. ✓ — `buildToolSysAPI`'s installed getter closes over the `api` it was handed;
+  `simple/app.ts` and `example/core/context.ts` read `this.api.registry.defaults`.
+  `example/`'s `toolDefaults_save`/`_load` now go through its own getter rather than naming
+  the global a second and third time.
+- Still one registry in play, so still no behaviour change. ✓
+
+`parseToolPath` and `initToolPaths` moved onto `ToolRegistry` as `parseToolPath` and
+`initPaths`, per the design sketch. That needed a fourth module: the argument parser
+(`buildParser`, `Parser`) is now `toolsys/toolpath_parser.ts`, a leaf both `toolregistry.ts`
+and `toolpath.ts` import. Leaving it in `toolpath.ts` would have put those two in a
+module-scope cycle — `toolpath.ts` evaluates `Parser` and `ToolPaths` at module scope, and
+the latter needs `defaultRegistry` — which is the stage 2 shape again. `toolpath.ts`
+re-exports `buildParser` and `Parser` by name rather than with `export *`, so the barrel
+gains nothing from the split.
+
+Barrel: no runtime change at all, 588 keys either side. Note the limit of that check — the
+`export {` block a built bundle carries holds runtime names only, so the one name stage 4
+does add to the public surface, the `ParseToolPathResult` type (module-private in
+`toolpath.ts` before, exported now because a public method returns it), is invisible to it. A
+type-level addition has to be caught by reading the diff.
+
+**Left incoherent deliberately, for stage 5 to close:** `updateToolSysAPI` and
+`buildToolSysAPI` still walk `ToolClasses`, the *default* registry's list, whatever
+`api.registry` says. Nothing sets `api.registry` outside the tests yet, so it cannot bite
+today, but an api pointed at a second registry currently gets that registry's
+`ctx.toolDefaults` over the default registry's accessors. `registry.buildAPI` is where those
+two meet.
 
 ### Stage 5 — make a second registry actually work
 
