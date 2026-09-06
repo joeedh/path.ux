@@ -3,7 +3,7 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: stages 1-4 done, stages 5-6 not started. Revised once after a fresh-context pressure
+Status: stages 1-5 done, stage 6 not started. Revised once after a fresh-context pressure
 test, which invalidated the first draft's census, its import-cycle fix, and its stage
 boundaries. See [Findings](#findings) for the disposition of each.
 
@@ -102,6 +102,14 @@ through whichever API the context carries" — states exactly the assumption tha
 This is task 2's bug, reached from task 3's direction, and it means
 [`toolsys-tasks.md`](toolsys-tasks.md)'s claim that tasks 2 and 3 are independent is wrong.
 Task 3 cannot demonstrate a working second registry without it. Stage 5 handles it.
+
+**Amended after stage 5.** Two halves of this were overstated. The wipe is real but has no
+observable effect while both APIs sit on one registry, because the refill walks the same
+class list — it needed a second registry to bite, which is why nothing in the app ever
+looked wrong. And `_map_structs` did not have to be fixed: stage 5 moved the defaults
+binding out of its reach instead, so the general bug (any two APIs sharing one struct for a
+model class) is still open and still task 2's. The dependency claim stands: task 3 could not
+have shown a working second registry while the defaults struct was keyed on the class.
 
 ### Stale, to clean up in passing
 
@@ -472,17 +480,66 @@ two meet.
 
 ### Stage 5 — make a second registry actually work
 
-The draft's stage 4 tested the easiest seam and would have passed while two others were
-broken. This stage has to fix `_map_structs` first.
+**Done.** `tests/toolregistry_second.test.ts`, four tests, both halves of the fix
+mutation-checked.
 
 - `mapStruct` must give each `DataAPI` its own `DataStruct` for a shared class, or
   `registry.buildAPI` must stop calling `clear()` on a struct it does not own. Either way
   this is task 2's bug; settle the shared-versus-per-API question for default _values_ here
   (shared is almost certainly right — the bug is in the binding, not the values).
+  **Neither, and `_map_structs` was not fixed** — see below.
 - Then the test: register a tool into registry B, point a `DataAPI` at it, resolve the
   toolpath, read a default, and run it — with the default registry never seeing the class,
-  and registry A's accessors still intact afterwards.
-- If this needs a fifth seam, add it here rather than widening an existing one.
+  and registry A's accessors still intact afterwards. ✓
+- If this needs a fifth seam, add it here rather than widening an existing one. ✓ —
+  `ToolRegistry.structFor(api)`, plus `structName` to key it.
+
+**What shipped: the registry owns the struct, so `clear()` is always its own.** The tool
+tables were never the problem; `api.mapStruct(ToolPropertyCache)` was. A `DataStruct`
+describes a class, but this one's shape is built from the tools a *cache instance* was
+filled with, so keying it on the class hands every registry the same struct and the second
+`buildAPI` clears the first's accessors. `structFor` maps the cache instance instead —
+`mapStruct` keys on object identity, which is the same trick `_buildAccessors` already uses
+for the accessor prefix objects — under a per-registry `structName`. `clear()` then only
+ever wipes a struct this registry filled, so it stays, and stale accessors from an
+unregistered tool still get dropped.
+
+That is a third route past a plan sub-question, after stage 2's cycle. It is worth naming
+why the plan's two options were both worse: making `mapStruct` per-API is task 2 in full,
+and it changes what `getStruct(cls)` answers on an api that never mapped `cls` — today the
+module map covers for it, and `resolvePath` leans on that. Dropping `clear()` leaves the
+struct wider than any one cache forever.
+
+**So `_map_structs` is untouched, and task 2 is still owed.** `mapStruct` is still keyed on
+the class object and still module-global; two `DataAPI`s still share one struct for any
+model class either of them maps. Stage 5 took the defaults binding out of that map's reach
+rather than fixing the map. The plan's claim that this stage "has to fix `_map_structs`
+first" was wrong: it had to stop depending on it.
+
+**The desktop app's live bug, revisited.** `defineGraphApi` still clears what
+`defineShellApi` built, because both sit on `defaultRegistry` and so on one struct — but it
+refills it from the same class list, so the result is identical and nothing observable
+happens. The breakage the census described needs two registries, and two registries now
+have two structs. Benign today, and no longer able to turn malignant.
+
+**Shared versus per-API, settled.** Per *registry*, not per api. Values were never in
+question (one cache per registry, by construction since stage 2); the binding now matches
+them. The visible consequence is that `cache.api` and `cache.dstruct` name the last api to
+call `buildAPI`, which is what they did before — `set()` falls back to them when a tool is
+missing from the map, so a tool saving a default on an api that is not the last builder
+writes through the wrong one's struct. Pre-existing, unchanged, and out of scope here.
+
+**Found while testing: toolpath prefixes are shared between registries, by name.**
+`_buildAccessors` maps each prefix object under the bare prefix (`api.mapStruct(obj[k],
+true, k)`), and `mapStruct` hands back an existing struct of that name — so two registries
+holding `foo.a` and `foo.b` describe `foo` with one struct carrying both members. Each
+registry's accessor *object* is still its own, so reading the other's path resolves and then
+finds nothing, and `getValue` throws. Left as is and pinned by the last test: the prefix
+namespace is global anyway, and the values stay separate. It does mean a registry cannot
+give an existing toolpath prefix a different shape.
+
+Stage 4's flagged incoherence is closed: `buildToolSysAPI` walks `api.registry.classes` for
+the nstructjs pass too. Barrel unchanged, 588 keys.
 
 ### Stage 6 — document
 
@@ -517,7 +574,7 @@ pieces need the paired commit and gitlink bump: `scripts/simple/app.ts` and
 | Stage 1 could not verify its own deliverable                                                                                 | **Accepted.** Folded into stage 2; stage 1 is now the missing tests.                                                    |
 | The `saveDefaultInputs` justification is wrong at every call site, and misses `_redo`                                        | **Accepted.** The `ToolOp` constructor is the real ctx-less site; corrected.                                            |
 | Macro classes never pass through `register()`, so nothing would stamp them                                                   | **Accepted.** Now an explicit sub-question of the seam and a stage 3 deliverable.                                       |
-| Stage 4 tested one seam of three, and `_map_structs` blocks the other two                                                    | **Accepted.** Rewritten as stage 5, fixing `mapStruct` first; the tasks-are-independent claim is retracted.             |
+| Stage 4 tested one seam of three, and `_map_structs` blocks the other two                                                    | **Accepted**, and rewritten as stage 5 — but the fix was to stop routing the defaults struct through `mapStruct`, not to fix it. |
 | `macroidgen` was described two contradictory ways; neither it nor `initToolPaths_run` is exported and neither needs an alias | **Accepted.** Table now marks what is exported; the counter is stated as process-wide with the question left open.      |
 | Stage 2's regression net does not exist for defaults and macros                                                              | **Accepted.** That is stage 1.                                                                                          |
 | `unregister`/re-register and subclass stamping are undecided                                                                 | **Accepted.** Both are stage 3 deliverables.                                                                            |
