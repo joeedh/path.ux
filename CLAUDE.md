@@ -154,11 +154,17 @@ needs. Regenerate after changing any `api_define` with `pnpm run gen:paths`
 
 A container built under a prefix declares it with `withDataPrefix<Prefix>()`,
 which lands the literal in `Container`'s third type parameter and its phantom
-`__dataPathPrefix` property. `prop` and the other path methods then take
-`PathsUnderPrefix<Prefix>` (autocomplete), and the `pathux/valid-datapath` ESLint
-rule reads the tag off the receiver and checks prefix + path exactly instead of
-falling back to suffix matching. See
+`__dataPathPrefix` property. The `pathux/valid-datapath` ESLint rule reads that
+tag off the receiver's type and checks prefix + path exactly, instead of falling
+back to suffix matching. See
 [documentation/container.md](documentation/container.md) § Path prefixes.
+
+The prefix earns its keep at lint time, not in the editor. `prop` and the other
+path methods are typed `PathsUnderPrefix<Prefix>`, but that resolves to `string`
+unless something augments the `DataPathRegistry` seam, and an app large enough to
+want the checking is the one whose compiler the generated union chokes — so no
+consumer augments it. Read the type parameter as what feeds the lint rule; do not
+expect completions from it.
 
 **TODO: the prefix parameter dies at every child container.** `row()`, `col()`,
 `panel()`, `twocol()` and `table()` return `RowFrame` / `ColumnFrame` /

@@ -14,8 +14,9 @@
      documentation/plans/ui-base-split-plan.md.
 [ ]: thread the Container DataPrefix type parameter through the child
      containers (RowFrame, ColumnFrame, PanelFrame, TwoColumnFrame,
-     TableFrame) so con.row().prop(...) keeps prefix autocomplete and
-     strict valid-datapath checking. See CLAUDE.md "Data-path prefixes".
+     TableFrame) so con.row().prop(...) keeps strict valid-datapath
+     checking instead of dropping to suffix matching. See CLAUDE.md
+     "Data-path prefixes".
 [x]: resynchronize setPathValueUndo with the async toolstack
      (regression from 336424c), per documentation/plans/toolsys-tasks.md
      task 0.

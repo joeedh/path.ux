@@ -232,18 +232,22 @@ with `withDataPrefix<Prefix>()`, which re-types the container without touching i
 ```ts
 buildUI(container: Container) {
   const con = container.withDataPrefix<"scene.objects.active.">()
-  con.prop("location")   // autocompletes the paths under that prefix
+  con.prop("location")   // checked as "scene.objects.active.location"
 }
 ```
 
 The prefix lands in `Container`'s third type parameter and is readable as the phantom
-`__dataPathPrefix` property. Two things use it. `prop` and the other path methods take
-`PathsUnderPrefix<Prefix>` (from `core/datapath_registry`), which is the tails of the
-registered paths starting with that prefix — so the editor completes `location` rather than
-the whole catalog. And the `pathux/valid-datapath` ESLint rule reads the tag off the
+`__dataPathPrefix` property. The `pathux/valid-datapath` ESLint rule reads that tag off the
 receiver and checks prefix + path against generated/api-paths.json, reporting the joined
 path when it does not resolve. Without a declared prefix the rule has nothing to resolve
 against and falls back to accepting any known path suffix.
+
+`prop` and the other path methods are also typed `PathsUnderPrefix<Prefix>` (from
+`core/datapath_registry`), the tails of the registered paths starting with that prefix. In
+practice that resolves to `string`: it only narrows where something augments the
+`DataPathRegistry` seam, and the apps big enough to want the checking are the ones whose
+compiler the generated union chokes, so they do not. Treat the prefix as what feeds the
+lint rule rather than as an editor feature.
 
 Prefixed containers are not assignable to `Container<CTX>`, which is what stops one from
 being passed somewhere that expects a bare container. Plumbing that legitimately does not
