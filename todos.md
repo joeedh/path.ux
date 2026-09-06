@@ -16,3 +16,13 @@
      containers (RowFrame, ColumnFrame, PanelFrame, TwoColumnFrame,
      TableFrame) so con.row().prop(...) keeps prefix autocomplete and
      strict valid-datapath checking. See CLAUDE.md "Data-path prefixes".
+[ ]: BLOCKER: resynchronize setPathValueUndo with the async toolstack
+     (regression from 336424c), per documentation/plans/toolsys-tasks.md
+     task 0.
+[ ]: fold DataPathSetOp writes instead of replaying them, per
+     documentation/plans/datapath-set-fold.md.
+[ ]: bind tool defaults per DataAPI instead of per process, per
+     documentation/plans/toolsys-tasks.md task 2.
+[ ]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
+     module globals as its default instance, per
+     documentation/plans/toolsys-tasks.md task 3.
