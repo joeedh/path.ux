@@ -857,8 +857,8 @@ export class UIBase<
     this.pathUndoGen++;
   }
 
-  setPathValueUndo(ctx: CTX, path: string, val: unknown): void {
-    datapath.setPathValueUndo(this, ctx, path, val);
+  setPathValueUndo(ctx: CTX, path: string, val: unknown): Promise<void> {
+    return datapath.setPathValueUndo(this, ctx, path, val);
   }
 
   loadNumConstraints(

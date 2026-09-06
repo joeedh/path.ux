@@ -4,8 +4,8 @@ Moves the coalescing that `setPathValueUndo` performs out of the widget layer an
 toolstack as one protected operation, and stops `DataPathSetOp` swallowing its own errors.
 Task 1 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: planned, not started. Depends on task 0 (`setPathValueUndo` vs. the async toolstack),
-which is in progress.
+Status: part B (stages 4a and 4b) landed; part A (`foldOrExec`, stages 1-3) not started.
+Task 0 is complete.
 
 Revised twice: once after a fresh-context pressure test, once after task 0's first pass made
 `ToolStack.head` a promise. See [Findings](#findings) for the disposition of each.
@@ -31,7 +31,7 @@ Revised twice: once after a fresh-context pressure test, once after task 0's fir
   - [Stage 1 — a harness that fails honestly](#stage-1--a-harness-that-fails-honestly)
   - [Stage 2 — assertions that pin the danger](#stage-2--assertions-that-pin-the-danger)
   - [Stage 3 — `foldOrExec`](#stage-3--foldorexec)
-  - [Stage 4 — abort and roll back](#stage-4--abort-and-roll-back)
+  - [Stage 4 — abort and roll back — **done**](#stage-4--abort-and-roll-back--done)
   - [Stage 5 — measure and document](#stage-5--measure-and-document)
 - [Repos](#repos)
 - [Findings](#findings)
@@ -368,20 +368,31 @@ Required to pass unchanged through stages 3 and 4 except where noted:
 - `setPathValueUndo` reduced to build-and-call; `_lastPathUndoGen` deleted (path.ux).
 - Assertions 5, 6 and 7 move to their new values.
 
-### Stage 4 — abort and roll back
+### Stage 4 — abort and roll back — **done**
 
-Two commits, because the first is a general toolstack contract and the second is one op
-taking advantage of it.
+Landed ahead of stages 1-3, since it needs none of the fold harness. Two commits, because the
+first is a general toolstack contract and the second is one op taking advantage of it.
 
-**4a, the contract.** `ToolExecPhase` and the no-op `ToolOp.onExecError`; the abort-and-roll-back
-wrapper in `_execTool`; `modal_running` cleared from a `finally`; `try/finally` around `exec`
-in `DataPathSetOp.modalStart` so `modalEnd` always runs. Assertions 8, 9 and 10 go green. No
-existing op changes behaviour, because nothing throws yet.
+Covered by `tests/toolstack_abort.test.ts` (10 assertions) rather than by the fold harness
+stage 1 describes. One thing turned up that the plan did not predict: `_undo_branch` was
+sliced _after_ `cur++`, so the branch save dropped the very entry the push was about to
+overwrite. Any `toolCancel` on a push over a live redo branch lost its first redo entry. The
+slice now happens before `cur` moves. Pre-existing, unrelated to the abort work, found by the
+redo-branch assertion.
+
+**4a, the contract.** `ToolExecPhase` and the no-op `ToolOp.onExecError`; the
+abort-and-roll-back wrapper in `_execTool` plus `_abortTool`; `modal_running` cleared on a
+synchronous throw out of `modalStart`; `try/finally` around `exec` in
+`DataPathSetOp.modalStart` so `modalEnd` always runs.
 
 **4b, `DataPathSetOp` stops swallowing.** Both `try/catch` blocks and `hadError` deleted; the
-mass set no longer runs after a failed single write. Decide here whether `DataPathSetOp`
-overrides `onExecError` to reverse itself — a widget edit that half-applied is a good candidate
-for `if (phase !== "undoPre") this.undo(ctx);`, but it is a behaviour choice, not a default.
+mass set no longer runs after a failed single write.
+
+`DataPathSetOp` does **not** override `onExecError`, so a failed widget edit is not reversed
+for the author. Left that way deliberately: `exec` is a single `api.setValue` followed by an
+optional `massSetProp`, so a throw from the first leaves nothing applied, and a throw from the
+second leaves a partial fan-out whose correct repair is the app's business. Revisit if a real
+case turns up.
 
 ### Stage 5 — measure and document
 

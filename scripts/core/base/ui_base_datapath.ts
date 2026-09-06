@@ -12,6 +12,7 @@ import { ContextLike } from "../../path-controller/controller/controller_abstrac
 import type { DataPathSetOp } from "../../path-controller/controller/controller_ops";
 import * as toolprop from "../../path-controller/toolsys/toolprop";
 import { IntProperty, NumberConstraints, PropFlags } from "../../path-controller/toolsys/toolprop";
+import * as util from "../../path-controller/util/util";
 import type { IContextBase } from "../context_base";
 import type { UIBase } from "../ui_base";
 
@@ -174,37 +175,47 @@ export function loadNumConstraints<CTX extends ContextLike = ContextLike>(
     }
   }
 }
-export function pushReportContext<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, key: string): void { 
+export function pushReportContext<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  key: string
+): void {
   const api = elem.ctx.api;
   if (api.pushReportContext) {
     api.pushReportContext(key);
   }
 }
 
-export function popReportContext<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
+export function popReportContext<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>
+): void {
   const api = elem.ctx.api;
   if (api.popReportContext) api.popReportContext();
 }
 
-export function setPathValue<T = unknown, CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string, val: T): void {
+export function setPathValue<T = unknown, CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  ctx: CTX,
+  path: string,
+  val: T
+): void {
   elem.pathSocketUpdate(ctx, path);
 
   if (elem.useDataPathUndo) {
+    // The undo path runs on the toolstack, so it outlives this call. Push and pop
+    // around the dispatch only, or two overlapping edits unbalance the stack.
     elem.pushReportContext(elem._reportCtxName);
+    const running = elem.setPathValueUndo(ctx, path, val);
+    elem.popReportContext();
 
-    try {
-      elem.setPathValueUndo(ctx, path, val);
-    } catch (error) {
-      elem.popReportContext();
-
-      if (!(error instanceof DataPathError)) {
-        throw error;
-      } else {
+    running.catch((error) => {
+      if (error instanceof DataPathError) {
         return;
       }
-    }
 
-    elem.popReportContext();
+      util.print_stack(error as Error);
+      console.error(`failed to set datapath "${path}"`);
+    });
+
     return;
   }
 
@@ -230,7 +241,11 @@ export function setPathValue<T = unknown, CTX extends ContextLike = ContextLike>
   elem.popReportContext();
 }
 
-export function getPathMeta<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string) {
+export function getPathMeta<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  ctx: CTX,
+  path: string
+) {
   elem.pushReportContext(elem._reportCtxName);
   const ret = ctx.api.resolvePath(ctx, path);
   elem.popReportContext();
@@ -238,7 +253,11 @@ export function getPathMeta<CTX extends ContextLike = ContextLike>(elem: AnyUIBa
   return ret !== undefined ? ret.prop : undefined;
 }
 
-export function getPathDescription<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, ctx: CTX, path: string): string | undefined {
+export function getPathDescription<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  ctx: CTX,
+  path: string
+): string | undefined {
   let ret;
   elem.pushReportContext(elem._reportCtxName);
 
@@ -289,13 +308,17 @@ export function addPathWatch<CTX extends IContextBase>(
   return w;
 }
 
-export function refreshPathWatches<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
+export function refreshPathWatches<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>
+): void {
   for (const w of elem._pathWatchers) {
     w.refresh();
   }
 }
 
-export function clearPathWatches<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>): void {
+export function clearPathWatches<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>
+): void {
   for (const w of elem._pathWatchers) {
     w.remove();
   }
@@ -304,7 +327,10 @@ export function clearPathWatches<CTX extends ContextLike = ContextLike>(elem: An
   elem._pathWatchInit = false;
 }
 
-export function updatePathWatchers<CTX extends ContextLike = ContextLike>(elem: AnyUIBase<CTX>, dataPathPolling: boolean): void {
+export function updatePathWatchers<CTX extends ContextLike = ContextLike>(
+  elem: AnyUIBase<CTX>,
+  dataPathPolling: boolean
+): void {
   if (!elem._ctx) {
     return;
   }

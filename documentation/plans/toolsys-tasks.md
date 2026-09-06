@@ -6,8 +6,8 @@ and blocks task 1; tasks 1-3 are independent of each other and land in any order
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: task 0 in progress, three bugs outstanding. Task 1 planned
-(`datapath-set-fold.md`), depends on task 0. Tasks 2 and 3 sketched only.
+Status: task 0 done. Task 1 half done — its part B landed, part A (`foldOrExec`) planned in
+`datapath-set-fold.md`. Tasks 2 and 3 sketched only.
 
 <!-- toc -->
 
@@ -31,7 +31,7 @@ a supported configuration; and `336424c` made the tool lifecycle async.
 
 ## Task 0 — resynchronize `setPathValueUndo` with the async toolstack
 
-In progress. **This is a live regression on `master`, not an improvement.** Fix it first.
+**Done.** It was a live regression on `master` rather than an improvement.
 
 - Before `336424c`, `ToolStack.undo()`/`redo()`/`execTool()` were synchronous `void`
   methods. That commit made the lifecycle async and routed every public entry point through
@@ -50,8 +50,8 @@ In progress. **This is a live regression on `master`, not an improvement.** Fix 
     longer at `cur` when the queued work runs — and the intermediate values are dropped.
 - The route taken: `pushTool` removed in favour of a single `execTool`, `ToolStack.head` is now
   a promise acquired through `protect`, and `setPathValueUndo` is async and awaits each step.
-- Outstanding as of the first pass, all found by running the suite (49 failures across four
-  files):
+- Three bugs came out of the first pass, all found by running the suite (49 failures across
+  four files), all now fixed:
   - `_execTool`'s `if (this.locked)` guard (`toolsys/toolstack.ts:290`) fires on every call.
     `protect` sets `_lockLabel` before invoking its callback (`:191-193`), so the normal
     `execTool` path always throws. It cannot tell "I hold the lock" from "someone else does".
