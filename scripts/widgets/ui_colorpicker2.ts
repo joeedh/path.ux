@@ -526,6 +526,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     });
 
     this.canvas.addEventListener("mousedown", (e: MouseEvent) => {
+      //a drag starts here, so the last one's undo entry is sealed here
+      this.undoBreakPoint();
+
       if (this.modalRunning) {
         return;
       }
@@ -575,6 +578,9 @@ export class SatValField<CTX extends IContextBase = IContextBase> extends UIBase
     });
 
     this.canvas.addEventListener("touchstart", (e: TouchEvent) => {
+      //a drag starts here, so the last one's undo entry is sealed here
+      this.undoBreakPoint();
+
       if (this.modalRunning) {
         return;
       }
@@ -1088,7 +1094,16 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
       label: string,
       cb: (e: { value: number }) => void
     ): SliderWidget => {
-      return tabFrame.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, cb);
+      return tabFrame.slider(undefined, {
+        name      : label,
+        defaultval: 0.0,
+        min       : 0.0,
+        max       : 1.0,
+        step      : 0.001,
+        is_int    : false,
+        do_redraw : true,
+        callback  : cb,
+      });
     };
 
     node.h = makeSlider(tab, "Hue", (e) => {
@@ -1158,7 +1173,6 @@ export class ColorPicker<CTX extends IContextBase = IContextBase> extends Column
         });
 
         slider.baseUnit = slider.displayUnit = "none";
-
         return slider;
       };
 

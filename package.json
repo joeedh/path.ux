@@ -36,7 +36,7 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@pathtx/prettier": "3.3.0-dev",
+    "@pathtx/prettier": "3.3.10-dev",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
     "@types/parse5": "^7.0.0",

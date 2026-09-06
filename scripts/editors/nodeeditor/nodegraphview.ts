@@ -1093,7 +1093,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   /** Replaces one group instance with a copy of its contents. */
   async ungroupNode(nodeId: GraphId): Promise<boolean> {
     const done = await this._dispatch({
-      kind: "ungroup",
+      kind     : "ungroup",
       graphPath: this.currentGraphPath,
       nodeId,
     });
@@ -1189,9 +1189,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
         for (const nid of [...this.selection]) {
           await this._dispatch({
-            kind: "deleteNode",
+            kind     : "deleteNode",
             graphPath: this.currentGraphPath,
-            nodeId: nid,
+            nodeId   : nid,
           });
         }
         this.syncGraph();
@@ -1244,7 +1244,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   async replaceNode(nodeId: GraphId, newType: string): Promise<void> {
     await this._dispatch({
-      kind: "replaceNode",
+      kind     : "replaceNode",
       graphPath: this.currentGraphPath,
       nodeId,
       newType,

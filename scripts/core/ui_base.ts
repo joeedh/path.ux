@@ -853,7 +853,10 @@ export class UIBase<
   }
 
   undoBreakPoint(): void {
+    // flush to all parents to avoid errors caused by child widgets
+    // triggering datapath updates in a root element up the hierarchy
     this.pathUndoGen++;
+    this.parentWidget?.undoBreakPoint();
   }
 
   setPathValueUndo(ctx: CTX, path: string, val: unknown): Promise<void> {
@@ -1246,6 +1249,25 @@ export class UIBase<
     }
     return false;
   }
+  /*
+  getMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T | undefined {
+    const inherits = ctor.metaDefine().inherits ?? false;
+    let elem: UIBase | undefined = this;
+    do {
+      const meta = getMeta(elem, ctor);
+      if (meta) {
+        return meta;
+      }
+      elem = elem.parentWidget;
+    } while (elem && inherits);
+    return undefined;
+  }
+  setMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>, meta: T): void {
+    setMeta(this, ctor, meta);
+  }
+  ensureMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T {
+    return ensureMeta(this, ctor);
+  }*/
 }
 
 export * from "./base/ui_draw";
