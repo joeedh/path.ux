@@ -106,6 +106,19 @@ describe("what two DataAPIs share", () => {
   });
 });
 
+describe("mapStruct without auto-create", () => {
+  test("throws for a class nothing has mapped", () => {
+    class Unmapped {}
+
+    // getStruct is this call, so an api that never ran its defineAPI crashes here rather
+    // than silently resolving through whatever another api happened to map
+    expect(() => apiA.mapStruct(Unmapped as never, false)).toThrow(
+      /class does not have a struct definition/
+    );
+    expect(apiA.hasStruct(Unmapped)).toBe(false);
+  });
+});
+
 describe("the useGlobalRegistry opt-out", () => {
   test("keeps the struct on its own api and off every other one", () => {
     class Private {}
