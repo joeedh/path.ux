@@ -3,7 +3,7 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: stage 1 done, stages 2-6 not started. Revised once after a fresh-context pressure
+Status: stages 1-2 done, stages 3-6 not started. Revised once after a fresh-context pressure
 test, which invalidated the first draft's census, its import-cycle fix, and its stage
 boundaries. See [Findings](#findings) for the disposition of each.
 
@@ -209,19 +209,44 @@ through the `../toolsys` barrel and `tooldefaults.ts:3` enters through `../contr
 "put `ToolRegistry` in its own module that both import" — the draft's option 1 — is precisely
 the failing configuration.
 
-Two fixes that work, one to be chosen in stage 2:
+Two fixes were proposed here, and **neither is what stage 2 shipped**. The second is
+broken, and the first opens a one-way door for no reason:
 
-- Move `ToolPropertyCache` into `toolregistry.ts`, leaving `tooldefaults.ts` as a re-export
-  shim. It must survive as a module exporting that name either way, because
+- _Move `ToolPropertyCache` into `toolregistry.ts`, leaving `tooldefaults.ts` as a re-export
+  shim._ Works, but it moves barrel provenance — the plan's own one-way door — and
+  `tooldefaults.ts` has to survive as a module exporting that name either way, because
   `simple/app.ts:5` imports it by path rather than through the barrel.
-- Make `defaults` a lazy getter, so nothing is constructed at module scope.
+- _Make `defaults` a lazy getter, so nothing is constructed at module scope._ **Wrong.** The
+  getter defers `new ToolPropertyCache()`, but `tooldefaults.ts` still evaluates
+  `export const SavedToolDefaults = defaultRegistry.defaults` at module scope, so entering
+  through `toolregistry.ts` reaches that line while `defaultRegistry` is still uninitialized.
+  Verified by building it and running the entry-order test: 7 of 8 orders pass and the
+  `toolregistry` one throws, which is the entry-order-dependent failure this section warned
+  about, arriving through the fix meant to prevent it.
 
-Cheap prerequisite, worth doing first regardless: `tooldefaults.ts:3` and `toolsys.ts:4`
-import `DataAPI`/`DataStruct` as values from the `../controller` barrel but use them only as
-types. Converting to `import type` deletes two large edges from the cycle graph.
+**What stage 2 did instead: invert the ownership.** `tooldefaults.ts` keeps `ToolPropertyCache`
+and keeps constructing `SavedToolDefaults`; `ToolRegistry`'s constructor takes a cache, and
+`defaultRegistry` is built as `new ToolRegistry(SavedToolDefaults)`. The identity the aliases
+need is the same either way — which module calls `new` is invisible to every consumer — but
+`tooldefaults.ts` now imports nothing from `toolregistry.ts`, so the 2-cycle never forms and
+no entry order can fail. The one-way door stays shut.
+
+Two supporting edge deletions made that hold rather than merely look tidy:
+
+- `tooldefaults.ts:3` and `toolsys.ts:4` imported `DataAPI`/`DataStruct` as values from the
+  `../controller` barrel but use them only as types; `tooldefaults.ts:5` did the same with
+  `IToolOpConstructor`. All three are now `import type`, which leaves `tooldefaults.ts`
+  importing values from only `./toolprop` and `../controller/controller_base`.
+- `updateToolDefaults` and `buildToolOpAPI` moved from `toolsys.ts` onto `ToolRegistry` as
+  `updateDefaults` and `buildOpAPI`, with the free functions kept as wrappers over
+  `defaultRegistry`. Neither needs `ToolOp` as a value, so this puts `toolregistry.ts`
+  strictly below `toolop.ts` — and it removes the `toolop.ts` → `toolsys.ts` edge, which was
+  the other half of the cycle `ToolOp.register` would otherwise have needed.
 
 `defaultRegistry` must also exist before the module-scope `ToolOp.register(...)` calls at the
-bottom of many modules run.
+bottom of many modules run. `tests/toolregistry_load.test.ts` checks all of this: it enters
+the graph through each of the eight plausible first modules and asserts the four aliases came
+out bound and the `ToolOp` statics still delegate.
 
 ## Hard constraints
 
@@ -254,8 +279,9 @@ The two things that can actually break are the module-load order (a `ReferenceEr
 import time, which fails loudly and immediately) and the `ctx.toolDefaults` seam (which fails
 quietly, as a menu reading an empty cache).
 
-Reversibility: stages 1-4 are reversible while the aliases stand. The one-way door is
-whichever module ends up owning `ToolPropertyCache`, because that changes barrel provenance.
+Reversibility: stages 1-4 are reversible while the aliases stand. The one-way door would
+have been whichever module ends up owning `ToolPropertyCache`, because that changes barrel
+provenance — stage 2's fix leaves it in `tooldefaults.ts`, so the door was never opened.
 
 ## Stages
 
@@ -307,16 +333,45 @@ Two facts the net records that the plan did not state:
 
 ### Stage 2 — the class, the cycle, and the tables
 
-Merged, because the draft's separate stage 1 could not verify its own deliverable: with no
-consumer there is no cycle, no load order and no test that would fail.
+**Done.** Merged, because the draft's separate stage 1 could not verify its own deliverable:
+with no consumer there is no cycle, no load order and no test that would fail.
 
-- `import type` conversion in `tooldefaults.ts` and `toolsys.ts` first.
-- New `toolsys/toolregistry.ts`; pick a cycle fix and record which and why.
-- The six tables become registry members; the four exported ones become aliases.
-- `ToolOp.register` / `unregister` / `isRegistered` delegate.
-- Barrel diff against a baseline built before the stage.
+- `import type` conversion in `tooldefaults.ts` and `toolsys.ts` first. ✓ — plus
+  `tooldefaults.ts`'s `IToolOpConstructor`, which was the same mistake a third time.
+- New `toolsys/toolregistry.ts`; pick a cycle fix and record which and why. ✓ — neither of
+  the two the plan offered; see [The import cycle](#the-import-cycle).
+- The six tables become registry members; the four exported ones become aliases. ✓ —
+  `initToolPaths_run` is `pathsScanned` and `macroidgen` is `macroIdGen`, both on the
+  registry, with `_getTypeClass` advancing `defaultRegistry`'s as the design says.
+- `ToolOp.register` / `unregister` / `isRegistered` delegate. ✓ — `unregister` keeps the
+  `.remove()` polyfill and its cast, now against `this.classes`.
+- Barrel diff against a baseline built before the stage. ✓ — 584 names before, 586 after,
+  the two added being `ToolRegistry` and `defaultRegistry`. Nothing dropped, nothing leaked.
+  Read the names statically out of `dist/pathux.js`'s single `export {` block rather than by
+  importing it: the barrel touches `window` at module scope and never settles under node.
 - Stage 1's tests plus the existing suite are the net. A test needing an edit means a
-  behaviour change, which means the stage is wrong.
+  behaviour change, which means the stage is wrong. ✓ — 441 tests, no edit.
+
+Two things the stage added that the plan did not ask for, both because the cycle fix needed
+them:
+
+- `updateToolDefaults` and `buildToolOpAPI` are now `ToolRegistry.updateDefaults` and
+  `.buildOpAPI`, free functions kept as wrappers. They were the only reason
+  `toolregistry.ts` would have had to import `toolsys.ts`, and moving them also means a
+  second registry builds accessors into its own cache rather than into `SavedToolDefaults`.
+  Stage 5 gets that for free.
+- `tests/toolregistry_load.test.ts`, eight entry orders. This is the only test that can
+  catch the failure mode the cycle section describes, and stages 4 and 5 both add
+  module-scope wiring that could reintroduce it.
+
+The stale `global.d.ts` comment at `toolsys.ts:11` went, per
+[Stale, to clean up in passing](#stale-to-clean-up-in-passing), along with two vacant
+section-header boxes below it. `window.parseToolPath` still points at the free function over
+the default registry.
+
+`parseToolPath` and `buildAPI` from the design sketch are **not** on `ToolRegistry` yet.
+Adding them here would have pulled `toolpath.ts` and `toolsys.ts` back under
+`toolregistry.ts` for no stage-2 benefit; they arrive with their seams, in stages 4 and 5.
 
 ### Stage 3 — the class → defaults stamp
 
@@ -375,7 +430,7 @@ pieces need the paired commit and gitlink bump: `scripts/simple/app.ts` and
 | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | The census was wrong: `simple/app.ts`, `example/` and `tests/` read the tables directly, and `example/` is in the gate       | **Accepted.** Census rewritten; the grep behind the draft never searched `SavedToolDefaults` and never left `scripts/`. |
 | A fourth seam, `ctx.toolDefaults`, has no owner in the design                                                                | **Accepted.** Added as a seam and to stage 4.                                                                           |
-| The proposed cycle is a mutual module-scope TDZ deadlock, and the draft's option 1 is the failing shape                      | **Accepted.** Section rewritten with the two fixes that work and the `import type` prerequisite.                        |
+| The proposed cycle is a mutual module-scope TDZ deadlock, and the draft's option 1 is the failing shape                      | **Accepted**, and the diagnosis was right — but one of the two replacement fixes was wrong too; stage 2 shipped a third. |
 | Stage 1 could not verify its own deliverable                                                                                 | **Accepted.** Folded into stage 2; stage 1 is now the missing tests.                                                    |
 | The `saveDefaultInputs` justification is wrong at every call site, and misses `_redo`                                        | **Accepted.** The `ToolOp` constructor is the real ctx-less site; corrected.                                            |
 | Macro classes never pass through `register()`, so nothing would stamp them                                                   | **Accepted.** Now an explicit sub-question of the seam and a stage 3 deliverable.                                       |
