@@ -4,7 +4,7 @@ Moves the coalescing that `setPathValueUndo` performs out of the widget layer an
 toolstack as one protected operation, and stops `DataPathSetOp` swallowing its own errors.
 Task 1 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: part B (stages 4a and 4b) landed; part A (`foldOrExec`, stages 1-3) not started.
+Status: part B (stages 4a, 4b and 4c) landed; part A (`foldOrExec`, stages 1-3) not started.
 Task 0 is complete.
 
 Revised twice: once after a fresh-context pressure test, once after task 0's first pass made
@@ -373,7 +373,7 @@ Required to pass unchanged through stages 3 and 4 except where noted:
 Landed ahead of stages 1-3, since it needs none of the fold harness. Two commits, because the
 first is a general toolstack contract and the second is one op taking advantage of it.
 
-Covered by `tests/toolstack_abort.test.ts` (10 assertions) rather than by the fold harness
+Covered by `tests/toolstack_abort.test.ts` (16 assertions) rather than by the fold harness
 stage 1 describes. One thing turned up that the plan did not predict: `_undo_branch` was
 sliced _after_ `cur++`, so the branch save dropped the very entry the push was about to
 overwrite. Any `toolCancel` on a push over a live redo branch lost its first redo entry. The
@@ -387,6 +387,17 @@ synchronous throw out of `modalStart`; `try/finally` around `exec` in
 
 **4b, `DataPathSetOp` stops swallowing.** Both `try/catch` blocks and `hadError` deleted; the
 mass set no longer runs after a failed single write.
+
+**4c, the rest of the lifecycle.** `_execTool` was the only entry that handled a throw. The
+same treatment now covers `_undo`, `_redo`, `_rerun` and `_replay`, each restoring what it
+alone can restore: `_undo` leaves `cur` on the tool, which is still applied; `_redo` steps it
+back; `_rerun` drops the tool it had already undone; `_replay` stops at the last entry that
+applied. Two bugs surfaced along the way. `ToolOp.redo` started its four phases without
+awaiting them, so an async tool ran them concurrently and a failure became an unhandled
+rejection. And `_replay` built a promise whose `reject` was captured but never called, so any
+throw during playback left it unsettled — and, because replay runs inside `protect()`, left
+the toolstack locked for the life of the page. `runToolPhases` in `toolop.ts` is now the one
+ordered runner both `ToolOp.redo` and the stack call, and `_replay` is a plain loop.
 
 `DataPathSetOp` does **not** override `onExecError`, so a failed widget edit is not reversed
 for the author. Left that way deliberately: `exec` is a single `api.setValue` followed by an
