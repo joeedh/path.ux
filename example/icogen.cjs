@@ -8,8 +8,8 @@ if (window.haveElectron) {
 
   const REQUIRED_IMAGE_SIZES = [16, 24, 32, 48, 64, 128, 256];
 
-  const DEFAULT_FILE_NAME = 'app';
-  const FILE_EXTENSION = '.ico';
+  const DEFAULT_FILE_NAME = "app";
+  const FILE_EXTENSION = ".ico";
 
   const HEADER_SIZE = 6;
 
@@ -61,7 +61,6 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/ja-jp/library/windows/desktop/dd183376%28v=vs.85%29.aspx
    */
 
-
   const createBitmapInfoHeader = (png, compression) => {
     const b = Buffer.alloc(BITMAPINFOHEADER_SIZE);
     b.writeUInt32LE(BITMAPINFOHEADER_SIZE, 0); // 4 DWORD biSize
@@ -99,7 +98,6 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
-
   const createDirectory = (png, offset) => {
     const b = Buffer.alloc(DIRECTORY_SIZE);
     const size = png.data.length + BITMAPINFOHEADER_SIZE;
@@ -131,8 +129,7 @@ if (window.haveElectron) {
    * @see https://msdn.microsoft.com/en-us/library/ms997538.aspx
    */
 
-
-  const createFileHeader = count => {
+  const createFileHeader = (count) => {
     const b = Buffer.alloc(HEADER_SIZE);
     b.writeUInt16LE(0, 0); // 2 WORD Reserved
 
@@ -150,17 +147,19 @@ if (window.haveElectron) {
    * @returns {Object} Checked options.
    */
 
-
-  const checkOptions = options => {
+  const checkOptions = (options) => {
     if (options) {
       return {
-        name: typeof options.name === 'string' && options.name !== '' ? options.name : DEFAULT_FILE_NAME,
-        sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES
+        name:
+          typeof options.name === "string" && options.name !== ""
+            ? options.name
+            : DEFAULT_FILE_NAME,
+        sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES,
       };
     } else {
       return {
-        name: DEFAULT_FILE_NAME,
-        sizes: REQUIRED_IMAGE_SIZES
+        name : DEFAULT_FILE_NAME,
+        sizes: REQUIRED_IMAGE_SIZES,
       };
     }
   };
@@ -168,7 +167,6 @@ if (window.haveElectron) {
    * Get the size of the required PNG.
    * @return {Number[]} Sizes.
    */
-
 
   const GetRequiredICOImageSizes = () => {
     return REQUIRED_IMAGE_SIZES;
@@ -183,7 +181,6 @@ if (window.haveElectron) {
    * @param {Logger} logger Logger.
    * @return {Promise} Promise object.
    */
-
 
   let stream = require("stream");
 
@@ -216,10 +213,10 @@ if (window.haveElectron) {
   exports.GetRequiredICOImageSizes = GetRequiredICOImageSizes;
 
   const GenerateICO = (images, logger = console) => {
-    logger.log('ICO:');
+    logger.log("ICO:");
 
     const stream = new WriteStream();
-    stream.write(createFileHeader(images.length), 'binary');
+    stream.write(createFileHeader(images.length), "binary");
 
     let pngs = [];
     for (let image of images) {
@@ -227,16 +224,16 @@ if (window.haveElectron) {
     }
 
     let offset = HEADER_SIZE + DIRECTORY_SIZE * images.length;
-    pngs.forEach(png => {
+    pngs.forEach((png) => {
       const directory = createDirectory(png, offset);
-      stream.write(directory, 'binary');
+      stream.write(directory, "binary");
       offset += png.data.length + BITMAPINFOHEADER_SIZE;
     });
-    pngs.forEach(png => {
+    pngs.forEach((png) => {
       const header = createBitmapInfoHeader(png, BI_RGB);
-      stream.write(header, 'binary');
+      stream.write(header, "binary");
       const dib = convertPNGtoDIB(png.data, png.width, png.height, png.bpp);
-      stream.write(dib, 'binary');
+      stream.write(dib, "binary");
     });
     stream.end();
 

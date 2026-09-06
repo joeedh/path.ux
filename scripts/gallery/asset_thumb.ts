@@ -234,7 +234,7 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     this.item = item;
     this._bindGen++;
 
-    this.description = item ? item.tooltip ?? item.label ?? item.id : undefined;
+    this.description = item ? (item.tooltip ?? item.label ?? item.id) : undefined;
     this.title = this.description ?? "";
 
     this.redraw();
@@ -275,8 +275,7 @@ export class AssetThumb<CTX extends IContextBase = IContextBase> extends UIBase<
     g.fillRect(0, 0, w, h);
 
     const border = this.getDefault("border") as unknown as
-      | { color: string; width: number }
-      | undefined;
+      { color: string; width: number } | undefined;
     const borderWidth = (border?.width ?? 0) * dpi;
     if (borderWidth > 0) {
       g.strokeStyle = border!.color;

@@ -66,5 +66,5 @@ test("mass set paths test", () => {
     totchange += p.x === -1 ? 1 : 0;
   }
 
-  expect(totsel).toBe(totchange)
+  expect(totsel).toBe(totchange);
 });

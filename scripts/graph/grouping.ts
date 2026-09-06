@@ -550,7 +550,7 @@ export function exposeEntry(
   if (bad !== undefined) {
     return bad;
   }
-  const propKey = req.kind === "prop" ? req.propKey ?? "" : "";
+  const propKey = req.kind === "prop" ? (req.propKey ?? "") : "";
   if (
     def.exposed.some(
       (e) =>
@@ -601,7 +601,7 @@ export function repointEntry(
   }
   const previous = { nodeId: entry.nodeId, propKey: entry.propKey as unknown as string };
   entry.nodeId = nodeId;
-  entry.propKey = (entry.kind === "prop" ? propKey ?? "" : "") as unknown as NodePropName;
+  entry.propKey = (entry.kind === "prop" ? (propKey ?? "") : "") as unknown as NodePropName;
   return { previous };
 }
 

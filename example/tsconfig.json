@@ -1,22 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "strictNullChecks": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "allowJs": true,
-    "checkJs": false,
-    "jsx": "react",
-    "jsxFactory": "jsx",
+    "target"            : "ES2022",
+    "module"            : "ES2022",
+    "moduleResolution"  : "bundler",
+    "strict"            : true,
+    "strictNullChecks"  : true,
+    "noImplicitAny"     : true,
+    "esModuleInterop"   : true,
+    "allowJs"           : true,
+    "checkJs"           : false,
+    "jsx"               : "react",
+    "jsxFactory"        : "jsx",
     "jsxFragmentFactory": "Fragment",
-    "noEmit": true,
-    "skipLibCheck": true,
-    "lib": ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
-    "types": []
+    "noEmit"            : true,
+    "skipLibCheck"      : true,
+    "lib"               : ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
+    "types"             : []
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "lib/**"]
+  "include"        : ["**/*.ts", "**/*.tsx"],
+  "exclude"        : ["node_modules", "lib/**"]
 }

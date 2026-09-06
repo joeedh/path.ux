@@ -1020,7 +1020,7 @@ export class Container<
     mass_set_path?: string
   ): UIBase<CTX> {
     const label = typeof name === "object" ? name.name : name;
-    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
+    packflag = typeof name === "object" ? (name.packflag ?? 0) : packflag;
 
     return this.addPropLabel(
       checkenumImpl(
@@ -1096,7 +1096,7 @@ export class Container<
     packflag = 0
   ): DropBox<CTX> {
     const label = typeof name === "string" ? name : name?.name;
-    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
+    packflag = typeof name === "object" ? (name.packflag ?? 0) : packflag;
     return this.addPropLabel(
       listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag),
       label,
@@ -1179,7 +1179,7 @@ export class Container<
     packflag = 0
   ) {
     const label = typeof name === "string" ? name : name?.name;
-    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
+    packflag = typeof name === "object" ? (name.packflag ?? 0) : packflag;
     return this.addPropLabel(
       simplesliderImpl(
         this,
@@ -1221,7 +1221,7 @@ export class Container<
     decimalPlaces?: number
   ) {
     const label = typeof name === "string" ? name : name?.name;
-    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
+    packflag = typeof name === "object" ? (name.packflag ?? 0) : packflag;
 
     return this.addPropLabel(
       sliderImpl(
@@ -1294,8 +1294,7 @@ export class Container<
   colorPicker(
     inpath?: string,
     packflag_or_args:
-      | number
-      | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
+      number | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
     mass_set_path?: string,
     themeOverride?: string
   ) {

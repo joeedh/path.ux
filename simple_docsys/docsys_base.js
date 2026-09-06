@@ -1,4 +1,4 @@
-export default function(fs, marked, parse5, pathmod, jsdiff) {
+export default function (fs, marked, parse5, pathmod, jsdiff) {
   let exports = {};
 
   if (!Array.prototype.remove) {
@@ -17,7 +17,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
 
       this.length--;
       return this;
-    }
+    };
   }
 
   function walkDir(path, cb) {
@@ -28,7 +28,6 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
 
     let files = [];
     let dirs = [];
-
 
     for (let entry of dir) {
       if (fs.statSync(path + "/" + entry).isDirectory()) {
@@ -60,11 +59,12 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
     }
 
     return count;
-  }
+  };
 
   function relative(a1, b1) {
     return pathmod.relative(pathmod.dirname(a1), b1).replace(/\\/g, "/");
-    let a = a1, b = b1;
+    let a = a1;
+    let b = b1;
 
     let i = 1;
     while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {
@@ -82,7 +82,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       s += "../";
     }
 
-    s = pref + s + b
+    s = pref + s + b;
 
     return pref + s + b;
   }
@@ -137,7 +137,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       //break;
       for (let i = 0; i < ls.length; i++) {
         if (ls[i].startsWith("-")) {
-          ls[i] = ls[i].slice(1, ls[i].length)
+          ls[i] = ls[i].slice(1, ls[i].length);
 
           let j;
           try {
@@ -151,7 +151,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
           if (j >= 0) {
             buf = buf.slice(j, buf.length);
             ls[i] = "^" + (start + j) + ":" + ls[i].length;
-            start += j
+            start += j;
           }
 
           i2++;
@@ -181,16 +181,16 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         let l = ls[i];
 
         if (l[0] === "^") {
-          l = l.slice(1, l.length).split(":")
+          l = l.slice(1, l.length).split(":");
 
-          let j = parseInt(l[0])
-          ls[i] = "-" + buf.slice(j, j + parseInt(l[1]))
+          let j = parseInt(l[0]);
+          ls[i] = "-" + buf.slice(j, j + parseInt(l[1]));
           //ls[i] = headVersion.data
         } else if (l[0] === "-") {
         } else if (l[0] === "$") {
-          l = l.slice(1, l.length).split(":")
+          l = l.slice(1, l.length).split(":");
           let j = parseInt(l[0]);
-          ls[i] = " " + buf.slice(j, j + parseInt(l[1]))
+          ls[i] = " " + buf.slice(j, j + parseInt(l[1]));
         }
       }
     }
@@ -201,7 +201,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
   class DocMeta {
     constructor() {
       this.metaVersion = 1;
-      this.versions = []
+      this.versions = [];
       this.headVersion = new DocVersion();
       this.relpath = "";
     }
@@ -227,7 +227,12 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
 
         //let diff = jsdiff.diffLines(doc.data, this.headVersion.data);
         //console.log(this);
-        let diff = jsdiff.structuredPatch(doc.relpath, doc.relpath, this.headVersion.data, doc.data)
+        let diff = jsdiff.structuredPatch(
+          doc.relpath,
+          doc.relpath,
+          this.headVersion.data,
+          doc.data
+        );
 
         if (diff.hunks.length == 0) {
           console.warn("File hasn't changed");
@@ -279,16 +284,16 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         metaVersion: this.metaVersion,
         versions   : this.versions,
         relpath    : this.relpath,
-        headVersion: this.headVersion
-      }
+        headVersion: this.headVersion,
+      };
     }
   }
 
   class DocsConfig {
     constructor(args) {
-      this.basePath = args.basePath || "./"
-      this.outPath = args.outPath || "./doc_build"
-      this.cssPath = args.cssPath || this.basePath + "/style.css"
+      this.basePath = args.basePath || "./";
+      this.outPath = args.outPath || "./doc_build";
+      this.cssPath = args.cssPath || this.basePath + "/style.css";
       this.docs = [];
     }
 
@@ -298,13 +303,13 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
 
     initCache() {
       this.cachePath = this.basePath + "/.cache";
-      fs.mkdirSync(this.cachePath, {recursive: true});
+      fs.mkdirSync(this.cachePath, { recursive: true });
     }
 
     getDocMetaPath(doc) {
       let key = doc.relpath;
-      key = key.replace(/[ \t\/\\\.]/g, "$") + ".json"
-      key = this.cachePath + "/" + key
+      key = key.replace(/[ \t\/\\\.]/g, "$") + ".json";
+      key = this.cachePath + "/" + key;
 
       console.log("key", key);
       return key;
@@ -331,9 +336,8 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
                 if (val.startsWith("base64")) {
                   console.log("Found base64 data url", ext);
                   val = val.slice("base64,".length, val.length);
-                  let buf = Buffer.from(val, 'base64');
+                  let buf = Buffer.from(val, "base64");
                   let path = this.getNewAssetPath(doc, ext);
-
 
                   let relpath = "./" + pathmod.relative(this.basePath, path).replace(/\\/g, "/");
 
@@ -359,7 +363,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         for (let c of n.childNodes) {
           visit(c);
         }
-      }
+      };
 
       visit(node);
 
@@ -375,7 +379,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         for (let c of n.childNodes) {
           find_body(c);
         }
-      }
+      };
       find_body(node);
       node = body;
 
@@ -384,7 +388,8 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       }
 
       return {
-        found, data
+        found,
+        data,
       };
     }
 
@@ -420,7 +425,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       }
 
       let dir = pathmod.dirname(pathmod.resolve(retpath));
-      fs.mkdirSync(dir, {recursive: true});
+      fs.mkdirSync(dir, { recursive: true });
 
       if (_build_path_out) {
         let f = pathmod.basename(retpath);
@@ -438,7 +443,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         throw new Error("invalid document at path " + doc_relpath);
       }
 
-      let outpath = [undefined]
+      let outpath = [undefined];
       let path = this.getNewAssetPath(doc, filename, outpath);
 
       let buf = Buffer.from(imagebuf);
@@ -525,7 +530,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
     newDoc(relpath, data) {
       let dir = fs.mkdirSync(pathmod.dirname(relpath));
 
-      let doc = new Document()
+      let doc = new Document();
       doc.path = normpath(this.basePath + "/" + relpath);
       this.docs.push(doc);
 
@@ -572,7 +577,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       }
 
       let path = this.getDocMetaPath(doc);
-      fs.writeFileSync(path, JSON.stringify(doc.meta, undefined, 2))
+      fs.writeFileSync(path, JSON.stringify(doc.meta, undefined, 2));
       doc.meta = undefined;
     }
 
@@ -630,7 +635,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       if (doc.path.toLowerCase().endsWith(".md")) {
         let renderer = {
           heading: (text, level) => {
-            let id = text.trim().replace(/[ \t_]/g, "-")
+            let id = text.trim().replace(/[ \t_]/g, "-");
 
             if (first) {
               first = false;
@@ -638,11 +643,11 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
               doc.title = text;
               doc.id = id;
             }
-            return `<h${level} id="${id}">${text}</h${level}>`
-          }
-        }
+            return `<h${level} id="${id}">${text}</h${level}>`;
+          },
+        };
 
-        marked.use({renderer});
+        marked.use({ renderer });
 
         let mark = marked(buf, {
           pedantic   : false,
@@ -653,7 +658,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
           smartypants: false,
           xhtml      : false,
           headerIds  : true,
-          footer     : ""
+          footer     : "",
         });
 
         doc.html = mark;
@@ -703,7 +708,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         }
 
         return ret;
-      }
+      };
       let visit = (n) => {
         if (!found && n.nodeName === "h1") {
           found = 1;
@@ -717,7 +722,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         for (let c of n.childNodes) {
           visit(c);
         }
-      }
+      };
 
       visit(node);
       return ret;
@@ -747,8 +752,8 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
         }
       }
 
-      node = get(node, "html")
-      node = get(node, "body")
+      node = get(node, "html");
+      node = get(node, "body");
       let nodes = [];
       let found = false;
 
@@ -780,7 +785,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
 
     transform() {
       this.config.docs.sort((a, b) => {
-        return (a.path < b.path)*2.0 - 1.0;
+        return (a.path < b.path) * 2.0 - 1.0;
       });
 
       for (let doc of this.config.docs) {
@@ -805,8 +810,10 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
           siblings.push(doc2);
         } else if (base2 === base) {
           let key = pathmod.dirname(doc2.path);
-          if (!(key in children) || doc2.path.toLowerCase().endsWith("index.md")
-            || doc2.path.toLowerCase().endsWith("index.html")
+          if (
+            !(key in children) ||
+            doc2.path.toLowerCase().endsWith("index.md") ||
+            doc2.path.toLowerCase().endsWith("index.html")
           ) {
             children[key] = doc2;
           }
@@ -814,7 +821,8 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
       }
 
       return {
-        siblings, children
+        siblings,
+        children,
       };
     }
 
@@ -828,12 +836,12 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
     }
 
     calcNav(doc) {
-      let {siblings, children} = this.calcStructure(doc);
+      let { siblings, children } = this.calcStructure(doc);
 
       siblings = [doc].concat(siblings);
       siblings.sort((a, b) => {
-        return (a.relpath > b.relpath)*2.0 - 1.0;
-      })
+        return (a.relpath > b.relpath) * 2.0 - 1.0;
+      });
       //children = [doc].concat(children)
       let s = ``;
 
@@ -894,11 +902,13 @@ ${doc.html}
 
       walkDir(dirpath, (root, dir, files) => {
         for (let f of files) {
-          let f2 = normpath(this.config.outPath + "/" + pathmod.dirname(doc.relpath) + "/assets/" + f);
+          let f2 = normpath(
+            this.config.outPath + "/" + pathmod.dirname(doc.relpath) + "/assets/" + f
+          );
           f = normpath(root + "/" + f);
 
           let dirpath2 = pathmod.dirname(f2);
-          fs.mkdirSync(dirpath2, {recursive: true});
+          fs.mkdirSync(dirpath2, { recursive: true });
 
           let update = !fs.existsSync(f2);
           update = update || fs.statSync(f2).mtime < fs.statSync(f).mtime;
@@ -928,7 +938,7 @@ ${doc.html}
 
       let dir = pathmod.dirname(path);
       fs.mkdirSync(dir, {
-        recursive: true
+        recursive: true,
       });
       fs.writeFileSync(path, doc.html);
     }
@@ -939,9 +949,8 @@ ${doc.html}
       }
 
       if (!this.config.style) {
-        this.config.readCSS()
+        this.config.readCSS();
       }
-
 
       fs.writeFileSync(this.config.outPath + "/style.css", this.config.style);
     }
@@ -949,11 +958,11 @@ ${doc.html}
 
   let normpath = (p) => {
     return pathmod.resolve(p).replace(/\\/g, "/").trim();
-  }
+  };
 
-  let readConfig = exports.readConfig = function readConfig(path) {
-    let cwd = normpath(process.cwd())
-    let base = pathmod.dirname(normpath(path))
+  let readConfig = (exports.readConfig = function readConfig(path) {
+    let cwd = normpath(process.cwd());
+    let base = pathmod.dirname(normpath(path));
     base = "./" + pathmod.relative(cwd, base).replace(/\\/g, "/");
 
     let rebasePath = (p) => {
@@ -961,7 +970,7 @@ ${doc.html}
         p = p.slice(2, p.length);
       }
       return base + "/" + p;
-    }
+    };
 
     console.log("PATH:", path, pathmod.resolve(path));
 
@@ -982,10 +991,10 @@ ${doc.html}
     config.initCache();
     config.loadCSS();
 
-    path = pathmod.resolve(config.basePath + "/../")
+    path = pathmod.resolve(config.basePath + "/../");
 
     walkDir(config.basePath, (root, dir, files) => {
-      root = config.basePath + "/" + root
+      root = config.basePath + "/" + root;
       for (let f of files) {
         if (f.endsWith(".md") || f.endsWith(".html")) {
           f = normpath(root + "/" + f);
@@ -1000,7 +1009,7 @@ ${doc.html}
     });
 
     return config;
-  }
+  });
 
   return exports;
-};
+}

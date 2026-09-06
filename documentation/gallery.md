@@ -28,6 +28,7 @@ whose `image` is either a decoded source or a thunk that produces one.
 - [Virtualization](#virtualization)
 - [Theming](#theming)
 - [API reference](#api-reference)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -152,13 +153,13 @@ or filtered out by the search box.
 Focus is an index into the item list rather than a DOM node, because which pool
 cell holds an item changes on every scroll.
 
-| Key | Effect |
-| --- | --- |
-| Arrow Left / Right | one cell |
-| Arrow Up / Down | one row |
-| Home / End | first / last item |
-| PageUp / PageDown | one viewport of rows |
-| Enter | confirm the focused cell |
+| Key                | Effect                   |
+| ------------------ | ------------------------ |
+| Arrow Left / Right | one cell                 |
+| Arrow Up / Down    | one row                  |
+| Home / End         | first / last item        |
+| PageUp / PageDown  | one viewport of rows     |
+| Enter              | confirm the focused cell |
 
 Movement clamps at the grid edges rather than wrapping. The target row is
 scrolled into view before the pool is rebound, so the focused index always
@@ -254,22 +255,22 @@ Selection is single; there is no multi-select.
 Cells read the `assetthumb` style class and the grid reads `assetgallery`, both
 declared through `static define().theme` with typed tokens.
 
-| Class | Key | Purpose |
-| --- | --- | --- |
-| `assetthumb` | `background-color` | idle cell fill |
-| `assetthumb` | `highlight` | mouseover fill |
-| `assetthumb` | `active` | selected fill |
-| `assetthumb` | `focusRing` | keyboard-focus outline, drawn as a ring so it stays visible on a cell that is also selected |
-| `assetthumb` | `border` | `{color, width}` around the cell |
-| `assetthumb` | `margin` | space between cells |
-| `assetthumb` | `padding` | inset between the cell border and the image |
-| `assetthumb` | `boxPadding` | inset between the thumbnail square and the row's box |
-| `assetthumb` | `rowFont` | face the default row renderer writes the name in |
-| `assetgallery` | `background-color` | fill behind the cells |
-| `assetgallery` | `cellWidth` / `cellHeight` | grid cell size in CSS pixels |
-| `assetgallery` | `rowHeight` | list-mode row height in CSS pixels |
-| `assetgallery` | `overscanRows` | rows kept bound above and below the viewport |
-| `assetgallery` | `width` / `height` | the outer widget's default grid size |
+| Class          | Key                        | Purpose                                                                                     |
+| -------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
+| `assetthumb`   | `background-color`         | idle cell fill                                                                              |
+| `assetthumb`   | `highlight`                | mouseover fill                                                                              |
+| `assetthumb`   | `active`                   | selected fill                                                                               |
+| `assetthumb`   | `focusRing`                | keyboard-focus outline, drawn as a ring so it stays visible on a cell that is also selected |
+| `assetthumb`   | `border`                   | `{color, width}` around the cell                                                            |
+| `assetthumb`   | `margin`                   | space between cells                                                                         |
+| `assetthumb`   | `padding`                  | inset between the cell border and the image                                                 |
+| `assetthumb`   | `boxPadding`               | inset between the thumbnail square and the row's box                                        |
+| `assetthumb`   | `rowFont`                  | face the default row renderer writes the name in                                            |
+| `assetgallery` | `background-color`         | fill behind the cells                                                                       |
+| `assetgallery` | `cellWidth` / `cellHeight` | grid cell size in CSS pixels                                                                |
+| `assetgallery` | `rowHeight`                | list-mode row height in CSS pixels                                                          |
+| `assetgallery` | `overscanRows`             | rows kept bound above and below the viewport                                                |
+| `assetgallery` | `width` / `height`         | the outer widget's default grid size                                                        |
 
 `border` is a structured sub-record rather than the flat `border-color` /
 `border-width` pair the older style classes use.
@@ -278,40 +279,40 @@ declared through `static define().theme` with typed tokens.
 
 **`AssetGallery`** (`assetgallery-x`)
 
-| Member | Description |
-| --- | --- |
-| `setItems(items)` | The items to offer, before filtering |
-| `active` | The selected item, get or set |
-| `setQuery(text)` | Filters as if the text had been typed into the search box |
-| `cache` | The `ThumbnailCache` to draw through |
-| `mode` | `"grid"` or `"list"`, get or set |
-| `rowRenderer` | Fills the box beside each thumbnail in list mode |
-| `showModeToggle` | Whether the grid/list buttons are drawn; set before init |
-| `"change"` / `"confirm"` | Selection and choice events |
+| Member                   | Description                                               |
+| ------------------------ | --------------------------------------------------------- |
+| `setItems(items)`        | The items to offer, before filtering                      |
+| `active`                 | The selected item, get or set                             |
+| `setQuery(text)`         | Filters as if the text had been typed into the search box |
+| `cache`                  | The `ThumbnailCache` to draw through                      |
+| `mode`                   | `"grid"` or `"list"`, get or set                          |
+| `rowRenderer`            | Fills the box beside each thumbnail in list mode          |
+| `showModeToggle`         | Whether the grid/list buttons are drawn; set before init  |
+| `"change"` / `"confirm"` | Selection and choice events                               |
 
 **`AssetGalleryGrid`** (`assetgallerygrid-x`)
 
-| Member | Description |
-| --- | --- |
-| `setItems(items)` | The items to draw, in display order |
-| `active` / `setActive(item, notify?)` | The selection, optionally silent |
-| `focusIndex` / `setFocusIndex(i)` | The keyboard cursor |
-| `mode` / `rowRenderer` | The layout, and what fills a row's box |
-| `columns` / `poolSize` / `itemCount` / `firstBoundIndex` | Layout state |
+| Member                                                   | Description                            |
+| -------------------------------------------------------- | -------------------------------------- |
+| `setItems(items)`                                        | The items to draw, in display order    |
+| `active` / `setActive(item, notify?)`                    | The selection, optionally silent       |
+| `focusIndex` / `setFocusIndex(i)`                        | The keyboard cursor                    |
+| `mode` / `rowRenderer`                                   | The layout, and what fills a row's box |
+| `columns` / `poolSize` / `itemCount` / `firstBoundIndex` | Layout state                           |
 
 **`GalleryRowRenderer`**
 
-| Member | Description |
-| --- | --- |
-| `create?(box)` | Builds the reusable content, once per pooled row |
+| Member            | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| `create?(box)`    | Builds the reusable content, once per pooled row                 |
 | `bind(box, item)` | Points it at an item, or at nothing; also on selection and focus |
-| `destroy?(box)` | Releases what `create` allocated |
+| `destroy?(box)`   | Releases what `create` allocated                                 |
 
 **`ThumbnailCache`**
 
-| Member | Description |
-| --- | --- |
-| `get(id, loader)` | Decoded thumbnail, coalescing concurrent loads |
-| `peek(id)` | Held thumbnail without loading |
-| `delete(id)` / `clear()` | Drop entries and release their bitmaps |
-| `maxEntries` / `ensureCapacity(n)` | The eviction bound |
+| Member                             | Description                                    |
+| ---------------------------------- | ---------------------------------------------- |
+| `get(id, loader)`                  | Decoded thumbnail, coalescing concurrent loads |
+| `peek(id)`                         | Held thumbnail without loading                 |
+| `delete(id)` / `clear()`           | Drop entries and release their bitmaps         |
+| `maxEntries` / `ensureCapacity(n)` | The eviction bound                             |

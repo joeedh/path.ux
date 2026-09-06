@@ -33,16 +33,16 @@ the emitted `.d.ts` are untouched.
 
 Measured budget, from a brace-matched parse of the file rather than an estimate:
 
-| | lines |
-|---|---|
-| class body retained after delegating all 112 eligible members | 1059 |
-| module-level retained (incl. +22 new import / `export *` lines) | 95 |
-| mechanical subtotal | 1154 |
-| named arg/return types (cleanup 1) | −41 |
-| dead commented-out code that survives delegation (cleanup 2) | −17 |
-| `graphNodeDef` literal moved out (cleanup 3) | −9 |
-| `noMarginsOrPadding` reusing `marginPaddingCSSKeys` | −2 |
-| projected final | ~1085 (+20 pessimism for prettier rewrapping) |
+|                                                                 | lines                                         |
+| --------------------------------------------------------------- | --------------------------------------------- |
+| class body retained after delegating all 112 eligible members   | 1059                                          |
+| module-level retained (incl. +22 new import / `export *` lines) | 95                                            |
+| mechanical subtotal                                             | 1154                                          |
+| named arg/return types (cleanup 1)                              | −41                                           |
+| dead commented-out code that survives delegation (cleanup 2)    | −17                                           |
+| `graphNodeDef` literal moved out (cleanup 3)                    | −9                                            |
+| `noMarginsOrPadding` reusing `marginPaddingCSSKeys`             | −2                                            |
+| projected final                                                 | ~1085 (+20 pessimism for prettier rewrapping) |
 
 The partition has to be total, with every cluster assigned. An 80/20 pass that
 only delegates the 52 methods saving ≥11 lines each lands at ~1445, over budget.
@@ -61,7 +61,7 @@ load-bearing, as is each of the three big module-level blocks (icons 488, draw
    forwards the type argument explicitly, since `T` is not inferable:
    `return pick.pickElement<CTX, T>(this, x, y, args);`
 3. Namespace imports, not named imports — `import * as themeLookup from
-   "./base/ui_base_theme_lookup";`, one line per new file. Named imports of ~112
+"./base/ui_base_theme_lookup";`, one line per new file. Named imports of ~112
    functions would add ~120 lines and eat the whole margin.
 4. Cycle rule: new files may `import { UIBase } from "../ui_base"` for runtime
    use, but `UIBase` may appear only inside function bodies, never at module top
@@ -146,27 +146,27 @@ implementation needs the class's `SELF` for `ThemeKeysFor<SELF>`),
 Every new file lands in `scripts/core/base/`. The largest is ~510 lines; none
 exceeds 600.
 
-| New file | Content | ≈ lines |
-|---|---|---|
-| `base/ui_icons.ts` | module `243–730`: `_IconManager`, `CustomIcon`, `IconManager`, `iconmanager`, `IconSheets`, `iconSheetFromPackFlag`, `get`/`setIconManager`, `makeIconDiv`, `CustomIconEntry` | 510 |
-| `base/ui_base_theme_lookup.ts` | theme lookup `3909–4359` plus `_mobile_theme_patterns` | 430 |
-| `base/ui_base_init.ts` | constructor body, lifecycle, `update`/`onadd`, `_idgen` | 430 |
-| `base/ui_base_anim.ts` | `flash`, `animateOld`, `abortAnimations`, `doOnce`, `internalSetTimeout` queue | 430 |
-| `base/ui_base_datapath.ts` | datapath `3159–3431` plus path watching `3717–3823` | 390 |
-| `base/ui_base_dom.ts` | DOM search, tree ops, visibility, `add`/`removeEventListener` | 380 |
-| `base/ui_draw.ts` | module `4498–4848`: `drawRoundBox*`, fonts, `measureText*`, `drawText` | 340 |
-| `base/ui_base_modal.ts` | `__updateDisable`, `push`/`popModal`, clipboard | 300 |
-| `base/ui_base_css.ts` | `setBoxCSS`, `genBoxCSS`, `setCSS`, `flushSetCSS`, `noMargins*`, `getTotalRect`, `parse`/`formatNumber` | 285 |
-| `base/ui_element_registry.ts` | tag prefix machinery, `EventCBSymbol`, `calcElemCBKey`, `ElementClasses`, element-name maps, `class_idgen`, `dpistack`, `UIFlags`, `report`, deprecated `getDefault` and `IsMobile`, `marginPaddingCSSKeys`, static registration bodies | 275 |
-| `base/ui_base_graph.ts` | event graph `1123–1309`, `updateEventGraph`, `uiBaseNodeDef` | 240 |
-| `base/ui_base_tooltips.ts` | `updateToolTipHandlers`, `updateToolTips`, `abortToolTips`, the `TextBox` late-bind hack | 195 |
-| `base/ui_base_pick.ts` | `pickElement*`, geometry | 180 |
-| `base/ui_savedata.ts` | module `4850–4979`: `PTOT`, `saveUIData`, `loadUIData` | 155 |
-| `base/ui_base_props.ts` | accessors cluster, serialization stubs, `getZoom`, instance `getDPI` | 150 |
-| `base/ui_theme_key.ts` | `styleScrollBars`, `_testSetScrollbars`, `_digest`, `calcThemeKey`, `_themeUpdateKey`, `flagThemeUpdate`, `setTheme` and its init call, `ErrorColors` | 130 |
-| `base/ui_base_types.ts` | `UIBaseDefinition`, `DisableData`, `ToolTipState`, `EventIF`, `IUIBaseConstructor`, `DefaultTypes`, `StyleRecord`, `PackFlags`, new `TotalRect` / `FormatNumberArgs` / `PickArgs` | 95 |
-| `base/ui_base_dpi.ts` | leaf free `getDPI()`; `static getDPI()` delegates | 20 |
-| `base/ui_worker_shim.ts` | module `938–950` | 20 |
+| New file                       | Content                                                                                                                                                                                                                                 | ≈ lines |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `base/ui_icons.ts`             | module `243–730`: `_IconManager`, `CustomIcon`, `IconManager`, `iconmanager`, `IconSheets`, `iconSheetFromPackFlag`, `get`/`setIconManager`, `makeIconDiv`, `CustomIconEntry`                                                           | 510     |
+| `base/ui_base_theme_lookup.ts` | theme lookup `3909–4359` plus `_mobile_theme_patterns`                                                                                                                                                                                  | 430     |
+| `base/ui_base_init.ts`         | constructor body, lifecycle, `update`/`onadd`, `_idgen`                                                                                                                                                                                 | 430     |
+| `base/ui_base_anim.ts`         | `flash`, `animateOld`, `abortAnimations`, `doOnce`, `internalSetTimeout` queue                                                                                                                                                          | 430     |
+| `base/ui_base_datapath.ts`     | datapath `3159–3431` plus path watching `3717–3823`                                                                                                                                                                                     | 390     |
+| `base/ui_base_dom.ts`          | DOM search, tree ops, visibility, `add`/`removeEventListener`                                                                                                                                                                           | 380     |
+| `base/ui_draw.ts`              | module `4498–4848`: `drawRoundBox*`, fonts, `measureText*`, `drawText`                                                                                                                                                                  | 340     |
+| `base/ui_base_modal.ts`        | `__updateDisable`, `push`/`popModal`, clipboard                                                                                                                                                                                         | 300     |
+| `base/ui_base_css.ts`          | `setBoxCSS`, `genBoxCSS`, `setCSS`, `flushSetCSS`, `noMargins*`, `getTotalRect`, `parse`/`formatNumber`                                                                                                                                 | 285     |
+| `base/ui_element_registry.ts`  | tag prefix machinery, `EventCBSymbol`, `calcElemCBKey`, `ElementClasses`, element-name maps, `class_idgen`, `dpistack`, `UIFlags`, `report`, deprecated `getDefault` and `IsMobile`, `marginPaddingCSSKeys`, static registration bodies | 275     |
+| `base/ui_base_graph.ts`        | event graph `1123–1309`, `updateEventGraph`, `uiBaseNodeDef`                                                                                                                                                                            | 240     |
+| `base/ui_base_tooltips.ts`     | `updateToolTipHandlers`, `updateToolTips`, `abortToolTips`, the `TextBox` late-bind hack                                                                                                                                                | 195     |
+| `base/ui_base_pick.ts`         | `pickElement*`, geometry                                                                                                                                                                                                                | 180     |
+| `base/ui_savedata.ts`          | module `4850–4979`: `PTOT`, `saveUIData`, `loadUIData`                                                                                                                                                                                  | 155     |
+| `base/ui_base_props.ts`        | accessors cluster, serialization stubs, `getZoom`, instance `getDPI`                                                                                                                                                                    | 150     |
+| `base/ui_theme_key.ts`         | `styleScrollBars`, `_testSetScrollbars`, `_digest`, `calcThemeKey`, `_themeUpdateKey`, `flagThemeUpdate`, `setTheme` and its init call, `ErrorColors`                                                                                   | 130     |
+| `base/ui_base_types.ts`        | `UIBaseDefinition`, `DisableData`, `ToolTipState`, `EventIF`, `IUIBaseConstructor`, `DefaultTypes`, `StyleRecord`, `PackFlags`, new `TotalRect` / `FormatNumberArgs` / `PickArgs`                                                       | 95      |
+| `base/ui_base_dpi.ts`          | leaf free `getDPI()`; `static getDPI()` delegates                                                                                                                                                                                       | 20      |
+| `base/ui_worker_shim.ts`       | module `938–950`                                                                                                                                                                                                                        | 20      |
 
 `base/ui_base_dpi.ts` is what makes `ui_icons.ts` and `ui_draw.ts` type-only
 dependents of `ui_base.ts`. Their sole class reference is `UIBase.getDPI()` at
@@ -210,8 +210,7 @@ live `${val}` → `${val2}` bug at 2256 and the stray space at 2248. `hasDefault
 `getDefault_intern` and `getStyleRecord` share one `walkStyleChain` helper.
 `_hasSubDefault`, which ignores its `_themeDef` param, collapses into
 `hasSubDefault`. `_hasClassSubDefault` routes through `getClassDefault`'s
-fallback chain, resolving the `TODO: harmonize this to use getStyleRecord` at
-4051. `IconManager.canvasDraw`, `getCSS` and `setCSS` share one
+fallback chain, resolving the `TODO: harmonize this to use getStyleRecord` at 4051. `IconManager.canvasDraw`, `getCSS` and `setCSS` share one
 `withDrawSize(sheet, size, cb)`. `noMarginsOrPadding` imports
 `marginPaddingCSSKeys` instead of rebuilding it inline, which is the only one of
 these worth 2 lines in `ui_base.ts`.
@@ -265,22 +264,22 @@ the five signatures from cleanup 1. This lands at ~4930 lines and de-risks steps
 Step 1 creates `scripts/core/base/`.
 
 1. [x] `base/ui_base_types.ts` — zero runtime deps; surfaces any `import type`
-   friction, and the new directory's `../` depth, immediately.
+       friction, and the new directory's `../` depth, immediately.
 2. [x] `base/ui_base_dpi.ts`, then `base/ui_worker_shim.ts`. Verify the shim still
-   runs before the class evaluates.
+       runs before the class evaluates.
 3. [x] `base/ui_icons.ts` (488) — the biggest single win, with no class coupling.
-   This is the canary for the `ui_base` ⇄ `ui_icons` cycle and for `export *`
-   preserving `iconmanager`, `IconSheets` and `makeIconDiv`.
+       This is the canary for the `ui_base` ⇄ `ui_icons` cycle and for `export *`
+       preserving `iconmanager`, `IconSheets` and `makeIconDiv`.
 4. [x] `base/ui_draw.ts` (351) — already free functions taking `elem`, so a straight
-   move plus the font-alias collapse.
+       move plus the font-alias collapse.
 5. [x] `base/ui_savedata.ts` (130). `ui_base.ts` imports `saveUIData` and `PTOT` back
-   for the retained 3-line `saveData` and `loadData`.
+       for the retained 3-line `saveData` and `loadData`.
 6. [x] `base/ui_theme_key.ts` — the highest module-order risk. Do it while the file
-   is still mostly intact so a regression bisects easily. Gate additionally on
-   `pnpm run gen:themes && pnpm run typecheck:themes`.
+       is still mostly intact so a regression bisects easily. Gate additionally on
+       `pnpm run gen:themes && pnpm run typecheck:themes`.
 7. [x] `base/ui_element_registry.ts`, plus the first delegation batch: the static
-   registration methods, minus `internalRegister`. Gate on the theme-editor and
-   custom-element registration tests.
+       registration methods, minus `internalRegister`. Gate on the theme-editor and
+       custom-element registration tests.
 
 After phase A the file is ~3200 lines, all module-level code is gone, and
 delegation is proven on statics.
@@ -288,30 +287,30 @@ delegation is proven on statics.
 ### Phase B — class clusters
 
 8. [x] `base/ui_base_theme_lookup.ts` — the largest class win (312) and nearly
-   self-contained. Fold in the `walkStyleChain` collapse. Gate on
-   `theme_editor.test.ts`, `theme_editor_widget.test.ts` and `gen:themes`.
+       self-contained. Fold in the `walkStyleChain` collapse. Gate on
+       `theme_editor.test.ts`, `theme_editor_widget.test.ts` and `gen:themes`.
 9. [x] `base/ui_base_tooltips.ts` — 152, three methods, isolated; carries the
-   `TextBox` late-bind hack.
+       `TextBox` late-bind hack.
 10. [x] `base/ui_base_modal.ts` — 234. `_clipboardHotkeyInit` is one 115-line method.
-    Gate on `clipboardDefer.test.ts`.
+        Gate on `clipboardDefer.test.ts`.
 11. [x] `base/ui_base_anim.ts` — 279.
 12. [x] `base/ui_base_css.ts` — 195.
 13. [x] `base/ui_base_datapath.ts` — 277. Gate on `pathWatch.test.ts`,
-    `datapathErrors.test.ts`, `datapathWalker.test.ts`, `massSetPaths.test.ts`
-    and `pnpm run gen:paths`. `UIBase.dataPathPolling` is read at 3816; pass it
-    in rather than importing the class there.
+        `datapathErrors.test.ts`, `datapathWalker.test.ts`, `massSetPaths.test.ts`
+        and `pnpm run gen:paths`. `UIBase.dataPathPolling` is read at 3816; pass it
+        in rather than importing the class there.
 14. [x] `base/ui_base_pick.ts` — 109.
 15. [x] `base/ui_base_dom.ts` — 264. This is the `super.` to
-    `HTMLElement.prototype.*.call` step; do it alone so a DOM-semantics
-    regression is unambiguous. Gate on `dock_panels.test.ts`,
-    `screenarea_switch_editor.test.ts`, `ui_tabs_*` and `ui_listbox_*`.
+        `HTMLElement.prototype.*.call` step; do it alone so a DOM-semantics
+        regression is unambiguous. Gate on `dock_panels.test.ts`,
+        `screenarea_switch_editor.test.ts`, `ui_tabs_*` and `ui_listbox_*`.
 16. [x] `base/ui_base_graph.ts` — 160; depends on the P0 rename. Gate on the eight
-    `graph_*.test.ts` files.
+        `graph_*.test.ts` files.
 17. [x] `base/ui_base_props.ts` — 72; many small accessors, low risk.
 18. [x] `base/ui_base_init.ts` — last. The constructor alone is 205 of the saving but
-    has the highest blast radius (field initialization order, `attachShadow`,
-    `_idgen`). Every other test is green by then, so breakage is unambiguously
-    the constructor.
+        has the highest blast radius (field initialization order, `attachShadow`,
+        `_idgen`). Every other test is green by then, so breakage is unambiguously
+        the constructor.
 
 ### Phase C — cleanup
 

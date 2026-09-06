@@ -128,14 +128,14 @@ Settled here so the stages below do not reopen them.
 
 1. **Entering a group edits its definition.** The research doc that shaped the graph module
    (deleted with its plans in commit `fbd16fae`; `git show
-   fbd16fae^:documentation/research/nodeEditor.md`) put the rule as "the editor can descend
+fbd16fae^:documentation/research/nodeEditor.md`) put the rule as "the editor can descend
    into an instance to look at it, and offers opening the definition as the way to change
    anything", and it stands. Tab, a double press on a group's header, and Edit ▸ Edit Group
-   all push a *definition* level. The read-only instance view stays reachable from the
+   all push a _definition_ level. The read-only instance view stays reachable from the
    node's context menu as Show Instance, since it is the only place an author can see what
    one instance overrides. An instance nested inside an instance has no definition of its
    own (reconciliation copies the definition's inner instances without resolving them), so
-   Show Instance one level down offers no *edit the definition* button and its tooltip says
+   Show Instance one level down offers no _edit the definition_ button and its tooltip says
    the definition is not loaded at that depth.
 2. **A definition level is addressed by datapath, not by host wiring.** `GroupNode`'s API
    gains a `definition` member beside `group`, declared over the dotted path
@@ -252,7 +252,7 @@ Settled here so the stages below do not reopen them.
 ## The look
 
 The editor is neutral grey with one orange for selection. Groups need to read as
-*containers* against that without adding a second loud color, and a level change needs to be
+_containers_ against that without adding a second loud color, and a level change needs to be
 visible without a banner.
 
 - **A group instance's frame** carries a 3 px accent stripe down its left edge in
@@ -260,13 +260,13 @@ visible without a banner.
   header tooltip says what it is and how to enter it. Nothing else on the frame changes; its
   body is the forwarded rows it already shows.
 - **The proxy nodes** inside a definition take `ProxyHeaderBG` and a final row that is a
-  dropdown labelled *Add input…* or *Add output…*, listing the registered socket types. That
+  dropdown labelled _Add input…_ or _Add output…_, listing the registered socket types. That
   row is the only structural control on a proxy; a socket is removed from the designer.
 - **The breadcrumb** becomes a trail rather than a row of buttons: `Graph ▸ ink wash ▸
-  kernel`, each crumb a plain text button, the last one set in `CrumbActiveFont`, separators
+kernel`, each crumb a plain text button, the last one set in `CrumbActiveFont`, separators
   in the crumb font at reduced opacity. After the trail sits one pill naming the level:
-  *definition · edits reach every instance* in `LevelDefinitionColor`, or *instance · values
-  only* in `LevelInstanceColor` with an *edit the definition* text button beside it. The root
+  _definition · edits reach every instance_ in `LevelDefinitionColor`, or _instance · values
+  only_ in `LevelInstanceColor` with an _edit the definition_ text button beside it. The root
   shows no pill. The whole row is `CrumbBG`.
 - **The level band.** Off the root, the pan/zoom canvas gets a 2 px inset outline in the
   level's color. It sits at the edges, so it says where you are without competing with the
@@ -278,11 +278,11 @@ visible without a banner.
   each widget's `define().theme` so `gen:themes --strict` covers them.
 - **The designer panel** is three headed lists — Inputs, Outputs, Exposed — built with
   path.ux containers rather than raw DOM. An input or output row is its name, its socket
-  type in the socket font, and ✕. An exposed row is its label, ↑ ↓ ✕, and a *missing*
-  flag in `ErrorColor` with *Repoint…* where the target is gone. Under each list a single
-  control adds: *Add input…* / *Add output…* (socket type dropdown, then a name box),
-  *Expose…* (a menu of the definition's inner nodes, each a submenu of that node's props
-  plus *whole node*). Nothing asks for an id.
+  type in the socket font, and ✕. An exposed row is its label, ↑ ↓ ✕, and a _missing_
+  flag in `ErrorColor` with _Repoint…_ where the target is gone. Under each list a single
+  control adds: _Add input…_ / _Add output…_ (socket type dropdown, then a name box),
+  _Expose…_ (a menu of the definition's inner nodes, each a submenu of that node's props
+  plus _whole node_). Nothing asks for an id.
 - Every control carries a `description` or `title`.
 
 ## Stages
@@ -311,11 +311,11 @@ Files: `scripts/graph/grouping.ts` (new), `scripts/graph/group.ts`, `scripts/gra
   proxies, place the input proxy left of the nodes' bounds and the output proxy right of
   them, add a `GroupNode` at the bounds' centre, `setDefinition`, `syncToDefinition`, and
   reconnect the crossing links to the instance's boundary sockets. `dissolveGroup(def,
-  node, graph, edges)` is its inverse for undo: the same node objects back into `graph`.
+node, graph, edges)` is its inverse for undo: the same node objects back into `graph`.
 - `ungroup(graph, node)` → `{ nodes, idMap }`, performing decision 6, positioned so the
   inlined nodes' bounds centre on where the instance stood.
 - The definition edits as functions over a `GroupDef` (decision 7): `exposeEntry(def,
-  entry, at?)`, `reorderEntry(def, from, to)`, `repointEntry(def, index, nodeId, key?)`,
+entry, at?)`, `reorderEntry(def, from, to)`, `repointEntry(def, index, nodeId, key?)`,
   `removeEntry(def, index)`, `addBoundary(def, dir, key, socketType)` → the proxy socket,
   and `removeBoundary(def, dir, key)` → the inner links it severed, each answering a
   refusal sentence for a bad index, an unknown socket type, a duplicate key, or a key not
@@ -464,10 +464,10 @@ Files: `scripts/editors/nodeeditor/groupui.ts`, `nodeframe.ts`, `nodegraphview.t
 - `buildGroupDesigner` rebuilt to [The look](#the-look): the three lists over path.ux
   containers, every mutation an edit through the delegate, re-rendered on `levelchange` and
   on the definition path's watch.
-- The proxy frames' *Add input…* / *Add output…* row, built in `buildExtraUI` for
+- The proxy frames' _Add input…_ / _Add output…_ row, built in `buildExtraUI` for
   `GroupInputNode`/`GroupOutputNode` frames when the frame sits in a definition level (the
   view passes a `level` to the frame builder), dispatching `addBoundary`.
-- A prop row inside a definition offers *Expose on group* from its context menu, dispatching
+- A prop row inside a definition offers _Expose on group_ from its context menu, dispatching
   `exposeEntry` for that node and key. The view installs the handler on `propEditRow`'s
   container when the frame's graph is a definition.
 

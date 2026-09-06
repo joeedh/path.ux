@@ -95,8 +95,7 @@ export function addEventListener(
     }
 
     const area = elem.findArea() as
-      | (AnyUIBase & { push_ctx_active(): void; pop_ctx_active(): void })
-      | undefined;
+      (AnyUIBase & { push_ctx_active(): void; pop_ctx_active(): void }) | undefined;
 
     if (area) {
       area.push_ctx_active();

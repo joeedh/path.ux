@@ -45,15 +45,15 @@ Two halves, already partly built:
      `this.addPathWatch(path, opts)`); replaces nothing at runtime beyond setup.
    - `updateFromPath(value, info)` — the reaction (the former post-diff body:
      state update + `_redraw()`/`setCSS()`). Invoked by the watcher on change.
-   The base `ValueButtonBase.updateDataPath` and every other `updateDataPath`
-   are removed; `super.updateDataPath()` chains (NumSlider) are untangled into
-   `super.updateFromPath()`.
+     The base `ValueButtonBase.updateDataPath` and every other `updateDataPath`
+     are removed; `super.updateDataPath()` chains (NumSlider) are untangled into
+     `super.updateFromPath()`.
 4. **Compat = keep the behavior, retire the code pattern.** A global
    `UIBase.dataPathPolling` (default `true`) makes the base `update()` drive each
    registered watcher in poll mode, reproducing today's 150 ms re-read+diff.
    Per-widget `this.pollDataPath: boolean | "auto"` overrides it. Push reactions
    fire on the controller's rAF flush (~16 ms), independent of the 150 ms Screen
-   timer, so migrated widgets get *more* responsive, not less.
+   timer, so migrated widgets get _more_ responsive, not less.
 5. **Debouncing is per-binding**, owned by the watcher: `raf` (default),
    `{ trailing: ms }` for heavy widgets (curve, colorpicker), or `immediate`.
 
@@ -101,14 +101,14 @@ co-commit per CLAUDE.md).
 5. **`DataPathWatcher`.** The single home for change detection:
    ```ts
    class DataPathWatcher {
-     constructor(ctx, path, onChange: (value, info) => void, opts)
-     private resolve()           // resolve once; cache leaf identity (struct,prop,subkey)
-     private equals(a, b)        // prop-aware: scalars, enums, AND vectors/arrays
-     poll(): boolean             // re-read, structural diff vs snapshot, fire onChange if changed
-     markDirty()                 // push: flipped by notifyChange
-     tick()                      // called per Screen frame; polls iff polling enabled
-     flush()                     // push: if dirty, fire onChange (debounced)
-     remove()                    // unsubscribe + prune
+     constructor(ctx, path, onChange: (value, info) => void, opts);
+     private resolve(); // resolve once; cache leaf identity (struct,prop,subkey)
+     private equals(a, b); // prop-aware: scalars, enums, AND vectors/arrays
+     poll(): boolean; // re-read, structural diff vs snapshot, fire onChange if changed
+     markDirty(); // push: flipped by notifyChange
+     tick(); // called per Screen frame; polls iff polling enabled
+     flush(); // push: if dirty, fire onChange (debounced)
+     remove(); // unsubscribe + prune
    }
    ```
    - `info = { resolved: boolean, path, prop }` so the widget can fold the
@@ -151,11 +151,11 @@ prunes; `updateChanged` wakes by `(struct,prop)`; poll mode matches push result.
    scattered per-widget `this.updateDataPath()` calls with:
    ```ts
    if (UIBase.dataPathPolling && this.pollDataPath !== false) {
-     for (const w of this._pathWatchers) w.tick();  // poll mode
+     for (const w of this._pathWatchers) w.tick(); // poll mode
    }
    ```
    Add static `UIBase.dataPathPolling = true` and instance `pollDataPath:
-   boolean | "auto" = "auto"`. `"auto"` = poll unless every one of the widget's
+boolean | "auto" = "auto"`. `"auto"` = poll unless every one of the widget's
    paths is confirmed push-covered (start conservative: `"auto"` polls).
 4. **Delete `updateDataPath`** from the base(s) once Phase 3 removes all
    overrides. No base method remains.
@@ -171,27 +171,28 @@ the `updateDataPath()` override and any `this.updateDataPath()` call in `update(
 
 Inventory (class — file:line):
 
-| Class | File:line | Notes |
-| --- | --- | --- |
-| `Label` | `scripts/core/ui.ts:172` | reads path, unit-formats, sets `innerText`; keep the `units.buildString` formatting **inside** `updateFromPath`. |
-| `ValueButtonBase` | `scripts/widgets/ui_widgets.ts:97` | the shared base; `NumSlider` chains `super`. Define base `updateFromPath` here (sets `this._value`). |
-| `Check` | `scripts/widgets/ui_widgets.ts:345` | boolean; folds `internalDisabled` on unresolved. |
-| `IconCheck` | `scripts/widgets/ui_widgets.ts:927` | extends `IconButton`. |
-| `VectorPopupButton` | `scripts/widgets/ui_widgets2.ts:85` | extends `Button`; vector value — verify `equals` handles it. |
-| `VectorPanel` | `scripts/widgets/ui_widgets2.ts:428` | extends `ColumnFrame`; likely watches multiple component paths. |
-| `TextBox` | `scripts/widgets/ui_textbox.ts:308` | extends `TextBoxBase`. |
-| `RichEditor` | `scripts/widgets/ui_richedit.ts:242` | extends `TextBoxBase`. |
-| `RichViewer` | `scripts/widgets/ui_richedit.ts:324` | extends `UIBase`. |
-| `Curve1DWidget` | `scripts/widgets/ui_curvewidget.ts:513` | heavy redraw → `{ trailing: … }` debounce. |
-| `ColorPicker` | `scripts/widgets/ui_colorpicker2.ts:1277` | extends `ColumnFrame`; vector/color; heavy. |
-| `ColorPickerButton` | `scripts/widgets/ui_colorpicker2.ts:1707` | extends `UIBase`. |
-| `NumSlider` | `scripts/widgets/ui_numsliders.ts:171` | calls `super.updateDataPath()` (line 211) → rewrite to `super.updateFromPath()`. |
-| `NumSliderSimpleBase` | `scripts/widgets/ui_numsliders.ts:1152` | extends `UIBase`. |
-| `SliderWithTextbox` | `scripts/widgets/ui_numsliders.ts:1975` | extends the simple base. |
-| `DropBox` | `scripts/widgets/ui_menu.ts:1063` | extends `OldButton`. |
-| `ListBox` | `scripts/widgets/ui_listbox.ts:493` | already partly DOM-event based; align. |
+| Class                 | File:line                                 | Notes                                                                                                            |
+| --------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Label`               | `scripts/core/ui.ts:172`                  | reads path, unit-formats, sets `innerText`; keep the `units.buildString` formatting **inside** `updateFromPath`. |
+| `ValueButtonBase`     | `scripts/widgets/ui_widgets.ts:97`        | the shared base; `NumSlider` chains `super`. Define base `updateFromPath` here (sets `this._value`).             |
+| `Check`               | `scripts/widgets/ui_widgets.ts:345`       | boolean; folds `internalDisabled` on unresolved.                                                                 |
+| `IconCheck`           | `scripts/widgets/ui_widgets.ts:927`       | extends `IconButton`.                                                                                            |
+| `VectorPopupButton`   | `scripts/widgets/ui_widgets2.ts:85`       | extends `Button`; vector value — verify `equals` handles it.                                                     |
+| `VectorPanel`         | `scripts/widgets/ui_widgets2.ts:428`      | extends `ColumnFrame`; likely watches multiple component paths.                                                  |
+| `TextBox`             | `scripts/widgets/ui_textbox.ts:308`       | extends `TextBoxBase`.                                                                                           |
+| `RichEditor`          | `scripts/widgets/ui_richedit.ts:242`      | extends `TextBoxBase`.                                                                                           |
+| `RichViewer`          | `scripts/widgets/ui_richedit.ts:324`      | extends `UIBase`.                                                                                                |
+| `Curve1DWidget`       | `scripts/widgets/ui_curvewidget.ts:513`   | heavy redraw → `{ trailing: … }` debounce.                                                                       |
+| `ColorPicker`         | `scripts/widgets/ui_colorpicker2.ts:1277` | extends `ColumnFrame`; vector/color; heavy.                                                                      |
+| `ColorPickerButton`   | `scripts/widgets/ui_colorpicker2.ts:1707` | extends `UIBase`.                                                                                                |
+| `NumSlider`           | `scripts/widgets/ui_numsliders.ts:171`    | calls `super.updateDataPath()` (line 211) → rewrite to `super.updateFromPath()`.                                 |
+| `NumSliderSimpleBase` | `scripts/widgets/ui_numsliders.ts:1152`   | extends `UIBase`.                                                                                                |
+| `SliderWithTextbox`   | `scripts/widgets/ui_numsliders.ts:1975`   | extends the simple base.                                                                                         |
+| `DropBox`             | `scripts/widgets/ui_menu.ts:1063`         | extends `OldButton`.                                                                                             |
+| `ListBox`             | `scripts/widgets/ui_listbox.ts:493`       | already partly DOM-event based; align.                                                                           |
 
 Special cases:
+
 - **Inheritance chains** (`ValueButtonBase`→`NumSlider`,
   `TextBoxBase`→`TextBox`/`RichEditor`, simple-slider chain): define
   `updateFromPath` on the base, extend via `super.updateFromPath(...)`.
@@ -212,8 +213,8 @@ first as the reference conversions, then the rest.
    observable the app behaves exactly as today. Then flip individual migrated
    widgets to push-primary and confirm.
 2. **Static/unit.** `pnpm run typecheck`; `pnpm run gen:themes &&
-   pnpm run typecheck:themes`; `pnpm run gen:paths &&
-   pnpm exec tsgo --noEmit -p tsconfig.structcatalog.json`; `pnpm test`.
+pnpm run typecheck:themes`; `pnpm run gen:paths &&
+pnpm exec tsgo --noEmit -p tsconfig.structcatalog.json`; `pnpm test`.
 3. **Playwright** widget DOM tests.
 4. **CDP smoke test (real app)** — the reason to reconcile with master:
    - `pnpm nwjs` (or `pnpm electron`), then drive with `pnpm cdp`.

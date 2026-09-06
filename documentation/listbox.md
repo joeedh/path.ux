@@ -16,14 +16,15 @@ navigation (Up/Down), and can be resized by the user via a corner grip.
 - [Manual mode](#manual-mode)
 - [Listening for selection changes](#listening-for-selection-changes)
 - [Data-API backed mode](#data-api-backed-mode)
-  * [The DataList contract](#the-datalist-contract)
-  * [Active element sync](#active-element-sync)
-  * [Item labels](#item-labels)
-  * [Change detection: getVersion vs key diff](#change-detection-getversion-vs-key-diff)
-  * [Undoable selection](#undoable-selection)
+  - [The DataList contract](#the-datalist-contract)
+  - [Active element sync](#active-element-sync)
+  - [Item labels](#item-labels)
+  - [Change detection: getVersion vs key diff](#change-detection-getversion-vs-key-diff)
+  - [Undoable selection](#undoable-selection)
 - [XML pages](#xml-pages)
 - [Resizing](#resizing)
 - [API reference](#api-reference)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -52,12 +53,12 @@ leaves the box in manual mode.
 ```ts
 const box = container.listbox<number>();
 
-const a = box.addItem("Alpha");        // auto id
-const b = box.addItem("Beta", 42);     // explicit id
+const a = box.addItem("Alpha"); // auto id
+const b = box.addItem("Beta", 42); // explicit id
 
-box.setActive(b);          // by reference
-box.setActive(42);         // or by id
-box.removeItem(a);         // by reference or id
+box.setActive(b); // by reference
+box.setActive(42); // or by id
+box.removeItem(a); // by reference or id
 box.clear();
 ```
 
@@ -105,14 +106,14 @@ automatically.
 A list is declared in an `api_define` with `struct.list(path, apiname, funcs)`.
 The callbacks the ListBox uses:
 
-| callback | required | purpose |
-| --- | --- | --- |
-| `getIter(api, list)` | yes | iterate the elements (for population) |
-| `getKey(api, list, obj)` | yes | the stable key/id of an element |
-| `get(api, list, key)` | yes | look an element up by key |
-| `getActive(api, list)` | no | the currently-active element |
-| `setActive(api, list, val)` | no | make `val` (the **value**, not a key) active |
-| `getVersion(api, list)` | no | O(1) change-detection counter |
+| callback                    | required | purpose                                      |
+| --------------------------- | -------- | -------------------------------------------- |
+| `getIter(api, list)`        | yes      | iterate the elements (for population)        |
+| `getKey(api, list, obj)`    | yes      | the stable key/id of an element              |
+| `get(api, list, key)`       | yes      | look an element up by key                    |
+| `getActive(api, list)`      | no       | the currently-active element                 |
+| `setActive(api, list, val)` | no       | make `val` (the **value**, not a key) active |
+| `getVersion(api, list)`     | no       | O(1) change-detection counter                |
 
 > **`setActive` receives the value object**, symmetric with `getActive` — not a
 > key. (A list path's `.active` resolves read-only through `getActive`, so the
@@ -149,7 +150,7 @@ actually changed:
 - Otherwise the box falls back to an **O(n) key diff** (it hashes the ordered
   keys).
 
-It also rebuilds if the data-path resolves to a *different* list object, and
+It also rebuilds if the data-path resolves to a _different_ list object, and
 clears itself if the list ceases to exist (e.g. a `foo.active.children` path
 whose `active` becomes undefined), repopulating if it reappears.
 
@@ -211,12 +212,15 @@ class ListBox<CTX, IDTYPE = string | number> extends Container<CTX> {
   // data-api binding
   getItemName?: (obj: unknown, key: IDTYPE) => string;
   itemNames(cb): this;
-  useActiveUndo: boolean;        // default false
+  useActiveUndo: boolean; // default false
 
   // resize
-  resizable: boolean;            // default true
-  resizeAxes: "x" | "y" | "xy";  // default "y"
-  minWidth; maxWidth; minHeight; maxHeight;
+  resizable: boolean; // default true
+  resizeAxes: "x" | "y" | "xy"; // default "y"
+  minWidth;
+  maxWidth;
+  minHeight;
+  maxHeight;
 
   // deprecated — use the "change" DOM event
   on_change?: (id: IDTYPE | undefined, item: ListItem | undefined) => void;

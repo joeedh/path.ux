@@ -1,16 +1,15 @@
-
-
 <!-- toc -->
 
 - [Tool Properties](#tool-properties)
-  * [API](#api)
+  - [API](#api)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 
 # Tool Properties
 
-Tool Properties are generic typed value containers.  They
+Tool Properties are generic typed value containers. They
 store things like:
 
 - Numbers (floats, integers)

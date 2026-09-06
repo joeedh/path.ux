@@ -1,2 +1,1 @@
-
-export * from './types/pathux.d.ts'
+export * from "./types/pathux.d.ts";

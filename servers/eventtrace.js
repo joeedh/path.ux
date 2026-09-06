@@ -1,11 +1,9 @@
-
 let debug = 0;
 
 function color(str, c) {
   let pre;
 
-  if (!str)
-    return;
+  if (!str) return;
 
   pre = "\u001b[38;5;" + c.toString(10) + "m";
 
@@ -13,134 +11,146 @@ function color(str, c) {
 }
 
 exports.parse = (buf, name) => {
-    let counts = {
-        addEventListener : 3,
-        removeEventListener : 3,
-        dispatchEvent : 1,
-        on : 3,
-        off : 3,
-      //   _fireEvent : 2,
-      //   _fire : 2
-    };
+  let counts = {
+    addEventListener   : 3,
+    removeEventListener: 3,
+    dispatchEvent      : 1,
+    on                 : 3,
+    off                : 3,
+    //   _fireEvent : 2,
+    //   _fire : 2
+  };
 
-    let keys = new Set(["addEventListener", "removeEventListener", "dispatchEvent", "on", "off", /*"_fireEvent", "_fire"*/]);
+  let keys = new Set([
+    "addEventListener",
+    "removeEventListener",
+    "dispatchEvent",
+    "on",
+    "off" /*"_fireEvent", "_fire"*/,
+  ]);
 
-    let babel = require("@babel/parser");
-    let walk = require("@babel/traverse").default;
-    let generator = require("@babel/generator").default;
-    let types = require("@babel/types");
+  let babel = require("@babel/parser");
+  let walk = require("@babel/traverse").default;
+  let generator = require("@babel/generator").default;
+  let types = require("@babel/types");
 
-    let node = babel.parse(buf, {
-        sourceType : "unambiguous",
-        sourceFilename : name,
-        ranges : true
-    });
+  let node = babel.parse(buf, {
+    sourceType    : "unambiguous",
+    sourceFilename: name,
+    ranges        : true,
+  });
 
-    function genjs(n) {
-        return generator(n, {}).code.trim();
-    }
+  function genjs(n) {
+    return generator(n, {}).code.trim();
+  }
 
-    walk(node, {
-        CallExpression(path) {
-            let n = path.node;
+  walk(node, {
+    CallExpression(path) {
+      let n = path.node;
 
-            //console.log(n.node)
-            let ok = n.callee.type === "MemberExpression";
-            let key = genjs(n.callee.property);
-            ok = ok && keys.has(key); 
+      //console.log(n.node)
+      let ok = n.callee.type === "MemberExpression";
+      let key = genjs(n.callee.property);
+      ok = ok && keys.has(key);
 
-            if (!ok) {
-                return;
-            }
-            
-            let args = key === "dispatchEvent" ? 1 : 4;
+      if (!ok) {
+        return;
+      }
 
-            while (n.arguments.length < args) {
-                n.arguments.push({
-                    type : "Identifier",
-                    name : "undefined"
-                })
-            }
-            //console.log(genjs(n.callee));
-            
-            let owner = "";
+      let args = key === "dispatchEvent" ? 1 : 4;
 
-            let p = path;
-            while (p) {
-                //console.log(p.node.type)
-                if (p.node.type === "ClassDeclaration") {
-                    owner = genjs(p.node.id) + "." + owner;
-                } else if (p.node.type === "ClassMethod") {
-                    let id = p.node.kind === "constructor" ? "constructor" : genjs(p.node.id);
-                    owner = id + "." + owner;
-                } else if (p.node.type === "FunctionExpression" || p.node.type === "ArrowFunctionExpression") {
-                    let id = genjs(p.node.id)
-                    
-                    let pn = p.parentPath.node;
-                    if (pn.type === "VariableDeclarator") {
-                        id = genjs(pn.id);
-                    } else if (pn.type === "MemberExpression") {
-                        id = genjs(pn.property);
-                    } else if (pn.type === "AssignmentExpression") {
-                        id = "'" + genjs(pn.left) + "'";
-                    }
+      while (n.arguments.length < args) {
+        n.arguments.push({
+          type: "Identifier",
+          name: "undefined",
+        });
+      }
+      //console.log(genjs(n.callee));
 
-                    owner = id + "." + owner
-                }
+      let owner = "";
 
-                p = p.parentPath;
-            }
+      let p = path;
+      while (p) {
+        //console.log(p.node.type)
+        if (p.node.type === "ClassDeclaration") {
+          owner = genjs(p.node.id) + "." + owner;
+        } else if (p.node.type === "ClassMethod") {
+          let id = p.node.kind === "constructor" ? "constructor" : genjs(p.node.id);
+          owner = id + "." + owner;
+        } else if (
+          p.node.type === "FunctionExpression" ||
+          p.node.type === "ArrowFunctionExpression"
+        ) {
+          let id = genjs(p.node.id);
 
-            if (owner.endsWith(".")) {
-                owner = owner.slice(0, owner.length-1);
-            }
+          let pn = p.parentPath.node;
+          if (pn.type === "VariableDeclarator") {
+            id = genjs(pn.id);
+          } else if (pn.type === "MemberExpression") {
+            id = genjs(pn.property);
+          } else if (pn.type === "AssignmentExpression") {
+            id = "'" + genjs(pn.left) + "'";
+          }
 
-            if (debug)
-                console.log(owner);
-
-
-            //console.log("\n\n");
-
-            n.arguments.push({
-                type : "Identifier",
-                name : "this"
-            });
-
-            n.arguments.push({
-                type : "NumericLiteral",
-                value : n.loc.start.line-1
-            })
-            n.arguments.push({
-                type : "StringLiteral", 
-                value : name
-            })
-
-            n.arguments.push({
-                type : "StringLiteral", 
-                value : owner
-            })
-            
-            //n.arguments.push()
+          owner = id + "." + owner;
         }
-    })
 
-    //console.log(node);
+        p = p.parentPath;
+      }
 
-    let buf2 = generator(node, {
-        retainLines  : true,
-        compact      : false,
-        comments     : true,
-        filename     : name,
-    }, buf);
+      if (owner.endsWith(".")) {
+        owner = owner.slice(0, owner.length - 1);
+      }
 
-    if (debug)
-        console.log(buf2.code);
+      if (debug) console.log(owner);
 
-    return buf2.code;
-}
+      //console.log("\n\n");
+
+      n.arguments.push({
+        type: "Identifier",
+        name: "this",
+      });
+
+      n.arguments.push({
+        type : "NumericLiteral",
+        value: n.loc.start.line - 1,
+      });
+      n.arguments.push({
+        type : "StringLiteral",
+        value: name,
+      });
+
+      n.arguments.push({
+        type : "StringLiteral",
+        value: owner,
+      });
+
+      //n.arguments.push()
+    },
+  });
+
+  //console.log(node);
+
+  let buf2 = generator(
+    node,
+    {
+      retainLines: true,
+      compact    : false,
+      comments   : true,
+      filename   : name,
+    },
+    buf
+  );
+
+  if (debug) console.log(buf2.code);
+
+  return buf2.code;
+};
 
 if (debug) {
-  console.log(exports.parse(`
+  console.log(
+    exports.parse(
+      `
   export class Yay {
       constructor() {
         function bleh() {
@@ -160,5 +170,8 @@ if (debug) {
         }
     }
 }
-`, "file.js"));
+`,
+      "file.js"
+    )
+  );
 }

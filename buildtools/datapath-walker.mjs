@@ -12,10 +12,10 @@
 
 // Mirror of DataTypes in controller_base.ts.
 export const DataTypes = {
-  STRUCT: 0,
+  STRUCT        : 0,
   DYNAMIC_STRUCT: 1,
-  PROP: 2,
-  ARRAY: 3,
+  PROP          : 2,
+  ARRAY         : 3,
 };
 
 const RANGE_SENTINEL = 1e16; // floats default range is +/-1e17; treat as "no range"
@@ -141,14 +141,28 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
           // Name of the struct this path RESOLVES TO — i.e. the type whose
           // instance lives at `path`. This is the join key for StructCatalog's
           // `paths` union.
-          structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
-          indexed: prefix.includes("["),
-          dynamic: false,
+          structName:
+            childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
+          indexed   : prefix.includes("["),
+          dynamic   : false,
         });
 
         const seen = visited.has(childStruct);
-        if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
-          walkStruct(api, childStruct, path, depth + 1, opts, out, new Set(visited).add(childStruct));
+        if (
+          !seen &&
+          depth + 1 <= opts.maxDepth &&
+          childStruct &&
+          Array.isArray(childStruct.members)
+        ) {
+          walkStruct(
+            api,
+            childStruct,
+            path,
+            depth + 1,
+            opts,
+            out,
+            new Set(visited).add(childStruct)
+          );
         }
         break;
       }
@@ -165,14 +179,28 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
             // Name of the struct this path RESOLVES TO — i.e. the type whose
             // instance lives at `path`. This is the join key for StructCatalog's
             // `paths` union.
-            structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
-            indexed: prefix.includes("["),
-            dynamic: true,
+            structName:
+              childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
+            indexed   : prefix.includes("["),
+            dynamic   : true,
           });
 
           const seen = visited.has(childStruct);
-          if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
-            walkStruct(api, childStruct, path, depth + 1, opts, out, new Set(visited).add(childStruct));
+          if (
+            !seen &&
+            depth + 1 <= opts.maxDepth &&
+            childStruct &&
+            Array.isArray(childStruct.members)
+          ) {
+            walkStruct(
+              api,
+              childStruct,
+              path,
+              depth + 1,
+              opts,
+              out,
+              new Set(visited).add(childStruct)
+            );
           }
         }
         break;
@@ -196,13 +224,27 @@ function walkStruct(api, struct, prefix, depth, opts, out, visited) {
             ownerStruct,
             // For a list, an individual element resolves at `path[n]`; record the
             // element struct so gen can emit `path[n]` as a valued path for it.
-            structName: childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
-            indexed: prefix.includes("["),
+            structName:
+              childStruct?.name && childStruct.name !== "unnamed" ? childStruct.name : undefined,
+            indexed   : prefix.includes("["),
           });
 
           const seen = visited.has(childStruct);
-          if (!seen && depth + 1 <= opts.maxDepth && childStruct && Array.isArray(childStruct.members)) {
-            walkStruct(api, childStruct, elemPrefix, depth + 1, opts, out, new Set(visited).add(childStruct));
+          if (
+            !seen &&
+            depth + 1 <= opts.maxDepth &&
+            childStruct &&
+            Array.isArray(childStruct.members)
+          ) {
+            walkStruct(
+              api,
+              childStruct,
+              elemPrefix,
+              depth + 1,
+              opts,
+              out,
+              new Set(visited).add(childStruct)
+            );
           }
         }
         break;

@@ -1,14 +1,13 @@
-
-
 <!-- toc -->
 
 - [Datapath Controller](#datapath-controller)
-  * [Object Wrapping Example](#object-wrapping-example)
-  * [Defining Properties](#defining-properties)
-  * [DataPath Modifiers](#datapath-modifiers)
-  * [Using Paths From the UI](#using-paths-from-the-ui)
-  * [Looking Up Structs by Name](#looking-up-structs-by-name)
-  * [Update Notifications (subscribe / notify)](#update-notifications-subscribe--notify)
+  - [Object Wrapping Example](#object-wrapping-example)
+  - [Defining Properties](#defining-properties)
+  - [DataPath Modifiers](#datapath-modifiers)
+  - [Using Paths From the UI](#using-paths-from-the-ui)
+  - [Looking Up Structs by Name](#looking-up-structs-by-name)
+  - [Update Notifications (subscribe / notify)](#update-notifications-subscribe--notify)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -16,11 +15,11 @@
 # Datapath Controller
 
 The controller is the glue by which the view (or UI) queries the model (application state),
-and is loosely based on Blender's RNA system.  UI code doesn't hold references to model
-objects; instead it holds special "data paths".  Objects in the model are wrapped
+and is loosely based on Blender's RNA system. UI code doesn't hold references to model
+objects; instead it holds special "data paths". Objects in the model are wrapped
 in a special API that describes all the type information a UI needs (e.g. property types,
-icon, tooltips, numeric ranges, etc).  Simple paths are used to look up data in the model
-(e.g. ```obj.property.something[bleh]```).
+icon, tooltips, numeric ranges, etc). Simple paths are used to look up data in the model
+(e.g. `obj.property.something[bleh]`).
 
 Blender's RNA was originally created to provide one wrapper API that could power Blender's UI,
 scripting, and animation systems.
@@ -179,7 +178,7 @@ after changing any `defineAPI`.
 
 ## Looking Up Structs by Name
 
-`getStruct(cls)` resolves a `DataStruct` from a class reference. When you only have a *name* —
+`getStruct(cls)` resolves a `DataStruct` from a class reference. When you only have a _name_ —
 e.g. a serialized type tag, or a string from a saved file or generic tool — use
 `getStructByName(name)` instead:
 
@@ -213,9 +212,9 @@ api.getStructByName("ExplicitWidget") === api.getStruct(Widget); // true
 api.getStructByName("RealBrush") === api.getStruct(brushClass); // true
 ```
 
-If two classes register the same *explicit* name, the second `mapStruct` call **aliases** the
+If two classes register the same _explicit_ name, the second `mapStruct` call **aliases** the
 first struct (both classes share one `DataStruct`; this is what lets `SavedToolDefaults`
-re-register). A genuine collision between *different* auto-derived structs logs a warning and
+re-register). A genuine collision between _different_ auto-derived structs logs a warning and
 keeps the first registration — pass an explicit name to disambiguate.
 
 ## Update Notifications (subscribe / notify)
@@ -245,9 +244,9 @@ undo/redo are covered automatically. For raw model mutation:
 
 ```ts
 api.updateFrom<BrushSettings>("workspace.brush", "size"); // typed, exact instance
-api.updateChanged<BrushSettings>("size");                 // typed, any instance of T
-api.notifyChange("workspace.brush.size");                 // untyped path
-api.notifyChange();  // structural epoch bump: wakes everything, re-resolves paths
+api.updateChanged<BrushSettings>("size"); // typed, any instance of T
+api.notifyChange("workspace.brush.size"); // untyped path
+api.notifyChange(); // structural epoch bump: wakes everything, re-resolves paths
 ```
 
 Notifying a path wakes watchers on the path itself, its subtree, and its ancestors

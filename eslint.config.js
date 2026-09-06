@@ -1,7 +1,14 @@
 import js from "@eslint/js";
 import globals from "globals";
-import tseslint from "typescript-eslint";
-import { defineConfig, globalIgnores } from "eslint/config";
+import { quickbuild } from "@pathtx/eslint-dispatcher";
+
+//import tseslint from "typescript-eslint";
+const tseslint = await quickbuild.quickBundleModule("typescript-eslint", { format: "cjs" }, true);
+
+const eslintConfig = await quickbuild.quickBundleModule("eslint/config", { format: "cjs" }, true);
+const { defineConfig, globalIgnores } = eslintConfig;
+//import { defineConfig } from 'eslint/config';
+
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import validDatapath from "./buildtools/eslint-rules/valid-datapath.mjs";
@@ -9,9 +16,13 @@ import validDatapath from "./buildtools/eslint-rules/valid-datapath.mjs";
 export default defineConfig([
   globalIgnores([
     //
+    "scripts/path-controller/util/*.js",
+    "**tinymce**",
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
+    "generated/**",
+    "simple_docsys/doc_build",
     "scripts/lib/tinymce/**",
     // Deliberately-wrong data paths that validDatapathRule.test.ts lints itself.
     "tests/fixtures/valid-datapath/**",

@@ -5712,14 +5712,14 @@ window._tinymce = function (domGlobals) {
       }),
       lt: createPositionalPseudo(function (matchIndexes, length, argument) {
         var i = argument < 0 ? argument + length : argument;
-        for (; --i >= 0; ) {
+        for (; --i >= 0;) {
           matchIndexes.push(i);
         }
         return matchIndexes;
       }),
       gt: createPositionalPseudo(function (matchIndexes, length, argument) {
         var i = argument < 0 ? argument + length : argument;
-        for (; ++i < length; ) {
+        for (; ++i < length;) {
           matchIndexes.push(i);
         }
         return matchIndexes;
@@ -12107,7 +12107,7 @@ window._tinymce = function (domGlobals) {
     };
     Node.prototype.unwrap = function () {
       var self = this;
-      for (var node = self.firstChild; node; ) {
+      for (var node = self.firstChild; node;) {
         var next = node.next;
         self.insert(node, self, true);
         node = next;
@@ -15932,7 +15932,7 @@ window._tinymce = function (domGlobals) {
       prev = findElementSibling(prev, "previousSibling");
       next = findElementSibling(next, "nextSibling");
       if (elementUtils.compare(prev, next)) {
-        for (sibling = prev.nextSibling; sibling && sibling !== next; ) {
+        for (sibling = prev.nextSibling; sibling && sibling !== next;) {
           tmpSibling = sibling;
           sibling = sibling.nextSibling;
           prev.appendChild(tmpSibling);
@@ -20123,7 +20123,7 @@ window._tinymce = function (domGlobals) {
             } else {
               tempNode = currentNode;
             }
-            for (childNode = parents[i].firstChild; childNode && childNode !== parents[i + 1]; ) {
+            for (childNode = parents[i].firstChild; childNode && childNode !== parents[i + 1];) {
               nextNode = childNode.next;
               tempNode.append(childNode);
               childNode = nextNode;
@@ -20333,7 +20333,7 @@ window._tinymce = function (domGlobals) {
       var removeWhitespaceBefore = function (node) {
         var textNode, textNodeNext, textVal, sibling;
         var blockElements = schema.getBlockElements();
-        for (textNode = node.prev; textNode && textNode.type === 3; ) {
+        for (textNode = node.prev; textNode && textNode.type === 3;) {
           textVal = textNode.value.replace(endWhiteSpaceRegExp, "");
           if (textVal.length > 0) {
             textNode.value = textVal;

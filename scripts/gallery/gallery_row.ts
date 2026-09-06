@@ -50,6 +50,6 @@ export interface GalleryRowRenderer {
 /** Writes the item's name into the box, which the gallery has already set to wrap it. */
 export const defaultRowRenderer: GalleryRowRenderer = {
   bind(box: GalleryRowBox, item: GalleryItem | undefined): void {
-    box.dom.textContent = item ? item.label ?? item.id : "";
+    box.dom.textContent = item ? (item.label ?? item.id) : "";
   },
 };

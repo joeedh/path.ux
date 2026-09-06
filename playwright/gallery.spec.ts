@@ -167,7 +167,10 @@ test("the search box filters the grid by label and by tag", async ({ page }) => 
     });
 
   const setQuery = (query: string) =>
-    gallery.evaluate((el, q) => (el as unknown as { setQuery(s: string): void }).setQuery(q), query);
+    gallery.evaluate(
+      (el, q) => (el as unknown as { setQuery(s: string): void }).setQuery(q),
+      query
+    );
 
   expect(await count()).toBe(200);
 
@@ -189,7 +192,11 @@ test("the popup resolves with the confirmed item and with nothing on cancel", as
   await page.getByTestId("gallery-pick").click();
 
   // by cell tag rather than by canvas, since the mode toggle draws canvases of its own
-  const popupCell = page.locator("body > *").last().locator(await cellTag(grid)).nth(2);
+  const popupCell = page
+    .locator("body > *")
+    .last()
+    .locator(await cellTag(grid))
+    .nth(2);
   await popupCell.dblclick();
 
   await expect.poll(() => events(page)).toContain("picked:item-2");
@@ -200,7 +207,9 @@ test("the popup resolves with the confirmed item and with nothing on cancel", as
   await expect.poll(() => events(page)).toContain("picked:undefined");
 });
 
-test("the popup cancels on a press outside it, but not on the pointer leaving", async ({ page }) => {
+test("the popup cancels on a press outside it, but not on the pointer leaving", async ({
+  page,
+}) => {
   await openGallery(page);
 
   await page.getByTestId("gallery-pick").click();
@@ -366,7 +375,7 @@ test("the mode toggle switches the gallery's layout and keeps the selection", as
   const toggle = (await buttons.first().boundingBox())!;
   const rest = (await buttons.last().boundingBox())!;
   await page.screenshot({
-    path: `${SCEENSHOTS}/gallery-mode-toggle.png`,
+    path : `${SCEENSHOTS}/gallery-mode-toggle.png`,
     clip: {
       x     : toggle.x - 6,
       y     : toggle.y - 6,

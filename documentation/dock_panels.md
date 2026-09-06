@@ -18,13 +18,13 @@ Implement the `definePanels()` hook and call `makePanels()` from `init()`:
 class MyEditor extends Editor {
   definePanels(panels: PanelManager) {
     panels.panel({
-      id   : "tools",              //stable string id — the serialization key
-      title: "Tools",
-      dock : "left",               //default placement (or "float")
-      flags: PanelFlags.NO_CLOSE,
+      id          : "tools", //stable string id — the serialization key
+      title       : "Tools",
+      dock        : "left", //default placement (or "float")
+      flags       : PanelFlags.NO_CLOSE,
       allowedDocks: PanelDockMask.LEFT | PanelDockMask.RIGHT | PanelDockMask.FLOAT,
-      minSize: [120, undefined],   //content size clamps in CSS pixels;
-      maxSize: [undefined, 300],   //either component may be omitted
+      minSize     : [120, undefined], //content size clamps in CSS pixels;
+      maxSize     : [undefined, 300], //either component may be omitted
       build: (c) => {
         c.prop("tool.strength");
       },
@@ -44,7 +44,7 @@ afterwards from the per-panel uidata blob. A serialized layout overrides the
 declared defaults: unknown ids are dropped, ids the layout predates get their
 default placement.
 
-`minSize`/`maxSize` clamp the panel *contents* in CSS pixels; each component
+`minSize`/`maxSize` clamp the panel _contents_ in CSS pixels; each component
 is optional. Content past `maxSize` scrolls inside the panel.
 
 ## Constraints
@@ -66,9 +66,9 @@ never render, and gestures are disabled by the flags:
 this.panels.dockPanel("tools", "right", { index: 0 });
 this.panels.dockPanelInto("tools", "props"); //group with "props" as tabs
 this.panels.floatPanel("tools", { pos: [x, y] });
-this.panels.closePanel("tools");     //hides; layout position retained
+this.panels.closePanel("tools"); //hides; layout position retained
 this.panels.showPanel("tools");
-this.panels.resetLayout();           //back to declared defaults
+this.panels.resetLayout(); //back to declared defaults
 ```
 
 ## Per-edge visibility and hotkeys
@@ -91,7 +91,7 @@ getKeyMaps() {
 
 Every visible region has a 6px resize grip on its center-facing edge
 (disabled when `panelLayoutEditable` is false); sizes persist. Regions hold
-an ordered list of *stacks*: a panel docked normally is its own rollout
+an ordered list of _stacks_: a panel docked normally is its own rollout
 stack, and panels merged together form a tab group (`StackMode.TABS` in
 `PanelStackState`). `setStackMode` merges/splits a whole region at once:
 

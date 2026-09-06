@@ -882,7 +882,7 @@
 
   var wrap = function (key, value) {
     var _a;
-    return (_a = {}), (_a[key] = value), _a;
+    return ((_a = {}), (_a[key] = value), _a);
   };
   var wrapAll = function (keyvalues) {
     var r = {};

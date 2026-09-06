@@ -1,19 +1,18 @@
-
-
 <!-- toc -->
 
 - [Context design](#context-design)
-  * [Required fields](#required-fields)
-  * [Context Overlay](#context-overlay)
-  * [Locked contexts](#locked-contexts)
-  * [Tool Contexts](#tool-contexts)
+  - [Required fields](#required-fields)
+  - [Context Overlay](#context-overlay)
+  - [Locked contexts](#locked-contexts)
+  - [Tool Contexts](#tool-contexts)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 
 # Context design
 
-Context is a simplified API to access the application model.  Contexts are passed around
+Context is a simplified API to access the application model. Contexts are passed around
 to ToolOps and used by path.ux.
 
 ## Required fields
@@ -26,11 +25,11 @@ Call contexts are required to have the following fields:
 
 ## Context Overlay
 
-A [context overlay](@ContextOverlay) is a class that overrides context fields.  It has a validate()
+A [context overlay](@ContextOverlay) is a class that overrides context fields. It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.
 
-Contexts can be "frozen" with .lock.  When frozen they should *have no direct object
-references at all*, other then .state, .datalib and .api.  
+Contexts can be "frozen" with .lock. When frozen they should _have no direct object
+references at all_, other then .state, .datalib and .api.
 
 Properties can control this with "_save" and "_load" methods inside
 of the overlay classes, as well as overriding saveProperty and loadProperty
@@ -42,47 +41,47 @@ Example of a context overlay:
       validate() {
         //check if this overlay is still valid or needs to be removed
       }
-    
+
       static contextDefine() {return {
         flag    :   0 //see ContextFlags
-    
+
         //an example of inheritance.  inheritance is automatic for fields
         //that are missing from contextDefine().
         flag    :   Context.inherit([a bitmask to or with parent])
       }}
-        
+
       get selectedObjects() {
         /*
           if you want to get a property from below the stack in the ctx
           use this.ctx or return Context.super
         */
         if (some_reason) {
-            //tell ctx to 
+            //tell ctx to
             return Context.super();
         } else {
             //this will also work
             return this.ctx.selectedObjects;
         }
-        
+
         return this.ctx.scene.objects.selected.editable;
       }
-    
+
       selectedObjects_save() {
         let ret = [];
         for (let ob of this.selectedObjects) {
-            ret.push(ob.id);        
+            ret.push(ob.id);
         }
-        
+
         return ret;
       }
-    
+
       selectedObjects_load(ctx, data) {
         let ret = [];
-        
+
         for (let id of data) {
             ret.push([lookup object from data using (possible new) context ctx])
         }
-        
+
         return ret;
       }
     }
@@ -99,11 +98,11 @@ We suggest you subclass Context and implement saveProperty and loadProperty meth
       get something() {
         return something;
       }
-    
+
       something_save() {
         return this.state.something.id;
       }
-    
+
       something_load(ctx, id) {
         return [lookup id somewhere to get something];
       }
@@ -112,7 +111,7 @@ We suggest you subclass Context and implement saveProperty and loadProperty meth
 ## Tool Contexts
 
 We encourage you to put Context properties related to the view inside
-a separate ContextOverlay.  That way you can keep ToolOps from accessing
+a separate ContextOverlay. That way you can keep ToolOps from accessing
 the view by feeding them a special context that lacks that overlay
 (but note that tools in modal mode should always get a full context).
 
@@ -121,11 +120,11 @@ class ToolOverlay extends ContextOverlay {
     static contextDefine() {return {
         name : "tool"
     }}
-    
+
     get mesh() {
         return this.state.mesh;
     }
-    
+
     get material() {
         return this.state.material;
     }
@@ -137,13 +136,13 @@ class ViewOverlay extends ContextOverlay {
         name : "view",
         flag : ContextFlags.IS_VIEW
     }}
-    
+
     get screen() {
         return this.state.screen;
     }
-    
+
     get textEditor() {
-        return 
+        return
     }
 }
 Context.register(ToolOverlay);

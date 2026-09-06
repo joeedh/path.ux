@@ -74,8 +74,7 @@ export class BaseOverlay extends ContextOverlay {
 
   get data(): ModelData | undefined {
     return (this.state as AppState).datalib.getBlockSet("model_data")!.active as
-      | ModelData
-      | undefined;
+      ModelData | undefined;
   }
 
   get canvas() {

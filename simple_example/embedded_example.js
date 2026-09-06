@@ -1,6 +1,6 @@
-import * as simple from '../scripts/simple/simple.js';
-import {Vector4, UIBase} from '../scripts/pathux.js';
-import {Editor} from '../scripts/simple/simple.js';
+import * as simple from "../scripts/simple/simple.js";
+import { Vector4, UIBase } from "../scripts/pathux.js";
+import { Editor } from "../scripts/simple/simple.js";
 
 export class Context {
   get canvas() {
@@ -62,8 +62,8 @@ export class AppState extends simple.AppState {
     super(Context);
 
     this.canvas = new Canvas();
-    this.timer  = window.setInterval(() => {
-      this.update()
+    this.timer = window.setInterval(() => {
+      this.update();
     }, 150);
   }
 
@@ -93,10 +93,9 @@ export class AppState extends simple.AppState {
 
   start() {
     return super.start({
-        autoSizeUpdate: false,
-        singlePage    : false,
-      }
-    );
+      autoSizeUpdate: false,
+      singlePage    : false,
+    });
   }
 }
 
@@ -116,8 +115,8 @@ export class CanvasEditor extends simple.Editor {
     return {
       tagname : "simple-canvas-x",
       areaname: "simple-canvas",
-      uiname  : "Canvas"
-    }
+      uiname  : "Canvas",
+    };
   }
 
   static defineAPI(api, st) {
@@ -139,13 +138,13 @@ export class CanvasEditor extends simple.Editor {
 
     let dpi = UIBase.getDPI();
 
-    let w = ~~((this.size[0])*dpi);
-    let h = ~~(this.size[1]*dpi)
+    let w = ~~(this.size[0] * dpi);
+    let h = ~~(this.size[1] * dpi);
 
     this.canvas.width = w;
     this.canvas.height = h;
-    this.canvas.style["width"] = (w/dpi) + "px";
-    this.canvas.style["height"] = (h/dpi) + "px";
+    this.canvas.style["width"] = w / dpi + "px";
+    this.canvas.style["height"] = h / dpi + "px";
 
     let g = this.g;
 
@@ -180,12 +179,12 @@ export class CanvasEditor extends simple.Editor {
     let x = e.x - r.x;
     let y = e.y - r.y;
 
-    x = ~~(x*dpi);
-    y = ~~(y*dpi);
+    x = ~~(x * dpi);
+    y = ~~(y * dpi);
 
     let idata = canvas.image.data;
 
-    let idx = (y*canvas.dimen + x)*4;
+    let idx = (y * canvas.dimen + x) * 4;
 
     idata[idx] = idata[idx + 1] = idata[idx + 2] = 0.0;
     idata[idx + 3] = 255;
@@ -209,4 +208,3 @@ export function start() {
   window._appstate = new AppState();
   _appstate.start();
 }
-

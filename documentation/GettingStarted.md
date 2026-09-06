@@ -17,11 +17,11 @@ fails at runtime (or silently renders `"(error)"`).
 This guide wires up a **codegen step** that walks your real `defineAPI()` and emits three
 artifacts that fix that:
 
-| Artifact | Purpose |
-| --- | --- |
-| `generated/API_PATHS.md` | Human/LLM-readable catalog — what an agent greps before writing a `prop()` call |
-| `generated/api-paths.json` | Machine-readable catalog — the source the ESLint rule reads |
-| `generated/datapaths.ts` | A `KnownDataPath` union + a `DataPathRegistry` augmentation for compile-time typo-checking and autocomplete |
+| Artifact                   | Purpose                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `generated/API_PATHS.md`   | Human/LLM-readable catalog — what an agent greps before writing a `prop()` call                             |
+| `generated/api-paths.json` | Machine-readable catalog — the source the ESLint rule reads                                                 |
+| `generated/datapaths.ts`   | A `KnownDataPath` union + a `DataPathRegistry` augmentation for compile-time typo-checking and autocomplete |
 
 On top of those you get an **ESLint rule** that flags unknown path literals (including
 inside `<prop path="...">` template strings), and **richer runtime errors** with
@@ -72,8 +72,8 @@ In `package.json`:
 ```jsonc
 {
   "scripts": {
-    "gen:paths": "node node_modules/path.ux/buildtools/gen-datapaths.mjs"
-  }
+    "gen:paths": "node node_modules/path.ux/buildtools/gen-datapaths.mjs",
+  },
 }
 ```
 
@@ -96,12 +96,12 @@ pnpm run gen:paths -- src/api/define_api.ts defineAPI
 gen-datapaths.mjs [factoryModule] [exportName] [--out dir] [--module name]
 ```
 
-| Arg | Default | Meaning |
-| --- | --- | --- |
-| `factoryModule` | `example/api/api_define.js` | Path (relative to repo root) to your factory module |
-| `exportName` | `defineAPI` | Named export to invoke; falls back to the default export |
-| `--out dir` | `generated` | Output directory for the three artifacts |
-| `--module name` | `path.ux` | Module name used in the `declare module "..."` augmentation in `datapaths.ts` |
+| Arg             | Default                     | Meaning                                                                       |
+| --------------- | --------------------------- | ----------------------------------------------------------------------------- |
+| `factoryModule` | `example/api/api_define.js` | Path (relative to repo root) to your factory module                           |
+| `exportName`    | `defineAPI`                 | Named export to invoke; falls back to the default export                      |
+| `--out dir`     | `generated`                 | Output directory for the three artifacts                                      |
+| `--module name` | `path.ux`                   | Module name used in the `declare module "..."` augmentation in `datapaths.ts` |
 
 On success it prints `wrote N paths to generated/`. If your factory can't load, it prints
 the error and exits non-zero (so it's safe to gate CI on).
@@ -122,7 +122,7 @@ include the generated augmentation in your `tsconfig.json`:
 
 ```jsonc
 {
-  "include": ["src/**/*", "generated/datapaths.ts"]
+  "include": ["src/**/*", "generated/datapaths.ts"],
 }
 ```
 
@@ -140,11 +140,11 @@ declare module "path.ux" {
 
 Once augmented, `KnownDataPath` becomes `(known paths) | (string & {})`:
 
-- **Exact known literals** are autocompleted, and an outright wrong *type* (e.g. a number)
+- **Exact known literals** are autocompleted, and an outright wrong _type_ (e.g. a number)
   is rejected by the compiler.
 - **Arbitrary strings still compile** — relative/prefixed paths (resolved at runtime via
   `Container._joinPrefix`) and dynamic-struct paths can't live in a global union, so they
-  fall through to `string & {}`. Catching *typo'd* strings is the ESLint rule's job
+  fall through to `string & {}`. Catching _typo'd_ strings is the ESLint rule's job
   (step 4), not the type system's.
 
 If `--module` differed from your install name, make sure the `declare module "<name>"`
@@ -166,7 +166,7 @@ export default [
   // ...your existing config...
   {
     plugins: { pathux: { rules: { "valid-datapath": validDatapath } } },
-    rules:   { "pathux/valid-datapath": "warn" }, // or "error" to fail CI
+    rules  : { "pathux/valid-datapath": "warn" }, // or "error" to fail CI
   },
 ];
 ```
@@ -213,12 +213,12 @@ A typical ordering — regenerate, then lint and typecheck against fresh artifac
 ```jsonc
 {
   "scripts": {
-    "gen:paths":  "node node_modules/path.ux/buildtools/gen-datapaths.mjs -- src/api/define_api.ts",
-    "lint":       "eslint .",
-    "typecheck":  "tsgo --noEmit",
-    "prebuild":   "pnpm run gen:paths",
-    "ci":         "pnpm run gen:paths && pnpm run lint && pnpm run typecheck && pnpm run build"
-  }
+    "gen:paths": "node node_modules/path.ux/buildtools/gen-datapaths.mjs -- src/api/define_api.ts",
+    "lint"     : "eslint .",
+    "typecheck": "tsgo --noEmit",
+    "prebuild" : "pnpm run gen:paths",
+    "ci"       : "pnpm run gen:paths && pnpm run lint && pnpm run typecheck && pnpm run build",
+  },
 }
 ```
 
@@ -257,7 +257,7 @@ Regenerate after changing any `api_define` with `pnpm run gen:paths`.
 1. `pnpm run gen:paths` writes a non-empty `generated/api-paths.json` covering known paths.
 2. Introduce a deliberate typo, e.g. `container.prop("workspace.brush.sized")`:
    - `eslint` flags it with a "did you mean…?" hint.
-   - With the augmentation included, a wrong *type* (`prop(123)`) is a `tsgo` error.
+   - With the augmentation included, a wrong _type_ (`prop(123)`) is a `tsgo` error.
    - Running the app yields a "did you mean workspace.brush.size?" message instead of a
      bare throw / `"(error)"`.
 3. Confirm valid absolute **and** relative paths (`"brush.size"`) still lint/typecheck
@@ -267,10 +267,10 @@ Regenerate after changing any `api_define` with `pnpm run gen:paths`.
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
-| --- | --- |
-| `has no export "defineAPI" (or default)` | Pass the correct export name as the 2nd CLI arg, or default-export your factory. |
-| `did not yield a DataAPI with a rootContextStruct` | Call `api.setRoot(...)` in your factory before returning. |
+| Symptom                                                | Cause / fix                                                                                                                                                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `has no export "defineAPI" (or default)`               | Pass the correct export name as the 2nd CLI arg, or default-export your factory.                                                                                                     |
+| `did not yield a DataAPI with a rootContextStruct`     | Call `api.setRoot(...)` in your factory before returning.                                                                                                                            |
 | `X is not defined` / `X is not a function` during load | Your module touches a DOM/global API not covered by the stub banner at import time. Defer that work out of module top-level, or extend the banner in `buildtools/gen-datapaths.mjs`. |
-| ESLint rule reports nothing | `generated/api-paths.json` is missing (rule is a no-op) — run `gen:paths` first. |
-| Augmentation doesn't narrow `KnownDataPath` | `generated/datapaths.ts` isn't in tsconfig `include`, or its `declare module "<name>"` doesn't match your path.ux import specifier (set `--module`). |
+| ESLint rule reports nothing                            | `generated/api-paths.json` is missing (rule is a no-op) — run `gen:paths` first.                                                                                                     |
+| Augmentation doesn't narrow `KnownDataPath`            | `generated/datapaths.ts` isn't in tsconfig `include`, or its `declare module "<name>"` doesn't match your path.ux import specifier (set `--module`).                                 |

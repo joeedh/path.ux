@@ -14,7 +14,7 @@
     "noEmit"                          : true,
     "noImplicitAny"                   : true,
     "lib"                             : ["ES2022", "DOM", "DOM.Iterable", "ESNext.Disposable"],
-    "types"                           : ["node", "jest"],
+    "types"                           : ["node", "jest"]
   },
-  "include"        : ["*.ts"],
+  "include"        : ["*.ts"]
 }

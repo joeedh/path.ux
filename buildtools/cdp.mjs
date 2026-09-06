@@ -32,11 +32,14 @@ export async function connectApp({ port = 9222 } = {}) {
 
   /* NW.js also exposes its background page; prefer the app window. */
   const page =
-    pages.find((p) => p.url().includes("nwjs_app.html") || p.url().includes("electron_app.html")) ?? pages[0];
+    pages.find((p) => p.url().includes("nwjs_app.html") || p.url().includes("electron_app.html")) ??
+    pages[0];
 
   if (!page) {
     await browser.close();
-    throw new Error(`No pages found on CDP port ${port}. Is \`pnpm nwjs\` or \`pnpm electron\` running?`);
+    throw new Error(
+      `No pages found on CDP port ${port}. Is \`pnpm nwjs\` or \`pnpm electron\` running?`
+    );
   }
 
   return { browser, page };

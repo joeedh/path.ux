@@ -123,7 +123,7 @@ function getPackFlag(elem: Element): { packflag: number; disabled: number } {
   boolflag("noLabel", PackFlags.NO_PROP_LABELS);
 
   if (elem.hasAttribute("labelPosition")) {
-    let pos = elem.getAttribute("labelPosition");
+    const pos = elem.getAttribute("labelPosition");
     if (pos === "top") {
       disabledFlags |= PackFlags.LABEL_ON_RIGHT | PackFlags.LABEL_ON_LEFT;
       packflag |= PackFlags.LABEL_ON_TOP;
@@ -378,7 +378,6 @@ class Handler {
                   style[k2] = val as string;
                 }
               } else {
-                // eslint-disable-next-line @typescript-eslint/no-for-in-array
                 for (const k2 in cssRule.style) {
                   const desc = Object.getOwnPropertyDescriptor(cssRule.style, k2);
                   if (!desc?.writable) continue;
@@ -812,7 +811,7 @@ class Handler {
       elem2 = this.container.colorPicker(path ?? undefined, {
         packflag,
         themeOverride: elem.hasAttribute("theme-class")
-          ? elem.getAttribute("theme-class") ?? undefined
+          ? (elem.getAttribute("theme-class") ?? undefined)
           : undefined,
       }) as unknown as Element;
     } else if (key === "prop") {

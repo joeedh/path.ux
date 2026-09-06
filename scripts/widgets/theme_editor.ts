@@ -268,8 +268,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   addEventListener(
     type: string,
     listener:
-      | ((this: ThemeEditor<CTX>, ev: ThemeChangeEvent) => void)
-      | EventListenerOrEventListenerObject,
+      ((this: ThemeEditor<CTX>, ev: ThemeChangeEvent) => void) | EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions
   ): void {
     super.addEventListener(type, listener as EventListenerOrEventListenerObject, options);
@@ -404,8 +403,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     // Backwards-compat shim for the deprecated on_change callback, whose declared
     // type on UIBase takes a single argument.
     const on_change = this.on_change as
-      | ((category: string, key: string, record?: ThemeRecord) => void)
-      | null;
+      ((category: string, key: string, record?: ThemeRecord) => void) | null;
 
     if (on_change) {
       on_change(category, key, record);
@@ -1146,7 +1144,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     };
 
     // create widgets
-    for (let propKey in props) {
+    for (const propKey in props) {
       const prop = props[propKey];
       const row = container.row();
       const widget = row.prop("obj." + propKey);

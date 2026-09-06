@@ -2,7 +2,7 @@
 description: Refactor a JavaScript file to TypeScript following path.ux conventions
 ---
 
-This workflow defines the steps to systematically refactor typical JS files in this workspace into TS files. 
+This workflow defines the steps to systematically refactor typical JS files in this workspace into TS files.
 
 0. **Read CLAUDE.md**
 1. **Analyze the target file**
@@ -15,7 +15,7 @@ This workflow defines the steps to systematically refactor typical JS files in t
    - **Type Inference**: **Do not** add type annotations if types can be inferred automatically by the TypeScript compiler.
    - **Strict Types**: Absolutely **no `any`** usage. The only exception is directly at `JSON.parse` boundaries, which must be immediately narrowed.
    - **Vector Classes**: Remember vectors do not have a simple string-to-number index signature beyond `LEN`. Use `IndexRange(length)` for iteration (e.g. `for (const i of IndexRange(3))`) rather than a standard for-loop, or cast the index using `as Number3` (or similar).
-   - **UIBase Components**: Any class inheriting from `UIBase` MUST take a `CTX` generic parameter that extends `IContextBase` and defaults to it: `class MyWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX>`. 
+   - **UIBase Components**: Any class inheriting from `UIBase` MUST take a `CTX` generic parameter that extends `IContextBase` and defaults to it: `class MyWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX>`.
    - **Widget Values**: If a widget implements `getValue`, you must provide the type to the second generic slot of `UIBase`. Example: `extends UIBase<CTX, number>`.
    - **ToolOp Definitions**: Strongly typed Property System. Any `ToolOp` you translate must have its outputs and inputs correspondingly typed in the class generics (e.g. `class Tool extends ToolOp<{input1: FloatProperty}, {output1: StringProperty}>`). The generic interfaces must perfectly match the literal properties returned in the static `tooldef()` method. See `CLAUDE.md` for proper inheritance examples and nested intersections.
 

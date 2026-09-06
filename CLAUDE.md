@@ -10,7 +10,7 @@ HTML5 UI library with Blender RNA-style data binding.
   and the pressure tested results folded back into the plan
 - when executing plans the status of each stage/task/phase/wave/etc
   should be written into the plan itself and marked as completed when done.
-  
+
 ## ToDos
 
 - A todos list lives in `todos.md` and is committed to the repo. Check items off
@@ -45,12 +45,16 @@ This project uses pnpm as its package manager. Use `pnpm` (and `pnpm run …`)
 rather than `npm`.
 
 ```bash
-pnpm run build          # Rollup bundle → dist/pathux.js
-pnpm run typecheck      # two passes: the library, then example/
-pnpm run test           # vitest
-pnpm run format         # prettier --write
-pnpm run format:check   # prettier --check
-pnpm run lint:prose     # commentlint prose style linter
+pnpm run build             # Rollup bundle → dist/pathux.js
+pnpm run typecheck         # two passes: the library, then example/
+pnpm run test              # vitest
+pnpm run format            # prettier --write
+pnpm run format:check      # prettier --check
+pnpm run lint:eslint       # pnpm exec @pathtx/eslint-dispatcher --fix
+pnpm run lint:eslint:check # pnpm exec @pathtx/eslint-dispatcher
+pnpm run lint:prose        # commentlint prose style linter
+pnpm run lint              # pnpm run lint:eslint && pnpm run lint:prose
+pnpm run lint:check        # pnpm run lint:eslint:check && pnpm run lint:prose
 ```
 
 Use `tsgo` to typecheck instead of `tsc`, e.g.
@@ -108,33 +112,33 @@ This is to prevent mixing of incompatible vectors.
 
 This can create problems with iteration, for example:
 
-  ```ts
-  let v = new Vector3()
-  for (let i=0; i<3; i++) {
-    // will not work
-    v[i] = i
-    // will work
-    v[i] = i as Number3
-  }
-  
-  //alternative with IndexRange:
-  for (const i of IndexRange(3)) {
-    v[i] = i
-  }
-  ```
+```ts
+let v = new Vector3();
+for (let i = 0; i < 3; i++) {
+  // will not work
+  v[i] = i;
+  // will work
+  v[i] = i as Number3;
+}
+
+//alternative with IndexRange:
+for (const i of IndexRange(3)) {
+  v[i] = i;
+}
+```
 
 ## Project Structure
 
- `scripts/` — main source (TypeScript, converting from JS)
- `scripts/path-controller/` — git submodule (data binding, tool system, math)
- `scripts/core/` — UIBase, Container, theme, animation
- `scripts/widgets/` — UI widget classes (extend UIBase)
- `scripts/screen/` — FrameManager, ScreenArea, area management
- `scripts/platforms/` — platform abstraction (web, electron)
- `scripts/simple/` — simple app framework
- `documentation/` — documentation source (markdown)
- `dist/` — built output
- `generated/` — auto-generated catalogs: data paths (`pnpm run gen:paths`) and theme keys (`pnpm run gen:themes`)
+`scripts/` — main source (TypeScript, converting from JS)
+`scripts/path-controller/` — git submodule (data binding, tool system, math)
+`scripts/core/` — UIBase, Container, theme, animation
+`scripts/widgets/` — UI widget classes (extend UIBase)
+`scripts/screen/` — FrameManager, ScreenArea, area management
+`scripts/platforms/` — platform abstraction (web, electron)
+`scripts/simple/` — simple app framework
+`documentation/` — documentation source (markdown)
+`dist/` — built output
+`generated/` — auto-generated catalogs: data paths (`pnpm run gen:paths`) and theme keys (`pnpm run gen:themes`)
 
 ## Data API paths
 
@@ -144,7 +148,7 @@ controller overview: how model classes are wrapped (`DataAPI` / `DataStruct` /
 name (`getStructByName`).
 
 See [documentation/container.md](documentation/container.md) for how `Container` binds those
-paths.  Note: many pathux widgets will modify the data model through an undoable
+paths. Note: many pathux widgets will modify the data model through an undoable
 DataPathSetOp unless you explicitly disable this.
 
 Valid `path` strings for `container.prop("...")`, related widget methods, and
@@ -200,7 +204,7 @@ old per-widget `updateDataPath()` protocol is removed. The runtime lives in
 - `updateFromPath(value, info)` — the reaction, called only when the value
   actually changed. `info = { resolved, path, prop, source }`;
   `info.resolved === false` replaces the old `val === undefined →
-  internalDisabled` check. The watcher owns read + snapshot + prop-aware
+internalDisabled` check. The watcher owns read + snapshot + prop-aware
   compare (including in-place vector mutation), so do **not** re-diff, but a
   widget-side no-op guard is fine.
 - `refreshPathWatches()` re-delivers current values past the diff — call it
@@ -286,7 +290,7 @@ catalog above.
 - **Strict check**: the default `pnpm run typecheck` keeps `getDefault` loose
   (empty seam) so the library builds standalone; existing `as number`/`as CSSFont`
   casts stay load-bearing there. Run `pnpm run gen:themes && pnpm run
-  typecheck:themes` (includes the catalog) to type-check `getDefault` against the
+typecheck:themes` (includes the catalog) to type-check `getDefault` against the
   per-class keys for migrated widgets.
 - **CI**: run `pnpm run gen:themes --strict` (fails on a `define().theme` key
   absent from `theme.ts` — i.e. a typo) followed by `pnpm run typecheck:themes`.
@@ -298,17 +302,17 @@ catalog above.
 
 ## Conventions
 
- Do not add type annotations if types can be inferred from the assignment.
- Annotate function parameters, return types where the type is non-obvious, and
- variables whose inferred type would be too wide (`unknown` out of `JSON.parse`).
- Leave `const x = 5`, `let s = "hello"` and the like to inference.
- The same rule applies to agents delegated conversion work — tell them.
- TypeScript: `strictNullChecks: true` in all tsconfigs
- No `any`: except at `JSON.parse` boundaries, immediately narrowed
- Formatting: prettier (see `.prettierrc`)
- Tests: vitest for unit tests, Playwright for DOM widget tests
- Modules: ES modules (`"type": "module"` in package.json)
- Entry point: `scripts/pathux.ts` → re-exported from root `pathux.js`
+Do not add type annotations if types can be inferred from the assignment.
+Annotate function parameters, return types where the type is non-obvious, and
+variables whose inferred type would be too wide (`unknown` out of `JSON.parse`).
+Leave `const x = 5`, `let s = "hello"` and the like to inference.
+The same rule applies to agents delegated conversion work — tell them.
+TypeScript: `strictNullChecks: true` in all tsconfigs
+No `any`: except at `JSON.parse` boundaries, immediately narrowed
+Formatting: prettier (see `.prettierrc`)
+Tests: vitest for unit tests, Playwright for DOM widget tests
+Modules: ES modules (`"type": "module"` in package.json)
+Entry point: `scripts/pathux.ts` → re-exported from root `pathux.js`
 
 ### The `pathux` barrel
 
@@ -367,12 +371,11 @@ leaving the old callback in place and `@deprecated`.
 ## Context
 
 Children of `UIBase` should all take a `CTX` generic parameter that extends
-`IContextBase` and defaults to `IContextBase`.  They should pass this parameter
+`IContextBase` and defaults to `IContextBase`. They should pass this parameter
 up the inheritance chain, e.g.:
 
 ```ts
-class MyWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {
-}
+class MyWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX> {}
 ```
 
 ## Widget values
@@ -381,16 +384,19 @@ If widgets implement `getValue` with a specific type they should pass that to UI
 
 ```ts
 class MyNumberWidget<CTX extends IContextBase = IContextBase> extends UIBase<CTX, number> {
-  value = 1.0
-  getValue(): number {return this.value}
-  setValue(value: number) {return this.value}
+  value = 1.0;
+  getValue(): number {
+    return this.value;
+  }
+  setValue(value: number) {
+    return this.value;
+  }
 }
-
 ```
 
 ## ToolOp
 
-ToolOp has a strongly typed property system.  Properties are created
+ToolOp has a strongly typed property system. Properties are created
 at runtime in the tooldef static method, and their types are declared in parameters
 that are passed up the inheritance chain to ToolOp.
 
@@ -414,9 +420,9 @@ class Tool extends ToolOp<{
       },
       // outputs must match output list in generic parameters
       outputs: {
-        output1: new StringProperty("out1"), 
+        output1: new StringProperty("out1"),
         output2: new BoolProperty(false),
-      } 
+      }
     }
   }
 }
@@ -430,7 +436,7 @@ class Tool1<Inputs extends PropertySlots, Outputs extends PropertySlots> extends
 Inputs & {
   input1: FloatProperty,
   input2: IntProperty
-}, 
+},
 Outputs & {
   output1: StringProperty,
   output2: BoolProperty
@@ -445,9 +451,9 @@ Outputs & {
       },
       // outputs must match output list in generic parameters
       outputs: {
-        output1: new StringProperty("out1"), 
+        output1: new StringProperty("out1"),
         output2: new BoolProperty(false),
-      } 
+      }
     }
   }
 }
@@ -460,7 +466,7 @@ class Tool2 extends Tool1<{
   output3: StringProperty,
   output4: BoolProperty
 }> {
-  exec(ctx){ 
+  exec(ctx){
     const {input1, input2, input3, input4} = this.getInputs()
   }
 
@@ -474,9 +480,9 @@ class Tool2 extends Tool1<{
       },
       // outputs must match output list in generic parameters
       outputs: {
-        output3: new StringProperty("out1"), 
+        output3: new StringProperty("out1"),
         output4: new BoolProperty(false),
-      } 
+      }
     }
   }
 }
@@ -539,5 +545,5 @@ no work is lost when the checkout goes away.
 
 ## Commit Messages
 
-Commit messages should be terse and use bullet points.  The message should lead with
+Commit messages should be terse and use bullet points. The message should lead with
 what the purpose of the commit is and high level information.

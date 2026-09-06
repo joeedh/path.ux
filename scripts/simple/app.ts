@@ -378,10 +378,9 @@ export class AppState {
    *  if you wish to reset the undo stack*/
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
-    const state = new (this.constructor as new (
-      ctxClass: Function,
-      screenClass?: typeof Screen
-    ) => AppState)((this.ctx as Record<string, unknown>)._ctxClass as Function);
+    const state = new (
+      this.constructor as new (ctxClass: Function, screenClass?: typeof Screen) => AppState
+    )((this.ctx as Record<string, unknown>)._ctxClass as Function);
 
     state.api = this.api;
     state.ctx = this.ctx;

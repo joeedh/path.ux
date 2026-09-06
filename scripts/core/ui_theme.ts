@@ -214,14 +214,7 @@ export class BoxBorder extends TypedThemeObject<BoxBorder, typeof BoxRecordProps
 /* `undefined` is a real value here: exportTheme() writes out keys the theme
    editor left blank, and they round-trip back in. */
 export type ThemeItem =
-  | ThemeRecord
-  | BoxBorder
-  | CSSFont
-  | string
-  | number
-  | boolean
-  | ThemeScrollBars
-  | undefined;
+  ThemeRecord | BoxBorder | CSSFont | string | number | boolean | ThemeScrollBars | undefined;
 export interface ThemeRecord {
   [k: string]: ThemeItem;
 }

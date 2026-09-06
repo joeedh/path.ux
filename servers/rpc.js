@@ -1,12 +1,12 @@
-import * as docsys from '../simple_docsys/docsys.js';
+import * as docsys from "../simple_docsys/docsys.js";
 
 let docsysConfig = docsys.readConfig("../simple_docsys/docs.config.js");
 
 export const rpcMethods = {
-  updateDoc : docsysConfig.updateDoc.bind(docsysConfig),
-  newDoc : docsysConfig.newDoc.bind(docsysConfig),
-  hasDoc : docsysConfig.hasDoc.bind(docsysConfig),
-  uploadImage : docsysConfig.uploadImage.bind(docsysConfig)
+  updateDoc  : docsysConfig.updateDoc.bind(docsysConfig),
+  newDoc     : docsysConfig.newDoc.bind(docsysConfig),
+  hasDoc     : docsysConfig.hasDoc.bind(docsysConfig),
+  uploadImage: docsysConfig.uploadImage.bind(docsysConfig),
 };
 
 export function handle(method, args) {
@@ -24,8 +24,8 @@ export function handle(method, args) {
       let buf;
       try {
         buf = JSON.stringify({
-          result : ret
-        })
+          result: ret,
+        });
       } catch (error) {
         console.log(error);
         reject("" + error);
@@ -35,7 +35,7 @@ export function handle(method, args) {
       accept(buf);
     } catch (error) {
       console.log(error);
-      reject(""+error);
+      reject("" + error);
       //reject(error.message);
     }
   });

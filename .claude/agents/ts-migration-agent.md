@@ -9,7 +9,7 @@ when you hit genuinely hard cases.
 
 ## Environment Assumptions
 
-- We use the native preview Go-based typescript compiler, `tsgo`.  Run it through
+- We use the native preview Go-based typescript compiler, `tsgo`. Run it through
   npx, e.g. `npx tsgo --noEmit`.
 - `tsconfig.json` is already configured with strict mode (see below)
 - Existing `.d.ts` type declaration files are present and should be leveraged
@@ -22,19 +22,19 @@ when you hit genuinely hard cases.
 ```json
 {
   "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true,
+    "strict"                    : true,
+    "noImplicitAny"             : true,
+    "strictNullChecks"          : true,
+    "noImplicitReturns"         : true,
+    "noUncheckedIndexedAccess"  : true,
     "exactOptionalPropertyTypes": true,
-    "skipLibCheck": false,
-    "allowJs": false,
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler"
+    "skipLibCheck"              : false,
+    "allowJs"                   : false,
+    "target"                    : "ES2020",
+    "module"                    : "ESNext",
+    "moduleResolution"          : "bundler"
   },
-  "exclude": ["legacy/"]
+  "exclude"        : ["legacy/"]
 }
 ```
 
@@ -51,12 +51,12 @@ Maintain `ts-migration-ledger.json` at the repo root. Create it on first run.
 {
   "summary": {
     "total_files": 0,
-    "done": 0,
+    "done"       : 0,
     "in_progress": 0,
     "not_started": 0
   },
   "type_decisions": {},
-  "files": {}
+  "files"         : {}
 }
 ```
 
@@ -80,6 +80,7 @@ Maintain `ts-migration-ledger.json` at the repo root. Create it on first run.
 ```
 
 ### Status values
+
 - `not_started` — still a `.js` file in `legacy/`
 - `in_progress` — renamed to `.ts`, has remaining errors
 - `done` — zero `tsgo` errors, fully typed
@@ -107,12 +108,12 @@ Consult `type_decisions` before pausing on a new file — the answer may already
 Each file goes through iterative passes. You do not need to fully type a file in one pass.
 Converge across multiple passes. Each pass has a focus:
 
-| Pass | Focus |
-|------|-------|
-| 1 | Rename to `.ts`, add primitive annotations, let `tsgo` report the full error surface |
-| 2 | Type objects, arrays, function signatures. Apply existing `.d.ts` declarations. |
-| 3 | Nullability, narrowing, control flow, union types |
-| 4+ | Strict cleanup — chase remaining `strict` flag errors to zero |
+| Pass | Focus                                                                                |
+| ---- | ------------------------------------------------------------------------------------ |
+| 1    | Rename to `.ts`, add primitive annotations, let `tsgo` report the full error surface |
+| 2    | Type objects, arrays, function signatures. Apply existing `.d.ts` declarations.      |
+| 3    | Nullability, narrowing, control flow, union types                                    |
+| 4+   | Strict cleanup — chase remaining `strict` flag errors to zero                        |
 
 After each pass, run `npx tsgo --noEmit`, parse the output, update the ledger, then decide:
 continue to the next pass on this file, move to another file, or pause for human input.
@@ -136,15 +137,15 @@ this one, making the migration harder overall.
 
 Pause and request human input when you encounter:
 
-| Pattern | Reason |
-|---------|--------|
-| Polymorphic functions where return type varies by argument shape | Needs overloads or conditional generics |
+| Pattern                                                                     | Reason                                                                  |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Polymorphic functions where return type varies by argument shape            | Needs overloads or conditional generics                                 |
 | Objects built up imperatively across branches (`obj.foo = x` conditionally) | Needs builder type or `Partial<T>` strategy — wrong choice creates pain |
-| Third-party callback signatures not covered by `@types` | Cannot safely infer expected shape |
-| `arguments` object or mixed rest params with heterogeneous types | No clean TS mapping without restructuring |
-| Prototype manipulation or mixin patterns | May need class restructuring, not just annotation |
-| Type narrowing logic too dynamic for TS to follow | Needs explicit user-defined type guard |
-| A pattern already seen but where the prior decision doesn't cleanly apply | Check `type_decisions`, ask if unsure |
+| Third-party callback signatures not covered by `@types`                     | Cannot safely infer expected shape                                      |
+| `arguments` object or mixed rest params with heterogeneous types            | No clean TS mapping without restructuring                               |
+| Prototype manipulation or mixin patterns                                    | May need class restructuring, not just annotation                       |
+| Type narrowing logic too dynamic for TS to follow                           | Needs explicit user-defined type guard                                  |
+| A pattern already seen but where the prior decision doesn't cleanly apply   | Check `type_decisions`, ask if unsure                                   |
 
 ---
 
@@ -191,6 +192,7 @@ What I need from you:
 Wait for the human response. Do not continue past this point in the file until unblocked.
 
 After the human edits or responds:
+
 1. Re-read the edited block
 2. Confirm the edit compiles cleanly for that block (mentally or by running `npx tsgo`)
 3. Record the decision in `type_decisions` if it establishes a reusable pattern

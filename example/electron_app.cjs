@@ -1,7 +1,7 @@
 let win;
 
-const {app, BrowserWindow, nativeTheme} = require('electron')
-const {ipcMain, Menu, MenuItem} = require('electron')
+const { app, BrowserWindow, nativeTheme } = require("electron");
+const { ipcMain, Menu, MenuItem } = require("electron");
 
 ipcMain.handle("nativeTheme.setThemeSource", async (event, val) => {
   nativeTheme.themeSource = val;
@@ -19,17 +19,21 @@ ipcMain.handle("nativeTheme", async (event) => {
   }
 
   if (win) {
-    win.webContents.send('nativeTheme', obj);
+    win.webContents.send("nativeTheme", obj);
   }
 });
 
-function makeInvoker(event, callbackKey, getargs = (args) => {
-  args
-}) {
+function makeInvoker(
+  event,
+  callbackKey,
+  getargs = (args) => {
+    args;
+  }
+) {
   return function () {
     let args = getargs(arguments);
-    win.webContents.send('invoke-menu-callback', callbackKey, args);
-  }
+    win.webContents.send("invoke-menu-callback", callbackKey, args);
+  };
 }
 
 function loadMenu(event, menudef) {
@@ -56,21 +60,21 @@ let menus = {};
 let menuBarId = undefined;
 
 // Main
-ipcMain.handle('popup-menu', async (event, menu, x, y, callback) => {
+ipcMain.handle("popup-menu", async (event, menu, x, y, callback) => {
   let id = menu._ipcId;
 
   callback = makeInvoker(event, callback);
   menu = loadMenu(event, menu);
 
   menus[id] = menu;
-  menu.popup({x, y, callback});
+  menu.popup({ x, y, callback });
 });
 
-ipcMain.handle('close-menu', async (event, menuid) => {
+ipcMain.handle("close-menu", async (event, menuid) => {
   menus[menuid].closePopup(win);
 });
 
-ipcMain.handle('set-menu-bar', async (event, menu) => {
+ipcMain.handle("set-menu-bar", async (event, menu) => {
   let id = menu._ipcId;
 
   menu = loadMenu(event, menu);
@@ -85,32 +89,42 @@ ipcMain.handle('set-menu-bar', async (event, menu) => {
   Menu.setApplicationMenu(menu);
 });
 
-ipcMain.handle('show-open-dialog', async (event, args, then, catchf) => {
-  let dialog = require('electron').dialog;
+ipcMain.handle("show-open-dialog", async (event, args, then, catchf) => {
+  let dialog = require("electron").dialog;
 
-  dialog.showOpenDialog(args).then(makeInvoker(event, then, (args) => {
-    let e = {
-      filePaths: args[0].filePaths,
-      cancelled: args[0].cancelled,
-      canceled : args[0].canceled
-    };
+  dialog
+    .showOpenDialog(args)
+    .then(
+      makeInvoker(event, then, (args) => {
+        let e = {
+          filePaths: args[0].filePaths,
+          cancelled: args[0].cancelled,
+          canceled : args[0].canceled,
+        };
 
-    return [e];
-  })).catch(makeInvoker(event, catchf));
+        return [e];
+      })
+    )
+    .catch(makeInvoker(event, catchf));
 });
 
-ipcMain.handle('show-save-dialog', async (event, args, then, catchf) => {
-  let dialog = require('electron').dialog;
+ipcMain.handle("show-save-dialog", async (event, args, then, catchf) => {
+  let dialog = require("electron").dialog;
 
-  dialog.showSaveDialog(args).then(makeInvoker(event, then, (args) => {
-    let e = {
-      filePath : args[0].filePath,
-      cancelled: args[0].cancelled,
-      canceled : args[0].canceled
-    };
+  dialog
+    .showSaveDialog(args)
+    .then(
+      makeInvoker(event, then, (args) => {
+        let e = {
+          filePath : args[0].filePath,
+          cancelled: args[0].cancelled,
+          canceled : args[0].canceled,
+        };
 
-    return [e];
-  })).catch(makeInvoker(event, catchf));
+        return [e];
+      })
+    )
+    .catch(makeInvoker(event, catchf));
 });
 
 function createWindow() {
@@ -119,20 +133,20 @@ function createWindow() {
     width         : 1024,
     height        : 768,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration            : true,
       /* Needed for nodeIntegration. */
       contextIsolation           : false,
       sandbox                    : false,
       enableRemoteModule         : true,
       experimentalFeatures       : true,
-      allowRunningInsecureContent: true
-    }
-  })
+      allowRunningInsecureContent: true,
+    },
+  });
 
   // and load the index.html of the app.
-  win.loadFile('electron_app.html');
+  win.loadFile("electron_app.html");
 
   win.webContents.openDevTools();
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);

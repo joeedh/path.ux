@@ -2,22 +2,22 @@ const PORT = 5002;
 const INDEX = "index.html";
 const SERVER_ROOT = ".";
 
-const http2 = require('http2');
-const fs = require('fs');
-const pathmod = require('path');
+const http2 = require("http2");
+const fs = require("fs");
+const pathmod = require("path");
 
-const rpc = require('./rpc.js');
+const rpc = require("./rpc.js");
 
 let colormap = {
-  black   : 30,
-  red     : 31,
-  green   : 32,
-  yellow  : 33,
-  blue    : 34,
-  magenta : 35,
-  cyan    : 36,
-  white   : 37,
-  reset   : 0
+  black  : 30,
+  red    : 31,
+  green  : 32,
+  yellow : 33,
+  blue   : 34,
+  magenta: 35,
+  cyan   : 36,
+  white  : 37,
+  reset  : 0,
 };
 
 function termColor(s, color = colormap.reset) {
@@ -28,17 +28,16 @@ function termColor(s, color = colormap.reset) {
   return `\u001b[${color}m${s}\u001b[0m`;
 }
 
-
 function walkDir(path, cb) {
   while (path.endsWith("/")) {
-    path = path.slice(0, path.length-1).trim();
+    path = path.slice(0, path.length - 1).trim();
   }
   let dir = fs.opendirSync(path);
 
   let files = [];
   let dirs = [];
 
-  for (let entry=dir.readSync(); entry; entry=dir.readSync()) {
+  for (let entry = dir.readSync(); entry; entry = dir.readSync()) {
     if (entry.isDirectory()) {
       dirs.push(entry.name);
     } else {
@@ -75,23 +74,23 @@ if (fs.existsSync(scriptFilesCache)) {
 }
 
 const server = http2.createSecureServer({
-  key: fs.readFileSync('localhost-privkey.pem'),
-  cert: fs.readFileSync('localhost-cert.pem')
+  key : fs.readFileSync("localhost-privkey.pem"),
+  cert: fs.readFileSync("localhost-cert.pem"),
 });
-server.on('error', (err) => console.error(err));
+server.on("error", (err) => console.error(err));
 
 let mimemap = {
-  ".js" : "application/javascript",
-  ".json" : "application/json",
-  ".html" : "text/html",
+  ".js"  : "application/javascript",
+  ".json": "application/json",
+  ".html": "text/html",
   ".svg" : "image/svg",
   ".png" : "image/png",
   ".jpg" : "image/jpeg",
-  ".jpeg" : "image/jpeg",
+  ".jpeg": "image/jpeg",
   ".txt" : "text/plain",
   ".css" : "text/css",
-  ".glsl" : "text/glsl",
-  ".xml"  : "text/xml"
+  ".glsl": "text/glsl",
+  ".xml" : "text/xml",
 };
 
 let textmap = new Set([
@@ -101,7 +100,7 @@ let textmap = new Set([
   "text/plain",
   "text/css",
   "text/glsl",
-  "text/xml"
+  "text/xml",
 ]);
 
 for (let k in mimemap) {
@@ -109,8 +108,8 @@ for (let k in mimemap) {
   re = `.+${re}$`;
 
   mimemap[k] = {
-    re   : new RegExp(re),
-    type : mimemap[k]
+    re  : new RegExp(re),
+    type: mimemap[k],
   };
 }
 
@@ -127,11 +126,11 @@ function getMime(path) {
   return "application/x-octet-stream";
 }
 
-server.on('stream', (stream, headers) => {
+server.on("stream", (stream, headers) => {
   function sendError(code, msg) {
     stream.respond({
-      'content-type': 'text/html',
-      ':status': code
+      "content-type": "text/html",
+      ":status"     : code,
     });
     stream.end(`<h1>Error ${code}</h1>${msg}`);
   }
@@ -146,7 +145,8 @@ server.on('stream', (stream, headers) => {
 
   let isIndex = path === INDEX;
 
-  if (!isIndex && (path.endsWith(".js"))) {//} || path.endsWith(".bin"))) {
+  if (!isIndex && path.endsWith(".js")) {
+    //} || path.endsWith(".bin"))) {
     let path2 = path;
     while (path2.startsWith("/")) {
       path2 = path2.slice(1, path2.length).trim();
@@ -187,31 +187,33 @@ server.on('stream', (stream, headers) => {
       }
 
       //console.log(json);
-      rpc.handle(method, json).then((result) => {
-        stream.respond({
-          'content-type': 'application/json',
-          ':status': 200
+      rpc
+        .handle(method, json)
+        .then((result) => {
+          stream.respond({
+            "content-type": "application/json",
+            ":status"     : 200,
+          });
+          stream.end(result);
+        })
+        .catch((error) => {
+          console.log(error);
+          sendError(501, "" + error);
         });
-        stream.end(result);
-      }).catch((error) => {
-        console.log(error);
-        sendError(501, "" + error);
-      })
-    }
-
+    };
 
     if (headers[":method"].toLowerCase() === "get") {
       path = path.split("?");
       api_finish(path[0], path[1]);
     } else {
-      stream.setEncoding("utf8")
+      stream.setEncoding("utf8");
       let data = "";
-      stream.on('data', (chunk) => {
+      stream.on("data", (chunk) => {
         data += chunk;
         //console.log("got data", chunk);
       });
 
-      stream.on('end', () => {
+      stream.on("end", () => {
         console.log("end");
         api_finish(path, data.trim());
       });
@@ -232,7 +234,7 @@ server.on('stream', (stream, headers) => {
   let encoding = textmap.has(mime) ? "utf8" : undefined;
   let buf = fs.readFileSync(path, encoding);
 
-  stream.on('error', (e) => {
+  stream.on("error", (e) => {
     console.log(e);
   });
 
@@ -281,52 +283,51 @@ server.on('stream', (stream, headers) => {
         if (!fs.existsSync(f)) {
           console.log("EVIL!", f);
 
-          pushStream.respond({'content-type': "text/html"});
-          pushStream.end("<html><head><title>404</title></head><body>404"+f+"<body></html>");
+          pushStream.respond({ "content-type": "text/html" });
+          pushStream.end("<html><head><title>404</title></head><body>404" + f + "<body></html>");
           return;
         }
 
-        pushStream.respond({'content-type': getMime(f)});
+        pushStream.respond({ "content-type": getMime(f) });
         pushStream.end(fs.readFileSync(f, encoding));
 
         //setTimeout(() => {
-          f = undefined;
+        f = undefined;
 
-          for (let f2 of scriptfiles) {
-            if (!visit.has(f2)) {
-              visit.add(f2);
-              f = f2;
-              break;
-            }
+        for (let f2 of scriptfiles) {
+          if (!visit.has(f2)) {
+            visit.add(f2);
+            f = f2;
+            break;
           }
+        }
 
-          if (!f) {
-            return;
-          }
+        if (!f) {
+          return;
+        }
 
-          //console.log("::", f)
-          try {
-            stream.pushStream({':path': "/" + f}, pushcb);
-          } catch (error) {
-            console.log("push stream failed", f);
-          }
+        //console.log("::", f)
+        try {
+          stream.pushStream({ ":path": "/" + f }, pushcb);
+        } catch (error) {
+          console.log("push stream failed", f);
+        }
         //}, 0.01);
 
         //console.log(headers);
       };
 
-      stream.pushStream({':path': "/" + f}, pushcb);
+      stream.pushStream({ ":path": "/" + f }, pushcb);
     });
   }
 
   // stream is a Duplex
   stream.respond({
-    'content-type': mime,
-    ':status': 200
+    "content-type": mime,
+    ":status"     : 200,
   });
   stream.end(buf);
 });
 
 console.log("Listening on port " + PORT);
 server.listen(PORT);
-

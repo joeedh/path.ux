@@ -11,6 +11,7 @@ A fresh-context agent re-read the port hunting for suspicious casts/asserts. No 
 `@ts-ignore`, or `@ts-nocheck` exist in `example/*.ts` source. Findings actioned:
 
 **Fixed:**
+
 - **`treeview()` library typing gap** (was `as TreeView`): fixed `scripts/core/ui.ts` `treeview()`
   to return `TreeView<CTX>` (added `import type`), removing the `// XXX property type me` TODO and
   the example-side cast. Main lib stays at 0 errors.
@@ -23,6 +24,7 @@ A fresh-context agent re-read the port hunting for suspicious casts/asserts. No 
 - **`_fileUndo!`** in toolop.ts undo: guarded with `if (this._fileUndo)`.
 
 **Left as legitimate (with rationale):**
+
 - Dead `init()` tab block (properties.ts) and dead `oldSave` (docbrowser.ts) are PRE-EXISTING
   intentionally-disabled code (confirmed via `git show HEAD:...js`: the `return;` and `oldSave`
   name were in the original JS). They typecheck honestly; deleting is out of port scope.

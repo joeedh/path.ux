@@ -42,8 +42,8 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
   private view: NodeGraphView<CTX>;
   private _origin: DragOrigin<CTX> | undefined = undefined;
   private _detach:
-    | { srcNode: GraphId; srcSocket: string; dstNode: GraphId; dstSocket: string }
-    | undefined = undefined;
+    { srcNode: GraphId; srcSocket: string; dstNode: GraphId; dstSocket: string } | undefined =
+    undefined;
   private _overlay: LinkCanvas<CTX> | undefined = undefined;
   private _dimmed: HTMLElement[] = [];
   private _highlight?: TerminalDot<CTX>;

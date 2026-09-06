@@ -1,16 +1,15 @@
-
-
 <!-- toc -->
 
 - [Containers and Property Binding](#containers-and-property-binding)
-  * [`prop()` — build the widget the property asks for](#prop--build-the-widget-the-property-asks-for)
-    + [Property flags that steer `prop()`](#property-flags-that-steer-prop)
-    + [Pack flags](#pack-flags)
-  * [Sliders](#sliders)
-  * [Other path-taking methods](#other-path-taking-methods)
-  * [Path prefixes](#path-prefixes)
-  * [Mass set](#mass-set)
-  * [Undo](#undo)
+  - [`prop()` — build the widget the property asks for](#prop--build-the-widget-the-property-asks-for)
+    - [Property flags that steer `prop()`](#property-flags-that-steer-prop)
+    - [Pack flags](#pack-flags)
+  - [Sliders](#sliders)
+  - [Other path-taking methods](#other-path-taking-methods)
+  - [Path prefixes](#path-prefixes)
+  - [Mass set](#mass-set)
+  - [Undo](#undo)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -35,21 +34,21 @@ covered in [controller.md](controller.md). The property types themselves are cov
 `ToolProperty` at the end of it, and creates whichever widget suits that property's type.
 The caller does not choose the widget:
 
-| Property type                   | Widget built                                                        |
-| ------------------------------- | ------------------------------------------------------------------- |
-| `REPORT`                        | `pathlabel` (read-only text)                                        |
-| `STRING`                        | textbox in a labeled strip; `textarea` when `multiLine`             |
-| `STRING` with `READ_ONLY`       | `pathlabel`                                                         |
-| `INT`, `FLOAT`                  | `slider` (or `simpleslider`, see below)                             |
-| `BOOL`                          | `check`                                                             |
-| `ENUM`                          | `listenum` dropdown, or a `checkenum` strip when icons are in play  |
-| `ENUM` with a subkey in the path | a single `check` for that one value                                 |
-| `FLAG`                          | a strip of checkboxes, one per flag value                           |
-| `FLAG` with a subkey in the path | a single `check` for that one bit                                   |
-| `VEC2`/`VEC3`/`VEC4`            | `vector-panel-x` (one slider per component)                         |
-| a vector with `COLOR` subtype   | `colorbutton`                                                       |
-| a vector with a subkey          | a single slider for that component                                  |
-| `CURVE`                         | `curve1d` curve widget                                              |
+| Property type                    | Widget built                                                       |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `REPORT`                         | `pathlabel` (read-only text)                                       |
+| `STRING`                         | textbox in a labeled strip; `textarea` when `multiLine`            |
+| `STRING` with `READ_ONLY`        | `pathlabel`                                                        |
+| `INT`, `FLOAT`                   | `slider` (or `simpleslider`, see below)                            |
+| `BOOL`                           | `check`                                                            |
+| `ENUM`                           | `listenum` dropdown, or a `checkenum` strip when icons are in play |
+| `ENUM` with a subkey in the path | a single `check` for that one value                                |
+| `FLAG`                           | a strip of checkboxes, one per flag value                          |
+| `FLAG` with a subkey in the path | a single `check` for that one bit                                  |
+| `VEC2`/`VEC3`/`VEC4`             | `vector-panel-x` (one slider per component)                        |
+| a vector with `COLOR` subtype    | `colorbutton`                                                      |
+| a vector with a subkey           | a single slider for that component                                 |
+| `CURVE`                          | `curve1d` curve widget                                             |
 
 An unhandled property type throws `DataPathError("Unsupported property: …")`, and an
 unresolvable path throws `DataPathError("Unknown property at path …")` carrying
@@ -59,10 +58,10 @@ Because the property carries the metadata, this is usually all a panel needs:
 
 ```js
 const panel = container.panel("Brush");
-panel.prop("scene.tool.brush.radius");   // float → slider, with the property's range/step
-panel.prop("scene.tool.brush.color");    // color4 → color button
-panel.prop("scene.tool.brush.mode");     // enum → dropdown, with the property's icons
-panel.prop("scene.tool.brush.flags");    // flag → checkbox strip
+panel.prop("scene.tool.brush.radius"); // float → slider, with the property's range/step
+panel.prop("scene.tool.brush.color"); // color4 → color button
+panel.prop("scene.tool.brush.mode"); // enum → dropdown, with the property's icons
+panel.prop("scene.tool.brush.flags"); // flag → checkbox strip
 ```
 
 ### Property flags that steer `prop()`
@@ -159,14 +158,14 @@ is preferred:
 
 ```js
 container.slider("scene.tool.brush.radius", {
-  name: "Radius",
-  min: 0,
-  max: 100,
-  step: 0.5,
-  isInt: false,
+  name         : "Radius",
+  min          : 0,
+  max          : 100,
+  step         : 0.5,
+  isInt        : false,
   decimalPlaces: 2,
-  packflag: PackFlags.NO_NUMSLIDER_TEXTBOX,
-  callback: (slider) => console.log(slider.value),
+  packflag     : PackFlags.NO_NUMSLIDER_TEXTBOX,
+  callback     : (slider) => console.log(slider.value),
 });
 ```
 
@@ -205,7 +204,7 @@ name, tooltip and value type:
   containers; they carry `dataPrefix`, `massSetPrefix` and `inherit_packflag` down to
   whatever is built inside them.
 
-`tool(toolpath, …)` and `menu()` bind a *tool* path rather than a data path — see
+`tool(toolpath, …)` and `menu()` bind a _tool_ path rather than a data path — see
 [toolsystem.md](toolsystem.md) and [menus.md](menus.md).
 
 ## Path prefixes
@@ -215,7 +214,7 @@ be written against one object and re-pointed at another:
 
 ```js
 panel.dataPrefix = "scene.objects.active";
-panel.prop("location");   // resolves "scene.objects.active.location"
+panel.prop("location"); // resolves "scene.objects.active.location"
 panel.prop("opacity");
 ```
 

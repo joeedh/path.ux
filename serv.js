@@ -1,5 +1,3 @@
-process.chdir("./servers")
+process.chdir("./servers");
 
-import('./servers/serv.js');
-
-
+import("./servers/serv.js");

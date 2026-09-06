@@ -284,8 +284,7 @@ export function colorPickerImpl<CTX extends IContextBase, SELF extends string>(
   self: Container<CTX, SELF, string>,
   inpath?: string,
   packflag_or_args:
-    | number
-    | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
+    number | { packflag?: number; massSetPath?: string; themeOverride?: string } = 0,
   mass_set_path?: string,
   themeOverride?: string
 ) {
@@ -354,8 +353,7 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
   }
 
   const ret = UIBase.createElement(isRichText ? "rich-text-editor-x" : "text-area-x") as
-    | RichEditor<CTX>
-    | TextArea<CTX>;
+    RichEditor<CTX> | TextArea<CTX>;
   ret.ctx = self.ctx;
 
   ret.packflag |= packflag;

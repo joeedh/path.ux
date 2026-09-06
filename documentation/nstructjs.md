@@ -1,10 +1,9 @@
-
-
 <!-- toc -->
 
 - [NStructJS](#nstructjs)
-  * [Control How Fields Are Saved](#control-how-fields-are-saved)
-  * [Versioning](#versioning)
+  - [Control How Fields Are Saved](#control-how-fields-are-saved)
+  - [Versioning](#versioning)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -20,7 +19,7 @@ NStructJS arose out of the following shortcomings of JSON:
 - JSON is slow compared to what you can get with a structured binary format
 
 The idea of NStructJS is to attach little scripts to your classes that define that
-class's data and how it is saved.  For example:
+class's data and how it is saved. For example:
 
 ```
 class SomeClass {
@@ -29,7 +28,7 @@ class SomeClass {
     this.data2 = [1, 2, 3];
     this.obj = [some object];
   }
-  
+
   //reader "fills in" fields in a newly created object with loaded data
   loadSTRUCT(reader) {
     reader(this);
@@ -60,5 +59,5 @@ my_module.AnotherClass {
 
 ## Versioning
 
-To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
+To a certain extend nstructjs will gracefully handle version changes. The basic idea is to save a
 copy of your struct scripts with each file, that way each file knows how to load itself.

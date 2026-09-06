@@ -31,12 +31,7 @@ export type MenuTemplateEntry = {
 
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
 export type MenuTemplateItem =
-  | SEP
-  | MenuTemplateTool
-  | MenuTemplateCustom
-  | MenuItemCallback
-  | MenuTemplateEntry
-  | Menu;
+  SEP | MenuTemplateTool | MenuTemplateCustom | MenuItemCallback | MenuTemplateEntry | Menu;
 
 export type MenuTemplate = MenuTemplateItem[];
 

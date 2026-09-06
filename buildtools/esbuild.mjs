@@ -21,8 +21,8 @@ let copyExamplePlugin = {
   name: "copyExamplePlugin",
   setup(build) {
     build.onEnd(() => {
-      console.log('built')
-      fs.mkdirSync("example/dist", {recursive: true});
+      console.log("built");
+      fs.mkdirSync("example/dist", { recursive: true });
 
       for (let name of ["app.js", "app.js.map"]) {
         let src = path.join("dist/example", name);
@@ -51,7 +51,7 @@ const libCtx = await esbuild.context({
 });
 
 const exampleCtx = await esbuild.context({
-  entryPoints: [{in: "example/core/app.ts", out: "example/app"}],
+  entryPoints: [{ in: "example/core/app.ts", out: "example/app" }],
   outdir     : "dist",
   sourcemap  : "linked",
   bundle     : true,

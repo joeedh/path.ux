@@ -3,6 +3,8 @@ package
 .idea
 docs
 .eslintcache
+.eslintcache-d
+.quickbuild
 .claude/worktrees
 
 # Auto-generated datapath catalog (parent repo writes api-paths.json here so the

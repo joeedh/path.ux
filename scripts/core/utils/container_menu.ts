@@ -213,7 +213,7 @@ export function toolImpl<CTX extends IContextBase, SELF extends string>(
     check.description = tooltip;
     ret = check;
   } else {
-    label = label === undefined ? def.uiname ?? def.toolpath! : label;
+    label = label === undefined ? (def.uiname ?? def.toolpath!) : label;
 
     ret = self.button(label, cb);
     ret.description = tooltip;

@@ -38,7 +38,7 @@ if (isNaN(port)) {
 if (!fs.existsSync(path.join(appDir, "dist", "app.js"))) {
   console.log("example/dist/app.js missing; running build...");
   const res = spawnSync(process.execPath, [path.join(root, "buildtools", "esbuild.mjs")], {
-    cwd: root,
+    cwd  : root,
     stdio: "inherit",
   });
   if (res.status !== 0) {
@@ -50,7 +50,11 @@ if (!fs.existsSync(path.join(appDir, "dist", "app.js"))) {
  * to the Electron binary. */
 const electronPath = (await import("electron")).default;
 
-const args = [path.join(appDir, "electron_app.cjs"), `--remote-debugging-port=${port}`, ...extraArgs];
+const args = [
+  path.join(appDir, "electron_app.cjs"),
+  `--remote-debugging-port=${port}`,
+  ...extraArgs,
+];
 
 console.log(`Launching Electron: ${electronPath}`);
 console.log(`  app: ${appDir}`);

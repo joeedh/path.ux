@@ -27,8 +27,11 @@
     "electron": "node buildtools/electron.mjs",
     "cdp": "node buildtools/cdp.mjs",
     "playwright": "npx playwright test",
-    "eslint": "node node_modules/eslint/bin/eslint.js --config eslint.config.js --cache --cache-location .eslintcache",
-    "eslint:clean-cache": "rm .eslintcache",
+    "lint": "pnpm run lint:eslint && pnpm run lint:prose",
+    "lint:check": "pnpm run lint:eslint:check && pnpm run lint:prose",
+    "lint:eslint": "pnpm exec eslint-dispatcher --fix",
+    "lint:eslint:check": "pnpm exec eslint-dispatcher",
+    "lint:eslint:clean-cache": "rm -rf .eslintcache-d .eslintcache",
     "lint:prose": "node node_modules/comment-lint/bin/commentlint.js --concise"
   },
   "directories": {
@@ -37,6 +40,7 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@pathtx/eslint-dispatcher": "^0.0.3",
     "@pathtx/prettier": "3.10.0-dev",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
@@ -51,6 +55,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.4.0",
     "happy-dom": "^20.9.0",
+    "jiti": "^2.7.0",
     "markdown-toc": "^1.2.0",
     "nstructjs": "^0.8.12",
     "nw": "0.112.0-sdk",

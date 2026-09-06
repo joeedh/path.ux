@@ -17,6 +17,7 @@ precedent `buildtools/gen-datapaths.mjs` → `generated/datapaths.ts`.
 ## Phase 0 — Foundations (no behavior change, no churn)
 
 **0.1 Type-token module** — `scripts/core/theme_schema.ts`
+
 - Export `t` tokens: `t.string`, `t.number`, `t.bool`, `t.color` (→ string),
   `t.font` (→ CSSFont), `t.scrollbars` (→ ThemeScrollBars).
 - Each token is a tiny runtime object carrying a phantom type
@@ -27,6 +28,7 @@ precedent `buildtools/gen-datapaths.mjs` → `generated/datapaths.ts`.
   nested schemas), used later by the generator's emitted code and accessor overloads.
 
 **0.2 Extend the define() contract** — `scripts/core/ui_base.ts`
+
 - Add optional `theme?: ThemeSchema` to `UIBaseDefinition` (`ui_base.ts:943`).
 - No code reads it yet. Existing `define()`s remain valid (loose typing preserved).
 
@@ -37,6 +39,7 @@ precedent `buildtools/gen-datapaths.mjs` → `generated/datapaths.ts`.
 ## Phase 1 — Generator: collate + resolve inheritance
 
 **1.1 `buildtools/gen-themes.mjs`** (model on `gen-datapaths.mjs`)
+
 - Bundle + import the widget registry entry so every `UIBase` subclass loads.
 - For each class: walk the **prototype chain**, merge `define().theme`
   child-over-parent → a resolved flat key→token map per class.
@@ -44,6 +47,7 @@ precedent `buildtools/gen-datapaths.mjs` → `generated/datapaths.ts`.
   cross-check declared keys against `DefaultTheme` for `style` + `parentStyle` + `base`.
 
 **1.2 Validation warnings** (build-time value-add)
+
 - key declared by element but absent from theme (typo / missing theme entry);
 - theme key present in `theme.ts` declared by no element (dead entry);
 - token/value mismatch (declared `t.number`, theme has non-`Npx` string);
@@ -51,6 +55,7 @@ precedent `buildtools/gen-datapaths.mjs` → `generated/datapaths.ts`.
   warn steering to canonical.
 
 **1.3 Emit `generated/themes.ts`**
+
 - `interface ResolvedThemeKeys { <ClassName>: { <key>: <tsType>; … flat, inherited … } }`
   — one entry per registered class; inheritance already baked in (flat → no type recursion).
 - `export type KnownThemeKey = keyof ResolvedThemeKeys[keyof ResolvedThemeKeys];`
@@ -70,16 +75,19 @@ alongside the `gen:paths` note.
 ## Phase 2 — Typed accessor surface (strictly additive)
 
 **2.1 Lightweight phantom generic** — `scripts/core/ui_base.ts`
+
 - `class UIBase<CTX … = IContextBase, VALUE = unknown, SELF extends keyof
-  ResolvedThemeKeys = "UIBase">`. `SELF` is a **string literal** (cheap, no cycle).
+ResolvedThemeKeys = "UIBase">`. `SELF` is a **string literal** (cheap, no cycle).
 
 **2.2 Overloads on `getDefault`**
+
 - Typed: `getDefault<K extends keyof ResolvedThemeKeys[SELF]>(key: K, checkForMobile?):
-  ResolvedThemeKeys[SELF][K]`.
+ResolvedThemeKeys[SELF][K]`.
 - Fallback (keep last): `getDefault<T extends DefaultTypes = string>(key: string, …): T`
   — preserves every existing call site and dynamic keys.
 
 **2.3 Companion signatures from the same registry**
+
 - `getSubDefault(key, subkey)` → index into nested sub-record type.
 - `overrideDefault(key, val)` / `overrideClassDefault(style, key, val)` → constrain
   `val` to the key's type (catches wrong-typed overrides — a current silent footgun).
@@ -93,6 +101,7 @@ alongside the `gen:paths` note.
 ## Phase 3 — Migrate widgets (leaves-first, per project convention)
 
 For each widget, smallest/leaf first:
+
 1. Add `theme: { … t-tokens … }` to its `define()` (only keys it adds/overrides;
    parent keys inherited via the generator).
 2. Add the `"ClassName"` literal as `SELF`: `extends UIBase<CTX, void, "Button">`.
@@ -117,16 +126,18 @@ casts like `as number` removed at those call sites; warnings for those classes c
 ---
 
 ## Non-goals / explicitly deferred
+
 - Typing `_themeOverride`/`overrideTheme` runtime trees (stay `string`; the static
   types describe the built-in theme contract only).
 - Converting `theme.ts` into the generated source — `theme.ts` stays the value
-  source; the generator only *validates* against it.
+  source; the generator only _validates_ against it.
 - Removing the `string` fallback overload (kept permanently for dynamic keys).
 
 ## Risks
+
 - **Generator must replicate `getStyleClass`/`parentStyle` resolution faithfully** —
   unit-test the resolver against a few known classes (`button`→`base`, an
   `_override_class` case, a `style:"none"` case).
-- **px-coercion**: declare the *returned* type; generator accepts `Npx` ↔ `t.number`.
+- **px-coercion**: declare the _returned_ type; generator accepts `Npx` ↔ `t.number`.
 - **Per-class `SELF` literal is churn** — mitigated by codemod + the fallback default
   (`"UIBase"`) so unmigrated classes are unaffected; rollout is incremental.

@@ -1,10 +1,9 @@
-
-
 <!-- toc -->
 
 - [Introduction](#introduction)
 - [Architecture](#architecture)
 - [Widgets](#widgets)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -12,7 +11,7 @@
 # Introduction
 
 Path.ux is a small app framework inspired by the architecture of
-Blender, a 3D animation/modeling/visualization app.  
+Blender, a 3D animation/modeling/visualization app.
 
 # Architecture
 

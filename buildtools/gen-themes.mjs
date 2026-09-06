@@ -118,11 +118,11 @@ async function loadRegistry(entryModule) {
       sourcefile: "gen-themes-entry.js",
       loader    : "js",
     },
-    bundle  : true,
-    write   : false,
-    format  : "esm",
-    platform: "node",
-    target  : "es2022",
+    bundle   : true,
+    write    : false,
+    format   : "esm",
+    platform : "node",
+    target   : "es2022",
     // Preserve SOURCE class names: without this esbuild renames collisions
     // (Screen->Screen2, Container->_Container, ...) and the catalog keys would
     // no longer match the class names widgets pass as the SELF type param.
@@ -295,8 +295,7 @@ function resolveClass(cls, ctx) {
   // parentStyle / base). Inherited declarations are validated on the class that
   // declares them, so a subclass isn't blamed for a parent's keys.
   const ownDef = ownDefine(cls);
-  const ownDeclared =
-    ownDef?.theme && typeof ownDef.theme === "object" ? ownDef.theme : {};
+  const ownDeclared = ownDef?.theme && typeof ownDef.theme === "object" ? ownDef.theme : {};
   const known = new Set([
     ...styleKeySet(ctx, "base"),
     ...(parentStyle ? styleKeySet(ctx, parentStyle) : []),

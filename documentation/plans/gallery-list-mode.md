@@ -65,7 +65,6 @@ export interface GalleryRowRenderer {
   /** Releases anything `create` allocated, when the pooled row is discarded. */
   destroy?(box: GalleryRowBox): void;
 }
-
 ```
 
 **Changed during the work:** the plan also offered a bare `bind` function as shorthand, with
@@ -158,15 +157,15 @@ gets a toggle that matches without doing anything.
 
 ## Widgets and files
 
-| File | Change |
-| --- | --- |
-| `gallery_row.ts` (new) | `GalleryRowBox`, `GalleryRowRenderer`, `defaultRowRenderer` |
-| `gallery_mode_button.ts` (new) | `GalleryModeButton` (`gallerymodebutton-x`), canvas glyphs |
-| `asset_thumb.ts` | `mode`, a leading image square in list mode, the box element |
-| `asset_gallery_grid.ts` | mode-aware `measure`, pool teardown on mode change, `rowRenderer` |
-| `asset_gallery.ts` | search row becomes a row, `mode`, `rowRenderer`, `showModeToggle` |
-| `pick_asset_popup.ts` | `PickAssetArgs.mode`, and a sticky last-used mode |
-| `index.ts` | re-export the two new modules |
+| File                           | Change                                                            |
+| ------------------------------ | ----------------------------------------------------------------- |
+| `gallery_row.ts` (new)         | `GalleryRowBox`, `GalleryRowRenderer`, `defaultRowRenderer`       |
+| `gallery_mode_button.ts` (new) | `GalleryModeButton` (`gallerymodebutton-x`), canvas glyphs        |
+| `asset_thumb.ts`               | `mode`, a leading image square in list mode, the box element      |
+| `asset_gallery_grid.ts`        | mode-aware `measure`, pool teardown on mode change, `rowRenderer` |
+| `asset_gallery.ts`             | search row becomes a row, `mode`, `rowRenderer`, `showModeToggle` |
+| `pick_asset_popup.ts`          | `PickAssetArgs.mode`, and a sticky last-used mode                 |
+| `index.ts`                     | re-export the two new modules                                     |
 
 - The cell keeps one canvas painting the whole row — fill, border, focus ring — with the
   image letterboxed into the leading square. The box is a transparent absolutely-positioned
@@ -178,11 +177,11 @@ gets a toggle that matches without doing anything.
 
 ## Theme additions
 
-| Class | Key | Purpose |
-| --- | --- | --- |
-| `assetgallery` | `rowHeight` | list-mode row height in CSS pixels (default 64) |
-| `assetthumb` | `boxPadding` | inset between the thumbnail square and the box (default 6) |
-| `assetthumb` | `rowFont` | face the default renderer writes the name in |
+| Class          | Key          | Purpose                                                    |
+| -------------- | ------------ | ---------------------------------------------------------- |
+| `assetgallery` | `rowHeight`  | list-mode row height in CSS pixels (default 64)            |
+| `assetthumb`   | `boxPadding` | inset between the thumbnail square and the box (default 6) |
+| `assetthumb`   | `rowFont`    | face the default renderer writes the name in               |
 
 No new style class. `GalleryModeButton` reads `iconbutton`.
 

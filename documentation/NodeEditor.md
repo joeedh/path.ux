@@ -16,33 +16,34 @@
 
 - [Quick start](#quick-start)
 - [Defining node types](#defining-node-types)
-  * [Definition merging](#definition-merging)
-  * [Node properties](#node-properties)
+  - [Definition merging](#definition-merging)
+  - [Node properties](#node-properties)
 - [Sockets](#sockets)
-  * [Value resolution](#value-resolution)
-  * [Multi-link inputs and reduce](#multi-link-inputs-and-reduce)
-  * [Coercion](#coercion)
-  * [Writing a socket type](#writing-a-socket-type)
+  - [Value resolution](#value-resolution)
+  - [Multi-link inputs and reduce](#multi-link-inputs-and-reduce)
+  - [Coercion](#coercion)
+  - [Writing a socket type](#writing-a-socket-type)
 - [The graph](#the-graph)
-  * [Links](#links)
-  * [Evaluation order](#evaluation-order)
+  - [Links](#links)
+  - [Evaluation order](#evaluation-order)
 - [Groups](#groups)
-  * [Definitions and instances](#definitions-and-instances)
-  * [The store seams](#the-store-seams)
-  * [Grouping and ungrouping](#grouping-and-ungrouping)
-  * [Exposed UI](#exposed-ui)
+  - [Definitions and instances](#definitions-and-instances)
+  - [The store seams](#the-store-seams)
+  - [Grouping and ungrouping](#grouping-and-ungrouping)
+  - [Exposed UI](#exposed-ui)
 - [The graph DSL](#the-graph-dsl)
 - [The data API](#the-data-api)
 - [ToolOps](#toolops)
 - [The view widget](#the-view-widget)
-  * [Theming](#theming)
-  * [Gestures](#gestures)
-  * [Levels](#levels)
-  * [View state](#view-state)
+  - [Theming](#theming)
+  - [Gestures](#gestures)
+  - [Levels](#levels)
+  - [View state](#view-state)
 - [The delegate seam](#the-delegate-seam)
 - [The editor Area](#the-editor-area)
 - [Registering it in an app](#registering-it-in-an-app)
 - [API reference](#api-reference)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -452,12 +453,12 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 - The struct exposes a `nodes` list keyed by node id, and each node's struct is built from
   its class's `defineAPI` on first use. The resulting datapaths:
 
-| path                                | resolves to                                                               |
-| ------------------------------------ | --------------------------------------------------------------------------- |
-| `nodegraph.nodes[3]`                | the node with id `3` (a string id is quoted: `nodes["v1"]`)               |
+| path                                      | resolves to                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| `nodegraph.nodes[3]`                      | the node with id `3` (a string id is quoted: `nodes["v1"]`)                       |
 | `nodegraph.nodes[3].props['value'].value` | one node property's value; writing on a group-inner node materializes an override |
-| `nodegraph.nodes[3].group`          | a `GroupNode`'s instance subgraph, itself a graph struct — the descent nests |
-| `nodegraph.nodes[3].definition`     | the same node's definition subgraph; throws while the definition is unresolved |
+| `nodegraph.nodes[3].group`                | a `GroupNode`'s instance subgraph, itself a graph struct — the descent nests      |
+| `nodegraph.nodes[3].definition`           | the same node's definition subgraph; throws while the definition is unresolved    |
 
 ## ToolOps
 
@@ -465,21 +466,21 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
   `graphPath` string input (node ids are passed JSON-encoded so numeric and string ids
   share one input):
 
-| toolpath              | effect                                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `graph.add_node`      | add a node of a registered type at a position                                                              |
-| `graph.delete_node`   | remove a node, severing its links                                                                          |
-| `graph.connect`       | link an output to an input                                                                                 |
-| `graph.disconnect`    | remove one link                                                                                            |
-| `graph.move_node`     | set a node's position                                                                                      |
-| `graph.rename_node`   | set a node's label                                                                                         |
-| `graph.replace_node`  | swap a node's type, keeping id, position, label and every link whose sockets still coerce                  |
-| `graph.set_node_prop` | write a node property (build via `SetNodePropOp.create`, since the value input clones the target property) |
-| `graph.duplicate_node` | clone a node at a position; a group's clone keeps its ref, subgraph and overrides                          |
-| `graph.create_group`  | move the nodes named in `nodeIds` into a new definition saved through `storePath`'s `groupSaver` under `ref`; output `nodeId` names the instance |
-| `graph.ungroup`       | replace a group instance with a copy of its contents; output `nodeIds` names them                          |
-| `graph.expose_entry` / `graph.reorder_entry` / `graph.repoint_entry` / `graph.remove_entry` | the exposed list of the definition whose subgraph is at `graphPath` |
-| `graph.add_group_socket` / `graph.remove_group_socket` | the boundary of that definition; removal severs the inner links and undo remakes them |
+| toolpath                                                                                    | effect                                                                                                                                           |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `graph.add_node`                                                                            | add a node of a registered type at a position                                                                                                    |
+| `graph.delete_node`                                                                         | remove a node, severing its links                                                                                                                |
+| `graph.connect`                                                                             | link an output to an input                                                                                                                       |
+| `graph.disconnect`                                                                          | remove one link                                                                                                                                  |
+| `graph.move_node`                                                                           | set a node's position                                                                                                                            |
+| `graph.rename_node`                                                                         | set a node's label                                                                                                                               |
+| `graph.replace_node`                                                                        | swap a node's type, keeping id, position, label and every link whose sockets still coerce                                                        |
+| `graph.set_node_prop`                                                                       | write a node property (build via `SetNodePropOp.create`, since the value input clones the target property)                                       |
+| `graph.duplicate_node`                                                                      | clone a node at a position; a group's clone keeps its ref, subgraph and overrides                                                                |
+| `graph.create_group`                                                                        | move the nodes named in `nodeIds` into a new definition saved through `storePath`'s `groupSaver` under `ref`; output `nodeId` names the instance |
+| `graph.ungroup`                                                                             | replace a group instance with a copy of its contents; output `nodeIds` names them                                                                |
+| `graph.expose_entry` / `graph.reorder_entry` / `graph.repoint_entry` / `graph.remove_entry` | the exposed list of the definition whose subgraph is at `graphPath`                                                                              |
+| `graph.add_group_socket` / `graph.remove_group_socket`                                      | the boundary of that definition; removal severs the inner links and undo remakes them                                                            |
 
 - The structural ops share a `canRun` that consults `structuralEditsRefused()`, so they
   refuse inside a group instance's subgraph. The definition ops refuse on any graph that is
@@ -529,7 +530,7 @@ view.setGraph(myGraph, "nodegraph");
   instead of prop rows (see [Exposed UI](#exposed-ui)).
 - A group instance's frame carries a `GroupAccent` stripe down its left edge and a
   `GroupHeaderBG` header; its header tooltip says how to enter it. Inside a definition the
-  two proxy frames take `ProxyHeaderBG` and end in an *Add input…* / *Add output…* row
+  two proxy frames take `ProxyHeaderBG` and end in an _Add input…_ / _Add output…_ row
   (see [Levels](#levels)).
 - The forwarded rows follow the definition: `syncGraph()` compares each group frame's
   `forwardedSignature` (the definition's identity plus every entry and its state) with the
@@ -657,7 +658,7 @@ view.setGraph(myGraph, "nodegraph");
 - **Entering a group edits its definition.** `enterDefinition(node)` pushes a definition
   level, where structural edits reach every instance; Tab, a double press on a group
   frame's header (two `onMoveClick`s within `DOUBLE_PRESS_MS`), the frame's Edit Group
-  entry and the instance pill's *edit the definition* button all call it. It is refused for
+  entry and the instance pill's _edit the definition_ button all call it. It is refused for
   a node that is no group, is not on screen, or has no resolved definition.
 - `enterInstance(node)` shows one instance's own subgraph, for the values it overrides; the
   delegate refuses structural gestures there with the graph's own refusal sentence. An
@@ -665,8 +666,8 @@ view.setGraph(myGraph, "nodegraph");
   edit button and says the definition is not loaded at that depth.
 - `exitLevel()` and `popTo(depth)` go back up; `enterOrExit()` is Tab's behaviour.
 - **The crumb row.** `Graph ▸ group ▸ group`, each crumb a text button back to that level,
-  the last in `CrumbActiveFont`; after the trail a pill names the level (*definition ·
-  edits reach every instance* or *instance · values only*) in the level's color, and off
+  the last in `CrumbActiveFont`; after the trail a pill names the level (_definition ·
+  edits reach every instance_ or _instance · values only_) in the level's color, and off
   the root the canvas takes a 2 px inset outline in that color. `LEVEL_PILL_TEXT` holds the
   two sentences.
 - **Saving and propagating.** A definition on screen is saved through the root graph's
@@ -772,10 +773,10 @@ interface NodeGraphDelegate {
 - The Group Designer panel follows the view's level. On a definition level it is three
   headed lists — Inputs, Outputs, Exposed — over path.ux containers: an input or output
   row is its name, its socket type in the socket font, and ✕; an exposed row is its label,
-  ↑ ↓ ✕, and a *missing* flag in `ErrorColor` with a *Repoint…* menu where the target is
-  gone. Under each list one control adds: *Add input…* / *Add output…* (a socket type
-  menu, then a name box and Add; a refusal shows beneath the box) and *Expose…* (a menu of
-  the definition's inner nodes, each a submenu of that node's props plus *whole node*).
+  ↑ ↓ ✕, and a _missing_ flag in `ErrorColor` with a _Repoint…_ menu where the target is
+  gone. Under each list one control adds: _Add input…_ / _Add output…_ (a socket type
+  menu, then a name box and Add; a refusal shows beneath the box) and _Expose…_ (a menu of
+  the definition's inner nodes, each a submenu of that node's props plus _whole node_).
   Nothing asks for an id. Every mutation is an edit through the view's delegate, and the
   panel re-renders from the definition path's watch and on `levelchange`. Off a definition
   it shows a hint.
@@ -835,10 +836,10 @@ export class NodeEditorTab extends NodeEditor {
 
   static define(): IAreaDef {
     return {
-      tagname: "nodeeditor-tab-x",
+      tagname : "nodeeditor-tab-x",
       areaname: "node_editor",
-      uiname: "Node Editor",
-      icon: -1,
+      uiname  : "Node Editor",
+      icon    : -1,
     };
   }
 }
@@ -982,19 +983,46 @@ class ExposedEntry {
 type Refusal = { refusal: string };
 function isRefusal(x: unknown): x is Refusal;
 function groupPlan(graph: Graph, nodeIds: GraphId[]): GroupPlan | Refusal;
-function createGroup(graph: Graph, plan: GroupPlan, ref: string): { node: GroupNode; def: GroupDef };
+function createGroup(
+  graph: Graph,
+  plan: GroupPlan,
+  ref: string
+): { node: GroupNode; def: GroupDef };
 function dissolveGroup(graph: Graph, node: GroupNode, def: GroupDef): Dissolved; // createGroup's undo
 function redoGroup(graph: Graph, node: GroupNode, def: GroupDef, dissolved: Dissolved): void;
 function ungroup(graph: Graph, node: GroupNode): Ungrouped | Refusal;
 function regroup(graph: Graph, node: GroupNode, ungrouped: Ungrouped): void; // ungroup's undo
 function cloneNode(node: Node): Node; // JSON round trip with a fresh id
-interface ExposeRequest { kind: "prop" | "nodeUI"; nodeId: GraphId; propKey?: string; label?: string }
-function exposeEntry(def: GroupDef, req: ExposeRequest, at?: number): { entry: ExposedEntry; index: number } | Refusal;
+interface ExposeRequest {
+  kind: "prop" | "nodeUI";
+  nodeId: GraphId;
+  propKey?: string;
+  label?: string;
+}
+function exposeEntry(
+  def: GroupDef,
+  req: ExposeRequest,
+  at?: number
+): { entry: ExposedEntry; index: number } | Refusal;
 function reorderEntry(def: GroupDef, from: number, to: number): void | Refusal;
-function repointEntry(def: GroupDef, index: number, nodeId: GraphId, propKey: NodePropName): void | Refusal;
+function repointEntry(
+  def: GroupDef,
+  index: number,
+  nodeId: GraphId,
+  propKey: NodePropName
+): void | Refusal;
 function removeEntry(def: GroupDef, index: number): ExposedEntry | Refusal;
-function addBoundary(def: GroupDef, dir: SocketDir, key: string, socketType: string): { socket: NodeSocketBase } | Refusal;
-function removeBoundary(def: GroupDef, dir: SocketDir, key: string): { template: NodeSocketBase; links: LinkRecord[] } | Refusal;
+function addBoundary(
+  def: GroupDef,
+  dir: SocketDir,
+  key: string,
+  socketType: string
+): { socket: NodeSocketBase } | Refusal;
+function removeBoundary(
+  def: GroupDef,
+  dir: SocketDir,
+  key: string
+): { template: NodeSocketBase; links: LinkRecord[] } | Refusal;
 
 // Each node entry's props/inputs/outputs are independent { key: value } blocks —
 // no fallback between them, no in:/out: prefix on the keys (see The graph DSL).
@@ -1005,11 +1033,19 @@ interface GraphDSLNode {
   inputs?: Record<string, unknown>;
   outputs?: Record<string, unknown>;
 }
-type GraphDSLLink = [fromNodeId: string | number, outputKey: string, toNodeId: string | number, inputKey: string];
+type GraphDSLLink = [
+  fromNodeId: string | number,
+  outputKey: string,
+  toNodeId: string | number,
+  inputKey: string,
+];
 
 function buildGraphFromDSL(
   input: unknown,
-  registries: { nodeTypes: ReadonlyMap<string, typeof Node>; socketTypes: ReadonlyMap<string, typeof NodeSocketBase> }
+  registries: {
+    nodeTypes: ReadonlyMap<string, typeof Node>;
+    socketTypes: ReadonlyMap<string, typeof NodeSocketBase>;
+  }
 ): { graph: Graph; diagnostics: DSLDiagnostic[] };
 function validateGraphDSL(input: unknown, registries): DSLDiagnostic[];
 function defineGraphAPI(api: DataAPI): DataStruct;
@@ -1052,12 +1088,19 @@ class NodeGraphView<CTX> extends Container<CTX> {
   selectLink(ref: LinkRef, additive: boolean): void;
   selectedLinks(): LinkRef[]; // resolved against the links on screen
   clearSelection(): void; // clears both selections
-  boxSelect(min: readonly [number, number], max: readonly [number, number], additive: boolean): void; // graph-space
+  boxSelect(
+    min: readonly [number, number],
+    max: readonly [number, number],
+    additive: boolean
+  ): void; // graph-space
   getViewState(): NodeGraphViewState; // { pan, zoom, descent }
   setViewState(state: NodeGraphViewState): void;
 }
 
-interface DescentEntry { nodeId: GraphId; into: "instance" | "definition" }
+interface DescentEntry {
+  nodeId: GraphId;
+  into: "instance" | "definition";
+}
 type Level =
   | { kind: "root" }
   | { kind: "definition"; node: GroupNode; ref: string; def: GroupDef }
@@ -1101,12 +1144,36 @@ function addMenuItems(): AddMenuItem[]; // registered types minus the group mach
 function addGroupMenuTemplate(refs: readonly string[], onPick: (ref: string) => void): MenuTemplate;
 
 // The group designer and its pieces, for a host that builds its own panel.
-interface DefinitionEditOpts { ctx: GraphContext; def: GroupDef; graphPath: string; delegate: NodeGraphDelegate; onChanged?: () => void }
-function buildGroupDesigner(root: HTMLElement, opts: DefinitionEditOpts & { errorColor?: string }): void;
-function buildAddSocketRow<CTX>(container: Container<CTX>, dir: SocketDir, opts: DefinitionEditOpts): Container<CTX>;
-function exposeMenuTemplate(ctx, def: GroupDef, onPick: (req: ExposeRequest) => void, kind?: "prop" | "nodeUI"): MenuTemplate;
+interface DefinitionEditOpts {
+  ctx: GraphContext;
+  def: GroupDef;
+  graphPath: string;
+  delegate: NodeGraphDelegate;
+  onChanged?: () => void;
+}
+function buildGroupDesigner(
+  root: HTMLElement,
+  opts: DefinitionEditOpts & { errorColor?: string }
+): void;
+function buildAddSocketRow<CTX>(
+  container: Container<CTX>,
+  dir: SocketDir,
+  opts: DefinitionEditOpts
+): Container<CTX>;
+function exposeMenuTemplate(
+  ctx,
+  def: GroupDef,
+  onPick: (req: ExposeRequest) => void,
+  kind?: "prop" | "nodeUI"
+): MenuTemplate;
 function socketTypeMenuTemplate(onPick: (typeName: string) => void): MenuTemplate;
-function buildForwardedUI(root: HTMLElement, ctx, node: GroupNode, nodePath: string, inherit_packflag: number): void;
+function buildForwardedUI(
+  root: HTMLElement,
+  ctx,
+  node: GroupNode,
+  nodePath: string,
+  inherit_packflag: number
+): void;
 function forwardedSignature(node: GroupNode): string; // what the forwarded rows depend on; "" while unresolved
 
 // Selection ops layered onto whatever context a client already passes; see

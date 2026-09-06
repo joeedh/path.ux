@@ -1,3 +1,3 @@
 {
-  basePath : "./manual"
+  ("./manual");
 }

@@ -159,16 +159,16 @@ function buildBoxCSS(elem: AnyUIBase, subkey?: string, apply?: boolean): string 
   // note: we support using either outline or border css properties,
   // this is controlled by BoxBorder.isOutline
 
-  let borderRec = themeFetch("border", false) as BoxBorder | undefined | string;
+  const borderRec = themeFetch("border", false) as BoxBorder | undefined | string;
   const borderPrefix = "border";
 
   const boxDef = (key: string) => {
-    let borderRec = themeFetch("border", false);
+    const borderRec = themeFetch("border", false);
 
     // prefers any explicit sibling border-XXX order borderXXX
     // over boxborder's
     if (borderRec instanceof BoxBorder) {
-      let borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
+      const borderKey = key.slice(borderPrefix.length + 1).toLowerCase();
 
       // use inherited value if non-inherited sibling and boxborder values both don't exist
       return (

@@ -450,7 +450,7 @@
                         env.container.querySelectorAll(env.selector)
                       );
                       _.hooks.run("before-all-elements-highlight", env);
-                      for (var i = 0, element; (element = env.elements[i++]); ) {
+                      for (var i = 0, element; (element = env.elements[i++]);) {
                         _.highlightElement(element, async === true, env.callback);
                       }
                     },
@@ -659,7 +659,7 @@
                         if (!callbacks || !callbacks.length) {
                           return;
                         }
-                        for (var i = 0, callback; (callback = callbacks[i++]); ) {
+                        for (var i = 0, callback; (callback = callbacks[i++]);) {
                           callback(env);
                         }
                       },

@@ -1,27 +1,27 @@
 {
-  "name": "path.ux",
-  "version": "VERSION",
-  "description": "Html5 based UI library with blender-rna-style data binding",
-  "main": "scripts/pathux.ts",
-  "index": "scripts/pathux.ts",
-  "types": "pathux.d.ts",
-  "browser": "true",
+  "name"           : "path.ux",
+  "version"        : "VERSION",
+  "description"    : "Html5 based UI library with blender-rna-style data binding",
+  "main"           : "scripts/pathux.ts",
+  "index"          : "scripts/pathux.ts",
+  "types"          : "pathux.d.ts",
+  "browser"        : "true",
   "directories": {
     "doc": "docs"
   },
-  "type": "module",
+  "type"           : "module",
   "devDependencies": {
     "nstructjs": "^0.8.4"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joeedh/path.ux.git"
+    "url" : "git+https://github.com/joeedh/path.ux.git"
   },
-  "author": "Joseph Eagar",
-  "license": "MIT",
+  "author"         : "Joseph Eagar",
+  "license"        : "MIT",
   "bugs": {
     "url": "https://github.com/joeedh/path.ux/issues"
   },
-  "homepage": "https://github.com/joeedh/path.ux#readme",
-  "packageManager": "pnpm@10.30.3"
+  "homepage"       : "https://github.com/joeedh/path.ux#readme",
+  "packageManager" : "pnpm@10.30.3"
 }

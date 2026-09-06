@@ -130,8 +130,7 @@ function patchDropBox() {
     this.setCSS();
 
     const onclose = (this._menu as unknown as Record<string, unknown>).onclose as
-      | (() => void)
-      | undefined;
+      (() => void) | undefined;
     (this._menu as unknown as Record<string, unknown>).onclose = () => {
       (this as unknown as { _pressed: boolean })._pressed = false;
       this._redraw();

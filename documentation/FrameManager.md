@@ -1,22 +1,21 @@
-
-
 <!-- toc -->
 
 - [FrameManager: Screens, Areas, and Dockable Panels](#framemanager-screens-areas-and-dockable-panels)
-  * [Defining an editor](#defining-an-editor)
-    + [AreaFlags](#areaflags)
-    + [Size constraints](#size-constraints)
-    + [Lifecycle hooks](#lifecycle-hooks)
-  * [Setting up a screen](#setting-up-a-screen)
-  * [The screen mesh](#the-screen-mesh)
-    + [Layout operations](#layout-operations)
-  * [Multiple editors per tile: the AreaDocker](#multiple-editors-per-tile-the-areadocker)
-  * [Context integration](#context-integration)
-  * [Keymaps and key events](#keymaps-and-key-events)
-  * [Serialization](#serialization)
-  * [Dockable panels](#dockable-panels)
-  * [Popups and utilities](#popups-and-utilities)
-  * [Debugging aids](#debugging-aids)
+  - [Defining an editor](#defining-an-editor)
+    - [AreaFlags](#areaflags)
+    - [Size constraints](#size-constraints)
+    - [Lifecycle hooks](#lifecycle-hooks)
+  - [Setting up a screen](#setting-up-a-screen)
+  - [The screen mesh](#the-screen-mesh)
+    - [Layout operations](#layout-operations)
+  - [Multiple editors per tile: the AreaDocker](#multiple-editors-per-tile-the-areadocker)
+  - [Context integration](#context-integration)
+  - [Keymaps and key events](#keymaps-and-key-events)
+  - [Serialization](#serialization)
+  - [Dockable panels](#dockable-panels)
+  - [Popups and utilities](#popups-and-utilities)
+  - [Debugging aids](#debugging-aids)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -34,14 +33,14 @@ dockable panels. The whole arrangement serializes with nstructjs.
 
 Core classes:
 
-| Class | Element | Role |
-|---|---|---|
-| `Screen` | `pathux-screen-x` | Root workspace: owns the tile mesh, update loop, popups, global keymap |
-| `ScreenArea` | `screenarea-x` | One tile: position/size, a set of editors, the active editor |
-| `Area` | (per editor) | Editor base class; your subclasses implement actual UI |
-| `ScreenBorder` | `screenborder-x` | Draggable border between tiles (part of the screen mesh) |
-| `AreaDocker` | `area-docker-x` | The editor tab bar in a tile's header |
-| `PanelManager` | — | Dockable/floatable panels inside one editor (see below) |
+| Class          | Element           | Role                                                                   |
+| -------------- | ----------------- | ---------------------------------------------------------------------- |
+| `Screen`       | `pathux-screen-x` | Root workspace: owns the tile mesh, update loop, popups, global keymap |
+| `ScreenArea`   | `screenarea-x`    | One tile: position/size, a set of editors, the active editor           |
+| `Area`         | (per editor)      | Editor base class; your subclasses implement actual UI                 |
+| `ScreenBorder` | `screenborder-x`  | Draggable border between tiles (part of the screen mesh)               |
+| `AreaDocker`   | `area-docker-x`   | The editor tab bar in a tile's header                                  |
+| `PanelManager` | —                 | Dockable/floatable panels inside one editor (see below)                |
 
 `simple.Editor` (`scripts/simple/editor.ts`) is a convenience Area
 subclass used by the `simple` app framework; `simple.AppState.makeScreen()`
@@ -58,18 +57,18 @@ import { Area, AreaFlags, nstructjs } from "pathux";
 export class MyEditor extends Area {
   static define() {
     return {
-      tagname : "my-editor-x",   //custom element name
-      areaname: "my_editor",     //stable key, used in serialization
-      apiname : "myEditor",      //optional: name in the data API
-      uiname  : "My Editor",     //label in the editor-switcher menu
+      tagname    : "my-editor-x", //custom element name
+      areaname   : "my_editor", //stable key, used in serialization
+      apiname    : "myEditor", //optional: name in the data API
+      uiname     : "My Editor", //label in the editor-switcher menu
       //optional: the pane tab's tooltip, whole. Say what the editor shows;
       //without one the tab falls back to "Show <uiname> in this pane".
       description: "Show the scene being edited in this pane",
-      icon    : Icons.EDITOR,    //optional switcher icon
-      flag    : 0,               //AreaFlags bits
+      icon       : Icons.EDITOR, //optional switcher icon
+      flag       : 0, //AreaFlags bits
       //bitmask of BorderMask.LEFT/BOTTOM/RIGHT/TOP: borders the user
       //cannot move (e.g. a fixed-height menu bar locks all four)
-      borderLock: 0,
+      borderLock : 0,
     };
   }
 
@@ -95,14 +94,14 @@ which drives the switcher tab bar's `+` menu, serialization by
 
 ### AreaFlags
 
-| Flag | Effect |
-|---|---|
-| `HIDDEN` | Excluded from the editor-switcher menu |
-| `FLOATING` | Area floats above the tile mesh (set by `Screen.floatArea`) |
-| `INDEPENDENT` | Excluded from the screen mesh (not resized with it) |
-| `NO_SWITCHER` | `makeHeader` omits the editor tab bar |
-| `NO_HEADER_CONTEXT_MENU` | No right-click split/collapse menu on the header |
-| `NO_COLLAPSE` | The tile's borders refuse to collapse/merge it away |
+| Flag                     | Effect                                                      |
+| ------------------------ | ----------------------------------------------------------- |
+| `HIDDEN`                 | Excluded from the editor-switcher menu                      |
+| `FLOATING`               | Area floats above the tile mesh (set by `Screen.floatArea`) |
+| `INDEPENDENT`            | Excluded from the screen mesh (not resized with it)         |
+| `NO_SWITCHER`            | `makeHeader` omits the editor tab bar                       |
+| `NO_HEADER_CONTEXT_MENU` | No right-click split/collapse menu on the header            |
+| `NO_COLLAPSE`            | The tile's borders refuse to collapse/merge it away         |
 
 ### Size constraints
 
@@ -138,16 +137,16 @@ its borders.
 import { UIBase, Screen, ScreenArea, startEvents } from "pathux";
 
 const screen = UIBase.createElement("pathux-screen-x") as Screen;
-screen.ctx = myContext;                 //your context object
+screen.ctx = myContext; //your context object
 document.body.appendChild(screen);
 
 const sarea = UIBase.createElement("screenarea-x") as ScreenArea;
 sarea.ctx = myContext;
-sarea.switchEditor(MyEditor);           //instantiate + activate an editor
-screen.appendChild(sarea);              //registers the tile, builds borders
+sarea.switchEditor(MyEditor); //instantiate + activate an editor
+screen.appendChild(sarea); //registers the tile, builds borders
 
 screen._init();
-screen.listen();                        //start the update timer (~150ms)
+screen.listen(); //start the update timer (~150ms)
 screen.completeUpdate();
 ```
 
@@ -191,18 +190,18 @@ debugging.
 Programmatic:
 
 ```ts
-screen.splitArea(sarea, 0.5, true);   //split at t, horiz=rows
-screen.collapseArea(sarea);           //merge into a neighbor
-screen.removeArea(sarea);             //remove outright
-screen.replaceArea(dst, src);         //swap a tile in place
-screen.floatArea(area);               //tear an editor into a floating tile
+screen.splitArea(sarea, 0.5, true); //split at t, horiz=rows
+screen.collapseArea(sarea); //merge into a neighbor
+screen.removeArea(sarea); //remove outright
+screen.replaceArea(dst, src); //swap a tile in place
+screen.floatArea(area); //tear an editor into a floating tile
 ```
 
 Interactive (all built on modal operators in `FrameManager_ops.ts`):
 
 - **Drag a border** — resize the adjoining tiles (`AreaResizeTool`).
-- **Double-click a border or header** — menu with *Split Area* /
-  *Collapse Area* (`SplitTool`, `RemoveAreaTool`). The same tools are
+- **Double-click a border or header** — menu with _Split Area_ /
+  _Collapse Area_ (`SplitTool`, `RemoveAreaTool`). The same tools are
   callable as `screen.splitTool()` / `screen.removeAreaTool()`.
 - **Drag an editor's tab off the tab bar** — floats the editor and starts
   `AreaMoveAttachTool`, which re-attaches it where dropped (drop-position
@@ -233,14 +232,14 @@ This is the hard counterpart to `area.closed` (below): closing hides a
 tab and keeps the instance, deleting throws the instance away.
 
 The **AreaDocker** is the tab bar in the header. Each tile owns a single
-docker instance which the active editor *adopts* into its header
+docker instance which the active editor _adopts_ into its header
 (`ScreenArea._attachSwitcher`) — so tab UI state and even an in-progress
 tab drag survive editor switches. Its affordances:
 
 - Click a tab: `switchEditor` to that editor.
 - `+` tab: menu of registered editor classes (from `areaclasses`) not
   already shown in the tile.
-- Tab close `×` (and right-click → *Close*): **soft-closes** the editor —
+- Tab close `×` (and right-click → _Close_): **soft-closes** the editor —
   `area.closed = true` hides its tab but keeps the instance and its UI
   state; re-adding it from the `+` menu (or any `switchEditor` call)
   restores it as it was. `closed` round-trips through `Area.STRUCT`.
@@ -322,7 +321,7 @@ Editors can host dockable/floatable **panels** — collapsible sections the
 user rearranges inside the editor — via a `PanelManager`
 (`scripts/screen/dock_panels.ts`). This is a separate, finer-grained
 layer than screen tiles: tiles partition the screen between editors;
-panels arrange tool UI *within* one editor.
+panels arrange tool UI _within_ one editor.
 
 Declare panels in the `definePanels()` hook and build the frame with
 `makePanels()`:
@@ -331,13 +330,13 @@ Declare panels in the `definePanels()` hook and build the frame with
 class MyEditor extends Editor {
   definePanels(panels: PanelManager) {
     panels.panel({
-      id   : "tools",            //stable id — the serialization key
-      title: "Tools",
-      dock : "left",             //default: left/right/top/bottom/"float"
-      flags: PanelFlags.NO_CLOSE,
+      id          : "tools", //stable id — the serialization key
+      title       : "Tools",
+      dock        : "left", //default: left/right/top/bottom/"float"
+      flags       : PanelFlags.NO_CLOSE,
       allowedDocks: PanelDockMask.LEFT | PanelDockMask.RIGHT | PanelDockMask.FLOAT,
-      minSize: [120, undefined], //content clamps, each component optional
-      maxSize: [undefined, 300], //content past maxSize scrolls
+      minSize     : [120, undefined], //content clamps, each component optional
+      maxSize     : [undefined, 300], //content past maxSize scrolls
       build: (c, panel) => {
         c.prop("tool.strength");
       },
@@ -400,13 +399,13 @@ is a thin delegate into that module.
   container, kept inside the window. Escape always closes it; which pointer
   gestures outside it do is `closeOnMouseOut`, a `PopupCloseMode`:
 
-  | Value | Closes on |
-  | --- | --- |
+  | Value            | Closes on                                       |
+  | ---------------- | ----------------------------------------------- |
   | `true` (default) | a press outside, and the pointer moving outside |
-  | `false` | neither; only Escape and `end()` |
-  | `"click"` | a press outside |
-  | `"move"` | the pointer moving outside |
-  | `"click-move"` | both, the same as `true` |
+  | `false`          | neither; only Escape and `end()`                |
+  | `"click"`        | a press outside                                 |
+  | `"move"`         | the pointer moving outside                      |
+  | `"click-move"`   | both, the same as `true`                        |
 
   `"click"` is what a popup the user browses before confirming wants — a
   picker or a form — since the default closes it as soon as the pointer
@@ -423,6 +422,7 @@ is a thin delegate into that module.
   from what was pressed up to the container. A widget that appends children to
   its shadow root rather than adding them has to set their `parentWidget`
   itself, or a press inside it reads as a press outside the popup.
+
 - `screen.draggablePopup(x, y)` — a `drag-box-x` the user can move.
 - `screen.popupArea(EditorClass)` — a whole editor in a popup frame.
 - `screen.pickElement(x, y, args)` — hit-test the widget tree, popups

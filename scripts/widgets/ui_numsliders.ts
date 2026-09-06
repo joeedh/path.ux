@@ -918,9 +918,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         g     : this.g,
         size  : ts,
         font: getDefault("DefaultText") as unknown as
-          | import("../core/cssfont.js").CSSFont
-          | string
-          | undefined,
+          import("../core/cssfont.js").CSSFont | string | undefined,
       });
       g.restore();
     } else {
@@ -929,9 +927,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
         g     : this.g,
         size  : ts,
         font: getDefault("DefaultText") as unknown as
-          | import("../core/cssfont.js").CSSFont
-          | string
-          | undefined,
+          import("../core/cssfont.js").CSSFont | string | undefined,
       });
     }
 
@@ -2113,6 +2109,4 @@ export class NumSliderWithTextBox<
 UIBase.internalRegister(NumSliderWithTextBox);
 
 export type NumSliderTypes<CTX extends IContextBase = IContextBase> =
-  | NumSlider<CTX>
-  | NumSliderSimple<CTX>
-  | NumSliderWithTextBox<CTX>;
+  NumSlider<CTX> | NumSliderSimple<CTX> | NumSliderWithTextBox<CTX>;

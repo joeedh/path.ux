@@ -371,7 +371,7 @@ export class Screen<
 
             if (!(rule as any).styleMap) {
               //handle firefox
-              // eslint-disable-next-line @typescript-eslint/no-for-in-array
+
               for (const k in rule.style) {
                 const desc = Object.getOwnPropertyDescriptor(rule.style, k);
 

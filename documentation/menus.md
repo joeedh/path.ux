@@ -12,15 +12,15 @@ imports.
 <!-- toc -->
 
 - [Menu templates](#menu-templates)
-  * [Tool path strings](#tool-path-strings)
-  * [Separators](#separators)
-  * [Custom entries](#custom-entries)
-  * [Submenus](#submenus)
-  * [DOM callbacks](#dom-callbacks)
+  - [Tool path strings](#tool-path-strings)
+  - [Separators](#separators)
+  - [Custom entries](#custom-entries)
+  - [Submenus](#submenus)
+  - [DOM callbacks](#dom-callbacks)
 - [Putting a menu on screen](#putting-a-menu-on-screen)
-  * [A menu bar button](#a-menu-bar-button)
-  * [A context menu](#a-context-menu)
-  * [An enum dropdown](#an-enum-dropdown)
+  - [A menu bar button](#a-menu-bar-button)
+  - [A context menu](#a-context-menu)
+  - [An enum dropdown](#an-enum-dropdown)
 - [Building a menu by hand](#building-a-menu-by-hand)
 - [The application menu bar](#the-application-menu-bar)
 - [The menu wrangler](#the-menu-wrangler)
@@ -29,6 +29,7 @@ imports.
 - [Theming](#theming)
 - [Which editors a menu offers](#which-editors-a-menu-offers)
 - [Gotchas](#gotchas)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->

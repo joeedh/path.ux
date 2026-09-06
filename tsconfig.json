@@ -17,22 +17,34 @@
     "noEmit"            : true,
     "skipLibCheck"      : true,
     "lib"               : ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
-    "types"             : [],
+    "types"             : ["node"]
   },
   "include": [
     "scripts/**/*.ts",
     "scripts/**/*.tsx",
     "scripts/**/*.js",
     "playwright/*.ts",
+    "simple_example/**/*.js",
+    "simple_example/**/*.ts",
+    "simple_docsys/**/*.js",
+    "simple_docsys/**/*.ts",
+    "servers/**/*.ts",
+    "servers/**/*.js",
+    "tests/**/*.ts",
+    "tests/**/*.js",
     "eslint.config.js",
+    "vitest.config.ts",
     "buildtools/**/*.mjs",
+    "serv_simple.js",
+    "serv.js"
   ],
   "exclude": [
+    "scripts/path-controller/util/*.js",
     "node_modules",
     "dist",
     "scripts/lib/**",
     "scripts/**/*.test.ts",
     "scripts/path-controller/util/isect.js",
-    "tests/*.ts",
-  ],
+    "tests/*.ts"
+  ]
 }

@@ -1545,7 +1545,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
     const path = this.hasAttribute("datapath")
-      ? this.getAttribute("datapath") ?? undefined
+      ? (this.getAttribute("datapath") ?? undefined)
       : undefined;
 
     const massSetPath = this.getAttribute("mass_set_path") ?? undefined;
