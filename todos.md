@@ -19,7 +19,7 @@
 [x]: resynchronize setPathValueUndo with the async toolstack
      (regression from 336424c), per documentation/plans/toolsys-tasks.md
      task 0.
-[ ]: fold DataPathSetOp writes onto the toolstack (foldOrExec), per
+[x]: fold DataPathSetOp writes onto the toolstack (foldOrExec), per
      documentation/plans/datapath-set-fold.md.
 [ ]: bind tool defaults per DataAPI instead of per process, per
      documentation/plans/toolsys-tasks.md task 2.

@@ -6,8 +6,8 @@ and blocks task 1; tasks 1-3 are independent of each other and land in any order
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: task 0 done. Task 1 half done — its part B landed, part A (`foldOrExec`) planned in
-`datapath-set-fold.md`. Tasks 2 and 3 sketched only.
+Status: tasks 0 and 1 done, bar one manual check recorded in `datapath-set-fold.md`'s
+stage 5. Tasks 2 and 3 sketched only.
 
 <!-- toc -->
 
@@ -67,7 +67,7 @@ a supported configuration; and `336424c` made the tool lifecycle async.
 
 ## Task 1 — fold `DataPathSetOp` writes instead of replaying them
 
-Plan: [`datapath-set-fold.md`](datapath-set-fold.md). Blocked on task 0.
+Plan: [`datapath-set-fold.md`](datapath-set-fold.md), **done**.
 
 - `setPathValueUndo` (`scripts/core/base/ui_base_datapath.ts:20`) coalesces a drag by
   rewinding and replaying: `toolstack.undo(ctx)` → mutate the head's inputs →
@@ -77,8 +77,10 @@ Plan: [`datapath-set-fold.md`](datapath-set-fold.md). Blocked on task 0.
   read-modify-write, so replaying is not what makes the coalesced result correct.
 - Replace the round trip with a fold: keep the op's `_undo` snapshot from the first push and
   write the new value through `exec` alone.
-- Wins: one write per frame instead of undo+exec, half the `change` events, and an explicit
-  coalescing key in place of a string hash compared against the stack head.
+- Wins: one write per frame instead of undo+exec, one undo snapshot per run instead of one
+  per frame, and an explicit coalescing key in place of a string hash the widget compared
+  against the stack head. The `change`-event saving did not materialize — see the plan's
+  stage 3.
 - Touches both repos: `controller_ops.ts` in the submodule, `ui_base_datapath.ts` in path.ux.
 
 ## Task 2 — bind tool defaults per `DataAPI` instead of per process

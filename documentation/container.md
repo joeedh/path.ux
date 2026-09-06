@@ -282,3 +282,17 @@ steps for their edits. `prop()` clears it per widget for a property flagged `NO_
 every build method returns a widget on which `.setUndo(bool)` overrides it. Under the hood
 an edit runs as a `DataPathToolOp`; consecutive edits to the same path from the same widget
 coalesce into one undo step rather than one step per drag frame.
+
+Coalescing happens on the toolstack, through `foldOrExec`. A widget builds an op per
+frame and the stack either pushes it or merges it into the head, which has two
+consequences for a consumer app:
+
+- **A folded frame re-runs `exec` without an intervening `undo`.** The written value is
+  absolute, so this is the same result for an ordinary property. A path flagged
+  `USE_CUSTOM_GETSET` runs the app's own setter, which nothing constrains to be
+  idempotent — it used to see the pre-drag state restored before each write, and no
+  longer does. Call `undoBreakPoint()` on the widget to end a run wherever that matters.
+- **A failed write throws.** `DataPathSetOp` used to catch, log and carry on, which also
+  let a mass set fan out a value the single write had already failed to apply. The
+  toolstack now drops the op and restores the branch it displaced, and the error reaches
+  the caller.

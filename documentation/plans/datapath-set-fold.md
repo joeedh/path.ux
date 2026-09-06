@@ -4,8 +4,7 @@ Moves the coalescing that `setPathValueUndo` performs out of the widget layer an
 toolstack as one protected operation, and stops `DataPathSetOp` swallowing its own errors.
 Task 1 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: part B (stages 4a, 4b and 4c) landed; part A (`foldOrExec`, stages 1-3) not started.
-Task 0 is complete.
+Status: complete except for stage 5's run in the example app. Task 0 is complete.
 
 Revised twice: once after a fresh-context pressure test, once after task 0's first pass made
 `ToolStack.head` a promise. See [Findings](#findings) for the disposition of each.
@@ -28,11 +27,11 @@ Revised twice: once after a fresh-context pressure test, once after task 0's fir
 - [What deliberately does not change](#what-deliberately-does-not-change)
 - [Risk](#risk)
 - [Stages](#stages)
-  - [Stage 1 — a harness that fails honestly](#stage-1--a-harness-that-fails-honestly)
-  - [Stage 2 — assertions that pin the danger](#stage-2--assertions-that-pin-the-danger)
-  - [Stage 3 — `foldOrExec`](#stage-3--foldorexec)
+  - [Stage 1 — a harness that fails honestly — **done**](#stage-1--a-harness-that-fails-honestly--done)
+  - [Stage 2 — assertions that pin the danger — **done**](#stage-2--assertions-that-pin-the-danger--done)
+  - [Stage 3 — `foldOrExec` — **done**](#stage-3--foldorexec--done)
   - [Stage 4 — abort and roll back — **done**](#stage-4--abort-and-roll-back--done)
-  - [Stage 5 — measure and document](#stage-5--measure-and-document)
+  - [Stage 5 — measure and document — **partly done**](#stage-5--measure-and-document--partly-done)
 - [Repos](#repos)
 - [Findings](#findings)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
@@ -318,7 +317,7 @@ unannounced.
 
 Each stage is green under `pnpm typecheck`, `pnpm test` and `pnpm format:check` on its own.
 
-### Stage 1 — a harness that fails honestly
+### Stage 1 — a harness that fails honestly — **done**
 
 New `tests/datapathSetFold.test.ts`, against post-task-0 code. Three obstacles first, each of
 which currently produces an unhandled rejection that leaves a test green:
@@ -336,7 +335,7 @@ The fake `elem` needs `_id`, `pathUndoGen`, `getAttribute("mass_set_path")`, `pa
 using the `ctx` argument everywhere else. Build the `DataAPI` in the style of
 `tests/massSetPaths.test.ts`.
 
-### Stage 2 — assertions that pin the danger
+### Stage 2 — assertions that pin the danger — **done**
 
 Required to pass unchanged through stages 3 and 4 except where noted:
 
@@ -361,12 +360,25 @@ Required to pass unchanged through stages 3 and 4 except where noted:
 10. An `onExecError` that itself throws does not replace the original error reaching the
     caller.
 
-### Stage 3 — `foldOrExec`
+### Stage 3 — `foldOrExec` — **done**
 
-- `FoldableToolOp`, `foldOrExec` and the `IToolStack` member (submodule).
+- `FoldableToolOp`, `isFoldableToolOp`, `foldOrExec` and the `IToolStack` member
+  (submodule).
 - `foldKey`, `foldFrom`, `extendUndo` on `DataPathSetOp` (submodule).
 - `setPathValueUndo` reduced to build-and-call; `_lastPathUndoGen` deleted (path.ux).
-- Assertions 5, 6 and 7 move to their new values.
+- Assertions 5, 6 and 7 moved to their new values.
+
+Two things the plan did not state. `foldOrExec` refuses to fold unless `cur` is at the end
+of the stack, because merging into an entry that has a redo branch after it would leave
+that branch standing over a value it was never built against. And it requires the two ops
+to be the same class, so two classes cannot collide on a key.
+
+Assertion 7's derivation was wrong, and the harness caught it. "3 before, 2 after" counted
+every `change` the property fired, but this plan has the widget building an op every frame,
+and `copyTo` hands a tool's input property the model property's own callback list — so
+`create` fires a third one, and the total does not move. The number that does move is
+writes reaching the model: 2 per folded frame before, 1 after. Assertion 7 counts those,
+filtering on the receiver.
 
 ### Stage 4 — abort and roll back — **done**
 
@@ -405,14 +417,14 @@ optional `massSetProp`, so a throw from the first leaves nothing applied, and a 
 second leaves a partial fan-out whose correct repair is the app's business. Revisit if a real
 case turns up.
 
-### Stage 5 — measure and document
+### Stage 5 — measure and document — **partly done**
 
-- Confirm the drop on a real drag in the example app (`pnpm nwjs`, then `pnpm cdp`), rather
-  than trusting the unit test.
-- Amend `documentation/container.md:284-285`, which already states the coalescing contract, to
-  say the undo snapshot is taken once per run, that a `USE_CUSTOM_GETSET` setter is no longer
-  re-run from a restored state, and that a failed datapath write now throws.
-- Tick the entries in `todos.md`.
+- **Not done:** confirm the drop on a real drag in the example app (`pnpm nwjs`, then
+  `pnpm cdp`), rather than trusting the unit test.
+- **Done.** `documentation/container.md` § Undo now says coalescing happens on the toolstack,
+  that a `USE_CUSTOM_GETSET` setter is no longer re-run from a restored state (with
+  `undoBreakPoint()` as the way out), and that a failed datapath write throws.
+- **Done.** `todos.md` ticked.
 
 ## Repos
 
