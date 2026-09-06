@@ -46,14 +46,20 @@ rather than `npm`.
 
 ```bash
 pnpm run build          # Rollup bundle → dist/pathux.js
-pnpm run typecheck      # tsgo --noEmit
+pnpm run typecheck      # two passes: the library, then example/
 pnpm run test           # vitest
 pnpm run format         # prettier --write
 pnpm run format:check   # prettier --check
+pnpm run lint:prose     # commentlint prose style linter
 ```
 
 Use `tsgo` to typecheck instead of `tsc`, e.g.
 `pnpm exec tsgo --noEmit`.
+
+That bare command is only the **first half** of `pnpm run typecheck`, which also runs
+`tsgo --noEmit -p example/tsconfig.json`. `example/` imports the library the way a
+consumer does, so it is the only thing that type-checks the public surface — run the
+full script before calling a change green.
 
 ## Running the example app (NW.js / Electron)
 

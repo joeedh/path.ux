@@ -1,7 +1,10 @@
 # Tool system: coalescing and multi-API tasks
 
 Four tasks in `scripts/path-controller/` and `scripts/core/`. Task 0 is a live regression
-and blocks task 1; tasks 1-3 are independent of each other and land in any order.
+and blocks task 1. Tasks 2 and 3 were thought independent and are not: task 3's pressure
+test found that `DataAPI.mapStruct` keys its `DataStruct` on the class object, so a second
+`buildToolSysAPI` clears the first API's accessors. Task 3 cannot show a working second
+registry until that is fixed, and it is task 2's bug. Task 3 goes first and fixes it.
 
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
@@ -15,6 +18,7 @@ Status: tasks 0 and 1 done. Tasks 2 and 3 sketched only.
 - [Task 1 — fold `DataPathSetOp` writes instead of replaying them](#task-1--fold-datapathsetop-writes-instead-of-replaying-them)
 - [Task 2 — bind tool defaults per `DataAPI` instead of per process](#task-2--bind-tool-defaults-per-dataapi-instead-of-per-process)
 - [Task 3 — a `ToolRegistry` object, with the module globals as its default instance](#task-3--a-toolregistry-object-with-the-module-globals-as-its-default-instance)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
