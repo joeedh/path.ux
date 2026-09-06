@@ -147,7 +147,7 @@ export class AfterAspect {
 
     const this2 = this;
 
-    const method: AspectMethod = (this._method = function (this: unknown) {
+    const method: AspectMethod = (this._method = function (this: unknown, ...args: unknown[]) {
       const chain = this2.chain;
       const chain2 = this2.chain2;
 
@@ -179,7 +179,7 @@ export class AfterAspect {
         }
 
         if (cb?.apply) {
-          method.value = cb.apply(this, arguments);
+          method.value = cb.apply(this, args);
           //method.value = Reflect.apply(cb, this, arguments);
           //cb.apply(this, args);
         }

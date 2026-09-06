@@ -28,32 +28,6 @@ function termColor(s, color = colormap.reset) {
   return `\u001b[${color}m${s}\u001b[0m`;
 }
 
-function walkDir(path, cb) {
-  while (path.endsWith("/")) {
-    path = path.slice(0, path.length - 1).trim();
-  }
-  let dir = fs.opendirSync(path);
-
-  let files = [];
-  let dirs = [];
-
-  for (let entry = dir.readSync(); entry; entry = dir.readSync()) {
-    if (entry.isDirectory()) {
-      dirs.push(entry.name);
-    } else {
-      files.push(entry.name);
-    }
-  }
-
-  cb(path, dirs, files);
-  for (let dir of dirs) {
-    let path2 = path + "/" + dir;
-    walkDir(path2, cb);
-  }
-
-  dir.closeSync();
-}
-
 let scriptFilesCache = "scriptpaths.cache";
 function saveScriptFiles() {
   let list = [];

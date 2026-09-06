@@ -1,6 +1,6 @@
 import * as ui_base from "../core/ui_base";
 import { IContextBase } from "../core/context_base";
-import { Container, Label } from "../core/ui";
+import { Label } from "../core/ui";
 import { ColumnFrame, RowFrame } from "../core/ui_containers";
 import { forwardContainerMethods } from "../core/ui_forward";
 import { IconCheck } from "./ui_widgets";

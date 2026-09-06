@@ -26,13 +26,13 @@ export class DataModel {
    *  and handles STRUCT inheritance.
    */
   static register(cls: typeof DataModel & { STRUCT: string }) {
-    if (!cls.hasOwnProperty("defineAPI")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "defineAPI")) {
       //  throw new Error(cls.name + "is missing a defineAPI method");
     }
 
     DataModelClasses.push(cls);
 
-    if (cls.hasOwnProperty("STRUCT") && !nstructjs.isRegistered(cls)) {
+    if (Object.prototype.hasOwnProperty.call(cls, "STRUCT") && !nstructjs.isRegistered(cls)) {
       cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT!);
     }
   }
@@ -42,9 +42,7 @@ export class DataModel {
   }
 }
 
-class EmptyContextClass extends Context {
-  static defineAPI(_api: DataAPI, _strct: unknown) {}
-}
+type EmptyContextClass = { defineAPI(_api: DataAPI, _strct: unknown): void };
 
 import * as ui_noteframe from "../widgets/ui_noteframe";
 
@@ -150,7 +148,7 @@ function GetContextClass(ctxClass: Function): typeof Context {
       st: { dynamicStruct(key: string, name: string, label: string): void }
     ) {
       st.dynamicStruct("activeArea", "activeArea", "Active Area");
-      return (Overlay as unknown as typeof EmptyContextClass).defineAPI(api, st);
+      return (Overlay as unknown as EmptyContextClass).defineAPI(api, st);
     }
   };
 }

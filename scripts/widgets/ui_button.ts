@@ -29,7 +29,32 @@ export class ButtonEventBase<
   }
 
   bindEvents() {
-    let depress: (e?: Event) => void;
+    const depress = (e?: Event) => {
+      if (this._auto_depress) {
+        this._pressed = false;
+
+        if (this.disabled) return;
+
+        this._redraw();
+      }
+
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (util.isMobile() || (e.type === "pointerup" && (e as PointerEvent).button)) {
+          return;
+        }
+      }
+
+      this._redraw();
+
+      if (this.onclick && e && (e as PointerEvent).pointerType !== "mouse") {
+        this.onclick(e as unknown as PointerEvent);
+      }
+
+      this.undoBreakPoint();
+    };
 
     const press = (e: PointerEvent) => {
       e.stopPropagation();
@@ -84,33 +109,6 @@ export class ButtonEventBase<
       this._redraw();
 
       e.preventDefault();
-    };
-
-    depress = (e?: Event) => {
-      if (this._auto_depress) {
-        this._pressed = false;
-
-        if (this.disabled) return;
-
-        this._redraw();
-      }
-
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (util.isMobile() || (e.type === "pointerup" && (e as PointerEvent).button)) {
-          return;
-        }
-      }
-
-      this._redraw();
-
-      if (this.onclick && e && (e as PointerEvent).pointerType !== "mouse") {
-        this.onclick(e as unknown as PointerEvent);
-      }
-
-      this.undoBreakPoint();
     };
 
     this.addEventListener("click", () => {

@@ -21,11 +21,6 @@ interface PNGImage {
   data: NodeBuffer;
 }
 
-interface IcoOptions {
-  name?: string;
-  sizes?: number[];
-}
-
 interface NodeWritableStream {
   end(): void;
 }
@@ -35,6 +30,8 @@ interface NodeWritableStream {
 
 //adapted from icon-gen code
 if (window.haveElectron) {
+  // A static import would load this Node module even when window.haveElectron is false.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pngjsNozlib = require("pngjs-nozlib") as {
     PNG: { sync: { read(data: NodeBuffer): PNGImage } };
   };
@@ -162,6 +159,8 @@ if (window.haveElectron) {
     return REQUIRED_IMAGE_SIZES;
   };
 
+  // A static import would load this Node module even when window.haveElectron is false.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const stream = require("stream") as {
     Writable: { new (): NodeWritableStream; prototype: NodeWritableStream };
   };

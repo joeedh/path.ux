@@ -7,14 +7,9 @@ THEME REFACTOR:
 */
 import {
   StringProperty,
-  EnumProperty,
-  FlagProperty,
-  IntProperty,
   FloatProperty,
-  ToolProperty,
   BoolProperty,
   Vec4Property,
-  Vec3Property,
 } from "../path-controller/toolsys/toolprop";
 
 import * as util from "../path-controller/util/util";
@@ -356,7 +351,7 @@ export function css2color(color: string | null | undefined): Vector4 {
   const colorParts = color
     .replace("rgba", "")
     .replace("rgb", "")
-    .replace(/[\(\)]/g, "")
+    .replace(/[()]/g, "")
     .trim()
     .split(",");
 
@@ -386,7 +381,7 @@ export function web2color(str: string): Vector4 {
   return css2color(str);
 }
 
-const validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+const validate_pat = /#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 
 export function validateWebColor(str: string): boolean {
   if (typeof str !== "string") return false;
@@ -523,6 +518,13 @@ ${indent}  color2   : ${writekey(v.color2)},
 ${indent}  contrast : ${writekey(v.contrast)},
 ${indent}  width     : ${writekey(v.width)}
 ${indent}})`;
+    } else if (v instanceof BoxBorder) {
+      return `new BoxBorder({
+${indent}  borderColor : ${writekey(v.color)},
+${indent}  borderWidth : ${writekey(v.width)},
+${indent}  borderRadius : ${writekey(v.radius)},
+${indent}  borderStyle : ${writekey(v.style)},
+    })`;
     } else if (typeof v === "object") {
       if (v instanceof CSSFont) {
         return `new CSSFont({
@@ -549,21 +551,6 @@ ${indent}})`;
         s += indent + "}";
         return s;
       }
-    } else if (v instanceof BoxBorder) {
-      return `new BoxBorder({
-${indent}  borderColor : ${writekey(v.color)},
-${indent}  borderWidth : ${writekey(v.width)},
-${indent}  borderRadius : ${writekey(v.radius)},
-${indent}  borderStyle : ${writekey(v.style)},
-    })`;
-    } else if (v instanceof ThemeScrollBars) {
-      return `new ThemeScrollBars({
-${indent}  border   : ${writekey(v.border)},
-${indent}  color    : ${writekey(v.color)},
-${indent}  color2   : ${writekey(v.color2)},
-${indent}  contrast : ${writekey(v.contrast)},
-${indent}  width     : ${writekey(v.width)}
-${indent}})`;
     } else {
       return "" + v;
     }

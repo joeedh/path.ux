@@ -47,6 +47,9 @@ export function snapi(c: number | number[], snap_limit = SnapLimit): number | nu
   return c;
 }
 
+// CTX is unused here but kept so callers can write ScreenVert<CTX> to match
+// the CTX-parameterized types (ScreenArea, ScreenBorder) that hold verts.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export class ScreenVert<CTX extends IContextBase = IContextBase> extends Vector2 {
   added_id: string;
   sareas: ScreenAreaAny[];
@@ -94,7 +97,7 @@ pathux.ScreenVert {
 `;
 nstructjs.register(ScreenVert);
 
-export class ScreenHalfEdge<CTX extends IContextBase = IContextBase> {
+export class ScreenHalfEdge {
   sarea: ScreenAreaAny;
   border: ScreenBorderAny;
   side: number;

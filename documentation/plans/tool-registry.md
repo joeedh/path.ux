@@ -229,7 +229,7 @@ bottom of many modules run.
   those names. Registries are a runtime concept; struct names are never namespaced. This
   kills the obvious "prefix the registry name" design, so it is stated rather than left to be
   rediscovered.
-- **`IToolStack` is not loosened.** Nothing here touches it.
+- **`IToolStack` stays untouched.** Nothing in this plan changes its type.
 - **path.ux is a shared library.** A consumer that never asks for a second registry sees no
   change: same tables, same identities, same registration order.
 - **The `pathux` barrel.** `toolsys/index.ts` re-exports with `export *`, so relocating

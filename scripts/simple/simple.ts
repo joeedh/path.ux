@@ -1,6 +1,3 @@
-import * as app from "./app";
-import * as editor from "./editor";
-
 export * from "./app";
 export * from "./editor";
 export * from "./icons";

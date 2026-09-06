@@ -30,7 +30,7 @@ export const mimeMap: Record<string, string> = {
   "gif"  : "image/gif",
 };
 
-export var textMimes = new Set([
+export const textMimes = new Set([
   "application/javascript",
   "application/x-javscript",
   "image/svg+xml",

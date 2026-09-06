@@ -6,9 +6,9 @@ reachable some other way, because today it simply runs past its pane and whateve
 the edge is unreachable — including `AreaDocker`'s `+` tab, which is where an editor is
 added from.
 
-So: when `multiRow` is off, the bar scrolls along itself. Mouse wheel, right-click and
-drag, or a two-finger swipe. **No scrollbar is drawn** — the affordance is the gesture, and
-a 20-pixel-tall bar has nowhere to put a bar of its own.
+When `multiRow` is off, the bar scrolls instead of wrapping, driven by the mouse wheel,
+right-click-and-drag, or a two-finger swipe. **No scrollbar is drawn**, since a 20-pixel-tall
+bar has no room for one and the gesture itself signals that scrolling works.
 
 The two features are exclusive by construction: wrapping and scrolling both answer "the
 tabs do not fit", so a bar that wraps has nothing left to scroll, and `_scrollExtent()`

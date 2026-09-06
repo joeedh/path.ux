@@ -880,7 +880,9 @@ class Handler {
 
   tool(elem: Element, key = "tool") {
     let path = elem.getAttribute("path");
-    let { packflag, disabled } = getPackFlag(elem);
+    const packFlagResult = getPackFlag(elem);
+    let packflag = packFlagResult.packflag;
+    const disabled = packFlagResult.disabled;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     using guard = disableflags(this.container, disabled);
 

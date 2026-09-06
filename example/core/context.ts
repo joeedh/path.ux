@@ -11,7 +11,7 @@ import {
 } from "../pathux.js";
 import { DocsBrowserEditor } from "../editors/docbrowser/docbrowser.js";
 
-import { message, warning, error, sendNote, SavedToolDefaults } from "../pathux.js";
+import { sendNote, SavedToolDefaults } from "../pathux.js";
 
 import type { AppState } from "./app.js";
 import type { ModelData } from "./state.js";

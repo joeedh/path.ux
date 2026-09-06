@@ -83,7 +83,6 @@ export function layoutTabRows({ sizes, available, pad }: TabRowInput): TabRowLay
     if (!rowEmpty && x + size + pad > available) {
       row++;
       x = pad;
-      rowEmpty = true;
     }
 
     rows.push(row);
@@ -663,7 +662,7 @@ export class ModalTabMove<CTX extends IContextBase = IContextBase> extends event
       //crosses another tab.
       const under = tbar.tabAt(x, y, tab);
 
-      if (under !== undefined && under.movable) {
+      if (under?.movable) {
         tbar.swapTabs(tab, under);
       }
     } else {
@@ -735,8 +734,8 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   rowCount = 1;
 
   /**
-   * Let a bar that is not wrapping scroll along its own axis, rather than running its last
-   * tabs off the end where nothing can reach them.
+   * Scrolls a non-wrapping bar along its own axis, instead of running its last tabs off the
+   * end where nothing can reach them.
    *
    * Needs {@link maxExtent} as well, and for the same reason wrapping does: a bar with no
    * idea how much room it has sizes itself to its tabs, and there is then nothing to scroll
@@ -1096,10 +1095,11 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
   }
 
   /**
-   * Begin a right-drag pan, or decline it and let the context menu happen as it always has.
+   * Starts a right-drag pan, or declines so the context menu opens as it did before this
+   * existed.
    *
-   * Declining is what keeps this from stealing the menu: on a bar whose tabs all fit, a
-   * right-click is the act it was before this existed. On one that scrolls the menu is only
+   * Declining keeps this from stealing the menu: on a bar whose tabs all fit, a right-click
+   * still does only what it did before this existed. On one that scrolls, the menu is only
    * deferred — a right-click that never moves still opens it when the button comes back up.
    */
   _startPan(e: PointerEvent): boolean {

@@ -1,5 +1,5 @@
 import { Editor } from "../editor_base.js";
-import { nstructjs, util, Vector2, Matrix4, UIBase, eventgraph } from "../../pathux.js";
+import { nstructjs, util, Vector2, UIBase, eventgraph } from "../../pathux.js";
 const { theEventGraph } = eventgraph;
 
 window.theEventGraph = theEventGraph;

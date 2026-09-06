@@ -7,15 +7,8 @@ import {
   setIconMap,
   setTheme,
   IconManager,
-  keymap,
-  ScreenArea,
   util,
   contextWrangler,
-  HotKey,
-  KeyMap,
-  Screen,
-  DataPathSetOp,
-  buildToolSysAPI,
   DataAPI,
   ContextLike,
   instanceThemeVars,
@@ -25,7 +18,7 @@ import { ModelData } from "./state.js";
 import { defineAPI } from "../api/api_define.js";
 import { ToolContext, ViewContext } from "./context.js";
 import "../draw/draw_ops";
-import { DataLib, DataRef, DataBlock } from "./datablock.js";
+import { DataLib } from "./datablock.js";
 import { theme, themeVars } from "../theme.js";
 
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
@@ -46,7 +39,7 @@ cconst.loadConstants(cconst1 as unknown as Parameters<typeof cconst.loadConstant
 import { MenuBarEditor } from "../editors/menu/menu.js";
 
 import { PropsEditor } from "../editors/properties/properties.js";
-import { LogEditor } from "../editors/log/log_editor.js";
+import "../editors/log/log_editor.js";
 import { Icons } from "../editors/icon_enum.js";
 
 const iconsheet = document.getElementById("iconsheet") as HTMLImageElement | null;
@@ -157,7 +150,6 @@ export class AppState {
     const data: number[] = [];
 
     const buf = new ArrayBuffer(8);
-    const f32 = new Float32Array(buf);
     const i32 = new Int32Array(buf);
     const u8 = new Uint8Array(buf);
 
@@ -175,13 +167,6 @@ export class AppState {
     function writestr(s: string) {
       for (let i = 0; i < s.length; i++) {
         data.push(s.charCodeAt(i));
-      }
-    }
-
-    function packfloat(i: number) {
-      f32[0] = i;
-      for (let i = 0; i < 4; i++) {
-        data.push(u8[i]);
       }
     }
 
@@ -264,11 +249,6 @@ export class AppState {
     function readint() {
       _i += 4;
       return data.getInt32(_i - 4, endian);
-    }
-
-    function readfloat() {
-      _i += 4;
-      return data.getFloat32(_i - 4, endian);
     }
 
     function readstring() {

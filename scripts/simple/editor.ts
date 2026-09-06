@@ -239,11 +239,11 @@ export class Editor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
    *  to handle inheritance.
    **/
   static register(cls: any) {
-    if (!cls.hasOwnProperty("define")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "define")) {
       throw new Error("missing define() method");
     }
 
-    if (!cls.hasOwnProperty("STRUCT")) {
+    if (!Object.prototype.hasOwnProperty.call(cls, "STRUCT")) {
       cls.STRUCT = nstructjs.inherit(cls, this) + `\n}`;
       nstructjs.register(cls);
     } else {

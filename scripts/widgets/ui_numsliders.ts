@@ -566,7 +566,6 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     this.last_time = util.time_ms();
 
     let last_background = this.dom._background;
-    let cancel: (restore_value: boolean) => void;
 
     this.ma = new util.MovingAvg(eventWasTouch(e) ? 8 : 2);
 
@@ -580,6 +579,26 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       if (this.on_change) {
         this.on_change(this);
       }
+    };
+
+    const cancel = (restore_value: boolean) => {
+      this._pressed = false;
+
+      if (restore_value) {
+        this.setValue(startvalue, true, true, true);
+      } else if (!this.realtime) {
+        this.setValue(this.value, true, true, true);
+      }
+
+      if (!this.realtime || restore_value) {
+        this.updateWidth();
+        fire();
+      }
+
+      this.dom._background = last_background; //ui_base.getDefault("background-color");
+      this._redraw(false);
+
+      this.popModal();
     };
 
     const handlers = {
@@ -686,26 +705,6 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
     //events.pushModal(this.getScreen(), handlers);
     this.pushModal(handlers);
-
-    cancel = (restore_value: boolean) => {
-      this._pressed = false;
-
-      if (restore_value) {
-        this.setValue(startvalue, true, true, true);
-      } else if (!this.realtime) {
-        this.setValue(this.value, true, true, true);
-      }
-
-      if (!this.realtime || restore_value) {
-        this.updateWidth();
-        fire();
-      }
-
-      this.dom._background = last_background; //ui_base.getDefault("background-color");
-      this._redraw(false);
-
-      this.popModal();
-    };
   }
 
   get _pressed() {

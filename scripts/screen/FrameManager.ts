@@ -387,7 +387,9 @@ export class Screen<
               continue;
             }
             for (const [key, val] of Array.from(rule.styleMap.entries())) {
-              if (1 || (rule2 as any).styleMap.has(key)) {
+              // Was `1 || rule2.styleMap.has(key)`, which always took this
+              // branch; the `1 ||` short-circuited the intended has() check.
+              if (rule2.styleMap.has(key)) {
                 //rule2.styleMap.delete(key);
                 let sval = "";
 
@@ -810,14 +812,14 @@ export class Screen<
     }, 150);
   }
 
-  _calcSizeKey(w: number, h: number, x: number, y: number, dpi: number, scale: number) {
-    if (arguments.length !== 6) {
+  _calcSizeKey(...args: number[]) {
+    if (args.length !== 6) {
       throw new Error("eek");
     }
 
     let s = "";
-    for (let i = 0; i < arguments.length; i++) {
-      s += arguments[i].toFixed(0) + ":";
+    for (let i = 0; i < args.length; i++) {
+      s += args[i].toFixed(0) + ":";
     }
 
     return s;
@@ -1490,10 +1492,6 @@ export class Screen<
   regenBorders_stage2() {
     for (const b of this.screenborders) {
       b.halfedges = [];
-    }
-
-    function hashHalfEdge(border: ScreenBorder, sarea: ScreenArea) {
-      return border._id + ":" + sarea._id;
     }
 
     function has_he(border: ScreenBorder, border2: ScreenBorder, sarea: ScreenArea) {
@@ -2729,7 +2727,7 @@ export class Screen<
       return;
     }
 
-    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keydown) {
+    if (!haveModal() && this.sareas.active?.on_keydown) {
       return this.sareas.active.on_keydown(e);
     }
   }
@@ -2828,7 +2826,7 @@ const stop_cbs = [] as (() => void)[];
 
 let key_event_opts: AddEventListenerOptions | undefined;
 
-export function startEvents<CTX extends IContextBase>(getScreenFunc: () => Screen | undefined) {
+export function startEvents(getScreenFunc: () => Screen | undefined) {
   get_screen_cb = getScreenFunc as unknown as typeof get_screen_cb;
 
   if (_events_started) {

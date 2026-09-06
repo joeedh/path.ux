@@ -26,6 +26,8 @@ export default defineConfig([
     "**/build/**",
     "generated/**",
     "simple_docsys/doc_build",
+    // A data fragment eval'd behind a "config = " prefix, not standalone JS.
+    "simple_docsys/docs.config.js",
     "scripts/lib/tinymce/**",
     // Deliberately-wrong data paths that validDatapathRule.test.ts lints itself.
     "tests/fixtures/valid-datapath/**",
@@ -104,5 +106,18 @@ export default defineConfig([
     // Build-tool CLIs run under Node, not the browser.
     files          : ["buildtools/**/*.mjs"],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Dev servers and doc tooling are plain CommonJS scripts run under Node.
+    files: [
+      "serv.js",
+      "serv_simple.js",
+      "servers/**/*.js",
+      "simple_docsys/**/*.js",
+      "simple_example/**/*.js",
+      "example/*.cjs",
+    ],
+    languageOptions: { globals: globals.node },
+    rules         : { "@typescript-eslint/no-require-imports": "off" },
   },
 ]);

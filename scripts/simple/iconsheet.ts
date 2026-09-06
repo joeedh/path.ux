@@ -15,7 +15,7 @@ let text = `
    version="1.1"
    inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    sodipodi:docname="iconsheet.svg"
-   inkscape:export-filename="C:\dev\allshape\src\datafiles\iconsheet16.png"
+   inkscape:export-filename="C:devallshapesrcdatafilesiconsheet16.png"
    inkscape:export-xdpi="45"
    inkscape:export-ydpi="45">
   <defs

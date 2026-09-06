@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, expect, test } from "vitest";
-import { UIBase, PackFlags, iconmanager } from "../scripts/core/ui_base";
+import { PackFlags, iconmanager } from "../scripts/core/ui_base";
 import "../scripts/core/ui_containers";
 import "../scripts/widgets/ui_textbox";
 import "../scripts/widgets/ui_panel";

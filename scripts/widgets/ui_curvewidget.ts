@@ -410,8 +410,10 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
 
   _redraw() {
     //forcibly clear canvas, works better then clearRect
-    this.canvas.width = this.canvas.width;
-    this.canvas.height = this.canvas.height;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    this.canvas.width = w;
+    this.canvas.height = h;
 
     const canvas = this.canvas;
     const g = this.g;

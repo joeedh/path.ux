@@ -1,7 +1,4 @@
-import { Vector2, Matrix4, Quat, Vector3, Vector4 } from "../path-controller/util/vectormath";
-import * as math from "../path-controller/util/math";
-import { color2css, css2color, parsepx } from "./ui_theme";
-import { Curve1D, getCurve } from "../path-controller/curve/curve1d";
+import { getCurve } from "../path-controller/curve/curve1d";
 import type { CurveTypeData } from "../path-controller/curve/curve1d_base";
 import * as util from "../path-controller/util/util";
 

@@ -26,7 +26,7 @@
  */
 
 import { CSSFont } from "./cssfont";
-import { TypedThemeObject, TypedThemeObjectConstructor } from "./theme_base_types";
+import { TypedThemeObject } from "./theme_base_types";
 import { compatMap, ThemeScrollBars, BoxBorder } from "./ui_theme";
 import type { ThemeItem, ThemeRecord } from "./ui_theme";
 

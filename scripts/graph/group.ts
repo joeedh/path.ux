@@ -4,7 +4,6 @@ import { ToolProperty } from "../path-controller/toolsys/toolprop";
 import { HashDigest } from "../path-controller/util/util";
 import { DataAPI, DataStruct } from "../path-controller/controller/controller";
 import { Graph } from "./graph";
-import { defineGraphAPI } from "./graph_api";
 import type { GroupResolveRuntime } from "./graph";
 import { Node, registerNodeType } from "./node";
 import type { NodeDef, NodePropName, Sockets } from "./node";

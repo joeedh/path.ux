@@ -155,14 +155,14 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
         graphPath: this.view.currentGraphPath,
         ...detach,
       });
-      if (target !== undefined && target.ok) {
+      if (target?.ok) {
         await this._dispatch(this._connectEdit(origin, target));
       }
       this.view.syncGraph();
       return;
     }
 
-    if (target !== undefined && target.ok) {
+    if (target?.ok) {
       await this._dispatch(this._connectEdit(origin, target));
     }
     this.view.syncGraph();
@@ -207,7 +207,6 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
 
   /** The opposite-direction terminal nearest to local, within LINK_DROP_PX. */
   private _nearestTarget(local: readonly [number, number]): DropTarget<CTX> | undefined {
-    const origin = this._origin!;
     const targetDir = this.targetDir;
     const tf = this.view.panzoom.transform;
 

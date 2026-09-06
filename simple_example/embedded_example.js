@@ -1,6 +1,5 @@
 import * as simple from "../scripts/simple/simple.js";
 import { Vector4, UIBase } from "../scripts/pathux.js";
-import { Editor } from "../scripts/simple/simple.js";
 
 export class Context {
   get canvas() {
@@ -206,5 +205,5 @@ simple.Editor.register(CanvasEditor);
 
 export function start() {
   window._appstate = new AppState();
-  _appstate.start();
+  window._appstate.start();
 }

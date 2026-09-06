@@ -1,6 +1,6 @@
 import { CSSFont } from "./cssfont";
 import { ThemeScrollBars, BoxBorder } from "./ui_theme";
-import { getVars, instanceThemeVars, ThemeVars } from "./ui_theme_utils";
+import { getVars, instanceThemeVars } from "./ui_theme_utils";
 
 // see UIBase.setBoxCSS for how to load border/margin/padding/round/etc of a box
 

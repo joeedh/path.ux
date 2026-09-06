@@ -1,10 +1,5 @@
 import * as nstructjs from "../path-controller/util/nstructjs";
-import {
-  FloatProperty,
-  Vec3Property,
-  StringProperty,
-  PropFlags,
-} from "../path-controller/toolsys/toolprop";
+import { FloatProperty, Vec3Property, StringProperty } from "../path-controller/toolsys/toolprop";
 import { Vector3 } from "../path-controller/util/vectormath";
 import type { SocketDir } from "./graph_types";
 import { NodeSocketBase, registerSocketType } from "./socket";

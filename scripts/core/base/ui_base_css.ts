@@ -159,7 +159,6 @@ function buildBoxCSS(elem: AnyUIBase, subkey?: string, apply?: boolean): string 
   // note: we support using either outline or border css properties,
   // this is controlled by BoxBorder.isOutline
 
-  const borderRec = themeFetch("border", false) as BoxBorder | undefined | string;
   const borderPrefix = "border";
 
   const boxDef = (key: string) => {

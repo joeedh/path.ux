@@ -58,22 +58,6 @@ function getNativeTheme() {
   return _nativeTheme;
 }
 
-function getElectronVersion() {
-  let key = navigator.userAgent;
-  let i = key.search("Electron");
-  key = key.slice(i + 9, key.length);
-
-  i = key.search(/[ \t]/);
-  if (i >= 0) {
-    key = key.slice(0, i);
-  }
-
-  return key
-    .trim()
-    .split(".")
-    .map((f) => parseInt(f));
-}
-
 /*
  * wrap require to keep angular from auto-importing
  * this api in browsers
@@ -90,7 +74,6 @@ import { Menu } from "../../menu/menu";
 import { DropBox } from "../../menu/dropbox";
 import { getIconManager, UIBase } from "../../core/ui_base";
 import cconst from "../../config/const";
-import * as util from "../../util/util";
 
 import { FileDialogArgs, FilePath } from "../platform_base";
 
@@ -344,16 +327,7 @@ export function checkInit() {
 
 export const iconcache: Record<string, unknown> = {};
 
-function makeIconKey(icon: number, iconsheet: number, invertColors: boolean) {
-  return "" + icon + ":" + iconsheet + ":" + invertColors;
-}
-
 export function getNativeIcon(icon: number, iconsheet = 0, invertColors = false, size = 16) {
-  //let key = makeIconKey(icon, iconsheet, invertColors);
-  //if (key in iconcache) {
-  //  return iconcache[key];
-  //}
-
   let icongen: IcoGenModule;
 
   try {

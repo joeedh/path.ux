@@ -899,8 +899,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     const last = this._lastPress;
     this._lastPress = frame.headerPressed ? { id: frame.node.id, at: now } : undefined;
     if (
-      last !== undefined &&
-      last.id === frame.node.id &&
+      last?.id === frame.node.id &&
       now - last.at <= DOUBLE_PRESS_MS &&
       frame.headerPressed &&
       frame.node instanceof GroupNode

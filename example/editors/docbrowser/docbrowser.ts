@@ -1,17 +1,5 @@
 import { Editor } from "../editor_base.js";
-import {
-  pushModalLight,
-  popModalLight,
-  Icons,
-  UIBase,
-  nstructjs,
-  util,
-  Vector2,
-  Matrix4,
-  cconst,
-  PlatformAPI,
-  platform as Platform,
-} from "../../pathux.js";
+import { UIBase, nstructjs, PlatformAPI, platform as Platform } from "../../pathux.js";
 // DocsBrowser lives in the optional pathux_with_docbrowser bundle, not the main
 // pathux entry; import it from source so the example bundle includes it and the
 // "docs-browser-x" custom element gets registered.
@@ -36,36 +24,6 @@ const countstr = function (buf: string, s: string) {
 
   return count;
 };
-
-function basename(path: string) {
-  while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length - 1);
-  }
-
-  path = path.replace(/\/+/g, "/");
-  const parts = path.split("/");
-  return parts[parts.length - 1];
-}
-
-function dirname(path: string) {
-  while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length - 1);
-  }
-
-  const parts = path.split("/");
-  parts.length--;
-
-  let s = "";
-  for (const t of parts) {
-    s += t + "/";
-  }
-
-  while (s.endsWith("/")) {
-    s = s.slice(0, s.length - 1);
-  }
-
-  return s;
-}
 
 function relative(a1: string, b1: string) {
   let a = a1;
@@ -185,40 +143,6 @@ DocsBrowserEditor.STRUCT =
 `;
 nstructjs.register(DocsBrowserEditor);
 Editor.register(DocsBrowserEditor);
-
-function oldSave(this: DocsBrowserEditor) {
-  const doc = this.browser.root.contentDocument!;
-  const head = doc.head;
-  const style = document.createElement("style");
-  head.appendChild(style);
-
-  let text = "";
-  for (const sheet of doc.styleSheets) {
-    let rules: CSSRuleList;
-
-    try {
-      rules = sheet.rules;
-    } catch (error) {
-      continue; //can't read rules
-    }
-    for (const rule of rules) {
-      text += rule.cssText + "\n\n";
-    }
-  }
-
-  style.textContent = text;
-
-  const data = `<!doctype html>
-<html>
-${doc.head.outerHTML.trim()}
-${doc.body.outerHTML.trim()}
-</html>
-      `;
-
-  console.log(data);
-  this.savedDocument.data = data;
-  _appstate.saveLocalStorage();
-}
 
 /*this.header.button("Clear", () => {
     if (prompt("ok?", "true")) {

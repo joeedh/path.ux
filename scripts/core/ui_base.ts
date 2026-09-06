@@ -1271,7 +1271,6 @@ export class UIBase<
 }
 
 export * from "./base/ui_draw";
-import { _getFont } from "./base/ui_draw";
 
 export * from "./base/ui_savedata";
 

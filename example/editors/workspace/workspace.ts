@@ -8,11 +8,10 @@ import {
   KeyMap,
   PanelFlags,
   type PanelManager,
-  PackFlags,
 } from "../../pathux.js";
 import { Editor } from "../editor_base.js";
-import { PanOp } from "./workspace_ops.js";
-import { DrawOp } from "../../draw/draw_ops.js";
+import "./workspace_ops.js";
+import "../../draw/draw_ops.js";
 import { BrushSettings } from "../../draw/brush.js";
 import { Dynamics } from "../../core/dynamics.js";
 import type { AppContext } from "../../core/context.js";

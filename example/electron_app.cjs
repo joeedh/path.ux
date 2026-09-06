@@ -26,9 +26,7 @@ ipcMain.handle("nativeTheme", async (event) => {
 function makeInvoker(
   event,
   callbackKey,
-  getargs = (args) => {
-    args;
-  }
+  getargs = (args) => args
 ) {
   return function () {
     let args = getargs(arguments);

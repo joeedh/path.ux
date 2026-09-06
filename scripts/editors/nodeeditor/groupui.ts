@@ -569,7 +569,7 @@ function buildExposedList<CTX extends IContextBase>(
     row.style.gap = "6px";
     row.style.alignItems = "center";
 
-    const name = mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
+    mark(row.label(entryLabel(entry, target)), "nodeeditor-exposure-name");
 
     if (state === "missing") {
       const flag = mark(row.label("missing"), "nodeeditor-exposure-flag");

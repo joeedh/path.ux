@@ -49,14 +49,13 @@ export interface NodeTypeConstructor {
 }
 
 declare const brand: unique symbol;
-type PrimTag<T, Tag extends string> = T & { readonly [brand]: Tag };
-type OpaqueTag<T, Tag extends string> = { readonly [brand]: Tag };
+type OpaqueTag<Tag extends string> = { readonly [brand]: Tag };
 
 /**
  * An opaque wrapper to prevent node prop keys (e.g. 'in:socket1', 'out:socket2', 'some-node-prop')
  * from mixing with real names in the type system.
  */
-export type NodePropName = OpaqueTag<string, "NodePropName">;
+export type NodePropName = OpaqueTag<"NodePropName">;
 
 const mergedDefs = new Map<NodeTypeConstructor, NodeDef>();
 
@@ -340,9 +339,8 @@ pathux.GraphNode {
         return nodePropKeys(node).length;
       },
       getIter(_api: DataAPI, node: Node) {
-        return nodePropKeys(node)
-          .map((k) => nodePropRef(node, k))
-          [Symbol.iterator]();
+        const refs = nodePropKeys(node).map((k) => nodePropRef(node, k));
+        return refs[Symbol.iterator]();
       },
       getStruct(_api: DataAPI, node: Node, key: string) {
         const target = nodePropTarget(node, key as unknown as NodePropName);

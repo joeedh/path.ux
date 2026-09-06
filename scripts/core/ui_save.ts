@@ -89,8 +89,6 @@ export function saveUIData(node: HTMLElement, key: string): string {
 export function makeParser(): parser {
   const tk = <T = string>(name: string, re: RegExp, func?: TokFunc<T>) =>
     new tokdef<T>(name, re, func);
-  let p: parser;
-
   const tokens = [
     tk("LSBRACKET", /\[/),
     tk("RSBRACKET", /\]/),
@@ -108,7 +106,7 @@ export function makeParser(): parser {
   }
 
   const l = new lexer(tokens);
-  p = new parser(l, p_error);
+  const p = new parser(l, p_error);
 
   function consumeAll(): void {
     while (!p.at_end()) {

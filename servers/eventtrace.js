@@ -1,26 +1,6 @@
 let debug = 0;
 
-function color(str, c) {
-  let pre;
-
-  if (!str) return;
-
-  pre = "\u001b[38;5;" + c.toString(10) + "m";
-
-  return pre + str + "\u001b[0m";
-}
-
 exports.parse = (buf, name) => {
-  let counts = {
-    addEventListener   : 3,
-    removeEventListener: 3,
-    dispatchEvent      : 1,
-    on                 : 3,
-    off                : 3,
-    //   _fireEvent : 2,
-    //   _fire : 2
-  };
-
   let keys = new Set([
     "addEventListener",
     "removeEventListener",
@@ -32,7 +12,6 @@ exports.parse = (buf, name) => {
   let babel = require("@babel/parser");
   let walk = require("@babel/traverse").default;
   let generator = require("@babel/generator").default;
-  let types = require("@babel/types");
 
   let node = babel.parse(buf, {
     sourceType    : "unambiguous",

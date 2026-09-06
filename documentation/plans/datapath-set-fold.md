@@ -193,7 +193,7 @@ renderer.
 
 ### What it does now
 
-Two swallow sites, and the second is worse than silent:
+The code below swallows errors at two sites, and the second one masks a real bug instead of merely staying silent:
 
 - `setValue` (`controller_ops.ts:69-77`) catches, logs `"Error setting datapath"`, sets
   `hadError = true`, returns normally.
@@ -317,7 +317,7 @@ unannounced.
 
 Each stage is green under `pnpm typecheck`, `pnpm test` and `pnpm format:check` on its own.
 
-### Stage 1 — a harness that fails honestly — **done**
+### Stage 1 — a harness that surfaces failures — **done**
 
 New `tests/datapathSetFold.test.ts`, against post-task-0 code. Three obstacles first, each of
 which currently produces an unhandled rejection that leaves a test green:

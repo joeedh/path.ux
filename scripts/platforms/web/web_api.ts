@@ -1,5 +1,5 @@
 import { PlatformAPI, isMimeText } from "../platform_base";
-import { saveFile, loadFile } from "../../path-controller/util/html5_fileapi";
+import { saveFile } from "../../path-controller/util/html5_fileapi";
 
 import { FileDialogArgs, FilePath } from "../platform_base";
 

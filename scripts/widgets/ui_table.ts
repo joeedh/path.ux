@@ -225,11 +225,11 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
     } as TableRowProxy;
 
     function makefunc(f: string) {
-      (ret as unknown as Record<string, unknown>)[f] = function () {
+      (ret as unknown as Record<string, unknown>)[f] = function (...args: unknown[]) {
         const container = maketd();
 
         container.background = (tr.style as StyleRecord)["background-color"]; //"rgba(0,0,0,0)";
-        return (container as unknown as Record<string, Function>)[f].apply(container, arguments);
+        return (container as unknown as Record<string, Function>)[f].apply(container, args);
       };
     }
 

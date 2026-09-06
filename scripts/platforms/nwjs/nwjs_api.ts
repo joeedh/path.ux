@@ -224,6 +224,8 @@ interface MenuItem {
 // clicks silently stop firing. We keep every built menu/item in a retain bucket
 // that outlives the menu: `retainMenuObjects` swaps the live set so the previous
 // menubar's objects can be collected only after the new one is installed.
+// Never read back; holding the reference is what keeps the objects alive.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let _menubarRetain: unknown[] = [];
 let _popupRetain: unknown[] = [];
 

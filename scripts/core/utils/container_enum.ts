@@ -423,8 +423,8 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
 
   // Left unset when there is no name, rather than written as the string "undefined", which is
   // what the button would then draw until the value's own label arrives.
-  if (name !== undefined) {
-    ret.setAttribute("name", name as string);
+  if (label !== undefined) {
+    ret.setAttribute("name", label);
   }
 
   // Tested against undefined rather than for truth: "" and 0 are ordinary enum values, and a

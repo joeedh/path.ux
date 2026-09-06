@@ -1,15 +1,9 @@
 "use strict";
 //adapted from icon-gen code
 if (window.haveElectron) {
-  let fs = require("fs");
-  let path = require("path");
   let pngjsNozlib = require("pngjs-nozlib");
-  let png = require("pngjs");
 
   const REQUIRED_IMAGE_SIZES = [16, 24, 32, 48, 64, 128, 256];
-
-  const DEFAULT_FILE_NAME = "app";
-  const FILE_EXTENSION = ".ico";
 
   const HEADER_SIZE = 6;
 
@@ -138,30 +132,6 @@ if (window.haveElectron) {
     b.writeUInt16LE(count, 4); // 2 WORD Image count
 
     return b;
-  };
-  /**
-   * Check an option properties.
-   * @param {Object} options Output destination the path of directory.
-   * @param {String} options.name Name of an output file.
-   * @param {Number[]} options.sizes Structure of an image sizes.
-   * @returns {Object} Checked options.
-   */
-
-  const checkOptions = (options) => {
-    if (options) {
-      return {
-        name:
-          typeof options.name === "string" && options.name !== ""
-            ? options.name
-            : DEFAULT_FILE_NAME,
-        sizes: Array.isArray(options.sizes) ? options.sizes : REQUIRED_IMAGE_SIZES,
-      };
-    } else {
-      return {
-        name : DEFAULT_FILE_NAME,
-        sizes: REQUIRED_IMAGE_SIZES,
-      };
-    }
   };
   /**
    * Get the size of the required PNG.

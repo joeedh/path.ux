@@ -4,7 +4,6 @@
  */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
-import { pushModalLight, popModalLight } from "../path-controller/util/simple_events";
 import cconst from "../config/const";
 import nstructjs from "../path-controller/util/struct";
 import type { StructReader } from "../util/nstructjs";
@@ -65,16 +64,6 @@ const countstr = function (buf: string, s: string) {
 
   return count;
 };
-
-function basename(path: string) {
-  while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length - 1);
-  }
-
-  path = path.replace(/\/+/g, "/");
-  const parts = path.split("/");
-  return parts[parts.length - 1];
-}
 
 function dirname(path: string) {
   while (path.length > 0 && path.trim().endsWith("/")) {
@@ -1185,7 +1174,7 @@ DocsBrowser {
     };
 
     window.setInterval(() => {
-      if (1 || !mdown) {
+      if (!mdown) {
         const val = img.getAttribute("draggable");
         img.setAttribute("draggable", "false");
         if (val) {

@@ -33,7 +33,6 @@ import { TypedThemeObject, TypedThemeObjectConstructor } from "../core/theme_bas
 import { DataAPI, DataPath, DataStruct } from "../path-controller/controller/controller";
 import { DataTypes } from "../path-controller/controller/controller_base";
 import {
-  PropTypes,
   StringProperty,
   Vec3Property,
   Vec4Property,

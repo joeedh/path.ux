@@ -1,4 +1,4 @@
-import { nstructjs, Vector2, Vector3, Vector4, Matrix4, util, color2css } from "../pathux.js";
+import { nstructjs, Vector2, Vector4, util, color2css } from "../pathux.js";
 
 export const DrawFlags = {
   BLUR : 1,

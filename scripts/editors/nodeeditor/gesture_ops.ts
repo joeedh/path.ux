@@ -312,7 +312,7 @@ export class LinkDragModalOp<CTX extends IContextBase = IContextBase> extends To
   override modalEnd(was_cancelled?: boolean) {
     const view = this._view;
     this._view = undefined;
-    if (view !== undefined && view.linkDrag.active) {
+    if (view?.linkDrag.active) {
       view.linkDrag.cancel();
     }
     super.modalEnd(was_cancelled);

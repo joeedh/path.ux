@@ -1,4 +1,3 @@
-import * as util from "../path-controller/util/util";
 import { RowFrame } from "../core/ui_containers";
 import * as ui_base from "../core/ui_base";
 import { Icons, css2color, color2css, getFont } from "../core/ui_base";

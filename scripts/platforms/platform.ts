@@ -12,7 +12,7 @@ if ((window as unknown as Record<string, unknown>).haveNwjs) {
 
 /* Assigned once the backend module resolves; every caller runs long after
    that, which is why this is not declared optional. */
-export var platform: typeof PlatformAPI;
+export let platform: typeof PlatformAPI;
 
 promise.then((module) => {
   platform = module.platform;

@@ -16,7 +16,6 @@ import { EnumDef, IconMap, PropTypes } from "../path-controller/toolsys/toolprop
 import type { DropBox } from "../menu/dropbox";
 import type { MenuTemplate } from "../menu/menu_types";
 import { IsRowFrameTag } from "./ui_consts";
-import { elementIsRow } from "./base/ui_base_dom";
 import { IContextBase } from "./context_base";
 import type { TreeView } from "../widgets/ui_treeview";
 import { ToolOp } from "../path-controller/toolsys";
@@ -372,7 +371,8 @@ export class Container<
           path = con._joinPrefix(path)!;
           n.setAttribute("datapath", path);
 
-          //update helper tooltips
+          // Re-invokes the description setter to regenerate the tooltip from the datapath just set above.
+          // eslint-disable-next-line no-self-assign
           n.description = n.description;
         }
       }

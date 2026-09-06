@@ -9,7 +9,7 @@ const debug_listeners = false; //parse code with babel and activates functionalt
 
 import fs from "fs";
 import http from "http";
-import path, { parse } from "path";
+import path from "path";
 
 const INDEX = "servers/index.html";
 const BASEDIR = path.resolve(process.cwd() + "/../");

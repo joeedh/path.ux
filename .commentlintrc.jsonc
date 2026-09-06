@@ -11,7 +11,7 @@
 
   // Extra gitignore-style patterns to skip, on top of .gitignore and
   // .commentlintignore.
-  "exclude": ["dist/**", "**/types/**"],
+  "exclude": ["**/dist/**", "**/types/**"],
 
   // Extra ignore files to read, beyond .gitignore and .commentlintignore.
   // "ignorePath": [".gitignore"],
@@ -56,7 +56,7 @@
   // Rule ids never to report. The gate that decides whether a comment is
   // flagged at all still runs over every rule; disabling one only changes
   // which rule a finding is named after.
-  "disableRules": ["P4", "P10"],
+  "disableRules": ["P4", "P10", "C2"]
 
   // Rule ids to turn back on even though they ship off by default (C10,
   // C11, C13 -- style calls the taxonomy can't settle for every codebase).

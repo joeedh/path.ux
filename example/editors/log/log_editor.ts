@@ -1,5 +1,5 @@
 import { Editor } from "../editor_base.js";
-import { nstructjs, util, TableFrame } from "../../pathux.js";
+import { nstructjs, TableFrame } from "../../pathux.js";
 
 export class LogEditor extends Editor {
   table!: TableFrame;

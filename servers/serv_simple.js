@@ -135,7 +135,7 @@ const serv = http.createServer(
       try {
         json = JSON.parse(unescape(path[1]));
       } catch (error) {
-        sendError(404, escape(path[1]));
+        res.sendError(404, escape(path[1]));
         return;
       }
 

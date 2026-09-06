@@ -118,12 +118,9 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
 
     let linemap = [0];
 
-    let last = 0;
     for (let i = 0; i < data.length; i++) {
       if (data[i] === "\n") {
-        let i2 = i + 1;
-        linemap.push(i2);
-        last = i2;
+        linemap.push(i + 1);
       }
     }
 
@@ -187,6 +184,7 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
           ls[i] = "-" + buf.slice(j, j + parseInt(l[1]));
           //ls[i] = headVersion.data
         } else if (l[0] === "-") {
+          // Deleted lines are left unchanged.
         } else if (l[0] === "$") {
           l = l.slice(1, l.length).split(":");
           let j = parseInt(l[0]);
@@ -222,9 +220,6 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
         version = this.headVersion.copy();
         this.versions.push(version);
       } else {
-        let buf = this.headVersion.data;
-        let start = 0;
-
         //let diff = jsdiff.diffLines(doc.data, this.headVersion.data);
         //console.log(this);
         let diff = jsdiff.structuredPatch(
@@ -308,7 +303,7 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
 
     getDocMetaPath(doc) {
       let key = doc.relpath;
-      key = key.replace(/[ \t\/\\\.]/g, "$") + ".json";
+      key = key.replace(/[ \t/\\.]/g, "$") + ".json";
       key = this.cachePath + "/" + key;
 
       console.log("key", key);
@@ -528,7 +523,7 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
     }
 
     newDoc(relpath, data) {
-      let dir = fs.mkdirSync(pathmod.dirname(relpath));
+      fs.mkdirSync(pathmod.dirname(relpath));
 
       let doc = new Document();
       doc.path = normpath(this.basePath + "/" + relpath);
@@ -587,7 +582,7 @@ export default function (fs, marked, parse5, pathmod, jsdiff) {
       gen.read();
 
       for (let doc of this.docs) {
-        let meta = this.getDocMeta(doc);
+        this.getDocMeta(doc);
         this.saveDocMeta(doc);
       }
 
@@ -960,7 +955,7 @@ ${doc.html}
     return pathmod.resolve(p).replace(/\\/g, "/").trim();
   };
 
-  let readConfig = (exports.readConfig = function readConfig(path) {
+  exports.readConfig = function readConfig(path) {
     let cwd = normpath(process.cwd());
     let base = pathmod.dirname(normpath(path));
     base = "./" + pathmod.relative(cwd, base).replace(/\\/g, "/");
@@ -991,8 +986,6 @@ ${doc.html}
     config.initCache();
     config.loadCSS();
 
-    path = pathmod.resolve(config.basePath + "/../");
-
     walkDir(config.basePath, (root, dir, files) => {
       root = config.basePath + "/" + root;
       for (let f of files) {
@@ -1009,7 +1002,7 @@ ${doc.html}
     });
 
     return config;
-  });
+  };
 
   return exports;
 }

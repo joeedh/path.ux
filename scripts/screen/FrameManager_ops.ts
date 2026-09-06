@@ -1164,8 +1164,6 @@ function endLingeringTooltip(): void {
 function lingerTooltip(tip: { end(): void }): void {
   endLingeringTooltip();
 
-  let timer: ReturnType<typeof setTimeout>;
-
   const close = () => {
     window.removeEventListener("pointerdown", onDown, true);
     clearTimeout(timer);
@@ -1179,7 +1177,7 @@ function lingerTooltip(tip: { end(): void }): void {
   const entry = { close };
 
   window.addEventListener("pointerdown", onDown, { capture: true, passive: true });
-  timer = setTimeout(close, LINGER_MS);
+  const timer = setTimeout(close, LINGER_MS);
 
   lingering = entry;
 }

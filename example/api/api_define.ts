@@ -1,17 +1,7 @@
 import { DataAPI, DataStruct, buildToolSysAPI, nodegraph } from "../pathux.js";
-import { Icons } from "../editors/icon_enum.js";
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
-import {
-  Canvas,
-  DrawFlags,
-  CanvasPath,
-  Material,
-  CanvasPoint,
-  CanvasEdge,
-  ElementArray,
-} from "../draw/draw.js";
-import { Brushes, BrushSettings, Brush } from "../draw/brush.js";
-import { Dynamics, DynamicsState, DynamicModes, DynamicKey } from "../core/dynamics.js";
+import { Canvas, DrawFlags, CanvasPath, Material, ElementArray } from "../draw/draw.js";
+import { BrushSettings } from "../draw/brush.js";
 
 function api_define_material(api: DataAPI) {
   const st = api.mapStruct(Material, true);
