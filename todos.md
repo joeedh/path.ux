@@ -23,7 +23,8 @@ task 0.
 [x]: fold DataPathSetOp writes onto the toolstack (foldOrExec), per
 documentation/plans/datapath-set-fold.md.
 [ ]: bind tool defaults per DataAPI instead of per process, per
-documentation/plans/toolsys-tasks.md task 2.
+documentation/plans/per-api-structs.md (task 2). Plan recommends
+narrowing the task; read it before starting.
 [x]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
 module globals as its default instance, per
 documentation/plans/tool-registry.md (task 3).

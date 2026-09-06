@@ -93,8 +93,12 @@ Plan: [`datapath-set-fold.md`](datapath-set-fold.md), **done**.
 
 ## Task 2 — bind tool defaults per `DataAPI` instead of per process
 
-Sketch only. Rewritten after task 3 landed, which settled one of its questions and did one
-half of its fix.
+Plan: [`per-api-structs.md`](per-api-structs.md), **not started**, pressure-tested once. It
+recommends against the task as titled — see its Three positions section. The sketch below is
+what it was planned from.
+
+Rewritten after task 3 landed, which settled one of its questions and did one half of its
+fix.
 
 Two things are still broken, and they are independent of each other.
 
