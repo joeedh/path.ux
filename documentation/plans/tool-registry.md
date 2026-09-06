@@ -3,9 +3,9 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: not started. Revised once after a fresh-context pressure test, which invalidated the
-first draft's census, its import-cycle fix, and its stage boundaries. See
-[Findings](#findings) for the disposition of each.
+Status: stage 1 done, stages 2-6 not started. Revised once after a fresh-context pressure
+test, which invalidated the first draft's census, its import-cycle fix, and its stage
+boundaries. See [Findings](#findings) for the disposition of each.
 
 <!-- toc -->
 
@@ -264,15 +264,46 @@ Each stage is green under `pnpm typecheck` — **both passes; the second one is 
 
 ### Stage 1 — tests for the parts that have none
 
-Grep over `tests/` finds no coverage of `SavedToolDefaults`, `saveDefaultInputs`,
-`hasDefault`, `loadDefaults` or `ToolMacro` — only `toolpath_parse.test.ts:69-71` touches
-registration at all. That is exactly where the macro and defaults hazards live, so the
-regression net is written before anything moves, not after.
+**Done.** `tests/tooldefaults.test.ts`, 11 tests over the four cases below. Grep over
+`tests/` had found no coverage of `SavedToolDefaults`, `saveDefaultInputs`, `hasDefault`,
+`loadDefaults` or `ToolMacro` — only `toolpath_parse.test.ts:69-71` touched registration at
+all. That is exactly where the macro and defaults hazards live, so the regression net is
+written before anything moves, not after.
 
 - Saved defaults survive a register → construct → `saveDefaultInputs` → construct round trip.
 - A `ToolMacro` gets and sets its defaults through `_getTypeClass()`.
 - `unregister` → re-register, as `setDataPathToolOp` does it.
 - A subclass of a registered tool: pin whatever it does today, so stage 3 shows the movement.
+
+Three things the net pins are wrong today, written around rather than fixed. Stage 3 owns
+all three, and each is now a test that will change colour when it moves:
+
+- **Re-registering resets a saved default.** `register()` → `updateToolDefaults` →
+  `_buildAccessors` ends with `obj[name] = prop2.getValue()`, so a `setDataPathToolOp`-shaped
+  unregister/re-register puts the accessor back at the `tooldef()` value while `userSetMap`
+  goes on reporting the path as user-set. `unregister` on its own clears nothing, so the
+  answer to "does `unregister` clear the stamp" has to cover re-`register` as well.
+- **A subclass with no `tooldef()` of its own reads _and writes_ the parent's defaults.**
+  Statics inherit, so `_getAccessor` resolves the parent's toolpath, and `isRegistered` says
+  `false` the whole time. Guarding only the read is not enough: `set()`'s
+  "not in the default map" fallback calls `_buildAccessors`, which resolves the same
+  inherited toolpath and lands the write on the parent anyway.
+- **Macro keys collide.** `_getTypeClass` builds the key with
+  `key = tool.constructor.name + ":"` rather than `+=`, so only the last member tool reaches
+  it, and two macros over different tool lists share one generated class and one set of
+  defaults. The key is also the accessor path, so it is what a registry would have to
+  namespace.
+
+Two facts the net records that the plan did not state:
+
+- `SavedToolDefaults.has()` asks whether registration built an accessor, not whether a value
+  was ever saved into it; `useDefault()` is the question about the saved value. For a
+  registered tool nothing has ever saved, `has()` is already `true` and `useDefault()` is
+  `false`, so stage 3 cannot read `has()` as "a default exists".
+- The cache has no remove: `pathmap`, `accessors` and `userSetMap` only ever grow, and
+  `updateToolSysAPI`'s `datastruct.clear()` does not touch them. Tests therefore need one
+  tool class per test rather than one per file, and stage 5's second registry cannot be
+  torn down by rebuilding the API.
 
 ### Stage 2 — the class, the cycle, and the tables
 
