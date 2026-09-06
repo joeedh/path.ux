@@ -2,6 +2,11 @@ import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 import { DataAPI } from "../scripts/path-controller/controller/controller";
 import { MacroClasses, ToolMacro } from "../scripts/path-controller/toolsys/toolmacro";
 import { SavedToolDefaults } from "../scripts/path-controller/toolsys/tooldefaults";
+import {
+  defaultRegistry,
+  registryOf,
+  ToolRegistry,
+} from "../scripts/path-controller/toolsys/toolregistry";
 import { ToolClasses, ToolOp } from "../scripts/path-controller/toolsys/toolop";
 import type { IToolOpConstructor, ToolDef } from "../scripts/path-controller/toolsys/toolop";
 import { buildToolSysAPI } from "../scripts/path-controller/toolsys/toolsys";
@@ -12,7 +17,7 @@ import type { ContextLike } from "../scripts/path-controller/controller/controll
  * Regression net for `documentation/plans/tool-registry.md` stage 1: the saved-defaults
  * cache, macro type classes and the register/unregister pair, none of which were covered
  * before the module tool tables move onto a registry object. Every expectation records
- * what the code does today, including the three places where that looks wrong.
+ * what the code does today, including the one place where that still looks wrong.
  */
 
 /* ------------------------------------------------------------------ */
@@ -165,22 +170,22 @@ class ShareStep extends ToolOp<{ count: IntProperty }> {
   }
 }
 
-class CollideA extends ToolOp<{ count: IntProperty }> {
+class FirstStep extends ToolOp<{ count: IntProperty }> {
   static tooldef(): ToolDef {
     return {
-      uiname  : "Collide A",
-      toolpath: "tooldefaults.collide_a",
+      uiname  : "First Step",
+      toolpath: "tooldefaults.first_step",
       inputs  : { count: new IntProperty(1) },
       outputs : {},
     };
   }
 }
 
-class CollideB extends ToolOp<{ count: IntProperty }> {
+class SecondStep extends ToolOp<{ count: IntProperty }> {
   static tooldef(): ToolDef {
     return {
-      uiname  : "Collide B",
-      toolpath: "tooldefaults.collide_b",
+      uiname  : "Second Step",
+      toolpath: "tooldefaults.second_step",
       inputs  : { count: new IntProperty(1) },
       outputs : {},
     };
@@ -200,6 +205,10 @@ describe("a ToolMacro reaches its defaults through _getTypeClass", () => {
     // namespace; it carries no ".", so it lands as one top-level accessor
     expect(cls.tooldef().toolpath).toBe("MacroStep:count:");
     expect(MacroClasses["MacroStep:count:"]).toBe(cls);
+
+    // Stamped where it is generated, since it never passes through register() — being
+    // owned by a registry and being in its class list are separate things
+    expect(registryOf(cls)).toBe(defaultRegistry);
     expect(ToolOp.isRegistered(cls as unknown as IToolOpConstructor)).toBe(false);
 
     // Nothing registers a macro type class, so the accessor register() would have
@@ -236,27 +245,26 @@ describe("a ToolMacro reaches its defaults through _getTypeClass", () => {
     expect(second.inputs.count.getValue()).toBe(99);
   });
 
-  test("two macros over different tools share defaults when the key collides", () => {
-    register(CollideA);
-    register(CollideB);
+  test("the key names every member tool, so two shapes stay apart", () => {
+    register(FirstStep);
+    register(SecondStep);
 
-    // _getTypeClass builds the key with `key = tool.constructor.name + ":"` rather
-    // than `+=`, so only the last member tool survives into it
     const pair = new ToolMacro<ContextLike>();
-    pair.add(new CollideA());
-    pair.add(new CollideB());
+    pair.add(new FirstStep());
+    pair.add(new SecondStep());
 
     const single = new ToolMacro<ContextLike>();
-    single.add(new CollideB());
+    single.add(new SecondStep());
 
-    expect(pair._getTypeClass().tooldef().toolpath).toBe("CollideB:count:");
-    expect(single._getTypeClass()).toBe(pair._getTypeClass());
+    expect(pair._getTypeClass().tooldef().toolpath).toBe("FirstStep:SecondStep:count:");
+    expect(single._getTypeClass().tooldef().toolpath).toBe("SecondStep:count:");
+    expect(single._getTypeClass()).not.toBe(pair._getTypeClass());
 
     pair.inputs.count.setValue(55);
     recordWarnings(() => pair.saveDefaultInputs());
 
     single.loadDefaults(true);
-    expect(single.inputs.count.getValue()).toBe(55);
+    expect(single.inputs.count.getValue()).toBe(1);
   });
 });
 
@@ -278,7 +286,7 @@ class ReRegisterTool extends ToolOp<{ count: IntProperty }> {
 describe("unregister then re-register", () => {
   // setDataPathToolOp itself is off limits here: it unregisters DataPathSetOp and never
   // puts it back, which would leave the shared registry broken for every later test
-  test("the sequence setDataPathToolOp runs resets the saved value", () => {
+  test("the sequence setDataPathToolOp runs keeps the saved value", () => {
     register(ReRegisterTool);
 
     const before = new ReRegisterTool();
@@ -298,9 +306,8 @@ describe("unregister then re-register", () => {
       ToolOp.register(ReRegisterTool);
     }
 
-    // register() rebuilds the accessor from tooldef(), which overwrites the saved
-    // value while userSetMap goes on reporting the path as user-set
-    expect(new ReRegisterTool().inputs.count.getValue()).toBe(1);
+    // register() rebuilds the accessors, but only seeds the ones it finds missing
+    expect(new ReRegisterTool().inputs.count.getValue()).toBe(7);
     const prop = new ReRegisterTool().inputs.count;
     expect(SavedToolDefaults.useDefault(ReRegisterTool, "count", prop)).toBe(true);
   });
@@ -401,5 +408,102 @@ describe("a subclass of a registered tool", () => {
     const registeredChild = new OwnPathTool();
     expect(registeredChild.hasDefault(registeredChild.inputs.count, "count")).toBe(true);
     expect(registeredChild.inputs.count.getValue()).toBe(1);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  the registry a class belongs to                                    */
+/* ------------------------------------------------------------------ */
+
+class StampTool extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Stamp Tool",
+      toolpath: "tooldefaults.stamp",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+}
+
+/** No tooldef() of its own, so it inherits both the toolpath and the stamp. */
+class StampChild extends StampTool {}
+
+class RouteTool extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Route Tool",
+      toolpath: "tooldefaults.route",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+}
+
+describe("the registry a class belongs to", () => {
+  test("register stamps the class and unregister takes the stamp back", () => {
+    // A second registry needs no DataAPI here: register calls updateDefaults, which
+    // returns early while the cache has no api to build accessors into
+    const other = new ToolRegistry();
+
+    expect(registryOf(StampTool)).toBe(defaultRegistry);
+
+    other.register(StampTool);
+    expect(registryOf(StampTool)).toBe(other);
+
+    // The class list and the stamp are separate, and ToolOp's statics ask the default
+    // registry's question
+    expect(ToolOp.isRegistered(StampTool)).toBe(false);
+    expect(other.isRegistered(StampTool)).toBe(true);
+
+    other.unregister(StampTool);
+    expect(registryOf(StampTool)).toBe(defaultRegistry);
+  });
+
+  test("a registry only takes back its own stamp", () => {
+    const other = new ToolRegistry();
+
+    other.register(StampTool);
+    defaultRegistry.unregister(StampTool);
+
+    expect(registryOf(StampTool)).toBe(other);
+
+    other.unregister(StampTool);
+  });
+
+  test("a subclass inherits its parent's registry until it is registered itself", () => {
+    const other = new ToolRegistry();
+    const another = new ToolRegistry();
+
+    other.register(StampTool);
+    expect(registryOf(StampChild)).toBe(other);
+
+    another.register(StampChild);
+    expect(registryOf(StampChild)).toBe(another);
+    expect(registryOf(StampTool)).toBe(other);
+
+    another.unregister(StampChild);
+    expect(registryOf(StampChild)).toBe(other);
+
+    other.unregister(StampTool);
+  });
+
+  test("the stamp decides which cache a ctx-less lookup reads", () => {
+    register(RouteTool);
+
+    const tool = new RouteTool();
+    tool.inputs.count.setValue(7);
+    tool.saveDefaultInputs();
+    expect(new RouteTool().inputs.count.getValue()).toBe(7);
+
+    // The other registry's cache has no accessors, so the tooldef value stands — which
+    // is only observable because the constructor followed the stamp rather than the
+    // module-level SavedToolDefaults
+    const other = new ToolRegistry();
+    other.register(RouteTool);
+    expect(new RouteTool().inputs.count.getValue()).toBe(1);
+
+    other.unregister(RouteTool);
+    expect(new RouteTool().inputs.count.getValue()).toBe(7);
   });
 });

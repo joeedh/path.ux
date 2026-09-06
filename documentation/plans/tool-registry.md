@@ -3,7 +3,7 @@
 Moves the module-level tool tables onto an object, with the current module globals kept as
 aliases onto a default instance. Task 3 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: stages 1-2 done, stages 3-6 not started. Revised once after a fresh-context pressure
+Status: stages 1-3 done, stages 4-6 not started. Revised once after a fresh-context pressure
 test, which invalidated the first draft's census, its import-cycle fix, and its stage
 boundaries. See [Findings](#findings) for the disposition of each.
 
@@ -302,7 +302,9 @@ written before anything moves, not after.
 - A subclass of a registered tool: pin whatever it does today, so stage 3 shows the movement.
 
 Three things the net pins are wrong today, written around rather than fixed. Stage 3 owns
-all three, and each is now a test that will change colour when it moves:
+all three, and each is now a test that will change colour when it moves. (Stage 3 fixed the
+first and the third; it decided the second is correct as it stands, for the reason recorded
+there.)
 
 - **Re-registering resets a saved default.** `register()` → `updateToolDefaults` →
   `_buildAccessors` ends with `obj[name] = prop2.getValue()`, so a `setDataPathToolOp`-shaped
@@ -349,6 +351,7 @@ with no consumer there is no cycle, no load order and no test that would fail.
   the two added being `ToolRegistry` and `defaultRegistry`. Nothing dropped, nothing leaked.
   Read the names statically out of `dist/pathux.js`'s single `export {` block rather than by
   importing it: the barrel touches `window` at module scope and never settles under node.
+  (Stage 3 adds `registryOf` and `defaultsFor`, and drops nothing, for 588.)
 - Stage 1's tests plus the existing suite are the net. A test needing an edit means a
   behaviour change, which means the stage is wrong. ✓ — 441 tests, no edit.
 
@@ -375,9 +378,59 @@ Adding them here would have pulled `toolpath.ts` and `toolsys.ts` back under
 
 ### Stage 3 — the class → defaults stamp
 
-- Stamp at `register()`, and at `_getTypeClass()` for macros.
-- Answer the three sub-questions above in code: subclass inheritance, `unregister` clearing,
-  and what `isRegistered` means once more than one registry exists.
+**Done.** `ToolRegistry.register` stamps `cls[REGISTRY_KEY] = this`, a module-private
+symbol; `registryOf(cls)` reads it, falling back to `defaultRegistry`, and `defaultsFor(cls)`
+is `registryOf(cls).defaults`. `ToolOp.hasDefault`, `getDefault` and `saveDefaultInputs` —
+and `ToolMacro`'s overrides of all three — go through it instead of naming
+`SavedToolDefaults` directly. `_getTypeClass` stamps the class it generates and reads and
+writes `registry.macros` rather than the module alias. With one registry every one of those
+resolves to the same cache, so nothing moves.
+
+- Stamp at `register()`, and at `_getTypeClass()` for macros. ✓
+- Answer the three sub-questions above in code. ✓, below.
+
+**Subclass inheritance: intended, so the lookup is not guarded.** The mark sits on the
+constructor, so an unregistered subclass finds its parent's through the static prototype
+chain. That is the answer we want and not merely the cheap one: a subclass of a registered
+tool belongs wherever its parent does, and a `hasOwnProperty` guard would send it to
+`defaultRegistry` — a *different* registry's defaults — rather than to none. This is why the
+mark is not guarded the way `_regWithNstructjs` guards `STRUCT`: `STRUCT` is about identity,
+where every class needs its own, and the mark is about ownership, which is exactly the thing
+a subclass should inherit.
+
+This decides the registry lookup only. A subclass with no `tooldef()` of its own still shares
+the parent's *toolpath*, and so its saved values, in either direction — stage 1 pinned that.
+It is left alone, because defaults are keyed by toolpath by design: two classes that report
+the same toolpath sharing one set of saved values is that rule working, not failing. The
+oddity is a subclass that declares no `tooldef()`, which is a malformed tool rather than a
+registry problem.
+
+**`unregister` clears the mark, but only its own.** It clears only when the mark is an own
+property of `cls` and points at this registry — so `registryB.unregister(cls)` cannot drop
+registryA's claim, and clearing an inherited mark cannot silently reparent a subclass. The
+"already-constructed op loses its defaults mid-life" objection does not bite: an unmarked
+class falls back to `defaultRegistry`, which is where `setDataPathToolOp`'s
+`unregister` → re-`register` was pointing anyway.
+
+Stage 1 pinned a second half of this that the sub-question did not name: re-`register` used
+to *reset* the saved value, because `_buildAccessors` ended with an unconditional
+`obj[name] = prop2.getValue()`. That is now a seed — it assigns only when the key is absent —
+so a class that moves between registries, or an API that gets rebuilt, keeps what
+`saveDefaultInputs` put in. `tests/tooldefaults.test.ts` was edited to match; that edit is
+the stage's deliverable rather than a warning sign.
+
+**`isRegistered` stays the default registry's question.** `ToolOp`'s statics *are*
+`defaultRegistry`'s public API, so `ToolOp.isRegistered` answers `false` for a class
+registered only into another registry. That is the answer `setDataPathToolOp:1746` wants,
+since the line after it registers into the default. `ToolRegistry.isRegistered` is the
+per-registry question, and being marked by a registry is a third thing again — a macro type
+class is marked and in no class list at all. All three are now pinned in tests.
+
+One more fix taken here because the stage was already inside `_getTypeClass`: the macro key
+was built with `key = tool.constructor.name + ":"` rather than `+=`, so only the last member
+tool reached it and two macros over different tool lists shared one generated class and one
+set of defaults. Safe to change — nothing in path.ux persists the cache or reads
+`_macroTypeId`, so no saved file carries the old keys.
 
 ### Stage 4 — `ModelInterface` carries a registry
 
