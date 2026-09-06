@@ -8,7 +8,7 @@ cost. That rejection was reviewed and did not survive: three of its four stated 
 wrong, and two argued the other way. See that plan's
 [Follow-ups](per-api-structs.md#follow-ups) for the correction, which this plan continues.
 
-Status: **stage 1 done**, stages 2-4 not started. Pressure-tested once, by a fresh-context agent, and revised
+Status: **stages 1-2 done**, stages 3-4 not started. Pressure-tested once, by a fresh-context agent, and revised
 substantially. One blocking finding removed a stage; a second was downgraded to a one-line
 fix on review. See [What the pressure test changed](#what-the-pressure-test-changed).
 
@@ -165,6 +165,27 @@ crash.
 - Cost to undo: free, and the diagnostic stands on its own terms.
 
 ### Stage 2 — move the tables
+
+**Done.** `pnpm typecheck` clean on both passes, `pnpm test` green at 47 files / 473 tests,
+`format:check` and commentlint clean, barrel unchanged at 588 keys.
+
+- `_map_structs` / `_map_structs_by_name` are now `DataAPI._structsByClass` and
+  `_structsByName`. Module scope holds neither.
+- **Exactly the five predicted tests flipped, and nothing else.** The "anything else is a
+  finding" rule went unfired, which is the first time this plan's census has been checkable
+  rather than asserted.
+- `api.structs` is now documented as *every struct this api has mapped*. The old "created, not
+  what it can reach" wording described a distinction that no longer exists: an api reaches only
+  what it mapped.
+- The duplicate-name warning is left as written. Per-api it fires only when two different
+  classes in one api derive one name, which is the case it was for; it stops firing across
+  APIs, where it never indicated a collision.
+- `_localStructs` stays until stage 3, now distinguished only by staying out of
+  `_structsByName`.
+- Mutation-tested: returning **only** the name table to module scope fails two tests, so the
+  plan's "they must move together" is pinned rather than merely stated.
+
+Original bullets:
 
 - `_map_structs` and `_map_structs_by_name` become `DataAPI` instance fields.
 - Settle what `api.structs` means and update its doc comment in the same commit.

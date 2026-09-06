@@ -79,12 +79,16 @@ beforeAll(() => {
 });
 
 describe("what two DataAPIs share", () => {
-  test("the roots differ and everything below them is one object", () => {
+  test("nothing: each owns every struct it maps, roots included", () => {
     expect(rootA).not.toBe(rootB);
 
-    expect(rootA.pathmap["toolDefaults"].data).toBe(rootB.pathmap["toolDefaults"].data);
-    expect(apiA.mapStruct(Model as never, true)).toBe(apiB.mapStruct(Model as never, true));
-    expect(apiA.getStruct(EarlyTool)).toBe(apiB.getStruct(EarlyTool));
+    expect(rootA.pathmap["toolDefaults"].data).not.toBe(rootB.pathmap["toolDefaults"].data);
+    expect(apiA.mapStruct(Model as never, true)).not.toBe(apiB.mapStruct(Model as never, true));
+    expect(apiA.getStruct(EarlyTool)).not.toBe(apiB.getStruct(EarlyTool));
+
+    // Same class, same derived name, two structs — the name resolves per api
+    expect(apiA.getStructByName("Model")).toBe(apiA.getStruct(Model as never));
+    expect(apiB.getStructByName("Model")).toBe(apiB.getStruct(Model as never));
   });
 
   test("a tool registered after both builds reaches both", () => {
@@ -96,15 +100,16 @@ describe("what two DataAPIs share", () => {
     expect(apiB.getValue(ctxB, "toolDefaults.perapi.late.count")).toBe(2);
   });
 
-  test("structs holds what that api created, not what it can reach", () => {
-    // Model was created by whichever api asked first, so only that one lists it
-    const st = apiA.mapStruct(Model as never, true);
-    const inA = apiA.structs.includes(st);
-    const inB = apiB.structs.includes(st);
+  test("structs lists what that api mapped, which is now all of it", () => {
+    // The old distinction between "created" and "can reach" is gone: an api reaches only
+    // what it mapped, so both list their own Model struct and neither lists the other's
+    const stA = apiA.mapStruct(Model as never, true);
+    const stB = apiB.mapStruct(Model as never, true);
 
-    expect(inA).not.toBe(inB);
-    expect(apiA.getStruct(Model as never)).toBe(st);
-    expect(apiB.getStruct(Model as never)).toBe(st);
+    expect(apiA.structs).toContain(stA);
+    expect(apiB.structs).toContain(stB);
+    expect(apiA.structs).not.toContain(stB);
+    expect(apiB.structs).not.toContain(stA);
   });
 });
 
@@ -116,10 +121,10 @@ describe("defineGraphAPI reached from two apis", () => {
     const st1 = defineGraphAPI(api1 as never);
     const st2 = defineGraphAPI(api2 as never);
 
-    // mapStruct(Graph) is process-wide, so api2 is handed api1's struct, sees "nodes"
-    // already on it, and returns before declaring anything of its own
-    expect(st2).toBe(st1);
-    expect(api2.getStruct(Graph)).toBe(st1);
+    // Each api maps Graph for itself, so the "nodes" guard sees a fresh struct and api2
+    // declares its own rather than inheriting whatever api1 built
+    expect(st2).not.toBe(st1);
+    expect("nodes" in st2.pathmap).toBe(true);
     expect(api1.structs).toContain(st1);
     expect(api2.structs).not.toContain(st1);
   });
@@ -179,12 +184,12 @@ describe("the useGlobalRegistry opt-out", () => {
 
     owner._addClass(Shared, new DataStruct(), undefined, false);
 
-    // Auto-create can still fire, because the opt-out left no id behind to block it
-    const global = apiA.mapStruct(Shared as never, true);
+    // Auto-create can still fire, because the opt-out left no mark on the class
+    const onA = apiA.mapStruct(Shared as never, true);
 
-    expect(global).toBeInstanceOf(DataStruct);
-    expect(global).not.toBe(owner.mapStruct(Shared as never, true));
-    expect(apiB.mapStruct(Shared as never, true)).toBe(global);
+    expect(onA).toBeInstanceOf(DataStruct);
+    expect(onA).not.toBe(owner.mapStruct(Shared as never, true));
+    expect(apiB.mapStruct(Shared as never, true)).not.toBe(onA);
   });
 });
 

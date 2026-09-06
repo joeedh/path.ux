@@ -151,17 +151,15 @@ describe("a registry the default one never saw", () => {
     expect(() => apiB.getValue(ctxB, "toolDefaults.stage5a.shared.count")).toThrow(DataPathError);
   });
 
-  test("a toolpath prefix both registries use is one struct, shared by name", () => {
-    // `_buildAccessors` maps each prefix object under the bare prefix, and mapStruct hands
-    // out an existing struct of that name — so the two registries describe `stage5c` with
-    // one struct even though their accessor objects are separate
+  test("a toolpath prefix both registries use is two structs, one per api", () => {
+    // `_buildAccessors` maps each prefix object under the bare prefix. The accessor objects
+    // were always separate; since the name tables went per api, the structs are too
     expect(SavedToolDefaults.pathmap.get("stage5c")).not.toBe(
       registryB.defaults.pathmap.get("stage5c")
     );
-    expect(apiA.getStructByName("stage5c")).toBe(apiB.getStructByName("stage5c"));
+    expect(apiA.getStructByName("stage5c")).not.toBe(apiB.getStructByName("stage5c"));
 
-    // The struct is therefore wider than either cache, and a path only the other registry
-    // filled resolves and then finds nothing
+    // Each struct now describes only its own registry's tools
     expect(() => apiA.getValue(ctxA, "toolDefaults.stage5c.colliding.count")).toThrow(
       DataPathError
     );
