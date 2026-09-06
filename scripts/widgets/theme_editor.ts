@@ -1052,8 +1052,10 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       const root = new DataStruct();
 
       cls._cachedDataAPI = new DataAPI();
-      cls._cachedDataAPI._addClass({}, root, undefined, false);
-      cls._cachedDataAPI._addClass(cls, st, undefined, false);
+      // The root is keyed on a throwaway object, so it needs a name of its own; the api is
+      // private to this class, so neither entry can collide with anything
+      cls._cachedDataAPI._addClass({}, root, "ThemeObjectRoot");
+      cls._cachedDataAPI._addClass(cls, st);
       cls._cachedDataAPI.rootContextStruct = root;
 
       root.struct("obj", "obj", "obj", st);

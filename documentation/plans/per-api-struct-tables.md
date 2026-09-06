@@ -8,7 +8,7 @@ cost. That rejection was reviewed and did not survive: three of its four stated 
 wrong, and two argued the other way. See that plan's
 [Follow-ups](per-api-structs.md#follow-ups) for the correction, which this plan continues.
 
-Status: **stages 1-2 done**, stages 3-4 not started. Pressure-tested once, by a fresh-context agent, and revised
+Status: **stages 1-3 done**, stage 4 not started. Pressure-tested once, by a fresh-context agent, and revised
 substantially. One blocking finding removed a stage; a second was downgraded to a one-line
 fix on review. See [What the pressure test changed](#what-the-pressure-test-changed).
 
@@ -197,6 +197,20 @@ Original bullets:
   consumer that deletes a now-redundant `mapStruct` breaks on revert.
 
 ### Stage 3 — delete the opt-out
+
+**Done.** `pnpm typecheck` clean on both passes, `pnpm test` green at 47 files / 472 tests,
+`format:check` and commentlint clean, barrel unchanged at 588 keys. `useGlobalRegistry` and
+`_localStructs` have no remaining occurrence in `scripts/`, `tests/` or `example/`.
+
+- `_addClass` lost its fourth parameter; `hasStruct` and `mapStruct` lost their `_localStructs`
+  branch. Every mapping is per-api, so there is nothing left to opt out of.
+- `theme_editor.ts:1054-1056` keeps both `_addClass` calls, and the root one now passes
+  `"ThemeObjectRoot"` — without a name it would have derived `undefined` from `{}`.
+- The two opt-out tests collapse to one, `_addClass` attaching a prebuilt struct to a single
+  api. That is the route the theme editor actually takes, and it was the only coverage of it.
+- Net test count drops by one, from 473 to 472.
+
+Original bullets:
 
 - `_localStructs` and the `useGlobalRegistry` parameter go away. Once every mapping is per-api,
   "do not add this to the global registry" has nothing to opt out of.
