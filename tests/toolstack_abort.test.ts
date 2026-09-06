@@ -23,7 +23,7 @@ const ctx = {
 class Op extends ToolOp {
   constructor(
     readonly tag: string,
-    readonly failAt?: ToolExecPhase
+    public failAt?: ToolExecPhase
   ) {
     super();
   }
@@ -171,5 +171,93 @@ describe("onExecError", () => {
       "bad:exec"
     );
     expect(stack.length).toBe(0);
+  });
+});
+
+describe("undo, redo, rerun and replay", () => {
+  test("a throw from undo leaves cur on the tool, which is still applied", async () => {
+    class BadUndo extends Op {
+      override undo() {
+        throw new Error("undo failed");
+      }
+    }
+    const stack = await stackWith(new Op("first"), new BadUndo("second"));
+
+    await expect(stack.undo()).rejects.toThrow("undo failed");
+
+    expect(stack.cur).toBe(1);
+    expect(applied).toEqual(["first", "second"]);
+    expect(reported.map((r) => r.phase)).toEqual(["undo"]);
+  });
+
+  test("a throw from redo steps cur back to the entry before it", async () => {
+    const stack = await stackWith(new Op("first"), new Op("second"));
+    await stack.undo();
+    expect(stack.cur).toBe(0);
+
+    (stack[1] as Op).failAt = "execPre";
+    await expect(stack.redo()).rejects.toThrow("second:execPre");
+
+    expect(stack.cur).toBe(0);
+    // redo is reported whole, since an overridden one is opaque to the stack
+    expect(reported.map((r) => r.phase)).toEqual(["redo"]);
+  });
+
+  test("ToolOp.redo awaits each phase in order and surfaces an async throw", async () => {
+    const seen: string[] = [];
+    class AsyncOp extends Op {
+      override async undoPre() {
+        seen.push("undoPre");
+      }
+      override async execPre() {
+        seen.push("execPre");
+      }
+      override async exec() {
+        seen.push("exec");
+        throw new Error("async exec failed");
+      }
+      override async execPost() {
+        seen.push("execPost");
+      }
+    }
+    const op = new AsyncOp("async");
+    await expect(op.redo(ctx as never)).rejects.toThrow("async exec failed");
+
+    // execPost is never reached, which an unawaited redo would not have managed
+    expect(seen).toEqual(["undoPre", "execPre", "exec"]);
+  });
+
+  test("a rerun that cannot re-run drops the tool it already undid", async () => {
+    const stack = await stackWith(new Op("first"), new Op("second"));
+    const second = stack[1] as Op;
+    second.failAt = "execPre";
+
+    await expect(stack.rerun(second)).rejects.toThrow("second:execPre");
+
+    // undo ran and execPre stopped it before exec could reapply; the stack agrees
+    expect(applied).toEqual(["first"]);
+    expect(stack.length).toBe(1);
+    expect(stack.cur).toBe(0);
+    expect(reported.map((r) => r.phase)).toEqual(["execPre"]);
+  });
+
+  test("replay rejects instead of hanging, and releases the toolstack", async () => {
+    const stack = await stackWith(new Op("first"), new Op("second"));
+    stack[1].failAt = "exec";
+
+    await expect(stack.replay()).rejects.toThrow("second:exec");
+
+    // the old executor left replay's promise unsettled, wedging the lock forever
+    expect(stack.locked).toBe(false);
+    await expect(stack.idle()).resolves.toBeUndefined();
+    expect(reported.map((r) => r.phase)).toEqual(["exec"]);
+  });
+
+  test("replay runs every tool in order when nothing throws", async () => {
+    const stack = await stackWith(new Op("first"), new Op("second"));
+    applied = [];
+
+    await expect(stack.replay()).resolves.toBe(stack);
+    expect(applied).toEqual(["first", "second"]);
   });
 });
