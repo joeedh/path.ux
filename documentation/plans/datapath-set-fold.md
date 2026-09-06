@@ -4,7 +4,7 @@ Moves the coalescing that `setPathValueUndo` performs out of the widget layer an
 toolstack as one protected operation, and stops `DataPathSetOp` swallowing its own errors.
 Task 1 of [`toolsys-tasks.md`](toolsys-tasks.md).
 
-Status: complete except for stage 5's run in the example app. Task 0 is complete.
+Status: complete. Task 0 is complete.
 
 Revised twice: once after a fresh-context pressure test, once after task 0's first pass made
 `ToolStack.head` a promise. See [Findings](#findings) for the disposition of each.
@@ -31,7 +31,7 @@ Revised twice: once after a fresh-context pressure test, once after task 0's fir
   - [Stage 2 — assertions that pin the danger — **done**](#stage-2--assertions-that-pin-the-danger--done)
   - [Stage 3 — `foldOrExec` — **done**](#stage-3--foldorexec--done)
   - [Stage 4 — abort and roll back — **done**](#stage-4--abort-and-roll-back--done)
-  - [Stage 5 — measure and document — **partly done**](#stage-5--measure-and-document--partly-done)
+  - [Stage 5 — measure and document — **done**](#stage-5--measure-and-document--done)
 - [Repos](#repos)
 - [Findings](#findings)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
@@ -417,10 +417,14 @@ optional `massSetProp`, so a throw from the first leaves nothing applied, and a 
 second leaves a partial fan-out whose correct repair is the app's business. Revisit if a real
 case turns up.
 
-### Stage 5 — measure and document — **partly done**
+### Stage 5 — measure and document — **done**
 
-- **Not done:** confirm the drop on a real drag in the example app (`pnpm nwjs`, then
-  `pnpm cdp`), rather than trusting the unit test.
+- **Done, and it earned its place.** Dragging a real slider in the example app turned up
+  what the harness could not: a break point set on a leaf widget did not end a run the
+  root above it was folding, because each widget carried its own `pathUndoGen` and an edit
+  triggered from a child seals against the ancestor's. The fake `elem` has no parent, so
+  no unit test could have seen it. `UIBase.undoBreakPoint` now walks `parentWidget`, and
+  the colour picker's sat/val field sets one on mousedown and touchstart.
 - **Done.** `documentation/container.md` § Undo now says coalescing happens on the toolstack,
   that a `USE_CUSTOM_GETSET` setter is no longer re-run from a restored state (with
   `undoBreakPoint()` as the way out), and that a failed datapath write throws.

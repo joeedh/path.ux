@@ -6,8 +6,7 @@ and blocks task 1; tasks 1-3 are independent of each other and land in any order
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: tasks 0 and 1 done, bar one manual check recorded in `datapath-set-fold.md`'s
-stage 5. Tasks 2 and 3 sketched only.
+Status: tasks 0 and 1 done. Tasks 2 and 3 sketched only.
 
 <!-- toc -->
 
