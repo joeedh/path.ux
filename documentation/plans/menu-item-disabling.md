@@ -4,7 +4,8 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stages 1-5 complete, plus the widget half of the tooltip work. Stage 6 not started.
+Status: complete. Stages 1-5 landed, plus the widget half of the tooltip work. Stage 6 was
+dropped rather than implemented — see below.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -33,7 +34,7 @@ of each result, including the three the review got wrong.
   - [Async `canRun` starts disabled](#async-canrun-starts-disabled)
   - [Submenus](#submenus)
   - [Theme](#theme)
-  - [The native menu bar](#the-native-menu-bar)
+  - [The native menu bar — dropped](#the-native-menu-bar--dropped)
 - [Answers an implementer would otherwise guess at](#answers-an-implementer-would-otherwise-guess-at)
 - [Scope and limits](#scope-and-limits)
 - [What deliberately does not change](#what-deliberately-does-not-change)
@@ -46,8 +47,6 @@ of each result, including the three the review got wrong.
 - [Findings](#findings)
   - [Accepted](#accepted)
   - [Rejected](#rejected)
-
-<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 
@@ -336,8 +335,8 @@ missed.
    cannot do it alone.
 4. **The `onfocus` handler in `addItem`** (`menu.ts:567`) — a disabled submenu row must not
    `start()` its child.
-5. **`buildElectronMenu`** (`electron_api.ts:414`) — see
-   [the native menu bar](#the-native-menu-bar).
+5. **`buildElectronMenu`** (`electron_api.ts:414`) — not changed; see
+   [the native menu bar](#the-native-menu-bar) for why.
 
 Plus one initial-state fix: `start()` (`menu.ts:382-393`) assigns
 `this.activeItem = this.dom.childNodes[0]` and focuses it, so a menu whose first row is disabled
@@ -421,11 +420,11 @@ enabled and disabling later is the wrong default: that is the window in which a 
 thing that was supposed to be forbidden.
 
 For the DOM path, a promise resolving after the menu closes writes to a detached element, which
-is harmless. **The native path is different** — `buildElectronMenu` snapshots `menu.items` once,
-so a row still pending at build time would freeze disabled forever. `createMenu` therefore
-publishes `menu.pendingValidation?: Promise<void>`, and the Electron builders await it before
-snapshotting. Both are already in async context (`DropBox._onpress`, and `initMenuBar` can be
-made so).
+is harmless. **A builder that snapshots the rows is different** — it reads `menu.items` once, so a
+row still pending at build time would freeze disabled forever. `createMenu` therefore publishes
+`menu.pendingValidation?: Promise<void>` for such a builder to await. The native menu bar was to
+be the first consumer; with stage 6 dropped there is none in this repo, and the field is kept for
+the reason given in [the native menu bar](#the-native-menu-bar).
 
 ### Submenus
 
@@ -455,31 +454,24 @@ migrated to typed `getDefault`), and that gate only fires on declared keys missi
 `.menuitem.disabled:focus` background rule — chokepoint 3 handles the highlight, because the
 inline style would beat the stylesheet anyway.
 
-### The native menu bar
+### The native menu bar — dropped
 
-`ElectronMenuItemArgs` (`electron_api.ts:105`) gains an `enabled` field, and `buildElectronMenu`
-sets it from `item._disabled` (args block, `electron_api.ts:437-447`). Without this the native
-path silently ignores every disable.
+Not implemented, and not deferred either: the owner is removing Electron's native menu support
+altogether, so `ElectronMenuItemArgs`, `buildElectronMenu` and `initMenuBar` have no future to
+carry a disabled state into. Decided 2026-09-07, after stage 5 landed.
 
-The same args block already declares `tooltip` (`electron_api.ts:107`) and **never sets it**, so
-today a native row carries no hover text at all. It gains `tooltip` from
-`li.title`, which is already the composed text — otherwise the native path ships the exact bug this plan's opening
-sentence names.
+What this would have needed, kept only so a reader knows the gap was seen rather than missed:
+`enabled` and `tooltip` fields set on the args block, `initMenuBar` awaiting
+`Menu.pendingValidation` before it snapshots the rows, and `MenuBarEditor.rebuild` calling
+`initMenuBar(this, true)` — since the `_menu_init` guard otherwise freezes the app menu's enabled
+states at startup.
 
-That is still not enough under Electron: `initMenuBar` (`electron_api.ts:472`) has a `_menu_init`
-guard and runs once from `MenuBarEditor.init()`'s `doOnce` (`menubar.ts:105-110`), so the native
-app menu's enabled states freeze at startup. `MenuBarEditor` has `needsRebuild`, polled in
-`update()` (`menubar.ts:124`), and `rebuild()` (`menubar.ts:116`) — which currently rebuilds the
-DOM row only and does **not** call `initMenuBar`. The change is to have `rebuild()` call
-`initMenuBar(this, true)` on the Electron path.
+`Menu.pendingValidation` was built for that snapshot and now has no consumer in this repo. It
+stays: it is the only way a builder that reads rows once can wait for an async `canRun`, and
+removing it would have to be undone by the first consumer that needs one.
 
-Two costs to accept explicitly: `initMenuBar(…, true)` reconstructs the entire `ElectronMenu`,
-its role table and every submenu, so a rebuild is not cheap and an app should not flag one per
-frame; and under Electron `rebuild()`'s DOM half is dead work, since `init()` sets
-`this.height = 1`. Deciding _when_ an app flags a rebuild stays out of scope.
-
-NW.js has its own `initMenuBar` (`nwjs_api.ts`) and is not covered — the DOM path is what
-`pnpm nwjs` exercises for menus.
+NW.js has its own `initMenuBar` (`nwjs_api.ts`) and was never in scope — the DOM path is what
+`pnpm nwjs` exercises for menus, and that path is covered by stages 2 and 3.
 
 ## Answers an implementer would otherwise guess at
 
@@ -561,8 +553,9 @@ straddles the boundary:
 
 - **Inside the submodule:** `toolsys/toolop.ts`, `toolsys/toolstack.ts`, `toolsys/toolmacro.ts`,
   `controller/controller_abstract.ts`, `controller/controller.ts`.
-- **In path.ux:** `menu/*`, `graph/*`, `platforms/electron/electron_api.ts`,
-  `simple/menubar.ts`, `core/theme.ts`, `example/theme.ts`, `tests/*`.
+- **In path.ux:** `menu/*`, `graph/*`, `core/*`, `tests/*`.
+  `platforms/electron/electron_api.ts` and `simple/menubar.ts` were in scope for stage 6 and were
+  not touched; `example/theme.ts` was dropped for the CRLF reason recorded under § Theme.
 
 Consequences, per path.ux's `CLAUDE.md`:
 
@@ -638,10 +631,9 @@ parent checkout. Stages 1 and 4 touch the submodule and need the user's go-ahead
   sentence before the warn that was carrying it goes away. Update `tests/graph_ops.test.ts`:
   `:278`, `:396`, `:400` and `:593` assert `toBe(false)` and become refusal-object assertions;
   `:280` and `:401-404` assert the dropped warns and move to asserting the returned sentences.
-- **Stage 6 — the native menu bar.** `enabled` and `tooltip` on `ElectronMenuItemArgs`,
-  `buildElectronMenu`, awaiting `pendingValidation`, `MenuBarEditor.rebuild` calling
-  `initMenuBar(this, true)`. Verified by hand under `pnpm electron`, since the native menu is not
-  reachable from the DOM.
+- **Stage 6 — the native menu bar** — **dropped**, not deferred. Electron's native menu support
+  is being removed, so there is nothing to carry a disabled state into. See § The native menu
+  bar.
 
 ## Findings
 
@@ -670,7 +662,8 @@ From the fresh-context pressure test.
 6. **`setActive` writes the highlight inline**, so the stylesheet rule could not have worked. It
    is now chokepoint 3, and the `.menuitem.disabled:focus` rule is dropped as useless.
    `start()`'s first-row focus added as a related fix.
-7. **Electron: async refusals freeze, and `tooltip` is never set.** Added
+7. **Electron: async refusals freeze, and `tooltip` is never set.** Was accepted and written into
+   stage 6, which was later dropped; the finding stands, the work does not. Added
    `menu.pendingValidation` for the first and the `tooltip` assignment for the second — without
    which the native path shipped the exact bug this plan opens by naming.
 8. **`MenuBarEditor.rebuild()` prose was written as fact** when it described the proposed change,

@@ -15668,6 +15668,7 @@ var init_theme = __esm({
         MenuBG: "rgba(250, 250, 250, 1.0)",
         MenuBorder: "1px solid grey",
         MenuHighlight: "rgba(155, 220, 255, 1.0)",
+        MenuTextDisabled: "rgba(150, 150, 150, 1.0)",
         MenuSeparator: {
           width: "100%",
           height: 2,
@@ -17657,6 +17658,138 @@ var init_ui_base_theme_lookup = __esm({
   }
 });
 
+// scripts/core/base/ui_base_props.ts
+function setParentWidget(elem, val) {
+  if (val) {
+    elem._wasAddedToNodeAtSomeTime = true;
+  }
+  elem._parentWidget = val;
+}
+function getUseDataPathUndo(elem) {
+  let p = elem;
+  while (p) {
+    if (p._useDataPathUndo !== void 0) {
+      return p._useDataPathUndo;
+    }
+    p = p.parentWidget;
+  }
+  return true;
+}
+function setDescription(elem, val) {
+  if (val === null) {
+    elem._description = void 0;
+    return;
+  }
+  elem._description = val;
+  if (val === void 0) {
+    return;
+  }
+  if (const_default.showPathsInToolTips && elem.hasAttribute("datapath")) {
+    let s = "" + elem._description;
+    const path = elem.getAttribute("datapath");
+    s += "\n    path: " + path;
+    if (elem.hasAttribute("mass_set_path")) {
+      const m = elem.getAttribute("mass_set_path");
+      s += "\n    massSetPath: " + m;
+    }
+    elem._description_final = s;
+  } else {
+    elem._description_final = elem._description;
+  }
+  refreshNativeToolTip(elem);
+}
+function resolveRefusal(elem) {
+  if (!elem.disabled || elem._refusalReason === void 0) {
+    return void 0;
+  }
+  return typeof elem._refusalReason === "function" ? elem._refusalReason() : elem._refusalReason;
+}
+function composeTooltip(refusal, description) {
+  if (!refusal) {
+    return description;
+  }
+  const full = refusal.description ? `${refusal.reason}
+
+${refusal.description}` : refusal.reason;
+  return description ? `${full}
+
+${description}` : full;
+}
+function tooltipText(elem) {
+  return composeTooltip(resolveRefusal(elem), elem._description_final);
+}
+function refreshNativeToolTip(elem) {
+  if (!const_default.useNativeToolTips) {
+    return;
+  }
+  const text2 = tooltipText(elem);
+  if (text2 !== void 0) {
+    elem.title = "" + text2;
+  }
+}
+function setBackground(elem, bg) {
+  elem.__background = bg;
+  if (bg !== void 0) {
+    elem.overrideDefault("background-color", bg, true);
+    elem.saneStyle["backgroundColor"] = bg;
+  } else {
+    elem.clearOverride("background-color");
+  }
+}
+function getDisabled(elem) {
+  if (elem.parentWidget?.disabled) {
+    return true;
+  }
+  return !!elem._client_disabled_set || !!elem._internalDisabled;
+}
+function setCtx(elem, c) {
+  elem._ctx = c;
+  elem._forEachChildWidget((n) => {
+    n.ctx = c;
+  });
+}
+function getZoom(elem) {
+  if (elem.parentWidget !== void 0) {
+    return elem.parentWidget.getZoom();
+  }
+  return 1;
+}
+function getDPI2(elem, staticGetDPI) {
+  if (elem.parentWidget !== void 0) {
+    return elem.parentWidget.getDPI();
+  }
+  return staticGetDPI();
+}
+function toJSON2(elem) {
+  const ret = {};
+  if (elem.hasAttribute("datapath")) {
+    ret.datapath = elem.getAttribute("datapath");
+  }
+  return ret;
+}
+function clearOverride(elem, key, localOnly) {
+  delete elem.my_default_overrides[key];
+  if (!localOnly) delete elem.default_overrides[key];
+}
+function overrideDefault(elem, key, val, localOnly) {
+  elem.my_default_overrides[key] = val;
+  if (!localOnly) {
+    elem.default_overrides[key] = val;
+  }
+}
+function overrideClassDefault(elem, style, key, val) {
+  if (!(style in elem.class_default_overrides)) {
+    elem.class_default_overrides[style] = {};
+  }
+  elem.class_default_overrides[style][key] = val;
+}
+var init_ui_base_props = __esm({
+  "scripts/core/base/ui_base_props.ts"() {
+    "use strict";
+    init_const();
+  }
+});
+
 // scripts/core/base/ui_base_tooltips.ts
 function abortToolTips(elem, delayMs = 500) {
   if (elem._has_own_tooltips) {
@@ -17737,7 +17870,8 @@ function updateToolTipHandlers(elem) {
   }
 }
 function updateToolTips(elem) {
-  if (elem._description_final === void 0 || elem._description_final === null || elem._description_final.trim().length === 0) {
+  const text2 = tooltipText(elem);
+  if (text2 === void 0 || text2 === null || text2.trim().length === 0) {
     return;
   }
   if (!elem.ctx?.screen) {
@@ -17766,10 +17900,9 @@ function updateToolTips(elem) {
   }
   ok = ok && !haveModal();
   ok = ok && screen.pickElement(x, y) === elem;
-  ok = ok && !!elem._description_final;
   if (ok) {
     const _ToolTip = window._ToolTip;
-    elem._tooltip_ref = _ToolTip.show(elem._description_final, elem.ctx.screen, x, y);
+    elem._tooltip_ref = _ToolTip.show(text2, elem.ctx.screen, x, y);
   } else {
     if (elem._tooltip_ref) {
       elem._tooltip_ref.remove();
@@ -17786,6 +17919,7 @@ var init_ui_base_tooltips = __esm({
     init_util();
     init_const();
     init_simple_events();
+    init_ui_base_props();
   }
 });
 
@@ -19478,14 +19612,23 @@ function setDefaultUndoHandlers(undoPre, undo) {
   defaultUndoHandlers.undoPre = undoPre;
   defaultUndoHandlers.undo = undo;
 }
-async function toolopCanRunAsync(ctx, cls, toolop) {
-  const result = cls.canRun(ctx, toolop);
-  if (result instanceof Promise) {
-    return result;
+function refusalOf(result) {
+  if (result === true) {
+    return void 0;
   }
-  return Promise.resolve(result);
+  if (result === false) {
+    return { reason: UNSPECIFIED_REFUSAL };
+  }
+  return result.reason ? result : { ...result, reason: UNSPECIFIED_REFUSAL };
 }
-var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag, modalstack2, defaultUndoHandlers, ToolOp, PropKey;
+async function toolopCanRunAsync(ctx, cls, toolop) {
+  return await toolopRefusal(ctx, cls, toolop) === void 0;
+}
+function toolopRefusal(ctx, cls, toolop) {
+  const answer = cls.canRun(ctx, toolop);
+  return answer instanceof Promise ? answer.then(refusalOf) : refusalOf(answer);
+}
+var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag, modalstack2, defaultUndoHandlers, UNSPECIFIED_REFUSAL, ToolRefusedError, ToolOp, PropKey;
 var init_toolop = __esm({
   "scripts/path-controller/toolsys/toolop.ts"() {
     "use strict";
@@ -19518,6 +19661,23 @@ var init_toolop = __esm({
       },
       undo(_ctx) {
         throw new Error("implement me");
+      }
+    };
+    UNSPECIFIED_REFUSAL = "the tool refused to run";
+    ToolRefusedError = class extends Error {
+      constructor(reason, toolop, toolpath) {
+        super(reason);
+        this.reason = reason;
+        this.toolop = toolop;
+        this.toolpath = toolpath;
+      }
+      reason;
+      toolop;
+      toolpath;
+      name = "ToolRefusedError";
+      /** `instanceof` is unreliable when a bundle holds two copies of this module. */
+      static is(e) {
+        return e instanceof Error && e.name === "ToolRefusedError";
       }
     };
     ToolOp = class _ToolOp extends EventHandler {
@@ -19798,6 +19958,14 @@ var init_toolop = __esm({
         return ret;
       }
       /**
+       * Whether this tool may run. Return `true`, or `{reason}` naming the refusal in a sentence
+       * the person who pressed the control can read.
+       *
+       * Must not call into `ctx.toolstack`. This is polled from the exec path and from UI build
+       * code; `head`, `idle`, `execTool`, `undo`, `redo`, `rerun` and `rewind` all take the
+       * toolstack lock, which is not reentrant. Read `ctx.toolstack.headOp` if the head is
+       * genuinely needed.
+       *
        * note: you can use a derivation of ContextLike if you like for ctx
        * @param toolop: an optional instance of this class, may be undefined
        */
@@ -25042,6 +25210,9 @@ function macroKey(members, subclassPath, inputs) {
   }
   return MACRO_PREFIX + sections.map((section) => section.join(MACRO_SEP)).join(MACRO_SECTION);
 }
+function firstRefusal(results) {
+  return results.find((result) => result !== true) ?? true;
+}
 var MacroClasses, MACRO_PREFIX, MACRO_SEP, MACRO_SECTION, asyncCheck, MacroLink, ToolMacro;
 var init_toolmacro = __esm({
   "scripts/path-controller/toolsys/toolmacro.ts"() {
@@ -25112,9 +25283,24 @@ var init_toolmacro = __esm({
           uiname: "Tool Macro"
         };
       }
-      //toolop is an optional instance of this class, may be undefined
-      static canRun(_ctx, _toolop) {
-        return true;
+      /**
+       * Refused if any step is, with that step's sentence. An empty macro is allowed; it runs
+       * nothing.
+       *
+       * toolop is an optional instance of this class, may be undefined
+       */
+      static canRun(ctx, toolop) {
+        const tools = toolop?.tools;
+        if (!tools?.length) {
+          return true;
+        }
+        const answers = tools.map(
+          (tool) => tool.constructor.canRun(ctx, tool)
+        );
+        if (answers.some((answer) => answer instanceof Promise)) {
+          return Promise.all(answers).then(firstRefusal);
+        }
+        return firstRefusal(answers);
       }
       _getTypeClass() {
         if (this._macro_class?.ready) {
@@ -25284,14 +25470,6 @@ var init_toolmacro = __esm({
           }
         }
       }
-      /*
-        canRun(ctx) {
-          if (this.tools.length == 0)
-            return false;
-      
-          //poll first tool only in list
-          return this.tools[0].constructor.canRun(ctx);
-        }//*/
       /** Note: resolves when the modalEnd is called */
       async modalStart(ctx) {
         this.loadDefaults(false);
@@ -25650,7 +25828,30 @@ var init_toolstack = __esm({
        * @param compareInputs : check if toolstack head has identical input values, defaults to false
        * */
       async execOrRedo(ctx, tool, compareInputs = false) {
+        const check = this._checkCanRun(ctx, tool);
+        if (check) {
+          await check;
+        }
         return this.protect("execOrRedo", () => this._execOrRedo(ctx, tool, compareInputs));
+      }
+      /**
+       * Throws `ToolRefusedError` when `toolop` refuses. Runs outside `protect`, because `canRun` is
+       * consumer code and the lock is not reentrant; the answer is therefore a gate rather than a
+       * guarantee, and an op that must be certain still checks in `exec`.
+       *
+       * Answers synchronously whenever `canRun` does — the default — so an ordinary exec still claims
+       * the lock in the turn it was issued, and cannot be overtaken by an undo issued right after it.
+       * A tool whose `canRun` is async gives that ordering up.
+       */
+      _checkCanRun(ctx, toolop) {
+        const cls = toolop.constructor;
+        const refuse = (refusal) => {
+          if (refusal) {
+            throw new ToolRefusedError(refusal.reason, toolop, cls.tooldef().toolpath);
+          }
+        };
+        const answer = toolopRefusal(ctx, cls, toolop);
+        return answer instanceof Promise ? answer.then(refuse) : refuse(answer);
       }
       async _execOrRedo(ctx, tool, compareInputs) {
         const head = this[this.cur];
@@ -25686,6 +25887,10 @@ var init_toolstack = __esm({
        * reading `head` and driving `undo`/`redo` itself.
        */
       async foldOrExec(ctx, toolop) {
+        const check = this._checkCanRun(ctx, toolop);
+        if (check) {
+          await check;
+        }
         return this.protect("foldOrExec", async () => {
           const head = this[this.cur];
           const atHead = this.cur === this.length - 1;
@@ -25698,10 +25903,20 @@ var init_toolstack = __esm({
         });
       }
       async execTool(ctx, toolop, event) {
+        const check = this._checkCanRun(ctx, toolop);
+        if (check) {
+          await check;
+        }
         return this.protect("execTool", () => {
           return this._execTool(ctx, toolop, event);
         });
       }
+      /**
+       * Runs `toolop` and pushes it, having taken no authorization decision of its own: the three
+       * public wrappers call `_checkCanRun` before taking the lock. It must not check here — `canRun`
+       * is consumer code, and awaiting it while holding the non-reentrant lock deadlocks the stack.
+       * Undo, redo and `_rerun` reach this unchecked by design.
+       */
       async _execTool(ctx, toolop, event) {
         if (!this.locked) {
           throw new Error("_execTool ran outside a protected region");
@@ -26354,6 +26569,13 @@ var init_pathwatch = __esm({
 });
 
 // scripts/path-controller/controller/controller_abstract.ts
+function reportToolError(error2) {
+  if (ToolRefusedError.is(error2)) {
+    console.warn(`could not run "${error2.toolpath ?? "tool"}": ${error2.reason}`);
+    return;
+  }
+  print_stack2(error2);
+}
 var ModelInterface;
 var init_controller_abstract = __esm({
   "scripts/path-controller/controller/controller_abstract.ts"() {
@@ -26538,10 +26760,10 @@ var init_controller_abstract = __esm({
             if (!resolveBeforeRun) {
               ctx.toolstack.execTool(ctx, tool, event).then(() => accept(tool)).catch(reject);
             } else {
-              ctx.toolstack.execTool(ctx, tool, event);
+              ctx.toolstack.execTool(ctx, tool, event).catch(reportToolError);
             }
           } catch (error2) {
-            print_stack2(error2);
+            reportToolError(error2);
             reject(error2);
             throw error2;
           }
@@ -31774,111 +31996,6 @@ var init_ui_base_graph = __esm({
   }
 });
 
-// scripts/core/base/ui_base_props.ts
-function setParentWidget(elem, val) {
-  if (val) {
-    elem._wasAddedToNodeAtSomeTime = true;
-  }
-  elem._parentWidget = val;
-}
-function getUseDataPathUndo(elem) {
-  let p = elem;
-  while (p) {
-    if (p._useDataPathUndo !== void 0) {
-      return p._useDataPathUndo;
-    }
-    p = p.parentWidget;
-  }
-  return true;
-}
-function setDescription(elem, val) {
-  if (val === null) {
-    elem._description = void 0;
-    return;
-  }
-  elem._description = val;
-  if (val === void 0) {
-    return;
-  }
-  if (const_default.showPathsInToolTips && elem.hasAttribute("datapath")) {
-    let s = "" + elem._description;
-    const path = elem.getAttribute("datapath");
-    s += "\n    path: " + path;
-    if (elem.hasAttribute("mass_set_path")) {
-      const m = elem.getAttribute("mass_set_path");
-      s += "\n    massSetPath: " + m;
-    }
-    elem._description_final = s;
-  } else {
-    elem._description_final = elem._description;
-  }
-  if (const_default.useNativeToolTips) {
-    elem.title = "" + elem._description_final;
-  }
-}
-function setBackground(elem, bg) {
-  elem.__background = bg;
-  if (bg !== void 0) {
-    elem.overrideDefault("background-color", bg, true);
-    elem.saneStyle["backgroundColor"] = bg;
-  } else {
-    elem.clearOverride("background-color");
-  }
-}
-function getDisabled(elem) {
-  if (elem.parentWidget?.disabled) {
-    return true;
-  }
-  return !!elem._client_disabled_set || !!elem._internalDisabled;
-}
-function setCtx(elem, c) {
-  elem._ctx = c;
-  elem._forEachChildWidget((n) => {
-    n.ctx = c;
-  });
-}
-function getZoom(elem) {
-  if (elem.parentWidget !== void 0) {
-    return elem.parentWidget.getZoom();
-  }
-  return 1;
-}
-function getDPI2(elem, staticGetDPI) {
-  if (elem.parentWidget !== void 0) {
-    return elem.parentWidget.getDPI();
-  }
-  return staticGetDPI();
-}
-function toJSON2(elem) {
-  const ret = {};
-  if (elem.hasAttribute("datapath")) {
-    ret.datapath = elem.getAttribute("datapath");
-  }
-  return ret;
-}
-function clearOverride(elem, key, localOnly) {
-  delete elem.my_default_overrides[key];
-  if (!localOnly) delete elem.default_overrides[key];
-}
-function overrideDefault(elem, key, val, localOnly) {
-  elem.my_default_overrides[key] = val;
-  if (!localOnly) {
-    elem.default_overrides[key] = val;
-  }
-}
-function overrideClassDefault(elem, style, key, val) {
-  if (!(style in elem.class_default_overrides)) {
-    elem.class_default_overrides[style] = {};
-  }
-  elem.class_default_overrides[style][key] = val;
-}
-var init_ui_base_props = __esm({
-  "scripts/core/base/ui_base_props.ts"() {
-    "use strict";
-    init_const();
-  }
-});
-
 // scripts/core/aspect.ts
 function _setUIBase(uibase) {
   UIBase3 = uibase;
@@ -33302,7 +33419,9 @@ var init_ui_base = __esm({
       _disdata;
       // will be set later
       _ctx = void 0;
+      /** Drives tooltips; see props.setDescription or the description getters/setters. */
       _description;
+      _refusalReason;
       _init_done;
       __background;
       _flashtimer;
@@ -33520,6 +33639,18 @@ var init_ui_base = __esm({
       }
       set description(val) {
         setDescription(this, val);
+      }
+      /**
+       * Why this control refuses, shown above its description while it is disabled. A thunk is
+       * resolved when the tooltip is built rather than when it is assigned, so it may read state
+       * that changes after the control is set up.
+       */
+      get refusalReason() {
+        return this._refusalReason;
+      }
+      set refusalReason(val) {
+        this._refusalReason = val;
+        refreshNativeToolTip(this);
       }
       get background() {
         return this.__background;
@@ -33794,6 +33925,7 @@ var init_ui_base = __esm({
       }
       __updateDisable(val) {
         updateDisable(this, val);
+        refreshNativeToolTip(this);
       }
       on_disabled() {
       }
@@ -34796,15 +34928,50 @@ var init_menu_types = __esm({
 });
 
 // scripts/menu/menu_ops.ts
+function toolpathRefusal(ctx, toolpath) {
+  let cls;
+  let toolop;
+  try {
+    cls = ctx.api.parseToolPath(toolpath);
+    if (!cls) {
+      return void 0;
+    }
+    toolop = ctx.api.createTool(ctx, toolpath);
+  } catch (error2) {
+    print_stack2(error2);
+    console.warn("could not build " + toolpath + " to ask whether it can run");
+    return void 0;
+  }
+  return toolopRefusal(ctx, cls, toolop);
+}
 function createMenu(ctx, title, templ) {
   const menu = newMenu(title, ctx);
   const menuSEP = menu.constructor.SEP;
   let id = 0;
   const cbs = {};
+  const pending = [];
   const bindCallback = (cbfunc, arg) => {
     return function() {
-      cbfunc(arg);
+      return cbfunc(arg);
     };
+  };
+  const applyRefusal = (itemId, refusal) => {
+    if (!(refusal instanceof Promise)) {
+      if (refusal !== void 0) {
+        menu.setItemDisabled(itemId, refusal);
+      }
+      return;
+    }
+    menu.setItemDisabled(itemId);
+    pending.push(
+      refusal.then((settled) => {
+        if (settled === void 0) {
+          menu.setItemEnabled(itemId);
+        } else {
+          menu.setItemDisabled(itemId, settled);
+        }
+      })
+    );
   };
   const doItem = (item) => {
     if (item !== void 0 && item instanceof Menu) {
@@ -34830,8 +34997,9 @@ function createMenu(ctx, title, templ) {
         hotkey = def.hotkey;
       }
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
+      applyRefusal(id, toolpathRefusal(ctx, item));
       cbs[id] = () => {
-        ctx.api.execTool(ctx, item);
+        return ctx.api.execTool(ctx, item);
       };
       id++;
     } else if (item === menuSEP) {
@@ -34858,15 +35026,25 @@ function createMenu(ctx, title, templ) {
         hotkey = hotkey.buildString();
       }
       menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
+      if (objItem.disabled) {
+        menu.setItemDisabled(id2);
+      } else if (objItem.validate) {
+        const verdict = objItem.validate(ctx);
+        if (verdict !== true) {
+          menu.setItemDisabled(id2, verdict);
+        }
+      }
       cbs[id2] = bindCallback(callback, id2);
     }
   };
   for (const item of templ) {
     doItem(item);
   }
-  menu._onselect = (id2) => {
-    cbs[id2]();
-  };
+  if (pending.length) {
+    menu.pendingValidation = Promise.all(pending).then(() => {
+    });
+  }
+  menu._onselect = (id2) => cbs[id2]();
   return menu;
 }
 function openMenuPopup(menu, screen, owner, x, y, opts = {}) {
@@ -34906,6 +35084,7 @@ var init_menu_ops = __esm({
     "use strict";
     init_util();
     init_simple_events();
+    init_toolop();
     init_menu();
     init_wrangler();
   }
@@ -35779,12 +35958,24 @@ var init_wrangler = __esm({
 });
 
 // scripts/menu/menu.ts
+function asRefusal(reason) {
+  if (reason === void 0) {
+    return void 0;
+  }
+  return typeof reason === "string" ? { reason } : reason;
+}
+function reportMenuCallbackError(error2) {
+  print_stack2(error2);
+  console.log("Error in menu callback");
+}
 function invokeMenuCallback(cb, id) {
   try {
-    cb(id);
+    const result = cb(id);
+    if (result instanceof Promise) {
+      result.catch(reportMenuCallbackError);
+    }
   } catch (error2) {
-    print_stack2(error2);
-    console.log("Error in menu callback");
+    reportMenuCallbackError(error2);
   }
 }
 function newMenu(title, ctx) {
@@ -35801,6 +35992,7 @@ var init_menu = __esm({
     "use strict";
     init_util();
     init_ui_base();
+    init_ui_base_props();
     init_constants();
     init_menu_types();
     init_wrangler();
@@ -35814,6 +36006,14 @@ var init_menu = __esm({
        * the text has to travel on it.
        */
       tooltip;
+      /**
+       * Refuses the row a *parent* menu draws for this menu as a submenu, so the submenu cannot be
+       * opened. Travels on the menu for the same reason `tooltip` does, and is named apart from
+       * `UIBase.disabled`, which greys this menu's own widget instead.
+       */
+      rowDisabled;
+      /** Why the submenu row refused, shown above `tooltip`. */
+      rowDisabledReason;
       parentMenu;
       _was_clicked;
       items;
@@ -35832,6 +36032,12 @@ var init_menu = __esm({
       hasSearchBox;
       textbox;
       _popup;
+      /**
+       * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
+       * The DOM menu is live and needs no wait; a builder that reads the rows once must await this or
+       * it captures rows still disabled by a pending answer. Nothing in path.ux does that today.
+       */
+      pendingValidation;
       _dropbox;
       _onclose;
       _onselect;
@@ -35904,7 +36110,7 @@ var init_menu = __esm({
           this.ignoreFirstClick = Math.max(this.ignoreFirstClick - 1, 0);
           return;
         }
-        if (!this.activeItem || this.activeItem._isMenu) {
+        if (!this.activeItem || this.activeItem._isMenu || this.activeItem._disabled) {
           return;
         }
         this._was_clicked = true;
@@ -35948,10 +36154,14 @@ var init_menu = __esm({
           this._onclose(this);
         }
       }
+      /** Whether keyboard selection may land on `item`. */
+      _selectable(item) {
+        return !item.hidden && !item._disabled;
+      }
       _select(dir, focus = true) {
         if (this.activeItem === void 0) {
           for (const item of this.items) {
-            if (!item.hidden) {
+            if (this._selectable(item)) {
               this.setActive(item, focus);
               break;
             }
@@ -35962,7 +36172,7 @@ var init_menu = __esm({
           do {
             i = (i + dir + this.items.length) % this.items.length;
             item = this.items[i];
-            if (!item.hidden) {
+            if (this._selectable(item)) {
               break;
             }
           } while (item !== this.activeItem);
@@ -35989,7 +36199,8 @@ var init_menu = __esm({
           }
         }
         if (item) {
-          item.style["backgroundColor"] = this.getDefault("MenuHighlight");
+          const key = item._disabled ? "MenuBG" : "MenuHighlight";
+          item.style["backgroundColor"] = this.getDefault(key);
           if (focus) {
             item.focus();
           }
@@ -36028,6 +36239,7 @@ var init_menu = __esm({
             item.hidden = true;
             item.remove();
           }
+          let activeFiltered = false;
           for (const item of this.items) {
             let ok = t2 == "";
             ok = ok || item.innerHTML.toLowerCase().search(t2) >= 0;
@@ -36035,8 +36247,11 @@ var init_menu = __esm({
               item.hidden = false;
               this.dom.appendChild(item);
             } else if (item === this.activeItem) {
-              this.selectNext(false);
+              activeFiltered = true;
             }
+          }
+          if (activeFiltered) {
+            this.selectNext(false);
           }
         };
         sbox.addEventListener("keydown", (e) => {
@@ -36084,7 +36299,7 @@ var init_menu = __esm({
         window.setTimeout(() => {
           this.flushUpdate();
           if (this.activeItem === void 0) {
-            this.activeItem = this.dom.childNodes[0];
+            this.activeItem = this.items.find((item) => item.parentNode === this.dom && this._selectable(item)) ?? this.dom.childNodes[0];
           }
           if (this.activeItem === void 0) {
             return;
@@ -36142,14 +36357,50 @@ var init_menu = __esm({
           hotkey_span.style["textWrap"] = "nowrap";
           dom.appendChild(hotkey_span);
         }
-        const ret = this.addItem(dom, id, add);
+        const ret = this.addItem(dom, id, add, tooltip || void 0);
         ret.hotkey = hotkey;
         ret.icon = icon;
         ret.label = text2 ? text2 : ret.innerText;
-        if (tooltip) {
-          ret.title = tooltip;
-        }
         return ret;
+      }
+      itemById(id) {
+        return this.items.find((item) => item._id === id);
+      }
+      /**
+       * Refuses the row, and shows `reason` above its tooltip. A disabled row still takes hover
+       * focus, which is how the reason gets read.
+       */
+      setItemDisabled(id, reason) {
+        const item = this.itemById(id);
+        if (!item) {
+          return;
+        }
+        item._disabled = true;
+        item._refusalReason = asRefusal(reason);
+        this._applyDisabled(item);
+      }
+      setItemEnabled(id) {
+        const item = this.itemById(id);
+        if (!item) {
+          return;
+        }
+        item._disabled = false;
+        item._refusalReason = void 0;
+        this._applyDisabled(item);
+      }
+      isItemDisabled(id) {
+        return this.itemById(id)?._disabled === true;
+      }
+      /** Repaints one row from its `_disabled` state. */
+      _applyDisabled(item) {
+        item.classList.toggle("disabled", !!item._disabled);
+        item.setAttribute("aria-disabled", item._disabled ? "true" : "false");
+        const refusal = item._disabled ? item._refusalReason : void 0;
+        item.title = composeTooltip(refusal, item._description) ?? "";
+        if (item === this.activeItem) {
+          const key = item._disabled ? "MenuBG" : "MenuHighlight";
+          item.style["backgroundColor"] = this.getDefault(key);
+        }
       }
       //item can be menu or text
       addItem(item, id, add = true, tooltip) {
@@ -36167,6 +36418,7 @@ var init_menu = __esm({
         li.setAttribute("tabindex", "" + this.itemindex++);
         li.setAttribute("class", "menuitem");
         const hover = tooltip !== void 0 ? tooltip : item instanceof _Menu ? item.tooltip : void 0;
+        li._description = hover;
         if (hover !== void 0) {
           li.title = hover;
         }
@@ -36183,11 +36435,16 @@ var init_menu = __esm({
           item.srcWidget = this.srcWidget;
           item.hidden = false;
           item.container = this.container;
+          li._disabled = item.rowDisabled;
+          li._refusalReason = asRefusal(item.rowDisabledReason);
         } else {
           li._isMenu = false;
           li.appendChild(item);
         }
         li._id = id;
+        if (li._disabled) {
+          this._applyDisabled(li);
+        }
         this.items.push(li);
         li.label = text2 ? text2 : li.innerText.trim();
         if (add) {
@@ -36207,7 +36464,7 @@ var init_menu = __esm({
               this._submenu.close();
               this._submenu = void 0;
             }
-            if (li._isMenu) {
+            if (li._isMenu && !li._disabled) {
               const sub = li._menu;
               if (sub._ownSelect === void 0) sub._ownSelect = sub._onselect ?? null;
               sub._onselect = (item2) => {
@@ -36348,6 +36605,11 @@ var init_menu = __esm({
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${menuText.color};
           -moz-user-focus: normal;
+        }
+
+        .menuitem.disabled, .menuitem.disabled:focus {
+          color : ${this.getDefault("MenuTextDisabled")};
+          cursor : default;
         }
       `;
       }
@@ -82703,14 +82965,10 @@ function structuralOkay(ctx, toolop) {
     graph = graphAt(ctx, toolop.inputs.graphPath.getValue());
   } catch (err) {
     console.warn(err instanceof Error ? err.message : String(err));
-    return false;
+    return { reason: err instanceof Error ? err.message : String(err) };
   }
   const refusal = graph.structuralEditsRefused();
-  if (refusal !== void 0) {
-    console.warn(refusal);
-    return false;
-  }
-  return true;
+  return refusal === void 0 ? true : { reason: refusal };
 }
 function definitionAt(ctx, path) {
   const def = definitionOfSubgraph(graphAt(ctx, path));
@@ -82723,11 +82981,16 @@ function definitionOkay(ctx, toolop) {
   if (toolop === void 0) {
     return true;
   }
+  const path = toolop.inputs.graphPath.getValue();
+  let graph;
   try {
-    definitionAt(ctx, toolop.inputs.graphPath.getValue());
+    graph = graphAt(ctx, path);
   } catch (err) {
     console.warn(err instanceof Error ? err.message : String(err));
-    return false;
+    return { reason: err instanceof Error ? err.message : String(err) };
+  }
+  if (definitionOfSubgraph(graph) === void 0) {
+    return { reason: `'${path}' is not a group definition` };
   }
   return true;
 }
@@ -83185,23 +83448,19 @@ var CreateGroupOp = class extends ToolOp {
   }
   static canRun(ctx, toolop) {
     const op = toolop;
-    if (!structuralOkay(ctx, op)) {
-      return false;
+    const structural = structuralOkay(ctx, op);
+    if (structural !== true) {
+      return structural;
     }
     if (op === void 0) {
       return true;
     }
     if (op.inputs.ref.getValue() === "") {
-      console.warn("a new group needs a reference to be saved under");
-      return false;
+      return { reason: "a new group needs a reference to be saved under" };
     }
     const graph = graphAt(ctx, op.inputs.graphPath.getValue());
     const plan = groupPlan(graph, JSON.parse(op.inputs.nodeIds.getValue()));
-    if (isRefusal(plan)) {
-      console.warn(plan.refusal);
-      return false;
-    }
-    return true;
+    return isRefusal(plan) ? { reason: plan.refusal } : true;
   }
   undoPre(_ctx) {
   }
@@ -83245,16 +83504,16 @@ var UngroupOp = class extends ToolOp {
   }
   static canRun(ctx, toolop) {
     const op = toolop;
-    if (!structuralOkay(ctx, op)) {
-      return false;
+    const structural = structuralOkay(ctx, op);
+    if (structural !== true) {
+      return structural;
     }
     if (op === void 0) {
       return true;
     }
     const graph = graphAt(ctx, op.inputs.graphPath.getValue());
     if (!(graph.nodeIdMap.get(JSON.parse(op.inputs.nodeId.getValue())) instanceof GroupNode)) {
-      console.warn(`node ${op.inputs.nodeId.getValue()} is not a group`);
-      return false;
+      return { reason: `node ${op.inputs.nodeId.getValue()} is not a group` };
     }
     return true;
   }
@@ -92268,6 +92527,7 @@ __export(controller_exports, {
   ToolPaths: () => ToolPaths,
   ToolProperty: () => ToolProperty,
   ToolPropertyCache: () => ToolPropertyCache,
+  ToolRefusedError: () => ToolRefusedError,
   ToolRegistry: () => ToolRegistry,
   ToolStack: () => ToolStack,
   UndoFlags: () => UndoFlags,
@@ -92426,6 +92686,7 @@ __export(controller_exports, {
   tet_volume: () => tet_volume,
   toLockedImpl: () => toLockedImpl,
   toolopCanRunAsync: () => toolopCanRunAsync,
+  toolopRefusal: () => toolopRefusal,
   toolprop_abstract: () => toolprop_abstract_exports,
   tri_angles: () => tri_angles,
   tri_area: () => tri_area,
@@ -100288,6 +100549,7 @@ export {
   ToolPaths,
   ToolProperty,
   ToolPropertyCache,
+  ToolRefusedError,
   ToolRegistry,
   ToolStack,
   ToolTip,
@@ -100612,6 +100874,7 @@ export {
   toLivePath,
   toLockedImpl,
   toolopCanRunAsync,
+  toolopRefusal,
   toolprop_abstract_exports as toolprop_abstract,
   tri_angles,
   tri_area,

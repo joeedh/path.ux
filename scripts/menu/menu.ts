@@ -78,8 +78,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   _popup: PopupContainer | undefined;
   /**
    * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
-   * The DOM menu is live and needs no wait; a builder that snapshots the rows, as the native
-   * menu bar does, awaits this first or it captures rows still disabled by a pending answer.
+   * The DOM menu is live and needs no wait; a builder that reads the rows once must await this or
+   * it captures rows still disabled by a pending answer. Nothing in path.ux does that today.
    */
   pendingValidation: Promise<void> | undefined;
   _dropbox: DropBox | undefined;
