@@ -50,6 +50,12 @@ describe("pathux/valid-datapath", () => {
   test("a declared prefix is joined onto the path and checked exactly", async () => {
     const found = await lint("tagged.ts");
 
+    console.log("there is a race condition here, that's why these prints exist");
+    console.log("== found array length:", found.length, "==");
+    console.log(JSON.stringify(found, undefined, 2));
+    console.log("== reported paths:", found.map(reported), "=="  );
+    console.log(JSON.stringify(found.map(reported), undefined, 2));
+    
     expect(found.map(reported)).toEqual([
       "scene.objects[n].sizee",
       // A real path elsewhere in the catalog, but not under this prefix — the
