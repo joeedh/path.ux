@@ -374,6 +374,7 @@ const theme = {
     MenuBG          : "rgba(250, 250, 250, 1.0)",
     MenuBorder      : "1px solid grey",
     MenuHighlight   : "rgba(155, 220, 255, 1.0)",
+    MenuTextDisabled: "rgba(150, 150, 150, 1.0)",
     MenuSeparator: {
       width             : "100%",
       height            : 2,

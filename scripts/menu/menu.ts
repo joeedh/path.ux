@@ -29,6 +29,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
    * the text has to travel on it.
    */
   tooltip: string | undefined;
+  /**
+   * Refuses the row a *parent* menu draws for this menu as a submenu, so the submenu cannot be
+   * opened. Travels on the menu for the same reason `tooltip` does, and is named apart from
+   * `UIBase.disabled`, which greys this menu's own widget instead.
+   */
+  rowDisabled: boolean | undefined;
+  /** Why the submenu row refused, shown in place of `tooltip`. */
+  rowDisabledReason: string | undefined;
   parentMenu: Menu | undefined;
   _was_clicked: boolean;
   items: MenuItem[];
@@ -147,7 +155,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       return;
     }
 
-    if (!this.activeItem || this.activeItem._isMenu) {
+    if (!this.activeItem || this.activeItem._isMenu || this.activeItem._disabled) {
       return;
     }
 
@@ -206,10 +214,15 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
   }
 
+  /** Whether keyboard selection may land on `item`. */
+  _selectable(item: MenuItem) {
+    return !item.hidden && !item._disabled;
+  }
+
   _select(dir: number, focus = true) {
     if (this.activeItem === undefined) {
       for (const item of this.items) {
-        if (!item.hidden) {
+        if (this._selectable(item)) {
           this.setActive(item, focus);
           break;
         }
@@ -222,7 +235,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
         i = (i + dir + this.items.length) % this.items.length;
         item = this.items[i];
 
-        if (!item.hidden) {
+        if (this._selectable(item)) {
           break;
         }
       } while (item !== this.activeItem);
@@ -257,7 +270,9 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
 
     if (item) {
-      item.style["backgroundColor"] = this.getDefault("MenuHighlight") as string;
+      // Written inline, so it beats any rule buildStyle emits for a disabled row
+      const key = item._disabled ? "MenuBG" : "MenuHighlight";
+      item.style["backgroundColor"] = this.getDefault(key) as string;
 
       if (focus) {
         item.focus();
@@ -310,6 +325,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
         item.remove();
       }
 
+      let activeFiltered = false;
+
       for (const item of this.items) {
         let ok = t == "";
         ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
@@ -318,8 +335,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           item.hidden = false;
           this.dom.appendChild(item);
         } else if (item === this.activeItem) {
-          this.selectNext(false);
+          activeFiltered = true;
         }
+      }
+
+      // Moving off the filtered-out row waits for the pass to finish: mid-loop, every row not
+      // yet visited is still hidden, so the walk could only land on one of those.
+      if (activeFiltered) {
+        this.selectNext(false);
       }
     };
 
@@ -383,7 +406,10 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       //TODO: cache last child entry
 
       if (this.activeItem === undefined) {
-        this.activeItem = this.dom.childNodes[0] as MenuItem | undefined;
+        // childNodes also holds the separators, so the pick comes from items
+        this.activeItem =
+          this.items.find((item) => item.parentNode === this.dom && this._selectable(item)) ??
+          (this.dom.childNodes[0] as MenuItem | undefined);
       }
 
       if (this.activeItem === undefined) {
@@ -490,6 +516,56 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     return ret;
   }
 
+  itemById(id: string | number): MenuItem | undefined {
+    return this.items.find((item) => item._id === id);
+  }
+
+  /**
+   * Refuses the row, and shows `reason` in place of its tooltip. A disabled row still takes
+   * hover focus, which is how the reason gets read.
+   */
+  setItemDisabled(id: string | number, reason?: string): void {
+    const item = this.itemById(id);
+    if (!item) {
+      return;
+    }
+
+    if (!item._disabled) {
+      item._enabledTitle = item.title;
+    }
+
+    item._disabled = true;
+    item._disabledReason = reason;
+    this._applyDisabled(item);
+  }
+
+  setItemEnabled(id: string | number): void {
+    const item = this.itemById(id);
+    if (!item) {
+      return;
+    }
+
+    item._disabled = false;
+    item._disabledReason = undefined;
+    this._applyDisabled(item);
+  }
+
+  isItemDisabled(id: string | number): boolean {
+    return this.itemById(id)?._disabled === true;
+  }
+
+  /** Repaints one row from its `_disabled` state. */
+  _applyDisabled(item: MenuItem): void {
+    item.classList.toggle("disabled", !!item._disabled);
+    item.setAttribute("aria-disabled", item._disabled ? "true" : "false");
+    item.title = (item._disabled ? item._disabledReason : item._enabledTitle) ?? "";
+
+    if (item === this.activeItem) {
+      const key = item._disabled ? "MenuBG" : "MenuHighlight";
+      item.style["backgroundColor"] = this.getDefault(key) as string;
+    }
+  }
+
   //item can be menu or text
   addItem(
     item: string | string | HTMLElement | Menu,
@@ -542,12 +618,21 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
       item.hidden = false;
       item.container = this.container;
+
+      // A submenu carries its own state, since addItem takes no per-item arguments for it
+      li._disabled = item.rowDisabled;
+      li._disabledReason = item.rowDisabledReason;
     } else {
       li._isMenu = false;
       li.appendChild(item as HTMLElement);
     }
 
     li._id = id!;
+    li._enabledTitle = li.title;
+
+    if (li._disabled) {
+      this._applyDisabled(li);
+    }
 
     this.items.push(li);
 
@@ -574,7 +659,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           this._submenu = undefined;
         }
 
-        if (li._isMenu) {
+        if (li._isMenu && !li._disabled) {
           const sub = li._menu!;
           // The submenu's own dispatch is kept rather than replaced. `createMenu` files a
           // submenu's callbacks on the submenu itself, keyed by that submenu's ids; a wrapper
@@ -758,6 +843,11 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${menuText.color};
           -moz-user-focus: normal;
+        }
+
+        .menuitem.disabled, .menuitem.disabled:focus {
+          color : ${this.getDefault("MenuTextDisabled")};
+          cursor : default;
         }
       `;
   }

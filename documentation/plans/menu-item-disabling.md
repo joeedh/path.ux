@@ -4,7 +4,7 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stage 1 complete, uncommitted (the `path-controller` half needs a go-ahead). Stages 2-6 not started.
+Status: stages 1 and 2 complete. Stages 3-6 not started.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -402,8 +402,10 @@ made so).
 ### Submenus
 
 A `Menu` added as a submenu has no per-item argument to carry state, so it rides on the menu
-object exactly as `Menu.tooltip` already does (`menu.ts:29`): `Menu.disabled` and
-`Menu.disabledReason`, read by `addItem` when `item instanceof Menu`.
+object exactly as `Menu.tooltip` already does (`menu.ts:29`): `Menu.rowDisabled` and
+`Menu.rowDisabledReason`, read by `addItem` when `item instanceof Menu`. They are named apart
+from `UIBase.disabled`, which every `Menu` already inherits and which greys the menu's own
+widget — a plain `disabled` here shadows it and fails the static-side variance check.
 
 ### Theme
 
@@ -413,8 +415,10 @@ A new `MenuTextDisabled` colour in the `menu` style class in `scripts/core/theme
 bare colour string that `.menuitem.disabled` overrides `color` with, emitted **after** both rules
 so it wins on order at equal specificity.
 
-`example/theme.ts` gets the key too, for the example app's look — but as a choice, not an
-obligation: `setTheme` merges, so a theme omitting it falls back to `DefaultTheme`. There is no
+`example/theme.ts` deliberately does **not** get the key. `setTheme` merges, so the example app
+falls back to `DefaultTheme` for it — and the file's blob predates `core.autocrlf=true`, so any
+`git add` of it normalizes all 584 lines from CRLF to LF. A one-line theme addition is not worth
+that diff; a `.gitattributes` would be the real fix, and is its own change. There is no
 `gen:themes --strict` obligation here, because `Menu.define()` has no `theme` block (it is not
 migrated to typed `getDefault`), and that gate only fires on declared keys missing from
 `theme.ts`.
@@ -556,7 +560,7 @@ parent checkout. Stages 1 and 4 touch the submodule and need the user's go-ahead
   superproject grep. Tests: a refusing `canRun` normalizes to `false`; `toolopRefusal` returns
   the sentence for object, boolean and promise forms, and for `{ reason: "" }`; a macro refuses
   when any member refuses.
-- **Stage 2 — menu item state and the five chokepoints.** `MenuItem` fields, the `Menu` API,
+- **Stage 2 — menu item state and the five chokepoints** — **done**. `MenuItem` fields, the `Menu` API,
   `click` / `_select` (both loops) / `setActive` / `onfocus`, `start()`'s first-row pick, the
   `startSearch` mid-loop `selectNext` fix, the CSS rule and the theme key. Tests (vitest, plus a
   Playwright DOM test for the widget): a disabled item does not dispatch on click or on Enter;
