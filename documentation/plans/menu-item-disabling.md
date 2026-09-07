@@ -4,7 +4,7 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stages 1-4 complete, plus the widget half of the tooltip work. Stages 5-6 not started.
+Status: stages 1-5 complete, plus the widget half of the tooltip work. Stage 6 not started.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -157,6 +157,12 @@ sentences of its own (pinned by `tests/graph_ops.test.ts:401-404`).
 The `catch` around `graphAt` is a different case and keeps its `console.warn`: a `graphPath` that
 will not resolve is a bug, not a policy decision, and the warn is the only signal of it. It
 returns a refusal as well, so the UI still greys the control.
+
+`definitionOkay` had to be split to honour that distinction. Its one `try` wrapped `definitionAt`,
+which throws both for an unresolvable path and for a resolvable graph that simply is not a
+definition — and the second is the ordinary case, so a menu build would have warned once per
+definition-op row. It now calls `graphAt` inside the `try` and tests `definitionOfSubgraph`
+outside it, so only the path failure warns.
 
 ### Macros
 
@@ -626,7 +632,7 @@ parent checkout. Stages 1 and 4 touch the submodule and need the user's go-ahead
   running its `_undo`; a fold refuses; a modal op refuses before `modalStart`; `_rerun`, undo and
   redo still run. Review `tests/toolstack_lock.test.ts` and `tests/toolstack_abort.test.ts`
   against the new early return.
-- **Stage 5 — `graph_ops` returns sentences.** Both shared helpers, the sixteen ops, and
+- **Stage 5 — `graph_ops` returns sentences** — **done**. Both shared helpers, the sixteen ops, and
   `CreateGroupOp`'s two hand-written warns; drop the policy `console.warn`, keep the `graphAt`
   one; correct the stale comment. **Lands after stages 2 and 3**, so a surface displays the
   sentence before the warn that was carrying it goes away. Update `tests/graph_ops.test.ts`:

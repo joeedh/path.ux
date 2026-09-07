@@ -1,5 +1,6 @@
 import { ToolOp } from "../path-controller/toolsys/toolop";
 import { FloatProperty, IntProperty, StringProperty } from "../path-controller/toolsys/toolprop";
+import type { CanRunResult } from "../path-controller/toolsys/toolop";
 import type { ToolProperty } from "../path-controller/toolsys/toolprop";
 import type { ContextLike } from "../path-controller/controller/controller_abstract";
 import { Graph } from "./graph";
@@ -91,14 +92,13 @@ function restoreEdges(graph: Graph, records: EdgeRecord[]): void {
 }
 
 /**
- * Shared canRun for the structural ops. A group instance's subgraph takes value
- * edits only; the refusal sentence is reported through console.warn, matching how
- * execTool reports a declined canRun.
+ * Shared canRun for the structural ops. A group instance's subgraph takes value edits only, and
+ * `structuralEditsRefused` already phrases that as a sentence for the control to show.
  */
 function structuralOkay(
   ctx: ContextLike,
   toolop: { inputs: { graphPath: StringProperty } } | undefined
-): boolean {
+): CanRunResult {
   if (toolop === undefined) {
     return true;
   }
@@ -107,16 +107,14 @@ function structuralOkay(
   try {
     graph = graphAt(ctx, toolop.inputs.graphPath.getValue());
   } catch (err) {
+    // A graphPath that will not resolve is a bug rather than a policy decision, and the warn is
+    // the only signal of it
     console.warn(err instanceof Error ? err.message : String(err));
-    return false;
+    return { reason: err instanceof Error ? err.message : String(err) };
   }
 
   const refusal = graph.structuralEditsRefused();
-  if (refusal !== undefined) {
-    console.warn(refusal);
-    return false;
-  }
-  return true;
+  return refusal === undefined ? true : { reason: refusal };
 }
 
 /** Resolves a graphPath input to the GroupDef whose subgraph it is, throwing otherwise. */
@@ -132,15 +130,24 @@ function definitionAt(ctx: ContextLike, path: string): GroupDef {
 function definitionOkay(
   ctx: ContextLike,
   toolop: { inputs: { graphPath: StringProperty } } | undefined
-): boolean {
+): CanRunResult {
   if (toolop === undefined) {
     return true;
   }
+
+  const path = toolop.inputs.graphPath.getValue();
+  let graph: Graph;
   try {
-    definitionAt(ctx, toolop.inputs.graphPath.getValue());
+    graph = graphAt(ctx, path);
   } catch (err) {
+    // Only an unresolvable path warns; an ordinary graph refusing here is the common case, and
+    // a menu build would warn once per row for it
     console.warn(err instanceof Error ? err.message : String(err));
-    return false;
+    return { reason: err instanceof Error ? err.message : String(err) };
+  }
+
+  if (definitionOfSubgraph(graph) === undefined) {
+    return { reason: `'${path}' is not a group definition` };
   }
   return true;
 }
@@ -229,7 +236,7 @@ export class AddNodeOp extends ToolOp<
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as AddNodeOp | undefined);
   }
 
@@ -288,7 +295,7 @@ export class DeleteNodeOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as DeleteNodeOp | undefined);
   }
 
@@ -326,7 +333,7 @@ export class ConnectOp extends ToolOp<LinkInputs> {
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as ConnectOp | undefined);
   }
 
@@ -375,7 +382,7 @@ export class DisconnectOp extends ToolOp<LinkInputs> {
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as DisconnectOp | undefined);
   }
 
@@ -422,7 +429,7 @@ export class MoveNodeOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as MoveNodeOp | undefined);
   }
 
@@ -472,7 +479,7 @@ export class RenameNodeOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as RenameNodeOp | undefined);
   }
 
@@ -523,7 +530,7 @@ export class ReplaceNodeOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as ReplaceNodeOp | undefined);
   }
 
@@ -709,7 +716,7 @@ export class DuplicateNodeOp extends ToolOp<
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return structuralOkay(ctx, toolop as DuplicateNodeOp | undefined);
   }
 
@@ -775,25 +782,21 @@ export class CreateGroupOp extends ToolOp<
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     const op = toolop as CreateGroupOp | undefined;
-    if (!structuralOkay(ctx, op)) {
-      return false;
+    const structural = structuralOkay(ctx, op);
+    if (structural !== true) {
+      return structural;
     }
     if (op === undefined) {
       return true;
     }
     if (op.inputs.ref.getValue() === "") {
-      console.warn("a new group needs a reference to be saved under");
-      return false;
+      return { reason: "a new group needs a reference to be saved under" };
     }
     const graph = graphAt(ctx, op.inputs.graphPath.getValue());
     const plan = groupPlan(graph, JSON.parse(op.inputs.nodeIds.getValue()) as GraphId[]);
-    if (isRefusal(plan)) {
-      console.warn(plan.refusal);
-      return false;
-    }
-    return true;
+    return isRefusal(plan) ? { reason: plan.refusal } : true;
   }
 
   override undoPre(_ctx: ContextLike): void {}
@@ -854,18 +857,18 @@ export class UngroupOp extends ToolOp<
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     const op = toolop as UngroupOp | undefined;
-    if (!structuralOkay(ctx, op)) {
-      return false;
+    const structural = structuralOkay(ctx, op);
+    if (structural !== true) {
+      return structural;
     }
     if (op === undefined) {
       return true;
     }
     const graph = graphAt(ctx, op.inputs.graphPath.getValue());
     if (!(graph.nodeIdMap.get(JSON.parse(op.inputs.nodeId.getValue())) instanceof GroupNode)) {
-      console.warn(`node ${op.inputs.nodeId.getValue()} is not a group`);
-      return false;
+      return { reason: `node ${op.inputs.nodeId.getValue()} is not a group` };
     }
     return true;
   }
@@ -927,7 +930,7 @@ export class ExposeEntryOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as ExposeEntryOp | undefined);
   }
 
@@ -979,7 +982,7 @@ export class ReorderEntryOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as ReorderEntryOp | undefined);
   }
 
@@ -1023,7 +1026,7 @@ export class RepointEntryOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as RepointEntryOp | undefined);
   }
 
@@ -1073,7 +1076,7 @@ export class RemoveEntryOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as RemoveEntryOp | undefined);
   }
 
@@ -1116,7 +1119,7 @@ export class AddGroupSocketOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as AddGroupSocketOp | undefined);
   }
 
@@ -1167,7 +1170,7 @@ export class RemoveGroupSocketOp extends ToolOp<{
     };
   }
 
-  static override canRun(ctx: ContextLike, toolop?: ToolOp): boolean {
+  static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
     return definitionOkay(ctx, toolop as RemoveGroupSocketOp | undefined);
   }
 

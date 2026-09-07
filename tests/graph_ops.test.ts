@@ -1,4 +1,4 @@
-import { test, expect, beforeAll, vi } from "vitest";
+import { test, expect, beforeAll } from "vitest";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { ToolStack } from "../scripts/path-controller/toolsys/toolstack";
 import { FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
@@ -261,8 +261,6 @@ test("every structural op refuses on an instance subgraph; SetNodePropOp does no
   const sub = `graph.nodes[${grp.id}].group`;
   const copy = grp.subgraph.nodeIdMap.get(inner.id)!;
 
-  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
   const structural = [
     new AddNodeOp(),
     new DeleteNodeOp(),
@@ -275,9 +273,9 @@ test("every structural op refuses on an instance subgraph; SetNodePropOp does no
   for (const tool of structural) {
     tool.inputs.graphPath.setValue(sub);
     const cls = tool.constructor as typeof AddNodeOp;
-    expect(cls.canRun(ctx, tool)).toBe(false);
+    // The sentence reaches the control that refused, rather than only the console
+    expect(cls.canRun(ctx, tool)).toEqual({ reason: REFUSAL });
   }
-  expect(warn.mock.calls.map((c) => c[0])).toEqual(structural.map(() => REFUSAL));
 
   // A value edit runs on the instance, materializing the property...
   inner.props.bias.setValue(4);
@@ -291,8 +289,6 @@ test("every structural op refuses on an instance subgraph; SetNodePropOp does no
   await ctx.toolstack.undo();
   expect(copy.props.bias.wasSet).toBe(false);
   expect(ctx.api.getValue(ctx, `${sub}.nodes[${copy.id}].props['bias'].value`)).toBe(4);
-
-  warn.mockRestore();
 });
 
 test("ReplaceNodeOp swaps in place, re-links compatible sockets, prunes exposure rows", async () => {
@@ -387,22 +383,19 @@ test("CreateGroupOp groups, saves through the store, undoes to the same objects 
 test("CreateGroupOp refuses through canRun on an empty ref and on a refused plan", async () => {
   const ctx = makeCtx(new Graph());
   const m = await addNode(ctx, "OpsMath");
-  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
   const tool = new CreateGroupOp();
   tool.inputs.graphPath.setValue("graph");
   tool.inputs.storePath.setValue("graph");
   tool.inputs.nodeIds.setValue(JSON.stringify([m.id]));
-  expect(CreateGroupOp.canRun(ctx, tool)).toBe(false);
+  expect(CreateGroupOp.canRun(ctx, tool)).toEqual({
+    reason: "a new group needs a reference to be saved under",
+  });
 
   tool.inputs.ref.setValue("grp");
   tool.inputs.nodeIds.setValue("[]");
-  expect(CreateGroupOp.canRun(ctx, tool)).toBe(false);
-  expect(warn.mock.calls.map((c) => c[0])).toEqual([
-    "a new group needs a reference to be saved under",
-    "select at least one node to group",
-  ]);
-  warn.mockRestore();
+  expect(CreateGroupOp.canRun(ctx, tool)).toEqual({
+    reason: "select at least one node to group",
+  });
 });
 
 test("UngroupOp inlines with fresh ids, undoes to the instance, and redoes onto the same ids", async () => {
@@ -577,7 +570,6 @@ test("the definition ops mutate a definition through the stack and undo, and ref
 
   // every definition op refuses on a root graph and on an instance subgraph
   const { host, grp } = await makeGroup();
-  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   for (const path of ["graph", `graph.nodes[${grp.id}].group`]) {
     const hctx = makeCtx(host);
     for (const op of [
@@ -590,11 +582,12 @@ test("the definition ops mutate a definition through the stack and undo, and ref
     ]) {
       op.inputs.graphPath.setValue(path);
       const cls = op.constructor as typeof ExposeEntryOp;
-      expect(cls.canRun(hctx, op)).toBe(false);
+      const refusal = cls.canRun(hctx, op);
+      expect(refusal).toMatchObject({
+        reason: expect.stringContaining("is not a group definition"),
+      });
     }
   }
-  expect(warn.mock.calls.every((c) => /is not a group definition/.test(String(c[0])))).toBe(true);
-  warn.mockRestore();
 });
 
 test("a DSL entry names its definition with group, and only a GroupNode may", () => {
