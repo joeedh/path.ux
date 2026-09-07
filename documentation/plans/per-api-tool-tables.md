@@ -624,12 +624,26 @@ its declared inputs ended up permanently bound to a live op, and the defaults tr
 `prop.copy()` inherited the flag and read the tooldef value instead of the saved one. It takes
 a copy now.
 
-**`ctx.last_tool` still does not reach a macro's inputs**, and the separator does not change
-that. `DYNAMIC_STRUCT` resolves through `mapStruct(obj2.constructor, false)`, and a running
-macro's constructor is `ToolMacro` rather than the generated type class — whose inputs are
-built by `add()` and so cannot be described by one struct per class anyway. The seam for it is
-`mapStructCustom` (`controller.ts:998`), which hands a class a callback returning a struct per
-instance. Not done here.
+**`ctx.last_tool.<input>` now resolves, for an ordinary tool as much as for a macro.** Two
+separate things were in the way.
+
+`ToolStack.head` returns a Promise — `protect("toolstackHead", async () => this[this.cur])` —
+so `last_tool` handed the resolver a Promise and no input resolved at all in a running app. The
+tests did not catch it because their toolstack fake sets `head` as a plain property.
+`ToolStack` grows a `headOp` beside `head`, and the three `last_tool` getters (`toolsys.ts`,
+`simple/app.ts`, `getLastToolStruct`) read that instead; a datapath resolver cannot await, and
+nothing awaited `ctx.last_tool` either.
+
+A macro then needed the seam this plan had only named. `DYNAMIC_STRUCT` resolves through
+`mapStruct(obj2.constructor, false)`, and a running macro's constructor is `ToolMacro`, whose
+inputs are assembled by `add()` rather than declared — one struct per class cannot describe
+them. `updateToolSysAPI` now registers a `mapStructCustom` callback on `ToolMacro` answering
+with `buildOpAPI` over the instance's own `_getTypeClass()`. Three details carry it: the
+callback is handed the api resolving the path, since it lives on the class and two apis share
+one; it answers `undefined` while the class is still the not-ready placeholder, rather than
+caching an empty struct under the identity the finished class reuses; and a generated class's
+`name` is set to its macro key, because an api names a struct after the class it maps and every
+one of them was called `MacroTypeClass`.
 
 Two smaller notes. Stage 1's new pins flipped at stage 4 along with the plan's own rows, since
 the `macro.` prefix reaches `userSetMap` keys — expected, and they moved with the listed rows.

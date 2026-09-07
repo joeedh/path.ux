@@ -113,7 +113,7 @@ function GetContextClass(ctxClass: Function): typeof Context {
     }
 
     get last_tool() {
-      return (this.toolstack as ToolStack).head;
+      return (this.toolstack as ToolStack).headOp;
     }
 
     message(msg: string, timeout = 2500) {

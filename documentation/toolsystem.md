@@ -3,6 +3,7 @@
 - [Tool System](#tool-system)
   - [Registration](#registration)
     - [Macro defaults](#macro-defaults)
+    - [The running tool](#the-running-tool)
     - [A registry of your own](#a-registry-of-your-own)
   - [Context](#context)
   - [Undo](#undo)
@@ -142,6 +143,22 @@ registered — which is true, and is how a macro type class always reaches a cac
 overriding an individual toolpath's is two different toolpaths holding values for one
 property object, resolved by an explicit `loadDefaults` call. The duplicate rule is about
 two registries offering one toolpath, where there is no principled way to choose.
+
+### The running tool
+
+`ctx.last_tool.<input>` reads and writes the op on top of the toolstack, live — the paths
+`LastToolPanel` binds, and the ones a "recent command settings" panel is built from. It is a
+separate tree from `ctx.toolDefaults`, which holds saved values rather than a running op's.
+
+Two things are worth knowing about it:
+
+- It reads `ToolStack.headOp`, not `head`. `head` takes the toolstack lock and answers a
+  Promise; a datapath resolver cannot await, so a context supplying its own `last_tool` getter
+  must return the op itself.
+- A macro resolves through its generated type class rather than through `ToolMacro`, since its
+  inputs are assembled by `add()` and one struct per class cannot describe them.
+  `updateToolSysAPI` wires that with `mapStructCustom`, so a macro on top of the stack panels
+  like any other tool.
 
 ### A registry of your own
 

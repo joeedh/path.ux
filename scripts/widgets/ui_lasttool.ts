@@ -13,7 +13,7 @@ export function getLastToolStruct(ctx: IContextBase) {
   let ret = (ctx.state as any)._last_tool;
 
   if (!ret) {
-    ret = ctx.toolstack.head;
+    ret = ctx.toolstack.headOp;
   } else {
     let msg = "Passing the last tool to last-tool-panel via appstate._last_tool is deprecated;";
     msg += "\nctx.toolstack.head is now used instead.";

@@ -45,12 +45,12 @@ class Model {
 
 class ShellCtx {
   api!: DataAPI<any>;
-  toolstack: { head?: ToolOp } = {};
+  toolstack: { headOp?: ToolOp } = {};
 }
 
 class PaneCtx {
   api!: DataAPI<any>;
-  toolstack: { head?: ToolOp } = {};
+  toolstack: { headOp?: ToolOp } = {};
 }
 
 const apiA = new DataAPI<any>();
@@ -217,11 +217,11 @@ describe("ctx.last_tool", () => {
     // through the api it falls back to. Stage 2 must keep it built.
     const tool = new LateTool();
     tool.inputs.count.setValue(7);
-    ctxA.toolstack.head = tool as ToolOp;
+    ctxA.toolstack.headOp = tool as ToolOp;
 
     expect(apiA.getValue(ctxA, "last_tool.count")).toBe(7);
 
-    ctxB.toolstack.head = tool as ToolOp;
+    ctxB.toolstack.headOp = tool as ToolOp;
     expect(apiB.getValue(ctxB, "last_tool.count")).toBe(7);
   });
 });
