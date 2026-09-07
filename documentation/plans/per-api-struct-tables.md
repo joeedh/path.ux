@@ -192,9 +192,9 @@ Original bullets:
 - Reword or remove the duplicate-name warning.
 - Rewrite the pins listed under [What flips](#what-flips), and only those. Anything else that
   needs editing is a finding to report, not a test to fix quietly.
-- Cost to undo: **one release, and this is the one-way door** — not stage 3. The diff reverts
-  cleanly in isolation, but once it ships, hosts rely on "my api mapped my own classes", and a
-  consumer that deletes a now-redundant `mapStruct` breaks on revert.
+- Cost to undo: **one release**. This stage opens the one-way door, not stage 3: the diff
+  reverts cleanly in isolation, but once it ships, hosts rely on "my api mapped my own classes",
+  and a consumer that deletes a now-redundant `mapStruct` breaks on revert.
 
 ### Stage 3 — delete the opt-out
 

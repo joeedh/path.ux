@@ -218,8 +218,8 @@ through the `../toolsys` barrel and `tooldefaults.ts:3` enters through `../contr
 "put `ToolRegistry` in its own module that both import" — the draft's option 1 — is precisely
 the failing configuration.
 
-Two fixes were proposed here, and **neither is what stage 2 shipped**. The second is
-broken, and the first opens a one-way door for no reason:
+Two fixes were proposed here. **Stage 2 shipped neither of them**, because the second one
+breaks and the first opens a one-way door for no reason:
 
 - _Move `ToolPropertyCache` into `toolregistry.ts`, leaving `tooldefaults.ts` as a re-export
   shim._ Works, but it moves barrel provenance — the plan's own one-way door — and
