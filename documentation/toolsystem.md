@@ -98,10 +98,24 @@ own.
 ### Macro defaults
 
 A `ToolMacro` has no toolpath of its own, so `_getTypeClass` generates one from the macro's
-shape — its member class names, the subclass toolpath where it is subclassed, and its input
-names — under the reserved prefix `macro.`. The key is structural, so two macros built the
-same way share one set of values, and the prefix keeps them out of the tree the authored
-toolpaths land in.
+shape, under the reserved prefix `macro.`:
+
+```
+macro.MoveOp$RotateOp$$mesh$extrude$$x$y
+      └── members ──┘  └ subclass ┘  └inputs┘
+```
+
+`$` joins the parts of a section and `$$` separates the sections; a subclass toolpath's dots
+become `$` too. The key is structural, so two macros built the same way share one set of
+values, and the prefix keeps them out of the tree the authored toolpaths land in.
+
+**Every part is a JS identifier, which is the point of `$`.** A datapath segment must match
+`/[a-zA-Z_$]+[a-zA-Z_$0-9]*/`, so a key built this way is one segment and a macro's saved
+defaults bind like any other tool's — which is what `container.toolPanel` needs, since it
+resolves `toolDefaults.<toolpath>.<apiname>` for each input. The sections are what make the
+key injective: without them a macro over `[A, B]` taking nothing collided with one over `[A]`
+taking `B`. A part carrying a `$` of its own would still merge two shapes, so generation warns
+about one rather than escaping it.
 
 The policy is that **macro inputs are macro-scoped**, seeded from the individual toolpath:
 

@@ -19392,10 +19392,10 @@ var init_toolregistry = __esm({
         const st = api.mapStruct(cls, true);
         const def = cls._getFinalToolDef();
         function makeProp(k) {
-          const prop = def.inputs[k];
-          if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
+          if (def.inputs[k].flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
             return;
           }
+          const prop = def.inputs[k].copy();
           prop.uiname = prop.uiname || ToolProperty.makeUIName(k);
           const dpath = new DataPath(k, k, prop);
           st.add(dpath);
@@ -25071,7 +25071,24 @@ var init_toolsys = __esm({
 });
 
 // scripts/path-controller/toolsys/toolmacro.ts
-var MacroClasses, MACRO_PREFIX, asyncCheck, MacroLink, ToolMacro;
+function macroKey(members, subclassPath, inputs) {
+  const sections = [members];
+  if (subclassPath !== void 0) {
+    sections.push(subclassPath.split(".").filter((part) => part.length > 0));
+  }
+  sections.push(inputs);
+  for (const section of sections) {
+    for (const part of section) {
+      if (part.includes(MACRO_SEP)) {
+        console.warn(
+          `Macro key part "${part}" carries a "${MACRO_SEP}"; two macro shapes may end up sharing one set of defaults`
+        );
+      }
+    }
+  }
+  return MACRO_PREFIX + sections.map((section) => section.join(MACRO_SEP)).join(MACRO_SECTION);
+}
+var MacroClasses, MACRO_PREFIX, MACRO_SEP, MACRO_SECTION, asyncCheck, MacroLink, ToolMacro;
 var init_toolmacro = __esm({
   "scripts/path-controller/toolsys/toolmacro.ts"() {
     "use strict";
@@ -25081,6 +25098,8 @@ var init_toolmacro = __esm({
     init_toolregistry();
     MacroClasses = defaultRegistry.macros;
     MACRO_PREFIX = "macro.";
+    MACRO_SEP = "$";
+    MACRO_SECTION = "$$";
     asyncCheck = async (p) => p instanceof Promise ? await p : void 0;
     MacroLink = class {
       static STRUCT = struct_default.inlineRegister(
@@ -25163,16 +25182,10 @@ var init_toolmacro = __esm({
         if (!this.tools || this.tools.length === 0) {
           return this._macro_class;
         }
-        let key = MACRO_PREFIX;
-        for (const tool of this.tools) {
-          key += tool.constructor.name + ":";
-        }
-        if (this.constructor !== _ToolMacro) {
-          key += ":" + this.constructor.tooldef().toolpath;
-        }
-        for (const k in this.inputs) {
-          key += k + ":";
-        }
+        const members = this.tools.map((tool) => tool.constructor.name);
+        const inputNames = Object.keys(this.inputs);
+        const subclassPath = this.constructor === _ToolMacro ? void 0 : this.constructor.tooldef().toolpath ?? "";
+        const key = macroKey(members, subclassPath, inputNames);
         if (key in registry.macros) {
           this._macro_class = registry.macros[key];
           return this._macro_class;

@@ -270,7 +270,7 @@ describe("a macro reaches the table it was not in when the api was built", () =>
       cls = macro._getTypeClass();
       key = cls.tooldef().toolpath as string;
 
-      expect(key).toBe("macro.LateStep:count:");
+      expect(key).toBe("macro.LateStep$$count");
       expect(api.parseToolPath(key)).toBe(cls);
 
       // A macro seeds nothing until the first save, which is what the warning says
@@ -281,15 +281,56 @@ describe("a macro reaches the table it was not in when the api was built", () =>
     }
 
     expect(registry.defaults.values.get(key)).toEqual({ count: 17 });
-    expect(cls.tooldef().toolpath).toBe(key);
+
+    // The whole point of "$": every part of the key is a JS identifier, so the key is one
+    // datapath segment and the leaf reads and writes like any other tool's
+    expect(api.getValue(ctx as never, `toolDefaults.${key}.count`)).toBe(17);
+    api.setValue(ctx as never, `toolDefaults.${key}.count`, 23);
+    expect(registry.defaults.values.get(key)).toEqual({ count: 23 });
 
     // The reserved prefix is a node of its own, so the authored toolpaths are untouched
     expect(api.getValue(ctx as never, "toolDefaults.list_late_step.run.count")).toBe(1);
+  });
 
-    // The leaf itself stays unreadable by path, and not because of the prefix: the
-    // resolver cannot walk a segment carrying ":", which is the macro key's own
-    // separator. Changing that separator is what would open it up
-    expect(() => api.getValue(ctx as never, `toolDefaults.${key}.count`)).toThrow(DataPathError);
-    expect(() => api.getValue(ctx as never, "toolDefaults.macro")).not.toThrow();
+  test("the path container.toolPanel composes resolves for a macro", () => {
+    class Ctx {
+      api!: DataAPI<any>;
+      toolstack = {};
+    }
+
+    const registry = makeRegistry();
+    const api = new DataAPI<any>();
+    api.registries = [registry];
+
+    const root = api.mapStruct(Ctx);
+    api.setRoot(root);
+    buildToolSysAPI(api as DataAPI, false, root, Ctx as never);
+
+    const ctx = new Ctx() as Ctx & { toolDefaults: unknown };
+    ctx.api = api;
+
+    registry.stamp(ToolMacro as never);
+
+    try {
+      const macro = new ToolMacro<ContextLike>();
+      macro.add(new LateStep());
+      macro._getTypeClass();
+      macro.inputs.count.setValue(5);
+      quiet(() => macro.saveDefaultInputs());
+    } finally {
+      defaultRegistry.stamp(ToolMacro as never);
+    }
+
+    // toolPanelImpl builds "toolDefaults." + tdef.toolpath + "." + apiname per input and
+    // hands each to container.prop, so this is the binding a tool panel would make
+    const tdef = api.parseToolPath("macro.LateStep$$count")!._getFinalToolDef();
+    const paths: string[] = [];
+
+    for (const k in tdef.inputs) {
+      paths.push(`toolDefaults.${tdef.toolpath}.${tdef.inputs[k].apiname ?? k}`);
+    }
+
+    expect(paths).toEqual(["toolDefaults.macro.LateStep$$count.count"]);
+    expect(api.getValue(ctx as never, paths[0])).toBe(5);
   });
 });

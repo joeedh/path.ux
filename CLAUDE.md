@@ -511,8 +511,9 @@ stamps the registry on the class, and subclasses inherit that through the static
 chain.
 
 **Within one api a toolpath names one tool.** Two registries offering the same one throw,
-naming both. Macro keys are the exemption and first wins, since the key is structural — and
-they carry a reserved `macro.` prefix so they cannot be mistaken for authored toolpaths.
+naming both. Macro keys are the exemption and first wins, since the key is structural — `macro.` prefixed,
+`$` between parts and `$$` between sections, so the whole key is one JS identifier and a
+macro's defaults bind through a datapath like any other tool's.
 
 **Saved values are per registry; the binding is the api's.** `ToolPropertyCache` is a flat map
 from toolpath to values. The tree `ctx.toolDefaults.<prefix>.<tool>.<prop>` walks is built by

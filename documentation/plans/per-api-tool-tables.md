@@ -600,18 +600,36 @@ keeps the collision scan and the merge as one thing, which was the argument agai
 in the first place. An api that lists a registry it never built into cannot be notified at all,
 so a miss rebuilds before it fails.
 
-**A macro's defaults are still unreadable by datapath, and the `macro.` prefix is not why.**
-The resolver cannot walk a path segment containing `":"`, which is the macro key's own
-separator — so `ctx.toolDefaults.<macro key>.<prop>` has never resolved, before this plan or
-after it. The values land in storage and in the merged table, and the `macro.` node is
-reachable; the leaf is not. Pinned in `toolregistry_list.test.ts`. Opening it up means changing
-the key's separator, which is cheap for the reason stage 3 of `tool-registry.md` gave — nothing
-persists the key — but it is not this plan's work.
+**The macro key moved to `$`, so a macro's defaults now bind like any other tool's.** Three
+gates constrain a toolpath and only one has a tokenizer: the table lookup is a Map key and
+takes any string without parens; `getToolDef` additionally eats `|` and `::`; and only the
+datapath resolver demands a JS identifier, `/[a-zA-Z_$]+[a-zA-Z_$0-9]*/`. `":"` fails the
+third, which is why `ctx.toolDefaults.<macro key>.<prop>` had never resolved. Of the
+characters that pass, only `$`, `_` and `__` are legal, and `_` is too common in identifiers
+to separate them, so the key is now `macro.<members>$$<subclass>$$<inputs>` with `$` inside a
+section. `container.toolPanel` resolves `toolDefaults.<toolpath>.<apiname>` per input, so this
+is what lets it panel a macro.
 
-**`_parsePathOverrides` reads `"::"` as the hotkey separator**, and a macro subclass's key
-embeds the subclass toolpath after exactly that. So `getToolDef` on such a key would take
-everything after it as a hotkey. Untouched here, and worth knowing before anything routes macro
-keys through `getToolDef`.
+The sections also fix an injectivity hole the `":"` key had: members and inputs both emitted
+`name:`, so a macro over `[A, B]` taking nothing produced the same key as one over `[A]` taking
+`B`. They also remove the `"::"` a subclassed macro used to embed, which `_parsePathOverrides`
+read as the hotkey separator — `getToolDef` on such a key truncated the path and invented a
+hotkey.
+
+**`buildOpAPI` was mutating the tooldef's own property objects**, and macros are where it
+shows. `customGetSet` rewrites `getValue`/`setValue` on the property it is handed, and
+`buildOpAPI` handed it `def.inputs[k]` directly. A normal `tooldef()` returns fresh properties
+every call so the mutation is discarded; a macro type class returns one `__tooldef` forever, so
+its declared inputs ended up permanently bound to a live op, and the defaults tree's
+`prop.copy()` inherited the flag and read the tooldef value instead of the saved one. It takes
+a copy now.
+
+**`ctx.last_tool` still does not reach a macro's inputs**, and the separator does not change
+that. `DYNAMIC_STRUCT` resolves through `mapStruct(obj2.constructor, false)`, and a running
+macro's constructor is `ToolMacro` rather than the generated type class — whose inputs are
+built by `add()` and so cannot be described by one struct per class anyway. The seam for it is
+`mapStructCustom` (`controller.ts:998`), which hands a class a callback returning a struct per
+instance. Not done here.
 
 Two smaller notes. Stage 1's new pins flipped at stage 4 along with the plan's own rows, since
 the `macro.` prefix reaches `userSetMap` keys — expected, and they moved with the listed rows.
