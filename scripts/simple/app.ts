@@ -572,7 +572,7 @@ export class AppState {
     sarea.switch_editor(cls);
     screen.appendChild(sarea);
 
-    screen._init();
+    screen.checkInit();
     screen.listen();
     screen.update();
     screen.completeSetCSS();

@@ -19,7 +19,7 @@ test("a container's packflag attribute (e.g. showLabel) propagates to its xml ch
 test("initPage/mount propagate a host container's inherit_packflag onto the mounted page", () => {
   const parent = UIBase.createElement("container-x") as unknown as Container;
   parent.ctx = undefined as any;
-  parent._init();
+  parent.checkInit();
   parent.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
 
   const mounted = mount(undefined as any, parent, jsx("button", { id: "tb2" }, "hi"));

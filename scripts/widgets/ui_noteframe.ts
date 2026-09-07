@@ -291,7 +291,8 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends RowFrame
     note.showExclMark = showExclMark;
 
     this.add(note);
-
+    note.checkInit();
+    
     this.noMarginsOrPadding();
     note.noMarginsOrPadding();
 

@@ -41,7 +41,7 @@ beforeAll(() => {
 
 function makeHost() {
   const root = UIBase.createElement("colframe-x") as Container;
-  root._init();
+  root.checkInit();
 
   const host: IPanelHost = {
     ctx                  : undefined as unknown as IContextBase,

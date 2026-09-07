@@ -61,7 +61,7 @@ function makeScreenArea() {
   sarea.ctx = {} as IContextBase;
   sarea.pos = new Vector2([0, 0]);
   sarea.size = new Vector2([100, 100]);
-  sarea._init();
+  sarea.checkInit();
 
   return sarea;
 }

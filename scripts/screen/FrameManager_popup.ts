@@ -313,7 +313,7 @@ export function makePopup(
   const container = UIBase.createElement("screen-popup-x") as PopupContainer;
 
   container.ctx = screen.ctx;
-  container._init();
+  container.checkInit();
 
   container.sarea = sarea;
   container.mouseOutCloseTimeout = mouseOutCloseTimeout;

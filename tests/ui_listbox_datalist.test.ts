@@ -98,7 +98,7 @@ function makeBox(ctx: any, path = "items"): ListBox<any, number> {
     throw new Error("listbox-x failed to register");
   }
   box.ctx = ctx;
-  box._init();
+  box.checkInit();
   box.setAttribute("datapath", path);
   return box;
 }

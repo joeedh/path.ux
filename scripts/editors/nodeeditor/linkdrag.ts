@@ -244,7 +244,7 @@ export class LinkDrag<CTX extends IContextBase = IContextBase> {
     overlay.style.pointerEvents = "none";
     // Appended after the pan/zoom content, so the preview paints above frames.
     this.view.panzoom.shadow.appendChild(overlay);
-    overlay._init();
+    overlay.checkInit();
     this._overlay = overlay;
   }
 

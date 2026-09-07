@@ -242,7 +242,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     this._pressed = false;
 
     tbox.ctx = this.ctx;
-    tbox._init();
+    tbox.checkInit();
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
@@ -1878,7 +1878,7 @@ export class SliderWithTextbox<
     this._textbox.overrideDefault?.("width", this.getDefault("TextBoxWidth"));
 
     textbox.style["height"] = this.getDefault<number>("height") - 2 + "px";
-    textbox._init();
+    textbox.checkInit();
 
     strip.add(textbox);
 

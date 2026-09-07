@@ -103,6 +103,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     const ret = UIBase.createElement("panel-contents-x") as unknown as PanelContents<CTX>;
     this._container_inherit(ret);
     this._add(ret as unknown as ui_base.UIBase<CTX>);
+    ret.checkInit();
     return ret;
   }
 
@@ -164,14 +165,15 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     discardEphemeral?: boolean;
     closePanel?: boolean;
   }): void {
+    if (closePanel) {
+      this.closed = true;
+    }
     this._virtual = {
       onOpen,
       onClose,
       discardEphemeral,
     };
-    if (closePanel) {
-      this.closed = true;
-    } else if (!this.closed) {
+    if (!closePanel && !this.closed) {
       this.handleVirtualize();
       this.flushUpdate();
       this.contents.flushUpdate();
@@ -514,6 +516,10 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     this.setAttribute("update-closed-contents", v ? "true" : "false");
   }
 
+  get isVirtual() {
+    return !!this._virtual;
+  }
+  
   private handleVirtualize(action?: "close" | "open") {
     action = action ?? (!this._state ? "open" : "close");
 

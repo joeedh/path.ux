@@ -62,6 +62,8 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
     const popup = screen.popup(this, this) as unknown as PopupContainer;
 
     popup.add(panel);
+    panel.checkInit();
+    
     popup.button("ok", () => {
       popup.end();
     });
@@ -292,6 +294,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     if (this.hasUniformSlider) {
       const uslider = (this.uslider = UIBase.createElement("numslider-x") as AnySlider);
       row!._prepend(uslider as unknown as UIBase<CTX>);
+      uslider.checkInit();
 
       uslider["range"] = this.range;
       uslider["baseUnit"] = this.baseUnit;

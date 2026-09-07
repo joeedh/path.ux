@@ -58,8 +58,8 @@ export function menuImpl<CTX extends IContextBase, SELF extends string>(
   }
 
   self._container_inherit(dbox, packflag);
-
   self._add(dbox);
+  dbox.checkInit();
   return dbox;
 }
 

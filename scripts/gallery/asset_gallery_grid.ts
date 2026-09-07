@@ -295,7 +295,7 @@ export class AssetGalleryGrid<CTX extends IContextBase = IContextBase> extends U
       // back up to find the enclosing popup has to be made here
       cell.parentWidget = this;
       this.content.appendChild(cell);
-      cell._init();
+      cell.checkInit();
 
       cell.addEventListener("click", () => this.pick(cell.index));
       cell.addEventListener("dblclick", () => this.confirmAt(cell.index));

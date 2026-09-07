@@ -1147,8 +1147,8 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
           if (this.dead) {
             return;
           }
-          ret._init();
-          ret.area!._init();
+          ret.checkInit();
+          ret.area!.checkInit();
           ret.area!.push_ctx_active();
           ret.area!.on_area_active();
           ret.area!.pop_ctx_active();
@@ -1478,7 +1478,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         editor.size = new Vector2(editor.size);
         editor.inactive = true;
         editor.push_ctx_active();
-        editor._init();
+        editor.checkInit();
         editor.on_area_inactive();
         editor.pop_ctx_active();
 
@@ -1529,7 +1529,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
       this.area.owning_sarea = undefined;
       this.area.inactive = true;
       this.area.push_ctx_active();
-      this.area._init(); //check that init was called
+      this.area.checkInit(); //check that init was called
       this.area.on_area_inactive();
       this.area.pop_ctx_active();
 
@@ -1565,7 +1565,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
 
     //propegate new size
     this.area.push_ctx_active();
-    this.area._init(); //check that init was called
+    this.area.checkInit(); //check that init was called
     this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     this.area.pop_ctx_active();
 
@@ -1763,7 +1763,7 @@ export class ScreenArea<CTX extends IContextBase = IContextBase> extends UIBase<
         if (this.area!.ctx === undefined) {
           this.area!.ctx = this.ctx;
         }
-        this.area!._init(); //ensure init has been called already
+        this.area!.checkInit(); //ensure init has been called already
         this.area!.on_area_active();
         this.area!.onadd();
       };

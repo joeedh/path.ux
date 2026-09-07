@@ -1411,6 +1411,7 @@ export class TabBar<CTX extends IContextBase = IContextBase> extends UIBase<
     tab.tooltip = tooltip;
     tab.movable = movable;
     tab.tbar = this;
+    tab.checkInit();
 
     this.tabs.push(tab);
     this.update(true);
@@ -2298,6 +2299,7 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
         this.flushUpdate();
       }
     };
+    this.tbar.checkInit();
   }
 
   addEventListener<K extends keyof (TabDragEvents & HTMLElementEventMap)>(
@@ -2579,10 +2581,11 @@ export class TabContainer<CTX extends IContextBase = IContextBase> extends UIBas
     col.parentWidget = this as unknown as UIBase<CTX>;
 
     if (col.ctx) {
-      col._init();
+      col.checkInit();
     }
 
     col.setCSS();
+    col.checkInit();
 
     if (this._tab === undefined) {
       this.setActive(col);

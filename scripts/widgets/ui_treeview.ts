@@ -53,6 +53,7 @@ export class TreeItem<CTX extends IContextBase = IContextBase> extends Container
       this._icon2 = UIBase.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
+      this._icon2.checkInit();
 
       this.header.insert(1, this._icon2);
     }
@@ -129,7 +130,7 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
     this.style.flexDirection = "column";
 
     this.overdraw = UIBase.createElement("overdraw-x");
-    console.log(this.overdraw.startNode);
+    this.overdraw.checkInit();
     this.overdraw.startNode(this);
 
     this.style.margin = this.style.padding = "0px";
@@ -297,8 +298,8 @@ export class TreeView<CTX extends IContextBase = IContextBase> extends Container
 
   item(name: string, args: { icon?: number; treeParent?: TreeItem<CTX> } = {}) {
     const ret = UIBase.createElement("tree-item-x") as TreeItem<CTX>;
+    ret.checkInit();
     this.add(ret);
-    ret._init();
 
     ret.text = name;
 

@@ -15,9 +15,10 @@ export function treeviewImpl<CTX extends IContextBase, SELF extends string>(
 ): TreeView<CTX> {
   const ret = UIBase.createElement("tree-view-x") as TreeView<CTX>;
   ret.ctx = self.ctx;
-  self.add(ret);
-
+  
   self._container_inherit(ret);
+  ret.checkInit();
+  self._add(ret);
 
   return ret;
 }
@@ -47,7 +48,7 @@ export function panelImpl<CTX extends IContextBase, SELF extends string>(
     //check init was called
     ret.ctx = self.ctx;
     ret.contents.ctx = self.ctx;
-    ret._init();
+    ret.checkInit();
     //ret.headerLabel = name;
   }
 
@@ -63,8 +64,9 @@ export function rowImpl<CTX extends IContextBase, SELF extends string>(
   const ret = UIBase.createElement("rowframe-x") as RowFrame<CTX>;
 
   self._container_inherit(ret, packflag);
+  ret.checkInit();
   self._add(ret);
-
+  
   ret.ctx = self.ctx;
 
   return ret;
@@ -78,7 +80,7 @@ export function listboxImpl<
   const ret = UIBase.createElement("listbox-x") as ListBox<CTX, IDType>;
 
   self._container_inherit(ret, packflag);
-
+  ret.checkInit();
   self._add(ret);
 
   if (path !== undefined) {
@@ -95,7 +97,7 @@ export function tableImpl<CTX extends IContextBase, SELF extends string>(
   const ret = UIBase.createElement("tableframe-x") as TableFrame<CTX>;
 
   self._container_inherit(ret, packflag);
-
+  ret.checkInit();
   self._add(ret);
   return ret;
 }
@@ -110,7 +112,7 @@ export function twocolImpl<CTX extends IContextBase, SELF extends string>(
   ret.parentDepth = parentDepth;
 
   self._container_inherit(ret, packflag);
-
+  ret.checkInit();
   self._add(ret);
   return ret;
 }
@@ -122,7 +124,7 @@ export function colImpl<CTX extends IContextBase, SELF extends string>(
   const ret = UIBase.createElement("colframe-x") as ColumnFrame<CTX>;
 
   self._container_inherit(ret, packflag);
-
+  ret.checkInit();
   self._add(ret);
   return ret;
 }
@@ -140,6 +142,7 @@ export function tabsImpl<CTX extends IContextBase, SELF extends string>(
   // XXX nee to fix tabcontainer's base class type conflict
   // with it's on_change method
   self._container_inherit(ret, packflag);
+  ret.checkInit();
   self._add(ret as unknown as UIBase<CTX>);
 
   return ret;

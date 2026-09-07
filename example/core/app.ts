@@ -320,7 +320,7 @@ export class AppState {
 
       document.body.appendChild(screen);
 
-      screen._init();
+      screen.checkInit();
       screen.listen();
       screen.update();
       screen.setCSS();

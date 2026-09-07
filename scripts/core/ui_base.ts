@@ -860,7 +860,7 @@ export class UIBase<
 
   loadJSON(obj: Record<string, unknown>): void {
     if (!this._init_done) {
-      this._init();
+      this.checkInit();
     }
   }
 

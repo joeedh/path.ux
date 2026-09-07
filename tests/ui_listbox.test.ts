@@ -9,7 +9,7 @@ beforeAll(() => {
 
 function makeBox(): ListBox {
   const box = UIBase.createElement("listbox-x") as ListBox;
-  box._init();
+  box.checkInit();
   return box;
 }
 

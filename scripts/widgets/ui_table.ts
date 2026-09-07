@@ -143,6 +143,7 @@ export class TableFrame<CTX extends IContextBase = IContextBase> extends Contain
       container.ctx = this2.ctx;
       container.parentWidget = this2;
       container.setAttribute("class", cls);
+      container.checkInit();
 
       td.setAttribute("class", cls);
       td.appendChild(container);

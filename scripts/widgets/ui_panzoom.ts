@@ -105,9 +105,10 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
   constructor() {
     super();
 
-    this.content = UIBase.createElement("container-x") as Container<CTX>;
+    this.content = UIBase.createElement<Container<CTX>>("container-x");
     this.content.parentWidget = this;
-    this.shadow.appendChild(this.content);
+    this._add(this.content);
+    this.content.checkInit();
   }
 
   static define(): UIBaseDefinition {
@@ -129,7 +130,7 @@ export class PanZoomContainer<CTX extends IContextBase = IContextBase> extends C
     this.style.position = "relative";
 
     this.content.ctx = this.ctx;
-    this.content._init();
+    this.content.checkInit();
     this.content.style.position = "absolute";
     this.content.style.transformOrigin = "0 0";
 

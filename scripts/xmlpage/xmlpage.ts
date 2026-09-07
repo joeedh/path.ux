@@ -1111,7 +1111,7 @@ export function initPage(
 
   container.ctx = ctx;
   if (ctx) {
-    container._init();
+    container.checkInit();
   }
 
   if (parentContainer) {

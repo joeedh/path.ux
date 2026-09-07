@@ -304,14 +304,14 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.parentWidget = this;
     this.shadow.appendChild(this.panzoom);
     this.panzoom.ctx = this.ctx;
-    this.panzoom._init();
+    this.panzoom.checkInit();
     this.panzoom.style.flexGrow = "1";
     this.panzoom.style.minHeight = "0";
 
     this.links = UIBase.createElement("nodelinkcanvas-x") as LinkCanvas<CTX>;
     this.links.ctx = this.ctx;
     this.panzoom.addUnderlay(this.links);
-    this.links._init();
+    this.links.checkInit();
 
     this.panzoom.addEventListener("transform", () => this._redrawLinks());
 
@@ -844,7 +844,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       this.panzoom.appendChild(frame);
       frame.ctx = this.ctx;
       frame.inherit_packflag |= this.inherit_packflag;
-      frame._init();
+      frame.checkInit();
       this.frames.set(node.id, frame);
     }
 

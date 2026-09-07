@@ -23053,7 +23053,7 @@ function setCSS(elem, setBG = true) {
   elem.saneStyle["transform"] = transform2 + ` scale(${zoom},${zoom})`;
 }
 function flushSetCSS(elem) {
-  elem._init();
+  elem.checkInit();
   elem.setCSS();
   elem._forEachChildWidget((c) => {
     if (!(c.packflag & PackFlags.NO_UPDATE)) {
@@ -32503,7 +32503,7 @@ function ondestroy(elem) {
   }
 }
 function flushUpdate(elem, force) {
-  elem._init();
+  elem.checkInit();
   elem.update();
   elem._forEachChildWidget((c) => {
     if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
@@ -32584,7 +32584,7 @@ function update(elem) {
     elem.description = d;
   }
   if (!elem._init_done) {
-    elem._init();
+    elem.checkInit();
   }
   if (elem._init_done && !elem.constructor.define().subclassChecksTheme) {
     if (elem.checkThemeUpdate()) {
@@ -33245,7 +33245,7 @@ function loadUIData(node, buf) {
       n = list5[ni];
     }
     if (n !== void 0 && n instanceof UIBase) {
-      n._init();
+      n.checkInit();
       n.loadData(data);
     }
   }
@@ -33928,7 +33928,7 @@ var init_ui_base = __esm({
       }
       loadJSON(obj) {
         if (!this._init_done) {
-          this._init();
+          this.checkInit();
         }
       }
       getPathValue(ctx, path) {
@@ -36929,7 +36929,7 @@ function initMenuBar(menuEditor, override = false) {
     db._build_menu();
     const menu2 = db._menu;
     menu2.ctx = db.ctx;
-    menu2._init();
+    menu2.checkInit();
     menu2.update();
     const title = db._genLabel();
     const item = new nw.MenuItem({
@@ -37335,7 +37335,7 @@ function initMenuBar2(menuEditor, override = false) {
     db._build_menu();
     const menu2 = db._menu;
     menu2.ctx = db.ctx;
-    menu2._init();
+    menu2.checkInit();
     menu2.update();
     const title = db._genLabel();
     const args = {
@@ -38947,6 +38947,7 @@ function menuImpl(self2, title, list5, packflag = 0) {
   }
   self2._container_inherit(dbox, packflag);
   self2._add(dbox);
+  dbox.checkInit();
   return dbox;
 }
 function toolPanelImpl(self2, path_or_cls, args = {}) {
@@ -39255,7 +39256,7 @@ function textboxImpl(self2, inpath, text2, cb, packflag = 0) {
   }
   ret.ctx = self2.ctx;
   ret.parentWidget = self2;
-  ret._init();
+  ret.checkInit();
   self2._add(ret);
   ret.setCSS();
   ret.update();
@@ -39309,7 +39310,7 @@ function helppickerImpl(self2) {
   if (isMobile()) {
   }
   if (ret.ctx) {
-    ret._init();
+    ret.checkInit();
     ret.setCSS();
   }
   return ret;
@@ -39414,7 +39415,7 @@ function colorPickerImpl(self2, inpath, packflag_or_args = 0, mass_set_path, the
   self2._container_inherit(ret, packflag);
   ret.ctx = self2.ctx;
   ret.parentWidget = self2;
-  ret._init();
+  ret.checkInit();
   ret.packflag |= packflag;
   ret.inherit_packflag |= packflag;
   ret.constructor.setDefault(ret);
@@ -39477,6 +39478,7 @@ function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
   self2.add(ret);
+  ret.checkInit();
   return ret;
 }
 function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
@@ -39506,7 +39508,8 @@ function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
   if (mass_set_path) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
-  self2._add(ret);
+  ret.checkInit();
+  self2.add(ret);
   return ret;
 }
 function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
@@ -39723,6 +39726,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   if (defaultval !== void 0) {
     ret.setValue(defaultval);
   }
+  ret.checkInit();
   ret.on_select = callback;
   ret.packflag |= packflag;
   return ret;
@@ -39854,6 +39858,7 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
       }
+      ret.checkInit();
       self2.add(ret);
       return ret.setUndo(useDataPathUndo);
     }
@@ -39883,7 +39888,7 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
         con = UIBase.createElement("container-x");
         con.ctx = self2.ctx;
-        con._init();
+        con.checkInit();
         con.style.display = self2.style.display;
         con.style.flexDirection = self2.style.flexDirection;
         con.inherit_packflag = self2.inherit_packflag;
@@ -40083,6 +40088,7 @@ function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, 
     ret.on_change = callback;
   }
   self2._add(ret);
+  ret.checkInit();
   if (self2.ctx) {
     ret.setCSS();
     ret.update();
@@ -40098,8 +40104,9 @@ init_ui_base();
 function treeviewImpl(self2) {
   const ret = UIBase.createElement("tree-view-x");
   ret.ctx = self2.ctx;
-  self2.add(ret);
   self2._container_inherit(ret);
+  ret.checkInit();
+  self2._add(ret);
   return ret;
 }
 function panelImpl(self2, name2, id, packflag = 0, tooltip) {
@@ -40114,7 +40121,7 @@ function panelImpl(self2, name2, id, packflag = 0, tooltip) {
   if (self2.ctx) {
     ret.ctx = self2.ctx;
     ret.contents.ctx = self2.ctx;
-    ret._init();
+    ret.checkInit();
   }
   self2._container_inherit(ret, packflag);
   self2._container_inherit(ret.contents, packflag);
@@ -40123,6 +40130,7 @@ function panelImpl(self2, name2, id, packflag = 0, tooltip) {
 function rowImpl(self2, packflag = 0) {
   const ret = UIBase.createElement("rowframe-x");
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   ret.ctx = self2.ctx;
   return ret;
@@ -40130,6 +40138,7 @@ function rowImpl(self2, packflag = 0) {
 function listboxImpl(self2, path, packflag = 0) {
   const ret = UIBase.createElement("listbox-x");
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   if (path !== void 0) {
     ret.setAttribute("datapath", self2._joinPrefix(path));
@@ -40139,6 +40148,7 @@ function listboxImpl(self2, path, packflag = 0) {
 function tableImpl(self2, packflag = 0) {
   const ret = UIBase.createElement("tableframe-x");
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   return ret;
 }
@@ -40146,12 +40156,14 @@ function twocolImpl(self2, parentDepth = 1, packflag = 0) {
   const ret = UIBase.createElement("two-column-x");
   ret.parentDepth = parentDepth;
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   return ret;
 }
 function colImpl(self2, packflag = 0) {
   const ret = UIBase.createElement("colframe-x");
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   return ret;
 }
@@ -40160,6 +40172,7 @@ function tabsImpl(self2, position = "top", packflag = 0) {
   ret.constructor.setDefault(ret);
   ret.setAttribute("bar_pos", position);
   self2._container_inherit(ret, packflag);
+  ret.checkInit();
   self2._add(ret);
   return ret;
 }
@@ -40703,8 +40716,8 @@ var Container3 = class _Container extends UIBase {
     return this._add(child, true);
   }
   //*/
-  add(child) {
-    return this._add(child);
+  add(child, prepend = false) {
+    return this._add(child, prepend);
   }
   insert(i, ch) {
     ch.parentWidget = this;
@@ -40720,6 +40733,7 @@ var Container3 = class _Container extends UIBase {
       ch.onadd();
     }
   }
+  /** Bypasses ui_forward'ing. */
   _add(child, prepend = false) {
     if (child instanceof NodeList) {
       throw new Error("eek!");
@@ -40928,8 +40942,8 @@ var Container3 = class _Container extends UIBase {
     strip._add(strip.labelElem);
     strip._add(widget);
     this._add(strip);
-    strip._init();
-    strip.labelElem._init();
+    strip.checkInit();
+    strip.labelElem.checkInit();
     strip.labelElem.text = label;
     strip.labelElem.setCSS();
     strip.setCSS();
@@ -41421,7 +41435,7 @@ var NumSlider = class extends ValueButtonBase {
     this.mdown = false;
     this._pressed = false;
     tbox.ctx = this.ctx;
-    tbox._init();
+    tbox.checkInit();
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
     tbox.editAsBaseUnit = this.editAsBaseUnit;
@@ -42604,7 +42618,7 @@ var SliderWithTextbox = class extends ColumnFrame {
     textbox.packflag = textbox.packflag | this.inherit_packflag;
     this._textbox.overrideDefault?.("width", this.getDefault("TextBoxWidth"));
     textbox.style["height"] = this.getDefault("height") - 2 + "px";
-    textbox._init();
+    textbox.checkInit();
     strip.add(textbox);
     textbox.setCSS();
     this.linkTextBox();
@@ -43630,7 +43644,7 @@ function initPage(ctx, xml, parentContainer, templateVars = {}, templateScope = 
   const container = UIBase.createElement("container-x");
   container.ctx = ctx;
   if (ctx) {
-    container._init();
+    container.checkInit();
   }
   if (parentContainer) {
     const parent = parentContainer;
@@ -43816,9 +43830,7 @@ var RichEditor = class extends TextBoxBase {
       }
     `;
     this.shadow.appendChild(this.styletag);
-    const controls = this.controls = UIBase.createElement(
-      "rowframe-x"
-    );
+    const controls = this.controls = UIBase.createElement("rowframe-x");
     const makeicon = (icon, description, cb) => {
       const btn = controls.iconbutton(icon, description, cb);
       btn.iconsheet = 1;
@@ -43838,6 +43850,7 @@ var RichEditor = class extends TextBoxBase {
       document.execCommand("strikeThrough");
     });
     controls.background = this.getDefault("background-color");
+    controls.checkInit();
     this.shadow.appendChild(controls);
     this.textarea = document.createElement("div");
     this.textarea.contentEditable = "true";
@@ -44075,6 +44088,7 @@ var VectorPopupButton = class extends Button {
     const screen = this.ctx.screen;
     const popup = screen.popup(this, this);
     popup.add(panel);
+    panel.checkInit();
     popup.button("ok", () => {
       popup.end();
     });
@@ -44255,6 +44269,7 @@ var VectorPanel = class extends ColumnFrame {
     if (this.hasUniformSlider) {
       const uslider = this.uslider = UIBase.createElement("numslider-x");
       row._prepend(uslider);
+      uslider.checkInit();
       uslider["range"] = this.range;
       uslider["baseUnit"] = this.baseUnit;
       uslider["slideSpeed"] = this.slideSpeed;
@@ -44776,7 +44791,7 @@ var Curve1DWidget = class extends ColumnFrame {
         this.value._on_change();
       }
     );
-    this.dropbox._init();
+    this.dropbox.checkInit();
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       const curve = this._value;
       if (!curve) return;
@@ -45129,6 +45144,7 @@ var PanelFrame = class extends ColumnFrame {
     const ret = UIBase6.createElement("panel-contents-x");
     this._container_inherit(ret);
     this._add(ret);
+    ret.checkInit();
     return ret;
   }
   constructor() {
@@ -45174,14 +45190,15 @@ var PanelFrame = class extends ColumnFrame {
     discardEphemeral = false,
     closePanel = true
   }) {
+    if (closePanel) {
+      this.closed = true;
+    }
     this._virtual = {
       onOpen,
       onClose,
       discardEphemeral
     };
-    if (closePanel) {
-      this.closed = true;
-    } else if (!this.closed) {
+    if (!closePanel && !this.closed) {
       this.handleVirtualize();
       this.flushUpdate();
       this.contents.flushUpdate();
@@ -45439,6 +45456,9 @@ var PanelFrame = class extends ColumnFrame {
   }
   set updateClosedContents(v) {
     this.setAttribute("update-closed-contents", v ? "true" : "false");
+  }
+  get isVirtual() {
+    return !!this._virtual;
   }
   handleVirtualize(action) {
     action = action ?? (!this._state ? "open" : "close");
@@ -46077,6 +46097,8 @@ var ColorField = class extends ColumnFrame {
     };
     this._add(satvalfield);
     this._add(huefield);
+    satvalfield.checkInit();
+    huefield.checkInit();
   }
   static define() {
     return {
@@ -46602,7 +46624,7 @@ var ColorPickerButton = class extends UIBase {
     const massSetPath = this.getAttribute("mass_set_path") ?? void 0;
     const widget = colorpicker.colorPicker(path, void 0, massSetPath);
     widget.ctx = ctx;
-    widget._init();
+    widget.checkInit();
     widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
     widget.style["padding"] = "20px";
     const onchange = () => {
@@ -47826,6 +47848,7 @@ var TabBar = class extends UIBase {
     tab2.tooltip = tooltip;
     tab2.movable = movable;
     tab2.tbar = this;
+    tab2.checkInit();
     this.tabs.push(tab2);
     this.update(true);
     if (this.tabs.length === 1) {
@@ -48453,6 +48476,7 @@ var TabContainer3 = class extends UIBase {
         this.flushUpdate();
       }
     };
+    this.tbar.checkInit();
   }
   addEventListener(type, cb, options) {
     super.addEventListener(type, cb, options);
@@ -48652,9 +48676,10 @@ var TabContainer3 = class extends UIBase {
     col.packflag |= this.packflag;
     col.parentWidget = this;
     if (col.ctx) {
-      col._init();
+      col.checkInit();
     }
     col.setCSS();
+    col.checkInit();
     if (this._tab === void 0) {
       this.setActive(col);
     }
@@ -49212,6 +49237,7 @@ var ListBox = class extends Container3 {
     this.idmap.set(item.listId, item);
     this.add(item);
     this.items.push(item);
+    item.checkInit();
     item.label(name2);
     item.addEventListener("click", () => this.setActive(item));
     return item;
@@ -50076,7 +50102,7 @@ var AssetGalleryGrid = class extends UIBase {
       cell.renderer = this._renderer;
       cell.parentWidget = this;
       this.content.appendChild(cell);
-      cell._init();
+      cell.checkInit();
       cell.addEventListener("click", () => this.pick(cell.index));
       cell.addEventListener("dblclick", () => this.confirmAt(cell.index));
       this.pool.push(cell);
@@ -50682,6 +50708,7 @@ var TableFrame = class extends Container3 {
       container.ctx = this2.ctx;
       container.parentWidget = this2;
       container.setAttribute("class", cls);
+      container.checkInit();
       td.setAttribute("class", cls);
       td.appendChild(container);
       return container;
@@ -51010,6 +51037,7 @@ var NoteFrame = class extends RowFrame {
     note.style["color"] = this.getDefault("DefaultText").color;
     note.showExclMark = showExclMark;
     this.add(note);
+    note.checkInit();
     this.noMarginsOrPadding();
     note.noMarginsOrPadding();
     note.style["height"] = this._h + "px";
@@ -51314,7 +51342,8 @@ var PanZoomContainer = class extends Container3 {
     super();
     this.content = UIBase.createElement("container-x");
     this.content.parentWidget = this;
-    this.shadow.appendChild(this.content);
+    this._add(this.content);
+    this.content.checkInit();
   }
   static define() {
     return {
@@ -51332,7 +51361,7 @@ var PanZoomContainer = class extends Container3 {
     this.style.overflow = "hidden";
     this.style.position = "relative";
     this.content.ctx = this.ctx;
-    this.content._init();
+    this.content.checkInit();
     this.content.style.position = "absolute";
     this.content.style.transformOrigin = "0 0";
     this.transform.minScale = this.getDefault("ZoomMin");
@@ -54984,7 +55013,7 @@ function propEditRow(ctx, label, path, inherit_packflag, createUI) {
   const row = UIBase.createElement("container-x");
   row.inherit_packflag |= inherit_packflag;
   row.ctx = ctx;
-  row._init();
+  row.checkInit();
   row.classList.add("nodeeditor-prop-row");
   row.inherit_packflag |= PackFlags.FORCE_PROP_LABELS | PackFlags.LABEL_ON_TOP;
   label = ToolProperty.makeUIName(label);
@@ -55014,7 +55043,7 @@ function sideWord(dir) {
   return dir === "in" ? "input" : "output";
 }
 function mark(el, cls) {
-  el._init();
+  el.checkInit();
   el.classList.add(cls);
   return el;
 }
@@ -55139,7 +55168,7 @@ function buildGroupDesigner(root, opts) {
   root.textContent = "";
   const con = UIBase.createElement("container-x");
   con.ctx = opts.ctx;
-  con._init();
+  con.checkInit();
   con.classList.add("nodeeditor-designer");
   root.appendChild(con);
   const rerender = () => buildGroupDesigner(root, opts);
@@ -55729,7 +55758,7 @@ var NodeFrame = class extends Container3 {
     this._body.parentWidget = this;
     this.shadow.appendChild(this._body);
     this._body.ctx = this.ctx;
-    this._body._init();
+    this._body.checkInit();
     this._propsRoot = document.createElement("div");
     this._propsRoot.className = "nodeframe-props";
     this._propsRoot.style.cssText = "display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;";
@@ -56125,7 +56154,7 @@ var LinkDrag = class {
     overlay.style.left = overlay.style.top = "0px";
     overlay.style.pointerEvents = "none";
     this.view.panzoom.shadow.appendChild(overlay);
-    overlay._init();
+    overlay.checkInit();
     this._overlay = overlay;
   }
   _dimRefusedTargets() {
@@ -57123,13 +57152,13 @@ var NodeGraphView = class extends Container3 {
     this.panzoom.parentWidget = this;
     this.shadow.appendChild(this.panzoom);
     this.panzoom.ctx = this.ctx;
-    this.panzoom._init();
+    this.panzoom.checkInit();
     this.panzoom.style.flexGrow = "1";
     this.panzoom.style.minHeight = "0";
     this.links = UIBase.createElement("nodelinkcanvas-x");
     this.links.ctx = this.ctx;
     this.panzoom.addUnderlay(this.links);
-    this.links._init();
+    this.links.checkInit();
     this.panzoom.addEventListener("transform", () => this._redrawLinks());
     this.panzoom.addEventListener("pointerdown", (e) => this._boxDown(e));
     this.linkDrag = new LinkDrag(this);
@@ -57587,7 +57616,7 @@ var NodeGraphView = class extends Container3 {
       this.panzoom.appendChild(frame);
       frame.ctx = this.ctx;
       frame.inherit_packflag |= this.inherit_packflag;
-      frame._init();
+      frame.checkInit();
       this.frames.set(node.id, frame);
     }
     for (const nid of [...this.selection]) {
@@ -60202,7 +60231,7 @@ function makePopup(screen, owning_node, elem_or_x, y, closeOnMouseOut = true, cl
   y = y ?? ry ?? 0;
   const container = UIBase.createElement("screen-popup-x");
   container.ctx = screen.ctx;
-  container._init();
+  container.checkInit();
   container.sarea = sarea;
   container.mouseOutCloseTimeout = mouseOutCloseTimeout;
   container.closeGestures = closeOn;
@@ -60928,7 +60957,7 @@ ${body}}
     });
     frame.add(panel);
     document.body.appendChild(frame);
-    frame._init();
+    frame.checkInit();
     frame.background = frame.getDefault("background-color");
     const screen = this.host.ctx ? this._screen() : void 0;
     if (screen) {
@@ -61387,7 +61416,7 @@ ${body}}
     tc.setAttribute("bar_pos", "top");
     stack.tabs = tc;
     c._add(tc);
-    tc._init();
+    tc.checkInit();
     if (r.side === "left" || r.side === "right") {
       tc.style.setProperty("width", "100%", "important");
     } else {
@@ -62517,8 +62546,8 @@ var ScreenArea2 = class extends UIBase {
           if (this.dead) {
             return;
           }
-          ret._init();
-          ret.area._init();
+          ret.checkInit();
+          ret.area.checkInit();
           ret.area.push_ctx_active();
           ret.area.on_area_active();
           ret.area.pop_ctx_active();
@@ -62768,7 +62797,7 @@ var ScreenArea2 = class extends UIBase {
         editor.size = new Vector2(editor.size);
         editor.inactive = true;
         editor.push_ctx_active();
-        editor._init();
+        editor.checkInit();
         editor.on_area_inactive();
         editor.pop_ctx_active();
         this.area = void 0;
@@ -62805,7 +62834,7 @@ var ScreenArea2 = class extends UIBase {
       this.area.owning_sarea = void 0;
       this.area.inactive = true;
       this.area.push_ctx_active();
-      this.area._init();
+      this.area.checkInit();
       this.area.on_area_inactive();
       this.area.pop_ctx_active();
       this.area.remove();
@@ -62825,7 +62854,7 @@ var ScreenArea2 = class extends UIBase {
     this.shadow.appendChild(this.area);
     this._styleArea();
     this.area.push_ctx_active();
-    this.area._init();
+    this.area.checkInit();
     this.area.on_resize([this._areaSize[0], this._areaSize[1]]);
     this.area.pop_ctx_active();
     this._attachSwitcher(this.area);
@@ -62964,7 +62993,7 @@ var ScreenArea2 = class extends UIBase {
         if (this.area.ctx === void 0) {
           this.area.ctx = this.ctx;
         }
-        this.area._init();
+        this.area.checkInit();
         this.area.on_area_active();
         this.area.onadd();
       };
@@ -63039,7 +63068,7 @@ var NodeEditor = class extends Area {
       this.view.inherit_packflag |= PackFlags.NO_REALTIME;
       this.view.packflag |= PackFlags.NO_REALTIME;
     }
-    this.view._init();
+    this.view.checkInit();
     this.view.style.flexGrow = "1";
   }
   definePanels(panels) {
@@ -63887,7 +63916,7 @@ var ThemeEditor = class extends Container3 {
       parent[livePath[livePath.length - 1]] = copyThemeItem(this._vars[varKey]);
     }
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify(livePath[0], livePath[livePath.length - 1], void 0, varKey);
   }
   /** Writes the variable's current value into the authored slot and stops reading it. */
@@ -63904,7 +63933,7 @@ var ThemeEditor = class extends Container3 {
   /** Adds a variable, returning the name it was stored under. */
   addThemeVar(name2, value) {
     const key = addVar(this._vars, name2, copyThemeItem(value));
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key, void 0, key);
     return key;
   }
@@ -63919,7 +63948,7 @@ var ThemeEditor = class extends Container3 {
     deleteVar(this._varTheme, this._vars, key);
     delete this._varComments[key];
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key);
   }
   /** Renames a variable, rewriting every slot that reads it. */
@@ -63929,7 +63958,7 @@ var ThemeEditor = class extends Container3 {
     }
     const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key, void 0, key);
     return key;
   }
@@ -64002,11 +64031,14 @@ var ThemeEditor = class extends Container3 {
       "Values shared by the theme slots bound to them"
     );
     this._varsPanel = panel;
-    for (const key of Object.keys(this._vars)) {
-      this.varRow(panel, key);
-    }
-    this.addVarMenu(panel);
-    panel.closed = true;
+    panel.virtualize({
+      onOpen: () => {
+        for (const key of Object.keys(this._vars)) {
+          this.varRow(panel, key);
+        }
+        this.addVarMenu(panel);
+      }
+    });
   }
   varRow(panel, key) {
     const row = panel.row();
@@ -64066,6 +64098,13 @@ var ThemeEditor = class extends Container3 {
       { name: "Font", tooltip: "Add a font variable", callback: () => add(new CSSFont()) }
     ]);
     menu.description = "Add a variable of the kind chosen here";
+  }
+  rebuildPanels() {
+    for (const child of this.shadow.childNodes) {
+      if (child instanceof PanelFrame && child.isVirtual) {
+        child.rebuild();
+      }
+    }
   }
   /** Rebuilds every row, once the widget is built at all. */
   rebuild() {
@@ -64402,20 +64441,8 @@ var ThemeEditor = class extends Container3 {
           this.doFolder(catkey, v, panel ?? this);
         }
       }
-      if (panel) {
-        panel.closed = true;
-      }
     }
     loadUIData(this, uidata);
-    for (let i = 0; i < 2; i++) {
-      this.flushSetCSS();
-      this.flushUpdate();
-    }
-    if (this.ctx) {
-      window.setTimeout(() => {
-        this.ctx.screen.completeSetCSS();
-      }, 100);
-    }
   }
 };
 UIBase.internalRegister(ThemeEditor);
@@ -64463,6 +64490,7 @@ var TreeItem = class extends Container3 {
       this._icon2 = UIBase.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
+      this._icon2.checkInit();
       this.header.insert(1, this._icon2);
     }
   }
@@ -64523,7 +64551,7 @@ var TreeView = class extends Container3 {
     this.style.display = "flex";
     this.style.flexDirection = "column";
     this.overdraw = UIBase.createElement("overdraw-x");
-    console.log(this.overdraw.startNode);
+    this.overdraw.checkInit();
     this.overdraw.startNode(this);
     this.style.margin = this.style.padding = "0px";
     this.updateOverdraw();
@@ -64646,8 +64674,8 @@ var TreeView = class extends Container3 {
   }
   item(name2, args = {}) {
     const ret = UIBase.createElement("tree-item-x");
+    ret.checkInit();
     this.add(ret);
-    ret._init();
     ret.text = name2;
     if (args.icon) {
       ret.icon = args.icon;
@@ -65105,8 +65133,8 @@ var DragBox = class extends Container3 {
     const header = this.header;
     header.ctx = this.ctx;
     this.contents.ctx = this.ctx;
-    header._init();
-    this.contents._init();
+    header.checkInit();
+    this.contents.checkInit();
     this.style.minWidth = "350px";
     header.style.height = "35px";
     const icon = header.iconbutton(Icons.DELETE, "Hide", () => {
@@ -65270,7 +65298,7 @@ function makeTitleBar(sarea, title) {
   bar.ctx = sarea.ctx;
   bar.parentWidget = sarea;
   sarea.shadow.appendChild(bar);
-  bar._init();
+  bar.checkInit();
   bar.noMarginsOrPadding();
   bar.style.position = UIBase.PositionKey;
   bar.style.left = "0px";
@@ -65312,6 +65340,7 @@ function makePopupArea(area_class, screen, args = {}) {
   sarea.pos[1] = args.pos ? args.pos[1] : 100;
   sarea.pos[0] = Math.min(Math.max(sarea.pos[0], 0), Math.max(screen.size[0] - width - 2, 0));
   sarea.pos[1] = Math.min(Math.max(sarea.pos[1], 0), Math.max(screen.size[1] - height - 2, 0));
+  sarea.checkInit();
   if (titlebar) {
     sarea.chromeHeight = POPUP_TITLEBAR_HEIGHT;
   }
@@ -65626,7 +65655,7 @@ Right-click the tab to close it.`;
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
     menu.srcWidget = tab2;
-    menu._init();
+    menu.checkInit();
     const prop = makeAreasEnum();
     const sarea = this.getScreenArea();
     if (!sarea) {
@@ -65661,7 +65690,7 @@ Right-click the tab to close it.`;
           const uidata = saveUIData(this.tbar, "switcherTabs");
           sarea2.switchEditor(cls);
           dockerdebug("switching", cls);
-          sarea2.area._init();
+          sarea2.area.checkInit();
           this.rebuild();
           this.loadTabData(uidata);
           sarea2.switcherData = uidata;
@@ -65701,7 +65730,7 @@ Right-click the tab to close it.`;
     const menu = UIBase.createElement("menu-x");
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
-    menu._init();
+    menu.checkInit();
     menu.addItemExtra("Close", "close", void 0, Icons.TINY_X);
     menu.on_select = (val) => {
       if (val === "close") {
@@ -66031,7 +66060,7 @@ var Screen2 = class extends UIBase {
       this.constructor.define().tagname
     );
     ret.ctx = this.ctx;
-    ret._init();
+    ret.checkInit();
     for (const sarea of this.sareas) {
       const sarea2 = sarea.copy(ret);
       sarea2._ctx = this.ctx;
@@ -66045,15 +66074,15 @@ var Screen2 = class extends UIBase {
         sarea.area.ctx = this.ctx;
       }
       sarea.area.push_ctx_active();
-      sarea._init();
-      sarea.area._init();
+      sarea.checkInit();
+      sarea.area.checkInit();
       sarea.area.pop_ctx_active();
       for (const area of sarea.editors) {
         if (area.ctx === void 0) {
           area.ctx = this.ctx;
         }
         area.push_ctx_active();
-        area._init();
+        area.checkInit();
         area.pop_ctx_active();
       }
     }
@@ -66148,7 +66177,7 @@ var Screen2 = class extends UIBase {
     const ret = UIBase.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
-    ret._init();
+    ret.checkInit();
     addPopup(this, ret);
     ret._onend = () => {
       removePopup(this, ret);
@@ -67558,7 +67587,7 @@ var Screen2 = class extends UIBase {
       this.regenBorders();
       child.setCSS();
       this.drawUpdate();
-      child._init();
+      child.checkInit();
     }
     return this.shadow.appendChild(child);
   }
@@ -68036,7 +68065,7 @@ var Editor = class _Editor extends Area {
     sidebar.ctx = this.ctx;
     this.shadow.appendChild(sidebar);
     if (this.ctx) {
-      sidebar._init();
+      sidebar.checkInit();
       this.sidebar.flushSetCSS();
       this.sidebar.flushUpdate();
     }
@@ -69780,7 +69809,7 @@ var AppState = class _AppState {
     }
     sarea.switch_editor(cls);
     screen.appendChild(sarea);
-    screen._init();
+    screen.checkInit();
     screen.listen();
     screen.update();
     screen.completeSetCSS();

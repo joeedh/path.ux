@@ -178,6 +178,7 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
         ret.setAttribute("mass_set_path", mass_set_path);
       }
 
+      ret.checkInit();
       self.add(ret as UIBase<CTX>);
       return (ret as UIBase<CTX>).setUndo(useDataPathUndo);
     }
@@ -213,7 +214,7 @@ export function propImpl<CTX extends IContextBase, SELF extends string>(
       if (packflag & PackFlags.FORCE_PROP_LABELS) {
         con = UIBase.createElement("container-x") as AnyContainer<CTX>;
         con.ctx = self.ctx;
-        con._init();
+        con.checkInit();
         con.style.display = self.style.display;
         con.style.flexDirection = self.style.flexDirection;
         con.inherit_packflag = self.inherit_packflag;
@@ -502,6 +503,7 @@ export function sliderImpl<CTX extends IContextBase, SELF extends string>(
   }
 
   self._add(ret);
+  ret.checkInit();
 
   if (self.ctx) {
     ret.setCSS();

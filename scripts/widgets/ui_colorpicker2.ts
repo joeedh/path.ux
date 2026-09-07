@@ -845,8 +845,9 @@ export class ColorField<CTX extends IContextBase = IContextBase> extends ColumnF
 
     this._add(satvalfield);
     this._add(huefield);
-    //this.shadow.appendChild(canvas);
-    //this.shadow.appendChild(huecanvas);
+
+    satvalfield.checkInit();
+    huefield.checkInit();
   }
 
   static define() {
@@ -1552,7 +1553,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     const widget = colorpicker.colorPicker(path, undefined, massSetPath);
 
     widget.ctx = ctx;
-    widget._init();
+    widget.checkInit();
     widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 
     widget.style["padding"] = "20px";

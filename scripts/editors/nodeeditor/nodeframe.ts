@@ -623,7 +623,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     this._body.parentWidget = this;
     this.shadow.appendChild(this._body);
     this._body.ctx = this.ctx;
-    this._body._init();
+    this._body.checkInit();
 
     this._propsRoot = document.createElement("div");
     this._propsRoot.className = "nodeframe-props";

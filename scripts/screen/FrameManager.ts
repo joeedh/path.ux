@@ -474,7 +474,7 @@ export class Screen<
       (this.constructor as unknown as typeof Screen).define().tagname
     ) as this;
     ret.ctx = this.ctx;
-    ret._init();
+    ret.checkInit();
 
     for (const sarea of this.sareas) {
       const sarea2 = sarea.copy(ret);
@@ -493,8 +493,8 @@ export class Screen<
       }
 
       sarea.area!.push_ctx_active();
-      sarea._init();
-      sarea.area!._init();
+      sarea.checkInit();
+      sarea.area!.checkInit();
       sarea.area!.pop_ctx_active();
 
       for (const area of sarea.editors) {
@@ -503,7 +503,7 @@ export class Screen<
         }
 
         area.push_ctx_active();
-        area._init();
+        area.checkInit();
         area.pop_ctx_active();
       }
     }
@@ -634,7 +634,7 @@ export class Screen<
     const ret = UIBase.createElement("drag-box-x") as UIBase;
     ret.ctx = this.ctx;
     ret.parentWidget = this;
-    ret._init();
+    ret.checkInit();
 
     addPopup(this as unknown as Screen, ret);
     (ret as any)._onend = () => {
@@ -2553,7 +2553,7 @@ export class Screen<
       this.regenBorders();
       child.setCSS();
       this.drawUpdate();
-      child._init();
+      child.checkInit();
     }
 
     return this.shadow.appendChild(child);

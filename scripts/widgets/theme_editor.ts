@@ -1,5 +1,6 @@
 import { UIBase, theme, flagThemeUpdate, saveUIData, loadUIData, PackFlags } from "../core/ui_base";
 import { Container } from "../core/ui";
+import { PanelFrame } from "../widgets/ui_panel";
 import { ColumnFrame } from "../core/ui_containers";
 import { IContextBase } from "../core/context_base";
 import {
@@ -292,7 +293,6 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       panel = container.panel(key, undefined, undefined, catkey.help);
       panel.style.marginLeft = "15px";
     }
-
     panel.virtualize({
       onOpen: () => {
         this.doFolderContents(catkey, obj, container, panel, path, key, bindable);
@@ -560,7 +560,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     }
 
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify(livePath[0]!, livePath[livePath.length - 1]!, undefined, varKey);
   }
 
@@ -583,7 +583,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
   addThemeVar(name: string, value: ThemeItem): string {
     const key = addVar(this._vars, name, copyThemeItem(value));
 
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key, undefined, key);
 
     return key;
@@ -602,7 +602,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     delete this._varComments[key];
 
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key);
   }
 
@@ -615,7 +615,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     const key = renameVar(this._varTheme, this._vars, this._varComments, from, to);
 
     this.rebuildBindings();
-    this.rebuild();
+    this.rebuildPanels();
     this.notify("themeVars", key, undefined, key);
 
     return key;
@@ -710,13 +710,16 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     );
 
     this._varsPanel = panel;
+    // .virtualize closes the panel by default
+    panel.virtualize({
+      onOpen: () => {
+        for (const key of Object.keys(this._vars)) {
+          this.varRow(panel, key);
+        }
 
-    for (const key of Object.keys(this._vars)) {
-      this.varRow(panel, key);
-    }
-
-    this.addVarMenu(panel);
-    panel.closed = true;
+        this.addVarMenu(panel);
+      },
+    });
   }
 
   private varRow(panel: PanelContents<CTX>, key: string): void {
@@ -792,6 +795,14 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     ]);
 
     menu.description = "Add a variable of the kind chosen here";
+  }
+
+  private rebuildPanels() {
+    for (const child of this.shadow.childNodes) {
+      if (child instanceof PanelFrame && child.isVirtual) {
+        child.rebuild();
+      }
+    }
   }
 
   /** Rebuilds every row, once the widget is built at all. */
@@ -1231,25 +1242,9 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
           this.doFolder(catkey, v as ThemeRecord, panel ?? this);
         }
       }
-
-      if (panel) {
-        panel.closed = true;
-      }
     }
 
     loadUIData(this, uidata);
-
-    for (let i = 0; i < 2; i++) {
-      this.flushSetCSS();
-      this.flushUpdate();
-    }
-
-    if (this.ctx) {
-      /* Fix panel spacing bug. */
-      window.setTimeout(() => {
-        this.ctx.screen.completeSetCSS();
-      }, 100);
-    }
   }
 }
 

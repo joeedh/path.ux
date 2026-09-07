@@ -32,7 +32,7 @@ export function textboxImpl<CTX extends IContextBase, SELF extends string>(
 
   ret.ctx = self.ctx;
   ret.parentWidget = self;
-  ret._init();
+  ret.checkInit();
   self._add(ret);
 
   ret.setCSS();
@@ -124,7 +124,7 @@ export function helppickerImpl<CTX extends IContextBase, SELF extends string>(
   }
 
   if (ret.ctx) {
-    ret._init();
+    ret.checkInit();
     ret.setCSS();
   }
 
@@ -318,7 +318,7 @@ export function colorPickerImpl<CTX extends IContextBase, SELF extends string>(
 
   ret.ctx = self.ctx;
   ret.parentWidget = self;
-  ret._init();
+  ret.checkInit();
   ret.packflag |= packflag;
   ret.inherit_packflag |= packflag;
   ret.constructor.setDefault(ret);

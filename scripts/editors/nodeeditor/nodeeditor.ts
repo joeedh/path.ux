@@ -92,7 +92,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
       this.view.packflag |= PackFlags.NO_REALTIME;
     }
 
-    this.view._init();
+    this.view.checkInit();
     this.view.style.flexGrow = "1";
   }
 

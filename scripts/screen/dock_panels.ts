@@ -1060,7 +1060,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     frame.add(panel as unknown as Container<CTX>);
 
     document.body.appendChild(frame);
-    frame._init();
+    frame.checkInit();
     frame.background = frame.getDefault("background-color") as string;
 
     //register as a screen popup so pickElement sees the frame first
@@ -1661,7 +1661,7 @@ export class PanelManager<CTX extends IContextBase = IContextBase> {
     stack.tabs = tc;
 
     c._add(tc as unknown as UIBase<CTX>);
-    tc._init();
+    tc.checkInit();
 
     if (r.side === "left" || r.side === "right") {
       tc.style.setProperty("width", "100%", "important");

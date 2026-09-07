@@ -45,7 +45,7 @@ function makeCtx() {
 function makeContainer(ctx: Root): Container {
   const container = UIBase.createElement("rowframe-x") as Container;
   container.ctx = ctx as never;
-  container._init();
+  container.checkInit();
   return container;
 }
 

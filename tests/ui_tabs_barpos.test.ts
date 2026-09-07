@@ -32,7 +32,7 @@ beforeAll(() => {
 function makeTabs() {
   const tc = UIBase.createElement("tabcontainer-x") as TabContainer;
   tc.setAttribute("bar_pos", "top");
-  tc._init();
+  tc.checkInit();
   const a = tc.tab("A");
   const b = tc.tab("B");
   return { tc, a, b };

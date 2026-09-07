@@ -417,7 +417,7 @@ Right-click the tab to close it.`;
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
     menu.srcWidget = tab;
-    menu._init();
+    menu.checkInit();
 
     const prop = makeAreasEnum();
     const sarea = this.getScreenArea();
@@ -470,7 +470,7 @@ Right-click the tab to close it.`;
           sarea.switchEditor(cls);
           dockerdebug("switching", cls);
 
-          sarea.area!._init();
+          sarea.area!.checkInit();
 
           this.rebuild();
           this.loadTabData(uidata);
@@ -522,7 +522,7 @@ Right-click the tab to close it.`;
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
-    menu._init();
+    menu.checkInit();
 
     menu.addItemExtra("Close", "close", undefined, Icons.TINY_X);
 

@@ -234,7 +234,7 @@ export class Curve1DWidget<CTX extends IContextBase = IContextBase> extends Colu
         this.value._on_change();
       }
     );
-    this.dropbox._init();
+    this.dropbox.checkInit();
 
     row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       const curve = this._value;

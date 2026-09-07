@@ -148,7 +148,7 @@ function makeCtx(graph: Graph) {
 function makeView(ctx: unknown): NodeGraphView {
   const view = UIBase.createElement("nodegraphview-x") as NodeGraphView;
   view.ctx = ctx as IContextBase;
-  view._init();
+  view.checkInit();
   return view;
 }
 

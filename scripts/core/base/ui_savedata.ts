@@ -129,7 +129,7 @@ export function loadUIData<CTX extends IContextBase = IContextBase>(
     }
 
     if (n !== undefined && n instanceof UIBase) {
-      n._init(); //ensure init's been called, _init will check if it has
+      n.checkInit(); //ensure init's been called, _init will check if it has
       n.loadData(data);
     }
   }

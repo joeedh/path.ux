@@ -265,7 +265,7 @@ export class Editor<CTX extends IContextBase = IContextBase> extends Area<CTX> {
     this.shadow.appendChild(sidebar);
 
     if (this.ctx) {
-      sidebar._init();
+      sidebar.checkInit();
 
       this.sidebar.flushSetCSS();
       this.sidebar.flushUpdate();

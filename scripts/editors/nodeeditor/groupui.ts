@@ -239,7 +239,7 @@ export function propEditRow<CTX extends IContextBase>(
   const row = UIBase.createElement("container-x") as Container<CTX>;
   row.inherit_packflag |= inherit_packflag;
   row.ctx = ctx;
-  row._init();
+  row.checkInit();
   // init writes the class attribute, so the marker class is added after it.
   row.classList.add("nodeeditor-prop-row");
   row.inherit_packflag |= PackFlags.FORCE_PROP_LABELS | PackFlags.LABEL_ON_TOP;
@@ -297,7 +297,7 @@ function sideWord(dir: SocketDir): string {
 
 /** Initializes el, then adds the marker class; Container.init writes the class attribute. */
 function mark<T extends UIBase>(el: T, cls: string): T {
-  el._init();
+  el.checkInit();
   el.classList.add(cls);
   return el;
 }
@@ -464,7 +464,7 @@ export function buildGroupDesigner(root: HTMLElement, opts: GroupDesignerOpts): 
 
   const con = UIBase.createElement("container-x") as Container<IContextBase>;
   con.ctx = opts.ctx as unknown as IContextBase;
-  con._init();
+  con.checkInit();
   con.classList.add("nodeeditor-designer");
   root.appendChild(con);
 

@@ -64,7 +64,7 @@ function makeEditor(values: ThemeRecord) {
 
   const editor = UIBase.createElement("theme-editor-x") as ThemeEditor;
   document.body.appendChild(editor);
-  editor._init();
+  editor.checkInit();
 
   return { editor, cls, rec: theme[cls] as ThemeRecord };
 }
@@ -88,7 +88,7 @@ function makeVarEditor(
 
   // set before init, so the editor builds its rows once
   editor.setVarTheme(varTheme, vars, existingThemeFile);
-  editor._init();
+  editor.checkInit();
 
   return { editor, cls, rec: theme[cls] as ThemeRecord, varTheme };
 }
@@ -204,7 +204,7 @@ test("handing the editor a var theme after init rebuilds its rows", () => {
 
   const editor = UIBase.createElement("theme-editor-x") as ThemeEditor;
   document.body.appendChild(editor);
-  editor._init();
+  editor.checkInit();
   editor.setVarTheme(varTheme, { ...vars });
 
   const panel = classPanel(editor, cls, true);

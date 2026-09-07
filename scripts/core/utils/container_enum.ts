@@ -32,6 +32,7 @@ export function iconcheckImpl<CTX extends IContextBase, SELF extends string>(
   }
 
   self.add(ret);
+  ret.checkInit();
 
   return ret;
 }
@@ -78,7 +79,8 @@ export function checkImpl<CTX extends IContextBase, SELF extends string>(
     ret.setAttribute("mass_set_path", mass_set_path);
   }
 
-  self._add(ret);
+  ret.checkInit()
+  self.add(ret);
   return ret;
 }
 
@@ -433,6 +435,7 @@ export function listenumImpl<CTX extends IContextBase, SELF extends string>(
     ret.setValue(defaultval);
   }
 
+  ret.checkInit();
   ret.on_select = callback;
   ret.packflag |= packflag;
 

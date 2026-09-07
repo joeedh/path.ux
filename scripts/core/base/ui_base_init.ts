@@ -207,7 +207,7 @@ export function ondestroy(elem: AnyUIBase): void {
 
 export function flushUpdate(elem: AnyUIBase, force: boolean): void {
   //check init
-  elem._init();
+  elem.checkInit();
 
   elem.update();
 
@@ -319,7 +319,7 @@ export function update(elem: AnyUIBase): void {
   }
 
   if (!elem._init_done) {
-    elem._init();
+    elem.checkInit();
   }
 
   if (elem._init_done && !elem.constructor.define().subclassChecksTheme) {

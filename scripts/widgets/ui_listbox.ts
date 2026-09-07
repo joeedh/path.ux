@@ -625,6 +625,7 @@ export class ListBox<
 
     this.add(item);
     this.items.push(item);
+    item.checkInit();
 
     item.label(name);
 

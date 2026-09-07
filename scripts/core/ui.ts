@@ -784,8 +784,8 @@ export class Container<
     return this._add(child, true);
   } //*/
 
-  add(child: UIBase<CTX>) {
-    return this._add(child);
+  add(child: UIBase<CTX>, prepend = false) {
+    return this._add(child, prepend);
   }
 
   insert(i: number, ch: UIBase<CTX>) {
@@ -805,6 +805,7 @@ export class Container<
     }
   }
 
+  /** Bypasses ui_forward'ing. */
   _add(child: UIBase<CTX>, prepend = false) {
     //paranoia check for if we accidentally got a DOM NodeList
     if (child instanceof NodeList) {
@@ -826,11 +827,6 @@ export class Container<
     } else {
       this.shadow.appendChild(child);
     }
-
-    /*
-    if (child._ctx) {
-      child._init();
-    }//*/
 
     if (child.onadd) {
       child.onadd();
@@ -1146,9 +1142,9 @@ export class Container<
     strip._add(strip.labelElem);
     strip._add(widget);
     this._add(strip);
-    strip._init();
+    strip.checkInit();
 
-    strip.labelElem._init();
+    strip.labelElem.checkInit();
     strip.labelElem.text = label;
     strip.labelElem.setCSS();
     strip.setCSS();

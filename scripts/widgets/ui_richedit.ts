@@ -46,9 +46,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
 
     this.shadow.appendChild(this.styletag);
 
-    const controls = (this.controls = UIBase.createElement(
-      "rowframe-x"
-    ) as unknown as RowFrame<CTX>);
+    const controls = (this.controls = UIBase.createElement<RowFrame<CTX>>("rowframe-x"));
 
     const makeicon = (icon: number, description: string, cb: () => void) => {
       const btn = controls.iconbutton(icon, description, cb);
@@ -72,7 +70,7 @@ export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBox
     });
 
     controls.background = this.getDefault("background-color") as string;
-
+    controls.checkInit();
     this.shadow.appendChild(controls);
 
     this.textarea = document.createElement("div");

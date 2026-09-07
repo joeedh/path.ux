@@ -174,7 +174,7 @@ known as data:
 
 ```js
 const menu = newMenu("", this.ctx);
-menu._init();
+menu.checkInit();
 
 menu.addItem("Plain row", "plain");
 menu.addItemExtra("With icon", "fancy", "Ctrl-D", Icons.DUPLICATE, true, "Duplicate the node");

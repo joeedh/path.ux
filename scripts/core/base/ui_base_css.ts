@@ -271,7 +271,7 @@ export function setCSS(elem: AnyUIBase, setBG = true): void {
 
 export function flushSetCSS(elem: AnyUIBase): void {
   //check init
-  elem._init();
+  elem.checkInit();
 
   elem.setCSS();
 

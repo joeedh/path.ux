@@ -121,7 +121,7 @@ function makeTitleBar<CTX extends IContextBase>(
   bar.parentWidget = sarea as unknown as Container<CTX>;
 
   sarea.shadow.appendChild(bar as unknown as HTMLElement);
-  bar._init();
+  bar.checkInit();
 
   bar.noMarginsOrPadding();
 
@@ -195,6 +195,8 @@ export function makePopupArea<CTX extends IContextBase = IContextBase>(
 
   sarea.pos[0] = Math.min(Math.max(sarea.pos[0], 0), Math.max(screen.size[0] - width - 2, 0));
   sarea.pos[1] = Math.min(Math.max(sarea.pos[1], 0), Math.max(screen.size[1] - height - 2, 0));
+
+  sarea.checkInit();
 
   //before switchEditor, so the editor is laid out under the titlebar on its first pass rather
   //than being resized out from under itself on the next one

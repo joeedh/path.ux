@@ -113,8 +113,8 @@ export class DragBox<CTX extends IContextBase = IContextBase> extends Container<
 
     header.ctx = this.ctx;
     this.contents.ctx = this.ctx;
-    header._init();
-    this.contents._init();
+    header.checkInit();
+    this.contents.checkInit();
 
     this.style.minWidth = "350px";
     header.style.height = "35px";

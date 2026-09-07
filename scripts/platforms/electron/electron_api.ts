@@ -533,7 +533,7 @@ export function initMenuBar<CTX extends IContextBase>(
     (db as unknown as { _build_menu(): void })._build_menu();
     const menu2 = db._menu!;
     menu2.ctx = db.ctx;
-    menu2._init();
+    menu2.checkInit();
     menu2.update();
 
     const title = (db as unknown as { _genLabel(): string })._genLabel();

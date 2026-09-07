@@ -145,7 +145,7 @@ sarea.ctx = myContext;
 sarea.switchEditor(MyEditor); //instantiate + activate an editor
 screen.appendChild(sarea); //registers the tile, builds borders
 
-screen._init();
+screen.checkInit();
 screen.listen(); //start the update timer (~150ms)
 screen.completeUpdate();
 ```
