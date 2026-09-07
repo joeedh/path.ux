@@ -604,11 +604,11 @@ describe("macro defaults are macro-scoped, seeded from the member's own toolpath
 
     const toolstack = new ToolStack();
     const ctx = {
-      state    : {},
-      api      : {},
+      state: {},
+      api  : {},
       toolstack,
-      screen   : {},
-      toLocked : () => ctx,
+      screen  : {},
+      toLocked: () => ctx,
     } as unknown as ContextLike;
 
     // toolstack.ts calls saveDefaultInputs on the op it ran; for a macro that is the

@@ -19193,6 +19193,14 @@ function buildParser() {
   p.start = p_Start;
   return p;
 }
+function splitToolPath(str) {
+  const i1 = str.search(/\(/);
+  const i2 = str.search(/\)/);
+  if (i1 >= 0 && i2 >= 0) {
+    return { path: str.slice(0, i1).trim(), argsStr: str.slice(i1 + 1, i2).trim() };
+  }
+  return { path: str, argsStr: "" };
+}
 var Parser;
 var init_toolpath_parser = __esm({
   "scripts/path-controller/toolsys/toolpath_parser.ts"() {
@@ -19275,7 +19283,36 @@ var init_toolregistry = __esm({
         }
         this.classes.push(cls);
         this.stamp(cls);
+        this._setPath(cls, cls);
         this.updateDefaults(cls);
+        this.notifyToolPaths();
+      }
+      /**
+       * Keeps `paths` level with `classes` across one registration. Only once the scan has
+       * run: before that `ensurePaths` walks the whole list anyway.
+       */
+      _setPath(cls, value) {
+        if (!this.pathsScanned || !Object.prototype.hasOwnProperty.call(cls, "tooldef")) {
+          return;
+        }
+        const path = cls.tooldef().toolpath;
+        if (value === void 0) {
+          if (this.paths[path] === cls) {
+            delete this.paths[path];
+          }
+          return;
+        }
+        this.paths[path] = value;
+      }
+      /**
+       * Tells every api built against this registry that its merged toolpath table no longer
+       * describes what is here. The table rebuilds on its next read, which is also where a
+       * duplicate across two registries is caught.
+       */
+      notifyToolPaths() {
+        for (const api of this.apis()) {
+          api.invalidateToolPaths();
+        }
       }
       /**
        * Marks `cls` as belonging here. The `ToolOp` constructor reads defaults and has no
@@ -19293,6 +19330,8 @@ var init_toolregistry = __esm({
         if (Object.prototype.hasOwnProperty.call(cls, REGISTRY_KEY) && cls[REGISTRY_KEY] === this) {
           delete cls[REGISTRY_KEY];
         }
+        this._setPath(cls, void 0);
+        this.notifyToolPaths();
       }
       isRegistered(cls) {
         return this.classes.includes(cls);
@@ -19307,20 +19346,23 @@ var init_toolregistry = __esm({
           this.paths[def.toolpath] = cls;
         }
       }
-      /** Resolves `"some.tool(a=1 b='x')"` to the class and its parsed arguments. */
-      parseToolPath(str, checkExists = true) {
+      /**
+       * The toolpath map, walked out of `classes` if that has not happened yet. A caller that
+       * merges this registry into a table of its own reads it through here.
+       */
+      ensurePaths() {
         if (!this.pathsScanned) {
           this.pathsScanned = true;
           this.initPaths();
         }
+        return this.paths;
+      }
+      /** Resolves `"some.tool(a=1 b='x')"` to the class and its parsed arguments. */
+      parseToolPath(str, checkExists = true) {
+        this.ensurePaths();
         const startstr = str;
-        const i1 = str.search(/\(/);
-        const i2 = str.search(/\)/);
-        let argsStr = "";
-        if (i1 >= 0 && i2 >= 0) {
-          argsStr = str.slice(i1 + 1, i2).trim();
-          str = str.slice(0, i1).trim();
-        }
+        const { path, argsStr } = splitToolPath(str);
+        str = path;
         if (!(str in this.paths)) {
           this.initPaths();
         }
@@ -25009,7 +25051,9 @@ function updateToolDefaults(cls, api, datastruct) {
   defaultRegistry.updateDefaults(cls, api, datastruct);
 }
 function updateToolSysAPI(api) {
-  api.registry.buildAPI(api);
+  for (const registry of api.registries) {
+    registry.buildAPI(api);
+  }
 }
 function buildToolOpAPI(api, cls) {
   return defaultRegistry.buildOpAPI(api, cls);
@@ -25057,14 +25101,16 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
   if (!registerWithNStructjs) {
     return;
   }
-  for (const cls of api.registry.classes) {
-    try {
-      if (!struct_default.isRegistered(cls)) {
-        ToolOp._regWithNstructjs(cls);
+  for (const registry of api.registries) {
+    for (const cls of registry.classes) {
+      try {
+        if (!struct_default.isRegistered(cls)) {
+          ToolOp._regWithNstructjs(cls);
+        }
+      } catch (error2) {
+        console.log(error2.stack);
+        console.error("Failed to register a tool with nstructjs");
       }
-    } catch (error2) {
-      console.log(error2.stack);
-      console.error("Failed to register a tool with nstructjs");
     }
   }
 }
@@ -26307,17 +26353,115 @@ var init_controller_abstract = __esm({
     init_toolsys2();
     init_controller_base();
     init_toolregistry();
+    init_toolpath_parser();
     init_pathwatch();
     ModelInterface = class {
       prefix;
-      /**
-       * The tool tables this api resolves toolpaths and tool defaults against. Assigning a
-       * second registry here is how a subsystem gets its own namespace.
-       */
-      registry;
+      _registries;
+      /** Built on demand from `_registries`, and dropped whenever one of them changes. */
+      _toolPaths;
       constructor() {
         this.prefix = "";
-        this.registry = defaultRegistry;
+        this._registries = [defaultRegistry];
+      }
+      /**
+       * The tool tables this api resolves toolpaths and tool defaults against, in the order
+       * they are merged. Listing a second registry is how a subsystem gets its own namespace
+       * without losing the built-ins, and two APIs may order the same two registries
+       * differently.
+       */
+      get registries() {
+        return this._registries;
+      }
+      set registries(registries) {
+        this._registries = [...registries];
+        this.invalidateToolPaths();
+      }
+      /** The first listed registry. Assigning replaces it rather than the whole list. */
+      get registry() {
+        return this._registries[0];
+      }
+      set registry(registry) {
+        this._registries[0] = registry;
+        this.invalidateToolPaths();
+      }
+      /**
+       * Every toolpath the listed registries offer, merged in list order. A toolpath names
+       * one tool within one api, which is what makes the bare string usable as an identity.
+       */
+      get toolPaths() {
+        if (this._toolPaths === void 0) {
+          this._toolPaths = this._mergeToolPaths();
+        }
+        return this._toolPaths;
+      }
+      /** Drops the merged table, so the next read rebuilds it. */
+      invalidateToolPaths() {
+        this._toolPaths = void 0;
+      }
+      /**
+       * Merging is also the collision scan, which is why a stale table is dropped and rebuilt
+       * rather than rescanned in place: a rescan cannot see a duplicate it introduces.
+       */
+      _mergeToolPaths() {
+        const merged = /* @__PURE__ */ new Map();
+        const macroKeys = /* @__PURE__ */ new Set();
+        const claim = (path, cls, registry, macro) => {
+          const held = merged.get(path);
+          if (held === void 0) {
+            merged.set(path, { cls, registry });
+            if (macro) {
+              macroKeys.add(path);
+            }
+            return;
+          }
+          if (macro || macroKeys.has(path)) {
+            return;
+          }
+          throw new Error(
+            `two registries offer the tool "${path}": ${held.registry.structName} and ${registry.structName}`
+          );
+        };
+        for (const registry of this._registries) {
+          const paths = registry.ensurePaths();
+          for (const path in paths) {
+            claim(path, paths[path], registry, false);
+          }
+          for (const key in registry.macros) {
+            const cls = registry.macros[key];
+            if (cls.ready) {
+              claim(key, cls, registry, true);
+            }
+          }
+        }
+        return merged;
+      }
+      /**
+       * Resolves `"some.tool(a=1)"` against the merged table. A miss rebuilds it first, since
+       * a registry that never had `buildAPI` run against it cannot have said it changed.
+       */
+      resolveToolPath(str, checkExists = true) {
+        const { path, argsStr } = splitToolPath(str);
+        let entry = this.toolPaths.get(path);
+        if (entry === void 0) {
+          this.invalidateToolPaths();
+          entry = this.toolPaths.get(path);
+        }
+        if (entry === void 0 && checkExists) {
+          throw new DataPathError("unknown tool " + path);
+        }
+        let args;
+        try {
+          args = Parser.parse(argsStr);
+        } catch (error2) {
+          console.log(error2);
+          throw new DataPathError(`"${str}"
+  ${error2.message}`);
+        }
+        if (entry !== void 0) {
+          args = entry.cls.parseArgs(args);
+        }
+        return { toolclass: entry?.cls, args };
       }
       getToolDef(path) {
         throw new Error("implement me");
@@ -27787,7 +27931,7 @@ An example of a more complicated expression might be:
       }
       parseToolPath(path) {
         try {
-          return this.registry.parseToolPath(path).toolclass;
+          return this.resolveToolPath(path).toolclass;
         } catch (error2) {
           if (error2 instanceof DataPathError) {
             console.warn("warning, bad tool path " + path);
@@ -27798,13 +27942,13 @@ An example of a more complicated expression might be:
         }
       }
       parseToolArgs(path) {
-        return this.registry.parseToolPath(path).args;
+        return this.resolveToolPath(path).args;
       }
       createTool(ctx, path, inputs = {}) {
         let cls;
         let args;
         if (typeof path == "string") {
-          const tpath = this.registry.parseToolPath(path);
+          const tpath = this.resolveToolPath(path);
           cls = tpath.toolclass;
           args = tpath.args;
         } else {

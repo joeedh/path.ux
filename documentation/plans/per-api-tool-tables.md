@@ -7,7 +7,7 @@ binding. `ToolRegistry` keeps the stored values.
 Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
 chaining.
 
-Status: **stage 1 done; stages 2-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
+Status: **stages 1-2 done; stages 3-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
 substantially. Two blocking findings removed claims the plan was partly built on: the
 `ToolPropertyCache.api`/`.dstruct` bug it promised to close does not exist any more, and the
 macro-defaults policy it proposed to choose is already shipped and was described backwards.
@@ -449,7 +449,7 @@ struct (`toolregistry_second.test.ts`); the macro key being structural and uniqu
   documented opt-outs and is untested.
 - Cost to undo: free.
 
-### Stage 2 — the list and the merged table
+### Stage 2 — the list and the merged table (done)
 
 - `ModelInterface.registries`, with `registry` as a getter/setter alias onto `registries[0]`.
 - The merged `toolPaths` table, built from `classes` and `macros`, with macros exempt from
