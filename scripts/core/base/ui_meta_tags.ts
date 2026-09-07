@@ -67,16 +67,23 @@ export interface IUXMetaDef {
   inherits?: boolean;
 }
 
-export interface IUIXMeta<O = unknown> {
-  copyTo(b: this): void;
-  copy(): this;
+export abstract class UXMetaTag<O = unknown> {
+  static STRUCT = nstructjs.inlineRegister(
+    this,
+    `
+    pathux.UXMetaTag {
+    }`
+  );
+
+  abstract copyTo(b: this): void;
+  abstract copy(): this;
   // set by the api; never serialized
   owner: O | undefined;
   // called when attaching to an owner, this.owner will exist
   onAttach?: () => void;
 }
 
-export interface IUXMetaConstructor<T extends IUIXMeta> {
+export interface IUXMetaConstructor<T extends UXMetaTag> {
   metaDefine(): IUXMetaDef;
   // remember nstructjs needs to be able to construct with no constructor arguments
   new (): T;
@@ -86,11 +93,11 @@ export interface IUXMetaConstructor<T extends IUIXMeta> {
 const metaTag: unique symbol = Symbol("uxMeta");
 
 // keyed by metaDefine().typeName so the whole set serializes as one array(abstract(...))
-export type TagSet = Map<string, IUIXMeta>;
+export type TagSet = Map<string, UXMetaTag>;
 type Owner<T = unknown> = T & { [metaTag]?: TagSet };
 
 // pure: a miss allocates nothing, ensureMeta owns creation
-export const getMeta = <T extends IUIXMeta>(
+export const getMeta = <T extends UXMetaTag>(
   obj: T["owner"],
   ctor: IUXMetaConstructor<T>
 ): T | undefined => {
@@ -98,7 +105,7 @@ export const getMeta = <T extends IUIXMeta>(
   return map?.get(ctor.metaDefine().typeName) as T | undefined;
 };
 
-export const setMeta = <T extends IUIXMeta, O extends T["owner"]>(
+export const setMeta = <T extends UXMetaTag, O extends T["owner"]>(
   obj: O,
   ctor: IUXMetaConstructor<T>,
   meta: T
@@ -119,7 +126,10 @@ export const setMeta = <T extends IUIXMeta, O extends T["owner"]>(
   map.set(key, meta);
 };
 
-export const ensureMeta = <T extends IUIXMeta>(obj: T["owner"], ctor: IUXMetaConstructor<T>): T => {
+export const ensureMeta = <T extends UXMetaTag>(
+  obj: T["owner"],
+  ctor: IUXMetaConstructor<T>
+): T => {
   let existing = getMeta(obj, ctor);
   if (!existing) {
     existing = new ctor();
@@ -128,14 +138,16 @@ export const ensureMeta = <T extends IUIXMeta>(obj: T["owner"], ctor: IUXMetaCon
   return existing;
 };
 
-export const allMeta = (obj: unknown): IUIXMeta[] => [...((obj as Owner)[metaTag]?.values() ?? [])];
+export const allMeta = (obj: unknown): UXMetaTag[] => [
+  ...((obj as Owner)[metaTag]?.values() ?? []),
+];
 
 export class MetaTagSet<O = unknown> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
     pathux.MetaTagSet {
-      tags: array(abstract(IUIXMeta));
+      tags: array(abstract(pathux.UXMetaTag));
     }`
   );
 
@@ -147,7 +159,7 @@ export class MetaTagSet<O = unknown> {
     }
   }
 
-  tags = [] as IUIXMeta<O>[];
+  tags = [] as UXMetaTag<O>[];
   declare owner: O;
 }
 
@@ -181,9 +193,8 @@ export abstract class UXToolMeta<TYPE extends string = string> {
   abstract copy(): this;
 }
 
-// example
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
+/* example
+export class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
@@ -193,7 +204,7 @@ class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
   );
 
   readonly type = "mytype" as const;
-  /** Prop names whose values are read from the widget when the tool runs. */
+  // Prop names whose values are read from the widget when the tool runs.
   supplies: string[];
 
   constructor({
@@ -216,22 +227,25 @@ class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
   copy(): this {
     return this.copyTo(new MyUXToolMetaExample() as this);
   }
-}
+}*/
 
 /*
 Note: presumably the meta tags are not meant to be permanently serialized along with model
 data.  They may however be serialized to transmit data over IPC.
 */
 
-export class StdUXMeta<UXToolTypes extends UXToolMeta = UXToolMeta> implements IUIXMeta<UIBase> {
+export class StdUXMeta<
+  UXToolTypes extends UXToolMeta = UXToolMeta,
+  Elem extends UIBase = UIBase,
+> extends UXMetaTag<Elem> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-    StdUXMeta {
+    pathux.StdUXMeta {
       widgetPath?: string;
       description?: string;
       valuePath?: string;
-      tools: array(abstract(UXToolMeta));
+      tools: array(abstract(pathux.UXToolMeta));
     }`
   );
   static metaDefine() {
@@ -283,9 +297,8 @@ export class StdUXMeta<UXToolTypes extends UXToolMeta = UXToolMeta> implements I
     }
   }
 
-  owner: UIBase | undefined;
-
   constructor(initialize?: { description?: string; valuePath?: string; tools?: UXToolTypes[] }) {
+    super();
     this.deserialHelper.description = initialize?.description;
     this.deserialHelper.valuePath = initialize?.valuePath;
     this.tools = initialize?.tools ?? [];
@@ -303,7 +316,7 @@ export class StdUXMeta<UXToolTypes extends UXToolMeta = UXToolMeta> implements I
     return this.copyTo(new StdUXMeta() as this);
   }
 
-  onAttach(): void {
+  onAttach = () => {
     // Apply any deserialized values to the owner before clearing the helper
     this.description = this.deserialHelper.description ?? this.description;
     this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;

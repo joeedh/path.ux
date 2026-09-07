@@ -32892,11 +32892,23 @@ var init_ui_icons = __esm({
 });
 
 // scripts/core/base/ui_meta_tags.ts
-var metaTag, getMeta, setMeta, ensureMeta, allMeta, MetaTagSet, UXToolMeta, MyUXToolMetaExample, StdUXMeta;
+var UXMetaTag, metaTag, getMeta, setMeta, ensureMeta, allMeta, MetaTagSet, UXToolMeta, StdUXMeta;
 var init_ui_meta_tags = __esm({
   "scripts/core/base/ui_meta_tags.ts"() {
     "use strict";
     init_nstructjs();
+    UXMetaTag = class {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.UXMetaTag {
+    }`
+      );
+      // set by the api; never serialized
+      owner;
+      // called when attaching to an owner, this.owner will exist
+      onAttach;
+    };
     metaTag = /* @__PURE__ */ Symbol("uxMeta");
     getMeta = (obj, ctor) => {
       const map3 = obj[metaTag];
@@ -32925,13 +32937,15 @@ var init_ui_meta_tags = __esm({
       }
       return existing;
     };
-    allMeta = (obj) => [...obj[metaTag]?.values() ?? []];
+    allMeta = (obj) => [
+      ...obj[metaTag]?.values() ?? []
+    ];
     MetaTagSet = class {
       static STRUCT = inlineRegister(
         this,
         `
     pathux.MetaTagSet {
-      tags: array(abstract(IUIXMeta));
+      tags: array(abstract(pathux.UXMetaTag));
     }`
       );
       onAttach() {
@@ -32961,45 +32975,15 @@ var init_ui_meta_tags = __esm({
         return b;
       }
     };
-    MyUXToolMetaExample = class _MyUXToolMetaExample extends UXToolMeta {
+    StdUXMeta = class _StdUXMeta extends UXMetaTag {
       static STRUCT = inlineRegister(
         this,
         `
-    pathux.MyUXToolMeta {
-      supplies: array(string);
-    }`
-      );
-      type = "mytype";
-      /** Prop names whose values are read from the widget when the tool runs. */
-      supplies;
-      constructor({
-        toolPath,
-        requirements,
-        supplies
-      } = {}) {
-        super();
-        this.toolPath = toolPath ?? "";
-        this.requirements = requirements;
-        this.supplies = supplies ?? [];
-      }
-      copyTo(b) {
-        super.copyTo(b);
-        b.supplies = [...this.supplies];
-        return b;
-      }
-      copy() {
-        return this.copyTo(new _MyUXToolMetaExample());
-      }
-    };
-    StdUXMeta = class _StdUXMeta {
-      static STRUCT = inlineRegister(
-        this,
-        `
-    StdUXMeta {
+    pathux.StdUXMeta {
       widgetPath?: string;
       description?: string;
       valuePath?: string;
-      tools: array(abstract(UXToolMeta));
+      tools: array(abstract(pathux.UXToolMeta));
     }`
       );
       static metaDefine() {
@@ -33043,8 +33027,8 @@ var init_ui_meta_tags = __esm({
           this.owner.description = s;
         }
       }
-      owner;
       constructor(initialize) {
+        super();
         this.deserialHelper.description = initialize?.description;
         this.deserialHelper.valuePath = initialize?.valuePath;
         this.tools = initialize?.tools ?? [];
@@ -33059,12 +33043,12 @@ var init_ui_meta_tags = __esm({
       copy() {
         return this.copyTo(new _StdUXMeta());
       }
-      onAttach() {
+      onAttach = () => {
         this.description = this.deserialHelper.description ?? this.description;
         this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;
         this.deserialHelper.description = void 0;
         this.deserialHelper.valuePath = void 0;
-      }
+      };
     };
   }
 });
