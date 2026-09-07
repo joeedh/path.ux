@@ -100,7 +100,7 @@ by the pressure test.
   and derive the same stable name, so the lookup still resolves — to that api's struct. An api
   that never mapped the class answers `undefined` instead of finding a global entry.
 - **`api.structs` changes meaning.** Today `mapStruct` returns early without calling
-  `_addClass`, which is *why* the field holds only what that api created
+  `_addClass`, which is _why_ the field holds only what that api created
   (documented at `controller.ts:662`). Per-api, `_addClass` runs for every class on every api,
   so `structs` becomes roughly the full set and the documented distinction collapses. Decide
   what the field means in stage 2, in the commit that causes it.
@@ -123,7 +123,7 @@ The first draft carried three claims marked unverified. All three are now settle
 - **The multiplier is retention, not allocation.** The CPU is already paid today:
   `buildAPI(apiB)` already runs `buildOpAPI` and `_buildBinding` for every class and input,
   including `prop.copy()` at `tooldefaults.ts:141`; it just replaces entries in the shared
-  struct. After the change the same work is *retained*. About 29 registered op classes in a
+  struct. After the change the same work is _retained_. About 29 registered op classes in a
   desktop-shaped process, so per api roughly 29 op structs, 10-15 accessor-prefix structs, and
   two `DataPath`s plus one full `ToolProperty` copy per input. The property copies dominate.
   Order 10² KB per open pane — still worth measuring, but state it as retention.
@@ -174,7 +174,7 @@ crash.
 - **Exactly the five predicted tests flipped, and nothing else.** The "anything else is a
   finding" rule went unfired, which is the first time this plan's census has been checkable
   rather than asserted.
-- `api.structs` is now documented as *every struct this api has mapped*. The old "created, not
+- `api.structs` is now documented as _every struct this api has mapped_. The old "created, not
   what it can reach" wording described a distinction that no longer exists: an api reaches only
   what it mapped.
 - The duplicate-name warning is left as written. Per-api it fires only when two different
@@ -231,8 +231,8 @@ Original bullets:
 
 **Done.**
 
-- `documentation/controller.md` § Who Owns a DataStruct rewritten to *a `DataAPI` owns every
-  struct it maps*, with the two call-site consequences: each api declares what it will resolve,
+- `documentation/controller.md` § Who Owns a DataStruct rewritten to _a `DataAPI` owns every
+  struct it maps_, with the two call-site consequences: each api declares what it will resolve,
   and `getStructByName` answers for the api you ask. The name-lookup section and the
   tool-system paragraph were both retargeted — the latter now says the `structName` guard is
   about two registries on **one** api, which is the case that survives.
@@ -279,14 +279,14 @@ Original bullets:
 Pins that assert the current sharing. All are pins rather than requirements, and stage 2
 rewrites exactly this list.
 
-| Pin                                          | Asserts                                                  |
-| -------------------------------------------- | -------------------------------------------------------- |
-| `tests/perApiStructs.test.ts:83`             | both roots' `toolDefaults` resolve to one struct          |
-| `tests/perApiStructs.test.ts:84-85`          | `Model` and `EarlyTool` are one struct across the two     |
-| `tests/perApiStructs.test.ts:105`            | `apiB.getStruct(Model)` is apiA's struct                  |
-| `tests/perApiStructs.test.ts:151`            | an opted-out class maps globally to one struct afterwards |
-| `tests/perApiStructs.test.ts:122-153`        | the `useGlobalRegistry` opt-out; deleted in stage 3       |
-| `tests/toolregistry_second.test.ts:161`      | `apiA.getStructByName("stage5c")` is `apiB`'s             |
+| Pin                                     | Asserts                                                   |
+| --------------------------------------- | --------------------------------------------------------- |
+| `tests/perApiStructs.test.ts:83`        | both roots' `toolDefaults` resolve to one struct          |
+| `tests/perApiStructs.test.ts:84-85`     | `Model` and `EarlyTool` are one struct across the two     |
+| `tests/perApiStructs.test.ts:105`       | `apiB.getStruct(Model)` is apiA's struct                  |
+| `tests/perApiStructs.test.ts:151`       | an opted-out class maps globally to one struct afterwards |
+| `tests/perApiStructs.test.ts:122-153`   | the `useGlobalRegistry` opt-out; deleted in stage 3       |
+| `tests/toolregistry_second.test.ts:161` | `apiA.getStructByName("stage5c")` is `apiB`'s             |
 
 `toolregistry_second.test.ts:158-160` does **not** flip — the two caches' prefix objects stay
 different objects; only the by-name struct identity at `:161` changes.
@@ -300,7 +300,7 @@ different objects; only the by-name struct identity at `:161` changes.
   public method on a barrel-exported class, called from another module
   (`theme_editor.ts:1055-1056`). The key count will not move. Check signatures by hand.
 - **nstructjs registers by class name globally**, and saved files in consumer projects depend
-  on those names. Struct *names* stay process-wide facts even though struct *objects* stop
+  on those names. Struct _names_ stay process-wide facts even though struct _objects_ stop
   being; `resolveStructName` does not change.
 - **Re-run `pnpm run gen:paths` after any stage that moves struct ownership.**
   `gen-datapaths.mjs:318-324` builds one api from a factory and walks its
@@ -342,7 +342,7 @@ Eleven findings, two blocking. The two that changed the plan's shape:
   neither enforces nor believes that: `api.registry` is a plain mutable public field
   (`controller_abstract.ts:73,77`), `buildAPI` is public, and
   `tests/toolregistry_api.test.ts:119-121` repoints `api.registry` after `buildToolSysAPI` on
-  purpose. Two registries on one api collide *within* the api, which per-api tables do nothing
+  purpose. Two registries on one api collide _within_ the api, which per-api tables do nothing
   about, and `buildAPI`'s `dstruct.clear()` then wipes one registry's accessors. The bullet was
   removed and stage 3 shrank to the opt-out.
 

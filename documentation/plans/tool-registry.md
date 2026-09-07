@@ -32,7 +32,8 @@ boundaries. See [Findings](#findings) for the disposition of each.
 - [Repos](#repos)
 - [Findings](#findings)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
-  <!-- regenerate with pnpm markdown-toc -->
+
+<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 
@@ -401,13 +402,13 @@ resolves to the same cache, so nothing moves.
 constructor, so an unregistered subclass finds its parent's through the static prototype
 chain. That is the answer we want and not merely the cheap one: a subclass of a registered
 tool belongs wherever its parent does, and a `hasOwnProperty` guard would send it to
-`defaultRegistry` — a *different* registry's defaults — rather than to none. This is why the
+`defaultRegistry` — a _different_ registry's defaults — rather than to none. This is why the
 mark is not guarded the way `_regWithNstructjs` guards `STRUCT`: `STRUCT` is about identity,
 where every class needs its own, and the mark is about ownership, which is exactly the thing
 a subclass should inherit.
 
 This decides the registry lookup only. A subclass with no `tooldef()` of its own still shares
-the parent's *toolpath*, and so its saved values, in either direction — stage 1 pinned that.
+the parent's _toolpath_, and so its saved values, in either direction — stage 1 pinned that.
 It is left alone, because defaults are keyed by toolpath by design: two classes that report
 the same toolpath sharing one set of saved values is that rule working, not failing. The
 oddity is a subclass that declares no `tooldef()`, which is a malformed tool rather than a
@@ -421,13 +422,13 @@ class falls back to `defaultRegistry`, which is where `setDataPathToolOp`'s
 `unregister` → re-`register` was pointing anyway.
 
 Stage 1 pinned a second half of this that the sub-question did not name: re-`register` used
-to *reset* the saved value, because `_buildAccessors` ended with an unconditional
+to _reset_ the saved value, because `_buildAccessors` ended with an unconditional
 `obj[name] = prop2.getValue()`. That is now a seed — it assigns only when the key is absent —
 so a class that moves between registries, or an API that gets rebuilt, keeps what
 `saveDefaultInputs` put in. `tests/tooldefaults.test.ts` was edited to match; that edit is
 the stage's deliverable rather than a warning sign.
 
-**`isRegistered` stays the default registry's question.** `ToolOp`'s statics *are*
+**`isRegistered` stays the default registry's question.** `ToolOp`'s statics _are_
 `defaultRegistry`'s public API, so `ToolOp.isRegistered` answers `false` for a class
 registered only into another registry. That is the answer `setDataPathToolOp:1746` wants,
 since the line after it registers into the default. `ToolRegistry.isRegistered` is the
@@ -474,7 +475,7 @@ does add to the public surface, the `ParseToolPathResult` type (module-private i
 type-level addition has to be caught by reading the diff.
 
 **Left incoherent deliberately, for stage 5 to close:** `updateToolSysAPI` and
-`buildToolSysAPI` still walk `ToolClasses`, the *default* registry's list, whatever
+`buildToolSysAPI` still walk `ToolClasses`, the _default_ registry's list, whatever
 `api.registry` says. Nothing sets `api.registry` outside the tests yet, so it cannot bite
 today, but an api pointed at a second registry currently gets that registry's
 `ctx.toolDefaults` over the default registry's accessors. `registry.buildAPI` is where those
@@ -498,7 +499,7 @@ mutation-checked.
 
 **What shipped: the registry owns the struct, so `clear()` is always its own.** The tool
 tables were never the problem; `api.mapStruct(ToolPropertyCache)` was. A `DataStruct`
-describes a class, but this one's shape is built from the tools a *cache instance* was
+describes a class, but this one's shape is built from the tools a _cache instance_ was
 filled with, so keying it on the class hands every registry the same struct and the second
 `buildAPI` clears the first's accessors. `structFor` maps the cache instance instead —
 `mapStruct` keys on object identity, which is the same trick `_buildAccessors` already uses
@@ -524,7 +525,7 @@ refills it from the same class list, so the result is identical and nothing obse
 happens. The breakage the census described needs two registries, and two registries now
 have two structs. Benign today, and no longer able to turn malignant.
 
-**Shared versus per-API, settled.** Per *registry*, not per api. Values were never in
+**Shared versus per-API, settled.** Per _registry_, not per api. Values were never in
 question (one cache per registry, by construction since stage 2); the binding now matches
 them. The visible consequence is that `cache.api` and `cache.dstruct` name the last api to
 call `buildAPI`, which is what they did before — `set()` falls back to them when a tool is
@@ -535,7 +536,7 @@ writes through the wrong one's struct. Pre-existing, unchanged, and out of scope
 `_buildAccessors` maps each prefix object under the bare prefix (`api.mapStruct(obj[k],
 true, k)`), and `mapStruct` hands back an existing struct of that name — so two registries
 holding `foo.a` and `foo.b` describe `foo` with one struct carrying both members. Each
-registry's accessor *object* is still its own, so reading the other's path resolves and then
+registry's accessor _object_ is still its own, so reading the other's path resolves and then
 finds nothing, and `getValue` throws. Left as is and pinned by the last test: the prefix
 namespace is global anyway, and the values stay separate. It does mean a registry cannot
 give an existing toolpath prefix a different shape.
@@ -581,23 +582,23 @@ pieces need the paired commit and gitlink bump: `scripts/simple/app.ts` and
 
 ### From the fresh-context pressure test
 
-| Finding                                                                                                                      | Disposition                                                                                                             |
-| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| The census was wrong: `simple/app.ts`, `example/` and `tests/` read the tables directly, and `example/` is in the gate       | **Accepted.** Census rewritten; the grep behind the draft never searched `SavedToolDefaults` and never left `scripts/`. |
-| A fourth seam, `ctx.toolDefaults`, has no owner in the design                                                                | **Accepted.** Added as a seam and to stage 4.                                                                           |
-| The proposed cycle is a mutual module-scope TDZ deadlock, and the draft's option 1 is the failing shape                      | **Accepted**, and the diagnosis was right — but one of the two replacement fixes was wrong too; stage 2 shipped a third. |
-| Stage 1 could not verify its own deliverable                                                                                 | **Accepted.** Folded into stage 2; stage 1 is now the missing tests.                                                    |
-| The `saveDefaultInputs` justification is wrong at every call site, and misses `_redo`                                        | **Accepted.** The `ToolOp` constructor is the real ctx-less site; corrected.                                            |
-| Macro classes never pass through `register()`, so nothing would stamp them                                                   | **Accepted.** Now an explicit sub-question of the seam and a stage 3 deliverable.                                       |
+| Finding                                                                                                                      | Disposition                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| The census was wrong: `simple/app.ts`, `example/` and `tests/` read the tables directly, and `example/` is in the gate       | **Accepted.** Census rewritten; the grep behind the draft never searched `SavedToolDefaults` and never left `scripts/`.          |
+| A fourth seam, `ctx.toolDefaults`, has no owner in the design                                                                | **Accepted.** Added as a seam and to stage 4.                                                                                    |
+| The proposed cycle is a mutual module-scope TDZ deadlock, and the draft's option 1 is the failing shape                      | **Accepted**, and the diagnosis was right — but one of the two replacement fixes was wrong too; stage 2 shipped a third.         |
+| Stage 1 could not verify its own deliverable                                                                                 | **Accepted.** Folded into stage 2; stage 1 is now the missing tests.                                                             |
+| The `saveDefaultInputs` justification is wrong at every call site, and misses `_redo`                                        | **Accepted.** The `ToolOp` constructor is the real ctx-less site; corrected.                                                     |
+| Macro classes never pass through `register()`, so nothing would stamp them                                                   | **Accepted.** Now an explicit sub-question of the seam and a stage 3 deliverable.                                                |
 | Stage 4 tested one seam of three, and `_map_structs` blocks the other two                                                    | **Accepted**, and rewritten as stage 5 — but the fix was to stop routing the defaults struct through `mapStruct`, not to fix it. |
-| `macroidgen` was described two contradictory ways; neither it nor `initToolPaths_run` is exported and neither needs an alias | **Accepted.** Table now marks what is exported; the counter is stated as process-wide with the question left open.      |
-| Stage 2's regression net does not exist for defaults and macros                                                              | **Accepted.** That is stage 1.                                                                                          |
-| `unregister`/re-register and subclass stamping are undecided                                                                 | **Accepted.** Both are stage 3 deliverables.                                                                            |
-| Stage 4's "same class in two registries is refused" contradicts "changes no behaviour"                                       | **Accepted.** Dropped; `register` keeps warning.                                                                        |
-| `initSimpleController` is dead, and the free `parseToolPath`/`initToolPaths` need wrappers                                   | **Accepted.** Both stated.                                                                                              |
-| The barrel rule and the `dist` key diff are not in the plan                                                                  | **Accepted.** Added as a hard constraint and a stage 2 step.                                                            |
-| `tooldefaults.ts` must survive as a module, since `simple/app.ts` imports it by path                                         | **Accepted.** Stated in the cycle section.                                                                              |
-| `unregister`'s `.remove()` polyfill cast still works against a `readonly` field                                              | **Accepted**, noted in the design so it is not a surprise.                                                              |
+| `macroidgen` was described two contradictory ways; neither it nor `initToolPaths_run` is exported and neither needs an alias | **Accepted.** Table now marks what is exported; the counter is stated as process-wide with the question left open.               |
+| Stage 2's regression net does not exist for defaults and macros                                                              | **Accepted.** That is stage 1.                                                                                                   |
+| `unregister`/re-register and subclass stamping are undecided                                                                 | **Accepted.** Both are stage 3 deliverables.                                                                                     |
+| Stage 4's "same class in two registries is refused" contradicts "changes no behaviour"                                       | **Accepted.** Dropped; `register` keeps warning.                                                                                 |
+| `initSimpleController` is dead, and the free `parseToolPath`/`initToolPaths` need wrappers                                   | **Accepted.** Both stated.                                                                                                       |
+| The barrel rule and the `dist` key diff are not in the plan                                                                  | **Accepted.** Added as a hard constraint and a stage 2 step.                                                                     |
+| `tooldefaults.ts` must survive as a module, since `simple/app.ts` imports it by path                                         | **Accepted.** Stated in the cycle section.                                                                                       |
+| `unregister`'s `.remove()` polyfill cast still works against a `readonly` field                                              | **Accepted**, noted in the design so it is not a surprise.                                                                       |
 
 Confirmed sound and left alone: every census line number, the `global.d.ts` cleanup, the
 superproject half of the census, the nstructjs constraint and the no-namespacing conclusion,

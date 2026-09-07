@@ -4,7 +4,7 @@
 `ToolRegistry` reference owns today: the resolved toolpath table, and the tool-defaults
 binding. `ToolRegistry` keeps the stored values.
 
-Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
+Continues [`tool-registry.md`](tool-registry.md), whose _Later, not here_ listed parent
 chaining.
 
 Status: **done, all six stages.** Pressure-tested once by a fresh-context agent, and revised
@@ -34,16 +34,17 @@ See [Findings](#findings).
 - [What deliberately does not change](#what-deliberately-does-not-change)
 - [Risk](#risk)
 - [Stages](#stages)
-  - [Stage 1 — pin what is not pinned](#stage-1--pin-what-is-not-pinned)
-  - [Stage 2 — the list and the merged table](#stage-2--the-list-and-the-merged-table)
-  - [Stage 3 — the api owns the binding](#stage-3--the-api-owns-the-binding)
-  - [Stage 4 — macros in the table](#stage-4--macros-in-the-table)
-  - [Stage 5 — pin and document the macro defaults policy](#stage-5--pin-and-document-the-macro-defaults-policy)
-  - [Stage 6 — document](#stage-6--document)
+  - [Stage 1 — pin what is not pinned (done)](#stage-1--pin-what-is-not-pinned-done)
+  - [Stage 2 — the list and the merged table (done)](#stage-2--the-list-and-the-merged-table-done)
+  - [Stage 3 — the api owns the binding (done)](#stage-3--the-api-owns-the-binding-done)
+  - [Stage 4 — macros in the table (done)](#stage-4--macros-in-the-table-done)
+  - [Stage 5 — pin and document the macro defaults policy (done)](#stage-5--pin-and-document-the-macro-defaults-policy-done)
+  - [Stage 6 — document (done)](#stage-6--document-done)
 - [Later, not here](#later-not-here)
 - [Open questions](#open-questions)
 - [Repos](#repos)
 - [Findings](#findings)
+  - [From building it](#from-building-it)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
 
 <!-- regenerate with pnpm markdown-toc -->
@@ -59,7 +60,7 @@ built-ins entirely.
 - **An ordered list is more expressive than parent chaining.** Chaining puts a parent
   pointer on `ToolRegistry`, which bakes one hierarchy for every consumer. A list at the api
   makes composition per-consumer: two APIs can order the same two registries differently.
-  This replaces the chaining item in `tool-registry.md`'s *Later, not here* rather than
+  This replaces the chaining item in `tool-registry.md`'s _Later, not here_ rather than
   layering on it.
 - **A merged table beats walking the list.** Holding `toolpath → { cls, registry }` on the
   api makes `parseToolPath` one lookup, gives the defaults binding a per-toolpath owner, and
@@ -80,22 +81,22 @@ commit `68bfc5d` had already made stale. Correcting that file is a stage 6 deliv
 
 ### The seven readers of `api.registry`
 
-| Site                                                    | Reads                         | Under a list      |
-| ------------------------------------------------------- | ----------------------------- | ----------------- |
-| `updateToolSysAPI` (`toolsys.ts:29`)                    | `api.registry.buildAPI(api)`  | loop              |
-| the nstructjs pass (`toolsys.ts:104`)                   | `api.registry.classes`        | loop              |
-| `parseToolPath` (`controller.ts:1647`)                  | `this.registry`               | the merged table  |
-| `parseToolArgs` (`controller.ts:1659`)                  | `this.registry`               | the merged table  |
-| `createTool` (`controller.ts:1668`)                     | `this.registry`               | the merged table  |
-| the `toolDefaults` root member (`toolsys.ts:58`)        | `api.registry.structFor(api)` | **single-valued** |
-| the `ctx.toolDefaults` getter (`toolsys.ts:88`)         | `api.registry.defaults`       | **single-valued** |
+| Site                                             | Reads                         | Under a list      |
+| ------------------------------------------------ | ----------------------------- | ----------------- |
+| `updateToolSysAPI` (`toolsys.ts:29`)             | `api.registry.buildAPI(api)`  | loop              |
+| the nstructjs pass (`toolsys.ts:104`)            | `api.registry.classes`        | loop              |
+| `parseToolPath` (`controller.ts:1647`)           | `this.registry`               | the merged table  |
+| `parseToolArgs` (`controller.ts:1659`)           | `this.registry`               | the merged table  |
+| `createTool` (`controller.ts:1668`)              | `this.registry`               | the merged table  |
+| the `toolDefaults` root member (`toolsys.ts:58`) | `api.registry.structFor(api)` | **single-valued** |
+| the `ctx.toolDefaults` getter (`toolsys.ts:88`)  | `api.registry.defaults`       | **single-valued** |
 
 And two more outside `toolsys.ts`, both single-valued, both reaching the cache object
 directly:
 
-| Site                       | Reads                          |
-| -------------------------- | ------------------------------ |
-| `simple/app.ts:112`        | `this.api.registry.defaults`   |
+| Site                         | Reads                        |
+| ---------------------------- | ---------------------------- |
+| `simple/app.ts:112`          | `this.api.registry.defaults` |
 | `example/core/context.ts:51` | `this.api.registry.defaults` |
 
 `example/` is inside the gate — `pnpm typecheck`'s second pass is
@@ -178,7 +179,7 @@ backwards. What the code does:
 
 - **`add()` aliases, it does not copy.** For every member input without `PropFlags.PRIVATE`,
   `selfInputs[k] = prop` puts the member's own property object into the macro's `inputs`
-  (`toolmacro.ts:335-354`). The macro's inputs *are* its members' inputs.
+  (`toolmacro.ts:335-354`). The macro's inputs _are_ its members' inputs.
 - **`connect()` unaliases.** Linking a property deletes it from `this.inputs`
   (`:291-311`), so `MacroLink` removes a property from macro-scoped defaults. It is an
   opt-out, not a promotion route.
@@ -216,7 +217,7 @@ class ModelInterface {
 - **One registry can never collide with itself**, since `paths` is a `Record` keyed on
   toolpath. So `new DataAPI()` — which assigns `registry = defaultRegistry` in the constructor
   (`controller_abstract.ts:77`) — can never throw, and the check is inherently about two or
-  more registries. Two classes in *one* registry declaring the same toolpath stays
+  more registries. Two classes in _one_ registry declaring the same toolpath stays
   last-wins, as `initPaths` does today (`toolregistry.ts:134-140`); changing that is out of
   scope.
 - **Macros are exempt from the check**, so "first wins" applies to them and to nothing else.
@@ -350,17 +351,17 @@ Pins that assert what this plan changes. Stage 2 rewrites none of these; stages 
 rewrite exactly this list, and anything else needing an edit is a finding to report rather
 than a test to fix quietly.
 
-| Pin                                             | Asserts                                           | Stage |
-| ----------------------------------------------- | ------------------------------------------------- | ----- |
-| `toolregistry_second.test.ts:128`               | `ctxB.toolDefaults` **is** `registryB.defaults`   | 3     |
-| `toolregistry_second.test.ts:145`               | `ctx.toolDefaults` **is** `SavedToolDefaults`     | 3     |
-| `toolregistry_api.test.ts:115,122,123`          | the same identity, three more times               | 3     |
-| `toolregistry_second.test.ts:140`               | `SavedToolDefaults.pathmap.has(...)`              | 3     |
-| `toolregistry_second.test.ts:157-158`           | `pathmap.get("stage5c")` on both caches           | 3     |
-| `tooldefaults.test.ts:206,207`                  | the bare macro key as toolpath and `MacroClasses` key | 4 |
-| `tooldefaults.test.ts:259-260`                  | two more bare macro keys                          | 4     |
-| `tooldefaults.test.ts:216`                      | `hasDefault` is false before the first save       | 4     |
-| `tooldefaults.test.ts:219-222,234,264`          | `set()`'s "unregistered?" warning fires once      | 4     |
+| Pin                                    | Asserts                                               | Stage |
+| -------------------------------------- | ----------------------------------------------------- | ----- |
+| `toolregistry_second.test.ts:128`      | `ctxB.toolDefaults` **is** `registryB.defaults`       | 3     |
+| `toolregistry_second.test.ts:145`      | `ctx.toolDefaults` **is** `SavedToolDefaults`         | 3     |
+| `toolregistry_api.test.ts:115,122,123` | the same identity, three more times                   | 3     |
+| `toolregistry_second.test.ts:140`      | `SavedToolDefaults.pathmap.has(...)`                  | 3     |
+| `toolregistry_second.test.ts:157-158`  | `pathmap.get("stage5c")` on both caches               | 3     |
+| `tooldefaults.test.ts:206,207`         | the bare macro key as toolpath and `MacroClasses` key | 4     |
+| `tooldefaults.test.ts:259-260`         | two more bare macro keys                              | 4     |
+| `tooldefaults.test.ts:216`             | `hasDefault` is false before the first save           | 4     |
+| `tooldefaults.test.ts:219-222,234,264` | `set()`'s "unregistered?" warning fires once          | 4     |
 
 The last two flip only if stage 4's notify hook builds defaults accessors rather than only the
 path table. Open question 2 owns that; whichever way it goes, the rows move together.
@@ -520,7 +521,7 @@ No behaviour changes here. The policy is shipped; this stage makes it legible.
 ## Later, not here
 
 - **Prefix claims.** A registry declaring the toolpath prefixes it owns, with `register()`
-  refusing anything outside them, would give identity *across* APIs rather than within one.
+  refusing anything outside them, would give identity _across_ APIs rather than within one.
   Wanted only if a swept record has to be resolvable without knowing which api produced it.
 - The dev-mode overlap reporter described above.
 - **`example/editors/screen.ts:5,49`** iterates the module-level `ToolClasses` to build the
@@ -574,9 +575,9 @@ installs a `ctx.toolDefaults` getter at all.
 Six things the stages turned up. Two changed what shipped.
 
 **`unregister` does not drop the saved values, and stage 3's bullet saying it should was
-declined.** A flat map keyed on toolpath *can* drop an entry, which is what the design section
+declined.** A flat map keyed on toolpath _can_ drop an entry, which is what the design section
 claims and all it claims. Actually doing it breaks three assertions in
-`tooldefaults.test.ts` § "unregister then re-register" — none of them listed in *What flips* —
+`tooldefaults.test.ts` § "unregister then re-register" — none of them listed in _What flips_ —
 and with them the behaviour `setDataPathToolOp` depends on: it unregisters `DataPathSetOp` and
 re-registers a replacement, and a tool built from an unregistered class is still expected to
 carry its saved default. Keeping values across unregister is deliberate, so the capability is
@@ -655,29 +656,29 @@ disagreeing with what is committed; the TOC edit here was made by hand instead.
 Sixteen findings, six blocking. Every file:line citation in the plan was re-verified against
 the submodule at `e5f0377`.
 
-| Finding                                                                                            | Disposition                                                                                                                                    |
-| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ToolPropertyCache.api`/`.dstruct` no longer exist; the "bug this closes" was fixed by `68bfc5d`   | **Accepted**, verified. Claim deleted from three sections and from stage 3. Correcting the stale `toolsys-tasks.md` census is a stage 6 item.   |
-| The reader table missed `simple/app.ts:112` and `example/core/context.ts:51`, both single-valued   | **Accepted**, verified. Both added; moving all four together is now a stage 3 deliverable and a design bullet.                                  |
-| The eager table has no invalidation for `register`/`unregister`, only for macros                   | **Accepted.** The notification moved to stage 2, with three live register-after-construction sites named.                                       |
-| The macro-defaults section was backwards; the policy it proposed to choose is already shipped      | **Accepted**, verified. Section re-derived from `add`/`connect`/`exec`/`modalStart`; stage 5 shrank to pinning and documenting.                 |
-| Stage 3 breaks five identity assertions and two `pathmap` reads, none listed                       | **Accepted.** A *What flips* table now covers them, and open question 1 owns the view's shape.                                                  |
-| Stage 4's rename and hook flip four more assertions, unnamed                                       | **Accepted.** Listed in *What flips*, gated on open question 2.                                                                                 |
-| `getToolPathHotkey` described two contradictory ways                                               | **Accepted.** It has an api and needs no registry; struck from the open question and from the global-registry section.                          |
-| "First wins" and "duplicate is an error" are mutually exclusive; a throwing setter throws in `new DataAPI()` | **Accepted.** One registry cannot collide with itself, so construction never throws and first-wins applies only to the macro exemption. Stated. |
-| Line-citation drift in `toolmacro.ts`, plus a `controller.ts` range copied from a sibling plan     | **Accepted**, all re-verified: stamp `:144`, toolpath `:206`, id `:214-216`, key `:153-165`, guard `:147-151`, warning `:841-849`, app `:112`.  |
-| The not-ready mechanism was wrong; a subclass gets its own toolpath and the read path never reaches `_splitToolpath` | **Accepted.** Rewritten around `:139` and `_getAccessor` (`:172-176`); the conclusion survives, the mechanism did not.               |
-| Stage 1 overlapped existing coverage and its second pin was a trap                                 | **Accepted.** Stage 1 now separates confirm-only from genuinely missing, and states why the naive form of that pin passes when broken.          |
-| `structFor` / `structName` left undecided while load-bearing                                       | **Accepted.** A stage 3 deliverable, with the two `controller.md` ranges named in stage 6.                                                      |
-| The `accessors.` first hop is unaddressed                                                          | **Accepted.** Documented in the census and folded into open question 1.                                                                         |
-| `example/editors/screen.ts` iterates the module table and is in the gate                           | **Accepted** as out of scope but named, under *Later, not here*.                                                                                |
-| No import-cycle analysis, though the series has been bitten before                                 | **Accepted.** Now a hard constraint: stages 2 and 4 safe by inspection, stage 3 adds the one edge and must keep `toolregistry_load.test.ts` green. |
-| Cost-to-undo understated at stages 2 and 5                                                         | **Accepted.** Stage 2's throw concern dissolves once construction cannot throw; stage 5 no longer changes behaviour, so its cost is now free.   |
+| Finding                                                                                                              | Disposition                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ToolPropertyCache.api`/`.dstruct` no longer exist; the "bug this closes" was fixed by `68bfc5d`                     | **Accepted**, verified. Claim deleted from three sections and from stage 3. Correcting the stale `toolsys-tasks.md` census is a stage 6 item.      |
+| The reader table missed `simple/app.ts:112` and `example/core/context.ts:51`, both single-valued                     | **Accepted**, verified. Both added; moving all four together is now a stage 3 deliverable and a design bullet.                                     |
+| The eager table has no invalidation for `register`/`unregister`, only for macros                                     | **Accepted.** The notification moved to stage 2, with three live register-after-construction sites named.                                          |
+| The macro-defaults section was backwards; the policy it proposed to choose is already shipped                        | **Accepted**, verified. Section re-derived from `add`/`connect`/`exec`/`modalStart`; stage 5 shrank to pinning and documenting.                    |
+| Stage 3 breaks five identity assertions and two `pathmap` reads, none listed                                         | **Accepted.** A _What flips_ table now covers them, and open question 1 owns the view's shape.                                                     |
+| Stage 4's rename and hook flip four more assertions, unnamed                                                         | **Accepted.** Listed in _What flips_, gated on open question 2.                                                                                    |
+| `getToolPathHotkey` described two contradictory ways                                                                 | **Accepted.** It has an api and needs no registry; struck from the open question and from the global-registry section.                             |
+| "First wins" and "duplicate is an error" are mutually exclusive; a throwing setter throws in `new DataAPI()`         | **Accepted.** One registry cannot collide with itself, so construction never throws and first-wins applies only to the macro exemption. Stated.    |
+| Line-citation drift in `toolmacro.ts`, plus a `controller.ts` range copied from a sibling plan                       | **Accepted**, all re-verified: stamp `:144`, toolpath `:206`, id `:214-216`, key `:153-165`, guard `:147-151`, warning `:841-849`, app `:112`.     |
+| The not-ready mechanism was wrong; a subclass gets its own toolpath and the read path never reaches `_splitToolpath` | **Accepted.** Rewritten around `:139` and `_getAccessor` (`:172-176`); the conclusion survives, the mechanism did not.                             |
+| Stage 1 overlapped existing coverage and its second pin was a trap                                                   | **Accepted.** Stage 1 now separates confirm-only from genuinely missing, and states why the naive form of that pin passes when broken.             |
+| `structFor` / `structName` left undecided while load-bearing                                                         | **Accepted.** A stage 3 deliverable, with the two `controller.md` ranges named in stage 6.                                                         |
+| The `accessors.` first hop is unaddressed                                                                            | **Accepted.** Documented in the census and folded into open question 1.                                                                            |
+| `example/editors/screen.ts` iterates the module table and is in the gate                                             | **Accepted** as out of scope but named, under _Later, not here_.                                                                                   |
+| No import-cycle analysis, though the series has been bitten before                                                   | **Accepted.** Now a hard constraint: stages 2 and 4 safe by inspection, stage 3 adds the one edge and must keep `toolregistry_load.test.ts` green. |
+| Cost-to-undo understated at stages 2 and 5                                                                           | **Accepted.** Stage 2's throw concern dissolves once construction cannot throw; stage 5 no longer changes behaviour, so its cost is now free.      |
 
-Confirmed sound and left alone: all four `toolsys.ts` citations; every citation in *What
-already supports N registries per api*; "nothing is ever removed" from the cache; the
+Confirmed sound and left alone: all four `toolsys.ts` citations; every citation in _What
+already supports N registries per api_; "nothing is ever removed" from the cache; the
 `getToolDef` and `window.parseToolPath` routing; the 588-name barrel count, counted directly
 from `dist/pathux.js`; the toolpath-prefix constraint existing in `toolsystem.md` and being
-genuinely removed rather than reworded; all four bullets of *Why not a global toolpath
-registry*; the macro key's structural uniqueness and the `_macroTypeId` constraint; and the
+genuinely removed rather than reworded; all four bullets of _Why not a global toolpath
+registry_; the macro key's structural uniqueness and the `_macroTypeId` constraint; and the
 superproject census.

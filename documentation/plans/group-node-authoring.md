@@ -28,6 +28,8 @@ This plan covers path.ux alone.
 - [Deliberately cut](#deliberately-cut)
 - [Pressure test](#pressure-test)
 
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## What exists, verified against the code

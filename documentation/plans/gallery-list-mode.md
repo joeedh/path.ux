@@ -8,6 +8,22 @@ Status: implemented. Two things changed during the work and are marked below: th
 shorthand for a renderer was dropped, and `rowFont` moved to the `assetthumb` style class.
 
 <!-- toc -->
+
+- [Why a second layout](#why-a-second-layout)
+- [The mode](#the-mode)
+- [The callback interface](#the-callback-interface)
+  - [Why this shape](#why-this-shape)
+  - [The default renderer](#the-default-renderer)
+  - [Rejected alternatives](#rejected-alternatives)
+- [Switching modes](#switching-modes)
+  - [The icons](#the-icons)
+- [Widgets and files](#widgets-and-files)
+- [Theme additions](#theme-additions)
+- [Tests](#tests)
+- [Settled questions](#settled-questions)
+
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## Why a second layout

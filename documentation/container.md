@@ -7,6 +7,7 @@
   - [Sliders](#sliders)
   - [Other path-taking methods](#other-path-taking-methods)
   - [Path prefixes](#path-prefixes)
+    - [Declaring the prefix to the type system](#declaring-the-prefix-to-the-type-system)
   - [Mass set](#mass-set)
   - [Undo](#undo)
 

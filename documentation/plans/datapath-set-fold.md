@@ -27,7 +27,7 @@ Revised twice: once after a fresh-context pressure test, once after task 0's fir
 - [What deliberately does not change](#what-deliberately-does-not-change)
 - [Risk](#risk)
 - [Stages](#stages)
-  - [Stage 1 — a harness that fails honestly — **done**](#stage-1--a-harness-that-fails-honestly--done)
+  - [Stage 1 — a harness that surfaces failures — **done**](#stage-1--a-harness-that-surfaces-failures--done)
   - [Stage 2 — assertions that pin the danger — **done**](#stage-2--assertions-that-pin-the-danger--done)
   - [Stage 3 — `foldOrExec` — **done**](#stage-3--foldorexec--done)
   - [Stage 4 — abort and roll back — **done**](#stage-4--abort-and-roll-back--done)
@@ -36,7 +36,8 @@ Revised twice: once after a fresh-context pressure test, once after task 0's fir
 - [Findings](#findings)
   - [From the fresh-context pressure test](#from-the-fresh-context-pressure-test)
   - [From task 0's first pass](#from-task-0s-first-pass)
-  <!-- regenerate with pnpm markdown-toc -->
+
+<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 

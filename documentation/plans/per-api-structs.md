@@ -44,7 +44,7 @@ every api in the process — model classes, `ToolOp` classes built by `buildOpAP
 registry's defaults cache alike.
 
 **Except that the map already has an opt-out, and the opt-out is broken.** `_addClass`
-stamps `cls[CLS_API_KEY]` at `controller.ts:836`, *before* the `useGlobalRegistry` early
+stamps `cls[CLS_API_KEY]` at `controller.ts:836`, _before_ the `useGlobalRegistry` early
 return at `:842`. So a class mapped with `useGlobalRegistry: false` is marked mapped
 process-wide while `_map_structs[key]` is never written. The consequences are live today:
 `api.hasStruct(cls)` is `true` on every api (`:707-709` is a bare `hasOwnProperty`), and
@@ -68,7 +68,7 @@ are read back by `ToolRegistry.updateDefaults` (`toolsys/toolregistry.ts:167-172
 `ToolPropertyCache.set`'s recovery path (`tooldefaults.ts:182`). They are harmless for
 exactly the reason above: whichever api they name, the struct they reach is the same one.
 
-**`cache.api` has a second job.** `updateDefaults` uses the api it falls back to for *two*
+**`cache.api` has a second job.** `updateDefaults` uses the api it falls back to for _two_
 things, not one: `buildOpAPI(api, cls)` at `toolregistry.ts:179` as well as
 `_buildAccessors` at `:185`. `buildOpAPI` is irreducibly api-shaped — `api.mapStruct(cls,
 true)` plus `customGetSet` DataPaths over a live op's inputs — and it is what
@@ -86,7 +86,7 @@ identity (`tooldefaults.ts:76`) and never cleared, so task 3's "stale accessors 
 dropped" holds for single-segment toolpaths only.
 
 So **the two halves are coupled, and the coupling runs the wrong way.** Half A
-(last-writer-wins fields) is inert *because* half B (global structs) is unfixed. Fixing half
+(last-writer-wins fields) is inert _because_ half B (global structs) is unfixed. Fixing half
 B alone would create the bug half A describes: an api that was not the last builder would
 stop seeing late-registered tools.
 
@@ -107,7 +107,7 @@ assumes both indexes split together**, because keeping one global is what produc
 - **A third kind, inside path.ux itself**: `theme_editor.ts:1054` builds a `DataAPI` per
   theme-object class (`CSSFont`, `ThemeScrollBars`, …), cached on the class. It is a library
   widget, so it exists in any app that opens the theme editor. It reaches its goal by opting
-  *out* of the global map (`_addClass(cls, st, undefined, false)`), not by wanting a second
+  _out_ of the global map (`_addClass(cls, st, undefined, false)`), not by wanting a second
   entry in it — but it is the closest thing in the tree to a working prototype of position 3,
   and it is where the broken opt-out above actually bites.
 - `example/api/api_define.ts:102` and `simple/app.ts:156` each build one.
@@ -115,22 +115,22 @@ assumes both indexes split together**, because keeping one global is what produc
   because `NodeGraphView` ships as a hostable widget and `NodeEditor` ships unregistered.
 
 Every graph pane describes `Graph` and the node classes identically, which is why sharing
-works there. Nothing wants two APIs to describe one class differently *through the global
-map*; the theme editor wants a class described only privately, which is a different thing
+works there. Nothing wants two APIs to describe one class differently _through the global
+map_; the theme editor wants a class described only privately, which is a different thing
 and already has a mechanism.
 
 ## What breaks if `mapStruct` goes per-API
 
 Six sites resolve a struct for a class the asking api may never have mapped.
 
-| Site                                | Shape                                                                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `graph/graph_api.ts:51-52`          | `nodeStructFor` guards with `hasStruct` (process-global) then calls `getStruct`                                            |
-| `graph/group.ts:375-376`            | `GroupNode.defineAPI` calls `api.getStruct(Graph)`; would need `defineGraphAPI(api)`, which is idempotent                  |
-| `controller/controller_base.ts:662` | `DataList`'s default `getStruct` does `api.getStruct(obj.constructor)` for an element class                                |
-| `controller/controller.ts:978`      | the mass-set filter's `api.mapStruct(obj.constructor, false)`                                                              |
+| Site                                | Shape                                                                                                                                                                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `graph/graph_api.ts:51-52`          | `nodeStructFor` guards with `hasStruct` (process-global) then calls `getStruct`                                                                                                                                      |
+| `graph/group.ts:375-376`            | `GroupNode.defineAPI` calls `api.getStruct(Graph)`; would need `defineGraphAPI(api)`, which is idempotent                                                                                                            |
+| `controller/controller_base.ts:662` | `DataList`'s default `getStruct` does `api.getStruct(obj.constructor)` for an element class                                                                                                                          |
+| `controller/controller.ts:978`      | the mass-set filter's `api.mapStruct(obj.constructor, false)`                                                                                                                                                        |
 | `controller/controller.ts:974`      | that filter resolves through `ctx.api ?? this` — the **context's** api, not the path's owner. `editors/nodes.ts:227-229` overrides `api` on the graph ctx, so this is a second, independent failure at the same call |
-| `controller/controller.ts:1243`     | dynamic-struct resolution, which `ctx.last_tool.<input>` goes through                                                     |
+| `controller/controller.ts:1243`     | dynamic-struct resolution, which `ctx.last_tool.<input>` goes through                                                                                                                                                |
 
 **These fail silently, not loudly.** `mapStruct`'s throw is on the `key === undefined &&
 !auto_create` branch (`controller.ts:888`); under a design that keeps `cls[CLS_API_KEY]` as a
@@ -147,7 +147,7 @@ the value is truthy).
 Three decisions come with it:
 
 - **Auto-create's test must change.** Today `mapStruct` auto-creates only when the key is
-  *absent* (`controller.ts:874-890`). Per-api, the key can be present — stamped by api A —
+  _absent_ (`controller.ts:874-890`). Per-api, the key can be present — stamped by api A —
   while this api's map has no entry, so the test becomes "key absent **or** key not in this
   api's map". Without that, every second api gets `undefined` from every call, `structFor`
   included.
@@ -166,7 +166,7 @@ Cost: two APIs can never describe one class differently through the global map.
 
 **2 — Half A only.** Move "which APIs has this registry been built against" from
 `ToolPropertyCache` to `ToolRegistry`, as a pruned list rather than a single last-writer
-field. `updateDefaults` with no arguments then reaches *every* built api instead of the most
+field. `updateDefaults` with no arguments then reaches _every_ built api instead of the most
 recent one, which is what the sketch wanted and what `buildOpAPI` needs. Small, and a
 prerequisite for 3.
 
@@ -179,7 +179,7 @@ lookup every datapath resolution goes through, fails silently when it is wrong, 
 capability nothing has asked for; its honest trigger is a consumer that needs two
 descriptions of one class through the global map, and there isn't one. The pressure test
 strengthened this rather than weakening it: the one place in the tree that wants a private
-description already has `useGlobalRegistry`, and that mechanism is *itself* broken — fixing
+description already has `useGlobalRegistry`, and that mechanism is _itself_ broken — fixing
 it (position 1's work) is better value than generalizing it.
 
 ## Stages
@@ -194,13 +194,13 @@ real.
 - Tests only, no production changes. **path.ux only; no submodule half, so no commit pair.**
 - Two APIs, both built: assert the root structs differ while the structs below them are the
   same objects, and assert a late-registered tool reaches both.
-- Assert the invariant, not the fixture: `api.structs` holds the structs *that api created*.
+- Assert the invariant, not the fixture: `api.structs` holds the structs _that api created_.
   "Empty" is only true when the second api maps nothing new, which is not the desktop shape —
   `apiB` maps `Graph` fresh at `graph_api.ts:18`.
 - Pin the `useGlobalRegistry: false` hole: after `_addClass(cls, st, undefined, false)`,
   `hasStruct(cls)` is `true` and `mapStruct(cls, true)` is `undefined`, on any api. Wrong,
   pinned as-is, fixed in stage 3.
-- Pin `ctx.last_tool.<input>` resolving for a tool registered *after* `buildToolSysAPI` —
+- Pin `ctx.last_tool.<input>` resolving for a tool registered _after_ `buildToolSysAPI` —
   this is the assertion stage 2 can break.
 - Read first, do not duplicate: `tests/mapStructByName.test.ts` covers name lookup and
   explicit-name aliasing; `tests/toolregistry_second.test.ts:94-120,161` already builds two
@@ -274,7 +274,7 @@ Mutation-tested, both halves load-bearing:
 barrel unchanged.
 
 - `DataAPI._localStructs` is a `WeakMap<object, DataStruct>` holding the structs mapped with
-  `useGlobalRegistry: false`. `_addClass` writes there and returns *before* stamping, so the
+  `useGlobalRegistry: false`. `_addClass` writes there and returns _before_ stamping, so the
   opt-out no longer leaves a global id with nothing behind it.
 - `mapStruct` checks it before the stamp, and `hasStruct` ORs the two, which lands the plan's
   own finding that `hasStruct`, `getStruct` and `mapStruct` have to move together.
@@ -283,7 +283,7 @@ barrel unchanged.
   `theme_editor.ts:1056` call made `mapStruct(thatThemeClass, true)` return `undefined` on
   every api forever, with auto-create unable to recover because the id was already there.
 - `getStructs()` deleted; it had no caller in either repo outside stage 1's own test. The
-  `structs` field stays, documented as *the structs this api created*, which is what stage 1
+  `structs` field stays, documented as _the structs this api created_, which is what stage 1
   pinned.
 - Stage 1's two pins rewritten to the fixed behaviour, and a second opt-out test added for the
   case the fix unlocks: a class that opted out on one api can still be mapped globally later.
@@ -300,8 +300,8 @@ Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module
   narrower than "one `DataStruct` per class per process", which three things already
   contradict: the `useGlobalRegistry` opt-out, explicit-name aliasing (many classes to one
   struct, documented as intended at `controller.md:215-219`), and `inheritStruct`, which
-  `copy()`s the parent (`controller.ts:812-823`). Write: *a class mapped through the global
-  registry has one `DataStruct` for the process; a `DataAPI` owns its root and its opt-outs.*
+  `copy()`s the parent (`controller.ts:812-823`). Write: _a class mapped through the global
+  registry has one `DataStruct` for the process; a `DataAPI` owns its root and its opt-outs._
 - Tick `todos.md`, update `toolsys-tasks.md`.
 - Cost to undo: cheap in code, expensive in belief once written down.
 
@@ -346,15 +346,15 @@ Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module
   **Corrected after review.** The three costs first written here were wrong, and two of them
   argue the other way:
 
-  - *"Six sites resolve a class on whatever api they were handed."* They were handed the right
+  - _"Six sites resolve a class on whatever api they were handed."_ They were handed the right
     api. `nodeStructFor` (`graph/graph_api.ts:49-57`) is already written per-api —
     `hasStruct(api)`, else map and run `defineAPI(api, st)` — and the global table **degrades**
     it: a second api skips `defineAPI` because the first already mapped the class, then resolves
     to the first's struct. Per-api tables need no change there at all.
-  - *"`getStructByName` is used for serialized type tags."* Two APIs registering a class run the
+  - _"`getStructByName` is used for serialized type tags."_ Two APIs registering a class run the
     same code and so derive the same stable name; the lookup becomes api-relative, which is the
     meaning a type tag wants.
-  - *"A custom struct getter has no api."* Pass one — `CLS_API_KEY_CUSTOM`'s callback takes an
+  - _"A custom struct getter has no api."_ Pass one — `CLS_API_KEY_CUSTOM`'s callback takes an
     api as a second argument, which existing callbacks ignore.
 
   `DataPath.validStructs` also favours the change: it is baked in at define time and `copy()`
@@ -373,7 +373,7 @@ Not done here, and not in the plan: dropping `CLS_API_KEY` in favour of a module
   - **Two pins flip**: `toolregistry_second.test.ts`'s fourth test and `perApiStructs.test.ts`'s
     first. That is the point of the change, and also the honest measure of its reach.
   - **Stage 5's workaround becomes dead weight.** `ToolRegistry.structName`, and mapping the
-    cache *instance* rather than `ToolPropertyCache`, exist only because the tables are global.
+    cache _instance_ rather than `ToolPropertyCache`, exist only because the tables are global.
     Fold their removal into the change rather than leaving them.
 
 ## Open questions
@@ -387,7 +387,7 @@ Carried forward; the pressure test answered the rest.
 2. ~~Should stage 3 fix the `useGlobalRegistry` stamp by not stamping, or by giving the opt-out
    per-api storage?~~ **Decided: per-api storage, a `WeakMap` on the `DataAPI`.** Not stamping
    is not the smaller option it looked like: `mapStruct(cls, false)` on an unstamped class
-   *throws* (`controller.ts:891`) rather than returning `undefined`, so that route converts a
+   _throws_ (`controller.ts:891`) rather than returning `undefined`, so that route converts a
    silent miss into an exception at every `auto_create = false` site, `controller_base.ts:662`
    included.
 
@@ -395,23 +395,23 @@ Carried forward; the pressure test answered the rest.
 
 ### From the fresh-context pressure test
 
-| Finding                                                                                                    | Disposition                                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Stage 2 silently drops `buildOpAPI` for late-registered tools; the plan never mentioned it                 | **Accepted**, and it changed stage 2's design: the registry owns a list of built APIs instead of the field simply being deleted. |
-| Stage 2's "no behaviour change" is wrong at `set()`'s recovery path                                        | **Accepted.** The recovery path now rebinds through the registry rather than being value-only.                                   |
-| `tests/tooldefaults.test.ts:60-61` reads both fields, so stage 2 cannot be green without editing it        | **Accepted.** Stated in stage 2, including that it makes the commit pair run the other way.                                     |
-| The census missed a third `DataAPI`: `theme_editor.ts:1054`, one per theme-object class, in the library    | **Accepted.** Added to the configuration list. The "nothing wants two descriptions" sentence is qualified rather than dropped — the theme editor wants a *private* description, which is a different want with an existing mechanism. |
-| `_addClass` stamps `CLS_API_KEY` before the `useGlobalRegistry` early return, so the opt-out is already broken | **Accepted**, and it is the sharpest finding: the failure mode this plan predicted for position 3 is already live. Now a stage 1 pin and a stage 3 fix, and it strengthens the recommendation rather than weakening it. |
-| The table's failure mode is wrong — `mapStruct` returns `undefined`, it does not throw                     | **Accepted.** Stated, with the `dpath.data` fallback that hides it.                                                             |
-| Per-api needs auto-create's test to change, or every second api gets `undefined`                            | **Accepted.** Added as the first of the three decisions.                                                                        |
-| The coupling claim is conditional on whether `_map_structs_by_name` splits too                              | **Accepted.** The plan now states which branch it assumes and why.                                                              |
-| Stage 1's "`structs` is empty" pins the fixture, not the system                                            | **Accepted.** Replaced with "holds the structs that api created", with the desktop counterexample.                              |
-| Stage 1 overlaps `tests/toolregistry_second.test.ts`, unmentioned                                          | **Accepted.** Both overlapping files are now named.                                                                             |
-| "One `DataStruct` per class per process" is contradicted three ways                                        | **Accepted.** Stage 3 carries the narrower wording and the three contradictions.                                                |
-| Unstated: the `prop2` split, what replaces `cache.api`, deprecate-vs-delete, cost to undo                  | **Accepted.** First two are in stage 2, third is open question 1, fourth is per stage.                                          |
-| Two `auto_create = false` sites outside the table; "five sites" should say five *cross-api* sites           | **Accepted.** Both named as non-hazards.                                                                                        |
-| `controller.ts:974` resolves through `ctx.api ?? this`, a second failure at the same call                  | **Accepted.** Added as its own table row.                                                                                       |
-| Unmentioned: the buildtools struct scanners, and that `clear()` only clears the top struct                 | **Accepted.** Scanners are a hard constraint; the `clear()` limit is in the census.                                             |
+| Finding                                                                                                        | Disposition                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stage 2 silently drops `buildOpAPI` for late-registered tools; the plan never mentioned it                     | **Accepted**, and it changed stage 2's design: the registry owns a list of built APIs instead of the field simply being deleted.                                                                                                      |
+| Stage 2's "no behaviour change" is wrong at `set()`'s recovery path                                            | **Accepted.** The recovery path now rebinds through the registry rather than being value-only.                                                                                                                                        |
+| `tests/tooldefaults.test.ts:60-61` reads both fields, so stage 2 cannot be green without editing it            | **Accepted.** Stated in stage 2, including that it makes the commit pair run the other way.                                                                                                                                           |
+| The census missed a third `DataAPI`: `theme_editor.ts:1054`, one per theme-object class, in the library        | **Accepted.** Added to the configuration list. The "nothing wants two descriptions" sentence is qualified rather than dropped — the theme editor wants a _private_ description, which is a different want with an existing mechanism. |
+| `_addClass` stamps `CLS_API_KEY` before the `useGlobalRegistry` early return, so the opt-out is already broken | **Accepted**, and it is the sharpest finding: the failure mode this plan predicted for position 3 is already live. Now a stage 1 pin and a stage 3 fix, and it strengthens the recommendation rather than weakening it.               |
+| The table's failure mode is wrong — `mapStruct` returns `undefined`, it does not throw                         | **Accepted.** Stated, with the `dpath.data` fallback that hides it.                                                                                                                                                                   |
+| Per-api needs auto-create's test to change, or every second api gets `undefined`                               | **Accepted.** Added as the first of the three decisions.                                                                                                                                                                              |
+| The coupling claim is conditional on whether `_map_structs_by_name` splits too                                 | **Accepted.** The plan now states which branch it assumes and why.                                                                                                                                                                    |
+| Stage 1's "`structs` is empty" pins the fixture, not the system                                                | **Accepted.** Replaced with "holds the structs that api created", with the desktop counterexample.                                                                                                                                    |
+| Stage 1 overlaps `tests/toolregistry_second.test.ts`, unmentioned                                              | **Accepted.** Both overlapping files are now named.                                                                                                                                                                                   |
+| "One `DataStruct` per class per process" is contradicted three ways                                            | **Accepted.** Stage 3 carries the narrower wording and the three contradictions.                                                                                                                                                      |
+| Unstated: the `prop2` split, what replaces `cache.api`, deprecate-vs-delete, cost to undo                      | **Accepted.** First two are in stage 2, third is open question 1, fourth is per stage.                                                                                                                                                |
+| Two `auto_create = false` sites outside the table; "five sites" should say five _cross-api_ sites              | **Accepted.** Both named as non-hazards.                                                                                                                                                                                              |
+| `controller.ts:974` resolves through `ctx.api ?? this`, a second failure at the same call                      | **Accepted.** Added as its own table row.                                                                                                                                                                                             |
+| Unmentioned: the buildtools struct scanners, and that `clear()` only clears the top struct                     | **Accepted.** Scanners are a hard constraint; the `clear()` limit is in the census.                                                                                                                                                   |
 
 Nothing was rejected. The reviewer's closing call — that stage 2 ships looking small while
 quietly breaking `ctx.last_tool` for late-registered tools — is the failure this revision is

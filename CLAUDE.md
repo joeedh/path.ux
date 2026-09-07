@@ -57,6 +57,11 @@ pnpm run lint              # pnpm run lint:eslint && pnpm run lint:prose
 pnpm run lint:check        # pnpm run lint:eslint:check && pnpm run lint:prose
 ```
 
+`format` and `format:check` cover `{scripts,example}/**/*.{ts,js}` plus the markdown in
+`documentation/`, `specs/` and the repo root — so a doc is formatted like any other file.
+`pnpm run markdown-toc` hands its files back to prettier at the end, since `markdown-toc`
+writes `*` bullets and prettier writes `-`; run either one and the tree stays clean.
+
 Use `tsgo` to typecheck instead of `tsc`, e.g.
 `pnpm exec tsgo --noEmit`.
 

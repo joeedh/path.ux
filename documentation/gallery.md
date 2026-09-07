@@ -21,6 +21,7 @@ whose `image` is either a decoded source or a thunk that produces one.
 - [Quick start](#quick-start)
 - [Items](#items)
 - [Grid and list](#grid-and-list)
+  - [Filling a row's box](#filling-a-rows-box)
 - [Selecting and confirming](#selecting-and-confirming)
 - [Keyboard navigation](#keyboard-navigation)
 - [The popup](#the-popup)

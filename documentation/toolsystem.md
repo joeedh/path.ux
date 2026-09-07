@@ -121,7 +121,7 @@ about one rather than escaping it.
 The policy is that **macro inputs are macro-scoped**, seeded from the individual toolpath:
 
 - `add()` **aliases**. Every member input without `PropFlags.PRIVATE` goes into the macro's
-  `inputs` as the member's own property object, so the macro's inputs *are* its members'.
+  `inputs` as the member's own property object, so the macro's inputs _are_ its members'.
 - A member reads its **own** toolpath's saved value when it is constructed, which seeds the
   macro.
 - `exec` and `modalStart` then call `loadDefaults(false)`, which overrides anything the

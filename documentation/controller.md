@@ -240,9 +240,9 @@ every struct the api has mapped, in creation order.
 
 Two consequences at a call site:
 
-- **Each api must declare what it will resolve.** `defineGraphAPI(api)`, `buildToolSysAPI(api,
-  …)`, an app's own `defineAPI` — each api runs its own. An api that skips one resolves nothing
-  through the classes it missed: `mapStruct(cls, false)`, which is what `getStruct` is, throws
+- **Each api must declare what it will resolve.** `defineGraphAPI(api)`,
+  `buildToolSysAPI(api, …)`, an app's own `defineAPI` — each api runs its own. An api that
+  skips one resolves nothing through the classes it missed: `mapStruct(cls, false)`, which is what `getStruct` is, throws
   a `DataPathError` naming the class, `resolvePath` records it on `lastResolveError`, and the
   path answers `undefined`. A widget bound to it disables rather than reading someone else's
   data.

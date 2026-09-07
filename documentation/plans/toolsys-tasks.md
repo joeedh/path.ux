@@ -24,6 +24,7 @@ see below.
 - [Task 1 — fold `DataPathSetOp` writes instead of replaying them](#task-1--fold-datapathsetop-writes-instead-of-replaying-them)
 - [Task 2 — bind tool defaults per `DataAPI` instead of per process](#task-2--bind-tool-defaults-per-dataapi-instead-of-per-process)
 - [Task 3 — a `ToolRegistry` object, with the module globals as its default instance](#task-3--a-toolregistry-object-with-the-module-globals-as-its-default-instance)
+
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
