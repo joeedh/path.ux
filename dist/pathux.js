@@ -19387,7 +19387,10 @@ var init_toolregistry = __esm({
         api.invalidateToolDefaults();
         return api.toolDefaultsStruct();
       }
-      /** Gives `cls` a struct whose paths read and write a live op's inputs. */
+      /**
+       * Gives `cls` a struct whose paths read and write a live op's inputs. Takes a macro type
+       * class too, which is how `ctx.last_tool` reaches a running macro's inputs.
+       */
       buildOpAPI(api, cls) {
         const st = api.mapStruct(cls, true);
         const def = cls._getFinalToolDef();
@@ -24994,82 +24997,6 @@ var init_context = __esm({
   }
 });
 
-// scripts/path-controller/toolsys/toolsys.ts
-function setContextClass(_cls) {
-  console.warn("setContextClass is deprecated");
-}
-function updateToolDefaults(cls, api) {
-  defaultRegistry.updateDefaults(cls, api);
-}
-function updateToolSysAPI(api) {
-  for (const registry of api.registries) {
-    registry.buildAPI(api);
-  }
-}
-function buildToolOpAPI(api, cls) {
-  return defaultRegistry.buildOpAPI(api, cls);
-}
-function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
-  updateToolSysAPI(api);
-  if (rootCtxStruct) {
-    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.toolDefaultsStruct());
-    rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
-  }
-  if (rootCtxClass && insertToolDefaultsIntoContext) {
-    let haveprop2 = function(k) {
-      return Reflect.ownKeys(inst).includes(k) || Reflect.ownKeys(rootCtxClass.prototype).includes(k);
-    };
-    var haveprop = haveprop2;
-    const inst = new rootCtxClass({});
-    if (!haveprop2("last_tool")) {
-      Object.defineProperty(rootCtxClass.prototype, "last_tool", {
-        get() {
-          return this.toolstack.head;
-        }
-      });
-      if (Context.isContextSubclass(rootCtxClass)) {
-        rootCtxClass.prototype.last_tool_save = () => ({});
-        rootCtxClass.prototype.last_tool_load = () => void 0;
-      }
-    }
-    if (!haveprop2("toolDefaults")) {
-      Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
-        get() {
-          return api.toolDefaults;
-        }
-      });
-      if (Context.isContextSubclass(rootCtxClass)) {
-        rootCtxClass.prototype.toolDefaults_save = () => ({});
-        rootCtxClass.prototype.toolDefaults_load = () => void 0;
-      }
-    }
-  }
-  if (!registerWithNStructjs) {
-    return;
-  }
-  for (const registry of api.registries) {
-    for (const cls of registry.classes) {
-      try {
-        if (!struct_default.isRegistered(cls)) {
-          ToolOp._regWithNstructjs(cls);
-        }
-      } catch (error2) {
-        console.log(error2.stack);
-        console.error("Failed to register a tool with nstructjs");
-      }
-    }
-  }
-}
-var init_toolsys = __esm({
-  "scripts/path-controller/toolsys/toolsys.ts"() {
-    "use strict";
-    init_struct();
-    init_context();
-    init_toolop();
-    init_toolregistry();
-  }
-});
-
 // scripts/path-controller/toolsys/toolmacro.ts
 function macroKey(members, subclassPath, inputs) {
   const sections = [members];
@@ -25226,6 +25153,7 @@ var init_toolmacro = __esm({
         cls.__tooldef = tdef;
         cls._macroTypeId = defaultRegistry.macroIdGen++;
         cls.ready = true;
+        Object.defineProperty(cls, "name", { value: key, configurable: true });
         registry.macros[key] = cls;
         registry.notifyToolPaths();
         return cls;
@@ -25428,6 +25356,93 @@ var init_toolmacro = __esm({
   }
 });
 
+// scripts/path-controller/toolsys/toolsys.ts
+function setContextClass(_cls) {
+  console.warn("setContextClass is deprecated");
+}
+function updateToolDefaults(cls, api) {
+  defaultRegistry.updateDefaults(cls, api);
+}
+function updateToolSysAPI(api) {
+  for (const registry of api.registries) {
+    registry.buildAPI(api);
+  }
+  buildMacroAPI(api);
+}
+function buildMacroAPI(api) {
+  api.mapStructCustom(ToolMacro, (macro, resolving) => {
+    const cls = macro._getTypeClass();
+    if (!cls.ready) {
+      return void 0;
+    }
+    return registryOf(cls).buildOpAPI(resolving, cls);
+  });
+}
+function buildToolOpAPI(api, cls) {
+  return defaultRegistry.buildOpAPI(api, cls);
+}
+function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
+  updateToolSysAPI(api);
+  if (rootCtxStruct) {
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.toolDefaultsStruct());
+    rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
+  }
+  if (rootCtxClass && insertToolDefaultsIntoContext) {
+    let haveprop2 = function(k) {
+      return Reflect.ownKeys(inst).includes(k) || Reflect.ownKeys(rootCtxClass.prototype).includes(k);
+    };
+    var haveprop = haveprop2;
+    const inst = new rootCtxClass({});
+    if (!haveprop2("last_tool")) {
+      Object.defineProperty(rootCtxClass.prototype, "last_tool", {
+        get() {
+          return this.toolstack.headOp;
+        }
+      });
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.last_tool_save = () => ({});
+        rootCtxClass.prototype.last_tool_load = () => void 0;
+      }
+    }
+    if (!haveprop2("toolDefaults")) {
+      Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
+        get() {
+          return api.toolDefaults;
+        }
+      });
+      if (Context.isContextSubclass(rootCtxClass)) {
+        rootCtxClass.prototype.toolDefaults_save = () => ({});
+        rootCtxClass.prototype.toolDefaults_load = () => void 0;
+      }
+    }
+  }
+  if (!registerWithNStructjs) {
+    return;
+  }
+  for (const registry of api.registries) {
+    for (const cls of registry.classes) {
+      try {
+        if (!struct_default.isRegistered(cls)) {
+          ToolOp._regWithNstructjs(cls);
+        }
+      } catch (error2) {
+        console.log(error2.stack);
+        console.error("Failed to register a tool with nstructjs");
+      }
+    }
+  }
+}
+var init_toolsys = __esm({
+  "scripts/path-controller/toolsys/toolsys.ts"() {
+    "use strict";
+    init_struct();
+    init_context();
+    init_toolop();
+    init_toolmacro();
+    init_toolregistry();
+  }
+});
+
 // scripts/path-controller/toolsys/toolstack.ts
 var asyncCheck2, ToolStack;
 var init_toolstack = __esm({
@@ -25478,6 +25493,13 @@ var init_toolstack = __esm({
       }
       get head() {
         return this.protect("toolstackHead", async () => this[this.cur]);
+      }
+      /**
+       * The op on top of the stack, read without queueing behind whatever holds the lock.
+       * `ctx.last_tool` binds through this, since a datapath resolver cannot await.
+       */
+      get headOp() {
+        return this[this.cur];
       }
       limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
         if (maxmem === void 0) {
@@ -27400,9 +27422,14 @@ var init_controller = __esm({
           this._structsByName[stableName] = dstruct;
         }
       }
-      /* Associate cls with a DataStruct
-       * via callback, which will be called
-       * with an instance of cls as its argument*/
+      /**
+       * Associates `cls` with a struct chosen per instance rather than per class. The callback
+       * is handed the instance and the api resolving it, and answers the struct to read it
+       * through; `undefined` falls back to the dynamic path's own default struct.
+       *
+       * The callback lives on the class, so two apis share one — which is why the api is
+       * passed in rather than closed over.
+       */
       mapStructCustom(cls, callback, name2) {
         this.mapStruct(cls, true, name2);
         cls[CLS_API_KEY_CUSTOM] = callback;
@@ -27682,7 +27709,7 @@ An example of a more complicated expression might be:
               dynstructobj = obj2;
               if (obj2 !== void 0) {
                 if (CLS_API_KEY_CUSTOM in obj2.constructor) {
-                  dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2);
+                  dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2, this);
                 } else {
                   dstruct = this.mapStruct(obj2.constructor, false);
                 }
@@ -50744,7 +50771,7 @@ var tool_idgen = 0;
 function getLastToolStruct(ctx) {
   let ret = ctx.state._last_tool;
   if (!ret) {
-    ret = ctx.toolstack.head;
+    ret = ctx.toolstack.headOp;
   } else {
     let msg = "Passing the last tool to last-tool-panel via appstate._last_tool is deprecated;";
     msg += "\nctx.toolstack.head is now used instead.";
@@ -69094,7 +69121,7 @@ function GetContextClass(ctxClass) {
       return this.api.toolDefaults;
     }
     get last_tool() {
-      return this.toolstack.head;
+      return this.toolstack.headOp;
     }
     message(msg, timeout = 2500) {
       return message(this.screen, msg, timeout);
