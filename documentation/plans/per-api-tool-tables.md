@@ -411,7 +411,7 @@ path table. Open question 2 owns that; whichever way it goes, the rows move toge
   Three existing test files register after constructing an api, so the suite catches it.
 - **The loud failure is a duplicate-key throw.** It fires only where two or more registries
   are listed, never from `new DataAPI()`, and it names both registries.
-- **The one-way door is the `ctx.toolDefaults` path shape.** It does not move under this
+- **`ctx.toolDefaults`'s path shape cannot be taken back.** It does not move under this
   design, and that is why the design was chosen over first-wins or one member per registry. A
   stage that moves it is a different plan.
 - **Stage 3 is the release-cost step**, and it is wider than the cache: four wiring sites and
