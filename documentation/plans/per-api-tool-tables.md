@@ -7,7 +7,7 @@ binding. `ToolRegistry` keeps the stored values.
 Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
 chaining.
 
-Status: **planned, not started.** Pressure-tested once by a fresh-context agent, and revised
+Status: **stage 1 done; stages 2-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
 substantially. Two blocking findings removed claims the plan was partly built on: the
 `ToolPropertyCache.api`/`.dstruct` bug it promised to close does not exist any more, and the
 macro-defaults policy it proposed to choose is already shipped and was described backwards.
@@ -422,7 +422,7 @@ path table. Open question 2 owns that; whichever way it goes, the rows move toge
 
 One green commit pair per stage: submodule first, then the parent's gitlink.
 
-### Stage 1 — pin what is not pinned
+### Stage 1 — pin what is not pinned (done)
 
 Most of what this plan touches is already covered, and saying which is what makes stage 2's
 "nothing else should need editing" rule checkable.

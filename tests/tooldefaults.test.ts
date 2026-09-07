@@ -10,6 +10,7 @@ import {
 import { ToolClasses, ToolOp } from "../scripts/path-controller/toolsys/toolop";
 import type { IToolOpConstructor, ToolDef } from "../scripts/path-controller/toolsys/toolop";
 import { buildToolSysAPI } from "../scripts/path-controller/toolsys/toolsys";
+import { ToolStack } from "../scripts/path-controller/toolsys/toolstack";
 import { IntProperty, StringProperty } from "../scripts/path-controller/toolsys/toolprop";
 import type { ContextLike } from "../scripts/path-controller/controller/controller_abstract";
 
@@ -505,5 +506,158 @@ describe("the registry a class belongs to", () => {
 
     other.unregister(RouteTool);
     expect(new RouteTool().inputs.count.getValue()).toBe(7);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  the macro defaults policy: seed, scope, and the connect() opt-out   */
+/* ------------------------------------------------------------------ */
+
+/* Macro inputs are macro-scoped by default, seeded from the individual toolpath at
+   construction, with PropFlags.PRIVATE and connect() as the two opt-outs. The member
+   tools below need names no other test reuses, since nothing clears an accessor. */
+
+class SeedStep extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Seed Step",
+      toolpath: "tooldefaults.seed_step",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+}
+
+class ScopeStep extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Scope Step",
+      toolpath: "tooldefaults.scope_step",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+
+  // The base class throws from both, and the run below goes through the real toolstack
+  override undoPre(): void {}
+  override exec(): void {}
+}
+
+class LinkSource extends ToolOp<Record<string, never>, { total: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Link Source",
+      toolpath: "tooldefaults.link_source",
+      inputs  : {},
+      outputs : { total: new IntProperty(0) },
+    };
+  }
+}
+
+class LinkTarget extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Link Target",
+      toolpath: "tooldefaults.link_target",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+}
+
+describe("macro defaults are macro-scoped, seeded from the member's own toolpath", () => {
+  test("a member reads its individual default at construction, and the macro overrides it", () => {
+    register(SeedStep);
+
+    // The individual toolpath's saved value, which is what a standalone SeedStep gets
+    const standalone = new SeedStep();
+    standalone.inputs.count.setValue(7);
+    standalone.saveDefaultInputs();
+
+    // A macro of this shape, holding a different value under its own key
+    const first = new ToolMacro<ContextLike>();
+    first.add(new SeedStep());
+    first.inputs.count.setValue(99);
+    recordWarnings(() => first.saveDefaultInputs());
+
+    const member = new SeedStep();
+
+    // The seed half: the member's constructor read defaultsFor(SeedStep), so it holds
+    // the individual value even though the macro key says 99
+    expect(member.inputs.count.getValue()).toBe(7);
+
+    const second = new ToolMacro<ContextLike>();
+    second.add(member);
+    expect(second.inputs.count.getValue()).toBe(7);
+
+    // ...and the override half, which exec and modalStart reach through loadDefaults
+    second.loadDefaults(false);
+    expect(second.inputs.count.getValue()).toBe(99);
+  });
+
+  test("running a macro saves under the macro key and leaves the member's toolpath alone", async () => {
+    register(ScopeStep);
+
+    const macro = new ToolMacro<ContextLike>();
+    macro.add(new ScopeStep());
+    macro.inputs.count.setValue(42);
+
+    const toolstack = new ToolStack();
+    const ctx = {
+      state    : {},
+      api      : {},
+      toolstack,
+      screen   : {},
+      toLocked : () => ctx,
+    } as unknown as ContextLike;
+
+    // toolstack.ts calls saveDefaultInputs on the op it ran; for a macro that is the
+    // override writing every aliased property under the macro key
+    await toolstack.execTool(ctx as never, macro as never);
+
+    expect(macro.getDefault(macro.inputs.count, "count")).toBe(42);
+
+    // The member shares the property object the macro just saved, so asking whether the
+    // value comes back would pass either way. Ask about the member's own toolpath
+    const prop = new ScopeStep().inputs.count;
+    expect(SavedToolDefaults.useDefault(ScopeStep, "count", prop)).toBe(false);
+    expect(prop.getValue()).toBe(1);
+  });
+
+  test("connect() takes a linked property back out of macro-scoped defaults", () => {
+    register(LinkSource);
+    register(LinkTarget);
+
+    const linked = new ToolMacro<ContextLike>();
+    const source = new LinkSource();
+    const target = new LinkTarget();
+
+    linked.add(source);
+    linked.add(target);
+
+    // add() aliases rather than copies, so the macro's input is the member's own object
+    expect(linked.inputs.count).toBe(target.inputs.count);
+
+    linked.connect(source, "total", target, "count");
+    expect("count" in linked.inputs).toBe(false);
+
+    // The key is built from the macro's inputs, so an unlinked property leaves it
+    expect(linked._getTypeClass().tooldef().toolpath).toBe("LinkSource:LinkTarget:");
+
+    linked.inputs.count?.setValue(31);
+    recordWarnings(() => linked.saveDefaultInputs());
+    expect(SavedToolDefaults.userSetMap.has("LinkSource:LinkTarget:.count")).toBe(false);
+
+    // The same two members without the link do keep a macro-scoped value, which is what
+    // makes the assertion above about connect() rather than about macros in general
+    const unlinked = new ToolMacro<ContextLike>();
+    unlinked.add(new LinkSource());
+    unlinked.add(new LinkTarget());
+
+    expect(unlinked._getTypeClass().tooldef().toolpath).toBe("LinkSource:LinkTarget:count:");
+
+    unlinked.inputs.count.setValue(31);
+    recordWarnings(() => unlinked.saveDefaultInputs());
+    expect(SavedToolDefaults.userSetMap.has("LinkSource:LinkTarget:count:.count")).toBe(true);
   });
 });
