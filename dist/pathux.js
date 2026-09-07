@@ -18620,18 +18620,22 @@ var init_tooldefaults = __esm({
   "scripts/path-controller/toolsys/tooldefaults.ts"() {
     "use strict";
     init_toolprop();
-    init_controller_base();
     ToolPropertyCache = class _ToolPropertyCache {
-      /** @deprecated */
-      map;
-      pathmap;
-      accessors;
+      /** Saved values per toolpath. An api's defaults tree hangs these records directly. */
+      values;
       userSetMap;
       constructor() {
-        this.map = /* @__PURE__ */ new Map();
-        this.pathmap = /* @__PURE__ */ new Map();
-        this.accessors = {};
+        this.values = /* @__PURE__ */ new Map();
         this.userSetMap = /* @__PURE__ */ new Set();
+      }
+      /** The record holding one tool's saved inputs, created empty on first ask. */
+      valuesFor(toolpath) {
+        let obj = this.values.get(toolpath);
+        if (obj === void 0) {
+          obj = {};
+          this.values.set(toolpath, obj);
+        }
+        return obj;
       }
       static getPropKey(_cls, key, prop) {
         return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
@@ -18650,81 +18654,25 @@ var init_tooldefaults = __esm({
         return prop.apiname !== void 0 && prop.apiname.length > 0 ? prop.apiname : key;
       }
       /**
-       * Seeds the stored value for one input and returns the object holding it. Reachable from
-       * the toolpath alone, so it works with no api and no struct.
+       * Seeds the stored value for one input and returns the record holding it. Reachable
+       * from the toolpath alone, so it works with no api and no struct.
        */
       _ensureValues(cls, key, prop) {
         const path = _ToolPropertyCache._splitToolpath(cls);
         if (path === void 0) {
           return void 0;
         }
-        let obj = this.accessors;
-        let partial = "";
-        for (let i = 0; i < path.length; i++) {
-          const k = path[i];
-          if (i > 0) {
-            partial += ".";
-          }
-          partial += k;
-          if (!(k in obj)) {
-            obj[k] = {};
-          }
-          this.pathmap.set(partial, obj[k]);
-          obj = obj[k];
-        }
+        const obj = this.valuesFor(path.join("."));
         const name2 = _ToolPropertyCache._accessorName(key, prop);
         if (!(name2 in obj)) {
           obj[name2] = prop.copy().getValue();
         }
         return obj;
       }
-      /**
-       * Adds one input to `dstruct` as a datapath over the stored value. `_ensureValues` must
-       * have run for `cls`, since the prefix objects it maps are the ones that seeds.
-       */
-      _buildBinding(cls, key, prop, dstruct, api) {
-        const path = _ToolPropertyCache._splitToolpath(cls);
-        if (path === void 0) {
-          return;
-        }
-        let obj = this.accessors;
-        let st = dstruct;
-        for (let i = 0; i < path.length; i++) {
-          const k = path[i];
-          let pathk = k;
-          if (i === 0) {
-            pathk = "accessors." + k;
-          }
-          const st2 = api.mapStruct(obj[k], true, k);
-          if (!(st.pathmap && k in st.pathmap)) {
-            st.struct(pathk, k, k, st2);
-          }
-          st = st2;
-          obj = obj[k];
-        }
-        const name2 = _ToolPropertyCache._accessorName(key, prop);
-        const prop2 = prop.copy();
-        const dpath = new DataPath(name2, name2, prop2);
-        let uiname = prop.uiname;
-        if (!uiname || uiname.trim().length === 0) {
-          uiname = prop.apiname;
-        }
-        if (!uiname || uiname.trim().length === 0) {
-          uiname = key;
-        }
-        uiname = ToolProperty.makeUIName(uiname);
-        prop2.uiname = uiname;
-        prop2.description = prop2.description || prop2.uiname;
-        st.add(dpath);
-      }
-      _buildAccessors(cls, key, prop, dstruct, api) {
-        this._ensureValues(cls, key, prop);
-        this._buildBinding(cls, key, prop, dstruct, api);
-      }
       _getAccessor(cls) {
         const toolpath = cls.tooldef().toolpath;
         if (!toolpath) return void 0;
-        return this.pathmap.get(toolpath.trim());
+        return this.values.get(toolpath.trim());
       }
       static getFullPath(cls, key, prop) {
         const toolpath = cls.tooldef().toolpath.trim();
@@ -19242,8 +19190,10 @@ var init_toolregistry = __esm({
        */
       macroIdGen = 0;
       /**
-       * The name `defaults`'s struct is registered under. Must differ between registries, or
-       * `mapStruct` hands the second one the first's struct by name.
+       * Names this registry in a diagnostic, such as the duplicate-toolpath error. Once the
+       * defaults struct became the api's there is nothing left for it to name in a struct
+       * table, so it no longer has to differ between registries — but it still does, since a
+       * message naming two registries the same would say nothing.
        */
       structName;
       /**
@@ -19387,54 +19337,55 @@ var init_toolregistry = __esm({
         };
       }
       /**
-       * Builds the accessors this registry's defaults cache reads `cls`'s inputs through.
+       * Seeds `cls`'s saved inputs and gives every api that should know about them a chance
+       * to rebuild.
        *
        * `register` calls this with no api, which reaches every api built against this registry
        * rather than whichever one happened to build last. An api gets a tool's `buildOpAPI`
        * struct that way too, which is what `ctx.last_tool.<input>` resolves through.
        */
-      updateDefaults(cls, api, datastruct) {
+      updateDefaults(cls, api) {
+        this.seedDefaults(cls);
         if (api !== void 0) {
-          this._updateDefaultsFor(cls, api, datastruct ?? this.structFor(api));
+          this.buildOpAPI(api, cls);
+          api.invalidateToolDefaults();
           return;
         }
         for (const built of this.apis()) {
-          this._updateDefaultsFor(cls, built, this.structFor(built));
+          this.buildOpAPI(built, cls);
+          built.invalidateToolDefaults();
         }
       }
-      _updateDefaultsFor(cls, api, datastruct) {
+      /**
+       * Gives every saveable input of `cls` a stored value if it has none. Needs no api: the
+       * toolpath alone says where the value lives.
+       */
+      seedDefaults(cls) {
         const def = cls._getFinalToolDef();
-        this.buildOpAPI(api, cls);
         for (const k in def.inputs) {
           const prop = def.inputs[k];
           if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
-            this.defaults._buildAccessors(cls, k, prop, datastruct, api);
+            this.defaults._ensureValues(cls, k, prop);
           }
         }
       }
       /**
-       * The datapath binding for `defaults`, which `ctx.toolDefaults` resolves through.
+       * Seeds every registered class and builds their op structs into `api`, then answers the
+       * api's merged defaults struct.
        *
-       * Keyed on the cache instance rather than on `ToolPropertyCache`, because the struct's
-       * shape comes from the registered tools rather than from the class: keying on the class
-       * gives every registry the same struct, and `buildAPI` then clears one registry's
-       * accessors while building another's. `mapStruct` keys on object identity, so an
-       * instance works the same way the accessor objects `_buildAccessors` maps do.
+       * The defaults binding is the api's rather than this registry's, because an api may list
+       * several registries and a toolpath prefix can span them.
        */
-      structFor(api) {
-        return api.mapStruct(this.defaults, true, this.structName);
-      }
-      /** Rebuilds `api`'s bindings for every class registered here. */
       buildAPI(api) {
         if (!this.apis().includes(api)) {
           this._builtAPIs.push(new WeakRef(api));
         }
-        const dstruct = this.structFor(api);
-        dstruct.clear();
         for (const cls of this.classes) {
-          this.updateDefaults(cls, api, dstruct);
+          this.seedDefaults(cls);
+          this.buildOpAPI(api, cls);
         }
-        return dstruct;
+        api.invalidateToolDefaults();
+        return api.toolDefaultsStruct();
       }
       /** Gives `cls` a struct whose paths read and write a live op's inputs. */
       buildOpAPI(api, cls) {
@@ -25047,8 +24998,8 @@ var init_context = __esm({
 function setContextClass(_cls) {
   console.warn("setContextClass is deprecated");
 }
-function updateToolDefaults(cls, api, datastruct) {
-  defaultRegistry.updateDefaults(cls, api, datastruct);
+function updateToolDefaults(cls, api) {
+  defaultRegistry.updateDefaults(cls, api);
 }
 function updateToolSysAPI(api) {
   for (const registry of api.registries) {
@@ -25061,12 +25012,7 @@ function buildToolOpAPI(api, cls) {
 function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootCtxClass, insertToolDefaultsIntoContext = true) {
   updateToolSysAPI(api);
   if (rootCtxStruct) {
-    rootCtxStruct.struct(
-      "toolDefaults",
-      "toolDefaults",
-      "Tool Defaults",
-      api.registry.structFor(api)
-    );
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.toolDefaultsStruct());
     rootCtxStruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
   }
   if (rootCtxClass && insertToolDefaultsIntoContext) {
@@ -25089,7 +25035,7 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct, rootC
     if (!haveprop2("toolDefaults")) {
       Object.defineProperty(rootCtxClass.prototype, "toolDefaults", {
         get() {
-          return api.registry.defaults;
+          return api.toolDefaults;
         }
       });
       if (Context.isContextSubclass(rootCtxClass)) {
@@ -26395,9 +26341,19 @@ var init_controller_abstract = __esm({
         }
         return this._toolPaths;
       }
-      /** Drops the merged table, so the next read rebuilds it. */
+      /** Whether the defaults tree still describes what the listed registries hold. */
+      _toolDefaultsDirty = true;
+      /**
+       * Drops the merged table, so the next read rebuilds it. The defaults tree is derived
+       * from the same table, so it owes a rebuild too.
+       */
       invalidateToolPaths() {
         this._toolPaths = void 0;
+        this.invalidateToolDefaults();
+      }
+      /** Marks the defaults tree as owing a rebuild, which the next read does. */
+      invalidateToolDefaults() {
+        this._toolDefaultsDirty = true;
       }
       /**
        * Merging is also the collision scan, which is why a stale table is dropped and rebuilt
@@ -26814,7 +26770,7 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, reportstack, DataStruct, _dummypath, DummyIntProperty, CLS_API_KEY_CUSTOM, DataAPI, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, reportstack, DataStruct, _dummypath, DummyIntProperty, CLS_API_KEY_CUSTOM, ToolDefaultsView, DataAPI, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
@@ -26833,6 +26789,8 @@ var init_controller = __esm({
     init_pathwatch();
     init_controller_base();
     init_toolpath();
+    init_toolregistry();
+    init_tooldefaults();
     init_controller_abstract();
     init_controller_base();
     init_toolprop();
@@ -27178,8 +27136,31 @@ var init_controller = __esm({
     _dummypath = new DataPath();
     DummyIntProperty = new IntProperty();
     CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
+    ToolDefaultsView = class {
+      constructor(api) {
+        this.api = api;
+      }
+      api;
+      /** Prefix tree. Only grows, so a struct already bound to a node stays valid. */
+      accessors = {};
+      /* The four questions ToolPropertyCache answers, routed to the registry that owns the
+         class rather than to whichever one happens to be listed first. */
+      useDefault(cls, key, prop) {
+        return defaultsFor(cls).useDefault(cls, key, prop);
+      }
+      has(cls, key, prop) {
+        return defaultsFor(cls).has(cls, key, prop);
+      }
+      get(cls, key, prop) {
+        return defaultsFor(cls).get(cls, key, prop);
+      }
+      set(cls, key, prop) {
+        defaultsFor(cls).set(cls, key, prop);
+      }
+    };
     DataAPI = class extends ModelInterface {
       rootContextStruct;
+      _toolDefaults;
       /** Every struct this api has mapped, in creation order. */
       structs = [];
       /** This api's structs, keyed on the class. Weak, so a dead class takes its struct. */
@@ -27211,6 +27192,78 @@ var init_controller = __esm({
       }
       setRoot(sdef) {
         this.rootContextStruct = sdef;
+      }
+      /**
+       * The saved tool defaults of every registry this api lists, as one tree. A prefix two
+       * registries both use is one node here, with each tool's values still read out of its
+       * own registry.
+       */
+      get toolDefaults() {
+        if (this._toolDefaults === void 0) {
+          this._toolDefaults = new ToolDefaultsView(this);
+        }
+        if (this._toolDefaultsDirty) {
+          this._toolDefaultsDirty = false;
+          this._buildToolDefaults();
+        }
+        return this._toolDefaults;
+      }
+      /** The struct `toolDefaults.<prefix>.<tool>.<prop>` resolves through. */
+      toolDefaultsStruct() {
+        return this.mapStruct(this.toolDefaults, true, "ToolDefaults");
+      }
+      /**
+       * Walks the merged toolpath table into the tree and its structs. The root is wiped
+       * first, the way one registry's own struct used to be; prefix nodes are kept, since a
+       * struct bound to a node cannot be rebound once something holds it.
+       */
+      _buildToolDefaults() {
+        const view = this._toolDefaults;
+        const root = this.mapStruct(view, true, "ToolDefaults");
+        root.clear();
+        for (const [toolpath, entry] of this.toolPaths) {
+          const def = entry.cls._getFinalToolDef();
+          const segments = toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
+          if (segments.length === 0) {
+            continue;
+          }
+          let obj = view.accessors;
+          let st = root;
+          for (let i = 0; i < segments.length; i++) {
+            const k = segments[i];
+            const last = i === segments.length - 1;
+            if (!(k in obj)) {
+              obj[k] = last ? entry.registry.defaults.valuesFor(toolpath.trim()) : {};
+            }
+            const st2 = this.mapStruct(obj[k], true, k);
+            if (!(st.pathmap && k in st.pathmap)) {
+              st.struct(i === 0 ? "accessors." + k : k, k, k, st2);
+            }
+            obj = obj[k];
+            st = st2;
+          }
+          for (const key in def.inputs) {
+            const prop = def.inputs[key];
+            if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
+              continue;
+            }
+            const name2 = ToolPropertyCache._accessorName(key, prop);
+            if (st.pathmap && name2 in st.pathmap) {
+              continue;
+            }
+            const prop2 = prop.copy();
+            let uiname = prop.uiname;
+            if (!uiname || uiname.trim().length === 0) {
+              uiname = prop.apiname;
+            }
+            if (!uiname || uiname.trim().length === 0) {
+              uiname = key;
+            }
+            prop2.uiname = ToolProperty.makeUIName(uiname);
+            prop2.description = prop2.description || prop2.uiname;
+            st.add(new DataPath(name2, name2, prop2));
+          }
+        }
       }
       /** Whether `mapStruct(cls, false)` would answer here. */
       hasStruct(cls) {
@@ -69023,7 +69076,7 @@ function GetContextClass(ctxClass) {
       return this.typedState.toolstack;
     }
     get toolDefaults() {
-      return this.api.registry.defaults;
+      return this.api.toolDefaults;
     }
     get last_tool() {
       return this.toolstack.head;

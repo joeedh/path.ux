@@ -7,7 +7,7 @@ binding. `ToolRegistry` keeps the stored values.
 Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
 chaining.
 
-Status: **stages 1-2 done; stages 3-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
+Status: **stages 1-3 done; stages 4-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
 substantially. Two blocking findings removed claims the plan was partly built on: the
 `ToolPropertyCache.api`/`.dstruct` bug it promised to close does not exist any more, and the
 macro-defaults policy it proposed to choose is already shipped and was described backwards.
@@ -465,7 +465,7 @@ struct (`toolregistry_second.test.ts`); the macro key being structural and uniqu
 - Cost to undo: cheap while `registry` is an alias. The setter cannot throw for a single
   registry, so no existing construction path changes.
 
-### Stage 3 — the api owns the binding
+### Stage 3 — the api owns the binding (done)
 
 - The api builds the `toolDefaults` struct tree from the merged table, each leaf bound to the
   owning registry's storage. `ctx.toolDefaults` reads through the same view.

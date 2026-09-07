@@ -109,7 +109,7 @@ function GetContextClass(ctxClass: Function): typeof Context {
     }
 
     get toolDefaults() {
-      return this.api.registry.defaults;
+      return this.api.toolDefaults;
     }
 
     get last_tool() {

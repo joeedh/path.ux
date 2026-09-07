@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
 import { DataPathError } from "../scripts/path-controller/controller/controller_base";
 import { SavedToolDefaults } from "../scripts/path-controller/toolsys/tooldefaults";
-import { ToolRegistry } from "../scripts/path-controller/toolsys/toolregistry";
+import { defaultRegistry, ToolRegistry } from "../scripts/path-controller/toolsys/toolregistry";
 import { ToolOp } from "../scripts/path-controller/toolsys/toolop";
 import type { ToolDef } from "../scripts/path-controller/toolsys/toolop";
 import { parseToolPath } from "../scripts/path-controller/toolsys/toolpath";
@@ -125,7 +125,9 @@ describe("a registry the default one never saw", () => {
     expect(ToolOp.isRegistered(PrivateTool as never)).toBe(false);
     expect(() => parseToolPath("stage5b.private")).toThrow(DataPathError);
 
-    expect(ctxB.toolDefaults).toBe(registryB.defaults);
+    // The view is the api's, not the registry's, since an api may list several
+    expect(ctxB.toolDefaults).toBe(apiB.toolDefaults);
+    expect(ctxB.toolDefaults).not.toBe(registryB.defaults);
     expect(apiB.getValue(ctxB, "toolDefaults.stage5b.private.count")).toBe(7);
   });
 
@@ -137,12 +139,13 @@ describe("a registry the default one never saw", () => {
     expect(new SavingTool().inputs.count.getValue()).toBe(9);
 
     // The default registry's cache is a different object and must not have learned it
-    expect(SavedToolDefaults.pathmap.has("stage5b.saving")).toBe(false);
+    expect(SavedToolDefaults.values.has("stage5b.saving")).toBe(false);
     expect(SavedToolDefaults.userSetMap.has("stage5b.saving.count")).toBe(false);
   });
 
   test("building it left the first api's accessors alone", () => {
-    expect(ctxA.toolDefaults).toBe(SavedToolDefaults);
+    expect(ctxA.toolDefaults).toBe(apiA.toolDefaults);
+    expect(ctxA.toolDefaults).not.toBe(ctxB.toolDefaults);
     expect(apiA.getValue(ctxA, "toolDefaults.stage5a.shared.count")).toBe(1);
     expect(apiA.getValue(ctxA, "toolDefaults.stage5c.common.count")).toBe(2);
 
@@ -152,11 +155,12 @@ describe("a registry the default one never saw", () => {
   });
 
   test("a toolpath prefix both registries use is two structs, one per api", () => {
-    // `_buildAccessors` maps each prefix object under the bare prefix. The accessor objects
-    // were always separate; since the name tables went per api, the structs are too
-    expect(SavedToolDefaults.pathmap.get("stage5c")).not.toBe(
-      registryB.defaults.pathmap.get("stage5c")
-    );
+    // The prefix node is the api's now, so what each cache holds is only its own tool's
+    // values; the structs are separate because the name tables went per api
+    expect(SavedToolDefaults.values.has("stage5c.common")).toBe(true);
+    expect(SavedToolDefaults.values.has("stage5c.colliding")).toBe(false);
+    expect(registryB.defaults.values.has("stage5c.colliding")).toBe(true);
+    expect(registryB.defaults.values.has("stage5c.common")).toBe(false);
     expect(apiA.getStructByName("stage5c")).not.toBe(apiB.getStructByName("stage5c"));
 
     // Each struct now describes only its own registry's tools
@@ -164,5 +168,34 @@ describe("a registry the default one never saw", () => {
       DataPathError
     );
     expect(apiB.getValue(ctxB, "toolDefaults.stage5c.colliding.count")).toBe(5);
+  });
+});
+
+describe("an api that lists both registries", () => {
+  test("reads a shared toolpath prefix as one node, each half from its own registry", () => {
+    // The constraint the old per-registry defaults struct imposed: a prefix two
+    // registries both use described only one of them. It is now the design
+    const apiBoth = new DataAPI<any>();
+    apiBoth.registries = [defaultRegistry, registryB];
+
+    const root = new DataStruct();
+    apiBoth.setRoot(root);
+
+    class BothCtx {
+      api!: DataAPI<any>;
+      toolstack = {};
+    }
+
+    buildToolSysAPI(apiBoth as DataAPI, false, root, BothCtx as never);
+
+    const ctx = new BothCtx() as BothCtx & { toolDefaults: unknown };
+    ctx.api = apiBoth;
+
+    expect(apiBoth.getValue(ctx, "toolDefaults.stage5c.common.count")).toBe(2);
+    expect(apiBoth.getValue(ctx, "toolDefaults.stage5c.colliding.count")).toBe(5);
+
+    // ...and each half still writes through to the registry that owns it
+    expect(apiBoth.getValue(ctx, "toolDefaults.stage5a.shared.count")).toBe(1);
+    expect(apiBoth.getValue(ctx, "toolDefaults.stage5b.private.count")).toBe(7);
   });
 });

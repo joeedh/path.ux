@@ -48,7 +48,7 @@ export class BaseOverlay extends ContextOverlay {
 
   //toolDefaults is used by path.ux, see api_define.js
   get toolDefaults() {
-    return this.api.registry.defaults;
+    return this.api.toolDefaults;
   }
 
   toolDefaults_save() {

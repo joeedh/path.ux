@@ -102,7 +102,10 @@ describe("an api resolves against its own registry", () => {
 });
 
 describe("ctx.toolDefaults follows the api", () => {
-  test("the getter buildToolSysAPI installs reads the api's registry", () => {
+  test("the getter buildToolSysAPI installs reads the api's own view", () => {
+    const other = makeRegistry();
+    other.register(PrivateTool);
+
     const api = new DataAPI<any>();
     const ctxStruct = api.mapStruct(Ctx);
     api.rootContextStruct = ctxStruct;
@@ -112,14 +115,19 @@ describe("ctx.toolDefaults follows the api", () => {
     const ctx = new Ctx() as Ctx & { toolDefaults: unknown };
     ctx.api = api;
 
-    expect(ctx.toolDefaults).toBe(defaultRegistry.defaults);
+    // The view belongs to the api, since an api may list several registries and a
+    // toolpath prefix can span them
+    expect(ctx.toolDefaults).toBe(api.toolDefaults);
+    expect(ctx.toolDefaults).not.toBe(defaultRegistry.defaults);
 
-    // The seam the plan calls the quiet one: repointing the api has to move the cache
-    // the menus read, or they go on showing the default registry's values
-    const other = makeRegistry();
+    // The seam the plan calls the quiet one: repointing the api has to move the values
+    // the menus read, or they go on showing the default registry's
+    expect(() => api.getValue(ctx as never, "toolDefaults.stage4.private.count")).toThrow(
+      DataPathError
+    );
+
     api.registry = other;
 
-    expect(ctx.toolDefaults).toBe(other.defaults);
-    expect(ctx.toolDefaults).not.toBe(defaultRegistry.defaults);
+    expect(api.getValue(ctx as never, "toolDefaults.stage4.private.count")).toBe(1);
   });
 });
