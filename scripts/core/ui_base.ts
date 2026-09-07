@@ -1250,7 +1250,7 @@ export class UIBase<
     }
     return false;
   }
-  
+
   getMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T | undefined {
     const inherits = ctor.metaDefine().inherits ?? false;
     let elem: UIBase | undefined = this;

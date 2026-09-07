@@ -1,4 +1,3 @@
-
 /*
 // ==== example usage ====
 
@@ -188,7 +187,7 @@ class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
   static STRUCT = nstructjs.inlineRegister(
     this,
     `
-    MyUXToolMeta : UXToolMeta {
+    pathux.MyUXToolMeta {
       supplies: array(string);
     }`
   );
