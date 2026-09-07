@@ -1,0 +1,67 @@
+// Example ESLint flat config for an app that uses path.ux. Copy it to
+// eslint.config.js at your app's root, drop the extension, and point the import
+// at wherever path.ux sits in your tree.
+
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
+
+// Vendored as a git submodule here; from an npm install the same file sits at
+// "path.ux/buildtools/eslint-rules/prefer-construct-element.mjs".
+import preferConstructElement from "./vendor/path.ux/buildtools/eslint-rules/prefer-construct-element.mjs";
+
+// Two more consumer-facing rules ship in the same directory. Both read a
+// generated catalog and no-op when it is missing, so each needs its catalog
+// built before it reports anything -- see the rules block below.
+// import validDatapath from "./vendor/path.ux/buildtools/eslint-rules/valid-datapath.mjs";
+// import validThemeKey from "./vendor/path.ux/buildtools/eslint-rules/valid-theme-key.mjs";
+
+export default defineConfig([
+  {
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    languageOptions: { globals: globals.browser },
+  },
+  tseslint.configs.recommended,
+  {
+    plugins: {
+      pathux: {
+        rules: {
+          "prefer-construct-element": preferConstructElement,
+          // "valid-datapath": validDatapath,
+          // "valid-theme-key": validThemeKey,
+        },
+      },
+    },
+    rules: {
+      // Options, both optional: "suffix" is the tag suffix that marks a path.ux
+      // custom element (default "-x"), and "allow" lists tags to leave alone --
+      // one you create uninitialized on purpose and hand to something that
+      // calls checkInit() later.
+      "pathux/prefer-construct-element": ["error", { suffix: "-x", allow: [] }],
+
+      // Checks container.prop("...") strings against a catalog your app
+      // generates by walking its own defineAPI(). Point "catalogPath" at that
+      // file (or export PATHUX_DATAPATH_CATALOG); left unset it falls back to
+      // path.ux's own generated/api-paths.json, which does not know your app's
+      // paths. Best run as a warning until the catalog covers every path the
+      // app resolves.
+      // "pathux/valid-datapath": ["warn", { catalogPath: "./generated/api-paths.json" }],
+
+      // Flags literal getDefault("...") keys that are in no class of the theme
+      // catalog. It takes no options and reads path.ux's own
+      // generated/themes.json (pnpm run gen:themes, inside the library), so it
+      // catches typos in library theme keys but not in keys your own widgets
+      // add. Opt-in: the catalog is a floor, not a closed set.
+      // "pathux/valid-theme-key": "warn",
+    },
+  },
+  {
+    // path.ux's own widget layer calls createElement deliberately, so the rule
+    // is off over the library. Drop this block if you do not lint it.
+    files: ["vendor/path.ux/**"],
+    rules: { "pathux/prefer-construct-element": "off" },
+  },
+]);

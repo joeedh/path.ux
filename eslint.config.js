@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import globals from "globals";
 import { quickbuild } from "@pathtx/eslint-dispatcher";
+import preferConstructElement from "./buildtools/eslint-rules/prefer-construct-element.mjs";
 
 //import tseslint from "typescript-eslint";
 const tseslint = await quickbuild.quickBundleModule("typescript-eslint", { format: "cjs" }, true);
@@ -99,8 +100,18 @@ export default defineConfig([
     },
   },
   {
-    plugins: { pathux: { rules: { "valid-datapath": validDatapath } } },
-    rules  : { "pathux/valid-datapath": "warn" },
+    plugins: {
+      pathux: {
+        rules: {
+          "valid-datapath": validDatapath,
+          //"prefer-construct-element": preferConstructElement,
+        },
+      },
+    },
+    rules: {
+      "pathux/valid-datapath": "warn",
+      //"pathux/prefer-construct-element": ["error", { suffix: "-x", allow: [] }],
+    },
   },
   {
     // Build-tool CLIs run under Node, not the browser.
@@ -118,6 +129,6 @@ export default defineConfig([
       "example/*.cjs",
     ],
     languageOptions: { globals: globals.node },
-    rules         : { "@typescript-eslint/no-require-imports": "off" },
+    rules          : { "@typescript-eslint/no-require-imports": "off" },
   },
 ]);

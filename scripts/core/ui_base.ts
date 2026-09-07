@@ -492,11 +492,27 @@ export class UIBase<
     return registry.getInternalName(name);
   }
 
+  /** For internal use only, use constructElement */
   static createElement<T extends UIBase | HTMLElement = HTMLElement>(
     name: string,
     internal = false
   ): T {
     return registry.createElement<T>(name, internal);
+  }
+
+  /** 
+   * For use with external code, calls elem.checkInit(). 
+   * Only use UIBase.createElement if you need to modify 
+   * the element prior to its .init().
+   */
+  static constructElement<T extends UIBase>(
+    name: string,
+    ctx: T['ctx']
+  ): T {
+    const elem = registry.createElement<T>(name, false);
+    elem.ctx = ctx
+    elem.checkInit();
+    return elem;
   }
 
   static isRegistered(cls: IUIBaseConstructor) {

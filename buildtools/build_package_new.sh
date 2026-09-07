@@ -18,6 +18,12 @@ pnpm emitTypes
 
 mkdir -p _package
 cp -r scripts simple_docsys package.json tsconfig.json pnpm-lock.yaml pathux.d.ts Readme.MD types _package
+
+# The consumer-facing eslint rules, at the same path they sit at in a checkout,
+# so an example config imports them identically either way.
+mkdir -p _package/buildtools
+cp -r buildtools/eslint-rules _package/buildtools/
+cp eslint.config.js.example _package
 cp -r dist _package/bundle
 cp package_dist.json _package/package.json
 

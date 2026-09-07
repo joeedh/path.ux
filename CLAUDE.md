@@ -314,6 +314,25 @@ typecheck:themes` (includes the catalog) to type-check `getDefault` against the
   un-themed keys read with runtime defaults); enable it as a `pathux/valid-theme-key`
   warning if you want typo coverage.
 
+## Creating widgets
+
+`UIBase.constructElement(tagname, ctx)` is how external code builds a widget. It assigns
+`ctx` and calls `checkInit()` before returning, so the widget is fully initialized on
+arrival.
+
+`UIBase.createElement` is the internal half. It leaves `init()` to the element's first
+`update()`, so a caller that touches the widget in between races with it — a `setValue`
+overwritten by the widget's own `init()`, a child added to a container that has not built
+its DOM yet. path.ux's own widget layer calls it deliberately; consumers should not.
+
+`buildtools/eslint-rules/prefer-construct-element.mjs` flags a literal `-x` tag passed to
+`createElement`, and is for consumers rather than for this repo — `eslint.config.js` does
+not enable it, and `eslint.config.js.example` shows an app how to. It takes `suffix` (the
+tag suffix that marks a custom element, default `-x`) and `allow` (tags to leave alone).
+Only a literal tag is checked; a tag computed at runtime is left alone rather than guessed
+at. The receiver is not checked, because `createElement` is a static every subclass
+inherits and `document.createElement` leaves the widget in the same state.
+
 ## Conventions
 
 Do not add type annotations if types can be inferred from the assignment.
