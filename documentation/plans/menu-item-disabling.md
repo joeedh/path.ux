@@ -516,9 +516,9 @@ exported from any module in an `export *` chain silently becomes public API.
 - `toolop.ts` → `toolsys/index.ts` → `controller.ts` → `pathux.ts`. Intended additions:
   `Refusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`. `toolopRefusal` and
   `ToolRefusedError` reach the runtime surface; the other two are types.
-- `ui_base_props.ts` → `ui_base.ts` → `pathux.ts`. `composeTooltip` is added deliberately: a
-  consumer composing refusal text for a surface path.ux does not draw should not re-derive the
-  ordering.
+- `ui_base_props.ts` reaches no barrel: `ui_base.ts` imports it as a namespace
+  (`import * as props`) rather than re-exporting it, so `composeTooltip` is shared between the
+  widget and menu code without becoming public API. Verified against the built bundle.
 - `pathux.ts:29-33` `export *`s `menu/menu_types`, `menu/menu` and `menu/menu_ops` **directly**.
   So any helper the template work adds to `menu_ops.ts` leaks too — keep the `createTool` /
   `canRun` plumbing unexported inside the module. Intended additions here are members on existing
