@@ -34,3 +34,5 @@ documentation/plans/tool-registry.md (task 3).
 toolpath table, move the tool-defaults binding onto the api, and pin and
 document the macro defaults policy, per
 documentation/plans/per-api-tool-tables.md.
+[ ]: give menu items a disabled state and let ToolOp.canRun return a refusal
+sentence, per documentation/plans/menu-item-disabling.md.

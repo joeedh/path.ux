@@ -4,7 +4,6 @@ import { ToolOp } from "../scripts/path-controller/toolsys/toolop";
 import type { ToolDef } from "../scripts/path-controller/toolsys/toolop";
 import { defaultRegistry, ToolRegistry } from "../scripts/path-controller/toolsys/toolregistry";
 import { buildToolSysAPI } from "../scripts/path-controller/toolsys/toolsys";
-import { Graph } from "../scripts/graph/graph";
 import { defineGraphAPI } from "../scripts/graph/graph_api";
 import { IntProperty } from "../scripts/path-controller/toolsys/toolprop";
 
