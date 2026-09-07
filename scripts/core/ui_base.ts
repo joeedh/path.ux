@@ -92,6 +92,7 @@ import type { IContextBase } from "./context_base";
 
 export { CSSFont } from "./cssfont";
 import type { Screen } from "../screen/FrameManager";
+import { ensureMeta, getMeta, IUIXMeta, IUXMetaConstructor, setMeta } from "./base/ui_meta_tags";
 
 interface TimeoutQueueItem {
   cb: () => void;
@@ -1249,12 +1250,12 @@ export class UIBase<
     }
     return false;
   }
-  /*
+  
   getMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T | undefined {
     const inherits = ctor.metaDefine().inherits ?? false;
     let elem: UIBase | undefined = this;
     do {
-      const meta = getMeta(elem, ctor);
+      const meta = getMeta<T>(elem, ctor);
       if (meta) {
         return meta;
       }
@@ -1267,7 +1268,7 @@ export class UIBase<
   }
   ensureMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T {
     return ensureMeta(this, ctor);
-  }*/
+  }
 }
 
 export * from "./base/ui_draw";

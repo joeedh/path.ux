@@ -1,3 +1,59 @@
+
+/*
+// ==== example usage ====
+
+// helper type union for all UX tool metas 
+// to allow type inference keyed on 'type'
+type MyUXTools = MyUXToolMeta;
+
+const widget: UIBase;
+widget.setMeta(
+  StdUXMeta,
+  new StdUXMeta<MyUXTools>({
+    tools: [
+      new MyUXToolMeta({
+        toolPath: "some/path",
+        requirements: "some/requirements",
+        supplies: ["text"],
+      }),
+    ],
+  }),
+);
+
+// builders (toolImpl, prop, tool-path menu rows, HotKey) would write toolPath/valuePath as they
+// build, so the values are trustworthy rather than hand-declared
+
+// one widget
+ipc.sendMessage({ type: "uxmeta", data: nstructjs.writeJSON(widget.getMeta(StdUXMeta)) });
+
+// a whole screen: every tag on every widget, each named by widgetPath
+const sweep = (root: UIBase) => {
+  const out: unknown[] = [];
+  for (const w of walkWidgets(root)) {
+    for (const meta of allMeta(w)) {
+      if (meta instanceof StdUXMeta) meta.widgetPath = widgetPathOf(w);
+      out.push(nstructjs.writeJSON(meta));
+    }
+  }
+  return out;
+};
+
+// on the other end we can either call nstructjs.validateJSON and deserialize directly,
+// or write an nstructjs script to zod converter
+
+const meta = widget.getMeta<StdUXMeta<MyUXTools>>(StdUXMeta)!;
+for (const tool of meta.tools) {
+  switch (tool.type) {
+    case "mytype":
+      // tool now has inferred MyUXToolMeta
+      break;
+  }
+}
+
+// headless: no owner, so the setters buffer and the same class is the derived-tier record
+const derived = new StdUXMeta<MyUXTools>({ description: "Approve the gate", valuePath: "ui.gate" });
+*/
+
 import type { UIBase } from "../ui_base";
 import * as nstructjs from "../../path-controller/util/nstructjs";
 
@@ -256,58 +312,3 @@ export class StdUXMeta<UXToolTypes extends UXToolMeta = UXToolMeta> implements I
     this.deserialHelper.valuePath = undefined;
   }
 }
-
-/*
-// ==== example usage ====
-
-// helper type union for all UX tool metas 
-// to allow type inference keyed on 'type'
-type MyUXTools = MyUXToolMeta;
-
-const widget: UIBase;
-widget.setMeta(
-  StdUXMeta,
-  new StdUXMeta<MyUXTools>({
-    tools: [
-      new MyUXToolMeta({
-        toolPath: "some/path",
-        requirements: "some/requirements",
-        supplies: ["text"],
-      }),
-    ],
-  }),
-);
-
-// builders (toolImpl, prop, tool-path menu rows, HotKey) would write toolPath/valuePath as they
-// build, so the values are trustworthy rather than hand-declared
-
-// one widget
-ipc.sendMessage({ type: "uxmeta", data: nstructjs.writeJSON(widget.getMeta(StdUXMeta)) });
-
-// a whole screen: every tag on every widget, each named by widgetPath
-const sweep = (root: UIBase) => {
-  const out: unknown[] = [];
-  for (const w of walkWidgets(root)) {
-    for (const meta of allMeta(w)) {
-      if (meta instanceof StdUXMeta) meta.widgetPath = widgetPathOf(w);
-      out.push(nstructjs.writeJSON(meta));
-    }
-  }
-  return out;
-};
-
-// on the other end we can either call nstructjs.validateJSON and deserialize directly,
-// or write an nstructjs script to zod converter
-
-const meta = widget.getMeta<StdUXMeta<MyUXTools>>(StdUXMeta)!;
-for (const tool of meta.tools) {
-  switch (tool.type) {
-    case "mytype":
-      // tool now has inferred MyUXToolMeta
-      break;
-  }
-}
-
-// headless: no owner, so the setters buffer and the same class is the derived-tier record
-const derived = new StdUXMeta<MyUXTools>({ description: "Approve the gate", valuePath: "ui.gate" });
-*/
