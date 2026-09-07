@@ -1,6 +1,8 @@
 import * as util from "../path-controller/util/util";
 import { UIBase } from "../core/ui_base";
 import { HotKey } from "../path-controller/util/simple_events";
+import { toolopRefusal } from "../path-controller/toolsys/toolop";
+import type { IToolOpConstructor, ToolOp } from "../path-controller/toolsys/toolop";
 import type { IContextBase } from "../core/context_base";
 import type { Screen } from "../screen/FrameManager";
 import type { PopupContainer } from "../screen/FrameManager_popup";
@@ -13,6 +15,33 @@ import type {
 } from "./menu_types";
 import { menuWrangler } from "./wrangler";
 
+/**
+ * The refusal for a toolpath row, or undefined when it may run. The instance is built because
+ * `canRun` is handed one — several ops answer permissively without it — and an `invoke` override
+ * that throws leaves the row enabled rather than killing the menu.
+ */
+function toolpathRefusal<CTX extends IContextBase>(
+  ctx: CTX,
+  toolpath: string
+): string | undefined | Promise<string | undefined> {
+  let cls: IToolOpConstructor;
+  let toolop: ToolOp | undefined;
+
+  try {
+    cls = ctx.api.parseToolPath(toolpath) as unknown as IToolOpConstructor;
+    if (!cls) {
+      return undefined;
+    }
+    toolop = ctx.api.createTool(ctx, toolpath) as unknown as ToolOp;
+  } catch (error: unknown) {
+    util.print_stack(error as Error);
+    console.warn("could not build " + toolpath + " to ask whether it can run");
+    return undefined;
+  }
+
+  return toolopRefusal(ctx as never, cls, toolop as never);
+}
+
 export function createMenu<CTX extends IContextBase = IContextBase>(
   ctx: CTX,
   title: string,
@@ -22,12 +51,40 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
   const menuSEP = (menu.constructor as typeof Menu).SEP;
   let id = 0;
-  const cbs: Record<string | number, () => void> = {};
+  const cbs: Record<string | number, () => unknown> = {};
+  const pending: Promise<void>[] = [];
 
   const bindCallback = (cbfunc: Function, arg: string | number) => {
     return function () {
-      cbfunc(arg);
+      return cbfunc(arg);
     };
+  };
+
+  /**
+   * Applies a refusal to a row already added. An answer that has not arrived disables the row
+   * until it does: enabling late would leave a window in which the click runs anyway.
+   */
+  const applyRefusal = (
+    itemId: string | number,
+    refusal: string | undefined | Promise<string | undefined>
+  ) => {
+    if (!(refusal instanceof Promise)) {
+      if (refusal !== undefined) {
+        menu.setItemDisabled(itemId, refusal);
+      }
+      return;
+    }
+
+    menu.setItemDisabled(itemId);
+    pending.push(
+      refusal.then((settled) => {
+        if (settled === undefined) {
+          menu.setItemEnabled(itemId);
+        } else {
+          menu.setItemDisabled(itemId, settled);
+        }
+      })
+    );
   };
 
   const doItem = (item: MenuTemplateItem) => {
@@ -57,9 +114,10 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
       }
 
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
+      applyRefusal(id, toolpathRefusal(ctx, item));
 
       cbs[id] = () => {
-        ctx.api.execTool(ctx, item);
+        return ctx.api.execTool(ctx, item);
       };
 
       id++;
@@ -94,6 +152,15 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
       menu.addItemExtra(name, id2, hotkey as string | undefined, icon, undefined, tooltip);
 
+      if (objItem.disabled) {
+        menu.setItemDisabled(id2);
+      } else if (objItem.validate) {
+        const verdict = objItem.validate(ctx);
+        if (verdict !== true) {
+          menu.setItemDisabled(id2, verdict);
+        }
+      }
+
       cbs[id2] = bindCallback(callback, id2);
     }
   };
@@ -102,8 +169,20 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
     doItem(item);
   }
 
+  if (pending.length) {
+    menu.pendingValidation = Promise.all(pending).then(() => {});
+  }
+
   menu._onselect = (id: string | number) => {
-    cbs[id]();
+    const result = cbs[id]();
+
+    // The dispatch that called this is synchronous, so a rejection here reaches nobody
+    if (result instanceof Promise) {
+      result.catch((error: unknown) => {
+        util.print_stack(error as Error);
+        console.log("Error in menu callback");
+      });
+    }
   };
 
   return menu;

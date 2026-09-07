@@ -1,4 +1,5 @@
 import type { HotKey } from "../path-controller/util/simple_events";
+import type { IContextBase } from "../core/context_base";
 import type { Menu } from "./menu";
 
 export const SEP = Symbol("MenuSep");
@@ -27,6 +28,13 @@ export type MenuTemplateEntry = {
   icon?: number;
   tooltip?: string;
   id?: string | number;
+  /** Refuses the entry outright, for a condition already known when the template is written. */
+  disabled?: boolean;
+  /**
+   * Refuses the entry with a sentence. Return `true` to allow it, or the reason it may not run,
+   * which becomes the row's tooltip. Runs once per menu build.
+   */
+  validate?: (ctx: IContextBase) => true | string;
 };
 
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */

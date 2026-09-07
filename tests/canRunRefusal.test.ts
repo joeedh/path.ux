@@ -47,6 +47,14 @@ describe("toolopRefusal", () => {
     expect(await toolopRefusal(ctx, clsOf(opAnswering({ reason: "" })))).toBeTruthy();
   });
 
+  test("stays synchronous when canRun does", () => {
+    // UI build code is synchronous, and the exec-path fold runs per frame; neither should be
+    // pushed through a microtask by a tool that answered outright
+    expect(toolopRefusal(ctx, clsOf(opAnswering(true)))).toBeUndefined();
+    expect(toolopRefusal(ctx, clsOf(opAnswering({ reason: "no" })))).toBe("no");
+    expect(toolopRefusal(ctx, clsOf(opAnswering(Promise.resolve(true))))).toBeInstanceOf(Promise);
+  });
+
   test("the default ToolOp.canRun allows", async () => {
     expect(await toolopRefusal(ctx, clsOf(class extends ToolOp {}))).toBeUndefined();
   });

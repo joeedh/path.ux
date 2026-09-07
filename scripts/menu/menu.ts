@@ -55,6 +55,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   hasSearchBox: boolean;
   textbox!: UIBase<CTX> & { text: string; onchange: (() => void) | null; parentWidget: unknown };
   _popup: PopupContainer | undefined;
+  /**
+   * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
+   * The DOM menu is live and needs no wait; a builder that snapshots the rows, as the native
+   * menu bar does, awaits this first or it captures rows still disabled by a pending answer.
+   */
+  pendingValidation: Promise<void> | undefined;
   _dropbox: DropBox | undefined;
   _onclose: ((...args: unknown[]) => void) | undefined;
   _onselect: ((id: string | number) => void) | null;

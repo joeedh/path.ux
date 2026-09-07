@@ -4,7 +4,7 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stages 1 and 2 complete. Stages 3-6 not started.
+Status: stages 1-3 complete. Stages 4-6 not started.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -106,12 +106,16 @@ happens in one place and the existing helper's contract does not move:
 
   ```ts
   /** The refusal sentence, or undefined when the tool may run. */
-  export async function toolopRefusal<CTX extends ContextLike>(
+  export function toolopRefusal<CTX extends ContextLike>(
     ctx: CTX,
     cls: IToolOpConstructor,
     toolop?: ToolOp
-  ): Promise<string | undefined>;
+  ): string | undefined | Promise<string | undefined>;
   ```
+
+  It stays synchronous when `canRun` does. Menu build code cannot await, and the fold path
+  gates per frame; forcing either through a microtask for a tool that answered outright would
+  be a cost with nothing bought. `await` reads it either way.
 
   A refusal with an empty `reason` still refuses; it yields a generic sentence rather than
   `undefined`, so an op cannot accidentally allow itself by returning `{ reason: "" }`.
@@ -566,7 +570,7 @@ parent checkout. Stages 1 and 4 touch the submodule and need the user's go-ahead
   Playwright DOM test for the widget): a disabled item does not dispatch on click or on Enter;
   arrow keys skip it; `setActive` leaves a disabled row unhighlighted; a disabled submenu row
   does not open; a menu opening on a disabled first row focuses the next enabled one.
-- **Stage 3 — template entries.** `disabled` / `validate` on `MenuTemplateEntry`, toolpath rows
+- **Stage 3 — template entries** — **done**. `disabled` / `validate` on `MenuTemplateEntry`, toolpath rows
   through `createTool` + `canRun` with the try/catch fallback, the pending-promise rule and
   `menu.pendingValidation`. Tests: a `validate` returning a string disables and titles the row; a
   toolpath whose op refuses is disabled with its reason; a promise-returning `canRun` starts
