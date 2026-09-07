@@ -14,7 +14,8 @@ unchanged in the other; see its section.
 Task 0 was found by the pressure test of task 1's plan, not by the design discussion that
 produced the rest of this file.
 
-Status: all four tasks done. Task 2 landed narrowed rather than as titled; see below.
+Status: all four tasks done. Task 2 landed in two passes, narrowed first and then in full;
+see below.
 
 <!-- toc -->
 

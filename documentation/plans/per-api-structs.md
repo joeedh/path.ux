@@ -4,8 +4,9 @@ Task 2 of [`toolsys-tasks.md`](toolsys-tasks.md): "bind tool defaults per `DataA
 of per process". The census below reframes it — after task 3 landed, neither half of the
 sketch has a live symptom, and the two halves turn out not to be independent.
 
-Status: stages 1-3 done. Stage 4 (position 3) is not planned here, but the review's case
-against it did not hold — see [Follow-ups](#follow-ups) for the corrected costs. Revised once after a
+Status: stages 1-3 done, and position 3 — which this plan argued against — landed separately
+under [`per-api-struct-tables.md`](per-api-struct-tables.md) once that argument was reviewed
+and did not hold. See [Follow-ups](#follow-ups) for the corrected costs. Revised once after a
 fresh-context pressure test, which found a third `DataAPI` the first census missed, a
 pre-existing hole in the global map, and a second job the field stage 2 wanted to delete is
 doing. See [Findings](#findings).
