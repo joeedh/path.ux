@@ -1,5 +1,6 @@
 import * as util from "../path-controller/util/util";
 import { UIBase, IconSheets, makeIconDiv, getFont, BoxBorder } from "../core/ui_base";
+import { composeTooltip } from "../core/base/ui_base_props";
 import { ZIndexes } from "../screen/constants";
 import type { IContextBase } from "../core/context_base";
 import type { CSSFont } from "../core/cssfont";
@@ -15,17 +16,6 @@ function asRefusal(reason: string | Refusal | undefined): Refusal | undefined {
     return undefined;
   }
   return typeof reason === "string" ? { reason } : reason;
-}
-
-/**
- * A refusal as one tooltip string. Menu rows have no expander yet, so the long text follows the
- * sentence rather than hiding behind one.
- */
-function refusalText(refusal: Refusal | undefined): string | undefined {
-  if (!refusal) {
-    return undefined;
-  }
-  return refusal.description ? `${refusal.reason}\n\n${refusal.description}` : refusal.reason;
 }
 
 /** Runs a menu-item callback, logging rather than propagating an exception it throws. */
@@ -55,7 +45,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
    * `UIBase.disabled`, which greys this menu's own widget instead.
    */
   rowDisabled: boolean | undefined;
-  /** Why the submenu row refused, shown in place of `tooltip`. */
+  /** Why the submenu row refused, shown above `tooltip`. */
   rowDisabledReason: string | Refusal | undefined;
   parentMenu: Menu | undefined;
   _was_clicked: boolean;
@@ -529,15 +519,11 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       dom.appendChild(hotkey_span);
     }
 
-    const ret = this.addItem(dom, id, add);
+    const ret = this.addItem(dom, id, add, tooltip || undefined);
 
     ret.hotkey = hotkey;
     ret.icon = icon;
     ret.label = text ? text : ret.innerText;
-
-    if (tooltip) {
-      ret.title = tooltip;
-    }
 
     return ret;
   }
@@ -547,8 +533,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   }
 
   /**
-   * Refuses the row, and shows `reason` in place of its tooltip. A disabled row still takes
-   * hover focus, which is how the reason gets read.
+   * Refuses the row, and shows `reason` above its tooltip. A disabled row still takes hover
+   * focus, which is how the reason gets read.
    */
   setItemDisabled(id: string | number, reason?: string | Refusal): void {
     const item = this.itemById(id);
@@ -556,12 +542,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       return;
     }
 
-    if (!item._disabled) {
-      item._enabledTitle = item.title;
-    }
-
     item._disabled = true;
-    item._disabledReason = asRefusal(reason);
+    item._refusalReason = asRefusal(reason);
     this._applyDisabled(item);
   }
 
@@ -572,7 +554,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
 
     item._disabled = false;
-    item._disabledReason = undefined;
+    item._refusalReason = undefined;
     this._applyDisabled(item);
   }
 
@@ -584,7 +566,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   _applyDisabled(item: MenuItem): void {
     item.classList.toggle("disabled", !!item._disabled);
     item.setAttribute("aria-disabled", item._disabled ? "true" : "false");
-    item.title = (item._disabled ? refusalText(item._disabledReason) : item._enabledTitle) ?? "";
+    const refusal = item._disabled ? item._refusalReason : undefined;
+    item.title = composeTooltip(refusal, item._description) ?? "";
 
     if (item === this.activeItem) {
       const key = item._disabled ? "MenuBG" : "MenuHighlight";
@@ -623,6 +606,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     // A submenu is added as the menu itself, so there is no `tooltip` argument to pass; it rides
     // on the menu instead.
     const hover = tooltip !== undefined ? tooltip : item instanceof Menu ? item.tooltip : undefined;
+    li._description = hover;
     if (hover !== undefined) {
       li.title = hover;
     }
@@ -647,14 +631,13 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
       // A submenu carries its own state, since addItem takes no per-item arguments for it
       li._disabled = item.rowDisabled;
-      li._disabledReason = asRefusal(item.rowDisabledReason);
+      li._refusalReason = asRefusal(item.rowDisabledReason);
     } else {
       li._isMenu = false;
       li.appendChild(item as HTMLElement);
     }
 
     li._id = id!;
-    li._enabledTitle = li.title;
 
     if (li._disabled) {
       this._applyDisabled(li);

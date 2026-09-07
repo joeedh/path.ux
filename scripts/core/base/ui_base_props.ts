@@ -70,19 +70,29 @@ export function resolveRefusal(elem: AnyUIBase): Refusal | undefined {
 }
 
 /**
- * The text a tooltip shows: the refusal, when the control is refusing, above its description.
- * Composed on read rather than at assignment, so flipping `disabled` needs no notification.
+ * A refusal above a description, as one tooltip string. The single authority for the ordering,
+ * shared with menu rows, which store the two halves elsewhere.
  */
-export function tooltipText(elem: AnyUIBase): string | undefined {
-  const refusal = resolveRefusal(elem);
+export function composeTooltip(
+  refusal: Refusal | undefined,
+  description: string | undefined
+): string | undefined {
   if (!refusal) {
-    return elem._description_final;
+    return description;
   }
 
   // TODO: the expander this belongs behind does not exist yet, so the long text is appended
   const full = refusal.description ? `${refusal.reason}\n\n${refusal.description}` : refusal.reason;
 
-  return elem._description_final ? `${full}\n\n${elem._description_final}` : full;
+  return description ? `${full}\n\n${description}` : full;
+}
+
+/**
+ * The text a tooltip shows: the refusal, when the control is refusing, above its description.
+ * Composed on read rather than at assignment, so flipping `disabled` needs no notification.
+ */
+export function tooltipText(elem: AnyUIBase): string | undefined {
+  return composeTooltip(resolveRefusal(elem), elem._description_final);
 }
 
 /** Re-applies the native title, which composes state the browser cannot recompute itself. */

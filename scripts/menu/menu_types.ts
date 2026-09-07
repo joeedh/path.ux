@@ -54,8 +54,8 @@ export interface MenuItem extends HTMLLIElement {
   label?: string;
   /** Refuses clicks and keyboard selection; the row still takes hover focus, to show why. */
   _disabled?: boolean;
-  /** Why the row refused, shown in place of its tooltip. */
-  _disabledReason?: Refusal;
-  /** The tooltip disabling replaced, restored when the row is enabled again. */
-  _enabledTitle?: string;
+  /** Why the row refused, shown above its description while disabled. */
+  _refusalReason?: Refusal;
+  /** The row's own tooltip, kept apart from `title` so a refusal can compose above it. */
+  _description?: string;
 }

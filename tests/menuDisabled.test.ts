@@ -3,6 +3,11 @@ import { newMenu, type Menu } from "../scripts/menu/menu";
 
 beforeAll(() => {
   (globalThis as unknown as { window: unknown }).window ||= globalThis;
+
+  // addItemExtra measures its label on a 2d context, which happy-dom does not implement
+  HTMLCanvasElement.prototype.getContext = function () {
+    return { font: "", measureText: (text: string) => ({ width: text.length * 7 }) };
+  } as unknown as HTMLCanvasElement["getContext"];
 });
 
 /** A started menu holding `labels`, plus the ids its click dispatch reports. */
@@ -34,14 +39,13 @@ describe("Menu.setItemDisabled", () => {
     expect(picked).toEqual(["save"]);
   });
 
-  test("shows the reason in place of the tooltip, and gives the tooltip back", () => {
+  test("shows the reason above the tooltip, and gives the tooltip back", () => {
     const { menu } = buildMenu(["open"]);
     const item = menu.itemById("open")!;
-    item.title = "Open a document";
-    item._enabledTitle = item.title;
+    item._description = "Open a document";
 
     menu.setItemDisabled("open", "no workspace yet");
-    expect(item.title).toBe("no workspace yet");
+    expect(item.title).toBe("no workspace yet\n\nOpen a document");
     expect(item.classList.contains("disabled")).toBe(true);
     expect(item.getAttribute("aria-disabled")).toBe("true");
 
@@ -50,17 +54,31 @@ describe("Menu.setItemDisabled", () => {
     expect(item.classList.contains("disabled")).toBe(false);
   });
 
+  test("a row with no tooltip of its own shows the reason alone", () => {
+    const { menu } = buildMenu(["open"]);
+
+    menu.setItemDisabled("open", "no workspace yet");
+    expect(menu.itemById("open")!.title).toBe("no workspace yet");
+  });
+
   test("disabling twice does not lose the original tooltip", () => {
     const { menu } = buildMenu(["open"]);
     const item = menu.itemById("open")!;
-    item.title = "Open a document";
-    item._enabledTitle = item.title;
+    item._description = "Open a document";
 
     menu.setItemDisabled("open", "first reason");
     menu.setItemDisabled("open", "second reason");
     menu.setItemEnabled("open");
 
     expect(item.title).toBe("Open a document");
+  });
+
+  test("addItemExtra's tooltip survives a disable", () => {
+    const menu = newMenu("test") as Menu;
+    menu.addItemExtra("Save", "save", undefined, -1, true, "Write the document to disk");
+
+    menu.setItemDisabled("save", "no document is open");
+    expect(menu.itemById("save")!.title).toBe("no document is open\n\nWrite the document to disk");
   });
 
   test("shows the long description under the sentence", () => {
@@ -146,11 +164,12 @@ describe("submenu rows", () => {
 
     sub.rowDisabled = true;
     sub.rowDisabledReason = "nothing to add yet";
+    sub.tooltip = "Add a node to the graph";
     parent.addItem(sub, "sub");
 
     const row = parent.itemById("sub")!;
     expect(row._disabled).toBe(true);
-    expect(row.title).toBe("nothing to add yet");
+    expect(row.title).toBe("nothing to add yet\n\nAdd a node to the graph");
 
     row.dispatchEvent(new Event("focus"));
     expect(parent._submenu).toBeUndefined();

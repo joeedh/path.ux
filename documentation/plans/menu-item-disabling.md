@@ -284,7 +284,9 @@ a crash:
 
 ### State on the item
 
-`MenuItem` (`menu_types.ts`) gains `_disabled?: boolean` and `_disabledReason?: string`. `Menu`
+`MenuItem` (`menu_types.ts`) gains `_disabled?: boolean`, `_refusalReason?: Refusal` and
+`_description?: string` — the row's own hover text, kept apart from `title` because `title` is the
+composed result. `Menu`
 gains:
 
 ```ts
@@ -296,9 +298,14 @@ isItemDisabled(id: string | number): boolean;
 Re-enabling is its own method rather than a boolean parameter, so a call site reads as what it
 does. Both mutators re-render the row immediately — they are the API a live menu uses.
 
-Rendering: a `disabled` class on the `<li>` plus `aria-disabled`, and `_disabledReason` written
-to `li.title`. The row's original tooltip is saved on the item and restored by `setItemEnabled`,
-so toggling twice does not lose it.
+Rendering: a `disabled` class on the `<li>` plus `aria-disabled`, and `li.title` recomposed from
+`composeTooltip(_refusalReason, _description)` — the same function `tooltipText` uses for a widget,
+so a row and a button order the two halves identically. `_description` is written once in
+`addItem`, from the `tooltip` argument or a submenu's own `Menu.tooltip`, so toggling twice cannot
+lose it.
+
+`addItemExtra` used to assign `ret.title` after `addItem` returned, which would have bypassed
+`_description` entirely; it now passes the tooltip through to `addItem` instead.
 
 ### The five chokepoints
 
@@ -443,7 +450,7 @@ path silently ignores every disable.
 
 The same args block already declares `tooltip` (`electron_api.ts:107`) and **never sets it**, so
 today a native row carries no hover text at all. It gains `tooltip` from
-`_disabledReason ?? li.title` — otherwise the native path ships the exact bug this plan's opening
+`li.title`, which is already the composed text — otherwise the native path ships the exact bug this plan's opening
 sentence names.
 
 That is still not enough under Electron: `initMenuBar` (`electron_api.ts:472`) has a `_menu_init`
@@ -525,8 +532,11 @@ adapter between: `UIBase.refusalReason?: Refusal | (() => Refusal | undefined)`.
 - The native path cannot recompute anything itself, so `__updateDisable` calls
   `props.refreshNativeToolTip`. That is the only notification the feature needs.
 - The refusal goes **above** the description rather than replacing it: a widget's own
-  description is still worth reading. A menu row is the other way round, because the row's
-  label already says what it does.
+  description is still worth reading. Menu rows compose the same way, through the shared
+  `composeTooltip`; an earlier draft had them replace, which was never justified by anything
+  except that a row's label is also on screen.
+- `composeTooltip` is exported from `ui_base_props.ts`, so it joins the barrel deliberately —
+  a consumer composing its own refusal text should not re-derive the ordering.
 
 ## Repos
 
