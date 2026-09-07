@@ -173,17 +173,8 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
     menu.pendingValidation = Promise.all(pending).then(() => {});
   }
 
-  menu._onselect = (id: string | number) => {
-    const result = cbs[id]();
-
-    // The dispatch that called this is synchronous, so a rejection here reaches nobody
-    if (result instanceof Promise) {
-      result.catch((error: unknown) => {
-        util.print_stack(error as Error);
-        console.log("Error in menu callback");
-      });
-    }
-  };
+  // A returned promise is caught by the dispatcher, which is the one authority for it
+  menu._onselect = (id: string | number) => cbs[id]();
 
   return menu;
 }

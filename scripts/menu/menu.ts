@@ -18,13 +18,24 @@ function asRefusal(reason: string | Refusal | undefined): Refusal | undefined {
   return typeof reason === "string" ? { reason } : reason;
 }
 
-/** Runs a menu-item callback, logging rather than propagating an exception it throws. */
-function invokeMenuCallback(cb: (id: string | number) => void, id: string | number) {
+function reportMenuCallbackError(error: unknown): void {
+  util.print_stack(error as Error);
+  console.log("Error in menu callback");
+}
+
+/**
+ * Runs a menu-item callback, logging rather than propagating what it throws. The dispatch is
+ * synchronous, so a promise it returns is caught here or nowhere.
+ */
+function invokeMenuCallback(cb: (id: string | number) => unknown, id: string | number) {
   try {
-    cb(id);
+    const result = cb(id);
+
+    if (result instanceof Promise) {
+      result.catch(reportMenuCallbackError);
+    }
   } catch (error: unknown) {
-    util.print_stack(error as Error);
-    console.log("Error in menu callback");
+    reportMenuCallbackError(error);
   }
 }
 
@@ -73,7 +84,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   pendingValidation: Promise<void> | undefined;
   _dropbox: DropBox | undefined;
   _onclose: ((...args: unknown[]) => void) | undefined;
-  _onselect: ((id: string | number) => void) | null;
+  _onselect: ((id: string | number) => unknown) | null;
   /**
    * A submenu's *own* dispatch, captured the first time a parent wraps it so that the wrapper can
    * be reinstalled on every focus without either dropping the callbacks or nesting itself. See

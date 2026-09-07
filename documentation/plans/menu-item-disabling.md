@@ -4,7 +4,7 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stages 1-3 complete, plus the widget half of the tooltip work. Stages 4-6 not started.
+Status: stages 1-4 complete, plus the widget half of the tooltip work. Stages 5-6 not started.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -251,6 +251,13 @@ So the check goes in the three **public** wrappers, before each takes the lock:
 
 `_execTool` itself stays unchecked, with a doc comment saying its callers gate and why it must
 not do so itself.
+
+`_checkCanRun` answers **synchronously whenever `canRun` does**, which is the default. That is
+load-bearing rather than an optimization: an `async` function body runs synchronously only up to
+its first `await`, so awaiting the check unconditionally would cost `execTool` its claim on the
+lock in the turn it was issued, and an `undo` issued on the next line would overtake it.
+`tests/toolstack_lock.test.ts` asserts that ordering in two places and caught it. A tool whose
+`canRun` is genuinely async gives the ordering up; nothing else does.
 
 Two consequences to state plainly:
 
@@ -507,8 +514,11 @@ Two barrels reach this work, and both must be checked against the rule in `CLAUD
 exported from any module in an `export *` chain silently becomes public API.
 
 - `toolop.ts` → `toolsys/index.ts` → `controller.ts` → `pathux.ts`. Intended additions:
-  `Refusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`. Only `toolopRefusal` reaches the
-  runtime surface; the rest are types.
+  `Refusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`. `toolopRefusal` and
+  `ToolRefusedError` reach the runtime surface; the other two are types.
+- `ui_base_props.ts` → `ui_base.ts` → `pathux.ts`. `composeTooltip` is added deliberately: a
+  consumer composing refusal text for a surface path.ux does not draw should not re-derive the
+  ordering.
 - `pathux.ts:29-33` `export *`s `menu/menu_types`, `menu/menu` and `menu/menu_ops` **directly**.
   So any helper the template work adds to `menu_ops.ts` leaks too — keep the `createTool` /
   `canRun` plumbing unexported inside the module. Intended additions here are members on existing
@@ -608,7 +618,7 @@ parent checkout. Stages 1 and 4 touch the submodule and need the user's go-ahead
   `menu.pendingValidation`. Tests: a `validate` returning a string disables and titles the row; a
   toolpath whose op refuses is disabled with its reason; a promise-returning `canRun` starts
   disabled and enables on resolve; a throwing `invoke` leaves the menu usable.
-- **Stage 4 — `ToolRefusedError` and the gate** _(submodule + parent)_. The class, the check in
+- **Stage 4 — `ToolRefusedError` and the gate** _(submodule + parent)_ — **done**. The class, the check in
   `execTool` / `execOrRedo` / `foldOrExec` with the shared private helper, `_execTool`'s doc
   comment, and the two reporting branches (`controller_abstract.ts`, and the `menu_ops.ts` /
   `invokeMenuCallback` promise fix). Tests: a refusing op throws `ToolRefusedError`; the stack is
