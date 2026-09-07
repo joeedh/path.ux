@@ -25098,7 +25098,7 @@ var init_toolsys = __esm({
 });
 
 // scripts/path-controller/toolsys/toolmacro.ts
-var MacroClasses, asyncCheck, MacroLink, ToolMacro;
+var MacroClasses, MACRO_PREFIX, asyncCheck, MacroLink, ToolMacro;
 var init_toolmacro = __esm({
   "scripts/path-controller/toolsys/toolmacro.ts"() {
     "use strict";
@@ -25107,6 +25107,7 @@ var init_toolmacro = __esm({
     init_toolop();
     init_toolregistry();
     MacroClasses = defaultRegistry.macros;
+    MACRO_PREFIX = "macro.";
     asyncCheck = async (p) => p instanceof Promise ? await p : void 0;
     MacroLink = class {
       static STRUCT = struct_default.inlineRegister(
@@ -25189,7 +25190,7 @@ var init_toolmacro = __esm({
         if (!this.tools || this.tools.length === 0) {
           return this._macro_class;
         }
-        let key = "";
+        let key = MACRO_PREFIX;
         for (const tool of this.tools) {
           key += tool.constructor.name + ":";
         }
@@ -25240,6 +25241,7 @@ var init_toolmacro = __esm({
         cls._macroTypeId = defaultRegistry.macroIdGen++;
         cls.ready = true;
         registry.macros[key] = cls;
+        registry.notifyToolPaths();
         return cls;
       }
       saveDefaultInputs() {

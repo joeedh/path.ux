@@ -7,7 +7,7 @@ binding. `ToolRegistry` keeps the stored values.
 Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
 chaining.
 
-Status: **stages 1-3 done; stages 4-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
+Status: **stages 1-4 done; stages 5-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
 substantially. Two blocking findings removed claims the plan was partly built on: the
 `ToolPropertyCache.api`/`.dstruct` bug it promised to close does not exist any more, and the
 macro-defaults policy it proposed to choose is already shipped and was described backwards.
@@ -484,7 +484,7 @@ struct (`toolregistry_second.test.ts`); the macro key being structural and uniqu
 - Cost to undo: **one release**, and the widest stage. Consumers start relying on a defaults
   path that resolves across registries.
 
-### Stage 4 — macros in the table
+### Stage 4 — macros in the table (done)
 
 - Merge `registry.macros`, filtered on `ready`.
 - Emit `macro.<key>` as the generated toolpath.

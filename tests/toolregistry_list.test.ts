@@ -34,6 +34,18 @@ const ClashA = tool("list_clash.run", 3);
 const ClashB = tool("list_clash.run", 4);
 const LateTool = tool("list_late.run", 5);
 
+/** Its own member and macro subclass, since the save below writes a value. */
+class LateStep extends ToolOp<{ count: IntProperty }> {
+  static tooldef(): ToolDef {
+    return {
+      uiname  : "Late Step",
+      toolpath: "list_late_step.run",
+      inputs  : { count: new IntProperty(1) },
+      outputs : {},
+    };
+  }
+}
+
 /** Never registered: a macro key is built from its members' class names, not their paths. */
 class MacroStep extends ToolOp<{ count: IntProperty }> {
   static tooldef(): ToolDef {
@@ -218,5 +230,66 @@ describe("the table follows what the registries hold", () => {
 
     expect(() => api.parseToolArgs("list_missing.run()")).toThrow(DataPathError);
     expect(() => api.createTool({} as never, "list_missing.run()")).toThrow(DataPathError);
+  });
+});
+
+describe("a macro reaches the table it was not in when the api was built", () => {
+  test("it resolves, and its defaults land under the reserved prefix", () => {
+    class Ctx {
+      api!: DataAPI<any>;
+      toolstack = {};
+    }
+
+    const registry = makeRegistry();
+    registry.register(LateStep);
+
+    const api = new DataAPI<any>();
+    api.registries = [registry];
+
+    const root = api.mapStruct(Ctx);
+    api.setRoot(root);
+    buildToolSysAPI(api as DataAPI, false, root, Ctx as never);
+
+    const ctx = new Ctx() as Ctx & { toolDefaults: unknown };
+    ctx.api = api;
+
+    // Built before the macro exists, so the table it lands in is already in use
+    expect(api.getValue(ctx as never, "toolDefaults.list_late_step.run.count")).toBe(1);
+
+    // _getTypeClass reads the stamp on the macro's own class, so routing one into a
+    // chosen registry means stamping ToolMacro itself
+    registry.stamp(ToolMacro as never);
+
+    let key: string;
+    let cls: ReturnType<ToolMacro<ContextLike>["_getTypeClass"]>;
+
+    try {
+      const macro = new ToolMacro<ContextLike>();
+      macro.add(new LateStep());
+
+      cls = macro._getTypeClass();
+      key = cls.tooldef().toolpath as string;
+
+      expect(key).toBe("macro.LateStep:count:");
+      expect(api.parseToolPath(key)).toBe(cls);
+
+      // A macro seeds nothing until the first save, which is what the warning says
+      macro.inputs.count.setValue(17);
+      quiet(() => macro.saveDefaultInputs());
+    } finally {
+      defaultRegistry.stamp(ToolMacro as never);
+    }
+
+    expect(registry.defaults.values.get(key)).toEqual({ count: 17 });
+    expect(cls.tooldef().toolpath).toBe(key);
+
+    // The reserved prefix is a node of its own, so the authored toolpaths are untouched
+    expect(api.getValue(ctx as never, "toolDefaults.list_late_step.run.count")).toBe(1);
+
+    // The leaf itself stays unreadable by path, and not because of the prefix: the
+    // resolver cannot walk a segment carrying ":", which is the macro key's own
+    // separator. Changing that separator is what would open it up
+    expect(() => api.getValue(ctx as never, `toolDefaults.${key}.count`)).toThrow(DataPathError);
+    expect(() => api.getValue(ctx as never, "toolDefaults.macro")).not.toThrow();
   });
 });

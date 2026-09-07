@@ -202,10 +202,10 @@ describe("a ToolMacro reaches its defaults through _getTypeClass", () => {
 
     const cls = macro._getTypeClass();
 
-    // The key doubles as the accessor path, so it is what a registry would have to
-    // namespace; it carries no ".", so it lands as one top-level accessor
-    expect(cls.tooldef().toolpath).toBe("MacroStep:count:");
-    expect(MacroClasses["MacroStep:count:"]).toBe(cls);
+    // The key doubles as the accessor path, and the reserved prefix is what keeps it
+    // out of the tree the authored toolpaths land in
+    expect(cls.tooldef().toolpath).toBe("macro.MacroStep:count:");
+    expect(MacroClasses["macro.MacroStep:count:"]).toBe(cls);
 
     // Stamped where it is generated, since it never passes through register() — being
     // owned by a registry and being in its class list are separate things
@@ -257,8 +257,8 @@ describe("a ToolMacro reaches its defaults through _getTypeClass", () => {
     const single = new ToolMacro<ContextLike>();
     single.add(new SecondStep());
 
-    expect(pair._getTypeClass().tooldef().toolpath).toBe("FirstStep:SecondStep:count:");
-    expect(single._getTypeClass().tooldef().toolpath).toBe("SecondStep:count:");
+    expect(pair._getTypeClass().tooldef().toolpath).toBe("macro.FirstStep:SecondStep:count:");
+    expect(single._getTypeClass().tooldef().toolpath).toBe("macro.SecondStep:count:");
     expect(single._getTypeClass()).not.toBe(pair._getTypeClass());
 
     pair.inputs.count.setValue(55);
@@ -642,11 +642,11 @@ describe("macro defaults are macro-scoped, seeded from the member's own toolpath
     expect("count" in linked.inputs).toBe(false);
 
     // The key is built from the macro's inputs, so an unlinked property leaves it
-    expect(linked._getTypeClass().tooldef().toolpath).toBe("LinkSource:LinkTarget:");
+    expect(linked._getTypeClass().tooldef().toolpath).toBe("macro.LinkSource:LinkTarget:");
 
     linked.inputs.count?.setValue(31);
     recordWarnings(() => linked.saveDefaultInputs());
-    expect(SavedToolDefaults.userSetMap.has("LinkSource:LinkTarget:.count")).toBe(false);
+    expect(SavedToolDefaults.userSetMap.has("macro.LinkSource:LinkTarget:.count")).toBe(false);
 
     // The same two members without the link do keep a macro-scoped value, which is what
     // makes the assertion above about connect() rather than about macros in general
@@ -654,10 +654,10 @@ describe("macro defaults are macro-scoped, seeded from the member's own toolpath
     unlinked.add(new LinkSource());
     unlinked.add(new LinkTarget());
 
-    expect(unlinked._getTypeClass().tooldef().toolpath).toBe("LinkSource:LinkTarget:count:");
+    expect(unlinked._getTypeClass().tooldef().toolpath).toBe("macro.LinkSource:LinkTarget:count:");
 
     unlinked.inputs.count.setValue(31);
     recordWarnings(() => unlinked.saveDefaultInputs());
-    expect(SavedToolDefaults.userSetMap.has("LinkSource:LinkTarget:count:.count")).toBe(true);
+    expect(SavedToolDefaults.userSetMap.has("macro.LinkSource:LinkTarget:count:.count")).toBe(true);
   });
 });
