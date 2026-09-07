@@ -293,6 +293,23 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       panel.style.marginLeft = "15px";
     }
 
+    panel.virtualize({
+      onOpen: () => {
+        this.doFolderContents(catkey, obj, container, panel, path, key, bindable);
+      },
+    });
+  }
+
+  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
+  doFolderContents(
+    catkey: CatKey,
+    obj: ThemeRecord,
+    container: Container<CTX> = this,
+    panel: PanelContents<CTX>,
+    path: string[],
+    key: string,
+    bindable = true
+  ): void {
     this.addPropMenu(panel, catkey, obj, container, path);
 
     const row = panel.row();
@@ -330,12 +347,6 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
       }
 
       placed++;
-    }
-
-    if (placed === 0) {
-      panel.remove();
-    } else {
-      panel.closed = true;
     }
   }
 
@@ -383,14 +394,7 @@ export class ThemeEditor<CTX extends IContextBase = IContextBase> extends Contai
     container: Container<CTX>,
     path: string[]
   ): void {
-    const uidata = saveUIData(panel, "theme-panel");
-
-    panel.clear();
-    this.doFolder(catkey, obj, container, panel, path);
-
-    loadUIData(panel, uidata);
-    panel.flushUpdate();
-    panel.flushSetCSS();
+    panel.rebuild();
   }
 
   /** Repaints the screen against the edited theme and reports the change. */

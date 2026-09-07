@@ -36400,7 +36400,6 @@ var init_menu = __esm({
           dom.innerHTML = item.title || (item.getAttribute("name") ?? "");
           dom._id = dom.id = "" + id;
           dom.setAttribute("class", "menu");
-          li.style["width"] = "100%";
           li.appendChild(dom);
           li._isMenu = true;
           li._menu = item;
@@ -45066,6 +45065,7 @@ function forwardContainerMethods(cls, propertyKey, keys2 = defaultForwardKeys) {
 
 // scripts/widgets/ui_panel.ts
 init_ui_base();
+init_ui_savedata();
 var UIBase6 = UIBase;
 var PackFlags3 = PackFlags;
 var PanelContents2 = class extends ColumnFrame {
@@ -45080,11 +45080,31 @@ var PanelContents2 = class extends ColumnFrame {
       this.parentPanel.closed = v;
     }
   }
+  // XXX this duplicates .panelFrame?
   get parentPanel() {
     return this.parentWidget;
   }
   remove() {
     this.parentWidget.remove();
+  }
+  virtualize({
+    onOpen,
+    onClose = () => {
+    },
+    discardEphemeral = false,
+    closePanel = true
+  }) {
+    this.parentPanel.virtualize({
+      onOpen,
+      onClose,
+      discardEphemeral,
+      closePanel
+    });
+    return this;
+  }
+  /** For virtualized panels, rebuilds the panel contents (if the panel is open). */
+  rebuild() {
+    return this.panelFrame.rebuild();
   }
   static define() {
     return {
@@ -45101,6 +45121,7 @@ var PanelFrame = class extends ColumnFrame {
   _closed;
   _state;
   _panel;
+  _virtual;
   get openCloseIcon() {
     return this._iconcheckWidget;
   }
@@ -45134,6 +45155,37 @@ var PanelFrame = class extends ColumnFrame {
     this.packflag = this.inherit_packflag = 0;
     this._closed = false;
     this.makeHeader();
+  }
+  /** For virtualized panels, rebuilds the panel contents (if the panel is open). */
+  rebuild() {
+    if (!this.closed) {
+      this.handleVirtualize("close");
+      this.handleVirtualize("open");
+      this.flushUpdate();
+      this.contents.flushUpdate();
+    }
+    return this;
+  }
+  /** Virtualize the contents, also exists in PanelContents. */
+  virtualize({
+    onOpen,
+    onClose = () => {
+    },
+    discardEphemeral = false,
+    closePanel = true
+  }) {
+    this._virtual = {
+      onOpen,
+      onClose,
+      discardEphemeral
+    };
+    if (closePanel) {
+      this.closed = true;
+    } else if (!this.closed) {
+      this.handleVirtualize();
+      this.flushUpdate();
+      this.contents.flushUpdate();
+    }
   }
   get inherit_packflag() {
     return this.contents ? this.contents.inherit_packflag & ~PackFlags3.NO_UPDATE : 0;
@@ -45388,6 +45440,25 @@ var PanelFrame = class extends ColumnFrame {
   set updateClosedContents(v) {
     this.setAttribute("update-closed-contents", v ? "true" : "false");
   }
+  handleVirtualize(action) {
+    action = action ?? (!this._state ? "open" : "close");
+    const vd = this._virtual;
+    if (!vd) {
+      return;
+    }
+    if (action === "open") {
+      vd.onOpen(this.contents);
+      if (!vd.discardEphemeral) {
+        loadUIData(this.contents, vd.ephemeral);
+      }
+    } else {
+      vd.onClose(this.contents);
+      if (!vd.discardEphemeral) {
+        vd.ephemeral = saveUIData(this.contents, "virtualized panel contents");
+      }
+      this.contents.clear();
+    }
+  }
   _setVisible(isClosed, changed) {
     changed = changed || !!isClosed !== !!this._closed;
     this._state = isClosed;
@@ -45402,6 +45473,7 @@ var PanelFrame = class extends ColumnFrame {
       this.contents.flushUpdate();
     }
     this.contents.hidden = isClosed;
+    this.handleVirtualize();
     if (this.parentWidget) {
       this.parentWidget.flushUpdate();
     } else {
@@ -63625,6 +63697,14 @@ var ThemeEditor = class extends Container3 {
       panel = container.panel(key, void 0, void 0, catkey.help);
       panel.style.marginLeft = "15px";
     }
+    panel.virtualize({
+      onOpen: () => {
+        this.doFolderContents(catkey, obj, container, panel, path, key, bindable);
+      }
+    });
+  }
+  /** Builds a panel of editors for `obj`, recursing into its sub-records. */
+  doFolderContents(catkey, obj, container = this, panel, path, key, bindable = true) {
     this.addPropMenu(panel, catkey, obj, container, path);
     const row = panel.row();
     const col1 = row.col();
@@ -63655,11 +63735,6 @@ var ThemeEditor = class extends Container3 {
       }
       placed++;
     }
-    if (placed === 0) {
-      panel.remove();
-    } else {
-      panel.closed = true;
-    }
   }
   /** Adds the "+" menu that creates a new property in `obj`. */
   addPropMenu(panel, catkey, obj, container, path) {
@@ -63687,12 +63762,7 @@ var ThemeEditor = class extends Container3 {
   }
   /** Rebuilds `panel` in place, preserving which of its sub-panels are open. */
   rebuildFolder(panel, catkey, obj, container, path) {
-    const uidata = saveUIData(panel, "theme-panel");
-    panel.clear();
-    this.doFolder(catkey, obj, container, panel, path);
-    loadUIData(panel, uidata);
-    panel.flushUpdate();
-    panel.flushSetCSS();
+    panel.rebuild();
   }
   /** Repaints the screen against the edited theme and reports the change. */
   notify(category, key, record, varKey) {

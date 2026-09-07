@@ -2,7 +2,7 @@
 //
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
-
+import type { PanelContents } from "../widgets/ui_panel";
 import * as util from "../path-controller/util/util";
 import * as units from "../core/units";
 import { FlagProperty, EnumProperty } from "../path-controller/toolsys";
@@ -1267,7 +1267,7 @@ export class Container<
     return treeviewImpl(this);
   }
 
-  panel(name: string, id?: string, packflag = 0, tooltip?: string) {
+  panel(name: string, id?: string, packflag = 0, tooltip?: string): PanelContents<CTX> {
     return panelImpl(this, name, id, packflag, tooltip);
   }
 

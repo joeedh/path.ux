@@ -19,6 +19,7 @@ import type { ThemeRecordWithVar, ThemeVarsDef } from "../scripts/core/ui_theme_
 import type { ThemeRecord } from "../scripts/core/ui_theme";
 import { ThemeEditor } from "../scripts/widgets/theme_editor";
 import "../scripts/widgets/theme_editor";
+import type { PanelFrame } from "../scripts/widgets/ui_panel";
 
 beforeAll(() => {
   // resolvePath / theme lookups touch window in node.
@@ -93,9 +94,12 @@ function makeVarEditor(
 }
 
 /** The panel the editor built for one style class, so rows elsewhere cannot match. */
-function classPanel(editor: ThemeEditor, cls: string): UIBase {
+function classPanel(editor: ThemeEditor, cls: string, openPanel = false): UIBase {
   for (const w of editor.traverse(UIBase)) {
     if (w.getAttribute("label") === cls) {
+      const panel = w as unknown as PanelFrame;
+      // pane is virtualized, open it
+      panel.closed = !openPanel;
       return w;
     }
   }
@@ -137,15 +141,13 @@ test("a slider writes the live theme and reports the change", () => {
   const changes: string[] = [];
   editor.addEventListener("change", (e) => changes.push(`${e.category}.${e.key}`));
 
-  const slider = widgets(classPanel(editor, cls), "padding")[0] as UIBase & {
+  const slider = widgets(classPanel(editor, cls, true), "padding")[0] as UIBase & {
     value: number;
-    on_change: () => void;
   };
   expect(slider).toBeTruthy();
   expect(slider.value).toBe(4);
 
   slider.value = 12;
-  slider.on_change();
 
   expect(rec.padding).toBe(12);
   expect(changes).toEqual([`${cls}.padding`]);
@@ -154,15 +156,13 @@ test("a slider writes the live theme and reports the change", () => {
 test("a checkbox writes the live theme", () => {
   const { editor, cls, rec } = makeEditor({ dashed: false });
 
-  const check = widgets(classPanel(editor, cls), "dashed")[0] as UIBase & {
+  const check = widgets(classPanel(editor, cls, true), "dashed")[0] as UIBase & {
     value: boolean;
-    on_change: () => void;
   };
   expect(check).toBeTruthy();
   expect(check.value).toBe(false);
 
   check.value = true;
-  check.on_change();
 
   expect(rec.dashed).toBe(true);
 });
@@ -175,12 +175,11 @@ test("editing one slot of a variable updates every slot reading it", () => {
   const changes: (string | undefined)[] = [];
   editor.addEventListener("change", (e) => changes.push(e.varKey));
 
-  const panel = classPanel(editor, cls);
-  const inner = widgets(panel, "inner")[0] as UIBase & { value: number; on_change: () => void };
+  const panel = classPanel(editor, cls, true);
+  const inner = widgets(panel, "inner")[0] as UIBase & { value: number };
   const outer = widgets(panel, "outer")[0] as UIBase & { value: number };
 
   inner.value = 9;
-  inner.on_change();
 
   expect(rec.inner).toBe(9);
   expect(rec.outer).toBe(9);
@@ -208,12 +207,11 @@ test("handing the editor a var theme after init rebuilds its rows", () => {
   editor._init();
   editor.setVarTheme(varTheme, { ...vars });
 
-  const panel = classPanel(editor, cls);
-  const inner = widgets(panel, "inner")[0] as UIBase & { value: number; on_change: () => void };
+  const panel = classPanel(editor, cls, true);
+  const inner = widgets(panel, "inner")[0] as UIBase & { value: number };
   const outer = widgets(panel, "outer")[0] as UIBase & { value: number };
 
   inner.value = 7;
-  inner.on_change();
 
   expect(outer.value).toBe(7);
 });
@@ -228,7 +226,7 @@ test("slots on one font variable hold independent copies", () => {
 
   expect(rec.TitleText).not.toBe(rec.DefaultText);
 
-  boundWidget(classPanel(editor, cls), "obj.size").setValue(22);
+  boundWidget(classPanel(editor, cls, true), "obj.size").setValue(22);
 
   expect((rec.TitleText as CSSFont).size).toBe(22);
   expect((rec.DefaultText as CSSFont).size).toBe(22);
@@ -245,14 +243,12 @@ test("a refreshed sibling row does not write back", () => {
   let writes = 0;
   editor.addEventListener("change", () => writes++);
 
-  const inner = widgets(classPanel(editor, cls), "inner")[0] as UIBase & {
+  const inner = widgets(classPanel(editor, cls, true), "inner")[0] as UIBase & {
     value: number;
-    on_change: () => void;
   };
 
   for (let i = 0; i < 3; i++) {
     inner.value = 10 + i;
-    inner.on_change();
   }
 
   expect(writes).toBe(3);
@@ -343,7 +339,7 @@ test("a font field writes a whole new font rather than mutating the live one", (
   const before = new CSSFont({ size: 14, color: "black" });
   const { editor, cls, rec } = makeEditor({ DefaultText: before });
 
-  boundWidget(classPanel(editor, cls), "obj.size").setValue(20);
+  boundWidget(classPanel(editor, cls, true), "obj.size").setValue(20);
 
   const after = rec.DefaultText as CSSFont;
   expect(after).toBeInstanceOf(CSSFont);

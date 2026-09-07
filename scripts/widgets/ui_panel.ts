@@ -5,10 +5,12 @@ import { ColumnFrame, RowFrame } from "../core/ui_containers";
 import { forwardContainerMethods } from "../core/ui_forward";
 import { IconCheck } from "./ui_widgets";
 import { CSSFont } from "../core/cssfont";
+import { saveUIData, loadUIData } from "../core/base/ui_savedata";
 
 const UIBase = ui_base.UIBase;
 const PackFlags = ui_base.PackFlags;
 
+/** This is the widget returned by container.panel, access the panel itself with .panelFrame. */
 export class PanelContents<CTX extends IContextBase = IContextBase> extends ColumnFrame<
   CTX,
   "PanelContents"
@@ -31,11 +33,36 @@ export class PanelContents<CTX extends IContextBase = IContextBase> extends Colu
       this.parentPanel.closed = v;
     }
   }
+  // XXX this duplicates .panelFrame?
   public get parentPanel() {
     return this.parentWidget as unknown as PanelFrame<CTX> | undefined;
   }
   remove() {
     this.parentWidget!.remove();
+  }
+  virtualize({
+    onOpen,
+    onClose = () => {},
+    discardEphemeral = false,
+    closePanel = true,
+  }: {
+    onOpen: (con: PanelContents<CTX>) => void;
+    onClose?: (con: PanelContents<CTX>) => void;
+    discardEphemeral?: boolean;
+    closePanel?: boolean;
+  }): this {
+    this.parentPanel!.virtualize({
+      onOpen,
+      onClose,
+      discardEphemeral,
+      closePanel,
+    });
+    return this;
+  }
+
+  /** For virtualized panels, rebuilds the panel contents (if the panel is open). */
+  rebuild() {
+    return this.panelFrame.rebuild();
   }
 
   static define() {
@@ -57,6 +84,16 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   _closed: boolean;
   _state: boolean | undefined;
   _panel: this;
+  _virtual?: {
+    onOpen: (con: PanelContents<CTX>) => void;
+    onClose: (con: PanelContents<CTX>) => void;
+    /**
+     * if true, ephemeral contents are discarded when the panel is closed
+     * otherwise they are preserved with saveUIData/loadUIData
+     */
+    discardEphemeral?: boolean;
+    ephemeral?: string;
+  };
 
   public get openCloseIcon() {
     return this._iconcheckWidget;
@@ -102,6 +139,43 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     this._closed = false;
 
     this.makeHeader();
+  }
+
+  /** For virtualized panels, rebuilds the panel contents (if the panel is open). */
+  rebuild(): this {
+    if (!this.closed) {
+      this.handleVirtualize("close");
+      this.handleVirtualize("open");
+      this.flushUpdate();
+      this.contents.flushUpdate();
+    }
+    return this;
+  }
+
+  /** Virtualize the contents, also exists in PanelContents. */
+  virtualize({
+    onOpen,
+    onClose = () => {},
+    discardEphemeral = false,
+    closePanel = true,
+  }: {
+    onOpen: (con: PanelContents<CTX>) => void;
+    onClose?: (con: PanelContents<CTX>) => void;
+    discardEphemeral?: boolean;
+    closePanel?: boolean;
+  }): void {
+    this._virtual = {
+      onOpen,
+      onClose,
+      discardEphemeral,
+    };
+    if (closePanel) {
+      this.closed = true;
+    } else if (!this.closed) {
+      this.handleVirtualize();
+      this.flushUpdate();
+      this.contents.flushUpdate();
+    }
   }
 
   get inherit_packflag(): number {
@@ -440,6 +514,28 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     this.setAttribute("update-closed-contents", v ? "true" : "false");
   }
 
+  private handleVirtualize(action?: "close" | "open") {
+    action = action ?? (!this._state ? "open" : "close");
+
+    const vd = this._virtual;
+    if (!vd) {
+      return;
+    }
+
+    if (action === "open") {
+      vd.onOpen(this.contents);
+      if (!vd.discardEphemeral) {
+        loadUIData(this.contents, vd.ephemeral!);
+      }
+    } else {
+      vd.onClose(this.contents);
+      if (!vd.discardEphemeral) {
+        vd.ephemeral = saveUIData(this.contents, "virtualized panel contents");
+      }
+      this.contents.clear();
+    }
+  }
+
   _setVisible(isClosed: boolean, changed: boolean) {
     changed = changed || !!isClosed !== !!this._closed;
 
@@ -458,6 +554,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
     }
 
     this.contents.hidden = isClosed;
+    this.handleVirtualize();
 
     if (this.parentWidget) {
       this.parentWidget.flushUpdate();

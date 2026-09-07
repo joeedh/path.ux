@@ -1,6 +1,6 @@
 import { UIBase } from "../ui_base";
 import type { IContextBase } from "../context_base";
-import type { PanelFrame } from "../../widgets/ui_panel";
+import type { PanelContents, PanelFrame } from "../../widgets/ui_panel";
 import type { TabContainer } from "../../widgets/ui_tabs";
 import type { TreeView } from "../../widgets/ui_treeview";
 import type { ListBox } from "../../widgets/ui_listbox";
@@ -28,7 +28,7 @@ export function panelImpl<CTX extends IContextBase, SELF extends string>(
   id?: string,
   packflag = 0,
   tooltip?: string
-) {
+): PanelContents<CTX> {
   id = id === undefined ? name : id;
 
   // XXX todo: add <CTX> after panelFrame is moved to TS

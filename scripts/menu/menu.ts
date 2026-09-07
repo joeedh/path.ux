@@ -629,7 +629,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
       dom._id = dom.id = "" + id;
       dom.setAttribute("class", "menu");
 
-      li.style["width"] = "100%";
+      // No explicit width: the column flex ul already stretches every row to its content
+      // width, and 100% under content-box would add .menuitem's padding on top of that.
       li.appendChild(dom);
 
       li._isMenu = true;

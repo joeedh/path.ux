@@ -5,7 +5,7 @@ const PTOT = 2;
 
 /**
 
- Saves UI layout data, like panel layouts, active tabs, etc.
+ Saves "euphemeral" UI layout data, like panel layouts, active tabs, etc.
  Uses the UIBase.prototype.[save/load]Data interface.
 
  Note that this is error-tolerant.
@@ -78,6 +78,12 @@ export function saveUIData<CTX extends IContextBase = IContextBase>(
   });
 }
 
+/**
+ * Loads "ephemeral" UI layout data previously saved with saveUIData.
+ * Uses the UIBase.prototype.[save/load]Data interface.
+ *
+ * Note: this is error-tolerant.
+ */
 export function loadUIData<CTX extends IContextBase = IContextBase>(
   node: UIBase<CTX>,
   buf: string | null | undefined
