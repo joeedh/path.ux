@@ -1,6 +1,7 @@
 import * as util from "../../path-controller/util/util";
 import cconst from "../../config/const";
 import { haveModal } from "../../path-controller/util/simple_events";
+import * as props from "./ui_base_props";
 import type { ToolTipState } from "./ui_base_types";
 import type { UIBase } from "../ui_base";
 
@@ -104,11 +105,11 @@ export function updateToolTipHandlers(elem: AnyUIBase): void {
 }
 
 export function updateToolTips(elem: AnyUIBase): void {
-  if (
-    elem._description_final === undefined ||
-    elem._description_final === null ||
-    elem._description_final.trim().length === 0
-  ) {
+  // Composed on read, so a control that became disabled since its description was set still
+  // states why, and one whose only text is a refusal gets a tooltip at all
+  const text = props.tooltipText(elem);
+
+  if (text === undefined || text === null || text.trim().length === 0) {
     return;
   }
 
@@ -148,11 +149,9 @@ export function updateToolTips(elem: AnyUIBase): void {
 
   ok = ok && !haveModal();
   ok = ok && screen.pickElement(x, y) === elem;
-  ok = ok && !!elem._description_final;
-
   if (ok) {
     const _ToolTip = window._ToolTip;
-    elem._tooltip_ref = _ToolTip.show(elem._description_final!, elem.ctx.screen, x, y);
+    elem._tooltip_ref = _ToolTip.show(text, elem.ctx.screen, x, y);
   } else {
     if (elem._tooltip_ref) {
       elem._tooltip_ref.remove();

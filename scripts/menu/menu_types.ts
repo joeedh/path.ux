@@ -1,4 +1,5 @@
 import type { HotKey } from "../path-controller/util/simple_events";
+import type { Refusal } from "../path-controller/toolsys/toolop";
 import type { IContextBase } from "../core/context_base";
 import type { Menu } from "./menu";
 
@@ -34,7 +35,7 @@ export type MenuTemplateEntry = {
    * Refuses the entry with a sentence. Return `true` to allow it, or the reason it may not run,
    * which becomes the row's tooltip. Runs once per menu build.
    */
-  validate?: (ctx: IContextBase) => true | string;
+  validate?: (ctx: IContextBase) => true | string | Refusal;
 };
 
 /** Old array form; [label, hotkey?:string|HotKey, icon?:number, tooltip?:string id?:any */
@@ -54,7 +55,7 @@ export interface MenuItem extends HTMLLIElement {
   /** Refuses clicks and keyboard selection; the row still takes hover focus, to show why. */
   _disabled?: boolean;
   /** Why the row refused, shown in place of its tooltip. */
-  _disabledReason?: string;
+  _disabledReason?: Refusal;
   /** The tooltip disabling replaced, restored when the row is enabled again. */
   _enabledTitle?: string;
 }

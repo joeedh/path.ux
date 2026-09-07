@@ -63,6 +63,20 @@ describe("Menu.setItemDisabled", () => {
     expect(item.title).toBe("Open a document");
   });
 
+  test("shows the long description under the sentence", () => {
+    const { menu } = buildMenu(["group"]);
+
+    menu.setItemDisabled("group", {
+      reason     : "this graph is a group instance",
+      description: "Group instances take value edits only.",
+    });
+
+    // No expander exists yet, so the long text follows the sentence
+    expect(menu.itemById("group")!.title).toBe(
+      "this graph is a group instance\n\nGroup instances take value edits only."
+    );
+  });
+
   test("isItemDisabled answers false for a row that is not there", () => {
     const { menu } = buildMenu(["open"]);
 

@@ -4,7 +4,7 @@ Gives a menu item a disabled state, and gives `ToolOp.canRun` somewhere to put t
 explaining why it said no. The two are one feature: a greyed control that will not say why is
 the same bug as a hidden one.
 
-Status: stages 1-3 complete. Stages 4-6 not started.
+Status: stages 1-3 complete, plus the widget half of the tooltip work. Stages 4-6 not started.
 
 Revised once, after a fresh-context pressure test. See [Findings](#findings) for the disposition
 of each result, including the three the review got wrong.
@@ -38,6 +38,7 @@ of each result, including the three the review got wrong.
 - [Scope and limits](#scope-and-limits)
 - [What deliberately does not change](#what-deliberately-does-not-change)
 - [Public API added to the barrels](#public-api-added-to-the-barrels)
+  - [The widget half](#the-widget-half)
 - [Repos](#repos)
 - [Risk](#risk)
 - [Cost to undo](#cost-to-undo)
@@ -74,12 +75,15 @@ window in which refusals are silent. The stage order below resolves that.
 In `scripts/path-controller/toolsys/toolop.ts`:
 
 ```ts
-/** A refusal from `canRun`. `reason` is shown verbatim on the control that refused. */
-export interface ToolRefusal {
+/** Why something refused, written for the person who pressed the control. */
+export interface Refusal {
+  /** One sentence, shown on the control itself. */
   reason: string;
+  /** The longer explanation, shown behind the tooltip's expander. */
+  description?: string;
 }
 
-export type CanRunResult = boolean | ToolRefusal;
+export type CanRunResult = boolean | Refusal;
 ```
 
 - An object always means refused. An op would never return one to mean yes, so no `ok` field is
@@ -496,7 +500,8 @@ Two barrels reach this work, and both must be checked against the rule in `CLAUD
 exported from any module in an `export *` chain silently becomes public API.
 
 - `toolop.ts` → `toolsys/index.ts` → `controller.ts` → `pathux.ts`. Intended additions:
-  `ToolRefusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`.
+  `Refusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`. Only `toolopRefusal` reaches the
+  runtime surface; the rest are types.
 - `pathux.ts:29-33` `export *`s `menu/menu_types`, `menu/menu` and `menu/menu_ops` **directly**.
   So any helper the template work adds to `menu_ops.ts` leaks too — keep the `createTool` /
   `canRun` plumbing unexported inside the module. Intended additions here are members on existing
@@ -504,6 +509,24 @@ exported from any module in an `export *` chain silently becomes public API.
 
 Verify per `CLAUDE.md` by diffing the sorted `Object.keys()` of the built `dist/pathux.js`
 against a pre-change baseline.
+
+### The widget half
+
+`Refusal` is the shape a widget holds as well, so an op's answer reaches a tooltip with no
+adapter between: `UIBase.refusalReason?: Refusal | (() => Refusal | undefined)`.
+
+- The tooltip is composed **on read**, in `props.tooltipText`, not when the fields are set.
+  Composing at assignment left two bugs standing: a control that sets its description once at
+  build and flips `disabled` per state — every command-backed button — showed the enabled
+  tooltip while disabled, and a thunk was called on every assignment rather than at hover.
+- `updateToolTips` reads `tooltipText` rather than `_description_final`, which also gives a
+  tooltip to a control whose only text is a refusal — an icon button with no description used
+  to hover silently.
+- The native path cannot recompute anything itself, so `__updateDisable` calls
+  `props.refreshNativeToolTip`. That is the only notification the feature needs.
+- The refusal goes **above** the description rather than replacing it: a widget's own
+  description is still worth reading. A menu row is the other way round, because the row's
+  label already says what it does.
 
 ## Repos
 

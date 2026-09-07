@@ -1,4 +1,5 @@
 import cconst from "../../config/const";
+import type { Refusal } from "../../path-controller/toolsys/toolop";
 import type { UIBase } from "../ui_base";
 
 type AnyUIBase = UIBase<any, any, any>;
@@ -53,8 +54,46 @@ export function setDescription(elem: AnyUIBase, val: string | undefined | null):
     elem._description_final = elem._description;
   }
 
-  if (cconst.useNativeToolTips) {
-    elem.title = "" + elem._description_final;
+  refreshNativeToolTip(elem);
+}
+
+/**
+ * The refusal to show on `elem`, or undefined. Resolved on read: a thunk may consult state that
+ * has moved since it was assigned, and a control that is not disabled states no refusal at all.
+ */
+export function resolveRefusal(elem: AnyUIBase): Refusal | undefined {
+  if (!elem.disabled || elem._refusalReason === undefined) {
+    return undefined;
+  }
+
+  return typeof elem._refusalReason === "function" ? elem._refusalReason() : elem._refusalReason;
+}
+
+/**
+ * The text a tooltip shows: the refusal, when the control is refusing, above its description.
+ * Composed on read rather than at assignment, so flipping `disabled` needs no notification.
+ */
+export function tooltipText(elem: AnyUIBase): string | undefined {
+  const refusal = resolveRefusal(elem);
+  if (!refusal) {
+    return elem._description_final;
+  }
+
+  // TODO: the expander this belongs behind does not exist yet, so the long text is appended
+  const full = refusal.description ? `${refusal.reason}\n\n${refusal.description}` : refusal.reason;
+
+  return elem._description_final ? `${full}\n\n${elem._description_final}` : full;
+}
+
+/** Re-applies the native title, which composes state the browser cannot recompute itself. */
+export function refreshNativeToolTip(elem: AnyUIBase): void {
+  if (!cconst.useNativeToolTips) {
+    return;
+  }
+
+  const text = tooltipText(elem);
+  if (text !== undefined) {
+    elem.title = "" + text;
   }
 }
 

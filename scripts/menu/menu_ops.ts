@@ -2,7 +2,7 @@ import * as util from "../path-controller/util/util";
 import { UIBase } from "../core/ui_base";
 import { HotKey } from "../path-controller/util/simple_events";
 import { toolopRefusal } from "../path-controller/toolsys/toolop";
-import type { IToolOpConstructor, ToolOp } from "../path-controller/toolsys/toolop";
+import type { IToolOpConstructor, Refusal, ToolOp } from "../path-controller/toolsys/toolop";
 import type { IContextBase } from "../core/context_base";
 import type { Screen } from "../screen/FrameManager";
 import type { PopupContainer } from "../screen/FrameManager_popup";
@@ -23,7 +23,7 @@ import { menuWrangler } from "./wrangler";
 function toolpathRefusal<CTX extends IContextBase>(
   ctx: CTX,
   toolpath: string
-): string | undefined | Promise<string | undefined> {
+): Refusal | undefined | Promise<Refusal | undefined> {
   let cls: IToolOpConstructor;
   let toolop: ToolOp | undefined;
 
@@ -66,7 +66,7 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
    */
   const applyRefusal = (
     itemId: string | number,
-    refusal: string | undefined | Promise<string | undefined>
+    refusal: Refusal | undefined | Promise<Refusal | undefined>
   ) => {
     if (!(refusal instanceof Promise)) {
       if (refusal !== undefined) {

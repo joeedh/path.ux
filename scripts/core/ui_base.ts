@@ -63,6 +63,7 @@ import { EventCBSymbol } from "./base/ui_element_registry";
 export { theme } from "./ui_theme";
 
 import cconst from "../config/const";
+import type { Refusal } from "../path-controller/toolsys/toolop";
 
 window.__cconst = cconst;
 
@@ -220,7 +221,9 @@ export class UIBase<
   _disdata: DisableData | undefined;
   // will be set later
   _ctx: CTX = undefined as unknown as CTX;
+  /** Drives tooltips; see props.setDescription or the description getters/setters. */
   _description: string | undefined;
+  _refusalReason: Refusal | (() => Refusal | undefined) | undefined;
   _init_done!: boolean;
   __background?: string;
   _flashtimer?: number;
@@ -402,6 +405,20 @@ export class UIBase<
 
   set description(val) {
     props.setDescription(this, val);
+  }
+
+  /**
+   * Why this control refuses, shown above its description while it is disabled. A thunk is
+   * resolved when the tooltip is built rather than when it is assigned, so it may read state
+   * that changes after the control is set up.
+   */
+  get refusalReason() {
+    return this._refusalReason;
+  }
+
+  set refusalReason(val) {
+    this._refusalReason = val;
+    props.refreshNativeToolTip(this);
   }
 
   get background() {
@@ -795,6 +812,9 @@ export class UIBase<
 
   __updateDisable(val: boolean): void {
     modal.updateDisable(this, val);
+
+    // The refusal only shows while disabled, so the native title changes with this
+    props.refreshNativeToolTip(this);
   }
 
   on_disabled(): void {}

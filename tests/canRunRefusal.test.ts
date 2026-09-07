@@ -30,16 +30,29 @@ describe("toolopRefusal", () => {
 
   test("returns the sentence a refusal carries", async () => {
     const cls = clsOf(opAnswering({ reason: "the graph is a group instance" }));
-    expect(await toolopRefusal(ctx, cls)).toBe("the graph is a group instance");
+    expect(await toolopRefusal(ctx, cls)).toEqual({ reason: "the graph is a group instance" });
   });
 
   test("returns the sentence through a promise", async () => {
     const cls = clsOf(opAnswering(Promise.resolve({ reason: "still loading" })));
-    expect(await toolopRefusal(ctx, cls)).toBe("still loading");
+    expect(await toolopRefusal(ctx, cls)).toEqual({ reason: "still loading" });
   });
 
   test("a bare false refuses with a stand-in sentence", async () => {
     expect(await toolopRefusal(ctx, clsOf(opAnswering(false)))).toBeTruthy();
+  });
+
+  test("carries the long description alongside the sentence", async () => {
+    const cls = clsOf(
+      opAnswering({
+        reason: "the graph is a group instance",
+        description: "Group instances take value edits only.",
+      })
+    );
+    expect(await toolopRefusal(ctx, cls)).toEqual({
+      reason     : "the graph is a group instance",
+      description: "Group instances take value edits only.",
+    });
   });
 
   test("an empty reason refuses rather than allowing", async () => {
@@ -51,7 +64,7 @@ describe("toolopRefusal", () => {
     // UI build code is synchronous, and the exec-path fold runs per frame; neither should be
     // pushed through a microtask by a tool that answered outright
     expect(toolopRefusal(ctx, clsOf(opAnswering(true)))).toBeUndefined();
-    expect(toolopRefusal(ctx, clsOf(opAnswering({ reason: "no" })))).toBe("no");
+    expect(toolopRefusal(ctx, clsOf(opAnswering({ reason: "no" })))).toEqual({ reason: "no" });
     expect(toolopRefusal(ctx, clsOf(opAnswering(Promise.resolve(true))))).toBeInstanceOf(Promise);
   });
 
@@ -91,7 +104,9 @@ describe("ToolMacro.canRun", () => {
       new (opAnswering({ reason: "step two says no" }))(),
       new (opAnswering({ reason: "step three also says no" }))()
     );
-    expect(await toolopRefusal(ctx, clsOf(ToolMacro), macro)).toBe("step two says no");
+    expect(await toolopRefusal(ctx, clsOf(ToolMacro), macro)).toEqual({
+      reason: "step two says no",
+    });
   });
 
   test("refuses when a step answers asynchronously", async () => {
@@ -99,7 +114,7 @@ describe("ToolMacro.canRun", () => {
       new (opAnswering(true))(),
       new (opAnswering(Promise.resolve({ reason: "resolved late" })))()
     );
-    expect(await toolopRefusal(ctx, clsOf(ToolMacro), macro)).toBe("resolved late");
+    expect(await toolopRefusal(ctx, clsOf(ToolMacro), macro)).toEqual({ reason: "resolved late" });
   });
 
   test("allows an empty macro, and one polled without an instance", async () => {
