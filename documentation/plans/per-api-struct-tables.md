@@ -239,12 +239,24 @@ Original bullets:
 - `CLAUDE.md`'s short form rewritten to match.
 - `pnpm run gen:paths` re-run clean: 150 paths, 70 widget tags, 5 structs. (`generated/` is
   gitignored here, so nothing to commit in this repo.)
-- **Measured, as a floor rather than the desktop figure.** One api over the 7 ops a bare
-  environment registers retains 17 structs, 49 `DataPath`s and 40 `ToolProperty` copies. A
-  desktop-shaped process registers roughly 29, so scale to about 70 structs, 200 `DataPath`s
-  and 165 property copies per api — order 10² KB per open pane, matching the estimate. A heap
-  snapshot of the running app is still worth taking; this is arithmetic, not a measurement of
-  the real thing.
+- **Measured in the running desktop app**, replacing the arithmetic this bullet used to carry.
+  `pnpm vndesktop --mock`, driven over CDP in the renderer: Gen Graph panes opened with
+  `view.open(editor='gengraph' where='right')`, `Runtime.getHeapUsage` read after three
+  `HeapProfiler.collectGarbage` passes.
+- **Per pane api: 64 structs, 218 `DataPath`s, 184 `ToolProperty` copies.** Identical on all
+  seven panes opened. Comparing two panes' APIs member by member, **none** of the 184
+  properties is shared — every one is that api's own object. The extrapolated 70 / 200 / 165
+  was within about 10% on all three counts.
+- **Retention is about 80 KB per api.** 59 of the 64 structs are the `buildToolSysAPI` half,
+  which rebuilds exactly against `api.registry` from outside the app; 100 such APIs built and
+  held measure **73.8 KB each** (median of five rounds, range 67-78 KB). The five
+  `defineGraphAPI` structs add 17 members, scaling that to roughly 80 KB.
+- **The order-10² KB estimate holds, at the low end.** Measured ≈0.8 × 10² KB per open pane,
+  so the estimate is high by at most about 25% — well inside the order of magnitude it claimed.
+- **A whole Gen Graph pane costs about 690 KB**, so the struct table is roughly an eighth of
+  it. Going from one pane to seven moved the heap from 10.28 MB to 14.33 MB, 4.05 MB over six
+  opens. Individual deltas ranged 0.12-0.98 MB, so the endpoint average is the figure to quote,
+  not any single reading.
 
 Original bullets:
 
