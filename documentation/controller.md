@@ -219,14 +219,15 @@ first struct (both classes share one `DataStruct`; this is what lets `SavedToolD
 re-register). A genuine collision between _different_ auto-derived structs logs a warning and
 keeps the first registration — pass an explicit name to disambiguate.
 
-Two consequences the tool system leans on, both about registries sharing **one api**. Each
-toolpath prefix under `ctx.toolDefaults` is mapped under the bare prefix, so two `ToolRegistry`
-instances on one api holding `foo.a` and `foo.b` describe `foo` with a single struct carrying
-both — their saved values stay separate. And a registry maps its own defaults cache
-**instance** rather than `ToolPropertyCache`, under a per-registry name, because that struct's
-shape comes from the tools the instance was filled with; keying it on the class would give two
-registries on one api a single struct, which `buildAPI`'s `clear()` then empties. `api.registry`
-is a mutable field, so that pairing is reachable and the guard stays.
+The tool system leans on that aliasing. An api lists an ordered set of registries and merges
+them into one toolpath table, then builds `ctx.toolDefaults` from it: each prefix is mapped
+under its bare name, so `foo.a` and `foo.b` coming from two different registries describe
+`foo` with a single struct carrying both. Each tool's leaf is the owning registry's own value
+record, so the saved values stay separate while the tree does not.
+
+The defaults root is the api's, mapped under the name `ToolDefaults` against the api's view
+object. A registry no longer maps a defaults struct of its own; `ToolRegistry.structName`
+survives only as the registry's name in a diagnostic, such as the duplicate-toolpath error.
 
 ## Who Owns a DataStruct
 
@@ -257,9 +258,9 @@ aliasing described above, and it is the one route by which a struct has more tha
 Structs are not shared **between** APIs at all, deliberately. Until
 [`plans/per-api-struct-tables.md`](plans/per-api-struct-tables.md) they were, through
 module-level tables, and the sharing was a hazard rather than a feature: `clear()` on a struct
-an api believed it owned emptied another's paths, which is why `ToolRegistry` still maps its
-defaults cache **instance** under a per-registry name rather than keying on `ToolPropertyCache`.
-That guard is kept, because two registries can still be pointed at one api.
+an api believed it owned emptied another's paths. That is also why the tool defaults struct
+became the api's rather than each registry's — with several registries merged into one api,
+there is no per-registry struct left for a `clear()` to reach across.
 
 ## Update Notifications (subscribe / notify)
 

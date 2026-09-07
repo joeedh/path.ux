@@ -7,7 +7,7 @@ binding. `ToolRegistry` keeps the stored values.
 Continues [`tool-registry.md`](tool-registry.md), whose *Later, not here* listed parent
 chaining.
 
-Status: **stages 1-4 done; stages 5-6 outstanding.** Pressure-tested once by a fresh-context agent, and revised
+Status: **done, all six stages.** Pressure-tested once by a fresh-context agent, and revised
 substantially. Two blocking findings removed claims the plan was partly built on: the
 `ToolPropertyCache.api`/`.dstruct` bug it promised to close does not exist any more, and the
 macro-defaults policy it proposed to choose is already shipped and was described backwards.
@@ -495,7 +495,7 @@ struct (`toolregistry_second.test.ts`); the macro key being structural and uniqu
   under `macro.`.
 - Cost to undo: cheap. Nothing persists the key.
 
-### Stage 5 — pin and document the macro defaults policy
+### Stage 5 — pin and document the macro defaults policy (done)
 
 No behaviour changes here. The policy is shipped; this stage makes it legible.
 
@@ -506,7 +506,7 @@ No behaviour changes here. The policy is shipped; this stage makes it legible.
 - Stage 1's three new pins are the evidence; add the `macro.` prefix to the wording.
 - Cost to undo: free.
 
-### Stage 6 — document
+### Stage 6 — document (done)
 
 - `documentation/toolsystem.md` § Registration: the list, the merged table, the duplicate-key
   rule. **Delete the toolpath-prefix constraint**, which stage 3 removes.
@@ -532,18 +532,27 @@ No behaviour changes here. The policy is shipped; this stage makes it legible.
 
 ## Open questions
 
-1. **What is the data shape of what `ctx.toolDefaults` returns?** Preserving `get`/`set`/`has`/
-   `useDefault` is not enough: the JS-side data path walks an object, and `_buildBinding`'s
-   `"accessors."` first hop (`tooldefaults.ts:127-129`) is part of that shape. Five tests hold
-   the cache by identity. Decide before stage 3 whether the view is a new object, the cache
-   with a redirected tree, or something the api owns outright.
-2. **Does the macro notify hook build defaults accessors, or only the path table?** Stage 4's
-   "its defaults land under `macro.`" implies the former. Four `tooldefaults.test.ts`
-   assertions move either way; which four depends on the answer.
-3. **Does the merge skip classes with no own `tooldef`,** as `initPaths` does
-   (`toolregistry.ts:134-137`)? Without that filter, abstract bases enter the table and two
-   classes in one registry sharing a toolpath become a throw where they silently last-win
-   today.
+All three were settled while the stages were built. Answers, and what each cost:
+
+1. **What is the data shape of what `ctx.toolDefaults` returns?** **A new object the api owns
+   outright** — `ToolDefaultsView`, holding the prefix tree under `accessors`, so the
+   `"accessors."` first hop and the api-visible path shape are both unchanged. Keeping the tree
+   under a named property rather than on the object itself also keeps a toolpath prefix from
+   colliding with a method name. The class is not exported: the `pathux` barrel re-exports
+   `controller.ts` wholesale, so a name there becomes public API; `ToolDefaults` is a type
+   alias, which erases. The view's `get`/`set`/`has`/`useDefault` route to the registry that
+   owns the class, so a ctx-less lookup and a ctx one agree.
+2. **Does the macro notify hook build defaults accessors, or only the path table?** **Neither
+   exactly: it invalidates, and it does not seed.** Seeding at generation would satisfy
+   `hasDefault`, and `loadDefaults` would then overwrite the member's individual-toolpath
+   default with the seeded copy — which is the seed half of the macro policy that stage 1 had
+   just pinned. So the values still arrive on the first save. The two rows the table gated on
+   this therefore **did not** flip: `hasDefault` is still false before the first save, and
+   `set()`'s "unregistered?" warning still fires.
+3. **Does the merge skip classes with no own `tooldef`?** **Yes, inherited rather than
+   restated.** The merge reads `registry.ensurePaths()` — the registry's own `paths` Record —
+   rather than `classes`, so `initPaths`'s abstract-class filter and its last-wins-within-one-
+   registry semantics both come along for free.
 
 ## Repos
 
@@ -559,6 +568,55 @@ or `api.registry`, and both calls pass `rootCtxClass` as undefined — so the de
 installs a `ctx.toolDefaults` getter at all.
 
 ## Findings
+
+### From building it
+
+Six things the stages turned up. Two changed what shipped.
+
+**`unregister` does not drop the saved values, and stage 3's bullet saying it should was
+declined.** A flat map keyed on toolpath *can* drop an entry, which is what the design section
+claims and all it claims. Actually doing it breaks three assertions in
+`tooldefaults.test.ts` § "unregister then re-register" — none of them listed in *What flips* —
+and with them the behaviour `setDataPathToolOp` depends on: it unregisters `DataPathSetOp` and
+re-registers a replacement, and a tool built from an unregistered class is still expected to
+carry its saved default. Keeping values across unregister is deliberate, so the capability is
+there and nothing calls it.
+
+**`register` grew `classes` without touching an already-scanned `paths`.** Pre-existing, and
+invisible while `parseToolPath` re-ran `initPaths` on every miss. The merged table reads
+`paths`, so it surfaced immediately as a tool registered after the api was built never
+resolving. `register` and `unregister` now keep the two level, which also removes the reason
+for the rescan.
+
+**A collision must not be a `DataPathError`.** `parseToolPath` catches those and answers
+`undefined` with a warning, so the loud failure the plan wants would have been swallowed. It is
+a plain `Error`, which is right on its own terms: a duplicate is a wiring mistake, not a path
+that fails to resolve.
+
+**The table is lazy, and invalidated rather than patched.** The plan has `register` and
+`unregister` "add or drop the one toolpath". Dropping the table and rebuilding on next read is
+simpler and strictly cheaper — a burst of registrations rebuilds once, not once each — and it
+keeps the collision scan and the merge as one thing, which was the argument against rescanning
+in the first place. An api that lists a registry it never built into cannot be notified at all,
+so a miss rebuilds before it fails.
+
+**A macro's defaults are still unreadable by datapath, and the `macro.` prefix is not why.**
+The resolver cannot walk a path segment containing `":"`, which is the macro key's own
+separator — so `ctx.toolDefaults.<macro key>.<prop>` has never resolved, before this plan or
+after it. The values land in storage and in the merged table, and the `macro.` node is
+reachable; the leaf is not. Pinned in `toolregistry_list.test.ts`. Opening it up means changing
+the key's separator, which is cheap for the reason stage 3 of `tool-registry.md` gave — nothing
+persists the key — but it is not this plan's work.
+
+**`_parsePathOverrides` reads `"::"` as the hotkey separator**, and a macro subclass's key
+embeds the subclass toolpath after exactly that. So `getToolDef` on such a key would take
+everything after it as a hotkey. Untouched here, and worth knowing before anything routes macro
+keys through `getToolDef`.
+
+Two smaller notes. Stage 1's new pins flipped at stage 4 along with the plan's own rows, since
+the `macro.` prefix reaches `userSetMap` keys — expected, and they moved with the listed rows.
+And `pnpm run markdown-toc` rewrites nested TOC bullets from `-` to `*` across every doc,
+disagreeing with what is committed; the TOC edit here was made by hand instead.
 
 ### From the fresh-context pressure test
 

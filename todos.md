@@ -30,7 +30,7 @@ _map_structs going per-api.
 [x]: move ToolClasses/ToolPaths/MacroClasses onto a ToolRegistry with the
 module globals as its default instance, per
 documentation/plans/tool-registry.md (task 3).
-[ ]: give ModelInterface an ordered list of registries plus a merged
+[x]: give ModelInterface an ordered list of registries plus a merged
 toolpath table, move the tool-defaults binding onto the api, and pin and
 document the macro defaults policy, per
 documentation/plans/per-api-tool-tables.md.

@@ -24,7 +24,6 @@ see below.
 - [Task 1 — fold `DataPathSetOp` writes instead of replaying them](#task-1--fold-datapathsetop-writes-instead-of-replaying-them)
 - [Task 2 — bind tool defaults per `DataAPI` instead of per process](#task-2--bind-tool-defaults-per-dataapi-instead-of-per-process)
 - [Task 3 — a `ToolRegistry` object, with the module globals as its default instance](#task-3--a-toolregistry-object-with-the-module-globals-as-its-default-instance)
-
 <!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
@@ -106,25 +105,23 @@ planned from.
 Rewritten after task 3 landed, which settled one of its questions and did one half of its
 fix.
 
-Two things are still broken, and they are independent of each other.
+Two things were broken when this was written. **Both are fixed**, and the description below
+is kept only because it is what the task was planned from — read it as history, not as a
+census of the code.
 
-**The cache's api/dstruct fields are last-writer-wins.**
+**The cache's api/dstruct fields were last-writer-wins.** `_buildAccessors` assigned
+`this.api` and `this.dstruct` on every call, so the last `buildToolSysAPI` won and a tool
+registered afterwards got accessors in that api only. Fixed by the per-registry `_builtAPIs`
+list, which `updateDefaults` iterates: a cache reaches every api it was built into. The two
+fields no longer exist, and neither does the accessor tree — under
+[`per-api-tool-tables.md`](per-api-tool-tables.md) the binding belongs to the api and
+`ToolPropertyCache` is storage alone.
 
-- `ToolPropertyCache._buildAccessors` (`toolsys/tooldefaults.ts:42-43`) assigns `this.api`
-  and `this.dstruct` on every call, so the last `buildToolSysAPI` wins. Two `DataAPI`s
-  sharing one registry — which is what the desktop app does, both on `defaultRegistry` —
-  means the second silently takes the binding from the first.
-- The knock-on: `ToolOp.register` reaches `ToolRegistry.updateDefaults(cls)` with no
-  arguments, which falls back to those two fields (`toolsys/toolregistry.ts:167-172`), so a
-  tool registered after both builds gets accessors in the second API only.
-- `ToolPropertyCache.set`'s recovery path (`tooldefaults.ts:182`) rebuilds through the same
-  two fields, so a tool saving a default writes through whichever API built last.
-
-**`mapStruct` is still keyed on the class object, module-globally.** Two `DataAPI`s share
-one `DataStruct` for any model class either of them maps, and `_addClass` only pushes it
-onto the mapping API's `structs`. This is the bigger and riskier half: `resolvePath` leans
-on the global map covering for an API that never mapped a class, so making it per-API
-changes what `getStruct(cls)` answers. Nothing outside the defaults binding was fixed.
+**`mapStruct` was keyed on the class object, module-globally**, so two `DataAPI`s shared one
+`DataStruct` for any class either mapped. Fixed by
+[`per-api-struct-tables.md`](per-api-struct-tables.md): both tables live on the api, and an
+api that never mapped a class gets a `DataPathError` naming it rather than someone else's
+struct.
 
 **Settled by task 3, no longer open here:** saved default _values_ are shared, one
 `ToolPropertyCache` per registry. The question was whether they should be per-API (two graph

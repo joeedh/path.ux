@@ -503,15 +503,26 @@ class Tool2 extends Tool1<{
 module exports `ToolClasses`, `ToolPaths`, `MacroClasses` and `SavedToolDefaults` are that
 registry's own tables by identity — writing to one writes to `defaultRegistry`.
 
-A subsystem that needs its own tool namespace builds a `ToolRegistry` and assigns it to
-`api.registry`; everything reached through `ctx.api` then resolves against it. Because a
-`ToolOp` constructor has no ctx, `register` also stamps the registry on the class, and
-subclasses inherit that through the static prototype chain.
+A subsystem that needs its own tool namespace builds a `ToolRegistry` and lists it in
+`api.registries`, an ordered list so it keeps the built-ins; `api.registry` is an alias for
+the first entry. The api merges the list into `api.toolPaths`, and everything reached through
+`ctx.api` is one lookup in that. Because a `ToolOp` constructor has no ctx, `register` also
+stamps the registry on the class, and subclasses inherit that through the static prototype
+chain.
+
+**Within one api a toolpath names one tool.** Two registries offering the same one throw,
+naming both. Macro keys are the exemption and first wins, since the key is structural — and
+they carry a reserved `macro.` prefix so they cannot be mistaken for authored toolpaths.
+
+**Saved values are per registry; the binding is the api's.** `ToolPropertyCache` is a flat map
+from toolpath to values. The tree `ctx.toolDefaults.<prefix>.<tool>.<prop>` walks is built by
+the api from the merged table, each leaf being the owning registry's own record — so a prefix
+two registries share is one node, and a write still lands in the right registry.
 
 **nstructjs registers by class name globally, and saved files in consumer projects depend on
 those names.** Registries are a runtime concept; struct names are never namespaced by one.
 
-Full write-up, including the toolpath-prefix caveat:
+Full write-up, including the macro defaults policy:
 [documentation/toolsystem.md](documentation/toolsystem.md) § Registration.
 
 ### Modal drag gestures
