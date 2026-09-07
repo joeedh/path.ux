@@ -26670,7 +26670,7 @@ function setDataPathToolOp(cls) {
   }
   dpt = cls;
 }
-var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, reportstack, DataStruct, _map_struct_idgen, _map_structs, _map_structs_by_name, _dummypath, DummyIntProperty, CLS_API_KEY, CLS_API_KEY_CUSTOM, DataAPI, dpt;
+var PUTLParseError2, tk, tokens, lexer3, pathParser, parserStack, parserStackCur, reportstack, DataStruct, _dummypath, DummyIntProperty, CLS_API_KEY_CUSTOM, DataAPI, dpt;
 var init_controller = __esm({
   "scripts/path-controller/controller/controller.ts"() {
     "use strict";
@@ -27031,16 +27031,20 @@ var init_controller = __esm({
         return this;
       }
     };
-    _map_struct_idgen = 1;
-    _map_structs = {};
-    _map_structs_by_name = {};
     _dummypath = new DataPath();
     DummyIntProperty = new IntProperty();
-    CLS_API_KEY = /* @__PURE__ */ Symbol("dp_map_id");
     CLS_API_KEY_CUSTOM = /* @__PURE__ */ Symbol("dp_map_custom");
     DataAPI = class extends ModelInterface {
       rootContextStruct;
+      /** Every struct this api has mapped, in creation order. */
       structs = [];
+      /** This api's structs, keyed on the class. Weak, so a dead class takes its struct. */
+      _structsByClass = /* @__PURE__ */ new WeakMap();
+      /**
+       * Reverse index into the same structs, by the stable (mangle-proof) name
+       * `resolveStructName` derived. See `getStructByName`.
+       */
+      _structsByName = {};
       /** Message from the most recent failed resolvePath (incl. "did you mean" hints). */
       lastResolveError = void 0;
       constructor() {
@@ -27061,14 +27065,12 @@ var init_controller = __esm({
       getStructsForStruct(dpath) {
         return this.getStructsForList(dpath);
       }
-      getStructs() {
-        return this.structs;
-      }
       setRoot(sdef) {
         this.rootContextStruct = sdef;
       }
+      /** Whether `mapStruct(cls, false)` would answer here. */
       hasStruct(cls) {
-        return Object.prototype.hasOwnProperty.call(cls, CLS_API_KEY);
+        return this._structsByClass.has(cls);
       }
       getStruct(cls) {
         return this.mapStruct(cls, false);
@@ -27149,7 +27151,7 @@ var init_controller = __esm({
        * struct was registered with an nstructjs/explicit name.
        */
       getStructByName(name2) {
-        return _map_structs_by_name[name2];
+        return this._structsByName[name2];
       }
       mergeStructs(dest, src) {
         for (const m of src.members) {
@@ -27170,26 +27172,20 @@ var init_controller = __esm({
        *
        * @param cls: the class
        * @param auto_create: If true, automatically create definition if not already existing.
-       * @param useGlobalRegistry: add to the global resolveStructName registry, defaults true
        * @returns {IterableIterator<*>}
        */
-      _addClass(cls, dstruct, name2, useGlobalRegistry = true) {
-        const key = _map_struct_idgen++;
-        cls[CLS_API_KEY] = key;
+      _addClass(cls, dstruct, name2) {
         const stableName = resolveStructName(cls, name2);
         dstruct.name = stableName;
         this.structs.push(dstruct);
-        if (!useGlobalRegistry) {
-          return;
-        }
-        _map_structs[key] = dstruct;
-        const existing = _map_structs_by_name[stableName];
+        this._structsByClass.set(cls, dstruct);
+        const existing = this._structsByName[stableName];
         if (existing !== void 0 && existing !== dstruct) {
           console.warn(
             `mapStruct: duplicate struct name "${stableName}"; keeping the first registration. Pass an explicit name to mapStruct/inheritStruct to disambiguate.`
           );
         } else {
-          _map_structs_by_name[stableName] = dstruct;
+          this._structsByName[stableName] = dstruct;
         }
       }
       /* Associate cls with a DataStruct
@@ -27200,25 +27196,23 @@ var init_controller = __esm({
         cls[CLS_API_KEY_CUSTOM] = callback;
       }
       mapStruct(cls, auto_create = true, name2) {
-        let key;
-        if (!Object.prototype.hasOwnProperty.call(cls, CLS_API_KEY)) {
-          key = void 0;
+        const mapped = this._structsByClass.get(cls);
+        if (mapped !== void 0) {
+          return mapped;
+        }
+        if (!auto_create) {
+          throw new DataPathError(
+            "class does not have a struct definition: " + resolveStructName(cls, name2)
+          );
+        }
+        let dstruct;
+        if (name2 !== void 0 && this._structsByName[name2] !== void 0) {
+          dstruct = this._structsByName[name2];
         } else {
-          key = cls[CLS_API_KEY];
+          dstruct = new DataStruct(void 0, resolveStructName(cls, name2));
         }
-        if (key === void 0 && auto_create) {
-          let dstruct;
-          if (name2 !== void 0 && _map_structs_by_name[name2] !== void 0) {
-            dstruct = _map_structs_by_name[name2];
-          } else {
-            dstruct = new DataStruct(void 0, resolveStructName(cls, name2));
-          }
-          this._addClass(cls, dstruct, name2);
-          return dstruct;
-        } else if (key === void 0) {
-          throw new Error("class does not have a struct definition: " + resolveStructName(cls, name2));
-        }
-        return _map_structs[key];
+        this._addClass(cls, dstruct, name2);
+        return dstruct;
       }
       //used for tagging error messages
       pushReportContext(name2) {
@@ -32658,6 +32652,184 @@ var init_ui_icons = __esm({
   }
 });
 
+// scripts/core/base/ui_meta_tags.ts
+var metaTag, getMeta, setMeta, ensureMeta, allMeta, MetaTagSet, UXToolMeta, MyUXToolMetaExample, StdUXMeta;
+var init_ui_meta_tags = __esm({
+  "scripts/core/base/ui_meta_tags.ts"() {
+    "use strict";
+    init_nstructjs();
+    metaTag = /* @__PURE__ */ Symbol("uxMeta");
+    getMeta = (obj, ctor) => {
+      const map3 = obj[metaTag];
+      return map3?.get(ctor.metaDefine().typeName);
+    };
+    setMeta = (obj, ctor, meta) => {
+      const owner = obj;
+      let map3 = owner[metaTag];
+      if (map3 === void 0) {
+        map3 = /* @__PURE__ */ new Map();
+        owner[metaTag] = map3;
+      }
+      const key = ctor.metaDefine().typeName;
+      if (map3.has(key)) {
+        console.warn("Meta already exists for", key, meta, map3.get(key));
+      }
+      meta.owner = obj;
+      meta.onAttach?.();
+      map3.set(key, meta);
+    };
+    ensureMeta = (obj, ctor) => {
+      let existing = getMeta(obj, ctor);
+      if (!existing) {
+        existing = new ctor();
+        setMeta(obj, ctor, existing);
+      }
+      return existing;
+    };
+    allMeta = (obj) => [...obj[metaTag]?.values() ?? []];
+    MetaTagSet = class {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.MetaTagSet {
+      tags: array(abstract(IUIXMeta));
+    }`
+      );
+      onAttach() {
+        for (const tag of this.tags) {
+          tag.owner = this.owner;
+          tag.onAttach?.();
+        }
+      }
+      tags = [];
+    };
+    UXToolMeta = class {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.UXToolMeta {
+      type: string;
+      toolPath: string;
+      requirements?: string;
+    }`
+      );
+      toolPath = "";
+      /** Why the control refuses right now, or the precondition that would produce that sentence. */
+      requirements;
+      copyTo(b) {
+        b.toolPath = this.toolPath;
+        b.requirements = this.requirements;
+        return b;
+      }
+    };
+    MyUXToolMetaExample = class _MyUXToolMetaExample extends UXToolMeta {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.MyUXToolMeta {
+      supplies: array(string);
+    }`
+      );
+      type = "mytype";
+      /** Prop names whose values are read from the widget when the tool runs. */
+      supplies;
+      constructor({
+        toolPath,
+        requirements,
+        supplies
+      } = {}) {
+        super();
+        this.toolPath = toolPath ?? "";
+        this.requirements = requirements;
+        this.supplies = supplies ?? [];
+      }
+      copyTo(b) {
+        super.copyTo(b);
+        b.supplies = [...this.supplies];
+        return b;
+      }
+      copy() {
+        return this.copyTo(new _MyUXToolMetaExample());
+      }
+    };
+    StdUXMeta = class _StdUXMeta {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    StdUXMeta {
+      widgetPath?: string;
+      description?: string;
+      valuePath?: string;
+      tools: array(abstract(UXToolMeta));
+    }`
+      );
+      static metaDefine() {
+        return {
+          typeName: "meta",
+          inherits: false
+        };
+      }
+      // holds values until an owner exists; also the storage when there is no owner at all,
+      // which lets a rules module build a record headlessly
+      deserialHelper = {};
+      /**
+       * Names the widget on the wire. Filled at serialize time from the same DOM-path scheme
+       * saveUIData uses for naming, without its ephemeral-data role.
+       */
+      widgetPath;
+      // not a base UIBase property
+      tools;
+      get valuePath() {
+        return this.owner?.getAttribute?.("datapath") ?? this.deserialHelper.valuePath;
+      }
+      set valuePath(s) {
+        if (this.owner === void 0) {
+          this.deserialHelper.valuePath = s;
+          return;
+        }
+        if (s === void 0) {
+          this.owner.removeAttribute("datapath");
+        } else {
+          this.owner.setAttribute("datapath", s);
+        }
+      }
+      // tooltip
+      get description() {
+        return this.owner?.description ?? this.deserialHelper.description;
+      }
+      set description(s) {
+        if (this.owner === void 0) {
+          this.deserialHelper.description = s;
+        } else {
+          this.owner.description = s;
+        }
+      }
+      owner;
+      constructor(initialize) {
+        this.deserialHelper.description = initialize?.description;
+        this.deserialHelper.valuePath = initialize?.valuePath;
+        this.tools = initialize?.tools ?? [];
+      }
+      copyTo(b) {
+        b.widgetPath = this.widgetPath;
+        b.description = this.description;
+        b.valuePath = this.valuePath;
+        b.tools = this.tools.map((t2) => t2.copy());
+        return b;
+      }
+      copy() {
+        return this.copyTo(new _StdUXMeta());
+      }
+      onAttach() {
+        this.description = this.deserialHelper.description ?? this.description;
+        this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;
+        this.deserialHelper.description = void 0;
+        this.deserialHelper.valuePath = void 0;
+      }
+    };
+  }
+});
+
 // scripts/core/base/ui_savedata.ts
 function saveUIData(node, key) {
   if (key === void 0) {
@@ -32821,6 +32993,7 @@ var init_ui_base = __esm({
     init_ui_icons();
     init_eventdag();
     init_cssfont();
+    init_ui_meta_tags();
     init_ui_draw();
     init_ui_savedata();
     window.__cconst = const_default;
@@ -33685,10 +33858,9 @@ var init_ui_base = __esm({
         }
         return false;
       }
-      /*
-      getMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T | undefined {
+      getMeta(ctor) {
         const inherits = ctor.metaDefine().inherits ?? false;
-        let elem: UIBase | undefined = this;
+        let elem = this;
         do {
           const meta = getMeta(elem, ctor);
           if (meta) {
@@ -33696,14 +33868,14 @@ var init_ui_base = __esm({
           }
           elem = elem.parentWidget;
         } while (elem && inherits);
-        return undefined;
+        return void 0;
       }
-      setMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>, meta: T): void {
+      setMeta(ctor, meta) {
         setMeta(this, ctor, meta);
       }
-      ensureMeta<T extends IUIXMeta>(ctor: IUXMetaConstructor<T>): T {
+      ensureMeta(ctor) {
         return ensureMeta(this, ctor);
-      }*/
+      }
     };
     UIBase.PositionKey = "fixed";
     _setUIBase(UIBase);
@@ -63538,8 +63710,8 @@ var ThemeEditor = class extends Container3 {
       );
       const root = new DataStruct();
       cls._cachedDataAPI = new DataAPI();
-      cls._cachedDataAPI._addClass({}, root, void 0, false);
-      cls._cachedDataAPI._addClass(cls, st, void 0, false);
+      cls._cachedDataAPI._addClass({}, root, "ThemeObjectRoot");
+      cls._cachedDataAPI._addClass(cls, st);
       cls._cachedDataAPI.rootContextStruct = root;
       root.struct("obj", "obj", "obj", st);
     }
