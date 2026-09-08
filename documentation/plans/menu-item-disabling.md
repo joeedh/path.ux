@@ -514,9 +514,10 @@ exported from any module in an `export *` chain silently becomes public API.
 - `toolop.ts` → `toolsys/index.ts` → `controller.ts` → `pathux.ts`. Intended additions:
   `Refusal`, `CanRunResult`, `ToolRefusedError`, `toolopRefusal`. `toolopRefusal` and
   `ToolRefusedError` reach the runtime surface; the other two are types.
-- `ui_base_props.ts` reaches no barrel: `ui_base.ts` imports it as a namespace
-  (`import * as props`) rather than re-exporting it, so `composeTooltip` is shared between the
-  widget and menu code without becoming public API. Verified against the built bundle.
+- `ui_base_props.ts` reaches no barrel through `export *`: `ui_base.ts` imports it as a namespace
+  (`import * as props`) rather than re-exporting it. `pathux.ts` re-exports `composeTooltip` from
+  it by name, and nothing else; that export was added on 2026-09-07 when the desktop app's anchor
+  layer needed the ordering, after the widget half below had shipped without it.
 - `pathux.ts:29-33` `export *`s `menu/menu_types`, `menu/menu` and `menu/menu_ops` **directly**.
   So any helper the template work adds to `menu_ops.ts` leaks too — keep the `createTool` /
   `canRun` plumbing unexported inside the module. Intended additions here are members on existing
@@ -543,8 +544,9 @@ adapter between: `UIBase.refusalReason?: Refusal | (() => Refusal | undefined)`.
   description is still worth reading. Menu rows compose the same way, through the shared
   `composeTooltip`; an earlier draft had them replace, which was never justified by anything
   except that a row's label is also on screen.
-- `composeTooltip` is exported from `ui_base_props.ts`, so it joins the barrel deliberately —
-  a consumer composing its own refusal text should not re-derive the ordering.
+- `composeTooltip` is exported from `ui_base_props.ts` and re-exported by name from `pathux.ts`,
+  so a consumer composing its own refusal text does not re-derive the ordering. The barrel
+  export landed after the rest of this section, once a consumer existed.
 
 ## Repos
 

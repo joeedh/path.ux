@@ -99283,6 +99283,7 @@ init_menu();
 // scripts/pathux.ts
 init_polyfill();
 init_ui_base();
+init_ui_base_props();
 init_ui_theme_utils();
 init_cssfont();
 init_ui_theme();

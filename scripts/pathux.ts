@@ -10,6 +10,9 @@ import "./jsx/intrinsics";
 export * from "./core/datapath_registry";
 export * from "./core/widget_registry";
 export * from "./core/ui_base";
+// The one name from ui_base_props on the public surface: a consumer composing a refusal
+// above its own tooltip text must not re-derive the ordering tooltipText uses
+export { composeTooltip } from "./core/base/ui_base_props";
 export * from "./core/ui";
 export * from "./core/ui_containers";
 export * from "./core/ui_theme_utils";
