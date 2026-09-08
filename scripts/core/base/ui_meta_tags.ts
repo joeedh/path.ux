@@ -322,5 +322,5 @@ export class StdUXMeta<
     this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;
     this.deserialHelper.description = undefined;
     this.deserialHelper.valuePath = undefined;
-  }
+  };
 }

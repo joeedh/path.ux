@@ -37,7 +37,7 @@ whose `image` is either a decoded source or a thunk that produces one.
 ## Quick start
 
 ```ts
-const gallery = UIBase.createElement<AssetGallery>("assetgallery-x");
+const gallery = UIBase.constructElement<AssetGallery>("assetgallery-x", container.ctx);
 container.add(gallery);
 
 gallery.setItems(

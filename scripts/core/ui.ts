@@ -923,21 +923,22 @@ export class Container<
     return buttonImpl(this, label, cb, thisvar, id, packflag);
   }
 
-  _joinPrefix(path?: string, prefix = this.dataPrefix.trim()): string | undefined {
-    if (path === undefined) {
-      return undefined;
+  _joinPrefix<P extends string | undefined>(path: P, prefix = this.dataPrefix.trim()): P {
+    let p = path as undefined | string;
+    if (p === undefined) {
+      return undefined as P;
     }
 
-    path = path.trim();
-    if (path[0] === "/") {
-      return path;
+    p = p.trim();
+    if (p[0] === "/") {
+      return p as P;
     }
 
-    if (prefix.length > 0 && path.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
-      path = "." + path;
+    if (prefix.length > 0 && p.length > 0 && !prefix.endsWith(".") && !p.startsWith(".")) {
+      p = "." + p;
     }
 
-    return prefix + path;
+    return (prefix + p) as P;
   }
 
   colorbutton(inpath: string | undefined, packflag?: number, mass_set_path?: string) {
@@ -968,6 +969,8 @@ export class Container<
     if (inpath === undefined) {
       return undefined;
     }
+
+    inpath = this._joinPrefix(inpath);
     if (mass_set_path === undefined && this.massSetPrefix.length > 0) {
       mass_set_path = ctx.api.getPropName(ctx, inpath) as string;
     }

@@ -136,16 +136,13 @@ its borders.
 ```ts
 import { UIBase, Screen, ScreenArea, startEvents } from "pathux";
 
-const screen = UIBase.createElement("pathux-screen-x") as Screen;
-screen.ctx = myContext; //your context object
+const screen = UIBase.constructElement<Screen>("pathux-screen-x", myContext);
 document.body.appendChild(screen);
 
-const sarea = UIBase.createElement("screenarea-x") as ScreenArea;
-sarea.ctx = myContext;
+const sarea = UIBase.constructElement<ScreenArea>("screenarea-x", myContext);
 sarea.switchEditor(MyEditor); //instantiate + activate an editor
 screen.appendChild(sarea); //registers the tile, builds borders
 
-screen.checkInit();
 screen.listen(); //start the update timer (~150ms)
 screen.completeUpdate();
 ```

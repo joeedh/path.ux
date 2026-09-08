@@ -21,10 +21,10 @@ export function iconcheckImpl<CTX extends IContextBase, SELF extends string>(
 ) {
   const ret = UIBase.createElement("iconcheck-x") as IconCheck<CTX>;
   ret.icon = icon;
-  ret.description = name ?? "";
+  ret.description = description ?? "";
 
   if (inpath) {
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self._joinPrefix(inpath));
   }
 
   if (mass_set_path) {
@@ -79,7 +79,7 @@ export function checkImpl<CTX extends IContextBase, SELF extends string>(
     ret.setAttribute("mass_set_path", mass_set_path);
   }
 
-  ret.checkInit()
+  ret.checkInit();
   self.add(ret);
   return ret;
 }

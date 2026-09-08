@@ -500,7 +500,7 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
   panel — can create and embed one:
 
 ```ts
-const view = UIBase.createElement("nodegraphview-x") as NodeGraphView;
+const view = UIBase.constructElement<NodeGraphView>("nodegraphview-x", myCtx);
 view.setGraph(myGraph, "nodegraph");
 ```
 

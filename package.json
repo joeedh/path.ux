@@ -5,6 +5,12 @@
   "main": "scripts/pathux.ts",
   "index": "scripts/pathux.ts",
   "browser": "true",
+  "exports": {
+    ".": "./scripts/pathux.ts",
+    "./eslint/*": "./buildtools/eslint-rules/*.mjs",
+    "./eslint/*.mjs": "./buildtools/eslint-rules/*.mjs",
+    "./*": "./*"
+  },
   "scripts": {
     "build": "node buildtools/esbuild.mjs",
     "gen:paths": "node buildtools/gen-datapaths.mjs",

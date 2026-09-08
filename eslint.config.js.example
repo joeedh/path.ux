@@ -7,15 +7,19 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
-// Vendored as a git submodule here; from an npm install the same file sits at
-// "path.ux/buildtools/eslint-rules/prefer-construct-element.mjs".
-import preferConstructElement from "./vendor/path.ux/buildtools/eslint-rules/prefer-construct-element.mjs";
+// package.json routes "path.ux/eslint/<rule>" to the rule files, so an app that
+// depends on the package imports them by name. A trailing ".mjs" resolves too.
+import preferConstructElement from "path.ux/eslint/prefer-construct-element";
 
-// Two more consumer-facing rules ship in the same directory. Both read a
-// generated catalog and no-op when it is missing, so each needs its catalog
-// built before it reports anything -- see the rules block below.
-// import validDatapath from "./vendor/path.ux/buildtools/eslint-rules/valid-datapath.mjs";
-// import validThemeKey from "./vendor/path.ux/buildtools/eslint-rules/valid-theme-key.mjs";
+// Where path.ux is vendored without being declared as a dependency -- a bare
+// git submodule -- the subpath does not resolve, so import by relative path:
+// import preferConstructElement from "./vendor/path.ux/buildtools/eslint-rules/prefer-construct-element.mjs";
+
+// Two more consumer-facing rules ship alongside it. Both read a generated
+// catalog and no-op when it is missing, so each needs its catalog built before
+// it reports anything -- see the rules block below.
+// import validDatapath from "path.ux/eslint/valid-datapath";
+// import validThemeKey from "path.ux/eslint/valid-theme-key";
 
 export default defineConfig([
   {

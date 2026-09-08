@@ -1,7 +1,9 @@
 import js from "@eslint/js";
 import globals from "globals";
 import { quickbuild } from "@pathtx/eslint-dispatcher";
-import preferConstructElement from "./buildtools/eslint-rules/prefer-construct-element.mjs";
+// Off for this repo: the widget layer calls createElement deliberately. Uncomment
+// this and the two lines below to lint an app that consumes path.ux.
+//import preferConstructElement from "./buildtools/eslint-rules/prefer-construct-element.mjs";
 
 //import tseslint from "typescript-eslint";
 const tseslint = await quickbuild.quickBundleModule("typescript-eslint", { format: "cjs" }, true);

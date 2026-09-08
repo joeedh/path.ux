@@ -63,7 +63,7 @@ export class VectorPopupButton<CTX extends IContextBase = IContextBase> extends 
 
     popup.add(panel);
     panel.checkInit();
-    
+
     popup.button("ok", () => {
       popup.end();
     });

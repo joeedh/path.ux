@@ -519,7 +519,7 @@ export class PanelFrame<CTX extends IContextBase = IContextBase> extends ColumnF
   get isVirtual() {
     return !!this._virtual;
   }
-  
+
   private handleVirtualize(action?: "close" | "open") {
     action = action ?? (!this._state ? "open" : "close");
 

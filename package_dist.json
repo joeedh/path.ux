@@ -6,6 +6,12 @@
   "index"          : "scripts/pathux.ts",
   "types"          : "pathux.d.ts",
   "browser"        : "true",
+  "exports"        : {
+    ".": "./scripts/pathux.ts",
+    "./eslint/*": "./buildtools/eslint-rules/*.mjs",
+    "./eslint/*.mjs": "./buildtools/eslint-rules/*.mjs",
+    "./*": "./*"
+  },
   "directories": {
     "doc": "docs"
   },

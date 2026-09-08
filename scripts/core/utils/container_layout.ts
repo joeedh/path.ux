@@ -15,7 +15,7 @@ export function treeviewImpl<CTX extends IContextBase, SELF extends string>(
 ): TreeView<CTX> {
   const ret = UIBase.createElement("tree-view-x") as TreeView<CTX>;
   ret.ctx = self.ctx;
-  
+
   self._container_inherit(ret);
   ret.checkInit();
   self._add(ret);
@@ -66,7 +66,7 @@ export function rowImpl<CTX extends IContextBase, SELF extends string>(
   self._container_inherit(ret, packflag);
   ret.checkInit();
   self._add(ret);
-  
+
   ret.ctx = self.ctx;
 
   return ret;

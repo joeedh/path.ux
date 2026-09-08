@@ -292,7 +292,7 @@ export class NoteFrame<CTX extends IContextBase = IContextBase> extends RowFrame
 
     this.add(note);
     note.checkInit();
-    
+
     this.noMarginsOrPadding();
     note.noMarginsOrPadding();
 

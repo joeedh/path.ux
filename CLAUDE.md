@@ -333,6 +333,13 @@ Only a literal tag is checked; a tag computed at runtime is left alone rather th
 at. The receiver is not checked, because `createElement` is a static every subclass
 inherits and `document.createElement` leaves the widget in the same state.
 
+`package.json`'s `exports` routes `path.ux/eslint/<rule>` to
+`buildtools/eslint-rules/<rule>.mjs`, so a consuming app imports a rule by name rather than
+by a path into the checkout; a trailing `.mjs` resolves too. The map keeps a `./*`
+catch-all, because adding `exports` at all would otherwise close off the deep imports
+consumers already rely on. `package_dist.json` carries the same map, and
+`build_package_new.sh` copies the rules into the published package.
+
 ## Conventions
 
 Do not add type annotations if types can be inferred from the assignment.

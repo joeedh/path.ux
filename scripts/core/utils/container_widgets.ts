@@ -16,18 +16,12 @@ export function textboxImpl<CTX extends IContextBase, SELF extends string>(
   cb?: typeof self.on_change,
   packflag = 0
 ) {
-  let path: string | undefined;
-
-  if (inpath) {
-    path = self._joinPrefix(inpath);
-  }
-
   packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
 
   const ret = UIBase.createElement("textbox-x") as TextBox<CTX>;
 
-  if (path !== undefined) {
-    ret.setAttribute("datapath", path);
+  if (inpath !== undefined) {
+    ret.setAttribute("datapath", self._joinPrefix(inpath));
   }
 
   ret.ctx = self.ctx;
@@ -193,10 +187,8 @@ export function colorbuttonImpl<CTX extends IContextBase, SELF extends string>(
   const ret = UIBase.createElement("color-picker-button-x") as ColorPickerButton<CTX>;
 
   if (inpath !== undefined) {
-    inpath = self._joinPrefix(inpath)!;
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self._joinPrefix(inpath));
   }
-
   if (mass_set_path !== undefined) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
@@ -235,11 +227,11 @@ export function curve1dImpl<CTX extends IContextBase, SELF extends string>(
   ret.packflag |= packflag;
 
   if (inpath) {
-    inpath = self._joinPrefix(inpath)!;
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self._joinPrefix(inpath));
   }
-
-  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
 
   self.add(ret as UIBase<CTX>);
 
@@ -326,7 +318,6 @@ export function colorPickerImpl<CTX extends IContextBase, SELF extends string>(
   if (path !== undefined) {
     ret.setAttribute("datapath", path);
   }
-
   if (mass_set_path) {
     ret.setAttribute("mass_set_path", mass_set_path);
   }
@@ -362,7 +353,7 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
     ret.value = value;
   }
 
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
 
   self.add(ret);
@@ -392,7 +383,7 @@ export function viewerImpl<CTX extends IContextBase, SELF extends string>(
     ret.value = value;
   }
 
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
 
   self.add(ret);

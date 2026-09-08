@@ -313,7 +313,7 @@ export class ThemeEditorArea extends Area {
     container.button("Export Theme", () => exportThemeFile()).description =
       "Download a regenerated theme.ts with your edits";
 
-    const editor = UIBase.createElement<ThemeEditor>("theme-editor-x");
+    const editor = UIBase.constructElement<ThemeEditor>("theme-editor-x", this.ctx);
     container.add(editor);
     this.style.overflowY = "scroll";
   }

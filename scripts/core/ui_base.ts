@@ -500,17 +500,14 @@ export class UIBase<
     return registry.createElement<T>(name, internal);
   }
 
-  /** 
-   * For use with external code, calls elem.checkInit(). 
-   * Only use UIBase.createElement if you need to modify 
+  /**
+   * For use with external code, calls elem.checkInit().
+   * Only use UIBase.createElement if you need to modify
    * the element prior to its .init().
    */
-  static constructElement<T extends UIBase>(
-    name: string,
-    ctx: T['ctx']
-  ): T {
+  static constructElement<T extends UIBase>(name: string, ctx: T["ctx"]): T {
     const elem = registry.createElement<T>(name, false);
-    elem.ctx = ctx
+    elem.ctx = ctx;
     elem.checkInit();
     return elem;
   }
