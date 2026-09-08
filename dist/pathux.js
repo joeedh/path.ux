@@ -1,6 +1,6 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __knownSymbol = (name2, symbol) => (symbol = Symbol[name2]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name2);
+var __knownSymbol = (name, symbol) => (symbol = Symbol[name]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name);
 var __typeError = (msg) => {
   throw TypeError(msg);
 };
@@ -19,8 +19,8 @@ var __esm = (fn, res, err) => function __init() {
   }
 };
 var __export = (target, all) => {
-  for (var name2 in all)
-    __defProp(target, name2, { get: all[name2], enumerable: true });
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __using = (stack, value, async) => {
   if (value != null) {
@@ -1426,8 +1426,8 @@ function StructParser() {
     "static_array",
     "optional"
   ]);
-  function tk2(name2, re, func, example) {
-    return new tokdef(name2, re, func, example);
+  function tk2(name, re, func, example) {
+    return new tokdef(name, re, func, example);
   }
   const tokens2 = [
     tk2(
@@ -1668,7 +1668,7 @@ function StructParser() {
     }
   }
   function p_Field(p) {
-    const name2 = p_ID_or_num(p);
+    const name = p_ID_or_num(p);
     const loc = getLoc(p);
     let is_opt = false;
     const next = p.peeknext();
@@ -1698,7 +1698,7 @@ function StructParser() {
       comment = tok.value;
       p.next();
     }
-    return { name: name2, type, get, comment, loc };
+    return { name, type, get, comment, loc };
   }
   const getLoc = (p) => {
     return {
@@ -1707,8 +1707,8 @@ function StructParser() {
     };
   };
   function p_Struct(p) {
-    const name2 = p.expect("ID", "struct name");
-    const st = new NStruct(name2, getLoc(p));
+    const name = p.expect("ID", "struct name");
+    const st = new NStruct(name, getLoc(p));
     let tok = p.peeknext();
     if (tok && tok.type === "ID" && tok.value === "id") {
       p.next();
@@ -2030,10 +2030,10 @@ function validateJSON(manager22, val, obj, field, type, instance, _abstractKey) 
   return StructFieldTypeMap[type.type].validateJSON(manager22, val, obj, field, type, instance, _abstractKey);
 }
 function unpack_field(manager22, data, type, uctx) {
-  let name2;
+  let name;
   if (debug) {
-    name2 = StructFieldTypeMap[type.type].define().name;
-    packer_debug_start("R " + name2);
+    name = StructFieldTypeMap[type.type].define().name;
+    packer_debug_start("R " + name);
   }
   let ret = StructFieldTypeMap[type.type].unpack(manager22, data, type, uctx);
   if (debug) {
@@ -2134,10 +2134,10 @@ function fmt_type(type) {
   return StructFieldTypeMap[type.type].format(type);
 }
 function do_pack(manager22, data, val, obj, field, type) {
-  let name2;
+  let name;
   if (debug) {
-    name2 = StructFieldTypeMap[type.type !== void 0 ? type.type : type].define().name;
-    packer_debug_start("W " + name2);
+    name = StructFieldTypeMap[type.type !== void 0 ? type.type : type].define().name;
+    packer_debug_start("W " + name);
   }
   let typeid;
   if (typeof type !== "number") {
@@ -2173,10 +2173,10 @@ function formatArrayJson(manager22, val, obj, field, type, type2, instance, tlvl
   return s;
 }
 function arrayBufferElem(type) {
-  const name2 = type.data.type;
-  const elem = arrayBufferElemTypes[name2];
+  const name = type.data.type;
+  const elem = arrayBufferElemTypes[name];
   if (!elem) {
-    throw new Error("invalid arraybuffer element type " + name2);
+    throw new Error("invalid arraybuffer element type " + name);
   }
   return elem;
 }
@@ -2214,7 +2214,7 @@ function setStructEval(val) {
   structEval = val;
 }
 function buildJSONParser() {
-  const tk2 = (name2, re, func, example) => new tokdef(name2, re, func, example);
+  const tk2 = (name, re, func, example) => new tokdef(name, re, func, example);
   let parse;
   const nint = "[+-]?[0-9]+";
   const nhex = "[+-]?0x[0-9a-fA-F]+";
@@ -2413,12 +2413,12 @@ function updateDEBUG() {
     }
   }
 }
-function stableStructId(name2) {
+function stableStructId(name) {
   let hash = 2166136261;
-  for (let i = 0; i < name2.length; i++) {
-    hash ^= name2.charCodeAt(i) & 255;
+  for (let i = 0; i < name.length; i++) {
+    hash ^= name.charCodeAt(i) & 255;
     hash = Math.imul(hash, 16777619) >>> 0;
-    const hi = name2.charCodeAt(i) >> 8;
+    const hi = name.charCodeAt(i) >> 8;
     if (hi !== 0) {
       hash ^= hi;
       hash = Math.imul(hash, 16777619) >>> 0;
@@ -2454,11 +2454,11 @@ function _truncateDollarSign(s) {
   }
   return s;
 }
-function unmangle(name2) {
+function unmangle(name) {
   if (truncateDollarSign) {
-    return _truncateDollarSign(name2);
+    return _truncateDollarSign(name);
   } else {
-    return name2;
+    return name;
   }
 }
 function gen_tabstr3(tot) {
@@ -2486,14 +2486,14 @@ function setDebugMode(t2) {
   sintern2.setDebugMode2(t2);
   update_debug_data();
 }
-function define_empty_class(scls, name2) {
+function define_empty_class(scls, name) {
   const cls = function() {
   };
   cls.prototype = Object.create(Object.prototype);
   cls.constructor = cls.prototype.constructor = cls;
   const keywords = scls.keywords;
-  cls.STRUCT = name2 + " {\n  }\n";
-  cls.structName = name2;
+  cls.STRUCT = name + " {\n  }\n";
+  cls.structName = name;
   cls.prototype.loadSTRUCT = function(reader) {
     reader(this);
   };
@@ -2659,8 +2659,8 @@ var init_nstructjs_es6 = __esm({
   "node_modules/.pnpm/nstructjs@0.8.12/node_modules/nstructjs/build/nstructjs_es6.js"() {
     __defProp2 = Object.defineProperty;
     __export2 = (target, all) => {
-      for (var name2 in all)
-        __defProp2(target, name2, { get: all[name2], enumerable: true });
+      for (var name in all)
+        __defProp2(target, name, { get: all[name], enumerable: true });
     };
     struct_parser_exports = {};
     __export2(struct_parser_exports, {
@@ -2720,8 +2720,8 @@ var init_nstructjs_es6 = __esm({
       }
     };
     tokdef = class {
-      constructor(name2, regexpr, func, example) {
-        this.name = name2;
+      constructor(name, regexpr, func, example) {
+        this.name = name;
         this.re = regexpr;
         this.reSticky = regexpr ? new RegExp(regexpr.source, regexpr.flags.replace(/[gy]/g, "") + "y") : void 0;
         this.func = func;
@@ -2770,13 +2770,13 @@ var init_nstructjs_es6 = __esm({
           console.log(...args);
         };
       }
-      add_state(name2, tokdefArr, errfunc) {
+      add_state(name, tokdefArr, errfunc) {
         if (errfunc === void 0) {
           errfunc = function(_lexer2) {
             return true;
           };
         }
-        this.states[name2] = [tokdefArr, errfunc];
+        this.states[name] = [tokdefArr, errfunc];
       }
       tok_int(_name) {
       }
@@ -3010,10 +3010,10 @@ var init_nstructjs_es6 = __esm({
     };
     TokSymbol = /* @__PURE__ */ Symbol("token-info");
     NStruct = class {
-      constructor(name2, loc) {
+      constructor(name, loc) {
         this.fields = [];
         this.id = -1;
-        this.name = name2;
+        this.name = name;
         this.loc = loc;
       }
     };
@@ -4613,15 +4613,15 @@ var init_nstructjs_es6 = __esm({
         stt.id = id;
         return id;
       }
-      define_null_native(name2, cls) {
+      define_null_native(name, cls) {
         const keywords = this.constructor.keywords;
-        const obj = define_empty_class(this.constructor, name2);
+        const obj = define_empty_class(this.constructor, name);
         const stt = struct_parse.parse(obj.STRUCT);
         this.assignStructId(stt);
-        this.structs[name2] = stt;
-        this.struct_cls[name2] = cls;
+        this.structs[name] = stt;
+        this.struct_cls[name] = cls;
         this.struct_ids[stt.id] = stt;
-        this.null_natives[name2] = 1;
+        this.null_natives[name] = 1;
       }
       validateStructs(onerror) {
         function getType(type) {
@@ -4918,15 +4918,15 @@ var init_nstructjs_es6 = __esm({
       get_struct_id(id) {
         return this.struct_ids[id];
       }
-      get_struct(name2) {
-        if (!(name2 in this.structs)) {
-          console.warn("Unknown struct", name2);
-          throw new Error("Unknown struct " + name2);
+      get_struct(name) {
+        if (!(name in this.structs)) {
+          console.warn("Unknown struct", name);
+          throw new Error("Unknown struct " + name);
         }
-        return this.structs[name2];
+        return this.structs[name];
       }
-      get_struct_cls(name2) {
-        return this.struct_cls[name2];
+      get_struct_cls(name) {
+        return this.struct_cls[name];
       }
       _env_call(code2, obj, env) {
         let envcode = _static_envcode_null2;
@@ -5203,22 +5203,22 @@ var init_nstructjs_es6 = __esm({
        * lookup; that's a dead end; not a loop, so resolution stops there and
        * returns the last name reached rather than cycling forever.
        */
-      structNameMigration(version, name2) {
-        const seen = /* @__PURE__ */ new Set([name2]);
+      structNameMigration(version, name) {
+        const seen = /* @__PURE__ */ new Set([name]);
         for (; ; ) {
           let next;
           for (let i = 0; i < this.struct_names_migrations.length; i++) {
             const item = this.struct_names_migrations[i];
-            if (version < item.version && item.map.has(name2)) {
-              next = item.map.get(name2);
+            if (version < item.version && item.map.has(name)) {
+              next = item.map.get(name);
               break;
             }
           }
           if (next === void 0 || seen.has(next)) {
-            return name2;
+            return name;
           }
-          name2 = next;
-          seen.add(name2);
+          name = next;
+          seen.add(name);
         }
       }
       migrateJSON(json, cls_or_struct_id, options, stt) {
@@ -5339,11 +5339,11 @@ var init_nstructjs_es6 = __esm({
                 break;
               }
               const was = data[type.jsonKeyword];
-              const name2 = this2.structNameMigration(version, was);
-              if (name2 !== was) {
-                data[type.jsonKeyword] = name2;
+              const name = this2.structNameMigration(version, was);
+              if (name !== was) {
+                data[type.jsonKeyword] = name;
               }
-              walkStruct(getVersion(version, name2, data), name2, data, false);
+              walkStruct(getVersion(version, name, data), name, data, false);
               break;
             }
             case StructEnum.OPTIONAL:
@@ -6788,8 +6788,8 @@ var init_util = __esm({
       _data;
       _data_length;
       maxCache;
-      constructor(name2, console3) {
-        this.name = name2;
+      constructor(name, console3) {
+        this.name = name;
         const c = [random(), random(), random()];
         let sum = Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
         sum = 255 / sum;
@@ -6902,11 +6902,11 @@ var init_util = __esm({
       constructor() {
         this.contexts = {};
       }
-      context(name2) {
-        if (!(name2 in this.contexts)) {
-          this.contexts[name2] = new SmartConsoleContext(name2, this);
+      context(name) {
+        if (!(name in this.contexts)) {
+          this.contexts[name] = new SmartConsoleContext(name, this);
         }
-        return this.contexts[name2];
+        return this.contexts[name];
       }
       log(...args) {
         const c = this.context("default");
@@ -6974,14 +6974,14 @@ var init_util = __esm({
           if (ch.length === 0) {
             continue;
           }
-          const name2 = ch[0].constructor.name;
-          let ok = !name2.startsWith("Vector") && !name2.startsWith("Quat");
-          ok = ok && !name2.startsWith("TriEditor");
-          ok = ok && !name2.startsWith("QuadEditor");
-          ok = ok && !name2.startsWith("PointEditor");
-          ok = ok && !name2.startsWith("LineEditor");
+          const name = ch[0].constructor.name;
+          let ok = !name.startsWith("Vector") && !name.startsWith("Quat");
+          ok = ok && !name.startsWith("TriEditor");
+          ok = ok && !name.startsWith("QuadEditor");
+          ok = ok && !name.startsWith("PointEditor");
+          ok = ok && !name.startsWith("LineEditor");
           if (ok) {
-            console2.log(name2, ch);
+            console2.log(name, ch);
           }
         }
         return void 0;
@@ -11538,16 +11538,16 @@ var init_units = __esm({
     Unit = class {
       static baseUnit = "meter";
       static isMetric = true;
-      static getUnit(name2) {
-        if (name2 === "none" || name2 === void 0) {
+      static getUnit(name) {
+        if (name === "none" || name === void 0) {
           return void 0;
         }
         for (const cls of Units) {
-          if (cls.unitDefine().name === name2) {
+          if (cls.unitDefine().name === name) {
             return cls;
           }
         }
-        throw new Error("Unknown unit " + name2);
+        throw new Error("Unknown unit " + name);
       }
       static register(cls) {
         Units.push(cls);
@@ -12155,7 +12155,7 @@ ToolProperty {
       static setDefaultDecimalPlaces(n) {
         defaultDecimalPlaces = n;
       }
-      static makeUIName(name2) {
+      static makeUIName(name) {
         const parts = [""];
         let lastc = void 0;
         const ischar = (c) => {
@@ -12166,8 +12166,8 @@ ToolProperty {
           lower = lower && code2 <= "z".charCodeAt(0);
           return upper || lower;
         };
-        for (let i = 0; i < name2.length; i++) {
-          const c = name2[i];
+        for (let i = 0; i < name.length; i++) {
+          const c = name[i];
           if (c === "_" || c === "-" || c === "$") {
             lastc = c;
             parts.push("");
@@ -14279,8 +14279,8 @@ var init_const = __esm({
         }
         return void 0;
       },
-      setClipboardData(name2, mime, data) {
-        _clipboards[mime] = { name: name2, mime, data };
+      setClipboardData(name, mime, data) {
+        _clipboards[mime] = { name, mime, data };
         const clipboard = navigator.clipboard;
         if (!clipboard) {
           return;
@@ -14292,7 +14292,7 @@ var init_const = __esm({
             })
           ]).catch((error2) => {
             if (mime.startsWith("text") && mime !== "text/plain") {
-              cconst.setClipboardData(name2, "text/plain", data);
+              cconst.setClipboardData(name, "text/plain", data);
             } else {
               console.error(error2);
             }
@@ -14994,19 +14994,19 @@ function unbindSlot(varTheme, vars2, varPath) {
   return value;
 }
 function addVar(vars2, key, value) {
-  const name2 = key.trim();
-  if (!name2) {
+  const name = key.trim();
+  if (!name) {
     throw new Error("a theme variable needs a name");
   }
-  if (name2.search("\n") >= 0) {
+  if (name.search("\n") >= 0) {
     throw new Error("a theme variable name cannot contain a newline");
   }
-  assertKey(name2);
-  if (name2 in vars2) {
-    throw new Error(`theme variable "${name2}" already exists`);
+  assertKey(name);
+  if (name in vars2) {
+    throw new Error(`theme variable "${name}" already exists`);
   }
-  vars2[name2] = value;
-  return name2;
+  vars2[name] = value;
+  return name;
 }
 function deleteVar(varTheme, vars2, key) {
   if (!(key in vars2)) {
@@ -15020,28 +15020,28 @@ function deleteVar(varTheme, vars2, key) {
   return slots;
 }
 function renameVar(varTheme, vars2, comments, from, to) {
-  const name2 = to.trim();
+  const name = to.trim();
   if (!(from in vars2)) {
     throw new Error(`no such theme variable "${from}"`);
   }
-  if (name2 === from) {
+  if (name === from) {
     return from;
   }
-  if (!name2) {
+  if (!name) {
     throw new Error("a theme variable needs a name");
   }
-  if (name2.search("\n") >= 0) {
+  if (name.search("\n") >= 0) {
     throw new Error("a theme variable name cannot contain a newline");
   }
-  assertKey(name2);
-  if (name2 in vars2) {
-    throw new Error(`theme variable "${name2}" already exists`);
+  assertKey(name);
+  if (name in vars2) {
+    throw new Error(`theme variable "${name}" already exists`);
   }
   for (const slot of varSlots(varTheme, from)) {
-    setItemAt(varTheme, slot.varPath, new ThemeVar(name2));
+    setItemAt(varTheme, slot.varPath, new ThemeVar(name));
   }
   const entries = Object.entries(vars2).map(([k, v]) => [
-    k === from ? name2 : k,
+    k === from ? name : k,
     v
   ]);
   for (const k of Object.keys(vars2)) {
@@ -15051,10 +15051,10 @@ function renameVar(varTheme, vars2, comments, from, to) {
     vars2[k] = v;
   }
   if (from in comments) {
-    comments[name2] = comments[from];
+    comments[name] = comments[from];
     delete comments[from];
   }
-  return name2;
+  return name;
 }
 function createThemeFile({
   theme: theme3,
@@ -15098,8 +15098,8 @@ export const theme = ${writeRecord(theme3, "")} satisfies ThemeRecordWithVar<Var
 }
 function parseVarComments(themeFile) {
   const comments = {};
-  const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
-  const decl = new RegExp(`\\b${name2}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
+  const name = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
+  const decl = new RegExp(`\\b${name}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
   if (!decl) {
     return comments;
   }
@@ -16841,10 +16841,10 @@ var init_ui_consts = __esm({
 });
 
 // scripts/screen/area_wrangler.ts
-function getAreaIntName(name2) {
+function getAreaIntName(name) {
   let hash = 0;
-  for (let i = 0; i < name2.length; i++) {
-    const c = name2.charCodeAt(i);
+  for (let i = 0; i < name.length; i++) {
+    const c = name.charCodeAt(i);
     if (i % 2 === 0) {
       hash += c << 8;
       hash *= 13;
@@ -17257,8 +17257,8 @@ function setTagPrefix(prefix2) {
 function getTagPrefix() {
   return tagPrefix;
 }
-function prefix(name2) {
-  return tagPrefix + name2;
+function prefix(name) {
+  return tagPrefix + name;
 }
 function registerInternal(cls, prefixedTag) {
   const clsAny = cls;
@@ -17267,19 +17267,19 @@ function registerInternal(cls, prefixedTag) {
   internalElementNames[cls.define().tagname] = prefixedTag;
   customElements.define(prefixedTag, cls);
 }
-function getInternalName(name2) {
-  return internalElementNames[name2];
+function getInternalName(name) {
+  return internalElementNames[name];
 }
-function createElement(name2, internal = false) {
-  const mappedTag = tagManager.get(name2);
+function createElement(name, internal = false) {
+  const mappedTag = tagManager.get(name);
   if (mappedTag !== void 0) {
     return document.createElement(mappedTag);
-  } else if (!internal && name2 in externalElementNames) {
-    return document.createElement(name2);
-  } else if (name2 in internalElementNames) {
-    return document.createElement(internalElementNames[name2]);
+  } else if (!internal && name in externalElementNames) {
+    return document.createElement(name);
+  } else if (name in internalElementNames) {
+    return document.createElement(internalElementNames[name]);
   } else {
-    return document.createElement(name2);
+    return document.createElement(name);
   }
 }
 function isRegistered2(cls) {
@@ -18797,9 +18797,9 @@ var init_tooldefaults = __esm({
           return void 0;
         }
         const obj = this.valuesFor(path.join("."));
-        const name2 = _ToolPropertyCache._accessorName(key, prop);
-        if (!(name2 in obj)) {
-          obj[name2] = prop.copy().getValue();
+        const name = _ToolPropertyCache._accessorName(key, prop);
+        if (!(name in obj)) {
+          obj[name] = prop.copy().getValue();
         }
         return obj;
       }
@@ -18947,8 +18947,8 @@ var init_parseutil = __esm({
       name;
       re;
       func;
-      constructor(name2, regexpr, func) {
-        this.name = name2;
+      constructor(name, regexpr, func) {
+        this.name = name;
         this.re = regexpr;
         this.func = func;
       }
@@ -18998,13 +18998,13 @@ var init_parseutil = __esm({
         return ret;
       }
       //errfunc is optional, defines state-specific error function
-      add_state(name2, tokdef3, errfunc) {
+      add_state(name, tokdef3, errfunc) {
         if (errfunc === void 0) {
           errfunc = function(_lexer2) {
             return true;
           };
         }
-        this.states[name2] = [tokdef3, errfunc];
+        this.states[name] = [tokdef3, errfunc];
       }
       tok_int(_name) {
       }
@@ -19212,7 +19212,7 @@ var init_parseutil = __esm({
 
 // scripts/path-controller/toolsys/toolpath_parser.ts
 function buildParser() {
-  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
+  const t2 = (name, re, func) => new tokdef2(name, re, func);
   const tokens2 = [
     t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
       if (tok.value === "true" || tok.value === "false") {
@@ -24852,9 +24852,9 @@ var init_context = __esm({
       }
       load(ctx) {
         const keys2 = ctx._props;
-        function wrapget(name2) {
+        function wrapget(name) {
           return function(ctx2, data) {
-            return ctx.loadProperty(ctx2, name2, data);
+            return ctx.loadProperty(ctx2, name, data);
           };
         }
         for (const k of keys2) {
@@ -24896,10 +24896,10 @@ var init_context = __esm({
             get: getter
           };
         }
-        const defineProp = (name2) => {
-          Object.defineProperty(this, name2, {
+        const defineProp = (name) => {
+          Object.defineProperty(this, name, {
             get: function() {
-              const def = this.props[name2];
+              const def = this.props[name];
               return def.get(this.ctx, def.data);
             }
           });
@@ -25030,11 +25030,11 @@ var init_context = __esm({
       loadProperty(_ctx, _key, data) {
         return data;
       }
-      getOwningOverlay(name2, _val_out) {
+      getOwningOverlay(name, _val_out) {
         const inside_map = this._inside_map;
         const stack = this._stack;
         if (config_default.DEBUG.contextSystem) {
-          console.log(name2, inside_map);
+          console.log(name, inside_map);
         }
         for (let i = stack.length - 1; i >= 0; i--) {
           const overlay = stack[i];
@@ -25049,13 +25049,13 @@ var init_context = __esm({
           if (inside_map[ikey]) {
             continue;
           }
-          if (overlay.__allKeys?.has(name2)) {
+          if (overlay.__allKeys?.has(name)) {
             if (config_default.DEBUG.contextSystem) {
               console.log("getting value");
             }
             inside_map[ikey] = 1;
             try {
-              ret = overlay[name2];
+              ret = overlay[name];
             } catch (error2) {
               inside_map[ikey] = 0;
               throw error2;
@@ -25074,16 +25074,16 @@ var init_context = __esm({
         }
         return void 0;
       }
-      ensureProperty(name2) {
-        if (Object.prototype.hasOwnProperty.call(this, name2)) {
+      ensureProperty(name) {
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
           return;
         }
-        this._props.add(name2);
-        Object.defineProperty(this, name2, {
+        this._props.add(name);
+        Object.defineProperty(this, name, {
           get: function() {
             const ret = _ret_tmp;
             _ret_tmp[0] = void 0;
-            this.getOwningOverlay(name2, ret);
+            this.getOwningOverlay(name, ret);
             return ret[0];
           },
           set: function() {
@@ -25303,22 +25303,22 @@ var init_toolmacro = __esm({
           this._macro_class = registry.macros[key];
           return this._macro_class;
         }
-        let name2 = "Macro(";
+        let name = "Macro(";
         let i = 0;
         let is_modal;
         for (const tool of this.tools) {
           const def = tool.constructor.tooldef();
           if (i > 0) {
-            name2 += ", ";
+            name += ", ";
           } else {
             is_modal = def.is_modal;
           }
           if (def.uiname) {
-            name2 += def.uiname;
+            name += def.uiname;
           } else if (def.toolpath) {
-            name2 += def.toolpath;
+            name += def.toolpath;
           } else {
-            name2 += tool.constructor.name;
+            name += tool.constructor.name;
           }
           i++;
         }
@@ -25329,7 +25329,7 @@ var init_toolmacro = __esm({
           inputs[k].wasSet = false;
         }
         const tdef = {
-          uiname: name2,
+          uiname: name,
           toolpath: key,
           inputs,
           outputs: {},
@@ -26743,7 +26743,7 @@ var init_controller_abstract = __esm({
         });
       }
       //used by simple_controller.js for tagging error messages
-      pushReportContext(name2) {
+      pushReportContext(name) {
       }
       //used by simple_controller.js for tagging error messages
       popReportContext() {
@@ -26992,17 +26992,17 @@ var init_controller_abstract = __esm({
 });
 
 // scripts/path-controller/controller/controller.ts
-function pushReportName(name2) {
+function pushReportName(name) {
   if (reportstack.length > 1024) {
     console.trace("eerk, reportstack overflowed");
     reportstack.length = 0;
     reportstack.push("api");
   }
-  reportstack.push(name2);
+  reportstack.push(name);
 }
 function report2(msg) {
-  const name2 = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
-  console2.context(name2).warn(msg);
+  const name = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
+  console2.context(name).warn(msg);
 }
 function popReportName() {
   reportstack.pop();
@@ -27054,7 +27054,7 @@ var init_controller = __esm({
     init_controller_base();
     init_toolprop();
     PUTLParseError2 = PUTLParseError;
-    tk = (name2, re, func) => new tokdef2(name2, re, func);
+    tk = (name, re, func) => new tokdef2(name, re, func);
     tokens = [
       tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
       tk("NUM", /-?[0-9]+/, (t2) => {
@@ -27100,9 +27100,9 @@ var init_controller = __esm({
       flag;
       dpath;
       inheritFlag;
-      constructor(members = [], name2 = "unnamed") {
+      constructor(members = [], name = "unnamed") {
         this.members = [];
-        this.name = name2;
+        this.name = name;
         this.pathmap = {};
         this.flag = 0;
         this.dpath = void 0;
@@ -27506,8 +27506,8 @@ var init_controller = __esm({
             if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
               continue;
             }
-            const name2 = ToolPropertyCache._accessorName(key, prop);
-            if (st.pathmap && name2 in st.pathmap) {
+            const name = ToolPropertyCache._accessorName(key, prop);
+            if (st.pathmap && name in st.pathmap) {
               continue;
             }
             const prop2 = prop.copy();
@@ -27520,7 +27520,7 @@ var init_controller = __esm({
             }
             prop2.uiname = ToolProperty.makeUIName(uiname);
             prop2.description = prop2.description || prop2.uiname;
-            st.add(new DataPath(name2, name2, prop2));
+            st.add(new DataPath(name, name, prop2));
           }
         }
       }
@@ -27606,21 +27606,21 @@ var init_controller = __esm({
        * need a class reference, so it survives bundler name-mangling as long as the
        * struct was registered with an nstructjs/explicit name.
        */
-      getStructByName(name2) {
-        return this._structsByName[name2];
+      getStructByName(name) {
+        return this._structsByName[name];
       }
       mergeStructs(dest, src) {
         for (const m of src.members) {
           dest.add(m.copy());
         }
       }
-      inheritStruct(cls, parent, auto_create_parent = false, name2) {
+      inheritStruct(cls, parent, auto_create_parent = false, name) {
         let st = this.mapStruct(parent, auto_create_parent);
         if (st === void 0) {
           throw new Error("parent has no struct definition");
         }
         st = st.copy();
-        this._addClass(cls, st, name2);
+        this._addClass(cls, st, name);
         return st;
       }
       /**
@@ -27630,8 +27630,8 @@ var init_controller = __esm({
        * @param auto_create: If true, automatically create definition if not already existing.
        * @returns {IterableIterator<*>}
        */
-      _addClass(cls, dstruct, name2) {
-        const stableName = resolveStructName(cls, name2);
+      _addClass(cls, dstruct, name) {
+        const stableName = resolveStructName(cls, name);
         dstruct.name = stableName;
         this.structs.push(dstruct);
         this._structsByClass.set(cls, dstruct);
@@ -27652,32 +27652,32 @@ var init_controller = __esm({
        * The callback lives on the class, so two apis share one — which is why the api is
        * passed in rather than closed over.
        */
-      mapStructCustom(cls, callback, name2) {
-        this.mapStruct(cls, true, name2);
+      mapStructCustom(cls, callback, name) {
+        this.mapStruct(cls, true, name);
         cls[CLS_API_KEY_CUSTOM] = callback;
       }
-      mapStruct(cls, auto_create = true, name2) {
+      mapStruct(cls, auto_create = true, name) {
         const mapped = this._structsByClass.get(cls);
         if (mapped !== void 0) {
           return mapped;
         }
         if (!auto_create) {
           throw new DataPathError(
-            "class does not have a struct definition: " + resolveStructName(cls, name2)
+            "class does not have a struct definition: " + resolveStructName(cls, name)
           );
         }
         let dstruct;
-        if (name2 !== void 0 && this._structsByName[name2] !== void 0) {
-          dstruct = this._structsByName[name2];
+        if (name !== void 0 && this._structsByName[name] !== void 0) {
+          dstruct = this._structsByName[name];
         } else {
-          dstruct = new DataStruct(void 0, resolveStructName(cls, name2));
+          dstruct = new DataStruct(void 0, resolveStructName(cls, name));
         }
-        this._addClass(cls, dstruct, name2);
+        this._addClass(cls, dstruct, name);
         return dstruct;
       }
       //used for tagging error messages
-      pushReportContext(name2) {
-        pushReportName(name2);
+      pushReportContext(name) {
+        pushReportName(name);
       }
       //used for tagging error messages
       popReportContext() {
@@ -27817,8 +27817,8 @@ An example of a more complicated expression might be:
             datapath: inpath,
             dataref: ret.obj
           };
-          const name2 = ret.dpath.ui_name_get.call(dummy);
-          ret.prop.uiname = "" + name2;
+          const name = ret.dpath.ui_name_get.call(dummy);
+          ret.prop.uiname = "" + name;
         }
         return ret;
       }
@@ -33670,17 +33670,29 @@ var init_ui_base = __esm({
       static getDPI() {
         return getDPI();
       }
-      static prefix(name2) {
-        return prefix(name2);
+      static prefix(name) {
+        return prefix(name);
       }
       static internalRegister(cls) {
         registerInternal(cls, this.prefix(cls.define().tagname));
       }
-      static getInternalName(name2) {
-        return getInternalName(name2);
+      static getInternalName(name) {
+        return getInternalName(name);
       }
-      static createElement(name2, internal = false) {
-        return createElement(name2, internal);
+      /** For internal use only, use constructElement */
+      static createElement(name, internal = false) {
+        return createElement(name, internal);
+      }
+      /**
+       * For use with external code, calls elem.checkInit().
+       * Only use UIBase.createElement if you need to modify
+       * the element prior to its .init().
+       */
+      static constructElement(name, ctx) {
+        const elem = createElement(name, false);
+        elem.ctx = ctx;
+        elem.checkInit();
+        return elem;
       }
       static isRegistered(cls) {
         return isRegistered2(cls);
@@ -34675,8 +34687,8 @@ var init_ui_button = __esm({
       setCSS() {
         super.setCSS();
         this.updateBorders();
-        const name2 = this._name;
-        if (name2 === void 0) {
+        const name = this._name;
+        if (name === void 0) {
           return;
         }
         const pad = this.getDefault("padding");
@@ -34711,9 +34723,9 @@ var init_ui_button = __esm({
         if (!this.hasAttribute("name")) {
           return;
         }
-        const name2 = this.getAttribute("name");
-        if (name2 !== this._name) {
-          this._name = name2 ?? void 0;
+        const name = this.getAttribute("name");
+        if (name !== this._name) {
+          this._name = name ?? void 0;
           this.setCSS();
           this._repos_canvas();
           this._redraw();
@@ -34992,13 +35004,13 @@ function createMenu(ctx, title, templ) {
       });
     } else if (typeof item === "object") {
       const objItem = item;
-      const { name: name2, callback, icon, tooltip } = objItem;
+      const { name, callback, icon, tooltip } = objItem;
       let { hotkey } = objItem;
       const id2 = objItem.id !== void 0 ? objItem.id : id++;
       if (hotkey !== void 0 && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
-      menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
+      menu.addItemExtra(name, id2, hotkey, icon, void 0, tooltip);
       if (objItem.disabled) {
         menu.setItemDisabled(id2);
       } else if (objItem.validate) {
@@ -35298,14 +35310,14 @@ var init_dropbox = __esm({
           this.prop = prop;
         }
         prop = this.prop;
-        let name2;
+        let name;
         if (prop.type & (PropTypes3.ENUM | PropTypes3.FLAG)) {
-          name2 = prop.ui_value_names[prop.keys[val]];
+          name = prop.ui_value_names[prop.keys[val]];
         } else {
-          name2 = "" + val;
+          name = "" + val;
         }
-        if (name2 !== this.getAttribute("name")) {
-          this.setAttribute("name", name2);
+        if (name !== this.getAttribute("name")) {
+          this.setAttribute("name", name);
           this.updateName();
         }
       }
@@ -39245,14 +39257,10 @@ init_util();
 init_ui_base();
 init_toolprop();
 function textboxImpl(self2, inpath, text2, cb, packflag = 0) {
-  let path;
-  if (inpath) {
-    path = self2._joinPrefix(inpath);
-  }
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const ret = UIBase.createElement("textbox-x");
-  if (path !== void 0) {
-    ret.setAttribute("datapath", path);
+  if (inpath !== void 0) {
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   ret.ctx = self2.ctx;
   ret.parentWidget = self2;
@@ -39342,8 +39350,7 @@ function colorbuttonImpl(self2, inpath, packflag, mass_set_path) {
   mass_set_path = inpath !== void 0 ? self2._getMassPath(self2.ctx, inpath, mass_set_path) : "";
   const ret = UIBase.createElement("color-picker-button-x");
   if (inpath !== void 0) {
-    inpath = self2._joinPrefix(inpath);
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   if (mass_set_path !== void 0) {
     ret.setAttribute("mass_set_path", mass_set_path);
@@ -39365,10 +39372,11 @@ function curve1dImpl(self2, inpath, packflag = 0, mass_set_path) {
   ret.ctx = self2.ctx;
   ret.packflag |= packflag;
   if (inpath) {
-    inpath = self2._joinPrefix(inpath);
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
-  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
   self2.add(ret);
   return ret;
 }
@@ -39376,7 +39384,7 @@ function vecpopupImpl(self2, inpath, packflag = 0, mass_set_path) {
   const button = UIBase.createElement("vector-popup-button-x");
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
-  let name2 = "vector";
+  let name = "vector";
   if (inpath) {
     inpath = self2._joinPrefix(inpath);
     button.setAttribute("datapath", inpath);
@@ -39385,10 +39393,10 @@ function vecpopupImpl(self2, inpath, packflag = 0, mass_set_path) {
     }
     const rdef = self2.ctx.api.resolvePath(self2.ctx, inpath);
     if (rdef?.prop) {
-      name2 = rdef.prop.uiname ?? rdef.prop.apiname ?? name2;
+      name = rdef.prop.uiname ?? rdef.prop.apiname ?? name;
     }
   }
-  button.setAttribute("name", name2);
+  button.setAttribute("name", name);
   button.packflag |= packflag;
   self2.add(button);
   return button;
@@ -39441,7 +39449,7 @@ function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, 
   if (value !== void 0) {
     ret.value = value;
   }
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self2._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
   self2.add(ret);
   return ret;
@@ -39455,7 +39463,7 @@ function viewerImpl(self2, datapath, value = "", packflag = 0, mass_set_path) {
   if (value !== void 0) {
     ret.value = value;
   }
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self2._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
   self2.add(ret);
   return ret;
@@ -39470,9 +39478,9 @@ function styl(el) {
 function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
   const ret = UIBase.createElement("iconcheck-x");
   ret.icon = icon;
-  ret.description = name ?? "";
+  ret.description = description ?? "";
   if (inpath) {
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   if (mass_set_path) {
     ret.setAttribute("mass_set_path", mass_set_path);
@@ -39481,23 +39489,23 @@ function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
   ret.checkInit();
   return ret;
 }
-function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
+function checkImpl(self2, inpath, name, packflag = 0, mass_set_path) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const path = inpath !== void 0 ? self2._joinPrefix(inpath) : void 0;
-  if (name2 === void 0 && path) {
+  if (name === void 0 && path) {
     const prop = self2.getPathMeta(self2.ctx, path);
     if (prop) {
-      name2 = prop.getUIName();
+      name = prop.getUIName();
     }
   }
-  name2 = name2 ?? "(error)";
+  name = name ?? "(error)";
   let ret;
   if (packflag & PackFlags.USE_ICONS) {
     ret = UIBase.createElement("iconcheck-x");
     ret.iconsheet = iconSheetFromPackFlag(packflag);
   } else {
     ret = UIBase.createElement("check-x");
-    ret.label = name2;
+    ret.label = name;
   }
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   ret.packflag |= packflag;
@@ -39512,10 +39520,10 @@ function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
   self2.add(ret);
   return ret;
 }
-function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-  if (typeof name2 === "object" && name2 !== null) {
-    const args = name2;
-    name2 = args.name;
+function checkenumImpl(self2, inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+  if (typeof name === "object" && name !== null) {
+    const args = name;
+    name = args.name;
     packflag = args.packflag;
     enummap = args.enummap;
     defaultval = args.defaultval;
@@ -39572,10 +39580,10 @@ function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, call
     };
     const useIcons = packflag & PackFlags.USE_ICONS;
     if (!useIcons) {
-      if (name2 === void 0) {
-        name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
+      if (name === void 0) {
+        name = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
       }
-      frame.label(name2).font = "TitleText";
+      frame.label(name).font = "TitleText";
     }
     const checks = {};
     let ignorecb = false;
@@ -39594,7 +39602,7 @@ function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, call
   }
   return frame;
 }
-function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_set_path, prop) {
+function checkenumPanelImpl(self2, inpath, name, packflag = 0, callback, mass_set_path, prop) {
   packflag = packflag === void 0 ? 0 : packflag;
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const path = self2._joinPrefix(inpath);
@@ -39603,15 +39611,15 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
     const resolved = self2.ctx.api.resolvePath(self2.ctx, path, true);
     prop = resolved !== void 0 ? resolved.prop : void 0;
   }
-  if (!name2 && prop) {
-    name2 = prop.getUIName();
+  if (!name && prop) {
+    name = prop.getUIName();
   }
   if (path !== void 0) {
     if (prop === void 0) {
       console.warn("Bad path in checkenum", path);
       return void 0;
     }
-    frame = self2.panel(name2, name2, packflag);
+    frame = self2.panel(name, name, packflag);
     frame.oneAxisPadding();
     frame.setCSSAfter(() => frame.background = self2.getDefault("BoxSub2BG"));
     if (packflag & PackFlags.USE_ICONS) {
@@ -39646,10 +39654,10 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
         };
       };
       var makecb = makecb2;
-      if (name2 === void 0) {
-        name2 = prop.getUIName();
+      if (name === void 0) {
+        name = prop.getUIName();
       }
-      frame.label(name2).font = "TitleText";
+      frame.label(name).font = "TitleText";
       const checks = {};
       let ignorecb = false;
       for (const key in prop.values) {
@@ -39668,11 +39676,11 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
   }
   return frame;
 }
-function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
+function listenumImpl(self2, inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
   let mass_set_path;
-  if (name2 && typeof name2 === "object") {
-    const args = name2;
-    name2 = args.name;
+  if (name && typeof name === "object") {
+    const args = name;
+    name = args.name;
     enumDef = args.enumDef;
     defaultval = args.defaultval;
     callback = args.callback;
@@ -39683,7 +39691,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   let path;
-  let label = name2;
+  let label = name;
   if (inpath !== void 0) {
     path = self2._joinPrefix(inpath);
   }
@@ -39700,7 +39708,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
       ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
-      ret.uiProp = new EnumProperty(defaultval, enumDef, path, name2);
+      ret.uiProp = new EnumProperty(defaultval, enumDef, path, name);
     }
     if (iconmap && typeof ret.uiProp === "object") {
       ret.uiProp.addIcons(iconmap);
@@ -39709,8 +39717,8 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
     const res = self2.ctx.api.resolvePath(self2.ctx, path, true);
     if (res !== void 0) {
       ret.prop = res.prop;
-      name2 ??= res.prop.getUIName();
-      label ??= name2;
+      name ??= res.prop.getUIName();
+      label ??= name;
     }
   }
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
@@ -39810,11 +39818,11 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   } else if (prop.type === PropTypes.ENUM) {
     if (rdef.subkey !== void 0) {
       const subkey = rdef.subkey;
-      let name2 = prop.ui_value_names[rdef.subkey];
-      if (name2 === void 0) {
-        name2 = ToolProperty.makeUIName("" + rdef.subkey);
+      let name = prop.ui_value_names[rdef.subkey];
+      if (name === void 0) {
+        name = ToolProperty.makeUIName("" + rdef.subkey);
       }
-      const check = self2.check(inpath, name2, packflag, mass_set_path);
+      const check = self2.check(inpath, name, packflag, mass_set_path);
       const tooltip = prop.descriptions[subkey];
       check.useDataPathUndo = useDataPathUndo;
       check.description = tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
@@ -39865,19 +39873,19 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   } else if (prop.type === PropTypes.FLAG) {
     if (rdef.subkey !== void 0) {
       const tooltip = prop.descriptions[rdef.subkey];
-      let name2 = prop.ui_value_names[rdef.subkey];
+      let name = prop.ui_value_names[rdef.subkey];
       if (typeof rdef.subkey === "number") {
-        name2 = prop.keys[rdef.subkey];
-        if (name2 && name2 in prop.ui_value_names) {
-          name2 = prop.ui_value_names[name2];
+        name = prop.keys[rdef.subkey];
+        if (name && name in prop.ui_value_names) {
+          name = prop.ui_value_names[name];
         } else {
-          name2 = ToolProperty.makeUIName(name2 ? name2 : "(error)");
+          name = ToolProperty.makeUIName(name ? name : "(error)");
         }
       }
-      if (name2 === void 0) {
-        name2 = "(error)";
+      if (name === void 0) {
+        name = "(error)";
       }
-      const ret = self2.check(inpath, name2, packflag, mass_set_path);
+      const ret = self2.check(inpath, name, packflag, mass_set_path);
       ret.icon = prop.iconmap[rdef.subkey];
       if (tooltip) {
         ret.description = tooltip;
@@ -39904,13 +39912,13 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
         const col1 = row.col();
         const col2 = row.col();
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
           const con2 = i & 1 ? col2 : col1;
-          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           if (tooltip) {
             check.description = tooltip;
           }
@@ -39941,17 +39949,17 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
         let x = 0;
         let y = 0;
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
-          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           check.setUndo(useDataPathUndo);
           if (tooltip) {
             check.description = tooltip;
           }
-          x += name2.length;
+          x += name.length;
           y += 1;
           if (isrow && x > wrapChars) {
             x = 0;
@@ -39969,12 +39977,12 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       const rebuild = () => {
         con.clear();
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
-          const check = con.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           check.useDataPathUndo = useDataPathUndo;
           if (tooltip) {
             check.description = tooltip;
@@ -39996,16 +40004,16 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   }
   throw new DataPathError(`Unsupported property: ${inpath}`);
 }
-function simplesliderImpl(self2, datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-  if (typeof name2 === "object") {
+function simplesliderImpl(self2, datapath, name, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
+  if (typeof name === "object") {
     return self2.slider(datapath, {
-      ...name2,
-      packflag: (name2.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
+      ...name,
+      packflag: (name.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
     });
   } else {
     return self2.slider(
       datapath,
-      name2,
+      name,
       defaultval,
       min,
       max,
@@ -40017,11 +40025,11 @@ function simplesliderImpl(self2, datapath, name2, defaultval, min, max, step, is
     );
   }
 }
-function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-  if (typeof name2 === "object") {
-    const args = name2;
+function sliderImpl(self2, datapath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+  if (typeof name === "object") {
+    const args = name;
     decimalPlaces = args.decimalPlaces;
-    name2 = args.name;
+    name = args.name;
     defaultval = args.defaultval;
     min = args.min;
     max = args.max;
@@ -40063,8 +40071,8 @@ function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, 
   if (datapath) {
     ret.setAttribute("datapath", datapath);
   }
-  if (name2) {
-    ret.setAttribute("name", name2);
+  if (name) {
+    ret.setAttribute("name", name);
   }
   if (min !== void 0) {
     ret.setAttribute("min", "" + min);
@@ -40109,13 +40117,13 @@ function treeviewImpl(self2) {
   self2._add(ret);
   return ret;
 }
-function panelImpl(self2, name2, id, packflag = 0, tooltip) {
-  id = id === void 0 ? name2 : id;
+function panelImpl(self2, name, id, packflag = 0, tooltip) {
+  id = id === void 0 ? name : id;
   const ret = UIBase.createElement("panelframe-x");
   if (tooltip) {
     ret.setHeaderToolTip(tooltip);
   }
-  ret.setAttribute("label", name2);
+  ret.setAttribute("label", name);
   ret.setAttribute("id", id);
   self2._add(ret);
   if (self2.ctx) {
@@ -40804,17 +40812,18 @@ var Container3 = class _Container extends UIBase {
     return buttonImpl(this, label, cb, thisvar, id, packflag);
   }
   _joinPrefix(path, prefix2 = this.dataPrefix.trim()) {
-    if (path === void 0) {
+    let p = path;
+    if (p === void 0) {
       return void 0;
     }
-    path = path.trim();
-    if (path[0] === "/") {
-      return path;
+    p = p.trim();
+    if (p[0] === "/") {
+      return p;
     }
-    if (prefix2.length > 0 && path.length > 0 && !prefix2.endsWith(".") && !path.startsWith(".")) {
-      path = "." + path;
+    if (prefix2.length > 0 && p.length > 0 && !prefix2.endsWith(".") && !p.startsWith(".")) {
+      p = "." + p;
     }
-    return prefix2 + path;
+    return prefix2 + p;
   }
   colorbutton(inpath, packflag, mass_set_path) {
     return this.addPropLabel(
@@ -40840,6 +40849,7 @@ var Container3 = class _Container extends UIBase {
     if (inpath === void 0) {
       return void 0;
     }
+    inpath = this._joinPrefix(inpath);
     if (mass_set_path === void 0 && this.massSetPrefix.length > 0) {
       mass_set_path = ctx.api.getPropName(ctx, inpath);
     }
@@ -40854,21 +40864,21 @@ var Container3 = class _Container extends UIBase {
   iconcheck(inpath, icon, description, mass_set_path) {
     return this.addPropLabel(iconcheckImpl(this, inpath, icon, description, mass_set_path)).widget;
   }
-  check(inpath, name2, packflag = 0, mass_set_path) {
-    return checkImpl(this, inpath, name2, packflag, mass_set_path);
+  check(inpath, name, packflag = 0, mass_set_path) {
+    return checkImpl(this, inpath, name, packflag, mass_set_path);
   }
   /*
    *
    * new (optional) form: checkenum(inpath, args)
    * */
-  checkenum(inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-    const label = typeof name2 === "object" ? name2.name : name2;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+    const label = typeof name === "object" ? name.name : name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       checkenumImpl(
         this,
         inpath,
-        name2,
+        name,
         packflag,
         enummap,
         defaultval,
@@ -40880,9 +40890,9 @@ var Container3 = class _Container extends UIBase {
       packflag
     ).widget;
   }
-  checkenum_panel(inpath, name2, packflag = 0, callback, mass_set_path, prop) {
-    const widget = checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
-    return widget ? this.addPropLabel(widget, name2, packflag).widget : widget;
+  checkenum_panel(inpath, name, packflag = 0, callback, mass_set_path, prop) {
+    const widget = checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
+    return widget ? this.addPropLabel(widget, name, packflag).widget : widget;
   }
   /**
       Creates a dropbox menu widget for selecting enum items
@@ -40901,11 +40911,11 @@ var Container3 = class _Container extends UIBase {
   
       defaultval cannot be undefined
     */
-  listenum(inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
-      listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag),
+      listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag),
       label,
       packflag
     ).widget;
@@ -40956,14 +40966,14 @@ var Container3 = class _Container extends UIBase {
     }
     return p;
   }
-  simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  simpleslider(datapath, name, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       simplesliderImpl(
         this,
         datapath,
-        name2,
+        name,
         defaultval,
         min,
         max,
@@ -40985,14 +40995,14 @@ var Container3 = class _Container extends UIBase {
    *  etc...
    * });
    * */
-  slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  slider(datapath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       sliderImpl(
         this,
         datapath,
-        name2,
+        name,
         defaultval,
         min,
         max,
@@ -41019,8 +41029,8 @@ var Container3 = class _Container extends UIBase {
   treeview() {
     return treeviewImpl(this);
   }
-  panel(name2, id, packflag = 0, tooltip) {
-    return panelImpl(this, name2, id, packflag, tooltip);
+  panel(name, id, packflag = 0, tooltip) {
+    return panelImpl(this, name, id, packflag, tooltip);
   }
   row(packflag = 0) {
     return rowImpl(this, packflag);
@@ -41360,11 +41370,11 @@ var NumSlider = class extends ValueButtonBase {
   }
   /** Current name label.  If set to null label will
    * be pulled from the datapath api.*/
-  set name(name2) {
-    if (name2 === void 0 || name2 === null) {
+  set name(name) {
+    if (name === void 0 || name === null) {
       this.removeAttribute("name");
     } else {
-      this.setAttribute("name", name2);
+      this.setAttribute("name", name);
     }
   }
   static define() {
@@ -41386,14 +41396,14 @@ var NumSlider = class extends ValueButtonBase {
   updateFromPath(value, info) {
     const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
     if (prop) {
-      let name2;
+      let name;
       if (this.hasAttribute("name")) {
-        name2 = this.getAttribute("name");
+        name = this.getAttribute("name");
       } else {
-        name2 = "" + prop.uiname;
+        name = "" + prop.uiname;
       }
-      if (name2 !== null && name2 !== this._name) {
-        this._name = name2;
+      if (name !== null && name !== this._name) {
+        this._name = name;
         this.setCSS(void 0, false);
       }
       this.loadNumConstraints(prop);
@@ -41816,9 +41826,9 @@ var NumSlider = class extends ValueButtonBase {
     if (!this.hasAttribute("name")) {
       return;
     }
-    const name2 = this.getAttribute("name");
-    if (name2 !== null && (force || name2 !== this._name)) {
-      this._name = name2;
+    const name = this.getAttribute("name");
+    if (name !== null && (force || name !== this._name)) {
+      this._name = name;
       this.setCSS(void 0, false);
     }
     const label = this._genLabel();
@@ -42669,20 +42679,20 @@ var SliderWithTextbox = class extends ColumnFrame {
     this.updateTextBox();
   }
   updateName() {
-    let name2 = this.getAttribute("name");
-    if (!name2 && this.hasAttribute("datapath")) {
+    let name = this.getAttribute("name");
+    if (!name && this.hasAttribute("datapath")) {
       const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
       if (prop) {
-        name2 = prop.uiname;
+        name = prop.uiname;
       }
     }
-    if (!name2) {
-      name2 = "[error]";
+    if (!name) {
+      name = "[error]";
     }
-    if (name2 !== this._name) {
-      this._name = name2;
+    if (name !== this._name) {
+      this._name = name;
       if (this.l) {
-        this.l.text = name2;
+        this.l.text = name;
       }
     }
   }
@@ -42779,9 +42789,9 @@ var NumSliderWithTextBox = class extends SliderWithTextbox {
   update() {
     super.update();
     if (this.hasAttribute("name")) {
-      const name2 = this.getAttribute("name");
-      if (name2 !== this.numslider.name) {
-        this.numslider.setAttribute("name", name2);
+      const name = this.getAttribute("name");
+      if (name !== this.numslider.name) {
+        this.numslider.setAttribute("name", name);
         this.numslider._redraw();
       }
     }
@@ -42868,8 +42878,8 @@ function getIconFlag(elem) {
 function getPackFlag(elem) {
   let packflag = getIconFlag(elem);
   let disabledFlags = 0;
-  const boolflag = (name2, flag) => {
-    if (getbool(elem, name2)) {
+  const boolflag = (name, flag) => {
+    if (getbool(elem, name)) {
       packflag |= flag;
     } else {
       packflag &= ~flag;
@@ -44374,9 +44384,9 @@ var VectorPanel = class extends ColumnFrame {
     if (!isVecProperty(meta)) {
       return;
     }
-    const name2 = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
-    if (name2 !== void 0 && name2 !== this.name) {
-      this.name = name2;
+    const name = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
+    if (name !== void 0 && name !== this.name) {
+      this.name = name;
       this.rebuild();
       return;
     }
@@ -46868,8 +46878,8 @@ function layoutTabRows({ sizes, available, pad }) {
 var TabClickEvent = class _TabClickEvent extends PointerEvent {
   tab;
   _preventTabDragging = false;
-  constructor(name2, tab2, e) {
-    super(name2, e);
+  constructor(name, tab2, e) {
+    super(name, e);
     if (e instanceof _TabClickEvent) {
       this._preventTabDragging = e._preventTabDragging;
     }
@@ -46891,14 +46901,14 @@ var TabItemContainer2 = class extends ColumnFrame {
     };
   }
   // forward data- custom attributes
-  getAttribute(name2) {
-    return isForwardAttr(name2) ? this._tab.getAttribute(name2) : super.getAttribute(name2);
+  getAttribute(name) {
+    return isForwardAttr(name) ? this._tab.getAttribute(name) : super.getAttribute(name);
   }
-  setAttribute(name2, value) {
-    if (isForwardAttr(name2)) {
-      this._tab.setAttribute(name2, value);
+  setAttribute(name, value) {
+    if (isForwardAttr(name)) {
+      this._tab.setAttribute(name, value);
     } else {
-      super.setAttribute(name2, value);
+      super.setAttribute(name, value);
     }
   }
   noSwitch() {
@@ -47839,11 +47849,11 @@ var TabBar = class extends UIBase {
     tab2.icon = icon;
     return tab2;
   }
-  addTab(name2, id, tooltip = "", movable = false) {
+  addTab(name, id, tooltip = "", movable = false) {
     const tab2 = UIBase.createElement("tab-item-x", true);
     this.shadow.appendChild(tab2);
     tab2.parentWidget = this;
-    tab2.name = name2;
+    tab2.name = name;
     tab2.id = id;
     tab2.tooltip = tooltip;
     tab2.movable = movable;
@@ -48170,7 +48180,7 @@ var TabBar = class extends UIBase {
     const r = this.r * dpi;
     this._layout();
     let tab2;
-    const draw_text = (name2, x2, y2) => {
+    const draw_text = (name, x2, y2) => {
       const hpad = this.getDefault("TabPadding", void 0, 0);
       if (this.horiz) {
         y2 += hpad * 0.5;
@@ -48662,7 +48672,7 @@ var TabContainer3 = class extends UIBase {
     this.tbar.removeTab(tab22);
     tab2.remove();
   }
-  tab(name2, id, tooltip, movable = true) {
+  tab(name, id, tooltip, movable = true) {
     if (id === void 0) {
       id = tab_idgen++;
     }
@@ -48671,7 +48681,7 @@ var TabContainer3 = class extends UIBase {
     this.tabs[id] = col;
     col.dataPrefix = this.dataPrefix;
     col.ctx = this.ctx;
-    col._tab = this.tbar.addTab(name2, id, tooltip, movable);
+    col._tab = this.tbar.addTab(name, id, tooltip, movable);
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
     col.parentWidget = this;
@@ -49178,8 +49188,8 @@ var ListBox = class extends Container3 {
     if (this.getItemName) {
       return this.getItemName(obj, key);
     }
-    const name2 = obj?.name;
-    return typeof name2 === "string" ? name2 : String(key);
+    const name = obj?.name;
+    return typeof name === "string" ? name : String(key);
   }
   _computeKeyDiff(api, list5) {
     if (this._dataList === void 0) {
@@ -49228,7 +49238,7 @@ var ListBox = class extends Container3 {
     const obj = id === void 0 ? void 0 : dataList.get(api, list5, id);
     dataList.setActive(api, list5, obj);
   }
-  addItem(name2, id) {
+  addItem(name, id) {
     const item = UIBase.createElement("listitem-x");
     item.listId = id === void 0 ? this._idgen++ : id;
     if (typeof item.listId === "number") {
@@ -49238,7 +49248,7 @@ var ListBox = class extends Container3 {
     this.add(item);
     this.items.push(item);
     item.checkInit();
-    item.label(name2);
+    item.label(name);
     item.addEventListener("click", () => this.setActive(item));
     return item;
   }
@@ -52280,19 +52290,19 @@ pathux.GraphNode {
   dirty = false;
   customPropUX = /* @__PURE__ */ new Map();
   static decomposePropName(prop) {
-    let name2 = prop;
+    let name = prop;
     let type = "prop";
-    if (name2.startsWith("in:")) {
+    if (name.startsWith("in:")) {
       type = "in";
-      name2 = name2.slice(3);
-    } else if (name2.startsWith("out:")) {
+      name = name.slice(3);
+    } else if (name.startsWith("out:")) {
       type = "out";
-      name2 = name2.slice(4);
+      name = name.slice(4);
     }
-    return { type, name: name2 };
+    return { type, name };
   }
-  static composePropName(type, name2) {
-    return type === "prop" ? name2 : `${type}:${name2}`;
+  static composePropName(type, name) {
+    return type === "prop" ? name : `${type}:${name}`;
   }
   constructor() {
     const def = finalDef(this.constructor);
@@ -52547,25 +52557,25 @@ function nodePropStruct(target) {
   return st;
 }
 function nodePropSocket(node, nodePropName) {
-  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  const { type, name } = Node3.decomposePropName(nodePropName);
   switch (type) {
     case "in":
-      return node.inputs[name2];
+      return node.inputs[name];
     case "out":
-      return node.outputs[name2];
+      return node.outputs[name];
     case "prop":
       return void 0;
   }
 }
 function nodePropTarget(node, nodePropName) {
-  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  const { type, name } = Node3.decomposePropName(nodePropName);
   switch (type) {
     case "in":
-      return node.inputs[name2]?.defaultProp;
+      return node.inputs[name]?.defaultProp;
     case "out":
-      return node.outputs[name2]?.defaultProp;
+      return node.outputs[name]?.defaultProp;
     case "prop":
-      return node.props[name2];
+      return node.props[name];
   }
 }
 function nodePropKeys(node) {
@@ -54985,14 +54995,14 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
-      const { name: name2, type } = Node3.decomposePropName(key);
+      const { name, type } = Node3.decomposePropName(key);
       let socket;
       switch (type) {
         case "in":
-          socket = target.inputs[name2];
+          socket = target.inputs[name];
           break;
         case "out":
-          socket = target.outputs[name2];
+          socket = target.outputs[name];
           break;
         case "prop":
           break;
@@ -55000,7 +55010,7 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
       root.appendChild(
         propEditRow(
           ctx,
-          name2,
+          name,
           path,
           inherit_packflag,
           socket?.createUI ? socket.createUI.bind(socket) : void 0
@@ -55078,15 +55088,15 @@ function exposeMenuTemplate(ctx, def, onPick, kind) {
     }
     if (kind !== "nodeUI") {
       for (const key of nodePropKeys(node)) {
-        const { name: name2, type } = Node3.decomposePropName(key);
+        const { name, type } = Node3.decomposePropName(key);
         if (type === "out") {
           continue;
         }
         const propKey = key;
         entries.push({
-          name: name2,
+          name,
           id: propKey,
-          tooltip: `Forward ${nodeName}'s ${name2} to every instance`,
+          tooltip: `Forward ${nodeName}'s ${name} to every instance`,
           callback: () => onPick({ kind: "prop", nodeId: node.id, propKey })
         });
       }
@@ -55814,18 +55824,18 @@ var NodeFrame = class extends Container3 {
     return row;
   }
   _terminalName(key, node) {
-    const name2 = document.createElement("span");
+    const name = document.createElement("span");
     const font = getStyleRecord(this, "propLabels", "font", true)?.font;
-    name2.textContent = nodePropTarget(node, key)?.uiname || Node3.decomposePropName(key).name;
-    name2.style.overflow = "hidden";
-    name2.style.whiteSpace = "nowrap";
-    name2.style.textOverflow = "ellipsis";
-    name2.title = nodePropTarget(node, key)?.description ?? "";
+    name.textContent = nodePropTarget(node, key)?.uiname || Node3.decomposePropName(key).name;
+    name.style.overflow = "hidden";
+    name.style.whiteSpace = "nowrap";
+    name.style.textOverflow = "ellipsis";
+    name.title = nodePropTarget(node, key)?.description ?? "";
     if (font) {
-      name2.style.font = font.genCSS();
-      name2.style.color = font.color;
+      name.style.font = font.genCSS();
+      name.style.color = font.color;
     }
-    return name2;
+    return name;
   }
   /** The editor for a sockets default value, bound through the props datapath. */
   _inlineEditor(socketPropName) {
@@ -56477,13 +56487,13 @@ var Constraint = class {
   threshold;
   func;
   funcDv;
-  constructor(name2, func, klst, params, k = 1) {
+  constructor(name, func, klst, params, k = 1) {
     this.glst = [];
     this.klst = klst;
     this.wlst = [];
     this.k = k;
     this.params = params;
-    this.name = name2;
+    this.name = name;
     for (const ks of klst) {
       this.glst.push(new Float64Array(ks.length));
       const ws = new Float64Array(ks.length);
@@ -57487,7 +57497,7 @@ var NodeGraphView = class extends Container3 {
     const activeFont = this.getDefault("CrumbActiveFont");
     const walk = this._walk();
     const names = ["Graph", ...walk.steps.map((s) => s.node.getUIName())];
-    names.forEach((name2, depth) => {
+    names.forEach((name, depth) => {
       if (depth > 0) {
         const sep = document.createElement("span");
         sep.textContent = "\u25B8";
@@ -57497,8 +57507,8 @@ var NodeGraphView = class extends Container3 {
       const last = depth === names.length - 1;
       const btn = document.createElement("button");
       btn.className = "nodeeditor-crumb";
-      btn.textContent = name2;
-      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name2}`;
+      btn.textContent = name;
+      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name}`;
       btn.style.cssText = "background: none; border: none; padding: 0 2px; cursor: pointer;";
       btn.style.font = (last ? activeFont : font).genCSS();
       btn.style.color = (last ? activeFont : font).color;
@@ -58049,12 +58059,12 @@ var NodeGraphView = class extends Container3 {
    */
   openPropMenu(frame, key, local) {
     const nid = frame.node.id;
-    const { name: name2 } = Node3.decomposePropName(key);
+    const { name } = Node3.decomposePropName(key);
     const menu = createMenu(this.ctx, "", [
       {
         name: "Expose on group",
         id: "expose",
-        tooltip: `Forward ${name2} so every instance of this group shows it`,
+        tooltip: `Forward ${name} so every instance of this group shows it`,
         callback: () => void this.exposeProp(nid, key)
       }
     ]);
@@ -62230,13 +62240,13 @@ var ScreenArea2 = class extends UIBase {
     this._areaSize = new Vector2([512, 512]);
     this.chromeHeight = 0;
     if (const_default.DEBUG.screenAreaPosSizeAccesses) {
-      const wrapVector = (name2, axis) => {
-        Object.defineProperty(this[name2], axis, {
+      const wrapVector = (name, axis) => {
+        Object.defineProperty(this[name], axis, {
           get: function() {
             return this["_" + axis];
           },
           set: function(val) {
-            console.warn(`ScreenArea.${name2}[${axis}] set:`, val);
+            console.warn(`ScreenArea.${name}[${axis}] set:`, val);
             this["_" + axis] = val;
           }
         });
@@ -62811,19 +62821,19 @@ var ScreenArea2 = class extends UIBase {
   }
   switchEditor(cls, opts = {}) {
     const def = cls.define();
-    const name2 = def.areaname;
+    const name = def.areaname;
     if (opts.deleteExisting) {
-      this._deleteEditors(name2);
+      this._deleteEditors(name);
     }
-    if (!(name2 in this.editormap)) {
-      this.editormap[name2] = UIBase.createElement(def.tagname);
-      if (this.editormap[name2].ctx === void 0) {
-        this.editormap[name2].ctx = this.ctx;
+    if (!(name in this.editormap)) {
+      this.editormap[name] = UIBase.createElement(def.tagname);
+      if (this.editormap[name].ctx === void 0) {
+        this.editormap[name].ctx = this.ctx;
       }
-      this.editormap[name2].parentWidget = this;
-      this.editormap[name2].owning_sarea = this;
-      this.editormap[name2].inactive = false;
-      this.editors.push(this.editormap[name2]);
+      this.editormap[name].parentWidget = this;
+      this.editormap[name].owning_sarea = this;
+      this.editormap[name].inactive = false;
+      this.editors.push(this.editormap[name]);
     }
     if (this.area) {
       if (this.switcher) {
@@ -62841,7 +62851,7 @@ var ScreenArea2 = class extends UIBase {
     } else {
       this.area = void 0;
     }
-    this.area = this.editormap[name2];
+    this.area = this.editormap[name];
     this.area.closed = false;
     this.area.inactive = false;
     this.area.parentWidget = this;
@@ -63618,8 +63628,8 @@ function strcmp(a2, b) {
   b = b.trim().toLowerCase();
   return a2 < b ? -1 : a2 === b ? 0 : 1;
 }
-function themeItemKind(name2, value) {
-  if (name2.toLowerCase().search("flag") >= 0) {
+function themeItemKind(name, value) {
+  if (name.toLowerCase().search("flag") >= 0) {
     return "skip";
   }
   if (typeof value === "string") {
@@ -63931,8 +63941,8 @@ var ThemeEditor = class extends Container3 {
     this.notify(livePath[0], livePath[livePath.length - 1]);
   }
   /** Adds a variable, returning the name it was stored under. */
-  addThemeVar(name2, value) {
-    const key = addVar(this._vars, name2, copyThemeItem(value));
+  addThemeVar(name, value) {
+    const key = addVar(this._vars, name, copyThemeItem(value));
     this.rebuildPanels();
     this.notify("themeVars", key, void 0, key);
     return key;
@@ -63977,16 +63987,16 @@ var ThemeEditor = class extends Container3 {
     }
     const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]];
     const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
-    let name2 = stem;
-    for (let i = 2; name2 in this._vars; i++) {
-      name2 = `${stem}_${i}`;
+    let name = stem;
+    for (let i = 2; name in this._vars; i++) {
+      name = `${stem}_${i}`;
     }
-    addVar(this._vars, name2, copyThemeItem(value));
-    this.bindLiveSlot(livePath, name2);
+    addVar(this._vars, name, copyThemeItem(value));
+    this.bindLiveSlot(livePath, name);
     if (this._varsPanel && !this._varsPanel.isDead()) {
       this._varsPanel.closed = false;
     }
-    return name2;
+    return name;
   }
   /** The menu binding one theme slot to a variable, detaching it, or making one. */
   bindMenu(col, livePath, kind) {
@@ -64042,15 +64052,15 @@ var ThemeEditor = class extends Container3 {
   }
   varRow(panel, key) {
     const row = panel.row();
-    const name2 = row.textbox(void 0, key);
-    name2.width = VAR_NAME_WIDTH;
-    name2.description = "The name this variable is written under in the theme file";
-    name2.on_change = () => {
+    const name = row.textbox(void 0, key);
+    name.width = VAR_NAME_WIDTH;
+    name.description = "The name this variable is written under in the theme file";
+    name.on_change = () => {
       try {
-        this.renameThemeVar(key, name2.text);
+        this.renameThemeVar(key, name.text);
       } catch (e) {
         console.error(e.message);
-        name2.text = key;
+        name.text = key;
       }
     };
     const slot = {
@@ -64522,9 +64532,9 @@ var TreeItem = class extends Container3 {
   get text() {
     return this._labelText;
   }
-  item(name2, args = {}) {
+  item(name, args = {}) {
     args.treeParent = this;
-    return this.parentWidget.item(name2, args);
+    return this.parentWidget.item(name, args);
   }
   init() {
     super.init();
@@ -64672,11 +64682,11 @@ var TreeView = class extends Container3 {
     super.update();
     this.updateOverdraw();
   }
-  item(name2, args = {}) {
+  item(name, args = {}) {
     const ret = UIBase.createElement("tree-item-x");
     ret.checkInit();
     this.add(ret);
-    ret.text = name2;
+    ret.text = name;
     if (args.icon) {
       ret.icon = args.icon;
     }
@@ -65443,16 +65453,16 @@ var AreaDocker = class extends Container3 {
         continue;
       }
       const def = getAreaConstructor(editor).define();
-      let name2 = def.uiname;
-      if (!name2) {
-        name2 = def.areaname || def.tagname.replace(/-x/, "");
-        name2 = ToolProperty.makeUIName(name2);
+      let name = def.uiname;
+      if (!name) {
+        name = def.areaname || def.tagname.replace(/-x/, "");
+        name = ToolProperty.makeUIName(name);
       }
-      const said = def.description ?? `Show ${name2} in this pane`;
+      const said = def.description ?? `Show ${name} in this pane`;
       const closable = const_default.closableAreaTabs;
       const tooltip = closable ? said : `${said}
 Right-click the tab to close it.`;
-      const tab2 = tabs.tab(name2, editor._id, tooltip);
+      const tab2 = tabs.tab(name, editor._id, tooltip);
       const tabItem = tab2._tab;
       tabItem.closable = closable;
       tabItem.ontabclose = () => this.closeEditor(editor);
@@ -65539,8 +65549,8 @@ Right-click the tab to close it.`;
   getArea() {
     let p = this.parentWidget;
     let lastp = p;
-    const name2 = UIBase.getInternalName("screenarea-x");
-    while (p && p.tagName.toLowerCase() !== name2) {
+    const name = UIBase.getInternalName("screenarea-x");
+    while (p && p.tagName.toLowerCase() !== name) {
       lastp = p;
       p = p.parentWidget;
     }
@@ -67937,8 +67947,8 @@ var SideBar = class extends Container3 {
       style: "sidebar"
     };
   }
-  tab(name2) {
-    return this.tabbar.tab(name2);
+  tab(name) {
+    return this.tabbar.tab(name);
   }
   init() {
     super.init();

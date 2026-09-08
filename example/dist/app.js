@@ -4,7 +4,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __knownSymbol = (name2, symbol) => (symbol = Symbol[name2]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name2);
+var __knownSymbol = (name, symbol) => (symbol = Symbol[name]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name);
 var __typeError = (msg) => {
   throw TypeError(msg);
 };
@@ -30,8 +30,8 @@ var __commonJS = (cb, mod) => function __require2() {
   }
 };
 var __export = (target, all) => {
-  for (var name2 in all)
-    __defProp(target, name2, { get: all[name2], enumerable: true });
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -1453,8 +1453,8 @@ function StructParser() {
     "static_array",
     "optional"
   ]);
-  function tk2(name2, re, func, example) {
-    return new tokdef(name2, re, func, example);
+  function tk2(name, re, func, example) {
+    return new tokdef(name, re, func, example);
   }
   const tokens2 = [
     tk2(
@@ -1695,7 +1695,7 @@ function StructParser() {
     }
   }
   function p_Field(p) {
-    const name2 = p_ID_or_num(p);
+    const name = p_ID_or_num(p);
     const loc = getLoc(p);
     let is_opt = false;
     const next = p.peeknext();
@@ -1725,7 +1725,7 @@ function StructParser() {
       comment = tok.value;
       p.next();
     }
-    return { name: name2, type, get, comment, loc };
+    return { name, type, get, comment, loc };
   }
   const getLoc = (p) => {
     return {
@@ -1734,8 +1734,8 @@ function StructParser() {
     };
   };
   function p_Struct(p) {
-    const name2 = p.expect("ID", "struct name");
-    const st = new NStruct(name2, getLoc(p));
+    const name = p.expect("ID", "struct name");
+    const st = new NStruct(name, getLoc(p));
     let tok = p.peeknext();
     if (tok && tok.type === "ID" && tok.value === "id") {
       p.next();
@@ -2057,10 +2057,10 @@ function validateJSON(manager22, val, obj, field, type, instance, _abstractKey) 
   return StructFieldTypeMap[type.type].validateJSON(manager22, val, obj, field, type, instance, _abstractKey);
 }
 function unpack_field(manager22, data, type, uctx) {
-  let name2;
+  let name;
   if (debug) {
-    name2 = StructFieldTypeMap[type.type].define().name;
-    packer_debug_start("R " + name2);
+    name = StructFieldTypeMap[type.type].define().name;
+    packer_debug_start("R " + name);
   }
   let ret = StructFieldTypeMap[type.type].unpack(manager22, data, type, uctx);
   if (debug) {
@@ -2161,10 +2161,10 @@ function fmt_type(type) {
   return StructFieldTypeMap[type.type].format(type);
 }
 function do_pack(manager22, data, val, obj, field, type) {
-  let name2;
+  let name;
   if (debug) {
-    name2 = StructFieldTypeMap[type.type !== void 0 ? type.type : type].define().name;
-    packer_debug_start("W " + name2);
+    name = StructFieldTypeMap[type.type !== void 0 ? type.type : type].define().name;
+    packer_debug_start("W " + name);
   }
   let typeid;
   if (typeof type !== "number") {
@@ -2200,10 +2200,10 @@ function formatArrayJson(manager22, val, obj, field, type, type2, instance, tlvl
   return s;
 }
 function arrayBufferElem(type) {
-  const name2 = type.data.type;
-  const elem = arrayBufferElemTypes[name2];
+  const name = type.data.type;
+  const elem = arrayBufferElemTypes[name];
   if (!elem) {
-    throw new Error("invalid arraybuffer element type " + name2);
+    throw new Error("invalid arraybuffer element type " + name);
   }
   return elem;
 }
@@ -2241,7 +2241,7 @@ function setStructEval(val) {
   structEval = val;
 }
 function buildJSONParser() {
-  const tk2 = (name2, re, func, example) => new tokdef(name2, re, func, example);
+  const tk2 = (name, re, func, example) => new tokdef(name, re, func, example);
   let parse;
   const nint = "[+-]?[0-9]+";
   const nhex = "[+-]?0x[0-9a-fA-F]+";
@@ -2440,12 +2440,12 @@ function updateDEBUG() {
     }
   }
 }
-function stableStructId(name2) {
+function stableStructId(name) {
   let hash = 2166136261;
-  for (let i2 = 0; i2 < name2.length; i2++) {
-    hash ^= name2.charCodeAt(i2) & 255;
+  for (let i2 = 0; i2 < name.length; i2++) {
+    hash ^= name.charCodeAt(i2) & 255;
     hash = Math.imul(hash, 16777619) >>> 0;
-    const hi = name2.charCodeAt(i2) >> 8;
+    const hi = name.charCodeAt(i2) >> 8;
     if (hi !== 0) {
       hash ^= hi;
       hash = Math.imul(hash, 16777619) >>> 0;
@@ -2481,11 +2481,11 @@ function _truncateDollarSign(s) {
   }
   return s;
 }
-function unmangle(name2) {
+function unmangle(name) {
   if (truncateDollarSign) {
-    return _truncateDollarSign(name2);
+    return _truncateDollarSign(name);
   } else {
-    return name2;
+    return name;
   }
 }
 function gen_tabstr3(tot) {
@@ -2513,14 +2513,14 @@ function setDebugMode(t2) {
   sintern2.setDebugMode2(t2);
   update_debug_data();
 }
-function define_empty_class(scls, name2) {
+function define_empty_class(scls, name) {
   const cls = function() {
   };
   cls.prototype = Object.create(Object.prototype);
   cls.constructor = cls.prototype.constructor = cls;
   const keywords = scls.keywords;
-  cls.STRUCT = name2 + " {\n  }\n";
-  cls.structName = name2;
+  cls.STRUCT = name + " {\n  }\n";
+  cls.structName = name;
   cls.prototype.loadSTRUCT = function(reader) {
     reader(this);
   };
@@ -2686,8 +2686,8 @@ var init_nstructjs_es6 = __esm({
   "node_modules/.pnpm/nstructjs@0.8.12/node_modules/nstructjs/build/nstructjs_es6.js"() {
     __defProp2 = Object.defineProperty;
     __export2 = (target, all) => {
-      for (var name2 in all)
-        __defProp2(target, name2, { get: all[name2], enumerable: true });
+      for (var name in all)
+        __defProp2(target, name, { get: all[name], enumerable: true });
     };
     struct_parser_exports = {};
     __export2(struct_parser_exports, {
@@ -2747,8 +2747,8 @@ var init_nstructjs_es6 = __esm({
       }
     };
     tokdef = class {
-      constructor(name2, regexpr, func, example) {
-        this.name = name2;
+      constructor(name, regexpr, func, example) {
+        this.name = name;
         this.re = regexpr;
         this.reSticky = regexpr ? new RegExp(regexpr.source, regexpr.flags.replace(/[gy]/g, "") + "y") : void 0;
         this.func = func;
@@ -2797,13 +2797,13 @@ var init_nstructjs_es6 = __esm({
           console.log(...args);
         };
       }
-      add_state(name2, tokdefArr, errfunc) {
+      add_state(name, tokdefArr, errfunc) {
         if (errfunc === void 0) {
           errfunc = function(_lexer2) {
             return true;
           };
         }
-        this.states[name2] = [tokdefArr, errfunc];
+        this.states[name] = [tokdefArr, errfunc];
       }
       tok_int(_name) {
       }
@@ -3037,10 +3037,10 @@ var init_nstructjs_es6 = __esm({
     };
     TokSymbol = /* @__PURE__ */ Symbol("token-info");
     NStruct = class {
-      constructor(name2, loc) {
+      constructor(name, loc) {
         this.fields = [];
         this.id = -1;
-        this.name = name2;
+        this.name = name;
         this.loc = loc;
       }
     };
@@ -4640,15 +4640,15 @@ var init_nstructjs_es6 = __esm({
         stt.id = id;
         return id;
       }
-      define_null_native(name2, cls) {
+      define_null_native(name, cls) {
         const keywords = this.constructor.keywords;
-        const obj = define_empty_class(this.constructor, name2);
+        const obj = define_empty_class(this.constructor, name);
         const stt = struct_parse.parse(obj.STRUCT);
         this.assignStructId(stt);
-        this.structs[name2] = stt;
-        this.struct_cls[name2] = cls;
+        this.structs[name] = stt;
+        this.struct_cls[name] = cls;
         this.struct_ids[stt.id] = stt;
-        this.null_natives[name2] = 1;
+        this.null_natives[name] = 1;
       }
       validateStructs(onerror) {
         function getType(type) {
@@ -4945,15 +4945,15 @@ var init_nstructjs_es6 = __esm({
       get_struct_id(id) {
         return this.struct_ids[id];
       }
-      get_struct(name2) {
-        if (!(name2 in this.structs)) {
-          console.warn("Unknown struct", name2);
-          throw new Error("Unknown struct " + name2);
+      get_struct(name) {
+        if (!(name in this.structs)) {
+          console.warn("Unknown struct", name);
+          throw new Error("Unknown struct " + name);
         }
-        return this.structs[name2];
+        return this.structs[name];
       }
-      get_struct_cls(name2) {
-        return this.struct_cls[name2];
+      get_struct_cls(name) {
+        return this.struct_cls[name];
       }
       _env_call(code2, obj, env) {
         let envcode = _static_envcode_null2;
@@ -5230,22 +5230,22 @@ var init_nstructjs_es6 = __esm({
        * lookup; that's a dead end; not a loop, so resolution stops there and
        * returns the last name reached rather than cycling forever.
        */
-      structNameMigration(version, name2) {
-        const seen = /* @__PURE__ */ new Set([name2]);
+      structNameMigration(version, name) {
+        const seen = /* @__PURE__ */ new Set([name]);
         for (; ; ) {
           let next;
           for (let i2 = 0; i2 < this.struct_names_migrations.length; i2++) {
             const item = this.struct_names_migrations[i2];
-            if (version < item.version && item.map.has(name2)) {
-              next = item.map.get(name2);
+            if (version < item.version && item.map.has(name)) {
+              next = item.map.get(name);
               break;
             }
           }
           if (next === void 0 || seen.has(next)) {
-            return name2;
+            return name;
           }
-          name2 = next;
-          seen.add(name2);
+          name = next;
+          seen.add(name);
         }
       }
       migrateJSON(json, cls_or_struct_id, options, stt) {
@@ -5366,11 +5366,11 @@ var init_nstructjs_es6 = __esm({
                 break;
               }
               const was = data[type.jsonKeyword];
-              const name2 = this2.structNameMigration(version, was);
-              if (name2 !== was) {
-                data[type.jsonKeyword] = name2;
+              const name = this2.structNameMigration(version, was);
+              if (name !== was) {
+                data[type.jsonKeyword] = name;
               }
-              walkStruct(getVersion(version, name2, data), name2, data, false);
+              walkStruct(getVersion(version, name, data), name, data, false);
               break;
             }
             case StructEnum.OPTIONAL:
@@ -6815,8 +6815,8 @@ var init_util = __esm({
       _data;
       _data_length;
       maxCache;
-      constructor(name2, console3) {
-        this.name = name2;
+      constructor(name, console3) {
+        this.name = name;
         const c = [random(), random(), random()];
         let sum = Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
         sum = 255 / sum;
@@ -6929,11 +6929,11 @@ var init_util = __esm({
       constructor() {
         this.contexts = {};
       }
-      context(name2) {
-        if (!(name2 in this.contexts)) {
-          this.contexts[name2] = new SmartConsoleContext(name2, this);
+      context(name) {
+        if (!(name in this.contexts)) {
+          this.contexts[name] = new SmartConsoleContext(name, this);
         }
-        return this.contexts[name2];
+        return this.contexts[name];
       }
       log(...args) {
         const c = this.context("default");
@@ -7001,14 +7001,14 @@ var init_util = __esm({
           if (ch.length === 0) {
             continue;
           }
-          const name2 = ch[0].constructor.name;
-          let ok = !name2.startsWith("Vector") && !name2.startsWith("Quat");
-          ok = ok && !name2.startsWith("TriEditor");
-          ok = ok && !name2.startsWith("QuadEditor");
-          ok = ok && !name2.startsWith("PointEditor");
-          ok = ok && !name2.startsWith("LineEditor");
+          const name = ch[0].constructor.name;
+          let ok = !name.startsWith("Vector") && !name.startsWith("Quat");
+          ok = ok && !name.startsWith("TriEditor");
+          ok = ok && !name.startsWith("QuadEditor");
+          ok = ok && !name.startsWith("PointEditor");
+          ok = ok && !name.startsWith("LineEditor");
           if (ok) {
-            console2.log(name2, ch);
+            console2.log(name, ch);
           }
         }
         return void 0;
@@ -11565,16 +11565,16 @@ var init_units = __esm({
     Unit = class {
       static baseUnit = "meter";
       static isMetric = true;
-      static getUnit(name2) {
-        if (name2 === "none" || name2 === void 0) {
+      static getUnit(name) {
+        if (name === "none" || name === void 0) {
           return void 0;
         }
         for (const cls of Units) {
-          if (cls.unitDefine().name === name2) {
+          if (cls.unitDefine().name === name) {
             return cls;
           }
         }
-        throw new Error("Unknown unit " + name2);
+        throw new Error("Unknown unit " + name);
       }
       static register(cls) {
         Units.push(cls);
@@ -12182,7 +12182,7 @@ ToolProperty {
       static setDefaultDecimalPlaces(n) {
         defaultDecimalPlaces = n;
       }
-      static makeUIName(name2) {
+      static makeUIName(name) {
         const parts = [""];
         let lastc = void 0;
         const ischar = (c) => {
@@ -12193,8 +12193,8 @@ ToolProperty {
           lower = lower && code2 <= "z".charCodeAt(0);
           return upper || lower;
         };
-        for (let i2 = 0; i2 < name2.length; i2++) {
-          const c = name2[i2];
+        for (let i2 = 0; i2 < name.length; i2++) {
+          const c = name[i2];
           if (c === "_" || c === "-" || c === "$") {
             lastc = c;
             parts.push("");
@@ -14306,8 +14306,8 @@ var init_const = __esm({
         }
         return void 0;
       },
-      setClipboardData(name2, mime, data) {
-        _clipboards[mime] = { name: name2, mime, data };
+      setClipboardData(name, mime, data) {
+        _clipboards[mime] = { name, mime, data };
         const clipboard = navigator.clipboard;
         if (!clipboard) {
           return;
@@ -14319,7 +14319,7 @@ var init_const = __esm({
             })
           ]).catch((error2) => {
             if (mime.startsWith("text") && mime !== "text/plain") {
-              cconst.setClipboardData(name2, "text/plain", data);
+              cconst.setClipboardData(name, "text/plain", data);
             } else {
               console.error(error2);
             }
@@ -15021,19 +15021,19 @@ function unbindSlot(varTheme, vars3, varPath) {
   return value;
 }
 function addVar(vars3, key, value) {
-  const name2 = key.trim();
-  if (!name2) {
+  const name = key.trim();
+  if (!name) {
     throw new Error("a theme variable needs a name");
   }
-  if (name2.search("\n") >= 0) {
+  if (name.search("\n") >= 0) {
     throw new Error("a theme variable name cannot contain a newline");
   }
-  assertKey(name2);
-  if (name2 in vars3) {
-    throw new Error(`theme variable "${name2}" already exists`);
+  assertKey(name);
+  if (name in vars3) {
+    throw new Error(`theme variable "${name}" already exists`);
   }
-  vars3[name2] = value;
-  return name2;
+  vars3[name] = value;
+  return name;
 }
 function deleteVar(varTheme, vars3, key) {
   if (!(key in vars3)) {
@@ -15047,28 +15047,28 @@ function deleteVar(varTheme, vars3, key) {
   return slots;
 }
 function renameVar(varTheme, vars3, comments, from, to) {
-  const name2 = to.trim();
+  const name = to.trim();
   if (!(from in vars3)) {
     throw new Error(`no such theme variable "${from}"`);
   }
-  if (name2 === from) {
+  if (name === from) {
     return from;
   }
-  if (!name2) {
+  if (!name) {
     throw new Error("a theme variable needs a name");
   }
-  if (name2.search("\n") >= 0) {
+  if (name.search("\n") >= 0) {
     throw new Error("a theme variable name cannot contain a newline");
   }
-  assertKey(name2);
-  if (name2 in vars3) {
-    throw new Error(`theme variable "${name2}" already exists`);
+  assertKey(name);
+  if (name in vars3) {
+    throw new Error(`theme variable "${name}" already exists`);
   }
   for (const slot of varSlots(varTheme, from)) {
-    setItemAt(varTheme, slot.varPath, new ThemeVar(name2));
+    setItemAt(varTheme, slot.varPath, new ThemeVar(name));
   }
   const entries = Object.entries(vars3).map(([k, v]) => [
-    k === from ? name2 : k,
+    k === from ? name : k,
     v
   ]);
   for (const k of Object.keys(vars3)) {
@@ -15078,10 +15078,10 @@ function renameVar(varTheme, vars3, comments, from, to) {
     vars3[k] = v;
   }
   if (from in comments) {
-    comments[name2] = comments[from];
+    comments[name] = comments[from];
     delete comments[from];
   }
-  return name2;
+  return name;
 }
 function createThemeFile({
   theme: theme4,
@@ -15125,8 +15125,8 @@ export const theme = ${writeRecord(theme4, "")} satisfies ThemeRecordWithVar<Var
 }
 function parseVarComments(themeFile) {
   const comments = {};
-  const name2 = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
-  const decl = new RegExp(`\\b${name2}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
+  const name = /\bgetVars\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/.exec(themeFile)?.[1] ?? "themeVars";
+  const decl = new RegExp(`\\b${name}\\s*(?::[^=]*)?=\\s*\\{`).exec(themeFile);
   if (!decl) {
     return comments;
   }
@@ -16868,10 +16868,10 @@ var init_ui_consts = __esm({
 });
 
 // scripts/screen/area_wrangler.ts
-function getAreaIntName(name2) {
+function getAreaIntName(name) {
   let hash = 0;
-  for (let i2 = 0; i2 < name2.length; i2++) {
-    const c = name2.charCodeAt(i2);
+  for (let i2 = 0; i2 < name.length; i2++) {
+    const c = name.charCodeAt(i2);
     if (i2 % 2 === 0) {
       hash += c << 8;
       hash *= 13;
@@ -17284,8 +17284,8 @@ function setTagPrefix(prefix2) {
 function getTagPrefix() {
   return tagPrefix;
 }
-function prefix(name2) {
-  return tagPrefix + name2;
+function prefix(name) {
+  return tagPrefix + name;
 }
 function registerInternal(cls, prefixedTag) {
   const clsAny = cls;
@@ -17294,19 +17294,19 @@ function registerInternal(cls, prefixedTag) {
   internalElementNames[cls.define().tagname] = prefixedTag;
   customElements.define(prefixedTag, cls);
 }
-function getInternalName(name2) {
-  return internalElementNames[name2];
+function getInternalName(name) {
+  return internalElementNames[name];
 }
-function createElement(name2, internal = false) {
-  const mappedTag = tagManager.get(name2);
+function createElement(name, internal = false) {
+  const mappedTag = tagManager.get(name);
   if (mappedTag !== void 0) {
     return document.createElement(mappedTag);
-  } else if (!internal && name2 in externalElementNames) {
-    return document.createElement(name2);
-  } else if (name2 in internalElementNames) {
-    return document.createElement(internalElementNames[name2]);
+  } else if (!internal && name in externalElementNames) {
+    return document.createElement(name);
+  } else if (name in internalElementNames) {
+    return document.createElement(internalElementNames[name]);
   } else {
-    return document.createElement(name2);
+    return document.createElement(name);
   }
 }
 function isRegistered2(cls) {
@@ -18824,9 +18824,9 @@ var init_tooldefaults = __esm({
           return void 0;
         }
         const obj = this.valuesFor(path.join("."));
-        const name2 = _ToolPropertyCache._accessorName(key, prop);
-        if (!(name2 in obj)) {
-          obj[name2] = prop.copy().getValue();
+        const name = _ToolPropertyCache._accessorName(key, prop);
+        if (!(name in obj)) {
+          obj[name] = prop.copy().getValue();
         }
         return obj;
       }
@@ -18974,8 +18974,8 @@ var init_parseutil = __esm({
       name;
       re;
       func;
-      constructor(name2, regexpr, func) {
-        this.name = name2;
+      constructor(name, regexpr, func) {
+        this.name = name;
         this.re = regexpr;
         this.func = func;
       }
@@ -19025,13 +19025,13 @@ var init_parseutil = __esm({
         return ret;
       }
       //errfunc is optional, defines state-specific error function
-      add_state(name2, tokdef3, errfunc) {
+      add_state(name, tokdef3, errfunc) {
         if (errfunc === void 0) {
           errfunc = function(_lexer2) {
             return true;
           };
         }
-        this.states[name2] = [tokdef3, errfunc];
+        this.states[name] = [tokdef3, errfunc];
       }
       tok_int(_name) {
       }
@@ -19239,7 +19239,7 @@ var init_parseutil = __esm({
 
 // scripts/path-controller/toolsys/toolpath_parser.ts
 function buildParser() {
-  const t2 = (name2, re, func) => new tokdef2(name2, re, func);
+  const t2 = (name, re, func) => new tokdef2(name, re, func);
   const tokens2 = [
     t2("ID", /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (tok) => {
       if (tok.value === "true" || tok.value === "false") {
@@ -24879,9 +24879,9 @@ var init_context = __esm({
       }
       load(ctx) {
         const keys2 = ctx._props;
-        function wrapget(name2) {
+        function wrapget(name) {
           return function(ctx2, data) {
-            return ctx.loadProperty(ctx2, name2, data);
+            return ctx.loadProperty(ctx2, name, data);
           };
         }
         for (const k of keys2) {
@@ -24923,10 +24923,10 @@ var init_context = __esm({
             get: getter
           };
         }
-        const defineProp = (name2) => {
-          Object.defineProperty(this, name2, {
+        const defineProp = (name) => {
+          Object.defineProperty(this, name, {
             get: function() {
-              const def = this.props[name2];
+              const def = this.props[name];
               return def.get(this.ctx, def.data);
             }
           });
@@ -25057,11 +25057,11 @@ var init_context = __esm({
       loadProperty(_ctx, _key, data) {
         return data;
       }
-      getOwningOverlay(name2, _val_out) {
+      getOwningOverlay(name, _val_out) {
         const inside_map = this._inside_map;
         const stack = this._stack;
         if (config_default.DEBUG.contextSystem) {
-          console.log(name2, inside_map);
+          console.log(name, inside_map);
         }
         for (let i2 = stack.length - 1; i2 >= 0; i2--) {
           const overlay = stack[i2];
@@ -25076,13 +25076,13 @@ var init_context = __esm({
           if (inside_map[ikey]) {
             continue;
           }
-          if (overlay.__allKeys?.has(name2)) {
+          if (overlay.__allKeys?.has(name)) {
             if (config_default.DEBUG.contextSystem) {
               console.log("getting value");
             }
             inside_map[ikey] = 1;
             try {
-              ret = overlay[name2];
+              ret = overlay[name];
             } catch (error2) {
               inside_map[ikey] = 0;
               throw error2;
@@ -25101,16 +25101,16 @@ var init_context = __esm({
         }
         return void 0;
       }
-      ensureProperty(name2) {
-        if (Object.prototype.hasOwnProperty.call(this, name2)) {
+      ensureProperty(name) {
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
           return;
         }
-        this._props.add(name2);
-        Object.defineProperty(this, name2, {
+        this._props.add(name);
+        Object.defineProperty(this, name, {
           get: function() {
             const ret = _ret_tmp;
             _ret_tmp[0] = void 0;
-            this.getOwningOverlay(name2, ret);
+            this.getOwningOverlay(name, ret);
             return ret[0];
           },
           set: function() {
@@ -25330,22 +25330,22 @@ var init_toolmacro = __esm({
           this._macro_class = registry.macros[key];
           return this._macro_class;
         }
-        let name2 = "Macro(";
+        let name = "Macro(";
         let i2 = 0;
         let is_modal;
         for (const tool of this.tools) {
           const def = tool.constructor.tooldef();
           if (i2 > 0) {
-            name2 += ", ";
+            name += ", ";
           } else {
             is_modal = def.is_modal;
           }
           if (def.uiname) {
-            name2 += def.uiname;
+            name += def.uiname;
           } else if (def.toolpath) {
-            name2 += def.toolpath;
+            name += def.toolpath;
           } else {
-            name2 += tool.constructor.name;
+            name += tool.constructor.name;
           }
           i2++;
         }
@@ -25356,7 +25356,7 @@ var init_toolmacro = __esm({
           inputs[k].wasSet = false;
         }
         const tdef = {
-          uiname: name2,
+          uiname: name,
           toolpath: key,
           inputs,
           outputs: {},
@@ -26770,7 +26770,7 @@ var init_controller_abstract = __esm({
         });
       }
       //used by simple_controller.js for tagging error messages
-      pushReportContext(name2) {
+      pushReportContext(name) {
       }
       //used by simple_controller.js for tagging error messages
       popReportContext() {
@@ -27019,17 +27019,17 @@ var init_controller_abstract = __esm({
 });
 
 // scripts/path-controller/controller/controller.ts
-function pushReportName(name2) {
+function pushReportName(name) {
   if (reportstack.length > 1024) {
     console.trace("eerk, reportstack overflowed");
     reportstack.length = 0;
     reportstack.push("api");
   }
-  reportstack.push(name2);
+  reportstack.push(name);
 }
 function report2(msg) {
-  const name2 = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
-  console2.context(name2).warn(msg);
+  const name = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
+  console2.context(name).warn(msg);
 }
 function popReportName() {
   reportstack.pop();
@@ -27081,7 +27081,7 @@ var init_controller = __esm({
     init_controller_base();
     init_toolprop();
     PUTLParseError2 = PUTLParseError;
-    tk = (name2, re, func) => new tokdef2(name2, re, func);
+    tk = (name, re, func) => new tokdef2(name, re, func);
     tokens = [
       tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
       tk("NUM", /-?[0-9]+/, (t2) => {
@@ -27127,9 +27127,9 @@ var init_controller = __esm({
       flag;
       dpath;
       inheritFlag;
-      constructor(members = [], name2 = "unnamed") {
+      constructor(members = [], name = "unnamed") {
         this.members = [];
-        this.name = name2;
+        this.name = name;
         this.pathmap = {};
         this.flag = 0;
         this.dpath = void 0;
@@ -27533,8 +27533,8 @@ var init_controller = __esm({
             if (prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY)) {
               continue;
             }
-            const name2 = ToolPropertyCache._accessorName(key, prop);
-            if (st.pathmap && name2 in st.pathmap) {
+            const name = ToolPropertyCache._accessorName(key, prop);
+            if (st.pathmap && name in st.pathmap) {
               continue;
             }
             const prop2 = prop.copy();
@@ -27547,7 +27547,7 @@ var init_controller = __esm({
             }
             prop2.uiname = ToolProperty.makeUIName(uiname);
             prop2.description = prop2.description || prop2.uiname;
-            st.add(new DataPath(name2, name2, prop2));
+            st.add(new DataPath(name, name, prop2));
           }
         }
       }
@@ -27633,21 +27633,21 @@ var init_controller = __esm({
        * need a class reference, so it survives bundler name-mangling as long as the
        * struct was registered with an nstructjs/explicit name.
        */
-      getStructByName(name2) {
-        return this._structsByName[name2];
+      getStructByName(name) {
+        return this._structsByName[name];
       }
       mergeStructs(dest, src) {
         for (const m of src.members) {
           dest.add(m.copy());
         }
       }
-      inheritStruct(cls, parent, auto_create_parent = false, name2) {
+      inheritStruct(cls, parent, auto_create_parent = false, name) {
         let st = this.mapStruct(parent, auto_create_parent);
         if (st === void 0) {
           throw new Error("parent has no struct definition");
         }
         st = st.copy();
-        this._addClass(cls, st, name2);
+        this._addClass(cls, st, name);
         return st;
       }
       /**
@@ -27657,8 +27657,8 @@ var init_controller = __esm({
        * @param auto_create: If true, automatically create definition if not already existing.
        * @returns {IterableIterator<*>}
        */
-      _addClass(cls, dstruct, name2) {
-        const stableName = resolveStructName(cls, name2);
+      _addClass(cls, dstruct, name) {
+        const stableName = resolveStructName(cls, name);
         dstruct.name = stableName;
         this.structs.push(dstruct);
         this._structsByClass.set(cls, dstruct);
@@ -27679,32 +27679,32 @@ var init_controller = __esm({
        * The callback lives on the class, so two apis share one — which is why the api is
        * passed in rather than closed over.
        */
-      mapStructCustom(cls, callback, name2) {
-        this.mapStruct(cls, true, name2);
+      mapStructCustom(cls, callback, name) {
+        this.mapStruct(cls, true, name);
         cls[CLS_API_KEY_CUSTOM] = callback;
       }
-      mapStruct(cls, auto_create = true, name2) {
+      mapStruct(cls, auto_create = true, name) {
         const mapped = this._structsByClass.get(cls);
         if (mapped !== void 0) {
           return mapped;
         }
         if (!auto_create) {
           throw new DataPathError(
-            "class does not have a struct definition: " + resolveStructName(cls, name2)
+            "class does not have a struct definition: " + resolveStructName(cls, name)
           );
         }
         let dstruct;
-        if (name2 !== void 0 && this._structsByName[name2] !== void 0) {
-          dstruct = this._structsByName[name2];
+        if (name !== void 0 && this._structsByName[name] !== void 0) {
+          dstruct = this._structsByName[name];
         } else {
-          dstruct = new DataStruct(void 0, resolveStructName(cls, name2));
+          dstruct = new DataStruct(void 0, resolveStructName(cls, name));
         }
-        this._addClass(cls, dstruct, name2);
+        this._addClass(cls, dstruct, name);
         return dstruct;
       }
       //used for tagging error messages
-      pushReportContext(name2) {
-        pushReportName(name2);
+      pushReportContext(name) {
+        pushReportName(name);
       }
       //used for tagging error messages
       popReportContext() {
@@ -27844,8 +27844,8 @@ An example of a more complicated expression might be:
             datapath: inpath,
             dataref: ret.obj
           };
-          const name2 = ret.dpath.ui_name_get.call(dummy);
-          ret.prop.uiname = "" + name2;
+          const name = ret.dpath.ui_name_get.call(dummy);
+          ret.prop.uiname = "" + name;
         }
         return ret;
       }
@@ -33697,17 +33697,29 @@ var init_ui_base = __esm({
       static getDPI() {
         return getDPI();
       }
-      static prefix(name2) {
-        return prefix(name2);
+      static prefix(name) {
+        return prefix(name);
       }
       static internalRegister(cls) {
         registerInternal(cls, this.prefix(cls.define().tagname));
       }
-      static getInternalName(name2) {
-        return getInternalName(name2);
+      static getInternalName(name) {
+        return getInternalName(name);
       }
-      static createElement(name2, internal = false) {
-        return createElement(name2, internal);
+      /** For internal use only, use constructElement */
+      static createElement(name, internal = false) {
+        return createElement(name, internal);
+      }
+      /**
+       * For use with external code, calls elem.checkInit().
+       * Only use UIBase.createElement if you need to modify
+       * the element prior to its .init().
+       */
+      static constructElement(name, ctx) {
+        const elem = createElement(name, false);
+        elem.ctx = ctx;
+        elem.checkInit();
+        return elem;
       }
       static isRegistered(cls) {
         return isRegistered2(cls);
@@ -34702,8 +34714,8 @@ var init_ui_button = __esm({
       setCSS() {
         super.setCSS();
         this.updateBorders();
-        const name2 = this._name;
-        if (name2 === void 0) {
+        const name = this._name;
+        if (name === void 0) {
           return;
         }
         const pad = this.getDefault("padding");
@@ -34738,9 +34750,9 @@ var init_ui_button = __esm({
         if (!this.hasAttribute("name")) {
           return;
         }
-        const name2 = this.getAttribute("name");
-        if (name2 !== this._name) {
-          this._name = name2 ?? void 0;
+        const name = this.getAttribute("name");
+        if (name !== this._name) {
+          this._name = name ?? void 0;
           this.setCSS();
           this._repos_canvas();
           this._redraw();
@@ -35019,13 +35031,13 @@ function createMenu(ctx, title, templ) {
       });
     } else if (typeof item === "object") {
       const objItem = item;
-      const { name: name2, callback, icon, tooltip } = objItem;
+      const { name, callback, icon, tooltip } = objItem;
       let { hotkey } = objItem;
       const id2 = objItem.id !== void 0 ? objItem.id : id++;
       if (hotkey !== void 0 && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
-      menu.addItemExtra(name2, id2, hotkey, icon, void 0, tooltip);
+      menu.addItemExtra(name, id2, hotkey, icon, void 0, tooltip);
       if (objItem.disabled) {
         menu.setItemDisabled(id2);
       } else if (objItem.validate) {
@@ -35325,14 +35337,14 @@ var init_dropbox = __esm({
           this.prop = prop;
         }
         prop = this.prop;
-        let name2;
+        let name;
         if (prop.type & (PropTypes3.ENUM | PropTypes3.FLAG)) {
-          name2 = prop.ui_value_names[prop.keys[val]];
+          name = prop.ui_value_names[prop.keys[val]];
         } else {
-          name2 = "" + val;
+          name = "" + val;
         }
-        if (name2 !== this.getAttribute("name")) {
-          this.setAttribute("name", name2);
+        if (name !== this.getAttribute("name")) {
+          this.setAttribute("name", name);
           this.updateName();
         }
       }
@@ -38211,8 +38223,8 @@ var require_tinymce = __commonJS({
       };
       var mapToArray = function(obj, f2) {
         var r2 = [];
-        each$1(obj, function(value2, name3) {
-          r2.push(f2(value2, name3));
+        each$1(obj, function(value2, name2) {
+          r2.push(f2(value2, name2));
         });
         return r2;
       };
@@ -38370,9 +38382,9 @@ var require_tinymce = __commonJS({
       var nu$1 = function(info) {
         var current = info.current;
         var version = info.version;
-        var isBrowser = function(name3) {
+        var isBrowser = function(name2) {
           return function() {
-            return current === name3;
+            return current === name2;
           };
         };
         return {
@@ -38413,9 +38425,9 @@ var require_tinymce = __commonJS({
       var nu$2 = function(info) {
         var current = info.current;
         var version = info.version;
-        var isOS = function(name3) {
+        var isOS = function(name2) {
           return function() {
-            return current === name3;
+            return current === name2;
           };
         };
         return {
@@ -38829,7 +38841,7 @@ var require_tinymce = __commonJS({
         remove2(wrapper);
       };
       var Global = typeof domGlobals.window !== "undefined" ? domGlobals.window : Function("return this;")();
-      var name2 = function(element) {
+      var name = function(element) {
         var r2 = element.dom().nodeName;
         return r2.toLowerCase();
       };
@@ -38842,7 +38854,7 @@ var require_tinymce = __commonJS({
         };
       };
       var isComment = function(element) {
-        return type(element) === COMMENT || name2(element) === "#comment";
+        return type(element) === COMMENT || name(element) === "#comment";
       };
       var isElement = isType$1(ELEMENT);
       var isText = isType$1(TEXT);
@@ -38973,14 +38985,14 @@ var require_tinymce = __commonJS({
           return false;
         };
       };
-      var matchStyleValues = function(name3, values2) {
+      var matchStyleValues = function(name2, values2) {
         var items = values2.toLowerCase().split(" ");
         return function(node) {
           var i2, cssValue;
           if (isElement$1(node)) {
             for (i2 = 0; i2 < items.length; i2++) {
               var computed = node.ownerDocument.defaultView.getComputedStyle(node, null);
-              cssValue = computed ? computed.getPropertyValue(name3) : null;
+              cssValue = computed ? computed.getPropertyValue(name2) : null;
               if (cssValue === items[i2]) {
                 return true;
               }
@@ -39105,9 +39117,9 @@ var require_tinymce = __commonJS({
         return find(nodes, isElement);
       };
       var getTableCaptionDeltaY = function(elm) {
-        if (browser.isFirefox() && name2(elm) === "table") {
+        if (browser.isFirefox() && name(elm) === "table") {
           return firstElement(children(elm)).filter(function(elm2) {
-            return name2(elm2) === "caption";
+            return name(elm2) === "caption";
           }).bind(function(caption) {
             return firstElement(nextSiblings(caption)).map(function(body) {
               var bodyTop = body.dom().offsetTop;
@@ -39355,10 +39367,10 @@ var require_tinymce = __commonJS({
                   process3.emit = noop2;
                   process3.prependListener = noop2;
                   process3.prependOnceListener = noop2;
-                  process3.listeners = function(name3) {
+                  process3.listeners = function(name2) {
                     return [];
                   };
-                  process3.binding = function(name3) {
+                  process3.binding = function(name2) {
                     throw new Error("process.binding is not supported");
                   };
                   process3.cwd = function() {
@@ -40770,19 +40782,19 @@ var require_tinymce = __commonJS({
         var lookup;
         return function(node) {
           lookup = lookup ? lookup : mapToObject(items, constant(true));
-          return lookup.hasOwnProperty(name2(node));
+          return lookup.hasOwnProperty(name(node));
         };
       };
       var isHeading = lazyLookup(headings);
       var isBlock = lazyLookup(blocks);
       var isTable$1 = function(node) {
-        return name2(node) === "table";
+        return name(node) === "table";
       };
       var isInline = function(node) {
         return isElement(node) && !isBlock(node);
       };
       var isBr$1 = function(node) {
-        return isElement(node) && name2(node) === "br";
+        return isElement(node) && name(node) === "br";
       };
       var isTextBlock = lazyLookup(textBlocks);
       var isList = lazyLookup(lists);
@@ -40930,7 +40942,7 @@ var require_tinymce = __commonJS({
           return baseEntities[chr] || entities[chr] || chr;
         });
       };
-      var getEncodeFunc = function(name3, entities) {
+      var getEncodeFunc = function(name2, entities) {
         var entitiesMap = buildEntitiesLookup(entities) || namedEntities;
         var encodeNamedAndNumeric = function(text2, attr) {
           return text2.replace(attr ? attrsCharsRegExp : textCharsRegExp, function(chr) {
@@ -40949,7 +40961,7 @@ var require_tinymce = __commonJS({
         var encodeCustomNamed = function(text2, attr) {
           return encodeNamed(text2, attr, entitiesMap);
         };
-        var nameMap = makeMap$1(name3.replace(/\+/g, ","));
+        var nameMap = makeMap$1(name2.replace(/\+/g, ","));
         if (nameMap.named && nameMap.numeric) {
           return encodeNamedAndNumeric;
         }
@@ -40999,7 +41011,7 @@ var require_tinymce = __commonJS({
         var schema = {};
         var globalAttributes, blockContent;
         var phrasingContent, flowContent, html4BlockContent, html4PhrasingContent;
-        var add2 = function(name3, attributes2, children2) {
+        var add2 = function(name2, attributes2, children2) {
           var ni, attributesOrder, element;
           var arrayToMap = function(array, obj) {
             var map4 = {};
@@ -41014,8 +41026,8 @@ var require_tinymce = __commonJS({
           if (typeof children2 === "string") {
             children2 = split(children2);
           }
-          name3 = split(name3);
-          ni = name3.length;
+          name2 = split(name2);
+          ni = name2.length;
           while (ni--) {
             attributesOrder = split([globalAttributes, attributes2].join(" "));
             element = {
@@ -41023,16 +41035,16 @@ var require_tinymce = __commonJS({
               attributesOrder,
               children: arrayToMap(children2, dummyObj)
             };
-            schema[name3[ni]] = element;
+            schema[name2[ni]] = element;
           }
         };
-        var addAttrs = function(name3, attributes2) {
+        var addAttrs = function(name2, attributes2) {
           var ni, schemaItem, i2, l;
-          name3 = split(name3);
-          ni = name3.length;
+          name2 = split(name2);
+          ni = name2.length;
           attributes2 = split(attributes2);
           while (ni--) {
-            schemaItem = schema[name3[ni]];
+            schemaItem = schema[name2[ni]];
             for (i2 = 0, l = attributes2.length; i2 < l; i2++) {
               schemaItem.attributes[attributes2[i2]] = {};
               schemaItem.attributesOrder.push(attributes2[i2]);
@@ -41054,14 +41066,14 @@ var require_tinymce = __commonJS({
           globalAttributes += " xml:lang";
           html4PhrasingContent = "acronym applet basefont big font strike tt";
           phrasingContent = [phrasingContent, html4PhrasingContent].join(" ");
-          each$3(split(html4PhrasingContent), function(name3) {
-            add2(name3, "", phrasingContent);
+          each$3(split(html4PhrasingContent), function(name2) {
+            add2(name2, "", phrasingContent);
           });
           html4BlockContent = "center dir isindex noframes";
           blockContent = [blockContent, html4BlockContent].join(" ");
           flowContent = [blockContent, phrasingContent].join(" ");
-          each$3(split(html4BlockContent), function(name3) {
-            add2(name3, "", flowContent);
+          each$3(split(html4BlockContent), function(name2) {
+            add2(name2, "", flowContent);
           });
         }
         flowContent = flowContent || [blockContent, phrasingContent].join(" ");
@@ -41214,9 +41226,9 @@ var require_tinymce = __commonJS({
           addAttrs("img", "loading");
           addAttrs("iframe", "sandbox seamless allowfullscreen loading");
         }
-        each$3(split("a form meter progress dfn"), function(name3) {
-          if (schema[name3]) {
-            delete schema[name3].children[name3];
+        each$3(split("a form meter progress dfn"), function(name2) {
+          if (schema[name2]) {
+            delete schema[name2].children[name2];
           }
         });
         delete schema.caption.children.table;
@@ -41310,8 +41322,8 @@ var require_tinymce = __commonJS({
         );
         each$3(
           (settings.special || "script noscript noframes noembed title style textarea xmp").split(" "),
-          function(name3) {
-            specialElements[name3] = new RegExp("</" + name3 + "[^>]*>", "gi");
+          function(name2) {
+            specialElements[name2] = new RegExp("</" + name2 + "[^>]*>", "gi");
           }
         );
         var patternToRegExp = function(str) {
@@ -41430,8 +41442,8 @@ var require_tinymce = __commonJS({
           elements = {};
           patternElements = [];
           addValidElements(validElements);
-          each$3(schemaItems, function(element, name3) {
-            children2[name3] = element.children;
+          each$3(schemaItems, function(element, name2) {
+            children2[name2] = element.children;
           });
         };
         var addCustomElements = function(customElements2) {
@@ -41439,24 +41451,24 @@ var require_tinymce = __commonJS({
           if (customElements2) {
             mapCache.text_block_elements = mapCache.block_elements = null;
             each$3(split(customElements2, ","), function(rule) {
-              var matches2 = customElementRegExp.exec(rule), inline = matches2[1] === "~", cloneName = inline ? "span" : "div", name3 = matches2[2];
-              children2[name3] = children2[cloneName];
-              customElementsMap[name3] = cloneName;
+              var matches2 = customElementRegExp.exec(rule), inline = matches2[1] === "~", cloneName = inline ? "span" : "div", name2 = matches2[2];
+              children2[name2] = children2[cloneName];
+              customElementsMap[name2] = cloneName;
               if (!inline) {
-                blockElementsMap[name3.toUpperCase()] = {};
-                blockElementsMap[name3] = {};
+                blockElementsMap[name2.toUpperCase()] = {};
+                blockElementsMap[name2] = {};
               }
-              if (!elements[name3]) {
+              if (!elements[name2]) {
                 var customRule = elements[cloneName];
                 customRule = extend$1({}, customRule);
                 delete customRule.removeEmptyAttrs;
                 delete customRule.removeEmpty;
-                elements[name3] = customRule;
+                elements[name2] = customRule;
               }
               each$3(children2, function(element, elmName) {
                 if (element[cloneName]) {
                   children2[elmName] = element = extend$1({}, children2[elmName]);
-                  element[name3] = element[cloneName];
+                  element[name2] = element[cloneName];
                 }
               });
             });
@@ -41488,26 +41500,26 @@ var require_tinymce = __commonJS({
             });
           }
         };
-        var getElementRule = function(name3) {
-          var element = elements[name3], i2;
+        var getElementRule = function(name2) {
+          var element = elements[name2], i2;
           if (element) {
             return element;
           }
           i2 = patternElements.length;
           while (i2--) {
             element = patternElements[i2];
-            if (element.pattern.test(name3)) {
+            if (element.pattern.test(name2)) {
               return element;
             }
           }
         };
         if (!settings.valid_elements) {
-          each$3(schemaItems, function(element, name3) {
-            elements[name3] = {
+          each$3(schemaItems, function(element, name2) {
+            elements[name2] = {
               attributes: element.attributes,
               attributesOrder: element.attributesOrder
             };
-            children2[name3] = element.children;
+            children2[name2] = element.children;
           });
           if (settings.schema !== "html5") {
             each$3(split("strong/b em/i"), function(item) {
@@ -41517,17 +41529,17 @@ var require_tinymce = __commonJS({
           }
           each$3(
             split("ol ul sub sup blockquote span font a table tbody tr strong em b i"),
-            function(name3) {
-              if (elements[name3]) {
-                elements[name3].removeEmpty = true;
+            function(name2) {
+              if (elements[name2]) {
+                elements[name2].removeEmpty = true;
               }
             }
           );
-          each$3(split("p h1 h2 h3 h4 h5 h6 th td pre div address caption li"), function(name3) {
-            elements[name3].paddEmpty = true;
+          each$3(split("p h1 h2 h3 h4 h5 h6 th td pre div address caption li"), function(name2) {
+            elements[name2].paddEmpty = true;
           });
-          each$3(split("span"), function(name3) {
-            elements[name3].removeEmptyAttrs = true;
+          each$3(split("span"), function(name2) {
+            elements[name2].removeEmptyAttrs = true;
           });
         } else {
           setValidElements(settings.valid_elements);
@@ -41606,13 +41618,13 @@ var require_tinymce = __commonJS({
         var getSpecialElements = function() {
           return specialElements;
         };
-        var isValidChild = function(name3, child2) {
-          var parent2 = children2[name3.toLowerCase()];
+        var isValidChild = function(name2, child2) {
+          var parent2 = children2[name2.toLowerCase()];
           return !!(parent2 && parent2[child2.toLowerCase()]);
         };
-        var isValid2 = function(name3, attr) {
+        var isValid2 = function(name2, attr) {
           var attrPatterns, i2;
-          var rule = getElementRule(name3);
+          var rule = getElementRule(name2);
           if (rule) {
             if (attr) {
               if (rule.attributes[attr]) {
@@ -41622,7 +41634,7 @@ var require_tinymce = __commonJS({
               if (attrPatterns) {
                 i2 = attrPatterns.length;
                 while (i2--) {
-                  if (attrPatterns[i2].pattern.test(name3)) {
+                  if (attrPatterns[i2].pattern.test(name2)) {
                     return true;
                   }
                 }
@@ -41704,7 +41716,7 @@ var require_tinymce = __commonJS({
           },
           parse: function(css) {
             var styles = {};
-            var matches2, name3, value2, isEncoded;
+            var matches2, name2, value2, isEncoded;
             var urlConverter = settings.url_converter;
             var urlConverterScope = settings.url_converter_scope || this;
             var compress2 = function(prefix2, suffix, noJoin) {
@@ -41820,25 +41832,25 @@ var require_tinymce = __commonJS({
               });
               while (matches2 = styleRegExp.exec(css)) {
                 styleRegExp.lastIndex = matches2.index + matches2[0].length;
-                name3 = matches2[1].replace(trimRightRegExp, "").toLowerCase();
+                name2 = matches2[1].replace(trimRightRegExp, "").toLowerCase();
                 value2 = matches2[2].replace(trimRightRegExp, "");
-                if (name3 && value2) {
-                  name3 = decodeHexSequences(name3);
+                if (name2 && value2) {
+                  name2 = decodeHexSequences(name2);
                   value2 = decodeHexSequences(value2);
-                  if (name3.indexOf(invisibleChar) !== -1 || name3.indexOf('"') !== -1) {
+                  if (name2.indexOf(invisibleChar) !== -1 || name2.indexOf('"') !== -1) {
                     continue;
                   }
-                  if (!settings.allow_script_urls && (name3 === "behavior" || /expression\s*\(|\/\*|\*\//.test(value2))) {
+                  if (!settings.allow_script_urls && (name2 === "behavior" || /expression\s*\(|\/\*|\*\//.test(value2))) {
                     continue;
                   }
-                  if (name3 === "font-weight" && value2 === "700") {
+                  if (name2 === "font-weight" && value2 === "700") {
                     value2 = "bold";
-                  } else if (name3 === "color" || name3 === "background-color") {
+                  } else if (name2 === "color" || name2 === "background-color") {
                     value2 = value2.toLowerCase();
                   }
                   value2 = value2.replace(rgbRegExp, toHex);
                   value2 = value2.replace(urlOrStrRegExp, processUrl);
-                  styles[name3] = isEncoded ? decode2(value2, true) : value2;
+                  styles[name2] = isEncoded ? decode2(value2, true) : value2;
                 }
               }
               compress2("border", "", true);
@@ -41859,34 +41871,34 @@ var require_tinymce = __commonJS({
           },
           serialize: function(styles, elementName) {
             var css = "";
-            var serializeStyles = function(name3) {
+            var serializeStyles = function(name2) {
               var styleList, i3, l, value2;
-              styleList = validStyles[name3];
+              styleList = validStyles[name2];
               if (styleList) {
                 for (i3 = 0, l = styleList.length; i3 < l; i3++) {
-                  name3 = styleList[i3];
-                  value2 = styles[name3];
+                  name2 = styleList[i3];
+                  value2 = styles[name2];
                   if (value2) {
-                    css += (css.length > 0 ? " " : "") + name3 + ": " + value2 + ";";
+                    css += (css.length > 0 ? " " : "") + name2 + ": " + value2 + ";";
                   }
                 }
               }
             };
-            var isValid2 = function(name3, elementName2) {
+            var isValid2 = function(name2, elementName2) {
               var styleMap = invalidStyles["*"];
-              if (styleMap && styleMap[name3]) {
+              if (styleMap && styleMap[name2]) {
                 return false;
               }
               styleMap = invalidStyles[elementName2];
-              return !(styleMap && styleMap[name3]);
+              return !(styleMap && styleMap[name2]);
             };
             if (elementName && validStyles) {
               serializeStyles("*");
               serializeStyles(elementName);
             } else {
-              each$1(styles, function(value2, name3) {
-                if (value2 && (!invalidStyles || isValid2(name3, elementName))) {
-                  css += (css.length > 0 ? " " : "") + name3 + ": " + value2 + ";";
+              each$1(styles, function(value2, name2) {
+                if (value2 && (!invalidStyles || isValid2(name2, elementName))) {
+                  css += (css.length > 0 ? " " : "") + name2 + ": " + value2 + ";";
                 }
               });
             }
@@ -41915,18 +41927,18 @@ var require_tinymce = __commonJS({
       var returnTrue = function() {
         return true;
       };
-      var addEvent = function(target, name3, callback, capture) {
+      var addEvent = function(target, name2, callback, capture) {
         if (target.addEventListener) {
-          target.addEventListener(name3, callback, capture || false);
+          target.addEventListener(name2, callback, capture || false);
         } else if (target.attachEvent) {
-          target.attachEvent("on" + name3, callback);
+          target.attachEvent("on" + name2, callback);
         }
       };
-      var removeEvent = function(target, name3, callback, capture) {
+      var removeEvent = function(target, name2, callback, capture) {
         if (target.removeEventListener) {
-          target.removeEventListener(name3, callback, capture || false);
+          target.removeEventListener(name2, callback, capture || false);
         } else if (target.detachEvent) {
-          target.detachEvent("on" + name3, callback);
+          target.detachEvent("on" + name2, callback);
         }
       };
       var getTargetFromShadowDom = function(event, defaultTarget) {
@@ -41939,11 +41951,11 @@ var require_tinymce = __commonJS({
         return defaultTarget;
       };
       var fix = function(originalEvent, data2) {
-        var name3;
+        var name2;
         var event = data2 || {};
-        for (name3 in originalEvent) {
-          if (!deprecated[name3]) {
-            event[name3] = originalEvent[name3];
+        for (name2 in originalEvent) {
+          if (!deprecated[name2]) {
+            event[name2] = originalEvent[name2];
           }
         }
         if (!event.target) {
@@ -42029,7 +42041,7 @@ var require_tinymce = __commonJS({
         }
         EventUtils2.prototype.bind = function(target, names, callback, scope) {
           var self2 = this;
-          var id, callbackList, i2, name3, fakeName, nativeHandler, capture;
+          var id, callbackList, i2, name2, fakeName, nativeHandler, capture;
           var win = domGlobals.window;
           var defaultNativeHandler = function(evt) {
             self2.executeHandlers(fix(evt || win.event), id);
@@ -42048,18 +42060,18 @@ var require_tinymce = __commonJS({
           var namesList = names.split(" ");
           i2 = namesList.length;
           while (i2--) {
-            name3 = namesList[i2];
+            name2 = namesList[i2];
             nativeHandler = defaultNativeHandler;
             fakeName = capture = false;
-            if (name3 === "DOMContentLoaded") {
-              name3 = "ready";
+            if (name2 === "DOMContentLoaded") {
+              name2 = "ready";
             }
-            if (self2.domLoaded && name3 === "ready" && target.readyState === "complete") {
-              callback.call(scope, fix({ type: name3 }));
+            if (self2.domLoaded && name2 === "ready" && target.readyState === "complete") {
+              callback.call(scope, fix({ type: name2 }));
               continue;
             }
             if (!self2.hasMouseEnterLeave) {
-              fakeName = self2.mouseEnterLeave[name3];
+              fakeName = self2.mouseEnterLeave[name2];
               if (fakeName) {
                 nativeHandler = function(evt) {
                   var current, related;
@@ -42081,18 +42093,18 @@ var require_tinymce = __commonJS({
                 };
               }
             }
-            if (!self2.hasFocusIn && (name3 === "focusin" || name3 === "focusout")) {
+            if (!self2.hasFocusIn && (name2 === "focusin" || name2 === "focusout")) {
               capture = true;
-              fakeName = name3 === "focusin" ? "focus" : "blur";
+              fakeName = name2 === "focusin" ? "focus" : "blur";
               nativeHandler = function(evt) {
                 evt = fix(evt || win.event);
                 evt.type = evt.type === "focus" ? "focusin" : "focusout";
                 self2.executeHandlers(evt, id);
               };
             }
-            callbackList = self2.events[id][name3];
+            callbackList = self2.events[id][name2];
             if (!callbackList) {
-              self2.events[id][name3] = callbackList = [
+              self2.events[id][name2] = callbackList = [
                 {
                   func: callback,
                   scope
@@ -42101,14 +42113,14 @@ var require_tinymce = __commonJS({
               callbackList.fakeName = fakeName;
               callbackList.capture = capture;
               callbackList.nativeHandler = nativeHandler;
-              if (name3 === "ready") {
+              if (name2 === "ready") {
                 bindOnReady(target, nativeHandler, self2);
               } else {
-                addEvent(target, fakeName || name3, nativeHandler, capture);
+                addEvent(target, fakeName || name2, nativeHandler, capture);
               }
             } else {
-              if (name3 === "ready" && self2.domLoaded) {
-                callback(fix({ type: name3 }));
+              if (name2 === "ready" && self2.domLoaded) {
+                callback(fix({ type: name2 }));
               } else {
                 callbackList.push({
                   func: callback,
@@ -42121,7 +42133,7 @@ var require_tinymce = __commonJS({
           return callback;
         };
         EventUtils2.prototype.unbind = function(target, names, callback) {
-          var id, callbackList, i2, ci, name3, eventMap;
+          var id, callbackList, i2, ci, name2, eventMap;
           if (!target || target.nodeType === 3 || target.nodeType === 8) {
             return this;
           }
@@ -42132,8 +42144,8 @@ var require_tinymce = __commonJS({
               var namesList = names.split(" ");
               i2 = namesList.length;
               while (i2--) {
-                name3 = namesList[i2];
-                callbackList = eventMap[name3];
+                name2 = namesList[i2];
+                callbackList = eventMap[name2];
                 if (callbackList) {
                   if (callback) {
                     ci = callbackList.length;
@@ -42145,15 +42157,15 @@ var require_tinymce = __commonJS({
                         callbackList.nativeHandler = nativeHandler;
                         callbackList.fakeName = fakeName;
                         callbackList.capture = capture;
-                        eventMap[name3] = callbackList;
+                        eventMap[name2] = callbackList;
                       }
                     }
                   }
                   if (!callback || callbackList.length === 0) {
-                    delete eventMap[name3];
+                    delete eventMap[name2];
                     removeEvent(
                       target,
-                      callbackList.fakeName || name3,
+                      callbackList.fakeName || name2,
                       callbackList.nativeHandler,
                       callbackList.capture
                     );
@@ -42161,18 +42173,18 @@ var require_tinymce = __commonJS({
                 }
               }
             } else {
-              each$1(eventMap, function(callbackList2, name4) {
+              each$1(eventMap, function(callbackList2, name3) {
                 removeEvent(
                   target,
-                  callbackList2.fakeName || name4,
+                  callbackList2.fakeName || name3,
                   callbackList2.nativeHandler,
                   callbackList2.capture
                 );
               });
               eventMap = {};
             }
-            for (name3 in eventMap) {
-              if (has(eventMap, name3)) {
+            for (name2 in eventMap) {
+              if (has(eventMap, name2)) {
                 return this;
               }
             }
@@ -42185,13 +42197,13 @@ var require_tinymce = __commonJS({
           }
           return this;
         };
-        EventUtils2.prototype.fire = function(target, name3, args) {
+        EventUtils2.prototype.fire = function(target, name2, args) {
           var id;
           if (!target || target.nodeType === 3 || target.nodeType === 8) {
             return this;
           }
           var event = fix(null, args);
-          event.type = name3;
+          event.type = name2;
           event.target = target;
           do {
             id = target[this.expando];
@@ -42406,14 +42418,14 @@ var require_tinymce = __commonJS({
       }
       function createInputPseudo(type2) {
         return function(elem) {
-          var name3 = elem.nodeName.toLowerCase();
-          return name3 === "input" && elem.type === type2;
+          var name2 = elem.nodeName.toLowerCase();
+          return name2 === "input" && elem.type === type2;
         };
       }
       function createButtonPseudo(type2) {
         return function(elem) {
-          var name3 = elem.nodeName.toLowerCase();
-          return (name3 === "input" || name3 === "button") && elem.type === type2;
+          var name2 = elem.nodeName.toLowerCase();
+          return (name2 === "input" || name2 === "button") && elem.type === type2;
         };
       }
       function createPositionalPseudo(fn) {
@@ -42594,12 +42606,12 @@ var require_tinymce = __commonJS({
         }
         return contains$3(context2, elem);
       };
-      Sizzle.attr = function(elem, name3) {
+      Sizzle.attr = function(elem, name2) {
         if ((elem.ownerDocument || elem) !== document2) {
           setDocument(elem);
         }
-        var fn = Expr.attrHandle[name3.toLowerCase()], val = fn && hasOwn.call(Expr.attrHandle, name3.toLowerCase()) ? fn(elem, name3, !documentIsHTML) : void 0;
-        return val !== void 0 ? val : support.attributes || !documentIsHTML ? elem.getAttribute(name3) : (val = elem.getAttributeNode(name3)) && val.specified ? val.value : null;
+        var fn = Expr.attrHandle[name2.toLowerCase()], val = fn && hasOwn.call(Expr.attrHandle, name2.toLowerCase()) ? fn(elem, name2, !documentIsHTML) : void 0;
+        return val !== void 0 ? val : support.attributes || !documentIsHTML ? elem.getAttribute(name2) : (val = elem.getAttributeNode(name2)) && val.specified ? val.value : null;
       };
       Sizzle.error = function(msg) {
         throw new Error("Syntax error, unrecognized expression: " + msg);
@@ -42714,9 +42726,9 @@ var require_tinymce = __commonJS({
               );
             });
           },
-          ATTR: function(name3, operator, check) {
+          ATTR: function(name2, operator, check) {
             return function(elem) {
-              var result = Sizzle.attr(elem, name3);
+              var result = Sizzle.attr(elem, name2);
               if (result == null) {
                 return operator === "!=";
               }
@@ -42732,13 +42744,13 @@ var require_tinymce = __commonJS({
             return first3 === 1 && last2 === 0 ? function(elem) {
               return !!elem.parentNode;
             } : function(elem, context2, xml) {
-              var cache, outerCache, node, diff2, nodeIndex2, start3, dir2 = simple !== forward ? "nextSibling" : "previousSibling", parent2 = elem.parentNode, name3 = ofType && elem.nodeName.toLowerCase(), useCache = !xml && !ofType;
+              var cache, outerCache, node, diff2, nodeIndex2, start3, dir2 = simple !== forward ? "nextSibling" : "previousSibling", parent2 = elem.parentNode, name2 = ofType && elem.nodeName.toLowerCase(), useCache = !xml && !ofType;
               if (parent2) {
                 if (simple) {
                   while (dir2) {
                     node = elem;
                     while (node = node[dir2]) {
-                      if (ofType ? node.nodeName.toLowerCase() === name3 : node.nodeType === 1) {
+                      if (ofType ? node.nodeName.toLowerCase() === name2 : node.nodeType === 1) {
                         return false;
                       }
                     }
@@ -42763,7 +42775,7 @@ var require_tinymce = __commonJS({
                   diff2 = cache[1];
                 } else {
                   while (node = ++nodeIndex2 && node && node[dir2] || (diff2 = nodeIndex2 = 0) || start3.pop()) {
-                    if ((ofType ? node.nodeName.toLowerCase() === name3 : node.nodeType === 1) && ++diff2) {
+                    if ((ofType ? node.nodeName.toLowerCase() === name2 : node.nodeType === 1) && ++diff2) {
                       if (useCache) {
                         (node[expando] || (node[expando] = {}))[type2] = [dirruns, diff2];
                       }
@@ -42885,8 +42897,8 @@ var require_tinymce = __commonJS({
             return rinputs.test(elem.nodeName);
           },
           button: function(elem) {
-            var name3 = elem.nodeName.toLowerCase();
-            return name3 === "input" && elem.type === "button" || name3 === "button";
+            var name2 = elem.nodeName.toLowerCase();
+            return name2 === "input" && elem.type === "button" || name2 === "button";
           },
           text: function(elem) {
             var attr;
@@ -43507,39 +43519,39 @@ var require_tinymce = __commonJS({
           }
           return self2;
         },
-        attr: function(name3, value2) {
+        attr: function(name2, value2) {
           var self2 = this;
           var hook;
-          if (typeof name3 === "object") {
-            each$4(name3, function(name4, value3) {
-              self2.attr(name4, value3);
+          if (typeof name2 === "object") {
+            each$4(name2, function(name3, value3) {
+              self2.attr(name3, value3);
             });
           } else if (isDefined(value2)) {
             this.each(function() {
               var hook2;
               if (this.nodeType === 1) {
-                hook2 = attrHooks[name3];
+                hook2 = attrHooks[name2];
                 if (hook2 && hook2.set) {
                   hook2.set(this, value2);
                   return;
                 }
                 if (value2 === null) {
-                  this.removeAttribute(name3, 2);
+                  this.removeAttribute(name2, 2);
                 } else {
-                  this.setAttribute(name3, value2, 2);
+                  this.setAttribute(name2, value2, 2);
                 }
               }
             });
           } else {
             if (self2[0] && self2[0].nodeType === 1) {
-              hook = attrHooks[name3];
+              hook = attrHooks[name2];
               if (hook && hook.get) {
-                return hook.get(self2[0], name3);
+                return hook.get(self2[0], name2);
               }
-              if (booleanMap[name3]) {
-                return self2.prop(name3) ? name3 : void 0;
+              if (booleanMap[name2]) {
+                return self2.prop(name2) ? name2 : void 0;
               }
-              value2 = self2[0].getAttribute(name3, 2);
+              value2 = self2[0].getAttribute(name2, 2);
               if (value2 === null) {
                 value2 = void 0;
               }
@@ -43548,86 +43560,86 @@ var require_tinymce = __commonJS({
           }
           return self2;
         },
-        removeAttr: function(name3) {
-          return this.attr(name3, null);
+        removeAttr: function(name2) {
+          return this.attr(name2, null);
         },
-        prop: function(name3, value2) {
+        prop: function(name2, value2) {
           var self2 = this;
-          name3 = propFix[name3] || name3;
-          if (typeof name3 === "object") {
-            each$4(name3, function(name4, value3) {
-              self2.prop(name4, value3);
+          name2 = propFix[name2] || name2;
+          if (typeof name2 === "object") {
+            each$4(name2, function(name3, value3) {
+              self2.prop(name3, value3);
             });
           } else if (isDefined(value2)) {
             this.each(function() {
               if (this.nodeType === 1) {
-                this[name3] = value2;
+                this[name2] = value2;
               }
             });
           } else {
-            if (self2[0] && self2[0].nodeType && name3 in self2[0]) {
-              return self2[0][name3];
+            if (self2[0] && self2[0].nodeType && name2 in self2[0]) {
+              return self2[0][name2];
             }
             return value2;
           }
           return self2;
         },
-        css: function(name3, value2) {
+        css: function(name2, value2) {
           var self2 = this;
           var elm, hook;
-          var camel = function(name4) {
-            return name4.replace(/-(\D)/g, function(a2, b) {
+          var camel = function(name3) {
+            return name3.replace(/-(\D)/g, function(a2, b) {
               return b.toUpperCase();
             });
           };
-          var dashed = function(name4) {
-            return name4.replace(/[A-Z]/g, function(a2) {
+          var dashed = function(name3) {
+            return name3.replace(/[A-Z]/g, function(a2) {
               return "-" + a2;
             });
           };
-          if (typeof name3 === "object") {
-            each$4(name3, function(name4, value3) {
-              self2.css(name4, value3);
+          if (typeof name2 === "object") {
+            each$4(name2, function(name3, value3) {
+              self2.css(name3, value3);
             });
           } else {
             if (isDefined(value2)) {
-              name3 = camel(name3);
-              if (typeof value2 === "number" && !numericCssMap[name3]) {
+              name2 = camel(name2);
+              if (typeof value2 === "number" && !numericCssMap[name2]) {
                 value2 = value2.toString() + "px";
               }
               self2.each(function() {
                 var style = this.style;
-                hook = cssHooks[name3];
+                hook = cssHooks[name2];
                 if (hook && hook.set) {
                   hook.set(this, value2);
                   return;
                 }
                 try {
-                  this.style[cssFix[name3] || name3] = value2;
+                  this.style[cssFix[name2] || name2] = value2;
                 } catch (ex) {
                 }
                 if (value2 === null || value2 === "") {
                   if (style.removeProperty) {
-                    style.removeProperty(dashed(name3));
+                    style.removeProperty(dashed(name2));
                   } else {
-                    style.removeAttribute(name3);
+                    style.removeAttribute(name2);
                   }
                 }
               });
             } else {
               elm = self2[0];
-              hook = cssHooks[name3];
+              hook = cssHooks[name2];
               if (hook && hook.get) {
                 return hook.get(elm);
               }
               if (elm.ownerDocument.defaultView) {
                 try {
-                  return elm.ownerDocument.defaultView.getComputedStyle(elm, null).getPropertyValue(dashed(name3));
+                  return elm.ownerDocument.defaultView.getComputedStyle(elm, null).getPropertyValue(dashed(name2));
                 } catch (ex) {
                   return void 0;
                 }
               } else if (elm.currentStyle) {
-                return elm.currentStyle[camel(name3)];
+                return elm.currentStyle[camel(name2)];
               } else {
                 return "";
               }
@@ -43806,22 +43818,22 @@ var require_tinymce = __commonJS({
         each: function(callback) {
           return each$4(this, callback);
         },
-        on: function(name3, callback) {
+        on: function(name2, callback) {
           return this.each(function() {
-            Event2.bind(this, name3, callback);
+            Event2.bind(this, name2, callback);
           });
         },
-        off: function(name3, callback) {
+        off: function(name2, callback) {
           return this.each(function() {
-            Event2.unbind(this, name3, callback);
+            Event2.unbind(this, name2, callback);
           });
         },
-        trigger: function(name3) {
+        trigger: function(name2) {
           return this.each(function() {
-            if (typeof name3 === "object") {
-              Event2.fire(this, name3.type, name3);
+            if (typeof name2 === "object") {
+              Event2.fire(this, name2.type, name2);
             } else {
-              Event2.fire(this, name3);
+              Event2.fire(this, name2);
             }
           });
         },
@@ -44016,8 +44028,8 @@ var require_tinymce = __commonJS({
             );
           }
         },
-        function(name3, fn) {
-          DomQueryConstructor.fn[name3] = function(selector) {
+        function(name2, fn) {
+          DomQueryConstructor.fn[name2] = function(selector) {
             var self2 = this;
             var result = [];
             self2.each(function() {
@@ -44031,10 +44043,10 @@ var require_tinymce = __commonJS({
               }
             });
             if (this.length > 1) {
-              if (!skipUniques[name3]) {
+              if (!skipUniques[name2]) {
                 result = DomQuery.unique(result);
               }
-              if (name3.indexOf("parents") === 0) {
+              if (name2.indexOf("parents") === 0) {
                 result = result.reverse();
               }
             }
@@ -44058,8 +44070,8 @@ var require_tinymce = __commonJS({
             return sibling(node, "previousSibling", 1, until).slice(1);
           }
         },
-        function(name3, fn) {
-          DomQueryConstructor.fn[name3] = function(selector, filter2) {
+        function(name2, fn) {
+          DomQueryConstructor.fn[name2] = function(selector, filter2) {
             var self2 = this;
             var result = [];
             self2.each(function() {
@@ -44074,7 +44086,7 @@ var require_tinymce = __commonJS({
             });
             if (this.length > 1) {
               result = DomQuery.unique(result);
-              if (name3.indexOf("parents") === 0 || name3 === "prevUntil") {
+              if (name2.indexOf("parents") === 0 || name2 === "prevUntil") {
                 result = result.reverse();
               }
             }
@@ -44185,19 +44197,19 @@ var require_tinymce = __commonJS({
       var setupAttrHooks = function(styles, settings, getContext) {
         var keepValues = settings.keep_values;
         var keepUrlHook = {
-          set: function($elm, value2, name3) {
+          set: function($elm, value2, name2) {
             if (settings.url_converter) {
               value2 = settings.url_converter.call(
                 settings.url_converter_scope || getContext(),
                 value2,
-                name3,
+                name2,
                 $elm[0]
               );
             }
-            $elm.attr("data-mce-" + name3, value2).attr(name3, value2);
+            $elm.attr("data-mce-" + name2, value2).attr(name2, value2);
           },
-          get: function($elm, name3) {
-            return $elm.attr("data-mce-" + name3) || $elm.attr(name3);
+          get: function($elm, name2) {
+            return $elm.attr("data-mce-" + name2) || $elm.attr(name2);
           }
         };
         var attrHooks2 = {
@@ -44311,15 +44323,15 @@ var require_tinymce = __commonJS({
         var $$ = function(elm) {
           return $(typeof elm === "string" ? get2(elm) : elm);
         };
-        var getAttrib = function(elm, name3, defaultVal) {
+        var getAttrib = function(elm, name2, defaultVal) {
           var hook, value2;
           var $elm = $$(elm);
           if ($elm.length) {
-            hook = attrHooks2[name3];
+            hook = attrHooks2[name2];
             if (hook && hook.get) {
-              value2 = hook.get($elm, name3);
+              value2 = hook.get($elm, name2);
             } else {
-              value2 = $elm.attr(name3);
+              value2 = $elm.attr(name2);
             }
           }
           if (typeof value2 === "undefined") {
@@ -44334,26 +44346,26 @@ var require_tinymce = __commonJS({
           }
           return node.attributes;
         };
-        var setAttrib = function(elm, name3, value2) {
+        var setAttrib = function(elm, name2, value2) {
           var originalValue, hook;
           if (value2 === "") {
             value2 = null;
           }
           var $elm = $$(elm);
-          originalValue = $elm.attr(name3);
+          originalValue = $elm.attr(name2);
           if (!$elm.length) {
             return;
           }
-          hook = attrHooks2[name3];
+          hook = attrHooks2[name2];
           if (hook && hook.set) {
-            hook.set($elm, value2, name3);
+            hook.set($elm, value2, name2);
           } else {
-            $elm.attr(name3, value2);
+            $elm.attr(name2, value2);
           }
           if (originalValue !== value2 && settings.onSetAttrib) {
             settings.onSetAttrib({
               attrElm: $elm,
-              attrName: name3,
+              attrName: name2,
               attrValue: value2
             });
           }
@@ -44384,8 +44396,8 @@ var require_tinymce = __commonJS({
         var getPos$1 = function(elm, rootElm) {
           return getPos(doc2.body, get2(elm), rootElm);
         };
-        var setStyle = function(elm, name3, value2) {
-          var $elm = isString(name3) ? $$(elm).css(name3, value2) : $$(elm).css(name3);
+        var setStyle = function(elm, name2, value2) {
+          var $elm = isString(name2) ? $$(elm).css(name2, value2) : $$(elm).css(name2);
           if (settings.update_styles) {
             updateInternalStyleAttr(styles, $elm);
           }
@@ -44396,18 +44408,18 @@ var require_tinymce = __commonJS({
             updateInternalStyleAttr(styles, $elm);
           }
         };
-        var getStyle2 = function(elm, name3, computed) {
+        var getStyle2 = function(elm, name2, computed) {
           var $elm = $$(elm);
           if (computed) {
-            return $elm.css(name3);
+            return $elm.css(name2);
           }
-          name3 = name3.replace(/-(\D)/g, function(a2, b) {
+          name2 = name2.replace(/-(\D)/g, function(a2, b) {
             return b.toUpperCase();
           });
-          if (name3 === "float") {
-            name3 = Env.browser.isIE() ? "styleFloat" : "cssFloat";
+          if (name2 === "float") {
+            name2 = Env.browser.isIE() ? "styleFloat" : "cssFloat";
           }
-          return $elm[0] && $elm[0].style ? $elm[0].style[name3] : void 0;
+          return $elm[0] && $elm[0].style ? $elm[0].style[name2] : void 0;
         };
         var getSize = function(elm) {
           var w, h;
@@ -44500,7 +44512,7 @@ var require_tinymce = __commonJS({
           var parents2 = getParents2(node, selector, root, false);
           return parents2 && parents2.length > 0 ? parents2[0] : null;
         };
-        var _findSib = function(node, selector, name3) {
+        var _findSib = function(node, selector, name2) {
           var func = selector;
           if (node) {
             if (typeof selector === "string") {
@@ -44508,7 +44520,7 @@ var require_tinymce = __commonJS({
                 return is2(node2, selector);
               };
             }
-            for (node = node[name3]; node; node = node[name3]) {
+            for (node = node[name2]; node; node = node[name2]) {
               if (typeof func === "function" && func(node)) {
                 return node;
               }
@@ -44548,8 +44560,8 @@ var require_tinymce = __commonJS({
         };
         var setAttribs = function(elm, attrs) {
           $$(elm).each(function(i2, node) {
-            each$5(attrs, function(value2, name3) {
-              setAttrib(node, name3, value2);
+            each$5(attrs, function(value2, name2) {
+              setAttrib(node, name2, value2);
             });
           });
         };
@@ -44575,9 +44587,9 @@ var require_tinymce = __commonJS({
             $elm.html(html);
           }
         };
-        var add2 = function(parentElm, name3, attrs, html, create3) {
+        var add2 = function(parentElm, name2, attrs, html, create3) {
           return run(parentElm, function(parentElm2) {
-            var newElm = typeof name3 === "string" ? doc2.createElement(name3) : name3;
+            var newElm = typeof name2 === "string" ? doc2.createElement(name2) : name2;
             setAttribs(newElm, attrs);
             if (html) {
               if (typeof html !== "string" && html.nodeType) {
@@ -44589,21 +44601,21 @@ var require_tinymce = __commonJS({
             return !create3 ? parentElm2.appendChild(newElm) : newElm;
           });
         };
-        var create2 = function(name3, attrs, html) {
-          return add2(doc2.createElement(name3), name3, attrs, html, true);
+        var create2 = function(name2, attrs, html) {
+          return add2(doc2.createElement(name2), name2, attrs, html, true);
         };
         var decode2 = Entities.decode;
         var encode = Entities.encodeAllRaw;
-        var createHTML = function(name3, attrs, html) {
+        var createHTML = function(name2, attrs, html) {
           var outHtml = "", key;
-          outHtml += "<" + name3;
+          outHtml += "<" + name2;
           for (key in attrs) {
             if (attrs.hasOwnProperty(key) && attrs[key] !== null && typeof attrs[key] !== "undefined") {
               outHtml += " " + key + '="' + encode(attrs[key]) + '"';
             }
           }
           if (typeof html !== "undefined") {
-            return outHtml + ">" + html + "</" + name3 + ">";
+            return outHtml + ">" + html + "</" + name2 + ">";
           }
           return outHtml + " />";
         };
@@ -44651,8 +44663,8 @@ var require_tinymce = __commonJS({
         var parseStyle = function(cssText) {
           return styles.parse(cssText);
         };
-        var serializeStyle = function(stylesArg, name3) {
-          return styles.serialize(stylesArg, name3);
+        var serializeStyle = function(stylesArg, name2) {
+          return styles.serialize(stylesArg, name2);
         };
         var addStyle = function(cssText) {
           var head2, styleElm;
@@ -44785,10 +44797,10 @@ var require_tinymce = __commonJS({
             return oldElm2.parentNode.replaceChild(newElm, oldElm2);
           });
         };
-        var rename = function(elm, name3) {
+        var rename = function(elm, name2) {
           var newElm;
-          if (elm.nodeName !== name3.toUpperCase()) {
-            newElm = create2(name3);
+          if (elm.nodeName !== name2.toUpperCase()) {
+            newElm = create2(name2);
             each$5(getAttribs(elm), function(attrNode) {
               setAttrib(newElm, attrNode.nodeName, getAttrib(elm, attrNode.nodeName));
             });
@@ -44826,7 +44838,7 @@ var require_tinymce = __commonJS({
           return false;
         };
         var isEmpty2 = function(node, elements) {
-          var type2, name3, brCount = 0;
+          var type2, name2, brCount = 0;
           if (isNonEmptyElement2(node)) {
             return false;
           }
@@ -44843,9 +44855,9 @@ var require_tinymce = __commonJS({
                   node = walker.next(bogusVal === "all");
                   continue;
                 }
-                name3 = node.nodeName.toLowerCase();
-                if (elements && elements[name3]) {
-                  if (name3 === "br") {
+                name2 = node.nodeName.toLowerCase();
+                if (elements && elements[name2]) {
+                  if (name2 === "br") {
                     brCount++;
                     node = walker.next();
                     continue;
@@ -44895,27 +44907,27 @@ var require_tinymce = __commonJS({
             return replacementElm || splitElm;
           }
         };
-        var bind2 = function(target, name3, func, scope) {
+        var bind2 = function(target, name2, func, scope) {
           if (Tools.isArray(target)) {
             var i2 = target.length;
             var rv = [];
             while (i2--) {
-              rv[i2] = bind2(target[i2], name3, func, scope);
+              rv[i2] = bind2(target[i2], name2, func, scope);
             }
             return rv;
           }
           if (settings.collect && (target === doc2 || target === win)) {
-            boundEvents.push([target, name3, func, scope]);
+            boundEvents.push([target, name2, func, scope]);
           }
-          return events.bind(target, name3, func, scope || self2);
+          return events.bind(target, name2, func, scope || self2);
         };
-        var unbind = function(target, name3, func) {
+        var unbind = function(target, name2, func) {
           var i2;
           if (Tools.isArray(target)) {
             i2 = target.length;
             var rv = [];
             while (i2--) {
-              rv[i2] = unbind(target[i2], name3, func);
+              rv[i2] = unbind(target[i2], name2, func);
             }
             return rv;
           }
@@ -44923,15 +44935,15 @@ var require_tinymce = __commonJS({
             i2 = boundEvents.length;
             while (i2--) {
               var item = boundEvents[i2];
-              if (target === item[0] && (!name3 || name3 === item[1]) && (!func || func === item[2])) {
+              if (target === item[0] && (!name2 || name2 === item[1]) && (!func || func === item[2])) {
                 events.unbind(item[0], item[1], item[2]);
               }
             }
           }
-          return events.unbind(target, name3, func);
+          return events.unbind(target, name2, func);
         };
-        var fire = function(target, name3, evt) {
-          return events.fire(target, name3, evt);
+        var fire = function(target, name2, evt) {
+          return events.fire(target, name2, evt);
         };
         var getContentEditable = function(node) {
           if (node && isElement$1(node)) {
@@ -45158,10 +45170,10 @@ var require_tinymce = __commonJS({
           var self2 = this;
           var loadScripts2;
           var failures = [];
-          var execCallbacks = function(name3, url) {
+          var execCallbacks = function(name2, url) {
             each$6(self2.scriptLoadedCallbacks[url], function(callback) {
-              if (isFunction(callback[name3])) {
-                callback[name3].call(callback.scope);
+              if (isFunction(callback[name2])) {
+                callback[name2].call(callback.scope);
               }
             });
             self2.scriptLoadedCallbacks[url] = void 0;
@@ -45267,8 +45279,8 @@ var require_tinymce = __commonJS({
         if (!langData) {
           data[code2] = langData = {};
         }
-        each$1(items, function(translation, name3) {
-          langData[name3.toLowerCase()] = translation;
+        each$1(items, function(translation, name2) {
+          langData[name2.toLowerCase()] = translation;
         });
       };
       var translate = function(text2) {
@@ -45332,38 +45344,38 @@ var require_tinymce = __commonJS({
         var urls = {};
         var lookup = {};
         var _listeners = [];
-        var runListeners = function(name3, state) {
+        var runListeners = function(name2, state) {
           var matchedListeners = filter(_listeners, function(listener) {
-            return listener.name === name3 && listener.state === state;
+            return listener.name === name2 && listener.state === state;
           });
           each(matchedListeners, function(listener) {
             return listener.callback();
           });
         };
-        var get2 = function(name3) {
-          if (lookup[name3]) {
-            return lookup[name3].instance;
+        var get2 = function(name2) {
+          if (lookup[name2]) {
+            return lookup[name2].instance;
           }
           return void 0;
         };
-        var dependencies = function(name3) {
+        var dependencies = function(name2) {
           var result;
-          if (lookup[name3]) {
-            result = lookup[name3].dependencies;
+          if (lookup[name2]) {
+            result = lookup[name2].dependencies;
           }
           return result || [];
         };
-        var requireLangPack = function(name3, languages) {
+        var requireLangPack = function(name2, languages) {
           if (AddOnManager.languageLoad !== false) {
             waitFor(
-              name3,
+              name2,
               function() {
                 var language = I18n.getCode();
                 var wrappedLanguages = "," + (languages || "") + ",";
                 if (!language || languages && wrappedLanguages.indexOf("," + language + ",") === -1) {
                   return;
                 }
-                ScriptLoader.ScriptLoader.add(urls[name3] + "/langs/" + language + ".js");
+                ScriptLoader.ScriptLoader.add(urls[name2] + "/langs/" + language + ".js");
               },
               "loaded"
             );
@@ -45379,9 +45391,9 @@ var require_tinymce = __commonJS({
           runListeners(id, "added");
           return addOnConstructor;
         };
-        var remove3 = function(name3) {
-          delete urls[name3];
-          delete lookup[name3];
+        var remove3 = function(name2) {
+          delete urls[name2];
+          delete lookup[name2];
         };
         var createUrl = function(baseUrl, dep) {
           if (typeof dep === "object") {
@@ -45403,8 +45415,8 @@ var require_tinymce = __commonJS({
             ScriptLoader.ScriptLoader.add(pluginUrl + "/" + script);
           });
         };
-        var loadDependencies = function(name3, addOnUrl, success, scope) {
-          var deps = dependencies(name3);
+        var loadDependencies = function(name2, addOnUrl, success, scope) {
+          var deps = dependencies(name2);
           each(deps, function(dep) {
             var newUrl = createUrl(addOnUrl, dep);
             load(newUrl.resource, newUrl, void 0, void 0);
@@ -45417,36 +45429,36 @@ var require_tinymce = __commonJS({
             }
           }
         };
-        var load = function(name3, addOnUrl, success, scope, failure) {
-          if (urls[name3]) {
+        var load = function(name2, addOnUrl, success, scope, failure) {
+          if (urls[name2]) {
             return;
           }
           var urlString = typeof addOnUrl === "string" ? addOnUrl : addOnUrl.prefix + addOnUrl.resource + addOnUrl.suffix;
           if (urlString.indexOf("/") !== 0 && urlString.indexOf("://") === -1) {
             urlString = AddOnManager.baseURL + "/" + urlString;
           }
-          urls[name3] = urlString.substring(0, urlString.lastIndexOf("/"));
+          urls[name2] = urlString.substring(0, urlString.lastIndexOf("/"));
           var done2 = function() {
-            runListeners(name3, "loaded");
-            loadDependencies(name3, addOnUrl, success, scope);
+            runListeners(name2, "loaded");
+            loadDependencies(name2, addOnUrl, success, scope);
           };
-          if (lookup[name3]) {
+          if (lookup[name2]) {
             done2();
           } else {
             ScriptLoader.ScriptLoader.add(urlString, done2, scope, failure);
           }
         };
-        var waitFor = function(name3, callback, state) {
+        var waitFor = function(name2, callback, state) {
           if (state === void 0) {
             state = "added";
           }
-          if (has(lookup, name3) && state === "added") {
+          if (has(lookup, name2) && state === "added") {
             callback();
-          } else if (has(urls, name3) && state === "loaded") {
+          } else if (has(urls, name2) && state === "loaded") {
             callback();
           } else {
             _listeners.push({
-              name: name3,
+              name: name2,
               state,
               callback
             });
@@ -45664,11 +45676,11 @@ var require_tinymce = __commonJS({
         };
         return closest2.bind(function(c) {
           return getAttr(c, "" + dataAnnotationId()).bind(function(uid) {
-            return getAttr(c, "" + dataAnnotation()).map(function(name3) {
+            return getAttr(c, "" + dataAnnotation()).map(function(name2) {
               var elements = findMarkers(editor, uid);
               return {
                 uid,
-                name: name3,
+                name: name2,
                 elements
               };
             });
@@ -45682,9 +45694,9 @@ var require_tinymce = __commonJS({
         var body = Element2.fromDom(editor.getBody());
         return descendants$1(body, "[" + dataAnnotationId() + '="' + uid + '"]');
       };
-      var findAll = function(editor, name3) {
+      var findAll = function(editor, name2) {
         var body = Element2.fromDom(editor.getBody());
-        var markers = descendants$1(body, "[" + dataAnnotation() + '="' + name3 + '"]');
+        var markers = descendants$1(body, "[" + dataAnnotation() + '="' + name2 + '"]');
         var directory = {};
         each(markers, function(m) {
           var uid = get$3(m, dataAnnotationId());
@@ -45701,23 +45713,23 @@ var require_tinymce = __commonJS({
             previous: Cell(Option.none())
           };
         };
-        var withCallbacks = function(name3, f2) {
-          updateCallbacks(name3, function(data2) {
+        var withCallbacks = function(name2, f2) {
+          updateCallbacks(name2, function(data2) {
             f2(data2);
             return data2;
           });
         };
-        var updateCallbacks = function(name3, f2) {
+        var updateCallbacks = function(name2, f2) {
           var callbackMap = changeCallbacks.get();
-          var data2 = callbackMap.hasOwnProperty(name3) ? callbackMap[name3] : initData();
+          var data2 = callbackMap.hasOwnProperty(name2) ? callbackMap[name2] : initData();
           var outputData = f2(data2);
-          callbackMap[name3] = outputData;
+          callbackMap[name2] = outputData;
           changeCallbacks.set(callbackMap);
         };
-        var fireCallbacks = function(name3, uid, elements) {
-          withCallbacks(name3, function(data2) {
+        var fireCallbacks = function(name2, uid, elements) {
+          withCallbacks(name2, function(data2) {
             each(data2.listeners, function(f2) {
-              return f2(true, name3, {
+              return f2(true, name2, {
                 uid,
                 nodes: map3(elements, function(elem) {
                   return elem.dom();
@@ -45726,30 +45738,30 @@ var require_tinymce = __commonJS({
             });
           });
         };
-        var fireNoAnnotation = function(name3) {
-          withCallbacks(name3, function(data2) {
+        var fireNoAnnotation = function(name2) {
+          withCallbacks(name2, function(data2) {
             each(data2.listeners, function(f2) {
-              return f2(false, name3);
+              return f2(false, name2);
             });
           });
         };
         var onNodeChange = last$2(function() {
           var callbackMap = changeCallbacks.get();
           var annotations = sort$1(keys2(callbackMap));
-          each(annotations, function(name3) {
-            updateCallbacks(name3, function(data2) {
+          each(annotations, function(name2) {
+            updateCallbacks(name2, function(data2) {
               var prev = data2.previous.get();
-              identify(editor, Option.some(name3)).fold(
+              identify(editor, Option.some(name2)).fold(
                 function() {
                   if (prev.isSome()) {
-                    fireNoAnnotation(name3);
+                    fireNoAnnotation(name2);
                     data2.previous.set(Option.none());
                   }
                 },
                 function(_a) {
-                  var uid = _a.uid, name4 = _a.name, elements = _a.elements;
+                  var uid = _a.uid, name3 = _a.name, elements = _a.elements;
                   if (!prev.is(uid)) {
-                    fireCallbacks(name4, uid, elements);
+                    fireCallbacks(name3, uid, elements);
                     data2.previous.set(Option.some(uid));
                   }
                 }
@@ -45767,8 +45779,8 @@ var require_tinymce = __commonJS({
         editor.on("NodeChange", function() {
           onNodeChange.throttle();
         });
-        var addListener = function(name3, f2) {
-          updateCallbacks(name3, function(data2) {
+        var addListener = function(name2, f2) {
+          updateCallbacks(name2, function(data2) {
             return {
               previous: data2.previous,
               listeners: data2.listeners.concat([f2])
@@ -45795,14 +45807,14 @@ var require_tinymce = __commonJS({
       };
       var create$1 = function() {
         var annotations = {};
-        var register4 = function(name3, settings) {
-          annotations[name3] = {
-            name: name3,
+        var register4 = function(name2, settings) {
+          annotations[name2] = {
+            name: name2,
             settings
           };
         };
-        var lookup = function(name3) {
-          return annotations.hasOwnProperty(name3) ? Option.from(annotations[name3]).map(function(a2) {
+        var lookup = function(name2) {
+          return annotations.hasOwnProperty(name2) ? Option.from(annotations[name2]).map(function(a2) {
             return a2.settings;
           }) : Option.none();
         };
@@ -46549,13 +46561,13 @@ var require_tinymce = __commonJS({
         return index - numTextFragments;
       };
       var createPathItem = function(node) {
-        var name3;
+        var name2;
         if (isText$5(node)) {
-          name3 = "text()";
+          name2 = "text()";
         } else {
-          name3 = node.nodeName.toLowerCase();
+          name2 = node.nodeName.toLowerCase();
         }
-        return name3 + "[" + normalizedNodeIndex(node) + "]";
+        return name2 + "[" + normalizedNodeIndex(node) + "]";
       };
       var parentsUntil = function(root, node, predicate) {
         var parents2 = [];
@@ -46593,12 +46605,12 @@ var require_tinymce = __commonJS({
         );
         return path.reverse().join("/") + "," + outputOffset;
       };
-      var resolvePathItem = function(node, name3, index) {
+      var resolvePathItem = function(node, name2, index) {
         var nodes = getChildNodes(node);
         nodes = filter$2(nodes, function(node2, index2) {
           return !isText$5(node2) || !isText$5(nodes[index2 - 1]);
         });
-        nodes = filter$2(nodes, matchNodeNames([name3]));
+        nodes = filter$2(nodes, matchNodeNames([name2]));
         return nodes[index];
       };
       var findTextPosition = function(container, offset) {
@@ -46724,9 +46736,9 @@ var require_tinymce = __commonJS({
         }
         return bookmark;
       };
-      var findIndex$2 = function(dom2, name3, element) {
+      var findIndex$2 = function(dom2, name2, element) {
         var count3 = 0;
-        Tools.each(dom2.select(name3), function(node) {
+        Tools.each(dom2.select(name2), function(node) {
           if (node.getAttribute("data-mce-bogus") === "all") {
             return;
           }
@@ -46783,20 +46795,20 @@ var require_tinymce = __commonJS({
       };
       var getOffsetBookmark = function(trim2, normalized, selection) {
         var element = selection.getNode();
-        var name3 = element ? element.nodeName : null;
+        var name2 = element ? element.nodeName : null;
         var rng = selection.getRng();
-        if (isContentEditableFalse$2(element) || name3 === "IMG") {
+        if (isContentEditableFalse$2(element) || name2 === "IMG") {
           return {
-            name: name3,
-            index: findIndex$2(selection.dom, name3, element)
+            name: name2,
+            index: findIndex$2(selection.dom, name2, element)
           };
         }
         var sibling2 = findAdjacentContentEditableFalseElm(rng);
         if (sibling2) {
-          name3 = sibling2.tagName;
+          name2 = sibling2.tagName;
           return {
-            name: name3,
-            index: findIndex$2(selection.dom, name3, sibling2)
+            name: name2,
+            index: findIndex$2(selection.dom, name2, sibling2)
           };
         }
         return getLocation(trim2, selection, normalized, rng);
@@ -46825,11 +46837,11 @@ var require_tinymce = __commonJS({
         var id = dom2.uniqueId();
         var collapsed = selection.isCollapsed();
         var element = selection.getNode();
-        var name3 = element.nodeName;
-        if (name3 === "IMG") {
+        var name2 = element.nodeName;
+        if (name2 === "IMG") {
           return {
-            name: name3,
-            index: findIndex$2(dom2, name3, element)
+            name: name2,
+            index: findIndex$2(dom2, name2, element)
           };
         }
         var rng2 = normalizeTableCellSelection(rng.cloneRange());
@@ -46874,10 +46886,10 @@ var require_tinymce = __commonJS({
         return null;
       };
       var DOM$1 = DOMUtils$1.DOM;
-      var getBodySetting = function(editor, name3, defaultValue) {
-        var value2 = editor.getParam(name3, defaultValue);
+      var getBodySetting = function(editor, name2, defaultValue) {
+        var value2 = editor.getParam(name2, defaultValue);
         if (value2.indexOf("=") !== -1) {
-          var bodyObj = editor.getParam(name3, "", "hash");
+          var bodyObj = editor.getParam(name2, "", "hash");
           return bodyObj.hasOwnProperty(editor.id) ? bodyObj[editor.id] : defaultValue;
         } else {
           return value2;
@@ -47993,11 +48005,11 @@ var require_tinymce = __commonJS({
           }
         }
       };
-      var isTextBlock$1 = function(editor, name3) {
-        if (isNode(name3)) {
-          name3 = name3.nodeName;
+      var isTextBlock$1 = function(editor, name2) {
+        if (isNode(name2)) {
+          name2 = name2.nodeName;
         }
-        return !!editor.schema.getTextBlockElements()[name3.toLowerCase()];
+        return !!editor.schema.getTextBlockElements()[name2.toLowerCase()];
       };
       var isValid = function(ed, parent2, child2) {
         return ed.schema.isValidChild(parent2, child2);
@@ -48012,8 +48024,8 @@ var require_tinymce = __commonJS({
         if (typeof value2 !== "string") {
           value2 = value2(vars3);
         } else if (vars3) {
-          value2 = value2.replace(/%(\w+)/g, function(str, name3) {
-            return vars3[name3] || str;
+          value2 = value2.replace(/%(\w+)/g, function(str, name2) {
+            return vars3[name2] || str;
           });
         }
         return value2;
@@ -48025,20 +48037,20 @@ var require_tinymce = __commonJS({
         str2 = "" + (str2.nodeName || str2);
         return str1.toLowerCase() === str2.toLowerCase();
       };
-      var normalizeStyleValue = function(dom2, value2, name3) {
-        if (name3 === "color" || name3 === "backgroundColor") {
+      var normalizeStyleValue = function(dom2, value2, name2) {
+        if (name2 === "color" || name2 === "backgroundColor") {
           value2 = dom2.toHex(value2);
         }
-        if (name3 === "fontWeight" && value2 === 700) {
+        if (name2 === "fontWeight" && value2 === 700) {
           value2 = "bold";
         }
-        if (name3 === "fontFamily") {
+        if (name2 === "fontFamily") {
           value2 = value2.replace(/[\'\"]/g, "").replace(/,\s+/g, ",");
         }
         return "" + value2;
       };
-      var getStyle = function(dom2, node, name3) {
-        return normalizeStyleValue(dom2, dom2.getStyle(node, name3), name3);
+      var getStyle = function(dom2, node, name2) {
+        return normalizeStyleValue(dom2, dom2.getStyle(node, name2), name2);
       };
       var getTextDecoration = function(dom2, node) {
         var decoration;
@@ -48394,9 +48406,9 @@ var require_tinymce = __commonJS({
           }
           return nodes;
         };
-        var collectSiblings = function(node2, name3, endNode) {
+        var collectSiblings = function(node2, name2, endNode) {
           var siblings3 = [];
-          for (; node2 && node2 !== endNode; node2 = node2[name3]) {
+          for (; node2 && node2 !== endNode; node2 = node2[name2]) {
             siblings3.push(node2);
           }
           return siblings3;
@@ -48521,7 +48533,7 @@ var require_tinymce = __commonJS({
       };
       var getLastChildren = function(node) {
         return lastChild(node).fold(constant([node]), function(child2) {
-          if (name2(child2) === "br") {
+          if (name(child2) === "br") {
             return prevSibling(child2).map(function(sibling2) {
               return [node].concat(getLastChildren(sibling2));
             }).getOr([]);
@@ -48593,10 +48605,10 @@ var require_tinymce = __commonJS({
         executor(bookmark);
         selection.moveToBookmark(bookmark);
       };
-      function NodeValue(is2, name3) {
+      function NodeValue(is2, name2) {
         var get2 = function(element) {
           if (!is2(element)) {
-            throw new Error("Can only get " + name3 + " value of a " + name3 + " node");
+            throw new Error("Can only get " + name2 + " value of a " + name2 + " node");
           }
           return getOption(element).getOr("");
         };
@@ -48605,7 +48617,7 @@ var require_tinymce = __commonJS({
         };
         var set3 = function(element, value2) {
           if (!is2(element)) {
-            throw new Error("Can only set raw " + name3 + " value of a " + name3 + " node");
+            throw new Error("Can only set raw " + name2 + " value of a " + name2 + " node");
           }
           element.dom().nodeValue = value2;
         };
@@ -48634,7 +48646,7 @@ var require_tinymce = __commonJS({
               return "existing";
             } else if (isCaretNode(elem)) {
               return "caret";
-            } else if (!isValid(editor, wrapName, nodeName) || !isValid(editor, name2(parent2), wrapName)) {
+            } else if (!isValid(editor, wrapName, nodeName) || !isValid(editor, name(parent2), wrapName)) {
               return "invalid-child";
             } else {
               return "valid";
@@ -48678,7 +48690,7 @@ var require_tinymce = __commonJS({
           each(elems, processElement);
         };
         var processElement = function(elem) {
-          var ctx = context(editor, elem, "span", name2(elem));
+          var ctx = context(editor, elem, "span", name(elem));
           switch (ctx) {
             case "invalid-child": {
               finishWrapper();
@@ -48704,7 +48716,7 @@ var require_tinymce = __commonJS({
         });
         return newWrappers;
       };
-      var annotateWithBookmark = function(editor, name3, settings, data2) {
+      var annotateWithBookmark = function(editor, name2, settings, data2) {
         editor.undoManager.transact(function() {
           var selection = editor.selection;
           var initialRng = selection.getRng();
@@ -48713,14 +48725,14 @@ var require_tinymce = __commonJS({
             applyWordGrab(editor, initialRng);
           }
           if (selection.getRng().collapsed && !hasFakeSelection) {
-            var wrapper = makeAnnotation(editor.getDoc(), data2, name3, settings.decorate);
+            var wrapper = makeAnnotation(editor.getDoc(), data2, name2, settings.decorate);
             set$1(wrapper, nbsp);
             selection.getRng().insertNode(wrapper.dom());
             selection.select(wrapper.dom());
           } else {
             preserve(selection, false, function() {
               runOnRanges(editor, function(selectionRng) {
-                annotate(editor, selectionRng, name3, settings.decorate, data2);
+                annotate(editor, selectionRng, name2, settings.decorate, data2);
               });
             });
           }
@@ -48731,25 +48743,25 @@ var require_tinymce = __commonJS({
         setup$1(editor, registry2);
         var changes = setup(editor);
         return {
-          register: function(name3, settings) {
-            registry2.register(name3, settings);
+          register: function(name2, settings) {
+            registry2.register(name2, settings);
           },
-          annotate: function(name3, data2) {
-            registry2.lookup(name3).each(function(settings) {
-              annotateWithBookmark(editor, name3, settings, data2);
+          annotate: function(name2, data2) {
+            registry2.lookup(name2).each(function(settings) {
+              annotateWithBookmark(editor, name2, settings, data2);
             });
           },
-          annotationChanged: function(name3, callback) {
-            changes.addListener(name3, callback);
+          annotationChanged: function(name2, callback) {
+            changes.addListener(name2, callback);
           },
-          remove: function(name3) {
-            identify(editor, Option.some(name3)).each(function(_a) {
+          remove: function(name2) {
+            identify(editor, Option.some(name2)).each(function(_a) {
               var elements = _a.elements;
               each(elements, unwrap);
             });
           },
-          getAll: function(name3) {
-            var directory = findAll(editor, name3);
+          getAll: function(name2) {
+            var directory = findAll(editor, name2);
             return map$1(directory, function(elems) {
               return map3(elems, function(elem) {
                 return elem.dom();
@@ -48801,16 +48813,16 @@ var require_tinymce = __commonJS({
         return node.attr("name") || node.attr("id") && !node.firstChild || node.attr("data-mce-bookmark") || isNamedAnchor2;
       };
       var Node7 = (function() {
-        function Node8(name3, type2) {
-          this.name = name3;
+        function Node8(name2, type2) {
+          this.name = name2;
           this.type = type2;
           if (type2 === 1) {
             this.attributes = [];
             this.attributes.map = {};
           }
         }
-        Node8.create = function(name3, attrs) {
-          var node = new Node8(name3, typeLookup[name3] || 1);
+        Node8.create = function(name2, attrs) {
+          var node = new Node8(name2, typeLookup[name2] || 1);
           if (attrs) {
             each$1(attrs, function(value2, attrName) {
               node.attr(attrName, value2);
@@ -48827,12 +48839,12 @@ var require_tinymce = __commonJS({
           self2.remove();
           return self2;
         };
-        Node8.prototype.attr = function(name3, value2) {
+        Node8.prototype.attr = function(name2, value2) {
           var self2 = this;
           var attrs;
-          if (typeof name3 !== "string") {
-            if (name3 !== void 0 && name3 !== null) {
-              each$1(name3, function(value3, key) {
+          if (typeof name2 !== "string") {
+            if (name2 !== void 0 && name2 !== null) {
+              each$1(name2, function(value3, key) {
                 self2.attr(key, value3);
               });
             }
@@ -48841,11 +48853,11 @@ var require_tinymce = __commonJS({
           if (attrs = self2.attributes) {
             if (value2 !== void 0) {
               if (value2 === null) {
-                if (name3 in attrs.map) {
-                  delete attrs.map[name3];
+                if (name2 in attrs.map) {
+                  delete attrs.map[name2];
                   var i2 = attrs.length;
                   while (i2--) {
-                    if (attrs[i2].name === name3) {
+                    if (attrs[i2].name === name2) {
                       attrs.splice(i2, 1);
                       return self2;
                     }
@@ -48853,24 +48865,24 @@ var require_tinymce = __commonJS({
                 }
                 return self2;
               }
-              if (name3 in attrs.map) {
+              if (name2 in attrs.map) {
                 var i2 = attrs.length;
                 while (i2--) {
-                  if (attrs[i2].name === name3) {
+                  if (attrs[i2].name === name2) {
                     attrs[i2].value = value2;
                     break;
                   }
                 }
               } else {
                 attrs.push({
-                  name: name3,
+                  name: name2,
                   value: value2
                 });
               }
-              attrs.map[name3] = value2;
+              attrs.map[name2] = value2;
               return self2;
             }
-            return attrs.map[name3];
+            return attrs.map[name2];
           }
         };
         Node8.prototype.clone = function() {
@@ -48977,11 +48989,11 @@ var require_tinymce = __commonJS({
           node.parent = parent2;
           return node;
         };
-        Node8.prototype.getAll = function(name3) {
+        Node8.prototype.getAll = function(name2) {
           var self2 = this;
           var collection = [];
           for (var node = self2.firstChild; node; node = walk$2(node, self2)) {
-            if (node.name === name3) {
+            if (node.name === name2) {
               collection.push(node);
             }
           }
@@ -49057,15 +49069,15 @@ var require_tinymce = __commonJS({
         encode = Entities.getEncodeFunc(settings.entity_encoding || "raw", settings.entities);
         htmlOutput = settings.element_format === "html";
         return {
-          start: function(name3, attrs, empty2) {
+          start: function(name2, attrs, empty2) {
             var i2, l, attr, value2;
-            if (indent && indentBefore[name3] && html.length > 0) {
+            if (indent && indentBefore[name2] && html.length > 0) {
               value2 = html[html.length - 1];
               if (value2.length > 0 && value2 !== "\n") {
                 html.push("\n");
               }
             }
-            html.push("<", name3);
+            html.push("<", name2);
             if (attrs) {
               for (i2 = 0, l = attrs.length; i2 < l; i2++) {
                 attr = attrs[i2];
@@ -49077,17 +49089,17 @@ var require_tinymce = __commonJS({
             } else {
               html[html.length] = " />";
             }
-            if (empty2 && indent && indentAfter[name3] && html.length > 0) {
+            if (empty2 && indent && indentAfter[name2] && html.length > 0) {
               value2 = html[html.length - 1];
               if (value2.length > 0 && value2 !== "\n") {
                 html.push("\n");
               }
             }
           },
-          end: function(name3) {
+          end: function(name2) {
             var value2;
-            html.push("</", name3, ">");
-            if (indent && indentAfter[name3] && html.length > 0) {
+            html.push("</", name2, ">");
+            if (indent && indentAfter[name2] && html.length > 0) {
               value2 = html[html.length - 1];
               if (value2.length > 0 && value2 !== "\n") {
                 html.push("\n");
@@ -49105,11 +49117,11 @@ var require_tinymce = __commonJS({
           comment: function(text2) {
             html.push("<!--", text2, "-->");
           },
-          pi: function(name3, text2) {
+          pi: function(name2, text2) {
             if (text2) {
-              html.push("<?", name3, " ", encode(text2), "?>");
+              html.push("<?", name2, " ", encode(text2), "?>");
             } else {
-              html.push("<?", name3, "?>");
+              html.push("<?", name2, "?>");
             }
             if (indent) {
               html.push("\n");
@@ -49163,9 +49175,9 @@ var require_tinymce = __commonJS({
           writer.reset();
           var walk2 = function(node2) {
             var handler = handlers[node2.type];
-            var name3, isEmpty2, attrs, attrName, attrValue, sortedAttrs, i2, l, elementRule;
+            var name2, isEmpty2, attrs, attrName, attrValue, sortedAttrs, i2, l, elementRule;
             if (!handler) {
-              name3 = node2.name;
+              name2 = node2.name;
               isEmpty2 = node2.shortEnded;
               attrs = node2.attributes;
               if (validate2 && attrs && attrs.length > 1) {
@@ -49205,7 +49217,7 @@ var require_tinymce = __commonJS({
                     walk2(node2);
                   } while (node2 = node2.next);
                 }
-                writer.end(name3);
+                writer.end(name2);
               }
             } else {
               handler(node2);
@@ -49271,8 +49283,8 @@ var require_tinymce = __commonJS({
           return Option.none();
         }
       };
-      var isValidPrefixAttrName = function(name3) {
-        return name3.indexOf("data-") === 0 || name3.indexOf("aria-") === 0;
+      var isValidPrefixAttrName = function(name2) {
+        return name2.indexOf("data-") === 0 || name2.indexOf("aria-") === 0;
       };
       var isInvalidUri = function(settings, uri) {
         if (settings.allow_html_data_urls) {
@@ -49361,7 +49373,7 @@ var require_tinymce = __commonJS({
           var html = base64Extract.html;
           var matches2, index = 0, value2, endRegExp;
           var stack = [];
-          var attrList, i2, textData, name3;
+          var attrList, i2, textData, name2;
           var isInternalElement, removeInternalElements, shortEndedElements, fillAttrsMap, isShortEnded;
           var validate2, elementRule, isValidElement, attr, attribsValue, validAttributesMap, validAttributePatterns;
           var attributesRequired, attributesDefault, attributesForced, processHtml;
@@ -49371,19 +49383,19 @@ var require_tinymce = __commonJS({
           var filteredUrlAttrs = Tools.makeMap("src,href,data,background,formaction,poster,xlink:href");
           var scriptUriRegExp = /((java|vb)script|mhtml):/i;
           var parsingMode = format === "html" ? 0 : 1;
-          var processEndTag = function(name4) {
+          var processEndTag = function(name3) {
             var pos, i3;
             pos = stack.length;
             while (pos--) {
-              if (stack[pos].name === name4) {
+              if (stack[pos].name === name3) {
                 break;
               }
             }
             if (pos >= 0) {
               for (i3 = stack.length - 1; i3 >= pos; i3--) {
-                name4 = stack[i3];
-                if (name4.valid) {
-                  end2(name4.name);
+                name3 = stack[i3];
+                if (name3.valid) {
+                  end2(name3.name);
                 }
               }
               stack.length = pos;
@@ -49415,18 +49427,18 @@ var require_tinymce = __commonJS({
             processComment(isBogus2 ? startTag + value3 : value3);
             return endIndex + 1;
           };
-          var parseAttribute = function(match2, name4, value3, val2, val3) {
+          var parseAttribute = function(match2, name3, value3, val2, val3) {
             var attrRule, i3;
             var trimRegExp = /[\s\u0000-\u001F]+/g;
-            name4 = name4.toLowerCase();
-            value3 = processAttr(name4 in fillAttrsMap ? name4 : decode2(value3 || val2 || val3 || ""));
-            if (validate2 && !isInternalElement && isValidPrefixAttrName(name4) === false) {
-              attrRule = validAttributesMap[name4];
+            name3 = name3.toLowerCase();
+            value3 = processAttr(name3 in fillAttrsMap ? name3 : decode2(value3 || val2 || val3 || ""));
+            if (validate2 && !isInternalElement && isValidPrefixAttrName(name3) === false) {
+              attrRule = validAttributesMap[name3];
               if (!attrRule && validAttributePatterns) {
                 i3 = validAttributePatterns.length;
                 while (i3--) {
                   attrRule = validAttributePatterns[i3];
-                  if (attrRule.pattern.test(name4)) {
+                  if (attrRule.pattern.test(name3)) {
                     break;
                   }
                 }
@@ -49441,7 +49453,7 @@ var require_tinymce = __commonJS({
                 return;
               }
             }
-            if (filteredUrlAttrs[name4] && !settings.allow_script_urls) {
+            if (filteredUrlAttrs[name3] && !settings.allow_script_urls) {
               var uri = value3.replace(trimRegExp, "");
               try {
                 uri = decodeURIComponent(uri);
@@ -49455,12 +49467,12 @@ var require_tinymce = __commonJS({
                 return;
               }
             }
-            if (isInternalElement && (name4 in filteredUrlAttrs || name4.indexOf("on") === 0)) {
+            if (isInternalElement && (name3 in filteredUrlAttrs || name3.indexOf("on") === 0)) {
               return;
             }
-            attrList.map[name4] = value3;
+            attrList.map[name3] = value3;
             attrList.push({
-              name: name4,
+              name: name3,
               value: value3
             });
           };
@@ -49541,14 +49553,14 @@ var require_tinymce = __commonJS({
                     i2 = attributesForced.length;
                     while (i2--) {
                       attr = attributesForced[i2];
-                      name3 = attr.name;
+                      name2 = attr.name;
                       attrValue = attr.value;
                       if (attrValue === "{$uid}") {
                         attrValue = "mce_" + idCount++;
                       }
-                      attrList.map[name3] = attrValue;
+                      attrList.map[name2] = attrValue;
                       attrList.push({
-                        name: name3,
+                        name: name2,
                         value: attrValue
                       });
                     }
@@ -49557,15 +49569,15 @@ var require_tinymce = __commonJS({
                     i2 = attributesDefault.length;
                     while (i2--) {
                       attr = attributesDefault[i2];
-                      name3 = attr.name;
-                      if (!(name3 in attrList.map)) {
+                      name2 = attr.name;
+                      if (!(name2 in attrList.map)) {
                         attrValue = attr.value;
                         if (attrValue === "{$uid}") {
                           attrValue = "mce_" + idCount++;
                         }
-                        attrList.map[name3] = attrValue;
+                        attrList.map[name2] = attrValue;
                         attrList.push({
-                          name: name3,
+                          name: name2,
                           value: attrValue
                         });
                       }
@@ -49756,29 +49768,29 @@ var require_tinymce = __commonJS({
           var getAttribs = function(node) {
             var attribs = {};
             each$7(dom2.getAttribs(node), function(attr) {
-              var name3 = attr.nodeName.toLowerCase();
-              if (name3.indexOf("_") !== 0 && name3 !== "style" && name3.indexOf("data-") !== 0) {
-                attribs[name3] = dom2.getAttrib(node, name3);
+              var name2 = attr.nodeName.toLowerCase();
+              if (name2.indexOf("_") !== 0 && name2 !== "style" && name2.indexOf("data-") !== 0) {
+                attribs[name2] = dom2.getAttrib(node, name2);
               }
             });
             return attribs;
           };
           var compareObjects = function(obj1, obj2) {
-            var value2, name3;
-            for (name3 in obj1) {
-              if (obj1.hasOwnProperty(name3)) {
-                value2 = obj2[name3];
+            var value2, name2;
+            for (name2 in obj1) {
+              if (obj1.hasOwnProperty(name2)) {
+                value2 = obj2[name2];
                 if (typeof value2 === "undefined") {
                   return false;
                 }
-                if (obj1[name3] !== value2) {
+                if (obj1[name2] !== value2) {
                   return false;
                 }
-                delete obj2[name3];
+                delete obj2[name2];
               }
             }
-            for (name3 in obj2) {
-              if (obj2.hasOwnProperty(name3)) {
+            for (name2 in obj2) {
+              if (obj2.hasOwnProperty(name2)) {
                 return false;
               }
             }
@@ -50069,7 +50081,7 @@ var require_tinymce = __commonJS({
         };
       };
       var isBlock$2 = function(editor, elm) {
-        return elm && editor.schema.getBlockElements().hasOwnProperty(name2(elm));
+        return elm && editor.schema.getBlockElements().hasOwnProperty(name(elm));
       };
       var paddEmptyBlock = function(elm) {
         if (isEmpty$1(elm)) {
@@ -50103,7 +50115,7 @@ var require_tinymce = __commonJS({
         });
       };
       var isInlineElement = function(editor, element) {
-        return has(editor.schema.getTextInlineElements(), name2(element));
+        return has(editor.schema.getTextInlineElements(), name(element));
       };
       var deleteElement = function(editor, forward, elm, moveCaret2) {
         if (moveCaret2 === void 0) {
@@ -50420,7 +50432,7 @@ var require_tinymce = __commonJS({
       };
       var getParentCaption = function(rootElm, elm) {
         return find(parentsAndSelf(elm, rootElm), function(elm2) {
-          return name2(elm2) === "caption";
+          return name(elm2) === "caption";
         });
       };
       var deleteBetweenCells = function(editor, rootElm, forward, fromCell, from2) {
@@ -51523,8 +51535,8 @@ var require_tinymce = __commonJS({
         };
       };
       var isEq$1 = isEq;
-      var matchesUnInheritedFormatSelector = function(ed, node, name3) {
-        var formatList = ed.formatter.get(name3);
+      var matchesUnInheritedFormatSelector = function(ed, node, name2) {
+        var formatList = ed.formatter.get(name2);
         if (formatList) {
           for (var i2 = 0; i2 < formatList.length; i2++) {
             if (formatList[i2].inherit === false && ed.dom.is(node, formatList[i2].selector)) {
@@ -51534,18 +51546,18 @@ var require_tinymce = __commonJS({
         }
         return false;
       };
-      var matchParents = function(editor, node, name3, vars3) {
+      var matchParents = function(editor, node, name2, vars3) {
         var root = editor.dom.getRoot();
         if (node === root) {
           return false;
         }
         node = editor.dom.getParent(node, function(node2) {
-          if (matchesUnInheritedFormatSelector(editor, node2, name3)) {
+          if (matchesUnInheritedFormatSelector(editor, node2, name2)) {
             return true;
           }
-          return node2.parentNode === root || !!matchNode(editor, node2, name3, vars3, true);
+          return node2.parentNode === root || !!matchNode(editor, node2, name2, vars3, true);
         });
-        return matchNode(editor, node, name3, vars3);
+        return matchNode(editor, node, name2, vars3);
       };
       var matchName = function(dom2, node, format) {
         if (isEq$1(node, format.inline)) {
@@ -51592,8 +51604,8 @@ var require_tinymce = __commonJS({
         }
         return format;
       };
-      var matchNode = function(ed, node, name3, vars3, similar) {
-        var formatList = ed.formatter.get(name3);
+      var matchNode = function(ed, node, name2, vars3, similar) {
+        var formatList = ed.formatter.get(name2);
         var format, i2, x, classes;
         var dom2 = ed.dom;
         if (formatList && node) {
@@ -51612,18 +51624,18 @@ var require_tinymce = __commonJS({
           }
         }
       };
-      var match = function(editor, name3, vars3, node) {
+      var match = function(editor, name2, vars3, node) {
         var startNode;
         if (node) {
-          return matchParents(editor, node, name3, vars3);
+          return matchParents(editor, node, name2, vars3);
         }
         node = editor.selection.getNode();
-        if (matchParents(editor, node, name3, vars3)) {
+        if (matchParents(editor, node, name2, vars3)) {
           return true;
         }
         startNode = editor.selection.getStart();
         if (startNode !== node) {
-          if (matchParents(editor, startNode, name3, vars3)) {
+          if (matchParents(editor, startNode, name2, vars3)) {
             return true;
           }
         }
@@ -51648,8 +51660,8 @@ var require_tinymce = __commonJS({
         );
         return matchedFormatNames;
       };
-      var canApply = function(editor, name3) {
-        var formatList = editor.formatter.get(name3);
+      var canApply = function(editor, name2) {
+        var formatList = editor.formatter.get(name2);
         var startNode, parents2, i2, x, selector;
         var dom2 = editor.dom;
         if (formatList) {
@@ -51672,10 +51684,10 @@ var require_tinymce = __commonJS({
       var matchAllOnNode = function(editor, node, formatNames) {
         return foldl(
           formatNames,
-          function(acc, name3) {
-            var matchSimilar = isVariableFormatName(editor, name3);
-            if (editor.formatter.matchNode(node, name3, {}, matchSimilar)) {
-              return acc.concat([name3]);
+          function(acc, name2) {
+            var matchSimilar = isVariableFormatName(editor, name2);
+            if (editor.formatter.matchNode(node, name2, {}, matchSimilar)) {
+              return acc.concat([name2]);
             } else {
               return acc;
             }
@@ -51807,27 +51819,27 @@ var require_tinymce = __commonJS({
           innerMostFormatNode.ownerDocument.createTextNode(ZWSP$1)
         );
       };
-      var cleanFormatNode = function(editor, caretContainer, formatNode, name3, vars3, similar) {
+      var cleanFormatNode = function(editor, caretContainer, formatNode, name2, vars3, similar) {
         var formatter = editor.formatter;
         var dom2 = editor.dom;
         var validFormats = filter(keys2(formatter.get()), function(formatName) {
-          return formatName !== "removeformat" && formatName !== name3;
+          return formatName !== "removeformat" && formatName !== name2;
         });
         var matchedFormats = matchAllOnNode(editor, formatNode, validFormats);
         var uniqueFormats = filter(matchedFormats, function(fmtName) {
-          return !areSimilarFormats(editor, fmtName, name3);
+          return !areSimilarFormats(editor, fmtName, name2);
         });
         if (uniqueFormats.length > 0) {
           var clonedFormatNode = formatNode.cloneNode(false);
           dom2.add(caretContainer, clonedFormatNode);
-          formatter.remove(name3, vars3, clonedFormatNode, similar);
+          formatter.remove(name2, vars3, clonedFormatNode, similar);
           dom2.remove(clonedFormatNode);
           return Option.some(clonedFormatNode);
         } else {
           return Option.none();
         }
       };
-      var applyCaretFormat = function(editor, name3, vars3) {
+      var applyCaretFormat = function(editor, name2, vars3) {
         var caretContainer, textNode;
         var selection = editor.selection;
         var selectionRng = selection.getRng();
@@ -51842,9 +51854,9 @@ var require_tinymce = __commonJS({
         if (text2 && offset > 0 && offset < text2.length && wordcharRegex.test(text2.charAt(offset)) && wordcharRegex.test(text2.charAt(offset - 1))) {
           var bookmark = selection.getBookmark();
           selectionRng.collapse(true);
-          var rng = expandRng(editor, selectionRng, editor.formatter.get(name3));
+          var rng = expandRng(editor, selectionRng, editor.formatter.get(name2));
           rng = split$1(rng);
-          editor.formatter.apply(name3, vars3, rng);
+          editor.formatter.apply(name2, vars3, rng);
           selection.moveToBookmark(bookmark);
         } else {
           if (!caretContainer || textNode.nodeValue !== ZWSP$1) {
@@ -51852,14 +51864,14 @@ var require_tinymce = __commonJS({
             textNode = caretContainer.firstChild;
             selectionRng.insertNode(caretContainer);
             offset = 1;
-            editor.formatter.apply(name3, vars3, caretContainer);
+            editor.formatter.apply(name2, vars3, caretContainer);
           } else {
-            editor.formatter.apply(name3, vars3, caretContainer);
+            editor.formatter.apply(name2, vars3, caretContainer);
           }
           selection.setCursorLocation(textNode, offset);
         }
       };
-      var removeCaretFormat = function(editor, name3, vars3, similar) {
+      var removeCaretFormat = function(editor, name2, vars3, similar) {
         var dom2 = editor.dom;
         var selection = editor.selection;
         var hasContentAfter, node, formatNode;
@@ -51875,7 +51887,7 @@ var require_tinymce = __commonJS({
           node = node.parentNode;
         }
         while (node) {
-          if (matchNode(editor, node, name3, vars3, similar)) {
+          if (matchNode(editor, node, name2, vars3, similar)) {
             formatNode = node;
             break;
           }
@@ -51891,9 +51903,9 @@ var require_tinymce = __commonJS({
         if (hasContentAfter) {
           var bookmark = selection.getBookmark();
           rng.collapse(true);
-          var expandedRng = expandRng(editor, rng, editor.formatter.get(name3), true);
+          var expandedRng = expandRng(editor, rng, editor.formatter.get(name2), true);
           expandedRng = split$1(expandedRng);
-          editor.formatter.remove(name3, vars3, expandedRng, similar);
+          editor.formatter.remove(name2, vars3, expandedRng, similar);
           selection.moveToBookmark(bookmark);
         } else {
           var caretContainer = getParentCaretContainer(editor.getBody(), formatNode);
@@ -51907,7 +51919,7 @@ var require_tinymce = __commonJS({
             editor,
             newCaretContainer,
             formatNode,
-            name3,
+            name2,
             vars3,
             similar
           );
@@ -51946,21 +51958,21 @@ var require_tinymce = __commonJS({
       };
       var isFormatElement = function(editor, element) {
         var inlineElements = editor.schema.getTextInlineElements();
-        return inlineElements.hasOwnProperty(name2(element)) && !isCaretNode(element.dom()) && !isBogus(element.dom());
+        return inlineElements.hasOwnProperty(name(element)) && !isCaretNode(element.dom()) && !isBogus(element.dom());
       };
       var isEmptyCaretFormatElement = function(element) {
         return isCaretNode(element.dom()) && isCaretContainerEmpty(element.dom());
       };
       var postProcessHooks = {}, filter$4 = filter$2, each$8 = each$2;
-      var addPostProcessHook = function(name3, hook) {
-        var hooks = postProcessHooks[name3];
+      var addPostProcessHook = function(name2, hook) {
+        var hooks = postProcessHooks[name2];
         if (!hooks) {
-          postProcessHooks[name3] = [];
+          postProcessHooks[name2] = [];
         }
-        postProcessHooks[name3].push(hook);
+        postProcessHooks[name2].push(hook);
       };
-      var postProcess = function(name3, editor) {
-        each$8(postProcessHooks[name3], function(hook) {
+      var postProcess = function(name2, editor) {
+        each$8(postProcessHooks[name2], function(hook) {
           hook(editor);
         });
       };
@@ -52010,15 +52022,15 @@ var require_tinymce = __commonJS({
         }
         return container;
       };
-      var wrap$2 = function(dom2, node, name3, attrs) {
-        var wrapper = dom2.create(name3, attrs);
+      var wrap$2 = function(dom2, node, name2, attrs) {
+        var wrapper = dom2.create(name2, attrs);
         node.parentNode.insertBefore(wrapper, node);
         wrapper.appendChild(node);
         return wrapper;
       };
-      var wrapWithSiblings = function(dom2, node, next, name3, attrs) {
+      var wrapWithSiblings = function(dom2, node, next, name2, attrs) {
         var start3 = Element2.fromDom(node);
-        var wrapper = Element2.fromDom(dom2.create(name3, attrs));
+        var wrapper = Element2.fromDom(dom2.create(name2, attrs));
         var siblings2 = next ? nextSiblings(start3) : prevSiblings(start3);
         append$1(wrapper, siblings2);
         if (next) {
@@ -52107,14 +52119,14 @@ var require_tinymce = __commonJS({
           }
         }
         if (format.remove !== "all") {
-          each$9(format.styles, function(value2, name3) {
-            value2 = normalizeStyleValue(dom2, replaceVars(value2, vars3), name3);
-            if (typeof name3 === "number") {
-              name3 = value2;
+          each$9(format.styles, function(value2, name2) {
+            value2 = normalizeStyleValue(dom2, replaceVars(value2, vars3), name2);
+            if (typeof name2 === "number") {
+              name2 = value2;
               compareNode = null;
             }
-            if (format.remove_similar || !compareNode || isEq$2(getStyle(dom2, compareNode, name3), value2)) {
-              dom2.setStyle(elm, name3, "");
+            if (format.remove_similar || !compareNode || isEq$2(getStyle(dom2, compareNode, name2), value2)) {
+              dom2.setStyle(elm, name2, "");
             }
             stylesModified = true;
           });
@@ -52122,16 +52134,16 @@ var require_tinymce = __commonJS({
             elm.removeAttribute("style");
             elm.removeAttribute("data-mce-style");
           }
-          each$9(format.attributes, function(value2, name3) {
+          each$9(format.attributes, function(value2, name2) {
             var valueOut;
             value2 = replaceVars(value2, vars3);
-            if (typeof name3 === "number") {
-              name3 = value2;
+            if (typeof name2 === "number") {
+              name2 = value2;
               compareNode = null;
             }
-            if (format.remove_similar || !compareNode || isEq$2(dom2.getAttrib(compareNode, name3), value2)) {
-              if (name3 === "class") {
-                value2 = dom2.getAttrib(elm, name3);
+            if (format.remove_similar || !compareNode || isEq$2(dom2.getAttrib(compareNode, name2), value2)) {
+              if (name2 === "class") {
+                value2 = dom2.getAttrib(elm, name2);
                 if (value2) {
                   valueOut = "";
                   each(value2.split(/\s+/), function(cls) {
@@ -52140,18 +52152,18 @@ var require_tinymce = __commonJS({
                     }
                   });
                   if (valueOut) {
-                    dom2.setAttrib(elm, name3, valueOut);
+                    dom2.setAttrib(elm, name2, valueOut);
                     return;
                   }
                 }
               }
-              if (name3 === "class") {
+              if (name2 === "class") {
                 elm.removeAttribute("className");
               }
-              if (MCE_ATTR_RE.test(name3)) {
-                elm.removeAttribute("data-mce-" + name3);
+              if (MCE_ATTR_RE.test(name2)) {
+                elm.removeAttribute("data-mce-" + name2);
               }
-              elm.removeAttribute(name3);
+              elm.removeAttribute(name2);
             }
           });
           each$9(format.classes, function(value2) {
@@ -52173,11 +52185,11 @@ var require_tinymce = __commonJS({
           return true;
         }
       };
-      var findFormatRoot = function(editor, container, name3, vars3, similar) {
+      var findFormatRoot = function(editor, container, name2, vars3, similar) {
         var formatRoot;
         each(getParents$1(editor.dom, container.parentNode).reverse(), function(parent2) {
           if (!formatRoot && parent2.id !== "_start" && parent2.id !== "_end") {
-            var format = matchNode(editor, parent2, name3, vars3, similar);
+            var format = matchNode(editor, parent2, name2, vars3, similar);
             if (format && format.split !== false) {
               formatRoot = parent2;
             }
@@ -52218,14 +52230,14 @@ var require_tinymce = __commonJS({
         }
         return container;
       };
-      var remove$6 = function(ed, name3, vars3, node, similar) {
-        var formatList = ed.formatter.get(name3);
+      var remove$6 = function(ed, name2, vars3, node, similar) {
+        var formatList = ed.formatter.get(name2);
         var format = formatList[0];
         var contentEditable = true;
         var dom2 = ed.dom;
         var selection = ed.selection;
         var splitToFormatRoot = function(container) {
-          var formatRoot = findFormatRoot(ed, container, name3, vars3, similar);
+          var formatRoot = findFormatRoot(ed, container, name2, vars3, similar);
           return wrapAndSplit(ed, formatList, formatRoot, container, container, true, format, vars3);
         };
         var isRemoveBookmarkNode = function(node2) {
@@ -52388,12 +52400,12 @@ var require_tinymce = __commonJS({
           preserve(selection, true, function() {
             runOnRanges(ed, removeRngStyle);
           });
-          if (format.inline && match(ed, name3, vars3, selection.getStart())) {
+          if (format.inline && match(ed, name2, vars3, selection.getStart())) {
             moveStart(dom2, selection, selection.getRng());
           }
           ed.nodeChanged();
         } else {
-          removeCaretFormat(ed, name3, vars3, similar);
+          removeCaretFormat(ed, name2, vars3, similar);
         }
       };
       var each$a = Tools.each;
@@ -52445,14 +52457,14 @@ var require_tinymce = __commonJS({
           }
         });
       };
-      var hasStyle = function(dom2, name3) {
+      var hasStyle = function(dom2, name2) {
         return function(node) {
-          return !!(node && getStyle(dom2, node, name3));
+          return !!(node && getStyle(dom2, node, name2));
         };
       };
-      var applyStyle = function(dom2, name3, value2) {
+      var applyStyle = function(dom2, name2, value2) {
         return function(node) {
-          dom2.setStyle(node, name3, value2);
+          dom2.setStyle(node, name2, value2);
           if (node.getAttribute("style") === "") {
             node.removeAttribute("style");
           }
@@ -52506,8 +52518,8 @@ var require_tinymce = __commonJS({
           var selector = format.links ? "*:not(a)" : "*";
           each$a(dom2.select(selector, node), function(node2) {
             if (isElementNode(node2)) {
-              each$a(format.styles, function(value2, name3) {
-                dom2.setStyle(node2, name3, "");
+              each$a(format.styles, function(value2, name2) {
+                dom2.setStyle(node2, name2, "");
               });
             }
           });
@@ -52524,15 +52536,15 @@ var require_tinymce = __commonJS({
           clearChildStyles(editor.dom, format, node);
         });
       };
-      var mergeWithParents = function(editor, format, name3, vars3, node) {
-        if (matchNode(editor, node.parentNode, name3, vars3)) {
+      var mergeWithParents = function(editor, format, name2, vars3, node) {
+        if (matchNode(editor, node.parentNode, name2, vars3)) {
           if (removeFormat(editor, format, vars3, node)) {
             return;
           }
         }
         if (format.merge_with_parents) {
           editor.dom.getParent(node.parentNode, function(parent2) {
-            if (matchNode(editor, parent2, name3, vars3)) {
+            if (matchNode(editor, parent2, name2, vars3)) {
               removeFormat(editor, format, vars3, node);
               return true;
             }
@@ -52543,8 +52555,8 @@ var require_tinymce = __commonJS({
       var isElementNode$1 = function(node) {
         return node && node.nodeType === 1 && !isBookmarkNode$1(node) && !isCaretNode(node) && !isBogus(node);
       };
-      var applyFormat = function(ed, name3, vars3, node) {
-        var formatList = ed.formatter.get(name3);
+      var applyFormat = function(ed, name2, vars3, node) {
+        var formatList = ed.formatter.get(name2);
         var format = formatList[0];
         var rng;
         var isCollapsed = !node && ed.selection.isCollapsed();
@@ -52555,8 +52567,8 @@ var require_tinymce = __commonJS({
             if (fmt.onformat) {
               fmt.onformat(elm, fmt, vars3, node);
             }
-            each$b(fmt.styles, function(value2, name4) {
-              dom2.setStyle(elm, name4, replaceVars(value2, vars3));
+            each$b(fmt.styles, function(value2, name3) {
+              dom2.setStyle(elm, name3, replaceVars(value2, vars3));
             });
             if (fmt.styles) {
               var styleVal = dom2.getAttrib(elm, "style");
@@ -52564,8 +52576,8 @@ var require_tinymce = __commonJS({
                 dom2.setAttrib(elm, "data-mce-style", styleVal);
               }
             }
-            each$b(fmt.attributes, function(value2, name4) {
-              dom2.setAttrib(elm, name4, replaceVars(value2, vars3));
+            each$b(fmt.attributes, function(value2, name3) {
+              dom2.setAttrib(elm, name3, replaceVars(value2, vars3));
             });
             each$b(fmt.classes, function(value2) {
               value2 = replaceVars(value2, vars3);
@@ -52617,7 +52629,7 @@ var require_tinymce = __commonJS({
                 }
                 return;
               }
-              if (format.wrapper && matchNode(ed, node2, name3, vars3)) {
+              if (format.wrapper && matchNode(ed, node2, name2, vars3)) {
                 currentWrapElm = 0;
                 return;
               }
@@ -52706,7 +52718,7 @@ var require_tinymce = __commonJS({
                 node2 = mergeStyles(node2);
               }
               mergeWithChildren(ed, formatList, vars3, node2);
-              mergeWithParents(ed, format, name3, vars3, node2);
+              mergeWithParents(ed, format, name2, vars3, node2);
               mergeBackgroundColorAndFontSize(dom3, format, vars3, node2);
               mergeTextDecorationsAndColor(dom3, format, vars3, node2);
               mergeSubSup(dom3, format, vars3, node2);
@@ -52752,18 +52764,18 @@ var require_tinymce = __commonJS({
               moveStart(dom2, selection, selection.getRng());
               ed.nodeChanged();
             } else {
-              applyCaretFormat(ed, name3, vars3);
+              applyCaretFormat(ed, name2, vars3);
             }
           }
-          postProcess(name3, ed);
+          postProcess(name2, ed);
         }
       };
-      var toggle = function(editor, name3, vars3, node) {
-        var fmt = editor.formatter.get(name3);
-        if (match(editor, name3, vars3, node) && (!("toggle" in fmt[0]) || fmt[0].toggle)) {
-          remove$6(editor, name3, vars3, node);
+      var toggle = function(editor, name2, vars3, node) {
+        var fmt = editor.formatter.get(name2);
+        if (match(editor, name2, vars3, node) && (!("toggle" in fmt[0]) || fmt[0].toggle)) {
+          remove$6(editor, name2, vars3, node);
         } else {
-          applyFormat(editor, name3, vars3, node);
+          applyFormat(editor, name2, vars3, node);
         }
       };
       var processRanges = function(editor, ranges) {
@@ -52906,15 +52918,15 @@ var require_tinymce = __commonJS({
       };
       var findParentListContainer = function(parents2) {
         return find(parents2, function(elm) {
-          return name2(elm) === "ul" || name2(elm) === "ol";
+          return name(elm) === "ul" || name(elm) === "ol";
         });
       };
       var getFullySelectedListWrappers = function(parents2, rng) {
         return find(parents2, function(elm) {
-          return name2(elm) === "li" && hasAllContentsSelected(elm, rng);
+          return name(elm) === "li" && hasAllContentsSelected(elm, rng);
         }).fold(constant([]), function(_li) {
           return findParentListContainer(parents2).map(function(listCont) {
-            return [Element2.fromTag("li"), Element2.fromTag(name2(listCont))];
+            return [Element2.fromTag("li"), Element2.fromTag(name(listCont))];
           }).getOr([]);
         });
       };
@@ -53459,14 +53471,14 @@ var require_tinymce = __commonJS({
             }
           },
           formatter: {
-            apply: function(name3, vars3, node) {
-              return applyFormat(editor, name3, vars3, node);
+            apply: function(name2, vars3, node) {
+              return applyFormat(editor, name2, vars3, node);
             },
-            remove: function(name3, vars3, node, similar) {
-              return remove$6(editor, name3, vars3, node, similar);
+            remove: function(name2, vars3, node, similar) {
+              return remove$6(editor, name2, vars3, node, similar);
             },
-            toggle: function(name3, vars3, node) {
-              return toggle(editor, name3, vars3, node);
+            toggle: function(name2, vars3, node) {
+              return toggle(editor, name2, vars3, node);
             }
           },
           editor: {
@@ -53526,14 +53538,14 @@ var require_tinymce = __commonJS({
             extra: unsupported
           },
           formatter: {
-            apply: function(name3, vars3, _node) {
-              return rtcEditor.applyFormat(name3, defaultVars(vars3));
+            apply: function(name2, vars3, _node) {
+              return rtcEditor.applyFormat(name2, defaultVars(vars3));
             },
-            remove: function(name3, vars3, _node, _similar) {
-              return rtcEditor.removeFormat(name3, defaultVars(vars3));
+            remove: function(name2, vars3, _node, _similar) {
+              return rtcEditor.removeFormat(name2, defaultVars(vars3));
             },
-            toggle: function(name3, vars3, _node) {
-              return rtcEditor.toggleFormat(name3, defaultVars(vars3));
+            toggle: function(name2, vars3, _node) {
+              return rtcEditor.toggleFormat(name2, defaultVars(vars3));
             }
           },
           editor: {
@@ -53650,14 +53662,14 @@ var require_tinymce = __commonJS({
       var extra$1 = function(editor, undoManager, index, callback1, callback2) {
         getRtcInstanceWithError(editor).undoManager.extra(undoManager, index, callback1, callback2);
       };
-      var applyFormat$1 = function(editor, name3, vars3, node) {
-        getRtcInstanceWithError(editor).formatter.apply(name3, vars3, node);
+      var applyFormat$1 = function(editor, name2, vars3, node) {
+        getRtcInstanceWithError(editor).formatter.apply(name2, vars3, node);
       };
-      var removeFormat$1 = function(editor, name3, vars3, node, similar) {
-        getRtcInstanceWithError(editor).formatter.remove(name3, vars3, node, similar);
+      var removeFormat$1 = function(editor, name2, vars3, node, similar) {
+        getRtcInstanceWithError(editor).formatter.remove(name2, vars3, node, similar);
       };
-      var toggleFormat = function(editor, name3, vars3, node) {
-        getRtcInstanceWithError(editor).formatter.toggle(name3, vars3, node);
+      var toggleFormat = function(editor, name2, vars3, node) {
+        getRtcInstanceWithError(editor).formatter.toggle(name2, vars3, node);
       };
       var getContent = function(editor, args, format) {
         return getRtcInstanceWithFallback(editor).editor.getContent(args, format);
@@ -53861,23 +53873,23 @@ var require_tinymce = __commonJS({
         });
         return sectionResult(result.t, result.f);
       };
-      var getSection = function(sectionResult2, name3, defaults) {
+      var getSection = function(sectionResult2, name2, defaults) {
         if (defaults === void 0) {
           defaults = {};
         }
         var sections = sectionResult2.sections();
-        var sectionSettings = sections.hasOwnProperty(name3) ? sections[name3] : {};
+        var sectionSettings = sections.hasOwnProperty(name2) ? sections[name2] : {};
         return Tools.extend({}, defaults, sectionSettings);
       };
-      var hasSection = function(sectionResult2, name3) {
-        return sectionResult2.sections().hasOwnProperty(name3);
+      var hasSection = function(sectionResult2, name2) {
+        return sectionResult2.sections().hasOwnProperty(name2);
       };
-      var isSectionTheme = function(sectionResult2, name3, theme4) {
+      var isSectionTheme = function(sectionResult2, name2, theme4) {
         var section = sectionResult2.sections();
-        return hasSection(sectionResult2, name3) && section[name3].theme === theme4;
+        return hasSection(sectionResult2, name2) && section[name2].theme === theme4;
       };
-      var getSectionConfig = function(sectionResult2, name3) {
-        return hasSection(sectionResult2, name3) ? sectionResult2.sections()[name3] : {};
+      var getSectionConfig = function(sectionResult2, name2) {
+        return hasSection(sectionResult2, name2) ? sectionResult2.sections()[name2] : {};
       };
       var getToolbarMode = function(settings, defaultVal) {
         return get(settings, "toolbar_mode").orThunk(function() {
@@ -53976,8 +53988,8 @@ var require_tinymce = __commonJS({
           settings
         );
       };
-      var getFiltered = function(predicate, editor, name3) {
-        return Option.from(editor.settings[name3]).filter(predicate);
+      var getFiltered = function(predicate, editor, name2) {
+        return Option.from(editor.settings[name2]).filter(predicate);
       };
       var getParamObject = function(value2) {
         var output = {};
@@ -54003,24 +54015,24 @@ var require_tinymce = __commonJS({
           return isArray2(a2) && forall(a2, p);
         };
       };
-      var getParam = function(editor, name3, defaultVal, type2) {
-        var value2 = name3 in editor.settings ? editor.settings[name3] : defaultVal;
+      var getParam = function(editor, name2, defaultVal, type2) {
+        var value2 = name2 in editor.settings ? editor.settings[name2] : defaultVal;
         if (type2 === "hash") {
           return getParamObject(value2);
         } else if (type2 === "string") {
-          return getFiltered(isString, editor, name3).getOr(defaultVal);
+          return getFiltered(isString, editor, name2).getOr(defaultVal);
         } else if (type2 === "number") {
-          return getFiltered(isNumber2, editor, name3).getOr(defaultVal);
+          return getFiltered(isNumber2, editor, name2).getOr(defaultVal);
         } else if (type2 === "boolean") {
-          return getFiltered(isBoolean, editor, name3).getOr(defaultVal);
+          return getFiltered(isBoolean, editor, name2).getOr(defaultVal);
         } else if (type2 === "object") {
-          return getFiltered(isObject, editor, name3).getOr(defaultVal);
+          return getFiltered(isObject, editor, name2).getOr(defaultVal);
         } else if (type2 === "array") {
-          return getFiltered(isArray2, editor, name3).getOr(defaultVal);
+          return getFiltered(isArray2, editor, name2).getOr(defaultVal);
         } else if (type2 === "string[]") {
-          return getFiltered(isArrayOf(isString), editor, name3).getOr(defaultVal);
+          return getFiltered(isArrayOf(isString), editor, name2).getOr(defaultVal);
         } else if (type2 === "function") {
-          return getFiltered(isFunction, editor, name3).getOr(defaultVal);
+          return getFiltered(isFunction, editor, name2).getOr(defaultVal);
         } else {
           return value2;
         }
@@ -54296,20 +54308,20 @@ var require_tinymce = __commonJS({
         fireError(editor, errorType, { message: msg });
         domGlobals.console.error(msg);
       };
-      var createLoadError = function(type2, url, name3) {
-        return name3 ? "Failed to load " + type2 + ": " + name3 + " from url " + url : "Failed to load " + type2 + " url: " + url;
+      var createLoadError = function(type2, url, name2) {
+        return name2 ? "Failed to load " + type2 + ": " + name2 + " from url " + url : "Failed to load " + type2 + " url: " + url;
       };
-      var pluginLoadError = function(editor, url, name3) {
-        logError(editor, "PluginLoadError", createLoadError("plugin", url, name3));
+      var pluginLoadError = function(editor, url, name2) {
+        logError(editor, "PluginLoadError", createLoadError("plugin", url, name2));
       };
-      var iconsLoadError = function(editor, url, name3) {
-        logError(editor, "IconsLoadError", createLoadError("icons", url, name3));
+      var iconsLoadError = function(editor, url, name2) {
+        logError(editor, "IconsLoadError", createLoadError("icons", url, name2));
       };
-      var languageLoadError = function(editor, url, name3) {
-        logError(editor, "LanguageLoadError", createLoadError("language", url, name3));
+      var languageLoadError = function(editor, url, name2) {
+        logError(editor, "LanguageLoadError", createLoadError("language", url, name2));
       };
-      var pluginInitError = function(editor, name3, err) {
-        var message2 = I18n.translate(["Failed to initialize plugin: {0}", name3]);
+      var pluginInitError = function(editor, name2, err) {
+        var message2 = I18n.translate(["Failed to initialize plugin: {0}", name2]);
         initError(message2, err);
         displayError(editor, message2);
       };
@@ -54347,20 +54359,20 @@ var require_tinymce = __commonJS({
       var appendContentCssFromSettings = function(editor) {
         editor.contentCSS = editor.contentCSS.concat(getContentCssUrls(editor));
       };
-      function Dimension(name3, getOffset) {
+      function Dimension(name2, getOffset) {
         var set3 = function(element, h) {
           if (!isNumber2(h) && !h.match(/^[0-9]+$/)) {
-            throw new Error(name3 + ".set accepts only positive integer values. Value was " + h);
+            throw new Error(name2 + ".set accepts only positive integer values. Value was " + h);
           }
           var dom2 = element.dom();
           if (isSupported(dom2)) {
-            dom2.style[name3] = h + "px";
+            dom2.style[name2] = h + "px";
           }
         };
         var get2 = function(element) {
           var r2 = getOffset(element);
           if (r2 <= 0 || r2 === null) {
-            var css = get$4(element, name3);
+            var css = get$4(element, name2);
             return parseFloat(css) || 0;
           }
           return r2;
@@ -54443,7 +54455,7 @@ var require_tinymce = __commonJS({
         return Position(r2.left + offset.left() + scroll.left(), r2.top + offset.top() + scroll.top());
       };
       var excludeFromDescend = function(element) {
-        return name2(element) === "textarea";
+        return name(element) === "textarea";
       };
       var fireScrollIntoViewEvent = function(editor, data2) {
         var scrollEvent = editor.fire("ScrollIntoView", data2);
@@ -54472,7 +54484,7 @@ var require_tinymce = __commonJS({
               offset
             };
           } else {
-            if (name2(last2) === "img") {
+            if (name(last2) === "img") {
               return {
                 element: last2,
                 offset: 1
@@ -54805,9 +54817,9 @@ var require_tinymce = __commonJS({
       var hasParent = function(node, rootNode, predicate) {
         return findParent$1(node, rootNode, predicate) !== null;
       };
-      var hasParentWithName = function(node, rootNode, name3) {
+      var hasParentWithName = function(node, rootNode, name2) {
         return hasParent(node, rootNode, function(node2) {
-          return node2.nodeName === name3;
+          return node2.nodeName === name2;
         });
       };
       var isTable$3 = function(node) {
@@ -54827,8 +54839,8 @@ var require_tinymce = __commonJS({
           }
         }
       };
-      var isPrevNode = function(node, name3) {
-        return node.previousSibling && node.previousSibling.nodeName === name3;
+      var isPrevNode = function(node, name2) {
+        return node.previousSibling && node.previousSibling.nodeName === name2;
       };
       var hasContentEditableFalseParent = function(body, node) {
         while (node && node !== body) {
@@ -55232,12 +55244,12 @@ var require_tinymce = __commonJS({
         var endGhostResize = function() {
           var wasResizeStarted = resizeStarted;
           resizeStarted = false;
-          var setSizeProp = function(name3, value2) {
+          var setSizeProp = function(name2, value2) {
             if (value2) {
-              if (selectedElm.style[name3] || !editor.schema.isValid(selectedElm.nodeName.toLowerCase(), name3)) {
-                dom2.setStyle(getResizeTarget(selectedElm), name3, value2);
+              if (selectedElm.style[name2] || !editor.schema.isValid(selectedElm.nodeName.toLowerCase(), name2)) {
+                dom2.setStyle(getResizeTarget(selectedElm), name2, value2);
               } else {
-                dom2.setAttrib(getResizeTarget(selectedElm), name3, "" + value2);
+                dom2.setAttrib(getResizeTarget(selectedElm), name2, "" + value2);
               }
             }
           };
@@ -55276,7 +55288,7 @@ var require_tinymce = __commonJS({
           }
           e = editor.fire("ObjectSelected", { target: targetElm });
           if (isResizable(targetElm) && !e.isDefaultPrevented()) {
-            each2(resizeHandles, function(handle2, name3) {
+            each2(resizeHandles, function(handle2, name2) {
               var handleElm;
               var startDrag2 = function(e2) {
                 startX = e2.screenX;
@@ -55320,16 +55332,16 @@ var require_tinymce = __commonJS({
                   startW + " &times; " + startH
                 );
               };
-              handleElm = dom2.get("mceResizeHandle" + name3);
+              handleElm = dom2.get("mceResizeHandle" + name2);
               if (handleElm) {
                 dom2.remove(handleElm);
               }
               handleElm = dom2.add(rootElement, "div", {
-                "id": "mceResizeHandle" + name3,
+                "id": "mceResizeHandle" + name2,
                 "data-mce-bogus": "all",
                 "class": "mce-resizehandle",
                 "unselectable": true,
-                "style": "cursor:" + name3 + "-resize; margin:0; padding:0"
+                "style": "cursor:" + name2 + "-resize; margin:0; padding:0"
               });
               if (Env.ie === 11) {
                 handleElm.contentEditable = false;
@@ -55355,8 +55367,8 @@ var require_tinymce = __commonJS({
           if (selectedElm) {
             selectedElm.removeAttribute("data-mce-selected");
           }
-          each$1(resizeHandles, function(value2, name3) {
-            var handleElm = dom2.get("mceResizeHandle" + name3);
+          each$1(resizeHandles, function(value2, name2) {
+            var handleElm = dom2.get("mceResizeHandle" + name2);
             if (handleElm) {
               dom2.unbind(handleElm);
               dom2.remove(handleElm);
@@ -55830,8 +55842,8 @@ var require_tinymce = __commonJS({
         return exports2;
       };
       var removeAttrs = function(node, names) {
-        each(names, function(name3) {
-          node.attr(name3, null);
+        each(names, function(name2) {
+          node.attr(name2, null);
         });
       };
       var addFontToSpansFilter = function(domParser, styles, fontSizes) {
@@ -56082,8 +56094,8 @@ var require_tinymce = __commonJS({
       var isPaddedWithNbsp = function(node) {
         return hasOnlyChild(node, "#text") && node.firstChild.value === nbsp;
       };
-      var hasOnlyChild = function(node, name3) {
-        return node && node.firstChild && node.firstChild === node.lastChild && node.firstChild.name === name3;
+      var hasOnlyChild = function(node, name2) {
+        return node && node.firstChild && node.firstChild === node.lastChild && node.firstChild.name === name2;
       };
       var isPadded = function(schema, node) {
         var rule = schema.getElementRule(node.name);
@@ -56383,35 +56395,35 @@ var require_tinymce = __commonJS({
           }
         };
         var filterNode = function(node) {
-          var i2, name3, list5;
-          name3 = node.name;
-          if (name3 in nodeFilters) {
-            list5 = matchedNodes[name3];
+          var i2, name2, list5;
+          name2 = node.name;
+          if (name2 in nodeFilters) {
+            list5 = matchedNodes[name2];
             if (list5) {
               list5.push(node);
             } else {
-              matchedNodes[name3] = [node];
+              matchedNodes[name2] = [node];
             }
           }
           i2 = attributeFilters.length;
           while (i2--) {
-            name3 = attributeFilters[i2].name;
-            if (name3 in node.attributes.map) {
-              list5 = matchedAttributes[name3];
+            name2 = attributeFilters[i2].name;
+            if (name2 in node.attributes.map) {
+              list5 = matchedAttributes[name2];
               if (list5) {
                 list5.push(node);
               } else {
-                matchedAttributes[name3] = [node];
+                matchedAttributes[name2] = [node];
               }
             }
           }
           return node;
         };
-        var addNodeFilter = function(name3, callback) {
-          each$c(explode$2(name3), function(name4) {
-            var list5 = nodeFilters[name4];
+        var addNodeFilter = function(name2, callback) {
+          each$c(explode$2(name2), function(name3) {
+            var list5 = nodeFilters[name3];
             if (!list5) {
-              nodeFilters[name4] = list5 = [];
+              nodeFilters[name3] = list5 = [];
             }
             list5.push(callback);
           });
@@ -56428,17 +56440,17 @@ var require_tinymce = __commonJS({
           }
           return out;
         };
-        var addAttributeFilter = function(name3, callback) {
-          each$c(explode$2(name3), function(name4) {
+        var addAttributeFilter = function(name2, callback) {
+          each$c(explode$2(name2), function(name3) {
             var i2;
             for (i2 = 0; i2 < attributeFilters.length; i2++) {
-              if (attributeFilters[i2].name === name4) {
+              if (attributeFilters[i2].name === name3) {
                 attributeFilters[i2].callbacks.push(callback);
                 return;
               }
             }
             attributeFilters.push({
-              name: name4,
+              name: name3,
               callbacks: [callback]
             });
           });
@@ -56447,18 +56459,18 @@ var require_tinymce = __commonJS({
           return [].concat(attributeFilters);
         };
         var parse = function(html, args) {
-          var parser3, nodes, i2, l, fi, fl, list5, name3;
+          var parser3, nodes, i2, l, fi, fl, list5, name2;
           var blockElements;
           var invalidChildren = [];
           var isInWhiteSpacePreservedElement;
           var node;
-          var getRootBlockName = function(name4) {
-            if (name4 === false) {
+          var getRootBlockName = function(name3) {
+            if (name3 === false) {
               return "";
-            } else if (name4 === true) {
+            } else if (name3 === true) {
               return "p";
             } else {
-              return name4;
+              return name3;
             }
           };
           args = args || {};
@@ -56515,15 +56527,15 @@ var require_tinymce = __commonJS({
             }
             trim2(rootBlockNode);
           };
-          var createNode = function(name4, type2) {
-            var node2 = new Node7(name4, type2);
+          var createNode = function(name3, type2) {
+            var node2 = new Node7(name3, type2);
             var list6;
-            if (name4 in nodeFilters) {
-              list6 = matchedNodes[name4];
+            if (name3 in nodeFilters) {
+              list6 = matchedNodes[name3];
               if (list6) {
                 list6.push(node2);
               } else {
-                matchedNodes[name4] = [node2];
+                matchedNodes[name3] = [node2];
               }
             }
             return node2;
@@ -56554,11 +56566,11 @@ var require_tinymce = __commonJS({
             }
           };
           var cloneAndExcludeBlocks = function(input) {
-            var name4;
+            var name3;
             var output = {};
-            for (name4 in input) {
-              if (name4 !== "li" && name4 !== "p") {
-                output[name4] = input[name4];
+            for (name3 in input) {
+              if (name3 !== "li" && name3 !== "p") {
+                output[name3] = input[name3];
               }
             }
             return output;
@@ -56590,8 +56602,8 @@ var require_tinymce = __commonJS({
               comment: function(text2) {
                 node.append(createNode("#comment", 8)).value = text2;
               },
-              pi: function(name4, text2) {
-                node.append(createNode(name4, 7)).value = text2;
+              pi: function(name3, text2) {
+                node.append(createNode(name3, 7)).value = text2;
                 removeWhitespaceBefore(node);
               },
               doctype: function(text2) {
@@ -56600,11 +56612,11 @@ var require_tinymce = __commonJS({
                 newNode.value = text2;
                 removeWhitespaceBefore(node);
               },
-              start: function(name4, attrs, empty2) {
+              start: function(name3, attrs, empty2) {
                 var newNode, attrFiltersLen, elementRule, attrName, parent2;
-                elementRule = validate2 ? schema.getElementRule(name4) : {};
+                elementRule = validate2 ? schema.getElementRule(name3) : {};
                 if (elementRule) {
-                  newNode = createNode(elementRule.outputName || name4, 1);
+                  newNode = createNode(elementRule.outputName || name3, 1);
                   newNode.attributes = attrs;
                   newNode.shortEnded = empty2;
                   node.append(newNode);
@@ -56624,22 +56636,22 @@ var require_tinymce = __commonJS({
                       }
                     }
                   }
-                  if (blockElements[name4]) {
+                  if (blockElements[name3]) {
                     removeWhitespaceBefore(newNode);
                   }
                   if (!empty2) {
                     node = newNode;
                   }
-                  if (!isInWhiteSpacePreservedElement && whiteSpaceElements[name4]) {
+                  if (!isInWhiteSpacePreservedElement && whiteSpaceElements[name3]) {
                     isInWhiteSpacePreservedElement = true;
                   }
                 }
               },
-              end: function(name4) {
+              end: function(name3) {
                 var textNode, elementRule, text2, sibling2, tempNode;
-                elementRule = validate2 ? schema.getElementRule(name4) : {};
+                elementRule = validate2 ? schema.getElementRule(name3) : {};
                 if (elementRule) {
-                  if (blockElements[name4]) {
+                  if (blockElements[name3]) {
                     if (!isInWhiteSpacePreservedElement) {
                       textNode = node.firstChild;
                       if (textNode && textNode.type === 3) {
@@ -56685,7 +56697,7 @@ var require_tinymce = __commonJS({
                       }
                     }
                   }
-                  if (isInWhiteSpacePreservedElement && whiteSpaceElements[name4]) {
+                  if (isInWhiteSpacePreservedElement && whiteSpaceElements[name3]) {
                     isInWhiteSpacePreservedElement = false;
                   }
                   if (elementRule.removeEmpty && isEmpty$2(schema, nonEmptyElements, whiteSpaceElements, node)) {
@@ -56720,12 +56732,12 @@ var require_tinymce = __commonJS({
             addRootBlocks2();
           }
           if (!args.invalid) {
-            for (name3 in matchedNodes) {
-              if (!matchedNodes.hasOwnProperty(name3)) {
+            for (name2 in matchedNodes) {
+              if (!matchedNodes.hasOwnProperty(name2)) {
                 continue;
               }
-              list5 = nodeFilters[name3];
-              nodes = matchedNodes[name3];
+              list5 = nodeFilters[name2];
+              nodes = matchedNodes[name2];
               fi = nodes.length;
               while (fi--) {
                 if (!nodes[fi].parent) {
@@ -56733,7 +56745,7 @@ var require_tinymce = __commonJS({
                 }
               }
               for (i2 = 0, l = list5.length; i2 < l; i2++) {
-                list5[i2](nodes, name3, args);
+                list5[i2](nodes, name2, args);
               }
             }
             for (i2 = 0, l = attributeFilters.length; i2 < l; i2++) {
@@ -56768,33 +56780,33 @@ var require_tinymce = __commonJS({
         return exports2;
       };
       var register$3 = function(htmlParser, settings, dom2) {
-        htmlParser.addAttributeFilter("data-mce-tabindex", function(nodes, name3) {
+        htmlParser.addAttributeFilter("data-mce-tabindex", function(nodes, name2) {
           var i2 = nodes.length, node;
           while (i2--) {
             node = nodes[i2];
             node.attr("tabindex", node.attr("data-mce-tabindex"));
-            node.attr(name3, null);
+            node.attr(name2, null);
           }
         });
-        htmlParser.addAttributeFilter("src,href,style", function(nodes, name3) {
+        htmlParser.addAttributeFilter("src,href,style", function(nodes, name2) {
           var i2 = nodes.length, node, value2;
-          var internalName = "data-mce-" + name3;
+          var internalName = "data-mce-" + name2;
           var urlConverter = settings.url_converter;
           var urlConverterScope = settings.url_converter_scope;
           while (i2--) {
             node = nodes[i2];
             value2 = node.attr(internalName);
             if (value2 !== void 0) {
-              node.attr(name3, value2.length > 0 ? value2 : null);
+              node.attr(name2, value2.length > 0 ? value2 : null);
               node.attr(internalName, null);
             } else {
-              value2 = node.attr(name3);
-              if (name3 === "style") {
+              value2 = node.attr(name2);
+              if (name2 === "style") {
                 value2 = dom2.serializeStyle(dom2.parseStyle(value2), node.name);
               } else if (urlConverter) {
-                value2 = urlConverter.call(urlConverterScope, value2, name3, node.name);
+                value2 = urlConverter.call(urlConverterScope, value2, name2, node.name);
               }
-              node.attr(name3, value2.length > 0 ? value2 : null);
+              node.attr(name2, value2.length > 0 ? value2 : null);
             }
           }
         });
@@ -56809,7 +56821,7 @@ var require_tinymce = __commonJS({
             }
           }
         });
-        htmlParser.addAttributeFilter("data-mce-type", function(nodes, name3, args) {
+        htmlParser.addAttributeFilter("data-mce-type", function(nodes, name2, args) {
           var i2 = nodes.length, node;
           while (i2--) {
             node = nodes[i2];
@@ -56834,7 +56846,7 @@ var require_tinymce = __commonJS({
             }
           }
         });
-        htmlParser.addNodeFilter("script,style", function(nodes, name3) {
+        htmlParser.addNodeFilter("script,style", function(nodes, name2) {
           var i2 = nodes.length, node, value2, type2;
           var trim2 = function(value3) {
             return value3.replace(/(<!--\[CDATA\[|\]\]-->)/g, "\n").replace(/^[\r\n]*|[\r\n]*$/g, "").replace(
@@ -56848,7 +56860,7 @@ var require_tinymce = __commonJS({
           while (i2--) {
             node = nodes[i2];
             value2 = node.firstChild ? node.firstChild.value : "";
-            if (name3 === "script") {
+            if (name2 === "script") {
               type2 = node.attr("type");
               if (type2) {
                 node.attr("type", type2 === "mce-no/type" ? null : type2.replace(/^mce\-/, ""));
@@ -56879,14 +56891,14 @@ var require_tinymce = __commonJS({
             }
           }
         });
-        htmlParser.addNodeFilter("xml:namespace,input", function(nodes, name3) {
+        htmlParser.addNodeFilter("xml:namespace,input", function(nodes, name2) {
           var i2 = nodes.length, node;
           while (i2--) {
             node = nodes[i2];
             if (node.type === 7) {
               node.remove();
             } else if (node.type === 1) {
-              if (name3 === "input" && !node.attr("type")) {
+              if (name2 === "input" && !node.attr("type")) {
                 node.attr("type", "text");
               }
             }
@@ -56905,10 +56917,10 @@ var require_tinymce = __commonJS({
         });
         htmlParser.addAttributeFilter(
           "data-mce-src,data-mce-href,data-mce-style,data-mce-selected,data-mce-expando,data-mce-type,data-mce-resize,data-mce-placeholder",
-          function(nodes, name3) {
+          function(nodes, name2) {
             var i2 = nodes.length;
             while (i2--) {
-              nodes[i2].attr(name3, null);
+              nodes[i2].attr(name2, null);
             }
           }
         );
@@ -56957,15 +56969,15 @@ var require_tinymce = __commonJS({
       var process2 = function(editor, node, args) {
         return shouldFireEvent(editor, args) ? preProcess(editor, node, args) : node;
       };
-      var addTempAttr = function(htmlParser, tempAttrs, name3) {
-        if (Tools.inArray(tempAttrs, name3) === -1) {
-          htmlParser.addAttributeFilter(name3, function(nodes, name4) {
+      var addTempAttr = function(htmlParser, tempAttrs, name2) {
+        if (Tools.inArray(tempAttrs, name2) === -1) {
+          htmlParser.addAttributeFilter(name2, function(nodes, name3) {
             var i2 = nodes.length;
             while (i2--) {
-              nodes[i2].attr(name4, null);
+              nodes[i2].attr(name3, null);
             }
           });
-          tempAttrs.push(name3);
+          tempAttrs.push(name2);
         }
       };
       var postProcess$1 = function(editor, args, content) {
@@ -57259,18 +57271,18 @@ var require_tinymce = __commonJS({
           }
         };
         var toBlobInfo = function(o) {
-          var id, name3;
+          var id, name2;
           if (!o.blob || !o.base64) {
             throw new Error(
               "blob and base64 representations of the image are required for BlobInfo to be created"
             );
           }
           id = o.id || uuid("blobid");
-          name3 = o.name || id;
+          name2 = o.name || id;
           return {
             id: constant(id),
-            name: constant(name3),
-            filename: constant(name3 + "." + mimeToExt(o.blob.type)),
+            name: constant(name2),
+            filename: constant(name2 + "." + mimeToExt(o.blob.type)),
             blob: constant(o.blob),
             base64: constant(o.base64),
             blobUri: constant(o.blobUri || domGlobals.URL.createObjectURL(o.blob)),
@@ -57885,9 +57897,9 @@ var require_tinymce = __commonJS({
             }
           ]
         };
-        Tools.each("p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp".split(/\s/), function(name3) {
-          formats[name3] = {
-            block: name3,
+        Tools.each("p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp".split(/\s/), function(name2) {
+          formats[name2] = {
+            block: name2,
             remove: "all"
           };
         });
@@ -57895,17 +57907,17 @@ var require_tinymce = __commonJS({
       };
       function FormatRegistry(editor) {
         var formats = {};
-        var get2 = function(name3) {
-          return name3 ? formats[name3] : formats;
+        var get2 = function(name2) {
+          return name2 ? formats[name2] : formats;
         };
-        var has$12 = function(name3) {
-          return has(formats, name3);
+        var has$12 = function(name2) {
+          return has(formats, name2);
         };
-        var register4 = function(name3, format) {
-          if (name3) {
-            if (typeof name3 !== "string") {
-              Tools.each(name3, function(format2, name4) {
-                register4(name4, format2);
+        var register4 = function(name2, format) {
+          if (name2) {
+            if (typeof name2 !== "string") {
+              Tools.each(name2, function(format2, name3) {
+                register4(name3, format2);
               });
             } else {
               if (!isArray2(format)) {
@@ -57929,13 +57941,13 @@ var require_tinymce = __commonJS({
                   format2.classes = format2.classes.split(/\s+/);
                 }
               });
-              formats[name3] = format;
+              formats[name2] = format;
             }
           }
         };
-        var unregister2 = function(name3) {
-          if (name3 && formats[name3]) {
-            delete formats[name3];
+        var unregister2 = function(name2) {
+          if (name2 && formats[name2]) {
+            delete formats[name2];
           }
           return formats;
         };
@@ -57971,8 +57983,8 @@ var require_tinymce = __commonJS({
           return elm2;
         };
         var getRequiredParent = function(elm2, candidate) {
-          var name3 = typeof elm2 !== "string" ? elm2.nodeName.toLowerCase() : elm2;
-          var elmRule = schema.getElementRule(name3);
+          var name2 = typeof elm2 !== "string" ? elm2.nodeName.toLowerCase() : elm2;
+          var elmRule = schema.getElementRule(name2);
           var parentsRequired = elmRule && elmRule.parentsRequired;
           if (parentsRequired && parentsRequired.length) {
             return candidate && Tools.inArray(parentsRequired, candidate) !== -1 ? candidate : parentsRequired[0];
@@ -58077,7 +58089,7 @@ var require_tinymce = __commonJS({
         }).reverse();
       };
       var getCssText = function(editor, format) {
-        var name3, previewFrag, previewElm, items;
+        var name2, previewFrag, previewElm, items;
         var previewCss = "", parentFontSize, previewStyles;
         previewStyles = editor.settings.preview_styles;
         if (previewStyles === false) {
@@ -58102,28 +58114,28 @@ var require_tinymce = __commonJS({
             return "";
           }
         }
-        name3 = format.block || format.inline || "span";
+        name2 = format.block || format.inline || "span";
         items = parseSelector(format.selector);
         if (items.length) {
           if (!items[0].name) {
-            items[0].name = name3;
+            items[0].name = name2;
           }
-          name3 = format.selector;
+          name2 = format.selector;
           previewFrag = parsedSelectorToHtml(items, editor);
         } else {
-          previewFrag = parsedSelectorToHtml([name3], editor);
+          previewFrag = parsedSelectorToHtml([name2], editor);
         }
-        previewElm = dom.select(name3, previewFrag)[0] || previewFrag.firstChild;
-        each$d(format.styles, function(value2, name4) {
+        previewElm = dom.select(name2, previewFrag)[0] || previewFrag.firstChild;
+        each$d(format.styles, function(value2, name3) {
           value2 = removeVars(value2);
           if (value2) {
-            dom.setStyle(previewElm, name4, value2);
+            dom.setStyle(previewElm, name3, value2);
           }
         });
-        each$d(format.attributes, function(value2, name4) {
+        each$d(format.attributes, function(value2, name3) {
           value2 = removeVars(value2);
           if (value2) {
-            dom.setAttrib(previewElm, name4, value2);
+            dom.setAttrib(previewElm, name3, value2);
           }
         });
         each$d(format.classes, function(value2) {
@@ -58140,20 +58152,20 @@ var require_tinymce = __commonJS({
         editor.getBody().appendChild(previewFrag);
         parentFontSize = dom.getStyle(editor.getBody(), "fontSize", true);
         parentFontSize = /px$/.test(parentFontSize) ? parseInt(parentFontSize, 10) : 0;
-        each$d(previewStyles.split(" "), function(name4) {
-          var value2 = dom.getStyle(previewElm, name4, true);
-          if (name4 === "background-color" && /transparent|rgba\s*\([^)]+,\s*0\)/.test(value2)) {
-            value2 = dom.getStyle(editor.getBody(), name4, true);
+        each$d(previewStyles.split(" "), function(name3) {
+          var value2 = dom.getStyle(previewElm, name3, true);
+          if (name3 === "background-color" && /transparent|rgba\s*\([^)]+,\s*0\)/.test(value2)) {
+            value2 = dom.getStyle(editor.getBody(), name3, true);
             if (dom.toHex(value2).toLowerCase() === "#ffffff") {
               return;
             }
           }
-          if (name4 === "color") {
+          if (name3 === "color") {
             if (dom.toHex(value2).toLowerCase() === "#000000") {
               return;
             }
           }
-          if (name4 === "font-size") {
+          if (name3 === "font-size") {
             if (/em|%$/.test(value2)) {
               if (parentFontSize === 0) {
                 return;
@@ -58162,10 +58174,10 @@ var require_tinymce = __commonJS({
               value2 = numValue * parentFontSize + "px";
             }
           }
-          if (name4 === "border" && value2) {
+          if (name3 === "border" && value2) {
             previewCss += "padding:0 2px;";
           }
-          previewCss += name4 + ":" + value2 + ";";
+          previewCss += name3 + ":" + value2 + ";";
         });
         editor.fire("AfterPreviewFormats");
         dom.remove(previewFrag);
@@ -58192,14 +58204,14 @@ var require_tinymce = __commonJS({
           has: formats.has,
           register: formats.register,
           unregister: formats.unregister,
-          apply: function(name3, vars3, node) {
-            applyFormat$1(editor, name3, vars3, node);
+          apply: function(name2, vars3, node) {
+            applyFormat$1(editor, name2, vars3, node);
           },
-          remove: function(name3, vars3, node, similar) {
-            removeFormat$1(editor, name3, vars3, node, similar);
+          remove: function(name2, vars3, node, similar) {
+            removeFormat$1(editor, name2, vars3, node, similar);
           },
-          toggle: function(name3, vars3, node) {
-            toggleFormat(editor, name3, vars3, node);
+          toggle: function(name2, vars3, node) {
+            toggleFormat(editor, name2, vars3, node);
           },
           match: curry(match, editor),
           matchAll: curry(matchAll, editor),
@@ -59815,7 +59827,7 @@ var require_tinymce = __commonJS({
         };
       };
       var isTarget = function(node) {
-        return contains(["figcaption"], name2(node));
+        return contains(["figcaption"], name(node));
       };
       var rangeBefore = function(target) {
         var rng = domGlobals.document.createRange();
@@ -60975,8 +60987,8 @@ var require_tinymce = __commonJS({
           return isListItem(Element2.fromDom(elm));
         }).isSome();
       };
-      var hasFirstChild = function(elm, name3) {
-        return elm.firstChild && elm.firstChild.nodeName === name3;
+      var hasFirstChild = function(elm, name2) {
+        return elm.firstChild && elm.firstChild.nodeName === name2;
       };
       var hasParent$1 = function(elm, parentName) {
         return elm && elm.parentNode && elm.parentNode.nodeName === parentName;
@@ -61225,11 +61237,11 @@ var require_tinymce = __commonJS({
         var dom2 = editor.dom;
         var schema = editor.schema, nonEmptyElementsMap = schema.getNonEmptyElements();
         var rng = editor.selection.getRng();
-        var createNewBlock = function(name3) {
+        var createNewBlock = function(name2) {
           var node = container, block, clonedNode, caretNode;
           var textInlineElements = schema.getTextInlineElements();
-          if (name3 || parentBlockName === "TABLE" || parentBlockName === "HR") {
-            block = dom2.create(name3 || newBlockName);
+          if (name2 || parentBlockName === "TABLE" || parentBlockName === "HR") {
+            block = dom2.create(name2 || newBlockName);
           } else {
             block = parentBlock.cloneNode(false);
           }
@@ -61260,7 +61272,7 @@ var require_tinymce = __commonJS({
           return block;
         };
         var isCaretAtStartOrEndOfBlock = function(start3) {
-          var node, name3;
+          var node, name2;
           var normalizedOffset = normalizeZwspOffset(start3, container, offset);
           if (isText$1(container) && (start3 ? normalizedOffset > 0 : normalizedOffset < container.nodeValue.length)) {
             return false;
@@ -61285,8 +61297,8 @@ var require_tinymce = __commonJS({
           while (node = walker.current()) {
             if (isElement$1(node)) {
               if (!node.getAttribute("data-mce-bogus")) {
-                name3 = node.nodeName.toLowerCase();
-                if (nonEmptyElementsMap[name3] && name3 !== "br") {
+                name2 = node.nodeName.toLowerCase();
+                if (nonEmptyElementsMap[name2] && name2 !== "br") {
                   return false;
                 }
               }
@@ -63275,29 +63287,29 @@ var require_tinymce = __commonJS({
       };
       var createParser = function(editor) {
         var parser3 = DomParser(mkParserSettings(editor), editor.schema);
-        parser3.addAttributeFilter("src,href,style,tabindex", function(nodes, name3) {
+        parser3.addAttributeFilter("src,href,style,tabindex", function(nodes, name2) {
           var i2 = nodes.length, node, value2;
           var dom2 = editor.dom;
-          var internalName = "data-mce-" + name3;
+          var internalName = "data-mce-" + name2;
           while (i2--) {
             node = nodes[i2];
-            value2 = node.attr(name3);
+            value2 = node.attr(name2);
             if (value2 && !node.attr(internalName)) {
               if (value2.indexOf("data:") === 0 || value2.indexOf("blob:") === 0) {
                 continue;
               }
-              if (name3 === "style") {
+              if (name2 === "style") {
                 value2 = dom2.serializeStyle(dom2.parseStyle(value2), node.name);
                 if (!value2.length) {
                   value2 = null;
                 }
                 node.attr(internalName, value2);
-                node.attr(name3, value2);
-              } else if (name3 === "tabindex") {
+                node.attr(name2, value2);
+              } else if (name2 === "tabindex") {
                 node.attr(internalName, value2);
-                node.attr(name3, null);
+                node.attr(name2, null);
               } else {
-                node.attr(internalName, editor.convertURL(value2, name3, node.name));
+                node.attr(internalName, editor.convertURL(value2, name2, node.name));
               }
             }
           }
@@ -63609,13 +63621,13 @@ var require_tinymce = __commonJS({
           }
         }
       };
-      var trimLegacyPrefix = function(name3) {
-        return name3.replace(/^\-/, "");
+      var trimLegacyPrefix = function(name2) {
+        return name2.replace(/^\-/, "");
       };
       var initPlugins = function(editor) {
         var initializedPlugins = [];
-        Tools.each(editor.settings.plugins.split(/[ ,]/), function(name3) {
-          initPlugin(editor, initializedPlugins, trimLegacyPrefix(name3));
+        Tools.each(editor.settings.plugins.split(/[ ,]/), function(name2) {
+          initPlugin(editor, initializedPlugins, trimLegacyPrefix(name2));
         });
       };
       var initIcons = function(editor) {
@@ -63705,8 +63717,8 @@ var require_tinymce = __commonJS({
         }
       };
       var DOM$7 = DOMUtils$1.DOM;
-      var hasSkipLoadPrefix = function(name3) {
-        return name3.charAt(0) === "-";
+      var hasSkipLoadPrefix = function(name2) {
+        return name2.charAt(0) === "-";
       };
       var loadLanguage = function(scriptLoader, editor) {
         var languageCode = getLanguageCode(editor);
@@ -63746,13 +63758,13 @@ var require_tinymce = __commonJS({
           };
         });
       };
-      var getIconsUrlMetaFromName = function(editor, name3, suffix) {
-        return Option.from(name3).filter(function(name4) {
-          return name4.length > 0 && !IconManager2.has(name4);
-        }).map(function(name4) {
+      var getIconsUrlMetaFromName = function(editor, name2, suffix) {
+        return Option.from(name2).filter(function(name3) {
+          return name3.length > 0 && !IconManager2.has(name3);
+        }).map(function(name3) {
           return {
-            url: editor.editorManager.baseURL + "/icons/" + name4 + "/icons" + suffix + ".js",
-            name: Option.some(name4)
+            url: editor.editorManager.baseURL + "/icons/" + name3 + "/icons" + suffix + ".js",
+            name: Option.some(name3)
           };
         });
       };
@@ -63771,11 +63783,11 @@ var require_tinymce = __commonJS({
         if (isArray2(settings.plugins)) {
           settings.plugins = settings.plugins.join(" ");
         }
-        Tools.each(settings.external_plugins, function(url, name3) {
-          PluginManager.load(name3, url, noop, void 0, function() {
-            pluginLoadError(editor, url, name3);
+        Tools.each(settings.external_plugins, function(url, name2) {
+          PluginManager.load(name2, url, noop, void 0, function() {
+            pluginLoadError(editor, url, name2);
           });
-          settings.plugins += " " + name3;
+          settings.plugins += " " + name2;
         });
         Tools.each(settings.plugins.split(/[ ,]/), function(plugin) {
           plugin = Tools.trim(plugin);
@@ -64011,7 +64023,7 @@ var require_tinymce = __commonJS({
       var getSpecifiedFontProp = function(propName, rootElm, elm) {
         var getProperty = function(elm2) {
           return getRaw(elm2, propName).orThunk(function() {
-            if (name2(elm2) === "font") {
+            if (name(elm2) === "font") {
               return get(legacyPropNames, propName).bind(function(legacyPropName) {
                 return getOpt(elm2, legacyPropName);
               });
@@ -64284,11 +64296,11 @@ var require_tinymce = __commonJS({
           }
           return this.editor.getDoc().execCommand(command, ui, value2);
         };
-        EditorCommands2.prototype.isFormatMatch = function(name3) {
-          return this.editor.formatter.match(name3);
+        EditorCommands2.prototype.isFormatMatch = function(name2) {
+          return this.editor.formatter.match(name2);
         };
-        EditorCommands2.prototype.toggleFormat = function(name3, value2) {
-          this.editor.formatter.toggle(name3, value2 ? { value: value2 } : void 0);
+        EditorCommands2.prototype.toggleFormat = function(name2, value2) {
+          this.editor.formatter.toggle(name2, value2 ? { value: value2 } : void 0);
           this.editor.nodeChanged();
         };
         EditorCommands2.prototype.storeSelection = function(type2) {
@@ -64344,9 +64356,9 @@ var require_tinymce = __commonJS({
               if (align === "full") {
                 align = "justify";
               }
-              each$e("left,center,right,justify".split(","), function(name3) {
-                if (align !== name3) {
-                  editor.formatter.remove("align" + name3);
+              each$e("left,center,right,justify".split(","), function(name2) {
+                if (align !== name2) {
+                  editor.formatter.remove("align" + name2);
                 }
               });
               if (align !== "none") {
@@ -64495,11 +64507,11 @@ var require_tinymce = __commonJS({
               return true;
             }
           });
-          var alignStates = function(name3) {
+          var alignStates = function(name2) {
             return function() {
               var nodes = editor.selection.isCollapsed() ? [editor.dom.getParent(editor.selection.getNode(), editor.dom.isBlock)] : editor.selection.getSelectedBlocks();
               var matches2 = map$3(nodes, function(node) {
-                return !!editor.formatter.matchNode(node, name3);
+                return !!editor.formatter.matchNode(node, name2);
               });
               return inArray$2(matches2, true) !== -1;
             };
@@ -64562,14 +64574,14 @@ var require_tinymce = __commonJS({
           this.scope = this.settings.scope || this;
           this.toggleEvent = this.settings.toggleEvent || never;
         }
-        EventDispatcher3.isNative = function(name3) {
-          return !!nativeEvents[name3.toLowerCase()];
+        EventDispatcher3.isNative = function(name2) {
+          return !!nativeEvents[name2.toLowerCase()];
         };
-        EventDispatcher3.prototype.fire = function(name3, args) {
+        EventDispatcher3.prototype.fire = function(name2, args) {
           var handlers, i2, l, callback;
-          name3 = name3.toLowerCase();
+          name2 = name2.toLowerCase();
           args = args || {};
-          args.type = name3;
+          args.type = name2;
           if (!args.target) {
             args.target = this.scope;
           }
@@ -64590,12 +64602,12 @@ var require_tinymce = __commonJS({
           if (this.settings.beforeFire) {
             this.settings.beforeFire(args);
           }
-          handlers = this.bindings[name3];
+          handlers = this.bindings[name2];
           if (handlers) {
             for (i2 = 0, l = handlers.length; i2 < l; i2++) {
               callback = handlers[i2];
               if (callback.once) {
-                this.off(name3, callback.func);
+                this.off(name2, callback.func);
               }
               if (args.isImmediatePropagationStopped()) {
                 args.stopPropagation();
@@ -64609,7 +64621,7 @@ var require_tinymce = __commonJS({
           }
           return args;
         };
-        EventDispatcher3.prototype.on = function(name3, callback, prepend2, extra2) {
+        EventDispatcher3.prototype.on = function(name2, callback, prepend2, extra2) {
           var handlers, names, i2;
           if (callback === false) {
             callback = never;
@@ -64619,14 +64631,14 @@ var require_tinymce = __commonJS({
             if (extra2) {
               Tools.extend(wrappedCallback, extra2);
             }
-            names = name3.toLowerCase().split(" ");
+            names = name2.toLowerCase().split(" ");
             i2 = names.length;
             while (i2--) {
-              name3 = names[i2];
-              handlers = this.bindings[name3];
+              name2 = names[i2];
+              handlers = this.bindings[name2];
               if (!handlers) {
-                handlers = this.bindings[name3] = [];
-                this.toggleEvent(name3, true);
+                handlers = this.bindings[name2] = [];
+                this.toggleEvent(name2, true);
               }
               if (prepend2) {
                 handlers.unshift(wrappedCallback);
@@ -64637,16 +64649,16 @@ var require_tinymce = __commonJS({
           }
           return this;
         };
-        EventDispatcher3.prototype.off = function(name3, callback) {
+        EventDispatcher3.prototype.off = function(name2, callback) {
           var _this = this;
           var i2, handlers, names, hi;
-          if (name3) {
-            names = name3.toLowerCase().split(" ");
+          if (name2) {
+            names = name2.toLowerCase().split(" ");
             i2 = names.length;
             while (i2--) {
-              name3 = names[i2];
-              handlers = this.bindings[name3];
-              if (!name3) {
+              name2 = names[i2];
+              handlers = this.bindings[name2];
+              if (!name2) {
                 each$1(this.bindings, function(_value, bindingName) {
                   _this.toggleEvent(bindingName, false);
                   delete _this.bindings[bindingName];
@@ -64661,30 +64673,30 @@ var require_tinymce = __commonJS({
                   while (hi--) {
                     if (handlers[hi].func === callback) {
                       handlers = handlers.slice(0, hi).concat(handlers.slice(hi + 1));
-                      this.bindings[name3] = handlers;
+                      this.bindings[name2] = handlers;
                     }
                   }
                 }
                 if (!handlers.length) {
-                  this.toggleEvent(name3, false);
-                  delete this.bindings[name3];
+                  this.toggleEvent(name2, false);
+                  delete this.bindings[name2];
                 }
               }
             }
           } else {
-            each$1(this.bindings, function(_value, name4) {
-              _this.toggleEvent(name4, false);
+            each$1(this.bindings, function(_value, name3) {
+              _this.toggleEvent(name3, false);
             });
             this.bindings = {};
           }
           return this;
         };
-        EventDispatcher3.prototype.once = function(name3, callback, prepend2) {
-          return this.on(name3, callback, prepend2, { once: true });
+        EventDispatcher3.prototype.once = function(name2, callback, prepend2) {
+          return this.on(name2, callback, prepend2, { once: true });
         };
-        EventDispatcher3.prototype.has = function(name3) {
-          name3 = name3.toLowerCase();
-          return !(!this.bindings[name3] || this.bindings[name3].length === 0);
+        EventDispatcher3.prototype.has = function(name2) {
+          name2 = name2.toLowerCase();
+          return !(!this.bindings[name2] || this.bindings[name2].length === 0);
         };
         return EventDispatcher3;
       })();
@@ -64692,9 +64704,9 @@ var require_tinymce = __commonJS({
         if (!obj._eventDispatcher) {
           obj._eventDispatcher = new EventDispatcher2({
             scope: obj,
-            toggleEvent: function(name3, state) {
-              if (EventDispatcher2.isNative(name3) && obj.toggleNativeEvent) {
-                obj.toggleNativeEvent(name3, state);
+            toggleEvent: function(name2, state) {
+              if (EventDispatcher2.isNative(name2) && obj.toggleNativeEvent) {
+                obj.toggleNativeEvent(name2, state);
               }
             }
           });
@@ -64702,32 +64714,32 @@ var require_tinymce = __commonJS({
         return obj._eventDispatcher;
       };
       var Observable = {
-        fire: function(name3, args, bubble) {
+        fire: function(name2, args, bubble) {
           var self2 = this;
-          if (self2.removed && name3 !== "remove" && name3 !== "detach") {
+          if (self2.removed && name2 !== "remove" && name2 !== "detach") {
             return args;
           }
-          var dispatcherArgs = getEventDispatcher(self2).fire(name3, args);
+          var dispatcherArgs = getEventDispatcher(self2).fire(name2, args);
           if (bubble !== false && self2.parent) {
             var parent_1 = self2.parent();
             while (parent_1 && !dispatcherArgs.isPropagationStopped()) {
-              parent_1.fire(name3, dispatcherArgs, false);
+              parent_1.fire(name2, dispatcherArgs, false);
               parent_1 = parent_1.parent();
             }
           }
           return dispatcherArgs;
         },
-        on: function(name3, callback, prepend2) {
-          return getEventDispatcher(this).on(name3, callback, prepend2);
+        on: function(name2, callback, prepend2) {
+          return getEventDispatcher(this).on(name2, callback, prepend2);
         },
-        off: function(name3, callback) {
-          return getEventDispatcher(this).off(name3, callback);
+        off: function(name2, callback) {
+          return getEventDispatcher(this).off(name2, callback);
         },
-        once: function(name3, callback) {
-          return getEventDispatcher(this).once(name3, callback);
+        once: function(name2, callback) {
+          return getEventDispatcher(this).once(name2, callback);
         },
-        hasEventListeners: function(name3) {
-          return getEventDispatcher(this).has(name3);
+        hasEventListeners: function(name2) {
+          return getEventDispatcher(this).has(name2);
         }
       };
       var internalContentEditableAttr = "data-mce-contenteditable";
@@ -64887,8 +64899,8 @@ var require_tinymce = __commonJS({
             editor.editorManager.on("removeEditor", function() {
               if (!editor.editorManager.activeEditor) {
                 if (customEventRootDelegates) {
-                  each$1(customEventRootDelegates, function(_value, name3) {
-                    editor.dom.unbind(getEventTarget(editor, name3));
+                  each$1(customEventRootDelegates, function(_value, name2) {
+                    editor.dom.unbind(getEventTarget(editor, name2));
                   });
                   customEventRootDelegates = null;
                 }
@@ -64922,28 +64934,28 @@ var require_tinymce = __commonJS({
       var EditorObservable = __assign(__assign({}, Observable), {
         bindPendingEventDelegates: function() {
           var self2 = this;
-          Tools.each(self2._pendingNativeEvents, function(name3) {
-            bindEventDelegate(self2, name3);
+          Tools.each(self2._pendingNativeEvents, function(name2) {
+            bindEventDelegate(self2, name2);
           });
         },
-        toggleNativeEvent: function(name3, state) {
+        toggleNativeEvent: function(name2, state) {
           var self2 = this;
-          if (name3 === "focus" || name3 === "blur") {
+          if (name2 === "focus" || name2 === "blur") {
             return;
           }
           if (state) {
             if (self2.initialized) {
-              bindEventDelegate(self2, name3);
+              bindEventDelegate(self2, name2);
             } else {
               if (!self2._pendingNativeEvents) {
-                self2._pendingNativeEvents = [name3];
+                self2._pendingNativeEvents = [name2];
               } else {
-                self2._pendingNativeEvents.push(name3);
+                self2._pendingNativeEvents.push(name2);
               }
             }
           } else if (self2.initialized) {
-            self2.dom.unbind(getEventTarget(self2, name3), name3, self2.delegates[name3]);
-            delete self2.delegates[name3];
+            self2.dom.unbind(getEventTarget(self2, name2), name2, self2.delegates[name2]);
+            delete self2.delegates[name2];
           }
         },
         unbindAllNativeEvents: function() {
@@ -64951,8 +64963,8 @@ var require_tinymce = __commonJS({
           var body = self2.getBody();
           var dom2 = self2.dom;
           if (self2.delegates) {
-            each$1(self2.delegates, function(value2, name3) {
-              self2.dom.unbind(getEventTarget(self2, name3), name3, value2);
+            each$1(self2.delegates, function(value2, name2) {
+              self2.dom.unbind(getEventTarget(self2, name2), name2, value2);
             });
             delete self2.delegates;
           }
@@ -65208,12 +65220,12 @@ var require_tinymce = __commonJS({
         var contextToolbars = {};
         var sidebars = {};
         var add2 = function(collection, type2) {
-          return function(name3, spec) {
-            return collection[name3.toLowerCase()] = __assign(__assign({}, spec), { type: type2 });
+          return function(name2, spec) {
+            return collection[name2.toLowerCase()] = __assign(__assign({}, spec), { type: type2 });
           };
         };
-        var addIcon = function(name3, svgData) {
-          return icons[name3.toLowerCase()] = svgData;
+        var addIcon = function(name2, svgData) {
+          return icons[name2.toLowerCase()] = svgData;
         };
         return {
           addButton: add2(buttons, "button"),
@@ -65580,17 +65592,17 @@ var require_tinymce = __commonJS({
         Editor4.prototype.hasFocus = function() {
           return hasFocus$1(this);
         };
-        Editor4.prototype.execCallback = function(name3) {
+        Editor4.prototype.execCallback = function(name2) {
           var x = [];
           for (var _i = 1; _i < arguments.length; _i++) {
             x[_i - 1] = arguments[_i];
           }
           var self2 = this;
-          var callback = self2.settings[name3], scope;
+          var callback = self2.settings[name2], scope;
           if (!callback) {
             return;
           }
-          if (self2.callbackLookup && (scope = self2.callbackLookup[name3])) {
+          if (self2.callbackLookup && (scope = self2.callbackLookup[name2])) {
             callback = scope.func;
             scope = scope.scope;
           }
@@ -65599,7 +65611,7 @@ var require_tinymce = __commonJS({
             scope = scope ? resolve$3(scope) : 0;
             callback = resolve$3(callback);
             self2.callbackLookup = self2.callbackLookup || {};
-            self2.callbackLookup[name3] = {
+            self2.callbackLookup[name2] = {
               func: callback,
               scope
             };
@@ -65609,20 +65621,20 @@ var require_tinymce = __commonJS({
         Editor4.prototype.translate = function(text2) {
           return I18n.translate(text2);
         };
-        Editor4.prototype.getParam = function(name3, defaultVal, type2) {
-          return getParam(this, name3, defaultVal, type2);
+        Editor4.prototype.getParam = function(name2, defaultVal, type2) {
+          return getParam(this, name2, defaultVal, type2);
         };
         Editor4.prototype.nodeChanged = function(args) {
           this._nodeChangeDispatcher.nodeChanged(args);
         };
-        Editor4.prototype.addCommand = function(name3, callback, scope) {
-          this.editorCommands.addCommand(name3, callback, scope);
+        Editor4.prototype.addCommand = function(name2, callback, scope) {
+          this.editorCommands.addCommand(name2, callback, scope);
         };
-        Editor4.prototype.addQueryStateHandler = function(name3, callback, scope) {
-          this.editorCommands.addQueryStateHandler(name3, callback, scope);
+        Editor4.prototype.addQueryStateHandler = function(name2, callback, scope) {
+          this.editorCommands.addQueryStateHandler(name2, callback, scope);
         };
-        Editor4.prototype.addQueryValueHandler = function(name3, callback, scope) {
-          this.editorCommands.addQueryValueHandler(name3, callback, scope);
+        Editor4.prototype.addQueryValueHandler = function(name2, callback, scope) {
+          this.editorCommands.addQueryValueHandler(name2, callback, scope);
         };
         Editor4.prototype.addShortcut = function(pattern, desc, cmdFunc, scope) {
           this.shortcuts.add(pattern, desc, cmdFunc, scope);
@@ -65813,10 +65825,10 @@ var require_tinymce = __commonJS({
           var doc2 = this.getDoc();
           return this.bodyElement || (doc2 ? doc2.body : null);
         };
-        Editor4.prototype.convertURL = function(url, name3, elm) {
+        Editor4.prototype.convertURL = function(url, name2, elm) {
           var self2 = this, settings = self2.settings;
           if (settings.urlconverter_callback) {
-            return self2.execCallback("urlconverter_callback", url, elm, true, name3);
+            return self2.execCallback("urlconverter_callback", url, elm, true, name2);
           }
           if (!settings.convert_urls || elm && elm.nodeName === "LINK" || url.indexOf("file:") === 0 || url.length === 0) {
             return url;
@@ -66064,8 +66076,8 @@ var require_tinymce = __commonJS({
             }
             return id;
           };
-          var execCallback = function(name3) {
-            var callback = settings[name3];
+          var execCallback = function(name2) {
+            var callback = settings[name2];
             if (!callback) {
               return;
             }
@@ -66570,12 +66582,12 @@ var require_tinymce = __commonJS({
         var dummy = function() {
           return this;
         };
-        var createMethod = function(name3, fn) {
+        var createMethod = function(name2, fn) {
           return function() {
             var self3 = this;
             var tmp = self3._super;
             var ret;
-            self3._super = _super[name3];
+            self3._super = _super[name2];
             ret = fn.apply(self3, arguments);
             self3._super = tmp;
             return ret;
@@ -66597,14 +66609,14 @@ var require_tinymce = __commonJS({
           }
         }
         if (prop.Methods) {
-          each$j(prop.Methods.split(","), function(name3) {
-            prop[name3] = dummy;
+          each$j(prop.Methods.split(","), function(name2) {
+            prop[name2] = dummy;
           });
         }
         if (prop.Properties) {
-          each$j(prop.Properties.split(","), function(name3) {
-            var fieldName = "_" + name3;
-            prop[name3] = function(value2) {
+          each$j(prop.Properties.split(","), function(name2) {
+            var fieldName = "_" + name2;
+            prop[name2] = function(value2) {
               var self3 = this;
               if (value2 !== void 0) {
                 self3[fieldName] = value2;
@@ -66615,18 +66627,18 @@ var require_tinymce = __commonJS({
           });
         }
         if (prop.Statics) {
-          each$j(prop.Statics, function(func, name3) {
-            Class2[name3] = func;
+          each$j(prop.Statics, function(func, name2) {
+            Class2[name2] = func;
           });
         }
         if (prop.Defaults && _super.Defaults) {
           prop.Defaults = extend$5({}, _super.Defaults, prop.Defaults);
         }
-        each$1(prop, function(member, name3) {
-          if (typeof member === "function" && _super[name3]) {
-            prototype[name3] = createMethod(name3, member);
+        each$1(prop, function(member, name2) {
+          if (typeof member === "function" && _super[name2]) {
+            prototype[name2] = createMethod(name2, member);
           } else {
-            prototype[name3] = member;
+            prototype[name2] = member;
           }
         });
         Class2.prototype = prototype;
@@ -68611,14 +68623,10 @@ init_util();
 init_ui_base();
 init_toolprop();
 function textboxImpl(self2, inpath, text2, cb, packflag = 0) {
-  let path;
-  if (inpath) {
-    path = self2._joinPrefix(inpath);
-  }
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const ret = UIBase.createElement("textbox-x");
-  if (path !== void 0) {
-    ret.setAttribute("datapath", path);
+  if (inpath !== void 0) {
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   ret.ctx = self2.ctx;
   ret.parentWidget = self2;
@@ -68708,8 +68716,7 @@ function colorbuttonImpl(self2, inpath, packflag, mass_set_path) {
   mass_set_path = inpath !== void 0 ? self2._getMassPath(self2.ctx, inpath, mass_set_path) : "";
   const ret = UIBase.createElement("color-picker-button-x");
   if (inpath !== void 0) {
-    inpath = self2._joinPrefix(inpath);
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   if (mass_set_path !== void 0) {
     ret.setAttribute("mass_set_path", mass_set_path);
@@ -68731,10 +68738,11 @@ function curve1dImpl(self2, inpath, packflag = 0, mass_set_path) {
   ret.ctx = self2.ctx;
   ret.packflag |= packflag;
   if (inpath) {
-    inpath = self2._joinPrefix(inpath);
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
-  if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
+  if (mass_set_path) {
+    ret.setAttribute("mass_set_path", mass_set_path);
+  }
   self2.add(ret);
   return ret;
 }
@@ -68742,7 +68750,7 @@ function vecpopupImpl(self2, inpath, packflag = 0, mass_set_path) {
   const button = UIBase.createElement("vector-popup-button-x");
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
-  let name2 = "vector";
+  let name = "vector";
   if (inpath) {
     inpath = self2._joinPrefix(inpath);
     button.setAttribute("datapath", inpath);
@@ -68751,10 +68759,10 @@ function vecpopupImpl(self2, inpath, packflag = 0, mass_set_path) {
     }
     const rdef = self2.ctx.api.resolvePath(self2.ctx, inpath);
     if (rdef?.prop) {
-      name2 = rdef.prop.uiname ?? rdef.prop.apiname ?? name2;
+      name = rdef.prop.uiname ?? rdef.prop.apiname ?? name;
     }
   }
-  button.setAttribute("name", name2);
+  button.setAttribute("name", name);
   button.packflag |= packflag;
   self2.add(button);
   return button;
@@ -68807,7 +68815,7 @@ function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, 
   if (value !== void 0) {
     ret.value = value;
   }
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self2._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
   self2.add(ret);
   return ret;
@@ -68821,7 +68829,7 @@ function viewerImpl(self2, datapath, value = "", packflag = 0, mass_set_path) {
   if (value !== void 0) {
     ret.value = value;
   }
-  if (datapath) ret.setAttribute("datapath", datapath);
+  if (datapath) ret.setAttribute("datapath", self2._joinPrefix(datapath));
   if (mass_set_path) ret.setAttribute("mass_set_path", mass_set_path);
   self2.add(ret);
   return ret;
@@ -68836,9 +68844,9 @@ function styl(el) {
 function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
   const ret = UIBase.createElement("iconcheck-x");
   ret.icon = icon;
-  ret.description = name ?? "";
+  ret.description = description ?? "";
   if (inpath) {
-    ret.setAttribute("datapath", inpath);
+    ret.setAttribute("datapath", self2._joinPrefix(inpath));
   }
   if (mass_set_path) {
     ret.setAttribute("mass_set_path", mass_set_path);
@@ -68847,23 +68855,23 @@ function iconcheckImpl(self2, inpath, icon, description, mass_set_path) {
   ret.checkInit();
   return ret;
 }
-function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
+function checkImpl(self2, inpath, name, packflag = 0, mass_set_path) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const path = inpath !== void 0 ? self2._joinPrefix(inpath) : void 0;
-  if (name2 === void 0 && path) {
+  if (name === void 0 && path) {
     const prop = self2.getPathMeta(self2.ctx, path);
     if (prop) {
-      name2 = prop.getUIName();
+      name = prop.getUIName();
     }
   }
-  name2 = name2 ?? "(error)";
+  name = name ?? "(error)";
   let ret;
   if (packflag & PackFlags.USE_ICONS) {
     ret = UIBase.createElement("iconcheck-x");
     ret.iconsheet = iconSheetFromPackFlag(packflag);
   } else {
     ret = UIBase.createElement("check-x");
-    ret.label = name2;
+    ret.label = name;
   }
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   ret.packflag |= packflag;
@@ -68878,10 +68886,10 @@ function checkImpl(self2, inpath, name2, packflag = 0, mass_set_path) {
   self2.add(ret);
   return ret;
 }
-function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-  if (typeof name2 === "object" && name2 !== null) {
-    const args = name2;
-    name2 = args.name;
+function checkenumImpl(self2, inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+  if (typeof name === "object" && name !== null) {
+    const args = name;
+    name = args.name;
     packflag = args.packflag;
     enummap = args.enummap;
     defaultval = args.defaultval;
@@ -68938,10 +68946,10 @@ function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, call
     };
     const useIcons = packflag & PackFlags.USE_ICONS;
     if (!useIcons) {
-      if (name2 === void 0) {
-        name2 = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
+      if (name === void 0) {
+        name = prop.uiname ?? ToolProperty.makeUIName(prop.apiname ?? inpath ?? "error");
       }
-      frame.label(name2).font = "TitleText";
+      frame.label(name).font = "TitleText";
     }
     const checks = {};
     let ignorecb = false;
@@ -68960,7 +68968,7 @@ function checkenumImpl(self2, inpath, name2, packflag, enummap, defaultval, call
   }
   return frame;
 }
-function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_set_path, prop) {
+function checkenumPanelImpl(self2, inpath, name, packflag = 0, callback, mass_set_path, prop) {
   packflag = packflag === void 0 ? 0 : packflag;
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   const path = self2._joinPrefix(inpath);
@@ -68969,15 +68977,15 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
     const resolved = self2.ctx.api.resolvePath(self2.ctx, path, true);
     prop = resolved !== void 0 ? resolved.prop : void 0;
   }
-  if (!name2 && prop) {
-    name2 = prop.getUIName();
+  if (!name && prop) {
+    name = prop.getUIName();
   }
   if (path !== void 0) {
     if (prop === void 0) {
       console.warn("Bad path in checkenum", path);
       return void 0;
     }
-    frame = self2.panel(name2, name2, packflag);
+    frame = self2.panel(name, name, packflag);
     frame.oneAxisPadding();
     frame.setCSSAfter(() => frame.background = self2.getDefault("BoxSub2BG"));
     if (packflag & PackFlags.USE_ICONS) {
@@ -69012,10 +69020,10 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
         };
       };
       var makecb = makecb2;
-      if (name2 === void 0) {
-        name2 = prop.getUIName();
+      if (name === void 0) {
+        name = prop.getUIName();
       }
-      frame.label(name2).font = "TitleText";
+      frame.label(name).font = "TitleText";
       const checks = {};
       let ignorecb = false;
       for (const key in prop.values) {
@@ -69034,11 +69042,11 @@ function checkenumPanelImpl(self2, inpath, name2, packflag = 0, callback, mass_s
   }
   return frame;
 }
-function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
+function listenumImpl(self2, inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
   let mass_set_path;
-  if (name2 && typeof name2 === "object") {
-    const args = name2;
-    name2 = args.name;
+  if (name && typeof name === "object") {
+    const args = name;
+    name = args.name;
     enumDef = args.enumDef;
     defaultval = args.defaultval;
     callback = args.callback;
@@ -69049,7 +69057,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
   let path;
-  let label = name2;
+  let label = name;
   if (inpath !== void 0) {
     path = self2._joinPrefix(inpath);
   }
@@ -69066,7 +69074,7 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
       ret.uiProp = enumDef;
       label ??= enumDef.getUIName();
     } else {
-      ret.uiProp = new EnumProperty(defaultval, enumDef, path, name2);
+      ret.uiProp = new EnumProperty(defaultval, enumDef, path, name);
     }
     if (iconmap && typeof ret.uiProp === "object") {
       ret.uiProp.addIcons(iconmap);
@@ -69075,8 +69083,8 @@ function listenumImpl(self2, inpath, name2, enumDef, defaultval, callback, iconm
     const res = self2.ctx.api.resolvePath(self2.ctx, path, true);
     if (res !== void 0) {
       ret.prop = res.prop;
-      name2 ??= res.prop.getUIName();
-      label ??= name2;
+      name ??= res.prop.getUIName();
+      label ??= name;
     }
   }
   mass_set_path = self2._getMassPath(self2.ctx, inpath, mass_set_path);
@@ -69176,11 +69184,11 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   } else if (prop.type === PropTypes.ENUM) {
     if (rdef.subkey !== void 0) {
       const subkey = rdef.subkey;
-      let name2 = prop.ui_value_names[rdef.subkey];
-      if (name2 === void 0) {
-        name2 = ToolProperty.makeUIName("" + rdef.subkey);
+      let name = prop.ui_value_names[rdef.subkey];
+      if (name === void 0) {
+        name = ToolProperty.makeUIName("" + rdef.subkey);
       }
-      const check = self2.check(inpath, name2, packflag, mass_set_path);
+      const check = self2.check(inpath, name, packflag, mass_set_path);
       const tooltip = prop.descriptions[subkey];
       check.useDataPathUndo = useDataPathUndo;
       check.description = tooltip ?? prop.ui_value_names[subkey] ?? ToolProperty.makeUIName(subkey);
@@ -69231,19 +69239,19 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   } else if (prop.type === PropTypes.FLAG) {
     if (rdef.subkey !== void 0) {
       const tooltip = prop.descriptions[rdef.subkey];
-      let name2 = prop.ui_value_names[rdef.subkey];
+      let name = prop.ui_value_names[rdef.subkey];
       if (typeof rdef.subkey === "number") {
-        name2 = prop.keys[rdef.subkey];
-        if (name2 && name2 in prop.ui_value_names) {
-          name2 = prop.ui_value_names[name2];
+        name = prop.keys[rdef.subkey];
+        if (name && name in prop.ui_value_names) {
+          name = prop.ui_value_names[name];
         } else {
-          name2 = ToolProperty.makeUIName(name2 ? name2 : "(error)");
+          name = ToolProperty.makeUIName(name ? name : "(error)");
         }
       }
-      if (name2 === void 0) {
-        name2 = "(error)";
+      if (name === void 0) {
+        name = "(error)";
       }
-      const ret = self2.check(inpath, name2, packflag, mass_set_path);
+      const ret = self2.check(inpath, name, packflag, mass_set_path);
       ret.icon = prop.iconmap[rdef.subkey];
       if (tooltip) {
         ret.description = tooltip;
@@ -69270,13 +69278,13 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
         const col1 = row.col();
         const col2 = row.col();
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
           const con2 = i2 & 1 ? col2 : col1;
-          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           if (tooltip) {
             check.description = tooltip;
           }
@@ -69307,17 +69315,17 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
         let x = 0;
         let y = 0;
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
-          const check = con2.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           check.setUndo(useDataPathUndo);
           if (tooltip) {
             check.description = tooltip;
           }
-          x += name2.length;
+          x += name.length;
           y += 1;
           if (isrow && x > wrapChars) {
             x = 0;
@@ -69335,12 +69343,12 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
       const rebuild = () => {
         con.clear();
         for (const k in prop.values) {
-          let name2 = prop.ui_value_names[k];
+          let name = prop.ui_value_names[k];
           const tooltip = prop.descriptions[k];
-          if (name2 === void 0) {
-            name2 = ToolProperty.makeUIName(k);
+          if (name === void 0) {
+            name = ToolProperty.makeUIName(k);
           }
-          const check = con.check(`${inpath}[${k}]`, name2, packflag, mass_set_path);
+          const check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
           check.useDataPathUndo = useDataPathUndo;
           if (tooltip) {
             check.description = tooltip;
@@ -69362,16 +69370,16 @@ function propImpl(self2, inpath, packflag = 0, mass_set_path) {
   }
   throw new DataPathError(`Unsupported property: ${inpath}`);
 }
-function simplesliderImpl(self2, datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-  if (typeof name2 === "object") {
+function simplesliderImpl(self2, datapath, name, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
+  if (typeof name === "object") {
     return self2.slider(datapath, {
-      ...name2,
-      packflag: (name2.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
+      ...name,
+      packflag: (name.packflag ?? 0) | PackFlags.SIMPLE_NUMSLIDERS
     });
   } else {
     return self2.slider(
       datapath,
-      name2,
+      name,
       defaultval,
       min,
       max,
@@ -69383,11 +69391,11 @@ function simplesliderImpl(self2, datapath, name2, defaultval, min, max, step, is
     );
   }
 }
-function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-  if (typeof name2 === "object") {
-    const args = name2;
+function sliderImpl(self2, datapath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+  if (typeof name === "object") {
+    const args = name;
     decimalPlaces = args.decimalPlaces;
-    name2 = args.name;
+    name = args.name;
     defaultval = args.defaultval;
     min = args.min;
     max = args.max;
@@ -69429,8 +69437,8 @@ function sliderImpl(self2, datapath, name2, defaultval, min, max, step, is_int, 
   if (datapath) {
     ret.setAttribute("datapath", datapath);
   }
-  if (name2) {
-    ret.setAttribute("name", name2);
+  if (name) {
+    ret.setAttribute("name", name);
   }
   if (min !== void 0) {
     ret.setAttribute("min", "" + min);
@@ -69475,13 +69483,13 @@ function treeviewImpl(self2) {
   self2._add(ret);
   return ret;
 }
-function panelImpl(self2, name2, id, packflag = 0, tooltip) {
-  id = id === void 0 ? name2 : id;
+function panelImpl(self2, name, id, packflag = 0, tooltip) {
+  id = id === void 0 ? name : id;
   const ret = UIBase.createElement("panelframe-x");
   if (tooltip) {
     ret.setHeaderToolTip(tooltip);
   }
-  ret.setAttribute("label", name2);
+  ret.setAttribute("label", name);
   ret.setAttribute("id", id);
   self2._add(ret);
   if (self2.ctx) {
@@ -70170,17 +70178,18 @@ var Container3 = class _Container extends UIBase {
     return buttonImpl(this, label, cb, thisvar, id, packflag);
   }
   _joinPrefix(path, prefix2 = this.dataPrefix.trim()) {
-    if (path === void 0) {
+    let p = path;
+    if (p === void 0) {
       return void 0;
     }
-    path = path.trim();
-    if (path[0] === "/") {
-      return path;
+    p = p.trim();
+    if (p[0] === "/") {
+      return p;
     }
-    if (prefix2.length > 0 && path.length > 0 && !prefix2.endsWith(".") && !path.startsWith(".")) {
-      path = "." + path;
+    if (prefix2.length > 0 && p.length > 0 && !prefix2.endsWith(".") && !p.startsWith(".")) {
+      p = "." + p;
     }
-    return prefix2 + path;
+    return prefix2 + p;
   }
   colorbutton(inpath, packflag, mass_set_path) {
     return this.addPropLabel(
@@ -70206,6 +70215,7 @@ var Container3 = class _Container extends UIBase {
     if (inpath === void 0) {
       return void 0;
     }
+    inpath = this._joinPrefix(inpath);
     if (mass_set_path === void 0 && this.massSetPrefix.length > 0) {
       mass_set_path = ctx.api.getPropName(ctx, inpath);
     }
@@ -70220,21 +70230,21 @@ var Container3 = class _Container extends UIBase {
   iconcheck(inpath, icon, description, mass_set_path) {
     return this.addPropLabel(iconcheckImpl(this, inpath, icon, description, mass_set_path)).widget;
   }
-  check(inpath, name2, packflag = 0, mass_set_path) {
-    return checkImpl(this, inpath, name2, packflag, mass_set_path);
+  check(inpath, name, packflag = 0, mass_set_path) {
+    return checkImpl(this, inpath, name, packflag, mass_set_path);
   }
   /*
    *
    * new (optional) form: checkenum(inpath, args)
    * */
-  checkenum(inpath, name2, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
-    const label = typeof name2 === "object" ? name2.name : name2;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+    const label = typeof name === "object" ? name.name : name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       checkenumImpl(
         this,
         inpath,
-        name2,
+        name,
         packflag,
         enummap,
         defaultval,
@@ -70246,9 +70256,9 @@ var Container3 = class _Container extends UIBase {
       packflag
     ).widget;
   }
-  checkenum_panel(inpath, name2, packflag = 0, callback, mass_set_path, prop) {
-    const widget = checkenumPanelImpl(this, inpath, name2, packflag, callback, mass_set_path, prop);
-    return widget ? this.addPropLabel(widget, name2, packflag).widget : widget;
+  checkenum_panel(inpath, name, packflag = 0, callback, mass_set_path, prop) {
+    const widget = checkenumPanelImpl(this, inpath, name, packflag, callback, mass_set_path, prop);
+    return widget ? this.addPropLabel(widget, name, packflag).widget : widget;
   }
   /**
       Creates a dropbox menu widget for selecting enum items
@@ -70267,11 +70277,11 @@ var Container3 = class _Container extends UIBase {
   
       defaultval cannot be undefined
     */
-  listenum(inpath, name2, enumDef, defaultval, callback, iconmap, packflag = 0) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
-      listenumImpl(this, inpath, name2, enumDef, defaultval, callback, iconmap, packflag),
+      listenumImpl(this, inpath, name, enumDef, defaultval, callback, iconmap, packflag),
       label,
       packflag
     ).widget;
@@ -70322,14 +70332,14 @@ var Container3 = class _Container extends UIBase {
     }
     return p;
   }
-  simpleslider(datapath, name2, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  simpleslider(datapath, name, defaultval, min, max, step, isInt, do_redraw, callback, packflag = 0) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       simplesliderImpl(
         this,
         datapath,
-        name2,
+        name,
         defaultval,
         min,
         max,
@@ -70351,14 +70361,14 @@ var Container3 = class _Container extends UIBase {
    *  etc...
    * });
    * */
-  slider(datapath, name2, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
-    const label = typeof name2 === "string" ? name2 : name2?.name;
-    packflag = typeof name2 === "object" ? name2.packflag ?? 0 : packflag;
+  slider(datapath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0, decimalPlaces) {
+    const label = typeof name === "string" ? name : name?.name;
+    packflag = typeof name === "object" ? name.packflag ?? 0 : packflag;
     return this.addPropLabel(
       sliderImpl(
         this,
         datapath,
-        name2,
+        name,
         defaultval,
         min,
         max,
@@ -70385,8 +70395,8 @@ var Container3 = class _Container extends UIBase {
   treeview() {
     return treeviewImpl(this);
   }
-  panel(name2, id, packflag = 0, tooltip) {
-    return panelImpl(this, name2, id, packflag, tooltip);
+  panel(name, id, packflag = 0, tooltip) {
+    return panelImpl(this, name, id, packflag, tooltip);
   }
   row(packflag = 0) {
     return rowImpl(this, packflag);
@@ -70726,11 +70736,11 @@ var NumSlider = class extends ValueButtonBase {
   }
   /** Current name label.  If set to null label will
    * be pulled from the datapath api.*/
-  set name(name2) {
-    if (name2 === void 0 || name2 === null) {
+  set name(name) {
+    if (name === void 0 || name === null) {
       this.removeAttribute("name");
     } else {
-      this.setAttribute("name", name2);
+      this.setAttribute("name", name);
     }
   }
   static define() {
@@ -70752,14 +70762,14 @@ var NumSlider = class extends ValueButtonBase {
   updateFromPath(value, info) {
     const prop = info.prop ?? this.getPathMeta(this.ctx, info.path);
     if (prop) {
-      let name2;
+      let name;
       if (this.hasAttribute("name")) {
-        name2 = this.getAttribute("name");
+        name = this.getAttribute("name");
       } else {
-        name2 = "" + prop.uiname;
+        name = "" + prop.uiname;
       }
-      if (name2 !== null && name2 !== this._name) {
-        this._name = name2;
+      if (name !== null && name !== this._name) {
+        this._name = name;
         this.setCSS(void 0, false);
       }
       this.loadNumConstraints(prop);
@@ -71182,9 +71192,9 @@ var NumSlider = class extends ValueButtonBase {
     if (!this.hasAttribute("name")) {
       return;
     }
-    const name2 = this.getAttribute("name");
-    if (name2 !== null && (force || name2 !== this._name)) {
-      this._name = name2;
+    const name = this.getAttribute("name");
+    if (name !== null && (force || name !== this._name)) {
+      this._name = name;
       this.setCSS(void 0, false);
     }
     const label = this._genLabel();
@@ -72035,20 +72045,20 @@ var SliderWithTextbox = class extends ColumnFrame {
     this.updateTextBox();
   }
   updateName() {
-    let name2 = this.getAttribute("name");
-    if (!name2 && this.hasAttribute("datapath")) {
+    let name = this.getAttribute("name");
+    if (!name && this.hasAttribute("datapath")) {
       const prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
       if (prop) {
-        name2 = prop.uiname;
+        name = prop.uiname;
       }
     }
-    if (!name2) {
-      name2 = "[error]";
+    if (!name) {
+      name = "[error]";
     }
-    if (name2 !== this._name) {
-      this._name = name2;
+    if (name !== this._name) {
+      this._name = name;
       if (this.l) {
-        this.l.text = name2;
+        this.l.text = name;
       }
     }
   }
@@ -72145,9 +72155,9 @@ var NumSliderWithTextBox = class extends SliderWithTextbox {
   update() {
     super.update();
     if (this.hasAttribute("name")) {
-      const name2 = this.getAttribute("name");
-      if (name2 !== this.numslider.name) {
-        this.numslider.setAttribute("name", name2);
+      const name = this.getAttribute("name");
+      if (name !== this.numslider.name) {
+        this.numslider.setAttribute("name", name);
         this.numslider._redraw();
       }
     }
@@ -72234,8 +72244,8 @@ function getIconFlag(elem) {
 function getPackFlag(elem) {
   let packflag = getIconFlag(elem);
   let disabledFlags = 0;
-  const boolflag = (name2, flag) => {
-    if (getbool(elem, name2)) {
+  const boolflag = (name, flag) => {
+    if (getbool(elem, name)) {
       packflag |= flag;
     } else {
       packflag &= ~flag;
@@ -73740,9 +73750,9 @@ var VectorPanel = class extends ColumnFrame {
     if (!isVecProperty(meta)) {
       return;
     }
-    const name2 = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
-    if (name2 !== void 0 && name2 !== this.name) {
-      this.name = name2;
+    const name = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
+    if (name !== void 0 && name !== this.name) {
+      this.name = name;
       this.rebuild();
       return;
     }
@@ -76234,8 +76244,8 @@ function layoutTabRows({ sizes, available, pad }) {
 var TabClickEvent = class _TabClickEvent extends PointerEvent {
   tab;
   _preventTabDragging = false;
-  constructor(name2, tab2, e) {
-    super(name2, e);
+  constructor(name, tab2, e) {
+    super(name, e);
     if (e instanceof _TabClickEvent) {
       this._preventTabDragging = e._preventTabDragging;
     }
@@ -76257,14 +76267,14 @@ var TabItemContainer2 = class extends ColumnFrame {
     };
   }
   // forward data- custom attributes
-  getAttribute(name2) {
-    return isForwardAttr(name2) ? this._tab.getAttribute(name2) : super.getAttribute(name2);
+  getAttribute(name) {
+    return isForwardAttr(name) ? this._tab.getAttribute(name) : super.getAttribute(name);
   }
-  setAttribute(name2, value) {
-    if (isForwardAttr(name2)) {
-      this._tab.setAttribute(name2, value);
+  setAttribute(name, value) {
+    if (isForwardAttr(name)) {
+      this._tab.setAttribute(name, value);
     } else {
-      super.setAttribute(name2, value);
+      super.setAttribute(name, value);
     }
   }
   noSwitch() {
@@ -77205,11 +77215,11 @@ var TabBar = class extends UIBase {
     tab2.icon = icon;
     return tab2;
   }
-  addTab(name2, id, tooltip = "", movable = false) {
+  addTab(name, id, tooltip = "", movable = false) {
     const tab2 = UIBase.createElement("tab-item-x", true);
     this.shadow.appendChild(tab2);
     tab2.parentWidget = this;
-    tab2.name = name2;
+    tab2.name = name;
     tab2.id = id;
     tab2.tooltip = tooltip;
     tab2.movable = movable;
@@ -77536,7 +77546,7 @@ var TabBar = class extends UIBase {
     const r = this.r * dpi;
     this._layout();
     let tab2;
-    const draw_text = (name2, x2, y2) => {
+    const draw_text = (name, x2, y2) => {
       const hpad = this.getDefault("TabPadding", void 0, 0);
       if (this.horiz) {
         y2 += hpad * 0.5;
@@ -78028,7 +78038,7 @@ var TabContainer3 = class extends UIBase {
     this.tbar.removeTab(tab22);
     tab2.remove();
   }
-  tab(name2, id, tooltip, movable = true) {
+  tab(name, id, tooltip, movable = true) {
     if (id === void 0) {
       id = tab_idgen++;
     }
@@ -78037,7 +78047,7 @@ var TabContainer3 = class extends UIBase {
     this.tabs[id] = col;
     col.dataPrefix = this.dataPrefix;
     col.ctx = this.ctx;
-    col._tab = this.tbar.addTab(name2, id, tooltip, movable);
+    col._tab = this.tbar.addTab(name, id, tooltip, movable);
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
     col.parentWidget = this;
@@ -78544,8 +78554,8 @@ var ListBox = class extends Container3 {
     if (this.getItemName) {
       return this.getItemName(obj, key);
     }
-    const name2 = obj?.name;
-    return typeof name2 === "string" ? name2 : String(key);
+    const name = obj?.name;
+    return typeof name === "string" ? name : String(key);
   }
   _computeKeyDiff(api, list5) {
     if (this._dataList === void 0) {
@@ -78594,7 +78604,7 @@ var ListBox = class extends Container3 {
     const obj = id === void 0 ? void 0 : dataList.get(api, list5, id);
     dataList.setActive(api, list5, obj);
   }
-  addItem(name2, id) {
+  addItem(name, id) {
     const item = UIBase.createElement("listitem-x");
     item.listId = id === void 0 ? this._idgen++ : id;
     if (typeof item.listId === "number") {
@@ -78604,7 +78614,7 @@ var ListBox = class extends Container3 {
     this.add(item);
     this.items.push(item);
     item.checkInit();
-    item.label(name2);
+    item.label(name);
     item.addEventListener("click", () => this.setActive(item));
     return item;
   }
@@ -81646,19 +81656,19 @@ pathux.GraphNode {
   dirty = false;
   customPropUX = /* @__PURE__ */ new Map();
   static decomposePropName(prop) {
-    let name2 = prop;
+    let name = prop;
     let type = "prop";
-    if (name2.startsWith("in:")) {
+    if (name.startsWith("in:")) {
       type = "in";
-      name2 = name2.slice(3);
-    } else if (name2.startsWith("out:")) {
+      name = name.slice(3);
+    } else if (name.startsWith("out:")) {
       type = "out";
-      name2 = name2.slice(4);
+      name = name.slice(4);
     }
-    return { type, name: name2 };
+    return { type, name };
   }
-  static composePropName(type, name2) {
-    return type === "prop" ? name2 : `${type}:${name2}`;
+  static composePropName(type, name) {
+    return type === "prop" ? name : `${type}:${name}`;
   }
   constructor() {
     const def = finalDef(this.constructor);
@@ -81913,25 +81923,25 @@ function nodePropStruct(target) {
   return st;
 }
 function nodePropSocket(node, nodePropName) {
-  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  const { type, name } = Node3.decomposePropName(nodePropName);
   switch (type) {
     case "in":
-      return node.inputs[name2];
+      return node.inputs[name];
     case "out":
-      return node.outputs[name2];
+      return node.outputs[name];
     case "prop":
       return void 0;
   }
 }
 function nodePropTarget(node, nodePropName) {
-  const { type, name: name2 } = Node3.decomposePropName(nodePropName);
+  const { type, name } = Node3.decomposePropName(nodePropName);
   switch (type) {
     case "in":
-      return node.inputs[name2]?.defaultProp;
+      return node.inputs[name]?.defaultProp;
     case "out":
-      return node.outputs[name2]?.defaultProp;
+      return node.outputs[name]?.defaultProp;
     case "prop":
-      return node.props[name2];
+      return node.props[name];
   }
 }
 function nodePropKeys(node) {
@@ -84351,14 +84361,14 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
     }
     for (const key of nodePropKeys(target)) {
       const path = `${nodePath}.group.nodes[${JSON.stringify(target.id)}].props['${key}'].value`;
-      const { name: name2, type } = Node3.decomposePropName(key);
+      const { name, type } = Node3.decomposePropName(key);
       let socket;
       switch (type) {
         case "in":
-          socket = target.inputs[name2];
+          socket = target.inputs[name];
           break;
         case "out":
-          socket = target.outputs[name2];
+          socket = target.outputs[name];
           break;
         case "prop":
           break;
@@ -84366,7 +84376,7 @@ function buildForwardedUI(root, ctx, node, nodePath, inherit_packflag) {
       root.appendChild(
         propEditRow(
           ctx,
-          name2,
+          name,
           path,
           inherit_packflag,
           socket?.createUI ? socket.createUI.bind(socket) : void 0
@@ -84444,15 +84454,15 @@ function exposeMenuTemplate(ctx, def, onPick, kind) {
     }
     if (kind !== "nodeUI") {
       for (const key of nodePropKeys(node)) {
-        const { name: name2, type } = Node3.decomposePropName(key);
+        const { name, type } = Node3.decomposePropName(key);
         if (type === "out") {
           continue;
         }
         const propKey = key;
         entries.push({
-          name: name2,
+          name,
           id: propKey,
-          tooltip: `Forward ${nodeName}'s ${name2} to every instance`,
+          tooltip: `Forward ${nodeName}'s ${name} to every instance`,
           callback: () => onPick({ kind: "prop", nodeId: node.id, propKey })
         });
       }
@@ -85180,18 +85190,18 @@ var NodeFrame = class extends Container3 {
     return row;
   }
   _terminalName(key, node) {
-    const name2 = document.createElement("span");
+    const name = document.createElement("span");
     const font = getStyleRecord(this, "propLabels", "font", true)?.font;
-    name2.textContent = nodePropTarget(node, key)?.uiname || Node3.decomposePropName(key).name;
-    name2.style.overflow = "hidden";
-    name2.style.whiteSpace = "nowrap";
-    name2.style.textOverflow = "ellipsis";
-    name2.title = nodePropTarget(node, key)?.description ?? "";
+    name.textContent = nodePropTarget(node, key)?.uiname || Node3.decomposePropName(key).name;
+    name.style.overflow = "hidden";
+    name.style.whiteSpace = "nowrap";
+    name.style.textOverflow = "ellipsis";
+    name.title = nodePropTarget(node, key)?.description ?? "";
     if (font) {
-      name2.style.font = font.genCSS();
-      name2.style.color = font.color;
+      name.style.font = font.genCSS();
+      name.style.color = font.color;
     }
-    return name2;
+    return name;
   }
   /** The editor for a sockets default value, bound through the props datapath. */
   _inlineEditor(socketPropName) {
@@ -85843,13 +85853,13 @@ var Constraint = class {
   threshold;
   func;
   funcDv;
-  constructor(name2, func, klst, params, k = 1) {
+  constructor(name, func, klst, params, k = 1) {
     this.glst = [];
     this.klst = klst;
     this.wlst = [];
     this.k = k;
     this.params = params;
-    this.name = name2;
+    this.name = name;
     for (const ks of klst) {
       this.glst.push(new Float64Array(ks.length));
       const ws = new Float64Array(ks.length);
@@ -86853,7 +86863,7 @@ var NodeGraphView = class extends Container3 {
     const activeFont = this.getDefault("CrumbActiveFont");
     const walk = this._walk();
     const names = ["Graph", ...walk.steps.map((s) => s.node.getUIName())];
-    names.forEach((name2, depth) => {
+    names.forEach((name, depth) => {
       if (depth > 0) {
         const sep = document.createElement("span");
         sep.textContent = "\u25B8";
@@ -86863,8 +86873,8 @@ var NodeGraphView = class extends Container3 {
       const last = depth === names.length - 1;
       const btn = document.createElement("button");
       btn.className = "nodeeditor-crumb";
-      btn.textContent = name2;
-      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name2}`;
+      btn.textContent = name;
+      btn.title = depth === 0 ? "Show the root graph" : `Go back to ${name}`;
       btn.style.cssText = "background: none; border: none; padding: 0 2px; cursor: pointer;";
       btn.style.font = (last ? activeFont : font).genCSS();
       btn.style.color = (last ? activeFont : font).color;
@@ -87415,12 +87425,12 @@ var NodeGraphView = class extends Container3 {
    */
   openPropMenu(frame, key, local) {
     const nid = frame.node.id;
-    const { name: name2 } = Node3.decomposePropName(key);
+    const { name } = Node3.decomposePropName(key);
     const menu = createMenu(this.ctx, "", [
       {
         name: "Expose on group",
         id: "expose",
-        tooltip: `Forward ${name2} so every instance of this group shows it`,
+        tooltip: `Forward ${name} so every instance of this group shows it`,
         callback: () => void this.exposeProp(nid, key)
       }
     ]);
@@ -91596,13 +91606,13 @@ var ScreenArea2 = class extends UIBase {
     this._areaSize = new Vector2([512, 512]);
     this.chromeHeight = 0;
     if (const_default.DEBUG.screenAreaPosSizeAccesses) {
-      const wrapVector = (name2, axis) => {
-        Object.defineProperty(this[name2], axis, {
+      const wrapVector = (name, axis) => {
+        Object.defineProperty(this[name], axis, {
           get: function() {
             return this["_" + axis];
           },
           set: function(val) {
-            console.warn(`ScreenArea.${name2}[${axis}] set:`, val);
+            console.warn(`ScreenArea.${name}[${axis}] set:`, val);
             this["_" + axis] = val;
           }
         });
@@ -92177,19 +92187,19 @@ var ScreenArea2 = class extends UIBase {
   }
   switchEditor(cls, opts = {}) {
     const def = cls.define();
-    const name2 = def.areaname;
+    const name = def.areaname;
     if (opts.deleteExisting) {
-      this._deleteEditors(name2);
+      this._deleteEditors(name);
     }
-    if (!(name2 in this.editormap)) {
-      this.editormap[name2] = UIBase.createElement(def.tagname);
-      if (this.editormap[name2].ctx === void 0) {
-        this.editormap[name2].ctx = this.ctx;
+    if (!(name in this.editormap)) {
+      this.editormap[name] = UIBase.createElement(def.tagname);
+      if (this.editormap[name].ctx === void 0) {
+        this.editormap[name].ctx = this.ctx;
       }
-      this.editormap[name2].parentWidget = this;
-      this.editormap[name2].owning_sarea = this;
-      this.editormap[name2].inactive = false;
-      this.editors.push(this.editormap[name2]);
+      this.editormap[name].parentWidget = this;
+      this.editormap[name].owning_sarea = this;
+      this.editormap[name].inactive = false;
+      this.editors.push(this.editormap[name]);
     }
     if (this.area) {
       if (this.switcher) {
@@ -92207,7 +92217,7 @@ var ScreenArea2 = class extends UIBase {
     } else {
       this.area = void 0;
     }
-    this.area = this.editormap[name2];
+    this.area = this.editormap[name];
     this.area.closed = false;
     this.area.inactive = false;
     this.area.parentWidget = this;
@@ -92984,8 +92994,8 @@ function strcmp(a2, b) {
   b = b.trim().toLowerCase();
   return a2 < b ? -1 : a2 === b ? 0 : 1;
 }
-function themeItemKind(name2, value) {
-  if (name2.toLowerCase().search("flag") >= 0) {
+function themeItemKind(name, value) {
+  if (name.toLowerCase().search("flag") >= 0) {
     return "skip";
   }
   if (typeof value === "string") {
@@ -93297,8 +93307,8 @@ var ThemeEditor = class extends Container3 {
     this.notify(livePath[0], livePath[livePath.length - 1]);
   }
   /** Adds a variable, returning the name it was stored under. */
-  addThemeVar(name2, value) {
-    const key = addVar(this._vars, name2, copyThemeItem(value));
+  addThemeVar(name, value) {
+    const key = addVar(this._vars, name, copyThemeItem(value));
     this.rebuildPanels();
     this.notify("themeVars", key, void 0, key);
     return key;
@@ -93343,16 +93353,16 @@ var ThemeEditor = class extends Container3 {
     }
     const value = findRecord(livePath.slice(0, -1))?.[livePath[livePath.length - 1]];
     const stem = livePath.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
-    let name2 = stem;
-    for (let i2 = 2; name2 in this._vars; i2++) {
-      name2 = `${stem}_${i2}`;
+    let name = stem;
+    for (let i2 = 2; name in this._vars; i2++) {
+      name = `${stem}_${i2}`;
     }
-    addVar(this._vars, name2, copyThemeItem(value));
-    this.bindLiveSlot(livePath, name2);
+    addVar(this._vars, name, copyThemeItem(value));
+    this.bindLiveSlot(livePath, name);
     if (this._varsPanel && !this._varsPanel.isDead()) {
       this._varsPanel.closed = false;
     }
-    return name2;
+    return name;
   }
   /** The menu binding one theme slot to a variable, detaching it, or making one. */
   bindMenu(col, livePath, kind) {
@@ -93408,15 +93418,15 @@ var ThemeEditor = class extends Container3 {
   }
   varRow(panel, key) {
     const row = panel.row();
-    const name2 = row.textbox(void 0, key);
-    name2.width = VAR_NAME_WIDTH;
-    name2.description = "The name this variable is written under in the theme file";
-    name2.on_change = () => {
+    const name = row.textbox(void 0, key);
+    name.width = VAR_NAME_WIDTH;
+    name.description = "The name this variable is written under in the theme file";
+    name.on_change = () => {
       try {
-        this.renameThemeVar(key, name2.text);
+        this.renameThemeVar(key, name.text);
       } catch (e) {
         console.error(e.message);
-        name2.text = key;
+        name.text = key;
       }
     };
     const slot = {
@@ -93888,9 +93898,9 @@ var TreeItem = class extends Container3 {
   get text() {
     return this._labelText;
   }
-  item(name2, args = {}) {
+  item(name, args = {}) {
     args.treeParent = this;
-    return this.parentWidget.item(name2, args);
+    return this.parentWidget.item(name, args);
   }
   init() {
     super.init();
@@ -94038,11 +94048,11 @@ var TreeView = class extends Container3 {
     super.update();
     this.updateOverdraw();
   }
-  item(name2, args = {}) {
+  item(name, args = {}) {
     const ret = UIBase.createElement("tree-item-x");
     ret.checkInit();
     this.add(ret);
-    ret.text = name2;
+    ret.text = name;
     if (args.icon) {
       ret.icon = args.icon;
     }
@@ -94809,16 +94819,16 @@ var AreaDocker = class extends Container3 {
         continue;
       }
       const def = getAreaConstructor(editor).define();
-      let name2 = def.uiname;
-      if (!name2) {
-        name2 = def.areaname || def.tagname.replace(/-x/, "");
-        name2 = ToolProperty.makeUIName(name2);
+      let name = def.uiname;
+      if (!name) {
+        name = def.areaname || def.tagname.replace(/-x/, "");
+        name = ToolProperty.makeUIName(name);
       }
-      const said = def.description ?? `Show ${name2} in this pane`;
+      const said = def.description ?? `Show ${name} in this pane`;
       const closable = const_default.closableAreaTabs;
       const tooltip = closable ? said : `${said}
 Right-click the tab to close it.`;
-      const tab2 = tabs.tab(name2, editor._id, tooltip);
+      const tab2 = tabs.tab(name, editor._id, tooltip);
       const tabItem = tab2._tab;
       tabItem.closable = closable;
       tabItem.ontabclose = () => this.closeEditor(editor);
@@ -94905,8 +94915,8 @@ Right-click the tab to close it.`;
   getArea() {
     let p = this.parentWidget;
     let lastp = p;
-    const name2 = UIBase.getInternalName("screenarea-x");
-    while (p && p.tagName.toLowerCase() !== name2) {
+    const name = UIBase.getInternalName("screenarea-x");
+    while (p && p.tagName.toLowerCase() !== name) {
       lastp = p;
       p = p.parentWidget;
     }
@@ -97303,8 +97313,8 @@ var SideBar = class extends Container3 {
       style: "sidebar"
     };
   }
-  tab(name2) {
-    return this.tabbar.tab(name2);
+  tab(name) {
+    return this.tabbar.tab(name);
   }
   init() {
     super.init();
@@ -101090,14 +101100,14 @@ var BlockSet = class extends Array {
       this.active = this.length > 0 ? this[0] : void 0;
     }
   }
-  uniqueName(name2) {
-    const basename = name2;
+  uniqueName(name) {
+    const basename = name;
     let i2 = 2;
-    while (this.blockNameMap.has(name2)) {
-      name2 = basename + i2;
+    while (this.blockNameMap.has(name)) {
+      name = basename + i2;
       i2++;
     }
-    return name2;
+    return name;
   }
   get(f2) {
     if (f2 === void 0 || f2 === null) {
@@ -101606,9 +101616,9 @@ BrushSettings {
 `;
 struct_default.register(BrushSettings);
 var Brushes = [];
-Brushes.get = function(name2) {
+Brushes.get = function(name) {
   for (let i2 = 0; i2 < this.length; i2++) {
-    if (name2 === this[i2].define().name) {
+    if (name === this[i2].define().name) {
       return this[i2];
     }
   }
@@ -102136,10 +102146,10 @@ var WorkspaceEditor = class extends Editor2 {
     this.canvas.style.pointerEvents = "none";
     this.g = this.canvas.getContext("2d");
     this.shadow.appendChild(this.canvas);
-    const makeEventListener = (name2, handler) => {
-      let mouse = name2.search("mouse") >= 0 || name2.search("pointer") >= 0;
-      mouse = mouse || name2.search("touch") >= 0;
-      this.addEventListener(name2, (e) => {
+    const makeEventListener = (name, handler) => {
+      let mouse = name.search("mouse") >= 0 || name.search("pointer") >= 0;
+      mouse = mouse || name.search("touch") >= 0;
+      this.addEventListener(name, (e) => {
         const me = e;
         if (mouse) {
           const screen = this.ctx.screen;
