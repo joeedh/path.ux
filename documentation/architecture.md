@@ -40,8 +40,9 @@ following properties:
 - toolstack : The tool stack, see [ToolStack](@ToolStack)
 
 Path.ux allows different controller implementations (though they must all pass type information via the
-classes in toolprop.js). The included implementation can be found in
-"simple_controller.js", and the abstract interface in "controller.js".
+classes in `toolsys/toolprop.ts`). The included implementation is
+`scripts/path-controller/controller/controller.ts`, and the abstract interface it
+implements is `controller_abstract.ts` beside it.
 
 # Setting Pathux API prefix
 
@@ -53,8 +54,6 @@ prefix to pathux element tag names. To do so, add a script tag like so:
 # History
 
 Path.ux is roughly based on [Blender's](http://www.blender.org) architecture.
-
-[Main page](controller.html)
 
 The Blender 2.5 project refactored the internal architecture into a rough MVC pattern. The model is the core code, the view is the UI, and the controller is the glue between them.
 

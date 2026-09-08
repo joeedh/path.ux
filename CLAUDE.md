@@ -45,7 +45,7 @@ This project uses pnpm as its package manager. Use `pnpm` (and `pnpm run …`)
 rather than `npm`.
 
 ```bash
-pnpm run build             # Rollup bundle → dist/pathux.js
+pnpm run build             # esbuild → dist/pathux.js, dist/pathux_with_docbrowser.js, example/dist/app.js
 pnpm run typecheck         # two passes: the library, then example/
 pnpm run test              # vitest
 pnpm run format            # prettier --write
@@ -137,9 +137,15 @@ for (const i of IndexRange(3)) {
 `scripts/` — main source (TypeScript, converting from JS)
 `scripts/path-controller/` — git submodule (data binding, tool system, math)
 `scripts/core/` — UIBase, Container, theme, animation
+`scripts/core/base/` — the UIBase implementation, split by concern (DOM, css, datapath, theme, savedata, …)
 `scripts/widgets/` — UI widget classes (extend UIBase)
-`scripts/screen/` — FrameManager, ScreenArea, area management
-`scripts/platforms/` — platform abstraction (web, electron)
+`scripts/screen/` — FrameManager, ScreenArea, area management, dock panels
+`scripts/menu/` — Menu, DropBox and the menu wrangler
+`scripts/graph/` — node-graph data model and the node editor
+`scripts/gallery/` — asset gallery and the thumbnail cache
+`scripts/xmlpage/` — the xmlpage template builder
+`scripts/jsx/` — the JSX front end that serializes to xmlpage
+`scripts/platforms/` — platform abstraction (web, electron, nwjs)
 `scripts/simple/` — simple app framework
 `documentation/` — documentation source (markdown)
 `dist/` — built output
@@ -263,7 +269,7 @@ which searches the widget's own style class (from `define().style`), then
 `parentStyle`, then `base`.
 
 - `scripts/core/theme.ts` holds path.ux's `DefaultTheme`. `setTheme(record)`
-  (in `scripts/core/ui_base.ts`) merges an app theme into the live global
+  (in `scripts/core/base/ui_theme_key.ts`, re-exported from `ui_base.ts`) merges an app theme into the live global
   `theme` object rather than replacing it, so an app only supplies the keys it
   overrides. After a runtime change call `flagThemeUpdate()` and repaint with
   `screen.completeSetCSS()` / `screen.completeUpdate()`.
@@ -385,7 +391,8 @@ leaving the old callback in place and `@deprecated`.
   and the other build methods (`slider`, `check`, `listenum`, `colorbutton`, …) turn a
   `ToolProperty`-typed datapath into a widget: which widget each property type gets, the
   `PropFlags` and `PackFlags` that steer the choice, the three slider styles, path
-  prefixes, mass set, and undo.
+  prefixes, virtualized panels (`PanelContents.virtualize` / `rebuild`), mass set,
+  and undo.
 - [Menus](documentation/menus.md) — `Menu`, `DropBox` and the menu wrangler
   (`scripts/menu/`; `scripts/widgets/ui_menu.ts` is a deprecated re-export
   shim): menu templates (tool paths, separators, custom entries, submenus),

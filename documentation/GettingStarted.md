@@ -14,14 +14,18 @@ The valid paths, their value types, and their UI metadata live only inside your
 `defineAPI()` builder code — nothing is statically greppable or checkable, so a typo
 fails at runtime (or silently renders `"(error)"`).
 
-This guide wires up a **codegen step** that walks your real `defineAPI()` and emits three
+This guide wires up a **codegen step** that walks your real `defineAPI()` and emits the
 artifacts that fix that:
 
-| Artifact                   | Purpose                                                                                                     |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `generated/API_PATHS.md`   | Human/LLM-readable catalog — what an agent greps before writing a `prop()` call                             |
-| `generated/api-paths.json` | Machine-readable catalog — the source the ESLint rule reads                                                 |
-| `generated/datapaths.ts`   | A `KnownDataPath` union + a `DataPathRegistry` augmentation for compile-time typo-checking and autocomplete |
+| Artifact                      | Purpose                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `generated/API_PATHS.md`      | Human/LLM-readable catalog — what an agent greps before writing a `prop()` call                                  |
+| `generated/api-paths.json`    | Machine-readable catalog — the source the ESLint rule reads                                                      |
+| `generated/datapaths.ts`      | A `KnownDataPath` union plus `DataPathRegistry`, `IndexedDataPathRegistry` and `WidgetTagRegistry` augmentations |
+| `generated/struct-catalog.ts` | The `StructCatalog` augmentation that type-checks `api.updateFrom<T>()` — see [controller.md](controller.md)     |
+
+`struct-catalog.ts` is best-effort: the generator warns and skips it rather than failing
+when it cannot resolve a struct's declaring module. The other three always land.
 
 On top of those you get an **ESLint rule** that flags unknown path literals (including
 inside `<prop path="...">` template strings), and **richer runtime errors** with
@@ -48,7 +52,7 @@ node. The factory module must export either:
 - a `DataAPI` instance directly.
 
 The returned API must have its root set (`api.setRoot(...)`), i.e. `api.rootContextStruct`
-must be defined. See `example/api/api_define.js` for a reference:
+must be defined. See `example/api/api_define.ts` for a reference:
 
 ```js
 export function defineAPI() {
@@ -100,7 +104,7 @@ gen-datapaths.mjs [factoryModule] [exportName] [--out dir] [--module name]
 | --------------- | --------------------------- | ----------------------------------------------------------------------------- |
 | `factoryModule` | `example/api/api_define.js` | Path (relative to repo root) to your factory module                           |
 | `exportName`    | `defineAPI`                 | Named export to invoke; falls back to the default export                      |
-| `--out dir`     | `generated`                 | Output directory for the three artifacts                                      |
+| `--out dir`     | `generated`                 | Output directory for the generated artifacts                                  |
 | `--module name` | `path.ux`                   | Module name used in the `declare module "..."` augmentation in `datapaths.ts` |
 
 On success it prints `wrote N paths to generated/`. If your factory can't load, it prints
@@ -160,7 +164,7 @@ which the type system can't see into.
 Register the rule in `eslint.config.js` (flat config):
 
 ```js
-import validDatapath from "path.ux/buildtools/eslint-rules/valid-datapath.mjs";
+import validDatapath from "path.ux/eslint/valid-datapath";
 
 export default [
   // ...your existing config...
@@ -182,6 +186,9 @@ How it avoids false positives:
 
 - Relative/prefixed paths validate if they match a known **path suffix** (so `"brush.size"`
   and `"size"` both pass when `"workspace.brush.size"` exists).
+- A container that declared its prefix with `withDataPrefix<"workspace.brush.">()` is
+  checked exactly, prefix plus path, instead of falling back to that suffix match — see
+  [container.md](container.md#declaring-the-prefix-to-the-type-system).
 - Strings containing `{`, `$`, or a backtick (mass-set / interpolated expressions) are
   skipped.
 - Indexed segments are normalized (`foo[0]` → `foo[n]`).

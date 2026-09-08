@@ -13,21 +13,25 @@
 Path.ux is a small app framework inspired by the architecture of
 Blender, a 3D animation/modeling/visualization app.
 
+- [Getting started: typed data paths](GettingStarted.md)
+
 # Architecture
 
-- [Overview](manual/architecture.html)
-- [Context](manual/context.html)
-- [Controller](manual/controller.html)
-- [Containers and Property Binding](manual/container.html)
-- [Tool Properties](manual/toolprop.html)
-- [Tool System](manual/toolsystem.html)
-- [STRUCT](manual/nstructjs.html)
-- [FrameManager](manual/FrameManager.html)
-- [Theming](manual/theming.html)
+- [Overview](architecture.md)
+- [Context](context.md)
+- [Controller](controller.md)
+- [Containers and Property Binding](container.md)
+- [Tool Properties](toolprop.md)
+- [Tool System](toolsystem.md)
+- [STRUCT](nstructjs.md)
+- [FrameManager](FrameManager.md)
+- [Theming](theming.md)
+- [JSX](jsx.md)
 
 # Widgets
 
-- [Menus](manual/menus.html)
-- [ListBox](manual/listbox.html)
-- [Asset gallery](manual/gallery.html)
-- [Node editor](manual/NodeEditor.html)
+- [Menus](menus.md)
+- [ListBox](listbox.md)
+- [Asset gallery](gallery.md)
+- [Dock panels](dock_panels.md)
+- [Node editor](NodeEditor.md)

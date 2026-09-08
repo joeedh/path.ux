@@ -291,6 +291,11 @@ one would replace the library's wholesale at the next load. The cost is that pat
 current defaults for those keys are frozen into the app's file, so a later library
 upgrade does not reach them.
 
+The editor's per-category panels are virtualized (see
+[container.md](container.md#virtualized-panels)): each starts closed and builds its rows
+on open, so a test or a CDP script must open a category before its widgets exist.
+`refreshFolder` is `panel.rebuild()`.
+
 `invertTheme()` rewrites live colours in place behind the editor's back. The bindings
 survive, but the values the rows show no longer match what the variables hold; rebuild
 the editor after calling it.
@@ -337,7 +342,8 @@ import { UIBase } from "pathux";
 import type { ThemeEditor } from "pathux";
 import { theme as varTheme, themeVars } from "./theme";
 
-const editor = UIBase.createElement<ThemeEditor>("theme-editor-x");
+// `ctx` is the app context the editor is built under, as in the area above.
+const editor = UIBase.constructElement<ThemeEditor>("theme-editor-x", ctx);
 editor.setVarTheme(varTheme, themeVars);
 
 function exportThemeFile() {

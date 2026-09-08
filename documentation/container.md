@@ -6,6 +6,7 @@
     - [Pack flags](#pack-flags)
   - [Sliders](#sliders)
   - [Other path-taking methods](#other-path-taking-methods)
+  - [Virtualized panels](#virtualized-panels)
   - [Path prefixes](#path-prefixes)
     - [Declaring the prefix to the type system](#declaring-the-prefix-to-the-type-system)
   - [Mass set](#mass-set)
@@ -150,9 +151,11 @@ gets the textbox variant.
 
 Those two `cconst` fields are library-wide defaults declared in `scripts/config/const.ts`
 (`useNumSliderTextboxes: true`, `simpleNumSliders: false`). An app using the `simple`
-framework re-exposes them on its `AppSettings` (`scripts/simple/app.ts`), seeded from the
-same `cconst` values; assigning either one changes what subsequently-built sliders look
-like across the whole app.
+framework carries them on the `StartArgs` record it hands to `AppState.start()`
+(`scripts/simple/app.ts`), which copies the whole record into `cconst` through
+`cconst.loadConstants`. Setting either one there changes what every subsequently-built
+slider looks like across the app; changing it later means writing to `cconst` directly,
+since `start()` copies once rather than binding.
 
 Both methods take either positional arguments or a `SliderArgs` object, and the object form
 is preferred:
@@ -208,6 +211,45 @@ name, tooltip and value type:
 `tool(toolpath, …)` and `menu()` bind a _tool_ path rather than a data path — see
 [toolsystem.md](toolsystem.md) and [menus.md](menus.md).
 
+## Virtualized panels
+
+`container.panel(title)` returns a `PanelContents` (`scripts/widgets/ui_panel.ts`), which
+by default is built eagerly and keeps its widgets for the life of the panel. A panel whose
+contents are expensive — hundreds of rows, one category out of many — can instead build
+them each time it opens and tear them down when it closes:
+
+```ts
+const panel = container.panel("Colors");
+panel.virtualize({
+  onOpen: (con) => {
+    for (const key of keys) con.prop(`theme.colors.${key}`);
+  },
+});
+```
+
+`virtualize()` exists on both `PanelContents` and the `PanelFrame` behind it; the former
+forwards to the latter. It takes:
+
+- `onOpen(con)` — builds the contents. Required, and it runs on every open, so it must be
+  safe to call repeatedly.
+- `onClose(con)` — runs before the contents are cleared, for anything `onOpen` allocated
+  outside the widget tree.
+- `closePanel` — closes the panel as part of virtualizing it, so nothing is built until
+  the user opens it. Defaults to `true`; pass `false` to virtualize a panel that is
+  already open and build it immediately.
+- `discardEphemeral` — skip the `saveUIData`/`loadUIData` round trip. Defaults to `false`,
+  which is what carries scroll position, expanded tree rows and the like across a
+  close/open cycle.
+
+`rebuild()` re-runs the teardown and the build on an open panel, so a virtualized panel
+refreshes by calling it rather than by clearing and re-populating by hand; on a closed
+panel it does nothing, since the next open rebuilds anyway. `isVirtual` reports whether a
+panel has been virtualized.
+
+The consequence for tests and automation is that a virtualized panel starts closed and
+empty — open it before looking for anything inside it. The theme editor's per-category
+panels are built this way.
+
 ## Path prefixes
 
 `dataPrefix` is prepended to every path a container builds (`_joinPrefix`), so a panel can
@@ -252,7 +294,7 @@ lint rule rather than as an editor feature.
 Prefixed containers are not assignable to `Container<CTX>`, which is what stops one from
 being passed somewhere that expects a bare container. Plumbing that legitimately does not
 care takes `AnyContainer<CTX>` instead. The tails come from `IndexedDataPathRegistry`,
-which `npm run gen:paths` emits alongside `DataPathRegistry`; a prefix pointing into a list
+which `pnpm run gen:paths` emits alongside `DataPathRegistry`; a prefix pointing into a list
 (`foo.items[n].`) needs it, since the plain registry holds no indexed paths.
 
 The type parameter does not survive `row()`, `col()` or `panel()` — those return their own
