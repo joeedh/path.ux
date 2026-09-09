@@ -621,11 +621,26 @@ As shipped, two differences.
 
 ### Stage 2 — the owner interface
 
-`MetaOwner`; `StdUXMeta`'s generic rebased onto it; the four accessors' getter and setter rules;
-`onAttach` flushing only what the owner can hold. Tests: a tag on a raw `HTMLLIElement` buffers
-`description` and does not install an expando on the element; a tag on a `UIBase` proxies both;
-`valuePath` set on an owner with no `setAttribute` buffers rather than throwing; `onAttach` onto
-a raw node leaves `description` buffered and readable rather than dropped.
+**Done.** `MetaOwner`; `StdUXMeta`'s generic rebased onto it; the four accessors' getter and
+setter rules; `onAttach` flushing only what the owner can hold. Tests: a tag on a raw
+`HTMLLIElement` buffers `description` and does not install an expando on the element; a tag on a
+`UIBase` proxies both; `valuePath` set on an owner with no `setAttribute` buffers rather than
+throwing; `onAttach` onto a raw node leaves `description` buffered and readable rather than
+dropped.
+
+As shipped, in `tests/uiMetaOwner.test.ts`, with four notes.
+
+- **Two presence tests, not one.** `holdsProperty` uses `in`, for `description` and later for
+  `disabled` and `refusalReason`. `holdsAttributes` requires all three attribute methods to be
+  functions, so the getter and the setter never disagree about where `valuePath` lives. Both stay
+  unexported.
+- **A raw element proxies `valuePath`.** `HTMLLIElement` carries the attribute methods, so a menu
+  row's `valuePath` lands on the `datapath` attribute and only `description` buffers. The plan's
+  "a menu row buffers everything" describes the fields the menu work cares about rather than the
+  structural rule.
+- **The barrel gains `MetaOwner`**, and nothing else.
+- **The type-only `UIBase` import is gone**, replaced by a type-only `Refusal` import for
+  `MetaOwner.refusalReason`. Both erase, so the headless property is unchanged.
 
 ### Stage 3 — `enabled`, `refusal`, and `toolsys.Refusal`
 

@@ -53,12 +53,43 @@ for (const tool of meta.tools) {
 const derived = new StdUXMeta<MyUXTools>({ description: "Approve the gate", valuePath: "ui.gate" });
 */
 
-import type { UIBase } from "../ui_base";
+import type { Refusal } from "../../path-controller/toolsys/toolop";
 import * as nstructjs from "../../path-controller/util/nstructjs";
 
 // Scratch sketch of a widget metadata system. Tags attach to a UIBase, are keyed by a stable
 // type name rather than a constructor, and serialize with nstructjs so they can cross IPC. They
 // are not part of the frame-mesh save file and hold no ephemeral state (that is saveData/loadData).
+
+/**
+ * What a tag may read off the thing it is attached to. Every member is optional because a
+ * control is not always a `UIBase`: path.ux's own menu rows are raw `HTMLLIElement`s, and an
+ * app drawing into an `appendSurface` root uses plain elements. A tag buffers whatever its
+ * owner cannot hold.
+ */
+export interface MetaOwner {
+  description?: string;
+  disabled?: boolean;
+  refusalReason?: Refusal | (() => Refusal | undefined);
+  getAttribute?(name: string): string | null;
+  setAttribute?(name: string, value: string): void;
+  removeAttribute?(name: string): void;
+}
+
+/** Whether the owner can hold `valuePath` itself, in the `datapath` attribute. */
+const holdsAttributes = (
+  owner: MetaOwner | undefined
+): owner is MetaOwner &
+  Required<Pick<MetaOwner, "getAttribute" | "setAttribute" | "removeAttribute">> =>
+  typeof owner?.getAttribute === "function" &&
+  typeof owner.setAttribute === "function" &&
+  typeof owner.removeAttribute === "function";
+
+/**
+ * Whether the owner declares `key`, so writing it lands somewhere another reader will find it.
+ * Assigning a property an owner never declared would make an expando that nothing else reads.
+ */
+const holdsProperty = (owner: MetaOwner | undefined, key: keyof MetaOwner): owner is MetaOwner =>
+  owner !== undefined && key in owner;
 
 export interface IUXMetaDef {
   /** Stable key for the tag set and the wire; a constructor identity does not survive IPC. */
@@ -236,7 +267,7 @@ data.  They may however be serialized to transmit data over IPC.
 
 export class StdUXMeta<
   UXToolTypes extends UXToolMeta = UXToolMeta,
-  Elem extends UIBase = UIBase,
+  Elem extends MetaOwner = MetaOwner,
 > extends UXMetaTag<Elem> {
   static STRUCT = nstructjs.inlineRegister(
     this,
@@ -272,28 +303,37 @@ export class StdUXMeta<
   tools: UXToolTypes[];
 
   get valuePath(): string | undefined {
-    return this.owner?.getAttribute?.("datapath") ?? this.deserialHelper.valuePath;
+    const owner = this.owner;
+    if (holdsAttributes(owner)) {
+      return owner.getAttribute("datapath") ?? undefined;
+    }
+    return this.deserialHelper.valuePath;
   }
   set valuePath(s: string | undefined) {
-    if (this.owner === undefined) {
+    const owner = this.owner;
+    if (!holdsAttributes(owner)) {
       this.deserialHelper.valuePath = s;
       return;
     }
     if (s === undefined) {
-      this.owner.removeAttribute("datapath");
+      owner.removeAttribute("datapath");
     } else {
-      this.owner.setAttribute("datapath", s);
+      owner.setAttribute("datapath", s);
     }
   }
   // tooltip
   get description(): string | undefined {
-    return this.owner?.description ?? this.deserialHelper.description;
+    const owner = this.owner;
+    return holdsProperty(owner, "description")
+      ? owner.description
+      : this.deserialHelper.description;
   }
   set description(s: string | undefined) {
-    if (this.owner === undefined) {
-      this.deserialHelper.description = s;
+    const owner = this.owner;
+    if (holdsProperty(owner, "description")) {
+      owner.description = s;
     } else {
-      this.owner.description = s;
+      this.deserialHelper.description = s;
     }
   }
 
@@ -317,10 +357,15 @@ export class StdUXMeta<
   }
 
   onAttach = () => {
-    // Apply any deserialized values to the owner before clearing the helper
-    this.description = this.deserialHelper.description ?? this.description;
-    this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;
-    this.deserialHelper.description = undefined;
-    this.deserialHelper.valuePath = undefined;
+    // Flush only into properties the owner can hold; the rest stays buffered rather than dropped
+    const buffered = this.deserialHelper;
+    if (buffered.description !== undefined && holdsProperty(this.owner, "description")) {
+      this.description = buffered.description;
+      buffered.description = undefined;
+    }
+    if (buffered.valuePath !== undefined && holdsAttributes(this.owner)) {
+      this.valuePath = buffered.valuePath;
+      buffered.valuePath = undefined;
+    }
   };
 }

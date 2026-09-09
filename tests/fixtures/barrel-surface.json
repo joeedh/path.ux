@@ -690,6 +690,7 @@
     "MenuTemplateEntry",
     "MenuTemplateItem",
     "MenuTemplateTool",
+    "MetaOwner",
     "ModalState",
     "NodeGraphDelegate",
     "NodeGraphViewState",
