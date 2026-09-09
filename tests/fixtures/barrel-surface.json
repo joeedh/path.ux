@@ -179,6 +179,7 @@
     "PanelState",
     "ParamKey",
     "Parser",
+    "PathToolMeta",
     "PercentUnit",
     "PixelUnit",
     "PlaneOps",

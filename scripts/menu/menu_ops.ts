@@ -6,6 +6,7 @@ import type { IToolOpConstructor, Refusal, ToolOp } from "../path-controller/too
 import type { IContextBase } from "../core/context_base";
 import type { Screen } from "../screen/FrameManager";
 import type { PopupContainer } from "../screen/FrameManager_popup";
+import { ensureMeta, PathToolMeta, StdUXMeta } from "../core/base/ui_meta_tags";
 import { Menu, newMenu } from "./menu";
 import type {
   MenuItemCallback,
@@ -115,6 +116,12 @@ export function createMenu<CTX extends IContextBase = IContextBase>(
 
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
       applyRefusal(id, toolpathRefusal(ctx, item));
+
+      // addItemExtra keeps only the id, so the row has to be fetched back to be tagged
+      const row = menu.itemById(id);
+      if (row) {
+        ensureMeta(row, StdUXMeta).tools.push(new PathToolMeta(item));
+      }
 
       cbs[id] = () => {
         return ctx.api.execTool(ctx, item);

@@ -270,6 +270,31 @@ export class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
   }
 }*/
 
+/**
+ * A control that runs one registered tool path. The default `identity()` is enough here, since
+ * a tool path already names the tool and the class carries nothing else.
+ */
+export class PathToolMeta extends UXToolMeta<"path"> {
+  static STRUCT = nstructjs.inlineRegister(
+    this,
+    `
+    pathux.PathToolMeta {
+    }`
+  );
+
+  readonly type = "path" as const;
+
+  constructor(toolPath = "", requirements?: string) {
+    super();
+    this.toolPath = toolPath;
+    this.requirements = requirements;
+  }
+
+  copy(): this {
+    return this.copyTo(new PathToolMeta() as this);
+  }
+}
+
 /*
 Note: presumably the meta tags are not meant to be permanently serialized along with model
 data.  They may however be serialized to transmit data over IPC.

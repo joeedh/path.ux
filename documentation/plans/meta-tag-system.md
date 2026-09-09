@@ -760,11 +760,25 @@ As shipped, in `tests/uiMetaRead.test.ts`.
 
 ### Stage 7 — `PathToolMeta` and the builders
 
-The class, plus `toolImpl` and the `menu_ops.ts` tool-path rows writing it through `ensureMeta`
-and `menu.itemById`. Needs a DOM, so this stage's gate includes `pnpm run playwright`. Tests: a
-button built by `container.tool("some.path")` carries a tag whose one tool has that `toolPath`; a
-menu row built from a tool-path template does too; neither writes a tag on the custom-callback
-path; a second `ensureMeta` on the same widget appends rather than warning and clobbering.
+**Done.** The class, plus `toolImpl` and the `menu_ops.ts` tool-path rows writing it through
+`ensureMeta` and `menu.itemById`. Needs a DOM, so this stage's gate includes
+`pnpm run playwright`. Tests: a button built by `container.tool("some.path")` carries a tag whose
+one tool has that `toolPath`; a menu row built from a tool-path template does too; neither writes
+a tag on the custom-callback path; a second `ensureMeta` on the same widget appends rather than
+warning and clobbering.
+
+As shipped, in `tests/uiMetaBuilders.test.ts`, under vitest for the same reason stage 5's tests
+are; the Playwright suite was still run and is unchanged.
+
+- **`toolImpl` writes the tag once, past both branches.** The plan reads as though the icon
+  branch and the plain branch each need a write; they both assign `ret`, so one line after the
+  `if` covers them. The icon branch is not covered by a test of its own, since `IconButton`
+  reads a real sprite sheet through `IconManager` and throws under happy-dom.
+- **`PathToolMeta`'s constructor takes `(toolPath, requirements)` positionally**, with defaults,
+  so nstructjs can still construct it with no arguments.
+- **The tool path comes from `def.toolpath`**, falling back to the string the caller passed, so
+  a `"path|Label"` form records the path rather than the label.
+- **The barrel gains `PathToolMeta`**, and nothing else.
 
 ### Stage 8 — document
 

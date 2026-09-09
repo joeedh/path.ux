@@ -9,6 +9,7 @@ import { PropFlags } from "../../path-controller/toolsys";
 import { ToolOpAny } from "../../path-controller/controller/controller_abstract";
 import type { Button, IconButton } from "../../widgets/ui_widgets";
 import { UIBase } from "../ui_base";
+import { PathToolMeta, StdUXMeta } from "../base/ui_meta_tags";
 import type { Container } from "../ui";
 
 export function dynamicMenuImpl<CTX extends IContextBase, SELF extends string>(
@@ -219,6 +220,11 @@ export function toolImpl<CTX extends IContextBase, SELF extends string>(
     ret.description = tooltip;
     ret.packflag |= packflag;
   }
+
+  // ensureMeta rather than setMeta: an app that also tags this button through its own layer
+  // would otherwise get a console warning per control and a clobbered tag
+  const toolpath = def.toolpath ?? (typeof path_or_cls === "string" ? path_or_cls : "");
+  ret.ensureMeta(StdUXMeta).tools.push(new PathToolMeta(toolpath));
 
   return ret;
 }
