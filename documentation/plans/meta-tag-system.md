@@ -644,7 +644,7 @@ As shipped, in `tests/uiMetaOwner.test.ts`, with four notes.
 
 ### Stage 3 — `enabled`, `refusal`, and `toolsys.Refusal`
 
-Two commits, innermost first.
+**Done.** Two commits, innermost first.
 
 **3a, in `path-controller`:** `Refusal` becomes a class with the two data fields, registered as
 `toolsys.Refusal`, with a doc comment saying `instanceof` is not a valid test. Grep the
@@ -658,6 +658,29 @@ does not call `resolveRefusal`; `enabled: bool` and `refusal?: struct(toolsys.Re
 `refusal` returns the sentence on an enabled control where `resolveRefusal` returns undefined; a
 thunk is called on read and not on assignment; a tag with a refusal round-trips with `reason` and
 `description` intact; a tag with no refusal round-trips with the field absent.
+
+As shipped, on branch `refusal-struct` in `path-controller`, with the gitlink bump in 3b.
+
+- **`struct(...)` is not nstructjs syntax.** nstructjs 0.8.12's `p_Type` has `array(…)`,
+  `abstract(…)`, `iter(…)`, `iterkeys(…)`, `optional(…)` and `static_string(…)`, and a bare
+  identifier already means a struct field. `refusal?: struct(toolsys.Refusal);` fails to parse
+  with "Expected ;". The field is written `refusal?: toolsys.Refusal;`, which is the same thing.
+- **Optional-of-struct does parse**, and the fallback is not needed. `p_Field` reads an
+  `OPT_COLON` token and wraps whatever type follows in `StructEnum.OPTIONAL`, so the wrapping is
+  independent of the type. A probe registered a throwaway struct with the field, wrote an object
+  literal into it, validated and read it back before anything relied on it.
+- **An absent refusal is written as `null`, not omitted**, and reads back as `undefined`. The
+  test asserts that shape rather than the plan's "field absent".
+- **`enabled` buffers as `boolean | undefined`,** so a tag nothing has written reads as enabled
+  while `onAttach` can still tell "nobody set this" from "someone set it to true". Flushing an
+  unset buffer would enable every widget a deserialized tag was attached to.
+- **`copyTo` carries `enabled` and `refusal`**, alongside the fields it already copied.
+- **3a's tests live in path.ux.** `path-controller` has no test tree of its own, and the round
+  trip needs a struct field naming `toolsys.Refusal`, so both checks are in
+  `tests/uiMetaRefusal.test.ts` and land with 3b. `toolopRefusal` and `CanRunResult` staying
+  unaffected is what the existing `tests/canRunRefusal.test.ts` asserts; it passes unchanged.
+- **`Refusal` moves from the fixture's type list to its value list**, which is what the plan
+  predicted and what `tests/barrelSurface.test.ts` reported.
 
 ### Stage 4 — `identity()` and `widgetSegment`
 

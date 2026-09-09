@@ -276,6 +276,8 @@ export class StdUXMeta<
       widgetPath?: string;
       description?: string;
       valuePath?: string;
+      enabled: bool;
+      refusal?: toolsys.Refusal;
       tools: array(abstract(pathux.UXToolMeta));
     }`
   );
@@ -291,6 +293,8 @@ export class StdUXMeta<
   private deserialHelper: {
     description?: string;
     valuePath?: string;
+    enabled?: boolean;
+    refusal?: Refusal;
   } = {};
 
   /**
@@ -337,6 +341,48 @@ export class StdUXMeta<
     }
   }
 
+  /**
+   * Whether the control accepts a press. Buffered when the owner carries no `disabled`, and a
+   * tag nothing has written reads as enabled.
+   */
+  get enabled(): boolean {
+    const owner = this.owner;
+    return holdsProperty(owner, "disabled")
+      ? !owner.disabled
+      : (this.deserialHelper.enabled ?? true);
+  }
+  set enabled(v: boolean) {
+    const owner = this.owner;
+    if (holdsProperty(owner, "disabled")) {
+      owner.disabled = !v;
+    } else {
+      this.deserialHelper.enabled = v;
+    }
+  }
+
+  /**
+   * The refusal the control carries, whether or not it is disabled. Deliberately ungated, so
+   * `resolveRefusal` is the wrong helper here: it answers undefined for an enabled control,
+   * which erases the case a record exists to catch — a rule that computes a refusal for a
+   * control the editor draws enabled. A display value is `enabled ? undefined : refusal`.
+   */
+  get refusal(): Refusal | undefined {
+    const owner = this.owner;
+    if (!holdsProperty(owner, "refusalReason")) {
+      return this.deserialHelper.refusal;
+    }
+    const held = owner.refusalReason;
+    return typeof held === "function" ? held() : held;
+  }
+  set refusal(r: Refusal | undefined) {
+    const owner = this.owner;
+    if (holdsProperty(owner, "refusalReason")) {
+      owner.refusalReason = r;
+    } else {
+      this.deserialHelper.refusal = r;
+    }
+  }
+
   constructor(initialize?: { description?: string; valuePath?: string; tools?: UXToolTypes[] }) {
     super();
     this.deserialHelper.description = initialize?.description;
@@ -348,6 +394,8 @@ export class StdUXMeta<
     b.widgetPath = this.widgetPath;
     b.description = this.description;
     b.valuePath = this.valuePath;
+    b.enabled = this.enabled;
+    b.refusal = this.refusal;
     b.tools = this.tools.map((t) => t.copy());
     return b;
   }
@@ -366,6 +414,14 @@ export class StdUXMeta<
     if (buffered.valuePath !== undefined && holdsAttributes(this.owner)) {
       this.valuePath = buffered.valuePath;
       buffered.valuePath = undefined;
+    }
+    if (buffered.enabled !== undefined && holdsProperty(this.owner, "disabled")) {
+      this.enabled = buffered.enabled;
+      buffered.enabled = undefined;
+    }
+    if (buffered.refusal !== undefined && holdsProperty(this.owner, "refusalReason")) {
+      this.refusal = buffered.refusal;
+      buffered.refusal = undefined;
     }
   };
 }
