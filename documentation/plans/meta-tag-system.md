@@ -710,7 +710,7 @@ As shipped, in `tests/uiMetaSegment.test.ts`, with two test-local tool classes r
 
 ### Stage 5 — the walk, in its own module
 
-`ui_meta_walk.ts` with `walkWidgets` — mirroring `saveUIData`'s `childNodes` then
+**Done.** `ui_meta_walk.ts` with `walkWidgets` — mirroring `saveUIData`'s `childNodes` then
 `shadow.childNodes` descent and yielding only tag-bearing owners — and
 `widgetPathOf(widget, scope)`, which is `scope + "/" + widgetSegment(tag)`. Playwright, since it
 needs a real shadow tree, so this stage's gate includes `pnpm run playwright`. Tests: a widget
@@ -719,6 +719,24 @@ yield the same path, which is the reported-collision case. Also assert `ui_meta_
 imports nothing but `nstructjs` at runtime — a test over the module's import list is the cheapest
 form, and it is what keeps the headless property from being lost to a plausible-looking later
 edit.
+
+As shipped, in `tests/uiMetaWalk.test.ts`.
+
+- **The tests are vitest, not Playwright.** vitest runs under happy-dom, which attaches real
+  shadow roots, so `UIBase.checkInit` builds one and the walk reaches a row appended to it. The
+  Playwright suite was still run as part of this stage's gate and is unchanged by it.
+- **`walkWidgets` takes a `Node`, not a `UIBase`**, because a tag-bearing owner is often a raw
+  element and a walk that started at a widget would still have to descend through plain nodes.
+  `instanceof UIBase` is the runtime test that decides whether a node has a shadow root to
+  descend into, which is why the walk cannot live in `ui_meta_tags.ts`.
+- **`widgetPathOf` answers `string | undefined`**, undefined when the owner carries no
+  `StdUXMeta`. The plan left the no-tag case unstated.
+- **The barrel gains `walkWidgets` and `widgetPathOf`**, and its second `export *` line.
+- **`pnpm run playwright` has one failure that predates this plan.** `theme_vars.spec.ts`'s
+  "the theme editor lists its variables" expects `["accent", "background", "radius", "bodyFont"]`
+  and gets a different order. It fails identically at the branch point, and the other nineteen
+  specs pass. The browsers also have to be downloaded once with `pnpm exec playwright install
+chromium` before the suite runs at all.
 
 ### Stage 6 — a validating deserialize
 

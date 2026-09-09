@@ -11,6 +11,7 @@ export * from "./core/datapath_registry";
 export * from "./core/widget_registry";
 export * from "./core/ui_base";
 export * from "./core/base/ui_meta_tags";
+export * from "./core/base/ui_meta_walk";
 // The one name from ui_base_props on the public surface: a consumer composing a refusal
 // above its own tooltip text must not re-derive the ordering tooltipText uses
 export { composeTooltip } from "./core/base/ui_base_props";

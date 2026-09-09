@@ -596,8 +596,10 @@
     "validateWebColor",
     "varSlots",
     "vectormath",
+    "walkWidgets",
     "warning",
     "web2color",
+    "widgetPathOf",
     "widgetSegment",
     "winding",
     "winding_axis"
