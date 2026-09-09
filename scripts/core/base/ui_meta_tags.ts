@@ -1,64 +1,9 @@
-/*
-// ==== example usage ====
-
-// helper type union for all UX tool metas 
-// to allow type inference keyed on 'type'
-type MyUXTools = MyUXToolMeta;
-
-const widget: UIBase;
-widget.setMeta(
-  StdUXMeta,
-  new StdUXMeta<MyUXTools>({
-    tools: [
-      new MyUXToolMeta({
-        toolPath: "some/path",
-        requirements: "some/requirements",
-        supplies: ["text"],
-      }),
-    ],
-  }),
-);
-
-// builders (toolImpl, prop, tool-path menu rows, HotKey) would write toolPath/valuePath as they
-// build, so the values are trustworthy rather than hand-declared
-
-// one widget
-ipc.sendMessage({ type: "uxmeta", data: nstructjs.writeJSON(widget.getMeta(StdUXMeta)) });
-
-// a whole screen: every tag on every widget, each named by widgetPath
-const sweep = (root: UIBase) => {
-  const out: unknown[] = [];
-  for (const w of walkWidgets(root)) {
-    for (const meta of allMeta(w)) {
-      if (meta instanceof StdUXMeta) meta.widgetPath = widgetPathOf(w);
-      out.push(nstructjs.writeJSON(meta));
-    }
-  }
-  return out;
-};
-
-// on the other end we can either call nstructjs.validateJSON and deserialize directly,
-// or write an nstructjs script to zod converter
-
-const meta = widget.getMeta<StdUXMeta<MyUXTools>>(StdUXMeta)!;
-for (const tool of meta.tools) {
-  switch (tool.type) {
-    case "mytype":
-      // tool now has inferred MyUXToolMeta
-      break;
-  }
-}
-
-// headless: no owner, so the setters buffer and the same class is the derived-tier record
-const derived = new StdUXMeta<MyUXTools>({ description: "Approve the gate", valuePath: "ui.gate" });
-*/
-
 import type { Refusal } from "../../path-controller/toolsys/toolop";
 import * as nstructjs from "../../path-controller/util/nstructjs";
 
-// Scratch sketch of a widget metadata system. Tags attach to a UIBase, are keyed by a stable
-// type name rather than a constructor, and serialize with nstructjs so they can cross IPC. They
-// are not part of the frame-mesh save file and hold no ephemeral state (that is saveData/loadData).
+// Tags attach to a control, are keyed by a stable type name rather than a constructor, and
+// serialize with nstructjs so they can cross IPC. They are not part of the frame-mesh save file
+// and hold no ephemeral state, which is saveData/loadData. See documentation/meta_tags.md.
 
 /**
  * What a tag may read off the thing it is attached to. Every member is optional because a
@@ -198,7 +143,7 @@ export class MetaTagSet<O = unknown> {
 
 // A base class rather than an interface so abstract(UXToolMeta) names a registered struct and
 // nstructjs validates each entry against it. Narrowing on `type` comes from the union the
-// StdUXMeta generic is given (see MyUXTools below), not from this class.
+// StdUXMeta generic is given, not from this class.
 export abstract class UXToolMeta<TYPE extends string = string> {
   static STRUCT = nstructjs.inlineRegister(
     this,
@@ -234,42 +179,6 @@ export abstract class UXToolMeta<TYPE extends string = string> {
   }
 }
 
-/* example
-export class MyUXToolMetaExample extends UXToolMeta<"mytype"> {
-  static STRUCT = nstructjs.inlineRegister(
-    this,
-    `
-    pathux.MyUXToolMeta {
-      supplies: array(string);
-    }`
-  );
-
-  readonly type = "mytype" as const;
-  // Prop names whose values are read from the widget when the tool runs.
-  supplies: string[];
-
-  constructor({
-    toolPath,
-    requirements,
-    supplies,
-  }: { toolPath?: string; requirements?: string; supplies?: string[] } = {}) {
-    super();
-    this.toolPath = toolPath ?? "";
-    this.requirements = requirements;
-    this.supplies = supplies ?? [];
-  }
-
-  copyTo(b: this): this {
-    super.copyTo(b);
-    b.supplies = [...this.supplies];
-    return b;
-  }
-
-  copy(): this {
-    return this.copyTo(new MyUXToolMetaExample() as this);
-  }
-}*/
-
 /**
  * A control that runs one registered tool path. The default `identity()` is enough here, since
  * a tool path already names the tool and the class carries nothing else.
@@ -294,11 +203,6 @@ export class PathToolMeta extends UXToolMeta<"path"> {
     return this.copyTo(new PathToolMeta() as this);
   }
 }
-
-/*
-Note: presumably the meta tags are not meant to be permanently serialized along with model
-data.  They may however be serialized to transmit data over IPC.
-*/
 
 export class StdUXMeta<
   UXToolTypes extends UXToolMeta = UXToolMeta,
@@ -333,8 +237,9 @@ export class StdUXMeta<
   } = {};
 
   /**
-   * Names the widget on the wire. Filled at serialize time from the same DOM-path scheme
-   * saveUIData uses for naming, without its ephemeral-data role.
+   * Names the widget on the wire, as `<scope>/<segment>`. Filled by the writer from
+   * `widgetPathOf`, which supplies the scope and computes the segment with `widgetSegment`.
+   * Deliberately not saveUIData's positional walk, which a single inserted widget rewrites.
    */
   widgetPath?: string;
 

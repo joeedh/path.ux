@@ -27,6 +27,7 @@ Blender, a 3D animation/modeling/visualization app.
 - [FrameManager](FrameManager.md)
 - [Theming](theming.md)
 - [JSX](jsx.md)
+- [Meta tags](meta_tags.md)
 
 # Widgets
 

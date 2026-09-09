@@ -5,7 +5,7 @@ barrel exports, an owner type that covers a raw DOM node, a `widgetPath` scheme,
 the tag and on the wire, a validating deserialize, and one concrete tool subclass with the
 builders that write it.
 
-Status: **in progress**. Plan 6 of the eight in the superproject's
+Status: **complete**. Plan 6 of the eight in the superproject's
 [`ux-behaviour-model-tasklist.md`](../../../../docs/plans/ux-behaviour-model-tasklist.md), and
 the last piece owed before plan 7 can replace the desktop app's `AnchorDump` with a tag.
 
@@ -782,9 +782,22 @@ are; the Playwright suite was still run and is unchanged.
 
 ### Stage 8 — document
 
-A `documentation/` page for the system, and the `widgetPath` field's doc comment rewritten off
-this plan — it currently points at `saveUIData`, which stage 4 makes wrong. The superproject's
-tasklist row 6 and its stale "Two path.ux bugs" section, with the gitlink bump.
+**Done.** A `documentation/` page for the system, and the `widgetPath` field's doc comment
+rewritten off this plan — it currently points at `saveUIData`, which stage 4 makes wrong. The
+superproject's tasklist row 6 and its stale "Two path.ux bugs" section, with the gitlink bump.
+
+As shipped, the page is `documentation/meta_tags.md`, linked from `documentation/index.md` and
+from path.ux's `CLAUDE.md`.
+
+- **Both commented examples came out of `ui_meta_tags.ts`.** The 54-line usage block at the top
+  taught a `widgetPathOf(w)` that takes two arguments now, and the `MyUXToolMetaExample` block
+  below it is the only worked subclass. Neither is checked by anything, and `CLAUDE.md` forbids
+  leaving commented-out code as commentary, so the page carries both instead — as a quick-start
+  and as a "Writing a tool subclass" section.
+- **The module's head comment no longer calls itself a scratch sketch**, and points at the page.
+- **The tasklist's stale claims are corrected rather than deleted.** § "The `widgetPath` scheme"
+  and § "What is actually owed in the submodule" were written before this plan; both now say
+  what shipped.
 
 ## Findings
 

@@ -409,6 +409,12 @@ leaving the old callback in place and `@deprecated`.
   panels in `definePanels()`, users drag them between edge regions, float
   them, or collapse regions to edge-aligned tab rails; layouts serialize via
   `Area.STRUCT`'s `panelLayout` field.
+- [Meta tags](documentation/meta_tags.md) — machine-readable records of what a control is
+  (`scripts/core/base/ui_meta_tags.ts` and `ui_meta_walk.ts`): `StdUXMeta`, the structural
+  `MetaOwner` bound that covers a raw DOM node, `UXToolMeta.identity()`, the
+  scope-plus-segment `widgetPath`, `readMetaJSON`, and the two builders that write a tag.
+  `ui_meta_tags.ts` imports nothing at runtime but nstructjs, deliberately, so a node
+  process with no DOM can build the same record; a test pins that.
 - [Node editor](documentation/NodeEditor.md) — the node-graph data model
   (`scripts/graph/`, exported as the `nodegraph` namespace: node/socket
   types, groups, DSL, ToolOps, data API) plus the editor layer:
