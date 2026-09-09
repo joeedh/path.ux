@@ -490,3 +490,26 @@ export const widgetSegment = (tag: StdUXMeta): string => {
 
   return `${stemOf(tag.tools[0]?.toolPath || valuePath)}~${digest(identity)}`;
 };
+
+// ==== deserialize ====
+
+/**
+ * Reads a tag back off the wire, refusing malformed json rather than constructing something
+ * half-built. `validateJSON` runs first with a collecting logger, so a failure arrives as one
+ * thrown Error naming the struct instead of the default logger's stack and the whole STRUCT
+ * script on a console the caller is about to throw past anyway.
+ */
+export function readMetaJSON<T>(json: unknown, cls: nstructjs.StructableClass<T>): T {
+  const complaints: string[] = [];
+  const collect = (...args: unknown[]): void => {
+    complaints.push(args.map((arg) => String(arg)).join(" "));
+  };
+
+  const name = cls.structName ?? cls.name ?? "(unnamed struct)";
+
+  if (!nstructjs.validateJSON(json, cls as nstructjs.StructableClass, true, false, collect)) {
+    throw new Error(`${name}: malformed json\n${complaints.join("\n")}`);
+  }
+
+  return nstructjs.readJSON<T>(json, cls);
+}

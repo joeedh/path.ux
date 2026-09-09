@@ -740,9 +740,23 @@ chromium` before the suite runs at all.
 
 ### Stage 6 — a validating deserialize
 
-`readMetaJSON`, with the collecting logger. Tests: a well-formed tag round-trips; a tag with a
-missing required field throws with the struct named and without the default logger's stack on the
-console; a tag naming an unregistered tool subclass throws.
+**Done.** `readMetaJSON`, with the collecting logger. Tests: a well-formed tag round-trips; a tag
+with a missing required field throws with the struct named and without the default logger's stack
+on the console; a tag naming an unregistered tool subclass throws.
+
+As shipped, in `tests/uiMetaRead.test.ts`.
+
+- **The struct name comes off the class**, as `cls.structName`, which is what
+  `STRUCT.setClassKeyword("STRUCT")` stamps at registration. The thrown message is
+  `<struct name>: malformed json` followed by whatever the collecting logger gathered.
+- **Colors are off.** `validateJSON(json, cls, true, false, collect)` keeps ANSI escapes out of
+  a string that is going into an `Error` rather than onto a terminal.
+- **One console write is outside the logger's reach.** `STRUCT.validateJSON` catches anything
+  that is not a `JSONError` and calls `console.error(error.stack)` before returning false
+  (`struct_intern.ts:1505-1509`), so an unregistered tool subclass still prints a stack. The
+  missing-field case raises a `JSONError` and goes through the logger, and the test asserts
+  neither `console.log` nor `console.error` is called for it.
+- **The barrel gains `readMetaJSON`**, and nothing else.
 
 ### Stage 7 — `PathToolMeta` and the builders
 
