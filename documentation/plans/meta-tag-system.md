@@ -684,13 +684,29 @@ As shipped, on branch `refusal-struct` in `path-controller`, with the gitlink bu
 
 ### Stage 4 — `identity()` and `widgetSegment`
 
-`UXToolMeta.identity()` with its default; the digest, the stem slugger, the `valuePath` index
-normalizer and `widgetSegment`, only the last exported. Tests: the segment is unchanged across a
-`description`, `enabled`, `refusal` and `requirements` change; it changes with `valuePath` and
-with an overridden `identity()`; `foo[3].bar` and `foo[7].bar` produce the same segment while
-`foo[3].baz` does not; an empty tag produces a stable segment. The `identity()` override test
-needs a concrete subclass — use `PathToolMeta` if stage 7 has landed, and otherwise a test-local
-class registered under a `test.` struct name, since nstructjs's name table is global.
+**Done.** `UXToolMeta.identity()` with its default; the digest, the stem slugger, the `valuePath`
+index normalizer and `widgetSegment`, only the last exported. Tests: the segment is unchanged
+across a `description`, `enabled`, `refusal` and `requirements` change; it changes with
+`valuePath` and with an overridden `identity()`; `foo[3].bar` and `foo[7].bar` produce the same
+segment while `foo[3].baz` does not; an empty tag produces a stable segment. The `identity()`
+override test needs a concrete subclass — use `PathToolMeta` if stage 7 has landed, and otherwise
+a test-local class registered under a `test.` struct name, since nstructjs's name table is
+global.
+
+As shipped, in `tests/uiMetaSegment.test.ts`, with two test-local tool classes registered as
+`test.PlainSegmentTool` and `test.KeyedSegmentTool`.
+
+- **The stem reads the flattened `valuePath`, not the raw one.** Slugging `foo[3].bar` would
+  give `foo-3-bar` and `foo[7].bar` `foo-7-bar`, so the two rows the flattening exists to unify
+  would still differ in the segment the plan says they share.
+- **The digest hashes both bytes of each UTF-16 code unit**, so a path outside ASCII is not
+  folded onto its low byte. An empty tag's segment is `w~811c9dc5`, the FNV-1a offset basis.
+- **The stem strips leading and trailing dashes**, before and after the 24-character trim, so a
+  truncation never leaves a hanging separator. An empty slug falls back to `w`.
+- **The barrel gains `widgetSegment`**, and nothing else.
+- **One unrelated test needed a longer timeout.** `tests/validDatapathRule.test.ts`'s first case
+  runs a cold type-aware ESLint and carries a comment saying it races; four new test files were
+  enough contention to push it past vitest's 5s default in a full run. It now declares 30s.
 
 ### Stage 5 — the walk, in its own module
 

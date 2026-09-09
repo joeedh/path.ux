@@ -222,6 +222,16 @@ export abstract class UXToolMeta<TYPE extends string = string> {
   }
 
   abstract copy(): this;
+
+  /**
+   * What tells this tool apart from another on a different control. Override it when the
+   * subclass carries anything two otherwise identical controls would differ in; the default
+   * reads `type` and `toolPath` alone. `widgetSegment` hashes the result, so changing what it
+   * reads rewrites every committed `widgetPath` underneath it.
+   */
+  identity(): string {
+    return `${this.type}\0${this.toolPath}`;
+  }
 }
 
 /* example
@@ -425,3 +435,58 @@ export class StdUXMeta<
     }
   };
 }
+
+// ==== widgetPath ====
+
+const FNV_OFFSET_BASIS = 0x811c9dc5;
+const FNV_PRIME = 0x01000193;
+const STEM_LIMIT = 24;
+
+/**
+ * Eight lowercase hex digits of FNV-1a over the UTF-16 bytes of `s`. Written here rather than
+ * taken from `util.strhash`, whose module imports `mobile-detect` and touches the DOM; this one
+ * has to run in a node process with no window.
+ */
+const digest = (s: string): string => {
+  let h = FNV_OFFSET_BASIS;
+
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h = Math.imul(h ^ (c & 0xff), FNV_PRIME);
+    h = Math.imul(h ^ (c >>> 8), FNV_PRIME);
+  }
+
+  return (h >>> 0).toString(16).padStart(8, "0");
+};
+
+/**
+ * A data path with its list indices flattened, so `foo[3].bar` and `foo[7].bar` read the same.
+ * Inserting a row would otherwise rewrite the path of every row after it.
+ */
+const flattenIndices = (path: string): string => path.replace(/\[\d+\]/g, "[]");
+
+/** A readable stub of `source` for a person reading a diff. Carries no identity of its own. */
+const stemOf = (source: string | undefined): string => {
+  const slug = (source ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, STEM_LIMIT)
+    .replace(/-+$/, "");
+
+  return slug.length > 0 ? slug : "w";
+};
+
+/**
+ * Names a control within a scope, as `<stem>~<hash>`. The hash reads an allow-list — the tag's
+ * flattened `valuePath` and each tool's `identity()`, in order — so a field added to the tag
+ * later cannot enter it by being forgotten, and `description`, `enabled` and `refusal` stay out
+ * of it. Two controls in one scope that produce the same segment are a duplicate for the caller
+ * to report; nothing here disambiguates them.
+ */
+export const widgetSegment = (tag: StdUXMeta): string => {
+  const valuePath = flattenIndices(tag.valuePath ?? "");
+  const identity = [valuePath, ...tag.tools.map((tool) => tool.identity())].join("\0");
+
+  return `${stemOf(tag.tools[0]?.toolPath || valuePath)}~${digest(identity)}`;
+};

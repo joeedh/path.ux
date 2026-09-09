@@ -53,9 +53,9 @@ describe("pathux/valid-datapath", () => {
     console.log("there is a race condition here, that's why these prints exist");
     console.log("== found array length:", found.length, "==");
     console.log(JSON.stringify(found, undefined, 2));
-    console.log("== reported paths:", found.map(reported), "=="  );
+    console.log("== reported paths:", found.map(reported), "==");
     console.log(JSON.stringify(found.map(reported), undefined, 2));
-    
+
     expect(found.map(reported)).toEqual([
       "scene.objects[n].sizee",
       // A real path elsewhere in the catalog, but not under this prefix — the
@@ -65,7 +65,9 @@ describe("pathux/valid-datapath", () => {
       "scene.objects[n].nope",
     ]);
     expect(found.every((f) => f.messageId === "unknownPrefixedPath")).toBe(true);
-  });
+    // the first lint pays for a cold type-aware ESLint, which outruns the 5s default
+    // once the suite is large enough to contend for the pool
+  }, 30000);
 
   test("the report names the relative path and the prefix it was joined to", async () => {
     const [typo] = await lint("tagged.ts");
