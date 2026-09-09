@@ -5,7 +5,7 @@ barrel exports, an owner type that covers a raw DOM node, a `widgetPath` scheme,
 the tag and on the wire, a validating deserialize, and one concrete tool subclass with the
 builders that write it.
 
-Status: **planned**. Plan 6 of the eight in the superproject's
+Status: **in progress**. Plan 6 of the eight in the superproject's
 [`ux-behaviour-model-tasklist.md`](../../../../docs/plans/ux-behaviour-model-tasklist.md), and
 the last piece owed before plan 7 can replace the desktop app's `AnchorDump` with a tag.
 
@@ -601,9 +601,23 @@ that grows one stage at a time.
 
 ### Stage 1 — the barrel, first
 
-The two `export *` lines; the `Object.keys()` baseline from `dist/pathux.js` and the `.d.ts`
-baseline, both checked in as fixtures with the test that compares against them. Nothing else
-changes, so this stage is exactly the module as it stands becoming public.
+**Done.** The two `export *` lines; the `Object.keys()` baseline from `dist/pathux.js` and the
+`.d.ts` baseline, both checked in as fixtures with the test that compares against them. Nothing
+else changes, so this stage is exactly the module as it stands becoming public.
+
+As shipped, two differences.
+
+- **One export line, not two.** `ui_meta_walk.ts` does not exist until stage 5, so its
+  `export *` line lands with the module rather than ahead of it. Every stage stays green on its
+  own, and the walk's two names still arrive in stage 5's own barrel diff.
+- **One fixture and one check, not two.** `tests/barrelSurface.test.ts` builds a TypeScript
+  program over `scripts/pathux.ts` and asks the checker for the module's exports, which resolves
+  the whole `export *` chain and reports each name as a value or a type. That covers both halves
+  the plan asks for in one pass, needs no `pnpm run build` or `emitTypes` beforehand, and runs in
+  about a second. The baseline is `tests/fixtures/barrel-surface.json`; regenerate it with
+  `UPDATE_BARREL_FIXTURE=1` after reading the diff. Stage 1's diff is eight values (`UXMetaTag`,
+  `UXToolMeta`, `StdUXMeta`, `MetaTagSet`, `getMeta`, `setMeta`, `ensureMeta`, `allMeta`) and
+  three types (`IUXMetaDef`, `IUXMetaConstructor`, `TagSet`).
 
 ### Stage 2 — the owner interface
 
